@@ -176,8 +176,6 @@ end)
 -- Choosing who you are: a name and a face
 ------------------------------------------------------------------------
 
-local EDIT_TIME = 300 -- seconds at the start of a life in which you can still choose
-
 -- Names that are celebrities, characters, memes or jokes. Compared with spaces and
 -- punctuation removed. Longer entries, so ordinary surnames aren't caught by accident.
 local BLOCKED = {
@@ -275,10 +273,9 @@ end
 
 function LC.OpenCharacterCreator(ply)
     if not IsValid(ply) then return end
-    ply.lcCharEditUntil = CurTime() + EDIT_TIME
     LC.SendCompressed("lcc_open", {
         name = LC.CharacterName(ply), model = ply:GetNW2String("lc_model", ""), models = LCF and LCF.CitizenModels or {},
-        cid = ply:GetNW2String("lc_cid", ""), reminder = REMINDER, seconds = EDIT_TIME,
+        cid = ply:GetNW2String("lc_cid", ""), reminder = REMINDER,
         first = ply:GetPData("lc_chosen", "0") ~= "1" and ply.lcNewLife == nil,
     }, { ply })
 end
@@ -292,7 +289,6 @@ end
 
 net.Receive("lcc_submit", function(_, ply)
     local name, model = net.ReadString(), net.ReadString()
-    if (ply.lcCharEditUntil or 0) < CurTime() then return Result(ply, false, "It's too late to change who you are.") end
     if (ply.lccNext or 0) > CurTime() then return Result(ply, false, "One moment.") end
     ply.lccNext = CurTime() + 1
     if not ValidModel(model) then return Result(ply, false, "Choose one of the faces shown.") end
@@ -301,7 +297,6 @@ net.Receive("lcc_submit", function(_, ply)
     if NameInUse(clean, ply) then return Result(ply, false, "Someone in the city already has that name.") end
     LC.SetCharacter(ply, clean, model)
     ply:SetPData("lc_chosen", "1")
-    ply.lcCharEditUntil = 0
     ply:ChatPrint(string.format("[Living City] You are %s, citizen %s.", clean, ply:GetNW2String("lc_cid", "")))
     Result(ply, true, clean)
 end)
@@ -309,16 +304,11 @@ end)
 -- Keeping the random name and face is a choice too.
 net.Receive("lcc_keep", function(_, ply)
     ply:SetPData("lc_chosen", "1")
-    ply.lcCharEditUntil = 0
 end)
 
 hook.Add("PlayerSay", "LivingCityCharacterChat", function(ply, text)
     if string.lower(string.Trim(text)) ~= "!character" then return end
-    if (ply.lcCharEditUntil or 0) < CurTime() then
-        ply:ChatPrint("[Living City] You chose who you are. If you die, you'll get to choose again.")
-    else
-        LC.OpenCharacterCreator(ply)
-    end
+    LC.OpenCharacterCreator(ply)
     return ""
 end)
 
