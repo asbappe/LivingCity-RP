@@ -2351,7 +2351,8 @@ local function Name(s) local ok2, r = LC.ValidateCharacterName(s) return ok2, r 
 local okN, cleaned = Name("  marta   BRANDT ")
 ok(okN and cleaned == "Marta Brandt", "an ordinary name is accepted and tidied up", cleaned)
 ok(Name("Anna-Marie O'Neil") and Name("Hagman Nilsson") and Name("Luigi Rossi"), "hyphens, apostrophes and ordinary surnames are fine")
-for _, bad in ipairs({ "Taylor Swift", "Gordon Freeman", "Walter White", "Donald Trump", "Skibidi Toilet", "Mike Hunt", "Bob", "J0hn Smith", "Xzqrt Plmn", "Aaaaron Smith", "Jesus Christ", "Johnny Depp" }) do
+ok(Name("Bob") and Name("Jan") and Name("Joe") and Name("Jo Li"), "short names are fine, one word or two")
+for _, bad in ipairs({ "Taylor Swift", "Gordon Freeman", "Walter White", "Donald Trump", "Skibidi Toilet", "Mike Hunt", "J0hn Smith", "Xzqrt Plmn", "Aaaaron Smith", "Jesus Christ", "Johnny Depp", "Jo", "Anna Bell Carla Dee" }) do
     ok(not Name(bad), "'" .. bad .. "' is refused")
 end
 local _, why = Name("Taylor Swift")

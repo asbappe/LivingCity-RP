@@ -208,7 +208,7 @@ local BLOCKED_WORDS = {
     "rizzler", "gyatt", "noscope", "shrek", "kratos", "heisenberg", "joker", "yoda", "gandalf", "voldemort",
 }
 
-local REMINDER = "Choose a realistic name for a person living in this city and era: an ordinary first and last name. "
+local REMINDER = "Choose a realistic name for a person living in this city and era: an ordinary name, first and last if you like. "
     .. "No celebrities, characters from games, films or shows, memes or joke names."
 
 local function Title(word)
@@ -220,11 +220,11 @@ end
 function LC.ValidateCharacterName(raw)
     local name = string.Trim(tostring(raw or ""))
     name = string.gsub(name, "%s+", " ")
-    if #name < 5 or #name > 26 then return false, "Names are between 5 and 26 letters long." end
+    if #name < 3 or #name > 26 then return false, "Names are between 3 and 26 characters long." end
     if string.find(name, "[^%a '%-]") then return false, "Names use letters only: no numbers or symbols." end
     local words = {}
     for w in string.gmatch(name, "%S+") do words[#words + 1] = w end
-    if #words < 2 or #words > 3 then return false, "Give a first and last name (and at most a middle one)." end
+    if #words < 1 or #words > 3 then return false, "A name is one to three words: a first name, and a surname if you like." end
     for _, w in ipairs(words) do
         local letters = string.gsub(w, "[^%a]", "")
         if #letters < 2 then return false, "Each part of your name needs at least two letters." end

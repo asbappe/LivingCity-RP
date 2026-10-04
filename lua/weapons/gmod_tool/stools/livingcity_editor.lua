@@ -486,5 +486,6 @@ function TOOL.BuildCPanel(panel)
     panel:Button("Status to chat", "lc_status")
     panel:Button("Reload saved layout", "lc_reload")
     panel:CheckBox("Show layout without the tool", "lc_show")
-    panel:CheckBox("Show what NPCs are doing", "lc_show_npcs")
+    panel:CheckBox("Show what the NPC I'm looking at is doing", "lc_show_npcs")
+    panel:CheckBox("Show every nearby NPC (cluttered)", "lc_show_all_npcs")
 end

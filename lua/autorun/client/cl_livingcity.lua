@@ -14,7 +14,8 @@
 LC_CL = LC_CL or { points = {}, nodes = {}, zones = {}, doors = {}, blocks = {} }
 
 local cvShow  = CreateClientConVar("lc_show", "0", true, false, "Always show the Living City layout")
-local cvDebug = CreateClientConVar("lc_show_npcs", "1", true, false, "Show NPC states in the editor overlay")
+local cvDebug = CreateClientConVar("lc_show_npcs", "1", true, false, "Show what the NPC you're looking at is doing, in the editor overlay")
+local cvAllNpcs = CreateClientConVar("lc_show_all_npcs", "0", true, false, "Show every nearby NPC's state and destination (cluttered)")
 local cvFill  = CreateClientConVar("lc_zone_fill", "1", true, false, "Shade zones on the ground in the editor")
 
 local function ReadCompressed()
@@ -153,7 +154,39 @@ hook.Add("Think", "LivingCityOverlay", function()
     end
 end)
 
-local MAX_DIST2 = 3000 * 3000
+local MAX_DIST2 = 1800 * 1800 -- the overlay only draws what's reasonably close
+
+-- The NPC you're pointing at (within a body's width of your aim line), if any.
+local function AimedNpc()
+    local ply = LocalPlayer()
+    local eye, dir = EyePos(), ply:GetAimVector()
+    local best, bd
+    for _, e in ipairs(npcCache) do
+        if IsValid(e) then
+            local to = e:GetPos() + Vector(0, 0, 40) - eye
+            local along = to:Dot(dir)
+            if along > 0 and along < 1500 then
+                local off = (to - dir * along):Length()
+                if off < 45 and (not bd or off < bd) then best, bd = e, off end
+            end
+        end
+    end
+    return best
+end
+
+-- Which NPCs get a state label and a destination line.
+local function ShownNpcs(eye)
+    if cvAllNpcs:GetBool() then
+        local out = {}
+        for _, e in ipairs(npcCache) do
+            if IsValid(e) and e:GetPos():DistToSqr(eye) < 600 * 600 then out[#out + 1] = e end
+        end
+        return out
+    end
+    if not cvDebug:GetBool() then return {} end
+    local e = AimedNpc()
+    return e and { e } or {}
+end
 local UP8, UP60 = Vector(0, 0, 8), Vector(0, 0, 60)
 
 local function Circle(center, r, col)
@@ -348,9 +381,13 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
 
     for _, seq in ipairs(LC_CL.sequences or {}) do
         local col = POINT_COLORS[seq.kind]
-        for i = 2, #seq.pts do render.DrawLine(seq.pts[i - 1].pos + UP8, seq.pts[i].pos + UP8, col, false) end
-        if seq.kind == "patrol" and #seq.pts > 2 then
-            render.DrawLine(seq.pts[#seq.pts].pos + UP8, seq.pts[1].pos + UP8, Color(col.r, col.g, col.b, 90), false)
+        local near = false
+        for _, sp in ipairs(seq.pts) do if sp.pos:DistToSqr(eye) < 1500 * 1500 then near = true break end end
+        if near then
+            for i = 2, #seq.pts do render.DrawLine(seq.pts[i - 1].pos + UP8, seq.pts[i].pos + UP8, col, false) end
+            if seq.kind == "patrol" and #seq.pts > 2 then
+                render.DrawLine(seq.pts[#seq.pts].pos + UP8, seq.pts[1].pos + UP8, Color(col.r, col.g, col.b, 90), false)
+            end
         end
     end
 
@@ -416,12 +453,10 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
         end
     end
 
-    if cvDebug:GetBool() then
-        for _, e in ipairs(npcCache) do
-            if IsValid(e) and e:GetNW2String("lc_state", "") == "moving" then
-                local dest = e:GetNW2Vector("lc_dest", vector_origin)
-                if dest ~= vector_origin then render.DrawLine(e:GetPos() + UP8, dest + UP8, Color(255, 255, 255, 60), false) end
-            end
+    for _, e in ipairs(ShownNpcs(eye)) do
+        if e:GetNW2String("lc_state", "") == "moving" then
+            local dest = e:GetNW2Vector("lc_dest", vector_origin)
+            if dest ~= vector_origin then render.DrawLine(e:GetPos() + UP8, dest + UP8, Color(255, 255, 255, 120), false) end
         end
     end
 end)
@@ -460,7 +495,7 @@ end
 local function DrawEditorLabels()
     DrawAimInfo()
     local eye = EyePos()
-    local near = 1000 * 1000
+    local near = 450 * 450 -- text only for what's close; the thing you aim at is named under the crosshair
 
     for _, p in ipairs(LC_CL.points) do
         if p.pos:DistToSqr(eye) < near then
@@ -479,7 +514,8 @@ local function DrawEditorLabels()
         if n.orphan and n.pos:DistToSqr(eye) < near then Label(n.pos + Vector(0, 0, 22), "UNLINKED", ORPHAN_COLOR) end
     end
     for _, z in ipairs(LC_CL.zones) do
-        if z.pos:DistToSqr(eye) < (1500 + z.r) ^ 2 then
+        -- a zone's name floats at its center, but only when you're standing in it
+        if eye:DistToSqr(z.pos) < z.r * z.r and math.abs(eye.z - z.pos.z) < 300 then
             local txt = ZONE_NAMES[z.kind] or z.kind
             if z.kind == "block" then txt = string.upper(BlockName(z.group)) end
             Label(z.pos + Vector(0, 0, 30), txt, ZONE_COLORS[z.kind])
@@ -491,13 +527,10 @@ local function DrawEditorLabels()
             Label(door:WorldSpaceCenter(), DOOR_LABELS[d.tag] or d.tag, DOOR_COLORS[d.tag])
         end
     end
-    if cvDebug:GetBool() then
-        for _, e in ipairs(npcCache) do
-            if IsValid(e) and e:GetPos():DistToSqr(eye) < near then
-                Label(e:GetPos() + Vector(0, 0, 84), string.upper(e:GetNW2String("lc_role", "")) .. ": " .. e:GetNW2String("lc_state", ""),
-                    Color(255, 255, 255, 220), "DermaDefault")
-            end
-        end
+    for _, e in ipairs(ShownNpcs(eye)) do
+        local who = e:GetNW2String("lc_pname", "")
+        Label(e:GetPos() + Vector(0, 0, 84), string.upper(e:GetNW2String("lc_role", "")) .. (who ~= "" and (" " .. who) or "") .. ": " .. e:GetNW2String("lc_state", ""),
+            Color(255, 255, 255, 220), "DermaDefault")
     end
 end
 
