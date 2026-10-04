@@ -27,19 +27,33 @@ util.AddNetworkString("lcc_keep")
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvPerma = CreateConVar("lc_permadeath", "1", FLAGS, "In the Living City gamemode, dying means starting over as a new character")
 
-local FIRST = {
-    "Dale", "Marta", "Owen", "Ilse", "Tomas", "Nadia", "Piotr", "Greta", "Jonas", "Lena", "Anton", "Vera",
-    "Emil", "Rosa", "Felix", "Hana", "Karl", "Mira", "Stefan", "Edith", "Bram", "Clara", "Viktor", "Alma",
-    "Walt", "Nora", "Dmitri", "Ruth", "Hugo", "Elsa", "Arvid", "Petra",
+local FIRST_MALE = {
+    "Dale", "Owen", "Tomas", "Piotr", "Jonas", "Anton", "Emil", "Felix", "Karl", "Stefan", "Bram", "Viktor",
+    "Walt", "Dmitri", "Hugo", "Arvid",
 }
+local FIRST_FEMALE = {
+    "Marta", "Ilse", "Nadia", "Greta", "Lena", "Vera", "Rosa", "Hana", "Mira", "Edith", "Clara", "Alma",
+    "Nora", "Ruth", "Elsa", "Petra",
+}
+local FIRST_GENDER = {}
+for _, n in ipairs(FIRST_MALE) do FIRST_GENDER[n] = "male" end
+for _, n in ipairs(FIRST_FEMALE) do FIRST_GENDER[n] = "female" end
 local LAST = {
     "Hollis", "Brandt", "Kowal", "Reyes", "Marsh", "Novak", "Lindqvist", "Okafor", "Varga", "Sutter", "Mercer", "Dunn",
     "Petrov", "Calloway", "Reiter", "Haas", "Moreau", "Tanner", "Zielinski", "Voss", "Abbott", "Kessler", "Ferro", "Lund",
     "Quill", "Maddox", "Sorensen", "Pruitt", "Hale", "Ostrander", "Weller", "Duval",
 }
 
-function LC.NewCharacterName()
-    return FIRST[math.random(#FIRST)] .. " " .. LAST[math.random(#LAST)],
+-- "male" or "female" for a name this file made up (by its first name), or nil.
+function LC.NameGender(name)
+    return FIRST_GENDER[string.match(name or "", "^(%S+)") or ""]
+end
+
+-- A man's or a woman's name to go with the face (either, if gender is nil).
+function LC.NewCharacterName(gender)
+    local list = gender == "female" and FIRST_FEMALE or gender == "male" and FIRST_MALE
+        or (math.random() < 0.5 and FIRST_MALE or FIRST_FEMALE)
+    return list[math.random(#list)] .. " " .. LAST[math.random(#LAST)],
         string.format("#%02d-%03d", math.random(10, 99), math.random(100, 999))
 end
 
@@ -58,12 +72,12 @@ local function RandomModel()
 end
 
 local function Assign(ply, announce)
-    local name, cid = LC.NewCharacterName()
+    local model = RandomModel()
+    local name, cid = LC.NewCharacterName(string.find(string.lower(model), "female", 1, true) and "female" or "male")
     ply:SetNW2String("lc_char", name)
     ply:SetNW2String("lc_cid", cid)
     ply:SetPData("lc_char", name)
     ply:SetPData("lc_cid", cid)
-    local model = RandomModel()
     ply:SetNW2String("lc_model", model)
     ply:SetPData("lc_model", model)
     if announce then ply:ChatPrint(string.format("[Living City] You are %s, citizen %s.", name, cid)) end

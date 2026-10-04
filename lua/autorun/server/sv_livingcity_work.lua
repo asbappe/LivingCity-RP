@@ -386,10 +386,12 @@ SHIFTS.courier = {
         local stages = { Q.Contact("Collect the mail from the postal clerk (press E)", office, "citizen",
             "'Three for the district. Two are overdue. Don't tell them I said so.'") }
         for i = 1, 3 do
-            local name = LC.NewCharacterName()
+            local g = math.random() < 0.5 and "male" or "female"
+            local name = LC.NewCharacterName(g)
             stages[#stages + 1] = Q.Contact(string.format("Hand letter %d of 3 to %s, %s (press E)", i, name, doors[i][2]), doors[i][1], "citizen",
                 Pick({ "They take it without looking at who sent it.", "'Finally,' they say, and shut the door on the rest of the sentence.",
-                    "A nod. Nobody says anything useful in this city out loud.", "They read the envelope twice before they put it away." }))
+                    "A nod. Nobody says anything useful in this city out loud.", "They read the envelope twice before they put it away." }),
+                { gender = g }) -- whoever answers the door looks like the name on the envelope
         end
         return { title = "Mail round", reward = 25, limit = 600, desc = "Three letters, three people. Collect them at the post office.", stages = stages }
     end,

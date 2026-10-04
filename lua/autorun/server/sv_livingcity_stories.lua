@@ -29,11 +29,12 @@ local function Trait(p, name, d) LC.AddTrait(p, name, d) end
 local function XP(p, n) if LC.AddXP then LC.AddXP(p, n) end end
 
 -- A stage that places a story character in the world and has you walk up to them.
-local function Meet(text, role, posFn, hold, r)
+-- gender ("male" or "female") makes sure they look like the person the story describes.
+local function Meet(text, role, posFn, hold, r, gender)
     return {
         kind = "target", action = "reach", r = r or 150, text = text,
         onEnter = function(q, st)
-            local npc = Q.SpawnActor(q, role, posFn(q), hold or 600)
+            local npc = Q.SpawnActor(q, role, posFn(q), hold or 600, nil, gender and { gender = gender } or nil)
             if not IsValid(npc) then return false end
             q.data.actor = npc
             st.npc = npc
@@ -180,7 +181,7 @@ LC.Chain{
                 desc = "A routine patrol " .. Place(spot, ply:GetPos()) .. ". Nothing to worry about.",
                 stages = {
                     Goto(spot, "Patrol the market", 200),
-                    Meet("A citizen is waving you over", "citizen", function() return spot end),
+                    Meet("A citizen is waving you over", "citizen", function() return spot end, nil, nil, "male"),
                     Choice("A citizen presses a bundle of ration units into your hand. 'For your trouble, officer.' " ..
                         "His eyes flick to a window across the street.", {
                         { text = "Refuse, and arrest him for attempted bribery.", pick = RefuseBribe },
@@ -317,7 +318,7 @@ LC.Chain{
                 desc = "Go home to " .. name .. ". Someone is waiting.",
                 stages = {
                     Goto(home, "Go home to " .. name, 260),
-                    Meet("Someone is waiting outside your door", "citizen", function() return home end),
+                    Meet("Someone is waiting outside your door", "citizen", function() return home end, nil, nil, "male"),
                     Choice("A stranger in a Union jacket that doesn't fit him. He says your name like he's known it for years. " ..
                         "'You've been kind to the wrong people. We noticed. Can you be useful, too?'", {
                         { text = "Listen.", pick = function(q)
@@ -397,11 +398,22 @@ LC.Chain{
 -- The Informant
 ------------------------------------------------------------------------
 
+-- The neighbor is whoever is out on the street: the words follow them.
+local PRONOUNS = {
+    male = { he = "he", him = "him", his = "his", He = "He", His = "His" },
+    female = { he = "she", him = "her", his = "her", He = "She", His = "Her" },
+}
+local function Neighbor(q, text)
+    local st = IsValid(q.data.target) and LC.NPCs[q.data.target]
+    local p = PRONOUNS[st and st.gender or "male"] or PRONOUNS.male
+    return (string.gsub(text, "{(%a+)}", function(k) return p[k] or k end))
+end
+
 local function TailStage(secs)
     return {
         kind = "tail", min = 200, max = 1100, lost = 1700, secs = secs,
         failText = "your neighbor isn't out on the streets right now. Try again once the city is busy",
-        text = "Follow your neighbor without being noticed. Not too far, and stay out of his sight: the longer he sees you, the more suspicious he gets",
+        text = "Follow your neighbor without being noticed",
         onEnter = function(q, st)
             local npc = q.data.target
             if not IsValid(npc) then npc = Q.RandomCitizen() end
@@ -409,24 +421,25 @@ local function TailStage(secs)
             Q.Lock(q, npc)
             q.data.target = npc
             st.npc = npc
+            st.text = Neighbor(q, "Follow your neighbor without being noticed. Not too far, and stay out of {his} sight: the longer {he} sees you, the more suspicious {he} gets")
             local nst = LC.NPCs[npc]
             if nst then nst.eventUntil = 0; LC.GoTo(npc, nst, LC.RandomWanderPos("citizen"), false, nil) end
         end,
         onNoticed = function(q)
-            Insert(q, { Choice("He stops and turns around. He knows exactly who you are.", {
+            Insert(q, { Choice(Neighbor(q, "{He} stops and turns around. {He} knows exactly who you are."), {
                 { text = "Pretend you were heading the other way.", check = { "guile", 12 },
                   success = function(q2)
-                      Narrate(q2, "He shrugs and walks on. You give him a longer leash.")
+                      Narrate(q2, Neighbor(q2, "{He} shrugs and walks on. You give {him} a longer leash."))
                       Insert(q2, { TailStage(20) })
                   end,
                   fail = function(q2)
-                      Narrate(q2, "He doesn't buy it. He runs.")
+                      Narrate(q2, Neighbor(q2, "{He} doesn't buy it. {He} runs."))
                       Q.Flee(q2)
                       return "fail"
                   end },
-                { text = "Confront him.", pick = function(q2, p)
+                { text = Neighbor(q, "Confront {him}."), pick = function(q2, p)
                     Trait(p, "loyalty", 1)
-                    Narrate(q2, "'You're one of them now? You?' He doesn't run. He just looks tired.")
+                    Narrate(q2, Neighbor(q2, "'You're one of them now? You?' {He} doesn't run. {He} just looks tired."))
                 end },
             }) })
             Q.Advance(q)
@@ -464,15 +477,17 @@ LC.Chain{
 
         neighbor = { num = 2, next = "payment", build = function()
             if not LC.Running or not Q.RandomCitizen() then return nil end -- nobody out to follow yet
-            local report = Count("used_npc", 1, "Report him to a unit (press E)", Q.IsCopNPC)
+            local report = Count("used_npc", 1, "Report your neighbor to a unit (press E)", Q.IsCopNPC)
+            report.onEnter = function(q, st) st.text = Neighbor(q, "Report {him} to a unit (press E)") end
             report.onDone = function(q)
                 local npc = q.data.target
+                local line = Neighbor(q, "By evening, {his} door is sealed with yellow tape.") -- before the arrest takes them away
                 if IsValid(npc) and LC.PrisonAvailable() and LC.ArrestNPC then LC.ArrestNPC(npc, nil) end
-                Narrate(q, "By evening, his door is sealed with yellow tape.")
+                Narrate(q, line)
             end
             return {
                 title = "The neighbor", reward = 35, limit = 720,
-                desc = "Your neighbor has been keeping strange hours. The Union would like to know where he goes.",
+                desc = "Your neighbor has been keeping strange hours. The Union would like to know where they go.",
                 stages = { TailStage(40), report },
             }
         end },
@@ -616,7 +631,7 @@ LC.Chain{
                 title = "The man in the stolen coat", reward = 45, limit = 600,
                 desc = "A citizen with a Civil Protection haircut was seen " .. Place(spot, ply:GetPos()) .. ".",
                 stages = {
-                    Meet("Find the man in the stolen coat (marked)", "citizen", function() return spot end),
+                    Meet("Find the man in the stolen coat (marked)", "citizen", function() return spot end, nil, nil, "male"),
                     Choice("It's him. 6-12, in a stolen coat, his haircut already growing out. 'Please. I have a daughter in Block 4.'", {
                         { text = "Bring him in.", pick = function(q, p)
                             Trait(p, "loyalty", 2)
@@ -855,7 +870,7 @@ LC.Chain{
                 desc = "Someone slipped a note into your ration packet. One line: a place, " .. Place(spot, ply:GetPos()) .. ", and a time. Now.",
                 stages = {
                     Goto(spot, "Go to the place named in the note", 220),
-                    Meet("Find whoever left it (marked)", "citizen", function() return spot end),
+                    Meet("Find whoever left it (marked)", "citizen", function() return spot end, nil, nil, "female"),
                     Choice("A woman with a lambda tattooed on the inside of her wrist. 'People talk about you, officer. " ..
                         "The one who looks the other way. The one who says please.' She doesn't blink. 'We could use someone like that.'", {
                         { text = "Hear her out.", pick = function(q)
@@ -904,7 +919,7 @@ LC.Chain{
                 desc = "They want to meet in " .. where .. ". Come out of uniform if you can. Come alone either way.",
                 stages = {
                     Goto(pos, "Go to the meeting in " .. where, r),
-                    Meet("Find her", "citizen", function() return pos end),
+                    Meet("Find her", "citizen", function() return pos end, nil, nil, "female"),
                     Choice("She's waiting with a man in a lambda armband who doesn't take his hand off his rifle. " ..
                         "'You've proven yourself. So: do you come over, or do you stay where you can do the most good?'", {
                         { text = "Come over. Tonight.", pick = function(q, p)

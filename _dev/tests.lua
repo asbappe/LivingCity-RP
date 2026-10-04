@@ -769,6 +769,36 @@ ok(qt2.stages[qt2.stage].kind == "choice", "get too close for too long and he no
 withRoll(1, function() LC.ResolveChoice(loyal, qt2.id, 1) end)
 ok(qt2.done and LC.Story(loyal).chains.informant.part == "neighbor", "a failed bluff fails the job, and you can try again")
 
+-- the neighbor can be a woman, and the words follow
+lcs = LC.ChainState(loyal, "informant")
+lcs.part, lcs.readyAt = "neighbor", 0
+loyal.lcqNext = 0
+local n3 = storyPosting(loyal, "informant")
+LC.AcceptPosting(loyal, n3.id)
+local qt3 = LC.QuestOf[loyal]
+local her = qt3.stages[1].npc
+LC.NPCs[her].gender = "female"
+qt3.stages[1].onEnter(qt3, qt3.stages[1])
+ok(qt3.stages[1].text:find("her sight", 1, true) and qt3.stages[1].text:find("she sees you", 1, true) and not qt3.stages[1].text:find(" he ", 1, true),
+    "a woman neighbor is 'she' and 'her'", qt3.stages[1].text)
+qt3.stages[2].onEnter(qt3, qt3.stages[2])
+ok(qt3.stages[2].text == "Report her to a unit (press E)", "including when you report her", qt3.stages[2].text)
+LC.AbandonQuest(loyal)
+
+section("Names and faces match")
+local mism = 0
+for _ = 1, 40 do
+    local person = LC.NewPerson("citizen")
+    if LC.NameGender(person.name) ~= person.gender or not person.model:find(person.gender == "female" and "female" or "/male", 1, true) then mism = mism + 1 end
+end
+ok(mism == 0, "new people get a name that goes with their face", mism)
+local fem = LC.QB.SpawnActor({ ents = {}, marked = {}, data = {} }, "citizen", Vector(9000, 9000, 0), 5, nil, { gender = "female" })
+ok(IsValid(fem) and LC.NPCs[fem].gender == "female" and fem:GetModel():find("female", 1, true), "a story can ask for a woman, and gets one")
+if IsValid(fem) then fem:Remove() end
+local man = LC.QB.SpawnActor({ ents = {}, marked = {}, data = {} }, "citizen", Vector(9000, 9000, 0), 5, nil, { gender = "male" })
+ok(IsValid(man) and LC.NPCs[man].gender == "male" and LC.NameGender(man:GetNW2String("lc_pname", "")) == "male", "or a man, with a man's name")
+if IsValid(man) then man:Remove() end
+
 
 ----------------------------------------------------------------------
 section("Stories: The Man Inside (honest cops, defectors, double agents)")

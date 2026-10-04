@@ -74,6 +74,13 @@ function LC.LoadPeople()
                 if p.id and p.name then
                     p.alive = p.alive ~= false
                     p.role = p.role or "citizen"
+                    -- rosters from before names matched faces: the face follows the name
+                    local g = p.role == "citizen" and LC.NameGender and LC.NameGender(p.name)
+                    if g and g ~= p.gender then
+                        p.gender = g
+                        p.model = "models/humans/group01/" .. Pick(g == "male" and MALE or FEMALE) .. ".mdl"
+                        MarkDirty()
+                    end
                     P.list[#P.list + 1] = p
                     P.next = math.max(P.next, p.id + 1)
                 end
@@ -108,13 +115,14 @@ function LC.NewPerson(role, want)
         repeat n = math.random(10, 99) until not NameTaken("Unit " .. n) or math.random() < 0.02
         p.name, p.gender, p.model = "Unit " .. n, "male", "models/police.mdl"
     else
+        -- the face first, then a name that goes with it
+        p.gender = want.gender or (math.random() < 0.5 and "male" or "female")
         local name
         for _ = 1, 30 do
-            name = LC.NewCharacterName and (LC.NewCharacterName()) or ("Citizen " .. p.id)
+            name = LC.NewCharacterName and (LC.NewCharacterName(p.gender)) or ("Citizen " .. p.id)
             if not NameTaken(name) then break end
         end
         p.name = name
-        p.gender = math.random() < 0.5 and "male" or "female"
         p.model = "models/humans/group01/" .. Pick(p.gender == "male" and MALE or FEMALE) .. ".mdl"
         p.job = RandomJob()
         local blocks = BlockNumbers()
@@ -157,13 +165,14 @@ function LC.ClaimProfile(role, want)
     want = want or {}
     local best, bt
     for _, p in ipairs(P.list) do
-        if p.alive and p.role == role and not InWorld(p) and (not want.rebel or p.rebel) then
+        if p.alive and p.role == role and not InWorld(p) and (not want.rebel or p.rebel)
+            and (not want.gender or p.gender == want.gender) then
             local t = (p.lastSeen or 0) + math.random() * 30 -- a little shuffle among equals
             if not bt or t < bt then best, bt = p, t end
         end
     end
-    if not best and want.rebel then
-        best = LC.NewPerson(role, { rebel = true }) -- the Resistance can always find someone
+    if not best and (want.rebel or want.gender) then
+        best = LC.NewPerson(role, want) -- the Resistance can always find someone, and a story its character
     end
     if best then
         best.lastSeen = os.time()
