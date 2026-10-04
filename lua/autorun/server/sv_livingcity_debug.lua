@@ -125,6 +125,14 @@ function LC.BuildReport()
     if count("cell") == 0 then warn[#warn + 1] = "no prison cells: arrests become street detentions (cuffed, searched, fined, released)" end
     if count("spawn") == 0 then warn[#warn + 1] = "no spawn/exit doorways: NPCs appear out of sight and leave into blocks or wander off" end
     if zones("block") == 0 then warn[#warn + 1] = "no housing blocks: curfew can't send anyone home, and nobody has a stash" end
+    do
+        local counts = {}
+        for _, fx in ipairs(LC.StaticFixtures or {}) do counts[fx.kind] = (counts[fx.kind] or 0) + 1 end
+        local parts = {}
+        for k, n in pairs(counts) do parts[#parts + 1] = n .. " " .. k end
+        out[#out + 1] = "static map fixtures: " .. (#parts > 0 and table.concat(parts, ", ") or "none")
+            .. (LC.StaticScanNote and (" (scan failed: " .. tostring(LC.StaticScanNote) .. ")") or "")
+    end
     if zones("combine") == 0 then warn[#warn + 1] = "no Combine-only zones: citizens can walk into the nexus, offices and armory (doors by the cells still lock)" end
     if count("zspawn") == 0 and zones("infest") > 0 then warn[#warn + 1] = "no infestation spawn points: zombies appear at random spots inside infestation zones" end
     if count("checkpoint") == 0 and count("patrol") == 0 then warn[#warn + 1] = "no checkpoints or patrol beats: cops wander at random" end

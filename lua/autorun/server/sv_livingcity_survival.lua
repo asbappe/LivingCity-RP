@@ -255,6 +255,25 @@ end
 
 local function InWater(ply) return ply:WaterLevel() >= 1 end
 
+-- A sink: one the map has as a prop (dynamic or static), within reach.
+function LC.NearSink(ply)
+    if LC.StaticFixtureNear and LC.StaticFixtureNear(ply:GetPos() + Vector(0, 0, 40), "sink", 110) then return true end
+    for _, e in ipairs(ents.FindInSphere(ply:GetPos() + Vector(0, 0, 40), 110)) do
+        if LC.FixtureKindOf and LC.FixtureKindOf(e) == "sink" then return true end
+    end
+    return false
+end
+
+-- Tap water: cleaner than a puddle, still not something to trust.
+function LC.DrinkFromSink(ply)
+    if (ply.lcnNextDrink or 0) > CurTime() then return false end
+    ply.lcnNextDrink = CurTime() + 2
+    LC.Feed(ply, 0, 20)
+    ply:EmitSound("ambient/water/water_spray1.wav", 55)
+    if math.random() < 0.15 then Infect(ply) end
+    return true
+end
+
 function LC.DrinkFromWater(ply)
     if not InWater(ply) then return false end
     if (ply.lcnNextDrink or 0) > CurTime() then return false end
@@ -280,6 +299,7 @@ end)
 local HEAT_CLASSES = { lc_stove = true, lc_fire = true, env_fire = true, entityflame = true }
 
 function LC.NearHeat(ply)
+    if LC.StaticFixtureNear and LC.StaticFixtureNear(ply:GetPos() + Vector(0, 0, 40), "stove", 150) then return true end
     for _, e in ipairs(ents.FindInSphere(ply:GetPos(), 150)) do
         if HEAT_CLASSES[e:GetClass()] then return true end
         local m = string.lower(e:GetModel() or "")
@@ -313,7 +333,7 @@ function LC.InvAction(ply, action, id)
         ply:ChatPrint(it.name .. " becomes " .. string.lower(LCS.Items[it.cooksTo].name) .. ".")
     elseif action == "fill" then
         if not it.fillTo then return end
-        if not InWater(ply) then return ply:ChatPrint("Stand in water to fill it.") end
+        if not InWater(ply) and not LC.NearSink(ply) then return ply:ChatPrint("Stand in water, or by a sink, to fill it.") end
         LC.TakeItem(ply, id)
         LC.GiveItem(ply, it.fillTo)
         ply:EmitSound("ambient/water/water_splash1.wav", 60)
@@ -527,11 +547,12 @@ function LC.UseVending(ply, ent)
     return true
 end
 
--- Stoves and vending machines the map already has act like the editor's fixtures:
--- press E on one. (Static map props can't be seen by the server; tag those with
--- the editor's fixture tools, or a stove prop placed within reach works as heat anyway.)
+-- Stoves, sinks and vending machines the map already has act like the editor's
+-- fixtures: press E on one. Dynamic props are found as entities; static ones from
+-- the map file (sv_livingcity_staticprops.lua).
 local MODEL_KINDS = {
     { "stove", "stove" }, { "furnace", "stove" }, { "oven", "stove" },
+    { "sink", "sink" },
     { "vendingmachine", "vending" }, { "vending_machine", "vending" }, { "vending", "vending" },
 }
 
@@ -548,19 +569,57 @@ function LC.FixtureKindOf(ent)
     return nil
 end
 
-hook.Add("KeyPress", "LivingCityMapFixtures", function(ply, key)
-    if key ~= IN_USE or not ply:Alive() then return end
-    local tr = util.TraceLine({ start = ply:EyePos(), endpos = ply:EyePos() + ply:EyeAngles():Forward() * 100, filter = ply })
-    local ent = tr.Entity
-    if not IsValid(ent) or string.StartWith(ent:GetClass(), "lc_") then return end -- ours handle themselves
-    local kind = LC.FixtureKindOf(ent)
+-- A vending machine that's part of the map's geometry: the can rolls out in front of it.
+function LC.UseStaticVending(ply, fx)
+    if (fx.lcNext or 0) > CurTime() then return false end
+    fx.lcNext = CurTime() + 1.5
+    local price = cvVend:GetInt()
+    local econ = GetConVar("lc_economy")
+    if econ and econ:GetBool() and price > 0 then
+        if LC.Credits(ply) < price then
+            ply:EmitSound("buttons/button10.wav", 65)
+            ply:ChatPrint("[Vending] Insert " .. price .. " credits.")
+            return false
+        end
+        LC.AddCredits(ply, -price)
+    end
+    ply:EmitSound("buttons/button4.wav", 65)
+    timer.Simple(0.6, function()
+        local fwd = fx.ang:Forward()
+        LC.SpawnWorldItem("water", fx.pos + fwd * 26 + Vector(0, 0, 14), nil, fwd * 70 + Vector(0, 0, 30))
+    end)
+    return true
+end
+
+local function UseFixture(ply, kind, ent, fx)
     if kind == "vending" then
-        LC.UseVending(ply, ent)
+        if ent then LC.UseVending(ply, ent) else LC.UseStaticVending(ply, fx) end
     elseif kind == "stove" and (ply.lcStoveUse or 0) < CurTime() then
         ply.lcStoveUse = CurTime() + 1
         if LC.SendInv then LC.SendInv(ply, true) end
         ply:ChatPrint("[Stove] Cook from your pockets (F2).")
+    elseif kind == "sink" then
+        if (ply.lcSinkUse or 0) < CurTime() then
+            ply.lcSinkUse = CurTime() + 1
+            ply:ChatPrint("[Sink] Fill bottles and cans from your pockets (F2). Boil them before you drink.")
+        end
+        LC.DrinkFromSink(ply)
     end
+end
+
+hook.Add("KeyPress", "LivingCityMapFixtures", function(ply, key)
+    if key ~= IN_USE or not ply:Alive() then return end
+    local tr = util.TraceLine({ start = ply:EyePos(), endpos = ply:EyePos() + ply:EyeAngles():Forward() * 100, filter = ply })
+    local ent = tr.Entity
+    if IsValid(ent) and ent ~= game.GetWorld() then
+        if string.StartWith(ent:GetClass(), "lc_") then return end -- ours handle themselves
+        local kind = LC.FixtureKindOf(ent)
+        if kind then UseFixture(ply, kind, ent) end
+        return
+    end
+    -- the map's own static props: the nearest one to where you're pointing
+    local fx = LC.StaticFixtureNear and tr.Hit and LC.StaticFixtureNear(tr.HitPos, nil, 75)
+    if fx then UseFixture(ply, fx.kind, nil, fx) end
 end)
 
 -- The dispenser's own animation, if the model has one.

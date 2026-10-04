@@ -2227,6 +2227,63 @@ local vend = ents.Create("prop_physics")
 vend:SetModel("models/props_interiors/vendingmachinesoda01a.mdl")
 ok(LC.FixtureKindOf(fix) == "stove" and LC.FixtureKindOf(vend) == "vending" and LC.FixtureKindOf(bin) == nil, "map stoves and vending machines are recognised as fixtures")
 bin:Remove() bin2:Remove() fix:Remove() vend:Remove()
+
+section("Static map props: stoves, sinks and vending machines")
+-- a tiny pretend map file: header, game lump directory, and three static props
+local store = {}
+local function L(p, v) store[p] = { t = "l", v = v } end
+local function U(p, v) store[p] = { t = "u", v = v } end
+local function Fl(p, v) store[p] = { t = "f", v = v } end
+local function S(p, v) store[p] = { t = "s", v = v } end
+L(0, 0x50534256) L(4, 20) L(568, 1000) L(572, 5000)
+L(1000, 1) L(1004, 0x73707270) U(1008, 0) U(1010, 4) L(1012, 2000) L(1016, 496)
+L(2000, 3)
+S(2004, "models/props_c17/furniturestove001a.mdl") S(2132, "models/props_junk/popcan01a.mdl") S(2260, "models/props_c17/FurnitureSink001a.mdl")
+L(2388, 2) L(2396, 3)
+local props = { { 1, { 7000, 7000, 0 } }, { 2, { 7100, 7000, 0 } }, { 3, { 7200, 7000, 0 } } }
+for i, pr in ipairs(props) do
+    local at = 2400 + (i - 1) * 32
+    Fl(at, pr[2][1]) Fl(at + 4, pr[2][2]) Fl(at + 8, pr[2][3])
+    Fl(at + 12, 0) Fl(at + 16, 90) Fl(at + 20, 0)
+    U(at + 24, pr[1] - 1)
+end
+local realOpen = file.Open
+file.Open = function()
+    local pos = 0
+    local f = {}
+    local function take(t, n)
+        local e = store[pos]
+        assert(e and e.t == t, "bad read at " .. pos)
+        pos = pos + n
+        return e.v
+    end
+    function f:Seek(p) pos = p end
+    function f:Tell() return pos end
+    function f:ReadLong() return take("l", 4) end
+    function f:ReadUShort() return take("u", 2) end
+    function f:ReadFloat() return take("f", 4) end
+    function f:Read(n) return take("s", n) end
+    function f:Close() end
+    return f
+end
+local fixtures, why = LC.ReadStaticFixtures("maps/test.bsp")
+file.Open = realOpen
+ok(fixtures and #fixtures == 2, "the map file's static props are read, and only stoves, sinks and vending machines kept", why or (fixtures and #fixtures))
+ok(fixtures[1].kind == "stove" and fixtures[1].pos.x == 7000 and fixtures[2].kind == "sink" and fixtures[2].pos.x == 7200, "with their positions")
+LC.StaticFixtures = fixtures
+local cook = newPlayer("Cook", "citizen")
+cook:SetPos(Vector(7040, 7000, 0))
+ok(LC.NearHeat(cook) and not LC.NearSink(cook), "standing by a static stove counts as heat")
+cook:SetPos(Vector(7160, 7000, 0))
+ok(LC.NearSink(cook) and not LC.NearHeat(cook), "and by a static sink, as water")
+cook:SetNW2Float("lcn_thirst", 10)
+ok(LC.DrinkFromSink(cook) and LC.Thirst(cook) >= 30, "a sink gives you a drink")
+LC.GiveItem(cook, "bottle_empty")
+LC.InvAction(cook, "fill", "bottle_empty")
+ok(LC.HasItem(cook, "bottle_dirty"), "and fills a bottle (boil it before you drink it)")
+cook:SetPos(Vector(0, 9000, 0))
+ok(not LC.NearSink(cook), "but not from across the room")
+LC.StaticFixtures = {}
 end
 UpdateTests()
 

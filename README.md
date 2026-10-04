@@ -164,7 +164,7 @@ The number is the workplace number in the editor. Shifts pay Credits and Civil S
 - **Breen's Private Reserve** from the vending machines quenches thirst and leaves you dizzy. Sometimes you forget what you were doing, and so does your quest tracker. You keep the empty can.
 - **Bottles and cans:** fill them in water, then boil them over a stove or fire.
 - **Hunting:** birds and headcrabs leave carcasses. Cook them at a stove or burning barrel (any stove, oven or fire already on the map works too). Raw meat is a gamble.
-- **Stoves and vending machines** the map already has work as fixtures: press E on a stove prop to cook, on a vending machine prop to buy a can. (Props baked into the map as static geometry can't be seen by the game; place the editor's fixtures there.)
+- **Stoves, sinks and vending machines** the map already has work as fixtures, including ones baked into the map as static props: the game reads their positions straight from the map file. Stand by a stove to cook (F2). Press E at a sink to drink (a small parasite risk) and fill bottles and cans from your pockets, then boil them. Press E at a vending machine to buy a can. `lc_scanprops` rescans the map and says what it found.
 - **Fists:** everyone has them. One punch kills a bird. A headcrab takes several. People barely notice. Don't go AFK in an alley with headcrabs around.
 - **Ration dispensers** give a ration packet once per allocation (twice as often during distribution), unless your standing is too low.
 
@@ -222,4 +222,4 @@ Stories: `lcq_startchain`, `lcq_story`, `lcq_resetstory`. Debug: `lc_debugreport
 
 ## Honest limits
 
-The server logic and the gamemode's rules are exercised by 462 automated scenario tests, and the client HUD and editor overlay by a smoke test, all against a simulated Garry's Mod (see `_dev/`). Real-game playtesting has only just started, so expect rough edges in anything visual or audible: animations, sounds, menus, HUD layout, and entity models. Send the debug report and they'll get fixed.
+The server logic and the gamemode's rules are exercised by 469 automated scenario tests, and the client HUD and editor overlay by a smoke test, all against a simulated Garry's Mod (see `_dev/`). Real-game playtesting has only just started, so expect rough edges in anything visual or audible: animations, sounds, menus, HUD layout, and entity models. Send the debug report and they'll get fixed.
