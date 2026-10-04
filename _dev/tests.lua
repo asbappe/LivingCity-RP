@@ -2474,6 +2474,26 @@ cellDoor.locked = true
 ok(hook.Run("PlayerUse", warden, cellDoor) == false and cellDoor.fired and cellDoor.fired[#cellDoor.fired - 1] == "Unlock", "a unit's E unlocks and opens it for a moment")
 cellDoor:Remove()
 
+section("Reporting to a unit")
+local reporter = newPlayer("Reporter", "citizen")
+local rn, rst = LC.Spawners.cop(Vector(8800, 8800, 0))
+rst.routeGroup = nil
+rn.sim = false
+local rq = inject(reporter, "cit_loyalty")
+reporter:SetPos(rq.stages[1].pos)
+_run(1)
+ok(LC.QuestWantsCop(reporter), "a loyalty check is about speaking with a unit")
+reporter:SetPos(rn:GetPos() + Vector(50, 0, 0))
+LC.SetState(rn, rst, "idle")
+rst.nextWarn = 0
+reporter.lcBump = nil
+reporter.chat = {}
+_run(6)
+ok(reporter.lcBump == nil and not has(reporter.chat, "Move along"), "and the unit doesn't warn or shove you for walking up to him")
+hook.Run("LivingCityPlayerUsedNPC", reporter, rn, rst)
+ok(rq.stages[rq.stage].kind == "choice" and not rq.done, "reporting to him leads to his question")
+rn:Remove()
+
 section("Getting unstuck")
 local stuck = newPlayer("Stuck", "citizen")
 LC.AddPoint(Vector(8200, 8200, 80), 0, "idle", 0)

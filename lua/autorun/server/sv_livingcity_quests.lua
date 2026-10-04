@@ -1767,6 +1767,14 @@ local function SpawnActor(q, role, pos, holdSecs, keep, want)
     return npc, st
 end
 
+-- True while this player's current job is to speak with a Civil Protection unit,
+-- so units don't treat walking up to one as crowding him.
+function LC.QuestWantsCop(ply)
+    local q = LC.QuestOf and LC.QuestOf[ply]
+    local st = q and not q.done and Stage(q)
+    return st ~= nil and st.kind == "count" and st.event == "used_npc" and st.filter == IsCopNPC
+end
+
 -- Somewhere to stand a person: inside the housing block if pos is a block's center,
 -- else the spot itself.
 local function PersonSpot(pos)

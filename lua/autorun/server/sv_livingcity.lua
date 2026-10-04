@@ -317,7 +317,19 @@ local function BuildFallback()
     if #LC.Fallback == 0 then LC.Source = "none" end
 end
 
-function LC.RandomWanderPos(role)
+-- near: somewhere to stay close to. Wandering NPCs mill around where they are
+-- (same level, within a few streets) instead of setting off across the map,
+-- which on multi-level maps meant routes the engine couldn't walk.
+function LC.RandomWanderPos(role, near)
+    if near then
+        for _ = 1, 25 do
+            local p = LC.RandomWanderPos(role)
+            if p then
+                local dx, dy = p.x - near.x, p.y - near.y
+                if dx * dx + dy * dy < 1600 * 1600 and math.abs(p.z - near.z) < 150 then return p end
+            end
+        end
+    end
     local pools = {}
     if #LC.Fallback > 0 then pools[#pools + 1] = LC.Fallback end
     local nodes = LC.NodePositions and LC.NodePositions(role) or {}
@@ -1191,7 +1203,7 @@ local function ChooseCitizenTask(npc, st, now)
         end
     end
 
-    if not GoTo(npc, st, LC.RandomWanderPos(), false, nil) then st.untilT = now + 5 end
+    if not GoTo(npc, st, LC.RandomWanderPos(nil, npc:GetPos()), false, nil) then st.untilT = now + 5 end
 end
 
 local function ThinkCitizen(npc, st, now)
@@ -1373,7 +1385,7 @@ local function ChooseSecurityTask(npc, st, now)
         local p = Pick(patrols)
         return GoTo(npc, st, p.pos, run, p)
     end
-    if not GoTo(npc, st, LC.RandomWanderPos(st.role), run, nil) then st.untilT = now + 5 end
+    if not GoTo(npc, st, LC.RandomWanderPos(st.role, npc:GetPos()), run, nil) then st.untilT = now + 5 end
 end
 
 local function CalmOne(npc, st, now)
@@ -1491,7 +1503,9 @@ local function ThinkSecurity(npc, st, now)
         if now > st.nextWarn and LC.Event ~= "curfew" and LC.Event ~= "lockdown" then
             for _, ply in ipairs(player.GetAll()) do
                 if ply:Alive() and not LC.PlayerIsCP(ply) and not (LC.DisguisedAsCP and LC.DisguisedAsCP(ply))
-                    and not (LC.Stops and LC.Stops[ply]) and ply:GetPos():DistToSqr(npc:GetPos()) < 90 * 90 then
+                    and not (LC.Stops and LC.Stops[ply]) and (ply.lcCopTalkUntil or 0) < now
+                    and not (LC.QuestWantsCop and LC.QuestWantsCop(ply))
+                    and ply:GetPos():DistToSqr(npc:GetPos()) < 90 * 90 then
                     LC.CopProvoked(npc, st, ply, now)
                     st.nextWarn = now + 4
                     break
@@ -1902,8 +1916,10 @@ hook.Add("PlayerUse", "LivingCityUse", function(ply, ent)
         if LC.PlayerIsCP(ply) or (LC.DisguisedAsCP and LC.DisguisedAsCP(ply)) then
             ent:EmitSound(st.role == "cop" and "npc/metropolice/vo/affirmative.wav" or "npc/combine_soldier/vo/affirmative.wav", 75)
         elseif st.role == "cop" then
+            -- walking up to a unit and pressing E is talking to him, not crowding him
+            ply.lcCopTalkUntil = CurTime() + 12
             if LC.QuestOf and LC.QuestOf[ply] then
-                ent:EmitSound(Pick(COP_WARN), 75) -- probably reporting something; just the usual brush-off
+                ent:EmitSound(Pick({ "npc/metropolice/vo/copy.wav", "npc/metropolice/vo/affirmative.wav", "npc/metropolice/vo/rodgerthat.wav" }), 75) -- probably reporting something: he acknowledges
             else
                 LC.CopProvoked(ent, st, ply, CurTime()) -- pestering a unit is as bad as crowding one
             end
