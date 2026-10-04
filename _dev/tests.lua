@@ -2534,6 +2534,76 @@ ok(LC.CanJoinFaction(tester2, "cp"), "admins can join regardless, to test")
 end
 UpdateTests()
 
+local function RunningTests()
+section("Running in front of Civil Protection")
+_setcvar("lc_stops", 0)
+_setcvar("lc_can_event", 0)
+LC.EndEvent(true)
+local rcop, rst
+for n, st in pairs(LC.NPCs) do
+    if IsValid(n) and st.role == "cop" and not st.questLock and not st.test then rcop, rst = n, st break end
+end
+for n, st in pairs(LC.NPCs) do -- just the one unit around
+    if IsValid(n) and (st.role == "cop" or st.role == "soldier") and n ~= rcop then n:SetPos(Vector(0, -40000, 0)) end
+end
+LC.CalmCops(nil)
+LC.SetState(rcop, rst, "idle")
+rst.untilT, rst.nextInspect, rst.nextWarn = CurTime() + 1000, CurTime() + 1000, CurTime() + 1000
+rcop.sim = false
+local here = rcop:GetPos()
+
+local walker = newPlayer("Walker", "citizen")
+walker:SetPos(here + Vector(300, 0, 0))
+walker.vel = Vector(100, 0, 0)
+_run(2)
+ok(not LC.Runners[walker] and walker:GetNW2Float("lc_shout_until", 0) == 0, "walking past a unit is fine")
+walker.vel = nil
+walker:SetPos(Vector(-30000, 30000, 0))
+
+local sprinter = newPlayer("Sprinter", "citizen")
+sprinter:SetPos(here + Vector(300, 0, 0))
+sprinter.vel = Vector(190, 0, 0)
+_run(0.6)
+ok(LC.Runners[sprinter] and has(sprinter.chat, "Stop running!"), "running past a unit gets a shout", table.concat(sprinter.chat or {}, " | "))
+ok(sprinter:GetNW2Float("lc_shout_until", 0) > CurTime() and sprinter:GetNW2String("lc_shout", "") == "STOP RUNNING!", "and it's on the screen")
+ok(not LC.PlayerIsWanted(sprinter), "you get a moment to stop")
+sprinter.vel = nil
+_run(5)
+ok(not LC.PlayerIsWanted(sprinter), "stopping is the end of it")
+sprinter.vel = Vector(190, 0, 0)
+_run(2)
+ok(LC.PlayerIsWanted(sprinter) and sprinter:GetNW2String("lc_wanted_reason", "") == "Fleeing Civil Protection",
+    "running again while he remembers you: wanted for fleeing")
+ok(rst.state == "hostile" and rst.enemy == sprinter, "and he comes after you", rst.state)
+sprinter.vel = nil
+LC.ClearWanted(sprinter)
+LC.CalmCops(sprinter)
+sprinter:SetPos(Vector(-30000, 30000, 0))
+
+local bolter = newPlayer("Bolter", "citizen")
+LC.SetState(rcop, rst, "idle")
+bolter:SetPos(here + Vector(300, 0, 0))
+bolter.vel = Vector(190, 0, 0)
+_run(4)
+ok(LC.PlayerIsWanted(bolter) and has(bolter.chat, "I said stop running"), "keep running after the shout and he chases you")
+bolter.vel = nil
+LC.ClearWanted(bolter)
+LC.CalmCops(bolter)
+bolter:SetPos(Vector(-30000, 30000, 0))
+
+local unit = newPlayer("RunUnit", "cp")
+LC.SetState(rcop, rst, "idle")
+unit:SetPos(here + Vector(300, 0, 0))
+unit.vel = Vector(190, 0, 0)
+_run(3)
+ok(not LC.Runners[unit] and not LC.PlayerIsWanted(unit), "units can run")
+unit.vel = nil
+unit:SetPos(Vector(-30000, 30000, 0))
+rcop.sim = true
+_setcvar("lc_can_event", 1)
+end
+RunningTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)

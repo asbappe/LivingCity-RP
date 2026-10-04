@@ -584,6 +584,7 @@ end
 local function Evaded(ply, s)
     EndStop(ply, s)
     if IsValid(s.cop) then s.cop:EmitSound("npc/metropolice/vo/holdit.wav", 80) end
+    if LC.CopShout then LC.CopShout(ply, s.cop, "Hold it! Get back here!", 3) end
     ply:ChatPrint("[Civil Protection] You walked away from an inspection.")
     LC.ReportCrime(ply, "Evading inspection", 180)
 end

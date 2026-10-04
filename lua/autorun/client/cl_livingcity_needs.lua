@@ -95,6 +95,16 @@ hook.Add("HUDPaint", "LivingCityUndergroundHUD", function()
         draw.SimpleText("STAND STILL FOR INSPECTION", "DermaLarge", cx, cy, Color(140, 190, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     end
 
+    -- a unit shouting at you
+    local shoutUntil = ply:GetNW2Float("lc_shout_until", 0)
+    if shoutUntil > now then
+        local cx, cy = ScrW() / 2, ScrH() * 0.36
+        local pulse = 0.6 + 0.4 * math.abs(math.sin(now * 8))
+        draw.RoundedBox(4, cx - 260, cy - 28, 520, 56, Color(60, 10, 10, 220))
+        draw.SimpleTextOutlined(ply:GetNW2String("lc_shout", "STOP RUNNING!"), "DermaLarge", cx, cy,
+            Color(255, 70 + 120 * pulse, 70 + 120 * pulse), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_black)
+    end
+
     -- working a lock
     local pickUntil = ply:GetNW2Float("lcu_pick_until", 0)
     if pickUntil > now then

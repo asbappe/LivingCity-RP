@@ -76,6 +76,8 @@ Citizens wander, sit, lean, work at workplaces, chat, queue at ration lines, and
 
 **Prison:** (there's a margin of `lc_prison_buffer` units, 150 by default, around the prison area and 250 around your own cell, so a step over the edge isn't an escape) security NPCs arrest instead of kill, CP players arrest with the Arrest Baton, escaping makes you wanted, and sentences survive death and disconnects. **No cells on the map yet?** Then an arrest happens on the street. You're cuffed and made to kneel for 20 seconds (`lc_street_detention`), searched, fined 25 credits (`lc_street_fine`), and let go with a warning. (Arrests need prison **cell points** placed with the editor; a prison zone around them is optional.)
 
+**Don't run in front of the cops.** A metrocop who sees you sprinting within `lc_run_range` units (500) shouts "STOP RUNNING!", in chat with his name and across the middle of your screen. Stop within `lc_run_react` seconds (2) and that's the end of it. Keep running, or start running again in front of a unit within `lc_run_memory` seconds (30), and you're wanted for fleeing Civil Protection (`lc_run_wanted`, 60 seconds) with the units nearby chasing you. Walking off from a stop-and-search gets the same shout. Units, anyone in a convincing uniform, rebel territory and the curfew grace period (when you're meant to hurry home) are exempt. `lc_running_cops 0` turns it off.
+
 **Giving yourself up:** while you're wanted, walk up to a unit and press E (or type `!surrender` near one). You get half the usual sentence, the search is called off, and serving it pays back more of your Civil Standing.
 
 ### Escalation
