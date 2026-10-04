@@ -245,7 +245,8 @@ local function Inspect(ply, trace)
         return true
     end
     local route = LC.BuildRoute and LC.BuildRoute(ply:GetPos(), trace.HitPos, "citizen")
-    Tell(ply, route and string.format("Nothing here. A citizen would get here from you in %d path hops.", #route - 1)
+    Tell(ply, route == false and "Nothing here. A citizen couldn't walk here from where you are (not connected in the map's navigation)."
+        or route and string.format("Nothing here. A citizen would get here from you in %d legs.", #route)
         or "Nothing here. A citizen would walk here using the map's own navigation.")
     return true
 end

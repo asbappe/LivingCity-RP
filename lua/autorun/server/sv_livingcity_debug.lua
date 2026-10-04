@@ -186,7 +186,16 @@ function LC.BuildReport()
     for k, c in SortedPairs(byState) do sl[#sl + 1] = k .. " " .. c end
     out[#out + 1] = "by role: " .. (#rl > 0 and table.concat(rl, ", ") or "none")
     out[#out + 1] = "by state: " .. (#sl > 0 and table.concat(sl, ", ") or "none")
-    out[#out + 1] = "stuck recoveries since load: " .. (LC.StuckCount or 0)
+    local reasons = {}
+    for k, c in SortedPairs(LC.StuckReasons or {}) do reasons[#reasons + 1] = k .. " " .. c end
+    out[#out + 1] = string.format("stuck: %d moved on a step, %d far trips given up%s", LC.StuckCount or 0, LC.GaveUp or 0,
+        #reasons > 0 and (" (" .. table.concat(reasons, ", ") .. ")") or "")
+    local ns = LC.NavStats
+    local bad = 0
+    for _, b in pairs(LC.BadDest or {}) do if b.n >= 2 and b.untilT > CurTime() then bad = bad + 1 end end
+    out[#out + 1] = string.format("routes: %s, %d trips not started (unreachable), %d places skipped as hard to reach",
+        ns and string.format("%d planned over the nodegraph, %d short enough to walk direct", ns.routes, ns.direct) or "no nodegraph links",
+        LC.UnreachableSkips or 0, bad)
     for _, r in ipairs(rows) do out[#out + 1] = r end
 
     Section(out, "Performance")

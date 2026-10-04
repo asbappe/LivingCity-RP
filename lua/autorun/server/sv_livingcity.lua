@@ -251,48 +251,121 @@ end
 ------------------------------------------------------------------------
 
 -- Reads ground nodes from the map's AI nodegraph (.ain), if the mapper placed nodes.
--- The engine sorts nodes into zones: nodes in the same zone are connected to
--- each other. Big maps have plenty of nodes NPCs can never walk to (rooftops,
--- sealed interiors, lone nodes), so only the largest connected area is used.
+-- Big maps have plenty of nodes NPCs can never walk to (rooftops, sealed
+-- interiors, lone nodes), so only the largest connected area is used.
 -- Otherwise people constantly set off for places they can't reach.
+--
+-- The file also lists the links between nodes, and which body sizes can walk
+-- each one. Those for a person on foot become LC.NavGraph, which
+-- sv_livingcity_navgraph.lua plans routes over: the engine is then only asked
+-- to walk short legs, which it manages, instead of crossing the map in one go,
+-- which on multi-level maps it often can't. Without links (older files), the
+-- engine's own zones decide what's connected.
 local AI_NODE_FIRST_ZONE = 4
+local NUM_HULLS, HULL_HUMAN, CAP_MOVE_GROUND = 10, 0, 1
 
 local function ReadNodegraph()
+    LC.NavGraph = nil
     local f = file.Open("maps/graphs/" .. game.GetMap() .. ".ain", "rb", "GAME")
     if not f then return {}, nil end
-    local nodes = {}
+    local nodes, byIndex = {}, {}
+    local links
     local ok = pcall(function()
         if f:ReadLong() ~= 37 then error("unsupported nodegraph version") end
         f:ReadLong() -- map revision
         local n = f:ReadLong()
         if n <= 0 or n > 20000 then error("bad node count") end
-        for _ = 1, n do
+        for i = 0, n - 1 do
             local x, y, z = f:ReadFloat(), f:ReadFloat(), f:ReadFloat()
             f:ReadFloat()                         -- yaw
-            for _ = 1, 10 do f:ReadFloat() end    -- hull offsets
+            for _ = 1, NUM_HULLS do f:ReadFloat() end -- hull offsets
             local nodeType = f:ReadByte()
             f:ReadUShort()                        -- info
             local zone = f:ReadShort()
-            if nodeType == 2 then nodes[#nodes + 1] = { pos = Vector(x, y, z), zone = zone } end -- ground node
+            if nodeType == 2 then -- ground node
+                local nd = { pos = Vector(x, y, z), zone = zone, adj = {} }
+                nodes[#nodes + 1] = nd
+                byIndex[i] = nd
+            end
         end
+        -- the links: whoever can walk between which nodes
+        local okL = pcall(function()
+            local count = f:ReadLong()
+            if not count or count < 0 or count > 200000 then error("no links") end
+            local list = {}
+            for _ = 1, count do
+                local a, b = f:ReadShort(), f:ReadShort()
+                local moves = 0
+                for h = 0, NUM_HULLS - 1 do
+                    local m = f:ReadByte()
+                    if h == HULL_HUMAN then moves = m end
+                end
+                list[#list + 1] = { a, b, moves }
+            end
+            links = list
+        end)
+        if not okL then links = nil end
     end)
     f:Close()
     if not ok then return {}, nil end
 
-    local counts = {}
-    for _, nd in ipairs(nodes) do
-        if nd.zone >= AI_NODE_FIRST_ZONE then counts[nd.zone] = (counts[nd.zone] or 0) + 1 end
+    local main
+    if links then
+        local walkable = 0
+        for _, l in ipairs(links) do
+            local a, b = byIndex[l[1]], byIndex[l[2]]
+            if a and b and bit.band(l[3], CAP_MOVE_GROUND) ~= 0 then
+                local d = a.pos:Distance(b.pos)
+                a.adj[#a.adj + 1] = { b, d }
+                b.adj[#b.adj + 1] = { a, d }
+                walkable = walkable + 1
+            end
+        end
+        -- connected areas for a person on foot
+        local comps, sizes = 0, {}
+        for _, nd in ipairs(nodes) do
+            if not nd.comp then
+                comps = comps + 1
+                nd.comp = comps
+                local stack, size = { nd }, 0
+                while #stack > 0 do
+                    local cur = table.remove(stack)
+                    size = size + 1
+                    for _, e in ipairs(cur.adj) do
+                        if not e[1].comp then e[1].comp = comps; stack[#stack + 1] = e[1] end
+                    end
+                end
+                sizes[comps] = size
+            end
+        end
+        local best, bestN = nil, 0
+        for c, size in pairs(sizes) do if size > bestN then best, bestN = c, size end end
+        if walkable > 0 and best and bestN >= 20 then
+            main = best
+            LC.NavGraph = { nodes = nodes, main = main, links = walkable }
+        end
     end
-    local best, bestN = nil, 0
-    for zone, c in pairs(counts) do if c > bestN then best, bestN = zone, c end end
+
     local pts = {}
-    -- only trust the zones if the main area is a real share of the map
-    if best and bestN >= math.max(20, #nodes * 0.25) then
-        for _, nd in ipairs(nodes) do if nd.zone == best then pts[#pts + 1] = nd.pos end end
+    if main then
+        for _, nd in ipairs(nodes) do if nd.comp == main then pts[#pts + 1] = nd.pos end end
     else
-        for _, nd in ipairs(nodes) do pts[#pts + 1] = nd.pos end
+        local counts = {}
+        for _, nd in ipairs(nodes) do
+            if nd.zone >= AI_NODE_FIRST_ZONE then counts[nd.zone] = (counts[nd.zone] or 0) + 1 end
+        end
+        local best, bestN = nil, 0
+        for zone, c in pairs(counts) do if c > bestN then best, bestN = zone, c end end
+        -- only trust the zones if the main area is a real share of the map
+        if best and bestN >= math.max(20, #nodes * 0.25) then
+            for _, nd in ipairs(nodes) do if nd.zone == best then pts[#pts + 1] = nd.pos end end
+        else
+            for _, nd in ipairs(nodes) do pts[#pts + 1] = nd.pos end
+        end
     end
-    return pts, string.format("%d of %d ground nodes, in the main connected area", #pts, #nodes)
+    if LC.NavGraphReady then LC.NavGraphReady() end
+    return pts, string.format("%d of %d ground nodes, in the main connected area%s", #pts, #nodes,
+        LC.NavGraph and string.format(" (%d walkable links, routes planned over them)", LC.NavGraph.links) or "")
 end
 
 local function ReadNavmesh()
@@ -326,7 +399,10 @@ function LC.RandomWanderPos(role, near)
             local p = LC.RandomWanderPos(role)
             if p then
                 local dx, dy = p.x - near.x, p.y - near.y
-                if dx * dx + dy * dy < 1600 * 1600 and math.abs(p.z - near.z) < 150 then return p end
+                if dx * dx + dy * dy < 1600 * 1600 and math.abs(p.z - near.z) < 150
+                    and not (LC.DestIsBad and LC.DestIsBad(p)) and (not LC.NavReachable or LC.NavReachable(near, p)) then
+                    return p
+                end
             end
         end
     end
@@ -341,7 +417,7 @@ function LC.RandomWanderPos(role, near)
     for _ = 1, 12 do
         local pool = pools[math.random(#pools)]
         local pos = pool[math.random(#pool)]
-        if not LC.InNoGo or not LC.InNoGo(pos, role) then return pos end
+        if (not LC.InNoGo or not LC.InNoGo(pos, role)) and not (LC.DestIsBad and LC.DestIsBad(pos)) then return pos end
     end
     return nil
 end
@@ -383,11 +459,32 @@ local function IssueHop(npc, st)
     npc:SetSchedule(st.run and SCHED_FORCED_GO_RUN or SCHED_FORCED_GO)
 end
 
+-- Places that walkers keep failing to reach: skipped for a while when choosing
+-- where to go. Keyed by a 64-unit grid square.
+LC.BadDest = LC.BadDest or {}
+local function DestKey(pos) return math.floor(pos.x / 64) .. ":" .. math.floor(pos.y / 64) .. ":" .. math.floor(pos.z / 64) end
+function LC.DestIsBad(pos)
+    local b = LC.BadDest[DestKey(pos)]
+    return b ~= nil and b.n >= 2 and b.untilT > CurTime()
+end
+local function MarkBadDest(pos)
+    local k = DestKey(pos)
+    local b = LC.BadDest[k] or { n = 0 }
+    b.n, b.untilT = b.n + 1, CurTime() + 600
+    LC.BadDest[k] = b
+end
+
 function LC.GoTo(npc, st, pos, run, poi)
     if not pos or not IsValid(npc) then return false end
     local now = CurTime()
+    local route = LC.BuildRoute and LC.BuildRoute(npc:GetPos(), pos, st.role)
+    if route == false then
+        -- nowhere they can walk to from here: don't set off at all
+        LC.UnreachableSkips = (LC.UnreachableSkips or 0) + 1
+        return false
+    end
     st.dest, st.poi, st.run = pos, poi, run
-    st.route = (LC.BuildRoute and LC.BuildRoute(npc:GetPos(), pos, st.role)) or { pos }
+    st.route = route or { pos }
     st.hop = 1
     st.hopTries = 0
     st.giveUp = now + 30 + 12 * #st.route
@@ -426,10 +523,11 @@ local function HandleMoving(npc, st, now)
         end
         st.hopTries = st.hopTries + 1
         if st.hopTries <= 2 then return IssueHop(npc, st) end
-        return Recover(npc, st, now)
+        return Recover(npc, st, now, "engine found no path")
     end
 
-    if now - st.lastMoved > 7 or now > st.giveUp then return Recover(npc, st, now) end
+    if now - st.lastMoved > 7 then return Recover(npc, st, now, "no progress") end
+    if now > st.giveUp then return Recover(npc, st, now, "took too long") end
 end
 
 ------------------------------------------------------------------------
@@ -736,18 +834,28 @@ timer.Create("LivingCityStuckSummary", 60, 0, function()
     stuckLogged, stuckQuiet = 0, {}
 end)
 
-function Recover(npc, st, now)
+-- Someone who isn't getting anywhere. If nobody's watching and the place they
+-- were heading for is close (a prop in the way, a doorframe), they're quietly
+-- put there. A far one isn't: popping people across the map is worse than the
+-- trip being given up, so they give it up, and that place is remembered as
+-- hard to reach so it isn't picked again straight away.
+local TELEPORT_MAX = 700
+
+function Recover(npc, st, now, why)
     if st.test then return LC.TestStuck(npc, st, now) end
     st.recoveries = (st.recoveries or 0) + 1
+    LC.StuckReasons = LC.StuckReasons or {}
+    LC.StuckReasons[why or "no progress"] = (LC.StuckReasons[why or "no progress"] or 0) + 1
     local target = st.route[st.hop]
     local unseen = not LC.IsSeen(npc:GetPos() + UP)
+    local close = npc:GetPos():DistToSqr(target) < TELEPORT_MAX * TELEPORT_MAX
 
-    -- nobody's looking: quietly put them where they were trying to go
-    if unseen and not LC.IsSeen(target + UP) and ClearSpot(target) then
+    -- nobody's looking and it's just a step away: put them there
+    if close and unseen and not LC.IsSeen(target + UP) and ClearSpot(target) then
         if stuckLogged < 5 then
             stuckLogged = stuckLogged + 1
-            LC.Log("warn", string.format("%s stuck near %s, moved to hop %d/%d (%s)", st.role,
-                tostring(npc:GetPos()), st.hop, #st.route, tostring(target)))
+            LC.Log("warn", string.format("%s stuck near %s (%s), moved on to hop %d/%d (%s)", st.role,
+                tostring(npc:GetPos()), why or "no progress", st.hop, #st.route, tostring(target)))
         else
             stuckQuiet[st.role] = (stuckQuiet[st.role] or 0) + 1
         end
@@ -764,6 +872,10 @@ function Recover(npc, st, now)
         return
     end
 
+    if not close and st.dest then
+        MarkBadDest(st.dest)
+        LC.GaveUp = (LC.GaveUp or 0) + 1
+    end
     AbandonTask(npc, st, now)
 end
 
@@ -817,6 +929,7 @@ function Arrive(npc, st, now)
     local poi = st.poi
     SetState(npc, st, "idle")
     st.recoveries = 0
+    if st.dest then LC.BadDest[DestKey(st.dest)] = nil end
     if st.test then return LC.TestArrived(npc, st, now) end
     if not poi then st.untilT = now + math.Rand(3, 10) return end
     FaceYaw(npc, poi.yaw)

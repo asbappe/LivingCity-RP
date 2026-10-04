@@ -1775,6 +1775,81 @@ for _, p in ipairs(LC.Fallback) do if p.y >= 4000 then anyRoof = true end end
 ok(not anyRoof, "no rooftops or air nodes to get stuck walking to")
 ok(string.find(LC.SourceDetail or "", "60 of 69", 1, true) ~= nil, "and the report says how many were kept", LC.SourceDetail)
 _files["maps/graphs/rp_test.ain"] = nil
+
+-- a nodegraph with links: routes are planned over it, in short legs
+local function ainLinked(nds, lks)
+    local size = 12 + #nds * (14 * 4 + 1 + 2 + 2) + 4 + #lks * (2 + 2 + 10)
+    local buf = ffi.new("uint8_t[?]", size)
+    local pos = 0
+    local function put(t, n, v) ffi.cast(t .. "*", buf + pos)[0] = v pos = pos + n end
+    put("int32_t", 4, 37) put("int32_t", 4, 1) put("int32_t", 4, #nds)
+    for _, nd in ipairs(nds) do
+        put("float", 4, nd[1]) put("float", 4, nd[2]) put("float", 4, nd[3]) put("float", 4, 0)
+        for _ = 1, 10 do put("float", 4, 0) end
+        put("uint8_t", 1, 2) put("uint16_t", 2, 0) put("int16_t", 2, 4)
+    end
+    put("int32_t", 4, #lks)
+    for _, l in ipairs(lks) do
+        put("int16_t", 2, l[1]) put("int16_t", 2, l[2])
+        for h = 0, 9 do put("uint8_t", 1, h == 0 and (l[3] or 1) or 1) end
+    end
+    return ffi.string(buf, size)
+end
+local G, L2 = {}, {}
+local function addNode(x, y, z) G[#G + 1] = { x, y, z } return #G - 1 end
+local street = {}
+for i = 0, 29 do street[i] = addNode(20000 + i * 150, 20000, 0) end           -- a long street
+for i = 1, 29 do L2[#L2 + 1] = { street[i - 1], street[i] } end
+local stairs = {}
+for i = 1, 6 do stairs[i] = addNode(20000 + 29 * 150, 20000 + i * 100, i * 40) end -- up a flight of stairs
+L2[#L2 + 1] = { street[29], stairs[1] }
+for i = 2, 6 do L2[#L2 + 1] = { stairs[i - 1], stairs[i] } end
+local upper = {}
+for i = 0, 9 do upper[i] = addNode(20000 + 29 * 150 - i * 150, 20700, 240) end -- the floor above
+L2[#L2 + 1] = { stairs[6], upper[0] }
+for i = 1, 9 do L2[#L2 + 1] = { upper[i - 1], upper[i] } end
+local sealed = {}
+for i = 0, 7 do sealed[i] = addNode(30000 + i * 150, 30000, 0) end              -- a sealed room
+for i = 1, 7 do L2[#L2 + 1] = { sealed[i - 1], sealed[i] } end
+local vent = addNode(20000, 19800, 0)                                         -- a vent: only small hulls fit
+L2[#L2 + 1] = { street[0], vent, 0 }
+_files["maps/graphs/rp_test.ain"] = ainLinked(G, L2)
+LC.Start(admin)
+ok(LC.NavGraph and LC.NavGraph.links == #L2 - 1, "the nodegraph's links are read, for people on foot", LC.NavGraph and LC.NavGraph.links)
+ok(#LC.Fallback == 46 and (LC.SourceDetail or ""):find("walkable links", 1, true), "only the area people can walk around is used for wandering", #LC.Fallback)
+local A, B = Vector(20000, 20000, 0), Vector(20000 + 29 * 150 - 9 * 150, 20700, 240)
+local route = LC.NavRoute(A, B, "citizen")
+local longest, prev, sawStairs = 0, A, false
+for _, p in ipairs(route or {}) do
+    longest = math.max(longest, p:Distance(prev)) prev = p
+    if p.z > 30 and p.z < 240 then sawStairs = true end
+end
+ok(route and #route >= 8 and route[#route] == B, "a long trip is planned as a string of short legs", route and #route)
+ok(longest <= 480, "none of them more than a few hundred units", longest)
+ok(sawStairs, "with a stop on the stairs, not a straight line through the ceiling")
+ok(LC.NavRoute(A, Vector(30500, 30000, 0), "citizen") == false, "a sealed room can't be reached")
+ok(LC.NavRoute(A, Vector(20000, 19800, 0), "citizen") == false, "nor somewhere only a small hull fits")
+local wanderer, wst = LC.SpawnCitizen(A + Vector(0, 0, 4))
+wanderer.sim = false
+LC.SetState(wanderer, wst, "idle")
+ok(LC.GoTo(wanderer, wst, Vector(30500, 30000, 0), false, nil) == false and wst.state == "idle", "so nobody sets off for it")
+local farAway = false
+for _ = 1, 200 do
+    local p = LC.RandomWanderPos("citizen", A)
+    if p and p.x >= 29000 then farAway = true end
+end
+ok(not farAway, "and wandering never picks it")
+-- stuck on the way somewhere far: they give up rather than pop across the map
+LC.GoTo(wanderer, wst, B, false, nil)
+local startPos = wanderer:GetPos()
+wst.hop = #wst.route -- pretend they're on the last leg, still far from it
+wst.lastMoved = CurTime() - 10
+wanderer.sched = nil
+_run(4)
+ok(wanderer:GetPos():DistToSqr(startPos) < 50 * 50 and wst.state ~= "moving", "someone stuck far from where they're going isn't teleported there", wst.state)
+LC.StuckReasons = nil
+wanderer:Remove()
+_files["maps/graphs/rp_test.ain"] = nil
 LC.Start(admin)
 
 ----------------------------------------------------------------------
@@ -2658,9 +2733,13 @@ ok(not okAgain and whyAgain:find("moment ago", 1, true), "not twice in a row")
 ok(LC.ArrestNPC(suspect, officer), "right click detains them")
 ok(sst.state == "detained", "cuffed for a moment first")
 _run(2)
-ok(sst.state == "jailed" and suspect:GetPos():DistToSqr(cellPt.pos) < 20 * 20, "then they're in a cell, without having to walk past locked doors", sst.state)
+local inCell = false
+for _, cp in ipairs(LC.PointsOfKind("cell")) do if suspect:GetPos():DistToSqr(cp.pos) < 20 * 20 then inCell = true end end
+ok(sst.state == "jailed" and inCell, "then they're in a cell, without having to walk past locked doors", sst.state)
 LC.ReleaseNPCPrisoner(suspect, sst, CurTime())
-ok(sst.state == "idle" and suspect:GetPos():DistToSqr(relPt.pos) < 20 * 20, "and let out at the release point")
+local atRelease = false
+for _, rp2 in ipairs(LC.PointsOfKind("release")) do if suspect:GetPos():DistToSqr(rp2.pos) < 20 * 20 then atRelease = true end end
+ok(sst.state == "idle" and atRelease, "and let out at the release point")
 local clean, cst2 = LC.Spawners.citizen(Vector(-11000, 11500, 0))
 clean.sim = false
 cst2.rebel = false

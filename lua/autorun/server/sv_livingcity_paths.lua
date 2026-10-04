@@ -222,9 +222,20 @@ local function AStar(start, goal, avoidRebel, avoidCombine)
 end
 LC._AStar = AStar -- exposed for testing
 
--- Returns a list of positions to walk through (ending at `to`), or nil to walk
--- there directly with the engine's own pathfinding.
+local EditorRoute
+
+-- Returns a list of positions to walk through (ending at `to`), nil to walk
+-- there directly with the engine's own pathfinding, or false when the map's
+-- nodegraph says it can't be reached from here.
 function LC.BuildRoute(from, to, role)
+    -- the drawn path network first; where it has nothing to offer, the map's own nodegraph
+    local route = EditorRoute(from, to, role)
+    if route then return route end
+    if LC.NavRoute then return LC.NavRoute(from, to, role) end
+    return nil
+end
+
+function EditorRoute(from, to, role)
     if #usableList < 2 then return nil end
     if from:DistToSqr(to) < 450 * 450 and LC.Walkable(from, to) then return nil end
 
