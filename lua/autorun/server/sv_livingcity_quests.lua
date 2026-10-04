@@ -410,7 +410,7 @@ local function Finish(q, success, why)
     for _, e in ipairs(q.ents) do
         if IsValid(e) then
             local est = LC.NPCs[e]
-            if est and (est.state == "escorted" or est.state == "jailed") then
+            if est and (est.state == "escorted" or est.state == "jailed" or est.jailUntil) then
                 -- an arrested story character stays in the world and serves their sentence
                 est.unmanaged = nil
                 est.leaveAt = CurTime() + 600
@@ -773,7 +773,7 @@ function LC.QuestEvent(name, ply, a, b)
             Advance(q)
         elseif st.action == "free" and name == "used_npc" then
             local nst = LC.NPCs[st.npc]
-            if nst and (nst.state == "jailed" or nst.state == "escorted") then
+            if nst and (nst.state == "jailed" or nst.state == "escorted" or nst.jailUntil) then
                 LC.Release(st.npc, nst)
                 nst.jailUntil = nil
                 Freeze(st.npc, 5)

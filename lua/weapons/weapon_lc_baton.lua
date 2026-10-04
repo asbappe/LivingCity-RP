@@ -90,7 +90,7 @@ function SWEP:SecondaryAttack()
         Tell(owner, done and (ent:Nick() .. " is in custody.") or ("Couldn't arrest: " .. tostring(err)))
     elseif LC.NPCs and LC.NPCs[ent] then
         local done, err = LC.ArrestNPC(ent, owner)
-        Tell(owner, done and "Citizen detained. They'll walk themselves to a cell." or ("Couldn't arrest: " .. tostring(err)))
+        Tell(owner, done and "Citizen detained. They're taken to a cell." or ("Couldn't arrest: " .. tostring(err)))
     end
 end
 
@@ -101,7 +101,14 @@ function SWEP:Reload()
     local owner = self:GetOwner()
     if not IsValid(owner) or not LC or not LC.BatonMayArrest or not LC.BatonMayArrest(owner) then return end
     local ent = MeleeTrace(owner).Entity
-    if not IsValid(ent) or not ent:IsPlayer() then return end
+    if not IsValid(ent) then return end
+    if not ent:IsPlayer() then
+        if LC.NPCs and LC.NPCs[ent] and LC.StartSearch then
+            local ok, why = LC.StartSearch(owner, ent)
+            if not ok and why then Tell(owner, why) end
+        end
+        return
+    end
     if LC.Prisoners[ent] then
         LC.ReleasePrisoner(ent)
         Tell(owner, ent:Nick() .. " released.")

@@ -474,7 +474,56 @@ function LC.Search(searcher, target)
 end
 
 -- A unit searches the person in front of them: three seconds of standing still.
+-- What a citizen on the street might be carrying. Sympathizers are far likelier to have something.
+local NPC_CONTRABAND = {
+    "a Resistance pamphlet", "an unregistered radio", "black market rations", "a crowbar wrapped in newspaper",
+    "a lambda armband", "forged ration coupons", "a handful of pistol rounds",
+}
+
+-- A unit patting down an NPC citizen: they stop, hands out, and after a few
+-- seconds you hear what was on them.
+function LC.SearchNPC(cop, npc)
+    local st = LC.NPCs and LC.NPCs[npc]
+    if not st or st.role ~= "citizen" then return false, "You can only search citizens." end
+    if st.state == "jailed" or st.state == "escorted" or st.questLock or st.state == "exiting" then return false, "Not now." end
+    if npc:GetPos():DistToSqr(cop:GetPos()) > 120 * 120 then return false, "Get closer." end
+    local now = CurTime()
+    if (st.searchedAt or -1e9) + 120 > now and not cop:IsAdmin() then return false, "You searched them a moment ago." end
+    if st.beingSearched then return false, "They're already being searched." end
+    st.searchedAt, st.beingSearched = now, true
+    if LC.LeaveLine then LC.LeaveLine(npc, st) end
+    if IsValid(st.ss) then st.ss:Fire("CancelSequence") st.ss:Remove() st.ss = nil end
+    LC.Release(npc, st)
+    npc:SetSchedule(SCHED_IDLE_STAND)
+    LC.SetState(npc, st, "detained")
+    st.untilT = now + 8
+    LC.Face(npc, cop:GetPos())
+    if LC.PlayGesture and LC.FRISKED_ANIMS then LC.PlayGesture(npc, LC.FRISKED_ANIMS, 4) end
+    cop:EmitSound("npc/metropolice/vo/apply.wav", 65)
+    cop:ChatPrint("[Search] Patting them down...")
+    timer.Simple(3, function()
+        if not IsValid(npc) or not LC.NPCs[npc] then return end
+        st.beingSearched = nil
+        if not IsValid(cop) or not cop:Alive() then return end
+        if math.random() < (st.rebel and 0.5 or 0.1) then
+            st.contraband = Pick(NPC_CONTRABAND)
+            npc:EmitSound(LC.Sounds and LC.Sounds.Vo(st.gender or "male", "no02") or "", 70)
+            cop:ChatPrint("[Search] Found " .. st.contraband .. ". Confiscated. Right click with the baton to detain them.")
+            if LC.AddXP then LC.AddXP(cop, 3, "search") end
+            st.untilT = CurTime() + 15 -- they stay put a while, waiting to see what you'll do
+        else
+            cop:ChatPrint("[Search] Nothing on them. Papers in order.")
+            st.untilT = CurTime() + 1.5
+        end
+    end)
+    return true
+end
+
 function LC.StartSearch(cop, target)
+    if IsValid(target) and LC.NPCs and LC.NPCs[target] then
+        if not (LC.PlayerIsCP(cop) or cop:IsAdmin()) then return false, "Only units can search people." end
+        return LC.SearchNPC(cop, target)
+    end
     if not IsValid(cop) or not IsValid(target) or not target:IsPlayer() then return false, "Search who?" end
     if not (LC.PlayerIsCP(cop) or cop:IsAdmin()) then return false, "Only units can search people." end
     if not target:Alive() or (LC.Prisoners and LC.Prisoners[target]) then return false, "Not now." end

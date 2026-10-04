@@ -389,20 +389,23 @@ function LC.OnNPCReachedCell(npc, st, now)
     st.untilT = st.jailUntil or (now + 90)
 end
 
+-- Cells sit behind doors that lock themselves, which NPCs can't walk through,
+-- so prisoners are moved in and out the way players are: put straight there.
 function LC.ReleaseNPCPrisoner(npc, st, now)
     LC.Release(npc, st)
     st.jailUntil = nil
     local rel = LC.PointsOfKind("release")
     if #rel > 0 then
         local p = LC.Pick(rel)
-        LC.GoTo(npc, st, p.pos, false, p)
-    else
-        LC.SetState(npc, st, "idle")
-        st.untilT = now + 1
+        npc:SetPos(p.pos + Vector(0, 0, 4))
+        if LC.FaceYaw and p.yaw then LC.FaceYaw(npc, p.yaw) end
     end
+    LC.SetState(npc, st, "idle")
+    st.untilT = now + math.Rand(2, 5)
 end
 
--- Used by the Arrest Baton on NPC citizens.
+-- Used by the Arrest Baton on NPC citizens (and by quests): cuffed, then a
+-- moment later they're in a cell, the same way an arrested player is.
 function LC.ArrestNPC(npc, arrester)
     local st = LC.NPCs[npc]
     if not st or st.role ~= "citizen" then return false, "only citizens can be arrested" end
@@ -410,11 +413,21 @@ function LC.ArrestNPC(npc, arrester)
     if not cell then return false, "no free cell" end
     if LC.LeaveLine then LC.LeaveLine(npc, st) end
     if IsValid(st.ss) then st.ss:Fire("CancelSequence"); st.ss:Remove(); st.ss = nil end
+    LC.Release(npc, st)
     LC.Claim(npc, st, cell)
     st.jailUntil = CurTime() + math.Rand(90, 240)
+    st.contraband = nil
     npc:EmitSound(LC.Sounds.Vo(st.gender or "male", "no02"), 70)
-    LC.GoTo(npc, st, cell.pos, false, cell)
-    LC.SetState(npc, st, "escorted")
+    npc:SetSchedule(SCHED_IDLE_STAND)
+    LC.SetState(npc, st, "detained") -- cuffed, standing still
+    st.untilT = CurTime() + 10
+    st.poi = cell
+    timer.Simple(1.5, function()
+        if not IsValid(npc) or LC.NPCs[npc] ~= st or st.state ~= "detained" then return end
+        npc:SetPos(cell.pos + Vector(0, 0, 4))
+        if LC.FaceYaw and cell.yaw then LC.FaceYaw(npc, cell.yaw) end
+        LC.OnNPCReachedCell(npc, st, CurTime())
+    end)
     hook.Run("LivingCityIncarcerated", npc, st.jailUntil - CurTime(), "NPC arrest", arrester)
     return true
 end

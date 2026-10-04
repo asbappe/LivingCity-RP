@@ -2632,6 +2632,48 @@ ok(LC.CanJoinFaction(tester2, "cp"), "admins can join regardless, to test")
 end
 UpdateTests()
 
+local function NPCArrestTests()
+section("Searching and arresting citizens on the street")
+local function forceRandom(v, fn)
+    local r = math.random
+    math.random = function(a, b) if a == nil then return v end if b == nil then return r(a) end return r(a, b) end
+    local okr, err = pcall(fn)
+    math.random = r
+    if not okr then error(err) end
+end
+local officer = newPlayer("Officer", "cp")
+local cellPt = LC.AddPoint(Vector(-12000, 12000, 0), 90, "cell", 0)
+local relPt = LC.AddPoint(Vector(-12500, 12000, 0), 0, "release", 0)
+local suspect, sst = LC.Spawners.citizen(Vector(-11000, 11000, 0))
+suspect.sim = false
+officer:SetPos(suspect:GetPos() + Vector(60, 0, 0))
+hook.Run("PlayerUse", officer, suspect)
+ok(sst.state == "detained" and has(officer.chat, "R to search them"), "pressing E stops them, and tells a unit what they can do next")
+sst.rebel = true
+LC.StartSearch(officer, suspect)
+forceRandom(0.01, function() _run(3.5) end)
+ok(sst.contraband and has(officer.chat, "Found "), "R with the baton searches a citizen, and finds what a sympathizer carries", table.concat(officer.chat, " | "))
+local okAgain, whyAgain = LC.StartSearch(officer, suspect)
+ok(not okAgain and whyAgain:find("moment ago", 1, true), "not twice in a row")
+ok(LC.ArrestNPC(suspect, officer), "right click detains them")
+ok(sst.state == "detained", "cuffed for a moment first")
+_run(2)
+ok(sst.state == "jailed" and suspect:GetPos():DistToSqr(cellPt.pos) < 20 * 20, "then they're in a cell, without having to walk past locked doors", sst.state)
+LC.ReleaseNPCPrisoner(suspect, sst, CurTime())
+ok(sst.state == "idle" and suspect:GetPos():DistToSqr(relPt.pos) < 20 * 20, "and let out at the release point")
+local clean, cst2 = LC.Spawners.citizen(Vector(-11000, 11500, 0))
+clean.sim = false
+cst2.rebel = false
+officer:SetPos(clean:GetPos() + Vector(60, 0, 0))
+LC.StartSearch(officer, clean)
+forceRandom(0.99, function() _run(3.5) end)
+ok(has(officer.chat, "Nothing on them"), "most people have nothing on them")
+suspect:Remove() clean:Remove()
+LC.RemovePoint(cellPt) LC.RemovePoint(relPt)
+officer:SetPos(Vector(-30000, 30000, 0))
+end
+NPCArrestTests()
+
 local function RunningTests()
 section("Running in front of Civil Protection")
 _setcvar("lc_stops", 0)

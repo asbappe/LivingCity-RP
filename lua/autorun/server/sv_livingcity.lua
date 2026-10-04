@@ -1285,22 +1285,17 @@ local function TryStartInspection(cop, cst, now)
     end
 end
 
--- Walk a detained citizen to a free cell, with the cop following behind.
+-- Take a detained citizen in. Cells are behind locked doors, so like an
+-- arrested player they're put straight in one (see LC.ArrestNPC).
 local function TryArrestCitizen(cop, cst, cit, ist, now)
     if math.random(100) > cvArrestChance:GetInt() then return false end
-    local cells = FreePoints({ cell = true }, cit)
-    if #cells == 0 then return false end
-    local cell = Pick(cells)
-    Claim(cit, ist, cell)
+    if not LC.ArrestNPC then return false end
     cop:EmitSound(Pick(COP_ARREST), 75)
     cit:EmitSound(Vo(ist.gender, Pick(CIT_PROTEST)), 70)
-    ist.jailUntil = now + math.Rand(60, 180)
-    GoTo(cit, ist, cell.pos, false, cell)
-    SetState(cit, ist, "escorted")
+    if not LC.ArrestNPC(cit, nil) then return false end
     cst.subject = nil
-    cst.escortee = cit
-    cst.escortUntil = now + 120
-    SetState(cop, cst, "escort")
+    SetState(cop, cst, "idle")
+    cst.untilT = now + math.Rand(2, 5)
     return true
 end
 
@@ -1904,6 +1899,10 @@ hook.Add("PlayerUse", "LivingCityUse", function(ply, ent)
             -- a Civil Protection player stops a citizen: they freeze and apologise
             ent:EmitSound(Vo(st.gender, Pick(CIT_NERVOUS)), 70)
             SetState(ent, st, "detained"); st.untilT = CurTime() + 10
+            if (ply.lcStopHintAt or 0) < CurTime() then
+                ply.lcStopHintAt = CurTime() + 300
+                ply:ChatPrint("[Civil Protection] Stopped. With the Arrest Baton out: R to search them, right click to detain.")
+            end
         else
             ent:EmitSound(Vo(st.gender, Pick(CIT_GREET)), 70)
             SetState(ent, st, "idle"); st.untilT = CurTime() + 4
