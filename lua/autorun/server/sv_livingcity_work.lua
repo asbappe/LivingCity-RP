@@ -229,10 +229,11 @@ SHIFTS.kitchen = {
         if not truck or not dest then return nil end
         return {
             title = "Supply run", reward = 20, limit = 480,
-            desc = "The supply truck dropped off " .. Place(truck, ply:GetPos()) .. ". Bring the crate in.",
+            desc = "The supply truck is waiting " .. Place(truck, ply:GetPos()) .. ". Bring the driver's crate in.",
             stages = {
-                { kind = "pickup", pos = truck, model = "models/props_junk/cardboard_box004a.mdl", text = "Collect the ration crate (press E)" },
-                Deliver(dest, "Bring it to the distribution point", 180),
+                Q.Contact("Get the ration crate from the truck driver (press E)", truck, "citizen", "'Sign here. No, nobody has a pen. Just take it.'"),
+                Q.Contact("Hand the crate to the kitchen hand at the distribution point (press E)", dest, "citizen",
+                    "She counts the packs twice and doesn't say what the number should have been."),
             },
         }
     end,

@@ -262,7 +262,7 @@ LC.Chain{
                 title = "The ring", reward = 60, limit = 600,
                 desc = "Your new friends need something moved. Quietly. Pick it up " .. Place(a, ply:GetPos()) .. ".",
                 stages = {
-                    { kind = "pickup", pos = a, model = "models/items/ammocrate_smg1.mdl", text = "Collect the crate (press E)" },
+                    Q.Contact("Collect the crate from your new friends (press E)", a, "citizen", "'Careful with that one. It's not what the label says.'"),
                     Choice("The crate rattles. Weapons. Rebel weapons, sold by the people whose job is hunting rebels.", {
                         { text = "Deliver it. Business is business.", pick = function(q, p)
                             Trait(p, "corruption", 1)
@@ -285,7 +285,7 @@ LC.Chain{
                               return "complete"
                           end },
                     }),
-                    Deliver(b, "Deliver it " .. Place(b, ply:GetPos()), 150),
+                    Q.Contact("Hand the crate to the buyer " .. Place(b, ply:GetPos()) .. " (press E)", b, "citizen", "The buyer doesn't count the money in front of you. That's how you know it's a lot."),
                 },
             }
         end },
@@ -349,7 +349,7 @@ LC.Chain{
                 title = "Proof of nerve", reward = 30, limit = 600, failOnArrest = true,
                 desc = "Carry a parcel across the district. Don't open it. Don't get caught.",
                 stages = {
-                    { kind = "pickup", pos = a, model = "models/props_junk/cardboard_box004a.mdl", text = "Collect the parcel (press E)" },
+                    Q.Contact("Take the parcel from your contact (press E)", a, "citizen", "'Straight there. Don't open it. Don't be late.'"),
                     Choice("Two units are checking papers at the corner ahead.", {
                         { text = "Walk past them, calmly.", check = { "guile", 11 },
                           success = function(q) Narrate(q, "One of them looks right at you. Then past you.") end,

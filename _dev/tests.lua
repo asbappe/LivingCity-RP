@@ -508,18 +508,21 @@ ok(q4.done and LC.Trait(cop, "corruption") == c0 + 1, "taking a bribe ends it, a
 ----------------------------------------------------------------------
 section("Quests: a supply run")
 local q5 = inject(member, "res_supply")
-local crate = q5.stages[1].item
-ok(IsValid(crate), "a real crate is placed in the world")
-hook.Run("PlayerUse", member, crate)
-ok(not IsValid(crate) and q5.stages[q5.stage].kind == "choice", "picking it up leads to a choice")
+local contact = q5.stages[1].npc
+ok(IsValid(contact), "a person is waiting with the crate")
+hook.Run("LivingCityPlayerUsedNPC", member, contact, LC.NPCs[contact])
+ok(q5.stages[q5.stage].kind == "choice", "taking it from them leads to a choice")
 withRoll(1, function() LC.ResolveChoice(member, q5.id, 2) end)
 ok(LC.PlayerIsWanted(member), "a failed Guile check gets you noticed")
 LC.ClearWanted(member)
 member:SetPos(q5.stages[q5.stage].pos)
 _run(1)
-ok(q5.done and not q5.failed, "delivering it completes the operation")
+local qm = q5.stages[q5.stage]
+ok(IsValid(qm.npc), "the quartermaster is waiting at the safe house")
+hook.Run("LivingCityPlayerUsedNPC", member, qm.npc, LC.NPCs[qm.npc])
+ok(q5.done and not q5.failed, "handing it over completes the operation")
 local q6 = inject(member, "res_supply")
-hook.Run("PlayerUse", member, q6.stages[1].item)
+hook.Run("LivingCityPlayerUsedNPC", member, q6.stages[1].npc, LC.NPCs[q6.stages[1].npc])
 LC.Incarcerate(member, 30, "test")
 _run(1)
 ok(q6.done and LC.QuestOf[member] == nil, "getting arrested on a supply run fails it")
@@ -675,7 +678,7 @@ local k2 = storyPosting(kind, "pamphleteer")
 ok(k2 and k2.part == "nerve", "listening leads to a test of nerve")
 LC.AcceptPosting(kind, k2.id)
 local qn = LC.QuestOf[kind]
-hook.Run("PlayerUse", kind, qn.stages[1].item)
+hook.Run("LivingCityPlayerUsedNPC", kind, qn.stages[1].npc, LC.NPCs[qn.stages[1].npc])
 LC.ResolveChoice(kind, qn.id, 2)
 ok(qn.stages[qn.stage].kind == "goto", "taking the long way adds a detour")
 for _ = 1, 4 do
