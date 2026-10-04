@@ -35,7 +35,7 @@ local RAID_TIME = 240
 ------------------------------------------------------------------------
 
 local CONTRABAND_MODELS = { "tv_monitor", "television", "radio", "reciever", "receiver" }
-local LEGAL_WEAPONS = { weapon_fists = true, weapon_physgun = true, gmod_tool = true, weapon_medkit = true }
+local LEGAL_WEAPONS = { weapon_fists = true, weapon_lc_hands = true, weapon_physgun = true, gmod_tool = true, weapon_medkit = true }
 
 -- A short name if the thing is contraband, else nil.
 function LC.ContrabandOf(ent)

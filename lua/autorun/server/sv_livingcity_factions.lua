@@ -188,6 +188,7 @@ local function GiveLoadout(ply, keep)
     ply:GiveAmmo(12, "357", true)
     local first = prof.loadout and prof.loadout[1]
     if first then ply:SelectWeapon(first) end
+    if LC.GiveHands then LC.GiveHands(ply, true) end -- start with your hands down; what you carry is a key away
 end
 
 -- True if the faction hands you this weapon (so selling it would be free money).

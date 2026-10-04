@@ -352,9 +352,18 @@ function PMT:SetJumpPower() end
 function PMT:GetRunSpeed() return 200 end
 function PMT:SetRunSpeed() end
 function PMT:SetupHands() end
-function PMT:SelectWeapon() end
+function PMT:SelectWeapon(c)
+    if not self:HasWeapon(c) or self.active == c then return end
+    local old = self:GetActiveWeapon()
+    self.active = c
+    hook.Run("PlayerSwitchWeapon", self, old, self:GetActiveWeapon())
+end
 function PMT:GiveAmmo() end
-function PMT:GetActiveWeapon() return nil end
+function PMT:GetActiveWeapon()
+    if not self.active or not self:HasWeapon(self.active) then return nil end
+    local cls = self.active
+    return { GetClass = function() return cls end, IsValid = function() return true end }
+end
 function PMT:ExitVehicle() end
 function PMT:IsOnGround() return self.ground ~= false end
 function PMT:Crouching() return self.crouch == true end

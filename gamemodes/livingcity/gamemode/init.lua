@@ -59,6 +59,7 @@ function GM:PlayerLoadout(ply)
         ply:Give("gmod_tool")
     end
     ply:SelectWeapon("weapon_fists")
+    if LC and LC.GiveHands then LC.GiveHands(ply, true) end
     return true
 end
 

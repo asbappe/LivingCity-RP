@@ -35,6 +35,7 @@ Running it as an addon on plain Sandbox still works, but then Sandbox stays Sand
 | `!search` | Units: search the person you're looking at |
 | `!stash` | Your hidden stash at home |
 | `!block`, `!credits`, `!report <msg>`, `!abandon` | Housing, money and standing, staff reports, drop a job |
+| `!holster`, or R with your hands down | Put away what you're holding (nothing in view, nothing to swing), or raise your fists / draw it again. You spawn with your hands down. Bind a key: `bind h lc_holster` |
 
 ## Building a map with the editor
 

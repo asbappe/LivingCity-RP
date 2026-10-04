@@ -65,7 +65,7 @@ for rel in sorted(os.path.relpath(p, ROOT) for p in glob.glob(ROOT + "/entities/
     L.execute("ENT = {}")
     L.globals()._SRC = open(os.path.join(ROOT, rel)).read()
     L.execute("assert(loadstring(_SRC, %r))()" % rel)
-for rel in ["weapons/weapon_lc_baton.lua", "weapons/weapon_lc_claws.lua", "weapons/weapon_lc_blessing.lua"]:
+for rel in ["weapons/weapon_lc_baton.lua", "weapons/weapon_lc_claws.lua", "weapons/weapon_lc_blessing.lua", "weapons/weapon_lc_hands.lua"]:
     L.execute("SWEP = {}")
     L.execute(open(os.path.join(ROOT, rel)).read())
 L.execute("TOOL = { GetClientInfo = function() return 'idle' end }")

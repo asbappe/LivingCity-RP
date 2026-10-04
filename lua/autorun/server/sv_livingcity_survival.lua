@@ -456,10 +456,46 @@ end)
 
 hook.Add("PlayerSpawn", "LivingCityFists", function(ply)
     timer.Simple(0.6, function()
-        if not IsValid(ply) or not cvFists:GetBool() or LC.IsRP() then return end
-        if LC.PlayerIsZombie(ply) then return end
-        if not ply:HasWeapon("weapon_fists") then ply:Give("weapon_fists") end
+        if not IsValid(ply) or LC.PlayerIsZombie(ply) then return end
+        if cvFists:GetBool() and not LC.IsRP() and not ply:HasWeapon("weapon_fists") then ply:Give("weapon_fists") end
+        if not LC.IsRP() then LC.GiveHands(ply, true) end -- you start out with your hands down (RP gamemodes have their own)
     end)
+end)
+
+------------------------------------------------------------------------
+-- Holstering: empty hands, nothing in view, nothing to swing
+------------------------------------------------------------------------
+
+local HANDS = "weapon_lc_hands"
+
+function LC.GiveHands(ply, select)
+    if not IsValid(ply) or not ply:Alive() or LC.PlayerIsZombie(ply) then return end
+    if not ply:HasWeapon(HANDS) then ply:Give(HANDS) end
+    if select then ply:SelectWeapon(HANDS) end
+end
+
+-- Remember what you were holding, so drawing again brings it back.
+hook.Add("PlayerSwitchWeapon", "LivingCityHolster", function(ply, old, new)
+    if IsValid(old) and old:GetClass() ~= HANDS then ply.lcLastWeapon = old:GetClass() end
+end)
+
+function LC.ToggleHolster(ply)
+    if not IsValid(ply) or not ply:Alive() or LC.PlayerIsZombie(ply) then return end
+    local cur = ply:GetActiveWeapon()
+    if IsValid(cur) and cur:GetClass() == HANDS then
+        local back = ply.lcLastWeapon
+        if not back or not ply:HasWeapon(back) then back = ply:HasWeapon("weapon_fists") and "weapon_fists" or nil end
+        if back then ply:SelectWeapon(back) end
+    else
+        if IsValid(cur) then ply.lcLastWeapon = cur:GetClass() end
+        LC.GiveHands(ply, true)
+    end
+end
+
+concommand.Add("lc_holster", function(ply) LC.ToggleHolster(ply) end)
+hook.Add("PlayerSay", "LivingCityHolster", function(ply, text)
+    local t = string.lower(string.Trim(text))
+    if t == "!holster" or t == "/holster" then LC.ToggleHolster(ply) return "" end
 end)
 
 ------------------------------------------------------------------------

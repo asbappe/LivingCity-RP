@@ -70,7 +70,7 @@ local function PutInCell(ply, cell)
     ply:StripWeapons()
     -- everyone has their fists, even in a cell
     ply:Give("weapon_fists")
-    ply:SelectWeapon("weapon_fists")
+    if LC.GiveHands then LC.GiveHands(ply, true) else ply:SelectWeapon("weapon_fists") end
 end
 
 ------------------------------------------------------------------------
