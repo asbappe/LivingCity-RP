@@ -1407,14 +1407,32 @@ T{
 T{
     id = "cit_errand", factions = { citizen = true },
     build = function(ply)
-        local a, b = Spot(ply, 400, 2000), Spot(ply, 600, 3000)
+        -- Mrs. Kleiner lives in a housing block: the parcel is picked up inside one
+        -- (yours if you have one), only falling back to the streets on maps without blocks
+        local a
+        local blocks = LC.ZonesOfKind and LC.ZonesOfKind("block") or {}
+        if #blocks > 0 then
+            local mine = LC.PlayerBlock and LC.PlayerBlock(ply)
+            local own = {}
+            for _, z in ipairs(blocks) do if mine and z.group == mine then own[#own + 1] = z end end
+            local pool = #own > 0 and own or blocks
+            for _ = 1, 6 do
+                a = LC.SpotInZone(pool[math.random(#pool)])
+                if a then break end
+            end
+        end
+        local inBlock = a ~= nil
+        a = a or Spot(ply, 400, 2000)
+        local b = Spot(ply, 600, 3000)
         if not a or not b then return nil end
         local deliver = Deliver(b, "Deliver the parcel " .. Place(b, ply:GetPos()), 150)
         return {
             title = "A neighbor's errand", reward = 20, limit = 420,
-            desc = "Mrs. Kleiner from the third floor needs a parcel carried across the district.",
+            desc = inBlock and "Mrs. Kleiner from the third floor has left a parcel in the block, to be carried across the district."
+                or "Mrs. Kleiner from the third floor needs a parcel carried across the district.",
             stages = {
-                { kind = "pickup", pos = a, model = "models/props_junk/cardboard_box004a.mdl", text = "Pick up the parcel (press E)" },
+                { kind = "pickup", pos = a, model = "models/props_junk/cardboard_box004a.mdl",
+                  text = inBlock and "Collect Mrs. Kleiner's parcel inside the block (press E)" or "Pick up the parcel (press E)" },
                 Choice("The parcel is taped shut. It's light, and something inside slides when you tilt it.", {
                     { text = "Deliver it unopened." },
                     { text = "Peel back the tape and look.", check = { "guile", 12 },
