@@ -81,6 +81,11 @@ end
 function LC.CitizenSpotOK(pos)
     if LC.InNoGo(pos) then return false end
     if LC.OnCombineSurface(pos) then return false end
+    if InZoneOfKinds(pos, { prison = true }) then return false end
+    for _, p in ipairs(LC.Points) do
+        -- cells and the release steps are Combine business, and so are checkpoints' immediate surroundings
+        if (p.kind == "cell" or p.kind == "release") and p.pos:DistToSqr(pos) < 500 * 500 then return false end
+    end
     for _, p in ipairs(LC.Points) do
         if p.kind == "zspawn" and p.pos:DistToSqr(pos) < 900 * 900 then return false end
     end

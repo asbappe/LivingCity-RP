@@ -1458,18 +1458,33 @@ T{
 T{
     id = "cit_report", factions = { citizen = true },
     build = function(ply)
-        local s = Spot(ply, 400, 2500)
+        -- sometimes it's behind a dumpster that's really in the map; otherwise on a quiet corner.
+        -- Either way two people are actually there, and you walk up and see them.
+        local bin = FindBins(ply, 300, 2500, 1)[1]
+        local atBin = bin ~= nil and math.random() < 0.6
+        local s = atBin and bin:GetPos() or Spot(ply, 400, 2500)
         if not s then return nil end
+        local prompt = atBin and "Two people swap a bundle behind the dumpster. One has a lambda scratched into his sleeve."
+            or "A man you know from your block hands a child a radio and walks away fast."
+        local look = Goto(s, atBin and "Go over to the dumpster, casually" or "Go and look, casually", 150)
+        look.onEnter = function(q)
+            -- the two of them, a little apart, facing each other
+            q.data.watched = {}
+            for i, off in ipairs({ Vector(45, 0, 0), Vector(-45, 0, 0) }) do
+                local npc = LC.QB.SpawnActor(q, "citizen", s + off, 900)
+                if npc then q.data.watched[#q.data.watched + 1] = npc end
+            end
+            local a, b = q.data.watched[1], q.data.watched[2]
+            if IsValid(a) and IsValid(b) then LC.Face(a, b:GetPos()) LC.Face(b, a:GetPos()) end
+        end
         return {
             title = "Something you saw", reward = 20, limit = 420,
-            desc = "Neighbors whisper about strange comings and goings " .. Place(s, ply:GetPos()) .. ".",
+            desc = atBin and ("Neighbors whisper about something going on behind a dumpster " .. Place(s, ply:GetPos()) .. ".")
+                or ("Neighbors whisper about strange comings and goings " .. Place(s, ply:GetPos()) .. "."),
             stages = {
-                Goto(s, "Go and look, casually", 150),
+                look,
                 Hold(s, 6, "Watch quietly", 220),
-                Choice(Pick({
-                    "Two people swap a bundle behind a dumpster. One has a lambda scratched into his sleeve.",
-                    "A man you know from your block hands a child a radio and walks away fast.",
-                }), {
+                Choice(prompt, {
                     { text = "Report it to a unit.", pick = function(q, p)
                         LC.AddTrait(p, "loyalty", 1)
                         LC.Bump(p, "reports")

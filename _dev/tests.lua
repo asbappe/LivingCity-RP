@@ -2474,6 +2474,19 @@ cellDoor.locked = true
 ok(hook.Run("PlayerUse", warden, cellDoor) == false and cellDoor.fired and cellDoor.fired[#cellDoor.fired - 1] == "Unlock", "a unit's E unlocks and opens it for a moment")
 cellDoor:Remove()
 
+section("Something you saw")
+local witness = newPlayer("Witness", "citizen")
+witness:SetPos(Vector(0, -500, 0))
+local dump = ents.Create("prop_physics")
+dump:SetModel("models/props_junk/trashdumpster01a.mdl")
+dump:SetPos(Vector(700, -500, 0))
+local seenQ = inject(witness, "cit_report")
+local w = seenQ.data.watched or {}
+ok(#w == 2 and IsValid(w[1]) and IsValid(w[2]), "two people are really there to be seen")
+ok(seenQ.stages[1].pos:DistToSqr(w[1]:GetPos()) < 200 * 200, "at the place you're sent")
+LC.AbandonQuest(witness)
+dump:Remove()
+
 section("Reporting to a unit")
 local reporter = newPlayer("Reporter", "citizen")
 local rn, rst = LC.Spawners.cop(Vector(8800, 8800, 0))

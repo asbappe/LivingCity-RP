@@ -828,7 +828,7 @@ function Arrive(npc, st, now)
         EnterQueue(npc, st, poi.line, now)
     elseif k == "spawn" and st.leaving then
         SetState(npc, st, "exiting")
-        st.untilT = now + 15
+        st.untilT = now + (st.homeBlock and 6 or 15) -- going indoors takes a moment, not a quarter of a minute
     elseif k == "cell" then
         if LC.OnNPCReachedCell then LC.OnNPCReachedCell(npc, st, now) else st.untilT = now + 30 end
     elseif k == "release" then
