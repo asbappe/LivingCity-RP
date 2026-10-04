@@ -201,7 +201,11 @@ The number is the workplace number in the editor. Shifts pay Credits and Civil S
 
 **Stash.** Eight hidden slots in your own housing block (`!stash`, or F2 while you're home). Searches never reach it, but inspection sweeps sometimes raid it. A retuned radio warns you before a sweep.
 
-**Black market.** Place a dealer with the editor, or on maps without one, trade in rebel territory (`!market`). The dealer sells contraband and a crowbar, and buys scrap, wedding rings, uniforms and spare papers. A unit who walks up to the dealer busts it: it vanishes for 15 minutes, the unit gets paid, and Freq 7 hears about it. Edit `lua/autorun/sh_livingcity_shop.lua` for prices and items.
+**Black market.** Place a dealer with the editor, or on maps without one, trade in rebel territory (`!market`). The dealer sells contraband and a crowbar, and buys scrap, wedding rings, uniforms and spare papers. **Selling:** the dealer buys nearly everything in your pockets (40% of the cheapest shop price, so there's no profit in reselling; scrap, rings, radios and the like have their own prices) and the weapons you carry, unless your faction issued them to you. There's a "sell all" button for stacks.
+
+**Lockpicks:** besides buying one from the dealer, you can **make one from four pieces of scrap** (F2, "Make pick"; scrap comes from the Reclamation job). Use it by looking at a locked door and typing `!pick`, or bind a key: `bind p lc_pick`. `!pick` also uses a keycard or bypass charge on a Combine door.
+
+A unit who walks up to the dealer busts it: it vanishes for 15 minutes, the unit gets paid, and Freq 7 hears about it. Edit `lua/autorun/sh_livingcity_shop.lua` for prices and items.
 
 Admin helpers: `lc_giveitem <name> <item> [count]`, `lc_search <name>`.
 
@@ -230,4 +234,4 @@ Stories: `lcq_startchain`, `lcq_story`, `lcq_resetstory`. Debug: `lc_debugreport
 
 ## Honest limits
 
-The server logic and the gamemode's rules are exercised by 507 automated scenario tests, and the client HUD and editor overlay by a smoke test, all against a simulated Garry's Mod (see `_dev/`). Real-game playtesting has only just started, so expect rough edges in anything visual or audible: animations, sounds, menus, HUD layout, and entity models. Send the debug report and they'll get fixed.
+The server logic and the gamemode's rules are exercised by 516 automated scenario tests, and the client HUD and editor overlay by a smoke test, all against a simulated Garry's Mod (see `_dev/`). Real-game playtesting has only just started, so expect rough edges in anything visual or audible: animations, sounds, menus, HUD layout, and entity models. Send the debug report and they'll get fixed.

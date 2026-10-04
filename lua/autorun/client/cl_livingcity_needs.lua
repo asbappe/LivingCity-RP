@@ -266,7 +266,8 @@ local function OpenInventory()
             if it.cooksTo then Btn(it.fillTo == nil and it.thirst and "Boil" or "Cook", "cook") end
             if it.hunger or it.thirst or it.cures then Btn(it.hunger and "Eat" or (it.cures and "Take" or "Drink"), "use") end
             if it.wear then Btn("Wear", "wear") end
-            if it.tool then Btn("Use", "use", "Look at a locked door first.") end
+            if it.tool then Btn("Use", "use", "Look at a locked door first. Or type !pick, or bind a key to lc_pick.") end
+            if id == "scrap" and (lastInv.items[id] or 0) >= 4 then Btn("Make pick", "craft", "Four pieces of scrap, bent into a lockpick set.") end
             if it.papers then Btn("Use", "use", "Become someone else. Clears your wanted status if no unit is watching.") end
             if it.forge then Btn("Forge", "use", "Somewhere private: your own block, or rebel territory.") end
         end
@@ -432,8 +433,17 @@ net.Receive("lcu_market", function()
             Row(string.format("%s  x%d", sitem.name, sitem.n), nil, "Sell for " .. sitem.price, true, function()
                 net.Start("lcu_sell")
                 net.WriteString(sitem.id)
+                net.WriteBool(false)
                 net.SendToServer()
             end)
+            if sitem.n > 1 then
+                Row("   all " .. sitem.n, nil, "Sell all for " .. (sitem.price * sitem.n), true, function()
+                    net.Start("lcu_sell")
+                    net.WriteString(sitem.id)
+                    net.WriteBool(true)
+                    net.SendToServer()
+                end, DIM)
+            end
         end
     end
 end)

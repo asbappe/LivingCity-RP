@@ -954,6 +954,14 @@ function LC.OpenMarket(ply)
         local it = LCS.Items[id]
         if it and it.sell then sell[#sell + 1] = { id = id, name = it.name, n = inv[id], price = it.sell } end
     end
+    -- weapons you're carrying, unless your faction issued them
+    for _, w in ipairs(ply:GetWeapons()) do
+        local cls = w:GetClass()
+        local price = LCS.SellWeapons[cls]
+        if price and not (LC.IsIssuedWeapon and LC.IsIssuedWeapon(ply, cls)) then
+            sell[#sell + 1] = { id = "w:" .. cls, name = (string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ")), n = 1, price = price, weapon = true }
+        end
+    end
     LC.SendCompressed("lcu_market", { credits = credits, goods = goods, sell = sell }, { ply })
     return true
 end
@@ -971,14 +979,26 @@ function LC.BlackBuy(ply, id)
     return true
 end
 
-function LC.DealerSell(ply, id)
-    local it = LCS.Items[id]
-    if not it or not it.sell or not LC.HasItem(ply, id) then return false end
+-- Sell one of something (or all of it): pocket items, or a weapon as "w:<class>".
+function LC.DealerSell(ply, id, all)
     local ok, why = LC.MarketAccess(ply)
     if not ok then return false, why end
-    LC.TakeItem(ply, id)
-    LC.AddCredits(ply, it.sell)
-    ply:ChatPrint(string.format("[Black market] Sold: %s, for %d credits.", it.name, it.sell))
+    local cls = string.match(id or "", "^w:(.+)$")
+    if cls then
+        local price = LCS.SellWeapons[cls]
+        if not price or not ply:HasWeapon(cls) then return false end
+        if LC.IsIssuedWeapon and LC.IsIssuedWeapon(ply, cls) then return false, "That was issued to you. The dealer doesn't want it." end
+        ply:StripWeapon(cls)
+        LC.AddCredits(ply, price)
+        ply:ChatPrint(string.format("[Black market] Sold: %s, for %d credits.", (string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ")), price))
+        return true
+    end
+    local it = LCS.Items[id]
+    if not it or not it.sell or not LC.HasItem(ply, id) then return false end
+    local n = all and (LC.Inventory(ply)[id] or 1) or 1
+    LC.TakeItem(ply, id, n)
+    LC.AddCredits(ply, it.sell * n)
+    ply:ChatPrint(string.format("[Black market] Sold: %s%s, for %d credits.", it.name, n > 1 and (" x" .. n) or "", it.sell * n))
     return true
 end
 
@@ -989,7 +1009,8 @@ net.Receive("lcu_buy", function(_, ply)
 end)
 
 net.Receive("lcu_sell", function(_, ply)
-    local ok, why = LC.DealerSell(ply, net.ReadString())
+    local id = net.ReadString()
+    local ok, why = LC.DealerSell(ply, id, net.ReadBool())
     if not ok and why then ply:ChatPrint("[Black market] " .. why) end
     LC.OpenMarket(ply)
 end)
@@ -1026,6 +1047,34 @@ end)
 -- Inventory actions and what the inventory window needs to know
 ------------------------------------------------------------------------
 
+-- !pick (or bind a key to lc_pick): use the right tool you're carrying on the door you're looking at.
+function LC.QuickPick(ply)
+    local tr = ply:GetEyeTrace()
+    local door = tr.Entity
+    if not LC.IsDoorEntity(door) or tr.HitPos:DistToSqr(ply:EyePos()) > 110 * 110 then
+        return false, "Look at a locked door, up close."
+    end
+    local cp = DoorLockKind(door)
+    local order = cp and { "cp_keycard", "bypass" } or { "lockpick" }
+    for _, id in ipairs(order) do
+        if LC.HasItem(ply, id) then return LC.StartPick(ply, id) end
+    end
+    return false, cp and "That's a Combine lock. You need a keycard or a bypass charge." or "You don't have a lockpick. Make one from four pieces of scrap (F2), or find the dealer."
+end
+
+concommand.Add("lc_pick", function(ply)
+    if not IsValid(ply) then return end
+    local ok, why = LC.QuickPick(ply)
+    if not ok and why then ply:ChatPrint(why) end
+end)
+
+hook.Add("PlayerSay", "LivingCityQuickPick", function(ply, text)
+    if string.lower(string.Trim(text)) ~= "!pick" then return end
+    local ok, why = LC.QuickPick(ply)
+    if not ok and why then ply:ChatPrint(why) end
+    return ""
+end)
+
 function LC.UndergroundAction(ply, action, id)
     local it = id and LCS.Items[id]
     local ok, why
@@ -1034,6 +1083,17 @@ function LC.UndergroundAction(ply, action, id)
     elseif action == "wear" then
         if not it or not it.wear then return true end
         ok, why = LC.Wear(ply, id)
+    elseif action == "craft" and id == "scrap" then
+        -- bend four bits of scrap into something that opens a lock
+        if not LC.HasItem(ply, "scrap", 4) then
+            why = "You need four pieces of scrap."
+        else
+            LC.TakeItem(ply, "scrap", 4)
+            LC.GiveItem(ply, "lockpick")
+            ply:EmitSound("physics/metal/metal_solid_impact_soft2.wav", 60)
+            why = "You bend and file the scrap into a lockpick set."
+        end
+        ok = false
     elseif action == "store" then
         ok, why = LC.StashStore(ply, id)
     elseif action == "take" then

@@ -189,6 +189,13 @@ local function GiveLoadout(ply, keep)
     if first then ply:SelectWeapon(first) end
 end
 
+-- True if the faction hands you this weapon (so selling it would be free money).
+function LC.IsIssuedWeapon(ply, cls)
+    local prof = Profile(ply)
+    for _, c in ipairs(prof and prof.loadout or {}) do if c == cls then return true end end
+    return false
+end
+
 hook.Add("PlayerLoadout", "LivingCityFactions", function(ply)
     if not Active() or not FactionOf(ply) then return end
     if LC.Prisoners and LC.Prisoners[ply] then return true end

@@ -175,3 +175,31 @@ for _, g in ipairs(LCS.Black) do
     g.name = g.name or (g.item and LCS.Items[g.item] and LCS.Items[g.item].name) or g.id
     LCS.BlackById[g.id] = g
 end
+
+------------------------------------------------------------------------
+-- What the black market dealer pays
+--   Items with their own `sell` above keep it. Everything else fetches 40% of
+--   its cheapest shop price (so there's never a profit in buy-and-resell), or
+--   a little for food and water nobody sells. Weapons you carry have a price
+--   too, unless your faction issued them to you.
+------------------------------------------------------------------------
+
+do
+    local ref = {}
+    for _, list in ipairs({ LCS.Goods, LCS.Black }) do
+        for _, g in ipairs(list) do
+            if g.item then ref[g.item] = math.min(ref[g.item] or 1e9, g.price) end
+        end
+    end
+    for id, it in pairs(LCS.Items) do
+        if not it.sell then
+            local base = ref[id] or (((it.hunger or 0) + (it.thirst or 0)) / 5)
+            it.sell = math.max(1, math.floor(base * 0.4))
+        end
+    end
+end
+
+LCS.SellWeapons = {
+    weapon_crowbar = 20, weapon_stunstick = 30, weapon_pistol = 40, weapon_smg1 = 70, weapon_shotgun = 80,
+    weapon_357 = 90, weapon_ar2 = 150, weapon_frag = 25, weapon_crossbow = 100,
+}

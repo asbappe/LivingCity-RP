@@ -1399,6 +1399,36 @@ ok(LC.BlackBuy(buyer2, "crowbar") and buyer2:HasWeapon("weapon_crowbar"), "and a
 LC.GiveItem(buyer2, "keepsake")
 local c2 = LC.Credits(buyer2)
 ok(LC.DealerSell(buyer2, "keepsake") and LC.Credits(buyer2) == c2 + 20, "the dealer buys what you find")
+LC.GiveItem(buyer2, "ration")
+c2 = LC.Credits(buyer2)
+ok(LC.DealerSell(buyer2, "ration") and LC.Credits(buyer2) == c2 + 2, "and ordinary things too, at a fraction of the shop price")
+for _ = 1, 3 do LC.GiveItem(buyer2, "bottle_empty") end
+c2 = LC.Credits(buyer2)
+ok(LC.DealerSell(buyer2, "bottle_empty", true) and not LC.HasItem(buyer2, "bottle_empty") and LC.Credits(buyer2) == c2 + 3, "a whole stack at once")
+c2 = LC.Credits(buyer2)
+ok(LC.DealerSell(buyer2, "w:weapon_crowbar") and not buyer2:HasWeapon("weapon_crowbar") and LC.Credits(buyer2) == c2 + 20, "and weapons you carry")
+local fighter = newPlayer("Fighter", "resistance", nil, 500)
+fighter:SetPos(Vector(-6000, -6000, 0))
+ok(fighter:HasWeapon("weapon_pistol") and not LC.DealerSell(fighter, "w:weapon_pistol") and fighter:HasWeapon("weapon_pistol"), "but not what your faction issued you")
+for _, it in pairs(LCS.Items) do
+    if not (it.sell and it.sell >= 1) then ok(false, "every item has a resale price") break end
+end
+-- a lockpick of your own
+for _ = 1, 4 do LC.GiveItem(buyer2, "scrap") end
+LC.TakeItem(buyer2, "lockpick", LC.Inventory(buyer2).lockpick or 0)
+ok(LC.UndergroundAction(buyer2, "craft", "scrap") and LC.HasItem(buyer2, "lockpick") and not LC.HasItem(buyer2, "scrap"), "four pieces of scrap make a lockpick")
+local pdoor = ents.Create("func_door")
+pdoor.mapid = 901
+LC.SetDoorTag(pdoor, "locked")
+buyer2.lookingAt = pdoor
+buyer2.chat = {}
+ok(LC.QuickPick(buyer2), "!pick uses it on the door you're looking at")
+LC.ClearWanted(buyer2)
+LC.TakeItem(buyer2, "lockpick")
+buyer2.lcPicking = nil
+local qok, qwhy = LC.QuickPick(buyer2)
+ok(not qok and qwhy and qwhy:find("scrap"), "and tells you how to get one if you have none", tostring(qwhy))
+buyer2.lookingAt = nil
 local fp = LC.AddPoint(Vector(-2500, -2500, 0), 0, "dealer", 0)
 _run(1)
 local dealer = ents.FindByClass("lc_dealer")[1]

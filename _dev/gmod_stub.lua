@@ -107,6 +107,7 @@ function net.Receive(n, fn) net["recv_" .. n] = fn end
 net._q = {}
 function net.ReadUInt() return table.remove(net._q, 1) end
 function net.ReadString() return table.remove(net._q, 1) end
+function net.ReadBool() return table.remove(net._q, 1) == true end
 function _netcall(name, ply, ...) net._q = { ... } net["recv_" .. name](0, ply) end
 function _lastnet(name) for i = #net.sent, 1, -1 do if net.sent[i].name == name then return net.sent[i] end end end
 
