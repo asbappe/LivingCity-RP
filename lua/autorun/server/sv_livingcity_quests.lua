@@ -1425,14 +1425,15 @@ T{
         a = a or Spot(ply, 400, 2000)
         local b = Spot(ply, 600, 3000)
         if not a or not b then return nil end
-        local deliver = Deliver(b, "Deliver the parcel " .. Place(b, ply:GetPos()), 150)
+        local deliver = LC.QB.Contact("Give the parcel to her cousin " .. Place(b, ply:GetPos()) .. " (press E)", b, "citizen",
+            "'From Kleiner? Tell her I'm fine.' It's not true, and you both know it.")
         return {
             title = "A neighbor's errand", reward = 20, limit = 420,
             desc = inBlock and "Mrs. Kleiner from the third floor has left a parcel in the block, to be carried across the district."
                 or "Mrs. Kleiner from the third floor needs a parcel carried across the district.",
             stages = {
-                { kind = "pickup", pos = a, model = "models/props_junk/cardboard_box004a.mdl",
-                  text = inBlock and "Collect Mrs. Kleiner's parcel inside the block (press E)" or "Pick up the parcel (press E)" },
+                LC.QB.Contact(inBlock and "Speak to Mrs. Kleiner inside the block (press E)" or "Speak to Mrs. Kleiner (press E)", a, "citizen",
+                    "'It's only a little parcel. It's gone to the third floor and back already.' She presses it into your hands."),
                 Choice("The parcel is taped shut. It's light, and something inside slides when you tilt it.", {
                     { text = "Deliver it unopened." },
                     { text = "Peel back the tape and look.", check = { "guile", 12 },
@@ -1766,8 +1767,37 @@ local function SpawnActor(q, role, pos, holdSecs, keep)
     return npc, st
 end
 
+-- Somewhere to stand a person: inside the housing block if pos is a block's center,
+-- else the spot itself.
+local function PersonSpot(pos)
+    for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("block") or {}) do
+        if z.pos:DistToSqr(pos) < 16 then return LC.SpotInZone(z) or pos end
+    end
+    return pos
+end
+
+-- A person to meet: someone is waiting at pos (marked on your HUD) and you press E
+-- on them. role is "citizen" (default) or "cop". If nobody can be placed, it falls
+-- back to simply walking there. line is what the quest says when you've met.
+local function Contact(text, pos, role, line)
+    local where = PersonSpot(pos)
+    return {
+        kind = "target", action = "use", pos = where, r = 140, text = text,
+        onEnter = function(q, st)
+            local npc = SpawnActor(q, role or "citizen", where, 900)
+            if not npc then
+                st.kind, st.r, st.npc = "deliver", 150, nil
+                return
+            end
+            st.npc = npc
+        end,
+        onDone = line and function(q) Narrate(q, line) end or nil,
+    }
+end
+
 -- Everything the story file needs to build parts out of the same pieces.
 LC.QB = {
+    Contact = Contact, PersonSpot = PersonSpot,
     Goto = Goto, Deliver = Deliver, Hold = Hold, Count = Count, Choice = Choice,
     FindCitizenStage = FindCitizenStage, ArrestStage = ArrestStage, Flee = Flee,
     Spot = Spot, SpotsNear = SpotsNear, FindBins = FindBins, Place = Place, SafeHouse = SafeHouse, NearestZone = NearestZone,

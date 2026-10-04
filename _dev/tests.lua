@@ -529,7 +529,8 @@ LC.ReleasePrisoner(member)
 section("Quests: choices change the story")
 local cit = tester.citizen
 local q7 = inject(cit, "cit_errand")
-hook.Run("PlayerUse", cit, q7.stages[1].item)
+hook.Run("LivingCityPlayerUsedNPC", cit, q7.stages[1].npc, LC.NPCs[q7.stages[1].npc])
+ok(q7.stages[q7.stage].kind == "choice", "the errand starts with Mrs. Kleiner, a person, not a parcel on the floor")
 withRoll(20, function() LC.ResolveChoice(cit, q7.id, 2) end)
 ok(q7.stages[q7.stage].kind == "choice", "peeking inside opens a second choice")
 local l0 = LC.Trait(cit, "loyalty")
@@ -890,6 +891,9 @@ local function work(q, p)
             LC.ResolveChoice(p, q.id, 1)
         elseif st.kind == "target" and st.action == "reach" then
             p:SetPos(st.npc:GetPos() + Vector(50, 0, 0)) _run(1)
+        elseif st.kind == "target" and st.action == "use" then
+            p:SetPos(st.npc:GetPos() + Vector(50, 0, 0))
+            hook.Run("LivingCityPlayerUsedNPC", p, st.npc, LC.NPCs[st.npc])
         elseif st.kind == "count" and st.event == "patched" then
             for _, n in ipairs(q.data.patients or { q.data.actor }) do if IsValid(n) then n:SetHealth(n:GetMaxHealth()) end end
             _run(1)
@@ -1428,6 +1432,9 @@ local function workAll(q, p)
             LC.ResolveChoice(p, q.id, p.lcPick or 1)
         elseif st.kind == "target" and st.action == "reach" then
             p:SetPos(st.npc:GetPos() + Vector(50, 0, 0)) _run(1)
+        elseif st.kind == "target" and st.action == "use" then
+            p:SetPos(st.npc:GetPos() + Vector(50, 0, 0))
+            hook.Run("LivingCityPlayerUsedNPC", p, st.npc, LC.NPCs[st.npc])
         elseif st.kind == "escort" then
             st.npc:SetPos(st.pos) p:SetPos(st.pos) _run(1)
         elseif st.kind == "count" and st.event == "used_npc" then

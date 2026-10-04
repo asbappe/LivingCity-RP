@@ -113,7 +113,7 @@ Searching a body in front of a unit is a crime. Bodies stay for 5 minutes (`lc_b
 
 ## Jobs and quests (F3)
 
-**Finding the objective.** The tracker on the right shows a compass for whatever you're after: a pointer relative to where you're facing, the distance in meters, a heading (ahead, behind left, ...) and whether it's on your level, a floor or more **UP**, or **DOWN**. It works even when the target is far enough away that the game isn't drawing it. Quests never send you to the infestation or onto Combine ground.
+**Finding the objective.** The tracker on the right shows a compass for whatever you're after: a pointer relative to where you're facing, the distance in meters, a heading (ahead, behind left, ...) and whether it's on your level, a floor or more **UP**, or **DOWN**. It works even when the target is far enough away that the game isn't drawing it. Quests never send you to the infestation or onto Combine ground. Deliveries are made to **people**: the mail comes from the postal clerk and goes to named residents, Mrs. Kleiner hands you her parcel herself, luggage goes back to its owner, uniforms go to the unit at the checkpoint. Each person waits at a marked spot; walk up and press E.
 
 Each faction has a board of radiant jobs built from your actual map: Directives, Protocols, Agenda, Operations, Assignments, Urges. Many have **choices with d20 checks** (Authority, Empathy, Guile, Nerve), and your choices build three traits that stick: **Loyalty, Sympathy, Corruption**.
 
@@ -222,4 +222,4 @@ Stories: `lcq_startchain`, `lcq_story`, `lcq_resetstory`. Debug: `lc_debugreport
 
 ## Honest limits
 
-The server logic and the gamemode's rules are exercised by 469 automated scenario tests, and the client HUD and editor overlay by a smoke test, all against a simulated Garry's Mod (see `_dev/`). Real-game playtesting has only just started, so expect rough edges in anything visual or audible: animations, sounds, menus, HUD layout, and entity models. Send the debug report and they'll get fixed.
+The server logic and the gamemode's rules are exercised by 470 automated scenario tests, and the client HUD and editor overlay by a smoke test, all against a simulated Garry's Mod (see `_dev/`). Real-game playtesting has only just started, so expect rough edges in anything visual or audible: animations, sounds, menus, HUD layout, and entity models. Send the debug report and they'll get fixed.

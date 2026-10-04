@@ -273,6 +273,17 @@ local function Wrap(text, font, width)
     return lines
 end
 
+-- Where the objective really is (the marker is drawn a little above it; the compass
+-- measures up and down to the thing itself).
+local function RawObjectivePos()
+    if state.ent then
+        local e = Entity(state.ent)
+        if IsValid(e) then return e:GetPos() end
+    end
+    if state.pos then return Vector(state.pos[1], state.pos[2], state.pos[3]) end
+    return nil
+end
+
 local function ObjectivePos()
     if state.ent then
         local e = Entity(state.ent)
@@ -292,7 +303,8 @@ local function Compass(target)
     local rel = math.NormalizeAngle(delta:Angle().y - EyeAngles().y) -- 0 ahead, +left
     local bucket = math.floor((rel + 22.5) / 45) % 8 + 1
     local dz = delta.z
-    local floors = math.floor(math.abs(dz) / 140 + 0.5)
+    -- anything more than a flight of stairs away counts: 48 units is "other level", then about 144 to a floor
+    local floors = math.abs(dz) < 48 and 0 or math.max(1, math.floor(math.abs(dz) / 144 + 0.5))
     local level = "same level"
     if floors >= 1 then level = string.format("%d floor%s %s", floors, floors == 1 and "" or "s", dz > 0 and "UP" or "DOWN") end
     local flat = Vector(delta.x, delta.y, 0):Length()
@@ -313,7 +325,7 @@ hook.Add("HUDPaint", "LivingCityQuestsTracker", function()
     local w = ScrW()
     local x, y, bw = w - 340, 120, 320
     local left = math.max(0, (state.left or 0) - (CurTime() - (state.received or CurTime())))
-    local compassTarget = ObjectivePos()
+    local compassTarget = RawObjectivePos()
 
     local lines = Wrap(state.objective or "", "DermaDefault", bw - 24)
     local narr = state.narration and Wrap(state.narration, "DermaDefault", bw - 24) or {}
@@ -352,11 +364,11 @@ hook.Add("HUDPaint", "LivingCityQuestsTracker", function()
         draw.RoundedBox(3, x + 8, ly - 4, bw - 16, 30, Color(30, 28, 24, 220))
         DrawArrow(x + 28, ly + 11, rel, ACCENT)
         draw.SimpleText(string.format("%d m, %s", meters, heading), "DermaDefaultBold", x + 50, ly + 1, INK)
-        draw.SimpleText(level, "DermaDefaultBold", x + 50, ly + 14, dz > 120 and Color(120, 200, 255) or (dz < -120 and Color(255, 170, 110) or DIM))
+        draw.SimpleText(level, "DermaDefaultBold", x + 50, ly + 14, dz > 48 and Color(120, 200, 255) or (dz < -48 and Color(255, 170, 110) or DIM))
     end
 
     -- objective marker
-    local target = compassTarget
+    local target = ObjectivePos()
     if not target then return end
     local s = target:ToScreen()
     local dist = math.floor(LocalPlayer():GetPos():Distance(target) * 0.019)

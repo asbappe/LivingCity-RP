@@ -381,11 +381,16 @@ SHIFTS.courier = {
             doors[#doors + 1] = { s, Place(s, ply:GetPos()) }
         end
         Q.Shuffle(doors)
-        local stages = { { kind = "pickup", pos = office, model = "models/props_c17/paper01.mdl", text = "Collect the mail (press E)" } }
+        -- the mail comes from the clerk at the post office, and goes to people, by hand
+        local stages = { Q.Contact("Collect the mail from the postal clerk (press E)", office, "citizen",
+            "'Three for the district. Two are overdue. Don't tell them I said so.'") }
         for i = 1, 3 do
-            stages[#stages + 1] = Deliver(doors[i][1], string.format("Deliver letter %d of 3 to %s", i, doors[i][2]), 180)
+            local name = LC.NewCharacterName()
+            stages[#stages + 1] = Q.Contact(string.format("Hand letter %d of 3 to %s, %s (press E)", i, name, doors[i][2]), doors[i][1], "citizen",
+                Pick({ "They take it without looking at who sent it.", "'Finally,' they say, and shut the door on the rest of the sentence.",
+                    "A nod. Nobody says anything useful in this city out loud.", "They read the envelope twice before they put it away." }))
         end
-        return { title = "Mail round", reward = 25, limit = 600, desc = "Three letters, three doors.", stages = stages }
+        return { title = "Mail round", reward = 25, limit = 600, desc = "Three letters, three people. Collect them at the post office.", stages = stages }
     end,
     function(ply, job)
         local office = WorkSpot(ply, job.num)
@@ -396,7 +401,7 @@ SHIFTS.courier = {
             title = "Sealed envelope", reward = 20, limit = 480,
             desc = "One envelope, Civil Protection seal, to be delivered " .. Place(dest, ply:GetPos()) .. ".",
             stages = {
-                { kind = "pickup", pos = office, model = "models/props_c17/paper01.mdl", text = "Collect the envelope (press E)" },
+                Q.Contact("Collect the envelope from the clerk (press E)", office, "citizen", "'Hand it over in person. Nobody signs for these.'"),
                 Choice("The seal is a Combine stamp. It's not glued very well.", {
                     { text = "Deliver it unopened." },
                     { text = "Steam it open.", check = { "guile", 12 },
@@ -412,7 +417,7 @@ SHIFTS.courier = {
                       end,
                       fail = function(q) Narrate(q, "The seal tears. You'll have to hope nobody checks.") end },
                 }),
-                Deliver(dest, "Deliver the envelope", 160),
+                Q.Contact("Hand the envelope to the addressee (press E)", dest, "citizen", "They take it with both hands, like it might go off."),
             },
         }
     end,
@@ -595,7 +600,7 @@ SHIFTS.porter = {
                         Insert(q, { Count("used_npc", 1, "Hand the suitcase to a unit (press E)", Q.IsCopNPC) })
                     end },
                 }),
-                Deliver(dest, "Deliver the suitcase to " .. destName, 180),
+                Q.Contact("Return the suitcase to its owner, " .. destName .. " (press E)", dest, "citizen", "'That's mine. I thought I'd lost it.' They don't say thank you."),
             },
         }
     end,
@@ -747,7 +752,9 @@ SHIFTS.laundry = {
                           LC.ReportCrime(p, "Theft of Civil Protection property", 240)
                       end },
                 }),
-                Deliver(dest, "Deliver the uniforms to " .. destName, 180),
+                destName == "the checkpoint"
+                    and Q.Contact("Hand the uniforms to the unit at the checkpoint (press E)", dest, "cop")
+                    or Deliver(dest, "Deliver the uniforms to " .. destName, 180),
             },
         }
     end,
