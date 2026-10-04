@@ -164,10 +164,12 @@ for npc in pairs(LC.NPCs) do if IsValid(npc) then total = total + 1 end end
 ok(total <= 7, "the NPC budget stops further spawning", total)
 _setcvar("lc_npc_budget", 60)
 
+_setcvar("lc_npc_arrest_chance", 0) -- walking home past a unit could get someone arrested, and a prisoner stays put
 LC.StartEvent("curfew", 2)
 ok(_globals.lc_event == "curfew", "curfew is published to clients")
 _run(60)
 ok(count("citizen") == 0, "during curfew every citizen goes home", count("citizen"))
+_setcvar("lc_npc_arrest_chance", 8)
 LC.EndEvent(false)
 ok(LC.Event == nil, "curfew ends")
 _run(25)
@@ -1786,6 +1788,7 @@ ok(GMt:GetFallDamage(resident, 900) > 50 and GMt:GetFallDamage(resident, 400) ==
 LC.AddCredits(resident, 200)
 LC.GiveItem(resident, "ration")
 local oldName, oldBlock = resident:GetNW2String("lc_char", "?"), resident:GetNW2Int("lc_block", 0)
+if LC.Prisoners[resident] then LC.ReleasePrisoner(resident) end -- dying in custody is exempt; make sure that's not why
 resident.alive = false
 hook.Run("PlayerDeath", resident)
 resident.alive = true
