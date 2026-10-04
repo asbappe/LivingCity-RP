@@ -62,7 +62,7 @@ If the layout file is ever damaged, it's copied aside as `<map>_unreadable_<time
 - **Fixtures:** water vending machine, ration dispenser, commissary terminal, stove, burning barrel, black market dealer. They appear in the world and come back with the layout. Place them at the foot of a wall and they'll face you. Floor-standing ones sit on the ground. The ration dispenser is wall-mounted at chest height, and a **ration dispenser placed at the front of a ration line** serves that line. Vending machines drop the can out of their slot near the floor.
 - **Paths:** nodes and links for places the map's own navigation can't handle. Send a **test walker** to see if a route works.
 - **Zones:** no-go, rebel territory (no security), housing blocks (numbered), prison area, infestation, and **Combine only** (the nexus, offices, armory, prison). Citizens, NPC or player, stay out: NPCs never wander or route through it, and a player gets `lc_trespass_grace` seconds (10) to leave before they're wanted for trespassing. Units, admins, people in custody and anyone in a convincing uniform may be inside.
-- **Doors:** CP only, always locked, always open, NPCs ignore, force-treat-as-door, plus a tester and inspector. **Doors beside a prison cell or release spot, or inside a prison or Combine-only zone, lock themselves** to everyone but Civil Protection. A tag of your own overrides that.
+- **Doors:** CP only, always locked, always open, NPCs ignore, force-treat-as-door, plus a tester and inspector. **Doors beside a prison cell or release spot, or inside a prison or Combine-only zone, lock themselves**: physically locked, opened only by a unit's E (for a few seconds), a keycard, a bypass charge or an escorted prisoner being walked through. A prisoner can't open any door, admin or not. Prisoners keep their fists. A tag of your own overrides that.
 
 ## The city
 
@@ -236,4 +236,4 @@ Stories: `lcq_startchain`, `lcq_story`, `lcq_resetstory`. Debug: `lc_debugreport
 
 ## Honest limits
 
-The server logic and the gamemode's rules are exercised by 528 automated scenario tests, and the client HUD and editor overlay by a smoke test, all against a simulated Garry's Mod (see `_dev/`). Real-game playtesting has only just started, so expect rough edges in anything visual or audible: animations, sounds, menus, HUD layout, and entity models. Send the debug report and they'll get fixed.
+The server logic and the gamemode's rules are exercised by 531 automated scenario tests, and the client HUD and editor overlay by a smoke test, all against a simulated Garry's Mod (see `_dev/`). Real-game playtesting has only just started, so expect rough edges in anything visual or audible: animations, sounds, menus, HUD layout, and entity models. Send the debug report and they'll get fixed.

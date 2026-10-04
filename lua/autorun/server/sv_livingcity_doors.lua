@@ -84,6 +84,11 @@ function LC.ApplyDoorState(door)
     if tag == "locked" then
         door:Fire("Close")
         door:Fire("Lock", "", 0.1)
+    elseif tag == "cp" or (not tag and LC.AutoDoorTag and LC.AutoDoorTag(door) == "cp") then
+        -- Combine doors, and the ones by the cells, are physically locked, not just "denied":
+        -- units and keycards open them, nothing else does
+        door:Fire("Close")
+        door:Fire("Lock", "", 0.1)
     elseif tag == "open" then
         door:Fire("Unlock")
         door:Fire("Open", "", 0.1)
@@ -107,10 +112,14 @@ end
 -- Opening doors for NPCs
 ------------------------------------------------------------------------
 
-local function NPCMayOpen(role, tag, locked)
+local function NPCMayOpen(role, tag, locked, st)
     if role == "zombie" or role == "scanner" then return false end
     if tag == "locked" or tag == "open" or tag == "ignore" then return false end
-    if tag == "cp" then return role == "cop" or role == "soldier" end
+    if tag == "cp" then
+        if role == "cop" or role == "soldier" then return true end
+        -- a prisoner being walked in, or let out, is taken through
+        return role == "citizen" and st ~= nil and (st.state == "escorted" or (st.poi ~= nil and st.poi.kind == "release"))
+    end
     return not locked -- a door a player locked stays shut
 end
 
@@ -121,7 +130,7 @@ local function TryOpenFor(st, door)
         return
     end
     local locked = IsLocked(door)
-    if not NPCMayOpen(st.role, LC.EffectiveDoorTag(door), locked) then return end
+    if not NPCMayOpen(st.role, LC.EffectiveDoorTag(door), locked, st) then return end
     if locked then
         LC.Relock[door] = true
         door:Fire("Unlock")
@@ -203,12 +212,23 @@ hook.Add("PlayerUse", "LivingCityDoorUse", function(ply, ent)
     local tag = LC.EffectiveDoorTag(ent)
 
     local denied = tag == "locked" or (tag == "cp" and not LC.PlayerMayUseCPDoor(ply, ent))
+    -- somebody in custody doesn't open doors, whoever they are
+    if LC.Prisoners and LC.Prisoners[ply] then denied = true end
     if LC.DoorPicked and LC.DoorPicked(ent) then denied = false end -- picked or bypassed, for a little while
     if denied then
         if (nextUse[ent] or 0) < CurTime() then
             ent:EmitSound(LOCKED_SOUND, 70)
             nextUse[ent] = CurTime() + 1
         end
+        return false
+    end
+
+    -- a Combine door is physically locked: a unit's (or keycard's) E unlocks it for a few seconds
+    if tag == "cp" and IsLocked(ent) and not (LC.DoorPicked and LC.DoorPicked(ent)) then
+        ent:Fire("Unlock")
+        ent:Fire("Open", "", 0.1)
+        LC.OpenedDoors[ent] = CurTime() + 5
+        LC.Relock[ent] = true
         return false
     end
 
@@ -287,4 +307,9 @@ concommand.Add("lc_opendoors", function(ply)
         end
     end
     Say(ply, "Opened " .. n .. " doors. They will stay open.")
+end)
+
+-- New cells, zones or tags change which doors lock.
+hook.Add("LivingCityLayoutChanged", "LivingCityDoors", function()
+    timer.Simple(0.5, function() if LC.Running then LC.ApplyAllDoors() end end)
 end)

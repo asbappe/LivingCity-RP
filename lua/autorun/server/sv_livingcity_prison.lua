@@ -68,6 +68,9 @@ local function PutInCell(ply, cell)
     ply:SetEyeAngles(Angle(0, cell.yaw or 0, 0))
     ply:SetLocalVelocity(Vector(0, 0, 0))
     ply:StripWeapons()
+    -- everyone has their fists, even in a cell
+    ply:Give("weapon_fists")
+    ply:SelectWeapon("weapon_fists")
 end
 
 ------------------------------------------------------------------------
@@ -132,6 +135,7 @@ function LC.ReleasePrisoner(ply)
         end
         -- factions give their own loadout; otherwise hand back what they had
         if hook.Run("LivingCityRestoreLoadout", ply) == nil then
+            ply:StripWeapons() -- the cell's fists; they get back what they came in with
             for _, cls in ipairs(pr.weapons or {}) do ply:Give(cls) end
         end
     end
