@@ -120,12 +120,37 @@ end
 -- Applying a faction to a body
 ------------------------------------------------------------------------
 
+-- The model for this rank: the one the player chose, if the rank has it (or its
+-- counterpart, such as the same face in the Resistance's clothes); else by unit number.
+local function PickModel(ply, models)
+    local chosen = ply:GetNW2String("lc_model", "")
+    if chosen ~= "" then
+        local base = string.match(chosen, "[^/]+$")
+        for _, m in ipairs(models) do
+            if m == chosen then return m end
+        end
+        for _, m in ipairs(models) do
+            if base and string.match(m, "[^/]+$") == base then return m end
+        end
+    end
+    return models[(LCF.UnitNumber(ply:SteamID()) % #models) + 1]
+end
+
+function LC.RefreshModel(ply)
+    local prof = Profile(ply)
+    local models = prof and prof.models or {}
+    if #models > 0 and ply:Alive() then
+        ply:SetModel(PickModel(ply, models))
+        ply:SetupHands()
+    end
+end
+
 local function ApplyBody(ply)
     local prof = Profile(ply)
     if not prof then return end
     local models = prof.models or {}
     if #models > 0 then
-        ply:SetModel(models[(LCF.UnitNumber(ply:SteamID()) % #models) + 1])
+        ply:SetModel(PickModel(ply, models))
     end
     ply:SetupHands()
     local hp = prof.health or 100
@@ -176,7 +201,7 @@ hook.Add("PlayerSetModel", "LivingCityFactions", function(ply)
     local prof = Profile(ply)
     local models = prof and prof.models or {}
     if #models == 0 then return end
-    ply:SetModel(models[(LCF.UnitNumber(ply:SteamID()) % #models) + 1])
+    ply:SetModel(PickModel(ply, models))
     return true
 end)
 

@@ -15,6 +15,8 @@ A Combine-occupied city for Garry's Mod: ambient citizens and Civil Protection r
 
 **Movement is slower and grounded**, so it feels like a person walking through a city: walk 110, sprint 190 (`lc_walk_speed`, `lc_run_speed`), a short jump (`lc_jump_power`) with a pause before the next one (`lc_jump_delay`), no jumping from a crouch, no ducking in the air, and no gaining speed in the air. `lc_slow_movement 0` brings the Half-Life 2 feel back. The visual style (models, materials, lighting, HUD art) is up to the map and content packs you run; this gamemode only changes how it plays.
 
+**Choosing who you are.** The first time you join, and again each time you start over after dying, a window asks for a **name** and a **face** (one of the citizen models, shown turning in a preview). It reminds you to pick a realistic name for a person in this city and era, an ordinary first and last name, with no celebrities, characters from games, films or shows, memes or joke names. The server enforces it: two or three words, letters only, no names on the blocklist (public figures, fictional characters, memes, slurs and profanity), and nobody else in the city can share your name. "Keep the name and face I was given" accepts the random ones. You have five minutes at the start of each life to change your mind (`!character`). Your face carries over to whatever you become: the same face in the Resistance's clothes, say. Staff: `lc_setname <player> <name>`, `lc_creator <player>`.
+
 ### The gamemode, and what's left of Sandbox
 
 Living City is built on Sandbox only so admins keep the building tools. Regular players can't spawn props, NPCs, weapons or vehicles. They also can't noclip, use the physgun or toolgun, or open the spawn and context menus. Factions and ranks are always on. Falls hurt the way they did in Half-Life 2, and there's a short wait before you respawn. Admins outside build mode play by the same rules as everyone else.
@@ -228,4 +230,4 @@ Stories: `lcq_startchain`, `lcq_story`, `lcq_resetstory`. Debug: `lc_debugreport
 
 ## Honest limits
 
-The server logic and the gamemode's rules are exercised by 485 automated scenario tests, and the client HUD and editor overlay by a smoke test, all against a simulated Garry's Mod (see `_dev/`). Real-game playtesting has only just started, so expect rough edges in anything visual or audible: animations, sounds, menus, HUD layout, and entity models. Send the debug report and they'll get fixed.
+The server logic and the gamemode's rules are exercised by 507 automated scenario tests, and the client HUD and editor overlay by a smoke test, all against a simulated Garry's Mod (see `_dev/`). Real-game playtesting has only just started, so expect rough edges in anything visual or audible: animations, sounds, menus, HUD layout, and entity models. Send the debug report and they'll get fixed.

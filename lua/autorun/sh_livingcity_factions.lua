@@ -41,6 +41,8 @@ end
 local CITIZEN = Models("group01", 9, 6)
 local REBEL = Models("group03", 9, 6)
 
+LCF.CitizenModels = CITIZEN -- what a new character may choose from
+
 LCF.Factions = {
     {
         id = "citizen", name = "Citizen", color = Color(160, 190, 160),

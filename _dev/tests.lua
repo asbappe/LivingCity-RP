@@ -2345,6 +2345,36 @@ local back
 for _, o in ipairs(P.list) do if o.name == deadName then back = o end end
 ok(#P.list == saved and back and not back.alive, "the roster, living and dead, survives a restart", #P.list .. "/" .. saved)
 n2:Remove()
+
+section("Choosing a name and a face")
+local function Name(s) local ok2, r = LC.ValidateCharacterName(s) return ok2, r end
+local okN, cleaned = Name("  marta   BRANDT ")
+ok(okN and cleaned == "Marta Brandt", "an ordinary name is accepted and tidied up", cleaned)
+ok(Name("Anna-Marie O'Neil") and Name("Hagman Nilsson") and Name("Luigi Rossi"), "hyphens, apostrophes and ordinary surnames are fine")
+for _, bad in ipairs({ "Taylor Swift", "Gordon Freeman", "Walter White", "Donald Trump", "Skibidi Toilet", "Mike Hunt", "Bob", "J0hn Smith", "Xzqrt Plmn", "Aaaaron Smith", "Jesus Christ", "Johnny Depp" }) do
+    ok(not Name(bad), "'" .. bad .. "' is refused")
+end
+local _, why = Name("Taylor Swift")
+ok(why:find("realistic name") and why:find("celebrities"), "with a reminder of what a good name is")
+local chooser = newPlayer("Chooser", "citizen")
+LC.OpenCharacterCreator(chooser)
+local open = _lastnet("lcc_open")
+ok(open ~= nil, "the creator opens for a new player")
+local face = LCF.CitizenModels[3]
+local function Submit(p, nm, model) _run(1.2) net._q = { nm, model } net.recv_lcc_submit(0, p) end
+Submit(chooser, "Gordon Freeman", face)
+ok(chooser:GetNW2String("lc_char", "") ~= "Gordon Freeman", "a refused name changes nothing")
+Submit(chooser, "Marta Brandt", "models/player/kleiner.mdl")
+ok(chooser:GetNW2String("lc_char", "") ~= "Marta Brandt", "and neither does a face that isn't on offer")
+Submit(chooser, "Marta Brandt", face)
+ok(chooser:GetNW2String("lc_char", "") == "Marta Brandt" and chooser:GetNW2String("lc_model", "") == face, "a good name and a face are kept")
+Submit(chooser, "Greta Voss", face)
+ok(chooser:GetNW2String("lc_char", "") == "Marta Brandt", "and you can't keep changing it", chooser:GetNW2String("lc_char", ""))
+local twin = newPlayer("Twin", "citizen")
+LC.OpenCharacterCreator(twin)
+Submit(twin, "marta brandt", face)
+ok(twin:GetNW2String("lc_char", "") ~= "Marta Brandt", "two people can't share a name", twin:GetNW2String("lc_char", ""))
+ok(LC.ValidateCharacterName("Elena Petrova"), "(and a different name is fine)")
 end
 UpdateTests()
 
