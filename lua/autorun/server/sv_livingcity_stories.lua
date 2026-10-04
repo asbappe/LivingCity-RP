@@ -400,7 +400,7 @@ LC.Chain{
 local function TailStage(secs)
     return {
         kind = "tail", min = 200, max = 1100, lost = 1700, secs = secs,
-        text = "Follow your neighbor without being noticed (not too close, not too far)",
+        text = "Follow your neighbor without being noticed. Not too far, and stay out of his sight: the longer he sees you, the more suspicious he gets",
         onEnter = function(q, st)
             local npc = q.data.target
             if not IsValid(npc) then npc = Q.RandomCitizen() end

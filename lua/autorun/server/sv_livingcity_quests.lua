@@ -547,6 +547,7 @@ function SendState(ply)
         end
         if pos then t.pos = { pos.x, pos.y, pos.z } end
         t.choice = st.kind == "choice" and not st.resolved
+        if st.kind == "tail" then t.suspicion, t.seen = math.floor(st.suspicion or 0), st.seen == true end
     end
     if forgetting then
         t.objective = "You can't quite remember what you were doing."
@@ -611,6 +612,36 @@ local function PollEscort(q, st)
     end
 end
 
+-- How fast someone being tailed grows suspicious of p, per second (0: not at all).
+-- Seeing you matters most: in front of them, in the open, and close. Right
+-- behind them they hear you even without looking; bumping into them is worse.
+local TAIL_COOL = 12 -- per second, out of sight
+local function TailSuspicion(npc, p, st)
+    local to = p:GetPos() - npc:GetPos()
+    to.z = 0
+    local d = to:Length()
+    if d < 100 then return 30 end
+    local sight = st.max or 1100
+    if d > sight then return 0 end
+    local tr = util.TraceLine({ start = npc:EyePos(), endpos = p:EyePos(), mask = MASK_OPAQUE, filter = npc })
+    if tr.Fraction <= 0.97 then return 0 end
+    local fwd = npc:GetForward()
+    local facing = d < 1 or (fwd.x * to.x + fwd.y * to.y) / d > 0.5 -- inside a 120 degree view
+    local rate
+    if facing then
+        local f = math.Clamp((sight - d) / (sight - (st.min or 200)), 0, 1)
+        rate = 30 * f * f
+    elseif d < (st.min or 200) then
+        rate = 10 -- footsteps right behind them
+    else
+        return 0
+    end
+    if p:Crouching() then rate = rate * 0.5 end
+    local v = p:GetVelocity()
+    if v.x * v.x + v.y * v.y > 150 * 150 then rate = rate * 1.5 end
+    return rate
+end
+
 local function Poll(q, now)
     if now > q.expires then return Finish(q, false, "out of time") end
     local mem = Members(q)
@@ -639,15 +670,20 @@ local function Poll(q, now)
             end
         end
         best = best or 1e9
-        if best < st.min then
-            st.close = (st.close or 0) + 0.5
-            if st.close >= 2 then
-                st.close = 0
-                if st.onNoticed then return st.onNoticed(q, st) end
-                return Finish(q, false, "they spotted you")
-            end
-        else
-            st.close = 0
+        -- suspicion builds while they can see you (or hear you right behind
+        -- them) and fades while you're out of sight; only a full meter blows it
+        local gain = 0
+        for _, p in ipairs(mem) do
+            if p:Alive() then gain = math.max(gain, TailSuspicion(npc, p, st)) end
+        end
+        local before = st.suspicion or 0
+        st.suspicion = math.Clamp(before + (gain > 0 and gain or -TAIL_COOL) * 0.5, 0, 100)
+        st.seen = gain > 0
+        if st.suspicion >= 50 and before < 50 then Narrate(q, "They keep glancing back. Get out of sight.") end
+        if st.suspicion >= 100 then
+            st.suspicion = 0
+            if st.onNoticed then return st.onNoticed(q, st) end
+            return Finish(q, false, "they spotted you")
         end
         if best > st.lost then
             st.away = (st.away or 0) + 0.5
@@ -704,10 +740,10 @@ timer.Create("LivingCityQuests", 0.5, 0, function()
         if not ok then
             LC.Error("quest " .. tostring(q.tmpl and q.tmpl.id), err)
             Finish(q, false, "something went wrong")
-        elseif tick and not q.done then
+        elseif not q.done then
             local st = Stage(q)
-            if st and (st.kind == "hold" or st.kind == "survive" or st.kind == "collect" or st.kind == "escort"
-                or st.kind == "target" or st.kind == "tail") then
+            if st and (st.kind == "tail" or tick and (st.kind == "hold" or st.kind == "survive" or st.kind == "collect"
+                or st.kind == "escort" or st.kind == "target")) then
                 SendStateAll(q)
             end
         end

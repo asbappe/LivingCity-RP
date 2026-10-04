@@ -142,7 +142,7 @@ Personal stories that unlock from what you've done, appear at the top of your bo
 | The Missing Unit | Experienced cops. Three different truths |
 | The Overwatch Candidate | Unit 01s. Accept conditioning, or keep your name |
 | The Pamphleteer | Kind citizens. Can end with you joining the Resistance |
-| The Informant | Loyal citizens. Includes tailing a neighbor without being seen |
+| The Informant | Loyal citizens. Includes tailing a neighbor: a suspicion meter fills while he can see you (faster the closer you are and when you run, slower crouched) and drains when you get out of sight, so stepping round a corner into view gives you time to duck back |
 | Father Grigori's Flock | The chaplain. A secret mass, and a traitor among the faithful |
 
 Admins can start any chain directly: `lcq_startchain <ia|inside|missing|candidate|pamphleteer|informant|flock> [player]`. `lcq_story <name>` shows someone's traits, counters and progress; `lcq_resetstory <name>` starts them over.

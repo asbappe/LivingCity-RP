@@ -728,7 +728,7 @@ local mark = qt.stages[1].npc
 ok(IsValid(mark), "a real neighbor is picked to follow")
 mark.sim = false
 for _ = 1, 90 do
-    loyal:SetPos(mark:GetPos() + Vector(500, 0, 0))
+    loyal:SetPos(mark:GetPos() + Vector(-500, 0, 0)) -- behind him (he faces +x)
     _run(0.5)
     if qt.stage > 1 then break end
 end
@@ -742,9 +742,28 @@ LC.AcceptPosting(loyal, n2.id)
 local qt2 = LC.QuestOf[loyal]
 local mark2 = qt2.stages[1].npc
 mark2.sim = false
-loyal:SetPos(mark2:GetPos() + Vector(80, 0, 0))
+-- around a corner, right into his view: the meter climbs, but there's time to duck back
+for _ = 1, 3 do loyal:SetPos(mark2:GetPos() + Vector(180, 0, 0)) _run(0.5) end
+local tst = qt2.stages[qt2.stage]
+ok(tst.kind == "tail" and tst.seen and (tst.suspicion or 0) > 0, "stepping into his view fills a suspicion meter", tst.suspicion)
+local sent = _lastnet("lcq_state")
+ok(sent and string.find(tostring(sent.data[2]), "suspicion", 1, true) ~= nil, "and the meter is sent to the HUD")
+ok(tst.kind == "tail" and not qt2.done, "but doesn't blow the tail on the spot")
+local wall = { a = mark2:GetPos() + Vector(100, -300, 0), b = mark2:GetPos() + Vector(100, 300, 0) }
+table.insert(_walls, wall)
+local high = tst.suspicion
 _run(3)
-ok(qt2.stages[qt2.stage].kind == "choice", "get too close and he notices you")
+ok(not tst.seen and tst.suspicion < high and qt2.stages[qt2.stage] == tst, "back out of sight, it fades", tst.suspicion)
+table.remove(_walls)
+local s0 = tst.suspicion
+for _ = 1, 4 do loyal:SetPos(mark2:GetPos() + Vector(-500, 0, 0)) _run(0.5) end
+ok(tst.suspicion <= s0 and not tst.seen, "following from behind doesn't make him suspicious", tst.suspicion)
+for _ = 1, 10 do
+    if qt2.stages[qt2.stage] ~= tst then break end
+    loyal:SetPos(mark2:GetPos() + Vector(80, 0, 0))
+    _run(0.5)
+end
+ok(qt2.stages[qt2.stage].kind == "choice", "get too close for too long and he notices you")
 withRoll(1, function() LC.ResolveChoice(loyal, qt2.id, 1) end)
 ok(qt2.done and LC.Story(loyal).chains.informant.part == "neighbor", "a failed bluff fails the job, and you can try again")
 
@@ -2550,7 +2569,12 @@ LC.CalmCops(nil)
 LC.SetState(rcop, rst, "idle")
 rst.untilT, rst.nextInspect, rst.nextWarn = CurTime() + 1000, CurTime() + 1000, CurTime() + 1000
 rcop.sim = false
+-- somewhere quiet: no walls, zones or curfew left over from earlier tests in the way
+local savedWalls = _walls
+_walls = {}
+rcop:SetPos(Vector(26000, -26000, 0))
 local here = rcop:GetPos()
+ok(not LC.InRebelZone(here) and not LC.Event, "a clear street for the running checks", LC.Event)
 
 local walker = newPlayer("Walker", "citizen")
 walker:SetPos(here + Vector(300, 0, 0))
@@ -2599,6 +2623,7 @@ _run(3)
 ok(not LC.Runners[unit] and not LC.PlayerIsWanted(unit), "units can run")
 unit.vel = nil
 unit:SetPos(Vector(-30000, 30000, 0))
+_walls = savedWalls
 rcop.sim = true
 _setcvar("lc_can_event", 1)
 end
