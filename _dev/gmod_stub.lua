@@ -43,6 +43,7 @@ function table.Count(t) local c = 0 for _ in pairs(t) do c = c + 1 end return c 
 function table.IsEmpty(t) return next(t) == nil end
 function table.HasValue(t, v) for _, x in pairs(t) do if x == v then return true end end return false end
 function table.GetKeys(t) local o = {} for k in pairs(t) do o[#o + 1] = k end return o end
+function table.Copy(t) local o = {} for k, v in pairs(t) do o[k] = type(v) == "table" and table.Copy(v) or v end return o end
 function SortedPairs(t)
     local keys = table.GetKeys(t)
     table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
@@ -188,6 +189,7 @@ function SetGlobal2String(k, v) _globals[k] = v end
 function SetGlobal2Float(k, v) _globals[k] = v end
 function SetGlobal2Bool(k, v) _globals[k] = v end
 IN_USE = 32
+IN_JUMP, IN_DUCK = 2, 4
 _errors = {}
 function ErrorNoHalt(...) table.insert(_errors, table.concat({ ... }, " ")) end
 function SafeRemoveEntityDelayed(e, d) timer.Simple(d, function() if IsValid(e) then e:Remove() end end) end
@@ -234,6 +236,7 @@ EMT.SetNW2Vector, EMT.GetNW2Vector = EMT.SetNW2String, EMT.GetNW2String
 EMT.SetNW2Float, EMT.GetNW2Float = EMT.SetNW2String, EMT.GetNW2String
 EMT.SetNW2Int, EMT.GetNW2Int = EMT.SetNW2String, EMT.GetNW2String
 function EMT:GetModel() return self.model end
+function EMT:GetOwner() return self.owner end
 function EMT:SetModel(m) self.model = m end
 function EMT:SetLastPosition(p) self.goal = Vector(p.x, p.y, p.z) end
 function EMT:SetSchedule(s) self.sched = s end
@@ -316,6 +319,7 @@ function PMT:IsPlayer() return true end
 function PMT:IsNPC() return false end
 function PMT:Nick() return self.nick end
 function PMT:SteamID() return self.sid end
+function PMT:SteamID64() return "7656119" .. tostring(self.sid) end
 function PMT:Alive() return self.alive end
 function PMT:IsAdmin() return self.admin == true end
 function PMT:IsSuperAdmin() return self.superadmin == true end
@@ -339,12 +343,17 @@ function PMT:Kick(r) self.kicked = r end
 function PMT:SetMaxHealth(h) self.maxhp = h end
 function PMT:SetArmor(a) self.armor = a end
 function PMT:SetWalkSpeed() end
+function PMT:SetSlowWalkSpeed() end
+function PMT:SetCrouchedWalkSpeed() end
+function PMT:SetJumpPower() end
+function PMT:GetRunSpeed() return 200 end
 function PMT:SetRunSpeed() end
 function PMT:SetupHands() end
 function PMT:SelectWeapon() end
 function PMT:GiveAmmo() end
 function PMT:GetActiveWeapon() return nil end
 function PMT:ExitVehicle() end
+function PMT:IsOnGround() return self.ground ~= false end
 function PMT:Crouching() return self.crouch == true end
 function PMT:HasWeapon(c) for _, w in ipairs(self.weps) do if w == c then return true end end return false end
 function PMT:WaterLevel() return self.water or 0 end

@@ -319,7 +319,8 @@ function LC.InvAction(ply, action, id)
         ply:EmitSound("ambient/water/water_splash1.wav", 60)
     elseif action == "drop" then
         LC.TakeItem(ply, id)
-        LC.SpawnWorldItem(id, Front(ply))
+        local dropped = LC.SpawnWorldItem(id, Front(ply))
+        if dropped and LC.ClaimEntity then LC.ClaimEntity(ply, dropped) end -- a raid traces it back to you
     end
 end
 
@@ -525,6 +526,42 @@ function LC.UseVending(ply, ent)
     end)
     return true
 end
+
+-- Stoves and vending machines the map already has act like the editor's fixtures:
+-- press E on one. (Static map props can't be seen by the server; tag those with
+-- the editor's fixture tools, or a stove prop placed within reach works as heat anyway.)
+local MODEL_KINDS = {
+    { "stove", "stove" }, { "furnace", "stove" }, { "oven", "stove" },
+    { "vendingmachine", "vending" }, { "vending_machine", "vending" }, { "vending", "vending" },
+}
+
+function LC.FixtureKindOf(ent)
+    if not IsValid(ent) then return nil end
+    local cls = ent:GetClass()
+    if cls == "lc_stove" then return "stove" elseif cls == "lc_vending" then return "vending" end
+    if string.StartWith(cls, "lc_") then return nil end
+    local m = string.lower(ent:GetModel() or "")
+    if m == "" then return nil end
+    for _, k in ipairs(MODEL_KINDS) do
+        if string.find(m, k[1], 1, true) then return k[2] end
+    end
+    return nil
+end
+
+hook.Add("KeyPress", "LivingCityMapFixtures", function(ply, key)
+    if key ~= IN_USE or not ply:Alive() then return end
+    local tr = util.TraceLine({ start = ply:EyePos(), endpos = ply:EyePos() + ply:EyeAngles():Forward() * 100, filter = ply })
+    local ent = tr.Entity
+    if not IsValid(ent) or string.StartWith(ent:GetClass(), "lc_") then return end -- ours handle themselves
+    local kind = LC.FixtureKindOf(ent)
+    if kind == "vending" then
+        LC.UseVending(ply, ent)
+    elseif kind == "stove" and (ply.lcStoveUse or 0) < CurTime() then
+        ply.lcStoveUse = CurTime() + 1
+        if LC.SendInv then LC.SendInv(ply, true) end
+        ply:ChatPrint("[Stove] Cook from your pockets (F2).")
+    end
+end)
 
 -- The dispenser's own animation, if the model has one.
 function LC.DispenserAnimate(ent)

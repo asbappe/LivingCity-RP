@@ -33,8 +33,9 @@ LC.POINT_KINDS = {
     idle = true, sit = true, sitchair = true, lean = true, queue = true,
     patrol = true, checkpoint = true, spawn = true, cell = true, release = true,
     work = true, vending = true, dispenser = true, terminal = true, stove = true, fire = true, dealer = true,
+    zspawn = true, rspawn = true, -- infested and resistance respawn/spawn points
 }
-LC.ZONE_KINDS = { nogo = true, infest = true, prison = true, block = true, rebel = true }
+LC.ZONE_KINDS = { nogo = true, infest = true, prison = true, block = true, rebel = true, combine = true }
 LC.DOOR_TAGS = { cp = true, locked = true, open = true, ignore = true, force = true }
 
 local DOOR_CLASSES = { prop_door_rotating = true, func_door = true, func_door_rotating = true }

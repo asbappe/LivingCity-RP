@@ -759,11 +759,28 @@ end
 -- Leaving the city (lifetime over, curfew) through spawn points
 ------------------------------------------------------------------------
 
+local function GoHome(npc, st, run)
+    local blocks = LC.ZonesOfKind and LC.ZonesOfKind("block") or {}
+    if #blocks == 0 then return false end
+    -- one of the nearest two blocks, so a street doesn't all pile into the same doorway
+    local from = npc:GetPos()
+    table.sort(blocks, function(a, b) return a.pos:DistToSqr(from) < b.pos:DistToSqr(from) end)
+    local z = blocks[math.min(#blocks, math.random(1, 2))]
+    local spot = LC.SpotInZone(z)
+    if not spot then return false end
+    st.homeBlock = z
+    return GoTo(npc, st, spot, run, { kind = "spawn", pos = spot, yaw = math.random(0, 359) })
+end
+
 local function StartLeaving(npc, st, run)
     st.leaving = true
     LeaveLine(npc, st)
     CancelBusy(npc, st)
     Release(npc, st)
+    -- curfew: people walk home to a housing block and go inside, rather than
+    -- trooping off to the edge of the map
+    local ev = LC.Event
+    if (ev == "curfew" or ev == "lockdown") and GoHome(npc, st, run) then return true end
     local spawns = PointsOfKind("spawn")
     if #spawns > 0 then
         local best, bd
@@ -774,16 +791,7 @@ local function StartLeaving(npc, st, run)
         return GoTo(npc, st, best.pos, run, best)
     end
     -- no spawn points: head into the nearest housing block and vanish there
-    local blocks = LC.ZonesOfKind and LC.ZonesOfKind("block") or {}
-    if #blocks > 0 then
-        local best, bd
-        for _, z in ipairs(blocks) do
-            local d = z.pos:DistToSqr(npc:GetPos())
-            if not bd or d < bd then best, bd = z, d end
-        end
-        local spot = LC.SpotInZone(best)
-        if spot then return GoTo(npc, st, spot, run, { kind = "spawn", pos = spot }) end
-    end
+    if GoHome(npc, st, run) then return true end
     if not GoTo(npc, st, LC.RandomWanderPos(), run, nil) then st.untilT = CurTime() + 5 end
 end
 LC.StartLeaving = StartLeaving
@@ -812,6 +820,8 @@ function Arrive(npc, st, now)
         if LC.OnNPCReachedCell then LC.OnNPCReachedCell(npc, st, now) else st.untilT = now + 30 end
     elseif k == "release" then
         st.untilT = now + math.Rand(2, 5)
+    elseif k == "raidpoint" then
+        st.untilT = now + 0.2
     elseif BUSY[k] then
         if not StartBusy(npc, st, poi) then st.untilT = now + math.Rand(15, 40) end
     elseif k == "checkpoint" then
@@ -996,6 +1006,15 @@ end
 
 local function FindSpawnPos(role)
     if role == "zombie" then
+        -- infestation spawn points first, spread out; then spots inside infestation zones
+        local zs = PointsOfKind("zspawn")
+        for _ = 1, 6 do
+            if #zs == 0 then break end
+            local p = Pick(zs)
+            if FarFromPlayers(p.pos, 400) and not LC.IsSeen(p.pos + UP) then
+                return p.pos + Vector(0, 0, 4), LC.InfestZoneAt and LC.InfestZoneAt(p.pos) or nil
+            end
+        end
         local zones = LC.ZonesOfKind and LC.ZonesOfKind("infest") or {}
         if #zones == 0 then return nil end
         local z = Pick(zones)
@@ -1004,24 +1023,45 @@ local function FindSpawnPos(role)
         return nil
     end
 
+    local citizen = role == "citizen"
     local spawns = PointsOfKind("spawn")
     if role ~= "scanner" and #spawns > 0 then
         for _ = 1, 8 do
             local p = Pick(spawns)
             if FarFromPlayers(p.pos, 250) and not LC.IsSeen(p.pos + UP) and ClearSpot(p.pos)
-                and not (LC.InNoGo and LC.InNoGo(p.pos, role)) then
+                and not (LC.InNoGo and LC.InNoGo(p.pos, role))
+                and (not citizen or LC.CitizenSpotOK(p.pos)) then
                 return p.pos + Vector(0, 0, 4)
             end
         end
+        if citizen then return nil end -- spawn points exist; never improvise a citizen onto Combine ground
     end
 
     for _ = 1, 25 do
         local pos = LC.RandomWanderPos(role)
         if not pos then return nil end
         local far = FarFromPlayers(pos, cvSpawnDist:GetFloat())
-        if (far or (FarFromPlayers(pos, 500) and not LC.IsSeen(pos + UP))) and ClearSpot(pos) then
+        if (far or (FarFromPlayers(pos, 500) and not LC.IsSeen(pos + UP))) and ClearSpot(pos)
+            and (not citizen or LC.CitizenSpotOK(pos)) then
             return pos + Vector(0, 0, 4)
         end
+    end
+    return nil
+end
+
+-- Somewhere a citizen player may stand when (re)spawning: a citizen spawn
+-- point if the map has any, else a clean wander spot.
+function LC.SafeCitizenSpot()
+    local spawns = PointsOfKind("spawn")
+    for _ = 1, 12 do
+        if #spawns == 0 then break end
+        local p = Pick(spawns)
+        if LC.CitizenSpotOK(p.pos) then return p.pos + Vector(0, 0, 4) end
+    end
+    for _ = 1, 25 do
+        local pos = LC.RandomWanderPos("citizen")
+        if not pos then break end
+        if LC.CitizenSpotOK(pos) then return pos + Vector(0, 0, 4) end
     end
     return nil
 end
@@ -1443,12 +1483,13 @@ local function ThinkSecurity(npc, st, now)
                 end
             end
         end
-        if now > st.nextInspect and (s == "idle" or s == "moving") then
+        if now > st.nextInspect and (s == "idle" or s == "moving") and not st.raid then
             TryStartInspection(npc, st, now)
             if st.state ~= "idle" and st.state ~= "moving" then return end
         end
     end
 
+    if st.raid and st.state == "idle" and now > st.untilT and LC.RaidThink and LC.RaidThink(npc, st, now) then return end
     if st.state == "moving" then return HandleMoving(npc, st, now) end
     if st.state == "idle" and now > st.untilT then ChooseSecurityTask(npc, st, now) end
 end

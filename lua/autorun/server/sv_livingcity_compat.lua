@@ -174,7 +174,7 @@ end
 
 -- The tag NPCs should obey: ours first, then whatever the gamemode says.
 function LC.EffectiveDoorTag(door)
-    return LC.GetDoorTag(door) or (LC.DoorIsCPByGamemode(door) and "cp") or nil
+    return LC.GetDoorTag(door) or (LC.AutoDoorTag and LC.AutoDoorTag(door)) or (LC.DoorIsCPByGamemode(door) and "cp") or nil
 end
 
 ------------------------------------------------------------------------

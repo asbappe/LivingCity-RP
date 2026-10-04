@@ -193,6 +193,9 @@ cst.untilT = 1e9
 cop.sim = false -- keep him put
 LC.StartEvent("curfew", 3)
 _run(40)
+ok(not has(citizen.chat, "Warning 1 of 3") and (LC.EventGraceEnds or 0) > CurTime(), "curfew gives a grace period to get home before anyone is warned")
+ok(LC.CurfewGrace() >= 60, "and it's never shorter than a minute")
+_run(45)
 ok(has(citizen.chat, "Warning 1 of 3") and has(citizen.chat, "Warning 3 of 3"), "an officer who sees you gives three warnings")
 ok(LC.PlayerIsWanted(citizen), "then you're wanted", table.concat(citizen.chat, " | ") .. " cop=" .. tostring(cst.state))
 LC.ClearWanted(citizen)
@@ -1695,6 +1698,49 @@ boss:StripWeapons()
 hook.Run("PlayerLoadout", boss)
 ok(not boss:HasWeapon("weapon_physgun"), "factions don't hand admins a physgun outside build mode")
 ok(GMt:GetFallDamage(resident, 900) > 50 and GMt:GetFallDamage(resident, 400) == 0, "falls hurt like they did in Half-Life 2")
+LC.AddCredits(resident, 200)
+LC.GiveItem(resident, "ration")
+local oldName, oldBlock = resident:GetNW2String("lc_char", "?"), resident:GetNW2Int("lc_block", 0)
+resident.alive = false
+hook.Run("PlayerDeath", resident)
+resident.alive = true
+ok(resident:GetNW2String("lc_char", "") ~= "" and resident:GetNW2String("lc_char", "") ~= oldName or oldName == "?", "dying makes you a new person")
+ok(LC.Credits(resident) <= 20 and not LC.HasItem(resident, "ration") and LC.Standing(resident) == 0, "with nothing from the old life")
+local ghost = newPlayer("Ghost", "zombie")
+local ghostName = ghost:GetNW2String("lc_char", "")
+LC.AddCredits(ghost, 50)
+ghost.alive = false
+hook.Run("PlayerDeath", ghost)
+ok(ghost:GetNW2String("lc_char", "") == ghostName and LC.Credits(ghost) >= 50, "the infested come back as themselves")
+ghost.alive = true
+-- movement
+local function Mv(buttons)
+    local m = { b = buttons, v = Vector(300, 0, 0) }
+    function m:GetButtons() return self.b end
+    function m:SetButtons(b) self.b = b end
+    function m:GetVelocity() return self.v end
+    function m:SetVelocity(v) self.v = v end
+    function m:GetMaxSpeed() return 190 end
+    return m
+end
+resident.lcNextJump = nil
+local mv1 = Mv(IN_JUMP)
+hook.Run("SetupMove", resident, mv1)
+ok(bit.band(mv1.b, IN_JUMP) ~= 0, "you can jump")
+local mv2 = Mv(IN_JUMP)
+hook.Run("SetupMove", resident, mv2)
+ok(bit.band(mv2.b, IN_JUMP) == 0, "but not again straight away: no bunny hopping")
+resident.lcNextJump = nil
+resident.crouch = true
+local mv3 = Mv(IN_JUMP)
+hook.Run("SetupMove", resident, mv3)
+ok(bit.band(mv3.b, IN_JUMP) == 0, "or from a crouch")
+resident.crouch = false
+resident.ground = false
+local mv4 = Mv(IN_DUCK)
+hook.Run("SetupMove", resident, mv4)
+ok(bit.band(mv4.b, IN_DUCK) == 0 and mv4.v:Length() <= 200.5, "nor tuck up or speed up in the air")
+resident.ground = nil
 GMt:PlayerDeath(resident)
 ok(resident.NextSpawnTime and resident.NextSpawnTime > CurTime() + 5, "a short wait before you respawn")
 GMt:ShowHelp(resident)
@@ -2045,6 +2091,144 @@ ok(q.done, "and stepping inside the edge of the block is enough")
 guide:SetPos(Vector(-30000, 30000, 0))
 end
 EscortTests()
+
+----------------------------------------------------------------------
+local function UpdateTests() -- combine zones, locked doors, curfew homes, raids, characters, quests
+local newPlayer = newPlayer
+_setcvar("lc_factions", 1)
+local FAR = Vector(30000, 30000, 0)
+section("Combine-only areas")
+local nexus = Vector(20000, 20000, 0)
+LC.AddZone(nexus, 300, "combine", 0)
+ok(LC.InNoGo(nexus, "citizen") and not LC.InNoGo(nexus, "cop"), "citizen NPCs avoid a Combine-only zone, units don't")
+local trespasser = newPlayer("Trespasser", "citizen")
+local nexusCop = newPlayer("NexusCop", "cp")
+_run(1) -- let their spawns settle
+trespasser:SetPos(nexus)
+nexusCop:SetPos(nexus + Vector(50, 0, 0))
+_run(2)
+ok(has(trespasser.chat, "restricted area"), "a citizen who walks in is told to leave")
+ok(not has(nexusCop.chat, "restricted area") and not LC.PlayerIsWanted(nexusCop), "Civil Protection may be there", tostring(nexusCop.chat and nexusCop.chat[#nexusCop.chat]))
+trespasser:SetPos(FAR)
+_run(2)
+ok(not LC.PlayerIsWanted(trespasser), "leaving in time costs nothing")
+trespasser:SetPos(nexus)
+_run(14)
+ok(LC.PlayerIsWanted(trespasser), "staying gets you wanted for trespassing")
+LC.ClearWanted(trespasser)
+trespasser:SetPos(FAR)
+nexusCop:SetPos(FAR)
+
+section("Doors by the cells lock themselves")
+local celldoor = ents.Create("func_door")
+celldoor.mapid = 801
+celldoor:SetPos(Vector(455, 450, 40))
+local farDoor = ents.Create("func_door")
+farDoor.mapid = 802
+farDoor:SetPos(Vector(9000, 9000, 40))
+ok(LC.EffectiveDoorTag(celldoor) == "cp", "a door beside a prison cell is Combine only")
+ok(LC.EffectiveDoorTag(farDoor) == nil, "a door elsewhere is left alone")
+local nexusDoor = ents.Create("func_door")
+nexusDoor.mapid = 803
+nexusDoor:SetPos(nexus + Vector(100, 0, 40))
+ok(LC.EffectiveDoorTag(nexusDoor) == "cp", "so is one inside a Combine-only zone")
+ok(hook.Run("PlayerUse", trespasser, celldoor) == false, "citizens can't open it", tostring(hook.Run("PlayerUse", trespasser, celldoor)))
+ok(hook.Run("PlayerUse", nexusCop, celldoor) ~= false, "Civil Protection can")
+LC.SetDoorTag(celldoor, "open")
+ok(LC.EffectiveDoorTag(celldoor) == "open", "a tag of your own wins")
+LC.SetDoorTag(celldoor, nil)
+
+section("Where citizens may appear")
+ok(LC.CitizenSpotOK(Vector(9000, -9000, 0)), "an ordinary street is fine")
+ok(not LC.CitizenSpotOK(nexus), "never a Combine-only zone")
+local realTrace = util.TraceLine
+util.TraceLine = function(t)
+    return { Hit = true, HitPos = t.endpos, HitNormal = Vector(0, 0, 1), HitTexture = "METAL/COMBINEMETAL001", Fraction = 0.5 }
+end
+ok(LC.OnCombineSurface(Vector(9000, -9000, 0)) and not LC.CitizenSpotOK(Vector(9000, -9000, 0)), "or Combine metal and glass")
+util.TraceLine = function(t)
+    return { Hit = true, HitPos = t.endpos, HitNormal = Vector(0, 0, 1), HitTexture = "CONCRETE/CONCRETEFLOOR001A", Fraction = 0.5 }
+end
+ok(not LC.OnCombineSurface(Vector(9000, -9000, 0)), "plain concrete isn't Combine ground")
+util.TraceLine = realTrace
+local nest = Vector(-9000, -9000, 0)
+LC.AddPoint(nest, 0, "zspawn", 0)
+ok(not LC.CitizenSpotOK(nest + Vector(300, 0, 0)), "and never beside an infestation spawn")
+ok(LC.POINT_KINDS.rspawn and LC.POINT_KINDS.zspawn, "zombie and rebel spawn points can be placed")
+
+section("Curfew: people walk home")
+local npcH, stH = LC.Spawners.citizen(Vector(-300, -500, 0))
+LC.StartEvent("curfew", 3)
+stH.state = "idle"
+LC.StartLeaving(npcH, stH, false)
+ok(stH.homeBlock ~= nil and stH.poi and stH.poi.kind == "spawn" and LC.InBlock(stH.poi.pos, 1), "a citizen is sent into a housing block, not off the map", stH.poi and stH.poi.kind)
+LC.EndEvent(true)
+npcH:Remove()
+
+section("Block raids")
+local zb = LC.ZonesOfKind("block")[1]
+local raided = newPlayer("Owner", "citizen")
+raided:SetPos(FAR)
+local function Drop(cls, model, offset)
+    local e = ents.Create(cls)
+    e:SetPos(zb.pos + offset)
+    if model then e:SetModel(model) end
+    e.lcOwner = raided:SteamID64()
+    return e
+end
+local radioItem = Drop("lc_item", nil, Vector(40, 0, 0))
+radioItem:SetNW2String("lc_item", "radio_tuned")
+local tv = Drop("prop_physics", "models/props_c17/tv_monitor01.mdl", Vector(0, 60, 0))
+local gun = Drop("weapon_ar2", nil, Vector(-50, 0, 0))
+local legal = ents.Create("lc_item")
+legal:SetPos(zb.pos + Vector(20, 20, 0))
+legal:SetNW2String("lc_item", "ration")
+local table1 = ents.Create("prop_physics")
+table1:SetPos(zb.pos + Vector(0, -60, 0))
+table1:SetModel("models/props_c17/furnituretable001a.mdl")
+ok(LC.ContrabandOf(radioItem) and LC.ContrabandOf(tv) and LC.ContrabandOf(gun), "contraband items, TVs and loose weapons count")
+ok(not LC.ContrabandOf(legal) and not LC.ContrabandOf(table1), "rations and furniture don't")
+local raidCop, rcst = LC.Spawners.cop(zb.pos + Vector(150, 0, 0))
+rcst.routeGroup = nil
+ok(LC.StartRaid(1), "a raid can be started on a block")
+_run(8)
+ok(rcst.raid ~= nil or LC.Raid == nil, "units take it in turn to walk the block")
+_run(160)
+ok(LC.Raid == nil, "and the raid ends")
+ok(not IsValid(radioItem) and not IsValid(tv) and not IsValid(gun), "contraband is confiscated")
+ok(IsValid(legal) and IsValid(table1), "everything else is left alone")
+ok(LC.PlayerIsWanted(raided) and has(raided.chat, "3 contraband items"), "and whoever owned it is wanted, for everything found under their name")
+LC.ClearWanted(raided)
+raidCop:Remove()
+
+section("A new life")
+ok(true, "(permanent death is covered with the gamemode, above)")
+local medic = newPlayer("Medic", "citizen")
+LC.SetJob(medic, "medic", true)
+medic:Give("weapon_smg1")
+ok(medic:HasWeapon("weapon_medkit"), "a medic is issued a medkit")
+LC.AddXP(medic, 100000, "test")
+ok(medic:HasWeapon("weapon_medkit") and medic:HasWeapon("weapon_smg1"), "a promotion doesn't take away your medkit or what's in your hands")
+
+section("Quests: bins, markers, house calls")
+local binman = newPlayer("Binman", "citizen")
+binman:SetPos(Vector(0, -500, 0))
+local bin = ents.Create("prop_physics")
+bin:SetModel("models/props_trainstation/trashcan_indoor001a.mdl")
+bin:SetPos(Vector(600, -500, 0))
+local bin2 = ents.Create("prop_physics")
+bin2:SetModel("models/props_junk/trashdumpster01a.mdl")
+bin2:SetPos(Vector(800, -900, 0))
+local found = LC.QB.FindBins(binman, 100, 5000, 3)
+ok(#found == 2 and (found[1] == bin or found[2] == bin), "the bin round finds the bins that are already in the map")
+local fix = ents.Create("prop_physics")
+fix:SetModel("models/props_c17/furniturestove001a.mdl")
+local vend = ents.Create("prop_physics")
+vend:SetModel("models/props_interiors/vendingmachinesoda01a.mdl")
+ok(LC.FixtureKindOf(fix) == "stove" and LC.FixtureKindOf(vend) == "vending" and LC.FixtureKindOf(bin) == nil, "map stoves and vending machines are recognised as fixtures")
+bin:Remove() bin2:Remove() fix:Remove() vend:Remove()
+end
+UpdateTests()
 
 ----------------------------------------------------------------------
 section("Stop")

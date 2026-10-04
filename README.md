@@ -9,6 +9,12 @@ A Combine-occupied city for Garry's Mod: ambient citizens and Civil Protection r
 3. The city starts by itself. You're a citizen. Press **F1** for the guide, **F4** to pick a faction.
 4. To build the city as an admin, type `!build`. Build mode gives you the spawn menu, the physgun, the toolgun and noclip. Then go to Q menu > Tools > **Living City > Living City Editor**. Type `!build` again to go back to playing.
 
+### Permanent death, and a slower pace
+
+**When you die, that person is gone.** You come back as someone new: a new name and citizen number (shown on name tags and in chat), no credits, no Civil Standing, no job, empty pockets and stash, no rank in any faction, no story, and a housing block of your own. Infested players come back as themselves, admins in build mode are exempt, and dying in custody doesn't end or shorten a sentence. Conduct strikes belong to the real player and stay. `lc_permadeath 0` turns it off; `lc_newcharacter <name>` wipes someone by hand.
+
+**Movement is slower and grounded**, so it feels like a person walking through a city: walk 110, sprint 190 (`lc_walk_speed`, `lc_run_speed`), a short jump (`lc_jump_power`) with a pause before the next one (`lc_jump_delay`), no jumping from a crouch, no ducking in the air, and no gaining speed in the air. `lc_slow_movement 0` brings the Half-Life 2 feel back. The visual style (models, materials, lighting, HUD art) is up to the map and content packs you run; this gamemode only changes how it plays.
+
 ### The gamemode, and what's left of Sandbox
 
 Living City is built on Sandbox only so admins keep the building tools. Regular players can't spawn props, NPCs, weapons or vehicles. They also can't noclip, use the physgun or toolgun, or open the spawn and context menus. Factions and ranks are always on. Falls hurt the way they did in Half-Life 2, and there's a short wait before you respawn. Admins outside build mode play by the same rules as everyone else.
@@ -50,11 +56,11 @@ If the layout file is ever damaged, it's copied aside as `<map>_unreadable_<time
 
 ### Placing things
 
-- **Points:** loiter, sit, bench, lean, ration line slots (front first), patrol beats (in order), checkpoints, spawn/exit doorways, prison cells, release spot, **workplaces** (number = job).
+- **Points:** loiter, sit, bench, lean, ration line slots (front first), patrol beats (in order), checkpoints, spawn/exit doorways (citizens), prison cells, release spot, **workplaces** (number = job), **infestation spawns** (zombies and infested players) and **resistance spawns** (hunted players). Place the three kinds of spawn far apart so citizens don't walk into the infestation. Citizens only ever appear at their spawn doorways (or, on a map with none, at clean spots), never on Combine metal or glass, in a Combine-only zone, or near an infestation spawn.
 - **Fixtures:** water vending machine, ration dispenser, commissary terminal, stove, burning barrel, black market dealer. They appear in the world and come back with the layout. Place them at the foot of a wall and they'll face you. Floor-standing ones sit on the ground. The ration dispenser is wall-mounted at chest height, and a **ration dispenser placed at the front of a ration line** serves that line. Vending machines drop the can out of their slot near the floor.
 - **Paths:** nodes and links for places the map's own navigation can't handle. Send a **test walker** to see if a route works.
-- **Zones:** no-go, rebel territory (no security), housing blocks (numbered), prison area, infestation.
-- **Doors:** CP only, always locked, always open, NPCs ignore, force-treat-as-door, plus a tester and inspector.
+- **Zones:** no-go, rebel territory (no security), housing blocks (numbered), prison area, infestation, and **Combine only** (the nexus, offices, armory, prison). Citizens, NPC or player, stay out: NPCs never wander or route through it, and a player gets `lc_trespass_grace` seconds (10) to leave before they're wanted for trespassing. Units, admins, people in custody and anyone in a convincing uniform may be inside.
+- **Doors:** CP only, always locked, always open, NPCs ignore, force-treat-as-door, plus a tester and inspector. **Doors beside a prison cell or release spot, or inside a prison or Combine-only zone, lock themselves** to everyone but Civil Protection. A tag of your own overrides that.
 
 ## The city
 
@@ -62,7 +68,9 @@ Citizens wander, sit, lean, work at workplaces, chat, queue at ration lines, and
 
 **Ration lines:** people nearby join the line and take their places in the order they arrive. The person at the front is served from the ration dispenser if one is placed at the front of the line (it plays its dispensing animation), or by an unseen clerk if not. Players can stand at the front of the line too. After a few seconds you're handed a ration, and the NPCs behind you wait their turn. The usual allocation rules apply: one per allocation, and none for anticitizens. Scanners follow citizens, change altitude now and then, and work themselves free when they snag on walkways. Overwatch soldiers are optional. Zombies live in infestation zones; birds and the odd headcrab roam the streets.
 
-**Events** run automatically or from the panel: rations, inspection sweeps, curfew, lockdown. During curfew and lockdown your HUD points you home to your housing block, and a cop who sees you outside gives three warnings before you're wanted.
+**Events** run automatically or from the panel: rations, inspection sweeps, block raids, curfew, lockdown. During curfew and lockdown your HUD points you home to your housing block, and you get a **grace period of at least 60 seconds** (`lc_curfew_grace`) to reach it, counted down on the HUD. After that, a cop who sees you outside gives three warnings before you're wanted. Citizens walk home into the nearest housing block when curfew starts and go inside, instead of disappearing from the edge of the map.
+
+**Block raids** (`lc_event raid`): a few units walk into one housing block and go through it systematically, a string of stops spread across the block. At each stop they frisk anyone there and confiscate contraband lying around: contraband items, loose weapons, TVs and radios. Whoever dropped or spawned each item is traced, and **each owner becomes wanted for contraband, for longer the more was found under their name** (five or more is a weapons cache, and gets the street units after them). Residents' hidden stashes may be found too, and owners who are offline are wanted when they next log in. `lc_raid_units`, `lc_raid_stash_chance`.
 
 **Prison:** security NPCs arrest instead of kill, CP players arrest with the Arrest Baton, escaping makes you wanted, and sentences survive death and disconnects. **No cells on the map yet?** Then an arrest happens on the street. You're cuffed and made to kneel for 20 seconds (`lc_street_detention`), searched, fined 25 credits (`lc_street_fine`), and let go with a warning. (Arrests need prison **cell points** placed with the editor; a prison zone around them is optional.)
 
@@ -105,6 +113,8 @@ Searching a body in front of a unit is a crime. Bodies stay for 5 minutes (`lc_b
 
 ## Jobs and quests (F3)
 
+**Finding the objective.** The tracker on the right shows a compass for whatever you're after: a pointer relative to where you're facing, the distance in meters, a heading (ahead, behind left, ...) and whether it's on your level, a floor or more **UP**, or **DOWN**. It works even when the target is far enough away that the game isn't drawing it. Quests never send you to the infestation or onto Combine ground.
+
 Each faction has a board of radiant jobs built from your actual map: Directives, Protocols, Agenda, Operations, Assignments, Urges. Many have **choices with d20 checks** (Authority, Empathy, Guile, Nerve), and your choices build three traits that stick: **Loyalty, Sympathy, Corruption**.
 
 Built for crowded servers: no job ever targets a player, boards are finite and scale with faction size, violent jobs are capped city-wide, and people can squad up.
@@ -127,11 +137,11 @@ Admins can start any chain directly: `lcq_startchain <ia|inside|missing|candidat
 
 ## Union jobs
 
-Citizens (and Resistance members who still pass for citizens) choose a job on their board. Each job posts a steady stream of **Union shifts** at its workplaces, or in the streets if none are marked:
+Citizens (and Resistance members who still pass for citizens) choose a job on their board. Promotions never take your tools away. Each job posts a steady stream of **Union shifts** at its workplaces, or in the streets if none are marked:
 
 | # | Job | Shifts |
 |---|---|---|
-| 1 | Sanitation Worker | Litter sweeps, bin rounds, graffiti removal |
+| 1 | Sanitation Worker | Litter sweeps, bin rounds (at the map's own bins), graffiti removal |
 | 2 | Ration Kitchen | Prep, supply runs, serving the line |
 | 3 | Clinic Medic (gets a medkit) | Clinic rounds, house calls |
 | 4 | Factory Worker | Assembly quotas, the loading dock, a foreman who skims |
@@ -154,6 +164,7 @@ The number is the workplace number in the editor. Shifts pay Credits and Civil S
 - **Breen's Private Reserve** from the vending machines quenches thirst and leaves you dizzy. Sometimes you forget what you were doing, and so does your quest tracker. You keep the empty can.
 - **Bottles and cans:** fill them in water, then boil them over a stove or fire.
 - **Hunting:** birds and headcrabs leave carcasses. Cook them at a stove or burning barrel (any stove, oven or fire already on the map works too). Raw meat is a gamble.
+- **Stoves and vending machines** the map already has work as fixtures: press E on a stove prop to cook, on a vending machine prop to buy a can. (Props baked into the map as static geometry can't be seen by the game; place the editor's fixtures there.)
 - **Fists:** everyone has them. One punch kills a bird. A headcrab takes several. People barely notice. Don't go AFK in an alley with headcrabs around.
 - **Ration dispensers** give a ration packet once per allocation (twice as often during distribution), unless your standing is too low.
 
@@ -204,11 +215,11 @@ Run **Copy debug report** in the editor panel (or `lc_debugreport`). It copies s
 
 ## Admin commands
 
-Gamemode: `lc_buildmode` (or `!build`). Escalation: `lc_setalert <name> <level>`.
+Gamemode: `lc_buildmode` (or `!build`), `lc_permadeath`, `lc_newcharacter <name>`, `lc_slow_movement`, `lc_walk_speed`, `lc_run_speed`, `lc_jump_power`, `lc_jump_delay`. Escalation: `lc_setalert <name> <level>`. Curfew and raids: `lc_curfew_grace`, `lc_event raid`, `lc_raid_units`, `lc_raid_stash_chance`, `lc_trespass_grace`.
 City: `lc_start`, `lc_stop`, `lc_calm`, `lc_status`, `lc_reload`, `lc_savesettings`, `lc_autolink`, `lc_event <rations|sweep|curfew|lockdown> [minutes]`, `lc_endevent`, `lc_announce`, `lc_unlockdoors`, `lc_opendoors`.
 People: `lc_jail`, `lc_unjail`, `lc_prisoners`, `lc_setblock`, `lc_reassignblocks`, `lc_conduct`, `lc_pardon`, `lc_setjob`, `lc_givecredits`, `lc_setstanding`, `lc_giveitem`, `lc_search`, `lcf_setfaction`, `lcf_setxp`, `lcf_promote`, `lcf_demote`, `lcf_whitelist`.
 Stories: `lcq_startchain`, `lcq_story`, `lcq_resetstory`. Debug: `lc_debugreport`.
 
 ## Honest limits
 
-The server logic and the gamemode's rules are exercised by 422 automated scenario tests, and the client HUD and editor overlay by a smoke test, all against a simulated Garry's Mod (see `_dev/`). Real-game playtesting has only just started, so expect rough edges in anything visual or audible: animations, sounds, menus, HUD layout, and entity models. Send the debug report and they'll get fixed.
+The server logic and the gamemode's rules are exercised by 462 automated scenario tests, and the client HUD and editor overlay by a smoke test, all against a simulated Garry's Mod (see `_dev/`). Real-game playtesting has only just started, so expect rough edges in anything visual or audible: animations, sounds, menus, HUD layout, and entity models. Send the debug report and they'll get fixed.

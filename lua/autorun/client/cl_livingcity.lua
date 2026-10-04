@@ -34,18 +34,19 @@ local POINT_COLORS = {
     spawn = Color(240, 240, 240), cell = Color(255, 140, 40), release = Color(255, 200, 140),
     work = Color(200, 150, 100), vending = Color(90, 170, 230), dispenser = Color(200, 200, 120),
     terminal = Color(230, 180, 90), stove = Color(230, 110, 60), fire = Color(255, 120, 40), dealer = Color(150, 110, 190),
+    zspawn = Color(170, 220, 40), rspawn = Color(230, 150, 70),
 }
 local POINT_NAMES = {
     idle = "LOITER", sit = "SIT", sitchair = "BENCH", lean = "LEAN", queue = "LINE", patrol = "PATROL",
     checkpoint = "CHECKPOINT", spawn = "SPAWN/EXIT", cell = "CELL", release = "RELEASE",
     work = "WORKPLACE", vending = "VENDING", dispenser = "RATIONS", terminal = "COMMISSARY", stove = "STOVE", fire = "FIRE",
-    dealer = "DEALER",
+    dealer = "DEALER", zspawn = "ZOMBIE SPAWN", rspawn = "REBEL SPAWN",
 }
 local ZONE_COLORS = {
     nogo = Color(255, 60, 60), infest = Color(170, 220, 40), prison = Color(255, 140, 40),
-    block = Color(180, 120, 255), rebel = Color(230, 150, 70),
+    block = Color(180, 120, 255), rebel = Color(230, 150, 70), combine = Color(70, 140, 255),
 }
-local ZONE_NAMES = { nogo = "NO-GO", infest = "INFESTATION", prison = "PRISON", block = "BLOCK", rebel = "REBEL TERRITORY" }
+local ZONE_NAMES = { nogo = "NO-GO", infest = "INFESTATION", prison = "PRISON", block = "BLOCK", rebel = "REBEL TERRITORY", combine = "COMBINE ONLY" }
 local DOOR_COLORS = {
     cp = Color(80, 150, 255), locked = Color(255, 70, 70), open = Color(90, 220, 120),
     ignore = Color(160, 160, 160), force = Color(240, 200, 60),
@@ -245,7 +246,7 @@ end
 -- What the editor is aiming at: the same thing a right click would remove
 ------------------------------------------------------------------------
 
-local ZONE_MODE_KIND = { zone_nogo = "nogo", zone_rebel = "rebel", zone_block = "block", zone_prison = "prison", zone_infest = "infest" }
+local ZONE_MODE_KIND = { zone_nogo = "nogo", zone_rebel = "rebel", zone_block = "block", zone_prison = "prison", zone_infest = "infest", zone_combine = "combine" }
 
 local function EditorMode()
     local cv = GetConVar("livingcity_editor_mode")
@@ -603,6 +604,14 @@ hook.Add("HUDPaint", "LivingCityHUD", function()
         y = y + (tall and 66 or 48)
     end
 
+    local trespass = ply:GetNW2Float("lc_trespass_until", 0)
+    if trespass > now then
+        Box(w / 2 - 210, y, 420, 40, Color(70, 140, 255))
+        draw.SimpleText(string.format("RESTRICTED AREA: LEAVE NOW (%ds)", math.ceil(trespass - now)), "DermaLarge", w / 2, y + 20,
+            color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        y = y + 48
+    end
+
     local protect = ply:GetNW2Float("lc_protect_until", 0)
     if protect > now then
         draw.SimpleTextOutlined(string.format("Spawn protection %ds", math.ceil(protect - now)), "DermaDefaultBold",
@@ -613,10 +622,14 @@ hook.Add("HUDPaint", "LivingCityHUD", function()
     local ev = GetGlobal2String("lc_event", "")
     if ev ~= "" then
         local left = math.max(0, GetGlobal2Float("lc_event_ends", 0) - now)
-        local names = { rations = "Ration distribution", sweep = "Civil status inspections", curfew = "CURFEW IN EFFECT", lockdown = "LOCKDOWN" }
+        local names = { rations = "Ration distribution", sweep = "Civil status inspections", curfew = "CURFEW IN EFFECT", lockdown = "LOCKDOWN", raid = "Housing block inspection" }
         local strict = ev == "curfew" or ev == "lockdown"
         local block = ply:GetNW2Int("lc_block", 0)
         local sub = string.FormattedTime(left, "%02i:%02i") .. " remaining"
+        local grace = GetGlobal2Float("lc_event_grace", 0) - now
+        if strict and grace > 0 and not (block > 0 and InMyBlock(block)) then
+            sub = string.format("Grace period: %ds to get home. ", math.ceil(grace)) .. sub
+        end
         if strict and block > 0 then
             sub = (InMyBlock(block) and "You are home. Stay inside. " or ("Report to " .. BlockName(block) .. ". ")) .. sub
         end

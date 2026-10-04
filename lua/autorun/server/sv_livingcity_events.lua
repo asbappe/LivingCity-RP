@@ -26,6 +26,7 @@ local cvAnnounce  = CreateConVar("lc_announce_interval", "6", FLAGS, "Minutes be
 local cvAuto      = CreateConVar("lc_auto_events", "1", FLAGS, "Run city events automatically")
 local cvInterval  = CreateConVar("lc_event_interval", "12", FLAGS, "Minutes between automatic events")
 CreateConVar("lc_curfew_citizens", "0", FLAGS, "Citizens left on the streets during curfew")
+local cvGrace     = CreateConVar("lc_curfew_grace", "60", FLAGS, "Seconds after a curfew or lockdown starts before anyone outside is warned (60 minimum)")
 local cvEnforce   = CreateConVar("lc_curfew_enforce", "1", FLAGS, "Cops warn, then pursue, players out during curfew")
 local cvChatter   = CreateConVar("lc_chatter", "1", FLAGS, "Civil Protection radio chatter")
 local cvCan       = CreateConVar("lc_can_event", "1", FLAGS, "Pick up that can (0 off, 1 on, 2 refusing makes you wanted)")
@@ -40,6 +41,7 @@ local VOICE = {
     },
     rations  = { CV .. "f_trainstation_assemble_spkr.wav", CV .. "f_trainstation_assumepositions_spkr.wav" },
     sweep    = { CV .. "f_confirmcivilstatus_1_spkr.wav" },
+    raid     = { CV .. "f_confirmcivilstatus_1_spkr.wav" },
     curfew   = { CV .. "f_unrestprocedure1_spkr.wav" },
     lockdown = { CV .. "f_unrestprocedure1_spkr.wav", CV .. "f_protectionresponse_1_spkr.wav" },
     ended    = { CV .. "f_sociostabilizationrestored_spkr.wav" },
@@ -47,12 +49,12 @@ local VOICE = {
 
 local TITLES = {
     rations = "Ration distribution", sweep = "Civil status inspections", curfew = "Curfew",
-    lockdown = "Lockdown", ended = "Stabilization restored", ambient = "City announcement",
+    lockdown = "Lockdown", raid = "Housing block inspection", ended = "Stabilization restored", ambient = "City announcement",
     response = "Overwatch response",
 }
 
-local DEFAULT_MINUTES = { rations = 3, sweep = 2, curfew = 4, lockdown = 3 }
-local AUTO_WEIGHTS = { { "rations", 45 }, { "sweep", 30 }, { "curfew", 18 }, { "lockdown", 7 } }
+local DEFAULT_MINUTES = { rations = 3, sweep = 2, curfew = 4, lockdown = 3, raid = 4 }
+local AUTO_WEIGHTS = { { "rations", 45 }, { "sweep", 30 }, { "curfew", 18 }, { "lockdown", 7 }, { "raid", 14 } }
 
 local RADIO_LINES = {
     "npc/metropolice/vo/copy.wav", "npc/metropolice/vo/ten4.wav", "npc/metropolice/vo/rodgerthat.wav",
@@ -91,12 +93,16 @@ local SOON = 45
 local function Publish()
     SetGlobal2String("lc_event", LC.Event or "")
     SetGlobal2Float("lc_event_ends", LC.EventEnds or 0)
+    SetGlobal2Float("lc_event_grace", LC.EventGraceEnds or 0)
 end
+
+-- Time to reach home before curfew is enforced. Never less than a minute.
+function LC.CurfewGrace() return math.max(60, cvGrace:GetFloat()) end
 
 function LC.EndEvent(silent)
     local was = LC.Event
     if not was then return end
-    LC.Event, LC.EventEnds = nil, nil
+    LC.Event, LC.EventEnds, LC.EventGraceEnds = nil, nil, nil
     LC.ExtraCops = 0
     warnings = {}
     Publish()
@@ -113,6 +119,7 @@ function LC.StartEvent(name, minutes)
     LC.EventEnds = CurTime() + minutes * 60
     LC.EventSerial = (LC.EventSerial or 0) + 1
     LC.ExtraCops = name == "lockdown" and 3 or 0
+    LC.EventGraceEnds = (name == "curfew" or name == "lockdown") and (CurTime() + LC.CurfewGrace()) or nil
     warnings = {}
     Publish()
 
@@ -173,6 +180,7 @@ LC.BlockName = BlockName
 
 local function EnforceCurfew(now)
     if not cvEnforce:GetBool() then return end
+    if now < (LC.EventGraceEnds or 0) then return end -- grace period: time to get home
     for _, ply in ipairs(player.GetAll()) do
         local exempt = not ply:Alive() or LC.PlayerIsCP(ply) or LC.PlayerIsZombie(ply)
             or (LC.InCustody and LC.InCustody(ply)) or LC.PlayerIsWanted(ply)
@@ -407,7 +415,7 @@ concommand.Add("lc_event", function(ply, _, args)
     local name = string.lower(args[1] or "")
     if not LC.Running then return Say(ply, "[Living City] Start the city first.") end
     if not LC.StartEvent(name, args[2]) then
-        return Say(ply, "[Living City] Events: rations, sweep, curfew, lockdown. Usage: lc_event curfew 5")
+        return Say(ply, "[Living City] Events: rations, sweep, curfew, lockdown, raid. Usage: lc_event curfew 5")
     end
     Say(ply, "[Living City] Event started: " .. name)
 end)

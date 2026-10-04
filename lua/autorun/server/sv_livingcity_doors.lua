@@ -50,6 +50,24 @@ local function IsRealDoor(ent)
 end
 LC.IsRealDoor = IsRealDoor
 
+-- Doors with no tag of your own are locked to everyone but Civil Protection when
+-- they stand by a prison cell, inside the prison area, or in a Combine-only zone.
+-- Tag a door (open, ignore, force, locked...) and your tag wins.
+local AUTO_CELL_RADIUS = 450
+
+function LC.AutoDoorTag(door)
+    if not IsValid(door) or LC.GetDoorTag(door) or LC.IsRP() then return nil end
+    if not LC.IsDoorEntity(door) then return nil end
+    local pos = door:WorldSpaceCenter()
+    for _, z in ipairs(LC.Zones or {}) do
+        if (z.kind == "prison" or z.kind == "combine") and pos:DistToSqr(z.pos) < z.r * z.r then return "cp" end
+    end
+    for _, p in ipairs(LC.Points or {}) do
+        if (p.kind == "cell" or p.kind == "release") and pos:DistToSqr(p.pos) < AUTO_CELL_RADIUS * AUTO_CELL_RADIUS then return "cp" end
+    end
+    return nil
+end
+
 local function IsLocked(door)
     return door:GetInternalVariable("m_bLocked") == true
 end
@@ -182,7 +200,7 @@ end)
 local nextUse = {}
 hook.Add("PlayerUse", "LivingCityDoorUse", function(ply, ent)
     if not LC.IsDoorEntity(ent) then return end
-    local tag = LC.GetDoorTag(ent)
+    local tag = LC.EffectiveDoorTag(ent)
 
     local denied = tag == "locked" or (tag == "cp" and not LC.PlayerMayUseCPDoor(ply, ent))
     if LC.DoorPicked and LC.DoorPicked(ent) then denied = false end -- picked or bypassed, for a little while
@@ -216,6 +234,9 @@ function LC.DoorInfo(door)
     lines[#lines + 1] = string.format("%s (map id %s)", door:GetClass(), id and id >= 0 and id or "none: spawned, can't be tagged")
     lines[#lines + 1] = "Locked right now: " .. (IsLocked(door) and "yes" or "no")
     lines[#lines + 1] = "Your tag: " .. (LC.GetDoorTag(door) or "none")
+    if not LC.GetDoorTag(door) and LC.AutoDoorTag(door) then
+        lines[#lines + 1] = "Locked automatically: it's by a prison cell or in a Combine-only area (tag it to override)"
+    end
     if LC.DoorIsCPByGamemode(door) then lines[#lines + 1] = "Gamemode door group: Civil Protection only" end
     if door:GetClass() ~= "prop_door_rotating" then
         local shape = ShapeLooksLikeDoor(door)

@@ -132,19 +132,29 @@ local function ApplyBody(ply)
     ply:SetMaxHealth(hp)
     ply:SetHealth(hp)
     ply:SetArmor(prof.armor or 0)
-    ply:SetWalkSpeed(prof.walk or 160)
-    ply:SetRunSpeed(prof.run or 260)
+    -- in the Living City gamemode, the slower default pace unless the rank sets its own
+    local gm = GAMEMODE
+    local slow = LC.InOwnGamemode and LC.InOwnGamemode() and gm and gm.LCSlowMovement and gm:LCSlowMovement()
+    ply:SetWalkSpeed(prof.walk or (slow and gm.cvWalk:GetInt()) or 160)
+    ply:SetRunSpeed(prof.run or (slow and gm.cvRun:GetInt()) or 260)
+    if slow then ply:SetJumpPower(gm.cvJump:GetInt()) end
 end
 
-local function GiveLoadout(ply)
+-- keep: a promotion changes the loadout, it doesn't empty your hands. Only top
+-- up what's missing (the medic's medkit, the builder's tools, what you were holding).
+local function GiveLoadout(ply, keep)
     local prof = Profile(ply)
     if not prof then return end
-    ply:StripWeapons()
-    for _, cls in ipairs(prof.loadout or {}) do ply:Give(cls) end
+    if not keep then ply:StripWeapons() end
+    for _, cls in ipairs(prof.loadout or {}) do
+        if not (keep and ply:HasWeapon(cls)) then ply:Give(cls) end
+    end
     if cvAdminTools:GetBool() and LC.IsBuilder(ply) then -- in the gamemode, only in build mode
         ply:Give("weapon_physgun")
         ply:Give("gmod_tool")
     end
+    if LC.GiveJobTools then LC.GiveJobTools(ply) end
+    if keep then return end
     ply:GiveAmmo(90, "Pistol", true)
     ply:GiveAmmo(180, "SMG1", true)
     ply:GiveAmmo(24, "Buckshot", true)
@@ -176,12 +186,26 @@ hook.Add("PlayerSpawn", "LivingCityFactions", function(ply)
         if not IsValid(ply) then return end
         ApplyBody(ply)
         if LC.Prisoners and LC.Prisoners[ply] then return end
-        -- hunted people spawn in rebel territory, the infested in their nests
-        local kind = LC.PlayerIsHunted(ply) and "rebel" or (LC.PlayerIsZombie(ply) and "infest") or nil
-        local zones = kind and LC.ZonesOfKind and LC.ZonesOfKind(kind) or {}
-        if #zones > 0 then
-            local spot = LC.SpotInZone(zones[math.random(#zones)])
-            if spot then ply:SetPos(spot + Vector(0, 0, 4)) end
+        -- hunted people spawn at resistance spawn points (or rebel territory), the
+        -- infested at theirs (or in their nests); citizens never spawn on Combine ground
+        local hunted, zombie = LC.PlayerIsHunted(ply), LC.PlayerIsZombie(ply)
+        local kind = hunted and "rebel" or (zombie and "infest") or nil
+        local pkind = hunted and "rspawn" or (zombie and "zspawn") or nil
+        local pts = pkind and LC.PointsOfKind and LC.PointsOfKind(pkind) or {}
+        if #pts > 0 then
+            ply:SetPos(pts[math.random(#pts)].pos + Vector(0, 0, 4))
+        elseif kind then
+            local zones = LC.ZonesOfKind and LC.ZonesOfKind(kind) or {}
+            if #zones > 0 then
+                local spot = LC.SpotInZone(zones[math.random(#zones)])
+                if spot then ply:SetPos(spot + Vector(0, 0, 4)) end
+            end
+        elseif not LC.PlayerIsCP(ply) and not ply:GetNW2Bool("lc_build", false) and LC.SafeCitizenSpot and LC.CitizenSpotOK then
+            local here = ply:GetPos()
+            if LC.OnCombineSurface(here) or LC.CombineZoneAt(here) then
+                local spot = LC.SafeCitizenSpot()
+                if spot then ply:SetPos(spot) end
+            end
         end
     end)
 end)
@@ -320,7 +344,7 @@ function LC.AddXP(ply, amount, why)
         end
         if ply:Alive() and not SpecialOf(ply) and not (LC.Prisoners and LC.Prisoners[ply]) then
             ApplyBody(ply)
-            GiveLoadout(ply)
+            GiveLoadout(ply, true)
         end
     end
 end

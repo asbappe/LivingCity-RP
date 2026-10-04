@@ -140,11 +140,12 @@ hook.Add("PlayerSay", "LivingCityRadio", function(ply, text)
 end)
 
 -- City notices reach radios before the loudspeakers.
-local EVENT_TITLES = { rations = "ration distribution", sweep = "civil status inspections", curfew = "curfew", lockdown = "lockdown" }
+local EVENT_TITLES = { rations = "ration distribution", sweep = "civil status inspections", curfew = "curfew", lockdown = "lockdown", raid = "a housing block inspection" }
 local WHISPERS = {
     sweep = "Units are gearing up for a sweep. Move anything you don't want found.",
     curfew = "Curfew's coming. Get where you need to be.",
     lockdown = "Lockdown incoming. Get off the street.",
+    raid = "Units are about to go through a housing block. Anything they find is traced to whoever it belongs to.",
 }
 
 hook.Add("LivingCityEventSoon", "LivingCityRadio", function(name, secs)
@@ -691,7 +692,7 @@ local Picking = LC.Picking
 function LC.DoorPicked(door) return IsValid(door) and (door.lcPickedUntil or 0) > CurTime() end
 
 local function DoorLockKind(door)
-    local tag = LC.GetDoorTag(door)
+    local tag = LC.EffectiveDoorTag(door)
     local cp = tag == "cp" or (LC.DoorIsCPByGamemode and LC.DoorIsCPByGamemode(door)) or false
     local locked = tag == "locked" or door:GetInternalVariable("m_bLocked") == true
     -- on RP gamemodes, owned doors and their lockpicks belong to the gamemode

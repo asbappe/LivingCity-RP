@@ -19,6 +19,10 @@ local GUIDE = {
         "F3  your board: jobs, stories, Union employment        F4  factions",
         "E on people: talk to citizens, report to units. E on things: pick up, use.",
     } },
+    { "Permanent death", {
+        "When you die, that person is gone. You come back as someone new, with a new name and citizen number,",
+        "and nothing: no credits, standing, job, pockets, stash or rank. Be careful who you pick a fight with.",
+    } },
     { "Staying alive", {
         "Eat and drink. Ration dispensers and the ration line feed you; the Commissary (!shop) sells the rest.",
         "Wade into water and press E to drink, but boil it first if you can (stove or fire, F2).",
@@ -27,7 +31,9 @@ local GUIDE = {
     { "Staying out of trouble", {
         "Don't crowd Civil Protection. Warnings come first, then the stick.",
         "When a unit stops you, stand still. Anything illegal in your pockets may be found.",
-        "Curfew: go home to your housing block. A travel permit gets you past one stop.",
+        "Curfew: you get a minute to reach your housing block. A travel permit gets you past one stop.",
+        "Combine-only areas (the nexus, offices, armory, prison) are off limits. Doors by the cells are locked.",
+        "Raids: units sweep a housing block and trace any contraband (guns, TVs, radios...) to whoever owned it.",
         "Being wanted means every unit nearby comes for you. Get caught and you're arrested.",
         "Kill units and it escalates: armed units, then Overwatch squads. Lie low to cool it off.",
         "To give yourself up, walk up to a unit and press E. It goes easier on you.",
@@ -80,4 +86,13 @@ net.Receive("lcg_help", function()
             l:SetText(line)
         end
     end
+end)
+
+-- Chat shows who people are in the city, not their Steam names.
+hook.Add("OnPlayerChat", "LivingCityCharacterNames", function(ply, text, teamOnly, dead)
+    if not IsValid(ply) then return end
+    local name = ply:GetNW2String("lc_char", "")
+    if name == "" then return end
+    chat.AddText(Color(150, 170, 200), name, color_white, ": " .. text)
+    return true
 end)

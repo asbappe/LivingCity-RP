@@ -282,15 +282,42 @@ local function ObjectivePos()
     return nil
 end
 
+local HEADINGS = { "ahead", "ahead left", "left", "behind left", "behind", "behind right", "right", "ahead right" }
+
+-- Where the objective is, relative to where you're looking: a heading, a
+-- distance, and whether it's up or down (about 140 units to a floor).
+local function Compass(target)
+    local me = LocalPlayer()
+    local delta = target - me:GetPos()
+    local rel = math.NormalizeAngle(delta:Angle().y - EyeAngles().y) -- 0 ahead, +left
+    local bucket = math.floor((rel + 22.5) / 45) % 8 + 1
+    local dz = delta.z
+    local floors = math.floor(math.abs(dz) / 140 + 0.5)
+    local level = "same level"
+    if floors >= 1 then level = string.format("%d floor%s %s", floors, floors == 1 and "" or "s", dz > 0 and "UP" or "DOWN") end
+    local flat = Vector(delta.x, delta.y, 0):Length()
+    return rel, HEADINGS[bucket], math.floor(flat * 0.019), level, dz
+end
+
+local function DrawArrow(cx, cy, rel, col)
+    -- a little arrow that points the way: up on screen is straight ahead
+    local a = math.rad(rel)
+    local function P(r, off) local t = a + off return { x = cx - math.sin(t) * r, y = cy - math.cos(t) * r } end
+    surface.SetDrawColor(col.r, col.g, col.b, 255)
+    draw.NoTexture()
+    surface.DrawPoly({ P(13, 0), P(10, math.rad(140)), P(4, math.rad(180)), P(10, math.rad(-140)) })
+end
+
 hook.Add("HUDPaint", "LivingCityQuestsTracker", function()
     if not state.active then return end
     local w = ScrW()
     local x, y, bw = w - 340, 120, 320
     local left = math.max(0, (state.left or 0) - (CurTime() - (state.received or CurTime())))
+    local compassTarget = ObjectivePos()
 
     local lines = Wrap(state.objective or "", "DermaDefault", bw - 24)
     local narr = state.narration and Wrap(state.narration, "DermaDefault", bw - 24) or {}
-    local h = 54 + #lines * 16 + (state.progress and 16 or 0) + (#narr > 0 and (#narr * 15 + 8) or 0) + (state.choice and 18 or 0)
+    local h = 54 + #lines * 16 + (state.progress and 16 or 0) + (#narr > 0 and (#narr * 15 + 8) or 0) + (state.choice and 18 or 0) + (compassTarget and 34 or 0)
     draw.RoundedBox(4, x, y, bw, h, Color(16, 15, 13, 210))
     draw.RoundedBox(0, x, y, 3, h, ACCENT)
     draw.SimpleText(string.upper(state.board or "") .. string.format("   step %d/%d", state.step or 1, state.steps or 1), "DermaDefault", x + 12, y + 8, DIM)
@@ -318,8 +345,18 @@ hook.Add("HUDPaint", "LivingCityQuestsTracker", function()
         end
     end
 
+    -- compass: heading, distance and up or down, for when the marker is off screen
+    if compassTarget then
+        local rel, heading, meters, level, dz = Compass(compassTarget)
+        ly = ly + 8
+        draw.RoundedBox(3, x + 8, ly - 4, bw - 16, 30, Color(30, 28, 24, 220))
+        DrawArrow(x + 28, ly + 11, rel, ACCENT)
+        draw.SimpleText(string.format("%d m, %s", meters, heading), "DermaDefaultBold", x + 50, ly + 1, INK)
+        draw.SimpleText(level, "DermaDefaultBold", x + 50, ly + 14, dz > 120 and Color(120, 200, 255) or (dz < -120 and Color(255, 170, 110) or DIM))
+    end
+
     -- objective marker
-    local target = ObjectivePos()
+    local target = compassTarget
     if not target then return end
     local s = target:ToScreen()
     local dist = math.floor(LocalPlayer():GetPos():Distance(target) * 0.019)

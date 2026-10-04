@@ -62,6 +62,20 @@ function GM:PlayerLoadout(ply)
     return true
 end
 
+-- The slow, grounded feel (see shared.lua). Factions may set their own speeds on top.
+function GM:LCApplyMovement(ply)
+    if not self:LCSlowMovement() then return end
+    ply:SetWalkSpeed(self.cvWalk:GetInt())
+    ply:SetRunSpeed(self.cvRun:GetInt())
+    ply:SetSlowWalkSpeed(70)
+    ply:SetCrouchedWalkSpeed(0.4)
+    ply:SetJumpPower(self.cvJump:GetInt())
+end
+
+hook.Add("PlayerSpawn", "LivingCityMovement", function(ply)
+    if GAMEMODE and GAMEMODE.LCApplyMovement then GAMEMODE:LCApplyMovement(ply) end
+end)
+
 function GM:PlayerSetModel(ply)
     ply:SetModel(string.format("models/player/group01/%s_0%d.mdl", math.random() < 0.5 and "male" or "female", math.random(1, 6)))
     ply:SetupHands()

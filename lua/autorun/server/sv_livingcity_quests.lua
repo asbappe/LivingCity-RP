@@ -193,15 +193,57 @@ function LC.DescribePlace(pos, from)
 end
 local Place = LC.DescribePlace
 
+-- Citizen jobs never send you onto Combine ground or into the infestation, and
+-- NPCs placed there (patients, targets) wouldn't survive it.
+local function GoodSpot(p, role)
+    return (role and role ~= "citizen") or not LC.CitizenSpotOK or LC.CitizenSpotOK(p)
+end
+
 local function Spot(ply, minD, maxD, role)
     local origin = ply:GetPos()
-    for _ = 1, 30 do
+    for _ = 1, 40 do
         local p = LC.RandomWanderPos(role or "citizen")
         if not p then break end
         local d = p:Distance(origin)
-        if d >= minD and d <= maxD then return p end
+        if d >= minD and d <= maxD and GoodSpot(p, role) then return p end
+    end
+    for _ = 1, 20 do
+        local p = LC.RandomWanderPos(role or "citizen")
+        if p and GoodSpot(p, role) then return p end
     end
     return LC.RandomWanderPos(role or "citizen")
+end
+
+-- Real bins already standing in the map (the server can see physics and
+-- dynamic props; map-static ones are invisible to it).
+local BIN_MODELS = { "trashcan", "trashbin", "dumpster", "garbagecan", "garbage_can" }
+local BIN_CLASSES = { prop_physics = true, prop_dynamic = true, prop_physics_multiplayer = true, prop_physics_override = true }
+
+local function FindBins(ply, minD, maxD, n)
+    local origin = ply:GetPos()
+    local out = {}
+    for _, e in ipairs(ents.GetAll()) do
+        if IsValid(e) and BIN_CLASSES[e:GetClass()] and not e.lcQuest then
+            local m = string.lower(e:GetModel() or "")
+            for _, pat in ipairs(BIN_MODELS) do
+                if string.find(m, pat, 1, true) then
+                    local d = e:GetPos():Distance(origin)
+                    if d >= minD and d <= maxD and GoodSpot(e:GetPos()) then out[#out + 1] = e end
+                    break
+                end
+            end
+        end
+    end
+    -- shuffled, then the first n that aren't stacked on each other
+    for i = #out, 2, -1 do local j = math.random(i); out[i], out[j] = out[j], out[i] end
+    local picked = {}
+    for _, e in ipairs(out) do
+        if #picked >= n then break end
+        local ok = true
+        for _, o in ipairs(picked) do if o:GetPos():DistToSqr(e:GetPos()) < 150 * 150 then ok = false end end
+        if ok then picked[#picked + 1] = e end
+    end
+    return picked
 end
 
 local function SpotsNear(center, n, radius)
@@ -498,7 +540,12 @@ function SendState(ply)
         if st.need then t.progress = string.format("%d/%d", st.got or 0, st.need) end
         if st.secs then t.progress = string.format("%ds / %ds", math.floor(st.progress or 0), st.secs) end
         local ent, pos = MarkerFor(q, st, ply)
-        if IsValid(ent) then t.ent = ent:EntIndex() elseif pos then t.pos = { pos.x, pos.y, pos.z } end
+        -- always send where it is too: far-away entities don't exist on the client
+        if IsValid(ent) then
+            t.ent = ent:EntIndex()
+            pos = ent:GetPos()
+        end
+        if pos then t.pos = { pos.x, pos.y, pos.z } end
         t.choice = st.kind == "choice" and not st.resolved
     end
     if forgetting then
@@ -1705,7 +1752,7 @@ end
 LC.QB = {
     Goto = Goto, Deliver = Deliver, Hold = Hold, Count = Count, Choice = Choice,
     FindCitizenStage = FindCitizenStage, ArrestStage = ArrestStage, Flee = Flee,
-    Spot = Spot, SpotsNear = SpotsNear, Place = Place, SafeHouse = SafeHouse, NearestZone = NearestZone,
+    Spot = Spot, SpotsNear = SpotsNear, FindBins = FindBins, Place = Place, SafeHouse = SafeHouse, NearestZone = NearestZone,
     Freeze = Freeze, Lock = Lock, SpawnActor = SpawnActor, SpawnItem = SpawnItem,
     CitizenID = CitizenID, Pick = Pick, Narrate = Narrate, InsertStages = InsertStages,
     IsCitizenNPC = IsCitizenNPC, IsCopNPC = IsCopNPC, RandomCitizen = RandomCitizen, CountRole = CountRole,

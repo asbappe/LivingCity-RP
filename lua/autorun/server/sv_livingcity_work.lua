@@ -49,6 +49,8 @@ local function GiveTools(ply)
     end
 end
 
+LC.GiveJobTools = GiveTools
+
 function LC.SetJob(ply, id, force)
     local job = LCJ.ById[id]
     if id ~= "" and not job then return false, "No such job." end
@@ -154,12 +156,26 @@ SHIFTS.sanitation = {
         }
     end,
     function(ply)
+        -- the bins that are already in the map; only if it has none do we put some down
+        local bins = Q.FindBins(ply, 200, 2500, 3)
         local stages = {}
         for i = 1, 3 do
-            local sp = Q.Spot(ply, 300, 2000)
-            if not sp then return nil end
-            local h = Hold(sp, 6, string.format("Empty bin %d of 3, %s", i, Place(sp, ply:GetPos())), 100)
-            h.onEnter = function(q) Q.SpawnItem(q, "models/props_trainstation/trashcan_indoor001a.mdl", sp) end
+            local bin = bins[i]
+            local sp
+            if bin then
+                sp = bin:GetPos()
+            else
+                sp = Q.Spot(ply, 300, 2000)
+                if not sp then return nil end
+                local tr = util.TraceLine({ start = sp + Vector(0, 0, 40), endpos = sp - Vector(0, 0, 300), mask = MASK_SOLID_BRUSHONLY })
+                if tr.Hit then sp = tr.HitPos end -- on the ground, not floating
+            end
+            local h = Hold(sp, 6, string.format("Empty bin %d of 3, %s", i, Place(sp, ply:GetPos())), 110)
+            if bin then
+                h.item = bin
+            else
+                h.onEnter = function(q, st) st.item = Q.SpawnItem(q, "models/props_trainstation/trashcan_indoor001a.mdl", sp) end
+            end
             stages[i] = h
         end
         return { title = "Bin round", reward = 15, limit = 480, desc = "Three bins, overflowing again.", stages = stages }
@@ -271,7 +287,7 @@ SHIFTS.medic = {
             desc = "A man was hurt " .. Place(sp, ply:GetPos()) .. ". He can't walk to the clinic.",
             stages = {
                 {
-                    kind = "target", action = "reach", r = 140, text = "Find the injured man (marked)",
+                    kind = "target", action = "reach", r = 140, text = "Find the injured man (marked)", pos = sp,
                     onEnter = function(q, st)
                         local npc = Q.SpawnActor(q, "citizen", sp, 900)
                         if not npc then return false end

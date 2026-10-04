@@ -24,8 +24,12 @@ local HUNGER_COL, THIRST_COL = Color(220, 160, 80), Color(90, 170, 230)
 local function Bar(x, y, w, h, frac, col, label)
     draw.RoundedBox(2, x, y, w, h, Color(40, 38, 34, 220))
     draw.RoundedBox(2, x, y, math.max(0, w * frac), h, frac < 0.15 and Color(220, 60, 60) or col)
-    draw.SimpleText(label, "DermaDefault", x + 4, y + h / 2, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+    draw.SimpleText(label, "DefaultSmall", x + 4, y + h / 2, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 end
+
+-- Top-left, compact: the bottom-left belongs to the chat.
+LC_CL = LC_CL or {}
+LC_CL.HudX, LC_CL.HudY, LC_CL.HudW = 16, 16, 190
 
 hook.Add("HUDPaint", "LivingCityNeedsHUD", function()
     local ply = LocalPlayer()
@@ -33,25 +37,33 @@ hook.Add("HUDPaint", "LivingCityNeedsHUD", function()
     local needs = GetGlobal2Bool("lc_needs_on", false)
     local econ = GetConVar("lc_economy")
     econ = econ and econ:GetBool()
-    if not needs and not econ then return end
+    local ident, identCol
+    if LC_CL.IdentityLine then ident, identCol = LC_CL.IdentityLine() end
+    if not needs and not econ and not ident then LC_CL.HudBottom = LC_CL.HudY return end
 
-    local x, y, w = 24, ScrH() - 290, 300
-    local rows = (needs and 2 or 0) + (econ and 1 or 0)
-    draw.RoundedBox(6, x, y, w, 10 + rows * 22, Color(10, 12, 16, 200))
-    local ry = y + 6
+    local x, y, w = LC_CL.HudX, LC_CL.HudY, LC_CL.HudW
+    local rows = (needs and 2 or 0) * 14 + (econ and 14 or 0) + (ident and 14 or 0)
+    draw.RoundedBox(4, x, y, w, 8 + rows, Color(10, 12, 16, 170))
+    local ry = y + 4
+    if ident then
+        draw.SimpleText(ident, "DefaultSmall", x + 6, ry + 6, identCol or INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        ry = ry + 14
+    end
     if needs then
         local h, t = ply:GetNW2Float("lcn_hunger", 100), ply:GetNW2Float("lcn_thirst", 100)
-        Bar(x + 8, ry, w - 16, 16, h / 100, HUNGER_COL, "Hunger")
-        ry = ry + 22
-        Bar(x + 8, ry, w - 16, 16, t / 100, THIRST_COL, "Thirst" .. (ply:GetNW2Float("lcn_parasites", 0) > CurTime() and "   (parasites)" or ""))
-        ry = ry + 22
+        Bar(x + 4, ry, w - 8, 11, h / 100, HUNGER_COL, "Hunger")
+        ry = ry + 14
+        Bar(x + 4, ry, w - 8, 11, t / 100, THIRST_COL, "Thirst" .. (ply:GetNW2Float("lcn_parasites", 0) > CurTime() and " (parasites)" or ""))
+        ry = ry + 14
     end
     if econ and LCS then
         local standing = ply:GetNW2Int("lce_standing", 0)
         local tier = LCS.TierFor(standing)
-        draw.SimpleText(string.format("%d credits", ply:GetNW2Int("lce_credits", 0)), "DermaDefaultBold", x + 10, ry + 8, ACCENT, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-        draw.SimpleText(string.format("%s (%d)", tier.name, standing), "DermaDefaultBold", x + w - 10, ry + 8, tier.color, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+        draw.SimpleText(string.format("%d cr", ply:GetNW2Int("lce_credits", 0)), "DefaultSmall", x + 6, ry + 6, ACCENT, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        draw.SimpleText(string.format("%s (%d)", tier.name, standing), "DefaultSmall", x + w - 6, ry + 6, tier.color, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+        ry = ry + 14
     end
+    LC_CL.HudBottom = ry + 4
 end)
 
 local BANDS = { union = "Union band", resistance = "Freq 7", cp = "CP net" }
@@ -62,7 +74,7 @@ hook.Add("HUDPaint", "LivingCityUndergroundHUD", function()
     if not IsValid(ply) or not ply:Alive() then return end
     local now = CurTime()
 
-    -- radio, disguise, papers: one quiet line above the needs box
+    -- radio, disguise, papers: one quiet line under the needs box
     local bits = {}
     local band = ply:GetNW2String("lcu_band", "")
     if BANDS[band] then bits[#bits + 1] = "Radio: " .. BANDS[band] .. " (!r)" end
@@ -71,8 +83,8 @@ hook.Add("HUDPaint", "LivingCityUndergroundHUD", function()
     local alias = ply:GetNW2String("lcd_alias", "")
     if alias ~= "" then bits[#bits + 1] = "Papers: citizen " .. alias end
     if #bits > 0 then
-        draw.SimpleTextOutlined(table.concat(bits, "   |   "), "DermaDefaultBold", 28, ScrH() - 304,
-            d ~= "" and Color(240, 200, 120) or INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM, 1, color_black)
+        draw.SimpleTextOutlined(table.concat(bits, "  |  "), "DefaultSmall", LC_CL.HudX + 2, (LC_CL.HudBottom or 60) + 2,
+            d ~= "" and Color(240, 200, 120) or INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, color_black)
     end
 
     -- being stopped or searched

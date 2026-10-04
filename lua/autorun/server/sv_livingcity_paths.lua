@@ -13,6 +13,7 @@
       prison   the prison area; leaving it while jailed counts as escaping
       rebel    Civil Protection and soldiers never patrol, path, or spawn here
       block    a housing block (see sv_livingcity_housing.lua)
+      combine  Combine only: nexus, offices, armory, prison. Citizens (NPC and player) stay out
 
     Data lives in LC.Nodes and LC.Zones (owned and saved by sv_livingcity_data.lua).
 ]]
@@ -29,6 +30,7 @@ local usable = {}       -- [node] = true for nodes outside avoided zones
 local usableList = {}   -- array of the same
 local usablePos = {}    -- array of positions, for random wandering
 local rebelNode = {}    -- [node] = true for usable nodes inside rebel zones
+local combineNode = {}  -- [node] = true for usable nodes inside Combine-only zones (security only)
 local securityPos = {}  -- usablePos minus rebel zones
 
 ------------------------------------------------------------------------
@@ -42,7 +44,7 @@ local function InZoneOfKinds(pos, kinds)
     return nil
 end
 
-local AVOID = { nogo = true, infest = true }
+local AVOID = { nogo = true, infest = true, combine = true }
 local AVOID_SECURITY = { nogo = true, infest = true, rebel = true }
 
 local function IsSecurityRole(role) return role == "cop" or role == "soldier" end
@@ -52,6 +54,43 @@ function LC.InNoGo(pos, role)
     return InZoneOfKinds(pos, IsSecurityRole(role) and AVOID_SECURITY or AVOID) ~= nil
 end
 function LC.InRebelZone(pos) return InZoneOfKinds(pos, { rebel = true }) ~= nil end
+-- Citizens never stand on Combine floors: nexus metal, Combine glass, citadel plating.
+local COMBINE_TEXTURES = { "combine", "citadel", "nexus", "comb_" }
+
+local function CombineTexture(tex)
+    if not tex then return false end
+    tex = string.lower(tex)
+    for _, pat in ipairs(COMBINE_TEXTURES) do
+        if string.find(tex, pat, 1, true) then return true end
+    end
+    return false
+end
+
+function LC.OnCombineSurface(pos)
+    local offsets = { Vector(0, 0, 0), Vector(24, 0, 0), Vector(-24, 0, 0), Vector(0, 24, 0), Vector(0, -24, 0) }
+    for _, o in ipairs(offsets) do
+        local from = pos + o + Vector(0, 0, 16)
+        local tr = util.TraceLine({ start = from, endpos = from - Vector(0, 0, 72), mask = MASK_NPCSOLID_BRUSHONLY })
+        if tr.Hit and CombineTexture(tr.HitTexture) then return true end
+    end
+    return false
+end
+
+-- Where a citizen may spawn or appear: not Combine ground, not a Combine-only
+-- or infested zone, and not right beside an infestation spawn.
+function LC.CitizenSpotOK(pos)
+    if LC.InNoGo(pos) then return false end
+    if LC.OnCombineSurface(pos) then return false end
+    for _, p in ipairs(LC.Points) do
+        if p.kind == "zspawn" and p.pos:DistToSqr(pos) < 900 * 900 then return false end
+    end
+    for _, z in ipairs(LC.Zones) do
+        if z.kind == "infest" and pos:DistToSqr(z.pos) < (z.r + 500) * (z.r + 500) then return false end
+    end
+    return true
+end
+
+function LC.CombineZoneAt(pos) return InZoneOfKinds(pos, { combine = true }) end
 function LC.InfestZoneAt(pos) return InZoneOfKinds(pos, { infest = true }) end
 function LC.PrisonZoneAt(pos) return InZoneOfKinds(pos, { prison = true }) end
 
@@ -66,12 +105,17 @@ end
 ------------------------------------------------------------------------
 
 function LC.RebuildGraph()
-    usable, usableList, usablePos, rebelNode, securityPos = {}, {}, {}, {}, {}
+    usable, usableList, usablePos, rebelNode, securityPos, combineNode = {}, {}, {}, {}, {}, {}
     for _, n in pairs(LC.Nodes) do
-        if not LC.InNoGo(n.pos) then
+        if not InZoneOfKinds(n.pos, { nogo = true, infest = true }) then
             usable[n] = true
             usableList[#usableList + 1] = n
-            usablePos[#usablePos + 1] = n.pos
+            -- Combine-only ground is for security: citizens neither wander there nor route through it
+            if LC.CombineZoneAt(n.pos) then
+                combineNode[n] = true
+            else
+                usablePos[#usablePos + 1] = n.pos
+            end
             if LC.InRebelZone(n.pos) then rebelNode[n] = true else securityPos[#securityPos + 1] = n.pos end
         end
     end
@@ -114,11 +158,13 @@ end
 ------------------------------------------------------------------------
 
 -- Nearest usable node we can walk straight to; falls back to plain nearest.
-local function EntryNode(pos, avoidRebel)
+local function EntryNode(pos, avoidRebel, avoidCombine)
     local cands = {}
     for _, n in ipairs(usableList) do
         local d = n.pos:DistToSqr(pos)
-        if d < 1600 * 1600 and not (avoidRebel and rebelNode[n]) then cands[#cands + 1] = { n = n, d = d } end
+        if d < 1600 * 1600 and not (avoidRebel and rebelNode[n]) and not (avoidCombine and combineNode[n]) then
+            cands[#cands + 1] = { n = n, d = d }
+        end
     end
     if #cands == 0 then return nil end
     table.sort(cands, function(x, y) return x.d < y.d end)
@@ -128,7 +174,7 @@ local function EntryNode(pos, avoidRebel)
     return cands[1].n
 end
 
-local function AStar(start, goal, avoidRebel)
+local function AStar(start, goal, avoidRebel, avoidCombine)
     local open = { [start] = true }
     local came = {}
     local g = { [start] = 0 }
@@ -156,7 +202,7 @@ local function AStar(start, goal, avoidRebel)
         open[cur] = nil
         for id in pairs(cur.links) do
             local nb = LC.Nodes[id]
-            if nb and usable[nb] and not (avoidRebel and rebelNode[nb]) then
+            if nb and usable[nb] and not (avoidRebel and rebelNode[nb]) and not (avoidCombine and combineNode[nb]) then
                 local t = g[cur] + cur.pos:Distance(nb.pos)
                 if not g[nb] or t < g[nb] then
                     came[nb] = cur
@@ -178,10 +224,11 @@ function LC.BuildRoute(from, to, role)
     if from:DistToSqr(to) < 450 * 450 and LC.Walkable(from, to) then return nil end
 
     local avoidRebel = IsSecurityRole(role)
-    local s, e = EntryNode(from, avoidRebel), EntryNode(to, avoidRebel)
+    local avoidCombine = not avoidRebel
+    local s, e = EntryNode(from, avoidRebel, avoidCombine), EntryNode(to, avoidRebel, avoidCombine)
     if not s or not e or s == e then return nil end
 
-    local path = AStar(s, e, avoidRebel)
+    local path = AStar(s, e, avoidRebel, avoidCombine)
     if not path then return nil end
 
     local out = {}

@@ -132,38 +132,28 @@ local function MyFaction()
     return LCF.Get(ply:GetNW2String("lcf_faction", ""))
 end
 
-hook.Add("HUDPaint", "LivingCityFactionsHUD", function()
+-- One small line (rank, block, hunted) that the needs HUD stacks under its bars.
+-- No big banner: the old panel repeated the faction and rank ("Citizen / Citizen")
+-- and sat where the chat lives.
+LC_CL = LC_CL or {}
+function LC_CL.IdentityLine()
     local f = MyFaction()
-    if not f then return end
+    if not f then return nil end
     local ply = LocalPlayer()
     local rank = f.ranks[ply:GetNW2Int("lcf_rank", 1)] or f.ranks[1]
     local special = f.specialsById[ply:GetNW2String("lcf_special", "")]
-    local xp = ply:GetNW2Int("lcf_xp", 0)
-    local nextR = f.ranks[ply:GetNW2Int("lcf_rank", 1) + 1]
-
-    local x, y, w, h = 24, ScrH() - 210, 300, 74
-    draw.RoundedBox(6, x, y, w, h, Color(10, 12, 16, 200))
-    draw.RoundedBox(0, x, y, 4, h, f.color)
-    draw.SimpleText(f.name, "DermaDefaultBold", x + 14, y + 10, f.color)
-    draw.SimpleText(special and special.name or ply:GetNW2String("lcf_title", rank.name), "DermaLarge", x + 14, y + 24, color_white)
-
+    local title = special and special.name or ply:GetNW2String("lcf_title", rank.name)
+    local text = title
+    if title ~= f.name and #f.ranks == 1 then text = f.name end
     local block = ply:GetNW2Int("lc_block", 0)
-    local status = {}
     if block > 0 then
         local cv = GetConVar("lc_block_name")
         local ok, s = pcall(string.format, cv and cv:GetString() or "Habitation Block %02d", block)
-        status[#status + 1] = ok and s or ("Block " .. block)
+        text = text .. "  |  " .. (ok and s or ("Block " .. block))
     end
-    if (special and special.hunted) or (not special and rank.hunted) then status[#status + 1] = "Hunted outside rebel territory" end
-    draw.SimpleText(table.concat(status, "   |   "), "DermaDefault", x + 14, y + 54, Color(190, 190, 190))
-
-    if nextR and not special then
-        local prev = rank.xp or 0
-        local frac = math.Clamp((xp - prev) / math.max(1, nextR.xp - prev), 0, 1)
-        draw.RoundedBox(0, x, y + h - 3, w, 3, Color(40, 40, 40))
-        draw.RoundedBox(0, x, y + h - 3, w * frac, 3, f.color)
-    end
-end)
+    if (special and special.hunted) or (not special and rank.hunted) then text = text .. "  |  hunted" end
+    return text, f.color
+end
 
 -- Name tags: what you're allowed to see about the person in front of you.
 -- Disguises change what everyone else sees. A real unit who looks closely
@@ -200,7 +190,8 @@ hook.Add("HUDDrawTargetID", "LivingCityFactionsTargetID", function()
     end
 
     local x, y = ScrW() / 2, ScrH() / 2 + 40
-    draw.SimpleTextOutlined(ent:Nick(), "DermaLarge", x, y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+    local charName = ent:GetNW2String("lc_char", "")
+    draw.SimpleTextOutlined(charName ~= "" and charName or ent:Nick(), "DermaLarge", x, y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     if title ~= "" then
         draw.SimpleTextOutlined(title, "DermaDefaultBold", x, y + 22, shown and shown.color or color_white,
             TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
