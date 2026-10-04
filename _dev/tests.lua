@@ -1179,12 +1179,13 @@ copSt.untilT, copSt.nextInspect = CurTime() + 1000, CurTime() + 1000
 copN.sim = false
 sweepGuy:SetPos(copN:GetPos() + Vector(400, 0, 0))
 _setcvar("lc_street_stop_chance", 0)
+_setcvar("lc_stop_chance", 0) -- a unit at his post could still pick him out at random; that's checkpoint behaviour, not this test
 for n, s in pairs(LC.NPCs) do -- any other unit wandering by could legitimately stop him
     if IsValid(n) and s.role == "cop" and n ~= copN then n:SetPos(Vector(0, -40000, 0)) end
 end
 _run(3.5)
-local _s = LC.Stops[sweepGuy]
-ok(_s == nil, "outside a sweep, a unit with nothing to do leaves you alone", _s and ("cop=" .. tostring(_s.cop) .. " isCopN=" .. tostring(_s.cop == copN) .. " copPos=" .. tostring(_s.cop and _s.cop:GetPos()) .. " guy=" .. tostring(sweepGuy:GetPos()) .. " reason=" .. tostring(_s.reason or _s.kind)) or "")
+ok(LC.Stops[sweepGuy] == nil, "outside a sweep, a unit with nothing to do leaves you alone")
+_setcvar("lc_stop_chance", 15)
 _setcvar("lc_stop_chance", 50)
 LC.StartEvent("sweep", 1)
 _run(3.5)
@@ -1751,6 +1752,11 @@ ok(GMt:PlayerSpawnProp(boss, "x") == false, "admins can't either, until they swi
 ok(hook.Run("PlayerSay", boss, "!build") == "" and boss:GetNW2Bool("lc_build", false), "!build switches an admin to build mode")
 ok(boss:HasWeapon("weapon_physgun") and boss:HasWeapon("gmod_tool") and GMt:CanTool(boss, {}, "livingcity_editor") ~= false, "with the physgun and the editor's toolgun")
 ok(GMt:PlayerNoClip(boss, true) == true, "and noclip")
+boss.alive = false
+boss.chat = {}
+hook.Run("PlayerDeath", boss)
+boss.alive = true
+ok(has(boss.chat, "build mode, so you keep this character"), "an admin who dies in build mode keeps their character, and is told why")
 hook.Run("PlayerSay", boss, "!build")
 ok(not boss:GetNW2Bool("lc_build", false) and not boss:HasWeapon("gmod_tool"), "!build again puts the tools away")
 ok(hook.Run("PlayerSay", resident, "!build") == "" and has(resident.chat, "for admins"), "regular players are told build mode is for admins")
@@ -1801,6 +1807,31 @@ local mv4 = Mv(IN_DUCK)
 hook.Run("SetupMove", resident, mv4)
 ok(bit.band(mv4.b, IN_DUCK) == 0 and mv4.v:Length() <= 200.5, "nor tuck up or speed up in the air")
 resident.ground = nil
+-- pulling yourself up onto a ledge
+local realHull, realLine = util.TraceHull, util.TraceLine
+local hulls = 0
+util.TraceHull = function(tr)
+    hulls = hulls + 1
+    if hulls % 2 == 1 then return { Hit = true, HitPos = Vector(30, 0, 20), HitNormal = Vector(-1, 0, 0), StartSolid = false } end
+    return { Hit = false } -- room to stand up there
+end
+util.TraceLine = function(tr) return { Hit = true, HitPos = Vector(44, 0, 64), HitNormal = Vector(0, 0, 1), StartSolid = false } end
+local function MantleMv(buttons)
+    local m = Mv(buttons)
+    function m:GetOrigin() return Vector(0, 0, 0) end
+    function m:GetAngles() return Angle(0, 0, 0) end
+    m.v = Vector(0, 0, 0)
+    return m
+end
+resident.lcNextJump, resident.lcNextMantle = nil, nil
+local mm = MantleMv(IN_JUMP)
+hook.Run("SetupMove", resident, mm)
+ok(mm.v.z > 250 and mm.v.x > 0, "jumping at a knee-to-chest high ledge pulls you up onto it", tostring(mm.v))
+local mm2 = MantleMv(IN_JUMP)
+hook.Run("SetupMove", resident, mm2)
+ok(mm2.v.z == 0, "but not over and over")
+util.TraceHull, util.TraceLine = realHull, realLine
+resident.lcNextJump, resident.lcNextMantle = nil, nil
 GMt:PlayerDeath(resident)
 ok(resident.NextSpawnTime and resident.NextSpawnTime > CurTime() + 5, "a short wait before you respawn")
 GMt:ShowHelp(resident)
@@ -2426,6 +2457,20 @@ LC.OpenCharacterCreator(twin)
 Submit(twin, "casimir delacroix", face)
 ok(twin:GetNW2String("lc_char", "") ~= "Casimir Delacroix", "two people can't share a name", twin:GetNW2String("lc_char", ""))
 ok(LC.ValidateCharacterName("Elena Petrova"), "(and a different name is fine)")
+
+section("Getting unstuck")
+local stuck = newPlayer("Stuck", "citizen")
+LC.AddPoint(Vector(8200, 8200, 80), 0, "idle", 0)
+stuck:SetPos(Vector(8200, 8600, -40))
+local su, sw = LC.Unstick(stuck)
+ok(su or sw == "There's nowhere to put you. Ask an admin.", "!stuck finds you somewhere to stand", tostring(sw))
+local first = stuck:GetPos()
+local su2, sw2 = LC.Unstick(stuck)
+ok(not su2 and sw2:find("again in"), "but not again straight away")
+local hunted = newPlayer("Hunted", "citizen")
+LC.ReportCrime(hunted, "test", 100)
+ok(not LC.Unstick(hunted), "and not as an escape from the law")
+LC.ClearWanted(hunted)
 
 section("Joining Civil Protection")
 local applicant = newPlayer("Applicant", "citizen")

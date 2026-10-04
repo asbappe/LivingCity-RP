@@ -159,3 +159,9 @@ hook.Add("InitPostEntity", "LivingCityGamemode", function()
         if LC and LC.Start and not LC.Running then LC.Start(nil) end
     end)
 end)
+
+-- The jump used to default to 150, which couldn't clear a curb-sized obstacle. Move old defaults up.
+hook.Add("InitPostEntity", "LivingCityJumpMigration", function()
+    local cv = GM.cvJump or (GAMEMODE and GAMEMODE.cvJump)
+    if cv and cv:GetInt() == 150 then cv:SetInt(200) end
+end)

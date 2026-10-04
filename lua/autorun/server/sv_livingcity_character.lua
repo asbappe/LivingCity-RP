@@ -155,9 +155,15 @@ end)
 
 hook.Add("PlayerDeath", "LivingCityCharacter", function(ply)
     if not Enabled() or ply.lcNoPermadeath then return end
-    if ply:GetNW2Bool("lc_build", false) then return end
+    if ply:GetNW2Bool("lc_build", false) then
+        ply:ChatPrint("[Living City] You died in build mode, so you keep this character. Type !build to leave build mode and play for real.")
+        return
+    end
     if LC.PlayerIsZombie(ply) then return end
-    if LC.InCustody and LC.InCustody(ply) then return end
+    if LC.InCustody and LC.InCustody(ply) then
+        ply:ChatPrint("[Living City] You died in custody. That doesn't change who you are, or how long you're in for.")
+        return
+    end
     LC.NewCharacter(ply, "death")
 end)
 
