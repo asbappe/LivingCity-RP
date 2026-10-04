@@ -347,6 +347,7 @@ function LC.CheckPapers(ply)
 end
 
 function LC.PapersFailed(ply, why)
+    why = why or "Your papers don't check out."
     local hadId = LC.Identity(ply) ~= nil
     ClearIdentity(ply)
     if LC.PassesAsCitizen(ply) and LC.PlayerIsHunted and LC.PlayerIsHunted(ply) then

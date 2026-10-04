@@ -1163,6 +1163,9 @@ copSt.untilT, copSt.nextInspect = CurTime() + 1000, CurTime() + 1000
 copN.sim = false
 sweepGuy:SetPos(copN:GetPos() + Vector(400, 0, 0))
 _setcvar("lc_street_stop_chance", 0)
+for n, s in pairs(LC.NPCs) do -- any other unit wandering by could legitimately stop him
+    if IsValid(n) and s.role == "cop" and n ~= copN then n:SetPos(Vector(0, -40000, 0)) end
+end
 _run(3.5)
 ok(LC.Stops[sweepGuy] == nil, "outside a sweep, a unit with nothing to do leaves you alone")
 _setcvar("lc_stop_chance", 50)
@@ -2378,8 +2381,8 @@ n2:Remove()
 
 section("Choosing a name and a face")
 local function Name(s) local ok2, r = LC.ValidateCharacterName(s) return ok2, r end
-local okN, cleaned = Name("  marta   BRANDT ")
-ok(okN and cleaned == "Marta Brandt", "an ordinary name is accepted and tidied up", cleaned)
+local okN, cleaned = Name("  ottoline   PEMBROOK ")
+ok(okN and cleaned == "Ottoline Pembrook", "an ordinary name is accepted and tidied up", cleaned)
 ok(Name("Anna-Marie O'Neil") and Name("Hagman Nilsson") and Name("Luigi Rossi"), "hyphens, apostrophes and ordinary surnames are fine")
 ok(Name("Bob") and Name("Jan") and Name("Joe") and Name("Jo Li"), "short names are fine, one word or two")
 for _, bad in ipairs({ "Taylor Swift", "Gordon Freeman", "Walter White", "Donald Trump", "Skibidi Toilet", "Mike Hunt", "J0hn Smith", "Xzqrt Plmn", "Aaaaron Smith", "Jesus Christ", "Johnny Depp", "Jo", "Anna Bell Carla Dee" }) do
@@ -2395,16 +2398,16 @@ local face = LCF.CitizenModels[3]
 local function Submit(p, nm, model) _run(1.2) net._q = { nm, model } net.recv_lcc_submit(0, p) end
 Submit(chooser, "Gordon Freeman", face)
 ok(chooser:GetNW2String("lc_char", "") ~= "Gordon Freeman", "a refused name changes nothing")
-Submit(chooser, "Marta Brandt", "models/player/kleiner.mdl")
-ok(chooser:GetNW2String("lc_char", "") ~= "Marta Brandt", "and neither does a face that isn't on offer")
-Submit(chooser, "Marta Brandt", face)
-ok(chooser:GetNW2String("lc_char", "") == "Marta Brandt" and chooser:GetNW2String("lc_model", "") == face, "a good name and a face are kept")
-Submit(chooser, "Greta Voss", face)
-ok(chooser:GetNW2String("lc_char", "") == "Greta Voss", "and you can change your mind later with !character")
+Submit(chooser, "Ottoline Pembrook", "models/player/kleiner.mdl")
+ok(chooser:GetNW2String("lc_char", "") ~= "Ottoline Pembrook", "and neither does a face that isn't on offer")
+Submit(chooser, "Ottoline Pembrook", face)
+ok(chooser:GetNW2String("lc_char", "") == "Ottoline Pembrook" and chooser:GetNW2String("lc_model", "") == face, "a good name and a face are kept")
+Submit(chooser, "Casimir Delacroix", face)
+ok(chooser:GetNW2String("lc_char", "") == "Casimir Delacroix", "and you can change your mind later with !character")
 local twin = newPlayer("Twin", "citizen")
 LC.OpenCharacterCreator(twin)
-Submit(twin, "greta voss", face)
-ok(twin:GetNW2String("lc_char", "") ~= "Greta Voss", "two people can't share a name", twin:GetNW2String("lc_char", ""))
+Submit(twin, "casimir delacroix", face)
+ok(twin:GetNW2String("lc_char", "") ~= "Casimir Delacroix", "two people can't share a name", twin:GetNW2String("lc_char", ""))
 ok(LC.ValidateCharacterName("Elena Petrova"), "(and a different name is fine)")
 
 section("Joining Civil Protection")
