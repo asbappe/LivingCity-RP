@@ -400,6 +400,7 @@ LC.Chain{
 local function TailStage(secs)
     return {
         kind = "tail", min = 200, max = 1100, lost = 1700, secs = secs,
+        failText = "your neighbor isn't out on the streets right now. Try again once the city is busy",
         text = "Follow your neighbor without being noticed. Not too far, and stay out of his sight: the longer he sees you, the more suspicious he gets",
         onEnter = function(q, st)
             local npc = q.data.target
@@ -462,6 +463,7 @@ LC.Chain{
         end },
 
         neighbor = { num = 2, next = "payment", build = function()
+            if not LC.Running or not Q.RandomCitizen() then return nil end -- nobody out to follow yet
             local report = Count("used_npc", 1, "Report him to a unit (press E)", Q.IsCopNPC)
             report.onDone = function(q)
                 local npc = q.data.target

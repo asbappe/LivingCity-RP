@@ -162,6 +162,8 @@ end)
 
 -- The jump used to default to 150, which couldn't clear a curb-sized obstacle. Move old defaults up.
 hook.Add("InitPostEntity", "LivingCityJumpMigration", function()
-    local cv = GM.cvJump or (GAMEMODE and GAMEMODE.cvJump)
+    -- GM only exists while the gamemode's files load; by now it's GAMEMODE. An error here
+    -- would stop every other InitPostEntity hook (the city starting among them).
+    local cv = GetConVar("lc_jump_power")
     if cv and cv:GetInt() == 150 then cv:SetInt(200) end
 end)

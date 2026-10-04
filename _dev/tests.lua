@@ -1858,9 +1858,28 @@ GMt:PlayerDeath(resident)
 ok(resident.NextSpawnTime and resident.NextSpawnTime > CurTime() + 5, "a short wait before you respawn")
 GMt:ShowHelp(resident)
 ok(_lastnet("lcg_help") ~= nil, "F1 opens the guide")
+-- at InitPostEntity, GM no longer exists: the gamemode's hooks must not depend on it,
+-- or one error stops the rest (the city never starting)
+GM = nil
+local startedCity = false
+local realStart = LC.Start
+LC.Start = function() startedCity = true end
+local wasRunning = LC.Running
+LC.Running = false
+_setcvar("lc_jump_power", 150)
+local hookErrs = {}
+for name, fn in pairs(hook.t.InitPostEntity) do
+    if name == "LivingCityGamemode" or name == "LivingCityJumpMigration" then
+        local okH, e = pcall(fn)
+        if not okH then hookErrs[#hookErrs + 1] = name .. ": " .. tostring(e) end
+    end
+end
+_run(5)
+LC.Start, LC.Running = realStart, wasRunning
+ok(#hookErrs == 0 and startedCity, "on map load the city starts, and no gamemode hook errors", hookErrs[1])
+ok(GetConVar("lc_jump_power"):GetInt() == 200, "an old 150 jump setting is moved up to 200")
 hook.t.InitPostEntity.LivingCityGamemode = nil
 GAMEMODE = oldGM
-GM = nil
 ok(not LC.InOwnGamemode() and not LC.FactionsActive(), "and as a plain addon on Sandbox, factions stay opt-in")
 _setcvar("lc_can_event", 1)
 end

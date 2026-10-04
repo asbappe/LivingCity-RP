@@ -61,6 +61,7 @@ function CVMT:GetInt() return math.floor(tonumber(self.v) or 0) end
 function CVMT:GetFloat() return tonumber(self.v) or 0 end
 function CVMT:GetBool() return (tonumber(self.v) or 0) ~= 0 end
 function CVMT:GetString() return tostring(self.v) end
+function CVMT:SetInt(v) self.v = math.floor(v) end
 function CreateConVar(name, def) if not convars[name] then convars[name] = setmetatable({ v = def }, CVMT) end return convars[name] end
 function GetConVar(name) return convars[name] end
 function RunConsoleCommand(name, val) if convars[name] then convars[name].v = val end end
