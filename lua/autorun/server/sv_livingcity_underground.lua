@@ -1,0 +1,1120 @@
+--[[
+    Living City: the underground
+
+    Contraband, and the people who look for it.
+
+      Stops        Civil Protection NPCs stop and frisk people: often at
+                   checkpoints, much more during inspection sweeps, and now
+                   and then on the street. Stand still while they do it.
+                   Walking off makes you wanted for evading inspection.
+      Searches     units (players) search people with the Arrest Baton
+                   (reload) or !search. Hidden things can slip past (Guile
+                   helps). What's found is confiscated and you're wanted.
+                   Arrest confiscates everything illegal you were carrying.
+      Papers       stops check your papers. Forged papers and a dead man's
+                   papers give you a new identity: your wanted status clears
+                   if no unit is watching, but a close look can catch it.
+                   A travel permit gets you past one curfew stop.
+      Disguises    a Civil Protection uniform fools security NPCs and opens
+                   CP doors, until a unit asks for your designation, a Combine
+                   door reads your biosignal, or you commit a crime. Citizen
+                   clothes let hunted Resistance members pass as citizens,
+                   until someone checks their face against the wanted notices.
+      Radios       Union radios hear city notices before the loudspeakers and
+                   talk on the Union band (Civil Protection monitors it).
+                   Retuned radios use Freq 7 and pick up CP dispatch, garbled.
+                   Chat: !r <message>, and !ru <message> for the Union band.
+      Lockpicks    open locked doors. Bypass charges open Combine doors too.
+      Stash        8 extra slots in your own housing block (!stash, or F2
+                   while you're home). Searches don't reach it; inspection
+                   sweeps sometimes raid it.
+      Black market a dealer placed with the editor or, on maps without one,
+                   rebel territory (!market). Units who find a dealer bust it.
+]]
+
+if CLIENT then return end
+
+util.AddNetworkString("lcu_market")
+util.AddNetworkString("lcu_buy")
+util.AddNetworkString("lcu_sell")
+
+LC = LC or {}
+
+local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
+local cvStops     = CreateConVar("lc_stops", "1", FLAGS, "Civil Protection NPCs stop and search players")
+local cvStopCD    = CreateConVar("lc_stop_cooldown", "480", FLAGS, "Seconds before NPCs can stop the same person again")
+local cvStopPct   = CreateConVar("lc_stop_chance", "15", FLAGS, "Percent chance per check that a cop at a checkpoint stops you (doubled during sweeps)")
+local cvStreetPct = CreateConVar("lc_street_stop_chance", "1", FLAGS, "Percent chance per check that a cop on the street stops you")
+local cvSearchCD  = CreateConVar("lc_search_cooldown", "120", FLAGS, "Seconds before units can search the same person again")
+local cvRisk      = CreateConVar("lc_disguise_risk", "5", FLAGS, "Percent chance per minute near security that a CP disguise is questioned")
+local cvIdentity  = CreateConVar("lc_identity_minutes", "30", FLAGS, "How long a forged identity holds")
+local cvStash     = CreateConVar("lc_stash_size", "8", FLAGS, "Slots in your hidden stash at home")
+local cvRaid      = CreateConVar("lc_raid_chance", "25", FLAGS, "Percent chance an inspection sweep raids a stash with contraband in it")
+local cvGuns      = CreateConVar("lc_search_weapons", "1", FLAGS, "Searches confiscate guns from citizens (Living City factions only)")
+
+local function Pick(t) return t[math.random(#t)] end
+local function Skill(ply, s) return LC.SkillMod and LC.SkillMod(ply, s) or 0 end
+
+-- A d20 check: a natural 20 always works, a natural 1 never does.
+local function Check(ply, skill, dc)
+    local roll = math.random(20)
+    return roll == 20 or (roll ~= 1 and roll + Skill(ply, skill) >= dc)
+end
+
+local function Watched(ply, dist) return LC.SeenBySecurity and LC.SeenBySecurity(ply, dist or 800) or false end
+local function Where(pos) return LC.DescribePlace and LC.DescribePlace(pos) or "somewhere in the city" end
+
+local function Faction(ply)
+    if LC.FactionsActive and LC.FactionsActive() then return ply:GetNW2String("lcf_faction", "") end
+    return ""
+end
+
+local function Free(ply)
+    return IsValid(ply) and ply:Alive() and not (LC.InCustody and LC.InCustody(ply))
+end
+
+------------------------------------------------------------------------
+-- Radios
+------------------------------------------------------------------------
+
+local BAND_NAMES = { union = "Union band", resistance = "Freq 7", cp = "CP net" }
+
+function LC.RadioBand(ply)
+    if LC.PlayerIsCP(ply) then return "cp" end
+    if LC.HasItem(ply, "radio_tuned") then return "resistance" end
+    if LC.HasItem(ply, "radio") then return "union" end
+    return nil
+end
+
+-- Everyone who hears a band. CP traffic also leaks, garbled, to retuned radios.
+local function Hears(ply, band)
+    if not IsValid(ply) or (LC.Prisoners and LC.Prisoners[ply]) then return false end
+    local mine = LC.RadioBand(ply)
+    if not mine then return false end
+    if band == "union" then return true end -- every radio picks up the Union band, and CP monitors it
+    return mine == band
+end
+
+local function Garble(text)
+    local out = {}
+    for w in string.gmatch(text, "%S+") do
+        out[#out + 1] = math.random() < 0.3 and string.rep("-", math.min(#w, 6)) or w
+    end
+    return table.concat(out, " ")
+end
+
+function LC.RadioNotice(band, text)
+    local name = BAND_NAMES[band] or band
+    for _, p in ipairs(player.GetAll()) do
+        if Hears(p, band) then
+            p:ChatPrint("[" .. name .. "] " .. text)
+        elseif band == "cp" and LC.RadioBand(p) == "resistance" and not (LC.Prisoners and LC.Prisoners[p]) then
+            p:ChatPrint("[Intercept] " .. Garble(text))
+        end
+    end
+end
+
+function LC.RadioSay(ply, text, band)
+    local mine = LC.RadioBand(ply)
+    if not mine then return false, "You don't have a radio." end
+    if LC.Prisoners and LC.Prisoners[ply] then return false, "Your radio was taken when you were processed." end
+    band = band or mine
+    if band ~= "union" and band ~= mine then return false, "Your radio isn't on that band." end
+    text = string.sub(string.Trim(text or ""), 1, 200)
+    if text == "" then return false, "Say what?" end
+    local who = (band == "cp" and ply:GetNW2String("lcf_title", "") ~= "" and ply:GetNW2String("lcf_title", "")) or ply:Nick()
+    LC.RadioNotice(band, who .. ": " .. text)
+    if band == "cp" then ply:EmitSound("npc/metropolice/vo/on1.wav", 50) end
+    return true
+end
+
+local RADIO_CMDS = { ["!r"] = true, ["/r"] = true, ["!radio"] = true, ["/radio"] = true, ["!ru"] = "union", ["/ru"] = "union" }
+
+hook.Add("PlayerSay", "LivingCityRadio", function(ply, text)
+    local cmd, rest = string.match(text, "^(%S+)%s*(.*)$")
+    local mode = cmd and RADIO_CMDS[string.lower(cmd)]
+    if not mode then return end
+    local ok, why = LC.RadioSay(ply, rest, mode ~= true and mode or nil)
+    if not ok then ply:ChatPrint("[Radio] " .. why) end
+    return ""
+end)
+
+-- City notices reach radios before the loudspeakers.
+local EVENT_TITLES = { rations = "ration distribution", sweep = "civil status inspections", curfew = "curfew", lockdown = "lockdown" }
+local WHISPERS = {
+    sweep = "Units are gearing up for a sweep. Move anything you don't want found.",
+    curfew = "Curfew's coming. Get where you need to be.",
+    lockdown = "Lockdown incoming. Get off the street.",
+}
+
+hook.Add("LivingCityEventSoon", "LivingCityRadio", function(name, secs)
+    local title = EVENT_TITLES[name] or name
+    LC.RadioNotice("union", string.format("Notice: %s begins in %d seconds.", title, math.floor(secs)))
+    if WHISPERS[name] then LC.RadioNotice("resistance", WHISPERS[name]) end
+end)
+
+local lastDispatch = setmetatable({}, { __mode = "k" })
+hook.Add("LivingCityWanted", "LivingCityRadio", function(ply, reason)
+    if not IsValid(ply) or not ply:IsPlayer() then return end
+    if (lastDispatch[ply] or 0) > CurTime() then return end
+    lastDispatch[ply] = CurTime() + 20
+    local alias = ply:GetNW2String("lcd_alias", "")
+    timer.Simple(0, function()
+        if not IsValid(ply) then return end
+        LC.RadioNotice("cp", string.format("Dispatch: all units, suspect %s, %s. Last seen %s.",
+            alias ~= "" and ("citizen " .. alias) or ply:Nick(), string.lower(reason or "malcompliance"), Where(ply:GetPos())))
+    end)
+end)
+
+hook.Add("LivingCityIncarcerated", "LivingCityRadio", function(target)
+    if IsValid(target) and target:IsPlayer() then
+        LC.RadioNotice("cp", "Dispatch: suspect " .. target:Nick() .. " in custody.")
+    end
+end)
+
+------------------------------------------------------------------------
+-- Disguises
+------------------------------------------------------------------------
+
+local DISGUISE_MODELS = {
+    cp = { "models/police.mdl" },
+    citizen = {
+        "models/humans/group01/male_02.mdl", "models/humans/group01/male_04.mdl", "models/humans/group01/male_07.mdl",
+        "models/humans/group01/female_01.mdl", "models/humans/group01/female_04.mdl",
+    },
+}
+
+function LC.Disguise(ply)
+    local d = IsValid(ply) and ply:GetNW2String("lcd_disguise", "") or ""
+    return d ~= "" and d or nil
+end
+function LC.DisguisedAsCP(ply) return LC.Disguise(ply) == "cp" end
+function LC.PassesAsCitizen(ply) return LC.Disguise(ply) == "citizen" end
+LC.FoolsSecurity = LC.DisguisedAsCP -- security NPCs take you for a unit
+
+function LC.TakeOff(ply, quiet, lose)
+    local kind = LC.Disguise(ply)
+    if not kind then return false end
+    ply:SetNW2String("lcd_disguise", "")
+    ply:SetNW2String("lcd_title", "")
+    if ply.lcdOldModel and ply:Alive() then ply:SetModel(ply.lcdOldModel) end
+    local id = ply.lcdItem
+    ply.lcdOldModel, ply.lcdItem, ply.lcdDoors = nil, nil, nil
+    if id and not lose and ply:Alive() then LC.GiveOrDrop(ply, id) end
+    if not quiet then ply:ChatPrint("You change back into your own clothes.") end
+    return true
+end
+
+function LC.BlowDisguise(ply, why)
+    local kind = LC.Disguise(ply)
+    if not kind then return false end
+    LC.TakeOff(ply, true, true)
+    ply:ChatPrint("[Disguise] " .. why .. " Your disguise is blown.")
+    ply:EmitSound("npc/metropolice/vo/holdit.wav", 70)
+    if kind == "cp" then
+        LC.ReportCrime(ply, "Impersonating a Civil Protection officer", 300)
+        if LC.MakeCopsHostile then LC.MakeCopsHostile(ply, ply:GetPos(), 2000) end
+    end
+    -- hunted Resistance in plain clothes are simply recognized again
+    hook.Run("LivingCityDisguiseBlown", ply, kind)
+    return true
+end
+
+function LC.Wear(ply, id)
+    local it = LCS.Items[id]
+    if not it or not it.wear or not LC.HasItem(ply, id) then return false end
+    if LC.Disguise(ply) then return false, "You're already in disguise. Take it off first." end
+    if not Free(ply) or LC.PlayerIsZombie(ply) then return false, "Not now." end
+    if LC.InCombat and LC.InCombat(ply) then return false, "Not in the middle of a fight." end
+    if it.wear == "cp" and LC.PlayerIsCP(ply) then return false, "You don't need a disguise to be a unit." end
+    LC.TakeItem(ply, id)
+    ply.lcdOldModel = ply:GetModel()
+    ply.lcdItem = id
+    ply.lcdDoors = {}
+    ply:SetModel(Pick(DISGUISE_MODELS[it.wear] or DISGUISE_MODELS.citizen))
+    ply:SetNW2String("lcd_disguise", it.wear)
+    ply:SetNW2String("lcd_title", it.wear == "cp"
+        and string.format("CP %s-%d", Pick({ "05", "04", "03" }), math.random(1000, 9999)) or "Citizen")
+    ply:EmitSound("physics/body/body_medium_impact_soft" .. math.random(1, 7) .. ".wav", 55)
+    if Watched(ply, 800) then
+        LC.BlowDisguise(ply, "A unit watched you change.")
+        return true
+    end
+    if it.wear == "cp" then
+        if LC.CalmCops then LC.CalmCops(ply) end
+        ply:ChatPrint("[Disguise] You're a unit now, as far as anyone on the street can tell. Don't fight, don't linger near real units, and stay away from Combine doors unless you're feeling lucky.")
+    else
+        ply:ChatPrint("[Disguise] Union blue, like everyone else. Nobody looks twice at a citizen. Until they check your face.")
+    end
+    hook.Run("LivingCityDisguised", ply, it.wear)
+    return true
+end
+
+-- Combine doors read biosignals. A uniform doesn't have one.
+function LC.DisguiseDoorCheck(ply, door)
+    if not LC.DisguisedAsCP(ply) then return false end
+    ply.lcdDoors = ply.lcdDoors or {}
+    local known = ply.lcdDoors[door]
+    if known ~= nil then return known end
+    local fooled = math.random() >= math.max(0.04, 0.15 - Skill(ply, "guile") * 0.01)
+    if fooled then
+        ply.lcdDoors[door] = true
+        return true
+    end
+    LC.BlowDisguise(ply, "The door reads your biosignal and sounds an alarm.")
+    return false
+end
+
+-- Any new crime blows a CP disguise; hunted Resistance get recognized.
+hook.Add("LivingCityWanted", "LivingCityDisguise", function(ply)
+    if not IsValid(ply) or not ply:IsPlayer() then return end
+    if LC.DisguisedAsCP(ply) then
+        LC.BlowDisguise(ply, "Units don't do that.")
+    elseif LC.PassesAsCitizen(ply) and LC.PlayerIsHunted and LC.PlayerIsHunted(ply) then
+        LC.BlowDisguise(ply, "Someone recognized you.")
+    end
+end)
+
+-- Hanging around real units is the risky part.
+local DESIGNATION_FAILS = {
+    "A unit asks for your designation. You give one that doesn't exist.",
+    "A unit tries to sync with your mask radio. There's nothing to sync with.",
+    "A unit looks at your boots for a long second. They're civilian issue.",
+}
+timer.Create("LivingCityDisguiseRisk", 15, 0, function()
+    if not LC.Running then return end
+    local p = cvRisk:GetFloat() / 100 / 4
+    if p <= 0 then return end
+    for _, ply in ipairs(player.GetAll()) do
+        if LC.DisguisedAsCP(ply) and ply:Alive() and Watched(ply, 400) then
+            if math.random() < math.max(0.004, p - Skill(ply, "guile") * 0.002) then
+                LC.BlowDisguise(ply, Pick(DESIGNATION_FAILS))
+            end
+        end
+    end
+end)
+
+------------------------------------------------------------------------
+-- Papers and identities
+------------------------------------------------------------------------
+
+local DETECT = { forged = 0.30, dead = 0.15 }
+
+function LC.Identity(ply)
+    local id = ply.lcIdentity
+    if id and CurTime() < id.untilT then return id end
+    return nil
+end
+
+local function ClearIdentity(ply)
+    ply.lcIdentity = nil
+    ply:SetNW2String("lcd_alias", "")
+end
+
+function LC.AssumeIdentity(ply, itemId)
+    local it = LCS.Items[itemId]
+    if not it or not it.papers or not LC.HasItem(ply, itemId) then return false end
+    if not Free(ply) then return false, "Not now." end
+    if Watched(ply, 1000) then return false, "Not with a unit watching." end
+    LC.TakeItem(ply, itemId)
+    local alias = (LC.QB and LC.QB.CitizenID and LC.QB.CitizenID())
+        or string.format("#%02d-%03d", math.random(10, 99), math.random(100, 999))
+    ply.lcIdentity = { kind = it.papers, alias = alias, untilT = CurTime() + cvIdentity:GetFloat() * 60 }
+    ply:SetNW2String("lcd_alias", alias)
+    local wasWanted = LC.PlayerIsWanted(ply)
+    LC.ClearWanted(ply)
+    if wasWanted and LC.CalmCops then LC.CalmCops(ply) end
+    ply:ChatPrint(string.format("[Papers] As far as the city knows, you're citizen %s now. Nobody is looking for %s.", alias, alias))
+    if LC.PlayerIsHunted and LC.PlayerIsHunted(ply) and not LC.PassesAsCitizen(ply) then
+        ply:ChatPrint("[Papers] Your face is still on the notices, though. Citizen clothes would help.")
+    end
+    hook.Run("LivingCityNewIdentity", ply, alias)
+    return true
+end
+
+-- Returns true if the papers hold up, or false and why not.
+function LC.CheckPapers(ply)
+    local id = LC.Identity(ply)
+    if LC.PlayerIsHunted and LC.PlayerIsHunted(ply) and LC.PassesAsCitizen(ply) and not id then
+        return false, "Your face matches a wanted notice."
+    end
+    if id then
+        local p = math.max(0.03, (DETECT[id.kind] or 0.3) - Skill(ply, "guile") * 0.02)
+        if math.random() < p then return false, "Your papers don't hold up to a close look." end
+    end
+    return true
+end
+
+function LC.PapersFailed(ply, why)
+    local hadId = LC.Identity(ply) ~= nil
+    ClearIdentity(ply)
+    if LC.PassesAsCitizen(ply) and LC.PlayerIsHunted and LC.PlayerIsHunted(ply) then
+        LC.BlowDisguise(ply, why)
+    else
+        ply:ChatPrint("[Civil Protection] " .. why)
+    end
+    LC.ReportCrime(ply, hadId and "Forged identity papers" or "Wanted anticitizen", 300)
+end
+
+-- Curfew: a permit (or papers that say night shift) gets you past the stop.
+function LC.CurfewExcuse(ply, cop)
+    if LC.DisguisedAsCP(ply) then return true end
+    if ply.lcPermitSerial and ply.lcPermitSerial == LC.EventSerial then return true end
+    if LC.HasItem(ply, "permit") then
+        LC.TakeItem(ply, "permit")
+        ply.lcPermitSerial = LC.EventSerial
+        if IsValid(cop) then cop:EmitSound("npc/metropolice/vo/allrightyoucango.wav", 75) end
+        ply:ChatPrint("[Civil Protection] The unit checks your permit and stamps it. You're cleared until this is over.")
+        return true
+    end
+    if LC.Identity(ply) then
+        local ok, why = LC.CheckPapers(ply)
+        if ok then
+            ply.lcPermitSerial = LC.EventSerial
+            if IsValid(cop) then cop:EmitSound("npc/metropolice/vo/allrightyoucango.wav", 75) end
+            ply:ChatPrint("[Civil Protection] Your papers say night shift. The unit waves you on.")
+        else
+            LC.PapersFailed(ply, why)
+        end
+        return true
+    end
+    return false
+end
+
+------------------------------------------------------------------------
+-- Searches
+------------------------------------------------------------------------
+
+-- Guns citizens shouldn't have, and how easy each is to hide.
+local ILLEGAL_WEAPONS = {
+    weapon_crowbar = 0, weapon_pistol = 0.3, weapon_357 = 0.15, weapon_smg1 = 0, weapon_ar2 = 0,
+    weapon_shotgun = 0, weapon_crossbow = 0, weapon_frag = 0.25, weapon_rpg = 0, weapon_slam = 0.2,
+}
+
+local function SearchWeapons(ply, extra)
+    local out = {}
+    if not cvGuns:GetBool() or not (LC.FactionsActive and LC.FactionsActive()) then return out end
+    local guile = Skill(ply, "guile") * 0.03
+    for _, w in ipairs(ply:GetWeapons()) do
+        local cls = w:GetClass()
+        local conceal = ILLEGAL_WEAPONS[cls]
+        if conceal and math.random() >= math.Clamp(conceal + guile - (extra or 0), 0, 0.85) then out[#out + 1] = cls end
+    end
+    for _, cls in ipairs(out) do ply:StripWeapon(cls) end
+    return out
+end
+
+-- Go through someone's pockets. Returns { { id, n } } of what was found and taken.
+function LC.SearchPockets(ply, thoroughness)
+    local inv = LC.Inventory(ply)
+    local guile = Skill(ply, "guile") * 0.03
+    local found = {}
+    local ids = table.GetKeys(inv)
+    table.sort(ids)
+    for _, id in ipairs(ids) do
+        local it = LCS.Items[id]
+        if it and it.contraband then
+            local slip = math.Clamp((it.conceal or 0) + guile - (thoroughness or 0), 0, 0.85)
+            local caught = 0
+            for _ = 1, inv[id] do if math.random() >= slip then caught = caught + 1 end end
+            if caught > 0 then found[#found + 1] = { id = id, n = caught } end
+        end
+    end
+    for _, f in ipairs(found) do LC.TakeItem(ply, f.id, f.n) end
+    return found
+end
+
+local function Describe(found, guns)
+    local names = {}
+    for _, f in ipairs(found) do
+        local it = LCS.Items[f.id]
+        names[#names + 1] = (it and it.name or f.id) .. (f.n > 1 and (" x" .. f.n) or "")
+    end
+    for _, cls in ipairs(guns or {}) do names[#names + 1] = string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ") end
+    return table.concat(names, ", ")
+end
+
+-- searcher: a unit (player) or a security NPC.
+function LC.Search(searcher, target)
+    local byPlayer = IsValid(searcher) and searcher:IsPlayer()
+    local thorough = byPlayer and 0.1 or 0
+    target.lcSearchedAt = CurTime()
+
+    if LC.DisguisedAsCP(target) and byPlayer then
+        LC.BlowDisguise(target, "Hands on, the uniform is obviously a costume.")
+    end
+
+    local found = LC.SearchPockets(target, thorough)
+    local guns = SearchWeapons(target, thorough)
+    local total = #guns
+    for _, f in ipairs(found) do total = total + f.n end
+
+    local tag = byPlayer and ("[" .. searcher:Nick() .. "]") or "[Civil Protection]"
+    if total == 0 then
+        target:ChatPrint(tag .. " Search complete. Nothing found.")
+        if byPlayer then searcher:ChatPrint("[Search] " .. target:Nick() .. " is clean.") end
+        hook.Run("LivingCitySearched", searcher, target, found, guns)
+        return 0, found, guns
+    end
+
+    local list = Describe(found, guns)
+    target:ChatPrint(tag .. " Confiscated: " .. list .. ".")
+    if LC.AddStanding then LC.AddStanding(target, -10 * total, "Contraband confiscated") end
+    LC.ReportCrime(target, "Possession of contraband", math.min(600, 120 + 60 * total))
+    if byPlayer then
+        searcher:ChatPrint("[Search] " .. target:Nick() .. " was carrying: " .. list .. ". Confiscated.")
+        if LC.AddXP then LC.AddXP(searcher, 5 * total, "Contraband seized") end
+        if LC.AddCredits then LC.AddCredits(searcher, 5 * total, "seizure bonus") end
+        if LC.QuestEvent then LC.QuestEvent("seized", searcher, target) end
+    end
+    hook.Run("LivingCitySearched", searcher, target, found, guns)
+    return total, found, guns
+end
+
+-- A unit searches the person in front of them: three seconds of standing still.
+function LC.StartSearch(cop, target)
+    if not IsValid(cop) or not IsValid(target) or not target:IsPlayer() then return false, "Search who?" end
+    if not (LC.PlayerIsCP(cop) or cop:IsAdmin()) then return false, "Only units can search people." end
+    if not target:Alive() or (LC.Prisoners and LC.Prisoners[target]) then return false, "Not now." end
+    if LC.PlayerIsCP(target) and not cop:IsAdmin() then return false, "You don't search other units." end
+    if target:GetPos():DistToSqr(cop:GetPos()) > 120 * 120 then return false, "Get closer." end
+    if target.lcBeingSearched then return false, "They're already being searched." end
+    if (target.lcSearchedAt or -1e9) + cvSearchCD:GetFloat() > CurTime() and not cop:IsAdmin() then
+        return false, "They were searched a moment ago."
+    end
+    target.lcBeingSearched = cop
+    target:SetNW2Float("lcu_stop_until", CurTime() + 3)
+    target:ChatPrint("[Civil Protection] " .. cop:Nick() .. " is searching you. Stay still.")
+    cop:ChatPrint("[Search] Searching " .. target:Nick() .. "...")
+    cop:EmitSound("npc/metropolice/vo/apply.wav", 65)
+    timer.Simple(3, function()
+        if not IsValid(target) then return end
+        target.lcBeingSearched = nil
+        target:SetNW2Float("lcu_stop_until", 0)
+        if not IsValid(cop) or not cop:Alive() or not target:Alive() then return end
+        if target:GetPos():DistToSqr(cop:GetPos()) > 200 * 200 then
+            cop:ChatPrint("[Search] " .. target:Nick() .. " walked away.")
+            LC.ReportCrime(target, "Evading a search", 180)
+            return
+        end
+        LC.Search(cop, target)
+    end)
+    return true
+end
+
+hook.Add("PlayerSay", "LivingCitySearchChat", function(ply, text)
+    if string.lower(string.Trim(text)) ~= "!search" then return end
+    local tr = ply:GetEyeTrace()
+    local ok, why = LC.StartSearch(ply, tr.Entity)
+    if not ok then ply:ChatPrint("[Search] " .. why) end
+    return ""
+end)
+
+-- Processing: anything illegal on you when you're arrested is gone.
+hook.Add("LivingCityIncarcerated", "LivingCityConfiscate", function(target)
+    if not IsValid(target) or not target:IsPlayer() then return end
+    LC.TakeOff(target, true, true)
+    ClearIdentity(target)
+    local found = LC.SearchPockets(target, 1)
+    if #found > 0 then target:ChatPrint("[Processing] Confiscated: " .. Describe(found) .. ".") end
+end)
+
+------------------------------------------------------------------------
+-- Stop and search: Civil Protection NPCs frisk people on the street
+------------------------------------------------------------------------
+
+LC.Stops = LC.Stops or {} -- [ply] = { cop, cst, stage, untilT, origin }
+local Stops = LC.Stops
+
+local STOP_LINES = { "npc/metropolice/vo/holdit.wav", "npc/metropolice/vo/citizen.wav" }
+local CLEAR_LINES = { "npc/metropolice/vo/allrightyoucango.wav", "npc/metropolice/vo/movealong.wav" }
+
+-- Don't wreck someone in the middle of a delicate job (tailing, escorting).
+local DELICATE = { tail = true, escort = true }
+local function Busy(ply)
+    local q = LC.QuestOf and LC.QuestOf[ply]
+    local st = q and not q.done and q.stages and q.stages[q.stage]
+    return st ~= nil and DELICATE[st.kind] == true
+end
+local EXEMPT_FACTIONS = { ota = true, admin = true }
+
+local function Stoppable(ply, now)
+    return ply:Alive() and not ply:InVehicle() and now > (ply.lcStopNext or 0)
+        and not EXEMPT_FACTIONS[Faction(ply)] and not Busy(ply)
+        and not Stops[ply] and not ply.lcBeingSearched
+        and not LC.PlayerIsCP(ply) and not LC.PlayerIsZombie(ply)
+        and not (LC.InCustody and LC.InCustody(ply)) and not LC.DisguisedAsCP(ply)
+        and not LC.PlayerIsWanted(ply) -- the wanted get chased, not frisked
+        and not (LC.InRebelZone and LC.InRebelZone(ply:GetPos()))
+        and not (LC.InCombat and LC.InCombat(ply))
+end
+
+local function CopFree(st)
+    return st.role == "cop" and not st.test and not st.questLock and (st.state == "idle" or st.state == "moving")
+end
+
+local function Sees(npc, ply)
+    local tr = util.TraceLine({ start = npc:EyePos(), endpos = ply:EyePos(), mask = MASK_OPAQUE, filter = npc })
+    return tr.Fraction > 0.97
+end
+
+function LC.StartStop(cop, cst, ply)
+    local now = CurTime()
+    LC.SetState(cop, cst, "event")
+    cst.eventUntil = now + 30
+    LC.Face(cop, ply:GetPos())
+    cop:EmitSound(Pick(STOP_LINES), 78)
+    cop:SetLastPosition(LC.SpotInFrontOf and LC.SpotInFrontOf(ply, cop, 40) or ply:GetPos())
+    cop:SetSchedule(SCHED_FORCED_GO)
+    Stops[ply] = { cop = cop, cst = cst, stage = "approach", untilT = now + 12, origin = ply:GetPos() }
+    ply.lcStopNext = now + cvStopCD:GetFloat()
+    ply:SetNW2Float("lcu_stop_until", now + 16)
+    ply:ChatPrint("[Civil Protection] Hold it right there. Stand still for inspection.")
+    hook.Run("LivingCityStopped", ply, cop)
+end
+
+local function EndStop(ply, s)
+    Stops[ply] = nil
+    if IsValid(ply) then ply:SetNW2Float("lcu_stop_until", 0) end
+    if IsValid(s.cop) and s.cst and s.cst.state == "event" then s.cst.eventUntil = 0 end
+end
+
+local function Evaded(ply, s)
+    EndStop(ply, s)
+    if IsValid(s.cop) then s.cop:EmitSound("npc/metropolice/vo/holdit.wav", 80) end
+    ply:ChatPrint("[Civil Protection] You walked away from an inspection.")
+    LC.ReportCrime(ply, "Evading inspection", 180)
+end
+
+local function Resolve(ply, s)
+    local cop = s.cop
+    EndStop(ply, s)
+    local ok, why = LC.CheckPapers(ply)
+    if not ok then
+        cop:EmitSound("npc/metropolice/vo/prepareforjudgement.wav", 78)
+        LC.PapersFailed(ply, why)
+        return
+    end
+    local total = LC.Search(cop, ply)
+    if total > 0 then
+        cop:EmitSound("npc/metropolice/vo/prepareforjudgement.wav", 78)
+    else
+        cop:EmitSound(Pick(CLEAR_LINES), 75)
+    end
+end
+
+local function RunStops(now)
+    for ply, s in pairs(Stops) do
+        local cop = s.cop
+        if not IsValid(ply) or not Free(ply) or not IsValid(cop) or cop:Health() <= 0 or s.cst.state ~= "event" then
+            EndStop(ply, s)
+        else
+            s.cst.eventUntil = now + 10
+            local d2 = ply:GetPos():DistToSqr(cop:GetPos())
+            if ply:GetPos():DistToSqr(s.origin) > 300 * 300 then
+                Evaded(ply, s)
+            elseif s.stage == "approach" then
+                if d2 < 60 * 60 then
+                    cop:SetSchedule(SCHED_IDLE_STAND)
+                    LC.Face(cop, ply:GetPos())
+                    cop:EmitSound("npc/metropolice/vo/apply.wav", 75)
+                    if LC.PlayGesture then LC.PlayGesture(cop, LC.FRISK_ANIMS, 6) end
+                    ply:ChatPrint("[Civil Protection] Papers. Arms out.")
+                    s.stage, s.untilT = "frisk", now + 4
+                    ply:SetNW2Float("lcu_stop_until", now + 4)
+                elseif now > s.untilT then
+                    EndStop(ply, s) -- couldn't get to them; let it go
+                elseif not cop:IsCurrentSchedule(SCHED_FORCED_GO) then
+                    cop:SetLastPosition(LC.SpotInFrontOf and LC.SpotInFrontOf(ply, cop, 40) or ply:GetPos())
+                    cop:SetSchedule(SCHED_FORCED_GO)
+                end
+            elseif s.stage == "frisk" then
+                LC.Face(cop, ply:GetPos())
+                if d2 > 180 * 180 then
+                    Evaded(ply, s)
+                elseif now > s.untilT then
+                    Resolve(ply, s)
+                end
+            end
+        end
+    end
+end
+
+local nextScan = 0
+local function ScanForStops(now)
+    if now < nextScan then return end
+    nextScan = now + 3
+    local players = player.GetAll()
+    local cap = math.max(2, math.floor(#players / 16))
+    if table.Count(Stops) >= cap then return end
+    local sweep = LC.Event == "sweep"
+    for _, ply in ipairs(players) do
+        if Stoppable(ply, now) then
+            for cop, cst in pairs(LC.NPCs or {}) do
+                if IsValid(cop) and CopFree(cst) then
+                    local atPost = cst.state == "idle" and cst.claim and cst.claim.kind == "checkpoint"
+                    local range = (sweep or atPost) and 450 or 300
+                    if cop:GetPos():DistToSqr(ply:GetPos()) < range * range then
+                        local pct = sweep and cvStopPct:GetFloat() * 2 or (atPost and cvStopPct:GetFloat() or cvStreetPct:GetFloat())
+                        if math.random() * 100 < pct and Sees(cop, ply) then
+                            LC.StartStop(cop, cst, ply)
+                            if table.Count(Stops) >= cap then return end
+                        end
+                        break -- one roll per person per scan
+                    end
+                end
+            end
+        end
+    end
+end
+
+timer.Create("LivingCityStops", 0.5, 0, function()
+    local ok, err = pcall(function()
+        local now = CurTime()
+        if not LC.Running or not cvStops:GetBool() then
+            for ply, s in pairs(Stops) do EndStop(ply, s) end
+            return
+        end
+        RunStops(now)
+        ScanForStops(now)
+    end)
+    if not ok then LC.Error("stops", err) end
+end)
+
+------------------------------------------------------------------------
+-- Lockpicks and bypass charges
+------------------------------------------------------------------------
+
+LC.Picking = LC.Picking or {}
+local Picking = LC.Picking
+
+function LC.DoorPicked(door) return IsValid(door) and (door.lcPickedUntil or 0) > CurTime() end
+
+local function DoorLockKind(door)
+    local tag = LC.GetDoorTag(door)
+    local cp = tag == "cp" or (LC.DoorIsCPByGamemode and LC.DoorIsCPByGamemode(door)) or false
+    local locked = tag == "locked" or door:GetInternalVariable("m_bLocked") == true
+    -- on RP gamemodes, owned doors and their lockpicks belong to the gamemode
+    if LC.IsRP() and tag == nil and not cp then locked = false end
+    return cp, locked
+end
+
+function LC.StartPick(ply, id)
+    local it = LCS.Items[id]
+    if not it or not it.tool or not LC.HasItem(ply, id) then return false end
+    if not Free(ply) then return false, "Not now." end
+    if Picking[ply] then return false, "You're already working on a lock." end
+    local tr = ply:GetEyeTrace()
+    local door = tr.Entity
+    if not LC.IsDoorEntity(door) or tr.HitPos:DistToSqr(ply:EyePos()) > 110 * 110 then
+        return false, "Look at a locked door, up close."
+    end
+    local cp, locked = DoorLockKind(door)
+    if it.tool == "keycard" then
+        if not cp then return false, "There's no card reader on that door." end
+    elseif cp and it.tool ~= "bypass" then
+        return false, "That's a Combine lock. A pick won't touch it."
+    end
+    if not cp and not locked then return false, "It isn't locked." end
+    if LC.DoorPicked(door) then return false, "It's already open." end
+    local secs = (it.tool == "keycard" and 1.5) or (it.tool == "bypass" and 4) or 7
+    Picking[ply] = { door = door, id = id, untilT = CurTime() + secs, cp = cp, locked = locked }
+    ply:SetNW2String("lcu_progress", it.tool == "keycard" and "Swiping the card..." or "Working the lock... keep looking at it")
+    ply:SetNW2Float("lcu_pick_start", CurTime())
+    ply:SetNW2Float("lcu_pick_until", CurTime() + secs)
+    ply:EmitSound((it.tool == "bypass" or it.tool == "keycard") and "buttons/combine_button2.wav" or "doors/door_locked2.wav", 55)
+    return true
+end
+
+local function StopPicking(ply, msg)
+    Picking[ply] = nil
+    if IsValid(ply) then
+        ply:SetNW2Float("lcu_pick_until", 0)
+        if msg then ply:ChatPrint(msg) end
+    end
+end
+
+-- Open for 30 seconds, then shut (and locked again, if it was locked before).
+local function OpenPicked(door, relock)
+    door.lcPickedUntil = CurTime() + 30
+    door:Fire("Unlock")
+    door:Fire("Open", "", 0.1)
+    if LC.OpenedDoors then LC.OpenedDoors[door] = nil end
+    timer.Simple(30, function()
+        if not IsValid(door) then return end
+        door.lcPickedUntil = nil
+        door:Fire("Close")
+        if relock then door:Fire("Lock", "", 1) end
+    end)
+end
+
+local function FinishPick(ply, p)
+    StopPicking(ply)
+    local it = LCS.Items[p.id]
+    if not LC.HasItem(ply, p.id) then return end
+    if it.tool == "lockpick" then
+        if not Check(ply, "guile", 8) then
+            if math.random() < 0.4 then
+                LC.TakeItem(ply, p.id)
+                ply:EmitSound("physics/metal/metal_solid_impact_soft1.wav", 60)
+                return ply:ChatPrint("Your pick snaps in the lock.")
+            end
+            return ply:ChatPrint("The lock won't give. Try again.")
+        end
+    elseif it.tool == "keycard" then
+        LC.TakeItem(ply, p.id) -- flagged as stolen the moment it's used
+        p.door:EmitSound("buttons/combine_button1.wav", 65)
+    else
+        LC.TakeItem(ply, p.id)
+        if math.random() < math.max(0.05, 0.25 - Skill(ply, "nerve") * 0.02) then
+            p.door:EmitSound("ambient/alarms/klaxon1.wav", 80)
+            LC.ReportCrime(ply, "Tampering with Combine technology", 240)
+        end
+    end
+    p.door:EmitSound("doors/door_latch3.wav", 65)
+    OpenPicked(p.door, p.locked)
+    ply:ChatPrint(it.tool == "keycard" and "The reader blinks green. The card won't work twice." or "The lock gives.")
+    if Watched(ply, 900) then
+        LC.ReportCrime(ply, it.tool == "keycard" and "Unauthorized use of a Civil Protection keycard" or "Breaking and entering", 180)
+    end
+    if LC.QuestEvent then LC.QuestEvent("picked", ply, p.door) end
+    hook.Run("LivingCityLockPicked", ply, p.door, it.tool)
+end
+
+timer.Create("LivingCityPicking", 0.25, 0, function()
+    local now = CurTime()
+    for ply, p in pairs(Picking) do
+        if not IsValid(ply) or not Free(ply) or not IsValid(p.door) then
+            StopPicking(ply)
+        else
+            local tr = ply:GetEyeTrace()
+            if tr.Entity ~= p.door or ply:GetPos():DistToSqr(p.door:GetPos()) > 160 * 160 then
+                StopPicking(ply, "You stop working on the lock.")
+            elseif now >= p.untilT then
+                FinishPick(ply, p)
+            end
+        end
+    end
+end)
+
+------------------------------------------------------------------------
+-- Forging papers
+------------------------------------------------------------------------
+
+local function Private(ply)
+    return LC.PlayerInOwnBlock and LC.PlayerInOwnBlock(ply) == true
+        or (LC.InRebelZone and LC.InRebelZone(ply:GetPos()))
+end
+
+function LC.Forge(ply, id)
+    local it = LCS.Items[id]
+    if not it or not it.forge or not LC.HasItem(ply, id) then return false end
+    if not Private(ply) then return false, "You need somewhere private: your own block, or rebel territory." end
+    if Watched(ply, 800) then return false, "Not with a unit watching." end
+    LC.TakeItem(ply, id)
+    if Check(ply, "guile", 11) then
+        LC.GiveOrDrop(ply, "papers_forged")
+        ply:ChatPrint("[Papers] Name, number, stamp. It looks right. It has to.")
+        return true
+    end
+    ply:ChatPrint("[Papers] The ink bleeds across the number. The form is ruined.")
+    return true
+end
+
+------------------------------------------------------------------------
+-- The stash at home
+------------------------------------------------------------------------
+
+local function StashKey() return "lci_stash_" .. game.GetMap() end
+
+function LC.Stash(ply)
+    if ply.lcStash and ply.lcStashMap == game.GetMap() then return ply.lcStash end
+    local raw = ply:GetPData(StashKey(), "")
+    local t = raw ~= "" and util.JSONToTable(raw) or nil
+    ply.lcStash = istable(t) and t or {}
+    ply.lcStashMap = game.GetMap()
+    return ply.lcStash
+end
+
+local function SaveStash(ply) ply:SetPData(StashKey(), util.TableToJSON(LC.Stash(ply))) end
+
+local function StashCount(ply)
+    local n = 0
+    for _, c in pairs(LC.Stash(ply)) do n = n + c end
+    return n
+end
+
+function LC.CanReachStash(ply) return Free(ply) and LC.PlayerInOwnBlock and LC.PlayerInOwnBlock(ply) == true end
+
+function LC.StashStore(ply, id)
+    if not LC.CanReachStash(ply) then return false, "Your stash is at home, in your own block." end
+    if not LC.HasItem(ply, id) then return false end
+    if StashCount(ply) >= cvStash:GetInt() then return false, "Your stash is full." end
+    LC.TakeItem(ply, id)
+    local st = LC.Stash(ply)
+    st[id] = (st[id] or 0) + 1
+    SaveStash(ply)
+    return true
+end
+
+function LC.StashTake(ply, id)
+    if not LC.CanReachStash(ply) then return false, "Your stash is at home, in your own block." end
+    local st = LC.Stash(ply)
+    if (st[id] or 0) < 1 then return false end
+    if LC.InvSpace(ply) < 1 then return false, "Your pockets are full." end
+    st[id] = st[id] - 1
+    if st[id] <= 0 then st[id] = nil end
+    SaveStash(ply)
+    LC.GiveItem(ply, id)
+    return true
+end
+
+-- Sweeps sometimes reach people's homes.
+hook.Add("LivingCityEventStarted", "LivingCityStashRaids", function(name)
+    if name ~= "sweep" then return end
+    for _, ply in ipairs(player.GetAll()) do
+        local st = LC.Stash(ply)
+        local found = {}
+        for id, n in pairs(st) do
+            if LCS.Items[id] and LCS.Items[id].contraband then found[#found + 1] = { id = id, n = n } end
+        end
+        if #found > 0 and math.random() * 100 < cvRaid:GetFloat() then
+            for _, f in ipairs(found) do st[f.id] = nil end
+            SaveStash(ply)
+            local home = LC.PlayerBlock and LC.PlayerBlock(ply)
+            ply:ChatPrint(string.format("[Civil Protection] Your residence%s was searched. Confiscated: %s.",
+                home and (" in " .. LC.BlockName(home)) or "", Describe(found)))
+            if LC.AddStanding then LC.AddStanding(ply, -40, "Contraband found in your residence") end
+            hook.Run("LivingCityStashRaided", ply, found)
+        end
+    end
+end)
+
+concommand.Add("lci_stash", function(ply) if IsValid(ply) then LC.SendInv(ply, true) end end)
+hook.Add("PlayerSay", "LivingCityStashChat", function(ply, text)
+    if string.lower(string.Trim(text)) ~= "!stash" then return end
+    if not LC.CanReachStash(ply) then
+        ply:ChatPrint("[Stash] Your stash is at home, in " .. (LC.PlayerBlock and LC.PlayerBlock(ply) and LC.BlockName(LC.PlayerBlock(ply)) or "your housing block") .. ".")
+    else
+        LC.SendInv(ply, true)
+    end
+    return ""
+end)
+
+------------------------------------------------------------------------
+-- The black market
+------------------------------------------------------------------------
+
+local function Dealers()
+    local out = {}
+    for _, f in ipairs(ents.FindByClass("lc_dealer")) do out[#out + 1] = f end
+    return out
+end
+
+local function NearDealer(ply)
+    for _, f in ipairs(Dealers()) do
+        if not f:GetNW2Bool("lc_busted", false) and f:GetPos():DistToSqr(ply:GetPos()) < 180 * 180 then return f end
+    end
+    return nil
+end
+
+local BARRED = { ota = "Overwatch doesn't shop.", admin = "The Administrator has people for this.", zombie = "..." }
+
+function LC.MarketAccess(ply)
+    if LC.PlayerIsCP(ply) then return false, "Nobody here sells anything to a unit." end
+    if LC.PlayerIsZombie(ply) then return false, "..." end
+    local f = Faction(ply)
+    if BARRED[f] then return false, BARRED[f] end
+    if NearDealer(ply) then return true end
+    local dealers = Dealers()
+    if #dealers == 0 and LC.InRebelZone and LC.InRebelZone(ply:GetPos()) then return true end
+    if #dealers > 0 then return false, "Find the dealer." end
+    return false, "There's no black market here. Try rebel territory, or ask an admin to place a dealer."
+end
+
+function LC.OpenMarket(ply)
+    local ok, why = LC.MarketAccess(ply)
+    if not ok then
+        ply:ChatPrint("[Black market] " .. why)
+        return false
+    end
+    local credits = LC.Credits and LC.Credits(ply) or 0
+    local goods, sell = {}, {}
+    for _, g in ipairs(LCS.Black) do
+        local can, reason = true, nil
+        if credits < g.price then can, reason = false, "Not enough credits" end
+        if can and g.item and LC.InvSpace(ply) < 1 then can, reason = false, "Pockets full" end
+        goods[#goods + 1] = { id = g.id, name = g.name, price = g.price, desc = g.desc, ok = can, why = reason }
+    end
+    local inv = LC.Inventory(ply)
+    local ids = table.GetKeys(inv)
+    table.sort(ids)
+    for _, id in ipairs(ids) do
+        local it = LCS.Items[id]
+        if it and it.sell then sell[#sell + 1] = { id = id, name = it.name, n = inv[id], price = it.sell } end
+    end
+    LC.SendCompressed("lcu_market", { credits = credits, goods = goods, sell = sell }, { ply })
+    return true
+end
+
+function LC.BlackBuy(ply, id)
+    local g = LCS.BlackById[id]
+    if not g then return false end
+    local ok, why = LC.MarketAccess(ply)
+    if not ok then return false, why end
+    if LC.Credits(ply) < g.price then return false, "Not enough credits." end
+    if g.item and LC.InvSpace(ply) < 1 then return false, "Your pockets are full." end
+    LC.AddCredits(ply, -g.price)
+    if g.item then LC.GiveItem(ply, g.item) elseif g.weapon then ply:Give(g.weapon) end
+    ply:ChatPrint(string.format("[Black market] %s, for %d credits. You didn't get it here.", g.name, g.price))
+    return true
+end
+
+function LC.DealerSell(ply, id)
+    local it = LCS.Items[id]
+    if not it or not it.sell or not LC.HasItem(ply, id) then return false end
+    local ok, why = LC.MarketAccess(ply)
+    if not ok then return false, why end
+    LC.TakeItem(ply, id)
+    LC.AddCredits(ply, it.sell)
+    ply:ChatPrint(string.format("[Black market] Sold: %s, for %d credits.", it.name, it.sell))
+    return true
+end
+
+net.Receive("lcu_buy", function(_, ply)
+    local ok, why = LC.BlackBuy(ply, net.ReadString())
+    if not ok and why then ply:ChatPrint("[Black market] " .. why) end
+    LC.OpenMarket(ply)
+end)
+
+net.Receive("lcu_sell", function(_, ply)
+    local ok, why = LC.DealerSell(ply, net.ReadString())
+    if not ok and why then ply:ChatPrint("[Black market] " .. why) end
+    LC.OpenMarket(ply)
+end)
+
+function LC.BustDealer(cop, dealer)
+    if not IsValid(dealer) or dealer:GetNW2Bool("lc_busted", false) then return false end
+    dealer:SetNW2Bool("lc_busted", true)
+    dealer:SetNotSolid(true)
+    dealer:EmitSound("npc/metropolice/vo/holdit.wav", 80)
+    if IsValid(cop) then
+        cop:ChatPrint("[Civil Protection] The dealer bolts. You confiscate what's left of the stock.")
+        if LC.AddCredits then LC.AddCredits(cop, 20, "black market busted") end
+        if LC.AddXP then LC.AddXP(cop, 10, "Busted a dealer") end
+        if LC.AddStanding then LC.AddStanding(cop, 10) end
+    end
+    LC.RadioNotice("resistance", "The dealer " .. Where(dealer:GetPos()) .. " got raided. Stay away for a while.")
+    timer.Simple(900, function()
+        if not IsValid(dealer) then return end
+        dealer:SetNW2Bool("lc_busted", false)
+        dealer:SetNotSolid(false)
+    end)
+    hook.Run("LivingCityDealerBusted", cop, dealer)
+    return true
+end
+
+hook.Add("PlayerSay", "LivingCityMarketChat", function(ply, text)
+    local t = string.lower(string.Trim(text))
+    if t ~= "!market" and t ~= "!blackmarket" and t ~= "!dealer" then return end
+    LC.OpenMarket(ply)
+    return ""
+end)
+
+------------------------------------------------------------------------
+-- Inventory actions and what the inventory window needs to know
+------------------------------------------------------------------------
+
+function LC.UndergroundAction(ply, action, id)
+    local it = id and LCS.Items[id]
+    local ok, why
+    if action == "takeoff" then
+        ok = LC.TakeOff(ply)
+    elseif action == "wear" then
+        if not it or not it.wear then return true end
+        ok, why = LC.Wear(ply, id)
+    elseif action == "store" then
+        ok, why = LC.StashStore(ply, id)
+    elseif action == "take" then
+        ok, why = LC.StashTake(ply, id)
+    elseif action == "use" and it then
+        if it.tool then
+            ok, why = LC.StartPick(ply, id)
+        elseif it.papers then
+            ok, why = LC.AssumeIdentity(ply, id)
+        elseif it.forge then
+            ok, why = LC.Forge(ply, id)
+        elseif it.wear then
+            ok, why = LC.Wear(ply, id)
+        elseif it.permit then
+            why = "Keep it on you. It's shown when a unit stops you during curfew."
+        elseif it.radio then
+            why = "Talk with !r <message>" .. (it.radio == "resistance" and " (Freq 7), or !ru on the Union band." or ".")
+        elseif it.rationCard then
+            why = "Use any ration dispenser."
+        else
+            return false
+        end
+    else
+        return false
+    end
+    if not ok and why then ply:ChatPrint(why) end
+    return true
+end
+
+function LC.InvExtras(ply, t)
+    t.disguise = LC.Disguise(ply)
+    t.alias = LC.Identity(ply) and LC.Identity(ply).alias or nil
+    if LC.CanReachStash(ply) then
+        t.stash = LC.Stash(ply)
+        t.stashSize = cvStash:GetInt()
+    end
+end
+
+------------------------------------------------------------------------
+-- Upkeep
+------------------------------------------------------------------------
+
+timer.Create("LivingCityUnderground", 2, 0, function()
+    for _, ply in ipairs(player.GetAll()) do
+        local band = LC.RadioBand(ply) or ""
+        if ply:GetNW2String("lcu_band", "") ~= band then ply:SetNW2String("lcu_band", band) end
+        if ply.lcIdentity and not LC.Identity(ply) then
+            ClearIdentity(ply)
+            ply:ChatPrint("[Papers] Your borrowed name has worn thin. You're yourself again.")
+        end
+    end
+end)
+
+hook.Add("PlayerDeath", "LivingCityUnderground", function(ply)
+    LC.TakeOff(ply, true, true) -- the disguise is ruined
+    ClearIdentity(ply)
+    StopPicking(ply)
+    if Stops[ply] then EndStop(ply, Stops[ply]) end
+end)
+
+hook.Add("PlayerDisconnected", "LivingCityUnderground", function(ply)
+    if ply.lcdItem then LC.GiveItem(ply, ply.lcdItem) end -- you keep your uniform overnight
+    Stops[ply], Picking[ply] = nil, nil
+end)
+
+concommand.Add("lc_search", function(ply, _, args)
+    if IsValid(ply) and not ply:IsAdmin() then return end
+    local target = LC.FindPlayer(args[1])
+    if not target then return end
+    local n, found, guns = LC.Search(ply, target)
+    local msg = string.format("%s searched: %d item(s) confiscated%s", target:Nick(), n, n > 0 and (": " .. Describe(found, guns)) or "")
+    if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
+end)
+
+concommand.Add("lc_giveitem", function(ply, _, args)
+    if IsValid(ply) and not ply:IsAdmin() then return end
+    local target = LC.FindPlayer(args[1])
+    local id = args[2]
+    if not target or not id or not LCS.Items[id] then
+        local msg = "Usage: lc_giveitem <name> <item> [count]"
+        if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
+        return
+    end
+    LC.GiveOrDrop(target, id, math.Clamp(tonumber(args[3]) or 1, 1, 20))
+end)

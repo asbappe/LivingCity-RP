@@ -1,0 +1,44 @@
+"livingcity"
+{
+	"base"			"sandbox"
+	"title"			"Living City"
+	"maps"			"^rp_|^d1_trainstation|^d3_c17|^gm_city"
+	"category"		"rp"
+	"menusystem"	"1"
+
+	"settings"
+	{
+		1
+		{
+			"name"		"lc_citizens"
+			"text"		"Citizens"
+			"help"		"How many NPC citizens live on the streets"
+			"type"		"Numeric"
+			"default"	"14"
+		}
+		2
+		{
+			"name"		"lc_cops"
+			"text"		"Civil Protection units"
+			"help"		"How many NPC metrocops patrol"
+			"type"		"Numeric"
+			"default"	"4"
+		}
+		3
+		{
+			"name"		"lc_zombies"
+			"text"		"Zombies"
+			"help"		"Zombies kept alive in infestation zones"
+			"type"		"Numeric"
+			"default"	"6"
+		}
+		4
+		{
+			"name"		"lc_needs"
+			"text"		"Hunger and thirst"
+			"help"		"People need to eat and drink"
+			"type"		"CheckBox"
+			"default"	"1"
+		}
+	}
+}
