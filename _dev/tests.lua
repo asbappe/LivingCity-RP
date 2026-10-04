@@ -2333,7 +2333,7 @@ local bin2 = ents.Create("prop_physics")
 bin2:SetModel("models/props_junk/trashdumpster01a.mdl")
 bin2:SetPos(Vector(800, -900, 0))
 local found = LC.QB.FindBins(binman, 100, 5000, 3)
-ok(#found == 2 and (found[1] == bin or found[2] == bin), "the bin round finds the bins that are already in the map")
+ok(#found == 2 and (found[1].ent == bin or found[2].ent == bin), "the bin round finds the bins that are already in the map")
 local fix = ents.Create("prop_physics")
 fix:SetModel("models/props_c17/furniturestove001a.mdl")
 local vend = ents.Create("prop_physics")
@@ -2506,8 +2506,35 @@ local seenQ = inject(witness, "cit_report")
 local w = seenQ.data.watched or {}
 ok(#w == 2 and IsValid(w[1]) and IsValid(w[2]), "two people are really there to be seen")
 ok(seenQ.stages[1].pos:DistToSqr(w[1]:GetPos()) < 200 * 200, "at the place you're sent")
+ok(seenQ.stages[1].pos == dump:GetPos() and seenQ.stages[1].text:find("dumpster", 1, true), "which is the dumpster in the map", seenQ.stages[1].text)
+local w1, w2 = w[1], w[2]
+local played = {}
+local realPlay = LC.PlayGesture
+LC.PlayGesture = function(npc, list) played[npc] = list[1] return true end
+_run(5)
+LC.PlayGesture = realPlay
+ok(played[w1] and played[w2], "they act out a hand-off", tostring(played[w1]) .. " " .. tostring(played[w2]))
 LC.AbandonQuest(witness)
+_run(5)
+ok(not IsValid(w1) and not IsValid(w2), "and they're gone once the job is over")
 dump:Remove()
+
+-- the map's own dumpsters are static props: read from the map file, and used just the same
+LC.StaticBins = { { kind = "bin", pos = Vector(-900, -500, 0), model = "models/props_junk/trashdumpster01a.mdl" } }
+witness.lcqNext = 0
+local seenS = inject(witness, "cit_report")
+ok(seenS.stages[1].pos == LC.StaticBins[1].pos, "a dumpster that's part of the map counts too")
+LC.AbandonQuest(witness)
+LC.StaticBins = {}
+
+-- no bins anywhere near: one is put down on the street, and they're behind it
+witness.lcqNext = 0
+local seenP = inject(witness, "cit_report")
+local placed = seenP.data.dumpster
+ok(IsValid(placed) and placed:GetModel():find("dumpster", 1, true), "with no bins on the map, a dumpster is put out for it")
+ok(seenP.desc:find("dumpster", 1, true) and not LC.CombineZoneAt(seenP.stages[1].pos), "and the job is behind a dumpster, not on Combine ground", seenP.desc)
+LC.AbandonQuest(witness)
+ok(not IsValid(placed), "it's cleared away afterwards")
 
 section("Reporting to a unit")
 local reporter = newPlayer("Reporter", "citizen")

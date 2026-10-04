@@ -298,6 +298,9 @@ hook.Add("GravGunOnPickedUp", "LivingCityCan", OnPickup)
 hook.Add("PhysgunPickup", "LivingCityCan", function(ply, ent) OnPickup(ply, ent) end)
 
 local function NearTrash(pos)
+    for _, b in ipairs(LC.StaticBins or {}) do -- the map's own dumpsters and bins
+        if b.pos:DistToSqr(pos) < 90 * 90 then return true end
+    end
     for _, e in ipairs(ents.FindInSphere(pos, 70)) do
         local m = string.lower(e:GetModel() or "")
         if string.find(m, "trash", 1, true) or string.find(m, "dumpster", 1, true) or string.find(m, "garbage", 1, true) then

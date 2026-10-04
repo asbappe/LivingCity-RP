@@ -214,34 +214,34 @@ local function Spot(ply, minD, maxD, role)
     return LC.RandomWanderPos(role or "citizen")
 end
 
--- Real bins already standing in the map (the server can see physics and
--- dynamic props; map-static ones are invisible to it).
-local BIN_MODELS = { "trashcan", "trashbin", "dumpster", "garbagecan", "garbage_can" }
+-- Real bins already standing in the map: the ones the server can see as
+-- entities, plus the map's own static props (read from the map file).
+-- Returns { pos, ent (nil for a static prop), model }, up to n of them.
 local BIN_CLASSES = { prop_physics = true, prop_dynamic = true, prop_physics_multiplayer = true, prop_physics_override = true }
 
-local function FindBins(ply, minD, maxD, n)
+local function FindBins(ply, minD, maxD, n, dumpstersOnly)
     local origin = ply:GetPos()
     local out = {}
+    local function consider(pos, ent, model)
+        if dumpstersOnly and not string.find(model, "dumpster", 1, true) then return end
+        local d = pos:Distance(origin)
+        if d >= minD and d <= maxD and GoodSpot(pos) then out[#out + 1] = { pos = pos, ent = ent, model = model } end
+    end
     for _, e in ipairs(ents.GetAll()) do
         if IsValid(e) and BIN_CLASSES[e:GetClass()] and not e.lcQuest then
             local m = string.lower(e:GetModel() or "")
-            for _, pat in ipairs(BIN_MODELS) do
-                if string.find(m, pat, 1, true) then
-                    local d = e:GetPos():Distance(origin)
-                    if d >= minD and d <= maxD and GoodSpot(e:GetPos()) then out[#out + 1] = e end
-                    break
-                end
-            end
+            if LC.IsBinModel and LC.IsBinModel(m) then consider(e:GetPos(), e, m) end
         end
     end
+    for _, b in ipairs(LC.StaticBins or {}) do consider(b.pos, nil, b.model or "") end
     -- shuffled, then the first n that aren't stacked on each other
     for i = #out, 2, -1 do local j = math.random(i); out[i], out[j] = out[j], out[i] end
     local picked = {}
-    for _, e in ipairs(out) do
+    for _, b in ipairs(out) do
         if #picked >= n then break end
         local ok = true
-        for _, o in ipairs(picked) do if o:GetPos():DistToSqr(e:GetPos()) < 150 * 150 then ok = false end end
-        if ok then picked[#picked + 1] = e end
+        for _, o in ipairs(picked) do if o.pos:DistToSqr(b.pos) < 150 * 150 then ok = false end end
+        if ok then picked[#picked + 1] = b end
     end
     return picked
 end
@@ -1491,32 +1491,79 @@ T{
     end,
 }
 
+-- Handing something over and taking it, on citizen models (first one the model has wins).
+local HANDOFF_GIVE = { "Heal", "takepackage", "g_palm_out_high_l", "g_point", "ACT_ARM" }
+local HANDOFF_TAKE = { "takepackage", "Heal", "g_palm_out_l", "ACT_DISARM" }
+local HANDOFF_LOOK = { "LookOutIdle", "photo_react_startle", "Fear_Reaction" }
+
 T{
     id = "cit_report", factions = { citizen = true },
     build = function(ply)
-        -- sometimes it's behind a dumpster that's really in the map; otherwise on a quiet corner.
-        -- Either way two people are actually there, and you walk up and see them.
-        local bin = FindBins(ply, 300, 2500, 1)[1]
-        local atBin = bin ~= nil and math.random() < 0.6
-        local s = atBin and bin:GetPos() or Spot(ply, 400, 2500)
+        -- behind a dumpster: a real one in the map if there's one in reach (a
+        -- dumpster first, any bin after that); otherwise one is put down on
+        -- the street. Two people are actually there, and you walk up and see them.
+        local bin = FindBins(ply, 300, 2500, 1, true)[1] or FindBins(ply, 300, 2500, 1)[1]
+            or FindBins(ply, 150, 5000, 1, true)[1] or FindBins(ply, 150, 5000, 1)[1]
+        local s = bin and bin.pos or Spot(ply, 400, 2500)
         if not s then return nil end
-        local prompt = atBin and "Two people swap a bundle behind the dumpster. One has a lambda scratched into his sleeve."
-            or "A man you know from your block hands a child a radio and walks away fast."
-        local look = Goto(s, atBin and "Go over to the dumpster, casually" or "Go and look, casually", 150)
+        if not bin then
+            local tr = util.TraceLine({ start = s + Vector(0, 0, 40), endpos = s - Vector(0, 0, 300), mask = MASK_SOLID_BRUSHONLY })
+            if tr.Hit then s = tr.HitPos end -- on the ground, not floating
+        end
+        local noun = (not bin or string.find(bin.model or "", "dumpster", 1, true)) and "the dumpster" or "the bins"
+        local prompt = "Two people swap a bundle behind " .. noun .. ". One has a lambda scratched into his sleeve."
+        local look = Goto(s, "Go over to " .. noun .. ", casually", 170)
+        local from = ply:GetPos()
         look.onEnter = function(q)
-            -- the two of them, a little apart, facing each other
+            if not bin then
+                local d = q.data.dumpster
+                if not IsValid(d) then
+                    d = SpawnItem(q, "models/props_junk/trashdumpster01a.mdl", s)
+                    q.data.dumpster = d
+                end
+                if IsValid(d) then
+                    d:SetPos(s + Vector(0, 0, d.OBBMins and -d:OBBMins().z or 30)) -- standing on the ground
+                    local ang = (s - from):Angle()
+                    d:SetAngles(Angle(0, ang.y + 90, 0)) -- side on to you, so there's a behind
+                end
+            end
+            -- the two of them behind it (from where you're coming), facing each other
+            local away = s - from
+            away.z = 0
+            away = away:LengthSqr() > 1 and away:GetNormalized() or Vector(1, 0, 0)
+            local side = Vector(-away.y, away.x, 0)
             q.data.watched = {}
-            for i, off in ipairs({ Vector(45, 0, 0), Vector(-45, 0, 0) }) do
-                local npc = LC.QB.SpawnActor(q, "citizen", s + off, 900)
+            for _, sign in ipairs({ 1, -1 }) do
+                local npc = LC.QB.SpawnActor(q, "citizen", s + away * 75 + side * (35 * sign), 900)
                 if npc then q.data.watched[#q.data.watched + 1] = npc end
             end
             local a, b = q.data.watched[1], q.data.watched[2]
-            if IsValid(a) and IsValid(b) then LC.Face(a, b:GetPos()) LC.Face(b, a:GetPos()) end
+            if IsValid(a) and IsValid(b) then
+                LC.Face(a, b:GetPos()) LC.Face(b, a:GetPos())
+                -- the hand-off, over and over: one holds something out, the other takes it,
+                -- then they glance around. Whichever animations the models have.
+                local name, turn = "LivingCityHandoff" .. tostring(q.id), 0
+                local function swap()
+                    if q.done or not IsValid(a) or not IsValid(b) then return timer.Remove(name) end
+                    turn = turn + 1
+                    local giver, taker = a, b
+                    if turn % 2 == 0 then giver, taker = b, a end
+                    LC.Face(giver, taker:GetPos()) LC.Face(taker, giver:GetPos())
+                    if turn % 3 == 0 then
+                        LC.PlayGesture(giver, HANDOFF_LOOK, 4)
+                        LC.PlayGesture(taker, HANDOFF_LOOK, 4)
+                    else
+                        LC.PlayGesture(giver, HANDOFF_GIVE, 4)
+                        timer.Simple(0.6, function() if IsValid(taker) then LC.PlayGesture(taker, HANDOFF_TAKE, 4) end end)
+                    end
+                end
+                timer.Create(name, 4.5, 0, swap)
+                timer.Simple(0.5, swap)
+            end
         end
         return {
             title = "Something you saw", reward = 20, limit = 420,
-            desc = atBin and ("Neighbors whisper about something going on behind a dumpster " .. Place(s, ply:GetPos()) .. ".")
-                or ("Neighbors whisper about strange comings and goings " .. Place(s, ply:GetPos()) .. "."),
+            desc = "Neighbors whisper about something going on behind " .. (noun == "the bins" and "some bins " or "a dumpster ") .. Place(s, ply:GetPos()) .. ".",
             stages = {
                 look,
                 Hold(s, 6, "Watch quietly", 220),

@@ -163,7 +163,7 @@ SHIFTS.sanitation = {
             local bin = bins[i]
             local sp
             if bin then
-                sp = bin:GetPos()
+                sp = bin.pos
             else
                 sp = Q.Spot(ply, 300, 2000)
                 if not sp then return nil end
@@ -172,7 +172,7 @@ SHIFTS.sanitation = {
             end
             local h = Hold(sp, 6, string.format("Empty bin %d of 3, %s", i, Place(sp, ply:GetPos())), 110)
             if bin then
-                h.item = bin
+                h.item = bin.ent
             else
                 h.onEnter = function(q, st) st.item = Q.SpawnItem(q, "models/props_trainstation/trashcan_indoor001a.mdl", sp) end
             end

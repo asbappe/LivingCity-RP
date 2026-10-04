@@ -13,6 +13,8 @@
 
     The result is LC.StaticFixtures = { { kind, pos, ang, model } }. The
     survival code uses it for E presses and for "near heat" and "near a sink".
+    Dumpsters and bins go in LC.StaticBins (same shape): quests send people to
+    them, and a can put in one counts as put in the trash.
     lc_scanprops rescans and reports what was found.
 ]]
 
@@ -20,12 +22,23 @@ if CLIENT then return end
 
 LC = LC or {}
 LC.StaticFixtures = LC.StaticFixtures or {}
+LC.StaticBins = LC.StaticBins or {}
 
 local KINDS = {
     { "stove", "stove" }, { "furnace", "stove" }, { "oven", "stove" },
     { "sink", "sink" },
     { "vendingmachine", "vending" }, { "vending_machine", "vending" }, { "vending", "vending" },
 }
+
+-- Dumpsters and bins: not fixtures you use, but places to be.
+local BINS = { "dumpster", "trashcan", "trash_can", "trashbin", "garbagecan", "garbage_can" }
+function LC.IsBinModel(model)
+    model = string.lower(model or "")
+    for _, pat in ipairs(BINS) do
+        if string.find(model, pat, 1, true) then return true end
+    end
+    return false
+end
 
 function LC.FixtureKindForModel(model)
     model = string.lower(model or "")
@@ -70,7 +83,8 @@ function LC.ReadStaticFixtures(path)
     for i = 1, dictN do
         local name = f:Read(128) or ""
         name = string.match(name, "^[^%z]*") or ""
-        kinds[i] = LC.FixtureKindForModel(name) and { LC.FixtureKindForModel(name), string.lower(name) } or false
+        local kind = LC.FixtureKindForModel(name) or (LC.IsBinModel(name) and "bin")
+        kinds[i] = kind and { kind, string.lower(name) } or false
     end
     local leafN = f:ReadLong()
     if leafN < 0 then return done(nil, "odd leaf list") end
@@ -99,11 +113,14 @@ end
 
 function LC.ScanStaticProps()
     local list, why = LC.ReadStaticFixtures("maps/" .. game.GetMap() .. ".bsp")
-    LC.StaticFixtures = list or {}
+    LC.StaticFixtures, LC.StaticBins = {}, {}
+    for _, fx in ipairs(list or {}) do
+        table.insert(fx.kind == "bin" and LC.StaticBins or LC.StaticFixtures, fx)
+    end
     LC.StaticScanNote = list and nil or why
     LC.StaticScanned = true
     if list then
-        LC.Log("info", string.format("Static props: %d stove/sink/vending fixtures found in the map", #list))
+        LC.Log("info", string.format("Static props: %d stove/sink/vending fixtures and %d dumpsters or bins found in the map", #LC.StaticFixtures, #LC.StaticBins))
     else
         LC.Log("warn", "Static props couldn't be read: " .. tostring(why))
     end
@@ -133,6 +150,7 @@ concommand.Add("lc_scanprops", function(ply)
     for _, fx in ipairs(LC.StaticFixtures) do counts[fx.kind] = (counts[fx.kind] or 0) + 1 end
     local parts = {}
     for k, n in pairs(counts) do parts[#parts + 1] = n .. " " .. k end
+    if #LC.StaticBins > 0 then parts[#parts + 1] = #LC.StaticBins .. " dumpsters or bins" end
     local msg = ok and ("[Living City] Static props: " .. (#parts > 0 and table.concat(parts, ", ") or "no stoves, sinks or vending machines")
         or ("[Living City] Couldn't read the map's props: " .. tostring(LC.StaticScanNote)))
     if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
