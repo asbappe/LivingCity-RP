@@ -98,6 +98,12 @@ Citizens, metrocops and soldiers leave a body when they die. Press E on one and 
 
 Searching a body in front of a unit is a crime. Bodies stay for 5 minutes (`lc_body_time`), up to 16 at once (`lc_max_bodies`). Birds and headcrabs leave a carcass item instead of a ragdoll, so nothing appears twice.
 
+## The city's people
+
+Every citizen and Civil Protection unit is a **named person with a profile that never changes**: a name, a sex and voice, a model, a Union job, and a housing block. You'll see the same faces again. Look at one to see their name and what they do. They spend part of their day at their workplace (if the map has one for their job) and go to **their own block** at curfew. About one in eight citizens (`lc_rebel_pct`) is secretly a **Resistance sympathizer**: Resistance players see "one of ours" on them, and the Resistance's contacts and supply runs are drawn from them.
+
+`lc_citizens` and `lc_cops` still set how many are out on the streets at once; the roster (`lc_roster_size` citizens, `lc_roster_cops` units) is everybody who lives in the city, and they take turns, the person who's been away longest coming out next. The roster is saved per map in `garrysmod/data/livingcity/<map>_people.json`, so it's the same people next session and next week. **A person who is killed stays dead**, and the city fills the gap with a new arrival. `lc_people [list]` summarizes, `lc_resetpeople` starts over.
+
 ## Factions and ranks
 
 | Faction | Ladder |
@@ -222,4 +228,4 @@ Stories: `lcq_startchain`, `lcq_story`, `lcq_resetstory`. Debug: `lc_debugreport
 
 ## Honest limits
 
-The server logic and the gamemode's rules are exercised by 471 automated scenario tests, and the client HUD and editor overlay by a smoke test, all against a simulated Garry's Mod (see `_dev/`). Real-game playtesting has only just started, so expect rough edges in anything visual or audible: animations, sounds, menus, HUD layout, and entity models. Send the debug report and they'll get fixed.
+The server logic and the gamemode's rules are exercised by 485 automated scenario tests, and the client HUD and editor overlay by a smoke test, all against a simulated Garry's Mod (see `_dev/`). Real-game playtesting has only just started, so expect rough edges in anything visual or audible: animations, sounds, menus, HUD layout, and entity models. Send the debug report and they'll get fixed.

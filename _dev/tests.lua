@@ -2294,6 +2294,57 @@ ok(LC.HasItem(cook, "bottle_dirty"), "and fills a bottle (boil it before you dri
 cook:SetPos(Vector(0, 9000, 0))
 ok(not LC.NearSink(cook), "but not from across the room")
 LC.StaticFixtures = {}
+
+section("Named, persistent people")
+local P = LC.People
+P.list, P.next, P.loaded = {}, 1, true
+_setcvar("lc_roster_size", 3)
+_setcvar("lc_roster_cops", 2)
+_setcvar("lc_rebel_pct", 0)
+LC.TopUpPeople()
+ok(#P.list == 5, "the roster is filled to its size, citizens and units", #P.list)
+local n1, s1 = LC.Spawners.citizen(Vector(9000, 9100, 0))
+local prof = s1.profile
+ok(prof and n1:GetNW2String("lc_pname", "") == prof.name and n1:GetModel() == prof.model and prof.model:find("group01"), "a citizen on the street is a named person with their own model")
+ok(s1.gender == prof.gender, "and their own voice")
+local n2, s2 = LC.Spawners.citizen(Vector(9000, 9200, 0))
+ok(s2.profile ~= prof, "nobody is out there twice")
+local name1 = prof.name
+n1:Remove()
+prof.lastSeen = 1
+for _, o in ipairs(P.list) do if o.role == "citizen" and o ~= prof and o ~= s2.profile then o.lastSeen = os.time() + 1000 end end
+local n3, s3 = LC.Spawners.citizen(Vector(9000, 9300, 0))
+ok(s3.profile == prof and n3:GetNW2String("lc_pname", "") == name1 and n3:GetModel() == prof.model, "the same person comes back, with the same face, after time away")
+-- jobs and homes
+prof.job, prof.home = "kitchen", 1
+ok(LC.HomeZoneFor(s3) and LC.HomeZoneFor(s3).group == 1, "they go home to their own block for curfew")
+-- death is permanent
+hook.Run("OnNPCKilled", n3, trespasser)
+ok(not prof.alive and prof.killer ~= nil, "a person who is killed is dead, and it's remembered")
+n3:Remove()
+LC.TopUpPeople()
+local alive = 0
+for _, o in ipairs(P.list) do if o.alive and o.role == "citizen" then alive = alive + 1 end end
+ok(alive == 3, "the city fills the gap with a new arrival", alive)
+for i = 1, 4 do
+    local nn, ss = LC.Spawners.citizen(Vector(9000 + i * 50, 9500, 0))
+    ok(ss.profile ~= prof, "and the dead never come back")
+    nn:Remove()
+end
+-- rebels
+local nr, sr = LC.Spawners.citizen(Vector(9500, 9500, 0), { rebel = true })
+ok(sr.profile.rebel and nr:GetNW2Bool("lc_prebel", false), "the Resistance's contacts are sympathizers, secretly")
+nr:Remove()
+-- saved across sessions
+LC.SavePeople()
+local saved = #P.list
+local deadName = prof.name
+P.list, P.next, P.loaded = {}, 1, false
+LC.LoadPeople()
+local back
+for _, o in ipairs(P.list) do if o.name == deadName then back = o end end
+ok(#P.list == saved and back and not back.alive, "the roster, living and dead, survives a restart", #P.list .. "/" .. saved)
+n2:Remove()
 end
 UpdateTests()
 

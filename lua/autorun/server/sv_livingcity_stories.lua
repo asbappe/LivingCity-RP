@@ -349,7 +349,7 @@ LC.Chain{
                 title = "Proof of nerve", reward = 30, limit = 600, failOnArrest = true,
                 desc = "Carry a parcel across the district. Don't open it. Don't get caught.",
                 stages = {
-                    Q.Contact("Take the parcel from your contact (press E)", a, "citizen", "'Straight there. Don't open it. Don't be late.'"),
+                    Q.Contact("Take the parcel from your contact (press E)", a, "citizen", "'Straight there. Don't open it. Don't be late.'", { rebel = true }),
                     Choice("Two units are checking papers at the corner ahead.", {
                         { text = "Walk past them, calmly.", check = { "guile", 11 },
                           success = function(q) Narrate(q, "One of them looks right at you. Then past you.") end,

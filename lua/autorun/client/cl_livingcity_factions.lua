@@ -165,6 +165,23 @@ hook.Add("HUDDrawTargetID", "LivingCityFactionsTargetID", function()
     if not MyFaction() then return end
     local tr = LocalPlayer():GetEyeTrace()
     local ent = tr.Entity
+    -- the city's named people: who they are, what they do, and (to the Resistance) who's with us
+    if IsValid(ent) and ent:IsNPC() and tr.HitPos:DistToSqr(tr.StartPos) < 350 * 350 then
+        local pname = ent:GetNW2String("lc_pname", "")
+        if pname ~= "" then
+            local x, y = ScrW() / 2, ScrH() / 2 + 40
+            draw.SimpleTextOutlined(pname, "DermaDefaultBold", x, y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+            local job = ent:GetNW2String("lc_pjob", "")
+            if job ~= "" then
+                draw.SimpleTextOutlined(job, "DefaultSmall", x, y + 15, Color(190, 190, 190), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+            end
+            if ent:GetNW2Bool("lc_prebel", false) and LocalPlayer():GetNW2String("lcf_faction", "") == "resistance" then
+                draw.SimpleTextOutlined("one of ours", "DefaultSmall", x, y + 29, Color(235, 150, 70), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+            end
+        end
+        stareEnt = nil
+        return false
+    end
     if not IsValid(ent) or not ent:IsPlayer() or tr.HitPos:DistToSqr(tr.StartPos) > 500 * 500 then
         stareEnt = nil
         return false

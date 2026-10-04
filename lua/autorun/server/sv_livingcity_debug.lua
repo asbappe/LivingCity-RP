@@ -133,6 +133,13 @@ function LC.BuildReport()
         out[#out + 1] = "static map fixtures: " .. (#parts > 0 and table.concat(parts, ", ") or "none")
             .. (LC.StaticScanNote and (" (scan failed: " .. tostring(LC.StaticScanNote) .. ")") or "")
     end
+    do
+        local alive, dead, rebels = 0, 0, 0
+        for _, p in ipairs(LC.People and LC.People.list or {}) do
+            if p.alive then alive = alive + 1 if p.rebel then rebels = rebels + 1 end else dead = dead + 1 end
+        end
+        out[#out + 1] = string.format("people: %d alive (%d sympathizers), %d dead remembered", alive, rebels, dead)
+    end
     if zones("combine") == 0 then warn[#warn + 1] = "no Combine-only zones: citizens can walk into the nexus, offices and armory (doors by the cells still lock)" end
     if count("zspawn") == 0 and zones("infest") > 0 then warn[#warn + 1] = "no infestation spawn points: zombies appear at random spots inside infestation zones" end
     if count("checkpoint") == 0 and count("patrol") == 0 then warn[#warn + 1] = "no checkpoints or patrol beats: cops wander at random" end

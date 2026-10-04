@@ -181,51 +181,93 @@ end)
 
 local dialog
 
+surface.CreateFont("LCChoicePrompt", { font = "Trebuchet MS", size = 20, weight = 500 })
+surface.CreateFont("LCChoiceOption", { font = "Trebuchet MS", size = 17, weight = 500 })
+
+-- Breaks text into lines that fit a pixel width.
+local function WrapLines(text, font, width)
+    surface.SetFont(font)
+    local lines, line = {}, ""
+    for word in string.gmatch(tostring(text or ""), "%S+") do
+        local try = line == "" and word or (line .. " " .. word)
+        if line ~= "" and surface.GetTextSize(try) > width then
+            lines[#lines + 1] = line
+            line = word
+        else
+            line = try
+        end
+    end
+    if line ~= "" or #lines == 0 then lines[#lines + 1] = line end
+    return lines
+end
+
 net.Receive("lcq_choice_open", function()
     local data = ReadCompressed()
     if not data then return end
     if IsValid(dialog) then dialog:Remove() end
 
+    local W = math.min(ScrW() - 60, 640)
+    local PROMPT_LH, OPT_LH, PAD = 24, 20, 16
+    local promptLines = WrapLines(data.prompt, "LCChoicePrompt", W - PAD * 2)
+    local promptH = #promptLines * PROMPT_LH
+
+    -- every option gets as many lines as it needs
+    local rows = {}
+    for n, o in ipairs(data.options) do
+        local tag = o.skill and string.format("[%s %d]", string.upper(o.skill), o.dc) or nil
+        local chance = o.skill and math.Clamp(math.floor((21 - (o.dc - (o.mod or 0))) / 20 * 100), 5, 95) or nil
+        surface.SetFont("DermaDefaultBold")
+        local tagW = tag and (surface.GetTextSize(tag) + 10) or 0
+        local chanceW = chance and 48 or 0
+        local textW = W - PAD * 2 - 24 - tagW - chanceW
+        local lines = WrapLines(n .. ". " .. o.text, "LCChoiceOption", textW)
+        rows[n] = { o = o, tag = tag, chance = chance, tagW = tagW, lines = lines, h = math.max(40, #lines * OPT_LH + 16) }
+    end
+    local optsH = 0
+    for _, r in ipairs(rows) do optsH = optsH + r.h + 6 end
+
+    local head = 36 + promptH + 14
+    local maxH = ScrH() - 60
+    local H = math.min(maxH, head + optsH + PAD)
     dialog = vgui.Create("DFrame")
     dialog:SetTitle("")
     dialog:ShowCloseButton(false)
-    dialog:SetSize(math.min(ScrW() - 80, 560), 120 + 46 * #data.options)
-    dialog:SetPos(ScrW() - dialog:GetWide() - 30, ScrH() / 2 - dialog:GetTall() / 2)
+    dialog:SetSize(W, H)
+    dialog:SetPos(math.max(10, ScrW() - W - 30), math.max(10, ScrH() / 2 - H / 2))
     dialog:MakePopup()
     dialog.Paint = function(self, w, h)
         draw.RoundedBox(4, 0, 0, w, h, PANEL)
-        draw.SimpleText(string.upper(data.title or ""), "DermaDefaultBold", 16, 12, ACCENT)
+        draw.SimpleText(string.upper(data.title or ""), "DermaDefaultBold", PAD, 12, ACCENT)
+        for i, l in ipairs(promptLines) do
+            draw.SimpleText(l, "LCChoicePrompt", PAD, 36 + (i - 1) * PROMPT_LH, INK)
+        end
     end
 
-    local prompt = vgui.Create("DLabel", dialog)
-    prompt:Dock(TOP)
-    prompt:DockMargin(10, 14, 10, 10)
-    prompt:SetFont("DermaLarge")
-    prompt:SetWrap(true)
-    prompt:SetAutoStretchVertical(true)
-    prompt:SetTextColor(INK)
-    prompt:SetText(data.prompt or "")
+    -- scrolls if the choices are taller than the screen
+    local scroll = vgui.Create("DScrollPanel", dialog)
+    scroll:SetPos(PAD - 6, head)
+    scroll:SetSize(W - (PAD - 6) * 2, H - head - 10)
 
-    for n, o in ipairs(data.options) do
-        local b = vgui.Create("DButton", dialog)
+    for n, r in ipairs(rows) do
+        local o = r.o
+        local b = vgui.Create("DButton", scroll)
         b:Dock(TOP)
-        b:DockMargin(10, 4, 10, 0)
-        b:SetTall(40)
+        b:DockMargin(6, 0, 6, 6)
+        b:SetTall(r.h)
         b:SetText("")
-        local label = n .. ". " .. o.text
-        local tag = o.skill and string.format("[%s %d]", string.upper(o.skill), o.dc) or nil
-        local chance = o.skill and math.Clamp(math.floor((21 - (o.dc - (o.mod or 0))) / 20 * 100), 5, 95) or nil
         b.Paint = function(self, w, h)
             local hover = self:IsHovered()
             draw.RoundedBox(3, 0, 0, w, h, hover and Color(50, 46, 38) or Color(30, 28, 24))
             local x = 10
-            if tag then
-                surface.SetFont("DermaDefaultBold")
-                draw.SimpleText(tag, "DermaDefaultBold", x, h / 2, SKILL_COLORS[o.skill] or ACCENT, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-                x = x + surface.GetTextSize(tag) + 8
+            if r.tag then
+                draw.SimpleText(r.tag, "DermaDefaultBold", x, h / 2, SKILL_COLORS[o.skill] or ACCENT, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+                x = x + r.tagW
             end
-            draw.SimpleText(label, "DermaDefault", x, h / 2, hover and color_white or INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-            if chance then draw.SimpleText(chance .. "%", "DermaDefault", w - 10, h / 2, DIM, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER) end
+            local ty = (h - #r.lines * OPT_LH) / 2
+            for i, l in ipairs(r.lines) do
+                draw.SimpleText(l, "LCChoiceOption", x, ty + (i - 1) * OPT_LH, hover and color_white or INK)
+            end
+            if r.chance then draw.SimpleText(r.chance .. "%", "DermaDefaultBold", w - 10, h / 2, DIM, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER) end
         end
         b.DoClick = function()
             net.Start("lcq_choice")
@@ -235,9 +277,6 @@ net.Receive("lcq_choice_open", function()
             dialog:Remove()
         end
     end
-    dialog:InvalidateLayout(true)
-    dialog:SizeToChildren(false, true)
-    dialog:SetTall(dialog:GetTall() + 10)
 end)
 
 ------------------------------------------------------------------------

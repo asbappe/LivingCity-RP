@@ -1151,7 +1151,7 @@ T{
             title = "Supply run", reward = 35, limit = 480, failOnArrest = true,
             desc = "A crate of medical supplies is waiting " .. Place(a, ply:GetPos()) .. ". Bring it home to " .. where .. ".",
             stages = {
-                LC.QB.Contact("Meet your contact and take the crate (press E)", a, "citizen", "'Don't thank me. Don't look back, either.'"),
+                LC.QB.Contact("Meet your contact and take the crate (press E)", a, "citizen", "'Don't thank me. Don't look back, either.'", { rebel = true }),
                 Choice("The crate is heavier than it should be. There's a unit posted at the end of the street.", {
                     { text = "Walk it out in plain sight." },
                     { text = "Bury it under a coat and some laundry.", check = { "guile", 11 },
@@ -1161,7 +1161,7 @@ T{
                           LC.ReportCrime(p, "Carrying contraband", 120)
                       end },
                 }),
-                LC.QB.Contact("Hand it to the quartermaster at " .. where .. " (press E)", dest, "citizen", "He's already prying the lid up. 'Good. We needed this yesterday.'"),
+                LC.QB.Contact("Hand it to the quartermaster at " .. where .. " (press E)", dest, "citizen", "He's already prying the lid up. 'Good. We needed this yesterday.'", { rebel = true }),
             },
         }
     end,
@@ -1749,10 +1749,10 @@ function LC.CheckUnlocks(ply)
 end
 
 -- Story NPCs: real people placed in the world for one quest.
-local function SpawnActor(q, role, pos, holdSecs, keep)
+local function SpawnActor(q, role, pos, holdSecs, keep, want)
     local spawner = LC.Spawners and LC.Spawners[role]
     if not spawner or not pos then return nil end
-    local npc, st = spawner(pos + Vector(math.random(-40, 40), math.random(-40, 40), 4))
+    local npc, st = spawner(pos + Vector(math.random(-40, 40), math.random(-40, 40), 4), role == "citizen" and want or nil)
     if not IsValid(npc) then return nil end
     st.unmanaged = true
     st.leaveAt = nil
@@ -1779,12 +1779,12 @@ end
 -- A person to meet: someone is waiting at pos (marked on your HUD) and you press E
 -- on them. role is "citizen" (default) or "cop". If nobody can be placed, it falls
 -- back to simply walking there. line is what the quest says when you've met.
-local function Contact(text, pos, role, line)
+local function Contact(text, pos, role, line, want)
     local where = PersonSpot(pos)
     return {
         kind = "target", action = "use", pos = where, r = 140, text = text,
         onEnter = function(q, st)
-            local npc = SpawnActor(q, role or "citizen", where, 900)
+            local npc = SpawnActor(q, role or "citizen", where, 900, nil, want)
             if not npc then
                 st.kind, st.r, st.npc = "deliver", 150, nil
                 return

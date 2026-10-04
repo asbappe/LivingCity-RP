@@ -142,6 +142,7 @@ DMG_CLUB, DMG_SLASH = 128, 4
 _files = {}
 file = {}
 function file.Read(p) return _files[p] end
+function file.Exists(p) return _files[p] ~= nil end
 function file.Write(p, s) _files[p] = s end
 function file.Append(p, s) _files[p] = (_files[p] or "") .. s end
 function file.Delete(p) _files[p] = nil end

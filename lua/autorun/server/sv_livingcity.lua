@@ -765,7 +765,8 @@ local function GoHome(npc, st, run)
     -- one of the nearest two blocks, so a street doesn't all pile into the same doorway
     local from = npc:GetPos()
     table.sort(blocks, function(a, b) return a.pos:DistToSqr(from) < b.pos:DistToSqr(from) end)
-    local z = blocks[math.min(#blocks, math.random(1, 2))]
+    -- their own block if they have one; otherwise one of the nearest two
+    local z = LC.HomeZoneFor and LC.HomeZoneFor(st) or blocks[math.min(#blocks, math.random(1, 2))]
     local spot = LC.SpotInZone(z)
     if not spot then return false end
     st.homeBlock = z
@@ -883,7 +884,7 @@ function LC.FilterSpeech(npc)
     timer.Simple(0, function() if IsValid(speechFilter) then speechFilter:Fire("Enable") end end)
 end
 
-local function SpawnCitizen(pos)
+local function SpawnCitizen(pos, want)
     local npc = ents.Create("npc_citizen")
     if not IsValid(npc) then return end
     npc:SetPos(pos)
@@ -899,6 +900,9 @@ local function SpawnCitizen(pos)
     end
     local st = Register(npc, "citizen")
     st.gender = string.find(string.lower(npc:GetModel() or ""), "female", 1, true) and "female" or "male"
+    -- everyone on the street is somebody: same name, face, job and home every time
+    local person = LC.ClaimProfile and LC.ClaimProfile("citizen", want)
+    if person then LC.AttachProfile(npc, st, person) end
     return npc, st
 end
 LC.SpawnCitizen = SpawnCitizen
@@ -933,6 +937,8 @@ local function SpawnCop(pos)
     local st = Register(npc, "cop")
     SetupSecurity(npc, st)
     st.nextChatter = CurTime() + math.Rand(20, 60)
+    local person = LC.ClaimProfile and LC.ClaimProfile("cop")
+    if person then LC.AttachProfile(npc, st, person) end
     return npc, st
 end
 
@@ -1152,6 +1158,15 @@ local function ChooseCitizenTask(npc, st, now)
         local spots = FreePoints(SITTABLE, npc)
         if #spots > 0 then
             local p = Pick(spots)
+            Claim(npc, st, p)
+            return GoTo(npc, st, p.pos, false, p)
+        end
+    end
+
+    -- people with a job spend a good part of the day at its workplace
+    if st.profile and st.profile.job and math.random() < 0.4 and LC.WorkplaceFor then
+        local p = LC.WorkplaceFor(st)
+        if p and IsFree(p, npc) then
             Claim(npc, st, p)
             return GoTo(npc, st, p.pos, false, p)
         end
