@@ -32,6 +32,7 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvTime    = CreateConVar("lc_prison_time", "180", FLAGS, "Default sentence in seconds")
 local cvArrests = CreateConVar("lc_npc_arrests", "1", FLAGS, "Security NPCs arrest players instead of killing them when a cell is free")
 local cvEscape  = CreateConVar("lc_escape_wanted", "300", FLAGS, "Seconds an escaped prisoner stays wanted")
+local cvBuffer  = CreateConVar("lc_prison_buffer", "150", FLAGS, "Extra distance (units, about 16 per foot) beyond the prison area before leaving counts as escaping")
 local cvRejoin  = CreateConVar("lc_rejoin_penalty", "120", FLAGS, "Extra seconds added when someone disconnects mid-sentence and comes back")
 local cvStreet  = CreateConVar("lc_street_detention", "20", FLAGS, "Seconds you're held on the street when there are no prison cells")
 local cvFine    = CreateConVar("lc_street_fine", "25", FLAGS, "Credits fined on a street detention")
@@ -164,11 +165,17 @@ timer.Create("LivingCityPrison", 1, 0, function()
             LC.ReleasePrisoner(ply)
         elseif ply:Alive() and not (pr.grace and now < pr.grace) then
             local pos = ply:GetPos()
-            local inside
-            if #zones > 0 then
-                inside = LC.PrisonZoneAt(pos) ~= nil
-            else
-                inside = pos:DistToSqr(pr.cell.pos) < 500 * 500
+            local inside = pos:DistToSqr(pr.cell.pos) < 250 * 250 -- anywhere near your own cell is fine
+            if not inside then
+                if #zones > 0 then
+                    -- a margin around the prison area, so a step over its edge isn't an escape
+                    local reach = cvBuffer:GetFloat()
+                    for _, z in ipairs(zones) do
+                        if pos:DistToSqr(z.pos) < (z.r + reach) ^ 2 then inside = true break end
+                    end
+                else
+                    inside = pos:DistToSqr(pr.cell.pos) < (500 + cvBuffer:GetFloat()) ^ 2
+                end
             end
             if not inside then Escape(ply) end
         end

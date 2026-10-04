@@ -225,6 +225,22 @@ LC.Incarcerate(con, 60, "escape test")
 con:SetPos(Vector(2000, -2000, 0))
 _run(2)
 ok(not LC.Prisoners[con] and LC.PlayerIsWanted(con), "walking out of the prison zone is an escape, and makes you wanted")
+LC.ClearWanted(con)
+con.lcGraceUntil = 0
+local pz = LC.ZonesOfKind("prison")[1]
+if pz then
+    LC.Incarcerate(con, 60, "buffer test")
+    con.lcGraceUntil = nil
+    LC.Prisoners[con].grace = nil
+    con:SetPos(pz.pos + Vector(pz.r + 80, 0, 0))
+    _run(2)
+    ok(LC.Prisoners[con] ~= nil, "a step past the edge of the prison area isn't an escape")
+    con:SetPos(pz.pos + Vector(pz.r + 600, 0, 0))
+    _run(2)
+    ok(not LC.Prisoners[con], "but well beyond it is")
+end
+con.lcGraceUntil = 0
+con:SetPos(Vector(2000, -2000, 0))
 
 -- NPC arrests instead of kills
 local cop2, cst2 = LC.Spawners.cop(Vector(-200, -200, 0))
@@ -1167,7 +1183,8 @@ for n, s in pairs(LC.NPCs) do -- any other unit wandering by could legitimately 
     if IsValid(n) and s.role == "cop" and n ~= copN then n:SetPos(Vector(0, -40000, 0)) end
 end
 _run(3.5)
-ok(LC.Stops[sweepGuy] == nil, "outside a sweep, a unit with nothing to do leaves you alone")
+local _s = LC.Stops[sweepGuy]
+ok(_s == nil, "outside a sweep, a unit with nothing to do leaves you alone", _s and ("cop=" .. tostring(_s.cop) .. " isCopN=" .. tostring(_s.cop == copN) .. " copPos=" .. tostring(_s.cop and _s.cop:GetPos()) .. " guy=" .. tostring(sweepGuy:GetPos()) .. " reason=" .. tostring(_s.reason or _s.kind)) or "")
 _setcvar("lc_stop_chance", 50)
 LC.StartEvent("sweep", 1)
 _run(3.5)
