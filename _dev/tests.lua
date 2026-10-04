@@ -2406,6 +2406,17 @@ LC.OpenCharacterCreator(twin)
 Submit(twin, "greta voss", face)
 ok(twin:GetNW2String("lc_char", "") ~= "Greta Voss", "two people can't share a name", twin:GetNW2String("lc_char", ""))
 ok(LC.ValidateCharacterName("Elena Petrova"), "(and a different name is fine)")
+
+section("Joining Civil Protection")
+local applicant = newPlayer("Applicant", "citizen")
+ok(LC.Standing(applicant) == 0 and not LC.CanJoinFaction(applicant, "cp"), "you can't join Civil Protection without good standing")
+local _, cpWhy = LC.CanJoinFaction(applicant, "cp")
+ok(cpWhy:find("100") and cpWhy:find("good standing"), "and you're told what it takes", tostring(cpWhy))
+LC.AddStanding(applicant, 100)
+ok(LC.CanJoinFaction(applicant, "cp"), "with 100 standing you can")
+local tester2 = newPlayer("TestAdmin", "citizen")
+tester2.admin = true
+ok(LC.CanJoinFaction(tester2, "cp"), "admins can join regardless, to test")
 end
 UpdateTests()
 

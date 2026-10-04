@@ -108,6 +108,8 @@ Every citizen and Civil Protection unit is a **named person with a profile that 
 
 ## Factions and ranks
 
+**Joining Civil Protection needs good standing**: 100 or more Civil Standing (`lc_cp_min_standing`), so a new character has to earn their way in with jobs and compliance first. Admins can join regardless, to test, and `lcf_setfaction <name> <faction>` sets anyone's faction directly.
+
 | Faction | Ladder |
 |---|---|
 | Citizen | Citizen, Union Worker, Loyalist, Model Citizen |
@@ -234,4 +236,4 @@ Stories: `lcq_startchain`, `lcq_story`, `lcq_resetstory`. Debug: `lc_debugreport
 
 ## Honest limits
 
-The server logic and the gamemode's rules are exercised by 516 automated scenario tests, and the client HUD and editor overlay by a smoke test, all against a simulated Garry's Mod (see `_dev/`). Real-game playtesting has only just started, so expect rough edges in anything visual or audible: animations, sounds, menus, HUD layout, and entity models. Send the debug report and they'll get fixed.
+The server logic and the gamemode's rules are exercised by 520 automated scenario tests, and the client HUD and editor overlay by a smoke test, all against a simulated Garry's Mod (see `_dev/`). Real-game playtesting has only just started, so expect rough edges in anything visual or audible: animations, sounds, menus, HUD layout, and entity models. Send the debug report and they'll get fixed.

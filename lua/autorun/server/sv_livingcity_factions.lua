@@ -28,6 +28,7 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn         = CreateConVar("lc_factions", "0", FLAGS, "Enable City Factions (Sandbox-based servers only)")
 local cvAdminTools = CreateConVar("lcf_admin_tools", "1", FLAGS, "Admins keep the physgun and toolgun in every faction")
 local cvCooldown   = CreateConVar("lcf_switch_cooldown", "60", FLAGS, "Seconds between faction changes")
+local cvCPStanding = CreateConVar("lc_cp_min_standing", "100", FLAGS, "Civil Standing needed to join Civil Protection")
 
 -- Always on in the Living City gamemode; opt-in (lc_factions 1) on Sandbox.
 function LC.FactionsActive()
@@ -267,6 +268,13 @@ function LC.CanJoinFaction(ply, fid, sid)
     if not f then return false, "No such faction." end
     if f.whitelist and not ply:IsSuperAdmin() and ply:GetPData("lcf_wl_" .. fid, "0") ~= "1" then
         return false, "Whitelist only."
+    end
+    if f.id == "cp" and LC.Standing and not ply:IsAdmin() then
+        local need = cvCPStanding:GetInt()
+        local have = LC.Standing(ply)
+        if have < need then
+            return false, string.format("Civil Protection only takes citizens in good standing (%d or more). Yours is %d.", need, have)
+        end
     end
     if f.requires then
         local rf = LCF.Get(f.requires.faction)
