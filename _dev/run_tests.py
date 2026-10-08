@@ -2,8 +2,11 @@ import glob, json, os, sys
 import lupa
 from lupa import luajit21 as lj
 
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lua")
 HERE = os.path.dirname(os.path.abspath(__file__))
+GMDIR = os.path.join(HERE, "..", "gamemodes", "livingcity")          # the gamemode
+MODS = os.path.join(GMDIR, "gamemode", "modules")                    # its modules
+ENTS = os.path.join(GMDIR, "entities")                               # its entities and weapons
+TOOLS = os.path.join(HERE, "..", "lua", "weapons", "gmod_tool", "stools")
 L = lj.LuaRuntime(unpack_returned_tuples=True)
 
 
@@ -50,34 +53,102 @@ util.TableToJSON = table_to_json
 util.JSONToTable = json_to_table
 util.Decompress = lambda s: s
 
-order = sorted(os.path.relpath(p, ROOT) for p in glob.glob(ROOT + "/autorun/sh_*.lua")) + sorted(
-    os.path.relpath(p, ROOT) for p in glob.glob(ROOT + "/autorun/server/*.lua"))
+# Garry's Mod's Lua isn't quite plain LuaJIT: "continue" is a keyword there, so a
+# label or variable called continue loads fine here and fails in the game. Catch
+# it (and anything else on this list) before the tests run.
+import re
+GMOD_RESERVED = ["continue"]
+def strip_lua(src):
+    out, i, n = [], 0, len(src)
+    while i < n:
+        if src.startswith("--", i):
+            m = re.match(r"--\[(=*)\[", src[i:])
+            if m:
+                end = src.find("]" + m.group(1) + "]", i)
+                i = n if end < 0 else end + len(m.group(1)) + 2
+            else:
+                end = src.find("\n", i)
+                i = n if end < 0 else end
+            continue
+        m = re.match(r"\[(=*)\[", src[i:])
+        if m:
+            end = src.find("]" + m.group(1) + "]", i)
+            i = n if end < 0 else end + len(m.group(1)) + 2
+            out.append('""')
+            continue
+        c = src[i]
+        if c in "\"'":
+            j = i + 1
+            while j < n and src[j] != c:
+                j += 2 if src[j] == "\\" else 1
+            i = j + 1
+            out.append('""')
+            continue
+        out.append(c)
+        i += 1
+    return "".join(out)
+problems = []
+GMROOT_ALL = os.path.join(HERE, "..")
+for path in glob.glob(GMROOT_ALL + "/lua/**/*.lua", recursive=True) + glob.glob(GMROOT_ALL + "/gamemodes/**/*.lua", recursive=True):
+    code = strip_lua(open(path).read())
+    for word in GMOD_RESERVED:
+        for m in re.finditer(r"\b" + word + r"\b", code):
+            line = code.count("\n", 0, m.start()) + 1
+            problems.append("%s:%d uses '%s', a keyword in Garry's Mod" % (os.path.relpath(path, GMROOT_ALL), line, word))
+# "local a, b = f and f()" keeps only the first value: b is always nil. (It hid
+# the reasons for a refused inform or microphone, and the on-air name.)
+MULTI_AND = re.compile(r"local\s+\w+\s*,\s*[\w,\s]+=\s*[\w.]+\s+and\s+[\w.:]+\(")
+for path in glob.glob(GMROOT_ALL + "/lua/**/*.lua", recursive=True) + glob.glob(GMROOT_ALL + "/gamemodes/**/*.lua", recursive=True):
+    code = strip_lua(open(path).read())
+    for m in MULTI_AND.finditer(code):
+        line = code.count("\n", 0, m.start()) + 1
+        problems.append("%s:%d takes several values from 'x and f()', which only ever gives one" % (os.path.relpath(path, GMROOT_ALL), line))
+if problems:
+    print("GMOD LUA CHECK FAILED")
+    for p in problems: print("  " + p)
+    sys.exit(1)
+
+# the modules, in the order the gamemode loads them (its manifest, in shared.lua)
+def manifest():
+    src = open(os.path.join(GMDIR, "gamemode", "shared.lua")).read()
+    out = {}
+    for side in ("shared", "server", "client"):
+        m = re.search(side + r" = \{(.*?)\}", src, re.S)
+        out[side] = re.findall(r'"([^"]+)"', m.group(1)) if m else []
+        on_disk = sorted(f[:-4] for f in os.listdir(os.path.join(MODS, side)) if f.endswith(".lua"))
+        if sorted(out[side]) != on_disk:
+            print("MANIFEST MISMATCH (%s): listed %s, on disk %s" % (side, sorted(set(out[side]) ^ set(on_disk)), side))
+            sys.exit(1)
+    return out
+MANIFEST = manifest()
+order = ["shared/" + n + ".lua" for n in MANIFEST["shared"]] + ["server/" + n + ".lua" for n in MANIFEST["server"]]
 for rel in order:
     try:
-        L.globals()._SRC = open(os.path.join(ROOT, rel)).read()
+        L.globals()._SRC = open(os.path.join(MODS, rel)).read()
         L.execute("assert(loadstring(_SRC, %r))()" % rel)
     except Exception as e:
         print("LOAD FAILED", rel, e)
         sys.exit(1)
 
 # weapons and the tool only need to load cleanly
-for rel in sorted(os.path.relpath(p, ROOT) for p in glob.glob(ROOT + "/entities/*.lua")):
+for rel in sorted(os.path.relpath(p, ENTS) for p in glob.glob(ENTS + "/entities/*.lua")):
     L.execute("ENT = {}")
-    L.globals()._SRC = open(os.path.join(ROOT, rel)).read()
+    L.globals()._SRC = open(os.path.join(ENTS, rel)).read()
     L.execute("assert(loadstring(_SRC, %r))()" % rel)
-for rel in ["weapons/weapon_lc_baton.lua", "weapons/weapon_lc_claws.lua", "weapons/weapon_lc_blessing.lua", "weapons/weapon_lc_hands.lua"]:
+for rel in sorted(os.path.relpath(p, ENTS) for p in glob.glob(ENTS + "/weapons/*.lua")):
     L.execute("SWEP = {}")
-    L.execute(open(os.path.join(ROOT, rel)).read())
+    L.globals()._SRC = open(os.path.join(ENTS, rel)).read()
+    L.execute("assert(loadstring(_SRC, %r))()" % rel)
 L.execute("TOOL = { GetClientInfo = function() return 'idle' end }")
-L.execute(open(os.path.join(ROOT, "weapons/gmod_tool/stools/livingcity_editor.lua")).read())
+L.execute(open(os.path.join(TOOLS, "livingcity_editor.lua")).read())
 
 # the gamemode is loaded by the tests themselves, at the point they test it
-GMROOT = os.path.join(HERE, "..", "gamemodes", "livingcity", "gamemode")
+GMROOT = os.path.join(GMDIR, "gamemode")
 L.globals()._GMSRC_SHARED = open(os.path.join(GMROOT, "shared.lua")).read()
 L.globals()._GMSRC_INIT = open(os.path.join(GMROOT, "init.lua")).read()
 
 L.execute("math.randomseed(7)")
-L.globals()._TESTSRC = open(os.path.join(HERE, "tests.lua")).read()
+L.globals()._TESTSRC = open(sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "tests.lua")).read()
 passed, failed, report = L.execute("""
 local fn = assert(loadstring(_TESTSRC, "tests.lua"))
 local ok, a, b, c = xpcall(fn, debug.traceback)

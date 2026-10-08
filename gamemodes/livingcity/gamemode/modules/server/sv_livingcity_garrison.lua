@@ -1,0 +1,130 @@
+--[[
+    Living City: the nexus garrison
+
+    Every Combine-only zone (the nexus, the offices, the armory) is manned.
+    Mostly Overwatch soldiers, with a metrocop or two, spread through the zone:
+    some standing post, some walking from one end of it to the other. They're
+    on top of the city's own numbers, so the streets don't empty to fill the
+    nexus. One killed is replaced after a while, out of sight.
+
+      lc_garrison           most units in one zone (0 = no garrison); a small
+                            zone gets fewer (about one per 15x15 metres of floor)
+      lc_garrison_cops      out of every ten, how many are metrocops (3)
+      lc_garrison_respawn   seconds before a lost unit is replaced (90)
+]]
+
+if CLIENT then return end
+
+LC = LC or {}
+
+local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
+local cvMax     = CreateConVar("lc_garrison", "6", FLAGS, "Most Combine units garrisoned in one Combine-only zone (0 = none)")
+local cvCops    = CreateConVar("lc_garrison_cops", "3", FLAGS, "Out of every ten garrison units, how many are metrocops (the rest are Overwatch soldiers)")
+local cvRespawn = CreateConVar("lc_garrison_respawn", "90", FLAGS, "Seconds before a lost garrison unit is replaced")
+
+LC.Garrison = LC.Garrison or {} -- [npc] = zone
+
+local nextFill = {} -- [zone] = time it may get its next unit
+
+-- How many a zone holds: about one per 15x15 metres (600x600 units) of floor, at least two.
+function LC.GarrisonSize(z)
+    local most = cvMax:GetInt()
+    if most <= 0 then return 0 end
+    local area
+    if z.box then
+        area = (z.box.maxs.x - z.box.mins.x) * (z.box.maxs.y - z.box.mins.y)
+    else
+        area = math.pi * (z.r or 0) ^ 2
+    end
+    return math.Clamp(math.floor(area / (600 * 600) + 0.5), math.min(2, most), most)
+end
+
+local function Count(z)
+    local n, cops = 0, 0
+    for npc, gz in pairs(LC.Garrison) do
+        if gz == z and IsValid(npc) and npc:Health() > 0 then
+            n = n + 1
+            local st = LC.NPCs[npc]
+            if st and st.role == "cop" then cops = cops + 1 end
+        end
+    end
+    return n, cops
+end
+
+-- A spot for one to turn up: inside the zone, out of sight, not on top of anyone.
+local function SpawnSpot(z)
+    for _ = 1, 8 do
+        local p = LC.SpotInZone(z)
+        if p and (not LC.CombineZoneAt or LC.CombineZoneAt(p) == z)
+            and not (LC.IsSeen and LC.IsSeen(p + Vector(0, 0, 40)))
+            and (not LC.FarFromPlayers or LC.FarFromPlayers(p, 300)) then
+            return p
+        end
+    end
+end
+
+function LC.GarrisonOne(z, role)
+    local p = SpawnSpot(z)
+    if not p then return nil end
+    local spawn = role == "cop" and LC.SpawnCop or LC.SpawnSoldier
+    if not spawn then return nil end
+    local npc, st = spawn(p + Vector(0, 0, 4))
+    if not IsValid(npc) or not st then return nil end
+    st.unmanaged = true -- (on top of the city's own numbers)
+    st.guardZone = z
+    st.routeGroup = nil -- (no beat out on the streets)
+    st.garrison = true
+    LC.Garrison[npc] = z
+    return npc, st
+end
+
+function LC.GarrisonTick(now)
+    -- the dead and the gone are forgotten; a zone that's been deleted sends its units away
+    for npc, z in pairs(LC.Garrison) do
+        if not IsValid(npc) or npc:Health() <= 0 then
+            LC.Garrison[npc] = nil
+            nextFill[z] = math.max(nextFill[z] or 0, now + cvRespawn:GetFloat())
+        elseif not table.HasValue(LC.Zones or {}, z) and not (LC.IsSeen and LC.IsSeen(npc:GetPos() + Vector(0, 0, 40))) then
+            LC.Garrison[npc] = nil
+            npc:Remove()
+        end
+    end
+    for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("combine") or {}) do
+        local want = LC.GarrisonSize(z)
+        local n, cops = Count(z)
+        if n < want and now >= (nextFill[z] or 0) then
+            -- keep the mix: about three in ten metrocops, the rest soldiers
+            local copsWant = math.floor(want * math.Clamp(cvCops:GetInt(), 0, 10) / 10 + 0.5)
+            if cvCops:GetInt() > 0 and want >= 2 then copsWant = math.max(1, copsWant) end
+            local soldiers, soldiersWant = n - cops, want - copsWant
+            local role = "soldier"
+            if cops < copsWant and (soldiers >= soldiersWant or math.random() < 0.3) then role = "cop" end
+            if LC.GarrisonOne(z, role) then
+                nextFill[z] = now + (n + 1 < want and 2 or 0) -- (filling up: one every couple of seconds)
+            else
+                nextFill[z] = now + 5
+            end
+        elseif n > want then
+            -- the editor turned it down: the extras slip away when nobody's looking
+            for npc, gz in pairs(LC.Garrison) do
+                if n <= want then break end
+                if gz == z and IsValid(npc) and not (LC.IsSeen and LC.IsSeen(npc:GetPos() + Vector(0, 0, 40))) then
+                    LC.Garrison[npc] = nil
+                    npc:Remove()
+                    n = n - 1
+                end
+            end
+        end
+    end
+end
+
+timer.Create("LivingCityGarrison", 2, 0, function()
+    if not LC.Running then return end
+    local ok, err = pcall(LC.GarrisonTick, CurTime())
+    if not ok and LC.Log then LC.Log("error", "garrison: " .. tostring(err)) end
+end)
+
+hook.Add("LivingCityStopped", "LivingCityGarrison", function()
+    LC.Garrison = {}
+    nextFill = {}
+end)

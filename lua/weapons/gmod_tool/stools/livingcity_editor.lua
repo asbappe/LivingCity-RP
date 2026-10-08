@@ -10,9 +10,14 @@
     Every change saves immediately for this map.
 ]]
 
+-- Only in the Living City gamemode (it's the gamemode's editor; elsewhere it isn't listed)
+if engine.ActiveGamemode() ~= "livingcity" then TOOL.AddToMenu = false return end
+
 TOOL.Category = "Living City"
 TOOL.Name = "#tool.livingcity_editor.name"
-TOOL.ClientConVar = { mode = "idle", group = "1", radius = "300" }
+TOOL.ClientConVar = { mode = "idle", group = "1", radius = "300", shape = "box", height = "192" }
+
+if SERVER then util.AddNetworkString("lc_boxcorner") end
 TOOL.Information = {
     { name = "left" },
     { name = "right" },
@@ -21,9 +26,9 @@ TOOL.Information = {
 
 local MODES = {
     { id = "idle",        label = "Point: loiter spot (citizens)" },
-    { id = "sit",         label = "Point: sit on the ground (citizens)" },
-    { id = "sitchair",    label = "Point: sit on a bench or chair (citizens)" },
-    { id = "lean",        label = "Point: lean on a wall (citizens)" },
+    { id = "sit",         label = "Point: sit on the ground (citizens; rebels too, inside rebel territory)" },
+    { id = "sitchair",    label = "Point: sit on a bench or chair (citizens; rebels too, inside rebel territory)" },
+    { id = "lean",        label = "Point: lean on a wall (citizens; rebels too, inside rebel territory)" },
     { id = "queue",       label = "Point: ration line slot (line #, front first)", group = true },
     { id = "patrol",      label = "Point: patrol stop (beat #, 0 = random patrols)", group = true },
     { id = "checkpoint",  label = "Point: checkpoint post (security)" },
@@ -32,33 +37,82 @@ local MODES = {
     { id = "release",     label = "Point: prison release spot" },
     { id = "zspawn",      label = "Point: infestation spawn (zombies, infested players)" },
     { id = "rspawn",      label = "Point: resistance spawn (rebel players)" },
-    { id = "work",        label = "Point: workplace (job #, see the list in the panel)", group = true },
+    { id = "rlookout",    label = "Point: rebel lookout post (an armed fighter stands guard here; place it from where the Combine would come, so he faces that way)" },
+    { id = "bunk",        label = "Point: bunk (a rebel sleeps here now and then; aim at the middle of the bed from its foot or head, so it lies along the bed)" },
+    { id = "sspawn",      label = "Point: scanner launch spot (where flown scanners go up)" },
+    { id = "platform",    label = "Point: train platform (trains stop here: new arrivals, people leaving the city)" },
+    { id = "arrival",     label = "Point: arrival (where new people step into the city, before Civil Intake; place it from the way they should face, Civil Intake say)" },
+    { id = "studio",      label = "Point: broadcast studio (Dr. Breen speaks here, filmed live, when no player is Director of Propaganda)" },
+    { id = "lz",          label = "Point: Overwatch landing zone (a dropship brings soldiers down here: open sky above it)" },
+    { id = "dock",        label = "Point: loading dock (supply drops come in here, by dropship under open sky; supply trucks, crates)" },
+    { id = "graffiti",    label = "Point: graffiti wall (sanitation scrubs it; aim at the foot of the wall)" },
+    { id = "rubble",      label = "Point: rubble pile (reclamation crews and work orders clear it)" },
+    { id = "pipe",        label = "Point: leaky pipe (citizens' work orders patch it)" },
     { id = "vending",     label = "Fixture: water vending machine" },
     { id = "dispenser",   label = "Fixture: ration dispenser" },
     { id = "terminal",    label = "Fixture: commissary terminal" },
+    { id = "cpsupply",    label = "Fixture: Civil Protection Commissary (units are issued grenades, ammunition, armour and rations here)" },
+    { id = "intake",      label = "Fixture: Civil Intake (registration: new people get their papers here; NPC arrivals queue in front)" },
+    { id = "housingterm", label = "Fixture: Housing Allocation (registered new arrivals ask for a room here)" },
     { id = "stove",       label = "Fixture: stove" },
     { id = "fire",        label = "Fixture: burning barrel" },
     { id = "dealer",      label = "Fixture: black market dealer" },
+    { id = "locker",      label = "Fixture: locker (people keep things in it)" },
+    { id = "screen",      label = "Fixture: city screen (shows broadcasts)" },
+    { id = "lawboard",    label = "Fixture: law board" },
+    { id = "console",     label = "Fixture: Combine console (fly a scanner: prisoners and units)" },
+    { id = "workbench",   label = "Fixture: Resistance lab (a scientist makes guns, ammunition, jammers and radios for the Resistance; one in every rebel base)" },
+    { id = "recycler",    label = "Fixture: Union reclamation point (hand in scrap for credits)" },
+    { id = "citybin",     label = "Street: bin (searchable; sanitation bin runs stop at it)" },
+    { id = "streetlight", label = "Street: streetlight (lights the street; maintenance fixes it when it breaks)" },
+    { id = "loudspeaker", label = "Street: loudspeaker (the PA and broadcasts; broken, nobody near it hears them)" },
+    { id = "screen_big",  label = "Street: giant Breencast screen" },
+    { id = "tv",          label = "Street: small TV (set it on a table)" },
+    { id = "transformer", label = "Fixture: transformer (powers the district: lights, loudspeakers, screens, forcefields, Combine locks)" },
+    { id = "forcefield",  label = "Fixture: Combine forcefield (place it facing you, across a doorway; units pass)" },
+    { id = "incinerator", label = "Fixture: incinerator (the dead are hauled here; mortuary attendants)" },
+    { id = "powerbank",   label = "Fixture: Combine power bank (a checkpoint's heart: turrets and forcefields near it run off it)" },
+    { id = "turret",      label = "Fixture: Combine turret (at a checkpoint, near a power bank or forcefield; facing you)" },
+    { id = "barricade_low",  label = "Fixture: Combine barricade, low (facing you)" },
+    { id = "barricade",      label = "Fixture: Combine barricade, medium (facing you)" },
+    { id = "barricade_tall", label = "Fixture: Combine barricade, tall (facing you)" },
+    { id = "dataterm",    label = "Fixture: Combine data terminal (the Resistance steal data; put it in the nexus)" },
+    { id = "masterterm",  label = "Fixture: Combine master terminal (the motherlode; one, deep in the nexus)" },
+    { id = "bin",         label = "Point: searchable bin (any spot: rubbish, a skip, a crate)" },
+    { id = "salvage",     label = "Point: salvage pile (junk to pry apart with a crowbar)" },
     { id = "node",        label = "Path: node (links to your last node)" },
     { id = "link",        label = "Path: link / unlink two nodes" },
+    { id = "ladder",      label = "Path: ladder end (give its bottom and top the same #; NPCs hop up it)", group = true },
     { id = "zone_nogo",   label = "Zone: no-go", radius = true },
-    { id = "zone_rebel",  label = "Zone: rebel territory (no security)", radius = true },
+    { id = "zone_rebel",  label = "Zone: rebel territory (Resistance ground: street units stay out)", radius = true },
     { id = "zone_block",  label = "Zone: housing block (block #)", radius = true, group = true },
     { id = "zone_prison", label = "Zone: prison area", radius = true },
     { id = "zone_combine", label = "Zone: Combine only (nexus, offices, armory)", radius = true },
     { id = "zone_infest", label = "Zone: infestation (zombies live here)", radius = true },
-    { id = "door_cp",     label = "Door: Civil Protection only" },
+    { id = "door_cp",     label = "Door: Civil Protection only (its lock dies in a blackout)" },
+    { id = "door_prison", label = "Door: prison or cell (units only, stays locked in a blackout)" },
     { id = "door_locked", label = "Door: always locked" },
     { id = "door_open",   label = "Door: always open" },
     { id = "door_ignore", label = "Door: NPCs ignore it" },
     { id = "door_force",  label = "Door: force NPCs to treat it as a door" },
+    { id = "door_rent",   label = "Door: apartment people can rent (!rent)" },
     { id = "door_test",   label = "Door: test open / close" },
+    { id = "prop",        label = "Prop: make persistent (spawn a prop, place it, zap it: saved with the layout, frozen)" },
     { id = "inspect",     label = "Inspect anything" },
     { id = "walker",      label = "Test walker: send a citizen here" },
 }
 
+-- Workplaces, one per Union job (a workplace point with that job's number).
+if LCJ and LCJ.Occupations then
+    for _, o in ipairs(LCJ.Occupations) do
+        MODES[#MODES + 1] = { id = "work_" .. o.id, kind = "work", num = o.num, label = "Workplace: " .. o.place .. " (" .. o.name .. " shifts)" }
+    end
+else
+    table.insert(MODES, 16, { id = "work", label = "Point: workplace (job #, see the list in the panel)", group = true })
+end
+
 -- sit, bench and lean spots, and fixtures, face the person placing them
-local FACE_PLACER = { sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true }
+local FACE_PLACER = { intake = true, housingterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, screen = true, lawboard = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true }
 
 local function ModeIndex(id)
     for i, m in ipairs(MODES) do if m.id == id then return i end end
@@ -111,10 +165,11 @@ local function PlacePoint(self, ply, trace, mode)
     end
     local yaw = ply:EyeAngles().y
     if FACE_PLACER[mode.id] then yaw = yaw + 180 end
-    local group = Mode(mode.id).group and self:GetClientNumber("group", 1) or 0
-    local p = LC.AddPoint(trace.HitPos, yaw, mode.id, group)
+    local kind = mode.kind or mode.id
+    local group = mode.num or (Mode(mode.id).group and self:GetClientNumber("group", 1)) or 0
+    local p = LC.AddPoint(trace.HitPos, yaw, kind, group)
     if not p then return false end
-    Undoable(ply, mode.id .. " point", function() LC.RemovePoint(p) end)
+    Undoable(ply, kind .. " point", function() LC.RemovePoint(p) end)
     local extra = ""
     if mode.id == "queue" then
         extra = group > 0 and string.format(" Line %d now has %d slot(s).", group, #LC.PointsOfKind("queue", group))
@@ -122,7 +177,7 @@ local function PlacePoint(self, ply, trace, mode)
     elseif mode.id == "patrol" and group > 0 then
         extra = string.format(" Beat %d now has %d stop(s).", group, #LC.PointsOfKind("patrol", group))
     end
-    Tell(ply, "Placed " .. mode.id .. " point." .. extra)
+    Tell(ply, "Placed " .. (mode.num and (string.gsub(mode.label, "^Workplace: ", "") .. " workplace") or (mode.id .. " point")) .. "." .. extra)
     return true
 end
 
@@ -178,16 +233,45 @@ local function LinkClick(ply, trace)
     return true
 end
 
+-- Box zones take two clicks: one corner, then the opposite one.
+local boxCorner = {} -- [ply] = { pos, kind }
+
+local function SendCorner(ply, pos)
+    net.Start("lc_boxcorner")
+    net.WriteBool(pos ~= nil)
+    if pos then net.WriteVector(pos) end
+    net.Send(ply)
+end
+
 local function PlaceZone(self, ply, trace, mode)
     if not trace.Hit then return false end
     local kind = string.sub(mode.id, 6)
-    local r = math.Clamp(self:GetClientNumber("radius", 300), 32, 4000)
     local group = mode.group and math.max(1, self:GetClientNumber("group", 1)) or 0
+    local where = kind == "block" and (" " .. LC.BlockName(group) .. ".") or ""
+    if self:GetClientInfo("shape") == "box" then
+        local c = boxCorner[ply]
+        if not c or c.kind ~= kind then
+            boxCorner[ply] = { pos = trace.HitPos, kind = kind }
+            SendCorner(ply, trace.HitPos)
+            Tell(ply, "First corner set. Click the opposite corner of the room or area. (Right click cancels.)")
+            return true
+        end
+        boxCorner[ply] = nil
+        SendCorner(ply, nil)
+        local box = LCZ.BoxFromCorners(c.pos, trace.HitPos, self:GetClientNumber("height", 192))
+        local sx, sy = box.maxs.x - box.mins.x, box.maxs.y - box.mins.y
+        if sx < 32 or sy < 32 then Tell(ply, "That box is too thin. Start again: click one corner, then the opposite one.") return false end
+        local z = LC.AddZone(nil, nil, kind, group, box)
+        if not z then return false end
+        Undoable(ply, kind .. " zone", function() LC.RemoveZone(z) end)
+        Tell(ply, string.format("Placed %s zone, a box %d by %d, %d tall.%s", kind, sx, sy, box.maxs.z - box.mins.z, where))
+        return true
+    end
+    local r = math.Clamp(self:GetClientNumber("radius", 300), 32, 4000)
     local z = LC.AddZone(trace.HitPos, r, kind, group)
     if not z then return false end
     Undoable(ply, kind .. " zone", function() LC.RemoveZone(z) end)
-    Tell(ply, string.format("Placed %s zone, radius %d.%s", kind, r,
-        kind == "block" and (" " .. LC.BlockName(group) .. ".") or ""))
+    Tell(ply, string.format("Placed %s zone, radius %d.%s", kind, r, where))
     return true
 end
 
@@ -212,6 +296,10 @@ local function Inspect(ply, trace)
     local ent = trace.Entity
     if LC.IsDoorEntity(ent) then
         for _, l in ipairs(LC.DoorInfo(ent)) do Tell(ply, l) end
+        return true
+    end
+    if IsValid(ent) and ent.lcPersistId then
+        Tell(ply, string.format("Persistent prop #%d: %s, saved with the layout.", ent.lcPersistId, ent:GetModel() or "?"))
         return true
     end
     local st = IsValid(ent) and LC.NPCs[ent]
@@ -241,7 +329,9 @@ local function Inspect(ply, trace)
     end
     local z = LC.ZoneAt(trace.HitPos)
     if z then
-        Tell(ply, string.format("%s zone, radius %d%s", z.kind, z.r, (z.group or 0) > 0 and (", #" .. z.group) or ""))
+        Tell(ply, string.format("%s zone, %s%s", z.kind,
+            z.box and string.format("a box %d by %d", z.box.maxs.x - z.box.mins.x, z.box.maxs.y - z.box.mins.y) or ("radius " .. z.r),
+            (z.group or 0) > 0 and (", #" .. z.group) or ""))
         return true
     end
     local route = LC.BuildRoute and LC.BuildRoute(ply:GetPos(), trace.HitPos, "citizen")
@@ -258,7 +348,7 @@ function TOOL:LeftClick(trace)
     local mode = Mode(self:GetClientInfo("mode"))
     local id = mode.id
 
-    if LC.POINT_KINDS[id] then return PlacePoint(self, ply, trace, mode) end
+    if LC.POINT_KINDS[mode.kind or id] then return PlacePoint(self, ply, trace, mode) end
     if id == "node" then return PlaceNode(ply, trace) end
     if id == "link" then return LinkClick(ply, trace) end
     if string.StartWith(id, "zone_") then return PlaceZone(self, ply, trace, mode) end
@@ -269,6 +359,18 @@ function TOOL:LeftClick(trace)
     end
     if string.StartWith(id, "door_") then return TagDoor(ply, trace, mode) end
     if id == "inspect" then return Inspect(ply, trace) end
+    if id == "prop" then
+        local e = trace.Entity
+        local ok, what = LC.PersistProp(ply, e)
+        if not ok then Tell(ply, what) return false end
+        if what == "new" then
+            Undoable(ply, "persistent prop", function() if IsValid(e) and e.lcPersistId then LC.UnpersistProp(e, true) end end)
+            Tell(ply, "Persistent: frozen, and saved with the layout. It's here every time the map loads. (Right click: not any more.)")
+        else
+            Tell(ply, "Saved as it is now.")
+        end
+        return true
+    end
     if id == "walker" then
         if not trace.Hit or trace.HitNormal.z < 0.7 then Tell(ply, "Aim at the floor where the walker should go.") return false end
         return LC.SpawnTestWalker(ply, trace.HitPos)
@@ -281,6 +383,12 @@ end
 ------------------------------------------------------------------------
 
 function TOOL:RightClick(trace)
+    if SERVER and boxCorner[self:GetOwner()] then
+        boxCorner[self:GetOwner()] = nil
+        SendCorner(self:GetOwner(), nil)
+        Tell(self:GetOwner(), "Box cancelled.")
+        return true
+    end
     if CLIENT then return true end
     local ply = self:GetOwner()
     if not CheckAccess(ply) then return false end
@@ -294,6 +402,13 @@ function TOOL:RightClick(trace)
     end
 
     local ent = trace.Entity
+    if id == "prop" then
+        if not (IsValid(ent) and ent.lcPersistId) then Tell(ply, "That isn't a persistent prop.") return false end
+        LC.UnpersistProp(ent, true)
+        Undoable(ply, "not persistent", function() if IsValid(ent) then LC.PersistProp(ply, ent) end end)
+        Tell(ply, "No longer persistent: it stays until the map changes (the remover takes it away now).")
+        return true
+    end
     if LC.IsDoorEntity(ent) then
         if id == "door_test" or id == "inspect" then
             for _, l in ipairs(LC.DoorInfo(ent)) do Tell(ply, l) end
@@ -382,7 +497,14 @@ if CLIENT then
         local mode = Mode(self:GetClientInfo("mode"))
         local extra = {}
         if mode.group then extra[#extra + 1] = "#" .. self:GetClientNumber("group", 1) end
-        if mode.radius then extra[#extra + 1] = "radius " .. self:GetClientNumber("radius", 300) end
+        if mode.radius then
+            if self:GetClientInfo("shape") == "box" then
+                extra[#extra + 1] = (LC_CL and LC_CL.boxCorner) and "box: click the opposite corner" or "box: click one corner"
+                extra[#extra + 1] = "height " .. self:GetClientNumber("height", 192)
+            else
+                extra[#extra + 1] = "radius " .. self:GetClientNumber("radius", 300)
+            end
+        end
         local text = mode.label .. (#extra > 0 and ("   [" .. table.concat(extra, ", ") .. "]") or "")
         draw.SimpleTextOutlined(text, "DermaLarge", ScrW() / 2, ScrH() - 140, color_white,
             TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_black)
@@ -392,28 +514,91 @@ if CLIENT then
     end
 end
 
+-- The city's settings live on the server: on a hosted server your game can't
+-- change them itself, so the panel's checkboxes and sliders ask the server to
+-- (admins only), and show what the server has. (Your own display settings,
+-- lc_show and the like, stay yours.)
+local MINE = { lc_zone_fill = true, lc_show = true, lc_show_npcs = true, lc_show_all_npcs = true }
+local bound = {} -- [convar] = { control, kind }
+
+if CLIENT then
+    net.Receive("lc_settings", function()
+        local t = net.ReadTable() or {}
+        for name, v in pairs(t) do
+            local b = bound[name]
+            if b and IsValid(b[1]) then
+                b[1].lcQuiet = true
+                if b[2] == "check" then b[1]:SetChecked(tonumber(v) ~= nil and tonumber(v) ~= 0) else b[1]:SetValue(tonumber(v) or 0) end
+                b[1].lcQuiet = nil
+            end
+        end
+    end)
+end
+
+local function SendSetting(name, value)
+    net.Start("lc_setting")
+    net.WriteString(name)
+    net.WriteString(tostring(value))
+    net.SendToServer()
+end
+
 function TOOL.BuildCPanel(panel)
     local function Header(text)
         local l = panel:Help(text)
         if IsValid(l) then l:SetFont("DermaDefaultBold") end
     end
+    local wanted = {}
+    local function Check(label, name)
+        if MINE[name] then return panel:CheckBox(label, name) end
+        local c = panel:CheckBox(label)
+        bound[name] = { c, "check" }
+        wanted[#wanted + 1] = name
+        c.OnChange = function(self, v) if not self.lcQuiet then SendSetting(name, v and 1 or 0) end end
+        return c
+    end
+    local function Slider(label, name, lo, hi, dec)
+        local sl = panel:NumSlider(label, nil, lo, hi, dec)
+        bound[name] = { sl, "slider" }
+        wanted[#wanted + 1] = name
+        sl.OnValueChanged = function(self, v)
+            if self.lcQuiet then return end
+            -- (only once you stop dragging it)
+            timer.Create("lc_setting_" .. name, 0.4, 1, function() SendSetting(name, math.Round(v, dec or 0)) end)
+        end
+        return sl
+    end
+    -- what the server has, for every one of them, once the panel's built
+    timer.Simple(0, function()
+        if #wanted == 0 then return end
+        net.Start("lc_settings_get")
+        net.WriteTable(wanted)
+        net.SendToServer()
+    end)
 
     panel:Help("Build the city. Every click saves for this map. Z undoes.")
 
-    local combo = panel:ComboBox("Mode")
-    for _, m in ipairs(MODES) do combo:AddChoice(m.label, m.id) end
-    local cur = GetConVar("livingcity_editor_mode")
-    combo:SetValue(Mode(cur and cur:GetString() or "idle").label)
-    combo.OnSelect = function(_, _, _, id) RunConsoleCommand("livingcity_editor_mode", id) end
+    if LC_CL and LC_CL.BuildLayoutBrowser then
+        LC_CL.BuildLayoutBrowser(panel, MODES)
+    else
+        local combo = panel:ComboBox("Mode")
+        for _, m in ipairs(MODES) do combo:AddChoice(m.label, m.id) end
+        local cur = GetConVar("livingcity_editor_mode")
+        combo:SetValue(Mode(cur and cur:GetString() or "idle").label)
+        combo.OnSelect = function(_, _, _, id) RunConsoleCommand("livingcity_editor_mode", id) end
+    end
 
     panel:NumSlider("Line / beat / block number", "livingcity_editor_group", 0, 32, 0)
-    panel:NumSlider("Zone radius", "livingcity_editor_radius", 32, 2000, 0)
+    local shape = panel:ComboBox("Zone shape")
+    shape:AddChoice("Box: click two opposite corners (fits rooms)", "box")
+    shape:AddChoice("Circle: one click, at the radius below", "circle")
+    local scv = GetConVar("livingcity_editor_shape")
+    shape:SetValue((scv and scv:GetString() == "circle") and "Circle: one click, at the radius below" or "Box: click two opposite corners (fits rooms)")
+    shape.OnSelect = function(_, _, _, v) RunConsoleCommand("livingcity_editor_shape", v) end
+    panel:NumSlider("Box zone height", "livingcity_editor_height", 64, 1024, 0)
+    panel:NumSlider("Circle zone radius", "livingcity_editor_radius", 32, 2000, 0)
+    panel:Help("Every zone has about eight feet of leeway at its edge (lc_zone_mercy): your block, the prison and rebel ground reach a little past the line, Combine-only zones start a little inside it.")
     panel:Help("Lines and beats: place slots/stops in order, front first. Sit, bench and lean spots: aim at the foot of the wall; they'll face you.")
-    if LCJ and LCJ.Occupations then
-        local jobs = {}
-        for _, o in ipairs(LCJ.Occupations) do jobs[#jobs + 1] = o.num .. " " .. o.place end
-        panel:Help("Workplace numbers: " .. table.concat(jobs, ", ") .. ".")
-    end
+    panel:Help("Workplaces: every Union job has its own line under Workplaces. Put one (or a few) where that job is done: shifts happen there. Without any, shifts happen out on the streets.")
 
     panel:CheckBox("Shade zones on the ground", "lc_zone_fill")
     panel:Help("Aim at a zone to highlight it and see its radius. Aim at its center marker to pick it out of overlapping zones.")
@@ -427,16 +612,24 @@ function TOOL.BuildCPanel(panel)
     panel:Button("Start the city", "lc_start")
     panel:Button("Stop and clear NPCs", "lc_stop")
     panel:Button("Calm security", "lc_calm")
-    panel:CheckBox("Start automatically on map load", "lc_autostart")
+    Check("Start automatically on map load", "lc_autostart")
 
     Header("Population")
-    panel:NumSlider("Citizens", "lc_citizens", 0, 80, 0)
-    panel:NumSlider("Civil Protection", "lc_cops", 0, 30, 0)
-    panel:NumSlider("Overwatch soldiers", "lc_soldiers", 0, 20, 0)
-    panel:NumSlider("Scanners", "lc_scanners", 0, 10, 0)
-    panel:NumSlider("Zombies (infestation zones)", "lc_zombies", 0, 40, 0)
-    panel:NumSlider("NPC budget (hard cap)", "lc_npc_budget", 10, 200, 0)
-    panel:Button("Save these numbers for this map", "lc_savesettings")
+    Slider("Citizens", "lc_citizens", 0, 80, 0)
+    Slider("Civil Protection", "lc_cops", 0, 30, 0)
+    Slider("Overwatch soldiers", "lc_soldiers", 0, 20, 0)
+    Slider("Scanners", "lc_scanners", 0, 10, 0)
+    Slider("Zombies (infestation zones)", "lc_zombies", 0, 40, 0)
+    Slider("Resistance fighters (rebel zones)", "lc_rebels", 0, 20, 0)
+    Check("Rebel raids and Combine sweeps, now and then", "lc_skirmishes")
+    Slider("Minutes between skirmishes", "lc_skirmish_interval", 2, 60, 0)
+    Check("Rebel and infestation zones spread when left alone", "lc_territory_spread")
+    Slider("Minutes between rebel growth", "lc_rebel_spread_minutes", 2, 120, 0)
+    Slider("Minutes between infestation growth", "lc_infest_spread_minutes", 2, 120, 0)
+    Slider("Most patches a zone can grow", "lc_territory_max", 0, 20, 0)
+    Slider("Kills to push back a patch", "lc_territory_hits", 1, 10, 0)
+    Slider("NPC budget (hard cap)", "lc_npc_budget", 10, 200, 0)
+    panel:Help("Every setting in this panel is saved with this map's layout as you change it, and comes back after a restart.")
 
     Header("Events")
     panel:Button("Ration distribution", "lc_event", "rations")
@@ -445,41 +638,64 @@ function TOOL.BuildCPanel(panel)
     panel:Button("Lockdown", "lc_event", "lockdown")
     panel:Button("End current event", "lc_endevent")
     panel:Button("Play an announcement", "lc_announce")
-    panel:CheckBox("Run events automatically", "lc_auto_events")
-    panel:CheckBox("Cops enforce curfew on players", "lc_curfew_enforce")
-    panel:CheckBox("Radio chatter", "lc_chatter")
+    Check("Run events automatically", "lc_auto_events")
+    Check("Cops enforce curfew on players", "lc_curfew_enforce")
+    Check("Radio chatter", "lc_chatter")
+    Check("Alarms send a response squad", "lc_squad")
+    Slider("Squad: metrocops", "lc_squad_cops", 0, 6, 0)
+    Slider("Squad: soldiers", "lc_squad_soldiers", 0, 6, 0)
+    Slider("Squad: seconds after the alarm", "lc_squad_delay", 0, 30, 0)
+    Slider("Garrison per Combine-only zone", "lc_garrison", 0, 12, 0)
+    Slider("Garrison metrocops (out of 10)", "lc_garrison_cops", 0, 10, 0)
 
     Header("Paths and doors")
+    panel:Button("Path mapping: on / off (walk to draw nodes)", "lc_pathmap")
+    panel:Button("Path mapping: undo this session's nodes", "lc_pathmap_undo")
     panel:Button("Auto-link nearby path nodes", "lc_autolink")
     panel:Button("Unlock all doors now", "lc_unlockdoors")
     panel:Button("Open all doors now", "lc_opendoors")
-    panel:CheckBox("Unlock untagged doors on start (Sandbox)", "lc_unlock_doors")
-    panel:CheckBox("Security chases people into rebel zones", "lc_rebel_pursuit")
+    Check("Unlock untagged doors on start", "lc_unlock_doors")
+    Check("Street units chase people into rebel territory (off: rebel ground is safe from street patrols)", "lc_rebel_pursuit")
+
+    Header("How it feels")
+    panel:Help("A person in a city too big for them. Field of view: the widest anyone sees (75 is Half-Life 2's; 0 leaves it to each player). Eye height: 64 is GMod's; lower and people stand over you.")
+    Slider("Field of view (widest)", "lc_fov", 0, 100, 0)
+    Slider("Eye height", "lc_eye_height", 54, 66, 0)
+    Check("Camera sways with your steps (players can turn theirs off: !bob)", "lc_view_bob")
+    Slider("Camera sway strength (%)", "lc_view_bob_amount", 0, 200, 0)
+    Check("Quiet HUD: no XP, credits, standing or kill feed on screen", "lc_quiet_hud")
+    Slider("Seconds on the death card before respawning", "lc_respawn_secs", 0, 60, 0)
+    Check("Word gets around when someone dies", "lc_word_gets_around")
+
+    Header("Civil Intake")
+    panel:Help("New people arrive with nothing and ask for it: register at Civil Intake (name, face, description, a citizen number), then ask Housing Allocation for a room. Place the two fixtures and an arrival point (Mode list). With no Civil Intake on the map, people are registered and housed as they arrive.")
+    Check("New arrivals go through Civil Intake", "lc_intake")
+    Slider("Seconds a desk takes to process someone", "lc_intake_secs", 2, 30, 0)
+    Slider("Minutes to register before it's a crime", "lc_intake_grace", 1, 60, 0)
 
     Header("Survival and economy")
-    panel:CheckBox("Hunger and thirst", "lc_needs")
-    panel:NumSlider("Minutes until starving", "lc_hunger_minutes", 5, 240, 0)
-    panel:NumSlider("Minutes until dehydrated", "lc_thirst_minutes", 5, 240, 0)
-    panel:NumSlider("Birds", "lc_birds", 0, 30, 0)
-    panel:NumSlider("Headcrab vermin", "lc_vermin", 0, 15, 0)
-    panel:CheckBox("Credits, Civil Standing and the Commissary", "lc_economy")
+    Check("Hunger and thirst", "lc_needs")
+    Slider("Minutes until starving", "lc_hunger_minutes", 5, 240, 0)
+    Slider("Minutes until dehydrated", "lc_thirst_minutes", 5, 240, 0)
+    Slider("Birds", "lc_birds", 0, 30, 0)
+    Slider("Headcrab vermin", "lc_vermin", 0, 15, 0)
+    Check("Credits, Civil Standing and the Commissary", "lc_economy")
 
     Header("Contraband and searches")
-    panel:CheckBox("Civil Protection NPCs stop and search players", "lc_stops")
-    panel:NumSlider("Checkpoint stop chance (%)", "lc_stop_chance", 0, 100, 0)
-    panel:NumSlider("Street stop chance (%)", "lc_street_stop_chance", 0, 20, 0)
-    panel:NumSlider("Seconds between stops (per person)", "lc_stop_cooldown", 60, 1800, 0)
-    panel:NumSlider("Disguise risk near units (% per minute)", "lc_disguise_risk", 0, 50, 0)
-    panel:NumSlider("Sweeps raid stashes (%)", "lc_raid_chance", 0, 100, 0)
+    Check("Civil Protection NPCs stop and search players", "lc_stops")
+    Slider("Checkpoint stop chance (%)", "lc_stop_chance", 0, 100, 0)
+    Slider("Street stop chance (%)", "lc_street_stop_chance", 0, 20, 0)
+    Slider("Seconds between stops (per person)", "lc_stop_cooldown", 60, 1800, 0)
+    Slider("Disguise risk near units (% per minute)", "lc_disguise_risk", 0, 50, 0)
+    Slider("Sweeps raid stashes (%)", "lc_raid_chance", 0, 100, 0)
 
     Header("Prison and conduct")
-    panel:NumSlider("Sentence (seconds)", "lc_prison_time", 30, 1200, 0)
-    panel:CheckBox("Security NPCs arrest instead of kill", "lc_npc_arrests")
-    panel:CheckBox("Judge player kills (anti-RDM)", "lc_conduct")
-    panel:NumSlider("Spawn protection (seconds)", "lc_spawn_protect", 0, 30, 0)
+    Slider("Sentence (seconds)", "lc_prison_time", 30, 1200, 0)
+    Check("Security NPCs arrest instead of kill", "lc_npc_arrests")
+    Check("Judge player kills (anti-RDM)", "lc_conduct")
+    Slider("Spawn protection (seconds)", "lc_spawn_protect", 0, 30, 0)
 
-    Header("Factions (Sandbox servers)")
-    panel:CheckBox("Enable factions and ranks", "lc_factions")
+    Header("Factions")
     panel:Button("Open faction menu", "lcf_menu")
 
     Header("Debugging")

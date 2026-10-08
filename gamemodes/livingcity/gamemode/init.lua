@@ -3,7 +3,7 @@
 
     Regular players: no spawning anything, no noclip, no physgun or toolgun,
     no Sandbox menus. Everyone is a person in the city with fists and whatever
-    their faction issues them. Death has a short respawn delay, falls hurt
+    their faction issues them. Death puts up a card and a short wait, falls hurt
     like they did in Half-Life 2, and the city starts on its own.
 
     Admins: !build (or lc_buildmode) toggles build mode, which gives back the
@@ -14,6 +14,7 @@
 AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("shared.lua")
 include("shared.lua")
+LC_LoadModules("server")
 
 util.AddNetworkString("lcg_help")
 
@@ -85,12 +86,20 @@ end
 -- Killing each other is possible; the conduct system judges whether it was fair.
 function GM:PlayerShouldTakeDamage(ply, attacker) return true end
 
+-- A killing blow puts a player down, bleeding out, instead (sv_livingcity_rp.lua).
+-- This runs after every hook has had its say about the damage.
+function GM:EntityTakeDamage(ent, dmg)
+    if LC and LC.TryDown and ent:IsPlayer() and LC.TryDown(ent, dmg) then return true end
+    if self.BaseClass and self.BaseClass.EntityTakeDamage then return self.BaseClass.EntityTakeDamage(self, ent, dmg) end
+end
+
 -- Half-Life 2's realistic fall damage.
 function GM:GetFallDamage(ply, speed) return math.max(0, (speed - 526.5) * (100 / 396)) end
 
+-- The death card is up meanwhile (lc_respawn_secs, sv_livingcity_life.lua).
 function GM:PlayerDeath(ply, inflictor, attacker)
     self.BaseClass.PlayerDeath(self, ply, inflictor, attacker)
-    ply.NextSpawnTime = CurTime() + 6
+    ply.NextSpawnTime = CurTime() + (LC and LC.RespawnWait and LC.RespawnWait() or 6)
 end
 
 function GM:ShowHelp(ply)
@@ -106,6 +115,7 @@ end
 function GM:LCSetBuild(ply, on)
     if not IsValid(ply) or not ply:IsAdmin() then return false end
     ply:SetNW2Bool("lc_build", on == true)
+    if LC.FieldRulesChanged then LC.FieldRulesChanged(ply) end -- (builders walk through forcefields)
     if on then
         ply:Give("weapon_physgun")
         ply:Give("gmod_tool")
@@ -118,6 +128,12 @@ function GM:LCSetBuild(ply, on)
     end
     return true
 end
+
+-- /help, through in-character chat
+LC = LC or {}
+LC.SlashCommands = LC.SlashCommands or {}
+LC.SlashCommands.help = function(ply) GAMEMODE:ShowHelp(ply) end
+LC.SlashCommands.guide = LC.SlashCommands.help
 
 concommand.Add("lc_buildmode", function(ply)
     if not IsValid(ply) or not ply:IsAdmin() then return end
@@ -134,7 +150,7 @@ hook.Add("PlayerSay", "LivingCityGamemode", function(ply, text)
         end
         return ""
     end
-    if t == "!help" then
+    if t == "!help" or t == "!guide" or t == "/help" then
         GAMEMODE:ShowHelp(ply)
         return ""
     end
@@ -147,7 +163,7 @@ end)
 hook.Add("PlayerInitialSpawn", "LivingCityGamemode", function(ply)
     timer.Simple(6, function()
         if not IsValid(ply) then return end
-        ply:ChatPrint("[Living City] Welcome to the city. F1 help, F2 pockets, F3 your board, F4 factions.")
+        ply:ChatPrint("[Living City] Welcome to the city. F1: what you can do (and the guide). F2 pockets, F3 your board, F4 factions.")
         if ply:IsAdmin() then
             ply:ChatPrint("[Living City] You're an admin: !build switches to build mode for the editor, physgun and noclip.")
         end

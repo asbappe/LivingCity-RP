@@ -7,9 +7,9 @@
     Admins switch between playing and building with !build (lc_buildmode).
 
     All of the city itself (NPCs, factions, jobs, quests, survival, prisons,
-    contraband...) lives in the Living City addon code under lua/autorun, which
-    this gamemode switches fully on: factions and ranks are always enabled and
-    the city starts by itself when the map loads.
+    contraband...) is in gamemode/modules (shared, server, client), loaded
+    below in a fixed order; its entities and weapons are in entities/. It is
+    its own gamemode: none of it loads anywhere else.
 ]]
 
 DeriveGamemode("sandbox")
@@ -19,7 +19,167 @@ GM.Author = "Living City"
 GM.Email = ""
 GM.Website = ""
 GM.TeamBased = false
-GM.IsLivingCity = true
+
+------------------------------------------------------------------------
+-- The city's code: every module, in the order it loads (shared first, then
+-- the server's or the client's). init.lua and cl_init.lua load them; nothing
+-- here runs outside this gamemode.
+------------------------------------------------------------------------
+
+LC_MODULES = {
+    shared = {
+        "sh_livingcity_cache", -- (first: quick lookups the rest use)
+        "sh_livingcity_acts",
+        "sh_livingcity_cp",
+        "sh_livingcity_custody",
+        "sh_livingcity_feel",
+        "sh_livingcity_factions",
+        "sh_livingcity_jobs",
+        "sh_livingcity_power",
+        "sh_livingcity_scanner",
+        "sh_livingcity_shop",
+        "sh_livingcity_zones",
+    },
+    server = {
+        "sv_livingcity_perf", -- (first of the server modules: every timer after it is timed and staggered)
+        "sv_livingcity",
+        "sv_livingcity_notices", -- (early: warnings and notices on screen, waypoints)
+        "sv_livingcity_actions",
+        "sv_livingcity_acts",
+        "sv_livingcity_admintools",
+        "sv_livingcity_atmos",
+        "sv_livingcity_bodies",
+        "sv_livingcity_business",
+        "sv_livingcity_character",
+        "sv_livingcity_law", -- (who is CP, who is wanted: early, others lean on it)
+        "sv_livingcity_lookouts",
+        "sv_livingcity_conduct",
+        "sv_livingcity_convoy",
+        "sv_livingcity_cp",
+        "sv_livingcity_cpsupply", -- (the Civil Protection Commissary: units are issued supplies)
+        "sv_livingcity_crafting",
+        "sv_livingcity_custody",
+        "sv_livingcity_data",
+        "sv_livingcity_debug",
+        "sv_livingcity_doors",
+        "sv_livingcity_dropship",
+        "sv_livingcity_escort",
+        "sv_livingcity_economy",
+        "sv_livingcity_events",
+        "sv_livingcity_factions",
+        "sv_livingcity_garrison",
+        "sv_livingcity_heist",
+        "sv_livingcity_hints",
+        "sv_livingcity_housing",
+        "sv_livingcity_life", -- (a life: eye height, time lived, the death card, word getting around)
+        "sv_livingcity_intake", -- (Civil Intake: new arrivals register, then ask for a room)
+        "sv_livingcity_lab", -- (the Resistance lab: the scientist makes what the cell needs)
+        "sv_livingcity_mortuary",
+        "sv_livingcity_navgraph",
+        "sv_livingcity_npcwork",
+        "sv_livingcity_mail", -- (after npcwork: it gives the city's couriers the real mail)
+        "sv_livingcity_paths",
+        "sv_livingcity_pathmap",
+        "sv_livingcity_people",
+        "sv_livingcity_power",
+        "sv_livingcity_props",
+        "sv_livingcity_checkpoints", -- (after power: turrets and forcefields run off its power banks)
+        "sv_livingcity_prison",
+        "sv_livingcity_propaganda",
+        "sv_livingcity_announcer", -- (after propaganda: it borrows Dr. Breen's speakers)
+        "sv_livingcity_quests",
+        "sv_livingcity_raids",
+        "sv_livingcity_rations",
+        "sv_livingcity_rebels",
+        "sv_livingcity_rebellife",
+        "sv_livingcity_resistanceops",
+        "sv_livingcity_response",
+        "sv_livingcity_rp",
+        "sv_livingcity_rhythm",
+        "sv_livingcity_running",
+        "sv_livingcity_salvage",
+        "sv_livingcity_scanner",
+        "sv_livingcity_scavenge",
+        "sv_livingcity_security",
+        "sv_livingcity_sidejobs",
+        "sv_livingcity_slots",
+        "sv_livingcity_staff",
+        "sv_livingcity_staticprops",
+        "sv_livingcity_stockpile",
+        "sv_livingcity_storage",
+        "sv_livingcity_stories",
+        "sv_livingcity_survival",
+        "sv_livingcity_talk",
+        "sv_livingcity_territory",
+        "sv_livingcity_trains",
+        "sv_livingcity_underground",
+        "sv_livingcity_vort",
+        "sv_livingcity_war",
+        "sv_livingcity_work",
+        "sv_livingcity_writing",
+    },
+    client = {
+        "cl_livingcity",
+        "cl_livingcity_view", -- (early: the camera the other modules add their touches to)
+        "cl_livingcity_notices",
+        "cl_livingcity_actions",
+        "cl_livingcity_quick", -- (F1: the quick menu, nine things on the number keys)
+        "cl_livingcity_acts",
+        "cl_livingcity_admintools",
+        "cl_livingcity_atmos",
+        "cl_livingcity_character",
+        "cl_livingcity_checkpoints",
+        "cl_livingcity_cp",
+        "cl_livingcity_factions",
+        "cl_livingcity_hints",
+        "cl_livingcity_infest",
+        "cl_livingcity_intake",
+        "cl_livingcity_lab",
+        "cl_livingcity_layoutbrowser",
+        "cl_livingcity_life",
+        "cl_livingcity_livecam",
+        "cl_livingcity_needs",
+        "cl_livingcity_quests",
+        "cl_livingcity_rent",
+        "cl_livingcity_resistance",
+        "cl_livingcity_rp",
+        "cl_livingcity_scanner",
+        "cl_livingcity_slots",
+        "cl_livingcity_unittools",
+        "cl_livingcity_staff",
+        "cl_livingcity_talk",
+        "cl_livingcity_war",
+        "cl_livingcity_writing",
+    },
+}
+
+-- Every Living City setting is saved with the map's layout as it changes (a
+-- dedicated server doesn't keep them over a restart by itself), so each one
+-- reports its changes as it's made (sv_livingcity_data.lua keeps them).
+if SERVER and not LC_ConVarWrapped then
+    LC_ConVarWrapped = true
+    local create = CreateConVar
+    CreateConVar = function(name, ...)
+        local cv = create(name, ...)
+        if isstring(name) and cvars and cvars.AddChangeCallback
+            and (string.match(name, "^lc_[%w_]+$") or string.match(name, "^lc[fq]_[%w_]+$")) then
+            cvars.AddChangeCallback(name, function(n, _, new)
+                if LC and LC.RememberSetting then LC.RememberSetting(n, new) end
+            end, "LivingCityRemember")
+        end
+        return cv
+    end
+end
+
+function LC_LoadModules(side)
+    for _, name in ipairs(LC_MODULES[side]) do include("modules/" .. side .. "/" .. name .. ".lua") end
+end
+
+if SERVER then
+    for _, name in ipairs(LC_MODULES.shared) do AddCSLuaFile("modules/shared/" .. name .. ".lua") end
+    for _, name in ipairs(LC_MODULES.client) do AddCSLuaFile("modules/client/" .. name .. ".lua") end
+end
+LC_LoadModules("shared")
 
 -- Admins in build mode get Sandbox's tools back.
 function GM:LCBuilder(ply)
@@ -73,18 +233,25 @@ local function Mantle(ply, mv)
     local g = 600
     local cv = GetConVar("sv_gravity")
     if cv then g = cv:GetFloat() end
-    mv:SetVelocity(Vector(fwd.x * 90, fwd.y * 90, math.sqrt(2 * g * (h + 12))))
+    -- just enough to clear the edge. Whatever upward speed you already have
+    -- (from the jump that started this) counts toward it, not on top of it.
+    local need = math.sqrt(2 * g * (h + 8))
+    local vz = math.max(mv:GetVelocity().z, 0)
+    mv:SetVelocity(Vector(fwd.x * 90, fwd.y * 90, math.max(need, vz)))
     return true
 end
 
 hook.Add("SetupMove", "LivingCityMovement", function(ply, mv)
     local gm = GAMEMODE
-    if not gm or not gm.IsLivingCity or not gm:LCSlowMovement() then return end
+    if not gm or not gm:LCSlowMovement() then return end
     if ply:GetMoveType() ~= MOVETYPE_WALK then return end
     local buttons = mv:GetButtons()
     if bit.band(buttons, IN_JUMP) ~= 0 and (ply.lcNextMantle or 0) <= CurTime() and Mantle(ply, mv) then
         ply.lcNextMantle = CurTime() + 1
         ply.lcNextJump = CurTime() + gm.cvHop:GetFloat()
+        -- the climb replaces the jump: left in, the engine adds a full jump on
+        -- top of the climb and throws you twenty feet up
+        mv:SetButtons(bit.band(buttons, bit.bnot(IN_JUMP)))
         return
     end
     if ply:IsOnGround() then
