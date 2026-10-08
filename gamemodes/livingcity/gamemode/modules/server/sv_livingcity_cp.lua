@@ -552,7 +552,7 @@ end
 function LC.StartStruggle(ply)
     local t = LC.Tied[ply]
     if not t then return false, "Your hands aren't tied." end
-    if IsValid(t.escort) then return false, "Not while they've got hold of you." end
+    if IsValid(t.escort) or hook.Run("LivingCityCanStruggle", ply) == false then return false, "Not while they've got hold of you." end
     return LC.StartTask(ply, cvStruggle:GetFloat(), "Working at the ties...", {
         maxMove = 30, cancelText = "You stop working at the ties.",
         done = function(p)

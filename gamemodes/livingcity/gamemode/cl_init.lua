@@ -83,6 +83,7 @@ local GUIDE = {
         "The Resistance (Member and up) can ask a sympathizer to keep watch: they warn Freq 7 when units come.",
         "The city keeps to the clock: work in the morning, ration lines at midday, quiet evenings, and thin streets at night (only the night shift works).",
         "Trains come into the station now and then: new arrivals with suitcases, and anyone leaving the city boards before it pulls out.",
+        "Arrested by a unit, you're tied and walked to the cells by two of them. On the way anyone can get you out: put the leading unit down, then {gm_showhelp} > Work at the ties.",
         "Rations come out of the city's stores (under the clock). Kitchen and factory work fills them; when they run low, so do the rations, and people grow restless.",
         "Transformers power their district: its lights (the map's switchable ones too), screens and TVs, dispensers, vending machines, the commissary and Combine door locks. Sabotage one (multitool) and the district goes dark and its Combine doors open, until maintenance fixes it. Prison doors stay locked.",
         "Half the grid down at once and the whole city goes dark, the map's own lighting included: switch on your flashlight (F).",

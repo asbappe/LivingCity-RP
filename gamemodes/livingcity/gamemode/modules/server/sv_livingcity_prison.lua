@@ -48,6 +48,7 @@ end
 -- In a cell, or cuffed on the street.
 function LC.InCustody(ply)
     return (LC.Prisoners and LC.Prisoners[ply] ~= nil) or (LC.Detained and LC.Detained[ply] ~= nil)
+        or (LC.Marching and LC.Marching[ply] ~= nil) -- (being walked to the cells: sv_livingcity_march.lua)
 end
 
 function LC.PrisonAvailable()
@@ -304,7 +305,11 @@ function LC.Surrender(ply, unit)
     if IsValid(unit) then unit:EmitSound(LC.Pick(LC.Sounds.COP_ARREST), 78) end
     ply:ChatPrint("[Civil Protection] You put your hands up.")
     local done
-    if LC.PrisonAvailable() then done = LC.Incarcerate(ply, math.max(30, math.floor(cvTime:GetInt() / 2)), reason, unit) end
+    if LC.PrisonAvailable() then
+        local secs = math.max(30, math.floor(cvTime:GetInt() / 2))
+        -- to a unit NPC: he walks you there (sv_livingcity_march.lua)
+        done = (LC.MarchToPrison and LC.MarchToPrison(ply, unit, secs, reason)) or LC.Incarcerate(ply, secs, reason, unit)
+    end
     if not done then done = LC.DetainOnTheSpot(ply, unit, reason) end
     if not done then ply.lcSurrendered = nil return false, "Nobody's taking you in right now." end
     return true
@@ -340,7 +345,7 @@ hook.Add("EntityTakeDamage", "LivingCityNPCArrest", function(victim, dmg)
     local attacker = dmg:GetAttacker()
     local st = LC.NPCs and LC.NPCs[attacker]
     if not st or not LC.IsSecurity(st) then return end
-    if LC.Prisoners[victim] or LC.Detained[victim] or (LC.PlayerIsZombie and LC.PlayerIsZombie(victim)) then
+    if LC.Prisoners[victim] or LC.Detained[victim] or (LC.Marching and LC.Marching[victim]) or (LC.PlayerIsZombie and LC.PlayerIsZombie(victim)) then
         if LC.Detained[victim] then dmg:SetDamage(0) return true end
         return
     end
@@ -355,7 +360,9 @@ hook.Add("EntityTakeDamage", "LivingCityNPCArrest", function(victim, dmg)
     if reason == "" then reason = "Resisting Civil Protection" end
     local done
     if LC.PrisonAvailable() then
-        done = LC.Incarcerate(victim, cvTime:GetInt(), reason, attacker)
+        -- walked there by the unit who took you down, and another (sv_livingcity_march.lua)
+        done = (LC.MarchToPrison and LC.MarchToPrison(victim, attacker, cvTime:GetInt(), reason))
+            or LC.Incarcerate(victim, cvTime:GetInt(), reason, attacker)
     end
     if not done then
         -- no cell (or no free one): cuffed on the street instead
