@@ -630,6 +630,8 @@ function TOOL.BuildCPanel(panel)
     Slider("Kills to push back a patch", "lc_territory_hits", 1, 10, 0)
     Slider("NPC budget (hard cap)", "lc_npc_budget", 10, 200, 0)
     Check("NPCs far from everyone sleep (engine AI off until someone comes near)", "lc_npc_sleep")
+    Slider("Civil Protection size (1 = HL2's own)", "lc_cp_scale", 0.8, 1.3, 2)
+    Slider("Overwatch soldier size (1 = HL2's own)", "lc_soldier_scale", 0.8, 1.3, 2)
     panel:Help("Every setting in this panel is saved with this map's layout as you change it, and comes back after a restart.")
 
     Header("Events")

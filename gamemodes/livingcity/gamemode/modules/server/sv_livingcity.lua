@@ -1181,6 +1181,24 @@ local function SetupSecurity(npc, st)
     AssignBeat(st)
 end
 
+-- The Combine loom: units a little bigger than the people they police, and
+-- Overwatch soldiers (who hunch as they walk) a little more. Only how they
+-- look: their size for doors and corridors is the same.
+local cvCopScale = CreateConVar("lc_cp_scale", "1.05", FLAGS, "How big Civil Protection NPCs are drawn (1 = HL2's own size)")
+local cvSoldierScale = CreateConVar("lc_soldier_scale", "1.10", FLAGS, "How big Overwatch soldier NPCs are drawn (1 = HL2's own size)")
+local function Loom(npc, cv)
+    local k = math.Clamp(cv:GetFloat(), 0.8, 1.3)
+    if npc.SetModelScale and (k ~= 1 or (npc.GetModelScale and npc:GetModelScale() ~= 1)) then npc:SetModelScale(k, 0) end
+end
+-- changed in the editor: the ones already out there change too
+for _, c in ipairs({ { "lc_cp_scale", cvCopScale, "cop" }, { "lc_soldier_scale", cvSoldierScale, "soldier" } }) do
+    cvars.AddChangeCallback(c[1], function()
+        for npc, st in pairs(LC.NPCs or {}) do
+            if IsValid(npc) and st.role == c[3] then Loom(npc, c[2]) end
+        end
+    end, "LivingCityLoom")
+end
+
 local function SpawnCop(pos)
     local npc = ents.Create("npc_metropolice")
     if not IsValid(npc) then return end
@@ -1190,6 +1208,7 @@ local function SpawnCop(pos)
     npc:SetKeyValue("spawnflags", tostring(BaseFlags()))
     npc:Spawn()
     npc:Activate()
+    Loom(npc, cvCopScale)
     local st = Register(npc, "cop")
     SetupSecurity(npc, st)
     st.nextChatter = CurTime() + math.Rand(20, 60)
@@ -1208,6 +1227,7 @@ local function SpawnSoldier(pos)
     npc:SetKeyValue("spawnflags", tostring(BaseFlags()))
     npc:Spawn()
     npc:Activate()
+    Loom(npc, cvSoldierScale)
     local st = Register(npc, "soldier")
     SetupSecurity(npc, st)
     return npc, st
