@@ -257,7 +257,8 @@ end
 con.lcGraceUntil = 0
 con:SetPos(Vector(2000, -2000, 0))
 
--- NPC arrests instead of kills
+-- NPC arrests instead of kills (straight to a cell here: being marched there is tested in MarchTests)
+_setcvar("lc_march", 0)
 local cop2, cst2 = LC.Spawners.cop(Vector(-200, -200, 0))
 cst2.untilT = 1e9
 local dmg = _dmg(cop2, 20, DMG_CLUB)
@@ -265,6 +266,7 @@ hook.Run("EntityTakeDamage", con, dmg)
 ok(LC.Prisoners[con] ~= nil, "a stunstick hit from a cop arrests a wanted player")
 ok(dmg:GetDamage() == 0, "instead of hurting them")
 LC.ReleasePrisoner(con)
+_setcvar("lc_march", 1)
 
 -- disconnect mid-sentence
 LC.Incarcerate(con, 100, "leaver")
@@ -2232,7 +2234,9 @@ local unit = cops()[1]
 crook:SetPos(unit.n:GetPos() + Vector(50, 0, 0))
 unit.st.nextUse = 0
 local s1 = LC.Standing(crook)
+_setcvar("lc_march", 0) -- (straight to a cell: being marched there is tested in MarchTests)
 hook.Run("PlayerUse", crook, unit.n)
+_setcvar("lc_march", 1)
 ok(LC.InCustody(crook) and not LC.PlayerIsWanted(crook) and has(crook.chat, "You put your hands up"), "pressing E on a unit while wanted is surrendering")
 local pr = LC.Prisoners[crook]
 ok(pr and pr.untilT - CurTime() <= GetConVar("lc_prison_time"):GetInt() / 2 + 1, "for half the usual sentence")
@@ -9374,6 +9378,127 @@ m:SetPos(Vector(-160000, -160000, 0))
 GAMEMODE = savedGM
 end
 MenuTests()
+
+----------------------------------------------------------------------
+function MarchTests()
+section("Arrested by a unit: walked to the cells, and rescued on the way")
+local M0 = Vector(-2600, 2600, 0)
+local function Unmarch(p)
+    local m = LC.Marching[p]
+    if m then LC.Marching[p] = nil end
+    if LC.IsTied(p) then LC.Untie(p, nil, true) end
+    if LC.Prisoners[p] then LC.ReleasePrisoner(p) end
+    LC.ClearWanted(p)
+    p.lcGraceUntil = 0
+end
+-- arrested
+local con = newPlayer("Marched", "citizen")
+_run(0.3)
+con:SetPos(M0)
+con.lcGraceUntil = 0
+LC.ReportCrime(con, "Theft", 300)
+local lead, lst = LC.Spawners.cop(M0 + Vector(60, 0, 0))
+local rear, rst = LC.Spawners.cop(M0 + Vector(-200, 0, 0))
+lst.untilT, rst.untilT = 1e9, 1e9
+local dmg = _dmg(lead, 20, DMG_CLUB)
+hook.Run("EntityTakeDamage", con, dmg)
+ok(LC.Marching[con] ~= nil, "a stunstick hit starts a march to the cells, not a teleport")
+ok(LC.IsTied(con) and LC.InCustody(con) and not LC.PlayerIsWanted(con) and not LC.Prisoners[con], "tied, in custody, the search called off, not in a cell yet")
+ok(LC.Marching[con] and LC.Marching[con].rear == rear and rst.state == "event", "a second unit comes along")
+ok(has(con.chat, "march") or has(con.chat, "Cuffed"), "and they're told", con.chat[#con.chat])
+-- walked all the way
+local reached = false
+for _ = 1, 90 do
+    _run(1)
+    if LC.Prisoners[con] then reached = true break end
+end
+ok(reached and not LC.Marching[con] and not LC.IsTied(con), "walked there and locked up", tostring(con:GetPos()) .. " | " .. table.concat(con.chat, " | "))
+ok(not rst.marching and not lst.marching, "and the units go back to their day")
+Unmarch(con)
+-- rescued: the unit leading is put down
+con:SetPos(M0)
+LC.ReportCrime(con, "Theft", 300)
+local lead2, lst2 = LC.Spawners.cop(M0 + Vector(60, 0, 0))
+lst2.untilT = 1e9
+hook.Run("EntityTakeDamage", con, _dmg(lead2, 20, DMG_CLUB))
+ok(LC.Marching[con] ~= nil, "(another march)")
+lead2:Remove()
+_run(0.5)
+ok(not LC.Marching[con] and LC.IsTied(con) and LC.PlayerIsWanted(con) and not LC.Prisoners[con],
+    "put the leading unit down: free, still tied, and wanted for it")
+Unmarch(con)
+-- nowhere to walk: straight to a cell
+_setcvar("lc_march", 0)
+LC.ReportCrime(con, "Theft", 300)
+local lead3, lst3 = LC.Spawners.cop(M0 + Vector(60, 0, 0))
+hook.Run("EntityTakeDamage", con, _dmg(lead3, 20, DMG_CLUB))
+ok(LC.Prisoners[con] ~= nil and not LC.Marching[con], "turned off: straight to a cell, as before")
+_setcvar("lc_march", 1)
+Unmarch(con)
+for _, n in ipairs({ lead, rear, lead3 }) do if IsValid(n) then n:Remove() end end
+con:SetPos(Vector(-150000, 150000, 0))
+end
+MarchTests()
+
+----------------------------------------------------------------------
+function BatchFixTests()
+section("The Combine loom; ration lines; graffiti needs a witness; supply guards answer")
+local B0 = Vector(-90000, -90000, 0)
+-- bigger units
+local c, cs = LC.Spawners.cop(B0)
+local so, ss = LC.Spawners.soldier(B0 + Vector(100, 0, 0))
+ok(math.abs(c:GetModelScale() - 1.05) < 0.001 and math.abs(so:GetModelScale() - 1.10) < 0.001, "units are drawn 5% bigger, soldiers 10%", c:GetModelScale() .. " / " .. so:GetModelScale())
+-- supply guards answer E
+cs.supplyGuard = true
+LC.SetState(c, cs, "event")
+cs.nextUse = 0
+local walker = newPlayer("GuardAsker", "citizen")
+_run(0.3)
+walker:SetPos(B0 + Vector(50, 0, 0))
+walker.chat = {}
+hook.Run("PlayerUse", walker, c)
+ok(has(walker.chat, "Move along") or has(walker.chat, "Step away") or has(walker.chat, "Keep moving"), "a supply guard answers when you press E on him", walker.chat[1])
+c:Remove() so:Remove()
+-- people who never set off for a line don't hold its places
+local line = LC.Lines[1]
+if line then
+    local ghosts = {}
+    for i = 1, #line.slots do
+        local n, st = LC.Spawners.citizen(B0 + Vector(0, i * 60, 0))
+        st.lineHeading, st.lineSince = 1, CurTime()
+        LC.SetState(n, st, "idle")
+        ghosts[#ghosts + 1] = n
+    end
+    local q0 = #line.q
+    line.q = {}
+    local n, st = LC.Spawners.citizen(line.slots[1].pos + Vector(200, 0, 0))
+    ok(LC.JoinLine(n, st, true) ~= false and st.lineHeading == 1, "people who never set off for the line don't fill it")
+    for _, g in ipairs(ghosts) do g:Remove() end
+    n:Remove()
+end
+-- graffiti costs the block its rations only once the Combine has seen it
+local tagger = newPlayer("QuietTagger", "citizen")
+_run(0.3)
+local far = Vector(-95000, -80000, 0)
+tagger:SetPos(far)
+tagger.lcRationDocked = nil
+tagger.chat = {}
+local t = { pos = far + Vector(40, 0, 40), normal = Vector(-1, 0, 0), owner = tagger, at = CurTime() }
+table.insert(LC.Tags, t)
+hook.Run("LivingCityTagged", tagger, t)
+ok(not tagger.lcRationDocked and not t.found, "graffiti nobody saw costs nobody their rations")
+local cop, cst = LC.Spawners.cop(far + Vector(-200, 0, 0))
+_advance(6) _runtimers()
+ok(t.found and tagger.lcRationDocked ~= nil, "once a unit comes across it, the block is docked")
+for i, x in ipairs(LC.Tags) do if x == t then table.remove(LC.Tags, i) break end end
+cop:Remove()
+tagger.lcRationDocked = nil
+tagger:SetNW2String("lc_ration_docked", "")
+-- the city eats less
+ok(GetConVar("lc_stock_eat") and GetConVar("lc_stock_eat"):GetInt() == 40, "the city eats a ration a minute per 40 citizens")
+for _, p in ipairs({ walker, tagger }) do p:SetPos(Vector(-150000, 150000, 0)) end
+end
+BatchFixTests()
 
 ----------------------------------------------------------------------
 section("Stop")

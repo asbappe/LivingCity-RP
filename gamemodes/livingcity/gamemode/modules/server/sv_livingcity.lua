@@ -1762,6 +1762,8 @@ local BUMP_LINES = {
 function LC.CopProvoked(npc, st, ply, now)
     if not IsValid(ply) or not ply:Alive() or LC.PlayerIsCP(ply) or (LC.DisguisedAsCP and LC.DisguisedAsCP(ply)) then return end
     if LC.PlayerIsZombie and LC.PlayerIsZombie(ply) then return end
+    if LC.InCustody and LC.InCustody(ply) then return end -- (a prisoner they're walking in, or one they've cuffed, isn't crowding them)
+    if LC.IsTied and LC.IsTied(ply) then return end
     local b = ply.lcBump
     if not b or now - b.last > 45 then
         b = { n = 0, last = 0 }
@@ -2270,6 +2272,9 @@ end
 -- level calls for it.
 function LC.MakeOneHostile(npc, st, target)
     local now = CurTime()
+    -- walking a prisoner in (sv_livingcity_march.lua): he only lets go of him to
+    -- fight whoever attacks him, not to chase someone else
+    if st.marching and not (IsValid(target) and st.provokedBy == target and (st.provokedUntil or 0) > now) then return end
     if st.subject then ReleaseInspection(npc, st, now) end
     if st.escortee then st.escortee = nil end
     if IsValid(npc.lcGesture) then npc.lcGesture:Fire("CancelSequence") npc.lcGesture:Remove() end
@@ -2401,6 +2406,7 @@ hook.Add("EntityTakeDamage", "LivingCityUnitsFightBack", function(victim, dmg)
     if not st or st.test or not IsSecurity(st) or st.state == "hostile" then return end
     local att = dmg:GetAttacker()
     if not IsValid(att) or att:IsPlayer() or not IsMonster(att) then return end
+    st.provokedBy, st.provokedUntil = att, CurTime() + 10 -- (bitten: he fights back, even walking a prisoner in)
     LC.MakeOneHostile(victim, st, att)
 end)
 
