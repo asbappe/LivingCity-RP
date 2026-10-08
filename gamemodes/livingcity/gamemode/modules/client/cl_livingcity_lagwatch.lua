@@ -113,7 +113,14 @@ end)
 
 net.Receive("lc_lagwatch", function()
     local t = ReadCompressed()
-    if t then srv = t end
+    if t then
+        srv = t
+        -- your usual ping: the lowest lately, drifting up slowly
+        if t.ping and t.ping > 0 then
+            local b = LC_CL.LagWatchPingBase
+            LC_CL.LagWatchPingBase = (not b or t.ping < b) and t.ping or (b + (t.ping - b) * 0.02)
+        end
+    end
 end)
 
 ------------------------------------------------------------------------
@@ -129,6 +136,11 @@ local function Verdict(r)
     end
     if s and (s.worstGap > tickMs * 4 or (s.ticks and s.rate and s.ticks < s.rate * 0.8)) then
         return string.format("The server is hitching: %.0f ms between two frames (it should be %.0f).", s.worstGap, tickMs), Color(255, 120, 90)
+    end
+    -- ping well above its usual: data queueing somewhere between you and the server
+    local base = LC_CL.LagWatchPingBase
+    if s and s.ping and base and s.ping > math.max(base * 2, base + 50) then
+        return string.format("Your ping jumped from about %d to %d ms with the server keeping up: something on the connection (a download, another device, the host's upload).", base, s.ping), Color(255, 160, 90)
     end
     if s and s.loss and s.loss > 2 then
         return string.format("Packets are being lost between you and the server (%d%%): the connection or the host.", s.loss), Color(255, 120, 90)

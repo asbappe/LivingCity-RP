@@ -43,7 +43,7 @@ do
         local setPos = EM.SetPos
         EM.lcLagSetPos = true
         EM.SetPos = function(self, pos, ...)
-            if Watching() and LC.NPCs and LC.NPCs[self] and IsValid(self) and self.GetPos then
+            if Watching() and LC.NPCs and LC.NPCs[self] and IsValid(self) and self.GetPos and not self.lcUnseenMove then
                 local from = self:GetPos()
                 if from and pos and from:DistToSqr(pos) > 48 * 48 then
                     sec.tele = sec.tele + 1

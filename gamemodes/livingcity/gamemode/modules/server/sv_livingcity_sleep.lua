@@ -76,7 +76,9 @@ function LC.NPCSleepTick(npc, st, now, near)
             if target then
                 st.sleepNext = st.sleepNext or (now + npc:GetPos():Distance(target) / WALK)
                 if now >= st.sleepNext and not LC.IsSeen(target + Vector(0, 0, 40)) then
+                    npc.lcUnseenMove = true -- (out of everyone's sight: the lag monitor doesn't count it as a snap)
                     npc:SetPos(target)
+                    npc.lcUnseenMove = nil
                     st.lastPos, st.lastMoved = target, now
                     st.sleepNext = nil
                     Stats.hops = Stats.hops + 1
