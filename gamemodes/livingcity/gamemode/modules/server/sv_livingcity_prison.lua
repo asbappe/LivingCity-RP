@@ -57,8 +57,15 @@ end
 
 local function FreeCell(who)
     local free = LC.FreePoints({ cell = true }, who)
+    -- the cell they were walked to (sv_livingcity_march.lua), if it's still free
+    local want = IsValid(who) and who.lcPreferCell
+    if want then
+        who.lcPreferCell = nil
+        for _, c in ipairs(free) do if c == want then return c end end
+    end
     return #free > 0 and LC.Pick(free) or nil
 end
+LC.FreeCell = FreeCell
 
 local function PutInCell(ply, cell)
     if ply:InVehicle() then ply:ExitVehicle() end

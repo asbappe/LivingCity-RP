@@ -5,9 +5,11 @@
     stunstick, or giving yourself up to one), you aren't put straight in a
     cell any more. Your hands are tied and two units walk you there: the one
     who arrested you leads, holding you by the arm, and the nearest other
-    unit comes along behind. They walk the city's paths as close to the
-    cells as they can get (the cells are behind the prison's locked doors),
-    and take you through the doors and lock you up when they get there.
+    unit comes along behind. They walk the city's paths to a free cell,
+    unlocking the Civil Protection and prison doors on the way (the
+    perimeter's, the cell block's) and locking them behind them. Where the
+    paths don't reach a cell, they walk you as close as they can get and take
+    you through the doors from there.
 
     On the way, anyone can try to get you out. Kill or drive off the unit
     leading you and his grip is gone: your hands are still tied (F1 > Work at
@@ -39,10 +41,13 @@ local function Up(npc) return IsValid(npc) and npc:Health() > 0 end
 
 function LC.IsMarching(ply) return LC.Marching[ply] ~= nil end
 
--- Where they walk you: as close to the cells as a unit can walk (the cells
--- themselves are behind the prison's locked doors): the nearest spot on the
--- city's paths to a cell, outside the prison zone, that they can get to from
--- here. Failing that, the prison's release point.
+-- Where they walk you. Units open Civil Protection and prison doors as they
+-- walk up to them, and lock them again behind them (sv_livingcity_doors.lua),
+-- so first: right to a free cell, through the perimeter and the cell block.
+-- If there's no route there: as close to the cells as a unit can walk (the
+-- nearest spot on the paths outside the prison zone), and through the doors
+-- from there. Failing that, the prison's release point.
+-- Returns the spot, and the cell when they're walking right to one.
 local function InPrison(pos)
     for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("prison") or {}) do
         if LCZ.Contains(z, pos, 0) then return true end
@@ -50,11 +55,17 @@ local function InPrison(pos)
     return false
 end
 
-local function Destination(from)
-    local cell, cd
-    for _, c in ipairs(LC.PointsOfKind and LC.PointsOfKind("cell") or {}) do
-        local d = c.pos:DistToSqr(from)
-        if not cd or d < cd then cell, cd = c.pos, d end
+local function Destination(from, who)
+    local cells = LC.FreePoints and LC.FreePoints({ cell = true }, who) or {}
+    table.sort(cells, function(a, b) return a.pos:DistToSqr(from) < b.pos:DistToSqr(from) end)
+    if LC.BuildRoute then
+        for i = 1, math.min(3, #cells) do
+            if LC.BuildRoute(from, cells[i].pos, "cop") ~= false then return cells[i].pos, cells[i] end
+        end
+    end
+    local cell = cells[1] and cells[1].pos
+    if not cell then
+        for _, c in ipairs(LC.PointsOfKind and LC.PointsOfKind("cell") or {}) do cell = cell or c.pos end
     end
     if cell and LC.NodePositions and LC.BuildRoute then
         local list = {}
@@ -112,7 +123,9 @@ local function TakeIn(ply, m, how)
     Finish(ply, m)
     if not IsValid(ply) then return end
     if LC.Untie then LC.Untie(ply, nil, true) end
+    ply.lcPreferCell = m.cell -- (the cell they were walked to, if it's still free)
     local ok = LC.Incarcerate(ply, m.seconds, m.reason, m.arrester)
+    ply.lcPreferCell = nil
     if ok and how then ply:ChatPrint("[Civil Protection] " .. how) end
     if not ok and LC.DetainOnTheSpot then LC.DetainOnTheSpot(ply, m.arrester, m.reason) end
 end
@@ -137,7 +150,7 @@ function LC.MarchToPrison(ply, arrester, seconds, reason)
     local st = IsValid(arrester) and LC.NPCs and LC.NPCs[arrester]
     if not IsUnit(st) or st.test or not Up(arrester) then return false end
     if not (LC.PrisonAvailable and LC.PrisonAvailable()) or not LC.TiePlayer or not LC.GoTo then return false end
-    local dest = Destination(ply:GetPos())
+    local dest, cell = Destination(ply:GetPos(), ply)
     if not dest or dest:DistToSqr(ply:GetPos()) < THERE * THERE then return false end
 
     -- the one who arrested him leads
@@ -160,7 +173,7 @@ function LC.MarchToPrison(ply, arrester, seconds, reason)
     end
 
     local m = { lead = arrester, rear = rear, seconds = seconds, reason = reason, arrester = arrester, dest = dest,
-        startT = CurTime(), tries = 0 }
+        cell = cell, startT = CurTime(), tries = 0 }
     LC.Marching[ply] = m
     ply:SetNW2Bool("lc_marching", true)
     arrester:EmitSound("npc/metropolice/vo/movingtocode3.wav", 75)
@@ -227,7 +240,8 @@ local function Tick(now)
             local d2 = lead:GetPos():DistToSqr(m.dest)
             if d2 < THERE * THERE or (ls.state ~= "moving" and d2 < CLOSE * CLOSE) then
                 -- there, or as close as he can get (stopped at the doors): through them, and down to the cells
-                TakeIn(ply, m, "They unlock the prison door, walk you through, and lock you in a cell.")
+                TakeIn(ply, m, m.cell and d2 < THERE * THERE and "They put you in the cell, and the door locks behind you."
+                    or "They unlock the prison door, walk you through, and lock you in a cell.")
             else
                 local going = true
                 if ls.state ~= "moving" then
