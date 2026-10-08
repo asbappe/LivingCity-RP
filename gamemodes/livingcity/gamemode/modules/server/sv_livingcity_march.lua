@@ -5,9 +5,9 @@
     stunstick, or giving yourself up to one), you aren't put straight in a
     cell any more. Your hands are tied and two units walk you there: the one
     who arrested you leads, holding you by the arm, and the nearest other
-    unit comes along behind. They walk the city's paths to the prison's door
-    (its release point; the cells themselves are behind locked doors), and
-    you're taken inside and locked up when you get there.
+    unit comes along behind. They walk the city's paths as close to the
+    cells as they can get (the cells are behind the prison's locked doors),
+    and take you through the doors and lock you up when they get there.
 
     On the way, anyone can try to get you out. Kill or drive off the unit
     leading you and his grip is gone: your hands are still tied (F1 > Work at
@@ -15,8 +15,8 @@
     While the units are busy fighting, they let go of you; stray far enough
     and you've slipped away.
 
-    If there's no way to walk there (no release point, no route, or it takes
-    longer than lc_march_max seconds), it's the old way: straight to a cell.
+    If there's no way to walk there (no route at all, or it takes longer
+    than lc_march_max seconds), it's the old way: straight to a cell.
 
       lc_march 0/1, lc_march_max (240)
 ]]
@@ -31,15 +31,41 @@ local cvOn  = CreateConVar("lc_march", "1", FLAGS, "Units arresting someone walk
 local cvMax = CreateConVar("lc_march_max", "240", FLAGS, "Seconds a march to the prison may take before they're simply taken in")
 
 local SLIP = 450   -- this far from the unit leading you, while he's busy fighting: you've slipped away
-local THERE = 170  -- this close to the prison's door: taken inside
+local THERE = 170  -- this close to the spot by the cells: taken inside
+local CLOSE = 600  -- stopped this close to it (held up at the doors): taken inside too
 
 local function IsUnit(st) return st and (st.role == "cop" or st.role == "soldier") end
 local function Up(npc) return IsValid(npc) and npc:Health() > 0 end
 
 function LC.IsMarching(ply) return LC.Marching[ply] ~= nil end
 
--- Where they walk you: the prison's door (its release point), or failing that a cell.
+-- Where they walk you: as close to the cells as a unit can walk (the cells
+-- themselves are behind the prison's locked doors): the nearest spot on the
+-- city's paths to a cell, outside the prison zone, that they can get to from
+-- here. Failing that, the prison's release point.
+local function InPrison(pos)
+    for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("prison") or {}) do
+        if LCZ.Contains(z, pos, 0) then return true end
+    end
+    return false
+end
+
 local function Destination(from)
+    local cell, cd
+    for _, c in ipairs(LC.PointsOfKind and LC.PointsOfKind("cell") or {}) do
+        local d = c.pos:DistToSqr(from)
+        if not cd or d < cd then cell, cd = c.pos, d end
+    end
+    if cell and LC.NodePositions and LC.BuildRoute then
+        local list = {}
+        for _, p in ipairs(LC.NodePositions("cop") or {}) do
+            if not InPrison(p) then list[#list + 1] = { p = p, d = p:DistToSqr(cell) } end
+        end
+        table.sort(list, function(a, b) return a.d < b.d end)
+        for i = 1, math.min(25, #list) do
+            if LC.BuildRoute(from, list[i].p, "cop") ~= false then return list[i].p end
+        end
+    end
     local best, bd
     for _, p in ipairs(LC.PointsOfKind and LC.PointsOfKind("release") or {}) do
         local d = p.pos:DistToSqr(from)
@@ -47,6 +73,7 @@ local function Destination(from)
     end
     return best
 end
+LC.MarchDestination = Destination
 
 -- The nearest other unit free to come along.
 local function SecondUnit(near, lead)
@@ -197,8 +224,10 @@ local function Tick(now)
                 Escaped(ply, m, "While they were busy, you slipped away.")
             end
         else
-            if lead:GetPos():DistToSqr(m.dest) < THERE * THERE then
-                TakeIn(ply, m, "They take you inside, through the checkpoint, and down to the cells.")
+            local d2 = lead:GetPos():DistToSqr(m.dest)
+            if d2 < THERE * THERE or (ls.state ~= "moving" and d2 < CLOSE * CLOSE) then
+                -- there, or as close as he can get (stopped at the doors): through them, and down to the cells
+                TakeIn(ply, m, "They unlock the prison door, walk you through, and lock you in a cell.")
             else
                 local going = true
                 if ls.state ~= "moving" then
