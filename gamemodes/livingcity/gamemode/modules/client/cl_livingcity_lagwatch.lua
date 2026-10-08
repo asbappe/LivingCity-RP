@@ -54,8 +54,48 @@ concommand.Add("lc_lagwatch", function() LC_CL.SetLagWatch() end)
 -- What this game sees, every frame
 ------------------------------------------------------------------------
 
+-- What a big update carries: networked values changed, by name, and
+-- entities moved, by class, in the single busiest frame of the second.
+local nwThisFrame, nwBy = 0, {}
+hook.Add("EntityNetworkedVarChanged", "LivingCityLagWatch", function(ent, name)
+    if not on then return end
+    nwThisFrame = nwThisFrame + 1
+    nwBy[name] = (nwBy[name] or 0) + 1
+end)
+
+local lastOrigin = {}
+local function BusiestFrame()
+    local moved, byClass = 0, {}
+    for _, e in ipairs(ents.GetAll()) do
+        if IsValid(e) and not e:IsPlayer() then
+            local o = e.GetNetworkOrigin and e:GetNetworkOrigin() or e:GetPos()
+            local was = lastOrigin[e]
+            if was and was ~= o then
+                moved = moved + 1
+                local c = e:GetClass()
+                byClass[c] = (byClass[c] or 0) + 1
+            end
+            lastOrigin[e] = o
+        end
+    end
+    for e in pairs(lastOrigin) do if not IsValid(e) then lastOrigin[e] = nil end end
+    if moved > (cur.peakMoved or 0) then cur.peakMoved, cur.peakBy = moved, byClass end
+    if nwThisFrame > (cur.peakNW or 0) then cur.peakNW, cur.peakNWBy = nwThisFrame, nwBy end
+    nwThisFrame, nwBy = 0, {}
+end
+
+local function Top3(t)
+    local list = {}
+    for k, v in pairs(t or {}) do list[#list + 1] = { k, v } end
+    table.sort(list, function(a, b) return a[2] > b[2] end)
+    local out = {}
+    for i = 1, math.min(3, #list) do out[i] = list[i][1] .. " " .. list[i][2] end
+    return table.concat(out, ", ")
+end
+
 hook.Add("Think", "LivingCityLagWatch", function()
     if not on then return end
+    BusiestFrame()
     local me = LocalPlayer()
     if not IsValid(me) then return end
     local now, dt = SysTime(), FrameTime()
@@ -104,6 +144,7 @@ timer.Create("LivingCityLagWatchSecond", 1, 0, function()
     local row = {
         t = os.date("%H:%M:%S"), fps = cur.frames, worstFrame = cur.worstFrame, worstUpdate = cur.worstUpdate,
         snaps = cur.snaps, backs = cur.backs, sft = (sft or 0) * 1000, sdev = (sdev or 0) * 1000, srv = srv,
+        peakMoved = cur.peakMoved or 0, peakBy = Top3(cur.peakBy), peakNW = cur.peakNW or 0, peakNWBy = Top3(cur.peakNWBy),
     }
     table.insert(hist, row)
     while #hist > 30 do table.remove(hist, 1) end
@@ -185,6 +226,11 @@ hook.Add("HUDPaint", "LivingCityLagWatch", function()
         L(string.format("Your game: %d fps, slowest frame %.0f ms; server frame as heard %.1f ms (+/- %.1f)", r.fps, r.worstFrame, r.sft, r.sdev))
         L(string.format("Longest wait for a server update: %.0f ms", r.worstUpdate))
         L(string.format("NPCs snapping on screen: %d jumps, %d steps back", r.snaps, r.backs))
+        L(string.format("Busiest update: %d things moved (%s); %d values changed (%s)", r.peakMoved, r.peakBy ~= "" and r.peakBy or "-", r.peakNW, r.peakNWBy ~= "" and r.peakNWBy or "-"), DIM)
+        if r.srv and r.srv.netcfg then
+            local n = r.srv.netcfg
+            L(string.format("Server net: split rate %s, max rate %s, min rate %s", n.net_splitpacket_maxrate or "?", n.sv_maxrate or "?", n.sv_minrate or "?"), DIM)
+        end
         L(string.format("cl_interp %s, cl_interp_ratio %s, cl_updaterate %s, rate %s", CV("cl_interp"), CV("cl_interp_ratio"), CV("cl_updaterate"), CV("rate")), DIM)
         local v, col = Verdict(r)
         L(v, col)
@@ -211,6 +257,9 @@ concommand.Add("lc_lagwatch_print", function()
             r.t, tostring(s.ticks), tostring(s.rate), tostring(s.worstGap), tostring(s.luaMax), tostring(s.tele), tb, tostring(s.netBytes), table.concat(nb, " "),
             tostring(s.ents), tostring(s.edicts), tostring(s.allNPCs), tostring(s.asleep), tostring(s.ping), tostring(s.loss),
             r.fps, r.worstFrame, r.sft, r.sdev, r.worstUpdate, r.snaps, r.backs, (Verdict(r))))
+        print(string.format("         busiest update: %d moved [%s] | %d values changed [%s]", r.peakMoved or 0, r.peakBy or "", r.peakNW or 0, r.peakNWBy or ""))
     end
+    local n = hist[#hist].srv and hist[#hist].srv.netcfg
+    if n then print(string.format("server net: net_splitpacket_maxrate %s sv_maxrate %s sv_minrate %s", n.net_splitpacket_maxrate or "?", n.sv_maxrate or "?", n.sv_minrate or "?")) end
     print(string.format("settings: cl_interp %s cl_interp_ratio %s cl_updaterate %s cl_cmdrate %s rate %s", CV("cl_interp"), CV("cl_interp_ratio"), CV("cl_updaterate"), CV("cl_cmdrate"), CV("rate")))
 end)

@@ -129,7 +129,7 @@ timer.Create("LivingCityLagWatch", 1, 0, function()
         luaMax = math.floor(sec.luaMax * 100) / 100, tele = sec.tele, teleBy = Top(sec.teleBy, nil, 3),
         netBytes = sec.netBytes, netBy = Top(sec.netBy, "bytes", 4),
         ents = #ents.GetAll(), edicts = ents.GetEdictCount and ents.GetEdictCount() or 0,
-        npcs = npcs, allNPCs = allNPCs, asleep = asleep,
+        npcs = npcs, allNPCs = allNPCs, asleep = asleep, netcfg = LC.NetSettings and LC.NetSettings() or nil,
     }
     -- sent outside the counting (the monitor doesn't count itself)
     local was = watchers
@@ -145,6 +145,45 @@ timer.Create("LivingCityLagWatch", 1, 0, function()
     for ply in pairs(was) do if IsValid(ply) then watchers[ply] = true end end
     Reset()
 end)
+
+------------------------------------------------------------------------
+-- The network settings big updates need. A busy city's update can be a
+-- few KB (lots of NPCs and props changing at once), which is split into
+-- several packets; Source sends split packets no faster than
+-- net_splitpacket_maxrate, so a low one holds the update back and
+-- everything freezes and then jumps (rubber-banding). lc_net_tune 0 leaves
+-- the server's own settings alone.
+------------------------------------------------------------------------
+
+local cvTune = CreateConVar("lc_net_tune", "1", FCVAR_ARCHIVE, "Raise the server's network rates so big updates aren't held back (rubber-banding)")
+local WANT = { net_splitpacket_maxrate = 1048576, sv_maxrate = 0, sv_minrate = 100000 }
+
+function LC.NetSettings()
+    local out = {}
+    for name in pairs(WANT) do
+        local cv = GetConVar(name)
+        out[name] = cv and cv:GetString() or "?"
+    end
+    return out
+end
+
+function LC.TuneNet()
+    if not cvTune:GetBool() then return end
+    for name, want in pairs(WANT) do
+        local cv = GetConVar(name)
+        if cv then
+            local v = cv:GetFloat()
+            -- sv_maxrate 0 is "no limit"; anything else under the wanted rate is raised
+            local low = (name == "sv_maxrate") and (v ~= 0 and v < 1048576) or (name ~= "sv_maxrate" and v < want)
+            if low then
+                RunConsoleCommand(name, tostring(want))
+                if LC.Log then LC.Log("info", "Network: " .. name .. " raised from " .. cv:GetString() .. " to " .. want .. " (lc_net_tune)") end
+            end
+        end
+    end
+end
+hook.Add("InitPostEntity", "LivingCityNetTune", function() timer.Simple(1, LC.TuneNet) end)
+cvars.AddChangeCallback("lc_net_tune", function() LC.TuneNet() end, "LivingCityNetTune")
 
 local function Allowed(ply) return IsValid(ply) and (ply:IsAdmin() or (LC.CanEdit and LC.CanEdit(ply))) end
 
