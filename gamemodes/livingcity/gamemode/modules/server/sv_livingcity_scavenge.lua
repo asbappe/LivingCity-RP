@@ -74,7 +74,7 @@ local function EndTask(ply, ok)
     if ok then
         if t.done then t.done(ply) end
     else
-        if IsValid(ply) and t.cancelText then ply:ChatPrint(t.cancelText) end
+        if IsValid(ply) and ply:Alive() and t.cancelText then ply:ChatPrint(t.cancelText) end
         if t.cancel then t.cancel(ply) end
     end
 end
@@ -85,8 +85,12 @@ function LC.CancelTask(ply) if tasks[ply] then EndTask(ply, false) end end
 timer.Create("LivingCityTasks", 0.25, 0, function()
     local now = CurTime()
     for ply, t in pairs(tasks) do
-        if not IsValid(ply) or not ply:Alive() then
+        if not IsValid(ply) then
             tasks[ply] = nil
+        elseif not ply:Alive() then
+            -- died mid-task: cancelled, so anything held for it is settled
+            local ok, err = pcall(EndTask, ply, false)
+            if not ok then LC.Error("task", err) end
         elseif ply:GetPos():DistToSqr(t.anchor) > t.maxMove * t.maxMove or ply:Health() < t.hp then
             EndTask(ply, false)
         elseif now >= t.untilT then

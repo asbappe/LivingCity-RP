@@ -9129,6 +9129,129 @@ end
 SuppliesAndLabTests()
 
 ----------------------------------------------------------------------
+function LabFixesTests()
+section("The lab settles up once; markers clear; the scientist moves with his bench")
+local savedGM = GAMEMODE
+GAMEMODE = { IsLivingCity = true }
+local function Later(secs) _advance(secs) _runtimers() end
+local L1 = Vector(-120000, 70000, 0)
+local bench = ents.Create("lc_workbench") bench:SetPos(L1)
+bench:SetAngles(Angle(0, 0, 0))
+local sci = LC.SetupLab(bench)
+local function ItemsNear(pos, id)
+    local n = 0
+    for _, e in ipairs(ents.FindByClass("lc_item")) do
+        if IsValid(e) and e:GetNW2String("lc_item", "") == id and e:GetPos():Distance(pos) < 200 then n = n + 1 end
+    end
+    return n
+end
+-- dies mid-job, having paid: the job is let go, no credits come back to the next life
+local r1 = newPlayer("LabDier", "resistance", nil, 900)
+Later(3)
+r1:SetPos(sci:GetPos() + Vector(40, 0, 0))
+LC.AddCredits(r1, 500)
+ok(LC.LabMake(r1, "ammo_smg", "pay"), "a rebel pays for a job")
+r1:Kill()
+local cAfter = LC.Credits(r1)
+Later(1)
+ok(not LC.Busy(r1) and sci.lcLabJob == nil, "dying mid-job lets the job go")
+ok(LC.Credits(r1) == cAfter, "and the credits don't come back to the next life", LC.Credits(r1) - cAfter)
+r1:SetPos(Vector(-150000, 150000, 0))
+-- dies mid-job with materials: they're left on the bench
+local r2 = newPlayer("LabDier2", "resistance", nil, 900)
+Later(3)
+r2:SetPos(sci:GetPos() + Vector(40, 0, 0))
+LC.GiveItem(r2, "gun_parts", 2) LC.GiveItem(r2, "scrap", 3)
+local parts0 = ItemsNear(sci:GetPos(), "gun_parts")
+ok(LC.LabMake(r2, "gun_pistol", "mats"), "a rebel brings materials")
+r2:Kill()
+Later(1)
+ok(ItemsNear(sci:GetPos(), "gun_parts") == parts0 + 2, "dying mid-job leaves the materials at the lab", ItemsNear(sci:GetPos(), "gun_parts") - parts0)
+r2:SetPos(Vector(-150000, 150000, 0))
+-- walks off with full pockets: what he hands back lands at their feet
+local r3 = newPlayer("LabFull", "resistance", nil, 900)
+Later(3)
+r3:SetPos(sci:GetPos() + Vector(40, 0, 0))
+for id in pairs(LC.Inventory(r3)) do if id == "gun_parts" then LC.TakeItem(r3, id, 99) end end
+LC.GiveItem(r3, "gun_parts", 2) LC.GiveItem(r3, "scrap", 3)
+ok(LC.LabMake(r3, "gun_pistol", "mats"), "another job")
+local savedCarry = LC.CanCarry
+LC.CanCarry = function() return false end
+r3:SetPos(sci:GetPos() + Vector(900, 0, 0))
+local before = ItemsNear(r3:GetPos(), "gun_parts")
+Later(1)
+LC.CanCarry = savedCarry
+ok(ItemsNear(r3:GetPos(), "gun_parts") == before + 2, "walking off with full pockets: the materials are dropped, not lost", ItemsNear(r3:GetPos(), "gun_parts") - before)
+-- someone else's job isn't cleared by an old one finishing
+r3:SetPos(sci:GetPos() + Vector(40, 0, 0))
+LC.AddCredits(r3, 500)
+ok(LC.LabMake(r3, "ammo_pistol", "pay"), "a job starts")
+local other = { ply = r3, untilT = CurTime() + 999 }
+sci.lcLabJob = other
+Later(8)
+ok(sci.lcLabJob == other, "finishing a job doesn't clear someone else's")
+sci.lcLabJob = nil
+r3:SetPos(Vector(-150000, 150000, 0))
+-- moved with the physgun: he goes with the bench
+local mover = newPlayer("LabMover", "citizen")
+mover.isAdmin, mover.superadmin = true, true
+bench.lcFixture = true
+bench.lcFixturePoint = { kind = "workbench", pos = bench:GetPos(), yaw = 0 }
+bench:SetPos(L1 + Vector(1500, 0, 0))
+hook.Run("PhysgunDrop", mover, bench)
+ok(LC.CanEdit(mover) and sci:GetPos():Distance(bench:GetPos()) < 150, "a lab bench moved with the physgun takes its scientist with it", sci:GetPos():Distance(bench:GetPos()))
+mover:SetPos(Vector(-150000, 150000, 0))
+-- the home marker clears once they're in their block
+local homer = newPlayer("WayHomer", "citizen")
+Later(0.3)
+local hz = LC.AddZone(Vector(-120000, 90000, 0), 300, "block", 61)
+homer:SetNW2Int("lc_block", 61)
+homer:SetPos(Vector(-120000, 95000, 0))
+ok(LC.WaypointTo(homer, "home") and homer.lcWaypoint and homer.lcWaypoint.block == 61, "the way home is marked")
+homer:SetPos(Vector(-120000, 90000 + 280, 0))
+net.sent = {}
+Later(1.5)
+local m = _lastnet("lc_waypoint")
+ok(homer.lcWaypoint == nil and m ~= nil and m.data[1] == false, "and cleared once they're inside the block, wherever its middle is")
+LC.RemoveZone(hz)
+homer:SetPos(Vector(-150000, 150000, 0))
+bench:Remove() sci:Remove()
+GAMEMODE = savedGM
+end
+LabFixesTests()
+
+----------------------------------------------------------------------
+function CarryTests()
+section("Luggage hangs at their side, upright, by the handle")
+local function Extents(mins, maxs, pos, ang)
+    local lo, hi = Vector(1e9, 1e9, 1e9), Vector(-1e9, -1e9, -1e9)
+    for _, x in ipairs({ mins.x, maxs.x }) do for _, y in ipairs({ mins.y, maxs.y }) do for _, z in ipairs({ mins.z, maxs.z }) do
+        local w = pos + LC.TurnVector(Vector(x, y, z), ang)
+        lo = Vector(math.min(lo.x, w.x), math.min(lo.y, w.y), math.min(lo.z, w.z))
+        hi = Vector(math.max(hi.x, w.x), math.max(hi.y, w.y), math.max(hi.z, w.z))
+    end end end
+    return lo, hi
+end
+local allOk, bad = true, nil
+-- a case built lying flat, standing up, or on its end: every way round, it ends up the same
+for _, b in ipairs({
+    { Vector(-10, -15, -4), Vector(10, 15, 4) }, { Vector(-15, -4, 0), Vector(15, 4, 20) },
+    { Vector(-4, -10, -15), Vector(4, 10, 15) }, { Vector(-10, -4, -15), Vector(10, 4, 15) },
+    { Vector(-4, -15, -10), Vector(4, 15, 10) }, { Vector(0, -4, -10), Vector(30, 4, 10) },
+}) do
+    local pos, ang = LC.CarrySideHold(b[1], b[2])
+    local lo, hi = Extents(b[1], b[2], pos, ang)
+    local fwd, side, up = hi.x - lo.x, hi.y - lo.y, hi.z - lo.z
+    if not (math.abs(fwd - 30) < 0.1 and math.abs(up - 20) < 0.1 and math.abs(side - 8) < 0.1 and math.abs(hi.z - 33) < 0.1 and hi.y < 0) then
+        allOk, bad = false, string.format("%s: fwd %.1f up %.1f side %.1f top %.1f", tostring(b[2]), fwd, up, side, hi.z)
+    end
+end
+ok(allOk, "long side forward, flat side to the leg, top at the hand, on the right, whichever way the model was built", bad)
+ok(LC.CarryAtSide["models/props_c17/suitcase001a.mdl"], "(the arrivals' suitcases are carried that way)")
+end
+CarryTests()
+
+----------------------------------------------------------------------
 function DropshipCargoTests()
 section("A dropship carries its container in its claws")
 local G = Vector(72000, 72000, 0)

@@ -16,16 +16,38 @@ local cvOn = CreateClientConVar("lc_infest_ambience", "1", true, false, "The inf
 
 LC_CL.InfestHaze = LC_CL.InfestHaze or 0 -- 0 to 1, eased (the fog reads it)
 
--- How deep into the infestation pos is: 0 outside it (a little past its edge
--- already counts for something), up to 1 well inside.
+-- How deep into the infestation pos is: 0 from OUTSIDE (units) beyond its
+-- edge, rising smoothly to 1 at INSIDE units in (less for a small zone), so the haze thickens a step
+-- at a time as you walk in, not all at once.
+local OUTSIDE, INSIDE = 500, 500
+
+-- How far in counts as all the way, for this zone (less for a small one, so
+-- its middle is still as thick as it gets).
+local function Full(z)
+    local b = z.box
+    local half = b and math.min(b.maxs.x - b.mins.x, b.maxs.y - b.mins.y) / 2 or (z.r or 0)
+    return math.Clamp(half * 0.7, 60, INSIDE)
+end
+
+-- How far pos is inside zone z (negative: outside it), to the nearest 15 units.
+local function Into(z, pos, full)
+    if not LCZ.Contains(z, pos, OUTSIDE) then return -OUTSIDE end
+    if LCZ.Contains(z, pos, -full) then return full end
+    local lo, hi = -full, OUTSIDE -- contained with margin hi, not with lo
+    while hi - lo > 15 do
+        local mid = (lo + hi) / 2
+        if LCZ.Contains(z, pos, mid) then hi = mid else lo = mid end
+    end
+    return -(lo + hi) / 2
+end
+
 local function Depth(pos)
     local best = 0
     for _, z in ipairs(LC_CL.territory or {}) do
         if z.kind == "infest" then
-            if LCZ.Contains(z, pos, -150) then return 1 end
-            if LCZ.Contains(z, pos, 0) then best = math.max(best, 0.85)
-            elseif LCZ.Contains(z, pos, 150) then best = math.max(best, 0.55)
-            elseif LCZ.Contains(z, pos, 400) then best = math.max(best, 0.25) end
+            local full = Full(z)
+            local f = math.Clamp((Into(z, pos, full) + OUTSIDE) / (OUTSIDE + full), 0, 1)
+            best = math.max(best, f * f * (3 - 2 * f)) -- eased at both ends
         end
     end
     return best
@@ -42,7 +64,7 @@ hook.Add("Think", "LivingCityInfest", function()
         nextDepth = now + 0.5
         target = (cvOn:GetBool() and me:Alive()) and Depth(me:GetPos()) or 0
     end
-    LC_CL.InfestHaze = math.Approach(LC_CL.InfestHaze, target, FrameTime() * 0.8)
+    LC_CL.InfestHaze = math.Approach(LC_CL.InfestHaze, target, FrameTime() * 0.4)
     if LC_CL.InfestHaze > 0.05 then LC_CL.InfestMotes(me, LC_CL.InfestHaze, now) end
     -- the geiger counter: a click now and then at the edge, a rattle in the middle of it
     if target > 0 and now > nextClick then
@@ -57,10 +79,10 @@ hook.Add("RenderScreenspaceEffects", "LivingCityInfestTint", function()
     local h = LC_CL.InfestHaze or 0
     if h <= 0.02 or not DrawColorModify or LC_CL.LiveCamRendering then return end
     DrawColorModify({
-        ["$pp_colour_addr"] = 0.07 * h, ["$pp_colour_addg"] = 0.06 * h, ["$pp_colour_addb"] = 0,
-        ["$pp_colour_brightness"] = -0.02 * h, ["$pp_colour_contrast"] = 1 - 0.08 * h,
+        ["$pp_colour_addr"] = 0.03 * h, ["$pp_colour_addg"] = 0.025 * h, ["$pp_colour_addb"] = 0,
+        ["$pp_colour_brightness"] = -0.07 * h, ["$pp_colour_contrast"] = 1 - 0.05 * h,
         ["$pp_colour_colour"] = 1 - 0.35 * h,
-        ["$pp_colour_mulr"] = 0.4 * h, ["$pp_colour_mulg"] = 0.35 * h, ["$pp_colour_mulb"] = 0,
+        ["$pp_colour_mulr"] = 0.3 * h, ["$pp_colour_mulg"] = 0.25 * h, ["$pp_colour_mulb"] = 0,
     })
 end)
 
@@ -82,7 +104,7 @@ function LC_CL.InfestMotes(me, h, now)
             p:SetEndSize(math.Rand(80, 140))
             p:SetRoll(math.Rand(0, 360))
             p:SetRollDelta(math.Rand(-0.2, 0.2))
-            p:SetColor(200, 195, 60)
+            p:SetColor(140, 130, 40)
             p:SetAirResistance(20)
         end
     end

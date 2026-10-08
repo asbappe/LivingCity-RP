@@ -137,6 +137,45 @@ local function DropCarry(npc, st)
     st.carry = nil
 end
 
+-- Luggage hangs at their side by its handle: upright, its long side pointing
+-- the way they walk, its flat side against their leg, the top at the hand.
+-- (Hung from the hand bone, a case turned with the wrist and swung flat
+-- against the leg.)
+local AT_SIDE = {
+    ["models/props_c17/suitcase001a.mdl"] = true,
+    ["models/props_c17/suitcase_passenger_physics.mdl"] = true,
+}
+LC.CarryAtSide = AT_SIDE
+local HAND_Z, SIDE_Y = 33, -13 -- the top of what's carried; to their right
+
+-- The turn that lays a model's (longest, middle, thinnest) axes along
+-- (forward, up, sideways), by which of its own axes is which.
+local UPRIGHT = {
+    xyz = Angle(0, 0, 90), xzy = Angle(0, 0, 0), yxz = Angle(270, 0, 90),
+    yzx = Angle(0, 90, 0), zxy = Angle(270, 0, 0), zyx = Angle(0, 90, 90),
+}
+
+-- v turned by angle a (Source's own order: roll, then pitch, then yaw).
+function LC.TurnVector(v, a)
+    local p, y, r = math.rad(a.p), math.rad(a.y), math.rad(a.r)
+    local sp, cp, sy, cy, sr, cr = math.sin(p), math.cos(p), math.sin(y), math.cos(y), math.sin(r), math.cos(r)
+    local fx, fy, fz = cp * cy, cp * sy, -sp
+    local lx, ly, lz = sr * sp * cy - cr * sy, sr * sp * sy + cr * cy, sr * cp
+    local ux, uy, uz = cr * sp * cy + sr * sy, cr * sp * sy - sr * cy, cr * cp
+    return Vector(v.x * fx + v.y * lx + v.z * ux, v.x * fy + v.y * ly + v.z * uy, v.x * fz + v.y * lz + v.z * uz)
+end
+
+-- Where and how a side-carried model sits on its carrier: local pos, angles.
+function LC.CarrySideHold(mins, maxs)
+    local size = { x = maxs.x - mins.x, y = maxs.y - mins.y, z = maxs.z - mins.z }
+    local axes = { "x", "y", "z" }
+    table.sort(axes, function(a, b) return size[a] > size[b] end)
+    local ang = UPRIGHT[axes[1] .. axes[2] .. axes[3]] or Angle(0, 0, 0)
+    local mid = (mins + maxs) * 0.5
+    local target = Vector(2, SIDE_Y, HAND_Z - size[axes[2]] / 2)
+    return target - LC.TurnVector(mid, ang), ang
+end
+
 local function Carry(npc, st, model)
     DropCarry(npc, st)
     local e = ents.Create("prop_dynamic")
@@ -145,7 +184,12 @@ local function Carry(npc, st, model)
     e:SetPos(npc:GetPos() + Vector(0, 0, 40))
     e:Spawn()
     if e.SetSolid then e:SetSolid(SOLID_NONE) end
-    if e.SetParent then
+    if e.SetParent and AT_SIDE[string.lower(model)] and e.OBBMins then
+        e:SetParent(npc)
+        local pos, ang = LC.CarrySideHold(e:OBBMins(), e:OBBMaxs())
+        if e.SetLocalPos then e:SetLocalPos(pos) end
+        if e.SetLocalAngles then e:SetLocalAngles(ang) end
+    elseif e.SetParent then
         local att = npc.LookupAttachment and npc:LookupAttachment("anim_attachment_RH") or 0
         if att and att > 0 then
             e:SetParent(npc, att)

@@ -104,8 +104,9 @@ end)
 local FOG = { fog = { 120, 900, 0.85 }, storm = { 300, 2600, 0.6 }, rain = { 500, 4500, 0.4 }, overcast = { 1000, 8000, 0.25 } }
 local fogCol = { 130, 135, 140 }
 
--- The infestation's haze (cl_livingcity_infest.lua): close, thick and yellow, the deeper in you are.
-local HAZE = { 0, 650, 0.92, 185, 175, 45 }
+-- The infestation's haze (cl_livingcity_infest.lua): close, thick and a dark,
+-- dirty yellow, the deeper in you are. start, end, max density, colour.
+local HAZE = { 0, 800, 0.88, 105, 95, 25 }
 
 local function ApplyFog(scale)
     local w = GetGlobal2String("lc_weather", "clear")
@@ -113,13 +114,15 @@ local function ApplyFog(scale)
     local haze = LC_CL.InfestHaze or 0
     if not f and haze <= 0.01 then return end
     local dark = 1 - Darkness(LC_CL.Hour()) * 0.8
-    dark = Lerp(haze * 0.6, dark, 1) -- (the haze still shows at night)
+    dark = Lerp(haze * 0.35, dark, 1) -- (the haze still shows at night, but isn't lit up)
     local s, e, d = 6000, 20000, 0
     local r, g, b = fogCol[1], fogCol[2], fogCol[3]
     if f then s, e, d = f[1], f[2], f[3] end
     if haze > 0.01 then
-        s, e = Lerp(haze, s, HAZE[1]), Lerp(haze, e, HAZE[2])
-        d = math.max(d, HAZE[3] * haze)
+        -- how far you can see shrinks by the same share at each step in
+        -- (a straight line from 20000 to 800 would only close in at the very end)
+        s, e = Lerp(haze, s, HAZE[1]), e * (HAZE[2] / e) ^ haze
+        d = math.max(d, HAZE[3] * math.min(1, haze * 1.4))
         r, g, b = Lerp(haze, r, HAZE[4]), Lerp(haze, g, HAZE[5]), Lerp(haze, b, HAZE[6])
     end
     render.FogMode(MATERIAL_FOG_LINEAR)

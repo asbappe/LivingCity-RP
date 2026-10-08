@@ -177,6 +177,23 @@ function LC.WaypointTo(ply, what)
         return false, label
     end
     LC.SetWaypoint(ply, pos, label, what == "home" and 260 or 170)
+    -- a block's middle can be in mid air or between wings: being inside the block is arriving
+    if what == "home" and ply.lcWaypoint then ply.lcWaypoint.block = LC.PlayerBlock and LC.PlayerBlock(ply) end
     LC.Notice(ply, "info", "Waypoint", label .. ": it's marked on your screen.")
     return true
 end
+
+-- Clear a home marker once they're in their block (the client clears the
+-- others itself, within reach of the spot).
+timer.Create("LivingCityWaypointHome", 1, 0, function()
+    if not LC.InBlock then return end
+    for _, ply in ipairs(player.GetAll()) do
+        local w = ply.lcWaypoint
+        if w and ply:GetPos():DistToSqr(w.pos) < w.near * w.near then
+            ply.lcWaypoint = nil -- reached: their own screen has already cleared it
+        elseif w and w.block and LC.InBlock(ply:GetPos(), w.block) then
+            LC.SetWaypoint(ply, nil)
+            LC.Notice(ply, "info", "Waypoint", "You're here: " .. (w.label or "home") .. ".")
+        end
+    end
+end)

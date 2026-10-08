@@ -78,25 +78,34 @@ function LC.SetupLab(bench)
         end
     end
     if not IsValid(bench.lcScientist) then
-        -- beside the bench, facing the way it faces (towards whoever placed it); the other side if that's a wall
-        local mid = bench:LocalToWorld(Vector((mins.x + maxs.x) / 2, (mins.y + maxs.y) / 2, mins.z + 40))
-        local pos
-        for _, side in ipairs({ maxs.y + 24, mins.y - 24 }) do
-            local try = bench:LocalToWorld(Vector((mins.x + maxs.x) / 2 + 8, side, mins.z + 40))
-            local tr = util.TraceLine({ start = mid, endpos = try, mask = MASK_SOLID_BRUSHONLY })
-            if not (tr and tr.Hit) then pos = try break end
-        end
-        pos = pos or bench:LocalToWorld(Vector(maxs.x + 26, 0, mins.z + 40))
         local s = ents.Create("lc_scientist")
         if IsValid(s) then
-            s:SetPos(LC.GroundAt and LC.GroundAt(pos) or (pos - Vector(0, 0, 40)))
-            s:SetAngles(Angle(0, bench:GetAngles().y, 0))
+            LC.PlaceScientist(bench, s)
             s:Spawn()
             s.lcLab = bench
             bench.lcScientist = s
         end
     end
     return bench.lcScientist
+end
+
+-- Stand the scientist beside the bench, facing the way it faces (towards
+-- whoever placed it); the other side if that's a wall. Also when the bench
+-- is moved with the physgun, so he goes with it.
+function LC.PlaceScientist(bench, s)
+    s = s or (IsValid(bench) and bench.lcScientist)
+    if not IsValid(bench) or not IsValid(s) then return end
+    local mins, maxs = bench:OBBMins(), bench:OBBMaxs()
+    local mid = bench:LocalToWorld(Vector((mins.x + maxs.x) / 2, (mins.y + maxs.y) / 2, mins.z + 40))
+    local pos
+    for _, side in ipairs({ maxs.y + 24, mins.y - 24 }) do
+        local try = bench:LocalToWorld(Vector((mins.x + maxs.x) / 2 + 8, side, mins.z + 40))
+        local tr = util.TraceLine({ start = mid, endpos = try, mask = MASK_SOLID_BRUSHONLY })
+        if not (tr and tr.Hit) then pos = try break end
+    end
+    pos = pos or bench:LocalToWorld(Vector(maxs.x + 26, 0, mins.z + 40))
+    s:SetPos(LC.GroundAt and LC.GroundAt(pos) or (pos - Vector(0, 0, 40)))
+    s:SetAngles(Angle(0, bench:GetAngles().y, 0))
 end
 
 -- The scientist within reach of pos (and not taken away), or nil.
@@ -201,28 +210,43 @@ function LC.LabMake(ply, id, how)
         end
         for mid, n in pairs(r.needs) do LC.TakeItem(ply, mid, n) end
     end
+    local job = { ply = ply, untilT = CurTime() + r.secs }
+    local settled = false
+    -- Once only. Someone who died mid-job gets nothing back (that life's
+    -- credits are gone with it); their materials are left on the bench.
     local function Refund(p)
+        if settled then return end
+        settled = true
         if not IsValid(p) then return end
+        if not p:Alive() then
+            if how ~= "pay" and LC.SpawnWorldItem then
+                local at = (IsValid(sci) and sci:GetPos() or p:GetPos()) + Vector(0, 0, 40)
+                for mid, n in pairs(r.needs) do for _ = 1, n do LC.SpawnWorldItem(mid, at) end end
+            end
+            return
+        end
         if how == "pay" then LC.AddCredits(p, price, "the lab, handed back")
-        else for mid, n in pairs(r.needs) do LC.GiveItem(p, mid, n) end end
+        else for mid, n in pairs(r.needs) do LC.GiveOrDrop(p, mid, n) end end
     end
-    sci.lcLabJob = { ply = ply, untilT = CurTime() + r.secs }
+    local function Clear() if IsValid(sci) and sci.lcLabJob == job then sci.lcLabJob = nil end end
+    sci.lcLabJob = job
     sci:EmitSound("buttons/lever7.wav", 60)
     Say(ply, how == "pay" and "\"Credits. Yes. Fine. Give me a moment.\"" or "\"Ah, good, good. Let me see what I can do with these.\"")
     local ok, why = LC.StartTask(ply, r.secs, "The scientist is making your " .. string.lower(it.name) .. "... stay in the lab", {
         maxMove = 220,
         done = function(p)
-            if IsValid(sci) then sci.lcLabJob = nil end
+            settled = true
+            Clear()
             if not LC.GiveItem(p, r.out) and LC.SpawnWorldItem then LC.SpawnWorldItem(r.out, p:GetPos() + p:GetForward() * 30 + Vector(0, 0, 20)) end
             if IsValid(sci) then sci:EmitSound("vo/k_lab/kl_excellent.wav", 65) end
             Say(p, "\"There. Do be careful with it.\" He hands you: " .. it.name .. ".")
             hook.Run("LivingCityLabMade", p, r.out, how)
         end,
-        cancel = function(p) if IsValid(sci) then sci.lcLabJob = nil end Refund(p) end,
+        cancel = function(p) Clear() Refund(p) end,
         cancelText = "[Scientist] You wander off. He sighs, and hands it all back.",
     })
     if not ok then
-        sci.lcLabJob = nil
+        Clear()
         Refund(ply)
         return false, why
     end

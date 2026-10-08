@@ -818,6 +818,7 @@ hook.Add("PhysgunDrop", "LivingCityFixtures", function(ply, e)
     e.lcFixtureKey = key
     local phys = e:GetPhysicsObject()
     if IsValid(phys) then phys:EnableMotion(false) end
+    if IsValid(e.lcScientist) and LC.PlaceScientist then LC.PlaceScientist(e) end -- a lab's scientist goes with it
     LC.SaveData()
     ply:ChatPrint("[Living City] Moved: the " .. p.kind .. " is saved where you put it.")
 end)
