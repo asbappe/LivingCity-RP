@@ -788,9 +788,20 @@ local LINE_REACH, LINE_REACH_RATIONS = 3000, 5000
 
 local function LineFront(line) return line.slots[1] and line.slots[1].pos end
 
+-- Who's on their way to line g: walking there, set off in the last two
+-- minutes. (Anyone who stopped, gave up or never set off isn't coming: left
+-- counted, they filled the line with nobody and nobody else could join.)
 local function Coming(g)
-    local n = 0
-    for _, s in pairs(LC.NPCs) do if s.lineHeading == g then n = n + 1 end end
+    local n, now = 0, CurTime()
+    for npc, s in pairs(LC.NPCs) do
+        if s.lineHeading == g then
+            if IsValid(npc) and s.state == "moving" and s.poi and s.poi.kind == "lineapproach" and now - (s.lineSince or 0) < 120 then
+                n = n + 1
+            else
+                s.lineHeading = nil
+            end
+        end
+    end
     return n
 end
 
@@ -825,7 +836,9 @@ local function JoinLine(npc, st, anywhere)
     local back = line.slots[math.min(#line.q + 1, #line.slots)]
     st.lineHeading = g
     st.lineSince = CurTime()
-    return GoTo(npc, st, back.pos, false, { kind = "lineapproach", line = g, pos = back.pos, yaw = back.yaw })
+    local ok = GoTo(npc, st, back.pos, false, { kind = "lineapproach", line = g, pos = back.pos, yaw = back.yaw })
+    if not ok then st.lineHeading = nil end -- no way there: not coming
+    return ok
 end
 
 -- Arrived at the back of the line: take the next free slot.

@@ -1045,7 +1045,7 @@ function LC.UseDispenser(ply, ent)
         refused = "[Rations] Distribution suspended: the city's stores are empty."
     elseif lvl == "short" and math.random() < 0.35 then
         ply.lcnRationAt = CurTime() + 60
-        refused = "[Rations] Supply shortfall. The dispenser whirs and gives nothing. Try again later."
+        refused = "[Rations] Supply shortfall. The dispenser whirs and gives nothing. Try again in a minute (the stores are low: kitchen and factory shifts, trains and supply drops fill them)."
     end
     local beeper = IsValid(ent) and ent or ply
     if refused and LC.HasItem(ply, "ration_forged") and lvl ~= "empty" then
@@ -1092,8 +1092,10 @@ function LC.ServePlayersAtLine(g, line, now)
                 ply.lcCounterLine, ply.lcCounterAt = g, now + 3
                 ply:ChatPrint("[Rations] Wait at the counter.")
             elseif now >= ply.lcCounterAt then
-                ply.lcCounterAt = now + 30 -- served (or refused); don't keep asking
-                LC.UseDispenser(ply, LC.LineDispenser and LC.LineDispenser(g) or nil)
+                -- served: not again for a while; refused: not until they step away and come back
+                -- (it used to try again by itself, and a ration dropped out for someone gone AFK)
+                local served = LC.UseDispenser(ply, LC.LineDispenser and LC.LineDispenser(g) or nil)
+                ply.lcCounterAt = served and (now + 30) or math.huge
             end
         elseif ply.lcCounterLine == g then
             ply.lcCounterLine = nil

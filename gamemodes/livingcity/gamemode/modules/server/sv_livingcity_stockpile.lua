@@ -10,7 +10,7 @@
             train's freight (+15); a supply convoy, for every load that wasn't
             stolen (+15 a load)
       Out   every ration handed out (one), and the city eating (a little every
-            minute, more with more people out)
+            minute for every lc_stock_eat (40) citizens out)
 
     Running low (under a quarter): allocations come slower, the dispensers
     are sometimes empty, the PA says so, and hungry people listen to the
@@ -26,6 +26,7 @@ LC = LC or {}
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn  = CreateConVar("lc_stockpile", "1", FLAGS, "Rations come from the city's stores, which work fills and people empty")
 local cvMax = CreateConVar("lc_stock_max", "400", FLAGS, "Rations the city's stores hold")
+local cvEat = CreateConVar("lc_stock_eat", "40", FLAGS, "The city eats a ration a minute for every this many citizens out (lower empties the stores faster)")
 
 local stock = nil
 local dirty = false
@@ -145,9 +146,11 @@ hook.Add("LivingCityServed", "LivingCityStock", function() LC.StockAdd(-1, "rati
 timer.Create("LivingCityStock", 60, 0, function()
     if not cvOn:GetBool() then return end
     if LC.Running then
-        -- the city eats: a ration for every fifteen people out, a minute
+        -- the city eats: a ration a minute for every lc_stock_eat (40) people out
+        -- (it was every fifteen: a full city of 80 ate 6 a minute, more than its
+        -- kitchen, factory and trains could ever bring in)
         local out = LC.RoleCounts and LC.RoleCounts.citizen or 0
-        LC.StockAdd(-math.ceil(out / 15))
+        LC.StockAdd(-math.ceil(out / math.max(5, cvEat:GetFloat())))
         local lvl = LC.StockLevel()
         -- hungry people listen to the Resistance; fed ones keep their heads down
         if lvl == "short" or lvl == "empty" then
