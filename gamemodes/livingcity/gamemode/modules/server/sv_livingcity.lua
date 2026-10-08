@@ -69,6 +69,23 @@ local UP = Vector(0, 0, 50)
 
 LC.LogBuffer = LC.LogBuffer or {}
 LC.Perf = LC.Perf or { samples = 0, total = 0, max = 0 }
+local THINK_MS = 4 -- the most NPC thinking done in one pass of the main loop; the rest wait for the next
+
+-- The whole server frame (the engine's NPC AI, physics and networking, not
+-- just Living City's Lua): how long between ticks, against how long a tick
+-- should take. Behind is what players feel as rubber-banding.
+LC.Frame = LC.Frame or { n = 0, total = 0, worst = 0, slow = 0 }
+local lastTick
+hook.Add("Tick", "LivingCityFrameTime", function()
+    local now = SysTime()
+    if lastTick then
+        local f, dt = LC.Frame, (now - lastTick) * 1000
+        f.n, f.total = f.n + 1, f.total + dt
+        if dt > f.worst then f.worst = dt end
+        if dt > engine.TickInterval() * 1000 * 1.5 then f.slow = f.slow + 1 end
+    end
+    lastTick = now
+end)
 
 function LC.Log(level, msg)
     local buf = LC.LogBuffer
@@ -2026,7 +2043,7 @@ local function Think()
     end
     local players = player.GetAll()
     local lod2 = cvLodDist:GetFloat() ^ 2
-    local budget = math.max(0.5, cvBudget:GetFloat()) / 1000
+    local budget = THINK_MS / 1000 -- (this used to read lc_npc_budget, the NPC cap, as milliseconds)
     while qi <= #queue do
         if SysTime() - t0 > budget and not LC.TestMode then break end
         local npc = queue[qi]

@@ -210,6 +210,25 @@ function LC.BuildReport()
     out[#out + 1] = string.format("main loop: avg %.2f ms, last %.2f ms, worst %.2f ms over %d ticks",
         (p.samples or 0) > 0 and p.total / p.samples or 0, p.last or 0, p.max or 0, p.samples or 0)
     out[#out + 1] = string.format("server tick interval %.4f, entity count %d", engine.TickInterval(), #ents.GetAll())
+    local f = LC.Frame or {}
+    if (f.n or 0) > 0 then
+        out[#out + 1] = string.format("whole server frame (engine AI, physics, networking): avg %.2f ms, worst %.2f ms, %d of %d ticks late (%.1f%%), a tick should take %.1f ms",
+            f.total / f.n, f.worst, f.slow, f.n, 100 * f.slow / f.n, engine.TickInterval() * 1000)
+    end
+    -- what the entities are, most first
+    local byClass, list = {}, {}
+    for _, e in ipairs(ents.GetAll()) do
+        local c = e:GetClass()
+        byClass[c] = (byClass[c] or 0) + 1
+    end
+    for c, n in pairs(byClass) do list[#list + 1] = { c, n } end
+    table.sort(list, function(a, b) return a[2] > b[2] end)
+    local top = {}
+    for i = 1, math.min(15, #list) do top[#top + 1] = list[i][1] .. " " .. list[i][2] end
+    out[#out + 1] = "entities by class: " .. table.concat(top, ", ")
+    local npcs = 0
+    for _, e in ipairs(ents.GetAll()) do if e:IsNPC() then npcs = npcs + 1 end end
+    out[#out + 1] = string.format("NPCs on the map (all of them, Living City's and not): %d", npcs)
 
     Section(out, "Quests")
     local nq = 0
