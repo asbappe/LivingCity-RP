@@ -892,6 +892,8 @@ local okI, errI = pcall(function()
     if LC_CL.StainZone(LC_CL.territory[1]) < 1 or decals < 1 then error("no stains on the ground") end
     if (LC_CL.InfestHaze or 0) <= 0 then error("no haze") end
     -- it thickens gradually walking in: many levels, never down, full in the middle
+    local blocked = util.TraceLine
+    util.TraceLine = function(t) return { Hit = false, HitPos = t.endpos, Fraction = 1 } end
     local c, last, levels, seen = _me:GetPos(), 0, 0, {}
     for d = 1200, 0, -50 do
         local v = LC_CL.InfestDepth(c + Vector(d, 0, 0))
@@ -902,6 +904,9 @@ local okI, errI = pcall(function()
         last = v
     end
     if last < 0.99 or levels < 8 then error("haze steps: " .. levels .. " levels, " .. last .. " in the middle") end
+    if LC_CL.InfestDepth(c + Vector(0, 0, -400)) > 0 then error("haze felt in the tunnel under the zone") end
+    util.TraceLine = blocked
+    if LC_CL.InfestDepth(c + Vector(800, 0, 0)) > 0 then error("haze felt through a wall") end
 end)
 if not okI then problems[#problems + 1] = "infestation: " .. tostring(errI) end
 run("SetupWorldFog")

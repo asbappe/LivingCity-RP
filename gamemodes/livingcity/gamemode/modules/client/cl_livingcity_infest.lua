@@ -17,9 +17,9 @@ local cvOn = CreateClientConVar("lc_infest_ambience", "1", true, false, "The inf
 LC_CL.InfestHaze = LC_CL.InfestHaze or 0 -- 0 to 1, eased (the fog reads it)
 
 -- How deep into the infestation pos is: 0 from OUTSIDE (units) beyond its
--- edge, rising smoothly to 1 at INSIDE units in (less for a small zone), so the haze thickens a step
+-- edge (on its own floor, and not through a wall), rising smoothly to 1 at INSIDE units in (less for a small zone), so the haze thickens a step
 -- at a time as you walk in, not all at once.
-local OUTSIDE, INSIDE = 500, 500
+local OUTSIDE, INSIDE = 300, 500
 
 -- How far in counts as all the way, for this zone (less for a small one, so
 -- its middle is still as thick as it gets).
@@ -41,10 +41,35 @@ local function Into(z, pos, full)
     return -(lo + hi) / 2
 end
 
+-- On the zone's own floor? A round zone otherwise reaches as far down as it
+-- does across (into the tunnels under it, or the street over them).
+local function SameFloor(z, pos)
+    if z.box then return pos.z >= z.box.mins.z - 16 and pos.z <= z.box.maxs.z end
+    return pos.z >= z.pos.z - 48 and pos.z <= z.pos.z + math.min(z.h or 256, 256)
+end
+
+-- The nearest spot of the zone to pos, at pos's height.
+local function NearestIn(z, pos)
+    if z.box then
+        return Vector(math.Clamp(pos.x, z.box.mins.x, z.box.maxs.x), math.Clamp(pos.y, z.box.mins.y, z.box.maxs.y), pos.z)
+    end
+    local d = Vector(pos.x - z.pos.x, pos.y - z.pos.y, 0)
+    local len = d:Length()
+    if len <= z.r then return Vector(pos.x, pos.y, pos.z) end
+    return Vector(z.pos.x + d.x / len * z.r, z.pos.y + d.y / len * z.r, pos.z)
+end
+
+-- Outside it: only felt with nothing solid between you and it (not through a wall).
+local function Open(z, pos)
+    if not util or not util.TraceLine then return true end
+    local tr = util.TraceLine({ start = pos + Vector(0, 0, 40), endpos = NearestIn(z, pos) + Vector(0, 0, 40), mask = MASK_SOLID_BRUSHONLY })
+    return not (tr and tr.Hit and tr.Fraction < 0.98)
+end
+
 local function Depth(pos)
     local best = 0
     for _, z in ipairs(LC_CL.territory or {}) do
-        if z.kind == "infest" then
+        if z.kind == "infest" and SameFloor(z, pos) and (LCZ.Contains(z, pos, 0) or Open(z, pos)) then
             local full = Full(z)
             local f = math.Clamp((Into(z, pos, full) + OUTSIDE) / (OUTSIDE + full), 0, 1)
             best = math.max(best, f * f * (3 - 2 * f)) -- eased at both ends

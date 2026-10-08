@@ -207,10 +207,12 @@ function GM:LCSlowMovement() return self.cvSlow:GetBool() end
 
 -- Pulling yourself up onto a ledge: look at something up to about chest height
 -- (a crate, the lip of a platform, out of a track bed) and jump.
-local MANTLE_MIN, MANTLE_MAX = 28, 92
+local MANTLE_MIN = 28
+local cvMantle = CreateConVar("lc_mantle_height", "108", FLAGS, "The highest ledge you can pull yourself up onto (units; you're 72 tall)")
 
 local function Mantle(ply, mv)
     if not mv.GetOrigin or not mv.GetAngles then return false end
+    local MANTLE_MAX = math.Clamp(cvMantle:GetFloat(), MANTLE_MIN + 1, 160)
     local pos = mv:GetOrigin()
     local fwd = Angle(0, mv:GetAngles().y, 0):Forward()
     -- a wall right ahead

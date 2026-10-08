@@ -1,8 +1,8 @@
 --[[
     Living City: "ration units are being deducted"
 
-    When the Resistance acts (a raid on a checkpoint, the lambda on a wall,
-    rebel ground spreading), the PA charges the people nearby with tolerating
+    When the Resistance acts (a raid on a checkpoint, the lambda on a wall
+    once a unit or scanner has seen it, rebel ground spreading), the PA charges the people nearby with tolerating
     noncompliance, and it's real: every citizen within lc_ration_dock_radius
     (1500) of it loses their next ration allocation. They're told on the spot,
     and again, with the reason, when they go to collect. Units, Overwatch and
@@ -55,8 +55,48 @@ hook.Add("LivingCitySkirmish", "LivingCityRationDock", function(kind, sk)
         timer.Simple(20, function() LC.DockRations(sk.target, "a Resistance attack") end)
     end
 end)
+-- Graffiti costs the block its rations only once the Combine knows about it:
+-- a unit or scanner sees it go up, or comes across it later. Paint nobody
+-- has found costs nobody anything.
+local function SeesTag(t)
+    local spot = t.pos + (t.normal or Vector(0, 0, 0)) * 8
+    for npc, st in pairs(LC.NPCs or {}) do
+        if IsValid(npc) and (st.role == "cop" or st.role == "soldier" or st.role == "scanner") then
+            local eye = npc.EyePos and npc:EyePos() or (npc:GetPos() + Vector(0, 0, 60))
+            if eye:DistToSqr(spot) < 700 * 700 then
+                local tr = util.TraceLine({ start = eye, endpos = spot, mask = MASK_SOLID_BRUSHONLY })
+                if not (tr and tr.Hit and tr.Fraction < 0.97) then return true end
+            end
+        end
+    end
+    for _, p in ipairs(player.GetAll()) do
+        if p:Alive() and LC.PlayerIsCP(p) and p:EyePos():DistToSqr(spot) < 600 * 600 then
+            local tr = util.TraceLine({ start = p:EyePos(), endpos = spot, mask = MASK_SOLID_BRUSHONLY })
+            if not (tr and tr.Hit and tr.Fraction < 0.97) then return true end
+        end
+    end
+    return false
+end
+LC.SecuritySeesTag = SeesTag
+
+local function Found(t)
+    t.found = true
+    LC.DockRations(t.pos, "Resistance graffiti")
+end
+
 hook.Add("LivingCityTagged", "LivingCityRationDock", function(ply, t)
-    if t and t.pos then LC.DockRations(t.pos, "Resistance graffiti") end
+    if not (t and t.pos) then return end
+    if (LC.SeenBySecurity and LC.SeenBySecurity(ply, 900)) or SeesTag(t) then Found(t) end
+end)
+
+timer.Create("LivingCityTagsFound", 5, 0, function()
+    if not cvOn:GetBool() then return end
+    for _, t in ipairs(LC.Tags or {}) do
+        if not t.found and t.pos then
+            local ok, seen = pcall(SeesTag, t)
+            if ok and seen then Found(t) end
+        end
+    end
 end)
 hook.Add("LivingCityTerritoryGrew", "LivingCityRationDock", function(seed, z)
     if z and z.kind == "rebel" then LC.DockRations(z.pos, "Resistance-held ground") end

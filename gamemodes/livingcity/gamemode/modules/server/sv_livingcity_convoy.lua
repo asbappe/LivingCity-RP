@@ -134,9 +134,28 @@ local function Unload(s, ground, side)
     end
     -- the guard: a few units standing round it
     local spawner = LC.Spawners and (LC.Spawners.cop or LC.Spawners.soldier)
-    for i = 1, cvGuards:GetInt() do
-        local a = (i / math.max(1, cvGuards:GetInt())) * math.pi * 2
-        local gp = ground + side * 140 + Vector(math.cos(a) * 130, math.sin(a) * 130, 4)
+    -- (never inside the container the dropship set down, or a crate, or a wall)
+    local function Free(p)
+        local c = s.container
+        if IsValid(c) then
+            local l, mins, maxs = c:WorldToLocal(p), c:OBBMins(), c:OBBMaxs()
+            if l.x > mins.x - 32 and l.x < maxs.x + 32 and l.y > mins.y - 32 and l.y < maxs.y + 32 then return false end
+        end
+        for _, e in ipairs(s.props) do
+            if IsValid(e) and e:GetPos():DistToSqr(p) < 50 * 50 then return false end
+        end
+        return not LC.ClearSpot or LC.ClearSpot(p)
+    end
+    local n = cvGuards:GetInt()
+    for i = 1, n do
+        local gp
+        for try = 0, 11 do
+            local a = (i / math.max(1, n)) * math.pi * 2 + try * 0.52
+            local cand = ground + side * 140 + Vector(math.cos(a) * (130 + (try % 3) * 40), math.sin(a) * (130 + (try % 3) * 40), 4)
+            cand = LC.GroundAt and LC.GroundAt(cand) or cand
+            if Free(cand) then gp = cand break end
+        end
+        gp = gp or (ground + side * 260 + Vector(0, 0, 4))
         local ok, npc, st = pcall(function() return (i == 1 and LC.Spawners and LC.Spawners.soldier or spawner)(gp) end)
         if ok and IsValid(npc) and st then
             st.unmanaged = true

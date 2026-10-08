@@ -2440,6 +2440,22 @@ hook.Add("PlayerUse", "LivingCityUse", function(ply, ent)
     if CurTime() < st.nextUse then return st.role == "citizen" and false or nil end
     st.nextUse = CurTime() + 3
     hook.Run("LivingCityPlayerUsedNPC", ply, ent, st)
+    -- guarding a supply drop (sv_livingcity_convoy.lua): he answers, without leaving his post
+    if st.supplyGuard and IsSecurity(st) and st.state ~= "hostile" then
+        if LC.PlayerIsWanted(ply) and not LC.PlayerIsCP(ply) and LC.Surrender then return LC.Surrender(ply, ent) end
+        Face(ent, ply:GetPos())
+        local soldier = st.role == "soldier"
+        if LC.PlayerIsCP(ply) or (LC.DisguisedAsCP and LC.DisguisedAsCP(ply)) then
+            ent:EmitSound(soldier and "npc/combine_soldier/vo/affirmative.wav" or "npc/metropolice/vo/affirmative.wav", 75)
+            ply:ChatPrint("[Civil Protection] \"Supply point secure. Hold the perimeter until the load moves on.\"")
+        else
+            ent:EmitSound(soldier and Pick({ "npc/combine_soldier/vo/contained.wav", "npc/combine_soldier/vo/affirmative2.wav" })
+                or Pick({ "npc/metropolice/vo/movealong.wav", "npc/metropolice/vo/movealong3.wav", "npc/metropolice/vo/keepmoving.wav" }), 75)
+            ply:ChatPrint("[Civil Protection] \"" .. Pick({ "Restricted supply point. Move along.", "Step away from the supplies, citizen.",
+                "Nothing here for you. Keep moving." }) .. "\"")
+        end
+        return
+    end
     if st.state == "event" then return st.role == "citizen" and false or nil end -- busy with something scripted
     if st.role == "citizen" then
         if st.state == "detained" or st.state == "jailed" or st.state == "escorted" or st.state == "busy" then return false end
