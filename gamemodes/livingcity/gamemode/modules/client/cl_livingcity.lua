@@ -898,3 +898,34 @@ hook.Add("HUDPaint", "LC_PathMapHUD", function()
     draw.SimpleTextOutlined(paused and "PATH MAPPING PAUSED (noclip)" or "PATH MAPPING: walk to lay nodes",
         "DermaDefaultBold", ScrW() / 2, ScrH() * 0.12, paused and Color(230, 180, 60) or Color(90, 220, 140), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 220))
 end)
+
+------------------------------------------------------------------------
+-- Luggage swinging in the hand (sv_livingcity_npcwork.lua, LC.NPCCarry)
+------------------------------------------------------------------------
+
+-- A suitcase hangs from the carrier's right hand, following it as the arm
+-- swings, but stays upright and facing the way they walk (hung from the
+-- hand bone itself, it would turn with the wrist).
+local function DrawHeld(self)
+    local npc = self:GetParent()
+    local att = IsValid(npc) and npc:LookupAttachment("anim_attachment_RH") or 0
+    local a = att and att > 0 and npc:GetAttachment(att)
+    if not a then return self:DrawModel() end
+    local pos, ang = LocalToWorld(self:GetNW2Vector("lc_hold_off", Vector(0, 0, 0)), self:GetNW2Angle("lc_hold_ang", Angle(0, 0, 0)),
+        a.Pos - Vector(0, 0, 2), Angle(0, npc:GetAngles().y, 0))
+    self:SetRenderOrigin(pos)
+    self:SetRenderAngles(ang)
+    self:SetupBones()
+    self:DrawModel()
+    self:SetRenderOrigin()
+    self:SetRenderAngles()
+end
+
+timer.Create("LivingCityHeldLuggage", 0.5, 0, function()
+    for _, e in ipairs(ents.FindByClass("prop_dynamic")) do
+        if not e.lcHeldDraw and e:GetNW2Bool("lc_hold_side", false) then
+            e.lcHeldDraw = true
+            e.RenderOverride = DrawHeld
+        end
+    end
+end)

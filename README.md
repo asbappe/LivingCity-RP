@@ -296,7 +296,7 @@ Every citizen and Civil Protection unit is a **named person with a profile that 
 
 ### Trains
 
-With a **train platform** on the map (an editor point; failing that, the Station Porter's workplace), a train comes in every `lc_train_minutes` (12, give or take a quarter): a horn at the platform, a notice for everyone ("The train from City 14 has arrived..."), and two to four **new arrivals** step off, suitcase in hand (carried upright at their side by the handle), and walk to their housing blocks before getting on with life in the city. Station Porters are told a train is in. For a minute and a half after, **anyone leaving the city** walks to the platform with a suitcase and boards, instead of going out through a doorway; then the train pulls out. Not during a curfew or lockdown. `lc_trains 0` turns them off; `lc_train` (admin) brings one in now.
+With a **train platform** on the map (an editor point; failing that, the Station Porter's workplace), a train comes in every `lc_train_minutes` (12, give or take a quarter): a horn at the platform, a notice for everyone ("The train from City 14 has arrived..."), and two to four **new arrivals** step off, suitcase in hand (hanging upright from the hand, swinging as they walk), and walk to their housing blocks before getting on with life in the city. Station Porters are told a train is in. For a minute and a half after, **anyone leaving the city** walks to the platform with a suitcase and boards, instead of going out through a doorway; then the train pulls out. Not during a curfew or lockdown. `lc_trains 0` turns them off; `lc_train` (admin) brings one in now.
 
 ### The power grid, and forcefields
 

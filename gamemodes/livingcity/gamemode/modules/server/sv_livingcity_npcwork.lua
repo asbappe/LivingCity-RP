@@ -189,6 +189,13 @@ local function Carry(npc, st, model)
         local pos, ang = LC.CarrySideHold(e:OBBMins(), e:OBBMaxs())
         if e.SetLocalPos then e:SetLocalPos(pos) end
         if e.SetLocalAngles then e:SetLocalAngles(ang) end
+        -- each player's game draws it hanging from the hand as the arm swings,
+        -- kept upright (cl_livingcity.lua); this spot at the hip is the fallback
+        if e.SetNW2Angle then
+            e:SetNW2Vector("lc_hold_off", pos - Vector(2, SIDE_Y, HAND_Z))
+            e:SetNW2Angle("lc_hold_ang", ang)
+            e:SetNW2Bool("lc_hold_side", true)
+        end
     elseif e.SetParent then
         local att = npc.LookupAttachment and npc:LookupAttachment("anim_attachment_RH") or 0
         if att and att > 0 then
