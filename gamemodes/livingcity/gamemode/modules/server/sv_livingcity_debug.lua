@@ -229,6 +229,11 @@ function LC.BuildReport()
     local npcs = 0
     for _, e in ipairs(ents.GetAll()) do if e:IsNPC() then npcs = npcs + 1 end end
     out[#out + 1] = string.format("NPCs on the map (all of them, Living City's and not): %d", npcs)
+    if LC.SleepStats then
+        local z = LC.SleepStats
+        out[#out + 1] = string.format("asleep (far from everyone, engine AI off; lc_npc_sleep %s): %d now; %d times put to sleep, %d woken, %d route stops walked out of sight",
+            GetConVar("lc_npc_sleep") and GetConVar("lc_npc_sleep"):GetString() or "?", LC.SleepingCount(), z.slept, z.woke, z.hops)
+    end
 
     Section(out, "Quests")
     local nq = 0

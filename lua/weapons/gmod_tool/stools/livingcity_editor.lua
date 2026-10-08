@@ -629,6 +629,7 @@ function TOOL.BuildCPanel(panel)
     Slider("Most patches a zone can grow", "lc_territory_max", 0, 20, 0)
     Slider("Kills to push back a patch", "lc_territory_hits", 1, 10, 0)
     Slider("NPC budget (hard cap)", "lc_npc_budget", 10, 200, 0)
+    Check("NPCs far from everyone sleep (engine AI off until someone comes near)", "lc_npc_sleep")
     panel:Help("Every setting in this panel is saved with this map's layout as you change it, and comes back after a restart.")
 
     Header("Events")

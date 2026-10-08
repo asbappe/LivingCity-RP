@@ -77,6 +77,7 @@ LC_MODULES = {
         "sv_livingcity_mortuary",
         "sv_livingcity_navgraph",
         "sv_livingcity_npcwork",
+        "sv_livingcity_sleep", -- (NPCs far from everyone stop running the engine's AI)
         "sv_livingcity_mail", -- (after npcwork: it gives the city's couriers the real mail)
         "sv_livingcity_paths",
         "sv_livingcity_pathmap",

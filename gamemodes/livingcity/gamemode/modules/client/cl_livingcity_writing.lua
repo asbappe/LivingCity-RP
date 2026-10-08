@@ -233,7 +233,7 @@ local function CurrentLaws()
 end
 
 function LC_CL.DrawLawBoard(ent)
-    draw.RoundedBox(4, -320, -180, 640, 360, Color(26, 24, 22, 245))
+    draw.RoundedBox(4, -320, -180, 640, 360, Color(26, 24, 22, 255))
     draw.RoundedBox(0, -320, -180, 640, 4, Color(200, 190, 160))
     draw.SimpleText("CITY LAWS", "DermaLarge", 0, -150, Color(225, 215, 185), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     local y = -118

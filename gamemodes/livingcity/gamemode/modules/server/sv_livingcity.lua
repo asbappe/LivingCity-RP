@@ -69,7 +69,6 @@ local UP = Vector(0, 0, 50)
 
 LC.LogBuffer = LC.LogBuffer or {}
 LC.Perf = LC.Perf or { samples = 0, total = 0, max = 0 }
-local THINK_MS = 4 -- the most NPC thinking done in one pass of the main loop; the rest wait for the next
 
 -- The whole server frame (the engine's NPC AI, physics and networking, not
 -- just Living City's Lua): how long between ticks, against how long a tick
@@ -2043,7 +2042,7 @@ local function Think()
     end
     local players = player.GetAll()
     local lod2 = cvLodDist:GetFloat() ^ 2
-    local budget = THINK_MS / 1000 -- (this used to read lc_npc_budget, the NPC cap, as milliseconds)
+    local budget = math.max(0.5, cvBudget:GetFloat()) / 1000
     while qi <= #queue do
         if SysTime() - t0 > budget and not LC.TestMode then break end
         local npc = queue[qi]
@@ -2059,6 +2058,7 @@ local function Think()
                 end
             end
             st.nextThink = near and (now + 0.45) or (now + 2)
+            if LC.NPCSleepTick then LC.NPCSleepTick(npc, st, now, near) end -- (sv_livingcity_sleep.lua)
             local fn = THINKERS[st.role] or (LC.Thinkers and LC.Thinkers[st.role])
             if fn then
                 local ok, err = pcall(fn, npc, st, now)
