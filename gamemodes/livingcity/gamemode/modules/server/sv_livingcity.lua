@@ -99,6 +99,55 @@ function LC.Error(where, err)
     ErrorNoHalt("[Living City] " .. where .. ": " .. tostring(err) .. "\n")
 end
 
+-- Is this sound file on the server's disk (and so, very likely, the
+-- players')? A sound that isn't makes every player near it search their whole
+-- install for it each time it plays, which can freeze a frame on a game with
+-- a lot of addons, and prints "Failed to load sound" in their console. Script
+-- sounds (no file extension) are always taken as there. Cached.
+local soundKnown = {}
+function LC.SoundExists(path)
+    if type(path) ~= "string" or path == "" then return false end
+    local clean = string.lower(string.gsub(string.gsub(path, "^[%*#@<>%^%)}%$!%?]+", ""), "\\", "/"))
+    local ext = string.match(clean, "%.(%w+)$")
+    if ext ~= "wav" and ext ~= "mp3" and ext ~= "ogg" then return true end
+    if LC.TestMode or not (file and file.Exists) then return true end
+    local known = soundKnown[clean]
+    if known == nil then
+        known = file.Exists("sound/" .. clean, "GAME") == true
+        soundKnown[clean] = known
+        if not known then LC.Log("warn", "sound missing from this install, not played: " .. clean) end
+    end
+    return known
+end
+
+-- The first of these sounds that's there (or nil).
+function LC.FirstSound(list)
+    for _, s in ipairs(type(list) == "table" and list or { list }) do
+        if LC.SoundExists(s) then return s end
+    end
+end
+
+-- Every sound the server plays goes through it, ours or not.
+do
+    local EM = FindMetaTable and FindMetaTable("Entity")
+    if EM and EM.EmitSound and not EM.lcSoundChecked then
+        local emit = EM.EmitSound
+        EM.lcSoundChecked = true
+        EM.EmitSound = function(self, snd, ...)
+            if not LC.SoundExists(snd) then return end
+            return emit(self, snd, ...)
+        end
+    end
+    if sound and sound.Play and not LC.lcSoundPlayChecked then
+        local play = sound.Play
+        LC.lcSoundPlayChecked = true
+        sound.Play = function(snd, ...)
+            if not LC.SoundExists(snd) then return end
+            return play(snd, ...)
+        end
+    end
+end
+
 ------------------------------------------------------------------------
 -- Sounds
 ------------------------------------------------------------------------

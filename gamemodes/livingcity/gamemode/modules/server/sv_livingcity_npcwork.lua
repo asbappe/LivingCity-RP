@@ -120,8 +120,13 @@ local function Claimed(key, npc)
 end
 LC.NPCWorkClaimed = function(key) return Claimed(key, nil) end
 
+-- One of these sounds, of the ones this install has.
 local function Sound(e, list, lvl)
-    if IsValid(e) and list then e:EmitSound(type(list) == "table" and Pick(list) or list, lvl or 65) end
+    if not IsValid(e) or not list then return end
+    if type(list) ~= "table" then list = { list } end
+    local have = {}
+    for _, s in ipairs(list) do if not LC.SoundExists or LC.SoundExists(s) then have[#have + 1] = s end end
+    if #have > 0 then e:EmitSound(Pick(have), lvl or 65) end
 end
 
 local function Sparks(pos)
@@ -757,7 +762,7 @@ Run("clerk", "papers", "taking papers to the checkpoint", "models/props_lab/clip
     function(npc) return Precinct(npc:GetPos()) end, { loading = "collecting the day's papers", dropAnim = KNOCK })
 
 -- Uniform Laundry
-Shift("laundry", "wash", "running the machines", { sound = { "ambient/machines/wash_machine1.wav" }, every = 9, weight = 3 })
+Shift("laundry", "wash", "running the machines", { sound = { "ambient/machines/laundry_machine1_amb.wav", "ambient/machines/machine1_hit1.wav", "ambient/machines/machine1_hit2.wav" }, every = 9, weight = 3 })
 Run("laundry", "uniforms", "delivering pressed uniforms", "models/props_junk/cardboard_box003a.mdl", Workplace("laundry"),
     function(npc) return Precinct(npc:GetPos()) end, { loading = "bundling the pressed uniforms" })
 
