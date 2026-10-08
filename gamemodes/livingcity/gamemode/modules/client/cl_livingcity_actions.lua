@@ -339,6 +339,8 @@ function LC_CL.OpenActions()
         Add(help, "Admin testing tools", function() Send("admintools") end, "icon16/wrench_orange.png")
         Add(help, me:GetNW2Bool("lc_build", false) and "Build mode: on (back to playing)" or "Build mode: off (spawn menu, physgun, editor)", function() Send("build") end, "icon16/brick.png")
         Add(help, "Path mapping: on / off (walk to draw NPC paths)", function() Send("pathmap") end, "icon16/map.png")
+        Add(help, (LC_CL.LagWatchOn and LC_CL.LagWatchOn()) and "Lag monitor: on (turn off)" or "Lag monitor: off (what's causing lag, live)",
+            function() if LC_CL.SetLagWatch then LC_CL.SetLagWatch() end end, "icon16/chart_line.png")
     end
 
     -- a cursor to click with, for as long as the menu is up

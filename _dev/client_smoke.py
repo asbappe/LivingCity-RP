@@ -881,6 +881,17 @@ if not okT then problems[#problems + 1] = "layout browser row: " .. tostring(err
 LC_CL.highlight = { dealer = true }
 run("HUDPaint")
 LC_CL.highlight = {}
+-- the lag monitor (cl_livingcity_lagwatch.lua): on, a few seconds of it, the panel, the printout, off
+local okLW, errLW = pcall(function()
+    LC_CL.SetLagWatch(true)
+    if not LC_CL.LagWatchOn() then error("didn't turn on") end
+    for _ = 1, 3 do run("Think") _advance(1.1) _runtimers() end
+    if not LC_CL.LagWatchRow then error("no row measured") end
+    run("HUDPaint")
+    concommand.list.lc_lagwatch_print(nil)
+    LC_CL.SetLagWatch(false)
+end)
+if not okLW then problems[#problems + 1] = "lag monitor: " .. tostring(errLW) end
 -- the infestation, up close (cl_livingcity_infest.lua): haze, the geiger counter, stains on the ground
 local decals = 0
 util.DecalEx = function() decals = decals + 1 end
