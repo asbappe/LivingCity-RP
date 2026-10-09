@@ -9501,6 +9501,61 @@ end
 BatchFixTests()
 
 ----------------------------------------------------------------------
+function NextStepTests()
+section("What now? Everyone always has a next step")
+local N0 = Vector(-130000, -60000, 0)
+local p = newPlayer("Newcomer", "citizen")
+_run(0.3)
+p:SetPos(N0)
+local function Step() return LC.NextStep(p) end
+-- hungry, with a ration due
+p:SetNW2Float("lcn_hunger", 10)
+p:SetNW2Float("lcn_thirst", 90)
+for id in pairs(LC.Inventory(p)) do local it = LCS.Items[id] if it and ((it.hunger or 0) > 0 or (it.thirst or 0) > 0) then LC.TakeItem(p, id, 99) end end
+p.lcnRationAt = 0
+p.lcRationDocked = nil
+local s = Step()
+ok(s and string.find(s.key, "^eat_") and s.urgent, "hungry: the next step is food, and it's urgent", s and s.key)
+ok(s and (s.key ~= "eat_ration" or s.way == "dispenser"), "(a ration that's due: the way to the dispenser)", s and s.key)
+LC.GiveItem(p, "bread", 1)
+s = Step()
+ok(s and s.key == "eat_own" and string.find(s.why, "bread", 1, true), "food in your pockets: eat it", s and s.why)
+LC.TakeItem(p, "bread", 1)
+p.lcnRationAt = CurTime() + 900
+s = Step()
+ok(s and (s.key == "eat_scrounge" or s.key == "eat_buy"), "no ration due and no food: buy some, or search bins", s and s.key)
+-- thirsty
+p:SetNW2Float("lcn_hunger", 90)
+p:SetNW2Float("lcn_thirst", 10)
+s = Step()
+ok(s and (s.key == "drink" or s.key == "drink_own") and s.urgent, "thirsty: the next step is water", s and s.key)
+-- the card, once, when it drops
+p.chat = {}
+local nWarn = 0
+local was = LC.Notice
+LC.Notice = function(ply, kind, title) if ply == p and kind == "warn" and title == "Thirsty" then nWarn = nWarn + 1 end return was(ply, kind, title) end
+LC.PushNextStep(p)
+LC.PushNextStep(p)
+LC.Notice = was
+ok(nWarn == 1, "running low puts a card on screen, once", nWarn)
+ok(p:GetNW2String("lc_next", "") ~= "" and p:GetNW2Bool("lc_next_urgent", false), "and the step is sent to their screen")
+-- fed and watered: no job yet
+p:SetNW2Float("lcn_thirst", 90)
+p:SetNW2String("lcj_job", "")
+p.lcHomeSeenCid = p:GetNW2String("lc_cid", "")
+s = Step()
+ok(s and (s.key == "job" or s.key == "ration" or s.key == "on_job"), "settled in: get a Union job", s and s.key)
+-- every place on F1 has a way there
+ok(LC.WaypointPlaces.dispenser and LC.WaypointPlaces.water and LC.WaypointPlaces.bin and LC.WaypointPlaces.work and LC.WaypointPlaces.shop, "Places: dispenser, water, bins, work, the Commissary")
+-- a new life's first ration is never a shortfall
+ok(LC.FirstRationDue(p), "a new life's first ration is due")
+hook.Run("LivingCityRationCollected", p)
+ok(not LC.FirstRationDue(p), "and once collected, it's ordinary again")
+p:SetPos(Vector(-150000, 150000, 0))
+end
+NextStepTests()
+
+----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)
 _run(1)

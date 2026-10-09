@@ -881,6 +881,24 @@ if not okT then problems[#problems + 1] = "layout browser row: " .. tostring(err
 LC_CL.highlight = { dealer = true }
 run("HUDPaint")
 LC_CL.highlight = {}
+-- what now? (cl_livingcity_nextstep.lua): the line on screen, and its F1 page
+local okWN, errWN = pcall(function()
+    _me:SetNW2String("lc_next", "Find water")
+    _me:SetNW2String("lc_next_why", "You're thirsty. A sink or a water machine: press E on it.")
+    _me:SetNW2String("lc_next_way", "water")
+    _me:SetNW2Bool("lc_next_urgent", true)
+    local s = LC_CL.NextStep()
+    if not s or s.text ~= "Find water" or not s.urgent then error("next step not read") end
+    run("HUDPaint")
+    local page = LC_CL.WhatNowPage()
+    if not page or #page.items < 3 then error("no what-now page") end
+    page.items[1].run()
+    local places = LC_CL.PlacesPage()
+    if #places.items < 6 then error("too few places") end
+    for _, it in ipairs(places.items) do it.run() end
+    _me:SetNW2String("lc_next", "")
+end)
+if not okWN then problems[#problems + 1] = "what now: " .. tostring(errWN) end
 -- the lag monitor (cl_livingcity_lagwatch.lua): on, a few seconds of it, the panel, the printout, off
 local okLW, errLW = pcall(function()
     LC_CL.SetLagWatch(true)

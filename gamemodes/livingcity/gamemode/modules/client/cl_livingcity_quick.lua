@@ -7,7 +7,7 @@
 
       Civil Protection   backup, 10-20, BOLO, mask voice lines, records
       Overwatch          the same, in a soldier's voice
-      Citizens           hands up, your name, your papers, talking, pockets
+      Citizens           what now?, hands up, your papers, talking, pockets
       The Resistance     hands up, gear up or plain clothes, talking, the
                          black market, pockets
 
@@ -59,6 +59,7 @@ local function TalkPage()
         Item("Roll the dice (1 to 100)", function() RunConsoleCommand("say", "/roll") end),
         Item("Out of character, nearby...", function() Say("Out of character", "Said out of character, to people nearby", "/looc ") end),
         Item("Out of character, everyone...", function() Say("Out of character", "Said out of character, to the whole server", "// ") end),
+        Item("Tell everyone nearby my name", function() Send("recognize", "all") end),
     } }
 end
 
@@ -218,6 +219,8 @@ function LC_CL.QuickRoot()
     local hands = Item(me:GetNW2Bool("lc_handsup", false) and "Lower my hands" or "Put my hands up", function() Send("handsup") end)
     local pockets = Item("My pockets (F2)", function() RunConsoleCommand("gm_showteam") end)
     local board = Item("My board: jobs (F3)", function() RunConsoleCommand("gm_showspare1") end)
+    -- slot 1 for anyone living in the city: the next step, and the way to everywhere (cl_livingcity_nextstep.lua)
+    local whatNow = Page("What now?", function() return LC_CL.WhatNowPage and LC_CL.WhatNowPage() or { title = "WHAT NOW?", items = {} } end)
     local items, usual, title, accent
     if unit then
         title = me:GetNW2String("lcf_title", "") ~= "" and me:GetNW2String("lcf_title", "") or (f == "ota" and "OVERWATCH" or "CIVIL PROTECTION")
@@ -238,18 +241,18 @@ function LC_CL.QuickRoot()
         title, accent = "RESISTANCE", ACCENT.resistance
         local plain = me:GetNW2String("lcd_disguise", "") ~= ""
         items = {
+            whatNow,
             hands,
             Item(plain and "Gear up (Resistance clothes)" or "Change into plain clothes", function() Send(plain and "gearup" or "plain") end),
             Page("Talk", TalkPage),
             Item("Black market", function() Send("market") end),
-            pockets,
         }
         usual = { Page("Resistance", ResistancePage), Page("Pose", PosePage), board }
     else
         title, accent = f == "admin" and "STAFF" or "CITIZEN", ACCENT.default
         items = {
+            whatNow,
             hands,
-            Item("Tell everyone nearby my name", function() Send("recognize", "all") end),
             Item("My papers", function() Send("papers") end),
             Page("Talk", TalkPage),
             pockets,

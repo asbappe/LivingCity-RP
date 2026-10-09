@@ -38,6 +38,14 @@ A Combine-occupied city for Garry's Mod: ambient citizens and Civil Protection r
 
 Everyone who was in the city before Civil Intake counts as registered and housed. **A map with no Civil Intake desk works as before** (people are registered and handed a room as they arrive), take the desks away and anyone still waiting is registered, and `lc_intake 0` turns it all off. Editor panel: **Civil Intake**. Staff: `lc_register <name>` (on the register now), `lc_unregister <name>` (back through all of it: no papers, no room, register again). Put a checkpoint point beside the desks and a unit will stand there, checking papers.
 
+### What now? Never lost
+
+Everyone always has **one next step**, worked out from where they stand: register at Civil Intake, ask Housing Allocation for a room, find your block, eat, drink, get a Union job, work a shift. Each step says why, and **F1 > 1 (What now?)** shows you the way (a waypoint). A new life sees the step as a quiet line under the status box for its first hour (`lc_whatnow_minutes`, 60), and anyone sees it when it's urgent (hungry, thirsty, nowhere to live). After that it's on F1 whenever you want it, or always on screen (C > Settings > Next step on screen; `lc_whatnow_show` 0 never, 1 new life and urgent, 2 always).
+
+**Hungry or thirsty?** The step names the nearest way to eat or drink right now, in order: what's in your pockets, your ration if it's due, food you can afford at the Commissary, bins to search (and how long until your next ration). Running low puts a card on screen once, with the way. **A new life's first ration allocation is never turned away by a supply shortfall.**
+
+**Places:** F1 > What now? > Places (and C > Places in the city) lists everywhere worth knowing, each with a waypoint: the ration dispenser, water, bins, your block, your workplace, the Commissary, Civil Intake and Housing Allocation (units: their Commissary; the Resistance: the lab). `lc_whatnow 0` turns all of it off.
+
 ### The quick menu (F1)
 
 **F1 opens the quick menu**, like a voice menu in a team shooter: a short list at the left of the screen, picked with the number keys (1 to 9; 0 goes back or closes), and you keep moving while it's up. Nine things, for who you are:
@@ -45,8 +53,8 @@ Everyone who was in the city before Civil Intake counts as registered and housed
 | You are | 1 to 5 | 6 to 8 (nothing in front of you) |
 |---|---|---|
 | Civil Protection, Overwatch | Call for backup, Send my 10-20, Issue a BOLO, **Voice lines >** (the mask's most used lines; Overwatch's own), Records terminal | Unit tools, My directives (F3), Sociostability > (officers) or My pockets |
-| Citizen | Hands up, Tell everyone nearby my name, My papers, **Talk >**, My pockets | **Pose >**, **Gesture >**, My board (F3) |
-| Resistance | Hands up, Gear up or Plain clothes, **Talk >**, Black market, My pockets | **Resistance >** (find the lab, donate food, decode a chip), **Pose >**, My board (F3) |
+| Citizen | **What now? >** (your next step, Places), Hands up, My papers, **Talk >** (and Tell everyone nearby my name), My pockets | **Pose >**, **Gesture >**, My board (F3) |
+| Resistance | **What now? >**, Hands up, Gear up or Plain clothes, **Talk >**, Black market | **Resistance >** (find the lab, donate food, decode a chip), **Pose >**, My board (F3) |
 
 **6 to 8 change with what's in front of you and your own trouble**, shown in green: a person (units: search, zip-tie or cut and drag, escort, take a microphone; everyone else: tell them your name, show them your papers, inform, a work order), someone who's down, a body, a door, a forcefield, a transformer, a power bank; and you being downed, tied, wanted, interrogated or hauling. **9 is everything else**: the full menu. A ">" opens a page of its own. Bind a key to `lc_quick` to open it from something else.
 

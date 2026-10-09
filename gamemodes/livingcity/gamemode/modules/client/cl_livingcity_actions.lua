@@ -86,6 +86,19 @@ function LC_CL.OpenActions()
         return o
     end
     -- the screens everyone has
+    -- what now? (sv_livingcity_nextstep.lua): the next step, and the way to everywhere
+    local step = LC_CL.NextStep and LC_CL.NextStep()
+    if step then
+        Add(menu, "What now? " .. step.text .. (step.way ~= "" and " (show me the way)" or ""), function()
+            if step.way ~= "" then Send("waypoint", step.way) end
+            if LC_CL.AddNotice then LC_CL.AddNotice(step.urgent and "warn" or "info", step.text, step.why) end
+        end, "icon16/flag_green.png")
+    end
+    if LC_CL.PlacesPage then
+        local places, po = menu:AddSubMenu("Places in the city (show me the way)")
+        po:SetIcon("icon16/map.png")
+        for _, it in ipairs(LC_CL.PlacesPage().items) do Add(places, it.label, it.run) end
+    end
     if unit then Add(menu, "Unit tools (Civil Protection)", function() if LC_CL.OpenUnitTools then LC_CL.OpenUnitTools() end end, "icon16/shield.png") end
     Add(menu, "Guide / manual", function() if LC_OpenGuide then LC_OpenGuide(me:IsAdmin()) else RunConsoleCommand("lc_help") end end, "icon16/book_open.png")
     Add(menu, "My pockets (F2)", function() RunConsoleCommand("gm_showteam") end, "icon16/briefcase.png")
@@ -320,6 +333,10 @@ function LC_CL.OpenActions()
     seto:SetIcon("icon16/cog.png")
     local bob = GetConVar("lc_my_view_bob")
     Add(set, (bob and bob:GetBool() and "Camera sway: on (turn off)") or "Camera sway: off (turn on)", function() RunConsoleCommand("lc_bob_toggle") end)
+    local wn = GetConVar("lc_whatnow_show")
+    local wm = wn and wn:GetInt() or 1
+    Add(set, wm == 2 and "Next step on screen: always (change)" or (wm == 1 and "Next step on screen: new life and urgent (change)" or "Next step on screen: never (change)"),
+        function() RunConsoleCommand("lc_whatnow_show", tostring((wm + 1) % 3)) end)
     local third = GetConVar("lc_act_thirdperson")
     Add(set, (third and third:GetBool() and "Third person while posing: on (turn off)") or "Third person while posing: off (turn on)",
         function() RunConsoleCommand("lc_act_thirdperson", (third and third:GetBool()) and "0" or "1") end)

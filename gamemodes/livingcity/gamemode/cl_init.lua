@@ -27,6 +27,7 @@ local INK, ACCENT = Color(232, 226, 210), Color(230, 180, 90)
 local GUIDE = {
     { "Keys", {
         "F1  the quick menu: nine things on the number keys, for who you are and what's in front of you (0 closes; 9 is everything else)",
+        "Lost? {gm_showhelp} > What now? is always your next step, with the way there; What now? > Places marks anywhere worth knowing (the dispenser, water, your block, your work).",
         "F2  your pockets (and stash at home)        F3  your board: jobs, stories, Union employment        F4  factions",
         "C (outside build mode)  the full menu: everything you can do, with this guide, your pockets, board, factions and tips at the top.",
         "E on people: talk to citizens, report to units. E on things: pick up, use.",

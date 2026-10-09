@@ -1043,7 +1043,7 @@ function LC.UseDispenser(ply, ent)
     local lvl = not refused and LC.StockLevel and LC.StockLevel() or nil
     if lvl == "empty" then
         refused = "[Rations] Distribution suspended: the city's stores are empty."
-    elseif lvl == "short" and math.random() < 0.35 then
+    elseif lvl == "short" and math.random() < 0.35 and not (LC.FirstRationDue and LC.FirstRationDue(ply)) then -- (a new life's first meal is never short: sv_livingcity_nextstep.lua)
         ply.lcnRationAt = CurTime() + 60
         refused = "[Rations] Supply shortfall. The dispenser whirs and gives nothing. Try again in a minute (the stores are low: kitchen and factory shifts, trains and supply drops fill them)."
     end
