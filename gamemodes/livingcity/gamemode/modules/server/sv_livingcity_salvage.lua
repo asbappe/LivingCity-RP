@@ -310,6 +310,7 @@ timer.Create("LivingCityCrowbar", 2, 0, function()
     local now = CurTime()
     for _, ply in ipairs(player.GetAll()) do
         if ply:Alive() and HoldingCrowbar(ply) and not LC.PlayerIsCP(ply) and (ply.lcCrowbarNext or 0) < now
+            and not ply.lcJobCrowbar -- (lent for rubble work: sv_livingcity_jobgames.lua)
             and not (LC.PlayerIsZombie and LC.PlayerIsZombie(ply))
             and not (LC.InRebelZone and LC.InRebelZone(ply:GetPos()))
             and not (LC.DisguisedAsCP and LC.DisguisedAsCP(ply))

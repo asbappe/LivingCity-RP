@@ -951,6 +951,30 @@ local function Gamify(spec, idx, kind, text, opts)
     return spec
 end
 
+-- Every "stand here" stage of a shift as a game there: a walk to the spot
+-- (with the stage's own setting-up), then the game (with its finishing-off).
+local function GamifyHolds(spec, kind, text, opts, keepEnter)
+    if not spec then return spec end
+    local out = {}
+    for _, st in ipairs(spec.stages) do
+        if st.kind == "hold" then
+            local go = Goto(st.pos, st.text, st.r or 150)
+            if keepEnter then go.onEnter = st.onEnter end
+            local o = table.Copy(opts or {})
+            o.pos, o.what = st.pos, o.what
+            go.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, kind, q, o) end end
+            local gs = GameStage(type(text) == "function" and text(st) or text)
+            gs.onDone = st.onDone
+            out[#out + 1] = go
+            out[#out + 1] = gs
+        else
+            out[#out + 1] = st
+        end
+    end
+    spec.stages = out
+    return spec
+end
+
 local LINE_TEXT = "Work the line: rust-red, sparking parts in the scrap bin (E to grab, left click to throw); good ones through"
 
 do
@@ -985,6 +1009,42 @@ do
     SHIFTS.factory[3] = function(ply, job)
         local spec = short(ply, job)
         if spec and GamesOn() then spec = Gamify(spec, 2, "line", LINE_TEXT) end
+        return spec
+    end
+
+    -- Maintenance: every repair is a wiring panel
+    for i, build in ipairs(SHIFTS.maintenance) do
+        SHIFTS.maintenance[i] = function(ply, job)
+            local spec = build(ply, job)
+            if spec and GamesOn() then
+                spec = GamifyHolds(spec, "wiring", "Rewire it: click a wire, then the terminal of the same colour (a wrong one bites)",
+                    { what = string.find(spec.title, "Terminal", 1, true) and "the terminal" or "the box" }, true)
+            end
+            return spec
+        end
+    end
+
+    -- Clinic Medic: rounds are triage
+    local rounds = SHIFTS.medic[1]
+    SHIFTS.medic[1] = function(ply, job)
+        if not GamesOn() then return rounds(ply, job) end
+        local center = WorkSpot(ply, job.num)
+        if not center then return nil end
+        return {
+            title = "Triage", reward = 10, limit = 600,
+            desc = "Patients coming in, and not enough of you. The worst first.",
+            stages = {
+                GameGo(center, "Go to the clinic", "triage", { center = center, spots = Q.SpotsNear(center, 4, 260) }),
+                GameStage("Treat them before they bleed out (medkit, primary fire): the bars over their heads say who's worst"),
+            },
+        }
+    end
+
+    -- Reclamation Crew: rubble is something you break up
+    local rubble = SHIFTS.scrap[2]
+    SHIFTS.scrap[2] = function(ply, job)
+        local spec = rubble(ply, job)
+        if spec and GamesOn() then spec = GamifyHolds(spec, "rubble", "Break up the rubble (crowbar, primary fire)") end
         return spec
     end
 

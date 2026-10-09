@@ -28,6 +28,7 @@ local GUIDE = {
     { "Keys", {
         "F1  the quick menu: nine things on the number keys, for who you are and what's in front of you (0 closes; 9 is everything else)",
         "Union work you do with your hands: Sanitation's street sweep (push the cart, throw the rubbish in), the Factory line (bin the rust-red parts), the Station Porter's papers check (approve, deny, or call a unit).",
+        "More of it: Maintenance rewires panels against the clock (a wrong wire bites), Clinic Medics triage patients bleeding out, the Reclamation Crew breaks up rubble with a crowbar.",
         "Lost? {gm_showhelp} > What now? is always your next step, with the way there; What now? > Places marks anywhere worth knowing (the dispenser, water, your block, your work).",
         "F2  your pockets (and stash at home)        F3  your board: jobs, stories, Union employment        F4  factions",
         "C (outside build mode)  the full menu: everything you can do, with this guide, your pockets, board, factions and tips at the top.",

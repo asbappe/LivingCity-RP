@@ -192,3 +192,100 @@ net.Receive("lc_papers_check", function()
         photo:SetFOV(40)
     end
 end)
+
+------------------------------------------------------------------------
+-- Rewiring: the panel of wires (click a wire, then its terminal)
+------------------------------------------------------------------------
+
+local WIRE_COL = {
+    red = Color(200, 50, 40), blue = Color(50, 90, 210), yellow = Color(230, 200, 40),
+    green = Color(50, 170, 70), white = Color(235, 235, 235), black = Color(30, 30, 30),
+}
+local wire -- { frame, left, right, linked = { [i] = j }, pick, flash, endsAt }
+
+local function CloseWires() if wire and IsValid(wire.frame) then wire.frame:Remove() end wire = nil end
+
+net.Receive("lc_wire_open", function()
+    local t = util.JSONToTable(net.ReadString() or "") or {}
+    if not t.left then return CloseWires() end
+    CloseWires()
+    wire = { left = t.left, right = t.right, linked = {}, endsAt = CurTime() + (t.secs or 25) }
+    for i, j in pairs(t.done or {}) do wire.linked[tonumber(i)] = j end
+    local f = vgui.Create("DFrame")
+    wire.frame = f
+    f:SetTitle("Rewiring " .. tostring(t.what or "the panel") .. ": click a wire, then the terminal of the same colour")
+    f:SetSize(math.min(ScrW() - 40, 520), 120 + #t.left * 56)
+    f:Center()
+    f:MakePopup()
+    local W = f:GetWide()
+    local rowY = function(k) return 50 + (k - 1) * 56 end
+    f.PaintOver = function(s, w, h)
+        -- the wires already in, straight across
+        for i, j in pairs(wire.linked) do
+            local c = WIRE_COL[wire.left[i]] or color_white
+            surface.SetDrawColor(c)
+            for o = -2, 2 do surface.DrawLine(130, rowY(i) + 20 + o, W - 130, rowY(j) + 20 + o) end
+        end
+        if wire.flash and wire.flash.t > CurTime() then
+            surface.SetDrawColor(255, 230, 120)
+            surface.DrawLine(130, rowY(wire.flash.i) + 20, W - 130, rowY(wire.flash.j) + 20)
+        end
+        local left = math.max(0, math.ceil(wire.endsAt - CurTime()))
+        draw.SimpleText(left .. " s", "LCJobTitle", w / 2, h - 30, left <= 5 and Color(255, 120, 90) or INK, TEXT_ALIGN_CENTER)
+    end
+    for side = 1, 2 do
+        local list = side == 1 and wire.left or wire.right
+        for k, colName in ipairs(list) do
+            local b = vgui.Create("DButton", f)
+            b:SetPos(side == 1 and 16 or W - 126, rowY(k))
+            b:SetSize(110, 40)
+            b:SetText(side == 1 and string.upper(colName) or "")
+            b:SetTextColor((colName == "white" or colName == "yellow") and Color(20, 20, 20) or color_white)
+            b.Paint = function(s, w, h)
+                local c = WIRE_COL[colName] or color_white
+                draw.RoundedBox(4, 0, 0, w, h, c)
+                if side == 1 and wire.pick == k then surface.SetDrawColor(255, 255, 255) surface.DrawOutlinedRect(0, 0, w, h, 3) end
+                if side == 2 then draw.SimpleText("o", "LCJobTitle", 12, h / 2, Color(0, 0, 0, 160), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER) end
+            end
+            b.DoClick = function()
+                if side == 1 then
+                    if not wire.linked[k] then wire.pick = k end
+                elseif wire.pick then
+                    net.Start("lc_wire_try") net.WriteUInt(wire.pick, 4) net.WriteUInt(k, 4) net.SendToServer()
+                    wire.flash = { i = wire.pick, j = k, t = CurTime() + 0.25 }
+                    wire.pick = nil
+                end
+            end
+        end
+    end
+end)
+
+net.Receive("lc_wire_result", function()
+    local i, j, right = net.ReadUInt(4), net.ReadUInt(4), net.ReadBool()
+    if not wire then return end
+    if right then wire.linked[i] = j else wire.endsAt = wire.endsAt - 3 end
+end)
+LC_CL.WireState = function() return wire end
+
+------------------------------------------------------------------------
+-- Triage: what's wrong with each patient, and how long they've got
+------------------------------------------------------------------------
+
+hook.Add("PostDrawTranslucentRenderables", "LivingCityJobPatients", function(depth, sky)
+    if sky or not game or game.kind ~= "triage" then return end
+    local me = LocalPlayer()
+    for _, e in ipairs(ents.FindInSphere(me:GetPos(), 900)) do
+        if IsValid(e) and e:GetNW2Bool("lc_patient", false) then
+            local top = e:GetPos() + Vector(0, 0, 84)
+            local ang = (top - EyePos()):Angle()
+            ang = Angle(0, ang.y - 90, 90)
+            local hp, max = e:GetNW2Int("lc_hp", 0), math.max(1, e:GetNW2Int("lc_hpmax", 40))
+            local f = math.Clamp(hp / max, 0, 1)
+            cam.Start3D2D(top, ang, 0.1)
+                draw.SimpleTextOutlined(e:GetNW2String("lc_injury", ""), "DermaLarge", 0, -30, Color(255, 220, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_black)
+                draw.RoundedBox(4, -100, 0, 200, 22, Color(20, 20, 20, 220))
+                draw.RoundedBox(4, -98, 2, 196 * f, 18, f < 0.3 and Color(220, 60, 50) or (f < 0.6 and Color(230, 170, 50) or Color(90, 200, 90)))
+            cam.End3D2D()
+        end
+    end
+end)

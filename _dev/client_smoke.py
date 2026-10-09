@@ -893,6 +893,24 @@ local okJG, errJG = pcall(function()
     net.ReadString, util.JSONToTable = rS, rJ
     run("HUDPaint")
     LC_CL.PapersDecide("deny")
+    -- the wiring panel: opened, a wire right, closed
+    local rS2, rJ2 = net.ReadString, util.JSONToTable
+    local wdoc = { left = { "red", "blue", "yellow", "green" }, right = { "blue", "green", "red", "yellow" }, secs = 30, what = "the box" }
+    net.ReadString = function() return "x" end
+    util.JSONToTable = function() return wdoc end
+    net.recv_lc_wire_open()
+    if not LC_CL.WireState() then error("no wiring panel") end
+    local rU, rB = net.ReadUInt, net.ReadBool
+    local q = { 1, 3 }
+    net.ReadUInt = function() return table.remove(q, 1) end
+    net.ReadBool = function() return true end
+    net.recv_lc_wire_result()
+    net.ReadUInt, net.ReadBool = rU, rB
+    if LC_CL.WireState().linked[1] ~= 3 then error("wire not linked") end
+    wdoc = {}
+    net.recv_lc_wire_open()
+    if LC_CL.WireState() then error("wiring panel didn't close") end
+    net.ReadString, util.JSONToTable = rS2, rJ2
 end)
 if not okJG then problems[#problems + 1] = "job games: " .. tostring(errJG) end
 -- what now? (cl_livingcity_nextstep.lua): the line on screen, and its F1 page

@@ -9636,6 +9636,70 @@ end
 JobGameTests()
 
 ----------------------------------------------------------------------
+function MoreJobGameTests()
+section("More work you actually do: rewiring, triage, rubble")
+local function Tick(n) for _ = 1, n or 1 do _advance(0.1) _runtimers() end end
+local K0 = Vector(-140000, -40000, 0)
+-- rewiring
+local mw = newPlayer("Wireman", "citizen")
+_run(0.3)
+mw:SetPos(K0)
+local c0 = LC.Credits(mw)
+local fixed = false
+ok(LC.JobGameStart(mw, "wiring", nil, { pos = K0, what = "the box", onFixed = function() fixed = true end }), "a panel of wires opens")
+local g = LC.JobGames[mw]
+ok(g and #g.left >= 4 and _lastnet("lc_wire_open") ~= nil, "four or five wires, sent to their screen", g and #g.left)
+-- a wrong one first
+local wrongJ
+for j, col in ipairs(g.right) do if col ~= g.left[1] then wrongJ = j break end end
+ok(LC.WireTry(mw, 1, wrongJ) == false and g.shocks == 1, "the wrong terminal bites")
+-- out of time: the panel trips and starts again
+g.limit = CurTime() - 1
+Tick(1)
+ok(g.trips == 1 and next(g.linked) == nil and g.limit > CurTime(), "too slow: the panel trips and resets")
+for i, col in ipairs(g.left) do
+    for j, c in ipairs(g.right) do if c == col then LC.WireTry(mw, i, j) break end end
+end
+ok(not LC.JobGames[mw] and fixed, "every wire in: it's fixed")
+ok(LC.Credits(mw) > c0, "and paid (less for the shock and the trip)", LC.Credits(mw) - c0)
+-- triage
+local md = newPlayer("Medic", "citizen")
+_run(0.3)
+md:SetPos(K0 + Vector(3000, 0, 0))
+c0 = LC.Credits(md)
+ok(LC.JobGameStart(md, "triage", nil, { center = md:GetPos() }), "patients come in")
+g = LC.JobGames[md]
+ok(g and #g.patients >= 3, "three or four of them", g and #g.patients)
+local dying = g.patients[#g.patients]
+dying.npc:SetHealth(1)
+for _, p in ipairs(g.patients) do if p ~= dying then p.npc:SetHealth(p.max) end end
+Tick(20)
+ok(not LC.JobGames[md] and g.saved == #g.patients - 1 and g.lost == 1, "treated in time they walk out; one left too long is lost", string.format("saved %d, lost %d", g.saved, g.lost))
+ok(LC.Credits(md) > c0, "paid for the ones saved", LC.Credits(md) - c0)
+-- rubble
+local rc = newPlayer("RubbleCrew", "citizen")
+_run(0.3)
+rc:SetPos(K0 + Vector(0, 3000, 0))
+for _, w in ipairs(rc.weps or {}) do end
+rc:StripWeapon("weapon_crowbar")
+ok(LC.JobGameStart(rc, "rubble", nil, { pos = rc:GetPos() + Vector(80, 0, 0) }), "a rubble pile to break up")
+g = LC.JobGames[rc]
+ok(g and #g.chunks >= 4 and rc:HasWeapon("weapon_crowbar") and rc.lcJobCrowbar, "a crowbar lent for it (and no unit books you for carrying it)")
+local items0 = #ents.FindByClass("lc_item")
+for _ = 1, 30 do
+    if not LC.JobGames[rc] then break end
+    local c = g.chunks[1]
+    if c then hook.Run("EntityTakeDamage", c, _dmg(rc, 25, DMG_CLUB)) end
+    Tick(1)
+end
+ok(not LC.JobGames[rc] and g.broken == g.total, "every block broken", g.broken .. " of " .. g.total)
+ok(#ents.FindByClass("lc_item") > items0, "scrap where they broke")
+ok(not rc:HasWeapon("weapon_crowbar") and not rc.lcJobCrowbar, "and the crowbar goes back")
+for _, p in ipairs({ mw, md, rc }) do p:SetPos(Vector(-150000, 150000, 0)) end
+end
+MoreJobGameTests()
+
+----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)
 _run(1)

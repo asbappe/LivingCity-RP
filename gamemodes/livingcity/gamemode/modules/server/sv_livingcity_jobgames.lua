@@ -711,3 +711,287 @@ net.Receive("lc_papers_decide", function(_, ply)
     if choice ~= "approve" and choice ~= "deny" and choice ~= "unit" then return end
     LC.PapersDecide(ply, choice)
 end)
+
+------------------------------------------------------------------------
+-- Rewiring (Maintenance): a fuse box, a streetlight or a terminal opens on
+-- a tangle of coloured wires. Match each wire to its terminal before the
+-- time runs out; a wrong one is a shock. During a blackout it pays double.
+------------------------------------------------------------------------
+
+util.AddNetworkString("lc_wire_open")    -- server -> client: the panel
+util.AddNetworkString("lc_wire_try")     -- client -> server: wire i to terminal j
+util.AddNetworkString("lc_wire_result")  -- server -> client: i, j, right?
+
+local WIRES = { "red", "blue", "yellow", "green", "white", "black" }
+
+local function Shuffle(t)
+    for i = #t, 2, -1 do local j = math.random(i) t[i], t[j] = t[j], t[i] end
+    return t
+end
+
+local function SendWires(g)
+    net.Start("lc_wire_open")
+    net.WriteString(util.TableToJSON({ left = g.left, right = g.right, secs = math.max(1, math.ceil(g.limit - CurTime())), done = g.linked, what = g.what }))
+    net.Send(g.ply)
+end
+
+GAMES.wiring = {
+    start = function(g)
+        g.title = "Rewiring"
+        g.what = g.opts.what or "the panel"
+        local n = math.random(4, 5)
+        local colors = Shuffle(table.Copy(WIRES))
+        g.left = {}
+        for i = 1, n do g.left[i] = colors[i] end
+        g.right = Shuffle(table.Copy(g.left))
+        g.linked, g.shocks = {}, 0
+        g.limit = CurTime() + 22 + n * 3
+        g.dark = LC.CityDark or (LC.PoweredAt and g.opts.pos and not LC.PoweredAt(g.opts.pos))
+        g.hud = function(gg)
+            local left = math.max(0, math.ceil(gg.limit - CurTime()))
+            local done = 0
+            for _ in pairs(gg.linked) do done = done + 1 end
+            return { string.format("Wires: %d of %d", done, #gg.left), string.format("Shocks: %d", gg.shocks),
+                (gg.dark and "Blackout: double pay. " or "") .. string.format("%d seconds", left) }
+        end
+        SendWires(g)
+    end,
+    tick = function(g, now)
+        if now > g.limit then
+            -- the panel trips: start again, shuffled (and paid less)
+            g.trips = (g.trips or 0) + 1
+            g.right = Shuffle(table.Copy(g.left))
+            g.linked = {}
+            g.limit = now + 22 + #g.left * 3
+            g.ply:EmitSound("ambient/energy/spark" .. math.random(1, 6) .. ".wav", 70)
+            g.ply:ChatPrint("[Maintenance] Too slow: the panel trips and resets. Again.")
+            SendWires(g)
+        end
+    end,
+    finish = function(g)
+        net.Start("lc_wire_open") net.WriteString("{}") net.Send(g.ply) -- (closes the panel)
+    end,
+}
+
+-- One connection: wire i (left) to terminal j (right). True when right.
+function LC.WireTry(ply, i, j)
+    local g = LC.JobGames[ply]
+    if not g or g.kind ~= "wiring" or not g.left[i] or not g.right[j] or g.linked[i] then return nil end
+    local right = g.left[i] == g.right[j]
+    if right then
+        g.linked[i] = j
+        ply:EmitSound("buttons/lever7.wav", 60)
+    else
+        g.shocks = g.shocks + 1
+        g.limit = g.limit - 3
+        ply:EmitSound("ambient/energy/zap" .. math.random(1, 3) .. ".wav", 70)
+        local d = DamageInfo and DamageInfo()
+        if d and ply.TakeDamageInfo then d:SetDamage(4) d:SetDamageType(DMG_SHOCK) d:SetAttacker(game.GetWorld and game.GetWorld() or ply) ply:TakeDamageInfo(d) end
+        if EffectData then local fx = EffectData() fx:SetOrigin(ply:EyePos() + ply:GetAimVector() * 30) util.Effect("Sparks", fx, true, true) end
+    end
+    net.Start("lc_wire_result") net.WriteUInt(i, 4) net.WriteUInt(j, 4) net.WriteBool(right) net.Send(ply)
+    local done = 0
+    for _ in pairs(g.linked) do done = done + 1 end
+    if done >= #g.left then
+        local base = math.max(1, 3 + math.max(0, 3 - g.shocks) - 2 * (g.trips or 0))
+        if g.dark then base = base * 2 g.notes[#g.notes + 1] = "Blackout rates." end
+        g.pay = base
+        if g.shocks == 0 then g.notes[#g.notes + 1] = "Clean: not a spark." end
+        if g.opts.onFixed then pcall(g.opts.onFixed) end
+        LC.JobGameEnd(ply, "done")
+    end
+    return right
+end
+
+net.Receive("lc_wire_try", function(_, ply)
+    local i, j = net.ReadUInt(4), net.ReadUInt(4)
+    LC.WireTry(ply, i, j)
+end)
+
+------------------------------------------------------------------------
+-- Triage (Clinic Medic): patients bleeding out at different rates. Treat
+-- them with the medkit (primary fire) before they're gone: the worst first.
+------------------------------------------------------------------------
+
+local INJURIES = {
+    { label = "Bleeding badly", rate = 2.2 }, { label = "Stab wound", rate = 1.6 },
+    { label = "Stunstick beating", rate = 1.0, beaten = true }, { label = "Burns", rate = 0.8 }, { label = "Broken arm", rate = 0.5 },
+}
+
+GAMES.triage = {
+    start = function(g)
+        g.title = "Triage"
+        local center = g.opts.center or g.ply:GetPos()
+        local spots = g.opts.spots or {}
+        if #spots == 0 then for i = 1, 4 do spots[i] = center + Vector(math.cos(i * 1.6) * 90, math.sin(i * 1.6) * 90, 0) end end
+        g.patients, g.saved, g.lost = {}, 0, 0
+        local inj = Shuffle(table.Copy(INJURIES))
+        for i = 1, math.min(#spots, math.random(3, 4)) do
+            if not (LC.Spawners and LC.Spawners.citizen) then break end
+            local npc, st = LC.Spawners.citizen(spots[i])
+            if IsValid(npc) and st then
+                LC.SetState(npc, st, "event")
+                st.eventUntil, st.questLock, st.unmanaged = CurTime() + 900, true, true
+                if npc.SetSchedule then npc:SetSchedule(SCHED_IDLE_STAND) end
+                local max = npc:GetMaxHealth() > 0 and npc:GetMaxHealth() or 40
+                npc:SetHealth(math.floor(max * math.Rand(0.35, 0.55)))
+                local injury = inj[(i - 1) % #inj + 1]
+                g.patients[#g.patients + 1] = { npc = npc, injury = injury, max = max, hp = npc:Health() }
+                npc:SetNW2Bool("lc_patient", true)
+                npc:SetNW2String("lc_injury", injury.label)
+                npc:SetNW2Int("lc_hpmax", max)
+                g.props[#g.props + 1] = npc
+            end
+        end
+        if #g.patients == 0 then error("no patients") end
+        g.ply:ChatPrint("[Clinic] Patients coming in. Medkit, primary fire. The worst first: they won't all wait.")
+        g.hud = function(gg)
+            local lines = { string.format("Saved: %d    Lost: %d    Waiting: %d", gg.saved, gg.lost, #gg.patients - gg.saved - gg.lost) }
+            for _, p in ipairs(gg.patients) do
+                if not p.done then lines[#lines + 1] = string.format("%s: %d%%", p.injury.label, math.floor(100 * p.hp / p.max)) end
+            end
+            return lines
+        end
+    end,
+    tick = function(g, now)
+        for _, p in ipairs(g.patients) do
+            if not p.done then
+                local npc = p.npc
+                if not IsValid(npc) or npc:Health() <= 0 then
+                    p.done, g.lost = true, g.lost + 1
+                    g.ply:ChatPrint("[Clinic] You've lost one. " .. p.injury.label .. ".")
+                else
+                    -- the medkit heals them; the wound takes them back down
+                    local hp = npc:Health()
+                    if hp > p.hp then p.healed = true end
+                    p.drain = (p.drain or 0) + p.injury.rate * 0.1 * (p.healed and 0.5 or 1)
+                    if p.drain >= 1 then
+                        local d = math.floor(p.drain)
+                        p.drain = p.drain - d
+                        hp = hp - d
+                        npc:SetHealth(math.max(0, hp))
+                        if hp <= 0 then
+                            p.done, g.lost = true, g.lost + 1
+                            npc:SetNW2Bool("lc_patient", false)
+                            if npc.TakeDamage then pcall(npc.TakeDamage, npc, 100, game.GetWorld and game.GetWorld() or npc) end
+                            g.ply:ChatPrint("[Clinic] You've lost one. " .. p.injury.label .. ".")
+                        end
+                    end
+                    if not p.done and npc:Health() >= p.max * 0.9 then
+                        p.done, g.saved = true, g.saved + 1
+                        npc:SetNW2Bool("lc_patient", false)
+                        npc:EmitSound("vo/npc/male01/thanks0" .. math.random(1, 2) .. ".wav", 70)
+                        if p.injury.beaten then
+                            g.ply:ChatPrint("[Clinic] He grabs your wrist on the way out. 'Thank you. Please... don't write down what did this.'")
+                        end
+                    end
+                    p.hp = npc:Health()
+                    npc:SetNW2Int("lc_hp", p.hp)
+                end
+            end
+        end
+        local open = 0
+        for _, p in ipairs(g.patients) do if not p.done then open = open + 1 end end
+        if open == 0 then
+            g.pay = g.saved * 4 - g.lost * 2
+            if g.lost == 0 then g.pay = g.pay + 6 g.notes[#g.notes + 1] = "Everyone walked out." end
+            g.notes[#g.notes + 1] = string.format("%d saved, %d lost.", g.saved, g.lost)
+            -- the survivors go home in their own time
+            for _, p in ipairs(g.patients) do
+                if IsValid(p.npc) and p.npc:Health() > 0 then
+                    for i, e in ipairs(g.props) do if e == p.npc then table.remove(g.props, i) break end end
+                    local st = LC.NPCs and LC.NPCs[p.npc]
+                    if st then st.questLock, st.eventUntil = nil, 0 LC.SetState(p.npc, st, "idle") st.untilT = CurTime() + 3 end
+                    SafeRemoveEntityDelayed(p.npc, 60)
+                end
+            end
+            return LC.JobGameEnd(g.ply, "done")
+        end
+    end,
+}
+
+------------------------------------------------------------------------
+-- Rubble (Reclamation Crew): a pile of broken concrete to smash apart with
+-- a crowbar (lent for the shift if you haven't one). Each block breaks
+-- into scrap you can pocket; now and then something else is under there.
+------------------------------------------------------------------------
+
+local CHUNKS = {}
+for _, m in ipairs({ "models/props_debris/concrete_chunk01a.mdl", "models/props_debris/concrete_chunk02a.mdl",
+    "models/props_debris/concrete_chunk03a.mdl", "models/props_debris/concrete_chunk04a.mdl", "models/props_junk/cinderblock01a.mdl" }) do
+    if Valid(m) then CHUNKS[#CHUNKS + 1] = m end
+end
+if #CHUNKS == 0 then CHUNKS = { "models/props_junk/cinderblock01a.mdl" } end
+
+GAMES.rubble = {
+    start = function(g)
+        g.title = "Rubble"
+        local pos = g.opts.pos or (g.ply:GetPos() + g.ply:GetForward() * 80)
+        g.chunks, g.broken = {}, 0
+        for i = 1, math.random(4, 6) do
+            local a = math.random() * math.pi * 2
+            local at = pos + Vector(math.cos(a), math.sin(a), 0) * math.random(0, 50) + Vector(0, 0, 6 + (i % 2) * 10)
+            local e = Spawn(Pick(CHUNKS), at, Angle(math.random(0, 359), math.random(0, 359), math.random(0, 359)), true)
+            if IsValid(e) then
+                e.lcRubble = g
+                e.lcHits = math.random(2, 4)
+                e:SetNW2Bool("lc_rubble", true)
+                g.chunks[#g.chunks + 1] = e
+                g.props[#g.props + 1] = e
+            end
+        end
+        if #g.chunks == 0 then error("no rubble") end
+        g.total = #g.chunks
+        if not g.ply:HasWeapon("weapon_crowbar") then
+            g.ply:Give("weapon_crowbar")
+            g.lent = true
+        end
+        g.ply.lcJobCrowbar = true
+        if g.ply.SelectWeapon then g.ply:SelectWeapon("weapon_crowbar") end
+        g.ply:ChatPrint("[Reclamation] Break the pile up (crowbar, primary fire). Each block gives up a bit of scrap.")
+        g.hud = function(gg) return { string.format("Blocks broken: %d of %d", gg.broken, gg.total), "Crowbar, primary fire" } end
+    end,
+    tick = function(g)
+        if g.broken >= g.total then
+            g.pay = g.total
+            return LC.JobGameEnd(g.ply, "done")
+        end
+    end,
+    finish = function(g)
+        if IsValid(g.ply) then
+            g.ply.lcJobCrowbar = nil
+            if g.lent and g.ply:HasWeapon("weapon_crowbar") and g.ply.StripWeapon then g.ply:StripWeapon("weapon_crowbar") end
+        end
+    end,
+}
+
+-- A blow lands on a block: it cracks, then breaks.
+local function Smash(ent, g)
+    ent.lcHits = (ent.lcHits or 1) - 1
+    ent:EmitSound("physics/concrete/concrete_impact_hard" .. math.random(1, 3) .. ".wav", 70)
+    if EffectData then
+        local fx = EffectData() fx:SetOrigin(ent:WorldSpaceCenter()) fx:SetScale(1)
+        util.Effect("GlassImpact", fx, true, true)
+    end
+    if ent.lcHits > 0 then return end
+    g.broken = g.broken + 1
+    ent:EmitSound("physics/concrete/concrete_break" .. math.random(2, 3) .. ".wav", 75)
+    local at = ent:WorldSpaceCenter()
+    for i, c in ipairs(g.chunks) do if c == ent then table.remove(g.chunks, i) break end end
+    ent:Remove()
+    if LC.SpawnWorldItem then
+        LC.SpawnWorldItem("scrap", at + Vector(0, 0, 8))
+        if math.random() < 0.15 then LC.SpawnWorldItem(Pick({ "gun_parts", "chemicals", "ration" }), at + Vector(0, 0, 12)) end
+    end
+end
+LC.RubbleSmash = Smash
+
+hook.Add("EntityTakeDamage", "LivingCityJobRubble", function(ent, dmg)
+    local g = IsValid(ent) and ent.lcRubble
+    if not g or LC.JobGames[g.ply] ~= g then return end
+    if dmg:GetAttacker() ~= g.ply then return true end
+    local inf = dmg:GetInflictor()
+    local club = dmg:IsDamageType(DMG_CLUB) or (IsValid(inf) and inf:GetClass() == "weapon_crowbar")
+    if club then Smash(ent, g) end
+    return true
+end)
