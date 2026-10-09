@@ -6,6 +6,9 @@
     ("Point: workplace", number = the job's number below) and shifts happen
     there; without them, shifts use the streets around you. NPC citizens go to
     work at those workplaces too.
+
+    npcOnly: the city's own people work there, but players can't take it
+    (its shifts were standing at a desk or a machine: no work for a player).
 ]]
 
 
@@ -26,15 +29,15 @@ LCJ.Occupations = {
       desc = "Fuse boxes, streetlights and Combine terminals. You see a lot of logs." },
     { id = "porter", num = 7, name = "Station Porter", place = "Train station",
       desc = "Luggage, tickets and new arrivals who don't know where anything is yet." },
-    { id = "clerk", num = 8, name = "Records Clerk", place = "Civil records office",
+    { id = "clerk", num = 8, name = "Records Clerk", place = "Civil records office", npcOnly = true,
       desc = "Stamps, files and identity forms. The cabinet with the blank ones is rarely locked." },
-    { id = "laundry", num = 9, name = "Uniform Laundry", place = "Nexus laundry",
+    { id = "laundry", num = 9, name = "Uniform Laundry", place = "Nexus laundry", npcOnly = true,
       desc = "Civil Protection uniforms, washed, pressed and counted. Usually counted." },
     { id = "mortuary", num = 10, name = "Mortuary Attendant", place = "City morgue",
       desc = "Collect the dead. Process what they leave behind. Nobody checks your work." },
     { id = "scrap", num = 11, name = "Reclamation Crew", place = "Reclamation yard",
       desc = "Scrap and rubble from the old city. Some of it was hidden there on purpose." },
-    { id = "radio", num = 12, name = "Radio Repair", place = "Radio repair shop",
+    { id = "radio", num = 12, name = "Radio Repair", place = "Radio repair shop", npcOnly = true,
       desc = "Loudspeakers and Union radios. Some come in tuned to frequencies that don't exist." },
 }
 

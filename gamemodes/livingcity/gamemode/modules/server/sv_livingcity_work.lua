@@ -54,6 +54,7 @@ LC.GiveJobTools = GiveTools
 function LC.SetJob(ply, id, force)
     local job = LCJ.ById[id]
     if id ~= "" and not job then return false, "No such job." end
+    if job and job.npcOnly and not force then return false, "The Union isn't taking anyone on for that." end
     if not force then
         if not LC.CanWork(ply) then return false, "The Union only employs citizens." end
         if id ~= "" and LC.IntakePending and LC.IntakePending(ply) then
@@ -85,6 +86,23 @@ hook.Add("PlayerInitialSpawn", "LivingCityJobs", function(ply)
     timer.Simple(1, function()
         if IsValid(ply) then ply:SetNW2String("lcj_job", ply:GetPData("lcj_job", "")) end
     end)
+end)
+
+-- A post the Union no longer gives players (sv_livingcity_jobs.lua: npcOnly):
+-- whoever held it is told, and picks another.
+timer.Create("LivingCityClosedJobs", 10, 0, function()
+    for _, ply in ipairs(player.GetAll()) do
+        local job = LC.Job(ply)
+        if job and job.npcOnly then
+            ply:SetNW2String("lcj_job", "")
+            ply:SetPData("lcj_job", "")
+            local s = LC.Story and LC.Story(ply)
+            if s and s.chains then s.chains.shift = nil if LC.SaveStory then LC.SaveStory(ply) end end
+            if ply.lcStoryPostings then ply.lcStoryPostings.shift = nil end
+            ply:ChatPrint("[Union] Your post (" .. job.name .. ") has been closed. Pick another job on your board (F3).")
+            if LC.SendBoard then LC.SendBoard(ply) end
+        end
+    end
 end)
 
 hook.Add("PlayerSpawn", "LivingCityJobs", function(ply)
@@ -716,153 +734,9 @@ SHIFTS.porter = {
 }
 
 ------------------------------------------------------------------------
--- Records Clerk
+-- (Records Clerk and Uniform Laundry are NPC jobs only: standing at a desk
+-- or a machine was no work for a player. sh_livingcity_jobs.lua)
 ------------------------------------------------------------------------
-
-SHIFTS.clerk = {
-    function(ply, job)
-        local office = WorkSpot(ply, job.num)
-        if not office then return nil end
-        return {
-            title = "Filing", reward = 15, limit = 360,
-            desc = "The day's files: relocations, ration audits, three deaths by natural causes.",
-            stages = { Goto(office, "Go to the records office", 180), Hold(office, 30, "Process the day's files", 160) },
-        }
-    end,
-    function(ply, job)
-        local office = WorkSpot(ply, job.num)
-        if not office then return nil end
-        return {
-            title = "Permit desk", reward = 20, limit = 420,
-            desc = "You're on the permit desk today.",
-            stages = {
-                Goto(office, "Go to the permit desk", 180),
-                Choice("A woman's relocation papers are missing one stamp. Without it, her family gets split across two districts. She's watching your hands.", {
-                    { text = "Stamp it anyway.", check = { "guile", 12 },
-                      success = function(q, p)
-                          Trait(p, "sympathy", 1)
-                          LC.Bump(p, "silences")
-                          Narrate(q, "One stamp. It's the easiest thing you've ever done.")
-                      end,
-                      fail = function(q, p)
-                          Narrate(q, "Your supervisor checks the stamp log at the end of the day.")
-                          LC.ReportCrime(p, "Falsifying records", 120)
-                      end },
-                    { text = "Reject the application.", pick = function(q, p) Trait(p, "loyalty", 1) end },
-                    { text = "Reject it, and flag her file.", pick = function(q, p)
-                        Trait(p, "loyalty", 2)
-                        LC.Bump(p, "reports")
-                    end },
-                }),
-                Hold(office, 15, "Finish the paperwork", 160),
-            },
-        }
-    end,
-    function(ply, job)
-        local office = WorkSpot(ply, job.num)
-        if not office then return nil end
-        return {
-            title = "Supply cabinet", reward = 15, limit = 420,
-            desc = "Restock the forms before the morning queue.",
-            stages = {
-                Goto(office, "Go to the records office", 180),
-                Hold(office, 20, "Restock the forms", 160),
-                Choice("The cabinet with the blank identity forms is unlocked, and your supervisor is at lunch.", {
-                    { text = "Lock it and move on.", pick = function(q, p) Trait(p, "loyalty", 1) end },
-                    { text = "Slip one into your coat.", check = { "guile", 11 },
-                      success = function(q, p)
-                          Give(p, "papers_blank")
-                          LC.Bump(p, "thefts")
-                          Narrate(q, "One form. Nobody counts them. Probably.")
-                      end,
-                      fail = function(q, p)
-                          Narrate(q, "Your supervisor comes back early.")
-                          LC.ReportCrime(p, "Theft of state documents", 180)
-                      end },
-                    { text = "Take a stack.", check = { "guile", 16 },
-                      success = function(q, p)
-                          Give(p, "papers_blank", 3)
-                          LC.Bump(p, "thefts")
-                          Narrate(q, "Three forms flat against your ribs. Your heart is louder than the printer.")
-                      end,
-                      fail = function(q, p)
-                          Narrate(q, "A stack that size doesn't hide. Your supervisor is already calling it in.")
-                          LC.ReportCrime(p, "Theft of state documents", 240)
-                      end },
-                }),
-            },
-        }
-    end,
-}
-
-------------------------------------------------------------------------
--- Uniform Laundry
-------------------------------------------------------------------------
-
-SHIFTS.laundry = {
-    function(ply, job)
-        local room = WorkSpot(ply, job.num)
-        if not room then return nil end
-        return {
-            title = "Wash cycle", reward = 15, limit = 360,
-            desc = "Forty uniforms, one cycle.",
-            stages = { Goto(room, "Go to the laundry", 180), Hold(room, 35, "Run the machines", 160) },
-        }
-    end,
-    function(ply, job)
-        local room = WorkSpot(ply, job.num)
-        local dest, destName = Precinct(ply)
-        if not room or not dest then return nil end
-        return {
-            title = "Pressed uniforms", reward = 20, limit = 480,
-            desc = "A bundle of pressed uniforms, due at " .. destName .. ".",
-            stages = {
-                { kind = "pickup", pos = room, model = "models/props_junk/cardboard_box003a.mdl", text = "Collect the bundle (press E)" },
-                Choice("The count is wrong. There's one uniform too many, mask and all, folded at the bottom. Nobody would miss it.", {
-                    { text = "Deliver the count as it is.", pick = function(q, p) Trait(p, "loyalty", 1) end },
-                    { text = "Keep the spare.", check = { "guile", 13 },
-                      success = function(q, p)
-                          Give(p, "uniform_cp")
-                          LC.Bump(p, "thefts")
-                          Narrate(q, "It goes under your coat. It's heavier than you'd think, being one of them.")
-                      end,
-                      fail = function(q, p)
-                          Narrate(q, "The quartermaster recounts in front of you.")
-                          LC.ReportCrime(p, "Theft of Civil Protection property", 240)
-                      end },
-                }),
-                destName == "the checkpoint"
-                    and Q.Contact("Hand the uniforms to the unit at the checkpoint (press E)", dest, "cop")
-                    or Deliver(dest, "Deliver the uniforms to " .. destName, 180),
-            },
-        }
-    end,
-    function(ply, job)
-        local room = WorkSpot(ply, job.num)
-        local home, homeName = Residence(ply)
-        if not room then return nil end
-        return {
-            title = "Stains", reward = 15, limit = 420,
-            desc = "The bloodstained ones need doing by hand.",
-            stages = {
-                Goto(room, "Go to the laundry", 180),
-                Hold(room, 20, "Scrub the stains", 160),
-                Choice("This sleeve is stiff with blood, still fresh. The tag pinned to it isn't a unit number. It's a citizen's.", {
-                    { text = "Wash it.", pick = function(q, p) Trait(p, "loyalty", 1) end },
-                    { text = "Keep the tag. Someone's family should know.", pick = function(q, p)
-                        Trait(p, "sympathy", 1)
-                        LC.Bump(p, "silences")
-                        if home then Insert(q, { Goto(home, "Leave the tag where his family will find it, " .. homeName, 160) }) end
-                    end },
-                    { text = "Report the irregularity.", pick = function(q, p)
-                        Trait(p, "loyalty", 1)
-                        Narrate(q, "Your supervisor tells you to wash it and forget it. You wash it.")
-                    end },
-                }),
-            },
-        }
-    end,
-}
 
 ------------------------------------------------------------------------
 -- Mortuary Attendant
@@ -1041,92 +915,9 @@ SHIFTS.scrap = {
 }
 
 ------------------------------------------------------------------------
--- Radio Repair
+-- (Radio Repair is an NPC job only: the city's own crews still see to the
+-- loudspeakers. sh_livingcity_jobs.lua)
 ------------------------------------------------------------------------
-
-SHIFTS.radio = {
-    function(ply)
-        -- the city's own loudspeakers, the broken ones first (sv_livingcity_propaganda.lua)
-        local speakers = LC.StreetFixtures and LC.StreetFixtures("lc_loudspeaker", ply:GetPos(), 3500) or {}
-        if #speakers > 0 then
-            local stages = {}
-            for i = 1, math.min(3, #speakers) do
-                local sp = speakers[i]
-                local h = Hold(sp:GetPos(), 8, string.format("Fix loudspeaker %d of %d, %s", i, math.min(3, #speakers), Place(sp:GetPos(), ply:GetPos())), 220)
-                h.onDone = function()
-                    if LC.RepairStreetFixture then LC.RepairStreetFixture(sp) end
-                    Sound("npc/overwatch/cityvoice/f_innactionisconspiracy_spkr.wav", sp:GetPos())
-                end
-                stages[i] = h
-            end
-            return { title = "Loudspeakers", reward = 20, limit = 540, desc = "The city's loudspeakers need seeing to. The city must be heard.", stages = stages }
-        end
-        local stages = {}
-        for i = 1, 3 do
-            local sp = Q.Spot(ply, 300, 2500)
-            if not sp then return nil end
-            local h = Hold(sp, 8, string.format("Fix loudspeaker %d of 3, %s", i, Place(sp, ply:GetPos())), 120)
-            h.onEnter = function(q) Q.SpawnItem(q, "models/props_wasteland/speakercluster01a.mdl", sp) end
-            h.onDone = function() Sound("npc/overwatch/cityvoice/f_innactionisconspiracy_spkr.wav", sp) end
-            stages[i] = h
-        end
-        return { title = "Loudspeakers", reward = 20, limit = 540, desc = "Three loudspeakers down. The city must be heard.", stages = stages }
-    end,
-    function(ply, job)
-        local shop = WorkSpot(ply, job.num)
-        if not shop then return nil end
-        return {
-            title = "Repair bench", reward = 15, limit = 420,
-            desc = "Radios in for repair.",
-            stages = {
-                Goto(shop, "Go to the repair shop", 180),
-                Hold(shop, 20, "Repair the radios on the bench", 160),
-                Choice("One radio came in already retuned, to a frequency the Union doesn't broadcast on. The owner's block number is on the tag.", {
-                    { text = "Reset it and log the owner.", pick = function(q, p)
-                        Trait(p, "loyalty", 2)
-                        LC.Bump(p, "reports")
-                    end },
-                    { text = "Reset it. Say nothing.", pick = function(q, p) LC.Bump(p, "silences") end },
-                    { text = "Keep it.", pick = function(q, p)
-                        Give(p, "radio_tuned")
-                        LC.Bump(p, "thefts")
-                        Narrate(q, "Freq 7 hisses softly in your coat.")
-                    end },
-                }),
-            },
-        }
-    end,
-    function(ply, job)
-        local shop = WorkSpot(ply, job.num)
-        if not shop then return nil end
-        return {
-            title = "Union radio order", reward = 20, limit = 420,
-            desc = "A batch of Union radios to assemble.",
-            stages = {
-                Goto(shop, "Go to the repair shop", 180),
-                Hold(shop, 25, "Assemble the radios", 160),
-                Choice("One is left over at the end of the count.", {
-                    { text = "Return it to stores.", pick = function(q, p) Trait(p, "loyalty", 1) end },
-                    { text = "Take it home.", check = { "guile", 11 },
-                      success = function(q, p) Give(p, "radio") end,
-                      fail = function(q, p)
-                          Narrate(q, "Stores counts them again while you're still there.")
-                          LC.ReportCrime(p, "Theft of Union property", 90)
-                      end },
-                    { text = "Retune it to Freq 7 first.", check = { "guile", 14 },
-                      success = function(q, p)
-                          Give(p, "radio_tuned")
-                          LC.Bump(p, "thefts")
-                      end,
-                      fail = function(q, p)
-                          Narrate(q, "The bench tester squeals on the unlisted frequency. Everyone turns around.")
-                          LC.ReportCrime(p, "Possession of an unregistered radio", 150)
-                      end },
-                }),
-            },
-        }
-    end,
-}
 
 ------------------------------------------------------------------------
 -- The shift chain: one personal posting at a time, forever

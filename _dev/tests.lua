@@ -929,7 +929,7 @@ for _, chain in ipairs(LC.ChainList) do
     for partId in pairs(chain.parts) do
         local variants = { false }
         if chain.id == "missing" then variants = { "rebels", "infestation", "deserted" } end
-        if chain.id == "shift" then variants = {} for _, o in ipairs(LCJ.Occupations) do variants[#variants + 1] = o.id end end
+        if chain.id == "shift" then variants = {} for _, o in ipairs(LCJ.Occupations) do if not o.npcOnly then variants[#variants + 1] = o.id end end end
         for _, cause in ipairs(variants) do
             if chain.id == "shift" then LC.SetJob(p, cause, true) end
             if chain.id == "rehab" then LC.AddStanding(p, -100 - LC.Standing(p)) end
@@ -1607,7 +1607,7 @@ local newJobs = { porter = { "New arrivals", "Luggage", "Ticket check" }, clerk 
 local jobber = newPlayer("Jobber", "citizen")
 local jobInc = ents.Create("lc_incinerator") jobInc:SetPos(Vector(-2600, 2600, 0)) jobInc:Spawn() -- the morgue's (bodies are hauled here)
 local done, total, missing = 0, 0, {}
-for _, id in ipairs({ "porter", "clerk", "laundry", "mortuary", "scrap", "radio" }) do
+for _, id in ipairs({ "porter", "mortuary", "scrap" }) do
     LC.SetJob(jobber, id, true)
     for _, title in ipairs(newJobs[id]) do
         total = total + 1
@@ -1627,6 +1627,18 @@ for _, id in ipairs({ "porter", "clerk", "laundry", "mortuary", "scrap", "radio"
 end
 ok(done == total, "every new job's shifts can be worked start to finish", missing[1])
 ok(#LCJ.Occupations == 12, "twelve occupations in all")
+local npcOnly = {}
+for _, o in ipairs(LCJ.Occupations) do if o.npcOnly then npcOnly[#npcOnly + 1] = o.id end end
+table.sort(npcOnly)
+ok(table.concat(npcOnly, ",") == "clerk,laundry,radio", "three are the city's own (no work for a player): laundry, records, radio repair", table.concat(npcOnly, ","))
+local applicant = newPlayer("JobApplicant", "citizen")
+applicant:SetPos(FAR)
+local okA, whyA = LC.SetJob(applicant, "laundry")
+ok(not okA and whyA and string.find(whyA, "isn't taking anyone", 1, true), "a player can't take one", whyA)
+applicant:SetNW2String("lcj_job", "laundry")
+applicant.chat = {}
+_advance(11) _runtimers()
+ok(applicant:GetNW2String("lcj_job", "") == "" and has(applicant.chat, "has been closed"), "and anyone who had one is told it's closed, and picks another")
 
 local function choose(job, title, pick, roll)
     local p = newPlayer("Job" .. job .. pick, "citizen")
@@ -1637,15 +1649,9 @@ local function choose(job, title, pick, roll)
     if roll then withRoll(roll, function() workAll(qj, p) end) else workAll(qj, p) end
     return p, qj
 end
-local pc = choose("clerk", "Supply cabinet", 2, 20)
-ok(LC.HasItem(pc, "papers_blank"), "a records clerk can lift a blank identity form")
-local pl = choose("laundry", "Pressed uniforms", 2, 20)
-ok(LC.HasItem(pl, "uniform_cp"), "the laundry is where uniforms go missing")
 local pm = choose("mortuary", "Collection", 2)
 ok(LC.HasItem(pm, "papers_dead"), "the morgue is where dead men's papers come from")
 ok(jobInc:GetNW2Float("lc_burn_until", 0) > 0, "the body went into the incinerator")
-local pr = choose("radio", "Repair bench", 3)
-ok(LC.HasItem(pr, "radio_tuned"), "the radio bench is where retuned radios come from")
 local pp, qp = choose("porter", "New arrivals", 3)
 ok(qp.done and LC.Counter(pp, "reports") >= 1, "a porter can turn in a nervous arrival instead of walking him home")
 local ps = choose("scrap", "Rubble clearing", 3)

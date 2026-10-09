@@ -418,13 +418,15 @@ Citizens (and Resistance members who still pass for citizens) choose a job on th
 | 5 | Courier | Mail rounds, sealed envelopes |
 | 6 | Maintenance Technician | Streetlights (or fuse boxes on a map with none), faulty terminals |
 | 7 | Station Porter | New arrivals to walk home, luggage, ticket checks |
-| 8 | Records Clerk | Filing, the permit desk, the cabinet of blank identity forms |
-| 9 | Uniform Laundry | Wash cycles, pressed uniforms for the precinct, bloodstains |
+| 8 | Records Clerk | *NPCs only* |
+| 9 | Uniform Laundry | *NPCs only* |
 | 10 | Mortuary Attendant | Hauling the dead to the incinerator, clearing the streets after trouble, the incinerator |
 | 11 | Reclamation Crew | Scrap runs, rubble that sometimes hides a weapons cache |
-| 12 | Radio Repair | Loudspeakers, the repair bench, Union radio orders |
+| 12 | Radio Repair | *NPCs only* |
 
-Place each job's workplace from the editor's "Workplaces" section. Shifts pay Credits and Civil Standing, and many carry small choices: the mother with one ration card, the beaten man who begs you to write "fell down the stairs". The newer jobs are also where contraband comes from, if you want it: blank forms from the records office, a spare uniform from the laundry, a dead man's papers from the morgue, a Freq 7 radio from the repair bench.
+**NPCs only:** the Records Clerk, Uniform Laundry and Radio Repair are the city's own people's work (they still go to those workplaces), but players can't take them: their shifts were standing at a desk or a machine. Anyone who had one is told the post has closed, and picks another.
+
+Place each job's workplace from the editor's "Workplaces" section. Shifts pay Credits and Civil Standing, and many carry small choices: the mother with one ration card, the beaten man who begs you to write "fell down the stairs". The newer jobs are also where contraband comes from, if you want it: a dead man's papers from the morgue, a suitcase that's heavier than clothes, a pistol under the rubble. (Blank forms, uniforms and Freq 7 radios come from the black market, the dead, scavenging and the Resistance lab.)
 
 ### Escorts through Combine doors
 
@@ -574,9 +576,9 @@ So nobody has to read all this first, the game explains itself as it happens. Th
 | Radio (Freq 7) | Black market, radio bench | Freq 7: private Resistance chat, sweep warnings, and garbled Civil Protection dispatch |
 | Travel permit | Commissary (Trusted) | Gets you past one curfew stop, for the rest of that curfew |
 | Spare citizen clothes | Commissary, black market | A hunted Resistance member passes as a citizen (and can hold a Union job) until someone checks their face. Units can wear them to go undercover |
-| Civil Protection uniform | Black market, laundry | Security NPCs take you for a unit, even if you're wanted. Combine doors usually open. Blown by any crime, by lingering near real units, by a door reading your biosignal, or by a real unit's search. Real units who look closely see "not on the roster" |
+| Civil Protection uniform | Black market, a dead unit, scavenging | Security NPCs take you for a unit, even if you're wanted. Combine doors usually open. Blown by any crime, by lingering near real units, by a door reading your biosignal, or by a real unit's search. Real units who look closely see "not on the roster" |
 | Forged papers / a dead man's papers | Black market, morgue, or forge a blank form | A new identity: clears your wanted status if no unit is watching. Inspections can catch it (dead men's papers are better) |
-| Blank identity form | Black market, records office, luggage | Forge it in your own block or rebel territory (Guile check) |
+| Blank identity form | Black market, luggage | Forge it in your own block or rebel territory (Guile check) |
 | Forged ration card | Black market | One ration from any dispenser, whatever your standing or cooldown |
 | Lockpick set | Black market | Locked doors (not Combine locks). Can snap. Being seen is breaking and entering |
 | Combine bypass charge | Black market | Opens any door once, Combine doors included. Sometimes trips an alarm |

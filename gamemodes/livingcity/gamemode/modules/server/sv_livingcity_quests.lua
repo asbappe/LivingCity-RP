@@ -2809,7 +2809,9 @@ function LC.SendBoard(ply)
     local jobs
     if LC.CanWork and LC.CanWork(ply) and LCJ then
         jobs = { current = ply:GetNW2String("lcj_job", ""), list = {} }
-        for _, o in ipairs(LCJ.Occupations) do jobs.list[#jobs.list + 1] = { id = o.id, name = o.name, desc = o.desc } end
+        for _, o in ipairs(LCJ.Occupations) do
+            if not o.npcOnly then jobs.list[#jobs.list + 1] = { id = o.id, name = o.name, desc = o.desc } end
+        end
     end
     LC.SendCompressed("lcq_board", {
         jobs = jobs, credits = LC.Credits and LC.Credits(ply) or nil, standing = LC.Standing and LC.Standing(ply) or nil,
