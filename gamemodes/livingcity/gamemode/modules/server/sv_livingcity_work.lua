@@ -923,6 +923,87 @@ SHIFTS.scrap = {
 -- The shift chain: one personal posting at a time, forever
 ------------------------------------------------------------------------
 
+------------------------------------------------------------------------
+-- Work you actually do (sv_livingcity_jobgames.lua): the street sweep, the
+-- factory line and the papers check take the place of the shifts that were
+-- standing at a spot. lc_jobgames 0 puts the old ones back.
+------------------------------------------------------------------------
+
+local function GamesOn() return LC.JobGamesOn and LC.JobGamesOn() end
+
+-- Arriving at a stage starts the game; the next stage is the game itself.
+local function GameGo(pos, text, kind, opts)
+    local go = Goto(pos, text, 180)
+    go.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, kind, q, opts) end end
+    return go
+end
+local function GameStage(text) return Count("game_done", 1, text) end
+
+-- An old shift, with its standing (stage idx) turned into a game started by the stage before it.
+local function Gamify(spec, idx, kind, text, opts)
+    if not spec or not spec.stages[idx] or idx < 2 then return spec end
+    local before = spec.stages[idx - 1]
+    local o = opts or {}
+    o.station = o.station or before.pos
+    o.depot = o.depot or before.pos
+    before.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, kind, q, o) end end
+    spec.stages[idx] = GameStage(text)
+    return spec
+end
+
+local LINE_TEXT = "Work the line: rust-red, sparking parts in the scrap bin (E to grab, left click to throw); good ones through"
+
+do
+    local litter = SHIFTS.sanitation[1]
+    SHIFTS.sanitation[1] = function(ply, job)
+        if not GamesOn() then return litter(ply, job) end
+        local depot = WorkSpot(ply, job.num, 300, 1500)
+        local spots = depot and Q.HideSpots(depot, 10, 900, true) or {}
+        if not depot or #spots < 5 then return litter(ply, job) end
+        return {
+            title = "Street sweep", reward = 10, limit = 600,
+            desc = "Your cart's at the depot. The streets are a mess. Pay for every piece in the cart.",
+            stages = {
+                GameGo(depot, "Go to the sanitation depot: your cart's there", "sweep", { depot = depot, spots = spots }),
+                GameStage("Fill the cart and bring it back: E pushes it, E picks up rubbish, left click throws it in"),
+            },
+        }
+    end
+
+    local quota = SHIFTS.factory[1]
+    SHIFTS.factory[1] = function(ply, job)
+        if not GamesOn() then return quota(ply, job) end
+        local station = WorkSpot(ply, job.num)
+        if not station then return nil end
+        return {
+            title = "On the line", reward = 10, limit = 600,
+            desc = "The line runs all day. Bad parts don't leave the floor.",
+            stages = { GameGo(station, "Report to the line", "line", { station = station }), GameStage(LINE_TEXT) },
+        }
+    end
+    local short = SHIFTS.factory[3]
+    SHIFTS.factory[3] = function(ply, job)
+        local spec = short(ply, job)
+        if spec and GamesOn() then spec = Gamify(spec, 2, "line", LINE_TEXT) end
+        return spec
+    end
+
+    local ticket = SHIFTS.porter[3]
+    SHIFTS.porter[3] = function(ply, job)
+        local spec = ticket(ply, job)
+        if spec and GamesOn() then
+            spec = Gamify(spec, 2, "papers", "Check the travelers' papers: E on each, then approve, deny or call a unit")
+            spec.title = "Papers check"
+            spec.reward = 10
+            spec.desc = "Papers and permits, everyone boarding. Today's rules are posted."
+        end
+        return spec
+    end
+end
+
+-- (tests: finish a game at once)
+LC.JobGameFinishForTest = function(ply) if LC.JobGames and LC.JobGames[ply] then LC.JobGameEnd(ply, "test") else LC.QuestEvent("game_done", ply) end end
+
 local function Employed(ply) return LC.Job(ply) ~= nil and LC.CanWork(ply) end
 
 LC.Chain{

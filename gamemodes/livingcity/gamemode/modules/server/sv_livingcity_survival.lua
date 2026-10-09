@@ -742,7 +742,7 @@ LC.Fixtures = LC.Fixtures or {}
 -- ration dispenser is wall-mounted at about chest height; everything else
 -- stands on the floor. (Models have their origin in different places, so the
 -- model's own bounds are used to put its bottom exactly here.)
-local FIXTURE_LIFT = { dispenser = 34, screen = 60, lawboard = 30, screen_big = 140, loudspeaker = 180, powerbank = 40 }
+local FIXTURE_LIFT = { conveyor = 34, dispenser = 34, screen = 60, lawboard = 30, screen_big = 140, loudspeaker = 180, powerbank = 40 }
 
 function LC.SeatFixture(e, ground, kind)
     local mins = e:OBBMins()
@@ -764,6 +764,7 @@ local FIXTURE_CLASS = {
     citybin = "lc_citybin", streetlight = "lc_streetlight", loudspeaker = "lc_loudspeaker", screen_big = "lc_screen", tv = "lc_screen",
     intake = "lc_intake", housingterm = "lc_intake", -- Civil Intake and Housing Allocation (sv_livingcity_intake.lua)
     cpsupply = "lc_cpsupply", -- units are issued supplies here (sv_livingcity_cpsupply.lua)
+    conveyor = "lc_conveyor", -- the factory line (sv_livingcity_jobgames.lua)
 }
 
 function LC.SyncFixtures()

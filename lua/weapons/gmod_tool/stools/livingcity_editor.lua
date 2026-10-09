@@ -52,6 +52,7 @@ local MODES = {
     { id = "dispenser",   label = "Fixture: ration dispenser" },
     { id = "terminal",    label = "Fixture: commissary terminal" },
     { id = "cpsupply",    label = "Fixture: Civil Protection Commissary (units are issued grenades, ammunition, armour and rations here)" },
+    { id = "conveyor",    label = "Fixture: factory conveyor (the Factory Worker's line runs parts along it)" },
     { id = "intake",      label = "Fixture: Civil Intake (registration: new people get their papers here; NPC arrivals queue in front)" },
     { id = "housingterm", label = "Fixture: Housing Allocation (registered new arrivals ask for a room here)" },
     { id = "stove",       label = "Fixture: stove" },
@@ -112,7 +113,7 @@ else
 end
 
 -- sit, bench and lean spots, and fixtures, face the person placing them
-local FACE_PLACER = { intake = true, housingterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, screen = true, lawboard = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true }
+local FACE_PLACER = { conveyor = true, intake = true, housingterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, screen = true, lawboard = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true }
 
 local function ModeIndex(id)
     for i, m in ipairs(MODES) do if m.id == id then return i end end
@@ -684,6 +685,7 @@ function TOOL.BuildCPanel(panel)
     Slider("Birds", "lc_birds", 0, 30, 0)
     Slider("Headcrab vermin", "lc_vermin", 0, 15, 0)
     Check("Credits, Civil Standing and the Commissary", "lc_economy")
+    Check("Hands-on Union shifts (street sweep, factory line, papers check)", "lc_jobgames")
     Check("Rations come from the city's stores", "lc_stockpile")
     Slider("Rations the stores hold", "lc_stock_max", 50, 2000, 0)
     Slider("Citizens per ration the city eats a minute (lower: emptier)", "lc_stock_eat", 5, 200, 0)

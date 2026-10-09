@@ -994,6 +994,8 @@ local function work(q, p)
                 LC.StopHaul(p)
             end
             _run(0.5)
+        elseif st.kind == "count" and st.event == "game_done" then
+            LC.JobGameFinishForTest(p) _run(0.5)
         elseif st.kind == "count" and st.event == "used_npc" then
             for n, ns in pairs(LC.NPCs) do
                 if IsValid(n) and ns.role == "cop" then hook.Run("LivingCityPlayerUsedNPC", p, n, ns) break end
@@ -1579,6 +1581,8 @@ local function workAll(q, p)
                 LC.StopHaul(p)
             end
             _run(0.5)
+        elseif st.kind == "count" and st.event == "game_done" then
+            LC.JobGameFinishForTest(p) _run(0.5)
         elseif st.kind == "count" and st.event == "used_npc" then
             for n, ns in pairs(LC.NPCs) do
                 if q.done or q.stages[q.stage] ~= st then break end
@@ -1601,7 +1605,7 @@ local function shiftTitled(p, title)
         end
     end
 end
-local newJobs = { porter = { "New arrivals", "Luggage", "Ticket check" }, clerk = { "Filing", "Permit desk", "Supply cabinet" },
+local newJobs = { porter = { "New arrivals", "Luggage", "Papers check" }, clerk = { "Filing", "Permit desk", "Supply cabinet" },
     laundry = { "Wash cycle", "Pressed uniforms", "Stains" }, mortuary = { "Collection", "Incinerator" },
     scrap = { "Scrap run", "Rubble clearing" }, radio = { "Loudspeakers", "Repair bench", "Union radio order" } }
 local jobber = newPlayer("Jobber", "citizen")
@@ -2229,6 +2233,7 @@ for _ = 1, 40 do
     if qr.done then break end
     local st = qr.stages[qr.stage]
     if st.kind == "collect" then for e in pairs(st.items) do hook.Run("PlayerUse", crook, e) end
+    elseif st.kind == "count" and st.event == "game_done" then LC.JobGameFinishForTest(crook) _run(0.5)
     elseif st.kind == "hold" then crook:SetPos(st.pos) crook.crouch = st.crouch _run(st.secs + 1) crook.crouch = false
     else crook:SetPos(st.pos or crook:GetPos()) _run(1) end
 end
@@ -9560,6 +9565,75 @@ ok(not LC.FirstRationDue(p), "and once collected, it's ordinary again")
 p:SetPos(Vector(-150000, 150000, 0))
 end
 NextStepTests()
+
+----------------------------------------------------------------------
+function JobGameTests()
+section("Work you actually do: the street sweep, the factory line, the papers check")
+local function Tick(n) for _ = 1, n or 1 do _advance(0.1) _runtimers() end end
+local J0 = Vector(-140000, 40000, 0)
+-- the street sweep
+local sw = newPlayer("Sweeper", "citizen")
+_run(0.3)
+sw:SetPos(J0)
+local spots = {}
+for i = 1, 6 do spots[i] = J0 + Vector(200 + i * 60, 0, 0) end
+local c0 = LC.Credits(sw)
+ok(LC.JobGameStart(sw, "sweep", nil, { depot = J0, spots = spots }), "the street sweep starts")
+local g = LC.JobGames[sw]
+ok(g and IsValid(g.cart) and #g.litter == 6, "a cart at the depot, and six pieces of rubbish about", g and #g.litter)
+g.cart.obbmin, g.cart.obbmax = Vector(-30, -20, 0), Vector(30, 20, 40) -- (a laundry cart's size; the stub's props are thin)
+for _, e in ipairs(g.litter) do e.lcThrown, e.lcDroppedFrom = true, J0 + Vector(400, 0, 0) e:SetPos(g.cart:GetPos() + Vector(0, 0, 20)) end
+Tick(2)
+ok(not LC.JobGames[sw], "all of it in the cart, at the depot: done")
+ok(LC.Credits(sw) - c0 >= 12, "paid for every piece, and more for the long throws", LC.Credits(sw) - c0)
+-- the factory line
+local fw = newPlayer("LineWorker", "citizen")
+_run(0.3)
+fw:SetPos(J0 + Vector(0, 3000, 0))
+c0 = LC.Credits(fw)
+ok(LC.JobGameStart(fw, "line", nil, { station = fw:GetPos() }), "the line starts")
+g = LC.JobGames[fw]
+ok(g and IsValid(g.conv) and IsValid(g.bin), "a conveyor and a scrap bin")
+local bad, seen = 0, {}
+for _ = 1, 1200 do
+    Tick(1)
+    if not LC.JobGames[fw] then break end
+    for _, e in ipairs(g.parts) do
+        if IsValid(e) and e.lcPart and e.lcPart.bad and not seen[e] then
+            seen[e] = true
+            bad = bad + 1
+            e:SetPos(g.bin:GetPos() + Vector(0, 0, 10))
+        end
+    end
+end
+ok(not LC.JobGames[fw] and g.spawned == 20, "twenty parts down the line, and the shift ends", g.spawned)
+ok(g.caught == bad and g.missed == 0 and g.wasted == 0, "the bad ones binned, the good ones through", string.format("caught %d of %d, missed %d, wasted %d", g.caught, bad, g.missed, g.wasted))
+ok(LC.Credits(fw) > c0, "paid for a clean shift", LC.Credits(fw) - c0)
+-- the papers check
+local pw = newPlayer("PapersClerk", "citizen")
+_run(0.3)
+pw:SetPos(J0 + Vector(3000, 0, 0))
+ok(LC.JobGameStart(pw, "papers", nil, {}), "the papers check starts")
+g = LC.JobGames[pw]
+ok(g and g.current and IsValid(g.current.npc), "a traveler steps up")
+local rights, wrongs = 0, 0
+for i = 1, 5 do
+    local c = g.current
+    if not c then break end
+    c.npc:SetPos(c.stand)
+    Tick(2)
+    local correct = c.forged and "unit" or (c.wrong and "deny" or "approve")
+    local choice = correct
+    if i == 5 then choice = (correct == "approve") and "deny" or "approve" end -- one mistake
+    local r = LC.PapersDecide(pw, choice)
+    if r then rights = rights + 1 else wrongs = wrongs + 1 end
+end
+Tick(2)
+ok(rights == 4 and not LC.JobGames[pw], "five travelers: four right calls, one wrong, and the shift's done", rights .. " right, " .. wrongs .. " wrong")
+-- in a shift: arriving starts the game, finishing it finishes the step
+for _, p in ipairs({ sw, fw, pw }) do p:SetPos(Vector(-150000, 150000, 0)) end
+end
+JobGameTests()
 
 ----------------------------------------------------------------------
 section("Stop")

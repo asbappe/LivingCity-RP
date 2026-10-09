@@ -881,6 +881,20 @@ if not okT then problems[#problems + 1] = "layout browser row: " .. tostring(err
 LC_CL.highlight = { dealer = true }
 run("HUDPaint")
 LC_CL.highlight = {}
+-- the job games (cl_livingcity_jobgames.lua): the panel, the papers window, its buttons
+local okJG, errJG = pcall(function()
+    local rS, rJ = net.ReadString, util.JSONToTable
+    local doc = { papers = { name = "Anya Vasek", cid = "12-345", model = "models/Humans/Group01/male_02.mdl",
+        district = "District 4", expires = 230, permit = true, union = false, purpose = "Work", seal = "0CS" },
+        rules = { "Papers must be in date.", "No entry from District 9." }, today = 214, n = 2, of = 5 }
+    net.ReadString = function() return "x" end
+    util.JSONToTable = function() return doc end
+    net.recv_lc_papers_check()
+    net.ReadString, util.JSONToTable = rS, rJ
+    run("HUDPaint")
+    LC_CL.PapersDecide("deny")
+end)
+if not okJG then problems[#problems + 1] = "job games: " .. tostring(errJG) end
 -- what now? (cl_livingcity_nextstep.lua): the line on screen, and its F1 page
 local okWN, errWN = pcall(function()
     _me:SetNW2String("lc_next", "Find water")

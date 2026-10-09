@@ -63,6 +63,7 @@ LC_MODULES = {
         "sv_livingcity_debug",
         "sv_livingcity_lagwatch", -- (staff: the lag monitor)
         "sv_livingcity_nextstep", -- (what now? everyone always has a next step)
+        "sv_livingcity_jobgames", -- (work you actually do: the street sweep, the factory line, papers check)
         "sv_livingcity_doors",
         "sv_livingcity_dropship",
         "sv_livingcity_escort",
@@ -132,6 +133,7 @@ LC_MODULES = {
         "cl_livingcity_admintools",
         "cl_livingcity_lagwatch", -- (staff: the lag monitor)
         "cl_livingcity_nextstep", -- (what now? the next step on screen, F1 slot 1)
+        "cl_livingcity_jobgames", -- (the job games' panel, the papers window)
         "cl_livingcity_atmos",
         "cl_livingcity_character",
         "cl_livingcity_checkpoints",

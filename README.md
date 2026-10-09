@@ -426,6 +426,14 @@ Citizens (and Resistance members who still pass for citizens) choose a job on th
 
 **NPCs only:** the Records Clerk, Uniform Laundry and Radio Repair are the city's own people's work (they still go to those workplaces), but players can't take them: their shifts were standing at a desk or a machine. Anyone who had one is told the post has closed, and picks another.
 
+**Work you actually do.** Three shifts are small games played with your hands in the world, and pay on top of the shift for how well you do them:
+
+- **Street sweep** (Sanitation): a wheeled cart waits at the depot. E grabs its handle and you push it; E again lets go. Rubbish lies about as real things (cans, bottles, scrap metal, chemical jugs, newspaper), outlined as you get near: pick a piece up (E) and throw it in (left click). A credit a piece, another for a long throw, a bonus for a quick round. Some pieces hide something (tokens, a ration, a blank form, ammunition, a note). Push the full cart back to the depot.
+- **On the line** (Factory): a conveyor carries parts past you. The defective ones are rust-red and spark: grab them and throw them in the scrap bin before they reach the end, and let the good ones through. Twenty parts, faster as it goes; pay for every right call, docked for every wrong one, a bonus for a clean shift. One part rattles: R while you hold it slips what's inside into your pocket (a unit who sees calls it theft). Place the factory's conveyor with the editor ("Fixture: factory conveyor"); without one, a line is set up where you report for the shift.
+- **Papers check** (Station Porter): travelers step up to you one at a time. E on one opens their papers beside today's rules: their photo (look at them: is it them?), name, district, expiry, stamps, and the seal (it must read OCS). Approve, deny, or call a unit. Mistakes earn a citation and are docked; a forgery handed to a unit pays well, and one waved through is between you and the Resistance (unless there's an audit).
+
+`lc_jobgames 0` (editor panel, Survival and economy) puts the old shifts back.
+
 Place each job's workplace from the editor's "Workplaces" section. Shifts pay Credits and Civil Standing, and many carry small choices: the mother with one ration card, the beaten man who begs you to write "fell down the stairs". The newer jobs are also where contraband comes from, if you want it: a dead man's papers from the morgue, a suitcase that's heavier than clothes, a pistol under the rubble. (Blank forms, uniforms and Freq 7 radios come from the black market, the dead, scavenging and the Resistance lab.)
 
 ### Escorts through Combine doors
