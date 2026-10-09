@@ -1121,8 +1121,8 @@ do
         "Go to the Nexus laundry", "Sort the uniforms by division (the bins say which); bloodstained ones to the incident wash. E brings the pile back") }
     SHIFTS.clerk = { AtWork("filing", "Filing", "The in-tray, by citizen number. Anything that doesn't match the register goes in the discrepancy tray.",
         "Go to the civil records office", "File every form in its drawer; mismatches to the discrepancy tray. E brings the in-tray back") }
-    SHIFTS.radio = { AtWork("radio", "Tuning", "Four sets on the shelf, all hissing. Find their station and lock it.",
-        "Go to the radio repair shop", "Turn the dial until the static clears and lock it. E brings the bench back") }
+    SHIFTS.radio = { AtWork("radio", "Repairs", "Four sets on the shelf, all hissing. Find each one's station, then set its screws until it comes through clean.",
+        "Go to the radio repair shop", "Repair the sets: find the station on the dial, then turn the screws by ear until it's clean. E brings the bench back") }
 end
 
 -- (tests: finish a game at once)

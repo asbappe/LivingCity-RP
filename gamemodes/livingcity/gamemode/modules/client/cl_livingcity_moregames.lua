@@ -263,26 +263,35 @@ BUILD.filing = function(t)
 end
 
 ------------------------------------------------------------------------
--- Tuning a radio
+-- Repairing a radio: the dial, the screws, and what the set sounds like
 ------------------------------------------------------------------------
 
 local LOW, HIGH = 87.5, 108
 local STOCK_STATIC = "ambient/levels/prison/radio_random%d.wav" -- (when nobody has put a static recording in radio/static/)
 
-function LC_CL.RadioSignal(dial, d)
-    local s = math.exp(-((dial - (d.t or 0)) / 0.8) ^ 2)
-    if d.f7 then s = math.max(s, math.exp(-((dial - d.f7) / 0.8) ^ 2)) end
-    return s
-end
-
 -- How loud each track is at this point on the dial: static, the station, Freq 7.
 -- They overlap: a station creeps in through the hiss a couple of points away,
 -- and the hiss never quite goes until you're on it.
-function LC_CL.RadioMix(dial, d)
+-- On a set being repaired, the trimmer screws shape all of it (turn: where they
+-- are now, d.screws: where they should be):
+--   the volume trimmer   how loud the station comes through
+--   the squelch          how much hiss is left under it
+--   the alignment        how sharp it is: off, and the station is weak and
+--                        smeared across the dial, with more static bleeding in
+local function ScrewQ(v, want) return math.Clamp(1 - math.abs((tonumber(v) or 0) - want) / 0.33, 0, 1) end
+function LC_CL.RadioMix(dial, d, turn)
     if d.heard then return 0.12, 0, 1 end
-    local su = math.exp(-((dial - (d.t or 0)) / 1.0) ^ 2)
-    local s7 = d.f7 and math.exp(-((dial - d.f7) / 1.0) ^ 2) or 0
-    return math.Clamp(1 - 0.85 * math.max(su, s7), 0.12, 1), su ^ 0.6, s7 ^ 0.6
+    turn = turn or d.turn
+    local qv, qs, qa = 1, 1, 1
+    if d.screws and turn then
+        qv, qs, qa = ScrewQ(turn[1], d.screws[1] or 0), ScrewQ(turn[2], d.screws[2] or 0), ScrewQ(turn[3], d.screws[3] or 0)
+    end
+    local width, peak = 1.0 + 1.2 * (1 - qa), 0.45 + 0.55 * qa
+    local su = peak * math.exp(-((dial - (d.t or 0)) / width) ^ 2)
+    local s7 = d.f7 and peak * math.exp(-((dial - d.f7) / width) ^ 2) or 0
+    local floor = 0.12 + 0.55 * (1 - qs)
+    local gain = 0.2 + 0.8 * qv
+    return math.Clamp(1 - 0.85 * math.max(su, s7), floor, 1), su ^ 0.6 * gain, s7 ^ 0.6 * gain
 end
 
 -- How loud a set is from this far away: full right beside it, quieter as you
@@ -349,9 +358,10 @@ hook.Add("Think", "LivingCityRadioBench", function()
         else
             local mine = ent == me
             local dial = b.d.dial or 98
-            if mine and panel and panel.kind == "radio" and IsValid(panel.dialCtl) then dial = panel.dialCtl:GetValue() end
+            local turn
+            if mine and panel and panel.kind == "radio" and IsValid(panel.dialCtl) then dial, turn = panel.dialCtl:GetValue(), panel.turn end
             local fall = mine and 1 or LC_CL.RadioFalloff(me:GetPos():Distance(ent:GetPos()))
-            local vs, vu, v7 = LC_CL.RadioMix(dial, b.d)
+            local vs, vu, v7 = LC_CL.RadioMix(dial, b.d, turn)
             for k, v in pairs({ static = vs, union = vu, f7 = v7 }) do
                 local snd = b[k]
                 if snd then
@@ -372,9 +382,34 @@ hook.Add("Think", "LivingCityRadioBench", function()
 end)
 LC_CL.RadioBenches = function() return benches end
 
+-- A trimmer screw: turn it with the screwdriver (drag it, or the mouse wheel).
+local function Screw(parent, name, get, set)
+    local p = vgui.Create("DPanel", parent)
+    p:SetSize(110, 96)
+    p:SetCursor("sizewe")
+    p.Paint = function(s, w, h)
+        local cx, cy, r = w / 2, 38, 26
+        surface.SetDrawColor(110, 112, 118)
+        for k = 0, 3 do surface.DrawCircle(cx, cy, r - k, 150 - k * 10, 152 - k * 10, 158 - k * 10, 255) end
+        draw.RoundedBox(r, cx - r + 4, cy - r + 4, (r - 4) * 2, (r - 4) * 2, s:IsHovered() and Color(150, 152, 160) or Color(125, 127, 134))
+        local a = math.rad(-135 + 270 * get())
+        local dx, dy = math.sin(a) * (r - 6), -math.cos(a) * (r - 6)
+        surface.SetDrawColor(40, 40, 44)
+        for o = -1, 1 do surface.DrawLine(cx - dx + o, cy - dy, cx + dx + o, cy + dy) end
+        draw.SimpleText(name, "LCJobLine", cx, h - 16, INK, TEXT_ALIGN_CENTER)
+    end
+    p.OnMousePressed = function(s) s.dragX = gui.MouseX() s.dragFrom = get() s:MouseCapture(true) end
+    p.OnMouseReleased = function(s) s.dragX = nil s:MouseCapture(false) end
+    p.Think = function(s) if s.dragX then set(math.Clamp(s.dragFrom + (gui.MouseX() - s.dragX) / 400, 0, 1)) end end
+    p.OnMouseWheeled = function(_, delta) set(math.Clamp(get() + delta * 0.015, 0, 1)) return true end
+    return p
+end
+
 BUILD.radio = function(t)
-    local f = Frame("Tuning: turn the dial until the static clears, then lock it", 560, 330)
+    local f = Frame("Radio repair: find its station, then set the screws by ear until it's clean", 600, 420)
     panel.frame = f
+    panel.turn = table.Copy(t.turn or {})
+    panel.set = t.n
     local dial = vgui.Create("DNumSlider", f)
     dial:Dock(TOP)
     dial:DockMargin(10, 90, 10, 0)
@@ -384,7 +419,7 @@ BUILD.radio = function(t)
     dial:SetDecimals(1)
     dial:SetValue(LOW + math.random() * (HIGH - LOW))
     panel.dialCtl = dial
-    -- (the server passes the dial on to whoever is standing near the bench)
+    -- (the server passes the dial and the screws on to whoever is standing near the bench)
     local sentAt, sentVal = 0, nil
     dial.OnValueChanged = function(_, v)
         if CurTime() - sentAt < 0.2 or v == sentVal then return end
@@ -397,13 +432,34 @@ BUILD.radio = function(t)
     meter:SetSize(f:GetWide() - 20, 56)
     meter.Paint = function(s, w, h)
         local d = panel and panel.data or t
-        local sig = LC_CL.RadioSignal(dial:GetValue(), d)
+        local vs, vu, v7 = LC_CL.RadioMix(dial:GetValue(), d, panel and panel.turn)
+        local station = math.max(vu, v7)
         draw.RoundedBox(4, 0, 0, w, h, CARD)
         draw.SimpleText(string.format("%.1f", dial:GetValue()), "DermaLarge", 12, h / 2, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-        draw.RoundedBox(2, 120, 18, (w - 220) * sig, 20, sig > 0.85 and GOOD or (sig > 0.4 and WARN or BAD))
+        local bw = w - 260
+        draw.SimpleText("Station", "LCJobLine", 110, 8, DIM)
+        draw.RoundedBox(2, 170, 9, bw * station, 14, station > 0.8 and GOOD or (station > 0.4 and WARN or BAD))
+        draw.SimpleText("Static", "LCJobLine", 110, 32, DIM)
+        draw.RoundedBox(2, 170, 33, bw * vs, 14, vs < 0.25 and GOOD or (vs < 0.6 and WARN or BAD))
         draw.SimpleText(string.format("Set %d of %d   %d s", d.n or 1, d.of or 4, d.secs or 0), "LCJobLine", w - 10, h / 2, DIM, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
     end
-    local lock = Button(f, "Lock it", GOOD, function() Act("lock", math.floor(dial:GetValue() * 10 + 0.5) / 10) end)
+    local bench = vgui.Create("DPanel", f)
+    bench:Dock(TOP)
+    bench:SetTall(100)
+    bench:DockMargin(10, 8, 10, 0)
+    bench.Paint = function(s, w, h) draw.RoundedBox(4, 0, 0, w, h, Color(30, 33, 38)) end
+    local screwSentAt = {}
+    for i, name in ipairs(t.names or { "Volume trimmer", "Squelch", "Alignment" }) do
+        local sc = Screw(bench, name, function() return panel and panel.turn and panel.turn[i] or 0 end, function(v)
+            if not panel or not panel.turn then return end
+            panel.turn[i] = v
+            if CurTime() - (screwSentAt[i] or 0) > 0.2 then screwSentAt[i] = CurTime() Act("screw", { i, v }) end
+        end)
+        sc:SetPos(20 + (i - 1) * 130, 2)
+    end
+    local lock = Button(f, "Test it: is it clean?", GOOD, function()
+        Act("lock", { f = math.floor(dial:GetValue() * 10 + 0.5) / 10, s = panel and panel.turn or {} })
+    end)
     lock:Dock(TOP)
     lock:SetTall(34)
     lock:DockMargin(10, 10, 10, 0)
@@ -427,6 +483,8 @@ BUILD.radio = function(t)
     local function Upd(d)
         heard:SetVisible(d.heard ~= nil)
         lock:SetDisabled(d.heard ~= nil)
+        -- the next set off the shelf: its screws are wherever they were left
+        if panel and d.n ~= panel.set then panel.set = d.n panel.turn = table.Copy(d.turn or {}) end
     end
     panel.update = Upd
     Upd(t)

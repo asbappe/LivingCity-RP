@@ -21,8 +21,10 @@
       Filing (Records Clerk)        Forms into the right drawer by citizen
           number, and anything that doesn't match the register into the
           discrepancy tray. The cabinet of blank forms is rarely locked.
-      Tuning (Radio Repair)         Turn the dial until the static clears, and
-          lock it. Now and then the clearest thing on the band is Freq 7.
+      Repairs (Radio Repair)        Find the set's station on the dial, then
+          turn its three trimmer screws (volume, squelch, alignment) by ear
+          until it comes through clean. Now and then the clearest thing on
+          the band is Freq 7.
       Pat-down (Civil Protection)   E on a citizen: pat them down, a pocket at
           a time, before they lose their nerve. Then release, confiscate or
           detain. Watch their hands.
@@ -709,10 +711,21 @@ LC.JobGameDefine("filing", {
 })
 
 ------------------------------------------------------------------------
--- Tuning (Radio Repair): sometimes Freq 7 is the clearest thing on the band
+-- Radio repair: a set's trimmer screws, set by ear. Tune it to its station
+-- (the dial), then turn the screws with the screwdriver until it comes
+-- through clean: the volume trimmer brings the station up, the squelch
+-- pushes the static down, the alignment pulls a smeared signal into focus.
+-- Sometimes the clearest thing on the band is Freq 7.
 ------------------------------------------------------------------------
 
 local RADIOS = 4
+local SCREWS = { "Volume trimmer", "Squelch", "Alignment" }
+local GOOD_SCREW = 0.7 -- (how close each must be: within about a tenth of a turn's range)
+local SET_SECS = 50
+
+-- How right a screw is: 1 on the spot, 0 a third of the range off.
+local function ScrewQ(v, want) return math.Clamp(1 - math.abs((tonumber(v) or 0) - want) / 0.33, 0, 1) end
+LC.RadioScrewQuality = ScrewQ
 local FREQ7 = {
     "'...this is Freq 7. They count the rations and they count you. Count them back...'",
     "'...the third shift at the station is short two units on Tuesdays. Freq 7, out...'",
@@ -740,7 +753,7 @@ local function Bench(g, off)
     g.heardBy = to
     LC.SendCompressed("lc_radio_bench", off and { e = ply:EntIndex(), off = true } or {
         e = ply:EntIndex(), dial = g.dial or 98, t = g.target, f7 = g.f7, heard = g.heard and true or false,
-        static = g.staticClip, union = g.unionClip, clip7 = g.f7clip }, to)
+        screws = g.screws, turn = g.turn, static = g.staticClip, union = g.unionClip, clip7 = g.f7clip }, to)
 end
 
 local function NewRadio(g)
@@ -755,13 +768,20 @@ local function NewRadio(g)
         g.f7msg = (text and ("'..." .. text .. "...'")) or (path and "A voice comes through the static, on Freq 7.") or Pick(FREQ7)
     end
     g.unionClip = Clip("union")
-    g.radioEnd = CurTime() + 30
+    -- where each screw should be, and where whoever last opened it left it (well off)
+    g.screws, g.turn = {}, {}
+    for i = 1, #SCREWS do
+        g.screws[i] = math.Rand(0.1, 0.9)
+        repeat g.turn[i] = math.Rand(0, 1) until math.abs(g.turn[i] - g.screws[i]) > 0.3
+    end
+    g.radioEnd = CurTime() + SET_SECS
     g.heard = nil
     return true
 end
 
 local function RadioPanel(g)
     LC.JobGamePanel(g, { n = g.n, of = RADIOS, t = g.target, f7 = g.f7, heard = g.heard and g.f7msg or nil,
+        screws = g.screws, turn = g.turn, names = SCREWS,
         static = g.staticClip, union = g.unionClip, clip7 = g.f7clip,
         secs = math.max(0, math.ceil(g.radioEnd - CurTime())) })
 end
@@ -778,12 +798,13 @@ end
 
 LC.JobGameDefine("radio", {
     start = function(g)
-        g.title = "Tuning"
+        g.title = "Radio repair"
         g.n, g.fixed = 0, 0
         g.staticClip = Clip("static")
         NewRadio(g)
         g.hud = function(gg)
             return { string.format("Set %d of %d", math.min(gg.n, RADIOS), RADIOS), string.format("Fixed: %d", gg.fixed),
+                "Find its station, then the screws: by ear",
                 string.format("%d seconds on this one", math.max(0, math.ceil(gg.radioEnd - CurTime()))) }
         end
         RadioPanel(g)
@@ -802,11 +823,37 @@ LC.JobGameDefine("radio", {
             if f then g.dial = math.Clamp(f, 87.5, 108) end
             return true
         end
+        if action == "screw" then
+            -- { i, v }: a screw turned (so whoever's near hears the set change too)
+            local i, v = istable(arg) and tonumber(arg[1]), istable(arg) and tonumber(arg[2])
+            if not i or not g.turn[i] or not v then return nil end
+            g.turn[i] = math.Clamp(v, 0, 1)
+            return true
+        end
         if action == "lock" then
             if g.heard then return nil end
-            local f = tonumber(arg)
+            -- the dial, and the screws as they are on the bench: { f = 95.5, s = { ... } } (or just the dial)
+            local f = istable(arg) and tonumber(arg.f) or tonumber(arg)
             if not f then return nil end
+            if istable(arg) and istable(arg.s) then
+                for i in ipairs(g.turn) do if tonumber(arg.s[i]) then g.turn[i] = math.Clamp(tonumber(arg.s[i]), 0, 1) end end
+            end
+            g.dial = f
             if math.abs(f - g.target) <= 0.3 then
+                -- on its station: is it clean?
+                local worst, wq = nil, 1
+                for i, want in ipairs(g.screws) do
+                    local q = ScrewQ(g.turn[i], want)
+                    if q < wq then worst, wq = i, q end
+                end
+                if wq < GOOD_SCREW then
+                    g.radioEnd = g.radioEnd - 2
+                    g.ply:EmitSound("buttons/button10.wav", 55)
+                    Say(g, "Radio", ({ "It's there, but so faint you'd miss it. The volume trimmer.",
+                        "It's there, under a wall of hiss. The squelch.", "It's there, but smeared across the dial. The alignment." })[worst])
+                    RadioPanel(g)
+                    return "adjust"
+                end
                 g.fixed = g.fixed + 1
                 g.pay = g.pay + 3 + math.floor(math.max(0, g.radioEnd - CurTime()) / 10)
                 g.ply:EmitSound("buttons/button3.wav", 60)

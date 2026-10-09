@@ -1650,7 +1650,7 @@ applicant.chat = {}
 _advance(11) _runtimers()
 ok(applicant:GetNW2String("lcj_job", "") == "" and has(applicant.chat, "has been closed"), "and anyone who had one is told it's closed, and picks another")
 _setcvar("lc_jobgames", 1)
-for _, t in ipairs({ { "courier", "Parcel run" }, { "mortuary", "Before the fire" }, { "laundry", "Sorting" }, { "clerk", "Filing" }, { "radio", "Tuning" } }) do
+for _, t in ipairs({ { "courier", "Parcel run" }, { "mortuary", "Before the fire" }, { "laundry", "Sorting" }, { "clerk", "Filing" }, { "radio", "Repairs" } }) do
     local p = newPlayer("Hands" .. t[1], "citizen")
     p:SetPos(FAR)
     LC.SetJob(p, t[1], true)
@@ -9978,12 +9978,16 @@ LC.JobGameAct(rd, "freq7", "note")
 ok(not g.heard and LC.HasItem(rd, "paper"), "written down where nobody will look")
 local e0 = g.radioEnd
 ok(LC.JobGameAct(rd, "lock", g.target > 100 and g.target - 2 or g.target + 2) == false and g.radioEnd < e0, "static: time lost")
-ok(LC.JobGameAct(rd, "lock", g.target) == true and g.fixed == 1 and g.n == 2, "on its station: fixed, the next one")
+ok(#g.screws == 3 and #g.turn == 3, "each set has three trimmer screws, left somewhere wrong")
+ok(LC.JobGameAct(rd, "lock", g.target) == "adjust" and g.fixed == 0, "on its station but the screws are off: not fixed yet")
+ok(LC.JobGameAct(rd, "screw", { 1, 0.42 }) and g.turn[1] == 0.42, "a screw turned on the bench")
+ok(LC.RadioScrewQuality(g.screws[2], g.screws[2]) == 1 and LC.RadioScrewQuality(g.screws[2] + 0.5, g.screws[2]) == 0, "how right a screw is: on the spot, or a long way off")
+ok(LC.JobGameAct(rd, "lock", { f = g.target, s = g.screws }) == true and g.fixed == 1 and g.n == 2, "on its station with the screws set right: fixed, the next one")
 g.radioEnd = CurTime() - 1
 Tick(1)
 ok(g.n == 3 and g.fixed == 1, "too slow: back on the shelf, still hissing")
-LC.JobGameAct(rd, "lock", g.target)
-LC.JobGameAct(rd, "lock", g.target)
+LC.JobGameAct(rd, "lock", { f = g.target, s = g.screws })
+LC.JobGameAct(rd, "lock", { f = g.target, s = g.screws })
 ok(not LC.JobGames[rd] and g.fixed == 3 and LC.Credits(rd) > c0, "the shelf done: paid", LC.Credits(rd) - c0)
 for k in pairs(_files) do if string.find(k, RA, 1, true) == 1 then _files[k] = nil end end
 LC.AnnounceRescan()

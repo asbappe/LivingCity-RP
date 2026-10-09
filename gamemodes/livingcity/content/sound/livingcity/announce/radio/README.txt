@@ -1,4 +1,8 @@
-The radio repair bench (Radio Repair's "Tuning" shift).
+The radio repair bench (Radio Repair's "Repairs" shift).
+
+The trimmer screws the worker sets change what these sound like: a volume
+trimmer that's off makes the station faint, a bad squelch leaves hiss under
+it, and bad alignment smears the station across the dial.
 
 As the worker turns a set's dial, these play from the set, mixed by where
 the dial is: static between stations, fading into a station as they get close

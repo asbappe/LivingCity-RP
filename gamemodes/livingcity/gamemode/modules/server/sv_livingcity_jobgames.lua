@@ -1058,9 +1058,10 @@ end)
 
 net.Receive("lc_jg_act", function(_, ply)
     local action = net.ReadString()
-    local key = action == "dial" and "lcJgDialAt" or "lcJgActAt" -- (turning the dial never eats a click)
+    local knob = action == "dial" or action == "screw"
+    local key = knob and "lcJgDialAt" or "lcJgActAt" -- (turning a dial or a screw never eats a click)
     if (ply[key] or 0) > CurTime() then return end
-    ply[key] = CurTime() + (action == "dial" and 0.15 or 0.08)
+    ply[key] = CurTime() + (knob and 0.1 or 0.08)
     local arg = util.JSONToTable(net.ReadString() or "") or {}
     LC.JobGameAct(ply, action, arg.v)
 end)

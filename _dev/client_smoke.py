@@ -928,7 +928,7 @@ local okMG, errMG = pcall(function()
         { kind = "search", n = 1, of = 3, watching = true, pockets = { { name = "Coat", open = true, find = "Papers" }, { name = "Shoes", open = false }, { name = "Lining", open = true, done = "empty" } } },
         { kind = "laundry", bins = { { label = "UNION / JURY" }, { label = "KING / TAP" }, { label = "Incident wash" } }, tag = "UNION-07", stain = true, pocket = "a folded note", n = 1, of = 12, secs = 90 },
         { kind = "filing", drawers = { "00-24", "25-49", "50-74", "75-99", "Discrepancy" }, name = "Mira Kesler", cid = "12-345", status = "Active", regName = "Mira Kessler", regCid = "12-345", n = 1, of = 10, secs = 100, blank = true },
-        { kind = "radio", n = 1, of = 4, t = 95.5, f7 = 101.2, heard = "'...this is Freq 7...'", secs = 20 },
+        { kind = "radio", n = 1, of = 4, t = 95.5, f7 = 101.2, heard = "'...this is Freq 7...'", secs = 20, screws = { 0.3, 0.6, 0.5 }, turn = { 0.9, 0.1, 0.1 }, names = { "Volume trimmer", "Squelch", "Alignment" } },
         { kind = "patdown", zones = { { name = "Coat", done = true }, { name = "Bag", done = true, found = "a lockpick" }, { name = "Boots", done = false } }, tell = "They hold the bag tight.", nerve = 2, found = "a lockpick", n = 1, of = 3 },
     }
     for _, d in ipairs(docs) do
@@ -937,7 +937,12 @@ local okMG, errMG = pcall(function()
         if not LC_CL.JobPanel() or LC_CL.JobPanel().kind ~= d.kind then error("no " .. d.kind .. " panel") end
         net.recv_lc_jg_panel() -- (an update to the same panel)
     end
-    if LC_CL.RadioSignal(95.5, { t = 95.5 }) < 0.99 or LC_CL.RadioSignal(90, { t = 95.5 }) > 0.01 then error("radio signal") end
+    -- a set's screws: off, the station is faint and the hiss stays; set right, it's clean
+    local good = { t = 95.5, screws = { 0.5, 0.5, 0.5 }, turn = { 0.5, 0.5, 0.5 } }
+    local bad = { t = 95.5, screws = { 0.5, 0.5, 0.5 }, turn = { 0.95, 0.05, 0.9 } }
+    local gs, gu = LC_CL.RadioMix(95.5, good)
+    local bs, bu = LC_CL.RadioMix(95.5, bad)
+    if not (gu > 0.95 and gs < 0.2 and bu < 0.3 and bs > 0.6) then error("radio screws " .. gs .. " " .. gu .. " " .. bs .. " " .. bu) end
     -- the radio mixes: static between stations, the station fading in through it, overlapping
     local vs, vu = LC_CL.RadioMix(95.5, { t = 95.5 })
     local fs, fu = LC_CL.RadioMix(80, { t = 95.5 })
