@@ -12,7 +12,7 @@
 
 LC_CL = LC_CL or {}
 
-local cvVol = CreateClientConVar("lc_breencast_volume", "0.5", true, false, "How loud Dr. Breen's addresses over the loudspeakers are for you (0 to 1)")
+local cvVol = CreateClientConVar("lc_breencast_volume", "0.5", true, false, "How loud the Administrator's addresses over the loudspeakers are for you (0 to 1)")
 local cvFps = CreateClientConVar("lc_livecam_fps", "12", true, false, "Frames a second for the broadcast picture on city screens (0 = off)")
 
 local W, H = 512, 288 -- 16:9, in the top of a 512 x 512 texture
@@ -71,9 +71,9 @@ end)
 -- In the picture, you're in it like everyone else (even if you're the one on air).
 hook.Add("ShouldDrawLocalPlayer", "LivingCityLiveCam", function() if rendering then return true end end)
 
--- Dr. Breen's recorded addresses (sv_livingcity_propaganda.lua): over the
+-- The Administrator's recorded addresses (sv_livingcity_propaganda.lua): over the
 -- loudspeakers. The server only sends them to people who'd hear them (not
--- next to a broken or powerless loudspeaker, not in the studio with him).
+-- next to a broken or powerless loudspeaker, not in the studio with her).
 net.Receive("lc_breencast", function()
     local path = net.ReadString()
     local me = LocalPlayer()

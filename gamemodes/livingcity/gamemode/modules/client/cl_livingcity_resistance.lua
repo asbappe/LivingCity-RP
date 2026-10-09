@@ -56,7 +56,7 @@ end)
 -- A hijacked city screen: the Resistance's minute
 timer.Simple(0, function()
     local orig = LC_CL.DrawCityScreen
-    -- who's on air: a player, Dr. Breen at the studio, or Dr. Breen's recording
+    -- who's on air: a player, the Administrator at the studio, or her recording
     local function OnAir()
         local live = GetGlobal2Entity("lc_live")
         if IsValid(live) and live:IsPlayer() then return live, live:Nick() end

@@ -1039,6 +1039,22 @@ local function Count(event, need, text, filter, distinct)
 end
 local function Choice(prompt, options) return { kind = "choice", prompt = prompt, options = options, text = "Decide what to do" } end
 
+-- Hands-on games (sv_livingcity_jobgames.lua, sv_livingcity_moregames.lua):
+-- arriving starts one (GameGo), or the stage starts it (GameNow); the stage
+-- after is the game itself, done when it's done.
+local function GamesOn() return LC.JobGamesOn ~= nil and LC.JobGamesOn() end
+local function GameStage(text) return Count("game_done", 1, text) end
+local function GameGo(pos, text, kind, opts, r)
+    local go = Goto(pos, text, r or 150)
+    go.onDone = function(q) if IsValid(q.owner) and LC.JobGameStart then LC.JobGameStart(q.owner, kind, q, opts) end end
+    return go
+end
+local function GameNow(kind, text, opts)
+    local st = GameStage(text)
+    st.onEnter = function(q) if IsValid(q.owner) and LC.JobGameStart then LC.JobGameStart(q.owner, kind, q, opts) end end
+    return st
+end
+
 local function IsCitizenNPC(_, _, npc) local st = LC.NPCs[npc] return st ~= nil and st.role == "citizen" end
 local function IsCopNPC(_, _, npc) local st = LC.NPCs[npc] return st ~= nil and st.role == "cop" end
 
@@ -1147,8 +1163,9 @@ T{
         local need = math.random(3, 5)
         return {
             title = "Civil status inspections", reward = 10 + 5 * need, limit = 360,
-            desc = string.format("Stop %d citizens and check their papers. Nobody is above suspicion.", need),
-            stages = { Count("used_npc", need, "Stop citizens for inspection (walk up and press E)", IsCitizenNPC) },
+            desc = string.format("Stop %d citizens and %s. Nobody is above suspicion.", need, GamesOn() and "pat them down" or "check their papers"),
+            stages = { GamesOn() and GameNow("patdown", string.format("Stop %d citizens and pat them down (E on one): release, confiscate or detain", need), { need = need })
+                or Count("used_npc", need, "Stop citizens for inspection (walk up and press E)", IsCitizenNPC) },
         }
     end,
 }
@@ -1880,7 +1897,52 @@ T{
                     { text = "Read it.", pick = function(q) Narrate(q, Pick(NOTES)) end },
                     { text = "Burn it unread.", pick = function(q) Narrate(q, "Some things are safer not known.") end },
                 }),
-                Goto(b, "Leave the message " .. Place(b, ply:GetPos()), 120),
+                GamesOn() and GameGo(b, "Take the message to the drop " .. Place(b, ply:GetPos()), "drop", { pos = b }, 140)
+                    or Goto(b, "Leave the message " .. Place(b, ply:GetPos()), 120),
+                GamesOn() and GameStage("Hide the message where nobody sees you do it: E on a hiding place, then crouch and keep still") or nil,
+            },
+        }
+    end,
+}
+
+T{
+    id = "res_terminal", factions = { resistance = true },
+    available = function() return GamesOn() end,
+    build = function(ply)
+        local terms = {}
+        for _, c in ipairs({ "lc_terminal", "lc_console" }) do
+            for _, e in ipairs(LC.EntsOf and LC.EntsOf(c) or {}) do terms[#terms + 1] = e end
+        end
+        local pos, what
+        if #terms > 0 then
+            local e = Pick(terms)
+            pos = e:GetPos()
+            what = e:GetClass() == "lc_terminal" and "the civil records terminal" or "the Combine console"
+        else
+            pos, what = Spot(ply, 500, 2500), "a records terminal"
+        end
+        if not pos then return nil end
+        local function Wipe(p)
+            -- one of ours with a record (or whoever did it, if nobody else has one)
+            local who
+            for _, o in ipairs(player.GetAll()) do
+                if o ~= p and o:GetNW2String("lcf_faction", "") == "resistance" and LC.PlayerIsWanted(o) then who = o break end
+            end
+            if not who and IsValid(p) and LC.PlayerIsWanted(p) then who = p end
+            if who then
+                LC.ClearWanted(who)
+                who:ChatPrint("[Operations] Your record is gone from the Combine's terminals. Somebody of ours did that.")
+                if IsValid(p) and p ~= who then p:ChatPrint("[Operations] " .. who:Nick() .. "'s record is gone.") end
+            elseif IsValid(p) then
+                p:ChatPrint("[Operations] Three names gone from the registers, and the scanner none the wiser.")
+            end
+        end
+        return {
+            title = "Doctor the records", reward = 30, limit = 480, failOnArrest = true,
+            desc = "Some of ours are in the Combine's records. Get into " .. what .. " " .. Place(pos, ply:GetPos()) .. " and make them disappear.",
+            stages = {
+                GameGo(pos, "Go to " .. what .. " " .. Place(pos, ply:GetPos()), "hack", { pos = pos, what = what, onDone = Wipe }, 140),
+                GameStage("Get into the terminal: stop the needle in the band, and keep your hands off while the scanner passes"),
             },
         }
     end,
@@ -2520,7 +2582,10 @@ T{
         return {
             title = "Housing block inspection: " .. name, reward = 45, limit = 600,
             desc = "The raid team is going through " .. name .. ". Back them up: stop residents and check their papers, then hold the entrance until it's done.",
-            stages = {
+            stages = GamesOn() and {
+                GameGo(z.pos, "Report to " .. name, "breach", { pos = z.pos }, math.max(250, z.r * 0.8)),
+                GameStage("Breach and search: blow the door, everyone on the floor (E), then search the furniture (E)"),
+            } or {
                 Goto(z.pos, "Report to " .. name, math.max(250, z.r * 0.8)),
                 { kind = "count", event = "used_npc", need = 3, distinct = true,
                   text = "Inspect residents of " .. name .. " (walk up and press E)",
@@ -2810,7 +2875,7 @@ function LC.SendBoard(ply)
     if LC.CanWork and LC.CanWork(ply) and LCJ then
         jobs = { current = ply:GetNW2String("lcj_job", ""), list = {} }
         for _, o in ipairs(LCJ.Occupations) do
-            if not o.npcOnly then jobs.list[#jobs.list + 1] = { id = o.id, name = o.name, desc = o.desc } end
+            if not LCJ.Closed(o) then jobs.list[#jobs.list + 1] = { id = o.id, name = o.name, desc = o.desc } end
         end
     end
     LC.SendCompressed("lcq_board", {

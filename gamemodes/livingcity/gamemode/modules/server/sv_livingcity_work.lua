@@ -54,7 +54,7 @@ LC.GiveJobTools = GiveTools
 function LC.SetJob(ply, id, force)
     local job = LCJ.ById[id]
     if id ~= "" and not job then return false, "No such job." end
-    if job and job.npcOnly and not force then return false, "The Union isn't taking anyone on for that." end
+    if job and LCJ.Closed(job) and not force then return false, "The Union isn't taking anyone on for that." end
     if not force then
         if not LC.CanWork(ply) then return false, "The Union only employs citizens." end
         if id ~= "" and LC.IntakePending and LC.IntakePending(ply) then
@@ -88,12 +88,12 @@ hook.Add("PlayerInitialSpawn", "LivingCityJobs", function(ply)
     end)
 end)
 
--- A post the Union no longer gives players (sv_livingcity_jobs.lua: npcOnly):
+-- A post the Union no longer gives players (sh_livingcity_jobs.lua: npcOnly, or gameOnly with lc_jobgames 0):
 -- whoever held it is told, and picks another.
 timer.Create("LivingCityClosedJobs", 10, 0, function()
     for _, ply in ipairs(player.GetAll()) do
         local job = LC.Job(ply)
-        if job and job.npcOnly then
+        if job and LCJ.Closed(job) then
             ply:SetNW2String("lcj_job", "")
             ply:SetPData("lcj_job", "")
             local s = LC.Story and LC.Story(ply)
@@ -915,8 +915,8 @@ SHIFTS.scrap = {
 }
 
 ------------------------------------------------------------------------
--- (Radio Repair is an NPC job only: the city's own crews still see to the
--- loudspeakers. sh_livingcity_jobs.lua)
+-- (Radio Repair, Uniform Laundry and the Records Clerk are games only: see
+-- the end of this file and sv_livingcity_moregames.lua.)
 ------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
@@ -1059,6 +1059,70 @@ do
         end
         return spec
     end
+end
+
+-- The rest of the hands-on games (sv_livingcity_moregames.lua)
+do
+    -- Courier: a parcel run against the clock (they aren't letters)
+    SHIFTS.courier[#SHIFTS.courier + 1] = function(ply, job)
+        if not GamesOn() then return nil end
+        local office = WorkSpot(ply, job.num)
+        if not office then return nil end
+        local stops = {}
+        for _, z in ipairs(LC.ZonesOfKind("block")) do stops[#stops + 1] = { pos = z.pos, name = LC.BlockName(z.group) } end
+        for _, p in ipairs(LC.PointsOfKind("spawn")) do stops[#stops + 1] = { pos = p.pos, name = "an apartment doorway" } end
+        Q.Shuffle(stops)
+        while #stops > 3 do table.remove(stops) end
+        while #stops < 3 do
+            local sp = Q.Spot(ply, 500, 2500)
+            if not sp then return nil end
+            stops[#stops + 1] = { pos = sp, name = Place(sp, ply:GetPos()) }
+        end
+        return {
+            title = "Parcel run", reward = 10, limit = 900,
+            desc = "Three parcels, against the clock. They aren't letters, and nobody says what's in them.",
+            stages = {
+                GameGo(office, "Collect the parcels at the post office", "parcel", { stops = stops }),
+                GameStage("Deliver the parcels against the clock (marked): units stop couriers they get a good look at, so crouch past them"),
+            },
+        }
+    end
+
+    -- Mortuary: the incinerator shift is searching the dead before they go in
+    local incinerator = SHIFTS.mortuary[3]
+    SHIFTS.mortuary[3] = function(ply, job)
+        if not GamesOn() then return incinerator(ply, job) end
+        local incs = LC.EntsOf("lc_incinerator")
+        local inc = #incs > 0 and Pick(incs) or nil
+        local morgue = IsValid(inc) and inc:GetPos() or WorkSpot(ply, job.num)
+        if not morgue then return nil end
+        local slab = IsValid(inc) and (inc:GetPos() + inc:GetForward() * 90) or morgue
+        return {
+            title = "Before the fire", reward = 10, limit = 600,
+            desc = "Three for the incinerator tonight. Every pocket first. Nobody checks your work, except when they do.",
+            stages = {
+                GameGo(morgue, IsValid(inc) and "Go to the incinerator" or "Go to the morgue", "search", { pos = slab, inc = inc }),
+                GameStage("Search the dead before they go in: E on the body, every pocket, then into the fire"),
+            },
+        }
+    end
+
+    -- The jobs that were the city's own: each shift is a game at the workplace
+    local function AtWork(kind, title, desc, go, text)
+        return function(ply, job)
+            if not GamesOn() then return nil end
+            local at = WorkSpot(ply, job.num)
+            if not at then return nil end
+            return { title = title, reward = 10, limit = 600, desc = desc,
+                stages = { GameGo(at, go, kind), GameStage(text) } }
+        end
+    end
+    SHIFTS.laundry = { AtWork("laundry", "Sorting", "Civil Protection uniforms, washed and pressed, and every one back to its own division. Units leave things in their pockets.",
+        "Go to the Nexus laundry", "Sort the uniforms by division (the bins say which); bloodstained ones to the incident wash. E brings the pile back") }
+    SHIFTS.clerk = { AtWork("filing", "Filing", "The in-tray, by citizen number. Anything that doesn't match the register goes in the discrepancy tray.",
+        "Go to the civil records office", "File every form in its drawer; mismatches to the discrepancy tray. E brings the in-tray back") }
+    SHIFTS.radio = { AtWork("radio", "Tuning", "Four sets on the shelf, all hissing. Find their station and lock it.",
+        "Go to the radio repair shop", "Turn the dial until the static clears and lock it. E brings the bench back") }
 end
 
 -- (tests: finish a game at once)

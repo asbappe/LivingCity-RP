@@ -25,13 +25,18 @@
                       with their hands up (the actions menu, F1): the Resistance would
                       love one.
 
-      Dr. Breen       (DORMANT: off unless lc_breen_broadcasts is 1) with no player as Director of Propaganda, every
-                      lc_broadcast_cooldown minutes Dr. Breen addresses the
-                      city himself: his recorded Breencasts over every
+      The Administrator (DORMANT: off unless lc_breen_broadcasts is 1) with no player as Director of Propaganda, every
+                      lc_broadcast_cooldown minutes the city's Administrator
+                      (lc_administrator_name, a woman; Dr. Mossman's model by
+                      default, lc_administrator_model) addresses the city
+                      herself: her recordings from
+                      sound/livingcity/announce/administrator/ambient/ over every
                       loudspeaker, and, if the map has a broadcast studio
-                      (an editor point), Dr. Breen at it, filmed live by the
-                      camera scanner. Kill him on air and the microphone
+                      (an editor point), her at it, filmed live by the
+                      camera scanner. Kill her on air and the microphone
                       drops: take it, and the transmitter is yours.
+                      (Dr. Breen's own stock Breencasts are used too only with
+                      lc_administrator_stock_lines 1.)
 
       lc_broadcast_cooldown (15), lc_broadcast_seconds (60), lc_fixture_wear 0/1,
       lc_breen_broadcasts 0/1 (off by default: dormant until there are enough lines)
@@ -142,9 +147,9 @@ end
 
 function LC.StartBroadcast(ply)
     if LC.LiveSpeaker then return false, "Someone is already on air." end
-    -- Dr. Breen's recorded address (below): the Director of Propaganda can cut in; anyone else waits
+    -- The Administrator's recorded address (below): the Director of Propaganda can cut in; anyone else waits
     if LC.LiveNPC then
-        if not Official(ply) then return false, "Dr. Breen is on air. The transmitter is his until he's done." end
+        if not Official(ply) then return false, LC.AdministratorName() .. " is on air. The transmitter is hers until she's done." end
         LC.StopNPCBroadcast("preempted")
     end
     local now = CurTime()
@@ -281,14 +286,22 @@ end
 ------------------------------------------------------------------------
 
 util.AddNetworkString("lc_breencast")
--- Dormant by default: the game only has so many Breen lines. Switch on with lc_breen_broadcasts 1 (the lc_breencast command still works for a test).
-local cvNPCCast = CreateConVar("lc_breen_broadcasts", "0", FLAGS, "With no player as Director of Propaganda, Dr. Breen addresses the city now and then (off: dormant)")
+-- Dormant by default until there are enough recordings. Switch on with lc_breen_broadcasts 1 (the lc_breencast command still works for a test).
+local cvNPCCast = CreateConVar("lc_breen_broadcasts", "0", FLAGS, "With no player as Director of Propaganda, the Administrator addresses the city now and then (off: dormant)")
+local cvAdminName = CreateConVar("lc_administrator_name", "The Administrator", FLAGS, "What the city's Administrator is called on screen, in chat and on air")
+local cvAdminModel = CreateConVar("lc_administrator_model", "models/mossman.mdl", FLAGS, "The Administrator's model at the broadcast studio (Dr. Mossman by default)")
+local cvStock = CreateConVar("lc_administrator_stock_lines", "0", FLAGS, "Also use Dr. Breen's own stock Breencast lines in her broadcasts (a man's voice: off)")
+function LC.AdministratorName()
+    local n = string.Trim(cvAdminName:GetString() or "")
+    return n ~= "" and n or "The Administrator"
+end
 
--- His recorded addresses (the game's own Breencast lines). Only the ones this
--- install actually has are used.
+-- Dr. Breen's stock addresses (the game's own Breencast lines), only with
+-- lc_administrator_stock_lines 1. Only the ones this install actually has are used.
 local BREEN_SETS = { { "br_welcome", 7 }, { "br_instinct", 25 }, { "br_collaboration", 11 }, { "br_overwatch", 9 }, { "br_disruptor", 8 } }
 local breenLines
 function LC.BreenLines()
+    if not cvStock:GetBool() then return {} end
     if breenLines and #breenLines > 0 then return breenLines end
     local out = {}
     for _, set in ipairs(BREEN_SETS) do
@@ -301,13 +314,13 @@ function LC.BreenLines()
     return out
 end
 
--- One broadcast: his addresses whole, each line in the order he recorded it,
--- starting with one he didn't give last time (and the next ones after it, if
+-- One broadcast: her addresses whole, each line in the order they were recorded,
+-- starting with one not given last time (and the next ones after it, if
 -- there's time).
 local lastSpeech
 function LC.BreenProgram()
     local speeches = {}
-    for _, set in ipairs(BREEN_SETS) do
+    for _, set in ipairs(cvStock:GetBool() and BREEN_SETS or {}) do
         local lines = {}
         for i = 1, set[2] do
             local p = string.format("vo/breencast/%s%02d.wav", set[1], i)
@@ -315,9 +328,9 @@ function LC.BreenProgram()
         end
         if #lines > 0 then speeches[#speeches + 1] = { name = set[1], lines = lines } end
     end
-    -- and the recordings dropped in sound/livingcity/announce/breen/ambient/ (sv_livingcity_announcer.lua)
+    -- and the recordings dropped in sound/livingcity/announce/administrator/ambient/ (sv_livingcity_announcer.lua)
     local custom = {}
-    for _, c in ipairs(LC.AnnounceClips and LC.AnnounceClips("breen", "ambient") or {}) do custom[#custom + 1] = c.path end
+    for _, c in ipairs(LC.AnnounceClips and LC.AnnounceClips("administrator", "ambient") or {}) do custom[#custom + 1] = c.path end
     if #custom > 0 then speeches[#speeches + 1] = { name = "custom_ambient", lines = custom } end
     if #speeches == 0 then return {} end
     local start = math.random(#speeches)
@@ -340,18 +353,21 @@ local function HumanPropagandaOnline()
 end
 
 local function SpawnBreen(pt)
-    local npc = ents.Create("npc_breen")
-    if not IsValid(npc) then
-        npc = ents.Create("npc_citizen")
+    local mdl = string.Trim(cvAdminModel:GetString() or "")
+    if mdl == "" or (util.IsValidModel and not util.IsValidModel(mdl)) then mdl = "models/mossman.mdl" end
+    local npc = ents.Create("npc_citizen")
+    if IsValid(npc) then
+        npc:SetModel(mdl)
+    else
+        npc = ents.Create("npc_breen")
         if not IsValid(npc) then return nil end
-        npc:SetModel("models/breen.mdl")
     end
     npc:SetPos(pt.pos + Vector(0, 0, 4))
     npc:SetAngles(Angle(0, pt.yaw or 0, 0))
     npc:SetKeyValue("spawnflags", tostring((SF_NPC_GAG or 4) + (SF_NPC_FADE_CORPSE or 512)))
     npc:Spawn()
     npc:Activate()
-    npc:SetNW2String("lc_pname", "Dr. Breen")
+    npc:SetNW2String("lc_pname", LC.AdministratorName())
     npc:SetNW2String("lc_pjob", "Administrator")
     npc.lcBreen = true
     return npc
@@ -409,10 +425,10 @@ local function LineSecs(path)
 end
 
 -- Over the loudspeakers: not where one is broken or the power's out, and not
--- twice for anyone standing in the studio with him (they hear him in person).
--- How far his own voice, in the studio, carries: anyone within it hears him in
+-- twice for anyone standing in the studio with her (they hear her in person).
+-- How far her own voice, in the studio, carries: anyone within it hears her in
 -- person and not over the loudspeakers too (two copies a beat apart otherwise).
--- His voice is pitched to fade out by about here.
+-- Her voice is pitched to fade out by about here.
 local IN_PERSON = 1600
 local IN_PERSON_LEVEL = 65
 
@@ -443,24 +459,24 @@ local function NextLine()
         net.WriteString(path)
         net.Send(to)
     end
-    if IsValid(live.npc) then live.npc:EmitSound(path, IN_PERSON_LEVEL) end -- in person, at the studio (and his lips move)
+    if IsValid(live.npc) then live.npc:EmitSound(path, IN_PERSON_LEVEL) end -- in person, at the studio (and her lips move)
     timer.Create("LivingCityBreencast", dur + 0.7, 1, NextLine)
 end
 
 function LC.StartNPCBroadcast()
     if LC.LiveSpeaker or LC.LiveNPC then return false, "Someone is already on air." end
     local lines = LC.BreenProgram()
-    if #lines == 0 then return false, "This install has none of Dr. Breen's recordings." end
+    if #lines == 0 then return false, "No recordings for " .. LC.AdministratorName() .. " yet (sound/livingcity/announce/administrator/ambient/)." end
     local now = CurTime()
     local studios = LC.PointsOfKind and LC.PointsOfKind("studio") or {}
     local npc = #studios > 0 and SpawnBreen(Pick(studios)) or nil
     LC.LiveNPC = { npc = npc, start = now, untilT = now + cvSecs:GetFloat(), lines = lines, i = 0 }
     SetGlobal2Entity("lc_live", npc or NULL)
     SetGlobal2Bool("lc_live_npc", true)
-    SetGlobal2String("lc_live_name", "Dr. Breen")
+    SetGlobal2String("lc_live_name", LC.AdministratorName())
     SetGlobal2Bool("lc_live_pirate", false)
     SetGlobal2Float("lc_live_until", now + cvSecs:GetFloat())
-    for _, p in ipairs(player.GetAll()) do p:ChatPrint("[City broadcast] Dr. Breen addresses the city.") end
+    for _, p in ipairs(player.GetAll()) do p:ChatPrint("[City broadcast] " .. LC.AdministratorName() .. " addresses the city.") end
     if IsValid(npc) then LC.SendBroadcastCamera(npc) end
     NextLine()
     hook.Run("LivingCityBroadcastStart", npc, false, true)
@@ -496,7 +512,7 @@ function LC.StopNPCBroadcast(why)
     return true
 end
 
--- Kill him on air: the transmission dies, and his microphone is on the floor.
+-- Kill her on air: the transmission dies, and her microphone is on the floor.
 hook.Add("OnNPCKilled", "LivingCityBreen", function(npc, attacker)
     if not npc.lcBreen then return end
     local live = LC.LiveNPC
@@ -507,12 +523,12 @@ hook.Add("OnNPCKilled", "LivingCityBreen", function(npc, attacker)
         w:Spawn()
     end
     for _, p in ipairs(player.GetAll()) do
-        if LC.PlayerIsCP and LC.PlayerIsCP(p) then p:ChatPrint("[CP net] Dr. Breen has been attacked " .. Where(npc:GetPos()) .. ". Secure the microphone.") end
+        if LC.PlayerIsCP and LC.PlayerIsCP(p) then p:ChatPrint("[CP net] " .. LC.AdministratorName() .. " has been attacked " .. Where(npc:GetPos()) .. ". Secure the microphone.") end
     end
     if IsValid(attacker) and attacker:IsPlayer() and LC.ReportCrime then LC.ReportCrime(attacker, "Attacking the Administrator", 600) end
 end)
 
--- A player's broadcast pushes his next one back.
+-- A player's broadcast pushes her next one back.
 hook.Add("LivingCityBroadcastEnd", "LivingCityBreenSchedule", function(_, _, _, npc)
     if not npc then LC.NPCBroadcastNext = math.max(LC.NPCBroadcastNext or 0, CurTime() + cvCool:GetFloat() * 60) end
 end)
@@ -539,6 +555,6 @@ end)
 concommand.Add("lc_breencast", function(ply)
     if IsValid(ply) and not ply:IsSuperAdmin() then return end
     local ok, why = LC.StartNPCBroadcast()
-    local msg = ok and "[Living City] Dr. Breen is on air." or ("[Living City] " .. tostring(why))
+    local msg = ok and "[Living City] " .. LC.AdministratorName() .. " is on air." or ("[Living City] " .. tostring(why))
     if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
 end)

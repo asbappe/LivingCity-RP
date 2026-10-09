@@ -7,8 +7,9 @@
     there; without them, shifts use the streets around you. NPC citizens go to
     work at those workplaces too.
 
-    npcOnly: the city's own people work there, but players can't take it
-    (its shifts were standing at a desk or a machine: no work for a player).
+    npcOnly: the city's own people work there, but players can't take it.
+    gameOnly: a player's shifts there are all hands-on games
+    (sv_livingcity_moregames.lua), so it's only open while lc_jobgames is on.
 ]]
 
 
@@ -29,17 +30,28 @@ LCJ.Occupations = {
       desc = "Fuse boxes, streetlights and Combine terminals. You see a lot of logs." },
     { id = "porter", num = 7, name = "Station Porter", place = "Train station",
       desc = "Luggage, tickets and new arrivals who don't know where anything is yet." },
-    { id = "clerk", num = 8, name = "Records Clerk", place = "Civil records office", npcOnly = true,
+    { id = "clerk", num = 8, name = "Records Clerk", place = "Civil records office", gameOnly = true,
       desc = "Stamps, files and identity forms. The cabinet with the blank ones is rarely locked." },
-    { id = "laundry", num = 9, name = "Uniform Laundry", place = "Nexus laundry", npcOnly = true,
+    { id = "laundry", num = 9, name = "Uniform Laundry", place = "Nexus laundry", gameOnly = true,
       desc = "Civil Protection uniforms, washed, pressed and counted. Usually counted." },
     { id = "mortuary", num = 10, name = "Mortuary Attendant", place = "City morgue",
       desc = "Collect the dead. Process what they leave behind. Nobody checks your work." },
     { id = "scrap", num = 11, name = "Reclamation Crew", place = "Reclamation yard",
       desc = "Scrap and rubble from the old city. Some of it was hidden there on purpose." },
-    { id = "radio", num = 12, name = "Radio Repair", place = "Radio repair shop", npcOnly = true,
+    { id = "radio", num = 12, name = "Radio Repair", place = "Radio repair shop", gameOnly = true,
       desc = "Loudspeakers and Union radios. Some come in tuned to frequencies that don't exist." },
 }
+
+-- Closed to players: an NPC-only post, or a games-only one with the games off.
+function LCJ.Closed(o)
+    if not o then return false end
+    if o.npcOnly then return true end
+    if o.gameOnly then
+        local cv = GetConVar("lc_jobgames")
+        return cv ~= nil and not cv:GetBool()
+    end
+    return false
+end
 
 LCJ.ById, LCJ.ByNum = {}, {}
 for _, o in ipairs(LCJ.Occupations) do

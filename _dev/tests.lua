@@ -864,17 +864,20 @@ local g3 = storyPosting(good, "inside")
 ok(g3 and g3.part == "crossroads", "then the crossroads")
 LC.AcceptPosting(good, g3.id)
 local qc = LC.QuestOf[good]
-good:SetPos(qc.stages[1].pos)
+ok(qc and qc.stages[1].pos ~= nil, "the crossroads starts with somewhere to go", qc and (tostring(qc.title) .. " / " .. tostring(qc.stages[1].kind)) or "no quest")
+if qc and qc.stages[1].pos then good:SetPos(qc.stages[1].pos) end
 _run(1)
-reach(good, qc.data.actor)
-LC.ResolveChoice(good, qc.id, 2)
+if qc then
+    reach(good, qc.data.actor)
+    LC.ResolveChoice(good, qc.id, 2)
+end
 ok(LC.StoryFlag(good, "insider") == true and LC.Story(good).chains.inside.done == "insider", "staying inside makes you a double agent")
 ok(good:GetNW2String("lcf_faction", "") == "cp", "still in uniform")
 local w1 = storyPosting(good, "insidework")
 ok(w1 ~= nil and string.find(w1.title, "Inside Work: ", 1, true) == 1, "secret Inside Work appears, for you alone", w1 and w1.title)
 local otherCop = newPlayer("OtherCop", "cp")
 ok(storyPosting(otherCop, "insidework") == nil, "nobody else sees it")
-LC.AcceptPosting(good, w1.id)
+if w1 then LC.AcceptPosting(good, w1.id) end
 ok(LC.QuestOf[good] ~= nil, "an op begins")
 LC.AbandonQuest(good)
 
@@ -929,7 +932,7 @@ for _, chain in ipairs(LC.ChainList) do
     for partId in pairs(chain.parts) do
         local variants = { false }
         if chain.id == "missing" then variants = { "rebels", "infestation", "deserted" } end
-        if chain.id == "shift" then variants = {} for _, o in ipairs(LCJ.Occupations) do if not o.npcOnly then variants[#variants + 1] = o.id end end end
+        if chain.id == "shift" then variants = {} for _, o in ipairs(LCJ.Occupations) do if not LCJ.Closed(o) then variants[#variants + 1] = o.id end end end
         for _, cause in ipairs(variants) do
             if chain.id == "shift" then LC.SetJob(p, cause, true) end
             if chain.id == "rehab" then LC.AddStanding(p, -100 - LC.Standing(p)) end
@@ -1606,7 +1609,7 @@ local function shiftTitled(p, title)
     end
 end
 local newJobs = { porter = { "New arrivals", "Luggage", "Papers check" }, clerk = { "Filing", "Permit desk", "Supply cabinet" },
-    laundry = { "Wash cycle", "Pressed uniforms", "Stains" }, mortuary = { "Collection", "Incinerator" },
+    laundry = { "Wash cycle", "Pressed uniforms", "Stains" }, mortuary = { "Collection", "Before the fire" },
     scrap = { "Scrap run", "Rubble clearing" }, radio = { "Loudspeakers", "Repair bench", "Union radio order" } }
 local jobber = newPlayer("Jobber", "citizen")
 local jobInc = ents.Create("lc_incinerator") jobInc:SetPos(Vector(-2600, 2600, 0)) jobInc:Spawn() -- the morgue's (bodies are hauled here)
@@ -1631,18 +1634,32 @@ for _, id in ipairs({ "porter", "mortuary", "scrap" }) do
 end
 ok(done == total, "every new job's shifts can be worked start to finish", missing[1])
 ok(#LCJ.Occupations == 12, "twelve occupations in all")
-local npcOnly = {}
-for _, o in ipairs(LCJ.Occupations) do if o.npcOnly then npcOnly[#npcOnly + 1] = o.id end end
-table.sort(npcOnly)
-ok(table.concat(npcOnly, ",") == "clerk,laundry,radio", "three are the city's own (no work for a player): laundry, records, radio repair", table.concat(npcOnly, ","))
+local gameOnly = {}
+for _, o in ipairs(LCJ.Occupations) do if o.gameOnly then gameOnly[#gameOnly + 1] = o.id end end
+table.sort(gameOnly)
+ok(table.concat(gameOnly, ",") == "clerk,laundry,radio", "three are hands-on games only: laundry, records, radio repair", table.concat(gameOnly, ","))
 local applicant = newPlayer("JobApplicant", "citizen")
 applicant:SetPos(FAR)
-local okA, whyA = LC.SetJob(applicant, "laundry")
-ok(not okA and whyA and string.find(whyA, "isn't taking anyone", 1, true), "a player can't take one", whyA)
-applicant:SetNW2String("lcj_job", "laundry")
+ok(LC.SetJob(applicant, "laundry"), "a player can take one while the games are on")
+_setcvar("lc_jobgames", 0)
+local applicant2 = newPlayer("JobApplicant2", "citizen")
+applicant2:SetPos(FAR)
+local okA, whyA = LC.SetJob(applicant2, "radio")
+ok(not okA and whyA and string.find(whyA, "isn't taking anyone", 1, true), "with lc_jobgames 0 they're closed", whyA)
 applicant.chat = {}
 _advance(11) _runtimers()
 ok(applicant:GetNW2String("lcj_job", "") == "" and has(applicant.chat, "has been closed"), "and anyone who had one is told it's closed, and picks another")
+_setcvar("lc_jobgames", 1)
+for _, t in ipairs({ { "courier", "Parcel run" }, { "mortuary", "Before the fire" }, { "laundry", "Sorting" }, { "clerk", "Filing" }, { "radio", "Tuning" } }) do
+    local p = newPlayer("Hands" .. t[1], "citizen")
+    p:SetPos(FAR)
+    LC.SetJob(p, t[1], true)
+    local qh = shiftTitled(p, t[2])
+    ok(qh ~= nil, t[1] .. " has a hands-on shift: " .. t[2])
+    if qh then workAll(qh, p) ok(qh.done, "and it can be worked start to finish", t[2]) end
+    LC.SetJob(p, "", true) -- (a player in a job makes the city's own wait for them)
+    p:SetPos(Vector(-150000, 150000, 0))
+end
 
 local function choose(job, title, pick, roll)
     local p = newPlayer("Job" .. job .. pick, "citizen")
@@ -4806,7 +4823,14 @@ crs.profile = { job = "courier" }
 _setcvar("lc_npc_work", 1)
 _setcvar("lc_npc_work_pct", 100)
 _setcvar("lc_npc_work_grace", 0)
-ok(LC.NPCWorkChoose(cr, crs, CurTime()) and crs.npcWork and crs.npcWork.id == "letters", "a courier takes the real mail")
+_setcvar("lc_daily_rhythm", 0) -- (whatever the hour: couriers don't work nights)
+local evWas = LC.Event
+LC.Event = nil -- (nor in a curfew, whatever earlier sections left running)
+local chose = LC.NPCWorkChoose(cr, crs, CurTime())
+ok(chose and crs.npcWork and crs.npcWork.id == "letters", "a courier takes the real mail",
+    string.format("%s %s out=%d lock=%s", tostring(chose), tostring(crs.npcWork and crs.npcWork.id), #LC.LettersOut(), tostring(crs.questLock)))
+LC.Event = evWas
+_setcvar("lc_daily_rhythm", 1)
 for _ = 1, 160 do if not crs.npcWork then break end _run(0.5) end
 local got = LC.Notes(reader)[#LC.Notes(reader)]
 ok(got and got.letter and string.find(got.text, "canal", 1, true) ~= nil, "and it turns up in their pockets", crs.state)
@@ -6616,7 +6640,10 @@ local door = LC.AddPoint(P0 + Vector(1200, 0, 0), 0, "spawn", 0)
 local porter = newPlayer("TrainPorter", "citizen")
 LC.SetJob(porter, "porter", true)
 porter.chat = {}
+local spotInZone = LC.SpotInZone
+LC.SpotInZone = function() return nil end -- (home is this section's doorway, not a block another section left across the map)
 local okA, arrivals = LC.TrainArrive(true)
+LC.SpotInZone = spotInZone
 arrivals = arrivals or {}
 ok(okA and #arrivals >= 2, "a train comes in, and people get off", tostring(okA) .. " " .. #arrivals .. " plats " .. #LC.TrainPlatforms() .. " npcs " .. table.Count(LC.NPCs))
 ok(has(porter.chat, "train is in"), "Station Porters are told")
@@ -6624,7 +6651,10 @@ local a1 = arrivals[1]
 local s1 = a1 and LC.NPCs[a1] or {}
 ok(s1 and s1.npcWork and s1.npcWork.id == "arrival" and IsValid(s1.carry), "each with a suitcase, going home")
 for _ = 1, 600 do if not s1.npcWork then break end _run(0.5) end
-ok(s1.npcWork == nil and not IsValid(s1.carry), "they get home and put the suitcase down", s1.state)
+local w1 = s1.npcWork
+local stepAt = w1 and w1.steps and w1.steps[w1.i] and w1.steps[w1.i].pos
+ok(s1.npcWork == nil and not IsValid(s1.carry), "they get home and put the suitcase down",
+    tostring(s1.state) .. " step " .. tostring(w1 and w1.i) .. "/" .. tostring(w1 and w1.steps and #w1.steps) .. " to " .. tostring(stepAt) .. " at " .. tostring(IsValid(a1) and a1:GetPos()) .. " doing " .. tostring(w1 and w1.steps and w1.steps[w1.i] and w1.steps[w1.i].doing))
 local lv, lvs = LC.SpawnCitizen(P0 + Vector(600, 300, 0))
 lvs.leaveAt = nil
 LC.StartLeaving(lv, lvs, false)
@@ -6897,19 +6927,20 @@ ok(string.find(LC.NPCWorkSummary(), "finished", 1, true) ~= nil, "the debug repo
 for _, e in ipairs({ m, r, r2, sw, mo, hurt, md, cr, cop, idler, lamp, spk, inc, scr }) do if IsValid(e) then e:Remove() end end
 downP:SetPos(Vector(-30000, 30000, 0)) shot:SetPos(Vector(-30000, 30000, 0))
 
-section("Dr. Breen, when nobody is Director of Propaganda")
+section("The Administrator, when nobody is Director of Propaganda")
+_setcvar("lc_administrator_stock_lines", 1)
 local B0 = Vector(-42000, 24000, 0)
 for i = 1, 3 do _files["sound/vo/breencast/br_welcome0" .. i .. ".wav"] = "" end
 local studio = LC.AddPoint(B0, 90, "studio", 0)
 SetGlobal2Float("lc_live_next", 0)
 if LC.LiveSpeaker then LC.StopBroadcast("test") end
-ok(LC.StartNPCBroadcast(), "Dr. Breen goes on air")
+ok(LC.StartNPCBroadcast(), "the Administrator goes on air")
 local breen = LC.LiveNPC and LC.LiveNPC.npc
-ok(IsValid(breen) and breen:GetClass() == "npc_breen" and breen:GetPos():Distance(B0) < 20, "at the broadcast studio")
-ok(GetGlobal2Bool("lc_live_npc", false) and GetGlobal2Entity("lc_live") == breen, "every screen shows him")
+ok(IsValid(breen) and breen:GetClass() == "npc_citizen" and breen:GetNW2String("lc_pname", "") == "The Administrator" and breen:GetPos():Distance(B0) < 20, "at the broadcast studio")
+ok(GetGlobal2Bool("lc_live_npc", false) and GetGlobal2Entity("lc_live") == breen, "every screen shows her")
 local bcam = GetGlobal2Entity("lc_live_cam")
-ok(IsValid(bcam) and bcam:GetNW2Entity("lc_subject") == breen, "the camera scanner films him")
-ok(has(_sounds, "vo/breencast/br_welcome0"), "and his recorded address plays")
+ok(IsValid(bcam) and bcam:GetNW2Entity("lc_subject") == breen, "the camera scanner films her")
+ok(has(_sounds, "vo/breencast/br_welcome0"), "and her recorded address plays")
 local pir = newPlayer("BreenPirate", "resistance", nil, 150)
 pir:Give("weapon_lc_microphone") pir:SelectWeapon("weapon_lc_microphone")
 ok(not LC.ToggleBroadcast(pir), "nobody else can go on air over him")
@@ -6954,9 +6985,12 @@ SetGlobal2Float("lc_live_next", 0)
 local runWas = LC.Running
 LC.Running = true
 LC.NPCBroadcastTick(CurTime())
-ok(LC.LiveNPC == nil, "and while one is on the server, Dr. Breen leaves it to them")
+ok(LC.LiveNPC == nil, "and while one is on the server, the Administrator leaves it to them")
 LC.Running = runWas
+for _, e in ipairs(ents.FindByClass("npc_citizen")) do if e.lcBreen then e:Remove() end end
 for _, e in ipairs(ents.FindByClass("npc_breen")) do e:Remove() end
+_setcvar("lc_administrator_stock_lines", 0)
+ok(#LC.BreenLines() == 0, "Dr. Breen's own stock lines (a man's voice) are off by default")
 for _, e in ipairs(ents.FindByClass("lc_broadcastcam")) do e:Remove() end
 for _, e in ipairs(ents.FindByClass("weapon_lc_microphone")) do e:Remove() end
 LC.RemovePoint(studio)
@@ -8379,9 +8413,10 @@ end
 PathMapTests()
 
 ----------------------------------------------------------------------
-section("Custom announcements: Overwatch and Dr. Breen")
+section("Custom announcements: Overwatch and the Administrator")
 function AnnouncerTests()
 local A = "sound/livingcity/announce/"
+LC.AnnounceCalm() LC.SocioOverride = { level = "green", untilT = CurTime() + 1e6 } LC.Socio = "green" SetGlobal2String("lc_socio", "green") -- (earlier sections left violence and moods behind)
 local function netPaths(name, from)
     local out = {}
     for i = (from or 0) + 1, #net.sent do if net.sent[i].name == name then out[#out + 1] = net.sent[i].data[1] end end
@@ -8391,13 +8426,14 @@ _files[A .. "overwatch/curfew/a.wav"] = ""
 _files[A .. "overwatch/curfew/a.txt"] = "Go home."
 _files[A .. "overwatch/curfew/b.mp3"] = ""
 _files[A .. "overwatch/curfew/README.txt"] = "notes"
-_files[A .. "breen/curfew/c.ogg"] = ""
-_files[A .. "breen/socio_red/s.wav"] = ""
+_files[A .. "administrator/curfew/firm/c.ogg"] = ""
+_files[A .. "administrator/curfew/stern/c2.wav"] = ""
+_files[A .. "breen/socio_red/s.wav"] = "" -- (the old folder name still counts, as her warm one)
 _files[A .. "overwatch/dusk/d.wav"] = ""
 _files[A .. "overwatch/outbreak/o.wav"] = ""
-_files[A .. "breen/ambient/z.wav"] = ""
-ok(LC.AnnounceRescan() == 7, "every sound in a trigger's folder is found (and the notes file isn't one)", LC.AnnounceRescan())
-ok(#LC.AnnounceClips("overwatch", "curfew") == 2 and #LC.AnnounceClips("breen", "curfew") == 1, "per voice, per trigger")
+_files[A .. "administrator/ambient/z.wav"] = ""
+ok(LC.AnnounceRescan() == 8, "every sound in a trigger's folder is found (and the notes file isn't one)", LC.AnnounceRescan())
+ok(#LC.AnnounceClips("overwatch", "curfew") == 2 and #LC.AnnounceClips("administrator", "curfew", 2) == 1 and #LC.AnnounceClips("breen", "socio_red") == 1, "per voice, per trigger, per tone")
 ok(LC.AnnounceClips("overwatch", "curfew")[1].text == "Go home.", "a text file beside a sound is its subtitle")
 local same = false
 local prev
@@ -8429,7 +8465,7 @@ n0 = #net.sent
 hook.Run("LivingCityEventStarted", "curfew", 4)
 _run(20)
 got = netPaths("lc_breencast", n0)
-ok(#got == 1 and string.find(got[1], "breen/curfew/c.ogg", 1, true), "Dr. Breen follows an event a few seconds on, over the loudspeakers", got[1])
+ok(#got == 1 and string.find(got[1], "administrator/curfew/firm/c.ogg", 1, true), "the Administrator follows an event a few seconds on, over the loudspeakers, firm about a curfew", got[1])
 local o1 = netPaths("lc_announce", n0)
 ok(#o1 == 0, "(Overwatch's own event line is LC.Announce's job, not said twice)", #o1)
 
@@ -8438,7 +8474,7 @@ n0 = #net.sent
 hook.Run("LivingCitySocioChanged", "red", "green")
 _run(30)
 got = netPaths("lc_breencast", n0)
-ok(#got == 1 and string.find(got[1], "breen/socio_red/s.wav", 1, true), "a sociostability change is answered by Dr. Breen too")
+ok(#got == 1 and string.find(got[1], "breen/socio_red/s.wav", 1, true), "a sociostability change is answered by the Administrator too (her only recording is warm, so she uses it)", got[1])
 
 n0 = #net.sent
 hook.Run("LivingCityDayPhase", "dusk", "day")
@@ -8459,10 +8495,32 @@ n0 = #net.sent
 concommand.list.lc_announce_say(nil, "lc_announce_say", { "overwatch", "nothing_here" })
 ok(#netPaths("lc_announce", n0) == 0, "and says nothing for an empty folder")
 
+-- her tone: usual for the thing, up with red sociostability, up with a run of violence
+LC.Socio = "green"
+ok(LC.AnnounceTier("rations") == 1 and LC.AnnounceTier("curfew") == 2 and LC.AnnounceTier("raid") == 3 and LC.AnnounceTier("breakout") == 4, "each thing has its usual tone, from warm to furious")
+LC.Socio = "red"
+ok(LC.AnnounceTier("rations") == 2 and LC.AnnounceTier("curfew") == 3 and LC.AnnounceTier("breakout") == 4, "red sociostability puts her a step up (never past furious)")
+LC.Socio = "green"
+for _ = 1, 3 do LC.TriggerAnnouncements("breakout") end
+ok(LC.AnnounceTier("curfew") == 3 and LC.AnnounceTier("rations") == 1, "three violent things in ten minutes put her a step up on anything serious, and leave the rations cheerful")
+for _ = 1, 3 do LC.TriggerAnnouncements("breakout") end
+ok(LC.AnnounceTier("curfew") == 4, "six, two steps")
+_advance(601) -- (heat is only timestamps; no need to simulate ten minutes of city)
+ok(LC.AnnounceTier("curfew") == 2, "and she calms down once it has been quiet for ten minutes")
+n0 = #net.sent
+concommand.list.lc_announce_say(nil, "lc_announce_say", { "administrator", "curfew", "stern" })
+got = netPaths("lc_breencast", n0)
+ok(#got == 1 and string.find(got[1], "curfew/stern/c2.wav", 1, true), "lc_announce_say can ask for a tone", got[1])
+n0 = #net.sent
+concommand.list.lc_announce_say(nil, "lc_announce_say", { "administrator", "curfew", "furious" })
+got = netPaths("lc_breencast", n0)
+ok(#got == 1 and string.find(got[1], "curfew/stern/c2.wav", 1, true), "with no furious recordings she uses the nearest one below", got[1])
+concommand.list.lc_announce_tier(nil, "lc_announce_tier", { "curfew" })
+
 local prog = LC.BreenProgram()
 local has_custom = false
-for _, p in ipairs(prog) do if p == "livingcity/announce/breen/ambient/z.wav" then has_custom = true end end
-ok(has_custom or #prog == 0, "Dr. Breen's periodic addresses include recordings from the ambient folder", #prog)
+for _, p in ipairs(prog) do if p == "livingcity/announce/administrator/ambient/z.wav" then has_custom = true end end
+ok(has_custom or #prog == 0, "the Administrator's periodic addresses include recordings from the ambient folder", #prog)
 
 _setcvar("lc_announce_custom", 0)
 ok(LC.PickAnnounceClip("overwatch", "curfew") == nil, "lc_announce_custom 0 turns the lot off")
@@ -8471,6 +8529,7 @@ for k in pairs(_files) do if string.find(k, A, 1, true) == 1 then _files[k] = ni
 LC.AnnounceRescan()
 ok(#LC.AnnounceClips("overwatch", "curfew") == 0, "take the files away and the city goes back to its built-in voice")
 watcher:SetPos(Vector(-120000, -120000, 0))
+LC.SocioOverride = nil
 end
 AnnouncerTests()
 
@@ -9698,6 +9757,281 @@ ok(not rc:HasWeapon("weapon_crowbar") and not rc.lcJobCrowbar, "and the crowbar 
 for _, p in ipairs({ mw, md, rc }) do p:SetPos(Vector(-150000, 150000, 0)) end
 end
 MoreJobGameTests()
+
+function HandsOnTests()
+section("Hands-on work: parcels, the records terminal, dead drops, the dead, laundry, filing, radios, pat-downs, breaches")
+local function Tick(n) for _ = 1, n or 1 do _advance(0.1) _runtimers() end end
+local H0 = Vector(-140000, 60000, 0)
+local GONE = Vector(-150000, 150000, 0)
+local function Unit(pos)
+    local u, ust = LC.Spawners.cop(pos)
+    ust.unmanaged, ust.questLock = true, true
+    return u
+end
+
+-- the parcel run
+local cu = newPlayer("Parcels", "citizen")
+_run(0.3)
+cu:SetPos(H0)
+local stops = { { pos = H0 + Vector(400, 0, 0), name = "Block A" }, { pos = H0 + Vector(800, 0, 0), name = "Block B" }, { pos = H0 + Vector(1200, 0, 0), name = "Block C" } }
+local c0 = LC.Credits(cu)
+ok(LC.JobGameStart(cu, "parcel", nil, { stops = stops, parcel = { text = "A box.", hot = true }, searchFinds = 0 }), "a parcel run starts with three to deliver")
+local g = LC.JobGames[cu]
+ok(cu.lcWaypoint and cu.lcWaypoint.pos == stops[1].pos, "the first door is marked on their screen")
+local unit = Unit(H0 + Vector(200, 150, 0))
+Tick(30)
+ok(g.stopped ~= nil, "a unit that gets a good look calls them over", g.heat)
+Tick(55)
+ok(g.stopped == nil and g.searches == 1 and LC.JobGames[cu] == g, "stand still for the search: this time it's handed back")
+unit:Remove()
+for i = 1, 3 do cu:SetPos(stops[i].pos) Tick(1) end
+ok(not LC.JobGames[cu] and LC.Credits(cu) > c0, "all three delivered: paid, faster is more", LC.Credits(cu) - c0)
+ok(cu.lcWaypoint == nil, "and the marker's gone")
+cu:SetPos(H0)
+LC.JobGameStart(cu, "parcel", nil, { stops = stops, parcel = { text = "A box.", hot = true }, searchFinds = 1 })
+g = LC.JobGames[cu]
+g.stopped = { at = cu:GetPos(), untilT = CurTime() + 5 }
+cu:SetPos(H0 + Vector(0, 300, 0))
+Tick(1)
+ok(g.ran and LC.PlayerIsWanted(cu), "run from a search and you're wanted")
+LC.ClearWanted(cu)
+cu:SetPos(H0)
+g.stopped = { at = cu:GetPos(), untilT = CurTime() + 5 }
+Tick(55)
+ok(not LC.JobGames[cu] and g.seized and LC.PlayerIsWanted(cu), "searched with something in it: seized, and wanted")
+LC.ClearWanted(cu)
+cu:SetPos(GONE)
+
+-- the records terminal
+local hk = newPlayer("Hacker", "resistance")
+_run(0.3)
+hk:SetPos(H0 + Vector(0, 4000, 0))
+c0 = LC.Credits(hk)
+local wiped = false
+ok(LC.JobGameStart(hk, "hack", nil, { pos = hk:GetPos(), onDone = function() wiped = true end }), "the terminal opens")
+g = LC.JobGames[hk]
+ok(_lastnet("lc_jg_panel") ~= nil and g.panelOpen, "its panel on their screen")
+local nd = LC.HackNeedle(g, CurTime() + 0.7)
+ok(nd >= 0 and nd <= 1, "the needle swings between the ends", nd)
+local sawSweep = false
+for _ = 1, 140 do Tick(1) if g.sweep then sawSweep = true break end end
+ok(sawSweep, "a scanner comes over every few seconds")
+ok(LC.JobGameAct(hk, "try", g.band + g.bandW / 2) == false and g.alarms == 1 and g.got == 0, "touch the panel while it's looking: it sees you")
+g.sweepEnd = CurTime() - 1
+Tick(1)
+ok(not g.sweep, "it passes")
+ok(LC.JobGameAct(hk, "try", g.band + g.bandW / 2) == true and g.got == 1, "the needle in the band: one bypassed")
+local w0 = g.bandW
+ok(LC.JobGameAct(hk, "try", g.band > 0.5 and 0.01 or 0.99) == false and g.got == 0, "out of it: you lose one")
+ok(g.bandW < w0 or g.speed > 0.55, "and every hit makes the next harder")
+for _ = 1, 4 do if LC.JobGames[hk] then g.sweep = false LC.JobGameAct(hk, "try", g.band + g.bandW / 2) end end
+ok(not LC.JobGames[hk] and wiped and LC.Credits(hk) > c0, "four in: through, paid, and the job done", LC.Credits(hk) - c0)
+LC.JobGameStart(hk, "hack", nil, { pos = hk:GetPos() })
+g = LC.JobGames[hk]
+g.sweep = true
+LC.JobGameAct(hk, "try", 0.5)
+LC.JobGameAct(hk, "try", 0.5)
+ok(not LC.JobGames[hk] and g.tripped and LC.PlayerIsWanted(hk), "seen twice: the alarm goes, and they're wanted")
+LC.ClearWanted(hk)
+hk:SetPos(GONE)
+
+-- the dead drop
+local dr = newPlayer("Dropper", "resistance")
+_run(0.3)
+local D0 = H0 + Vector(4000, 4000, 0)
+dr:SetPos(D0)
+c0 = LC.Credits(dr)
+ok(LC.JobGameStart(dr, "drop", nil, { pos = D0 }), "a drop with somewhere to hide the message")
+g = LC.JobGames[dr]
+ok(#g.spots == 3 and g.spots[1]:GetNW2String("lc_jg_mark", "") == "target", "three places, outlined")
+dr.lookingAt = g.spots[1]
+dr:SetPos(g.spots[1]:GetPos() + Vector(30, 0, 0))
+hook.Run("KeyPress", dr, IN_USE)
+ok(g.hiding and g.hiding.ent == g.spots[1], "E on one starts to hide it")
+dr.crouch = false
+Tick(10)
+ok(g.hiding.t == 0 and g.hiding.paused, "standing up, nothing happens: crouch")
+local watcher = Unit(D0 + Vector(-300, 0, 0))
+dr.crouch = true
+Tick(20)
+ok(g.spots[1].lcBurned and g.burned == 1 and not g.hiding, "a unit sees: that place is burned")
+watcher:Remove()
+dr:SetPos(g.spots[2]:GetPos() + Vector(30, 0, 0))
+LC.JobGameUse(dr, g.spots[2])
+LC.JobGameUse(dr, g.spots[2])
+Tick(30)
+ok(not LC.JobGames[dr] and LC.Credits(dr) > c0, "hidden unseen in another: done and paid", LC.Credits(dr) - c0)
+dr.crouch = false
+dr:SetPos(GONE)
+
+-- searching the dead
+local mo = newPlayer("Mortician", "citizen")
+_run(0.3)
+mo:SetPos(H0 + Vector(-4000, 0, 0))
+ok(LC.JobGameStart(mo, "search", nil, { pos = mo:GetPos() + Vector(60, 0, 0) }), "a body on the slab")
+g = LC.JobGames[mo]
+ok(IsValid(g.body) and g.body.lcBody and g.body.lcBody.claimed, "it's theirs to search (no other job takes it)")
+ok(LC.JobGameUse(mo, g.body) and g.panelOpen, "E on it: its pockets")
+g.pockets = {
+    { name = "Coat", find = { label = "Papers", item = "papers_dead", value = 2, stolen = true } },
+    { name = "Shoes", find = { label = "Rounds", item = "ammo_pistol", value = 2, contraband = true } },
+    { name = "Lining" },
+    { name = "Trousers", find = { label = "A ring", item = "keepsake", value = 1, family = true } },
+}
+g.watching = false
+LC.JobGameAct(mo, "open", 1)
+LC.JobGameAct(mo, "keep", 1)
+ok(LC.HasItem(mo, "papers_dead") and g.kept == 1, "kept while nobody's looking: yours")
+g.watching = true
+LC.JobGameAct(mo, "open", 2)
+LC.JobGameAct(mo, "keep", 2)
+ok(g.caught == 1 and not LC.HasItem(mo, "ammo_pistol") and g.pockets[2].done == "log", "kept while the overseer watches: caught, and it goes in the tray")
+LC.JobGameAct(mo, "open", 3)
+ok(g.pockets[3].done == "empty", "an empty pocket is just empty")
+LC.JobGameAct(mo, "open", 4)
+LC.JobGameAct(mo, "family", 4)
+ok(g.pockets[4].done == "family", "set aside for the family")
+g.watchAt = CurTime() - 1
+local was = g.watching
+Tick(1)
+ok(g.watching ~= was, "the overseer comes and goes")
+local first = g.body
+LC.JobGameAct(mo, "burn")
+ok(not IsValid(first) and IsValid(g.body) and g.n == 2, "into the fire, and the next one's on the slab")
+LC.JobGameAct(mo, "burn")
+LC.JobGameAct(mo, "burn")
+ok(not LC.JobGames[mo] and has(g.notes, "wrote your name"), "three done: the shift's over (and the overseer remembers)")
+mo:SetPos(GONE)
+
+-- sorting uniforms
+local la = newPlayer("Launderer", "citizen")
+_run(0.3)
+la:SetPos(H0 + Vector(-4000, 4000, 0))
+c0 = LC.Credits(la)
+ok(LC.JobGameStart(la, "laundry", nil, {}), "a pile of uniforms")
+g = LC.JobGames[la]
+ok(#g.bins == 5 and g.u and g.u.tag, "four division bins and the incident wash", g.u and g.u.tag)
+local function rightBin(u)
+    if u.stain then return 5 end
+    for i, b in ipairs(g.bins) do if b.divs[1] == u.div or b.divs[2] == u.div then return i end end
+end
+g.u.pocket, g.u.item = "a folded note", "paper"
+LC.JobGameAct(la, "turnin")
+ok(g.u.pocket == nil and g.pay >= 1, "something in a pocket, turned in")
+local wrongBin = rightBin(g.u) == 1 and 2 or 1
+ok(LC.JobGameAct(la, "sort", wrongBin) == false and g.wrong == 1, "the wrong bin is wrong")
+for _ = 1, 20 do if LC.JobGames[la] then LC.JobGameAct(la, "sort", rightBin(g.u)) end end
+ok(not LC.JobGames[la] and g.right == 11 and LC.Credits(la) > c0, "the pile sorted: paid", LC.Credits(la) - c0)
+la:SetPos(GONE)
+
+-- filing
+local fl = newPlayer("Filer", "citizen")
+_run(0.3)
+fl:SetPos(H0 + Vector(-8000, 0, 0))
+c0 = LC.Credits(fl)
+ok(LC.JobGameStart(fl, "filing", nil, {}), "an in-tray of forms")
+g = LC.JobGames[fl]
+local honest = true
+local function rightDrawer(f) return f.bad and 5 or LC.FilingDrawerOf(f.cid) end
+ok(LC.FilingDrawerOf("07-123") == 1 and LC.FilingDrawerOf("49-001") == 2 and LC.FilingDrawerOf("99-999") == 4, "drawers by citizen number")
+ok(LC.JobGameAct(fl, "file", rightDrawer(g.form) == 1 and 2 or 1) == false and g.wrong == 1, "the wrong drawer is wrong")
+ok(LC.JobGameAct(fl, "blank") and LC.HasItem(fl, "papers_blank"), "a blank identity form, from the cabinet nobody locks")
+ok(LC.JobGameAct(fl, "blank") == nil, "(once a shift)")
+for _ = 1, 20 do
+    local f = g.form
+    if not f then break end
+    if (f.bad == true) ~= (f.name ~= f.regName or f.cid ~= f.regCid) then honest = false end
+    LC.JobGameAct(fl, "file", rightDrawer(f))
+end
+ok(honest, "a form that doesn't match the register really doesn't (and the rest do)")
+ok(not LC.JobGames[fl] and g.right == 9 and LC.Credits(fl) > c0, "the tray filed: paid", LC.Credits(fl) - c0)
+fl:SetPos(GONE)
+
+-- tuning radios
+local rd = newPlayer("RadioMan", "citizen")
+_run(0.3)
+rd:SetPos(H0 + Vector(-8000, 4000, 0))
+c0 = LC.Credits(rd)
+ok(LC.JobGameStart(rd, "radio", nil, { freq7 = 1 }), "a shelf of hissing radios")
+g = LC.JobGames[rd]
+ok(g.f7 and math.abs(g.f7 - g.target) > 3, "this one has Freq 7 on it, well away from its station")
+ok(LC.JobGameAct(rd, "lock", g.f7) == "freq7" and g.heard, "lock onto the clearest thing on the band: Freq 7")
+ok(LC.JobGameAct(rd, "lock", g.target) == nil, "(decide about it first)")
+LC.JobGameAct(rd, "freq7", "note")
+ok(not g.heard and LC.HasItem(rd, "paper"), "written down where nobody will look")
+local e0 = g.radioEnd
+ok(LC.JobGameAct(rd, "lock", g.target > 100 and g.target - 2 or g.target + 2) == false and g.radioEnd < e0, "static: time lost")
+ok(LC.JobGameAct(rd, "lock", g.target) == true and g.fixed == 1 and g.n == 2, "on its station: fixed, the next one")
+g.radioEnd = CurTime() - 1
+Tick(1)
+ok(g.n == 3 and g.fixed == 1, "too slow: back on the shelf, still hissing")
+LC.JobGameAct(rd, "lock", g.target)
+LC.JobGameAct(rd, "lock", g.target)
+ok(not LC.JobGames[rd] and g.fixed == 3 and LC.Credits(rd) > c0, "the shelf done: paid", LC.Credits(rd) - c0)
+rd:SetPos(GONE)
+
+-- pat-downs
+local pc = newPlayer("PatCop", "cp")
+_run(0.3)
+local P0 = H0 + Vector(-12000, 0, 0)
+pc:SetPos(P0)
+c0 = LC.Credits(pc)
+local cit1, c1st = LC.Spawners.citizen(P0 + Vector(60, 0, 0))
+local cit2 = LC.Spawners.citizen(P0 + Vector(0, 60, 0))
+local cit3 = LC.Spawners.citizen(P0 + Vector(-60, 0, 0))
+ok(LC.JobGameStart(pc, "patdown", nil, { need = 2, carry = 1 }), "a pat-down shift")
+g = LC.JobGames[pc]
+ok(LC.JobGameUse(pc, cit1) and g.subject and c1st.questLock, "E on a citizen: they're stopped")
+ok(LC.JobGameAct(pc, "verdict", "confiscate") == nil, "nothing to confiscate until you've found it")
+LC.JobGameAct(pc, "pat", g.subject.hidden)
+ok(g.subject.found, "the right place: found")
+LC.JobGameAct(pc, "verdict", "confiscate")
+ok(g.done == 1 and g.right == 1 and not c1st.questLock, "confiscated, and they go on their way")
+ok(LC.JobGameUse(pc, cit1) == nil, "(not the same one twice)")
+g.opts.carry = 0
+LC.JobGameUse(pc, cit2)
+LC.JobGameAct(pc, "pat", 1)
+LC.JobGameAct(pc, "verdict", "detain")
+ok(not LC.JobGames[pc] and g.wrong == 1, "detain someone clean: a bad call (and the shift's over)")
+LC.JobGameStart(pc, "patdown", nil, { need = 1, carry = 0 })
+g = LC.JobGames[pc]
+LC.JobGameUse(pc, cit3)
+local r
+for i = 1, 4 do r = LC.JobGameAct(pc, "pat", i) end
+ok(r == "bolted" and not LC.JobGames[pc], "too long at it and they lose their nerve and bolt")
+pc:SetPos(GONE)
+
+-- a breach
+local bc = newPlayer("Breacher", "cp")
+_run(0.3)
+local B0 = H0 + Vector(-12000, 6000, 0)
+bc:SetPos(B0)
+local door = ents.Create("prop_door_rotating")
+door:SetPos(B0 + Vector(100, 0, 0))
+door:Spawn()
+door:Fire("Lock")
+ok(LC.JobGameStart(bc, "breach", nil, { pos = B0 }), "a raid on a block")
+g = LC.JobGames[bc]
+ok(g.phase == "door" and g.door == door, "the door first")
+LC.JobGameUse(bc, door)
+Tick(30)
+ok(g.phase == "room" and not door.locked, "the charge goes: the door's open")
+ok(#g.res >= 2 and #g.stash == 3, "residents, and places to search", #g.res)
+LC.JobGameUse(bc, g.res[1].npc)
+ok(g.res[1].done == "secured" and g.secured == 1, "E on one: on the floor")
+g.res[2].until_ = CurTime() - 1
+Tick(1)
+ok(g.res[2].done == "fled" or g.res[2].done == "flushed", "too slow with another: they run, or burn something", g.res[2].done)
+for _, rr in ipairs(g.res) do if not rr.done then LC.JobGameUse(bc, rr.npc) end end
+for _, e in ipairs(g.stash) do LC.JobGameUse(bc, e) end
+Tick(1)
+ok(not LC.JobGames[bc] and (g.found >= 1 or g.flushed >= 1), "everyone down and the place searched: done", string.format("found %d, flushed %d", g.found, g.flushed))
+door:Remove()
+bc:SetPos(GONE)
+ok(LC.JobGameStart(bc, "breach", nil, { pos = B0, noDoor = true }) and LC.JobGames[bc].phase == "room", "(no door: straight in)")
+LC.JobGameEnd(bc, "quit")
+end
+HandsOnTests()
 
 ----------------------------------------------------------------------
 section("Stop")

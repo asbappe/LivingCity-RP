@@ -64,6 +64,7 @@ LC_MODULES = {
         "sv_livingcity_lagwatch", -- (staff: the lag monitor)
         "sv_livingcity_nextstep", -- (what now? everyone always has a next step)
         "sv_livingcity_jobgames", -- (work you actually do: the street sweep, the factory line, papers check)
+        "sv_livingcity_moregames", -- (more of them: parcels, the records terminal, dead drops, the dead, laundry, filing, radios, pat-downs, breaches)
         "sv_livingcity_doors",
         "sv_livingcity_dropship",
         "sv_livingcity_escort",
@@ -91,7 +92,7 @@ LC_MODULES = {
         "sv_livingcity_prison",
         "sv_livingcity_march", -- (after prison: arrested by a unit NPC, you're walked to the cells)
         "sv_livingcity_propaganda",
-        "sv_livingcity_announcer", -- (after propaganda: it borrows Dr. Breen's speakers)
+        "sv_livingcity_announcer", -- (after propaganda: it borrows the Administrator's speakers)
         "sv_livingcity_quests",
         "sv_livingcity_raids",
         "sv_livingcity_rations",
@@ -134,6 +135,7 @@ LC_MODULES = {
         "cl_livingcity_lagwatch", -- (staff: the lag monitor)
         "cl_livingcity_nextstep", -- (what now? the next step on screen, F1 slot 1)
         "cl_livingcity_jobgames", -- (the job games' panel, the papers window)
+        "cl_livingcity_moregames", -- (their panels, and the outline on what the game wants you to look at)
         "cl_livingcity_atmos",
         "cl_livingcity_character",
         "cl_livingcity_checkpoints",

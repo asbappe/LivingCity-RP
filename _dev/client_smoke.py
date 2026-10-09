@@ -913,6 +913,40 @@ local okJG, errJG = pcall(function()
     net.ReadString, util.JSONToTable = rS2, rJ2
 end)
 if not okJG then problems[#problems + 1] = "job games: " .. tostring(errJG) end
+-- the other job games (cl_livingcity_moregames.lua): every panel opened, updated, closed
+local okMG, errMG = pcall(function()
+    local rU, rD, rDc, rJ = net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable
+    local doc
+    net.ReadUInt = function() return 1 end
+    net.ReadData = function() return "x" end
+    util.Decompress = function(s) return s end
+    util.JSONToTable = function() return doc end
+    local docs = {
+        { kind = "hack", band = 0.3, w = 0.2, speed = 0.5, t = 1, got = 1, need = 4, alarms = 1, sweep = true, warn = false },
+        { kind = "search", n = 1, of = 3, watching = true, pockets = { { name = "Coat", open = true, find = "Papers" }, { name = "Shoes", open = false }, { name = "Lining", open = true, done = "empty" } } },
+        { kind = "laundry", bins = { { label = "UNION / JURY" }, { label = "KING / TAP" }, { label = "Incident wash" } }, tag = "UNION-07", stain = true, pocket = "a folded note", n = 1, of = 12, secs = 90 },
+        { kind = "filing", drawers = { "00-24", "25-49", "50-74", "75-99", "Discrepancy" }, name = "Mira Kesler", cid = "12-345", status = "Active", regName = "Mira Kessler", regCid = "12-345", n = 1, of = 10, secs = 100, blank = true },
+        { kind = "radio", n = 1, of = 4, t = 95.5, f7 = 101.2, heard = "'...this is Freq 7...'", secs = 20 },
+        { kind = "patdown", zones = { { name = "Coat", done = true }, { name = "Bag", done = true, found = "a lockpick" }, { name = "Boots", done = false } }, tell = "They hold the bag tight.", nerve = 2, found = "a lockpick", n = 1, of = 3 },
+    }
+    for _, d in ipairs(docs) do
+        doc = d
+        net.recv_lc_jg_panel()
+        if not LC_CL.JobPanel() or LC_CL.JobPanel().kind ~= d.kind then error("no " .. d.kind .. " panel") end
+        net.recv_lc_jg_panel() -- (an update to the same panel)
+    end
+    if LC_CL.RadioSignal(95.5, { t = 95.5 }) < 0.99 or LC_CL.RadioSignal(90, { t = 95.5 }) > 0.01 then error("radio signal") end
+    doc = {}
+    net.recv_lc_jg_panel()
+    if LC_CL.JobPanel() then error("panel didn't close") end
+    local tj = util.TableToJSON
+    util.TableToJSON = util.TableToJSON or function() return "{}" end
+    LC_CL.JobAct("try", 0.5)
+    util.TableToJSON = tj
+    net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable = rU, rD, rDc, rJ
+    run("PreDrawHalos")
+end)
+if not okMG then problems[#problems + 1] = "more job games: " .. tostring(errMG) end
 -- what now? (cl_livingcity_nextstep.lua): the line on screen, and its F1 page
 local okWN, errWN = pcall(function()
     _me:SetNW2String("lc_next", "Find water")

@@ -995,3 +995,127 @@ hook.Add("EntityTakeDamage", "LivingCityJobRubble", function(ent, dmg)
     if club then Smash(ent, g) end
     return true
 end)
+
+------------------------------------------------------------------------
+-- For the other games (sv_livingcity_moregames.lua): a game can have a
+-- panel on screen (lc_jg_panel, answered with lc_jg_act), and E on things
+-- in the world (def.use). LC.JobGameKit is the toolbox above.
+------------------------------------------------------------------------
+
+util.AddNetworkString("lc_jg_panel") -- server -> client: { kind, ... } ({} closes it)
+util.AddNetworkString("lc_jg_act")   -- client -> server: action, argument (JSON)
+
+function LC.JobGameDefine(kind, def) GAMES[kind] = def end
+function LC.JobGameDef(kind) return GAMES[kind] end
+
+-- Show (or update) the game's panel; nil closes it.
+function LC.JobGamePanel(g, data)
+    if not g or not IsValid(g.ply) then return end
+    if data then data.kind = data.kind or g.kind g.panelOpen = true else g.panelOpen = nil end
+    LC.SendCompressed("lc_jg_panel", data or {}, { g.ply })
+end
+
+-- Something done on the panel. Returns whatever the game says.
+function LC.JobGameAct(ply, action, arg)
+    local g = LC.JobGames[ply]
+    local def = g and GAMES[g.kind]
+    if g and action == "closed" then g.panelOpen = nil return true end -- (they shut it: E brings it back)
+    if not def or not def.act then return nil end
+    local ok, r = pcall(def.act, g, tostring(action or ""), arg)
+    if not ok then if LC.Error then LC.Error("job game " .. g.kind, r) end return nil end
+    g.nextHud = 0
+    return r
+end
+
+-- E on something in the world, for the game that wants it.
+function LC.JobGameUse(ply, ent)
+    local g = LC.JobGames[ply]
+    local def = g and GAMES[g.kind]
+    if not def or not def.use or not IsValid(ent) then return nil end
+    local ok, r = pcall(def.use, g, ent)
+    if not ok then if LC.Error then LC.Error("job game " .. g.kind, r) end return nil end
+    g.nextHud = 0
+    return r
+end
+
+-- Close a panel left open when the game ends, however it ends.
+local baseEnd = LC.JobGameEnd
+function LC.JobGameEnd(ply, how)
+    local g = LC.JobGames[ply]
+    if g and g.panelOpen and IsValid(ply) then LC.SendCompressed("lc_jg_panel", {}, { ply }) end
+    return baseEnd(ply, how)
+end
+
+hook.Add("KeyPress", "LivingCityJobGameUse", function(ply, key)
+    if key ~= IN_USE then return end
+    local g = LC.JobGames[ply]
+    if not g or not GAMES[g.kind].use then return end
+    local tr = ply:GetEyeTrace()
+    local ent = tr and tr.Entity
+    if IsValid(ent) and ent:GetPos():DistToSqr(ply:GetPos()) < 160 * 160 then LC.JobGameUse(ply, ent) end
+end)
+
+net.Receive("lc_jg_act", function(_, ply)
+    if (ply.lcJgActAt or 0) > CurTime() then return end
+    ply.lcJgActAt = CurTime() + 0.08
+    local action = net.ReadString()
+    local arg = util.JSONToTable(net.ReadString() or "") or {}
+    LC.JobGameAct(ply, action, arg.v)
+end)
+
+-- Mark a thing for this player's game (the client outlines it). col: "target", "person", "danger", "done"
+local function Mark(ent, ply, col)
+    if not IsValid(ent) then return end
+    ent:SetNW2Entity("lc_jg_owner", ply)
+    ent:SetNW2String("lc_jg_mark", col or "target")
+end
+
+-- Is a Civil Protection unit (or anyone, with others) looking at them, within dist? The unit, or nil.
+local function Watcher(ply, dist, others)
+    local eye = ply:EyePos()
+    local best, bd
+    for npc, st in pairs(LC.NPCs or {}) do
+        if IsValid(npc) and (LC.IsSecurity(st) or (others and st.role == "citizen" and not st.questLock)) then
+            local d = npc:GetPos():DistToSqr(ply:GetPos())
+            local lim = LC.IsSecurity(st) and dist or dist * 0.45
+            if d < lim * lim and (not bd or d < bd) then
+                local tr = util.TraceLine({ start = npc:EyePos(), endpos = eye, mask = MASK_OPAQUE, filter = npc })
+                if tr.Fraction > 0.97 and not (LC.SmokeBlocks and LC.SmokeBlocks(npc:EyePos(), eye)) then best, bd = npc, d end
+            end
+        end
+    end
+    return best
+end
+
+-- A citizen for a game (a traveler, a resident, a suspect): stands where it's put, belongs to the game.
+local function Extra(g, pos, secs)
+    if not (LC.Spawners and LC.Spawners.citizen) then return nil end
+    local npc, st = LC.Spawners.citizen(pos)
+    if not IsValid(npc) or not st then return nil end
+    LC.SetState(npc, st, "event")
+    st.eventUntil, st.questLock, st.unmanaged = CurTime() + (secs or 900), true, true
+    if npc.SetSchedule then npc:SetSchedule(SCHED_IDLE_STAND) end
+    g.props[#g.props + 1] = npc
+    return npc, st
+end
+
+-- Let one of them go about their business (and out of the game's props).
+local function Release(g, npc, walkTo, secs)
+    if not IsValid(npc) then return end
+    for i, e in ipairs(g.props) do if e == npc then table.remove(g.props, i) break end end
+    npc:SetNW2String("lc_jg_mark", "")
+    local st = LC.NPCs and LC.NPCs[npc]
+    if walkTo then
+        if npc.SetLastPosition then npc:SetLastPosition(walkTo) npc:SetSchedule(SCHED_FORCED_GO_RUN) end
+    elseif st then
+        st.questLock, st.unmanaged, st.eventUntil = nil, nil, 0
+        LC.SetState(npc, st, "idle")
+        st.untilT = CurTime() + 3
+    end
+    SafeRemoveEntityDelayed(npc, secs or 60)
+end
+
+LC.JobGameKit = {
+    Pick = Pick, Valid = Valid, FirstValid = FirstValid, Phys = Phys, Held = Held, Spawn = Spawn, InBox = InBox,
+    Shuffle = Shuffle, Hud = Hud, Mark = Mark, Watcher = Watcher, Extra = Extra, Release = Release,
+}
