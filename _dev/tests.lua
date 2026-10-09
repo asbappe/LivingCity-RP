@@ -9952,10 +9952,27 @@ local rd = newPlayer("RadioMan", "citizen")
 _run(0.3)
 rd:SetPos(H0 + Vector(-8000, 4000, 0))
 c0 = LC.Credits(rd)
+local RA = "sound/livingcity/announce/radio/"
+_files[RA .. "freq7/a.wav"] = ""
+_files[RA .. "freq7/a.txt"] = "Count them back."
+_files[RA .. "static/hiss.wav"] = ""
+_files[RA .. "union/notices.wav"] = ""
+LC.AnnounceRescan()
 ok(LC.JobGameStart(rd, "radio", nil, { freq7 = 1 }), "a shelf of hissing radios")
 g = LC.JobGames[rd]
 ok(g.f7 and math.abs(g.f7 - g.target) > 3, "this one has Freq 7 on it, well away from its station")
+ok(g.f7clip == "livingcity/announce/radio/freq7/a.wav" and string.find(g.f7msg, "Count them back", 1, true), "Freq 7 is a recording from radio/freq7/, its words from its .txt", g.f7clip)
+ok(g.staticClip == "livingcity/announce/radio/static/hiss.wav" and g.unionClip == "livingcity/announce/radio/union/notices.wav", "the static and the ordinary station from their own folders, for the screen to mix")
+local nearBy = newPlayer("RadioNeighbour", "citizen")
+nearBy:SetPos(rd:GetPos() + Vector(150, 0, 0))
+LC.JobGameAct(rd, "dial", 99.9)
+Tick(3)
+local benchNet = _lastnet("lc_radio_bench")
+local inEar = {}
+for _, p in ipairs(g.heardBy or {}) do inEar[p] = true end
+ok(benchNet and g.dial == 99.9 and inEar[rd] and inEar[nearBy] and not inEar[cu], "the set is heard by whoever's near the bench: the dial and what's on it go to them", #(g.heardBy or {}))
 ok(LC.JobGameAct(rd, "lock", g.f7) == "freq7" and g.heard, "lock onto the clearest thing on the band: Freq 7")
+nearBy:SetPos(GONE)
 ok(LC.JobGameAct(rd, "lock", g.target) == nil, "(decide about it first)")
 LC.JobGameAct(rd, "freq7", "note")
 ok(not g.heard and LC.HasItem(rd, "paper"), "written down where nobody will look")
@@ -9968,6 +9985,8 @@ ok(g.n == 3 and g.fixed == 1, "too slow: back on the shelf, still hissing")
 LC.JobGameAct(rd, "lock", g.target)
 LC.JobGameAct(rd, "lock", g.target)
 ok(not LC.JobGames[rd] and g.fixed == 3 and LC.Credits(rd) > c0, "the shelf done: paid", LC.Credits(rd) - c0)
+for k in pairs(_files) do if string.find(k, RA, 1, true) == 1 then _files[k] = nil end end
+LC.AnnounceRescan()
 rd:SetPos(GONE)
 
 -- pat-downs

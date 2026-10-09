@@ -30,6 +30,18 @@
         ambient        general city announcements; also what the Administrator's
                        periodic addresses are made of (lc_breen_broadcasts 1)
 
+      The radio repair bench (sv_livingcity_moregames.lua): what a set plays
+      as you turn the dial. Static fills the gaps between stations and blends
+      into them as you get close, so long, loopable files work best.
+        sound/livingcity/announce/radio/static/anything.wav   the hiss between stations
+        sound/livingcity/announce/radio/union/anything.wav    an ordinary station (the
+                       Union band); none, and the Administrator's ambient
+                       recordings are used
+        sound/livingcity/announce/radio/freq7/anything.wav    the Resistance's pirate
+                       band, when a set is tuned to it; its .txt is the line
+                       shown on the panel. Anyone within about twenty feet
+                       of the set hears it all too.
+
       The Administrator is a kindly parent with a dash of the cheerful host. Her
       tone is picked per announcement: every trigger has a usual tone (rations
       and the weather warm, a curfew firm, a raid or a response stern, a
@@ -77,6 +89,8 @@ LC.AnnounceTriggers = {
 }
 LC.AnnounceVoices = { "overwatch", "administrator" }
 LC.AnnounceTierNames = { "warm", "firm", "stern", "furious" }
+-- Other voices with folders of their own, and their triggers: [voice] = { trigger, ... }
+LC.AnnounceExtra = { radio = { "static", "union", "freq7" } }
 local TIERS = LC.AnnounceTierNames
 
 -- the tone she usually takes for each thing (1 warm .. 4 furious)
@@ -188,7 +202,15 @@ function LC.AnnounceRescan()
             end
         end
     end
+    for v, trigs in pairs(LC.AnnounceExtra) do for _, t in ipairs(trigs) do n = n + #Scan(v, t) end end
     return n
+end
+
+-- The radio repair bench's recordings: "static", "union" or "freq7". Path and subtitle, or nil.
+function LC.RadioClip(trig)
+    local path, text = LC.PickAnnounceClip("radio", trig)
+    if not path and trig == "union" then path = LC.PickAnnounceClip("administrator", "ambient", false, 1) text = nil end
+    return path, text
 end
 
 local lastPicked = {}
@@ -348,6 +370,15 @@ concommand.Add("lc_announce_clips", function(ply)
             end
         end
         Reply(ply, "[Living City] " .. v .. ": " .. (#parts > 0 and table.concat(parts, ", ") or "nothing yet"))
+    end
+    for v, trigs in pairs(LC.AnnounceExtra) do
+        local parts = {}
+        for _, t in ipairs(trigs) do
+            local n = #Scan(v, t)
+            total = total + n
+            parts[#parts + 1] = t .. " " .. n
+        end
+        Reply(ply, "[Living City] " .. v .. ": " .. table.concat(parts, ", "))
     end
     Reply(ply, "[Living City] " .. total .. " custom announcements found. Folders: sound/" .. ROOT .. "<overwatch|administrator>/<trigger>/[firm|stern|furious/] (lc_announce_rescan after adding files).")
 end)

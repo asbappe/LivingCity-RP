@@ -5,6 +5,9 @@ Custom announcements for Living City.
   administrator/<trigger>/firm/              ... losing patience
   administrator/<trigger>/stern/             ... displeased
   administrator/<trigger>/furious/           ... domineering
+  radio/static/, radio/union/, radio/freq7/  the radio repair bench: static, the
+                                             Union band, and the Resistance's
+                                             pirate broadcast (see radio/README.txt)
 
 Put sound files (.wav, .mp3, .ogg) in a trigger's folder and the city plays one
 when that thing happens. The Administrator picks her tone herself: each trigger

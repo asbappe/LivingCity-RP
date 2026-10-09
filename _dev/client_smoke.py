@@ -921,6 +921,8 @@ local okMG, errMG = pcall(function()
     net.ReadData = function() return "x" end
     util.Decompress = function(s) return s end
     util.JSONToTable = function() return doc end
+    local tj0 = util.TableToJSON
+    util.TableToJSON = util.TableToJSON or function() return "{}" end
     local docs = {
         { kind = "hack", band = 0.3, w = 0.2, speed = 0.5, t = 1, got = 1, need = 4, alarms = 1, sweep = true, warn = false },
         { kind = "search", n = 1, of = 3, watching = true, pockets = { { name = "Coat", open = true, find = "Papers" }, { name = "Shoes", open = false }, { name = "Lining", open = true, done = "empty" } } },
@@ -936,13 +938,27 @@ local okMG, errMG = pcall(function()
         net.recv_lc_jg_panel() -- (an update to the same panel)
     end
     if LC_CL.RadioSignal(95.5, { t = 95.5 }) < 0.99 or LC_CL.RadioSignal(90, { t = 95.5 }) > 0.01 then error("radio signal") end
+    -- the radio mixes: static between stations, the station fading in through it, overlapping
+    local vs, vu = LC_CL.RadioMix(95.5, { t = 95.5 })
+    local fs, fu = LC_CL.RadioMix(80, { t = 95.5 })
+    local ms, mu = LC_CL.RadioMix(96.5, { t = 95.5 })
+    if not (vu > 0.95 and vs < 0.2 and fu < 0.01 and fs > 0.95 and mu > 0.3 and ms > 0.3) then error("radio mix " .. vs .. " " .. vu .. " " .. ms .. " " .. mu) end
+    local hs, hu, h7 = LC_CL.RadioMix(80, { t = 95.5, f7 = 101, heard = "x" })
+    if h7 ~= 1 or hu ~= 0 then error("freq 7 not up once locked") end
     doc = {}
     net.recv_lc_jg_panel()
     if LC_CL.JobPanel() then error("panel didn't close") end
-    local tj = util.TableToJSON
-    util.TableToJSON = util.TableToJSON or function() return "{}" end
     LC_CL.JobAct("try", 0.5)
-    util.TableToJSON = tj
+    -- a set being tuned nearby: heard close up, quieter further off, silent past twenty feet
+    if LC_CL.RadioFalloff(0) ~= 1 or LC_CL.RadioFalloff(140) <= 0 or LC_CL.RadioFalloff(140) >= 0.5 or LC_CL.RadioFalloff(260) ~= 0 then error("radio falloff") end
+    doc = { e = _me:EntIndex(), dial = 95.4, t = 95.5, f7 = 101, heard = false, static = "x/static.wav", union = "x/union.wav" }
+    net.recv_lc_radio_bench()
+    if not LC_CL.RadioBenches()[_me:EntIndex()] then error("no bench") end
+    run("Think")
+    doc = { e = _me:EntIndex(), off = true }
+    net.recv_lc_radio_bench()
+    if LC_CL.RadioBenches()[_me:EntIndex()] then error("bench didn't stop") end
+    util.TableToJSON = tj0
     net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable = rU, rD, rDc, rJ
     run("PreDrawHalos")
 end)

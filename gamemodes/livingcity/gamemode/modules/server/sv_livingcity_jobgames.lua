@@ -1004,6 +1004,7 @@ end)
 
 util.AddNetworkString("lc_jg_panel") -- server -> client: { kind, ... } ({} closes it)
 util.AddNetworkString("lc_jg_act")   -- client -> server: action, argument (JSON)
+util.AddNetworkString("lc_radio_bench") -- server -> nearby clients: a radio repair set, as it is tuned (sv_livingcity_moregames.lua)
 
 function LC.JobGameDefine(kind, def) GAMES[kind] = def end
 function LC.JobGameDef(kind) return GAMES[kind] end
@@ -1056,9 +1057,10 @@ hook.Add("KeyPress", "LivingCityJobGameUse", function(ply, key)
 end)
 
 net.Receive("lc_jg_act", function(_, ply)
-    if (ply.lcJgActAt or 0) > CurTime() then return end
-    ply.lcJgActAt = CurTime() + 0.08
     local action = net.ReadString()
+    local key = action == "dial" and "lcJgDialAt" or "lcJgActAt" -- (turning the dial never eats a click)
+    if (ply[key] or 0) > CurTime() then return end
+    ply[key] = CurTime() + (action == "dial" and 0.15 or 0.08)
     local arg = util.JSONToTable(net.ReadString() or "") or {}
     LC.JobGameAct(ply, action, arg.v)
 end)

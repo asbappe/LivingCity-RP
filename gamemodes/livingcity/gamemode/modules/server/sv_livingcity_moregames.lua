@@ -720,15 +720,41 @@ local FREQ7 = {
     "'...the Administrator's broadcasts are recorded. She is not in the city. Freq 7...'",
 }
 
+-- What the sets play (sv_livingcity_announcer.lua: sound/livingcity/announce/radio/):
+-- the repairer's own screen mixes static and stations by the dial
+-- (cl_livingcity_moregames.lua), and so do the screens of whoever is near the bench.
+local function Clip(trig) if LC.RadioClip then return LC.RadioClip(trig) end end
+
+-- Everyone near the bench hears the set: the dial and what's on it, a few
+-- times a second, to players within earshot (their screens mix it, fading out
+-- by about twenty feet: cl_livingcity_moregames.lua).
+local BENCH_SEND = 400
+
+local function Bench(g, off)
+    local ply = g.ply
+    if not IsValid(ply) then return end
+    local to = {}
+    for _, p in ipairs(player.GetAll()) do
+        if p == ply or p:GetPos():DistToSqr(ply:GetPos()) < BENCH_SEND * BENCH_SEND then to[#to + 1] = p end
+    end
+    g.heardBy = to
+    LC.SendCompressed("lc_radio_bench", off and { e = ply:EntIndex(), off = true } or {
+        e = ply:EntIndex(), dial = g.dial or 98, t = g.target, f7 = g.f7, heard = g.heard and true or false,
+        static = g.staticClip, union = g.unionClip, clip7 = g.f7clip }, to)
+end
+
 local function NewRadio(g)
     g.n = g.n + 1
     if g.n > RADIOS then return false end
     g.target = math.floor(math.Rand(88.5, 107) * 10 + 0.5) / 10
-    g.f7, g.f7msg = nil, nil
+    g.f7, g.f7msg, g.f7clip = nil, nil, nil
     if math.random() < (g.opts.freq7 or 0.25) then
         repeat g.f7 = math.floor(math.Rand(88.5, 107) * 10 + 0.5) / 10 until math.abs(g.f7 - g.target) > 3
-        g.f7msg = Pick(FREQ7)
+        local path, text = Clip("freq7")
+        g.f7clip = path
+        g.f7msg = (text and ("'..." .. text .. "...'")) or (path and "A voice comes through the static, on Freq 7.") or Pick(FREQ7)
     end
+    g.unionClip = Clip("union")
     g.radioEnd = CurTime() + 30
     g.heard = nil
     return true
@@ -736,6 +762,7 @@ end
 
 local function RadioPanel(g)
     LC.JobGamePanel(g, { n = g.n, of = RADIOS, t = g.target, f7 = g.f7, heard = g.heard and g.f7msg or nil,
+        static = g.staticClip, union = g.unionClip, clip7 = g.f7clip,
         secs = math.max(0, math.ceil(g.radioEnd - CurTime())) })
 end
 
@@ -753,6 +780,7 @@ LC.JobGameDefine("radio", {
     start = function(g)
         g.title = "Tuning"
         g.n, g.fixed = 0, 0
+        g.staticClip = Clip("static")
         NewRadio(g)
         g.hud = function(gg)
             return { string.format("Set %d of %d", math.min(gg.n, RADIOS), RADIOS), string.format("Fixed: %d", gg.fixed),
@@ -761,6 +789,7 @@ LC.JobGameDefine("radio", {
         RadioPanel(g)
     end,
     tick = function(g, now)
+        if (g.benchAt or 0) <= now then g.benchAt = now + 0.25 Bench(g) end
         if now > g.radioEnd and not g.heard then
             Say(g, "Radio", "It goes back on the shelf, still hissing.")
             RadioDone(g)
@@ -768,6 +797,11 @@ LC.JobGameDefine("radio", {
     end,
     use = function(g) if not g.panelOpen then RadioPanel(g) return true end end,
     act = function(g, action, arg)
+        if action == "dial" then
+            local f = tonumber(arg)
+            if f then g.dial = math.Clamp(f, 87.5, 108) end
+            return true
+        end
         if action == "lock" then
             if g.heard then return nil end
             local f = tonumber(arg)
@@ -802,12 +836,13 @@ LC.JobGameDefine("radio", {
             else
                 Say(g, "Radio", "You tune past it. Nothing on this band is worth what it costs.")
             end
-            g.heard, g.f7 = nil, nil
+            g.heard, g.f7, g.f7clip = nil, nil, nil
             RadioPanel(g)
             return true
         end
         return nil
     end,
+    finish = function(g) Bench(g, true) end,
 })
 
 ------------------------------------------------------------------------

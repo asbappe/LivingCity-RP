@@ -267,13 +267,110 @@ end
 ------------------------------------------------------------------------
 
 local LOW, HIGH = 87.5, 108
-local nextHiss = 0
+local STOCK_STATIC = "ambient/levels/prison/radio_random%d.wav" -- (when nobody has put a static recording in radio/static/)
 
 function LC_CL.RadioSignal(dial, d)
     local s = math.exp(-((dial - (d.t or 0)) / 0.8) ^ 2)
     if d.f7 then s = math.max(s, math.exp(-((dial - d.f7) / 0.8) ^ 2)) end
     return s
 end
+
+-- How loud each track is at this point on the dial: static, the station, Freq 7.
+-- They overlap: a station creeps in through the hiss a couple of points away,
+-- and the hiss never quite goes until you're on it.
+function LC_CL.RadioMix(dial, d)
+    if d.heard then return 0.12, 0, 1 end
+    local su = math.exp(-((dial - (d.t or 0)) / 1.0) ^ 2)
+    local s7 = d.f7 and math.exp(-((dial - d.f7) / 1.0) ^ 2) or 0
+    return math.Clamp(1 - 0.85 * math.max(su, s7), 0.12, 1), su ^ 0.6, s7 ^ 0.6
+end
+
+-- How loud a set is from this far away: full right beside it, quieter as you
+-- step back, and gone by about twenty feet.
+local NEAR, RANGE = 40, 240
+function LC_CL.RadioFalloff(dist)
+    if dist >= RANGE then return 0 end
+    if dist <= NEAR then return 1 end
+    local f = 1 - (dist - NEAR) / (RANGE - NEAR)
+    return f * f
+end
+
+-- Every set being tuned near you (the server sends each one's dial and what's
+-- on it). Every track keeps playing and only its volume moves, so tuning never
+-- cuts anything off; a file that ends starts again (the stock static picks another).
+local benches = {} -- [entindex] = { paths = {}, static, union, f7, d, seen }
+
+local function Track(ent, path)
+    if not path or path == "" or not IsValid(ent) or not CreateSound then return nil end
+    local snd = CreateSound(ent, path)
+    if not snd then return nil end
+    if snd.SetSoundLevel then snd:SetSoundLevel(0) end -- (the distance is ours to do: RadioFalloff)
+    snd:Play()
+    snd:ChangeVolume(0, 0)
+    return snd
+end
+
+local function BenchStop(id)
+    local b = benches[id]
+    if b then for _, k in ipairs({ "static", "union", "f7" }) do if b[k] then b[k]:Stop() end end end
+    benches[id] = nil
+end
+
+local function BenchTracks(b, ent)
+    local want = { static = b.d.static or "", union = b.d.union or "", f7 = b.d.clip7 or "" }
+    for k, path in pairs(want) do
+        if b.paths[k] ~= path then
+            if b[k] then b[k]:Stop() end
+            b.paths[k] = path
+            b[k] = Track(ent, (k == "static" and path == "") and string.format(STOCK_STATIC, math.random(1, 15)) or path)
+        end
+    end
+end
+
+net.Receive("lc_radio_bench", function()
+    local t = ReadCompressed() or {}
+    local id = tonumber(t.e)
+    if not id then return end
+    if t.off then return BenchStop(id) end
+    local b = benches[id] or { paths = {} }
+    benches[id] = b
+    b.d, b.seen = t, CurTime()
+    BenchTracks(b, Entity(id))
+end)
+
+hook.Add("Think", "LivingCityRadioBench", function()
+    if not next(benches) then return end
+    local me = LocalPlayer()
+    if not IsValid(me) then return end
+    for id, b in pairs(benches) do
+        local ent = Entity(id)
+        if not IsValid(ent) or CurTime() - (b.seen or 0) > 1.5 then
+            BenchStop(id)
+        else
+            local mine = ent == me
+            local dial = b.d.dial or 98
+            if mine and panel and panel.kind == "radio" and IsValid(panel.dialCtl) then dial = panel.dialCtl:GetValue() end
+            local fall = mine and 1 or LC_CL.RadioFalloff(me:GetPos():Distance(ent:GetPos()))
+            local vs, vu, v7 = LC_CL.RadioMix(dial, b.d)
+            for k, v in pairs({ static = vs, union = vu, f7 = v7 }) do
+                local snd = b[k]
+                if snd then
+                    if not snd:IsPlaying() then
+                        if k == "static" and b.paths.static == "" then
+                            snd:Stop()
+                            snd = Track(ent, string.format(STOCK_STATIC, math.random(1, 15)))
+                            b.static = snd
+                        else
+                            snd:Play()
+                        end
+                    end
+                    if snd then snd:ChangeVolume(v * fall, 0.15) end
+                end
+            end
+        end
+    end
+end)
+LC_CL.RadioBenches = function() return benches end
 
 BUILD.radio = function(t)
     local f = Frame("Tuning: turn the dial until the static clears, then lock it", 560, 330)
@@ -286,6 +383,15 @@ BUILD.radio = function(t)
     dial:SetMax(HIGH)
     dial:SetDecimals(1)
     dial:SetValue(LOW + math.random() * (HIGH - LOW))
+    panel.dialCtl = dial
+    -- (the server passes the dial on to whoever is standing near the bench)
+    local sentAt, sentVal = 0, nil
+    dial.OnValueChanged = function(_, v)
+        if CurTime() - sentAt < 0.2 or v == sentVal then return end
+        sentAt, sentVal = CurTime(), v
+        Act("dial", math.floor(v * 10 + 0.5) / 10)
+    end
+    Act("dial", math.floor(dial:GetValue() * 10 + 0.5) / 10)
     local meter = vgui.Create("DPanel", f)
     meter:SetPos(10, 30)
     meter:SetSize(f:GetWide() - 20, 56)
@@ -296,10 +402,6 @@ BUILD.radio = function(t)
         draw.SimpleText(string.format("%.1f", dial:GetValue()), "DermaLarge", 12, h / 2, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         draw.RoundedBox(2, 120, 18, (w - 220) * sig, 20, sig > 0.85 and GOOD or (sig > 0.4 and WARN or BAD))
         draw.SimpleText(string.format("Set %d of %d   %d s", d.n or 1, d.of or 4, d.secs or 0), "LCJobLine", w - 10, h / 2, DIM, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
-        if CurTime() > nextHiss and sig < 0.85 then
-            nextHiss = CurTime() + 1.2
-            surface.PlaySound("ambient/levels/prison/radio_random" .. math.random(1, 15) .. ".wav")
-        end
     end
     local lock = Button(f, "Lock it", GOOD, function() Act("lock", math.floor(dial:GetValue() * 10 + 0.5) / 10) end)
     lock:Dock(TOP)
@@ -325,7 +427,6 @@ BUILD.radio = function(t)
     local function Upd(d)
         heard:SetVisible(d.heard ~= nil)
         lock:SetDisabled(d.heard ~= nil)
-        if d.heard then surface.PlaySound("ambient/levels/prison/radio_random" .. math.random(1, 15) .. ".wav") end
     end
     panel.update = Upd
     Upd(t)
