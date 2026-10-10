@@ -101,7 +101,11 @@ end)
 -- Weather you can see
 ------------------------------------------------------------------------
 
-local FOG = { fog = { 120, 900, 0.85 }, storm = { 300, 2600, 0.6 }, rain = { 500, 4500, 0.4 }, overcast = { 1000, 8000, 0.25 } }
+local FOG = { fog = { 120, 900, 0.85 }, storm = { 200, 2200, 0.65 }, rain = { 300, 3200, 0.5 }, overcast = { 1000, 8000, 0.25 } }
+-- Rain and storms only fog the air you're standing out in: under a roof it
+-- clears, and it closes back in as you step out (outFog, eased each frame).
+local RAIN_FOG = { rain = true, storm = true }
+local outFog = 0
 local fogCol = { 130, 135, 140 }
 
 -- The infestation's haze (cl_livingcity_infest.lua): close, thick and a dark,
@@ -111,6 +115,10 @@ local HAZE = { 0, 800, 0.88, 105, 95, 25 }
 local function ApplyFog(scale)
     local w = GetGlobal2String("lc_weather", "clear")
     local f = cvEffects:GetBool() and FOG[w] or nil
+    if f and RAIN_FOG[w] then
+        if outFog <= 0.01 then f = nil
+        else f = { Lerp(outFog, 6000, f[1]), Lerp(outFog, 20000, f[2]), f[3] * outFog } end
+    end
     local haze = LC_CL.InfestHaze or 0
     if not f and haze <= 0.01 then return end
     local dark = 1 - Darkness(LC_CL.Hour()) * 0.8
@@ -155,6 +163,7 @@ hook.Add("Think", "LivingCityRain", function()
         local tr = util.TraceLine({ start = ply:EyePos(), endpos = ply:EyePos() + Vector(0, 0, 4000), mask = MASK_SOLID_BRUSHONLY })
         outdoors = not tr.Hit or tr.HitSky == true
     end
+    outFog = math.Approach(outFog, (outdoors and raining) and 1 or 0, FrameTime() * 0.6) -- (about two seconds in or out)
     -- the sound of it
     if raining then
         if not rainSound then
@@ -183,7 +192,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityRain", function(depth, sky
     local ply = LocalPlayer()
     if not IsValid(ply) then return end
     local origin = ply:EyePos()
-    local n = w == "storm" and 880 or 560
+    local n = w == "storm" and 1760 or 1120 -- (twice as many as they were, half as thick)
     local now = CurTime()
     render.SetColorMaterial() -- (plain colour: a texture would tint it)
     -- the same few hundred drops recycled, and the same two vectors moved about:
@@ -199,7 +208,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityRain", function(depth, sky
         local tz = oz + d.z - (now - d.born) * d.speed
         RAIN_TOP.x, RAIN_TOP.y, RAIN_TOP.z = ox + d.x, oy + d.y, tz
         RAIN_BOT.x, RAIN_BOT.y, RAIN_BOT.z = ox + d.x - 2, oy + d.y - 1, tz - 17
-        render.DrawBeam(RAIN_TOP, RAIN_BOT, 0.6, 0, 1, RAIN_COL)
+        render.DrawBeam(RAIN_TOP, RAIN_BOT, 0.3, 0, 1, RAIN_COL)
     end
 end)
 

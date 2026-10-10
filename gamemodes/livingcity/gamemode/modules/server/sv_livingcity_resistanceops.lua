@@ -383,13 +383,26 @@ function LC.StartOverwatchDrop(pos)
     -- They come by dropship: in over the rooftops, down over the landing zone,
     -- out they come, and it climbs away. Under a roof (no open sky), they come on foot.
     local clear = 0 -- (how far out to stand: the container takes up room)
-    local function Deploy(spot, i, n, onFoot)
+    -- When the city is on red and has been for a while (this is what brings a
+    -- drop), the first one out is an Overwatch Elite; the rest are soldiers.
+    local elite = LC.Socio == "red"
+    local function Deploy(spot, i, n, onFoot, door)
         local sp = LC.Spawners and LC.Spawners.soldier
         if not sp or LC.OverwatchDrop ~= d then return end
         local a = i / math.max(1, n) * math.pi * 2
-        local at = spot + Vector(math.cos(a) * (50 + clear + i * 12), math.sin(a) * (50 + clear + i * 12), 6)
-        if LC.GroundAt then at = LC.GroundAt(at) + Vector(0, 0, 6) end
-        local ok, npc, st = pcall(sp, at)
+        local at
+        if door then
+            at = door.pos + Vector(0, 0, 4) -- (out of the container's door, one after another)
+        else
+            at = spot + Vector(math.cos(a) * (50 + clear + i * 12), math.sin(a) * (50 + clear + i * 12), 6)
+            if LC.GroundAt then at = LC.GroundAt(at) + Vector(0, 0, 6) end
+        end
+        local ok, npc, st = pcall(sp, at, (elite and i == 1) and "elite" or nil)
+        if ok and IsValid(npc) and st and door then
+            npc:SetAngles(Angle(0, door.dir:Angle().y, 0))
+            -- the deploy: Half-Life 2's soldiers jump or step down out of the container
+            if LC.PlayGesture then LC.PlayGesture(npc, { "Dropship_Deploy", "ACT_JUMP", "jump_holding_land" }, 1.4) end
+        end
         if ok and IsValid(npc) and st then
             st.unmanaged = true
             st.dropGuard = true
@@ -398,7 +411,10 @@ function LC.StartOverwatchDrop(pos)
             -- they take up posts round the landing zone (and fight from there)
             local post = pos + Vector(math.cos(a) * 160, math.sin(a) * 160, 0)
             st.holdPos = LC.GroundAt and LC.GroundAt(post) or post
-            if LC.GoTo then LC.GoTo(npc, st, st.holdPos, onFoot, nil) end
+            if LC.GoTo then
+                if door then timer.Simple(1.5, function() if IsValid(npc) and st then LC.GoTo(npc, st, st.holdPos, true, nil) end end)
+                else LC.GoTo(npc, st, st.holdPos, onFoot, nil) end
+            end
             d.soldiers[#d.soldiers + 1] = npc
         end
     end
@@ -406,10 +422,10 @@ function LC.StartOverwatchDrop(pos)
     d.expected = n
     timer.Simple(6, function()
         if LC.OverwatchDrop ~= d then return end
-        local ship = LC.FlyDropship and LC.FlyDropship({ pos = pos, hold = 8 + n, cargo = true, takeAway = true, -- (it brings the soldiers in its container, and lifts it away again)
-            onLanded = function(_, ground, container)
-                if IsValid(container) then clear = 130 end
-                for i = 1, n do timer.Simple((i - 1) * 0.9, function() Deploy(ground, i, n, false) end) end
+        local ship = LC.FlyDropship and LC.FlyDropship({ pos = pos, hold = 8 + n * 1.5, troops = true, -- (the soldiers come out of its container, which never leaves its claws)
+            onLanded = function(_, ground, container, door)
+                if IsValid(container) and not door then clear = 130 end
+                for i = 1, n do timer.Simple(1 + (i - 1) * 1.4, function() Deploy(ground, i, n, false, door) end) end
             end })
         if ship then
             d.ship = ship

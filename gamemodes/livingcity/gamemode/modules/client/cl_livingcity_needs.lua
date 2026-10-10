@@ -648,7 +648,7 @@ net.Receive("lce_shop", function()
     local tier = LCS.TierFor(t.standing or 0)
     shopFrame.Paint = function(self, w, h)
         draw.RoundedBox(4, 0, 0, w, h, PANEL)
-        draw.SimpleText("UNION COMMISSARY", "DermaLarge", 16, 14, ACCENT)
+        draw.SimpleText(t.cp and "CIVIL PROTECTION COMMISSARY" or "UNION COMMISSARY", "DermaLarge", 16, 14, ACCENT)
         draw.SimpleText(string.format("%d credits   |   %s (%d)", t.credits or 0, tier.name, t.standing or 0), "DermaDefault", w - 40, 24, tier.color, TEXT_ALIGN_RIGHT)
     end
     local scroll = vgui.Create("DScrollPanel", shopFrame)

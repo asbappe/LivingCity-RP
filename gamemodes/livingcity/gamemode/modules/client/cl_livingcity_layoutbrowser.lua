@@ -115,7 +115,7 @@ local WANTED = {
     { "zone_block", "No housing blocks: curfew has nowhere to send people." },
     { "zone_prison", "No prison area (optional; the cells work without it)." },
     { "zspawn", "No infestation spawns: zombies appear anywhere in infestation zones." },
-    { "incinerator", "No incinerator: Mortuary Attendants bag bodies at the morgue workplace, or have no collections." },
+    { "incinerator", "No incinerator: Morticians bag bodies at the morgue workplace, or have no collections." },
     { "sspawn", "No scanner launch spot: flown scanners go up in the open air near the console." },
     { "intake", "No Civil Intake (optional): new people are registered as they arrive, with a room handed to them." },
     { "cpsupply", "No Civil Protection Commissary: units are issued their supplies at the Union Commissary instead." },

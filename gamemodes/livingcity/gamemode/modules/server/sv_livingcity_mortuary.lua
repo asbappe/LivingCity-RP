@@ -2,7 +2,7 @@
     Living City: hauling the dead
 
     Any body in the city (sv_livingcity_bodies.lua) can be hauled: press E on
-    it if you're a Mortuary Attendant, or, looking at it, F1 > Haul the body, as anyone.
+    it if you're a Mortician, or, looking at it, F1 > Haul the body, as anyone.
     You drag it behind you at a walk. Let go next to an incinerator (placed
     with the editor, "Fixture: incinerator"), or press E on the incinerator,
     and in it goes. Attendants are paid for each one.
@@ -17,7 +17,7 @@ if CLIENT then return end
 LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvPay = CreateConVar("lc_cremation_pay", "6", FLAGS, "Credits a Mortuary Attendant is paid per body")
+local cvPay = CreateConVar("lc_cremation_pay", "6", FLAGS, "Credits a Mortician is paid per body")
 
 local hauling = {} -- [ply] = body
 LC.Haulers = hauling
@@ -214,7 +214,7 @@ end)
 hook.Add("PlayerDeath", "LivingCityHauling", function(ply) if hauling[ply] then LC.StopHaul(ply, true) end end)
 hook.Add("PlayerDisconnected", "LivingCityHauling", function(ply) hauling[ply] = nil end)
 
--- Mortuary Attendants haul with E; everyone else searches (the actions menu does either).
+-- Morticians haul with E; everyone else searches (the actions menu does either).
 hook.Add("LivingCityBodyUse", "LivingCityHauling", function(ply, body)
     if Attendant(ply) and not hauling[ply] then
         local ok, why = LC.StartHaul(ply, body)

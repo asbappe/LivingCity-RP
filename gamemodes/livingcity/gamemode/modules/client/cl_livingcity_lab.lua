@@ -56,6 +56,27 @@ function LC_CL.OpenLab(t)
     note:SetTextColor(DIM)
     note:SetText(t.busy and string.format("He's busy with someone else's work for another %d seconds.", t.busy)
         or "Bring him the materials and he makes it for nothing, or pay him for it (cheaper than the dealer). Stay in the lab while he works.")
+    -- the Combine's data, decoded (not made)
+    for _, d in ipairs(t.decode or {}) do
+        local row = vgui.Create("DPanel", scroll)
+        row:Dock(TOP)
+        row:DockMargin(0, 0, 0, 6)
+        row:SetTall(50)
+        row.Paint = function(self, w, h)
+            draw.RoundedBox(3, 0, 0, w, h, Color(40, 52, 40, 240))
+            draw.SimpleText(string.format("%s (%d)", d.name, d.n or 1), "LCLabItem", 10, 13, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            draw.SimpleText(d.desc or "", "DermaDefault", 10, 35, HAVE, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        end
+        local b = vgui.Create("DButton", row)
+        b:Dock(RIGHT)
+        b:DockMargin(4, 10, 6, 10)
+        b:SetWide(110)
+        b:SetText("Decode it")
+        b.DoClick = function()
+            net.Start("lc_lab_decode") net.WriteString(d.id) net.SendToServer()
+            if IsValid(frame) then frame:Remove() end
+        end
+    end
     for _, it in ipairs(t.items or {}) do
         local row = vgui.Create("DPanel", scroll)
         row:Dock(TOP)

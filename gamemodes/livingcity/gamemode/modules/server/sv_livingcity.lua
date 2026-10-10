@@ -1230,18 +1230,41 @@ local function SpawnCop(pos)
     return npc, st
 end
 
-local function SpawnSoldier(pos)
+-- Nova Prospekt's own: any soldier posted in a Combine-only zone near the
+-- prison wears the prison guard's uniform (lc_prisonguard_range, 3000 units
+-- from a prison zone or cell; 0 turns it off).
+local cvGuardRange = CreateConVar("lc_prisonguard_range", "3000", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Soldiers in a Combine-only zone this close to the prison are Nova Prospekt guards (0: never)")
+local GUARD_MODEL, ELITE_MODEL = "models/combine_soldier_prisonguard.mdl", "models/combine_super_soldier.mdl"
+function LC.NearPrisonCombine(pos)
+    local r = cvGuardRange:GetFloat()
+    if r <= 0 or not LCZ or not LC.ZonesOfKind then return false end
+    local inside = false
+    for _, z in ipairs(LC.ZonesOfKind("combine")) do if LCZ.Contains(z, pos, 0) then inside = true break end end
+    if not inside then return false end
+    for _, z in ipairs(LC.ZonesOfKind("prison")) do if z.pos:DistToSqr(pos) < r * r then return true end end
+    for _, p in ipairs(LC.PointsOfKind and LC.PointsOfKind("cell") or {}) do if p.pos:DistToSqr(pos) < r * r then return true end end
+    return false
+end
+
+-- kind: nil (as the place says), "elite" (an Overwatch Elite) or "guard" (Nova Prospekt)
+local function SpawnSoldier(pos, kind)
     local npc = ents.Create("npc_combine_s")
     if not IsValid(npc) then return end
+    if not kind and LC.NearPrisonCombine(pos) then kind = "guard" end
+    local model = (kind == "elite" and ELITE_MODEL) or (kind == "guard" and GUARD_MODEL) or nil
+    if model and (not util.IsValidModel or util.IsValidModel(model)) then npc:SetModel(model) end
     npc:SetPos(pos)
     npc:SetAngles(Angle(0, math.random(0, 359), 0))
-    npc:SetKeyValue("additionalequipment", math.random() < 0.7 and "weapon_smg1" or "weapon_ar2")
-    npc:SetKeyValue("NumGrenades", "0")
+    npc:SetKeyValue("additionalequipment", kind == "elite" and "weapon_ar2" or (kind == "guard" and math.random() < 0.4 and "weapon_shotgun") or (math.random() < 0.7 and "weapon_smg1" or "weapon_ar2"))
+    npc:SetKeyValue("NumGrenades", kind == "elite" and "2" or "0")
     npc:SetKeyValue("spawnflags", tostring(BaseFlags()))
     npc:Spawn()
     npc:Activate()
+    if kind == "elite" then npc:SetMaxHealth(120) npc:SetHealth(120) end
     Loom(npc, cvSoldierScale)
     local st = Register(npc, "soldier")
+    st.elite = kind == "elite" or nil
+    st.prisonGuard = kind == "guard" or nil
     SetupSecurity(npc, st)
     return npc, st
 end

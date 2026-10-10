@@ -8,7 +8,13 @@
 
       LC.FlyDropship{ pos = ground spot, hold = seconds over it,
                       cargo = true (bring a container and leave it there),
-                      pickup = entity (lift it away), onLanded(ship, ground, container),
+                      troops = true (as Half-Life 2 does it: the troop
+                        container stays in the claws, hovering just off the
+                        ground; its door opens, the soldiers come out of it,
+                        the door shuts and it all lifts away together),
+                      pickup = entity (lift it away),
+                      onLanded(ship, ground, container, door) (door: troops
+                        only, { pos, dir } just outside the open door),
                       onLeaving(ship), onGone() }
         returns the ship, or nil and why (no open sky over the spot, or no
         clear way in): the caller does it another way (on foot, by road).
@@ -109,7 +115,17 @@ function LC.FlyDropship(opts)
     local sMins, sMaxs = ship:OBBMins(), ship:OBBMaxs()
     -- the container it brings, or the one it's come for (hanging at the ship's origin: Hang)
     local cargo, above = nil, -sMins.z + 60
-    if opts.cargo and ModelOK(CONTAINER) then
+    if opts.troops and ModelOK(CONTAINER) then
+        -- a troop container: animated (its door), and never let go of
+        cargo = ents.Create("prop_dynamic")
+        if IsValid(cargo) then
+            cargo:SetModel(CONTAINER)
+            local cMins = cargo:OBBMins()
+            above = -cMins.z + 12 -- (hovering just off the ground, doorway at boot height)
+            cargo.lcContainerMins = cMins
+            cargo.lcTroops = true
+        end
+    elseif opts.cargo and ModelOK(CONTAINER) then
         cargo = ents.Create("prop_physics")
         if IsValid(cargo) then
             cargo:SetModel(CONTAINER)
@@ -147,6 +163,34 @@ function LC.FlyDropship(opts)
     return ship
 end
 
+-- The container's door: open, shut, and the spot just outside it.
+local function ContainerSeq(c, names)
+    if not IsValid(c) or not c.LookupSequence then return false end
+    for _, n in ipairs(names) do
+        local seq = c:LookupSequence(n)
+        if seq and seq >= 0 then c:ResetSequence(seq) return true end
+    end
+    return false
+end
+
+function LC.DropshipDoor(c)
+    if not IsValid(c) then return nil end
+    -- Half-Life 2's container marks where its troops step off; else its back end
+    for _, a in ipairs({ "deploy_landpoint", "Deploy_Landpoint", "deploy_start", "Deploy_Start" }) do
+        local id = c.LookupAttachment and c:LookupAttachment(a) or 0
+        if id and id > 0 then
+            local att = c:GetAttachment(id)
+            if att and att.Pos then
+                local dir = att.Pos - c:WorldSpaceCenter() dir.z = 0
+                return { pos = att.Pos, dir = dir:GetNormalized() }
+            end
+        end
+    end
+    local mins, maxs = c:OBBMins(), c:OBBMaxs()
+    local dir = -c:GetForward()
+    return { pos = c:LocalToWorld(Vector(mins.x - 24, (mins.y + maxs.y) / 2, mins.z + 4)), dir = dir }
+end
+
 local function Dust(pos)
     if util.Effect and EffectData then
         local ed = EffectData()
@@ -177,7 +221,19 @@ local function Step(f, now)
     if t < 1 then return true end
     -- the end of a leg
     if leg.landing then
-        if IsValid(f.cargo) then
+        if IsValid(f.cargo) and f.cargo.lcTroops then
+            -- troops: the door opens where it hangs; it stays in the claws
+            ContainerSeq(f.cargo, { "open_idle", "open", "door_open" })
+            f.cargo:EmitSound("doors/heavy_metal_move1.wav", 85)
+            f.door = LC.DropshipDoor(f.cargo)
+            if f.opts.onLanded then
+                local ok, err = pcall(f.opts.onLanded, f.ship, f.ground, f.cargo, f.door)
+                if not ok and LC.Error then LC.Error("dropship", err) end
+            end
+            f.leg = f.leg + 1
+            f.legStart = now
+            return true
+        elseif IsValid(f.cargo) then
             -- set the container down, and let go of it
             local c = f.cargo
             local mins = c.lcContainerMins or c:OBBMins()
@@ -196,6 +252,10 @@ local function Step(f, now)
             if not ok and LC.Error then LC.Error("dropship", err) end
         end
     elseif leg.hold then
+        if IsValid(f.cargo) and f.cargo.lcTroops then
+            ContainerSeq(f.cargo, { "close_idle", "close", "door_close" })
+            f.cargo:EmitSound("doors/heavy_metal_stop1.wav", 85)
+        end
         -- (a troop carrier takes its container away again)
         if f.opts.takeAway and IsValid(f.dropped) and not f.cargo then
             f.cargo = f.dropped

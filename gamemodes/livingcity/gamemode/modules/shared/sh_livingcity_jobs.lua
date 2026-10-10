@@ -34,7 +34,7 @@ LCJ.Occupations = {
       desc = "Stamps, files and identity forms. The cabinet with the blank ones is rarely locked." },
     { id = "laundry", num = 9, name = "Uniform Laundry", place = "Nexus laundry", gameOnly = true,
       desc = "Civil Protection uniforms, washed, pressed and counted. Usually counted." },
-    { id = "mortuary", num = 10, name = "Mortuary Attendant", place = "City morgue",
+    { id = "mortuary", num = 10, name = "Mortician", place = "City morgue",
       desc = "Collect the dead. Process what they leave behind. Nobody checks your work." },
     { id = "scrap", num = 11, name = "Reclamation Crew", place = "Reclamation yard",
       desc = "Scrap and rubble from the old city. Some of it was hidden there on purpose." },

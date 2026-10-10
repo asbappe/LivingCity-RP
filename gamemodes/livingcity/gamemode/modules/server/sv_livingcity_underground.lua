@@ -1050,7 +1050,7 @@ local function NearDealer(ply)
 end
 
 local BARRED = { ota = "Overwatch doesn't shop.", admin = "The Administrator has people for this.", zombie = "..." }
--- What the quartermaster decodes instead of buying (sv_livingcity_heist.lua)
+-- What the quartermaster won't buy: the lab decodes it (sv_livingcity_heist.lua, sv_livingcity_lab.lua)
 local DECODED = { data_chip = true, master_chip = true }
 
 function LC.MarketAccess(ply)
@@ -1074,19 +1074,8 @@ function LC.OpenMarket(ply)
     end
     local credits = LC.Credits and LC.Credits(ply) or 0
     local goods, sell = {}, {}
-    -- the quartermaster (and no dealer here): he decodes the Combine's data rather than buying it
+    -- the quartermaster (and no dealer here): he won't buy the Combine's data; the lab decodes it
     local qm = Faction(ply) == "resistance" and not NearDealer(ply) and LC.NearQuartermaster and LC.NearQuartermaster(ply) and true or nil
-    local decode = {}
-    if qm then
-        for _, id in ipairs({ "data_chip", "master_chip" }) do
-            local n = LC.Inventory(ply)[id] or 0
-            if n > 0 and LCS.Items[id] then
-                decode[#decode + 1] = { id = id, name = LCS.Items[id].name, n = n,
-                    desc = id == "master_chip" and "150 XP, 150 credits, and every unit marked for the whole Resistance for ten minutes"
-                        or "50 XP, 50 credits, and every unit marked for the whole Resistance for five minutes" }
-            end
-        end
-    end
     for _, g in ipairs(LCS.Black) do
         local can, reason = true, nil
         local price = LC.BlackPrice(g)
@@ -1110,7 +1099,7 @@ function LC.OpenMarket(ply)
             sell[#sell + 1] = { id = "w:" .. cls, name = (string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ")), n = 1, price = price, weapon = true }
         end
     end
-    LC.SendCompressed("lcu_market", { credits = credits, goods = goods, sell = sell, quartermaster = qm, decode = decode }, { ply })
+    LC.SendCompressed("lcu_market", { credits = credits, goods = goods, sell = sell, quartermaster = qm }, { ply })
     return true
 end
 
@@ -1161,7 +1150,7 @@ function LC.DealerSell(ply, id, all)
     local price = LC.SellPrice and LC.SellPrice(ply, id) or (it and it.sell)
     if not it or not price or not LC.HasItem(ply, id) then return false end
     if DECODED[id] and not NearDealer(ply) and LC.NearQuartermaster and LC.NearQuartermaster(ply) then
-        return false, "The quartermaster doesn't buy those. He decodes them: the Decode button, at the top."
+        return false, "The quartermaster doesn't buy those. Take it to the lab: the scientist decodes them."
     end
     local n = all and (LC.Inventory(ply)[id] or 1) or 1
     LC.TakeItem(ply, id, n)

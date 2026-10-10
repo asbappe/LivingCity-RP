@@ -739,7 +739,7 @@ SHIFTS.porter = {
 ------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
--- Mortuary Attendant
+-- Mortician
 ------------------------------------------------------------------------
 
 -- Hauling a body to the incinerator (sv_livingcity_mortuary.lua). Done when
@@ -853,6 +853,37 @@ SHIFTS.mortuary = {
         }
     end,
 }
+
+-- Dead headcrabs: bag every carcass lying about (or the ones reported), burn them
+SHIFTS.mortuary[#SHIFTS.mortuary + 1] = function(ply, job)
+    local proc = LC.NearestBodyProcessor and LC.NearestBodyProcessor(ply:GetPos())
+    if not proc then return nil end
+    local real, spots = {}, {}
+    for _, e in ipairs(LC.EntsOf("lc_item")) do
+        if LC.CrabCarcass and LC.CrabCarcass(e) and not e.lcBagging and e:GetPos():DistToSqr(ply:GetPos()) < 3500 * 3500 and #spots < 6 then
+            real[#real + 1] = e
+            spots[#spots + 1] = e:GetPos()
+        end
+    end
+    if #spots < 3 then
+        local c = Q.Spot(ply, 300, 2000)
+        if not c then return nil end
+        for _, sp in ipairs(Q.HideSpots(c, 4 - #spots, 600, true)) do spots[#spots + 1] = sp end
+    end
+    if #spots < 2 then return nil end
+    local bag = { kind = "collect", spots = spots, models = { "models/headcrabclassic.mdl" }, need = #spots,
+        text = "Bag the dead headcrabs (press E on each)" }
+    bag.onEnter = function(q)
+        for _, e in ipairs(real) do if IsValid(e) then e:Remove() end end -- (the bag stage puts its own where they lay)
+    end
+    local burn = Deliver(proc.pos, "Take them to " .. proc.name .. " and burn them", 200)
+    burn.onDone = function() if IsValid(proc.ent) then proc.ent:SetNW2Float("lc_burn_until", CurTime() + 8) end end
+    return {
+        title = "Headcrab collection", reward = 10 + 3 * #spots, limit = 600,
+        desc = "Dead headcrabs left lying in the street breed flies and worse. Bag them and burn them.",
+        stages = { bag, burn },
+    }
+end
 
 ------------------------------------------------------------------------
 -- Reclamation Crew

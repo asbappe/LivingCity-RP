@@ -28,7 +28,7 @@
       The chip       a Combine data chip, in your pockets (contraband; units
                      who search you will want it back). What to do with it:
                        - sell it to the black market dealer, for a lot
-                       - hand it to the Resistance quartermaster to decode: XP
+                       - take it to the Resistance lab: the scientist decodes it: XP
                          and credits for whoever brought it, and for
                          lc_heist_intel_seconds (300, five minutes) every Resistance member
                          sees every unit in the city outlined through walls
@@ -217,7 +217,7 @@ function LC.StealData(ply)
     return true
 end
 
--- The quartermaster decodes it: XP and credits, and the Resistance see every unit for a while.
+-- The lab's scientist decodes it: XP and credits, and the Resistance see every unit for a while.
 -- Which chip to use: the one asked for, else an ordinary chip before the master core.
 local function ChipFor(ply, id)
     if id and LC.HasItem(ply, id) then return id end
@@ -230,7 +230,7 @@ function LC.DecodeChip(ply, id)
     local chip = ChipFor(ply, id)
     if not chip then return false, "You don't have a data chip." end
     if not IsResistance(ply) then return false, "Only the Resistance can make sense of it. The dealer would buy it." end
-    if not (LC.NearQuartermaster and LC.NearQuartermaster(ply)) then return false, "Take it to the quartermaster." end
+    if not (LC.ScientistNear and LC.ScientistNear(ply:GetPos())) then return false, "Take it to the lab: the scientist decodes them." end
     LC.TakeItem(ply, chip)
     local master = chip == "master_chip"
     if LC.AddXP then LC.AddXP(ply, master and 150 or 50, master and "The master terminal's data decoded" or "Combine data decoded") end
@@ -303,9 +303,11 @@ hook.Add("PlayerSay", "LivingCityHeist", function(ply, text)
     end
 end)
 
--- Using the chip from your pockets: the quartermaster if he's here, else a terminal you're at
+-- Using the chip from your pockets: the lab's scientist if he's here, else a terminal you're at
 function LC.UseDataChip(ply, id)
-    if IsResistance(ply) and LC.NearQuartermaster and LC.NearQuartermaster(ply) then return LC.DecodeChip(ply, id) end
+    if IsResistance(ply) and LC.ScientistNear and LC.ScientistNear(ply:GetPos()) then
+        return LC.DecodeChip(ply, id)
+    end
     return LC.WipeRecordWithChip(ply, id)
 end
 

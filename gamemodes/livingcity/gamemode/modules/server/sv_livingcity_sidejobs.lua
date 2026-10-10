@@ -181,7 +181,7 @@ T{
         return {
             title = "Steal the Combine's data " .. Place(t1.pos, here), reward = 60, limit = 1200,
             desc = "Each Combine terminal only holds half the picture. Hit two: one " .. Place(t1.pos, here) .. ", then another " ..
-                Place(t2.pos, ply:GetPos()) .. ". Aim the multitool at each, primary fire, and stay with it while it downloads. Each sounds the alarm halfway, and a squad comes. The two fragments make a chip: the quartermaster decodes it, or the dealer pays for it.",
+                Place(t2.pos, ply:GetPos()) .. ". Aim the multitool at each, primary fire, and stay with it while it downloads. Each sounds the alarm halfway, and a squad comes. The two fragments make a chip: the lab's scientist decodes it, or the dealer pays for it.",
             stages = {
                 Goto(t1.pos, "Get to the first terminal", 200),
                 Count("data_stolen", 1, "Download its half (multitool, primary fire; stay close)", first, false),

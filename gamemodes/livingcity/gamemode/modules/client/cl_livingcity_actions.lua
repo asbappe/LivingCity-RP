@@ -324,7 +324,7 @@ function LC_CL.OpenActions()
         Add(rs, "Black market (here, in rebel territory)", function() Send("market") end, "icon16/money.png")
         Add(rs, "Find the lab (the scientist makes our guns; mark it)", function() Send("waypoint", "lab") end, "icon16/map.png")
         Add(rs, "Donate food to the supply crate", function() Send("donate") end)
-        Add(rs, "Have the quartermaster decode a data chip", function() Send("decode") end)
+        Add(rs, "Decode a data chip (at the lab)", function() Send("decode") end)
         if me:HasWeapon("weapon_lc_multitool") then Add(rs, "Hack the Combine door I'm looking at", function() Send("hack") end) end
     end
 

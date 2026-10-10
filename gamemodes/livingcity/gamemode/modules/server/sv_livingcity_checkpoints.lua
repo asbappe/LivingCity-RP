@@ -17,6 +17,22 @@
     lc_turrets_per_post (4) on one bank or forcefield, and pack them up again
     (E on one, or the menu). Only units can pick them up or move them.
 
+    Power banks have a limit: each feeds lc_bank_loads (2) things, turrets
+    and forcefields alike (two turrets, a forcefield and a turret, or two
+    forcefields), the nearest first; anything past that sits dead until a
+    bank with room is near it. A forcefield needs a bank
+    (lc_forcefield_needs_bank 1); so does a turret.
+
+    Forcefields take a beating, and give out. Each has lc_forcefield_hp (300)
+    of strength that comes back at lc_forcefield_regen (15) a second once it's
+    been left alone for a few seconds. Infected pressing against it wear it
+    down (6 a second each: two can't get through, five will), and so do
+    bullets and explosives. Run it down to nothing and it's overwhelmed:
+    offline for lc_forcefield_down seconds (30). Overwhelmed lc_forcefield_breaks
+    times (3) inside five minutes, or blown up while it's down, and it's
+    broken until it's repaired: a Maintenance Technician (E on it, ten
+    seconds, paid) or the city's own crews after lc_forcefield_fix_minutes (6).
+
     Holding the infestation: forcefields stop the infected as well as people,
     the infestation can't spread past a checkpoint that has power, and what
     the turrets kill holds it where it is (quietly: no radio for every kill)
@@ -38,6 +54,13 @@ local cvPerUnit = CreateConVar("lc_turrets_per_unit", "2", FLAGS, "Turrets one u
 local cvPerPost = CreateConVar("lc_turrets_per_post", "4", FLAGS, "Turrets one power bank (or forcefield) can power")
 local cvContain = CreateConVar("lc_containment", "1", FLAGS, "A checkpoint with power stops the infestation spreading past it, and losing that power is a breach")
 local cvBreach  = CreateConVar("lc_breach_infected", "4", FLAGS, "Infected that come pouring out of a containment breach")
+local cvLoads   = CreateConVar("lc_bank_loads", "2", FLAGS, "Things one power bank can feed: turrets and forcefields together")
+local cvNeedBank = CreateConVar("lc_forcefield_needs_bank", "1", FLAGS, "Forcefields and turrets need a Combine power bank to run (0: a forcefield runs off its district, a turret off a forcefield)")
+local cvFFHP    = CreateConVar("lc_forcefield_hp", "300", FLAGS, "How much punishment a forcefield takes before it's overwhelmed")
+local cvFFRegen = CreateConVar("lc_forcefield_regen", "15", FLAGS, "How fast a forcefield's strength comes back, per second, once it's left alone")
+local cvFFDown  = CreateConVar("lc_forcefield_down", "30", FLAGS, "Seconds an overwhelmed forcefield stays offline")
+local cvFFBreak = CreateConVar("lc_forcefield_breaks", "3", FLAGS, "Times overwhelmed inside five minutes before a forcefield breaks and needs repairing")
+local cvFFFix   = CreateConVar("lc_forcefield_fix_minutes", "6", FLAGS, "Minutes before the city's crews repair a broken forcefield nobody else has")
 
 local TURRET = "npc_turret_floor"
 local BREACH_NEAR = 1500    -- a checkpoint this close to the infestation is containing it
@@ -69,16 +92,55 @@ end
 -- The bank something hangs off, if there's one in reach.
 function LC.BankFor(pos) return Nearest("lc_powerbank", pos, cvRange:GetFloat()) end
 
--- Whether a forcefield has power: off its bank if it has one, else its district.
+local Turrets -- (below)
+
+-- Who each bank feeds: at most lc_bank_loads things, the nearest first.
+-- [thing] = its bank, or false (in reach of a bank, but the bank is full).
+local loads, loadsAt = {}, -1
+function LC.BankLoads(force)
+    local now = CurTime()
+    if not force and loadsAt == now then return loads end
+    loadsAt = now
+    local cands = {}
+    local function Add(e)
+        local b = LC.BankFor(e:GetPos())
+        if b then cands[#cands + 1] = { e = e, b = b, d = e:GetPos():DistToSqr(b:GetPos()) } end
+    end
+    for _, f in ipairs(LC.EntsOf("lc_forcefield")) do Add(f) end
+    for _, t in ipairs(Turrets()) do Add(t) end
+    table.sort(cands, function(a, b) if a.d ~= b.d then return a.d < b.d end return a.e:EntIndex() < b.e:EntIndex() end)
+    local used, out, cap = {}, {}, cvLoads:GetInt()
+    for _, c in ipairs(cands) do
+        if (used[c.b] or 0) < cap then used[c.b] = (used[c.b] or 0) + 1 out[c.e] = c.b else out[c.e] = false end
+    end
+    loads = out
+    return out
+end
+
+-- How many things a bank is feeding.
+function LC.BankLoad(b)
+    local n = 0
+    for _, bank in pairs(LC.BankLoads()) do if bank == b then n = n + 1 end end
+    return n
+end
+
+-- Whether a forcefield has power: off its bank (if the bank has room for it).
+-- With lc_forcefield_needs_bank 0, off its bank if it has one, else its district.
 -- (sv_livingcity_power.lua asks this for every forcefield.)
 function LC.FieldOff(f)
+    if cvNeedBank:GetBool() then
+        local b = LC.BankLoads()[f]
+        return not (b and LC.PowerBankLive(b))
+    end
     local b = LC.BankFor(f:GetPos())
     if IsValid(b) then return not LC.PowerBankLive(b) end
     return LC.PowerDarkAt and LC.PowerDarkAt(f:GetPos()) or false
 end
 
--- What a turret's cable runs to: a bank, else a forcefield.
+-- What a turret's cable runs to: its bank (if the bank has room for it).
+-- With lc_forcefield_needs_bank 0: a bank, else a forcefield.
 function LC.TurretSource(t)
+    if cvNeedBank:GetBool() then return LC.BankLoads()[t] or nil end
     local p, r = t:GetPos(), cvRange:GetFloat()
     return Nearest("lc_powerbank", p, r) or Nearest("lc_forcefield", p, r)
 end
@@ -89,7 +151,7 @@ local function SourceLive(s)
 end
 
 -- The city's turrets: the editor's and the ones units put up (not whatever else the map has).
-local function Turrets()
+function Turrets()
     local out = {}
     for _, t in ipairs(LC.EntsOf(TURRET)) do
         if IsValid(t) and (t.lcFixture or LC.DeployedTurrets[t]) then out[#out + 1] = t end
@@ -255,6 +317,7 @@ local function Track(post, live, now)
 end
 
 function LC.CheckpointTick(now)
+    LC.BankLoads(true)
     -- forcefields: a bank's short comes and goes
     for _, f in ipairs(LC.EntsOf("lc_forcefield")) do
         local off = LC.FieldOff(f)
@@ -262,8 +325,9 @@ function LC.CheckpointTick(now)
             f:SetNW2Bool("lc_nopower", off)
             if LC.FieldRulesChanged then LC.FieldRulesChanged(f) end
         end
-        local b = LC.BankFor(f:GetPos())
+        local b = cvNeedBank:GetBool() and LC.BankLoads()[f] or LC.BankFor(f:GetPos())
         if f:GetNW2Entity("lc_cable") ~= (b or NULL) then f:SetNW2Entity("lc_cable", b or NULL) end
+        f:SetNW2Bool("lc_bank_full", LC.BankLoads()[f] == false)
         Track(f, FieldUp(f), now)
     end
     for _, b in ipairs(LC.EntsOf("lc_powerbank")) do Track(b, LC.PowerBankLive(b), now) end
@@ -347,18 +411,28 @@ function LC.DeployTurret(ply)
         mins = Vector(-14, -14, 0), maxs = Vector(14, 14, 60), mask = MASK_SOLID, filter = ply })
     if hull and (hull.Hit or hull.StartSolid) then return false, "Not enough room there." end
     local r = cvRange:GetFloat()
-    local src = Nearest("lc_powerbank", pos, r) or Nearest("lc_forcefield", pos, r)
-    if not src then
-        return false, "No power here: turrets go up at a checkpoint, near a Combine power bank or a forcefield."
+    local src
+    if cvNeedBank:GetBool() then
+        src = Nearest("lc_powerbank", pos, r)
+        if not src then return false, "No power here: turrets go up near a Combine power bank." end
+        if LC.BankLoad(src) >= cvLoads:GetInt() then
+            return false, string.format("That power bank is feeding %d things already (turrets and forcefields): put up another bank.", cvLoads:GetInt())
+        end
+    else
+        src = Nearest("lc_powerbank", pos, r) or Nearest("lc_forcefield", pos, r)
+        if not src then
+            return false, "No power here: turrets go up at a checkpoint, near a Combine power bank or a forcefield."
+        end
+        local n = 0
+        for _, t in ipairs(Turrets()) do if LC.TurretSource(t) == src then n = n + 1 end end
+        if n >= cvPerPost:GetInt() then return false, "That checkpoint is powering all the turrets it can." end
     end
-    local n = 0
-    for _, t in ipairs(Turrets()) do if LC.TurretSource(t) == src then n = n + 1 end end
-    if n >= cvPerPost:GetInt() then return false, "That checkpoint is powering all the turrets it can." end
     local t = SpawnTurret(pos, Angle(0, ply:EyeAngles().y, 0))
     if not IsValid(t) then return false, "The turret won't deploy." end
     LC.DeployedTurrets[t] = ply
     t.lcDeployedBy = ply
     ply.lcTurretNext = CurTime() + 5
+    LC.BankLoads(true)
     LC.CheckpointTick(CurTime())
     hook.Run("LivingCityTurretDeployed", ply, t, src)
     return true, "Turret deployed, cabled to the " .. (src:GetClass() == "lc_powerbank" and "power bank" or "forcefield")
@@ -415,11 +489,11 @@ end
 function LC.UsePowerBank(ply, b)
     local turrets, fields = 0, 0
     for _, t in ipairs(Turrets()) do if LC.TurretSource(t) == b then turrets = turrets + 1 end end
-    for _, f in ipairs(LC.EntsOf("lc_forcefield")) do if LC.BankFor(f:GetPos()) == b then fields = fields + 1 end end
+    for _, f in ipairs(LC.EntsOf("lc_forcefield")) do if LC.BankLoads()[f] == b then fields = fields + 1 end end
     if b:GetNW2Float("lc_short_until", 0) > CurTime() then return false, "It spits sparks. Shorted out." end
     if LC.PlayerIsCP(ply) then
-        return true, string.format("Power bank: %s. Feeding %d turret%s and %d forcefield%s.", LC.PowerBankLive(b) and "live" or "DEAD (no power)",
-            turrets, turrets == 1 and "" or "s", fields, fields == 1 and "" or "s")
+        return true, string.format("Power bank: %s. Feeding %d turret%s and %d forcefield%s (it can feed %d).", LC.PowerBankLive(b) and "live" or "DEAD (no power)",
+            turrets, turrets == 1 and "" or "s", fields, fields == 1 and "" or "s", cvLoads:GetInt())
     end
     return false, LC.PowerBankLive(b) and "It hums. A Combine power bank." or "Dead. No power."
 end
@@ -484,4 +558,156 @@ function LC.CheckpointAction(ply, what, target)
     end
     if why then ply:ChatPrint(why) end
     return ok
+end
+
+------------------------------------------------------------------------
+-- Forcefields under attack: strength that recharges, overwhelmed, broken
+------------------------------------------------------------------------
+
+local ZOMBIE_PUSH = 6     -- strength a second each infected leaning on it takes off
+local OVERWHELM_WINDOW = 300
+
+local function FFUp(f) return FieldUp(f) and not f:GetNW2Bool("lc_ff_broken", false) end
+
+local function FFInit(f)
+    if f.lcHP then return end
+    f.lcHP, f.lcLastHit, f.lcOverwhelms = cvFFHP:GetFloat(), 0, {}
+    f:SetNW2Int("lc_ff_hpmax", cvFFHP:GetInt())
+    f:SetNW2Int("lc_ff_hp", cvFFHP:GetInt())
+end
+
+local function Techs()
+    local out = {}
+    for _, p in ipairs(player.GetAll()) do
+        local job = LC.Job and LC.Job(p)
+        if job and job.id == "maintenance" then out[#out + 1] = p end
+    end
+    return out
+end
+
+function LC.ForcefieldBreak(f)
+    if not IsValid(f) or f:GetNW2Bool("lc_ff_broken", false) then return end
+    f:SetNW2Bool("lc_ff_broken", true)
+    f:SetNW2Float("lc_short_until", CurTime() + 1e6)
+    f.lcBrokenAt = CurTime()
+    f.lcHP = 0
+    f:SetNW2Int("lc_ff_hp", 0)
+    if LC.FieldRulesChanged then LC.FieldRulesChanged(f) end
+    f:EmitSound("ambient/energy/powerdown2.wav", 85)
+    if EffectData then local fx = EffectData() fx:SetOrigin(f:WorldSpaceCenter()) fx:SetMagnitude(4) util.Effect("Sparks", fx, true, true) end
+    local where = Where(f:GetPos())
+    for _, p in ipairs(Techs()) do
+        if LC.Notice then LC.Notice(p, "warn", "A forcefield is broken", "The forcefield " .. where .. " is broken. E on it to repair it (ten seconds, paid).", 8) end
+    end
+    for _, p in ipairs(player.GetAll()) do if LC.PlayerIsCP(p) then p:ChatPrint("[CP net] The forcefield " .. where .. " is broken. Maintenance has been told.") end end
+    hook.Run("LivingCityForcefieldBroken", f)
+end
+
+function LC.ForcefieldRepaired(f, ply)
+    if not IsValid(f) then return end
+    f:SetNW2Bool("lc_ff_broken", false)
+    f:SetNW2Float("lc_short_until", 0)
+    f.lcHP, f.lcOverwhelms, f.lcBrokenAt = cvFFHP:GetFloat(), {}, nil
+    f:SetNW2Int("lc_ff_hp", cvFFHP:GetInt())
+    if LC.FieldRulesChanged then LC.FieldRulesChanged(f) end
+    f:EmitSound("ambient/machines/thumper_startup1.wav", 70)
+    if IsValid(ply) then
+        if LC.AddCredits then LC.AddCredits(ply, 15, "Forcefield repaired") end
+        if LC.Notice then LC.Notice(ply, "info", "Forcefield repaired", "It hums back up. 15 credits.", 5) end
+    end
+end
+
+-- Overwhelmed: offline for a while; too often, and it breaks.
+local function Overwhelm(f, now)
+    local keep = {}
+    for _, t in ipairs(f.lcOverwhelms) do if now - t < OVERWHELM_WINDOW then keep[#keep + 1] = t end end
+    keep[#keep + 1] = now
+    f.lcOverwhelms = keep
+    if #keep >= cvFFBreak:GetInt() then return LC.ForcefieldBreak(f) end
+    f:SetNW2Float("lc_short_until", now + cvFFDown:GetFloat())
+    f.lcHP = 0
+    if LC.FieldRulesChanged then
+        LC.FieldRulesChanged(f)
+        timer.Simple(cvFFDown:GetFloat() + 0.05, function() if IsValid(f) then LC.FieldRulesChanged(f) end end)
+    end
+    f:EmitSound("ambient/energy/zap9.wav", 85)
+    if EffectData then local fx = EffectData() fx:SetOrigin(f:WorldSpaceCenter()) util.Effect("Sparks", fx, true, true) end
+    hook.Run("LivingCityForcefieldOverwhelmed", f)
+end
+
+function LC.ForcefieldHurt(f, amount, blast)
+    if not IsValid(f) or amount <= 0 then return end
+    FFInit(f)
+    local now = CurTime()
+    if not FFUp(f) then
+        -- blown up while it's down: that's it broken
+        if blast and amount >= 100 and not f:GetNW2Bool("lc_ff_broken", false) and f:GetNW2Float("lc_short_until", 0) > now then LC.ForcefieldBreak(f) end
+        return
+    end
+    f.lcHP = f.lcHP - amount * (blast and 1.5 or 1)
+    f.lcLastHit = now
+    if f.lcHP <= 0 then Overwhelm(f, now) end
+    f:SetNW2Int("lc_ff_hp", math.max(0, math.floor(f.lcHP)))
+end
+
+hook.Add("EntityTakeDamage", "LivingCityForcefieldHurt", function(ent, dmg)
+    if not IsValid(ent) or ent:GetClass() ~= "lc_forcefield" then return end
+    LC.ForcefieldHurt(ent, dmg:GetDamage(), dmg:IsDamageType(DMG_BLAST))
+    return true
+end)
+
+-- The infected leaning on it.
+local function Leaning(f)
+    local n = 0
+    local w, h = (f.HalfWidth or 64) + 20, f.Height or 112
+    local function Near(pos)
+        local l = f:WorldToLocal(pos)
+        return math.abs(l.x) < 60 and math.abs(l.y) < w and l.z > -20 and l.z < h
+    end
+    local c = f:GetPos()
+    for npc, st in pairs(LC.NPCs or {}) do
+        if IsValid(npc) and st.role == "zombie" and npc:GetPos():DistToSqr(c) < 300 * 300 and Near(npc:GetPos()) then n = n + 1 end
+    end
+    for _, p in ipairs(player.GetAll()) do
+        if p:Alive() and LC.PlayerIsZombie and LC.PlayerIsZombie(p) and p:GetPos():DistToSqr(c) < 300 * 300 and Near(p:GetPos()) then n = n + 1 end
+    end
+    return n
+end
+LC.ForcefieldLeaning = Leaning
+
+local FF_DT = 0.5
+function LC.ForcefieldTick(now)
+    for _, f in ipairs(LC.EntsOf("lc_forcefield")) do
+        FFInit(f)
+        if f:GetNW2Bool("lc_ff_broken", false) then
+            if now - (f.lcBrokenAt or now) > cvFFFix:GetFloat() * 60 then
+                LC.ForcefieldRepaired(f, nil)
+                for _, p in ipairs(player.GetAll()) do if LC.PlayerIsCP(p) then p:ChatPrint("[CP net] City crews have repaired the forcefield " .. Where(f:GetPos()) .. ".") end end
+            end
+        elseif FFUp(f) then
+            if f.lcHP <= 0 then f.lcHP = cvFFHP:GetFloat() * 0.4 end -- (back from being overwhelmed, not fully charged)
+            local n = Leaning(f)
+            if n > 0 then LC.ForcefieldHurt(f, n * ZOMBIE_PUSH * FF_DT, false) end
+            if n == 0 and now - f.lcLastHit > 3 then f.lcHP = math.min(cvFFHP:GetFloat(), f.lcHP + cvFFRegen:GetFloat() * FF_DT) end
+            f:SetNW2Int("lc_ff_hp", math.max(0, math.floor(f.lcHP)))
+            f:SetNW2Int("lc_ff_hpmax", cvFFHP:GetInt())
+        end
+    end
+end
+
+timer.Create("LivingCityForcefieldHealth", FF_DT, 0, function()
+    local ok, err = pcall(LC.ForcefieldTick, CurTime())
+    if not ok and LC.Error then LC.Error("forcefield health", err) end
+end)
+
+-- E on a broken one: a Maintenance Technician repairs it.
+function LC.RepairForcefield(ply, f)
+    if not IsValid(f) or not f:GetNW2Bool("lc_ff_broken", false) then return false end
+    local job = LC.Job and LC.Job(ply)
+    if not (job and job.id == "maintenance") then return false, "It's broken: sparks and a dead hum. A Maintenance Technician could fix it." end
+    if not LC.StartTask then LC.ForcefieldRepaired(f, ply) return true end
+    return LC.StartTask(ply, 10, "Repairing the forcefield...", {
+        maxMove = 60, cancelText = "You leave it half done.",
+        done = function(p) if IsValid(f) then LC.ForcefieldRepaired(f, p) end end,
+    })
 end

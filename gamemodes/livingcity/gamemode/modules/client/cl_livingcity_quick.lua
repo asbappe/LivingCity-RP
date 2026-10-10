@@ -117,7 +117,7 @@ local function ResistancePage()
     local items = {
         Item("Find the lab (mark it)", function() Send("waypoint", "lab") end),
         Item("Donate food to the supply crate", function() Send("donate") end),
-        Item("Have the quartermaster decode a data chip", function() Send("decode") end),
+        Item("Decode a data chip (at the lab)", function() Send("decode") end),
     }
     if me:HasWeapon("weapon_lc_multitool") then items[#items + 1] = Item("Hack the Combine door I'm looking at", function() Send("hack") end) end
     return { title = "RESISTANCE", items = items }

@@ -2,8 +2,9 @@
     Living City: the Resistance lab
 
     A lab ("Fixture: Resistance lab" in the editor; entities/lc_workbench.lua)
-    is a bench cluttered with Dr. Kleiner's lab kit and a scientist standing
-    beside it (entities/lc_scientist.lua): the Resistance's own. He makes
+    is one of Dr. Kleiner's own lab workstations with a scientist standing
+    beside it (entities/lc_scientist.lua): the Resistance's own. He decodes
+    Combine data chips (use one from your pockets beside him), and makes
     what a cell needs and can't buy in the open (LCS.Lab, the shared shop
     config): guns, ammunition, armour, jammers, bypass charges, smoke bombs,
     and a Union radio retuned to Freq 7.
@@ -28,6 +29,7 @@ LC = LC or {}
 
 util.AddNetworkString("lc_lab")
 util.AddNetworkString("lc_lab_make")
+util.AddNetworkString("lc_lab_decode")
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvShut  = CreateConVar("lc_lab_shutdown", "600", FLAGS, "Seconds a Resistance lab stays shut after a unit finds it")
@@ -56,7 +58,7 @@ local CLUTTER = {
 function LC.SetupLab(bench)
     if not IsValid(bench) then return end
     local mins, maxs = bench:OBBMins(), bench:OBBMaxs()
-    if not bench.lcClutter then
+    if not bench.lcClutter and not bench.lcKleiner then -- (Kleiner's workstations come with their own kit)
         bench.lcClutter = {}
         for _, c in ipairs(CLUTTER) do
             if not util.IsValidModel or util.IsValidModel(c[1]) then
@@ -160,7 +162,16 @@ function LC.SendLab(ply, sci)
     end
     local job = IsValid(sci) and sci.lcLabJob
     local busy = job and IsValid(job.ply) and job.ply ~= ply and job.untilT > CurTime() and math.ceil(job.untilT - CurTime()) or nil
-    LC.SendCompressed("lc_lab", { items = items, credits = credits, busy = busy }, { ply })
+    -- the Combine's data, decoded here (sv_livingcity_heist.lua)
+    local decode = {}
+    for _, id in ipairs({ "data_chip", "master_chip" }) do
+        if (inv[id] or 0) > 0 and LCS.Items[id] then
+            decode[#decode + 1] = { id = id, name = LCS.Items[id].name, n = inv[id],
+                desc = id == "master_chip" and "150 XP, 150 credits, and every unit marked for the whole Resistance for ten minutes"
+                    or "50 XP, 50 credits, and every unit marked for the whole Resistance for five minutes" }
+        end
+    end
+    LC.SendCompressed("lc_lab", { items = items, credits = credits, busy = busy, decode = decode }, { ply })
 end
 
 local GREET = {
@@ -182,6 +193,11 @@ function LC.UseScientist(ply, sci)
     if (ply.lcLabGreet or 0) < CurTime() then
         ply.lcLabGreet = CurTime() + 120
         Say(ply, GREET[math.random(#GREET)])
+    end
+    if LC.HasItem and (LC.HasItem(ply, "data_chip") or LC.HasItem(ply, "master_chip") or LC.HasItem(ply, "data_shard")) then
+        Say(ply, LC.HasItem(ply, "data_shard") and not LC.HasItem(ply, "data_chip") and not LC.HasItem(ply, "master_chip")
+            and "\"Half a chip? Bring me the other fragment and I'll decode the lot.\""
+            or "\"Is that Combine data? I can decode that. (Decode: at the top of my list.)\"")
     end
     LC.SendLab(ply, sci)
 end
@@ -252,6 +268,16 @@ function LC.LabMake(ply, id, how)
     end
     return true
 end
+
+net.Receive("lc_lab_decode", function(_, ply)
+    local id = net.ReadString()
+    if (id ~= "data_chip" and id ~= "master_chip") or not LC.DecodeChip then return end
+    local ok, why = LC.DecodeChip(ply, id)
+    if not ok and why then Say(ply, why) end
+    if ok then Say(ply, "He slots it into a humming console and leans in. \"Oh, this is marvellous. Get the word out.\"") end
+    local sci = LC.ScientistNear(ply:GetPos())
+    if IsValid(sci) then LC.SendLab(ply, sci) end
+end)
 
 net.Receive("lc_lab_make", function(_, ply)
     if not IsValid(ply) or (ply.lcLabNext or 0) > CurTime() then return end

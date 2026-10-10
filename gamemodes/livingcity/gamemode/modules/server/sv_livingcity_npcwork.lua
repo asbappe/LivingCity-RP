@@ -799,6 +799,31 @@ Shift("scrap", "yard", "sorting scrap at the yard", { sound = METAL })
 Shift("radio", "bench", "repairing radios at the bench", { sound = { "buttons/lever7.wav", "buttons/button16.wav" }, prop = "models/props_lab/citizenradio.mdl" })
 Shift("maintenance", "yard", "at the maintenance yard", { sound = METAL })
 Shift("sanitation", "depot", "at the sanitation depot", { anim = CROUCH, weight = 1 })
+
+-- Dead headcrabs left lying about: the morgue bags them for the incinerator.
+local CRABS = { raw_headcrab = true, raw_fastcrab = true, raw_poisoncrab = true }
+LC.CrabCarcass = function(e) return IsValid(e) and e:GetClass() == "lc_item" and CRABS[e:GetNW2String("lc_item", "")] == true end
+Task("mortuary", { id = "crabs", label = "bagging dead headcrabs", find = function(npc, st, now)
+    local best, bd
+    for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_item") or {}) do
+        if LC.CrabCarcass(e) and not e.lcBagging and now - (e.lcBorn or 0) > 90 then -- (a while for a player to pick it up first)
+            local d = e:GetPos():DistToSqr(npc:GetPos())
+            if d < 3000 * 3000 and (not bd or d < bd) then best, bd = e, d end
+        end
+    end
+    if not best then return nil end
+    local crab = best
+    return {
+        key = "crab" .. crab:EntIndex(),
+        onStart = function() crab.lcBagging = true end,
+        onEnd = function() if IsValid(crab) then crab.lcBagging = nil end end,
+        steps = {
+            { pos = function(n) return Beside(crab:GetPos(), n:GetPos(), 30) end, face = function() return crab:GetPos() end,
+              check = function() return IsValid(crab) end, secs = 2, anim = CROUCH, doing = "bagging a dead headcrab",
+              done = function() if IsValid(crab) then crab:Remove() end end },
+        },
+    }
+end })
 Shift("mortuary", "morgue", "at the morgue", { weight = 1 })
 Shift("courier", "sorting", "sorting the mail", { weight = 1, prop = "models/props_lab/clipboard.mdl" })
 

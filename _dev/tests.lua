@@ -4536,13 +4536,16 @@ ok(LC.HasItem(thief, "data_chip") and not LC.HasItem(thief, "data_shard"), "and 
 term2:Remove()
 thief.lookingAt = term
 ok(LC.SellPrice(thief, "data_chip") >= 100, "the dealer pays a lot for it")
--- decoded by the quartermaster
-local realQM = LC.NearQuartermaster
+-- decoded at the lab (only there: the quartermaster won't touch it)
+local realQM, realSci = LC.NearQuartermaster, LC.ScientistNear
 LC.NearQuartermaster = function() return true end
+LC.ScientistNear = function() return nil end
+ok(not LC.DecodeChip(thief), "the quartermaster doesn't decode chips any more")
+LC.ScientistNear = function() return thief end
 local xp0 = LC.Credits(thief)
-ok(LC.UseDataChip(thief) and not LC.HasItem(thief, "data_chip"), "the quartermaster decodes it")
+ok(LC.UseDataChip(thief) and not LC.HasItem(thief, "data_chip"), "the lab's scientist decodes it")
 ok(LC.Credits(thief) > xp0 and GetGlobal2Float("lc_rebel_intel", 0) > CurTime(), "and the Resistance see every unit for a while")
-LC.NearQuartermaster = realQM
+LC.NearQuartermaster, LC.ScientistNear = realQM, realSci
 -- or plugged in at a terminal: a clean record
 LC.GiveItem(thief, "data_chip", 1)
 LC.SetWanted(thief, 300, "Test")
@@ -4684,15 +4687,21 @@ ok(under and shipStart:Distance(C0 + Vector(4000, 4000, 0)) > 1000, "flown in fr
 local st1 = LC.NPCs[d.soldiers[1]]
 ok(st1 and st1.drop == d and st1.holdPos ~= nil, "(they take up posts round it)")
 local function Containers()
-    local n = 0
-    for _, e in ipairs(ents.FindByClass("prop_physics")) do
-        if string.find(e:GetModel() or "", "dropship_container", 1, true) and e:GetPos():Distance(C0 + Vector(4000, 4000, 0)) < 600 then n = n + 1 end
+    local n, held = 0, false
+    for _, cls in ipairs({ "prop_dynamic", "prop_physics" }) do
+        for _, e in ipairs(ents.FindByClass(cls)) do
+            if string.find(e:GetModel() or "", "dropship_container", 1, true) and e:GetPos():Distance(C0 + Vector(4000, 4000, 0)) < 600 then
+                n = n + 1
+                if IsValid(d.ship) and e:GetPos():Distance(d.ship:GetPos()) < 1 then held = true end
+            end
+        end
     end
-    return n
+    return n, held
 end
-ok(Containers() >= 1, "the soldiers come in a dropship container, set down at the landing zone")
+local nC, held = Containers()
+ok(nC >= 1 and held, "the soldiers come out of a troop container that never leaves the dropship's claws")
 _run(40)
-ok(Containers() == 0, "and the dropship lifts the container away again")
+ok(Containers() == 0, "and the dropship lifts away with it")
 for _, s in ipairs(d.soldiers) do if LC.NPCs[s] then LC.NPCs[s] = nil end s:Remove() end
 LC.EndOverwatchDrop()
 ok(LC.OverwatchDrop == nil, "and leave again")
@@ -4866,6 +4875,7 @@ local lamp = ents.Create("lc_streetlight") lamp:SetPos(G0 + Vector(500, 0, 0))
 local spk = ents.Create("lc_loudspeaker") spk:SetPos(G0 + Vector(0, 500, 0))
 local scr = ents.Create("lc_screen") scr:SetPos(G0 + Vector(-500, 0, 0))
 local ff = ents.Create("lc_forcefield") ff:SetPos(G0 + Vector(0, -500, 0))
+local ffBank = ents.Create("lc_powerbank") ffBank:SetPos(G0 + Vector(0, -640, 0)) -- (a forcefield runs off a power bank)
 ff.lcForcefield = true -- (the harness doesn't give entities their scripts' methods)
 ff.FieldUp = function(self) return not self:GetNW2Bool("lc_nopower", false) and self:GetNW2Float("lc_short_until", 0) < CurTime() end
 local far = ents.Create("lc_streetlight") far:SetPos(G0 + Vector(9000, 0, 0))
@@ -5666,19 +5676,21 @@ LC.NPCs[sold], LC.NPCs[cop] = nil, nil
 sold:Remove() cop:Remove()
 end
 GunDropTests()
-section("The quartermaster decodes chips")
+section("The lab decodes chips")
 function QMDecodeTests()
-local qmWas = LC.NearQuartermaster
+local qmWas, sciWas = LC.NearQuartermaster, LC.ScientistNear
 LC.NearQuartermaster = function() return true end
 local rebel = newPlayer("ChipCarrier", "resistance", nil, 150)
 rebel.chat = {}
 LC.GiveItem(rebel, "data_chip", 1)
 local okS, whyS = LC.DealerSell(rebel, "data_chip")
-ok(not okS and string.find(whyS or "", "decodes", 1, true), "the quartermaster doesn't buy a chip by accident", whyS)
-local c0 = LC.Credits(rebel)
-_netcall("lcu_decode", rebel, "data_chip")
-ok(not LC.HasItem(rebel, "data_chip") and LC.Credits(rebel) > c0, "the Decode button in his menu decodes it")
+ok(not okS and string.find(whyS or "", "lab", 1, true), "the quartermaster doesn't buy a chip: he sends you to the lab", whyS)
 LC.NearQuartermaster = qmWas
+LC.ScientistNear = function() return rebel end
+local c0 = LC.Credits(rebel)
+_netcall("lc_lab_decode", rebel, "data_chip")
+ok(not LC.HasItem(rebel, "data_chip") and LC.Credits(rebel) > c0, "the Decode button in the lab's window decodes it")
+LC.ScientistNear = sciWas
 rebel:SetPos(Vector(-30000, 30000, 0))
 end
 QMDecodeTests()
@@ -6866,7 +6878,7 @@ local inc = ents.Create("lc_incinerator") inc:SetPos(W0 + Vector(-600, 0, 0))
 local body = LC.SpawnBody("models/humans/group01/male_01.mdl", W0 + Vector(200, 200, 0))
 for _, b in ipairs(LC.Bodies) do if b.ent == body then b.born = CurTime() - 1000 end end
 local mo, mos = worker("mortuary")
-ok(LC.NPCWorkChoose(mo, mos, CurTime()) and mos.npcWork.id == "haul", "the city's mortuary attendant goes for a body left lying")
+ok(LC.NPCWorkChoose(mo, mos, CurTime()) and mos.npcWork.id == "haul", "the city's mortician goes for a body left lying")
 ok(runUntil(function() return LC.HauledBy(body) == mo end, 30), "takes hold of it")
 ok(runUntil(function() return not IsValid(body) end, 40), "and hauls it into the incinerator")
 ok(inc:GetNW2Float("lc_burn_until", 0) > CurTime(), "which roars")
@@ -7012,7 +7024,7 @@ ok(IsValid(body) and body.lcBody ~= nil, "a body can be laid out for a job")
 ok(LC.NearestBodyProcessor(M0).ent == inc, "a placed incinerator is where bodies go")
 att.lcNextBodyUse = 0
 hook.Run("PlayerUse", att, body)
-ok(LC.HauledBy(body) == att and att:GetNW2Bool("lc_hauling", false), "a Mortuary Attendant takes hold of a body with E")
+ok(LC.HauledBy(body) == att and att:GetNW2Bool("lc_hauling", false), "a Mortician takes hold of a body with E")
 hook.Run("Think")
 att:SetPos(M0 + Vector(500, 0, 0)) body:SetPos(M0 + Vector(560, 0, 0))
 local before = LC.Credits(att)
@@ -10055,6 +10067,65 @@ ok(LC.JobGameStart(bc, "breach", nil, { pos = B0, noDoor = true }) and LC.JobGam
 LC.JobGameEnd(bc, "quit")
 end
 HandsOnTests()
+
+function ForcefieldTests()
+section("Forcefields: a power bank feeds two things; they take a beating and recharge")
+local F0 = Vector(-120000, -90000, 0)
+local function Field(pos)
+    local f = ents.Create("lc_forcefield") f:SetPos(pos) f:Spawn()
+    f.lcForcefield = true
+    f.FieldUp = function(self) return not self:GetNW2Bool("lc_nopower", false) and self:GetNW2Float("lc_short_until", 0) < CurTime() end
+    return f
+end
+local bank = ents.Create("lc_powerbank") bank:SetPos(F0) bank:Spawn()
+local f1, f2, f3 = Field(F0 + Vector(100, 0, 0)), Field(F0 + Vector(200, 0, 0)), Field(F0 + Vector(300, 0, 0))
+LC.CheckpointTick(CurTime())
+local loads = LC.BankLoads(true)
+ok(loads[f1] == bank and loads[f2] == bank and loads[f3] == false, "one power bank feeds two things, the nearest first")
+ok(not LC.FieldOff(f1) and LC.FieldOff(f3), "the third sits dead until a bank with room is near it")
+local lone = Field(F0 + Vector(5000, 0, 0))
+ok(LC.FieldOff(lone), "a forcefield with no power bank near it has no power")
+f3:Remove() lone:Remove()
+_run(1)
+-- a beating
+local hp0 = f1:GetNW2Int("lc_ff_hp", 0)
+ok(hp0 == GetConVar("lc_forcefield_hp"):GetInt(), "it starts at full strength", hp0)
+LC.ForcefieldHurt(f1, 100, false)
+ok(f1:GetNW2Int("lc_ff_hp", 0) == hp0 - 100 and f1:FieldUp(), "a few hits wear it down, and it holds")
+_run(8)
+ok(f1:GetNW2Int("lc_ff_hp", 0) > hp0 - 100, "left alone, it recharges", f1:GetNW2Int("lc_ff_hp", 0))
+LC.ForcefieldHurt(f1, 1000, false)
+ok(not f1:FieldUp() and not f1:GetNW2Bool("lc_ff_broken", false), "too much at once: overwhelmed, offline for a while")
+_run(GetConVar("lc_forcefield_down"):GetFloat() + 1)
+ok(f1:FieldUp() and f1:GetNW2Int("lc_ff_hp", 0) < hp0, "it comes back, not fully charged")
+LC.ForcefieldHurt(f1, 1000, false)
+_run(GetConVar("lc_forcefield_down"):GetFloat() + 1)
+LC.ForcefieldHurt(f1, 1000, false)
+ok(f1:GetNW2Bool("lc_ff_broken", false) and not f1:FieldUp(), "overwhelmed three times in five minutes: broken")
+_run(GetConVar("lc_forcefield_down"):GetFloat() + 1)
+ok(not f1:FieldUp(), "and it stays down")
+local cit = newPlayer("FieldCitizen", "citizen")
+cit:SetPos(f1:GetPos() + Vector(40, 0, 0))
+ok(not LC.RepairForcefield(cit, f1), "only a Maintenance Technician can repair it")
+local tech = newPlayer("FieldTech", "citizen")
+LC.SetJob(tech, "maintenance", true)
+tech:SetPos(f1:GetPos() + Vector(40, 0, 0))
+local c0 = LC.Credits(tech)
+ok(LC.SwipeForcefield(tech, f1), "E on the broken field: the technician gets to work")
+_run(11)
+ok(not f1:GetNW2Bool("lc_ff_broken", false) and f1:FieldUp() and LC.Credits(tech) > c0, "repaired, and paid")
+LC.ForcefieldBreak(f1)
+f1.lcBrokenAt = CurTime() - 10000
+_run(1)
+ok(not f1:GetNW2Bool("lc_ff_broken", false), "nobody repairs it: the city's crews do, eventually")
+-- a blast while it's down breaks it outright
+LC.ForcefieldHurt(f2, 1000, false)
+LC.ForcefieldHurt(f2, 200, true)
+ok(f2:GetNW2Bool("lc_ff_broken", false), "blown up while it's down: broken")
+for _, e in ipairs({ f1, f2, bank }) do e:Remove() end
+for _, p in ipairs({ cit, tech }) do p:SetPos(Vector(-150000, 150000, 0)) end
+end
+ForcefieldTests()
 
 ----------------------------------------------------------------------
 section("Stop")

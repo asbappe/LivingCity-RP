@@ -12,7 +12,9 @@
       A ration     your allocation, once every lc_cpsupply_ration (600) seconds
 
     Once every lc_cpsupply_cooldown (120) seconds. Then the Commissary's unit
-    counter opens (flashbangs, gas, ammunition and batteries for credits).
+    counter opens (flashbangs, gas, ammunition and batteries for credits):
+    the only place units buy those; the Union Commissary terminals never sell
+    them (unless the city has no Civil Protection Commissary).
 
     A city with no Civil Protection Commissary placed: the Union Commissary
     terminal issues units their supplies instead. F2 points units to the

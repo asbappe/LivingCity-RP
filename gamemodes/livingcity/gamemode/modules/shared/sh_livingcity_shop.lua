@@ -197,7 +197,7 @@ LCS.Items = {
                         contraband = true, conceal = 0.05, sell = 14, desc = "Pries scrap out of junk. A weapon too, and every unit knows it" },
     data_chip       = { name = "Combine data chip", model = "models/props_lab/harddrive02.mdl", use = "datachip", useLabel = "Decode / plug in",
                         contraband = true, conceal = 0.3, sell = 130,
-                        desc = "Two terminals' data, put together. The dealer pays well; the quartermaster decodes it; plugged into a terminal it wipes your record" },
+                        desc = "Two terminals' data, put together. The dealer pays well; the lab decodes it; plugged into a terminal it wipes your record" },
     data_shard      = { name = "Combine data fragment", model = "models/props_lab/harddrive01.mdl",
                         contraband = true, conceal = 0.35, sell = 40,
                         desc = "Half of what the Combine know: one terminal's data. Download another terminal's and the two make a whole chip" },
@@ -272,7 +272,8 @@ end
 --   item      goes into your inventory
 --   entity    spawns in front of you (health vials, batteries)
 --   ammo      { type, amount }
---   cpOnly    units only
+--   cpOnly    units only, and sold only at the Civil Protection Commissary's
+--             counter (the Union terminal sells them only in a city without one)
 ------------------------------------------------------------------------
 
 LCS.Goods = {

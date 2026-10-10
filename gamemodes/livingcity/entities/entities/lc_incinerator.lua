@@ -1,7 +1,7 @@
 --[[ Incinerator (Living City): placed with the editor ("Fixture: incinerator").
      The city's dead end up here. Haul a body to it (press E on a body, or
      the actions menu, F1) and press E on the incinerator, or just let go of
-     the body next to it. Mortuary Attendants are paid for every one
+     the body next to it. Morticians are paid for every one
      (sv_livingcity_mortuary.lua). Nothing else ever spawns one: no
      incinerator on the map, no cremations.
      It's a spent headcrab canister, a fire burning in its broad, open end. ]]

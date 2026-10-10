@@ -185,6 +185,7 @@ function LC.SpawnWorldItem(id, pos, ang, vel)
     if ang then e:SetAngles(ang) end
     e:Spawn()
     e:Activate()
+    e.lcBorn = CurTime()
     if vel then
         local phys = e:GetPhysicsObject()
         if IsValid(phys) then phys:Wake() phys:SetVelocity(vel) end

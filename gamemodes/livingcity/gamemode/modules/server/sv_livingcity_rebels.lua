@@ -1383,7 +1383,7 @@ hook.Add("PlayerUse", "LivingCityRebelsUse", function(ply, ent)
         ent:EmitSound(Vo(st, Pick({ "hi01", "hi02" })), 70)
         ply:ChatPrint("[Quartermaster] 'What do you need?' (Work: F3. Fighters: E on any of ours here, to bring them along.)")
         if LC.HasItem and (LC.HasItem(ply, "data_chip") or LC.HasItem(ply, "master_chip")) then
-            ply:ChatPrint("[Quartermaster] 'Is that a Combine chip? Give it here, I'll decode it.' (Decode: at the top of his list.)")
+            ply:ChatPrint("[Quartermaster] 'Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it.'")
         end
         if LC.OpenMarket then LC.OpenMarket(ply) end
         return false

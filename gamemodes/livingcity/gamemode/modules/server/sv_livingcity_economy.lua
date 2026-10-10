@@ -183,10 +183,20 @@ local function NearTerminal(ply)
     return false
 end
 
+-- Where a unit's things are sold: the Civil Protection Commissary's counter
+-- (sv_livingcity_cpsupply.lua), never the Union's terminals; only a city with
+-- no Civil Protection Commissary sells them at the Union terminal.
+local function AtUnitCounter(ply)
+    if not (LC.HasCPSupply and LC.HasCPSupply()) then return true end
+    return LC.NearCPSupply ~= nil and LC.NearCPSupply(ply)
+end
+LC.AtUnitCounter = AtUnitCounter
+
 function LC.CanBuy(ply, g)
     if not cvOn:GetBool() then return false, "The commissary is closed." end
     if LC.PlayerIsZombie(ply) then return false, "The terminal doesn't recognize you. It doesn't recognize anything like you." end
     if g.cpOnly and not LC.PlayerIsCP(ply) then return false, "Units only." end
+    if g.cpOnly and not AtUnitCounter(ply) then return false, "Issued at the Civil Protection Commissary, not here." end
     if g.minRank and ply:GetNW2String("lcf_faction", "") ~= "ota" and ply:GetNW2Int("lcf_rank", 1) < g.minRank then
         return false, "Not at your rank."
     end
@@ -231,8 +241,9 @@ function LC.OpenShop(ply, viaTerminal)
         return ply:ChatPrint("[Commissary] Find a Union Commissary terminal.")
     end
     local goods = {}
+    local counter = LC.PlayerIsCP(ply) and AtUnitCounter(ply)
     for _, g in ipairs(LCS.Goods) do
-        if not g.cpOnly or LC.PlayerIsCP(ply) then
+        if not g.cpOnly or counter then
             local ok, why = LC.CanBuy(ply, g)
             goods[#goods + 1] = {
                 id = g.id, name = g.name, price = g.price, desc = g.desc, ok = ok, why = why,
@@ -240,7 +251,8 @@ function LC.OpenShop(ply, viaTerminal)
             }
         end
     end
-    LC.SendCompressed("lce_shop", { credits = LC.Credits(ply), standing = LC.Standing(ply), goods = goods }, { ply })
+    local cp = LC.PlayerIsCP(ply) and LC.NearCPSupply ~= nil and LC.NearCPSupply(ply)
+    LC.SendCompressed("lce_shop", { credits = LC.Credits(ply), standing = LC.Standing(ply), goods = goods, cp = cp or nil }, { ply })
 end
 
 net.Receive("lce_buy", function(_, ply)

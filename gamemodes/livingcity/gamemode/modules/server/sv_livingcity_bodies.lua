@@ -327,7 +327,7 @@ hook.Add("PlayerUse", "LivingCityBodies", function(ply, ent)
     if not IsValid(ent) or not ent.lcBody then return end
     if (ply.lcNextBodyUse or 0) > CurTime() then return false end
     ply.lcNextBodyUse = CurTime() + 1
-    if hook.Run("LivingCityBodyUse", ply, ent) then return false end -- a Mortuary Attendant hauls it instead
+    if hook.Run("LivingCityBodyUse", ply, ent) then return false end -- a Mortician hauls it instead
     local ok, why = LC.StartBodySearch(ply, ent)
     if not ok and why then ply:ChatPrint(why) end
     return false

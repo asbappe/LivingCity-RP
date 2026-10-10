@@ -288,6 +288,7 @@ function LC.ShortForcefield(ply, f)
 end
 
 function LC.SwipeForcefield(ply, f)
+    if f:GetNW2Bool("lc_ff_broken", false) and LC.RepairForcefield then return LC.RepairForcefield(ply, f) end
     if LC.FieldPass(ply) then return true end
     if not (LC.HasItem and LC.HasItem(ply, "cp_keycard")) then
         f:EmitSound("buttons/combine_button_locked.wav", 65)

@@ -1,7 +1,7 @@
 --[[
     Resistance lab (Living City). Place it with the Living City Editor
     ("Fixture: Resistance lab"), in rebel territory: every rebel base needs
-    one for its guns. A lab bench, cluttered with Dr. Kleiner's lab kit, and
+    one for its guns. One of Dr. Kleiner's own lab workstations, and
     a scientist beside it (lc_scientist) who makes guns, ammunition, armour,
     jammers and radios for the Resistance. E on him, or on the bench.
     See sv_livingcity_lab.lua.
@@ -20,12 +20,18 @@ ENT.Category = "Living City"
 ENT.Spawnable = true
 ENT.AdminOnly = true
 
+-- Dr. Kleiner's own lab workstations first (monitors, kit and all), then a plain desk for the clutter
+local KLEINER = { "models/props_lab/workspace003.mdl", "models/props_lab/workspace001.mdl", "models/props_lab/workspace002.mdl" }
 local MODELS = { "models/props_wasteland/controlroom_desk001b.mdl", "models/props_c17/FurnitureTable001a.mdl" }
 
 function ENT:Initialize()
     if CLIENT then return end
-    local m = MODELS[1]
-    if util.IsValidModel and not util.IsValidModel(m) then m = MODELS[2] end
+    local m
+    for _, k in ipairs(KLEINER) do if not util.IsValidModel or util.IsValidModel(k) then m = k self.lcKleiner = true break end end
+    if not m then
+        m = MODELS[1]
+        if util.IsValidModel and not util.IsValidModel(m) then m = MODELS[2] end
+    end
     self:SetModel(m)
     self:PhysicsInit(SOLID_VPHYSICS)
     self:SetMoveType(MOVETYPE_VPHYSICS)
