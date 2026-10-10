@@ -110,6 +110,10 @@ end
 -- The model for this rank: the one the player chose, if the rank has it (or its
 -- counterpart, such as the same face in the Resistance's clothes); else by unit number.
 local function PickModel(ply, models)
+    if LC.ModelOverride then -- (a stalker's body: sv_livingcity_custody.lua)
+        local m = LC.ModelOverride(ply)
+        if m then return m end
+    end
     local chosen = ply:GetNW2String("lc_model", "")
     if chosen ~= "" then
         local base = string.match(chosen, "[^/]+$")

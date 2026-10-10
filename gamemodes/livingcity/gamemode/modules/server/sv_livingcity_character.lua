@@ -217,7 +217,8 @@ end)
 -- theirs is still there to tell.
 hook.Add("PlayerDeath", "LivingCityCharacter", function(ply, inflictor, attacker)
     local function Card(gone, note) if LC.RecordDeath then LC.RecordDeath(ply, gone, attacker, note) end end
-    if not Enabled() or ply.lcNoPermadeath then
+    -- (lcEndOfLife: an ending that is final whatever the setting, like a stalker stepping into the light)
+    if (not Enabled() and not ply.lcEndOfLife) or ply.lcNoPermadeath then
         Card(false, "Permanent death is off here: you come back as yourself.")
         return
     end
@@ -236,7 +237,7 @@ hook.Add("PlayerDeath", "LivingCityCharacter", function(ply, inflictor, attacker
         return
     end
     Card(true)
-    LC.NewCharacter(ply, "death")
+    LC.NewCharacter(ply, ply.lcEndOfLife or "death")
 end)
 
 concommand.Add("lc_newcharacter", function(ply, _, args)

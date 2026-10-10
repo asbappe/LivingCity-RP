@@ -2413,7 +2413,7 @@ function LC.AdvanceChain(q, success)
     local cs = LC.ChainState(ply, chain.id)
     local def = chain.parts[q.chainPart]
     if ply.lcStoryPostings then ply.lcStoryPostings[chain.id] = nil end
-    local pace = cvPacing:GetFloat()
+    local pace = math.min(chain.pace or math.huge, cvPacing:GetFloat()) -- (a chain can ask to come round sooner)
 
     if success and q.chainDecline then
         cs.part = nil

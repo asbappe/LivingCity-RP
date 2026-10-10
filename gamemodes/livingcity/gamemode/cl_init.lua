@@ -197,6 +197,7 @@ local GUIDE = {
         "Citizens: look at someone, F1 > Inform on them. Civil Protection pays if it's true. If the Resistance see you do it, you're a traitor.",
         "Trusted citizens: actions menu > Getting by > Become a Union foreman; then the actions menu on a citizen > Give them a work order. You take a cut.",
         "The worst anticitizens get worse than time: interrogation (the interrogator offers 50 social credits if you talk), broken feet (no running), or being made a stalker.",
+        "A stalker works below, in the Combine areas: The Stalker's Lot on your board (F3). At its end is a Combine ball energizer you built yourself. Step into it and that person is gone for good; turn away and they let you go soon after.",
         "Released from prison, you get your fists back but not your guns or radio. Units get their issue back.",
         "Rebel ground has no mercy: REBEL TERRITORY AHEAD warns you a step before it. Inside, they shoot units.",
         "Supply drop on? Guard the crate: if anything's left when the convoy moves on, every unit nearby is paid.",

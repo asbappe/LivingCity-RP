@@ -926,9 +926,10 @@ section("Stories: every part of every chain starts")
 LC.SetFaction(tester.chaplain, "citizen", nil, true)
 local cast = { cp = newPlayer("SCop", "cp", nil, 1000), citizen = newPlayer("SCit", "citizen") }
 cast.chaplain = newPlayer("SPriest", "resistance", "chaplain", 200)
+cast.stalker = newPlayer("SStalker", "stalker")
 local problems2, started2, total2 = {}, 0, 0
 for _, chain in ipairs(LC.ChainList) do
-    local p = chain.special and cast.chaplain or (chain.factions.cp and cast.cp or cast.citizen)
+    local p = chain.special and cast.chaplain or (chain.id == "stalker" and cast.stalker) or (chain.factions.cp and cast.cp or cast.citizen)
     for partId in pairs(chain.parts) do
         local variants = { false }
         if chain.id == "missing" then variants = { "rebels", "infestation", "deserted" } end
@@ -962,6 +963,7 @@ for _, chain in ipairs(LC.ChainList) do
 end
 ok(#problems2 == 0, "no story errors", problems2[1])
 ok(started2 == total2, "every part starts", started2 .. "/" .. total2)
+LC.SetFaction(cast.stalker, "citizen", nil, true)
 
 
 ----------------------------------------------------------------------
@@ -10280,6 +10282,78 @@ if #priests > 0 then ok(not IsValid(LC.Grigori), "a player is Father Grigori: th
 for _, p in ipairs({ cit, unit, reb }) do p:SetPos(Vector(-150000, 150000, 0)) end
 end
 VestTests()
+
+function StalkerTests()
+section("Stalkers: their body, their work, and the energizer")
+_setcvar("lc_story_pacing", 0)
+local S0 = Vector(-140000, -40000, 0)
+local function posting(p) for _, sp in ipairs(LC.StoryPostings(p)) do if sp.chain == "stalker" then return sp end end end
+local stk = newPlayer("StalkerWorker", "citizen")
+_run(0.3)
+ok(posting(stk) == nil, "a citizen gets no stalker story")
+_setcvar("lc_stalker_model", "models/player/test_stalker.mdl")
+ok(LC.MakeStalker(stk, 20) and LC.PlayerIsStalker(stk), "made into a stalker")
+ok(LC.ModelOverride(stk) == "models/player/test_stalker.mdl", "lc_stalker_model sets the stalker's body")
+LC.RefreshModel(stk)
+ok(stk:GetModel() == "models/player/test_stalker.mdl", "and the stalker wears it")
+_setcvar("lc_stalker_model", "")
+local function Work(q, choose)
+    if not q then return end
+    for _ = 1, 12 do
+        if q.done then break end
+        local st = q.stages[q.stage]
+        if st.kind == "choice" then LC.ResolveChoice(stk, q.id, choose) break end
+        if st.pos then stk:SetPos(st.pos) end
+        stk.crouch = st.crouch == true
+        if st.kind == "hold" then st.progress = st.secs end
+        _run(0.6)
+    end
+    stk.crouch = false
+end
+local parts = {}
+for i = 1, 5 do
+    local sp = posting(stk)
+    if not sp then break end
+    parts[#parts + 1] = sp.part
+    stk.lcqNext = 0
+    LC.AcceptPosting(stk, sp.id)
+    local q = LC.QuestOf[stk]
+    if not q then break end
+    if i == 1 then
+        stk:SetNW2Float("lc_stalker_until", CurTime() - 1)
+        _advance(1.1) _runtimers()
+        ok(LC.PlayerIsStalker(stk), "the term doesn't run out in the middle of a job")
+        stk:SetNW2Float("lc_stalker_until", CurTime() + 1200)
+    end
+    Work(q, 2)
+    ok(q.done, "part " .. i .. " (" .. sp.part .. ") can be done", q.stage .. "/" .. #q.stages)
+end
+ok(table.concat(parts, ",") == "processing,floors,cable,frame,charge", "five parts, in order", table.concat(parts, ","))
+local e = LC.Energizers[stk]
+ok(IsValid(e) and e:GetNW2Int("lc_built", 0) == 3, "the energizer is built, and charged")
+ok(LC.Story(stk).chains.stalker.done == "endured", "turning away from it ends the story")
+ok(stk:GetNW2Float("lc_stalker_until", 0) < CurTime() + 200, "and the city lets you go soon")
+-- again, and this time step in
+LC.MakeStalker(stk, 20)
+ok(posting(stk) ~= nil and posting(stk).part == "processing", "a new term starts the story over")
+local cid = stk:GetNW2String("lc_cid", "")
+_setcvar("lc_permadeath", 0)
+LC.Story(stk).chains.stalker = { part = "charge", data = { site = { S0.x, S0.y, S0.z } }, readyAt = 0 }
+stk.lcStoryPostings = nil
+local sp = posting(stk)
+stk.lcqNext = 0
+if sp then LC.AcceptPosting(stk, sp.id) end
+ok(sp ~= nil and LC.QuestOf[stk] ~= nil, "the last part can be taken up again")
+Work(LC.QuestOf[stk], 1)
+_advance(2) _runtimers()
+ok(not stk:Alive(), "stepping into the light kills the stalker")
+ok(not LC.PlayerIsStalker(stk) and stk:GetPData("lc_stalker_until", nil) == nil, "and nothing of the stalker is left")
+ok(cid == "" or stk:GetNW2String("lc_cid", "") ~= cid, "a new person, even with permanent death off", cid .. " -> " .. stk:GetNW2String("lc_cid", ""))
+_setcvar("lc_permadeath", 1)
+stk.alive = true stk:Spawn()
+stk:SetPos(Vector(-150000, 150000, 0))
+end
+StalkerTests()
 
 ----------------------------------------------------------------------
 section("Stop")

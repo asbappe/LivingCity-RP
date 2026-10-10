@@ -33,6 +33,7 @@ local cvOn      = CreateConVar("lc_custody_punish", "1", FLAGS, "Interrogation, 
 local cvCripple = CreateConVar("lc_cripple_minutes", "15", FLAGS, "Minutes without running after the city breaks your feet")
 local cvStalker = CreateConVar("lc_stalkers", "1", FLAGS, "The worst anticitizens are made into stalkers instead of released")
 local cvStalkM  = CreateConVar("lc_stalker_minutes", "20", FLAGS, "Minutes a stalker serves (or until they die)")
+local cvStalkMdl = CreateConVar("lc_stalker_model", "", FLAGS, "Playermodel for stalkers. Blank: a stalker playermodel if one is installed (Workshop 268895264), else a corpse")
 
 local function Pick(t) return t[math.random(#t)] end
 
@@ -202,6 +203,31 @@ function LC.PlayerIsStalker(ply)
     return IsValid(ply) and ply:IsPlayer() and ply:GetNW2String("lcf_faction", "") == "stalker"
 end
 
+-- The stalker's body: lc_stalker_model if set, else an installed playermodel
+-- with "stalker" in its name or path (Workshop 268895264 is sent to players
+-- who join), else the rank's own (a corpse).
+if resource and resource.AddWorkshop then resource.AddWorkshop("268895264") end
+local foundStalker
+function LC.StalkerModel()
+    local m = cvStalkMdl:GetString()
+    if m ~= "" then return m end
+    if foundStalker == nil then
+        foundStalker = false
+        local list = {}
+        for name, path in pairs(player_manager and player_manager.AllValidModels and player_manager.AllValidModels() or {}) do
+            if string.find(string.lower(name), "stalker", 1, true) or string.find(string.lower(path), "stalker", 1, true) then list[#list + 1] = path end
+        end
+        table.sort(list)
+        foundStalker = list[1] or false
+    end
+    return foundStalker or nil
+end
+cvars.AddChangeCallback("lc_stalker_model", function() foundStalker = nil end, "LivingCityStalker")
+
+function LC.ModelOverride(ply)
+    if LC.PlayerIsStalker(ply) then return LC.StalkerModel() end
+end
+
 function LC.MakeStalker(ply, minutes)
     if not IsValid(ply) or not LC.SetFaction then return false end
     minutes = minutes or cvStalkM:GetFloat()
@@ -234,6 +260,7 @@ function LC.FreeStalker(ply, why)
     local s = LC.Standing and LC.Standing(ply) or 0
     if LC.AddStanding and s < -50 then LC.AddStanding(ply, -50 - s, nil) end -- what's left of you is on probation
     ply:ChatPrint(why or "[City] The city has had its use of you. You're let back onto the streets, on probation.")
+    hook.Run("LivingCityStalkerFreed", ply)
     return true
 end
 
@@ -249,6 +276,11 @@ end)
 -- and can't pick up guns
 hook.Add("PlayerCanPickupWeapon", "LivingCityStalker", function(ply, wep)
     if LC.PlayerIsStalker(ply) and IsValid(wep) and wep:GetClass() ~= "weapon_lc_hands" then return false end
+end)
+-- a new person (death with permanent death on, a staff decision) was never a stalker
+hook.Add("LivingCityNewCharacter", "LivingCityStalker", function(ply)
+    ply:RemovePData("lc_stalker_until")
+    ply:SetNW2Float("lc_stalker_until", 0)
 end)
 hook.Add("PlayerDeath", "LivingCityStalker", function(ply)
     if LC.PlayerIsStalker(ply) then
@@ -314,8 +346,13 @@ timer.Create("LivingCityCustody", 1, 0, function()
     local now = CurTime()
     InterrogationTick(now)
     for _, ply in ipairs(player.GetAll()) do
-        if LC.PlayerIsStalker(ply) and ply:GetNW2Float("lc_stalker_until", 0) > 0 and now > ply:GetNW2Float("lc_stalker_until", 0) then
-            LC.FreeStalker(ply)
+        local untilT = ply:GetNW2Float("lc_stalker_until", 0)
+        if LC.PlayerIsStalker(ply) and untilT > 0 and now > untilT then
+            if LC.StalkerWorking and LC.StalkerWorking(ply) then
+                ply:SetNW2Float("lc_stalker_until", now + 5) -- (not in the middle of a job: sv_livingcity_stalkerwork.lua)
+            else
+                LC.FreeStalker(ply)
+            end
         end
     end
 end)
