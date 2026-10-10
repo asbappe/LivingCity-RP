@@ -22,7 +22,7 @@ function LC_CL.NextStep()
     if not IsValid(me) then return nil end
     local text = me:GetNW2String("lc_next", "")
     if text == "" then return nil end
-    return { text = text, why = me:GetNW2String("lc_next_why", ""), way = me:GetNW2String("lc_next_way", ""),
+    return { text = text, why = me:GetNW2String("lc_next_why", ""), way = me:GetNW2String("lc_next_way", ""), act = me:GetNW2String("lc_next_act", ""),
         urgent = me:GetNW2Bool("lc_next_urgent", false), new = me:GetNW2Bool("lc_next_new", false) }
 end
 
@@ -84,19 +84,28 @@ local function Page(label, build) return { label = label, page = build } end
 local PLACES = {
     { "dispenser", "Ration dispenser" }, { "water", "Water (a sink or a machine)" }, { "bin", "Bins to search" },
     { "home", "My block" }, { "work", "My workplace" }, { "shop", "The Commissary" },
-    { "intake", "Civil Intake" }, { "housing", "Housing Allocation" },
+    { "toilet", "Toilet" }, { "bath", "Bathtub or shower" },
 }
+local MORE_PLACES = { { "bed", "A bed" }, { "intake", "Civil Intake" }, { "housing", "Housing Allocation" } }
 
-function LC_CL.PlacesPage()
+local function MorePlacesPage()
     local me = LocalPlayer()
     local f = IsValid(me) and me:GetNW2String("lcf_faction", "") or ""
+    local items = {}
+    for _, p in ipairs(MORE_PLACES) do items[#items + 1] = Item(p[2], function() Send("waypoint", p[1]) end) end
+    if f == "cp" or f == "ota" then items[#items + 1] = Item("Civil Protection Commissary", function() Send("waypoint", "cpsupply") end) end
+    if f == "resistance" then items[#items + 1] = Item("The lab", function() Send("waypoint", "lab") end) end
+    if IsValid(me) and me:GetNW2String("lcj_job", "") == "sanitation" then items[#items + 1] = Item("A mess to clean up", function() Send("waypoint", "stain") end) end
+    while #items > 9 do table.remove(items) end
+    return { title = "MORE PLACES", items = items }
+end
+
+function LC_CL.PlacesPage()
     local items = {}
     for _, p in ipairs(PLACES) do
         items[#items + 1] = Item(p[2], function() Send("waypoint", p[1]) end)
     end
-    if f == "cp" or f == "ota" then items[#items + 1] = Item("Civil Protection Commissary", function() Send("waypoint", "cpsupply") end) end
-    if f == "resistance" then items[#items + 1] = Item("The lab", function() Send("waypoint", "lab") end) end
-    while #items > 9 do table.remove(items) end
+    items[#items + 1] = Page("More places...", MorePlacesPage)
     return { title = "PLACES", items = items }
 end
 
@@ -104,7 +113,8 @@ function LC_CL.WhatNowPage()
     local s = LC_CL.NextStep()
     local items = {}
     if s then
-        items[#items + 1] = Item((s.way ~= "" and "Show me the way: " or "") .. s.text, function()
+        items[#items + 1] = Item((s.act ~= "" and "Do it: " or (s.way ~= "" and "Show me the way: " or "")) .. s.text, function()
+            if s.act ~= "" then Send(s.act) end
             if s.way ~= "" then Send("waypoint", s.way) end
             if LC_CL.AddNotice then LC_CL.AddNotice(s.urgent and "warn" or "info", s.text, s.why) end
         end)

@@ -64,6 +64,8 @@ LC_MODULES = {
         "sv_livingcity_lagwatch", -- (staff: the lag monitor)
         "sv_livingcity_nextstep", -- (what now? everyone always has a next step)
         "sv_livingcity_jobgames", -- (work you actually do: the street sweep, the factory line, papers check)
+        "sv_livingcity_hygiene", -- (toilets, baths, soiling yourself, the stink, the mess on the ground)
+        "sv_livingcity_rest", -- (beds, sleep, being tired)
         "sv_livingcity_moregames", -- (more of them: parcels, the records terminal, dead drops, the dead, laundry, filing, radios, pat-downs, breaches)
         "sv_livingcity_doors",
         "sv_livingcity_dropship",
@@ -135,6 +137,7 @@ LC_MODULES = {
         "cl_livingcity_lagwatch", -- (staff: the lag monitor)
         "cl_livingcity_nextstep", -- (what now? the next step on screen, F1 slot 1)
         "cl_livingcity_jobgames", -- (the job games' panel, the papers window)
+        "cl_livingcity_rest", -- (drooping eyelids, the stink's flies, sleeping, what you still have to do)
         "cl_livingcity_moregames", -- (their panels, and the outline on what the game wants you to look at)
         "cl_livingcity_atmos",
         "cl_livingcity_character",

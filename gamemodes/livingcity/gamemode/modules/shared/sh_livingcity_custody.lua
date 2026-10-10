@@ -21,3 +21,12 @@ hook.Add("SetupMove", "LivingCityHauling", function(ply, mv)
     if mv:GetMaxSpeed() > slow then mv:SetMaxSpeed(slow) end
     if mv:KeyDown(IN_SPEED) then mv:SetButtons(bit.band(mv:GetButtons(), bit.bnot(IN_SPEED))) end
 end)
+
+-- Too tired to run (sv_livingcity_rest.lua): no sleep in a whole day.
+hook.Add("SetupMove", "LivingCityTired", function(ply, mv)
+    if not ply:GetNW2Bool("lc_tired", false) then return end
+    local walk = ply:GetWalkSpeed()
+    if mv:GetMaxClientSpeed() > walk then mv:SetMaxClientSpeed(walk) end
+    if mv:GetMaxSpeed() > walk then mv:SetMaxSpeed(walk) end
+    if mv:KeyDown(IN_SPEED) then mv:SetButtons(bit.band(mv:GetButtons(), bit.bnot(IN_SPEED))) end
+end)

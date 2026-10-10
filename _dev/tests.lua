@@ -6662,7 +6662,10 @@ ok(has(porter.chat, "train is in"), "Station Porters are told")
 local a1 = arrivals[1]
 local s1 = a1 and LC.NPCs[a1] or {}
 ok(s1 and s1.npcWork and s1.npcWork.id == "arrival" and IsValid(s1.carry), "each with a suitcase, going home")
+for _, n in ipairs(arrivals) do local s = LC.NPCs[n] if s then s.leaveAt = nil end end -- (nobody gets straight back on the train)
+_setcvar("lc_daily_rhythm", 0)
 for _ = 1, 600 do if not s1.npcWork then break end _run(0.5) end
+_setcvar("lc_daily_rhythm", 1)
 local w1 = s1.npcWork
 local stepAt = w1 and w1.steps and w1.steps[w1.i] and w1.steps[w1.i].pos
 ok(s1.npcWork == nil and not IsValid(s1.carry), "they get home and put the suitcase down",
@@ -10126,6 +10129,99 @@ for _, e in ipairs({ f1, f2, bank }) do e:Remove() end
 for _, p in ipairs({ cit, tech }) do p:SetPos(Vector(-150000, 150000, 0)) end
 end
 ForcefieldTests()
+
+function HygieneTests()
+section("Toilets, soiling yourself, baths, clean clothes; beds and sleep")
+local Y0 = Vector(-120000, -60000, 0)
+local function Tick(n) for _ = 1, n or 1 do _advance(5) _runtimers() end end
+local p = newPlayer("Parasited", "citizen")
+_run(0.3)
+p:SetPos(Y0)
+LC.Infect(p)
+ok(LC.HasParasites(p) and LC.Urge(p) == 0, "parasites: the urge starts at nothing")
+Tick(40)
+ok(LC.Urge(p) >= 50, "and builds", LC.Urge(p))
+local ns = LC.NextStep(p)
+ok(ns and ns.key == "toilet" and ns.way == "toilet", "What now? says find a toilet")
+-- a toilet in time
+local loo = ents.Create("lc_toilet") loo:SetPos(Y0 + Vector(40, 0, 0)) loo:Spawn()
+ok(LC.AmenityKindOf(loo) == "toilet" and LC.NearestAmenity("toilet", p:GetPos()) ~= nil, "a toilet the city knows about")
+local th0 = LC.Thirst(p)
+ok(LC.UseToilet(p), "sit on it")
+_run(9)
+ok(LC.Urge(p) == 0 and LC.Thirst(p) < th0, "relief, and it dehydrates you")
+-- too late
+p:SetNW2Float("lc_urge", 99)
+local stains0 = #ents.FindByClass("lc_stain")
+Tick(1)
+ok(p:GetNW2Bool("lc_soiled", false) and #ents.FindByClass("lc_stain") > stains0, "too late: soiled, and a mess on the ground")
+ok(LC.IsFilthy(p), "and filthy until it's sorted")
+local npc, nst = LC.Spawners.citizen(p:GetPos() + Vector(80, 0, 0))
+nst.leaveAt = nil
+Tick(1)
+ok((nst.lcShunned or 0) > 0, "the city's own step away from the smell")
+ok(LC.NextStep(p).key == "toilet", "What now?: the toilet first")
+LC.UseToilet(p) _run(9)
+ok(LC.NextStep(p).key == "wash" and LC.IsFilthy(p), "then a wash")
+local tub = ents.Create("lc_bath") tub:SetPos(Y0 + Vector(-40, 0, 0)) tub:Spawn()
+LC.UseBath(p) _run(11)
+ok(not LC.SoilNeeds(p).wash and LC.IsFilthy(p), "washed, but the clothes still stink")
+ok(not LC.ChangeClothes(p), "no clean clothes in your pockets: you can't change")
+LC.GiveItem(p, "civvies")
+ok(LC.NextStep(p).action == "changeclothes", "What now? offers to change into the clean ones")
+LC.RunAction(p, "changeclothes", "")
+ok(not LC.IsFilthy(p) and not p:GetNW2Bool("lc_soiled", false) and not LC.HasItem(p, "civvies"), "clean clothes: all put right")
+-- the mess on the ground
+local mess
+for _, e in ipairs(ents.FindByClass("lc_stain")) do if e:GetPos():Distance(Y0) < 300 then mess = e end end
+mess.lcBorn = CurTime() + 1e6 -- (the city's own crews wait their turn)
+local sw = newPlayer("Sweeper", "citizen")
+LC.SetJob(sw, "sanitation", true)
+sw:SetPos(mess:GetPos() + Vector(30, 0, 0))
+local c0 = LC.Credits(sw)
+ok(LC.CleanStain(sw, mess), "a sanitation worker scrubs it up")
+_run(6)
+ok(not IsValid(mess) and LC.Credits(sw) > c0, "gone, and paid")
+-- the city's own sanitation crew does it too
+local mess2 = LC.SpawnStain(Y0 + Vector(0, 300, 0))
+mess2.lcBorn = CurTime() - 10000
+local crew, cst = LC.SpawnCitizen(Y0 + Vector(0, 360, 0))
+cst.leaveAt = nil
+cst.profile = { job = "sanitation" }
+_setcvar("lc_npc_work", 1)
+_setcvar("lc_npc_work_pct", 100)
+_setcvar("lc_daily_rhythm", 0)
+ok(LC.NPCWorkChoose(crew, cst, CurTime()) and cst.npcWork and cst.npcWork.id == "stain", "the city's own sanitation crew goes to scrub it")
+for _ = 1, 60 do if not IsValid(mess2) then break end _run(0.5) end
+ok(not IsValid(mess2), "and it's gone")
+_setcvar("lc_daily_rhythm", 1)
+crew:Remove() if IsValid(npc) then npc:Remove() end
+LC.ClearWanted(p)
+-- sleep
+local sl = newPlayer("Sleeper", "citizen")
+_run(0.3)
+sl:SetPos(Y0 + Vector(0, -400, 0))
+local bed = ents.Create("lc_bed") bed:SetPos(sl:GetPos() + Vector(40, 0, 0)) bed:Spawn()
+local isNight = LC.IsNight
+LC.IsNight = function() return false end
+local okD, whyD = LC.SleepIn(sl, bed)
+ok(not okD and whyD and string.find(whyD, "daylight", 1, true), "not tired in the day: no sleeping", whyD)
+sl.lcAwakeSince = CurTime() - GetGlobal2Float("lc_day_len", 1440) * 2
+local max0 = sl:GetMaxHealth()
+Tick(1)
+ok(LC.IsTired(sl) and sl:GetMaxHealth() == max0 - 25, "a day without sleep: tired, 25 less health at most")
+ok(LC.NextStep(sl).key == "sleep", "What now? says get some sleep")
+ok(LC.SleepIn(sl, bed), "exhausted: you can sleep any time")
+_run(GetConVar("lc_sleep_seconds"):GetFloat() + 1)
+Tick(1)
+ok(not LC.IsTired(sl) and LC.IsRested(sl) and sl:GetMaxHealth() == max0, "slept: rested, and back to full strength")
+LC.IsNight = function() return true end
+ok(not LC.SleepIn(sl, bed), "(and you can't sleep again straight away)")
+LC.IsNight = isNight
+for _, e in ipairs({ loo, tub, bed }) do e:Remove() end
+for _, q in ipairs({ p, sw, sl }) do q:SetPos(Vector(-150000, 150000, 0)) end
+end
+HygieneTests()
 
 ----------------------------------------------------------------------
 section("Stop")

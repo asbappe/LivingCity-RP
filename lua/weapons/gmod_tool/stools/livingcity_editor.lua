@@ -56,6 +56,9 @@ local MODES = {
     { id = "intake",      label = "Fixture: Civil Intake (registration: new people get their papers here; NPC arrivals queue in front)" },
     { id = "housingterm", label = "Fixture: Housing Allocation (registered new arrivals ask for a room here)" },
     { id = "stove",       label = "Fixture: stove" },
+    { id = "bed",         label = "Fixture: bed (sleep here at night; the map's own beds work too)" },
+    { id = "toilet",      label = "Fixture: toilet (for parasites; the map's own toilets work too)" },
+    { id = "bath",        label = "Fixture: bathtub (a wash after soiling yourself; the map's own tubs and showers work too)" },
     { id = "fire",        label = "Fixture: burning barrel" },
     { id = "dealer",      label = "Fixture: black market dealer" },
     { id = "locker",      label = "Fixture: locker (people keep things in it)" },
@@ -113,7 +116,7 @@ else
 end
 
 -- sit, bench and lean spots, and fixtures, face the person placing them
-local FACE_PLACER = { conveyor = true, intake = true, housingterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, screen = true, lawboard = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true }
+local FACE_PLACER = { bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, screen = true, lawboard = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true }
 
 local function ModeIndex(id)
     for i, m in ipairs(MODES) do if m.id == id then return i end end

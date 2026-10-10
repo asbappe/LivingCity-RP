@@ -182,6 +182,11 @@ function LC.NextStep(ply)
     if LC.IsDowned and LC.IsDowned(ply) then
         return { key = "down", text = "Hold on", why = "You're down and bleeding out. Someone can press E on you to help.", urgent = true }
     end
+    -- a toilet, a wash, clean clothes (sv_livingcity_hygiene.lua); a bed (sv_livingcity_rest.lua)
+    local hy = LC.HygieneStep and LC.HygieneStep(ply)
+    if hy then return hy end
+    local rest = LC.RestStep and LC.RestStep(ply)
+    if rest and rest.urgent then return rest end
     local hunger = LC.Hunger and LC.Hunger(ply) or 100
     local thirst = LC.Thirst and LC.Thirst(ply) or 100
     local needs = GetConVar("lc_needs") and GetConVar("lc_needs"):GetBool()
@@ -246,6 +251,8 @@ local warned = {} -- [ply] = { hunger = bool, thirst = bool }
 local function Push(ply)
     local s = cvOn:GetBool() and LC.NextStep(ply) or nil
     local text, why, way = s and s.text or "", s and s.why or "", s and s.way or ""
+    local act = s and s.action or ""
+    if ply:GetNW2String("lc_next_act", "") ~= act then ply:SetNW2String("lc_next_act", act) end
     if ply:GetNW2String("lc_next", "") ~= text then ply:SetNW2String("lc_next", text) end
     if ply:GetNW2String("lc_next_why", "") ~= why then ply:SetNW2String("lc_next_why", why) end
     if ply:GetNW2String("lc_next_way", "") ~= way then ply:SetNW2String("lc_next_way", way) end

@@ -251,6 +251,8 @@ function LC.Wear(ply, id)
     local it = LCS.Items[id]
     if OWN_CLOTHES[id] then it = { wear = OWN_CLOTHES[id], own = true } end
     if not it or not it.wear or not (it.own or LC.HasItem(ply, id)) then return false end
+    -- filthy clothes: spare citizen clothes are just clean clothes (sv_livingcity_hygiene.lua)
+    if LC.CleanClothes and LC.CleanClothes[id] and LC.SoilNeeds and LC.SoilNeeds(ply).clothes then return LC.ChangeClothes(ply, id) end
     if LC.Disguise(ply) then return false, "You're already in disguise. Take it off first." end
     if not Free(ply) or LC.PlayerIsZombie(ply) then return false, "Not now." end
     if LC.InCombat and LC.InCombat(ply) then return false, "Not in the middle of a fight." end

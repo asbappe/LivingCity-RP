@@ -65,6 +65,8 @@ local GUIDE = {
         "Eat and drink. Ration dispensers and the ration line feed you; the Commissary (a terminal, or C > Getting by) sells the rest.",
         "Wade into water and press E to drink, but boil it first if you can (stove or fire, F2). A sink has to be in plain sight to use.",
         "Parasites (coughing, hunger, thirst) never wear off: antiparasitic tablets from a medic or the black market clear them.",
+        "Parasites also mean you'll need a toilet (E on one). Ignore it and you soil yourself: then a toilet, a wash (a bathtub or shower) and clean clothes, or people back away from your stink.",
+        "Sleep once a day: E on a bed at night. Without it your eyes droop, you can't run and you're weaker. A good night leaves you well rested.",
         "Your fists kill birds. Cook them.",
     } },
     { "Staying out of trouble", {

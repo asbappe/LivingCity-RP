@@ -982,7 +982,9 @@ local okWN, errWN = pcall(function()
     page.items[1].run()
     local places = LC_CL.PlacesPage()
     if #places.items < 6 then error("too few places") end
-    for _, it in ipairs(places.items) do it.run() end
+    for _, it in ipairs(places.items) do
+        if it.run then it.run() elseif it.page then for _, x in ipairs(it.page().items) do x.run() end end
+    end
     _me:SetNW2String("lc_next", "")
 end)
 if not okWN then problems[#problems + 1] = "what now: " .. tostring(errWN) end

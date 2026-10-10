@@ -34,6 +34,7 @@ local ALLOWED = {
     givekey = true, takekey = true, unrent = true, time = true, city = true, laws = true, broadcast = true,
     -- settings and help (each checks who's asking)
     bob = true, hints = true, ticket = true, build = true, admintools = true, staff = true, pathmap = true,
+    changeclothes = true, sleep = true, -- (sv_livingcity_hygiene.lua, sv_livingcity_rest.lua)
 }
 for n in pairs(LCA and LCA.Gestures or {}) do ALLOWED[n] = true end -- (wave, salute, bow...)
 LC.MenuActions = ALLOWED

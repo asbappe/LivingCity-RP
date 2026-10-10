@@ -258,7 +258,7 @@ timer.Create("LivingCityNeeds", 5, 0, function()
     local tDrain = 100 / math.max(1, cvThirst:GetFloat() * 60) * 5
     for _, ply in ipairs(player.GetAll()) do
         if not Exempt(ply) then
-            local mult = HasParasites(ply) and 2 or 1
+            local mult = (HasParasites(ply) and 2 or 1) * ((LC.IsRested and LC.IsRested(ply)) and 0.75 or 1) -- (a good night's sleep: sv_livingcity_rest.lua)
             LC.Feed(ply, -hDrain * mult, -tDrain * mult)
             local h, t = LC.Hunger(ply), LC.Thirst(ply)
 
@@ -766,6 +766,7 @@ local FIXTURE_CLASS = {
     intake = "lc_intake", housingterm = "lc_intake", -- Civil Intake and Housing Allocation (sv_livingcity_intake.lua)
     cpsupply = "lc_cpsupply", -- units are issued supplies here (sv_livingcity_cpsupply.lua)
     conveyor = "lc_conveyor", -- the factory line (sv_livingcity_jobgames.lua)
+    bed = "lc_bed", toilet = "lc_toilet", bath = "lc_bath", -- (sv_livingcity_rest.lua, sv_livingcity_hygiene.lua)
 }
 
 function LC.SyncFixtures()
@@ -859,6 +860,7 @@ end
 local MODEL_KINDS = {
     { "stove", "stove" }, { "furnace", "stove" }, { "oven", "stove" },
     { "sink", "sink" },
+    { "toilet", "toilet" }, { "bathtub", "bath" }, { "bath_tub", "bath" }, { "shower", "bath" }, -- (sv_livingcity_hygiene.lua)
     { "vendingmachine", "vending" }, { "vending_machine", "vending" }, { "vending", "vending" },
 }
 
@@ -910,6 +912,10 @@ local function UseFixture(ply, kind, ent, fx)
             ply:ChatPrint("[Sink] Fill bottles and cans from your pockets (F2). Boil them before you drink.")
         end
         LC.DrinkFromSink(ply)
+    elseif kind == "toilet" and LC.UseToilet then
+        LC.UseToilet(ply)
+    elseif kind == "bath" and LC.UseBath then
+        LC.UseBath(ply)
     end
 end
 

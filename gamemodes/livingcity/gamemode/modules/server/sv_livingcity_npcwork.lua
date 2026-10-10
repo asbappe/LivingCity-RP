@@ -824,6 +824,29 @@ Task("mortuary", { id = "crabs", label = "bagging dead headcrabs", find = functi
         },
     }
 end })
+-- Somebody's mess in the street: sanitation scrubs it up (sv_livingcity_hygiene.lua)
+Task("sanitation", { id = "stain", label = "scrubbing up a mess", urgent = true, find = function(npc, st, now)
+    local grace = Grace("sanitation")
+    local best, bd
+    for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_stain") or {}) do
+        if now - (e.lcBorn or 0) >= grace then
+            local d = e:GetPos():DistToSqr(npc:GetPos())
+            if d < 4000 * 4000 and (not bd or d < bd) then best, bd = e, d end
+        end
+    end
+    if not best then return nil end
+    local mess = best
+    return {
+        key = "stain" .. mess:EntIndex(),
+        steps = {
+            { pos = function(n) return Beside(mess:GetPos(), n:GetPos(), 32) end, face = function() return mess:GetPos() end,
+              check = function() return IsValid(mess) end, secs = 5, anim = CROUCH, doing = "scrubbing up somebody's mess",
+              sound = { "ambient/water/water_splash1.wav", "ambient/water/water_splash2.wav" },
+              done = function() if IsValid(mess) then mess:Remove() end end },
+        },
+    }
+end })
+
 Shift("mortuary", "morgue", "at the morgue", { weight = 1 })
 Shift("courier", "sorting", "sorting the mail", { weight = 1, prop = "models/props_lab/clipboard.mdl" })
 

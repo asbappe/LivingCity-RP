@@ -31,7 +31,9 @@
     offline for lc_forcefield_down seconds (30). Overwhelmed lc_forcefield_breaks
     times (3) inside five minutes, or blown up while it's down, and it's
     broken until it's repaired: a Maintenance Technician (E on it, ten
-    seconds, paid) or the city's own crews after lc_forcefield_fix_minutes (6).
+    seconds, paid), or one of the city's own maintenance crew walks out and
+    fixes it (after the players have had their chance); with no crew in the
+    city, emergency crews after lc_forcefield_fix_minutes (6).
 
     Holding the infestation: forcefields stop the infected as well as people,
     the infestation can't spread past a checkpoint that has power, and what
@@ -60,7 +62,7 @@ local cvFFHP    = CreateConVar("lc_forcefield_hp", "300", FLAGS, "How much punis
 local cvFFRegen = CreateConVar("lc_forcefield_regen", "15", FLAGS, "How fast a forcefield's strength comes back, per second, once it's left alone")
 local cvFFDown  = CreateConVar("lc_forcefield_down", "30", FLAGS, "Seconds an overwhelmed forcefield stays offline")
 local cvFFBreak = CreateConVar("lc_forcefield_breaks", "3", FLAGS, "Times overwhelmed inside five minutes before a forcefield breaks and needs repairing")
-local cvFFFix   = CreateConVar("lc_forcefield_fix_minutes", "6", FLAGS, "Minutes before the city's crews repair a broken forcefield nobody else has")
+local cvFFFix   = CreateConVar("lc_forcefield_fix_minutes", "6", FLAGS, "Minutes before emergency crews repair a broken forcefield when no maintenance crew (player or NPC) has")
 
 local TURRET = "npc_turret_floor"
 local BREACH_NEAR = 1500    -- a checkpoint this close to the infestation is containing it
@@ -680,6 +682,7 @@ function LC.ForcefieldTick(now)
     for _, f in ipairs(LC.EntsOf("lc_forcefield")) do
         FFInit(f)
         if f:GetNW2Bool("lc_ff_broken", false) then
+            -- (the city's maintenance crews normally get there first: the task at the end)
             if now - (f.lcBrokenAt or now) > cvFFFix:GetFloat() * 60 then
                 LC.ForcefieldRepaired(f, nil)
                 for _, p in ipairs(player.GetAll()) do if LC.PlayerIsCP(p) then p:ChatPrint("[CP net] City crews have repaired the forcefield " .. Where(f:GetPos()) .. ".") end end
@@ -710,4 +713,29 @@ function LC.RepairForcefield(ply, f)
         maxMove = 60, cancelText = "You leave it half done.",
         done = function(p) if IsValid(f) then LC.ForcefieldRepaired(f, p) end end,
     })
+end
+
+-- The city's own maintenance crews walk out and repair a broken forcefield
+-- (after the players have had their chance); the timer above is only for a
+-- city with no crew to send.
+if LC.AddNPCTask then
+    LC.AddNPCTask("maintenance", { id = "forcefield", label = "repairing a forcefield", urgent = true, find = function(npc, st, now)
+        local grace = LC.NPCWorkGrace and LC.NPCWorkGrace("maintenance") or 60
+        local best, bd
+        for _, f in ipairs(LC.EntsOf("lc_forcefield")) do
+            if f:GetNW2Bool("lc_ff_broken", false) and now - (f.lcBrokenAt or now) >= grace and not (LC.NPCWorkClaimed and LC.NPCWorkClaimed("field" .. f:EntIndex())) then
+                local d = f:GetPos():DistToSqr(npc:GetPos())
+                if d < 5000 * 5000 and (not bd or d < bd) then best, bd = f, d end
+            end
+        end
+        if not best then return nil end
+        local f = best
+        return { key = "field" .. f:EntIndex(), steps = {
+            { pos = function(n) return LC.NPCWorkBeside(f:GetPos(), n:GetPos(), 70) end, face = function() return f:WorldSpaceCenter() end,
+              check = function() return IsValid(f) and f:GetNW2Bool("lc_ff_broken", false) end,
+              secs = 10, anim = { "ACT_PICKUP_RACK", "ACT_PICKUP_GROUND" },
+              sound = { "ambient/energy/spark1.wav", "ambient/energy/spark2.wav", "ambient/energy/spark3.wav" }, doing = "repairing a forcefield",
+              done = function() LC.ForcefieldRepaired(f, nil) end },
+        } }
+    end })
 end

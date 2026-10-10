@@ -32,6 +32,7 @@ LC.StaticRest = LC.StaticRest or {}
 local KINDS = {
     { "stove", "stove" }, { "furnace", "stove" }, { "oven", "stove" },
     { "sink", "sink" },
+    { "toilet", "toilet" }, { "bathtub", "bath" }, { "bath_tub", "bath" }, { "shower", "bath" }, -- (sv_livingcity_hygiene.lua)
     { "vendingmachine", "vending" }, { "vending_machine", "vending" }, { "vending", "vending" },
     -- Combine terminals the Resistance can steal data from (sv_livingcity_heist.lua)
     { "combine_interface", "dataterm" }, { "breenconsole", "dataterm" }, { "combine_intmonitor", "dataterm" },
