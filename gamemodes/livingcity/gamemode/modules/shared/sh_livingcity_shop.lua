@@ -206,8 +206,8 @@ LCS.Items = {
                         desc = "Out of the Combine's master terminal: the motherlode. The dealer pays a fortune; the quartermaster's decoding marks every unit for ten minutes; plugged into a terminal it wipes every comrade's record" },
     jammer          = { name = "Radio jammer", model = "models/props_lab/reciever01b.mdl", use = "jammer", useLabel = "Set down",
                         contraband = true, conceal = 0.3, sell = 35, desc = "Set it down: four minutes of static on every unit radio nearby, and no scanner photos get out" },
-    armor_vest      = { name = "Armour vest", model = "models/props_c17/SuitCase001a.mdl", use = "armor", useLabel = "Put on", armor = 30,
-                        contraband = true, conceal = 0.15, sell = 30, desc = "Scrap plates sewn into rags. Thirty armour" },
+    armor_vest      = { name = "Powered vest", model = "models/props_c17/SuitCase001a.mdl", use = "armor", useLabel = "Put on", armor = 30,
+                        contraband = true, conceal = 0.15, sell = 30, desc = "Plates and salvaged charge cells: holds a charge (75), comes with thirty in it. Vortigaunts and batteries top it up" },
     ammo_357        = { name = "Box of .357 rounds", model = "models/items/357ammo.mdl", use = "ammo", useLabel = "Load", ammo = { "357", 6 },
                         contraband = true, conceal = 0.4, sell = 20, arms = true, desc = "Six heavy rounds, hand-loaded" },
     gun_357         = { name = "Homemade revolver", model = "models/weapons/w_357.mdl", use = "arm", useLabel = "Draw", weapon = "weapon_357",
@@ -348,7 +348,7 @@ LCS.Black = {
     { id = "gun_smg", item = "gun_smg", price = 200, desc = "It jams. Not often." },
     { id = "gun_shotgun", item = "gun_shotgun", price = 210, desc = "Hard to hide. Hard to argue with." },
     { id = "gun_357", item = "gun_357", price = 240, desc = "Loud, heavy, final." },
-    { id = "armor_vest", item = "armor_vest", price = 90, desc = "Scrap plates sewn into rags. Thirty armour." },
+    { id = "armor_vest", item = "armor_vest", price = 90, desc = "Plates and salvaged charge cells. Holds a charge; comes with thirty in it." },
     { id = "jammer", item = "jammer", price = 150, desc = "Four minutes of static on every unit radio nearby." },
 }
 
@@ -411,7 +411,7 @@ LCS.Lab = {
     { id = "gun_smg", out = "gun_smg", needs = { gun_parts = 4, scrap = 6, chemicals = 1 }, secs = 18, desc = "An SMG" },
     { id = "gun_shotgun", out = "gun_shotgun", needs = { gun_parts = 3, scrap = 5 }, secs = 15, desc = "A shotgun" },
     { id = "gun_357", out = "gun_357", needs = { gun_parts = 4, scrap = 6, chemicals = 1 }, secs = 20, desc = "A .357 revolver" },
-    { id = "armor_vest", out = "armor_vest", needs = { scrap = 6, cloth = 4 }, secs = 14, desc = "Thirty armour" },
+    { id = "armor_vest", out = "armor_vest", needs = { scrap = 6, cloth = 4, chemicals = 1 }, secs = 14, desc = "A powered vest: holds a charge (vortigaunts and batteries top it up)" },
     { id = "smokebomb", out = "smokebomb", needs = { chemicals = 2, can_empty = 1 }, secs = 5, desc = "Thick white smoke" },
     { id = "bypass", out = "bypass", needs = { gun_parts = 1, chemicals = 2, scrap = 2 }, secs = 10, desc = "Opens any door once" },
     { id = "radio_tuned", out = "radio_tuned", needs = { radio = 1 }, secs = 8, desc = "A Union radio, opened up and retuned to Freq 7" },

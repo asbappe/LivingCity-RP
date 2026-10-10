@@ -144,6 +144,7 @@ local function ApplyBody(ply)
     ply:SetMaxHealth(hp)
     ply:SetHealth(hp)
     ply:SetArmor(prof.armor or 0)
+    if LC.IssueVest then LC.IssueVest(ply, prof.armor or 0) end -- (the rank's vest: sv_livingcity_vest.lua)
     -- the city's slower pace, unless the rank sets its own
     local gm = GAMEMODE
     local slow = gm and gm.LCSlowMovement and gm:LCSlowMovement()

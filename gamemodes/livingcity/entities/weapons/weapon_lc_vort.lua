@@ -3,7 +3,7 @@
 
     Free vortigaunts:
       Primary:   a bolt of vortessence at what you're looking at (25 shock damage, 3 second recharge)
-      Secondary: heal the person in front of you, or yourself (25, 15 second recharge)
+      Secondary: charge the vest of the person in front of you, or your own (25, 15 second recharge): the vortessence charges a powered vest, it does not heal
     Shackled vortigaunts: the collar holds it in. Nothing happens but a hum.
 ]]
 
@@ -12,7 +12,7 @@ AddCSLuaFile()
 SWEP.PrintName    = "Vortessence"
 SWEP.Author       = "Living City"
 SWEP.Category     = "Living City"
-SWEP.Instructions = "Primary: a bolt of vortessence. Secondary: heal. (Shackled: the collar holds it in.)"
+SWEP.Instructions = "Primary: a bolt of vortessence. Secondary: charge a vest. (Shackled: the collar holds it in.)"
 SWEP.Spawnable    = true
 SWEP.AdminOnly    = true
 
@@ -84,16 +84,19 @@ function SWEP:SecondaryAttack()
     local tr = util.TraceLine({ start = owner:GetShootPos(), endpos = owner:GetShootPos() + owner:GetAimVector() * 110, filter = owner })
     local target = tr.Entity
     if not (IsValid(target) and target:IsPlayer() and target:Alive()) then target = owner end
-    if LC and LC.PlayerIsZombie and LC.PlayerIsZombie(target) then return Tell(owner, "There is nothing left in them to heal.") end
-    local max = target:GetMaxHealth() > 0 and target:GetMaxHealth() or 100
-    if target:Health() >= max then return Tell(owner, target == owner and "You're whole." or "They're whole.") end
+    if LC and LC.PlayerIsZombie and LC.PlayerIsZombie(target) then return Tell(owner, "There is nothing left in them to charge.") end
+    -- the vortessence charges a vest (sv_livingcity_vest.lua); it doesn't knit flesh
+    if not (LC and LC.HasVest and LC.HasVest(target)) then
+        return Tell(owner, target == owner and "You wear nothing for the vortessence to charge." or "They wear no vest for the vortessence to charge.")
+    end
+    if target:Armor() >= LC.VestCap(target) then return Tell(owner, target == owner and "Your vest is full." or "Their vest is full.") end
     self.nextHeal = CurTime() + 15
-    target:SetHealth(math.min(max, target:Health() + 25))
+    local gained = LC.ChargeVest(target, 25)
     owner:EmitSound(HEAL_SOUND, 70)
     if target ~= owner then
-        Tell(target, "A warmth runs through you. The vortigaunt's hands glow green.")
-        if LC and LC.AddXP then LC.AddXP(owner, 2, "healing with the vortessence") end
-        hook.Run("LivingCityHealed", owner, target, 25)
+        Tell(target, "A warmth runs through your vest. The vortigaunt's hands glow green, and the cells hum.")
+        if LC.AddXP then LC.AddXP(owner, 2, "charging with the vortessence") end
+        hook.Run("LivingCityVestCharged", owner, target, gained)
     end
 end
 

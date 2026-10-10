@@ -124,6 +124,7 @@ function LC.ArmsUse(ply, id)
     elseif it.use == "jammer" then
         return LC.PlaceJammer and LC.PlaceJammer(ply) or false
     elseif it.use == "armor" then
+        if LC.PutOnVest then return LC.PutOnVest(ply, id) end -- (a powered vest: sv_livingcity_vest.lua)
         if ply:Armor() >= 100 then return false, "You can't wear any more." end
         LC.TakeItem(ply, id)
         ply:SetArmor(math.min(100, ply:Armor() + (it.armor or 25)))

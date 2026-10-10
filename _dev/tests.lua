@@ -4716,14 +4716,16 @@ ok(LC.BecomeForeman(fore), "a Trusted citizen becomes a foreman")
 local okA, whyA = LC.AssignWork(fore, worker)
 ok(okA and LC.QuestOf[worker] and LC.QuestOf[worker].foreman == fore, "and hands another citizen a work order", whyA)
 if LC.QuestOf[worker] then LC.AbandonQuest(worker) end
--- a freed vortigaunt heals the Resistance
+-- a freed vortigaunt charges the Resistance's vests (it doesn't heal)
 local vort = ents.Create("npc_vortigaunt") vort:SetPos(C0 + Vector(-4000, 0, 0))
 LC.RegisterNPC(vort, "vortigaunt")
 LC.SettleVort(vort)
 hacker:SetPos(C0 + Vector(-4000, 100, 0))
+hacker:SetNW2Bool("lc_vest", true)
+hacker:SetArmor(0)
 hacker:SetHealth(50)
 _run(2)
-ok(hacker:Health() > 50, "a freed vortigaunt heals the Resistance's wounded")
+ok(hacker:Armor() > 0 and hacker:Health() == 50, "a freed vortigaunt charges the Resistance's vests (it doesn't heal)")
 LC.RebelVorts[vort] = nil LC.NPCs[vort] = nil vort:Remove()
 for _, p in ipairs({ mild, bad, worst, units, hacker, inmate, snitch, plain, fore, worker }) do p:SetPos(Vector(-30000, 30000, 0)) end
 screen:Remove() door:Remove()
@@ -10222,6 +10224,62 @@ for _, e in ipairs({ loo, tub, bed }) do e:Remove() end
 for _, q in ipairs({ p, sw, sl }) do q:SetPos(Vector(-150000, 150000, 0)) end
 end
 HygieneTests()
+
+function VestTests()
+section("Powered vests, vortigaunts charging them, and Father Grigori")
+local V0 = Vector(-120000, -30000, 0)
+local cit = newPlayer("VestCitizen", "citizen")
+_run(0.3)
+cit:SetPos(V0)
+cit:SetArmor(50)
+_advance(1.1) _runtimers()
+ok(cit:Armor() == 0 and not LC.HasVest(cit), "a citizen with no vest holds no charge")
+LC.GiveItem(cit, "armor_vest")
+ok(LC.ItemUse(cit, "armor_vest") and cit:GetNW2Bool("lc_vest", false) and cit:Armor() == 30, "put on a powered vest: it comes with thirty in it")
+ok(LC.ChargeVest(cit, 100) == 45 and cit:Armor() == 75, "and holds up to seventy-five")
+local unit = newPlayer("VestUnit", "cp")
+_run(0.3)
+ok(LC.HasVest(unit) and LC.VestCap(unit) >= 100, "a unit's vest is built into the uniform")
+-- a freed vortigaunt in rebel territory charges vests, not health
+local reb = newPlayer("VestRebel", "resistance")
+_run(0.3)
+reb:SetPos(V0 + Vector(3000, 0, 0))
+reb:SetNW2Bool("lc_vest", true)
+reb:SetArmor(0)
+reb:SetHealth(50)
+local v = LC.Spawners.citizen(reb:GetPos() + Vector(60, 0, 0))
+LC.SettleVort(v)
+for _ = 1, 4 do _advance(5) _runtimers() end
+ok(reb:Armor() > 0 and reb:Health() == 50, "a freed vortigaunt charges our vests (and doesn't heal)", reb:Armor() .. " / " .. reb:Health())
+LC.RebelVorts[v] = nil v:Remove()
+-- Father Grigori
+local z = LC.AddZone(V0 + Vector(6000, 0, 0), 600, "rebel", 0)
+local priests = {}
+for _, p in ipairs(player.GetAll()) do
+    if p:GetNW2String("lcf_special", "") == "chaplain" then priests[#priests + 1] = p p:SetNW2String("lcf_special", "") end
+end
+LC.GrigoriTick(CurTime())
+local g = LC.Grigori
+ok(IsValid(g) and g:GetClass() == "npc_monk" and g.lcGrigori, "Father Grigori keeps to rebel territory (while no player is him)")
+if not IsValid(g) then return end
+reb:SetPos(g:GetPos() + Vector(60, 0, 0))
+local hp0 = reb:Health()
+ok(LC.GrigoriAsk(reb, "bless") and reb:Health() > hp0 and reb:GetNW2Float("lc_blessed_until", 0) > CurTime(), "his blessing: health, and blessed for a while")
+ok(not LC.GrigoriAsk(reb, "bless"), "(not again straight away)")
+ok(LC.GrigoriAsk(reb, "sermon") and reb:GetNW2Float("lc_emboldened_until", 0) > CurTime(), "his sermon emboldens everyone of ours nearby")
+cit:SetPos(g:GetPos() + Vector(-60, 0, 0))
+ok(not LC.GrigoriAsk(cit, "bless") and LC.GrigoriAsk(cit, "talk"), "he blesses only his own, but talks to anyone")
+LC.RemoveZone(z)
+_setcvar("lc_grigori", 0)
+LC.GrigoriTick(CurTime())
+ok(not IsValid(LC.Grigori), "lc_grigori 0: he's gone")
+_setcvar("lc_grigori", 1)
+for _, p in ipairs(priests) do p:SetNW2String("lcf_special", "chaplain") end
+LC.GrigoriTick(CurTime())
+if #priests > 0 then ok(not IsValid(LC.Grigori), "a player is Father Grigori: the NPC stands aside") end
+for _, p in ipairs({ cit, unit, reb }) do p:SetPos(Vector(-150000, 150000, 0)) end
+end
+VestTests()
 
 ----------------------------------------------------------------------
 section("Stop")

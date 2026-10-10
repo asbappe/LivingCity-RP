@@ -663,7 +663,7 @@ hook.Add("LivingCityQuestComplete", "LivingCityForeman", function(p, q)
 end)
 
 ------------------------------------------------------------------------
--- Freed vortigaunts heal the Resistance
+-- Freed vortigaunts charge the Resistance's vests (sv_livingcity_vest.lua)
 ------------------------------------------------------------------------
 
 LC.RebelVorts = LC.RebelVorts or {}
@@ -678,7 +678,7 @@ function LC.SettleVort(npc)
         st.eventUntil = CurTime() + 1e6
     end
     npc:SetNW2String("lc_pname", "Freed vortigaunt")
-    Radio("resistance", "The vortigaunt is home. It will tend our wounded.")
+    Radio("resistance", "The vortigaunt is home. Stand near it and it will charge your vest.")
 end
 
 local function VortTick()
@@ -687,8 +687,7 @@ local function VortTick()
             LC.RebelVorts[v] = nil
         else
             for _, p in ipairs(player.GetAll()) do
-                if IsResistance(p) and p:Alive() and p:Health() < p:GetMaxHealth() and p:GetPos():DistToSqr(v:GetPos()) < 260 * 260 then
-                    p:SetHealth(math.min(p:GetMaxHealth(), p:Health() + 5))
+                if IsResistance(p) and p:Alive() and p:GetPos():DistToSqr(v:GetPos()) < 260 * 260 and LC.ChargeVest and LC.ChargeVest(p, 5) > 0 then
                     if math.random() < 0.3 then v:EmitSound("npc/vort/health_charge.wav", 60) end
                 end
             end

@@ -162,7 +162,9 @@ local GUIDE = {
     } },
     { "Vortigaunts, time and weather", {
         "Shackled vortigaunts work the Union's shifts; the collar holds their vortessence in.",
-        "The Resistance (Member and up) can cut one free (look at it, C): ten seconds, unseen. Free, it strikes (left click) and heals (right click), and is hunted.",
+        "The Resistance (Member and up) can cut one free (look at it, C): ten seconds, unseen. Free, it strikes (left click) and charges vests (right click), and is hunted.",
+        "Armour is the charge in a powered vest: units have one in the uniform, rebel ranks come with one, anyone else needs one from the lab. Vortigaunts charge it.",
+        "Father Grigori keeps to rebel territory when no player is him: E on him for a blessing, a sermon, or a word.",
         "A day lasts an hour. Nights are dark, and curfews likelier. C > The city tells the time and the weather.",
         "Rain fills an empty bottle or can if you stand out in it. lc_music 0 turns the city's music off.",
         "Need staff? Type @ and your message.",

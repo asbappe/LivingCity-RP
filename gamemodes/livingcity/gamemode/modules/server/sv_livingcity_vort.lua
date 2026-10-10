@@ -5,7 +5,7 @@
     work the Union's shifts, and the collar holds their vortessence in. A
     Resistance Member or above can cut the shackles: !unshackle, looking at
     one up close, ten seconds, and no unit can be watching. The vortigaunt is
-    free: it joins the Resistance as a Free Vortigaunt, heals and strikes with
+    free: it joins the Resistance as a Free Vortigaunt, charges vests and strikes with
     its vortessence, and is hunted on sight.
 ]]
 
@@ -33,7 +33,7 @@ function LC.StartUnshackle(ply)
                 return p:ChatPrint("A unit is watching. Not now.")
             end
             LC.SetFaction(vort, "resistance", "vortigaunt", true)
-            vort:ChatPrint("[Living City] The shackles fall away. The vortessence is yours again: left click strikes, right click heals. The Combine will want you back.")
+            vort:ChatPrint("[Living City] The shackles fall away. The vortessence is yours again: left click strikes, right click charges a vest (yours or a comrade's). The Combine will want you back.")
             p:ChatPrint("The shackles fall. The vortigaunt is free.")
             if LC.AddXP then LC.AddXP(p, 30, "freeing a vortigaunt") end
             if LC.RadioNotice then LC.RadioNotice("resistance", "A vortigaunt has been freed. Welcome it.") end
