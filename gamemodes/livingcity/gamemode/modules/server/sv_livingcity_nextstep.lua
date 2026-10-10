@@ -236,7 +236,7 @@ function LC.NextStep(ply)
         end
         return { key = "free", text = "Your time is your own", why = "Work another shift (F3), take a side job (F3), or get to know people: F1 > Talk." }
     end
-    if f == "cp" or f == "ota" then
+    if f == "cp" then
         return { key = "unit", text = "On duty", why = "Your directives are on F3. The Commissary issues your supplies.", way = "cpsupply" }
     end
     return nil

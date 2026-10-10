@@ -451,6 +451,38 @@ function LC.EndOverwatchDrop()
     end
 end
 
+-- The Overwatch Commander calls a squad in: to the landing zone nearest
+-- them (or where they stand), one every fifteen minutes.
+local COMMAND_EVERY = 15 * 60
+LC.CommanderDropAt = LC.CommanderDropAt or 0
+function LC.CommanderDrop(ply)
+    if not IsValid(ply) or ply:GetNW2String("lcf_special", "") ~= "ow_commander" then return false, "Only the Overwatch Commander can call in a squad." end
+    local now = CurTime()
+    if now < LC.CommanderDropAt then
+        local left = LC.CommanderDropAt - now
+        return false, string.format("The next squad can be called in %d:%02d.", math.floor(left / 60), math.floor(left % 60))
+    end
+    if LC.OverwatchDrop then return false, "A squad is already down." end
+    local best
+    for _, p in ipairs(LC.PointsOfKind and LC.PointsOfKind("lz") or {}) do
+        if not best or p.pos:DistToSqr(ply:GetPos()) < best:DistToSqr(ply:GetPos()) then best = p.pos end
+    end
+    local ok, d = LC.StartOverwatchDrop(best or ply:GetPos())
+    if not ok then return false, "The dropship can't come: " .. tostring(d) .. "." end
+    LC.CommanderDropAt = now + COMMAND_EVERY
+    for _, p in ipairs(player.GetAll()) do p:SetNW2Float("lc_cmd_drop_at", LC.CommanderDropAt) end
+    return true
+end
+LC.SlashCommands = LC.SlashCommands or {}
+LC.SlashCommands.dropship = function(ply)
+    local ok, why = LC.CommanderDrop(ply)
+    if ok then
+        if LC.Notice then LC.Notice(ply, "info", "Squad inbound", "A dropship is on its way with an Overwatch squad. Secure the landing zone.", 6) end
+    elseif why then
+        if LC.Notice then LC.Notice(ply, "bad", "No squad", why, 5) else ply:ChatPrint(why) end
+    end
+end
+
 local function DropTick(now)
     local d = LC.OverwatchDrop
     if d then

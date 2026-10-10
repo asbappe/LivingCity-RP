@@ -14,11 +14,12 @@
 
     At the end you choose. Step into the light, and the stalker that was you is
     gone for good: whatever permanent death is set to, you start over as a new
-    person. Or turn away and go back to work, and the city, pleased with its
-    property, lets you go a little early (on probation).
+    person. Or turn away and go back to work: there is no other way out of
+    being a stalker. The energizer stays where you built it, humming, and you
+    can walk back to it any time (E on it, twice) and step in after all.
 
-    Your term doesn't run out in the middle of a part. The stalker playermodel
-    is Workshop 268895264 (lc_stalker_model in sv_livingcity_custody.lua).
+    The stalker playermodel is Workshop 268895264 (lc_stalker_model in
+    sv_livingcity_custody.lua).
 ]]
 
 if CLIENT then return end
@@ -143,19 +144,29 @@ function LC.StalkerStepIn(ply)
     return true
 end
 
--- Turned away: the city is pleased with its property, and lets it go soon.
+-- Turned away: back to work. The energizer stays, and so does the way out.
 function LC.StalkerEndure(ply)
     if not IsValid(ply) or not Stalker(ply) then return false end
-    local left = 120
-    ply:SetNW2Float("lc_stalker_until", CurTime() + left)
-    ply:SetPData("lc_stalker_until", os.time() + left)
     if LC.Notice then
-        LC.Notice(ply, "info", "Two more minutes", "The energizer hums behind you. A unit marks something on a pad. In two minutes they let you go, on probation.", 8)
+        LC.Notice(ply, "info", "Back to work", "The energizer hums behind you. It will still be there. E on it, twice, if you change your mind.", 8)
     end
-    Unbuild(ply, 300)
     return true
 end
 
+-- E on a finished energizer: its stalker steps in (the second press, within
+-- five seconds, so nobody does it by accident).
+function LC.UseEnergizer(ply, e)
+    if not IsValid(e) or LC.Energizers[ply] ~= e or not Stalker(ply) then return false end
+    if e:GetNW2Int("lc_built", 0) < 3 then return false end
+    if LC.QuestOf and LC.QuestOf[ply] and not LC.QuestOf[ply].done then return false end -- (the story asks you itself)
+    if (ply.lcEnergizerArmed or 0) > CurTime() then
+        ply.lcEnergizerArmed = nil
+        return LC.StalkerStepIn(ply)
+    end
+    ply.lcEnergizerArmed = CurTime() + 5
+    if LC.Notice then LC.Notice(ply, "bad", "The light", "It would be very easy. Press E again to step in. There's no coming back.", 5) end
+    return true
+end
 hook.Add("PlayerDisconnected", "LivingCityStalkerWork", function(ply) Unbuild(ply) end)
 hook.Add("LivingCityStalkerFreed", "LivingCityStalkerWork", function(ply) Unbuild(ply, 300) end)
 hook.Add("LivingCityNewCharacter", "LivingCityStalkerWork", function(ply) Unbuild(ply, 60) end)
@@ -172,7 +183,7 @@ LC.Chain{
     start = "processing",
     endings = {
         light = "You stepped into the light you made. Nothing of the stalker came back out.",
-        endured = "You turned away from it, and went back to work. In a little while they let you go.",
+        endured = "You turned away from it, and went back to work. It's still down there, humming. So are you.",
     },
     parts = {
         processing = { num = 1, next = "floors", build = function(ply)
@@ -288,8 +299,3 @@ hook.Add("LivingCityStalker", "LivingCityStalkerWork", function(ply)
     if LC.CheckUnlocks then LC.CheckUnlocks(ply) end
 end)
 
--- True while a stalker is in the middle of a part (their term waits for it).
-function LC.StalkerWorking(ply)
-    local q = LC.QuestOf and LC.QuestOf[ply]
-    return q ~= nil and not q.done and q.chain == "stalker"
-end

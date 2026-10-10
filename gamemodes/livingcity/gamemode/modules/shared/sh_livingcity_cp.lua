@@ -78,9 +78,9 @@ LCCP.VoiceOTA = {
     { "lostcontact", "Lost contact.", CS .. "lostcontact.wav", "Overwatch" },
 }
 
--- What a player in this faction says through the mask.
-function LCCP.VoiceFor(faction)
-    return faction == "ota" and LCCP.VoiceOTA or LCCP.Voice
+-- What this player says through the mask: the Overwatch ranks have their own lines.
+function LCCP.VoiceFor(ply)
+    return (IsValid(ply) and LCF and LCF.IsOverwatch and LCF.IsOverwatch(ply)) and LCCP.VoiceOTA or LCCP.Voice
 end
 
 -- City-wide sociostability. Set by events and the state of the city, or by

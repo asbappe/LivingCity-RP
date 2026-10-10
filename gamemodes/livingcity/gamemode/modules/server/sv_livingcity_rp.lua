@@ -108,7 +108,7 @@ end
 function LC.Description(ply)
     if Masked(ply) then return "A masked Civil Protection unit" end
     local f = ply:GetNW2String("lcf_faction", "")
-    if f == "ota" then return "An Overwatch soldier" end
+    if LCF.IsOverwatch(ply) then return "An Overwatch soldier" end
     if string.find(string.lower(ply:GetModel() or ""), "vortigaunt", 1, true) then
         return f == "vort" and "A shackled vortigaunt" or "A vortigaunt"
     end

@@ -61,6 +61,7 @@ local ACTIONS = {
         local i = math.floor(tonumber(v) or 0)
         if not f or #f.ranks < 2 then return false, "That faction has no ranks." end
         if i < 1 or i > #f.ranks then return false, string.format("%s ranks go from 1 to %d.", f.name, #f.ranks) end
+        if f.ranks[i].overwatch then t:SetPData("lcf_transhuman", "1") end -- (staff skip the Overwatch Candidate story)
         t:SetPData("lcf_xp_" .. f.id, f.ranks[i].xp or 0)
         Recompute(t, "by staff")
         return true, string.format("%s is now %s (%d XP).", t:Nick(), f.ranks[i].name, f.ranks[i].xp or 0)

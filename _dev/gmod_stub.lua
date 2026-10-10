@@ -484,6 +484,7 @@ function PMT:SetEyeAngles() end
 function PMT:SetLocalVelocity() end
 function PMT:EyeAngles() return self.eyeang or Angle() end
 function PMT:GetAimVector() return self.aim end
+function PMT:GetShootPos() return self:GetPos() + Vector(0, 0, 64) end
 function PMT:EyePos() return self.pos + Vector(0, 0, 64) end
 function PMT:Spawn() hook.Run("PlayerSpawn", self) end
 function PMT:Kick(r) self.kicked = r end

@@ -16,12 +16,12 @@
                          after death.
       6+  Stalker        the worst are not released at all: they're made into
                          stalkers (lc_stalkers 1). Combine property: slow,
-                         unarmed, unable to speak, put to work. It lasts until
-                         you die, or lc_stalker_minutes (20); then you're let
-                         back into the city as a broken citizen.
+                         unarmed, unable to speak, put to work. There is no
+                         way out but death (then, with permanent death off,
+                         you're back in the city as a broken citizen).
 
       lc_custody_punish 0/1, lc_cripple_minutes (15), lc_stalkers 0/1,
-      lc_stalker_minutes (20)
+      lc_stalker_model
 ]]
 
 if CLIENT then return end
@@ -32,7 +32,6 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn      = CreateConVar("lc_custody_punish", "1", FLAGS, "Interrogation, broken feet and stalkers for the worst anticitizens in custody")
 local cvCripple = CreateConVar("lc_cripple_minutes", "15", FLAGS, "Minutes without running after the city breaks your feet")
 local cvStalker = CreateConVar("lc_stalkers", "1", FLAGS, "The worst anticitizens are made into stalkers instead of released")
-local cvStalkM  = CreateConVar("lc_stalker_minutes", "20", FLAGS, "Minutes a stalker serves (or until they die)")
 local cvStalkMdl = CreateConVar("lc_stalker_model", "", FLAGS, "Playermodel for stalkers. Blank: a stalker playermodel if one is installed (Workshop 268895264), else a corpse")
 
 local function Pick(t) return t[math.random(#t)] end
@@ -228,11 +227,10 @@ function LC.ModelOverride(ply)
     if LC.PlayerIsStalker(ply) then return LC.StalkerModel() end
 end
 
-function LC.MakeStalker(ply, minutes)
+function LC.MakeStalker(ply)
     if not IsValid(ply) or not LC.SetFaction then return false end
-    minutes = minutes or cvStalkM:GetFloat()
-    ply:SetPData("lc_stalker_until", os.time() + minutes * 60)
-    ply:SetNW2Float("lc_stalker_until", CurTime() + minutes * 60)
+    ply:SetPData("lc_stalker", "1")
+    ply:SetNW2Bool("lc_stalker", true)
     if LC.Prisoners and LC.Prisoners[ply] then
         local pr = LC.Prisoners[ply]
         LC.Prisoners[ply] = nil
@@ -243,7 +241,8 @@ function LC.MakeStalker(ply, minutes)
     LC.SetFaction(ply, "stalker", nil, true)
     ply:StripWeapons()
     ply:Give("weapon_lc_hands")
-    ply:ChatPrint(string.format("[Custody] You aren't released. You're taken below, and what comes back up is a stalker: Combine property. You can't run, fight or speak, and you'll work. It lasts %d minutes, or until you die.", minutes))
+    ply:ChatPrint("[Custody] You aren't released. You're taken below, and what comes back up is a stalker: Combine property. You can't run, fight or speak, and you'll work. There is no way out of it but death.")
+    if LC.Notice then LC.Notice(ply, "bad", "Combine property", "You are a stalker now. There is no way out of it but death. Your work is on your board (F3).", 10) end
     ply:ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 3, 1)
     for _, p in ipairs(player.GetAll()) do
         if p ~= ply then p:ChatPrint("[City] An anticitizen has been repurposed. Citizens are reminded that cooperation is mandatory.") end
@@ -254,8 +253,8 @@ end
 
 function LC.FreeStalker(ply, why)
     if not LC.PlayerIsStalker(ply) then return false end
-    ply:RemovePData("lc_stalker_until")
-    ply:SetNW2Float("lc_stalker_until", 0)
+    ply:RemovePData("lc_stalker")
+    ply:SetNW2Bool("lc_stalker", false)
     if LC.SetFaction then LC.SetFaction(ply, "citizen", nil, true) end
     local s = LC.Standing and LC.Standing(ply) or 0
     if LC.AddStanding and s < -50 then LC.AddStanding(ply, -50 - s, nil) end -- what's left of you is on probation
@@ -279,8 +278,8 @@ hook.Add("PlayerCanPickupWeapon", "LivingCityStalker", function(ply, wep)
 end)
 -- a new person (death with permanent death on, a staff decision) was never a stalker
 hook.Add("LivingCityNewCharacter", "LivingCityStalker", function(ply)
-    ply:RemovePData("lc_stalker_until")
-    ply:SetNW2Float("lc_stalker_until", 0)
+    ply:RemovePData("lc_stalker")
+    ply:SetNW2Bool("lc_stalker", false)
 end)
 hook.Add("PlayerDeath", "LivingCityStalker", function(ply)
     if LC.PlayerIsStalker(ply) then
@@ -333,10 +332,9 @@ hook.Add("PlayerInitialSpawn", "LivingCityCustody", function(ply)
     timer.Simple(3, function()
         if not IsValid(ply) then return end
         RestoreCripple(ply)
-        -- leaving the server doesn't end a stalker's service
-        local t = tonumber(ply:GetPData("lc_stalker_until", 0)) or 0
-        if t > os.time() and LC.SetFaction then
-            ply:SetNW2Float("lc_stalker_until", CurTime() + (t - os.time()))
+        -- leaving the server doesn't end it: nothing does but death
+        if ply:GetPData("lc_stalker", "0") == "1" and LC.SetFaction then
+            ply:SetNW2Bool("lc_stalker", true)
             LC.SetFaction(ply, "stalker", nil, true)
         end
     end)
@@ -345,14 +343,4 @@ end)
 timer.Create("LivingCityCustody", 1, 0, function()
     local now = CurTime()
     InterrogationTick(now)
-    for _, ply in ipairs(player.GetAll()) do
-        local untilT = ply:GetNW2Float("lc_stalker_until", 0)
-        if LC.PlayerIsStalker(ply) and untilT > 0 and now > untilT then
-            if LC.StalkerWorking and LC.StalkerWorking(ply) then
-                ply:SetNW2Float("lc_stalker_until", now + 5) -- (not in the middle of a job: sv_livingcity_stalkerwork.lua)
-            else
-                LC.FreeStalker(ply)
-            end
-        end
-    end
 end)

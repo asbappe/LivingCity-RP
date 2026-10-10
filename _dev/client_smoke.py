@@ -135,17 +135,21 @@ _globals.lc_needs_on = true
 run("HUDPaint")
 run("HUDDrawTargetID")
 -- the rank and XP bar
-_me.nw.lcf_faction, _me.nw.lcf_rank, _me.nw.lcf_xp = "cp", 3, 300
+_me.nw.lcf_faction, _me.nw.lcf_rank, _me.nw.lcf_xp = "cp", 2, 300
 run("HUDPaint")
 _me.nw.lcf_xp = 325
 run("HUDPaint")
 local frac, label, col, gain = LC_CL.XPInfo()
-if not (frac and math.abs(frac - 75 / 200) < 0.01) then problems[#problems + 1] = "xp bar fraction " .. tostring(frac) end
-if label ~= "Unit 04   325 / 450 XP" then problems[#problems + 1] = "xp label " .. tostring(label) end
+if not (frac and math.abs(frac - 175 / 450) < 0.01) then problems[#problems + 1] = "xp bar fraction " .. tostring(frac) end
+if label ~= "Metrocop   325 / 600 XP" then problems[#problems + 1] = "xp label " .. tostring(label) end
 if gain ~= "+25 XP" then problems[#problems + 1] = "xp gain " .. tostring(gain) end
-_me.nw.lcf_rank, _me.nw.lcf_xp = 10, 4100
+_me.nw.lcf_rank, _me.nw.lcf_xp = 3, 900
 frac, label = LC_CL.XPInfo()
-if label ~= "Sectoral Commander   4100 XP (top rank)" or frac ~= 1 then problems[#problems + 1] = "top rank " .. tostring(label) end
+if not (label and string.find(label, "needs the Overwatch conditioning", 1, true)) then problems[#problems + 1] = "division leader " .. tostring(label) end
+_me.nw.lcf_rank, _me.nw.lcf_xp, _me.nw.lcf_transhuman = 6, 4100, true
+frac, label = LC_CL.XPInfo()
+if label ~= "Elite Soldier   4100 XP (top rank)" or frac ~= 1 then problems[#problems + 1] = "top rank " .. tostring(label) end
+_me.nw.lcf_transhuman = nil
 -- down and bleeding out; a stranger in front of you
 _me.nw.lc_downed_until = CurTime() + 50
 run("HUDPaint")

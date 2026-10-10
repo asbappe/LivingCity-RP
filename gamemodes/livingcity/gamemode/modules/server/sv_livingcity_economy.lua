@@ -197,7 +197,7 @@ function LC.CanBuy(ply, g)
     if LC.PlayerIsZombie(ply) then return false, "The terminal doesn't recognize you. It doesn't recognize anything like you." end
     if g.cpOnly and not LC.PlayerIsCP(ply) then return false, "Units only." end
     if g.cpOnly and not AtUnitCounter(ply) then return false, "Issued at the Civil Protection Commissary, not here." end
-    if g.minRank and ply:GetNW2String("lcf_faction", "") ~= "ota" and ply:GetNW2Int("lcf_rank", 1) < g.minRank then
+    if g.minRank and ply:GetNW2Int("lcf_rank", 1) < g.minRank and not (LCF.IsOverwatch and LCF.IsOverwatch(ply)) then
         return false, "Not at your rank."
     end
     local need = g.minStanding or -50

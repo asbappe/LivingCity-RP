@@ -41,7 +41,7 @@ LC.HintScan = function() end
 ----------------------------------------------------------------------
 section("Load")
 ok(#_errors == 0, "no errors while loading every file", _errors[1])
-ok(LCF and LCF.Get("cp") and #LCF.Get("cp").ranks == 10, "faction config loaded, CP has 10 ranks")
+ok(LCF and LCF.Get("cp") and #LCF.Get("cp").ranks == 6, "faction config loaded, CP has 6 ranks (Record Keeper to Elite Soldier)")
 ok(LCF.Get("cp").ranks[3].loadout[2] == "weapon_pistol", "ranks inherit loadouts from the rank below")
 ok(LCF.Get("resistance").ranks[4].hunted == true, "Lieutenant inherits hunted from Fighter")
 
@@ -313,14 +313,18 @@ _setcvar("lc_overwatch_drops", 0)
 local rec = _makeplayer("Recruit")
 hook.Run("PlayerInitialSpawn", rec)
 ok(rec:GetNW2String("lcf_faction", "") == "citizen", "new players start as citizens")
-ok(not LC.CanJoinFaction(rec, "ota"), "Overwatch is locked for a nobody")
+ok(LCF.Get("ota") == nil, "Overwatch is no faction of its own: it's Civil Protection's top ranks")
 LC.SetFaction(rec, "cp", nil, true)
-ok(LC.PlayerIsCP(rec), "joining Civil Protection makes you CP to Living City")
-LC.AddXP(rec, 1000)
-ok(rec:GetNW2Int("lcf_rank", 1) == 6, "1000 XP makes you Unit 01", rec:GetNW2Int("lcf_rank", 1))
-ok(has(rec.chat, "Promoted to Unit 01"), "with a promotion message")
-ok(string.find(rec:GetNW2String("lcf_title", ""), "CP 01-", 1, true) ~= nil, "and a unit designation", rec:GetNW2String("lcf_title", ""))
-ok(LC.CanJoinFaction(rec, "ota"), "Unit 01 unlocks Overwatch")
+ok(LC.PlayerIsCP(rec) and rec:GetNW2Int("lcf_rank", 1) == 1, "joining Civil Protection makes you CP to Living City, a Record Keeper")
+LC.AddXP(rec, 2500)
+ok(rec:GetNW2Int("lcf_rank", 1) == 3, "XP takes you as far as Division Leader without the conditioning", rec:GetNW2Int("lcf_rank", 1))
+ok(has(rec.chat, "Promoted to Division Leader"), "with a promotion message")
+ok(string.find(rec:GetNW2String("lcf_title", ""), "CP DvL-", 1, true) ~= nil, "and a unit designation", rec:GetNW2String("lcf_title", ""))
+ok(not LCF.IsOverwatch(rec), "(not Overwatch yet)")
+LC.Condition(rec)
+ok(rec:GetNW2Int("lcf_rank", 1) == 5 and LCF.IsOverwatch(rec), "the conditioning opens the Overwatch ranks: the XP counts at once", rec:GetNW2Int("lcf_rank", 1))
+ok(string.find(rec:GetNW2String("lcf_title", ""), "OWS ", 1, true) == 1, "and an Overwatch designation", rec:GetNW2String("lcf_title", ""))
+LC.SetFaction(rec, "citizen", nil, true)
 ok(not LC.CanJoinFaction(rec, "admin"), "City Administrator is whitelist only")
 
 local priest = _makeplayer("Priest")
@@ -4758,7 +4762,6 @@ ok(_lastnet("lc_interrogate") ~= nil, "an interrogation puts the choice on the p
 _netcall("lc_interrogate_reply", con, true)
 ok(LC.Interrogations[con] == nil, "choosing Talk ends it")
 LC.ReleasePrisoner(con)
-ok(GetConVar("lc_stalker_minutes"):GetInt() == 20, "a stalker serves twenty minutes")
 ok(GetConVar("lc_rebel_ops_minutes"):GetInt() >= 30, "the Resistance's own operations are at least half an hour apart")
 for _, p in ipairs({ a, b, u, con }) do p:SetPos(Vector(-30000, 30000, 0)) end
 end
@@ -5371,7 +5374,7 @@ bank:SetNW2Float("lc_short_until", 0)
 -- officers put banks up
 tu.GetEyeTrace = function() return { Hit = true, HitPos = K0 + Vector(940, 0, 40), HitNormal = Vector(1, 0, 0) } end
 ok(not LC.DeployPowerBank(tu), "only officers put up power banks")
-tu:SetNW2Int("lcf_rank", 8)
+tu:SetNW2Int("lcf_rank", 3)
 local okB = LC.DeployPowerBank(tu)
 local nb = tu.lcBank
 ok(okB and IsValid(nb) and LC.DeployedBanks[nb] == tu, "an officer puts one up on a wall")
@@ -10292,7 +10295,7 @@ local stk = newPlayer("StalkerWorker", "citizen")
 _run(0.3)
 ok(posting(stk) == nil, "a citizen gets no stalker story")
 _setcvar("lc_stalker_model", "models/player/test_stalker.mdl")
-ok(LC.MakeStalker(stk, 20) and LC.PlayerIsStalker(stk), "made into a stalker")
+ok(LC.MakeStalker(stk) and LC.PlayerIsStalker(stk), "made into a stalker")
 ok(LC.ModelOverride(stk) == "models/player/test_stalker.mdl", "lc_stalker_model sets the stalker's body")
 LC.RefreshModel(stk)
 ok(stk:GetModel() == "models/player/test_stalker.mdl", "and the stalker wears it")
@@ -10319,12 +10322,6 @@ for i = 1, 5 do
     LC.AcceptPosting(stk, sp.id)
     local q = LC.QuestOf[stk]
     if not q then break end
-    if i == 1 then
-        stk:SetNW2Float("lc_stalker_until", CurTime() - 1)
-        _advance(1.1) _runtimers()
-        ok(LC.PlayerIsStalker(stk), "the term doesn't run out in the middle of a job")
-        stk:SetNW2Float("lc_stalker_until", CurTime() + 1200)
-    end
     Work(q, 2)
     ok(q.done, "part " .. i .. " (" .. sp.part .. ") can be done", q.stage .. "/" .. #q.stages)
 end
@@ -10332,9 +10329,12 @@ ok(table.concat(parts, ",") == "processing,floors,cable,frame,charge", "five par
 local e = LC.Energizers[stk]
 ok(IsValid(e) and e:GetNW2Int("lc_built", 0) == 3, "the energizer is built, and charged")
 ok(LC.Story(stk).chains.stalker.done == "endured", "turning away from it ends the story")
-ok(stk:GetNW2Float("lc_stalker_until", 0) < CurTime() + 200, "and the city lets you go soon")
+for _ = 1, 4 do _advance(60) _runtimers() end
+ok(LC.PlayerIsStalker(stk), "and you're still a stalker: there's no way out but death")
+stk.lcqNext = 0
+ok(LC.UseEnergizer(stk, e) and LC.PlayerIsStalker(stk) and stk:Alive(), "E on the energizer asks first")
 -- again, and this time step in
-LC.MakeStalker(stk, 20)
+LC.MakeStalker(stk)
 ok(posting(stk) ~= nil and posting(stk).part == "processing", "a new term starts the story over")
 local cid = stk:GetNW2String("lc_cid", "")
 _setcvar("lc_permadeath", 0)
@@ -10347,13 +10347,77 @@ ok(sp ~= nil and LC.QuestOf[stk] ~= nil, "the last part can be taken up again")
 Work(LC.QuestOf[stk], 1)
 _advance(2) _runtimers()
 ok(not stk:Alive(), "stepping into the light kills the stalker")
-ok(not LC.PlayerIsStalker(stk) and stk:GetPData("lc_stalker_until", nil) == nil, "and nothing of the stalker is left")
+ok(not LC.PlayerIsStalker(stk) and stk:GetPData("lc_stalker", nil) == nil, "and nothing of the stalker is left")
 ok(cid == "" or stk:GetNW2String("lc_cid", "") ~= cid, "a new person, even with permanent death off", cid .. " -> " .. stk:GetNW2String("lc_cid", ""))
 _setcvar("lc_permadeath", 1)
 stk.alive = true stk:Spawn()
 stk:SetPos(Vector(-150000, 150000, 0))
 end
 StalkerTests()
+
+function MergeKickTests()
+section("One Civil Protection career, the Overwatch Commander, and the kick")
+local M0 = Vector(-160000, -50000, 0)
+local ow = newPlayer("OldOverwatch", "ota")
+_run(0.3)
+ok(ow:GetNW2String("lcf_faction", "") == "cp" and LCF.IsOverwatch(ow) and ow:GetNW2Int("lcf_rank", 1) == 4, "an old Overwatch save comes back as a Combine Prison Guard")
+ok(LC.QuestFaction(ow) == "ota", "the Overwatch ranks keep their own board")
+local dl = newPlayer("DivLeader", "cp", nil, 900)
+_run(0.3)
+ok(dl:GetNW2Int("lcf_rank", 1) == 3 and LC.IsCPOfficer(dl), "a Division Leader is an officer")
+ok(LC.Chains.candidate.unlock(dl) and not LC.Chains.candidate.unlock(ow), "the Overwatch Candidate story comes to Division Leaders who haven't had the conditioning")
+-- the Commander
+local cmd = newPlayer("OWCommander", "cp", "ow_commander", 3000)
+cmd:SetPData("lcf_transhuman", "1")
+LC.SetFaction(cmd, "cp", "ow_commander", true)
+_run(0.3)
+ok(LCF.IsOverwatch(cmd) and cmd:GetModel() == "models/player/combine_super_soldier.mdl", "the Overwatch Commander is one of the Elite")
+ok(not LC.CommanderDrop(dl), "only the Commander calls in a squad")
+LC.CommanderDropAt = 0
+if LC.OverwatchDrop then LC.EndOverwatchDrop() end
+cmd:SetPos(M0)
+local okD = LC.CommanderDrop(cmd)
+ok(okD and LC.OverwatchDrop ~= nil, "the Commander calls in a squad")
+ok(not LC.CommanderDrop(cmd), "(and not again for a while)")
+LC.EndOverwatchDrop()
+-- the kick
+local cit = newPlayer("KickCitizen", "citizen")
+ok(not LC.Kick(cit), "citizens don't kick")
+dl:SetPos(M0 + Vector(0, 2000, 0))
+dl.aim = Vector(1, 0, 0)
+local door = ents.Create("prop_door_rotating")
+door:SetPos(dl:GetShootPos() + Vector(40, 0, -24))
+door:Spawn()
+local fired = {}
+door.Fire = function(_, input) fired[#fired + 1] = input end
+local tr0 = util.TraceHull
+util.TraceHull = function() return { Hit = true, Entity = door, HitPos = door:GetPos() } end
+ok(LC.KickLand(dl) == "door" and has(fired, "OpenAwayFrom"), "a kick swings an unlocked door open")
+fired = {}
+door.GetInternalVariable = function(_, k) if k == "m_bLocked" then return true end end
+LC.KickLand(dl)
+ok(not has(fired, "OpenAwayFrom"), "a locked door takes more than one")
+LC.KickLand(dl)
+ok(has(fired, "Unlock") and has(fired, "OpenAwayFrom"), "and gives on the second")
+local tag0 = LC.GetDoorTag
+LC.GetDoorTag = function(d) if d == door then return "prison" end return tag0(d) end
+fired = {}
+LC.KickLand(dl) LC.KickLand(dl)
+ok(not has(fired, "Unlock"), "a prison door doesn't give")
+LC.GetDoorTag = tag0
+local vic = newPlayer("KickVictim", "citizen")
+_run(0.3)
+vic:SetPos(M0 + Vector(40, 2000, 0))
+local hp = vic:Health()
+util.TraceHull = function() return { Hit = true, Entity = vic, HitPos = vic:GetPos() } end
+ok(LC.KickLand(dl) == "person" and vic:Health() < hp, "a kick knocks someone back, and hurts")
+util.TraceHull = tr0
+ok(LC.Kick(dl) and dl:GetNW2Float("lc_kick_at", 0) > 0, "a unit kicks: everyone sees the leg come up")
+ok(not LC.Kick(dl), "(not again straight away)")
+door:Remove()
+for _, p in ipairs({ ow, dl, cmd, cit, vic }) do p:SetPos(Vector(-150000, 150000, 0)) LC.SetFaction(p, "citizen", nil, true) end
+end
+MergeKickTests()
 
 ----------------------------------------------------------------------
 section("Stop")

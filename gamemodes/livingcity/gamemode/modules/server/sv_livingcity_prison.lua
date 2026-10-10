@@ -155,7 +155,7 @@ function LC.ReleasePrisoner(ply)
         -- call a weapon, and no radio: guns (carried or in the pockets) and radios stay
         -- behind. Their fists are theirs, always.
         local fid = ply:GetNW2String("lcf_faction", "")
-        if fid == "cp" or fid == "ota" or fid == "admin" then
+        if fid == "cp" or fid == "admin" then
             if hook.Run("LivingCityRestoreLoadout", ply) == nil then
                 ply:StripWeapons()
                 for _, cls in ipairs(pr.weapons or {}) do ply:Give(cls) end

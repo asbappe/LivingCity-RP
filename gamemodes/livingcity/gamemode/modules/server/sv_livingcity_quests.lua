@@ -56,6 +56,7 @@ local function Pick(t) return t[math.random(#t)] end
 function LC.QuestFaction(ply)
     local f = ply:GetNW2String("lcf_faction", "")
     if f == "vort" or f == "stalker" then return "citizen" end -- shackled vortigaunts and stalkers work the Union's shifts
+    if f == "cp" and LCF.IsOverwatch(ply) then return "ota" end -- (the Overwatch ranks have their own board: Protocols, and Civil Protection's)
     if f ~= "" then return f end
     if LC.PlayerIsZombie(ply) then return "zombie" end
     if LC.PlayerIsCP(ply) then return "cp" end

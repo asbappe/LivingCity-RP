@@ -760,11 +760,11 @@ LC.Chain{
 
 LC.Chain{
     id = "candidate", name = "The Overwatch Candidate", factions = { cp = true },
-    unlock = function(ply) return Q.RankIndex(ply) >= 6 end,
+    unlock = function(ply) return Q.RankIndex(ply) >= 3 and not (LC.Conditioned and LC.Conditioned(ply)) end, -- (Division Leaders)
     start = "evaluation",
     endings = {
         transhuman = "You don't remember your name. You don't need to.",
-        human = "You keep your name, your face, and the nightmares. Overwatch won't ask twice.",
+        human = "You keep your name, your face, and the nightmares. Overwatch won't ask twice: you'll go no higher than Division Leader.",
     },
     parts = {
         evaluation = { num = 1, next = "conditioning", build = function(ply)
@@ -793,11 +793,11 @@ LC.Chain{
                     Goto(pos, "Report as ordered", 300),
                     Choice("A technician in a coat that has never been white. 'Transhuman conditioning. " ..
                         "You won't remember your name, unit. You won't need to.'", {
-                        { text = "Accept.", pick = function(q, p)
+                        { text = "Accept. (The Overwatch ranks open to you: Prison Guard, Soldier, Elite. There's no undoing it.)", pick = function(q, p)
                             q.chainEnd = "transhuman"
-                            JoinLater(p, "ota", 0)
+                            timer.Simple(1.5, function() if IsValid(p) and LC.Condition then LC.Condition(p) end end)
                         end },
-                        { text = "Decline. You like your name.", pick = function(q)
+                        { text = "Decline. You like your name. (You'll rise no higher than Division Leader.)", pick = function(q)
                             q.bonus = 50
                             q.chainEnd = "human"
                         end },

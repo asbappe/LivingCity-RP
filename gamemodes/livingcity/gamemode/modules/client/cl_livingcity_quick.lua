@@ -88,7 +88,7 @@ end
 local CP_LINES = { "movealong", "holdit", "apply", "document", "freeze", "first", "youcango", "copy" }
 local function VoicePage()
     local me = LocalPlayer()
-    local ota = me:GetNW2String("lcf_faction", "") == "ota"
+    local ota = LCF and LCF.IsOverwatch and LCF.IsOverwatch(me)
     local items = {}
     if ota then
         for _, l in ipairs(LCCP and LCCP.VoiceOTA or {}) do
@@ -212,10 +212,10 @@ end
 function LC_CL.QuickRoot()
     local me = LocalPlayer()
     local f = me:GetNW2String("lcf_faction", "")
-    local unit = me:GetNW2Bool("lc_unit", false) or f == "cp" or f == "ota"
+    local unit = me:GetNW2Bool("lc_unit", false) or f == "cp"
     local rebel = f == "resistance"
     local rank = me:GetNW2Int("lcf_rank", 1)
-    local officer = me:IsAdmin() or (f == "cp" and rank >= 7) or (f == "ota" and rank >= 3)
+    local officer = me:IsAdmin() or (f == "cp" and rank >= 3)
     local hands = Item(me:GetNW2Bool("lc_handsup", false) and "Lower my hands" or "Put my hands up", function() Send("handsup") end)
     local pockets = Item("My pockets (F2)", function() RunConsoleCommand("gm_showteam") end)
     local board = Item("My board: jobs (F3)", function() RunConsoleCommand("gm_showspare1") end)
@@ -223,14 +223,14 @@ function LC_CL.QuickRoot()
     local whatNow = Page("What now?", function() return LC_CL.WhatNowPage and LC_CL.WhatNowPage() or { title = "WHAT NOW?", items = {} } end)
     local items, usual, title, accent
     if unit then
-        title = me:GetNW2String("lcf_title", "") ~= "" and me:GetNW2String("lcf_title", "") or (f == "ota" and "OVERWATCH" or "CIVIL PROTECTION")
+        title = me:GetNW2String("lcf_title", "") ~= "" and me:GetNW2String("lcf_title", "") or ((LCF and LCF.IsOverwatch and LCF.IsOverwatch(me)) and "OVERWATCH" or "CIVIL PROTECTION")
         accent = ACCENT.cp
         items = {
             Item("Call for backup", function() Send("backup") end),
             Item("Send my 10-20", function() Send("10-20") end),
             Item("Issue a BOLO...", function() Ask("BOLO", "What should units look out for?", "bolo") end),
             Page("Voice lines", VoicePage),
-            Item("Records terminal", function() Send("records") end),
+            Item("Kick (" .. (LC_CL.KickKeyName and LC_CL.KickKeyName() or "G") .. ")", function() Send("kick") end),
         }
         usual = {
             Item("Unit tools (everything a unit has)", function() if LC_CL.OpenUnitTools then LC_CL.OpenUnitTools() end end),

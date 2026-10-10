@@ -81,6 +81,7 @@ LC_MODULES = {
         "sv_livingcity_housing",
         "sv_livingcity_life", -- (a life: eye height, time lived, the death card, word getting around)
         "sv_livingcity_intake", -- (Civil Intake: new arrivals register, then ask for a room)
+        "sv_livingcity_kick",
         "sv_livingcity_lab", -- (the Resistance lab: the scientist makes what the cell needs)
         "sv_livingcity_mortuary",
         "sv_livingcity_navgraph",
@@ -151,6 +152,7 @@ LC_MODULES = {
         "cl_livingcity_hints",
         "cl_livingcity_infest",
         "cl_livingcity_intake",
+        "cl_livingcity_kick",
         "cl_livingcity_lab",
         "cl_livingcity_layoutbrowser",
         "cl_livingcity_life",

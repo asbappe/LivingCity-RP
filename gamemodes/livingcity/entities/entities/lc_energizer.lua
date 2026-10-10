@@ -31,6 +31,12 @@ function ENT:Initialize()
     self:SetUseType(SIMPLE_USE)
 end
 
+if SERVER then
+    function ENT:Use(activator)
+        if IsValid(activator) and activator:IsPlayer() and LC and LC.UseEnergizer then LC.UseEnergizer(activator, self) end
+    end
+end
+
 if CLIENT then
     local GLOW = Material("sprites/light_glow02_add")
     local BALL = Material("effects/ar2_altfire1")

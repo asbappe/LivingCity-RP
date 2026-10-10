@@ -22,7 +22,7 @@ local CYAN = Color(110, 190, 230)
 
 local function Masked(ply)
     local f = ply:GetNW2String("lcf_faction", "")
-    return f == "cp" or f == "ota" or ply:GetNW2String("lcd_disguise", "") == "cp"
+    return f == "cp" or ply:GetNW2String("lcd_disguise", "") == "cp"
 end
 LC_CL.Masked = Masked
 
@@ -272,7 +272,7 @@ local voFrame
 function LC_CL.OpenVoiceMenu()
     local ply = LocalPlayer()
     if not IsValid(ply) or not LCCP then return end
-    local list = LCCP.VoiceFor(ply:GetNW2String("lcf_faction", ""))
+    local list = LCCP.VoiceFor(ply)
     if IsValid(voFrame) then voFrame:Remove() end
     voFrame = vgui.Create("DFrame")
     voFrame:SetTitle("Voice (or type the words, or /vo <word>)")

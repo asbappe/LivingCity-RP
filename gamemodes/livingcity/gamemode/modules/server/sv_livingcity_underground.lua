@@ -657,11 +657,11 @@ local function Busy(ply)
     local st = q and not q.done and q.stages and q.stages[q.stage]
     return st ~= nil and DELICATE[st.kind] == true
 end
-local EXEMPT_FACTIONS = { ota = true, admin = true }
+local function Exempt(ply) return Faction(ply) == "admin" or LCF.IsOverwatch(ply) end
 
 local function Stoppable(ply, now)
     return ply:Alive() and not ply:InVehicle() and now > (ply.lcStopNext or 0)
-        and not EXEMPT_FACTIONS[Faction(ply)] and not Busy(ply)
+        and not Exempt(ply) and not Busy(ply)
         and not Stops[ply] and not ply.lcBeingSearched
         and not LC.PlayerIsCP(ply) and not LC.PlayerIsZombie(ply)
         and not (LC.InCustody and LC.InCustody(ply)) and not LC.DisguisedAsCP(ply)

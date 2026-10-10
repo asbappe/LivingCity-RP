@@ -351,12 +351,10 @@ end)
 
 -- issued by rank, topped up when a unit spawns
 local ISSUE = {
-    { faction = "cp", rank = 3, item = "gren_smoke", n = 1 },
-    { faction = "cp", rank = 5, item = "gren_flash", n = 1 },
-    { faction = "cp", rank = 7, item = "gren_gas", n = 1 },
-    { faction = "ota", rank = 1, item = "gren_flash", n = 1 },
-    { faction = "ota", rank = 1, item = "gren_gas", n = 2 },
-    { faction = "ota", rank = 1, item = "gren_smoke", n = 1 },
+    { faction = "cp", rank = 2, item = "gren_smoke", n = 1 },  -- Metrocop
+    { faction = "cp", rank = 3, item = "gren_flash", n = 1 },  -- Division Leader
+    { faction = "cp", rank = 3, item = "gren_gas", n = 1 },
+    { faction = "cp", rank = 4, item = "gren_gas", n = 2 },    -- the Overwatch
 }
 function LC.IssueGrenades(ply)
     if not IsValid(ply) or not LC.Inventory then return end

@@ -502,7 +502,7 @@ local function OpenInventory()
     -- units don't make things: they're issued them (sv_livingcity_cpsupply.lua)
     local me = LocalPlayer()
     local mf = me:GetNW2String("lcf_faction", "")
-    local isUnit = me:GetNW2Bool("lc_unit", false) or mf == "cp" or mf == "ota"
+    local isUnit = me:GetNW2Bool("lc_unit", false) or mf == "cp"
     if isUnit then
         local head = vgui.Create("DLabel", scroll)
         head:Dock(TOP)

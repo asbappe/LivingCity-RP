@@ -81,12 +81,13 @@ local function Callsign(ply)
     return t ~= "" and t or ply:Nick()
 end
 
--- An officer: Civil Protection from OfC up, Overwatch Elite, the Administrator, or an admin.
+-- An officer: Civil Protection from Division Leader up (the Overwatch too),
+-- the Administrator, or an admin.
 function LC.IsCPOfficer(ply)
     if not IsValid(ply) then return false end
     if ply:IsAdmin() then return true end
     local f = Faction(ply)
-    return (f == "cp" and Rank(ply) >= 7) or (f == "ota" and Rank(ply) >= 3) or f == "admin"
+    return (f == "cp" and Rank(ply) >= 3) or f == "admin"
 end
 
 ------------------------------------------------------------------------
@@ -710,7 +711,7 @@ function LC.RefreshSocio(quiet, force)
 end
 
 function LC.SetSocio(ply, level, minutes)
-    if IsValid(ply) and not LC.IsCPOfficer(ply) then return false, "Officers only (OfC and up, Overwatch Elite, the Administrator)." end
+    if IsValid(ply) and not LC.IsCPOfficer(ply) then return false, "Officers only (Division Leader and up, the Administrator)." end
     level = string.lower(tostring(level or ""))
     if level == "auto" then
         LC.SocioOverride = nil
@@ -793,7 +794,7 @@ local function CanUseVoice(ply)
 end
 
 local function VoiceList(ply)
-    return LCCP.VoiceFor(Faction(ply))
+    return LCCP.VoiceFor(ply)
 end
 
 local function FindLine(ply, word)
@@ -931,7 +932,7 @@ function LC.IssueDutyAllocation(ply)
     local rv = GetConVar("lc_ration_interval")
     ply.lcnRationAt = now + (rv and rv:GetFloat() or 600)
     local credits = math.max(0, cvCoupons:GetInt()) + math.max(0, Rank(ply) - 1)
-    local eats = Faction(ply) ~= "ota"
+    local eats = not LCF.IsOverwatch(ply) -- (the Overwatch are fed through the suit)
     local got = {}
     if eats and LC.GiveItem then
         if LC.GiveItem(ply, "ration", 1) then got[#got + 1] = "a ration packet" else got[#got + 1] = "a ration packet (your pockets are full: collect it from a dispenser)" ply.lcnRationAt = now end

@@ -816,7 +816,7 @@ hook.Add("HUDPaint", "LivingCityHUD", function()
         local strict = ev == "curfew" or ev == "lockdown"
         -- units and Overwatch don't go home for curfew: they enforce it
         local f = ply:GetNW2String("lcf_faction", "")
-        local unit = ply:GetNW2Bool("lc_unit", false) or f == "cp" or f == "ota"
+        local unit = ply:GetNW2Bool("lc_unit", false) or f == "cp"
         local block = unit and 0 or ply:GetNW2Int("lc_block", 0)
         local sub = string.FormattedTime(left, "%02i:%02i") .. " remaining"
         if strict and unit then sub = "Clear the streets. " .. sub end

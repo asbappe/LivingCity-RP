@@ -19,7 +19,7 @@
       cp        counts as Civil Protection for Living City (doors, arrests, NPC cops)
       zombie    counts as a zombie (NPC zombies are friendly, everyone else is not)
       whitelist only players an admin has whitelisted can join (lcf_whitelist)
-      requires  { faction = "cp", rank = 6 }: must have reached that rank there first
+      requires  { faction = "cp", rank = 3 }: must have reached that rank there first
       specials  unique roles inside the faction (see Father Grigori)
 ]]
 
@@ -90,33 +90,34 @@ LCF.Factions = {
         },
     },
     {
+        -- One career, from the records office to the Overwatch. The Overwatch
+        -- ranks (overwatch = true) need the transhuman conditioning first: the
+        -- Overwatch Candidate story offers it to Division Leaders. Without it,
+        -- XP keeps counting but the rank stops at Division Leader.
         id = "cp", name = "Civil Protection", color = Color(80, 140, 255), cp = true,
-        desc = "The Metropolice. Patrol, inspect, detain. Earn your way up the ranks, and the best are offered to Overwatch.",
+        desc = "Civil Protection: the records office, the Metropolice, and for the best of them, the Overwatch. " ..
+               "Earn your way up. Past Division Leader there is no going back to being human.",
         ranks = {
-            { name = "Recruit", short = "RCT", xp = 0, models = { "models/player/police.mdl", "models/player/police_fem.mdl" },
+            { name = "Record Keeper", short = "RCK", xp = 0, models = { "models/player/police.mdl", "models/player/police_fem.mdl" },
               loadout = { "weapon_lc_baton" }, armor = 25 },
-            { name = "Unit 05", short = "05", xp = 100, loadout = { "weapon_lc_baton", "weapon_pistol" }, armor = 50 },
-            { name = "Unit 04", short = "04", xp = 250 },
-            { name = "Unit 03", short = "03", xp = 450 },
-            { name = "Unit 02", short = "02", xp = 700 },
-            { name = "Unit 01", short = "01", xp = 1000, loadout = { "weapon_lc_baton", "weapon_pistol", "weapon_smg1" }, armor = 75 },
-            { name = "Officer", short = "OfC", xp = 1400 },
-            { name = "Elite Protection Unit", short = "EpU", xp = 2000, armor = 100 },
-            { name = "Division Leader", short = "DvL", xp = 2800 },
-            { name = "Sectoral Commander", short = "SeC", xp = 4000 },
-        },
-    },
-    {
-        id = "ota", name = "Overwatch", color = Color(205, 70, 70), cp = true,
-        requires = { faction = "cp", rank = 6 },
-        desc = "Transhuman Overwatch soldiers. Reach Unit 01 in Civil Protection to be considered.",
-        ranks = {
-            { name = "Overwatch Soldier", short = "OWS", xp = 0, models = { "models/player/combine_soldier.mdl" },
-              loadout = { "weapon_lc_baton", "weapon_smg1", "weapon_frag" }, health = 100, armor = 100 },
-            { name = "Prison Guard", short = "OPG", xp = 600, models = { "models/player/combine_soldier_prisonguard.mdl" },
-              loadout = { "weapon_lc_baton", "weapon_smg1", "weapon_shotgun" } },
-            { name = "Elite", short = "EOW", xp = 1500, models = { "models/player/combine_super_soldier.mdl" },
+            { name = "Metrocop", short = "MPF", xp = 150, loadout = { "weapon_lc_baton", "weapon_pistol" }, armor = 50 },
+            { name = "Division Leader", short = "DvL", xp = 600, loadout = { "weapon_lc_baton", "weapon_pistol", "weapon_smg1" }, armor = 75 },
+            { name = "Combine Prison Guard", short = "OPG", xp = 1200, overwatch = true, models = { "models/player/combine_soldier_prisonguard.mdl" },
+              loadout = { "weapon_lc_baton", "weapon_smg1", "weapon_shotgun" }, health = 100, armor = 100 },
+            { name = "Combine Soldier", short = "OWS", xp = 2000, overwatch = true, models = { "models/player/combine_soldier.mdl" },
+              loadout = { "weapon_lc_baton", "weapon_smg1", "weapon_frag" } },
+            { name = "Elite Soldier", short = "EOW", xp = 3000, overwatch = true, models = { "models/player/combine_super_soldier.mdl" },
               loadout = { "weapon_lc_baton", "weapon_ar2", "weapon_frag" }, health = 125, armor = 150 },
+        },
+        specials = {
+            {
+                id = "ow_commander", name = "Overwatch Commander", max = 1, minRank = 6, overwatch = true,
+                desc = "One at a time, from the Elite. Calls in an Overwatch squad by dropship (F1 > Unit tools), " ..
+                       "every fifteen minutes, and commands every unit in the city.",
+                models = { "models/player/combine_super_soldier.mdl" },
+                loadout = { "weapon_lc_baton", "weapon_ar2", "weapon_frag" },
+                health = 150, armor = 200,
+            },
         },
     },
     {
@@ -200,12 +201,30 @@ end
 
 function LCF.Get(id) return LCF.ById[id] end
 
-function LCF.RankIndexFor(fac, xp)
+-- The rank this much XP earns. conditioned: has had the transhuman
+-- conditioning (else the Overwatch ranks stay out of reach).
+function LCF.RankIndexFor(fac, xp, conditioned)
     local idx = 1
     for i, r in ipairs(fac.ranks) do
+        if r.overwatch and not conditioned then break end
         if xp >= (r.xp or 0) then idx = i end
     end
     return idx
+end
+
+-- The rank (or special role) a player holds now.
+function LCF.RankOf(ply)
+    local f = LCF.ById[ply:GetNW2String("lcf_faction", "")]
+    if not f then return nil end
+    local sid = ply:GetNW2String("lcf_special", "")
+    return (sid ~= "" and f.specialsById[sid]) or f.ranks[ply:GetNW2Int("lcf_rank", 1)] or f.ranks[1]
+end
+
+-- Overwatch: a Civil Protection rank (or role) past the conditioning.
+function LCF.IsOverwatch(ply)
+    if not IsValid(ply) or ply:GetNW2String("lcf_faction", "") ~= "cp" then return false end
+    local r = LCF.RankOf(ply)
+    return r ~= nil and r.overwatch == true
 end
 
 function LCF.UnitNumber(steamid)

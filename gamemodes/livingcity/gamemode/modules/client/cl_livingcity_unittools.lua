@@ -35,7 +35,7 @@ local frame
 function LC_CL.IsUnit(ply)
     if not IsValid(ply) then return false end
     local f = ply:GetNW2String("lcf_faction", "")
-    return ply:GetNW2Bool("lc_unit", false) or f == "cp" or f == "ota"
+    return ply:GetNW2Bool("lc_unit", false) or f == "cp"
 end
 
 function LC_CL.OpenUnitTools()
@@ -44,7 +44,7 @@ function LC_CL.OpenUnitTools()
     local Send, Ask = LC_CL.SendAction, LC_CL.AskAction
     if not IsValid(me) or not Send then return end
     if not LC_CL.IsUnit(me) then
-        if chat and chat.AddText then chat.AddText(ACCENT, "[Unit tools] ", INK, "For Civil Protection and Overwatch.") end
+        if chat and chat.AddText then chat.AddText(ACCENT, "[Unit tools] ", INK, "For Civil Protection (the Overwatch included).") end
         return
     end
     -- whoever is in front of you as you open it
@@ -131,6 +131,10 @@ function LC_CL.OpenUnitTools()
     s = Section("Records")
     Button(s, "Open the records terminal", "Citizens by name and number: record, loyalty, violations. BOLOs, and requests citizens sent in.", Do("records"))
 
+    s = Section("Your boot")
+    Button(s, "Kick", "Doors swing open, locked ones give on the second kick; people are knocked back. Key: " ..
+        (LC_CL.KickKeyName and LC_CL.KickKeyName() or "G") .. " (lc_kick_key).", Do("kick"))
+
     s = Section("Your mask")
     Button(s, "Voice lines", "Pick a line and the mask says it (saying the words in chat works too).", Do("vo"))
 
@@ -154,6 +158,12 @@ function LC_CL.OpenUnitTools()
     else
         Note(s, "Look at someone up close, then open Unit tools, to search, tie or drag them.")
         Note(s, "Your baton: left click strikes, right click arrests, reload searches.")
+    end
+
+    if me:GetNW2String("lcf_special", "") == "ow_commander" then
+        local left = me:GetNW2Float("lc_cmd_drop_at", 0) - CurTime()
+        s = Section("Overwatch Commander", left > 0 and string.format("next squad in %d:%02d", math.floor(left / 60), math.floor(left % 60)) or "a squad is ready")
+        Button(s, "Call in a squad", "A dropship lands an Overwatch squad at the landing zone nearest you. One every fifteen minutes.", Do("dropship"))
     end
 
     s = Section("Checkpoints")

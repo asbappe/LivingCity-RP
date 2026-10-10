@@ -82,7 +82,9 @@ function LC.RentalOf(door)
     return nil
 end
 
-local function HasKey(ply, r)
+local HasKey
+function LC.HasRentKey(ply, r) return HasKey(ply, r) end
+function HasKey(ply, r)
     local k = OwnerKey(ply)
     return r.owner == k or (r.keys and r.keys[k] ~= nil)
 end

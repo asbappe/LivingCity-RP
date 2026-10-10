@@ -287,7 +287,7 @@ function LC.MayBroadcast(ply)
     if not IsValid(ply) then return true end
     if ply:IsAdmin() then return true end
     local f = ply:GetNW2String("lcf_faction", "")
-    return f == "admin" or (f == "cp" and ply:GetNW2Int("lcf_rank", 1) >= 9)
+    return f == "admin" or (f == "cp" and ply:GetNW2Int("lcf_rank", 1) >= 3) -- (Division Leader and up)
 end
 
 function LC.Broadcast(ply, text)

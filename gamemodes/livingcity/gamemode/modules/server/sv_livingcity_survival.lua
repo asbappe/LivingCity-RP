@@ -231,7 +231,7 @@ LC.Infect = Infect
 local function Exempt(ply)
     if not ply:Alive() or LC.PlayerIsZombie(ply) then return true end
     if LC.Prisoners and LC.Prisoners[ply] then return true end
-    if ply:GetNW2String("lcf_faction", "") == "ota" then return true end
+    if LCF.IsOverwatch(ply) then return true end
     return false
 end
 

@@ -93,7 +93,7 @@ local function MorePlacesPage()
     local f = IsValid(me) and me:GetNW2String("lcf_faction", "") or ""
     local items = {}
     for _, p in ipairs(MORE_PLACES) do items[#items + 1] = Item(p[2], function() Send("waypoint", p[1]) end) end
-    if f == "cp" or f == "ota" then items[#items + 1] = Item("Civil Protection Commissary", function() Send("waypoint", "cpsupply") end) end
+    if f == "cp" then items[#items + 1] = Item("Civil Protection Commissary", function() Send("waypoint", "cpsupply") end) end
     if f == "resistance" then items[#items + 1] = Item("The lab", function() Send("waypoint", "lab") end) end
     if IsValid(me) and me:GetNW2String("lcj_job", "") == "sanitation" then items[#items + 1] = Item("A mess to clean up", function() Send("waypoint", "stain") end) end
     while #items > 9 do table.remove(items) end

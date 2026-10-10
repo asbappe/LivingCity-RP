@@ -35,9 +35,8 @@ hook.Add("HUDPaint", "LivingCityTraitors", function()
             ScrW() - 20, y, Color(230, 190, 160), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER, 1, color_black)
         y = y + 16
     end
-    local stalk = me:GetNW2Float("lc_stalker_until", 0) - now
-    if stalk > 0 and MyFaction() == "stalker" then
-        draw.SimpleTextOutlined(string.format("COMBINE PROPERTY: %d:%02d left to serve (or until you die)", math.floor(stalk / 60), math.floor(stalk % 60)), "DermaDefaultBold",
+    if MyFaction() == "stalker" then
+        draw.SimpleTextOutlined("COMBINE PROPERTY: there is no way out but death", "DermaDefaultBold",
             ScrW() / 2, ScrH() * 0.1, Color(200, 180, 170), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     end
     if me:GetNW2Bool("lc_interrogated", false) then

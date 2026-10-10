@@ -52,7 +52,7 @@ local function Title(s) return string.upper(string.sub(s, 1, 1)) .. string.sub(s
 function LC_CL.ICName(ply)
     if not IsValid(ply) then return "?" end
     local f = ply:GetNW2String("lcf_faction", "")
-    if (f == "cp" or f == "ota") and ply:GetNW2String("lcf_title", "") ~= "" then return ply:GetNW2String("lcf_title", "") end
+    if (f == "cp") and ply:GetNW2String("lcf_title", "") ~= "" then return ply:GetNW2String("lcf_title", "") end
     if LC_CL.Knows and LC_CL.Knows(ply) and ply:GetNW2String("lc_char", "") ~= "" then return ply:GetNW2String("lc_char", "") end
     local d = LC_CL.Description and LC_CL.Description(ply) or ply:Nick()
     if #d > 34 then d = string.sub(d, 1, 32) .. "..." end
@@ -68,7 +68,7 @@ function LC_CL.OpenActions()
     if not IsValid(me) or not me:Alive() then return end
     local now = CurTime()
     local f = me:GetNW2String("lcf_faction", "")
-    local unit = me:GetNW2Bool("lc_unit", false) or f == "cp" or f == "ota"
+    local unit = me:GetNW2Bool("lc_unit", false) or f == "cp"
     local rebel = f == "resistance"
     local standing = me:GetNW2Int("lce_standing", 0)
     local downed = me:GetNW2Float("lc_downed_until", 0) > now
@@ -280,7 +280,7 @@ function LC_CL.OpenActions()
     Add(city, "The time and the weather", function() Send("time") end, "icon16/clock.png")
     Add(city, "Who holds the city", function() Send("city") end, "icon16/chart_pie.png")
     Add(city, "The city's laws", function() Send("laws") end, "icon16/script.png")
-    if me:IsAdmin() or f == "admin" or (f == "cp" and me:GetNW2Int("lcf_rank", 1) >= 9) then
+    if me:IsAdmin() or f == "admin" or (f == "cp" and me:GetNW2Int("lcf_rank", 1) >= 3) then
         Add(city, "Broadcast to the whole city...", function() Ask("Broadcast", "What does the city hear?", "broadcast") end, "icon16/sound.png")
     end
 

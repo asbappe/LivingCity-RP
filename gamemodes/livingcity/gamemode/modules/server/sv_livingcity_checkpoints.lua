@@ -453,7 +453,7 @@ end
 -- Officers put up a power bank: on the wall they're looking at.
 function LC.DeployPowerBank(ply)
     if not (LC.IsCPOfficer and LC.IsCPOfficer(ply)) then
-        return false, "Officers put up power banks (OfC and up). Any unit can deploy turrets at one."
+        return false, "Officers put up power banks (Division Leader and up). Any unit can deploy turrets at one."
     end
     if IsValid(ply.lcBank) then return false, "You've one up already. Take it down first (the actions menu, looking at it)." end
     local tr = ply:GetEyeTrace()

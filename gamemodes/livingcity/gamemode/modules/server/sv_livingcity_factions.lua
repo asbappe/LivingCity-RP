@@ -4,8 +4,10 @@
       - Everyone starts as a Citizen. F4, !faction or lcf_menu opens the faction menu.
       - XP is kept separately per faction and saved by SteamID. Ranks are earned
         automatically as XP crosses each threshold (sh_livingcity_factions.lua).
-      - Overwatch requires reaching Unit 01 in Civil Protection. City Administrator
-        is whitelist only. Father Grigori is one player at a time.
+      - Civil Protection is one career: Record Keeper, Metrocop, Division Leader,
+        then the Overwatch ranks, which need the transhuman conditioning first
+        (the Overwatch Candidate story; LC.Condition). City Administrator is
+        whitelist only. Father Grigori is one player at a time.
       - Each rank sets model, loadout, health, armor and speed.
       - Living City treats CP / Overwatch / Administrator as Civil Protection,
         Infested as zombies, and hunted ranks as anticitizens outside rebel zones.
@@ -50,6 +52,10 @@ end
 
 local function XP(ply, fid) return tonumber(ply:GetPData("lcf_xp_" .. fid, 0)) or 0 end
 
+-- Had the transhuman conditioning (the Overwatch ranks are open).
+local function Conditioned(ply) return ply:GetPData("lcf_transhuman", "0") == "1" end
+LC.Conditioned = Conditioned
+
 local function RankOf(ply)
     local f = FactionOf(ply)
     if not f then return nil end
@@ -69,11 +75,11 @@ local function Titles(ply)
     if s then
         true_ = s.name
         public = s.name
+    elseif f.id == "cp" and r.overwatch then
+        true_ = string.format("%s %d", r.short, unit)
+        public = true_
     elseif f.id == "cp" then
         true_ = string.format("CP %s-%d", r.short, unit)
-        public = true_
-    elseif f.id == "ota" then
-        true_ = string.format("%s %d", r.short, unit)
         public = true_
     elseif f.id == "resistance" then
         true_ = "Resistance " .. r.name
@@ -97,7 +103,8 @@ local function RecomputeRank(ply)
     local f = FactionOf(ply)
     if not f then return false end
     local old = ply:GetNW2Int("lcf_rank", 1)
-    local new = LCF.RankIndexFor(f, XP(ply, f.id))
+    ply:SetNW2Bool("lcf_transhuman", Conditioned(ply))
+    local new = LCF.RankIndexFor(f, XP(ply, f.id), Conditioned(ply))
     ply:SetNW2Int("lcf_rank", new)
     Publish(ply)
     return new ~= old, new > old
@@ -270,7 +277,7 @@ function LC.CanJoinFaction(ply, fid, sid)
     end
     if f.requires then
         local rf = LCF.Get(f.requires.faction)
-        if rf and LCF.RankIndexFor(rf, XP(ply, rf.id)) < f.requires.rank and not ply:IsSuperAdmin() then
+        if rf and LCF.RankIndexFor(rf, XP(ply, rf.id), Conditioned(ply)) < f.requires.rank and not ply:IsSuperAdmin() then
             return false, string.format("Requires %s in %s.", rf.ranks[f.requires.rank].name, rf.name)
         end
     end
@@ -279,7 +286,7 @@ function LC.CanJoinFaction(ply, fid, sid)
         if not s then return false, "No such role." end
         local mine = ply:GetNW2String("lcf_faction", "") == fid and ply:GetNW2String("lcf_special", "") == sid
         if not mine and SpecialHolders(fid, sid) >= (s.max or 1) then return false, "Someone already holds that role." end
-        if LCF.RankIndexFor(f, XP(ply, fid)) < (s.minRank or 1) and not ply:IsSuperAdmin() then
+        if LCF.RankIndexFor(f, XP(ply, fid), Conditioned(ply)) < (s.minRank or 1) and not ply:IsSuperAdmin() then
             return false, "Requires " .. f.ranks[s.minRank].name .. " in " .. f.name .. "."
         end
     end
@@ -287,6 +294,12 @@ function LC.CanJoinFaction(ply, fid, sid)
 end
 
 function LC.SetFaction(ply, fid, sid, quiet)
+    if fid == "ota" then -- (Overwatch was its own faction once: now it's Civil Protection's top ranks)
+        fid = "cp"
+        ply:SetPData("lcf_transhuman", "1")
+        local pg = LCF.Get("cp").ranks[4].xp
+        if XP(ply, "cp") < pg then ply:SetPData("lcf_xp_cp", pg) end
+    end
     ply:SetNW2String("lcf_faction", fid)
     ply:SetNW2String("lcf_special", sid or "")
     ply:SetPData("lcf_faction", fid)
@@ -322,7 +335,7 @@ local function SendMenu(ply)
     for _, f in ipairs(LCF.Factions) do
         local xp = XP(ply, f.id)
         local ok, why = LC.CanJoinFaction(ply, f.id, nil)
-        local entry = { id = f.id, xp = xp, rank = LCF.RankIndexFor(f, xp), ok = ok, why = why, specials = {} }
+        local entry = { id = f.id, xp = xp, rank = LCF.RankIndexFor(f, xp, Conditioned(ply)), ok = ok, why = why, specials = {} }
         for _, s in ipairs(f.specials or {}) do
             local sok, swhy = LC.CanJoinFaction(ply, f.id, s.id)
             entry.specials[#entry.specials + 1] = { id = s.id, ok = sok, why = swhy, taken = SpecialHolders(f.id, s.id) }
@@ -399,6 +412,21 @@ end)
 ------------------------------------------------------------------------
 -- XP
 ------------------------------------------------------------------------
+
+-- The transhuman conditioning: the Overwatch ranks open, and whatever XP
+-- you've earned counts at once. There's no undoing it.
+function LC.Condition(ply)
+    if not IsValid(ply) then return false end
+    ply:SetPData("lcf_transhuman", "1")
+    ply:SetNW2Bool("lcf_transhuman", true)
+    if ply:GetNW2String("lcf_faction", "") == "cp" then LC.AddXP(ply, 0, "the conditioning") end
+    return true
+end
+
+hook.Add("LivingCityNewCharacter", "LivingCityFactions", function(ply)
+    ply:RemovePData("lcf_transhuman")
+    ply:SetNW2Bool("lcf_transhuman", false)
+end)
 
 function LC.AddXP(ply, amount, why)
     if not IsValid(ply) or not ply:IsPlayer() then return end
@@ -542,6 +570,7 @@ local function Step(target, dir, out)
     local f = FactionOf(target)
     if not f then return end
     local idx = math.Clamp(target:GetNW2Int("lcf_rank", 1) + dir, 1, #f.ranks)
+    if f.ranks[idx].overwatch then target:SetPData("lcf_transhuman", "1") end -- (staff can skip the story)
     target:SetPData("lcf_xp_" .. f.id, f.ranks[idx].xp or 0)
     LC.AddXP(target, 0, "by staff")
     out(target:Nick() .. " is now " .. f.ranks[idx].name .. ".")

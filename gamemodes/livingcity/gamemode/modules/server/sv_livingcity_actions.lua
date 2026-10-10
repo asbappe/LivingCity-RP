@@ -35,6 +35,7 @@ local ALLOWED = {
     -- settings and help (each checks who's asking)
     bob = true, hints = true, ticket = true, build = true, admintools = true, staff = true, pathmap = true,
     changeclothes = true, sleep = true, -- (sv_livingcity_hygiene.lua, sv_livingcity_rest.lua)
+    dropship = true, kick = true, -- (the Overwatch Commander's squad, sv_livingcity_resistanceops.lua; a unit's kick, sv_livingcity_kick.lua)
 }
 for n in pairs(LCA and LCA.Gestures or {}) do ALLOWED[n] = true end -- (wave, salute, bow...)
 LC.MenuActions = ALLOWED

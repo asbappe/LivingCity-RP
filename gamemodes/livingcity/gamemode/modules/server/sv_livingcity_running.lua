@@ -33,7 +33,6 @@ local cvWanted = CreateConVar("lc_run_wanted", "60", FLAGS, "Seconds wanted for 
 
 local SHOUTS = { "npc/metropolice/vo/holdit.wav", "npc/metropolice/vo/freeze.wav" }
 local CHASE_LINES = { "npc/metropolice/vo/finalwarning.wav", "npc/metropolice/vo/holdit.wav" }
-local EXEMPT_FACTIONS = { ota = true, admin = true }
 
 LC.Runners = LC.Runners or {} -- [ply] = { warnedAt, by, ranFor }
 local Runners = LC.Runners
@@ -84,7 +83,7 @@ local function ExemptWhy(ply)
     if LC.PlayerIsWanted(ply) then return "already wanted" end -- already being chased
     if (LC.InCustody and LC.InCustody(ply)) or (LC.Prisoners and LC.Prisoners[ply]) then return "in custody" end
     if LC.Stops and LC.Stops[ply] then return "being stopped" end -- walking off from a stop is handled there
-    if EXEMPT_FACTIONS[ply:GetNW2String("lcf_faction", "")] then return "Overwatch or the Administrator" end
+    if ply:GetNW2String("lcf_faction", "") == "admin" or LCF.IsOverwatch(ply) then return "Overwatch or the Administrator" end
     if LC.InRebelZone and LC.InRebelZone(ply:GetPos()) then return "in rebel territory" end
     -- told to hurry home: running is what they want
     if (LC.Event == "curfew" or LC.Event == "lockdown") and (LC.EventGraceEnds or 0) > CurTime() then return "curfew grace period" end

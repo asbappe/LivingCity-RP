@@ -152,7 +152,7 @@ LC.HINTS = {
         text = "Death here is permanent: that character is gone. New name, new face, and nobody knows you. Being shot first puts you down, so next time someone may get to you in time." },
     promoted = { title = "Promoted",
         text = { default = "A new rank can mean new gear, new jobs and new trust. {gm_showspare2} shows what your rank opens up.",
-                 cp = "A new rank can mean new gear: grenades come from Unit 04 up. {gm_showspare2} shows what your rank opens up." } },
+                 cp = "A new rank can mean new gear: grenades come from Metrocop up. {gm_showspare2} shows what your rank opens up." } },
     promoted_member = { title = "A Resistance Member",
         text = { resistance = "Fighters will follow you now: press {+use} on one in rebel territory (three at most). {+use} again sends them home." } },
     ration = { title = "A ration",
@@ -465,7 +465,7 @@ local function RoleOf(ply)
     if LC.PlayerIsZombie and LC.PlayerIsZombie(ply) then return "zombie" end
     local f = ply:GetNW2String("lcf_faction", "")
     if f == "resistance" then return "resistance" end
-    if f == "ota" then return "ota" end
+    if LCF.IsOverwatch(ply) then return "ota" end
     if f == "vort" then return "vort" end
     if LC.PlayerIsCP and LC.PlayerIsCP(ply) then return "cp" end
     return "citizen"
@@ -656,7 +656,7 @@ function LC.HintScan(ply)
     -- how you're doing
     if Due(ply, "hurt") and ply:Health() < 35 then return Try("hurt") end
     if (Due(ply, "hungry") or Due(ply, "thirsty") or Due(ply, "parasites")) and not (LC.PlayerIsZombie and LC.PlayerIsZombie(ply))
-        and ply:GetNW2String("lcf_faction", "") ~= "ota" then
+        and not LCF.IsOverwatch(ply) then
         if LC.Hunger and LC.Hunger(ply) < 25 and Due(ply, "hungry") then return Try("hungry") end
         if LC.Thirst and LC.Thirst(ply) < 25 and Due(ply, "thirsty") then return Try("thirsty") end
         if LC.HasParasites and LC.HasParasites(ply) and Due(ply, "parasites") then return Try("parasites") end

@@ -187,7 +187,7 @@ local function Killer(ply, ent, depth)
         local f = ent:GetNW2String("lcf_faction", "")
         local who = PersonTo(ply, ent)
         local openly = (LC.PlayerIsHunted and LC.PlayerIsHunted(ent)) or string.find(who, "Resistance", 1, true)
-        local said = ((f == "cp" or f == "ota" or (LC.DisguisedAsCP and LC.DisguisedAsCP(ent))) and "combine")
+        local said = ((f == "cp" or (LC.DisguisedAsCP and LC.DisguisedAsCP(ent))) and "combine")
             or (f == "resistance" and openly and "resistance") or (f == "zombie" and "infestation") or "someone"
         return who, said
     end

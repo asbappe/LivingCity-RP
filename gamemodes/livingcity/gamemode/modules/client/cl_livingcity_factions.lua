@@ -175,7 +175,7 @@ function LC_CL.IdentityLine()
 end
 
 -- XP toward the next rank, for the HUD bar: fraction filled, the label
--- ("Unit 04  312 / 450 XP"), the faction color, and a "+25 XP" that shows for
+-- ("Metrocop  312 / 600 XP"), the faction color, and a "+25 XP" that shows for
 -- a few seconds after you earn some. Nil for factions without ranks to climb.
 local lastXP, gainAmt, gainUntil = nil, 0, 0
 function LC_CL.XPInfo()
@@ -195,7 +195,11 @@ function LC_CL.XPInfo()
     local special = f.specialsById[ply:GetNW2String("lcf_special", "")]
     local name = special and special.name or rank.name
     local frac, label
-    if nextR then
+    if nextR and nextR.overwatch and not ply:GetNW2Bool("lcf_transhuman", false) then
+        -- (the Overwatch ranks wait on the conditioning: the Overwatch Candidate story)
+        frac = 1
+        label = string.format("%s   %d XP (higher needs the Overwatch conditioning)", name, xp)
+    elseif nextR then
         local base, goal = rank.xp or 0, nextR.xp or 0
         frac = goal > base and math.Clamp((xp - base) / (goal - base), 0, 1) or 1
         label = string.format("%s   %d / %d XP", name, xp, goal)
@@ -262,7 +266,7 @@ end)
 -- Disguises change what everyone else sees. A real unit who looks closely
 -- at a "unit" for a few seconds notices the designation isn't on the roster.
 local stareEnt, stareSince = nil, 0
-local SECURITY = { cp = true, ota = true, admin = true }
+local SECURITY = { cp = true, admin = true }
 
 if surface and surface.CreateFont then
     surface.CreateFont("LCNameMain", { font = "Tahoma", size = 20, weight = 800, extended = true })
@@ -334,7 +338,7 @@ hook.Add("HUDDrawTargetID", "LivingCityFactionsTargetID", function()
     local x, y = ScrW() / 2, ScrH() / 2 + 40
     local charName = ent:GetNW2String("lc_char", "")
     -- a name only if they've told you it; otherwise what they look like
-    local masked = (theirs == "cp" or theirs == "ota" or disguise == "cp") and theirs ~= "admin"
+    local masked = (theirs == "cp" or disguise == "cp") and theirs ~= "admin"
     local shownName
     if masked then
         shownName = title ~= "" and title or "Civil Protection"
