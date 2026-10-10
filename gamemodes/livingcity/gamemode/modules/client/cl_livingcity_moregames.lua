@@ -359,7 +359,8 @@ hook.Add("Think", "LivingCityRadioBench", function()
             local mine = ent == me
             local dial = b.d.dial or 98
             local turn
-            if mine and panel and panel.kind == "radio" and IsValid(panel.dialCtl) then dial, turn = panel.dialCtl:GetValue(), panel.turn end
+            if mine and panel and panel.kind == "radio" and IsValid(panel.dialCtl) then dial, turn = panel.dialCtl:GetValue(), panel.turn
+            elseif mine and LC_CL.ListenDial then dial = LC_CL.ListenDial() or dial end
             local fall = mine and 1 or LC_CL.RadioFalloff(me:GetPos():Distance(ent:GetPos()))
             local vs, vu, v7 = LC_CL.RadioMix(dial, b.d, turn)
             for k, v in pairs({ static = vs, union = vu, f7 = v7 }) do
@@ -489,6 +490,86 @@ BUILD.radio = function(t)
     panel.update = Upd
     Upd(t)
 end
+
+------------------------------------------------------------------------
+-- Your own radio (Listen, from your pockets): the dial, and what's on it.
+-- Close the window and it keeps playing where you left it; Switch off stops it.
+------------------------------------------------------------------------
+
+local listen -- { frame, dial value, data }
+
+function LC_CL.ListenDial() return listen and listen.value or nil end
+
+local function SendDial(v)
+    net.Start("lc_radio_dial")
+    net.WriteFloat(v)
+    net.SendToServer()
+end
+
+local function ListenWindow()
+    if not listen then return end
+    if IsValid(listen.frame) then listen.frame:MakePopup() return end
+    local d = listen.data
+    local f = vgui.Create("DFrame")
+    listen.frame = f
+    f:SetTitle(d.tuned and "Radio (retuned)" or "Union radio")
+    f:SetSize(math.min(ScrW() - 40, 460), 190)
+    f:SetPos(ScrW() - f:GetWide() - 20, ScrH() - 230)
+    f:MakePopup()
+    f.Paint = function(s, w, h) draw.RoundedBox(6, 0, 0, w, h, BG) draw.RoundedBox(0, 0, 0, w, 24, Color(14, 16, 20)) end
+    local meter = vgui.Create("DPanel", f)
+    meter:Dock(TOP)
+    meter:SetTall(50)
+    meter:DockMargin(6, 4, 6, 0)
+    local dial = vgui.Create("DNumSlider", f)
+    meter.Paint = function(s, w, h)
+        local vs, vu, v7 = LC_CL.RadioMix(dial:GetValue(), d)
+        draw.RoundedBox(4, 0, 0, w, h, CARD)
+        draw.SimpleText(string.format("%.1f", dial:GetValue()), "DermaLarge", 10, h / 2, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        local st = math.max(vu, v7)
+        draw.SimpleText("Station", "LCJobLine", 100, 6, DIM)
+        draw.RoundedBox(2, 160, 7, (w - 170) * st, 12, st > 0.8 and GOOD or (st > 0.4 and WARN or BAD))
+        draw.SimpleText("Static", "LCJobLine", 100, 28, DIM)
+        draw.RoundedBox(2, 160, 29, (w - 170) * vs, 12, vs < 0.25 and GOOD or (vs < 0.6 and WARN or BAD))
+    end
+    dial:Dock(TOP)
+    dial:DockMargin(6, 6, 6, 0)
+    dial:SetText("Frequency")
+    dial:SetMin(87.5)
+    dial:SetMax(108)
+    dial:SetDecimals(1)
+    dial:SetValue(listen.value or d.dial or 96.4)
+    local sentAt = 0
+    dial.OnValueChanged = function(_, v)
+        if not listen then return end
+        listen.value = v
+        if CurTime() - sentAt > 0.2 then sentAt = CurTime() SendDial(math.floor(v * 10 + 0.5) / 10) end
+    end
+    local off = Button(f, "Switch it off", BAD, function() SendDial(0) end)
+    off:Dock(BOTTOM)
+    off:SetTall(28)
+    off:DockMargin(6, 0, 6, 6)
+    local hint = vgui.Create("DLabel", f)
+    hint:Dock(BOTTOM)
+    hint:DockMargin(8, 0, 8, 4)
+    hint:SetTextColor(DIM)
+    hint:SetText("Anyone within about twenty feet hears it too. Close this and it keeps playing.")
+end
+LC_CL.RadioListenWindow = ListenWindow
+
+net.Receive("lc_radio_listen", function()
+    local t = util.JSONToTable(net.ReadString() or "") or {}
+    if not t.dial then
+        if listen and IsValid(listen.frame) then listen.frame:Remove() end
+        listen = nil
+        return
+    end
+    if listen and IsValid(listen.frame) then listen.frame:Remove() end
+    listen = { data = t, value = t.dial }
+    ListenWindow()
+end)
+
+concommand.Add("lc_radio", function() if listen then ListenWindow() end end) -- (bring the window back: bindable)
 
 ------------------------------------------------------------------------
 -- Pat-down

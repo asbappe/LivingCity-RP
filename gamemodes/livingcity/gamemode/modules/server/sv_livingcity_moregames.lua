@@ -893,6 +893,105 @@ LC.JobGameDefine("radio", {
 })
 
 ------------------------------------------------------------------------
+-- Listening to a radio of your own (the Union radio, or one retuned to
+-- Freq 7): Listen, from your pockets. The same dial as the repair bench:
+-- static between stations, the station fading in through it, and whoever is
+-- within about twenty feet hears it too. The Union band sits where it always
+-- does; Freq 7 moves every so often, and a retuned radio knows where to.
+-- Freq 7 coming out of your radio where a unit can hear it is a crime.
+------------------------------------------------------------------------
+
+local UNION_FREQ = 96.4
+local freq7, freq7Until = nil, 0
+
+function LC.RadioStations()
+    if CurTime() > freq7Until or not freq7 then
+        repeat freq7 = math.floor(math.Rand(88.5, 107) * 10 + 0.5) / 10 until math.abs(freq7 - UNION_FREQ) > 3
+        freq7Until = CurTime() + 20 * 60
+    end
+    return UNION_FREQ, freq7
+end
+
+LC.Listening = LC.Listening or {} -- [ply] = { dial, item, static, union, clip7, caughtAt }
+
+local function ListenSend(ply, l, off)
+    local to = {}
+    for _, p in ipairs(player.GetAll()) do
+        if p == ply or p:GetPos():DistToSqr(ply:GetPos()) < BENCH_SEND * BENCH_SEND then to[#to + 1] = p end
+    end
+    if off then return LC.SendCompressed("lc_radio_bench", { e = ply:EntIndex(), off = true }, to) end
+    local u, f7 = LC.RadioStations()
+    LC.SendCompressed("lc_radio_bench", { e = ply:EntIndex(), dial = l.dial, t = u, f7 = f7, heard = false,
+        static = l.static, union = l.union, clip7 = l.clip7 }, to)
+end
+
+local function ListenOff(ply, why)
+    local l = LC.Listening[ply]
+    if not l then return end
+    LC.Listening[ply] = nil
+    if IsValid(ply) then
+        ListenSend(ply, l, true)
+        net.Start("lc_radio_listen") net.WriteString("{}") net.Send(ply)
+        if why then ply:ChatPrint("[Radio] " .. why) end
+    end
+end
+LC.RadioListenOff = ListenOff
+
+-- Listen (already on: the window again, where you left the dial; it has its own off switch).
+function LC.RadioListen(ply, id)
+    if not IsValid(ply) then return false end
+    if LC.InCustody and LC.InCustody(ply) then return false, "Not in here." end
+    local u, f7 = LC.RadioStations()
+    local l = LC.Listening[ply] or { item = id, dial = (id == "radio_tuned") and f7 or u, static = Clip("static"), union = Clip("union"), clip7 = Clip("freq7") }
+    LC.Listening[ply] = l
+    net.Start("lc_radio_listen")
+    net.WriteString(util.TableToJSON({ dial = l.dial, t = u, f7 = f7, static = l.static, union = l.union, clip7 = l.clip7,
+        tuned = id == "radio_tuned" }))
+    net.Send(ply)
+    ListenSend(ply, l)
+    return true
+end
+
+function LC.RadioListenDial(ply, f)
+    local l = LC.Listening[ply]
+    if not l then return false end
+    f = tonumber(f)
+    if not f or f <= 0 then ListenOff(ply) return true end
+    l.dial = math.Clamp(f, 87.5, 108)
+    return true
+end
+
+net.Receive("lc_radio_dial", function(_, ply)
+    if (ply.lcRadioDialAt or 0) > CurTime() then return end
+    ply.lcRadioDialAt = CurTime() + 0.1
+    LC.RadioListenDial(ply, net.ReadFloat())
+end)
+
+timer.Create("LivingCityRadioListen", 0.25, 0, function()
+    for ply, l in pairs(LC.Listening) do
+        if not IsValid(ply) then
+            LC.Listening[ply] = nil
+        elseif not ply:Alive() or (LC.InCustody and LC.InCustody(ply)) then
+            ListenOff(ply)
+        elseif not LC.HasItem(ply, l.item) then
+            ListenOff(ply, "Your radio's gone.")
+        else
+            ListenSend(ply, l)
+            -- the pirate band, out loud, where a unit can hear it
+            local _, f7 = LC.RadioStations()
+            if math.abs(l.dial - f7) <= 0.6 and CurTime() - (l.caughtAt or -999) > 120 and not LC.PlayerIsCP(ply)
+                and LC.SeenBySecurity and LC.SeenBySecurity(ply, 300) then
+                l.caughtAt = CurTime()
+                if LC.ReportCrime then LC.ReportCrime(ply, "Listening to an illegal broadcast", 120) end
+                if LC.Notice then LC.Notice(ply, "warn", "A unit heard that", "Freq 7, out loud, in front of Civil Protection. Turn it off, or run.", 6) end
+            end
+        end
+    end
+end)
+
+hook.Add("PlayerDisconnected", "LivingCityRadioListen", function(ply) LC.Listening[ply] = nil end)
+
+------------------------------------------------------------------------
 -- Pat-down (Civil Protection)
 ------------------------------------------------------------------------
 

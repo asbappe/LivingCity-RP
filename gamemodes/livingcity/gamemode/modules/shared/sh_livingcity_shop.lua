@@ -73,9 +73,9 @@ LCS.Items = {
     --                "citizen" lets hunted Resistance pass as ordinary citizens
     --   tool         "lockpick" for locked doors, "bypass" for Combine doors too
     ------------------------------------------------------------------------
-    radio           = { name = "Union radio", model = "models/props_lab/citizenradio.mdl", radio = "union", sell = 12,
+    radio           = { name = "Union radio", model = "models/props_lab/citizenradio.mdl", radio = "union", sell = 12, use = "listen", useLabel = "Listen",
                         desc = "Union band. Hear city notices before the loudspeakers do. Talk with !r" },
-    radio_tuned     = { name = "Radio", model = "models/props_lab/citizenradio.mdl", radio = "resistance",
+    radio_tuned     = { name = "Radio", model = "models/props_lab/citizenradio.mdl", radio = "resistance", use = "listen", useLabel = "Listen",
                         contraband = true, conceal = 0.25, sell = 20,
                         desc = "Tuned to Freq 7, the Resistance's: their chat, sweep warnings, and whatever Civil Protection says when it thinks nobody is listening" },
     permit          = { name = "Travel permit", model = "models/props_c17/paper01.mdl", permit = true,

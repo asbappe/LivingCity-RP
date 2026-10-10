@@ -1004,6 +1004,8 @@ end)
 
 util.AddNetworkString("lc_jg_panel") -- server -> client: { kind, ... } ({} closes it)
 util.AddNetworkString("lc_jg_act")   -- client -> server: action, argument (JSON)
+util.AddNetworkString("lc_radio_listen") -- server -> client: your own radio switched on ({ dial, ... }) or off ({})
+util.AddNetworkString("lc_radio_dial")   -- client -> server: where you've turned your radio's dial (0 switches it off)
 util.AddNetworkString("lc_radio_bench") -- server -> nearby clients: a radio repair set, as it is tuned (sv_livingcity_moregames.lua)
 
 function LC.JobGameDefine(kind, def) GAMES[kind] = def end
