@@ -151,7 +151,10 @@ local WHISPERS = {
 
 hook.Add("LivingCityEventSoon", "LivingCityRadio", function(name, secs)
     local title = EVENT_TITLES[name] or name
-    LC.RadioNotice("union", string.format("Notice: %s begins in %d seconds.", title, math.floor(secs)))
+    -- the Union band only announces the routine ones; the rest are surprises
+    if LC.PublicEvents and LC.PublicEvents[name] then
+        LC.RadioNotice("union", string.format("Notice: %s begins in %d seconds.", title, math.floor(secs)))
+    end
     if WHISPERS[name] then LC.RadioNotice("resistance", WHISPERS[name]) end
 end)
 

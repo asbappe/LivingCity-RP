@@ -12,6 +12,8 @@ Three flat folders in their own addon, so updates to the gamemode never touch th
 
 `.wav`, `.mp3` or `.ogg`. One is picked each time, never the same twice running. A `.txt` with the same name is its subtitle. The longest trigger that fits wins, so `curfew_soon1.wav` is curfew_soon, not curfew.
 
+**Only the routine is announced ahead.** Rations and curfew get a two-minute warning (`rations_soon`, `curfew_soon`). A sweep, a raid or a supply convoy is a surprise: the PA says nothing until it starts. A lockdown is never scheduled; it answers violence (the escalation reaching red alert, or the city falling into unrest).
+
 **How she picks her tone:** each trigger has a usual tone (shown below). It goes up a step while the city is on red sociostability, and up again after a run of violence (three raids, skirmishes, breakouts, outbreaks or rebel gains in ten minutes is a step, six is two; warm triggers only escalate on red). Furious is the ceiling. If the tone she wants has no recordings she uses the nearest calmer one, then the nearest angrier one, so one warm take covers a trigger on its own.
 
 In game (superadmin): `lc_announce_rescan` picks up new files, `lc_announce_clips` lists what it found, `lc_announce_say <overwatch|administrator> <trigger> [warm|firm|stern|furious]` plays one, `lc_announce_tier <trigger>` says which tone she'd use right now.
@@ -74,22 +76,6 @@ In game (superadmin): `lc_announce_rescan` picks up new files, `lc_announce_clip
 *Furious:*
 - `sweep_furious1.wav`: I have been patient. I have been generous. Anyone who obstructs these checks will answer to me, and you will not enjoy it.
 
-## sweep_soon
-
-*About two minutes before an inspection sweep.*
-
-**Overwatch** (`overwatch/`):
-
-- `sweep_soon1.wav`: Advisory. Civil status inspections will begin shortly. Have your papers prepared.
-
-**The Administrator** (`administrator/`), usually **warm**:
-
-*Warm:*
-- `sweep_soon1.wav`: A little reminder, everyone: checks will be starting shortly. Have your papers to hand and this will be painless.
-
-*Firm:*
-- `sweep_soon_firm1.wav`: Checks begin in minutes. If your papers are not in order, I suggest you sort that out now, and not when an officer is looking at you.
-
 ## curfew
 
 *Curfew begins; everyone must reach their housing block.*
@@ -145,25 +131,6 @@ In game (superadmin): `lc_announce_rescan` picks up new files, `lc_announce_clip
 *Furious:*
 - `lockdown_furious1.wav`: That is quite enough! The city is locked down because some of you cannot be trusted with your freedom. Inside. Now. All of you.
 
-## lockdown_soon
-
-*About two minutes before lockdown.*
-
-**Overwatch** (`overwatch/`):
-
-- `lockdown_soon1.wav`: Warning. Lockdown procedures are imminent. Proceed indoors.
-
-**The Administrator** (`administrator/`), usually **firm**:
-
-*Firm:*
-- `lockdown_soon_firm1.wav`: Everyone, please listen. A lockdown is coming very shortly. Get yourselves indoors and stay there.
-
-*Stern:*
-- `lockdown_soon_stern1.wav`: Lockdown in minutes. If you are outside when it falls, that is entirely your own doing. Get inside.
-
-*Furious:*
-- `lockdown_soon_furious1.wav`: Get off the streets! Lockdown is about to fall, and I will not be responsible for what happens to those still out there!
-
 ## raid
 
 *A housing block inspection (block raid) begins.*
@@ -181,22 +148,6 @@ In game (superadmin): `lc_announce_rescan` picks up new files, `lc_announce_clip
 
 *Furious:*
 - `raid_furious1.wav`: Do not insult me by pretending. Every drawer, every floorboard. You have brought this on yourselves, and you will sit quietly while it is undone.
-
-## raid_soon
-
-*About two minutes before a block inspection.*
-
-**Overwatch** (`overwatch/`):
-
-- `raid_soon1.wav`: Advisory. A housing inspection will begin shortly in a nearby block. Remain at your residence.
-
-**The Administrator** (`administrator/`), usually **firm**:
-
-*Firm:*
-- `raid_soon_firm1.wav`: A word to one of our blocks. Inspectors will be calling soon. I'd tidy up if I were you, and perhaps do some thinking.
-
-*Stern:*
-- `raid_soon_stern1.wav`: Inspectors are almost at your door. If there is anything you ought to hand over, this is the last chance to do it quietly.
 
 ## supply
 
@@ -218,22 +169,6 @@ In game (superadmin): `lc_announce_rescan` picks up new files, `lc_announce_clip
 
 *Stern:*
 - `supply_stern1.wav`: Touch those supplies and you will answer for it. Every crate is counted, and so is every person near one.
-
-## supply_soon
-
-*About two minutes before a supply drop.*
-
-**Overwatch** (`overwatch/`):
-
-- `supply_soon1.wav`: Advisory. A supply convoy will pass through the city shortly. Keep the route clear.
-
-**The Administrator** (`administrator/`), usually **warm**:
-
-*Warm:*
-- `supply_soon1.wav`: Deliveries are due shortly, everyone. Stand back from the road and let them through, please.
-
-*Firm:*
-- `supply_soon_firm1.wav`: Supplies arrive shortly. They are counted, and so are the people nearby. Think on that.
 
 ## ended
 

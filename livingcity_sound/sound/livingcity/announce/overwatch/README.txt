@@ -8,18 +8,16 @@ Optional subtitle: a .txt with the same name (curfew1.wav + curfew1.txt).
 Draft lines for every trigger: ANNOUNCEMENT_SCRIPTS.md, at the top of this addon.
 
 TRIGGERS (what a file's name starts with) AND WHEN THEY PLAY:
+(Only rations and curfew are warned ahead. Sweeps, raids and supply convoys
+are surprises, and a lockdown only ever answers violence.)
   rations         Ration distribution begins at the queue lines.
   rations_soon    About two minutes before rations.
   sweep           An inspection sweep starts: units stop people and check papers.
-  sweep_soon      About two minutes before an inspection sweep.
   curfew          Curfew begins; everyone must reach their housing block.
   curfew_soon     About two minutes before curfew.
-  lockdown        Full lockdown: more units, strict curfew, perimeter held.
-  lockdown_soon   About two minutes before lockdown.
+  lockdown        Full lockdown after violence: more units, strict curfew, perimeter held.
   raid            A housing block inspection (block raid) begins.
-  raid_soon       About two minutes before a block inspection.
   supply          A Combine supply convoy or dropship arrives with stores.
-  supply_soon     About two minutes before a supply drop.
   ended           A curfew or lockdown is over.
   socio_green     The city drops back to green (nominal).
   socio_yellow    The city moves to yellow (marginal): more stops.

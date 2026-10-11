@@ -1193,9 +1193,21 @@ hook.Run("PlayerSay", unitR, "!r sweep in block two")
 ok(has(rebelR.chat, "[Intercept]") and not has(listener.chat, "sweep in block two"), "CP traffic leaks to retuned radios")
 ok(hook.Run("PlayerSay", deaf, "!r hello") == "" and has(deaf.chat, "You don't have a radio"), "no radio, no talking")
 listener.chat, rebelR.chat = {}, {}
+hook.Run("LivingCityEventSoon", "curfew", 45)
+ok(has(listener.chat, "Notice: curfew begins in 45 seconds"), "radios hear about routine events before the loudspeakers")
+listener.chat, rebelR.chat = {}, {}
 hook.Run("LivingCityEventSoon", "sweep", 45)
-ok(has(listener.chat, "Notice: civil status inspections begins in 45 seconds"), "radios hear about events before the loudspeakers")
-ok(has(rebelR.chat, "Move anything you don't want found"), "Freq 7 adds a warning")
+ok(not has(listener.chat, "Notice:"), "a sweep is a surprise: nothing on the Union band")
+ok(has(rebelR.chat, "Move anything you don't want found"), "but Freq 7's informants whisper it")
+listener.chat, rebelR.chat = {}, {}
+hook.Run("LivingCityEventSoon", "raid", 45)
+ok(not has(listener.chat, "Notice:") and has(rebelR.chat, "go through a housing block"), "a raid is a surprise too, except to the Resistance")
+do
+    local auto = {}
+    for _, w in ipairs(LC.AutoEventWeights or {}) do auto[w[1]] = true end
+    ok(auto.rations and auto.sweep and not auto.lockdown, "a lockdown is never scheduled: it answers violence")
+    ok(LC.PublicEvents.rations and LC.PublicEvents.curfew and not LC.PublicEvents.sweep and not LC.PublicEvents.raid and not LC.PublicEvents.supply, "only rations and curfew are announced ahead")
+end
 unitR.chat, rebelR.chat = {}, {}
 deaf:SetPos(FAR)
 LC.ReportCrime(deaf, "Testing the dispatch", 30)

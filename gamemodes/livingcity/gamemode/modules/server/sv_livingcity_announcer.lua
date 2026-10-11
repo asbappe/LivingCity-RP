@@ -24,8 +24,9 @@
       Triggers (what a file's name starts with)
         events         rations  sweep  curfew  lockdown  raid  supply
                        ended (an event is over: stabilization restored)
-        warnings       rations_soon  sweep_soon  curfew_soon  lockdown_soon
-                       raid_soon  supply_soon (two minutes ahead)
+        warnings       rations_soon  curfew_soon (two minutes ahead; a sweep,
+                       a raid or a supply convoy is a surprise, and a
+                       lockdown answers violence, so they have none)
         the city       socio_green  socio_yellow  socio_red
                        dawn  day  dusk  night
                        outbreak  blackout  power_restored
@@ -87,7 +88,7 @@ local EXT = { wav = true, mp3 = true, ogg = true }
 
 LC.AnnounceTriggers = {
     "rations", "sweep", "curfew", "lockdown", "raid", "supply", "ended",
-    "rations_soon", "sweep_soon", "curfew_soon", "lockdown_soon", "raid_soon", "supply_soon",
+    "rations_soon", "curfew_soon",
     "socio_green", "socio_yellow", "socio_red", "dawn", "day", "dusk", "night",
     "outbreak", "blackout", "power_restored", "skirmish_raid", "skirmish_sweep", "response",
     "breakout", "overwatch_drop", "block_raided", "territory_grew", "train_arrival", "welcome", "ambient",
@@ -100,9 +101,9 @@ local TIERS = LC.AnnounceTierNames
 
 -- the tone she usually takes for each thing (1 warm .. 4 furious)
 local BASE_TIER = {
-    rations = 1, supply = 1, ended = 1, rations_soon = 1, supply_soon = 1, sweep_soon = 1,
+    rations = 1, supply = 1, ended = 1, rations_soon = 1,
     dawn = 1, day = 1, dusk = 1, night = 1, ambient = 1, welcome = 1, power_restored = 1, train_arrival = 1, socio_green = 1,
-    sweep = 2, curfew = 2, curfew_soon = 2, lockdown_soon = 2, raid_soon = 2, blackout = 2, territory_grew = 2, socio_yellow = 2, outbreak = 2,
+    sweep = 2, curfew = 2, curfew_soon = 2, blackout = 2, territory_grew = 2, socio_yellow = 2, outbreak = 2,
     lockdown = 3, raid = 3, skirmish_raid = 3, skirmish_sweep = 3, response = 3, block_raided = 3, overwatch_drop = 3, socio_red = 3,
     breakout = 4,
 }
@@ -353,7 +354,8 @@ hook.Add("LivingCityEventStarted", "LivingCityAnnouncer", function(name)
     Trigger(name, { builtin = true, force = true, breenAfter = 14 })
 end)
 hook.Add("LivingCityEventSoon", "LivingCityAnnouncer", function(name)
-    if name then Trigger(name .. "_soon", { delay = 1, breenAfter = 8 }) end
+    -- only the routine ones are announced ahead: a sweep or a raid is a surprise
+    if name and LC.PublicEvents and LC.PublicEvents[name] then Trigger(name .. "_soon", { delay = 1, breenAfter = 8 }) end
 end)
 hook.Add("LivingCityEventEnded", "LivingCityAnnouncer", function(was)
     if was ~= "curfew" and was ~= "lockdown" then return end -- (the ones Overwatch says "restored" for)

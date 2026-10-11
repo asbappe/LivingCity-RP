@@ -174,6 +174,7 @@ local GUIDE = {
     } },
     { "Directives and jobs", {
         "F3 is your board. Events bring their own directives: they go up two minutes before, and come down when it's over.",
+        "Only rations and curfew are announced ahead. Sweeps, raids and supply convoys come without warning, and a lockdown only follows violence.",
         "Several people can take the same job: up to 8 for an event, 6 for containment or retaking ground, 4 for a chase.",
         "When the infestation spreads or the Resistance take ground, a directive to deal with it goes up straight away.",
     } },

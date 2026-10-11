@@ -64,6 +64,8 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **Dropships:** the container stays in the claws, the door opens and soldiers jump out; on red alert the first one out is an Elite.
   Notes:
+- [ ] **Surprise events:** only rations and curfew are announced two minutes ahead. Sweeps, raids and supply convoys come without warning (units still get their directive early; the Resistance hear a whisper on Freq 7). A lockdown only follows violence.
+  Notes:
 - [ ] **Alyx Combine models:** used automatically if the Workshop pack is installed (lc_combine_models_list shows what was found).
   Notes:
 

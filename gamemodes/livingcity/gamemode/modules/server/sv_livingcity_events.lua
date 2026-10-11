@@ -10,6 +10,11 @@
       Radio chatter  cops key their radios now and then
       The can        every so often a cop drops a can at your feet. You know the rest.
 
+    Rations and curfew are announced two minutes ahead; a sweep, a raid or a
+    supply convoy is a surprise (units are briefed, and the Resistance's
+    informants whisper it on Freq 7). A lockdown is never scheduled: it
+    answers violence (a high alert, or the city in unrest).
+
     Events run automatically (lc_auto_events) or from the editor panel / commands:
       lc_event <rations|sweep|curfew|lockdown> [minutes], lc_endevent, lc_announce
 ]]
@@ -57,7 +62,14 @@ local TITLES = {
 local cvSupplyMin = CreateConVar("lc_supply_minutes", "6", FLAGS, "How long a supply drop stays before the convoy moves on")
 local DEFAULT_MINUTES = { rations = 3, sweep = 2, curfew = 4, lockdown = 3, raid = 4 }
 setmetatable(DEFAULT_MINUTES, { __index = function(_, k) if k == "supply" then return cvSupplyMin:GetFloat() end end })
-local AUTO_WEIGHTS = { { "rations", 45 }, { "sweep", 30 }, { "curfew", 18 }, { "lockdown", 7 }, { "raid", 14 }, { "supply", 10 } }
+-- (no lockdown: a lockdown answers violence, from the escalation or the city
+-- falling into unrest: sv_livingcity_response.lua, sv_livingcity_war.lua)
+local AUTO_WEIGHTS = { { "rations", 45 }, { "sweep", 30 }, { "curfew", 18 }, { "raid", 14 }, { "supply", 10 } }
+LC.AutoEventWeights = AUTO_WEIGHTS
+
+-- Announced ahead to everyone: the routine, published ones. A sweep, a raid or
+-- a supply convoy is a surprise; only the units (and the Resistance's informants) know.
+LC.PublicEvents = { rations = true, curfew = true }
 
 local RADIO_LINES = {
     "npc/metropolice/vo/copy.wav", "npc/metropolice/vo/ten4.wav", "npc/metropolice/vo/rodgerthat.wav",

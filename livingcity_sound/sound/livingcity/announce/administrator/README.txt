@@ -19,18 +19,16 @@ nearest angrier one, so one warm take covers a trigger on its own.
 Draft lines for every trigger and tone: ANNOUNCEMENT_SCRIPTS.md, at the top of this addon.
 
 TRIGGERS, HER USUAL TONE, AND WHEN THEY PLAY:
+(Only rations and curfew are warned ahead. Sweeps, raids and supply convoys
+are surprises, and a lockdown only ever answers violence.)
   rations         warm     Ration distribution begins at the queue lines.
   rations_soon    warm     About two minutes before rations.
   sweep           firm     An inspection sweep starts: units stop people and check papers.
-  sweep_soon      warm     About two minutes before an inspection sweep.
   curfew          firm     Curfew begins; everyone must reach their housing block.
   curfew_soon     firm     About two minutes before curfew.
-  lockdown        stern    Full lockdown: more units, strict curfew, perimeter held.
-  lockdown_soon   firm     About two minutes before lockdown.
+  lockdown        stern    Full lockdown after violence: more units, strict curfew, perimeter held.
   raid            stern    A housing block inspection (block raid) begins.
-  raid_soon       firm     About two minutes before a block inspection.
   supply          warm     A Combine supply convoy or dropship arrives with stores.
-  supply_soon     warm     About two minutes before a supply drop.
   ended           warm     A curfew or lockdown is over.
   socio_green     warm     The city drops back to green (nominal).
   socio_yellow    firm     The city moves to yellow (marginal): more stops.
