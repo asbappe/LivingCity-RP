@@ -39,6 +39,7 @@ local function CharKeys()
         "lce_credits", "lce_standing", "lcf_faction", "lcf_special", "lci_inv", "lci_stash_" .. map, "lc_block_" .. map,
         "lcj_job", "lcq_story", "lcq_done", "lcq_loyalty", "lcq_sympathy", "lcq_corruption", "lc_notes",
         "lc_docs", "lc_housed_how", "lc_transfer_at",
+        "lcf_transhuman", "lc_stalker", "lc_close_used", "lc_close_at", -- (the conditioning, a stalker, close calls: the person's, not the player's)
     }
     for _, f in ipairs(LCF and LCF.Factions or {}) do keys[#keys + 1] = "lcf_xp_" .. f.id end
     return keys
@@ -71,6 +72,7 @@ local function Summary(ply)
         name = LC.CharacterName and LC.CharacterName(ply) or ply:Nick(), cid = ply:GetNW2String("lc_cid", ""),
         model = ply:GetNW2String("lc_model", ""), faction = f and f.name or "Citizen", rank = rank and rank.name or nil,
         credits = LC.Credits and LC.Credits(ply) or nil, standing = LC.Standing and LC.Standing(ply) or nil, last = os.time(),
+        close = LC.CloseCallsLeft and LC.CloseCallsLeft(ply) or nil,
     }
 end
 
@@ -199,14 +201,16 @@ function LC.SendSlots(ply)
     local can, why = LC.CanSwitchCharacter(ply)
     local list = {}
     for i = 1, math.max(1, cvSlots:GetInt()) do list[i] = m.slots[i] or false end
-    LC.SendCompressed("lc_slots", { active = m.active, slots = list, can = can or nil, why = why }, ply)
+    local legacy = LC.Legacy and LC.Legacy(ply) or nil
+    LC.SendCompressed("lc_slots", { active = m.active, slots = list, can = can or nil, why = why, legacy = legacy }, ply)
 end
 
 net.Receive("lc_slots_do", function(_, ply)
     local action, n = net.ReadString(), net.ReadString()
     local ok, msg
     if action == "play" then ok, msg = LC.SwitchCharacter(ply, n)
-    elseif action == "delete" then ok, msg = LC.DeleteCharacterSlot(ply, n) end
+    elseif action == "delete" then ok, msg = LC.DeleteCharacterSlot(ply, n)
+    elseif action == "retire" and LC.RetireCharacter then ok, msg = LC.RetireCharacter(ply) end
     if msg then ply:ChatPrint("[Characters] " .. msg) end
     if action ~= "play" or not ok then LC.SendSlots(ply) end
 end)

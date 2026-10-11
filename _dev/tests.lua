@@ -46,6 +46,8 @@ ok(LCF.Get("cp").ranks[3].loadout[2] == "weapon_pistol", "ranks inherit loadouts
 ok(LCF.Get("resistance").ranks[4].hunted == true, "Lieutenant inherits hunted from Fighter")
 
 ----------------------------------------------------------------------
+_setcvar("lc_close_calls", 0) -- (the tests below expect every death to be final: close calls are tested on their own, ProgressTests)
+_setcvar("lc_levy_threshold", 0) -- (and nobody's savings to be levied mid-test)
 section("Saving and loading a layout")
 local admin = _makeplayer("Admin", Vector(0, -3000, 0))
 admin.superadmin = true
@@ -1969,12 +1971,13 @@ ok(GMt:GetFallDamage(resident, 900) > 50 and GMt:GetFallDamage(resident, 400) ==
 LC.AddCredits(resident, 200)
 LC.GiveItem(resident, "ration")
 local oldName, oldBlock = resident:GetNW2String("lc_char", "?"), resident:GetNW2Int("lc_block", 0)
+local heir = math.min(200, math.floor(LC.Credits(resident) / 4)) -- (the next person inherits a quarter of the savings: sv_livingcity_progress.lua)
 if LC.Prisoners[resident] then LC.ReleasePrisoner(resident) end -- dying in custody is exempt; make sure that's not why
 resident.alive = false
 hook.Run("PlayerDeath", resident)
 resident.alive = true
 ok(resident:GetNW2String("lc_char", "") ~= "" and resident:GetNW2String("lc_char", "") ~= oldName or oldName == "?", "dying makes you a new person")
-ok(LC.Credits(resident) <= 20 and not LC.HasItem(resident, "ration") and LC.Standing(resident) == 0, "with nothing from the old life")
+ok(LC.Credits(resident) <= 20 + heir and not LC.HasItem(resident, "ration") and LC.Standing(resident) == 0, "with nothing from the old life (but a small inheritance)", LC.Credits(resident))
 local ghost = newPlayer("Ghost", "zombie")
 local ghostName = ghost:GetNW2String("lc_char", "")
 LC.AddCredits(ghost, 50)
@@ -10418,6 +10421,182 @@ door:Remove()
 for _, p in ipairs({ ow, dl, cmd, cit, vic }) do p:SetPos(Vector(-150000, 150000, 0)) LC.SetFaction(p, "citizen", nil, true) end
 end
 MergeKickTests()
+
+function OperatorDoorTests()
+section("The Scanner Operator, and the Overwatch's boots")
+local O0 = Vector(-170000, -60000, 0)
+local op = newPlayer("ScanOperator", "cp", "scanner_op")
+local plain = newPlayer("ScanPlainUnit", "cp")
+_run(0.3)
+ok(LC.IsScannerOperator(op) and not LC.IsScannerOperator(plain), "Scanner Operator is a Civil Protection role")
+ok(not LC.OperatorLink(plain), "only an operator flies from a terminal")
+local con = ents.Create("lc_console") con:SetPos(O0)
+op:SetPos(O0 + Vector(3000, 0, 0))
+local okFar = LC.OperatorLink(op)
+ok(not okFar, "an operator needs a terminal (or the Nexus)")
+op:SetPos(O0 + Vector(60, 0, 0))
+ok(LC.OperatorLink(op) and LC.ScannerLinks[op] ~= nil, "at a Combine console, the operator is in a scanner")
+local l = LC.ScannerLinks[op]
+local reb = newPlayer("ScanRebel", "resistance", nil, 900)
+local wan = newPlayer("ScanWanted", "citizen")
+_run(0.3)
+reb:SetPos(O0 + Vector(0, 3000, 0))
+local bolos = {}
+hook.Add("LivingCityBOLO", "TestOperator", function(b) bolos[#bolos + 1] = b end)
+local xp0 = tonumber(op:GetPData("lcf_xp_cp", 0)) or 0
+local origin = reb:EyePos() - Vector(80, 0, 0)
+local rep = LC.ScannerPhoto(op, l, origin, Vector(1, 0, 0))
+ok(rep ~= nil and #bolos == 1 and string.find(bolos[1].text, "rebel", 1, true), "a rebel the operator photographs goes out as a BOLO", #bolos)
+ok((tonumber(op:GetPData("lcf_xp_cp", 0)) or 0) > xp0, "and the operator earns XP for the report")
+LC.SetWanted(wan, 120, "Test")
+wan:SetPos(O0 + Vector(0, 6000, 0))
+LC.ScannerPhoto(op, l, wan:EyePos() - Vector(80, 0, 0), Vector(1, 0, 0))
+ok(#bolos == 1, "anyone else photographed is reported, but isn't a BOLO")
+hook.Add("LivingCityBOLO", "TestOperator", function() end)
+LC.EndScannerLink(op)
+con:Remove()
+-- doors off their hinges
+local sol = newPlayer("KickSoldier", "cp", nil, 2000)
+sol:SetPData("lcf_transhuman", "1") LC.SetFaction(sol, "cp", nil, true)
+local eli = newPlayer("KickElite", "cp", nil, 3000)
+eli:SetPData("lcf_transhuman", "1") LC.SetFaction(eli, "cp", nil, true)
+local guard = newPlayer("KickGuard", "cp", nil, 1300)
+guard:SetPData("lcf_transhuman", "1") LC.SetFaction(guard, "cp", nil, true)
+_run(0.3)
+ok(LC.KickPower(guard) == 0 and LC.KickPower(sol) == 1 and LC.KickPower(eli) == 2, "Combine Soldiers kick doors off their hinges, the Elite harder; a Prison Guard doesn't")
+ok(LC.DoorFlight(1) == 0, "a Soldier's door falls over where it hung")
+local lo, hi = 1e9, 0
+for _ = 1, 30 do local d = LC.DoorFlight(2) lo, hi = math.min(lo, d), math.max(hi, d) end
+ok(lo >= 60 and hi <= 120 and hi > lo, "an Elite's flies five to ten feet, never the same twice", lo .. " to " .. hi)
+sol:SetPos(O0 + Vector(0, 9000, 0)) sol.aim = Vector(1, 0, 0)
+local door = ents.Create("prop_door_rotating") door:SetPos(O0 + Vector(50, 9000, 0)) door:Spawn()
+door:SetModel("models/props_c17/door01_left.mdl")
+ok(LC.KickDoor(sol, door) and IsValid(LC.BlownDoors[door]) and door.nodraw, "a hinged door comes off and flies in")
+ok(LC.BlownDoors[door]:GetModel() == "models/props_c17/door01_left.mdl", "(the same door)")
+ok(not LC.KickDoor(sol, door), "(a door already off its hinges stays off)")
+LC.RehangDoor(door)
+ok(LC.BlownDoors[door] == nil and not door.nodraw, "and it's back on its hinges later")
+local brush = ents.Create("func_door") brush:SetPos(O0 + Vector(50, 9200, 0)) brush:Spawn()
+local fired = {}
+brush.Fire = function(_, input) fired[#fired + 1] = input end
+ok(LC.KickDoor(sol, brush) and LC.BlownDoors[brush] == nil and has(fired, "Open"), "a brush door (sliding, a shutter) just opens")
+local door2 = ents.Create("prop_door_rotating") door2:SetPos(O0 + Vector(50, 9400, 0)) door2:Spawn()
+LC.KickDoor(guard, door2)
+ok(LC.BlownDoors[door2] == nil, "a Prison Guard's kick opens it like anyone's")
+door:Remove() door2:Remove() brush:Remove()
+for _, p in ipairs({ op, plain, reb, wan, sol, eli, guard }) do p:SetPos(Vector(-150000, 150000, 0)) LC.SetFaction(p, "citizen", nil, true) end
+end
+OperatorDoorTests()
+
+function ProgressTests()
+section("Close calls, careers for life, inheritance and the levy")
+_setcvar("lc_close_calls", 3)
+_setcvar("lc_permadeath", 1)
+local P0 = Vector(-180000, -70000, 0)
+local p = newPlayer("CloseCaller", "citizen")
+_run(0.3)
+p:SetPos(P0)
+local cid = p:GetNW2String("lc_cid", "")
+ok(LC.CloseCallsLeft(p) == 3, "a person starts with three close calls")
+LC.GiveItem(p, "ration", 1)
+p:Kill() _run(0.5) p.alive = true p:Spawn() _run(2)
+ok(p:GetNW2String("lc_cid", "") == cid and cid ~= "", "dying isn't the end: still the same person")
+ok(LC.CloseCallsLeft(p) == 2 and not LC.HasItem(p, "ration"), "one close call fewer, and the pockets are gone")
+ok(p:GetNW2Float("lc_recovering_until", 0) > CurTime(), "and they're still recovering for a while")
+for _ = 1, 2 do p:Kill() _run(0.5) p.alive = true p:Spawn() _run(0.5) end
+ok(p:GetNW2String("lc_cid", "") == cid and LC.CloseCallsLeft(p) == 0, "three close calls, still the same person")
+LC.AddCredits(p, 1000 - LC.Credits(p))
+p:Kill() _run(0.5) p.alive = true p:Spawn() _run(0.5)
+ok(p:GetNW2String("lc_cid", "") ~= cid, "the death after the last close call is the end of them")
+ok(LC.CloseCallsLeft(p) == 3, "the new person has their own close calls")
+local start = GetConVar("lc_start_credits") and GetConVar("lc_start_credits"):GetInt() or 20
+ok(LC.Credits(p) == start + 200, "and inherits a quarter of the savings, up to 200", LC.Credits(p))
+local lg = LC.Legacy(p)
+ok(lg.lives >= 1 and lg.last[1] and lg.last[1].ended == "died", "the player's legacy remembers the life")
+-- a stalker's death is the end whatever's left
+local st = newPlayer("FinalStalker", "citizen")
+_run(0.3)
+local scid = st:GetNW2String("lc_cid", "")
+LC.MakeStalker(st)
+ok(LC.DeathIsFinal(st), "a stalker's death is the end, close calls or not")
+-- careers for life
+local ow = newPlayer("LifeOverwatch", "cp", nil, 2000)
+ow:SetPData("lcf_transhuman", "1") LC.SetFaction(ow, "cp", nil, true)
+local okJ, whyJ = LC.CanJoinFaction(ow, "citizen")
+ok(not okJ and string.find(whyJ or "", "Overwatch for life", 1, true), "a conditioned person can't go back to being a citizen", whyJ)
+ok(not LC.CanJoinFaction(st, "citizen"), "nor can a stalker")
+-- retiring
+local okR = LC.RetireCharacter(ow)
+ok(okR and not LC.Conditioned(ow) and ow:GetNW2String("lcf_faction", "") == "citizen", "retiring someone: a new person, free of the old one's career")
+-- the levy
+_setcvar("lc_levy_threshold", 2000)
+local rich = newPlayer("Hoarder", "citizen")
+LC.AddCredits(rich, 3000 - LC.Credits(rich))
+ok(LC.Levy(rich) == 100 and LC.Credits(rich) == 2900, "the Union levies a tenth of what's held above 2000")
+local poor = newPlayer("Saver", "citizen")
+ok(LC.Levy(poor) == 0, "and nothing from anyone below it")
+_setcvar("lc_levy_threshold", 0)
+_setcvar("lc_close_calls", 0)
+for _, q in ipairs({ p, st, ow, rich, poor }) do q:SetPos(Vector(-150000, 150000, 0)) end
+LC.SetFaction(st, "citizen", nil, true)
+end
+ProgressTests()
+
+function KickFollowTests()
+section("Kicks: doors bang open, boots break crates, fallen doors knock out and get rehung")
+local K0 = Vector(-190000, -80000, 0)
+local mc = newPlayer("KickMetrocop", "cp", nil, 200)
+_run(0.3)
+mc:SetPos(K0) mc.aim = Vector(1, 0, 0)
+local door = ents.Create("prop_door_rotating") door:SetPos(K0 + Vector(50, 0, 0)) door:Spawn()
+ok(LC.KickDoor(mc, door) and door.kv.speed == "500" and LC.BlownDoors[door] == nil, "a metrocop's kick bangs the door open fast, on its hinges")
+_run(1.5)
+ok(door.kv.speed == "100", "(and it swings at its own pace again after)")
+local crate = ents.Create("prop_physics") crate:SetPos(K0 + Vector(40, 300, 0)) crate:Spawn() crate.hp = 40
+local tr0 = util.TraceHull
+util.TraceHull = function() return { Hit = true, Entity = crate, HitPos = crate:GetPos() } end
+LC.KickLand(mc)
+util.TraceHull = tr0
+ok(crate.hp <= 10, "a kick hits a crate like a crowbar", crate.hp)
+-- knocked out, not killed
+local vic = newPlayer("DoorVictim", "citizen")
+_run(0.3)
+local hp = vic:Health()
+LC.KnockOut(vic, 15, 25)
+ok(vic:GetNW2Float("lc_ko_until", 0) > CurTime() + 14 and vic.frozen and vic:Health() == hp, "a flying door knocks you out cold: no harm done, no close call")
+_run(16)
+ok(not vic.frozen, "and you come round")
+-- rehanging
+local sol = newPlayer("KickSoldier2", "cp", nil, 2000)
+sol:SetPData("lcf_transhuman", "1") LC.SetFaction(sol, "cp", nil, true)
+_run(0.3)
+sol:SetPos(K0 + Vector(0, 600, 0)) sol.aim = Vector(1, 0, 0)
+local d2 = ents.Create("prop_door_rotating") d2:SetPos(K0 + Vector(50, 600, 0)) d2:Spawn()
+LC.KickDoor(sol, d2)
+local fallen = LC.BlownDoors[d2]
+ok(IsValid(fallen) and fallen.lcKickedDoor == d2, "the door is off its hinges")
+local cit = newPlayer("DoorCitizen", "citizen")
+_run(0.3)
+local okC, whyC = LC.UseFallenDoor(cit, fallen)
+ok(not okC and string.find(whyC or "", "Maintenance Technician", 1, true), "only a Maintenance Technician can hang it back up")
+local tech = newPlayer("DoorTech", "citizen")
+LC.SetJob(tech, "maintenance", true)
+_run(0.3)
+tech:SetPos(fallen:GetPos() + Vector(0, 40, 0))
+fallen:SetPos(K0 + Vector(400, 600, 0))
+tech:SetPos(fallen:GetPos() + Vector(0, 40, 0))
+ok(LC.UseFallenDoor(tech, fallen) and LC.DoorCarriers[tech] == fallen, "a technician lifts the fallen door")
+fallen:SetPos(d2:GetPos() + Vector(10, 0, 0))
+tech:SetPos(d2:GetPos() + Vector(-40, 0, 0))
+tech.lcDoorUseNext = 0
+local c0 = LC.Credits(tech)
+ok(LC.UseFallenDoor(tech, fallen), "carried back to its frame, E hangs it")
+_run(9)
+ok(LC.BlownDoors[d2] == nil and not d2.nodraw and LC.Credits(tech) > c0, "it's back on its hinges, and the technician is paid")
+for _, e in ipairs({ door, crate, d2 }) do if IsValid(e) then e:Remove() end end
+for _, q in ipairs({ mc, vic, sol, cit, tech }) do q:SetPos(Vector(-150000, 150000, 0)) LC.SetJob(q, "", true) LC.SetFaction(q, "citizen", nil, true) end
+end
+KickFollowTests()
 
 ----------------------------------------------------------------------
 section("Stop")

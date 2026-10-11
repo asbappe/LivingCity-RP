@@ -265,6 +265,8 @@ end
 function LC.CanJoinFaction(ply, fid, sid)
     local f = LCF.Get(fid)
     if not f then return false, "No such faction." end
+    local bound = LC.BoundTo and not ply:IsSuperAdmin() and LC.BoundTo(ply, fid)
+    if bound then return false, bound end -- (careers that can't be undone: sv_livingcity_progress.lua)
     if f.whitelist and not ply:IsSuperAdmin() and ply:GetPData("lcf_wl_" .. fid, "0") ~= "1" then
         return false, "Whitelist only."
     end

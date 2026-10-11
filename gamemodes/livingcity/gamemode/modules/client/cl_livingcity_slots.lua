@@ -51,12 +51,28 @@ local function Card(parent, i, s, active, can, why)
             "DermaDefault", 0, 34, active and ACCENT or DIM)
         draw.SimpleText(string.format("%s credits   |   standing %s%s", tostring(s.credits or "?"), tostring(s.standing or "?"),
             active and "   |   playing now" or ""), "DermaDefault", 0, 52, DIM)
+        if s.close then
+            draw.SimpleText(s.close > 0 and string.format("%d close call%s left", s.close, s.close == 1 and "" or "s") or "No close calls left: the next death is the end",
+                "DermaDefault", 0, 68, s.close > 0 and DIM or Color(230, 120, 100))
+        end
     end
     local btns = vgui.Create("DPanel", card)
     btns:Dock(RIGHT)
     btns:SetWide(130)
     btns:DockMargin(0, 10, 10, 10)
     btns.Paint = nil
+    if active and s then
+        local ret = vgui.Create("DButton", btns)
+        ret:Dock(TOP)
+        ret:SetTall(28)
+        ret:SetText("Retire them")
+        ret:SetTextColor(Color(200, 60, 50))
+        ret.DoClick = function()
+            Derma_Query("Retire " .. (s.name or "them") .. "? They leave the city for good, and somebody new takes their place. " ..
+                "The new person inherits a little of their savings.", "Retire character",
+                "Retire", function() Do("retire", i) if IsValid(frame) then frame:Remove() end end, "Keep playing", function() end)
+        end
+    end
     if not active then
         local play = vgui.Create("DButton", btns)
         play:Dock(TOP)
@@ -87,9 +103,19 @@ net.Receive("lc_slots", function()
     frame = vgui.Create("DFrame")
     frame:SetTitle("Your characters")
     local n = #(t.slots or {})
-    frame:SetSize(math.min(ScrW() - 60, 620), math.min(ScrH() - 60, 70 + n * 104 + (t.can and 0 or 24)))
+    local lg = t.legacy
+    frame:SetSize(math.min(ScrW() - 60, 620), math.min(ScrH() - 60, 70 + n * 104 + (t.can and 0 or 24) + (lg and lg.lives and lg.lives > 0 and 24 or 0)))
     frame:Center()
     frame:MakePopup()
+    if lg and lg.lives and lg.lives > 0 then
+        local h, m = math.floor((lg.longest or 0) / 3600), math.floor(((lg.longest or 0) % 3600) / 60)
+        local last = lg.last and lg.last[1]
+        local note = vgui.Create("DLabel", frame)
+        note:Dock(TOP)
+        note:SetTextColor(DIM)
+        note:SetText(string.format("  Lives lived: %d.  Longest: %dh %02dm%s.%s", lg.lives, h, m, lg.longestName and (" (" .. lg.longestName .. ")") or "",
+            last and string.format("  Last: %s, %s.", last.name or "?", last.ended or "gone") or ""))
+    end
     if not t.can and t.why then
         local note = vgui.Create("DLabel", frame)
         note:Dock(TOP)

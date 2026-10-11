@@ -95,6 +95,7 @@ LC_MODULES = {
         "sv_livingcity_props",
         "sv_livingcity_checkpoints", -- (after power: turrets and forcefields run off its power banks)
         "sv_livingcity_prison",
+        "sv_livingcity_progress",
         "sv_livingcity_march", -- (after prison: arrested by a unit NPC, you're walked to the cells)
         "sv_livingcity_propaganda",
         "sv_livingcity_announcer", -- (after propaganda: it borrows the Administrator's speakers)

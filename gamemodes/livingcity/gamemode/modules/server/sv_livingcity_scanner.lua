@@ -71,7 +71,7 @@ function LC.CanLinkScanner(ply, console)
     if LC.ScannerLinks[ply] then return false, "You're already linked." end
     if not (Prisoner(ply) or Unit(ply) or ply:IsAdmin()) then return false, "ACCESS DENIED. Civil Protection credentials required." end
     for other, l in pairs(LC.ScannerLinks) do
-        if l.console == console and IsValid(other) then return false, "Someone's already on this console." end
+        if console ~= nil and l.console == console and IsValid(other) then return false, "Someone's already on this console." end
     end
     return true
 end
@@ -501,9 +501,24 @@ function LC.ScannerPhoto(ply, l, origin, aim)
         end
     end
 
-    -- the snitch's reward: Civil Standing, never time off
+    -- a Scanner Operator's photographs: XP (the same cap as a snitch's standing),
+    -- and a rebel caught on camera goes out to every unit as a BOLO
     local gain = 0
-    if not Unit(ply) then
+    if LC.IsScannerOperator(ply) then
+        local earned = Earned(ply, now)
+        gain = math.max(0, math.min(pts, cvSnitchCap:GetInt() - earned))
+        if gain > 0 then
+            table.insert(LC.ScannerEarned[ply], { t = now, n = gain })
+            if LC.AddXP then LC.AddXP(ply, gain, "scanner report") end
+        end
+        for _, ent in ipairs(caught) do
+            if ent:IsPlayer() and ent:GetNW2String("lc_spotted_why", "") == "a rebel" and LC.AddBOLO and LC.RecordKey then
+                local spot = LC.DescribePlace and LC.DescribePlace(ent:GetPos()) or ""
+                LC.AddBOLO(ply, LC.RecordKey(ent), "Photographed by a city scanner as a rebel" .. (spot ~= "" and (", " .. spot) or ""), 30)
+            end
+        end
+        ply:ChatPrint(string.format("[Scanner link] Report filed: %s.%s", table.concat(parts, ", "), gain > 0 and string.format(" %+d XP.", gain) or ""))
+    elseif not Unit(ply) then
         local earned = Earned(ply, now)
         gain = math.max(0, math.min(pts, cvSnitchCap:GetInt() - earned))
         if gain > 0 then
@@ -613,6 +628,50 @@ timer.Create("LivingCityScannerLinks", 0.5, 0, function()
 end)
 
 -- Being hurt pulls you out of it.
+------------------------------------------------------------------------
+-- The Scanner Operator: a Civil Protection role (two at a time) that flies a
+-- scanner from a Combine console, a data terminal, or anywhere in the Nexus
+-- (a map with none of those: from anywhere). F1 > Unit tools.
+------------------------------------------------------------------------
+
+local DESKS = { "lc_console", "lc_dataterminal", "lc_masterterminal" }
+function LC.IsScannerOperator(ply)
+    return IsValid(ply) and ply:IsPlayer() and ply:GetNW2String("lcf_faction", "") == "cp" and ply:GetNW2String("lcf_special", "") == "scanner_op"
+end
+
+-- Where an operator can fly from here: a desk (the console entity), "here"
+-- (in the Nexus, or a map with no desks), or nil.
+function LC.OperatorDesk(ply)
+    local any = false
+    for _, cls in ipairs(DESKS) do
+        for _, e in ipairs(LC.EntsOf and LC.EntsOf(cls) or {}) do
+            any = true
+            if IsValid(e) and e:GetPos():DistToSqr(ply:GetPos()) < 160 * 160 then return e end
+        end
+    end
+    for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("combine") or {}) do
+        any = true
+        if LCZ and LCZ.Contains(z, ply:GetPos(), 0) then return "here" end
+    end
+    if not any then return "here" end
+    return nil
+end
+
+function LC.OperatorLink(ply)
+    if not LC.IsScannerOperator(ply) then return false, "Scanner Operators only (F4: Civil Protection, Scanner Operator)." end
+    local desk = LC.OperatorDesk(ply)
+    if not desk then return false, "Get to a terminal: a Combine console, a data terminal, or anywhere in the Nexus." end
+    return LC.StartScannerLink(ply, desk ~= "here" and desk or nil)
+end
+
+LC.SlashCommands = LC.SlashCommands or {}
+LC.SlashCommands.scanner = function(ply)
+    local ok, why = LC.OperatorLink(ply)
+    if not ok and why then
+        if LC.Notice then LC.Notice(ply, "bad", "Scanner link", why, 5) else ply:ChatPrint(why) end
+    end
+end
+
 hook.Add("EntityTakeDamage", "LivingCityScannerLinks", function(target, dmg)
     if IsValid(target) and target:IsPlayer() and LC.ScannerLinks[target] and dmg:GetDamage() > 0 then
         timer.Simple(0, function() if IsValid(target) then LC.EndScannerLink(target, "Something hits you. You pull out of the link.") end end)

@@ -10,7 +10,8 @@
     Not counted as a death: infested players (the infested come back), admins in build
     mode, and anyone in custody (dying doesn't end a sentence, or shorten it).
 
-    lc_permadeath 0 turns it off.
+    lc_permadeath 0 turns it off. Most deaths aren't the end, though: each
+    person has a few close calls first (sv_livingcity_progress.lua).
     What belongs to the real player, not the character, stays: conduct strikes
     and the combat log.
 ]]
@@ -157,6 +158,9 @@ function LC.NewCharacter(ply, why)
     if not IsValid(ply) or not ply:IsPlayer() then return end
     local oldName = LC.CharacterName(ply)
     local oldCid = ply:GetNW2String("lc_cid", "")
+    -- what the next person inherits, and the player's record of this life (sv_livingcity_progress.lua)
+    local inherit = LC.Inheritance and LC.Inheritance(ply, why) or 0
+    if LC.RecordLegacy then LC.RecordLegacy(ply, why) end
 
     -- pockets and hidden things
     if LC.Inventory and LC.TakeItem then
@@ -166,7 +170,8 @@ function LC.NewCharacter(ply, why)
     ply:RemovePData("lci_stash_" .. game.GetMap())
 
     -- money and standing
-    ply:SetPData("lce_credits", GetConVar("lc_start_credits") and GetConVar("lc_start_credits"):GetInt() or 20)
+    ply:SetPData("lce_credits", (GetConVar("lc_start_credits") and GetConVar("lc_start_credits"):GetInt() or 20) + inherit)
+    ply.lcInherited = inherit
     ply:SetNW2Int("lce_credits", tonumber(ply:GetPData("lce_credits", 20)) or 20)
     ply:SetPData("lce_standing", 0)
     ply:SetNW2Int("lce_standing", 0)
@@ -234,6 +239,12 @@ hook.Add("PlayerDeath", "LivingCityCharacter", function(ply, inflictor, attacker
     if LC.InCustody and LC.InCustody(ply) then
         ply:ChatPrint("[Living City] You died in custody. That doesn't change who you are, or how long you're in for.")
         Card(false, "Died in custody: you're still you, and still serving your time.")
+        return
+    end
+    -- a close call, unless this one is the end of them (sv_livingcity_progress.lua)
+    if LC.DeathIsFinal and not LC.DeathIsFinal(ply) then
+        local left = LC.UseCloseCall(ply)
+        Card(false, left > 0 and string.format("A close call: %d left.", left) or "A close call: the last one.")
         return
     end
     Card(true)

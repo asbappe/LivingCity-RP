@@ -121,3 +121,52 @@ hook.Add("PlayerButtonDown", "LivingCityKick", function(ply, button)
     if ply:GetNW2String("lcf_faction", "") ~= "cp" then return end
     RunConsoleCommand("lc_kick")
 end)
+
+------------------------------------------------------------------------
+-- Knocked out by a door (sv_livingcity_kick.lua): black for a while, then
+-- the room swims, harder than Breen's water
+------------------------------------------------------------------------
+
+local function Dizzy(me, now)
+    local from, to = me:GetNW2Float("lc_dizzy_from", 0), me:GetNW2Float("lc_dizzy_until", 0)
+    if now >= to or now < from - 0.01 then return 0 end
+    return math.Clamp((to - now) / 8, 0, 1)
+end
+
+hook.Add("HUDPaint", "LivingCityKnockedOut", function()
+    local me = LocalPlayer()
+    if not IsValid(me) or not me:Alive() then return end
+    local left = me:GetNW2Float("lc_ko_until", 0) - CurTime()
+    if left <= 0 then return end
+    local a = math.Clamp(left / 1.5, 0, 1) -- (the last moment fades back in)
+    surface.SetDrawColor(0, 0, 0, 255 * a)
+    surface.DrawRect(0, 0, ScrW(), ScrH())
+    if a > 0.5 then
+        draw.SimpleText("Out cold", "DermaLarge", ScrW() / 2, ScrH() / 2 - 14, Color(170, 170, 175, 200 * a), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        draw.SimpleText(string.format("You come round in %d", math.ceil(left)), "DermaDefault", ScrW() / 2, ScrH() / 2 + 18, Color(140, 140, 145, 200 * a), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    end
+end)
+
+hook.Add("RenderScreenspaceEffects", "LivingCityKnockedOut", function()
+    local me = LocalPlayer()
+    if not IsValid(me) then return end
+    local d = Dizzy(me, CurTime())
+    if d <= 0 then return end
+    if DrawMotionBlur then DrawMotionBlur(0.08, 0.95 * d, 0.03) end
+    if DrawColorModify then
+        DrawColorModify({
+            ["$pp_colour_addr"] = 0.02 * d, ["$pp_colour_addg"] = 0, ["$pp_colour_addb"] = 0,
+            ["$pp_colour_brightness"] = -0.04 * d, ["$pp_colour_contrast"] = 1 + 0.15 * d,
+            ["$pp_colour_colour"] = 1 - 0.6 * d, ["$pp_colour_mulr"] = 0, ["$pp_colour_mulg"] = 0, ["$pp_colour_mulb"] = 0,
+        })
+    end
+end)
+
+LC_CL.ViewMods = LC_CL.ViewMods or {}
+LC_CL.ViewMods.knocked = { order = 41, fn = function(ply, view)
+    local d = Dizzy(ply, CurTime())
+    if d <= 0 then return end
+    local t = CurTime()
+    view.angles = view.angles + Angle(math.sin(t * 1.1) * 5 * d, math.sin(t * 0.7) * 4 * d, math.sin(t * 1.6) * 14 * d)
+    view.fov = view.fov + math.sin(t * 0.9) * 9 * d
+end }

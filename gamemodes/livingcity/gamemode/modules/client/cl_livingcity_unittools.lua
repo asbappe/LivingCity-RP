@@ -160,6 +160,11 @@ function LC_CL.OpenUnitTools()
         Note(s, "Your baton: left click strikes, right click arrests, reload searches.")
     end
 
+    if me:GetNW2String("lcf_special", "") == "scanner_op" then
+        s = Section("Scanner Operator")
+        Button(s, "Fly a scanner", "From a Combine console, a data terminal, or anywhere in the Nexus. Photographs earn XP; rebels go out as BOLOs.", Do("scanner"))
+    end
+
     if me:GetNW2String("lcf_special", "") == "ow_commander" then
         local left = me:GetNW2Float("lc_cmd_drop_at", 0) - CurTime()
         s = Section("Overwatch Commander", left > 0 and string.format("next squad in %d:%02d", math.floor(left / 60), math.floor(left % 60)) or "a squad is ready")

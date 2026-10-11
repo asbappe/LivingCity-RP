@@ -50,6 +50,12 @@ hook.Add("HUDPaint", "LivingCityRest", function()
             surface.DrawRect(0, h - lid, w, lid)
         end
     end
+    -- after a close call: still recovering (sv_livingcity_progress.lua)
+    local rec = me:GetNW2Float("lc_recovering_until", 0) - CurTime()
+    if rec > 0 then
+        draw.SimpleText(string.format("Recovering from a close call (%d:%02d): a little less to give", math.floor(rec / 60), math.floor(rec % 60)),
+            "DermaDefault", 20, (LC_CL.StatusBottom or 60) + 14, Color(200, 170, 150))
+    end
     -- the urge (parasites): a line under the needs while it's building
     local urge = me:GetNW2Float("lc_urge", 0)
     if urge >= 25 then
