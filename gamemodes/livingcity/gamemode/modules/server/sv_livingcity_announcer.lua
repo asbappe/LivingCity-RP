@@ -32,7 +32,7 @@
                        outbreak  blackout  power_restored
                        skirmish_raid  skirmish_sweep  response (a response squad)
                        breakout  overwatch_drop  block_raided  territory_grew
-                       train_arrival  welcome (just for someone joining)
+                       train_arrival  welcome (just for someone joining: hers, then Overwatch's)
         ambient        general city announcements; also what the Administrator's
                        periodic addresses are made of (lc_breen_broadcasts 1)
 
@@ -303,12 +303,21 @@ local function Say(voice, trig, only, force, tier)
     voice = VoiceName(voice)
     local now = CurTime()
     if not force and ((voiceNext[voice] or 0) > now or (trigNext[voice .. "/" .. trig] or 0) > now) then return false end
-    if voice == "administrator" and (LC.LiveSpeaker or LC.LiveNPC) then return false end -- somebody is already on air
+    if voice == "administrator" and not only and (LC.LiveSpeaker or LC.LiveNPC) then return false end -- somebody is already on air
     local path, text, used = LC.PickAnnounceClip(voice, trig, false, tier)
     if not path then return false end
-    voiceNext[voice] = now + cvGap:GetFloat()
-    trigNext[voice .. "/" .. trig] = now + cvCat:GetFloat()
+    -- one just for somebody (their welcome) doesn't hold up the city's own
+    if not only then
+        voiceNext[voice] = now + cvGap:GetFloat()
+        trigNext[voice .. "/" .. trig] = now + cvCat:GetFloat()
+    end
+    -- (and while someone's welcome plays, the city's go to everyone else)
     local to = only and { only } or nil
+    if not to then
+        to = {}
+        for _, p in ipairs(player.GetAll()) do if (p.lcWelcomeUntil or 0) <= now then to[#to + 1] = p end end
+        if #to == #player.GetAll() then to = nil end
+    end
     if voice == "overwatch" then
         net.Start("lc_announce")
         net.WriteString(path)
@@ -318,7 +327,14 @@ local function Say(voice, trig, only, force, tier)
             if text then p:ChatPrint("[" .. (TITLES[trig] or "City announcement") .. "] \"" .. text .. "\"") end
         end
     else
-        local hear = to or (LC.BreencastListeners and LC.BreencastListeners()) or player.GetAll()
+        local hear = only and { only } or (LC.BreencastListeners and LC.BreencastListeners()) or player.GetAll()
+        if to and not only then
+            local ok = {}
+            for _, p in ipairs(to) do ok[p] = true end
+            local kept = {}
+            for _, p in ipairs(hear) do if ok[p] then kept[#kept + 1] = p end end
+            hear = kept
+        end
         if #hear > 0 then
             net.Start("lc_breencast")
             net.WriteString(path)
@@ -327,9 +343,16 @@ local function Say(voice, trig, only, force, tier)
         end
     end
     hook.Run("LivingCityCustomAnnouncement", voice, trig, path, used)
-    return true
+    return true, path
 end
 LC.CustomAnnounce = Say
+
+-- How long a clip runs (SoundDuration can say 0 on a dedicated server; the wav's header then)
+local function ClipSecs(path)
+    local d = SoundDuration and SoundDuration(path) or 0
+    if d and d > 0.2 and d <= 60 then return d end
+    return LC.WavDuration and LC.WavDuration(path) or 8
+end
 
 -- Both voices for one thing happening: Overwatch first, the Administrator a few seconds after.
 -- built-in: Overwatch already spoke for this one (an event or a sociostability change),
@@ -379,20 +402,34 @@ hook.Add("LivingCityTerritoryGrew", "LivingCityAnnouncer", function() Trigger("t
 hook.Add("LivingCityTrainArrived", "LivingCityAnnouncer", function() Trigger("train_arrival", { delay = 2 }) end)
 hook.Add("LivingCityResponseSquad", "LivingCityAnnouncer", function() Trigger("response", { builtin = true }) end)
 
--- The welcome, just for them (also for a new person arriving: sv_livingcity_intake.lua).
-function LC.AnnounceWelcome(ply)
-    if not IsValid(ply) then return end
-    Say("overwatch", "welcome", ply, true)
-    timer.Simple(9, function() if IsValid(ply) then Say("administrator", "welcome", ply, true) end end)
+-- The welcome, just for them, whatever else is going on: the Administrator,
+-- then Overwatch as soon as she's finished. Nothing the city says reaches them
+-- over it (they hear the next one). Also for a new person arriving
+-- (sv_livingcity_intake.lua). If someone is speaking live on the loudspeakers,
+-- it waits for them to finish (a minute at most).
+function LC.AnnounceWelcome(ply, waited)
+    if not IsValid(ply) or not cvOn:GetBool() then return end
+    local now = CurTime()
+    if not waited and (ply.lcWelcomeUntil or 0) > now then return end -- (already being welcomed)
+    waited = waited or 0
+    if (LC.LiveSpeaker or LC.LiveNPC) and waited < 60 then
+        ply.lcWelcomeUntil = now + 4
+        timer.Simple(3, function() LC.AnnounceWelcome(ply, waited + 3) end)
+        return
+    end
+    local said, path = Say("administrator", "welcome", ply, true)
+    local after = said and (ClipSecs(path) + 1) or 0
+    ply.lcWelcomeUntil = now + after + 1
+    timer.Simple(after, function()
+        if not IsValid(ply) then return end
+        local saidO, pathO = Say("overwatch", "welcome", ply, true)
+        ply.lcWelcomeUntil = CurTime() + (saidO and ClipSecs(pathO) or 0) + 0.5
+    end)
 end
 
 -- a few seconds after someone joins, just for them
 hook.Add("PlayerInitialSpawn", "LivingCityAnnouncer", function(ply)
-    timer.Simple(20, function()
-        if not IsValid(ply) then return end
-        Say("overwatch", "welcome", ply, true)
-        timer.Simple(9, function() if IsValid(ply) then Say("administrator", "welcome", ply, true) end end)
-    end)
+    timer.Simple(20, function() LC.AnnounceWelcome(ply) end)
 end)
 
 hook.Add("InitPostEntity", "LivingCityAnnouncer", function() LC.AnnounceRescan() end)

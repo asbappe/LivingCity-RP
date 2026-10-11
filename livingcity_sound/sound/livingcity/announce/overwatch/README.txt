@@ -37,5 +37,6 @@ are surprises, and a lockdown only ever answers violence.)
   block_raided    A block raid finishes.
   territory_grew  The Resistance take more ground.
   train_arrival   A train brings new arrivals.
-  welcome         A few seconds after a player joins, only they hear it.
+  welcome         A player joins (or starts a new character): only they hear it,
+                  always. Right after the Administrator's welcome.
   ambient         Random city announcements, and what Dr. Breen's periodic addresses are made of.

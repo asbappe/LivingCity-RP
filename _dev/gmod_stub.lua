@@ -136,7 +136,7 @@ function net.WriteFloat(f) table.insert(cur.data, f) end
 function net.WriteEntity(e) table.insert(cur.data, e) end
 function net.WriteInt(v) table.insert(cur.data, v) end
 function net.WriteTable(t) table.insert(cur.data, t) end
-function net.Send() table.insert(net.sent, cur) end
+function net.Send(to) cur.to = to table.insert(net.sent, cur) end
 function net.Broadcast() table.insert(net.sent, cur) end
 function net.Receive(n, fn) net["recv_" .. n] = fn end
 net._q = {}

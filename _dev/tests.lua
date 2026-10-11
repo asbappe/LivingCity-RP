@@ -8574,6 +8574,43 @@ ok(hasClip(LC.AnnounceClips("overwatch", "curfew_soon"), "overwatch/curfew_soon1
 ok(hasClip(LC.AnnounceClips("administrator", "curfew", 4), "administrator/curfew_furious1.wav") and not hasClip(LC.AnnounceClips("administrator", "curfew", 1), "curfew_furious1"), "the Administrator's tone from the name, in the one folder")
 ok(hasClip(LC.AnnounceClips("radio", "freq7"), "radio/freq7_1.wav") and hasClip(LC.AnnounceClips("radio", "static"), "radio/static1.wav"), "and the radios' recordings, flat too")
 
+-- the welcome: always, just for them, the Administrator first and Overwatch after her
+_files[A .. "administrator/welcome1.wav"] = ""
+_files[A .. "overwatch/welcome1.wav"] = ""
+_files[A .. "overwatch/train_arrival1.wav"] = ""
+LC.AnnounceRescan()
+_run(30)
+local function sentTo(name, from, bit)
+    for i = (from or 0) + 1, #net.sent do
+        local m = net.sent[i]
+        if m.name == name and string.find(m.data[1] or "", bit, 1, true) then return m end
+    end
+end
+local function holds(list, p) if type(list) ~= "table" then return list == p end for _, q in ipairs(list) do if q == p then return true end end return false end
+local newcomer = newPlayer("Newcomer", "citizen")
+n0 = #net.sent
+LC.AnnounceWelcome(newcomer)
+local m = sentTo("lc_breencast", n0, "administrator/welcome1")
+ok(m and holds(m.to, newcomer) and #m.to == 1, "a newcomer's welcome starts with the Administrator, just for them")
+ok(not sentTo("lc_announce", n0, "welcome"), "(Overwatch waits for her to finish)")
+LC.TriggerAnnouncements("train_arrival")
+_run(5)
+m = sentTo("lc_announce", n0, "overwatch/train_arrival1")
+ok(m and not holds(m.to, newcomer) and holds(m.to, watcher), "a train still comes in for everyone else, and doesn't talk over the welcome")
+_run(10)
+m = sentTo("lc_announce", n0, "overwatch/welcome1")
+ok(m and holds(m.to, newcomer) and #m.to == 1, "then Overwatch welcomes them, right after her")
+_run(30)
+local late = newPlayer("LateNewcomer", "citizen")
+LC.LiveSpeaker = watcher
+n0 = #net.sent
+LC.AnnounceWelcome(late)
+ok(not sentTo("lc_breencast", n0, "welcome"), "someone live on the loudspeakers isn't talked over")
+LC.LiveSpeaker = nil
+_run(4)
+ok(sentTo("lc_breencast", n0, "administrator/welcome1"), "the welcome follows as soon as they're off air")
+_run(15)
+
 _setcvar("lc_announce_custom", 0)
 ok(LC.PickAnnounceClip("overwatch", "curfew") == nil, "lc_announce_custom 0 turns the lot off")
 _setcvar("lc_announce_custom", 1)
