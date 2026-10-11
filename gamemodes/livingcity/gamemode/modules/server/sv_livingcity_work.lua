@@ -73,6 +73,7 @@ function LC.SetJob(ply, id, force)
     if ply.lcStoryPostings then ply.lcStoryPostings.shift = nil end
     GiveTools(ply)
     if job then ply:ChatPrint("[Union] You are now employed as: " .. job.name .. ". Your shifts appear on your board (F3).") end
+    hook.Run("LivingCityJobChanged", ply, id)
     return true
 end
 

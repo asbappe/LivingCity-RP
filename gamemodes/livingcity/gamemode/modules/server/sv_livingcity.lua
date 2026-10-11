@@ -1739,6 +1739,7 @@ local function ChooseSecurityTask(npc, st, now)
 end
 
 local function CalmOne(npc, st, now)
+    if LC.LeaveSquad then LC.LeaveSquad(npc, st) end
     if IsValid(st.enemy) and st.enemy:IsPlayer() then SetRel(npc, st, st.enemy, D_NU) end
     npc:SetEnemy(NULL)
     npc:ClearEnemyMemory()
@@ -1770,6 +1771,10 @@ local function Pursue(npc, st, e, now)
         sees = tr.Fraction > 0.97 and not (LC.SmokeBlocks and LC.SmokeBlocks(npc:EyePos(), e:EyePos()))
     end
     local running = npc:IsCurrentSchedule(SCHED_FORCED_GO_RUN) or npc:IsCurrentSchedule(SCHED_FORCED_GO)
+    -- as a squad (sv_livingcity_squadai.lua): just hurt, the combat AI has them; a
+    -- follower keeps with the leader rather than running at the target alone
+    if LC.SquadHurt and LC.SquadHurt(st, now) then return end
+    if LC.SquadFollow and LC.SquadFollow(npc, st, e, now, sees) then return end
     if sees and d2 < 600 * 600 then
         -- in sight and close: let the combat AI close in and swing
         if running then npc:SetSchedule(SCHED_CHASE_ENEMY) end

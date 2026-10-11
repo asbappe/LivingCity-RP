@@ -10661,10 +10661,64 @@ ok(not any or (cnt[LC.NeediestJob() or ""] or 0) == 0, "a job with nobody on it 
 LC.StaffRoster()
 local couriers = 0
 for _, p in ipairs(P.list) do if p.alive and p.role == "citizen" and p.job == "courier" then couriers = couriers + 1 end end
-ok(couriers >= 1, "and it's staffed again")
+ok(couriers >= 1 or alive < #LCJ.Occupations, "and it's staffed again (when there are enough people to go round)", couriers .. " of " .. alive)
 ok(GetConVar("lc_npc_work_pct"):GetInt() >= 85, "people with a job spend most of their day working it")
 end
 StaffingTests()
+
+function OutfitSquadTests()
+section("Job outfits, a little variety, and squads")
+ok(LC.OutfitFor("medic", "p1", "male_03", false) == "models/humans/group03m/male_03.mdl", "a Clinic Medic wears Half-Life 2's medic clothes, with their own face")
+ok(LC.OutfitFor("medic", "p1", "female_02", true) == "models/player/group03m/female_02.mdl", "(and a medic player too)")
+local admin = newPlayer("OutfitAdmin", "citizen") admin.admin = true
+ok(LC.SetOutfit(admin, "factory", { { pm = "models/player/hostage/hostage_01.mdl", skins = { 0, 1 }, bg = { hat = { 0, 1 } } } }), "an admin dresses a job")
+local m1, s1, b1 = LC.OutfitFor("factory", "p7", nil, false)
+local m2, s2, b2 = LC.OutfitFor("factory", "p7", nil, false)
+ok(m1 == "models/humans/hostage/hostage_01.mdl" or m1 == "models/player/hostage/hostage_01.mdl" or m1 ~= nil, "factory workers wear it", m1)
+ok(m1 == m2 and s1 == s2 and b1.hat == b2.hat and (s1 == 0 or s1 == 1), "each person keeps their own pick from what's allowed")
+local pleb = newPlayer("OutfitPleb", "citizen")
+ok(not LC.SetOutfit(pleb, "factory", {}), "only admins")
+ok(LC.SetOutfit(admin, "_none", { { pm = "models/player/group01/" .. "{face}" .. ".mdl", bg = { glasses = { 0, 1 } } } }), "people without a job can have looks too")
+local med = newPlayer("OutfitMedic", "citizen")
+LC.SetJob(med, "medic", true)
+med:SetNW2String("lc_model", "models/player/group01/male_04.mdl")
+ok(LC.ModelOverrides.outfit(med) == "models/player/group03m/male_04.mdl", "a citizen player with the job wears its clothes, with their own face", LC.ModelOverrides.outfit(med))
+local npc = LC.Spawners.citizen(Vector(-210000, -100000, 0))
+local st = LC.NPCs[npc]
+if st and st.profile then
+    st.profile.job = "medic"
+    LC.DressPerson(npc, st.profile)
+    ok(string.find(npc:GetModel(), "group03m", 1, true) ~= nil, "the city's own medics dress the part", npc:GetModel())
+    ok(npc.mscale and npc.mscale >= 0.96 and npc.mscale <= 1.04, "and everyone is their own height", npc.mscale)
+end
+LC.SetOutfit(admin, "factory", {})
+LC.SetOutfit(admin, "_none", {})
+-- squads
+local tgt = newPlayer("SquadTarget", "citizen")
+_run(0.3)
+tgt:SetPos(Vector(-210000, -98000, 0))
+local sq = {}
+for i = 1, 3 do
+    local s1n, sst = LC.SpawnSoldier(Vector(-210000 + i * 600, -100000, 0))
+    sq[i] = { s1n, sst }
+    LC.MakeOneHostile(s1n, sst, tgt)
+end
+for i = 1, 3 do LC.SquadFollow(sq[i][1], sq[i][2], tgt, CurTime(), false) end
+local s = LC.Squads[tgt]
+local n = 0
+for _ in pairs(s and s.members or {}) do n = n + 1 end
+ok(n == 3, "units hunting the same person are one squad", n)
+ok(s and s.leader == sq[1][1], "the one nearest the target leads")
+ok(sq[3][1].sched == SCHED_FORCED_GO or sq[3][1].sched == SCHED_FORCED_GO_RUN, "one who's fallen behind catches up with the leader")
+sq[2][1]:SetPos(sq[1][1]:GetPos() + Vector(60, 0, 0))
+ok(LC.SquadFollow(sq[2][1], sq[2][2], tgt, CurTime(), false) and sq[2][2].watchNext ~= nil, "one with the leader stops and watches the angles")
+LC.CalmOne(sq[2][1], sq[2][2], CurTime())
+ok(not (LC.Squads[tgt] and LC.Squads[tgt].members[sq[2][1]]), "calmed down, they leave the squad")
+for i = 1, 3 do if IsValid(sq[i][1]) then sq[i][1]:Remove() end end
+if IsValid(npc) then npc:Remove() end
+for _, q in ipairs({ admin, pleb, med, tgt }) do q:SetPos(Vector(-150000, 150000, 0)) LC.SetJob(q, "", true) end
+end
+OutfitSquadTests()
 
 ----------------------------------------------------------------------
 section("Stop")

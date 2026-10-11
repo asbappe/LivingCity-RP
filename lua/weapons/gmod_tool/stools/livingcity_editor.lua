@@ -613,6 +613,7 @@ function TOOL.BuildCPanel(panel)
     panel:Button("List backups (restore with lc_restore <number>)", "lc_backups")
 
     Header("City")
+    panel:Button("Job outfits (who wears what)", "lc_outfits")
     panel:Button("Start the city", "lc_start")
     panel:Button("Stop and clear NPCs", "lc_stop")
     panel:Button("Calm security", "lc_calm")

@@ -85,6 +85,8 @@ LC_MODULES = {
         "sv_livingcity_combinemodels",
         "sv_livingcity_lab", -- (the Resistance lab: the scientist makes what the cell needs)
         "sv_livingcity_ways",
+        "sv_livingcity_outfits",
+        "sv_livingcity_squadai",
         "sv_livingcity_mortuary",
         "sv_livingcity_navgraph",
         "sv_livingcity_npcwork",
@@ -157,6 +159,7 @@ LC_MODULES = {
         "cl_livingcity_intake",
         "cl_livingcity_kick",
         "cl_livingcity_ways",
+        "cl_livingcity_outfits",
         "cl_livingcity_lab",
         "cl_livingcity_layoutbrowser",
         "cl_livingcity_life",
