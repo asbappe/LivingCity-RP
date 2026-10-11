@@ -2,7 +2,10 @@
     Living City (client): choosing who you are
 
     Shown when you first join, and again each time you start over as a new
-    person: a name, and a face from the citizen models. The window says what
+    person: a name, and a face from the citizen models (any installed
+    citizen pack too), then that face's skin and its clothes and
+    accessories (bodygroups), one at a time with < and >. An admin can
+    narrow what's offered: Job outfits > New characters choose from. The window says what
     kind of name fits (and the server enforces it). "Keep this one" accepts
     the random name and face you were given.
 
@@ -51,8 +54,13 @@ net.Receive("lcc_open", function()
     if IsValid(frame) then frame:Remove() end
     local intake = data.intake == true
 
-    local W, H = math.min(ScrW() - 40, 820), math.min(ScrH() - 40, intake and 680 or 560)
-    local chosenModel = data.model ~= "" and data.model or (data.models and data.models[1]) or ""
+    local W, H = math.min(ScrW() - 40, 860), math.min(ScrH() - 40, intake and 700 or 620)
+    -- the looks on offer: a path each, and what it may wear (sv_livingcity_outfits.lua)
+    local looks = {}
+    for _, m in ipairs(data.models or {}) do looks[#looks + 1] = istable(m) and m or { path = m } end
+    local function LookOf(path) for _, l in ipairs(looks) do if l.path == path then return l end end end
+    local chosenModel = data.model ~= "" and data.model or (looks[1] and looks[1].path) or ""
+    local chosenSkin, chosenBG = tonumber(data.skin) or 0, istable(data.bg) and data.bg or {}
     frame = vgui.Create("DFrame")
     frame:SetTitle("")
     frame:ShowCloseButton(false)
@@ -80,11 +88,87 @@ net.Receive("lcc_open", function()
         end
     end
 
-    -- the face, turning slowly
+    -- the face, turning slowly; under it, the face and clothes this look may wear
+    local LOOK_H = 190
     local preview = vgui.Create("DModelPanel", frame)
     preview:SetPos(14, 56)
-    preview:SetSize(270, H - 80)
+    preview:SetSize(270, H - 80 - LOOK_H)
     preview:SetModel(chosenModel)
+    local lookPanel = vgui.Create("DScrollPanel", frame)
+    lookPanel:SetPos(14, 56 + H - 80 - LOOK_H + 4)
+    lookPanel:SetSize(270, LOOK_H - 8)
+
+    local function Dress()
+        local ent = preview:GetEntity()
+        if not IsValid(ent) then return end
+        ent:SetSkin(chosenSkin or 0)
+        local groups = ent.GetBodyGroups and ent:GetBodyGroups()
+        for _, g in ipairs(istable(groups) and groups or {}) do
+            if istable(g) and g.id then ent:SetBodygroup(g.id, chosenBG[g.name] or 0) end
+        end
+    end
+
+    -- one row: a label and < value >, cycling through what's allowed
+    local function Cycler(label, values, current, names, onPick)
+        local row = vgui.Create("DPanel", lookPanel)
+        row:Dock(TOP)
+        row:DockMargin(0, 0, 0, 3)
+        row:SetTall(26)
+        row.Paint = function(s, w, h) draw.RoundedBox(3, 0, 0, w, h, Color(30, 28, 25, 230)) end
+        local idx = 1
+        for i, v in ipairs(values) do if v == current then idx = i end end
+        local text = vgui.Create("DLabel", row)
+        text:Dock(FILL)
+        text:DockMargin(30, 0, 30, 0)
+        text:SetContentAlignment(5)
+        text:SetTextColor(INK)
+        local function Show() text:SetText(label .. ": " .. (names and names[values[idx]] or tostring(values[idx]))) end
+        Show()
+        local function Step(d)
+            idx = (idx - 1 + d) % #values + 1
+            Show()
+            onPick(values[idx])
+            Dress()
+        end
+        local l = vgui.Create("DButton", row) l:Dock(LEFT) l:SetWide(26) l:SetText("<") l.DoClick = function() Step(-1) end
+        local r = vgui.Create("DButton", row) r:Dock(RIGHT) r:SetWide(26) r:SetText(">") r.DoClick = function() Step(1) end
+    end
+
+    local function BuildLook()
+        lookPanel:Clear()
+        local ent = preview:GetEntity()
+        if not IsValid(ent) then return end
+        local look = LookOf(chosenModel) or { path = chosenModel }
+        local skins = {}
+        if istable(look.skins) and #look.skins > 0 then skins = look.skins
+        else for i = 0, math.max(0, (tonumber(ent.SkinCount and ent:SkinCount()) or 1) - 1) do skins[#skins + 1] = i end end
+        if not table.HasValue(skins, chosenSkin) then chosenSkin = skins[1] or 0 end
+        if #skins > 1 then
+            local names = {}
+            for i, v in ipairs(skins) do names[v] = string.format("%d of %d", i, #skins) end
+            Cycler("Face", skins, chosenSkin, names, function(v) chosenSkin = v end)
+        end
+        local groups = ent.GetBodyGroups and ent:GetBodyGroups()
+        for _, g in ipairs(istable(groups) and groups or {}) do
+            local vals = {}
+            if not istable(g) or not isstring(g.name) then g = { name = "", num = 0 } end
+            if istable(look.bg) then vals = look.bg[g.name] or {}
+            else for v = 0, (g.num or 1) - 1 do vals[#vals + 1] = v end end
+            if #vals > 1 then
+                if not table.HasValue(vals, chosenBG[g.name]) then chosenBG[g.name] = vals[1] end
+                local names = {}
+                for _, v in ipairs(vals) do
+                    local sub = g.submodels and g.submodels[v]
+                    names[v] = (sub and sub ~= "" and string.gsub(string.match(sub, "([^/]+)$") or sub, "%.smd$", "")) or ("option " .. v)
+                end
+                Cycler((string.gsub(g.name or "", "_", " ")), vals, chosenBG[g.name], names, function(v) chosenBG[g.name] = v end)
+            elseif #vals == 1 then
+                chosenBG[g.name] = vals[1]
+            end
+        end
+        Dress()
+    end
+    BuildLook()
     preview:SetFOV(32)
     preview:SetCamPos(Vector(75, 0, 42))
     preview:SetLookAt(Vector(0, 0, 36))
@@ -141,7 +225,7 @@ net.Receive("lcc_open", function()
     facesLabel:SetPos(300, below:GetY() + 42)
     facesLabel:SetFont("LCCreatorText")
     facesLabel:SetTextColor(INK)
-    facesLabel:SetText("Your face")
+    facesLabel:SetText("Your face (then its look, under the picture)")
     facesLabel:SizeToContents()
 
     local layout = vgui.Create("DIconLayout", frame)
@@ -149,7 +233,8 @@ net.Receive("lcc_open", function()
     layout:SetSize(W - 300 - 20, H - (facesLabel:GetY() + 22) - 110)
     layout:SetSpaceX(4)
     layout:SetSpaceY(4)
-    for _, path in ipairs(data.models or {}) do
+    for _, look in ipairs(looks) do
+        local path = look.path
         local icon = layout:Add("SpawnIcon")
         icon:SetSize(58, 58)
         icon:SetModel(path)
@@ -160,8 +245,10 @@ net.Receive("lcc_open", function()
             end
         end
         icon.DoClick = function()
+            if chosenModel ~= path then chosenSkin, chosenBG = 0, {} end
             chosenModel = path
             preview:SetModel(path)
+            BuildLook()
         end
     end
 
@@ -194,6 +281,8 @@ net.Receive("lcc_open", function()
         net.WriteString(entry:GetValue())
         net.WriteString(chosenModel)
         net.WriteString(descEntry and descEntry:GetValue() or "")
+        net.WriteUInt(math.Clamp(chosenSkin or 0, 0, 255), 8)
+        net.WriteString(util.TableToJSON(chosenBG or {}) or "{}")
         net.SendToServer()
     end)
 

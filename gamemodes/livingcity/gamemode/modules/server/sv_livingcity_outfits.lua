@@ -39,6 +39,7 @@ local cvHeights = CreateConVar("lc_people_heights", "1", FLAGS, "The city's peop
 local cvTint = CreateConVar("lc_citizen_tint", "1", FLAGS, "Each citizen player's shirt has its own drab colour")
 
 local EVERYONE = "_none" -- (the looks for people without a job)
+local CREATOR = "_creator" -- (what a new character may choose from: the character creator)
 
 local FILE = "livingcity/outfits.json"
 local FACE = "{face}" -- (in a model path: the person's own face, male_03 and so on)
@@ -130,6 +131,11 @@ LC.ModelOverrides = LC.ModelOverrides or {}
 LC.ModelOverrides.outfit = function(ply)
     local path = PlayerLook(ply)
     if Valid(path) then return path end
+    -- no job clothes: the face they chose, if it's one the city's own list doesn't have (a pack's)
+    if ply:GetNW2String("lcf_faction", "") ~= "citizen" then return nil end
+    local chosen = ply:GetNW2String("lc_model", "")
+    if chosen == "" or table.HasValue(LCF and LCF.CitizenModels or {}, chosen) then return nil end
+    if LC.CreatorChoice(chosen) and Valid(chosen) then return chosen end
 end
 
 -- drab shirts, one each (the default citizen playermodels tint with the player colour)
@@ -144,7 +150,14 @@ local function DressPlayer(ply)
         ply:SetPlayerColor(LC.CitizenTint(ply:GetNW2String("lc_cid", ply:SteamID())))
     end
     local path, skin, bg = PlayerLook(ply)
-    if not Valid(path) then return end
+    if not Valid(path) then
+        -- their own look: the face (skin) and clothes they chose
+        if f == "citizen" or f == "resistance" then
+            local own = util.JSONToTable(ply:GetPData("lc_bgs", "") or "") or {}
+            LC.ApplyLook(ply, tonumber(ply:GetPData("lc_skin", "")), own)
+        end
+        return
+    end
     if ply:GetModel() ~= path and LC.RefreshModel then LC.RefreshModel(ply) end
     LC.ApplyLook(ply, skin, bg)
 end
@@ -157,6 +170,84 @@ hook.Add("LivingCityJobChanged", "LivingCityOutfits", function(ply)
 end)
 
 ------------------------------------------------------------------------
+-- Who you are: what the character creator offers (cl_livingcity_character.lua)
+------------------------------------------------------------------------
+
+local NOT_CITIZEN = { "police", "combine", "zombie", "corpse", "skeleton", "charple", "soldier", "hazmat", "hev" }
+
+-- Every look a new character may choose: { path, skins (nil: any), bg (nil: any) }.
+-- The "New characters choose from" looks if an admin has set them up; else
+-- Half-Life 2's citizens and every installed citizen-like playermodel (named
+-- male_NN or female_NN, the way citizen packs name them).
+function LC.CreatorChoices()
+    local out, seen = {}, {}
+    local function Add(path, skins, bg)
+        if path and not seen[path] then seen[path] = true out[#out + 1] = { path = path, skins = skins, bg = bg } end
+    end
+    local o = Outfits()[CREATOR]
+    if o and istable(o.list) and #o.list > 0 then
+        for _, e in ipairs(o.list) do
+            if e.pm and string.find(e.pm, FACE, 1, true) then
+                for _, m in ipairs(LCF and LCF.CitizenModels or {}) do
+                    local face = LC.FaceOf(m)
+                    if face then Add((string.gsub(e.pm, "{face}", face)), e.skins, e.bg) end
+                end
+            else
+                Add(e.pm, istable(e.skins) and #e.skins > 0 and e.skins or nil, e.bg)
+            end
+        end
+        return out
+    end
+    for _, m in ipairs(LCF and LCF.CitizenModels or {}) do Add(m) end
+    local extra = {}
+    for _, path in pairs(player_manager and player_manager.AllValidModels and player_manager.AllValidModels() or {}) do
+        local low = string.lower(path)
+        local bad = false
+        for _, w in ipairs(NOT_CITIZEN) do if string.find(low, w, 1, true) then bad = true break end end
+        if not bad and LC.FaceOf(low) and not string.find(low, "models/player/group0", 1, true) then extra[#extra + 1] = path end
+    end
+    table.sort(extra)
+    for _, p in ipairs(extra) do Add(p) end
+    return out
+end
+
+function LC.CreatorChoice(path)
+    for _, c in ipairs(LC.CreatorChoices()) do if c.path == path then return c end end
+    return nil
+end
+
+-- A chosen skin and bodygroups, kept to what this look allows.
+function LC.CleanLook(path, skin, bg)
+    local c = LC.CreatorChoice(path)
+    if not c then return nil end
+    skin = tonumber(skin) and math.Clamp(math.floor(tonumber(skin)), 0, 63) or 0
+    if c.skins and not table.HasValue(c.skins, skin) then skin = c.skins[1] or 0 end
+    local out = {}
+    for name, v in pairs(istable(bg) and bg or {}) do
+        v = tonumber(v)
+        if isstring(name) and v then
+            v = math.Clamp(math.floor(v), 0, 31)
+            local allowed = c.bg and c.bg[name]
+            if not c.bg or (allowed and table.HasValue(allowed, v)) then out[string.sub(name, 1, 64)] = v end
+        end
+    end
+    return skin, out
+end
+
+-- Kept with the person (sv_livingcity_slots.lua keeps lc_skin and lc_bgs per character).
+function LC.SetLook(ply, skin, bg)
+    ply:SetPData("lc_skin", tostring(skin or 0))
+    ply:SetPData("lc_bgs", util.TableToJSON(bg or {}))
+    ply:SetNW2Int("lc_skin", skin or 0)
+    timer.Simple(0.1, function() if IsValid(ply) then LC.DressPlayer(ply) end end)
+end
+
+hook.Add("LivingCityNewCharacter", "LivingCityOutfitsLook", function(ply)
+    ply:RemovePData("lc_skin")
+    ply:RemovePData("lc_bgs")
+end)
+
+------------------------------------------------------------------------
 -- The designer (cl_livingcity_outfits.lua)
 ------------------------------------------------------------------------
 
@@ -165,6 +256,7 @@ function LC.OpenOutfits(ply)
     local jobs = {}
     for _, o in ipairs(LCJ and LCJ.Occupations or {}) do jobs[#jobs + 1] = { id = o.id, name = o.name } end
     jobs[#jobs + 1] = { id = EVERYONE, name = "Everyone else (no job)" }
+    jobs[#jobs + 1] = { id = CREATOR, name = "New characters choose from" }
     LC.SendCompressed("lc_outfits_open", { jobs = jobs, outfits = Outfits() }, ply)
     return true
 end
@@ -172,7 +264,7 @@ end
 -- What the designer sends back for one job, cleaned up.
 function LC.SetOutfit(ply, jobId, list)
     if IsValid(ply) and not ply:IsAdmin() then return false, "Admins only." end
-    if jobId ~= EVERYONE and not (LCJ and LCJ.ById[jobId]) then return false, "No such job." end
+    if jobId ~= EVERYONE and jobId ~= CREATOR and not (LCJ and LCJ.ById[jobId]) then return false, "No such job." end
     local clean = {}
     for _, e in ipairs(istable(list) and list or {}) do
         if istable(e) and isstring(e.pm) and e.pm ~= "" and #clean < 16 then

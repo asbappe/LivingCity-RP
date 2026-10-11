@@ -10720,6 +10720,27 @@ for _, q in ipairs({ admin, pleb, med, tgt }) do q:SetPos(Vector(-150000, 150000
 end
 OutfitSquadTests()
 
+function CreatorLookTests()
+section("Choosing a face and clothes")
+local choices = LC.CreatorChoices()
+ok(#choices >= #LCF.CitizenModels, "the creator offers every Half-Life 2 citizen (and any installed citizen pack)", #choices)
+local admin = newPlayer("LookAdmin", "citizen") admin.admin = true
+ok(LC.SetOutfit(admin, "_creator", { { pm = "models/player/test/male_20.mdl", skins = { 2, 5 }, bg = { glasses = { 0, 1 } } } }), "an admin narrows what new characters may choose")
+ok(#LC.CreatorChoices() == 1 and LC.CreatorChoice("models/player/test/male_20.mdl") ~= nil, "and the creator offers just that")
+local sk, bg = LC.CleanLook("models/player/test/male_20.mdl", 9, { glasses = 1, coat = 3 })
+ok(sk == 2 and bg.glasses == 1 and bg.coat == nil, "a face or a piece that isn't allowed is put right", tostring(sk))
+local p = newPlayer("LookChooser", "citizen")
+_run(0.3)
+p:SetNW2String("lc_model", "models/player/test/male_20.mdl")
+LC.SetLook(p, 5, { glasses = 1 })
+ok(p:GetPData("lc_skin", "") == "5" and p:GetNW2Int("lc_skin", 0) == 5, "the chosen face is kept with the person")
+ok(LC.ModelOverrides.outfit(p) == "models/player/test/male_20.mdl", "and they wear the pack's model, not Half-Life 2's", LC.ModelOverrides.outfit(p))
+LC.SetOutfit(admin, "_creator", {})
+ok(#LC.CreatorChoices() >= #LCF.CitizenModels, "with nothing set, it's everything installed again")
+for _, q in ipairs({ admin, p }) do q:SetPos(Vector(-150000, 150000, 0)) end
+end
+CreatorLookTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)

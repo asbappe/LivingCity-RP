@@ -345,6 +345,7 @@ local function NameInUse(name, except)
 end
 
 local function ValidModel(path)
+    if LC.CreatorChoice and LC.CreatorChoice(path) then return true end -- (installed packs too: sv_livingcity_outfits.lua)
     for _, m in ipairs(LCF and LCF.CitizenModels or {}) do if m == path then return true end end
     return false
 end
@@ -372,7 +373,8 @@ function LC.OpenCharacterCreator(ply, opts)
         return
     end
     LC.SendCompressed("lcc_open", {
-        name = intake and "" or LC.CharacterName(ply), model = ply:GetNW2String("lc_model", ""), models = LCF and LCF.CitizenModels or {},
+        name = intake and "" or LC.CharacterName(ply), model = ply:GetNW2String("lc_model", ""), models = LC.CreatorChoices and LC.CreatorChoices() or (LCF and LCF.CitizenModels or {}),
+        skin = tonumber(ply:GetPData("lc_skin", "")) or 0, bg = util.JSONToTable(ply:GetPData("lc_bgs", "") or "") or {},
         cid = ply:GetNW2String("lc_cid", ""), reminder = REMINDER,
         first = ply:GetPData("lc_chosen", "0") ~= "1" and ply.lcNewLife == nil,
         intake = intake and true or nil, desc = intake and ply:GetNW2String("lc_desc", "") or nil,
@@ -389,6 +391,8 @@ end
 net.Receive("lcc_submit", function(_, ply)
     local name, model = net.ReadString(), net.ReadString()
     local desc = net.ReadString() or "" -- (the registration form's description)
+    local skin = net.ReadUInt(8) or 0
+    local bg = util.JSONToTable(net.ReadString() or "") or {}
     if (ply.lccNext or 0) > CurTime() then return Result(ply, false, "One moment.") end
     ply.lccNext = CurTime() + 1
     if not ValidModel(model) then return Result(ply, false, "Choose one of the faces shown.") end
@@ -402,6 +406,10 @@ net.Receive("lcc_submit", function(_, ply)
         if not okF then return Result(ply, false, why) end
     end
     LC.SetCharacter(ply, clean, model)
+    if LC.CleanLook and LC.SetLook then
+        local s2, bg2 = LC.CleanLook(model, skin, bg)
+        LC.SetLook(ply, s2 or 0, bg2 or {})
+    end
     if atDesk and LC.SetDescription then LC.SetDescription(ply, desc) end
     ply:SetPData("lc_chosen", "1")
     if not atDesk then ply:ChatPrint(string.format("[Living City] You are %s, citizen %s.", clean, ply:GetNW2String("lc_cid", ""))) end

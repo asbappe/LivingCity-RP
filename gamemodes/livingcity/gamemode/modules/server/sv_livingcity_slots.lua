@@ -39,7 +39,7 @@ local function CharKeys()
         "lce_credits", "lce_standing", "lcf_faction", "lcf_special", "lci_inv", "lci_stash_" .. map, "lc_block_" .. map,
         "lcj_job", "lcq_story", "lcq_done", "lcq_loyalty", "lcq_sympathy", "lcq_corruption", "lc_notes",
         "lc_docs", "lc_housed_how", "lc_transfer_at",
-        "lcf_transhuman", "lc_stalker", "lc_close_used", "lc_close_at", -- (the conditioning, a stalker, close calls: the person's, not the player's)
+        "lcf_transhuman", "lc_stalker", "lc_close_used", "lc_close_at", "lc_skin", "lc_bgs", -- (the conditioning, a stalker, close calls: the person's, not the player's)
     }
     for _, f in ipairs(LCF and LCF.Factions or {}) do keys[#keys + 1] = "lcf_xp_" .. f.id end
     return keys
