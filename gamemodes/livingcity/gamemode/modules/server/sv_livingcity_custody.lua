@@ -223,7 +223,8 @@ function LC.StalkerModel()
 end
 cvars.AddChangeCallback("lc_stalker_model", function() foundStalker = nil end, "LivingCityStalker")
 
-function LC.ModelOverride(ply)
+LC.ModelOverrides = LC.ModelOverrides or {}
+LC.ModelOverrides.stalker = function(ply)
     if LC.PlayerIsStalker(ply) then return LC.StalkerModel() end
 end
 

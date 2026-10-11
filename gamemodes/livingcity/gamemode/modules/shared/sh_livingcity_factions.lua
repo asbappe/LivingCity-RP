@@ -102,11 +102,11 @@ LCF.Factions = {
               loadout = { "weapon_lc_baton" }, armor = 25 },
             { name = "Metrocop", short = "MPF", xp = 150, loadout = { "weapon_lc_baton", "weapon_pistol" }, armor = 50 },
             { name = "Division Leader", short = "DvL", xp = 600, loadout = { "weapon_lc_baton", "weapon_pistol", "weapon_smg1" }, armor = 75 },
-            { name = "Combine Prison Guard", short = "OPG", xp = 1200, overwatch = true, models = { "models/player/combine_soldier_prisonguard.mdl" },
+            { name = "Combine Prison Guard", short = "OPG", xp = 1200, overwatch = true, hla = "guard", models = { "models/player/combine_soldier_prisonguard.mdl" },
               loadout = { "weapon_lc_baton", "weapon_smg1", "weapon_shotgun" }, health = 100, armor = 100 },
-            { name = "Combine Soldier", short = "OWS", xp = 2000, overwatch = true, models = { "models/player/combine_soldier.mdl" },
+            { name = "Combine Soldier", short = "OWS", xp = 2000, overwatch = true, hla = "soldier", models = { "models/player/combine_soldier.mdl" },
               loadout = { "weapon_lc_baton", "weapon_smg1", "weapon_frag" } },
-            { name = "Elite Soldier", short = "EOW", xp = 3000, overwatch = true, models = { "models/player/combine_super_soldier.mdl" },
+            { name = "Elite Soldier", short = "EOW", xp = 3000, overwatch = true, hla = "elite", models = { "models/player/combine_super_soldier.mdl" },
               loadout = { "weapon_lc_baton", "weapon_ar2", "weapon_frag" }, health = 125, armor = 150 },
         },
         specials = {
@@ -120,7 +120,7 @@ LCF.Factions = {
                 armor = 25,
             },
             {
-                id = "ow_commander", name = "Overwatch Commander", max = 1, minRank = 6, overwatch = true,
+                id = "ow_commander", name = "Overwatch Commander", max = 1, minRank = 6, overwatch = true, hla = "elite",
                 desc = "One at a time, from the Elite. Calls in an Overwatch squad by dropship (F1 > Unit tools), " ..
                        "every fifteen minutes, and commands every unit in the city.",
                 models = { "models/player/combine_super_soldier.mdl" },

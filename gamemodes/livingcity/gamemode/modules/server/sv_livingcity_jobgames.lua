@@ -328,6 +328,17 @@ local BIN = FirstValid({ "models/props_junk/TrashBin01a.mdl", "models/props_trai
 local RUST = Color(170, 95, 60)
 local TOTAL_PARTS = 20
 
+-- The same line, other work: the ration plant's sealing line (opts.variant = "rations").
+local LINES = {
+    factory = { title = "On the line", tag = "[Factory]", word = "parts", parts = PARTS, bad = RUST,
+        intro = "The line's starting. Rust-red, sparking parts are bad: grab them (E) and throw them in the scrap bin. Let the good ones go through.",
+        rattle = "Something rattles inside this one. R while you're holding it to slip it in your pocket." },
+    rations = { title = "The sealing line", tag = "[Ration plant]", word = "packs", parts = { "models/weapons/w_package.mdl" }, bad = Color(120, 140, 70),
+        intro = "The sealing line's starting. Split, leaking packs (the sickly green ones) go in the reject bin: grab them (E) and throw them in. Sealed ones go through to the dispensers.",
+        rattle = "This pack is heavier than a ration should be. R while you're holding it to slip it in your pocket." },
+}
+local function LineOf(g) return LINES[g and g.opts and g.opts.variant or "factory"] or LINES.factory end
+
 -- A belt's frame: start, the way along it, how long, how wide, its top.
 local function Belt(conv)
     local mins, maxs = conv:OBBMins(), conv:OBBMaxs()
@@ -370,7 +381,8 @@ end
 
 GAMES.line = {
     start = function(g)
-        g.title = "On the line"
+        local L = LineOf(g)
+        g.title = L.title
         local conv, temp = FindConveyor(g)
         if not IsValid(conv) then error("no conveyor") end
         g.conv = conv
@@ -387,12 +399,13 @@ GAMES.line = {
         g.caught, g.wasted, g.missed, g.shipped = 0, 0, 0, 0
         g.rattle = math.random(4, TOTAL_PARTS - 2)
         g.speed = 40
-        g.ply:ChatPrint("[Factory] The line's starting. Rust-red, sparking parts are bad: grab them (E) and throw them in the scrap bin. Let the good ones go through.")
+        g.ply:ChatPrint(L.tag .. " " .. L.intro)
+        local w = L.word
         g.hud = function(gg)
             return {
-                string.format("Parts: %d of %d", gg.spawned, TOTAL_PARTS),
-                string.format("Bad parts binned: %d    Good parts through: %d", gg.caught, gg.shipped),
-                string.format("Bad parts let through: %d    Good parts binned: %d", gg.missed, gg.wasted),
+                string.format("%s: %d of %d", w:sub(1, 1):upper() .. w:sub(2), gg.spawned, TOTAL_PARTS),
+                string.format("Bad %s binned: %d    Good %s through: %d", w, gg.caught, w, gg.shipped),
+                string.format("Bad %s let through: %d    Good %s binned: %d", w, gg.missed, w, gg.wasted),
             }
         end
     end,
@@ -403,15 +416,16 @@ GAMES.line = {
         if g.spawned < TOTAL_PARTS and now >= g.nextPart then
             g.spawned = g.spawned + 1
             local start = b.origin - b.dir * (b.len / 2 - 14) + Vector(0, 0, 10)
-            local e = Spawn(Pick(PARTS), start, Angle(0, math.random(0, 359), 0))
+            local L = LineOf(g)
+            local e = Spawn(Pick(L.parts), start, Angle(0, math.random(0, 359), 0))
             if IsValid(e) then
                 e.lcPart = { bad = math.random() < 0.32, rattle = g.spawned == g.rattle, t = now }
                 if e.lcPart.bad then
-                    e:SetColor(RUST)
+                    e:SetColor(L.bad)
                     e:SetNW2Bool("lc_defect", true)
                 end
                 if e.lcPart.rattle then
-                    e.lcOnPickup = function(p) if p == g.ply and e.lcPart then p:ChatPrint("[Factory] Something rattles inside this one. R while you're holding it to slip it in your pocket.") end end
+                    e.lcOnPickup = function(p) if p == g.ply and e.lcPart then p:ChatPrint(L.tag .. " " .. L.rattle) end end
                 end
                 g.parts[#g.parts + 1] = e
                 g.props[#g.props + 1] = e
@@ -489,7 +503,7 @@ hook.Add("KeyPress", "LivingCityJobLine", function(ply, key)
     if not LCS.Items[what] then what = "gun_parts" end
     e.lcPart.rattle = false
     LC.GiveOrDrop(ply, what, 1)
-    ply:ChatPrint("[Factory] You work it open and palm what's inside: " .. (LCS.Items[what] and LCS.Items[what].name or what) .. ".")
+    ply:ChatPrint(LineOf(g).tag .. " You work it open and palm what's inside: " .. (LCS.Items[what] and LCS.Items[what].name or what) .. ".")
     if LC.SeenBySecurity and LC.SeenBySecurity(ply, 700) then
         LC.ReportCrime(ply, "Theft from the factory floor", 120)
         ply:ChatPrint("[Civil Protection] A unit saw that.")

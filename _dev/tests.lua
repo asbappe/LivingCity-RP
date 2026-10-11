@@ -10299,7 +10299,7 @@ _run(0.3)
 ok(posting(stk) == nil, "a citizen gets no stalker story")
 _setcvar("lc_stalker_model", "models/player/test_stalker.mdl")
 ok(LC.MakeStalker(stk) and LC.PlayerIsStalker(stk), "made into a stalker")
-ok(LC.ModelOverride(stk) == "models/player/test_stalker.mdl", "lc_stalker_model sets the stalker's body")
+ok(LC.ModelOverrides.stalker(stk) == "models/player/test_stalker.mdl", "lc_stalker_model sets the stalker's body")
 LC.RefreshModel(stk)
 ok(stk:GetModel() == "models/player/test_stalker.mdl", "and the stalker wears it")
 _setcvar("lc_stalker_model", "")
@@ -10479,7 +10479,7 @@ ok(LC.BlownDoors[door] == nil and not door.nodraw, "and it's back on its hinges 
 local brush = ents.Create("func_door") brush:SetPos(O0 + Vector(50, 9200, 0)) brush:Spawn()
 local fired = {}
 brush.Fire = function(_, input) fired[#fired + 1] = input end
-ok(LC.KickDoor(sol, brush) and LC.BlownDoors[brush] == nil and has(fired, "Open"), "a brush door (sliding, a shutter) just opens")
+ok(not LC.KickDoor(sol, brush) and LC.BlownDoors[brush] == nil and not has(fired, "Open"), "a brush door (sliding, a shutter) doesn't budge")
 local door2 = ents.Create("prop_door_rotating") door2:SetPos(O0 + Vector(50, 9400, 0)) door2:Spawn()
 LC.KickDoor(guard, door2)
 ok(LC.BlownDoors[door2] == nil, "a Prison Guard's kick opens it like anyone's")
@@ -10597,6 +10597,74 @@ for _, e in ipairs({ door, crate, d2 }) do if IsValid(e) then e:Remove() end end
 for _, q in ipairs({ mc, vic, sol, cit, tech }) do q:SetPos(Vector(-150000, 150000, 0)) LC.SetJob(q, "", true) LC.SetFaction(q, "citizen", nil, true) end
 end
 KickFollowTests()
+
+function WaysModelTests()
+section("Ways to get by, and the Combine model packs")
+local cit = newPlayer("WaysCitizen", "citizen")
+_run(0.3)
+LC.AddStanding(cit, -LC.Standing(cit))
+local function find(list, text) for _, w in ipairs(list) do if w.text == text then return w end end end
+local ways = LC.WaysToGetBy(cit)
+local stall = find(ways, "Sell from a market stall")
+ok(stall and stall.need and string.find(stall.need, "Civil Standing 50", 1, true), "a stall says the one thing missing: standing", stall and stall.need)
+ok(find(ways, "Get a Union job") and find(ways, "Get a Union job").open == "f3", "no job: the board is where to get one")
+ok(ways[1].need == nil and ways[#ways].need ~= nil, "what you can do now comes first")
+LC.GiveItem(cit, "business_license")
+ok(find(LC.WaysToGetBy(cit), "Sell from a market stall").need == nil, "with a license, it's ready")
+ok(LC.SendWays(cit) and _lastnet("lc_ways") ~= nil, "!ways (F1 > What now?) opens the list")
+local unit = newPlayer("WaysUnit", "cp")
+_run(0.3)
+ok(find(LC.WaysToGetBy(unit), "Take directives") ~= nil and find(LC.WaysToGetBy(unit), "Get a Union job") == nil, "a unit's list is a unit's")
+-- Combine model packs: what kind a model is, from its name
+ok(LC.CombineKindOf("HLA Combine Elite models/hla/combine_elite.mdl") == "elite", "an Elite is found by its name")
+ok(LC.CombineKindOf("Combine Prison Guard Shotgunner") == "guard_shotgun" and LC.CombineKindOf("Combine Soldier (Alyx)") == "soldier", "and a shotgunner guard, and a plain soldier")
+ok(LC.CombineKindOf("Metro Police") == nil and LC.CombineKindOf("Combine Soldier stripped") == nil, "metrocops and the stripped soldier aren't")
+ok(LC.CombineModel("elite", true) == nil, "no pack installed: Half-Life 2's own")
+_setcvar("lc_pm_elite", "models/test/hla_elite.mdl")
+local eli = newPlayer("WaysElite", "cp", nil, 3000)
+eli:SetPData("lcf_transhuman", "1") LC.SetFaction(eli, "cp", nil, true)
+_run(0.3)
+LC.RefreshModel(eli)
+ok(eli:GetModel() == "models/test/hla_elite.mdl", "an Elite player wears the pack's Elite", eli:GetModel())
+_setcvar("lc_pm_elite", "")
+_setcvar("lc_npcmodel_soldier", "models/test/hla_soldier_npc.mdl")
+_setcvar("lc_npcmodel_shotgunner", "models/test/hla_soldier_npc.mdl")
+local npc = LC.SpawnSoldier(Vector(-200000, -90000, 0))
+ok(IsValid(npc) and npc:GetModel() == "models/test/hla_soldier_npc.mdl", "and the city's soldiers too", IsValid(npc) and npc:GetModel())
+_setcvar("lc_npcmodel_soldier", "")
+_setcvar("lc_npcmodel_shotgunner", "")
+if IsValid(npc) then npc:Remove() end
+for _, q in ipairs({ cit, unit, eli }) do q:SetPos(Vector(-150000, 150000, 0)) LC.SetFaction(q, "citizen", nil, true) end
+end
+WaysModelTests()
+
+function StaffingTests()
+section("Ration Production, and every job staffed")
+ok(LCJ.ById.kitchen.name == "Ration Production", "the Ration Kitchen is Ration Production: rations are made, not cooked")
+local P = LC.People
+local alive = 0
+for _, p in ipairs(P.list) do if p.alive and p.role == "citizen" then alive = alive + 1 end end
+local target = LC.JobStaffTarget()
+ok(target >= 1 and target <= 4, "each job's share grows with the city, from one to four", target)
+LC.StaffRoster()
+local count = {}
+for _, p in ipairs(P.list) do if p.alive and p.role == "citizen" and p.job then count[p.job] = (count[p.job] or 0) + 1 end end
+local short = {}
+for _, o in ipairs(LCJ.Occupations) do if (count[o.id] or 0) < math.min(target, math.floor(alive / #LCJ.Occupations)) then short[#short + 1] = o.id end end
+ok(#short == 0, "every Union job has its people", short[1])
+-- a job left empty is filled first
+local any
+for _, p in ipairs(P.list) do if p.alive and p.role == "citizen" and p.job == "courier" then p.job = nil any = true end end
+local cnt = {}
+for _, p in ipairs(P.list) do if p.alive and p.role == "citizen" and p.job then cnt[p.job] = (cnt[p.job] or 0) + 1 end end
+ok(not any or (cnt[LC.NeediestJob() or ""] or 0) == 0, "a job with nobody on it is among the neediest", LC.NeediestJob())
+LC.StaffRoster()
+local couriers = 0
+for _, p in ipairs(P.list) do if p.alive and p.role == "citizen" and p.job == "courier" then couriers = couriers + 1 end end
+ok(couriers >= 1, "and it's staffed again")
+ok(GetConVar("lc_npc_work_pct"):GetInt() >= 85, "people with a job spend most of their day working it")
+end
+StaffingTests()
 
 ----------------------------------------------------------------------
 section("Stop")

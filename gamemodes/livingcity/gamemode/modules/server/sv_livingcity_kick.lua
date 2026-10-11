@@ -8,13 +8,15 @@
       A locked door                gives on the second kick (lc_kick_door_kicks);
                                    an apartment's tenants are told
       A Combine door               opens (units have the codes anyway)
+      A brush door (sliding,       doesn't budge
+      a shutter, a gate)
       A prison or locked-tagged    doesn't give
       door
       Someone                      knocked back, and hurt a little
       Something loose              sent flying
 
-    The Overwatch's boots are heavier. Only hinged doors: a brush door (a
-    sliding warehouse door, a Combine shutter) just opens.
+    Only hinged doors: a brush door (a sliding warehouse door, a Combine
+    shutter, a gate) doesn't budge. The Overwatch's boots are heavier.
       Combine Soldier   the door comes off its hinges and falls over where
                         it hung
       Elite Soldier     it flies into the room, five to ten feet (never the
@@ -200,6 +202,13 @@ end
 
 -- What a kick does to a door. True if it did something.
 function LC.KickDoor(ply, door)
+    -- a brush door (a sliding warehouse door, a Combine shutter, a gate) is
+    -- too big and too heavy: a boot does nothing to it
+    if door:GetClass() ~= "prop_door_rotating" then
+        door:EmitSound("physics/metal/metal_solid_impact_hard" .. math.random(1, 5) .. ".wav", 75)
+        ply:ChatPrint("It doesn't budge.")
+        return false
+    end
     local tag = LC.GetDoorTag and LC.GetDoorTag(door)
     local auto = not tag and LC.AutoDoorTag and LC.AutoDoorTag(door) or nil
     door:EmitSound(Pick(DOOR_HIT), 80)
@@ -208,9 +217,8 @@ function LC.KickDoor(ply, door)
         return false
     end
     if door.lcBlown then return false end
-    -- the Overwatch take a hinged door off its hinges (a brush door, a
-    -- sliding one or a Combine shutter, just opens)
-    local power = door:GetClass() == "prop_door_rotating" and not (tag == "cp" or auto == "cp") and LC.KickPower(ply) or 0
+    -- the Overwatch take a hinged door off its hinges
+    local power = not (tag == "cp" or auto == "cp") and LC.KickPower(ply) or 0
     local dir = ply:GetAimVector()
     dir.z = 0
     dir:Normalize()

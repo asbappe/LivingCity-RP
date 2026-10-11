@@ -34,7 +34,7 @@ LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn      = CreateConVar("lc_npc_work", "1", FLAGS, "City NPCs do their Union jobs (fix, haul, carry, deliver, heal)")
-local cvPct     = CreateConVar("lc_npc_work_pct", "65", FLAGS, "Percent chance an employed citizen picks work over wandering")
+local cvPct     = CreateConVar("lc_npc_work_pct", "85", FLAGS, "Percent chance an employed citizen picks work over wandering")
 local cvGrace   = CreateConVar("lc_npc_work_grace", "60", FLAGS, "Seconds something broken waits for a player before an NPC fixes it")
 local cvGraceP  = CreateConVar("lc_npc_work_grace_players", "300", FLAGS, "The same, while a player with that job is on the server")
 
@@ -732,10 +732,10 @@ local function Shift(job, id, label, opts)
     end })
 end
 
--- Kitchen
-Run("kitchen", "supply", "bringing in a ration crate", "models/props_junk/cardboard_box004a.mdl", Dock, Workplace("kitchen"),
+-- Ration Production
+Run("kitchen", "supply", "bringing in a crate of sealed packs", "models/props_junk/cardboard_box004a.mdl", Dock, Workplace("kitchen"),
     { loading = "collecting a crate from the dock" })
-Shift("kitchen", "cook", "cooking for the ration line", { sound = { "ambient/levels/canals/toxic_slime_sizzle2.wav", "physics/metal/metal_box_impact_soft1.wav" } })
+Shift("kitchen", "cook", "sealing ration packs", { sound = { "ambient/machines/machine1_hit1.wav", "physics/metal/metal_box_impact_soft1.wav" } })
 
 -- Factory
 Run("factory", "parts", "carrying parts to the line", "models/props_junk/cardboard_box004a.mdl", Dock, Workplace("factory"),

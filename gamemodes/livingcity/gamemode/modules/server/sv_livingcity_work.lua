@@ -250,28 +250,70 @@ SHIFTS.sanitation = {
     end,
 }
 
+-- Ration Production: rations are factory bars and gel, made, counted and
+-- handed out; nobody cooks them.
+local function Dispenser(ply)
+    local list = LC.EntsOf and LC.EntsOf("lc_dispenser") or {}
+    if #list > 0 then return Pick(list):GetPos() end
+    local lines = table.GetKeys(LC.Lines or {})
+    if #lines > 0 then return LC.Lines[Pick(lines)].slots[1].pos end
+    return nil
+end
+
 SHIFTS.kitchen = {
     function(ply, job)
         local station = WorkSpot(ply, job.num)
         if not station then return nil end
         return {
-            title = "Prep shift", reward = 15, limit = 360,
-            desc = "Ration packs don't assemble themselves. Report to the kitchen.",
-            stages = { Goto(station, "Go to the kitchen", 180), Hold(station, 40, "Prepare ration packs", 160) },
+            title = "The sealing line", reward = 15, limit = 360,
+            desc = "Bars and gel, sealed in foil, by the thousand. Split packs don't leave the plant.",
+            stages = { Goto(station, "Go to the ration plant", 180), Hold(station, 40, "Seal ration packs on the line", 160) },
         }
     end,
     function(ply, job)
         local truck = Marked("dock", ply) or Q.Spot(ply, 600, 2500)
-        local lines = table.GetKeys(LC.Lines or {})
-        local dest = #lines > 0 and LC.Lines[Pick(lines)].slots[1].pos or WorkSpot(ply, job.num)
+        local dest = Dispenser(ply) or WorkSpot(ply, job.num)
         if not truck or not dest then return nil end
         return {
             title = "Supply run", reward = 20, limit = 480,
-            desc = "The supply truck is waiting " .. Place(truck, ply:GetPos()) .. ". Bring the driver's crate in.",
+            desc = "The supply truck is waiting " .. Place(truck, ply:GetPos()) .. ". Bring the driver's crate of sealed packs in.",
             stages = {
                 Q.Contact("Get the ration crate from the truck driver (press E)", truck, "citizen", "'Sign here. No, nobody has a pen. Just take it.'"),
-                Q.Contact("Hand the crate to the kitchen hand at the distribution point (press E)", dest, "citizen",
+                Q.Contact("Hand the crate to the dispenser attendant (press E)", dest, "citizen",
                     "She counts the packs twice and doesn't say what the number should have been."),
+            },
+        }
+    end,
+    function(ply, job)
+        local at = Dispenser(ply) or WorkSpot(ply, job.num)
+        if not at then return nil end
+        return {
+            title = "The count", reward = 20, limit = 420,
+            desc = "Every pack in the dispensers is on the register. Every pack. Count them.",
+            stages = {
+                Goto(at, "Go to the dispensers", 200),
+                Hold(at, 25, "Count the packs against the register", 180),
+                Choice("The count is three short. Nobody signed for them, and the register doesn't care whose fault that is.", {
+                    { text = "Report the shortfall.", pick = function(q, p)
+                        Trait(p, "loyalty", 1)
+                        q.bonus = 5
+                        Narrate(q, "The supervisor writes it down. Somebody is going to have a very bad week. It isn't you.")
+                    end },
+                    { text = "Make the numbers match.", pick = function(q, p)
+                        Trait(p, "corruption", 1)
+                        Narrate(q, "A stroke of the pen and the register agrees with the shelves. Nobody will ever know. Probably.")
+                    end },
+                    { text = "Make it six short, and pocket three.", check = { "guile", 12 },
+                      success = function(q, p)
+                          Trait(p, "corruption", 1)
+                          if LC.GiveOrDrop then LC.GiveOrDrop(p, "ration", 3) end
+                          Narrate(q, "Three packs go up your sleeve. The register will blame whoever was here before you.")
+                      end,
+                      fail = function(q, p)
+                          Narrate(q, "A dispenser attendant watches you do it. She doesn't say anything. She doesn't have to.")
+                          LC.ReportCrime(p, "Ration fraud", 120)
+                      end },
+                }),
             },
         }
     end,
@@ -281,25 +323,34 @@ SHIFTS.kitchen = {
         local g = Pick(lines)
         local front = LC.Lines[g].slots[1].pos
         return {
-            title = "Serve the line", reward = 25, limit = 600,
-            desc = "You're on the counter at ration line " .. g .. " today.",
+            title = "The counter", reward = 25, limit = 600,
+            desc = "You check ration cards at line " .. g .. " today. One card, one pack, and forged cards don't get either.",
             stages = {
                 Goto(front, "Take your place at the counter", 220),
-                Choice("A mother with two small children holds out a single ration card. She doesn't say anything. She doesn't have to.", {
-                    { text = "Follow the rules. One card, one ration.", pick = function(q, p) Trait(p, "loyalty", 1) end },
-                    { text = "Slip her an extra ration.", check = { "guile", 10 },
+                Choice("A card with a smudged stamp and a citizen number that's one digit too long. The man holding it is very thin.", {
+                    { text = "Confiscate it, and report him.", pick = function(q, p)
+                        Trait(p, "loyalty", 1)
+                        q.bonus = 10
+                        Narrate(q, "A unit takes him by the arm. The card goes in the box with the others.")
+                    end },
+                    { text = "Let it through.", pick = function(q, p)
+                        Trait(p, "sympathy", 1)
+                        LC.Bump(p, "silences")
+                        Narrate(q, "He takes the pack and doesn't look back. Neither do you.")
+                    end },
+                    { text = "Keep the card for yourself.", check = { "guile", 10 },
                       success = function(q, p)
-                          Trait(p, "sympathy", 1)
-                          LC.Bump(p, "silences")
-                          Narrate(q, "It's gone into her coat before anyone sees. The older child looks back at you all the way out.")
+                          Trait(p, "corruption", 1)
+                          if LC.GiveOrDrop then LC.GiveOrDrop(p, "ration_forged", 1) end
+                          Narrate(q, "'Invalid,' you tell him, and it goes in your pocket instead of the box. He doesn't argue.")
                       end,
                       fail = function(q, p)
-                          Narrate(q, "The supervisor saw. 'Ration fraud,' he says, almost bored.")
+                          Narrate(q, "The supervisor saw the card go in your pocket. 'Ration fraud,' he says, almost bored.")
                           LC.ReportCrime(p, "Ration fraud", 120)
                       end },
                 }),
                 { kind = "count", event = "served", need = 3, pos = front, r = 320, distinct = false,
-                  text = "Serve the line (stay at the counter)" },
+                  text = "Hand out the rations (stay at the counter)" },
             },
         }
     end,
@@ -1034,6 +1085,18 @@ do
             title = "On the line", reward = 10, limit = 600,
             desc = "The line runs all day. Bad parts don't leave the floor.",
             stages = { GameGo(station, "Report to the line", "line", { station = station }), GameStage(LINE_TEXT) },
+        }
+    end
+    local seal = SHIFTS.kitchen[1]
+    SHIFTS.kitchen[1] = function(ply, job)
+        if not GamesOn() then return seal(ply, job) end
+        local station = WorkSpot(ply, job.num)
+        if not station then return nil end
+        return {
+            title = "The sealing line", reward = 10, limit = 600,
+            desc = "Bars and gel, sealed in foil, by the thousand. Split packs don't leave the plant.",
+            stages = { GameGo(station, "Report to the sealing line", "line", { station = station, variant = "rations" }),
+                GameStage("Work the sealing line: split, leaking packs (sickly green) in the reject bin (E to grab, left click to throw); sealed ones through") },
         }
     end
     local short = SHIFTS.factory[3]

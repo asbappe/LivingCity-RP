@@ -18,8 +18,8 @@ LCJ = LCJ or {}
 LCJ.Occupations = {
     { id = "sanitation", num = 1, name = "Sanitation Worker", place = "Sanitation depot",
       desc = "Litter, bins, graffiti. The city must look clean, whatever it is." },
-    { id = "kitchen", num = 2, name = "Ration Kitchen", place = "Ration kitchen",
-      desc = "Prepare, carry and hand out the rations everybody lines up for." },
+    { id = "kitchen", num = 2, name = "Ration Production", place = "Ration plant",
+      desc = "Seal the packs on the line, count them against the register, and catch the forged cards at the counter. Nobody cooks: rations are made, not cooked." },
     { id = "medic", num = 3, name = "Clinic Medic", place = "Clinic", tools = { "weapon_medkit" },
       desc = "Patch people up. Write down what happened. Decide what really happened." },
     { id = "factory", num = 4, name = "Factory Worker", place = "Factory",

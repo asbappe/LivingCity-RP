@@ -202,6 +202,7 @@ local GUIDE = {
         "The worst anticitizens get worse than time: interrogation (the interrogator offers 50 social credits if you talk), broken feet (no running), or being made a stalker.",
         "A stalker works below, in the Combine areas: The Stalker's Lot on your board (F3). There is no way out of being a stalker but death. At the end of it is a Combine ball energizer you built yourself, and stepping into it is a way out: that person is gone for good.",
         "Civil Protection is one career: Record Keeper, Metrocop, Division Leader, then the Overwatch ranks (Prison Guard, Soldier, Elite), which need the transhuman conditioning: the Overwatch Candidate story offers it to Division Leaders.",
+        "Not sure what you could be doing? F1 > What now? > Ways to get by: everything open to you, and what the rest need.",
         "Units kick: G (or F1 > Kick). Doors swing open, locked ones give on the second kick, people get knocked back. A Combine Soldier kicks a hinged door off its hinges; an Elite sends it flying, and whoever it hits is knocked out. Maintenance Technicians rehang fallen doors: E to lift, carry it to the frame, E again.",
         "Scanner Operator (Civil Protection, F4): fly a scanner from a Combine console or the Nexus (F1 > Unit tools). Reports earn XP; a rebel you photograph becomes a BOLO.",
         "Released from prison, you get your fists back but not your guns or radio. Units get their issue back.",

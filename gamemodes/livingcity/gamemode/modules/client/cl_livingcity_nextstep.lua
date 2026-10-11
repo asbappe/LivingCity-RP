@@ -121,6 +121,7 @@ function LC_CL.WhatNowPage()
     else
         items[#items + 1] = Item("Nothing pressing", function() end)
     end
+    items[#items + 1] = Item("Ways to get by (everything you could do)", function() Send("ways") end)
     items[#items + 1] = Page("Places in the city", LC_CL.PlacesPage)
     local mode = cvShow:GetInt()
     items[#items + 1] = Item(mode == 2 and "Keep it on screen: always (change)" or (mode == 1 and "Keep it on screen: new life and urgent (change)" or "Keep it on screen: never (change)"),

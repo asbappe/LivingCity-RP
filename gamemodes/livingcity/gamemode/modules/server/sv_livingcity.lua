@@ -1251,11 +1251,16 @@ local function SpawnSoldier(pos, kind)
     local npc = ents.Create("npc_combine_s")
     if not IsValid(npc) then return end
     if not kind and LC.NearPrisonCombine(pos) then kind = "guard" end
-    local model = (kind == "elite" and ELITE_MODEL) or (kind == "guard" and GUARD_MODEL) or nil
+    local gun = kind == "elite" and "weapon_ar2" or (kind == "guard" and math.random() < 0.4 and "weapon_shotgun")
+        or (not kind and math.random() < 0.2 and "weapon_shotgun") or (math.random() < 0.7 and "weapon_smg1" or "weapon_ar2")
+    -- an installed Combine pack's model if there is one (sv_livingcity_combinemodels.lua), else Half-Life 2's
+    local shot = gun == "weapon_shotgun"
+    local hla = LC.CombineModel and LC.CombineModel(kind == "elite" and "elite" or (kind == "guard" and (shot and "guard_shotgun" or "guard")) or (shot and "shotgunner" or "soldier"), false)
+    local model = hla or (kind == "elite" and ELITE_MODEL) or (kind == "guard" and GUARD_MODEL) or nil
     if model and (not util.IsValidModel or util.IsValidModel(model)) then npc:SetModel(model) end
     npc:SetPos(pos)
     npc:SetAngles(Angle(0, math.random(0, 359), 0))
-    npc:SetKeyValue("additionalequipment", kind == "elite" and "weapon_ar2" or (kind == "guard" and math.random() < 0.4 and "weapon_shotgun") or (math.random() < 0.7 and "weapon_smg1" or "weapon_ar2"))
+    npc:SetKeyValue("additionalequipment", gun)
     npc:SetKeyValue("NumGrenades", kind == "elite" and "2" or "0")
     npc:SetKeyValue("spawnflags", tostring(BaseFlags()))
     npc:Spawn()

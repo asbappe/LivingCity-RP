@@ -19,6 +19,11 @@
     session. A person who is killed stays dead; the city fills the gap with
     new arrivals.
 
+    Every Union job is staffed: one person each in a city of about a dozen,
+    up to four each from about a hundred (the roster plus the players),
+    filled from the unemployed and then the most crowded trades; and a job
+    nobody on the streets is doing comes out first.
+
     lc_roster_size, lc_roster_cops, lc_rebel_pct.
     Admin: lc_people (summary), lc_resetpeople (start the city's people over).
 ]]
@@ -105,9 +110,79 @@ LC.PersonNameTaken = NameTaken
 
 local function BlockNumbers() return LC.BlockNumbers and LC.BlockNumbers() or {} end
 
+------------------------------------------------------------------------
+-- Staffing: every Union job has people on it, more as the city grows
+------------------------------------------------------------------------
+
+-- How many of the city's people each job should have: one each in a city of
+-- a dozen, two at thirty, three at sixty, four from about a hundred
+-- (people: the roster plus the players).
+function LC.JobStaffTarget()
+    local n = 0
+    for _, p in ipairs(P.list) do if p.alive and p.role == "citizen" then n = n + 1 end end
+    n = n + #player.GetAll()
+    return math.Clamp(math.floor(n / 28) + 1, 1, 4)
+end
+
+local function JobCounts()
+    local count = {}
+    for _, p in ipairs(P.list) do
+        if p.alive and p.role == "citizen" and p.job then count[p.job] = (count[p.job] or 0) + 1 end
+    end
+    return count
+end
+
+-- The job that most needs a person (nil: every job has its share).
+function LC.NeediestJob()
+    if not LCJ then return nil end
+    local target, count = LC.JobStaffTarget(), JobCounts()
+    local best, bn
+    for _, o in ipairs(LCJ.Occupations) do
+        local n = count[o.id] or 0
+        if n < target and (not bn or n < bn or (n == bn and math.random() < 0.5)) then best, bn = o.id, n end
+    end
+    return best
+end
+
 local function RandomJob()
-    if not LCJ or math.random() > 0.7 then return nil end -- the rest are between jobs
+    if not LCJ then return nil end
+    local need = LC.NeediestJob()
+    if need then return need end
+    if math.random() > 0.6 then return nil end -- every job is covered: the rest are between jobs, or extra hands
     return Pick(LCJ.Occupations).id
+end
+
+-- Fill the gaps, the emptiest job first: from the unemployed, then from the
+-- most crowded job.
+function LC.StaffRoster()
+    if not LCJ then return 0 end
+    local target, count = LC.JobStaffTarget(), JobCounts()
+    local idle = {}
+    for _, p in ipairs(P.list) do if p.alive and p.role == "citizen" and not p.job then idle[#idle + 1] = p end end
+    local moved = 0
+    for _ = 1, 200 do
+        local need, nn
+        for _, o in ipairs(LCJ.Occupations) do
+            local n = count[o.id] or 0
+            if n < target and (not nn or n < nn) then need, nn = o, n end
+        end
+        if not need then break end
+        local p = table.remove(idle)
+        if not p then
+            local most, mn
+            for j, n in pairs(count) do if n > target and (not mn or n > mn) then most, mn = j, n end end
+            if not most then break end
+            for _, q in ipairs(P.list) do if q.alive and q.role == "citizen" and q.job == most then p = q break end end
+            if not p then break end
+            count[most] = count[most] - 1
+        end
+        p.job = need.id
+        count[need.id] = (count[need.id] or 0) + 1
+        moved = moved + 1
+        if IsValid(p.npc) then p.npc:SetNW2String("lc_pjob", need.name or "") end
+    end
+    if moved > 0 then MarkDirty() end
+    return moved
 end
 
 function LC.NewPerson(role, want)
@@ -151,6 +226,7 @@ function LC.TopUpPeople()
     if not P.loaded then LC.LoadPeople() end
     while Alive("citizen") < cvSize:GetInt() do LC.NewPerson("citizen") end
     while Alive("cop") < cvCops:GetInt() do LC.NewPerson("cop") end
+    LC.StaffRoster()
     -- the dead are remembered, but not forever
     local dead = 0
     for i = #P.list, 1, -1 do
@@ -167,11 +243,15 @@ function LC.ClaimProfile(role, want)
     if not P.loaded then LC.LoadPeople() end
     LC.TopUpPeople()
     want = want or {}
+    -- a job nobody out there is doing comes first, so every trade has someone on the streets
+    local working = {}
+    for _, p in ipairs(P.list) do if p.alive and InWorld(p) and p.job then working[p.job] = true end end
     local best, bt
     for _, p in ipairs(P.list) do
         if p.alive and p.role == role and not InWorld(p) and (not want.rebel or p.rebel)
             and (not want.gender or p.gender == want.gender) then
             local t = (p.lastSeen or 0) + math.random() * 30 -- a little shuffle among equals
+            if role == "citizen" and p.job and not working[p.job] then t = t - 1e9 end
             if not bt or t < bt then best, bt = p, t end
         end
     end
