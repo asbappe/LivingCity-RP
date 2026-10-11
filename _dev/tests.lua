@@ -8548,6 +8548,20 @@ local has_custom = false
 for _, p in ipairs(prog) do if p == "livingcity/announce/administrator/ambient/z.wav" then has_custom = true end end
 ok(has_custom or #prog == 0, "the Administrator's periodic addresses include recordings from the ambient folder", #prog)
 
+-- the flat layout: one folder per voice, the trigger (and her tone) in the file name
+_files[A .. "overwatch/curfew_soon1.wav"] = ""
+_files[A .. "overwatch/curfew7.wav"] = ""
+_files[A .. "administrator/curfew_furious1.wav"] = ""
+_files[A .. "radio/freq7_1.wav"] = ""
+_files[A .. "radio/static1.wav"] = ""
+LC.AnnounceRescan()
+local function hasClip(list, bit) for _, c in ipairs(list) do if string.find(c.path, bit, 1, true) then return true end end return false end
+ok(LC.AnnounceTriggerOf("curfew_soon1") == "curfew_soon" and LC.AnnounceTriggerOf("curfew7") == "curfew" and LC.AnnounceTriggerOf("curfewx") == nil, "a flat file's trigger is the longest one its name starts with")
+ok(hasClip(LC.AnnounceClips("overwatch", "curfew"), "overwatch/curfew7.wav") and not hasClip(LC.AnnounceClips("overwatch", "curfew"), "curfew_soon1"), "Overwatch: files dropped straight in the folder, by name")
+ok(hasClip(LC.AnnounceClips("overwatch", "curfew_soon"), "overwatch/curfew_soon1.wav"), "(and curfew_soon1 is the warning, not the curfew)")
+ok(hasClip(LC.AnnounceClips("administrator", "curfew", 4), "administrator/curfew_furious1.wav") and not hasClip(LC.AnnounceClips("administrator", "curfew", 1), "curfew_furious1"), "the Administrator's tone from the name, in the one folder")
+ok(hasClip(LC.AnnounceClips("radio", "freq7"), "radio/freq7_1.wav") and hasClip(LC.AnnounceClips("radio", "static"), "radio/static1.wav"), "and the radios' recordings, flat too")
+
 _setcvar("lc_announce_custom", 0)
 ok(LC.PickAnnounceClip("overwatch", "curfew") == nil, "lc_announce_custom 0 turns the lot off")
 _setcvar("lc_announce_custom", 1)

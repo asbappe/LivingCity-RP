@@ -1,24 +1,27 @@
 --[[
     Living City: custom announcements, for Overwatch and for the Administrator
 
-      Drop sound files in a folder and the city says them when something
-      happens. No code, no list to edit: the folder IS the trigger.
+      Drop sound files in a voice's folder and the city says them when
+      something happens. No code, no list to edit: the file's name says when.
 
-        sound/livingcity/announce/overwatch/<trigger>/anything.wav        the Combine PA
-        sound/livingcity/announce/administrator/<trigger>/anything.wav    the Administrator
+        sound/livingcity/announce/overwatch/curfew1.wav          the Combine PA
+        sound/livingcity/announce/administrator/curfew1.wav      the Administrator, warm
+        sound/livingcity/announce/administrator/curfew_firm1.wav ... firm (stern, furious the same)
+        sound/livingcity/announce/radio/freq7_1.wav              the radios (static, union, freq7)
 
-      The Administrator's tone is in the file name: firm, stern or furious in
-      it (curfew_firm_01.wav, furious_2.wav) is that tone; any other name is
-      her warm one. (Older firm/, stern/, furious/ subfolders still work.)
+      One flat folder per voice. A file's name starts with its trigger
+      (curfew1, curfew_soon2, ambient_3); for the Administrator, firm, stern
+      or furious anywhere in the name is that tone, and no tone word is her
+      warm one. (Older layouts, a folder per trigger, still work.)
 
       They live in their own addon, garrysmod/addons/livingcity_sound/sound/livingcity/announce/...,
       so replacing the gamemode's folder on an update never touches them.
-      .wav, .mp3 and .ogg all work. Put as many files in a folder as you like;
-      one is picked each time, never the same one twice running. An optional
-      text file with the same name (curfew/01_move_along.txt next to
-      curfew/01_move_along.wav) is the subtitle printed in chat as it plays.
+      .wav, .mp3 and .ogg all work. Put as many files in as you like; one
+      is picked each time, never the same one twice running. An optional
+      text file with the same name (curfew1.txt next to curfew1.wav) is the
+      subtitle printed in chat as it plays.
 
-      Triggers (the folder names)
+      Triggers (what a file's name starts with)
         events         rations  sweep  curfew  lockdown  raid  supply
                        ended (an event is over: stabilization restored)
         warnings       rations_soon  sweep_soon  curfew_soon  lockdown_soon
@@ -35,11 +38,11 @@
       The radio repair bench (sv_livingcity_moregames.lua): what a set plays
       as you turn the dial. Static fills the gaps between stations and blends
       into them as you get close, so long, loopable files work best.
-        sound/livingcity/announce/radio/static/anything.wav   the hiss between stations
-        sound/livingcity/announce/radio/union/anything.wav    an ordinary station (the
+        sound/livingcity/announce/radio/static1.wav    the hiss between stations
+        sound/livingcity/announce/radio/union1.wav     an ordinary station (the
                        Union band); none, and the Administrator's ambient
                        recordings are used
-        sound/livingcity/announce/radio/freq7/anything.wav    the Resistance's pirate
+        sound/livingcity/announce/radio/freq7_1.wav    the Resistance's pirate
                        band, when a set is tuned to it; its .txt is the line
                        shown on the panel. Anyone within about twenty feet
                        of the set hears it all too.
@@ -169,6 +172,40 @@ local function ScanDir(out, rel, tier)
     end
 end
 
+-- Which trigger a flat file is for: the trigger its name starts with (the
+-- longest that fits, so curfew_soon1 isn't curfew), followed by nothing,
+-- a number or a separator. nil: none of them.
+function LC.AnnounceTriggerOf(base, list)
+    local n = string.lower(base or "")
+    local best
+    for _, t in ipairs(list or LC.AnnounceTriggers) do
+        if string.sub(n, 1, #t) == t and (not best or #t > #best) then
+            local rest = string.sub(n, #t + 1, #t + 1)
+            if rest == "" or not string.match(rest, "%a") then best = t end
+        end
+    end
+    return best
+end
+
+-- One voice's own folder, flat: every file named for its trigger
+-- (curfew1.wav, curfew_firm2.wav, freq7_1.wav).
+local function FlatDir(out, voice, trig, tier, list)
+    local dir = "sound/" .. ROOT .. voice
+    local names = file.Find(dir .. "/*", "GAME") or {}
+    table.sort(names)
+    for _, name in ipairs(names) do
+        local base, ext = string.match(name, "^(.*)%.([%w]+)$")
+        if base and not string.find(name, "/", 1, true) and EXT[string.lower(ext)] and LC.AnnounceTriggerOf(base, list) == trig
+            and (not tier or LC.AnnounceToneOf(base) == tier) then
+            local text = file.Read(dir .. "/" .. base .. ".txt", "GAME")
+            text = text and string.Trim(text) or nil
+            if text == "" then text = nil end
+            out[#out + 1] = { path = ROOT .. voice .. "/" .. name, text = text }
+            if resource and resource.AddFile then resource.AddFile("sound/" .. ROOT .. voice .. "/" .. name) end
+        end
+    end
+end
+
 local function VoiceName(v)
     v = string.lower(tostring(v or ""))
     return v == "breen" and "administrator" or v
@@ -180,9 +217,11 @@ local function Scan(voice, trig, tier)
     local key = voice .. "/" .. trig .. "/" .. (voice == "administrator" and (tier or 1) or 0)
     if cache[key] then return cache[key] end
     local out = {}
+    -- the voice's own folder, flat: the trigger (and her tone) are in the file name
+    FlatDir(out, voice, trig, voice == "administrator" and (tier or 1) or nil, LC.AnnounceExtra[voice])
     if voice == "administrator" then
         tier = tier or 1
-        ScanDir(out, "administrator/" .. trig, tier) -- (the tone is in the file name)
+        ScanDir(out, "administrator/" .. trig, tier) -- (older: a folder per trigger)
         if tier <= 1 then
             ScanDir(out, "breen/" .. trig, 1) -- (the old folder name)
         else
@@ -394,7 +433,7 @@ concommand.Add("lc_announce_clips", function(ply)
         end
         Reply(ply, "[Living City] " .. v .. ": " .. table.concat(parts, ", "))
     end
-    Reply(ply, "[Living City] " .. total .. " custom announcements found. Folders: sound/" .. ROOT .. "<overwatch|administrator>/<trigger>/ (the Administrator's tone is in the file name: firm, stern or furious; lc_announce_rescan after adding files).")
+    Reply(ply, "[Living City] " .. total .. " custom announcements found. Folders: sound/" .. ROOT .. "overwatch/, administrator/, radio/, flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files.")
 end)
 
 concommand.Add("lc_announce_rescan", function(ply)
