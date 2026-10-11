@@ -1,5 +1,8 @@
 Custom announcements for Living City.
 
+This is its own addon (garrysmod/addons/livingcity_sound/), separate from the gamemode,
+so updating the gamemode never touches your recordings. Install it once and keep it.
+
   overwatch/<trigger>/                       the Combine PA (always cold)
   administrator/<trigger>/                   the Administrator: the tone is in the
                                              file name (firm, stern or furious in

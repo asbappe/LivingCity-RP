@@ -11,7 +11,8 @@
       it (curfew_firm_01.wav, furious_2.wav) is that tone; any other name is
       her warm one. (Older firm/, stern/, furious/ subfolders still work.)
 
-      Installed as an addon, that's garrysmod/addons/livingcity/sound/livingcity/announce/...
+      They live in their own addon, garrysmod/addons/livingcity_sound/sound/livingcity/announce/...,
+      so replacing the gamemode's folder on an update never touches them.
       .wav, .mp3 and .ogg all work. Put as many files in a folder as you like;
       one is picked each time, never the same one twice running. An optional
       text file with the same name (curfew/01_move_along.txt next to
