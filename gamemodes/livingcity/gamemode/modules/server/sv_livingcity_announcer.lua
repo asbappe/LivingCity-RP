@@ -4,13 +4,14 @@
       Drop sound files in a folder and the city says them when something
       happens. No code, no list to edit: the folder IS the trigger.
 
-        sound/livingcity/announce/overwatch/<trigger>/anything.wav   the Combine PA
-        sound/livingcity/announce/administrator/<trigger>/anything.wav        the Administrator (warm)
-        sound/livingcity/announce/administrator/<trigger>/firm/anything.wav   ... when she is losing patience
-        sound/livingcity/announce/administrator/<trigger>/stern/anything.wav  ... when she is cross
-        sound/livingcity/announce/administrator/<trigger>/furious/anything.wav ... when she is domineering
+        sound/livingcity/announce/overwatch/<trigger>/anything.wav        the Combine PA
+        sound/livingcity/announce/administrator/<trigger>/anything.wav    the Administrator
 
-      (in this gamemode: gamemodes/livingcity/content/sound/livingcity/announce/...).
+      The Administrator's tone is in the file name: firm, stern or furious in
+      it (curfew_firm_01.wav, furious_2.wav) is that tone; any other name is
+      her warm one. (Older firm/, stern/, furious/ subfolders still work.)
+
+      Installed as an addon, that's garrysmod/addons/livingcity/sound/livingcity/announce/...
       .wav, .mp3 and .ogg all work. Put as many files in a folder as you like;
       one is picked each time, never the same one twice running. An optional
       text file with the same name (curfew/01_move_along.txt next to
@@ -140,13 +141,24 @@ local TITLES = {
 
 local cache = {} -- [voice .. "/" .. trigger] = { { path, text }, ... }
 
-local function ScanDir(out, rel)
+-- The Administrator's tone from a file's name: firm, stern or furious in it,
+-- else warm (1 warm .. 4 furious).
+function LC.AnnounceToneOf(name)
+    local n = string.lower(name or "")
+    if string.find(n, "furious", 1, true) then return 4 end
+    if string.find(n, "stern", 1, true) then return 3 end
+    if string.find(n, "firm", 1, true) then return 2 end
+    return 1
+end
+
+-- tier: only the files of that tone (by name); nil: every file
+local function ScanDir(out, rel, tier)
     local dir = "sound/" .. ROOT .. rel
     local names = file.Find(dir .. "/*", "GAME") or {}
     table.sort(names)
     for _, name in ipairs(names) do
         local base, ext = string.match(name, "^(.*)%.([%w]+)$")
-        if base and EXT[string.lower(ext)] then
+        if base and EXT[string.lower(ext)] and (not tier or LC.AnnounceToneOf(base) == tier) then
             local text = file.Read(dir .. "/" .. base .. ".txt", "GAME")
             text = text and string.Trim(text) or nil
             if text == "" then text = nil end
@@ -168,11 +180,12 @@ local function Scan(voice, trig, tier)
     if cache[key] then return cache[key] end
     local out = {}
     if voice == "administrator" then
-        if (tier or 1) <= 1 then
-            ScanDir(out, "administrator/" .. trig)
-            ScanDir(out, "breen/" .. trig) -- (the old folder name)
+        tier = tier or 1
+        ScanDir(out, "administrator/" .. trig, tier) -- (the tone is in the file name)
+        if tier <= 1 then
+            ScanDir(out, "breen/" .. trig, 1) -- (the old folder name)
         else
-            ScanDir(out, "administrator/" .. trig .. "/" .. TierName(tier))
+            ScanDir(out, "administrator/" .. trig .. "/" .. TierName(tier)) -- (the old way: a folder per tone)
         end
     else
         ScanDir(out, voice .. "/" .. trig)
@@ -380,7 +393,7 @@ concommand.Add("lc_announce_clips", function(ply)
         end
         Reply(ply, "[Living City] " .. v .. ": " .. table.concat(parts, ", "))
     end
-    Reply(ply, "[Living City] " .. total .. " custom announcements found. Folders: sound/" .. ROOT .. "<overwatch|administrator>/<trigger>/[firm|stern|furious/] (lc_announce_rescan after adding files).")
+    Reply(ply, "[Living City] " .. total .. " custom announcements found. Folders: sound/" .. ROOT .. "<overwatch|administrator>/<trigger>/ (the Administrator's tone is in the file name: firm, stern or furious; lc_announce_rescan after adding files).")
 end)
 
 concommand.Add("lc_announce_rescan", function(ply)

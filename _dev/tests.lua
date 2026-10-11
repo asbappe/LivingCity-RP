@@ -8452,7 +8452,7 @@ _files[A .. "overwatch/curfew/a.txt"] = "Go home."
 _files[A .. "overwatch/curfew/b.mp3"] = ""
 _files[A .. "overwatch/curfew/README.txt"] = "notes"
 _files[A .. "administrator/curfew/firm/c.ogg"] = ""
-_files[A .. "administrator/curfew/stern/c2.wav"] = ""
+_files[A .. "administrator/curfew/curfew_stern_2.wav"] = "" -- (the tone in the file name)
 _files[A .. "breen/socio_red/s.wav"] = "" -- (the old folder name still counts, as her warm one)
 _files[A .. "overwatch/dusk/d.wav"] = ""
 _files[A .. "overwatch/outbreak/o.wav"] = ""
@@ -8535,11 +8535,12 @@ ok(LC.AnnounceTier("curfew") == 2, "and she calms down once it has been quiet fo
 n0 = #net.sent
 concommand.list.lc_announce_say(nil, "lc_announce_say", { "administrator", "curfew", "stern" })
 got = netPaths("lc_breencast", n0)
-ok(#got == 1 and string.find(got[1], "curfew/stern/c2.wav", 1, true), "lc_announce_say can ask for a tone", got[1])
+ok(#got == 1 and string.find(got[1], "curfew/curfew_stern_2.wav", 1, true), "lc_announce_say can ask for a tone (stern in the file name)", got[1])
+ok(LC.AnnounceToneOf("curfew_firm_01") == 2 and LC.AnnounceToneOf("Furious_take") == 4 and LC.AnnounceToneOf("curfew_01") == 1, "the tone is read from the file name; anything else is warm")
 n0 = #net.sent
 concommand.list.lc_announce_say(nil, "lc_announce_say", { "administrator", "curfew", "furious" })
 got = netPaths("lc_breencast", n0)
-ok(#got == 1 and string.find(got[1], "curfew/stern/c2.wav", 1, true), "with no furious recordings she uses the nearest one below", got[1])
+ok(#got == 1 and string.find(got[1], "curfew/curfew_stern_2.wav", 1, true), "with no furious recordings she uses the nearest one below", got[1])
 concommand.list.lc_announce_tier(nil, "lc_announce_tier", { "curfew" })
 
 local prog = LC.BreenProgram()
