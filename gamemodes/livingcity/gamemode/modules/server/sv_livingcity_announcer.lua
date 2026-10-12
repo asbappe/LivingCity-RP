@@ -93,6 +93,10 @@ LC.AnnounceTriggers = {
     "outbreak", "blackout", "power_restored", "skirmish_raid", "skirmish_sweep", "response",
     "breakout", "overwatch_drop", "block_raided", "territory_grew", "train_arrival", "welcome", "ambient",
 }
+-- No longer said (a sweep, a raid or a supply convoy is a surprise; a lockdown
+-- answers violence): files named for these are left alone, never mistaken for
+-- the event itself (lockdown_soon1.wav is not a lockdown line).
+LC.AnnounceRetired = { "sweep_soon", "lockdown_soon", "raid_soon", "supply_soon" }
 LC.AnnounceVoices = { "overwatch", "administrator" }
 LC.AnnounceTierNames = { "warm", "firm", "stern", "furious" }
 -- Other voices with folders of their own, and their triggers: [voice] = { trigger, ... }
@@ -179,13 +183,38 @@ end
 function LC.AnnounceTriggerOf(base, list)
     local n = string.lower(base or "")
     local best
-    for _, t in ipairs(list or LC.AnnounceTriggers) do
+    local function Try(t)
         if string.sub(n, 1, #t) == t and (not best or #t > #best) then
             local rest = string.sub(n, #t + 1, #t + 1)
             if rest == "" or not string.match(rest, "%a") then best = t end
         end
     end
+    for _, t in ipairs(list or LC.AnnounceTriggers) do Try(t) end
+    if not list then for _, t in ipairs(LC.AnnounceRetired) do Try(t) end end
     return best
+end
+
+-- The files in a voice's folder that never play, and why (lc_announce_clips).
+function LC.AnnounceUnused(voice)
+    local out = {}
+    local retired = {}
+    for _, t in ipairs(LC.AnnounceRetired) do retired[t] = true end
+    local names = file.Find("sound/" .. ROOT .. voice .. "/*", "GAME") or {}
+    table.sort(names)
+    for _, name in ipairs(names) do
+        local base, ext = string.match(name, "^(.*)%.([%w]+)$")
+        if base and EXT[string.lower(ext)] then
+            local t = LC.AnnounceTriggerOf(base)
+            if not t then
+                out[#out + 1] = name .. ": doesn't start with a trigger (a typo?)"
+            elseif retired[t] then
+                out[#out + 1] = name .. ": " .. t .. " is no longer said (a surprise, or it answers violence)"
+            elseif voice == "overwatch" and (LC.AnnounceToneOf(base) > 1 or string.find(string.lower(base), "warm", 1, true)) then
+                out[#out + 1] = name .. ": plays as Overwatch (a tone word only means something to the Administrator: is this her recording?)"
+            end
+        end
+    end
+    return out
 end
 
 -- One voice's own folder, flat: every file named for its trigger
@@ -462,6 +491,7 @@ concommand.Add("lc_announce_clips", function(ply)
             end
         end
         Reply(ply, "[Living City] " .. v .. ": " .. (#parts > 0 and table.concat(parts, ", ") or "nothing yet"))
+        for _, why in ipairs(LC.AnnounceUnused(v)) do Reply(ply, "[Living City]   check " .. v .. "/" .. why) end
     end
     for v, trigs in pairs(LC.AnnounceExtra) do
         local parts = {}

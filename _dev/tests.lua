@@ -8611,6 +8611,22 @@ _run(4)
 ok(sentTo("lc_breencast", n0, "administrator/welcome1"), "the welcome follows as soon as they're off air")
 _run(15)
 
+-- names as people actually make them
+_files[A .. "overwatch/lockdown_soon1.wav"] = ""
+_files[A .. "overwatch/lockdown1.wav"] = ""
+_files[A .. "overwatch/blackout.wav"] = ""
+_files[A .. "overwatch/welcome_warm.wav"] = ""
+_files[A .. "administrator/skirming_sweep_stern1.wav"] = ""
+_files[A .. "administrator/dawn_warm1.wav"] = ""
+_files[A .. "administrator/rations_soon_warm1.wav"] = ""
+LC.AnnounceRescan()
+ok(hasClip(LC.AnnounceClips("overwatch", "lockdown"), "lockdown1.wav") and not hasClip(LC.AnnounceClips("overwatch", "lockdown"), "lockdown_soon1"), "a retired warning (lockdown_soon1) is never played as the lockdown itself")
+ok(hasClip(LC.AnnounceClips("overwatch", "blackout"), "overwatch/blackout.wav"), "a file with no number is fine")
+ok(hasClip(LC.AnnounceClips("administrator", "dawn", 1), "dawn_warm1.wav") and hasClip(LC.AnnounceClips("administrator", "rations_soon", 1), "rations_soon_warm1.wav"), "_warm in the name is her warm one")
+local unusedO, unusedA = table.concat(LC.AnnounceUnused("overwatch"), "|"), table.concat(LC.AnnounceUnused("administrator"), "|")
+ok(string.find(unusedO, "lockdown_soon1.wav: lockdown_soon is no longer said", 1, true) and string.find(unusedO, "welcome_warm.wav: plays as Overwatch", 1, true), "lc_announce_clips points out retired files, and a tone word in Overwatch's folder")
+ok(string.find(unusedA, "skirming_sweep_stern1.wav: doesn't start with a trigger", 1, true) and not string.find(unusedA, "dawn_warm1", 1, true), "and a typo in a trigger")
+
 _setcvar("lc_announce_custom", 0)
 ok(LC.PickAnnounceClip("overwatch", "curfew") == nil, "lc_announce_custom 0 turns the lot off")
 _setcvar("lc_announce_custom", 1)

@@ -5,6 +5,7 @@ trigger, then anything you like: curfew1.wav, curfew2.wav, ambient_3.wav.
 (curfew_soon1.wav is curfew_soon, not curfew: the longest trigger that fits wins.)
 .wav, .mp3 or .ogg. One is picked each time, never the same one twice running.
 Optional subtitle: a .txt with the same name (curfew1.wav + curfew1.txt).
+In game, lc_announce_clips lists what was found and any file that never plays.
 Draft lines for every trigger: ANNOUNCEMENT_SCRIPTS.md, at the top of this addon.
 
 TRIGGERS (what a file's name starts with) AND WHEN THEY PLAY:

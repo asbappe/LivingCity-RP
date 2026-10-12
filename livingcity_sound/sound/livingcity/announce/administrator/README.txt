@@ -16,6 +16,7 @@ violence (three raids, skirmishes, breakouts, outbreaks or rebel gains in ten
 minutes is a step, six is two; warm triggers only escalate on red). If the
 tone she wants has no recordings she uses the nearest calmer one, then the
 nearest angrier one, so one warm take covers a trigger on its own.
+In game, lc_announce_clips lists what was found and any file that never plays.
 Draft lines for every trigger and tone: ANNOUNCEMENT_SCRIPTS.md, at the top of this addon.
 
 TRIGGERS, HER USUAL TONE, AND WHEN THEY PLAY:
