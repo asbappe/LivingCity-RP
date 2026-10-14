@@ -138,7 +138,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **Bloom (lc_ending bloom now):** everyone dancing (NPCs too), the camera circling you, the coloured lights and sparkles, the speed-up at 2:01, the launches one at a time. Does the dance look right? (lc_bloom_preview to check it on yourself; lc_bloom_pose_print to send me the numbers.)
   Notes:
-- [ ] **Marrow (lc_ending marrow now):** skeletons dancing their way in, the drops (everyone dancing, the Combine's units too, strobes), the attacks in between, turning into a skeleton, the outro. Do the sections line up with the song? Doors locked open? Plenty of skeletons (up to 60); the kicks in the dance; the Combine shooting them in the fights; easy to outrun in the first fight, overwhelming by the last.
+- [ ] **Marrow (lc_ending marrow now):** skeletons dancing their way in, the drops (everyone dancing, the Combine's units too, strobes), the attacks in between, turning into a skeleton, the outro. Do the sections line up with the song? Doors locked open? More and more skeletons (15 at first, 80 by two thirds through); the kicks in the dance; the Combine shooting them in the fights; you can always outrun one, but the crowd gets everyone by the last fight.
   Notes:
 - [ ] **The Bus (lc_ending bus now):** the bus driving about, everyone seated on the drop, the rainbow trail, the rings popping, the speed on the beat, the landing at 2:29 and the faster take-off. How does the seated pose look? It roams the open air from one far-off spot to the next (never circling one spot, never through a building).
   Notes:

@@ -520,6 +520,7 @@ local function Hit(p)
     local fury = LC.MingeFury(now)
     p.lcMingeHitAt = now + 0.3 / math.min(1, fury) * 0.8
     if not p:IsPlayer() then -- (one of the Combine's units, or one of the city's people in the ring)
+        if E then E.ringHits = (E.ringHits or 0) + 1 end
         p:SetHealth(p:Health() - math.max(1, math.floor(math.random(10, 18) * fury)))
         p:EmitSound("physics/body/body_medium_impact_hard" .. math.random(1, 6) .. ".wav", 75)
         if p:Health() <= 0 then
@@ -1064,7 +1065,7 @@ end
 -- good; at the outro they claim whoever's left.
 local cvMarrowSections = CreateConVar("lc_ending_marrow_sections", "45:dance,75:attack,82:rave,112:attack,150:dance,180:attack,188:dance,217:outro,232:end", FLAGS,
     "Marrow: the song's sections, second:kind (dance, rave, attack, outro, end); before the first, the skeletons gather")
-local cvMarrowMax   = CreateConVar("lc_ending_marrow_max", "60", FLAGS, "Marrow: how many skeletons")
+local cvMarrowMax   = CreateConVar("lc_ending_marrow_max", "80", FLAGS, "Marrow: how many skeletons at the most (their numbers build to it by about two thirds of the way through the song)")
 local cvMarrowBPM   = CreateConVar("lc_ending_marrow_bpm", "128", FLAGS, "Marrow: the song's beats per minute (the dancing and the lights keep to it)")
 local cvMarrowModel = CreateConVar("lc_ending_marrow_model", "models/player/skeleton.mdl", FLAGS, "Marrow: the skeletons' model")
 local SPOOKY = { { 170, 60, 255 }, { 255, 130, 20 } } -- (purple and orange)
@@ -1128,21 +1129,24 @@ local function Bones(npc)
     if k then k:SetNW2Bool("lc_dancing", DANCING[E.section] or false) end
 end
 
--- How hard the skeletons come on, through the song: slower than you can run
--- and easy to shake off in the first fight, about your pace in the second,
--- and unstoppable by the last (they overwhelm everyone, so all dance as skeletons).
-function LC.MarrowPace(t)
-    local k = math.Clamp(((t or 0) - 60) / 120, 0, 1) ^ 2
-    return { speed = 150 + 140 * k, dmg = 0.6 + 2.4 * k }
+-- The skeletons never get faster (you can always outrun one: faster than a
+-- walk, slower than a run) or harder: there are just more and more of them,
+-- 15 at first and the full lc_ending_marrow_max by about two thirds of the way
+-- through, and each one claws on its own, so a crowd of them is the end of you.
+local SKEL_SPEED = 160
+function LC.MarrowCount(t)
+    local len = E and E.holdUntil and E.phaseT and (E.holdUntil - E.phaseT) or 232
+    local k = math.Clamp((t or 0) / (len * 0.62), 0, 1) ^ 2
+    local max = cvMarrowMax:GetInt()
+    return math.floor(math.min(max, 15) + (max - math.min(max, 15)) * k)
 end
 
-local function Claw(target)
+local function Claw(target, k)
     local now = CurTime()
-    if not IsValid(target) or now < (target.lcClawAt or 0) then return end
-    target.lcClawAt = now + 0.8
+    if not IsValid(target) or not IsValid(k) or now < (k.lcClawAt or 0) then return end
+    k.lcClawAt = now + 0.8 -- (each skeleton on its own: the more of them on you, the worse)
     target:EmitSound("npc/zombie/claw_strike" .. math.random(1, 3) .. ".wav", 75)
-    local pace = LC.MarrowPace(E and (now - E.phaseT) or 0)
-    target:SetHealth(target:Health() - math.max(1, math.floor(math.random(4, 7) * pace.dmg)))
+    target:SetHealth(target:Health() - math.random(3, 5))
     if target:IsPlayer() then
         if target.ViewPunch then target:ViewPunch(Angle(math.Rand(-8, 8), math.Rand(-8, 8), 0)) end
         if target:Health() <= 0 then Convert(target) end
@@ -1161,7 +1165,7 @@ function LC.SkelStep(m, dt)
     to.z = 0
     local dist = to:Length()
     if dist < 6 then Anim(m, "idle_all_01") return end
-    Anim(m, (s.speed or 0) > 180 and "run_all_01" or "walk_all")
+    Anim(m, (s.speed or 0) > 130 and "run_all_01" or "walk_all")
     local dir = to * (1 / dist)
     local step = math.min(dist, (s.speed or 100) * (dt or 0.1))
     local nextPos = pos + dir * step
@@ -1274,15 +1278,17 @@ TICK.marrow = function(now)
     for _, k in ipairs(E.skels) do if IsValid(k) then alive[#alive + 1] = k end end
     E.skels = alive
     -- more of them, all over the map at first
-    local max = cvMarrowMax:GetInt()
-    local want = E.section == "intro" and math.floor(max * math.Clamp(t / 30, 0.15, 1)) or max
+    local want = LC.MarrowCount(t)
     if #E.skels < want and now >= (E.nextSpawn or 0) then
-        E.nextSpawn = now + (E.section == "intro" and 0.2 or 0.5)
-        -- a few at a time; far off if there's room, closer in where the map's cramped
+        E.nextSpawn = now + (E.section == "intro" and 0.2 or 0.4)
+        -- a few at a time; far off if there's room, closer in where the map's cramped, and
+        -- in a fight, round whoever's still standing, on every side
+        local living = Living()
         for _ = 1, math.min(3, want - #E.skels) do
             local g
-            for _, d in ipairs(E.section == "intro" and { math.Rand(1500, 3000), 1000, 650 } or { 1200, 800, 500 }) do
-                g = RingSpot(E.lz, d, false)
+            local near = E.section == "attack" and #living > 0 and living[math.random(#living)]:GetPos() or E.lz
+            for _, d in ipairs(E.section == "intro" and { math.Rand(1500, 3000), 1000, 650 } or { 900, 650, 450 }) do
+                g = RingSpot(near, d, false)
                 if g then break end
             end
             if g then
@@ -1295,7 +1301,6 @@ TICK.marrow = function(now)
     local targets = {}
     for _, p in ipairs(Living()) do targets[#targets + 1] = p end
     for _, n in ipairs(E.combine or {}) do if IsValid(n) then targets[#targets + 1] = n end end
-    local pace = LC.MarrowPace(t)
     -- and in a fight, the Combine shoot back (talking it through on their radios)
     if E.section == "attack" then
         for _, n in ipairs(E.combine or {}) do
@@ -1330,8 +1335,8 @@ TICK.marrow = function(now)
                 if not bd or d < bd then best, bd = p, d end
             end
             if best then
-                s.goal, s.speed = best:GetPos(), pace.speed
-                if bd < 60 * 60 then Claw(best) end
+                s.goal, s.speed = best:GetPos(), SKEL_SPEED
+                if bd < 60 * 60 then Claw(best, k) end
             end
             if (s.stuck or 0) > 1.5 and best then
                 local g = RingSpot(best:GetPos(), 300, true)

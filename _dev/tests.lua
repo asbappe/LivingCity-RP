@@ -11205,11 +11205,9 @@ runTo(34)
 hurt = 0
 for _, p in ipairs(player.GetAll()) do if p.lcEndTaken or p:Health() < 100 then hurt = hurt + 1 end end
 runTo(36)
-local ringHurt = not IsValid(unit) or unit:Health() < 100
-for _, c in ipairs(E.folk) do if not IsValid(c) or c:Health() < 40 then ringHurt = true end end
-ok(E.mode == "leap" and ringHurt and not a.lcEndTaken and not b.lcEndTaken,
+ok(E.mode == "leap" and (E.ringHits or 0) > 0 and not a.lcEndTaken and not b.lcEndTaken,
     "then they leap, at the Combine and the city's people first, and the players have a chance to run",
-    E.mode .. " unit " .. tostring(IsValid(unit) and unit:Health()) .. " a " .. tostring(a.lcEndTaken) .. " b " .. tostring(b.lcEndTaken))
+    E.mode .. " ring hits " .. tostring(E.ringHits) .. " a " .. tostring(a.lcEndTaken) .. " b " .. tostring(b.lcEndTaken))
 ok(LC.MingeFury(E.leapAt + 10) < 0.5 and LC.MingeFury(E.leapAt + 45) > 2.5, "they hit lightly at first, and much harder 30 to 45 seconds in")
 for _, n in ipairs(FIRE) do _files["sound/npc/metropolice/vo/" .. n .. ".wav"] = nil end
 runTo(38.5)
@@ -11362,9 +11360,10 @@ ok(a.lcEndTaken and a:GetModel() == "models/player/skeleton.mdl" and a:GetNW2Boo
 local nk = #E.skels
 ok(LC.SkelHurt(E.skels[#E.skels], _dmg(b, 500)), "and in a fight, they can be put down")
 ok((E.shots or 0) > 0, "the Combine's units shoot at them in a fight", E.shots or 0)
-local early, late = LC.MarrowPace(75), LC.MarrowPace(180)
-ok(early.speed < 190 and late.speed > 250 and late.dmg > early.dmg * 3,
-    "early on they're slower than you can run and hit lightly; by the last fight they overwhelm everyone", early.speed .. " / " .. late.speed)
+_setcvar("lc_ending_marrow_max", 80)
+local few, many = LC.MarrowCount(1), LC.MarrowCount((E.holdUntil - E.phaseT) * 0.62)
+_setcvar("lc_ending_marrow_max", 8)
+ok(few <= 16 and many == 80, "just more and more of them: a handful at first, the whole horde by two thirds of the way through", few .. " then " .. many)
 runToM(12.5)
 ok(E.section == "outro" and b.lcEndTaken and not IsValid(mcop), "the outro claims everyone left (the Combine's units too)")
 ok(E.client.danceRate == 2, "and everyone dances double time to the xylophone")
@@ -11373,7 +11372,7 @@ ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and when the son
 _run(6)
 ok(a:GetModel() ~= "models/player/skeleton.mdl" and not mdoor.lcHeldOpen, "(everyone's back as they were, the doors too)")
 _setcvar("lc_ending_marrow_sections", "45:dance,75:attack,82:rave,112:attack,150:dance,180:attack,188:dance,217:outro,232:end")
-_setcvar("lc_ending_marrow_max", 60)
+_setcvar("lc_ending_marrow_max", 80)
 if IsValid(mdoor) then mdoor:Remove() end
 -- Base: someone set up us the bomb (short timings for the test)
 concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
@@ -11469,8 +11468,13 @@ local z0 = E.floodZ
 runToW(3)
 ok(E.floodZ > z0 and E.stage:GetPos().z >= E.lz.z, "the water rises, and the stage floats on it")
 ok(E.stage:GetPos().z + E.stageTop > E.floodZ, "with its deck above the water line, not under it", math.floor(E.stage:GetPos().z + E.stageTop - E.floodZ))
-ok(#E.crowd >= 1 and E.crowd[1]:GetNW2Bool("lc_rocking", false) and E.crowd[1]:GetNW2Bool("lc_crowd", false),
-    "a crowd's up there with him, headbanging (the Combine's units and the city's people)", #E.crowd)
+local rockingN, crowdN = 0, 0
+for _, c in ipairs(E.crowd) do
+    if IsValid(c) and c:GetNW2Bool("lc_crowd", false) then crowdN = crowdN + 1 end
+    if IsValid(c) and c:GetNW2Bool("lc_rocking", false) then rockingN = rockingN + 1 end
+end
+ok(#E.crowd >= 1 and crowdN >= 1 and rockingN >= 1, "a crowd's up there with him, headbanging (the Combine's units and the city's people; the waves may have taken one or two already)",
+    #E.crowd .. " / " .. rockingN)
 a:SetPos(E.stage:GetPos() + Vector(40, 0, -10))
 _run(0.2)
 ok(a:GetPos().z >= E.stage:GetPos().z + E.stageTop, "anyone the deck rises into is lifted onto it (no getting stuck inside)")
