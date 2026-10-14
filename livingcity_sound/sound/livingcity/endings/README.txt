@@ -1,5 +1,5 @@
 Secret endings: one folder per ending, the song for it goes inside.
 
-  harpies  bus  plane  topsecret  water
+  harpies  bus  plane  standup  water
 
 lc_endings lists what's found. Full details: README.md, "Secret endings".

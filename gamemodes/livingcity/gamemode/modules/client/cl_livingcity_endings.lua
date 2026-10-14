@@ -1015,3 +1015,78 @@ hook.Add("HUDPaint", "LivingCityPlane", function()
         surface.DrawRect(0, 0, w, h)
     end
 end)
+
+------------------------------------------------------------------------
+-- Standup: the ropes, the struggling, and the view from the end of one
+------------------------------------------------------------------------
+
+local function Standup() return S and S.id == "standup" and S.phase == "apocalypse" and S.client end
+local ropeMat
+local hungPosed = {}
+
+local function NeckOf(e)
+    local id = e.LookupBone and e:LookupBone("ValveBiped.Bip01_Head1")
+    local m = id and e.GetBoneMatrix and e:GetBoneMatrix(id)
+    if m then return m:GetTranslation() end
+    return e:GetPos() + Vector(0, 0, 62)
+end
+
+hook.Add("PostDrawTranslucentRenderables", "LivingCityStandup", function(_, sky)
+    local c = Standup()
+    if sky or not c or not render or not render.DrawBeam then return end
+    ropeMat = ropeMat or (Material and Material("cable/rope"))
+    if ropeMat then render.SetMaterial(ropeMat) end
+    for _, h in ipairs(c.hangs or {}) do
+        local e = Entity(h.e)
+        if IsValid(e) and h.a then
+            local neck = NeckOf(e)
+            render.DrawBeam(Vector(h.a.x, h.a.y, h.a.z), neck, 2, 0, neck:Distance(Vector(h.a.x, h.a.y, h.a.z)) / 32, Color(255, 255, 255))
+        end
+    end
+end)
+
+-- hands at the rope and legs kicking; then limp, head over
+hook.Add("Think", "LivingCityStandup", function()
+    local c = Standup()
+    if not c then
+        for e in pairs(hungPosed) do
+            if IsValid(e) and e.ManipulateBoneAngles then
+                for _, name in ipairs({ "R_UpperArm", "L_UpperArm", "R_Forearm", "L_Forearm", "Head", "R_Calf", "L_Calf", "R_Thigh", "L_Thigh" }) do
+                    local id = e:LookupBone("ValveBiped.Bip01_" .. name)
+                    if id then e:ManipulateBoneAngles(id, Angle(0, 0, 0)) end
+                end
+            end
+        end
+        hungPosed = {}
+        return
+    end
+    local now = CurTime()
+    for _, h in ipairs(c.hangs or {}) do
+        local e = Entity(h.e)
+        if IsValid(e) and e.ManipulateBoneAngles then
+            hungPosed[e] = true
+            local limp = e:GetNW2Bool("lc_limp", false)
+            local k = now * 9 + h.e
+            local function Set(name, a) local id = e:LookupBone("ValveBiped.Bip01_" .. name) if id then e:ManipulateBoneAngles(id, a) end end
+            if limp then
+                Set("R_UpperArm", Angle(0, 0, 0)) Set("L_UpperArm", Angle(0, 0, 0))
+                Set("R_Forearm", Angle(0, 0, 0)) Set("L_Forearm", Angle(0, 0, 0))
+                Set("Head", Angle(0, 30, 25))
+                Set("R_Calf", Angle(0, 8, 0)) Set("L_Calf", Angle(0, 8, 0))
+                Set("R_Thigh", Angle(0, 0, 0)) Set("L_Thigh", Angle(0, 0, 0))
+            else
+                Set("R_UpperArm", Angle(15, -110, 0)) Set("L_UpperArm", Angle(-15, -110, 0))
+                Set("R_Forearm", Angle(0, -120, 0)) Set("L_Forearm", Angle(0, -120, 0))
+                Set("Head", Angle(0, -10, 10 * math.sin(k * 0.5)))
+                Set("R_Thigh", Angle(0, -25 * math.max(0, math.sin(k)), 0)) Set("L_Thigh", Angle(0, -25 * math.max(0, -math.sin(k)), 0))
+                Set("R_Calf", Angle(0, 40 * math.max(0, math.sin(k)), 0)) Set("L_Calf", Angle(0, 40 * math.max(0, -math.sin(k)), 0))
+            end
+        end
+    end
+end)
+
+-- strung up: you see yourself from a little way off, and can look about
+hook.Add("CalcView", "LivingCityStandup", function(me, origin, angles, fov)
+    if not Standup() or not IsValid(me) or me:GetNW2Float("lc_hanged", 0) <= 0 then return end
+    return { origin = me:GetPos() + Vector(0, 0, 50) - angles:Forward() * 160, angles = angles, fov = fov, drawviewer = true }
+end)

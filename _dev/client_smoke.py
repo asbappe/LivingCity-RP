@@ -1320,6 +1320,17 @@ for _, h in pairs(hook.t["MouthMoveAnimation"] or {}) do h(_me) end
 for _, h in pairs(hook.t["CalcView"] or {}) do h(_me, Vector(0, 0, 0), Angle(0, 0, 0), 75) end
 paint()
 _me.nw.lc_riding = nil
+net._q = { { id = "standup", phase = "apocalypse", name = "Standup", say = "x", song = "livingcity/endings/standup/standup.ogg",
+    client = { bpm = 133, offset = 0, start = CurTime(), hangs = { { e = 1, a = Vector(0, 0, 300) } } } } }
+net.recv_lc_ending()
+_me.nw.lc_hanged = CurTime()
+for _, h in pairs(hook.t["Think"] or {}) do h() end
+for _, h in pairs(hook.t["PostDrawTranslucentRenderables"] or {}) do h(false, false) end
+for _, h in pairs(hook.t["CalcView"] or {}) do h(_me, Vector(0, 0, 0), Angle(0, 0, 0), 75) end
+_me.nw.lc_limp = true
+for _, h in pairs(hook.t["Think"] or {}) do h() end
+_me.nw.lc_hanged = 0
+_me.nw.lc_limp = false
 _me.nw.lc_dancing = false
 if concommand.list and concommand.list.lc_bloom_pose then concommand.list.lc_bloom_pose(nil, "lc_bloom_pose", { "R_Hand", "1", "2", "3" }) end
 net._q = { { id = "water", phase = "reset", name = "The Flood" } }

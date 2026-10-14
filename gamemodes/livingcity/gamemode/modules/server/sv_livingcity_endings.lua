@@ -39,7 +39,10 @@
                    little webcam of your own face in the corner; swooping and
                    rolling in the choruses, fireworks in the last, and up into
                    the clouds on the final note (lc_ending_plane_sections)
-        topsecret  everyone hung by barnacles, one a second
+        standup    the rope: someone new strung up every other beat, from
+                   whatever is above them or the nearest wall; the hanged
+                   struggle while their health drains, then go limp and look
+                   on (lc_ending_standup_sections)
         hard       party hard: everyone at the landing zone (every NPC in the
                    city dancing too), the cheap mirror-flip meme dance on the
                    half-beat, PARTY HARD flashing everywhere, strobes; people
@@ -104,7 +107,7 @@ LC.Endings = {
     harpies   = { name = "The Harpies", say = "The lights go out. Something is gathering out there in the dark." },
     bus       = { name = "The Bus", say = "Hear that horn? All aboard." },
     plane     = { name = "Plane", say = "Alo, salut. Please fasten your seatbelts." },
-    topsecret = { name = "Top Secret", say = "Look up." },
+    standup   = { name = "Standup", say = "Look up." },
     water     = { name = "The Flood", say = "Father Grigori has eaten the motherlode. The waters rise." },
     bloom     = { name = "Bloom", say = "Everybody dances. Nobody stops." },
     marrow    = { name = "Marrow", say = "Something is rattling out there. Lots of somethings." },
@@ -114,7 +117,7 @@ LC.Endings = {
 -- The ones with strobes or flashes: everyone is warned before and as they start
 -- (and lc_ending_calm, on each player's own screen, leaves the flashing out).
 for _, id in ipairs({ "bus", "bloom", "marrow", "base", "hard", "water", "plane" }) do if LC.Endings[id] then LC.Endings[id].flashing = true end end
-LC.EndingOrder = { "harpies", "bus", "plane", "topsecret", "water", "bloom", "marrow", "base", "hard" }
+LC.EndingOrder = { "harpies", "bus", "plane", "standup", "water", "bloom", "marrow", "base", "hard" }
 
 local E -- the ending in progress: { id, phase, by, ... }
 function LC.EndingSession() return E end
@@ -1708,38 +1711,160 @@ TICK.plane = function(now)
     end
 end
 
--- Top Secret: barnacles, one victim a second
-SETUP.topsecret = function()
-    E.nextHang = CurTime() + 1
-    E.hanging = {}
+-- Standup (a codeword): the rope. Every other beat from lc_ending_standup_sections'
+-- "hang", someone else is strung up: a rope from whatever is above them (a
+-- ledge, a balcony, a ceiling), or from the nearest wall of a building, or
+-- failing both, from the sky. Players are spread through the song; the
+-- city's people (the Combine's units too) fill the beats between, and when
+-- there's nobody left, new people turn up near you to be next. The hanged
+-- swing and struggle while their health drains; at nothing they go limp,
+-- and stay hanging there, looking on.
+local cvStandupSections = CreateConVar("lc_ending_standup_sections", "11:hang,104:last,110:end", FLAGS,
+    "Standup: the song's sections, second:kind (hang, last, end)")
+local cvStandupBPM   = CreateConVar("lc_ending_standup_bpm", "133", FLAGS, "Standup: the song's beats per minute (someone new every other beat)")
+local cvStandupDrain = CreateConVar("lc_ending_standup_drain", "4", FLAGS, "Standup: health a second the hanged lose")
+local cvStandupMax   = CreateConVar("lc_ending_standup_max", "60", FLAGS, "Standup: the most people strung up in all")
+
+local function StandupSection(t)
+    local kind = "intro"
+    for _, sct in ipairs(E.sections) do if t >= sct.t then kind = sct.kind end end
+    return kind
 end
-TICK.topsecret = function(now)
-    if now >= E.nextHang then
-        E.nextHang = now + 1
-        for _, p in ipairs(Living()) do
-            if not p.lcEndHang then
-                p.lcEndHang = { t = now, from = p:GetPos() }
-                p:Freeze(true)
-                p:SetMoveType(MOVETYPE_NONE)
-                Prop("models/barnacle.mdl", p:GetPos() + Vector(0, 0, 260))
-                p:EmitSound("npc/barnacle/barnacle_tongue_pull1.wav", 80)
-                E.hanging[#E.hanging + 1] = p
-                break
+
+-- Where the rope goes: something overhead, else the nearest wall, else the sky.
+local function RopeAnchor(pos)
+    local up = util.TraceLine({ start = pos + Vector(0, 0, 80), endpos = pos + Vector(0, 0, 900), mask = MASK_SOLID_BRUSHONLY })
+    if up.Hit and not up.HitSky then return up.HitPos - Vector(0, 0, 4), Vector(0, 0, 0) end
+    local best, bestD, out
+    for i = 0, 7 do
+        local dir = Angle(0, i * 45, 0):Forward()
+        local tr = util.TraceLine({ start = pos + Vector(0, 0, 300), endpos = pos + Vector(0, 0, 300) + dir * 700, mask = MASK_SOLID_BRUSHONLY })
+        if tr.Hit and not tr.HitSky and (not bestD or tr.Fraction < bestD) then best, bestD, out = tr.HitPos, tr.Fraction, (tr.HitNormal or -dir) end
+    end
+    if best then return best + out * 40, out end
+    return pos + Vector(0, 0, 500), Vector(0, 0, 0)
+end
+
+local function Hang(e)
+    if not IsValid(e) or e.lcHang or e.lcEndTaken then return false end
+    local pos = e:GetPos()
+    local anchor = RopeAnchor(pos)
+    local g = Ground(pos)
+    local drop = anchor.z - 110 - 72 -- (a rope, then the person under it)
+    local feet = math.max(drop, ((g and g.z) or pos.z) + 25)
+    e.lcHang = { anchor = anchor, base = Vector(anchor.x, anchor.y, feet), t0 = CurTime() }
+    e:SetNW2Float("lc_hanged", CurTime())
+    if e:IsPlayer() then
+        if e.InVehicle and e:InVehicle() and e.ExitVehicle then e:ExitVehicle() end
+        e.lcEndFrozen = true
+        e:Freeze(true)
+        e:SetMoveType(MOVETYPE_NONE)
+        e:ChatPrint("A rope drops round your neck from above, and up you go.")
+    end
+    e:EmitSound("physics/wood/wood_strain" .. math.random(2, 4) .. ".wav", 80)
+    E.hanged[#E.hanged + 1] = e
+    E.client.hangs[#E.client.hangs + 1] = { e = e:EntIndex(), a = anchor }
+    Send()
+    return true
+end
+
+-- Gone limp: still hanging there, looking on.
+local function Limp(e)
+    if not IsValid(e) or e.lcEndTaken then return end
+    e:SetNW2Bool("lc_limp", true)
+    if e:IsPlayer() then
+        e.lcEndTaken = true
+        e:SetNW2Bool("lc_end_taken", true)
+        e:ChatPrint("You stop kicking. You hang there, and watch the rest.")
+        hook.Run("LivingCityEndingTook", e, E and E.id)
+    end
+end
+
+SETUP.standup = function()
+    local now = CurTime()
+    E.songEnds = true -- (it is over when the song is)
+    E.sections = LC.MarrowSections(cvStandupSections:GetString())
+    local hangAt, lastAt = now + 11, now + 104
+    for _, sct in ipairs(E.sections) do
+        if sct.kind == "end" then E.holdUntil = now + sct.t end
+        if sct.kind == "hang" then hangAt = now + sct.t end
+        if sct.kind == "last" then lastAt = now + sct.t end
+    end
+    E.holdUntil = E.holdUntil or (now + 110)
+    E.hanged = {}
+    E.beatLen = 60 / math.max(1, cvStandupBPM:GetFloat())
+    -- the players, spread through the song; everyone else on the beats between
+    local ps = player.GetAll()
+    E.playerGap = math.max(E.beatLen * 2, (lastAt - hangAt) / math.max(1, #ps))
+    E.nextPlayer = hangAt
+    E.nextAny = hangAt
+    LC.TimeStopped = true
+    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    E.client = { bpm = cvStandupBPM:GetFloat(), offset = 0, start = now, hangs = {} }
+end
+
+TICK.standup = function(now)
+    local t = now - E.phaseT
+    local kind = StandupSection(t)
+    if kind == "hang" or kind == "last" then
+        -- a player, on their turn
+        if now >= E.nextPlayer then
+            E.nextPlayer = now + E.playerGap
+            local pick = {}
+            for _, p in ipairs(Living()) do if not p.lcHang then pick[#pick + 1] = p end end
+            if #pick > 0 then Hang(pick[math.random(#pick)]) E.nextAny = now + E.beatLen * 2 end
+        end
+        -- and on every other beat between, somebody else
+        if now >= E.nextAny and #E.hanged < cvStandupMax:GetInt() then
+            E.nextAny = now + E.beatLen * 2
+            local victim
+            for npc in pairs(LC.NPCs or {}) do if IsValid(npc) and not npc.lcHang then victim = npc break end end
+            if not victim then
+                -- nobody left: someone turns up near one of you to be next
+                local near = Living()[1] or player.GetAll()[1]
+                local spot = near and RingSpot(near:GetPos(), math.Rand(250, 600), false)
+                if spot then
+                    victim = ents.Create("npc_citizen")
+                    if IsValid(victim) then
+                        victim:SetPos(spot)
+                        victim:Spawn()
+                        E.ents[#E.ents + 1] = victim
+                    end
+                end
+            end
+            if IsValid(victim) then Hang(victim) end
+        end
+    end
+    -- the last of the song: everyone left goes up
+    if kind == "last" and not E.lastHang then
+        E.lastHang = true
+        for _, p in ipairs(Living()) do if not p.lcHang then Hang(p) end end
+    end
+    -- the hanged: swinging, turning, and (the living) losing health
+    local drain = cvStandupDrain:GetFloat() * 0.1
+    for _, e in ipairs(E.hanged) do
+        local h = IsValid(e) and e.lcHang
+        if h then
+            local k = now - h.t0
+            local limp = e:GetNW2Bool("lc_limp", false)
+            local swing = limp and 4 or 10
+            e:SetPos(h.base + Vector(math.sin(k * 1.3) * swing, math.cos(k * 1.1) * swing * 0.6, 0))
+            e:SetAngles(Angle(0, (k * (limp and 6 or 25)) % 360, 0))
+            if not limp then
+                if e:IsPlayer() then
+                    e.lcHangHP = (e.lcHangHP or e:Health()) - drain
+                    e:SetHealth(math.max(1, math.floor(e.lcHangHP)))
+                    if e.lcHangHP <= 0 then Limp(e) end
+                elseif k > 6 then
+                    Limp(e)
+                end
             end
         end
     end
-    for _, p in ipairs(E.hanging) do
-        local h = IsValid(p) and p.lcEndHang
-        if h and not p.lcEndTaken then
-            local t = now - h.t
-            p:SetPos(h.from + Vector(0, 0, math.min(1, t / 2.5) * 180))
-            if t > 3.5 then
-                p:EmitSound("npc/barnacle/barnacle_crunch2.wav", 80)
-                Take(p, "Up you go.")
-            end
-        end
-    end
 end
+
+-- The hanged can't do anything about it.
+hook.Add("CanPlayerSuicide", "LivingCityStandup", function(p) if p.lcHang then return false end end)
 
 -- The Flood: Father Grigori's song. A stage floats at the landing zone with
 -- everyone on it; the storm is at its worst; the water rises over the city.
@@ -2032,6 +2157,10 @@ local function Clear()
             if p.UnSpectate then p:UnSpectate() end
             if p.Spawn then p:Spawn() end
         end
+        if p.lcHang then p:Freeze(false) p:SetMoveType(MOVETYPE_WALK) end
+        p.lcHang, p.lcHangHP = nil, nil
+        p:SetNW2Float("lc_hanged", 0)
+        p:SetNW2Bool("lc_limp", false)
         p.lcEndTaken, p.lcEndRide, p.lcEndHang, p.lcEndUnder = nil, nil, nil, nil
         p.lcEndSpectating, p.lcEndWatching, p.lcEndRoam = nil, nil, nil
         if p.lcEndModel then p:SetModel(p.lcEndModel) p.lcEndModel = nil end
@@ -2049,7 +2178,10 @@ local function Clear()
     SetGlobal2Bool("lc_flood_real", false)
     for _, p in ipairs(player.GetAll()) do if p.SetGravity then p:SetGravity(1) end p.lcEndUnder = nil end
     for npc in pairs(LC.NPCs or {}) do
-        if IsValid(npc) then npc:SetNW2Bool("lc_dancing", false) npc:SetNW2Bool("lc_seated", false) npc.lcBloomUp = nil npc.lcEndRide = nil end
+        if IsValid(npc) then
+            npc:SetNW2Bool("lc_dancing", false) npc:SetNW2Bool("lc_seated", false) npc.lcBloomUp = nil npc.lcEndRide = nil
+            if npc.lcHang then npc.lcHang = nil npc:SetNW2Float("lc_hanged", 0) npc:SetNW2Bool("lc_limp", false) end
+        end
     end
     if E and E.doorsOpen and LC.ReleaseEveryDoor then LC.ReleaseEveryDoor() end
     if E and E.dark then
