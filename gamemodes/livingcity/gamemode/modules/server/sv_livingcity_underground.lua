@@ -796,7 +796,7 @@ end
 timer.Create("LivingCityStops", 0.5, 0, function()
     local ok, err = pcall(function()
         local now = CurTime()
-        if not LC.Running or not cvStops:GetBool() then
+        if not LC.Running or not cvStops:GetBool() or (LC.EndingSession and LC.EndingSession()) then -- (no inspections through an ending)
             for ply, s in pairs(Stops) do EndStop(ply, s) end
             return
         end

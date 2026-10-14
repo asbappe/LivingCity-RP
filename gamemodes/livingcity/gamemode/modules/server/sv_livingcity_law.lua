@@ -74,6 +74,7 @@ end
 -- A crime happened. Returns true if it counted.
 function LC.ReportCrime(ply, reason, seconds)
     if not IsValid(ply) or not ply:IsPlayer() then return false end
+    if LC.EndingSession and LC.EndingSession() then return false end -- (the city's ending: nobody's booked for anything now)
     local handled = hook.Run("LivingCityCrime", ply, reason)
     if handled ~= nil then return handled == true end
     if LC.PlayerIsCP(ply) then return false end

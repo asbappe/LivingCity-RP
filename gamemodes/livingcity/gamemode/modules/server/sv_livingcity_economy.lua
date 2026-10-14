@@ -82,6 +82,7 @@ LC.FlushStanding = FlushStanding
 function LC.AddStanding(ply, n, why)
     if not cvOn:GetBool() or not IsValid(ply) or not ply:IsPlayer() or not n or n == 0 then return end
     if LC.PlayerIsZombie(ply) then return end
+    if n < 0 and LC.EndingSession and LC.EndingSession() then return end -- (an ending never costs anyone standing)
     local old = LC.Standing(ply)
     local v = math.Clamp(old + n, -1000, 1000)
     ply:SetPData("lce_standing", v)

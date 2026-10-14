@@ -327,10 +327,14 @@ end)
 local POSE = {
     R_UpperArm = Angle(25, -95, 10),  R_Forearm = Angle(-15, -110, 0), R_Hand = Angle(0, 0, 0),
     L_UpperArm = Angle(-25, -95, -10), L_Forearm = Angle(15, -110, 0), L_Hand = Angle(0, 0, 0),
-    Pelvis = Angle(0, 0, 0), Spine2 = Angle(0, 0, 0), Head = Angle(0, 0, 0),
+    Pelvis = Angle(0, 0, 0), Spine = Angle(0, 0, 0), Spine2 = Angle(0, 0, 0), Head = Angle(0, 0, 0),
     R_Thigh = Angle(0, 0, 0), L_Thigh = Angle(0, 0, 0), R_Calf = Angle(0, 0, 0), L_Calf = Angle(0, 0, 0),
 }
 local FLAP, SWAY, KNEE = 40, 14, 18
+-- The hips sway, and only the hips: the spine just above them and both thighs turn back
+-- the other way, so the body stays upright and the feet stay planted. (Which way a thigh
+-- turns sideways can differ: lc_bloom_leg_sign -1 if the feet splay instead of staying put.)
+local cvLegSign = CreateClientConVar("lc_bloom_leg_sign", "1", true, false, "Bloom's dance: which way the thighs turn to keep the feet planted under the swaying hips (1 or -1)")
 local PALETTE = { Color(255, 110, 200), Color(220, 90, 255), Color(100, 190, 255), Color(110, 255, 190), Color(255, 235, 110) }
 local preview = false
 local danced = {}   -- [ent] = true: someone we've turned bones on
@@ -486,8 +490,8 @@ local function Dance(ent, beat, now)
         if name == "R_Hand" then a.y = a.y + flap
         elseif name == "L_Hand" then a.y = a.y - flap
         elseif name == "Pelvis" then a.y = a.y + wave * SWAY
-        elseif name == "Spine2" then a.y = a.y - wave * SWAY * 0.8
-        elseif name == "Head" then a.y = a.y + wave * 4
+        elseif name == "Spine" then a.y = a.y - wave * SWAY -- (back upright above the hips: the chest and head stay still)
+        elseif name == "R_Thigh" or name == "L_Thigh" then a.p = a.p - wave * SWAY * (cvLegSign:GetFloat() >= 0 and 1 or -1) -- (the legs back down straight: feet planted)
         elseif name == "R_Calf" then a.y = a.y + bounce * KNEE * (wave > 0 and 1 or 0.3)
         elseif name == "L_Calf" then a.y = a.y + bounce * KNEE * (wave < 0 and 1 or 0.3)
         end
