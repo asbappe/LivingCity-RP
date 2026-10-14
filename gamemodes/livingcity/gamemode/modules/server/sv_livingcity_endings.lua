@@ -478,6 +478,13 @@ end
 local function Spectator(p, how, col)
     if not IsValid(p) or p.lcEndTaken then return end
     p.lcEndTaken, p.lcEndSpectating = true, true
+    -- (out of it: no longer frozen in a dance or a seat, or pinned to the bus or the plane,
+    -- so the keys work: clicks to watch someone else, jump to fly free)
+    if p.lcEndFrozen or (p.IsFrozen and p:IsFrozen()) then p:Freeze(false) p.lcEndFrozen = nil end
+    p.lcEndRide = nil
+    p:SetNW2Entity("lc_riding", NULL)
+    p:SetNW2Bool("lc_seated", false)
+    p:SetNW2Bool("lc_dancing", false)
     p:SetNW2Bool("lc_end_taken", true)
     p:SetNW2Bool("lc_end_spectating", true)
     if p.SetNoDraw then p:SetNoDraw(true) end
@@ -922,7 +929,7 @@ TICK.harpies = function(now)
     end
     -- the dead keep watching someone
     for _, p in ipairs(player.GetAll()) do
-        if p.lcEndSpectating and (not IsValid(p.lcEndWatching) or p.lcEndWatching.lcEndTaken) then Watch(p, 1) end
+        if p.lcEndSpectating and not p.lcEndRoam and (not IsValid(p.lcEndWatching) or p.lcEndWatching.lcEndTaken) then Watch(p, 1) end
     end
     -- (anything that doesn't move itself every tick, moves here)
     for _, m in ipairs(E.minges) do if IsValid(m) and not m.lcThinks then LC.MingeStep(m, 0.1) end end
@@ -933,9 +940,10 @@ hook.Add("KeyPress", "LivingCityEndingWatch", function(p, key)
     if not E or not p.lcEndSpectating then return end
     if key == IN_ATTACK then Watch(p, 1)
     elseif key == IN_ATTACK2 then Watch(p, -1)
-    elseif key == IN_JUMP and p.Spectate then
+    elseif key == IN_JUMP then
         p.lcEndRoam = not p.lcEndRoam
-        p:Spectate(p.lcEndRoam and OBS_MODE_ROAM or OBS_MODE_CHASE)
+        if p.Spectate then p:Spectate(p.lcEndRoam and OBS_MODE_ROAM or OBS_MODE_CHASE) end
+        if p.lcEndRoam and p.SetMoveType and MOVETYPE_OBSERVER then p:SetMoveType(MOVETYPE_OBSERVER) end -- (free to fly)
         if not p.lcEndRoam then Watch(p, 0) end
     end
 end)
@@ -1818,6 +1826,78 @@ local function HardSection(t)
     return kind
 end
 
+-- Through the song, one at a time, one of the Combine's units really goes
+-- for it: a crowd surf over everyone's heads, a frenzied spin, or a jump for
+-- joy with a backflip, confetti and all (every lc_ending_hard_moment_beats
+-- beats in the "hard" parts; each unit gets a turn before anyone goes twice).
+local cvHardMoment = CreateConVar("lc_ending_hard_moment_beats", "16", FLAGS, "Hard: beats between one of the Combine's units going for it (a crowd surf, a spin, a backflip; 0 off)")
+local WOO = {
+    "npc/metropolice/vo/affirmative.wav", "npc/metropolice/vo/rodgerthat.wav", "npc/metropolice/vo/ten4.wav",
+    "npc/combine_soldier/vo/affirmative.wav", "npc/combine_soldier/vo/affirmative2.wav", "npc/combine_soldier/vo/copythat.wav",
+}
+local YEAH = { "vo/npc/male01/yeah02.wav", "vo/npc/female01/yeah02.wav", "vo/npc/male01/fantastic01.wav", "vo/npc/female01/nice01.wav" }
+local function Confetti(pos, n)
+    if not (util.Effect and EffectData) then return end
+    for _ = 1, n or 4 do
+        local fx = EffectData()
+        fx:SetOrigin(pos + VectorRand() * 30)
+        local c = RAINBOW2 and RAINBOW2[math.random(#RAINBOW2)]
+        if c and fx.SetStart then fx:SetStart(Vector(c[1], c[2], c[3])) end
+        util.Effect("balloon_pop", fx)
+    end
+end
+local function PartyMoment(now)
+    local pool = {}
+    for _, n in ipairs(CombineNPCs()) do if IsValid(n) and not n.lcEndTaken then pool[#pool + 1] = n end end
+    if #pool == 0 then return end
+    E.partied = E.partied or {}
+    local fresh = {}
+    for _, n in ipairs(pool) do if not E.partied[n] then fresh[#fresh + 1] = n end end
+    if #fresh == 0 then E.partied = {} fresh = pool end
+    local e = fresh[math.random(#fresh)]
+    E.partied[e] = true
+    local kinds = { "surf", "spin", "flip" }
+    local kind = kinds[(E.momentsDone or 0) % #kinds + 1]
+    local from, yaw = e:GetPos(), e:GetAngles().y
+    local across = E.lz + (E.lz - from) -- (the far side of the ring)
+    across.z = from.z
+    E.moment = { e = e, kind = kind, t0 = now, dur = kind == "surf" and 4.5 or (kind == "spin" and 3 or 1.6), from = from, to = kind == "surf" and across or from, yaw = yaw }
+    E.momentsDone = (E.momentsDone or 0) + 1
+    local w = Pick(WOO)
+    if w then e:EmitSound(w, 85) end
+    for _, n in ipairs(pool) do if n ~= e and math.random() < 0.15 then local y = Pick(YEAH) if y then n:EmitSound(y, 75, math.random(95, 110)) end end end
+    if kind ~= "surf" then Confetti(from + Vector(0, 0, 50), 5) end
+end
+local function MomentStep(now)
+    local m = E.moment
+    if not m then return end
+    local e = m.e
+    local f = (now - m.t0) / m.dur
+    if not IsValid(e) or f >= 1 then
+        if IsValid(e) then
+            e:SetPos(m.to)
+            e:SetAngles(Angle(0, m.kind == "surf" and (E.lz - m.to):Angle().y or m.yaw, 0))
+            if m.kind == "flip" then Confetti(m.to + Vector(0, 0, 40), 6) end
+        end
+        E.moment = nil
+        return
+    end
+    if m.kind == "surf" then
+        -- lifted up, laid flat, and passed across the ring over everyone's heads
+        local up = math.min(1, f * 4, (1 - f) * 4)
+        e:SetPos(LerpVector(f, m.from, m.to) + Vector(0, 0, 70 * up))
+        e:SetAngles(Angle(-80 * up, m.yaw + f * 180, 0))
+    elseif m.kind == "spin" then
+        e:SetPos(m.from)
+        e:SetAngles(Angle(0, m.yaw + f * 1440, 0))
+        if math.random() < 0.3 then Confetti(m.from + Vector(0, 0, 60), 1) end
+    else
+        -- straight up, a full backflip, and down
+        e:SetPos(m.from + Vector(0, 0, 4 * 180 * f * (1 - f)))
+        e:SetAngles(Angle(-360 * f, m.yaw, 0))
+    end
+end
+
 -- Partied too hard: down they go.
 local function PassOut(e, how)
     if not IsValid(e) or e.lcEndTaken then return end
@@ -1875,6 +1955,16 @@ TICK.hard = function(now)
         E.client.partyText = kind ~= "break" and kind ~= "fade"
         Send()
     end
+    -- one of the Combine's units goes for it, every so many beats in the hard parts
+    local every = cvHardMoment:GetInt()
+    if every > 0 and kind == "hard" and not E.moment then
+        local beat = math.floor(t * cvHardBPM:GetFloat() / 60)
+        if beat ~= E.momentBeat and beat % every == 0 then
+            E.momentBeat = beat
+            PartyMoment(now)
+        end
+    end
+    MomentStep(now)
     -- one at a time, they drop
     if kind == "passout" and now >= (E.nextPass or 0) then
         E.nextPass = now + E.passGap

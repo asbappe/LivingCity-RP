@@ -146,13 +146,13 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **Base (lc_ending base now):** the subtitles lining up with the spoken lines (move them with lc_ending_base_lines), the bombs, CATS in the sky, the ZIG fleet, the explosions, the white, Engrish chat.
   Notes:
-- [ ] **Hard (lc_ending hard now):** everyone at the LZ doing the mirror-flip dance, PARTY HARD everywhere, the strobe, the freeze at the break, people passing out one at a time.
+- [ ] **Hard (lc_ending hard now):** everyone at the LZ doing the mirror-flip dance, PARTY HARD everywhere, the strobe, the freeze at the break, people passing out one at a time. Every so often one of the Combine goes for it (a crowd surf, a spin, a backflip with confetti).
   Notes:
 - [ ] **Plane (lc_ending plane now):** everyone on the wings doing the webcam dance and mouthing the words, the webcam box in the corner, the captions, the barrel rolls, the fireworks, the climb into the clouds. Do the captions line up (lc_ending_plane_captions)? Do the wings look right? The plane (and the bus, and the ZIG fleet) stays in open sky, never through a building, and the camera never ends up in the void?
   Notes:
 - [ ] **Standup (lc_ending standup now):** someone strung up every other beat, where the ropes go (overhead, walls, sky), the struggling and going limp, the view from the rope. Hanging still on the rope, not running in place; the white cone hats showing; and everyone limp before the song ends, even the last to go up.
   Notes:
-- [ ] **Secret endings:** the G-Man stops time and everyone votes (he's right in front of you whichever way you were looking, your view held on him, and the city's announcements stop); Father Grigori eating a master data core (Eat it in his pockets, or /eatchip) starts the flood (admins: lc_ending <id> now).
+- [ ] **Secret endings:** the G-Man stops time and everyone votes (he's right in front of you whichever way you were looking, your view held on him, and the city's announcements stop); Father Grigori eating a master data core (Eat it in his pockets, or /eatchip) starts the flood (admins: lc_ending <id> now). Once you're out of an ending, left/right click watches someone else and jump flies free (in every ending).
   Notes:
 
 ## Death and progression

@@ -11403,13 +11403,18 @@ _setcvar("lc_ending_base_bombs", 30)
 -- Hard: party hard (short timings for the test)
 concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
 _setcvar("lc_ending_hard_sections", "1:hard,3:break,4:hard,6:passout,9:fade,10:end")
+_setcvar("lc_ending_hard_moment_beats", 2)
 a:SetPos(G0) b:SetPos(G0 + Vector(200, 0, 0))
+local partyCop = ents.Create("npc_metropolice") partyCop:Spawn()
+LC.NPCs[partyCop] = { role = "cop", state = "idle" }
 ok(LC.Endings.hard.flashing and LC.Endings.marrow.flashing and not LC.Endings.harpies.flashing, "the ones with strobes are marked, so everyone's warned first")
 ok(LC.TriggerEnding("hard", a, true), "hard")
 E = LC.EndingSession()
 local function runToH(sec) _run(math.max(0.1, E.phaseT + sec - CurTime())) end
 ok(a.frozen and a:GetNW2Bool("lc_dancing", false) and a:GetPos():Distance(E.lz) < 300 and E.client.dance == "hard" and E.client.partyText,
     "everyone at the landing zone, dancing the party hard dance, PARTY HARD everywhere")
+runToH(2.5)
+ok((E.momentsDone or 0) >= 1, "one of the Combine's units goes for it (a crowd surf, a spin, a backflip)", E.momentsDone or 0)
 runToH(3.5)
 ok(E.client.section == "break" and not E.client.strobe, "the break: everyone freezes mid-pose")
 runToH(4.5)
@@ -11417,12 +11422,20 @@ ok(E.client.section == "hard" and E.client.strobe, "then it slams back in")
 local function down() local n = 0 for _, p in ipairs({ a, b }) do if p.lcEndTaken then n = n + 1 end end return n end
 runToH(6.5)
 ok(down() == 1, "they start passing out, one at a time", down())
+local outP = a.lcEndTaken and a or b
+ok(not outP.frozen, "out of it, you're not frozen any more (the keys work)")
+hook.Run("KeyPress", outP, IN_JUMP)
+ok(outP.lcEndRoam, "and jump lets you fly free")
+hook.Run("KeyPress", outP, IN_JUMP)
 runToH(8)
 ok(down() == 2 and a.alive and b.alive, "until nobody's left standing (nobody really dies)", down())
 runToH(10.5)
 ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and the city resets")
 _run(6)
 _setcvar("lc_ending_hard_sections", "6:hard,28:break,32:hard,150:passout,177:fade,188:end")
+_setcvar("lc_ending_hard_moment_beats", 16)
+LC.NPCs[partyCop] = nil
+if IsValid(partyCop) then partyCop:Remove() end
 -- Father Grigori eats the motherlode
 concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
 local grig = newPlayer("EndGrigori", "resistance", "chaplain", 300)
