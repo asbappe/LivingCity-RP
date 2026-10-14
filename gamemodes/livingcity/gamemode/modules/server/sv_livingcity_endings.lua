@@ -723,9 +723,9 @@ local GUNS = {
     weapon_pistol = { sound = "Weapon_Pistol.NPC_Single", tracer = "Tracer", dmg = 8, num = 1, spread = 0.04, gap = { 0.3, 0.55 } },
     weapon_shotgun = { sound = "Weapon_Shotgun.NPC_Single", tracer = "Tracer", dmg = 6, num = 7, spread = 0.09, gap = { 0.8, 1.1 } },
 }
-local function Shoot(n, now)
+local function Shoot(n, now, list, hurt)
     local best, bd
-    for _, m in ipairs(E.minges or {}) do
+    for _, m in ipairs(list or E.minges or {}) do
         if IsValid(m) then
             local d = m:GetPos():DistToSqr(n:GetPos())
             if d < 1800 * 1800 and (not bd or d < bd) then best, bd = m, d end
@@ -754,7 +754,7 @@ local function Shoot(n, now)
         n:FireBullets({ Attacker = n, Inflictor = IsValid(wep) and wep or n, Num = G.num, Src = src, Dir = (aimAt - src):GetNormalized(),
             Spread = Vector(G.spread, G.spread, 0), Tracer = 1, TracerName = G.tracer, Force = 2, Damage = G.dmg, IgnoreEntity = n })
     elseif math.random() < 0.6 then
-        LC.MingeHurt(best, { GetDamage = function() return G.dmg * G.num end })
+        (hurt or LC.MingeHurt)(best, { GetDamage = function() return G.dmg * G.num end })
     end
     E.shots = (E.shots or 0) + 1
     return true
@@ -850,7 +850,7 @@ TICK.harpies = function(now)
     -- the Combine open fire, a moment before the leaping (and keep firing)
     if firing then
         for _, n in ipairs(E.combine or {}) do
-            if IsValid(n) and now >= (n.lcNextShot or 0) then Shoot(n, now) end
+            if IsValid(n) and now >= (n.lcNextShot or 0) then Shoot(n, now, E.minges, LC.MingeHurt) end
         end
     end
 
@@ -1064,7 +1064,7 @@ end
 -- good; at the outro they claim whoever's left.
 local cvMarrowSections = CreateConVar("lc_ending_marrow_sections", "45:dance,75:attack,82:rave,112:attack,150:dance,180:attack,188:dance,217:outro,232:end", FLAGS,
     "Marrow: the song's sections, second:kind (dance, rave, attack, outro, end); before the first, the skeletons gather")
-local cvMarrowMax   = CreateConVar("lc_ending_marrow_max", "40", FLAGS, "Marrow: how many skeletons")
+local cvMarrowMax   = CreateConVar("lc_ending_marrow_max", "60", FLAGS, "Marrow: how many skeletons")
 local cvMarrowBPM   = CreateConVar("lc_ending_marrow_bpm", "128", FLAGS, "Marrow: the song's beats per minute (the dancing and the lights keep to it)")
 local cvMarrowModel = CreateConVar("lc_ending_marrow_model", "models/player/skeleton.mdl", FLAGS, "Marrow: the skeletons' model")
 local SPOOKY = { { 170, 60, 255 }, { 255, 130, 20 } } -- (purple and orange)
@@ -1128,12 +1128,21 @@ local function Bones(npc)
     if k then k:SetNW2Bool("lc_dancing", DANCING[E.section] or false) end
 end
 
+-- How hard the skeletons come on, through the song: slower than you can run
+-- and easy to shake off in the first fight, about your pace in the second,
+-- and unstoppable by the last (they overwhelm everyone, so all dance as skeletons).
+function LC.MarrowPace(t)
+    local k = math.Clamp(((t or 0) - 60) / 120, 0, 1) ^ 2
+    return { speed = 150 + 140 * k, dmg = 0.6 + 2.4 * k }
+end
+
 local function Claw(target)
     local now = CurTime()
     if not IsValid(target) or now < (target.lcClawAt or 0) then return end
-    target.lcClawAt = now + 0.6
+    target.lcClawAt = now + 0.8
     target:EmitSound("npc/zombie/claw_strike" .. math.random(1, 3) .. ".wav", 75)
-    target:SetHealth(target:Health() - math.random(8, 14))
+    local pace = LC.MarrowPace(E and (now - E.phaseT) or 0)
+    target:SetHealth(target:Health() - math.max(1, math.floor(math.random(4, 7) * pace.dmg)))
     if target:IsPlayer() then
         if target.ViewPunch then target:ViewPunch(Angle(math.Rand(-8, 8), math.Rand(-8, 8), 0)) end
         if target:Health() <= 0 then Convert(target) end
@@ -1213,6 +1222,11 @@ local function ApplySection(kind, now)
             if dancing then k.lcSkel.goal = nil end
         end
     end
+    if kind == "attack" then
+        local a = Speaker()
+        Chatter(a, "fire")
+        E.nextChatter = now + math.Rand(2, 3)
+    end
     if kind == "outro" then
         for _, p in ipairs(Living()) do Convert(p, "The skeletons claim everyone in the end. You're one of them now. Dance it out.") end
         for _, n in ipairs(CombineNPCs()) do Bones(n) end
@@ -1241,7 +1255,8 @@ SETUP.marrow = function()
         p:SetPos((Ground(E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)) or E.lz) + Vector(0, 0, 4))
         if p:Health() < 100 then p:SetHealth(100) end
     end
-    GatherCombine(E.lz, 100 + 12 * #ps)
+    E.combine = GatherCombine(E.lz, 100 + 12 * #ps)
+    for _, n in ipairs(E.combine) do n.lcRing = true end
     -- the map goes dark (every lamp out), and the coloured light pulses everywhere
     E.dark = true
     LC.EndingDark = true
@@ -1262,16 +1277,35 @@ TICK.marrow = function(now)
     local max = cvMarrowMax:GetInt()
     local want = E.section == "intro" and math.floor(max * math.Clamp(t / 30, 0.15, 1)) or max
     if #E.skels < want and now >= (E.nextSpawn or 0) then
-        E.nextSpawn = now + (E.section == "intro" and 0.3 or 1)
-        local g = RingSpot(E.lz, E.section == "intro" and math.Rand(1500, 3500) or 1200, false)
-        if g then
-            local k = SpawnSkel(g)
-            if k then k:SetNW2Bool("lc_dancing", DANCING[E.section] or false) end
+        E.nextSpawn = now + (E.section == "intro" and 0.2 or 0.5)
+        -- a few at a time; far off if there's room, closer in where the map's cramped
+        for _ = 1, math.min(3, want - #E.skels) do
+            local g
+            for _, d in ipairs(E.section == "intro" and { math.Rand(1500, 3000), 1000, 650 } or { 1200, 800, 500 }) do
+                g = RingSpot(E.lz, d, false)
+                if g then break end
+            end
+            if g then
+                local k = SpawnSkel(g)
+                if k then k:SetNW2Bool("lc_dancing", DANCING[E.section] or false) end
+            end
         end
     end
+    -- who they go for: the nearest of you, or of the Combine's units
     local targets = {}
     for _, p in ipairs(Living()) do targets[#targets + 1] = p end
-    if #targets == 0 then targets = CombineNPCs() end
+    for _, n in ipairs(E.combine or {}) do if IsValid(n) then targets[#targets + 1] = n end end
+    local pace = LC.MarrowPace(t)
+    -- and in a fight, the Combine shoot back (talking it through on their radios)
+    if E.section == "attack" then
+        for _, n in ipairs(E.combine or {}) do
+            if IsValid(n) and now >= (n.lcNextShot or 0) then Shoot(n, now, E.skels, LC.SkelHurt) end
+        end
+        if now >= (E.nextChatter or 0) then
+            Chatter(Speaker(), "fight")
+            E.nextChatter = now + math.Rand(2, 3.5)
+        end
+    end
     for _, k in ipairs(E.skels) do
         local s = k.lcSkel
         if E.section == "intro" then
@@ -1296,7 +1330,7 @@ TICK.marrow = function(now)
                 if not bd or d < bd then best, bd = p, d end
             end
             if best then
-                s.goal, s.speed = best:GetPos(), 230
+                s.goal, s.speed = best:GetPos(), pace.speed
                 if bd < 60 * 60 then Claw(best) end
             end
             if (s.stuck or 0) > 1.5 and best then

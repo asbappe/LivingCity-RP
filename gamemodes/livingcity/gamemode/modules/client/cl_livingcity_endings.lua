@@ -319,14 +319,18 @@ local CLUB = {
     R_Forearm = function() return Angle(0, -70, 0) end, L_Forearm = function() return Angle(0, -70, 0) end,
     Head = function(w, b) return Angle(0, -14 * b, 0) end,
     Spine2 = function(w) return Angle(0, 0, w * 10) end, Pelvis = function(w) return Angle(0, 0, w * 8) end,
-    R_Calf = function(w, b) return Angle(0, 22 * b, 0) end, L_Calf = function(w, b) return Angle(0, 22 * b, 0) end,
+    -- the kicks: one leg out straight on each beat, the other knee bent, left then right
+    R_Thigh = function(w) return Angle(0, -55 * math.max(0, w), 0) end, L_Thigh = function(w) return Angle(0, -55 * math.max(0, -w), 0) end,
+    R_Calf = function(w) return Angle(0, 26 * math.max(0, -w), 0) end, L_Calf = function(w) return Angle(0, 26 * math.max(0, w), 0) end,
 }
 local RAVE = {
     R_UpperArm = function(w) return Angle(20 * w, -110, 10) end, L_UpperArm = function(w) return Angle(20 * w, -110, -10) end,
     R_Forearm = function(w) return Angle(0, -20 + 30 * w, 0) end, L_Forearm = function(w) return Angle(0, -20 - 30 * w, 0) end,
     Head = function(w, b) return Angle(0, -10 * b, w * 8) end, Pelvis = function(w) return Angle(0, 0, w * 14) end,
     Spine2 = function(w) return Angle(0, 0, -w * 8) end,
-    R_Calf = function(w, b) return Angle(0, 30 * b, 0) end, L_Calf = function(w, b) return Angle(0, 30 * b, 0) end,
+    -- bigger kicks for the rave, high and out to the side
+    R_Thigh = function(w) local k = math.max(0, w) return Angle(12 * k, -75 * k, 0) end, L_Thigh = function(w) local k = math.max(0, -w) return Angle(-12 * k, -75 * k, 0) end,
+    R_Calf = function(w) return Angle(0, 34 * math.max(0, -w), 0) end, L_Calf = function(w) return Angle(0, 34 * math.max(0, w), 0) end,
 }
 -- On the bus: sat down (crammed in), arms in the air.
 local BUS = {

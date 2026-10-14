@@ -11355,12 +11355,16 @@ runToM(8.5)
 ok(E.section == "attack" and a.frozen == false and not a:GetNW2Bool("lc_dancing", false), "in between, the dancing stops")
 local k1 = E.skels[1]
 k1:SetPos(a:GetPos() + Vector(30, 0, 0))
-a:SetHealth(6)
+a:SetHealth(2)
 _run(0.3)
 ok(a.lcEndTaken and a:GetModel() == "models/player/skeleton.mdl" and a:GetNW2Bool("lc_dancing", false) and a.alive,
     "they attack; whoever they get becomes one of them, dancing for good", a:Health())
 local nk = #E.skels
 ok(LC.SkelHurt(E.skels[#E.skels], _dmg(b, 500)), "and in a fight, they can be put down")
+ok((E.shots or 0) > 0, "the Combine's units shoot at them in a fight", E.shots or 0)
+local early, late = LC.MarrowPace(75), LC.MarrowPace(180)
+ok(early.speed < 190 and late.speed > 250 and late.dmg > early.dmg * 3,
+    "early on they're slower than you can run and hit lightly; by the last fight they overwhelm everyone", early.speed .. " / " .. late.speed)
 runToM(12.5)
 ok(E.section == "outro" and b.lcEndTaken and not IsValid(mcop), "the outro claims everyone left (the Combine's units too)")
 ok(E.client.danceRate == 2, "and everyone dances double time to the xylophone")
@@ -11369,7 +11373,7 @@ ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and when the son
 _run(6)
 ok(a:GetModel() ~= "models/player/skeleton.mdl" and not mdoor.lcHeldOpen, "(everyone's back as they were, the doors too)")
 _setcvar("lc_ending_marrow_sections", "45:dance,75:attack,82:rave,112:attack,150:dance,180:attack,188:dance,217:outro,232:end")
-_setcvar("lc_ending_marrow_max", 40)
+_setcvar("lc_ending_marrow_max", 60)
 if IsValid(mdoor) then mdoor:Remove() end
 -- Base: someone set up us the bomb (short timings for the test)
 concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
