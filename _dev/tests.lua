@@ -11294,6 +11294,8 @@ ok(who.lcEndTaken and who:GetNW2Bool("lc_limp", false) and who.alive, "they lose
 ok(hook.Run("CanPlayerSuicide", who) == false, "and there's no way out of it")
 runToS(8.5)
 ok(a.lcHang and b.lcHang, "by the end of the song everyone's up")
+runToS(9.9)
+ok(a:GetNW2Bool("lc_limp", false) and b:GetNW2Bool("lc_limp", false), "and even the last to go up go limp before it ends (nobody left kicking on 1 health)")
 runToS(10.5)
 ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and the city resets")
 _run(6)

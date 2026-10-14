@@ -2081,6 +2081,9 @@ local function Hang(e)
     local drop = anchor.z - 110 - 72 -- (a rope, then the person under it)
     local feet = math.max(drop, ((g and g.z) or pos.z) + 25)
     e.lcHang = { anchor = anchor, base = Vector(anchor.x, anchor.y, feet), t0 = CurTime() }
+    -- (drained fast enough to go limp before the song ends, however late they went up)
+    local left = ((E.holdUntil or (CurTime() + 60)) - CurTime()) - 3
+    e.lcHang.rate = math.max(cvStandupDrain:GetFloat(), (e.Health and e:Health() or 100) / math.max(1.5, left))
     e:SetNW2Float("lc_hanged", CurTime())
     -- painted white, and (on each screen) a white cone hat over the head
     if e.SetMaterial then e:SetMaterial("models/debug/debugwhite") end
@@ -2211,7 +2214,7 @@ TICK.standup = function(now)
             e:SetAngles(Angle(0, (k * (limp and 6 or 25)) % 360, 0))
             if not limp then
                 if e:IsPlayer() then
-                    e.lcHangHP = (e.lcHangHP or e:Health()) - drain
+                    e.lcHangHP = (e.lcHangHP or e:Health()) - (h.rate and h.rate * 0.1 or drain)
                     e:SetHealth(math.max(1, math.floor(e.lcHangHP)))
                     if e.lcHangHP <= 0 then Limp(e) end
                 elseif k > 6 then

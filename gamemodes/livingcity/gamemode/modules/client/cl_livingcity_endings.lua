@@ -1169,6 +1169,12 @@ hook.Add("Think", "LivingCityStandup", function()
     end
 end)
 
+-- On the rope you're moved along it every tick, which the game takes for
+-- running: stand still instead (the kicking and the limp are the bones, above).
+hook.Add("CalcMainActivity", "LivingCityStandup", function(ply)
+    if Standup() and IsValid(ply) and ply:GetNW2Float("lc_hanged", 0) > 0 then return ACT_MP_STAND_IDLE, -1 end
+end)
+
 -- strung up: you see yourself from a little way off, and can look about
 hook.Add("CalcView", "LivingCityStandup", function(me, origin, angles, fov)
     if not Standup() or not IsValid(me) or me:GetNW2Float("lc_hanged", 0) <= 0 then return end
@@ -1179,8 +1185,9 @@ end)
 local CONE = "models/props_junk/trafficcone001a.mdl"
 local cones = {}
 hook.Add("PostDrawOpaqueRenderables", "LivingCityStandupHats", function(_, sky)
+    if sky then return end -- (the 3D skybox's pass: nothing to draw there, and the hats stay)
     local c = Standup()
-    if sky or not c or not ClientsideModel then
+    if not c or not ClientsideModel then
         for e, m in pairs(cones) do if IsValid(m) then m:Remove() end end
         cones = {}
         return
