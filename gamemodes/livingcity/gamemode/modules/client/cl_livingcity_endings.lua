@@ -260,6 +260,24 @@ local function Dance(ent, beat, now)
     local wave = math.sin(beat * math.pi)            -- left, right, a beat each
     local flap = math.sin(beat * math.pi * 2) * FLAP -- the wrists, every beat
     local bounce = math.abs(wave)
+    -- party hard: two frames, a pose and its mirror image, flipping every half-beat
+    if S and S.client and S.client.dance == "hard" and not preview then
+        local hold = S.client.section == "break" or S.client.section == "fade"
+        local flip = hold and 1 or ((math.floor(beat * 2) % 2 == 0) and 1 or -1)
+        local HARD = {
+            Pelvis = Angle(0, 0, 0) + Angle(0, 40 * flip, 0),
+            Spine2 = Angle(0, 0, 12 * flip),
+            Head = Angle(0, 0, -14 * flip),
+            R_UpperArm = flip > 0 and Angle(20, -120, 0) or Angle(0, -10, 0),
+            L_UpperArm = flip > 0 and Angle(0, -10, 0) or Angle(-20, -120, 0),
+            R_Forearm = flip > 0 and Angle(0, -40, 0) or Angle(0, 0, 0),
+            L_Forearm = flip > 0 and Angle(0, 0, 0) or Angle(0, -40, 0),
+            R_Thigh = Angle(0, flip > 0 and -20 or 0, 0), L_Thigh = Angle(0, flip > 0 and 0 or -20, 0),
+        }
+        for name, id in pairs(b) do ent:ManipulateBoneAngles(id, HARD[name] or Angle(0, 0, 0)) end
+        danced[ent] = true
+        return
+    end
     local style = STYLES[S and S.client and S.client.dance or ""]
     if style and not preview then
         for name, id in pairs(b) do
@@ -801,4 +819,66 @@ hook.Add("RenderScreenspaceEffects", "LivingCityBasePixels", function()
     render.DrawScreenQuad() -- (and back up, no smoothing: blocks)
     render.PopFilterMin()
     render.PopFilterMag()
+end)
+
+------------------------------------------------------------------------
+-- Hard: PARTY HARD, everywhere, flashing
+------------------------------------------------------------------------
+
+if surface and surface.CreateFont then
+    surface.CreateFont("LCPartyHard", { font = "Impact", size = 72, weight = 900 })
+    surface.CreateFont("LCPartyHardSmall", { font = "Impact", size = 40, weight = 900 })
+end
+local partySpots, partyBeat = {}, -1
+local function Hard() return S and S.id == "hard" and S.phase == "apocalypse" and S.client end
+
+hook.Add("HUDPaint", "LivingCityHard", function()
+    local c = Hard()
+    if not c then return end
+    local now = CurTime()
+    local beat = Beat(now)
+    local half = math.floor(beat * 2)
+    local pal = c.palette or PALETTE
+    local w, h = ScrW(), ScrH()
+    -- the whole screen flashes a colour on the beat
+    if c.strobe and (beat % 1) < 0.18 then
+        local c0 = pal[math.floor(beat) % #pal + 1]
+        surface.SetDrawColor(c0[1] or c0.r or 255, c0[2] or c0.g or 255, c0[3] or c0.b or 255, 45)
+        surface.DrawRect(0, 0, w, h)
+    end
+    if not c.partyText then return end
+    -- PARTY HARD, somewhere new every half-beat
+    if half ~= partyBeat then
+        partyBeat = half
+        partySpots = {}
+        for i = 1, math.random(4, 8) do
+            partySpots[i] = { x = math.random(80, w - 80), y = math.random(60, h - 60), c = pal[math.random(#pal)], big = math.random() < 0.4 }
+        end
+    end
+    for _, sp in ipairs(partySpots) do
+        draw.SimpleTextOutlined("PARTY HARD", sp.big and "LCPartyHard" or "LCPartyHardSmall", sp.x, sp.y,
+            Color(sp.c[1] or sp.c.r or 255, sp.c[2] or sp.c.g or 255, sp.c[3] or sp.c.b or 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 3, Color(0, 0, 0, 230))
+    end
+end)
+
+-- and over every dancer's head
+hook.Add("PostDrawTranslucentRenderables", "LivingCityHard", function(_, sky)
+    local c = Hard()
+    if sky or not c or not c.partyText or not cam or not cam.Start3D2D then return end
+    local me = LocalPlayer()
+    if not IsValid(me) then return end
+    local beat = Beat(CurTime())
+    local pal = c.palette or PALETTE
+    local n = 0
+    for _, e in ipairs(dancers) do
+        if IsValid(e) and n < 20 and e:GetPos():DistToSqr(me:GetPos()) < 1500 * 1500 and not (e.GetNoDraw and e:GetNoDraw()) then
+            n = n + 1
+            local c0 = pal[(math.floor(beat * 2) + n) % #pal + 1]
+            local pos = e:GetPos() + Vector(0, 0, 92)
+            local ang = Angle(0, (me:EyePos() - pos):Angle().y + 90, 90)
+            cam.Start3D2D(pos, ang, 0.25)
+            draw.SimpleTextOutlined("PARTY HARD", "LCPartyHardSmall", 0, 0, Color(c0[1] or 255, c0[2] or 255, c0[3] or 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, Color(0, 0, 0, 230))
+            cam.End3D2D()
+        end
+    end
 end)

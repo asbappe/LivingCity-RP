@@ -36,6 +36,10 @@
                    up faster (lc_ending_bus_sections)
         nuanua     everyone on an airplane, high over the city
         topsecret  everyone hung by barnacles, one a second
+        hard       party hard: everyone at the landing zone (every NPC in the
+                   city dancing too), the cheap mirror-flip meme dance on the
+                   half-beat, PARTY HARD flashing everywhere, strobes; people
+                   pass out one at a time (lc_ending_hard_sections)
         base       someone set up us the bomb: the song's opening lines as
                    arcade subtitles, bombs all over the city, CATS in the sky;
                    everyone on a ZIG (a dropship), the fleet circling the city
@@ -101,8 +105,9 @@ LC.Endings = {
     bloom     = { name = "Bloom", say = "Everybody dances. Nobody stops." },
     marrow    = { name = "Marrow", say = "Something is rattling out there. Lots of somethings." },
     base      = { name = "Base", say = "What happen ?" },
+    hard      = { name = "Hard", say = "It's time." },
 }
-LC.EndingOrder = { "harpies", "bus", "nuanua", "topsecret", "water", "bloom", "marrow", "base" }
+LC.EndingOrder = { "harpies", "bus", "nuanua", "topsecret", "water", "bloom", "marrow", "base", "hard" }
 
 local E -- the ending in progress: { id, phase, by, ... }
 function LC.EndingSession() return E end
@@ -1469,6 +1474,97 @@ hook.Add("PlayerSay", "LivingCityEngrish", function(p, text, team)
     if string.sub(text or "", 1, 1) == "!" or string.sub(text or "", 1, 1) == "/" then return end
     return LC.Engrish(text)
 end)
+
+-- Hard (a codeword): party hard. Everyone at the landing zone, the Combine's
+-- units too, every NPC in the city dancing where they stand; the cheap meme
+-- dance (each half-beat, the mirror image of the last pose), PARTY HARD
+-- flashing everywhere, the strobe never stops. From lc_ending_hard_sections'
+-- "passout" people drop, one at a time, having partied too hard; when the
+-- music cuts, whoever's left goes down too.
+local cvHardSections = CreateConVar("lc_ending_hard_sections", "6:hard,28:break,32:hard,150:passout,177:fade,188:end", FLAGS,
+    "Hard: the song's sections, second:kind (hard, break, passout, fade, end); before the first, the intro")
+local cvHardBPM = CreateConVar("lc_ending_hard_bpm", "150", FLAGS, "Hard: the song's beats per minute (the flips and the strobe keep to it)")
+local RAINBOW2 = { { 255, 40, 40 }, { 255, 150, 30 }, { 255, 240, 40 }, { 60, 230, 80 }, { 60, 140, 255 }, { 200, 70, 255 }, { 255, 80, 200 } }
+
+local function HardSection(t)
+    local kind = "intro"
+    for _, sct in ipairs(E.sections) do if t >= sct.t then kind = sct.kind end end
+    return kind
+end
+
+-- Partied too hard: down they go.
+local function PassOut(e, how)
+    if not IsValid(e) or e.lcEndTaken then return end
+    Body(e:GetModel(), e:GetPos(), e:GetAngles().y, 60)
+    if e:IsPlayer() then
+        e:EmitSound("vo/npc/male01/moan0" .. math.random(1, 5) .. ".wav", 75)
+        if e.SetNoDraw then e:SetNoDraw(true) end
+        Spectator(e, how or "You partied too hard. Lights out.", Color(255, 80, 200, 200))
+    else
+        e:Remove()
+    end
+end
+
+SETUP.hard = function()
+    local now = CurTime()
+    E.songEnds = true -- (it is over when the song is)
+    E.sections = LC.MarrowSections(cvHardSections:GetString())
+    for _, sct in ipairs(E.sections) do
+        if sct.kind == "end" then E.holdUntil = now + sct.t end
+        if sct.kind == "passout" then E.passAt = now + sct.t end
+        if sct.kind == "fade" then E.fadeAt = now + sct.t end
+    end
+    E.holdUntil = E.holdUntil or (now + 188)
+    E.passAt, E.fadeAt = E.passAt or (now + 150), E.fadeAt or (now + 177)
+    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
+    LC.TimeStopped = true
+    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    local ps = player.GetAll()
+    for i, p in ipairs(ps) do
+        if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
+        local a = (i / math.max(1, #ps)) * math.pi * 2
+        local r = 60 + 14 * #ps
+        p:SetPos((Ground(E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)) or E.lz) + Vector(0, 0, 4))
+        p.lcEndFrozen = true
+        p:Freeze(true)
+        p:SetNW2Bool("lc_dancing", true)
+    end
+    GatherCombine(E.lz, 120 + 14 * #ps)
+    for npc in pairs(LC.NPCs or {}) do if IsValid(npc) then npc:SetNW2Bool("lc_dancing", true) end end
+    E.dark = true
+    LC.EndingDark = "e"
+    if LC.ApplyLightStyle then LC.ApplyLightStyle() end
+    E.client = { party = true, lights = true, strobe = true, dance = "hard", partyText = true, palette = RAINBOW2,
+        bpm = cvHardBPM:GetFloat(), offset = 0, start = now, section = "intro" }
+    E.passGap = math.max(0.5, (E.fadeAt - E.passAt) / math.max(1, #ps))
+end
+
+TICK.hard = function(now)
+    local t = now - E.phaseT
+    local kind = HardSection(t)
+    if kind ~= E.client.section then
+        E.client.section = kind
+        E.client.strobe = kind ~= "break" and kind ~= "fade"
+        E.client.partyText = kind ~= "break" and kind ~= "fade"
+        Send()
+    end
+    -- one at a time, they drop
+    if kind == "passout" and now >= (E.nextPass or 0) then
+        E.nextPass = now + E.passGap
+        local pick = Living()
+        if #pick > 0 then PassOut(pick[math.random(#pick)]) end
+    end
+    if (kind == "passout") and now >= (E.nextNPCPass or 0) then
+        E.nextNPCPass = now + 0.4
+        for npc in pairs(LC.NPCs or {}) do if IsValid(npc) then PassOut(npc) break end end
+    end
+    -- the music cuts: everyone left goes down
+    if (kind == "fade" or kind == "end") and not E.allOut then
+        E.allOut = true
+        for _, p in ipairs(Living()) do PassOut(p, "The music stops. So do you. You partied too hard.") end
+    end
+end
 
 SETUP.nuanua = function()
     Fly({ "models/xqm/jetbody3.mdl", "models/xqm/airplanewing1.mdl", "models/props_vehicles/van001a_physics.mdl" }, 64, 1600, 0.2, 3, 90)

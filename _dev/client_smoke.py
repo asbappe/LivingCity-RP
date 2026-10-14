@@ -1300,6 +1300,14 @@ for _, h in pairs(hook.t["CalcView"] or {}) do h(_me, Vector(0, 0, 0), Angle(0, 
 for _, h in pairs(hook.t["PostDrawOpaqueRenderables"] or {}) do h(false, false) end
 paint()
 _me.nw.lc_riding = nil
+net._q = { { id = "hard", phase = "apocalypse", name = "Hard", say = "x", song = "livingcity/endings/hard/hard.ogg",
+    client = { party = true, lights = true, strobe = true, dance = "hard", partyText = true, palette = { { 255, 40, 40 }, { 60, 140, 255 } }, bpm = 150, offset = 0, start = CurTime(), section = "hard" } } }
+net.recv_lc_ending()
+_me.nw.lc_dancing = true
+_advance(1.1)
+for _, h in pairs(hook.t["Think"] or {}) do h() end
+for _, h in pairs(hook.t["PostDrawTranslucentRenderables"] or {}) do h(false, false) end
+paint()
 _me.nw.lc_dancing = false
 if concommand.list and concommand.list.lc_bloom_pose then concommand.list.lc_bloom_pose(nil, "lc_bloom_pose", { "R_Hand", "1", "2", "3" }) end
 net._q = { { id = "water", phase = "reset", name = "The Flood" } }
