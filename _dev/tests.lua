@@ -11232,6 +11232,21 @@ ok(a.lcEndRide and b.lcEndRide and a.frozen and a:GetNW2Bool("lc_seated", false)
 runToB(4)
 ok(E.bus:GetPos().z > 150 and a:GetPos():Distance(E.bus:GetPos()) < 400, "and it takes off, everyone in their seats", math.floor(E.bus:GetPos().z))
 ok(#E.rings >= 1, "with a ring to fly through")
+-- a low sky somewhere (z = 600 here): the bus keeps well under it, wherever it flies
+local tlWas = util.TraceLine
+util.TraceLine = function(t)
+    if t.endpos.z > t.start.z + 100 and math.abs(t.endpos.x - t.start.x) < 1 and math.abs(t.endpos.y - t.start.y) < 1 then
+        local zz = 600
+        if t.start.z >= zz then return { Hit = true, StartSolid = true, HitPos = t.start, Fraction = 0 } end
+        return { Hit = true, HitSky = true, HitPos = Vector(t.start.x, t.start.y, zz), Fraction = (zz - t.start.z) / (t.endpos.z - t.start.z) }
+    end
+    return tlWas(t)
+end
+local highest = -math.huge
+for _ = 1, 6 do _run(0.1) end
+for _ = 1, 6 do _run(0.1) highest = math.max(highest, E.bus:GetPos().z) end
+util.TraceLine = tlWas
+ok(highest <= 600 - 150, "and keeps well under the sky, even where it comes low (if it's ever up in it, straight down out of it)", math.floor(highest))
 E.rings[1]:SetPos(E.bus:GetPos())
 _run(0.2)
 ok((E.ringsPopped or 0) >= 1, "and through it goes: pop")

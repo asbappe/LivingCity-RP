@@ -277,6 +277,13 @@ local function OpenPath(a, b)
     return not tr.Hit and not tr.StartSolid
 end
 LC.EndingOpenPath = OpenPath
+-- How high it's open above a spot (the sky, or a roof, whichever's lowest there).
+local function CeilingAt(pos)
+    local tr = util.TraceLine({ start = pos, endpos = pos + Vector(0, 0, 4000), mask = MASK_SOLID_BRUSHONLY })
+    if tr.StartSolid then return pos.z end
+    return tr.Hit and tr.HitPos and tr.HitPos.z or (pos.z + 4000)
+end
+LC.EndingCeilingAt = CeilingAt
 function LC.EndingSky(centre)
     centre = centre or Vector(0, 0, 0)
     local up = util.TraceLine({ start = centre + Vector(0, 0, 64), endpos = centre + Vector(0, 0, 32768), mask = MASK_SOLID_BRUSHONLY })
@@ -1523,6 +1530,9 @@ local function SkySpot()
     for _ = 1, 30 do
         local a, d = math.Rand(0, math.pi * 2), math.Rand(600, sky.roam)
         local p = Vector(base.x + math.cos(a) * d, base.y + math.sin(a) * d, sky.z - math.Rand(0, 450))
+        -- (well under the sky there, which may come lower than over the landing zone)
+        local ceil = CeilingAt(p - Vector(0, 0, 600))
+        if ceil - 260 < p.z then p.z = ceil - 260 end
         if Open(p) and (not from or OpenPath(from, p)) then
             if d >= 1200 then return p end
             if not bestD or d > bestD then best, bestD = p, d end
@@ -1641,6 +1651,25 @@ TICK.bus = function(now)
         E.busDir = (E.busDir * 0.85 + want * 0.15):GetNormalized()
         local step = math.min(dist, speed * 0.1)
         local nextPos = pos + E.busDir * step
+        if flying then
+            -- never up into the sky (or a roof): keep well under whatever's overhead; if the
+            -- way ahead is blocked, turn straight for the target, or find another; and if it
+            -- ever is up in the sky, straight down out of it
+            local function UnderSky(p) local c = CeilingAt(p) if c - p.z < 220 then p.z = c - 220 end return p end
+            if CeilingAt(pos) <= pos.z + 1 then
+                nextPos = pos - Vector(0, 0, math.max(step, 120))
+            else
+                nextPos = UnderSky(nextPos)
+                if not OpenPath(pos, nextPos) or not Open(nextPos) then
+                    E.busDir = want
+                    nextPos = UnderSky(pos + want * step)
+                    if not OpenPath(pos, nextPos) then
+                        E.goal = SkySpot()
+                        nextPos = UnderSky(Vector(pos.x, pos.y, pos.z)) -- (stay put, but under the sky)
+                    end
+                end
+            end
+        end
         if not flying then
             local g = Ground(nextPos)
             -- (coming down to the road: a gentle descent rather than a drop)
