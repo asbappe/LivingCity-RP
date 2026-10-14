@@ -52,6 +52,7 @@ are surprises, and a lockdown only ever answers violence.)
   block_raided    firm     A block raid finishes.
   territory_grew  firm     The Resistance take more ground.
   train_arrival   warm     A train brings new arrivals.
-  welcome         warm     A player joins (or starts a new character): only they hear it,
-                           always. She speaks first, then Overwatch.
+  welcome         warm     Someone who still has to register at Civil Intake joins (or
+                           starts a new character): only they hear it. Not for anyone
+                           already registered. She speaks first, then Overwatch.
   ambient         warm     Random city announcements, and what Dr. Breen's periodic addresses are made of.

@@ -438,13 +438,16 @@ hook.Add("LivingCityTerritoryGrew", "LivingCityAnnouncer", function() Trigger("t
 hook.Add("LivingCityTrainArrived", "LivingCityAnnouncer", function() Trigger("train_arrival", { delay = 2 }) end)
 hook.Add("LivingCityResponseSquad", "LivingCityAnnouncer", function() Trigger("response", { builtin = true }) end)
 
--- The welcome, just for them, whatever else is going on: the Administrator,
+-- The welcome, only for someone who still has to register at Civil Intake
+-- (someone already on the register doesn't hear it each time they join), and
+-- just for them, whatever else is going on: the Administrator,
 -- then Overwatch as soon as she's finished. Nothing the city says reaches them
 -- over it (they hear the next one). Also for a new person arriving
 -- (sv_livingcity_intake.lua). If someone is speaking live on the loudspeakers,
 -- it waits for them to finish (a minute at most).
 function LC.AnnounceWelcome(ply, waited)
     if not IsValid(ply) or not cvOn:GetBool() then return end
+    if not (LC.IntakePending and LC.IntakePending(ply)) then return end
     local now = CurTime()
     if not waited and (ply.lcWelcomeUntil or 0) > now then return end -- (already being welcomed)
     waited = waited or 0

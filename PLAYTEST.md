@@ -174,6 +174,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 
 - [ ] **Outfit designer:** editor panel > Job outfits (or !outfits). The Clinic Medic wears HL2's medic clothes by default.
   Notes:
+- [ ] **Welcome announcement:** plays when an unregistered person joins (or a new character arrives), and not when someone already registered rejoins.
 - [ ] **Sound files:** `lc_sound_check` (your console) counts the city's sounds on your computer and test-plays one; a sound you can't hear shows a "Sound missing" notice. `lc_announce_clips` shows no CAN'T PLAY lines (an MP3 renamed .wav, or a WAV that isn't 16-bit 44100 Hz), and a superadmin gets a notice on joining if there are any. MP3 announcements queue properly (the Administrator, then Overwatch, for the welcome).
 - [ ] **Character creator:** installed citizen packs, face skins, clothes and accessories. On a dedicated server, a joining player downloads the Workshop citizen packs and sees no ERROR models.
   Notes:

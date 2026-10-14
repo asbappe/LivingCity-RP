@@ -8602,6 +8602,14 @@ local function sentTo(name, from, bit)
 end
 local function holds(list, p) if type(list) ~= "table" then return list == p end for _, q in ipairs(list) do if q == p then return true end end return false end
 local newcomer = newPlayer("Newcomer", "citizen")
+local registered = newPlayer("Registered", "citizen")
+local pendingWas = LC.IntakePending
+local onRegister = { [registered] = true }
+LC.IntakePending = function(p) return not onRegister[p] end
+n0 = #net.sent
+LC.AnnounceWelcome(registered)
+_run(15)
+ok(not sentTo("lc_breencast", n0, "welcome") and not sentTo("lc_announce", n0, "welcome"), "someone already registered isn't welcomed (told to register) each time they join")
 n0 = #net.sent
 LC.AnnounceWelcome(newcomer)
 local m = sentTo("lc_breencast", n0, "administrator/welcome1")
@@ -8624,6 +8632,7 @@ LC.LiveSpeaker = nil
 _run(4)
 ok(sentTo("lc_breencast", n0, "administrator/welcome1"), "the welcome follows as soon as they're off air")
 _run(15)
+LC.IntakePending = pendingWas
 
 -- names as people actually make them
 _files[A .. "overwatch/lockdown_soon1.wav"] = ""

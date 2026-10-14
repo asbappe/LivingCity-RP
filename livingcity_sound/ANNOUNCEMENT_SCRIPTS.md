@@ -554,7 +554,7 @@ In game (superadmin): `lc_announce_rescan` picks up new files, `lc_announce_clip
 
 ## welcome
 
-*A few seconds after a player joins (or starts a new character), only they hear it, always. The Administrator speaks first, then Overwatch as soon as she finishes.*
+*A few seconds after someone who still has to register at Civil Intake joins (or starts a new character), only they hear it; someone already registered never does. The Administrator speaks first, then Overwatch as soon as she finishes.*
 
 **Overwatch** (`overwatch/`):
 
