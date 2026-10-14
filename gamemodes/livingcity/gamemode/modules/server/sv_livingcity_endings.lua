@@ -2416,12 +2416,19 @@ concommand.Add("lc_endings", function(ply)
     if IsValid(ply) and not ply:IsSuperAdmin() then return end
     for _, id in ipairs(LC.EndingOrder) do
         local n = #LC.EndingSongs(id)
-        Reply(ply, string.format("%s (%s): %s", id, LC.Endings[id].name, n > 0 and (n .. " song(s)") or "no song yet: sound/" .. ROOT .. id .. ".mp3"))
+        Reply(ply, string.format("%s (%s): %s", id, LC.Endings[id].name, n > 0 and (n .. " song(s)") or ("NO SONG FOUND (looking for " .. id .. ".mp3 in garrysmod/sound/" .. ROOT .. ")")))
     end
-    for _, n in ipairs(file.Find("sound/" .. ROOT .. "*", "GAME") or {}) do
+    -- everything that's actually there, so a file in the wrong place shows
+    local files, dirs = file.Find("sound/" .. ROOT .. "*", "GAME")
+    files, dirs = files or {}, dirs or {}
+    Reply(ply, "In sound/" .. ROOT .. ": " .. (#files + #dirs > 0 and (table.concat(files, ", ") ..
+        (#dirs > 0 and ((#files > 0 and "; " or "") .. "folders: " .. table.concat(dirs, ", ")) or "")) or "nothing at all (the server can't see that folder)"))
+    for _, n in ipairs(files) do
         local ext = string.match(n, "%.([%w]+)$")
         if ext and EXT[string.lower(ext)] and not LC.EndingOfSong(n) then
             Reply(ply, n .. " never plays: name it for its ending (harpies.mp3, bus.mp3 ...)")
+        elseif not ext or not EXT[string.lower(ext)] then
+            if not string.match(string.lower(n), "%.txt$") then Reply(ply, n .. " isn't a sound the game plays (.mp3, .ogg or .wav)") end
         end
     end
     local left = LC.EndingCooldownLeft()

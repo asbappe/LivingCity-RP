@@ -11127,6 +11127,14 @@ _run(31)
 E = LC.EndingSession()
 ok(E and E.phase == "apocalypse", "nobody votes: it happens")
 ok(E and E.song == "livingcity/endings/harpies.mp3", "with its song (straight in the endings folder, named for it)")
+local endOut = {}
+local oldPrint2 = print
+print = function(m) endOut[#endOut + 1] = tostring(m) end
+pcall(concommand.list["lc_endings"], nil)
+print = oldPrint2
+endOut = table.concat(endOut, "\n")
+ok(string.find(endOut, "In sound/livingcity/endings/: harpies.mp3", 1, true) and string.find(endOut, "NO SONG FOUND (looking for bus.mp3", 1, true),
+    "lc_endings lists what's really in the folder, and where it looks for a missing song", endOut)
 ok(LC.EndingOfSong("bus2.mp3") == "bus" and LC.EndingOfSong("bloom.ogg") == "bloom" and LC.EndingOfSong("busted.mp3") == nil
     and LC.EndingOfSong("Son of the Harpy.mp3") == nil, "a song's name says which ending it's for")
 -- the Harpies: the mingebags (timings shortened for the test: swell at 20 s, all over by 40)
