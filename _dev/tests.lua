@@ -11149,6 +11149,13 @@ ok(LC.EndingOfSong("bus2.mp3") == "bus" and LC.EndingOfSong("bloom.ogg") == "blo
 -- the Harpies: the mingebags (timings shortened for the test: swell at 20 s, all over by 40)
 ok(E and E.mode == "lurk" and LC.EndingDark and LC.LightStyle == "a", "the lights go out, all of them")
 ok(a:GetPos():Distance(E.lz) < 300 and b:GetPos():Distance(E.lz) < 300, "and everyone is at the landing zone")
+local noRebels = true
+for _, c in ipairs(E.folk) do if string.find(string.lower(c:GetModel() or ""), "group03", 1, true) then noRebels = false end end
+ok(#E.folk >= 12 and noRebels, "the city's people stand in the ring too (topped up with citizens, never the Resistance)", #E.folk)
+local unit = ents.Create("npc_metropolice") unit:SetPos(E.lz + Vector(260, 0, 0)) unit:Spawn() unit.lcRing = true
+E.combine[#E.combine + 1] = unit
+local FIRE = { "prosecute", "firingtoexposetarget", "shotsfiredhostilemalignants", "readytoprosecutefinalwarning" }
+for _, n in ipairs(FIRE) do _files["sound/npc/metropolice/vo/" .. n .. ".wav"] = "" end
 local function runTo(sec) _run(math.max(0.1, E.phaseT + sec - CurTime())) end -- (seconds into the song)
 local function minges() local n = 0 for _, m in ipairs(E.minges) do if IsValid(m) then n = n + 1 end end return n end
 local function closest()
@@ -11175,6 +11182,9 @@ runTo(34)
 hurt = 0
 for _, p in ipairs(player.GetAll()) do if p.lcEndTaken or p:Health() < 100 then hurt = hurt + 1 end end
 ok(E.mode == "leap" and hurt > 0, "then they leap, all of them, and it's a slaughter", hurt)
+ok((E.shots or 0) > 0, "and as they leap, the Combine open fire", E.shots or 0)
+ok(string.find(table.concat(E.chatterLog or {}, ","), "metropolice/vo/", 1, true) ~= nil, "calling it out loud on their radios", table.concat(E.chatterLog or {}, ","))
+for _, n in ipairs(FIRE) do _files["sound/npc/metropolice/vo/" .. n .. ".wav"] = nil end
 runTo(38.5)
 ok(a.lcEndTaken and b.lcEndTaken and a.alive and b.alive and a:GetNW2Bool("lc_end_spectating", false),
     "by the end everyone's gone, and the dead watch (nobody really dies: no close call, no new character)")

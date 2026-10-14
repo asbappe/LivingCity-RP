@@ -19,7 +19,9 @@ ENDING: harpies (The Harpies)
 WHAT HAPPENS: The lights go out and everyone is put at the dropship landing
 zone. Mingebags (Dr. Kleiner in the reference pose, physgun at the crotch) gather in the dark for a minute, keeping their distance;
 when the song swells they rush in, surround everyone, and 9 seconds later
-leap. Everyone is dead by 2:00 and watches the rest.
+leap. The Combine's units (in a ring, with the city's people between them
+and the players) chatter on their radios out loud, and open fire the moment
+the mingebags leap. Everyone is dead by 2:00 and watches the rest.
 SONG: Son of the Harpy (your file, named harpies.mp3). It should swell at 1:00 and run about
 two minutes. If yours swells somewhere else, set lc_ending_minge_swell to
 that second (and lc_ending_minge_end to when it should all be over).

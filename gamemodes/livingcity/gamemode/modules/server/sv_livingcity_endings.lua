@@ -442,10 +442,15 @@ local function Hit(p)
     local now = CurTime()
     if now < (p.lcMingeHitAt or 0) then return false end
     p.lcMingeHitAt = now + 0.3
-    if not p:IsPlayer() then -- (one of the Combine's units)
+    if not p:IsPlayer() then -- (one of the Combine's units, or one of the city's people in the ring)
         p:SetHealth(p:Health() - math.random(10, 18))
         p:EmitSound("physics/body/body_medium_impact_hard" .. math.random(1, 6) .. ".wav", 75)
-        if p:Health() <= 0 then Body(p:GetModel(), p:GetPos(), p:GetAngles().y, 260) p:Remove() end
+        if p:Health() <= 0 then
+            local unit = E and table.HasValue(E.combine or {}, p)
+            Body(p:GetModel(), p:GetPos(), p:GetAngles().y, 260)
+            p:Remove()
+            if unit and LC.EndingChatter then LC.EndingChatter("down") end
+        end
         return true
     end
     p:SetHealth(p:Health() - math.random(7, 12))
@@ -527,6 +532,154 @@ local function Nearest(pos, list)
     return best, bd and math.sqrt(bd) or nil
 end
 
+-- Who else stands in the ring with everyone: the city's own people (never
+-- the Resistance), topped up to lc_ending_minge_crowd with ordinary citizens.
+local cvMingeCrowd = CreateConVar("lc_ending_minge_crowd", "12", FLAGS, "The Harpies: how many of the city's people stand in the ring too (its own NPCs first, never the Resistance; topped up with citizens)")
+local FOLK = {
+    "models/humans/group01/male_02.mdl", "models/humans/group01/female_02.mdl", "models/humans/group01/male_05.mdl", "models/humans/group01/female_04.mdl",
+    "models/humans/group01/male_08.mdl", "models/humans/group01/female_07.mdl", "models/humans/group02/male_04.mdl", "models/humans/group02/female_03.mdl",
+    "models/humans/group02/male_08.mdl", "models/humans/group02/female_06.mdl",
+}
+local NOT_IN_RING = { rebel = true, resistance = true, vortigaunt = true, vort = true, zombie = true, scanner = true }
+local function CityFolk()
+    local out, known = {}, LC.NPCs or {}
+    for npc, st in pairs(known) do
+        if IsValid(npc) and not NOT_IN_RING[st.role or ""] and not (LC.IsSecurity and LC.IsSecurity(st)) then out[#out + 1] = npc end
+    end
+    for _, cls in ipairs({ "npc_citizen", "npc_breen", "npc_mossman" }) do
+        for _, npc in ipairs(ents.FindByClass and ents.FindByClass(cls) or {}) do
+            local mdl = string.lower(npc.GetModel and npc:GetModel() or "")
+            if IsValid(npc) and not known[npc] and not npc.lcCrowd and not string.find(mdl, "group03", 1, true) then out[#out + 1] = npc end
+        end
+    end
+    return out
+end
+local function SpawnFolk(pos, i)
+    local c = ents.Create("npc_citizen")
+    if not IsValid(c) then return nil end
+    if c.SetKeyValue then c:SetKeyValue("citizentype", "4") end -- (the model it's given, not one of its own)
+    c:SetModel(FOLK[(i - 1) % #FOLK + 1])
+    c:SetPos(pos)
+    c:Spawn()
+    c.lcCrowd = true
+    E.ents[#E.ents + 1] = c
+    return c
+end
+
+-- What the Combine's units say out loud, by what they're seeing. Missing
+-- files are left out (lc_ending_minge_chatter 0: none of it).
+local cvMingeChatter = CreateConVar("lc_ending_minge_chatter", "1", FLAGS, "The Harpies: the Combine's units talk on their radios, out loud, about what they're seeing (0 off)")
+local MP, CS = "npc/metropolice/vo/", "npc/combine_soldier/vo/"
+local function Lines(dir, list) local o = {} for _, n in ipairs(list) do o[#o + 1] = dir .. n .. ".wav" end return o end
+local CHATTER = {
+    cop = {
+        on = Lines(MP, { "on1", "on2" }),
+        lurk = Lines(MP, { "searchingforsuspect", "sweepingforsuspect", "acquiringonvisual", "possible10-103alerttagunits", "holdthisposition",
+            "lockyourposition", "cpweneedtoestablishaperimeterat", "hidinglastseenatrange", "holdit", "dontmove", "suspectlocationunknown", "ivegot408hereatlocation" }),
+        rush = Lines(MP, { "lookout", "watchit", "getdown", "malignant", "holditrightthere", "readytoprosecute", "dispatchineed10-78", "isclosingonsuspect" }),
+        fire = Lines(MP, { "prosecute", "firingtoexposetarget", "shotsfiredhostilemalignants", "readytoprosecutefinalwarning" }),
+        fight = Lines(MP, { "officerunderfiretakingcover", "11-99officerneedsassistance", "takecover", "help", "backup", "minorhitscontinuing",
+            "runninglowonverdicts", "reload", "movingtocover", "shotsfiredhostilemalignants", "getdown", "necrotics" }),
+        down = Lines(MP, { "officerdowncode3tomy10-20", "officerdowniam10-99", "11-99officerneedsassistance", "help" }),
+    },
+    soldier = {
+        on = Lines(CS, { "on1", "on2" }),
+        lurk = Lines(CS, { "motioncheckallradials", "stayalertreportsightlines", "sectorisnotsecure", "lostcontact", "fixsightlinesmovein",
+            "teamdeployedandscanning", "gosharpgosharp", "stayalert", "hardenthatposition", "sightlineisclear" }),
+        rush = Lines(CS, { "contact", "contactconfim", "readyweaponshostilesinbound", "alert1", "weaponsoffsafeprepforcontact", "heavyresistance", "inbound", "targetmyradial" }),
+        fire = Lines(CS, { "engaging", "prosecuting", "contactconfirmprosecuting", "goactiveintercept" }),
+        fight = Lines(CS, { "overwatchrequestreinforcement", "displace", "displace2", "cover", "coverhurt", "requestmedical", "ripcordripcord",
+            "heavyresistance", "sectorisnotsecure", "infected", "outbreak", "targetineffective" }),
+        down = Lines(CS, { "overwatchteamisdown", "onedown", "requestmedical", "overwatchrequestreinforcement" }),
+    },
+    folk = {
+        male = Lines("vo/npc/male01/", { "runforyourlife01", "runforyourlife02", "help01", "watchout", "ohno", "uhoh", "gethellout", "startle01", "startle02" }),
+        female = Lines("vo/npc/female01/", { "runforyourlife01", "runforyourlife02", "help01", "watchout", "ohno", "uhoh", "gethellout", "startle01", "startle02" }),
+    },
+}
+local hasSound = {}
+local function Has(path)
+    if hasSound[path] == nil then hasSound[path] = (not file.Exists) or file.Exists("sound/" .. path, "GAME") end
+    return hasSound[path]
+end
+local function Pick(list)
+    local ok = {}
+    for _, p in ipairs(list or {}) do if Has(p) then ok[#ok + 1] = p end end
+    return ok[math.random(math.max(1, #ok))]
+end
+local function VoiceOf(n) return n.GetClass and n:GetClass() == "npc_combine_s" and "soldier" or "cop" end
+-- One of the Combine's units says something (kind: lurk, rush, fire, fight, down), radio click first.
+local function Chatter(n, kind)
+    if not cvMingeChatter:GetBool() or not IsValid(n) then return false end
+    local v = CHATTER[VoiceOf(n)]
+    local line = Pick(v[kind])
+    if not line then return false end
+    local click = Pick(v.on)
+    if click then n:EmitSound(click, 80) end
+    timer.Simple(click and 0.25 or 0, function() if IsValid(n) then n:EmitSound(line, 85) end end)
+    E.chatterLog = E.chatterLog or {}
+    E.chatterLog[#E.chatterLog + 1] = line
+    return true
+end
+local function Speaker()
+    local list = {}
+    for _, n in ipairs(E.combine or {}) do if IsValid(n) then list[#list + 1] = n end end
+    return list[math.random(math.max(1, #list))]
+end
+local function Scream(c)
+    if not IsValid(c) then return end
+    local female = string.find(string.lower(c.GetModel and c:GetModel() or ""), "female", 1, true)
+    local line = Pick(CHATTER.folk[female and "female" or "male"])
+    if line then c:EmitSound(line, 80, math.random(96, 106)) end
+end
+
+-- The Combine open fire once the mingebags leap: each unit turns on the
+-- nearest one and shoots (time is stopped for them otherwise: this is them).
+local GUNS = {
+    weapon_ar2 = { sound = "Weapon_AR2.NPC_Single", tracer = "AR2Tracer", dmg = 8, num = 1, spread = 0.04, gap = { 0.1, 0.22 } },
+    weapon_smg1 = { sound = "Weapon_SMG1.NPC_Single", tracer = "Tracer", dmg = 5, num = 1, spread = 0.05, gap = { 0.08, 0.18 } },
+    weapon_pistol = { sound = "Weapon_Pistol.NPC_Single", tracer = "Tracer", dmg = 8, num = 1, spread = 0.04, gap = { 0.3, 0.55 } },
+    weapon_shotgun = { sound = "Weapon_Shotgun.NPC_Single", tracer = "Tracer", dmg = 6, num = 7, spread = 0.09, gap = { 0.8, 1.1 } },
+}
+local function Shoot(n, now)
+    local best, bd
+    for _, m in ipairs(E.minges or {}) do
+        if IsValid(m) then
+            local d = m:GetPos():DistToSqr(n:GetPos())
+            if d < 1800 * 1800 and (not bd or d < bd) then best, bd = m, d end
+        end
+    end
+    if not best then return false end
+    local wep = n.GetActiveWeapon and n:GetActiveWeapon()
+    local cls = IsValid(wep) and wep:GetClass() or ""
+    if not GUNS[cls] and n.Give then -- (a stunstick won't do: a pistol, then)
+        n:Give("weapon_pistol")
+        wep = n.GetActiveWeapon and n:GetActiveWeapon()
+        cls = IsValid(wep) and wep:GetClass() or "weapon_pistol"
+    end
+    local G = GUNS[cls] or GUNS.weapon_pistol
+    n.lcNextShot = now + math.Rand(G.gap[1], G.gap[2])
+    local aimAt = best:GetPos() + Vector(0, 0, 40)
+    n:SetAngles(Angle(0, (aimAt - n:GetPos()):Angle().y, 0))
+    local src = n:GetPos() + Vector(0, 0, 50) + n:GetForward() * 20
+    if IsValid(wep) and wep.LookupAttachment then
+        local id = wep:LookupAttachment("muzzle")
+        local at = id and id > 0 and wep:GetAttachment(id)
+        if at and at.Pos then src = at.Pos end
+    end
+    n:EmitSound(G.sound, 90, math.random(96, 104))
+    if n.FireBullets then
+        n:FireBullets({ Attacker = n, Inflictor = IsValid(wep) and wep or n, Num = G.num, Src = src, Dir = (aimAt - src):GetNormalized(),
+            Spread = Vector(G.spread, G.spread, 0), Tracer = 1, TracerName = G.tracer, Force = 2, Damage = G.dmg, IgnoreEntity = n })
+    elseif math.random() < 0.6 then
+        LC.MingeHurt(best, { GetDamage = function() return G.dmg * G.num end })
+    end
+    E.shots = (E.shots or 0) + 1
+    return true
+end
+
+LC.EndingChatter = function(kind) if E then return Chatter(Speaker(), kind) end end
+
 SETUP.harpies = function()
     E.minges, E.bodies = {}, {}
     local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
@@ -547,7 +700,23 @@ SETUP.harpies = function()
     -- the city stops, and the Combine's units are out there with everyone, in a ring round them
     LC.TimeStopped = true
     if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
-    E.combine = GatherCombine(E.lz, 150 + 12 * #ps)
+    E.combine = GatherCombine(E.lz, 210 + 12 * #ps)
+    for _, n in ipairs(E.combine) do n.lcRing = true end
+    -- and the city's people stand with them (never the Resistance), between everyone and the Combine
+    E.folk = {}
+    local folk = CityFolk()
+    for i = #folk + 1, cvMingeCrowd:GetInt() do folk[#folk + 1] = i end -- (the rest: citizens, spawned below)
+    local rf = 120 + 12 * #ps
+    for i, c in ipairs(folk) do
+        local a = (i / math.max(1, #folk)) * math.pi * 2 + 0.15
+        local spot = (Ground(E.lz + Vector(math.cos(a) * rf, math.sin(a) * rf, 0)) or E.lz) + Vector(0, 0, 4)
+        if type(c) == "number" then c = SpawnFolk(spot, c) elseif IsValid(c) then c:SetPos(spot) end
+        if IsValid(c) then
+            c:SetAngles(Angle(0, math.deg(a), 0))
+            c.lcRing = true
+            E.folk[#E.folk + 1] = c
+        end
+    end
     -- and every light in the city goes out
     E.dark = true
     LC.EndingDark = true
@@ -562,13 +731,38 @@ TICK.harpies = function(now)
     local targets = {}
     for _, p in ipairs(living) do targets[#targets + 1] = p end
     for _, n in ipairs(E.combine or {}) do if IsValid(n) then targets[#targets + 1] = n end end
+    for _, c in ipairs(E.folk or {}) do if IsValid(c) then targets[#targets + 1] = c end end
     local centre = E.lz
     local mode = t < swell and "lurk" or (t < swell + RUSH and "rush" or "leap")
     local noclip = t >= fin - 10
     local k = math.Clamp(t / swell, 0, 1)
     local far = 2400 - 1800 * k -- (how far off they keep: closer as the song goes on)
     E.vulnerable = t >= swell - 10
+    local was = E.mode
     E.mode = mode
+
+    -- the Combine's radios, out loud: what they see out there, then contact, then the fight
+    if mode == "leap" and was ~= "leap" then
+        local a, b = Speaker(), Speaker()
+        Chatter(a, "fire")
+        if b ~= a then timer.Simple(0.8, function() if E then Chatter(b, "fire") end end) end
+        E.nextChatter = now + math.Rand(2, 3)
+        for _, c in ipairs(E.folk or {}) do if math.random() < 0.5 then timer.Simple(math.Rand(0, 1.5), function() Scream(c) end) end end
+    elseif mode == "rush" and was ~= "rush" then
+        Chatter(Speaker(), "rush")
+        E.nextChatter = now + math.Rand(2.5, 4)
+        for _, c in ipairs(E.folk or {}) do if math.random() < 0.3 then timer.Simple(math.Rand(0.5, 3), function() Scream(c) end) end end
+    elseif now >= (E.nextChatter or (E.phaseT + 6)) then
+        local kind = mode == "lurk" and "lurk" or (mode == "rush" and "rush" or "fight")
+        Chatter(Speaker(), kind)
+        E.nextChatter = now + (mode == "lurk" and math.Rand(7, 12) or (mode == "rush" and math.Rand(2.5, 4) or math.Rand(2, 3.5)))
+    end
+    -- and once they leap, the Combine open fire
+    if mode == "leap" then
+        for _, n in ipairs(E.combine or {}) do
+            if IsValid(n) and now >= (n.lcNextShot or 0) then Shoot(n, now) end
+        end
+    end
 
     -- gather: a handful at first, a crowd by the swell, replaced as fast as they fall after it
     local alive = {}
@@ -636,6 +830,7 @@ TICK.harpies = function(now)
     if t >= fin - 2 then
         for _, p in ipairs(living) do Slaughter(p, "There's nowhere left. The mingebags got you.") end
         for _, n in ipairs(E.combine or {}) do if IsValid(n) then Body(n:GetModel(), n:GetPos(), n:GetAngles().y, 260) n:Remove() end end
+        for _, c in ipairs(E.folk or {}) do if IsValid(c) then Body(c:GetModel(), c:GetPos(), c:GetAngles().y, 260) c:Remove() end end
     end
     -- the dead keep watching someone
     for _, p in ipairs(player.GetAll()) do
@@ -1844,6 +2039,7 @@ TICK.standup = function(now)
             if spot then
                 local c = ents.Create("npc_citizen")
                 if IsValid(c) then
+                    if c.SetKeyValue then c:SetKeyValue("citizentype", "4") end -- (the model it's given)
                     c:SetModel(CROWD[(i - 1) % #CROWD + 1])
                     c:SetPos(spot)
                     c:SetAngles(Angle(0, (centre - spot):Angle().y, 0))
@@ -2375,8 +2571,10 @@ timer.Create("LivingCityEndings", 0.1, 0, function()
 end)
 
 -- Nobody gets hurt while time's stopped or the world ends.
-hook.Add("EntityTakeDamage", "LivingCityEndings", function(ent)
+hook.Add("EntityTakeDamage", "LivingCityEndings", function(ent, dmg)
     if E and E.phase ~= "pending" and IsValid(ent) and ent:IsPlayer() then return true end
+    -- (the Combine's stray rounds don't hurt anyone in the ring with them)
+    if E and IsValid(ent) and ent.lcRing and dmg and dmg.GetAttacker and IsValid(dmg:GetAttacker()) and dmg:GetAttacker().lcRing then return true end
 end)
 hook.Add("PlayerInitialSpawn", "LivingCityEndings", function(ply)
     timer.Simple(3, function() if IsValid(ply) and E then Send(ply) end end)
@@ -2423,6 +2621,12 @@ concommand.Add("lc_endings", function(ply)
     files, dirs = files or {}, dirs or {}
     Reply(ply, "In sound/" .. ROOT .. ": " .. (#files + #dirs > 0 and (table.concat(files, ", ") ..
         (#dirs > 0 and ((#files > 0 and "; " or "") .. "folders: " .. table.concat(dirs, ", ")) or "")) or "nothing at all (the server can't see that folder)"))
+    for _, d in ipairs(dirs) do
+        if not LC.Endings[string.lower(d)] then
+            local inside = file.Find("sound/" .. ROOT .. d .. "/*", "GAME") or {}
+            if #inside > 0 then Reply(ply, "The folder " .. d .. "/ holds " .. #inside .. " file(s) that never play: move them up one level, straight into sound/" .. ROOT) end
+        end
+    end
     for _, n in ipairs(files) do
         local ext = string.match(n, "%.([%w]+)$")
         if ext and EXT[string.lower(ext)] and not LC.EndingOfSong(n) then

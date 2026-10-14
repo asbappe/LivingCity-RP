@@ -493,6 +493,11 @@ local function NearTrash(pos)
 end
 
 local function CanThink(now)
+    -- (not while time's stopped, or through a secret ending: the officer has other things on his mind)
+    if LC.TimeStopped or (LC.EndingSession and LC.EndingSession()) then
+        if can then EndCan(false) end
+        return
+    end
     if not can then
         if cvCan:GetInt() == 0 or LC.Event or now < nextCanCheck then return end
         nextCanCheck = now + 30
