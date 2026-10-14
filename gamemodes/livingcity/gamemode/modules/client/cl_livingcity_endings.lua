@@ -926,7 +926,13 @@ function LC_CL.FlashWarning()
     fine:Dock(BOTTOM)
     fine:DockMargin(10, 4, 10, 0)
     fine:SetTall(26)
-    fine:SetText("I'm fine, keep it")
+    -- (doing nothing is "I'm fine": it goes by itself after 8 seconds)
+    local closeAt = CurTime() + 8
+    fine:SetText("I'm fine, keep it (8)")
     fine.DoClick = function() f:Remove() end
-    timer.Simple(15, function() if IsValid(f) then f:Remove() end end)
+    fine.Think = function(b)
+        local left = math.ceil(closeAt - CurTime())
+        if left <= 0 then f:Remove() return end
+        b:SetText("I'm fine, keep it (" .. left .. ")")
+    end
 end
