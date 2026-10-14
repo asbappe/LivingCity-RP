@@ -30,6 +30,19 @@ local myVote
 local resetAt
 
 local songAt -- (when the song really started playing, by the clock)
+local cvEndVol = CreateClientConVar("lc_ending_volume", "1", true, false, "How loud the secret endings' songs are for you (0 to 2)")
+-- The song's volume: the server's for this song (a quiet recording), up by half in a
+-- fight so it carries over the gunfire, times your own lc_ending_volume.
+function LC_CL.EndingSongVolume()
+    local loud = S and S.client and S.client.loud and 1.5 or 1
+    return math.Clamp((S and S.songVolume or 1) * loud * cvEndVol:GetFloat(), 0, 3)
+end
+local songVolSet
+hook.Add("Think", "LivingCityEndingSongVolume", function()
+    if not channel or not channel.SetVolume then songVolSet = nil return end
+    local v = LC_CL.EndingSongVolume()
+    if v ~= songVolSet then songVolSet = v pcall(channel.SetVolume, channel, v) end
+end)
 local function StopSong()
     if channel and channel.Stop then pcall(channel.Stop, channel) end
     channel, songAt = nil, nil
@@ -49,7 +62,13 @@ local function PlaySong(path)
     if sound and sound.PlayFile then
         sound.PlayFile("sound/" .. path, "noblock", function(ch, err, errName)
             if IsValid(ch) then
-                if S and S.phase == "apocalypse" then channel = ch ch:Play() songAt = CurTime() else ch:Stop() end
+                if S and S.phase == "apocalypse" then
+                    channel = ch
+                    -- (the server's volume for this song, for a quiet recording, times your own)
+                    if ch.SetVolume then ch:SetVolume(LC_CL.EndingSongVolume()) end
+                    ch:Play()
+                    songAt = CurTime()
+                else ch:Stop() end
             elseif file.Exists("sound/" .. path, "GAME") and LC_CL.SoundTrouble then
                 LC_CL.SoundTrouble(path, "the game can't open it (" .. tostring(errName or err) .. "): is it really the format its name says?")
             end
@@ -1147,6 +1166,60 @@ hook.Add("HUDPaint", "LivingCityPlane", function()
         local a = math.Clamp((now - (c.whiteAt - 3)) / 3, 0, 1)
         surface.SetDrawColor(255, 255, 255, 255 * a)
         surface.DrawRect(0, 0, w, h)
+    end
+end)
+
+------------------------------------------------------------------------
+-- Marrow: spotlights round the circle while everyone dances, purple and
+-- orange, their beams sweeping the dark (faster in the rave)
+------------------------------------------------------------------------
+
+local beamMat, glowMat
+hook.Add("PostDrawTranslucentRenderables", "LivingCityMarrowSpots", function(_, sky)
+    local c = Party()
+    if sky or not c or not c.spots or not c.lz or not render or not render.DrawBeam then return end
+    beamMat = beamMat or (Material and Material("effects/lamp_beam"))
+    glowMat = glowMat or (Material and Material("sprites/light_glow02_add"))
+    local now = CurTime()
+    local speed = (c.section == "rave" and 1.8) or (c.section == "outro" and 2.4) or 1
+    local lz = Vector(c.lz.x, c.lz.y, c.lz.z)
+    local R = c.spotR or 300
+    for i = 1, 8 do
+        local a = (i / 8) * math.pi * 2
+        local base = lz + Vector(math.cos(a) * R, math.sin(a) * R, 8)
+        local col = (i % 2 == 0) and Color(170, 60, 255, 200) or Color(255, 130, 20, 200)
+        -- each one sweeps round and tilts on its own, out of step with the next
+        local yaw = math.deg(a) + 180 + math.sin(now * 0.9 * speed + i) * 70
+        local pitch = -50 + math.sin(now * 0.6 * speed + i * 1.7) * 25
+        local dir = Angle(pitch, yaw, 0):Forward()
+        if beamMat then
+            render.SetMaterial(beamMat)
+            render.DrawBeam(base, base + dir * 1100, 90, 0, 0.95, col)
+            render.DrawBeam(base, base + dir * 500, 40, 0, 0.95, Color(col.r, col.g, col.b, 255))
+        end
+        if glowMat and render.DrawSprite then
+            render.SetMaterial(glowMat)
+            render.DrawSprite(base, 70, 70, Color(col.r, col.g, col.b, 255))
+        end
+    end
+end)
+hook.Add("Think", "LivingCityMarrowSpots", function()
+    local c = Party()
+    if not c or not c.spots or not c.lz or not DynamicLight then return end
+    local lz = Vector(c.lz.x, c.lz.y, c.lz.z)
+    local R = c.spotR or 300
+    for i = 1, 8, 2 do -- (four lamps light the ground round them: enough for the colour, light on the frame rate)
+        local a = (i / 8) * math.pi * 2
+        local d = DynamicLight(52000 + i)
+        if d then
+            local purple = i % 4 == 1
+            d.pos = lz + Vector(math.cos(a) * R, math.sin(a) * R, 40)
+            d.r, d.g, d.b = purple and 170 or 255, purple and 60 or 130, purple and 255 or 20
+            d.brightness = 3
+            d.size = 420
+            d.decay = 1000
+            d.dietime = CurTime() + 0.2
+        end
     end
 end)
 

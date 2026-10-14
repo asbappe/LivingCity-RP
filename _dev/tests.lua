@@ -11107,6 +11107,7 @@ LC.EndingReload = function() reloaded = reloaded + 1 end
 _files["livingcity/endings.json"] = nil
 _files["sound/livingcity/endings/harpies.mp3"] = ""
 ok(#LC.EndingSongs("harpies") == 1, "an ending's song is the file named for it")
+ok(LC.EndingSongVolume("harpies") == 2 and LC.EndingSongVolume("bus") == 1, "a quiet recording (the Harpies') plays louder (lc_ending_song_volume)")
 -- skipped
 ok(LC.TriggerEnding("harpies", a), "an ending is triggered")
 ok(LC.EndingSession().phase == "pending", "a few seconds pass first")
@@ -11339,6 +11340,9 @@ ok(LC.TriggerEnding("marrow", b, true), "marrow")
 E = LC.EndingSession()
 ok(a:GetPos():Distance(E.lz) < 300 and IsValid(mcop) and mcop:GetPos():Distance(E.lz) < 500, "everyone, the Combine's units too, is put at the landing zone")
 ok(mdoor.lcHeldOpen and has(mdoor.fired, "Open") and has(mdoor.fired, "Lock"), "and every door is locked open")
+local nearNow = 0
+for _, k in ipairs(E.skels) do if IsValid(k) and k:GetPos():Distance(E.lz) < 800 then nearNow = nearNow + 1 end end
+ok(nearNow >= 5, "skeletons in plain sight round everyone from the very start", nearNow)
 ok(E.client and E.client.party and E.client.lights and E.client.ambient and LC.LightStyle == "a" and #E.client.palette == 2,
     "the map goes dark, and purple and orange light pulses everywhere")
 _run(2)
@@ -11348,10 +11352,12 @@ runToM(3.5)
 ok(E.section == "dance" and a.frozen and a:GetNW2Bool("lc_dancing", false) and mcop:GetNW2Bool("lc_dancing", false) and E.client.lights and E.client.strobe,
     "the drop: everyone dances with them, the Combine's units too, the lights strobing")
 ok(not LC.SkelHurt(E.skels[1], _dmg(a, 500)), "and nothing hurts a dancing skeleton")
+ok(E.client.spots and E.client.lz and E.client.spotR, "purple and orange spotlights sweep round the circle while everyone dances")
 runToM(6.5)
 ok(E.section == "rave" and E.client.dance == "rave" and E.client.danceRate > 1, "the rave part: faster")
 runToM(8.5)
 ok(E.section == "attack" and a.frozen == false and not a:GetNW2Bool("lc_dancing", false), "in between, the dancing stops")
+ok(E.client.loud and not E.client.spots, "and the song comes up over the gunfire (the spotlights off till the next dance)")
 local k1 = E.skels[1]
 k1:SetPos(a:GetPos() + Vector(30, 0, 0))
 a:SetHealth(2)

@@ -103,6 +103,7 @@ local cvMax     = CreateConVar("lc_ending_max", "180", FLAGS, "Longest a secret 
 local cvCool    = CreateConVar("lc_ending_cooldown", "60", FLAGS, "Minutes between secret endings (triggered, voted on or skipped)")
 local cvGman    = CreateConVar("lc_ending_gman_lines", "vo/citadel/gman_exit01.wav,vo/citadel/gman_exit02.wav", FLAGS,
     "The G-Man's lines when he stops time, in order (comma-separated sound paths)")
+local cvSongVol = CreateConVar("lc_ending_song_volume", "harpies=2", FLAGS, "How loud an ending's song plays, for a quiet recording: id=volume, comma-separated (1 is as it is; up to 3)")
 local cvRadius  = CreateConVar("lc_ending_flight_radius", "2200", FLAGS, "How wide the flying endings circle the city, at most (narrower where buildings are in the way: they keep to open sky)")
 
 local ROOT = "livingcity/endings/"
@@ -190,6 +191,13 @@ end
 -- Telling the clients
 ------------------------------------------------------------------------
 
+function LC.EndingSongVolume(id)
+    for k, v in string.gmatch(cvSongVol:GetString() or "", "([%w_]+)%s*=%s*([%d%.]+)") do
+        if string.lower(k) == id then return math.Clamp(tonumber(v) or 1, 0, 3) end
+    end
+    return 1
+end
+
 local function Send(to)
     net.Start("lc_ending")
     if not E then
@@ -198,7 +206,7 @@ local function Send(to)
         local yes, skip = 0, 0
         for _, v in pairs(E.votes or {}) do if v then yes = yes + 1 else skip = skip + 1 end end
         net.WriteTable({ id = E.id, phase = E.phase, name = LC.Endings[E.id].name, say = LC.Endings[E.id].say,
-            voteEnds = E.voteEnds, yes = yes, skip = skip, song = E.song, lines = E.lines, grigori = E.grigori,
+            voteEnds = E.voteEnds, yes = yes, skip = skip, song = E.song, songVolume = LC.EndingSongVolume(E.id), lines = E.lines, grigori = E.grigori,
             floodZ = E.floodZ, client = E.client, flashing = LC.Endings[E.id].flashing or nil })
     end
     if to then net.Send(to) else net.Broadcast() end
@@ -632,6 +640,25 @@ local function CityFolk()
     end
     return out
 end
+-- Standing in the model's own idle, not the bind pose (time's stopped, so nothing
+-- else animates them). The model is asked for its idle; names are the fallback.
+local function StandIdle(e)
+    if not IsValid(e) then return end
+    local seq = e.SelectWeightedSequence and ACT_IDLE and e:SelectWeightedSequence(ACT_IDLE) or -1
+    if not seq or seq < 0 then
+        for _, name in ipairs({ "idle_all_01", "LineIdle01", "idle_unarmed", "Idle01", "idle_subtle" }) do
+            seq = e.LookupSequence and e:LookupSequence(name)
+            if seq and seq >= 0 then break end
+        end
+    end
+    if not seq or seq < 0 then return end
+    if e.SetSequence then e:SetSequence(seq) end
+    if e.ResetSequence then e:ResetSequence(seq) end
+    if e.SetCycle then e:SetCycle(math.Rand(0, 1)) end
+    if e.SetPlaybackRate then e:SetPlaybackRate(1) end
+end
+LC.EndingStandIdle = StandIdle
+
 local function SpawnFolk(pos, i)
     local c = ents.Create("npc_citizen")
     if not IsValid(c) then return nil end
@@ -640,11 +667,10 @@ local function SpawnFolk(pos, i)
     c:SetPos(pos)
     c:Spawn()
     c.lcCrowd = true
-    -- (time's stopped, so nothing animates them: set them standing, or they'd be in the T pose)
-    for _, name in ipairs({ "LineIdle01", "LineIdle02", "idle_unarmed", "Idle01" }) do
-        local seq = c.LookupSequence and c:LookupSequence(name)
-        if seq and seq >= 0 then c:ResetSequence(seq) if c.SetCycle then c:SetCycle(math.Rand(0, 1)) end break end
-    end
+    -- (time's stopped, so nothing animates them: set them standing, or they'd be in the bind pose;
+    -- and again a moment later, in case spawning set one of its own)
+    StandIdle(c)
+    timer.Simple(0.3, function() StandIdle(c) end)
     E.ents[#E.ents + 1] = c
     return c
 end
@@ -698,8 +724,8 @@ local function Chatter(n, kind)
     local line = Pick(v[kind])
     if not line then return false end
     local click = Pick(v.on)
-    if click then n:EmitSound(click, 80) end
-    timer.Simple(click and 0.25 or 0, function() if IsValid(n) then n:EmitSound(line, 85) end end)
+    if click then n:EmitSound(click, 75, 100, 0.7) end
+    timer.Simple(click and 0.25 or 0, function() if IsValid(n) then n:EmitSound(line, 80, 100, 0.85) end end)
     E.chatterLog = E.chatterLog or {}
     E.chatterLog[#E.chatterLog + 1] = line
     return true
@@ -750,7 +776,7 @@ local function Shoot(n, now, list, hurt)
         local at = id and id > 0 and wep:GetAttachment(id)
         if at and at.Pos then src = at.Pos end
     end
-    n:EmitSound(G.sound, 90, math.random(96, 104))
+    n:EmitSound(G.sound, 78, math.random(96, 104), 0.45) -- (under the song, not over it)
     if n.FireBullets then
         n:FireBullets({ Attacker = n, Inflictor = IsValid(wep) and wep or n, Num = G.num, Src = src, Dir = (aimAt - src):GetNormalized(),
             Spread = Vector(G.spread, G.spread, 0), Tracer = 1, TracerName = G.tracer, Force = 2, Damage = G.dmg, IgnoreEntity = n })
@@ -833,6 +859,9 @@ TICK.harpies = function(now)
     -- the Combine's radios, out loud: what they see out there, then contact, then the order to fire, then the fight
     if firing and not E.fireOrdered then
         E.fireOrdered = true
+        E.client = E.client or {}
+        E.client.loud = true -- (the song up over the gunfire)
+        Send()
         local a, b = Speaker(), Speaker()
         Chatter(a, "fire")
         if b ~= a then timer.Simple(0.9, function() if E then Chatter(b, "fire") end end) end
@@ -1125,7 +1154,7 @@ local function SpawnSkel(pos)
     k:SetModel(k.lcModel)
     k:SetPos(pos)
     k:Spawn()
-    k.lcSkel = { hp = 40, phase = "walk", untilT = CurTime() + math.Rand(3, 6) }
+    k.lcSkel = { hp = 100, phase = "walk", untilT = CurTime() + math.Rand(3, 6) } -- (tough: the Combine's units don't mow them down)
     E.ents[#E.ents + 1] = k
     E.skels[#E.skels + 1] = k
     return k
@@ -1180,7 +1209,7 @@ local function Claw(target, k)
     if not IsValid(target) or not IsValid(k) or now < (k.lcClawAt or 0) then return end
     k.lcClawAt = now + 0.8 -- (each skeleton on its own: the more of them on you, the worse)
     target:EmitSound("npc/zombie/claw_strike" .. math.random(1, 3) .. ".wav", 75)
-    target:SetHealth(target:Health() - math.random(3, 5))
+    target:SetHealth(target:Health() - math.random(4, 6))
     if target:IsPlayer() then
         if target.ViewPunch then target:ViewPunch(Angle(math.Rand(-8, 8), math.Rand(-8, 8), 0)) end
         if target:Health() <= 0 then Convert(target) end
@@ -1240,6 +1269,9 @@ local function ApplySection(kind, now)
     E.client.strobe = kind == "dance" or kind == "rave"
     E.client.dance = kind == "rave" and "rave" or "club"
     E.client.danceRate = (kind == "rave" and 1.5) or (kind == "outro" and 2) or 1 -- (the xylophone outro: double time)
+    E.client.loud = kind == "attack" -- (the song up over the gunfire in a fight)
+    E.client.section = kind
+    E.client.spots = dancing -- (the spotlights round the circle, while everyone dances)
     for _, p in ipairs(player.GetAll()) do
         if p.lcEndTaken then
             p:SetNW2Bool("lc_dancing", true)
@@ -1295,12 +1327,21 @@ SETUP.marrow = function()
     end
     E.combine = GatherCombine(E.lz, 100 + 12 * #ps)
     for _, n in ipairs(E.combine) do n.lcRing = true end
+    -- the first of them already there, in plain sight round everyone, dancing their way in
+    for _ = 1, 10 do
+        local g = RingSpot(E.lz, math.Rand(350, 650), false)
+        if g then
+            local k = SpawnSkel(g)
+            if k then k.lcSkel.untilT = CurTime() + math.Rand(0.5, 3) end
+        end
+    end
     -- the map goes dark (every lamp out), and the coloured light pulses everywhere
     E.dark = true
     LC.EndingDark = true
     if LC.ForceBlackout then LC.ForceBlackout("on") end
     if LC.ApplyLightStyle then LC.ApplyLightStyle() end
-    E.client = { party = true, lights = true, ambient = true, dance = "club", palette = SPOOKY, bpm = cvMarrowBPM:GetFloat(), offset = 0, start = now }
+    E.client = { party = true, lights = true, ambient = true, dance = "club", palette = SPOOKY, bpm = cvMarrowBPM:GetFloat(), offset = 0, start = now,
+        lz = E.lz, spotR = 260 + 12 * #ps }
     E.section = "intro"
 end
 
@@ -1321,7 +1362,7 @@ TICK.marrow = function(now)
         for _ = 1, math.min(3, want - #E.skels) do
             local g
             local near = E.section == "attack" and #living > 0 and living[math.random(#living)]:GetPos() or E.lz
-            for _, d in ipairs(E.section == "intro" and { math.Rand(1500, 3000), 1000, 650 } or { 900, 650, 450 }) do
+            for _, d in ipairs(E.section == "intro" and { math.Rand(700, 1400), 550, 380 } or { 900, 650, 450 }) do
                 g = RingSpot(near, d, false)
                 if g then break end
             end
@@ -1357,8 +1398,8 @@ TICK.marrow = function(now)
                     s.phase, s.untilT = "walk", now + math.Rand(3, 6)
                     k:SetNW2Bool("lc_dancing", false)
                     local a = math.Rand(0, math.pi * 2)
-                    s.goal = E.lz + Vector(math.cos(a), math.sin(a), 0) * math.Rand(250, 450)
-                    s.speed = 140
+                    s.goal = E.lz + Vector(math.cos(a), math.sin(a), 0) * math.Rand(220, 400)
+                    s.speed = 160
                 end
             end
         elseif E.section == "attack" then
@@ -2565,10 +2606,8 @@ SETUP.water = function()
         end
         if IsValid(g) then
             -- (time's stopped: standing, not the T pose; the headbanging is on each screen)
-            for _, name in ipairs({ "LineIdle01", "Idle_Angry", "idle_subtle", "Idle01" }) do
-                local seq = g.LookupSequence and g:LookupSequence(name)
-                if seq and seq >= 0 then g:ResetSequence(seq) break end
-            end
+            StandIdle(g)
+            timer.Simple(0.3, function() StandIdle(g) end)
             if IsValid(st) then g:SetPos(st:GetPos() + Vector(0, 0, E.stageTop + 1)) end
             E.grigori = g
         end
