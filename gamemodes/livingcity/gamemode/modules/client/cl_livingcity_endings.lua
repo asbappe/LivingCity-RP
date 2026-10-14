@@ -116,6 +116,11 @@ hook.Add("HUDPaint", "LivingCityEndings", function()
         if myVote ~= nil then Text(myVote and "You chose: let it happen." or "You chose: skip it.", "LCEndText", cx, cy + 162, AMBER) end
     elseif S.phase == "apocalypse" then
         Text(string.upper(S.name or ""), "LCEndBig", cx, ScrH() * 0.1, AMBER)
+        local me = LocalPlayer()
+        if IsValid(me) and me:GetNW2Bool("lc_end_spectating", false) then
+            Text("You're dead. Watch the end of the city.", "LCEndText", cx, ScrH() * 0.85, WHITE)
+            Text("Left / right click: someone else      Jump: fly free", "LCEndText", cx, ScrH() * 0.85 + 26, AMBER)
+        end
     elseif S.phase == "reset" and resetAt then
         local a = math.Clamp((now - resetAt) / 4, 0, 1) * 255
         surface.SetDrawColor(255, 255, 255, a)

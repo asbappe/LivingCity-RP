@@ -134,6 +134,8 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **A full stomach:** hunger 85+ gives 15% more XP and slow healing.
   Notes:
+- [ ] **The Harpies (lc_ending harpies now):** lights out, everyone at the LZ, mingebags gathering in the dark, the rush at the swell, the leaping, spectating the dead. Does the timing line up with the song? Does the pose look right?
+  Notes:
 - [ ] **Secret endings:** the G-Man stops time and everyone votes; Father Grigori's /eatchip with a master data core starts the flood (admins: lc_ending <id> now).
   Notes:
 

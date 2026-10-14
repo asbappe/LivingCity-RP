@@ -23,7 +23,11 @@
       there, .wav, .mp3 or .ogg; they live in the separate sound addon,
       garrysmod/addons/livingcity_sound/sound/livingcity/endings/<id>/,
       so updating the gamemode never touches them)
-        harpies    Kleiners, in step, closing in on everyone from all sides
+        harpies    lights out, everyone at the landing zone, and the mingebags
+                   (old-school Garry's Mod players, civilian pose, sliding)
+                   gather in the dark for a minute, rush in when the song
+                   swells, then leap; everyone's dead by 2:00 and watches
+                   (lc_ending_minge_swell, lc_ending_minge_end, _max, _models)
         crazybus   everyone in a bus or van, flying round the city
         nuanua     everyone on an airplane, high over the city
         topsecret  everyone hung by barnacles, one a second
@@ -61,7 +65,7 @@ local ROOT = "livingcity/endings/"
 local EXT = { wav = true, mp3 = true, ogg = true }
 
 LC.Endings = {
-    harpies   = { name = "The Harpies", say = "Kleiners. Everywhere. In step." },
+    harpies   = { name = "The Harpies", say = "The lights go out. Something is gathering out there in the dark." },
     crazybus  = { name = "The Crazy Bus", say = "All aboard." },
     nuanua    = { name = "Nua Nua", say = "Please fasten your seatbelts." },
     topsecret = { name = "Top Secret", say = "Look up." },
@@ -227,51 +231,332 @@ end
 
 local SETUP, TICK = {}, {}
 
--- the Harpies: Kleiners close in from all sides, in step
+-- the Harpies: the mingebags. Lights out, everyone at the landing zone, and
+-- old-school Garry's Mod players in the civilian pose, sliding. For the first
+-- minute they gather in the dark, far off and out of sight, keeping their
+-- distance and getting bolder; when the song swells (lc_ending_minge_swell,
+-- 60 s) they rush in and surround everyone; 9 seconds later they leap, all of
+-- them, and it's a slaughter. From 1:50 walls don't stop them; by 2:00
+-- (lc_ending_minge_end) everyone's gone. The dead watch (spectating).
+local cvMingeMax    = CreateConVar("lc_ending_minge_max", "60", FLAGS, "How many mingebags the Harpies ending gathers")
+local cvMingeSwell  = CreateConVar("lc_ending_minge_swell", "60", FLAGS, "Seconds into the Harpies' song when it swells and the mingebags rush in (they leap 9 seconds later)")
+local cvMingeEnd    = CreateConVar("lc_ending_minge_end", "120", FLAGS, "Seconds into the Harpies' song by which everyone is dead (walls stop mattering 10 seconds before)")
+CreateConVar("lc_ending_minge_pose", "ragdoll", FLAGS, "The mingebags' pose: a sequence name on their models (ragdoll: the reference pose)")
+local cvMingeModels = CreateConVar("lc_ending_minge_models",
+    "models/player/kleiner.mdl,models/player/group01/male_07.mdl,models/player/group01/male_09.mdl,models/player/group01/male_02.mdl,models/player/group01/male_04.mdl,models/player/group01/female_02.mdl",
+    FLAGS, "The mingebags' models (comma-separated; any missing are skipped)")
+
+local RUSH = 9 -- (seconds of rushing in before the leaping)
+local UP = Vector(0, 0, 1)
+
+-- The floor under a spot (nil: inside a wall, or nothing there).
+local function Ground(pos)
+    local tr = util.TraceLine({ start = pos + Vector(0, 0, 120), endpos = pos - Vector(0, 0, 600), mask = MASK_SOLID_BRUSHONLY })
+    if not tr.Hit or tr.StartSolid then return nil end
+    return tr.HitPos
+end
+
+-- Nothing solid between two spots, at knee height.
+local function Clear(a, b)
+    local tr = util.TraceLine({ start = a + Vector(0, 0, 24), endpos = b + Vector(0, 0, 24), mask = MASK_SOLID_BRUSHONLY })
+    return not tr.Hit
+end
+
+local function Seen(pos)
+    for _, p in ipairs(Living()) do
+        local tr = util.TraceLine({ start = p:EyePos(), endpos = pos + Vector(0, 0, 50), mask = MASK_SOLID_BRUSHONLY })
+        if not tr.Hit then return true end
+    end
+    return false
+end
+
+-- A spot about `dist` from the centre (near `angle`, if given), out of sight if `hide`.
+local function RingSpot(centre, dist, hide, angle)
+    for i = 1, 10 do
+        local a = angle and (angle + math.Rand(-0.5, 0.5)) or math.Rand(0, math.pi * 2)
+        local d = dist + math.Rand(-150, 150)
+        local g = Ground(centre + Vector(math.cos(a) * d, math.sin(a) * d, 0))
+        if g and (not hide or i > 7 or not Seen(g)) then return g, a end
+    end
+    return nil
+end
+
+local function MingeModel()
+    local list = {}
+    for m in string.gmatch(cvMingeModels:GetString() or "", "[^,]+") do
+        m = string.Trim(m)
+        if m ~= "" and (not util.IsValidModel or util.IsValidModel(m)) then list[#list + 1] = m end
+    end
+    return list[math.random(math.max(1, #list))] or "models/player/kleiner.mdl"
+end
+
+local function SpawnMinge(pos, angle)
+    local m = ents.Create("lc_minge")
+    if not IsValid(m) then return nil end
+    m.lcModel = MingeModel()
+    m:SetModel(m.lcModel)
+    m:SetPos(pos)
+    m:SetAngles(Angle(0, math.deg(angle or 0) + 180, 0))
+    m:Spawn()
+    m.lcMinge = { mode = "lurk", angle = angle, hp = 25 }
+    E.ents[#E.ents + 1] = m
+    E.minges[#E.minges + 1] = m
+    return m
+end
+
+local function Body(model, pos, yaw, fling)
+    local r = ents.Create("prop_ragdoll")
+    if not IsValid(r) then return nil end
+    r:SetModel(model or "models/player/kleiner.mdl")
+    r:SetPos(pos)
+    r:SetAngles(Angle(0, yaw or 0, 0))
+    r:Spawn()
+    if r.GetPhysicsObjectCount then
+        for i = 0, r:GetPhysicsObjectCount() - 1 do
+            local ph = r:GetPhysicsObjectNum(i)
+            if IsValid(ph) then ph:SetVelocity(VectorRand() * fling + Vector(0, 0, fling * 0.6)) end
+        end
+    end
+    E.ents[#E.ents + 1] = r
+    E.bodies[#E.bodies + 1] = r
+    if #E.bodies > 40 then local old = table.remove(E.bodies, 1) if IsValid(old) then old:Remove() end end
+    return r
+end
+
+-- Who a dead player watches: the living first, then the mingebags.
+local function Watch(p, dir)
+    local list = {}
+    for _, q in ipairs(Living()) do list[#list + 1] = q end
+    for _, m in ipairs(E and E.minges or {}) do if IsValid(m) then list[#list + 1] = m end end
+    if #list == 0 then return end
+    p.lcEndWatchI = ((p.lcEndWatchI or 0) + (dir or 1) - 1) % #list + 1
+    p.lcEndWatching = list[p.lcEndWatchI]
+    if p.SpectateEntity then p:SpectateEntity(p.lcEndWatching) end
+end
+
+-- Killed by them: a body on the ground, and the player watches the rest.
+-- (Not really dead: no close call spent, no new character; the map resets.)
+local function Slaughter(p, how)
+    if not IsValid(p) or p.lcEndTaken then return end
+    Body(p:GetModel(), p:GetPos(), p:EyeAngles().y, 260)
+    p:EmitSound("vo/npc/male01/pain0" .. math.random(7, 9) .. ".wav", 80)
+    p.lcEndTaken, p.lcEndSpectating = true, true
+    p:SetNW2Bool("lc_end_taken", true)
+    p:SetNW2Bool("lc_end_spectating", true)
+    if p.SetNoDraw then p:SetNoDraw(true) end
+    if p.SetNotSolid then p:SetNotSolid(true) end
+    if p.Spectate then p:Spectate(OBS_MODE_CHASE) end
+    Watch(p, 1)
+    if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(140, 0, 0, 220), 2, 0) end
+    p:ChatPrint(how or "The mingebags got you.")
+    hook.Run("LivingCityEndingTook", p, E and E.id)
+end
+LC.EndingSlaughter = Slaughter
+
+local function Hit(p)
+    if not IsValid(p) or p.lcEndTaken then return false end
+    local now = CurTime()
+    if now < (p.lcMingeHitAt or 0) then return false end
+    p.lcMingeHitAt = now + 0.3
+    p:SetHealth(p:Health() - math.random(7, 12))
+    if p.ViewPunch then p:ViewPunch(Angle(math.Rand(-10, 10), math.Rand(-10, 10), 0)) end
+    p:EmitSound("physics/body/body_medium_impact_hard" .. math.random(1, 6) .. ".wav", 75)
+    if util.Effect and EffectData then
+        local fx = EffectData()
+        fx:SetOrigin(p:GetPos() + Vector(0, 0, 40))
+        util.Effect("BloodImpact", fx)
+    end
+    if p:Health() <= 0 then Slaughter(p, "They're on you, all of them, in that pose. The mingebags got you.") end
+    return true
+end
+
+-- One step of a mingebag's slide or leap (each server tick: lc_minge.lua).
+function LC.MingeStep(m, dt)
+    local s = m.lcMinge
+    if not s or not E or E.id ~= "harpies" then return end
+    local now = CurTime()
+    local pos = m:GetPos()
+    if s.leap then
+        local L = s.leap
+        local f = math.min(1, (now - L.t0) / L.dur)
+        m:SetPos(LerpVector(f, L.from, L.to) + UP * (4 * L.h * f * (1 - f)))
+        if f >= 1 then
+            s.leap = nil
+            local t = s.target
+            if IsValid(t) and t:IsPlayer() and t:GetPos():DistToSqr(m:GetPos()) < 80 * 80 then Hit(t) end
+        end
+        return
+    end
+    if not s.goal then return end
+    local to = s.goal - pos
+    to.z = 0
+    local dist = to:Length()
+    if dist < 4 then return end
+    local dir = to * (1 / dist)
+    local step = math.min(dist, (s.speed or 100) * (dt or 0.1))
+    local nextPos = pos + dir * step
+    if not s.noclip then
+        if not Clear(pos, nextPos + dir * 16) then
+            local found
+            for _, turn in ipairs({ 50, -50, 90, -90 }) do
+                local a = dir:Angle()
+                a.y = a.y + turn
+                local alt = pos + a:Forward() * step
+                if Clear(pos, alt + a:Forward() * 16) then nextPos, found = alt, true break end
+            end
+            if not found then s.stuck = (s.stuck or 0) + (dt or 0.1) return end
+        end
+        s.stuck = 0
+        local g = Ground(nextPos)
+        if g and math.abs(g.z - pos.z) < 60 then nextPos.z = g.z end
+    else
+        local g = Ground(nextPos)
+        nextPos.z = g and g.z or nextPos.z + (s.goal.z - nextPos.z) * 0.2
+    end
+    m:SetPos(nextPos)
+end
+
+-- Shot: nothing touches them until they've gathered; after that one goes
+-- down, and another takes its place.
+function LC.MingeHurt(m, dmg)
+    local s = m.lcMinge
+    if not s or not E or not E.vulnerable then return false end
+    s.hp = s.hp - (dmg and dmg.GetDamage and dmg:GetDamage() or 25)
+    if s.hp > 0 then return false end
+    Body(m:GetModel(), m:GetPos(), m:GetAngles().y, 120)
+    m:Remove()
+    return true
+end
+
+local function Nearest(pos, list)
+    local best, bd
+    for _, p in ipairs(list) do
+        local d = p:GetPos():DistToSqr(pos)
+        if not bd or d < bd then best, bd = p, d end
+    end
+    return best, bd and math.sqrt(bd) or nil
+end
+
 SETUP.harpies = function()
-    E.kleiners = {}
-    E.nextWave = 0
+    E.minges, E.bodies = {}, {}
+    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    E.lz = (#lz > 0 and lz[1].pos) or (LC.SupplyDropSpot and LC.SupplyDropSpot()) or (IsValid(E.by) and E.by:GetPos()) or Centre()
+    E.holdUntil = CurTime() + cvMingeEnd:GetFloat()
+    -- everyone to the landing zone, facing out into the dark
+    local ps = player.GetAll()
+    for i, p in ipairs(ps) do
+        if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
+        local a = (i / math.max(1, #ps)) * math.pi * 2
+        local r = 60 + 12 * #ps
+        local spot = E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)
+        p:SetPos((Ground(spot) or E.lz) + Vector(0, 0, 4))
+        if p.SetEyeAngles then p:SetEyeAngles(Angle(0, math.deg(a), 0)) end
+        if p:Health() < 100 then p:SetHealth(100) end
+    end
+    -- and every light in the city goes out
+    E.dark = true
+    LC.EndingDark = true
+    if LC.ForceBlackout then LC.ForceBlackout("on") end
+    if LC.ApplyLightStyle then LC.ApplyLightStyle() end
 end
+
 TICK.harpies = function(now)
+    local t = now - E.phaseT
+    local swell, fin = cvMingeSwell:GetFloat(), cvMingeEnd:GetFloat()
     local living = Living()
-    if now >= E.nextWave and #E.kleiners < 60 then
-        E.nextWave = now + 10
-        for _, p in ipairs(living) do
-            for i = 1, 3 do
-                local a = (i / 3 + math.random() * 0.2) * math.pi * 2
-                local pos = p:GetPos() + Vector(math.cos(a) * 900, math.sin(a) * 900, 8)
-                local k = ents.Create("npc_kleiner")
-                if not IsValid(k) then
-                    k = ents.Create("npc_citizen")
-                    if IsValid(k) then k:SetModel("models/kleiner.mdl") end
+    local centre = E.lz
+    local mode = t < swell and "lurk" or (t < swell + RUSH and "rush" or "leap")
+    local noclip = t >= fin - 10
+    local k = math.Clamp(t / swell, 0, 1)
+    local far = 2400 - 1800 * k -- (how far off they keep: closer as the song goes on)
+    E.vulnerable = t >= swell - 10
+    E.mode = mode
+
+    -- gather: a handful at first, a crowd by the swell, replaced as fast as they fall after it
+    local alive = {}
+    for _, m in ipairs(E.minges) do if IsValid(m) then alive[#alive + 1] = m end end
+    E.minges = alive
+    local want = mode == "lurk" and math.floor(4 + (cvMingeMax:GetInt() - 4) * k ^ 1.3) or cvMingeMax:GetInt()
+    if #E.minges < want and now >= (E.nextSpawn or 0) then
+        E.nextSpawn = now + (mode == "lurk" and 0.4 or 0.1)
+        local g, a = RingSpot(centre, mode == "lurk" and far or 900, mode == "lurk" and k < 0.6)
+        if g then SpawnMinge(g, a) end
+    end
+
+    for i, m in ipairs(E.minges) do
+        local s = m.lcMinge
+        local pos = m:GetPos()
+        s.noclip = noclip
+        local near, nd = Nearest(pos, living)
+        local face = (near and near:GetPos()) or centre
+        m:SetAngles(Angle(0, (face - pos):Angle().y, 0))
+        if mode == "lurk" then
+            -- keep their distance, at the edge of the dark, a little bolder all the time
+            s.speed = 40 + 160 * k
+            if not s.goal or (pos:DistToSqr(s.goal) < 30 * 30 and now >= (s.rest or 0)) or math.abs((s.ringD or far) - far) > 250 then
+                local g, a = RingSpot(centre, far, k < 0.6, s.angle)
+                if g then s.goal, s.angle, s.ringD = g, a, far end
+                s.rest = now + math.Rand(2, 6)
+            end
+            if near and nd < far * 0.5 then
+                -- someone walks up to one: it backs away into the dark
+                s.goal = pos + (pos - near:GetPos()):GetNormalized() * 500
+                s.speed = 260 - 120 * k
+                s.rest = now + 3
+            end
+        else
+            -- each has someone (shared out evenly) and a place round them
+            if not IsValid(s.target) or not s.target:IsPlayer() or s.target.lcEndTaken then
+                s.target = #living > 0 and living[(i - 1) % #living + 1] or nil
+                s.slot = math.Rand(0, math.pi * 2)
+                s.ring = math.floor((i - 1) / math.max(1, #living) / 8)
+            end
+            local tp = IsValid(s.target) and s.target:GetPos()
+                or (#E.bodies > 0 and IsValid(E.bodies[#E.bodies]) and E.bodies[#E.bodies]:GetPos()) or centre
+            if mode == "rush" then
+                s.goal = tp + Vector(math.cos(s.slot), math.sin(s.slot), 0) * (60 + 32 * (s.ring or 0))
+                s.speed = 650
+            elseif not s.leap and now >= (s.nextLeap or 0) then
+                local d = pos:Distance(tp)
+                if d < 520 and (noclip or Clear(pos, tp)) then
+                    local dur = 0.3 + d / 1500
+                    s.leap = { from = pos, to = tp + Vector(math.Rand(-15, 15), math.Rand(-15, 15), 0), t0 = now, dur = dur, h = 30 + d * 0.18 }
+                    s.nextLeap = now + dur + math.Rand(0.15, 0.7)
+                else
+                    s.goal, s.speed = tp, noclip and 700 or 520
                 end
-                if IsValid(k) then
-                    k:SetPos(pos)
-                    k:Spawn()
-                    k:Activate()
-                    k.lcEndTarget = p
-                    E.ents[#E.ents + 1] = k
-                    E.kleiners[#E.kleiners + 1] = k
-                end
+            end
+            -- stuck behind something (before the walls stop mattering): around the other way, out of sight
+            if not noclip and (s.stuck or 0) > 1.5 and IsValid(s.target) then
+                local g = RingSpot(tp, 350, true)
+                if g then m:SetPos(g) s.stuck = 0 end
             end
         end
     end
-    -- in step: every one of them re-aims on the same beat
-    if now >= (E.step or 0) then
-        E.step = now + 0.5
-        for _, k in ipairs(E.kleiners) do
-            if IsValid(k) then
-                local t = k.lcEndTarget
-                if not IsValid(t) or t.lcEndTaken then t = living[math.random(math.max(1, #living))] k.lcEndTarget = t end
-                if IsValid(t) then
-                    k:SetLastPosition(t:GetPos())
-                    k:SetSchedule(SCHED_FORCED_GO)
-                    if k:GetPos():DistToSqr(t:GetPos()) < 70 * 70 then Take(t, "A Kleiner reaches you. Then another. Then all of them.") end
-                end
-            end
-        end
+
+    -- the last two seconds: nobody's left
+    if t >= fin - 2 then
+        for _, p in ipairs(living) do Slaughter(p, "There's nowhere left. The mingebags got you.") end
     end
+    -- the dead keep watching someone
+    for _, p in ipairs(player.GetAll()) do
+        if p.lcEndSpectating and (not IsValid(p.lcEndWatching) or p.lcEndWatching.lcEndTaken) then Watch(p, 1) end
+    end
+    -- (anything that doesn't move itself every tick, moves here)
+    for _, m in ipairs(E.minges) do if IsValid(m) and not m.lcThinks then LC.MingeStep(m, 0.1) end end
 end
+
+-- The dead watching: left and right click, someone else; jump, fly free.
+hook.Add("KeyPress", "LivingCityEndingWatch", function(p, key)
+    if not E or not p.lcEndSpectating then return end
+    if key == IN_ATTACK then Watch(p, 1)
+    elseif key == IN_ATTACK2 then Watch(p, -1)
+    elseif key == IN_JUMP and p.Spectate then
+        p.lcEndRoam = not p.lcEndRoam
+        p:Spectate(p.lcEndRoam and OBS_MODE_ROAM or OBS_MODE_CHASE)
+        if not p.lcEndRoam then Watch(p, 0) end
+    end
+end)
 
 -- flying things: a vehicle per group of riders, circling the city
 local function Fly(models, perVehicle, height, speed, scale, secs)
@@ -405,11 +690,22 @@ local function Clear()
             if p.SetNoDraw then p:SetNoDraw(false) end
             if p.SetNotSolid then p:SetNotSolid(false) end
         end
+        if p.lcEndSpectating then
+            if p.UnSpectate then p:UnSpectate() end
+            if p.Spawn then p:Spawn() end
+        end
         p.lcEndTaken, p.lcEndRide, p.lcEndHang, p.lcEndUnder = nil, nil, nil, nil
+        p.lcEndSpectating, p.lcEndWatching, p.lcEndRoam = nil, nil, nil
         p:SetNW2Bool("lc_end_taken", false)
+        p:SetNW2Bool("lc_end_spectating", false)
         p:SetNW2Bool("lc_rocking", false)
     end
     SetGlobal2Float("lc_flood_z", 0)
+    if E and E.dark then
+        LC.EndingDark = nil
+        if LC.ForceBlackout then LC.ForceBlackout("auto") end
+        if LC.ApplyLightStyle then LC.ApplyLightStyle() end
+    end
 end
 
 -- The map reloads, with the city's layout (characters, standing and credits are kept).
@@ -518,7 +814,8 @@ timer.Create("LivingCityEndings", 0.1, 0, function()
             end
         elseif E.phase == "apocalypse" then
             if TICK[E.id] then TICK[E.id](now) end
-            if #Living() == 0 or now - E.phaseT > cvMax:GetFloat() then GoTo("reset") end
+            -- (an ending can run to the end of its song even after the last one goes: the dead watch)
+            if (#Living() == 0 and now >= (E.holdUntil or 0)) or now - E.phaseT > math.max(cvMax:GetFloat(), (E.holdUntil or 0) - E.phaseT + 1) then GoTo("reset") end
         elseif E.phase == "reset" then
             if now - E.phaseT >= 5 then
                 local id = E.id

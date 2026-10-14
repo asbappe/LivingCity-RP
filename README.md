@@ -669,7 +669,7 @@ Joke "end of the city" events, mostly about the motherlode (the master data core
 
 | Ending | What happens | Song folder | Trigger |
 |---|---|---|---|
-| `harpies` | Kleiners close in on everyone from all sides, in step | `endings/harpies/` | to be decided |
+| `harpies` | Every light goes out and everyone is put at the dropship landing zone. Mingebags (old-school Garry's Mod players, frozen in the civilian pose, sliding) gather far off in the dark for the first minute, keeping their distance and getting bolder; nothing hurts them until they've gathered, then one shot down is replaced at once. When the song swells (`lc_ending_minge_swell`, 60 s) they rush in and surround everyone; 9 seconds later they leap, all of them, and it's a slaughter. From 1:50 walls don't stop them; by 2:00 (`lc_ending_minge_end`) everyone's dead and watching (left/right click: someone else, jump: fly free). Nobody really dies: no close call, no new character. `lc_ending_minge_max` (60), `lc_ending_minge_models`, `lc_ending_minge_pose` | `endings/harpies/` | to be decided |
 | `crazybus` | Everyone in a bus or van flying round the city | `endings/crazybus/` | to be decided |
 | `nuanua` | Everyone on one airplane, high over the city | `endings/nuanua/` | to be decided |
 | `topsecret` | Barnacles hang everyone, one a second | `endings/topsecret/` | to be decided |

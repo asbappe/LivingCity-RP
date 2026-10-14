@@ -11082,6 +11082,9 @@ ok(LC.EndingSession() == nil and not LC.TimeStopped and a.frozen == false, "more
 ok(not LC.TriggerEnding("harpies", a), "and there can't be another for a while")
 concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
 -- nobody votes: the apocalypse
+_setcvar("lc_ending_minge_swell", 20)
+_setcvar("lc_ending_minge_end", 40)
+_setcvar("lc_ending_minge_max", 12)
 ok(LC.TriggerEnding("harpies", a), "again (cooldown cleared)")
 _run(5)
 local n0 = #net.sent
@@ -11089,14 +11092,41 @@ _run(31)
 E = LC.EndingSession()
 ok(E and E.phase == "apocalypse", "nobody votes: it happens")
 ok(E and E.song == "livingcity/endings/harpies/harpy.mp3", "with its song")
-ok(E and E.kleiners and #E.kleiners >= 3, "Kleiners close in", E and E.kleiners and #E.kleiners)
-for _, k in ipairs(E.kleiners) do if IsValid(k) and k.lcEndTarget then k:SetPos(k.lcEndTarget:GetPos() + Vector(20, 0, 0)) end end
-_run(1)
-ok(a.lcEndTaken or b.lcEndTaken, "and take whoever they reach")
-for _, k in ipairs(E.kleiners) do if IsValid(k) and k.lcEndTarget then k:SetPos(k.lcEndTarget:GetPos() + Vector(20, 0, 0)) end end
-_run(1)
-ok(a.alive and b.alive, "(taken is not dead: no new characters)")
-ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "everyone taken: the city resets")
+-- the Harpies: the mingebags (timings shortened for the test: swell at 20 s, all over by 40)
+ok(E and E.mode == "lurk" and LC.EndingDark and LC.LightStyle == "a", "the lights go out, all of them")
+ok(a:GetPos():Distance(E.lz) < 300 and b:GetPos():Distance(E.lz) < 300, "and everyone is at the landing zone")
+local function runTo(sec) _run(math.max(0.1, E.phaseT + sec - CurTime())) end -- (seconds into the song)
+local function minges() local n = 0 for _, m in ipairs(E.minges) do if IsValid(m) then n = n + 1 end end return n end
+local function closest()
+    local best
+    for _, m in ipairs(E.minges) do
+        if IsValid(m) then for _, p in ipairs({ a, b }) do local d = m:GetPos():Distance(p:GetPos()) best = math.min(best or d, d) end end
+    end
+    return best or 0
+end
+runTo(8)
+ok(minges() >= 4 and closest() > 400, "they gather far off in the dark, keeping their distance", minges() .. " at " .. math.floor(closest()))
+ok(not LC.MingeHurt(E.minges[1], _dmg(a, 500)), "and nothing touches them yet")
+runTo(12)
+local before = minges()
+ok(LC.MingeHurt(E.minges[1], _dmg(a, 500)) and minges() == before - 1, "once they've gathered, one can be put down")
+runTo(13)
+ok(minges() >= before, "and another takes its place")
+runTo(28)
+ok(E.mode == "rush" and closest() < 250, "when the song swells they rush in and surround everyone", math.floor(closest()))
+local hurt = 0
+for _, p in ipairs(player.GetAll()) do if p.lcEndTaken or p:Health() < 100 then hurt = hurt + 1 end end
+ok(hurt == 0, "(nobody's hurt while they close in)", hurt)
+runTo(34)
+hurt = 0
+for _, p in ipairs(player.GetAll()) do if p.lcEndTaken or p:Health() < 100 then hurt = hurt + 1 end end
+ok(E.mode == "leap" and hurt > 0, "then they leap, all of them, and it's a slaughter", hurt)
+runTo(38.5)
+ok(a.lcEndTaken and b.lcEndTaken and a.alive and b.alive and a:GetNW2Bool("lc_end_spectating", false),
+    "by the end everyone's gone, and the dead watch (nobody really dies: no close call, no new character)")
+ok(LC.EndingSession().phase == "apocalypse", "the song plays out with the dead watching")
+runTo(41)
+ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and when it's over the city resets")
 _run(6)
 ok(reloaded == 1 and LC.EndingSession() == nil and not a.lcEndTaken, "and the map reloads")
 -- the flying ones and the barnacles (no vote: lc_ending <id> now)
@@ -11144,6 +11174,9 @@ _run(14)
 ok(a.lcEndTaken and b.lcEndTaken and not grig.lcEndTaken, "it closes over everyone else first", tostring(GetGlobal2Float("lc_flood_z", 0)))
 LC.CancelEnding()
 LC.EndingReload = realReload
+_setcvar("lc_ending_minge_swell", 60)
+_setcvar("lc_ending_minge_end", 120)
+_setcvar("lc_ending_minge_max", 60)
 _files["sound/livingcity/endings/harpies/harpy.mp3"] = nil
 _files["livingcity/endings.json"] = nil
 for _, p in ipairs({ a, b, grig }) do p:SetPos(Vector(-120000, -120000, 0)) end
