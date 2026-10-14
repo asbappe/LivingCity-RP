@@ -11082,6 +11082,8 @@ ok(LC.EndingSession() == nil and not LC.TimeStopped and a.frozen == false, "more
 ok(not LC.TriggerEnding("harpies", a), "and there can't be another for a while")
 concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
 -- nobody votes: the apocalypse
+local realGetAll = player.GetAll
+player.GetAll = function() return { a, b } end -- (just these two in the world for the endings below: the suite's other players would crowd the landing zone)
 _setcvar("lc_ending_minge_swell", 20)
 _setcvar("lc_ending_minge_end", 40)
 _setcvar("lc_ending_minge_max", 12)
@@ -11179,6 +11181,7 @@ ok(not a:GetNW2Bool("lc_dancing", false) and a.frozen == false and not LC.TimeSt
 _setcvar("lc_ending_bloom_speedup", 121)
 _setcvar("lc_ending_bloom_ramp", 20)
 _setcvar("lc_ending_bloom_launch_secs", 16)
+player.GetAll = realGetAll
 -- Father Grigori eats the motherlode
 concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
 local grig = newPlayer("EndGrigori", "resistance", "chaplain", 300)
