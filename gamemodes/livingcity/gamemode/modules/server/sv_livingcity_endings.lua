@@ -276,25 +276,43 @@ function LC.EndingSky(centre)
     if not up.HitSky and top - centre.z < 600 then top = centre.z + 1600 end -- (under a roof: aim well above it)
     local z = math.max(centre.z + 350, top - 220)
     if top - centre.z < 700 then z = centre.z + (top - centre.z) * 0.6 end
-    local function RingOK(r, zz)
+    local function RingOK(r, zz, c)
+        c = c or centre
         local prev
         for i = 0, 24 do
             local a = i / 24 * math.pi * 2
-            local p = Vector(centre.x + math.cos(a) * r, centre.y + math.sin(a) * r, zz)
+            local p = Vector(c.x + math.cos(a) * r, c.y + math.sin(a) * r, zz)
             if not Open(p) or (prev and not OpenPath(prev, p)) then return false end
             prev = p
         end
         return true
     end
-    local r = cvRadius:GetFloat()
-    while r > 300 and not RingOK(r, z) do r = r * 0.82 end
-    if not RingOK(r, z) then
-        for _, dz in ipairs({ -150, -300, -500 }) do -- (lower, if the very top is cramped)
-            if RingOK(math.max(300, r), z + dz) then z = z + dz break end
+    -- the widest open circle: round the spot itself, else the roomiest patch of sky nearby
+    local function Widest(c, zz)
+        if not Open(Vector(c.x, c.y, zz)) then return 0 end
+        local r = cvRadius:GetFloat()
+        while r >= 300 do
+            if RingOK(r, zz, c) then return r end
+            r = r * 0.82
         end
-        r = math.max(300, r)
+        return 0
     end
-    return { z = z, top = top, r = r, centre = Vector(centre.x, centre.y, z) }
+    local best, bestR, bestZ = centre, 0, z
+    local want = cvRadius:GetFloat() * 0.7
+    local tries = { Vector(0, 0, 0) }
+    for gx = -3, 3 do for gy = -3, 3 do if gx ~= 0 or gy ~= 0 then tries[#tries + 1] = Vector(gx * 1200, gy * 1200, 0) end end end
+    table.sort(tries, function(a, b) return a:LengthSqr() < b:LengthSqr() end)
+    for _, zz in ipairs({ z, z - 200, z - 450 }) do
+        for _, off in ipairs(tries) do
+            local c = centre + off
+            local r = Widest(c, zz)
+            if r > bestR then best, bestR, bestZ = c, r, zz end
+            if bestR >= want then break end
+        end
+        if bestR >= want then break end
+    end
+    if bestR == 0 then bestR = 300 end
+    return { z = bestZ, top = top, r = bestR, centre = Vector(best.x, best.y, bestZ), roam = math.max(3000, cvRadius:GetFloat() * 2), from = Vector(centre.x, centre.y, z) }
 end
 
 local function FirstModel(list)
@@ -1311,7 +1329,7 @@ local function FlyTick(now)
     for i, f in ipairs(E.flights or {}) do
         if IsValid(f.v) then
             local a = f.phase + (now - E.started) * f.speed
-            local pos = Vector(E.centre.x + math.cos(a) * r, E.centre.y + math.sin(a) * r, E.flight.z - 120 + math.sin(a * 3 + i) * 100)
+            local pos = Vector(E.flight.centre.x + math.cos(a) * r, E.flight.centre.y + math.sin(a) * r, E.flight.z - 120 + math.sin(a * 3 + i) * 100)
             f.v:SetPos(pos)
             f.v:SetAngles(Angle(math.sin(a * 2) * 12, math.deg(a) + 90, math.cos(a * 3) * 18))
         end
@@ -1371,18 +1389,26 @@ local function GroundSpot(near)
     return Ground(near + Vector(math.cos(a) * d, math.sin(a) * d, 0)) or near
 end
 
--- Somewhere to fly to, in open sky (and a straight run there from where the bus is).
+-- Somewhere to fly to: anywhere in the map's open air, well away from where
+-- the bus is, that it can reach in a straight line (so it roams about,
+-- aimlessly, and never through a building).
 local function SkySpot()
     E.flight = E.flight or LC.EndingSky(E.centre)
     local sky = E.flight
     local from = IsValid(E.bus) and E.bus:GetPos()
-    for _ = 1, 16 do
-        local a, d = math.Rand(0, math.pi * 2), math.Rand(0.3, 1) * sky.r
-        local p = Vector(E.centre.x + math.cos(a) * d, E.centre.y + math.sin(a) * d, sky.z - math.Rand(0, 250))
-        if Open(p) and (not from or OpenPath(from, p)) then return p end
+    local base = from or sky.centre
+    local best, bestD
+    for _ = 1, 30 do
+        local a, d = math.Rand(0, math.pi * 2), math.Rand(600, sky.roam)
+        local p = Vector(base.x + math.cos(a) * d, base.y + math.sin(a) * d, sky.z - math.Rand(0, 450))
+        if Open(p) and (not from or OpenPath(from, p)) then
+            if d >= 1200 then return p end
+            if not bestD or d > bestD then best, bestD = p, d end
+        end
     end
+    if best then return best end
     local a = math.Rand(0, math.pi * 2)
-    return Vector(E.centre.x + math.cos(a) * sky.r, E.centre.y + math.sin(a) * sky.r, sky.z)
+    return Vector(sky.centre.x + math.cos(a) * sky.r, sky.centre.y + math.sin(a) * sky.r, sky.z)
 end
 
 local function NewRing(at, from)
@@ -1475,7 +1501,11 @@ TICK.bus = function(now)
     local to = E.goal - pos
     if not flying then to.z = 0 end
     local dist = to:Length()
-    if dist < 120 then
+    -- reached it (within a couple of steps at this speed, or circling it too long: it'd orbit
+    -- a spot it keeps overshooting), and on to the next
+    E.goalSince = E.goalSince or now
+    if E.lastGoal ~= E.goal then E.lastGoal, E.goalSince = E.goal, now end
+    if dist < math.max(120, speed * 0.1 * 2.5) or (flying and now - E.goalSince > 6) then
         if flying then
             local from = E.goal
             E.goal = SkySpot()
@@ -1723,7 +1753,7 @@ TICK.base = function(now)
         local sky = E.flight
         local r = kind == "justice" and math.max(300, sky.r * (1 - math.Clamp((t - 174) / 38, 0, 1) * 0.75)) or sky.r
         local height = kind == "justice" and math.min(sky.top - 60, sky.z + math.Clamp((t - 174) / 38, 0, 1) * 1500) or sky.z
-        local lead = Vector(E.lz.x + math.cos(E.fleetA) * r, E.lz.y + math.sin(E.fleetA) * r, height)
+        local lead = Vector(sky.centre.x + math.cos(E.fleetA) * r, sky.centre.y + math.sin(E.fleetA) * r, height)
         local yaw = math.deg(E.fleetA) + 90
         local roll = (kind == "move" or kind == "justice") and math.sin(t * 2) * 25 or math.sin(t) * 8
         for _, z in ipairs(E.zigs) do
@@ -1919,7 +1949,7 @@ SETUP.plane = function()
     if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
     -- the plane: a body and two wings, low over the city
     E.flight = LC.EndingSky(E.lz)
-    local body = Prop(FirstModel(PLANE_BODY), Vector(E.lz.x + E.flight.r, E.lz.y, E.flight.z), 3)
+    local body = Prop(FirstModel(PLANE_BODY), Vector(E.flight.centre.x + E.flight.r, E.flight.centre.y, E.flight.z), 3)
     if not body then return end
     if body.SetSolid then body:SetSolid(SOLID_NONE) end
     E.plane = body
@@ -1968,7 +1998,7 @@ TICK.plane = function(now)
     local height = sky.z
     if kind == "chorus" or kind == "final" then height = height - 120 + math.sin(t * 0.9) * 120 end
     if kind == "climb" then E.climb = math.min((E.climb or 0) + 60 + (E.climb or 0) * 0.08, math.max(0, sky.top - sky.z - 40)) end
-    local pos = Vector(E.lz.x + math.cos(E.planeA) * r, E.lz.y + math.sin(E.planeA) * r, height + (E.climb or 0))
+    local pos = Vector(sky.centre.x + math.cos(E.planeA) * r, sky.centre.y + math.sin(E.planeA) * r, height + (E.climb or 0))
     local yaw = math.deg(E.planeA) + 90
     -- a barrel roll on the big hits (every 16 beats in a chorus), a bank otherwise
     local bank = (kind == "chorus" or kind == "final") and 30 or 12

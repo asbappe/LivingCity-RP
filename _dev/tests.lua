@@ -11160,8 +11160,8 @@ util.TraceLine = function(t)
 end
 local sky = LC.EndingSky(Vector(0, 0, 0))
 util.TraceLine = traceWas
-ok(sky.r < 1000 and sky.r >= 300 and math.abs(sky.z - 2780) < 1, "whatever flies keeps to open sky: under the map's sky, and a circle that misses the buildings",
-    math.floor(sky.r) .. " at " .. math.floor(sky.z))
+ok(sky.r >= 300 and (sky.centre.x + sky.r < 1000 or sky.centre.x - sky.r > 1000) and math.abs(sky.z - 2780) < 1,
+    "whatever flies keeps to open sky: under the map's sky, on the roomiest circle that misses the buildings", math.floor(sky.r) .. " round x " .. math.floor(sky.centre.x) .. " at " .. math.floor(sky.z))
 ok(LC.EndingOfSong("bus2.mp3") == "bus" and LC.EndingOfSong("bloom.ogg") == "bloom" and LC.EndingOfSong("busted.mp3") == nil
     and LC.EndingOfSong("Son of the Harpy.mp3") == nil, "a song's name says which ending it's for")
 -- the Harpies: the mingebags (timings shortened for the test: swell at 20 s, all over by 40)
@@ -11204,8 +11204,12 @@ ok(hurt == 0, "(nobody's hurt while they close in)", hurt)
 runTo(34)
 hurt = 0
 for _, p in ipairs(player.GetAll()) do if p.lcEndTaken or p:Health() < 100 then hurt = hurt + 1 end end
-ok(E.mode == "leap" and (not IsValid(unit) or unit:Health() < 100) and not a.lcEndTaken and not b.lcEndTaken,
-    "then they leap, at the Combine first, and everyone else has a chance to run")
+runTo(36)
+local ringHurt = not IsValid(unit) or unit:Health() < 100
+for _, c in ipairs(E.folk) do if not IsValid(c) or c:Health() < 40 then ringHurt = true end end
+ok(E.mode == "leap" and ringHurt and not a.lcEndTaken and not b.lcEndTaken,
+    "then they leap, at the Combine and the city's people first, and the players have a chance to run",
+    E.mode .. " unit " .. tostring(IsValid(unit) and unit:Health()) .. " a " .. tostring(a.lcEndTaken) .. " b " .. tostring(b.lcEndTaken))
 ok(LC.MingeFury(E.leapAt + 10) < 0.5 and LC.MingeFury(E.leapAt + 45) > 2.5, "they hit lightly at first, and much harder 30 to 45 seconds in")
 for _, n in ipairs(FIRE) do _files["sound/npc/metropolice/vo/" .. n .. ".wav"] = nil end
 runTo(38.5)
