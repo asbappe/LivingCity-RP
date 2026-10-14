@@ -335,6 +335,7 @@ local trigNext = {}  -- [voice/trigger] = earliest time for this trigger again
 
 local function Say(voice, trig, only, force, tier)
     if not cvOn:GetBool() then return false end
+    if LC.EndingSession and LC.EndingSession() then return false end -- (quiet through a secret ending)
     voice = VoiceName(voice)
     local now = CurTime()
     if not force and ((voiceNext[voice] or 0) > now or (trigNext[voice .. "/" .. trig] or 0) > now) then return false end

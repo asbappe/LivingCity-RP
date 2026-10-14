@@ -1,8 +1,10 @@
 --[[
     Living City: secret endings, on your screen (sv_livingcity_endings.lua)
 
-      Time stopped: the colour drains out, the G-Man speaks, and the vote is
-      on screen (1: let it happen, 2: skip it). The ending: its song, the
+      Time stopped: the colour drains out, the G-Man appears right in front
+      of you (on your screen, wherever you were looking) and your view turns
+      to him and stays there, he speaks, and the vote is on screen (1: let it
+      happen, 2: skip it). The ending: its song, the
       flood's water, Father Grigori mouthing along. The reset: white.
 ]]
 
@@ -49,9 +51,62 @@ local function PlaySong(path)
     end
 end
 
+-- The G-Man: on each person's own screen, standing right in front of
+-- wherever they were looking when time stopped, and the view turns to him and
+-- stays on him for the vote (the mouse can't look away).
+local gman, gmanAt, gmanFrom
+local function GmanGone()
+    if IsValid(gman) then gman:Remove() end
+    gman, gmanAt, gmanFrom = nil, nil, nil
+end
+local function GmanPlace()
+    GmanGone()
+    local me = LocalPlayer()
+    if not IsValid(me) then return end
+    local eye = me:EyePos()
+    local ang = me:EyeAngles()
+    local fwd = Angle(0, ang.y, 0):Forward()
+    local tr = util.TraceLine({ start = eye, endpos = eye + fwd * 90, filter = me })
+    local dist = math.Clamp((tr.Fraction or 1) * 90 - 20, 30, 90) -- (not into a wall)
+    local spot = eye + fwd * dist
+    local down = util.TraceLine({ start = spot, endpos = spot - Vector(0, 0, 300), filter = me })
+    gmanAt = (down.Hit and down.HitPos) or (me:GetPos() + fwd * dist)
+    gmanFrom = { ang = ang, t = CurTime() }
+    if not ClientsideModel then return end
+    gman = ClientsideModel("models/gman_high.mdl", RENDERGROUP_OPAQUE)
+    if not IsValid(gman) then gman = nil return end
+    gman:SetPos(gmanAt)
+    gman:SetAngles(Angle(0, ang.y + 180, 0))
+    for _, name in ipairs({ "idle_subtle", "idle" }) do
+        local seq = gman:LookupSequence(name)
+        if seq and seq >= 0 then gman:ResetSequence(seq) break end
+    end
+end
+LC_CL.EndingGmanAt = function() return gmanAt end
+
+hook.Add("Think", "LivingCityEndingGman", function()
+    if IsValid(gman) and gman.FrameAdvance then gman:FrameAdvance() end -- (the only thing still moving)
+end)
+
+hook.Add("CalcView", "LivingCityEndingGman", function(me, origin, angles, fov)
+    if not S or S.phase ~= "gman" or not gmanAt or not gmanFrom then return end
+    local want = ((gmanAt + Vector(0, 0, 62)) - origin):Angle()
+    local k = math.Clamp((CurTime() - gmanFrom.t) / 0.8, 0, 1)
+    k = k * k * (3 - 2 * k)
+    return { origin = origin, angles = LerpAngle(k, gmanFrom.ang, want), fov = fov, drawviewer = false }
+end)
+
+hook.Add("InputMouseApply", "LivingCityEndingGman", function(cmd)
+    if S and S.phase == "gman" and gmanAt then
+        cmd:SetMouseX(0) cmd:SetMouseY(0)
+        return true
+    end
+end)
+
 net.Receive("lc_ending", function()
     local t = net.ReadTable() or {}
     local was = S and S.phase
+    if t.phase ~= "gman" then GmanGone() end
     if not t.phase then
         S, lineQueue, myVote, resetAt = nil, nil, nil, nil
         StopSong()
@@ -60,6 +115,9 @@ net.Receive("lc_ending", function()
     S = t
     if t.phase == "gman" and was ~= "gman" then
         myVote = nil
+        GmanPlace()
+        if LC_CL.ClearVoices then LC_CL.ClearVoices() end
+        if LC_CL.StopBreencast then LC_CL.StopBreencast() end
         lineQueue, lineNext = {}, CurTime() + 0.5
         for _, l in ipairs(t.lines or {}) do lineQueue[#lineQueue + 1] = l end
         surface.PlaySound("ambient/levels/citadel/strange_talk1.wav")

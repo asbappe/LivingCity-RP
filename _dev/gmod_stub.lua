@@ -45,6 +45,7 @@ color_white, color_black = Color(255, 255, 255), Color(0, 0, 0)
 function math.Rand(a, b) return a + math.random() * (b - a) end
 function Lerp(t, a, b) return a + (b - a) * t end
 function LerpVector(t, a, b) return a + (b - a) * t end
+function LerpAngle(t, a, b) return Angle(a.p + (b.p - a.p) * t, a.y + (b.y - a.y) * t, a.r + (b.r - a.r) * t) end
 function math.Approach(cur, target, inc)
     inc = math.abs(inc)
     if cur < target then return math.min(cur + inc, target) elseif cur > target then return math.max(cur - inc, target) end

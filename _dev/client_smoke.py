@@ -1254,7 +1254,12 @@ for _, h in pairs(hook.t["RenderScreenspaceEffects"] or {}) do h() end
 local blocked
 for _, h in pairs(hook.t["PlayerBindPress"] or {}) do blocked = h(_me, "slot1", true) or blocked end
 if not blocked then return "ending: the vote key wasn't taken" end
+if not LC_CL.EndingGmanAt() then return "ending: the G-Man wasn't put in front of you" end
 _advance(1)
+local gv = hook.t.CalcView.LivingCityEndingGman(_me, Vector(0, 0, 64), Angle(0, 0, 0), 75)
+if not gv or not gv.angles then return "ending: the view doesn't turn to the G-Man" end
+local mcmd = { SetMouseX = function() end, SetMouseY = function() end }
+if hook.t.InputMouseApply.LivingCityEndingGman(mcmd) ~= true then return "ending: you can still look away from the G-Man" end
 paint()
 net._q = { { id = "water", phase = "apocalypse", name = "The Flood", say = "x", song = "livingcity/endings/water/song.mp3", grigori = _me } }
 net.recv_lc_ending()

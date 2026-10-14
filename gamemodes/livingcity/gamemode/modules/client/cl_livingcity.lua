@@ -681,11 +681,13 @@ local function PlayNextVoice()
     banner = { text = "CITY ANNOUNCEMENT", sub = v.title, untilT = CurTime() + math.max(7, dur + 1) }
 end
 LC_CL.QueueVoice = function(path, title)
+    if LC_CL.Ending and LC_CL.Ending() then return end -- (the city's announcer is quiet through a secret ending)
     if #voiceQueue >= 4 then table.remove(voiceQueue, 1) end -- never a long backlog
     voiceQueue[#voiceQueue + 1] = { path = path, title = title }
     PlayNextVoice()
 end
 timer.Create("LivingCityVoiceQueue", 0.25, 0, PlayNextVoice)
+LC_CL.ClearVoices = function() voiceQueue = {} end
 
 net.Receive("lc_announce", function()
     local path = net.ReadString()

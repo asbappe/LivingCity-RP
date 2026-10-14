@@ -10,6 +10,8 @@
         1. Something triggers it.
         2. A few seconds later (lc_ending_pause, 4) the G-Man stops time:
            everyone freezes, every NPC stops, colour drains out of the world,
+           the G-Man is standing right in front of each person (whichever way
+           they were looking; their view turns to him and stays on him),
            his voice plays for everyone (lc_ending_gman_lines) and the vote
            comes up on every screen. 1: let it happen. 2: skip it.
         3. lc_ending_vote_secs (30) later: more skips than yeses and he
@@ -221,22 +223,6 @@ local function Freeze(on)
     end
 end
 LC.EndingFreeze = Freeze
-
-local function SpawnGman(near)
-    local by = IsValid(near) and near or player.GetAll()[1]
-    if not IsValid(by) then return nil end
-    local fwd = by.GetForward and by:GetForward() or Vector(1, 0, 0)
-    fwd.z = 0
-    fwd = fwd:GetNormalized()
-    local pos = by:GetPos() + fwd * 90
-    local g = ents.Create("npc_gman")
-    if not IsValid(g) then return nil end
-    g:SetPos(pos)
-    g:SetAngles(Angle(0, (by:GetPos() - pos):Angle().y, 0))
-    g:Spawn()
-    g:Activate()
-    return g
-end
 
 ------------------------------------------------------------------------
 -- The endings themselves
@@ -2271,9 +2257,7 @@ local function GoTo(phase)
     E.phase = phase
     E.phaseT = now
     if phase == "gman" then
-        Freeze(true)
-        E.gman = SpawnGman(E.by)
-        if IsValid(E.gman) then E.ents[#E.ents + 1] = E.gman end
+        Freeze(true) -- (the G-Man himself is on each screen, in front of each person: cl_livingcity_endings.lua)
         E.voteEnds = now + math.max(5, cvVote:GetFloat())
         E.votes = {}
         E.lines = {}
@@ -2282,9 +2266,16 @@ local function GoTo(phase)
         MarkEnding()
     elseif phase == "apocalypse" then
         Freeze(false)
-        if IsValid(E.gman) then E.gman:Remove() end
         local songs = LC.EndingSongs(E.id)
         E.song = #songs > 0 and songs[math.random(#songs)] or nil
+        if not E.song and LC.Notice then
+            for _, p in ipairs(player.GetAll()) do
+                if p:IsSuperAdmin() then
+                    LC.Notice(p, "warn", "No song", "No song found for " .. E.id .. ": put " .. E.id .. ".mp3 in garrysmod/sound/livingcity/endings/ on the server " ..
+                        "(and sync FastDL). lc_endings shows what it finds.", 12)
+                end
+            end
+        end
         All("[???] So be it. " .. LC.Endings[E.id].say)
         local ok, err = pcall(SETUP[E.id])
         if not ok then LC.Error("ending setup " .. E.id, err) end
