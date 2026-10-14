@@ -480,13 +480,22 @@ local function Slaughter(p, how)
 end
 LC.EndingSlaughter = Slaughter
 
+-- How hard they hit: light for the first 30 seconds of the leaping (a chance
+-- to run), then climbing steeply to full at 45 seconds, and worse after.
+function LC.MingeFury(now)
+    local since = (now or CurTime()) - ((E and E.leapAt) or math.huge)
+    if since < 30 then return 0.3 end
+    return 0.3 + ((math.min(since, 45) - 30) / 15) ^ 2 * 2.7 + math.max(0, since - 45) * 0.2
+end
+
 local function Hit(p)
     if not IsValid(p) or p.lcEndTaken then return false end
     local now = CurTime()
     if now < (p.lcMingeHitAt or 0) then return false end
-    p.lcMingeHitAt = now + 0.3
+    local fury = LC.MingeFury(now)
+    p.lcMingeHitAt = now + 0.3 / math.min(1, fury) * 0.8
     if not p:IsPlayer() then -- (one of the Combine's units, or one of the city's people in the ring)
-        p:SetHealth(p:Health() - math.random(10, 18))
+        p:SetHealth(p:Health() - math.max(1, math.floor(math.random(10, 18) * fury)))
         p:EmitSound("physics/body/body_medium_impact_hard" .. math.random(1, 6) .. ".wav", 75)
         if p:Health() <= 0 then
             local unit = E and table.HasValue(E.combine or {}, p)
@@ -496,7 +505,7 @@ local function Hit(p)
         end
         return true
     end
-    p:SetHealth(p:Health() - math.random(7, 12))
+    p:SetHealth(p:Health() - math.max(1, math.floor(math.random(7, 12) * fury)))
     if p.ViewPunch then p:ViewPunch(Angle(math.Rand(-10, 10), math.Rand(-10, 10), 0)) end
     p:EmitSound("physics/body/body_medium_impact_hard" .. math.random(1, 6) .. ".wav", 75)
     if util.Effect and EffectData then
@@ -605,6 +614,11 @@ local function SpawnFolk(pos, i)
     c:SetPos(pos)
     c:Spawn()
     c.lcCrowd = true
+    -- (time's stopped, so nothing animates them: set them standing, or they'd be in the T pose)
+    for _, name in ipairs({ "LineIdle01", "LineIdle02", "idle_unarmed", "Idle01" }) do
+        local seq = c.LookupSequence and c:LookupSequence(name)
+        if seq and seq >= 0 then c:ResetSequence(seq) if c.SetCycle then c:SetCycle(math.Rand(0, 1)) end break end
+    end
     E.ents[#E.ents + 1] = c
     return c
 end
@@ -617,20 +631,20 @@ local function Lines(dir, list) local o = {} for _, n in ipairs(list) do o[#o + 
 local CHATTER = {
     cop = {
         on = Lines(MP, { "on1", "on2" }),
-        lurk = Lines(MP, { "searchingforsuspect", "sweepingforsuspect", "acquiringonvisual", "possible10-103alerttagunits", "holdthisposition",
-            "lockyourposition", "cpweneedtoestablishaperimeterat", "hidinglastseenatrange", "holdit", "dontmove", "suspectlocationunknown", "ivegot408hereatlocation" }),
+        lurk = Lines(MP, { "searchingforsuspect", "sweepingforsuspect", "holdthisposition", "lockyourposition", "cpweneedtoestablishaperimeterat", "suspectlocationunknown" }),
+        closing = Lines(MP, { "acquiringonvisual", "possible10-103alerttagunits", "holdit", "dontmove", "ivegot408hereatlocation", "hidinglastseenatrange", "lookout" }),
         rush = Lines(MP, { "lookout", "watchit", "getdown", "malignant", "holditrightthere", "readytoprosecute", "dispatchineed10-78", "isclosingonsuspect" }),
-        fire = Lines(MP, { "prosecute", "firingtoexposetarget", "shotsfiredhostilemalignants", "readytoprosecutefinalwarning" }),
+        fire = Lines(MP, { "openfire", "takedown", "prosecute", "firingtoexposetarget", "shotsfiredhostilemalignants", "readytoprosecutefinalwarning" }),
         fight = Lines(MP, { "officerunderfiretakingcover", "11-99officerneedsassistance", "takecover", "help", "backup", "minorhitscontinuing",
             "runninglowonverdicts", "reload", "movingtocover", "shotsfiredhostilemalignants", "getdown", "necrotics" }),
         down = Lines(MP, { "officerdowncode3tomy10-20", "officerdowniam10-99", "11-99officerneedsassistance", "help" }),
     },
     soldier = {
         on = Lines(CS, { "on1", "on2" }),
-        lurk = Lines(CS, { "motioncheckallradials", "stayalertreportsightlines", "sectorisnotsecure", "lostcontact", "fixsightlinesmovein",
-            "teamdeployedandscanning", "gosharpgosharp", "stayalert", "hardenthatposition", "sightlineisclear" }),
+        lurk = Lines(CS, { "motioncheckallradials", "stayalertreportsightlines", "lostcontact", "fixsightlinesmovein", "teamdeployedandscanning", "gosharpgosharp", "stayalert" }),
+        closing = Lines(CS, { "sectorisnotsecure", "hardenthatposition", "alert1", "weaponsoffsafeprepforcontact", "readyweapons", "motioncheckallradials" }),
         rush = Lines(CS, { "contact", "contactconfim", "readyweaponshostilesinbound", "alert1", "weaponsoffsafeprepforcontact", "heavyresistance", "inbound", "targetmyradial" }),
-        fire = Lines(CS, { "engaging", "prosecuting", "contactconfirmprosecuting", "goactiveintercept" }),
+        fire = Lines(CS, { "openfire", "engaging", "prosecuting", "contactconfirmprosecuting", "goactiveintercept" }),
         fight = Lines(CS, { "overwatchrequestreinforcement", "displace", "displace2", "cover", "coverhurt", "requestmedical", "ripcordripcord",
             "heavyresistance", "sectorisnotsecure", "infected", "outbreak", "targetineffective" }),
         down = Lines(CS, { "overwatchteamisdown", "onedown", "requestmedical", "overwatchrequestreinforcement" }),
@@ -743,7 +757,8 @@ SETUP.harpies = function()
     -- the city stops, and the Combine's units are out there with everyone, in a ring round them
     LC.TimeStopped = true
     if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
-    E.combine = GatherCombine(E.lz, 210 + 12 * #ps)
+    E.ringR = 210 + 12 * #ps
+    E.combine = GatherCombine(E.lz, E.ringR)
     for _, n in ipairs(E.combine) do n.lcRing = true end
     -- and the city's people stand with them (never the Resistance), between everyone and the Combine
     E.folk = {}
@@ -771,12 +786,16 @@ TICK.harpies = function(now)
     local t = now - E.phaseT
     local swell, fin = cvMingeSwell:GetFloat(), cvMingeEnd:GetFloat()
     local living = Living()
+    -- who they go for: the Combine's units first (they're the ones shooting),
+    -- then the city's people, and only then the players
     local targets = {}
-    for _, p in ipairs(living) do targets[#targets + 1] = p end
     for _, n in ipairs(E.combine or {}) do if IsValid(n) then targets[#targets + 1] = n end end
-    for _, c in ipairs(E.folk or {}) do if IsValid(c) then targets[#targets + 1] = c end end
+    if #targets == 0 then for _, c in ipairs(E.folk or {}) do if IsValid(c) then targets[#targets + 1] = c end end end
+    if #targets == 0 then for _, p in ipairs(living) do targets[#targets + 1] = p end end
+    local tier = targets[1] and (targets[1]:IsPlayer() and 3 or (table.HasValue(E.combine or {}, targets[1]) and 1 or 2)) or 3
     local centre = E.lz
     local mode = t < swell and "lurk" or (t < swell + RUSH and "rush" or "leap")
+    local firing = t >= swell + RUSH - 3 -- (the Combine open fire first: that's what sets them off)
     local noclip = t >= fin - 10
     local k = math.Clamp(t / swell, 0, 1)
     local far = 2400 - 1800 * k -- (how far off they keep: closer as the song goes on)
@@ -784,24 +803,27 @@ TICK.harpies = function(now)
     local was = E.mode
     E.mode = mode
 
-    -- the Combine's radios, out loud: what they see out there, then contact, then the fight
-    if mode == "leap" and was ~= "leap" then
+    if mode == "leap" and was ~= "leap" then E.leapAt = now end
+    -- the Combine's radios, out loud: what they see out there, then contact, then the order to fire, then the fight
+    if firing and not E.fireOrdered then
+        E.fireOrdered = true
         local a, b = Speaker(), Speaker()
         Chatter(a, "fire")
-        if b ~= a then timer.Simple(0.8, function() if E then Chatter(b, "fire") end end) end
-        E.nextChatter = now + math.Rand(2, 3)
+        if b ~= a then timer.Simple(0.9, function() if E then Chatter(b, "fire") end end) end
+        for _, p in ipairs(player.GetAll()) do p:ChatPrint("[Civil Protection] \"All units, open fire! Take them down!\"") end
+        E.nextChatter = now + math.Rand(2.5, 3.5)
         for _, c in ipairs(E.folk or {}) do if math.random() < 0.5 then timer.Simple(math.Rand(0, 1.5), function() Scream(c) end) end end
     elseif mode == "rush" and was ~= "rush" then
         Chatter(Speaker(), "rush")
         E.nextChatter = now + math.Rand(2.5, 4)
         for _, c in ipairs(E.folk or {}) do if math.random() < 0.3 then timer.Simple(math.Rand(0.5, 3), function() Scream(c) end) end end
     elseif now >= (E.nextChatter or (E.phaseT + 6)) then
-        local kind = mode == "lurk" and "lurk" or (mode == "rush" and "rush" or "fight")
+        local kind = mode == "lurk" and (k < 0.55 and "lurk" or "closing") or (firing and "fight" or "rush")
         Chatter(Speaker(), kind)
         E.nextChatter = now + (mode == "lurk" and math.Rand(7, 12) or (mode == "rush" and math.Rand(2.5, 4) or math.Rand(2, 3.5)))
     end
-    -- and once they leap, the Combine open fire
-    if mode == "leap" then
+    -- the Combine open fire, a moment before the leaping (and keep firing)
+    if firing then
         for _, n in ipairs(E.combine or {}) do
             if IsValid(n) and now >= (n.lcNextShot or 0) then Shoot(n, now) end
         end
@@ -841,15 +863,20 @@ TICK.harpies = function(now)
             end
         else
             -- each has someone (shared out evenly: players and the Combine's units) and a place round them
-            if not IsValid(s.target) or s.target.lcEndTaken then
+            if not IsValid(s.target) or s.target.lcEndTaken or (s.tier or 0) < tier then
                 s.target = #targets > 0 and targets[(i - 1) % #targets + 1] or nil
-                s.slot = math.Rand(0, math.pi * 2)
-                s.ring = math.floor((i - 1) / math.max(1, #targets) / 8)
+                s.tier = tier
+                -- (their place on the ring: the nearest point to where they are, so none cuts across it)
+                local off = pos - centre
+                s.slot = math.atan2(off.y, off.x) + math.Rand(-0.15, 0.15)
+                s.ring = math.floor((i - 1) / 24)
             end
             local tp = IsValid(s.target) and s.target:GetPos()
                 or (#E.bodies > 0 and IsValid(E.bodies[#E.bodies]) and E.bodies[#E.bodies]:GetPos()) or centre
             if mode == "rush" then
-                s.goal = tp + Vector(math.cos(s.slot), math.sin(s.slot), 0) * (60 + 32 * (s.ring or 0))
+                -- round the outside of the ring, shoulder to shoulder, never inside it until they leap
+                local out = (E.ringR or 250) + 70 + 36 * (s.ring or 0)
+                s.goal = centre + Vector(math.cos(s.slot), math.sin(s.slot), 0) * out
                 s.speed = 650
             elseif not s.leap and now >= (s.nextLeap or 0) then
                 local d = pos:Distance(tp)

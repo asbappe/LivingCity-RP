@@ -134,7 +134,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **A full stomach:** hunger 85+ gives 15% more XP and slow healing.
   Notes:
-- [ ] **The Harpies (lc_ending harpies now):** lights out, everyone at the LZ, mingebags gathering in the dark, the rush at the swell, the leaping, spectating the dead. Does the timing line up with the song? Does the pose look right? Citizens and other NPCs (no rebels) in the ring between you and the Combine? The Combine chattering out loud, opening fire as they leap, and actually dropping some? No "pick up that can"?
+- [ ] **The Harpies (lc_ending harpies now):** lights out, everyone at the LZ, mingebags gathering in the dark, the rush at the swell, the leaping, spectating the dead. Does the timing line up with the song? Does the pose look right? Citizens and other NPCs (no rebels) in the ring between you and the Combine? The Combine chattering out loud, opening fire as they leap, and actually dropping some? No "pick up that can"? The mingebags stay outside the ring until they leap; the Combine open fire 3 seconds before; they go for the Combine first, you have about 30 seconds to run, then it gets brutal; spawned citizens stand normally (no T pose).
   Notes:
 - [ ] **Bloom (lc_ending bloom now):** everyone dancing (NPCs too), the camera circling you, the coloured lights and sparkles, the speed-up at 2:01, the launches one at a time. Does the dance look right? (lc_bloom_preview to check it on yourself; lc_bloom_pose_print to send me the numbers.)
   Notes:

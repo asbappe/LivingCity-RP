@@ -11191,17 +11191,22 @@ local before = minges()
 ok(LC.MingeHurt(E.minges[1], _dmg(a, 500)) and minges() == before - 1, "once they've gathered, one can be put down")
 runTo(13)
 ok(minges() >= before, "and another takes its place")
+local function fromCentre() local best for _, m in ipairs(E.minges) do if IsValid(m) then local d = m:GetPos():Distance(E.lz) best = math.min(best or d, d) end end return best or 0 end
+runTo(25)
+ok(E.mode == "rush" and fromCentre() >= E.ringR and fromCentre() < E.ringR + 400, "when the song swells they rush in and surround the ring, never inside it", math.floor(fromCentre()) .. " vs " .. E.ringR)
+runTo(27.5)
+ok(E.mode == "rush" and (E.shots or 0) > 0, "a moment before they leap, the Combine open fire (that's what sets them off)", E.shots or 0)
+ok(string.find(table.concat(E.chatterLog or {}, ","), "metropolice/vo/", 1, true) ~= nil, "with the order called out loud on their radios", table.concat(E.chatterLog or {}, ","))
 runTo(28)
-ok(E.mode == "rush" and closest() < 250, "when the song swells they rush in and surround everyone", math.floor(closest()))
 local hurt = 0
 for _, p in ipairs(player.GetAll()) do if p.lcEndTaken or p:Health() < 100 then hurt = hurt + 1 end end
 ok(hurt == 0, "(nobody's hurt while they close in)", hurt)
 runTo(34)
 hurt = 0
 for _, p in ipairs(player.GetAll()) do if p.lcEndTaken or p:Health() < 100 then hurt = hurt + 1 end end
-ok(E.mode == "leap" and hurt > 0, "then they leap, all of them, and it's a slaughter", hurt)
-ok((E.shots or 0) > 0, "and as they leap, the Combine open fire", E.shots or 0)
-ok(string.find(table.concat(E.chatterLog or {}, ","), "metropolice/vo/", 1, true) ~= nil, "calling it out loud on their radios", table.concat(E.chatterLog or {}, ","))
+ok(E.mode == "leap" and (not IsValid(unit) or unit:Health() < 100) and not a.lcEndTaken and not b.lcEndTaken,
+    "then they leap, at the Combine first, and everyone else has a chance to run")
+ok(LC.MingeFury(E.leapAt + 10) < 0.5 and LC.MingeFury(E.leapAt + 45) > 2.5, "they hit lightly at first, and much harder 30 to 45 seconds in")
 for _, n in ipairs(FIRE) do _files["sound/npc/metropolice/vo/" .. n .. ".wav"] = nil end
 runTo(38.5)
 ok(a.lcEndTaken and b.lcEndTaken and a.alive and b.alive and a:GetNW2Bool("lc_end_spectating", false),
