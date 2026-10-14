@@ -165,7 +165,7 @@ SONG: your file. "base" is a codeword: name the file base.mp3
 
 The timeline was worked out from the song itself (3:44; the lines for the
 first 33 seconds, then the remix at about 150 BPM):
-  lc_ending_base_sections "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"
+  lc_ending_base_sections "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"
   lc_ending_base_lines    the subtitles, second=WHO: line, separated by |.
                           Which spoken bit is which line is my best guess from
                           the audio: listen once and move them if they're off.

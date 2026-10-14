@@ -11106,6 +11106,12 @@ local realReload = LC.EndingReload
 LC.EndingReload = function() reloaded = reloaded + 1 end
 _files["livingcity/endings.json"] = nil
 _files["sound/livingcity/endings/harpies.mp3"] = ""
+_setcvar("lc_ending_hard_moment_beats", 16)
+_setcvar("lc_ending_marrow_max", 33)
+LC.EndingRetune()
+ok(GetConVar("lc_ending_hard_moment_beats"):GetString() == "5" and GetConVar("lc_ending_marrow_max"):GetString() == "33",
+    "a setting still at an old default moves to the new one (a server that ran the old one gets it), one somebody chose is left alone")
+_setcvar("lc_ending_marrow_max", 80)
 ok(#LC.EndingSongs("harpies") == 1, "an ending's song is the file named for it")
 ok(LC.EndingSongVolume("harpies") == 2 and LC.EndingSongVolume("bus") == 1, "a quiet recording (the Harpies') plays louder (lc_ending_song_volume)")
 -- skipped
@@ -11407,7 +11413,7 @@ a:SetPos(G0) b:SetPos(G0 + Vector(200, 0, 0))
 ok(LC.TriggerEnding("base", a, true), "base")
 E = LC.EndingSession()
 local function runToX(sec) _run(math.max(0.1, E.phaseT + sec - CurTime())) end
-ok(E.client and #E.client.lines >= 10 and E.client.lines[1].t == 2.2 and string.find(E.client.lines[2].text, "set up us the bomb", 1, true), "the opening lines, as subtitles, timed to the song")
+ok(E.client and #E.client.lines >= 10 and E.client.lines[1].t == 2.15 and string.find(E.client.lines[2].text, "set up us the bomb", 1, true) and E.client.lines[4].t == 6.5 and string.find(E.client.lines[4].text, "What !", 1, true), "the opening lines, as subtitles, timed to the song")
 ok(LC.TimeStopped and LC.LightStyle == "f", "the city stops and stares, and dims")
 runToX(1.5)
 ok(#E.bombs >= 5 and #E.client.bombs >= 5, "somebody set up us the bomb: all over the city", #E.bombs)
@@ -11426,7 +11432,7 @@ runToX(10.5)
 ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and the city resets")
 _run(6)
 ok(not a.lcEndRide and not IsValid(a:GetNW2Entity("lc_riding")), "(everyone off the ZIGs)")
-_setcvar("lc_ending_base_sections", "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end")
+_setcvar("lc_ending_base_sections", "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end")
 _setcvar("lc_ending_base_bombs", 60)
 -- Hard: party hard (short timings for the test)
 concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})

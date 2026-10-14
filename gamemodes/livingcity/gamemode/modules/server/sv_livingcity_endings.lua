@@ -1744,10 +1744,10 @@ end)
 -- bombs go off below; "Move ZIG" faster; "For great justice" they dive at
 -- CATS, the bombs chain, and everything blows. All the while, everyone's
 -- chat comes out in Engrish.
-local cvBaseSections = CreateConVar("lc_ending_base_sections", "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end", FLAGS,
+local cvBaseSections = CreateConVar("lc_ending_base_sections", "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end", FLAGS,
     "Base: the song's moments, second:kind (bomb, screen, zig, move, justice, boom, end)")
 local cvBaseLines = CreateConVar("lc_ending_base_lines",
-    "2.2=CAPTAIN: What happen ?|3.5=MECHANIC: Somebody set up us the bomb.|6.5=OPERATOR: We get signal.|9.5=CAPTAIN: What !|12.5=OPERATOR: Main screen turn on.|14.7=CAPTAIN: It's you !!|16.4=CATS: How are you gentlemen !!|18.4=CATS: All your base are belong to us.|20.4=CATS: You are on the way to destruction.|21.6=CAPTAIN: What you say !!|23.0=CATS: You have no chance to survive make your time.|26.0=CATS: Ha ha ha ha ....|34=CAPTAIN: Take off every 'ZIG' !!|126=CAPTAIN: Move 'ZIG'.|174=CAPTAIN: For great justice.",
+    "2.15=CAPTAIN: What happen ?|3.55=MECHANIC: Somebody set up us the bomb.|4.65=OPERATOR: We get signal.|6.5=CAPTAIN: What !|9.5=OPERATOR: Main screen turn on.|11.7=CAPTAIN: It's you !!|12.55=CATS: How are you gentlemen !!|14.7=CATS: All your base are belong to us.|18.45=CATS: You are on the way to destruction.|20.6=CAPTAIN: What you say !!|21.65=CATS: You have no chance to survive make your time.|26.0=CATS: Ha ha ha ha ....|34=CAPTAIN: Take off every 'ZIG' !!|126=CAPTAIN: Move 'ZIG'.|174=CAPTAIN: For great justice.",
     FLAGS, "Base: the subtitles, second=WHO: line, separated by |")
 local cvBaseBPM   = CreateConVar("lc_ending_base_bpm", "150", FLAGS, "Base: the song's beats per minute (the bombs and the fleet keep to it)")
 local cvBaseBombs = CreateConVar("lc_ending_base_bombs", "60", FLAGS, "Base: how many bombs someone sets up (and keeps setting up, as they go off)")
@@ -1921,7 +1921,12 @@ TICK.base = function(now)
                 local off = z.lcSlot or Vector()
                 local ang = Angle(0, yaw, 0)
                 local pos = lead + ang:Forward() * off.x + ang:Right() * off.y + Vector(0, 0, off.z)
-                z:SetPos(LerpVector(0.35, z:GetPos(), pos))
+                -- (each ship, out in the formation, well under the sky or a roof right where it is)
+                local ceil = CeilingAt(pos)
+                if ceil - pos.z < 260 then pos.z = ceil - 260 end
+                local cur = z:GetPos()
+                if CeilingAt(cur) <= cur.z + 1 then cur = cur - Vector(0, 0, 250) end -- (up in the sky: out of it)
+                z:SetPos(LerpVector(0.35, cur, pos))
                 z:SetAngles(Angle(math.sin(t * 1.3) * 5, yaw, roll))
             end
         end
@@ -2265,7 +2270,11 @@ TICK.plane = function(now)
     local roll = bank
     if E.rollFrom and now - E.rollFrom < 2 then roll = bank + 360 * ((now - E.rollFrom) / 2) end
     local pitch = kind == "climb" and -70 or math.sin(t * 0.7) * 6
-    plane:SetPos(LerpVector(0.4, plane:GetPos(), pos))
+    local ceil = CeilingAt(pos) -- (well under the sky right there, which can come lower than over the landing zone)
+    if ceil - pos.z < 240 then pos.z = ceil - 240 end
+    local cur = plane:GetPos()
+    if CeilingAt(cur) <= cur.z + 1 then cur = cur - Vector(0, 0, 250) end
+    plane:SetPos(LerpVector(0.4, cur, pos))
     plane:SetAngles(Angle(pitch, yaw, roll))
     for _, e in ipairs(E.riders or {}) do
         local rd = IsValid(e) and e.lcEndRide
@@ -3145,6 +3154,34 @@ concommand.Add("lc_ending_vote", function(ply, _, args)
     local a = string.lower(tostring(args[1] or ""))
     LC.EndingVote(ply, a == "yes" or a == "1")
 end)
+
+-- Settings are saved, so a default changed since would never reach a server that ran
+-- the old one: anything still exactly at an old default moves to the new one (once;
+-- a value someone chose themselves is left alone).
+local RETUNED = {
+    { "lc_ending_marrow_max", { "40", "60" }, "80" },
+    { "lc_ending_base_bombs", { "30" }, "60" },
+    { "lc_ending_hard_moment_beats", { "16" }, "5" },
+    { "lc_ending_base_sections", { "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end" }, "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end" },
+    { "lc_ending_base_lines", { "2.2=CAPTAIN: What happen ?|3.5=MECHANIC: Somebody set up us the bomb.|6.5=OPERATOR: We get signal.|9.5=CAPTAIN: What !|12.5=OPERATOR: Main screen turn on.|14.7=CAPTAIN: It's you !!|16.4=CATS: How are you gentlemen !!|18.4=CATS: All your base are belong to us.|20.4=CATS: You are on the way to destruction.|21.6=CAPTAIN: What you say !!|23.0=CATS: You have no chance to survive make your time.|26.0=CATS: Ha ha ha ha ....|34=CAPTAIN: Take off every 'ZIG' !!|126=CAPTAIN: Move 'ZIG'.|174=CAPTAIN: For great justice." }, "2.15=CAPTAIN: What happen ?|3.55=MECHANIC: Somebody set up us the bomb.|4.65=OPERATOR: We get signal.|6.5=CAPTAIN: What !|9.5=OPERATOR: Main screen turn on.|11.7=CAPTAIN: It's you !!|12.55=CATS: How are you gentlemen !!|14.7=CATS: All your base are belong to us.|18.45=CATS: You are on the way to destruction.|20.6=CAPTAIN: What you say !!|21.65=CATS: You have no chance to survive make your time.|26.0=CATS: Ha ha ha ha ....|34=CAPTAIN: Take off every 'ZIG' !!|126=CAPTAIN: Move 'ZIG'.|174=CAPTAIN: For great justice." },
+}
+function LC.EndingRetune()
+    local n = 0
+    for _, r in ipairs(RETUNED) do
+        local cv = GetConVar(r[1])
+        if cv then
+            for _, old in ipairs(r[2]) do
+                if cv:GetString() == old then
+                    if cv.SetString then cv:SetString(r[3]) elseif RunConsoleCommand then RunConsoleCommand(r[1], r[3]) end
+                    n = n + 1
+                    break
+                end
+            end
+        end
+    end
+    return n
+end
+LC.EndingRetune()
 
 hook.Add("InitPostEntity", "LivingCityEndings", function()
     for _, id in ipairs(LC.EndingOrder) do LC.EndingSongs(id) end -- (so the songs are sent to joining players)
