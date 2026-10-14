@@ -11086,8 +11086,8 @@ local reloaded = 0
 local realReload = LC.EndingReload
 LC.EndingReload = function() reloaded = reloaded + 1 end
 _files["livingcity/endings.json"] = nil
-_files["sound/livingcity/endings/harpies/harpy.mp3"] = ""
-ok(#LC.EndingSongs("harpies") == 1, "an ending's song is whatever's in its folder")
+_files["sound/livingcity/endings/harpies.mp3"] = ""
+ok(#LC.EndingSongs("harpies") == 1, "an ending's song is the file named for it")
 -- skipped
 ok(LC.TriggerEnding("harpies", a), "an ending is triggered")
 ok(LC.EndingSession().phase == "pending", "a few seconds pass first")
@@ -11116,7 +11116,9 @@ local n0 = #net.sent
 _run(31)
 E = LC.EndingSession()
 ok(E and E.phase == "apocalypse", "nobody votes: it happens")
-ok(E and E.song == "livingcity/endings/harpies/harpy.mp3", "with its song")
+ok(E and E.song == "livingcity/endings/harpies.mp3", "with its song (straight in the endings folder, named for it)")
+ok(LC.EndingOfSong("bus2.mp3") == "bus" and LC.EndingOfSong("bloom.ogg") == "bloom" and LC.EndingOfSong("busted.mp3") == nil
+    and LC.EndingOfSong("Son of the Harpy.mp3") == nil, "a song's name says which ending it's for")
 -- the Harpies: the mingebags (timings shortened for the test: swell at 20 s, all over by 40)
 ok(E and E.mode == "lurk" and LC.EndingDark and LC.LightStyle == "a", "the lights go out, all of them")
 ok(a:GetPos():Distance(E.lz) < 300 and b:GetPos():Distance(E.lz) < 300, "and everyone is at the landing zone")
@@ -11420,7 +11422,7 @@ LC.EndingReload = realReload
 _setcvar("lc_ending_minge_swell", 60)
 _setcvar("lc_ending_minge_end", 120)
 _setcvar("lc_ending_minge_max", 60)
-_files["sound/livingcity/endings/harpies/harpy.mp3"] = nil
+_files["sound/livingcity/endings/harpies.mp3"] = nil
 _files["livingcity/endings.json"] = nil
 for _, p in ipairs({ a, b, grig }) do p:SetPos(Vector(-120000, -120000, 0)) end
 _walls = savedWalls

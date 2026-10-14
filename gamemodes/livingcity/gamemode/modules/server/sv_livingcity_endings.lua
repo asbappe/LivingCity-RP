@@ -19,10 +19,12 @@
            (or lc_ending_max seconds), then the world goes white and the map
            reloads.
 
-      The endings (their songs: sound/livingcity/endings/<id>/, any file
-      there, .wav, .mp3 or .ogg; they live in the separate sound addon,
-      garrysmod/addons/livingcity_sound/sound/livingcity/endings/<id>/,
-      so updating the gamemode never touches them)
+      The endings (their songs go straight in sound/livingcity/endings/,
+      named for the ending: bus.mp3, harpies.ogg, bus2.mp3 for another;
+      .mp3, .ogg or .wav. They live in the separate sound addon,
+      garrysmod/addons/livingcity_sound/sound/livingcity/endings/, so
+      updating the gamemode never touches them. The older layout, a
+      folder per ending, endings/bus/anything.mp3, still works.)
         harpies    lights out, everyone at the landing zone, and the mingebags
                    (the 2007 default: Dr. Kleiner in the reference pose, a
                    physgun stuck at his crotch, sliding)
@@ -130,17 +132,39 @@ local function All(msg) for _, p in ipairs(player.GetAll()) do p:ChatPrint(msg) 
 -- Songs, and the cooldown (kept in a file: it outlasts the reload)
 ------------------------------------------------------------------------
 
+-- Which ending a song in the endings folder is for: the codeword its name
+-- starts with (the longest that fits), followed by nothing, a number or a
+-- separator: bus.mp3, bus2.mp3, bus_remix.ogg. nil: none of them.
+function LC.EndingOfSong(name)
+    local base = string.lower(string.match(name or "", "^(.*)%.[%w]+$") or "")
+    local best
+    for _, id in ipairs(LC.EndingOrder) do
+        if string.sub(base, 1, #id) == id and (not best or #id > #best) then
+            local rest = string.sub(base, #id + 1, #id + 1)
+            if rest == "" or not string.match(rest, "%a") then best = id end
+        end
+    end
+    return best
+end
+
 function LC.EndingSongs(id)
     local out = {}
-    local dir = "sound/" .. ROOT .. id
-    local names = file.Find(dir .. "/*", "GAME") or {}
+    local function Add(rel)
+        out[#out + 1] = ROOT .. rel
+        if resource and resource.AddFile then resource.AddFile("sound/" .. ROOT .. rel) end
+    end
+    local function Audio(n) local ext = string.match(n, "%.([%w]+)$") return ext and EXT[string.lower(ext)] end
+    -- straight in the folder, named for the ending
+    local names = file.Find("sound/" .. ROOT .. "*", "GAME") or {}
     table.sort(names)
     for _, n in ipairs(names) do
-        local ext = string.match(n, "%.([%w]+)$")
-        if ext and EXT[string.lower(ext)] then
-            out[#out + 1] = ROOT .. id .. "/" .. n
-            if resource and resource.AddFile then resource.AddFile("sound/" .. ROOT .. id .. "/" .. n) end
-        end
+        if not string.find(n, "/", 1, true) and Audio(n) and LC.EndingOfSong(n) == id then Add(n) end
+    end
+    -- (older: a folder per ending, any name)
+    names = file.Find("sound/" .. ROOT .. id .. "/*", "GAME") or {}
+    table.sort(names)
+    for _, n in ipairs(names) do
+        if Audio(n) then Add(id .. "/" .. n) end
     end
     return out
 end
@@ -651,8 +675,8 @@ end)
 -- can stop. The city dims, coloured light pulses on the beat, the props
 -- hop. At lc_ending_bloom_speedup (2:01) the song starts speeding up; at the
 -- top of it, the dancers spin up into the sky one at a time and burst.
--- (The song's own name stays out of everything players can see: the folder
--- is endings/bloom/, and the file can be called anything.)
+-- (The song's own name stays out of everything players can see: the file
+-- is endings/bloom.mp3.)
 local cvBloomBPM     = CreateConVar("lc_ending_bloom_bpm", "165", FLAGS, "Bloom: the song's beats per minute (the dance keeps to it)")
 local cvBloomOffset  = CreateConVar("lc_ending_bloom_offset", "0", FLAGS, "Bloom: seconds into the song of its first beat")
 local cvBloomSpeedup = CreateConVar("lc_ending_bloom_speedup", "121", FLAGS, "Bloom: seconds into the song when it starts speeding up")
@@ -2401,7 +2425,13 @@ concommand.Add("lc_endings", function(ply)
     if IsValid(ply) and not ply:IsSuperAdmin() then return end
     for _, id in ipairs(LC.EndingOrder) do
         local n = #LC.EndingSongs(id)
-        Reply(ply, string.format("%s (%s): %s", id, LC.Endings[id].name, n > 0 and (n .. " song(s)") or "no song yet: sound/" .. ROOT .. id .. "/"))
+        Reply(ply, string.format("%s (%s): %s", id, LC.Endings[id].name, n > 0 and (n .. " song(s)") or "no song yet: sound/" .. ROOT .. id .. ".mp3"))
+    end
+    for _, n in ipairs(file.Find("sound/" .. ROOT .. "*", "GAME") or {}) do
+        local ext = string.match(n, "%.([%w]+)$")
+        if ext and EXT[string.lower(ext)] and not LC.EndingOfSong(n) then
+            Reply(ply, n .. " never plays: name it for its ending (harpies.mp3, bus.mp3 ...)")
+        end
     end
     local left = LC.EndingCooldownLeft()
     Reply(ply, left > 0 and ("Next one possible in " .. math.ceil(left / 60) .. " minutes (lc_ending_reset_cooldown).") or "One can happen now.")
