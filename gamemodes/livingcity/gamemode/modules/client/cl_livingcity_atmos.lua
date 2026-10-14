@@ -177,7 +177,7 @@ hook.Add("Think", "LivingCityRain", function()
     end
     -- thunder and lightning
     if w == "storm" and cvEffects:GetBool() and CurTime() > thunderAt then
-        thunderAt = CurTime() + math.random(12, 35)
+        thunderAt = CurTime() + (GetGlobal2Bool("lc_storm_max", false) and math.random(4, 10) or math.random(12, 35)) -- (the worst storm: a secret ending)
         flashUntil = CurTime() + 0.25
         local p = First(THUNDER)
         if p then timer.Simple(math.Rand(0.4, 2.5), function() surface.PlaySound(p) end) end
@@ -192,7 +192,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityRain", function(depth, sky
     local ply = LocalPlayer()
     if not IsValid(ply) then return end
     local origin = ply:EyePos()
-    local n = w == "storm" and 1760 or 1120 -- (twice as many as they were, half as thick)
+    local n = w == "storm" and (GetGlobal2Bool("lc_storm_max", false) and 2800 or 1760) or 1120 -- (twice as many as they were, half as thick; more still in the worst storm)
     local now = CurTime()
     render.SetColorMaterial() -- (plain colour: a texture would tint it)
     -- the same few hundred drops recycled, and the same two vectors moved about:

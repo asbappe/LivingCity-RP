@@ -49,9 +49,14 @@
                    of it the dancers spin up into the sky one at a time and
                    burst. (A codeword: the song's name is in nothing players
                    download.)
-        grigori    a rising flood; Father Grigori rocks out above it, mouthing
-                   every word. Triggered by Father Grigori himself eating the
-                   motherlode: /eatchip, with a master data core in his pockets.
+        water      the flood: a stage floats at the landing zone in the worst
+                   storm the city's seen; the waves knock people off it,
+                   ichthyosaurs hunt the water and leap at the edge; swim, or
+                   drown. Father Grigori rocks out on it, mouthing every word,
+                   untouchable, and goes last on the final note
+                   (lc_ending_flood_sections, from the song itself).
+                   Triggered by Father Grigori himself eating the motherlode:
+                   /eatchip, with a master data core in his pockets.
 
       Nobody can be hurt during the vote or an ending (and "taken" isn't dead:
       no new character). The city's events wait. One ending (or a skipped one)
@@ -87,11 +92,11 @@ LC.Endings = {
     bus       = { name = "The Bus", say = "Hear that horn? All aboard." },
     nuanua    = { name = "Nua Nua", say = "Please fasten your seatbelts." },
     topsecret = { name = "Top Secret", say = "Look up." },
-    grigori   = { name = "The Flood", say = "Father Grigori has eaten the motherlode. The waters rise." },
+    water     = { name = "The Flood", say = "Father Grigori has eaten the motherlode. The waters rise." },
     bloom     = { name = "Bloom", say = "Everybody dances. Nobody stops." },
     marrow    = { name = "Marrow", say = "Something is rattling out there. Lots of somethings." },
 }
-LC.EndingOrder = { "harpies", "bus", "nuanua", "topsecret", "grigori", "bloom", "marrow" }
+LC.EndingOrder = { "harpies", "bus", "nuanua", "topsecret", "water", "bloom", "marrow" }
 
 local E -- the ending in progress: { id, phase, by, ... }
 function LC.EndingSession() return E end
@@ -1218,6 +1223,22 @@ TICK.bus = function(now)
     end
 end
 
+-- Swimming in the flood: you sink slowly, move slowly, and Jump swims up
+-- (cl_livingcity_endings.lua does the same, so it feels right).
+function LC.FloodSwim(p, mv, z)
+    if not z or p:GetPos().z + 40 >= z then return false end
+    local v = mv:GetVelocity()
+    v.x, v.y = v.x * 0.9, v.y * 0.9
+    v.z = math.max(v.z * 0.9, -50)
+    if mv:KeyDown(IN_JUMP) then v.z = 220 end
+    mv:SetVelocity(v)
+    return true
+end
+hook.Add("SetupMove", "LivingCityFlood", function(p, mv)
+    if not E or E.id ~= "water" or E.phase ~= "apocalypse" or p.lcEndTaken or IsValid(E.realWater) then return end
+    LC.FloodSwim(p, mv, E.floodZ)
+end)
+
 -- Nobody gets off the bus: no suicide, and the dead are put straight back on.
 hook.Add("CanPlayerSuicide", "LivingCityEndings", function() if E and E.phase == "apocalypse" then return false end end)
 hook.Add("PlayerDeath", "LivingCityEndingBus", function(p)
@@ -1265,39 +1286,277 @@ TICK.topsecret = function(now)
     end
 end
 
--- the Flood: the water rises; Grigori rocks out above it
-SETUP.grigori = function()
-    local low
-    for _, p in ipairs(player.GetAll()) do low = math.min(low or p:GetPos().z, p:GetPos().z) end
-    E.floodZ = (low or 0) - 40
-    E.floodStart = CurTime()
+-- The Flood: Father Grigori's song. A stage floats at the landing zone with
+-- everyone on it; the storm is at its worst; the water rises over the city.
+-- The song's sections (lc_ending_flood_sections, worked out from the song
+-- itself) set how violent it is: the stage pitches and the waves knock
+-- people off, ichthyosaurs circle under the water, go for anyone in it, and
+-- leap at anyone near the edge; lightning on the big beats. In the water
+-- you swim (Jump to go up) and can climb back on, but stay under too long
+-- and you drown. Father Grigori rocks out the whole time, untouchable, and
+-- goes last, on the final note.
+local cvFloodSections = CreateConVar("lc_ending_flood_sections", "15:heavy,79:calm,102:heavy,134:calm,169:heavy,183:climax,212:calm,235:heavy,249:climax,264:outro,276:last,285:end", FLAGS,
+    "The Flood: the song's sections, second:kind (calm, heavy, climax, outro, last, end); before the first, it builds")
+local cvFloodBPM   = CreateConVar("lc_ending_flood_bpm", "150", FLAGS, "The Flood: the song's beats per minute (the lightning keeps to it)")
+local cvFloodRise  = CreateConVar("lc_ending_flood_rise", "900", FLAGS, "The Flood: how high the water rises over the landing zone by the outro")
+local cvFloodDrown = CreateConVar("lc_ending_flood_drown", "10", FLAGS, "The Flood: seconds under the water before you drown")
+local cvIcthys     = CreateConVar("lc_ending_flood_icthys", "8", FLAGS, "The Flood: how many ichthyosaurs at the worst of it")
+local INTENSITY = { intro = 0.3, calm = 0.35, heavy = 0.75, climax = 1, outro = 0.25, last = 0.1 }
+local STAGE_MODEL, STAGE_R = "models/hunter/plates/plate8x8.mdl", 170
+
+local function FloodSection(t)
+    local kind = "intro"
+    for _, sct in ipairs(E.sections) do if t >= sct.t then kind = sct.kind end end
+    return kind
+end
+
+local function OnStage(p)
+    local st = E.stage
+    if not IsValid(st) then return false end
+    local d = p:GetPos() - st:GetPos()
+    return math.abs(d.x) < STAGE_R + 20 and math.abs(d.y) < STAGE_R + 20 and d.z > -20 and d.z < 140
+end
+local function StageSpot(spread)
+    local st = E.stage
+    return st:GetPos() + Vector(math.Rand(-spread, spread), math.Rand(-spread, spread), 8)
+end
+local function Immune(p) return p == E.grigori end
+
+local function Bite(p, how)
+    local now = CurTime()
+    if not IsValid(p) or p.lcEndTaken or Immune(p) or now < (p.lcBiteAt or 0) then return false end
+    p.lcBiteAt = now + 1
+    p:EmitSound("npc/ichthyosaur/snap.wav", 85)
+    p:SetHealth(p:Health() - math.random(15, 25))
+    if p.ViewPunch then p:ViewPunch(Angle(math.Rand(-15, 15), math.Rand(-15, 15), 0)) end
+    if p:Health() <= 0 then Spectator(p, how or "Something huge comes up out of the dark water. That's the last you see.", Color(20, 40, 90, 230)) end
+    return true
+end
+
+function LC.IcthyStep(m, dt)
+    local s = m.lcIcthy
+    if not s or not E or E.id ~= "water" then return end
+    local now = CurTime()
+    if s.leap then
+        local L = s.leap
+        local f = math.min(1, (now - L.t0) / L.dur)
+        m:SetPos(LerpVector(f, L.from, L.to) + Vector(0, 0, 4 * L.h * f * (1 - f)))
+        if f >= 1 then
+            s.leap = nil
+            local t = s.target
+            if IsValid(t) and t:GetPos():DistToSqr(m:GetPos()) < 100 * 100 and Bite(t, "It comes over the edge of the stage at you, jaws first. That's the last you see.") then
+                local away = t:GetPos() - E.stage:GetPos()
+                away.z = 0
+                if t.SetVelocity and not t.lcEndTaken then t:SetVelocity(away:GetNormalized() * 400 + Vector(0, 0, 200)) end
+            end
+        end
+        return
+    end
+    if not s.goal then return end
+    local pos = m:GetPos()
+    local to = s.goal - pos
+    local dist = to:Length()
+    if dist < 8 then return end
+    local dir = to * (1 / dist)
+    local nextPos = pos + dir * math.min(dist, (s.speed or 200) * (dt or 0.1))
+    nextPos.z = math.min(nextPos.z, (E.floodZ or nextPos.z) - 45) -- (under the water, always)
+    m:SetPos(nextPos)
+    m:SetAngles(Angle(0, dir:Angle().y, 0))
+end
+
+function LC.IcthyHurt(m, dmg)
+    local s = m.lcIcthy
+    if not s then return false end
+    s.hp = s.hp - (dmg and dmg.GetDamage and dmg:GetDamage() or 150)
+    if s.hp > 0 then return false end
+    m:EmitSound("npc/ichthyosaur/die1.wav", 85)
+    m:Remove()
+    E.nextIcthy = CurTime() + 6
+    return true
+end
+
+local function SpawnIcthy()
+    local st = E.stage
+    local a = math.Rand(0, math.pi * 2)
+    local pos = st:GetPos() + Vector(math.cos(a), math.sin(a), 0) * math.Rand(600, 900)
+    pos.z = E.floodZ - 70
+    local m = ents.Create("lc_icthy")
+    if not IsValid(m) then return end
+    m:SetModel("models/ichthyosaur.mdl")
+    m:SetPos(pos)
+    m:Spawn()
+    m.lcIcthy = { hp = 150, a = a, dir = math.random() < 0.5 and 1 or -1 }
+    E.ents[#E.ents + 1] = m
+    E.icthys[#E.icthys + 1] = m
+end
+
+SETUP.water = function()
+    local now = CurTime()
+    E.sections = LC.MarrowSections(cvFloodSections:GetString())
+    for _, sct in ipairs(E.sections) do if sct.kind == "end" then E.holdUntil = now + sct.t end end
+    E.holdUntil = E.holdUntil or (now + 285)
+    E.riseBy = now + 264
+    for _, sct in ipairs(E.sections) do if sct.kind == "outro" then E.riseBy = now + sct.t end end
+    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
+    E.floodBase = E.lz.z - 30
+    E.floodZ = E.floodBase
+    -- real water, if the map has it: a func_water_analog named lc_flood (the
+    -- mapper's own rising water, the way Half-Life 2 does it). Then the engine
+    -- does the swimming; otherwise the water is drawn and the swimming is ours.
+    local real = ents.FindByName and ents.FindByName("lc_flood")[1]
+    if IsValid(real) then
+        E.realWater = real
+        SetGlobal2Bool("lc_flood_real", true)
+        real:Fire("Open") -- (func_water_analog rises to its open position; SetPosition below follows the song)
+    end
+    E.icthys = {}
+    LC.TimeStopped = true
+    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    -- the stage, at the landing zone
+    local st = Prop(STAGE_MODEL, E.lz + Vector(0, 0, 4))
+    if st then
+        if st.PhysicsInit then st:PhysicsInit(SOLID_VPHYSICS) end
+        local ph = st.GetPhysicsObject and st:GetPhysicsObject()
+        if IsValid(ph) then ph:EnableMotion(false) end
+        if st.SetMaterial then st:SetMaterial("phoenix_storms/wood") end
+    end
+    E.stage = st
+    -- Father Grigori in the middle, everyone round him
     if IsValid(E.by) then
         E.grigori = E.by
         E.by:SetNW2Bool("lc_rocking", true)
     end
-end
-TICK.grigori = function(now)
-    E.floodZ = E.floodZ + 22 * 0.1
-    SetGlobal2Float("lc_flood_z", E.floodZ)
-    local g = E.grigori
-    if IsValid(g) and now >= (E.nextDance or 0) then
-        E.nextDance = now + 5
-        g:ConCommand("act " .. (math.random() < 0.5 and "dance" or "muscle"))
+    for _, p in ipairs(player.GetAll()) do
+        if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
+        if IsValid(st) then p:SetPos(p == E.grigori and (st:GetPos() + Vector(0, 0, 8)) or StageSpot(STAGE_R - 40)) end
+        if p:Health() < 100 then p:SetHealth(100) end
     end
+    -- the worst storm the city has seen
+    if LC.SetWeather then LC.SetWeather("storm", true) end
+    SetGlobal2Bool("lc_storm_max", true)
+    E.dark = true
+    LC.EndingDark = "e"
+    if LC.ApplyLightStyle then LC.ApplyLightStyle() end
+    E.section = "intro"
+end
+
+TICK.water = function(now)
+    local st = E.stage
+    if not IsValid(st) then return end
+    local t = now - E.phaseT
+    local kind = FloodSection(t)
+    E.section = kind
+    local I = INTENSITY[kind] or 0.5
+    SetGlobal2Float("lc_flood_slosh", I)
+    -- the water rises, and the stage floats on it
+    local k = math.Clamp(t / math.max(1, E.riseBy - E.phaseT), 0, 1)
+    E.floodZ = E.floodBase + cvFloodRise:GetFloat() * (1 - (1 - k) ^ 2)
+    if IsValid(E.realWater) then
+        -- the map's own water: raised along its path, and its surface is the water line
+        E.realWater:Fire("SetPosition", tostring(1 - (1 - k) ^ 2))
+        local top = E.realWater.OBBMaxs and E.realWater:LocalToWorld(E.realWater:OBBMaxs()).z
+        if top then E.floodZ = top end
+    end
+    SetGlobal2Float("lc_flood_z", E.floodZ)
+    local sp = st:GetPos()
+    st:SetPos(Vector(sp.x, sp.y, math.max(E.lz.z + 4, E.floodZ - 6)))
+    -- the waves: a shove all the time, and a big one now and then
+    local wave = Angle(0, (t * 25 + math.sin(t * 0.13) * 120) % 360, 0):Forward()
+    local big = now >= (E.nextWave or 0)
+    if big then
+        E.nextWave = now + math.Rand(6, 10) * (1.2 - I)
+        st:EmitSound("ambient/water/wave" .. math.random(1, 6) .. ".wav", 90)
+        if util.ScreenShake then util.ScreenShake(st:GetPos(), 2 + 6 * I, 5, 1.2, 900) end
+    end
+    local g = E.grigori
     for _, p in ipairs(Living()) do
         if p ~= g then
-            local under = p:EyePos().z < E.floodZ
-            if under then
+            if OnStage(p) and p.SetVelocity then
+                local push = wave * ((big and (250 + 500 * I) or (25 + 70 * I)) * math.Rand(0.6, 1.2))
+                p:SetVelocity(Vector(push.x, push.y, big and 60 or 0))
+            end
+            -- under the water: you hold your breath, then you drown
+            if p:EyePos().z < E.floodZ then
                 p.lcEndUnder = p.lcEndUnder or now
-                if now - p.lcEndUnder > 6 then Take(p, "The water closes over your head. Somewhere above, Father Grigori hits the high note.") end
+                if now - p.lcEndUnder > cvFloodDrown:GetFloat() then
+                    Spectator(p, "The water closes over your head. Somewhere above, Father Grigori hits the high note.", Color(20, 40, 90, 230))
+                end
             else
                 p.lcEndUnder = nil
             end
         end
     end
-    -- Grigori is the last to go, once he's alone
-    if IsValid(g) and not g.lcEndTaken and #Living() <= 1 and now - E.floodStart > 20 then
-        Take(g, "Father Grigori bows. The flood takes its encore.")
+    -- Father Grigori keeps his feet, whatever happens
+    if IsValid(g) and not g.lcEndTaken then
+        if not OnStage(g) then g:SetPos(st:GetPos() + Vector(0, 0, 8)) end
+        if g:Health() < 100 then g:SetHealth(100) end
+        if now >= (E.nextDance or 0) then
+            E.nextDance = now + 5
+            g:ConCommand("act " .. (math.random() < 0.5 and "dance" or "muscle"))
+        end
+    end
+    -- lightning on the big beats
+    if (kind == "heavy" or kind == "climax") then
+        local beat = math.floor(t * cvFloodBPM:GetFloat() / 60)
+        if beat ~= E.lastBeat then
+            E.lastBeat = beat
+            if beat % (kind == "climax" and 4 or 8) == 0 and math.random() < 0.8 then SetGlobal2Float("lc_flood_flash", now) end
+        end
+    end
+    -- the ichthyosaurs, once there's water enough for them
+    local alive = {}
+    for _, m in ipairs(E.icthys) do if IsValid(m) then alive[#alive + 1] = m end end
+    E.icthys = alive
+    local want = math.max(2, math.floor(cvIcthys:GetInt() * I))
+    if kind == "last" then want = 0 end
+    if E.floodZ - E.floodBase > 60 and #E.icthys < want and now >= (E.nextIcthy or 0) then
+        E.nextIcthy = now + 1.5
+        SpawnIcthy()
+    end
+    local swimmers, edge = {}, {}
+    for _, p in ipairs(Living()) do
+        if p ~= g then
+            if not OnStage(p) and p:GetPos().z < E.floodZ - 10 then swimmers[#swimmers + 1] = p
+            elseif OnStage(p) and (p:GetPos() - st:GetPos()):Length2D() > STAGE_R * 0.5 then edge[#edge + 1] = p end
+        end
+    end
+    for _, m in ipairs(E.icthys) do
+        local s = m.lcIcthy
+        if not s.leap then
+            local best, bd
+            for _, p in ipairs(swimmers) do
+                local d = p:GetPos():DistToSqr(m:GetPos())
+                if d < 1500 * 1500 and (not bd or d < bd) then best, bd = p, d end
+            end
+            if best then
+                s.goal, s.speed, s.target = best:GetPos(), 260 + 200 * I, best
+                if bd < 100 * 100 then Bite(best) end
+            else
+                -- circling the stage
+                s.a = s.a + s.dir * 0.03 * (0.5 + I)
+                s.goal = st:GetPos() + Vector(math.cos(s.a), math.sin(s.a), 0) * (STAGE_R + 220)
+                s.goal.z = E.floodZ - 70
+                s.speed = 160 + 160 * I
+                -- and in the worst of it, a leap at whoever's near the edge
+                if #edge > 0 and (kind == "heavy" or kind == "climax") and math.random() < 0.012 * I * 10 and now >= (s.nextLeap or 0) then
+                    local v = edge[math.random(#edge)]
+                    s.target = v
+                    s.nextLeap = now + 6
+                    s.leap = { from = m:GetPos(), to = v:GetPos(), t0 = now, dur = 0.9, h = 120 }
+                    m:EmitSound("npc/ichthyosaur/attack_growl" .. math.random(1, 3) .. ".wav", 90)
+                end
+            end
+        end
+        if not m.lcThinks then LC.IcthyStep(m, 0.1) end
+    end
+    -- the last note: whoever's still here goes, and Father Grigori last of all
+    if kind == "last" and not E.lastDone then
+        E.lastDone = true
+        for _, p in ipairs(Living()) do
+            if p ~= g then Spectator(p, "The tide takes you, gently, at the very end.", Color(20, 40, 90, 230)) end
+        end
+        if IsValid(g) then Spectator(g, "Father Grigori holds the last note, bows, and the flood takes its encore.", Color(255, 255, 255, 200)) end
     end
 end
 
@@ -1329,6 +1588,10 @@ local function Clear()
         p:SetNW2Bool("lc_rocking", false)
     end
     SetGlobal2Float("lc_flood_z", 0)
+    SetGlobal2Float("lc_flood_slosh", 0)
+    SetGlobal2Bool("lc_storm_max", false)
+    SetGlobal2Bool("lc_flood_real", false)
+    for _, p in ipairs(player.GetAll()) do if p.SetGravity then p:SetGravity(1) end p.lcEndUnder = nil end
     for npc in pairs(LC.NPCs or {}) do
         if IsValid(npc) then npc:SetNW2Bool("lc_dancing", false) npc:SetNW2Bool("lc_seated", false) npc.lcBloomUp = nil npc.lcEndRide = nil end
     end
@@ -1484,7 +1747,7 @@ function LC.EatChip(ply)
     for _, p in ipairs(player.GetAll()) do
         if p:GetPos():DistToSqr(ply:GetPos()) < 600 * 600 then p:ChatPrint("** Father Grigori swallows a Combine data core whole. His eyes light up.") end
     end
-    return LC.TriggerEnding("grigori", ply)
+    return LC.TriggerEnding("water", ply)
 end
 LC.SlashCommands = LC.SlashCommands or {}
 LC.SlashCommands.eatchip = function(ply)

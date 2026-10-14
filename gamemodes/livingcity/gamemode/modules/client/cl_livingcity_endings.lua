@@ -129,14 +129,29 @@ hook.Add("HUDPaint", "LivingCityEndings", function()
     end
 end)
 
--- the flood
+-- the flood: drawn as water (unless the map's own water is rising: lc_flood).
+-- A murky body of it, and a rippling surface on top in one of Half-Life 2's
+-- own water-ish materials (lc_flood_material).
+local cvFloodMat = CreateClientConVar("lc_flood_material", "models/shadertest/shader3", true, false, "The surface the flood is drawn with (a refracting material)")
+local floodMat, floodMatName
 hook.Add("PostDrawTranslucentRenderables", "LivingCityEndings", function(_, sky)
-    if sky or not S or S.id ~= "grigori" or S.phase ~= "apocalypse" then return end
+    if sky or not S or S.id ~= "water" or S.phase ~= "apocalypse" or GetGlobal2Bool("lc_flood_real", false) then return end
     local z = GetGlobal2Float("lc_flood_z", 0)
     if z == 0 then return end
     local eye = EyePos()
     render.SetColorMaterial()
-    render.DrawBox(Vector(eye.x, eye.y, z), Angle(0, 0, 0), Vector(-20000, -20000, -4000), Vector(20000, 20000, 0), Color(40, 80, 110, 150), true)
+    render.DrawBox(Vector(eye.x, eye.y, z), Angle(0, 0, 0), Vector(-20000, -20000, -4000), Vector(20000, 20000, 0), Color(25, 60, 85, 170), true)
+    if Material and render.DrawQuadEasy then
+        if floodMatName ~= cvFloodMat:GetString() then floodMatName = cvFloodMat:GetString() floodMat = Material(floodMatName) end
+        if floodMat and not (floodMat.IsError and floodMat:IsError()) then
+            render.SetMaterial(floodMat)
+            for gx = -2, 2 do
+                for gy = -2, 2 do
+                    render.DrawQuadEasy(Vector(math.floor(eye.x / 2000) * 2000 + gx * 2000, math.floor(eye.y / 2000) * 2000 + gy * 2000, z + 1), Vector(0, 0, 1), 2000, 2000, Color(255, 255, 255, 255), 0)
+                end
+            end
+        end
+    end
 end)
 
 -- Father Grigori mouths the words: his jaw follows the song's loudness
@@ -475,4 +490,64 @@ concommand.Add("lc_bloom_pose_print", function()
     for n in pairs(POSE) do names[#names + 1] = n end
     table.sort(names)
     for _, n in ipairs(names) do print(string.format("%s = Angle(%g, %g, %g)", n, POSE[n].p, POSE[n].y, POSE[n].r)) end
+end)
+
+------------------------------------------------------------------------
+-- The Flood: the stage pitching under you, swimming, the water over your
+-- head, and the lightning
+------------------------------------------------------------------------
+
+local function Flood() return S and S.id == "water" and S.phase == "apocalypse" end
+
+hook.Add("SetupMove", "LivingCityFlood", function(p, mv)
+    if not Flood() or p ~= LocalPlayer() or p:GetNW2Bool("lc_end_taken", false) or GetGlobal2Bool("lc_flood_real", false) then return end
+    local z = GetGlobal2Float("lc_flood_z", 0)
+    if z == 0 or p:GetPos().z + 40 >= z then return end
+    local v = mv:GetVelocity()
+    v.x, v.y = v.x * 0.9, v.y * 0.9
+    v.z = math.max(v.z * 0.9, -50)
+    if mv:KeyDown(IN_JUMP) then v.z = 220 end
+    mv:SetVelocity(v)
+end)
+
+hook.Add("CalcView", "LivingCityFlood", function(me, origin, angles, fov)
+    if not Flood() or not IsValid(me) or me:GetNW2Bool("lc_end_spectating", false) then return end
+    local slosh = GetGlobal2Float("lc_flood_slosh", 0)
+    local t = CurTime()
+    local roll = math.sin(t * 1.1) * 9 * slosh + math.sin(t * 2.3) * 3 * slosh
+    local pitch = math.sin(t * 0.8) * 4 * slosh
+    return { origin = origin, angles = Angle(angles.p + pitch, angles.y, angles.r + roll), fov = fov }
+end)
+
+local flashSeen, flashUntil = 0, 0
+local THUNDER = { "ambient/atmosphere/thunder1.wav", "ambient/atmosphere/thunder2.wav", "ambient/atmosphere/thunder3.wav", "ambient/atmosphere/thunder4.wav" }
+hook.Add("Think", "LivingCityFloodSky", function()
+    if not Flood() then return end
+    local f = GetGlobal2Float("lc_flood_flash", 0)
+    if f ~= flashSeen then
+        flashSeen = f
+        flashUntil = CurTime() + 0.3
+        surface.PlaySound(THUNDER[math.random(#THUNDER)])
+    end
+end)
+
+hook.Add("HUDPaint", "LivingCityFloodSky", function()
+    if not Flood() then return end
+    local now = CurTime()
+    if now < flashUntil then
+        surface.SetDrawColor(225, 235, 255, 200 * (flashUntil - now) / 0.3)
+        surface.DrawRect(0, 0, ScrW(), ScrH())
+    end
+    local me = LocalPlayer()
+    if IsValid(me) and not me:GetNW2Bool("lc_end_taken", false) and me:EyePos().z < GetGlobal2Float("lc_flood_z", 0) then
+        draw.SimpleTextOutlined("Under the water: hold Jump to swim up", "LCEndText", ScrW() / 2, ScrH() * 0.8, Color(200, 225, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 220))
+    end
+end)
+
+hook.Add("RenderScreenspaceEffects", "LivingCityFloodSky", function()
+    if not Flood() or not DrawColorModify then return end
+    local me = LocalPlayer()
+    if not IsValid(me) or me:EyePos().z >= GetGlobal2Float("lc_flood_z", 0) then return end
+    DrawColorModify({ ["$pp_colour_addr"] = 0, ["$pp_colour_addg"] = 0.03, ["$pp_colour_addb"] = 0.12, ["$pp_colour_brightness"] = -0.15,
+        ["$pp_colour_contrast"] = 0.9, ["$pp_colour_colour"] = 0.5, ["$pp_colour_mulr"] = 0, ["$pp_colour_mulg"] = 0, ["$pp_colour_mulb"] = 0 })
 end)

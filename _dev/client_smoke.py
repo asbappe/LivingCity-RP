@@ -1245,7 +1245,7 @@ paint()
 
 -- secret endings: time stopped and the vote, the flood, the reset
 for _, h in pairs(hook.t["RenderScreenspaceEffects"] or {}) do h() end
-net._q = { { id = "grigori", phase = "gman", name = "The Flood", say = "x", voteEnds = CurTime() + 20, yes = 1, skip = 0,
+net._q = { { id = "water", phase = "gman", name = "The Flood", say = "x", voteEnds = CurTime() + 20, yes = 1, skip = 0,
     lines = { "vo/citadel/gman_exit01.wav" } } }
 net.recv_lc_ending()
 if not LC_CL.Ending() or LC_CL.Ending().phase ~= "gman" then return "ending: state not received" end
@@ -1256,7 +1256,7 @@ for _, h in pairs(hook.t["PlayerBindPress"] or {}) do blocked = h(_me, "slot1", 
 if not blocked then return "ending: the vote key wasn't taken" end
 _advance(1)
 paint()
-net._q = { { id = "grigori", phase = "apocalypse", name = "The Flood", say = "x", song = "livingcity/endings/grigori/song.mp3", grigori = _me } }
+net._q = { { id = "water", phase = "apocalypse", name = "The Flood", say = "x", song = "livingcity/endings/water/song.mp3", grigori = _me } }
 net.recv_lc_ending()
 _globals.lc_flood_z = 40
 paint()
@@ -1291,7 +1291,7 @@ paint()
 _me.nw.lc_seated = false
 _me.nw.lc_dancing = false
 if concommand.list and concommand.list.lc_bloom_pose then concommand.list.lc_bloom_pose(nil, "lc_bloom_pose", { "R_Hand", "1", "2", "3" }) end
-net._q = { { id = "grigori", phase = "reset", name = "The Flood" } }
+net._q = { { id = "water", phase = "reset", name = "The Flood" } }
 net.recv_lc_ending()
 _advance(2)
 paint()
