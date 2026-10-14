@@ -15,6 +15,12 @@ if surface and surface.CreateFont then
     surface.CreateFont("LCEndText", { font = "Trebuchet MS", size = 20, weight = 600 })
 end
 
+-- Photosensitivity: lc_ending_calm 1 turns the strobes into a steady glow and
+-- leaves out the screen flashes, the lightning and the static (the music,
+-- the dancing and the rest stay). The endings that flash warn first.
+local cvCalm = CreateClientConVar("lc_ending_calm", "0", true, false, "Secret endings without strobes or screen flashes (for photosensitivity)")
+local function Calm() return cvCalm:GetBool() end
+
 local S = nil      -- what the server last said
 local channel      -- the ending's song, playing
 local lineQueue, lineNext = nil, 0
@@ -57,6 +63,7 @@ net.Receive("lc_ending", function()
     elseif t.phase == "apocalypse" and was ~= "apocalypse" then
         lineQueue = nil
         PlaySong(t.song)
+        if t.flashing and not Calm() and LC_CL.FlashWarning then LC_CL.FlashWarning() end
     elseif t.phase == "reset" and was ~= "reset" then
         resetAt = CurTime()
     end
@@ -114,6 +121,10 @@ hook.Add("HUDPaint", "LivingCityEndings", function()
         local left = math.max(0, math.floor((S.voteEnds or now) - now))
         Text(string.format("%d seconds.   Let it happen: %d   Skip it: %d   (no votes at all: it happens)", left, S.yes or 0, S.skip or 0), "LCEndText", cx, cy + 135)
         if myVote ~= nil then Text(myVote and "You chose: let it happen." or "You chose: skip it.", "LCEndText", cx, cy + 162, AMBER) end
+        if S.flashing then
+            Text("PHOTOSENSITIVITY WARNING: this one has flashing lights and strobes.", "LCEndText", cx, cy + 200, Color(255, 120, 100))
+            Text(Calm() and "You've turned the flashing off (lc_ending_calm 0 turns it back on)." or "Type lc_ending_calm 1 in the console to leave the flashing out, just for you.", "LCEndText", cx, cy + 224, WHITE)
+        end
     elseif S.phase == "apocalypse" then
         Text(string.upper(S.name or ""), "LCEndBig", cx, ScrH() * 0.1, AMBER)
         local me = LocalPlayer()
@@ -342,7 +353,8 @@ hook.Add("Think", "LivingCityBloom", function()
     end
     if not on then return end
     -- coloured light, pulsing on the beat, round the dancers nearest you
-    local frac = (beat * (on.strobe and 2 or 1)) % 1
+    local strobe = on.strobe and not Calm()
+    local frac = Calm() and 0.5 or ((beat * (strobe and 2 or 1)) % 1)
     if DynamicLight and IsValid(me) and on.lights then
         local near = {}
         for _, e in ipairs(dancers) do if IsValid(e) then near[#near + 1] = { e = e, d = e:GetPos():DistToSqr(me:GetPos()) } end end
@@ -355,7 +367,7 @@ hook.Add("Think", "LivingCityBloom", function()
             if dl then
                 dl.pos = near[i].e:GetPos() + Vector(0, 0, 70)
                 dl.r, dl.g, dl.b = col.r, col.g, col.b
-                dl.brightness = on.strobe and ((frac < 0.25) and 5 or 0.3) or (1 + 3 * (1 - frac))
+                dl.brightness = strobe and ((frac < 0.25) and 5 or 0.3) or (1 + 3 * (1 - frac))
                 dl.size = 320
                 dl.decay = 0
                 dl.dietime = now + 0.15
@@ -371,7 +383,7 @@ hook.Add("Think", "LivingCityBloom", function()
         if dl then
             dl.pos = bus:GetPos() + Vector(0, 0, 60)
             dl.r, dl.g, dl.b = c0.r or c0[1] or 255, c0.g or c0[2] or 255, c0.b or c0[3] or 255
-            dl.brightness = on.strobe and ((frac < 0.25) and 6 or 1) or (2 + 4 * (1 - frac))
+            dl.brightness = strobe and ((frac < 0.25) and 6 or 1) or (2 + 4 * (1 - frac))
             dl.size = 600
             dl.decay = 0
             dl.dietime = now + 0.15
@@ -393,7 +405,7 @@ hook.Add("Think", "LivingCityBloom", function()
                     if dl then
                         dl.pos = Vector(cx * 500 + 250, cy * 500 + 250, here.z + 90)
                         dl.r, dl.g, dl.b = c0.r or c0[1] or 255, c0.g or c0[2] or 255, c0.b or c0[3] or 255
-                        dl.brightness = on.strobe and ((frac < 0.25) and 4 or 0.4) or (0.6 + 2.4 * (1 - frac))
+                        dl.brightness = strobe and ((frac < 0.25) and 4 or 0.4) or (0.6 + 2.4 * (1 - frac))
                         dl.size = 520
                         dl.decay = 0
                         dl.dietime = now + 0.15
@@ -476,7 +488,7 @@ hook.Add("RenderScreenspaceEffects", "LivingCityBloom", function()
     local on = Party()
     if not on or not on.lights or not DrawColorModify then return end
     local beat = Beat(CurTime())
-    local pulse = 1 - (beat % 1)
+    local pulse = Calm() and 0.4 or (1 - (beat % 1))
     local pal = on.palette or PALETTE
     local c0 = pal[math.floor(beat) % #pal + 1]
     local r, g, b = (c0.r or c0[1] or 255) / 255, (c0.g or c0[2] or 255) / 255, (c0.b or c0[3] or 255) / 255
@@ -552,7 +564,7 @@ end)
 hook.Add("HUDPaint", "LivingCityFloodSky", function()
     if not Flood() then return end
     local now = CurTime()
-    if now < flashUntil then
+    if now < flashUntil and not Calm() then
         surface.SetDrawColor(225, 235, 255, 200 * (flashUntil - now) / 0.3)
         surface.DrawRect(0, 0, ScrW(), ScrH())
     end
@@ -740,7 +752,7 @@ hook.Add("Think", "LivingCityBase", function()
                 if dl then
                     dl.pos = b:GetPos() + Vector(0, 0, 30)
                     dl.r, dl.g, dl.b = 255, 30, 20
-                    dl.brightness = frac < 0.3 and 3 or 0
+                    dl.brightness = Calm() and 1.2 or (frac < 0.3 and 3 or 0)
                     dl.size = 160
                     dl.decay = 0
                     dl.dietime = now + 0.12
@@ -780,7 +792,7 @@ hook.Add("HUDPaint", "LivingCityBase", function()
         draw.SimpleText(line, "LCArcade", w / 2, h * 0.78 + 30, Color(235, 235, 235), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     end
     -- main screen turn on: static, a moment
-    if catsSeen and now - catsSeen < 1.2 then
+    if catsSeen and now - catsSeen < 1.2 and not Calm() then
         for _ = 1, 120 do
             local g = math.random(60, 220)
             surface.SetDrawColor(g, g, g, 140)
@@ -841,13 +853,14 @@ hook.Add("HUDPaint", "LivingCityHard", function()
     local pal = c.palette or PALETTE
     local w, h = ScrW(), ScrH()
     -- the whole screen flashes a colour on the beat
-    if c.strobe and (beat % 1) < 0.18 then
+    if c.strobe and not Calm() and (beat % 1) < 0.18 then
         local c0 = pal[math.floor(beat) % #pal + 1]
         surface.SetDrawColor(c0[1] or c0.r or 255, c0[2] or c0.g or 255, c0[3] or c0.b or 255, 45)
         surface.DrawRect(0, 0, w, h)
     end
     if not c.partyText then return end
     -- PARTY HARD, somewhere new every half-beat
+    if Calm() then half = math.floor(beat / 4) end -- (calm: it moves every few beats, not every half)
     if half ~= partyBeat then
         partyBeat = half
         partySpots = {}
@@ -882,3 +895,38 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityHard", function(_, sky)
         end
     end
 end)
+
+------------------------------------------------------------------------
+-- The warning, as a flashing ending starts: leave the flashing out, or not
+------------------------------------------------------------------------
+
+local warnFrame
+function LC_CL.FlashWarning()
+    if not vgui or not vgui.Create then return end
+    if IsValid(warnFrame) then warnFrame:Remove() end
+    local f = vgui.Create("DFrame")
+    warnFrame = f
+    f:SetTitle("Photosensitivity warning")
+    f:SetSize(460, 170)
+    f:Center()
+    f:MakePopup()
+    local l = vgui.Create("DLabel", f)
+    l:Dock(TOP)
+    l:DockMargin(10, 6, 10, 6)
+    l:SetWrap(true)
+    l:SetAutoStretchVertical(true)
+    l:SetText("What's about to happen has flashing lights, strobes and screen flashes. If that could be a problem for you, leave them out: the music, the dancing and everything else stay. (lc_ending_calm in the console changes it any time.)")
+    local calm = vgui.Create("DButton", f)
+    calm:Dock(BOTTOM)
+    calm:DockMargin(10, 4, 10, 8)
+    calm:SetTall(30)
+    calm:SetText("Reduce flashing")
+    calm.DoClick = function() RunConsoleCommand("lc_ending_calm", "1") f:Remove() end
+    local fine = vgui.Create("DButton", f)
+    fine:Dock(BOTTOM)
+    fine:DockMargin(10, 4, 10, 0)
+    fine:SetTall(26)
+    fine:SetText("I'm fine, keep it")
+    fine.DoClick = function() f:Remove() end
+    timer.Simple(15, function() if IsValid(f) then f:Remove() end end)
+end

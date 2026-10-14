@@ -1301,7 +1301,7 @@ for _, h in pairs(hook.t["PostDrawOpaqueRenderables"] or {}) do h(false, false) 
 paint()
 _me.nw.lc_riding = nil
 net._q = { { id = "hard", phase = "apocalypse", name = "Hard", say = "x", song = "livingcity/endings/hard/hard.ogg",
-    client = { party = true, lights = true, strobe = true, dance = "hard", partyText = true, palette = { { 255, 40, 40 }, { 60, 140, 255 } }, bpm = 150, offset = 0, start = CurTime(), section = "hard" } } }
+    flashing = true, client = { party = true, lights = true, strobe = true, dance = "hard", partyText = true, palette = { { 255, 40, 40 }, { 60, 140, 255 } }, bpm = 150, offset = 0, start = CurTime(), section = "hard" } } }
 net.recv_lc_ending()
 _me.nw.lc_dancing = true
 _advance(1.1)

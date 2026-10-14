@@ -107,6 +107,9 @@ LC.Endings = {
     base      = { name = "Base", say = "What happen ?" },
     hard      = { name = "Hard", say = "It's time." },
 }
+-- The ones with strobes or flashes: everyone is warned before and as they start
+-- (and lc_ending_calm, on each player's own screen, leaves the flashing out).
+for _, id in ipairs({ "bus", "bloom", "marrow", "base", "hard", "water" }) do if LC.Endings[id] then LC.Endings[id].flashing = true end end
 LC.EndingOrder = { "harpies", "bus", "nuanua", "topsecret", "water", "bloom", "marrow", "base", "hard" }
 
 local E -- the ending in progress: { id, phase, by, ... }
@@ -162,7 +165,7 @@ local function Send(to)
         for _, v in pairs(E.votes or {}) do if v then yes = yes + 1 else skip = skip + 1 end end
         net.WriteTable({ id = E.id, phase = E.phase, name = LC.Endings[E.id].name, say = LC.Endings[E.id].say,
             voteEnds = E.voteEnds, yes = yes, skip = skip, song = E.song, lines = E.lines, grigori = E.grigori,
-            floodZ = E.floodZ, client = E.client })
+            floodZ = E.floodZ, client = E.client, flashing = LC.Endings[E.id].flashing or nil })
     end
     if to then net.Send(to) else net.Broadcast() end
 end

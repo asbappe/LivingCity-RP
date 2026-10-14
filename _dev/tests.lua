@@ -11276,6 +11276,7 @@ _setcvar("lc_ending_base_bombs", 30)
 concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
 _setcvar("lc_ending_hard_sections", "1:hard,3:break,4:hard,6:passout,9:fade,10:end")
 a:SetPos(G0) b:SetPos(G0 + Vector(200, 0, 0))
+ok(LC.Endings.hard.flashing and LC.Endings.marrow.flashing and not LC.Endings.harpies.flashing, "the ones with strobes are marked, so everyone's warned first")
 ok(LC.TriggerEnding("hard", a, true), "hard")
 E = LC.EndingSession()
 local function runToH(sec) _run(math.max(0.1, E.phaseT + sec - CurTime())) end
