@@ -11403,7 +11403,7 @@ ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and the city res
 _run(6)
 ok(not a.lcEndRide and not IsValid(a:GetNW2Entity("lc_riding")), "(everyone off the ZIGs)")
 _setcvar("lc_ending_base_sections", "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end")
-_setcvar("lc_ending_base_bombs", 30)
+_setcvar("lc_ending_base_bombs", 60)
 -- Hard: party hard (short timings for the test)
 concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
 _setcvar("lc_ending_hard_sections", "1:hard,3:break,4:hard,6:passout,9:fade,10:end")

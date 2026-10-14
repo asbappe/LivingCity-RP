@@ -29,9 +29,17 @@ local lineQueue, lineNext = nil, 0
 local myVote
 local resetAt
 
+local songAt -- (when the song really started playing, by the clock)
 local function StopSong()
     if channel and channel.Stop then pcall(channel.Stop, channel) end
-    channel = nil
+    channel, songAt = nil, nil
+end
+-- How far into the song it is: by the clock from when it started, not the
+-- player's own idea of it (for a variable-bitrate .mp3 that's an estimate
+-- from the bitrate, and it drifts further off the longer it plays).
+local function SongClock(now)
+    if channel and songAt then return (now or CurTime()) - songAt end
+    return nil
 end
 
 local function PlaySong(path)
@@ -41,7 +49,7 @@ local function PlaySong(path)
     if sound and sound.PlayFile then
         sound.PlayFile("sound/" .. path, "noblock", function(ch, err, errName)
             if IsValid(ch) then
-                if S and S.phase == "apocalypse" then channel = ch ch:Play() else ch:Stop() end
+                if S and S.phase == "apocalypse" then channel = ch ch:Play() songAt = CurTime() else ch:Stop() end
             elseif file.Exists("sound/" .. path, "GAME") and LC_CL.SoundTrouble then
                 LC_CL.SoundTrouble(path, "the game can't open it (" .. tostring(errName or err) .. "): is it really the format its name says?")
             end
@@ -276,7 +284,8 @@ local Bloom = Party
 
 -- How far into the song we are (the song itself if it's playing; else the clock, sped up the same way).
 local function SongPos(now)
-    if channel and channel.GetTime then return channel:GetTime() end
+    local clock = SongClock(now)
+    if clock then return clock end
     local c = S and S.client
     if not c then return 0 end
     local t = now - (c.start or now)
@@ -720,7 +729,7 @@ end
 local function RockBeat(now)
     local c = S and S.client
     if not c or not c.bpm then return now * 150 / 60 end
-    local pos = (channel and channel.GetTime and channel:GetTime()) or (now - (c.start or now))
+    local pos = SongClock(now) or (now - (c.start or now))
     return (pos - (c.offset or 0)) * c.bpm / 60
 end
 
@@ -834,7 +843,8 @@ end
 
 local function SongTime(now)
     local c = S and S.client
-    if channel and channel.GetTime then return channel:GetTime() end
+    local clock = SongClock(now)
+    if clock then return clock end
     return now - ((c and c.start) or now)
 end
 

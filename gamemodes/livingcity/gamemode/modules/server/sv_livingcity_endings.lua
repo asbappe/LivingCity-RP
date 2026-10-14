@@ -1657,7 +1657,7 @@ local cvBaseLines = CreateConVar("lc_ending_base_lines",
     "2.2=CAPTAIN: What happen ?|3.5=MECHANIC: Somebody set up us the bomb.|6.5=OPERATOR: We get signal.|9.5=CAPTAIN: What !|12.5=OPERATOR: Main screen turn on.|14.7=CAPTAIN: It's you !!|16.4=CATS: How are you gentlemen !!|18.4=CATS: All your base are belong to us.|20.4=CATS: You are on the way to destruction.|21.6=CAPTAIN: What you say !!|23.0=CATS: You have no chance to survive make your time.|26.0=CATS: Ha ha ha ha ....|34=CAPTAIN: Take off every 'ZIG' !!|126=CAPTAIN: Move 'ZIG'.|174=CAPTAIN: For great justice.",
     FLAGS, "Base: the subtitles, second=WHO: line, separated by |")
 local cvBaseBPM   = CreateConVar("lc_ending_base_bpm", "150", FLAGS, "Base: the song's beats per minute (the bombs and the fleet keep to it)")
-local cvBaseBombs = CreateConVar("lc_ending_base_bombs", "30", FLAGS, "Base: how many bombs someone sets up")
+local cvBaseBombs = CreateConVar("lc_ending_base_bombs", "60", FLAGS, "Base: how many bombs someone sets up (and keeps setting up, as they go off)")
 local ZIG = { "models/combine_dropship.mdl" }
 local BOMB = { "models/props_phx/ww2bomb.mdl", "models/props_c17/oildrum001_explosive.mdl" }
 
@@ -1704,6 +1704,15 @@ local function SetBomb(pos)
         E.bombs[#E.bombs + 1] = b
     end
     return b
+end
+
+-- Somewhere to set one: far out if there's room, closer in where the map's cramped.
+local function BombSpot()
+    for _, d in ipairs({ math.Rand(1500, 3000), math.Rand(800, 1500), math.Rand(300, 800), 250 }) do
+        local g = RingSpot(E.lz, d, false)
+        if g then return g end
+    end
+    return nil
 end
 
 local function BombIndices()
@@ -1766,7 +1775,7 @@ TICK.base = function(now)
         if kind == "bomb" then
             -- somebody set up us the bomb: all over the city
             for _ = 1, cvBaseBombs:GetInt() do
-                local g = RingSpot(E.lz, math.Rand(300, 3000), false)
+                local g = BombSpot()
                 if g then SetBomb(g) end
             end
         elseif kind == "screen" then
@@ -1842,8 +1851,11 @@ TICK.base = function(now)
                     local bb = table.remove(E.bombs, math.random(#alive))
                     Blow(bb:GetPos(), false)
                     bb:Remove()
-                    local g = RingSpot(E.lz, math.Rand(300, 3000), false) -- (and somebody sets up another)
-                    if g then SetBomb(g) end
+                    -- (and somebody sets up another, and keeps it topped up)
+                    for _ = 1, math.min(2, cvBaseBombs:GetInt() - #E.bombs) do
+                        local g = BombSpot()
+                        if g then SetBomb(g) end
+                    end
                     E.client.bombs = BombIndices()
                     Send()
                 end

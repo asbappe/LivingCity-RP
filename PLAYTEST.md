@@ -144,7 +144,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **The Flood (lc_ending water now):** the stage at the LZ, the storm, the water rising, the waves knocking people off, swimming back, the ichthyosaurs, drowning, Father Grigori on the mic, headbanging the heavy parts and dancing the rest,, and going last. Does the water surface look like water? Does the headbang nod the right way (lc_headbang_angle)? The stage's deck above the water, rising smoothly with you on it (no getting stuck, no jerking up); Father Grigori there even when an admin starts it; a crowd headbanging with him, swept off by the big waves.
   Notes:
-- [ ] **Base (lc_ending base now):** the subtitles lining up with the spoken lines (move them with lc_ending_base_lines), the bombs, CATS in the sky, the ZIG fleet, the explosions, the white, Engrish chat.
+- [ ] **Base (lc_ending base now):** the subtitles lining up with the spoken lines (move them with lc_ending_base_lines), the bombs, CATS in the sky, the ZIG fleet, the explosions, the white, Engrish chat. The subtitles still on the words at the end of the opening (not drifting behind); lots of bombs; the fleet in open sky.
   Notes:
 - [ ] **Hard (lc_ending hard now):** everyone at the LZ doing the mirror-flip dance, PARTY HARD everywhere, the strobe, the freeze at the break, people passing out one at a time. Every so often one of the Combine goes for it (a crowd surf, a spin, a backflip with confetti).
   Notes:
