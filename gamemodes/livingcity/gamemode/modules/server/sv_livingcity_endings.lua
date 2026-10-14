@@ -39,7 +39,8 @@
                    little webcam of your own face in the corner; swooping and
                    rolling in the choruses, fireworks in the last, and up into
                    the clouds on the final note (lc_ending_plane_sections)
-        standup    the rope: someone new strung up every other beat, from
+        standup    the rope (the hanged painted white, white cone hats on, a
+                   crowd cheering): someone new strung up every other beat, from
                    whatever is above them or the nearest wall; the hanged
                    struggle while their health drains, then go limp and look
                    on (lc_ending_standup_sections)
@@ -1724,6 +1725,15 @@ local cvStandupSections = CreateConVar("lc_ending_standup_sections", "11:hang,10
 local cvStandupBPM   = CreateConVar("lc_ending_standup_bpm", "133", FLAGS, "Standup: the song's beats per minute (someone new every other beat)")
 local cvStandupDrain = CreateConVar("lc_ending_standup_drain", "4", FLAGS, "Standup: health a second the hanged lose")
 local cvStandupMax   = CreateConVar("lc_ending_standup_max", "60", FLAGS, "Standup: the most people strung up in all")
+local cvStandupCrowd = CreateConVar("lc_ending_standup_crowd", "14", FLAGS, "Standup: how many people gather round to cheer")
+-- (the hanged are painted white, white cone hats on: the Klan, strung up, and the crowd loves it)
+local CROWD = {
+    "models/humans/group01/male_01.mdl", "models/humans/group01/male_03.mdl", "models/humans/group01/male_04.mdl", "models/humans/group01/male_07.mdl",
+    "models/humans/group01/male_09.mdl", "models/humans/group01/female_01.mdl", "models/humans/group01/female_03.mdl", "models/humans/group01/female_06.mdl",
+    "models/humans/group02/male_02.mdl", "models/humans/group02/male_06.mdl", "models/humans/group02/female_02.mdl", "models/humans/group02/female_04.mdl",
+}
+local CHEERS = { "vo/npc/male01/yeah02.wav", "vo/npc/female01/yeah02.wav", "vo/npc/male01/fantastic01.wav", "vo/npc/female01/finally.wav",
+    "vo/npc/male01/likethat.wav", "vo/npc/female01/nice01.wav", "vo/npc/male01/question17.wav" }
 
 local function StandupSection(t)
     local kind = "intro"
@@ -1754,6 +1764,9 @@ local function Hang(e)
     local feet = math.max(drop, ((g and g.z) or pos.z) + 25)
     e.lcHang = { anchor = anchor, base = Vector(anchor.x, anchor.y, feet), t0 = CurTime() }
     e:SetNW2Float("lc_hanged", CurTime())
+    -- painted white, and (on each screen) a white cone hat over the head
+    if e.SetMaterial then e:SetMaterial("models/debug/debugwhite") end
+    if e.SetColor then e:SetColor(Color(245, 245, 245, 255)) end
     if e:IsPlayer() then
         if e.InVehicle and e:InVehicle() and e.ExitVehicle then e:ExitVehicle() end
         e.lcEndFrozen = true
@@ -1762,6 +1775,11 @@ local function Hang(e)
         e:ChatPrint("A rope drops round your neck from above, and up you go.")
     end
     e:EmitSound("physics/wood/wood_strain" .. math.random(2, 4) .. ".wav", 80)
+    -- and the crowd goes wild
+    for i = 1, math.min(3, #(E.crowd or {})) do
+        local c = E.crowd[math.random(#E.crowd)]
+        if IsValid(c) then c:EmitSound(CHEERS[math.random(#CHEERS)], 80, math.random(95, 108)) end
+    end
     E.hanged[#E.hanged + 1] = e
     E.client.hangs[#E.client.hangs + 1] = { e = e:EntIndex(), a = anchor }
     Send()
@@ -1791,7 +1809,7 @@ SETUP.standup = function()
         if sct.kind == "last" then lastAt = now + sct.t end
     end
     E.holdUntil = E.holdUntil or (now + 110)
-    E.hanged = {}
+    E.hanged, E.crowd = {}, {}
     E.beatLen = 60 / math.max(1, cvStandupBPM:GetFloat())
     -- the players, spread through the song; everyone else on the beats between
     local ps = player.GetAll()
@@ -1800,12 +1818,34 @@ SETUP.standup = function()
     E.nextAny = hangAt
     LC.TimeStopped = true
     if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
-    E.client = { bpm = cvStandupBPM:GetFloat(), offset = 0, start = now, hangs = {} }
+    E.client = { party = true, lights = false, dance = "cheer", bpm = cvStandupBPM:GetFloat(), offset = 0, start = now, hangs = {} }
 end
 
 TICK.standup = function(now)
     local t = now - E.phaseT
     local kind = StandupSection(t)
+    -- the crowd gathers round, and cheers every one
+    if (kind == "hang" or kind == "last") and not E.crowded then
+        E.crowded = true
+        local near = Living()[1] or player.GetAll()[1]
+        local centre = near and near:GetPos() or Centre()
+        for i = 1, cvStandupCrowd:GetInt() do
+            local spot = RingSpot(centre, math.Rand(220, 520), false)
+            if spot then
+                local c = ents.Create("npc_citizen")
+                if IsValid(c) then
+                    c:SetModel(CROWD[(i - 1) % #CROWD + 1])
+                    c:SetPos(spot)
+                    c:SetAngles(Angle(0, (centre - spot):Angle().y, 0))
+                    c:Spawn()
+                    c.lcCrowd = true
+                    c:SetNW2Bool("lc_dancing", true)
+                    E.ents[#E.ents + 1] = c
+                    E.crowd[#E.crowd + 1] = c
+                end
+            end
+        end
+    end
     if kind == "hang" or kind == "last" then
         -- a player, on their turn
         if now >= E.nextPlayer then
@@ -1818,7 +1858,7 @@ TICK.standup = function(now)
         if now >= E.nextAny and #E.hanged < cvStandupMax:GetInt() then
             E.nextAny = now + E.beatLen * 2
             local victim
-            for npc in pairs(LC.NPCs or {}) do if IsValid(npc) and not npc.lcHang then victim = npc break end end
+            for npc in pairs(LC.NPCs or {}) do if IsValid(npc) and not npc.lcHang and not npc.lcCrowd then victim = npc break end end
             if not victim then
                 -- nobody left: someone turns up near one of you to be next
                 local near = Living()[1] or player.GetAll()[1]
@@ -2157,7 +2197,12 @@ local function Clear()
             if p.UnSpectate then p:UnSpectate() end
             if p.Spawn then p:Spawn() end
         end
-        if p.lcHang then p:Freeze(false) p:SetMoveType(MOVETYPE_WALK) end
+        if p.lcHang then
+            p:Freeze(false)
+            p:SetMoveType(MOVETYPE_WALK)
+            if p.SetMaterial then p:SetMaterial("") end
+            if p.SetColor then p:SetColor(Color(255, 255, 255, 255)) end
+        end
         p.lcHang, p.lcHangHP = nil, nil
         p:SetNW2Float("lc_hanged", 0)
         p:SetNW2Bool("lc_limp", false)

@@ -11195,6 +11195,10 @@ local first = #E.hanged
 runToS(3)
 ok(#E.hanged > first, "and someone else every other beat", #E.hanged)
 local who = a.lcHang and a or b
+local crowdOK = #E.crowd >= 1
+for _, c in ipairs(E.crowd) do if c.lcHang or not c:GetNW2Bool("lc_dancing", false) then crowdOK = false end end
+ok(crowdOK, "a crowd gathers round and cheers, and none of them is strung up", #E.crowd)
+ok(not who.SetMaterial or who:GetMaterial() == "models/debug/debugwhite", "the hanged are painted white")
 ok(who.frozen and #E.client.hangs >= 1 and E.client.hangs[1].a, "the rope goes up to something, and they can't get down")
 runToS(4.5)
 ok(who.lcEndTaken and who:GetNW2Bool("lc_limp", false) and who.alive, "they lose health on the rope, then go limp, and look on (nobody really dies)")
@@ -11204,7 +11208,7 @@ ok(a.lcHang and b.lcHang, "by the end of the song everyone's up")
 runToS(10.5)
 ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and the city resets")
 _run(6)
-ok(not a.lcHang and a:GetNW2Float("lc_hanged", 0) == 0 and a.frozen == false, "(everyone cut down)")
+ok(not a.lcHang and a:GetNW2Float("lc_hanged", 0) == 0 and a.frozen == false and (not a.GetMaterial or a:GetMaterial() == ""), "(everyone cut down, the paint off)")
 _setcvar("lc_ending_standup_sections", "11:hang,104:last,110:end")
 _setcvar("lc_ending_standup_drain", 4)
 -- Bloom: everyone dances, the song speeds up, and they spin up one at a time (short timings for the test)

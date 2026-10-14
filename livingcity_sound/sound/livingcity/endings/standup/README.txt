@@ -1,6 +1,8 @@
 ENDING: standup (Standup)
-WHAT HAPPENS: The rope. From 0:11, every other beat, someone else is strung
-up: a rope from whatever is above them (a ledge, a balcony, a ceiling), or the
+WHAT HAPPENS: The rope: the Klan, strung up. From 0:11, every other beat,
+someone else is strung up, painted white with a white cone hat over their
+head, while a crowd of the city's people gathers round and cheers each one
+(lc_ending_standup_crowd, 14). The rope goes to whatever is above them (a ledge, a balcony, a ceiling), or the
 nearest wall of a building, or failing both, the sky. The players are spread
 through the song; the city's people (the Combine's units too) fill the beats
 between, and when there's nobody left, new people turn up near you to be next.

@@ -272,6 +272,18 @@ local function Dance(ent, beat, now)
     local wave = math.sin(beat * math.pi)            -- left, right, a beat each
     local flap = math.sin(beat * math.pi * 2) * FLAP -- the wrists, every beat
     local bounce = math.abs(wave)
+    -- the crowd at the rope: both arms up, fists pumping on the beat
+    if S and S.client and S.client.dance == "cheer" and not preview then
+        if ent.GetNW2Float and ent:GetNW2Float("lc_hanged", 0) > 0 then return end -- (not the hanged: they've their own)
+        local CHEER = {
+            R_UpperArm = Angle(10, -120 + 25 * bounce, 0), L_UpperArm = Angle(-10, -120 + 25 * (1 - bounce), 0),
+            R_Forearm = Angle(0, -20, 0), L_Forearm = Angle(0, -20, 0),
+            Head = Angle(0, -12 * bounce, 0), R_Calf = Angle(0, 16 * bounce, 0), L_Calf = Angle(0, 16 * bounce, 0),
+        }
+        for name, id in pairs(b) do ent:ManipulateBoneAngles(id, CHEER[name] or Angle(0, 0, 0)) end
+        danced[ent] = true
+        return
+    end
     -- numa numa: the webcam dance, arms rolling in front of the face, the head
     -- tipping side to side, a bounce
     if S and S.client and S.client.dance == "numa" and not preview then
@@ -1089,4 +1101,42 @@ end)
 hook.Add("CalcView", "LivingCityStandup", function(me, origin, angles, fov)
     if not Standup() or not IsValid(me) or me:GetNW2Float("lc_hanged", 0) <= 0 then return end
     return { origin = me:GetPos() + Vector(0, 0, 50) - angles:Forward() * 160, angles = angles, fov = fov, drawviewer = true }
+end)
+
+-- the hanged: a white cone hat over the head
+local CONE = "models/props_junk/trafficcone001a.mdl"
+local cones = {}
+hook.Add("PostDrawOpaqueRenderables", "LivingCityStandupHats", function(_, sky)
+    local c = Standup()
+    if sky or not c or not ClientsideModel then
+        for e, m in pairs(cones) do if IsValid(m) then m:Remove() end end
+        cones = {}
+        return
+    end
+    for _, h in ipairs(c.hangs or {}) do
+        local e = Entity(h.e)
+        if IsValid(e) then
+            local m = cones[e]
+            if not IsValid(m) then
+                m = ClientsideModel(CONE, RENDERGROUP_OPAQUE)
+                if IsValid(m) then
+                    m:SetNoDraw(true)
+                    if m.SetMaterial then m:SetMaterial("models/debug/debugwhite") end
+                    if m.SetModelScale then m:SetModelScale(0.9, 0) end
+                    cones[e] = m
+                end
+            end
+            if IsValid(m) then
+                local id = e.LookupBone and e:LookupBone("ValveBiped.Bip01_Head1")
+                local mat = id and e.GetBoneMatrix and e:GetBoneMatrix(id)
+                local head = mat and mat:GetTranslation() or (e:GetPos() + Vector(0, 0, 64))
+                m:SetPos(head - Vector(0, 0, 9)) -- (pulled down over the head)
+                m:SetAngles(Angle(0, e:GetAngles().y, 0))
+                if render.SetColorModulation then render.SetColorModulation(0.96, 0.96, 0.96) end
+                m:SetupBones()
+                m:DrawModel()
+                if render.SetColorModulation then render.SetColorModulation(1, 1, 1) end
+            end
+        end
+    end
 end)
