@@ -146,7 +146,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **Base (lc_ending base now):** the subtitles lining up with the spoken lines (move them with lc_ending_base_lines), the bombs, CATS in the sky, the ZIG fleet, the explosions, the white, Engrish chat. The subtitles still on the words at the end of the opening (not drifting behind); lots of bombs; the fleet in open sky.
   Notes:
-- [ ] **Hard (lc_ending hard now):** everyone at the LZ doing the mirror-flip dance, PARTY HARD everywhere, the strobe, the freeze at the break, people passing out one at a time. Every so often one of the Combine goes for it (a crowd surf, a spin, a backflip with confetti).
+- [ ] **Hard (lc_ending hard now):** everyone at the LZ doing the mirror-flip dance, PARTY HARD everywhere, the strobe, the freeze at the break, people passing out one at a time. The Combine going for it all through (crowd surfs, spins, backflips with confetti), two or three at once.
   Notes:
 - [ ] **Plane (lc_ending plane now):** everyone on the wings doing the webcam dance and mouthing the words, the webcam box in the corner, the captions, the barrel rolls, the fireworks, the climb into the clouds. Do the captions line up (lc_ending_plane_captions)? Do the wings look right? The plane (and the bus, and the ZIG fleet) stays in open sky, never through a building, and the camera never ends up in the void?
   Notes:

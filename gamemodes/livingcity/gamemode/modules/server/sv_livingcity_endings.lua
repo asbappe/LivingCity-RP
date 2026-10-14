@@ -1985,7 +1985,8 @@ end
 -- for it: a crowd surf over everyone's heads, a frenzied spin, or a jump for
 -- joy with a backflip, confetti and all (every lc_ending_hard_moment_beats
 -- beats in the "hard" parts; each unit gets a turn before anyone goes twice).
-local cvHardMoment = CreateConVar("lc_ending_hard_moment_beats", "16", FLAGS, "Hard: beats between one of the Combine's units going for it (a crowd surf, a spin, a backflip; 0 off)")
+local cvHardMoment = CreateConVar("lc_ending_hard_moment_beats", "5", FLAGS, "Hard: beats between another of the Combine's units going for it (a crowd surf, a spin, a backflip; 0 off)")
+local cvHardMomentMax = CreateConVar("lc_ending_hard_moment_max", "3", FLAGS, "Hard: how many of the Combine's units can be going for it at once")
 local WOO = {
     "npc/metropolice/vo/affirmative.wav", "npc/metropolice/vo/rodgerthat.wav", "npc/metropolice/vo/ten4.wav",
     "npc/combine_soldier/vo/affirmative.wav", "npc/combine_soldier/vo/affirmative2.wav", "npc/combine_soldier/vo/copythat.wav",
@@ -2006,9 +2007,16 @@ local function PartyMoment(now)
     for _, n in ipairs(CombineNPCs()) do if IsValid(n) and not n.lcEndTaken then pool[#pool + 1] = n end end
     if #pool == 0 then return end
     E.partied = E.partied or {}
+    E.moments = E.moments or {}
+    local busy = {}
+    for _, m in ipairs(E.moments) do busy[m.e] = true end
     local fresh = {}
-    for _, n in ipairs(pool) do if not E.partied[n] then fresh[#fresh + 1] = n end end
-    if #fresh == 0 then E.partied = {} fresh = pool end
+    for _, n in ipairs(pool) do if not E.partied[n] and not busy[n] then fresh[#fresh + 1] = n end end
+    if #fresh == 0 then
+        E.partied = {}
+        for _, n in ipairs(pool) do if not busy[n] then fresh[#fresh + 1] = n end end
+        if #fresh == 0 then return end
+    end
     local e = fresh[math.random(#fresh)]
     E.partied[e] = true
     local kinds = { "surf", "spin", "flip" }
@@ -2016,16 +2024,14 @@ local function PartyMoment(now)
     local from, yaw = e:GetPos(), e:GetAngles().y
     local across = E.lz + (E.lz - from) -- (the far side of the ring)
     across.z = from.z
-    E.moment = { e = e, kind = kind, t0 = now, dur = kind == "surf" and 4.5 or (kind == "spin" and 3 or 1.6), from = from, to = kind == "surf" and across or from, yaw = yaw }
+    E.moments[#E.moments + 1] = { e = e, kind = kind, t0 = now, dur = kind == "surf" and 4.5 or (kind == "spin" and 3 or 1.6), from = from, to = kind == "surf" and across or from, yaw = yaw }
     E.momentsDone = (E.momentsDone or 0) + 1
     local w = Pick(WOO)
     if w then e:EmitSound(w, 85) end
     for _, n in ipairs(pool) do if n ~= e and math.random() < 0.15 then local y = Pick(YEAH) if y then n:EmitSound(y, 75, math.random(95, 110)) end end end
     if kind ~= "surf" then Confetti(from + Vector(0, 0, 50), 5) end
 end
-local function MomentStep(now)
-    local m = E.moment
-    if not m then return end
+local function MomentOne(m, now)
     local e = m.e
     local f = (now - m.t0) / m.dur
     if not IsValid(e) or f >= 1 then
@@ -2034,8 +2040,7 @@ local function MomentStep(now)
             e:SetAngles(Angle(0, m.kind == "surf" and (E.lz - m.to):Angle().y or m.yaw, 0))
             if m.kind == "flip" then Confetti(m.to + Vector(0, 0, 40), 6) end
         end
-        E.moment = nil
-        return
+        return true -- (done)
     end
     if m.kind == "surf" then
         -- lifted up, laid flat, and passed across the ring over everyone's heads
@@ -2051,6 +2056,12 @@ local function MomentStep(now)
         e:SetPos(m.from + Vector(0, 0, 4 * 180 * f * (1 - f)))
         e:SetAngles(Angle(-360 * f, m.yaw, 0))
     end
+    return false
+end
+local function MomentStep(now)
+    local left = {}
+    for _, m in ipairs(E.moments or {}) do if not MomentOne(m, now) then left[#left + 1] = m end end
+    E.moments = left
 end
 
 -- Partied too hard: down they go.
@@ -2112,7 +2123,7 @@ TICK.hard = function(now)
     end
     -- one of the Combine's units goes for it, every so many beats in the hard parts
     local every = cvHardMoment:GetInt()
-    if every > 0 and kind == "hard" and not E.moment then
+    if every > 0 and kind == "hard" and #(E.moments or {}) < cvHardMomentMax:GetInt() then
         local beat = math.floor(t * cvHardBPM:GetFloat() / 60)
         if beat ~= E.momentBeat and beat % every == 0 then
             E.momentBeat = beat
