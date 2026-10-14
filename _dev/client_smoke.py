@@ -1195,6 +1195,81 @@ net.ReadFloat = function() return qd[3] end
 net.recv_lc_rent_ask()
 net.ReadEntity, net.ReadUInt, net.ReadFloat = rE, rU, rF
 if asked ~= 1 or not LC_CL.RentAskLast then return "rent popup did not open" end
+-- morning exercise: the jog, the drill (a cue, the rope, leading), the parade
+local function paint()
+    for _, h in pairs(hook.t["HUDPaint"] or {}) do h() end
+    for _, h in pairs(hook.t["PostDrawTranslucentRenderables"] or {}) do h(false, false) end
+    for _, h in pairs(hook.t["Think"] or {}) do h() end
+end
+local function pop() return table.remove(net._q, 1) end
+net.ReadString, net.ReadFloat, net.ReadTable, net.ReadUInt = pop, pop, pop, pop
+net.ReadBool = function() return table.remove(net._q, 1) == true end
+local route = { Vector(0, 0, 0), Vector(1000, 0, 0), Vector(1000, 1000, 0) }
+_me.nw.lcf_faction = "citizen"
+net._q = { "jog", "muster", CurTime() + 60, CurTime() + 400, { center = route[1], route = route, pace = 150, runStart = 0, total = 2000 } }
+net.recv_lc_exercise()
+if not LC_CL.Exercise() or LC_CL.Exercise().kind ~= "jog" then return "exercise: state not received" end
+paint()
+_me.nw.lcx_in = true
+paint()
+net._q = { "jog", "run", CurTime() - 1, CurTime() + 400, { center = route[1], route = route, pace = 150, runStart = CurTime() - 3, total = 2000 } }
+net.recv_lc_exercise()
+_me.nw.lcx_cp, _me.nw.lcx_behind, _me.nw.lcx_boost = 2, true, CurTime() + 3
+paint()
+_me.nw.lcx_cp = 4
+paint()
+net._q = { "drill", "run", CurTime() - 1, CurTime() + 400, { center = Vector(0, 0, 0), yard = Vector(0, 0, 0), yardYaw = 90 } }
+net.recv_lc_exercise()
+_me.nw.lcx_spot, _me.nw.lcx_mistakes = Vector(100, 0, 0), 2
+net._q = { "spin", CurTime() + 2.5, false }
+net.recv_lc_drill_cue()
+paint()
+net._q = { CurTime() - 0.2, 0.85, 10 }
+net.recv_lc_drill_rope()
+paint()
+_advance(0.9)
+paint()
+_me.nw.lcx_leader = true
+paint()
+_me.nw.lcx_leader = false
+net._q = { "parade", "run", CurTime() - 1, CurTime() + 400, { center = route[1], route = route } }
+net.recv_lc_exercise()
+_me.nw.lcx_cheer = 20
+paint()
+_me.nw.lcx_in = false
+paint()
+net._q = { "" }
+net.recv_lc_exercise()
+if LC_CL.Exercise() ~= nil then return "exercise: not cleared at the end" end
+paint()
+
+-- secret endings: time stopped and the vote, the flood, the reset
+for _, h in pairs(hook.t["RenderScreenspaceEffects"] or {}) do h() end
+net._q = { { id = "grigori", phase = "gman", name = "The Flood", say = "x", voteEnds = CurTime() + 20, yes = 1, skip = 0,
+    lines = { "vo/citadel/gman_exit01.wav" } } }
+net.recv_lc_ending()
+if not LC_CL.Ending() or LC_CL.Ending().phase ~= "gman" then return "ending: state not received" end
+paint()
+for _, h in pairs(hook.t["RenderScreenspaceEffects"] or {}) do h() end
+local blocked
+for _, h in pairs(hook.t["PlayerBindPress"] or {}) do blocked = h(_me, "slot1", true) or blocked end
+if not blocked then return "ending: the vote key wasn't taken" end
+_advance(1)
+paint()
+net._q = { { id = "grigori", phase = "apocalypse", name = "The Flood", say = "x", song = "livingcity/endings/grigori/song.mp3", grigori = _me } }
+net.recv_lc_ending()
+_globals.lc_flood_z = 40
+paint()
+_me.nw.lc_rocking = true
+for _, h in pairs(hook.t["MouthMoveAnimation"] or {}) do h(_me) end
+net._q = { { id = "grigori", phase = "reset", name = "The Flood" } }
+net.recv_lc_ending()
+_advance(2)
+paint()
+net._q = { {} }
+net.recv_lc_ending()
+if LC_CL.Ending() ~= nil then return "ending: not cleared" end
+paint()
 return nil
 """)
 if err:

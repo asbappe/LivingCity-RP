@@ -237,6 +237,7 @@ local function Speak(ply, kind, text)
         end
     end
     LC.Log("chat", string.format("[%s] %s (%s): %s", kind, ply:Nick(), ply:GetNW2String("lc_char", ""), text))
+    hook.Run("LivingCitySpoke", ply, kind, text) -- (the morning parade listens for cheering: sv_livingcity_exercise.lua)
 end
 LC.Speak = Speak
 

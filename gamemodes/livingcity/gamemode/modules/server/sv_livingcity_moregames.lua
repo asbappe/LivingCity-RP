@@ -762,7 +762,12 @@ local function NewRadio(g)
     g.target = math.floor(math.Rand(88.5, 107) * 10 + 0.5) / 10
     g.f7, g.f7msg, g.f7clip = nil, nil, nil
     if math.random() < (g.opts.freq7 or 0.25) then
-        repeat g.f7 = math.floor(math.Rand(88.5, 107) * 10 + 0.5) / 10 until math.abs(g.f7 - g.target) > 3
+        if LC.Freq7Freqs then -- (always one of the seven: sv_livingcity_freq7.lua)
+            g.f7 = LC.Freq7Freqs[math.random(#LC.Freq7Freqs)]
+            if math.abs(g.f7 - g.target) <= 3 then g.target = math.floor(math.Rand(88.5, 97) * 10 + 0.5) / 10 end
+        else
+            repeat g.f7 = math.floor(math.Rand(88.5, 107) * 10 + 0.5) / 10 until math.abs(g.f7 - g.target) > 3
+        end
         local path, text = Clip("freq7")
         g.f7clip = path
         g.f7msg = (text and ("'..." .. text .. "...'")) or (path and "A voice comes through the static, on Freq 7.") or Pick(FREQ7)
@@ -905,6 +910,7 @@ local UNION_FREQ = 96.4
 local freq7, freq7Until = nil, 0
 
 function LC.RadioStations()
+    if LC.Freq7Now then return UNION_FREQ, LC.Freq7Now().f end -- (the seven frequencies, and the Combine hunting it: sv_livingcity_freq7.lua)
     if CurTime() > freq7Until or not freq7 then
         repeat freq7 = math.floor(math.Rand(88.5, 107) * 10 + 0.5) / 10 until math.abs(freq7 - UNION_FREQ) > 3
         freq7Until = CurTime() + 20 * 60
@@ -921,8 +927,9 @@ local function ListenSend(ply, l, off)
     end
     if off then return LC.SendCompressed("lc_radio_bench", { e = ply:EntIndex(), off = true }, to) end
     local u, f7 = LC.RadioStations()
+    local n = LC.Freq7Now and LC.Freq7Now() or { clip = l.clip7, loop = true }
     LC.SendCompressed("lc_radio_bench", { e = ply:EntIndex(), dial = l.dial, t = u, f7 = f7, heard = false,
-        static = l.static, union = l.union, clip7 = l.clip7 }, to)
+        static = l.static, union = l.union, clip7 = n.clip, seq7 = n.seq, once7 = not n.loop }, to)
 end
 
 local function ListenOff(ply, why)
@@ -942,7 +949,7 @@ function LC.RadioListen(ply, id)
     if not IsValid(ply) then return false end
     if LC.InCustody and LC.InCustody(ply) then return false, "Not in here." end
     local u, f7 = LC.RadioStations()
-    local l = LC.Listening[ply] or { item = id, dial = (id == "radio_tuned") and f7 or u, static = Clip("static"), union = Clip("union"), clip7 = Clip("freq7") }
+    local l = LC.Listening[ply] or { item = id, dial = (id == "radio_tuned") and f7 or u, static = Clip("static"), union = Clip("union"), clip7 = Clip("freq7"), followed = f7 }
     LC.Listening[ply] = l
     net.Start("lc_radio_listen")
     net.WriteString(util.TableToJSON({ dial = l.dial, t = u, f7 = f7, static = l.static, union = l.union, clip7 = l.clip7,
@@ -976,10 +983,19 @@ timer.Create("LivingCityRadioListen", 0.25, 0, function()
         elseif not LC.HasItem(ply, l.item) then
             ListenOff(ply, "Your radio's gone.")
         else
+            -- a Resistance radio follows Freq 7 when it hops (the cell gave you the hop sheet)
+            local _, f7 = LC.RadioStations()
+            local onAir = not LC.Freq7Now or LC.Freq7Now().onAir
+            if l.item == "radio_tuned" and onAir and l.followed ~= f7 then
+                if l.followed and math.abs(l.dial - l.followed) <= 0.6 then
+                    l.dial = f7
+                    net.Start("lc_radio_listen") net.WriteString(util.TableToJSON({ follow = f7 })) net.Send(ply)
+                end
+                l.followed = f7
+            end
             ListenSend(ply, l)
             -- the pirate band, out loud, where a unit can hear it
-            local _, f7 = LC.RadioStations()
-            if math.abs(l.dial - f7) <= 0.6 and CurTime() - (l.caughtAt or -999) > 120 and not LC.PlayerIsCP(ply)
+            if onAir and math.abs(l.dial - f7) <= 0.6 and CurTime() - (l.caughtAt or -999) > 120 and not LC.PlayerIsCP(ply)
                 and LC.SeenBySecurity and LC.SeenBySecurity(ply, 300) then
                 l.caughtAt = CurTime()
                 if LC.ReportCrime then LC.ReportCrime(ply, "Listening to an illegal broadcast", 120) end

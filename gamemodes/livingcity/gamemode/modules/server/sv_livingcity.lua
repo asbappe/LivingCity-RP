@@ -1093,6 +1093,8 @@ function Arrive(npc, st, now)
         if not StartBusy(npc, st, poi) then st.untilT = now + math.Rand(15, 40) end
     elseif k == "checkpoint" then
         st.untilT = now + math.Rand(40, 120)
+    elseif k == "exercise" then
+        if LC.ExerciseArrive then LC.ExerciseArrive(npc, st, now) else st.untilT = now + 5 end
     elseif k == "npcwork" then
         if LC.NPCWorkArrive then LC.NPCWorkArrive(npc, st, now) else st.untilT = now + 5 end
     elseif k == "work" then
@@ -2143,6 +2145,7 @@ local cvBudget = CreateConVar("lc_think_budget_ms", "2.5", bit.bor(FCVAR_ARCHIVE
 local nextPop, nextRel, nextLines = 0, 0, 0
 local queue, qi = {}, 1
 local function Think()
+    if LC.TimeStopped then return end -- (the G-Man has stopped time: sv_livingcity_endings.lua)
     local now = CurTime()
     local t0 = SysTime()
     if LC.Running then

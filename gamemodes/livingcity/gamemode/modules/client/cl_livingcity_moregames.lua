@@ -327,10 +327,11 @@ end
 
 local function BenchTracks(b, ent)
     local want = { static = b.d.static or "", union = b.d.union or "", f7 = b.d.clip7 or "" }
+    local keys = { f7 = (b.d.clip7 or "") .. "#" .. tostring(b.d.seq7 or "") } -- (Freq 7: each new thing on air starts afresh)
     for k, path in pairs(want) do
-        if b.paths[k] ~= path then
+        if b.paths[k] ~= (keys[k] or path) then
             if b[k] then b[k]:Stop() end
-            b.paths[k] = path
+            b.paths[k] = keys[k] or path
             b[k] = Track(ent, (k == "static" and path == "") and string.format(STOCK_STATIC, math.random(1, 15)) or path)
         end
     end
@@ -366,7 +367,7 @@ hook.Add("Think", "LivingCityRadioBench", function()
             for k, v in pairs({ static = vs, union = vu, f7 = v7 }) do
                 local snd = b[k]
                 if snd then
-                    if not snd:IsPlaying() then
+                    if not snd:IsPlaying() and not (k == "f7" and b.d.once7) then -- (Freq 7's program plays each thing once)
                         if k == "static" and b.paths.static == "" then
                             snd:Stop()
                             snd = Track(ent, string.format(STOCK_STATIC, math.random(1, 15)))
@@ -523,7 +524,8 @@ local function ListenWindow()
     meter:DockMargin(6, 4, 6, 0)
     local dial = vgui.Create("DNumSlider", f)
     meter.Paint = function(s, w, h)
-        local vs, vu, v7 = LC_CL.RadioMix(dial:GetValue(), d)
+        local mine = benches[LocalPlayer():EntIndex()]
+        local vs, vu, v7 = LC_CL.RadioMix(dial:GetValue(), mine and mine.d or d) -- (the latest: Freq 7 moves)
         draw.RoundedBox(4, 0, 0, w, h, CARD)
         draw.SimpleText(string.format("%.1f", dial:GetValue()), "DermaLarge", 10, h / 2, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         local st = math.max(vu, v7)
@@ -539,6 +541,7 @@ local function ListenWindow()
     dial:SetMax(108)
     dial:SetDecimals(1)
     dial:SetValue(listen.value or d.dial or 96.4)
+    listen.dialCtl = dial
     local sentAt = 0
     dial.OnValueChanged = function(_, v)
         if not listen then return end
@@ -559,6 +562,13 @@ LC_CL.RadioListenWindow = ListenWindow
 
 net.Receive("lc_radio_listen", function()
     local t = util.JSONToTable(net.ReadString() or "") or {}
+    if t.follow then -- (a Resistance radio following Freq 7 to its new frequency)
+        if listen then
+            listen.value = t.follow
+            if IsValid(listen.dialCtl) then listen.dialCtl:SetValue(t.follow) end
+        end
+        return
+    end
     if not t.dial then
         if listen and IsValid(listen.frame) then listen.frame:Remove() end
         listen = nil

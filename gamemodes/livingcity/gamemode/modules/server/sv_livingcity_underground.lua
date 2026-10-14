@@ -147,6 +147,7 @@ local WHISPERS = {
     curfew = "Curfew's coming. Get where you need to be.",
     lockdown = "Lockdown incoming. Get off the street.",
     raid = "Units are about to go through a housing block. Anything they find is traced to whoever it belongs to.",
+    supply = "A Combine convoy is coming through. Lots of crates, not many guards.",
 }
 
 hook.Add("LivingCityEventSoon", "LivingCityRadio", function(name, secs)

@@ -10822,6 +10822,423 @@ end
 CreatorLookTests()
 
 ----------------------------------------------------------------------
+section("Morning exercise: the jog")
+function ExerciseJogTests()
+local savedWalls = _walls
+_walls = {}
+LC.EndEvent(true)
+local E0 = Vector(-70000, -70000, 0)
+ok(not LC.ExerciseReady("jog") and not LC.StartEvent("jog"), "no jogging route on the map, no jog")
+local jp = {}
+for i, off in ipairs({ Vector(0, 0, 0), Vector(1200, 0, 0), Vector(1200, 1200, 0), Vector(0, 1200, 0) }) do
+    jp[i] = LC.AddPoint(E0 + off, 0, "jogroute", 1)
+end
+ok(LC.ExerciseReady("jog"), "a route of two or more stops is enough")
+local runner = newPlayer("Jogger", "citizen") runner:SetPos(E0 + Vector(40, 0, 0))
+local skiver = newPlayer("Skiver", "citizen") skiver:SetPos(E0 + Vector(-9000, 0, 0))
+local unitP = newPlayer("ExCop", "cp") unitP:SetPos(E0 + Vector(0, -200, 0))
+_setcvar("lc_exercise_muster", 15)
+ok(LC.StartEvent("jog"), "the morning jog starts")
+local X = LC.ExerciseSession()
+ok(X and X.kind == "jog" and X.phase == "muster", "citizens are called to the start")
+ok(X and #X.units >= 2, "units are posted along the route", X and #X.units)
+local means = LC.ExerciseMeans("jog", runner)
+ok(string.find(means, "pace marker", 1, true) ~= nil, "the announcement says what to do", means)
+_run(1)
+ok(runner:GetNW2Bool("lcx_in", false), "standing at the start, you're counted in")
+ok(not skiver:GetNW2Bool("lcx_in", false), "the one who stayed away isn't")
+ok(X.people[unitP] == nil, "Civil Protection doesn't jog")
+_run(15)
+ok(X.phase == "run", "after the muster, they're off")
+-- standing about next to a posted unit: the stick, and a burst of speed
+local u = X.units[1]
+local ust = LC.NPCs[u]
+u:SetPos(ust.holdPos)
+runner:SetPos(u:GetPos() + Vector(40, 0, 0))
+runner.vel = Vector(0, 0, 0)
+local hp0, run0, walk0 = runner:Health(), runner:GetRunSpeed(), runner:GetWalkSpeed()
+_run(3.2)
+ok(runner:Health() < hp0, "not jogging: a unit uses the stick", runner:Health())
+ok(runner:GetRunSpeed() > run0 and runner:GetNW2Float("lcx_boost", 0) > CurTime(), "and it gives you a burst of speed to catch up", runner:GetRunSpeed())
+runner:SetPos(E0 + Vector(-3000, -3000, 0)) -- (out of the unit's reach while the boost wears off)
+_run(6)
+ok(runner:GetRunSpeed() == run0 and runner:GetWalkSpeed() == walk0, "the boost wears off, back to your own speed", runner:GetRunSpeed())
+-- the stick never takes you below 15
+runner:SetHealth(18)
+runner.lcxBeatNext = 0
+LC.ExerciseBeat(u, runner, "jog")
+ok(runner:Health() >= 15, "a beating never takes you below 15 health", runner:Health())
+runner:SetHealth(100)
+-- now properly: round the route ahead of the pace marker
+local corners = { E0, E0 + Vector(1200, 0, 0), E0 + Vector(1200, 1200, 0), E0 + Vector(0, 1200, 0) }
+local function At(d)
+    for i = 2, #corners do
+        local seg = corners[i]:Distance(corners[i - 1])
+        if d <= seg then return LerpVector(d / seg, corners[i - 1], corners[i]) end
+        d = d - seg
+    end
+    return corners[#corners]
+end
+X.runStart = CurTime() -- (the pace marker from here)
+local hp1 = runner:Health()
+runner.vel = Vector(200, 0, 0)
+local d = 120
+local behindEver = false
+for _ = 1, 40 do
+    runner:SetPos(At(d))
+    _run(0.5)
+    if runner:GetNW2Bool("lcx_behind", false) then behindEver = true end
+    d = d + 100
+    if not LC.ExerciseSession() then break end
+end
+ok(not behindEver and runner:Health() == hp1, "jogging ahead of the pace: no trouble", runner:Health())
+ok(LC.ExerciseSession() == nil and LC.Event == nil, "everyone in: the jog is over")
+ok(tonumber(skiver:GetPData("lce_standing", 0)) < 0, "skipping it costs Civil Standing", skiver:GetPData("lce_standing", 0))
+ok(LC.NPCs[u] == nil or LC.NPCs[u].holdPos == nil, "the posted units go back to their beats")
+for _, p in ipairs(jp) do LC.RemovePoint(p) end
+for _, p in ipairs({ runner, skiver, unitP }) do p:SetPos(Vector(-120000, -120000, 0)) end
+_walls = savedWalls
+end
+ExerciseJogTests()
+
+----------------------------------------------------------------------
+section("Morning exercise: the drill")
+function ExerciseDrillTests()
+local savedWalls = _walls
+_walls = {}
+LC.EndEvent(true)
+local D0 = Vector(-74000, -70000, 0)
+local yard = LC.AddPoint(D0, 0, "yard", 0)
+local medic = newPlayer("DrillMedic", "citizen") medic:SetNW2String("lcj_job", "medic") medic:SetPos(D0 + Vector(30, 0, 0))
+local d1 = newPlayer("Driller1", "citizen") d1:SetPos(D0 + Vector(300, 0, 0))
+local d2 = newPlayer("Driller2", "citizen") d2:SetPos(D0 + Vector(300, 100, 0))
+_setcvar("lc_exercise_muster", 15)
+ok(LC.StartEvent("drill"), "the morning drill starts")
+local X = LC.ExerciseSession()
+ok(X and X.leaderCandidate == medic, "a Clinic Medic at the yard is asked to lead it")
+_run(16)
+ok(X.phase == "run" and X.leader == medic and X.people[medic] == nil, "and leads it (not judged)")
+ok(X.people[d1] and X.people[d1].spot ~= nil, "everyone else has a place in the rows", X.people[d1] and tostring(X.people[d1].spot))
+d1:SetPos(X.people[d1].spot)
+d2:SetPos(X.people[d2].spot)
+-- the leader crouches: everyone crouches
+X.nextCue = math.huge
+hook.Run("KeyPress", medic, IN_DUCK)
+ok(X.cue and X.cue.move == "crouch", "the leader's own move is called out", X.cue and X.cue.move)
+hook.Run("KeyPress", d1, IN_DUCK)
+hook.Run("KeyPress", d2, IN_JUMP)
+_run(2.7)
+ok(X.people[d1].total == 0, "copying it is right")
+ok(X.people[d2].total == 1, "the wrong move is a mistake", X.people[d2].total)
+-- a spin: turn most of the way round
+LC.DrillCue("spin", CurTime())
+for i = 1, 7 do d1.eyeang = Angle(0, i * 60, 0) _run(0.1) end
+_run(2)
+ok(X.people[d1].total == 0, "turning right round counts as the spin", X.people[d1].total)
+ok(X.people[d2].total == 2, "doing nothing is a mistake too", X.people[d2].total)
+-- one more: the stick
+local hp = d2:Health()
+LC.DrillCue("jump", CurTime())
+_run(2.7)
+ok(X.people[d2].owed or d2:Health() < hp, "too many mistakes: a unit is sent", X.people[d2].total)
+for _, u in ipairs(X.units) do if IsValid(u) then u:SetPos(d2:GetPos() + Vector(60, 0, 0)) end end
+_run(1)
+ok(d2:Health() < hp, "and uses the stick", d2:Health())
+-- out of your place
+d1:SetPos(X.people[d1].spot + Vector(400, 0, 0))
+_run(3)
+ok(X.people[d1].total >= 1, "wandering off your place is a mistake", X.people[d1].total)
+d1:SetPos(X.people[d1].spot)
+-- the rope: jump on every beat
+X.people[d1].total, X.people[d2].total = 0, 0
+X.cueNo, X.ropeAt, X.ropeDone, X.nextCue = 5, 5, nil, 0
+X.leaderActive = 0
+_run(0.2)
+local rope = X.rope
+ok(rope ~= nil and _lastnet("lc_drill_rope") ~= nil, "then the skipping rope comes out")
+if rope then
+    for b = 0, rope.beats - 1 do
+        local t = rope.start + b * rope.interval
+        while CurTime() < t - 0.1 do _run(0.1) end
+        hook.Run("KeyPress", d1, IN_JUMP)
+    end
+    _run(1)
+end
+ok(X.rope == nil and X.people[d1].total == 0, "jumping on every beat clears it", X.people[d1].total)
+ok(X.people[d2].total >= 3, "not jumping: the rope catches you", X.people[d2].total)
+-- the leader stands about: the instructor's voice fills in
+X.leaderActive = CurTime() - 20
+X.nextCue = 0
+local n0 = X.cueNo
+_run(0.3)
+ok(X.cueNo > n0, "with the leader idle, the moves are called anyway")
+LC.EndEvent(false)
+ok(LC.ExerciseSession() == nil, "it ends")
+-- no leader: a Union fitness instructor runs it
+medic:SetPos(Vector(-120000, -120000, 0))
+LC.StartEvent("drill")
+_run(16)
+local X2 = LC.ExerciseSession()
+ok(X2 and IsValid(X2.instructor) and X2.leader == nil, "with no medic or clerk there, an instructor runs it")
+local inst = X2 and X2.instructor
+LC.EndEvent(false)
+ok(not (IsValid(inst) and LC.NPCs[inst] and LC.NPCs[inst].unmanaged), "and goes on their way afterwards")
+LC.RemovePoint(yard)
+for _, p in ipairs({ medic, d1, d2 }) do p:SetPos(Vector(-120000, -120000, 0)) end
+_walls = savedWalls
+end
+ExerciseDrillTests()
+
+----------------------------------------------------------------------
+section("Morning exercise: the parade, breakfast, a full stomach")
+function ExerciseParadeTests()
+local savedWalls = _walls
+_walls = {}
+LC.EndEvent(true)
+local P0 = Vector(-78000, -70000, 0)
+local pp = {}
+for i = 0, 2 do pp[#pp + 1] = LC.AddPoint(P0 + Vector(i * 800, 0, 0), 0, "parade", 1) end
+local fan = newPlayer("Fan", "citizen") fan:SetPos(P0 + Vector(400, 250, 0))
+local dour = newPlayer("Dour", "citizen") dour:SetPos(P0 + Vector(400, -250, 0))
+fan:SetPData("lce_standing", 200)
+fan:SetNW2Float("lcn_hunger", 40)
+_setcvar("lc_exercise_muster", 15)
+ok(LC.StartEvent("parade"), "the morning parade starts")
+local X = LC.ExerciseSession()
+ok(X and #X.column >= 2, "a column forms up at the start", X and #X.column)
+_run(16)
+ok(X.phase == "run" and X.people[fan] and X.people[dour], "the citizens lining the route are counted")
+-- cheering
+local c0 = X.people[fan].cheer
+ok(LC.Gesture(fan, "cheer"), "/cheer")
+ok(X.people[fan].cheer > c0, "cheering raises your enthusiasm", X.people[fan].cheer)
+local c1 = X.people[fan].cheer
+LC.ParadeChant(fan, "Glory to the Union!")
+ok(X.people[fan].cheer > c1, "so does chanting", X.people[fan].cheer)
+local c2 = X.people[fan].cheer
+LC.ParadeChant(fan, "Glory to the Union!")
+ok(X.people[fan].cheer - c2 <= (c2 - c1), "(the same line said twice counts for less)")
+-- the column comes past the quiet one
+X.people[dour].cheer = 10
+for _, c in ipairs(X.column) do if IsValid(c) then c:SetPos(dour:GetPos() + Vector(0, 200, 0)) end end
+for _, g in ipairs(X.units) do if IsValid(g) then g:SetPos(dour:GetPos() + Vector(70, 0, 0)) end end
+local hp = dour:Health()
+_run(5)
+ok(dour:Health() < hp, "too little enthusiasm as the column passes: the stick", dour:Health())
+ok(X.people[dour].cheer >= 40, "(after which you cheer)", X.people[dour].cheer)
+-- keep the fan cheering, and let it finish
+for _ = 1, 60 do
+    if not LC.ExerciseSession() then break end
+    LC.ParadeCheer(fan, 40)
+    _run(1)
+end
+local byItself = LC.ExerciseSession() == nil
+if LC.ExerciseSession() then LC.EndEvent(false) end
+ok(byItself, "the column marches the route and reaches the end: over")
+ok(fan:GetNW2Float("lcn_hunger", 0) >= 70, "a citizen of good standing gets breakfast", fan:GetNW2Float("lcn_hunger", 0))
+-- a full stomach
+fan:SetNW2Float("lcn_hunger", 95)
+ok(LC.FullStomach(fan) and LC.FullStomachXP(fan, 100) == 115, "a full stomach: 15% more XP")
+fan:SetNW2Float("lcn_hunger", 50)
+ok(LC.FullStomachXP(fan, 100) == 100, "not on an empty one")
+-- mornings: every second one, in turn
+ok(LC.NextExercise(false) ~= nil, "the next morning's exercise is known", LC.NextExercise(false))
+for _, p in ipairs(pp) do LC.RemovePoint(p) end
+ok(LC.NextExercise(false) == nil, "and with no points on the map, there's none")
+for _, p in ipairs({ fan, dour }) do p:SetPos(Vector(-120000, -120000, 0)) end
+_walls = savedWalls
+end
+ExerciseParadeTests()
+
+----------------------------------------------------------------------
+section("Secret endings: the G-Man, the vote, the end of the city")
+function EndingTests()
+local savedWalls = _walls
+_walls = {}
+LC.EndEvent(true)
+local G0 = Vector(-82000, -70000, 0)
+local a = newPlayer("EndA", "citizen") a:SetPos(G0)
+local b = newPlayer("EndB", "citizen") b:SetPos(G0 + Vector(200, 0, 0))
+local reloaded = 0
+local realReload = LC.EndingReload
+LC.EndingReload = function() reloaded = reloaded + 1 end
+_files["livingcity/endings.json"] = nil
+_files["sound/livingcity/endings/harpies/harpy.mp3"] = ""
+ok(#LC.EndingSongs("harpies") == 1, "an ending's song is whatever's in its folder")
+-- skipped
+ok(LC.TriggerEnding("harpies", a), "an ending is triggered")
+ok(LC.EndingSession().phase == "pending", "a few seconds pass first")
+_run(5)
+local E = LC.EndingSession()
+ok(E and E.phase == "gman" and LC.TimeStopped, "then the G-Man stops time")
+ok(a.frozen == true and b.frozen == true, "everyone freezes")
+ok(IsValid(E.gman), "and he's there")
+ok(hook.Run("EntityTakeDamage", a, _dmg(b, 50)) == true, "nobody can be hurt while time's stopped")
+ok(not LC.StartEvent("rations"), "and the city's events wait")
+LC.EndingVote(a, false)
+LC.EndingVote(b, false)
+_run(31)
+ok(LC.EndingSession() == nil and not LC.TimeStopped and a.frozen == false, "more skips than yeses: time starts again, life goes on")
+ok(not LC.TriggerEnding("harpies", a), "and there can't be another for a while")
+concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
+-- nobody votes: the apocalypse
+ok(LC.TriggerEnding("harpies", a), "again (cooldown cleared)")
+_run(5)
+local n0 = #net.sent
+_run(31)
+E = LC.EndingSession()
+ok(E and E.phase == "apocalypse", "nobody votes: it happens")
+ok(E and E.song == "livingcity/endings/harpies/harpy.mp3", "with its song")
+ok(E and E.kleiners and #E.kleiners >= 3, "Kleiners close in", E and E.kleiners and #E.kleiners)
+for _, k in ipairs(E.kleiners) do if IsValid(k) and k.lcEndTarget then k:SetPos(k.lcEndTarget:GetPos() + Vector(20, 0, 0)) end end
+_run(1)
+ok(a.lcEndTaken or b.lcEndTaken, "and take whoever they reach")
+for _, k in ipairs(E.kleiners) do if IsValid(k) and k.lcEndTarget then k:SetPos(k.lcEndTarget:GetPos() + Vector(20, 0, 0)) end end
+_run(1)
+ok(a.alive and b.alive, "(taken is not dead: no new characters)")
+ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "everyone taken: the city resets")
+_run(6)
+ok(reloaded == 1 and LC.EndingSession() == nil and not a.lcEndTaken, "and the map reloads")
+-- the flying ones and the barnacles (no vote: lc_ending <id> now)
+concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
+a:SetPos(G0) b:SetPos(G0 + Vector(200, 0, 0))
+ok(LC.TriggerEnding("crazybus", a, true), "the crazy bus")
+_run(2)
+ok(a.lcEndRide and a:GetPos().z > 300, "everyone's aboard, flying", a:GetPos().z)
+LC.CancelEnding()
+ok(a.lcEndRide == nil and a.frozen == false, "lc_ending_cancel puts everyone back")
+concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
+a:SetPos(G0) b:SetPos(G0 + Vector(200, 0, 0))
+ok(LC.TriggerEnding("nuanua", a, true), "nua nua")
+_run(1)
+ok(a.lcEndRide and b.lcEndRide and a.lcEndRide.v == b.lcEndRide.v, "everyone on the one plane")
+LC.CancelEnding()
+concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
+a:SetPos(G0) b:SetPos(G0 + Vector(200, 0, 0))
+ok(LC.TriggerEnding("topsecret", a, true), "top secret")
+_run(1.1)
+local hung = #LC.EndingSession().hanging
+ok(hung == 1, "a barnacle takes one", hung)
+_run(1.1)
+hung = #LC.EndingSession().hanging
+ok(hung == 2, "and another a second later", hung)
+LC.CancelEnding()
+-- Father Grigori eats the motherlode
+concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
+local grig = newPlayer("EndGrigori", "resistance", "chaplain", 300)
+grig:SetPos(G0 + Vector(0, 300, 0))
+a:SetPos(G0) b:SetPos(G0 + Vector(200, 0, 0))
+LC.SlashCommands.eatchip(a)
+ok(LC.EndingSession() == nil, "only Father Grigori can eat it")
+LC.SlashCommands.eatchip(grig)
+ok(LC.EndingSession() == nil, "and only with the motherlode in his pockets")
+LC.GiveItem(grig, "master_chip", 1)
+LC.SlashCommands.eatchip(grig)
+E = LC.EndingSession()
+ok(E and E.id == "grigori" and not LC.HasItem(grig, "master_chip"), "he eats the master data core: the flood")
+_run(5)
+_run(31)
+E = LC.EndingSession()
+ok(E and E.phase == "apocalypse" and grig:GetNW2Bool("lc_rocking", false), "the water rises, and he rocks out")
+_run(14)
+ok(a.lcEndTaken and b.lcEndTaken and not grig.lcEndTaken, "it closes over everyone else first", tostring(GetGlobal2Float("lc_flood_z", 0)))
+LC.CancelEnding()
+LC.EndingReload = realReload
+_files["sound/livingcity/endings/harpies/harpy.mp3"] = nil
+_files["livingcity/endings.json"] = nil
+for _, p in ipairs({ a, b, grig }) do p:SetPos(Vector(-120000, -120000, 0)) end
+_walls = savedWalls
+end
+EndingTests()
+
+----------------------------------------------------------------------
+section("Freq 7: the seven frequencies, the program, the hunt")
+function Freq7Tests()
+local A = "sound/livingcity/announce/radio/"
+local n7 = 0
+for f10 = 875, 1080 do if LC.IsFreq7(f10 / 10) then n7 = n7 + 1 end end
+ok(n7 == 7 and #LC.Freq7Freqs == 7, "exactly seven frequencies on the dial have digits adding up to seven", n7)
+for _, f in ipairs(LC.Freq7Freqs) do if not LC.IsFreq7(f) then ok(false, "every one of them follows the rule", f) end end
+-- an .ogg's length, from the file
+local function u32(v) return string.char(v % 256, math.floor(v / 256) % 256, math.floor(v / 65536) % 256, math.floor(v / 16777216) % 256) end
+local ogg = "OggS" .. string.rep("\0", 24) .. "\1vorbis" .. u32(0) .. "\2" .. u32(44100) .. string.rep("\0", 40)
+    .. "OggS" .. "\0\4" .. u32(44100 * 125) .. "\0\0\0\0" .. string.rep("\0", 20)
+_files[A .. "freq7_song_rag.ogg"] = ogg
+ok(math.abs((LC.OggDuration("livingcity/announce/radio/freq7_song_rag.ogg") or 0) - 125) < 0.01, "a song's length is read from the .ogg itself")
+_files[A .. "freq7_1.wav"] = ""
+_files[A .. "freq7_2.wav"] = ""
+_files[A .. "freq7_sweep1.wav"] = ""
+LC.AnnounceRescan()
+LC.Freq7Reset()
+local now = CurTime()
+LC.Freq7Tick(now, 0)
+local first = LC.Freq7Now()
+ok(first.onAir and LC.IsFreq7(first.f) and first.kind == "voice", "it starts on one of the seven, with a voice line", first.kind)
+local kinds = { first.kind }
+for i = 1, 5 do
+    now = now + 200
+    LC.Freq7.holdUntil = now + 9999
+    LC.Freq7Tick(now, 1)
+    kinds[#kinds + 1] = LC.Freq7Now().kind
+end
+ok(table.concat(kinds, ",") == "voice,song,voice,song,voice,song", "a voice line, then a song, back and forth: never two voice lines running", table.concat(kinds, ","))
+local seq = LC.Freq7Now().seq
+hook.Run("LivingCityEventSoon", "sweep", 120)
+local w = LC.Freq7Now()
+ok(string.find(w.clip or "", "freq7_sweep1", 1, true) and w.seq > seq, "a warning for the Resistance cuts in at once, mid-song")
+now = now + 30
+LC.Freq7Tick(now, 1)
+ok(LC.Freq7Now().kind == "song", "and a song follows it")
+-- the hunt: found, jammed, dark, back somewhere else
+local unit = newPlayer("Freq7Unit", "cp")
+unit.chat = {}
+local was = LC.Freq7Now().f
+LC.Freq7.holdUntil = now
+LC.Freq7Tick(now, 1)
+local j = LC.Freq7Now()
+ok(not j.onAir and j.f == was and j.loop and j.clip == "ambient/energy/electric_loop.wav", "found: that frequency is jammed (a whine, until a jam recording is added), and the broadcast is dark")
+ok(has(unit.chat, string.format("pirate signal located on %.1f", was)), "units are told where it was found")
+LC.Freq7Tick(now + 100, 1)
+local back = LC.Freq7Now()
+ok(back.onAir and back.f ~= was and LC.IsFreq7(back.f) and back.kind == "voice", "a minute or so later it's back, on another of the seven", back.f)
+ok((LC.Freq7.jammed[was] or 0) > now + 100, "and the jammed one stays dead for a while")
+-- a blackout stops the hunt
+LC.CityDark = true
+LC.Freq7.holdUntil = now + 100
+LC.Freq7Tick(now + 101, 1)
+ok(LC.Freq7Now().onAir, "in a blackout the jammers are dark: it holds where it is")
+LC.CityDark = nil
+-- red sociostability: they find it sooner
+local socioWas = LC.Socio
+LC.Socio = "red"
+LC.Freq7.holdUntil = now + 101
+LC.Freq7Tick(now + 101, 1)
+LC.Freq7Tick(now + 300, 1)
+local hold = LC.Freq7.holdUntil - (now + 300)
+LC.Socio = socioWas
+ok(hold > 0 and hold <= 18 * 60 * 0.3 * 1.25 + 1, "on red they find it in a third of the time", hold)
+-- a Resistance radio follows the hop
+local rebel = newPlayer("Freq7Rebel", "resistance")
+LC.GiveItem(rebel, "radio_tuned")
+LC.RadioListen(rebel, "radio_tuned")
+local l = LC.Listening[rebel]
+ok(l and math.abs(l.dial - LC.Freq7Now().f) < 0.05, "a retuned radio opens on Freq 7")
+local from = LC.Freq7Now().f
+LC.Freq7Jam(CurTime())
+LC.Freq7Tick(CurTime() + 100, 1)
+_run(0.5)
+ok(math.abs(LC.Listening[rebel].dial - LC.Freq7Now().f) < 0.05 and LC.Freq7Now().f ~= from, "and follows it when it hops")
+if LC.RadioListenOff then LC.RadioListenOff(rebel) end
+for k in pairs(_files) do if string.find(k, A, 1, true) == 1 then _files[k] = nil end end
+LC.AnnounceRescan()
+LC.Freq7Reset()
+for _, p in ipairs({ unit, rebel }) do p:SetPos(Vector(-120000, -120000, 0)) end
+end
+Freq7Tests()
+
+----------------------------------------------------------------------
+
+----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)
 _run(1)

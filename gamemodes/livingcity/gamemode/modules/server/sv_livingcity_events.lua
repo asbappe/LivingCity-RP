@@ -16,7 +16,8 @@
     answers violence (a high alert, or the city in unrest).
 
     Events run automatically (lc_auto_events) or from the editor panel / commands:
-      lc_event <rations|sweep|curfew|lockdown> [minutes], lc_endevent, lc_announce
+      lc_event <rations|sweep|curfew|lockdown|raid|supply|jog|drill|parade> [minutes], lc_endevent, lc_announce
+      (jog, drill and parade are the morning exercise: sv_livingcity_exercise.lua)
 ]]
 
 if CLIENT then return end
@@ -51,16 +52,21 @@ local VOICE = {
     lockdown = { CV .. "f_unrestprocedure1_spkr.wav", CV .. "f_protectionresponse_1_spkr.wav" },
     supply   = { CV .. "f_protectionresponse_1_spkr.wav" },
     ended    = { CV .. "f_sociostabilizationrestored_spkr.wav" },
+    -- morning exercise (sv_livingcity_exercise.lua)
+    jog      = { CV .. "f_trainstation_assemble_spkr.wav" },
+    drill    = { CV .. "f_trainstation_assumepositions_spkr.wav", CV .. "f_trainstation_assemble_spkr.wav" },
+    parade   = { CV .. "f_trainstation_assemble_spkr.wav" },
 }
 
 local TITLES = {
     rations = "Ration distribution", sweep = "Civil status inspections", curfew = "Curfew",
     lockdown = "Lockdown", raid = "Housing block inspection", ended = "Stabilization restored", ambient = "City announcement",
     response = "Overwatch response", supply = "Supply convoy",
+    jog = "Morning exercise: the jog", drill = "Morning exercise: the drill", parade = "Morning parade",
 }
 
 local cvSupplyMin = CreateConVar("lc_supply_minutes", "6", FLAGS, "How long a supply drop stays before the convoy moves on")
-local DEFAULT_MINUTES = { rations = 3, sweep = 2, curfew = 4, lockdown = 3, raid = 4 }
+local DEFAULT_MINUTES = { rations = 3, sweep = 2, curfew = 4, lockdown = 3, raid = 4, jog = 8, drill = 7, parade = 8 } -- (the exercises end themselves when they're done; never in AUTO_WEIGHTS: they're at dawn)
 setmetatable(DEFAULT_MINUTES, { __index = function(_, k) if k == "supply" then return cvSupplyMin:GetFloat() end end })
 -- (no lockdown: a lockdown answers violence, from the escalation or the city
 -- falling into unrest: sv_livingcity_response.lua, sv_livingcity_war.lua)
@@ -161,6 +167,9 @@ local MEANS = {
     end,
     ended = function() return "The curfew is over. You can go out again." end,
     response = function() return "Overwatch has been sent in. Keep clear of any fighting." end,
+    jog = function(ply) return LC.ExerciseMeans and LC.ExerciseMeans("jog", ply) end,
+    drill = function(ply) return LC.ExerciseMeans and LC.ExerciseMeans("drill", ply) end,
+    parade = function(ply) return LC.ExerciseMeans and LC.ExerciseMeans("parade", ply) end,
     supply = function(ply)
         local where = LC.Supply and LC.DescribePlace and LC.DescribePlace(LC.Supply.pos) or "on the streets"
         if LC.PlayerIsCP(ply) then return "A supply convoy is unloading " .. where .. " for " .. Minutes() .. ". Guard the crate: if anything's left in it when the convoy moves on, every unit nearby is paid." end
@@ -173,6 +182,7 @@ local ENDED = {
     rations = "Ration distribution is over. Lines go back to their usual pace.",
     sweep = "Inspections are over. Units are back to stopping people at the usual rate.",
     raid = "The housing block inspection is over.",
+    jog = "Morning exercise is over. Off to work.", drill = "Morning exercise is over. Off to work.", parade = "The parade is over. Off to work.",
 }
 
 -- detail: a line of its own that replaces the usual explanation (who, where).
@@ -241,6 +251,8 @@ end
 
 function LC.StartEvent(name, minutes)
     if not DEFAULT_MINUTES[name] then return false end
+    if LC.EndingBusy and LC.EndingBusy() then return false end -- (the world is ending: sv_livingcity_endings.lua)
+    if LC.ExerciseKinds and LC.ExerciseKinds[name] and not (LC.ExerciseReady and LC.ExerciseReady(name)) then return false end -- (no route or yard on this map)
     if LC.Event then LC.EndEvent(true) end
     minutes = tonumber(minutes) or DEFAULT_MINUTES[name]
     LC.Event = name
@@ -588,7 +600,7 @@ concommand.Add("lc_event", function(ply, _, args)
     local name = string.lower(args[1] or "")
     if not LC.Running then return Say(ply, "[Living City] Start the city first.") end
     if not LC.StartEvent(name, args[2]) then
-        return Say(ply, "[Living City] Events: rations, sweep, curfew, lockdown, raid, supply. Usage: lc_event curfew 5")
+        return Say(ply, "[Living City] Events: rations, sweep, curfew, lockdown, raid, supply, jog, drill, parade (those three need their points placed). Usage: lc_event curfew 5")
     end
     Say(ply, "[Living City] Event started: " .. name)
 end)

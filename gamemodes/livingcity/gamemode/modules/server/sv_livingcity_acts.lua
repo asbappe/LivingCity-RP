@@ -52,6 +52,7 @@ function LC.Gesture(ply, name)
     if (ply.lcGestureNext or 0) > CurTime() then return false end
     ply.lcGestureNext = CurTime() + 1.5
     ply:ConCommand("act " .. g)
+    hook.Run("LivingCityGesture", ply, name) -- (the morning parade counts cheers: sv_livingcity_exercise.lua)
     return true
 end
 

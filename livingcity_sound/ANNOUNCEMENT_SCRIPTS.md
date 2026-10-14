@@ -31,7 +31,7 @@ In game (superadmin): `lc_announce_rescan` picks up new files, `lc_announce_clip
 
 *Warm:*
 - `rations1.wav`: Good morning, everyone! Rations are ready, so do come along and queue nicely. There's plenty for those who wait their turn.
-- `rations2.wav`: Come along, lovelies, breakfast is served. Have your papers handy and mind the elbows in the line.
+- `rations2.wav`: Come along, lovelies, your allocation is ready. Have your papers handy and mind the elbows in the line.
 
 *Firm:*
 - `rations_firm1.wav`: Now, I'm only going to say this once, and I'd like it to stick. Rations are for those who queue. Pushing will be remembered.
@@ -188,6 +188,69 @@ In game (superadmin): `lc_announce_rescan` picks up new files, `lc_announce_clip
 *Firm:*
 - `ended_firm1.wav`: The restrictions are lifted. I would like it noted that they should never have been needed. Do better.
 
+## jog
+
+*The morning jog begins (every second dawn, in turn): citizens report to the start of the route.*
+
+**Overwatch** (`overwatch/`):
+
+- `jog1.wav`: Attention, citizens. Morning conditioning is now in effect. Report to the designated route. Maintain pace. Noncompliance will be corrected.
+- `jog2.wav`: Physical readiness cycle in progress. Assemble at the starting point. Falling behind is a violation.
+
+**The Administrator** (`administrator/`), usually **warm**:
+
+*Warm:*
+- `jog1.wav`: Rise and shine, everyone! It's time for our morning jog. Make your way to the start, and do try to keep up. The officers will be cheering you on!
+- `jog2.wav`: Good morning, lovelies! A brisk jog to start the day. Healthy bodies, healthy city. Off we go!
+
+*Firm:*
+- `jog_firm1.wav`: Jogging, everyone, not strolling. I can see who's dawdling. Pick up those feet.
+
+*Stern:*
+- `jog_stern1.wav`: I will not have this city crawling round its own streets. Run. Every one of you. The officers have their instructions.
+
+## drill
+
+*The morning drill begins: citizens report to the exercise yard and copy the leader.*
+
+**Overwatch** (`overwatch/`):
+
+- `drill1.wav`: Attention, citizens. Assume your positions in the exercise yard. Mirror all instruction. Errors are recorded.
+- `drill2.wav`: Morning drill is in effect. Assemble. Comply with every movement. Deviation will be corrected.
+
+**The Administrator** (`administrator/`), usually **warm**:
+
+*Warm:*
+- `drill1.wav`: Good morning, everyone! Into the yard for our morning drill. Find your place, watch your leader, and copy every move. Isn't this fun?
+- `drill2.wav`: Arms up, chins up! It's drill time, lovelies. A little skipping today, too. I do love a bit of skipping.
+
+*Firm:*
+- `drill_firm1.wav`: Concentrate, please. Crouch means crouch. Jump means jump. It isn't difficult, and I'm watching.
+
+*Stern:*
+- `drill_stern1.wav`: If you cannot follow a simple instruction in the yard, I wonder what else you cannot follow. Do it properly.
+
+## parade
+
+*The morning parade begins: citizens line the route and cheer the column.*
+
+**Overwatch** (`overwatch/`):
+
+- `parade1.wav`: Attention, citizens. A ceremonial procession is in effect. Line the designated route. Express your gratitude. Enthusiasm is mandatory.
+- `parade2.wav`: Overwatch procession in progress. Citizens will display appropriate appreciation. Silence will be noted.
+
+**The Administrator** (`administrator/`), usually **warm**:
+
+*Warm:*
+- `parade1.wav`: Oh, what a morning! Our brave protectors are on parade today. Line the route, everyone, and let them hear how much you love them!
+- `parade2.wav`: Flags out, voices up! The parade is coming through. Cheer loudly, lovelies. They do so like to be appreciated.
+
+*Firm:*
+- `parade_firm1.wav`: I'm hearing some very quiet cheering out there. Our protectors deserve better. Louder, please.
+
+*Stern:*
+- `parade_stern1.wav`: Silence on parade day is a statement, and I hear it very clearly. Cheer. Now. I want to hear you from my office.
+
 ## socio_green
 
 *The city drops back to green (nominal).*
@@ -247,7 +310,7 @@ In game (superadmin): `lc_announce_rescan` picks up new files, `lc_announce_clip
 **The Administrator** (`administrator/`), usually **warm**:
 
 *Warm:*
-- `dawn1.wav`: Good morning, everyone! A fresh new day. Off to work with you, and do have something to eat first.
+- `dawn1.wav`: Good morning, everyone! A fresh new day. Off to work with you. Quotas first, and the Union will see to the rest.
 - `dawn2.wav`: Rise and shine, lovelies. Another day ahead of us, and so much to be getting on with.
 
 *Firm:*
@@ -536,5 +599,37 @@ In game (superadmin): `lc_announce_rescan` picks up new files, `lc_announce_clip
 - `freq7_4.wav`: The Administrator's broadcasts are recorded. She is not in the city.
 - `freq7_5.wav`: Block 4: the inspection is tomorrow. Whatever you're keeping, keep it somewhere else.
 - `freq7_6.wav`: Don't answer this. Just listen. And then turn it back to the Union band.
+- `freq7_7.wav`: Good evening to everyone the Combine says doesn't exist. This one's for you.
+- `freq7_8.wav`: A reminder from the people keeping this signal alive: never carry anything you can't explain. Papers in your pocket. The rest under the floor.
+- `freq7_9.wav`: They tell you the ration is generous. Count the grams. Then count the guards. Then you'll know who it's really for.
+- `freq7_10.wav`: If a friend stops showing up at the dispenser, don't ask about them out loud. Ask us. Freq Seven remembers names.
+- `freq7_11.wav`: Scanners photograph faces, not hearts. Keep your head down, and keep your heart where it is.
+- `freq7_12.wav`: To whoever keeps leaving bread by the canal: we see you. Thank you.
+- `freq7_13.wav`: Somebody once owned these records. Somebody once danced to them. We'll keep playing them until they make us stop.
+- `freq7_14.wav`: Stay off the main roads after dusk. And if a unit asks where you heard that, you didn't.
+- `freq7_15.wav`: We're moving the transmitter again tonight. If the signal drops, wait. We always come back.
+- `freq7_16.wav`: They count everything. Grams. Hours. People. Here's one thing they can't count: how many of us are listening right now.
+- `freq7_17.wav`: Here's one from before the sky went grey. Close your eyes. Three minutes. They can't take that.
+- `freq7_18.wav`: Something from the old world. Mind the volume, and mind the window.
+- `freq7_19.wav`: Still here. Still broadcasting. Still not sorry. Here's a song.
+- `freq7_20.wav`: Frequency Seven. You know the rule. Add it up, and you'll always find us.
+
+Voice lines and songs take turns, so every voice line is followed by a song (several of these introduce one).
+
+**Freq 7's songs** (`radio/`): `freq7_song_<anything>.ogg`, as many as you like. Public domain recordings only: a modern performance of an old tune is still protected, so look for recordings published before 1926 (public domain in the US and in Ireland/the EU) on the Internet Archive (the Great 78 Project), the Library of Congress National Jukebox, or Wikimedia Commons. Scott Joplin piano rolls, 1910s parlour ballads, early jazz and Caruso all suit it. Save them as `.ogg` or `.wav`.
+
+**Freq 7's warnings** (`radio/`), cutting in at once, even mid-song:
+
+- `freq7_sweep1.wav` (two minutes before a papers sweep): Heads up. Units are gearing up for papers checks. If it isn't yours or it isn't legal, it shouldn't be on you. Move it now.
+- `freq7_sweep2.wav`: Inspection teams heading out. Clean pockets, clean story.
+- `freq7_raid1.wav` (two minutes before a block raid): Housing block inspection coming. They'll go through every room, and anything they find gets traced back. Get it out, or get out.
+- `freq7_curfew1.wav` (two minutes before curfew): Curfew's coming. Runners, this is your window. Everyone else, get home.
+- `freq7_supply1.wav` (two minutes before a supply convoy): Combine convoy coming through. Lots of crates, not many guards. Just saying.
+- `freq7_incursion1.wav` (Civil Protection sweeping into rebel territory): They're coming into our streets. Fighters to the barricades. Everyone else, get below ground. Now.
+- `freq7_incursion2.wav`: Boots on our side of the line. This is not a drill. Go.
+- `freq7_lockdown1.wav` (a lockdown declared): That's a lockdown. Get indoors, keep off this frequency for a while, and wait for us. We'll be back.
+- `freq7_dropship1.wav` (an Overwatch dropship coming in): Dropship inbound. That's Overwatch, not the metrocops. Don't be a hero. Be gone.
+
+**The jamming** (`radio/jam1.wav`): no script. A harsh, looping electronic whine, heard where the Combine found Freq 7 while it's dark.
 
 **Static** (`static1.wav`...) and **the Union band** (`union1.wav`...): no script. Static is any long, loopable radio hiss; the Union band can be any long, loopable bland station (with none, the Administrator's ambient recordings play there).

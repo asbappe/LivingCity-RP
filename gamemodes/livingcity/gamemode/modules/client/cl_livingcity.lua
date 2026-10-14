@@ -89,6 +89,7 @@ end
 ------------------------------------------------------------------------
 
 local POINT_COLORS = {
+    jogroute = Color(120, 230, 160), yard = Color(255, 210, 90), parade = Color(240, 120, 200),
     idle = Color(90, 220, 120), sit = Color(60, 200, 200), sitchair = Color(60, 170, 220), lean = Color(120, 230, 230),
     queue = Color(240, 200, 60), patrol = Color(80, 150, 255), checkpoint = Color(255, 80, 80),
     spawn = Color(240, 240, 240), cell = Color(255, 140, 40), release = Color(255, 200, 140),
@@ -97,6 +98,7 @@ local POINT_COLORS = {
     zspawn = Color(170, 220, 40), rspawn = Color(230, 150, 70),
 }
 local POINT_NAMES = {
+    jogroute = "JOGGING ROUTE", yard = "EXERCISE YARD", parade = "PARADE ROUTE",
     idle = "LOITER", sit = "SIT", sitchair = "BENCH", lean = "LEAN", queue = "LINE", patrol = "PATROL",
     checkpoint = "CHECKPOINT", spawn = "SPAWN/EXIT", cell = "CELL", release = "RELEASE",
     work = "WORKPLACE", vending = "VENDING", dispenser = "RATIONS", terminal = "COMMISSARY", stove = "STOVE", fire = "FIRE",
@@ -162,7 +164,7 @@ net.Receive("lc_data", function()
     LC_CL.sequences = {}
     local index = {}
     for _, p in ipairs(LC_CL.points) do
-        if (p.kind == "queue" or p.kind == "patrol") and p.group > 0 then
+        if ((p.kind == "queue" or p.kind == "patrol") and p.group > 0) or p.kind == "jogroute" or p.kind == "parade" then
             local key = p.kind .. p.group
             if not index[key] then
                 index[key] = { kind = p.kind, group = p.group, pts = {} }
@@ -601,6 +603,8 @@ local function DrawEditorLabels()
             if p.kind == "queue" and p.group > 0 then txt = string.format("LINE %d  #%d", p.group, p.order or 0)
             elseif p.kind == "queue" then txt = "STAND HERE"
             elseif p.kind == "patrol" and p.group > 0 then txt = string.format("BEAT %d  #%d", p.group, p.order or 0)
+            elseif p.kind == "jogroute" then txt = string.format("JOG ROUTE %d  #%d%s", p.group, p.order or 0, p.order == 1 and " (START)" or "")
+            elseif p.kind == "parade" then txt = string.format("PARADE ROUTE %d  #%d%s", p.group, p.order or 0, p.order == 1 and " (FORM UP)" or "")
             elseif p.kind == "work" then
                 local job = LCJ and LCJ.ByNum[p.group]
                 txt = "WORK: " .. string.upper(job and job.place or ("job " .. p.group))

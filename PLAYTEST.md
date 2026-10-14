@@ -48,6 +48,11 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Listening to a radio:** the dial, static between stations, the Union station and Freq 7 (its frequency moves). Heard within about 20 feet, quieter further away. Listening to Freq 7 is a crime.
   Notes:
 
+- [ ] **Freq 7, one station:** a voice line, then a song, back and forth; every radio on it hears the same thing. A warning cuts in before a sweep, raid, curfew or convoy (and for an incursion, a lockdown or a dropship).
+  Notes:
+- [ ] **Freq 7, the hunt:** it only ever sits on 100.6, 101.5, 102.4, 103.3, 104.2, 105.1 or 106.0. The Combine find it and jam it (a whine, units told), it goes dark, then comes back on another. A Resistance radio follows it; a Union radio has to search. A blackout stops the jamming.
+  Notes:
+
 ## The city and the Combine
 
 - [ ] **Data chips:** decoded only at the Resistance lab, by the scientist. The lab bench is Kleiner's now.
@@ -121,6 +126,15 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Rehanging:** a Maintenance Technician lifts the fallen door (E), carries it to its frame and presses E there.
   Notes:
 - [ ] **The leg animation:** how it looks in first and third person (it may need tuning).
+  Notes:
+
+## Morning exercise and more (from the other session)
+
+- [ ] **Morning exercise:** every second dawn, the jog (keep up with the pace marker), the drill (copy the leader on your ring, then the skipping rope) or the parade (cheer the column). Needs its editor points: jogging route, exercise yard, parade route.
+  Notes:
+- [ ] **A full stomach:** hunger 85+ gives 15% more XP and slow healing.
+  Notes:
+- [ ] **Secret endings:** the G-Man stops time and everyone votes; Father Grigori's /eatchip with a master data core starts the flood (admins: lc_ending <id> now).
   Notes:
 
 ## Death and progression

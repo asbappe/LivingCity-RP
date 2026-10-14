@@ -20,6 +20,9 @@ are surprises, and a lockdown only ever answers violence.)
   raid            A housing block inspection (block raid) begins.
   supply          A Combine supply convoy or dropship arrives with stores.
   ended           A curfew or lockdown is over.
+  jog             The morning jog begins (every second dawn, in turn).
+  drill           The morning drill begins.
+  parade          The morning parade begins.
   socio_green     The city drops back to green (nominal).
   socio_yellow    The city moves to yellow (marginal): more stops.
   socio_red       The city moves to red (judgment waiver).

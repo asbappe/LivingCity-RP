@@ -42,7 +42,10 @@ local MODES = {
     { id = "sspawn",      label = "Point: scanner launch spot (where flown scanners go up)" },
     { id = "platform",    label = "Point: train platform (trains stop here: new arrivals, people leaving the city)" },
     { id = "arrival",     label = "Point: arrival (where new people step into the city, before Civil Intake; place it from the way they should face, Civil Intake say)" },
-    { id = "studio",      label = "Point: broadcast studio (Dr. Breen speaks here, filmed live, when no player is Director of Propaganda)" },
+    { id = "studio",      label = "Point: broadcast studio (the Administrator speaks here, filmed live, when no player is Director of Propaganda)" },
+    { id = "jogroute",    label = "Point: jogging route stop (morning jog: place them in order round the route, the first is the start; route #)", group = true },
+    { id = "yard",        label = "Point: exercise yard (morning drill: stand where the rows of citizens will be and aim at where the leader stands)" },
+    { id = "parade",      label = "Point: parade route stop (morning parade: in order, the first is where the column forms up; route #)", group = true },
     { id = "lz",          label = "Point: Overwatch landing zone (a dropship brings soldiers down here: open sky above it)" },
     { id = "dock",        label = "Point: loading dock (supply drops come in here, by dropship under open sky; supply trucks, crates)" },
     { id = "graffiti",    label = "Point: graffiti wall (sanitation scrubs it; aim at the foot of the wall)" },
@@ -116,7 +119,7 @@ else
 end
 
 -- sit, bench and lean spots, and fixtures, face the person placing them
-local FACE_PLACER = { bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, screen = true, lawboard = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true }
+local FACE_PLACER = { bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, screen = true, lawboard = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, yard = true }
 
 local function ModeIndex(id)
     for i, m in ipairs(MODES) do if m.id == id then return i end end
@@ -180,6 +183,12 @@ local function PlacePoint(self, ply, trace, mode)
             or " (Line 0 is a loose standing spot, not a line.)"
     elseif mode.id == "patrol" and group > 0 then
         extra = string.format(" Beat %d now has %d stop(s).", group, #LC.PointsOfKind("patrol", group))
+    elseif mode.id == "jogroute" or mode.id == "parade" then
+        local n = #LC.PointsOfKind(mode.id, group)
+        extra = string.format(" %s route %d now has %d stop(s)%s.", mode.id == "jogroute" and "Jogging" or "Parade", group, n,
+            n < 2 and " (it needs at least two)" or "")
+    elseif mode.id == "yard" then
+        extra = " The rows form up in front of it, facing it."
     end
     Tell(ply, "Placed " .. (mode.num and (string.gsub(mode.label, "^Workplace: ", "") .. " workplace") or (mode.id .. " point")) .. "." .. extra)
     return true
@@ -644,10 +653,16 @@ function TOOL.BuildCPanel(panel)
     panel:Button("Inspection sweep", "lc_event", "sweep")
     panel:Button("Curfew", "lc_event", "curfew")
     panel:Button("Lockdown", "lc_event", "lockdown")
+    panel:Button("Morning exercise: the jog", "lc_exercise", "jog")
+    panel:Button("Morning exercise: the drill", "lc_exercise", "drill")
+    panel:Button("Morning exercise: the parade", "lc_exercise", "parade")
     panel:Button("End current event", "lc_endevent")
     panel:Button("Play an announcement", "lc_announce")
     Check("Run events automatically", "lc_auto_events")
     Check("Cops enforce curfew on players", "lc_curfew_enforce")
+    Check("Morning exercise for citizens (at dawn)", "lc_morning_exercise")
+    Slider("Morning exercise every N mornings", "lc_exercise_every", 1, 7, 0)
+    panel:Help("Morning exercise needs its points: a jogging route, an exercise yard, a parade route (under Points). They take turns; one with no points is skipped.")
     Check("Radio chatter", "lc_chatter")
     Check("Alarms send a response squad", "lc_squad")
     Slider("Squad: metrocops", "lc_squad_cops", 0, 6, 0)

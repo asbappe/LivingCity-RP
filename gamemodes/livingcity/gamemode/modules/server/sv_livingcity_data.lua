@@ -45,6 +45,7 @@ LC.POINT_KINDS = {
     zspawn = true, rspawn = true, -- infested and resistance respawn/spawn points
     rlookout = true, -- an armed rebel stands guard here (sv_livingcity_rebels.lua)
     bunk = true, -- a rebel sleeps here now and then (sv_livingcity_rebellife.lua)
+    jogroute = true, yard = true, parade = true, -- morning exercise: the jogging route, the drill yard, the parade route (sv_livingcity_exercise.lua)
 }
 LC.ZONE_KINDS = { nogo = true, infest = true, prison = true, block = true, rebel = true, combine = true }
 LC.DOOR_TAGS = { cp = true, prison = true, locked = true, open = true, ignore = true, force = true, rent = true }

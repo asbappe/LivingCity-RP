@@ -23,6 +23,7 @@
 
       Triggers (what a file's name starts with)
         events         rations  sweep  curfew  lockdown  raid  supply
+                       jog  drill  parade (the morning exercise)
                        ended (an event is over: stabilization restored)
         warnings       rations_soon  curfew_soon (two minutes ahead; a sweep,
                        a raid or a supply convoy is a surprise, and a
@@ -92,6 +93,7 @@ LC.AnnounceTriggers = {
     "socio_green", "socio_yellow", "socio_red", "dawn", "day", "dusk", "night",
     "outbreak", "blackout", "power_restored", "skirmish_raid", "skirmish_sweep", "response",
     "breakout", "overwatch_drop", "block_raided", "territory_grew", "train_arrival", "welcome", "ambient",
+    "jog", "drill", "parade", -- morning exercise (sv_livingcity_exercise.lua)
 }
 -- No longer said (a sweep, a raid or a supply convoy is a surprise; a lockdown
 -- answers violence): files named for these are left alone, never mistaken for
@@ -100,7 +102,8 @@ LC.AnnounceRetired = { "sweep_soon", "lockdown_soon", "raid_soon", "supply_soon"
 LC.AnnounceVoices = { "overwatch", "administrator" }
 LC.AnnounceTierNames = { "warm", "firm", "stern", "furious" }
 -- Other voices with folders of their own, and their triggers: [voice] = { trigger, ... }
-LC.AnnounceExtra = { radio = { "static", "union", "freq7" } }
+LC.AnnounceExtra = { radio = { "static", "union", "freq7", "freq7_song", "jam",
+    "freq7_sweep", "freq7_raid", "freq7_curfew", "freq7_supply", "freq7_incursion", "freq7_lockdown", "freq7_dropship" } } -- (Freq 7: sv_livingcity_freq7.lua)
 local TIERS = LC.AnnounceTierNames
 
 -- the tone she usually takes for each thing (1 warm .. 4 furious)
@@ -110,6 +113,7 @@ local BASE_TIER = {
     sweep = 2, curfew = 2, curfew_soon = 2, blackout = 2, territory_grew = 2, socio_yellow = 2, outbreak = 2,
     lockdown = 3, raid = 3, skirmish_raid = 3, skirmish_sweep = 3, response = 3, block_raided = 3, overwatch_drop = 3, socio_red = 3,
     breakout = 4,
+    jog = 1, drill = 1, parade = 1, -- (she loves a bit of exercise)
 }
 local VIOLENT = { raid = true, skirmish_raid = true, skirmish_sweep = true, breakout = true, outbreak = true, block_raided = true, territory_grew = true, overwatch_drop = true }
 local heat = {} -- times of recent violent things
@@ -122,6 +126,7 @@ local function Heat()
 end
 
 function LC.AnnounceCalm() heat = {} end -- (forget the violence: tests, a fresh map)
+LC.AnnounceHeatReset = LC.AnnounceCalm
 
 local function TierName(t) return TIERS[math.Clamp(t, 1, #TIERS)] end
 
@@ -137,6 +142,7 @@ function LC.AnnounceTier(trig)
 end
 
 local TITLES = {
+    jog = "Morning exercise", drill = "Morning exercise", parade = "Morning parade",
     outbreak = "Outbreak", blackout = "Power failure", power_restored = "Power restored", skirmish_raid = "Overwatch response",
     skirmish_sweep = "Overwatch response", breakout = "Prison breakout", overwatch_drop = "Overwatch deployment",
     block_raided = "Housing block inspection", territory_grew = "Resistance activity", train_arrival = "Arrivals",

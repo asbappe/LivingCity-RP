@@ -31,6 +31,9 @@ are surprises, and a lockdown only ever answers violence.)
   raid            stern    A housing block inspection (block raid) begins.
   supply          warm     A Combine supply convoy or dropship arrives with stores.
   ended           warm     A curfew or lockdown is over.
+  jog             warm     The morning jog begins (every second dawn, in turn).
+  drill           warm     The morning drill begins.
+  parade          warm     The morning parade begins.
   socio_green     warm     The city drops back to green (nominal).
   socio_yellow    firm     The city moves to yellow (marginal): more stops.
   socio_red       stern    The city moves to red (judgment waiver).

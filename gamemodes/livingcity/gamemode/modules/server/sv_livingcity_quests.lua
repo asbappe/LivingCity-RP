@@ -571,6 +571,7 @@ local function Finish(q, success, why)
         if success then
             local share = (p == q.owner) and 1 or 0.75
             local xp = math.floor((q.reward + (q.bonus or 0)) * share)
+            if LC.FullStomachXP then xp = LC.FullStomachXP(p, xp) end -- (well fed: more done)
             if xp > 0 and LC.AddXP then LC.AddXP(p, xp, q.title) end
             p:SetPData("lcq_done", (tonumber(p:GetPData("lcq_done", 0)) or 0) + 1)
             p:ChatPrint(string.format("[%s] Complete: %s%s", q.board, q.title, xp > 0 and string.format(" (+%d XP)", xp) or ""))
