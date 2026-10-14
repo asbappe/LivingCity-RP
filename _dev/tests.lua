@@ -11135,7 +11135,7 @@ ok(reloaded == 1 and LC.EndingSession() == nil and not a.lcEndTaken, "and the ma
 concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
 a:SetPos(G0) b:SetPos(G0 + Vector(200, 0, 0))
 _setcvar("lc_ending_bus_sections", "2:fly,6:drive,8:fast,12:end")
-ok(LC.TriggerEnding("crazybus", a, true), "the crazy bus")
+ok(LC.TriggerEnding("bus", a, true), "the bus")
 E = LC.EndingSession()
 local function runToB(sec) _run(math.max(0.1, E.phaseT + sec - CurTime())) end
 ok(IsValid(E.bus) and E.bus:GetPos().z < 60 and not a.lcEndRide, "first it drives about the streets (the song's intro)")

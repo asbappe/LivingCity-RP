@@ -29,7 +29,7 @@
                    gather in the dark for a minute, rush in when the song
                    swells, then leap; everyone's dead by 2:00 and watches
                    (lc_ending_minge_swell, lc_ending_minge_end, _max, _models)
-        crazybus   the party bus: it drives about through the song's intro,
+        bus        the party bus: it drives about through the song's intro,
                    then everyone (and some of the Combine) is in it and it
                    flies through walls, a rainbow behind it, speed surging on
                    the beat, through rings that pop; down to drive again, then
@@ -84,14 +84,14 @@ local EXT = { wav = true, mp3 = true, ogg = true }
 
 LC.Endings = {
     harpies   = { name = "The Harpies", say = "The lights go out. Something is gathering out there in the dark." },
-    crazybus  = { name = "The Crazy Bus", say = "Hear that horn? All aboard." },
+    bus       = { name = "The Bus", say = "Hear that horn? All aboard." },
     nuanua    = { name = "Nua Nua", say = "Please fasten your seatbelts." },
     topsecret = { name = "Top Secret", say = "Look up." },
     grigori   = { name = "The Flood", say = "Father Grigori has eaten the motherlode. The waters rise." },
     bloom     = { name = "Bloom", say = "Everybody dances. Nobody stops." },
     marrow    = { name = "Marrow", say = "Something is rattling out there. Lots of somethings." },
 }
-LC.EndingOrder = { "harpies", "crazybus", "nuanua", "topsecret", "grigori", "bloom", "marrow" }
+LC.EndingOrder = { "harpies", "bus", "nuanua", "topsecret", "grigori", "bloom", "marrow" }
 
 local E -- the ending in progress: { id, phase, by, ... }
 function LC.EndingSession() return E end
@@ -1019,16 +1019,16 @@ local function FlyTick(now)
     end
 end
 
--- The Crazy Bus: the party bus. It drives about the streets through the
+-- The Bus: the party bus. It drives about the streets through the
 -- song's intro; on the drop (lc_ending_bus_sections) everyone, and some of
 -- the Combine's units, are in it, seated, and it takes off: through walls,
 -- a rainbow behind it, its speed surging on the beat, rings to fly through,
 -- the light inside pulsing. It comes down and drives again for a while,
 -- then takes off faster still. Nobody gets off (die, and you're back on).
 local cvBusSections = CreateConVar("lc_ending_bus_sections", "27:fly,149:drive,176:fast,220:end", FLAGS,
-    "The Crazy Bus: the song's sections, second:kind (fly, drive, fast, end); before the first, it drives about the streets")
-local cvBusBPM   = CreateConVar("lc_ending_bus_bpm", "138", FLAGS, "The Crazy Bus: the song's beats per minute (its speed and the lights keep to it)")
-local cvBusCombine = CreateConVar("lc_ending_bus_combine", "6", FLAGS, "The Crazy Bus: how many of the Combine's units get on too")
+    "The Bus: the song's sections, second:kind (fly, drive, fast, end); before the first, it drives about the streets")
+local cvBusBPM   = CreateConVar("lc_ending_bus_bpm", "138", FLAGS, "The Bus: the song's beats per minute (its speed and the lights keep to it)")
+local cvBusCombine = CreateConVar("lc_ending_bus_combine", "6", FLAGS, "The Bus: how many of the Combine's units get on too")
 local BUS = { "models/props_vehicles/bus01_2.mdl", "models/props_vehicles/van001a_physics.mdl" }
 local RAINBOW = { { 255, 40, 40 }, { 255, 150, 30 }, { 255, 240, 40 }, { 60, 230, 80 }, { 60, 140, 255 }, { 170, 70, 255 } }
 local RING = "models/hunter/tubes/tube4x4x025.mdl"
@@ -1089,7 +1089,7 @@ local function NewRing(at, from)
     E.rings[#E.rings + 1] = ring
 end
 
-SETUP.crazybus = function()
+SETUP.bus = function()
     local now = CurTime()
     E.sections = LC.MarrowSections(cvBusSections:GetString())
     for _, sct in ipairs(E.sections) do if sct.kind == "end" then E.holdUntil = now + sct.t end end
@@ -1136,7 +1136,7 @@ local function BoardBus()
     end
 end
 
-TICK.crazybus = function(now)
+TICK.bus = function(now)
     local bus = E.bus
     if not IsValid(bus) then return end
     local t = now - E.phaseT
@@ -1221,7 +1221,7 @@ end
 -- Nobody gets off the bus: no suicide, and the dead are put straight back on.
 hook.Add("CanPlayerSuicide", "LivingCityEndings", function() if E and E.phase == "apocalypse" then return false end end)
 hook.Add("PlayerDeath", "LivingCityEndingBus", function(p)
-    if E and E.id == "crazybus" and E.boarded then
+    if E and E.id == "bus" and E.boarded then
         p.lcEndRide = nil
         timer.Simple(0.5, function() if IsValid(p) and not p:Alive() then p:Spawn() end end)
     end

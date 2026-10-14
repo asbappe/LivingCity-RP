@@ -1280,7 +1280,7 @@ _advance(1.1)
 for _, h in pairs(hook.t["Think"] or {}) do h() end
 paint()
 for _, h in pairs(hook.t["RenderScreenspaceEffects"] or {}) do h() end
-net._q = { { id = "crazybus", phase = "apocalypse", name = "The Crazy Bus", say = "x", song = "livingcity/endings/crazybus/bus.ogg",
+net._q = { { id = "bus", phase = "apocalypse", name = "The Bus", say = "x", song = "livingcity/endings/bus/bus.ogg",
     client = { party = true, lights = true, strobe = true, dance = "bus", palette = { { 255, 40, 40 }, { 60, 140, 255 } }, bpm = 138, offset = 0, start = CurTime(), bus = 1 } } }
 net.recv_lc_ending()
 _me.nw.lc_seated = true
