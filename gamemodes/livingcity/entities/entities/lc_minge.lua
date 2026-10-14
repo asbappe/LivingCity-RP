@@ -46,8 +46,8 @@ function ENT:Draw()
         self.lcGun:SetNoDraw(true)
     end
     local ang = self:GetAngles()
-    local pos = self:GetPos() + ang:Up() * 38 + ang:Forward() * 4 - ang:Right() * 2
-    local ga = Angle(ang.p, ang.y - 90, ang.r) -- (lying across him, the prongs out to his right)
+    local pos = self:GetPos() + ang:Up() * 36 + ang:Forward() * 2
+    local ga = Angle(0, ang.y, 0) -- (sticking straight out of him, the way he faces)
     self.lcGun:SetPos(pos)
     self.lcGun:SetAngles(ga)
     self.lcGun:SetupBones()
