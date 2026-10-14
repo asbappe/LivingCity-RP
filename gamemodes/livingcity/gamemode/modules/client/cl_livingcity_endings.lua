@@ -471,8 +471,15 @@ local function Dance(ent, beat, now)
         danced[ent] = true
         return
     end
+    -- hands higher above the head (they clip it otherwise): about 6 inches for a person,
+    -- about 12 for the Combine's units, whose helmets and gear stand out further
+    local mdl = string.lower(ent.GetModel and ent:GetModel() or "")
+    local lift = (string.find(mdl, "police", 1, true) or string.find(mdl, "combine", 1, true) or string.find(mdl, "soldier", 1, true)) and 2 or 1
     for name, id in pairs(b) do
         local a = Angle(POSE[name].p, POSE[name].y, POSE[name].r)
+        if name == "R_UpperArm" or name == "L_UpperArm" then a.y = a.y - 12 * lift
+        elseif name == "R_Forearm" or name == "L_Forearm" then a.y = a.y + 10 * lift
+        end
         -- (on these models a bone's yaw is side to side and its roll front to back: the hips
         -- swing side to side under a chest that leans against them, and the hands bend at
         -- the wrist like ears flapping, rather than twisting)
