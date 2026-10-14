@@ -11320,7 +11320,10 @@ local crowdOK = #E.crowd >= 1
 for _, c in ipairs(E.crowd) do if c.lcHang or not c:GetNW2Bool("lc_dancing", false) then crowdOK = false end end
 ok(crowdOK, "a crowd gathers round and cheers, and none of them is strung up", #E.crowd)
 ok(not who.SetMaterial or who:GetMaterial() == "models/debug/debugwhite", "the hanged are painted white")
-ok(who.frozen and #E.client.hangs >= 1 and E.client.hangs[1].a, "the rope goes up to something, and they can't get down")
+ok(IsValid(who.lcCone) and who.lcCone:GetParent() == who and who.lcCone:GetModel() == "models/props_junk/trafficcone001a.mdl",
+    "with a white cone hat over the head, riding along with them (everyone sees it)")
+ok(not who.frozen and who:GetMoveType() == MOVETYPE_NONE and #E.client.hangs >= 1 and E.client.hangs[1].a, "the rope goes up to something, and they can't get down (but they can look about)",
+    tostring(who.frozen) .. " " .. tostring(who:GetMoveType()) .. " " .. tostring(#E.client.hangs))
 runToS(4.5)
 ok(who.lcEndTaken and who:GetNW2Bool("lc_limp", false) and who.alive, "they lose health on the rope, then go limp, and look on (nobody really dies)")
 ok(hook.Run("CanPlayerSuicide", who) == false, "and there's no way out of it")

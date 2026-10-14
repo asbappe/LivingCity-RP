@@ -273,6 +273,7 @@ function file.Open(path)
     return R
 end
 MOVETYPE_WALK, MOVETYPE_NOCLIP, MOVETYPE_LADDER = 2, 8, 9
+MOVETYPE_NONE = 0
 function AddOriginToPVS() end
 navmesh = { IsLoaded = function() return false end }
 game = {

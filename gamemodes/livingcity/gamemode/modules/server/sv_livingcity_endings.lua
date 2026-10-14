@@ -2371,15 +2371,36 @@ local function Hang(e)
     local left = ((E.holdUntil or (CurTime() + 60)) - CurTime()) - 3
     e.lcHang.rate = math.max(cvStandupDrain:GetFloat(), (e.Health and e:Health() or 100) / math.max(1.5, left))
     e:SetNW2Float("lc_hanged", CurTime())
-    -- painted white, and (on each screen) a white cone hat over the head
+    -- painted white, and a white cone hat pulled down over the head (a real prop, riding
+    -- along with them: everyone sees it, wherever they swing)
     if e.SetMaterial then e:SetMaterial("models/debug/debugwhite") end
     if e.SetColor then e:SetColor(Color(245, 245, 245, 255)) end
+    local cone = ents.Create("prop_dynamic")
+    if IsValid(cone) then
+        cone:SetModel("models/props_junk/trafficcone001a.mdl")
+        local head = e:GetPos() + Vector(0, 0, 64)
+        local id = e.LookupBone and e:LookupBone("ValveBiped.Bip01_Head1")
+        local bp = id and e.GetBonePosition and e:GetBonePosition(id)
+        if bp and bp.z - e:GetPos().z > 40 then head = bp end -- (the bone, if the server knows where it is)
+        cone:SetPos(head - Vector(0, 0, 9))
+        cone:SetAngles(Angle(0, e:GetAngles().y, 0))
+        cone:Spawn()
+        if cone.SetSolid then cone:SetSolid(SOLID_NONE) end
+        if cone.SetMaterial then cone:SetMaterial("models/debug/debugwhite") end
+        if cone.SetColor then cone:SetColor(Color(245, 245, 245, 255)) end
+        if cone.SetModelScale then cone:SetModelScale(0.9, 0) end
+        cone:SetParent(e)
+        E.ents[#E.ents + 1] = cone
+        e.lcCone = cone
+    end
     if e:IsPlayer() then
         if e.InVehicle and e:InVehicle() and e.ExitVehicle then e:ExitVehicle() end
-        e.lcEndFrozen = true
-        e:Freeze(true)
+        -- (held there, not frozen: a frozen player can't even look about, and the rope's
+        -- view is all about looking about; where they are is set every tick anyway)
+        e:Freeze(false)
+        e.lcEndFrozen = nil
         e:SetMoveType(MOVETYPE_NONE)
-        e:ChatPrint("A rope drops round your neck from above, and up you go.")
+        e:ChatPrint("A rope drops round your neck from above, and up you go. (You can still look about.)")
     end
     e:EmitSound("physics/wood/wood_strain" .. math.random(2, 4) .. ".wav", 80)
     -- and the crowd goes wild

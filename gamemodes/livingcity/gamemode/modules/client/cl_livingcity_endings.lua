@@ -104,15 +104,52 @@ local function GmanPlace()
     if not IsValid(gman) then gman = nil return end
     gman:SetPos(gmanAt)
     gman:SetAngles(Angle(0, ang.y + 180, 0))
-    for _, name in ipairs({ "idle_subtle", "idle" }) do
-        local seq = gman:LookupSequence(name)
-        if seq and seq >= 0 then gman:ResetSequence(seq) break end
+    -- his idle (the model's own), and the tie he straightens now and then
+    local idle = gman.SelectWeightedSequence and ACT_IDLE and gman:SelectWeightedSequence(ACT_IDLE) or -1
+    if not idle or idle < 0 then
+        for _, name in ipairs({ "idle_subtle", "idle", "Idle01", "standing_idle" }) do
+            idle = gman:LookupSequence(name)
+            if idle and idle >= 0 then break end
+        end
     end
+    gman.lcIdle = idle
+    for _, name in ipairs({ "tiefidget", "Tie_Adjust", "adjust_tie" }) do
+        local f = gman:LookupSequence(name)
+        if f and f >= 0 then gman.lcFidget = f break end
+    end
+    gman.lcNextFidget = CurTime() + math.Rand(3, 6)
+    if idle and idle >= 0 then gman:ResetSequence(idle) gman.lcSeqT0 = CurTime() end
 end
 LC_CL.EndingGmanAt = function() return gmanAt end
 
+-- (a model drawn only on your screen doesn't animate by itself: he's moved along by the
+-- clock, the only thing in the world still moving)
 hook.Add("Think", "LivingCityEndingGman", function()
-    if IsValid(gman) and gman.FrameAdvance then gman:FrameAdvance() end -- (the only thing still moving)
+    if not IsValid(gman) then return end
+    local now = CurTime()
+    local fidgeting = gman.lcFidgetUntil and now < gman.lcFidgetUntil
+    if not fidgeting and gman.lcFidget and now >= (gman.lcNextFidget or math.huge) then
+        local d = gman.SequenceDuration and gman:SequenceDuration(gman.lcFidget) or 0
+        gman.lcFidgetUntil = now + ((d and d > 0) and d or 3)
+        gman.lcNextFidget = gman.lcFidgetUntil + math.Rand(5, 9)
+        fidgeting = true
+    end
+    local seq = fidgeting and gman.lcFidget or gman.lcIdle
+    if seq and seq >= 0 then
+        if gman.GetSequence and gman:GetSequence() ~= seq then gman:ResetSequence(seq) gman.lcSeqT0 = now end
+        local d = gman.SequenceDuration and gman:SequenceDuration(seq) or 0
+        if not d or d <= 0 then d = 3 end
+        if gman.SetCycle then gman:SetCycle(((now - (gman.lcSeqT0 or now)) / d) % 1) end
+    end
+    -- and his mouth, while he speaks
+    if gman.GetFlexIDByName then
+        local talking = LC_CL.gmanTalkUntil and now < LC_CL.gmanTalkUntil
+        local w = talking and (math.abs(math.sin(now * 11)) * (0.35 + 0.65 * math.abs(math.sin(now * 3.7)))) or 0
+        for _, name in ipairs({ "jaw_drop", "right_part", "left_part" }) do
+            local id = gman:GetFlexIDByName(name)
+            if id then gman:SetFlexWeight(id, w) end
+        end
+    end
 end)
 
 hook.Add("CalcView", "LivingCityEndingGman", function(me, origin, angles, fov)
@@ -165,7 +202,9 @@ hook.Add("Think", "LivingCityEndings", function()
     local l = table.remove(lineQueue, 1)
     surface.PlaySound(l)
     local d = SoundDuration and SoundDuration(l) or 0
-    lineNext = CurTime() + ((d and d > 0.2) and d or 4) + 0.6
+    d = (d and d > 0.2) and d or 4
+    lineNext = CurTime() + d + 0.6
+    LC_CL.gmanTalkUntil = CurTime() + d -- (his mouth moves while he speaks)
 end)
 
 -- the vote: 1 or 2 (the weapon slots), or lc_ending_vote yes|skip
@@ -1360,8 +1399,19 @@ end)
 
 -- On the rope you're moved along it every tick, which the game takes for
 -- running: stand still instead (the kicking and the limp are the bones, above).
+-- (and the standing idle itself, named, so it's never the bind pose with the arms out)
 hook.Add("CalcMainActivity", "LivingCityStandup", function(ply)
-    if Standup() and IsValid(ply) and ply:GetNW2Float("lc_hanged", 0) > 0 then return ACT_MP_STAND_IDLE, -1 end
+    if Standup() and IsValid(ply) and ply:GetNW2Float("lc_hanged", 0) > 0 then
+        local seq = ply.LookupSequence and ply:LookupSequence("idle_all_01") or -1
+        if not seq or seq < 0 then seq = ply.LookupSequence and ply:LookupSequence("idle_all_02") or -1 end
+        return ACT_MP_STAND_IDLE, seq or -1
+    end
+end)
+-- You can look about from the rope, but the body doesn't turn its head after you:
+-- kicking, it's the struggle; limp, it hangs.
+hook.Add("UpdateAnimation", "LivingCityStandup", function(ply)
+    if not Standup() or not IsValid(ply) or ply:GetNW2Float("lc_hanged", 0) <= 0 or not ply.SetPoseParameter then return end
+    for _, pp in ipairs({ "head_yaw", "head_pitch", "aim_yaw", "aim_pitch" }) do ply:SetPoseParameter(pp, 0) end
 end)
 
 -- strung up: you see yourself from a little way off, and can look about
@@ -1370,41 +1420,4 @@ hook.Add("CalcView", "LivingCityStandup", function(me, origin, angles, fov)
     return { origin = me:GetPos() + Vector(0, 0, 50) - angles:Forward() * 160, angles = angles, fov = fov, drawviewer = true }
 end)
 
--- the hanged: a white cone hat over the head
-local CONE = "models/props_junk/trafficcone001a.mdl"
-local cones = {}
-hook.Add("PostDrawOpaqueRenderables", "LivingCityStandupHats", function(_, sky)
-    if sky then return end -- (the 3D skybox's pass: nothing to draw there, and the hats stay)
-    local c = Standup()
-    if not c or not ClientsideModel then
-        for e, m in pairs(cones) do if IsValid(m) then m:Remove() end end
-        cones = {}
-        return
-    end
-    for _, h in ipairs(c.hangs or {}) do
-        local e = Entity(h.e)
-        if IsValid(e) then
-            local m = cones[e]
-            if not IsValid(m) then
-                m = ClientsideModel(CONE, RENDERGROUP_OPAQUE)
-                if IsValid(m) then
-                    m:SetNoDraw(true)
-                    if m.SetMaterial then m:SetMaterial("models/debug/debugwhite") end
-                    if m.SetModelScale then m:SetModelScale(0.9, 0) end
-                    cones[e] = m
-                end
-            end
-            if IsValid(m) then
-                local id = e.LookupBone and e:LookupBone("ValveBiped.Bip01_Head1")
-                local mat = id and e.GetBoneMatrix and e:GetBoneMatrix(id)
-                local head = mat and mat:GetTranslation() or (e:GetPos() + Vector(0, 0, 64))
-                m:SetPos(head - Vector(0, 0, 9)) -- (pulled down over the head)
-                m:SetAngles(Angle(0, e:GetAngles().y, 0))
-                if render.SetColorModulation then render.SetColorModulation(0.96, 0.96, 0.96) end
-                m:SetupBones()
-                m:DrawModel()
-                if render.SetColorModulation then render.SetColorModulation(1, 1, 1) end
-            end
-        end
-    end
-end)
+-- (the white cone hats are real props, set on them by the server: sv_livingcity_endings.lua)

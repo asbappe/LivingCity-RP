@@ -150,11 +150,11 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **Plane (lc_ending plane now):** everyone on the wings doing the webcam dance and mouthing the words, the webcam box in the corner, the captions, the barrel rolls, the fireworks, the climb into the clouds. Do the captions line up (lc_ending_plane_captions)? Do the wings look right? The plane (and the bus, and the ZIG fleet) stays in open sky, never through a building, and the camera never ends up in the void?
   Notes:
-- [ ] **Standup (lc_ending standup now):** someone strung up every other beat, where the ropes go (overhead, walls, sky), the struggling and going limp, the view from the rope. Hanging still on the rope, not running in place; the white cone hats showing; and everyone limp before the song ends, even the last to go up.
+- [ ] **Standup (lc_ending standup now):** someone strung up every other beat, where the ropes go (overhead, walls, sky), the struggling and going limp, the view from the rope. Hanging still on the rope, not running in place; the white cone hats showing; and everyone limp before the song ends, even the last to go up. On the rope you can look about (the camera moves; your body's head doesn't turn after it); the white cone hats on everyone strung up (real props now); hanging in a standing pose, not arms out.
   Notes:
 - [ ] **Flashing warning:** before an ending with strobes, the popup stays up 15 seconds (counting down) before keeping the flashing; Reduce flashing turns it off for you.
 - [ ] **Running sway:** running looks like a grown-up's stride (about three steps a second), not a toddler's bounce; walking unchanged.
-- [ ] **Secret endings:** the G-Man stops time and everyone votes (he's right in front of you whichever way you were looking, your view held on him, and the city's announcements stop); Father Grigori eating a master data core (Eat it in his pockets, or /eatchip) starts the flood (admins: lc_ending <id> now). Once you're out of an ending, left/right click watches someone else and jump flies free (in every ending).
+- [ ] **Secret endings:** the G-Man stops time and everyone votes (he's right in front of you whichever way you were looking, your view held on him, and the city's announcements stop); Father Grigori eating a master data core (Eat it in his pockets, or /eatchip) starts the flood (admins: lc_ending <id> now). Once you're out of an ending, left/right click watches someone else and jump flies free (in every ending). The G-Man moves: his idle, straightening his tie now and then, his mouth going as he speaks (each player sees their own, in front of them).
   Notes:
 
 ## Death and progression
