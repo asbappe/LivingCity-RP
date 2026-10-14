@@ -32,6 +32,12 @@
         crazybus   everyone in a bus or van, flying round the city
         nuanua     everyone on an airplane, high over the city
         topsecret  everyone hung by barnacles, one a second
+        bloom      everyone dances (every NPC too) and can't stop; the city dims
+                   and coloured light pulses on the beat; from 2:01
+                   (lc_ending_bloom_speedup) the song speeds up, and at the top
+                   of it the dancers spin up into the sky one at a time and
+                   burst. (A codeword: the song's name is in nothing players
+                   download.)
         grigori    a rising flood; Father Grigori rocks out above it, mouthing
                    every word. Triggered by Father Grigori himself eating the
                    motherlode: /eatchip, with a master data core in his pockets.
@@ -71,8 +77,9 @@ LC.Endings = {
     nuanua    = { name = "Nua Nua", say = "Please fasten your seatbelts." },
     topsecret = { name = "Top Secret", say = "Look up." },
     grigori   = { name = "The Flood", say = "Father Grigori has eaten the motherlode. The waters rise." },
+    bloom     = { name = "Bloom", say = "Everybody dances. Nobody stops." },
 }
-LC.EndingOrder = { "harpies", "crazybus", "nuanua", "topsecret", "grigori" }
+LC.EndingOrder = { "harpies", "crazybus", "nuanua", "topsecret", "grigori", "bloom" }
 
 local E -- the ending in progress: { id, phase, by, ... }
 function LC.EndingSession() return E end
@@ -127,7 +134,7 @@ local function Send(to)
         for _, v in pairs(E.votes or {}) do if v then yes = yes + 1 else skip = skip + 1 end end
         net.WriteTable({ id = E.id, phase = E.phase, name = LC.Endings[E.id].name, say = LC.Endings[E.id].say,
             voteEnds = E.voteEnds, yes = yes, skip = skip, song = E.song, lines = E.lines, grigori = E.grigori,
-            floodZ = E.floodZ })
+            floodZ = E.floodZ, client = E.client })
     end
     if to then net.Send(to) else net.Broadcast() end
 end
@@ -318,6 +325,7 @@ local function Body(model, pos, yaw, fling)
         end
     end
     E.ents[#E.ents + 1] = r
+    E.bodies = E.bodies or {}
     E.bodies[#E.bodies + 1] = r
     if #E.bodies > 40 then local old = table.remove(E.bodies, 1) if IsValid(old) then old:Remove() end end
     return r
@@ -336,10 +344,8 @@ end
 
 -- Killed by them: a body on the ground, and the player watches the rest.
 -- (Not really dead: no close call spent, no new character; the map resets.)
-local function Slaughter(p, how)
+local function Spectator(p, how, col)
     if not IsValid(p) or p.lcEndTaken then return end
-    Body(p:GetModel(), p:GetPos(), p:EyeAngles().y, 260)
-    p:EmitSound("vo/npc/male01/pain0" .. math.random(7, 9) .. ".wav", 80)
     p.lcEndTaken, p.lcEndSpectating = true, true
     p:SetNW2Bool("lc_end_taken", true)
     p:SetNW2Bool("lc_end_spectating", true)
@@ -347,9 +353,17 @@ local function Slaughter(p, how)
     if p.SetNotSolid then p:SetNotSolid(true) end
     if p.Spectate then p:Spectate(OBS_MODE_CHASE) end
     Watch(p, 1)
-    if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(140, 0, 0, 220), 2, 0) end
-    p:ChatPrint(how or "The mingebags got you.")
+    if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, col or Color(140, 0, 0, 220), 2, 0) end
+    p:ChatPrint(how or "You're out of it. Watch the rest.")
     hook.Run("LivingCityEndingTook", p, E and E.id)
+end
+LC.EndingSpectator = Spectator
+
+local function Slaughter(p, how)
+    if not IsValid(p) or p.lcEndTaken then return end
+    Body(p:GetModel(), p:GetPos(), p:EyeAngles().y, 260)
+    p:EmitSound("vo/npc/male01/pain0" .. math.random(7, 9) .. ".wav", 80)
+    Spectator(p, how or "The mingebags got you.")
 end
 LC.EndingSlaughter = Slaughter
 
@@ -558,6 +572,113 @@ hook.Add("KeyPress", "LivingCityEndingWatch", function(p, key)
     end
 end)
 
+-- Bloom: everyone dances (players, and every NPC in the city), and nobody
+-- can stop. The city dims, coloured light pulses on the beat, the props
+-- hop. At lc_ending_bloom_speedup (2:01) the song starts speeding up; at the
+-- top of it, the dancers spin up into the sky one at a time and burst.
+-- (The song's own name stays out of everything players can see: the folder
+-- is endings/bloom/, and the file can be called anything.)
+local cvBloomBPM     = CreateConVar("lc_ending_bloom_bpm", "165", FLAGS, "Bloom: the song's beats per minute (the dance keeps to it)")
+local cvBloomOffset  = CreateConVar("lc_ending_bloom_offset", "0", FLAGS, "Bloom: seconds into the song of its first beat")
+local cvBloomSpeedup = CreateConVar("lc_ending_bloom_speedup", "121", FLAGS, "Bloom: seconds into the song when it starts speeding up")
+local cvBloomRamp    = CreateConVar("lc_ending_bloom_ramp", "20", FLAGS, "Bloom: seconds it takes to reach top speed")
+local cvBloomPeak    = CreateConVar("lc_ending_bloom_peak", "1.6", FLAGS, "Bloom: top speed (1.6: 60% faster, and higher, like a record spun up)")
+local cvBloomWindow  = CreateConVar("lc_ending_bloom_launch_secs", "16", FLAGS, "Bloom: seconds over which everyone spins up into the sky, one at a time, once it's at top speed")
+
+local function Dancers()
+    local out = {}
+    for npc in pairs(LC.NPCs or {}) do if IsValid(npc) then out[#out + 1] = npc end end
+    return out
+end
+
+SETUP.bloom = function()
+    E.dark = true
+    LC.EndingDark = "e" -- (dim, so the coloured light shows)
+    if LC.ApplyLightStyle then LC.ApplyLightStyle() end
+    -- the city stops what it's doing...
+    LC.TimeStopped = true
+    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    -- ...and dances
+    for _, p in ipairs(player.GetAll()) do
+        if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
+        p.lcEndFrozen = true -- (so a cancel lets them go again)
+        p:Freeze(true)
+        p:SetNW2Bool("lc_dancing", true)
+    end
+    for _, n in ipairs(Dancers()) do n:SetNW2Bool("lc_dancing", true) end
+    -- the props near anyone hop along
+    local props, seen = {}, {}
+    for _, p in ipairs(player.GetAll()) do
+        for _, e in ipairs(ents.FindInSphere(p:GetPos(), 900)) do
+            local c = IsValid(e) and e:GetClass() or ""
+            if not seen[e] and #props < 48 and (c == "prop_physics" or c == "prop_dynamic" or c == "prop_physics_multiplayer") then
+                seen[e] = true
+                props[#props + 1] = e:EntIndex()
+            end
+        end
+    end
+    local now = CurTime()
+    E.client = { bpm = cvBloomBPM:GetFloat(), offset = cvBloomOffset:GetFloat(), start = now,
+        rateAt = now + cvBloomSpeedup:GetFloat(), rateDur = math.max(1, cvBloomRamp:GetFloat()), peak = math.max(1, cvBloomPeak:GetFloat()),
+        props = props }
+    E.climax = E.client.rateAt + E.client.rateDur
+    E.launchGap = math.Clamp(cvBloomWindow:GetFloat() / math.max(1, #player.GetAll()), 0.6, 3)
+    E.holdUntil = E.climax + math.max(cvBloomWindow:GetFloat(), E.launchGap * #player.GetAll()) + 5 -- (the last one up, and a moment)
+    E.launching = {}
+end
+
+-- One dancer spins up into the sky, and bursts.
+local function Launch(e, now)
+    if not IsValid(e) or e.lcBloomUp then return end
+    e.lcBloomUp = { t0 = now, from = e:GetPos() }
+    e:SetNW2Float("lc_spin_t0", now)
+    if e:IsPlayer() then e:SetMoveType(MOVETYPE_NONE) end
+    E.launching[#E.launching + 1] = e
+end
+
+TICK.bloom = function(now)
+    if now >= (E.climax or math.huge) then
+        -- the players, one at a time
+        if now >= (E.nextLaunch or 0) then
+            E.nextLaunch = now + E.launchGap
+            local pick = {}
+            for _, p in ipairs(Living()) do if not p.lcBloomUp then pick[#pick + 1] = p end end
+            if #pick > 0 then Launch(pick[math.random(#pick)], now) end
+        end
+        -- and the city's own dancers, a few at a time
+        if now >= (E.nextNPCLaunch or 0) then
+            E.nextNPCLaunch = now + 0.25
+            for _, n in ipairs(Dancers()) do if not n.lcBloomUp then Launch(n, now) break end end
+        end
+    end
+    local keep = {}
+    for _, e in ipairs(E.launching) do
+        local u = IsValid(e) and e.lcBloomUp
+        if u then
+            local t = now - u.t0
+            e:SetPos(u.from + Vector(0, 0, 40 * t + 160 * t * t))
+            if t >= 2.5 then
+                if util.Effect and EffectData then
+                    local fx = EffectData()
+                    fx:SetOrigin(e:GetPos() + Vector(0, 0, 40))
+                    if fx.SetStart then fx:SetStart(Vector(255, 120, 200)) end
+                    util.Effect("balloon_pop", fx)
+                end
+                e:EmitSound("garrysmod/balloon_pop_cute.wav", 90)
+                if e:IsPlayer() then
+                    if e.SetNoDraw then e:SetNoDraw(true) end
+                    Spectator(e, "You spin up into the sky and burst into sparkles. Watch the rest go.", Color(255, 150, 210, 220))
+                else
+                    e:Remove()
+                end
+            else
+                keep[#keep + 1] = e
+            end
+        end
+    end
+    E.launching = keep
+end
+
 -- flying things: a vehicle per group of riders, circling the city
 local function Fly(models, perVehicle, height, speed, scale, secs)
     E.flights = {}
@@ -698,9 +819,12 @@ local function Clear()
         p.lcEndSpectating, p.lcEndWatching, p.lcEndRoam = nil, nil, nil
         p:SetNW2Bool("lc_end_taken", false)
         p:SetNW2Bool("lc_end_spectating", false)
+        p:SetNW2Bool("lc_dancing", false)
+        p.lcBloomUp = nil
         p:SetNW2Bool("lc_rocking", false)
     end
     SetGlobal2Float("lc_flood_z", 0)
+    for npc in pairs(LC.NPCs or {}) do if IsValid(npc) then npc:SetNW2Bool("lc_dancing", false) npc.lcBloomUp = nil end end
     if E and E.dark then
         LC.EndingDark = nil
         if LC.ForceBlackout then LC.ForceBlackout("auto") end

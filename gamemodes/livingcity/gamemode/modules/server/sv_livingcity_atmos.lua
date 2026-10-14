@@ -96,7 +96,7 @@ local function ApplyLight(phase)
     -- a city-wide blackout (sv_livingcity_power.lua): whichever's darker
     local dark = LC.CityDark and LC.BlackoutStyle and LC.BlackoutStyle()
     if dark and dark < style then style = dark end
-    if LC.EndingDark then style = "a" end -- (a secret ending turned every light out: sv_livingcity_endings.lua)
+    if LC.EndingDark then style = isstring(LC.EndingDark) and LC.EndingDark or "a" end -- (a secret ending dimmed the city, or turned every light out: sv_livingcity_endings.lua)
     if LC.LightStyle == style then return end
     LC.LightStyle = style
     if engine.LightStyle then engine.LightStyle(0, style) end

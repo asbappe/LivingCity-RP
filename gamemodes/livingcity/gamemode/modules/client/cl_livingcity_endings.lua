@@ -151,3 +151,238 @@ hook.Add("MouthMoveAnimation", "LivingCityEndings", function(ply)
     end
     return true
 end)
+
+------------------------------------------------------------------------
+-- Bloom: everyone dances, nobody stops (sv_livingcity_endings.lua)
+------------------------------------------------------------------------
+
+-- The dance, as bone turns on top of whatever the model's doing: both hands
+-- up on the head, the wrists flapping in turn, the hips swaying with the
+-- beat, a bounce in the knees. Tune it live: lc_bloom_preview (dance on the
+-- spot yourself), lc_bloom_pose <bone> <p> <y> <r>, lc_bloom_pose_print.
+local POSE = {
+    R_UpperArm = Angle(25, -95, 10),  R_Forearm = Angle(-15, -110, 0), R_Hand = Angle(0, 0, 0),
+    L_UpperArm = Angle(-25, -95, -10), L_Forearm = Angle(15, -110, 0), L_Hand = Angle(0, 0, 0),
+    Pelvis = Angle(0, 0, 0), Spine2 = Angle(0, 0, 0), Head = Angle(0, 0, 0),
+    R_Thigh = Angle(0, 0, 0), L_Thigh = Angle(0, 0, 0), R_Calf = Angle(0, 0, 0), L_Calf = Angle(0, 0, 0),
+}
+local FLAP, SWAY, KNEE = 35, 12, 18
+local PALETTE = { Color(255, 110, 200), Color(220, 90, 255), Color(100, 190, 255), Color(110, 255, 190), Color(255, 235, 110) }
+local preview = false
+local danced = {}   -- [ent] = true: someone we've turned bones on
+local bonesOf = {}  -- [model] = { name = id }
+
+local function Bloom() return S and S.id == "bloom" and S.phase == "apocalypse" and S.client end
+
+-- How far into the song we are (the song itself if it's playing; else the clock, sped up the same way).
+local function SongPos(now)
+    if channel and channel.GetTime then return channel:GetTime() end
+    local c = S and S.client
+    if not c then return 0 end
+    local t = now - (c.start or now)
+    local a = (c.rateAt or math.huge) - (c.start or now)
+    if t <= a then return t end
+    local x = math.min(t - a, c.rateDur or 1)
+    local ramp = x + (c.peak - 1) * x * x / (2 * (c.rateDur or 1))
+    return a + ramp + math.max(0, t - a - (c.rateDur or 1)) * c.peak
+end
+
+local function Rate(now)
+    local c = S and S.client
+    if not c or now < (c.rateAt or math.huge) then return 1 end
+    return 1 + ((c.peak or 1) - 1) * math.Clamp((now - c.rateAt) / (c.rateDur or 1), 0, 1)
+end
+
+local function Beat(now)
+    if preview and not Bloom() then return now * 165 / 60 end
+    local c = S.client
+    return (SongPos(now) - (c.offset or 0)) * (c.bpm or 165) / 60
+end
+
+local function Bones(ent)
+    local m = ent:GetModel() or ""
+    local b = bonesOf[m]
+    if not b then
+        b = {}
+        for name in pairs(POSE) do
+            local id = ent.LookupBone and ent:LookupBone("ValveBiped.Bip01_" .. name)
+            if id then b[name] = id end
+        end
+        bonesOf[m] = b
+    end
+    return b
+end
+
+local function Dance(ent, beat, now)
+    if not ent.ManipulateBoneAngles then return end
+    local b = Bones(ent)
+    local wave = math.sin(beat * math.pi)            -- left, right, a beat each
+    local flap = math.sin(beat * math.pi * 2) * FLAP -- the wrists, every beat
+    local bounce = math.abs(wave)
+    for name, id in pairs(b) do
+        local a = Angle(POSE[name].p, POSE[name].y, POSE[name].r)
+        if name == "R_Hand" then a.r = a.r + flap
+        elseif name == "L_Hand" then a.r = a.r - flap
+        elseif name == "Pelvis" then a.r = a.r + wave * SWAY
+        elseif name == "Spine2" then a.r = a.r - wave * SWAY * 0.6
+        elseif name == "Head" then a.r = a.r - wave * 6
+        elseif name == "R_Calf" then a.y = a.y + bounce * KNEE * (wave > 0 and 1 or 0.3)
+        elseif name == "L_Calf" then a.y = a.y + bounce * KNEE * (wave < 0 and 1 or 0.3)
+        end
+        -- spinning up into the sky
+        local t0 = ent.GetNW2Float and ent:GetNW2Float("lc_spin_t0", 0) or 0
+        if name == "Pelvis" and t0 > 0 then a.y = a.y + ((now - t0) ^ 2) * 720 % 360 end
+        ent:ManipulateBoneAngles(id, a)
+    end
+    danced[ent] = true
+end
+
+local function Undance(ent)
+    if IsValid(ent) and ent.ManipulateBoneAngles then
+        for _, id in pairs(Bones(ent)) do ent:ManipulateBoneAngles(id, Angle(0, 0, 0)) end
+    end
+    danced[ent] = nil
+end
+
+local dancers, dancersAt = {}, 0
+local props = {}
+
+hook.Add("Think", "LivingCityBloom", function()
+    local now = CurTime()
+    local on = Bloom()
+    if not on and not preview then
+        if next(danced) then for e in pairs(danced) do Undance(e) end end
+        for e in pairs(props) do if IsValid(e) and e.DisableMatrix then e:DisableMatrix("RenderMultiply") end end
+        props = {}
+        return
+    end
+    local beat = Beat(now)
+    if on and channel and channel.SetPlaybackRate then channel:SetPlaybackRate(Rate(now)) end
+    -- who's dancing (looked up once a second)
+    if now >= dancersAt then
+        dancersAt = now + 1
+        dancers = {}
+        for _, e in ipairs(ents.GetAll and ents.GetAll() or player.GetAll()) do
+            if IsValid(e) and e.GetNW2Bool and e:GetNW2Bool("lc_dancing", false) then dancers[#dancers + 1] = e end
+        end
+    end
+    local me = LocalPlayer()
+    if preview and IsValid(me) then Dance(me, beat, now) end
+    for _, e in ipairs(dancers) do
+        if IsValid(e) and e:GetNW2Bool("lc_dancing", false) and not (e.GetNoDraw and e:GetNoDraw()) then Dance(e, beat, now)
+        elseif danced[e] then Undance(e) end
+    end
+    if not on then return end
+    -- coloured light, pulsing on the beat, round the dancers nearest you
+    local frac = beat % 1
+    if DynamicLight and IsValid(me) then
+        local near = {}
+        for _, e in ipairs(dancers) do if IsValid(e) then near[#near + 1] = { e = e, d = e:GetPos():DistToSqr(me:GetPos()) } end end
+        table.sort(near, function(x, y) return x.d < y.d end)
+        for i = 1, math.min(#near, 24) do
+            local col = PALETTE[(math.floor(beat) + i) % #PALETTE + 1]
+            local dl = DynamicLight(52000 + i)
+            if dl then
+                dl.pos = near[i].e:GetPos() + Vector(0, 0, 70)
+                dl.r, dl.g, dl.b = col.r, col.g, col.b
+                dl.brightness = 1 + 3 * (1 - frac)
+                dl.size = 320
+                dl.decay = 0
+                dl.dietime = now + 0.15
+            end
+        end
+    end
+    -- the props hop
+    for _, idx in ipairs(on.props or {}) do
+        local e = Entity(idx)
+        if IsValid(e) and e.EnableMatrix and Matrix then
+            local m = Matrix()
+            m:Translate(Vector(0, 0, 6 * math.abs(math.sin(beat * math.pi))))
+            m:Rotate(Angle(0, 10 * math.sin(beat * math.pi), 0))
+            e:EnableMatrix("RenderMultiply", m)
+            props[e] = true
+        end
+    end
+end)
+
+-- You watch yourself dance: the camera circles you.
+local function Dancing(me)
+    return IsValid(me) and (preview or (Bloom() and me:GetNW2Bool("lc_dancing", false) and not me:GetNW2Bool("lc_end_spectating", false)))
+end
+hook.Add("CalcView", "LivingCityBloom", function(me, origin, angles, fov)
+    if not Dancing(me) then return end
+    local a = math.rad(CurTime() * 18)
+    local centre = me:GetPos() + Vector(0, 0, 45)
+    local eye = centre + Vector(math.cos(a) * 120, math.sin(a) * 120, 30)
+    return { origin = eye, angles = (centre - eye):Angle(), fov = fov, drawviewer = true }
+end)
+hook.Add("ShouldDrawLocalPlayer", "LivingCityBloom", function(me) if Dancing(me) then return true end end)
+
+-- The screen: a slow sunburst of pink and blue behind it all, sparkles
+-- rising, and the colour pulsing on the beat.
+local sparkles = {}
+hook.Add("HUDPaint", "LivingCityBloom", function()
+    if not Bloom() then sparkles = {} return end
+    local now = CurTime()
+    local w, h = ScrW(), ScrH()
+    local cx, cy = w / 2, h / 2
+    if draw.NoTexture and surface.DrawPoly then
+        draw.NoTexture()
+        local r = math.max(w, h)
+        local spin = math.rad(now * 12)
+        for i = 0, 15 do
+            local a1, a2 = spin + i * math.pi / 8, spin + (i + 1) * math.pi / 8
+            local col = i % 2 == 0 and PALETTE[1] or PALETTE[3]
+            surface.SetDrawColor(col.r, col.g, col.b, 18)
+            surface.DrawPoly({ { x = cx, y = cy }, { x = cx + math.cos(a1) * r, y = cy + math.sin(a1) * r }, { x = cx + math.cos(a2) * r, y = cy + math.sin(a2) * r } })
+        end
+    end
+    if #sparkles < 60 and math.random() < 0.5 then
+        sparkles[#sparkles + 1] = { x = math.random(0, w), y = h + 10, v = math.random(60, 160), s = math.random(4, 10), c = PALETTE[math.random(#PALETTE)], spin = math.random(0, 90) }
+    end
+    local keep = {}
+    local dt = FrameTime and FrameTime() or 0.016
+    for _, p in ipairs(sparkles) do
+        p.y = p.y - p.v * dt
+        if p.y > -20 then
+            surface.SetDrawColor(p.c.r, p.c.g, p.c.b, 200)
+            if surface.DrawTexturedRectRotated then surface.DrawTexturedRectRotated(p.x, p.y, p.s, p.s, p.spin + now * 90)
+            else surface.DrawRect(p.x, p.y, p.s, p.s) end
+            keep[#keep + 1] = p
+        end
+    end
+    sparkles = keep
+end)
+
+hook.Add("RenderScreenspaceEffects", "LivingCityBloom", function()
+    if not Bloom() or not DrawColorModify then return end
+    local pulse = 1 - (Beat(CurTime()) % 1)
+    DrawColorModify({ ["$pp_colour_addr"] = 0.05 * pulse, ["$pp_colour_addg"] = 0, ["$pp_colour_addb"] = 0.06 * pulse,
+        ["$pp_colour_brightness"] = 0, ["$pp_colour_contrast"] = 1.05, ["$pp_colour_colour"] = 1.35,
+        ["$pp_colour_mulr"] = 0, ["$pp_colour_mulg"] = 0, ["$pp_colour_mulb"] = 0 })
+end)
+
+-- tuning the dance (anyone can preview it on themselves; it's only on your screen)
+concommand.Add("lc_bloom_preview", function()
+    preview = not preview
+    if not preview and IsValid(LocalPlayer()) then Undance(LocalPlayer()) end
+    print("[Living City] Dance preview " .. (preview and "on (lc_bloom_preview again to stop)" or "off"))
+end)
+concommand.Add("lc_bloom_pose", function(_, _, args)
+    local name = args[1]
+    if not name or not POSE[name] then
+        local names = {}
+        for n in pairs(POSE) do names[#names + 1] = n end
+        table.sort(names)
+        print("[Living City] lc_bloom_pose <" .. table.concat(names, "|") .. "> <pitch> <yaw> <roll>")
+        return
+    end
+    POSE[name] = Angle(tonumber(args[2]) or 0, tonumber(args[3]) or 0, tonumber(args[4]) or 0)
+    bonesOf = {}
+end)
+concommand.Add("lc_bloom_pose_print", function()
+    local names = {}
+    for n in pairs(POSE) do names[#names + 1] = n end
+    table.sort(names)
+    for _, n in ipairs(names) do print(string.format("%s = Angle(%g, %g, %g)", n, POSE[n].p, POSE[n].y, POSE[n].r)) end
+end)

@@ -1262,6 +1262,19 @@ _globals.lc_flood_z = 40
 paint()
 _me.nw.lc_rocking = true
 for _, h in pairs(hook.t["MouthMoveAnimation"] or {}) do h(_me) end
+net._q = { { id = "bloom", phase = "apocalypse", name = "Bloom", say = "x", song = "livingcity/endings/bloom/bloom.ogg",
+    client = { bpm = 165, offset = 0, start = CurTime(), rateAt = CurTime() - 1, rateDur = 2, peak = 1.6, props = { 1 } } } }
+net.recv_lc_ending()
+_me.nw.lc_dancing = true
+for _, h in pairs(hook.t["Think"] or {}) do h() end
+_advance(1.2)
+for _, h in pairs(hook.t["Think"] or {}) do h() end
+for _, h in pairs(hook.t["CalcView"] or {}) do h(_me, Vector(0, 0, 0), Angle(0, 0, 0), 75) end
+for _, h in pairs(hook.t["ShouldDrawLocalPlayer"] or {}) do h(_me) end
+paint()
+for _, h in pairs(hook.t["RenderScreenspaceEffects"] or {}) do h() end
+_me.nw.lc_dancing = false
+if concommand.list and concommand.list.lc_bloom_pose then concommand.list.lc_bloom_pose(nil, "lc_bloom_pose", { "R_Hand", "1", "2", "3" }) end
 net._q = { { id = "grigori", phase = "reset", name = "The Flood" } }
 net.recv_lc_ending()
 _advance(2)

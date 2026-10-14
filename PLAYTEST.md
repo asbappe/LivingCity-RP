@@ -136,6 +136,8 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **The Harpies (lc_ending harpies now):** lights out, everyone at the LZ, mingebags gathering in the dark, the rush at the swell, the leaping, spectating the dead. Does the timing line up with the song? Does the pose look right?
   Notes:
+- [ ] **Bloom (lc_ending bloom now):** everyone dancing (NPCs too), the camera circling you, the coloured lights and sparkles, the speed-up at 2:01, the launches one at a time. Does the dance look right? (lc_bloom_preview to check it on yourself; lc_bloom_pose_print to send me the numbers.)
+  Notes:
 - [ ] **Secret endings:** the G-Man stops time and everyone votes; Father Grigori's /eatchip with a master data core starts the flood (admins: lc_ending <id> now).
   Notes:
 
