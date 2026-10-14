@@ -717,13 +717,15 @@ end)
 -- the free arm waving. Tune the nod: lc_headbang_angle "p y r".
 ------------------------------------------------------------------------
 
-local cvBang = CreateClientConVar("lc_headbang_angle", "0 48 0", true, false, "Father Grigori's headbang: how far his head goes down on each beat (pitch yaw roll)")
+local cvBang = CreateClientConVar("lc_headbang_angle", "0 0 30", true, false, "Father Grigori's headbang: how far his head goes down on each beat (pitch yaw roll; the neck and upper back follow it; \"0 0 -30\" if he bangs backwards)")
 local MIC = "models/props_lab/reciever01d.mdl"
 local rocked = {}
 
 local function BangAngle()
-    local p, y, r = string.match(cvBang:GetString() or "", "(%-?[%d%.]+)%s+(%-?[%d%.]+)%s+(%-?[%d%.]+)")
-    return Angle(tonumber(p) or 0, tonumber(y) or 48, tonumber(r) or 0)
+    local str = cvBang:GetString() or ""
+    if str == "0 48 0" then str = "0 0 30" end -- (the old setting nodded on the wrong axis: side to side)
+    local p, y, r = string.match(str, "(%-?[%d%.]+)%s+(%-?[%d%.]+)%s+(%-?[%d%.]+)")
+    return Angle(tonumber(p) or 0, tonumber(y) or 0, tonumber(r) or 30)
 end
 
 local function RockBeat(now)
@@ -759,10 +761,12 @@ hook.Add("Think", "LivingCityHeadbang", function()
             local sec = S.client and S.client.section or "intro"
             local wave = math.sin(beat * math.pi) -- (side to side, a beat each way)
             if sec == "heavy" or sec == "climax" then
-                -- the heavy parts: headbanging, hard, and the fist pumping
+                -- the heavy parts: headbanging, hard, the whole upper body slamming down on
+                -- the beat (head, neck and back each taking some of it), and the fist pumping
                 Set("Head", bang * down)
-                Set("Neck1", bang * (down * 0.6))
-                Set("Spine2", bang * (down * 0.35))
+                Set("Neck1", bang * (down * 0.8))
+                Set("Spine2", bang * (down * 0.7))
+                Set("Spine1", bang * (down * 0.5))
                 Set("Pelvis", Angle(0, 0, 0))
                 Set("L_UpperArm", Angle(-10, -60 - 50 * pump, 0))
                 Set("L_Forearm", Angle(0, -60, 0))
@@ -770,10 +774,12 @@ hook.Add("Think", "LivingCityHeadbang", function()
                 Set("L_Calf", Angle(0, 12 * pump, 0))
             else
                 -- the rest: dancing, the hips going, the free arm waving over his head
-                Set("Head", Angle(0, 6 * pump, 10 * wave))
+                -- (yaw is side to side on these bones, roll front to back)
+                Set("Head", Angle(0, 10 * wave, 6 * pump))
                 Set("Neck1", Angle(0, 0, 0))
-                Set("Spine2", Angle(0, 0, -8 * wave))
-                Set("Pelvis", Angle(0, 0, 12 * wave))
+                Set("Spine1", Angle(0, 0, 0))
+                Set("Spine2", Angle(0, -10 * wave, 0))
+                Set("Pelvis", Angle(0, 14 * wave, 0))
                 Set("L_UpperArm", Angle(25 * wave, -115, -10))
                 Set("L_Forearm", Angle(0, -25 + 25 * wave, 0))
                 Set("R_Calf", Angle(0, 20 * pump * (wave > 0 and 1 or 0.3), 0))
@@ -790,7 +796,7 @@ hook.Add("Think", "LivingCityHeadbang", function()
                 if IsValid(ply.lcMic) then ply.lcMic:Remove() ply.lcMic = nil end
             end
             if IsValid(ply) and ply.ManipulateBoneAngles then
-                for _, name in ipairs({ "Head", "Neck1", "Spine2", "Pelvis", "R_UpperArm", "R_Forearm", "L_UpperArm", "L_Forearm", "R_Calf", "L_Calf" }) do
+                for _, name in ipairs({ "Head", "Neck1", "Spine1", "Spine2", "Pelvis", "R_UpperArm", "R_Forearm", "L_UpperArm", "L_Forearm", "R_Calf", "L_Calf" }) do
                     local id = Bone(ply, name)
                     if id then ply:ManipulateBoneAngles(id, Angle(0, 0, 0)) end
                 end

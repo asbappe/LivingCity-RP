@@ -937,8 +937,13 @@ TICK.harpies = function(now)
 end
 
 -- The dead watching: left and right click, someone else; jump, fly free.
-hook.Add("KeyPress", "LivingCityEndingWatch", function(p, key)
+local function EndKey(p, key)
     if not E or not p.lcEndSpectating then return end
+    -- (it comes from the key event or from the polling below, whichever's first: once)
+    p.lcEndKeyT = p.lcEndKeyT or {}
+    local now = CurTime()
+    if now - (p.lcEndKeyT[key] or -1) < 0.3 then return end
+    p.lcEndKeyT[key] = now
     if key == IN_ATTACK then Watch(p, 1)
     elseif key == IN_ATTACK2 then Watch(p, -1)
     elseif key == IN_JUMP then
@@ -947,7 +952,25 @@ hook.Add("KeyPress", "LivingCityEndingWatch", function(p, key)
         if p.lcEndRoam and p.SetMoveType and MOVETYPE_OBSERVER then p:SetMoveType(MOVETYPE_OBSERVER) end -- (free to fly)
         if not p.lcEndRoam then Watch(p, 0) end
     end
-end)
+end
+LC.EndingKey = EndKey
+hook.Add("KeyPress", "LivingCityEndingWatch", EndKey)
+-- (and polled, in case something else ate the key event: the dead's controls always work)
+function LC.EndingPollKeys()
+    if not E then return end
+    local KEYS = {}
+    for _, k in pairs({ IN_ATTACK or false, IN_ATTACK2 or false, IN_JUMP or false }) do if k then KEYS[#KEYS + 1] = k end end
+    for _, p in ipairs(player.GetAll()) do
+        if p.lcEndSpectating and p.KeyDown then
+            p.lcEndKeyWas = p.lcEndKeyWas or {}
+            for _, k in ipairs(KEYS) do
+                local down = p:KeyDown(k) and true or false
+                if down and not p.lcEndKeyWas[k] then EndKey(p, k) end
+                p.lcEndKeyWas[k] = down
+            end
+        end
+    end
+end
 
 -- Bloom: everyone dances (players, and every NPC in the city), and nobody
 -- can stop. The city dims, coloured light pulses on the beat, the props
@@ -2413,7 +2436,7 @@ local function OnStage(p)
 end
 local function StageSpot(spread)
     local st = E.stage
-    return st:GetPos() + Vector(math.Rand(-spread, spread), math.Rand(-spread, spread), 8)
+    return st:GetPos() + Vector(math.Rand(-spread, spread), math.Rand(-spread, spread), (E.stageTop or 2) + 3) -- (on the deck, not in it)
 end
 local function Immune(p) return p == E.grigori end
 
@@ -2422,6 +2445,12 @@ local function Bite(p, how)
     if not IsValid(p) or p.lcEndTaken or Immune(p) or now < (p.lcBiteAt or 0) then return false end
     p.lcBiteAt = now + 1
     p:EmitSound("npc/ichthyosaur/snap.wav", 85)
+    if not p:IsPlayer() then -- (one of the crowd, swept off: gone in one)
+        if util.Effect and EffectData then local fx = EffectData() fx:SetOrigin(p:GetPos() + Vector(0, 0, 30)) util.Effect("BloodImpact", fx) end
+        p.lcEndTaken = true
+        p:Remove()
+        return true
+    end
     p:SetHealth(p:Health() - math.random(15, 25))
     if p.ViewPunch then p:ViewPunch(Angle(math.Rand(-15, 15), math.Rand(-15, 15), 0)) end
     if p:Health() <= 0 then Spectator(p, how or "Something huge comes up out of the dark water. That's the last you see.", Color(20, 40, 90, 230)) end
@@ -2639,8 +2668,17 @@ TICK.water = function(now)
     for _, p in ipairs(Living()) do
         if p ~= g then
             if OnStage(p) and p.SetVelocity then
-                local push = wave * ((big and (250 + 500 * I) or (25 + 70 * I)) * math.Rand(0.6, 1.2))
+                local push = wave * ((big and (180 + 340 * I) or (20 + 55 * I)) * math.Rand(0.6, 1.2))
                 p:SetVelocity(Vector(push.x, push.y, big and 60 or 0))
+            end
+            -- in the water by the edge: hold Jump and you haul yourself back up onto it
+            if not OnStage(p) and p.KeyDown and p:KeyDown(IN_JUMP) then
+                local d = p:GetPos() - st:GetPos()
+                if math.abs(d.x) < STAGE_R + 90 and math.abs(d.y) < STAGE_R + 90 and p:GetPos().z > E.floodZ - 110 then
+                    local inward = Vector(math.Clamp(d.x, -(STAGE_R - 20), STAGE_R - 20), math.Clamp(d.y, -(STAGE_R - 20), STAGE_R - 20), 0)
+                    p:SetPos(st:GetPos() + inward + Vector(0, 0, (E.stageTop or 2) + 3))
+                    p.lcEndUnder = nil
+                end
             end
             -- under the water: you hold your breath, then you drown
             if p:EyePos().z < E.floodZ then
@@ -2657,8 +2695,10 @@ TICK.water = function(now)
     for _, c in ipairs(E.crowd or {}) do
         if IsValid(c) and c.lcSwept then
             local cp = c:GetPos()
-            c:SetPos(Vector(cp.x, cp.y, math.min(cp.z, E.floodZ - 30) - 6))
-            if now - c.lcSwept > 4 then c:Remove() end
+            local g = Ground(cp)
+            local z = math.max(E.floodZ - 55, (g and g.z or -math.huge) + 2) -- (under the surface, floundering; not through the ground)
+            c:SetPos(Vector(cp.x, cp.y, math.max(z, math.min(cp.z - 6, E.floodZ - 30))))
+            if now - c.lcSwept > 8 then c:Remove() end -- (or the ichthyosaurs get them first)
         end
     end
     -- Father Grigori keeps his feet, whatever happens
@@ -2691,6 +2731,10 @@ TICK.water = function(now)
             if not OnStage(p) and p:GetPos().z < E.floodZ - 10 then swimmers[#swimmers + 1] = p
             elseif OnStage(p) and (p:GetPos() - st:GetPos()):Length2D() > STAGE_R * 0.5 then edge[#edge + 1] = p end
         end
+    end
+    for _, c in ipairs(E.crowd or {}) do
+        if IsValid(c) and c.lcSwept then swimmers[#swimmers + 1] = c
+        elseif IsValid(c) and (c:GetPos() - st:GetPos()):Length2D() > STAGE_R * 0.5 then edge[#edge + 1] = c end
     end
     for _, m in ipairs(E.icthys) do
         local s = m.lcIcthy
@@ -2906,6 +2950,7 @@ timer.Create("LivingCityEndings", 0.1, 0, function()
             end
         elseif E.phase == "apocalypse" then
             if TICK[E.id] then TICK[E.id](now) end
+            LC.EndingPollKeys()
             -- (an ending can run to the end of its song even after the last one goes: the dead
             -- watch; and one that lasts its song, with people still in it, ends with the song)
             local songOver = E.holdUntil and now >= E.holdUntil

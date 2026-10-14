@@ -11430,7 +11430,12 @@ local outP = a.lcEndTaken and a or b
 ok(not outP.frozen, "out of it, you're not frozen any more (the keys work)")
 hook.Run("KeyPress", outP, IN_JUMP)
 ok(outP.lcEndRoam, "and jump lets you fly free")
-hook.Run("KeyPress", outP, IN_JUMP)
+_run(0.4)
+outP.keys = { [IN_JUMP] = true }
+_run(0.2)
+outP.keys = nil
+ok(not outP.lcEndRoam, "(and it works even if the key event never comes: the keys are watched too)",
+    tostring(LC.EndingSession() and LC.EndingSession().phase) .. " spect " .. tostring(outP.lcEndSpectating) .. " was " .. tostring(outP.lcEndKeyWas and outP.lcEndKeyWas[IN_JUMP]) .. " kd " .. tostring(outP.KeyDown and outP:KeyDown(IN_JUMP)))
 runToH(8)
 ok(down() == 2 and a.alive and b.alive, "until nobody's left standing (nobody really dies)", down())
 runToH(10.5)
@@ -11480,6 +11485,12 @@ a:SetPos(E.stage:GetPos() + Vector(40, 0, -10))
 _run(0.2)
 ok(a:GetPos().z >= E.stage:GetPos().z + E.stageTop, "anyone the deck rises into is lifted onto it (no getting stuck inside)")
 ok(E.client and E.client.section == "heavy" and E.client.bpm, "his screen knows the section (he headbangs the heavy parts, dances the rest) and the beat")
+-- knocked into the water by the edge: hold Jump and you climb back on
+a:SetPos(E.stage:GetPos() + Vector(220, 0, -40))
+a.keys = { [IN_JUMP] = true }
+_run(0.2)
+a.keys = nil
+ok(a:GetPos().z >= E.stage:GetPos().z + E.stageTop and math.abs(a:GetPos().x - E.stage:GetPos().x) < 190, "knocked into the water by the edge, hold Jump and you haul yourself back on")
 a:SetPos(E.stage:GetPos() + Vector(60, 0, 8)) -- (in the game the stage lifts you as it rises; here, put back on it)
 a.pushed = nil
 runToW(3.5)
