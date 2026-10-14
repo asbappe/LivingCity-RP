@@ -775,3 +775,30 @@ hook.Add("HUDPaint", "LivingCityBase", function()
         surface.DrawRect(0, 0, w, h)
     end
 end)
+
+-- Base: the whole screen blocky, like the old arcade game (the subtitles stay
+-- sharp: they're drawn after). lc_pixel_size: how big the blocks are.
+local cvPixel = CreateClientConVar("lc_pixel_size", "6", true, false, "How big the blocks are in the Base ending's arcade look (1: off)")
+local pixRT, pixMat, pixW, pixH
+hook.Add("RenderScreenspaceEffects", "LivingCityBasePixels", function()
+    if not Base() or not render or not render.UpdateScreenEffectTexture or not GetRenderTarget or not CreateMaterial then return end
+    local size = math.Clamp(cvPixel:GetInt(), 1, 32)
+    if size <= 1 then return end
+    local w, h = math.max(16, math.floor(ScrW() / size)), math.max(16, math.floor(ScrH() / size))
+    if not pixRT or pixW ~= w or pixH ~= h then
+        pixW, pixH = w, h
+        pixRT = GetRenderTarget("lc_pixels_" .. w .. "x" .. h, w, h)
+        pixMat = CreateMaterial("lc_pixels_mat_" .. w .. "x" .. h, "UnlitGeneric", { ["$basetexture"] = pixRT:GetName(), ["$ignorez"] = 1, ["$vertexcolor"] = 1 })
+    end
+    render.UpdateScreenEffectTexture()
+    local screen = render.GetScreenEffectTexture()
+    render.PushRenderTarget(pixRT)
+    render.DrawTextureToScreen(screen) -- (squeezed down: the detail goes)
+    render.PopRenderTarget()
+    render.PushFilterMag(TEXFILTER.POINT)
+    render.PushFilterMin(TEXFILTER.POINT)
+    render.SetMaterial(pixMat)
+    render.DrawScreenQuad() -- (and back up, no smoothing: blocks)
+    render.PopFilterMin()
+    render.PopFilterMag()
+end)

@@ -5,7 +5,8 @@ city, blinking and beeping; the main screen turns on and CATS fills the sky.
 When the remix kicks in everyone (and some of the Combine) is on a ZIG, a
 dropship, and the whole fleet circles the city on the beat while the bombs go
 off below; "Move ZIG", faster; "For great justice", the fleet dives at CATS,
-the bombs chain, and everything blows. Everyone's chat comes out in Engrish
+the bombs chain, and everything blows. The whole screen is blocky
+and pixelated, like the old arcade game (lc_pixel_size, per player). Everyone's chat comes out in Engrish
 the whole time.
 SONG: your file. "base" is a codeword: players download whatever is in this
 folder, so give the file a name that gives nothing away (base.ogg).
