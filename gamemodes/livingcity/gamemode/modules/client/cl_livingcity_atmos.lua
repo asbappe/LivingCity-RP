@@ -292,6 +292,12 @@ local lastEvent = ""
 local lastMood = nil
 timer.Create("LivingCityMusic", 1, 0, function()
     if not cvMusic:GetBool() then if playing then Stop(true) end return end
+    -- (a secret ending has its own song: the city's music fades out and waits)
+    if LC_CL.Ending and LC_CL.Ending() then
+        if playing then Stop(true) end
+        nextTrack = CurTime() + 20
+        return
+    end
     -- a lockdown starts with its music, straight away: no waiting for the next piece
     local event = GetGlobal2String("lc_event", "")
     if event ~= lastEvent then

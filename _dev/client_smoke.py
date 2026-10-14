@@ -1255,6 +1255,11 @@ local blocked
 for _, h in pairs(hook.t["PlayerBindPress"] or {}) do blocked = h(_me, "slot1", true) or blocked end
 if not blocked then return "ending: the vote key wasn't taken" end
 if not LC_CL.EndingGmanAt() then return "ending: the G-Man wasn't put in front of you" end
+local musicT = (timer.list or timer.t or {}).LivingCityMusic
+if musicT then
+    local ok = pcall(type(musicT) == "table" and musicT.fn or musicT)
+    if not ok then return "music: the timer errors while an ending's on" end
+end
 _advance(1)
 local gv = hook.t.CalcView.LivingCityEndingGman(_me, Vector(0, 0, 64), Angle(0, 0, 0), 75)
 if not gv or not gv.angles then return "ending: the view doesn't turn to the G-Man" end

@@ -975,6 +975,17 @@ SETUP.bloom = function()
     -- the city stops what it's doing...
     LC.TimeStopped = true
     if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    -- ...gathers at the landing zone (the Combine's units round everyone)...
+    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
+    local ps = player.GetAll()
+    for i, p in ipairs(ps) do
+        if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
+        local a = (i / math.max(1, #ps)) * math.pi * 2
+        local r = 70 + 14 * #ps
+        p:SetPos((Ground(E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)) or E.lz) + Vector(0, 0, 4))
+    end
+    GatherCombine(E.lz, 150 + 14 * #ps)
     -- ...and dances
     for _, p in ipairs(player.GetAll()) do
         if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end

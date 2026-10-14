@@ -264,7 +264,7 @@ local POSE = {
     Pelvis = Angle(0, 0, 0), Spine2 = Angle(0, 0, 0), Head = Angle(0, 0, 0),
     R_Thigh = Angle(0, 0, 0), L_Thigh = Angle(0, 0, 0), R_Calf = Angle(0, 0, 0), L_Calf = Angle(0, 0, 0),
 }
-local FLAP, SWAY, KNEE = 35, 12, 18
+local FLAP, SWAY, KNEE = 40, 14, 18
 local PALETTE = { Color(255, 110, 200), Color(220, 90, 255), Color(100, 190, 255), Color(110, 255, 190), Color(255, 235, 110) }
 local preview = false
 local danced = {}   -- [ent] = true: someone we've turned bones on
@@ -406,11 +406,14 @@ local function Dance(ent, beat, now)
     end
     for name, id in pairs(b) do
         local a = Angle(POSE[name].p, POSE[name].y, POSE[name].r)
-        if name == "R_Hand" then a.r = a.r + flap
-        elseif name == "L_Hand" then a.r = a.r - flap
-        elseif name == "Pelvis" then a.r = a.r + wave * SWAY
-        elseif name == "Spine2" then a.r = a.r - wave * SWAY * 0.6
-        elseif name == "Head" then a.r = a.r - wave * 6
+        -- (on these models a bone's yaw is side to side and its roll front to back: the hips
+        -- swing side to side under a chest that leans against them, and the hands bend at
+        -- the wrist like ears flapping, rather than twisting)
+        if name == "R_Hand" then a.y = a.y + flap
+        elseif name == "L_Hand" then a.y = a.y - flap
+        elseif name == "Pelvis" then a.y = a.y + wave * SWAY
+        elseif name == "Spine2" then a.y = a.y - wave * SWAY * 0.8
+        elseif name == "Head" then a.y = a.y + wave * 4
         elseif name == "R_Calf" then a.y = a.y + bounce * KNEE * (wave > 0 and 1 or 0.3)
         elseif name == "L_Calf" then a.y = a.y + bounce * KNEE * (wave < 0 and 1 or 0.3)
         end
