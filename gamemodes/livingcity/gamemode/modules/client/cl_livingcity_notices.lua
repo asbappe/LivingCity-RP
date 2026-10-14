@@ -66,6 +66,64 @@ function LC_CL.AddNotice(kind, title, text, secs)
     if kind == "warn" and surface and surface.PlaySound then surface.PlaySound("buttons/blip2.wav") end
 end
 
+-- A sound the server asked for that this computer can't play: said once per
+-- file, on screen and in the console, with why. Announcements and songs play
+-- on each player's own computer, so the sound addon has to be on it too.
+local soundWarned = {}
+function LC_CL.SoundTrouble(path, why)
+    path = tostring(path or "")
+    if path == "" or soundWarned[path] then return end
+    if not why then
+        if not file.Exists("sound/" .. path, "GAME") then why = "it isn't on this computer" else return end
+    end
+    soundWarned[path] = true
+    print("[Living City] Can't play sound/" .. path .. ": " .. why)
+    LC_CL.AddNotice("warn", "Sound missing", "Can't play " .. (string.match(path, "([^/]+)$") or path) .. ": " .. why ..
+        ". Type lc_sound_check in the console to see why.", 12)
+end
+
+-- What this computer has of the city's sounds, and a test that one plays.
+local SOUND_DIRS = { "livingcity/announce/overwatch", "livingcity/announce/administrator", "livingcity/announce/radio", "livingcity/endings" }
+concommand.Add("lc_sound_check", function()
+    local function Say(s) print("[Living City] " .. s) end
+    local first, total = nil, 0
+    for _, d in ipairs(SOUND_DIRS) do
+        local n = 0
+        local function Count(dir)
+            for _, f in ipairs(file.Find("sound/" .. dir .. "/*", "GAME") or {}) do
+                local ext = string.lower(string.match(f, "%.(%w+)$") or "")
+                if ext == "wav" or ext == "mp3" or ext == "ogg" then
+                    n = n + 1
+                    first = first or (dir .. "/" .. f)
+                end
+            end
+        end
+        Count(d)
+        if d == "livingcity/endings" then
+            local _, sub = file.Find("sound/" .. d .. "/*", "GAME")
+            for _, s in ipairs(sub or {}) do Count(d .. "/" .. s) end
+        end
+        total = total + n
+        Say(string.format("sound/%s/: %d file(s) on this computer", d, n))
+    end
+    local vol = GetConVar("volume")
+    Say("Game volume: " .. (vol and vol:GetString() or "?") .. ", lc_breencast_volume (the Administrator): " ..
+        (GetConVar("lc_breencast_volume") and GetConVar("lc_breencast_volume"):GetString() or "?"))
+    if total == 0 then
+        Say("This computer has none of the city's sounds, so you hear none of them. Put the livingcity_sound folder in garrysmod/addons/ here too (and restart the game), or have the server send it: a Workshop addon, FastDL (sv_downloadurl), or sv_allowdownload 1.")
+        return
+    end
+    Say("Playing " .. first .. " now...")
+    sound.PlayFile("sound/" .. first, "noblock", function(ch, err, errName)
+        if IsValid(ch) then
+            ch:Play()
+            Say("It plays. If you heard nothing, check your game volume. If you heard it but not in the city, tell the server's admin to run lc_announce_clips.")
+        else
+            Say("It's here but the game can't play it (" .. tostring(errName or err) .. "): the file isn't what its name says. Rename an MP3 to .mp3; a WAV must be 16-bit, 44100 Hz.")
+        end
+    end)
+end)
+
 net.Receive("lc_notice", function()
     local kind, title, text, secs = net.ReadString(), net.ReadString(), net.ReadString(), net.ReadFloat()
     LC_CL.AddNotice(kind, title, text, secs)

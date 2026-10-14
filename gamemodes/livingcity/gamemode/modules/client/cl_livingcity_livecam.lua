@@ -78,6 +78,7 @@ net.Receive("lc_breencast", function()
     local path = net.ReadString()
     local me = LocalPlayer()
     if path == "" or not IsValid(me) then return end
+    if LC_CL.SoundTrouble then LC_CL.SoundTrouble(path) end
     local vol = math.Clamp(cvVol:GetFloat(), 0, 1)
     if vol <= 0 then return end
     -- (level 0: everywhere at once, like the PA, at the volume you've set)

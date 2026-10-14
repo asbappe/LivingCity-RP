@@ -35,10 +35,13 @@ end
 local function PlaySong(path)
     StopSong()
     if not path or path == "" then return end
+    if LC_CL.SoundTrouble then LC_CL.SoundTrouble(path) end
     if sound and sound.PlayFile then
-        sound.PlayFile("sound/" .. path, "noblock", function(ch)
+        sound.PlayFile("sound/" .. path, "noblock", function(ch, err, errName)
             if IsValid(ch) then
                 if S and S.phase == "apocalypse" then channel = ch ch:Play() else ch:Stop() end
+            elseif file.Exists("sound/" .. path, "GAME") and LC_CL.SoundTrouble then
+                LC_CL.SoundTrouble(path, "the game can't open it (" .. tostring(errName or err) .. "): is it really the format its name says?")
             end
         end)
     elseif surface and surface.PlaySound then

@@ -673,6 +673,7 @@ local function PlayNextVoice()
         voiceBusy = CurTime() + 2
         return
     end
+    if LC_CL.SoundTrouble then LC_CL.SoundTrouble(v.path) end
     surface.PlaySound(v.path)
     local dur = SoundDuration and SoundDuration(v.path) or 0
     if not dur or dur <= 0.2 or dur > 20 then dur = 4.5 end

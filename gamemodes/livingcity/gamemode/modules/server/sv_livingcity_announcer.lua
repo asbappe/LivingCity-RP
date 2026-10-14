@@ -545,6 +545,11 @@ concommand.Add("lc_announce_clips", function(ply)
         end
         Reply(ply, "[Living City] " .. v .. ": " .. table.concat(parts, ", "))
     end
+    local dl, url = GetConVar("sv_allowdownload"), GetConVar("sv_downloadurl")
+    Reply(ply, "[Living City] Players' computers play these, so each needs the files: " ..
+        (game.IsDedicated and game.IsDedicated() and "this is a dedicated server; " or "") ..
+        "sv_allowdownload " .. (dl and dl:GetString() or "?") .. ", sv_downloadurl \"" .. (url and url:GetString() or "") .. "\"" ..
+        " (a Workshop addon is the reliable way). Each player can type lc_sound_check to test their own.")
     Reply(ply, "[Living City] " .. total .. " custom announcements found. Folders: sound/" .. ROOT .. "overwatch/, administrator/, radio/, flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files.")
 end)
 
