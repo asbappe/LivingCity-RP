@@ -1274,7 +1274,7 @@ for _, h in pairs(hook.t["ShouldDrawLocalPlayer"] or {}) do h(_me) end
 paint()
 for _, h in pairs(hook.t["RenderScreenspaceEffects"] or {}) do h() end
 net._q = { { id = "marrow", phase = "apocalypse", name = "Marrow", say = "x", song = "livingcity/endings/marrow/marrow.ogg",
-    client = { party = true, lights = true, strobe = true, dance = "rave", danceRate = 1.5, palette = { { 120, 255, 80 }, { 170, 60, 255 } }, bpm = 128, offset = 0, start = CurTime() } } }
+    client = { party = true, lights = true, ambient = true, strobe = true, dance = "rave", danceRate = 1.5, palette = { { 120, 255, 80 }, { 170, 60, 255 } }, bpm = 128, offset = 0, start = CurTime() } } }
 net.recv_lc_ending()
 _advance(1.1)
 for _, h in pairs(hook.t["Think"] or {}) do h() end

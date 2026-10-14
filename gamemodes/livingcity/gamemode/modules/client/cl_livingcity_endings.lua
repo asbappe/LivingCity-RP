@@ -322,6 +322,31 @@ hook.Add("Think", "LivingCityBloom", function()
             end
         end
     end
+    -- light everywhere: a grid of it across the ground round you, pulsing on the beat
+    if DynamicLight and IsValid(me) and on.lights and on.ambient then
+        local pal = on.palette or PALETTE
+        local here = me:GetPos()
+        local gx, gy = math.floor(here.x / 500), math.floor(here.y / 500)
+        local n = 0
+        for dx = -3, 3 do
+            for dy = -3, 3 do
+                if n < 24 and dx * dx + dy * dy <= 10 then
+                    n = n + 1
+                    local cx, cy = gx + dx, gy + dy
+                    local c0 = pal[(cx + cy + math.floor(beat)) % #pal + 1]
+                    local dl = DynamicLight(52100 + n)
+                    if dl then
+                        dl.pos = Vector(cx * 500 + 250, cy * 500 + 250, here.z + 90)
+                        dl.r, dl.g, dl.b = c0.r or c0[1] or 255, c0.g or c0[2] or 255, c0.b or c0[3] or 255
+                        dl.brightness = on.strobe and ((frac < 0.25) and 4 or 0.4) or (0.6 + 2.4 * (1 - frac))
+                        dl.size = 520
+                        dl.decay = 0
+                        dl.dietime = now + 0.15
+                    end
+                end
+            end
+        end
+    end
     -- the props hop
     for _, idx in ipairs(on.props or {}) do
         local e = Entity(idx)

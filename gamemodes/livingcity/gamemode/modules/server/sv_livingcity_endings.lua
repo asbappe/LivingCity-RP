@@ -735,7 +735,7 @@ local cvMarrowSections = CreateConVar("lc_ending_marrow_sections", "45:dance,75:
 local cvMarrowMax   = CreateConVar("lc_ending_marrow_max", "40", FLAGS, "Marrow: how many skeletons")
 local cvMarrowBPM   = CreateConVar("lc_ending_marrow_bpm", "128", FLAGS, "Marrow: the song's beats per minute (the dancing and the lights keep to it)")
 local cvMarrowModel = CreateConVar("lc_ending_marrow_model", "models/player/skeleton.mdl", FLAGS, "Marrow: the skeletons' model")
-local SPOOKY = { { 120, 255, 80 }, { 170, 60, 255 }, { 255, 140, 30 }, { 90, 255, 200 } }
+local SPOOKY = { { 170, 60, 255 }, { 255, 130, 20 } } -- (purple and orange)
 local DANCING = { dance = true, rave = true, outro = true }
 
 function LC.MarrowSections(str)
@@ -857,7 +857,7 @@ end
 local function ApplySection(kind, now)
     E.section = kind
     local dancing = DANCING[kind] or false
-    E.client.lights = dancing
+    E.client.lights = true -- (purple and orange, all the way through)
     E.client.strobe = kind == "dance" or kind == "rave"
     E.client.dance = kind == "rave" and "rave" or "club"
     E.client.danceRate = (kind == "rave" and 1.5) or (kind == "outro" and 2) or 1 -- (the xylophone outro: double time)
@@ -909,10 +909,12 @@ SETUP.marrow = function()
         if p:Health() < 100 then p:SetHealth(100) end
     end
     GatherCombine(E.lz, 100 + 12 * #ps)
+    -- the map goes dark (every lamp out), and the coloured light pulses everywhere
     E.dark = true
-    LC.EndingDark = "d"
+    LC.EndingDark = true
+    if LC.ForceBlackout then LC.ForceBlackout("on") end
     if LC.ApplyLightStyle then LC.ApplyLightStyle() end
-    E.client = { party = true, lights = false, dance = "club", palette = SPOOKY, bpm = cvMarrowBPM:GetFloat(), offset = 0, start = now }
+    E.client = { party = true, lights = true, ambient = true, dance = "club", palette = SPOOKY, bpm = cvMarrowBPM:GetFloat(), offset = 0, start = now }
     E.section = "intro"
 end
 

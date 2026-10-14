@@ -1,6 +1,7 @@
 ENDING: marrow (Marrow)
 WHAT HAPPENS: Everyone, the Combine's units too, is put at the dropship
-landing zone; every door is locked open and the city dims. Skeletons appear
+landing zone; every door is locked open, the map goes dark, and purple
+and orange light pulses everywhere on the beat. Skeletons appear
 dancing all over the map and work their way in. On the heavy parts everyone
 is made to dance with them, club lights strobing (the rave part faster); in
 between, the skeletons attack, and whoever they get becomes one of them,

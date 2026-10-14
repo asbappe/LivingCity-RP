@@ -11193,7 +11193,8 @@ ok(LC.TriggerEnding("marrow", b, true), "marrow")
 E = LC.EndingSession()
 ok(a:GetPos():Distance(E.lz) < 300 and IsValid(mcop) and mcop:GetPos():Distance(E.lz) < 500, "everyone, the Combine's units too, is put at the landing zone")
 ok(mdoor.lcHeldOpen and has(mdoor.fired, "Open") and has(mdoor.fired, "Lock"), "and every door is locked open")
-ok(E.client and E.client.party and not E.client.lights, "the lights are down; no dancing yet")
+ok(E.client and E.client.party and E.client.lights and E.client.ambient and LC.LightStyle == "a" and #E.client.palette == 2,
+    "the map goes dark, and purple and orange light pulses everywhere")
 _run(2)
 ok(#E.skels > 0, "skeletons appear, dancing their way in from all over", #E.skels)
 local function runToM(sec) _run(math.max(0.1, E.phaseT + sec - CurTime())) end
