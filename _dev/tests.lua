@@ -7003,7 +7003,21 @@ _files["sound/test/two_seconds.wav"] = "RIFF" .. le(0, 4) .. "WAVE" .. "fmt " ..
     .. le(2, 2) .. le(16, 2) .. "LIST" .. le(4, 4) .. "abcd" .. "data" .. le(88200, 4)
 ok(math.abs((LC.WavDuration("test/two_seconds.wav") or 0) - 2) < 0.01, "a recording's length is read from the file when the engine won't say")
 ok(LC.WavDuration("vo/breencast/br_welcome01.wav") == nil, "(and a file it can't read just isn't timed)")
-_files["sound/test/two_seconds.wav"] = nil
+-- an mp3's length (128 kbps, 44100 Hz: 32000 bytes is two seconds), past an ID3 tag
+local mp3 = "ID3\3\0\0\0\0\0\10" .. string.rep("x", 10) .. "\255\251\144\100" .. string.rep("\0", 31996)
+_files["sound/test/two_seconds.mp3"] = mp3
+ok(math.abs((LC.WavDuration("test/two_seconds.mp3") or 0) - 2) < 0.01, "an MP3 recording's length is read from the file too", LC.WavDuration("test/two_seconds.mp3"))
+ok(LC.SoundProblem("test/two_seconds.mp3") == nil and LC.SoundProblem("test/two_seconds.wav") == nil, "a proper MP3 or 16-bit 22050 Hz WAV is fine")
+_files["sound/test/fake.wav"] = mp3
+ok(string.find(LC.SoundProblem("test/fake.wav") or "", "rename it to .mp3", 1, true) ~= nil, "an MP3 renamed .wav is caught (nobody would hear it)")
+_files["sound/test/hz48.wav"] = "RIFF" .. le(0, 4) .. "WAVE" .. "fmt " .. le(16, 4) .. le(1, 2) .. le(1, 2) .. le(48000, 4) .. le(96000, 4)
+    .. le(2, 2) .. le(16, 2) .. "data" .. le(0, 4)
+ok(string.find(LC.SoundProblem("test/hz48.wav") or "", "48000 Hz", 1, true) ~= nil, "and so is a 48000 Hz WAV")
+_files["sound/livingcity/announce/overwatch/welcome9.wav"] = mp3
+local badList = table.concat(LC.AnnounceBadFiles(), "\n")
+ok(string.find(badList, "overwatch/welcome9.wav", 1, true) ~= nil, "lc_announce_clips lists every recording the game can't play", badList)
+for _, k in ipairs({ "test/two_seconds.wav", "test/two_seconds.mp3", "test/fake.wav", "test/hz48.wav", "livingcity/announce/overwatch/welcome9.wav" }) do _files["sound/" .. k] = nil end
+if LC.AnnounceRescan then LC.AnnounceRescan() end
 local mics = #ents.FindByClass("weapon_lc_microphone")
 hook.Run("OnNPCKilled", breen, pir)
 ok(LC.LiveNPC == nil and not GetGlobal2Bool("lc_live_npc", true), "kill him and the transmission dies")

@@ -387,6 +387,7 @@ end
 -- a dedicated server, so the wav's own header is read when it does.
 local durations = {}
 function LC.WavDuration(path)
+    if string.lower(string.sub(path or "", -4)) == ".mp3" then return LC.Mp3Duration(path) end
     if durations[path] ~= nil then return durations[path] or nil end
     durations[path] = false
     local f = file.Open and file.Open("sound/" .. path, "rb", "GAME")
@@ -416,6 +417,118 @@ function LC.WavDuration(path)
     f:Close()
     if ok and secs and secs > 0.2 and secs < 60 then durations[path] = secs return secs end
     return nil
+end
+
+-- An .mp3's length, from its first frame: the frame count a VBR file keeps
+-- there (Xing, Info or VBRI), else its size over its bitrate.
+local MP3_RATE = { { 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320 },
+    { 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160 } }
+local MP3_HZ = { 44100, 48000, 32000 }
+local function BE(s, i) return ((s:byte(i) * 256 + s:byte(i + 1)) * 256 + s:byte(i + 2)) * 256 + s:byte(i + 3) end
+
+-- { at (where the audio starts), hz, kbps, spf (samples a frame), mono } of an mp3's first frame
+function LC.Mp3Frame(data)
+    if not data or #data < 16 then return nil end
+    local at = 1
+    if data:sub(1, 3) == "ID3" and #data >= 10 then
+        local b = { data:byte(7, 10) }
+        at = 11 + b[1] % 128 * 2097152 + b[2] % 128 * 16384 + b[3] % 128 * 128 + b[4] % 128
+        if math.floor(data:byte(6) / 16) % 2 == 1 then at = at + 10 end -- (a footer)
+    end
+    for i = at, math.min(#data - 4, at + 65536) do
+        local a, b, c, d = data:byte(i, i + 3)
+        if a == 255 and b >= 224 then
+            local ver, layer = math.floor(b / 8) % 4, math.floor(b / 2) % 4
+            local bi, si = math.floor(c / 16), math.floor(c / 4) % 4
+            if ver ~= 1 and layer == 1 and bi > 0 and bi < 15 and si < 3 then
+                local mpeg1 = ver == 3
+                return { at = i, hz = MP3_HZ[si + 1] / (mpeg1 and 1 or (ver == 2 and 2 or 4)), kbps = MP3_RATE[mpeg1 and 1 or 2][bi],
+                    spf = mpeg1 and 1152 or 576, mono = math.floor(d / 64) == 3, mpeg1 = mpeg1 }
+            end
+        end
+    end
+    return nil
+end
+
+function LC.Mp3Duration(path)
+    if durations[path] ~= nil then return durations[path] or nil end
+    durations[path] = false
+    local data = file.Read("sound/" .. path, "GAME")
+    local fr = LC.Mp3Frame(data)
+    if not fr then return nil end
+    local side = fr.mpeg1 and (fr.mono and 17 or 32) or (fr.mono and 9 or 17)
+    local secs
+    local x = fr.at + 4 + side
+    local tag = data:sub(x, x + 3)
+    if (tag == "Xing" or tag == "Info") and #data >= x + 11 and BE(data, x + 4) % 2 == 1 then
+        secs = BE(data, x + 8) * fr.spf / fr.hz
+    elseif data:sub(fr.at + 36, fr.at + 39) == "VBRI" and #data >= fr.at + 53 then
+        secs = BE(data, fr.at + 50) * fr.spf / fr.hz
+    else
+        local size = #data - fr.at + 1
+        if data:sub(-128, -126) == "TAG" then size = size - 128 end
+        secs = size * 8 / (fr.kbps * 1000)
+    end
+    if secs and secs > 0.2 and secs < 3600 then durations[path] = secs return secs end
+    return nil
+end
+
+-- What's wrong with a sound file, for the game (nil: nothing). A player's game
+-- plays a file by its name: an MP3 renamed .wav is silent for everyone, and a
+-- WAV must be 8 or 16-bit at 44100, 22050 or 11025 Hz.
+local GOOD_HZ = { [44100] = true, [22050] = true, [11025] = true }
+local function U16(s, i) return s:byte(i) + s:byte(i + 1) * 256 end
+local function U32(s, i) return U16(s, i) + U16(s, i + 2) * 65536 end
+function LC.SoundProblem(path)
+    local ext = string.lower(string.match(path or "", "%.(%w+)$") or "")
+    local data = file.Read("sound/" .. path, "GAME")
+    if not data or #data < 12 then return "empty, or couldn't be read" end
+    local riff, ogg = data:sub(1, 4) == "RIFF", data:sub(1, 4) == "OggS"
+    local mp3 = not riff and not ogg and LC.Mp3Frame(data) ~= nil
+    if ext == "wav" then
+        if mp3 then return "it's really an MP3 named .wav, so nobody hears it: rename it to .mp3" end
+        if ogg then return "it's really an OGG named .wav, so nobody hears it: rename it to .ogg" end
+        if not riff or data:sub(9, 12) ~= "WAVE" then return "not a real WAV: convert it (16-bit, 44100 Hz)" end
+        local i = 13
+        while i + 8 <= #data do
+            local id, size = data:sub(i, i + 3), U32(data, i + 4)
+            if id == "fmt " and i + 23 <= #data then
+                local fmt, hz, bits = U16(data, i + 8), U32(data, i + 12), U16(data, i + 22)
+                if fmt == 65534 then fmt = 1 end -- (extensible: PCM)
+                if fmt == 1 and bits ~= 8 and bits ~= 16 then return bits .. "-bit, which the game can't play: convert it to 16-bit" end
+                if fmt == 3 then return "32-bit float, which the game can't play: convert it to 16-bit" end
+                if not GOOD_HZ[hz] then return hz .. " Hz, which the game can't play: convert it to 44100 Hz" end
+                return nil
+            end
+            i = i + 8 + size + size % 2
+        end
+        return "not a real WAV: convert it (16-bit, 44100 Hz)"
+    elseif ext == "mp3" then
+        if riff then return "it's really a WAV named .mp3: rename it to .wav" end
+        if ogg then return "it's really an OGG named .mp3: rename it to .ogg" end
+        local fr = LC.Mp3Frame(data)
+        if not fr then return "not a real MP3" end
+        if not GOOD_HZ[fr.hz] then return fr.hz .. " Hz, which may play at the wrong speed: convert it to 44100 Hz" end
+    elseif ext == "ogg" then
+        if riff then return "it's really a WAV named .ogg: rename it to .wav" end
+        if mp3 then return "it's really an MP3 named .ogg: rename it to .mp3" end
+    end
+    return nil
+end
+
+-- Every sound file in a folder (under sound/) the game can't play: { "name: why" }
+function LC.SoundProblems(dir)
+    local out = {}
+    local names = file.Find("sound/" .. dir .. "/*", "GAME") or {}
+    table.sort(names)
+    for _, name in ipairs(names) do
+        local ext = string.lower(string.match(name, "%.(%w+)$") or "")
+        if ext == "wav" or ext == "mp3" or ext == "ogg" then
+            local why = LC.SoundProblem(dir .. "/" .. name)
+            if why then out[#out + 1] = name .. ": " .. why end
+        end
+    end
+    return out
 end
 
 local function LineSecs(path)

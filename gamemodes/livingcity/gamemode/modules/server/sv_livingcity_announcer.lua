@@ -475,6 +475,40 @@ hook.Add("InitPostEntity", "LivingCityAnnouncer", function() LC.AnnounceRescan()
 
 local function Reply(ply, msg) if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end end
 
+-- Every recording the game can't play (an MP3 renamed .wav, a 48000 Hz or
+-- 24-bit WAV...): { "folder/name: why" }. Nobody would hear those at all.
+function LC.AnnounceBadFiles()
+    if not LC.SoundProblems then return {} end
+    local dirs = { "overwatch", "administrator", "radio" }
+    local out = {}
+    for _, d in ipairs(dirs) do
+        for _, why in ipairs(LC.SoundProblems(ROOT .. d)) do out[#out + 1] = d .. "/" .. why end
+    end
+    for _, id in ipairs(LC.EndingOrder or {}) do
+        for _, why in ipairs(LC.SoundProblems("livingcity/endings/" .. id)) do out[#out + 1] = "endings/" .. id .. "/" .. why end
+    end
+    return out
+end
+
+-- Told once at start-up, and each superadmin when they join.
+local badCount = 0
+hook.Add("InitPostEntity", "LivingCityAnnounceBadFiles", function()
+    local bad = LC.AnnounceBadFiles()
+    badCount = #bad
+    if badCount > 0 then
+        print("[Living City] " .. badCount .. " sound file(s) the game can't play (nobody hears them):")
+        for _, why in ipairs(bad) do print("[Living City]   " .. why) end
+    end
+end)
+hook.Add("PlayerInitialSpawn", "LivingCityAnnounceBadFiles", function(ply)
+    timer.Simple(25, function()
+        if badCount > 0 and IsValid(ply) and ply:IsSuperAdmin() and LC.Notice then
+            LC.Notice(ply, "warn", "Sound files", badCount .. " recording(s) can't be played (an MP3 renamed .wav, or a WAV that isn't 16-bit 44100 Hz). " ..
+                "Type lc_announce_clips in the console to see which, and how to fix each.", 12)
+        end
+    end)
+end)
+
 concommand.Add("lc_announce_clips", function(ply)
     if IsValid(ply) and not ply:IsSuperAdmin() then return end
     local total = 0
@@ -499,6 +533,8 @@ concommand.Add("lc_announce_clips", function(ply)
         Reply(ply, "[Living City] " .. v .. ": " .. (#parts > 0 and table.concat(parts, ", ") or "nothing yet"))
         for _, why in ipairs(LC.AnnounceUnused(v)) do Reply(ply, "[Living City]   check " .. v .. "/" .. why) end
     end
+    local bad = LC.AnnounceBadFiles()
+    for _, why in ipairs(bad) do Reply(ply, "[Living City]   CAN'T PLAY " .. why) end
     for v, trigs in pairs(LC.AnnounceExtra) do
         local parts = {}
         for _, t in ipairs(trigs) do
