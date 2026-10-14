@@ -1,7 +1,8 @@
 --[[ A mingebag (Living City): the secret ending "The Harpies"
-     (sv_livingcity_endings.lua). An old-school Garry's Mod player, frozen in
-     the civilian pose, sliding. Every move it makes is the ending's
-     (LC.MingeStep, each server tick); it only stands there and takes hits. ]]
+     (sv_livingcity_endings.lua). The 2007 Garry's Mod default: Dr. Kleiner
+     frozen in the reference pose, a physgun stuck at his crotch, sliding.
+     Every move it makes is the ending's (LC.MingeStep, each server tick);
+     it only stands there and takes hits. ]]
 
 AddCSLuaFile()
 
@@ -31,6 +32,30 @@ function ENT:Initialize()
     if seq and seq >= 0 then self:ResetSequence(seq) end
     self:SetCycle(0)
     self:SetPlaybackRate(0)
+end
+
+-- The physgun, at the crotch, the way a playermodel held it back then (drawn here,
+-- on each player's screen: nothing more to send over the network).
+local GUN = "models/weapons/w_physics.mdl"
+function ENT:Draw()
+    self:DrawModel()
+    if not ClientsideModel then return end
+    if not IsValid(self.lcGun) then
+        self.lcGun = ClientsideModel(GUN, RENDERGROUP_OPAQUE)
+        if not IsValid(self.lcGun) then return end
+        self.lcGun:SetNoDraw(true)
+    end
+    local ang = self:GetAngles()
+    local pos = self:GetPos() + ang:Up() * 38 + ang:Forward() * 4 - ang:Right() * 2
+    local ga = Angle(ang.p, ang.y - 90, ang.r) -- (lying across him, the prongs out to his right)
+    self.lcGun:SetPos(pos)
+    self.lcGun:SetAngles(ga)
+    self.lcGun:SetupBones()
+    self.lcGun:DrawModel()
+end
+
+function ENT:OnRemove()
+    if CLIENT and IsValid(self.lcGun) then self.lcGun:Remove() end
 end
 
 function ENT:Think()

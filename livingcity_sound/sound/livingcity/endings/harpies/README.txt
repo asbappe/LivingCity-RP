@@ -1,6 +1,6 @@
 ENDING: harpies (The Harpies)
 WHAT HAPPENS: The lights go out and everyone is put at the dropship landing
-zone. Mingebags gather in the dark for a minute, keeping their distance;
+zone. Mingebags (Dr. Kleiner in the reference pose, physgun at the crotch) gather in the dark for a minute, keeping their distance;
 when the song swells they rush in, surround everyone, and 9 seconds later
 leap. Everyone is dead by 2:00 and watches the rest.
 SONG: Son of the Harpy (your file). It should swell at 1:00 and run about

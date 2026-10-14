@@ -24,7 +24,8 @@
       garrysmod/addons/livingcity_sound/sound/livingcity/endings/<id>/,
       so updating the gamemode never touches them)
         harpies    lights out, everyone at the landing zone, and the mingebags
-                   (old-school Garry's Mod players, civilian pose, sliding)
+                   (the 2007 default: Dr. Kleiner in the reference pose, a
+                   physgun stuck at his crotch, sliding)
                    gather in the dark for a minute, rush in when the song
                    swells, then leap; everyone's dead by 2:00 and watches
                    (lc_ending_minge_swell, lc_ending_minge_end, _max, _models)
@@ -243,8 +244,7 @@ local cvMingeSwell  = CreateConVar("lc_ending_minge_swell", "60", FLAGS, "Second
 local cvMingeEnd    = CreateConVar("lc_ending_minge_end", "120", FLAGS, "Seconds into the Harpies' song by which everyone is dead (walls stop mattering 10 seconds before)")
 CreateConVar("lc_ending_minge_pose", "ragdoll", FLAGS, "The mingebags' pose: a sequence name on their models (ragdoll: the reference pose)")
 local cvMingeModels = CreateConVar("lc_ending_minge_models",
-    "models/player/kleiner.mdl,models/player/group01/male_07.mdl,models/player/group01/male_09.mdl,models/player/group01/male_02.mdl,models/player/group01/male_04.mdl,models/player/group01/female_02.mdl",
-    FLAGS, "The mingebags' models (comma-separated; any missing are skipped)")
+    "models/player/kleiner.mdl", FLAGS, "The mingebags' models (comma-separated; any missing are skipped). Kleiner: the 2007 default, physgun at the crotch")
 
 local RUSH = 9 -- (seconds of rushing in before the leaping)
 local UP = Vector(0, 0, 1)
