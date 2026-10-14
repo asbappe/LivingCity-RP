@@ -142,9 +142,9 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **The Bus (lc_ending bus now):** the bus driving about, everyone seated on the drop, the rainbow trail, the rings popping, the speed on the beat, the landing at 2:29 and the faster take-off. How does the seated pose look?
   Notes:
-- [ ] **The Flood (lc_ending water now):** the stage at the LZ, the storm, the water rising, the waves knocking people off, swimming back, the ichthyosaurs, drowning, Father Grigori going last. Does the water surface look like water?
+- [ ] **The Flood (lc_ending water now):** the stage at the LZ, the storm, the water rising, the waves knocking people off, swimming back, the ichthyosaurs, drowning, Father Grigori on the mic, headbanging the heavy parts and dancing the rest,, and going last. Does the water surface look like water? Does the headbang nod the right way (lc_headbang_angle)?
   Notes:
-- [ ] **Secret endings:** the G-Man stops time and everyone votes; Father Grigori's /eatchip with a master data core starts the flood (admins: lc_ending <id> now).
+- [ ] **Secret endings:** the G-Man stops time and everyone votes; Father Grigori eating a master data core (Eat it in his pockets, or /eatchip) starts the flood (admins: lc_ending <id> now).
   Notes:
 
 ## Death and progression

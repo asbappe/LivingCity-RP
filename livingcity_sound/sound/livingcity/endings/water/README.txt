@@ -2,8 +2,9 @@ ENDING: water (The Flood)
 WHAT HAPPENS: A stage floats at the dropship landing zone with everyone on it,
 in the worst storm the city has seen. The water rises over the city; waves
 knock people off the stage; ichthyosaurs hunt the water and leap at the edge;
-swim (hold Jump) or drown. Father Grigori rocks out the whole time, his jaw
-following the song, untouchable, and goes last on the final note.
+swim (hold Jump) or drown. Father Grigori is on the mic the whole time, his jaw
+following the song: headbanging the heavy parts, dancing the rest. He's
+untouchable, and goes last on the final note.
 Triggered by Father Grigori eating a master data core: Eat it, on the core in
 his pockets (F2), or /eatchip.
 SONG: your file. "water" is a codeword: players download whatever is in this

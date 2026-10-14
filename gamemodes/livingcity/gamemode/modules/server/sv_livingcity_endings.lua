@@ -1439,6 +1439,7 @@ SETUP.water = function()
     LC.EndingDark = "e"
     if LC.ApplyLightStyle then LC.ApplyLightStyle() end
     E.section = "intro"
+    E.client = { bpm = cvFloodBPM:GetFloat(), offset = 0, start = now } -- (the beat Father Grigori headbangs to)
 end
 
 TICK.water = function(now)
@@ -1447,6 +1448,7 @@ TICK.water = function(now)
     local t = now - E.phaseT
     local kind = FloodSection(t)
     E.section = kind
+    if E.client and E.client.section ~= kind then E.client.section = kind Send() end -- (Father Grigori headbangs the heavy parts and dances the rest)
     local I = INTENSITY[kind] or 0.5
     SetGlobal2Float("lc_flood_slosh", I)
     -- the water rises, and the stage floats on it
@@ -1491,10 +1493,7 @@ TICK.water = function(now)
     if IsValid(g) and not g.lcEndTaken then
         if not OnStage(g) then g:SetPos(st:GetPos() + Vector(0, 0, 8)) end
         if g:Health() < 100 then g:SetHealth(100) end
-        if now >= (E.nextDance or 0) then
-            E.nextDance = now + 5
-            g:ConCommand("act " .. (math.random() < 0.5 and "dance" or "muscle"))
-        end
+        -- (he headbangs, mic in hand: cl_livingcity_endings.lua, on the song's beat)
     end
     -- lightning on the big beats
     if (kind == "heavy" or kind == "climax") then

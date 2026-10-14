@@ -11271,6 +11271,7 @@ ok(GetGlobal2String("lc_weather", "") == "storm" and GetGlobal2Bool("lc_storm_ma
 local z0 = E.floodZ
 runToW(3)
 ok(E.floodZ > z0 and E.stage:GetPos().z >= E.lz.z, "the water rises, and the stage floats on it")
+ok(E.client and E.client.section == "heavy" and E.client.bpm, "his screen knows the section (he headbangs the heavy parts, dances the rest) and the beat")
 a:SetPos(E.stage:GetPos() + Vector(60, 0, 8)) -- (in the game the stage lifts you as it rises; here, put back on it)
 a.pushed = nil
 runToW(3.5)

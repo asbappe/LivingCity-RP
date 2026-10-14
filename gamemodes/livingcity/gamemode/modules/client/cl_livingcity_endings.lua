@@ -551,3 +551,107 @@ hook.Add("RenderScreenspaceEffects", "LivingCityFloodSky", function()
     DrawColorModify({ ["$pp_colour_addr"] = 0, ["$pp_colour_addg"] = 0.03, ["$pp_colour_addb"] = 0.12, ["$pp_colour_brightness"] = -0.15,
         ["$pp_colour_contrast"] = 0.9, ["$pp_colour_colour"] = 0.5, ["$pp_colour_mulr"] = 0, ["$pp_colour_mulg"] = 0, ["$pp_colour_mulb"] = 0 })
 end)
+
+------------------------------------------------------------------------
+-- Father Grigori on stage, the mic up at his mouth the whole time (his jaw
+-- follows the song: MouthMoveAnimation above): headbanging hard on every
+-- beat in the heavy parts, fist pumping; dancing in the rest, hips going,
+-- the free arm waving. Tune the nod: lc_headbang_angle "p y r".
+------------------------------------------------------------------------
+
+local cvBang = CreateClientConVar("lc_headbang_angle", "0 48 0", true, false, "Father Grigori's headbang: how far his head goes down on each beat (pitch yaw roll)")
+local MIC = "models/props_lab/reciever01d.mdl"
+local rocked = {}
+
+local function BangAngle()
+    local p, y, r = string.match(cvBang:GetString() or "", "(%-?[%d%.]+)%s+(%-?[%d%.]+)%s+(%-?[%d%.]+)")
+    return Angle(tonumber(p) or 0, tonumber(y) or 48, tonumber(r) or 0)
+end
+
+local function RockBeat(now)
+    local c = S and S.client
+    if not c or not c.bpm then return now * 150 / 60 end
+    local pos = (channel and channel.GetTime and channel:GetTime()) or (now - (c.start or now))
+    return (pos - (c.offset or 0)) * c.bpm / 60
+end
+
+local function Bone(ply, name) return ply.LookupBone and ply:LookupBone("ValveBiped.Bip01_" .. name) end
+
+hook.Add("Think", "LivingCityHeadbang", function()
+    local now = CurTime()
+    local beat = RockBeat(now)
+    -- the nod: slammed down on the beat, back up between
+    local down = (1 - (beat % 1)) ^ 2.2
+    local pump = math.abs(math.sin(beat * math.pi))
+    local bang = BangAngle()
+    for _, ply in ipairs(player.GetAll()) do
+        local on = IsValid(ply) and ply:GetNW2Bool("lc_rocking", false) and S and S.phase == "apocalypse"
+        if on and ply.ManipulateBoneAngles then
+            rocked[ply] = true
+            local function Set(name, a) local id = Bone(ply, name) if id then ply:ManipulateBoneAngles(id, a) end end
+            local sec = S.client and S.client.section or "intro"
+            local wave = math.sin(beat * math.pi) -- (side to side, a beat each way)
+            if sec == "heavy" or sec == "climax" then
+                -- the heavy parts: headbanging, hard, and the fist pumping
+                Set("Head", bang * down)
+                Set("Neck1", bang * (down * 0.6))
+                Set("Spine2", bang * (down * 0.35))
+                Set("Pelvis", Angle(0, 0, 0))
+                Set("L_UpperArm", Angle(-10, -60 - 50 * pump, 0))
+                Set("L_Forearm", Angle(0, -60, 0))
+                Set("R_Calf", Angle(0, 12 * pump, 0))
+                Set("L_Calf", Angle(0, 12 * pump, 0))
+            else
+                -- the rest: dancing, the hips going, the free arm waving over his head
+                Set("Head", Angle(0, 6 * pump, 10 * wave))
+                Set("Neck1", Angle(0, 0, 0))
+                Set("Spine2", Angle(0, 0, -8 * wave))
+                Set("Pelvis", Angle(0, 0, 12 * wave))
+                Set("L_UpperArm", Angle(25 * wave, -115, -10))
+                Set("L_Forearm", Angle(0, -25 + 25 * wave, 0))
+                Set("R_Calf", Angle(0, 20 * pump * (wave > 0 and 1 or 0.3), 0))
+                Set("L_Calf", Angle(0, 20 * pump * (wave < 0 and 1 or 0.3), 0))
+            end
+            -- the mic up at his mouth, all the way through
+            Set("R_UpperArm", Angle(10, -70, 0))
+            Set("R_Forearm", Angle(0, -115, 0))
+        elseif rocked[ply] then
+            rocked[ply] = nil
+            if IsValid(ply) then
+                local w = ply.GetActiveWeapon and ply:GetActiveWeapon()
+                if IsValid(w) and w.SetNoDraw then w:SetNoDraw(false) end -- (his gun back)
+                if IsValid(ply.lcMic) then ply.lcMic:Remove() ply.lcMic = nil end
+            end
+            if IsValid(ply) and ply.ManipulateBoneAngles then
+                for _, name in ipairs({ "Head", "Neck1", "Spine2", "Pelvis", "R_UpperArm", "R_Forearm", "L_UpperArm", "L_Forearm", "R_Calf", "L_Calf" }) do
+                    local id = Bone(ply, name)
+                    if id then ply:ManipulateBoneAngles(id, Angle(0, 0, 0)) end
+                end
+            end
+        end
+    end
+end)
+
+-- his gun put away; the mic in his hand
+hook.Add("PrePlayerDraw", "LivingCityHeadbang", function(ply)
+    if not ply:GetNW2Bool("lc_rocking", false) then return end
+    local w = ply.GetActiveWeapon and ply:GetActiveWeapon()
+    if IsValid(w) and w.SetNoDraw then w:SetNoDraw(true) end
+end)
+hook.Add("PostPlayerDraw", "LivingCityHeadbang", function(ply)
+    if not ply:GetNW2Bool("lc_rocking", false) or not ClientsideModel then return end
+    if not IsValid(ply.lcMic) then
+        ply.lcMic = ClientsideModel(MIC, RENDERGROUP_OPAQUE)
+        if not IsValid(ply.lcMic) then return end
+        ply.lcMic:SetNoDraw(true)
+        if ply.lcMic.SetModelScale then ply.lcMic:SetModelScale(0.6, 0) end
+    end
+    local id = Bone(ply, "R_Hand")
+    local m = id and ply.GetBoneMatrix and ply:GetBoneMatrix(id)
+    if not m then return end
+    local pos, ang = m:GetTranslation(), m:GetAngles()
+    ply.lcMic:SetPos(pos + ang:Forward() * 3 + ang:Right() * 1.5)
+    ply.lcMic:SetAngles(ang)
+    ply.lcMic:SetupBones()
+    ply.lcMic:DrawModel()
+end)
