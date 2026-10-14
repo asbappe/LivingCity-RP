@@ -226,6 +226,16 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityEndings", function(_, sky)
     end
 end)
 
+-- Who's Father Grigori, rocking out: a player, or the city's own (an NPC)
+local function Rockers()
+    local out = {}
+    for _, p in ipairs(player.GetAll()) do out[#out + 1] = p end
+    for _, n in ipairs(ents.FindByClass and ents.FindByClass("npc_*") or {}) do
+        if IsValid(n) and n:GetNW2Bool("lc_rocking", false) then out[#out + 1] = n end
+    end
+    return out
+end
+
 -- Father Grigori mouths the words: his jaw follows the song's loudness
 local MOUTH = { "jaw_drop", "right_part", "left_part", "right_mouth_drop", "left_mouth_drop" }
 hook.Add("MouthMoveAnimation", "LivingCityEndings", function(ply)
@@ -716,8 +726,17 @@ hook.Add("Think", "LivingCityHeadbang", function()
     local down = (1 - (beat % 1)) ^ 2.2
     local pump = math.abs(math.sin(beat * math.pi))
     local bang = BangAngle()
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in ipairs(Rockers()) do
         local on = IsValid(ply) and ply:GetNW2Bool("lc_rocking", false) and S and S.phase == "apocalypse"
+        -- (an NPC Grigori mouths the words here: players do it in MouthMoveAnimation)
+        if on and not ply:IsPlayer() and channel and channel.GetLevel and ply.GetFlexIDByName then
+            local l, r = channel:GetLevel()
+            local w = math.Clamp(((l or 0) + (r or 0)) * 1.6, 0, 1)
+            for _, name in ipairs(MOUTH) do
+                local id = ply:GetFlexIDByName(name)
+                if id then ply:SetFlexWeight(id, w) end
+            end
+        end
         if on and ply.ManipulateBoneAngles then
             rocked[ply] = true
             local function Set(name, a) local id = Bone(ply, name) if id then ply:ManipulateBoneAngles(id, a) end end
@@ -770,8 +789,8 @@ hook.Add("PrePlayerDraw", "LivingCityHeadbang", function(ply)
     local w = ply.GetActiveWeapon and ply:GetActiveWeapon()
     if IsValid(w) and w.SetNoDraw then w:SetNoDraw(true) end
 end)
-hook.Add("PostPlayerDraw", "LivingCityHeadbang", function(ply)
-    if not ply:GetNW2Bool("lc_rocking", false) or not ClientsideModel then return end
+local function DrawMic(ply)
+    if not ply:GetNW2Bool("lc_rocking", false) or ply:GetNW2Bool("lc_crowd", false) or not ClientsideModel then return end -- (the mic's his alone)
     if not IsValid(ply.lcMic) then
         ply.lcMic = ClientsideModel(MIC, RENDERGROUP_OPAQUE)
         if not IsValid(ply.lcMic) then return end
@@ -786,6 +805,14 @@ hook.Add("PostPlayerDraw", "LivingCityHeadbang", function(ply)
     ply.lcMic:SetAngles(ang)
     ply.lcMic:SetupBones()
     ply.lcMic:DrawModel()
+end
+hook.Add("PostPlayerDraw", "LivingCityHeadbang", DrawMic)
+-- (the city's own Father Grigori, an NPC, gets his mic here)
+hook.Add("PostDrawOpaqueRenderables", "LivingCityHeadbangNPC", function(_, sky)
+    if sky or not S or S.id ~= "water" or S.phase ~= "apocalypse" then return end
+    for _, n in ipairs(ents.FindByClass and ents.FindByClass("npc_monk") or {}) do
+        if IsValid(n) and n:GetNW2Bool("lc_rocking", false) then DrawMic(n) end
+    end
 end)
 
 ------------------------------------------------------------------------

@@ -11451,6 +11451,12 @@ ok(GetGlobal2String("lc_weather", "") == "storm" and GetGlobal2Bool("lc_storm_ma
 local z0 = E.floodZ
 runToW(3)
 ok(E.floodZ > z0 and E.stage:GetPos().z >= E.lz.z, "the water rises, and the stage floats on it")
+ok(E.stage:GetPos().z + E.stageTop > E.floodZ, "with its deck above the water line, not under it", math.floor(E.stage:GetPos().z + E.stageTop - E.floodZ))
+ok(#E.crowd >= 1 and E.crowd[1]:GetNW2Bool("lc_rocking", false) and E.crowd[1]:GetNW2Bool("lc_crowd", false),
+    "a crowd's up there with him, headbanging (the Combine's units and the city's people)", #E.crowd)
+a:SetPos(E.stage:GetPos() + Vector(40, 0, -10))
+_run(0.2)
+ok(a:GetPos().z >= E.stage:GetPos().z + E.stageTop, "anyone the deck rises into is lifted onto it (no getting stuck inside)")
 ok(E.client and E.client.section == "heavy" and E.client.bpm, "his screen knows the section (he headbangs the heavy parts, dances the rest) and the beat")
 a:SetPos(E.stage:GetPos() + Vector(60, 0, 8)) -- (in the game the stage lifts you as it rises; here, put back on it)
 a.pushed = nil
@@ -11480,6 +11486,15 @@ ok(b.lcEndTaken and grig.lcEndTaken, "the last note: whoever's left goes, Father
 runToW(11.5)
 ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and the city resets")
 _run(6)
+-- started by an admin (nobody's eaten anything): the city's own Father Grigori takes the stage
+concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
+ok(LC.TriggerEnding("water", a, true), "the flood, started by an admin")
+E = LC.EndingSession()
+ok(IsValid(E.grigori) and not E.grigori:IsPlayer() and E.grigori:GetNW2Bool("lc_rocking", false) and not a:GetNW2Bool("lc_rocking", false),
+    "and Father Grigori is there anyway (an NPC), rocking out, not the admin")
+local npcGrig = E.grigori
+LC.CancelEnding()
+ok(not IsValid(npcGrig) or not npcGrig:GetNW2Bool("lc_rocking", false), "(cancelled: he stops)")
 player.GetAll = realGetAll
 _setcvar("lc_ending_flood_sections", "15:heavy,79:calm,102:heavy,134:calm,169:heavy,183:climax,212:calm,235:heavy,249:climax,264:outro,276:last,285:end")
 _setcvar("lc_ending_flood_rise", 900)

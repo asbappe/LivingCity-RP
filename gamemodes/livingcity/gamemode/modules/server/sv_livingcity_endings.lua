@@ -2243,6 +2243,7 @@ local cvFloodBPM   = CreateConVar("lc_ending_flood_bpm", "150", FLAGS, "The Floo
 local cvFloodRise  = CreateConVar("lc_ending_flood_rise", "900", FLAGS, "The Flood: how high the water rises over the landing zone by the outro")
 local cvFloodDrown = CreateConVar("lc_ending_flood_drown", "10", FLAGS, "The Flood: seconds under the water before you drown")
 local cvIcthys     = CreateConVar("lc_ending_flood_icthys", "8", FLAGS, "The Flood: how many ichthyosaurs at the worst of it")
+local cvFloodCrowd = CreateConVar("lc_ending_flood_crowd", "10", FLAGS, "The Flood: how many of the city's people and the Combine's units are on the stage too, headbanging (the big waves take them one by one)")
 local INTENSITY = { intro = 0.3, calm = 0.35, heavy = 0.75, climax = 1, outro = 0.25, last = 0.1 }
 local STAGE_MODEL, STAGE_R = "models/hunter/plates/plate8x8.mdl", 170
 
@@ -2365,14 +2366,54 @@ SETUP.water = function()
         if st.SetMaterial then st:SetMaterial("phoenix_storms/wood") end
     end
     E.stage = st
-    -- Father Grigori in the middle, everyone round him
-    if IsValid(E.by) then
-        E.grigori = E.by
-        E.by:SetNW2Bool("lc_rocking", true)
+    E.stageTop = math.Clamp((IsValid(st) and st.OBBMaxs and st:OBBMaxs().z) or 2, 0, 12) -- (how far the deck is above the stage's middle)
+    -- Father Grigori in the middle, everyone round him: the player who ate it,
+    -- or (an admin started it) the city's own Father Grigori, or one for the occasion
+    local by = E.by
+    if IsValid(by) and by:IsPlayer() and by:GetNW2String("lcf_special", "") == "chaplain" then
+        E.grigori = by
+    else
+        local g = IsValid(LC.Grigori) and LC.Grigori or nil
+        if not IsValid(g) then
+            g = ents.Create("npc_monk")
+            if IsValid(g) then
+                g:Spawn()
+                g:SetNW2String("lc_pname", "Father Grigori")
+                E.ents[#E.ents + 1] = g
+            end
+        end
+        if IsValid(g) then
+            -- (time's stopped: standing, not the T pose; the headbanging is on each screen)
+            for _, name in ipairs({ "LineIdle01", "Idle_Angry", "idle_subtle", "Idle01" }) do
+                local seq = g.LookupSequence and g:LookupSequence(name)
+                if seq and seq >= 0 then g:ResetSequence(seq) break end
+            end
+            if IsValid(st) then g:SetPos(st:GetPos() + Vector(0, 0, E.stageTop + 1)) end
+            E.grigori = g
+        end
+    end
+    if IsValid(E.grigori) then E.grigori:SetNW2Bool("lc_rocking", true) end
+    -- and a crowd up there with him: the Combine's units and the city's people, headbanging along
+    E.crowd = {}
+    local pool = {}
+    for _, n in ipairs(CombineNPCs()) do pool[#pool + 1] = n end
+    for _, c in ipairs(CityFolk()) do if c ~= E.grigori then pool[#pool + 1] = c end end
+    for i = #pool, 2, -1 do local j = math.random(i) pool[i], pool[j] = pool[j], pool[i] end
+    local want = cvFloodCrowd:GetInt()
+    for i = 1, want do
+        local c = pool[i]
+        if not IsValid(c) and IsValid(st) then c = SpawnFolk(StageSpot(STAGE_R - 30), i) end
+        if IsValid(c) and IsValid(st) then
+            c:SetPos(StageSpot(STAGE_R - 30))
+            c:SetAngles(Angle(0, (st:GetPos() - c:GetPos()):Angle().y, 0))
+            c:SetNW2Bool("lc_rocking", true)
+            c:SetNW2Bool("lc_crowd", true)
+            E.crowd[#E.crowd + 1] = c
+        end
     end
     for _, p in ipairs(player.GetAll()) do
         if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
-        if IsValid(st) then p:SetPos(p == E.grigori and (st:GetPos() + Vector(0, 0, 8)) or StageSpot(STAGE_R - 40)) end
+        if IsValid(st) then p:SetPos(p == E.grigori and (st:GetPos() + Vector(0, 0, E.stageTop + 1)) or StageSpot(STAGE_R - 40)) end
         if p:Health() < 100 then p:SetHealth(100) end
     end
     -- the worst storm the city has seen
@@ -2404,14 +2445,42 @@ TICK.water = function(now)
         if top then E.floodZ = top end
     end
     SetGlobal2Float("lc_flood_z", E.floodZ)
+    -- the deck rides a little above the water line, and everyone on it rises with it
+    -- (moved up under them otherwise, they'd end up stuck inside it)
     local sp = st:GetPos()
-    st:SetPos(Vector(sp.x, sp.y, math.max(E.lz.z + 4, E.floodZ - 6)))
+    local deckOff = E.stageTop or 2
+    st:SetPos(Vector(sp.x, sp.y, math.max(E.lz.z + 4, E.floodZ + 6 - deckOff)))
+    local top = st:GetPos().z + deckOff
+    local riders = {}
+    for _, p in ipairs(player.GetAll()) do if not p.lcEndSpectating then riders[#riders + 1] = p end end
+    if IsValid(E.grigori) and not E.grigori:IsPlayer() then riders[#riders + 1] = E.grigori end
+    for _, c in ipairs(E.crowd or {}) do if IsValid(c) and not c.lcSwept then riders[#riders + 1] = c end end
+    for _, p in ipairs(riders) do
+        local pp = p:GetPos()
+        local d = pp - st:GetPos()
+        if math.abs(d.x) < STAGE_R + 16 and math.abs(d.y) < STAGE_R + 16 and pp.z < top + 1 and pp.z > top - 70 then
+            p:SetPos(Vector(pp.x, pp.y, top + 1))
+        end
+    end
     -- the waves: a shove all the time, and a big one now and then
     local wave = Angle(0, (t * 25 + math.sin(t * 0.13) * 120) % 360, 0):Forward()
     local big = now >= (E.nextWave or 0)
     if big then
         E.nextWave = now + math.Rand(6, 10) * (1.2 - I)
         st:EmitSound("ambient/water/wave" .. math.random(1, 6) .. ".wav", 90)
+        -- and one of the crowd goes over the side
+        local on = {}
+        for _, c in ipairs(E.crowd or {}) do if IsValid(c) and not c.lcSwept then on[#on + 1] = c end end
+        if #on > 0 and math.random() < 0.35 + 0.5 * I then
+            local c = on[math.random(#on)]
+            local out = c:GetPos() - st:GetPos()
+            out.z = 0
+            out = out:Length() > 1 and out:GetNormalized() or Vector(1, 0, 0)
+            c.lcSwept = now
+            c:SetNW2Bool("lc_rocking", false)
+            c:SetPos(st:GetPos() + out * (STAGE_R + 90) + Vector(0, 0, -30))
+            c:EmitSound(math.random() < 0.5 and "vo/npc/male01/help01.wav" or "vo/npc/female01/help01.wav", 80)
+        end
         if util.ScreenShake then util.ScreenShake(st:GetPos(), 2 + 6 * I, 5, 1.2, 900) end
     end
     local g = E.grigori
@@ -2432,9 +2501,17 @@ TICK.water = function(now)
             end
         end
     end
+    -- the swept away: down into the water, and gone
+    for _, c in ipairs(E.crowd or {}) do
+        if IsValid(c) and c.lcSwept then
+            local cp = c:GetPos()
+            c:SetPos(Vector(cp.x, cp.y, math.min(cp.z, E.floodZ - 30) - 6))
+            if now - c.lcSwept > 4 then c:Remove() end
+        end
+    end
     -- Father Grigori keeps his feet, whatever happens
     if IsValid(g) and not g.lcEndTaken then
-        if not OnStage(g) then g:SetPos(st:GetPos() + Vector(0, 0, 8)) end
+        if not OnStage(g) then g:SetPos(st:GetPos() + Vector(0, 0, (E.stageTop or 2) + 1)) end
         if g:Health() < 100 then g:SetHealth(100) end
         -- (he headbangs, mic in hand: cl_livingcity_endings.lua, on the song's beat)
     end
@@ -2495,10 +2572,15 @@ TICK.water = function(now)
     -- the last note: whoever's still here goes, and Father Grigori last of all
     if kind == "last" and not E.lastDone then
         E.lastDone = true
+        for _, c in ipairs(E.crowd or {}) do if IsValid(c) and not c.lcSwept then c.lcSwept = now c:SetNW2Bool("lc_rocking", false) end end
         for _, p in ipairs(Living()) do
             if p ~= g then Spectator(p, "The tide takes you, gently, at the very end.", Color(20, 40, 90, 230)) end
         end
-        if IsValid(g) then Spectator(g, "Father Grigori holds the last note, bows, and the flood takes its encore.", Color(255, 255, 255, 200)) end
+        if IsValid(g) and g:IsPlayer() then Spectator(g, "Father Grigori holds the last note, bows, and the flood takes its encore.", Color(255, 255, 255, 200))
+        elseif IsValid(g) then
+            g.lcEndTaken = true
+            for _, p in ipairs(player.GetAll()) do p:ChatPrint("Father Grigori holds the last note, bows, and the flood takes its encore.") end
+        end
     end
 end
 
@@ -2508,6 +2590,9 @@ end
 
 local function Clear()
     for _, e in ipairs(E and E.ents or {}) do if IsValid(e) then e:Remove() end end
+    -- (the city's own people who were in it: back to themselves)
+    for _, c in ipairs(E and E.crowd or {}) do if IsValid(c) then c:SetNW2Bool("lc_rocking", false) c:SetNW2Bool("lc_crowd", false) end end
+    if E and IsValid(E.grigori) then E.grigori:SetNW2Bool("lc_rocking", false) end
     for _, p in ipairs(player.GetAll()) do
         if p.lcEndTaken or p.lcEndRide or p.lcEndHang then
             p:Freeze(false)
