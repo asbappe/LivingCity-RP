@@ -393,6 +393,16 @@ if lowest > 59 then problems[#problems + 1] = "a hard landing doesn't dip the ca
 for _ = 1, 40 do _advance(0.05) LC_CL.CalcView(_me, { origin = Vector(0, 0, 61), angles = Angle(), fov = 75 }) end
 local settled = LC_CL.CalcView(_me, { origin = Vector(0, 0, 61), angles = Angle(), fov = 75 })
 if math.abs(settled.origin.z - 61) > 0.3 then problems[#problems + 1] = "the camera doesn't settle after a landing: " .. tostring(settled.origin.z) end
+-- running: a grown-up's stride, about 3 steps a second (not a toddler's 4 or 5)
+_me.vel = Vector(190, 0, 0)
+_me.ground = true
+for _ = 1, 4 do _advance(0.05) LC_CL.CalcView(_me, { origin = Vector(0, 0, 61), angles = Angle(), fov = 75 }) end
+local ph0 = LC_CL.Bob.phase
+for _ = 1, 10 do _advance(0.05) LC_CL.CalcView(_me, { origin = Vector(0, 0, 61), angles = Angle(), fov = 75 }) end
+local adv = (LC_CL.Bob.phase - ph0) % (math.pi * 2)
+local stepsPerSec = adv / math.pi / 0.5
+if stepsPerSec > 3.4 or stepsPerSec < 2.4 then problems[#problems + 1] = "running steps per second: " .. tostring(stepsPerSec) end
+_me.vel = Vector(0, 0, 0)
 GetConVar("lc_my_view_bob").v = "0"
 _me.vel = Vector(150, 0, 0)
 local still = true

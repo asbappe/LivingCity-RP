@@ -153,6 +153,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Standup (lc_ending standup now):** someone strung up every other beat, where the ropes go (overhead, walls, sky), the struggling and going limp, the view from the rope. Hanging still on the rope, not running in place; the white cone hats showing; and everyone limp before the song ends, even the last to go up.
   Notes:
 - [ ] **Flashing warning:** before an ending with strobes, the popup stays up 15 seconds (counting down) before keeping the flashing; Reduce flashing turns it off for you.
+- [ ] **Running sway:** running looks like a grown-up's stride (about three steps a second), not a toddler's bounce; walking unchanged.
 - [ ] **Secret endings:** the G-Man stops time and everyone votes (he's right in front of you whichever way you were looking, your view held on him, and the city's announcements stop); Father Grigori eating a master data core (Eat it in his pockets, or /eatchip) starts the flood (admins: lc_ending <id> now). Once you're out of an ending, left/right click watches someone else and jump flies free (in every ending).
   Notes:
 

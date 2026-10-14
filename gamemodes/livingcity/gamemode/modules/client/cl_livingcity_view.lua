@@ -98,8 +98,10 @@ end }
 ------------------------------------------------------------------------
 
 local STRIDE = 42        -- units per footstep at a walk
+local STRIDE_RUN = 64    -- and at a run: a grown-up's stride lengthens, so the steps don't just come faster (about 3 a second, not 4.5)
+local WALK = 110         -- (lc_walk_speed)
 local RUN = 190          -- the speed the sway is sized for (lc_run_speed)
-local UP, SIDE = 0.65, 0.27 -- units of sway at a run: up and down, side to side (lc_view_bob_amount 100)
+local UP, SIDE = 0.5, 0.27 -- units of sway at a run: up and down, side to side (lc_view_bob_amount 100)
 local ROLL, PITCH = 0.3, 0.15 -- degrees
 
 local bob = { phase = 0, amount = 0, dip = 0, dipVel = 0, fall = 0, ground = true, t = nil }
@@ -154,7 +156,8 @@ LC_CL.ViewMods.bob = { order = 30, fn = function(ply, view, ctx)
     local target = ground and math.Clamp(speed / RUN, 0, 1.25) or 0
     if ply:Crouching() then target = target * 0.5 end
     bob.amount = bob.amount + (target - bob.amount) * math.min(dt * 8, 1)
-    bob.phase = (bob.phase + speed * dt / STRIDE * math.pi) % (math.pi * 2)
+    local stride = STRIDE + (STRIDE_RUN - STRIDE) * math.Clamp((speed - WALK) / (RUN - WALK), 0, 1)
+    bob.phase = (bob.phase + speed * dt / stride * math.pi) % (math.pi * 2)
 
     local amt = GetConVar("lc_view_bob_amount")
     local k = math.Clamp((amt and amt:GetFloat() or 100) / 100, 0, 3)
