@@ -57,7 +57,12 @@ net.Receive("lcc_open", function()
     local W, H = math.min(ScrW() - 40, 860), math.min(ScrH() - 40, intake and 700 or 620)
     -- the looks on offer: a path each, and what it may wear (sv_livingcity_outfits.lua)
     local looks = {}
-    for _, m in ipairs(data.models or {}) do looks[#looks + 1] = istable(m) and m or { path = m } end
+    for _, m in ipairs(data.models or {}) do
+        local l = istable(m) and m or { path = m }
+        -- (a look this computer hasn't got would only show the ERROR model)
+        if not util.IsValidModel or util.IsValidModel(l.path or "") or l.path == data.model then looks[#looks + 1] = l end
+    end
+    if #looks == 0 then for _, m in ipairs(data.models or {}) do looks[#looks + 1] = istable(m) and m or { path = m } end end
     local function LookOf(path) for _, l in ipairs(looks) do if l.path == path then return l end end end
     local chosenModel = data.model ~= "" and data.model or (looks[1] and looks[1].path) or ""
     local chosenSkin, chosenBG = tonumber(data.skin) or 0, istable(data.bg) and data.bg or {}

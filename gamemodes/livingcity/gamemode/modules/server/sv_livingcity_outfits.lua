@@ -204,12 +204,34 @@ function LC.CreatorChoices()
         local low = string.lower(path)
         local bad = false
         for _, w in ipairs(NOT_CITIZEN) do if string.find(low, w, 1, true) then bad = true break end end
-        if not bad and LC.FaceOf(low) and not string.find(low, "models/player/group0", 1, true) then extra[#extra + 1] = path end
+        if not bad and LC.FaceOf(low) and not string.find(low, "models/player/group0", 1, true)
+            and (not util.IsValidModel or util.IsValidModel(path)) then extra[#extra + 1] = path end -- (a pack missing its files: never offered)
     end
     table.sort(extra)
     for _, p in ipairs(extra) do Add(p) end
     return out
 end
+
+-- Joining players get the Workshop packs the creator's looks come from (or
+-- they'd see the ERROR model). Legacy folder packs can't be sent this way:
+-- those need FastDL, or the players subscribed to them.
+local function SendCreatorPacks()
+    if not (engine and engine.GetAddons and resource and resource.AddWorkshop) then return end
+    local paths = {}
+    for _, c in ipairs(LC.CreatorChoices()) do
+        if c.path and not string.find(string.lower(c.path), "models/player/group0", 1, true) then paths[#paths + 1] = c.path end
+    end
+    if #paths == 0 then return end
+    for _, a in ipairs(engine.GetAddons()) do
+        local id = tostring(a.wsid or "")
+        if a.mounted ~= false and id ~= "" and id ~= "0" and a.title then
+            for _, p in ipairs(paths) do
+                if file.Exists(p, a.title) then resource.AddWorkshop(id) break end
+            end
+        end
+    end
+end
+hook.Add("InitPostEntity", "LivingCityCreatorPacks", SendCreatorPacks)
 
 function LC.CreatorChoice(path)
     for _, c in ipairs(LC.CreatorChoices()) do if c.path == path then return c end end

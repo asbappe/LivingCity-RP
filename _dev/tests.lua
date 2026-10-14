@@ -10817,6 +10817,15 @@ ok(p:GetPData("lc_skin", "") == "5" and p:GetNW2Int("lc_skin", 0) == 5, "the cho
 ok(LC.ModelOverrides.outfit(p) == "models/player/test/male_20.mdl", "and they wear the pack's model, not Half-Life 2's", LC.ModelOverrides.outfit(p))
 LC.SetOutfit(admin, "_creator", {})
 ok(#LC.CreatorChoices() >= #LCF.CitizenModels, "with nothing set, it's everything installed again")
+local hadPM = player_manager
+player_manager = player_manager or {}
+local oldAll, oldValid = player_manager.AllValidModels, util.IsValidModel
+player_manager.AllValidModels = function() return { a = "models/player/packok/male_21.mdl", b = "models/player/packgone/female_22.mdl" } end
+util.IsValidModel = function(m) return not string.find(m, "packgone", 1, true) end
+ok(LC.CreatorChoice("models/player/packok/male_21.mdl") ~= nil and LC.CreatorChoice("models/player/packgone/female_22.mdl") == nil,
+    "a pack whose model files are missing is never offered (no ERROR model)")
+player_manager.AllValidModels, util.IsValidModel = oldAll, oldValid
+player_manager = hadPM
 for _, q in ipairs({ admin, p }) do q:SetPos(Vector(-150000, 150000, 0)) end
 end
 CreatorLookTests()

@@ -174,7 +174,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 
 - [ ] **Outfit designer:** editor panel > Job outfits (or !outfits). The Clinic Medic wears HL2's medic clothes by default.
   Notes:
-- [ ] **Character creator:** installed citizen packs, face skins, clothes and accessories.
+- [ ] **Character creator:** installed citizen packs, face skins, clothes and accessories. On a dedicated server, a joining player downloads the Workshop citizen packs and sees no ERROR models.
   Notes:
 - [ ] **Variety:** NPCs are slightly different heights, and citizen shirts have their own drab colours.
   Notes:
