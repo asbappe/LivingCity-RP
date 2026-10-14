@@ -655,3 +655,123 @@ hook.Add("PostPlayerDraw", "LivingCityHeadbang", function(ply)
     ply.lcMic:SetupBones()
     ply.lcMic:DrawModel()
 end)
+
+------------------------------------------------------------------------
+-- Base: the opening lines as arcade subtitles, CATS in the sky, the bombs
+-- blinking and beeping, the view from your ZIG, and the end of everything
+------------------------------------------------------------------------
+
+local function Base() return S and S.id == "base" and S.phase == "apocalypse" and S.client end
+if surface and surface.CreateFont then
+    surface.CreateFont("LCArcade", { font = "Courier New", size = 30, weight = 900, antialias = false })
+end
+
+local function SongTime(now)
+    local c = S and S.client
+    if channel and channel.GetTime then return channel:GetTime() end
+    return now - ((c and c.start) or now)
+end
+
+local catsModel, catsSeen
+hook.Add("PostDrawOpaqueRenderables", "LivingCityBase", function(_, sky)
+    local c = Base()
+    if sky or not c or not c.cats or not c.sky or not ClientsideModel then return end
+    if not IsValid(catsModel) then
+        catsModel = ClientsideModel("models/gman_high.mdl", RENDERGROUP_OPAQUE)
+        if not IsValid(catsModel) then return end
+        catsModel:SetNoDraw(true)
+        if catsModel.SetModelScale then catsModel:SetModelScale(40, 0) end
+    end
+    local now = CurTime()
+    catsSeen = catsSeen or now
+    if now - catsSeen < 1.2 and math.random() < 0.5 then return end -- (main screen turn on: it flickers in)
+    local eye = EyePos()
+    local at = Vector(c.sky.x, c.sky.y, c.sky.z) - Vector(0, 0, 2400)
+    catsModel:SetPos(at)
+    catsModel:SetAngles(Angle(0, (eye - at):Angle().y, 0))
+    if render.SetColorModulation then render.SetColorModulation(1, 0.25, 0.2) end
+    catsModel:SetupBones()
+    catsModel:DrawModel()
+    if render.SetColorModulation then render.SetColorModulation(1, 1, 1) end
+end)
+
+local lastBeep = -1
+hook.Add("Think", "LivingCityBase", function()
+    local c = Base()
+    if not c then
+        catsSeen = nil
+        if IsValid(catsModel) then catsModel:Remove() catsModel = nil end
+        return
+    end
+    local now = CurTime()
+    local me = LocalPlayer()
+    if not IsValid(me) then return end
+    local beat = SongTime(now) * (c.bpm or 150) / 60
+    local frac = beat % 1
+    -- the bombs: a red light blinking on each, and a beep from the nearest
+    local near, nd = nil, nil
+    local n = 0
+    for _, idx in ipairs(c.bombs or {}) do
+        local b = Entity(idx)
+        if IsValid(b) then
+            local d = b:GetPos():DistToSqr(me:GetPos())
+            if not nd or d < nd then near, nd = b, d end
+            if DynamicLight and n < 10 and d < 2000 * 2000 then
+                n = n + 1
+                local dl = DynamicLight(52300 + n)
+                if dl then
+                    dl.pos = b:GetPos() + Vector(0, 0, 30)
+                    dl.r, dl.g, dl.b = 255, 30, 20
+                    dl.brightness = frac < 0.3 and 3 or 0
+                    dl.size = 160
+                    dl.decay = 0
+                    dl.dietime = now + 0.12
+                end
+            end
+        end
+    end
+    if near and nd < 600 * 600 and math.floor(beat) ~= lastBeep then
+        lastBeep = math.floor(beat)
+        if sound and sound.Play then sound.Play("buttons/blip1.wav", near:GetPos(), 70, 120, 0.6) end
+    end
+end)
+
+-- on your ZIG: the view from behind it
+hook.Add("CalcView", "LivingCityBase", function(me, origin, angles, fov)
+    if not Base() or not IsValid(me) then return end
+    local z = me:GetNW2Entity("lc_riding")
+    if not IsValid(z) then return end
+    return { origin = z:GetPos() + Vector(0, 0, 220) - angles:Forward() * 700, angles = angles, fov = fov, drawviewer = true }
+end)
+
+hook.Add("HUDPaint", "LivingCityBase", function()
+    local c = Base()
+    if not c then return end
+    local now = CurTime()
+    local w, h = ScrW(), ScrH()
+    -- the lines, the way the game showed them
+    local st = SongTime(now)
+    local line
+    for i, l in ipairs(c.lines or {}) do
+        local nxt = c.lines[i + 1]
+        if st >= l.t and st < math.min(l.t + 4, nxt and nxt.t or l.t + 4) then line = l.text end
+    end
+    if line then
+        surface.SetDrawColor(0, 0, 0, 230)
+        surface.DrawRect(w * 0.1, h * 0.78, w * 0.8, 60)
+        draw.SimpleText(line, "LCArcade", w / 2, h * 0.78 + 30, Color(235, 235, 235), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    end
+    -- main screen turn on: static, a moment
+    if catsSeen and now - catsSeen < 1.2 then
+        for _ = 1, 120 do
+            local g = math.random(60, 220)
+            surface.SetDrawColor(g, g, g, 140)
+            surface.DrawRect(math.random(0, w), math.random(0, h), math.random(20, 120), 2)
+        end
+    end
+    -- for great justice: the white
+    if c.boomAt and now - c.boomAt < 3 then
+        surface.SetDrawColor(255, 255, 255, 255 * math.Clamp(1 - (now - c.boomAt) / 3, 0, 1))
+        surface.DrawRect(0, 0, w, h)
+    end
+end)

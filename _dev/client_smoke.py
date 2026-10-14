@@ -1289,6 +1289,17 @@ for _, h in pairs(hook.t["Think"] or {}) do h() end
 for _, h in pairs(hook.t["CalcView"] or {}) do h(_me, Vector(0, 0, 0), Angle(0, 0, 0), 75) end
 paint()
 _me.nw.lc_seated = false
+net._q = { { id = "base", phase = "apocalypse", name = "Base", say = "x", song = "livingcity/endings/base/base.ogg",
+    client = { party = true, lights = true, dance = "bus", bpm = 150, offset = 0, start = CurTime() - 3, cats = true, sky = Vector(0, 0, 2600),
+        bombs = { 1 }, boomAt = CurTime(), lines = { { t = 2.2, text = "CAPTAIN: What happen ?" }, { t = 3.5, text = "MECHANIC: Somebody set up us the bomb." } } } } }
+net.recv_lc_ending()
+_me.nw.lc_riding = _me
+_advance(0.5)
+for _, h in pairs(hook.t["Think"] or {}) do h() end
+for _, h in pairs(hook.t["CalcView"] or {}) do h(_me, Vector(0, 0, 0), Angle(0, 0, 0), 75) end
+for _, h in pairs(hook.t["PostDrawOpaqueRenderables"] or {}) do h(false, false) end
+paint()
+_me.nw.lc_riding = nil
 _me.nw.lc_dancing = false
 if concommand.list and concommand.list.lc_bloom_pose then concommand.list.lc_bloom_pose(nil, "lc_bloom_pose", { "R_Hand", "1", "2", "3" }) end
 net._q = { { id = "water", phase = "reset", name = "The Flood" } }

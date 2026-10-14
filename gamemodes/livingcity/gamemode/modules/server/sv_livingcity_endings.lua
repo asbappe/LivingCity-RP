@@ -36,6 +36,11 @@
                    up faster (lc_ending_bus_sections)
         nuanua     everyone on an airplane, high over the city
         topsecret  everyone hung by barnacles, one a second
+        base       someone set up us the bomb: the song's opening lines as
+                   arcade subtitles, bombs all over the city, CATS in the sky;
+                   everyone on a ZIG (a dropship), the fleet circling the city
+                   as the bombs go off, then diving at CATS for great justice;
+                   chat in Engrish (lc_ending_base_sections, _lines)
         marrow     skeletons dance their way in from all over the map to the
                    landing zone; on the song's heavy parts everyone (the
                    Combine's units too) dances with them, club lights
@@ -95,8 +100,9 @@ LC.Endings = {
     water     = { name = "The Flood", say = "Father Grigori has eaten the motherlode. The waters rise." },
     bloom     = { name = "Bloom", say = "Everybody dances. Nobody stops." },
     marrow    = { name = "Marrow", say = "Something is rattling out there. Lots of somethings." },
+    base      = { name = "Base", say = "What happen ?" },
 }
-LC.EndingOrder = { "harpies", "bus", "nuanua", "topsecret", "water", "bloom", "marrow" }
+LC.EndingOrder = { "harpies", "bus", "nuanua", "topsecret", "water", "bloom", "marrow", "base" }
 
 local E -- the ending in progress: { id, phase, by, ... }
 function LC.EndingSession() return E end
@@ -899,6 +905,7 @@ end
 
 SETUP.marrow = function()
     local now = CurTime()
+    E.songEnds = true -- (it is over when the song is)
     E.skels = {}
     E.sections = LC.MarrowSections()
     local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
@@ -1096,6 +1103,7 @@ end
 
 SETUP.bus = function()
     local now = CurTime()
+    E.songEnds = true -- (it is over when the song is)
     E.sections = LC.MarrowSections(cvBusSections:GetString())
     for _, sct in ipairs(E.sections) do if sct.kind == "end" then E.holdUntil = now + sct.t end end
     E.holdUntil = E.holdUntil or (now + 220)
@@ -1248,6 +1256,220 @@ hook.Add("PlayerDeath", "LivingCityEndingBus", function(p)
     end
 end)
 
+-- Base (a codeword): someone set up us the bomb. The song's opening lines
+-- play as arcade subtitles (lc_ending_base_lines); bombs appear all over the
+-- city, beeping; the main screen turns on and CATS fills the sky; when the
+-- remix kicks in everyone (and some of the Combine) is on a ZIG, a dropship,
+-- and the whole fleet takes off and circles the city on the beat while the
+-- bombs go off below; "Move ZIG" faster; "For great justice" they dive at
+-- CATS, the bombs chain, and everything blows. All the while, everyone's
+-- chat comes out in Engrish.
+local cvBaseSections = CreateConVar("lc_ending_base_sections", "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end", FLAGS,
+    "Base: the song's moments, second:kind (bomb, screen, zig, move, justice, boom, end)")
+local cvBaseLines = CreateConVar("lc_ending_base_lines",
+    "2.2=CAPTAIN: What happen ?|3.5=MECHANIC: Somebody set up us the bomb.|6.5=OPERATOR: We get signal.|9.5=CAPTAIN: What !|12.5=OPERATOR: Main screen turn on.|14.7=CAPTAIN: It's you !!|16.4=CATS: How are you gentlemen !!|18.4=CATS: All your base are belong to us.|20.4=CATS: You are on the way to destruction.|21.6=CAPTAIN: What you say !!|23.0=CATS: You have no chance to survive make your time.|26.0=CATS: Ha ha ha ha ....|34=CAPTAIN: Take off every 'ZIG' !!|126=CAPTAIN: Move 'ZIG'.|174=CAPTAIN: For great justice.",
+    FLAGS, "Base: the subtitles, second=WHO: line, separated by |")
+local cvBaseBPM   = CreateConVar("lc_ending_base_bpm", "150", FLAGS, "Base: the song's beats per minute (the bombs and the fleet keep to it)")
+local cvBaseBombs = CreateConVar("lc_ending_base_bombs", "30", FLAGS, "Base: how many bombs someone sets up")
+local ZIG = { "models/combine_dropship.mdl" }
+local BOMB = { "models/props_phx/ww2bomb.mdl", "models/props_c17/oildrum001_explosive.mdl" }
+
+function LC.BaseLines(str)
+    local out = {}
+    for t, line in string.gmatch((str or cvBaseLines:GetString()) .. "|", "([%d%.]+)%s*=%s*([^|]+)|") do out[#out + 1] = { t = tonumber(t), text = string.Trim(line) } end
+    table.sort(out, function(x, y) return x.t < y.t end)
+    return out
+end
+
+-- Engrish: what everyone says, the way the captain would say it.
+local ENGRISH = { { "%f[%a][Yy]our%f[%A]", "you" }, { "%f[%a][Yy]ou're%f[%A]", "you are" }, { "%f[%a]is%f[%A]", "are belong" },
+    { "%f[%a]the%f[%A] ", "" }, { "%f[%a]The%f[%A] ", "" }, { "%f[%a]a%f[%A] ", "" }, { "%f[%a]I am%f[%A]", "I are" },
+    { "%f[%a]happened%f[%A]", "happen" }, { "%f[%a]what's%f[%A]", "what" }, { "%f[%a]going to%f[%A]", "on the way to" } }
+function LC.Engrish(text)
+    local s = tostring(text or "")
+    for _, r in ipairs(ENGRISH) do s = string.gsub(s, r[1], r[2]) end
+    s = string.gsub(s, "%s+$", "")
+    if not string.find(s, "[!?%.]$") then s = s .. " !!" else s = string.gsub(s, "([!?])$", " %1%1") end
+    return s
+end
+
+local function BaseSection(t)
+    local kind = "intro"
+    for _, sct in ipairs(E.sections) do if t >= sct.t then kind = sct.kind end end
+    return kind
+end
+
+local function Blow(pos, big)
+    if util.Effect and EffectData then
+        local fx = EffectData()
+        fx:SetOrigin(pos)
+        util.Effect("Explosion", fx)
+    end
+    if util.ScreenShake then util.ScreenShake(pos, big and 12 or 5, 5, big and 2 or 1, big and 3000 or 1500) end
+    if sound and sound.Play then sound.Play("ambient/explosions/explode_" .. math.random(1, 9) .. ".wav", pos, big and 140 or 110, 100, 1) end
+end
+
+local function SetBomb(pos)
+    local b = Prop(FirstModel(BOMB), pos + Vector(0, 0, 10))
+    if b then
+        b:SetAngles(Angle(0, math.Rand(0, 360), math.Rand(-10, 10)))
+        if b.SetSolid then b:SetSolid(SOLID_NONE) end
+        E.bombs[#E.bombs + 1] = b
+    end
+    return b
+end
+
+local function BombIndices()
+    local out = {}
+    for _, b in ipairs(E.bombs) do if IsValid(b) then out[#out + 1] = b:EntIndex() end end
+    return out
+end
+
+-- On a ZIG: a place on top of it (crammed in, like the bus).
+local function ZigSeat(i)
+    local row, side = (i - 1) % 3, math.floor((i - 1) / 3) % 2
+    return Vector(-80 + row * 80, side == 0 and -40 or 40, 150 + math.floor((i - 1) / 6) * 50)
+end
+
+local function ZigBoard(e)
+    if not IsValid(e) or e.lcEndRide or #E.zigs == 0 then return end
+    E.zigSeat = (E.zigSeat or 0) + 1
+    local zi = (E.zigSeat - 1) % #E.zigs + 1
+    local per = math.floor((E.zigSeat - 1) / #E.zigs) + 1
+    e.lcEndRide = { v = E.zigs[zi], off = ZigSeat(per) }
+    E.riders = E.riders or {}
+    E.riders[#E.riders + 1] = e
+    if e:IsPlayer() then
+        if e.InVehicle and e:InVehicle() and e.ExitVehicle then e:ExitVehicle() end
+        e.lcEndFrozen = true
+        e:Freeze(true)
+        e:SetMoveType(MOVETYPE_NONE)
+    end
+    e:SetNW2Entity("lc_riding", E.zigs[zi])
+    e:SetNW2Bool("lc_dancing", true)
+end
+
+SETUP.base = function()
+    local now = CurTime()
+    E.songEnds = true -- (it is over when the song is)
+    E.sections = LC.MarrowSections(cvBaseSections:GetString())
+    for _, sct in ipairs(E.sections) do if sct.kind == "end" then E.holdUntil = now + sct.t end end
+    E.holdUntil = E.holdUntil or (now + 224)
+    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
+    E.bombs, E.zigs = {}, {}
+    E.sky = E.lz + Vector(0, 0, 2600)
+    LC.TimeStopped = true -- (the city stops and stares)
+    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    E.dark = true
+    LC.EndingDark = "f"
+    if LC.ApplyLightStyle then LC.ApplyLightStyle() end
+    E.client = { party = true, lights = false, dance = "bus", bpm = cvBaseBPM:GetFloat(), offset = 0, start = now,
+        lines = LC.BaseLines(), palette = { { 255, 60, 40 }, { 255, 200, 60 } }, sky = E.sky, bombs = {} }
+    E.section = "intro"
+end
+
+TICK.base = function(now)
+    local t = now - E.phaseT
+    local kind = BaseSection(t)
+    local beat = t * cvBaseBPM:GetFloat() / 60
+    if kind ~= E.section then
+        E.section = kind
+        E.client.section = kind
+        if kind == "bomb" then
+            -- somebody set up us the bomb: all over the city
+            for _ = 1, cvBaseBombs:GetInt() do
+                local g = RingSpot(E.lz, math.Rand(300, 3000), false)
+                if g then SetBomb(g) end
+            end
+        elseif kind == "screen" then
+            E.client.cats = true -- (main screen turn on: CATS in the sky)
+        elseif kind == "zig" then
+            -- take off every ZIG: the fleet at the landing zone, everyone aboard
+            local n = math.max(3, math.ceil(#player.GetAll() / 6) + 1)
+            for i = 1, n do
+                local side = (i % 2 == 0) and 1 or -1
+                local rank = math.floor(i / 2)
+                local z = Prop(FirstModel(ZIG), E.lz + Vector(-rank * 420, side * rank * 380, 250))
+                if z then
+                    if z.SetSolid then z:SetSolid(SOLID_NONE) end
+                    z.lcSlot = Vector(-rank * 420, side * rank * 380, rank * 60)
+                    E.zigs[#E.zigs + 1] = z
+                end
+            end
+            for _, p in ipairs(player.GetAll()) do ZigBoard(p) end
+            local c = 0
+            for _, npc in ipairs(CombineNPCs()) do if c < 6 then c = c + 1 ZigBoard(npc) end end
+            E.client.lights = true
+            E.fleetA = 0
+        elseif kind == "move" then
+            E.client.strobe = true
+        elseif kind == "boom" then
+            -- for great justice
+            for _, b in ipairs(E.bombs) do if IsValid(b) then Blow(b:GetPos(), true) b:Remove() end end
+            Blow(E.sky, true)
+            E.client.cats = false
+            E.client.boomAt = now
+        end
+        E.client.bombs = BombIndices()
+        Send()
+    end
+    if E.boarded ~= false and #E.zigs > 0 then for _, p in ipairs(player.GetAll()) do ZigBoard(p) end end
+    -- the fleet: round the city in formation, faster with the beat; at the end, at CATS
+    if #E.zigs > 0 then
+        local surge = 1 + 0.3 * math.abs(math.sin(beat * math.pi))
+        local speed = (kind == "move" and 0.32) or (kind == "justice" and 0.4) or 0.2
+        E.fleetA = (E.fleetA or 0) + speed * surge * 0.1
+        local r = kind == "justice" and math.max(500, cvRadius:GetFloat() * (1 - math.Clamp((t - 174) / 38, 0, 1) * 0.75)) or cvRadius:GetFloat()
+        local height = kind == "justice" and (900 + math.Clamp((t - 174) / 38, 0, 1) * 1500) or 900
+        local lead = E.lz + Vector(math.cos(E.fleetA) * r, math.sin(E.fleetA) * r, height)
+        local yaw = math.deg(E.fleetA) + 90
+        local roll = (kind == "move" or kind == "justice") and math.sin(t * 2) * 25 or math.sin(t) * 8
+        for _, z in ipairs(E.zigs) do
+            if IsValid(z) then
+                local off = z.lcSlot or Vector()
+                local ang = Angle(0, yaw, 0)
+                local pos = lead + ang:Forward() * off.x + ang:Right() * off.y + Vector(0, 0, off.z)
+                z:SetPos(LerpVector(0.35, z:GetPos(), pos))
+                z:SetAngles(Angle(math.sin(t * 1.3) * 5, yaw, roll))
+            end
+        end
+        for _, e in ipairs(E.riders or {}) do
+            local rd = IsValid(e) and e.lcEndRide
+            if rd and IsValid(rd.v) then e:SetPos(rd.v.LocalToWorld and rd.v:LocalToWorld(rd.off) or (rd.v:GetPos() + rd.off)) end
+        end
+    end
+    -- the bombs go off below, more and more of them
+    if (kind == "zig" or kind == "move" or kind == "justice") then
+        local b = math.floor(beat)
+        if b ~= E.lastBeat then
+            E.lastBeat = b
+            local chance = (kind == "justice" and 0.7) or (kind == "move" and 0.4) or 0.2
+            if math.random() < chance then
+                local alive = {}
+                for _, bb in ipairs(E.bombs) do if IsValid(bb) then alive[#alive + 1] = bb end end
+                E.bombs = alive
+                if #alive > 0 then
+                    local bb = table.remove(E.bombs, math.random(#alive))
+                    Blow(bb:GetPos(), false)
+                    bb:Remove()
+                    local g = RingSpot(E.lz, math.Rand(300, 3000), false) -- (and somebody sets up another)
+                    if g then SetBomb(g) end
+                    E.client.bombs = BombIndices()
+                    Send()
+                end
+            end
+        end
+    end
+end
+
+-- Everyone's chat, in Engrish, while the base is belong to them.
+hook.Add("PlayerSay", "LivingCityEngrish", function(p, text, team)
+    if not E or E.id ~= "base" or E.phase ~= "apocalypse" then return end
+    if string.sub(text or "", 1, 1) == "!" or string.sub(text or "", 1, 1) == "/" then return end
+    return LC.Engrish(text)
+end)
+
 SETUP.nuanua = function()
     Fly({ "models/xqm/jetbody3.mdl", "models/xqm/airplanewing1.mdl", "models/props_vehicles/van001a_physics.mdl" }, 64, 1600, 0.2, 3, 90)
 end
@@ -1392,6 +1614,7 @@ end
 
 SETUP.water = function()
     local now = CurTime()
+    E.songEnds = true -- (it is over when the song is)
     E.sections = LC.MarrowSections(cvFloodSections:GetString())
     for _, sct in ipairs(E.sections) do if sct.kind == "end" then E.holdUntil = now + sct.t end end
     E.holdUntil = E.holdUntil or (now + 285)
@@ -1583,6 +1806,7 @@ local function Clear()
         p:SetNW2Bool("lc_end_spectating", false)
         p:SetNW2Bool("lc_dancing", false)
         p:SetNW2Bool("lc_seated", false)
+        p:SetNW2Entity("lc_riding", NULL)
         p.lcBloomUp = nil
         p:SetNW2Bool("lc_rocking", false)
     end
@@ -1708,8 +1932,11 @@ timer.Create("LivingCityEndings", 0.1, 0, function()
             end
         elseif E.phase == "apocalypse" then
             if TICK[E.id] then TICK[E.id](now) end
-            -- (an ending can run to the end of its song even after the last one goes: the dead watch)
-            if (#Living() == 0 and now >= (E.holdUntil or 0)) or now - E.phaseT > math.max(cvMax:GetFloat(), (E.holdUntil or 0) - E.phaseT + 1) then GoTo("reset") end
+            -- (an ending can run to the end of its song even after the last one goes: the dead
+            -- watch; and one that lasts its song, with people still in it, ends with the song)
+            local songOver = E.holdUntil and now >= E.holdUntil
+            if (songOver and (#Living() == 0 or E.songEnds)) or (not E.holdUntil and #Living() == 0)
+                or now - E.phaseT > math.max(cvMax:GetFloat(), (E.holdUntil or 0) - E.phaseT + 1) then GoTo("reset") end
         elseif E.phase == "reset" then
             if now - E.phaseT >= 5 then
                 local id = E.id
