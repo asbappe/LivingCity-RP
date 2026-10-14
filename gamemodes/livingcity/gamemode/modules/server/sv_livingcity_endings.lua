@@ -382,10 +382,15 @@ local RUSH = 9 -- (seconds of rushing in before the leaping)
 local UP = Vector(0, 0, 1)
 
 -- The floor under a spot (nil: inside a wall, or nothing there).
+-- The floor under a spot: close below first, then much further down (the landing
+-- zone may be up on a roof or a platform, with the streets round it far below).
 local function Ground(pos)
     local tr = util.TraceLine({ start = pos + Vector(0, 0, 120), endpos = pos - Vector(0, 0, 600), mask = MASK_SOLID_BRUSHONLY })
-    if not tr.Hit or tr.StartSolid then return nil end
-    return tr.HitPos
+    if tr.Hit and not tr.StartSolid then return tr.HitPos end
+    if tr.StartSolid then return nil end
+    tr = util.TraceLine({ start = pos - Vector(0, 0, 590), endpos = pos - Vector(0, 0, 4000), mask = MASK_SOLID_BRUSHONLY })
+    if tr.Hit and not tr.StartSolid then return tr.HitPos end
+    return nil
 end
 
 -- Nothing solid between two spots, at knee height.
@@ -431,8 +436,23 @@ local function RingSpot(centre, dist, hide, angle)
         local g = Ground(centre + Vector(math.cos(a) * d, math.sin(a) * d, 0))
         if g and (not hide or i > 7 or not Seen(g)) then return g, a end
     end
+    -- nowhere found: somewhere people can walk, about that far out (the map's own navigation)
+    if LC.NavNodesNear then
+        local near = {}
+        for _, nd in ipairs(LC.NavNodesNear(centre, dist + 500)) do
+            local d2 = (nd.pos - centre):Length2D()
+            if d2 >= dist * 0.5 then near[#near + 1] = nd end
+        end
+        if #near > 0 then
+            local nd = near[math.random(#near)]
+            local off = nd.pos - centre
+            return nd.pos, math.atan2(off.y, off.x)
+        end
+    end
     return nil
 end
+
+LC.EndingRingSpot = RingSpot
 
 local function MingeModel()
     local list = {}
@@ -1871,6 +1891,7 @@ TICK.base = function(now)
                 local g = BombSpot()
                 if g then SetBomb(g) end
             end
+            if LC.Log then LC.Log("info", "Base: " .. #E.bombs .. " bombs set up (of " .. cvBaseBombs:GetInt() .. ")") end
         elseif kind == "screen" then
             E.client.cats = true -- (main screen turn on: CATS in the sky)
         elseif kind == "zig" then

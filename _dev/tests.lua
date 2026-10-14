@@ -11169,6 +11169,15 @@ local sky = LC.EndingSky(Vector(0, 0, 0))
 util.TraceLine = traceWas
 ok(sky.r >= 300 and (sky.centre.x + sky.r < 1000 or sky.centre.x - sky.r > 1000) and math.abs(sky.z - 2780) < 1,
     "whatever flies keeps to open sky: under the map's sky, on the roomiest circle that misses the buildings", math.floor(sky.r) .. " round x " .. math.floor(sky.centre.x) .. " at " .. math.floor(sky.z))
+-- the landing zone up on a roof, the streets 1500 below: spots are still found
+local tlWas2 = util.TraceLine
+util.TraceLine = function(t)
+    if t.endpos.z < t.start.z - 1000 then return { Hit = true, HitPos = Vector(t.start.x, t.start.y, -1500), Fraction = 0.5 } end
+    return { Hit = false, HitPos = t.endpos, Fraction = 1 }
+end
+local spot = LC.EndingRingSpot(Vector(0, 0, 0), 800, false)
+util.TraceLine = tlWas2
+ok(spot and spot.z == -1500, "with the landing zone up on a roof, places to put things are found in the streets far below", spot and tostring(spot.z) or "none")
 ok(LC.EndingOfSong("bus2.mp3") == "bus" and LC.EndingOfSong("bloom.ogg") == "bloom" and LC.EndingOfSong("busted.mp3") == nil
     and LC.EndingOfSong("Son of the Harpy.mp3") == nil, "a song's name says which ending it's for")
 -- the Harpies: the mingebags (timings shortened for the test: swell at 20 s, all over by 40)
