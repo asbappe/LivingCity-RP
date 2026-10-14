@@ -1280,6 +1280,15 @@ _advance(1.1)
 for _, h in pairs(hook.t["Think"] or {}) do h() end
 paint()
 for _, h in pairs(hook.t["RenderScreenspaceEffects"] or {}) do h() end
+net._q = { { id = "crazybus", phase = "apocalypse", name = "The Crazy Bus", say = "x", song = "livingcity/endings/crazybus/bus.ogg",
+    client = { party = true, lights = true, strobe = true, dance = "bus", palette = { { 255, 40, 40 }, { 60, 140, 255 } }, bpm = 138, offset = 0, start = CurTime(), bus = 1 } } }
+net.recv_lc_ending()
+_me.nw.lc_seated = true
+_advance(1.1)
+for _, h in pairs(hook.t["Think"] or {}) do h() end
+for _, h in pairs(hook.t["CalcView"] or {}) do h(_me, Vector(0, 0, 0), Angle(0, 0, 0), 75) end
+paint()
+_me.nw.lc_seated = false
 _me.nw.lc_dancing = false
 if concommand.list and concommand.list.lc_bloom_pose then concommand.list.lc_bloom_pose(nil, "lc_bloom_pose", { "R_Hand", "1", "2", "3" }) end
 net._q = { { id = "grigori", phase = "reset", name = "The Flood" } }

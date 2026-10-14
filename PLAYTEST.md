@@ -140,6 +140,8 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **Marrow (lc_ending marrow now):** skeletons dancing their way in, the drops (everyone dancing, the Combine's units too, strobes), the attacks in between, turning into a skeleton, the outro. Do the sections line up with the song? Doors locked open?
   Notes:
+- [ ] **The Crazy Bus (lc_ending crazybus now):** the bus driving about, everyone seated on the drop, the rainbow trail, the rings popping, the speed on the beat, the landing at 2:29 and the faster take-off. How does the seated pose look?
+  Notes:
 - [ ] **Secret endings:** the G-Man stops time and everyone votes; Father Grigori's /eatchip with a master data core starts the flood (admins: lc_ending <id> now).
   Notes:
 

@@ -29,7 +29,11 @@
                    gather in the dark for a minute, rush in when the song
                    swells, then leap; everyone's dead by 2:00 and watches
                    (lc_ending_minge_swell, lc_ending_minge_end, _max, _models)
-        crazybus   everyone in a bus or van, flying round the city
+        crazybus   the party bus: it drives about through the song's intro,
+                   then everyone (and some of the Combine) is in it and it
+                   flies through walls, a rainbow behind it, speed surging on
+                   the beat, through rings that pop; down to drive again, then
+                   up faster (lc_ending_bus_sections)
         nuanua     everyone on an airplane, high over the city
         topsecret  everyone hung by barnacles, one a second
         marrow     skeletons dance their way in from all over the map to the
@@ -80,7 +84,7 @@ local EXT = { wav = true, mp3 = true, ogg = true }
 
 LC.Endings = {
     harpies   = { name = "The Harpies", say = "The lights go out. Something is gathering out there in the dark." },
-    crazybus  = { name = "The Crazy Bus", say = "All aboard." },
+    crazybus  = { name = "The Crazy Bus", say = "Hear that horn? All aboard." },
     nuanua    = { name = "Nua Nua", say = "Please fasten your seatbelts." },
     topsecret = { name = "Top Secret", say = "Look up." },
     grigori   = { name = "The Flood", say = "Father Grigori has eaten the motherlode. The waters rise." },
@@ -1015,10 +1019,213 @@ local function FlyTick(now)
     end
 end
 
-SETUP.crazybus = function()
-    Fly({ "models/props_vehicles/bus01_2.mdl", "models/props_vehicles/van001a_physics.mdl", "models/props_vehicles/car002a_physics.mdl" }, 6, 700, 0.35, nil, 75)
+-- The Crazy Bus: the party bus. It drives about the streets through the
+-- song's intro; on the drop (lc_ending_bus_sections) everyone, and some of
+-- the Combine's units, are in it, seated, and it takes off: through walls,
+-- a rainbow behind it, its speed surging on the beat, rings to fly through,
+-- the light inside pulsing. It comes down and drives again for a while,
+-- then takes off faster still. Nobody gets off (die, and you're back on).
+local cvBusSections = CreateConVar("lc_ending_bus_sections", "27:fly,149:drive,176:fast,220:end", FLAGS,
+    "The Crazy Bus: the song's sections, second:kind (fly, drive, fast, end); before the first, it drives about the streets")
+local cvBusBPM   = CreateConVar("lc_ending_bus_bpm", "138", FLAGS, "The Crazy Bus: the song's beats per minute (its speed and the lights keep to it)")
+local cvBusCombine = CreateConVar("lc_ending_bus_combine", "6", FLAGS, "The Crazy Bus: how many of the Combine's units get on too")
+local BUS = { "models/props_vehicles/bus01_2.mdl", "models/props_vehicles/van001a_physics.mdl" }
+local RAINBOW = { { 255, 40, 40 }, { 255, 150, 30 }, { 255, 240, 40 }, { 60, 230, 80 }, { 60, 140, 255 }, { 170, 70, 255 } }
+local RING = "models/hunter/tubes/tube4x4x025.mdl"
+
+local function BusSection(t)
+    local kind = "drive"
+    for _, sct in ipairs(E.sections) do if t >= sct.t then kind = sct.kind end end
+    return kind
 end
-TICK.crazybus = FlyTick
+
+-- A seat: rows down the bus, two across, and on top of each other when it's full.
+local function Seat(i)
+    local row, side, layer = (i - 1) % 8, math.floor((i - 1) / 8) % 2, math.floor((i - 1) / 16)
+    return Vector(-140 + row * 40, side == 0 and -24 or 24, 18 + layer * 46)
+end
+
+local function BusBoard(e)
+    if not IsValid(e) or e.lcEndRide then return end
+    E.seats = (E.seats or 0) + 1
+    e.lcEndRide = { v = E.bus, off = Seat(E.seats) }
+    E.riders = E.riders or {}
+    E.riders[#E.riders + 1] = e
+    if e:IsPlayer() then
+        if e.InVehicle and e:InVehicle() and e.ExitVehicle then e:ExitVehicle() end
+        e.lcEndFrozen = true
+        e:Freeze(true)
+        e:SetMoveType(MOVETYPE_NONE)
+    end
+    e:SetNW2Bool("lc_seated", true)
+    e:SetNW2Bool("lc_dancing", true)
+end
+
+local function GroundSpot(near)
+    local a = math.Rand(0, math.pi * 2)
+    local d = math.Rand(400, 1100)
+    return Ground(near + Vector(math.cos(a) * d, math.sin(a) * d, 0)) or near
+end
+
+local function SkySpot()
+    local r = cvRadius:GetFloat()
+    local p = E.centre + Vector(math.Rand(-r, r), math.Rand(-r, r), 0)
+    local g = Ground(p)
+    return Vector(p.x, p.y, (g and g.z or E.centre.z) + math.Rand(300, 1100))
+end
+
+local function NewRing(at, from)
+    local ring = ents.Create("prop_dynamic")
+    if not IsValid(ring) then return end
+    ring:SetModel(RING)
+    ring:SetPos(at)
+    local dir = (at - from)
+    ring:SetAngles(dir:Angle() + Angle(90, 0, 0)) -- (facing the way the bus comes)
+    ring:Spawn()
+    if ring.SetModelScale then ring:SetModelScale(1.7, 0) end
+    if ring.SetSolid then ring:SetSolid(SOLID_NONE) end
+    if ring.SetRenderMode then ring:SetRenderMode(RENDERMODE_TRANSCOLOR) end
+    E.ents[#E.ents + 1] = ring
+    E.rings[#E.rings + 1] = ring
+end
+
+SETUP.crazybus = function()
+    local now = CurTime()
+    E.sections = LC.MarrowSections(cvBusSections:GetString())
+    for _, sct in ipairs(E.sections) do if sct.kind == "end" then E.holdUntil = now + sct.t end end
+    E.holdUntil = E.holdUntil or (now + 220)
+    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    E.centre = (#lz > 0 and lz[1].pos) or Centre()
+    E.rings = {}
+    LC.TimeStopped = true -- (the city stops and watches)
+    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    -- the bus, somewhere near people, on the road
+    local near = (Living()[1] and Living()[1]:GetPos()) or E.centre
+    local bus = Prop(FirstModel(BUS), GroundSpot(near))
+    if not bus then return end
+    if bus.SetSolid then bus:SetSolid(SOLID_NONE) end
+    E.bus = bus
+    E.busDir = Vector(1, 0, 0)
+    E.goal = GroundSpot(near)
+    -- the rainbow behind it: a trail of each colour, one above the other
+    for i, c in ipairs(RAINBOW) do
+        local a = ents.Create("prop_dynamic")
+        if IsValid(a) then
+            a:SetModel("models/hunter/plates/plate.mdl")
+            a:SetPos(bus:GetPos())
+            a:Spawn()
+            if a.SetNoDraw then a:SetNoDraw(true) end
+            if a.SetSolid then a:SetSolid(SOLID_NONE) end
+            a:SetParent(bus)
+            if a.SetLocalPos then a:SetLocalPos(Vector(-230, 0, 20 + (#RAINBOW - i) * 14)) end
+            if util.SpriteTrail then util.SpriteTrail(a, 0, Color(c[1], c[2], c[3]), true, 16, 4, 2.5, 1 / 20 * 0.5, "trails/laser.vmt") end
+            E.ents[#E.ents + 1] = a
+        end
+    end
+    E.client = { party = true, lights = true, dance = "bus", palette = RAINBOW, bpm = cvBusBPM:GetFloat(), offset = 0, start = now, bus = bus:EntIndex() }
+    E.section = "intro"
+end
+
+local function BoardBus()
+    for _, p in ipairs(player.GetAll()) do BusBoard(p) end
+    local n = 0
+    for _, npc in ipairs(CombineNPCs()) do
+        if n >= cvBusCombine:GetInt() then break end
+        n = n + 1
+        BusBoard(npc)
+    end
+end
+
+TICK.crazybus = function(now)
+    local bus = E.bus
+    if not IsValid(bus) then return end
+    local t = now - E.phaseT
+    local kind = BusSection(t)
+    if kind ~= E.section then
+        E.section = kind
+        if kind == "fly" or kind == "fast" then
+            E.boarded = true
+            BoardBus()
+            E.goal = SkySpot()
+        else
+            E.goal = GroundSpot(bus:GetPos())
+        end
+        E.client.strobe = kind == "fast"
+        Send()
+    end
+    if E.boarded then for _, p in ipairs(player.GetAll()) do BusBoard(p) end end -- (someone just joining, or back from the dead)
+    -- the speed, surging on the beat
+    local beat = t * cvBusBPM:GetFloat() / 60
+    local surge = 1 + 0.35 * math.abs(math.sin(beat * math.pi))
+    local flying = E.section == "fly" or E.section == "fast"
+    local speed = (flying and (E.section == "fast" and 1500 or 900) or 380) * (flying and surge or 1)
+    local pos = bus:GetPos()
+    local to = E.goal - pos
+    if not flying then to.z = 0 end
+    local dist = to:Length()
+    if dist < 120 then
+        if flying then
+            local from = E.goal
+            E.goal = SkySpot()
+            if #E.rings < 4 then NewRing(E.goal, from) end
+        else
+            E.goal = GroundSpot(pos)
+        end
+    else
+        -- swing round towards it, not snap
+        local want = to * (1 / dist)
+        E.busDir = (E.busDir * 0.85 + want * 0.15):GetNormalized()
+        local step = math.min(dist, speed * 0.1)
+        local nextPos = pos + E.busDir * step
+        if not flying then
+            local g = Ground(nextPos)
+            -- (coming down to the road: a gentle descent rather than a drop)
+            nextPos.z = g and (pos.z + (g.z - pos.z) * 0.3) or pos.z
+        end
+        bus:SetPos(nextPos)
+        local ang = E.busDir:Angle()
+        bus:SetAngles(Angle(flying and ang.p or 0, ang.y, flying and math.sin(t * 1.3) * 14 or 0))
+    end
+    -- the rings: through one, and it pops
+    local keep = {}
+    for _, ring in ipairs(E.rings) do
+        if IsValid(ring) then
+            local c = RAINBOW[(math.floor(beat) % #RAINBOW) + 1]
+            ring:SetColor(Color(c[1], c[2], c[3], 220))
+            if ring:GetPos():DistToSqr(bus:GetPos()) < 160 * 160 then
+                ring:EmitSound("garrysmod/balloon_pop_cute.wav", 90)
+                if util.Effect and EffectData then
+                    local fx = EffectData()
+                    fx:SetOrigin(ring:GetPos())
+                    util.Effect("balloon_pop", fx)
+                end
+                ring:Remove()
+                E.ringsPopped = (E.ringsPopped or 0) + 1
+            else
+                keep[#keep + 1] = ring
+            end
+        end
+    end
+    E.rings = keep
+    if flying and #E.rings == 0 then NewRing(E.goal, bus:GetPos()) end
+    -- everyone in their seat (the seats turn with the bus)
+    for _, e in ipairs(E.riders or {}) do
+        local r = IsValid(e) and e.lcEndRide
+        if r and r.v == bus then
+            e:SetPos(bus.LocalToWorld and bus:LocalToWorld(r.off) or (bus:GetPos() + r.off))
+            if not e:IsPlayer() then e:SetAngles(Angle(0, bus:GetAngles().y, 0)) end
+        end
+    end
+end
+
+-- Nobody gets off the bus: no suicide, and the dead are put straight back on.
+hook.Add("CanPlayerSuicide", "LivingCityEndings", function() if E and E.phase == "apocalypse" then return false end end)
+hook.Add("PlayerDeath", "LivingCityEndingBus", function(p)
+    if E and E.id == "crazybus" and E.boarded then
+        p.lcEndRide = nil
+        timer.Simple(0.5, function() if IsValid(p) and not p:Alive() then p:Spawn() end end)
+    end
+end)
 
 SETUP.nuanua = function()
     Fly({ "models/xqm/jetbody3.mdl", "models/xqm/airplanewing1.mdl", "models/props_vehicles/van001a_physics.mdl" }, 64, 1600, 0.2, 3, 90)
@@ -1117,11 +1324,14 @@ local function Clear()
         p:SetNW2Bool("lc_end_taken", false)
         p:SetNW2Bool("lc_end_spectating", false)
         p:SetNW2Bool("lc_dancing", false)
+        p:SetNW2Bool("lc_seated", false)
         p.lcBloomUp = nil
         p:SetNW2Bool("lc_rocking", false)
     end
     SetGlobal2Float("lc_flood_z", 0)
-    for npc in pairs(LC.NPCs or {}) do if IsValid(npc) then npc:SetNW2Bool("lc_dancing", false) npc.lcBloomUp = nil end end
+    for npc in pairs(LC.NPCs or {}) do
+        if IsValid(npc) then npc:SetNW2Bool("lc_dancing", false) npc:SetNW2Bool("lc_seated", false) npc.lcBloomUp = nil npc.lcEndRide = nil end
+    end
     if E and E.doorsOpen and LC.ReleaseEveryDoor then LC.ReleaseEveryDoor() end
     if E and E.dark then
         LC.EndingDark = nil

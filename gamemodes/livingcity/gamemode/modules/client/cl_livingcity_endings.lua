@@ -230,7 +230,14 @@ local RAVE = {
     Spine2 = function(w) return Angle(0, 0, -w * 8) end,
     R_Calf = function(w, b) return Angle(0, 30 * b, 0) end, L_Calf = function(w, b) return Angle(0, 30 * b, 0) end,
 }
-local STYLES = { club = CLUB, rave = RAVE }
+-- On the bus: sat down (crammed in), arms in the air.
+local BUS = {
+    R_UpperArm = RAVE.R_UpperArm, L_UpperArm = RAVE.L_UpperArm, R_Forearm = RAVE.R_Forearm, L_Forearm = RAVE.L_Forearm,
+    Head = RAVE.Head, Spine2 = function(w) return Angle(0, 0, -w * 6) end,
+    R_Thigh = function() return Angle(0, -85, 0) end, L_Thigh = function() return Angle(0, -85, 0) end,
+    R_Calf = function(w, b) return Angle(0, 85 + 6 * b, 0) end, L_Calf = function(w, b) return Angle(0, 85 + 6 * b, 0) end,
+}
+local STYLES = { club = CLUB, rave = RAVE, bus = BUS }
 
 local function Dance(ent, beat, now)
     if not ent.ManipulateBoneAngles then return end
@@ -322,6 +329,21 @@ hook.Add("Think", "LivingCityBloom", function()
             end
         end
     end
+    -- the party bus: the light inside it, pulsing through the colours
+    local bus = on.bus and Entity(on.bus)
+    if DynamicLight and IsValid(bus) then
+        local pal = on.palette or PALETTE
+        local c0 = pal[math.floor(beat) % #pal + 1]
+        local dl = DynamicLight(52200)
+        if dl then
+            dl.pos = bus:GetPos() + Vector(0, 0, 60)
+            dl.r, dl.g, dl.b = c0.r or c0[1] or 255, c0.g or c0[2] or 255, c0.b or c0[3] or 255
+            dl.brightness = on.strobe and ((frac < 0.25) and 6 or 1) or (2 + 4 * (1 - frac))
+            dl.size = 600
+            dl.decay = 0
+            dl.dietime = now + 0.15
+        end
+    end
     -- light everywhere: a grid of it across the ground round you, pulsing on the beat
     if DynamicLight and IsValid(me) and on.lights and on.ambient then
         local pal = on.palette or PALETTE
@@ -365,6 +387,13 @@ local function Dancing(me)
     return IsValid(me) and (preview or (Bloom() and me:GetNW2Bool("lc_dancing", false) and not me:GetNW2Bool("lc_end_spectating", false)))
 end
 hook.Add("CalcView", "LivingCityBloom", function(me, origin, angles, fov)
+    -- on the party bus: behind it, looking wherever you look
+    local on = Party()
+    local bus = on and on.bus and Entity(on.bus)
+    if IsValid(me) and me:GetNW2Bool("lc_seated", false) and IsValid(bus) then
+        local eye = bus:GetPos() + Vector(0, 0, 140) - angles:Forward() * 520
+        return { origin = eye, angles = angles, fov = fov, drawviewer = true }
+    end
     if not Dancing(me) then return end
     local a = math.rad(CurTime() * 18)
     local centre = me:GetPos() + Vector(0, 0, 45)
