@@ -142,6 +142,7 @@ end
 
 function LC.ApplyDoorState(door)
     if not IsValid(door) then return end
+    if door.lcHeldOpen then OpenAndHold(door) return end -- (a secret ending locked every door open)
     local tag = LC.GetDoorTag(door)
     local auto = not tag and LC.AutoDoorTag and LC.AutoDoorTag(door) or nil
     LC.OpenedDoors[door] = nil
@@ -347,7 +348,7 @@ function LC.PrisonDoorThink(now)
     for door in pairs(LC.PrisonDoors) do
         if not IsValid(door) then
             LC.PrisonDoors[door] = nil
-        elseif not LC.OpenedDoors[door] and not (LC.DoorPicked and LC.DoorPicked(door)) then
+        elseif not LC.OpenedDoors[door] and not door.lcHeldOpen and not (LC.DoorPicked and LC.DoorPicked(door)) then
             if DoorOpen(door) then
                 door:Fire("Close")
                 door:Fire("Lock", "", 0.1)
@@ -500,6 +501,43 @@ concommand.Add("lc_unlockdoors", function(ply)
     end
     Say(ply, "Unlocked " .. n .. " doors (locked-tagged doors left alone).")
 end)
+
+-- Every door in the city, open and locked open (a secret ending: nothing
+-- gets stuck behind one, and nobody can shut one; sv_livingcity_endings.lua).
+-- Locked-tagged ones too. The map reloads afterwards, which puts them back.
+function LC.OpenEveryDoor()
+    local n = 0
+    for class in pairs(DOOR_CLASSES) do
+        for _, door in ipairs(ents.FindByClass(class)) do
+            if IsRealDoor(door) then
+                door.lcHeldOpen = true
+                LC.OpenedDoors[door] = nil
+                LC.Relock[door] = nil
+                LC.PrisonDoors[door] = nil
+                LC.KeptOpen[door] = true
+                HoldOpen(door, true) -- (it doesn't swing back by itself)
+                OpenAndHold(door)    -- (open, then locked in the open position: E won't shut it)
+                n = n + 1
+            end
+        end
+    end
+    return n
+end
+
+-- And back as they were (an ending cancelled without the reload).
+function LC.ReleaseEveryDoor()
+    for class in pairs(DOOR_CLASSES) do
+        for _, door in ipairs(ents.FindByClass(class)) do
+            if door.lcHeldOpen then
+                door.lcHeldOpen = nil
+                LC.KeptOpen[door] = nil
+                HoldOpen(door, false)
+                door:Fire("Unlock")
+                LC.ApplyDoorState(door)
+            end
+        end
+    end
+end
 
 concommand.Add("lc_opendoors", function(ply)
     if not LC.CanEdit(ply) then return end

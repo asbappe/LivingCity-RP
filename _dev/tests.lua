@@ -11181,6 +11181,48 @@ ok(not a:GetNW2Bool("lc_dancing", false) and a.frozen == false and not LC.TimeSt
 _setcvar("lc_ending_bloom_speedup", 121)
 _setcvar("lc_ending_bloom_ramp", 20)
 _setcvar("lc_ending_bloom_launch_secs", 16)
+-- Marrow: skeletons, the song's sections (short ones for the test), and the Combine's units in it too
+concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
+_setcvar("lc_ending_marrow_sections", "3:dance,6:rave,8:attack,12:outro,14:end")
+_setcvar("lc_ending_marrow_max", 8)
+local mcop = LC.Spawners.cop(G0 + Vector(-3000, 0, 0))
+local mdoor = ents.Create("prop_door_rotating") mdoor:SetPos(G0 + Vector(0, -900, 0))
+a:SetPos(G0 + Vector(0, 2000, 0)) b:SetPos(G0 + Vector(200, 0, 0))
+a:SetHealth(100) b:SetHealth(100)
+ok(LC.TriggerEnding("marrow", b, true), "marrow")
+E = LC.EndingSession()
+ok(a:GetPos():Distance(E.lz) < 300 and IsValid(mcop) and mcop:GetPos():Distance(E.lz) < 500, "everyone, the Combine's units too, is put at the landing zone")
+ok(mdoor.lcHeldOpen and has(mdoor.fired, "Open") and has(mdoor.fired, "Lock"), "and every door is locked open")
+ok(E.client and E.client.party and not E.client.lights, "the lights are down; no dancing yet")
+_run(2)
+ok(#E.skels > 0, "skeletons appear, dancing their way in from all over", #E.skels)
+local function runToM(sec) _run(math.max(0.1, E.phaseT + sec - CurTime())) end
+runToM(3.5)
+ok(E.section == "dance" and a.frozen and a:GetNW2Bool("lc_dancing", false) and mcop:GetNW2Bool("lc_dancing", false) and E.client.lights and E.client.strobe,
+    "the drop: everyone dances with them, the Combine's units too, the lights strobing")
+ok(not LC.SkelHurt(E.skels[1], _dmg(a, 500)), "and nothing hurts a dancing skeleton")
+runToM(6.5)
+ok(E.section == "rave" and E.client.dance == "rave" and E.client.danceRate > 1, "the rave part: faster")
+runToM(8.5)
+ok(E.section == "attack" and a.frozen == false and not a:GetNW2Bool("lc_dancing", false), "in between, the dancing stops")
+local k1 = E.skels[1]
+k1:SetPos(a:GetPos() + Vector(30, 0, 0))
+a:SetHealth(6)
+_run(0.3)
+ok(a.lcEndTaken and a:GetModel() == "models/player/skeleton.mdl" and a:GetNW2Bool("lc_dancing", false) and a.alive,
+    "they attack; whoever they get becomes one of them, dancing for good", a:Health())
+local nk = #E.skels
+ok(LC.SkelHurt(E.skels[#E.skels], _dmg(b, 500)), "and in a fight, they can be put down")
+runToM(12.5)
+ok(E.section == "outro" and b.lcEndTaken and not IsValid(mcop), "the outro claims everyone left (the Combine's units too)")
+ok(E.client.danceRate == 2, "and everyone dances double time to the xylophone")
+runToM(14.5)
+ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and when the song's over, the city resets")
+_run(6)
+ok(a:GetModel() ~= "models/player/skeleton.mdl" and not mdoor.lcHeldOpen, "(everyone's back as they were, the doors too)")
+_setcvar("lc_ending_marrow_sections", "45:dance,75:attack,82:rave,112:attack,150:dance,180:attack,188:dance,217:outro,232:end")
+_setcvar("lc_ending_marrow_max", 40)
+if IsValid(mdoor) then mdoor:Remove() end
 player.GetAll = realGetAll
 -- Father Grigori eats the motherlode
 concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})

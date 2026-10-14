@@ -32,6 +32,13 @@
         crazybus   everyone in a bus or van, flying round the city
         nuanua     everyone on an airplane, high over the city
         topsecret  everyone hung by barnacles, one a second
+        marrow     skeletons dance their way in from all over the map to the
+                   landing zone; on the song's heavy parts everyone (the
+                   Combine's units too) dances with them, club lights
+                   strobing; in between they attack, and whoever they get
+                   becomes one, dancing for good; the outro (the xylophone)
+                   claims the rest, everyone dancing double time
+                   (lc_ending_marrow_sections lines it up with your file)
         bloom      everyone dances (every NPC too) and can't stop; the city dims
                    and coloured light pulses on the beat; from 2:01
                    (lc_ending_bloom_speedup) the song speeds up, and at the top
@@ -78,8 +85,9 @@ LC.Endings = {
     topsecret = { name = "Top Secret", say = "Look up." },
     grigori   = { name = "The Flood", say = "Father Grigori has eaten the motherlode. The waters rise." },
     bloom     = { name = "Bloom", say = "Everybody dances. Nobody stops." },
+    marrow    = { name = "Marrow", say = "Something is rattling out there. Lots of somethings." },
 }
-LC.EndingOrder = { "harpies", "crazybus", "nuanua", "topsecret", "grigori", "bloom" }
+LC.EndingOrder = { "harpies", "crazybus", "nuanua", "topsecret", "grigori", "bloom", "marrow" }
 
 local E -- the ending in progress: { id, phase, by, ... }
 function LC.EndingSession() return E end
@@ -269,6 +277,27 @@ local function Clear(a, b)
     return not tr.Hit
 end
 
+-- The Combine's own units in the city (they're in this too).
+local function CombineNPCs()
+    local out = {}
+    for npc, st in pairs(LC.NPCs or {}) do
+        if IsValid(npc) and LC.IsSecurity and LC.IsSecurity(st) then out[#out + 1] = npc end
+    end
+    return out
+end
+
+-- The Combine's units, to the landing zone with everyone (a ring outside the players).
+local function GatherCombine(centre, r)
+    local list = CombineNPCs()
+    for i, npc in ipairs(list) do
+        local a = (i / math.max(1, #list)) * math.pi * 2 + 0.3
+        local spot = centre + Vector(math.cos(a) * r, math.sin(a) * r, 0)
+        npc:SetPos((Ground(spot) or centre) + Vector(0, 0, 4))
+        npc:SetAngles(Angle(0, math.deg(a), 0))
+    end
+    return list
+end
+
 local function Seen(pos)
     for _, p in ipairs(Living()) do
         local tr = util.TraceLine({ start = p:EyePos(), endpos = pos + Vector(0, 0, 50), mask = MASK_SOLID_BRUSHONLY })
@@ -372,6 +401,12 @@ local function Hit(p)
     local now = CurTime()
     if now < (p.lcMingeHitAt or 0) then return false end
     p.lcMingeHitAt = now + 0.3
+    if not p:IsPlayer() then -- (one of the Combine's units)
+        p:SetHealth(p:Health() - math.random(10, 18))
+        p:EmitSound("physics/body/body_medium_impact_hard" .. math.random(1, 6) .. ".wav", 75)
+        if p:Health() <= 0 then Body(p:GetModel(), p:GetPos(), p:GetAngles().y, 260) p:Remove() end
+        return true
+    end
     p:SetHealth(p:Health() - math.random(7, 12))
     if p.ViewPunch then p:ViewPunch(Angle(math.Rand(-10, 10), math.Rand(-10, 10), 0)) end
     p:EmitSound("physics/body/body_medium_impact_hard" .. math.random(1, 6) .. ".wav", 75)
@@ -397,7 +432,7 @@ function LC.MingeStep(m, dt)
         if f >= 1 then
             s.leap = nil
             local t = s.target
-            if IsValid(t) and t:IsPlayer() and t:GetPos():DistToSqr(m:GetPos()) < 80 * 80 then Hit(t) end
+            if IsValid(t) and (t:IsPlayer() or t:IsNPC()) and t:GetPos():DistToSqr(m:GetPos()) < 80 * 80 then Hit(t) end
         end
         return
     end
@@ -456,6 +491,7 @@ SETUP.harpies = function()
     local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
     E.lz = (#lz > 0 and lz[1].pos) or (LC.SupplyDropSpot and LC.SupplyDropSpot()) or (IsValid(E.by) and E.by:GetPos()) or Centre()
     E.holdUntil = CurTime() + cvMingeEnd:GetFloat()
+    if LC.OpenEveryDoor then LC.OpenEveryDoor() E.doorsOpen = true end -- (every door locked open: nothing stuck behind one, them or us)
     -- everyone to the landing zone, facing out into the dark
     local ps = player.GetAll()
     for i, p in ipairs(ps) do
@@ -467,6 +503,10 @@ SETUP.harpies = function()
         if p.SetEyeAngles then p:SetEyeAngles(Angle(0, math.deg(a), 0)) end
         if p:Health() < 100 then p:SetHealth(100) end
     end
+    -- the city stops, and the Combine's units are out there with everyone, in a ring round them
+    LC.TimeStopped = true
+    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    E.combine = GatherCombine(E.lz, 150 + 12 * #ps)
     -- and every light in the city goes out
     E.dark = true
     LC.EndingDark = true
@@ -478,6 +518,9 @@ TICK.harpies = function(now)
     local t = now - E.phaseT
     local swell, fin = cvMingeSwell:GetFloat(), cvMingeEnd:GetFloat()
     local living = Living()
+    local targets = {}
+    for _, p in ipairs(living) do targets[#targets + 1] = p end
+    for _, n in ipairs(E.combine or {}) do if IsValid(n) then targets[#targets + 1] = n end end
     local centre = E.lz
     local mode = t < swell and "lurk" or (t < swell + RUSH and "rush" or "leap")
     local noclip = t >= fin - 10
@@ -519,11 +562,11 @@ TICK.harpies = function(now)
                 s.rest = now + 3
             end
         else
-            -- each has someone (shared out evenly) and a place round them
-            if not IsValid(s.target) or not s.target:IsPlayer() or s.target.lcEndTaken then
-                s.target = #living > 0 and living[(i - 1) % #living + 1] or nil
+            -- each has someone (shared out evenly: players and the Combine's units) and a place round them
+            if not IsValid(s.target) or s.target.lcEndTaken then
+                s.target = #targets > 0 and targets[(i - 1) % #targets + 1] or nil
                 s.slot = math.Rand(0, math.pi * 2)
-                s.ring = math.floor((i - 1) / math.max(1, #living) / 8)
+                s.ring = math.floor((i - 1) / math.max(1, #targets) / 8)
             end
             local tp = IsValid(s.target) and s.target:GetPos()
                 or (#E.bodies > 0 and IsValid(E.bodies[#E.bodies]) and E.bodies[#E.bodies]:GetPos()) or centre
@@ -551,6 +594,7 @@ TICK.harpies = function(now)
     -- the last two seconds: nobody's left
     if t >= fin - 2 then
         for _, p in ipairs(living) do Slaughter(p, "There's nowhere left. The mingebags got you.") end
+        for _, n in ipairs(E.combine or {}) do if IsValid(n) then Body(n:GetModel(), n:GetPos(), n:GetAngles().y, 260) n:Remove() end end
     end
     -- the dead keep watching someone
     for _, p in ipairs(player.GetAll()) do
@@ -618,7 +662,7 @@ SETUP.bloom = function()
         end
     end
     local now = CurTime()
-    E.client = { bpm = cvBloomBPM:GetFloat(), offset = cvBloomOffset:GetFloat(), start = now,
+    E.client = { party = true, lights = true, overlay = "bloom", dance = "ears", bpm = cvBloomBPM:GetFloat(), offset = cvBloomOffset:GetFloat(), start = now,
         rateAt = now + cvBloomSpeedup:GetFloat(), rateDur = math.max(1, cvBloomRamp:GetFloat()), peak = math.max(1, cvBloomPeak:GetFloat()),
         props = props }
     E.climax = E.client.rateAt + E.client.rateDur
@@ -677,6 +721,256 @@ TICK.bloom = function(now)
         end
     end
     E.launching = keep
+end
+
+-- Marrow: skeletons. Everyone (the Combine's units too) is put at the
+-- landing zone and the city dims; skeletons appear dancing all over the map
+-- and work their way in. The song's sections decide the rest
+-- (lc_ending_marrow_sections): on the heavy parts everyone is made to dance
+-- with them, a club, strobing (the rave part faster); in between, the
+-- skeletons attack, and whoever they get becomes one of them, dancing for
+-- good; at the outro they claim whoever's left.
+local cvMarrowSections = CreateConVar("lc_ending_marrow_sections", "45:dance,75:attack,82:rave,112:attack,150:dance,180:attack,188:dance,217:outro,232:end", FLAGS,
+    "Marrow: the song's sections, second:kind (dance, rave, attack, outro, end); before the first, the skeletons gather")
+local cvMarrowMax   = CreateConVar("lc_ending_marrow_max", "40", FLAGS, "Marrow: how many skeletons")
+local cvMarrowBPM   = CreateConVar("lc_ending_marrow_bpm", "128", FLAGS, "Marrow: the song's beats per minute (the dancing and the lights keep to it)")
+local cvMarrowModel = CreateConVar("lc_ending_marrow_model", "models/player/skeleton.mdl", FLAGS, "Marrow: the skeletons' model")
+local SPOOKY = { { 120, 255, 80 }, { 170, 60, 255 }, { 255, 140, 30 }, { 90, 255, 200 } }
+local DANCING = { dance = true, rave = true, outro = true }
+
+function LC.MarrowSections(str)
+    local out = {}
+    for t, kind in string.gmatch(str or cvMarrowSections:GetString(), "([%d%.]+)%s*:%s*(%a+)") do out[#out + 1] = { t = tonumber(t), kind = string.lower(kind) } end
+    table.sort(out, function(x, y) return x.t < y.t end)
+    return out
+end
+
+local function SectionAt(t)
+    local kind = "intro"
+    for _, sct in ipairs(E.sections) do if t >= sct.t then kind = sct.kind end end
+    return kind
+end
+
+local function SpawnSkel(pos)
+    local k = ents.Create("lc_skel")
+    if not IsValid(k) then return nil end
+    k.lcModel = cvMarrowModel:GetString()
+    k:SetModel(k.lcModel)
+    k:SetPos(pos)
+    k:Spawn()
+    k.lcSkel = { hp = 40, phase = "walk", untilT = CurTime() + math.Rand(3, 6) }
+    E.ents[#E.ents + 1] = k
+    E.skels[#E.skels + 1] = k
+    return k
+end
+
+local function Anim(m, name)
+    local s = m.lcSkel
+    if s.anim == name or not m.LookupSequence then return end
+    s.anim = name
+    local seq = m:LookupSequence(name)
+    if seq and seq >= 0 then m:ResetSequence(seq) if m.SetPlaybackRate then m:SetPlaybackRate(1) end end
+end
+
+-- Got by a skeleton: you're one of them now, dancing for good.
+local function Convert(p, how)
+    if not IsValid(p) or p.lcEndTaken then return end
+    p.lcEndTaken = true
+    p.lcEndModel = p.lcEndModel or p:GetModel()
+    p:SetModel(cvMarrowModel:GetString())
+    p:SetNW2Bool("lc_end_taken", true)
+    p.lcEndFrozen = true
+    p:Freeze(true)
+    p:SetNW2Bool("lc_dancing", true)
+    if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(90, 255, 120, 200), 1.5, 0) end
+    p:ChatPrint(how or "The skeletons got you. You're one of them now. Dance.")
+    hook.Run("LivingCityEndingTook", p, E and E.id)
+end
+
+-- A unit of the Combine caught: a skeleton where it stood.
+local function Bones(npc)
+    if not IsValid(npc) then return end
+    local pos = npc:GetPos()
+    npc:Remove()
+    local k = SpawnSkel(pos)
+    if k then k:SetNW2Bool("lc_dancing", DANCING[E.section] or false) end
+end
+
+local function Claw(target)
+    local now = CurTime()
+    if not IsValid(target) or now < (target.lcClawAt or 0) then return end
+    target.lcClawAt = now + 0.6
+    target:EmitSound("npc/zombie/claw_strike" .. math.random(1, 3) .. ".wav", 75)
+    target:SetHealth(target:Health() - math.random(8, 14))
+    if target:IsPlayer() then
+        if target.ViewPunch then target:ViewPunch(Angle(math.Rand(-8, 8), math.Rand(-8, 8), 0)) end
+        if target:Health() <= 0 then Convert(target) end
+    elseif target:Health() <= 0 then
+        Bones(target)
+    end
+end
+
+-- One step of a skeleton (each server tick: lc_skel.lua).
+function LC.SkelStep(m, dt)
+    local s = m.lcSkel
+    if not s or not E or E.id ~= "marrow" then return end
+    local pos = m:GetPos()
+    if not s.goal or m:GetNW2Bool("lc_dancing", false) then Anim(m, "idle_all_01") return end
+    local to = s.goal - pos
+    to.z = 0
+    local dist = to:Length()
+    if dist < 6 then Anim(m, "idle_all_01") return end
+    Anim(m, (s.speed or 0) > 180 and "run_all_01" or "walk_all")
+    local dir = to * (1 / dist)
+    local step = math.min(dist, (s.speed or 100) * (dt or 0.1))
+    local nextPos = pos + dir * step
+    if not Clear(pos, nextPos + dir * 16) then
+        local found
+        for _, turn in ipairs({ 50, -50, 90, -90 }) do
+            local a = dir:Angle()
+            a.y = a.y + turn
+            local alt = pos + a:Forward() * step
+            if Clear(pos, alt + a:Forward() * 16) then nextPos, found = alt, true break end
+        end
+        if not found then s.stuck = (s.stuck or 0) + (dt or 0.1) return end
+    end
+    s.stuck = 0
+    local g = Ground(nextPos)
+    if g and math.abs(g.z - pos.z) < 60 then nextPos.z = g.z end
+    m:SetPos(nextPos)
+    m:SetAngles(Angle(0, dir:Angle().y, 0))
+end
+
+-- Hurt: only in a fight (dancing, they're untouchable); down it goes, and another comes later.
+function LC.SkelHurt(m, dmg)
+    local s = m.lcSkel
+    if not s or not E or E.section ~= "attack" then return false end
+    s.hp = s.hp - (dmg and dmg.GetDamage and dmg:GetDamage() or 40)
+    if s.hp > 0 then return false end
+    Body(m:GetModel(), m:GetPos(), m:GetAngles().y, 100)
+    m:EmitSound("physics/wood/wood_box_break" .. math.random(1, 2) .. ".wav", 75)
+    m:Remove()
+    E.nextSpawn = CurTime() + 3
+    return true
+end
+
+local function ApplySection(kind, now)
+    E.section = kind
+    local dancing = DANCING[kind] or false
+    E.client.lights = dancing
+    E.client.strobe = kind == "dance" or kind == "rave"
+    E.client.dance = kind == "rave" and "rave" or "club"
+    E.client.danceRate = (kind == "rave" and 1.5) or (kind == "outro" and 2) or 1 -- (the xylophone outro: double time)
+    for _, p in ipairs(player.GetAll()) do
+        if p.lcEndTaken then
+            p:SetNW2Bool("lc_dancing", true)
+        elseif dancing then
+            p.lcEndFrozen = true
+            p:Freeze(true)
+            p:SetNW2Bool("lc_dancing", true)
+        else
+            p.lcEndFrozen = nil
+            p:Freeze(false)
+            p:SetNW2Bool("lc_dancing", false)
+        end
+    end
+    for _, n in ipairs(CombineNPCs()) do n:SetNW2Bool("lc_dancing", dancing) end
+    for _, k in ipairs(E.skels) do
+        if IsValid(k) then
+            k:SetNW2Bool("lc_dancing", dancing)
+            if dancing then k.lcSkel.goal = nil end
+        end
+    end
+    if kind == "outro" then
+        for _, p in ipairs(Living()) do Convert(p, "The skeletons claim everyone in the end. You're one of them now. Dance it out.") end
+        for _, n in ipairs(CombineNPCs()) do Bones(n) end
+    end
+    Send()
+end
+
+SETUP.marrow = function()
+    local now = CurTime()
+    E.skels = {}
+    E.sections = LC.MarrowSections()
+    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
+    for _, sct in ipairs(E.sections) do if sct.kind == "end" then E.holdUntil = now + sct.t end end
+    E.holdUntil = E.holdUntil or (now + 232)
+    if LC.OpenEveryDoor then LC.OpenEveryDoor() E.doorsOpen = true end -- (every door locked open: nothing stuck behind one, them or us)
+    -- the city stops; everyone (the Combine's units too) to the landing zone; the lights dim
+    LC.TimeStopped = true
+    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    local ps = player.GetAll()
+    for i, p in ipairs(ps) do
+        if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
+        local a = (i / math.max(1, #ps)) * math.pi * 2
+        local r = 60 + 12 * #ps
+        p:SetPos((Ground(E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)) or E.lz) + Vector(0, 0, 4))
+        if p:Health() < 100 then p:SetHealth(100) end
+    end
+    GatherCombine(E.lz, 100 + 12 * #ps)
+    E.dark = true
+    LC.EndingDark = "d"
+    if LC.ApplyLightStyle then LC.ApplyLightStyle() end
+    E.client = { party = true, lights = false, dance = "club", palette = SPOOKY, bpm = cvMarrowBPM:GetFloat(), offset = 0, start = now }
+    E.section = "intro"
+end
+
+TICK.marrow = function(now)
+    local t = now - E.phaseT
+    local kind = SectionAt(t)
+    if kind ~= E.section and kind ~= "end" then ApplySection(kind, now) end
+    local alive = {}
+    for _, k in ipairs(E.skels) do if IsValid(k) then alive[#alive + 1] = k end end
+    E.skels = alive
+    -- more of them, all over the map at first
+    local max = cvMarrowMax:GetInt()
+    local want = E.section == "intro" and math.floor(max * math.Clamp(t / 30, 0.15, 1)) or max
+    if #E.skels < want and now >= (E.nextSpawn or 0) then
+        E.nextSpawn = now + (E.section == "intro" and 0.3 or 1)
+        local g = RingSpot(E.lz, E.section == "intro" and math.Rand(1500, 3500) or 1200, false)
+        if g then
+            local k = SpawnSkel(g)
+            if k then k:SetNW2Bool("lc_dancing", DANCING[E.section] or false) end
+        end
+    end
+    local targets = {}
+    for _, p in ipairs(Living()) do targets[#targets + 1] = p end
+    if #targets == 0 then targets = CombineNPCs() end
+    for _, k in ipairs(E.skels) do
+        local s = k.lcSkel
+        if E.section == "intro" then
+            -- dancing their way in: walk a while, stop and dance a while
+            if now >= s.untilT then
+                if s.phase == "walk" then
+                    s.phase, s.untilT, s.goal = "dance", now + math.Rand(1.5, 3), nil
+                    k:SetNW2Bool("lc_dancing", true)
+                else
+                    s.phase, s.untilT = "walk", now + math.Rand(3, 6)
+                    k:SetNW2Bool("lc_dancing", false)
+                    local a = math.Rand(0, math.pi * 2)
+                    s.goal = E.lz + Vector(math.cos(a), math.sin(a), 0) * math.Rand(250, 450)
+                    s.speed = 140
+                end
+            end
+        elseif E.section == "attack" then
+            -- at whoever's nearest, and the claws
+            local best, bd = nil, nil
+            for _, p in ipairs(targets) do
+                local d = p:GetPos():DistToSqr(k:GetPos())
+                if not bd or d < bd then best, bd = p, d end
+            end
+            if best then
+                s.goal, s.speed = best:GetPos(), 230
+                if bd < 60 * 60 then Claw(best) end
+            end
+            if (s.stuck or 0) > 1.5 and best then
+                local g = RingSpot(best:GetPos(), 300, true)
+                if g then k:SetPos(g) s.stuck = 0 end
+            end
+        end
+        if not k.lcThinks then LC.SkelStep(k, 0.1) end
+    end
 end
 
 -- flying things: a vehicle per group of riders, circling the city
@@ -817,6 +1111,7 @@ local function Clear()
         end
         p.lcEndTaken, p.lcEndRide, p.lcEndHang, p.lcEndUnder = nil, nil, nil, nil
         p.lcEndSpectating, p.lcEndWatching, p.lcEndRoam = nil, nil, nil
+        if p.lcEndModel then p:SetModel(p.lcEndModel) p.lcEndModel = nil end
         p:SetNW2Bool("lc_end_taken", false)
         p:SetNW2Bool("lc_end_spectating", false)
         p:SetNW2Bool("lc_dancing", false)
@@ -825,6 +1120,7 @@ local function Clear()
     end
     SetGlobal2Float("lc_flood_z", 0)
     for npc in pairs(LC.NPCs or {}) do if IsValid(npc) then npc:SetNW2Bool("lc_dancing", false) npc.lcBloomUp = nil end end
+    if E and E.doorsOpen and LC.ReleaseEveryDoor then LC.ReleaseEveryDoor() end
     if E and E.dark then
         LC.EndingDark = nil
         if LC.ForceBlackout then LC.ForceBlackout("auto") end

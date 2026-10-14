@@ -172,7 +172,9 @@ local preview = false
 local danced = {}   -- [ent] = true: someone we've turned bones on
 local bonesOf = {}  -- [model] = { name = id }
 
-local function Bloom() return S and S.id == "bloom" and S.phase == "apocalypse" and S.client end
+-- A dancing ending (bloom, marrow): what the server says about it (the dance, the light, the beat).
+local function Party() return S and S.phase == "apocalypse" and S.client and S.client.party and S.client or nil end
+local Bloom = Party
 
 -- How far into the song we are (the song itself if it's playing; else the clock, sped up the same way).
 local function SongPos(now)
@@ -194,9 +196,9 @@ local function Rate(now)
 end
 
 local function Beat(now)
-    if preview and not Bloom() then return now * 165 / 60 end
+    if preview and not Party() then return now * 165 / 60 end
     local c = S.client
-    return (SongPos(now) - (c.offset or 0)) * (c.bpm or 165) / 60
+    return (SongPos(now) - (c.offset or 0)) * (c.bpm or 165) / 60 * (c.danceRate or 1)
 end
 
 local function Bones(ent)
@@ -213,12 +215,38 @@ local function Bones(ent)
     return b
 end
 
+-- The other dances (marrow's club and rave): turns added to a standing pose.
+local CLUB = {
+    R_UpperArm = function(w, b) return Angle(0, -40 - 45 * b, 0) end, L_UpperArm = function(w, b) return Angle(0, -40 - 45 * (1 - b), 0) end,
+    R_Forearm = function() return Angle(0, -70, 0) end, L_Forearm = function() return Angle(0, -70, 0) end,
+    Head = function(w, b) return Angle(0, -14 * b, 0) end,
+    Spine2 = function(w) return Angle(0, 0, w * 10) end, Pelvis = function(w) return Angle(0, 0, w * 8) end,
+    R_Calf = function(w, b) return Angle(0, 22 * b, 0) end, L_Calf = function(w, b) return Angle(0, 22 * b, 0) end,
+}
+local RAVE = {
+    R_UpperArm = function(w) return Angle(20 * w, -110, 10) end, L_UpperArm = function(w) return Angle(20 * w, -110, -10) end,
+    R_Forearm = function(w) return Angle(0, -20 + 30 * w, 0) end, L_Forearm = function(w) return Angle(0, -20 - 30 * w, 0) end,
+    Head = function(w, b) return Angle(0, -10 * b, w * 8) end, Pelvis = function(w) return Angle(0, 0, w * 14) end,
+    Spine2 = function(w) return Angle(0, 0, -w * 8) end,
+    R_Calf = function(w, b) return Angle(0, 30 * b, 0) end, L_Calf = function(w, b) return Angle(0, 30 * b, 0) end,
+}
+local STYLES = { club = CLUB, rave = RAVE }
+
 local function Dance(ent, beat, now)
     if not ent.ManipulateBoneAngles then return end
     local b = Bones(ent)
     local wave = math.sin(beat * math.pi)            -- left, right, a beat each
     local flap = math.sin(beat * math.pi * 2) * FLAP -- the wrists, every beat
     local bounce = math.abs(wave)
+    local style = STYLES[S and S.client and S.client.dance or ""]
+    if style and not preview then
+        for name, id in pairs(b) do
+            local f = style[name]
+            ent:ManipulateBoneAngles(id, f and f(wave, bounce) or Angle(0, 0, 0))
+        end
+        danced[ent] = true
+        return
+    end
     for name, id in pairs(b) do
         local a = Angle(POSE[name].p, POSE[name].y, POSE[name].r)
         if name == "R_Hand" then a.r = a.r + flap
@@ -274,18 +302,20 @@ hook.Add("Think", "LivingCityBloom", function()
     end
     if not on then return end
     -- coloured light, pulsing on the beat, round the dancers nearest you
-    local frac = beat % 1
-    if DynamicLight and IsValid(me) then
+    local frac = (beat * (on.strobe and 2 or 1)) % 1
+    if DynamicLight and IsValid(me) and on.lights then
         local near = {}
         for _, e in ipairs(dancers) do if IsValid(e) then near[#near + 1] = { e = e, d = e:GetPos():DistToSqr(me:GetPos()) } end end
         table.sort(near, function(x, y) return x.d < y.d end)
         for i = 1, math.min(#near, 24) do
-            local col = PALETTE[(math.floor(beat) + i) % #PALETTE + 1]
+            local pal = on.palette or PALETTE
+            local c0 = pal[(math.floor(beat) + i) % #pal + 1]
+            local col = Color(c0.r or c0[1] or 255, c0.g or c0[2] or 255, c0.b or c0[3] or 255)
             local dl = DynamicLight(52000 + i)
             if dl then
                 dl.pos = near[i].e:GetPos() + Vector(0, 0, 70)
                 dl.r, dl.g, dl.b = col.r, col.g, col.b
-                dl.brightness = 1 + 3 * (1 - frac)
+                dl.brightness = on.strobe and ((frac < 0.25) and 5 or 0.3) or (1 + 3 * (1 - frac))
                 dl.size = 320
                 dl.decay = 0
                 dl.dietime = now + 0.15
@@ -322,7 +352,8 @@ hook.Add("ShouldDrawLocalPlayer", "LivingCityBloom", function(me) if Dancing(me)
 -- rising, and the colour pulsing on the beat.
 local sparkles = {}
 hook.Add("HUDPaint", "LivingCityBloom", function()
-    if not Bloom() then sparkles = {} return end
+    local on = Party()
+    if not on or on.overlay ~= "bloom" then sparkles = {} return end
     local now = CurTime()
     local w, h = ScrW(), ScrH()
     local cx, cy = w / 2, h / 2
@@ -355,9 +386,14 @@ hook.Add("HUDPaint", "LivingCityBloom", function()
 end)
 
 hook.Add("RenderScreenspaceEffects", "LivingCityBloom", function()
-    if not Bloom() or not DrawColorModify then return end
-    local pulse = 1 - (Beat(CurTime()) % 1)
-    DrawColorModify({ ["$pp_colour_addr"] = 0.05 * pulse, ["$pp_colour_addg"] = 0, ["$pp_colour_addb"] = 0.06 * pulse,
+    local on = Party()
+    if not on or not on.lights or not DrawColorModify then return end
+    local beat = Beat(CurTime())
+    local pulse = 1 - (beat % 1)
+    local pal = on.palette or PALETTE
+    local c0 = pal[math.floor(beat) % #pal + 1]
+    local r, g, b = (c0.r or c0[1] or 255) / 255, (c0.g or c0[2] or 255) / 255, (c0.b or c0[3] or 255) / 255
+    DrawColorModify({ ["$pp_colour_addr"] = 0.06 * pulse * r, ["$pp_colour_addg"] = 0.06 * pulse * g, ["$pp_colour_addb"] = 0.06 * pulse * b,
         ["$pp_colour_brightness"] = 0, ["$pp_colour_contrast"] = 1.05, ["$pp_colour_colour"] = 1.35,
         ["$pp_colour_mulr"] = 0, ["$pp_colour_mulg"] = 0, ["$pp_colour_mulb"] = 0 })
 end)
