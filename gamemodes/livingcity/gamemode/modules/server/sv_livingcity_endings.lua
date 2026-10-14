@@ -103,7 +103,7 @@ local cvMax     = CreateConVar("lc_ending_max", "180", FLAGS, "Longest a secret 
 local cvCool    = CreateConVar("lc_ending_cooldown", "60", FLAGS, "Minutes between secret endings (triggered, voted on or skipped)")
 local cvGman    = CreateConVar("lc_ending_gman_lines", "vo/citadel/gman_exit01.wav,vo/citadel/gman_exit02.wav", FLAGS,
     "The G-Man's lines when he stops time, in order (comma-separated sound paths)")
-local cvRadius  = CreateConVar("lc_ending_flight_radius", "2200", FLAGS, "How wide the flying endings circle the city")
+local cvRadius  = CreateConVar("lc_ending_flight_radius", "2200", FLAGS, "How wide the flying endings circle the city, at most (narrower where buildings are in the way: they keep to open sky)")
 
 local ROOT = "livingcity/endings/"
 local EXT = { wav = true, mp3 = true, ogg = true }
@@ -252,6 +252,49 @@ local function Centre()
     local sum, n = Vector(0, 0, 0), 0
     for _, p in ipairs(player.GetAll()) do sum = sum + p:GetPos() n = n + 1 end
     return n > 0 and sum * (1 / n) or Vector(0, 0, 0)
+end
+
+-- Open sky to fly in: the height just under the map's sky over a spot, and
+-- the widest circle (up to lc_ending_flight_radius) round it that stays in
+-- open air the whole way round, so whatever flies (and whoever rides it, and
+-- the camera behind them) never goes through a building or out of the map.
+-- { z, r, centre } (kept for the ending in E.flight).
+local function Open(pos)
+    if util.IsInWorld and not util.IsInWorld(pos) then return false end
+    if util.PointContents and CONTENTS_SOLID and bit.band(util.PointContents(pos), CONTENTS_SOLID) ~= 0 then return false end
+    return true
+end
+local function OpenPath(a, b)
+    local tr = util.TraceLine({ start = a, endpos = b, mask = MASK_SOLID_BRUSHONLY })
+    return not tr.Hit and not tr.StartSolid
+end
+LC.EndingOpenPath = OpenPath
+function LC.EndingSky(centre)
+    centre = centre or Vector(0, 0, 0)
+    local up = util.TraceLine({ start = centre + Vector(0, 0, 64), endpos = centre + Vector(0, 0, 32768), mask = MASK_SOLID_BRUSHONLY })
+    local top = (up.Hit and up.HitPos and up.HitPos.z) or (centre.z + 1600)
+    if not up.HitSky and top - centre.z < 600 then top = centre.z + 1600 end -- (under a roof: aim well above it)
+    local z = math.max(centre.z + 350, top - 220)
+    if top - centre.z < 700 then z = centre.z + (top - centre.z) * 0.6 end
+    local function RingOK(r, zz)
+        local prev
+        for i = 0, 24 do
+            local a = i / 24 * math.pi * 2
+            local p = Vector(centre.x + math.cos(a) * r, centre.y + math.sin(a) * r, zz)
+            if not Open(p) or (prev and not OpenPath(prev, p)) then return false end
+            prev = p
+        end
+        return true
+    end
+    local r = cvRadius:GetFloat()
+    while r > 300 and not RingOK(r, z) do r = r * 0.82 end
+    if not RingOK(r, z) then
+        for _, dz in ipairs({ -150, -300, -500 }) do -- (lower, if the very top is cramped)
+            if RingOK(math.max(300, r), z + dz) then z = z + dz break end
+        end
+        r = math.max(300, r)
+    end
+    return { z = z, top = top, r = r, centre = Vector(centre.x, centre.y, z) }
 end
 
 local function FirstModel(list)
@@ -1236,11 +1279,12 @@ local function Fly(models, perVehicle, height, speed, scale, secs)
 end
 
 local function FlyTick(now)
-    local r = cvRadius:GetFloat()
+    E.flight = E.flight or LC.EndingSky(E.centre)
+    local r = E.flight.r
     for i, f in ipairs(E.flights or {}) do
         if IsValid(f.v) then
             local a = f.phase + (now - E.started) * f.speed
-            local pos = E.centre + Vector(math.cos(a) * r, math.sin(a) * r, f.height + math.sin(a * 3 + i) * 120)
+            local pos = Vector(E.centre.x + math.cos(a) * r, E.centre.y + math.sin(a) * r, E.flight.z - 120 + math.sin(a * 3 + i) * 100)
             f.v:SetPos(pos)
             f.v:SetAngles(Angle(math.sin(a * 2) * 12, math.deg(a) + 90, math.cos(a * 3) * 18))
         end
@@ -1300,11 +1344,18 @@ local function GroundSpot(near)
     return Ground(near + Vector(math.cos(a) * d, math.sin(a) * d, 0)) or near
 end
 
+-- Somewhere to fly to, in open sky (and a straight run there from where the bus is).
 local function SkySpot()
-    local r = cvRadius:GetFloat()
-    local p = E.centre + Vector(math.Rand(-r, r), math.Rand(-r, r), 0)
-    local g = Ground(p)
-    return Vector(p.x, p.y, (g and g.z or E.centre.z) + math.Rand(300, 1100))
+    E.flight = E.flight or LC.EndingSky(E.centre)
+    local sky = E.flight
+    local from = IsValid(E.bus) and E.bus:GetPos()
+    for _ = 1, 16 do
+        local a, d = math.Rand(0, math.pi * 2), math.Rand(0.3, 1) * sky.r
+        local p = Vector(E.centre.x + math.cos(a) * d, E.centre.y + math.sin(a) * d, sky.z - math.Rand(0, 250))
+        if Open(p) and (not from or OpenPath(from, p)) then return p end
+    end
+    local a = math.Rand(0, math.pi * 2)
+    return Vector(E.centre.x + math.cos(a) * sky.r, E.centre.y + math.sin(a) * sky.r, sky.z)
 end
 
 local function NewRing(at, from)
@@ -1641,9 +1692,11 @@ TICK.base = function(now)
         local surge = 1 + 0.3 * math.abs(math.sin(beat * math.pi))
         local speed = (kind == "move" and 0.32) or (kind == "justice" and 0.4) or 0.2
         E.fleetA = (E.fleetA or 0) + speed * surge * 0.1
-        local r = kind == "justice" and math.max(500, cvRadius:GetFloat() * (1 - math.Clamp((t - 174) / 38, 0, 1) * 0.75)) or cvRadius:GetFloat()
-        local height = kind == "justice" and (900 + math.Clamp((t - 174) / 38, 0, 1) * 1500) or 900
-        local lead = E.lz + Vector(math.cos(E.fleetA) * r, math.sin(E.fleetA) * r, height)
+        E.flight = E.flight or LC.EndingSky(E.lz) -- (open sky: the fleet and its riders stay out of the buildings)
+        local sky = E.flight
+        local r = kind == "justice" and math.max(300, sky.r * (1 - math.Clamp((t - 174) / 38, 0, 1) * 0.75)) or sky.r
+        local height = kind == "justice" and math.min(sky.top - 60, sky.z + math.Clamp((t - 174) / 38, 0, 1) * 1500) or sky.z
+        local lead = Vector(E.lz.x + math.cos(E.fleetA) * r, E.lz.y + math.sin(E.fleetA) * r, height)
         local yaw = math.deg(E.fleetA) + 90
         local roll = (kind == "move" or kind == "justice") and math.sin(t * 2) * 25 or math.sin(t) * 8
         for _, z in ipairs(E.zigs) do
@@ -1838,7 +1891,8 @@ SETUP.plane = function()
     LC.TimeStopped = true
     if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
     -- the plane: a body and two wings, low over the city
-    local body = Prop(FirstModel(PLANE_BODY), E.lz + Vector(cvRadius:GetFloat(), 0, 450), 3)
+    E.flight = LC.EndingSky(E.lz)
+    local body = Prop(FirstModel(PLANE_BODY), Vector(E.lz.x + E.flight.r, E.lz.y, E.flight.z), 3)
     if not body then return end
     if body.SetSolid then body:SetSolid(SOLID_NONE) end
     E.plane = body
@@ -1881,11 +1935,13 @@ TICK.plane = function(now)
     -- the flight: wide and steady in the verses, swooping in the choruses, a glide in the break
     local speed = ({ intro = 0.12, board = 0.15, verse = 0.14, chorus = 0.24, ["break"] = 0.07, final = 0.32, climb = 0.2 })[kind] or 0.14
     E.planeA = E.planeA + speed * 0.1
-    local r = cvRadius:GetFloat()
-    local height = ({ intro = 450, board = 700 })[kind] or 1300
-    if kind == "chorus" or kind == "final" then height = height + math.sin(t * 0.9) * 350 end
-    if kind == "climb" then E.climb = (E.climb or 0) + 60 + (E.climb or 0) * 0.08 end
-    local pos = E.lz + Vector(math.cos(E.planeA) * r, math.sin(E.planeA) * r, height + (E.climb or 0))
+    -- (in open sky: E.flight, so the plane, its riders and the camera stay out of the buildings)
+    local sky = E.flight or LC.EndingSky(E.lz)
+    local r = sky.r
+    local height = sky.z
+    if kind == "chorus" or kind == "final" then height = height - 120 + math.sin(t * 0.9) * 120 end
+    if kind == "climb" then E.climb = math.min((E.climb or 0) + 60 + (E.climb or 0) * 0.08, math.max(0, sky.top - sky.z - 40)) end
+    local pos = Vector(E.lz.x + math.cos(E.planeA) * r, E.lz.y + math.sin(E.planeA) * r, height + (E.climb or 0))
     local yaw = math.deg(E.planeA) + 90
     -- a barrel roll on the big hits (every 16 beats in a chorus), a bank otherwise
     local bank = (kind == "chorus" or kind == "final") and 30 or 12

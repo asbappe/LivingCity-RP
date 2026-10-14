@@ -523,18 +523,28 @@ end)
 local function Dancing(me)
     return IsValid(me) and (preview or (Bloom() and me:GetNW2Bool("lc_dancing", false) and not me:GetNW2Bool("lc_end_spectating", false)))
 end
+-- A chase camera that stops at a wall instead of going through it (and out
+-- into the void past the map): from what it follows, out to where it wants to be.
+local function SafeCam(from, to)
+    if not util or not util.TraceHull then return to end
+    local tr = util.TraceHull({ start = from, endpos = to, mins = Vector(-10, -10, -10), maxs = Vector(10, 10, 10), mask = MASK_SOLID_BRUSHONLY })
+    if not tr or tr.StartSolid or not tr.Hit then return to end
+    return tr.HitPos + (from - to):GetNormalized() * 12
+end
+LC_CL.EndingSafeCam = SafeCam
+
 hook.Add("CalcView", "LivingCityBloom", function(me, origin, angles, fov)
     -- on the party bus: behind it, looking wherever you look
     local on = Party()
     local bus = on and on.bus and Entity(on.bus)
     if IsValid(me) and me:GetNW2Bool("lc_seated", false) and IsValid(bus) then
-        local eye = bus:GetPos() + Vector(0, 0, 140) - angles:Forward() * 520
-        return { origin = eye, angles = angles, fov = fov, drawviewer = true }
+        local from = bus:GetPos() + Vector(0, 0, 140)
+        return { origin = SafeCam(from, from - angles:Forward() * 520), angles = angles, fov = fov, drawviewer = true }
     end
     if not Dancing(me) then return end
     local a = math.rad(CurTime() * 18)
     local centre = me:GetPos() + Vector(0, 0, 45)
-    local eye = centre + Vector(math.cos(a) * 120, math.sin(a) * 120, 30)
+    local eye = SafeCam(centre, centre + Vector(math.cos(a) * 120, math.sin(a) * 120, 30))
     return { origin = eye, angles = (centre - eye):Angle(), fov = fov, drawviewer = true }
 end)
 hook.Add("ShouldDrawLocalPlayer", "LivingCityBloom", function(me) if Dancing(me) then return true end end)
@@ -863,7 +873,8 @@ hook.Add("CalcView", "LivingCityBase", function(me, origin, angles, fov)
     if not (S and S.phase == "apocalypse") or not IsValid(me) or me:GetNW2Bool("lc_end_spectating", false) then return end
     local z = me:GetNW2Entity("lc_riding")
     if not IsValid(z) then return end
-    return { origin = z:GetPos() + Vector(0, 0, 220) - angles:Forward() * 700, angles = angles, fov = fov, drawviewer = true }
+    local from = z:GetPos() + Vector(0, 0, 120)
+    return { origin = SafeCam(from, from + Vector(0, 0, 100) - angles:Forward() * 700), angles = angles, fov = fov, drawviewer = true }
 end)
 
 hook.Add("HUDPaint", "LivingCityBase", function()

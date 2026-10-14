@@ -11144,6 +11144,20 @@ print = oldPrint2
 endOut = table.concat(endOut, "\n")
 ok(string.find(endOut, "In sound/livingcity/endings/: harpies.mp3", 1, true) and string.find(endOut, "NO SONG FOUND (looking for bus.mp3", 1, true),
     "lc_endings lists what's really in the folder, and where it looks for a missing song", endOut)
+-- flying: open sky only (a wall at x = 1000, the sky at z = 3000)
+local traceWas = util.TraceLine
+util.TraceLine = function(t)
+    local s, e = t.start, t.endpos
+    if e.z > 2999 and math.abs(e.x - s.x) < 1 and math.abs(e.y - s.y) < 1 then
+        return { Hit = true, HitSky = true, HitPos = Vector(s.x, s.y, 3000), Fraction = (3000 - s.z) / (e.z - s.z) }
+    end
+    if (s.x - 1000) * (e.x - 1000) <= 0 and s.x ~= e.x then return { Hit = true, HitPos = e, Fraction = 0.5 } end
+    return { Hit = false, HitPos = e, Fraction = 1 }
+end
+local sky = LC.EndingSky(Vector(0, 0, 0))
+util.TraceLine = traceWas
+ok(sky.r < 1000 and sky.r >= 300 and math.abs(sky.z - 2780) < 1, "whatever flies keeps to open sky: under the map's sky, and a circle that misses the buildings",
+    math.floor(sky.r) .. " at " .. math.floor(sky.z))
 ok(LC.EndingOfSong("bus2.mp3") == "bus" and LC.EndingOfSong("bloom.ogg") == "bloom" and LC.EndingOfSong("busted.mp3") == nil
     and LC.EndingOfSong("Son of the Harpy.mp3") == nil, "a song's name says which ending it's for")
 -- the Harpies: the mingebags (timings shortened for the test: swell at 20 s, all over by 40)
