@@ -1224,6 +1224,72 @@ hook.Add("Think", "LivingCityMarrowSpots", function()
 end)
 
 ------------------------------------------------------------------------
+-- The party bus: a light rig on the roof, spotlights sweeping every colour,
+-- strobes on the beat, and an underglow (steady, with lc_ending_calm 1)
+------------------------------------------------------------------------
+
+local busBeam, busGlow
+-- Six lamps along the roof's edges: front, middle and back, either side.
+local function Rig(bus)
+    local mins, maxs = bus:OBBMins(), bus:OBBMaxs()
+    local out = {}
+    for _, fx in ipairs({ 0.9, 0.5, 0.1 }) do
+        for _, fy in ipairs({ 0.1, 0.9 }) do
+            out[#out + 1] = bus:LocalToWorld(Vector(Lerp(fx, mins.x, maxs.x), Lerp(fy, mins.y, maxs.y), maxs.z + 6))
+        end
+    end
+    return out
+end
+hook.Add("PostDrawTranslucentRenderables", "LivingCityBusRig", function(_, sky)
+    local c = Party()
+    local bus = c and c.bus and Entity(c.bus)
+    if sky or not IsValid(bus) or not render or not render.DrawBeam or not bus.OBBMaxs then return end
+    busBeam = busBeam or (Material and Material("effects/lamp_beam"))
+    busGlow = busGlow or (Material and Material("sprites/light_glow02_add"))
+    local now = CurTime()
+    local beat = Beat(now)
+    local frac = beat % 1
+    local calm = Calm()
+    local pulse = calm and 0.7 or (0.45 + 0.55 * (1 - frac) ^ 1.5)
+    local ang = bus:GetAngles()
+    for i, base in ipairs(Rig(bus)) do
+        local col = HSVToColor((beat * 40 + i * 60) % 360, 0.9, 1)
+        -- each sweeps round on its own, out of step with the next, tilting up and down
+        local yaw = ang.y + (i % 2 == 0 and 1 or -1) * (now * 70 + i * 60)
+        local pitch = -25 + math.sin(now * 1.3 + i) * 35
+        local dir = Angle(pitch, yaw, 0):Forward()
+        if busBeam then
+            render.SetMaterial(busBeam)
+            render.DrawBeam(base, base + dir * 900, 70, 0, 0.95, Color(col.r, col.g, col.b, 200 * pulse))
+        end
+        if busGlow and render.DrawSprite then
+            render.SetMaterial(busGlow)
+            render.DrawSprite(base, 50, 50, Color(col.r, col.g, col.b, 255))
+            -- the strobes: a white flash at every lamp on the beat
+            if not calm and frac < 0.12 then render.DrawSprite(base, 140, 140, Color(255, 255, 255, 255)) end
+        end
+    end
+end)
+hook.Add("Think", "LivingCityBusRig", function()
+    local c = Party()
+    local bus = c and c.bus and Entity(c.bus)
+    if not IsValid(bus) or not DynamicLight then return end
+    local now = CurTime()
+    local beat = Beat(now)
+    local col = HSVToColor((beat * 40 + 180) % 360, 0.9, 1)
+    -- the underglow, the colours going round
+    local d = DynamicLight(52300)
+    if d then
+        d.pos = bus:GetPos() + Vector(0, 0, 10)
+        d.r, d.g, d.b = col.r, col.g, col.b
+        d.brightness = Calm() and 3 or (2 + 4 * (1 - beat % 1))
+        d.size = 700
+        d.decay = 0
+        d.dietime = now + 0.15
+    end
+end)
+
+------------------------------------------------------------------------
 -- Standup: the ropes, the struggling, and the view from the end of one
 ------------------------------------------------------------------------
 

@@ -1298,6 +1298,18 @@ _advance(1.1)
 for _, h in pairs(hook.t["Think"] or {}) do h() end
 for _, h in pairs(hook.t["CalcView"] or {}) do h(_me, Vector(0, 0, 0), Angle(0, 0, 0), 75) end
 paint()
+-- the light rig on the bus's roof: six beams
+local fakeBus = { IsValid = function() return true end, OBBMins = function() return Vector(-200, -50, 0) end, OBBMaxs = function() return Vector(200, 50, 120) end,
+    LocalToWorld = function(_, v) return v end, GetAngles = function() return Angle(0, 0, 0) end, GetPos = function() return Vector(0, 0, 0) end }
+local entWas, hsvWas = Entity, HSVToColor
+Entity = function(i) if i == 1 then return fakeBus end return entWas(i) end
+HSVToColor = HSVToColor or function() return Color(255, 120, 200) end
+local rigBefore = _calls["render.DrawBeam"] or 0
+for _, h in pairs(hook.t["PostDrawTranslucentRenderables"] or {}) do h(false, false) end
+for _, h in pairs(hook.t["Think"] or {}) do h() end
+local rigBeams = (_calls["render.DrawBeam"] or 0) - rigBefore
+Entity, HSVToColor = entWas, hsvWas
+if rigBeams < 6 then return "bus: the light rig on the roof isn't drawn (" .. rigBeams .. " beams)" end
 _me.nw.lc_seated = false
 net._q = { { id = "base", phase = "apocalypse", name = "Base", say = "x", song = "livingcity/endings/base/base.ogg",
     client = { party = true, lights = true, dance = "bus", bpm = 150, offset = 0, start = CurTime() - 3, cats = true, sky = Vector(0, 0, 2600),
