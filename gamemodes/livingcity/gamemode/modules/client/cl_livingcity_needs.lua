@@ -491,6 +491,9 @@ local function OpenInventory()
             if it.hunger or it.thirst or it.cures then Btn(it.hunger and "Eat" or (it.cures and "Take" or "Drink"), "use") end
             if it.wear then Btn("Wear", "wear") end
             if it.use then Btn(it.useLabel or "Use", "use", it.desc) end
+            if id == "master_chip" and LocalPlayer():GetNW2String("lcf_special", "") == "chaplain" then
+                Btn("Eat it", "eatchip", "Swallow the motherlode whole. You have a feeling about what happens next.")
+            end
             if giveTo then Btn("Give", "give", "Hand one to the person in front of you") end
             if it.tool then Btn("Use", "use", "Look at a locked door first. Or type !pick, or bind a key to lc_pick.") end
 

@@ -1242,7 +1242,9 @@ end)
 function LC.UndergroundAction(ply, action, id)
     local it = id and LCS.Items[id]
     local ok, why
-    if action == "takeoff" then
+    if action == "eatchip" then -- (Father Grigori, the motherlode: sv_livingcity_endings.lua)
+        if LC.EatChip then ok, why = LC.EatChip(ply) end
+    elseif action == "takeoff" then
         ok = LC.TakeOff(ply)
     elseif action == "wear" then
         if id == "plain" or id == "gear" then

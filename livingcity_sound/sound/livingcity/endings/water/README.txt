@@ -4,8 +4,8 @@ in the worst storm the city has seen. The water rises over the city; waves
 knock people off the stage; ichthyosaurs hunt the water and leap at the edge;
 swim (hold Jump) or drown. Father Grigori rocks out the whole time, his jaw
 following the song, untouchable, and goes last on the final note.
-Triggered by Father Grigori typing /eatchip with a master data core in his
-pockets.
+Triggered by Father Grigori eating a master data core: Eat it, on the core in
+his pockets (F2), or /eatchip.
 SONG: your file. "water" is a codeword: players download whatever is in this
 folder, so give the file a name that gives nothing away (water.ogg).
 
