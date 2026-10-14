@@ -168,7 +168,8 @@ end)
 -- Father Grigori mouths the words: his jaw follows the song's loudness
 local MOUTH = { "jaw_drop", "right_part", "left_part", "right_mouth_drop", "left_mouth_drop" }
 hook.Add("MouthMoveAnimation", "LivingCityEndings", function(ply)
-    if not IsValid(ply) or not ply:GetNW2Bool("lc_rocking", false) or not channel or not channel.GetLevel then return end
+    local singing = ply:GetNW2Bool("lc_rocking", false) or (S and S.client and S.client.lipsync and ply:GetNW2Bool("lc_dancing", false))
+    if not IsValid(ply) or not singing or not channel or not channel.GetLevel then return end
     local l, r = channel:GetLevel()
     local w = math.Clamp(((l or 0) + (r or 0)) * 1.6, 0, 1)
     for _, name in ipairs(MOUTH) do
@@ -271,6 +272,24 @@ local function Dance(ent, beat, now)
     local wave = math.sin(beat * math.pi)            -- left, right, a beat each
     local flap = math.sin(beat * math.pi * 2) * FLAP -- the wrists, every beat
     local bounce = math.abs(wave)
+    -- numa numa: the webcam dance, arms rolling in front of the face, the head
+    -- tipping side to side, a bounce
+    if S and S.client and S.client.dance == "numa" and not preview then
+        local ph = beat * math.pi
+        local NUMA = {
+            R_UpperArm = Angle(28 * math.sin(ph), -75 + 22 * math.cos(ph), 0),
+            L_UpperArm = Angle(-28 * math.sin(ph + math.pi), -75 + 22 * math.cos(ph + math.pi), 0),
+            R_Forearm = Angle(0, -95 + 20 * math.sin(ph * 2), 0),
+            L_Forearm = Angle(0, -95 + 20 * math.sin(ph * 2 + math.pi), 0),
+            Head = Angle(0, 8 * bounce, 14 * math.sin(ph / 2)),
+            Spine2 = Angle(0, 0, 6 * wave),
+            Pelvis = Angle(0, 0, 8 * wave),
+            R_Calf = Angle(0, 14 * bounce, 0), L_Calf = Angle(0, 14 * bounce, 0),
+        }
+        for name, id in pairs(b) do ent:ManipulateBoneAngles(id, NUMA[name] or Angle(0, 0, 0)) end
+        danced[ent] = true
+        return
+    end
     -- party hard: two frames, a pose and its mirror image, flipping every half-beat
     if S and S.client and S.client.dance == "hard" and not preview then
         local hold = S.client.section == "break" or S.client.section == "fade"
@@ -768,7 +787,7 @@ end)
 
 -- on your ZIG: the view from behind it
 hook.Add("CalcView", "LivingCityBase", function(me, origin, angles, fov)
-    if not Base() or not IsValid(me) then return end
+    if not (S and S.phase == "apocalypse") or not IsValid(me) or me:GetNW2Bool("lc_end_spectating", false) then return end
     local z = me:GetNW2Entity("lc_riding")
     if not IsValid(z) then return end
     return { origin = z:GetPos() + Vector(0, 0, 220) - angles:Forward() * 700, angles = angles, fov = fov, drawviewer = true }
@@ -936,3 +955,63 @@ function LC_CL.FlashWarning()
         b:SetText("I'm fine, keep it (" .. left .. ")")
     end
 end
+
+------------------------------------------------------------------------
+-- Plane: the sing-along, the webcam, and up into the clouds
+------------------------------------------------------------------------
+
+if surface and surface.CreateFont then surface.CreateFont("LCNuma", { font = "Impact", size = 64, weight = 900 }) end
+local function Plane() return S and S.id == "plane" and S.phase == "apocalypse" and S.client end
+local camRT, camMat
+
+hook.Add("HUDPaint", "LivingCityPlane", function()
+    local c = Plane()
+    if not c then return end
+    local now = CurTime()
+    local w, h = ScrW(), ScrH()
+    local st = SongTime(now)
+    -- the sing-along: the captions, and NUMA NUMA IEI on the choruses
+    local cap
+    for _, l in ipairs(c.captions or {}) do if st >= l.t and st < l.t + 1.1 then cap = l.text end end
+    if not cap and (c.section == "chorus" or c.section == "final" or c.section == "board") then
+        local beat = st * (c.bpm or 130) / 60
+        if beat % 16 < 3 then cap = "NUMA NUMA IEI!" end
+    end
+    if cap then
+        draw.SimpleTextOutlined(cap, "LCNuma", w / 2, h * 0.2, Color(255, 235, 120), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 3, Color(0, 0, 0, 230))
+    end
+    -- your webcam: a grainy little box in the corner, your own face, mouthing along
+    local me = LocalPlayer()
+    if c.webcam and IsValid(me) and IsValid(me:GetNW2Entity("lc_riding")) and render and render.RenderView and GetRenderTarget and CreateMaterial then
+        if not camRT then
+            camRT = GetRenderTarget("lc_webcam_rt", 128, 96)
+            camMat = CreateMaterial("lc_webcam_mat", "UnlitGeneric", { ["$basetexture"] = camRT:GetName(), ["$ignorez"] = 1, ["$vertexcolor"] = 1 })
+        end
+        local eyes = me.LookupAttachment and me:LookupAttachment("eyes")
+        local att = eyes and eyes > 0 and me:GetAttachment(eyes)
+        local face = att and att.Pos or (me:GetPos() + Vector(0, 0, 64))
+        local fwd = (att and att.Ang or me:GetAngles()):Forward()
+        local camPos = face + fwd * 28 + Vector(0, 0, 3)
+        render.PushRenderTarget(camRT)
+        render.RenderView({ origin = camPos, angles = (face - camPos):Angle(), x = 0, y = 0, w = 128, h = 96, fov = 60, drawviewer = true, drawhud = false })
+        render.PopRenderTarget()
+        local bw, bh = 256, 192
+        local x, y = w - bw - 24, h - bh - 140
+        surface.SetDrawColor(20, 20, 20, 255)
+        surface.DrawRect(x - 6, y - 6, bw + 12, bh + 30)
+        render.PushFilterMag(TEXFILTER.POINT)
+        render.PushFilterMin(TEXFILTER.POINT)
+        surface.SetMaterial(camMat)
+        surface.SetDrawColor(255, 255, 255, 255)
+        surface.DrawTexturedRect(x, y, bw, bh)
+        render.PopFilterMin()
+        render.PopFilterMag()
+        draw.SimpleText((math.floor(now * 2) % 2 == 0 and "o " or "  ") .. "REC   webcam", "DermaDefaultBold", x + 6, y + bh + 12, Color(255, 80, 80), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+    end
+    -- the climb: up into the clouds, and white
+    if c.whiteAt then
+        local a = math.Clamp((now - (c.whiteAt - 3)) / 3, 0, 1)
+        surface.SetDrawColor(255, 255, 255, 255 * a)
+        surface.DrawRect(0, 0, w, h)
+    end
+end)

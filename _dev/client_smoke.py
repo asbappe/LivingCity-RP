@@ -1308,6 +1308,18 @@ _advance(1.1)
 for _, h in pairs(hook.t["Think"] or {}) do h() end
 for _, h in pairs(hook.t["PostDrawTranslucentRenderables"] or {}) do h(false, false) end
 paint()
+net._q = { { id = "plane", phase = "apocalypse", name = "Plane", say = "x", song = "livingcity/endings/plane/plane.ogg", flashing = true,
+    client = { party = true, lights = true, dance = "numa", bpm = 130, offset = 0, start = CurTime() - 16, section = "chorus", webcam = true, lipsync = true,
+        palette = { { 255, 60, 60 }, { 80, 200, 255 } }, captions = { { t = 15.1, text = "MA-IA-HII" } }, whiteAt = CurTime() + 5 } } }
+net.recv_lc_ending()
+_me.nw.lc_dancing = true
+_me.nw.lc_riding = _me
+_advance(0.2)
+for _, h in pairs(hook.t["Think"] or {}) do h() end
+for _, h in pairs(hook.t["MouthMoveAnimation"] or {}) do h(_me) end
+for _, h in pairs(hook.t["CalcView"] or {}) do h(_me, Vector(0, 0, 0), Angle(0, 0, 0), 75) end
+paint()
+_me.nw.lc_riding = nil
 _me.nw.lc_dancing = false
 if concommand.list and concommand.list.lc_bloom_pose then concommand.list.lc_bloom_pose(nil, "lc_bloom_pose", { "R_Hand", "1", "2", "3" }) end
 net._q = { { id = "water", phase = "reset", name = "The Flood" } }

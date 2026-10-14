@@ -34,7 +34,11 @@
                    flies through walls, a rainbow behind it, speed surging on
                    the beat, through rings that pop; down to drive again, then
                    up faster (lc_ending_bus_sections)
-        nuanua     everyone on an airplane, high over the city
+        plane      numa numa: everyone dancing on the wings of an airplane over
+                   the city, the webcam dance, everyone mouthing the words, a
+                   little webcam of your own face in the corner; swooping and
+                   rolling in the choruses, fireworks in the last, and up into
+                   the clouds on the final note (lc_ending_plane_sections)
         topsecret  everyone hung by barnacles, one a second
         hard       party hard: everyone at the landing zone (every NPC in the
                    city dancing too), the cheap mirror-flip meme dance on the
@@ -99,7 +103,7 @@ local EXT = { wav = true, mp3 = true, ogg = true }
 LC.Endings = {
     harpies   = { name = "The Harpies", say = "The lights go out. Something is gathering out there in the dark." },
     bus       = { name = "The Bus", say = "Hear that horn? All aboard." },
-    nuanua    = { name = "Nua Nua", say = "Please fasten your seatbelts." },
+    plane     = { name = "Plane", say = "Alo, salut. Please fasten your seatbelts." },
     topsecret = { name = "Top Secret", say = "Look up." },
     water     = { name = "The Flood", say = "Father Grigori has eaten the motherlode. The waters rise." },
     bloom     = { name = "Bloom", say = "Everybody dances. Nobody stops." },
@@ -109,8 +113,8 @@ LC.Endings = {
 }
 -- The ones with strobes or flashes: everyone is warned before and as they start
 -- (and lc_ending_calm, on each player's own screen, leaves the flashing out).
-for _, id in ipairs({ "bus", "bloom", "marrow", "base", "hard", "water" }) do if LC.Endings[id] then LC.Endings[id].flashing = true end end
-LC.EndingOrder = { "harpies", "bus", "nuanua", "topsecret", "water", "bloom", "marrow", "base", "hard" }
+for _, id in ipairs({ "bus", "bloom", "marrow", "base", "hard", "water", "plane" }) do if LC.Endings[id] then LC.Endings[id].flashing = true end end
+LC.EndingOrder = { "harpies", "bus", "plane", "topsecret", "water", "bloom", "marrow", "base", "hard" }
 
 local E -- the ending in progress: { id, phase, by, ... }
 function LC.EndingSession() return E end
@@ -1035,7 +1039,7 @@ local function FlyTick(now)
     Ride(now)
     -- the ride lasts the song, more or less, and then nobody ever gets off
     if now - E.started > (E.flightSecs or 80) then
-        for _, p in ipairs(Living()) do Take(p, E.id == "nuanua" and "The plane climbs into the clouds and keeps climbing." or "The bus doesn't stop. It never stops.") end
+        for _, p in ipairs(Living()) do Take(p, "The ride doesn't stop. It never stops.") end
     end
 end
 
@@ -1569,10 +1573,140 @@ TICK.hard = function(now)
     end
 end
 
-SETUP.nuanua = function()
-    Fly({ "models/xqm/jetbody3.mdl", "models/xqm/airplanewing1.mdl", "models/props_vehicles/van001a_physics.mdl" }, 64, 1600, 0.2, 3, 90)
+-- Plane (a codeword): numa numa. Like the band in the video, everyone dances
+-- on the wings of an airplane over the city. It circles low through the
+-- intro; at the first hook everyone (and some of the Combine) is up on it,
+-- doing the webcam dance, everyone's jaw mouthing the words; the verses
+-- cruise, the choruses swoop and roll, the breakdown glides, the last chorus
+-- is fastest, with fireworks; on the final note it climbs into the clouds.
+local cvPlaneSections = CreateConVar("lc_ending_plane_sections", "17:board,26:verse,63:chorus,89:verse,122:chorus,148:break,167:final,210:climb,215:end", FLAGS,
+    "Plane: the song's sections, second:kind (board, verse, chorus, break, final, climb, end); before the first, it circles low")
+local cvPlaneCaptions = CreateConVar("lc_ending_plane_captions", "15.1=MA-IA-HII|16.3=MA-IA-HUU|17.5=MA-IA-HOO|18.7=MA-IA-HAHA", FLAGS,
+    "Plane: the sing-along captions, second=TEXT, separated by | (the choruses add their own)")
+local cvPlaneBPM = CreateConVar("lc_ending_plane_bpm", "130", FLAGS, "Plane: the song's beats per minute")
+local cvPlaneCombine = CreateConVar("lc_ending_plane_combine", "8", FLAGS, "Plane: how many of the Combine's units get on the wings too")
+local PLANE_BODY, PLANE_WING = { "models/xqm/jetbody3.mdl", "models/props_vehicles/van001a_physics.mdl" }, "models/xqm/airplanewing1.mdl"
+local FIREWORK = { { 255, 60, 60 }, { 255, 210, 60 }, { 80, 200, 255 }, { 120, 255, 120 }, { 255, 100, 230 } }
+
+local function PlaneSection(t)
+    local kind = "intro"
+    for _, sct in ipairs(E.sections) do if t >= sct.t then kind = sct.kind end end
+    return kind
 end
-TICK.nuanua = FlyTick
+
+-- A place on the wings and the roof: out along each wing, a few rows deep.
+local function WingSpot(i)
+    local side = (i % 2 == 0) and 1 or -1
+    local k = math.floor((i - 1) / 2)
+    local along, row = k % 5, math.floor(k / 5)
+    return Vector(-40 + row * 50, side * (90 + along * 55), 80 + row * 6)
+end
+
+local function PlaneBoard(e)
+    if not IsValid(e) or e.lcEndRide or not IsValid(E.plane) then return end
+    E.planeSeat = (E.planeSeat or 0) + 1
+    e.lcEndRide = { v = E.plane, off = WingSpot(E.planeSeat) }
+    E.riders = E.riders or {}
+    E.riders[#E.riders + 1] = e
+    if e:IsPlayer() then
+        if e.InVehicle and e:InVehicle() and e.ExitVehicle then e:ExitVehicle() end
+        e.lcEndFrozen = true
+        e:Freeze(true)
+        e:SetMoveType(MOVETYPE_NONE)
+    end
+    e:SetNW2Entity("lc_riding", E.plane)
+    e:SetNW2Bool("lc_dancing", true)
+end
+
+SETUP.plane = function()
+    local now = CurTime()
+    E.songEnds = true -- (it is over when the song is)
+    E.sections = LC.MarrowSections(cvPlaneSections:GetString())
+    for _, sct in ipairs(E.sections) do if sct.kind == "end" then E.holdUntil = now + sct.t end end
+    E.holdUntil = E.holdUntil or (now + 215)
+    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
+    LC.TimeStopped = true
+    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    -- the plane: a body and two wings, low over the city
+    local body = Prop(FirstModel(PLANE_BODY), E.lz + Vector(cvRadius:GetFloat(), 0, 450), 3)
+    if not body then return end
+    if body.SetSolid then body:SetSolid(SOLID_NONE) end
+    E.plane = body
+    if not util.IsValidModel or util.IsValidModel(PLANE_WING) then
+        for _, side in ipairs({ -1, 1 }) do
+            local w = Prop(PLANE_WING, body:GetPos(), 3)
+            if w then
+                if w.SetSolid then w:SetSolid(SOLID_NONE) end
+                w:SetParent(body)
+                if w.SetLocalPos then w:SetLocalPos(Vector(0, side * 160, 40)) end
+                if w.SetLocalAngles then w:SetLocalAngles(Angle(0, side > 0 and 0 or 180, 0)) end
+            end
+        end
+    end
+    E.planeA, E.roll = 0, 0
+    local caps = LC.BaseLines(cvPlaneCaptions:GetString())
+    E.client = { party = true, lights = true, dance = "numa", bpm = cvPlaneBPM:GetFloat(), offset = 0, start = now, section = "intro",
+        palette = FIREWORK, captions = caps, webcam = true, lipsync = true }
+end
+
+TICK.plane = function(now)
+    local plane = E.plane
+    if not IsValid(plane) then return end
+    local t = now - E.phaseT
+    local kind = PlaneSection(t)
+    local beat = t * cvPlaneBPM:GetFloat() / 60
+    if kind ~= E.client.section then
+        E.client.section = kind
+        E.client.lights = kind ~= "break"
+        if kind == "board" then
+            for _, p in ipairs(player.GetAll()) do PlaneBoard(p) end
+            local c = 0
+            for _, npc in ipairs(CombineNPCs()) do if c < cvPlaneCombine:GetInt() then c = c + 1 PlaneBoard(npc) end end
+        elseif kind == "climb" then
+            E.client.whiteAt = now + 3
+        end
+        Send()
+    end
+    if E.planeSeat then for _, p in ipairs(player.GetAll()) do PlaneBoard(p) end end -- (anyone joining, or back)
+    -- the flight: wide and steady in the verses, swooping in the choruses, a glide in the break
+    local speed = ({ intro = 0.12, board = 0.15, verse = 0.14, chorus = 0.24, ["break"] = 0.07, final = 0.32, climb = 0.2 })[kind] or 0.14
+    E.planeA = E.planeA + speed * 0.1
+    local r = cvRadius:GetFloat()
+    local height = ({ intro = 450, board = 700 })[kind] or 1300
+    if kind == "chorus" or kind == "final" then height = height + math.sin(t * 0.9) * 350 end
+    if kind == "climb" then E.climb = (E.climb or 0) + 60 + (E.climb or 0) * 0.08 end
+    local pos = E.lz + Vector(math.cos(E.planeA) * r, math.sin(E.planeA) * r, height + (E.climb or 0))
+    local yaw = math.deg(E.planeA) + 90
+    -- a barrel roll on the big hits (every 16 beats in a chorus), a bank otherwise
+    local bank = (kind == "chorus" or kind == "final") and 30 or 12
+    if (kind == "chorus" or kind == "final") and math.floor(beat) % 16 == 0 and math.floor(beat) ~= E.rollBeat then
+        E.rollBeat = math.floor(beat)
+        E.rollFrom = now
+    end
+    local roll = bank
+    if E.rollFrom and now - E.rollFrom < 2 then roll = bank + 360 * ((now - E.rollFrom) / 2) end
+    local pitch = kind == "climb" and -70 or math.sin(t * 0.7) * 6
+    plane:SetPos(LerpVector(0.4, plane:GetPos(), pos))
+    plane:SetAngles(Angle(pitch, yaw, roll))
+    for _, e in ipairs(E.riders or {}) do
+        local rd = IsValid(e) and e.lcEndRide
+        if rd and IsValid(rd.v) then e:SetPos(rd.v.LocalToWorld and rd.v:LocalToWorld(rd.off) or (rd.v:GetPos() + rd.off)) end
+    end
+    -- fireworks round it in the last chorus
+    if kind == "final" and now >= (E.nextFirework or 0) then
+        E.nextFirework = now + math.Rand(0.3, 0.8)
+        if util.Effect and EffectData then
+            local fx = EffectData()
+            fx:SetOrigin(plane:GetPos() + VectorRand() * 600 + Vector(0, 0, 200))
+            local c = FIREWORK[math.random(#FIREWORK)]
+            if fx.SetStart then fx:SetStart(Vector(c[1], c[2], c[3])) end
+            util.Effect("balloon_pop", fx)
+            util.Effect("cball_explode", fx)
+        end
+        if sound and sound.Play then sound.Play("weapons/flaregun/burn.wav", plane:GetPos(), 90, math.random(90, 130), 0.6) end
+    end
+end
 
 -- Top Secret: barnacles, one victim a second
 SETUP.topsecret = function()
