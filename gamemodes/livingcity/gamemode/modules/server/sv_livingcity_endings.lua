@@ -2670,6 +2670,10 @@ concommand.Add("lc_endings", function(ply)
     if IsValid(ply) and not ply:IsSuperAdmin() then return end
     for _, id in ipairs(LC.EndingOrder) do
         local n = #LC.EndingSongs(id)
+        for _, song in ipairs(LC.EndingSongs(id)) do
+            local fr = LC.Mp3Frame and string.match(string.lower(song), "%.mp3$") and LC.Mp3Frame(file.Read("sound/" .. song, "GAME"))
+            if fr and fr.hz < 32000 then Reply(ply, "  " .. song .. " is a low-quality copy (" .. fr.hz .. " Hz: it plays, but sounds muffled); a better copy would sound much better") end
+        end
         Reply(ply, string.format("%s (%s): %s", id, LC.Endings[id].name, n > 0 and (n .. " song(s)") or ("NO SONG FOUND (looking for " .. id .. ".mp3 in garrysmod/sound/" .. ROOT .. ")")))
     end
     -- everything that's actually there, so a file in the wrong place shows

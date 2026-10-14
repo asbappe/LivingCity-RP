@@ -488,9 +488,9 @@ function LC.AnnounceBadFiles()
     for _, d in ipairs(dirs) do
         for _, why in ipairs(LC.SoundProblems(ROOT .. d)) do out[#out + 1] = d .. "/" .. why end
     end
-    for _, why in ipairs(LC.SoundProblems("livingcity/endings")) do out[#out + 1] = "endings/" .. why end
+    for _, why in ipairs(LC.SoundProblems("livingcity/endings", true)) do out[#out + 1] = "endings/" .. why end
     for _, id in ipairs(LC.EndingOrder or {}) do -- (the older layout, a folder per ending)
-        for _, why in ipairs(LC.SoundProblems("livingcity/endings/" .. id)) do out[#out + 1] = "endings/" .. id .. "/" .. why end
+        for _, why in ipairs(LC.SoundProblems("livingcity/endings/" .. id, true)) do out[#out + 1] = "endings/" .. id .. "/" .. why end
     end
     return out
 end

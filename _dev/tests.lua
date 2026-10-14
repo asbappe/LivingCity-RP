@@ -7013,6 +7013,10 @@ ok(string.find(LC.SoundProblem("test/fake.wav") or "", "rename it to .mp3", 1, t
 _files["sound/test/hz48.wav"] = "RIFF" .. le(0, 4) .. "WAVE" .. "fmt " .. le(16, 4) .. le(1, 2) .. le(1, 2) .. le(48000, 4) .. le(96000, 4)
     .. le(2, 2) .. le(16, 2) .. "data" .. le(0, 4)
 ok(string.find(LC.SoundProblem("test/hz48.wav") or "", "48000 Hz", 1, true) ~= nil, "and so is a 48000 Hz WAV")
+_files["sound/test/low.mp3"] = "\255\243\152\100" .. string.rep("\0", 3000) -- (MPEG-2, 16000 Hz)
+ok(LC.SoundProblem("test/low.mp3") ~= nil and LC.SoundProblem("test/low.mp3", true) == nil, "a 16000 Hz MP3 is flagged as an announcement, but is fine as a song (the music player takes any rate)",
+    tostring(LC.SoundProblem("test/low.mp3")))
+_files["sound/test/low.mp3"] = nil
 _files["sound/livingcity/announce/overwatch/welcome9.wav"] = mp3
 local badList = table.concat(LC.AnnounceBadFiles(), "\n")
 ok(string.find(badList, "overwatch/welcome9.wav", 1, true) ~= nil, "lc_announce_clips lists every recording the game can't play", badList)

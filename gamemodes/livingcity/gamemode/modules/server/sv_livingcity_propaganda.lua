@@ -479,7 +479,9 @@ end
 local GOOD_HZ = { [44100] = true, [22050] = true, [11025] = true }
 local function U16(s, i) return s:byte(i) + s:byte(i + 1) * 256 end
 local function U32(s, i) return U16(s, i) + U16(s, i + 2) * 65536 end
-function LC.SoundProblem(path)
+-- song: played by the game's music player (sound.PlayFile), which takes an
+-- .mp3 or .ogg at any rate: only a file that isn't what its name says matters.
+function LC.SoundProblem(path, song)
     local ext = string.lower(string.match(path or "", "%.(%w+)$") or "")
     local data = file.Read("sound/" .. path, "GAME")
     if not data or #data < 12 then return "empty, or couldn't be read" end
@@ -508,7 +510,7 @@ function LC.SoundProblem(path)
         if ogg then return "it's really an OGG named .mp3: rename it to .ogg" end
         local fr = LC.Mp3Frame(data)
         if not fr then return "not a real MP3" end
-        if not GOOD_HZ[fr.hz] then return fr.hz .. " Hz, which may play at the wrong speed: convert it to 44100 Hz" end
+        if not GOOD_HZ[fr.hz] and not song then return fr.hz .. " Hz, which may play at the wrong speed: convert it to 44100 Hz" end
     elseif ext == "ogg" then
         if riff then return "it's really a WAV named .ogg: rename it to .wav" end
         if mp3 then return "it's really an MP3 named .ogg: rename it to .mp3" end
@@ -517,14 +519,14 @@ function LC.SoundProblem(path)
 end
 
 -- Every sound file in a folder (under sound/) the game can't play: { "name: why" }
-function LC.SoundProblems(dir)
+function LC.SoundProblems(dir, song)
     local out = {}
     local names = file.Find("sound/" .. dir .. "/*", "GAME") or {}
     table.sort(names)
     for _, name in ipairs(names) do
         local ext = string.lower(string.match(name, "%.(%w+)$") or "")
         if ext == "wav" or ext == "mp3" or ext == "ogg" then
-            local why = LC.SoundProblem(dir .. "/" .. name)
+            local why = LC.SoundProblem(dir .. "/" .. name, song)
             if why then out[#out + 1] = name .. ": " .. why end
         end
     end
