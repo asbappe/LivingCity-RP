@@ -11536,6 +11536,7 @@ ok(a:GetPos():Distance(p0) < 1, "the intro: everyone stands, arm in arm")
 runToS(3.5)
 ok(a:GetPos():Distance(p0) > 5, "then the rings go round", a:GetPos():Distance(p0))
 ok(E.rings.inner.spin > 0 and E.rings.outer.spin < 0, "the two rings go opposite ways")
+ok(math.abs(a:GetPos().z - E.floorZ) < 0.01, "and everyone's right on the floor (held even a little above it, a dancer looks like they float)", a:GetPos().z - E.floorZ)
 ok(E.joined and horaCops[1]:GetNW2Bool("lc_dancing", false) and horaCops[1].lcHora and #(E.hidWeps or {}) >= 1,
     "the hora proper: the Combine's units put their guns down and join the outer ring")
 runToS(4.6)

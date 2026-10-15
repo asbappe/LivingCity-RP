@@ -83,7 +83,7 @@ Things worth knowing:
 ## Waiting on the owner's playtest (unverified in game)
 
 - **Bloom:** the sway is now a curve up the spine (the pelvis isn't turned: that lifted the feet); palms forward by a forearm twist (`lc_bloom_palm`, -90 if backwards).
-- **Bone axes (worked out from the last playtest):** on the arms, yaw raises an arm out to the side (minus is up), pitch swings it forward and back (mirrored: right arm forward is minus, left plus), roll twists it; the forearm bends at the elbow on pitch (yaw folds it sideways: the "chicken wing"). On the head and spine, yaw tilts side to side, roll twists, so a nod is pitch. Thighs: yaw is forward and back.
+- **Bone axes (confirmed by screenshots):** on the arms, yaw raises an arm forward (minus is up), pitch takes it out to the side (minus for the right arm, plus for the left), roll twists it; a forearm bends at the elbow on yaw. On the head and spine, yaw tilts side to side, roll twists, pitch nods. Thighs: yaw is forward and back. **Never bend the knee of a leg that's standing, or tip the pelvis** (yaw or pitch): either lifts the feet off the floor and the character floats. Twist the pelvis (roll) instead, sway the spine, and only bend the knee of a leg that's kicking. Everyone an ending holds in place goes exactly on the floor (no +1 or +4).
 - Dances' hand and leg axes in general (Marrow kicks, club and rave kicks).
 - **Standup:** can the hanged look around? Do the heads stay put? Are the white cones visible on everyone? Do the hanged go limp 3 seconds before the end?
 - **G-Man:** the tiefidget sequence name, the jaw moving while he talks, and whether he only appears for the one player he's talking to.

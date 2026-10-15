@@ -437,7 +437,7 @@ local function GatherCombine(centre, r)
     for i, npc in ipairs(list) do
         local a = (i / math.max(1, #list)) * math.pi * 2 + 0.3
         local spot = centre + Vector(math.cos(a) * r, math.sin(a) * r, 0)
-        npc:SetPos((Ground(spot) or centre) + Vector(0, 0, 1)) -- (on the ground: time's stopped, so nothing would drop them onto it)
+        npc:SetPos((Ground(spot) or centre)) -- (right on the ground: time's stopped, so nothing would drop them onto it)
         npc:SetAngles(Angle(0, math.deg(a), 0))
     end
     return list
@@ -1115,7 +1115,7 @@ SETUP.bloom = function()
         if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
         local a = (i / math.max(1, #ps)) * math.pi * 2
         local r = 70 + 14 * #ps
-        p:SetPos((Ground(E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)) or E.lz) + Vector(0, 0, 1)) -- (frozen, nobody drops: on the floor, not over it)
+        p:SetPos((Ground(E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)) or E.lz)) -- (frozen, nobody drops: on the floor, not over it)
     end
     GatherCombine(E.lz, 150 + 14 * #ps)
     -- ...and dances
@@ -2226,7 +2226,7 @@ SETUP.hard = function()
         if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
         local a = (i / math.max(1, #ps)) * math.pi * 2
         local r = 60 + 14 * #ps
-        p:SetPos((Ground(E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)) or E.lz) + Vector(0, 0, 1))
+        p:SetPos((Ground(E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)) or E.lz))
         p.lcEndFrozen = true
         p:Freeze(true)
         p:SetNW2Bool("lc_dancing", true)
@@ -2466,7 +2466,7 @@ function LC.ShalomStep(now)
                 m.r = m.r + math.Clamp(ring.r - m.r, -150 * dt, 150 * dt)
                 local a = m.a + ring.spin
                 local r = m.r * (name == "watch" and 1 or E.rush)
-                local pos = Vector(c.x + math.cos(a) * r, c.y + math.sin(a) * r, z0 + 2)
+                local pos = Vector(c.x + math.cos(a) * r, c.y + math.sin(a) * r, z0) -- (right on the floor: anything held up off it looks like it floats)
                 local yaw = math.deg(a) + 180
                 if m.lift then
                     local f = (now - m.lift.t0) / m.lift.dur
@@ -2528,7 +2528,7 @@ SETUP.shalom = function()
     E.rings.outer.r = outerR
     for i = 1, want do
         local a = (i - 1) / math.max(1, want) * math.pi * 2 + 0.1
-        local spot = Vector(E.lz.x + math.cos(a) * outerR, E.lz.y + math.sin(a) * outerR, E.floorZ + 4)
+        local spot = Vector(E.lz.x + math.cos(a) * outerR, E.lz.y + math.sin(a) * outerR, E.floorZ)
         local c = folk[i]
         if not IsValid(c) then c = SpawnFolk(spot, i) elseif c.SetPos then c:SetPos(spot) end
         if IsValid(c) then

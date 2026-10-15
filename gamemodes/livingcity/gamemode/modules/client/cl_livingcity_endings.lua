@@ -330,7 +330,7 @@ local POSE = {
     Pelvis = Angle(0, 0, 0), Spine = Angle(0, 0, 0), Spine2 = Angle(0, 0, 0), Head = Angle(0, 0, 0),
     R_Thigh = Angle(0, 0, 0), L_Thigh = Angle(0, 0, 0), R_Calf = Angle(0, 0, 0), L_Calf = Angle(0, 0, 0),
 }
-local FLAP, SWAY, KNEE = 40, 12, 18
+local FLAP, SWAY = 40, 12
 -- (the palms turned to face forward, a twist of the forearm: lc_bloom_palm -90 if they face back)
 local cvPalm = CreateClientConVar("lc_bloom_palm", "90", true, false, "Bloom's dance: how far the forearms twist to turn the palms forward (-90 if they end up facing back)")
 local PALETTE = { Color(255, 110, 200), Color(220, 90, 255), Color(100, 190, 255), Color(110, 255, 190), Color(255, 235, 110) }
@@ -388,18 +388,17 @@ local CLUB = {
     R_Forearm = function() return Angle(0, -70, 0) end, L_Forearm = function() return Angle(0, -70, 0) end,
     Head = function(w, b) return Angle(0, -14 * b, 0) end,
     Spine2 = function(w) return Angle(0, 0, w * 10) end, Pelvis = function(w) return Angle(0, 0, w * 8) end,
-    -- the kicks: one leg out straight on each beat, the other knee bent, left then right
+    -- the kicks: one leg out on each beat, left then right, the other straight under them
+    -- (a knee bent with the thigh left as it is only shortens the leg: the foot leaves the floor)
     R_Thigh = function(w) return Angle(0, -55 * math.max(0, w), 0) end, L_Thigh = function(w) return Angle(0, -55 * math.max(0, -w), 0) end,
-    R_Calf = function(w) return Angle(0, 26 * math.max(0, -w), 0) end, L_Calf = function(w) return Angle(0, 26 * math.max(0, w), 0) end,
 }
 local RAVE = {
     R_UpperArm = function(w) return Angle(20 * w, -110, 10) end, L_UpperArm = function(w) return Angle(20 * w, -110, -10) end,
     R_Forearm = function(w) return Angle(0, -20 + 30 * w, 0) end, L_Forearm = function(w) return Angle(0, -20 - 30 * w, 0) end,
-    Head = function(w, b) return Angle(0, -10 * b, w * 8) end, Pelvis = function(w) return Angle(0, 0, w * 14) end,
+    Head = function(w, b) return Angle(6 * b, -10 * w, 0) end, Pelvis = function(w) return Angle(0, 0, w * 14) end,
     Spine2 = function(w) return Angle(0, 0, -w * 8) end,
     -- bigger kicks for the rave, high and out to the side
     R_Thigh = function(w) local k = math.max(0, w) return Angle(12 * k, -75 * k, 0) end, L_Thigh = function(w) local k = math.max(0, -w) return Angle(-12 * k, -75 * k, 0) end,
-    R_Calf = function(w) return Angle(0, 34 * math.max(0, -w), 0) end, L_Calf = function(w) return Angle(0, 34 * math.max(0, w), 0) end,
 }
 -- On the bus: sat down (crammed in), arms in the air.
 local BUS = {
@@ -415,9 +414,13 @@ local STYLES = { club = CLUB, rave = RAVE, bus = BUS }
 -- for the rush into the middle; up on a chair, sat down, arms waving. The walk is the same
 -- step at half speed; at the very start everyone just stands arm in arm, then sways.
 -- Tune the arms live: lc_shalom_pose <R_UpperArm|L_UpperArm|R_Forearm|L_Forearm> <p> <y> <r>.
+-- (The arm bones, as the last playtest showed: yaw raises an arm forward, minus is up;
+-- pitch takes it out to the side, minus for the right arm, plus for the left; roll twists
+-- it. A forearm bends at the elbow on yaw. Both legs straight under them unless kicking:
+-- a bent knee lifts the foot off the floor.)
 local HORA = {
-    R_UpperArm = Angle(-30, -75, 0), L_UpperArm = Angle(30, -75, 0),
-    R_Forearm = Angle(-15, 0, 0), L_Forearm = Angle(15, 0, 0),
+    R_UpperArm = Angle(-80, -15, 0), L_UpperArm = Angle(80, -15, 0),
+    R_Forearm = Angle(0, -15, 0), L_Forearm = Angle(0, -15, 0),
 }
 local function HoraPose(ent, b, beat)
     local sec = S.client.section or "intro"
@@ -427,8 +430,8 @@ local function HoraPose(ent, b, beat)
     local chair = ent.GetNW2Bool and ent:GetNW2Bool("lc_chair", false)
     local P = {}
     if sec == "in" or chair then
-        P.R_UpperArm, P.L_UpperArm = Angle(-10, -140 + 15 * s, 0), Angle(10, -140 + 15 * s, 0)
-        P.R_Forearm, P.L_Forearm = Angle(0, 0, 0), Angle(0, 0, 0)
+        P.R_UpperArm, P.L_UpperArm = Angle(-25, -160 + 15 * s, 0), Angle(25, -160 + 15 * s, 0)
+        P.R_Forearm, P.L_Forearm = Angle(0, -10, 0), Angle(0, -10, 0)
     else
         P.R_UpperArm, P.L_UpperArm, P.R_Forearm, P.L_Forearm = HORA.R_UpperArm, HORA.L_UpperArm, HORA.R_Forearm, HORA.L_Forearm
     end
@@ -437,15 +440,15 @@ local function HoraPose(ent, b, beat)
         P.R_Calf, P.L_Calf = Angle(0, 85, 0), Angle(0, 85, 0)
         P.Head = Angle(0, 10 * math.sin(beat * math.pi), 0)
     elseif sec == "gather" then
-        P.Pelvis = Angle(0, 10 * math.sin(beat * math.pi), 0)
-        P.Spine = Angle(0, -10 * math.sin(beat * math.pi), 0)
-        P.R_Calf, P.L_Calf = Angle(0, 12 * s, 0), Angle(0, 12 * s, 0)
+        -- swaying arm in arm: a curve up the back, the feet planted
+        local w = math.sin(beat * math.pi)
+        P.Spine, P.Spine2, P.Head = Angle(0, 8 * w, 0), Angle(0, 5 * w, 0), Angle(0, -6 * w, 0)
     elseif sec ~= "intro" and sec ~= "end" then
+        -- the grapevine: out to the side, cross behind, out, kick, step, kick (one foot always down)
         if k == 0 or k == 2 then P.L_Thigh = Angle(-14 * s, 0, 0)
         elseif k == 1 then P.R_Thigh = Angle(-8 * s, 14 * s, 0)
-        elseif k == 3 then P.R_Thigh = Angle(0, -38 * s, 0) P.L_Calf = Angle(0, 14 * s, 0)
-        elseif k == 4 then P.R_Calf = Angle(0, 10 * s, 0)
-        else P.L_Thigh = Angle(0, -38 * s, 0) P.R_Calf = Angle(0, 14 * s, 0) end
+        elseif k == 3 then P.R_Thigh = Angle(0, -38 * s, 0) P.R_Calf = Angle(0, 20 * s, 0)
+        elseif k == 5 then P.L_Thigh = Angle(0, -38 * s, 0) P.L_Calf = Angle(0, 20 * s, 0) end
         P.Head = Angle(6 * s, 0, 0)
     end
     for name, id in pairs(b) do ent:ManipulateBoneAngles(id, P[name] or Angle(0, 0, 0)) end
@@ -463,7 +466,7 @@ local function Dance(ent, beat, now)
         local CHEER = {
             R_UpperArm = Angle(10, -120 + 25 * bounce, 0), L_UpperArm = Angle(-10, -120 + 25 * (1 - bounce), 0),
             R_Forearm = Angle(0, -20, 0), L_Forearm = Angle(0, -20, 0),
-            Head = Angle(0, -12 * bounce, 0), R_Calf = Angle(0, 16 * bounce, 0), L_Calf = Angle(0, 16 * bounce, 0),
+            Head = Angle(-8 * bounce, 0, 0),
         }
         for name, id in pairs(b) do ent:ManipulateBoneAngles(id, CHEER[name] or Angle(0, 0, 0)) end
         danced[ent] = true
@@ -473,17 +476,15 @@ local function Dance(ent, beat, now)
     -- tipping side to side, a bounce
     if S and S.client and S.client.dance == "numa" and not preview then
         local ph = beat * math.pi
-        -- (on the arms pitch swings forward and back, mirrored: the right arm forward is minus,
-        -- the left plus; the elbow bends on pitch too; yaw raises an arm out to the side)
+        -- (on the arms yaw raises them forward and the elbow bends on yaw; pitch takes an arm
+        -- out to the side, minus for the right, plus for the left)
         local NUMA = {
-            R_UpperArm = Angle(-60 + 18 * math.sin(ph), -20 + 10 * math.cos(ph), 0),
-            L_UpperArm = Angle(60 + 18 * math.sin(ph + math.pi), -20 + 10 * math.cos(ph + math.pi), 0),
-            R_Forearm = Angle(-70 + 20 * math.sin(ph * 2), 0, 0),
-            L_Forearm = Angle(70 + 20 * math.sin(ph * 2 + math.pi), 0, 0),
+            R_UpperArm = Angle(8, -55 + 14 * math.sin(ph), 0),
+            L_UpperArm = Angle(-8, -55 + 14 * math.sin(ph + math.pi), 0),
+            R_Forearm = Angle(0, -65 + 18 * math.cos(ph), 0),
+            L_Forearm = Angle(0, -65 + 18 * math.cos(ph + math.pi), 0),
             Head = Angle(4 * bounce, 14 * math.sin(ph / 2), 0),
             Spine2 = Angle(0, 6 * wave, 0),
-            Pelvis = Angle(0, 8 * wave, 0),
-            R_Calf = Angle(0, 14 * bounce, 0), L_Calf = Angle(0, 14 * bounce, 0),
         }
         for name, id in pairs(b) do ent:ManipulateBoneAngles(id, NUMA[name] or Angle(0, 0, 0)) end
         danced[ent] = true
@@ -499,9 +500,9 @@ local function Dance(ent, beat, now)
         local hold = S.client.section == "break" or S.client.section == "fade"
         local flip = hold and 1 or ((math.floor(beat * 2) % 2 == 0) and 1 or -1)
         local HARD = {
-            Pelvis = Angle(0, 0, 0) + Angle(0, 40 * flip, 0),
-            Spine2 = Angle(0, 0, 12 * flip),
-            Head = Angle(0, 0, -14 * flip),
+            Pelvis = Angle(0, 0, 40 * flip), -- (a twist at the hips: tipping them lifted the feet off the floor)
+            Spine2 = Angle(0, 12 * flip, 0),
+            Head = Angle(0, -14 * flip, 0),
             R_UpperArm = flip > 0 and Angle(20, -120, 0) or Angle(0, -10, 0),
             L_UpperArm = flip > 0 and Angle(0, -10, 0) or Angle(-20, -120, 0),
             R_Forearm = flip > 0 and Angle(0, -40, 0) or Angle(0, 0, 0),
@@ -533,8 +534,8 @@ local function Dance(ent, beat, now)
         -- (on these models a bone's yaw is side to side and its roll front to back: the hips
         -- swing side to side under a chest that leans against them, and the hands bend at
         -- the wrist like ears flapping, rather than twisting)
-        -- (the sway: a curve up the back over legs that stay put, the knees dipping in turn;
-        -- turning the hips themselves swung the legs and lifted the feet off the floor)
+        -- (the sway: a curve up the back over legs that stay put and straight; turning the
+        -- hips, or bending a knee, lifts the feet off the floor)
         if name == "R_Hand" then a.y = a.y + flap
         elseif name == "L_Hand" then a.y = a.y - flap
         elseif name == "R_Forearm" then a.r = a.r + cvPalm:GetFloat()
@@ -542,8 +543,6 @@ local function Dance(ent, beat, now)
         elseif name == "Spine" then a.y = a.y + wave * SWAY
         elseif name == "Spine2" then a.y = a.y + wave * SWAY * 0.5
         elseif name == "Head" then a.y = a.y - wave * SWAY * 0.8
-        elseif name == "R_Calf" then a.y = a.y + bounce * KNEE * (wave > 0 and 1 or 0.3)
-        elseif name == "L_Calf" then a.y = a.y + bounce * KNEE * (wave < 0 and 1 or 0.3)
         end
         -- spinning up into the sky
         local t0 = ent.GetNW2Float and ent:GetNW2Float("lc_spin_t0", 0) or 0
@@ -888,29 +887,26 @@ hook.Add("Think", "LivingCityHeadbang", function()
                 Set("Spine2", bang * (down * 0.7))
                 Set("Spine1", bang * (down * 0.5))
                 Set("Pelvis", Angle(0, 0, 0))
-                -- (the free arm: forward and up over his head, the fist pumping on the beat; on the
-                -- arms pitch swings forward and back, yaw raises out to the side, roll twists)
-                Set("L_UpperArm", Angle(110 + 35 * pump, -15, 0))
-                Set("L_Forearm", Angle(25 * pump, 0, 0))
-                Set("R_Calf", Angle(0, 12 * pump, 0))
-                Set("L_Calf", Angle(0, 12 * pump, 0))
+                -- (the free arm: up over his head, the fist pumping on the beat; on the arms yaw
+                -- raises them forward and up, pitch takes them out to the side, the elbow bends on yaw)
+                Set("L_UpperArm", Angle(15, -150 - 20 * pump, 0))
+                Set("L_Forearm", Angle(0, -25 * pump, 0))
             else
                 -- the rest: dancing, the hips going, the free arm waving over his head
                 -- (yaw is side to side on these bones, roll front to back)
                 Set("Head", Angle(8 * pump, 10 * wave, 0))
                 Set("Neck1", Angle(0, 0, 0))
                 Set("Spine1", Angle(0, 0, 0))
-                Set("Spine2", Angle(0, -10 * wave, 0))
-                Set("Pelvis", Angle(0, 14 * wave, 0))
-                Set("L_UpperArm", Angle(140, -20 + 25 * wave, 0))
-                Set("L_Forearm", Angle(15, 0, 0))
-                Set("R_Calf", Angle(0, 20 * pump * (wave > 0 and 1 or 0.3), 0))
-                Set("L_Calf", Angle(0, 20 * pump * (wave < 0 and 1 or 0.3), 0))
+                Set("Spine", Angle(0, 8 * wave, 0))
+                Set("Spine2", Angle(0, 6 * wave, 0))
+                Set("Pelvis", Angle(0, 0, 0))
+                Set("L_UpperArm", Angle(25 + 20 * wave, -150, 0))
+                Set("L_Forearm", Angle(0, -20, 0))
             end
-            -- the mic up at his mouth, all the way through: the upper arm forward and down,
-            -- the elbow bent right up (the elbow bends on pitch; yaw folded it sideways, a chicken wing)
-            Set("R_UpperArm", Angle(-40, -10, 0))
-            Set("R_Forearm", Angle(-125, 0, 0))
+            -- the mic up at his mouth, all the way through: the upper arm forward and down, a
+            -- little out, and the elbow bent right up
+            Set("R_UpperArm", Angle(-10, -40, 0))
+            Set("R_Forearm", Angle(0, -130, 0))
         elseif rocked[ply] then
             rocked[ply] = nil
             if IsValid(ply) then
@@ -919,7 +915,7 @@ hook.Add("Think", "LivingCityHeadbang", function()
                 if IsValid(ply.lcMic) then ply.lcMic:Remove() ply.lcMic = nil end
             end
             if IsValid(ply) and ply.ManipulateBoneAngles then
-                for _, name in ipairs({ "Head", "Neck1", "Spine1", "Spine2", "Pelvis", "R_UpperArm", "R_Forearm", "L_UpperArm", "L_Forearm", "R_Calf", "L_Calf" }) do
+                for _, name in ipairs({ "Head", "Neck1", "Spine", "Spine1", "Spine2", "Pelvis", "R_UpperArm", "R_Forearm", "L_UpperArm", "L_Forearm", "R_Calf", "L_Calf" }) do
                     local id = Bone(ply, name)
                     if id then ply:ManipulateBoneAngles(id, Angle(0, 0, 0)) end
                 end
