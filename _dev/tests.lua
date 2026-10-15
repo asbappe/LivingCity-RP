@@ -11243,7 +11243,7 @@ E = LC.EndingSession()
 local function runToB(sec) _run(math.max(0.1, E.phaseT + sec - CurTime())) end
 ok(IsValid(E.bus) and E.bus:GetPos().z < 60 and not a.lcEndRide, "first it drives about the streets (the song's intro)")
 runToB(2.2)
-ok(a.lcEndRide and b.lcEndRide and a.frozen and a:GetNW2Bool("lc_seated", false), "on the drop, everyone's in it, seated")
+ok(a.lcEndRide and b.lcEndRide and a.movetype == MOVETYPE_NONE and not a.frozen and a:GetNW2Bool("lc_seated", false), "on the drop, everyone's in it, seated (held in, not frozen: free to look about)")
 runToB(4)
 ok(E.bus:GetPos().z > 150 and a:GetPos():Distance(E.bus:GetPos()) < 400, "and it takes off, everyone in their seats", math.floor(E.bus:GetPos().z))
 ok(#E.rings >= 1, "with a ring to fly through")
@@ -11287,7 +11287,7 @@ E = LC.EndingSession()
 local function runToP(sec) _run(math.max(0.1, E.phaseT + sec - CurTime())) end
 ok(IsValid(E.plane) and not a.lcEndRide and E.client.dance == "numa" and #E.client.captions == 4 and E.client.webcam, "the plane circles low; the sing-along and the webcam are ready")
 runToP(1.5)
-ok(a.lcEndRide and b.lcEndRide and a.lcEndRide.v == E.plane and b.lcEndRide.v == E.plane and a.frozen and a:GetNW2Bool("lc_dancing", false), "at the hook, everyone's up on the wings, dancing")
+ok(a.lcEndRide and b.lcEndRide and a.lcEndRide.v == E.plane and b.lcEndRide.v == E.plane and a.movetype == MOVETYPE_NONE and not a.frozen and a:GetNW2Bool("lc_dancing", false), "at the hook, everyone's up on the wings, dancing (and can look about)")
 ok(a:GetPos():Distance(E.plane:GetPos()) < 500 and a:GetPos() ~= b:GetPos(), "each in their own spot along the wings")
 runToP(3.5)
 ok(E.client.section == "chorus" and E.plane:GetPos().z > E.lz.z + 500, "the choruses swoop, high over the city")
@@ -11320,8 +11320,9 @@ local crowdOK = #E.crowd >= 1
 for _, c in ipairs(E.crowd) do if c.lcHang or not c:GetNW2Bool("lc_dancing", false) then crowdOK = false end end
 ok(crowdOK, "a crowd gathers round and cheers, and none of them is strung up", #E.crowd)
 ok(not who.SetMaterial or who:GetMaterial() == "models/debug/debugwhite", "the hanged are painted white")
-ok(IsValid(who.lcCone) and who.lcCone:GetParent() == who and who.lcCone:GetModel() == "models/props_junk/trafficcone001a.mdl",
-    "with a white cone hat over the head, riding along with them (everyone sees it)")
+local coneFor
+for _, h in ipairs(E.client.hangs) do if h.e == who:EntIndex() then coneFor = true end end
+ok(coneFor, "with a white cone hat over the head (each screen draws it on the hanged, from the list it's sent)")
 ok(not who.frozen and who:GetMoveType() == MOVETYPE_NONE and #E.client.hangs >= 1 and E.client.hangs[1].a, "the rope goes up to something, and they can't get down (but they can look about)",
     tostring(who.frozen) .. " " .. tostring(who:GetMoveType()) .. " " .. tostring(#E.client.hangs))
 runToS(4.5)
@@ -11382,7 +11383,11 @@ ok(nearNow >= 5, "skeletons in plain sight round everyone from the very start", 
 ok(E.client and E.client.party and E.client.lights and E.client.ambient and LC.LightStyle == "a" and #E.client.palette == 2,
     "the map goes dark, and purple and orange light pulses everywhere")
 _run(2)
-ok(#E.skels > 0, "skeletons appear, dancing their way in from all over", #E.skels)
+ok(#E.skels > 0, "skeletons appear all round", #E.skels)
+local allDancing = true
+for _, k in ipairs(E.skels) do if IsValid(k) and not k:GetNW2Bool("lc_dancing", false) then allDancing = false end end
+ok(allDancing, "and through the opening they just dance, waiting for the drop")
+ok(#(E.folk or {}) >= 1 and E.folk[1]:GetPos():Distance(E.lz) < 500, "the city's people are there with everyone too", #(E.folk or {}))
 local function runToM(sec) _run(math.max(0.1, E.phaseT + sec - CurTime())) end
 runToM(3.5)
 ok(E.section == "dance" and a.frozen and a:GetNW2Bool("lc_dancing", false) and mcop:GetNW2Bool("lc_dancing", false) and E.client.lights and E.client.strobe,
@@ -11403,6 +11408,15 @@ ok(a.lcEndTaken and a:GetModel() == "models/player/skeleton.mdl" and a:GetNW2Boo
 local nk = #E.skels
 ok(LC.SkelHurt(E.skels[#E.skels], _dmg(b, 500)), "and in a fight, they can be put down")
 ok((E.shots or 0) > 0, "the Combine's units shoot at them in a fight", E.shots or 0)
+local pistols = 0
+for _, w in ipairs(mcop.weps or {}) do if w == "weapon_pistol" then pistols = pistols + 1 end end
+ok(pistols <= 1, "(a unit with a stunstick is given one pistol, not one a shot: that ran the server out of entities)", pistols)
+local edWas = ents.GetEdictCount
+ents.GetEdictCount = function() return 8100 end
+local before = #E.skels
+_run(0.5)
+ents.GetEdictCount = edWas
+ok(#E.skels <= before, "and nothing more is spawned once the server's near its limit (lc_ending_edict_limit)", before .. " -> " .. #E.skels)
 _setcvar("lc_ending_marrow_max", 80)
 local few, many = LC.MarrowCount(1), LC.MarrowCount((E.holdUntil - E.phaseT) * 0.62)
 _setcvar("lc_ending_marrow_max", 8)
@@ -11432,7 +11446,7 @@ ok(#E.bombs >= 5 and #E.client.bombs >= 5, "somebody set up us the bomb: all ove
 runToX(2.5)
 ok(E.client.cats, "main screen turn on: CATS in the sky")
 runToX(3.5)
-ok(#E.zigs >= 3 and a.lcEndRide and b.lcEndRide and a.frozen and IsValid(a:GetNW2Entity("lc_riding")), "take off every ZIG: everyone aboard the fleet")
+ok(#E.zigs >= 3 and a.lcEndRide and b.lcEndRide and not a.frozen and a.movetype == MOVETYPE_NONE and IsValid(a:GetNW2Entity("lc_riding")), "take off every ZIG: everyone aboard the fleet (free to look about)")
 runToX(4.8)
 ok(E.zigs[1]:GetPos().z > E.lz.z + 400 and a:GetPos():Distance(a.lcEndRide.v:GetPos()) < 400, "the fleet flies, everyone on top of it", math.floor(E.zigs[1]:GetPos().z - E.lz.z))
 ok(LC.Engrish("this is your base") == "this are belong you base !!" and LC.Engrish("What happened?") == "What happen ??", "and everyone's chat comes out in Engrish")
@@ -11559,6 +11573,7 @@ LC.GiveItem(grig, "master_chip", 1)
 _setcvar("lc_ending_flood_sections", "2:heavy,5:climax,8:outro,10:last,11:end")
 _setcvar("lc_ending_flood_rise", 300)
 _setcvar("lc_ending_flood_drown", 2)
+_setcvar("lc_ending_flood_attack_from", 4)
 LC.InvAction(grig, "eatchip", "master_chip")
 E = LC.EndingSession()
 ok(E and E.id == "water" and not LC.HasItem(grig, "master_chip"), "he eats the master data core (Eat it, in his pockets): the flood")
@@ -11601,7 +11616,9 @@ ok(#E.icthys >= 1, "ichthyosaurs in the water", #E.icthys)
 local fish = E.icthys[1]
 fish:SetPos(b:GetPos() + Vector(40, 0, 0))
 _run(0.3)
-ok(b:Health() < 100 or b.lcEndTaken, "they go for anyone in the water", b:Health())
+ok(b:Health() < 100 or b.lcEndTaken, "they go for anyone in the water (once they're hunting: lc_ending_flood_attack_from)", b:Health())
+ok(b.lcEndTaken or b:Health() > 80, "(a bite hurts, but it's no instant death)", b:Health())
+ok(#(E.boats or {}) >= 1 and E.client.spots and E.client.spotEnt, "rowboats on the water round the stage, and stage lights on it", #(E.boats or {}))
 -- Father Grigori: untouchable
 local grigHP = grig:Health()
 fish:SetPos(grig:GetPos())
@@ -11630,7 +11647,8 @@ ok(not IsValid(npcGrig) or not npcGrig:GetNW2Bool("lc_rocking", false), "(cancel
 player.GetAll = realGetAll
 _setcvar("lc_ending_flood_sections", "15:heavy,79:calm,102:heavy,134:calm,169:heavy,183:climax,212:calm,235:heavy,249:climax,264:outro,276:last,285:end")
 _setcvar("lc_ending_flood_rise", 900)
-_setcvar("lc_ending_flood_drown", 10)
+_setcvar("lc_ending_flood_drown", 15)
+_setcvar("lc_ending_flood_attack_from", 140)
 LC.EndingReload = realReload
 _setcvar("lc_ending_minge_swell", 60)
 _setcvar("lc_ending_minge_end", 120)

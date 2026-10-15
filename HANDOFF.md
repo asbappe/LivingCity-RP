@@ -69,7 +69,7 @@ Things worth knowing:
 - **Placement uses `Ground()` and `RingSpot`,** which fall back to `LC.NavNodesNear`, because the map's landing zone is up on a roof.
 - **Spectators (the dead):** `EndKey` and `LC.EndingPollKeys()` poll keys, because KeyPress doesn't always fire for spectators. Jump toggles free flight (OBS_MODE_ROAM).
 - **ClientsideModels don't animate by themselves** (the G-Man), so their cycle is driven by hand.
-- **Dances are bone manipulation on ValveBiped:** for Pelvis, Spine and Head, yaw (y) is side to side and roll (r) is front to back. Thigh y is forward and back.
+- **Dances are bone manipulation on ValveBiped:** see "Bone axes" below (roll on the head is a twist, not a nod).
 - **An ending in progress:** `LC.EndingSession()` returns its state (nil when none). It now gates:
   - the city events
   - the announcer and voice clips
@@ -81,7 +81,8 @@ Things worth knowing:
 
 ## Waiting on the owner's playtest (unverified in game)
 
-- **Bloom:** do the feet stay planted with only the hips swaying? If they splay, `lc_bloom_leg_sign -1` (a client setting) flips the thigh counter-turn; then make the default match. Do the raised hands look right (higher for Combine models)?
+- **Bloom:** the sway is now a curve up the spine (the pelvis isn't turned: that lifted the feet); palms forward by a forearm twist (`lc_bloom_palm`, -90 if backwards).
+- **Bone axes (worked out from the last playtest):** on the arms, yaw raises an arm out to the side (minus is up), pitch swings it forward and back (mirrored: right arm forward is minus, left plus), roll twists it; the forearm bends at the elbow on pitch (yaw folds it sideways: the "chicken wing"). On the head and spine, yaw tilts side to side, roll twists, so a nod is pitch. Thighs: yaw is forward and back.
 - Dances' hand and leg axes in general (Marrow kicks, club and rave kicks).
 - **Standup:** can the hanged look around? Do the heads stay put? Are the white cones visible on everyone? Do the hanged go limp 3 seconds before the end?
 - **G-Man:** the tiefidget sequence name, the jaw moving while he talks, and whether he only appears for the one player he's talking to.

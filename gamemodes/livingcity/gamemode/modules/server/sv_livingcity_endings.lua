@@ -338,12 +338,21 @@ function LC.EndingSky(centre)
     return { z = bestZ, top = top, r = bestR, centre = Vector(best.x, best.y, bestZ), roam = math.max(3000, cvRadius:GetFloat() * 2), from = Vector(centre.x, centre.y, z) }
 end
 
+-- Room for another entity? The engine has 8192 in all and the server falls over
+-- when they run out, so an ending never spawns anything past lc_ending_edict_limit.
+local cvEdicts = CreateConVar("lc_ending_edict_limit", "7000", FLAGS, "Endings spawn nothing more once the server has this many entities (the engine's limit is 8192)")
+local function Room()
+    return not ents.GetEdictCount or ents.GetEdictCount() < cvEdicts:GetInt()
+end
+LC.EndingRoom = Room
+
 local function FirstModel(list)
     for _, m in ipairs(list) do if not util.IsValidModel or util.IsValidModel(m) then return m end end
     return list[#list]
 end
 
 local function Prop(model, pos, scale)
+    if not Room() then return nil end
     local e = ents.Create("prop_dynamic")
     if not IsValid(e) then return nil end
     e:SetModel(model)
@@ -355,10 +364,16 @@ local function Prop(model, pos, scale)
 end
 
 -- Riders: held in place on a moving thing, every tick.
+-- (held, not frozen: a frozen player can't even look about, and the camera behind
+-- whatever they're riding turns with their mouse)
+local function HoldOn(p)
+    if p.lcEndFrozen or (p.IsFrozen and p:IsFrozen()) then p:Freeze(false) end
+    p.lcEndFrozen = nil
+    p:SetMoveType(MOVETYPE_NONE)
+end
 local function Board(vehicle, riders, offsets)
     for i, p in ipairs(riders) do
-        p:Freeze(true)
-        p:SetMoveType(MOVETYPE_NONE)
+        HoldOn(p)
         p.lcEndRide = { v = vehicle, off = offsets[i] or Vector(0, 0, 40) }
     end
 end
@@ -422,7 +437,7 @@ local function GatherCombine(centre, r)
     for i, npc in ipairs(list) do
         local a = (i / math.max(1, #list)) * math.pi * 2 + 0.3
         local spot = centre + Vector(math.cos(a) * r, math.sin(a) * r, 0)
-        npc:SetPos((Ground(spot) or centre) + Vector(0, 0, 4))
+        npc:SetPos((Ground(spot) or centre) + Vector(0, 0, 1)) -- (on the ground: time's stopped, so nothing would drop them onto it)
         npc:SetAngles(Angle(0, math.deg(a), 0))
     end
     return list
@@ -472,6 +487,7 @@ local function MingeModel()
 end
 
 local function SpawnMinge(pos, angle)
+    if not Room() then return nil end
     local m = ents.Create("lc_minge")
     if not IsValid(m) then return nil end
     m.lcModel = MingeModel()
@@ -485,7 +501,9 @@ local function SpawnMinge(pos, angle)
     return m
 end
 
+local cvBodies = CreateConVar("lc_ending_bodies", "120", FLAGS, "How many bodies an ending leaves lying about before the oldest go (each is a ragdoll: the server's limits apply)")
 local function Body(model, pos, yaw, fling)
+    if not Room() then return nil end
     local r = ents.Create("prop_ragdoll")
     if not IsValid(r) then return nil end
     r:SetModel(model or "models/player/kleiner.mdl")
@@ -501,7 +519,7 @@ local function Body(model, pos, yaw, fling)
     E.ents[#E.ents + 1] = r
     E.bodies = E.bodies or {}
     E.bodies[#E.bodies + 1] = r
-    if #E.bodies > 40 then local old = table.remove(E.bodies, 1) if IsValid(old) then old:Remove() end end
+    if #E.bodies > cvBodies:GetInt() then local old = table.remove(E.bodies, 1) if IsValid(old) then old:Remove() end end
     return r
 end
 
@@ -604,7 +622,17 @@ function LC.MingeStep(m, dt)
         return
     end
     if not s.goal then return end
-    local to = s.goal - pos
+    -- (a way round a wall, over the map's nodegraph, once one's in the way: waypoint by waypoint)
+    local aim = s.goal
+    if s.path then
+        if not s.pathGoal or s.pathGoal:DistToSqr(s.goal) > 200 * 200 then s.path = nil
+        else
+            local wp = s.path[s.pathI]
+            while wp and (wp - pos):Length2D() < 30 do s.pathI = s.pathI + 1 wp = s.path[s.pathI] end
+            if wp then aim = wp else s.path = nil end
+        end
+    end
+    local to = aim - pos
     to.z = 0
     local dist = to:Length()
     if dist < 4 then return end
@@ -620,7 +648,15 @@ function LC.MingeStep(m, dt)
                 local alt = pos + a:Forward() * step
                 if Clear(pos, alt + a:Forward() * 16) then nextPos, found = alt, true break end
             end
-            if not found then s.stuck = (s.stuck or 0) + (dt or 0.1) return end
+            if not found then
+                s.stuck = (s.stuck or 0) + (dt or 0.1)
+                if s.stuck > 0.6 and not s.path and LC.NavRoute and now >= (s.routeAt or 0) then
+                    s.routeAt = now + 2
+                    local route = LC.NavRoute(pos, s.goal)
+                    if type(route) == "table" then s.path, s.pathI, s.pathGoal = route, 1, s.goal end
+                end
+                return
+            end
         end
         s.stuck = 0
         local g = Ground(nextPos)
@@ -695,6 +731,7 @@ end
 LC.EndingStandIdle = StandIdle
 
 local function SpawnFolk(pos, i)
+    if not Room() then return nil end
     local c = ents.Create("npc_citizen")
     if not IsValid(c) then return nil end
     if c.SetKeyValue then c:SetKeyValue("citizentype", "4") end -- (the model it's given, not one of its own)
@@ -796,8 +833,10 @@ local function Shoot(n, now, list, hurt)
     if not best then return false end
     local wep = n.GetActiveWeapon and n:GetActiveWeapon()
     local cls = IsValid(wep) and wep:GetClass() or ""
-    if not GUNS[cls] and n.Give then -- (a stunstick won't do: a pistol, then)
+    if not GUNS[cls] and n.Give and not n.lcGivenGun then -- (a stunstick won't do: a pistol, then; once, never one a shot)
+        n.lcGivenGun = true
         n:Give("weapon_pistol")
+        if n.SelectWeapon then n:SelectWeapon("weapon_pistol") end
         wep = n.GetActiveWeapon and n:GetActiveWeapon()
         cls = IsValid(wep) and wep:GetClass() or "weapon_pistol"
     end
@@ -927,7 +966,8 @@ TICK.harpies = function(now)
     if #E.minges < want and now >= (E.nextSpawn or 0) then
         E.nextSpawn = now + (mode == "lurk" and 0.4 or 0.1)
         local g, a = RingSpot(centre, mode == "lurk" and far or 900, mode == "lurk" and k < 0.6)
-        if g then SpawnMinge(g, a) end
+        -- (only somewhere it can get to everyone from on foot: never shut away behind a wall)
+        if g and (not LC.NavReachable or LC.NavReachable(g, centre)) then SpawnMinge(g, a) end
     end
 
     for i, m in ipairs(E.minges) do
@@ -944,6 +984,11 @@ TICK.harpies = function(now)
                 local g, a = RingSpot(centre, far, k < 0.6, s.angle)
                 if g then s.goal, s.angle, s.ringD = g, a, far end
                 s.rest = now + math.Rand(2, 6)
+            end
+            if (s.stuck or 0) > 3 then
+                -- (stuck against a wall with no way round: somewhere else on the edge of the dark)
+                local g2 = RingSpot(centre, far, false, s.angle)
+                if g2 then m:SetPos(g2) s.stuck, s.path = 0, nil end
             end
             if near and nd < far * 0.5 then
                 -- someone walks up to one: it backs away into the dark
@@ -979,9 +1024,9 @@ TICK.harpies = function(now)
                 end
             end
             -- stuck behind something (before the walls stop mattering): around the other way, out of sight
-            if not noclip and (s.stuck or 0) > 1.5 and IsValid(s.target) then
-                local g = RingSpot(tp, 350, true)
-                if g then m:SetPos(g) s.stuck = 0 end
+            if not noclip and (s.stuck or 0) > 2.5 and IsValid(s.target) then
+                local g = RingSpot(tp, 350, false)
+                if g and Clear(g, tp) then m:SetPos(g) s.stuck, s.path = 0, nil end
             end
         end
     end
@@ -1070,7 +1115,7 @@ SETUP.bloom = function()
         if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
         local a = (i / math.max(1, #ps)) * math.pi * 2
         local r = 70 + 14 * #ps
-        p:SetPos((Ground(E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)) or E.lz) + Vector(0, 0, 4))
+        p:SetPos((Ground(E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)) or E.lz) + Vector(0, 0, 1)) -- (frozen, nobody drops: on the floor, not over it)
     end
     GatherCombine(E.lz, 150 + 14 * #ps)
     -- ...and dances
@@ -1103,6 +1148,7 @@ SETUP.bloom = function()
 end
 
 -- One dancer spins up into the sky, and bursts.
+local PALETTE_BLOOM = { { 255, 110, 200 }, { 220, 90, 255 }, { 100, 190, 255 }, { 110, 255, 190 }, { 255, 235, 110 } }
 local function Launch(e, now)
     if not IsValid(e) or e.lcBloomUp then return end
     e.lcBloomUp = { t0 = now, from = e:GetPos() }
@@ -1131,18 +1177,27 @@ TICK.bloom = function(now)
         local u = IsValid(e) and e.lcBloomUp
         if u then
             local t = now - u.t0
-            e:SetPos(u.from + Vector(0, 0, 40 * t + 160 * t * t))
+            e:SetPos(u.from + Vector(0, 0, 40 * t + 70 * t * t)) -- (about 500 up when it bursts: low enough for everyone to see it)
             if t >= 2.5 then
+                -- the burst: a flash of energy and a shower of confetti in every colour, big enough to see from the ground
                 if util.Effect and EffectData then
+                    local at = e:GetPos() + Vector(0, 0, 40)
                     local fx = EffectData()
-                    fx:SetOrigin(e:GetPos() + Vector(0, 0, 40))
-                    if fx.SetStart then fx:SetStart(Vector(255, 120, 200)) end
-                    util.Effect("balloon_pop", fx)
+                    fx:SetOrigin(at)
+                    util.Effect("cball_explode", fx)
+                    for i = 1, 14 do
+                        local c = PALETTE_BLOOM[i % #PALETTE_BLOOM + 1]
+                        local cf = EffectData()
+                        cf:SetOrigin(at + VectorRand() * 70)
+                        if cf.SetStart then cf:SetStart(Vector(c[1], c[2], c[3])) end
+                        util.Effect("balloon_pop", cf)
+                    end
                 end
-                e:EmitSound("garrysmod/balloon_pop_cute.wav", 90)
+                e:EmitSound("garrysmod/balloon_pop_cute.wav", 100)
+                if sound and sound.Play then sound.Play("weapons/flaregun/burn.wav", e:GetPos(), 95, 140, 0.7) end
                 if e:IsPlayer() then
                     if e.SetNoDraw then e:SetNoDraw(true) end
-                    Spectator(e, "You spin up into the sky and burst into sparkles. Watch the rest go.", Color(255, 150, 210, 220))
+                    Spectator(e, "You spin up into the sky and burst into sparkles. Watch the rest go.", Color(255, 150, 210, 70))
                 else
                     e:Remove()
                 end
@@ -1166,6 +1221,7 @@ local cvMarrowSections = CreateConVar("lc_ending_marrow_sections", "45:dance,75:
 local cvMarrowMax   = CreateConVar("lc_ending_marrow_max", "80", FLAGS, "Marrow: how many skeletons at the most (their numbers build to it by about two thirds of the way through the song)")
 local cvMarrowBPM   = CreateConVar("lc_ending_marrow_bpm", "128", FLAGS, "Marrow: the song's beats per minute (the dancing and the lights keep to it)")
 local cvMarrowModel = CreateConVar("lc_ending_marrow_model", "models/player/skeleton.mdl", FLAGS, "Marrow: the skeletons' model")
+local cvMarrowCrowd = CreateConVar("lc_ending_marrow_crowd", "10", FLAGS, "Marrow: how many of the city's people are at the landing zone with everyone (its own NPCs first, topped up with citizens)")
 local SPOOKY = { { 170, 60, 255 }, { 255, 130, 20 } } -- (purple and orange)
 local DANCING = { dance = true, rave = true, outro = true }
 
@@ -1183,6 +1239,7 @@ local function SectionAt(t)
 end
 
 local function SpawnSkel(pos)
+    if not Room() then return nil end
     local k = ents.Create("lc_skel")
     if not IsValid(k) then return nil end
     k.lcModel = cvMarrowModel:GetString()
@@ -1321,6 +1378,7 @@ local function ApplySection(kind, now)
         end
     end
     for _, n in ipairs(CombineNPCs()) do n:SetNW2Bool("lc_dancing", dancing) end
+    for _, c in ipairs(E.folk or {}) do if IsValid(c) then c:SetNW2Bool("lc_dancing", dancing) end end
     for _, k in ipairs(E.skels) do
         if IsValid(k) then
             k:SetNW2Bool("lc_dancing", dancing)
@@ -1335,6 +1393,7 @@ local function ApplySection(kind, now)
     if kind == "outro" then
         for _, p in ipairs(Living()) do Convert(p, "The skeletons claim everyone in the end. You're one of them now. Dance it out.") end
         for _, n in ipairs(CombineNPCs()) do Bones(n) end
+        for _, c in ipairs(E.folk or {}) do Bones(c) end
     end
     Send()
 end
@@ -1362,12 +1421,28 @@ SETUP.marrow = function()
     end
     E.combine = GatherCombine(E.lz, 100 + 12 * #ps)
     for _, n in ipairs(E.combine) do n.lcRing = true end
-    -- the first of them already there, in plain sight round everyone, dancing their way in
+    -- the city's people with everyone, between the players and the Combine (never the Resistance)
+    E.folk = {}
+    local folk = CityFolk()
+    for i = #folk + 1, cvMarrowCrowd:GetInt() do folk[i] = i end
+    while #folk > cvMarrowCrowd:GetInt() do table.remove(folk) end
+    local rf = 80 + 12 * #ps
+    for i, c in ipairs(folk) do
+        local a = (i / math.max(1, #folk)) * math.pi * 2 + 0.15
+        local spot = (Ground(E.lz + Vector(math.cos(a) * rf, math.sin(a) * rf, 0)) or E.lz)
+        if type(c) == "number" then c = SpawnFolk(spot, c) elseif IsValid(c) then c:SetPos(spot) end
+        if IsValid(c) then
+            c:SetAngles(Angle(0, math.deg(a), 0))
+            c.lcRing = true
+            E.folk[#E.folk + 1] = c
+        end
+    end
+    -- the first of them already there, in plain sight round everyone, dancing
     for _ = 1, 10 do
         local g = RingSpot(E.lz, math.Rand(350, 650), false)
         if g then
             local k = SpawnSkel(g)
-            if k then k.lcSkel.untilT = CurTime() + math.Rand(0.5, 3) end
+            if k then k:SetNW2Bool("lc_dancing", true) end
         end
     end
     -- the map goes dark (every lamp out), and the coloured light pulses everywhere
@@ -1397,13 +1472,13 @@ TICK.marrow = function(now)
         for _ = 1, math.min(3, want - #E.skels) do
             local g
             local near = E.section == "attack" and #living > 0 and living[math.random(#living)]:GetPos() or E.lz
-            for _, d in ipairs(E.section == "intro" and { math.Rand(700, 1400), 550, 380 } or { 900, 650, 450 }) do
+            for _, d in ipairs(E.section == "intro" and { math.Rand(350, 900), 550, 380 } or { 900, 650, 450 }) do
                 g = RingSpot(near, d, false)
                 if g then break end
             end
             if g then
                 local k = SpawnSkel(g)
-                if k then k:SetNW2Bool("lc_dancing", DANCING[E.section] or false) end
+                if k then k:SetNW2Bool("lc_dancing", E.section == "intro" or DANCING[E.section] or false) end
             end
         end
     end
@@ -1411,6 +1486,7 @@ TICK.marrow = function(now)
     local targets = {}
     for _, p in ipairs(Living()) do targets[#targets + 1] = p end
     for _, n in ipairs(E.combine or {}) do if IsValid(n) then targets[#targets + 1] = n end end
+    for _, c in ipairs(E.folk or {}) do if IsValid(c) then targets[#targets + 1] = c end end
     -- and in a fight, the Combine shoot back (talking it through on their radios)
     if E.section == "attack" then
         for _, n in ipairs(E.combine or {}) do
@@ -1424,19 +1500,9 @@ TICK.marrow = function(now)
     for _, k in ipairs(E.skels) do
         local s = k.lcSkel
         if E.section == "intro" then
-            -- dancing their way in: walk a while, stop and dance a while
-            if now >= s.untilT then
-                if s.phase == "walk" then
-                    s.phase, s.untilT, s.goal = "dance", now + math.Rand(1.5, 3), nil
-                    k:SetNW2Bool("lc_dancing", true)
-                else
-                    s.phase, s.untilT = "walk", now + math.Rand(3, 6)
-                    k:SetNW2Bool("lc_dancing", false)
-                    local a = math.Rand(0, math.pi * 2)
-                    s.goal = E.lz + Vector(math.cos(a), math.sin(a), 0) * math.Rand(220, 400)
-                    s.speed = 160
-                end
-            end
+            -- the opening: they just dance, all round everyone, waiting for the drop
+            s.goal = nil
+            if not k:GetNW2Bool("lc_dancing", false) then k:SetNW2Bool("lc_dancing", true) end
         elseif E.section == "attack" then
             -- at whoever's nearest, and the claws
             local best, bd = nil, nil
@@ -1532,9 +1598,7 @@ local function BusBoard(e)
     E.riders[#E.riders + 1] = e
     if e:IsPlayer() then
         if e.InVehicle and e:InVehicle() and e.ExitVehicle then e:ExitVehicle() end
-        e.lcEndFrozen = true
-        e:Freeze(true)
-        e:SetMoveType(MOVETYPE_NONE)
+        HoldOn(e)
     end
     e:SetNW2Bool("lc_seated", true)
     e:SetNW2Bool("lc_dancing", true)
@@ -1546,9 +1610,31 @@ local function GroundSpot(near)
     return Ground(near + Vector(math.cos(a) * d, math.sin(a) * d, 0)) or near
 end
 
--- Somewhere to fly to: anywhere in the map's open air, well away from where
--- the bus is, that it can reach in a straight line (so it roams about,
--- aimlessly, and never through a building).
+-- How high the sky is over a spot: up through any roof or floor in the way, to the
+-- skybox itself (the bus flies through buildings, never up into the sky).
+local function SkyZ(pos)
+    -- (measured up from about the landing zone's level: from up in the sky itself, or inside
+    -- a wall, there'd be no telling)
+    local p = Vector(pos.x, pos.y, math.min(pos.z, (E and E.centre and E.centre.z or pos.z) + 64))
+    for _ = 1, 24 do
+        local tr = util.TraceLine({ start = p, endpos = p + Vector(0, 0, 16000), mask = MASK_SOLID_BRUSHONLY })
+        if tr.StartSolid then p = p + Vector(0, 0, 64)
+        elseif not tr.Hit then return p.z + 16000
+        elseif tr.HitSky then return tr.HitPos.z
+        else p = tr.HitPos + Vector(0, 0, 8) end
+        if util.IsInWorld and not util.IsInWorld(p) then return p.z end
+    end
+    return p.z
+end
+-- (the bus sits on its wheels, not half in the road: its model's middle is its origin)
+local function BusLift(bus)
+    local lo = IsValid(bus) and bus.OBBMins and bus:OBBMins().z or 0
+    return math.max(0, -lo) + 2
+end
+
+-- Somewhere to fly to: anywhere in the map's air, well away from where the bus
+-- is, under the sky (so it roams about aimlessly, straight through whatever's
+-- in the way).
 local function SkySpot()
     E.flight = E.flight or LC.EndingSky(E.centre)
     local sky = E.flight
@@ -1559,9 +1645,9 @@ local function SkySpot()
         local a, d = math.Rand(0, math.pi * 2), math.Rand(600, sky.roam)
         local p = Vector(base.x + math.cos(a) * d, base.y + math.sin(a) * d, sky.z - math.Rand(0, 450))
         -- (well under the sky there, which may come lower than over the landing zone)
-        local ceil = CeilingAt(p - Vector(0, 0, 600))
-        if ceil - 260 < p.z then p.z = ceil - 260 end
-        if Open(p) and (not from or OpenPath(from, p)) then
+        local top = SkyZ(p - Vector(0, 0, 600))
+        if top - 260 < p.z then p.z = top - 260 end
+        if Open(p) then
             if d >= 1200 then return p end
             if not bestD or d > bestD then best, bestD = p, d end
         end
@@ -1601,6 +1687,7 @@ SETUP.bus = function()
     local near = (Living()[1] and Living()[1]:GetPos()) or E.centre
     local bus = Prop(FirstModel(BUS), GroundSpot(near))
     if not bus then return end
+    bus:SetPos(bus:GetPos() + Vector(0, 0, BusLift(bus)))
     if bus.SetSolid then bus:SetSolid(SOLID_NONE) end
     E.bus = bus
     E.busDir = Vector(1, 0, 0)
@@ -1680,28 +1767,21 @@ TICK.bus = function(now)
         local step = math.min(dist, speed * 0.1)
         local nextPos = pos + E.busDir * step
         if flying then
-            -- never up into the sky (or a roof): keep well under whatever's overhead; if the
-            -- way ahead is blocked, turn straight for the target, or find another; and if it
-            -- ever is up in the sky, straight down out of it
-            local function UnderSky(p) local c = CeilingAt(p) if c - p.z < 220 then p.z = c - 220 end return p end
-            if CeilingAt(pos) <= pos.z + 1 then
-                nextPos = pos - Vector(0, 0, math.max(step, 120))
-            else
-                nextPos = UnderSky(nextPos)
-                if not OpenPath(pos, nextPos) or not Open(nextPos) then
-                    E.busDir = want
-                    nextPos = UnderSky(pos + want * step)
-                    if not OpenPath(pos, nextPos) then
-                        E.goal = SkySpot()
-                        nextPos = UnderSky(Vector(pos.x, pos.y, pos.z)) -- (stay put, but under the sky)
-                    end
-                end
+            -- straight through walls and buildings, but never up into the sky (you'd see
+            -- nothing), down through the ground, or off the edge of the map
+            local top = SkyZ(nextPos)
+            if nextPos.z > top - 220 then nextPos.z = top - 220 end
+            local fl = util.TraceLine({ start = nextPos, endpos = nextPos - Vector(0, 0, 4000), mask = MASK_SOLID_BRUSHONLY })
+            if not fl.StartSolid and fl.Hit and nextPos.z < fl.HitPos.z + 80 then nextPos.z = fl.HitPos.z + 80 end
+            if util.IsInWorld and not util.IsInWorld(nextPos) then
+                E.goal = SkySpot()
+                nextPos = pos
             end
         end
         if not flying then
             local g = Ground(nextPos)
-            -- (coming down to the road: a gentle descent rather than a drop)
-            nextPos.z = g and (pos.z + (g.z - pos.z) * 0.3) or pos.z
+            -- (coming down to the road: a gentle descent rather than a drop; on its wheels)
+            nextPos.z = g and (pos.z + (g.z + BusLift(bus) - pos.z) * 0.3) or pos.z
         end
         bus:SetPos(nextPos)
         local ang = E.busDir:Angle()
@@ -1858,9 +1938,7 @@ local function ZigBoard(e)
     E.riders[#E.riders + 1] = e
     if e:IsPlayer() then
         if e.InVehicle and e:InVehicle() and e.ExitVehicle then e:ExitVehicle() end
-        e.lcEndFrozen = true
-        e:Freeze(true)
-        e:SetMoveType(MOVETYPE_NONE)
+        HoldOn(e)
     end
     e:SetNW2Entity("lc_riding", E.zigs[zi])
     e:SetNW2Bool("lc_dancing", true)
@@ -1919,6 +1997,8 @@ TICK.base = function(now)
             local c = 0
             for _, npc in ipairs(CombineNPCs()) do if c < 6 then c = c + 1 ZigBoard(npc) end end
             E.client.lights = true
+            E.client.zigs = {}
+            for _, z in ipairs(E.zigs) do E.client.zigs[#E.client.zigs + 1] = z:EntIndex() end -- (their exhaust trails, on every screen)
             E.fleetA = 0
         elseif kind == "move" then
             E.client.strobe = true
@@ -1962,6 +2042,21 @@ TICK.base = function(now)
         for _, e in ipairs(E.riders or {}) do
             local rd = IsValid(e) and e.lcEndRide
             if rd and IsValid(rd.v) then e:SetPos(rd.v.LocalToWorld and rd.v:LocalToWorld(rd.off) or (rd.v:GetPos() + rd.off)) end
+        end
+    end
+    -- the end: a barrage, bombs going off everywhere, below the fleet and all round it,
+    -- one after another to the last note (each one heard: it's played where you are)
+    if kind == "boom" and now >= (E.nextBoom or 0) then
+        E.nextBoom = now + math.Rand(0.12, 0.3)
+        local lead = (#E.zigs > 0 and IsValid(E.zigs[1]) and E.zigs[1]:GetPos()) or E.lz
+        local at = lead + Vector(math.Rand(-900, 900), math.Rand(-900, 900), math.Rand(-700, 150))
+        if math.random() < 0.5 then
+            local g = Ground(at)
+            if g then at = g + Vector(0, 0, 20) end
+        end
+        Blow(at, math.random() < 0.3)
+        for _, p in ipairs(player.GetAll()) do
+            if math.random() < 0.6 then p:EmitSound("ambient/explosions/explode_" .. math.random(1, 9) .. ".wav", 85, math.random(85, 110), 0.7) end
         end
     end
     -- the bombs go off below, more and more of them
@@ -2131,7 +2226,7 @@ SETUP.hard = function()
         if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
         local a = (i / math.max(1, #ps)) * math.pi * 2
         local r = 60 + 14 * #ps
-        p:SetPos((Ground(E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)) or E.lz) + Vector(0, 0, 4))
+        p:SetPos((Ground(E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)) or E.lz) + Vector(0, 0, 1))
         p.lcEndFrozen = true
         p:Freeze(true)
         p:SetNW2Bool("lc_dancing", true)
@@ -2142,7 +2237,8 @@ SETUP.hard = function()
     LC.EndingDark = "e"
     if LC.ApplyLightStyle then LC.ApplyLightStyle() end
     E.client = { party = true, lights = true, strobe = true, dance = "hard", partyText = true, palette = RAINBOW2,
-        bpm = cvHardBPM:GetFloat(), offset = 0, start = now, section = "intro" }
+        bpm = cvHardBPM:GetFloat(), offset = 0, start = now, section = "intro",
+        spots = true, lz = E.lz, spotR = 200 + 14 * #ps, spotN = 10, spotCols = RAINBOW2, spotCycle = true } -- (spotlights round the ring, every colour)
     E.passGap = math.max(0.5, (E.fadeAt - E.passAt) / math.max(1, #ps))
 end
 
@@ -2182,6 +2278,7 @@ TICK.hard = function(now)
     end
 end
 
+do -- (Shalom keeps its own names to itself: the file is near Lua's limit on them)
 -- Shalom (a codeword): the hora. Israeli flags shoot up on poles round the
 -- landing zone on the intro's hit, and everyone is gathered there in rings
 -- round a giant hanukkiah: the players in the inner ring, the city's people
@@ -2513,6 +2610,7 @@ TICK.shalom = function(now)
         for _, r in ipairs({ E.rings.inner, E.rings.outer }) do for _, m in ipairs(r.members) do LiftDown(m) end end
     end
 end
+end
 
 -- Plane (a codeword): numa numa. Like the band in the video, everyone dances
 -- on the wings of an airplane over the city. It circles low through the
@@ -2526,6 +2624,7 @@ local cvPlaneCaptions = CreateConVar("lc_ending_plane_captions", "15.1=MA-IA-HII
     "Plane: the sing-along captions, second=TEXT, separated by | (the choruses add their own)")
 local cvPlaneBPM = CreateConVar("lc_ending_plane_bpm", "130", FLAGS, "Plane: the song's beats per minute")
 local cvPlaneCombine = CreateConVar("lc_ending_plane_combine", "8", FLAGS, "Plane: how many of the Combine's units get on the wings too")
+local cvPlaneModelYaw = CreateConVar("lc_ending_plane_model_yaw", "-90", FLAGS, "Plane: which way its body model's nose points, turned to the way it flies (-90, 90, 0 or 180: whichever puts the nose in front)")
 local PLANE_BODY, PLANE_WING = { "models/xqm/jetbody3.mdl", "models/props_vehicles/van001a_physics.mdl" }, "models/xqm/airplanewing1.mdl"
 local FIREWORK = { { 255, 60, 60 }, { 255, 210, 60 }, { 80, 200, 255 }, { 120, 255, 120 }, { 255, 100, 230 } }
 
@@ -2551,13 +2650,71 @@ local function PlaneBoard(e)
     E.riders[#E.riders + 1] = e
     if e:IsPlayer() then
         if e.InVehicle and e:InVehicle() and e.ExitVehicle then e:ExitVehicle() end
-        e.lcEndFrozen = true
-        e:Freeze(true)
-        e:SetMoveType(MOVETYPE_NONE)
+        HoldOn(e)
     end
     e:SetNW2Entity("lc_riding", E.plane)
     e:SetNW2Bool("lc_dancing", true)
 end
+
+-- The flight, every frame (and every tick, which is all a test has): wide and steady in the
+-- verses, swooping in the choruses, a glide in the break, a barrel roll on the big hits
+-- (round the way it's flying: everyone on it goes round with it).
+local function OnPlane(frame, pos, off)
+    return pos + frame:Forward() * off.x - frame:Right() * off.y + frame:Up() * off.z
+end
+function LC.PlaneStep(now)
+    if not E or E.id ~= "plane" or E.phase ~= "apocalypse" or not IsValid(E.plane) then return end
+    local plane = E.plane
+    local dt = math.Clamp(now - (E.planeStepAt or now), 0, 0.25)
+    E.planeStepAt = now
+    local t = now - E.phaseT
+    local kind = E.client.section or "intro"
+    local speed = ({ intro = 0.12, board = 0.15, verse = 0.14, chorus = 0.24, ["break"] = 0.07, final = 0.32, climb = 0.2 })[kind] or 0.14
+    E.planeA = E.planeA + speed * dt
+    -- (in open sky: E.flight, so the plane, its riders and the camera stay out of the buildings)
+    local sky = E.flight or LC.EndingSky(E.lz)
+    local r = sky.r
+    local height = sky.z
+    if kind == "chorus" or kind == "final" then height = height - 120 + math.sin(t * 0.9) * 120 end
+    if kind == "climb" then E.climb = math.min((E.climb or 0) + (60 + (E.climb or 0) * 0.08) * dt * 10, math.max(0, sky.top - sky.z - 40)) end
+    local pos = Vector(sky.centre.x + math.cos(E.planeA) * r, sky.centre.y + math.sin(E.planeA) * r, height + (E.climb or 0))
+    local yaw = math.deg(E.planeA) + 90
+    local bank = (kind == "chorus" or kind == "final") and 30 or 12
+    local roll = bank
+    if E.rollFrom and now - E.rollFrom < 2 then
+        local f = (now - E.rollFrom) / 2
+        roll = bank + 360 * (f * f * (3 - 2 * f))
+    end
+    local pitch = kind == "climb" and -70 or math.sin(t * 0.7) * 6
+    local ceil = CeilingAt(pos) -- (well under the sky right there, which can come lower than over the landing zone)
+    if ceil - pos.z < 240 then pos.z = ceil - 240 end
+    local cur = plane:GetPos()
+    if CeilingAt(cur) <= cur.z + 1 then cur = cur - Vector(0, 0, 250) end
+    pos = LerpVector(1 - 0.6 ^ (dt * 10), cur, pos)
+    -- the way it flies (its frame), and the body model turned to it (lc_ending_plane_model_yaw)
+    local frame = Angle(pitch, yaw, roll)
+    E.planeFrame = frame
+    local body = Angle(frame.p, frame.y, frame.r)
+    if body.RotateAroundAxis then body:RotateAroundAxis(frame:Up(), cvPlaneModelYaw:GetFloat()) end
+    plane:SetPos(pos)
+    plane:SetAngles(body)
+    for _, w in ipairs(E.wings or {}) do
+        if IsValid(w.e) then
+            w.e:SetPos(OnPlane(frame, pos, Vector(0, w.side * 160, 40)))
+            local wa = Angle(frame.p, frame.y, frame.r)
+            if w.side < 0 and wa.RotateAroundAxis then wa:RotateAroundAxis(frame:Up(), 180) end
+            w.e:SetAngles(wa)
+        end
+    end
+    for _, e in ipairs(E.riders or {}) do
+        local rd = IsValid(e) and e.lcEndRide
+        if rd and rd.v == plane then
+            e:SetPos(OnPlane(frame, pos, rd.off))
+            if not e:IsPlayer() then e:SetAngles(Angle(frame.p, frame.y, frame.r)) end -- (the Combine's units go round with it; a player can't be turned over)
+        end
+    end
+end
+hook.Add("Think", "LivingCityPlane", function() if E and E.id == "plane" then LC.PlaneStep(CurTime()) end end)
 
 SETUP.plane = function()
     local now = CurTime()
@@ -2575,18 +2732,18 @@ SETUP.plane = function()
     if not body then return end
     if body.SetSolid then body:SetSolid(SOLID_NONE) end
     E.plane = body
+    E.wings = {}
     if not util.IsValidModel or util.IsValidModel(PLANE_WING) then
         for _, side in ipairs({ -1, 1 }) do
             local w = Prop(PLANE_WING, body:GetPos(), 3)
             if w then
                 if w.SetSolid then w:SetSolid(SOLID_NONE) end
-                w:SetParent(body)
-                if w.SetLocalPos then w:SetLocalPos(Vector(0, side * 160, 40)) end
-                if w.SetLocalAngles then w:SetLocalAngles(Angle(0, side > 0 and 0 or 180, 0)) end
+                E.wings[#E.wings + 1] = { e = w, side = side }
             end
         end
     end
     E.planeA, E.roll = 0, 0
+    E.planeFrame = Angle(0, 90, 0)
     local caps = LC.BaseLines(cvPlaneCaptions:GetString())
     E.client = { party = true, lights = true, dance = "numa", bpm = cvPlaneBPM:GetFloat(), offset = 0, start = now, section = "intro",
         palette = FIREWORK, captions = caps, webcam = true, lipsync = true }
@@ -2611,36 +2768,11 @@ TICK.plane = function(now)
         Send()
     end
     if E.planeSeat then for _, p in ipairs(player.GetAll()) do PlaneBoard(p) end end -- (anyone joining, or back)
-    -- the flight: wide and steady in the verses, swooping in the choruses, a glide in the break
-    local speed = ({ intro = 0.12, board = 0.15, verse = 0.14, chorus = 0.24, ["break"] = 0.07, final = 0.32, climb = 0.2 })[kind] or 0.14
-    E.planeA = E.planeA + speed * 0.1
-    -- (in open sky: E.flight, so the plane, its riders and the camera stay out of the buildings)
-    local sky = E.flight or LC.EndingSky(E.lz)
-    local r = sky.r
-    local height = sky.z
-    if kind == "chorus" or kind == "final" then height = height - 120 + math.sin(t * 0.9) * 120 end
-    if kind == "climb" then E.climb = math.min((E.climb or 0) + 60 + (E.climb or 0) * 0.08, math.max(0, sky.top - sky.z - 40)) end
-    local pos = Vector(sky.centre.x + math.cos(E.planeA) * r, sky.centre.y + math.sin(E.planeA) * r, height + (E.climb or 0))
-    local yaw = math.deg(E.planeA) + 90
-    -- a barrel roll on the big hits (every 16 beats in a chorus), a bank otherwise
-    local bank = (kind == "chorus" or kind == "final") and 30 or 12
     if (kind == "chorus" or kind == "final") and math.floor(beat) % 16 == 0 and math.floor(beat) ~= E.rollBeat then
         E.rollBeat = math.floor(beat)
         E.rollFrom = now
     end
-    local roll = bank
-    if E.rollFrom and now - E.rollFrom < 2 then roll = bank + 360 * ((now - E.rollFrom) / 2) end
-    local pitch = kind == "climb" and -70 or math.sin(t * 0.7) * 6
-    local ceil = CeilingAt(pos) -- (well under the sky right there, which can come lower than over the landing zone)
-    if ceil - pos.z < 240 then pos.z = ceil - 240 end
-    local cur = plane:GetPos()
-    if CeilingAt(cur) <= cur.z + 1 then cur = cur - Vector(0, 0, 250) end
-    plane:SetPos(LerpVector(0.4, cur, pos))
-    plane:SetAngles(Angle(pitch, yaw, roll))
-    for _, e in ipairs(E.riders or {}) do
-        local rd = IsValid(e) and e.lcEndRide
-        if rd and IsValid(rd.v) then e:SetPos(rd.v.LocalToWorld and rd.v:LocalToWorld(rd.off) or (rd.v:GetPos() + rd.off)) end
-    end
+    LC.PlaneStep(now)
     -- fireworks round it in the last chorus
     if kind == "final" and now >= (E.nextFirework or 0) then
         E.nextFirework = now + math.Rand(0.3, 0.8)
@@ -2651,6 +2783,11 @@ TICK.plane = function(now)
             if fx.SetStart then fx:SetStart(Vector(c[1], c[2], c[3])) end
             util.Effect("balloon_pop", fx)
             util.Effect("cball_explode", fx)
+            E.fwBig = (E.fwBig or 0) + 1
+            if E.fwBig % 3 == 0 then
+                util.Effect("Explosion", fx) -- (every third one a big bang)
+                if sound and sound.Play then sound.Play("ambient/explosions/explode_" .. math.random(1, 9) .. ".wav", (fx.GetOrigin and fx:GetOrigin()) or plane:GetPos(), 100, math.random(95, 115), 0.8) end
+            end
         end
         if sound and sound.Play then sound.Play("weapons/flaregun/burn.wav", plane:GetPos(), 90, math.random(90, 130), 0.6) end
     end
@@ -2711,28 +2848,11 @@ local function Hang(e)
     local left = ((E.holdUntil or (CurTime() + 60)) - CurTime()) - 3
     e.lcHang.rate = math.max(cvStandupDrain:GetFloat(), (e.Health and e:Health() or 100) / math.max(1.5, left))
     e:SetNW2Float("lc_hanged", CurTime())
-    -- painted white, and a white cone hat pulled down over the head (a real prop, riding
-    -- along with them: everyone sees it, wherever they swing)
+    -- painted white, and a white cone hat pulled down over the head (drawn on every screen
+    -- on the head itself, wherever it swings: cl_livingcity_endings.lua; a prop riding along
+    -- on the server never showed)
     if e.SetMaterial then e:SetMaterial("models/debug/debugwhite") end
     if e.SetColor then e:SetColor(Color(245, 245, 245, 255)) end
-    local cone = ents.Create("prop_dynamic")
-    if IsValid(cone) then
-        cone:SetModel("models/props_junk/trafficcone001a.mdl")
-        local head = e:GetPos() + Vector(0, 0, 64)
-        local id = e.LookupBone and e:LookupBone("ValveBiped.Bip01_Head1")
-        local bp = id and e.GetBonePosition and e:GetBonePosition(id)
-        if bp and bp.z - e:GetPos().z > 40 then head = bp end -- (the bone, if the server knows where it is)
-        cone:SetPos(head - Vector(0, 0, 9))
-        cone:SetAngles(Angle(0, e:GetAngles().y, 0))
-        cone:Spawn()
-        if cone.SetSolid then cone:SetSolid(SOLID_NONE) end
-        if cone.SetMaterial then cone:SetMaterial("models/debug/debugwhite") end
-        if cone.SetColor then cone:SetColor(Color(245, 245, 245, 255)) end
-        if cone.SetModelScale then cone:SetModelScale(0.9, 0) end
-        cone:SetParent(e)
-        E.ents[#E.ents + 1] = cone
-        e.lcCone = cone
-    end
     if e:IsPlayer() then
         if e.InVehicle and e:InVehicle() and e.ExitVehicle then e:ExitVehicle() end
         -- (held there, not frozen: a frozen player can't even look about, and the rope's
@@ -2827,7 +2947,14 @@ TICK.standup = function(now)
         if now >= E.nextAny and #E.hanged < cvStandupMax:GetInt() then
             E.nextAny = now + E.beatLen * 2
             local victim
-            for npc in pairs(LC.NPCs or {}) do if IsValid(npc) and not npc.lcHang and not npc.lcCrowd then victim = npc break end end
+            -- the Combine's units first, every one of them (brought to where you can see it)
+            for _, n in ipairs(CombineNPCs()) do if not n.lcHang then victim = n break end end
+            if IsValid(victim) then
+                local near = Living()[1] or player.GetAll()[1]
+                local spot = near and RingSpot(near:GetPos(), math.Rand(250, 650), false)
+                if spot then victim:SetPos(spot) end
+            end
+            for npc in pairs(LC.NPCs or {}) do if not victim and IsValid(npc) and not npc.lcHang and not npc.lcCrowd then victim = npc break end end
             if not victim then
                 -- nobody left: someone turns up near one of you to be next
                 local near = Living()[1] or player.GetAll()[1]
@@ -2848,6 +2975,7 @@ TICK.standup = function(now)
     if kind == "last" and not E.lastHang then
         E.lastHang = true
         for _, p in ipairs(Living()) do if not p.lcHang then Hang(p) end end
+        for _, n in ipairs(CombineNPCs()) do if not n.lcHang then Hang(n) end end -- (and every unit of the Combine still standing)
     end
     -- the hanged: swinging, turning, and (the living) losing health
     local drain = cvStandupDrain:GetFloat() * 0.1
@@ -2888,9 +3016,13 @@ local cvFloodSections = CreateConVar("lc_ending_flood_sections", "15:heavy,79:ca
     "The Flood: the song's sections, second:kind (calm, heavy, climax, outro, last, end); before the first, it builds")
 local cvFloodBPM   = CreateConVar("lc_ending_flood_bpm", "150", FLAGS, "The Flood: the song's beats per minute (the lightning keeps to it)")
 local cvFloodRise  = CreateConVar("lc_ending_flood_rise", "900", FLAGS, "The Flood: how high the water rises over the landing zone by the outro")
-local cvFloodDrown = CreateConVar("lc_ending_flood_drown", "10", FLAGS, "The Flood: seconds under the water before you drown")
+local cvFloodDrown = CreateConVar("lc_ending_flood_drown", "15", FLAGS, "The Flood: seconds under the water before you drown")
 local cvIcthys     = CreateConVar("lc_ending_flood_icthys", "8", FLAGS, "The Flood: how many ichthyosaurs at the worst of it")
 local cvFloodCrowd = CreateConVar("lc_ending_flood_crowd", "10", FLAGS, "The Flood: how many of the city's people and the Combine's units are on the stage too, headbanging (the big waves take them one by one)")
+local cvFloodAttack = CreateConVar("lc_ending_flood_attack_from", "140", FLAGS, "The Flood: seconds into the song before the ichthyosaurs bite or leap at anyone (till then they circle)")
+local cvFloodBoats = CreateConVar("lc_ending_flood_boats", "6", FLAGS, "The Flood: rowboats floating round the stage (climb in from the water with Jump; the waves don't throw you out of them)")
+local BOATS = { "models/props_canal/boat001a.mdl", "models/props_canal/boat001b.mdl", "models/props_canal/boat002b.mdl", "models/hunter/plates/plate2x4.mdl" }
+local STAGE_LIGHTS = { { 255, 255, 255 }, { 80, 140, 255 }, { 255, 60, 60 }, { 255, 200, 60 } }
 local INTENSITY = { intro = 0.3, calm = 0.35, heavy = 0.75, climax = 1, outro = 0.25, last = 0.1 }
 local STAGE_MODEL, STAGE_R = "models/hunter/plates/plate8x8.mdl", 170
 
@@ -2915,7 +3047,7 @@ local function Immune(p) return p == E.grigori end
 local function Bite(p, how)
     local now = CurTime()
     if not IsValid(p) or p.lcEndTaken or Immune(p) or now < (p.lcBiteAt or 0) then return false end
-    p.lcBiteAt = now + 1
+    p.lcBiteAt = now + 1.5
     p:EmitSound("npc/ichthyosaur/snap.wav", 85)
     if not p:IsPlayer() then -- (one of the crowd, swept off: gone in one)
         if util.Effect and EffectData then local fx = EffectData() fx:SetOrigin(p:GetPos() + Vector(0, 0, 30)) util.Effect("BloodImpact", fx) end
@@ -2923,7 +3055,7 @@ local function Bite(p, how)
         p:Remove()
         return true
     end
-    p:SetHealth(p:Health() - math.random(15, 25))
+    p:SetHealth(p:Health() - math.random(6, 10))
     if p.ViewPunch then p:ViewPunch(Angle(math.Rand(-15, 15), math.Rand(-15, 15), 0)) end
     if p:Health() <= 0 then Spectator(p, how or "Something huge comes up out of the dark water. That's the last you see.", Color(20, 40, 90, 230)) end
     return true
@@ -2976,6 +3108,7 @@ local function SpawnIcthy()
     local a = math.Rand(0, math.pi * 2)
     local pos = st:GetPos() + Vector(math.cos(a), math.sin(a), 0) * math.Rand(600, 900)
     pos.z = E.floodZ - 70
+    if not Room() then return end
     local m = ents.Create("lc_icthy")
     if not IsValid(m) then return end
     m:SetModel("models/ichthyosaur.mdl")
@@ -3073,8 +3206,26 @@ SETUP.water = function()
     E.dark = true
     LC.EndingDark = "e"
     if LC.ApplyLightStyle then LC.ApplyLightStyle() end
+    -- rowboats round the stage, bobbing: somewhere to climb into out of the water
+    E.boats = {}
+    local nb = cvFloodBoats:GetInt()
+    for i = 1, nb do
+        local a = (i - 0.5) / math.max(1, nb) * math.pi * 2
+        local bp = (IsValid(st) and st:GetPos() or E.lz) + Vector(math.cos(a), math.sin(a), 0) * (STAGE_R + 260)
+        local mdl = FirstModel(BOATS)
+        local b = Prop(mdl, bp)
+        if b then
+            if b.PhysicsInit then b:PhysicsInit(SOLID_VPHYSICS) end
+            local ph = b.GetPhysicsObject and b:GetPhysicsObject()
+            if IsValid(ph) then ph:EnableMotion(false) end
+            if string.find(mdl, "plate", 1, true) and b.SetMaterial then b:SetMaterial("phoenix_storms/wood") end
+            E.boats[#E.boats + 1] = { e = b, a = a, r = STAGE_R + 260, i = i }
+        end
+    end
     E.section = "intro"
-    E.client = { bpm = cvFloodBPM:GetFloat(), offset = 0, start = now } -- (the beat Father Grigori headbangs to)
+    -- (the beat Father Grigori headbangs to; stage lights round the deck, sweeping the storm)
+    E.client = { bpm = cvFloodBPM:GetFloat(), offset = 0, start = now, spots = IsValid(st) or nil, spotEnt = IsValid(st) and st:EntIndex() or nil,
+        spotR = STAGE_R - 10, spotUp = (E.stageTop or 2) + 2, spotN = 6, spotCols = STAGE_LIGHTS, spotCycle = true }
 end
 
 TICK.water = function(now)
@@ -3138,7 +3289,7 @@ TICK.water = function(now)
     for _, p in ipairs(Living()) do
         if p ~= g then
             if OnStage(p) and p.SetVelocity then
-                local push = wave * ((big and (180 + 340 * I) or (20 + 55 * I)) * math.Rand(0.6, 1.2))
+                local push = wave * ((big and (120 + 180 * I) or (10 + 30 * I)) * math.Rand(0.6, 1.2))
                 p:SetVelocity(Vector(push.x, push.y, big and 60 or 0))
             end
             -- in the water by the edge: hold Jump and you haul yourself back up onto it
@@ -3177,6 +3328,40 @@ TICK.water = function(now)
         if g:Health() < 100 then g:SetHealth(100) end
         -- (he headbangs, mic in hand: cl_livingcity_endings.lua, on the song's beat)
     end
+    -- the rowboats: round the stage on the water, bobbing, carrying whoever's in them
+    local inBoat = {}
+    for _, bt in ipairs(E.boats or {}) do
+        local b = bt.e
+        if IsValid(b) then
+            local was = b:GetPos()
+            bt.a = bt.a + 0.004
+            local bp = st:GetPos() + Vector(math.cos(bt.a), math.sin(bt.a), 0) * bt.r
+            local gr = Ground(Vector(bp.x, bp.y, E.floodZ + 40))
+            bp.z = math.max(E.floodZ - 10 + math.sin(t * 1.3 + bt.i) * 3, (gr and gr.z or -math.huge) + 2)
+            local delta = bp - was
+            for _, p in ipairs(riders) do
+                local d = p:GetPos() - was
+                if d:Length2D() < 90 and d.z > -30 and d.z < 90 and not OnStage(p) then
+                    p:SetPos(p:GetPos() + delta)
+                    inBoat[p] = b
+                end
+            end
+            b:SetPos(bp)
+            b:SetAngles(Angle(math.sin(t * 0.9 + bt.i) * 4, math.deg(bt.a) + 90, math.cos(t * 1.1 + bt.i) * 5))
+            -- in the water next to one, hold Jump to climb in
+            for _, p in ipairs(Living()) do
+                if p ~= E.grigori and not inBoat[p] and not OnStage(p) and p.KeyDown and p:KeyDown(IN_JUMP) then
+                    local d = p:GetPos() - bp
+                    if d:Length2D() < 120 and p:GetPos().z > E.floodZ - 110 and p:GetPos().z < bp.z + 40 then
+                        p:SetPos(bp + Vector(0, 0, 24))
+                        p.lcEndUnder = nil
+                        inBoat[p] = b
+                    end
+                end
+            end
+        end
+    end
+    E.inBoat = inBoat
     -- lightning on the big beats
     if (kind == "heavy" or kind == "climax") then
         local beat = math.floor(t * cvFloodBPM:GetFloat() / 60)
@@ -3214,9 +3399,16 @@ TICK.water = function(now)
                 local d = p:GetPos():DistToSqr(m:GetPos())
                 if d < 1500 * 1500 and (not bd or d < bd) then best, bd = p, d end
             end
-            if best then
+            local hunting = t >= cvFloodAttack:GetFloat()
+            if best and hunting then
                 s.goal, s.speed, s.target = best:GetPos(), 260 + 200 * I, best
                 if bd < 100 * 100 then Bite(best) end
+            elseif best and bd < 500 * 500 then
+                -- (not yet: close enough to scare you, circling, no bite)
+                s.a = s.a + s.dir * 0.05
+                s.goal = best:GetPos() + Vector(math.cos(s.a), math.sin(s.a), 0) * 260
+                s.goal.z = E.floodZ - 70
+                s.speed = 200
             else
                 -- circling the stage
                 s.a = s.a + s.dir * 0.03 * (0.5 + I)
@@ -3224,7 +3416,7 @@ TICK.water = function(now)
                 s.goal.z = E.floodZ - 70
                 s.speed = 160 + 160 * I
                 -- and in the worst of it, a leap at whoever's near the edge
-                if #edge > 0 and (kind == "heavy" or kind == "climax") and math.random() < 0.012 * I * 10 and now >= (s.nextLeap or 0) then
+                if #edge > 0 and t >= cvFloodAttack:GetFloat() and (kind == "heavy" or kind == "climax") and math.random() < 0.012 * I * 10 and now >= (s.nextLeap or 0) then
                     local v = edge[math.random(#edge)]
                     s.target = v
                     s.nextLeap = now + 6
@@ -3266,7 +3458,7 @@ local function Clear()
             if p.SetNoDraw then p:SetNoDraw(false) end
             if p.SetNotSolid then p:SetNotSolid(false) end
         end
-        if p.lcEndSpectating then
+        if p.lcEndSpectating and not (E and E.reloading) then -- (the map's about to reload: the dead stay down till it does)
             if p.UnSpectate then p:UnSpectate() end
             if p.Spawn then p:Spawn() end
         end
@@ -3435,6 +3627,7 @@ timer.Create("LivingCityEndings", 0.1, 0, function()
         elseif E.phase == "reset" then
             if now - E.phaseT >= 5 then
                 local id = E.id
+                E.reloading = not LC.TestMode
                 LC.CancelEnding()
                 LC.Log("info", "Secret ending " .. id .. ": the map reloads")
                 LC.EndingReload()
@@ -3550,6 +3743,7 @@ local RETUNED = {
     { "lc_ending_marrow_max", { "40", "60" }, "80" },
     { "lc_ending_base_bombs", { "30" }, "60" },
     { "lc_ending_hard_moment_beats", { "16" }, "5" },
+    { "lc_ending_flood_drown", { "10" }, "15" },
     { "lc_ending_base_sections", { "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end" }, "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end" },
     { "lc_ending_base_lines", { "2.2=CAPTAIN: What happen ?|3.5=MECHANIC: Somebody set up us the bomb.|6.5=OPERATOR: We get signal.|9.5=CAPTAIN: What !|12.5=OPERATOR: Main screen turn on.|14.7=CAPTAIN: It's you !!|16.4=CATS: How are you gentlemen !!|18.4=CATS: All your base are belong to us.|20.4=CATS: You are on the way to destruction.|21.6=CAPTAIN: What you say !!|23.0=CATS: You have no chance to survive make your time.|26.0=CATS: Ha ha ha ha ....|34=CAPTAIN: Take off every 'ZIG' !!|126=CAPTAIN: Move 'ZIG'.|174=CAPTAIN: For great justice." }, "2.15=CAPTAIN: What happen ?|3.55=MECHANIC: Somebody set up us the bomb.|4.65=OPERATOR: We get signal.|6.5=CAPTAIN: What !|9.5=OPERATOR: Main screen turn on.|11.7=CAPTAIN: It's you !!|12.55=CATS: How are you gentlemen !!|14.7=CATS: All your base are belong to us.|18.45=CATS: You are on the way to destruction.|20.6=CAPTAIN: What you say !!|21.65=CATS: You have no chance to survive make your time.|26.0=CATS: Ha ha ha ha ....|34=CAPTAIN: Take off every 'ZIG' !!|126=CAPTAIN: Move 'ZIG'.|174=CAPTAIN: For great justice." },
 }

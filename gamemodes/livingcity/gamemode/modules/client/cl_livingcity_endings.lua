@@ -330,11 +330,9 @@ local POSE = {
     Pelvis = Angle(0, 0, 0), Spine = Angle(0, 0, 0), Spine2 = Angle(0, 0, 0), Head = Angle(0, 0, 0),
     R_Thigh = Angle(0, 0, 0), L_Thigh = Angle(0, 0, 0), R_Calf = Angle(0, 0, 0), L_Calf = Angle(0, 0, 0),
 }
-local FLAP, SWAY, KNEE = 40, 14, 18
--- The hips sway, and only the hips: the spine just above them and both thighs turn back
--- the other way, so the body stays upright and the feet stay planted. (Which way a thigh
--- turns sideways can differ: lc_bloom_leg_sign -1 if the feet splay instead of staying put.)
-local cvLegSign = CreateClientConVar("lc_bloom_leg_sign", "1", true, false, "Bloom's dance: which way the thighs turn to keep the feet planted under the swaying hips (1 or -1)")
+local FLAP, SWAY, KNEE = 40, 12, 18
+-- (the palms turned to face forward, a twist of the forearm: lc_bloom_palm -90 if they face back)
+local cvPalm = CreateClientConVar("lc_bloom_palm", "90", true, false, "Bloom's dance: how far the forearms twist to turn the palms forward (-90 if they end up facing back)")
 local PALETTE = { Color(255, 110, 200), Color(220, 90, 255), Color(100, 190, 255), Color(110, 255, 190), Color(255, 235, 110) }
 local preview = false
 local danced = {}   -- [ent] = true: someone we've turned bones on
@@ -419,7 +417,7 @@ local STYLES = { club = CLUB, rave = RAVE, bus = BUS }
 -- Tune the arms live: lc_shalom_pose <R_UpperArm|L_UpperArm|R_Forearm|L_Forearm> <p> <y> <r>.
 local HORA = {
     R_UpperArm = Angle(-30, -75, 0), L_UpperArm = Angle(30, -75, 0),
-    R_Forearm = Angle(0, -15, 0), L_Forearm = Angle(0, -15, 0),
+    R_Forearm = Angle(-15, 0, 0), L_Forearm = Angle(15, 0, 0),
 }
 local function HoraPose(ent, b, beat)
     local sec = S.client.section or "intro"
@@ -429,8 +427,8 @@ local function HoraPose(ent, b, beat)
     local chair = ent.GetNW2Bool and ent:GetNW2Bool("lc_chair", false)
     local P = {}
     if sec == "in" or chair then
-        P.R_UpperArm, P.L_UpperArm = Angle(10, -125 + 15 * s, 0), Angle(-10, -125 + 15 * s, 0)
-        P.R_Forearm, P.L_Forearm = Angle(0, -20, 0), Angle(0, -20, 0)
+        P.R_UpperArm, P.L_UpperArm = Angle(-10, -140 + 15 * s, 0), Angle(10, -140 + 15 * s, 0)
+        P.R_Forearm, P.L_Forearm = Angle(0, 0, 0), Angle(0, 0, 0)
     else
         P.R_UpperArm, P.L_UpperArm, P.R_Forearm, P.L_Forearm = HORA.R_UpperArm, HORA.L_UpperArm, HORA.R_Forearm, HORA.L_Forearm
     end
@@ -448,7 +446,7 @@ local function HoraPose(ent, b, beat)
         elseif k == 3 then P.R_Thigh = Angle(0, -38 * s, 0) P.L_Calf = Angle(0, 14 * s, 0)
         elseif k == 4 then P.R_Calf = Angle(0, 10 * s, 0)
         else P.L_Thigh = Angle(0, -38 * s, 0) P.R_Calf = Angle(0, 14 * s, 0) end
-        P.Head = Angle(0, 0, 6 * s)
+        P.Head = Angle(6 * s, 0, 0)
     end
     for name, id in pairs(b) do ent:ManipulateBoneAngles(id, P[name] or Angle(0, 0, 0)) end
 end
@@ -475,14 +473,16 @@ local function Dance(ent, beat, now)
     -- tipping side to side, a bounce
     if S and S.client and S.client.dance == "numa" and not preview then
         local ph = beat * math.pi
+        -- (on the arms pitch swings forward and back, mirrored: the right arm forward is minus,
+        -- the left plus; the elbow bends on pitch too; yaw raises an arm out to the side)
         local NUMA = {
-            R_UpperArm = Angle(28 * math.sin(ph), -75 + 22 * math.cos(ph), 0),
-            L_UpperArm = Angle(-28 * math.sin(ph + math.pi), -75 + 22 * math.cos(ph + math.pi), 0),
-            R_Forearm = Angle(0, -95 + 20 * math.sin(ph * 2), 0),
-            L_Forearm = Angle(0, -95 + 20 * math.sin(ph * 2 + math.pi), 0),
-            Head = Angle(0, 8 * bounce, 14 * math.sin(ph / 2)),
-            Spine2 = Angle(0, 0, 6 * wave),
-            Pelvis = Angle(0, 0, 8 * wave),
+            R_UpperArm = Angle(-60 + 18 * math.sin(ph), -20 + 10 * math.cos(ph), 0),
+            L_UpperArm = Angle(60 + 18 * math.sin(ph + math.pi), -20 + 10 * math.cos(ph + math.pi), 0),
+            R_Forearm = Angle(-70 + 20 * math.sin(ph * 2), 0, 0),
+            L_Forearm = Angle(70 + 20 * math.sin(ph * 2 + math.pi), 0, 0),
+            Head = Angle(4 * bounce, 14 * math.sin(ph / 2), 0),
+            Spine2 = Angle(0, 6 * wave, 0),
+            Pelvis = Angle(0, 8 * wave, 0),
             R_Calf = Angle(0, 14 * bounce, 0), L_Calf = Angle(0, 14 * bounce, 0),
         }
         for name, id in pairs(b) do ent:ManipulateBoneAngles(id, NUMA[name] or Angle(0, 0, 0)) end
@@ -533,11 +533,15 @@ local function Dance(ent, beat, now)
         -- (on these models a bone's yaw is side to side and its roll front to back: the hips
         -- swing side to side under a chest that leans against them, and the hands bend at
         -- the wrist like ears flapping, rather than twisting)
+        -- (the sway: a curve up the back over legs that stay put, the knees dipping in turn;
+        -- turning the hips themselves swung the legs and lifted the feet off the floor)
         if name == "R_Hand" then a.y = a.y + flap
         elseif name == "L_Hand" then a.y = a.y - flap
-        elseif name == "Pelvis" then a.y = a.y + wave * SWAY
-        elseif name == "Spine" then a.y = a.y - wave * SWAY -- (back upright above the hips: the chest and head stay still)
-        elseif name == "R_Thigh" or name == "L_Thigh" then a.p = a.p - wave * SWAY * (cvLegSign:GetFloat() >= 0 and 1 or -1) -- (the legs back down straight: feet planted)
+        elseif name == "R_Forearm" then a.r = a.r + cvPalm:GetFloat()
+        elseif name == "L_Forearm" then a.r = a.r - cvPalm:GetFloat()
+        elseif name == "Spine" then a.y = a.y + wave * SWAY
+        elseif name == "Spine2" then a.y = a.y + wave * SWAY * 0.5
+        elseif name == "Head" then a.y = a.y - wave * SWAY * 0.8
         elseif name == "R_Calf" then a.y = a.y + bounce * KNEE * (wave > 0 and 1 or 0.3)
         elseif name == "L_Calf" then a.y = a.y + bounce * KNEE * (wave < 0 and 1 or 0.3)
         end
@@ -832,15 +836,16 @@ end)
 -- the free arm waving. Tune the nod: lc_headbang_angle "p y r".
 ------------------------------------------------------------------------
 
-local cvBang = CreateClientConVar("lc_headbang_angle", "0 0 30", true, false, "Father Grigori's headbang: how far his head goes down on each beat (pitch yaw roll; the neck and upper back follow it; \"0 0 -30\" if he bangs backwards)")
+local cvBang = CreateClientConVar("lc_headbang_angle", "35 0 0", true, false, "Father Grigori's headbang: how far his head goes down on each beat (pitch yaw roll; the neck and upper back follow it; \"-35 0 0\" if he bangs backwards)")
 local MIC = "models/props_lab/reciever01d.mdl"
 local rocked = {}
 
 local function BangAngle()
     local str = cvBang:GetString() or ""
-    if str == "0 48 0" then str = "0 0 30" end -- (the old setting nodded on the wrong axis: side to side)
+    -- (the old settings turned the head the wrong way: "0 48 0" side to side, "0 0 30" a twist)
+    if str == "0 48 0" or str == "0 0 30" then str = "35 0 0" end
     local p, y, r = string.match(str, "(%-?[%d%.]+)%s+(%-?[%d%.]+)%s+(%-?[%d%.]+)")
-    return Angle(tonumber(p) or 0, tonumber(y) or 0, tonumber(r) or 30)
+    return Angle(tonumber(p) or 35, tonumber(y) or 0, tonumber(r) or 0)
 end
 
 local function RockBeat(now)
@@ -855,8 +860,8 @@ local function Bone(ply, name) return ply.LookupBone and ply:LookupBone("ValveBi
 hook.Add("Think", "LivingCityHeadbang", function()
     local now = CurTime()
     local beat = RockBeat(now)
-    -- the nod: slammed down on the beat, back up between
-    local down = (1 - (beat % 1)) ^ 2.2
+    -- the nod: down on the beat, up between, smoothly (no snapping back: that looked like a twitch)
+    local down = (0.5 + 0.5 * math.cos(beat * math.pi * 2)) ^ 1.6
     local pump = math.abs(math.sin(beat * math.pi))
     local bang = BangAngle()
     for _, ply in ipairs(Rockers()) do
@@ -883,26 +888,29 @@ hook.Add("Think", "LivingCityHeadbang", function()
                 Set("Spine2", bang * (down * 0.7))
                 Set("Spine1", bang * (down * 0.5))
                 Set("Pelvis", Angle(0, 0, 0))
-                Set("L_UpperArm", Angle(-10, -60 - 50 * pump, 0))
-                Set("L_Forearm", Angle(0, -60, 0))
+                -- (the free arm: forward and up over his head, the fist pumping on the beat; on the
+                -- arms pitch swings forward and back, yaw raises out to the side, roll twists)
+                Set("L_UpperArm", Angle(110 + 35 * pump, -15, 0))
+                Set("L_Forearm", Angle(25 * pump, 0, 0))
                 Set("R_Calf", Angle(0, 12 * pump, 0))
                 Set("L_Calf", Angle(0, 12 * pump, 0))
             else
                 -- the rest: dancing, the hips going, the free arm waving over his head
                 -- (yaw is side to side on these bones, roll front to back)
-                Set("Head", Angle(0, 10 * wave, 6 * pump))
+                Set("Head", Angle(8 * pump, 10 * wave, 0))
                 Set("Neck1", Angle(0, 0, 0))
                 Set("Spine1", Angle(0, 0, 0))
                 Set("Spine2", Angle(0, -10 * wave, 0))
                 Set("Pelvis", Angle(0, 14 * wave, 0))
-                Set("L_UpperArm", Angle(25 * wave, -115, -10))
-                Set("L_Forearm", Angle(0, -25 + 25 * wave, 0))
+                Set("L_UpperArm", Angle(140, -20 + 25 * wave, 0))
+                Set("L_Forearm", Angle(15, 0, 0))
                 Set("R_Calf", Angle(0, 20 * pump * (wave > 0 and 1 or 0.3), 0))
                 Set("L_Calf", Angle(0, 20 * pump * (wave < 0 and 1 or 0.3), 0))
             end
-            -- the mic up at his mouth, all the way through
-            Set("R_UpperArm", Angle(10, -70, 0))
-            Set("R_Forearm", Angle(0, -115, 0))
+            -- the mic up at his mouth, all the way through: the upper arm forward and down,
+            -- the elbow bent right up (the elbow bends on pitch; yaw folded it sideways, a chicken wing)
+            Set("R_UpperArm", Angle(-40, -10, 0))
+            Set("R_Forearm", Angle(-125, 0, 0))
         elseif rocked[ply] then
             rocked[ply] = nil
             if IsValid(ply) then
@@ -1071,6 +1079,72 @@ hook.Add("HUDPaint", "LivingCityBase", function()
     if c.boomAt and now - c.boomAt < 3 then
         surface.SetDrawColor(255, 255, 255, 255 * math.Clamp(1 - (now - c.boomAt) / 3, 0, 1))
         surface.DrawRect(0, 0, w, h)
+    end
+end)
+
+-- Base, the arcade: a score at the top that climbs with every bomb that goes off (a
+-- "1000" popping up where it was), and blocky exhaust trails behind every ZIG.
+local baseScore, bombsSeen, popups, trails = 0, {}, {}, {}
+local TRAIL_COLS = { Color(255, 60, 40), Color(255, 200, 60), Color(255, 255, 255) }
+hook.Add("Think", "LivingCityBaseArcade", function()
+    local c = Base()
+    if not c then baseScore, bombsSeen, popups, trails = 0, {}, {}, {} return end
+    local now = CurTime()
+    local live = {}
+    for _, idx in ipairs(c.bombs or {}) do
+        local b = Entity(idx)
+        if IsValid(b) then live[idx] = b:GetPos() end
+    end
+    for idx, pos in pairs(bombsSeen) do
+        if not live[idx] and not IsValid(Entity(idx)) then
+            baseScore = baseScore + 1000
+            popups[#popups + 1] = { pos = pos + Vector(0, 0, 60), t0 = now }
+            bombsSeen[idx] = nil
+        end
+    end
+    for idx, pos in pairs(live) do bombsSeen[idx] = pos end
+    if c.boomAt and not c.boomScored then c.boomScored = true baseScore = baseScore + 50000 end
+    -- the trails: where each ZIG has been, a few times a second
+    for _, idx in ipairs(c.zigs or {}) do
+        local z = Entity(idx)
+        if IsValid(z) then
+            local tr = trails[idx] or { at = 0 }
+            trails[idx] = tr
+            if now >= tr.at then
+                tr.at = now + 0.06
+                table.insert(tr, 1, z:GetPos() - z:GetForward() * 260 + Vector(0, 0, 40))
+                while #tr > 24 do table.remove(tr) end
+            end
+        end
+    end
+    local keep = {}
+    for _, pp in ipairs(popups) do if now - pp.t0 < 1.5 then keep[#keep + 1] = pp end end
+    popups = keep
+end)
+hook.Add("PostDrawTranslucentRenderables", "LivingCityBaseArcade", function(_, sky)
+    local c = Base()
+    if sky or not c or not render or not render.SetColorMaterial then return end
+    render.SetColorMaterial()
+    local now = CurTime()
+    for _, tr in pairs(trails) do
+        for i, p in ipairs(tr) do
+            local col = TRAIL_COLS[(i + math.floor(now * 8)) % #TRAIL_COLS + 1]
+            local s = 34 - i
+            if s > 4 then render.DrawBox(p, Angle(0, 0, 0), Vector(-s, -s, -s), Vector(s, s, s), Color(col.r, col.g, col.b, 200)) end
+        end
+    end
+end)
+hook.Add("HUDPaint", "LivingCityBaseArcade", function()
+    local c = Base()
+    if not c then return end
+    local now = CurTime()
+    local w = ScrW()
+    draw.SimpleText(string.format("1UP  %07d", baseScore), "LCArcade", 40, 30, Color(255, 60, 40), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+    draw.SimpleText(string.format("HI-SCORE  %07d", math.max(baseScore, 1000000)), "LCArcade", w / 2, 30, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    if math.floor(now * 2) % 2 == 0 then draw.SimpleText("INSERT COIN", "LCArcade", w - 40, 30, Color(255, 200, 60), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER) end
+    for _, pp in ipairs(popups) do
+        local sp = (pp.pos + Vector(0, 0, (now - pp.t0) * 60)):ToScreen()
+        if sp.visible then draw.SimpleText("1000", "LCArcade", sp.x, sp.y, Color(255, 255, 255, 255 * (1 - (now - pp.t0) / 1.5)), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER) end
     end
 end)
 
@@ -1266,24 +1340,41 @@ hook.Add("HUDPaint", "LivingCityPlane", function()
 end)
 
 ------------------------------------------------------------------------
--- Marrow: spotlights round the circle while everyone dances, purple and
--- orange, their beams sweeping the dark (faster in the rave)
+-- Spotlights round the circle (Marrow while everyone dances, purple and
+-- orange; Hard's in every colour; the Flood's on the stage), their beams
+-- sweeping the dark, faster in the wilder parts. c.spotEnt: they ride on it.
 ------------------------------------------------------------------------
 
+local SPOT_COLS = { { 170, 60, 255 }, { 255, 130, 20 } }
+local SPOT_FAST = { rave = 1.8, outro = 2.4, hard = 1.5, heavy = 1.5, climax = 2.2 }
+local function Spots()
+    local c = S and S.phase == "apocalypse" and S.client
+    if not c or not c.spots or not (c.lz or c.spotEnt) then return nil end
+    return c
+end
+local function SpotCentre(c)
+    local e = c.spotEnt and Entity(c.spotEnt)
+    if IsValid(e) then return e:GetPos() + Vector(0, 0, c.spotUp or 0) end
+    return c.lz and Vector(c.lz.x, c.lz.y, c.lz.z) or nil
+end
 local beamMat, glowMat
 hook.Add("PostDrawTranslucentRenderables", "LivingCityMarrowSpots", function(_, sky)
-    local c = Party()
-    if sky or not c or not c.spots or not c.lz or not render or not render.DrawBeam then return end
+    local c = Spots()
+    if sky or not c or not render or not render.DrawBeam then return end
+    local lz = SpotCentre(c)
+    if not lz then return end
     beamMat = beamMat or (Material and Material("effects/lamp_beam"))
     glowMat = glowMat or (Material and Material("sprites/light_glow02_add"))
     local now = CurTime()
-    local speed = (c.section == "rave" and 1.8) or (c.section == "outro" and 2.4) or 1
-    local lz = Vector(c.lz.x, c.lz.y, c.lz.z)
+    local speed = SPOT_FAST[c.section or ""] or 1
     local R = c.spotR or 300
-    for i = 1, 8 do
-        local a = (i / 8) * math.pi * 2
+    local cols = c.spotCols or SPOT_COLS
+    local n = c.spotN or 8
+    for i = 1, n do
+        local a = (i / n) * math.pi * 2
         local base = lz + Vector(math.cos(a) * R, math.sin(a) * R, 8)
-        local col = (i % 2 == 0) and Color(170, 60, 255, 200) or Color(255, 130, 20, 200)
+        local c0 = cols[(c.spotCycle and (i + math.floor(now * 2)) or i) % #cols + 1]
+        local col = Color(c0[1] or c0.r, c0[2] or c0.g, c0[3] or c0.b, 200)
         -- each one sweeps round and tilts on its own, out of step with the next
         local yaw = math.deg(a) + 180 + math.sin(now * 0.9 * speed + i) * 70
         local pitch = -50 + math.sin(now * 0.6 * speed + i * 1.7) * 25
@@ -1300,17 +1391,20 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityMarrowSpots", function(_, 
     end
 end)
 hook.Add("Think", "LivingCityMarrowSpots", function()
-    local c = Party()
-    if not c or not c.spots or not c.lz or not DynamicLight then return end
-    local lz = Vector(c.lz.x, c.lz.y, c.lz.z)
+    local c = Spots()
+    if not c or not DynamicLight then return end
+    local lz = SpotCentre(c)
+    if not lz then return end
     local R = c.spotR or 300
-    for i = 1, 8, 2 do -- (four lamps light the ground round them: enough for the colour, light on the frame rate)
-        local a = (i / 8) * math.pi * 2
-        local d = DynamicLight(52000 + i)
+    local cols = c.spotCols or SPOT_COLS
+    local n = c.spotN or 8
+    for i = 1, n, 2 do -- (every other lamp lights the ground round it: enough for the colour, light on the frame rate)
+        local a = (i / n) * math.pi * 2
+        local d = DynamicLight(52400 + i)
         if d then
-            local purple = i % 4 == 1
+            local c0 = cols[i % #cols + 1]
             d.pos = lz + Vector(math.cos(a) * R, math.sin(a) * R, 40)
-            d.r, d.g, d.b = purple and 170 or 255, purple and 60 or 130, purple and 255 or 20
+            d.r, d.g, d.b = c0[1] or c0.r, c0[2] or c0.g, c0[3] or c0.b
             d.brightness = 3
             d.size = 420
             d.decay = 1000
@@ -1477,7 +1571,38 @@ hook.Add("CalcView", "LivingCityStandup", function(me, origin, angles, fov)
     return { origin = me:GetPos() + Vector(0, 0, 50) - angles:Forward() * 160, angles = angles, fov = fov, drawviewer = true }
 end)
 
--- (the white cone hats are real props, set on them by the server: sv_livingcity_endings.lua)
+-- the white cone hats: pulled down over every hanged head, drawn on the head bone itself
+local coneModel
+hook.Add("PostDrawOpaqueRenderables", "LivingCityStandupCones", function(_, sky)
+    local c = Standup()
+    if sky or not c or not ClientsideModel then return end
+    if not IsValid(coneModel) then
+        coneModel = ClientsideModel("models/props_junk/trafficcone001a.mdl", RENDERGROUP_OPAQUE)
+        if not IsValid(coneModel) then return end
+        coneModel:SetNoDraw(true)
+        if coneModel.SetModelScale then coneModel:SetModelScale(0.85, 0) end
+    end
+    local white = render.MaterialOverride and Material and Material("models/debug/debugwhite")
+    for _, h in ipairs(c.hangs or {}) do
+        local e = Entity(h.e)
+        if IsValid(e) and not (e.GetNoDraw and e:GetNoDraw()) then
+            local id = e.LookupBone and e:LookupBone("ValveBiped.Bip01_Head1")
+            local m = id and e.GetBoneMatrix and e:GetBoneMatrix(id)
+            local pos, up = e:GetPos() + Vector(0, 0, 62), Vector(0, 0, 1)
+            if m then pos, up = m:GetTranslation(), m:GetAngles():Forward() end -- (the head bone points up out of the top of the head)
+            local ang = up:Angle()
+            ang.p = ang.p + 90
+            coneModel:SetPos(pos - up * 5)
+            coneModel:SetAngles(ang)
+            coneModel:SetupBones()
+            if white then render.MaterialOverride(white) end
+            if render.SetColorModulation then render.SetColorModulation(0.96, 0.96, 0.96) end
+            coneModel:DrawModel()
+            if render.SetColorModulation then render.SetColorModulation(1, 1, 1) end
+            if white then render.MaterialOverride() end
+        end
+    end
+end)
 
 ------------------------------------------------------------------------
 -- Shalom: the hanukkiah, the flags, kippahs, the sayings, the fireworks
@@ -1826,4 +1951,16 @@ concommand.Add("lc_shalom_pose", function(_, _, args)
 end)
 concommand.Add("lc_shalom_pose_print", function()
     for _, n in ipairs({ "R_UpperArm", "L_UpperArm", "R_Forearm", "L_Forearm" }) do print(string.format("%s = Angle(%g, %g, %g)", n, HORA[n].p, HORA[n].y, HORA[n].r)) end
+end)
+
+-- Anyone an ending moves about (dancing in a ring, riding the plane, a ZIG or the bus) is
+-- moved every tick, which the game takes for running: they stand instead, and the dance is
+-- the bones on top (the standing idle named, so it's never the bind pose).
+hook.Add("CalcMainActivity", "LivingCityEndingStand", function(ply)
+    if not S or S.phase ~= "apocalypse" or not IsValid(ply) then return end
+    if not (ply:GetNW2Bool("lc_dancing", false) or IsValid(ply:GetNW2Entity("lc_riding", NULL)) or ply:GetNW2Bool("lc_seated", false)) then return end
+    if ply:GetNW2Bool("lc_end_spectating", false) then return end
+    local seq = ply.LookupSequence and ply:LookupSequence("idle_all_01") or -1
+    if not seq or seq < 0 then seq = ply.LookupSequence and ply:LookupSequence("idle_all_02") or -1 end
+    return ACT_MP_STAND_IDLE, seq or -1
 end)

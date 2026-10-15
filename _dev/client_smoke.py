@@ -1419,6 +1419,63 @@ if concommand.list and concommand.list.lc_shalom_pose_print then concommand.list
 Matrix, ents.GetAll, sound.Play, sound.PlayFile = matrixWas, allWas, playWas, pfWas
 _me.LookupBone, _me.GetBoneMatrix = nil, nil
 _me.nw.lc_dancing = false
+-- the playtest fixes: stage lights on the flood, spotlights for Hard, cones drawn on the hanged,
+-- the arcade's score and trails, nobody running in place while an ending moves them
+local entWas2 = Entity
+Entity = function(i) if i == 1 then return _me end return entWas2(i) end
+_me.LookupBone = function() return 6 end
+_me.GetBoneMatrix = function() return { GetTranslation = function() return Vector(0, 0, 64) end, GetAngles = function() return Angle(-90, 0, 0) end } end
+_me.GetForward = function() return Vector(1, 0, 0) end
+local function beams() return _calls["render.DrawBeam"] or 0 end
+local b0 = beams()
+net._q = { { id = "water", phase = "apocalypse", name = "The Flood", say = "x", client = { bpm = 150, offset = 0, start = CurTime(), section = "heavy",
+    spots = true, spotEnt = 1, spotR = 160, spotN = 6, spotCols = { { 255, 255, 255 }, { 80, 140, 255 } }, spotCycle = true } } }
+net.recv_lc_ending()
+_me.nw.lc_rocking = true
+for _, h in pairs(hook.t["Think"] or {}) do h() end
+for _, h in pairs(hook.t["PostDrawTranslucentRenderables"] or {}) do h(false, false) end
+_me.nw.lc_rocking = false
+if beams() - b0 < 6 then return "flood: no stage lights" end
+b0 = beams()
+net._q = { { id = "hard", phase = "apocalypse", name = "Hard", say = "x", client = { party = true, lights = true, strobe = true, dance = "hard", partyText = true,
+    palette = { { 255, 40, 40 } }, bpm = 150, offset = 0, start = CurTime(), section = "hard", spots = true, lz = Vector(0, 0, 0), spotR = 200, spotN = 10,
+    spotCols = { { 255, 40, 40 }, { 60, 140, 255 } }, spotCycle = true } } }
+net.recv_lc_ending()
+for _, h in pairs(hook.t["PostDrawTranslucentRenderables"] or {}) do h(false, false) end
+if beams() - b0 < 10 then return "hard: no spotlights" end
+_me.nw.lc_dancing = true
+ACT_MP_STAND_IDLE = ACT_MP_STAND_IDLE or 1
+local act = hook.t.CalcMainActivity and hook.t.CalcMainActivity.LivingCityEndingStand and hook.t.CalcMainActivity.LivingCityEndingStand(_me)
+if act == nil then return "endings: a dancer moved about by an ending would run on the spot" end
+_me.nw.lc_dancing = false
+local cmWas, drawn = ClientsideModel, 0
+ClientsideModel = function() return { IsValid = function() return true end, SetNoDraw = function() end, SetModelScale = function() end, SetPos = function() end,
+    SetAngles = function() end, SetupBones = function() end, DrawModel = function() drawn = drawn + 1 end, Remove = function() end } end
+net._q = { { id = "standup", phase = "apocalypse", name = "Standup", say = "x", client = { bpm = 133, offset = 0, start = CurTime(), hangs = { { e = 1, a = Vector(0, 0, 300) } } } } }
+net.recv_lc_ending()
+hook.t.PostDrawOpaqueRenderables.LivingCityStandupCones(false, false)
+ClientsideModel = cmWas
+if drawn < 1 then return "standup: no cone on the hanged head" end
+net._q = { { id = "base", phase = "apocalypse", name = "Base", say = "x", client = { party = true, lights = true, dance = "bus", bpm = 150, offset = 0, start = CurTime() - 40,
+    sky = Vector(0, 0, 2600), bombs = { 1 }, zigs = { 1 }, lines = {} } } }
+net.recv_lc_ending()
+for _, h in pairs(hook.t["Think"] or {}) do h() end
+_advance(0.2)
+for _, h in pairs(hook.t["Think"] or {}) do h() end
+net._q = { { id = "base", phase = "apocalypse", name = "Base", say = "x", client = { party = true, lights = true, dance = "bus", bpm = 150, offset = 0, start = CurTime() - 40,
+    sky = Vector(0, 0, 2600), bombs = {}, zigs = { 1 }, lines = {}, boomAt = CurTime() } } }
+net.recv_lc_ending()
+Entity = function(i) return nil end
+for _, h in pairs(hook.t["Think"] or {}) do h() end
+local boxes = _calls["render.DrawBox"] or 0
+hook.t.PostDrawTranslucentRenderables.LivingCityBaseArcade(false, false)
+local tb = _calls["render.DrawBox"] or 0
+local txt = _calls["draw.SimpleText"] or 0
+hook.t.HUDPaint.LivingCityBaseArcade()
+if tb - boxes < 1 then return "base: no exhaust trail behind the ZIG" end
+if (_calls["draw.SimpleText"] or 0) - txt < 3 then return "base: no score, or no 1000 where a bomb went off" end
+Entity = entWas2
+_me.LookupBone, _me.GetBoneMatrix, _me.GetForward = nil, nil, nil
 if concommand.list and concommand.list.lc_bloom_pose then concommand.list.lc_bloom_pose(nil, "lc_bloom_pose", { "R_Hand", "1", "2", "3" }) end
 net._q = { { id = "water", phase = "reset", name = "The Flood" } }
 net.recv_lc_ending()
