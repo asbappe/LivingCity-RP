@@ -422,6 +422,11 @@ local HORA = {
     R_UpperArm = Angle(-80, -15, 0), L_UpperArm = Angle(80, -15, 0),
     R_Forearm = Angle(0, -15, 0), L_Forearm = Angle(0, -15, 0),
 }
+-- Sat on the chair, lifted up (lc_shalom_pose chair <R_Thigh|L_Thigh|R_Calf|L_Calf> <p> <y> <r> to tune it live).
+local SEATED = {
+    R_Thigh = Angle(0, -85, 0), L_Thigh = Angle(0, -85, 0),
+    R_Calf = Angle(0, 85, 0), L_Calf = Angle(0, 85, 0),
+}
 local function HoraPose(ent, b, beat)
     local sec = S.client.section or "intro"
     if sec == "walk" then beat = beat / 2 end
@@ -436,8 +441,7 @@ local function HoraPose(ent, b, beat)
         P.R_UpperArm, P.L_UpperArm, P.R_Forearm, P.L_Forearm = HORA.R_UpperArm, HORA.L_UpperArm, HORA.R_Forearm, HORA.L_Forearm
     end
     if chair then
-        P.R_Thigh, P.L_Thigh = Angle(0, -85, 0), Angle(0, -85, 0)
-        P.R_Calf, P.L_Calf = Angle(0, 85, 0), Angle(0, 85, 0)
+        P.R_Thigh, P.L_Thigh, P.R_Calf, P.L_Calf = SEATED.R_Thigh, SEATED.L_Thigh, SEATED.R_Calf, SEATED.L_Calf
         P.Head = Angle(0, 10 * math.sin(beat * math.pi), 0)
     elseif sec == "gather" then
         -- swaying arm in arm: a curve up the back, the feet planted
@@ -1706,7 +1710,7 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityShalomKippah", function(_, sky)
                     mat:Rotate(ang)
                     mat:Scale(part == 1 and Vector(0.4, 1, 1) or Vector(0.14, 1.08, 1.08))
                     cam.PushModelMatrix(mat)
-                    render.DrawSphere(Vector(0, 0, 0), 4.4, 14, 8, ((part == 1) == blue) and BLUE or SNOW)
+                    render.DrawSphere(Vector(0, 0, 0), 3.6, 14, 8, ((part == 1) == blue) and BLUE or SNOW)
                     cam.PopModelMatrix()
                 end
             end
@@ -1714,12 +1718,69 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityShalomKippah", function(_, sky)
     end
 end)
 
+-- The hanukkiah and the flagpoles are built from one small cube model, stretched and drawn
+-- many times, in a shiny material the map's light falls on (flat colour glowed like neon).
+local block, shiny, chalk
+local BLOCK = "models/hunter/blocks/cube025x025x025.mdl"
+local BLOCK_SIZE = 11.86
+local function Block()
+    if IsValid(block) then return block end
+    if not ClientsideModel then return nil end
+    block = ClientsideModel(BLOCK, RENDERGROUP_OPAQUE)
+    if IsValid(block) then block:SetNoDraw(true) else block = nil end
+    return block
+end
+-- A box from its centre, turned `ang`, `size` long, wide and tall, in a colour (shiny gold, metal, wax).
+local function Box(centre, ang, size, col, mat)
+    local b = Block()
+    if not b or not Matrix then
+        render.SetColorMaterial()
+        render.DrawBox(centre, ang, size * -0.5, size * 0.5, col)
+        return
+    end
+    local m = Matrix()
+    m:Scale(Vector(size.x / BLOCK_SIZE, size.y / BLOCK_SIZE, size.z / BLOCK_SIZE))
+    b:EnableMatrix("RenderMultiply", m)
+    b:SetPos(centre)
+    b:SetAngles(ang)
+    b:SetupBones()
+    if render.MaterialOverride and mat then render.MaterialOverride(mat) end
+    if render.SetColorModulation then render.SetColorModulation(col.r / 255, col.g / 255, col.b / 255) end
+    b:DrawModel()
+    if render.SetColorModulation then render.SetColorModulation(1, 1, 1) end
+    if render.MaterialOverride and mat then render.MaterialOverride() end
+end
+-- The chair whoever's lifted up sits on: drawn right under their hips, wherever they are.
+-- (lc_shalom_chair: how far under the hips the chair's foot is, and a turn if it faces the wrong way)
+local cvChair = CreateClientConVar("lc_shalom_chair", "21 0", true, false, "Shalom: the chair under whoever's lifted up: how far below their hips its foot is, and a turn (degrees) if it faces the wrong way")
+local chairModel
+hook.Add("PostDrawOpaqueRenderables", "LivingCityShalomChair", function(_, sky)
+    if sky or not (S and S.id == "shalom" and S.phase == "apocalypse") or not ClientsideModel then return end
+    for _, e in ipairs(dancers) do
+        if IsValid(e) and e:GetNW2Bool("lc_chair", false) and not (e.GetNoDraw and e:GetNoDraw()) then
+            if not IsValid(chairModel) then
+                chairModel = ClientsideModel("models/props_c17/chair02a.mdl", RENDERGROUP_OPAQUE)
+                if not IsValid(chairModel) then return end
+                chairModel:SetNoDraw(true)
+            end
+            local id = e.LookupBone and e:LookupBone("ValveBiped.Bip01_Pelvis")
+            local m = id and e.GetBoneMatrix and e:GetBoneMatrix(id)
+            local hips = m and m:GetTranslation() or (e:GetPos() + Vector(0, 0, 38))
+            local drop, turn = string.match(cvChair:GetString() or "", "(%-?[%d%.]+)%s+(%-?[%d%.]+)")
+            chairModel:SetPos(hips - Vector(0, 0, tonumber(drop) or 21))
+            chairModel:SetAngles(Angle(0, e:GetAngles().y + (tonumber(turn) or 0), 0))
+            chairModel:SetupBones()
+            chairModel:DrawModel()
+        end
+    end
+end)
+
 -- A box along a line, from a to b (the hanukkiah's arms and stem).
-local function Bar(a, b, th, col)
+local function Bar(a, b, th, col, mat)
     local d = b - a
     local len = d:Length()
     if len < 0.01 then return end
-    render.DrawBox(a, d:Angle(), Vector(0, -th, -th), Vector(len, th, th), col)
+    Box(a + d * 0.5, d:Angle(), Vector(len, th * 2, th * 2), col, mat)
 end
 
 -- The flag of Israel on a waving surface: the white field, a blue stripe at the top and the
@@ -1770,7 +1831,8 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityShalom", function(_, sky)
     local now = CurTime()
     local t = SongPos(now)
     local eye = EyePos()
-    render.SetColorMaterial()
+    shiny = shiny or (Material and Material("models/shiny"))
+    chalk = chalk or (Material and Material("models/debug/debugwhite"))
     -- the hanukkiah: a giant one in the middle of the rings, turned to face you
     local m = c.menorah
     if m and m.pos then
@@ -1784,15 +1846,15 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityShalom", function(_, sky)
         local function P(x, z) return base + right * x + up * z end
         local th = w * 0.02 + 1.5
         local top, sp = h * 0.74, w / 9
-        render.DrawBox(base, flat, Vector(-w * 0.2, -w * 0.12, 0), Vector(w * 0.2, w * 0.12, h * 0.05), GOLD2)
-        Bar(P(0, h * 0.05), P(0, h * 0.86), th * 1.4, GOLD)
+        Box(base + up * (h * 0.025), flat, Vector(w * 0.24, w * 0.4, h * 0.05), GOLD2, shiny)
+        Bar(P(0, h * 0.05), P(0, h * 0.86), th * 1.4, GOLD, shiny)
         for i = 1, 4 do
             for _, sgn in ipairs({ 1, -1 }) do
-                Bar(P(0, top - h * 0.115 * i), P(sgn * i * sp, top), th, GOLD)
-                render.DrawBox(P(sgn * i * sp, top), flat, Vector(-th * 1.8, -th * 1.8, 0), Vector(th * 1.8, th * 1.8, th * 1.6), GOLD2)
+                Bar(P(0, top - h * 0.115 * i), P(sgn * i * sp, top), th, GOLD, shiny)
+                Box(P(sgn * i * sp, top + th * 0.8), flat, Vector(th * 3.6, th * 3.6, th * 1.6), GOLD2, shiny)
             end
         end
-        render.DrawBox(P(0, h * 0.86), flat, Vector(-th * 2, -th * 2, 0), Vector(th * 2, th * 2, th * 1.6), GOLD2)
+        Box(P(0, h * 0.86 + th * 0.8), flat, Vector(th * 4, th * 4, th * 1.6), GOLD2, shiny)
         -- the candles: the first on the right, each next one to its left; the shamash in the middle, higher, lit from the start
         local lit = 0
         for _, ct in ipairs(c.candles or {}) do if t >= ct then lit = lit + 1 end end
@@ -1800,7 +1862,7 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityShalom", function(_, sky)
         for k = 0, 8 do
             local x = k == 0 and 0 or (k <= 4 and (5 - k) * sp or -(k - 4) * sp)
             local cb = k == 0 and P(0, h * 0.86 + th * 1.6) or P(x, top + th * 1.6)
-            render.DrawBox(cb, flat, Vector(-th, -th, 0), Vector(th, th, ch), Color(235, 240, 255))
+            Box(cb + up * (ch * 0.5), flat, Vector(th * 2, th * 2, ch), Color(235, 240, 255), chalk)
             if k <= lit then flames[#flames + 1] = cb + up * (ch + 3) end
         end
         if lit > litWas and sound and sound.Play then sound.Play("ambient/fire/ignite.wav", P(0, top), 80, 100, 1) end
@@ -1811,7 +1873,8 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityShalom", function(_, sky)
         local foot = Vector(pole.x, pole.y, pole.z)
         if foot:DistToSqr(eye) < 3500 * 3500 then
             local PH = 200
-            render.DrawBox(foot, Angle(0, 0, 0), Vector(-1.5, -1.5, 0), Vector(1.5, 1.5, PH), Color(225, 225, 230))
+            Box(foot + Vector(0, 0, PH * 0.5), Angle(0, 0, 0), Vector(3, 3, PH), Color(170, 170, 178), shiny)
+            render.SetColorMaterial()
             local hoist = math.Clamp((t - 0.4 - (i - 1) * 0.8) / 1.0, 0, 1)
             hoist = hoist * hoist * (3 - 2 * hoist)
             local topZ = foot.z + 50 + (PH - 52) * hoist
@@ -1828,6 +1891,7 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityShalom", function(_, sky)
         toEye:Normalize()
         local across = Vector(-toEye.y, toEye.x, 0)
         local W, H = 660, 480
+        render.SetColorMaterial()
         Flag(sk - across * (W / 2) + Vector(0, 0, H / 2), across, Vector(0, 0, -1), toEye, W * u, H, now, 22, 16)
     end
 end)
@@ -1940,13 +2004,22 @@ hook.Add("HUDPaint", "LivingCityShalom", function()
 end)
 
 -- tuning the hora's arms (only on your screen)
+-- (the arms in the ring: lc_shalom_pose R_UpperArm -80 -15 0; the legs sat on the chair:
+-- lc_shalom_pose chair R_Thigh 0 -85 0. Only on your screen; lc_shalom_pose_print to pass the numbers on.)
 concommand.Add("lc_shalom_pose", function(_, _, args)
+    local tbl = HORA
+    if args[1] == "chair" then tbl = SEATED table.remove(args, 1) end
     local name = args[1]
-    if not name or not HORA[name] then print("[Living City] lc_shalom_pose <R_UpperArm|L_UpperArm|R_Forearm|L_Forearm> <pitch> <yaw> <roll>") return end
-    HORA[name] = Angle(tonumber(args[2]) or 0, tonumber(args[3]) or 0, tonumber(args[4]) or 0)
+    if not name or not tbl[name] then
+        print("[Living City] lc_shalom_pose <R_UpperArm|L_UpperArm|R_Forearm|L_Forearm> <pitch> <yaw> <roll>")
+        print("[Living City] lc_shalom_pose chair <R_Thigh|L_Thigh|R_Calf|L_Calf> <pitch> <yaw> <roll>")
+        return
+    end
+    tbl[name] = Angle(tonumber(args[2]) or 0, tonumber(args[3]) or 0, tonumber(args[4]) or 0)
 end)
 concommand.Add("lc_shalom_pose_print", function()
     for _, n in ipairs({ "R_UpperArm", "L_UpperArm", "R_Forearm", "L_Forearm" }) do print(string.format("%s = Angle(%g, %g, %g)", n, HORA[n].p, HORA[n].y, HORA[n].r)) end
+    for _, n in ipairs({ "R_Thigh", "L_Thigh", "R_Calf", "L_Calf" }) do print(string.format("chair %s = Angle(%g, %g, %g)", n, SEATED[n].p, SEATED[n].y, SEATED[n].r)) end
 end)
 
 -- Anyone an ending moves about (dancing in a ring, riding the plane, a ZIG or the bus) is

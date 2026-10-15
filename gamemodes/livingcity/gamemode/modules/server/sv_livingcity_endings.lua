@@ -2309,7 +2309,6 @@ local SHALOM_PAL = { { 255, 205, 110 }, { 60, 120, 255 }, { 255, 255, 255 }, { 1
 local SHALOM_SPEED = { intro = 0, gather = 0, walk = 0.5, hora = 1, lift = 1, ["in"] = 0, build = 1.2, peak = 1.6, final = 1.8, outro = 0.4, ["end"] = 0 }
 local HORA_STEP = 38      -- (shoulder to shoulder, round a ring)
 local HORA_PACE = 42      -- (how fast a ring goes round at the hora's own speed: units a second)
-local CHAIRS = { "models/props_c17/chair02a.mdl", "models/props_interiors/furniture_chair01a.mdl", "models/props_c17/furniturechair001a.mdl" }
 
 local function ShalomSection(t)
     local kind, at = "intro", 0
@@ -2339,20 +2338,11 @@ local function Member(ring, e, a)
     return m
 end
 
-local function Chair(pos)
-    local c = Prop(FirstModel(CHAIRS), pos)
-    if IsValid(c) then
-        if c.SetSolid then c:SetSolid(SOLID_NONE) end
-        if c.SetNotSolid then c:SetNotSolid(true) end
-    end
-    return c
-end
-
 -- Up on a chair, over everyone's heads (a beat-long bounce on every beat), then down.
 local function LiftUp(m, now)
     if not m or m.lift or not IsValid(m.e) then return end
     local beats = 16
-    m.lift = { t0 = now, dur = beats * 60 / math.max(40, cvShalomBPM:GetFloat()), chair = Chair(m.e:GetPos()) }
+    m.lift = { t0 = now, dur = beats * 60 / math.max(40, cvShalomBPM:GetFloat()) }
     m.e:SetNW2Bool("lc_chair", true)
     E.lifted = E.lifted or {}
     E.lifted[m.e] = true
@@ -2368,7 +2358,6 @@ local function LiftUp(m, now)
 end
 local function LiftDown(m)
     if not m or not m.lift then return end
-    if IsValid(m.lift.chair) then m.lift.chair:Remove() end
     m.lift = nil
     if IsValid(m.e) then m.e:SetNW2Bool("lc_chair", false) end
 end
@@ -2457,6 +2446,19 @@ function LC.ShalomStep(now)
     end
     E.rush = (E.rush or 1) + math.Clamp(rush - (E.rush or 1), -2 * dt, 2 * dt)
     local c, z0 = E.lz, E.floorZ
+    -- (the ground under each of them, not one height for all: the landing zone's middle can be
+    -- a kerb or a step above the road round it; looked up once a spot and kept)
+    E.groundAt = E.groundAt or {}
+    local function FloorAt(x, y)
+        local key = math.floor(x / 16) .. ":" .. math.floor(y / 16)
+        local z = E.groundAt[key]
+        if z == nil then
+            local g = Ground(Vector(x, y, z0 + 40))
+            z = (g and math.abs(g.z - z0) < 80) and g.z or z0 -- (never down off a roof's edge)
+            E.groundAt[key] = z
+        end
+        return z
+    end
     for name, ring in pairs(E.rings) do
         ring.spin = ring.spin + ring.dir * HORA_PACE * E.mult / math.max(60, ring.r) * dt
         for _, m in ipairs(ring.members) do
@@ -2466,17 +2468,15 @@ function LC.ShalomStep(now)
                 m.r = m.r + math.Clamp(ring.r - m.r, -150 * dt, 150 * dt)
                 local a = m.a + ring.spin
                 local r = m.r * (name == "watch" and 1 or E.rush)
-                local pos = Vector(c.x + math.cos(a) * r, c.y + math.sin(a) * r, z0) -- (right on the floor: anything held up off it looks like it floats)
+                local px, py = c.x + math.cos(a) * r, c.y + math.sin(a) * r
+                local pos = Vector(px, py, FloorAt(px, py)) -- (right on the floor: anything held up off it looks like it floats)
                 local yaw = math.deg(a) + 180
                 if m.lift then
                     local f = (now - m.lift.t0) / m.lift.dur
                     local up = math.Clamp(math.min(f * 5, (1 - f) * 5), 0, 1)
                     local s = up * up * (3 - 2 * up)
                     pos.z = pos.z + s * (62 + 8 * math.abs(math.sin(beat * math.pi)))
-                    if IsValid(m.lift.chair) then
-                        m.lift.chair:SetPos(pos + Vector(0, 0, 20))
-                        m.lift.chair:SetAngles(Angle(0, yaw, 8 * s * math.sin(beat * math.pi)))
-                    end
+                    -- (the chair itself is drawn on every screen under their hips: cl_livingcity_endings.lua)
                 end
                 e:SetPos(pos)
                 if e:IsPlayer() then
