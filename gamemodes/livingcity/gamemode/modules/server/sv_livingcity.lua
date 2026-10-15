@@ -1407,6 +1407,12 @@ local SPAWNERS = {
 local ROLE_ORDER = { "citizen", "cop", "soldier", "scanner", "zombie", "rebel" }
 LC.Spawners = SPAWNERS
 
+-- How many NPCs the city's settings want in all (lc_citizens, lc_cops and the rest).
+function LC.NPCTargetsTotal()
+    return (LC.CitizenTarget and LC.CitizenTarget() or 0) + cvCops:GetInt() + (LC.ExtraCops or 0) + cvSoldiers:GetInt() + cvScanners:GetInt()
+        + (LC.ZombieTarget and LC.ZombieTarget() or 0) + (LC.RebelTarget and LC.RebelTarget() or 0)
+end
+
 function LC.CitizenTarget()
     if LC.Event == "curfew" or LC.Event == "lockdown" then
         local cv = GetConVar("lc_curfew_citizens")
@@ -1431,7 +1437,22 @@ local function MaintainPopulation()
     LC.RoleCounts = counts
     local total = 0
     for _, c in pairs(counts) do total = total + c end
-    if total >= cvBudget:GetInt() then return end
+    if total >= cvBudget:GetInt() then
+        -- (the cap's lower than what the city's asking for: say so, now and then, or it just
+        -- looks like Civil Protection and the citizens have stopped turning up)
+        local want = LC.NPCTargetsTotal()
+        if want > cvBudget:GetInt() and CurTime() >= (LC.BudgetWarnAt or 0) and LC.Notice then
+            LC.BudgetWarnAt = CurTime() + 600
+            for _, p in ipairs(player.GetAll()) do
+                if p:IsSuperAdmin() then
+                    LC.Notice(p, "warn", "NPC cap", string.format("lc_npc_budget is %d, but the city's settings want %d NPCs: no more will spawn (units and citizens included). "
+                        .. "60 is the default: lc_npc_budget 60.", cvBudget:GetInt(), want), 14)
+                end
+            end
+            LC.Log("warn", string.format("lc_npc_budget (%d) is below what the city's settings want (%d): nothing more spawns", cvBudget:GetInt(), want))
+        end
+        return
+    end
 
     local targets = {
         citizen = LC.CitizenTarget(),

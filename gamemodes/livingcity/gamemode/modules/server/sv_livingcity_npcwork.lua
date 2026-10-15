@@ -140,6 +140,7 @@ end
 local function DropCarry(npc, st)
     if IsValid(st.carry) then st.carry:Remove() end
     st.carry = nil
+    if IsValid(npc) and npc.SetNW2Bool then npc:SetNW2Bool("lc_carry_front", false) end
 end
 
 -- Luggage hangs at their side by its handle: upright, its long side pointing
@@ -181,6 +182,12 @@ function LC.CarrySideHold(mins, maxs)
     return target - LC.TurnVector(mid, ang), ang
 end
 
+-- What's carried in both hands, out in front: boxes and crates.
+function LC.CarryInFront(model)
+    local m = string.lower(model or "")
+    return (string.find(m, "box", 1, true) or string.find(m, "crate", 1, true) or string.find(m, "cardboard", 1, true)) and true or false
+end
+
 local function Carry(npc, st, model)
     DropCarry(npc, st)
     local e = ents.Create("prop_dynamic")
@@ -201,6 +208,15 @@ local function Carry(npc, st, model)
             e:SetNW2Angle("lc_hold_ang", ang)
             e:SetNW2Bool("lc_hold_side", true)
         end
+    elseif e.SetParent and LC.CarryInFront(model) and e.OBBMins then
+        -- a box or a crate: held out in front in both hands, not swinging from one like luggage
+        -- (each player's game bends the arms under it: cl_livingcity.lua)
+        e:SetParent(npc)
+        local mins, maxs = e:OBBMins(), e:OBBMaxs()
+        local mid = (mins + maxs) * 0.5
+        if e.SetLocalPos then e:SetLocalPos(Vector(14 + (maxs.x - mins.x) / 2, 0, 42) - mid) end
+        if e.SetLocalAngles then e:SetLocalAngles(Angle(0, 0, 0)) end
+        if npc.SetNW2Bool then npc:SetNW2Bool("lc_carry_front", true) end
     elseif e.SetParent then
         local att = npc.LookupAttachment and npc:LookupAttachment("anim_attachment_RH") or 0
         if att and att > 0 then

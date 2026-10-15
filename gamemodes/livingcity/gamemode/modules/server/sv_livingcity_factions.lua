@@ -297,7 +297,9 @@ function LC.CanJoinFaction(ply, fid, sid)
     return true
 end
 
-function LC.SetFaction(ply, fid, sid, quiet)
+-- stay: switching by choice from the faction menu, you stay where you are (a new
+-- character, a slot or an admin's say-so still starts you at a spawn point).
+function LC.SetFaction(ply, fid, sid, quiet, stay)
     if fid == "ota" then -- (Overwatch was its own faction once: now it's Civil Protection's top ranks)
         fid = "cp"
         ply:SetPData("lcf_transhuman", "1")
@@ -314,7 +316,22 @@ function LC.SetFaction(ply, fid, sid, quiet)
         local s = sid and f.specialsById[sid]
         Tell(ply, "You are now " .. (s and s.name or (f.name .. ", " .. RankOf(ply).name)) .. ".")
     end
-    if ply:Alive() and not (LC.Prisoners and LC.Prisoners[ply]) then ply:Spawn() end
+    if ply:Alive() and not (LC.Prisoners and LC.Prisoners[ply]) then
+        local pos, ang = ply:GetPos(), ply:EyeAngles()
+        ply:Spawn()
+        if stay then
+            -- (the new uniform and kit, right where you were standing; set again a moment
+            -- later in case anything spawning moves you)
+            local function Back()
+                if not IsValid(ply) or not ply:Alive() then return end
+                ply:SetPos(pos)
+                if ply.SetEyeAngles then ply:SetEyeAngles(Angle(ang.p, ang.y, 0)) end
+            end
+            Back()
+            timer.Simple(0, Back)
+            timer.Simple(0.3, Back) -- (after the spawn hooks that place people: rebels at their spawns, citizens off Combine ground)
+        end
+    end
     if LC.RefreshRelations then LC.RefreshRelations() end
 end
 
@@ -330,7 +347,7 @@ net.Receive("lcf_join", function(_, ply)
     local ok, why = LC.CanJoinFaction(ply, fid, sid)
     if not ok then return Tell(ply, why) end
     ply.lcfNextSwitch = CurTime() + cvCooldown:GetFloat()
-    LC.SetFaction(ply, fid, sid)
+    LC.SetFaction(ply, fid, sid, nil, true)
 end)
 
 local function SendMenu(ply)

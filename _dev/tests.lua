@@ -11753,6 +11753,36 @@ Freq7Tests()
 ----------------------------------------------------------------------
 
 ----------------------------------------------------------------------
+section("Playtest fixes: switching faction where you stand, boxes in both hands, the NPC cap")
+;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
+    local sw = newPlayer("Switcher", "citizen")
+    local here = Vector(4321, -1234, 0)
+    sw:SetPos(here)
+    LC.SetFaction(sw, "resistance", nil, true, true)
+    _run(0.5)
+    ok(sw:GetPos():Distance(here) < 1 and sw:GetNW2String("lcf_faction", "") == "resistance", "switching faction from the menu, you stay right where you are", tostring(sw:GetPos()))
+    LC.SetFaction(sw, "citizen", nil, true)
+    local n = ents.Create("npc_citizen") n:Spawn()
+    local st = { role = "citizen", state = "idle", test = true }
+    LC.NPCs[n] = st
+    LC.NPCCarry(n, st, "models/props_junk/cardboard_box004a.mdl")
+    ok(n:GetNW2Bool("lc_carry_front", false) and IsValid(st.carry) and st.carry:GetParent() == n, "a box is carried out in front, in both hands")
+    LC.NPCDropCarry(n, st)
+    ok(not n:GetNW2Bool("lc_carry_front", false), "(put down, and the arms come down)")
+    LC.NPCCarry(n, st, "models/props_c17/suitcase001a.mdl")
+    ok(not n:GetNW2Bool("lc_carry_front", false), "a suitcase is still carried at the side")
+    LC.NPCDropCarry(n, st)
+    LC.NPCs[n] = nil
+    n:Remove()
+    local was = GetConVar("lc_npc_budget"):GetInt()
+    _setcvar("lc_npc_budget", 1)
+    local okr, rep = pcall(LC.BuildReport)
+    ok(okr and LC.NPCTargetsTotal() > 1 and string.find(rep or "", "lc_npc_budget (1) is below", 1, true),
+        "a cap lower than the city's settings is pointed out in the debug report (it stops Civil Protection spawning)")
+    _setcvar("lc_npc_budget", was)
+end)()
+
+----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)
 _run(1)

@@ -148,6 +148,8 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **Hard (lc_ending hard now):** everyone at the LZ doing the mirror-flip dance, PARTY HARD everywhere, the strobe, the freeze at the break, people passing out one at a time. The Combine going for it all through (crowd surfs, spins, backflips with confetti), two or three at once.
   Notes:
+- [ ] **Everyday fixes:** citizens delivering boxes or crates carry them out in front in both hands (not swinging from one hand like a suitcase); switching faction from F4 keeps you where you are; if Civil Protection or citizens stop turning up, a superadmin gets an "NPC cap" notice (`lc_npc_budget` was 10 on the server: set it back to 60).
+  Notes:
 - [ ] **Pose Recorder (the separate addon, pose_recorder.zip):** Tools, Poser, Pose Recorder. Spawn a mannequin from the panel: is it your model, standing, limbs frozen? Pose an arm with the physgun, right click: "Keyframe 1". Pose it differently, right click again. Reload: does the blue ghost beside it play the loop, and do its poses match the mannequin's exactly (that's the test of the maths)? Try "Record / stop" while moving a limb. Copy, and paste the result to me; Save and Load. Then pose a real dance (Bloom's, Grigori's headbang, the hora) and send it over.
   Notes:
 - [ ] **Fixes from the last playtest (bone axes worked out from what you saw: tell me which still look wrong):**

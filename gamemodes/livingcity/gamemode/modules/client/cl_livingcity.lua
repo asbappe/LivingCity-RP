@@ -928,6 +928,36 @@ local function DrawHeld(self)
     self:SetRenderAngles()
 end
 
+-- Carrying a box or a crate out in front (sv_livingcity_npcwork.lua): both arms forward and
+-- bent under it. (On the arm bones yaw raises an arm forward, pitch takes it out to the side
+-- or in, minus for the right arm; a forearm bends at the elbow on yaw.)
+local CARRY_ARMS = {
+    ["ValveBiped.Bip01_R_UpperArm"] = Angle(12, -38, 0), ["ValveBiped.Bip01_L_UpperArm"] = Angle(-12, -38, 0),
+    ["ValveBiped.Bip01_R_Forearm"] = Angle(0, -62, 0), ["ValveBiped.Bip01_L_Forearm"] = Angle(0, -62, 0),
+}
+local carryPosed = {}
+local function CarryPose(e, on)
+    for name, a in pairs(CARRY_ARMS) do
+        local id = e:LookupBone(name)
+        if id then e:ManipulateBoneAngles(id, on and a or Angle(0, 0, 0)) end
+    end
+end
+timer.Create("LivingCityCarryFront", 0.25, 0, function()
+    local seen = {}
+    for _, e in ipairs(ents.FindByClass("npc_*")) do
+        if IsValid(e) and e:GetNW2Bool("lc_carry_front", false) then
+            seen[e] = true
+            if not carryPosed[e] then carryPosed[e] = true CarryPose(e, true) end
+        end
+    end
+    for e in pairs(carryPosed) do
+        if not seen[e] then
+            if IsValid(e) then CarryPose(e, false) end
+            carryPosed[e] = nil
+        end
+    end
+end)
+
 timer.Create("LivingCityHeldLuggage", 0.5, 0, function()
     for _, e in ipairs(ents.FindByClass("prop_dynamic")) do
         if not e.lcHeldDraw and e:GetNW2Bool("lc_hold_side", false) then

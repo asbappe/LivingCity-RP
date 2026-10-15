@@ -254,6 +254,7 @@ local ADMIN_GUIDE = { "Admin", {
     "How it feels (editor panel, How it feels): lc_fov (75, the widest anyone sees; 0 leaves it to each player), lc_eye_height (61; GMod's is 64), lc_view_bob (lc_view_bob_amount, 100%, for how strong), lc_quiet_hud, lc_respawn_secs (12, the death card), lc_word_gets_around.",
     "lc_debugreport copies a report to send when something breaks.",
     "C > Help > Admin testing tools (or the button on F4, or !admintools): give yourself XP, a rank, credits and standing, switch faction, start over.",
+    "Switching faction from F4 changes your uniform and kit where you stand: no trip back to a spawn point.",
     "Chat: !givexp, !setrank, !givecredits, !givestanding <n> [name]; !resetxp, !resetcredits [name]; !resetme.",
     "C > Help > Staff panel (or !staff): logs, tickets, warnings, character bans. !warn <name> <reason>, !charban <name> <reason>.",
     "lc_time <hour>, lc_weather <clear|overcast|fog|rain|storm|auto>.",
