@@ -1,0 +1,63 @@
+# Living City: the core (read this before changing anything)
+
+This is the master technical document. It lists what the owner's server, files, players and workflow depend on. **None of it changes without the owner being told first and saying yes**, in the chat, before the change is made. A new feature is fine; changing, moving, renaming or removing anything below is not, unless the owner asked for exactly that.
+
+## The rules
+
+1. **Read this file and `CLAUDE.md` at the start of every session.** `HANDOFF.md` has the latest work in progress; `README.md` is the full specification of how everything behaves.
+2. **Anything `README.md` describes is the agreed behaviour.** Change it only when the owner asks for that change, or after asking them ("this would change X to Y: OK?") and getting a yes. Never as a side effect, a tidy-up or a guess.
+3. **Something isn't working?** Find out what's actually on the owner's server first (the debug report, `lc_announce_clips`, `lc_endings`, `lc_sound_check`, or ask them to look) and compare it with this file. Don't guess, and don't ask them to move or rename their files to fit the code: make the code fit what they have, and write down here what they have.
+4. **The core snapshot is a tripwire.** `_dev/core_snapshot.txt` lists every setting and its default, every announcement trigger and folder, every ending, the data files, every faction and rank (with its XP), every item, and every chat and console command. The test suite compares the code with it ("the core is as the owner knows it"). If the test fails, something core changed: tell the owner exactly what (the test prints the differences, `+` added, `-` gone), and only with their OK copy `_dev/core_snapshot.new.txt` over `_dev/core_snapshot.txt`. Adding a new feature adds lines too: say what they are, the same way.
+5. **An approved change is written down in the same commit:** here (if it touches anything below), in `README.md`, in the snapshot, and in the changelog at the bottom of this file, with the date and the owner's words approving it.
+
+## The owner's setup (facts, as they are; don't assume otherwise)
+
+- They play on **Linux Mint**: give Linux commands.
+- The server is a **dedicated server on a Hexane host**, map **`rp_c18_ug`**.
+- **FastDL** is `http://a29ka.hexane.co/9124749/garrysmod/` and mirrors `garrysmod/`. The host panel has a **"FastDL sync"** button: it must be pressed after every upload, or players don't get new files.
+- **A new sound reaches players only after: upload, FastDL sync, a map change (the server builds its download list when a map starts), and the player reconnecting.**
+- **Their recordings on the server** are in **`garrysmod/sound/livingcity/overwatch/`**, **`garrysmod/sound/livingcity/administrator/`** and **`garrysmod/sound/livingcity/endings/`** (straight under `sound/livingcity/`: no `announce/` folder, not inside an addon). Their announcement recordings are `.wav` files named for their trigger (`curfew1.wav`, `socio_green1.wav`, the Administrator's with her tone: `curfew_firm1.wav`). The Shalom song is `endings/shalom1.mp3`.
+- **Delivering a change:** a `livingcity.zip` of the gamemode (`git archive HEAD` into `livingcity/`, without `livingcity_sound/` and `pose_recorder/`), sent as a file. **Never send a zip that could replace their sound folders**: the `livingcity_sound` folder in git holds only READMEs. A new sound file goes on its own, with exactly where to put it. `pose_recorder.zip` is the Pose Recorder addon, separate.
+
+## Files and folders (where things are read from and saved to)
+
+| What | Where | In the code |
+|---|---|---|
+| Overwatch and Administrator recordings, and the radio's | `sound/livingcity/<voice>/` **and** `sound/livingcity/announce/<voice>/` (both are read: `overwatch`, `administrator`, `radio`) | `LC.AnnounceRoots`, sv_livingcity_announcer.lua |
+| Which trigger a recording is for | its file name starts with the trigger (the longest that fits): `curfew_soon1.wav` is `curfew_soon`; a `.txt` with the same name is its subtitle | `LC.AnnounceTriggerOf` |
+| The Administrator's tone | `firm`, `stern` or `furious` anywhere in the name; none is warm | `LC.AnnounceToneOf` |
+| Ending songs | `sound/livingcity/endings/`, flat, named for the ending's codeword (`bus.mp3`, `bus2.mp3`, `shalom1.mp3`); `.mp3`, `.ogg` or `.wav`; the older folder per ending still works | `LC.EndingOfSong`, `LC.EndingSongs`, `LC.EndingRoot` |
+| The city's layout (the editor's work) | `data/livingcity/<map>.json`, with backups in `data/livingcity/backups/<map>/` | `LC.LayoutPath`, sv_livingcity_data.lua |
+| When the last secret ending was | `data/livingcity/endings.json` | `LC.EndingCooldownFile` |
+| Pose Recorder recordings | the player's `data/pose_recorder/<name>.json` | pose_recorder/ |
+
+Every recording and song is sent to players with `resource.AddFile` when the map starts.
+
+## Settings
+
+- Every setting (`lc_*`) and its default is in the core snapshot. **Settings are saved on the server (archived): changing a default never reaches a server that already has the old value.** When a default has to change (with the owner's OK), add the old and new value to the `RETUNED` table in sv_livingcity_endings.lua (`LC.EndingRetune`), which moves a server still on exactly the old default to the new one.
+- `lc_npc_budget` caps the city's NPCs (default 60). Lower than what the settings add up to, nothing more spawns (Civil Protection included); superadmins are told, and the debug report says so.
+
+## How it all behaves
+
+`README.md` is the specification, section by section: Install and first run; Permanent death; Civil Intake; the quick menu (F1) and the full menu (C); building a map with the editor; the city (events, escalation, the dead); the city's people (trains, the power grid, checkpoints, talking to people, lookouts); factions and ranks; Civil Protection's tools; jobs and quests; story chains; Union jobs; survival; social credit; your characters; talking, knowing people and going down; homes, trade and writing; vortigaunts; day, night and weather; staff tools; contraband and the underground; conduct; the secret endings; admin commands. Each of those is core: the tests in `_dev/tests.lua` (about 2500 of them, by section) check them.
+
+Things players and the owner rely on that were settled in conversation:
+
+- **Everything works through the in-game UI.** Console commands are extras for admins, never the only way. Important messages go through `LC.Notice`.
+- **Switching faction from the F4 menu keeps you where you stand** (a new character, another of your characters, or an admin setting your faction starts you at a spawn point).
+- **Secret endings:** the G-Man stops time, everyone votes (no votes is a yes), nobody can be hurt, the city's events and announcer are quiet, and the map reloads afterwards; one per `lc_ending_cooldown` minutes. Each ending's timing comes from its song (`lc_ending_<id>_sections`).
+- **NPCs carry boxes and crates in front in both hands,** luggage at the side, small things in the hand.
+
+## How the code must be written (or things break)
+
+- **Never an em dash**, anywhere: `grep -rl $'\xe2\x80\x94' . --exclude-dir=.git` must print nothing.
+- **Lua allows 200 local variables per function:** `sv_livingcity_endings.lua` and `_dev/tests.lua` are at the limit. Put new code in its own scope (`do ... end`, or a function, as Shalom and the newer tests do).
+- **Bone poses (the dances):** on the arms, yaw raises an arm forward (minus is up), pitch takes it out to the side (minus for the right arm, plus for the left), roll twists it; a forearm bends at the elbow on yaw. On the head and spine, yaw tilts side to side, roll twists, pitch nods. Thighs: yaw swings forward and back. **Never bend the knee of a standing leg or tip the pelvis**: the feet leave the floor and the character floats. Anyone an ending holds in place goes exactly on the ground under them.
+- **Every change** keeps `README.md`, `PLAYTEST.md`, the in-game guide (`cl_init.lua`, when players would notice), `_dev/tests.lua` and `_dev/client_smoke.py` up to date. The client smoke test must end `CLIENT SMOKE PASS`; the full suite (`timeout 6900 python3 run_tests.py tests.lua` from `_dev`) must pass.
+
+## Changelog of the core (approved changes only)
+
+- 2026-10-15: this file and the core snapshot created. Recordings are read from `sound/livingcity/<voice>/` as well as `sound/livingcity/announce/<voice>/` (the owner's folders had never been read: "you had me create a folder in garrysmod > sound > livingcity, one for overwatch, one for administrator, and one for endings").
+- 2026-10-15: switching faction from F4 keeps you where you stand (the owner: "Can't I just change where I am?").
+- 2026-10-15: NPCs carry boxes in front in both hands (the owner: "can we make them use both hands to carry boxes out in front of them?").

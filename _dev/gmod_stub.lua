@@ -82,7 +82,8 @@ function CVMT:GetFloat() return tonumber(self.v) or 0 end
 function CVMT:GetBool() return (tonumber(self.v) or 0) ~= 0 end
 function CVMT:GetString() return tostring(self.v) end
 function CVMT:SetInt(v) self.v = math.floor(v) end
-function CreateConVar(name, def) if not convars[name] then convars[name] = setmetatable({ v = def }, CVMT) end return convars[name] end
+_cvarDefaults = {} -- (every setting's default as the code makes it: the core snapshot test, CORE.md)
+function CreateConVar(name, def) if not convars[name] then convars[name] = setmetatable({ v = def }, CVMT) _cvarDefaults[name] = tostring(def) end return convars[name] end
 function GetConVar(name) return convars[name] end
 -- change callbacks fire for RunConsoleCommand (the console, the editor), not _setcvar (a test's own setup)
 cvars = { cb = {} }

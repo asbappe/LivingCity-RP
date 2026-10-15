@@ -156,6 +156,26 @@ function LC.BuildReport()
             warn[#warn + 1] = string.format("line %d has no ration dispenser at its front: NPCs are still served, and players who wait at the front are handed a ration", g)
         end
     end
+    -- where the city's recordings are looked for, and what's found in each place (the server's own
+    -- view: a player's computer must have the same files, downloaded, to hear them)
+    do
+        local parts = {}
+        for _, root in ipairs(LC.AnnounceRoots or { "livingcity/announce/" }) do
+            for _, v in ipairs({ "overwatch", "administrator", "radio" }) do
+                local n = #(file.Find("sound/" .. root .. v .. "/*", "GAME") or {})
+                if n > 0 then parts[#parts + 1] = "sound/" .. root .. v .. "/ " .. n end
+            end
+        end
+        out[#out + 1] = "recordings: " .. (#parts > 0 and table.concat(parts, ", ") or "none found in sound/livingcity/overwatch/, administrator/, radio/ or under announce/")
+        local songs = {}
+        for _, id in ipairs(LC.EndingOrder or {}) do
+            local n = #(LC.EndingSongs and LC.EndingSongs(id) or {})
+            songs[#songs + 1] = id .. " " .. n
+        end
+        out[#out + 1] = "ending songs (sound/livingcity/endings/): " .. table.concat(songs, ", ")
+        local url = GetConVar("sv_downloadurl")
+        out[#out + 1] = "downloads: sv_downloadurl \"" .. (url and url:GetString() or "") .. "\" (players get new sounds after a FastDL sync and a map change)"
+    end
     out[#out + 1] = "setup notes: " .. (#warn > 0 and "" or "none")
     for _, w in ipairs(warn) do out[#out + 1] = "  - " .. w end
     for g, line in SortedPairs(LC.Lines or {}) do

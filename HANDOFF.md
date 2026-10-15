@@ -1,6 +1,6 @@
 # Living City: handoff to a new session
 
-Read this first, then README.md (what the gamemode does, every setting) and PLAYTEST.md (the owner's in-game checklist).
+`CLAUDE.md` (loaded into every session) and **`CORE.md`** (the core: what must not change without the owner's OK, and the owner's real server setup) come first. Then this, then README.md (what the gamemode does, every setting) and PLAYTEST.md (the owner's in-game checklist).
 
 ## The project
 

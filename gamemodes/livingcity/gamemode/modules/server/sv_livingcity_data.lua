@@ -61,6 +61,7 @@ end
 LC.IsCitySetting = OurSetting
 
 local function Path() return "livingcity/" .. game.GetMap() .. ".json" end
+LC.LayoutPath = Path -- (core: CORE.md)
 
 function LC.CanEdit(ply)
     if not IsValid(ply) then return true end -- server console

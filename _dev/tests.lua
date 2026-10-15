@@ -11793,6 +11793,53 @@ section("Playtest fixes: switching faction where you stand, boxes in both hands,
 end)()
 
 ----------------------------------------------------------------------
+section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
+;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
+    -- Everything here is something the owner's server, files or players depend on. The list is
+    -- compared with _dev/core_snapshot.txt: a difference fails, and the runner writes the new list
+    -- to _dev/core_snapshot.new.txt. Only with the owner's OK is that copied over the old one.
+    local lines = {}
+    local function Add(s) lines[#lines + 1] = s end
+    for name, def in pairs(_cvarDefaults or {}) do
+        if string.sub(name, 1, 2) == "lc" then Add("setting " .. name .. " = " .. def) end
+    end
+    for _, v in ipairs(LC.AnnounceVoices or {}) do Add("announce voice " .. v) end
+    for _, t in ipairs(LC.AnnounceTriggers or {}) do Add("announce trigger " .. t) end
+    for _, t in ipairs(LC.AnnounceRetired or {}) do Add("announce retired " .. t) end
+    for v, ts in pairs(LC.AnnounceExtra or {}) do for _, t in ipairs(ts) do Add("announce " .. v .. " trigger " .. t) end end
+    for _, r in ipairs(LC.AnnounceRoots or {}) do Add("announce folder sound/" .. r .. "<voice>/") end
+    for _, id in ipairs(LC.EndingOrder or {}) do Add("ending " .. id .. " (" .. LC.Endings[id].name .. ")") end
+    Add("ending songs folder sound/" .. tostring(LC.EndingRoot))
+    Add("ending cooldown file data/" .. tostring(LC.EndingCooldownFile))
+    local lp, map = LC.LayoutPath(), game.GetMap()
+    local at = string.find(lp, map, 1, true)
+    Add("layout file data/" .. (at and (string.sub(lp, 1, at - 1) .. "<map>" .. string.sub(lp, at + #map)) or lp))
+    for _, f in ipairs(LCF.Factions or {}) do
+        Add("faction " .. f.id .. " (" .. f.name .. ")")
+        for i, r in ipairs(f.ranks or {}) do Add(string.format("faction %s rank %d %s at %s xp", f.id, i, r.name, tostring(r.xp))) end
+        for _, s in ipairs(f.specials or {}) do Add("faction " .. f.id .. " special " .. s.id) end
+    end
+    for id in pairs(LCS and LCS.Items or {}) do Add("item " .. id) end
+    for n in pairs(LC.SlashCommands or {}) do Add("chat command /" .. n) end
+    for n in pairs(concommand.list or {}) do if string.sub(n, 1, 2) == "lc" then Add("console command " .. n) end end
+    table.sort(lines)
+    _CORE_NOW = table.concat(lines, "\n") .. "\n"
+    if not _CORE_SNAPSHOT then
+        ok(false, "the core snapshot (_dev/core_snapshot.txt) is missing: the runner wrote core_snapshot.new.txt")
+        return
+    end
+    local have, had, diff = {}, {}, {}
+    for l in string.gmatch(_CORE_NOW, "[^\n]+") do have[l] = true end
+    for l in string.gmatch(_CORE_SNAPSHOT, "[^\n]+") do had[l] = true end
+    for l in pairs(have) do if not had[l] then diff[#diff + 1] = "+ " .. l end end
+    for l in pairs(had) do if not have[l] then diff[#diff + 1] = "- " .. l end end
+    table.sort(diff)
+    ok(#diff == 0, "the core is as the owner knows it: settings' defaults, announcement triggers and folders, endings, data files, "
+        .. "factions and ranks, items and commands match _dev/core_snapshot.txt (a change needs the owner's OK first: CORE.md)",
+        #diff .. " differences: " .. table.concat(diff, " | ", 1, math.min(#diff, 15)))
+end)()
+
+----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)
 _run(1)

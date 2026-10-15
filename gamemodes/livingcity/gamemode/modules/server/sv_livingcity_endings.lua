@@ -181,6 +181,7 @@ function LC.EndingSongs(id)
 end
 
 local COOL_FILE = "livingcity/endings.json"
+LC.EndingRoot, LC.EndingCooldownFile = ROOT, COOL_FILE -- (core: CORE.md)
 local function LastEnding()
     local raw = file.Read(COOL_FILE, "DATA")
     if not raw or raw == "" then return 0 end

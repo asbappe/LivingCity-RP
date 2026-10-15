@@ -88,6 +88,7 @@ local ROOT = "livingcity/announce/"
 -- (and straight under sound/livingcity/ too: sound/livingcity/overwatch/, .../administrator/,
 -- .../radio/, beside endings/, is where a server's own recordings often are)
 local ROOTS = { ROOT, "livingcity/" }
+LC.AnnounceRoots = ROOTS -- (core: CORE.md; the tests check this list hasn't changed)
 local EXT = { wav = true, mp3 = true, ogg = true }
 
 LC.AnnounceTriggers = {

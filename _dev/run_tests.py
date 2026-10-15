@@ -147,6 +147,10 @@ GMROOT = os.path.join(GMDIR, "gamemode")
 L.globals()._GMSRC_SHARED = open(os.path.join(GMROOT, "shared.lua")).read()
 L.globals()._GMSRC_INIT = open(os.path.join(GMROOT, "init.lua")).read()
 
+# the core snapshot (CORE.md): what the core looked like when the owner last OK'd it
+SNAP = os.path.join(HERE, "core_snapshot.txt")
+L.globals()._CORE_SNAPSHOT = open(SNAP).read() if os.path.exists(SNAP) else None
+
 L.execute("math.randomseed(7)")
 L.globals()._TESTSRC = open(sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "tests.lua")).read()
 passed, failed, report = L.execute("""
@@ -156,5 +160,11 @@ if not ok then error(a, 0) end
 return a, b, c
 """)
 print(report)
+now = L.globals()._CORE_NOW
+if now is not None and (not os.path.exists(SNAP) or open(SNAP).read() != now):
+    with open(os.path.join(HERE, "core_snapshot.new.txt"), "w") as f:
+        f.write(now)
+    print("\nThe core has changed (or there's no snapshot yet): the new list is in _dev/core_snapshot.new.txt. "
+          "Diff it against core_snapshot.txt, and only with the owner's OK copy it over (CORE.md).")
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)
