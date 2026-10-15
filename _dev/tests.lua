@@ -11492,6 +11492,58 @@ _run(6)
 _setcvar("lc_ending_hard_sections", "6:hard,28:break,32:hard,150:passout,177:fade,188:end")
 _setcvar("lc_ending_hard_moment_beats", 5)
 for _, pc in ipairs(partyCops) do LC.NPCs[pc] = nil if IsValid(pc) then pc:Remove() end end
+-- Shalom: the hora (short timings for the test)
+concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
+_setcvar("lc_ending_shalom_sections", "1:gather,2:walk,3:hora,4:lift,5:in,6:peak,7:final,8:outro,9:end")
+_setcvar("lc_ending_shalom_candles", "2,3,4,5,6,6.2,6.4,6.6")
+_setcvar("lc_ending_shalom_offset", 0)
+_setcvar("lc_ending_shalom_lift_beats", 2)
+a:SetPos(G0) b:SetPos(G0 + Vector(200, 0, 0))
+local horaCops = {}
+for i = 1, 2 do
+    local pc = ents.Create("npc_metropolice") pc:Spawn()
+    pc:Give("weapon_stunstick")
+    LC.NPCs[pc] = { role = "cop", state = "idle", untilT = 0, nextWarn = 1e9, nextInspect = 1e9, test = true } -- (the city leaves test NPCs be)
+    horaCops[i] = pc
+end
+ok(not LC.Endings.shalom.flashing and LC.EndingOfSong("shalom.mp3") == "shalom", "shalom: its song is shalom.mp3, and it has no strobes")
+ok(LC.TriggerEnding("shalom", a, true), "shalom")
+E = LC.EndingSession()
+local function runToS(sec) _run(math.max(0.1, E.phaseT + sec - CurTime())) end
+ok(a.frozen and a.movetype == MOVETYPE_NONE and a:GetNW2Bool("lc_dancing", false) and E.client.dance == "hora" and a.lcHora and b.lcHora,
+    "everyone in the inner ring at the landing zone, ready to dance the hora")
+ok(E.client.menorah and #E.client.candles == 8 and #E.client.poles == 8 and E.client.sky, "a hanukkiah in the middle, eight candles to light, eight flagpoles round it, a sky for the big flag")
+ok(#E.rings.outer.members == GetConVar("lc_ending_shalom_crowd"):GetInt(), "the city's people in the outer ring", #E.rings.outer.members)
+ok(horaCops[1].lcHora and not horaCops[1]:GetNW2Bool("lc_dancing", false), "the Combine's units round the outside, watching")
+ok(E.client.menorah.w / 2 < E.rings.inner.r * 0.65, "(the hanukkiah fits inside the rush into the middle)")
+local p0 = a:GetPos()
+runToS(0.9)
+ok(a:GetPos():Distance(p0) < 1, "the intro: everyone stands, arm in arm")
+runToS(3.5)
+ok(a:GetPos():Distance(p0) > 5, "then the rings go round", a:GetPos():Distance(p0))
+ok(E.rings.inner.spin > 0 and E.rings.outer.spin < 0, "the two rings go opposite ways")
+ok(E.joined and horaCops[1]:GetNW2Bool("lc_dancing", false) and horaCops[1].lcHora and #(E.hidWeps or {}) >= 1,
+    "the hora proper: the Combine's units put their guns down and join the outer ring")
+runToS(4.6)
+local chaired
+for _, p in ipairs({ a, b }) do if p:GetNW2Bool("lc_chair", false) then chaired = p end end
+for _, m in ipairs(E.rings.outer.members) do if IsValid(m.e) and m.e:GetNW2Bool("lc_chair", false) then chaired = chaired or m.e end end
+ok(chaired and (E.lifted or {})[chaired], "someone's lifted up on a chair")
+local ringR = E.rings.inner.r
+runToS(5.9)
+ok(E.rush < 0.9 and (a:GetPos() - E.lz):Length2D() < ringR * 0.95, "the breakdown: everyone rushes into the middle", E.rush)
+runToS(8.5)
+ok(not a.lcEndTaken and not b.lcEndTaken, "nobody's taken: everyone dances to the end")
+runToS(9.5)
+ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and the song's over: the city resets")
+_run(6)
+ok(not a.frozen and a.movetype ~= MOVETYPE_NONE and not a:GetNW2Bool("lc_dancing", false) and not a:GetNW2Bool("lc_chair", false) and not a.lcHora,
+    "(and everyone can move again)")
+_setcvar("lc_ending_shalom_sections", "7.4:gather,35.7:walk,62.1:hora,111.5:lift,125.7:hora,153.9:in,157.4:hora,180.4:in,183.9:build,205.1:peak,219.2:hora,224.5:in,231.5:final,273.9:outro,288.5:end")
+_setcvar("lc_ending_shalom_candles", "35.7,62.1,86.8,111.5,125.7,153.9,183.9,205.1")
+_setcvar("lc_ending_shalom_offset", 0.36)
+_setcvar("lc_ending_shalom_lift_beats", 8)
+for _, pc in ipairs(horaCops) do LC.NPCs[pc] = nil if IsValid(pc) then pc:Remove() end end
 -- Father Grigori eats the motherlode
 concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
 local grig = newPlayer("EndGrigori", "resistance", "chaplain", 300)

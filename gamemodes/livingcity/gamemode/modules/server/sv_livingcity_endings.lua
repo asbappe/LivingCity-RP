@@ -78,6 +78,13 @@
                    (lc_ending_flood_sections, from the song itself).
                    Triggered by Father Grigori himself eating the motherlode:
                    /eatchip, with a master data core in his pockets.
+        shalom     the hora: Israeli flags round the landing zone, a giant
+                   hanukkiah in the middle (a candle lit each phrase), kippahs
+                   on every head and Yiddish and Hebrew sayings over them;
+                   everyone dances the hora in rings, the Combine putting
+                   their guns down to join in, someone up on a chair, a giant
+                   flag and Star of David fireworks at the key change
+                   (lc_ending_shalom_sections, _candles)
 
       Nobody can be hurt during the vote or an ending (and "taken" isn't dead:
       no new character). The city's events wait. One ending (or a skipped one)
@@ -119,11 +126,12 @@ LC.Endings = {
     marrow    = { name = "Marrow", say = "Something is rattling out there. Lots of somethings." },
     base      = { name = "Base", say = "What happen ?" },
     hard      = { name = "Hard", say = "It's time." },
+    shalom    = { name = "Shalom", say = "Shalom. Take your neighbour by the shoulders: it's time to dance." },
 }
 -- The ones with strobes or flashes: everyone is warned before and as they start
 -- (and lc_ending_calm, on each player's own screen, leaves the flashing out).
 for _, id in ipairs({ "bus", "bloom", "marrow", "base", "hard", "water", "plane" }) do if LC.Endings[id] then LC.Endings[id].flashing = true end end
-LC.EndingOrder = { "harpies", "bus", "plane", "standup", "water", "bloom", "marrow", "base", "hard" }
+LC.EndingOrder = { "harpies", "bus", "plane", "standup", "water", "bloom", "marrow", "base", "hard", "shalom" }
 
 local E -- the ending in progress: { id, phase, by, ... }
 function LC.EndingSession() return E end
@@ -2174,6 +2182,338 @@ TICK.hard = function(now)
     end
 end
 
+-- Shalom (a codeword): the hora. Israeli flags shoot up on poles round the
+-- landing zone on the intro's hit, and everyone is gathered there in rings
+-- round a giant hanukkiah: the players in the inner ring, the city's people
+-- in the outer one, and the Combine's units standing round them, watching.
+-- Kippahs go on, sayings float over every head (Yiddish and Israeli, in
+-- English and Hebrew), and the rings sway, then walk, then dance the hora
+-- (arms on each other's shoulders, the grapevine step), the two rings going
+-- opposite ways. When the hora proper starts, the Combine's units drop their
+-- guns and join the outer ring. A candle on the hanukkiah is lit at each
+-- phrase, all eight burning by the key change; on the breakdowns everyone
+-- rushes into the middle with their arms up and back out; through the song
+-- someone is lifted up on a chair over everyone's heads, like at a wedding.
+-- At the key change a giant flag unfurls across the sky and blue and white
+-- Star of David fireworks go off; the last run is the fastest, and the song
+-- ends with everyone still dancing. Nobody is taken. (Timed from the song:
+-- 4:49, 136 BPM, E Phrygian dominant up to F at 3:25.)
+local cvShalomSections = CreateConVar("lc_ending_shalom_sections",
+    "7.4:gather,35.7:walk,62.1:hora,111.5:lift,125.7:hora,153.9:in,157.4:hora,180.4:in,183.9:build,205.1:peak,219.2:hora,224.5:in,231.5:final,273.9:outro,288.5:end", FLAGS,
+    "Shalom: the song's sections, second:kind (gather, walk, hora, lift, in, build, peak, final, outro, end); before the first, the intro")
+local cvShalomBPM = CreateConVar("lc_ending_shalom_bpm", "136", FLAGS, "Shalom: the song's beats per minute (the steps keep to it)")
+local cvShalomOffset = CreateConVar("lc_ending_shalom_offset", "0.36", FLAGS, "Shalom: seconds into the song of its first beat")
+local cvShalomCandles = CreateConVar("lc_ending_shalom_candles", "35.7,62.1,86.8,111.5,125.7,153.9,183.9,205.1", FLAGS,
+    "Shalom: the seconds into the song the hanukkiah's eight candles are lit, one by one (the shamash burns from the start)")
+local cvShalomLift = CreateConVar("lc_ending_shalom_lift_beats", "8", FLAGS, "Shalom: beats between someone else being lifted up on a chair (every 4 in the lift section; 0 off)")
+local cvShalomCrowd = CreateConVar("lc_ending_shalom_crowd", "12", FLAGS, "Shalom: how many of the city's people dance in the outer ring (its own NPCs first, topped up with citizens)")
+local cvShalomSayings = CreateConVar("lc_ending_shalom_sayings", "", FLAGS, "Shalom: more sayings to float over heads, separated by | (added to the built-in ones)")
+local SHALOM_PAL = { { 255, 205, 110 }, { 60, 120, 255 }, { 255, 255, 255 }, { 120, 170, 255 } }
+local SHALOM_SPEED = { intro = 0, gather = 0, walk = 0.5, hora = 1, lift = 1, ["in"] = 0, build = 1.2, peak = 1.6, final = 1.8, outro = 0.4, ["end"] = 0 }
+local HORA_STEP = 38      -- (shoulder to shoulder, round a ring)
+local HORA_PACE = 42      -- (how fast a ring goes round at the hora's own speed: units a second)
+local CHAIRS = { "models/props_c17/chair02a.mdl", "models/props_interiors/furniture_chair01a.mdl", "models/props_c17/furniturechair001a.mdl" }
+
+local function ShalomSection(t)
+    local kind, at = "intro", 0
+    for _, sct in ipairs(E.sections) do if t >= sct.t then kind, at = sct.kind, sct.t end end
+    return kind, at
+end
+local function SecondOf(kind, fallback)
+    for _, sct in ipairs(E.sections or {}) do if sct.kind == kind then return sct.t end end
+    return fallback
+end
+-- (the shortest way round from one angle to another)
+local function AngleTo(a, b) return (b - a + math.pi) % (math.pi * 2) - math.pi end
+
+-- A ring: shoulder to shoulder, evenly spaced, wide enough for everyone in it.
+local function Layout(ring, minR)
+    local n = #ring.members
+    ring.r = math.max(minR or ring.minR or 150, n * HORA_STEP / (math.pi * 2))
+    -- (in the order they stand, so nobody cuts across to a new place)
+    table.sort(ring.members, function(x, y) return (x.a % (math.pi * 2)) < (y.a % (math.pi * 2)) end)
+    local base = n > 0 and ring.members[1].a or 0
+    for i, m in ipairs(ring.members) do m.ta = base + (i - 1) / math.max(1, n) * math.pi * 2 end
+end
+local function Member(ring, e, a)
+    local m = { e = e, a = a, ta = a, r = ring.r or 150 }
+    ring.members[#ring.members + 1] = m
+    e.lcHora = m
+    return m
+end
+
+local function Chair(pos)
+    local c = Prop(FirstModel(CHAIRS), pos)
+    if IsValid(c) then
+        if c.SetSolid then c:SetSolid(SOLID_NONE) end
+        if c.SetNotSolid then c:SetNotSolid(true) end
+    end
+    return c
+end
+
+-- Up on a chair, over everyone's heads (a beat-long bounce on every beat), then down.
+local function LiftUp(m, now)
+    if not m or m.lift or not IsValid(m.e) then return end
+    local beats = 16
+    m.lift = { t0 = now, dur = beats * 60 / math.max(40, cvShalomBPM:GetFloat()), chair = Chair(m.e:GetPos()) }
+    m.e:SetNW2Bool("lc_chair", true)
+    E.lifted = E.lifted or {}
+    E.lifted[m.e] = true
+    local y = Pick(YEAH)
+    for _, r in ipairs({ E.rings.inner, E.rings.outer }) do
+        for _, o in ipairs(r.members) do
+            if o ~= m and IsValid(o.e) and not o.e:IsPlayer() and math.random() < 0.2 then
+                local s = Pick(YEAH) if s then o.e:EmitSound(s, 75, math.random(95, 110)) end
+            end
+        end
+    end
+    if y and m.e.EmitSound then m.e:EmitSound(y, 80) end
+end
+local function LiftDown(m)
+    if not m or not m.lift then return end
+    if IsValid(m.lift.chair) then m.lift.chair:Remove() end
+    m.lift = nil
+    if IsValid(m.e) then m.e:SetNW2Bool("lc_chair", false) end
+end
+-- Whose turn: players and the city's people in turn, nobody twice till everyone's been up.
+local function NextLift()
+    E.lifted = E.lifted or {}
+    local up = 0
+    local pools = { {}, {} }
+    for _, r in ipairs({ E.rings.inner, E.rings.outer }) do
+        for _, m in ipairs(r.members) do
+            if m.lift then up = up + 1
+            elseif IsValid(m.e) then local pl = m.e:IsPlayer() and 1 or 2 pools[pl][#pools[pl] + 1] = m end
+        end
+    end
+    E.liftTurn = (E.liftTurn or 0) + 1
+    local order = E.liftTurn % 2 == 1 and { 1, 2 } or { 2, 1 }
+    for _, k in ipairs(order) do
+        local fresh = {}
+        for _, m in ipairs(pools[k]) do if not (E.lifted or {})[m.e] then fresh[#fresh + 1] = m end end
+        if #fresh == 0 and #pools[k] > 0 then
+            for _, m in ipairs(pools[k]) do E.lifted[m.e] = nil end
+            fresh = pools[k]
+        end
+        if #fresh > 0 then return fresh[math.random(#fresh)], up end
+    end
+    return nil, up
+end
+
+-- The Combine's units put their guns down and join the outer ring.
+local function CombineJoin(now)
+    if E.joined then return end
+    E.joined = true
+    local outer, watch = E.rings.outer, E.rings.watch
+    E.hidWeps = E.hidWeps or {}
+    for _, m in ipairs(watch.members) do
+        local n = m.e
+        if IsValid(n) then
+            local w = n.GetActiveWeapon and n:GetActiveWeapon()
+            if IsValid(w) then
+                local mdl = w.GetModel and w:GetModel()
+                if mdl and mdl ~= "" then
+                    local dropped = ents.Create("prop_physics")
+                    if IsValid(dropped) then
+                        dropped:SetModel(mdl)
+                        dropped:SetPos(n:GetPos() + Vector(0, 0, 40) + (n.GetForward and n:GetForward() or Vector(1, 0, 0)) * 18)
+                        dropped:Spawn()
+                        E.ents[#E.ents + 1] = dropped
+                    end
+                end
+                if w.SetNoDraw then w:SetNoDraw(true) end
+                E.hidWeps[#E.hidWeps + 1] = w
+            end
+            n:SetNW2Bool("lc_dancing", true)
+            m.a = (m.a + watch.spin) - outer.spin
+            outer.members[#outer.members + 1] = m
+        end
+    end
+    watch.members = {}
+    Layout(outer, E.rings.inner.r + 85)
+    local s = Pick(WOO)
+    local first = outer.members[1]
+    if s and first and IsValid(first.e) then first.e:EmitSound(s, 85) end
+end
+
+-- Everyone round the rings, every frame (and every tick, which is all a test has).
+function LC.ShalomStep(now)
+    if not E or E.id ~= "shalom" or E.phase ~= "apocalypse" or not E.rings then return end
+    local dt = math.Clamp(now - (E.stepAt or now), 0, 0.25)
+    E.stepAt = now
+    local t = now - E.phaseT
+    local kind, at = ShalomSection(t)
+    local bpm = math.max(40, cvShalomBPM:GetFloat())
+    local beat = (t - cvShalomOffset:GetFloat()) * bpm / 60
+    -- how fast: by the section, the build speeding up through it, the outro winding down
+    local want = SHALOM_SPEED[kind] or 1
+    if kind == "build" then
+        local nextT = SecondOf("peak", at + 20)
+        want = 1 + 0.4 * math.Clamp((t - at) / math.max(1, nextT - at), 0, 1)
+    end
+    E.mult = (E.mult or 0) + math.Clamp(want - (E.mult or 0), -1.5 * dt, 1.5 * dt)
+    -- into the middle with the arms up and back out, every two bars, on the breakdowns
+    local rush = 1
+    if kind == "in" then
+        local p = (((t - at) * bpm / 60) % 8) / 8
+        rush = 1 - 0.35 * math.sin(math.pi * p)
+    end
+    E.rush = (E.rush or 1) + math.Clamp(rush - (E.rush or 1), -2 * dt, 2 * dt)
+    local c, z0 = E.lz, E.floorZ
+    for name, ring in pairs(E.rings) do
+        ring.spin = ring.spin + ring.dir * HORA_PACE * E.mult / math.max(60, ring.r) * dt
+        for _, m in ipairs(ring.members) do
+            local e = m.e
+            if IsValid(e) then
+                m.a = m.a + math.Clamp(AngleTo(m.a, m.ta), -1.2 * dt, 1.2 * dt)
+                m.r = m.r + math.Clamp(ring.r - m.r, -150 * dt, 150 * dt)
+                local a = m.a + ring.spin
+                local r = m.r * (name == "watch" and 1 or E.rush)
+                local pos = Vector(c.x + math.cos(a) * r, c.y + math.sin(a) * r, z0 + 2)
+                local yaw = math.deg(a) + 180
+                if m.lift then
+                    local f = (now - m.lift.t0) / m.lift.dur
+                    local up = math.Clamp(math.min(f * 5, (1 - f) * 5), 0, 1)
+                    local s = up * up * (3 - 2 * up)
+                    pos.z = pos.z + s * (62 + 8 * math.abs(math.sin(beat * math.pi)))
+                    if IsValid(m.lift.chair) then
+                        m.lift.chair:SetPos(pos + Vector(0, 0, 20))
+                        m.lift.chair:SetAngles(Angle(0, yaw, 8 * s * math.sin(beat * math.pi)))
+                    end
+                end
+                e:SetPos(pos)
+                if e:IsPlayer() then
+                    if math.abs(AngleTo(math.rad(m.yawSent or 0), math.rad(yaw))) > 0.05 then
+                        m.yawSent = yaw
+                        if e.SetEyeAngles then e:SetEyeAngles(Angle(0, yaw, 0)) end
+                    end
+                else
+                    e:SetAngles(Angle(0, yaw, 0))
+                end
+            end
+        end
+    end
+end
+hook.Add("Think", "LivingCityShalom", function() if E and E.id == "shalom" then LC.ShalomStep(CurTime()) end end)
+
+SETUP.shalom = function()
+    local now = CurTime()
+    E.songEnds = true -- (everyone dances to the last note; then it's over)
+    E.sections = LC.MarrowSections(cvShalomSections:GetString())
+    E.holdUntil = now + SecondOf("end", 288.5)
+    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
+    E.floorZ = (Ground(E.lz) or E.lz).z
+    LC.TimeStopped = true
+    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    E.rings = {
+        inner = { members = {}, dir = 1, spin = 0, minR = 150 },
+        outer = { members = {}, dir = -1, spin = 0 },
+        watch = { members = {}, dir = 0, spin = 0 },
+    }
+    -- the players: the inner ring
+    local ps = player.GetAll()
+    for i, p in ipairs(ps) do
+        if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
+        p.lcEndFrozen = true
+        p:Freeze(true)
+        p:SetMoveType(MOVETYPE_NONE)
+        p.lcShalom = true
+        p:SetNW2Bool("lc_dancing", true)
+        Member(E.rings.inner, p, (i - 1) / math.max(1, #ps) * math.pi * 2)
+    end
+    Layout(E.rings.inner)
+    -- the city's people: the outer ring (its own first, topped up with citizens)
+    local folk = CityFolk()
+    local want = cvShalomCrowd:GetInt()
+    while #folk > want do table.remove(folk) end
+    local outerR = math.max(E.rings.inner.r + 85, (want + #CombineNPCs()) * HORA_STEP / (math.pi * 2))
+    E.rings.outer.r = outerR
+    for i = 1, want do
+        local a = (i - 1) / math.max(1, want) * math.pi * 2 + 0.1
+        local spot = Vector(E.lz.x + math.cos(a) * outerR, E.lz.y + math.sin(a) * outerR, E.floorZ + 4)
+        local c = folk[i]
+        if not IsValid(c) then c = SpawnFolk(spot, i) elseif c.SetPos then c:SetPos(spot) end
+        if IsValid(c) then
+            c.lcRing = true
+            c:SetNW2Bool("lc_dancing", true)
+            Member(E.rings.outer, c, a)
+        end
+    end
+    Layout(E.rings.outer, E.rings.inner.r + 85)
+    -- the Combine's units: round the outside, watching, guns in hand (up to two dozen; any more dance where they stand)
+    local cps = CombineNPCs()
+    local watchR = E.rings.outer.r + 80
+    E.rings.watch.r = watchR
+    for i, n in ipairs(cps) do
+        if i <= 24 then
+            n.lcRing = true
+            n:SetNW2Bool("lc_dancing", false)
+            Member(E.rings.watch, n, (i - 1) / math.min(24, #cps) * math.pi * 2 + 0.2)
+        end
+    end
+    for _, m in ipairs(E.rings.watch.members) do m.r = watchR end
+    -- every other NPC in the city dances the hora where they stand
+    for npc in pairs(LC.NPCs or {}) do
+        if IsValid(npc) and not npc.lcHora then npc:SetNW2Bool("lc_dancing", true) end
+    end
+    LC.ShalomStep(now)
+    -- the hanukkiah in the middle (it fits inside the rush in), the flagpoles round the outside, the sky over it all
+    local mw = E.rings.inner.r * 1.05
+    local mh = math.max(150, mw * 0.95)
+    local room = CeilingAt(Vector(E.lz.x, E.lz.y, E.floorZ + 8)) - E.floorZ - 20
+    if room > 60 then mh = math.min(mh, room) end
+    local poles = {}
+    local poleR = watchR + 90
+    for i = 1, 8 do
+        local a = (i - 0.5) / 8 * math.pi * 2
+        poles[i] = Vector(E.lz.x + math.cos(a) * poleR, E.lz.y + math.sin(a) * poleR, E.floorZ)
+    end
+    local skyZ = math.min(CeilingAt(Vector(E.lz.x, E.lz.y, E.floorZ + 64)) - 80, E.floorZ + 700)
+    local candles = {}
+    for s in string.gmatch(cvShalomCandles:GetString() or "", "[%d%.]+") do candles[#candles + 1] = tonumber(s) end
+    table.sort(candles)
+    local extra = {}
+    for s in string.gmatch(cvShalomSayings:GetString() or "", "[^|]+") do s = string.Trim(s) if s ~= "" then extra[#extra + 1] = s end end
+    E.client = { party = true, lights = true, strobe = false, dance = "hora", palette = SHALOM_PAL,
+        bpm = cvShalomBPM:GetFloat(), offset = cvShalomOffset:GetFloat(), start = now, section = "intro",
+        menorah = { pos = Vector(E.lz.x, E.lz.y, E.floorZ), w = mw, h = mh }, candles = candles, poles = poles,
+        sky = Vector(E.lz.x, E.lz.y, math.max(E.floorZ + 200, skyZ)),
+        gatherAt = SecondOf("gather", 7.4), peakAt = SecondOf("peak", 205.1), outroAt = SecondOf("outro", 273.9),
+        sayings = #extra > 0 and extra or nil }
+end
+
+TICK.shalom = function(now)
+    local t = now - E.phaseT
+    local kind = ShalomSection(t)
+    if kind ~= E.client.section then
+        E.client.section = kind
+        Send()
+    end
+    -- the hora proper: the Combine's units join in
+    if not E.joined and t >= SecondOf("hora", 62.1) then CombineJoin(now) end
+    LC.ShalomStep(now)
+    -- the chairs: back down when it's over, and someone else up every so many beats
+    for _, r in ipairs({ E.rings.inner, E.rings.outer }) do
+        for _, m in ipairs(r.members) do
+            if m.lift and (now - m.lift.t0 >= m.lift.dur or not IsValid(m.e)) then LiftDown(m) end
+        end
+    end
+    local every = kind == "lift" and 4 or cvShalomLift:GetInt()
+    local lifting = { hora = true, lift = true, build = true, peak = true, final = true }
+    if every > 0 and lifting[kind] then
+        local beat = math.floor((t - cvShalomOffset:GetFloat()) * math.max(40, cvShalomBPM:GetFloat()) / 60)
+        if beat ~= E.liftBeat and beat % every == 0 then
+            E.liftBeat = beat
+            local m, up = NextLift()
+            if m and up < (kind == "lift" and 3 or 2) then LiftUp(m, now) end
+        end
+    end
+    if kind == "outro" or kind == "end" then
+        for _, r in ipairs({ E.rings.inner, E.rings.outer }) do for _, m in ipairs(r.members) do LiftDown(m) end end
+    end
+end
+
 -- Plane (a codeword): numa numa. Like the band in the video, everyone dances
 -- on the wings of an airplane over the city. It circles low through the
 -- intro; at the first hook everyone (and some of the Combine) is up on it,
@@ -2949,6 +3289,9 @@ local function Clear()
         p:SetNW2Entity("lc_riding", NULL)
         p.lcBloomUp = nil
         p:SetNW2Bool("lc_rocking", false)
+        p:SetNW2Bool("lc_chair", false)
+        if p.lcShalom then p:SetMoveType(MOVETYPE_WALK) p.lcShalom = nil end
+        p.lcHora = nil
     end
     SetGlobal2Float("lc_flood_z", 0)
     SetGlobal2Float("lc_flood_slosh", 0)
@@ -2958,10 +3301,13 @@ local function Clear()
     for npc in pairs(LC.NPCs or {}) do
         if IsValid(npc) then
             npc:SetNW2Bool("lc_dancing", false) npc:SetNW2Bool("lc_seated", false) npc.lcBloomUp = nil npc.lcEndRide = nil
+            npc:SetNW2Bool("lc_chair", false) npc.lcHora = nil
             if npc.lcHang then npc.lcHang = nil npc:SetNW2Float("lc_hanged", 0) npc:SetNW2Bool("lc_limp", false) end
         end
     end
     if E and E.doorsOpen and LC.ReleaseEveryDoor then LC.ReleaseEveryDoor() end
+    -- (the Combine's guns, put down for the hora: back in their hands)
+    for _, w in ipairs(E and E.hidWeps or {}) do if IsValid(w) and w.SetNoDraw then w:SetNoDraw(false) end end
     if E and E.dark then
         LC.EndingDark = nil
         if LC.ForceBlackout then LC.ForceBlackout("auto") end

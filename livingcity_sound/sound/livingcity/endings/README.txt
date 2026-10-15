@@ -4,7 +4,7 @@ Name each song for its ending (the codeword), so the name gives nothing away
 (players download these files when they join):
 
   harpies.mp3  bus.mp3  plane.mp3  standup.mp3  water.mp3
-  bloom.mp3    marrow.mp3  base.mp3  hard.mp3
+  bloom.mp3    marrow.mp3  base.mp3  hard.mp3  shalom.mp3
 
 .mp3, .ogg or .wav. Keep the extension true to the file: an MP3 renamed .wav is
 silent (lc_announce_clips points out any file the game can't play). MP3 or OGG
@@ -192,3 +192,27 @@ The timeline was worked out from the song itself (3:08, about 150 BPM):
   lc_ending_hard_bpm 150
 
 Test it with: lc_ending hard now   (lc_ending_cancel stops it)
+
+========================================================================
+ENDING: shalom (Shalom)
+WHAT HAPPENS: The hora. Israeli flags run up their poles round the dropship
+landing zone, and everyone dances the hora in rings round a giant hanukkiah,
+kippahs on every head, Yiddish and Hebrew sayings floating over them. The
+Combine put their guns down and join in at 1:02, a candle is lit each phrase,
+someone goes up on a chair every so often, everyone rushes into the middle on
+the breakdowns, and at the key change (3:25) a giant flag unfurls across the
+sky with Star of David fireworks. Everyone dances to the last note; then Am
+Yisrael chai, Shalom, and the reset. No strobes.
+SONG: your file. "shalom" is a codeword: name the file shalom.mp3 (or .ogg).
+
+The timeline was worked out from the song itself (4:49, 136 BPM, first beat
+at 0.36 s; E Phrygian dominant, up a half step to F at 3:25):
+  lc_ending_shalom_sections "7.4:gather,35.7:walk,62.1:hora,111.5:lift,125.7:hora,153.9:in,157.4:hora,180.4:in,183.9:build,205.1:peak,219.2:hora,224.5:in,231.5:final,273.9:outro,288.5:end"
+  kinds: gather (sway arm in arm, kippahs on), walk (round, half speed),
+  hora (the dance), lift (chairs every 4 beats), in (rush into the middle and
+  back), build (speeding up), peak (the key change: the sky flag, fireworks),
+  final (fastest, fireworks), outro (slowing down, the last words), end.
+  lc_ending_shalom_candles "35.7,62.1,86.8,111.5,125.7,153.9,183.9,205.1"
+  lc_ending_shalom_bpm 136   lc_ending_shalom_offset 0.36
+
+Test it with: lc_ending shalom now   (lc_ending_cancel stops it)

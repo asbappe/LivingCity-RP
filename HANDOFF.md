@@ -57,7 +57,7 @@ Living City is a Garry's Mod Half-Life 2 roleplay gamemode.
 
 The main file is `modules/server/sv_livingcity_endings.lua`, with its client side in `modules/client/cl_livingcity_endings.lua`. The G-Man offers a vote; the endings are:
 
-- harpies, bus, plane, standup, hard, base, marrow, bloom, water (the flood)
+- harpies, bus, plane, standup, hard, base, marrow, bloom, water (the flood), shalom (the hora)
 
 Each ending has a song and its own `lc_ending_<name>_*` cvars, all documented in the README's endings table.
 
@@ -88,6 +88,7 @@ Things worth knowing:
 - **Base:** the bomb count is no longer zero (the server log line says how many). Are the captions in time?
 - **Spectators:** does Jump toggle free flight?
 - **Flood:** Grigori visible and headbanging, the crowd on the raft, the ichthyosaurs biting NPCs, Jump at the edge climbing back on.
+- **Shalom (new):** the kippah's spot on the head (`lc_shalom_kippah`), the hora's arms on the shoulders (`lc_shalom_pose`), the grapevine legs, the chair under the lifted person, Hebrew readable and right to left (fonts are `extended`; letters reversed by `LC_CL.Hebrew`), the flags and the hanukkiah. The rings are moved every frame by a server Think hook (`LC.ShalomStep`, also called from the tick so the tests reach it).
 - **No inspections, wanted notices or lost standing during an ending** (just fixed after the owner lost 25 standing mid-Bloom).
 
 ## Later ideas

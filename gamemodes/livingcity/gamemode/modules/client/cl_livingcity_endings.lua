@@ -412,6 +412,47 @@ local BUS = {
 }
 local STYLES = { club = CLUB, rave = RAVE, bus = BUS }
 
+-- Shalom's hora: arms out on the neighbours' shoulders, and the grapevine on the beat
+-- (out to the side, cross behind, out, kick and hop, step, kick the other); the arms go up
+-- for the rush into the middle; up on a chair, sat down, arms waving. The walk is the same
+-- step at half speed; at the very start everyone just stands arm in arm, then sways.
+-- Tune the arms live: lc_shalom_pose <R_UpperArm|L_UpperArm|R_Forearm|L_Forearm> <p> <y> <r>.
+local HORA = {
+    R_UpperArm = Angle(-30, -75, 0), L_UpperArm = Angle(30, -75, 0),
+    R_Forearm = Angle(0, -15, 0), L_Forearm = Angle(0, -15, 0),
+}
+local function HoraPose(ent, b, beat)
+    local sec = S.client.section or "intro"
+    if sec == "walk" then beat = beat / 2 end
+    local k = math.floor(beat) % 6
+    local s = math.sin(math.pi * (beat % 1)) -- (each step: out and back within its beat)
+    local chair = ent.GetNW2Bool and ent:GetNW2Bool("lc_chair", false)
+    local P = {}
+    if sec == "in" or chair then
+        P.R_UpperArm, P.L_UpperArm = Angle(10, -125 + 15 * s, 0), Angle(-10, -125 + 15 * s, 0)
+        P.R_Forearm, P.L_Forearm = Angle(0, -20, 0), Angle(0, -20, 0)
+    else
+        P.R_UpperArm, P.L_UpperArm, P.R_Forearm, P.L_Forearm = HORA.R_UpperArm, HORA.L_UpperArm, HORA.R_Forearm, HORA.L_Forearm
+    end
+    if chair then
+        P.R_Thigh, P.L_Thigh = Angle(0, -85, 0), Angle(0, -85, 0)
+        P.R_Calf, P.L_Calf = Angle(0, 85, 0), Angle(0, 85, 0)
+        P.Head = Angle(0, 10 * math.sin(beat * math.pi), 0)
+    elseif sec == "gather" then
+        P.Pelvis = Angle(0, 10 * math.sin(beat * math.pi), 0)
+        P.Spine = Angle(0, -10 * math.sin(beat * math.pi), 0)
+        P.R_Calf, P.L_Calf = Angle(0, 12 * s, 0), Angle(0, 12 * s, 0)
+    elseif sec ~= "intro" and sec ~= "end" then
+        if k == 0 or k == 2 then P.L_Thigh = Angle(-14 * s, 0, 0)
+        elseif k == 1 then P.R_Thigh = Angle(-8 * s, 14 * s, 0)
+        elseif k == 3 then P.R_Thigh = Angle(0, -38 * s, 0) P.L_Calf = Angle(0, 14 * s, 0)
+        elseif k == 4 then P.R_Calf = Angle(0, 10 * s, 0)
+        else P.L_Thigh = Angle(0, -38 * s, 0) P.R_Calf = Angle(0, 14 * s, 0) end
+        P.Head = Angle(0, 0, 6 * s)
+    end
+    for name, id in pairs(b) do ent:ManipulateBoneAngles(id, P[name] or Angle(0, 0, 0)) end
+end
+
 local function Dance(ent, beat, now)
     if not ent.ManipulateBoneAngles then return end
     local b = Bones(ent)
@@ -445,6 +486,11 @@ local function Dance(ent, beat, now)
             R_Calf = Angle(0, 14 * bounce, 0), L_Calf = Angle(0, 14 * bounce, 0),
         }
         for name, id in pairs(b) do ent:ManipulateBoneAngles(id, NUMA[name] or Angle(0, 0, 0)) end
+        danced[ent] = true
+        return
+    end
+    if S and S.client and S.client.dance == "hora" and not preview then
+        HoraPose(ent, b, beat)
         danced[ent] = true
         return
     end
@@ -1432,3 +1478,352 @@ hook.Add("CalcView", "LivingCityStandup", function(me, origin, angles, fov)
 end)
 
 -- (the white cone hats are real props, set on them by the server: sv_livingcity_endings.lua)
+
+------------------------------------------------------------------------
+-- Shalom: the hanukkiah, the flags, kippahs, the sayings, the fireworks
+------------------------------------------------------------------------
+
+if surface and surface.CreateFont then
+    -- (extended: Hebrew letters are outside a font's usual range)
+    surface.CreateFont("LCShalom", { font = "Arial", size = 40, weight = 800, extended = true })
+    surface.CreateFont("LCShalomBig", { font = "Arial", size = 110, weight = 800, extended = true })
+end
+local function Shalom() return S and S.id == "shalom" and S.phase == "apocalypse" and S.client end
+local BLUE, SNOW, GOLD, GOLD2 = Color(0, 56, 184), Color(250, 250, 250), Color(212, 168, 60), Color(170, 128, 40)
+
+-- Hebrew reads right to left, and the game only draws left to right: its letters go in backwards.
+function LC_CL.Hebrew(s)
+    if not s or not string.find(s, "\215", 1, true) then return s end
+    local chars = {}
+    for ch in string.gmatch(s, "[^\128-\191][\128-\191]*") do table.insert(chars, 1, ch) end
+    return table.concat(chars)
+end
+
+local SAYINGS = {
+    "Oy vey!", "Oy gevalt!", "Mazel tov!", "L'chaim!", "Shalom!", "Chutzpah!", "Nu?", "Mensch!", "Kvetch, kvetch", "Schlep!",
+    "Bubbeleh!", "Zei gezunt!", "Yalla!", "Sababa!", "Achla!", "Balagan!", "Tachles!", "Kapara!", "Kol hakavod!", "Oy li!",
+    "Shkoyach!", "Mishpacha!", "Hava nagila!", "Am Yisrael chai!", "Toda raba!", "Ein ba'aya!", "Chag sameach!", "Shabbat shalom!",
+    "Ma nishma?", "Yasher koach!", "Kvell!", "Nosh!", "Schmooze!", "Oy, mamaleh!", "Hakol beseder!", "Tov me'od!", "Ahalan!", "Baruch HaShem!",
+    "שלום", "לחיים", "מזל טוב", "יאללה", "סבבה", "אחלה", "שבת שלום", "הבה נגילה", "עם ישראל חי", "תודה רבה", "כל הכבוד", "בלגן",
+    "חג שמח", "אין בעיה", "בסדר",
+}
+LC_CL.ShalomSayings = SAYINGS
+-- (the same on every screen: a number from 0 to 1 for a pair of numbers)
+local function Hash(a, b) local x = math.sin(a * 12.9898 + b * 78.233) * 43758.5453 return x - math.floor(x) end
+
+-- the sayings, over heads: each person says something new every two bars, floating up a little
+hook.Add("PostDrawTranslucentRenderables", "LivingCityShalomSayings", function(_, sky)
+    local c = Shalom()
+    if sky or not c or not cam or not cam.Start3D2D then return end
+    local me = LocalPlayer()
+    if not IsValid(me) then return end
+    local now = CurTime()
+    local t = SongPos(now)
+    if t < (c.gatherAt or 7.4) or t >= (c.outroAt or math.huge) then return end
+    local beat = Beat(now)
+    local list = SAYINGS
+    if c.sayings then
+        list = {}
+        for _, x in ipairs(SAYINGS) do list[#list + 1] = x end
+        for _, x in ipairs(c.sayings) do list[#list + 1] = x end
+    end
+    local n = 0
+    for _, e in ipairs(dancers) do
+        if IsValid(e) and n < 24 and e:GetPos():DistToSqr(me:GetPos()) < 1500 * 1500 and not (e.GetNoDraw and e:GetNoDraw()) then
+            local id = e:EntIndex()
+            local cyc = (beat + (id * 3) % 8) / 8
+            local k = math.floor(cyc)
+            local f = cyc - k
+            if f < 0.65 then
+                n = n + 1
+                local text = LC_CL.Hebrew(list[math.floor(Hash(id, k) * #list) % #list + 1])
+                local alpha = 255 * math.Clamp(math.min(f * 8, (0.65 - f) * 8), 0, 1)
+                local pos = e:GetPos() + Vector(0, 0, 88 + f * 14 + (e:GetNW2Bool("lc_chair", false) and 70 or 0))
+                local ang = Angle(0, (me:EyePos() - pos):Angle().y + 90, 90)
+                local blue = Hash(id, k + 0.5) < 0.5
+                cam.Start3D2D(pos, ang, 0.22)
+                draw.SimpleTextOutlined(text, "LCShalom", 0, 0, blue and Color(BLUE.r, BLUE.g, BLUE.b, alpha) or Color(255, 255, 255, alpha),
+                    TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, blue and Color(255, 255, 255, alpha) or Color(BLUE.r, BLUE.g, BLUE.b, alpha))
+                cam.End3D2D()
+            end
+        end
+    end
+end)
+
+-- Kippahs: a flattened dome on top of every dancer's head, blue with a white rim or
+-- white with a blue one, going on one head after another from when everyone gathers.
+-- (Where it sits: lc_shalom_kippah, forward right up from the head bone, forward being
+-- up out of the top of the head.)
+local cvKippah = CreateClientConVar("lc_shalom_kippah", "6.5 0 -1", true, false, "Shalom: where the kippah sits on a head (forward right up from the head bone; forward is up out of the top of the head)")
+hook.Add("PostDrawOpaqueRenderables", "LivingCityShalomKippah", function(_, sky)
+    local c = Shalom()
+    if sky or not c or not render or not render.DrawSphere or not Matrix or not cam or not cam.PushModelMatrix then return end
+    local t = SongPos(CurTime())
+    local from = c.gatherAt or 7.4
+    if t < from then return end
+    local fx, rx, ux = string.match(cvKippah:GetString() or "", "(%S+)%s+(%S+)%s+(%S+)")
+    fx, rx, ux = tonumber(fx) or 6.5, tonumber(rx) or 0, tonumber(ux) or -1
+    local eye = EyePos()
+    render.SetColorMaterial()
+    local n = 0
+    for _, e in ipairs(dancers) do
+        if IsValid(e) and n < 40 and e:GetNW2Bool("lc_dancing", false) and not (e.GetNoDraw and e:GetNoDraw())
+            and e:GetPos():DistToSqr(eye) < 2500 * 2500 then
+            local id = e:EntIndex()
+            local bone = t >= from + (id % 16) * 0.44 and e.LookupBone and e:LookupBone("ValveBiped.Bip01_Head1")
+            local m = bone and e.GetBoneMatrix and e:GetBoneMatrix(bone)
+            if m then
+                n = n + 1
+                local mdl = string.lower(e.GetModel and e:GetModel() or "")
+                local helmet = (string.find(mdl, "police", 1, true) or string.find(mdl, "combine", 1, true) or string.find(mdl, "soldier", 1, true)) and 2.5 or 0
+                local ang = m:GetAngles()
+                local pos = m:GetTranslation() + ang:Forward() * (fx + helmet) + ang:Right() * rx + ang:Up() * ux
+                local blue = id % 2 == 0
+                for part = 1, 2 do
+                    local mat = Matrix()
+                    mat:Translate(part == 1 and pos or (pos - ang:Forward() * 0.5))
+                    mat:Rotate(ang)
+                    mat:Scale(part == 1 and Vector(0.4, 1, 1) or Vector(0.14, 1.08, 1.08))
+                    cam.PushModelMatrix(mat)
+                    render.DrawSphere(Vector(0, 0, 0), 4.4, 14, 8, ((part == 1) == blue) and BLUE or SNOW)
+                    cam.PopModelMatrix()
+                end
+            end
+        end
+    end
+end)
+
+-- A box along a line, from a to b (the hanukkiah's arms and stem).
+local function Bar(a, b, th, col)
+    local d = b - a
+    local len = d:Length()
+    if len < 0.01 then return end
+    render.DrawBox(a, d:Angle(), Vector(0, -th, -th), Vector(len, th, th), col)
+end
+
+-- The flag of Israel on a waving surface: the white field, a blue stripe at the top and the
+-- bottom, the Star of David in the middle. `across` and `down` are its edges, `normal` the way
+-- it ripples (more towards the free end); drawn on both sides.
+local function Flag(origin, across, down, normal, W, H, t, amp, cols)
+    local function At(u, v, lift)
+        return origin + across * (u * W) + down * (v * H) + normal * (math.sin(u * 7 - t * 4.5) * amp * u + (lift or 0))
+    end
+    local function Quad(a, b, c2, d, col) render.DrawQuad(a, b, c2, d, col) render.DrawQuad(d, c2, b, a, col) end
+    local bands = { { 0, 0.094, SNOW }, { 0.094, 0.25, BLUE }, { 0.25, 0.75, SNOW }, { 0.75, 0.906, BLUE }, { 0.906, 1, SNOW } }
+    for i = 0, cols - 1 do
+        local u0, u1 = i / cols, (i + 1) / cols
+        for _, bd in ipairs(bands) do Quad(At(u0, bd[1]), At(u1, bd[1]), At(u1, bd[2]), At(u0, bd[2]), bd[3]) end
+    end
+    -- the star: two triangles' outlines, a hair off the cloth on each side (in flag units: x across, y down)
+    local R, th = 0.2 * H, 0.034 * H
+    for tri = 0, 1 do
+        for edge = 0, 2 do
+            local a1, a2 = math.rad(-90 + tri * 180 + edge * 120), math.rad(-90 + tri * 180 + (edge + 1) * 120)
+            local x1, y1 = W / 2 + math.cos(a1) * R, H / 2 + math.sin(a1) * R
+            local x2, y2 = W / 2 + math.cos(a2) * R, H / 2 + math.sin(a2) * R
+            local len = math.sqrt((x2 - x1) ^ 2 + (y2 - y1) ^ 2)
+            local nx, ny = -(y2 - y1) / len * th / 2, (x2 - x1) / len * th / 2
+            for seg = 0, 2 do
+                local f0, f1 = seg / 3, (seg + 1) / 3
+                local ax, ay = x1 + (x2 - x1) * f0, y1 + (y2 - y1) * f0
+                local bx, by = x1 + (x2 - x1) * f1, y1 + (y2 - y1) * f1
+                for _, side in ipairs({ 0.4, -0.4 }) do
+                    local p1, p2 = At((ax + nx) / W, (ay + ny) / H, side), At((bx + nx) / W, (by + ny) / H, side)
+                    local p3, p4 = At((bx - nx) / W, (by - ny) / H, side), At((ax - nx) / W, (ay - ny) / H, side)
+                    if side > 0 then render.DrawQuad(p1, p2, p3, p4, BLUE) else render.DrawQuad(p4, p3, p2, p1, BLUE) end
+                end
+            end
+        end
+    end
+end
+LC_CL.ShalomFlag = Flag
+
+-- (where the candle flames are this frame, for the glow; and how many were lit last frame)
+local flames, litWas = {}, 0
+local WIND = Vector(math.cos(0.6), math.sin(0.6), 0)
+
+hook.Add("PostDrawOpaqueRenderables", "LivingCityShalom", function(_, sky)
+    local c = Shalom()
+    flames = {}
+    if sky or not c or not render or not render.DrawBox then return end
+    local now = CurTime()
+    local t = SongPos(now)
+    local eye = EyePos()
+    render.SetColorMaterial()
+    -- the hanukkiah: a giant one in the middle of the rings, turned to face you
+    local m = c.menorah
+    if m and m.pos then
+        local base = Vector(m.pos.x, m.pos.y, m.pos.z)
+        local w, h = m.w or 180, m.h or 170
+        local toEye = Vector(eye.x - base.x, eye.y - base.y, 0)
+        if toEye:LengthSqr() < 1 then toEye = Vector(1, 0, 0) end
+        toEye:Normalize()
+        local right, up = Vector(-toEye.y, toEye.x, 0), Vector(0, 0, 1)
+        local flat = Angle(0, toEye:Angle().y, 0)
+        local function P(x, z) return base + right * x + up * z end
+        local th = w * 0.02 + 1.5
+        local top, sp = h * 0.74, w / 9
+        render.DrawBox(base, flat, Vector(-w * 0.2, -w * 0.12, 0), Vector(w * 0.2, w * 0.12, h * 0.05), GOLD2)
+        Bar(P(0, h * 0.05), P(0, h * 0.86), th * 1.4, GOLD)
+        for i = 1, 4 do
+            for _, sgn in ipairs({ 1, -1 }) do
+                Bar(P(0, top - h * 0.115 * i), P(sgn * i * sp, top), th, GOLD)
+                render.DrawBox(P(sgn * i * sp, top), flat, Vector(-th * 1.8, -th * 1.8, 0), Vector(th * 1.8, th * 1.8, th * 1.6), GOLD2)
+            end
+        end
+        render.DrawBox(P(0, h * 0.86), flat, Vector(-th * 2, -th * 2, 0), Vector(th * 2, th * 2, th * 1.6), GOLD2)
+        -- the candles: the first on the right, each next one to its left; the shamash in the middle, higher, lit from the start
+        local lit = 0
+        for _, ct in ipairs(c.candles or {}) do if t >= ct then lit = lit + 1 end end
+        local ch = h * 0.08
+        for k = 0, 8 do
+            local x = k == 0 and 0 or (k <= 4 and (5 - k) * sp or -(k - 4) * sp)
+            local cb = k == 0 and P(0, h * 0.86 + th * 1.6) or P(x, top + th * 1.6)
+            render.DrawBox(cb, flat, Vector(-th, -th, 0), Vector(th, th, ch), Color(235, 240, 255))
+            if k <= lit then flames[#flames + 1] = cb + up * (ch + 3) end
+        end
+        if lit > litWas and sound and sound.Play then sound.Play("ambient/fire/ignite.wav", P(0, top), 80, 100, 1) end
+        litWas = lit
+    end
+    -- the flags on their poles round the outside, run up one after another on the intro's hit
+    for i, pole in ipairs(c.poles or {}) do
+        local foot = Vector(pole.x, pole.y, pole.z)
+        if foot:DistToSqr(eye) < 3500 * 3500 then
+            local PH = 200
+            render.DrawBox(foot, Angle(0, 0, 0), Vector(-1.5, -1.5, 0), Vector(1.5, 1.5, PH), Color(225, 225, 230))
+            local hoist = math.Clamp((t - 0.4 - (i - 1) * 0.8) / 1.0, 0, 1)
+            hoist = hoist * hoist * (3 - 2 * hoist)
+            local topZ = foot.z + 50 + (PH - 52) * hoist
+            Flag(Vector(foot.x, foot.y, topZ) + WIND * 1.5, WIND, Vector(0, 0, -1), Vector(WIND.y, -WIND.x, 0), 66, 48, now + i, 5, 10)
+        end
+    end
+    -- at the key change, a giant one unfurls across the sky, facing you
+    if c.sky and c.peakAt and t >= c.peakAt then
+        local u = math.Clamp((t - c.peakAt) / 2.5, 0, 1)
+        u = 1 - (1 - u) ^ 3
+        local sk = Vector(c.sky.x, c.sky.y, c.sky.z)
+        local toEye = Vector(eye.x - sk.x, eye.y - sk.y, 0)
+        if toEye:LengthSqr() < 1 then toEye = Vector(1, 0, 0) end
+        toEye:Normalize()
+        local across = Vector(-toEye.y, toEye.x, 0)
+        local W, H = 660, 480
+        Flag(sk - across * (W / 2) + Vector(0, 0, H / 2), across, Vector(0, 0, -1), toEye, W * u, H, now, 22, 16)
+    end
+end)
+
+-- Star of David fireworks, in the sky over everyone: every four beats at the key change,
+-- every eight in the last run (the same bursts on every screen).
+local bursts, burstBeat = {}, nil
+local BURST_COLS = { Color(80, 140, 255), Color(255, 255, 255), Color(255, 210, 110) }
+hook.Add("Think", "LivingCityShalom", function()
+    local c = Shalom()
+    if not c then bursts, burstBeat, litWas = {}, nil, 0 return end
+    local now = CurTime()
+    local beat = math.floor(Beat(now))
+    local every = c.section == "peak" and 4 or (c.section == "final" and 8 or nil)
+    if every and c.sky and beat ~= burstBeat and beat % every == 0 then
+        burstBeat = beat
+        local sk = Vector(c.sky.x, c.sky.y, c.sky.z)
+        local pos = sk + Vector((Hash(beat, 1) - 0.5) * 1000, (Hash(beat, 2) - 0.5) * 1000, -Hash(beat, 3) * 220)
+        bursts[#bursts + 1] = { t0 = now, pos = pos, col = BURST_COLS[beat % #BURST_COLS + 1], size = 150 + Hash(beat, 4) * 120 }
+        if sound and sound.Play then sound.Play("ambient/explosions/explode_" .. (beat % 3 + 7) .. ".wav", pos, 100, 150, 0.6) end
+    end
+    local keep = {}
+    for _, b in ipairs(bursts) do if now - b.t0 < 2.6 then keep[#keep + 1] = b end end
+    bursts = keep
+    -- the warm glow of the lit candles, and a flash of light for each burst
+    if DynamicLight then
+        if #flames > 0 then
+            local dl = DynamicLight(52300)
+            if dl then
+                dl.pos = flames[1] + Vector(0, 0, 10)
+                dl.r, dl.g, dl.b = 255, 170, 80
+                dl.brightness = 2 + 0.4 * math.sin(now * 13)
+                dl.size = 260 + 40 * #flames
+                dl.decay = 0
+                dl.dietime = now + 0.15
+            end
+        end
+        if not Calm() then
+            for i, b in ipairs(bursts) do
+                if now - b.t0 < 0.4 then
+                    local dl = DynamicLight(52310 + i)
+                    if dl then
+                        dl.pos = b.pos
+                        dl.r, dl.g, dl.b = b.col.r, b.col.g, b.col.b
+                        dl.brightness = 4
+                        dl.size = 1400
+                        dl.decay = 0
+                        dl.dietime = now + 0.1
+                    end
+                end
+            end
+        end
+    end
+end)
+
+local glow
+hook.Add("PostDrawTranslucentRenderables", "LivingCityShalom", function(_, sky)
+    local c = Shalom()
+    if sky or not c or not render or not render.DrawSprite then return end
+    glow = glow or (Material and Material("sprites/light_glow02_add"))
+    if glow then render.SetMaterial(glow) end
+    local now = CurTime()
+    -- the candle flames, flickering
+    for i, f in ipairs(flames) do
+        local fl = math.sin(now * 17 + i * 2.1) * 1.5
+        render.DrawSprite(f + Vector(0, 0, fl * 0.5), 7, 13 + fl, Color(255, 190, 90))
+        render.DrawSprite(f, 26, 26, Color(255, 140, 40, 120))
+    end
+    -- the fireworks: the star's outline spreading out from the burst, then drifting down and fading
+    local eye = EyePos()
+    for _, b in ipairs(bursts) do
+        local age = now - b.t0
+        local e = 1 - (1 - math.min(age / 0.7, 1)) ^ 3
+        local alpha = 255 * math.Clamp(1 - (age - 1.2) / 1.4, 0, 1)
+        local toEye = eye - b.pos
+        toEye.z = 0
+        if toEye:LengthSqr() < 1 then toEye = Vector(1, 0, 0) end
+        toEye:Normalize()
+        local right, up = Vector(-toEye.y, toEye.x, 0), Vector(0, 0, 1)
+        local droop = up * (-30 * age * age)
+        local col = Color(b.col.r, b.col.g, b.col.b, alpha)
+        for tri = 0, 1 do
+            for edge = 0, 2 do
+                local a1, a2 = math.rad(90 + tri * 180 + edge * 120), math.rad(90 + tri * 180 + (edge + 1) * 120)
+                for s = 0, 5 do
+                    local f = s / 6
+                    local x = math.cos(a1) + (math.cos(a2) - math.cos(a1)) * f
+                    local y = math.sin(a1) + (math.sin(a2) - math.sin(a1)) * f
+                    render.DrawSprite(b.pos + (right * x + up * y) * (b.size * e) + droop, 34, 34, col)
+                end
+            end
+        end
+        if age < 0.25 and not Calm() then render.DrawSprite(b.pos, 320, 320, Color(b.col.r, b.col.g, b.col.b, 200 * (1 - age / 0.25))) end
+    end
+end)
+
+-- the end: Am Yisrael chai, then Shalom
+hook.Add("HUDPaint", "LivingCityShalom", function()
+    local c = Shalom()
+    if not c or not c.outroAt then return end
+    local t = SongPos(CurTime())
+    local x0 = t - c.outroAt
+    if x0 < 0 then return end
+    local w, h = ScrW(), ScrH()
+    local first = x0 < 7
+    local a = 255 * math.Clamp(first and math.min(x0 / 1.5, (7 - x0) / 1) or (x0 - 7) / 1.5, 0, 1)
+    local big = first and "עם ישראל חי" or "שלום"
+    draw.SimpleTextOutlined(LC_CL.Hebrew(big), "LCShalomBig", w / 2, h * 0.42, Color(255, 255, 255, a), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 4, Color(BLUE.r, BLUE.g, BLUE.b, a))
+    draw.SimpleTextOutlined(first and "Am Yisrael chai" or "Shalom", "LCShalom", w / 2, h * 0.42 + 80, Color(BLUE.r, BLUE.g, BLUE.b, a), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, Color(255, 255, 255, a))
+end)
+
+-- tuning the hora's arms (only on your screen)
+concommand.Add("lc_shalom_pose", function(_, _, args)
+    local name = args[1]
+    if not name or not HORA[name] then print("[Living City] lc_shalom_pose <R_UpperArm|L_UpperArm|R_Forearm|L_Forearm> <pitch> <yaw> <roll>") return end
+    HORA[name] = Angle(tonumber(args[2]) or 0, tonumber(args[3]) or 0, tonumber(args[4]) or 0)
+end)
+concommand.Add("lc_shalom_pose_print", function()
+    for _, n in ipairs({ "R_UpperArm", "L_UpperArm", "R_Forearm", "L_Forearm" }) do print(string.format("%s = Angle(%g, %g, %g)", n, HORA[n].p, HORA[n].y, HORA[n].r)) end
+end)

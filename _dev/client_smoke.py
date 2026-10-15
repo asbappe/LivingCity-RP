@@ -1364,6 +1364,61 @@ for _, h in pairs(hook.t["Think"] or {}) do h() end
 _me.nw.lc_hanged = 0
 _me.nw.lc_limp = false
 _me.nw.lc_dancing = false
+-- Shalom: the hora, kippahs, the hanukkiah, the flags, the sayings, the fireworks, the end
+if LC_CL.Hebrew("\215\169\215\156\215\149\215\157") ~= "\215\157\215\149\215\156\215\169" then return "shalom: Hebrew isn't turned round to read right to left" end
+if LC_CL.Hebrew("Oy vey!") ~= "Oy vey!" then return "shalom: English is turned round too" end
+local matrixWas, allWas, soundPlayed = Matrix, ents.GetAll, 0
+Matrix = function() return setmetatable({}, { __index = function() return function() end end }) end
+ents.GetAll = function() return { _me } end
+local playWas = sound.Play
+sound.Play = function() soundPlayed = soundPlayed + 1 end
+_me.LookupBone = function() return 6 end
+_me.GetBoneMatrix = function() return { GetTranslation = function() return Vector(0, 0, 64) end, GetAngles = function() return Angle(-90, 0, 0) end } end
+local pfWas = sound.PlayFile
+sound.PlayFile = function() end -- (no song playing: the clock is the ending's own start)
+local function shalom(at, section)
+    net._q = { {} }
+    net.recv_lc_ending()
+    net._q = { { id = "shalom", phase = "apocalypse", name = "Shalom", say = "x", song = "livingcity/endings/shalom.mp3",
+        client = { party = true, lights = true, dance = "hora", palette = { { 255, 205, 110 }, { 60, 120, 255 } }, bpm = 136, offset = 0.36, start = CurTime() - at,
+            section = section, menorah = { pos = Vector(0, 0, 0), w = 180, h = 170 }, candles = { 35.7, 62.1, 86.8, 111.5, 125.7, 153.9, 183.9, 205.1 },
+            poles = { Vector(400, 0, 0), Vector(-400, 0, 0) }, sky = Vector(0, 0, 900), gatherAt = 7.4, peakAt = 205.1, outroAt = 273.9, sayings = { "Gut yontif!" } } } }
+    net.recv_lc_ending()
+end
+_me.nw.lc_dancing = true
+for _, at in ipairs({ { 3, "intro" }, { 20, "gather" }, { 40, "walk" }, { 70, "hora" }, { 155, "in" }, { 206, "peak" }, { 240, "final" } }) do
+    shalom(at[1], at[2])
+    _me.nw.lc_chair = at[2] == "hora"
+    _advance(1.1)
+    for _, h in pairs(hook.t["Think"] or {}) do h() end
+    for _, h in pairs(hook.t["CalcView"] or {}) do h(_me, Vector(0, 0, 0), Angle(0, 0, 0), 75) end
+    local spheres = _calls["render.DrawSphere"] or 0
+    hook.t.PostDrawOpaqueRenderables.LivingCityShalomKippah(false, false)
+    spheres = (_calls["render.DrawSphere"] or 0) - spheres
+    local boxes, quads = _calls["render.DrawBox"] or 0, _calls["render.DrawQuad"] or 0
+    hook.t.PostDrawOpaqueRenderables.LivingCityShalom(false, false)
+    boxes, quads = (_calls["render.DrawBox"] or 0) - boxes, (_calls["render.DrawQuad"] or 0) - quads
+    for _, h in pairs(hook.t["PostDrawOpaqueRenderables"] or {}) do h(false, false) end
+    for _, h in pairs(hook.t["PostDrawTranslucentRenderables"] or {}) do h(false, false) end
+    paint()
+    for _, h in pairs(hook.t["RenderScreenspaceEffects"] or {}) do h() end
+    if boxes < 20 then return "shalom: the hanukkiah isn't drawn at " .. at[1] .. "s" end
+    if quads < 100 then return "shalom: the flags aren't drawn at " .. at[1] .. "s" end
+    if at[1] >= 206 and quads < 400 then return "shalom: no giant flag in the sky after the key change" end
+    if at[1] >= 20 and spheres < 2 then return "shalom: no kippah at " .. at[1] .. "s" end
+    if at[1] < 7 and spheres > 0 then return "shalom: a kippah before everyone's gathered" end
+end
+_me.nw.lc_chair = false
+if soundPlayed < 1 then return "shalom: no candle lit, and no fireworks, by the key change" end
+shalom(276, "outro")
+local before = _calls["draw.SimpleTextOutlined"] or 0
+paint()
+if (_calls["draw.SimpleTextOutlined"] or 0) - before < 2 then return "shalom: no Am Yisrael chai at the end" end
+if concommand.list and concommand.list.lc_shalom_pose then concommand.list.lc_shalom_pose(nil, "lc_shalom_pose", { "R_UpperArm", "-20", "-80", "0" }) end
+if concommand.list and concommand.list.lc_shalom_pose_print then concommand.list.lc_shalom_pose_print() end
+Matrix, ents.GetAll, sound.Play, sound.PlayFile = matrixWas, allWas, playWas, pfWas
+_me.LookupBone, _me.GetBoneMatrix = nil, nil
+_me.nw.lc_dancing = false
 if concommand.list and concommand.list.lc_bloom_pose then concommand.list.lc_bloom_pose(nil, "lc_bloom_pose", { "R_Hand", "1", "2", "3" }) end
 net._q = { { id = "water", phase = "reset", name = "The Flood" } }
 net.recv_lc_ending()
