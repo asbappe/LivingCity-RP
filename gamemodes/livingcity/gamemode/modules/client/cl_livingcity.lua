@@ -673,8 +673,11 @@ local function PlayNextVoice()
         voiceBusy = CurTime() + 2
         return
     end
-    if LC_CL.SoundTrouble then LC_CL.SoundTrouble(v.path) end
-    surface.PlaySound(v.path)
+    if file.Exists("sound/" .. v.path, "GAME") then
+        surface.PlaySound(v.path)
+    elseif string.find(v.path, "^livingcity/") and LC_CL.SoundTrouble then
+        LC_CL.SoundTrouble(v.path) -- (one of the server's own recordings: say it's missing here)
+    end -- (a stock Half-Life 2 line this install doesn't have: the banner and the words, without the sound)
     local dur = SoundDuration and SoundDuration(v.path) or 0
     if not dur or dur <= 0.2 or dur > 20 then dur = 4.5 end
     voiceBusy = CurTime() + dur + 0.6

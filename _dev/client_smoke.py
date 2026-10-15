@@ -1476,6 +1476,17 @@ if tb - boxes < 1 then return "base: no exhaust trail behind the ZIG" end
 if (_calls["draw.SimpleText"] or 0) - txt < 3 then return "base: no score, or no 1000 where a bomb went off" end
 Entity = entWas2
 _me.LookupBone, _me.GetBoneMatrix, _me.GetForward = nil, nil, nil
+-- lc_sound_check: the counts, every ending song opened (one that won't, and one that does), a test announcement
+do
+    local findWas, pfWas2 = file.Find, sound.PlayFile
+    file.Find = function(p) if string.find(p, "endings", 1, true) then return { "shalom1.mp3", "bad.mp3" }, {} end return { "ambient1.mp3" }, {} end
+    sound.PlayFile = function(path, flags, cb)
+        if string.find(path, "bad", 1, true) then cb(nil, 41, "BASS_ERROR_FILEFORM") return end
+        cb(setmetatable({ IsValid = function() return true end }, { __index = function() return function() end end }))
+    end
+    concommand.list.lc_sound_check()
+    file.Find, sound.PlayFile = findWas, pfWas2
+end
 if concommand.list and concommand.list.lc_bloom_pose then concommand.list.lc_bloom_pose(nil, "lc_bloom_pose", { "R_Hand", "1", "2", "3" }) end
 net._q = { { id = "water", phase = "reset", name = "The Flood" } }
 net.recv_lc_ending()

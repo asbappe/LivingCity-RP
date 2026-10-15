@@ -113,6 +113,28 @@ concommand.Add("lc_sound_check", function()
         Say("This computer has none of the city's sounds, so you hear none of them. Put the livingcity_sound folder in garrysmod/addons/ here too (and restart the game), or have the server send it: a Workshop addon, FastDL (sv_downloadurl), or sv_allowdownload 1.")
         return
     end
+    -- the ending songs: every one on this computer, opened (not played) to see the game can play it
+    local songs = {}
+    for _, f in ipairs(file.Find("sound/livingcity/endings/*", "GAME") or {}) do
+        local ext = string.lower(string.match(f, "%.(%w+)$") or "")
+        if ext == "mp3" or ext == "ogg" or ext == "wav" then songs[#songs + 1] = f end
+    end
+    table.sort(songs)
+    if #songs > 0 then Say("Ending songs on this computer (checking each one opens):") end
+    for _, f in ipairs(songs) do
+        local path = "sound/livingcity/endings/" .. f
+        local kb = math.floor(((file.Size and file.Size(path, "GAME")) or 0) / 1024)
+        sound.PlayFile(path, "noplay noblock", function(ch, err, errName)
+            if IsValid(ch) then
+                Say(string.format("  %s (%d KB): plays", f, kb))
+                ch:Stop()
+            else
+                Say(string.format("  %s (%d KB): the game can't open it (%s)%s", f, kb, tostring(errName or err),
+                    kb == 0 and ": it's empty, a download that didn't finish (delete it here and reconnect)" or ": re-encode it as a 44100 Hz MP3"))
+            end
+        end)
+    end
+    Say("(A song added to the server only reaches players after the server changes map and they reconnect: FastDL sync, then a map change.)")
     Say("Playing " .. first .. " now...")
     sound.PlayFile("sound/" .. first, "noblock", function(ch, err, errName)
         if IsValid(ch) then
