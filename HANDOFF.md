@@ -20,6 +20,7 @@ Living City is a Garry's Mod Half-Life 2 roleplay gamemode.
 - Plays on Linux Mint, so give Linux commands.
 - Dedicated server on a Hexane host, map `rp_c18_ug`.
 - FastDL at `http://a29ka.hexane.co/9124749/garrysmod/`, which mirrors `garrysmod/`. The host panel has a "FastDL sync" button, and it has to be pressed after every upload, or clients don't get new files.
+- **Where the owner's recordings are on their server: `garrysmod/sound/livingcity/overwatch/`, `.../administrator/` and `.../endings/`** (straight under `sound/livingcity/`, no `announce/` folder, not in the addon). The announcer reads both that and `sound/livingcity/announce/<voice>/`. Never hand over a `livingcity_sound.zip` that could replace their folders (it holds only READMEs); send a single new file on its own, saying exactly where it goes. A recording that "stopped working" means: run `lc_announce_clips` on the server first, it lists what the server found.
 - Sounds: clients must download them to hear them. Ending songs go flat in `sound/livingcity/endings/` (for example `endings/bloom.mp3`), never in subfolders. Many of the owner's files were mp3s renamed to .wav; `lc_sound_check` (client) and `lc_endings` (server) report problems.
 
 ## House rules (the owner insists on these)

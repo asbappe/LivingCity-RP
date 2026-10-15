@@ -85,6 +85,9 @@ local cvGap  = CreateConVar("lc_announce_gap", "25", FLAGS, "Seconds between two
 local cvCat  = CreateConVar("lc_announce_cat_gap", "90", FLAGS, "Seconds before the same trigger can be announced again")
 
 local ROOT = "livingcity/announce/"
+-- (and straight under sound/livingcity/ too: sound/livingcity/overwatch/, .../administrator/,
+-- .../radio/, beside endings/, is where a server's own recordings often are)
+local ROOTS = { ROOT, "livingcity/" }
 local EXT = { wav = true, mp3 = true, ogg = true }
 
 LC.AnnounceTriggers = {
@@ -205,7 +208,8 @@ function LC.AnnounceUnused(voice)
     local out = {}
     local retired = {}
     for _, t in ipairs(LC.AnnounceRetired) do retired[t] = true end
-    local names = file.Find("sound/" .. ROOT .. voice .. "/*", "GAME") or {}
+    local names = {}
+    for _, root in ipairs(ROOTS) do for _, n in ipairs(file.Find("sound/" .. root .. voice .. "/*", "GAME") or {}) do names[#names + 1] = n end end
     table.sort(names)
     for _, name in ipairs(names) do
         local base, ext = string.match(name, "^(.*)%.([%w]+)$")
@@ -226,18 +230,20 @@ end
 -- One voice's own folder, flat: every file named for its trigger
 -- (curfew1.wav, curfew_firm2.wav, freq7_1.wav).
 local function FlatDir(out, voice, trig, tier, list)
-    local dir = "sound/" .. ROOT .. voice
-    local names = file.Find(dir .. "/*", "GAME") or {}
-    table.sort(names)
-    for _, name in ipairs(names) do
-        local base, ext = string.match(name, "^(.*)%.([%w]+)$")
-        if base and not string.find(name, "/", 1, true) and EXT[string.lower(ext)] and LC.AnnounceTriggerOf(base, list) == trig
-            and (not tier or LC.AnnounceToneOf(base) == tier) then
-            local text = file.Read(dir .. "/" .. base .. ".txt", "GAME")
-            text = text and string.Trim(text) or nil
-            if text == "" then text = nil end
-            out[#out + 1] = { path = ROOT .. voice .. "/" .. name, text = text }
-            if resource and resource.AddFile then resource.AddFile("sound/" .. ROOT .. voice .. "/" .. name) end
+    for _, root in ipairs(ROOTS) do
+        local dir = "sound/" .. root .. voice
+        local names = file.Find(dir .. "/*", "GAME") or {}
+        table.sort(names)
+        for _, name in ipairs(names) do
+            local base, ext = string.match(name, "^(.*)%.([%w]+)$")
+            if base and not string.find(name, "/", 1, true) and EXT[string.lower(ext)] and LC.AnnounceTriggerOf(base, list) == trig
+                and (not tier or LC.AnnounceToneOf(base) == tier) then
+                local text = file.Read(dir .. "/" .. base .. ".txt", "GAME")
+                text = text and string.Trim(text) or nil
+                if text == "" then text = nil end
+                out[#out + 1] = { path = root .. voice .. "/" .. name, text = text }
+                if resource and resource.AddFile then resource.AddFile("sound/" .. root .. voice .. "/" .. name) end
+            end
         end
     end
 end
@@ -486,7 +492,9 @@ function LC.AnnounceBadFiles()
     local dirs = { "overwatch", "administrator", "radio" }
     local out = {}
     for _, d in ipairs(dirs) do
-        for _, why in ipairs(LC.SoundProblems(ROOT .. d)) do out[#out + 1] = d .. "/" .. why end
+        for _, root in ipairs(ROOTS) do
+            for _, why in ipairs(LC.SoundProblems(root .. d)) do out[#out + 1] = d .. "/" .. why end
+        end
     end
     for _, why in ipairs(LC.SoundProblems("livingcity/endings", true)) do out[#out + 1] = "endings/" .. why end
     for _, id in ipairs(LC.EndingOrder or {}) do -- (the older layout, a folder per ending)
@@ -554,7 +562,7 @@ concommand.Add("lc_announce_clips", function(ply)
         (game.IsDedicated and game.IsDedicated() and "this is a dedicated server; " or "") ..
         "sv_allowdownload " .. (dl and dl:GetString() or "?") .. ", sv_downloadurl \"" .. (url and url:GetString() or "") .. "\"" ..
         " (a Workshop addon is the reliable way). Each player can type lc_sound_check to test their own.")
-    Reply(ply, "[Living City] " .. total .. " custom announcements found. Folders: sound/" .. ROOT .. "overwatch/, administrator/, radio/, flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files.")
+    Reply(ply, "[Living City] " .. total .. " custom announcements found. Folders: sound/livingcity/overwatch/, administrator/, radio/ (or the same under sound/" .. ROOT .. "), flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files.")
 end)
 
 concommand.Add("lc_announce_rescan", function(ply)

@@ -89,7 +89,8 @@ local STOCK_LINES = {
     "f_sociostabilizationrestored_spkr", "f_trainstation_assemble_spkr", "f_trainstation_assumepositions_spkr",
     "f_trainstation_cooperation_spkr", "f_trainstation_inform_spkr", "f_unrestprocedure1_spkr",
 }
-local SOUND_DIRS = { "livingcity/announce/overwatch", "livingcity/announce/administrator", "livingcity/announce/radio", "livingcity/endings" }
+local SOUND_DIRS = { "livingcity/announce/overwatch", "livingcity/announce/administrator", "livingcity/announce/radio",
+    "livingcity/overwatch", "livingcity/administrator", "livingcity/radio", "livingcity/endings" }
 concommand.Add("lc_sound_check", function()
     local function Say(s) print("[Living City] " .. s) end
     local first, total = nil, 0

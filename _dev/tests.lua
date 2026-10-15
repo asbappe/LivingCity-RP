@@ -11780,6 +11780,16 @@ section("Playtest fixes: switching faction where you stand, boxes in both hands,
     ok(okr and LC.NPCTargetsTotal() > 1 and string.find(rep or "", "lc_npc_budget (1) is below", 1, true),
         "a cap lower than the city's settings is pointed out in the debug report (it stops Civil Protection spawning)")
     _setcvar("lc_npc_budget", was)
+    -- recordings straight under sound/livingcity/ (overwatch/, administrator/), not only under announce/
+    _files["sound/livingcity/overwatch/socio_green1.wav"] = "RIFF" .. string.rep("\0", 3000)
+    _files["sound/livingcity/administrator/socio_green2.wav"] = "RIFF" .. string.rep("\0", 3000)
+    LC.AnnounceRescan()
+    local ow = LC.PickAnnounceClip("overwatch", "socio_green")
+    local ad = LC.PickAnnounceClip("administrator", "socio_green", false, 1)
+    ok(ow == "livingcity/overwatch/socio_green1.wav" and ad == "livingcity/administrator/socio_green2.wav",
+        "recordings in sound/livingcity/overwatch/ and .../administrator/ are found too, not only under announce/", tostring(ow) .. " " .. tostring(ad))
+    _files["sound/livingcity/overwatch/socio_green1.wav"], _files["sound/livingcity/administrator/socio_green2.wav"] = nil, nil
+    LC.AnnounceRescan()
 end)()
 
 ----------------------------------------------------------------------
