@@ -11400,6 +11400,7 @@ runToM(8.5)
 ok(E.section == "attack" and a.frozen == false and not a:GetNW2Bool("lc_dancing", false), "in between, the dancing stops")
 ok(E.client.loud and not E.client.spots, "and the song comes up over the gunfire (the spotlights off till the next dance)")
 local k1 = E.skels[1]
+for _, c in ipairs(E.folk or {}) do if IsValid(c) then c:SetPos(c:GetPos() + Vector(0, 5000, 0)) end end -- (out of the way: it goes for whoever's nearest)
 k1:SetPos(a:GetPos() + Vector(30, 0, 0))
 a:SetHealth(2)
 _run(0.3)
@@ -11536,7 +11537,10 @@ ok(a:GetPos():Distance(p0) < 1, "the intro: everyone stands, arm in arm")
 runToS(3.5)
 ok(a:GetPos():Distance(p0) > 5, "then the rings go round", a:GetPos():Distance(p0))
 ok(E.rings.inner.spin > 0 and E.rings.outer.spin < 0, "the two rings go opposite ways")
-ok(math.abs(a:GetPos().z - E.floorZ) < 0.01, "and everyone's right on the floor (held even a little above it, a dancer looks like they float)", a:GetPos().z - E.floorZ)
+local grounded
+for _, m in ipairs(E.rings.inner.members) do if not m.lift and IsValid(m.e) then grounded = m.e end end
+ok(grounded and math.abs(grounded:GetPos().z - E.floorZ) < 0.01, "and everyone (not up on a chair) is right on the floor: held even a little above it, a dancer looks like they float",
+    grounded and (grounded:GetPos().z - E.floorZ))
 ok(E.joined and horaCops[1]:GetNW2Bool("lc_dancing", false) and horaCops[1].lcHora and #(E.hidWeps or {}) >= 1,
     "the hora proper: the Combine's units put their guns down and join the outer ring")
 runToS(4.6)
