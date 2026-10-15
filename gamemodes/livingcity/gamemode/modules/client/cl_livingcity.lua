@@ -673,6 +673,13 @@ local function PlayNextVoice()
         voiceBusy = CurTime() + 2
         return
     end
+    -- (a stock line's loudspeaker version, "_spkr", missing here: the plain one, if that's here)
+    local path = v.path
+    if not file.Exists("sound/" .. path, "GAME") then
+        local plain = string.gsub(path, "_spkr%.wav$", ".wav")
+        if plain ~= path and file.Exists("sound/" .. plain, "GAME") then path = plain end
+    end
+    v.path = path
     if file.Exists("sound/" .. v.path, "GAME") then
         surface.PlaySound(v.path)
     elseif string.find(v.path, "^livingcity/") and LC_CL.SoundTrouble then

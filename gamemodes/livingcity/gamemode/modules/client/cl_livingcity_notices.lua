@@ -83,6 +83,12 @@ function LC_CL.SoundTrouble(path, why)
 end
 
 -- What this computer has of the city's sounds, and a test that one plays.
+local STOCK_LINES = {
+    "f_anticitizenreport_spkr", "f_capitalmalcompliance_spkr", "f_citizenshiprevoked_6_spkr", "f_confirmcivilstatus_1_spkr",
+    "f_evasionbehavior_2_spkr", "f_innactionisconspiracy_spkr", "f_protectionresponse_1_spkr", "f_rationunitsdeduct_3_spkr",
+    "f_sociostabilizationrestored_spkr", "f_trainstation_assemble_spkr", "f_trainstation_assumepositions_spkr",
+    "f_trainstation_cooperation_spkr", "f_trainstation_inform_spkr", "f_unrestprocedure1_spkr",
+}
 local SOUND_DIRS = { "livingcity/announce/overwatch", "livingcity/announce/administrator", "livingcity/announce/radio", "livingcity/endings" }
 concommand.Add("lc_sound_check", function()
     local function Say(s) print("[Living City] " .. s) end
@@ -135,6 +141,15 @@ concommand.Add("lc_sound_check", function()
         end)
     end
     Say("(A song added to the server only reaches players after the server changes map and they reconnect: FastDL sync, then a map change.)")
+    -- the stock Half-Life 2 Overwatch lines the city uses: which this install has
+    Say("Half-Life 2's own Overwatch lines the city uses (found here, or missing):")
+    for _, n in ipairs(STOCK_LINES) do
+        local p = "npc/overwatch/cityvoice/" .. n .. ".wav"
+        local plain = "npc/overwatch/cityvoice/" .. string.gsub(n, "_spkr$", "") .. ".wav"
+        local have = file.Exists("sound/" .. p, "GAME")
+        local alt = not have and plain ~= p and file.Exists("sound/" .. plain, "GAME")
+        Say("  " .. n .. ": " .. (have and "found" or (alt and ("missing, but " .. string.gsub(n, "_spkr$", "") .. " is here (used instead)") or "MISSING")))
+    end
     Say("Playing " .. first .. " now...")
     sound.PlayFile("sound/" .. first, "noblock", function(ch, err, errName)
         if IsValid(ch) then
