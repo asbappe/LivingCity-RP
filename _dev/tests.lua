@@ -11355,7 +11355,7 @@ local function up() local n = 0 for _, p in ipairs(player.GetAll()) do if p.lcBl
 ok(up() == 0, "nobody goes up until it's at top speed")
 _run(0.55)
 ok(up() == 1, "then one spins up into the sky", up())
-_run(E.launchGap)
+_run(E.launchGap + 0.15) -- (a little past the gap: run in tenths, a gap of exactly 0.6 lands on the boundary)
 ok(up() == 2, "and then another: one at a time", up())
 local total = #player.GetAll()
 _run(E.launchGap * total + 3)
