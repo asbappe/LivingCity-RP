@@ -148,6 +148,8 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **Hard (lc_ending hard now):** everyone at the LZ doing the mirror-flip dance, PARTY HARD everywhere, the strobe, the freeze at the break, people passing out one at a time. The Combine going for it all through (crowd surfs, spins, backflips with confetti), two or three at once.
   Notes:
+- [ ] **Pose Recorder (the separate addon, pose_recorder.zip):** Tools, Poser, Pose Recorder. Spawn a mannequin from the panel: is it your model, standing, limbs frozen? Pose an arm with the physgun, right click: "Keyframe 1". Pose it differently, right click again. Reload: does the blue ghost beside it play the loop, and do its poses match the mannequin's exactly (that's the test of the maths)? Try "Record / stop" while moving a limb. Copy, and paste the result to me; Save and Load. Then pose a real dance (Bloom's, Grigori's headbang, the hora) and send it over.
+  Notes:
 - [ ] **Fixes from the last playtest (bone axes worked out from what you saw: tell me which still look wrong):**
   - Flood: no biting or leaping till 2:20, softer bites and waves, 15 s of breath; rowboats to climb into (Jump from the water); stage lights; Grigori nodding on the beat (if backwards, `lc_headbang_angle "-35 0 0"`), mic at his mouth, elbow forward, not a chicken wing.
   - Plane: a real barrel roll, everyone on the wings staying on through it; if the plane flies sideways, `lc_ending_plane_model_yaw 90` (or 0, 180); turn the camera with the mouse; arms rolling in front of the chest; nobody running on the spot; some fireworks big bangs.

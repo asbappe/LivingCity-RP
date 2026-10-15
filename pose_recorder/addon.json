@@ -1,0 +1,6 @@
+{
+	"title": "Pose Recorder",
+	"type": "tool",
+	"tags": [ "movie", "build" ],
+	"ignore": [ "*.md", "*.psd", "*.svg" ]
+}

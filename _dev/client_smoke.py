@@ -1489,6 +1489,92 @@ return nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+# Pose Recorder (the separate addon, ../pose_recorder): pick a ragdoll, snap keyframes, record,
+# play the loop, copy, save and load, and the tool's panel, on the fake client
+PR_DIR = os.path.join(HERE, "..", "pose_recorder", "lua")
+L.globals()["_pr_core"] = open(os.path.join(PR_DIR, "pose_recorder", "core.lua")).read()
+L.globals()["_pr_auto"] = open(os.path.join(PR_DIR, "autorun", "pose_recorder.lua")).read()
+L.globals()["_pr_tool"] = open(os.path.join(PR_DIR, "weapons", "gmod_tool", "stools", "pose_recorder.lua")).read()
+err = L.execute(r"""
+local ok, e = pcall(function()
+    include = function(p) if p == "pose_recorder/core.lua" then assert(loadstring(_pr_core, "core.lua"))() end end
+    AddCSLuaFile = function() end
+    surface.PlaySound = function() end
+    chat = chat or {}
+    chat.AddText = function() end
+    string.GetFileFromFilename = string.GetFileFromFilename or function(p) return (string.match(p or "", "([^/]+)$")) end
+    file.CreateDir = file.CreateDir or function() end
+    local clip
+    SetClipboardText = function(t) clip = t end
+    util.TableToJSON = util.TableToJSON or function(t) return "{json}" end
+    -- a fake model: a pelvis, a chest and an arm, standing; the ragdoll the same with the arm raised
+    local function M(p, y, r) return { GetAngles = function() return Angle(p, y, r) end, GetTranslation = function() return Vector() end } end
+    local BONES = { { "ValveBiped.Bip01_Pelvis", -1 }, { "ValveBiped.Bip01_Spine2", 0 }, { "ValveBiped.Bip01_R_UpperArm", 1 } }
+    local function Fake(angles)
+        local e = { manip = {} }
+        e.IsValid = function() return true end
+        e.GetModel = function() return "models/player/kleiner.mdl" end
+        e.GetPos = function() return Vector(0, 0, 0) end
+        e.GetBoneCount = function() return #BONES end
+        e.GetBoneName = function(_, i) return BONES[i + 1][1] end
+        e.GetBoneParent = function(_, i) return BONES[i + 1][2] end
+        e.LookupBone = function(_, n) for i, b in ipairs(BONES) do if b[1] == n then return i - 1 end end end
+        e.GetBoneMatrix = function(_, i) local a = angles[i + 1] return M(a[1], a[2], a[3]) end
+        e.InvalidateBoneCache, e.SetupBones, e.SetNoDraw, e.SetPos, e.SetAngles = function() end, function() end, function() end, function() end, function() end
+        e.LookupSequence = function() return 3 end
+        e.SelectWeightedSequence = function() return 3 end
+        e.ResetSequence, e.SetCycle, e.SetPlaybackRate, e.Remove = function() end, function() end, function() end, function() e.removed = true end
+        e.ManipulateBoneAngles = function(_, id, a) e.manip[id] = a end
+        e.GetClass = function() return "prop_ragdoll" end
+        return e
+    end
+    local standing = { { 0, 0, 90 }, { -80, 0, 90 }, { 80, 10, 0 } }
+    local raised = { { 0, 0, 90 }, { -80, 0, 90 }, { -20, 10, 0 } }
+    local ghost
+    ClientsideModel = function() ghost = Fake(standing) return ghost end
+    SERVER, CLIENT = false, true
+    assert(loadstring(_pr_auto, "pose_recorder.lua"))()
+    local PR = PoseRecorder
+    local rag = Fake(raised)
+    net._q = nil
+    PR.sel = { ent = rag, phys = { ["ValveBiped.Bip01_Pelvis"] = true, ["ValveBiped.Bip01_Spine2"] = true, ["ValveBiped.Bip01_R_UpperArm"] = true } }
+    concommand.list.pose_recorder_snap()
+    if #PR.frames ~= 1 then error("pose recorder: no keyframe snapped") end
+    local arm = PR.frames[1].bones["ValveBiped.Bip01_R_UpperArm"]
+    if not arm or math.abs(arm[1]) + math.abs(arm[2]) + math.abs(arm[3]) < 10 then error("pose recorder: the raised arm wasn't recorded as a turn") end
+    local pelvis = PR.frames[1].bones["ValveBiped.Bip01_Pelvis"]
+    if not pelvis or math.abs(pelvis[1]) + math.abs(pelvis[2]) + math.abs(pelvis[3]) > 0.5 then error("pose recorder: a bone posed as it stands should record no turn") end
+    standing, raised = standing, standing
+    rag.GetBoneMatrix = function(_, i) local a = ({ { 0, 0, 90 }, { -80, 0, 90 }, { 80, 10, 0 } })[i + 1] return M(a[1], a[2], a[3]) end
+    concommand.list.pose_recorder_snap()
+    concommand.list.pose_recorder_preview()
+    if not IsValid(ghost) then error("pose recorder: no ghost to play the loop") end
+    _advance(0.25)
+    for _, h in pairs(hook.t["Think"] or {}) do h() end
+    if not ghost.manip[2] then error("pose recorder: the ghost isn't posed") end
+    for _, h in pairs(hook.t["HUDPaint"] or {}) do h() end
+    concommand.list.pose_recorder_copy()
+    if not clip then error("pose recorder: nothing copied") end
+    concommand.list.pose_recorder_save()
+    concommand.list.pose_recorder_clear()
+    concommand.list.pose_recorder_load()
+    concommand.list.pose_recorder_preview()
+    concommand.list.pose_recorder_record()
+    _advance(0.5)
+    for _, h in pairs(hook.t["Think"] or {}) do h() end
+    concommand.list.pose_recorder_record()
+    if PR.mode ~= "rec" or #PR.frames < 1 then error("pose recorder: nothing recorded") end
+    local cp = setmetatable({}, { __index = function() return function() return setmetatable({}, { __index = function() return function() end end }) end end })
+    TOOL = {}
+    language = language or {}
+    language.Add = function() end
+    assert(loadstring(_pr_tool, "stool.lua"))()
+    TOOL.BuildCPanel(cp)
+end)
+return (not ok) and tostring(e) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
 print(problems or "no client errors")
 print("zone fills drawn:", filled, "thick edges drawn:", beams)
 ok = not problems and filled >= 2 and beams > 0

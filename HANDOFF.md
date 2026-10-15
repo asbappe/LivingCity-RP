@@ -10,6 +10,7 @@ Living City is a Garry's Mod Half-Life 2 roleplay gamemode.
 - Layout:
   - `gamemodes/livingcity/`: the gamemode. Modules are in `gamemode/modules/server` (about 96 files) and `gamemode/modules/client` (about 42). `gamemode/cl_init.lua` holds the in-game guide text.
   - `livingcity_sound/`: a separate addon for the sound files (READMEs only in git; the owner supplies the audio).
+  - `pose_recorder/`: Pose Recorder, a separate tool addon (also meant for the Workshop): pose a ragdoll, snap keyframes, get ManipulateBoneAngles angles relative to the idle, as JSON. The owner poses dances with it and pastes the JSON; turn that into the endings' dances. Its maths is `pose_recorder/lua/pose_recorder/core.lua` (plain Lua, tested in the client smoke test).
   - `lua/`: a small shared addon part.
   - `_dev/`: the offline test harness (not shipped).
 - Last commit at handoff: `5db2d2e` (Bloom hips-only sway; no inspections, crimes or lost standing during endings).
@@ -35,11 +36,11 @@ Living City is a Garry's Mod Half-Life 2 roleplay gamemode.
 5. **Work lean.** The owner has limited usage, so keep the chat short and don't re-read large files you don't need.
 6. **After each change, deliver a zip:**
    - `git archive HEAD` into a temp folder `livingcity/`
-   - remove `livingcity/livingcity_sound`
+   - remove `livingcity/livingcity_sound` and `livingcity/pose_recorder`
    - zip it as `livingcity.zip`
    - send it to the owner as a file attachment.
 
-   Also build `livingcity_sound.zip` when anything under `livingcity_sound/` changes.
+   Also build `livingcity_sound.zip` when anything under `livingcity_sound/` changes, and `pose_recorder.zip` (the `pose_recorder/` folder) when that does.
 
 ## Testing
 

@@ -661,6 +661,10 @@ Admin helpers: `lc_giveitem <name> <item> [count]`, `lc_search <name>`.
 
 Every player kill is judged; unjustified ones earn strikes (2: prison, 4: kick), and leaving mid-fight (or wanted, or being chased) is remembered, but only if you chose to leave: a server restart or map change, a crash or dropped connection, or a kick isn't held against anyone. Admins clear someone's strikes from the admin tools (Handy > Clear conduct strikes) or with `lc_pardon <name>`. New spawns get 8 seconds of protection. Logged to `garrysmod/data/livingcity/conduct_log.txt`.
 
+## Pose Recorder (a separate tool)
+
+The `pose_recorder/` folder is its own addon (install it as `garrysmod/addons/pose_recorder/`, from `pose_recorder.zip`), made for posing the endings' dances and fit for the Workshop on its own. Tools, Poser, Pose Recorder: spawn a mannequin or pick any ragdoll, pose it with the physgun, right click to snap keyframes (or record it moving), reload to watch a blue ghost play the loop to the beat, then copy it or save it to `garrysmod/data/pose_recorder/<name>.json`. Each bone's angle is what `ManipulateBoneAngles` needs, relative to the model standing in its idle. Paste the JSON to whoever's working on the code. Details, the file format and publishing to the Workshop: `pose_recorder/README.md`.
+
 ## Secret endings
 
 Joke "end of the city" events, mostly about the motherlode (the master data core). **Nobody really dies and nothing is lost:** characters, Civil Standing and credits carry on (the usual inheritance caveat applies), nobody can be hurt while one runs, and afterwards the map reloads with its Living City layout.
