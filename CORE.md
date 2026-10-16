@@ -16,6 +16,8 @@ This is the master technical document. It lists what the owner's server, files, 
 - The server is a **dedicated server on a Hexane host**, map **`rp_c18_ug`**.
 - **FastDL** is `http://a29ka.hexane.co/9124749/garrysmod/` and mirrors `garrysmod/`. The host panel has a **"FastDL sync"** button: it must be pressed after every upload, or players don't get new files.
 - **A new sound reaches players only after: upload, FastDL sync, a map change (the server builds its download list when a map starts), and the player reconnecting.**
+- **`garrysmod/sound/livingcity/` is the official folder for every recording and song** (the owner, 2026-10-16: "we are dedicated to garrysmod/sound/livingcity now, that is to be the authoritative/official folder"); the older places are still read, but nothing tells anyone to use them.
+- **The gamemode's one official place is `garrysmod/addons/livingcity/`** (the owner, 2026-10-16). No other copy (an old `addons/livingcity-rp-main`) may sit beside it: both would load.
 - **Their recordings on the server** are in **`garrysmod/sound/livingcity/overwatch/`**, **`garrysmod/sound/livingcity/administrator/`** and **`garrysmod/sound/livingcity/endings/`** (straight under `sound/livingcity/`: no `announce/` folder, not inside an addon). Their announcement recordings are `.wav` files named for their trigger (`curfew1.wav`, `socio_green1.wav`, the Administrator's with her tone: `curfew_firm1.wav`). The Shalom song is `endings/shalom1.mp3`.
 - **Delivering a change:** a `livingcity.zip` of the gamemode (`git archive HEAD` into `livingcity/`, without `livingcity_sound/` and `pose_recorder/`), sent as a file. **Never send a zip that could replace their sound folders**: the `livingcity_sound` folder in git holds only READMEs. A new sound file goes on its own, with exactly where to put it. `pose_recorder.zip` is the Pose Recorder addon, separate.
 
@@ -64,4 +66,5 @@ Things players and the owner rely on that were settled in conversation:
 
 - 2026-10-15: this file and the core snapshot created. Recordings are read from `sound/livingcity/<voice>/` as well as `sound/livingcity/announce/<voice>/` (the owner's folders had never been read: "you had me create a folder in garrysmod > sound > livingcity, one for overwatch, one for administrator, and one for endings").
 - 2026-10-15: switching faction from F4 keeps you where you stand (the owner: "Can't I just change where I am?").
+- 2026-10-16: `garrysmod/sound/livingcity/` made the official folder for recordings and songs in every instruction (README, guide, messages); `addons/livingcity/` the one official place for the gamemode. The older sound places are still read.
 - 2026-10-15: NPCs carry boxes in front in both hands (the owner: "can we make them use both hands to carry boxes out in front of them?").

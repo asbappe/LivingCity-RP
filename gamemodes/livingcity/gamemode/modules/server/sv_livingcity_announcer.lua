@@ -4,18 +4,20 @@
       Drop sound files in a voice's folder and the city says them when
       something happens. No code, no list to edit: the file's name says when.
 
-        sound/livingcity/announce/overwatch/curfew1.wav          the Combine PA
-        sound/livingcity/announce/administrator/curfew1.wav      the Administrator, warm
-        sound/livingcity/announce/administrator/curfew_firm1.wav ... firm (stern, furious the same)
-        sound/livingcity/announce/radio/freq7_1.wav              the radios (static, union, freq7)
+        sound/livingcity/overwatch/curfew1.wav          the Combine PA
+        sound/livingcity/administrator/curfew1.wav      the Administrator, warm
+        sound/livingcity/administrator/curfew_firm1.wav ... firm (stern, furious the same)
+        sound/livingcity/radio/freq7_1.wav              the radios (static, union, freq7)
 
       One flat folder per voice. A file's name starts with its trigger
       (curfew1, curfew_soon2, ambient_3); for the Administrator, firm, stern
       or furious anywhere in the name is that tone, and no tone word is her
       warm one. (Older layouts, a folder per trigger, still work.)
 
-      They live in their own addon, garrysmod/addons/livingcity_sound/sound/livingcity/announce/...,
-      so replacing the gamemode's folder on an update never touches them.
+      The official place is the server's own garrysmod/sound/livingcity/<voice>/
+      (FastDL mirrors it to players), outside the gamemode's folder, so an
+      update never touches them. (sound/livingcity/announce/<voice>/, in the old
+      livingcity_sound addon or not, is still read too.)
       .wav, .mp3 and .ogg all work. Put as many files in as you like; one
       is picked each time, never the same one twice running. An optional
       text file with the same name (curfew1.txt next to curfew1.wav) is the
@@ -40,11 +42,11 @@
       The radio repair bench (sv_livingcity_moregames.lua): what a set plays
       as you turn the dial. Static fills the gaps between stations and blends
       into them as you get close, so long, loopable files work best.
-        sound/livingcity/announce/radio/static1.wav    the hiss between stations
-        sound/livingcity/announce/radio/union1.wav     an ordinary station (the
+        sound/livingcity/radio/static1.wav    the hiss between stations
+        sound/livingcity/radio/union1.wav     an ordinary station (the
                        Union band); none, and the Administrator's ambient
                        recordings are used
-        sound/livingcity/announce/radio/freq7_1.wav    the Resistance's pirate
+        sound/livingcity/radio/freq7_1.wav    the Resistance's pirate
                        band, when a set is tuned to it; its .txt is the line
                        shown on the panel. Anyone within about twenty feet
                        of the set hears it all too.
@@ -79,7 +81,7 @@ if CLIENT then return end
 LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvOn   = CreateConVar("lc_announce_custom", "1", FLAGS, "Custom Overwatch and Administrator announcements from sound/livingcity/announce/")
+local cvOn   = CreateConVar("lc_announce_custom", "1", FLAGS, "Custom Overwatch and Administrator announcements from sound/livingcity/<voice>/")
 local cvPct  = CreateConVar("lc_announce_custom_pct", "100", FLAGS, "Chance (percent) a custom Overwatch line replaces the built-in one for an event")
 local cvGap  = CreateConVar("lc_announce_gap", "25", FLAGS, "Seconds between two custom announcements by the same voice")
 local cvCat  = CreateConVar("lc_announce_cat_gap", "90", FLAGS, "Seconds before the same trigger can be announced again")

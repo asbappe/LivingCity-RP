@@ -581,7 +581,7 @@ end
 function LC.StartNPCBroadcast()
     if LC.LiveSpeaker or LC.LiveNPC then return false, "Someone is already on air." end
     local lines = LC.BreenProgram()
-    if #lines == 0 then return false, "No recordings for " .. LC.AdministratorName() .. " yet (sound/livingcity/announce/administrator/ambient/)." end
+    if #lines == 0 then return false, "No recordings for " .. LC.AdministratorName() .. " yet (sound/livingcity/administrator/, named ambient1.wav and so on)." end
     local now = CurTime()
     local studios = LC.PointsOfKind and LC.PointsOfKind("studio") or {}
     local npc = #studios > 0 and SpawnBreen(Pick(studios)) or nil

@@ -1,7 +1,10 @@
 Custom announcements for Living City.
 
-This is its own addon (garrysmod/addons/livingcity_sound/), separate from the gamemode,
-so updating the gamemode never touches your recordings. Install it once and keep it.
+The official place for these is the server's own garrysmod/sound/livingcity/:
+overwatch/, administrator/ and radio/ straight under it, beside endings/. It's
+outside the gamemode's folder, so updating the gamemode never touches your
+recordings, and FastDL mirrors it to players (press FastDL sync after adding one,
+then change the map). This folder in the project only holds these notes.
 
 Three flat folders. Drop the files straight in; the name says when it plays:
 

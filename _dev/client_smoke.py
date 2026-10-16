@@ -1586,6 +1586,12 @@ return (not ok) and tostring(e) or nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+# the official folder for recordings and songs is the server's garrysmod/sound/livingcity/ (CORE.md):
+# what players read in the guide and the sound check must send them there, never to the old sound addon
+_guide = open(os.path.join(GMDIR, "gamemode", "cl_init.lua")).read()
+_notes = open(os.path.join(GMDIR, "gamemode", "modules", "client", "cl_livingcity_notices.lua")).read()
+if "garrysmod/sound/livingcity/" not in _guide or "livingcity_sound" in _guide or "livingcity_sound folder" in _notes:
+    problems = (problems + "\n" if problems else "") + "the guide or the sound check points somewhere other than garrysmod/sound/livingcity/"
 print(problems or "no client errors")
 print("zone fills drawn:", filled, "thick edges drawn:", beams)
 ok = not problems and filled >= 2 and beams > 0

@@ -117,7 +117,7 @@ concommand.Add("lc_sound_check", function()
     Say("Game volume: " .. (vol and vol:GetString() or "?") .. ", lc_breencast_volume (the Administrator): " ..
         (GetConVar("lc_breencast_volume") and GetConVar("lc_breencast_volume"):GetString() or "?"))
     if total == 0 then
-        Say("This computer has none of the city's sounds, so you hear none of them. Put the livingcity_sound folder in garrysmod/addons/ here too (and restart the game), or have the server send it: a Workshop addon, FastDL (sv_downloadurl), or sv_allowdownload 1.")
+        Say("This computer has none of the city's sounds, so you hear none of them. The server sends them through FastDL: after a sound is added there, press FastDL sync, change the map, and reconnect. (For a game of your own, put them in garrysmod/sound/livingcity/ here.)")
         return
     end
     -- the ending songs: every one on this computer, opened (not played) to see the game can play it

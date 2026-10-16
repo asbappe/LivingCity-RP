@@ -23,9 +23,9 @@
 
       The endings (their songs go straight in sound/livingcity/endings/,
       named for the ending: bus.mp3, harpies.ogg, bus2.mp3 for another;
-      .mp3, .ogg or .wav. They live in the separate sound addon,
-      garrysmod/addons/livingcity_sound/sound/livingcity/endings/, so
-      updating the gamemode never touches them. The older layout, a
+      .mp3, .ogg or .wav. The official place is the server's own
+      garrysmod/sound/livingcity/endings/ (FastDL mirrors it), outside the
+      gamemode's folder, so updating the gamemode never touches them. The older layout, a
       folder per ending, endings/bus/anything.mp3, still works.)
         harpies    lights out, everyone at the landing zone, and the mingebags
                    (the 2007 default: Dr. Kleiner in the reference pose, a

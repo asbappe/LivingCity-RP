@@ -25,7 +25,7 @@
                        own; a plain Union radio has to be retuned by hand
       Units            are told on their net when it's located and jammed
 
-    Recordings (garrysmod/addons/livingcity_sound/sound/livingcity/announce/radio/):
+    Recordings (garrysmod/sound/livingcity/radio/):
       freq7_1.wav ...             the voice lines (between songs)
       freq7_song_<anything>.ogg   the songs (.ogg or .wav: the server can
                                   tell how long those run)

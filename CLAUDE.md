@@ -17,6 +17,7 @@ Living City is a Garry's Mod Half-Life 2 roleplay gamemode. The owner has put a 
 5. **Work lean.** The owner has a limited budget: keep chat short, don't re-read large files you don't need.
 6. **Deliver a zip after each change:** `git archive HEAD` into a temp `livingcity/`, remove `livingcity/livingcity_sound` and `livingcity/pose_recorder`, zip it as `livingcity.zip`, send it as a file. Never send a sound zip that could replace the owner's sound folders.
 7. The owner plays on **Linux Mint**: give Linux commands.
+8. **`main` is the official branch** (the owner, 2026-10-16: "stop using random branches"). Start from `main`. When a change is finished and the tests pass, push it to the session's branch and also to `main` (a fast-forward: `git push origin HEAD:main`; if `main` has moved, merge it in first, never force).
 
 ## Testing
 
