@@ -128,6 +128,9 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **The leg animation:** how it looks in first and third person (it may need tuning).
   Notes:
 
+- [ ] **The Endings menu (C > Help > Endings menu, as superadmin):** opens with the ending playing already picked (or pick one and press Play it now). On The dance tab: pick a move and a bone on the body map; is the bone lit up yellow on the dancers, and does the close-up at the top show them (drag to turn round, wheel to zoom)? Do the three sliders turn the bone the way their labels say, live, on everyone (ask another player to watch), with the other side mirrored? Tick the stand-in with no ending playing: does someone do the move in front of you? Settings: do the sliders change the ending as it plays, and does "back to the default" work? Changes: does "Copy it all" give you a list to paste me? After a map change, is the tuning still there?
+  Notes:
+
 ## Morning exercise and more (from the other session)
 
 - [ ] **Morning exercise:** every second dawn, the jog (keep up with the pace marker), the drill (copy the leader on your ring, then the skipping rope) or the parade (cheer the column). Needs its editor points: jogging route, exercise yard, parade route.

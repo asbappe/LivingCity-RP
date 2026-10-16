@@ -11793,6 +11793,53 @@ section("Playtest fixes: switching faction where you stand, boxes in both hands,
 end)()
 
 ----------------------------------------------------------------------
+section("The Endings menu: every ending's settings, and its dances tuned live")
+;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
+    ok(LC.EndingSettingGroup("lc_ending_flood_boats") == "water" and LC.EndingSettingGroup("lc_ending_minge_max") == "harpies"
+        and LC.EndingSettingGroup("lc_ending_shalom_sections") == "shalom" and LC.EndingSettingGroup("lc_ending_cooldown") == "all"
+        and LC.EndingSettingGroup("lc_endings_on") == "all" and LC.EndingSettingGroup("lc_citizens") == nil,
+        "each ending's settings are found by their names (the Flood's are flood_, the Harpies' minge_), the rest are every ending's")
+    local inf = LC.EndingTuneInfo()
+    local function Has(list, name) for _, s in ipairs(list or {}) do if s.name == name then return s end end end
+    local boats = Has(inf.settings.water, "lc_ending_flood_boats")
+    ok(#inf.endings == #LC.EndingOrder and boats and boats.d == "6" and boats.help ~= "" and Has(inf.settings.all, "lc_ending_cooldown")
+        and Has(inf.settings.shalom, "lc_ending_shalom_sections"),
+        "the menu gets every ending, and each one's settings with their value, default and what they do")
+    local guest = newPlayer("TuneGuest", "citizen")
+    local boss = newPlayer("TuneBoss", "citizen")
+    boss.superadmin = true
+    ok(LC.EndingTuneSet(guest, "bone", "hora", "R_UpperArm", -10, 5, 0) == false and not (LC.EndingTuning().bones.hora),
+        "only a superadmin can tune an ending")
+    net.sent = {}
+    ok(LC.EndingTuneSet(boss, "bone", "hora", "R_UpperArm", -10, 5, 0) and LC.EndingTuning().bones.hora.R_UpperArm[1] == -10,
+        "a superadmin turns one bone of the hora")
+    local all = _lastnet("lc_tune_all")
+    ok(all and all.omit == boss and all.data[1].bones.hora, "and every other player's game is sent it, so everyone dances the same")
+    _run(1.5)
+    ok(string.find(_files["livingcity/ending_tuning.json"] or "", "R_UpperArm", 1, true), "the tuning is kept in data/livingcity/ending_tuning.json")
+    LC.EndingTuneSet(boss, "bone", "hora", "R_UpperArm", 0, 0, 0)
+    ok(not LC.EndingTuning().bones.hora, "turned back to nothing, it's the code's own pose again")
+    local was = GetConVar("lc_ending_flood_boats"):GetString()
+    ok(LC.EndingTuneSet(boss, "setting", "lc_ending_flood_boats", "8") and GetConVar("lc_ending_flood_boats"):GetString() == "8",
+        "an ending's setting changed from the menu is the server's setting")
+    RunConsoleCommand("lc_ending_flood_boats", was)
+    local cit = GetConVar("lc_citizens"):GetString()
+    ok(LC.EndingTuneSet(boss, "setting", "lc_citizens", "0") == false and GetConVar("lc_citizens"):GetString() == cit,
+        "but nothing that isn't an ending's")
+    ok(LC.EndingTuneSet(boss, "setting", "lc_bloom_palm", "75") and LC.EndingTuning().shared.lc_bloom_palm == "75",
+        "the settings every player's game keeps for itself (Bloom's palms) get one value for everyone")
+    LC.EndingTuneSet(boss, "setting", "lc_bloom_palm", "")
+    _netcall("lc_tune_set", boss, "bone", "numa", "Head", 1, 2, 3)
+    ok(LC.EndingTuning().bones.numa and LC.EndingTuning().bones.numa.Head[3] == 3, "the menu's changes arrive over the network")
+    LC.EndingTuneSet(boss, "bone", "numa", "Head", 0, 0, 0)
+    net.sent = {}
+    _netcall("lc_tune_req", guest)
+    ok(not _lastnet("lc_tune_info"), "the menu doesn't open for someone who isn't a superadmin")
+    _netcall("lc_tune_req", boss)
+    ok(_lastnet("lc_tune_info") ~= nil, "it does for a superadmin")
+    guest.valid, boss.valid = false, false
+end)()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
@@ -11811,6 +11858,7 @@ section("Core contract: nothing load-bearing changes without the owner knowing (
     for _, id in ipairs(LC.EndingOrder or {}) do Add("ending " .. id .. " (" .. LC.Endings[id].name .. ")") end
     Add("ending songs folder sound/" .. tostring(LC.EndingRoot))
     Add("ending cooldown file data/" .. tostring(LC.EndingCooldownFile))
+    Add("ending tuning file data/" .. tostring(LC.EndingTuneFile))
     local lp, map = LC.LayoutPath(), game.GetMap()
     local at = string.find(lp, map, 1, true)
     Add("layout file data/" .. (at and (string.sub(lp, 1, at - 1) .. "<map>" .. string.sub(lp, at + #map)) or lp))

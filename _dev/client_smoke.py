@@ -1487,6 +1487,89 @@ do
     concommand.list.lc_sound_check()
     file.Find, sound.PlayFile = findWas, pfWas2
 end
+-- the Endings menu: asks the server, opens on the ending playing, every tab built; a bone tuned on a
+-- dancer, lit up in the world; the stand-in; the shared settings; the list of changes
+do
+    local saWas, stsWas, cmWas3, vgWas = _me.IsSuperAdmin, net.SendToServer, ClientsideModel, vgui
+    local made2 = {}
+    local function P2()
+        local t = {}
+        made2[#made2 + 1] = t
+        return setmetatable(t, { __index = function(_, k)
+            if string.sub(k, 1, 2) == "lc" or string.sub(k, 1, 1) == "_" or k == "Items" or k == "Label" then return nil end
+            if k == "IsValid" then return function() return not t._removed end end
+            if k == "Remove" then return function() t._removed = true if t.OnRemove then t.OnRemove() end end end
+            if k == "GetValue" then return function() return 0 end end
+            if k == "GetWide" or k == "GetTall" then return function() return 400 end end
+            if k == "LocalToScreen" then return function() return 0, 0 end end
+            return function() return P2() end
+        end })
+    end
+    vgui = { Create = function() return P2() end, GetKeyboardFocus = function() return nil end }
+    local asked = 0
+    _me.IsSuperAdmin = function() return true end
+    net.SendToServer = function() asked = asked + 1 end
+    concommand.list.lc_endings_menu()
+    if asked < 1 then return "endings menu: never asked the server" end
+    net._q = { { endings = { { id = "base", name = "Base" }, { id = "shalom", name = "Shalom" } }, now = "base",
+        settings = { base = { { name = "lc_ending_base_bombs", v = "60", d = "60", help = "how many" }, { name = "lc_ending_base_sections", v = "1:a,2:b", d = "1:a,2:b", help = "when" } },
+            all = { { name = "lc_ending_cooldown", v = "45", d = "60", help = "minutes" } } },
+        tuning = { bones = { bus = { Head = { 5, 0, 0 } } }, shared = {} } } }
+    net.recv_lc_tune_info()
+    local st = LC_CL.EndingTuneState()
+    if st.ending ~= "base" then return "endings menu: didn't pick the ending playing (" .. tostring(st.ending) .. ")" end
+    if st.move ~= "bus" then return "endings menu: Base's move isn't picked (" .. tostring(st.move) .. ")" end
+    local a = LC_CL.EndingTuneBone(_me, "bus", "Head", Angle(1, 2, 3))
+    if not (a.p == 6 and a.y == 2 and a.r == 3) then return "endings menu: a tuned bone isn't turned on the dancer" end
+    local ch = LC_CL.EndingTuneChanges()
+    if not (string.find(ch, "bus: Head 5 0 0", 1, true) and string.find(ch, "lc_ending_cooldown = 45", 1, true)) then return "endings menu: the changes list is missing something:\n" .. ch end
+    st.bone = "Head"
+    _me.LookupBone = function() return 6 end
+    _me.GetBoneMatrix = function() return { GetTranslation = function() return Vector(0, 0, 64) end, GetAngles = function() return Angle(0, 0, 0) end } end
+    local sp = _calls["render.DrawSphere"] or 0
+    hook.t.PostDrawTranslucentRenderables.LivingCityEndingTune(false, false)
+    if (_calls["render.DrawSphere"] or 0) <= sp then return "endings menu: the bone being tuned isn't lit up" end
+    local fake = { manip = {} }
+    fake.IsValid = function() return not fake.gone end
+    fake.Remove = function() fake.gone = true end
+    fake.GetPos = function() return Vector(100, 0, 0) end
+    fake.GetAngles = function() return Angle(0, 180, 0) end
+    fake.GetBonePosition = function() return Vector(100, 0, 60), Angle() end
+    fake.GetModel = function() return "models/player/group01/male_02.mdl" end
+    fake.LookupSequence = function() return 3 end
+    fake.LookupBone = function(_, n) return #n end
+    fake.ManipulateBoneAngles = function(_, id, ang) fake.manip[id] = ang end
+    for _, k in ipairs({ "ResetSequence", "SetPos", "SetAngles", "SetCycle" }) do fake[k] = function() end end
+    fake.GetNW2Float = function(_, _, d) return d end
+    fake.GetNW2Bool = function(_, _, d) return d end
+    ClientsideModel = function() return fake end
+    st.standIn = true
+    for _, mv in ipairs({ "bus", "ears", "hora", "chair", "numa", "hard", "cheer", "club", "bang", "hanged", "limp" }) do
+        st.move = mv
+        fake.manip = {}
+        hook.t.Think.LivingCityEndingTuneStandIn()
+        if not next(fake.manip) then return "endings menu: the stand-in doesn't do " .. mv end
+    end
+    st.standIn = false
+    hook.t.Think.LivingCityEndingTuneStandIn()
+    if not fake.gone then return "endings menu: the stand-in stays after it's unticked" end
+    net._q = { { bones = {}, shared = { lc_bloom_palm = "70" } } }
+    net.recv_lc_tune_all()
+    local cv = { GetName = function() return "lc_bloom_palm" end, GetString = function() return "90" end }
+    if LC_CL.EndingTunedCV(cv) ~= "70" then return "endings menu: the shared palms setting isn't used" end
+    net._q = { { bones = {}, shared = {} } }
+    net.recv_lc_tune_all()
+    -- every panel's own drawing and clicks run without an error
+    for _, pnl in ipairs(made2) do
+        for _, k in ipairs({ "Paint", "Think", "PerformLayout", "DoClick" }) do
+            local f = rawget(pnl, k)
+            if f then local okp, e = pcall(f, pnl, 400, 240) if not okp then return "endings menu: a panel's " .. k .. " fails: " .. tostring(e) end end
+        end
+    end
+    LC_CL.CloseEndingsMenu()
+    _me.IsSuperAdmin, net.SendToServer, ClientsideModel, vgui = saWas, stsWas, cmWas3, vgWas
+    _me.LookupBone, _me.GetBoneMatrix = nil, nil
+end
 if concommand.list and concommand.list.lc_bloom_pose then concommand.list.lc_bloom_pose(nil, "lc_bloom_pose", { "R_Hand", "1", "2", "3" }) end
 net._q = { { id = "water", phase = "reset", name = "The Flood" } }
 net.recv_lc_ending()

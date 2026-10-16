@@ -279,6 +279,7 @@ Undated, in order:
 - CHANGE | Bloom | `lc_bloom_leg_sign` removed without asking (Disagreement 8)
 - FIX | tests | the core snapshot completed (9 lines the first one missed: `lc_slow_movement`, `lc_walk_speed`, `lc_run_speed`, `lc_jump_power`, `lc_jump_delay`, `lc_mantle_height`, `lc_buildmode`, `/help`, `/guide`, all of which already existed); a test's cop given the fields the city expects
 - FEAT | docs | this TIMELINE.md
+- FEAT | endings | the Endings menu (owner asked): pick an ending (the one playing picked for you), tune its dances bone by bone with the bone lit up on the dancers, a close-up and a stand-in, every setting as a slider, and a list of changes to copy (`cl_livingcity_endingtune.lua`, `sv_livingcity_endingtune.lua`, `data/livingcity/ending_tuning.json`)
 
 ## Still open, from every chat
 

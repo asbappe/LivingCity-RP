@@ -358,6 +358,9 @@ function LC_CL.OpenActions()
         Add(help, "Path mapping: on / off (walk to draw NPC paths)", function() Send("pathmap") end, "icon16/map.png")
         Add(help, (LC_CL.LagWatchOn and LC_CL.LagWatchOn()) and "Lag monitor: on (turn off)" or "Lag monitor: off (what's causing lag, live)",
             function() if LC_CL.SetLagWatch then LC_CL.SetLagWatch() end end, "icon16/chart_line.png")
+        if me:IsSuperAdmin() then
+            Add(help, "Endings menu (tune the secret endings live)", function() if LC_CL.EndingsMenu then LC_CL.EndingsMenu() end end, "icon16/music.png")
+        end
     end
 
     -- a cursor to click with, for as long as the menu is up

@@ -32,6 +32,7 @@ local AMT = {}
 AMT.__index = AMT
 function Angle(p, y, r) return setmetatable({ p = p or 0, y = y or 0, r = r or 0 }, AMT) end
 AMT.__add = function(a, b) return Angle(a.p + b.p, a.y + b.y, a.r + b.r) end
+AMT.__mul = function(a, b) if type(a) == "number" then a, b = b, a end return Angle(a.p * b, a.y * b, a.r * b) end -- (an angle times a number, as in the game)
 function AMT:Forward() local y = math.rad(self.y) return Vector(math.cos(y), math.sin(y), 0) end
 function AMT:Up() return Vector(0, 0, 1) end
 function AMT:Right() local y = math.rad(self.y - 90) return Vector(math.cos(y), math.sin(y), 0) end
@@ -83,7 +84,13 @@ function CVMT:GetBool() return (tonumber(self.v) or 0) ~= 0 end
 function CVMT:GetString() return tostring(self.v) end
 function CVMT:SetInt(v) self.v = math.floor(v) end
 _cvarDefaults = {} -- (every setting's default as the code makes it: the core snapshot test, CORE.md)
-function CreateConVar(name, def) if not convars[name] then convars[name] = setmetatable({ v = def }, CVMT) _cvarDefaults[name] = tostring(def) end return convars[name] end
+function CreateConVar(name, def, flags, help, mn, mx)
+    if not convars[name] then convars[name] = setmetatable({ v = def }, CVMT) _cvarDefaults[name] = tostring(def) end
+    -- (as shared.lua's wrapper does in the game: every setting's default and help, for the Endings menu)
+    LC_SettingInfo = LC_SettingInfo or {}
+    LC_SettingInfo[name] = { d = tostring(def or ""), help = type(help) == "string" and help or "", min = tonumber(mn), max = tonumber(mx) }
+    return convars[name]
+end
 function GetConVar(name) return convars[name] end
 -- change callbacks fire for RunConsoleCommand (the console, the editor), not _setcvar (a test's own setup)
 cvars = { cb = {} }
@@ -140,6 +147,7 @@ function net.WriteInt(v) table.insert(cur.data, v) end
 function net.WriteTable(t) table.insert(cur.data, t) end
 function net.Send(to) cur.to = to table.insert(net.sent, cur) end
 function net.Broadcast() table.insert(net.sent, cur) end
+function net.SendOmit(p) cur.omit = p table.insert(net.sent, cur) end
 function net.Receive(n, fn) net["recv_" .. n] = fn end
 net._q = {}
 function net.ReadUInt() return table.remove(net._q, 1) end

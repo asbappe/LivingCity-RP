@@ -74,6 +74,7 @@ LC_MODULES = {
         "sv_livingcity_escort",
         "sv_livingcity_economy",
         "sv_livingcity_endings",
+        "sv_livingcity_endingtune", -- (the Endings menu: every ending's settings, and the dances tuned live)
         "sv_livingcity_events",
         "sv_livingcity_exercise", -- (after events: the morning jog, drill and parade are events)
         "sv_livingcity_freq7",
@@ -156,6 +157,7 @@ LC_MODULES = {
         "cl_livingcity_character",
         "cl_livingcity_checkpoints",
         "cl_livingcity_endings",
+        "cl_livingcity_endingtune", -- (the Endings menu)
         "cl_livingcity_exercise",
         "cl_livingcity_cp",
         "cl_livingcity_factions",
@@ -190,8 +192,13 @@ LC_MODULES = {
 if SERVER and not LC_ConVarWrapped then
     LC_ConVarWrapped = true
     local create = CreateConVar
+    LC_SettingInfo = LC_SettingInfo or {} -- [name] = { d = default, help, min, max } (the Endings menu lists them)
     CreateConVar = function(name, ...)
         local cv = create(name, ...)
+        if isstring(name) then
+            local d, _, help, mn, mx = ...
+            LC_SettingInfo[name] = { d = tostring(d or ""), help = isstring(help) and help or "", min = tonumber(mn), max = tonumber(mx) }
+        end
         if isstring(name) and cvars and cvars.AddChangeCallback
             and (string.match(name, "^lc_[%w_]+$") or string.match(name, "^lc[fq]_[%w_]+$")) then
             cvars.AddChangeCallback(name, function(n, _, new)

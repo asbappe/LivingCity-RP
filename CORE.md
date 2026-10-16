@@ -31,6 +31,7 @@ This is the master technical document. It lists what the owner's server, files, 
 | Ending songs | `sound/livingcity/endings/`, flat, named for the ending's codeword (`bus.mp3`, `bus2.mp3`, `shalom1.mp3`); `.mp3`, `.ogg` or `.wav`; the older folder per ending still works | `LC.EndingOfSong`, `LC.EndingSongs`, `LC.EndingRoot` |
 | The city's layout (the editor's work) | `data/livingcity/<map>.json`, with backups in `data/livingcity/backups/<map>/` | `LC.LayoutPath`, sv_livingcity_data.lua |
 | When the last secret ending was | `data/livingcity/endings.json` | `LC.EndingCooldownFile` |
+| The endings' dances as tuned in the Endings menu, and its shared settings | `data/livingcity/ending_tuning.json` | `LC.EndingTuneFile`, sv_livingcity_endingtune.lua |
 | The city's named people (citizens and cops, who they are) | `data/livingcity/<map>_people.json` | sv_livingcity_people.lua |
 | Charges waiting for raided players who were offline | `data/livingcity/pending_raid.json` | sv_livingcity_raids.lua |
 | Each player's record (character, credits, standing, XP, faction) | PData: the server's `garrysmod/sv.db`, table `playerpdata` | |
@@ -66,5 +67,6 @@ Things players and the owner rely on that were settled in conversation:
 
 - 2026-10-15: this file and the core snapshot created. Recordings are read from `sound/livingcity/<voice>/` as well as `sound/livingcity/announce/<voice>/` (the owner's folders had never been read: "you had me create a folder in garrysmod > sound > livingcity, one for overwatch, one for administrator, and one for endings").
 - 2026-10-15: switching faction from F4 keeps you where you stand (the owner: "Can't I just change where I am?").
+- 2026-10-16: the Endings menu added (a new feature, the owner asked: "make this now for all ending variables and have a dropdown to select the ending"); its tuning is kept in `data/livingcity/ending_tuning.json` (a new line in the snapshot).
 - 2026-10-16: `garrysmod/sound/livingcity/` made the official folder for recordings and songs in every instruction (README, guide, messages); `addons/livingcity/` the one official place for the gamemode. The older sound places are still read.
 - 2026-10-15: NPCs carry boxes in front in both hands (the owner: "can we make them use both hands to carry boxes out in front of them?").

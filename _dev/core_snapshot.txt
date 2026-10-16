@@ -224,6 +224,7 @@ ending plane (Plane)
 ending shalom (Shalom)
 ending songs folder sound/livingcity/endings/
 ending standup (Standup)
+ending tuning file data/livingcity/ending_tuning.json
 ending water (The Flood)
 faction admin (City Administrator)
 faction admin rank 1 Administrator at 0 xp

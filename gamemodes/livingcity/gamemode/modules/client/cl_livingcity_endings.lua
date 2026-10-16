@@ -12,6 +12,12 @@ if SERVER then return end
 
 LC_CL = LC_CL or {}
 
+-- The Endings menu (cl_livingcity_endingtune.lua) tunes the dances live: a turn added to a
+-- bone of one of the moves, and the server's own value for the settings everyone's dance
+-- shares (the palms, the headbang, the kippah, the chair). Without it, as they are.
+local function Tune(ent, move, name, a) local f = LC_CL.EndingTuneBone return f and f(ent, move, name, a) or a end
+local function Tuned(cv) local f = LC_CL.EndingTunedCV return f and f(cv) or cv:GetString() end
+
 if surface and surface.CreateFont then
     surface.CreateFont("LCEndBig", { font = "Trebuchet MS", size = 40, weight = 800 })
     surface.CreateFont("LCEndText", { font = "Trebuchet MS", size = 20, weight = 600 })
@@ -356,6 +362,9 @@ local function SongPos(now)
     return a + ramp + math.max(0, t - a - (c.rateDur or 1)) * c.peak
 end
 
+-- (the Endings menu shows where the song is, for lining up the sections)
+function LC_CL.EndingSongPos() return S and S.client and S.phase == "apocalypse" and SongPos(CurTime()) or nil end
+
 local function Rate(now)
     local c = S and S.client
     if not c or now < (c.rateAt or math.huge) then return 1 end
@@ -428,11 +437,12 @@ local SEATED = {
     R_Calf = Angle(0, 85, 0), L_Calf = Angle(0, 85, 0),
 }
 local function HoraPose(ent, b, beat)
-    local sec = S.client.section or "intro"
+    -- (a stand-in in the Endings menu says its own part of the dance)
+    local sec = ent.lcTuneSection or (S and S.client and S.client.section) or "intro"
     if sec == "walk" then beat = beat / 2 end
     local k = math.floor(beat) % 6
     local s = math.sin(math.pi * (beat % 1)) -- (each step: out and back within its beat)
-    local chair = ent.GetNW2Bool and ent:GetNW2Bool("lc_chair", false)
+    local chair = ent.lcTuneChair or (ent.GetNW2Bool and ent:GetNW2Bool("lc_chair", false))
     local P = {}
     if sec == "in" or chair then
         P.R_UpperArm, P.L_UpperArm = Angle(-25, -160 + 15 * s, 0), Angle(25, -160 + 15 * s, 0)
@@ -455,30 +465,33 @@ local function HoraPose(ent, b, beat)
         elseif k == 5 then P.L_Thigh = Angle(0, -38 * s, 0) P.L_Calf = Angle(0, 20 * s, 0) end
         P.Head = Angle(6 * s, 0, 0)
     end
-    for name, id in pairs(b) do ent:ManipulateBoneAngles(id, P[name] or Angle(0, 0, 0)) end
+    local move = chair and "chair" or (sec == "in" and "hora_in" or "hora")
+    for name, id in pairs(b) do ent:ManipulateBoneAngles(id, Tune(ent, move, name, P[name] or Angle(0, 0, 0))) end
 end
 
-local function Dance(ent, beat, now)
+local function Dance(ent, beat, now, key)
     if not ent.ManipulateBoneAngles then return end
+    -- which dance: the ending's (none while previewing Bloom's), or the one a stand-in is given
+    key = key or (not preview and S and S.client and S.client.dance) or nil
     local b = Bones(ent)
     local wave = math.sin(beat * math.pi)            -- left, right, a beat each
     local flap = math.sin(beat * math.pi * 2) * FLAP -- the wrists, every beat
     local bounce = math.abs(wave)
     -- the crowd at the rope: both arms up, fists pumping on the beat
-    if S and S.client and S.client.dance == "cheer" and not preview then
+    if key == "cheer" then
         if ent.GetNW2Float and ent:GetNW2Float("lc_hanged", 0) > 0 then return end -- (not the hanged: they've their own)
         local CHEER = {
             R_UpperArm = Angle(10, -120 + 25 * bounce, 0), L_UpperArm = Angle(-10, -120 + 25 * (1 - bounce), 0),
             R_Forearm = Angle(0, -20, 0), L_Forearm = Angle(0, -20, 0),
             Head = Angle(-8 * bounce, 0, 0),
         }
-        for name, id in pairs(b) do ent:ManipulateBoneAngles(id, CHEER[name] or Angle(0, 0, 0)) end
+        for name, id in pairs(b) do ent:ManipulateBoneAngles(id, Tune(ent, "cheer", name, CHEER[name] or Angle(0, 0, 0))) end
         danced[ent] = true
         return
     end
     -- numa numa: the webcam dance, arms rolling in front of the face, the head
     -- tipping side to side, a bounce
-    if S and S.client and S.client.dance == "numa" and not preview then
+    if key == "numa" then
         local ph = beat * math.pi
         -- (on the arms yaw raises them forward and the elbow bends on yaw; pitch takes an arm
         -- out to the side, minus for the right, plus for the left)
@@ -490,17 +503,17 @@ local function Dance(ent, beat, now)
             Head = Angle(4 * bounce, 14 * math.sin(ph / 2), 0),
             Spine2 = Angle(0, 6 * wave, 0),
         }
-        for name, id in pairs(b) do ent:ManipulateBoneAngles(id, NUMA[name] or Angle(0, 0, 0)) end
+        for name, id in pairs(b) do ent:ManipulateBoneAngles(id, Tune(ent, "numa", name, NUMA[name] or Angle(0, 0, 0))) end
         danced[ent] = true
         return
     end
-    if S and S.client and S.client.dance == "hora" and not preview then
+    if key == "hora" then
         HoraPose(ent, b, beat)
         danced[ent] = true
         return
     end
     -- party hard: two frames, a pose and its mirror image, flipping every half-beat
-    if S and S.client and S.client.dance == "hard" and not preview then
+    if key == "hard" then
         local hold = S.client.section == "break" or S.client.section == "fade"
         local flip = hold and 1 or ((math.floor(beat * 2) % 2 == 0) and 1 or -1)
         local HARD = {
@@ -513,15 +526,15 @@ local function Dance(ent, beat, now)
             L_Forearm = flip > 0 and Angle(0, 0, 0) or Angle(0, -40, 0),
             R_Thigh = Angle(0, flip > 0 and -20 or 0, 0), L_Thigh = Angle(0, flip > 0 and 0 or -20, 0),
         }
-        for name, id in pairs(b) do ent:ManipulateBoneAngles(id, HARD[name] or Angle(0, 0, 0)) end
+        for name, id in pairs(b) do ent:ManipulateBoneAngles(id, Tune(ent, "hard", name, HARD[name] or Angle(0, 0, 0))) end
         danced[ent] = true
         return
     end
-    local style = STYLES[S and S.client and S.client.dance or ""]
-    if style and not preview then
+    local style = STYLES[key or ""]
+    if style then
         for name, id in pairs(b) do
             local f = style[name]
-            ent:ManipulateBoneAngles(id, f and f(wave, bounce) or Angle(0, 0, 0))
+            ent:ManipulateBoneAngles(id, Tune(ent, key, name, f and f(wave, bounce) or Angle(0, 0, 0)))
         end
         danced[ent] = true
         return
@@ -542,8 +555,8 @@ local function Dance(ent, beat, now)
         -- hips, or bending a knee, lifts the feet off the floor)
         if name == "R_Hand" then a.y = a.y + flap
         elseif name == "L_Hand" then a.y = a.y - flap
-        elseif name == "R_Forearm" then a.r = a.r + cvPalm:GetFloat()
-        elseif name == "L_Forearm" then a.r = a.r - cvPalm:GetFloat()
+        elseif name == "R_Forearm" then a.r = a.r + (tonumber(Tuned(cvPalm)) or 90)
+        elseif name == "L_Forearm" then a.r = a.r - (tonumber(Tuned(cvPalm)) or 90)
         elseif name == "Spine" then a.y = a.y + wave * SWAY
         elseif name == "Spine2" then a.y = a.y + wave * SWAY * 0.5
         elseif name == "Head" then a.y = a.y - wave * SWAY * 0.8
@@ -551,7 +564,7 @@ local function Dance(ent, beat, now)
         -- spinning up into the sky
         local t0 = ent.GetNW2Float and ent:GetNW2Float("lc_spin_t0", 0) or 0
         if name == "Pelvis" and t0 > 0 then a.y = a.y + ((now - t0) ^ 2) * 720 % 360 end
-        ent:ManipulateBoneAngles(id, a)
+        ent:ManipulateBoneAngles(id, Tune(ent, "ears", name, a))
     end
     danced[ent] = true
 end
@@ -844,7 +857,7 @@ local MIC = "models/props_lab/reciever01d.mdl"
 local rocked = {}
 
 local function BangAngle()
-    local str = cvBang:GetString() or ""
+    local str = Tuned(cvBang) or ""
     -- (the old settings turned the head the wrong way: "0 48 0" side to side, "0 0 30" a twist)
     if str == "0 48 0" or str == "0 0 30" then str = "35 0 0" end
     local p, y, r = string.match(str, "(%-?[%d%.]+)%s+(%-?[%d%.]+)%s+(%-?[%d%.]+)")
@@ -860,13 +873,50 @@ end
 
 local function Bone(ply, name) return ply.LookupBone and ply:LookupBone("ValveBiped.Bip01_" .. name) end
 
-hook.Add("Think", "LivingCityHeadbang", function()
-    local now = CurTime()
-    local beat = RockBeat(now)
+-- Father Grigori's moves: the headbang in the heavy parts ("bang"), dancing in the rest ("groove")
+local function RockPose(ply, beat, sec)
     -- the nod: down on the beat, up between, smoothly (no snapping back: that looked like a twitch)
     local down = (0.5 + 0.5 * math.cos(beat * math.pi * 2)) ^ 1.6
     local pump = math.abs(math.sin(beat * math.pi))
     local bang = BangAngle()
+    local heavy = sec == "heavy" or sec == "climax"
+    local move = heavy and "bang" or "groove"
+    local function Set(name, a) local id = Bone(ply, name) if id then ply:ManipulateBoneAngles(id, Tune(ply, move, name, a)) end end
+    local wave = math.sin(beat * math.pi) -- (side to side, a beat each way)
+    if heavy then
+        -- the heavy parts: headbanging, hard, the whole upper body slamming down on
+        -- the beat (head, neck and back each taking some of it), and the fist pumping
+        Set("Head", bang * down)
+        Set("Neck1", bang * (down * 0.8))
+        Set("Spine2", bang * (down * 0.7))
+        Set("Spine1", bang * (down * 0.5))
+        Set("Spine", Angle(0, 0, 0))
+        Set("Pelvis", Angle(0, 0, 0))
+        -- (the free arm: up over his head, the fist pumping on the beat; on the arms yaw
+        -- raises them forward and up, pitch takes them out to the side, the elbow bends on yaw)
+        Set("L_UpperArm", Angle(15, -150 - 20 * pump, 0))
+        Set("L_Forearm", Angle(0, -25 * pump, 0))
+    else
+        -- the rest: dancing, the hips going, the free arm waving over his head
+        -- (yaw is side to side on these bones, roll front to back)
+        Set("Head", Angle(8 * pump, 10 * wave, 0))
+        Set("Neck1", Angle(0, 0, 0))
+        Set("Spine1", Angle(0, 0, 0))
+        Set("Spine", Angle(0, 8 * wave, 0))
+        Set("Spine2", Angle(0, 6 * wave, 0))
+        Set("Pelvis", Angle(0, 0, 0))
+        Set("L_UpperArm", Angle(25 + 20 * wave, -150, 0))
+        Set("L_Forearm", Angle(0, -20, 0))
+    end
+    -- the mic up at his mouth, all the way through: the upper arm forward and down, a
+    -- little out, and the elbow bent right up
+    Set("R_UpperArm", Angle(-10, -40, 0))
+    Set("R_Forearm", Angle(0, -130, 0))
+end
+
+hook.Add("Think", "LivingCityHeadbang", function()
+    local now = CurTime()
+    local beat = RockBeat(now)
     for _, ply in ipairs(Rockers()) do
         local on = IsValid(ply) and ply:GetNW2Bool("lc_rocking", false) and S and S.phase == "apocalypse"
         -- (an NPC Grigori mouths the words here: players do it in MouthMoveAnimation)
@@ -880,37 +930,7 @@ hook.Add("Think", "LivingCityHeadbang", function()
         end
         if on and ply.ManipulateBoneAngles then
             rocked[ply] = true
-            local function Set(name, a) local id = Bone(ply, name) if id then ply:ManipulateBoneAngles(id, a) end end
-            local sec = S.client and S.client.section or "intro"
-            local wave = math.sin(beat * math.pi) -- (side to side, a beat each way)
-            if sec == "heavy" or sec == "climax" then
-                -- the heavy parts: headbanging, hard, the whole upper body slamming down on
-                -- the beat (head, neck and back each taking some of it), and the fist pumping
-                Set("Head", bang * down)
-                Set("Neck1", bang * (down * 0.8))
-                Set("Spine2", bang * (down * 0.7))
-                Set("Spine1", bang * (down * 0.5))
-                Set("Pelvis", Angle(0, 0, 0))
-                -- (the free arm: up over his head, the fist pumping on the beat; on the arms yaw
-                -- raises them forward and up, pitch takes them out to the side, the elbow bends on yaw)
-                Set("L_UpperArm", Angle(15, -150 - 20 * pump, 0))
-                Set("L_Forearm", Angle(0, -25 * pump, 0))
-            else
-                -- the rest: dancing, the hips going, the free arm waving over his head
-                -- (yaw is side to side on these bones, roll front to back)
-                Set("Head", Angle(8 * pump, 10 * wave, 0))
-                Set("Neck1", Angle(0, 0, 0))
-                Set("Spine1", Angle(0, 0, 0))
-                Set("Spine", Angle(0, 8 * wave, 0))
-                Set("Spine2", Angle(0, 6 * wave, 0))
-                Set("Pelvis", Angle(0, 0, 0))
-                Set("L_UpperArm", Angle(25 + 20 * wave, -150, 0))
-                Set("L_Forearm", Angle(0, -20, 0))
-            end
-            -- the mic up at his mouth, all the way through: the upper arm forward and down, a
-            -- little out, and the elbow bent right up
-            Set("R_UpperArm", Angle(-10, -40, 0))
-            Set("R_Forearm", Angle(0, -130, 0))
+            RockPose(ply, beat, S.client and S.client.section or "intro")
         elseif rocked[ply] then
             rocked[ply] = nil
             if IsValid(ply) then
@@ -1508,6 +1528,25 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityStandup", function(_, sky)
     end
 end)
 
+-- hands at the rope and legs kicking ("hanged"); then limp, head over ("limp")
+local function HangPose(e, limp, k)
+    local move = limp and "limp" or "hanged"
+    local function Set(name, a) local id = e:LookupBone("ValveBiped.Bip01_" .. name) if id then e:ManipulateBoneAngles(id, Tune(e, move, name, a)) end end
+    if limp then
+        Set("R_UpperArm", Angle(0, 0, 0)) Set("L_UpperArm", Angle(0, 0, 0))
+        Set("R_Forearm", Angle(0, 0, 0)) Set("L_Forearm", Angle(0, 0, 0))
+        Set("Head", Angle(0, 30, 25))
+        Set("R_Calf", Angle(0, 8, 0)) Set("L_Calf", Angle(0, 8, 0))
+        Set("R_Thigh", Angle(0, 0, 0)) Set("L_Thigh", Angle(0, 0, 0))
+    else
+        Set("R_UpperArm", Angle(15, -110, 0)) Set("L_UpperArm", Angle(-15, -110, 0))
+        Set("R_Forearm", Angle(0, -120, 0)) Set("L_Forearm", Angle(0, -120, 0))
+        Set("Head", Angle(0, -10, 10 * math.sin(k * 0.5)))
+        Set("R_Thigh", Angle(0, -25 * math.max(0, math.sin(k)), 0)) Set("L_Thigh", Angle(0, -25 * math.max(0, -math.sin(k)), 0))
+        Set("R_Calf", Angle(0, 40 * math.max(0, math.sin(k)), 0)) Set("L_Calf", Angle(0, 40 * math.max(0, -math.sin(k)), 0))
+    end
+end
+
 -- hands at the rope and legs kicking; then limp, head over
 hook.Add("Think", "LivingCityStandup", function()
     local c = Standup()
@@ -1530,20 +1569,7 @@ hook.Add("Think", "LivingCityStandup", function()
             hungPosed[e] = true
             local limp = e:GetNW2Bool("lc_limp", false)
             local k = now * 9 + h.e
-            local function Set(name, a) local id = e:LookupBone("ValveBiped.Bip01_" .. name) if id then e:ManipulateBoneAngles(id, a) end end
-            if limp then
-                Set("R_UpperArm", Angle(0, 0, 0)) Set("L_UpperArm", Angle(0, 0, 0))
-                Set("R_Forearm", Angle(0, 0, 0)) Set("L_Forearm", Angle(0, 0, 0))
-                Set("Head", Angle(0, 30, 25))
-                Set("R_Calf", Angle(0, 8, 0)) Set("L_Calf", Angle(0, 8, 0))
-                Set("R_Thigh", Angle(0, 0, 0)) Set("L_Thigh", Angle(0, 0, 0))
-            else
-                Set("R_UpperArm", Angle(15, -110, 0)) Set("L_UpperArm", Angle(-15, -110, 0))
-                Set("R_Forearm", Angle(0, -120, 0)) Set("L_Forearm", Angle(0, -120, 0))
-                Set("Head", Angle(0, -10, 10 * math.sin(k * 0.5)))
-                Set("R_Thigh", Angle(0, -25 * math.max(0, math.sin(k)), 0)) Set("L_Thigh", Angle(0, -25 * math.max(0, -math.sin(k)), 0))
-                Set("R_Calf", Angle(0, 40 * math.max(0, math.sin(k)), 0)) Set("L_Calf", Angle(0, 40 * math.max(0, -math.sin(k)), 0))
-            end
+            HangPose(e, limp, k)
         end
     end
 end)
@@ -1686,7 +1712,7 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityShalomKippah", function(_, sky)
     local t = SongPos(CurTime())
     local from = c.gatherAt or 7.4
     if t < from then return end
-    local fx, rx, ux = string.match(cvKippah:GetString() or "", "(%S+)%s+(%S+)%s+(%S+)")
+    local fx, rx, ux = string.match(Tuned(cvKippah) or "", "(%S+)%s+(%S+)%s+(%S+)")
     fx, rx, ux = tonumber(fx) or 6.5, tonumber(rx) or 0, tonumber(ux) or -1
     local eye = EyePos()
     render.SetColorMaterial()
@@ -1766,7 +1792,7 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityShalomChair", function(_, sky)
             local id = e.LookupBone and e:LookupBone("ValveBiped.Bip01_Pelvis")
             local m = id and e.GetBoneMatrix and e:GetBoneMatrix(id)
             local hips = m and m:GetTranslation() or (e:GetPos() + Vector(0, 0, 38))
-            local drop, turn = string.match(cvChair:GetString() or "", "(%-?[%d%.]+)%s+(%-?[%d%.]+)")
+            local drop, turn = string.match(Tuned(cvChair) or "", "(%-?[%d%.]+)%s+(%-?[%d%.]+)")
             chairModel:SetPos(hips - Vector(0, 0, tonumber(drop) or 21))
             chairModel:SetAngles(Angle(0, e:GetAngles().y + (tonumber(turn) or 0), 0))
             chairModel:SetupBones()
@@ -2033,3 +2059,19 @@ hook.Add("CalcMainActivity", "LivingCityEndingStand", function(ply)
     if not seq or seq < 0 then seq = ply.LookupSequence and ply:LookupSequence("idle_all_02") or -1 end
     return ACT_MP_STAND_IDLE, seq or -1
 end)
+
+-- The Endings menu's stand-in (cl_livingcity_endingtune.lua): one of the moves, on a model
+-- in front of you, only on your screen.
+function LC_CL.EndingPoseMove(ent, move, beat)
+    if not IsValid(ent) or not ent.ManipulateBoneAngles then return end
+    if move == "bang" or move == "groove" then RockPose(ent, beat, move == "bang" and "heavy" or "calm") return end
+    if move == "hanged" or move == "limp" then HangPose(ent, move == "limp", CurTime() * 9) return end
+    local key = move
+    if move == "hora" or move == "hora_in" or move == "chair" then
+        key = "hora"
+        ent.lcTuneSection = move == "hora_in" and "in" or "dance"
+        ent.lcTuneChair = move == "chair"
+    end
+    Dance(ent, beat, CurTime(), key)
+    danced[ent] = nil -- (the city's own dancers are let go when nobody dances; this one is the menu's)
+end

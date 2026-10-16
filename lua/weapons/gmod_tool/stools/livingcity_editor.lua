@@ -621,6 +621,10 @@ function TOOL.BuildCPanel(panel)
     panel:Button("Back up the layout now", "lc_backup")
     panel:Button("List backups (restore with lc_restore <number>)", "lc_backups")
 
+    Header("Secret endings")
+    panel:Button("Endings menu: tune them live (superadmin)", "lc_endings_menu")
+    panel:Help("Pick an ending, play it, and tune its dances bone by bone and all its settings while it plays.")
+
     Header("City")
     panel:Button("Job outfits (who wears what)", "lc_outfits")
     panel:Button("Start the city", "lc_start")
