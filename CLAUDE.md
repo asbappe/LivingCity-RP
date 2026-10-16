@@ -1,6 +1,6 @@
 # Living City: read me first (every session)
 
-Living City is a Garry's Mod Half-Life 2 roleplay gamemode. The owner has put a great deal into it and runs it on a live server. **Before changing anything, read `CORE.md`** (the core: the owner's server, where their files are, what must not change without asking) and `HANDOFF.md` (the latest work).
+Living City is a Garry's Mod Half-Life 2 roleplay gamemode. The owner has put a great deal into it and runs it on a live server. **Before changing anything, read `CORE.md`** (the core: the owner's server, where their files are, what must not change without asking) and `HANDOFF.md` (the latest work). `TIMELINE.md` has every earlier chat's work in date order, what each told the owner, and where it disagrees with the code.
 
 ## The one rule above all
 

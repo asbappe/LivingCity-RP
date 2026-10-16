@@ -69,8 +69,10 @@ chat command /dropship
 chat command /eatchip
 chat command /escort
 chat command /givekey
+chat command /guide
 chat command /halt
 chat command /handsup
+chat command /help
 chat command /hu
 chat command /kick
 chat command /kneel
@@ -123,6 +125,7 @@ console command lc_backups
 console command lc_blackout
 console command lc_breencast
 console command lc_broadcast
+console command lc_buildmode
 console command lc_calm
 console command lc_characters
 console command lc_city
@@ -554,6 +557,8 @@ setting lc_jog_laps = 1
 setting lc_jog_min_speed = 0
 setting lc_jog_pace = 150
 setting lc_jog_units = 8
+setting lc_jump_delay = 0.9
+setting lc_jump_power = 200
 setting lc_kick = 1
 setting lc_kick_damage = 12
 setting lc_kick_door_back = 600
@@ -575,6 +580,7 @@ setting lc_lookout_range = 1100
 setting lc_machine_hack_cooldown = 10
 setting lc_machine_hack_out = 3
 setting lc_mail_minutes = 4
+setting lc_mantle_height = 108
 setting lc_march = 1
 setting lc_march_max = 240
 setting lc_max_bodies = 16
@@ -664,6 +670,7 @@ setting lc_roster_size = 30
 setting lc_run_memory = 30
 setting lc_run_range = 500
 setting lc_run_react = 2
+setting lc_run_speed = 190
 setting lc_run_wanted = 60
 setting lc_running_cops = 1
 setting lc_salvage = 1
@@ -685,6 +692,7 @@ setting lc_skirmish_interval = 25
 setting lc_skirmishes = 1
 setting lc_sleep = 1
 setting lc_sleep_seconds = 60
+setting lc_slow_movement = 1
 setting lc_soldier_scale = 1.10
 setting lc_soldiers = 0
 setting lc_spawn_mindist = 900
@@ -748,6 +756,7 @@ setting lc_vest_capacity = 75
 setting lc_view_bob = 1
 setting lc_view_bob_amount = 100
 setting lc_voice_range = 900
+setting lc_walk_speed = 110
 setting lc_weather_auto = 1
 setting lc_whatnow = 1
 setting lc_whatnow_minutes = 60

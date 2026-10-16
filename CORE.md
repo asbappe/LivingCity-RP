@@ -4,7 +4,7 @@ This is the master technical document. It lists what the owner's server, files, 
 
 ## The rules
 
-1. **Read this file and `CLAUDE.md` at the start of every session.** `HANDOFF.md` has the latest work in progress; `README.md` is the full specification of how everything behaves.
+1. **Read this file and `CLAUDE.md` at the start of every session.** `HANDOFF.md` has the latest work in progress; `TIMELINE.md` has every chat's work in date order and what each told the owner; `README.md` is the full specification of how everything behaves.
 2. **Anything `README.md` describes is the agreed behaviour.** Change it only when the owner asks for that change, or after asking them ("this would change X to Y: OK?") and getting a yes. Never as a side effect, a tidy-up or a guess.
 3. **Something isn't working?** Find out what's actually on the owner's server first (the debug report, `lc_announce_clips`, `lc_endings`, `lc_sound_check`, or ask them to look) and compare it with this file. Don't guess, and don't ask them to move or rename their files to fit the code: make the code fit what they have, and write down here what they have.
 4. **The core snapshot is a tripwire.** `_dev/core_snapshot.txt` lists every setting and its default, every announcement trigger and folder, every ending, the data files, every faction and rank (with its XP), every item, and every chat and console command. The test suite compares the code with it ("the core is as the owner knows it"). If the test fails, something core changed: tell the owner exactly what (the test prints the differences, `+` added, `-` gone), and only with their OK copy `_dev/core_snapshot.new.txt` over `_dev/core_snapshot.txt`. Adding a new feature adds lines too: say what they are, the same way.
@@ -29,6 +29,9 @@ This is the master technical document. It lists what the owner's server, files, 
 | Ending songs | `sound/livingcity/endings/`, flat, named for the ending's codeword (`bus.mp3`, `bus2.mp3`, `shalom1.mp3`); `.mp3`, `.ogg` or `.wav`; the older folder per ending still works | `LC.EndingOfSong`, `LC.EndingSongs`, `LC.EndingRoot` |
 | The city's layout (the editor's work) | `data/livingcity/<map>.json`, with backups in `data/livingcity/backups/<map>/` | `LC.LayoutPath`, sv_livingcity_data.lua |
 | When the last secret ending was | `data/livingcity/endings.json` | `LC.EndingCooldownFile` |
+| The city's named people (citizens and cops, who they are) | `data/livingcity/<map>_people.json` | sv_livingcity_people.lua |
+| Charges waiting for raided players who were offline | `data/livingcity/pending_raid.json` | sv_livingcity_raids.lua |
+| Each player's record (character, credits, standing, XP, faction) | PData: the server's `garrysmod/sv.db`, table `playerpdata` | |
 | Pose Recorder recordings | the player's `data/pose_recorder/<name>.json` | pose_recorder/ |
 
 Every recording and song is sent to players with `resource.AddFile` when the map starts.
@@ -36,6 +39,7 @@ Every recording and song is sent to players with `resource.AddFile` when the map
 ## Settings
 
 - Every setting (`lc_*`) and its default is in the core snapshot. **Settings are saved on the server (archived): changing a default never reaches a server that already has the old value.** When a default has to change (with the owner's OK), add the old and new value to the `RETUNED` table in sv_livingcity_endings.lua (`LC.EndingRetune`), which moves a server still on exactly the old default to the new one.
+- **Settings changed in game are also saved per map**, in the layout file (`data/livingcity/<map>.json`, under `"settings"`) and put back on every start (`LC.RememberSetting`). A setting the owner once changed stays that way on that map, whatever its default (that's how `lc_npc_budget` stayed at 10).
 - `lc_npc_budget` caps the city's NPCs (default 60). Lower than what the settings add up to, nothing more spawns (Civil Protection included); superadmins are told, and the debug report says so.
 
 ## How it all behaves

@@ -11469,7 +11469,7 @@ a:SetPos(G0) b:SetPos(G0 + Vector(200, 0, 0))
 local partyCops = {}
 for i = 1, 3 do
     local pc = ents.Create("npc_metropolice") pc:Spawn()
-    LC.NPCs[pc] = { role = "cop", state = "idle" }
+    LC.NPCs[pc] = { role = "cop", state = "idle", untilT = 0, nextWarn = 1e9, nextInspect = 1e9 }
     partyCops[i] = pc
 end
 local partyCop = partyCops[1]
