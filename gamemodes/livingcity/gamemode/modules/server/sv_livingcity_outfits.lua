@@ -129,6 +129,26 @@ function LC.ApplyLook(ent, skin, bg)
             end
         end
     end
+    LC.StripBattleGear(ent)
+end
+
+-- Anything battle-like a model wears by itself (some packs' medics come with a helmet on
+-- by default): off, unless it's the Resistance in the open. The bodygroup goes to its first
+-- piece that isn't battle gear (usually none at all).
+function LC.StripBattleGear(ent)
+    if not IsValid(ent) or not ent.GetBodyGroups or not ent.GetBodygroup then return end
+    local open
+    for _, g in ipairs(ent:GetBodyGroups() or {}) do
+        local cur = ent:GetBodygroup(g.id) or 0
+        local subs = g.submodels or {}
+        if BattleGear(subs[cur]) then
+            if open == nil then open = OpenRebel(ent) end
+            if open then return end
+            for k = 0, #subs do
+                if subs[k] ~= nil and not BattleGear(subs[k]) then ent:SetBodygroup(g.id, k) break end
+            end
+        end
+    end
 end
 
 local function Valid(path) return path and (not util.IsValidModel or util.IsValidModel(path)) end

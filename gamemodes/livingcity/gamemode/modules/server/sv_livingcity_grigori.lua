@@ -28,6 +28,7 @@ util.AddNetworkString("lc_grigori_ask")  -- client -> server: "bless", "sermon",
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn      = CreateConVar("lc_grigori", "1", FLAGS, "Father Grigori keeps to rebel territory when no player is him: blessings and sermons for the Resistance")
 local cvRespawn = CreateConVar("lc_grigori_respawn", "10", FLAGS, "Minutes before Father Grigori is back after he's killed")
+local cvTalk    = CreateConVar("lc_grigori_talk_gap", "60", FLAGS, "Seconds at the least between two things Father Grigori says out loud")
 
 local BLESS_SECS, BLESS_EVERY = 300, 300
 local SERMON_SECS, SERMON_EVERY = 600, 600
@@ -43,6 +44,16 @@ local SAYINGS = {
 }
 
 local function Pick(t) return t[math.random(#t)] end
+
+-- He says something: at most once every lc_grigori_talk_gap seconds, whatever it's for.
+local function Speak(g, level)
+    local now = CurTime()
+    if not IsValid(g) or (g.lcSpokeAt or -1e9) + cvTalk:GetFloat() > now then return false end
+    g.lcSpokeAt = now
+    g:EmitSound(Pick(RANTS), level or 70)
+    return true
+end
+LC.GrigoriSpeak = Speak
 local function Rebel(ply) return ply:GetNW2String("lcf_faction", "") == "resistance" end
 local function Notice(ply, kind, title, text, secs) if LC.Notice then LC.Notice(ply, kind, title, text, secs) else ply:ChatPrint(title .. ": " .. text) end end
 
@@ -76,6 +87,7 @@ function LC.SpawnGrigori()
     npc:SetPos(pos + Vector(0, 0, 4))
     npc:SetAngles(Angle(0, math.random(0, 359), 0))
     npc:SetKeyValue("additionalequipment", "weapon_annabelle")
+    npc:SetKeyValue("spawnflags", "2") -- (gagged: none of the engine's own idle chatter; he talks when we say)
     npc:Spawn()
     npc:Activate()
     npc:SetNW2String("lc_pname", "Father Grigori")
@@ -106,7 +118,7 @@ function LC.GrigoriTick(now)
         g:SetLastPosition(z.pos)
         g:SetSchedule(SCHED_FORCED_GO)
     elseif math.random() < 0.02 then
-        g:EmitSound(Pick(RANTS), 70) -- (talking to himself, and to God)
+        Speak(g, 70) -- (talking to himself, and to God)
     end
 end
 
@@ -128,7 +140,7 @@ function LC.UseGrigori(ply, g)
     if (ply.lcGrigoriUse or 0) > CurTime() then return end
     ply.lcGrigoriUse = CurTime() + 0.8
     if LC.PlayerIsCP and LC.PlayerIsCP(ply) then
-        g:EmitSound(Pick(RANTS), 80)
+        Speak(g, 80)
         ply:ChatPrint("[Father Grigori] \"Ah, a shepherd of the Combine! Come closer, so Annabelle can give you my blessing.\"")
         return
     end
@@ -162,16 +174,15 @@ function LC.GrigoriAsk(ply, what)
         ply:SetHealth(math.min(ply:GetMaxHealth(), ply:Health() + 25))
         ply:SetNW2Float("lc_blessed_until", now + BLESS_SECS)
         ply:EmitSound("items/medshot4.wav", 65)
-        g:EmitSound(Pick(RANTS), 70)
+        Speak(g, 70)
         Notice(ply, "info", "Blessed", "He lays a heavy hand on your head and mutters in Russian. For five minutes, the world hurts you a little less.", 6)
         return true
     elseif what == "sermon" then
         if (g.lcSermonNext or 0) > now then return false, string.format("\"I have said my piece. Come back later and I will say it again, louder.\" (%d s)", math.ceil(g.lcSermonNext - now)) end
         g.lcSermonNext = now + SERMON_EVERY
         local n = 0
-        for i = 0, 2 do
-            timer.Simple(i * 6, function() if IsValid(g) then g:EmitSound(Pick(RANTS), 85) end end)
-        end
+        g.lcSpokeAt = nil -- (a sermon is asked for: he says his piece now)
+        Speak(g, 85)
         for _, p in ipairs(player.GetAll()) do
             if Rebel(p) and p:Alive() and p:GetPos():DistToSqr(g:GetPos()) < 500 * 500 then
                 n = n + 1

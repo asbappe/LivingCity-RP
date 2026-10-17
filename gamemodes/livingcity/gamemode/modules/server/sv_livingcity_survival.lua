@@ -507,9 +507,11 @@ function LC.InvAction(ply, action, id)
     elseif action == "fill" then
         if not it.fillTo then return end
         if not InWater(ply) and not LC.NearSink(ply) then return ply:ChatPrint("Stand in water, or by a sink, to fill it.") end
+        local atSink = not InWater(ply)
         LC.TakeItem(ply, id)
         LC.GiveItem(ply, it.fillTo)
-        ply:EmitSound("ambient/water/water_splash1.wav", 60)
+        -- the tap running into it (a splash was too loud for a sink); dipped in water, a soft slosh
+        if atSink then ply:EmitSound("ambient/water/water_spray1.wav", 55, 115, 0.6) else ply:EmitSound("ambient/water/water_splash2.wav", 50, 100, 0.5) end
     elseif action == "drop" then
         if it.doc then return ply:ChatPrint("[Papers] You keep your papers on you. (Stash them at home if you must.)") end
         LC.TakeItem(ply, id)

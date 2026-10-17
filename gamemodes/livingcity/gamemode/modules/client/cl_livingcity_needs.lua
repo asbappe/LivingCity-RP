@@ -30,6 +30,16 @@ end
 -- Top-left, compact: the bottom-left belongs to the chat.
 LC_CL = LC_CL or {}
 LC_CL.HudX, LC_CL.HudY, LC_CL.HudW = 16, 16, 220
+-- The left column, top to bottom: the needs box, the line under it (radio, disguise, papers),
+-- then the "What now?" card, then the odd line (recovering, the urge). Each goes under the one
+-- above, wherever that ended last frame (they used to be placed under the centre banners, so
+-- with no banner up they landed on the needs box).
+function LC_CL.LeftColumnTop() return (LC_CL.HudBottom or LC_CL.HudY) + (LC_CL.UnderLineShown and 18 or 0) end
+function LC_CL.LeftColumnBottom()
+    -- (the card's bottom, if it was drawn a moment ago: whichever is drawn first in a frame, the other's last place counts)
+    if LC_CL.NextStepAt and CurTime() - LC_CL.NextStepAt < 0.25 then return LC_CL.NextStepBottom end
+    return LC_CL.LeftColumnTop()
+end
 
 -- The quiet HUD (lc_quiet_hud, sh_livingcity_feel.lua): no running score.
 -- Rank and XP are on F4, credits and standing at the top of your pockets
@@ -120,6 +130,7 @@ hook.Add("HUDPaint", "LivingCityUndergroundHUD", function()
     if DISGUISES[d] then bits[#bits + 1] = "Wearing " .. DISGUISES[d] end
     local alias = ply:GetNW2String("lcd_alias", "")
     if alias ~= "" then bits[#bits + 1] = "Papers: citizen " .. alias end
+    LC_CL.UnderLineShown = #bits > 0
     if #bits > 0 then
         draw.SimpleTextOutlined(table.concat(bits, "  |  "), "DefaultSmall", LC_CL.HudX + 2, (LC_CL.HudBottom or 60) + 2,
             d ~= "" and Color(240, 200, 120) or INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, color_black)

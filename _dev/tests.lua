@@ -12134,6 +12134,35 @@ section("Playtest fixes, 17 October")
     mort.valid = false
 end)()
 
+section("Playtest fixes, 17 October (evening)")
+;(function()
+    -- Father Grigori says something once a minute at the most, whatever it's for
+    local g = ents.Create("npc_monk") g:Spawn()
+    local said = 0
+    local emitWas = g.EmitSound
+    g.EmitSound = function(self, snd, ...) said = said + 1 end
+    for _ = 1, 20 do LC.GrigoriSpeak(g, 70) _run(1) end
+    ok(said == 1, "Father Grigori: at most one line a minute", said)
+    _run(45)
+    LC.GrigoriSpeak(g, 70)
+    ok(said == 2, "and the next once the minute's up", said)
+    g:Remove()
+    -- a medic's clothes pack with a helmet on by default: off, unless it's the Resistance in the open
+    local m = ents.Create("npc_citizen") m:Spawn()
+    m:SetModel("models/humans/group03m/male_01.mdl")
+    m.bg = { [1] = 1 }
+    m.GetBodyGroups = function() return { { id = 1, name = "headgear", submodels = { [0] = "blank", [1] = "helmet_combat" } } } end
+    m.GetBodygroup = function(self, i) return (self.bg or {})[i] or 0 end
+    LC.NPCs[m] = { role = "citizen", job = "medic" }
+    LC.ApplyLook(m, nil, {})
+    ok(m:GetBodygroup(1) == 0, "a clinic medic's pack helmet comes off (only the Resistance in the open wear battle gear)")
+    m.bg[1] = 1
+    LC.NPCs[m].role = "rebel"
+    LC.StripBattleGear(m)
+    ok(m:GetBodygroup(1) == 1, "(and a rebel fighter keeps his)")
+    LC.NPCs[m] = nil m:Remove()
+end)()
+
 section("The Endings menu: every ending's settings, and its dances tuned live")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     ok(LC.EndingSettingGroup("lc_ending_flood_boats") == "water" and LC.EndingSettingGroup("lc_ending_minge_max") == "harpies"

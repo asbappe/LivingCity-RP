@@ -52,14 +52,16 @@ hook.Add("HUDPaint", "LivingCityRest", function()
     end
     -- after a close call: still recovering (sv_livingcity_progress.lua)
     local rec = me:GetNW2Float("lc_recovering_until", 0) - CurTime()
+    local ly = (LC_CL.LeftColumnBottom and LC_CL.LeftColumnBottom() or 160) + 6 -- (in the left column, under the rest)
     if rec > 0 then
         draw.SimpleText(string.format("Recovering from a close call (%d:%02d): a little less to give", math.floor(rec / 60), math.floor(rec % 60)),
-            "DermaDefault", 20, (LC_CL.StatusBottom or 60) + 14, Color(200, 170, 150))
+            "DermaDefault", 20, ly, Color(200, 170, 150))
+        ly = ly + 16
     end
     -- the urge (parasites): a line under the needs while it's building
     local urge = me:GetNW2Float("lc_urge", 0)
     if urge >= 25 then
-        local y = (LC_CL.StatusBottom or 60) - 2
+        local y = ly
         draw.SimpleText(urge >= 80 and "You need a toilet. NOW." or (urge >= 50 and "Your stomach cramps: find a toilet." or "Your stomach's unsettled."),
             "DermaDefaultBold", 20, y, urge >= 80 and Color(255, 120, 90) or Color(230, 190, 120))
     end

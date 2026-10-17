@@ -62,13 +62,14 @@ hook.Add("HUDPaint", "LivingCityNextStep", function()
     -- Civil Intake has its own line on screen while you're being processed
     if me:GetNW2Bool("lc_unreg", false) or me:GetNW2Bool("lc_unhoused", false) then return end
     local w = math.min(340, ScrW() - 32)
-    local x, y = 16, (LC_CL.StatusBottom or 60) + 8
+    local x, y = 16, (LC_CL.LeftColumnTop and LC_CL.LeftColumnTop() or 160) + 8
     local why = Wrap(s.why, "LCNextWhy", w - 16)
     local h = 26 + #why * 15 + (s.way ~= "" and 15 or 0)
     draw.RoundedBox(4, x, y, w, h, BG)
     draw.RoundedBox(0, x, y, 3, h, s.urgent and URGENT or NEXT)
     draw.SimpleText(string.upper(s.text), "LCNextStep", x + 10, y + 5, s.urgent and URGENT or INK)
     for i, l in ipairs(why) do draw.SimpleText(l, "LCNextWhy", x + 10, y + 7 + i * 15, DIM) end
+    LC_CL.NextStepBottom, LC_CL.NextStepAt = y + h, CurTime()
     if s.way ~= "" then
         draw.SimpleText("F1 > 1 shows you the way", "LCNextWhy", x + 10, y + 7 + (#why + 1) * 15, NEXT)
     end
