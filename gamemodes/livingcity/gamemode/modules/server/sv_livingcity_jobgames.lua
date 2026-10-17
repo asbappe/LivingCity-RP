@@ -328,11 +328,14 @@ hook.Add("AllowPlayerPickup", "LivingCityJobCart", function(ply, ent) if ent.lcC
 -- On the line (Factory)
 ------------------------------------------------------------------------
 
+-- (all of them boxy enough to sit on a belt and big enough to grab with E: the little lever
+-- and plug couldn't be picked up, and round ones rolled)
 local PARTS = {
     "models/props_lab/reciever01a.mdl", "models/props_lab/reciever01b.mdl", "models/props_lab/box01a.mdl",
-    "models/props_lab/harddrive01.mdl", "models/props_junk/metal_paintcan001a.mdl", "models/props_c17/TrapPropeller_Lever.mdl",
-    "models/props_lab/tpplug.mdl", "models/props_junk/garbage_metalcan001a.mdl",
+    "models/props_lab/harddrive01.mdl", "models/props_junk/metal_paintcan001a.mdl", "models/props_lab/reciever01d.mdl",
+    "models/props_c17/BriefCase001a.mdl", "models/props_junk/cardboard_box004a.mdl",
 }
+LC.LineParts = PARTS
 local BIN = FirstValid({ "models/props_junk/TrashBin01a.mdl", "models/props_trainstation/trashcan_indoor001a.mdl" })
 local RUST = Color(170, 95, 60)
 local TOTAL_PARTS = 20
@@ -424,15 +427,19 @@ GAMES.line = {
         -- the next part onto the belt, sooner as the shift goes on
         if g.spawned < TOTAL_PARTS and now >= g.nextPart then
             g.spawned = g.spawned + 1
-            local start = b.origin - b.dir * (b.len / 2 - 14) + Vector(0, 0, 6)
+            -- well onto the belt (not at its very end, where they tipped off the back), square
+            -- to it, sitting on it rather than dropped onto it
+            local start = b.origin - b.dir * (b.len / 2 - 36)
             local L = LineOf(g)
-            local e = Spawn(Pick(L.parts), start, Angle(0, math.random(0, 359), 0))
+            local e = Spawn(Pick(L.parts), start, Angle(0, b.dir:Angle().y, 0))
             if IsValid(e) then
-                -- light enough for anyone to pick up with E (some weren't), and not rolling about
+                local mn = e.OBBMins and e:OBBMins() or Vector(0, 0, 0)
+                e:SetPos(Vector(start.x, start.y, b.top - mn.z + 1))
+                -- light enough for anyone to pick up with E (some weren't), and not spinning about
                 local ph = Phys(e)
                 if ph then
                     if ph.SetMass then ph:SetMass(8) end
-                    if ph.SetDamping then ph:SetDamping(0.5, 4) end
+                    if ph.SetDamping then ph:SetDamping(0.5, 30) end
                 end
                 e.lcPart = { bad = math.random() < 0.32, rattle = g.spawned == g.rattle, t = now }
                 if e.lcPart.bad then
@@ -473,8 +480,10 @@ GAMES.line = {
                     local ph = Phys(e)
                     if ph then
                         local v = ph:GetVelocity()
-                        -- along the belt, and drawn back to its middle (round ones used to roll off the side)
+                        -- along the belt, and drawn back to its middle (round ones used to roll off the side);
+                        -- no spinning (a spinning part sank through the belt)
                         ph:SetVelocity(b.dir * g.speed - b.side * (across * 2) + Vector(0, 0, math.min(v.z, 0)))
+                        if ph.GetAngleVelocity and ph.AddAngleVelocity then ph:AddAngleVelocity(-ph:GetAngleVelocity()) end
                         ph:Wake()
                     else
                         e:SetPos(e:GetPos() + b.dir * g.speed * 0.1)
@@ -504,6 +513,8 @@ GAMES.line = {
     end,
     finish = function(g)
         if IsValid(g.conv) then g.conv:SetNW2Bool("lc_running", false) end
+        for _, e in ipairs(g.parts or {}) do if IsValid(e) then e:Remove() end end
+        g.parts = {}
     end,
 }
 

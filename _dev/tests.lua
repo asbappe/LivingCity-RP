@@ -12404,6 +12404,15 @@ section("Playtest fixes, 17 October (evening)")
     LC.NPCs[tcop] = nil tcop:Remove()
     backer.valid = false
     LC.RemoveZone(rz)
+    -- the factory line: every part grabbable, workers at the line face the belt
+    local lever = false
+    for _, m in ipairs(LC.LineParts) do if string.find(string.lower(m), "lever", 1, true) or string.find(m, "tpplug", 1, true) then lever = true end end
+    ok(not lever, "no more little levers or plugs on the line (they couldn't be picked up)")
+    local belt = ents.Create("lc_conveyor") belt:SetPos(Vector(-103000, 195000, 34)) belt:Spawn()
+    local face = LC.ConveyorFace(Vector(-103000, 195060, 0))
+    ok(face and face:Distance(belt:GetPos()) < 200, "a worker at a point beside the conveyor faces the belt", face and tostring(face))
+    ok(LC.ConveyorFace(Vector(-110000, 195000, 0)) == nil, "(and one with no belt near works as before)")
+    belt:Remove()
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")

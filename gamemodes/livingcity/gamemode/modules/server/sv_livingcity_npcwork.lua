@@ -732,11 +732,36 @@ local function Workplace(job) return function(npc) local p = Nearest(JobPoints(j
 local function Dock(npc) return Marked("dock", npc:GetPos()) end
 
 -- At the workplace for a while, busy.
+-- (at the factory line: the nearest spot on a conveyor near the point, to face it)
+local function ConveyorFace(pos)
+    local best, bd
+    for _, c in ipairs(LC.EntsOf and LC.EntsOf("lc_conveyor") or ents.FindByClass("lc_conveyor")) do
+        if IsValid(c) then
+            local d = c:GetPos():DistToSqr(pos)
+            if d < 300 * 300 and (not bd or d < bd) then best, bd = c, d end
+        end
+    end
+    if not best then return nil end
+    local b = LC.ConveyorBelt and LC.ConveyorBelt(best)
+    if not b then return best:GetPos() end
+    local along = math.Clamp((pos - b.origin):Dot(b.dir), -b.len / 2, b.len / 2)
+    return b.origin + b.dir * along
+end
+LC.ConveyorFace = ConveyorFace
+
 local function Shift(job, id, label, opts)
     opts = opts or {}
     Task(job, { id = id, label = label, weight = opts.weight or 2, find = function(npc, st, now)
         local p = Nearest(JobPoints(job), npc:GetPos(), 4500)
         if not p then return nil end
+        -- at the line: by the belt, facing it, beside the point (not wandering off it)
+        local belt = opts.belt and ConveyorFace(p.pos)
+        if belt then
+            return { steps = {
+                { pos = function(n) return p.pos + Vector(math.Rand(-12, 12), math.Rand(-12, 12), 0) end, face = belt, secs = math.Rand(opts.min or 30, opts.max or 70),
+                  anim = opts.anim or BENCH, sound = opts.sound, lvl = 55, every = opts.every or 5, doing = label },
+            } }
+        end
         -- a chair or bench near it: they sit and work there
         if opts.sit then
             for _, c in ipairs(LC.FreePoints and LC.FreePoints({ sitchair = true }, npc) or {}) do
@@ -761,7 +786,8 @@ Run("factory", "parts", "carrying parts to the line", "models/props_junk/cardboa
     { loading = "collecting parts from the dock" })
 Run("factory", "station", "moving parts between stations", "models/props_junk/cardboard_box004a.mdl", Workplace("factory"),
     function(npc, st, a) for _, p in ipairs(JobPoints("factory")) do if p.pos:DistToSqr(a) > 150 * 150 then return p.pos end end end)
-Shift("factory", "line", "working the line", { sound = METAL, weight = 3 })
+-- (quiet work at the line: the clanks were heard all over the factory, long after the belt stopped)
+Shift("factory", "line", "working the line", { sound = { "physics/metal/metal_box_impact_soft1.wav", "physics/metal/metal_box_impact_soft2.wav" }, every = 12, weight = 3, belt = true })
 
 -- Courier: the mail, door to door
 Run("courier", "mail", "delivering the mail", "models/props_lab/clipboard.mdl",
