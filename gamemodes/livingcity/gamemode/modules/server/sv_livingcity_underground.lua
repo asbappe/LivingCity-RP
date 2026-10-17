@@ -167,7 +167,7 @@ hook.Add("LivingCityWanted", "LivingCityRadio", function(ply, reason)
     local alias = ply:GetNW2String("lcd_alias", "")
     timer.Simple(0, function()
         if not IsValid(ply) then return end
-        LC.RadioNotice("cp", string.format("Dispatch: all Civil Protection units, suspect %s, %s. Last seen %s.",
+        LC.RadioNotice("cp", string.format("Dispatch: all units, suspect %s, %s. Last seen %s.",
             alias ~= "" and ("citizen " .. alias) or ply:Nick(), string.lower(reason or "malcompliance"), Where(ply:GetPos())))
     end)
 end)

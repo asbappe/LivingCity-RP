@@ -2646,7 +2646,7 @@ T{
                   end },
                 Hold(z.pos, 45, "Hold the block until the team is through", math.max(300, z.r)),
             },
-            intro = "Dispatch: all Civil Protection units, " .. name .. " is under inspection. Nobody leaves without papers.",
+            intro = "Dispatch: all units, " .. name .. " is under inspection. Nobody leaves without papers.",
         }
     end,
 }

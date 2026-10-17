@@ -88,7 +88,7 @@ end
 -- post with fewest hands; they can ask for another (F3 > Jobs). The Resistance aren't
 -- assigned (one can still take a job, passing as a citizen).
 local cvAssign = CreateConVar("lc_assign_work", "1", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Every registered citizen without a job is assigned Union work (rebels aren't)")
-function LC.AssignWork(ply)
+function LC.GiveUnionWork(ply)
     if not cvAssign:GetBool() or not IsValid(ply) or not ply:Alive() then return false end
     if ply:GetNW2String("lcf_faction", "") ~= "citizen" or LC.Job(ply) then return false end
     if (LC.IntakePending and LC.IntakePending(ply)) or not LC.CanWork(ply) then return false end
@@ -113,8 +113,8 @@ function LC.AssignWork(ply)
     end
     return true
 end
-hook.Add("LivingCityRegistered", "LivingCityAssignWork", function(ply) timer.Simple(2, function() LC.AssignWork(ply) end) end)
-hook.Add("PlayerSpawn", "LivingCityAssignWork", function(ply) timer.Simple(5, function() LC.AssignWork(ply) end) end)
+hook.Add("LivingCityRegistered", "LivingCityAssignWork", function(ply) timer.Simple(2, function() LC.GiveUnionWork(ply) end) end)
+hook.Add("PlayerSpawn", "LivingCityAssignWork", function(ply) timer.Simple(5, function() LC.GiveUnionWork(ply) end) end)
 
 net.Receive("lcj_set", function(_, ply)
     local ok, why = LC.SetJob(ply, net.ReadString())

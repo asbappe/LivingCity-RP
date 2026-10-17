@@ -149,7 +149,7 @@ local function Escalate(ply, level)
     end
     if level == 2 then
         ply:ChatPrint("[Overwatch] Alert 2: every Civil Protection unit in the sector has your description. They've drawn their weapons.")
-        if LC.RadioNotice then LC.RadioNotice("cp", "Dispatch: all Civil Protection units, suspect " .. ply:Nick() .. " is armed and dangerous. Weapons free.") end
+        if LC.RadioNotice then LC.RadioNotice("cp", "Dispatch: all units, suspect " .. ply:Nick() .. " is armed and dangerous. Weapons free.") end
     elseif level == 3 then
         ply:ChatPrint("[Overwatch] Alert 3: Overwatch has been dispatched. Lethal force is authorized.")
         if LC.Announce then LC.Announce("response", "npc/overwatch/cityvoice/f_protectionresponse_1_spkr.wav",
