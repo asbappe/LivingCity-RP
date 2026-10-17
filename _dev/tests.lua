@@ -7386,7 +7386,7 @@ ok(not door.locked and not r.locked, "!unlock leaves it open to anyone")
 hook.Run("PlayerSay", tenant, "!lock")
 ok(door.locked, "!lock locks it")
 hook.Run("PlayerUse", cop, door)
-_run(3.5)
+_run(4.5) -- (three seconds forcing it, and the task's own ticks)
 ok(not door.locked, "units force their way in")
 tenant.chat = {}
 hook.Run("PlayerSay", tenant, "!apartment")
