@@ -10373,6 +10373,7 @@ Tick(1)
 ok(not LC.IsTired(sl) and LC.IsRested(sl) and sl:GetMaxHealth() == max0, "slept: rested, and back to full strength")
 LC.IsNight = function() return true end
 ok(not LC.SleepIn(sl, bed), "(and you can't sleep again straight away)")
+LC.WakeUp(sl, "jump")
 LC.IsNight = isNight
 for _, e in ipairs({ loo, tub, bed }) do e:Remove() end
 for _, q in ipairs({ p, sw, sl }) do q:SetPos(Vector(-150000, 150000, 0)) end
@@ -12237,6 +12238,37 @@ section("Playtest fixes, 17 October (evening)")
     LC.CalmCops(culprit)
     LC.NPCs[ec2] = nil ec2:Remove()
     culprit.valid = false
+    -- sleep: lying still till Jump, healed by the end, kept over a restart
+    local napper = newPlayer("Napper", "citizen")
+    _run(1)
+    napper:SetPos(Q0 + Vector(0, 900, 0))
+    local nbed = ents.Create("lc_bed") nbed:SetPos(napper:GetPos() + Vector(40, 0, 0)) nbed:Spawn()
+    local nightWas = LC.IsNight
+    LC.IsNight = function() return true end
+    napper.lcAwakeSince = CurTime() - 100
+    napper:SetNW2Float("lc_rested_until", 0)
+    napper:SetHealth(30)
+    ok(LC.SleepIn(napper, nbed) and napper:GetNW2Bool("lc_sleeping", false), "asleep in a bed")
+    local cmd = { buttons = bit.bor(IN_FORWARD, IN_JUMP, IN_USE), cleared = false }
+    function cmd:ClearMovement() self.cleared = true end
+    function cmd:GetButtons() return self.buttons end
+    function cmd:SetButtons(b) self.buttons = b end
+    hook.Run("StartCommand", napper, cmd)
+    ok(cmd.cleared and cmd.buttons == IN_JUMP, "lying still: no walking off in your sleep (only Jump gets through)")
+    _run(GetConVar("lc_sleep_seconds"):GetFloat() * 0.5)
+    ok(napper:Health() > 30 and napper:Health() < napper:GetMaxHealth(), "healing as you sleep", napper:Health())
+    _run(GetConVar("lc_sleep_seconds"):GetFloat() * 0.5 + 1)
+    ok(napper:Health() == napper:GetMaxHealth() and LC.IsRested(napper) and napper:GetNW2Bool("lc_sleeping", false), "healed by the end, rested, and still asleep till you get up", napper:Health())
+    hook.Run("KeyPress", napper, IN_JUMP)
+    ok(not napper:GetNW2Bool("lc_sleeping", false), "Jump: up again")
+    napper.lcAwakeSince = CurTime() - 500
+    LC.SaveRest(napper)
+    napper.lcAwakeSince = nil
+    hook.Run("PlayerSpawn", napper)
+    ok(math.abs(LC.AwakeFor(napper) - 500) < 2 and LC.IsRested(napper), "how long you've been awake, and rested, is kept over a restart", LC.AwakeFor(napper))
+    LC.IsNight = nightWas
+    nbed:Remove()
+    napper.valid = false
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")

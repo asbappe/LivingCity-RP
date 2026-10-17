@@ -8,10 +8,13 @@
 
     Sleep in a bed (E on it: the editor's "Fixture: bed", a bunk point, or any
     bed or mattress the map has, a cell's too) at night, or any time you're
-    exhausted. It takes lc_sleep_seconds (60) lying still; get up, or get
-    hurt, and you've not slept. A good night leaves you well rested for the
-    next in-game day: hunger and thirst come on a quarter more slowly, and
-    you slowly heal (a point every ten seconds, up to full).
+    exhausted. You lie there and can't move: Jump gets you up. It takes
+    lc_sleep_seconds (60) to sleep; get up before then, or get hurt, and
+    you've not slept. You heal as you sleep, to full by the end of it, and
+    stay asleep until you press Jump. A good night leaves you well rested for
+    the next in-game day: hunger and thirst come on a quarter more slowly, and
+    you slowly heal (a point every ten seconds, up to full). How long you've
+    been awake is kept over a server restart.
 
       lc_sleep 0/1, lc_sleep_seconds (60), lc_tired_days (1)
 ]]
@@ -64,31 +67,83 @@ local function BedAt(ply, ent)
 end
 LC.BedNear = BedAt
 
--- Sleep in a bed. True, or false and why not.
+-- Sleep in a bed. True, or false and why not. You lie still (you can't move) till you press Jump.
 function LC.SleepIn(ply, ent)
     if not cvOn:GetBool() or not IsValid(ply) or not ply:Alive() then return false end
+    if ply.lcSleep then return false end
     if not BedAt(ply, ent) then return false, "There's no bed here." end
     if not LC.IsNight() and not LC.IsTired(ply) then return false, "You're not tired, and it's broad daylight. Beds are for the night (or when you're exhausted)." end
     if LC.IsRested(ply) and not LC.IsTired(ply) then return false, "You slept already. You couldn't sleep again if you tried." end
-    if not LC.StartTask then return false end
+    local now = CurTime()
+    ply.lcSleep = { t0 = now, done = now + math.max(1, cvSecs:GetFloat()), last = now }
     ply:SetNW2Bool("lc_sleeping", true)
-    local ok, why = LC.StartTask(ply, cvSecs:GetFloat(), "Sleeping...", {
-        maxMove = 60, cancelText = "You get up before you've really slept.",
-        cancel = function(p) if IsValid(p) then p:SetNW2Bool("lc_sleeping", false) end end,
-        done = function(p)
-            if not IsValid(p) then return end
-            p:SetNW2Bool("lc_sleeping", false)
-            p.lcAwakeSince = CurTime()
-            p:SetNW2Bool("lc_tired", false)
-            TiredHealth(p, false)
-            p:SetNW2Float("lc_rested_until", CurTime() + DayLen())
-            Notice(p, "info", "Well rested", "A night's sleep. For the next day: hunger and thirst come on more slowly, and you heal a little.", 8)
-            hook.Run("LivingCitySlept", p)
-        end,
-    })
-    if not ok then ply:SetNW2Bool("lc_sleeping", false) end
-    return ok, why
+    ply:SetNW2Float("lc_sleep_done", ply.lcSleep.done)
+    ply:SetVelocity(-ply:GetVelocity())
+    return true
 end
+
+-- Up again: Jump, or hurt. Before the sleep's done, it doesn't count.
+function LC.WakeUp(ply, how)
+    local s = IsValid(ply) and ply.lcSleep
+    if not s then return false end
+    ply.lcSleep = nil
+    ply:SetNW2Bool("lc_sleeping", false)
+    ply:SetNW2Float("lc_sleep_done", 0)
+    if not s.slept and how ~= "quiet" then
+        ply:ChatPrint(how == "hurt" and "You wake with a start. You've not slept." or "You get up before you've really slept.")
+    end
+    return true
+end
+
+-- Asleep: healing as you go, full by the end; then rested, and still asleep till you get up.
+local function SleepStep(ply, now)
+    local s = ply.lcSleep
+    if not ply:Alive() then LC.WakeUp(ply, "quiet") return end
+    local dt = now - (s.last or now)
+    s.last = now
+    if not s.slept then
+        local left = s.done - now
+        local max = ply:GetMaxHealth()
+        if left > 0 then
+            local hp = ply:Health()
+            if hp < max then
+                s.heal = (s.heal or 0) + (max - hp) * math.min(1, dt / left)
+                local whole = math.floor(s.heal)
+                if whole > 0 then ply:SetHealth(math.min(max, hp + whole)) s.heal = s.heal - whole end
+            end
+        else
+            s.slept = true
+            ply.lcAwakeSince = now
+            ply:SetNW2Bool("lc_tired", false)
+            TiredHealth(ply, false)
+            ply:SetHealth(ply:GetMaxHealth())
+            ply:SetNW2Float("lc_rested_until", now + DayLen())
+            Notice(ply, "info", "Well rested", "A night's sleep, and you're healed. For the next day: hunger and thirst come on more slowly, and you heal a little. Press Jump to get up.", 9)
+            hook.Run("LivingCitySlept", ply)
+        end
+    end
+end
+timer.Create("LivingCitySleepers", 0.5, 0, function()
+    local now = CurTime()
+    for _, ply in ipairs(player.GetAll()) do
+        if ply.lcSleep then
+            local ok, err = pcall(SleepStep, ply, now)
+            if not ok and LC.Error then LC.Error("rest", err) end
+        end
+    end
+end)
+hook.Add("KeyPress", "LivingCitySleepWake", function(ply, key)
+    if key == IN_JUMP and ply.lcSleep then LC.WakeUp(ply, "jump") end
+end)
+hook.Add("EntityTakeDamage", "LivingCitySleepWake", function(ent, dmg)
+    if IsValid(ent) and ent:IsPlayer() and ent.lcSleep and dmg:GetDamage() > 0 then LC.WakeUp(ent, "hurt") end
+end)
+-- lying still: no walking about in your sleep (Jump still gets through, to wake you)
+hook.Add("StartCommand", "LivingCitySleeping", function(ply, cmd)
+    if not ply:GetNW2Bool("lc_sleeping", false) then return end
+    cmd:ClearMovement()
+    cmd:SetButtons(bit.band(cmd:GetButtons(), IN_JUMP))
+end)
 
 if LC.SlashCommands == nil then LC.SlashCommands = {} end
 LC.SlashCommands.sleep = function(ply)
@@ -147,9 +202,25 @@ end)
 -- A new life starts out rested enough; dying doesn't make you any less tired.
 hook.Add("PlayerSpawn", "LivingCityRest", function(ply)
     ply.lcTiredHP = nil -- (spawning sets the health limit afresh; the tick takes it down again if need be)
-    if not ply.lcAwakeSince then ply.lcAwakeSince = CurTime() end
+    if ply.lcSleep then LC.WakeUp(ply, "quiet") end
+    if not ply.lcAwakeSince then
+        -- how long they'd been awake, and rested for, kept over a restart or a reconnect
+        local awake = tonumber(ply:GetPData("lc_awake_for", "")) or 0
+        ply.lcAwakeSince = CurTime() - math.max(0, awake)
+        local rest = tonumber(ply:GetPData("lc_rested_for", "")) or 0
+        if rest > 0 then ply:SetNW2Float("lc_rested_until", CurTime() + rest) end
+    end
 end)
-hook.Add("LivingCityNewCharacter", "LivingCityRest", function(ply) ply.lcAwakeSince = CurTime() ply:SetNW2Float("lc_rested_until", 0) end)
+local function SaveRest(ply)
+    if not IsValid(ply) or not ply.lcAwakeSince then return end
+    ply:SetPData("lc_awake_for", tostring(math.floor(CurTime() - ply.lcAwakeSince)))
+    ply:SetPData("lc_rested_for", tostring(math.max(0, math.floor(ply:GetNW2Float("lc_rested_until", 0) - CurTime()))))
+end
+LC.SaveRest = SaveRest
+hook.Add("PlayerDisconnected", "LivingCityRest", SaveRest)
+hook.Add("ShutDown", "LivingCityRest", function() for _, p in ipairs(player.GetAll()) do SaveRest(p) end end)
+timer.Create("LivingCityRestSave", 60, 0, function() for _, p in ipairs(player.GetAll()) do SaveRest(p) end end)
+hook.Add("LivingCityNewCharacter", "LivingCityRest", function(ply) ply.lcAwakeSince = CurTime() ply:SetNW2Float("lc_rested_until", 0) SaveRest(ply) end)
 
 -- What now? (sv_livingcity_nextstep.lua)
 function LC.RestStep(ply)

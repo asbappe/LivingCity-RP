@@ -11,6 +11,29 @@
 LC_CL = LC_CL or {}
 
 local BLACK = Color(0, 0, 0)
+local FEATHER = 90 -- (the eyelids' soft edge, in pixels)
+local gradDown, gradUp, blurMat
+-- lying still: the same as the server's, so your own game doesn't try to walk you about
+hook.Add("StartCommand", "LivingCitySleeping", function(ply, cmd)
+    if not ply:GetNW2Bool("lc_sleeping", false) then return end
+    cmd:ClearMovement()
+    cmd:SetButtons(bit.band(cmd:GetButtons(), IN_JUMP))
+end)
+-- An eyelid: dark, fading softly into the open eye (not a hard black line)
+local function Lid(w, h, lid, top)
+    gradDown = gradDown or (Material and Material("vgui/gradient-d"))
+    gradUp = gradUp or (Material and Material("vgui/gradient-u"))
+    local solid = math.max(0, lid - FEATHER * 0.5)
+    surface.SetDrawColor(0, 0, 0, 255)
+    if top then surface.DrawRect(0, 0, w, solid) else surface.DrawRect(0, h - solid, w, solid) end
+    local g = top and gradUp or gradDown
+    if g and surface.SetMaterial then
+        surface.SetMaterial(g)
+        surface.SetDrawColor(0, 0, 0, 255)
+        if top then surface.DrawTexturedRect(0, solid, w, FEATHER) else surface.DrawTexturedRect(0, h - solid - FEATHER, w, FEATHER) end
+        if draw.NoTexture then draw.NoTexture() end
+    end
+end
 
 -- How closed the eyes are right now (0 open, 1 shut): a slow droop every
 -- seven seconds or so, held a moment, then opened with a start.
@@ -36,7 +59,10 @@ hook.Add("HUDPaint", "LivingCityRest", function()
         surface.DrawRect(0, 0, w, h)
         if sleepFade > 0.6 then
             draw.SimpleText("Z z z", "DermaLarge", w / 2, h / 2 - 20, Color(200, 200, 210, 200 * sleepFade), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-            draw.SimpleText("Asleep. Move, and you'll wake.", "DermaDefault", w / 2, h / 2 + 16, Color(170, 170, 180, 200 * sleepFade), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            local done = me:GetNW2Float("lc_sleep_done", 0)
+            local msg = (done > 0 and CurTime() < done) and string.format("Asleep (%ds). Jump to get up (too soon, and it won't count).", math.ceil(done - CurTime()))
+                or "Rested. Jump to get up."
+            draw.SimpleText(msg, "DermaDefault", w / 2, h / 2 + 16, Color(170, 170, 180, 200 * sleepFade), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         end
         return
     end
@@ -45,9 +71,21 @@ hook.Add("HUDPaint", "LivingCityRest", function()
         local f = LC_CL.EyelidClose(CurTime())
         if f > 0.01 then
             local lid = h / 2 * f
-            surface.SetDrawColor(BLACK)
-            surface.DrawRect(0, 0, w, lid)
-            surface.DrawRect(0, h - lid, w, lid)
+            -- the world blurs as they close
+            blurMat = blurMat or (Material and Material("pp/blurscreen"))
+            if blurMat and render and render.UpdateScreenEffectTexture and surface.SetMaterial then
+                surface.SetMaterial(blurMat)
+                surface.SetDrawColor(255, 255, 255, 255)
+                for i = 1, 3 do
+                    blurMat:SetFloat("$blur", f * 2 * i)
+                    if blurMat.Recompute then blurMat:Recompute() end
+                    render.UpdateScreenEffectTexture()
+                    surface.DrawTexturedRect(0, 0, w, h)
+                end
+                if draw.NoTexture then draw.NoTexture() end
+            end
+            Lid(w, h, lid, true)
+            Lid(w, h, lid, false)
         end
     end
     -- after a close call: still recovering (sv_livingcity_progress.lua)
