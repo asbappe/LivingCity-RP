@@ -1703,7 +1703,10 @@ ok(LC.HasItem(pm, "papers_dead"), "the morgue is where dead men's papers come fr
 ok(jobInc:GetNW2Float("lc_burn_until", 0) > 0, "the body went into the incinerator")
 local pp, qp = choose("porter", "New arrivals", 3)
 ok(qp.done and LC.Counter(pp, "reports") >= 1, "a porter can turn in a nervous arrival instead of walking him home")
+local seenWasR = LC.SeenBySecurity
+LC.SeenBySecurity = function() return false end -- (nobody sees it come out of the rubble: a unit who did would take it, and you, in now)
 local ps = choose("scrap", "Rubble clearing", 3)
+LC.SeenBySecurity = seenWasR
 ok(ps:HasWeapon("weapon_pistol"), "and the rubble sometimes hides a pistol")
 jobInc:Remove()
 _setcvar("lc_disguise_risk", 5)
