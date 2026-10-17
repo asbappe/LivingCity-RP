@@ -30,6 +30,7 @@ This is the master technical document. It lists what the owner's server, files, 
 | The Administrator's tone | `firm`, `stern` or `furious` anywhere in the name; none is warm | `LC.AnnounceToneOf` |
 | Ending songs | `sound/livingcity/endings/`, flat, named for the ending's codeword (`bus.mp3`, `bus2.mp3`, `shalom1.mp3`); `.mp3`, `.ogg` or `.wav`; the older folder per ending still works | `LC.EndingOfSong`, `LC.EndingSongs`, `LC.EndingRoot` |
 | The city's layout (the editor's work) | `data/livingcity/<map>.json`, with backups in `data/livingcity/backups/<map>/` | `LC.LayoutPath`, sv_livingcity_data.lua |
+| Who knew whom (for "word gets around"), and news of a death still to pass on | `data/livingcity/known.json`, `data/livingcity/word.json` | sv_livingcity_life.lua |
 | When the last secret ending was | `data/livingcity/endings.json` | `LC.EndingCooldownFile` |
 | The endings' dances as tuned in the Endings menu, and its shared settings | `data/livingcity/ending_tuning.json` | `LC.EndingTuneFile`, sv_livingcity_endingtune.lua |
 | The city's named people (citizens and cops, who they are) | `data/livingcity/<map>_people.json` | sv_livingcity_people.lua |

@@ -15,8 +15,11 @@ Built on 2026-10-16 from the exports the owner pasted in from each chat, plus th
 7. **Two copies of the gamemode on the server?** On 10-04 the owner's debug report showed the addon at `addons/livingcity-rp-main` (a GitHub download); on 10-07 the SFTP queue used `addons/livingcity/`; the delivery now is `livingcity.zip` into `addons/livingcity/`. If both folders are on the server, both load. **Ask the owner:** check `garrysmod/addons/` has only one Living City folder (plus `livingcity_sound` if used). **Owner (10-16): `addons/livingcity` is the newest and official place.** In CORE.md and README.
 8. **`lc_bloom_leg_sign` was removed on 2026-10-15** (this chat) while fixing Bloom's feet, without asking first. It was a client setting added 10-14 ("if feet splay: `lc_bloom_leg_sign -1`"); the reworked dance no longer uses it (`e8b24ce`). Owner: say if you want it back. **Owner (10-16): never used it; wants every tweakable dance and pose setting as a live slider in an Endings menu** (in TODO.md).
 9. **Branches.** `main` exists on GitHub (made 10-04 at `1614333`) but is far behind: work went on in `claude/youthful-rubin-j6lyfk` (to 10-15) and now `claude/intelligent-curie-p02qp4`, which holds everything. The youthful-rubin chat thought there was no `main`. The owner's GitHub default branch is `?`. **Proposal:** when you're ready, make `main` the latest and the default, so a new chat starts from it. OK? **Owner (10-16): yes, back to `main`.** `main` brought up to date the same day; CLAUDE.md now says to push finished work to `main`.
+10. **"Never add CalcView hooks" (a code rule from the scale/seriousness chat, about 10-07).** That chat made one camera pipeline, `GM:CalcView` plus `LC_CL.ViewMods` (scanner, acts, bob, FOV, dizzy), and said never to add CalcView hooks. The secret endings (built 10-13 and 10-14) add five (`cl_livingcity_endings.lua`: the G-Man, Bloom, the Flood, Base, Standup). Nothing is known to be broken by it, and the rule wasn't in CORE.md, so later chats didn't know. **Proposal:** write the rule into CORE.md's code rules, and leave the endings' cameras as they are unless one fights with the view (they only run during an ending). OK?
+11. **Two more data files missing from CORE.md:** `data/livingcity/known.json` (who knew whom, for "word gets around") and `data/livingcity/word.json` (news of a death still to be passed on), both from the scale/seriousness chat (`sv_livingcity_life.lua`). Added to CORE.md as facts.
+12. **The Resistance lab's numbers were never confirmed.** The chat that built it (10-08) listed its own guesses and the owner never said yes or no: the lab sells at 60% of the dealer's price (`lc_lab_price` 0.6), a CP unit shuts it for 10 minutes (`lc_lab_shutdown` 600), and which items it makes. They're what runs. **Question for the owner:** keep them?
 
-Checked and in agreement: hacker cap 2 (`sh_livingcity_factions.lua`); `lc_mantle_height` 108; `lc_cp_min_standing` 100; `lc_stock_eat` 40; `lc_morning_exercise` (setting) vs `lc_exercise` (command); the ranks ladder; `lc_ending_cooldown` 60; Marrow max 80; Base bombs 60; Hard moments every 5 beats, 3 at once; the Combine-only zone and auto-locked prison doors (asked for in v2.7, built in git on 10-04); welcome only for the unregistered; `lc_administrator_model` `models/mossman.mdl` (whether that path exists in game is still `?`).
+Checked and in agreement: everything the scale/seriousness chat built (the view settings, death card, Civil Intake, papers and ration card, housing register, the CP Commissary's armour 50/75/100 and its settings, crafting cut to lockpick and bandage, the dealer's prices, `lc_rebel_pursuit`); its five lab bugs were fixed on 10-08 (`246eece`); hacker cap 2 (`sh_livingcity_factions.lua`); `lc_mantle_height` 108; `lc_cp_min_standing` 100; `lc_stock_eat` 40; `lc_morning_exercise` (setting) vs `lc_exercise` (command); the ranks ladder; `lc_ending_cooldown` 60; Marrow max 80; Base bombs 60; Hard moments every 5 beats, 3 at once; the Combine-only zone and auto-locked prison doors (asked for in v2.7, built in git on 10-04); welcome only for the unregistered; `lc_administrator_model` `models/mossman.mdl` (whether that path exists in game is still `?`).
 
 ## Before 2026-10-04: v2.1 to v2.6 (chat outside git; versions before 2.1 not itemised)
 
@@ -175,6 +178,44 @@ Undated, in order:
 - SETUP | handoff | owner given `livingcity.zip` and `HANDOFF.md` to start a new chat
 - ISSUE | SFTP (separate chat) | the owner's FileZilla uploads to the host failed: `mkdir` "Internal server error", `cd` "I/O error" under `addons/livingcity/gamemodes/livingcity/content/sound/livingcity/announce/`; the queue used `announce/breen/<trigger>/` (renamed `administrator` 10-09); `addons/livingcity/lua/weapons/gmod_tool/stools` was missing so the editor tool failed to upload. Advised: 1 transfer and 1 connection at a time in FileZilla, check host disk space, recreate the `announce` folder in the host panel, contact the host if it persists. Outcome `?`
 - OPEN (then) | lying on bunks, sitting on chairs, followers shooting while running, long errand routes: unverified in game
+
+## 2026-10-05 to 10-08: scale and seriousness, menus, papers, the CP Commissary, the lab (outside git; delivered as a zip with HANDOFF.md, synced into git on 10-08 as `0aa5faf`)
+
+Undated, in order:
+- DECISION | design | owner: copy Synapse RP's sense of scale and seriousness "without breaking everything"; plan: the feel, the weight of death, Civil Intake ("please start")
+- FEAT | feel | narrower view, lower eyes, step sway, landing dip, a quiet HUD (`lc_fov` 75, `lc_eye_height` 61, `lc_view_bob`, `lc_quiet_hud`; each player's `lc_my_view_bob`, `lc_bob_toggle`)
+- ARCH | camera | one camera pipeline, `GM:CalcView` and `LC_CL.ViewMods`; "never add CalcView hooks" (Disagreement 10)
+- FEAT | death | the death card, a respawn wait, word getting round to people who knew them, kill feed hidden (`sv_livingcity_life.lua`, `lc_respawn_secs` 12, `lc_word_gets_around`; files `data/livingcity/known.json`, `word.json`: Disagreement 11)
+- FIX | death | a rumour named a disguised rebel's Resistance identity; the card's "Lived at least less than a minute" reworded
+- FEAT | intake | Civil Intake: arrive with nothing, register, then Housing Allocation; gates on rations, a job, the Commissary, stops; NPC arrivals queue (`lc_intake` 1, `lc_intake_secs` 8, `lc_intake_grace` 10; `lc_register`, `lc_unregister`)
+- SETUP | editor | owner to place "Fixture: Civil Intake", "Fixture: Housing Allocation", "Point: arrival"
+- CHANGE | feel | owner: sway "a tad bit too much": about 60% (`lc_view_bob_amount` 100%)
+- FIX | dropship | owner: the container hung about 15 ft below: now at the ship's own origin
+- DECISION | menus | owner: "we don't want ANYTHING to be reliant on chat commands only" (house rule 2 since)
+- FEAT | menus | Unit tools window, "Tips I've seen", F1 menu with Talk, Home, The city, Settings, Help
+
+**2026-10-07**
+- CHANGE | docs | README test count, the em dash check in HANDOFF
+
+**2026-10-08**
+- DECISION | menus | owner: a TF2-style popup menu, 9 slots by role and rank, one opening the full menu
+- DECISION | CP | owner: no crafting for CP/OTA; "Visit a Civil Protection Commisary to be issued supplies" with a waypoint button
+- DECISION | intake | owner: papers and ration card as items; terminal wording; point to Housing Allocation; a real interaction there
+- DECISION | UI | owner: rebel warnings and event messages on screen, not just chat
+- DECISION | lab | owner: replace the workbench with a Resistance lab (Kleiner's things, Kleiner as the scientist), materials or credits, cheaper than the dealer, Resistance only, one in every rebel base (the numbers never confirmed: Disagreement 12)
+- FEAT | menus | F1 quick menu (keys 1 to 9, 0 back, closes after 20 s); C is the full menu (`lc_quick`)
+- FEAT | notices | on-screen notices: subtitles, coloured cards, event announcements with what they mean (`lc_notices` 1)
+- FEAT | waypoints | HUD waypoint with distance and an edge arrow
+- FEAT | CP | the CP Commissary: grenades, ammo, armour (50; officers 75; Overwatch 100), 2 bandages, a ration (`lc_cpsupply_cooldown` 120, `lc_cpsupply_ration` 600)
+- CORE | items | papers and ration card (`id_papers`, `ration_card`): weightless, can't be dropped or given
+- FEAT | intake | papers at registration; shown to whoever you look at; dispensers need the card; no papers at a stop costs 2 standing (`lc_papers_fee` 10, `lc_card_fee` 15)
+- CHANGE | intake | Housing Allocation is a register: apply for a block, transfers, standing gates
+- CHANGE | intake | `lc_unregister` takes papers and room too
+- CHANGE | editor | rebel zone reworded: "Resistance ground: street units stay out"
+- FEAT | lab | the Resistance lab (`lc_lab_price` 0.6, `lc_lab_shutdown` 600); the workbench fixture renamed "Resistance lab" (class kept)
+- CHANGE | crafting | hand crafting cut to lockpick and bandage; the dealer sells the finished goods (smoke bomb 30, ammo 40 to 65, guns 120 to 240, vest 90, jammer 150)
+- ISSUE | lab | five bugs left for later (fixed 10-08 in git, `246eece`)
+- DECISION | release | owner: "please give a handoff doc and package this ASAP, we are out of usage"
 
 ## 2026-10-08 to 10-15: main dev chat (`claude/youthful-rubin-j6lyfk`, commits `0aa5faf..e477970`) and the parallel announcer/exercise/endings chat (outside git)
 
