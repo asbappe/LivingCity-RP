@@ -12326,6 +12326,33 @@ section("Playtest fixes, 17 October (evening)")
     end
     ok(who.kleiner == 1 and who.eli == 1 and who.magnusson == 1, "three labs: Dr. Kleiner, Eli Vance and Dr. Magnusson, one each (no Kleiner clones)")
     for _, b in ipairs(benches) do if IsValid(b.lcScientist) then b.lcScientist:Remove() end b:Remove() end
+    -- freeing a vortigaunt: it waits shackled and harmless; walk it out still shackled, to any rebel territory
+    local vz1 = LC.AddZone(Vector(-100000, 170000, 0), 300, "rebel", 0)
+    local vz2 = LC.AddZone(Vector(-100000, 176000, 0), 300, "rebel", 0)
+    local freer = newPlayer("VortFreer", "resistance")
+    _run(1)
+    freer:SetNW2Int("lcf_rank", 3)
+    freer:SetPos(Vector(-100000, 173000, 0))
+    local vq = inject(freer, "res_freevort")
+    ok(vq ~= nil, "(the job is offered)")
+    if vq then
+        local v = vq.data.vort
+        if IsValid(v) then freer:SetPos(v:GetPos() + Vector(40, 0, 0)) end
+        _run(2)
+        ok(IsValid(v) and v:GetNW2Bool("lc_shackled", false) and LC.NPCs[v] and LC.NPCs[v].shackled, "the vortigaunt is there, still shackled (it doesn't fight anyone)")
+        local st = LC.QB.Stage(vq)
+        ok(st and st.kind == "choice", "a choice: cut the shackles there, or walk it out shackled", tostring(st and st.kind) .. " stage " .. tostring(vq.stage) .. " done " .. tostring(vq.done) .. " dist " .. tostring(IsValid(v) and freer:GetPos():Distance(v:GetPos())) .. " active " .. tostring(LC.ActiveQuests[vq]))
+        LC.ResolveChoice(freer, vq.id, 2)
+        st = LC.QB.Stage(vq)
+        ok(st and st.kind == "escort" and st.anyRebel, "walking it out, shackled, to rebel territory (any of it)", st and st.kind)
+        -- the far camp, not the nearest: still home
+        if IsValid(v) then v:SetPos(vz2.pos + Vector(20, 0, 0)) end
+        freer:SetPos(vz2.pos + Vector(60, 0, 0))
+        _run(2)
+        ok(vq.done and IsValid(v) and not v:GetNW2Bool("lc_shackled", true), "any rebel territory will do: the shackles come off there", tostring(vq.done))
+    end
+    freer.valid = false
+    LC.RemoveZone(vz1) LC.RemoveZone(vz2)
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")

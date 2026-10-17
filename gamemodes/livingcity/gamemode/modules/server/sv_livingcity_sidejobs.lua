@@ -324,7 +324,25 @@ T{
     end,
 }
 
--- A shackled vortigaunt, at a Combine work site
+-- A shackled vortigaunt, at a Combine work site. It waits, shackled and harmless,
+-- with its keepers. Cut the shackles there (they may see), or lead it off still
+-- shackled as if you were moving Combine property, and cut them in rebel
+-- territory (any of it): unless a unit stops you and asks where you're taking it.
+local SECURITY_NPC = { "npc_metropolice", "npc_combine_s", "npc_hunter", "npc_strider", "npc_cscanner", "npc_turret_floor", "npc_manhack" }
+local function Peaceful(v, on)
+    for _, cls in ipairs(SECURITY_NPC) do v:AddRelationship(cls .. (on and " D_NU 99" or " D_HT 99")) end
+    v:AddRelationship("player " .. (on and "D_NU" or "D_LI") .. " 99")
+    for npc, st in pairs(LC.NPCs or {}) do
+        if IsValid(npc) and st.role ~= "rebel" and st.role ~= "citizen" and npc.AddEntityRelationship then npc:AddEntityRelationship(v, on and D_NU or D_HT, 99) end
+    end
+end
+LC.QuestVortPeaceful = Peaceful
+-- (hurt by one of them, it defends itself against that one; it doesn't go looking for a fight)
+hook.Add("EntityTakeDamage", "LivingCityQuestVort", function(v, dmg)
+    if not v.lcQuestVort then return end
+    local a = dmg:GetAttacker()
+    if IsValid(a) and a:IsNPC() and v.AddEntityRelationship then v:AddEntityRelationship(a, D_HT, 99) end
+end)
 T{
     id = "res_freevort", factions = { resistance = true }, violent = true, squad = 4,
     available = function(ply)
@@ -336,48 +354,79 @@ T{
     build = function(ply)
         local site = Spot(ply, 800, 3000)
         if not site then return nil end
-        local home
-        for _, z in ipairs(LC.ZonesOfKind("rebel")) do if not home or z.pos:DistToSqr(site) < home.pos:DistToSqr(site) then home = z end end
-        if not home then return nil end
+        if #LC.ZonesOfKind("rebel") == 0 then return nil end
         local find = {
             kind = "target", action = "reach", r = 160, text = "Find the shackled vortigaunt at the work site",
             onEnter = function(q, st)
                 local v = ents.Create("npc_vortigaunt")
                 if not IsValid(v) then return false end
+                if not util.IsValidModel or util.IsValidModel("models/vortigaunt_slave.mdl") then v:SetModel("models/vortigaunt_slave.mdl") end
                 v:SetPos(site + Vector(0, 0, 4))
                 v:Spawn()
                 v:Activate()
                 local vst = LC.RegisterNPC and LC.RegisterNPC(v, "vortigaunt")
-                if vst then vst.unmanaged = true end
+                if vst then vst.unmanaged = true vst.shackled = true end
+                v:SetNW2Bool("lc_shackled", true)
+                v.lcQuestVort = true
+                Peaceful(v, true) -- (shackled: it harms nobody, and nobody harms it)
                 Q.Lock(q, v)
                 Q.Freeze(v, 900)
                 q.data.vort = v
                 q.ents[#q.ents + 1] = v -- (gone again if the job fails)
                 st.npc = v
                 -- its keepers
-                for i = 1, 2 do Q.SpawnActor(q, "cop", site + Vector(i == 1 and 120 or -120, 60, 0), 900) end
+                for i = 1, 2 do
+                    local c = Q.SpawnActor(q, "cop", site + Vector(i == 1 and 120 or -120, 60, 0), 900)
+                    if IsValid(c) and c.AddEntityRelationship then c:AddEntityRelationship(v, D_NU, 99) end
+                end
             end,
         }
+        local function Home(text, shackled)
+            local e = { kind = "escort", anyRebel = true, pos = LC.ZonesOfKind("rebel")[1].pos, r = 200, text = text,
+                onEnter = function(q, st) st.npc = q.data.vort if not IsValid(st.npc) then return false end end }
+            if shackled then
+                -- a unit who sees you leading it may stop you and ask (once): then it's a fight
+                e.watch = function(q, st)
+                    local p = q.owner
+                    if q.data.questioned or not IsValid(p) or (st.nextAsk or 0) > CurTime() then return end
+                    st.nextAsk = CurTime() + 4
+                    if LC.SeenBySecurity and LC.SeenBySecurity(p, 700) and math.random(100) <= 12 then
+                        q.data.questioned = true
+                        Narrate(q, "A Civil Protection unit steps into your way: \"Where are you taking that?\" No answer will do. Run, or fight.")
+                        LC.ReportCrime(p, "Theft of Combine property", 180)
+                        if IsValid(q.data.vort) then Peaceful(q.data.vort, false) end
+                    end
+                end
+            end
+            e.onDone = function(q)
+                local v = q.data.vort
+                if IsValid(v) then
+                    q.marked[v] = nil
+                    for i, ent in ipairs(q.ents) do if ent == v then table.remove(q.ents, i) break end end
+                    if q.data.shackled then Narrate(q, "In rebel territory, the shackles come off. It breathes in, slowly, and looks round at its new home.") end
+                    v:SetNW2Bool("lc_shackled", false)
+                    if LC.SettleVort then LC.SettleVort(v) end
+                end
+            end
+            return e
+        end
         local cut = Hold(site, 12, "Cut the shackles (stay beside it)", 140)
         cut.onDone = function(q)
             local p = q.owner
             if IsValid(p) and LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then LC.ReportCrime(p, "Theft of Combine property", 180) end
+            if IsValid(q.data.vort) then q.data.vort:SetNW2Bool("lc_shackled", false) end
             Narrate(q, "The shackles fall. It looks at you, and waits. Lead it home.")
         end
-        local escort = { kind = "escort", pos = home.pos, r = math.max(250, home.r * 0.7), text = "Lead it home to rebel territory",
-            onEnter = function(q, st) st.npc = q.data.vort if not IsValid(st.npc) then return false end end }
-        escort.onDone = function(q)
-            local v = q.data.vort
-            if IsValid(v) then
-                q.marked[v] = nil
-                for i, e in ipairs(q.ents) do if e == v then table.remove(q.ents, i) break end end
-                if LC.SettleVort then LC.SettleVort(v) end
-            end
-        end
+        local choose = Q.Choice("The vortigaunt waits, its collar humming. Cut it loose here, or walk it out as if it were still the Combine's?", {
+            { text = "Cut the shackles here (twelve seconds beside it; its keepers may see), then lead it home.",
+              pick = function(q) Q.InsertStages(q, { cut, Home("Lead it home to rebel territory (any of it)") }) return "next" end },
+            { text = "Lead it off still shackled, like Combine property on the move; cut them in rebel territory (a unit may stop you and ask).",
+              pick = function(q) q.data.shackled = true Q.InsertStages(q, { Home("Walk it to rebel territory (any of it), still shackled", true) }) return "next" end },
+        })
         return {
             title = "Free a vortigaunt " .. Place(site, ply:GetPos()), reward = 70, limit = 1200,
-            desc = "The Combine are working a shackled vortigaunt " .. Place(site, ply:GetPos()) .. ". Free it and bring it home: it will heal our wounded.",
-            stages = { find, cut, escort },
+            desc = "The Combine are working a shackled vortigaunt " .. Place(site, ply:GetPos()) .. ". Free it and bring it to rebel territory: it will heal our wounded.",
+            stages = { find, choose },
         }
     end,
 }

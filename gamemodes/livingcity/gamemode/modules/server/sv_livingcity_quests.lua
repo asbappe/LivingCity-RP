@@ -790,9 +790,11 @@ local function PollEscort(q, st)
         local v = leader.GetVelocity and leader:GetVelocity() or Vector(0, 0, 0)
         local leaderRunning = v:Length2D() > (leader.GetWalkSpeed and leader:GetWalkSpeed() or 110) + 20
         -- a ladder between you (you went up or down it): to its foot, and up (or down) they go
-        if math.abs(lpos.z - npos.z) > 64 and LC.LadderToward then
+        if math.abs(lpos.z - npos.z) > 64 and LC.LadderToward and now > (st.ladderAt or 0) then
             local climbing = leader.GetMoveType and leader:GetMoveType() == (MOVETYPE_LADDER or 9)
             local near, far = LC.LadderToward(npos, lpos, climbing)
+            -- (only towards the end you're at: they used to hop up and down it over and over)
+            if near and far and lpos:DistToSqr(far) > lpos:DistToSqr(near) then near = nil end
             if near then
                 if climbing and Vector(npos.x - near.x, npos.y - near.y, 0):LengthSqr() < 90 * 90 and math.abs(npos.z - near.z) < 72 then
                     -- (they're still on it: wait at its end; up they go once they're off)
@@ -802,6 +804,7 @@ local function PollEscort(q, st)
                 end
                 if Vector(npos.x - near.x, npos.y - near.y, 0):LengthSqr() < 90 * 90 and math.abs(npos.z - near.z) < 72 then
                     npc:SetPos(far + Vector(0, 0, 6))
+                    st.ladderAt = now + 4 -- (and not straight back down it)
                     npc:SetSchedule(SCHED_IDLE_STAND)
                     npc:EmitSound("player/footsteps/ladder" .. math.random(1, 4) .. ".wav", 70)
                     st.goal, st.running = nil, false
@@ -838,7 +841,18 @@ local function PollEscort(q, st)
             if LC.Face then LC.Face(npc, lpos) end
         end
     end
-    if npc:GetPos():DistToSqr(st.pos) < (st.r or 200) ^ 2 then
+    if st.anyRebel and (st.nextHome or 0) < CurTime() then
+        -- (home is any rebel territory: the marker points to the nearest)
+        st.nextHome = CurTime() + 3
+        local best, bd
+        for _, z in ipairs(LC.ZonesOfKind("rebel")) do
+            local d = z.pos:DistToSqr(npc:GetPos())
+            if not bd or d < bd then best, bd = z, d end
+        end
+        if best then st.pos = best.pos end
+    end
+    if st.watch then st.watch(q, st) end
+    if (st.anyRebel and LC.InRebelZone and LC.InRebelZone(npc:GetPos())) or npc:GetPos():DistToSqr(st.pos) < (st.r or 200) ^ 2 then
         if st.vanish then
             q.marked[npc] = nil
             npc:Remove()
