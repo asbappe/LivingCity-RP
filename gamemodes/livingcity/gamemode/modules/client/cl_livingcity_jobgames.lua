@@ -18,9 +18,14 @@ local function ReadCompressed()
     return json and util.JSONToTable(json) or nil
 end
 
+local closeOnEnd = {} -- (windows a game opened: shut when it's over)
+LC_CL.JobGameWindows = closeOnEnd
 net.Receive("lc_jobgame", function()
     local t = ReadCompressed()
     game = (t and t.kind) and t or nil
+    if not game then
+        for _, f in ipairs(closeOnEnd) do if f and f() then end end
+    end
 end)
 function LC_CL.JobGame() return game end
 
@@ -86,6 +91,7 @@ end)
 
 local frame
 local PAPER, PINK, STAMP, BAD = Color(222, 214, 190), Color(40, 36, 30), Color(150, 40, 40), Color(60, 90, 160)
+closeOnEnd[#closeOnEnd + 1] = function() if IsValid(frame) then frame:Remove() end end
 
 local function Decide(choice)
     net.Start("lc_papers_decide")

@@ -706,7 +706,7 @@ local METAL = {
 local RUBBLE = { "models/props_junk/rock001a.mdl", "models/props_debris/wood_chunk03a.mdl" }
 
 ------------------------------------------------------------------------
--- Station Porter
+-- Intake Processor
 ------------------------------------------------------------------------
 
 SHIFTS.porter = {
@@ -801,7 +801,7 @@ SHIFTS.porter = {
             stages = {
                 Goto(platform, "Go to the platform", 220),
                 Count("used_npc", 3, "Check three travelers' tickets (press E on citizens)", Q.IsCitizenNPC),
-                Choice("An old woman has a ticket but no transit permit. She's going to see her son, she says. He's in Nova Prospekt.", {
+                Choice("An old woman has a ticket, but no transit permit. \"I'm going to see my son,\" she says. \"He's in Nova Prospekt.\"", {
                     { text = "Let her board.", check = { "guile", 10 },
                       success = function(q, p)
                           Trait(p, "sympathy", 1)
@@ -1145,7 +1145,7 @@ do
         if spec and GamesOn() then spec = Gamify(spec, 2, "line", LINE_TEXT) end
         return spec
     end
-    -- The loading dock (two crates, a long walk each way) is the Station Porter's work now; the
+    -- The loading dock (two crates, a long walk each way) is the Intake Processor's work now; the
     -- factory floor gets more of the line instead (the owner: "an absolute grind").
     local dock = SHIFTS.factory[2]
     SHIFTS.porter[#SHIFTS.porter + 1] = function(ply, job)

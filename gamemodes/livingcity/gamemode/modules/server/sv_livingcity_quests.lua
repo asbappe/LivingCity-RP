@@ -981,11 +981,64 @@ local function Poll(q, now)
     end
 end
 
+-- A ration break: rations are out mid-shift, so the job waits (its clock stopped, nothing
+-- failing for your being away) till you've had your ration, five minutes are up, or you
+-- go back to it. F1 > Take a ration break (or !rationbreak; !back to carry on).
+function LC.RationBreak(ply, on)
+    if not IsValid(ply) then return false end
+    if on then
+        local q = LC.QuestOf[ply]
+        if not q or q.done then return false, "You've no shift or job on to step away from." end
+        if LC.Event ~= "rations" then return false, "Rations aren't out right now." end
+        ply.lcRationBreak = CurTime() + 300
+        ply:SetNW2Bool("lc_ration_break", true)
+        return true
+    end
+    if not ply.lcRationBreak then return false end
+    ply.lcRationBreak = nil
+    ply:SetNW2Bool("lc_ration_break", false)
+    return true
+end
+local function OnBreak(q)
+    local p = q.owner
+    if not IsValid(p) or not p.lcRationBreak then return false end
+    if CurTime() > p.lcRationBreak then
+        LC.RationBreak(p, false)
+        p:ChatPrint("[Work] Break's over. Back to it.")
+        return false
+    end
+    return true
+end
+hook.Add("LivingCityRationCollected", "LivingCityRationBreak", function(ply)
+    if ply.lcRationBreak then
+        LC.RationBreak(ply, false)
+        ply:ChatPrint("[Work] Ration in hand. Back to the job: it's waiting where you left it.")
+    end
+end)
+hook.Add("LivingCityEventStarted", "LivingCityRationBreak", function(name)
+    if name ~= "rations" then return end
+    for _, p in ipairs(player.GetAll()) do
+        local q = LC.QuestOf[p]
+        if q and not q.done and LC.Notice then
+            LC.Notice(p, "info", "Rations are out", "Your shift can wait: F1 > Take a ration break (it pauses the job till you've had your ration).", 9)
+        end
+    end
+end)
+LC.SlashCommands = LC.SlashCommands or {}
+LC.SlashCommands.rationbreak = function(ply)
+    local ok, why = LC.RationBreak(ply, true)
+    ply:ChatPrint(ok and "[Work] You step away for your ration. The job waits (five minutes at most)." or ("[Work] " .. (why or "You can't now.")))
+end
+LC.SlashCommands.back = function(ply)
+    ply:ChatPrint(LC.RationBreak(ply, false) and "[Work] Back to it." or "[Work] You're not on a break.")
+end
+
 timer.Create("LivingCityQuests", 0.5, 0, function()
     local now = CurTime()
     local tick = math.floor(now * 2) % 2 == 0
     for q in pairs(LC.ActiveQuests) do
-        local ok, err = pcall(Poll, q, now)
+        local ok, err = true, nil
+        if OnBreak(q) then q.expires = q.expires + 0.5 else ok, err = pcall(Poll, q, now) end
         if not ok then
             LC.Error("quest " .. tostring(q.tmpl and q.tmpl.id), err)
             Finish(q, false, "something went wrong")

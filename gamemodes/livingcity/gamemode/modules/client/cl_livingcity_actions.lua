@@ -203,6 +203,10 @@ function LC_CL.OpenActions()
         Add(you, "Talk to the interrogator", function() net.Start("lc_interrogate_reply") net.WriteBool(true) net.SendToServer() end, "icon16/comment.png")
     end
     if me:GetNW2Bool("lc_hauling", false) then Add(you, "Let go of the body", function() Send("haul") end) end
+    if GetGlobal2String("lc_event", "") == "rations" or me:GetNW2Bool("lc_ration_break", false) then
+        if me:GetNW2Bool("lc_ration_break", false) then Add(you, "Back to work (end the ration break)", function() Send("back") end, "icon16/arrow_redo.png")
+        else Add(you, "Take a ration break (the job waits till you've had your ration)", function() Send("rationbreak") end, "icon16/cup.png") end
+    end
     if me:GetNW2String("lcj_job", "") == "mortuary" then Add(you, "Take a body cart, or leave it (by the incinerator or the morgue)", function() Send("bodycart") end, "icon16/lorry.png") end
     if IsValid(me:GetNW2Entity("lc_scanner")) then Add(you, "Disconnect from the scanner", function() Send("unlink") end) end
     local poses = you:AddSubMenu("Pose")

@@ -13,7 +13,7 @@
       Kitchen           bring crates in from the loading dock, cook
       Factory           work the line, carry parts from the dock
       Courier           carry the mail from the post office to people's doors
-      Station Porter    carry luggage from the platform to the housing blocks
+      Intake Processor    carry luggage from the platform to the housing blocks
       Records Clerk     file at the records office, take papers to the checkpoint
       Laundry           wash, and take pressed uniforms to the checkpoint
       Reclamation       clear rubble, carry the scrap to the reclamation point
@@ -796,7 +796,7 @@ Run("courier", "mail", "delivering the mail", "models/props_lab/clipboard.mdl",
     { loading = "collecting the mail", dropAnim = KNOCK, sound = { "physics/wood/wood_box_impact_soft1.wav" }, weight = 3,
       done = function(n) Sound(n, { "physics/wood/wood_crate_impact_soft2.wav", "physics/wood/wood_crate_impact_soft3.wav" }, 60) end })
 
--- Station Porter: luggage, platform to the blocks
+-- Intake Processor: luggage, platform to the blocks
 Run("porter", "luggage", "carrying someone's luggage", "models/props_c17/suitcase001a.mdl", Workplace("porter"),
     function(npc) return Residence(npc:GetPos()) end, { loading = "collecting luggage from the platform", weight = 3 })
 Shift("porter", "platform", "on the platform", { anim = KNOCK, every = 9, min = 25, max = 50 })

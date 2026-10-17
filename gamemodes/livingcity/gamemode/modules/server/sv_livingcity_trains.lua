@@ -2,14 +2,14 @@
     Living City: the trains
 
     With a train platform on the map (an editor point, "Point: train platform";
-    or failing that, the Station Porter's workplace), a train comes in every
+    or failing that, the Intake Processor's workplace), a train comes in every
     lc_train_minutes (12, give or take). A horn at the platform, a notice
     for everyone, and a few new arrivals step off, suitcase in hand, and walk
     to their housing blocks. For a minute and a half after, anyone leaving the
     city (their day is done) walks to the platform with a suitcase and
     boards, instead of going out through a doorway. Then the train pulls out.
 
-    Station Porters are told when a train is in (their "New arrivals" shift
+    Intake Processors are told when a train is in (their "New arrivals" shift
     is the time to work the platform). lc_trains 0 turns them off;
     lc_train (admin) brings one in now.
 ]]

@@ -6686,7 +6686,7 @@ local okA, arrivals = LC.TrainArrive(true)
 LC.SpotInZone = spotInZone
 arrivals = arrivals or {}
 ok(okA and #arrivals >= 2, "a train comes in, and people get off", tostring(okA) .. " " .. #arrivals .. " plats " .. #LC.TrainPlatforms() .. " npcs " .. table.Count(LC.NPCs))
-ok(has(porter.chat, "train is in"), "Station Porters are told")
+ok(has(porter.chat, "train is in"), "Intake Processors are told")
 local a1 = arrivals[1]
 local s1 = a1 and LC.NPCs[a1] or {}
 ok(s1 and s1.npcWork and s1.npcWork.id == "arrival" and IsValid(s1.carry), "each with a suitcase, going home")
@@ -12413,6 +12413,31 @@ section("Playtest fixes, 17 October (evening)")
     ok(face and face:Distance(belt:GetPos()) < 200, "a worker at a point beside the conveyor faces the belt", face and tostring(face))
     ok(LC.ConveyorFace(Vector(-110000, 195000, 0)) == nil, "(and one with no belt near works as before)")
     belt:Remove()
+    -- the station: Intake Processor; travelers walk off out of sight, not vanish in front of you
+    ok(LCJ.ById.porter and LCJ.ById.porter.name == "Intake Processor", "the Station Porter is the Intake Processor now (same job, same shifts)")
+    local tr = ents.Create("npc_citizen") tr:Spawn() tr:SetPos(Vector(-104000, 200000, 0))
+    LC.PapersWalking[tr] = { to = Vector(-104000, 200100, 0), t0 = CurTime() - 4, max = 30 }
+    local seenWas = LC.IsSeen
+    LC.IsSeen = function() return true end
+    _run(2)
+    ok(IsValid(tr), "an approved traveler walks off, and isn't removed while you can still see them")
+    LC.IsSeen = function() return false end
+    _run(2)
+    ok(not IsValid(tr), "and is gone once out of sight")
+    LC.IsSeen = seenWas
+    -- a ration break: the shift waits
+    local worker = newPlayer("BreakTaker", "citizen")
+    _run(1)
+    local wq = { owner = worker, expires = CurTime() + 100, stages = { { kind = "count", event = "nothing", need = 1 } }, stage = 1, members = { worker }, ents = {}, marked = {}, data = {} }
+    LC.QuestOf[worker] = wq
+    local evWas = LC.Event
+    LC.Event = "rations"
+    ok(LC.RationBreak(worker, true) and worker:GetNW2Bool("lc_ration_break", false), "rations out mid-shift: a ration break")
+    LC.Event = evWas
+    hook.Run("LivingCityRationCollected", worker)
+    ok(not worker:GetNW2Bool("lc_ration_break", false), "and once the ration's in hand, back to work")
+    LC.QuestOf[worker] = nil
+    worker.valid = false
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")

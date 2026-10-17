@@ -17,7 +17,7 @@
           It speeds up. One part rattles: R while you hold it pockets what's
           inside (risky, if a unit sees).
 
-      Papers check (Station Porter)   Travelers step up to you one at a time.
+      Papers check (Intake Processor)   Travelers step up to you one at a time.
           E on one opens their papers (a photo, name, district, expiry,
           stamps) beside today's rules. Approve, deny, or call a unit.
           Mistakes earn a citation. Forgeries carry a seal that's not quite
@@ -119,6 +119,8 @@ timer.Create("LivingCityJobGames", 0.1, 0, function()
     for ply, g in pairs(LC.JobGames) do
         if not IsValid(ply) or not ply:Alive() or (g.q and LC.QuestOf and LC.QuestOf[ply] ~= g.q) then
             LC.JobGameEnd(ply, "quit")
+        elseif ply.lcRationBreak then
+            -- (on a ration break: the game waits too)
         else
             local ok, err = pcall(GAMES[g.kind].tick, g, now)
             if not ok then
@@ -539,7 +541,7 @@ hook.Add("KeyPress", "LivingCityJobLine", function(ply, key)
 end)
 
 ------------------------------------------------------------------------
--- Papers check (Station Porter)
+-- Papers check (Intake Processor)
 ------------------------------------------------------------------------
 
 local MALE = { "models/Humans/Group01/male_01.mdl", "models/Humans/Group01/male_02.mdl", "models/Humans/Group01/male_03.mdl",
@@ -613,13 +615,29 @@ local function MakePapers(g, npc)
     return p, wrong, forged
 end
 
+-- Where travelers come from and go to: the platform (or an arrival point), else somewhere
+-- out of your sight a little way off; failing both, straight in front of you, at a distance.
+local function TravelerSpot(g, away)
+    local post = g.post
+    for _, kind in ipairs(away and { "release", "spawn", "platform" } or { "platform", "spawn", "release" }) do
+        for _, p in ipairs(LC.PointsOfKind and LC.PointsOfKind(kind) or {}) do
+            local d = p.pos:DistToSqr(post)
+            if d > 300 * 300 and d < 3000 * 3000 then return p.pos end
+        end
+    end
+    local hide = LC.QB and LC.QB.HideSpots and LC.QB.HideSpots(post, 1, 900, true)
+    if hide and hide[1] and hide[1]:DistToSqr(post) > 250 * 250 then return hide[1] end
+    local p = post + g.facing * (away and -700 or 500)
+    return LC.GroundAt and LC.GroundAt(p) or p
+end
+
 local function NextTraveler(g)
     g.current = nil
     if g.done >= TRAVELERS then return end
     local post = g.post
     local fwd = g.facing
-    local from = post + fwd * 500
-    if LC.GroundAt then from = LC.GroundAt(from) or from end
+    -- they walk up from the platform (or out of sight), not appear in front of you
+    local from = TravelerSpot(g, false)
     if not (LC.Spawners and LC.Spawners.citizen) then g.done = TRAVELERS return end
     local npc, st = LC.Spawners.citizen(from)
     if not IsValid(npc) or not st then g.done = TRAVELERS return end
@@ -693,11 +711,34 @@ hook.Add("KeyPress", "LivingCityJobPapers", function(ply, key)
     if tr and tr.Entity == g.current.npc and ply:GetPos():DistToSqr(g.current.npc:GetPos()) < 200 * 200 then ShowPapers(ply, g) end
 end)
 
+-- Off they go: walking away (to the platform or the exits), and gone once nobody can see
+-- them (or after a while regardless), not standing there or vanishing in front of you.
+local walking = {}
 local function Walk(npc, to, secs)
     if not IsValid(npc) then return end
     if npc.SetLastPosition then npc:SetLastPosition(to) npc:SetSchedule(SCHED_FORCED_GO) end
-    SafeRemoveEntityDelayed(npc, secs or 8)
+    walking[npc] = { to = to, t0 = CurTime(), max = math.max(20, (secs or 8) * 3) }
 end
+LC.PapersWalking = walking
+timer.Create("LivingCityTravelersOff", 1, 0, function()
+    local now = CurTime()
+    for npc, w in pairs(walking) do
+        if not IsValid(npc) then
+            walking[npc] = nil
+        else
+            local gone = now - w.t0 > w.max
+            if not gone and now - w.t0 > 3 then
+                local away = npc:GetPos():DistToSqr(w.to) < 120 * 120
+                local seen = LC.IsSeen and LC.IsSeen(npc:GetPos() + Vector(0, 0, 40))
+                gone = (away or now - w.t0 > 6) and not seen
+            end
+            if gone then walking[npc] = nil npc:Remove()
+            elseif npc.IsCurrentSchedule and not npc:IsCurrentSchedule(SCHED_FORCED_GO) and npc.SetSchedule then
+                npc:SetLastPosition(w.to) npc:SetSchedule(SCHED_FORCED_GO) -- (keep walking)
+            end
+        end
+    end
+end)
 
 -- The call: "approve", "deny" or "unit". True when it was right.
 function LC.PapersDecide(ply, choice)
@@ -736,11 +777,13 @@ function LC.PapersDecide(ply, choice)
     elseif note then
         ply:ChatPrint("[Station] " .. note)
     end
-    if choice == "approve" then Walk(c.npc, c.stand - g.facing * 600, 9)
+    if choice == "approve" then Walk(c.npc, TravelerSpot(g, true), 9)
     elseif choice == "unit" then
         Walk(c.npc, c.from, 5)
         if IsValid(c.npc) then c.npc:EmitSound("vo/npc/male01/no02.wav", 70) end
     else Walk(c.npc, c.from, 9) end
+    -- (theirs to walk off now, not the shift's to remove at the end)
+    for i = #g.props, 1, -1 do if g.props[i] == c.npc then table.remove(g.props, i) end end
     c.npc = nil -- (it walks off on its own now)
     g.nextHud = 0
     NextTraveler(g)

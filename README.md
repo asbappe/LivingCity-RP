@@ -324,7 +324,7 @@ Every citizen and Civil Protection unit is a **named person with a profile that 
 
 ### Trains
 
-With a **train platform** on the map (an editor point; failing that, the Station Porter's workplace), a train comes in every `lc_train_minutes` (12, give or take a quarter): a horn at the platform, a notice for everyone ("The train from City 14 has arrived..."), and two to four **new arrivals** step off, suitcase in hand (hanging upright from the hand, swinging as they walk), and walk to their housing blocks before getting on with life in the city. Station Porters are told a train is in. For a minute and a half after, **anyone leaving the city** walks to the platform with a suitcase and boards, instead of going out through a doorway; then the train pulls out. Not during a curfew or lockdown. `lc_trains 0` turns them off; `lc_train` (admin) brings one in now.
+With a **train platform** on the map (an editor point; failing that, the Intake Processor's workplace), a train comes in every `lc_train_minutes` (12, give or take a quarter): a horn at the platform, a notice for everyone ("The train from City 14 has arrived..."), and two to four **new arrivals** step off, suitcase in hand (hanging upright from the hand, swinging as they walk), and walk to their housing blocks before getting on with life in the city. Intake Processors are told a train is in. For a minute and a half after, **anyone leaving the city** walks to the platform with a suitcase and boards, instead of going out through a doorway; then the train pulls out. Not during a curfew or lockdown. `lc_trains 0` turns them off; `lc_train` (admin) brings one in now.
 
 ### The power grid, and forcefields
 
@@ -450,7 +450,7 @@ Admins can start any chain directly: `lcq_startchain <ia|inside|missing|candidat
 | 4 | Factory Worker | Assembly quotas, the loading dock, a foreman who skims |
 | 5 | Courier | Mail rounds, sealed envelopes, parcel runs |
 | 6 | Maintenance Technician | Streetlights (or fuse boxes on a map with none), faulty terminals |
-| 7 | Station Porter | New arrivals to walk home, luggage, ticket checks |
+| 7 | Intake Processor | New arrivals to walk home, luggage, ticket checks |
 | 8 | Records Clerk | Filing (*a game; open while `lc_jobgames` is on*) |
 | 9 | Uniform Laundry | Sorting (*a game; open while `lc_jobgames` is on*) |
 | 10 | Mortician | Hauling the dead to the incinerator, clearing the streets after trouble, searching the dead before the fire, bagging dead headcrabs |
@@ -463,7 +463,7 @@ Admins can start any chain directly: `lcq_startchain <ia|inside|missing|candidat
 
 - **Street sweep** (Sanitation): a wheeled cart waits at the depot. E grabs its handle and you push it; E again lets go. Rubbish lies about as real things (cans, bottles, scrap metal, chemical jugs, newspaper), outlined as you get near: pick a piece up (E) and throw it in (left click). A credit a piece, another for a long throw, a bonus for a quick round. Some pieces hide something (tokens, a ration, a blank form, ammunition, a note). Push the full cart back to the depot.
 - **On the line** (Factory): a conveyor carries parts past you. The defective ones are rust-red and spark: grab them and throw them in the scrap bin before they reach the end, and let the good ones through. Twenty parts, faster as it goes; pay for every right call, docked for every wrong one, a bonus for a clean shift. One part rattles: R while you hold it slips what's inside into your pocket (a unit who sees calls it theft). Place the factory's conveyor with the editor ("Fixture: factory conveyor"); without one, a line is set up where you report for the shift.
-- **Papers check** (Station Porter): travelers step up to you one at a time. E on one opens their papers beside today's rules: their photo (look at them: is it them?), name, district, expiry, stamps, and the seal (it must read OCS). Approve, deny, or call a unit. Mistakes earn a citation and are docked; a forgery handed to a unit pays well, and one waved through is between you and the Resistance (unless there's an audit).
+- **Papers check** (Intake Processor): travelers step up to you one at a time. E on one opens their papers beside today's rules: their photo (look at them: is it them?), name, district, expiry, stamps, and the seal (it must read OCS). Approve, deny, or call a unit. Mistakes earn a citation and are docked; a forgery handed to a unit pays well, and one waved through is between you and the Resistance (unless there's an audit).
 
 - **Rewiring** (Maintenance): every streetlight, fuse box and faulty terminal opens a panel of coloured wires. Click a wire, then the terminal of the same colour, before the time runs out. A wrong one is a shock (and costs you a few seconds); too slow and the panel trips and starts again, shuffled, for less pay. During a blackout it pays double.
 - **Triage** (Clinic Medic): three or four patients come in at once, bleeding out at different rates (a bad bleed, a stab wound, a stunstick beating, burns, a broken arm). A bar over each head shows who's worst; the medkit (primary fire) brings them up, and the wound takes them back down. Get them on their feet before they're gone. Paid for every one who walks out, docked for every one lost, and a bonus when nobody is. The beaten man asks you not to write down what did it.
@@ -517,7 +517,7 @@ The city's own people have these jobs too, and when no player is doing the work,
 | Ration Production | Carry crates of sealed packs in from the loading dock; work the sealing line |
 | Factory | Carry parts from the dock and between stations, work the line |
 | Courier | Collect the mail at the post office and carry it to people's doors |
-| Station Porter | Carry luggage from the platform to the housing blocks |
+| Intake Processor | Carry luggage from the platform to the housing blocks |
 | Records Clerk | File at the records office (at a desk, if there's a chair near it), take papers to the checkpoint |
 | Laundry | Run the machines, take pressed uniforms to the checkpoint |
 | Reclamation | Clear rubble piles, carry the scrap to the reclamation point |

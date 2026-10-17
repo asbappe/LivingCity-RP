@@ -27,7 +27,7 @@ local INK, ACCENT = Color(232, 226, 210), Color(230, 180, 90)
 local GUIDE = {
     { "Keys", {
         "F1  the quick menu: nine things on the number keys, for who you are and what's in front of you (0 closes; 9 is everything else)",
-        "Union work you do with your hands: Sanitation's street sweep (push the cart, throw the rubbish in), the Factory line (bin the rust-red parts), the Station Porter's papers check (approve, deny, or call a Civil Protection unit).",
+        "Union work you do with your hands: Sanitation's street sweep (push the cart, throw the rubbish in), the Factory line (bin the rust-red parts), the Intake Processor's papers check (approve, deny, or call a Civil Protection unit).",
         "More of it: Maintenance rewires panels against the clock (a wrong wire bites), Clinic Medics triage patients bleeding out, the Reclamation Crew breaks up rubble with a crowbar.",
         "And more: Couriers run parcels against the clock past Civil Protection units who want to search them, the Mortuary searches the dead before the fire (log it, keep it, or keep it for the family; mind the overseer), the Laundry sorts uniforms by division, Records Clerks file forms and catch mismatches, Radio Repair finds each set's station and turns its trimmer screws by ear until it's clean (and sometimes finds Freq 7; record your own broadcasts in sound/livingcity/radio/).",
         "Some of the city's rarer moments have flashing lights and strobes: you're warned first, and lc_ending_calm 1 in the console leaves the flashing out, just for you.",

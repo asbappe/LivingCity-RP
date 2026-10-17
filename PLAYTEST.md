@@ -16,7 +16,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **Factory:** the conveyor line (bin the rust-red parts, pocket the rattling one).
   Notes:
-- [ ] **Station Porter:** the papers check.
+- [ ] **Intake Processor:** the papers check.
   Notes:
 - [ ] **Maintenance:** rewiring panels.
   Notes:
@@ -142,7 +142,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Arrested:** walked to the cells (a unit pausing on the way doesn't end the walk; only a long hold-up brings the van).
 - [ ] **Sinks:** E on the map's sinks works again (and not through walls).
 - [ ] **Ration line:** during a ration event people queue and move up to the dispenser. If not: copy the debug report and look at the "line" line (it says if the dispenser has no power, or the line was placed from the back).
-- [ ] **Factory line:** every red part can be picked up with E; no part rolls off the belt. The loading dock run is the Station Porter's now; the factory gets "Overtime on the line".
+- [ ] **Factory line:** every red part can be picked up with E; no part rolls off the belt. The loading dock run is the Intake Processor's now; the factory gets "Overtime on the line".
 - [ ] **Carrying boxes:** citizens' hands stay on the box as they walk.
 - [ ] **The bed fixture** is the bed with a mattress (Counter-Strike: Source's; HL2's if the server hasn't CS:S. Players without CS:S see an ERROR: tell me if that happens and I'll pick another). **The toilet** flushes after the splash. **Your fridge** at home opens your stash. The stash button no longer says searches don't reach it.
 - [ ] **"Civil Protection unit"** everywhere players read "unit" (say if one reads oddly).
