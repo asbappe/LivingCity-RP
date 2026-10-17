@@ -11186,7 +11186,7 @@ ok(LC.EndingOfSong("bus2.mp3") == "bus" and LC.EndingOfSong("bloom.ogg") == "blo
 ok(E and E.mode == "lurk" and LC.EndingDark and LC.LightStyle == "a", "the lights go out, all of them")
 ok(a:GetPos():Distance(E.lz) < 300 and b:GetPos():Distance(E.lz) < 300, "and everyone is at the landing zone")
 local noRebels = true
-for _, c in ipairs(E.folk) do if string.find(string.lower(c:GetModel() or ""), "group03", 1, true) then noRebels = false end end
+for _, c in ipairs(E.folk) do if string.find(string.lower(c:GetModel() or ""), "group03/", 1, true) then noRebels = false end end
 ok(#E.folk >= 12 and noRebels, "the city's people stand in the ring too (topped up with citizens, never the Resistance)", #E.folk)
 local unit = ents.Create("npc_metropolice") unit:SetPos(E.lz + Vector(260, 0, 0)) unit:Spawn() unit.lcRing = true
 E.combine[#E.combine + 1] = unit
