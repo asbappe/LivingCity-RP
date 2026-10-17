@@ -21,7 +21,8 @@ local IDLES = { "idle_subtle", "LineIdle01", "idle01", "Idle01", "idle_all_01", 
 
 function ENT:Initialize()
     if CLIENT then return end
-    local m = MODELS[1]
+    local m = self.lcModel or MODELS[1] -- (which scientist: sv_livingcity_lab.lua picks one for each lab)
+    if util.IsValidModel and not util.IsValidModel(m) then m = MODELS[1] end
     if util.IsValidModel and not util.IsValidModel(m) then m = MODELS[2] end
     self:SetModel(m)
     self:SetSolid(SOLID_BBOX)

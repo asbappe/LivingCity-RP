@@ -3,7 +3,8 @@
 
     A lab ("Fixture: Resistance lab" in the editor; entities/lc_workbench.lua)
     is one of Dr. Kleiner's own lab workstations with a scientist standing
-    beside it (entities/lc_scientist.lua): the Resistance's own. He decodes
+    beside it (entities/lc_scientist.lua): the Resistance's own, Dr. Kleiner,
+    Eli Vance or Dr. Magnusson, a different one at each lab. He decodes
     Combine data chips (use one from your pockets beside him), and makes
     what a cell needs and can't buy in the open (LCS.Lab, the shared shop
     config): guns, ammunition, armour, jammers, bypass charges, smoke bombs,
@@ -53,6 +54,28 @@ local CLUTTER = {
     { "models/props_lab/harddrive02.mdl", 0.55, 0.48, 90 },
 }
 
+-- Who runs each lab: Dr. Kleiner, Eli Vance or Dr. Magnusson, a different one at each
+-- (the first that isn't at another lab already; any of them again past three labs).
+LC.SCIENTISTS = {
+    { id = "kleiner", name = "Dr. Kleiner", model = "models/kleiner.mdl" },
+    { id = "eli", name = "Eli Vance", model = "models/eli.mdl" },
+    { id = "magnusson", name = "Dr. Magnusson", model = "models/magnusson.mdl" },
+}
+function LC.PickScientist(bench)
+    local taken = {}
+    for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_scientist") or ents.FindByClass("lc_scientist")) do
+        if IsValid(e) and e.lcWho and e.lcLab ~= bench then taken[e.lcWho] = true end
+    end
+    local free = {}
+    for _, s in ipairs(LC.SCIENTISTS) do
+        if not taken[s.id] and (not util.IsValidModel or util.IsValidModel(s.model)) then free[#free + 1] = s end
+    end
+    if #free == 0 then
+        for _, s in ipairs(LC.SCIENTISTS) do if not util.IsValidModel or util.IsValidModel(s.model) then free[#free + 1] = s end end
+    end
+    return free[math.random(math.max(1, #free))] or LC.SCIENTISTS[1]
+end
+
 -- Set a lab up: the clutter on the bench, and the scientist beside it. (The
 -- bench calls this once it's in place; calling it again changes nothing.)
 function LC.SetupLab(bench)
@@ -82,8 +105,12 @@ function LC.SetupLab(bench)
     if not IsValid(bench.lcScientist) then
         local s = ents.Create("lc_scientist")
         if IsValid(s) then
+            local who = LC.PickScientist(bench)
+            s.lcModel, s.lcWho = who.model, who.id
             LC.PlaceScientist(bench, s)
             s:Spawn()
+            s:SetNW2String("lc_pname", who.name)
+            s:SetNW2String("lc_pjob", "The Resistance's scientist: decodes chips, makes what a cell needs")
             s.lcLab = bench
             bench.lcScientist = s
         end

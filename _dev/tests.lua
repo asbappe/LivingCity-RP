@@ -12314,6 +12314,18 @@ section("Playtest fixes, 17 October (evening)")
     LC.CampForget()
     LC.RemoveZone(zone)
     mover.valid = false
+    -- each lab its own scientist: Kleiner, Eli or Magnusson
+    local who = {}
+    local benches = {}
+    for i = 1, 3 do
+        local b = ents.Create("lc_workbench") b:SetPos(Vector(-99000 + i * 300, 165000, 0)) b:Spawn()
+        benches[i] = b
+        local sc = LC.SetupLab(b)
+        if IsValid(sc) and sc.lcWho then who[sc.lcWho] = (who[sc.lcWho] or 0) + 1 end
+        ok(IsValid(sc) and sc:GetNW2String("lc_pname", "") ~= "", "(the scientist has a name tag)", IsValid(sc) and sc:GetNW2String("lc_pname", ""))
+    end
+    ok(who.kleiner == 1 and who.eli == 1 and who.magnusson == 1, "three labs: Dr. Kleiner, Eli Vance and Dr. Magnusson, one each (no Kleiner clones)")
+    for _, b in ipairs(benches) do if IsValid(b.lcScientist) then b.lcScientist:Remove() end b:Remove() end
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")
