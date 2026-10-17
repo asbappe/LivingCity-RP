@@ -6,10 +6,11 @@
           you're seen at half the distance, creeping slowly less again, and in the
           dark less still (how lit you are is measured here, on your own screen,
           and sent to the server once a second);
-        - each Civil Protection unit and soldier near you has his sight painted
-          on the ground in front of him, as far as he'd see you right now: red if
-          you're in it, faint orange if not. Crouched, a unit doesn't see you
-          behind his back.
+        - each Civil Protection unit and soldier near you has his sight shown in
+          front of him, as far as he'd see you right now: on the ground (up
+          slopes and steps too) with see-through walls about waist high, so you
+          can see it from below as well; red if you're in it, faint orange if
+          not. Crouched, a unit doesn't see you behind his back.
       lc_stealth_cones 0 turns the painting off (your own setting).
 ]]
 
@@ -75,24 +76,59 @@ local function Inside(e, pos, r)
 end
 LC_CL.StealthInside = Inside
 
--- his sight on the ground: a fan of thin triangles
+-- his sight, in 3D: a fan that follows the ground (up a slope, down steps), with walls
+-- round it about waist high and a lid, so you can see it from below or from far off,
+-- not just from above
+local HEIGHT = 48
+local cache = {} -- [unit] = { at, r, pts = { ground points } }
+local function Ground(p)
+    if not util or not util.TraceLine then return p end
+    local tr = util.TraceLine({ start = p + Vector(0, 0, 90), endpos = p - Vector(0, 0, 200), mask = MASK_SOLID_BRUSHONLY })
+    if tr and tr.Hit and tr.HitPos then return tr.HitPos + Vector(0, 0, 3) end
+    return p
+end
+local function Quad(a, b, c, d, col)
+    render.DrawQuad(a, b, c, d, col)
+    render.DrawQuad(d, c, b, a, col) -- (and from the other side)
+end
+local function Fan(e, r, now)
+    local c = cache[e]
+    if c and now - c.at < 0.25 and math.abs(c.r - r) < 8 then return c end
+    local o = e:GetPos() + Vector(0, 0, 3)
+    local yaw = e:GetAngles().y
+    local segs = 12
+    local pts = {}
+    for i = 0, segs do
+        local a = math.rad(yaw - HALF + (2 * HALF) * i / segs)
+        pts[#pts + 1] = Ground(o + Vector(math.cos(a), math.sin(a), 0) * r)
+    end
+    c = { at = now, r = r, o = o, pts = pts }
+    cache[e] = c
+    return c
+end
+LC_CL.StealthFan = Fan
 hook.Add("PostDrawTranslucentRenderables", "LivingCityStealthCones", function(_, sky)
     if sky or not cvCones:GetBool() or not On() then return end
     local r = REACH * LC_CL.StealthFactor()
     local me = LocalPlayer():GetPos()
+    local now = CurTime()
     if render.SetColorMaterial then render.SetColorMaterial() end
+    local up = Vector(0, 0, HEIGHT)
     for _, e in ipairs(Units()) do
-        local o = e:GetPos() + Vector(0, 0, 3)
-        local yaw = e:GetAngles().y
-        local col = Inside(e, me, r) and Color(255, 40, 40, 45) or Color(255, 150, 40, 18)
-        local segs = 12
-        local prev
-        for i = 0, segs do
-            local a = math.rad(yaw - HALF + (2 * HALF) * i / segs)
-            local p = o + Vector(math.cos(a), math.sin(a), 0) * r
-            if prev then render.DrawQuad(o, prev, p, o, col) end
-            prev = p
+        local inside = Inside(e, me, r)
+        local floor = inside and Color(255, 40, 40, 45) or Color(255, 150, 40, 18)
+        local wall = inside and Color(255, 40, 40, 28) or Color(255, 150, 40, 12)
+        local f = Fan(e, r, now)
+        local o, pts = f.o, f.pts
+        for i = 2, #pts do
+            local a, b = pts[i - 1], pts[i]
+            Quad(o, a, b, o, floor)                 -- the ground
+            Quad(o + up, a + up, b + up, o + up, wall) -- the lid
+            Quad(a, b, b + up, a + up, wall)        -- the far edge
         end
+        -- the two sides
+        Quad(o, pts[1], pts[1] + up, o + up, wall)
+        Quad(o, pts[#pts], pts[#pts] + up, o + up, wall)
     end
 end)
 

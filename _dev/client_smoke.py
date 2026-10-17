@@ -1568,6 +1568,7 @@ do
     local q0 = _calls["render.DrawQuad"] or 0
     hook.t.PostDrawTranslucentRenderables.LivingCityStealthCones(false, false)
     if (_calls["render.DrawQuad"] or 0) <= q0 then return "sneaking: no sight painted on the ground" end
+    if (_calls["render.DrawQuad"] or 0) - q0 < 12 * 6 then return "sneaking: the sight isn't 3D (ground, lid and walls)" end
     hook.t.HUDPaint.LivingCityStealthMeter()
     unit.GetForward = function() return Vector(-1, 0, 0) end
     if LC_CL.StealthInside(unit, _me:GetPos(), 900 * LC_CL.StealthFactor()) then return "sneaking: seen from behind his back" end
