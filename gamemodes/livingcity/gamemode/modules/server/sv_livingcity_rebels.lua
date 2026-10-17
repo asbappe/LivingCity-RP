@@ -535,13 +535,65 @@ local function SquadThreat(npc, st, leader, now)
     return best
 end
 
+-- Acting casual: guns put away, plain clothes on, walking like anyone else. Units take
+-- them for citizens (they don't open fire on what they don't see). Shot at, or the leader
+-- in a fight: guns out, all of them.
+function LC.SquadCasual(npc, st, on)
+    if not IsValid(npc) or not st then return end
+    if on and not st.casual then
+        st.casual = true
+        local m = npc:GetModel() or ""
+        if string.find(m, "group03", 1, true) then
+            st.preCasualModel = m
+            local plain = string.gsub(string.gsub(m, "group03m", "group01"), "group03", "group01")
+            if not util.IsValidModel or util.IsValidModel(plain) then npc:SetModel(plain) end
+        end
+        local w = npc.GetActiveWeapon and npc:GetActiveWeapon()
+        if IsValid(w) and w.SetNoDraw then w:SetNoDraw(true) end
+        npc:SetNW2Bool("lc_casual", true)
+        if st.foe then DropFoe(npc, st, CurTime()) end
+    elseif not on and st.casual then
+        st.casual = nil
+        if st.preCasualModel then npc:SetModel(st.preCasualModel) st.preCasualModel = nil end
+        local w = npc.GetActiveWeapon and npc:GetActiveWeapon()
+        if IsValid(w) and w.SetNoDraw then w:SetNoDraw(false) end
+        npc:SetNW2Bool("lc_casual", false)
+    end
+end
+-- The whole squad of a leader, one way or the other.
+function LC.SquadCasualAll(leader, on)
+    local n = 0
+    for _, f in ipairs(LC.FollowersOf and LC.FollowersOf(leader) or {}) do
+        local fst = LC.NPCs[f]
+        if fst and (fst.casual or false) ~= on then LC.SquadCasual(f, fst, on) n = n + 1 end
+    end
+    return n
+end
+
 local FOLLOW_ANGLES = { 0, 38, -38 }
 local function FollowThink(npc, st, now)
     local leader = st.follow
     local pos = npc:GetPos()
-    if not IsValid(leader) or not leader:Alive() or not IsResistance(leader) or leader:GetPos():DistToSqr(pos) > 4000 * 4000 then
+    if not IsValid(leader) or not leader:Alive() or not IsResistance(leader) or (not st.meetAt and leader:GetPos():DistToSqr(pos) > 4000 * 4000) then
         LC.DismissFollower(npc, st, true)
         return false -- (and on with the rest of the think: home)
+    end
+    -- sent ahead to meet the leader at the job's destination: there, loitering, till the leader turns up
+    if st.meetAt then
+        st.nextThink = now + 0.5
+        if leader:GetPos():DistToSqr(st.meetAt) < 350 * 350 and leader:GetPos():DistToSqr(pos) < 600 * 600 then
+            st.meetAt = nil
+            leader:ChatPrint("[Resistance] " .. npc:GetNW2String("lc_pname", "A fighter") .. " falls in with you.")
+        elseif pos:DistToSqr(st.meetAt) > 140 * 140 then
+            HeadFor(npc, st, st.meetAt, false)
+            LC.SetState(npc, st, "moving")
+            return true
+        else
+            if npc:IsCurrentSchedule(SCHED_FORCED_GO) or npc:IsCurrentSchedule(SCHED_FORCED_GO_RUN) then npc:SetSchedule(SCHED_IDLE_STAND) end
+            st.goingTo = nil
+            LC.SetState(npc, st, "idle")
+            return true
+        end
     end
     st.nextThink = now + 0.2 -- quicker than the usual: they keep up
     if npc.CapabilitiesAdd and CAP_MOVE_SHOOT and not st.moveShoot then
@@ -553,6 +605,10 @@ local function FollowThink(npc, st, now)
     if now >= (st.nextLook or 0) then
         st.nextLook = now + 0.5
         local foe = SquadThreat(npc, st, leader, now)
+        if foe and st.casual then
+            -- under fire: guns out, all of them
+            if LC.SquadCasualAll(leader, false) > 0 then leader:ChatPrint("[Resistance] Your squad pull their guns out.") end
+        end
         if foe then
             Engage(npc, st, foe, now)
             st.foeSeen = now
@@ -900,7 +956,7 @@ function LC.UnitsSpotRebels()
     local units
     for npc, st in pairs(LC.NPCs) do
         if IsValid(npc) and st.role == "rebel" and npc:Health() > 0 and not st.raid and not st.quartermaster and not st.post
-            and not st.foe and not st.test and st.state ~= "event" then
+            and not st.foe and not st.test and st.state ~= "event" and not st.casual then -- (acting casual: just a citizen, to them)
             local rp = npc:GetPos()
             if not ZoneAt(rp, 200) then
                 if not units then
@@ -1306,6 +1362,8 @@ LC.FollowersOf = FollowersOf
 
 function LC.DismissFollower(npc, st, quiet)
     local leader = st.follow
+    if st.casual then LC.SquadCasual(npc, st, false) end
+    st.meetAt = nil
     st.follow = nil
     st.goingTo = nil
     st.followSlot, st.followSID, st.followAt, st.apartSince = nil, nil, nil, nil
@@ -1406,6 +1464,47 @@ hook.Add("PlayerUse", "LivingCityRebelsUse", function(ply, ent)
     end
     Recruit(ply, ent, st)
     return false
+end)
+
+-- Orders for the squad (F1 / the C menu, Resistance; or the chat shortcuts !casual, !gunsout, !meet).
+LC.SlashCommands = LC.SlashCommands or {}
+LC.SlashCommands.casual = function(ply)
+    local n = LC.SquadCasualAll(ply, true)
+    ply:ChatPrint(#FollowersOf(ply) == 0 and "[Resistance] You've nobody with you." or (n > 0 and "[Resistance] Guns away, plain clothes on. They walk like anyone else now. (Shot at, they'll fight.)" or "[Resistance] They're acting casual already."))
+end
+LC.SlashCommands.gunsout = function(ply)
+    local n = LC.SquadCasualAll(ply, false)
+    ply:ChatPrint(#FollowersOf(ply) == 0 and "[Resistance] You've nobody with you." or (n > 0 and "[Resistance] Guns out." or "[Resistance] They're armed and ready already."))
+end
+LC.SlashCommands.meet = function(ply)
+    local fs = FollowersOf(ply)
+    if #fs == 0 then return ply:ChatPrint("[Resistance] You've nobody with you.") end
+    local dest = LC.QuestObjectivePos and LC.QuestObjectivePos(ply)
+    if not dest then return ply:ChatPrint("[Resistance] Meet you where? Take a job first: they go on ahead to where it's taking you.") end
+    for i, f in ipairs(fs) do
+        local fst = LC.NPCs[f]
+        if fst then
+            local a = math.rad(i * 70)
+            fst.meetAt = dest + Vector(math.cos(a) * 90, math.sin(a) * 90, 0)
+            LC.SquadCasual(f, fst, true) -- (on their own in the streets: guns away)
+            fst.goingTo = nil
+        end
+    end
+    ply:ChatPrint("[Resistance] 'We'll meet you there.' They go on ahead, acting casual, and wait for you near the job's marker.")
+end
+hook.Add("PlayerSay", "LivingCitySquadOrders", function(ply, text)
+    local t = string.lower(string.Trim(text or ""))
+    local cmd = (t == "!casual" and "casual") or ((t == "!gunsout" or t == "!guns") and "gunsout") or (t == "!meet" and "meet") or nil
+    if not cmd then return end
+    LC.SlashCommands[cmd](ply)
+    return ""
+end)
+-- (how many are with you, for the menus)
+timer.Create("LivingCitySquadCount", 2, 0, function()
+    for _, p in ipairs(player.GetAll()) do
+        local n = #FollowersOf(p)
+        if p:GetNW2Int("lc_squad_n", 0) ~= n then p:SetNW2Int("lc_squad_n", n) end
+    end
 end)
 
 hook.Add("PlayerDeath", "LivingCityRebelFollowers", function(ply)

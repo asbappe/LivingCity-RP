@@ -12353,6 +12353,37 @@ section("Playtest fixes, 17 October (evening)")
     end
     freer.valid = false
     LC.RemoveZone(vz1) LC.RemoveZone(vz2)
+    -- a squad acting casual: guns away, plain clothes; units leave them be; shot at, guns out
+    local sz = LC.AddZone(Vector(-101000, 180000, 0), 300, "rebel", 0)
+    local boss = newPlayer("SquadBoss", "resistance")
+    _run(1)
+    boss:SetNW2Int("lcf_rank", 3)
+    boss:SetPos(sz.pos + Vector(0, 0, 0))
+    local fr, fst = LC.Spawners.rebel(sz.pos + Vector(60, 0, 0), sz)
+    hook.Run("PlayerUse", boss, fr)
+    ok(fst.follow == boss, "(a fighter comes along)")
+    LC.SlashCommands.casual(boss)
+    ok(fst.casual and fr:GetNW2Bool("lc_casual", false) and not string.find(fr:GetModel() or "", "group03", 1, true), "act casual: guns away, plain clothes on")
+    fst.preCasualModel = fst.preCasualModel or "models/humans/group03/male_01.mdl"
+    local cop3, cst3 = LC.Spawners.cop(sz.pos + Vector(1200, 0, 0))
+    cst3.routeGroup = nil cst3.untilT = 1e9 cop3.sim = false
+    boss:SetPos(sz.pos + Vector(1000, 0, 0)) fr:SetPos(sz.pos + Vector(1060, 0, 0))
+    LC.UnitsSpotRebels()
+    ok(cst3.state ~= "hostile", "out in the streets, a unit takes them for a citizen and lets them be", cst3.state)
+    LC.SlashCommands.gunsout(boss)
+    ok(not fst.casual and not fr:GetNW2Bool("lc_casual", false), "guns out: back to how they were")
+    -- go on ahead: they meet you at the job's marker and wait
+    local qWas = LC.QuestObjectivePos
+    LC.QuestObjectivePos = function() return sz.pos + Vector(2000, 0, 0) end
+    LC.SlashCommands.meet(boss)
+    ok(fst.meetAt and fst.casual and fst.meetAt:Distance(sz.pos + Vector(2000, 0, 0)) < 120, "meet me there: they go on ahead, acting casual, to the job's marker")
+    LC.QuestObjectivePos = qWas
+    LC.DismissFollower(fr, fst, true)
+    ok(not fst.casual and not fst.meetAt, "(sent home: back to themselves)")
+    LC.NPCs[cop3] = nil cop3:Remove()
+    LC.NPCs[fr] = nil fr:Remove()
+    boss.valid = false
+    LC.RemoveZone(sz)
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")

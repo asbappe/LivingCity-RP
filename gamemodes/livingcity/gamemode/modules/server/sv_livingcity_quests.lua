@@ -2587,6 +2587,16 @@ local function Contact(text, pos, role, line, want)
 end
 
 -- Everything the story file needs to build parts out of the same pieces.
+-- Where someone's job is taking them right now (the marker on their screen), or nil.
+function LC.QuestObjectivePos(ply)
+    local q = IsValid(ply) and LC.QuestOf[ply]
+    local st = q and not q.done and Stage(q)
+    if not st then return nil end
+    local ent, pos = MarkerFor(q, st, ply)
+    if IsValid(ent) then return ent:GetPos() end
+    return pos
+end
+
 LC.QB = {
     Contact = Contact, PersonSpot = PersonSpot,
     Goto = Goto, Deliver = Deliver, Hold = Hold, Count = Count, Choice = Choice,

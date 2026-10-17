@@ -327,6 +327,11 @@ function LC_CL.OpenActions()
         Add(rs, "Donate food to the supply crate", function() Send("donate") end)
         Add(rs, "Decode a data chip (at the lab)", function() Send("decode") end)
         if me:HasWeapon("weapon_lc_multitool") then Add(rs, "Hack the Combine door I'm looking at", function() Send("hack") end) end
+        if me:GetNW2Int("lc_squad_n", 0) > 0 then
+            Add(rs, "Squad: act casual (guns away, plain clothes: units take them for citizens)", function() Send("casual") end, "icon16/user_gray.png")
+            Add(rs, "Squad: guns out", function() Send("gunsout") end, "icon16/gun.png")
+            Add(rs, "Squad: go on ahead and meet me at the job's marker", function() Send("meet") end, "icon16/flag_green.png")
+        end
     end
 
     -- settings, just for you
