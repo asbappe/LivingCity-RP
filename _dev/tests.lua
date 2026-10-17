@@ -12269,6 +12269,51 @@ section("Playtest fixes, 17 October (evening)")
     LC.IsNight = nightWas
     nbed:Remove()
     napper.valid = false
+    -- rebel territory: fighters for the room there is; nothing in the way or in the water; the camp rearranged
+    local small = { kind = "rebel", pos = Vector(-98000, 160000, 0), r = 495, box = { mins = Vector(-98350, 159650, -16), maxs = Vector(-97650, 160350, 176) } }
+    ok(LC.RebelRoomIn(small) == 4, "a 700 by 700 camp has room for four fighters (lc_rebel_room 350)", LC.RebelRoomIn(small))
+    local tlW = util.TraceLine
+    util.TraceLine = function(t)
+        local d = t.endpos - t.start
+        if math.abs(d.y) > 1 and math.abs(d.x) < 1 then return { Hit = true, Fraction = 60 / 200, HitPos = t.start + d * 0.3 } end
+        return tlW(t)
+    end
+    ok(LC.InWalkway(Vector(0, 0, 0), 30), "a corridor 120 wide: no room to set a crate down and still get by", LC.WayWidth(Vector(0, 0, 0)))
+    util.TraceLine = tlW
+    ok(not LC.InWalkway(Vector(0, 0, 0), 30), "open floor is fine")
+    local pcWas = util.PointContents
+    util.PointContents = function(p) return p.x < -97990 and (CONTENTS_WATER or 32) or 0 end
+    ok(LC.InWater(Vector(-98100, 160000, 0)) and not LC.InWater(Vector(-97900, 160000, 0)), "the sewer channel is water; the walkway beside it isn't")
+    local dry = 0
+    for _ = 1, 10 do local sp = LC.SpotInZone(small) if sp and sp.x >= -97990 then dry = dry + 1 end end
+    ok(dry >= 8, "people and things go on the dry side first", dry)
+    util.PointContents = pcWas
+    -- a sleeper settled onto the mattress, not floating over it
+    local sleeper = ents.Create("npc_citizen") sleeper:Spawn()
+    sleeper:SetPos(Vector(0, 0, 10))
+    local ssq = ents.Create("scripted_sequence") ssq:SetPos(Vector(0, 0, 10)) ssq:Spawn()
+    sleeper.LookupBone = function() return 0 end
+    sleeper.GetBonePosition = function(self) return self:GetPos() + Vector(0, 0, 40) end
+    LC.RebelSettleOnBed(sleeper, { ss = ssq }, 10)
+    ok(math.abs(sleeper:GetPos().z - (10 - 32)) < 0.5, "a sleeper floating over the mattress is settled onto it (hips just on top)", sleeper:GetPos().z)
+    sleeper:Remove() ssq:Remove()
+    -- hold E on a camp's mattress: carried where you look, set down, kept for next time
+    LC.AddZone(small.pos, 300, "rebel", 0)
+    local zone = LC.ZonesOfKind("rebel")[#LC.ZonesOfKind("rebel")]
+    local mat = ents.Create("prop_physics") mat:SetModel("models/props_c17/furnituremattress001a.mdl") mat:SetPos(small.pos + Vector(50, 0, 0)) mat:Spawn()
+    mat.lcDressing = true
+    LC.Dressed[zone] = { want = 1, ents = { mat } }
+    local mover = newPlayer("CampMover", "resistance")
+    mover:SetPos(small.pos)
+    ok(LC.CampMovable(mat) and LC.CampPickUp(mover, mat), "hold E on the camp's mattress: you pick it up")
+    mover.keys = {}
+    LC.CampCarryStep(mover)
+    ok(mover.lcCampCarry == nil and LC.CampSaved(zone) and LC.CampSaved(zone)[1].model == mat:GetModel(), "let go of E: it's set down, and where it is is kept for the map")
+    LC.Dressed[zone] = nil
+    mat:Remove()
+    LC.CampForget()
+    LC.RemoveZone(zone)
+    mover.valid = false
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")
@@ -12337,6 +12382,7 @@ section("Core contract: nothing load-bearing changes without the owner knowing (
     Add("ending songs folder sound/" .. tostring(LC.EndingRoot))
     Add("ending cooldown file data/" .. tostring(LC.EndingCooldownFile))
     Add("ending tuning file data/" .. tostring(LC.EndingTuneFile))
+    Add("rebel camp layout data/" .. tostring(LC.CampFile))
     local lp, map = LC.LayoutPath(), game.GetMap()
     local at = string.find(lp, map, 1, true)
     Add("layout file data/" .. (at and (string.sub(lp, 1, at - 1) .. "<map>" .. string.sub(lp, at + #map)) or lp))

@@ -144,10 +144,26 @@ local function CanSee(npc, e, range)
     return tr.Fraction > 0.97 or tr.Entity == e
 end
 
+-- How many fighters a zone has room for: one for every lc_rebel_room square (its floor area,
+-- a box's or a circle's), at least one. A small camp isn't packed wall to wall.
+local cvRoom = CreateConVar("lc_rebel_room", "350", FLAGS, "Room each Resistance fighter needs in rebel territory (units: one for every this-by-this square of a zone); a small zone gets fewer")
+function LC.RebelRoomIn(z)
+    local area
+    if z.box then
+        area = math.abs(z.box.maxs.x - z.box.mins.x) * math.abs(z.box.maxs.y - z.box.mins.y)
+    else
+        area = math.pi * (z.r or 300) ^ 2
+    end
+    return math.max(1, math.floor(area / math.max(50, cvRoom:GetFloat()) ^ 2))
+end
+
 function LC.RebelTarget()
     if #RebelZones() == 0 then return 0 end
-    -- more ground, more fighters (sv_livingcity_territory.lua)
-    return math.max(0, cvRebels:GetInt()) + (LC.GrownCount and LC.GrownCount("rebel") or 0)
+    -- more ground, more fighters (sv_livingcity_territory.lua), but never more than the zones have room for
+    local want = math.max(0, cvRebels:GetInt()) + (LC.GrownCount and LC.GrownCount("rebel") or 0)
+    local room = 0
+    for _, z in ipairs(RebelZones()) do room = room + LC.RebelRoomIn(z) end
+    return math.min(want, room)
 end
 
 ------------------------------------------------------------------------
@@ -181,7 +197,7 @@ function LC.RebelSpawnPos()
     local now = CurTime()
     for _, z in ipairs(zones) do
         -- (no goto here: "continue" is a keyword in Garry's Mod's Lua)
-        if (z.contestedUntil or 0) <= now then
+        if (z.contestedUntil or 0) <= now and CountIn(z) < LC.RebelRoomIn(z) then
             local p = HiddenSpot(z)
             if p then return p + Vector(0, 0, 4), z end
         end

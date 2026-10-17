@@ -291,6 +291,20 @@ local function EnsureRebelProps()
             for i = #r.pots, 1, -1 do if not IsValid(r.pots[i]) then table.remove(r.pots, i) end end
             local need = (IsValid(r.cache) and 0 or 1) + math.max(0, 2 - #r.pots)
             if need > 0 then
+                -- where the players last set them down (sv_livingcity_campmove.lua)
+                for _, it in ipairs(LC.CampSaved and LC.CampSaved(z) or {}) do
+                    local p = Vector(it.x, it.y, it.z)
+                    if it.prop == "cache" and not IsValid(r.cache) then
+                        r.cache = Prop("models/items/item_item_crate.mdl", p, "cache")
+                        if IsValid(r.cache) then SetStock(r.cache, r.stock or 4) r.cache:SetAngles(Angle(0, it.yaw or 0, 0)) end
+                    elseif it.prop == "pot" and #r.pots < 2 then
+                        local pot = Prop("models/props_junk/terracotta01.mdl", p, "pot")
+                        if IsValid(pot) then SetPot(pot, "empty") r.pots[#r.pots + 1] = pot end
+                    end
+                end
+                need = (IsValid(r.cache) and 0 or 1) + math.max(0, 2 - #r.pots)
+            end
+            if need > 0 then
                 -- on the zone's own floor (a rooftop camp keeps its crate on the roof: sv_livingcity_war.lua)
                 local spots = LC.ZoneFloorSpots and LC.ZoneFloorSpots(z, need * 2)
                     or (LC.QB and LC.QB.HideSpots and LC.QB.HideSpots(z.pos, need * 2, z.r * 0.7, true)) or {}

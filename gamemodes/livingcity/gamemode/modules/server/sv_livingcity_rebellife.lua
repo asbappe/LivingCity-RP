@@ -47,6 +47,23 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvLife    = CreateConVar("lc_rebel_life", "1", FLAGS, "Rebels at home keep busy: patrols, the workbench, crates, the garden, the fire, sitting, sleeping")
 local cvErrands = CreateConVar("lc_rebel_errands", "1", FLAGS, "Rebels slip out in ones and twos to scavenge, keeping out of sight, and bring it home")
 local cvErrandM = CreateConVar("lc_rebel_errand_minutes", "4", FLAGS, "Average minutes between scavenging runs, for each rebel zone")
+local cvBedLift = CreateConVar("lc_rebel_bed_height", "8", FLAGS, "How far above a mattress or bed a sleeping fighter's hips lie (they're settled onto it by this; more if they sink into it, less if they float)")
+
+-- Lying down, settled onto the bed: the lying animations carry their own height (they were made
+-- for the game's cots), so the sleeper is moved down until the hips are just on top of it.
+local function SettleOnBed(npc, L, topZ)
+    if not IsValid(npc) or not IsValid(L.ss) or not npc.LookupBone or not npc.GetBonePosition then return end
+    local bone = npc:LookupBone("ValveBiped.Bip01_Pelvis")
+    local bp = bone and npc:GetBonePosition(bone)
+    if not bp then return end
+    local drop = bp.z - (topZ + cvBedLift:GetFloat())
+    if drop > 4 and drop < 120 then
+        L.ss:SetPos(L.ss:GetPos() - Vector(0, 0, drop))
+        npc:SetPos(npc:GetPos() - Vector(0, 0, drop))
+        L.settled = drop
+    end
+end
+LC.RebelSettleOnBed = SettleOnBed
 
 local UP = Vector(0, 0, 50)
 local function Pick(t) return t[math.random(#t)] end
@@ -366,6 +383,7 @@ local function End(npc, st)
         if L.gunHidden then HideGun(npc, L, false) end
         if st.carry and LC.NPCDropCarry then LC.NPCDropCarry(npc, st) end
         if L.onBed and L.standAt then npc:SetPos(L.standAt + Vector(0, 0, 4)) end -- (up, and off the bed)
+        if L.asleep then npc:SetNW2Bool("lc_eyes_shut", false) end
         SetDoing(npc, "")
         if Walking(npc) then npc:SetSchedule(SCHED_IDLE_STAND) end
     end
@@ -536,7 +554,8 @@ function A.fire(npc, st, z, now, t)
         if Free(key, npc) then
             local a = math.rad(slot * 120 + math.random(-20, 20))
             local spot = Floor(t.pos + Vector(math.cos(a), math.sin(a), 0) * 62 + Vector(0, 0, 30))
-            if Standable(spot) and math.abs(spot.z - t.pos.z) < 40 then
+            if Standable(spot) and math.abs(spot.z - t.pos.z) < 40 and not (LC.InWalkway and LC.InWalkway(spot, 16))
+                and not (LC.InWater and LC.InWater(spot)) then
                 local yaw = (t.pos - spot):Angle().y
                 return Start(npc, st, now, "fire", { { at = spot, near = 70, yaw = yaw, secs = { 40, 100 }, doing = "warming up by the fire", key = key, direct = true,
                     onArrive = function(n, s, L)
@@ -594,6 +613,10 @@ function A.sleep(npc, st, z, now, t)
             L.asleep = lying == true
             SetDoing(n, L.asleep and "asleep" or "resting")
             HideGun(n, L, true)
+            if L.asleep then
+                n:SetNW2Bool("lc_eyes_shut", true) -- (eyes closed: cl_livingcity_rest.lua)
+                timer.Simple(0.6, function() SettleOnBed(n, L, b.top.z) end)
+            end
         end } })
 end
 

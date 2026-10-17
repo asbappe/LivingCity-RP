@@ -1358,13 +1358,17 @@ LC.SpawnZombie = SpawnZombie
 
 -- A random standing spot inside a zone.
 function LC.SpotInZone(z)
-    for _ = 1, 10 do
+    local wet
+    for _ = 1, 14 do
         local top = LCZ.RandomInside(z, 0.85) + Vector(0, 0, 64)
         -- (a patch of territory one floor deep: on its floor, not the street under a roof)
         local tr = util.TraceLine({ start = top, endpos = top - Vector(0, 0, z.h and (z.h + 64) or 400), mask = MASK_NPCSOLID_BRUSHONLY })
-        if tr.Hit and tr.HitNormal.z > 0.7 and (not z.h or LCZ.Contains(z, tr.HitPos)) and ClearSpot(tr.HitPos) then return tr.HitPos end
+        if tr.Hit and tr.HitNormal.z > 0.7 and (not z.h or LCZ.Contains(z, tr.HitPos)) and ClearSpot(tr.HitPos) then
+            -- dry ground first: down in the water, or a channel below the zone's floor, only if there's nothing else
+            if (LC.InWater and LC.InWater(tr.HitPos)) or tr.HitPos.z < z.pos.z - 14 then wet = wet or tr.HitPos else return tr.HitPos end
+        end
     end
-    return nil
+    return wet
 end
 
 local function FindSpawnPos(role)

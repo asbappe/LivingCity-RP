@@ -104,12 +104,39 @@ LC.FloorUnder = FloorUnder
 
 -- Spots on the zone's own ground: at its level (a zone on a roof is dressed on
 -- the roof, not the street below it), with floor all round.
+local cvWalk = CreateConVar("lc_walkway_clear", "100", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED),
+    "Units of room kept clear to walk past anything the city puts down in a passage (a corridor, a walkway beside a sewer channel): nothing goes where it would leave less")
+
+-- How wide the way is here, wall to wall, at knee height: the narrowest of four
+-- cross-measures (along the axes and the diagonals), up to 400.
+local function WayWidth(pos)
+    local o = pos + Vector(0, 0, 30)
+    local function Out(d)
+        local tr = util.TraceLine({ start = o, endpos = o + d * 200, mask = MASK_SOLID_BRUSHONLY or MASK_SOLID })
+        return (tr and tr.Hit and tr.Fraction) and (tr.Fraction * 200) or 200
+    end
+    local s = 0.7071
+    return math.min(Out(Vector(1, 0, 0)) + Out(Vector(-1, 0, 0)), Out(Vector(0, 1, 0)) + Out(Vector(0, -1, 0)),
+        Out(Vector(s, s, 0)) + Out(Vector(-s, -s, 0)), Out(Vector(s, -s, 0)) + Out(Vector(-s, s, 0)))
+end
+LC.WayWidth = WayWidth
+-- In a passage: something this big here would leave less than lc_walkway_clear to get by.
+function LC.InWalkway(pos, radius)
+    return WayWidth(pos) - 2 * (radius or 0) < cvWalk:GetFloat()
+end
+-- Standing in water (or sewage): the channel, not the walkway beside it.
+function LC.InWater(pos)
+    local c = util.PointContents and util.PointContents(pos + Vector(0, 0, 6)) or 0
+    return bit.band(c or 0, bit.bor(CONTENTS_WATER or 32, CONTENTS_SLIME or 16)) ~= 0
+end
+
 local function DressSpots(z, n)
-    local spots = {}
+    local spots, wet = {}, {}
     local function Take(p)
         local g = p and FloorUnder(p)
         if g and math.abs(g.z - z.pos.z) < 120 and g:DistToSqr(z.pos) < (z.r * 0.95) ^ 2 and Footing(g, 30) then
-            spots[#spots + 1] = g
+            -- (down in a channel or a ditch below the zone's floor: only if there's nowhere dry)
+            if LC.InWater(g) or g.z < z.pos.z - 14 then wet[#wet + 1] = g else spots[#spots + 1] = g end
         end
     end
     if LC.QB and LC.QB.HideSpots then
@@ -120,6 +147,7 @@ local function DressSpots(z, n)
         if #spots >= n * 2 then break end
         Take(LCZ.RandomInside(z, 0.85) + Vector(0, 0, 8))
     end
+    for _, g in ipairs(wet) do spots[#spots + 1] = g end
     return spots
 end
 LC.ZoneFloorSpots = DressSpots
@@ -128,6 +156,8 @@ LC.ZoneFloorSpots = DressSpots
 local function Clear(pos, radius)
     local g = FloorUnder(pos)
     if not g or math.abs(g.z - pos.z) > 48 or not Footing(g, radius) then return false end -- (nothing to stand on, or off the edge)
+    if LC.InWater(g) then return false end -- (not in the water)
+    if LC.InWalkway(g, radius) then return false end -- (not where it'd block the way through)
     for _, d in pairs(LC.Dressed) do
         for _, e in ipairs(d.ents) do
             if IsValid(e) and e:GetPos():DistToSqr(pos) < math.max(SPACING, radius * 1.5) ^ 2 then return false end
@@ -258,6 +288,26 @@ local function DressingTick()
                     end
                     d = { want = inside and 1 or math.Clamp(3 + math.floor(z.r / 250), 3, 8), ents = {} }
                     LC.Dressed[z] = d
+                    -- a camp the players have arranged (sv_livingcity_campmove.lua): put back just as they left it
+                    local keep = z.kind == "rebel" and LC.CampSaved and LC.CampSaved(z)
+                    if keep then
+                        local n = 0
+                        for _, it in ipairs(keep) do
+                            if not it.prop then
+                                n = n + 1
+                                local pos = Vector(it.x, it.y, it.z)
+                                local e
+                                if it.cls == "lc_fire" then
+                                    e = ents.Create("lc_fire")
+                                    if IsValid(e) then e:SetPos(pos) e:Spawn() e.lcDressing = true d.fire = e end
+                                elseif it.model and ModelOK(it.model) then
+                                    e = Prop(it.model, pos, it.yaw)
+                                end
+                                if IsValid(e) then d.ents[#d.ents + 1] = e end
+                            end
+                        end
+                        d.want, d.table = n, true
+                    end
                 end
                 for i = #d.ents, 1, -1 do if not IsValid(d.ents[i]) then table.remove(d.ents, i) end end
                 if not IsValid(d.fire) then d.fire = nil end

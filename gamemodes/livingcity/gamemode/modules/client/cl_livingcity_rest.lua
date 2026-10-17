@@ -132,3 +132,38 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityStink", function(depth, sk
         end
     end
 end)
+
+-- Asleep (a fighter on his mattress, sv_livingcity_rebellife.lua): eyes shut. The face's
+-- blink and eyelid controls, held closed every frame (its own blinking would open them).
+do
+    local sleepers, at = {}, 0
+    local flexOf = {} -- [model] = { ids }
+    local function Lids(e)
+        local m = e:GetModel() or ""
+        local ids = flexOf[m]
+        if not ids then
+            ids = {}
+            for i = 0, (e.GetFlexNum and e:GetFlexNum() or 0) - 1 do
+                local n = string.lower(e:GetFlexName(i) or "")
+                if n == "blink" or string.find(n, "lid_closer", 1, true) or string.find(n, "eyes_closed", 1, true) then ids[#ids + 1] = i end
+            end
+            flexOf[m] = ids
+        end
+        return ids
+    end
+    hook.Add("Think", "LivingCityEyesShut", function()
+        local now = CurTime()
+        if now >= at then
+            at = now + 1
+            sleepers = {}
+            for _, e in ipairs(ents.FindByClass and ents.FindByClass("npc_*") or {}) do
+                if IsValid(e) and e.GetNW2Bool and e:GetNW2Bool("lc_eyes_shut", false) then sleepers[#sleepers + 1] = e end
+            end
+        end
+        for _, e in ipairs(sleepers) do
+            if IsValid(e) and e.SetFlexWeight then
+                for _, id in ipairs(Lids(e)) do e:SetFlexWeight(id, 1) end
+            end
+        end
+    end)
+end
