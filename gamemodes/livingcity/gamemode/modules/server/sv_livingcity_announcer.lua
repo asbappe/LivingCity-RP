@@ -85,6 +85,8 @@ local cvOn   = CreateConVar("lc_announce_custom", "1", FLAGS, "Custom Overwatch 
 local cvPct  = CreateConVar("lc_announce_custom_pct", "100", FLAGS, "Chance (percent) a custom Overwatch line replaces the built-in one for an event")
 local cvGap  = CreateConVar("lc_announce_gap", "25", FLAGS, "Seconds between two custom announcements by the same voice")
 local cvCat  = CreateConVar("lc_announce_cat_gap", "90", FLAGS, "Seconds before the same trigger can be announced again")
+local cvShare = CreateConVar("lc_announce_admin_share", "50", FLAGS, "Only one voice announces each thing: how often (percent) it's the Administrator rather than Overwatch, when both have something to say for it")
+local cvQuiet = CreateConVar("lc_announce_quiet", "60", FLAGS, "Seconds after any announcement before a minor one (the time of day, a train, a skirmish...) is made; minor ones in that time are left out")
 
 local ROOT = "livingcity/announce/"
 -- (and straight under sound/livingcity/ too: sound/livingcity/overwatch/, .../administrator/,
@@ -355,19 +357,16 @@ local function Say(voice, trig, only, force, tier)
     local now = CurTime()
     if not force and ((voiceNext[voice] or 0) > now or (trigNext[voice .. "/" .. trig] or 0) > now) then return false end
     if voice == "administrator" and not only and (LC.LiveSpeaker or LC.LiveNPC) then return false end -- somebody is already on air
-    -- Overwatch still speaking: she waits for him to finish, then has her say (she used to talk over him)
-    if voice == "administrator" and not only and (LC.OverwatchUntil or 0) > now then
-        local wait = LC.OverwatchUntil - now + 1.5
-        timer.Simple(wait, function() Say(voice, trig, only, force, tier) end)
-        return false
-    end
+    -- (nobody talks over anybody: each player's game plays the voices one after another, in turn)
     local path, text, used = LC.PickAnnounceClip(voice, trig, false, tier)
     if not path then return false end
     -- one just for somebody (their welcome) doesn't hold up the city's own
     if not only then
         voiceNext[voice] = now + cvGap:GetFloat()
         trigNext[voice .. "/" .. trig] = now + cvCat:GetFloat()
+        LC.LastPA = now
     end
+    local secs = LC.AnnounceKnownSecs and LC.AnnounceKnownSecs(path) or 0
     -- (and while someone's welcome plays, the city's go to everyone else)
     local to = only and { only } or nil
     if not to then
@@ -380,6 +379,7 @@ local function Say(voice, trig, only, force, tier)
         net.Start("lc_announce")
         net.WriteString(path)
         net.WriteString(TITLES[trig] or "City announcement")
+        net.WriteFloat(secs)
         if to then net.Send(to) else net.Broadcast() end
         for _, p in ipairs(to or player.GetAll()) do
             if text then p:ChatPrint("[" .. (TITLES[trig] or "City announcement") .. "] \"" .. text .. "\"") end
@@ -396,6 +396,7 @@ local function Say(voice, trig, only, force, tier)
         if #hear > 0 then
             net.Start("lc_breencast")
             net.WriteString(path)
+            net.WriteFloat(secs)
             net.Send(hear)
             if text then for _, p in ipairs(hear) do p:ChatPrint("[" .. (LC.AdministratorName and LC.AdministratorName() or "The Administrator") .. "] \"" .. text .. "\"") end end
         end
@@ -412,19 +413,45 @@ local function ClipSecs(path)
     return LC.WavDuration and LC.WavDuration(path) or 8
 end
 LC.AnnounceClipSecs = ClipSecs
+-- How long, if it can be told (0: leave it to the player's own game to work out)
+function LC.AnnounceKnownSecs(path)
+    local d = SoundDuration and SoundDuration(path) or 0
+    if d and d > 0.2 and d <= 120 then return d end
+    return LC.WavDuration and LC.WavDuration(path) or 0
+end
 
--- Both voices for one thing happening: Overwatch first, the Administrator a few seconds after.
--- built-in: Overwatch already spoke for this one (an event or a sociostability change),
--- so only the Administrator is added here.
+-- Who says it: only one voice for each thing that happens, never both. The
+-- Administrator (lc_announce_admin_share percent of the time) or Overwatch,
+-- whichever has something for it; nil: neither. builtin: Overwatch has his
+-- own Half-Life 2 lines for it.
+function LC.AnnounceVoiceFor(trig, builtin)
+    local admin = cvOn:GetBool() and ResolveTier(trig, LC.AnnounceTier(trig)) ~= nil
+    local ow = builtin or (cvOn:GetBool() and #Scan("overwatch", trig) > 0)
+    if admin and ow then return math.random(100) <= cvShare:GetInt() and "administrator" or "overwatch" end
+    return admin and "administrator" or (ow and "overwatch" or nil)
+end
+
+-- The minor ones: left out if anything was said in the last lc_announce_quiet seconds
+local MINOR = { day = true, dusk = true, train_arrival = true, territory_grew = true, block_raided = true, skirmish_raid = true,
+    skirmish_sweep = true, overwatch_drop = true, power_restored = true, ambient = true }
+LC.AnnounceMinor = MINOR
+function LC.AnnounceTooSoon(trig)
+    return MINOR[trig] and CurTime() - (LC.LastPA or -1e9) < cvQuiet:GetFloat() or false
+end
+
+-- One voice for one thing happening: Overwatch or the Administrator, picked
+-- at random (LC.AnnounceVoiceFor). built-in: it's been said already (an event,
+-- a sociostability change, a response squad: LC.Announce picks the voice there).
 local function Trigger(trig, opts)
     if not LC.Running then return end
     opts = opts or {}
     local d = opts.delay or 3
     if VIOLENT[trig] then heat[#heat + 1] = CurTime() end
-    if not opts.builtin then
-        timer.Simple(d, function() Say("overwatch", trig, opts.only, opts.force) end)
-    end
-    timer.Simple(d + (opts.breenAfter or 9), function() Say("administrator", trig, opts.only, opts.force, opts.tier) end)
+    if opts.builtin then return end
+    if not opts.only and LC.AnnounceTooSoon(trig) then return end
+    local who = LC.AnnounceVoiceFor(trig)
+    if not who then return end
+    timer.Simple(d, function() Say(who, trig, opts.only, opts.force, who == "administrator" and opts.tier or nil) end)
 end
 LC.TriggerAnnouncements = Trigger
 

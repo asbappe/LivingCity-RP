@@ -195,13 +195,22 @@ local HARSH = {
 function LC.Announce(kind, path, detail)
     if not path and kind == "ambient" and LC.CityState and LC.CityState() == "unrest" then path = LC.Pick(HARSH) end
     local subtitle
+    -- one voice for it: Overwatch, or (some of the time) the Administrator in his place (sv_livingcity_announcer.lua)
+    local herTurn = kind ~= "ambient" and LC.AnnounceVoiceFor and LC.AnnounceVoiceFor(kind, true) == "administrator"
+        and LC.CustomAnnounce and LC.CustomAnnounce("administrator", kind, nil, true)
     if not path and LC.PickAnnounceClip then path, subtitle = LC.PickAnnounceClip("overwatch", kind, true) end -- a custom recording (sv_livingcity_announcer.lua)
     path = path or LC.Pick(VOICE[kind] or VOICE.ambient)
-    if LC.OverwatchSpeaks then LC.OverwatchSpeaks(path) end -- (the Administrator waits till he's done)
-    net.Start("lc_announce")
-    net.WriteString(path)
-    net.WriteString(TITLES[kind] or TITLES.ambient)
-    net.Broadcast()
+    LC.LastPA = CurTime()
+    if herTurn then
+        subtitle, path = nil, ""
+    else
+        if LC.OverwatchSpeaks then LC.OverwatchSpeaks(path) end
+        net.Start("lc_announce")
+        net.WriteString(path)
+        net.WriteString(TITLES[kind] or TITLES.ambient)
+        net.WriteFloat(LC.AnnounceKnownSecs and LC.AnnounceKnownSecs(path) or 0)
+        net.Broadcast()
+    end
     -- and in chat, what it said and what it means
     local key = string.match(path, "([^/]+)%.wav$") or ""
     local says = subtitle or SAYS[key]
@@ -632,6 +641,7 @@ local lastSaid = 0
 local function Say(file, detail)
     local now = CurTime()
     if now - lastSaid < 45 then return false end -- not a running commentary
+    if now - (LC.LastPA or -1e9) < 30 then return false end -- (nor straight after something else)
     lastSaid = now
     LC.Announce("ambient", CV .. file, detail)
     return true

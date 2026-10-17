@@ -687,6 +687,22 @@ end
 local function PlayNextVoice()
     if CurTime() < voiceBusy or #voiceQueue == 0 then return end
     local v = table.remove(voiceQueue, 1)
+    -- the Administrator over the loudspeakers: in turn with Overwatch, never over him
+    -- (the server only sends hers to people near a working loudspeaker)
+    if v.admin then
+        local me = LocalPlayer()
+        local vol = LC_CL.BreencastVolume and LC_CL.BreencastVolume() or 0.5
+        if LC_CL.SoundTrouble then LC_CL.SoundTrouble(v.path) end
+        if vol > 0 and IsValid(me) then
+            me:EmitSound(v.path, 0, 100, vol, CHAN_VOICE2)
+            LC_CL.lastBreencast = v.path
+        end
+        local d = v.dur or 0
+        if d <= 0.2 then d = SoundDuration and SoundDuration(v.path) or 0 end
+        if not d or d <= 0.2 or d > 120 then d = 6 end
+        voiceBusy = CurTime() + d + 0.6
+        return
+    end
     if LC_CL.SpeakerBrokenNear(LocalPlayer():GetPos()) then
         banner = { text = "CITY ANNOUNCEMENT", sub = "(the loudspeaker here is broken)", untilT = CurTime() + 5 }
         voiceBusy = CurTime() + 2
@@ -704,15 +720,16 @@ local function PlayNextVoice()
     elseif string.find(v.path, "^livingcity/") and LC_CL.SoundTrouble then
         LC_CL.SoundTrouble(v.path) -- (one of the server's own recordings: say it's missing here)
     end -- (a stock Half-Life 2 line this install doesn't have: the banner and the words, without the sound)
-    local dur = SoundDuration and SoundDuration(v.path) or 0
-    if not dur or dur <= 0.2 or dur > 20 then dur = 4.5 end
+    local dur = (v.dur and v.dur > 0.2) and v.dur or (SoundDuration and SoundDuration(v.path) or 0)
+    if not dur or dur <= 0.2 or dur > 120 then dur = 4.5 end
     voiceBusy = CurTime() + dur + 0.6
     banner = { text = "CITY ANNOUNCEMENT", sub = v.title, untilT = CurTime() + math.max(7, dur + 1) }
 end
-LC_CL.QueueVoice = function(path, title)
+-- admin: the Administrator's (over the loudspeakers); dur: how long, if the server knows
+LC_CL.QueueVoice = function(path, title, admin, dur)
     if LC_CL.Ending and LC_CL.Ending() then return end -- (the city's announcer is quiet through a secret ending)
-    if #voiceQueue >= 4 then table.remove(voiceQueue, 1) end -- never a long backlog
-    voiceQueue[#voiceQueue + 1] = { path = path, title = title }
+    if #voiceQueue >= 5 then table.remove(voiceQueue, 1) end -- never a long backlog
+    voiceQueue[#voiceQueue + 1] = { path = path, title = title, admin = admin, dur = dur }
     PlayNextVoice()
 end
 timer.Create("LivingCityVoiceQueue", 0.25, 0, PlayNextVoice)
@@ -721,7 +738,8 @@ LC_CL.ClearVoices = function() voiceQueue = {} end
 net.Receive("lc_announce", function()
     local path = net.ReadString()
     local title = net.ReadString()
-    LC_CL.QueueVoice(path, title)
+    local dur = net.ReadFloat and net.ReadFloat() or 0
+    LC_CL.QueueVoice(path, title, false, dur)
 end)
 
 local function Box(x, y, w, h, col)

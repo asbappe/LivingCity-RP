@@ -682,12 +682,19 @@ end
 local function AnnounceSocio(level, by)
     local info = LCCP.Socio[level]
     local custom, subtitle = nil, nil
-    if LC.PickAnnounceClip then custom, subtitle = LC.PickAnnounceClip("overwatch", "socio_" .. tostring(level), true) end -- (sv_livingcity_announcer.lua)
-    if LC.OverwatchSpeaks then LC.OverwatchSpeaks(custom or SOCIO_VOICE[level]) end -- (the Administrator waits till he's done)
-    net.Start("lc_announce")
-    net.WriteString(custom or SOCIO_VOICE[level])
-    net.WriteString(info.long)
-    net.Broadcast()
+    local trig = "socio_" .. tostring(level)
+    -- one voice for it: Overwatch, or (some of the time) the Administrator in his place (sv_livingcity_announcer.lua)
+    local herTurn = LC.AnnounceVoiceFor and LC.AnnounceVoiceFor(trig, true) == "administrator" and LC.CustomAnnounce and LC.CustomAnnounce("administrator", trig, nil, true)
+    LC.LastPA = CurTime()
+    if not herTurn then
+        if LC.PickAnnounceClip then custom, subtitle = LC.PickAnnounceClip("overwatch", trig, true) end -- (sv_livingcity_announcer.lua)
+        if LC.OverwatchSpeaks then LC.OverwatchSpeaks(custom or SOCIO_VOICE[level]) end
+        net.Start("lc_announce")
+        net.WriteString(custom or SOCIO_VOICE[level])
+        net.WriteString(info.long)
+        net.WriteFloat(LC.AnnounceKnownSecs and LC.AnnounceKnownSecs(custom or SOCIO_VOICE[level]) or 0)
+        net.Broadcast()
+    end
     if subtitle then for _, p in ipairs(player.GetAll()) do p:ChatPrint("[Overwatch] \"" .. subtitle .. "\"") end end
     for _, p in ipairs(player.GetAll()) do
         local unit = LC.PlayerIsCP(p)

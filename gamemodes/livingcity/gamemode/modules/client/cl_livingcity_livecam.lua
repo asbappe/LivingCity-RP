@@ -74,17 +74,18 @@ hook.Add("ShouldDrawLocalPlayer", "LivingCityLiveCam", function() if rendering t
 -- The Administrator's recorded addresses (sv_livingcity_propaganda.lua): over the
 -- loudspeakers. The server only sends them to people who'd hear them (not
 -- next to a broken or powerless loudspeaker, not in the studio with her).
+-- They wait their turn with Overwatch's (one voice at a time: cl_livingcity.lua).
+LC_CL.BreencastVolume = function() return math.Clamp(cvVol:GetFloat(), 0, 1) end
 net.Receive("lc_breencast", function()
     local path = net.ReadString()
+    local dur = net.ReadFloat and net.ReadFloat() or 0
     local me = LocalPlayer()
     if path == "" or not IsValid(me) then return end
     if LC_CL.Ending and LC_CL.Ending() then return end -- (quiet through a secret ending)
-    if LC_CL.SoundTrouble then LC_CL.SoundTrouble(path) end
-    local vol = math.Clamp(cvVol:GetFloat(), 0, 1)
-    if vol <= 0 then return end
+    if LC_CL.QueueVoice then return LC_CL.QueueVoice(path, nil, true, dur) end
     -- (level 0: everywhere at once, like the PA, at the volume you've set)
-    me:EmitSound(path, 0, 100, vol, CHAN_VOICE2)
-    LC_CL.lastBreencast = path
+    local vol = LC_CL.BreencastVolume()
+    if vol > 0 then me:EmitSound(path, 0, 100, vol, CHAN_VOICE2) LC_CL.lastBreencast = path end
 end)
 -- When time stops, she stops mid-sentence.
 LC_CL.StopBreencast = function()

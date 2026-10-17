@@ -572,6 +572,7 @@ local function NextLine()
     if #to > 0 then
         net.Start("lc_breencast")
         net.WriteString(path)
+        net.WriteFloat(dur)
         net.Send(to)
     end
     if IsValid(live.npc) then live.npc:EmitSound(path, IN_PERSON_LEVEL) end -- in person, at the studio (and her lips move)

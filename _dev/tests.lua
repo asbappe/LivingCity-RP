@@ -8474,6 +8474,7 @@ section("Custom announcements: Overwatch and the Administrator")
 function AnnouncerTests()
 local A = "sound/livingcity/announce/"
 LC.AnnounceCalm() LC.SocioOverride = { level = "green", untilT = CurTime() + 1e6 } LC.Socio = "green" SetGlobal2String("lc_socio", "green") -- (earlier sections left violence and moods behind)
+_setcvar("lc_announce_admin_share", 0) _setcvar("lc_announce_quiet", 0) -- (Overwatch's turn every time, and no minor ones held back, till the tests below say otherwise)
 local function netPaths(name, from)
     local out = {}
     for i = (from or 0) + 1, #net.sent do if net.sent[i].name == name then out[#out + 1] = net.sent[i].data[1] end end
@@ -8521,17 +8522,43 @@ ok(#got == 1 and not string.find(got[1], "livingcity/announce", 1, true), "an ev
 n0 = #net.sent
 hook.Run("LivingCityEventStarted", "curfew", 4)
 _run(20)
-got = netPaths("lc_breencast", n0)
-ok(#got == 1 and string.find(got[1], "administrator/curfew/firm/c.ogg", 1, true), "the Administrator follows an event a few seconds on, over the loudspeakers, firm about a curfew", got[1])
-local o1 = netPaths("lc_announce", n0)
-ok(#o1 == 0, "(Overwatch's own event line is LC.Announce's job, not said twice)", #o1)
-
-_run(30) -- (past his gap since the last one)
-n0 = #net.sent
-hook.Run("LivingCitySocioChanged", "red", "green")
+ok(#netPaths("lc_breencast", n0) == 0 and #netPaths("lc_announce", n0) == 0, "one voice for each thing: the event's own announcement (LC.Announce) was it, nobody adds to it")
+-- whose turn it is: the Administrator lc_announce_admin_share percent of the time, in his place
+_setcvar("lc_announce_admin_share", 100)
 _run(30)
+n0 = #net.sent
+LC.Announce("curfew")
 got = netPaths("lc_breencast", n0)
-ok(#got == 1 and string.find(got[1], "breen/socio_red/s.wav", 1, true), "a sociostability change is answered by the Administrator too (her only recording is warm, so she uses it)", got[1])
+ok(#got == 1 and string.find(got[1], "administrator/curfew/firm/c.ogg", 1, true) and #netPaths("lc_announce", n0) == 0,
+    "her turn: the Administrator says it instead of Overwatch, over the loudspeakers, firm about a curfew", got[1])
+local lastB
+for i = n0 + 1, #net.sent do if net.sent[i].name == "lc_breencast" then lastB = net.sent[i] end end
+ok(lastB and type(lastB.data[2]) == "number", "(and how long it runs goes with it, so everyone's game plays the voices one after another)")
+_run(30)
+n0 = #net.sent
+LC.TriggerAnnouncements("socio_red")
+_run(10)
+got = netPaths("lc_breencast", n0)
+ok(#got == 1 and string.find(got[1], "breen/socio_red/s.wav", 1, true) and #netPaths("lc_announce", n0) == 0, "only she has a line for it: she says it (her only recording is warm, so she uses it)", got[1])
+_setcvar("lc_announce_admin_share", 0)
+_run(30)
+n0 = #net.sent
+LC.Announce("curfew")
+ok(#netPaths("lc_announce", n0) == 1 and #netPaths("lc_breencast", n0) == 0, "his turn: Overwatch alone")
+-- the minor ones are left out straight after anything else
+_setcvar("lc_announce_quiet", 60)
+_run(91)
+n0 = #net.sent
+LC.Announce("curfew")
+hook.Run("LivingCityDayPhase", "dusk", "day")
+_run(10)
+ok(#netPaths("lc_announce", n0) == 1, "a minor one (dusk) straight after another announcement is left out")
+_run(61)
+hook.Run("LivingCityDayPhase", "dusk", "day")
+_run(10)
+ok(#netPaths("lc_announce", n0) == 2, "and is made once it's been quiet a minute")
+_setcvar("lc_announce_quiet", 0)
+_run(91)
 
 n0 = #net.sent
 hook.Run("LivingCityDayPhase", "dusk", "day")
@@ -11881,20 +11908,27 @@ section("Playtest fixes, 17 October")
         ok(sq.done and LC.QuestOf[hopper] == nil, "changing jobs ends the old job's shift, so the new job's can be taken")
     end
     hopper.valid = false
-    -- The Administrator waits for Overwatch to finish (she used to cut in on the warnings)
-    LC.OverwatchUntil = CurTime() + 10
-    local said = 0
-    local hk = function(voice) if voice == "administrator" then said = said + 1 end end
-    hook.Add("LivingCityCustomAnnouncement", "TestWaitsForOverwatch", hk)
+    -- One voice for each warning, never both (they used to talk over each other)
+    local said = {}
+    local hk = function(voice) said[voice] = (said[voice] or 0) + 1 end
+    hook.Add("LivingCityCustomAnnouncement", "TestOneVoice", hk)
     _files["sound/livingcity/administrator/curfew_soon_firm1.wav"] = "RIFF" .. string.rep("\0", 3000)
+    _files["sound/livingcity/overwatch/curfew_soon1.wav"] = "RIFF" .. string.rep("\0", 3000)
     LC.AnnounceRescan()
-    LC.CustomAnnounce("administrator", "curfew_soon", nil, true, 2)
-    _run(5)
-    local early = said
-    _run(8)
-    ok(early == 0 and said >= 1, "the Administrator waits till Overwatch has finished, then speaks", early .. " then " .. said)
-    hook.Remove("LivingCityCustomAnnouncement", "TestWaitsForOverwatch")
+    _setcvar("lc_announce_admin_share", 50)
+    local both, admins = 0, 0
+    for _ = 1, 20 do
+        said = {}
+        LC.TriggerAnnouncements("curfew_soon", { force = true, delay = 0.1 })
+        _run(1)
+        if (said.administrator or 0) > 0 and (said.overwatch or 0) > 0 then both = both + 1 end
+        if (said.administrator or 0) > 0 then admins = admins + 1 end
+    end
+    ok(both == 0 and admins > 0 and admins < 20, "each warning is said by one voice, the Administrator or Overwatch at random, never both", admins .. " of 20 hers, " .. both .. " both")
+    _setcvar("lc_announce_admin_share", 0)
+    hook.Remove("LivingCityCustomAnnouncement", "TestOneVoice")
     _files["sound/livingcity/administrator/curfew_soon_firm1.wav"] = nil
+    _files["sound/livingcity/overwatch/curfew_soon1.wav"] = nil
     LC.AnnounceRescan()
     -- Curfew: a unit on an event's duty (a post, a checkpoint) warns you too, and comes over
     if LC.Event then LC.EndEvent(true) end
