@@ -217,6 +217,7 @@ ending base (Base)
 ending bloom (Bloom)
 ending bus (The Bus)
 ending cooldown file data/livingcity/endings.json
+ending fire (Fire)
 ending hard (Hard)
 ending harpies (The Harpies)
 ending marrow (Marrow)
@@ -441,6 +442,12 @@ setting lc_ending_bus_combine = 6
 setting lc_ending_bus_sections = 27:fly,149:drive,176:fast,220:end
 setting lc_ending_cooldown = 60
 setting lc_ending_edict_limit = 7000
+setting lc_ending_fire_bpm = 100
+setting lc_ending_fire_crowd = 10
+setting lc_ending_fire_fly_speed = 0.35
+setting lc_ending_fire_hop = 22
+setting lc_ending_fire_offset = 0.18
+setting lc_ending_fire_sections = 12.2:ignite,60.2:hop,101:fly,146.6:launch,153:end
 setting lc_ending_flight_radius = 2200
 setting lc_ending_flood_attack_from = 140
 setting lc_ending_flood_boats = 6
