@@ -12384,6 +12384,26 @@ section("Playtest fixes, 17 October (evening)")
     LC.NPCs[fr] = nil fr:Remove()
     boss.valid = false
     LC.RemoveZone(sz)
+    -- a raid coming: the Resistance's own hear first, and get a job to back it up
+    if LC.Skirmish then LC.Skirmish.done = true LC.Skirmish = nil end
+    local rz = LC.AddZone(Vector(-102000, 190000, 0), 300, "rebel", 0)
+    local zonesWas = LC.ZonesOfKindShared
+    local backer = newPlayer("RaidBacker", "resistance")
+    _run(1)
+    backer.chat = {}
+    local tcop, tcst = LC.Spawners.cop(rz.pos + Vector(2500, 0, 0))
+    tcst.routeGroup = nil tcst.untilT = 1e9 tcop.sim = false
+    local planned = LC.PlanRebelRaid()
+    ok(planned and LC.PlannedRaid and not LC.Skirmish, "a raid is planned a minute and a half ahead, not sprung at once")
+    local posted = false
+    for _, ps in ipairs(LC.Postings.resistance or {}) do if ps.tmpl and ps.tmpl.id == "res_backupraid" and not ps.dead then posted = true end end
+    ok(posted and has(backer.chat, "Back up the raid"), "the Resistance get a job to back it up, on their board, and told so")
+    _run(GetConVar("lc_raid_warning"):GetFloat() + 3)
+    ok(LC.PlannedRaid == nil and LC.Skirmish and LC.Skirmish.kind == "raid", "and when the time comes, the fighters go in")
+    if LC.Skirmish then LC.Skirmish.done = true LC.Skirmish = nil end
+    LC.NPCs[tcop] = nil tcop:Remove()
+    backer.valid = false
+    LC.RemoveZone(rz)
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")

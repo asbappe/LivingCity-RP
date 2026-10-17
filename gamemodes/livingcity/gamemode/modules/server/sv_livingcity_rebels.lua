@@ -59,6 +59,7 @@ LC.Thinkers = LC.Thinkers or {}
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvRebels   = CreateConVar("lc_rebels", "4", FLAGS, "Resistance fighters kept in rebel territory, spread across the rebel zones")
 local cvSkirm    = CreateConVar("lc_skirmishes", "1", FLAGS, "Rebels sometimes raid the Combine, and the Combine sometimes sweeps rebel territory")
+local cvRaidLead = CreateConVar("lc_raid_warning", "90", FLAGS, "Seconds the Resistance's own hear (and get a job to back it up) before their fighters hit the Combine (0: no warning)")
 local cvSkirmInt = CreateConVar("lc_skirmish_interval", "25", FLAGS, "Average minutes between skirmishes (each one comes 20% either side of it)")
 -- the old default (9) was far too busy: a server still on it moves to the new one
 timer.Simple(5, function() if cvSkirmInt:GetFloat() == 9 then RunConsoleCommand("lc_skirmish_interval", "25") end end)
@@ -1085,6 +1086,28 @@ local function StartRaid(z, target, purpose, data)
     return true
 end
 
+-- A raid planned a little ahead (lc_raid_warning): the Resistance's own hear where, and
+-- get a job to go and back the fighters up ("Back up the raid", sv_livingcity_sidejobs.lua).
+local function PlanRaid(now)
+    local z = Pick(RebelZones())
+    if not z then return false end
+    local target = RaidTarget(z)
+    if not target then return false end
+    local lead = cvRaidLead:GetFloat()
+    if lead <= 0 then return StartRaid(z, target) end
+    LC.PlannedRaid = { zone = z, target = target, at = now + lead }
+    local where = LC.DescribePlace and LC.DescribePlace(target) or "in the city"
+    Radio("resistance", "In about " .. math.floor(lead / 10 + 0.5) * 10 .. " seconds our people hit the Combine " .. where .. ". Anyone who can, back them up.")
+    for _, p in ipairs(player.GetAll()) do
+        if IsResistance(p) and LC.Notice then
+            LC.Notice(p, "event", "A raid is coming", "Our fighters hit the Combine " .. where .. " in about " .. math.floor(lead / 10 + 0.5) * 10 .. " seconds. Back them up: the job's on your board (F3).", 10)
+        end
+    end
+    if LC.PostDirective then LC.PostDirective("res_backupraid") end
+    return true
+end
+LC.PlanRebelRaid = function() return PlanRaid(CurTime()) end
+
 function LC.StartRebelRaid(z, target, purpose, data)
     if LC.Skirmish then return false, "a skirmish is already on" end
     return StartRaid(z, target, purpose, data)
@@ -1301,15 +1324,22 @@ timer.Create("LivingCitySkirmishes", 2, 0, function()
         local sk = LC.Skirmish
         if sk then RunSkirmish(sk, now) end
         CleanupWithdrawn(now)
+        -- a planned raid, when its time comes
+        local pr = LC.PlannedRaid
+        if pr and now >= pr.at then
+            LC.PlannedRaid = nil
+            if not LC.Skirmish and not (LC.Event == "curfew" or LC.Event == "lockdown") then StartRaid(pr.zone, pr.target) end
+        end
+        if pr then return end
         if LC.Skirmish or not cvSkirm:GetBool() or #RebelZones() == 0 or #player.GetAll() == 0 then return end
         nextSkirmish = nextSkirmish or (now + Interval())
         if now < nextSkirmish then return end
         nextSkirmish = now + Interval()
         if LC.Event == "curfew" or LC.Event == "lockdown" then return end -- the streets are locked down
-        local started = math.random() < 0.5 and StartRaid() or StartSweep()
+        local started = math.random() < 0.5 and PlanRaid(now) or StartSweep()
         if not started then
             -- if one kind can't happen on this map, try the other
-            if not StartRaid() then StartSweep() end
+            if not PlanRaid(now) then StartSweep() end
         end
     end)
     if not ok then LC.Error("skirmishes", err) end

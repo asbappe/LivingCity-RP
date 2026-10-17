@@ -324,6 +324,29 @@ T{
     end,
 }
 
+-- The Resistance's fighters are about to hit the Combine (sv_livingcity_rebels.lua): be there,
+-- and back them up.
+T{
+    id = "res_backupraid", factions = { resistance = true }, violent = true, squad = 6,
+    available = function() return LC.PlannedRaid ~= nil or (LC.Skirmish ~= nil and LC.Skirmish.kind == "raid") end,
+    build = function(ply)
+        local r = LC.PlannedRaid or LC.Skirmish
+        if not r or not r.target then return nil end
+        local target = r.target
+        return {
+            title = "Back up the raid " .. Place(target, ply:GetPos()), reward = 55, limit = 420,
+            desc = "Our fighters are hitting the Combine " .. Place(target, ply:GetPos()) .. ". Get there, and help them: take down the units they're fighting.",
+            stages = {
+                Goto(target, "Meet our fighters at the target", 600),
+                Count("killed", 2, "Back them up: take down two of the Combine's units there", function(_, _, npc)
+                    local st = LC.NPCs[npc]
+                    return st ~= nil and LC.IsSecurity(st) and IsValid(npc) and npc:GetPos():DistToSqr(target) < 1400 * 1400
+                end),
+            },
+        }
+    end,
+}
+
 -- A shackled vortigaunt, at a Combine work site. It waits, shackled and harmless,
 -- with its keepers. Cut the shackles there (they may see), or lead it off still
 -- shackled as if you were moving Combine property, and cut them in rebel
