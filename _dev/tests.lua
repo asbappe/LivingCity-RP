@@ -11565,6 +11565,48 @@ _setcvar("lc_ending_shalom_candles", "35.7,62.1,86.8,111.5,125.7,153.9,183.9,205
 _setcvar("lc_ending_shalom_offset", 0.36)
 _setcvar("lc_ending_shalom_lift_beats", 8)
 for _, pc in ipairs(horaCops) do LC.NPCs[pc] = nil if IsValid(pc) then pc:Remove() end end
+-- Fire: behinds on fire, then flying on them (short timings for the test)
+;(function()
+    concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
+    _setcvar("lc_ending_fire_sections", "1:ignite,2:hop,3:fly,10:launch,13:end")
+    _setcvar("lc_ending_fire_offset", 0)
+    a:SetPos(G0) b:SetPos(G0 + Vector(200, 0, 0))
+    ok(LC.Endings.fire and LC.Endings.fire.flashing and LC.EndingOfSong("fire.mp3") == "fire" and LC.EndingOfSong("fire2.ogg") == "fire",
+        "fire: its song is fire.mp3, and everyone's warned (the explosions at the end)")
+    ok(LC.TriggerEnding("fire", a, true), "fire")
+    local F = LC.EndingSession()
+    local function runToF(sec) _run(math.max(0.1, F.phaseT + sec - CurTime())) end
+    ok(F.id == "fire" and a.frozen and a.movetype == MOVETYPE_NONE and a:GetNW2Bool("lc_dancing", false) and F.client.fire and F.client.dance == "fire",
+        "everyone held at the landing zone, ready to dance")
+    ok(#F.fliers >= 2 + GetConVar("lc_ending_fire_crowd"):GetInt(), "the players, and the city's people round them", #F.fliers)
+    local home
+    for _, f in ipairs(F.fliers) do if f.e == a then home = f.home end end
+    runToF(0.5)
+    ok(a:GetNW2Float("lc_fire", -1) == 0 and a:GetPos() == home, "the intro: only sputtering, everyone standing on the floor")
+    runToF(1.5)
+    ok(a:GetNW2Float("lc_fire", 0) == 1 and a:GetPos() == home, "the drop: every behind lights up, and the dancing starts")
+    local top = 0
+    for _ = 1, 8 do _run(0.11) top = math.max(top, a:GetPos().z - home.z) end
+    ok(top > 5 and top <= GetConVar("lc_ending_fire_hop"):GetFloat() + 0.01 and a:GetNW2Float("lc_fire", 0) > 1, "then the flames grow and everyone hops on the beat", top)
+    runToF(4)
+    ok(a:GetNW2Bool("lc_flying", false) and a:GetPos().z > home.z + 20, "the peak: lift off", a:GetPos().z - home.z)
+    runToF(9.3)
+    local fl = F.flight
+    local d = Vector(a:GetPos().x - fl.centre.x, a:GetPos().y - fl.centre.y, 0):Length()
+    ok(math.abs(d - fl.r) < 1 and a:GetPos().z >= fl.z - 91 and a:GetPos().z <= fl.z + 111, "then everyone flies round a ring in the open sky", d .. " of " .. fl.r)
+    local y0 = a:GetNW2Float("lc_fly_yaw", 0)
+    _run(0.5)
+    ok(a:GetNW2Float("lc_fly_yaw", 0) ~= y0, "facing the way they fly, round and round")
+    runToF(12.6)
+    ok(a.lcEndTaken and b.lcEndTaken and a:GetNW2Float("lc_fire", 1) == 0, "the end: each one rockets up and goes off like a firework, and watches the rest")
+    runToF(13.5)
+    ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and the song's over: the city resets")
+    _run(6)
+    ok(not a.frozen and a.movetype ~= MOVETYPE_NONE and not a:GetNW2Bool("lc_flying", false) and a:GetNW2Float("lc_fire", 0) == 0 and not a.lcFire,
+        "(and everyone can move again)")
+    _setcvar("lc_ending_fire_sections", "12.2:ignite,60.2:hop,101:fly,146.6:launch,153:end")
+    _setcvar("lc_ending_fire_offset", 0.18)
+end)()
 -- Father Grigori eats the motherlode
 concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
 local grig = newPlayer("EndGrigori", "resistance", "chaplain", 300)

@@ -59,7 +59,7 @@ Living City is a Garry's Mod Half-Life 2 roleplay gamemode.
 
 The main file is `modules/server/sv_livingcity_endings.lua`, with its client side in `modules/client/cl_livingcity_endings.lua`. The G-Man offers a vote; the endings are:
 
-- harpies, bus, plane, standup, hard, base, marrow, bloom, water (the flood), shalom (the hora)
+- harpies, bus, plane, standup, hard, base, marrow, bloom, water (the flood), shalom (the hora), fire (behinds on fire, then flying on them)
 
 Each ending has a song and its own `lc_ending_<name>_*` cvars, all documented in the README's endings table.
 

@@ -85,6 +85,12 @@
                    their guns down to join in, someone up on a chair, a giant
                    flag and Star of David fireworks at the key change
                    (lc_ending_shalom_sections, _candles)
+        fire       everyone's behind catches fire: they sputter and smoke
+                   through the intro, ignite at the drop and dance bent over,
+                   hop on the beat as the flames grow, then lift off on their
+                   own jets and fly Superman style in a ring over the city;
+                   at the end each one rockets straight up and goes off like
+                   a firework (lc_ending_fire_sections, _hop, _fly_speed)
 
       Nobody can be hurt during the vote or an ending (and "taken" isn't dead:
       no new character). The city's events wait. One ending (or a skipped one)
@@ -127,11 +133,12 @@ LC.Endings = {
     base      = { name = "Base", say = "What happen ?" },
     hard      = { name = "Hard", say = "It's time." },
     shalom    = { name = "Shalom", say = "Shalom. Take your neighbour by the shoulders: it's time to dance." },
+    fire      = { name = "Fire", say = "Something smells like smoke. It's coming from behind you." },
 }
 -- The ones with strobes or flashes: everyone is warned before and as they start
 -- (and lc_ending_calm, on each player's own screen, leaves the flashing out).
-for _, id in ipairs({ "bus", "bloom", "marrow", "base", "hard", "water", "plane" }) do if LC.Endings[id] then LC.Endings[id].flashing = true end end
-LC.EndingOrder = { "harpies", "bus", "plane", "standup", "water", "bloom", "marrow", "base", "hard", "shalom" }
+for _, id in ipairs({ "bus", "bloom", "marrow", "base", "hard", "water", "plane", "fire" }) do if LC.Endings[id] then LC.Endings[id].flashing = true end end
+LC.EndingOrder = { "harpies", "bus", "plane", "standup", "water", "bloom", "marrow", "base", "hard", "shalom", "fire" }
 
 local E -- the ending in progress: { id, phase, by, ... }
 function LC.EndingSession() return E end
@@ -2613,6 +2620,232 @@ TICK.shalom = function(now)
 end
 end
 
+-- Fire (a codeword): everyone's behind catches fire. Everyone gathers at the
+-- landing zone (the players in the middle, the city's people and the
+-- Combine's units round them); through the intro their behinds sputter and
+-- smoke on the beat; at the drop they ignite, flames roaring out of every
+-- behind, and everyone dances bent over, behind out; the flames grow and
+-- everyone hops on the beat; at the peak they lift off on their own jets and
+-- fly, Superman style, in a great ring over the city, faster and faster,
+-- exhaust trailing; at the end each one rockets straight up and goes off
+-- like a firework. (Timed from the song: 2:33, 100 BPM.)
+do
+local cvFireSections = CreateConVar("lc_ending_fire_sections", "12.2:ignite,60.2:hop,101:fly,146.6:launch,153:end", FLAGS,
+    "Fire: the song's sections, second:kind (ignite, hop, fly, launch, end); before the first, the behinds sputter")
+local cvFireBPM = CreateConVar("lc_ending_fire_bpm", "100", FLAGS, "Fire: the song's beats per minute (the dance and the hops keep to it)")
+local cvFireOffset = CreateConVar("lc_ending_fire_offset", "0.18", FLAGS, "Fire: seconds into the song of its first beat")
+local cvFireCrowd = CreateConVar("lc_ending_fire_crowd", "10", FLAGS, "Fire: how many of the city's people stand round everyone (its own NPCs first, topped up with citizens)")
+local cvFireHop = CreateConVar("lc_ending_fire_hop", "22", FLAGS, "Fire: how high everyone hops on the beat (units)")
+local cvFireSpeed = CreateConVar("lc_ending_fire_fly_speed", "0.35", FLAGS, "Fire: how fast the flyers go round the ring at first (radians a second; twice that by the end)")
+local FIRE_PAL = { { 255, 120, 20 }, { 255, 200, 60 }, { 255, 60, 10 }, { 255, 160, 40 } }
+-- how hard each behind burns, by section (the client draws the flames from it)
+local FIRE_HEAT = { intro = 0, ignite = 1, hop = 1.6, fly = 2.2, launch = 3, ["end"] = 3 }
+local RISE, OUT = 3, 3 -- (seconds to rise to the ring's height, then to fly out onto it)
+
+local function FireSection(t)
+    local kind, at = "intro", 0
+    for _, sct in ipairs(E.sections) do if t >= sct.t then kind, at = sct.kind, sct.t end end
+    return kind, at
+end
+local function FireAt(kind, fallback)
+    for _, sct in ipairs(E.sections or {}) do if sct.kind == kind then return sct.t end end
+    return fallback
+end
+local function Smooth(x) x = math.Clamp(x, 0, 1) return x * x * (3 - 2 * x) end
+
+-- Everyone the ending holds: { e, home (on the floor), i }
+local function Hold(e, home, yaw)
+    if not IsValid(e) then return end
+    if e:IsPlayer() then
+        if e.InVehicle and e:InVehicle() and e.ExitVehicle then e:ExitVehicle() end
+        e.lcEndFrozen = true
+        e:Freeze(true)
+        e:SetMoveType(MOVETYPE_NONE)
+        e.lcFire = true
+    end
+    e:SetPos(home)
+    if e:IsPlayer() then
+        if e.SetEyeAngles then e:SetEyeAngles(Angle(0, yaw, 0)) end
+    elseif e.SetAngles then
+        e:SetAngles(Angle(0, yaw, 0))
+    end
+    e:SetNW2Bool("lc_dancing", true)
+    E.fliers[#E.fliers + 1] = { e = e, home = home, i = #E.fliers + 1 }
+end
+
+SETUP.fire = function()
+    local now = CurTime()
+    E.songEnds = true -- (it's over when the song is)
+    E.sections = LC.MarrowSections(cvFireSections:GetString())
+    E.holdUntil = now + FireAt("end", 153)
+    E.dark = true
+    LC.EndingDark = "f" -- (dimmer, so the flames light everyone up)
+    if LC.ApplyLightStyle then LC.ApplyLightStyle() end
+    LC.TimeStopped = true
+    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
+    E.floorZ = (Ground(E.lz) or E.lz).z
+    E.fliers = {}
+    -- the players in the middle, facing out (their behinds to the middle: the flames go in)
+    local ps = player.GetAll()
+    local r1 = 70 + 16 * #ps
+    for i, p in ipairs(ps) do
+        local a = (i - 1) / math.max(1, #ps) * math.pi * 2
+        local spot = Ground(E.lz + Vector(math.cos(a) * r1, math.sin(a) * r1, 0)) or Vector(E.lz.x + math.cos(a) * r1, E.lz.y + math.sin(a) * r1, E.floorZ)
+        Hold(p, spot, math.deg(a))
+    end
+    -- the city's people, and the Combine's units, round them
+    local folk = CityFolk()
+    local want = cvFireCrowd:GetInt()
+    while #folk > want do table.remove(folk) end
+    local cps = CombineNPCs()
+    local outer = {}
+    for i = 1, want do
+        local c = folk[i]
+        if not IsValid(c) then c = SpawnFolk(E.lz, i) end
+        if IsValid(c) then outer[#outer + 1] = c end
+    end
+    for i, n in ipairs(cps) do if i <= 24 then outer[#outer + 1] = n end end
+    local r2 = math.max(r1 + 110, #outer * 45 / (math.pi * 2))
+    for i, e in ipairs(outer) do
+        local a = (i - 1) / math.max(1, #outer) * math.pi * 2 + 0.2
+        local spot = Ground(E.lz + Vector(math.cos(a) * r2, math.sin(a) * r2, 0)) or Vector(E.lz.x + math.cos(a) * r2, E.lz.y + math.sin(a) * r2, E.floorZ)
+        e.lcRing = true
+        Hold(e, spot, math.deg(a))
+    end
+    -- every other NPC in the city burns (and dances) where they stand
+    for npc in pairs(LC.NPCs or {}) do if IsValid(npc) then npc:SetNW2Bool("lc_dancing", true) end end
+    -- the sky to fly in
+    E.flight = LC.EndingSky(E.lz)
+    E.client = { party = true, lights = true, dance = "fire", fire = true, palette = FIRE_PAL, bpm = cvFireBPM:GetFloat(), offset = cvFireOffset:GetFloat(),
+        start = now, section = "intro" }
+end
+
+local function Heat(kind)
+    local h = FIRE_HEAT[kind] or 0
+    for npc in pairs(LC.NPCs or {}) do if IsValid(npc) then npc:SetNW2Float("lc_fire", h) end end
+    for _, f in ipairs(E.fliers) do if IsValid(f.e) then f.e:SetNW2Float("lc_fire", h) end end
+end
+
+-- the ring in the sky: everyone evenly round it, each at their own height
+local function RingPos(f, t, n)
+    local fl = E.flight
+    local flyT = t - FireAt("fly", 101)
+    local w0 = cvFireSpeed:GetFloat()
+    local span = math.max(1, FireAt("launch", 146.6) - FireAt("fly", 101))
+    local turned = w0 * flyT + w0 * flyT * flyT / (2 * span) -- (the speed doubles over the flight)
+    local a = (f.i - 1) / math.max(1, n) * math.pi * 2 + turned
+    local z = fl.z - 60 + 140 * ((f.i * 0.618) % 1) + 30 * math.sin(t * 1.3 + f.i)
+    return Vector(fl.centre.x + math.cos(a) * fl.r, fl.centre.y + math.sin(a) * fl.r, z), a
+end
+
+local function Burst(f, now)
+    local e = f.e
+    if not IsValid(e) then return end
+    local at = e:GetPos() + Vector(0, 0, 30)
+    if util.Effect and EffectData then
+        local fx = EffectData()
+        fx:SetOrigin(at)
+        util.Effect("Explosion", fx, true, true) -- (only the look and the sound: nobody's hurt)
+        for i = 1, 12 do
+            local c = FIRE_PAL[i % #FIRE_PAL + 1]
+            local cf = EffectData()
+            cf:SetOrigin(at + VectorRand() * 90)
+            if cf.SetStart then cf:SetStart(Vector(c[1], c[2], c[3])) end
+            util.Effect("balloon_pop", cf)
+        end
+    end
+    if e:IsPlayer() then
+        e:SetNW2Float("lc_fire", 0)
+        e:SetNW2Bool("lc_flying", false)
+        Spectator(e, "Your behind takes you all the way up, and you go off like a firework. Watch the rest go.", Color(255, 140, 30, 90))
+    else
+        e:SetNW2Float("lc_fire", 0)
+        e:SetNW2Bool("lc_flying", false)
+        if e.lcCrowd then e:Remove() elseif e.SetNoDraw then e:SetNoDraw(true) end
+    end
+    f.gone = true
+end
+
+TICK.fire = function(now)
+    local t = now - E.phaseT
+    local kind = FireSection(t)
+    if kind ~= E.client.section then
+        E.client.section = kind
+        Heat(kind)
+        -- each new section starts with a roar
+        for i, f in ipairs(E.fliers) do
+            if IsValid(f.e) and i <= 30 and sound and sound.Play then
+                if kind == "ignite" then sound.Play("ambient/fire/ignite.wav", f.e:GetPos(), 80, math.random(90, 115), 0.8)
+                elseif kind == "fly" then sound.Play("weapons/rpg/rocketfire1.wav", f.e:GetPos(), 85, math.random(85, 110), 0.8) end
+            end
+        end
+        Send()
+    end
+    local bpm = math.max(40, cvFireBPM:GetFloat())
+    local beat = (t - cvFireOffset:GetFloat()) * bpm / 60
+    local n = #E.fliers
+    local flyAt, launchAt = FireAt("fly", 101), FireAt("launch", 146.6)
+    for _, f in ipairs(E.fliers) do
+        local e = f.e
+        if IsValid(e) and not f.gone then
+            local pos, yaw
+            if t < flyAt then
+                -- on the ground: hopping on the beat once the flames are big enough
+                pos = f.home
+                if kind == "hop" then pos = f.home + Vector(0, 0, cvFireHop:GetFloat() * math.abs(math.sin(beat * math.pi))) end
+            else
+                local ring, a = RingPos(f, t, n)
+                local ft = t - flyAt
+                if not f.up then
+                    f.up = true
+                    e:SetNW2Bool("lc_flying", true)
+                    e:SetNW2Bool("lc_dancing", true)
+                end
+                if ft < RISE then
+                    -- lift off: straight up, faster and faster, to the ring's height
+                    local s = (ft / RISE) ^ 2
+                    pos = Vector(f.home.x, f.home.y, Lerp(s, f.home.z, ring.z))
+                    yaw = math.deg(math.atan2(ring.y - f.home.y, ring.x - f.home.x))
+                elseif ft < RISE + OUT then
+                    -- out onto the ring
+                    local from = Vector(f.home.x, f.home.y, ring.z)
+                    pos = LerpVector(Smooth((ft - RISE) / OUT), from, ring)
+                    yaw = math.deg(math.atan2(ring.y - from.y, ring.x - from.x))
+                else
+                    pos = ring
+                    yaw = math.deg(a) + 90 -- (round the ring, the way it turns)
+                end
+                if t >= launchAt then
+                    -- the end: one after another, straight up, and bang
+                    f.launchT = f.launchT or (now + ((f.i - 1) % 12) * 0.25)
+                    if now >= f.launchT then
+                        if not f.launchFrom then
+                            f.launchFrom = e:GetPos()
+                            if sound and sound.Play then sound.Play("weapons/rpg/rocketfire1.wav", f.launchFrom, 90, 120, 0.9) end
+                        end
+                        local lt = now - f.launchT
+                        local top = (E.flight.top or (f.launchFrom.z + 600)) - 40
+                        pos = Vector(f.launchFrom.x, f.launchFrom.y, math.min(top, f.launchFrom.z + 250 * lt + 500 * lt * lt))
+                        if lt >= 1.4 then Burst(f, now) end
+                    else
+                        pos = pos or e:GetPos()
+                    end
+                end
+            end
+            if not f.gone then
+                e:SetPos(pos)
+                if yaw then
+                    e:SetNW2Float("lc_fly_yaw", yaw)
+                    if not e:IsPlayer() and e.SetAngles then e:SetAngles(Angle(0, yaw, 0)) end
+                end
+            end
+        end
+    end
+end
+end
+
 -- Plane (a codeword): numa numa. Like the band in the video, everyone dances
 -- on the wings of an airplane over the city. It circles low through the
 -- intro; at the first hook everyone (and some of the Combine) is up on it,
@@ -3483,7 +3716,10 @@ local function Clear()
         p.lcBloomUp = nil
         p:SetNW2Bool("lc_rocking", false)
         p:SetNW2Bool("lc_chair", false)
+        p:SetNW2Float("lc_fire", 0)
+        p:SetNW2Bool("lc_flying", false)
         if p.lcShalom then p:SetMoveType(MOVETYPE_WALK) p.lcShalom = nil end
+        if p.lcFire then p:SetMoveType(MOVETYPE_WALK) p.lcFire = nil end
         p.lcHora = nil
     end
     SetGlobal2Float("lc_flood_z", 0)
@@ -3495,6 +3731,7 @@ local function Clear()
         if IsValid(npc) then
             npc:SetNW2Bool("lc_dancing", false) npc:SetNW2Bool("lc_seated", false) npc.lcBloomUp = nil npc.lcEndRide = nil
             npc:SetNW2Bool("lc_chair", false) npc.lcHora = nil
+            npc:SetNW2Float("lc_fire", 0) npc:SetNW2Bool("lc_flying", false)
             if npc.lcHang then npc.lcHang = nil npc:SetNW2Float("lc_hanged", 0) npc:SetNW2Bool("lc_limp", false) end
         end
     end

@@ -46,6 +46,7 @@ local MOVES = {
     hard = { { "hard", "Party hard (a pose and its mirror image)" } },
     shalom = { { "hora", "The hora: arms on the shoulders, the grapevine" }, { "hora_in", "Rushing into the middle, arms up" }, { "chair", "Up on the chair" } },
     plane = { { "numa", "Numa numa" } },
+    fire = { { "fire", "Bent over, behind out, arms pumping (on the ground)" }, { "fly", "Flying on it, Superman style (Pelvis tips the whole body)" } },
     standup = { { "cheer", "The crowd cheering" }, { "hanged", "On the rope, kicking" }, { "limp", "Limp, at the end" } },
     water = { { "bang", "Father Grigori headbanging (the heavy parts)" }, { "groove", "Father Grigori dancing (the calm parts)" } },
 }

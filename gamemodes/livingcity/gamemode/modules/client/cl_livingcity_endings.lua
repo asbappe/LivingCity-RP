@@ -507,6 +507,33 @@ local function Dance(ent, beat, now, key)
         danced[ent] = true
         return
     end
+    -- Fire: on the ground, bent over with the behind out (the flames), hips shaking, fists
+    -- pumping; up in the air, flying on it, Superman style: the whole body tipped forward
+    -- at the hips, arms out in front, legs trailing and fluttering. (On the head and spine
+    -- pitch nods, plus forward; the pelvis turns the whole body, fine once off the ground.)
+    if key == "fire" then
+        local move = (ent.lcTuneFly or (ent.GetNW2Bool and ent:GetNW2Bool("lc_flying", false))) and "fly" or "fire"
+        local P
+        if move == "fly" then
+            P = {
+                Pelvis = Angle(80, 0, 0),
+                Spine = Angle(-5, 0, 0), Head = Angle(-55, 0, 0),
+                R_UpperArm = Angle(-12, -150, 0), L_UpperArm = Angle(12, -150, 0),
+                R_Forearm = Angle(0, -10, 0), L_Forearm = Angle(0, -10, 0),
+                R_Thigh = Angle(0, 10 * wave, 0), L_Thigh = Angle(0, -10 * wave, 0),
+            }
+        else
+            P = {
+                Spine = Angle(22 + 6 * bounce, 0, 0), Spine2 = Angle(12, 0, 0), Head = Angle(-28, 0, 0),
+                Pelvis = Angle(0, 0, 18 * wave), -- (a twist at the hips: the shake)
+                R_UpperArm = Angle(-10, -45 - 30 * wave, 0), L_UpperArm = Angle(10, -45 + 30 * wave, 0),
+                R_Forearm = Angle(0, -75, 0), L_Forearm = Angle(0, -75, 0),
+            }
+        end
+        for name, id in pairs(b) do ent:ManipulateBoneAngles(id, Tune(ent, move, name, P[name] or Angle(0, 0, 0))) end
+        danced[ent] = true
+        return
+    end
     if key == "hora" then
         HoraPose(ent, b, beat)
         danced[ent] = true
@@ -701,6 +728,11 @@ hook.Add("CalcView", "LivingCityBloom", function(me, origin, angles, fov)
     if IsValid(me) and me:GetNW2Bool("lc_seated", false) and IsValid(bus) then
         local from = bus:GetPos() + Vector(0, 0, 140)
         return { origin = SafeCam(from, from - angles:Forward() * 520), angles = angles, fov = fov, drawviewer = true }
+    end
+    -- Fire, flying: behind you and a little above, looking wherever you look
+    if IsValid(me) and on and on.fire and me:GetNW2Bool("lc_flying", false) and not me:GetNW2Bool("lc_end_spectating", false) then
+        local from = me:GetPos() + Vector(0, 0, 50)
+        return { origin = SafeCam(from, from - angles:Forward() * 240 + Vector(0, 0, 40)), angles = angles, fov = fov, drawviewer = true }
     end
     if not Dancing(me) then return end
     local a = math.rad(CurTime() * 18)
@@ -2072,6 +2104,183 @@ function LC_CL.EndingPoseMove(ent, move, beat)
         ent.lcTuneSection = move == "hora_in" and "in" or "dance"
         ent.lcTuneChair = move == "chair"
     end
+    if move == "fire" or move == "fly" then
+        key = "fire"
+        ent.lcTuneFly = move == "fly"
+    end
     Dance(ent, beat, CurTime(), key)
     danced[ent] = nil -- (the city's own dancers are let go when nobody dances; this one is the menu's)
+end
+
+------------------------------------------------------------------------
+-- Fire: the flames out of everyone's behind (sv_livingcity_endings.lua)
+------------------------------------------------------------------------
+-- Each one burns as hard as the server says (lc_fire: 0 sputtering, 1 lit,
+-- up to 3 for the last rocket up): flames and smoke out of the back of the
+-- hips, pointing back and down on the ground and straight out behind in the
+-- air, a glow over the flames, firelight round the nearest, and the roar of
+-- your own. Before they light, a puff of smoke and a spark now and then, on
+-- the beat. Only the nearest few dozen get the particles; everyone gets the glow.
+do
+local emitter
+local lastPos = {}   -- [ent] = where they were (which way they're going: the exhaust goes the other way)
+local burners, burnersAt = {}, 0
+local nextEmit = 0
+local lastPuffBeat = -1
+local roar, roarFly
+local glowMat
+local function FireOn() local c = S and S.phase == "apocalypse" and S.client return c and c.fire and c or nil end
+LC_CL.EndingFireOn = FireOn
+
+-- Where someone's behind is, and which way the flames go
+local function Behind(e)
+    local pos = e:GetPos() + Vector(0, 0, 38)
+    local bone = e.LookupBone and e:LookupBone("ValveBiped.Bip01_Pelvis")
+    if bone and e.GetBonePosition then
+        local bp = e:GetBonePosition(bone)
+        if bp then pos = bp end
+    end
+    local yaw = e:GetNW2Float("lc_fly_yaw", 0)
+    local flying = e:GetNW2Bool("lc_flying", false)
+    local fwd = flying and Angle(0, yaw, 0):Forward() or e:GetForward()
+    local dir
+    if flying then
+        local last = lastPos[e]
+        local now = e:GetPos()
+        if last and now:DistToSqr(last) > 4 then dir = (last - now):GetNormalized() end
+        lastPos[e] = now
+        dir = dir or -fwd
+    else
+        fwd.z = 0
+        fwd:Normalize()
+        dir = (-fwd * 0.75 + Vector(0, 0, -0.55)):GetNormalized()
+    end
+    return pos - fwd * 6, dir
+end
+
+local function Flame(pos, dir, heat)
+    local p = emitter:Add("particles/flamelet" .. math.random(1, 5), pos)
+    if not p then return end
+    p:SetVelocity(dir * (120 + 140 * heat) + VectorRand() * 20)
+    p:SetDieTime(math.Rand(0.2, 0.32 + 0.08 * heat))
+    p:SetStartAlpha(255)
+    p:SetEndAlpha(0)
+    p:SetStartSize(4 + 5 * heat)
+    p:SetEndSize(1)
+    p:SetRoll(math.Rand(0, 360))
+    p:SetRollDelta(math.Rand(-3, 3))
+    p:SetColor(255, math.random(170, 230), math.random(90, 140))
+end
+
+local function Smoke(pos, dir, size)
+    local p = emitter:Add("particle/particle_smokegrenade", pos)
+    if not p then return end
+    p:SetVelocity(dir * 60 + Vector(0, 0, 25) + VectorRand() * 10)
+    p:SetDieTime(math.Rand(1, 1.8))
+    p:SetStartAlpha(90)
+    p:SetEndAlpha(0)
+    p:SetStartSize(size)
+    p:SetEndSize(size * 3)
+    p:SetRoll(math.Rand(0, 360))
+    p:SetColor(70, 65, 60)
+end
+
+hook.Add("Think", "LivingCityFire", function()
+    local on = FireOn()
+    local me = LocalPlayer()
+    if not on or not IsValid(me) then
+        if roar then roar:Stop() roar = nil end
+        if roarFly then roarFly:Stop() roarFly = nil end
+        if emitter then emitter:Finish() emitter = nil end
+        burners, lastPos = {}, {}
+        return
+    end
+    local now = CurTime()
+    if now >= burnersAt then
+        burnersAt = now + 1
+        burners = {}
+        for _, e in ipairs(ents.GetAll and ents.GetAll() or player.GetAll()) do
+            if IsValid(e) and e.GetNW2Bool and (e:GetNW2Bool("lc_dancing", false) or e:GetNW2Float("lc_fire", 0) > 0) then burners[#burners + 1] = e end
+        end
+    end
+    -- your own roar, louder in the air
+    local heat = me:GetNW2Float("lc_fire", 0)
+    if heat > 0 and CreateSound then
+        roar = roar or CreateSound(me, "ambient/fire/fire_med_loop1.wav")
+        if roar and not roar:IsPlaying() then roar:PlayEx(0.5, 100) end
+        if me:GetNW2Bool("lc_flying", false) then
+            roarFly = roarFly or CreateSound(me, "thrusters/rocket04.wav")
+            if roarFly and not roarFly:IsPlaying() then roarFly:PlayEx(0.45, 100) end
+        elseif roarFly then roarFly:Stop() roarFly = nil end
+    elseif roar then roar:Stop() roar = nil end
+    if now < nextEmit then return end
+    nextEmit = now + 1 / 30
+    emitter = emitter or (ParticleEmitter and ParticleEmitter(me:GetPos(), false))
+    if not emitter then return end
+    -- the nearest few dozen
+    local near = {}
+    local here = me:GetPos()
+    for _, e in ipairs(burners) do
+        if IsValid(e) and not (e.GetNoDraw and e:GetNoDraw()) then
+            local d = e:GetPos():DistToSqr(here)
+            if d < 3000 * 3000 then near[#near + 1] = { e = e, d = d } end
+        end
+    end
+    table.sort(near, function(x, y) return x.d < y.d end)
+    local beat = math.floor((SongPos(now) - (on.offset or 0)) * (on.bpm or 100) / 60)
+    local puff = beat ~= lastPuffBeat
+    lastPuffBeat = beat
+    for i = 1, math.min(#near, 32) do
+        local e = near[i].e
+        local h = e:GetNW2Float("lc_fire", 0)
+        local pos, dir = Behind(e)
+        if h > 0 then
+            for _ = 1, math.ceil(1 + h) do Flame(pos, dir, h) end
+            if math.random() < 0.12 + 0.05 * h then Smoke(pos + dir * 30, dir, 8 + 4 * h) end
+        elseif puff and math.random() < 0.35 then
+            -- sputtering: a puff, and now and then a little lick of flame
+            Smoke(pos, dir, 6)
+            if math.random() < 0.4 then for _ = 1, 3 do Flame(pos, dir, 0.4) end end
+        end
+        -- firelight on the nearest
+        if h > 0 and i <= 8 and DynamicLight then
+            local dl = DynamicLight(52400 + i)
+            if dl then
+                dl.pos = pos + dir * 20
+                dl.r, dl.g, dl.b = 255, 140, 40
+                dl.brightness = 1.5 + 0.6 * h + math.Rand(-0.4, 0.4)
+                dl.size = 180 + 60 * h
+                dl.decay = 0
+                dl.dietime = now + 0.1
+            end
+        end
+    end
+end)
+
+-- the glow over the flames (everyone burning, however far)
+hook.Add("PostDrawTranslucentRenderables", "LivingCityFire", function(_, sky)
+    if sky or not FireOn() or not render.DrawSprite then return end
+    glowMat = glowMat or (Material and Material("sprites/light_glow02_add"))
+    if not glowMat then return end
+    render.SetMaterial(glowMat)
+    for _, e in ipairs(burners) do
+        if IsValid(e) and not (e.GetNoDraw and e:GetNoDraw()) then
+            local h = e:GetNW2Float("lc_fire", 0)
+            if h > 0 then
+                local pos, dir = Behind(e)
+                local s = (26 + 14 * h) * math.Rand(0.85, 1.15)
+                render.DrawSprite(pos + dir * 10, s, s, Color(255, 150, 50, 220))
+            end
+        end
+    end
+end)
+
+-- Flying: everyone's body faces the way they fly, whichever way they look
+local function FlyFacing(ply)
+    if FireOn() and ply:GetNW2Bool("lc_flying", false) and ply.SetRenderAngles then
+        ply:SetRenderAngles(Angle(0, ply:GetNW2Float("lc_fly_yaw", 0), 0))
+    end
+end
+hook.Add("UpdateAnimation", "LivingCityFire", function(ply) FlyFacing(ply) end)
+hook.Add("PrePlayerDraw", "LivingCityFire", function(ply) FlyFacing(ply) end)
 end

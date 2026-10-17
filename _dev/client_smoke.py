@@ -1426,6 +1426,41 @@ if concommand.list and concommand.list.lc_shalom_pose_print then concommand.list
 Matrix, ents.GetAll, sound.Play, sound.PlayFile = matrixWas, allWas, playWas, pfWas
 _me.LookupBone, _me.GetBoneMatrix = nil, nil
 _me.nw.lc_dancing = false
+-- Fire: flames out of the behind (and smoke before they light), a glow over them, flying
+do
+    local pewWas, allWas2 = ParticleEmitter, ents.GetAll
+    local flames = 0
+    local fp = setmetatable({}, { __index = function() return function() end end })
+    ParticleEmitter = function() return { Add = function() flames = flames + 1 return fp end, Finish = function() end } end
+    ents.GetAll = function() return { _me } end
+    _me.nw.lc_dancing = true
+    local function fire(at, section, heat, flying)
+        net._q = { {} }
+        net.recv_lc_ending()
+        net._q = { { id = "fire", phase = "apocalypse", name = "Fire", say = "x", song = "livingcity/endings/fire.mp3",
+            client = { party = true, lights = true, dance = "fire", fire = true, palette = { { 255, 120, 20 } }, bpm = 100, offset = 0.18, start = CurTime() - at, section = section } } }
+        net.recv_lc_ending()
+        _me.nw.lc_fire, _me.nw.lc_flying, _me.nw.lc_fly_yaw = heat, flying, 90
+    end
+    for _, at in ipairs({ { 5, "intro", 0, false }, { 30, "ignite", 1, false }, { 80, "hop", 1.6, false }, { 120, "fly", 2.2, true } }) do
+        fire(at[1], at[2], at[3], at[4])
+        local f0, s0 = flames, _calls["render.DrawSprite"] or 0
+        for _ = 1, 6 do _advance(0.6) for _, h in pairs(hook.t["Think"] or {}) do h() end end
+        for _, h in pairs(hook.t["PostDrawTranslucentRenderables"] or {}) do h(false, false) end
+        for _, h in pairs(hook.t["CalcView"] or {}) do h(_me, Vector(0, 0, 0), Angle(0, 0, 0), 75) end
+        if hook.t.PrePlayerDraw and hook.t.PrePlayerDraw.LivingCityFire then hook.t.PrePlayerDraw.LivingCityFire(_me) end
+        paint()
+        local sprites = (_calls["render.DrawSprite"] or 0) - s0
+        if at[3] > 0 and flames - f0 < 6 then return "fire: hardly any flames at " .. at[1] .. "s (" .. (flames - f0) .. ")" end
+        if at[3] > 0 and sprites < 1 then return "fire: no glow over the flames at " .. at[1] .. "s" end
+        if at[3] == 0 and sprites > 0 then return "fire: a glow before anyone's lit" end
+    end
+    if not LC_CL.EndingMoves.fire or #LC_CL.EndingMoves.fire ~= 2 then return "fire: its two moves aren't in the Endings menu" end
+    net._q = { {} }
+    net.recv_lc_ending()
+    _me.nw.lc_fire, _me.nw.lc_flying, _me.nw.lc_dancing = 0, false, false
+    ParticleEmitter, ents.GetAll = pewWas, allWas2
+end
 -- the playtest fixes: stage lights on the flood, spotlights for Hard, cones drawn on the hanged,
 -- the arcade's score and trails, nobody running in place while an ending moves them
 local entWas2 = Entity
