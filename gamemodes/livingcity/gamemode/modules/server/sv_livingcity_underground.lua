@@ -506,7 +506,8 @@ local function Describe(found, guns)
     local names = {}
     for _, f in ipairs(found) do
         local it = LCS.Items[f.id]
-        names[#names + 1] = (it and it.name or f.id) .. (f.n > 1 and (" x" .. f.n) or "")
+        local gun = isstring(f.id) and string.sub(f.id, 1, 2) == "w:" and string.gsub(string.gsub(string.sub(f.id, 3), "^weapon_", ""), "_", " ")
+        names[#names + 1] = (it and it.name or gun or f.id) .. (f.n > 1 and (" x" .. f.n) or "")
     end
     for _, cls in ipairs(guns or {}) do names[#names + 1] = string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ") end
     return table.concat(names, ", ")
@@ -978,7 +979,7 @@ local function SaveStash(ply) ply:SetPData(StashKey(), util.TableToJSON(LC.Stash
 
 local function StashCount(ply)
     local n = 0
-    for _, c in pairs(LC.Stash(ply)) do n = n + c end
+    for k, c in pairs(LC.Stash(ply)) do if isnumber(c) then n = n + c end end -- (lcClips: what's in the guns' magazines)
     return n
 end
 
@@ -1008,6 +1009,61 @@ function LC.StashTake(ply, id)
     return true
 end
 
+-- Weapons in hand (a crowbar, a gun) go in too: "w:<class>", one stash place each,
+-- with what's in the magazine. The ones your faction issues you stay with you.
+local function WeaponName(cls) return (string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ")) end
+LC.StashWeaponName = WeaponName
+function LC.StashableWeapons(ply)
+    local out = {}
+    for _, w in ipairs(ply:GetWeapons()) do
+        local cls = w and w.GetClass and w:GetClass()
+        if cls and LCS.SellWeapons[cls] and not (LC.IsIssuedWeapon and LC.IsIssuedWeapon(ply, cls)) then
+            out[#out + 1] = { cls = cls, name = WeaponName(cls) }
+        end
+    end
+    table.sort(out, function(a, b) return a.cls < b.cls end)
+    return out
+end
+
+function LC.StashStoreWeapon(ply, cls)
+    if not LC.CanReachStash(ply) then return false, "Your stash is at home, in your own block." end
+    if not isstring(cls) or not LCS.SellWeapons[cls] or not ply:HasWeapon(cls) then return false end
+    local w = ply.GetWeapon and ply:GetWeapon(cls)
+    if LC.IsIssuedWeapon and LC.IsIssuedWeapon(ply, cls) then return false, "That was issued to you. It stays with you." end
+    if StashCount(ply) >= cvStash:GetInt() then return false, "Your stash is full." end
+    local st = LC.Stash(ply)
+    local key = "w:" .. cls
+    st[key] = (st[key] or 0) + 1
+    local clip = IsValid(w) and w.Clip1 and w:Clip1() or -1
+    if clip and clip > 0 then
+        st.lcClips = istable(st.lcClips) and st.lcClips or {}
+        st.lcClips[key] = (st.lcClips[key] or 0) + clip
+    end
+    ply:StripWeapon(cls)
+    SaveStash(ply)
+    ply:EmitSound("physics/metal/weapon_impact_soft" .. math.random(1, 3) .. ".wav", 55)
+    return true, "You hide the " .. WeaponName(cls) .. " away."
+end
+
+function LC.StashTakeWeapon(ply, key)
+    if not LC.CanReachStash(ply) then return false, "Your stash is at home, in your own block." end
+    local st = LC.Stash(ply)
+    if not isstring(key) or (st[key] or 0) < 1 then return false end
+    local cls = string.sub(key, 3)
+    if ply:HasWeapon(cls) then return false, "You've one of those on you already." end
+    st[key] = st[key] - 1
+    if st[key] <= 0 then st[key] = nil end
+    local w = ply:Give(cls, true)
+    local clips = istable(st.lcClips) and st.lcClips or nil
+    if clips and clips[key] then
+        if IsValid(w) and w.SetClip1 then w:SetClip1(clips[key]) end
+        clips[key] = nil
+        if next(clips) == nil then st.lcClips = nil end
+    end
+    SaveStash(ply)
+    return true
+end
+
 -- Sweeps sometimes reach people's homes.
 hook.Add("LivingCityEventStarted", "LivingCityStashRaids", function(name)
     if name ~= "sweep" then return end
@@ -1016,9 +1072,10 @@ hook.Add("LivingCityEventStarted", "LivingCityStashRaids", function(name)
         local found = {}
         for id, n in pairs(st) do
             if LCS.Items[id] and LCS.Items[id].contraband then found[#found + 1] = { id = id, n = n } end
+            if isstring(id) and string.sub(id, 1, 2) == "w:" and isnumber(n) then found[#found + 1] = { id = id, n = n, weapon = true } end
         end
         if #found > 0 and math.random() * 100 < cvRaid:GetFloat() then
-            for _, f in ipairs(found) do st[f.id] = nil end
+            for _, f in ipairs(found) do st[f.id] = nil if istable(st.lcClips) then st.lcClips[f.id] = nil end end
             SaveStash(ply)
             local home = LC.PlayerBlock and LC.PlayerBlock(ply)
             ply:ChatPrint(string.format("[Civil Protection] Your residence%s was searched. Confiscated: %s.",
@@ -1282,8 +1339,11 @@ function LC.UndergroundAction(ply, action, id)
         ok = false
     elseif action == "store" then
         ok, why = LC.StashStore(ply, id)
+    elseif action == "wstore" then
+        ok, why = LC.StashStoreWeapon(ply, id)
+        if ok and why then ply:ChatPrint("[Stash] " .. why) why = nil end
     elseif action == "take" then
-        ok, why = LC.StashTake(ply, id)
+        if isstring(id) and string.sub(id, 1, 2) == "w:" then ok, why = LC.StashTakeWeapon(ply, id) else ok, why = LC.StashTake(ply, id) end
     elseif action == "use" and it then
         if it.tool then
             ok, why = LC.StartPick(ply, id)
@@ -1315,8 +1375,10 @@ function LC.InvExtras(ply, t)
     t.disguise = LC.Disguise(ply)
     t.alias = LC.Identity(ply) and LC.Identity(ply).alias or nil
     if LC.CanReachStash(ply) then
-        t.stash = LC.Stash(ply)
+        t.stash = {}
+        for k, v in pairs(LC.Stash(ply)) do if isnumber(v) then t.stash[k] = v end end
         t.stashSize = cvStash:GetInt()
+        t.stashWeapons = LC.StashableWeapons(ply)
     end
 end
 

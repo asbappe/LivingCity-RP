@@ -12171,6 +12171,20 @@ section("Playtest fixes, 17 October (evening)")
     LC.NearQuartermaster = nqWas
     ok(LCS.BlackById.ration_forged.price == 10 and LCS.Items.ration_forged.sell < 10, "a forged ration card is 10 credits")
     comrade.valid = false
+    -- the stash takes what's in your hands too: a crowbar, a gun (not what your faction issued you)
+    local hider = newPlayer("GunHider", "citizen")
+    hider:Give("weapon_crowbar") hider:Give("weapon_pistol")
+    local reachWas = LC.CanReachStash
+    LC.CanReachStash = function() return true end
+    local listed = {}
+    for _, w in ipairs(LC.StashableWeapons(hider)) do listed[w.cls] = true end
+    ok(listed.weapon_crowbar and listed.weapon_pistol, "at your stash, the crowbar and the pistol in your hands can be put away")
+    LC.InvAction(hider, "wstore", "weapon_pistol")
+    ok(not hider:HasWeapon("weapon_pistol") and (LC.Stash(hider)["w:weapon_pistol"] or 0) == 1, "stash it: the pistol goes from your hands into the stash")
+    LC.InvAction(hider, "take", "w:weapon_pistol")
+    ok(hider:HasWeapon("weapon_pistol") and LC.Stash(hider)["w:weapon_pistol"] == nil, "take it: back in your hands")
+    LC.CanReachStash = reachWas
+    hider.valid = false
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")

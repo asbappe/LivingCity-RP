@@ -614,6 +614,11 @@ local function OpenInventory()
         end
         for _, id in ipairs(sids) do
             local it = LCS.Items[id]
+            -- a weapon put away ("w:<class>")
+            if not it and string.sub(id, 1, 2) == "w:" then
+                it = { name = (string.gsub(string.gsub(string.sub(id, 3), "^weapon_", ""), "_", " ")), contraband = true }
+                it.name = string.upper(string.sub(it.name, 1, 1)) .. string.sub(it.name, 2)
+            end
             if it then
                 local row = vgui.Create("DPanel", scroll)
                 row:Dock(TOP)
@@ -632,13 +637,32 @@ local function OpenInventory()
                 b.DoClick = function() Act("take", id) end
             end
         end
+        -- what's in your hands: a crowbar, a gun (not what your faction issued you)
+        for _, wpn in ipairs(lastInv.stashWeapons or {}) do
+            local row = vgui.Create("DPanel", scroll)
+            row:Dock(TOP)
+            row:DockMargin(0, 0, 0, 4)
+            row:SetTall(30)
+            local label = "On you: " .. string.upper(string.sub(wpn.name, 1, 1)) .. string.sub(wpn.name, 2)
+            row.Paint = function(self, w, h)
+                draw.RoundedBox(3, 0, 0, w, h, Color(30, 26, 22, 240))
+                draw.SimpleText(label, "DermaDefault", 10, h / 2, ILLEGAL, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            end
+            local b = vgui.Create("DButton", row)
+            b:Dock(RIGHT)
+            b:DockMargin(4, 3, 4, 3)
+            b:SetWide(70)
+            b:SetText("Stash it")
+            b:SetTooltip("Hide it at home, magazine and all. (A raid on your block can still find it.)")
+            b.DoClick = function() Act("wstore", wpn.cls) end
+        end
     end
 end
 
 net.Receive("lci_inv", function()
     local t = ReadCompressed()
     if not t then return end
-    lastInv = { items = t.items or {}, size = t.size or 12, stash = t.stash, stashSize = t.stashSize,
+    lastInv = { items = t.items or {}, size = t.size or 12, stash = t.stash, stashSize = t.stashSize, stashWeapons = t.stashWeapons,
         disguise = t.disguise, alias = t.alias, kg = t.kg, maxKg = t.maxKg, bulky = t.bulky, maxBulky = t.maxBulky,
         container = t.container, notes = t.notes }
     if t.open or IsValid(invFrame) then OpenInventory() end
