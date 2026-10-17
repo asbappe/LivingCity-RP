@@ -157,7 +157,7 @@ local function Clear(pos, radius)
     local g = FloorUnder(pos)
     if not g or math.abs(g.z - pos.z) > 48 or not Footing(g, radius) then return false end -- (nothing to stand on, or off the edge)
     if LC.InWater(g) then return false end -- (not in the water)
-    if LC.InWalkway(g, radius) then return false end -- (not where it'd block the way through)
+    if LC.InWalkway(g, math.min(radius, 40)) then return false end -- (not where it'd block the way through; a table's chairs can be stepped round)
     for _, d in pairs(LC.Dressed) do
         for _, e in ipairs(d.ents) do
             if IsValid(e) and e:GetPos():DistToSqr(pos) < math.max(SPACING, radius * 1.5) ^ 2 then return false end

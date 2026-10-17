@@ -1763,6 +1763,7 @@ pest2.lcBump = nil
 
 ----------------------------------------------------------------------
 section("Cops that chase")
+_setcvar("lc_squads", 0) -- (one unit's own chase: any of the city's units nearby would make it a squad, and him a follower)
 copA.sim = true
 local runner2 = newPlayer("Runaway", "citizen")
 runner2:SetPos(copA:GetPos() + Vector(2000, 0, 0))
@@ -1774,6 +1775,7 @@ _run(5)
 ok(copA:GetPos():Distance(runner2:GetPos()) < d0 - 400, "and runs after them, even out of sight", string.format("%.0f -> %.0f", d0, copA:GetPos():Distance(runner2:GetPos())))
 _run(10)
 ok(copA:GetPos():Distance(runner2:GetPos()) < 600 and copA.sched == SCHED_CHASE_ENEMY, "close in, the combat AI takes over", copA.sched)
+_setcvar("lc_squads", 1)
 
 ----------------------------------------------------------------------
 section("Arrests with no prison cells")
