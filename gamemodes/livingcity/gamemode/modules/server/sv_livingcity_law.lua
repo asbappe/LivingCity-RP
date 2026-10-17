@@ -71,6 +71,30 @@ function LC.ClearWanted(ply)
     ply:SetNW2Float("lc_wanted_until", 0)
 end
 
+-- Violent: hurt someone (a person, one of the city's people, a unit) in the last two minutes,
+-- wanted for something violent, at a sector-wide search or higher, or with a gun in hand.
+-- Units shoot at the violent; anyone else wanted they run down and cuff (sv_livingcity.lua).
+local GUNS = { weapon_pistol = true, weapon_357 = true, weapon_smg1 = true, weapon_ar2 = true, weapon_shotgun = true,
+    weapon_crossbow = true, weapon_rpg = true, weapon_annabelle = true }
+LC.ViolentGuns = GUNS
+local VIOLENT_WORDS = { "assault", "murder", "kill", "attack", "shoot", "armed", "violen", "weapon", "bomb" }
+function LC.Violent(ply)
+    if not IsValid(ply) or not ply:IsPlayer() then return true end
+    if (ply.lcViolentUntil or 0) > CurTime() then return true end
+    if LC.AlertLevel and LC.AlertLevel(ply) >= 2 then return true end
+    if LC.PlayerIsHunted and LC.PlayerIsHunted(ply) then return true end -- (hunted on sight: Father Grigori, a stalker loose)
+    local w = ply.GetActiveWeapon and ply:GetActiveWeapon()
+    local cls = IsValid(w) and w.GetClass and w:GetClass()
+    return cls ~= nil and GUNS[cls] == true
+end
+hook.Add("EntityTakeDamage", "LivingCityViolence", function(victim, dmg)
+    local a = dmg:GetAttacker()
+    if IsValid(a) and a:IsPlayer() and a ~= victim and IsValid(victim) and (victim:IsPlayer() or victim:IsNPC())
+        and not (LC.IsMonster and LC.IsMonster(victim)) and dmg:GetDamage() > 0 then
+        a.lcViolentUntil = CurTime() + 120
+    end
+end)
+
 -- A crime happened. Returns true if it counted.
 function LC.ReportCrime(ply, reason, seconds)
     if not IsValid(ply) or not ply:IsPlayer() then return false end
@@ -78,6 +102,8 @@ function LC.ReportCrime(ply, reason, seconds)
     local handled = hook.Run("LivingCityCrime", ply, reason)
     if handled ~= nil then return handled == true end
     if LC.PlayerIsCP(ply) then return false end
+    local r = string.lower(tostring(reason or ""))
+    for _, w in ipairs(VIOLENT_WORDS) do if string.find(r, w, 1, true) then ply.lcViolentUntil = CurTime() + 120 break end end
     LC.SetWanted(ply, seconds or 180, reason)
     return true
 end

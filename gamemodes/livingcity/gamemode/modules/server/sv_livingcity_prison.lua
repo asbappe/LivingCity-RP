@@ -363,24 +363,33 @@ hook.Add("EntityTakeDamage", "LivingCityNPCArrest", function(victim, dmg)
     local club = dmg:IsDamageType(DMG_CLUB) or (IsValid(inflictor) and inflictor:GetClass() == "weapon_stunstick")
     if not club and victim:Health() - dmg:GetDamage() > 20 then return end
 
+    if LC.NPCTakesIn(attacker, victim) then
+        dmg:SetDamage(0)
+        return true
+    end
+end)
+
+-- A unit takes someone in: walked to a cell, or cuffed on the street where there's none.
+-- (A stunstick hit does it, a hit that would take them under 20 health, or a unit who's run a
+-- non-violent suspect down and laid hands on them: sv_livingcity.lua.)
+function LC.NPCTakesIn(unit, victim)
+    if not IsValid(unit) or not IsValid(victim) or not victim:Alive() or not cvArrests:GetBool() then return false end
+    if LC.Prisoners[victim] or LC.Detained[victim] or (LC.Marching and LC.Marching[victim]) then return false end
     local reason = victim:GetNW2String("lc_wanted_reason", "")
     if reason == "" then reason = "Resisting Civil Protection" end
     local done
     if LC.PrisonAvailable() then
         -- walked there by the unit who took you down, and another (sv_livingcity_march.lua)
-        done = (LC.MarchToPrison and LC.MarchToPrison(victim, attacker, cvTime:GetInt(), reason))
-            or LC.Incarcerate(victim, cvTime:GetInt(), reason, attacker)
+        done = (LC.MarchToPrison and LC.MarchToPrison(victim, unit, cvTime:GetInt(), reason))
+            or LC.Incarcerate(victim, cvTime:GetInt(), reason, unit)
     end
     if not done then
         -- no cell (or no free one): cuffed on the street instead
-        done = LC.DetainOnTheSpot(victim, attacker, reason)
+        done = LC.DetainOnTheSpot(victim, unit, reason)
     end
-    if done then
-        attacker:EmitSound("npc/metropolice/vo/affirmative.wav", 75)
-        dmg:SetDamage(0)
-        return true
-    end
-end)
+    if done then unit:EmitSound("npc/metropolice/vo/affirmative.wav", 75) end
+    return done and true or false
+end
 
 -- Prisoners can't build their way out.
 local function Blocked(ply) if LC.Prisoners[ply] then return false end end

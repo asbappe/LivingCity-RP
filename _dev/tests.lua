@@ -214,10 +214,12 @@ LC.StartEvent("curfew", 3)
 _run(40)
 ok(not has(citizen.chat, "Warning 1 of 3") and (LC.EventGraceEnds or 0) > CurTime(), "curfew gives a grace period to get home before anyone is warned")
 ok(LC.CurfewGrace() >= 60, "and it's never shorter than a minute")
+citizen.lcViolentUntil = CurTime() + 1e6 -- (taken for violent: the unit chases rather than laying hands on them, so the wanted status can be checked)
 _run(80)
 ok(has(citizen.chat, "Warning 1 of 3") and has(citizen.chat, "Warning 3 of 3"), "an officer who sees you gives three warnings")
 ok(LC.PlayerIsWanted(citizen), "then you're wanted", table.concat(citizen.chat, " | ") .. " cop=" .. tostring(cst.state))
 LC.ClearWanted(citizen)
+citizen.lcViolentUntil = nil
 citizen:SetPos(Vector(3000, 3000, 0))
 citizen.chat = {}
 _run(20)
@@ -254,6 +256,7 @@ if pz then
     con:SetPos(pz.pos + Vector(pz.r + 80, 0, 0))
     _run(2)
     ok(LC.Prisoners[con] ~= nil, "a step past the edge of the prison area isn't an escape")
+    con.lcViolentUntil = CurTime() + 1e6 -- (taken for violent: units chase with sticks rather than laying hands on him, for the stunstick test below)
     con:SetPos(pz.pos + Vector(pz.r + 600, 0, 0))
     _run(2)
     ok(not LC.Prisoners[con], "but well beyond it is")
@@ -268,6 +271,7 @@ cst2.untilT = 1e9
 local dmg = _dmg(cop2, 20, DMG_CLUB)
 hook.Run("EntityTakeDamage", con, dmg)
 ok(LC.Prisoners[con] ~= nil, "a stunstick hit from a cop arrests a wanted player")
+con.lcViolentUntil = nil
 ok(dmg:GetDamage() == 0, "instead of hurting them")
 LC.ReleasePrisoner(con)
 _setcvar("lc_march", 1)
@@ -350,7 +354,7 @@ ok(priest:GetNW2String("lcf_public_title", "") == "Father Grigori", "his name ta
 priest:SetPos(Vector(9000, 9000, 0))
 priest:Spawn()
 _run(1)
-ok(priest:GetPos():Distance(Vector(-5000, -5000, 0)) < 300, "and he respawns in rebel territory", tostring(priest:GetPos()))
+ok(priest:GetPos():Distance(Vector(-5000, -5000, 0)) < 300, "and he respawns in rebel territory", tostring(priest:GetPos()) .. " custody " .. tostring(LC.InCustody(priest)) .. " prisoner " .. tostring(LC.Prisoners[priest] ~= nil) .. " detained " .. tostring(LC.Detained[priest] ~= nil))
 
 local sym = _makeplayer("Sympathizer")
 hook.Run("PlayerInitialSpawn", sym)
@@ -12185,6 +12189,54 @@ section("Playtest fixes, 17 October (evening)")
     ok(hider:HasWeapon("weapon_pistol") and LC.Stash(hider)["w:weapon_pistol"] == nil, "take it: back in your hands")
     LC.CanReachStash = reachWas
     hider.valid = false
+    -- someone wanted who's hurt nobody: run down and cuffed, not shot (soldiers too)
+    if LC.Event then LC.EndEvent(true) end
+    local Q0 = Vector(-95000, 155000, 0)
+    local sol, sst = LC.Spawners.soldier(Q0 + Vector(60, 0, 0))
+    sst.routeGroup = nil sst.untilT = 1e9 sol.sim = false
+    local runner = newPlayer("RanFromSearch", "citizen")
+    runner:SetPos(Q0)
+    LC.ReportCrime(runner, "Ran from a search", 120)
+    ok(not LC.Violent(runner), "running from a search isn't violent")
+    LC.MakeCopsHostile(runner, runner:GetPos(), 500)
+    ok(sst.state == "hostile" and sst.arrestOnly and sst.rel and sst.rel[runner] == D_NU, "a soldier after someone who's hurt nobody holds his fire and runs them down")
+    _run(2)
+    ok(LC.InCustody(runner), "and lays hands on them: taken in, not shot")
+    LC.CalmCops(runner)
+    LC.NPCs[sol] = nil sol:Remove()
+    sol, sst = LC.Spawners.soldier(Q0 + Vector(60, 300, 0))
+    sst.routeGroup = nil sst.untilT = 1e9 sol.sim = false
+    -- someone violent: weapons free
+    local brawler = newPlayer("Brawler", "citizen")
+    brawler:SetPos(Q0 + Vector(0, 300, 0))
+    LC.ReportCrime(brawler, "Assault", 120)
+    ok(LC.Violent(brawler), "an assault is violent")
+    LC.MakeCopsHostile(brawler, brawler:GetPos(), 1000)
+    ok(sst.enemy == brawler and not sst.arrestOnly, "and the violent get no such courtesy")
+    LC.CalmCops(brawler)
+    LC.NPCs[sol] = nil sol:Remove()
+    runner.valid, brawler.valid = false, false
+    -- a curfew that's about you: the unit who sees you knows you (no warnings)
+    local ec2, est2 = LC.Spawners.cop(Q0 + Vector(0, -600, 0) + Vector(150, 0, 0))
+    est2.routeGroup = nil est2.untilT = 1e9 ec2.sim = false
+    local culprit = newPlayer("TheCulprit", "citizen")
+    culprit:SetPos(Q0 + Vector(0, -600, 0))
+    culprit.lcHeat = 2
+    culprit.chat = {}
+    LC.StartEvent("curfew", 3)
+    LC.EventGraceEnds = CurTime() - 1
+    culprit.lcCurfewGrace = 0
+    ok(LC.EventCulprits[culprit], "the curfew is about whoever's still hot from the trouble")
+    LC.SetState(ec2, est2, "event")
+    est2.eventUntil = 1e9
+    _run(3)
+    ok(has(culprit.chat, "That's the one") and LC.PlayerIsWanted(culprit) and not has(culprit.chat, "Warning 1"), "a unit who sees them knows them: wanted, no warnings")
+    LC.EndEvent(true)
+    culprit.lcHeat = 0
+    LC.ClearWanted(culprit)
+    LC.CalmCops(culprit)
+    LC.NPCs[ec2] = nil ec2:Remove()
+    culprit.valid = false
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")

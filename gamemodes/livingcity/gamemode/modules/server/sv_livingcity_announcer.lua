@@ -475,7 +475,11 @@ end)
 hook.Add("LivingCitySocioChanged", "LivingCityAnnouncer", function(level)
     Trigger("socio_" .. tostring(level), { builtin = true, breenAfter = 12 })
 end)
-hook.Add("LivingCityDayPhase", "LivingCityAnnouncer", function(phase) Trigger(phase, { delay = 4 }) end)
+hook.Add("LivingCityDayPhase", "LivingCityAnnouncer", function(phase)
+    -- (not "a new day" while a curfew or lockdown holds everyone indoors: it says the opposite)
+    if LC.Event == "curfew" or LC.Event == "lockdown" then return end
+    Trigger(phase, { delay = 4 })
+end)
 hook.Add("LivingCityOutbreak", "LivingCityAnnouncer", function() Trigger("outbreak") end)
 hook.Add("LivingCityBlackout", "LivingCityAnnouncer", function(on)
     if on then Trigger("blackout", { delay = 1, breenAfter = 10 }) else Trigger("power_restored") end

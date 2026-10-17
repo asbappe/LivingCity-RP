@@ -1807,7 +1807,7 @@ local function CalmOne(npc, st, now)
     npc:SetEnemy(NULL)
     npc:ClearEnemyMemory()
     npc:SetSchedule(SCHED_IDLE_STAND)
-    st.enemy, st.provokedBy = nil, nil
+    st.enemy, st.provokedBy, st.arrestOnly = nil, nil, nil
     if st.armed then
         -- back to the stick (unless there's a judgment waiver on: then the pistol stays out)
         st.armed = nil
@@ -1821,9 +1821,36 @@ LC.CalmOne = CalmOne
 -- engages what it can see, and a walking schedule ignores enemies entirely,
 -- so dispatch keeps them told where the suspect is and they run there until
 -- they have eyes on them.
+local STOP_LINES = { cop = { "npc/metropolice/vo/holdit.wav", "npc/metropolice/vo/stopthere.wav", "npc/metropolice/vo/dontmove.wav" },
+    soldier = { "npc/combine_soldier/vo/contact.wav", "npc/combine_soldier/vo/stayalert.wav" } }
 local function Pursue(npc, st, e, now)
     if now < (st.nextPursue or 0) then return end
-    st.nextPursue = now + 1
+    st.nextPursue = now + (st.arrestOnly and 0.3 or 1)
+    -- after someone who's harmed nobody: run them down and lay hands on them (no shots).
+    -- If they turn violent (hurt anyone, a gun in hand, the alert climbs), weapons free.
+    if st.arrestOnly then
+        if not e:IsPlayer() or LC.Violent(e) then
+            st.arrestOnly = nil
+            if e:IsPlayer() then SetRel(npc, st, e, D_HT) end
+            npc:SetEnemy(e)
+            if LC.ArmForAlert then LC.ArmForAlert(npc, st, e) end
+        else
+            local epos = e:GetPos()
+            if npc:GetPos():DistToSqr(epos) < 90 * 90 and LC.NPCTakesIn and LC.NPCTakesIn(npc, e) then return end
+            if (st.nextShout or 0) < now then
+                st.nextShout = now + 7
+                local lines = STOP_LINES[st.role] or STOP_LINES.cop
+                npc:EmitSound(lines[math.random(#lines)], 80)
+            end
+            st.chasePos = epos
+            npc:SetLastPosition(epos)
+            if not npc:IsCurrentSchedule(SCHED_FORCED_GO_RUN) or (st.lastArrestGoal or Vector(0, 0, 0)):DistToSqr(epos) > 60 * 60 then
+                st.lastArrestGoal = epos
+                npc:SetSchedule(SCHED_FORCED_GO_RUN)
+            end
+            return
+        end
+    end
     local epos = e:GetPos()
     if npc.UpdateEnemyMemory then npc:UpdateEnemyMemory(e, epos) end
     if npc:GetEnemy() ~= e then npc:SetEnemy(e) end
@@ -2379,6 +2406,13 @@ function LC.MakeOneHostile(npc, st, target)
     SetState(npc, st, "hostile")
     st.enemy = target
     st.nextPursue, st.chasePos, st.lostSince = 0, nil, nil
+    -- someone wanted who's done nobody any harm: run them down and cuff them, no shooting
+    st.arrestOnly = target:IsPlayer() and LC.Violent and not LC.Violent(target) or nil
+    if st.arrestOnly then
+        SetRel(npc, st, target, D_NU)
+        if st.role == "cop" and npc.SelectWeapon then npc:SelectWeapon("weapon_stunstick") end
+        return
+    end
     if target:IsPlayer() then SetRel(npc, st, target, D_HT) else npc:AddEntityRelationship(target, D_HT, 99) end
     npc:SetEnemy(target)
     if npc.UpdateEnemyMemory then npc:UpdateEnemyMemory(target, target:GetPos()) end

@@ -147,6 +147,13 @@ local MEANS = {
     end,
     curfew = function(ply)
         local grace = math.floor(math.max(0, (LC.EventGraceEnds or CurTime()) - CurTime()))
+        local pre = ""
+        if LC.IsNight and not LC.IsNight() then pre = "A curfew in the daytime: a punishment for the unrest in the city. " end
+        if LC.EventCulprits and LC.EventCulprits[ply] then pre = pre .. "It's about you: any Civil Protection unit who sees you knows you, and won't stop at a warning. " end
+        if pre ~= "" and not IsUnit(ply) then
+            local home = LC.PlayerBlock and LC.PlayerBlock(ply)
+            return pre .. "Curfew for " .. Minutes() .. ". Get inside " .. (home and LC.BlockName(home) or "your housing block") .. " within " .. grace .. " seconds."
+        end
         if IsUnit(ply) then return "Curfew for " .. Minutes() .. ". After " .. grace .. " seconds, citizens still outside get three warnings from a Civil Protection unit, then they're wanted." end
         local home = LC.PlayerBlock and LC.PlayerBlock(ply)
         if not home and LC.AwaitingHousing and LC.AwaitingHousing(ply) then
@@ -157,6 +164,9 @@ local MEANS = {
     end,
     lockdown = function(ply)
         local grace = math.floor(math.max(0, (LC.EventGraceEnds or CurTime()) - CurTime()))
+        if LC.EventCulprits and LC.EventCulprits[ply] then
+            return "Lockdown for " .. Minutes() .. ", and it's about you: any Civil Protection unit who sees you knows you, and won't stop at a warning. Get out of sight."
+        end
         if IsUnit(ply) then return "Lockdown for " .. Minutes() .. ": a curfew with extra Civil Protection units out. After " .. grace .. " seconds, anyone outside gets three warnings, then they're wanted." end
         local home = LC.PlayerBlock and LC.PlayerBlock(ply)
         if not home and LC.AwaitingHousing and LC.AwaitingHousing(ply) then
@@ -271,6 +281,13 @@ function LC.StartEvent(name, minutes)
     LC.ExtraCops = name == "lockdown" and 3 or 0
     LC.EventGraceEnds = (name == "curfew" or name == "lockdown") and (CurTime() + LC.CurfewGrace()) or nil
     warnings = {}
+    -- whoever the trouble was about (wanted, or still hot from it): the units have their description
+    LC.EventCulprits = {}
+    if name == "curfew" or name == "lockdown" then
+        for _, p in ipairs(player.GetAll()) do
+            if IsValid(p) and not LC.PlayerIsCP(p) and (LC.PlayerIsWanted(p) or (LC.Heat and LC.Heat(p) >= 1)) then LC.EventCulprits[p] = true end
+        end
+    end
     Publish()
 
     if name == "rations" then
@@ -300,6 +317,9 @@ local function PickAuto()
     for i, w in ipairs(AUTO_WEIGHTS) do
         weights[i] = w[2] * (LC.EventWeightMul and LC.EventWeightMul(w[1]) or 1)
             * (LC.AtmosEventMul and LC.AtmosEventMul(w[1]) or 1) -- night: curfew more likely (sv_livingcity_atmos.lua)
+        -- a curfew in daylight only as a punishment, when the city's in unrest
+        if w[1] == "curfew" and LC.IsNight and not LC.IsNight() and (LC.Socio or "green") == "green"
+            and not (LC.CityState and LC.CityState() == "unrest") then weights[i] = 0 end
         total = total + weights[i]
     end
     local r = math.random() * total
@@ -388,7 +408,14 @@ local function EnforceCurfew(now)
             if now > w.next then
                 local cop, cst = SeenByCop(ply)
                 if not cop then w.next = now + 1 end -- nobody in sight: look again in a second, not every half
-                if cop and LC.CurfewExcuse and LC.CurfewExcuse(ply, cop) then
+                if cop and LC.EventCulprits and LC.EventCulprits[ply] then
+                    -- the one this is all about: no warnings, he knows you
+                    cop:EmitSound("npc/metropolice/vo/holdit.wav", 80)
+                    Say(ply, "[Civil Protection] \"That's the one!\" The Civil Protection unit knows you: this curfew is about you. You are wanted.")
+                    LC.ReportCrime(ply, "Wanted in connection with the unrest", 240)
+                    LC.MakeCopsHostile(ply, ply:GetPos(), 1500)
+                    warnings[ply] = nil
+                elseif cop and LC.CurfewExcuse and LC.CurfewExcuse(ply, cop) then
                     warnings[ply] = nil -- a permit, or papers that say night shift
                 elseif cop then
                     w.stage = w.stage + 1
