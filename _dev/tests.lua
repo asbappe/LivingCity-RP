@@ -12161,6 +12161,16 @@ section("Playtest fixes, 17 October (evening)")
     LC.StripBattleGear(m)
     ok(m:GetBodygroup(1) == 1, "(and a rebel fighter keeps his)")
     LC.NPCs[m] = nil m:Remove()
+    -- the quartermaster charges his own what the lab does; a forged ration card is cheap
+    local comrade = newPlayer("QMBuyer", "resistance")
+    local nqWas = LC.NearQuartermaster
+    LC.NearQuartermaster = function() return true end
+    local radio = LCS.BlackById.radio_tuned
+    ok(LC.MarketPrice(comrade, radio) == LC.LabPrice({ out = "radio_tuned", item = "radio_tuned" }) and LC.MarketPrice(comrade, radio) < LC.BlackPrice(radio),
+        "the quartermaster's radio costs what the lab's does, well under the dealer's", LC.MarketPrice(comrade, radio) .. " vs " .. LC.BlackPrice(radio))
+    LC.NearQuartermaster = nqWas
+    ok(LCS.BlackById.ration_forged.price == 10 and LCS.Items.ration_forged.sell < 10, "a forged ration card is 10 credits")
+    comrade.valid = false
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")

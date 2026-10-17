@@ -1083,10 +1083,10 @@ function LC.OpenMarket(ply)
     local credits = LC.Credits and LC.Credits(ply) or 0
     local goods, sell = {}, {}
     -- the quartermaster (and no dealer here): he won't buy the Combine's data; the lab decodes it
-    local qm = Faction(ply) == "resistance" and not NearDealer(ply) and LC.NearQuartermaster and LC.NearQuartermaster(ply) and true or nil
+    local qm = LC.AtQuartermaster(ply) or nil
     for _, g in ipairs(LCS.Black) do
         local can, reason = true, nil
-        local price = LC.BlackPrice(g)
+        local price = LC.MarketPrice(ply, g)
         if credits < price then can, reason = false, "Not enough credits" end
         if can and g.item and not LC.CanCarry(ply, g.item, g.count or 1) then can, reason = false, "Too much to carry" end
         goods[#goods + 1] = { id = g.id, name = g.name, price = price, desc = g.desc, ok = can, why = reason }
@@ -1126,12 +1126,26 @@ function LC.BlackPrice(g)
     return math.max(1, math.floor(g.price * (LC.BlackPriceMul and LC.BlackPriceMul() or 1) + 0.5))
 end
 
+-- Buying from the quartermaster (a Resistance member at his post, no dealer about): he charges
+-- his own what the lab does (lc_lab_price of the dealer's price), not the dealer's markup.
+function LC.AtQuartermaster(ply)
+    return Faction(ply) == "resistance" and not NearDealer(ply) and LC.NearQuartermaster and LC.NearQuartermaster(ply) and true or false
+end
+function LC.QuartermasterPrice(g)
+    if LC.LabPrice then return LC.LabPrice({ out = g.id, item = g.item }) end
+    return LC.BlackPrice(g)
+end
+function LC.MarketPrice(ply, g)
+    if IsValid(ply) and LC.AtQuartermaster(ply) then return LC.QuartermasterPrice(g) end
+    return LC.BlackPrice(g)
+end
+
 function LC.BlackBuy(ply, id)
     local g = LCS.BlackById[id]
     if not g then return false end
     local ok, why = LC.MarketAccess(ply)
     if not ok then return false, why end
-    local price = LC.BlackPrice(g)
+    local price = LC.MarketPrice(ply, g)
     if LC.Credits(ply) < price then return false, "Not enough credits." end
     if g.item then local okC, whyC = LC.CanCarry(ply, g.item, g.count or 1) if not okC then return false, whyC end end
     LC.AddCredits(ply, -price)

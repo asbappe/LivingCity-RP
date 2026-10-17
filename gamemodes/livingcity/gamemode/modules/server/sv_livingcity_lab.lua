@@ -128,7 +128,7 @@ function LC.LabShut(sci) return IsValid(sci) and sci:GetNW2Float("lc_away_until"
 -- What he charges for one, in credits.
 function LC.LabPrice(r)
     local g = LCS.BlackById and LCS.BlackById[r.out]
-    local it = LCS.Items[r.out]
+    local it = LCS.Items[r.item or r.out]
     local p = math.ceil((g and g.price or 50) * cvPrice:GetFloat())
     if it and it.arms then
         local qm = GetConVar("lc_quartermaster_arms_bonus")
