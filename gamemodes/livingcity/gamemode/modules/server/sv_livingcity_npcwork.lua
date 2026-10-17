@@ -216,6 +216,9 @@ local function Carry(npc, st, model)
         local mid = (mins + maxs) * 0.5
         if e.SetLocalPos then e:SetLocalPos(Vector(14 + (maxs.x - mins.x) / 2, 0, 42) - mid) end
         if e.SetLocalAngles then e:SetLocalAngles(Angle(0, 0, 0)) end
+        -- where the hands go: either side of the box, near its front edge, within an arm's reach
+        -- (the right one; the left mirrors it)
+        if npc.SetNW2Vector then npc:SetNW2Vector("lc_carry_hand", Vector(14 + math.min((maxs.x - mins.x) * 0.3, 8), -((maxs.y - mins.y) / 2 + 1), 44)) end
         if npc.SetNW2Bool then npc:SetNW2Bool("lc_carry_front", true) end
     elseif e.SetParent then
         local att = npc.LookupAttachment and npc:LookupAttachment("anim_attachment_RH") or 0
@@ -905,7 +908,7 @@ function LC.NPCRetakeScreens(now)
                           s:SetNW2Float("lc_hijacked_until", 0)
                           s:EmitSound("buttons/combine_button2.wav", 70)
                           for _, p in ipairs(player.GetAll()) do
-                              if LC.PlayerIsCP and LC.PlayerIsCP(p) then p:ChatPrint("[CP net] A unit has the hijacked screen back under control.")
+                              if LC.PlayerIsCP and LC.PlayerIsCP(p) then p:ChatPrint("[CP net] A Civil Protection unit has the hijacked screen back under control.")
                               elseif p:GetNW2String("lcf_faction", "") == "resistance" then p:ChatPrint("[Resistance] They cut the broadcast.") end
                           end
                           hook.Run("LivingCityNPCRetookScreen", n, s)

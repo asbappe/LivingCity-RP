@@ -90,7 +90,7 @@ LC.JobGameDefine("parcel", {
         local dist, from = 0, g.ply:GetPos()
         for _, s in ipairs(g.stops) do dist = dist + from:Distance(s.pos) from = s.pos end
         g.limit = CurTime() + 45 + dist / 190
-        Say(g, "Courier", g.parcel.text .. " Three to go, against the clock. Units stop couriers they get a good look at: crouch past them, or stand still for the search.")
+        Say(g, "Courier", g.parcel.text .. " Three to go, against the clock. Civil Protection units stop couriers they get a good look at: crouch past them, or stand still for the search.")
         ParcelWay(g)
         g.hud = function(gg)
             local s = gg.stops[gg.i]
@@ -99,7 +99,7 @@ LC.JobGameDefine("parcel", {
                 left > 0 and string.format("%d seconds", math.ceil(left)) or "LATE",
                 "Watched " .. Bar(gg.heat) }
             if gg.stopped then lines[#lines + 1] = string.format("SEARCH: stand still (%d), or run", math.max(0, math.ceil(gg.stopped.untilT - CurTime())))
-            elseif gg.watched then lines[#lines + 1] = "A unit is looking at you. Crouch, or get out of sight." end
+            elseif gg.watched then lines[#lines + 1] = "A Civil Protection unit is looking at you. Crouch, or get out of sight." end
             return lines
         end
     end,
@@ -111,7 +111,7 @@ LC.JobGameDefine("parcel", {
                 g.stopped, g.ran = nil, true
                 g.cool = now + 20
                 if LC.ReportCrime then LC.ReportCrime(ply, "Evading a search", 150) end
-                if LC.Notice then LC.Notice(ply, "warn", "You ran", "Every unit in the sector has your description now. Get the parcels there anyway.", 7) end
+                if LC.Notice then LC.Notice(ply, "warn", "You ran", "Every Civil Protection unit in the sector has your description now. Get the parcels there anyway.", 7) end
             elseif now >= s.untilT then
                 g.stopped = nil
                 g.searches = g.searches + 1
@@ -119,11 +119,11 @@ LC.JobGameDefine("parcel", {
                 if g.parcel.hot and math.random() < (g.opts.searchFinds or 0.6) then
                     g.seized = true
                     if LC.ReportCrime then LC.ReportCrime(ply, "Carrying contraband", 180) end
-                    Note(g, "A unit opened the parcel. It's evidence now, and so are you.")
+                    Note(g, "A Civil Protection unit opened the parcel. It's evidence now, and so are you.")
                     g.pay = 0
                     return LC.JobGameEnd(ply, "done")
                 end
-                Say(g, "Courier", "The unit turns it over, shakes it, and hands it back. 'Move along.'")
+                Say(g, "Courier", "The Civil Protection unit turns it over, shakes it, and hands it back. 'Move along.'")
             end
             return
         end
@@ -136,7 +136,7 @@ LC.JobGameDefine("parcel", {
             g.stopped = { by = w, at = ply:GetPos(), untilT = now + SEARCH_SECS }
             if LC.Face then LC.Face(w, ply:GetPos()) end
             w:EmitSound("npc/metropolice/vo/holditrightthere.wav", 75)
-            if LC.Notice then LC.Notice(ply, "warn", "Halt!", "A unit wants to see the parcel. Stand still for the search, or run.", 5) end
+            if LC.Notice then LC.Notice(ply, "warn", "Halt!", "A Civil Protection unit wants to see the parcel. Stand still for the search, or run.", 5) end
             return
         end
         local s = g.stops[g.i]
@@ -577,13 +577,13 @@ LC.JobGameDefine("laundry", {
         if action == "pocket" and u.pocket then
             Give(g.ply, u.item, 1)
             if math.random() < 0.25 then
-                Standing(g.ply, -2, "a unit's pocket came back short")
+                Standing(g.ply, -2, "a Civil Protection unit's pocket came back short")
                 Say(g, "Laundry", "The supervisor counts what comes out of the pockets. Tonight he counts one short, and looks at you.")
             end
             u.pocket = nil
         elseif action == "turnin" and u.pocket then
             g.pay = g.pay + 1
-            Standing(g.ply, 1, "turned in what a unit left in a pocket")
+            Standing(g.ply, 1, "turned in what a Civil Protection unit left in a pocket")
             u.pocket = nil
         elseif action == "sort" then
             local b = g.bins[tonumber(arg) or 0]
@@ -682,7 +682,7 @@ LC.JobGameDefine("filing", {
             if K.Watcher(g.ply, 600) then
                 Standing(g.ply, -4, "caught taking a blank identity form")
                 if LC.ReportCrime then LC.ReportCrime(g.ply, "Theft of state forms", 120) end
-                Say(g, "Records", "A unit at the counter watches you put it back.")
+                Say(g, "Records", "A Civil Protection unit at the counter watches you put it back.")
             else
                 Give(g.ply, "papers_blank", 1)
                 Bump(g.ply, "thefts")
@@ -728,7 +728,7 @@ local function ScrewQ(v, want) return math.Clamp(1 - math.abs((tonumber(v) or 0)
 LC.RadioScrewQuality = ScrewQ
 local FREQ7 = {
     "'...this is Freq 7. They count the rations and they count you. Count them back...'",
-    "'...the third shift at the station is short two units on Tuesdays. Freq 7, out...'",
+    "'...the third shift at the station is short two Civil Protection units on Tuesdays. Freq 7, out...'",
     "'...if you can hear this, you are not alone. Freq 7...'",
     "'...the Administrator's broadcasts are recorded. She is not in the city. Freq 7...'",
 }
@@ -879,7 +879,7 @@ LC.JobGameDefine("radio", {
                 g.pay = g.pay + 2
                 Standing(g.ply, 2, "reported an illegal broadcast")
                 Bump(g.ply, "reports")
-                Say(g, "Radio", "You write the frequency on a slip for the units. Somebody will be listening for it now.")
+                Say(g, "Radio", "You write the frequency on a slip for the Civil Protection units. Somebody will be listening for it now.")
             elseif arg == "note" then
                 Trait(g.ply, "sympathy", 1)
                 Bump(g.ply, "silences")
@@ -999,7 +999,7 @@ timer.Create("LivingCityRadioListen", 0.25, 0, function()
                 and LC.SeenBySecurity and LC.SeenBySecurity(ply, 300) then
                 l.caughtAt = CurTime()
                 if LC.ReportCrime then LC.ReportCrime(ply, "Listening to an illegal broadcast", 120) end
-                if LC.Notice then LC.Notice(ply, "warn", "A unit heard that", "Freq 7, out loud, in front of Civil Protection. Turn it off, or run.", 6) end
+                if LC.Notice then LC.Notice(ply, "warn", "A Civil Protection unit heard that", "Freq 7, out loud, in front of Civil Protection. Turn it off, or run.", 6) end
             end
         end
     end

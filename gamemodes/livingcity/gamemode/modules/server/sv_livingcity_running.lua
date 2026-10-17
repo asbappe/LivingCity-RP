@@ -77,7 +77,7 @@ LC.PlayerSprinting = Running
 local function ExemptWhy(ply)
     if not ply:Alive() or ply:InVehicle() then return "dead or in a vehicle" end
     if ply:GetNW2Bool("lc_build", false) then return "build mode" end
-    if LC.PlayerIsCP(ply) then return "a unit" end
+    if LC.PlayerIsCP(ply) then return "a Civil Protection unit" end
     if LC.FoolsSecurity and LC.FoolsSecurity(ply) then return "in a convincing uniform" end
     if LC.PlayerIsZombie and LC.PlayerIsZombie(ply) then return "infested" end
     if LC.PlayerIsWanted(ply) then return "already wanted" end -- already being chased
@@ -117,7 +117,7 @@ function LC.RunningStatus(ply)
     local run = ply.GetRunSpeed and ply:GetRunSpeed() or 0
     return string.format("speed %d (walk %d, run %d)%s, %s, %s", Speed(ply), walk, run,
         Running(ply) and " sprinting" or "", why and ("exempt: " .. why) or "not exempt",
-        IsValid(cop) and ("unit watching at " .. math.floor(cop:GetPos():Distance(ply:GetPos()))) or ("no unit in sight within " .. cvRange:GetInt()))
+        IsValid(cop) and ("Civil Protection unit watching at " .. math.floor(cop:GetPos():Distance(ply:GetPos()))) or ("no Civil Protection unit in sight within " .. cvRange:GetInt()))
 end
 
 local function Chase(ply, cop)
@@ -125,7 +125,7 @@ local function Chase(ply, cop)
     local pos = IsValid(cop) and cop:GetPos() or ply:GetPos()
     if IsValid(cop) then cop:EmitSound(LC.Pick(CHASE_LINES), 85) end
     LC.CopShout(ply, cop, "I said stop running!", 4)
-    ply:ChatPrint("[Civil Protection] You ran from a unit. Units are after you. Press E on one to give yourself up.")
+    ply:ChatPrint("[Civil Protection] You ran from a Civil Protection unit. Units are after you. Press E on one to give yourself up.")
     LC.ReportCrime(ply, "Fleeing Civil Protection", cvWanted:GetFloat())
     LC.MakeCopsHostile(ply, pos, 1500)
 end

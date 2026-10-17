@@ -11,7 +11,8 @@ ENT.Category = "Living City"
 ENT.Spawnable = true
 ENT.AdminOnly = true
 
-local MODELS = { "models/props_c17/FurnitureBed001a.mdl", "models/props_wasteland/prison_bedframe001b.mdl", "models/props_c17/FurnitureMattress001a.mdl" }
+-- (the owner's choice first: a bed with a mattress, from Counter-Strike: Source; HL2's own if the server hasn't it)
+local MODELS = { "models/props/de_inferno/bed.mdl", "models/props_c17/FurnitureBed001a.mdl", "models/props_wasteland/prison_bedframe001b.mdl", "models/props_c17/FurnitureMattress001a.mdl" }
 
 function ENT:Initialize()
     if CLIENT then return end

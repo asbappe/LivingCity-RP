@@ -463,7 +463,7 @@ function LC.DoorInfo(door)
     lines[#lines + 1] = "Your tag: " .. (LC.GetDoorTag(door) or "none")
     local auto = not LC.GetDoorTag(door) and LC.AutoDoorTag(door)
     if auto == "prison" then
-        lines[#lines + 1] = "A prison door, automatically: it's by a cell or the release point, or in the prison area. Locked to all but units, even in a blackout (tag it to override)"
+        lines[#lines + 1] = "A prison door, automatically: it's by a cell or the release point, or in the prison area. Locked to all but Civil Protection units, even in a blackout (tag it to override)"
     elseif auto then
         lines[#lines + 1] = "Locked automatically: it's in a Combine-only area. Its lock goes dead in a blackout (tag it to override)"
     end

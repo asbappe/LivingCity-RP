@@ -471,7 +471,7 @@ local function OpenInventory()
                 btnW = btnW + 78
             end
             Btn("Drop", "drop")
-            if lastInv.stash then Btn("Stash", "store", "Hide it at home. Searches don't reach your stash.") end
+            if lastInv.stash then Btn("Stash", "store", "Hide it at home. (A raid on your block can still find it.)") end
             if box and box.mode == "open" and box.kind == "stall" then
                 local b = vgui.Create("DButton", row)
                 b:Dock(RIGHT)
@@ -497,8 +497,8 @@ local function OpenInventory()
             if giveTo then Btn("Give", "give", "Hand one to the person in front of you") end
             if it.tool then Btn("Use", "use", "Look at a locked door first. Or type !pick, or bind a key to lc_pick.") end
 
-            if it.papers then Btn("Use", "use", "Become someone else. Clears your wanted status if no unit is watching.") end
-            if it.forge then Btn("Forge", "use", "Out of sight of any unit.") end
+            if it.papers then Btn("Use", "use", "Become someone else. Clears your wanted status if no Civil Protection unit is watching.") end
+            if it.forge then Btn("Forge", "use", "Out of sight of any Civil Protection unit.") end
         end
     end
 

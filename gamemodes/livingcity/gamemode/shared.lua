@@ -162,6 +162,7 @@ LC_MODULES = {
         "cl_livingcity_cp",
         "cl_livingcity_factions",
         "cl_livingcity_hints",
+        "cl_livingcity_stealth", -- (sneaking: how seen you are, and the units' sight on the ground)
         "cl_livingcity_infest",
         "cl_livingcity_intake",
         "cl_livingcity_kick",
@@ -245,7 +246,7 @@ function GM:LCSlowMovement() return self.cvSlow:GetBool() end
 -- Pulling yourself up onto a ledge: look at something up to about chest height
 -- (a crate, the lip of a platform, out of a track bed) and jump.
 local MANTLE_MIN = 28
-local cvMantle = CreateConVar("lc_mantle_height", "108", FLAGS, "The highest ledge you can pull yourself up onto (units; you're 72 tall)")
+local cvMantle = CreateConVar("lc_mantle_height", "108", FLAGS, "The highest ledge you can pull yourself up onto (Civil Protection units; you're 72 tall)")
 
 local function Mantle(ply, mv)
     if not mv.GetOrigin or not mv.GetAngles then return false end

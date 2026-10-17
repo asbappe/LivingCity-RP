@@ -234,7 +234,7 @@ function LC.NextStep(ply)
         if (LC.Credits and LC.Credits(ply) or 0) < 15 and LC.Job and LC.Job(ply) then
             return { key = "shift", text = "Work a shift", why = "You're short of credits. F3 has your next shift.", way = "work" }
         end
-        return { key = "free", text = "Your time is your own", why = "Work another shift (F3), take a side job (F3), or get to know people: F1 > Talk." }
+        return { key = "free", text = "The Union expects more", why = "Idle hands are noticed. Another shift (F3), or a side job (F3); a citizen seen loafing is a citizen asked questions." }
     end
     if f == "cp" then
         return { key = "unit", text = "On duty", why = "Your directives are on F3. The Commissary issues your supplies.", way = "cpsupply" }

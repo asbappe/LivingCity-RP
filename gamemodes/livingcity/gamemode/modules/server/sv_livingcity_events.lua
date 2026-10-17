@@ -97,7 +97,7 @@ local function Say(ply, msg) if IsValid(ply) then ply:ChatPrint(msg) else print(
 -- Half-Life 2 and aren't always clear, or are a loose fit for what's happening.
 local SAYS = {
     f_innactionisconspiracy_spkr = "Failing to report suspicious behaviour counts as conspiracy. Report it to Civil Protection.",
-    f_anticitizenreport_spkr = "Ground units: an anticitizen has been reported in this community. Contain them.",
+    f_anticitizenreport_spkr = "Ground Civil Protection units: an anticitizen has been reported in this community. Contain them.",
     f_trainstation_cooperation_spkr = "Residents: a miscount has been detected. Cooperate with Civil Protection to keep your full rations.",
     f_trainstation_inform_spkr = "Residents: this block may harbour civil unrest. Inform, cooperate, assemble.",
     f_rationunitsdeduct_3_spkr = "Occupants: your block is charged with tolerating noncompliance. Ration units are being deducted.",
@@ -109,7 +109,7 @@ local SAYS = {
     f_confirmcivilstatus_1_spkr = "Persons of interest: confirm your civil status with your local protection team immediately.",
     f_unrestprocedure1_spkr = "Unrest procedure is now in effect.",
     f_protectionresponse_1_spkr = "All ground protection teams: response protocol is now in effect.",
-    f_sociostabilizationrestored_spkr = "Socio-stabilization restored. Units, return to standard duty.",
+    f_sociostabilizationrestored_spkr = "Socio-stabilization restored. Civil Protection units, return to standard duty.",
 }
 
 local function Minutes()
@@ -135,35 +135,35 @@ local MEANS = {
         return "Rations are being handed out for " .. Minutes() .. ". Lines move faster and you can collect again sooner. Stand at the front of a ration line to get yours (not if you're wanted)."
     end,
     sweep = function(ply)
-        if LC.PlayerIsCP(ply) then return "Civil status inspections for " .. Minutes() .. ". Stop and search citizens: units stop people far more often now." end
-        return "Civil status inspections for " .. Minutes() .. ". Units stop and search people far more often and from further away. Anything illegal on you will be found: stash it, or stay out of sight."
+        if LC.PlayerIsCP(ply) then return "Civil status inspections for " .. Minutes() .. ". Stop and search citizens: Civil Protection units stop people far more often now." end
+        return "Civil status inspections for " .. Minutes() .. ". Civil Protection units stop and search people far more often and from further away. Anything illegal on you will be found: stash it, or stay out of sight."
     end,
     raid = function(ply)
         local block = LC.Raid and LC.Raid.block
         local name = block and LC.BlockName(block) or "a housing block"
-        if LC.PlayerIsCP(ply) then return "Units are searching " .. name .. ". Contraband found there is traced to its owner, who becomes wanted." end
+        if LC.PlayerIsCP(ply) then return "Civil Protection units are searching " .. name .. ". Contraband found there is traced to its owner, who becomes wanted." end
         local mine = block and LC.PlayerBlock and LC.PlayerBlock(ply) == block
-        return "Units are searching " .. name .. (mine and " (your block)" or "") .. " room by room. Anyone there gets frisked, contraband lying around is traced to whoever left it, and they become wanted. Stashes can be found too."
+        return "Civil Protection units are searching " .. name .. (mine and " (your block)" or "") .. " room by room. Anyone there gets frisked, contraband lying around is traced to whoever left it, and they become wanted. Stashes can be found too."
     end,
     curfew = function(ply)
         local grace = math.floor(math.max(0, (LC.EventGraceEnds or CurTime()) - CurTime()))
-        if IsUnit(ply) then return "Curfew for " .. Minutes() .. ". After " .. grace .. " seconds, citizens still outside get three warnings from a unit, then they're wanted." end
+        if IsUnit(ply) then return "Curfew for " .. Minutes() .. ". After " .. grace .. " seconds, citizens still outside get three warnings from a Civil Protection unit, then they're wanted." end
         local home = LC.PlayerBlock and LC.PlayerBlock(ply)
         if not home and LC.AwaitingHousing and LC.AwaitingHousing(ply) then
-            return "Curfew for " .. Minutes() .. ". You have no room yet: wait it out at Civil Intake, or where you arrived. Units leave new arrivals there alone."
+            return "Curfew for " .. Minutes() .. ". You have no room yet: wait it out at Civil Intake, or where you arrived. Civil Protection units leave new arrivals there alone."
         end
         return "Curfew for " .. Minutes() .. ". Get inside " .. (home and LC.BlockName(home) or "your housing block") ..
-            " (your HUD points the way). You have " .. grace .. " seconds. After that, a unit who sees you outside warns you three times, then you're wanted. Running is allowed until then."
+            " (your HUD points the way). You have " .. grace .. " seconds. After that, a Civil Protection unit who sees you outside warns you three times, then you're wanted. Running is allowed until then."
     end,
     lockdown = function(ply)
         local grace = math.floor(math.max(0, (LC.EventGraceEnds or CurTime()) - CurTime()))
-        if IsUnit(ply) then return "Lockdown for " .. Minutes() .. ": a curfew with extra units out. After " .. grace .. " seconds, anyone outside gets three warnings, then they're wanted." end
+        if IsUnit(ply) then return "Lockdown for " .. Minutes() .. ": a curfew with extra Civil Protection units out. After " .. grace .. " seconds, anyone outside gets three warnings, then they're wanted." end
         local home = LC.PlayerBlock and LC.PlayerBlock(ply)
         if not home and LC.AwaitingHousing and LC.AwaitingHousing(ply) then
-            return "Lockdown for " .. Minutes() .. ". You have no room yet: wait it out at Civil Intake, or where you arrived. Units leave new arrivals there alone."
+            return "Lockdown for " .. Minutes() .. ". You have no room yet: wait it out at Civil Intake, or where you arrived. Civil Protection units leave new arrivals there alone."
         end
-        return "Lockdown for " .. Minutes() .. ": a curfew, with extra units on the street. Get inside " .. (home and LC.BlockName(home) or "your housing block") ..
-            " within " .. grace .. " seconds. After that, units who see you outside warn you three times, then you're wanted."
+        return "Lockdown for " .. Minutes() .. ": a curfew, with extra Civil Protection units on the street. Get inside " .. (home and LC.BlockName(home) or "your housing block") ..
+            " within " .. grace .. " seconds. After that, Civil Protection units who see you outside warn you three times, then you're wanted."
     end,
     ended = function() return "The curfew is over. You can go out again." end,
     response = function() return "Overwatch has been sent in. Keep clear of any fighting." end,
@@ -172,7 +172,7 @@ local MEANS = {
     parade = function(ply) return LC.ExerciseMeans and LC.ExerciseMeans("parade", ply) end,
     supply = function(ply)
         local where = LC.Supply and LC.DescribePlace and LC.DescribePlace(LC.Supply.pos) or "on the streets"
-        if LC.PlayerIsCP(ply) then return "A supply convoy is unloading " .. where .. " for " .. Minutes() .. ". Guard the crate: if anything's left in it when the convoy moves on, every unit nearby is paid." end
+        if LC.PlayerIsCP(ply) then return "A supply convoy is unloading " .. where .. " for " .. Minutes() .. ". Guard the crate: if anything's left in it when the convoy moves on, every Civil Protection unit nearby is paid." end
         if ply:GetNW2String("lcf_faction", "") == "resistance" then return "A supply convoy is unloading " .. where .. " for " .. Minutes() .. ". Guns, ammunition, medicine, lightly guarded. Take what you can (E on the crate)." end
         return "A supply convoy is unloading " .. where .. " for " .. Minutes() .. ". Keep clear of it. Anyone caught taking from the crate is wanted."
     end,
@@ -180,7 +180,7 @@ local MEANS = {
 
 local ENDED = {
     rations = "Ration distribution is over. Lines go back to their usual pace.",
-    sweep = "Inspections are over. Units are back to stopping people at the usual rate.",
+    sweep = "Inspections are over. Civil Protection units are back to stopping people at the usual rate.",
     raid = "The housing block inspection is over.",
     jog = "Morning exercise is over. Off to work.", drill = "Morning exercise is over. Off to work.", parade = "The parade is over. Off to work.",
 }
@@ -197,6 +197,7 @@ function LC.Announce(kind, path, detail)
     local subtitle
     if not path and LC.PickAnnounceClip then path, subtitle = LC.PickAnnounceClip("overwatch", kind, true) end -- a custom recording (sv_livingcity_announcer.lua)
     path = path or LC.Pick(VOICE[kind] or VOICE.ambient)
+    if LC.OverwatchSpeaks then LC.OverwatchSpeaks(path) end -- (the Administrator waits till he's done)
     net.Start("lc_announce")
     net.WriteString(path)
     net.WriteString(TITLES[kind] or TITLES.ambient)
@@ -273,7 +274,7 @@ function LC.StartEvent(name, minutes)
         for npc, st in pairs(LC.NPCs or {}) do
             if st.role == "citizen" and not st.test and not st.questLock and (st.state == "idle" or st.state == "moving") and not st.leaving then
                 st.untilT = 0
-                if st.state == "moving" then LC.StartLeaving(npc, st, name == "lockdown") end
+                if st.state == "moving" then LC.StartLeaving(npc, st, name == "lockdown", "curfew or lockdown: gone home") end
             end
         end
     end
@@ -307,8 +308,9 @@ end
 local function SeenByCop(ply)
     local eye = ply:EyePos()
     for npc, st in pairs(LC.NPCs or {}) do
-        if IsValid(npc) and LC.IsSecurity(st) and st.state ~= "hostile" and st.state ~= "event"
-            and npc:GetPos():DistToSqr(ply:GetPos()) < 700 * 700 then
+        -- (units at a post or on an event's duty see you too; a story's actors don't)
+        if IsValid(npc) and LC.IsSecurity(st) and st.state ~= "hostile" and not st.unmanaged
+            and (LC.UnitSees and LC.UnitSees(npc, ply, 900) or (not LC.UnitSees and npc:GetPos():DistToSqr(ply:GetPos()) < 900 * 900)) then
             if LC.LineOfSight(npc:EyePos(), eye, npc) then return npc, st end
         end
     end
@@ -381,8 +383,10 @@ local function EnforceCurfew(now)
                     warnings[ply] = nil -- a permit, or papers that say night shift
                 elseif cop then
                     w.stage = w.stage + 1
-                    w.next = now + 15 -- (time to act on a warning before the next)
+                    w.next = now + 10 -- (time to act on a warning before the next)
                     LC.Face(cop, ply:GetPos())
+                    -- and he comes over: walking at the first warning, running after that
+                    if cst and cst.state ~= "event" and LC.GoTo then LC.GoTo(cop, cst, ply:GetPos(), w.stage >= 2) end
                     local home = LC.PlayerBlock and LC.PlayerBlock(ply)
                     local where = home and BlockName(home)
                         or (LC.AwaitingHousing and LC.AwaitingHousing(ply) and "Civil Intake (you have no room yet)") or "your residence"

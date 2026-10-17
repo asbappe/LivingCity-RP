@@ -54,7 +54,7 @@ LC = LC or {}
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn    = CreateConVar("lc_intake", "1", FLAGS, "New people arrive with nothing and go through Civil Intake: register, then ask for a room (only on maps with the desks placed)")
 local cvSecs  = CreateConVar("lc_intake_secs", "8", FLAGS, "Seconds a Civil Intake or Housing Allocation terminal takes to process someone")
-local cvGrace = CreateConVar("lc_intake_grace", "10", FLAGS, "Minutes a new arrival has to register before a unit who stops them makes it a crime")
+local cvGrace = CreateConVar("lc_intake_grace", "10", FLAGS, "Minutes a new arrival has to register before a Civil Protection unit who stops them makes it a crime")
 local cvPapersFee = CreateConVar("lc_papers_fee", "10", FLAGS, "Credits Civil Intake charges to replace lost identity papers")
 local cvCardFee   = CreateConVar("lc_card_fee", "15", FLAGS, "Credits Civil Intake charges to replace a lost ration card")
 
@@ -602,7 +602,7 @@ hook.Add("PlayerSpawn", "LivingCityIntake", function(ply)
         timer.Simple(1, function()
             if not IsValid(ply) or Documented(ply) or LC.IntakePending(ply) or not Papered(ply) then return end
             LC.IssueDocuments(ply)
-            ply:ChatPrint("[Papers] Your identity papers and ration card are in your pockets (F2). Keep them on you: units ask for papers, and the dispensers want the card.")
+            ply:ChatPrint("[Papers] Your identity papers and ration card are in your pockets (F2). Keep them on you: Civil Protection units ask for papers, and the dispensers want the card.")
         end)
     end
     -- a new arrival (or someone still not registered) steps off where arrivals do, in a city with the desks

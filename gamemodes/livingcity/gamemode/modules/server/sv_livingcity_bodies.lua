@@ -149,7 +149,7 @@ end)
 local DROPS = { weapon_smg1 = true, weapon_ar2 = true, weapon_pistol = true, weapon_shotgun = true, weapon_357 = true, weapon_crossbow = true }
 local DROP_ROLES = { soldier = true, cop = true, rebel = true }
 LC.DroppedGuns = LC.DroppedGuns or {} -- list of { ent, at }
-local cvDrops = CreateConVar("lc_gun_drops", "1", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Soldiers, armed units and rebels drop their guns when they die (about half a clip in them)")
+local cvDrops = CreateConVar("lc_gun_drops", "1", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Soldiers, armed Civil Protection units and rebels drop their guns when they die (about half a clip in them)")
 
 function LC.DropNPCGun(npc)
     local wep = npc.GetActiveWeapon and npc:GetActiveWeapon()

@@ -60,10 +60,10 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn       = CreateConVar("lc_heist", "1", FLAGS, "The Resistance can steal data from Combine terminals")
 local cvSecs     = CreateConVar("lc_heist_seconds", "30", FLAGS, "Seconds a data download takes")
 local cvCooldown = CreateConVar("lc_heist_cooldown", "20", FLAGS, "Minutes before a terminal has new data to steal")
-local cvIntel    = CreateConVar("lc_heist_intel_seconds", "300", FLAGS, "Seconds the Resistance can see every unit after a chip is decoded")
+local cvIntel    = CreateConVar("lc_heist_intel_seconds", "300", FLAGS, "Seconds the Resistance can see every Civil Protection unit after a chip is decoded")
 local cvMSecs    = CreateConVar("lc_heist_master_seconds", "60", FLAGS, "Seconds a download from the master terminal takes")
 local cvMCool    = CreateConVar("lc_heist_master_cooldown", "60", FLAGS, "Minutes before the master terminal has new data to steal")
-local cvMIntel   = CreateConVar("lc_heist_master_intel_seconds", "600", FLAGS, "Seconds the Resistance can see every unit after a master data core is decoded")
+local cvMIntel   = CreateConVar("lc_heist_master_intel_seconds", "600", FLAGS, "Seconds the Resistance can see every Civil Protection unit after a master data core is decoded")
 
 local function IsResistance(p) return IsValid(p) and p:GetNW2String("lcf_faction", "") == "resistance" end
 local function Unit(p) return LC.PlayerIsCP and LC.PlayerIsCP(p) end
@@ -136,7 +136,7 @@ local function Alarm(pos, ply, master)
     for _, p in ipairs(player.GetAll()) do
         if Unit(p) then
             units[#units + 1] = p
-            p:ChatPrint("[CP net] " .. (master and "MASTER TERMINAL BREACH " or "DATA BREACH ") .. where .. ". Anticitizens are inside Combine systems. All units respond.")
+            p:ChatPrint("[CP net] " .. (master and "MASTER TERMINAL BREACH " or "DATA BREACH ") .. where .. ". Anticitizens are inside Combine systems. All Civil Protection units respond.")
         end
     end
     if LC.SendCompressed and #units > 0 then
@@ -156,7 +156,7 @@ end
 local function Downloaded(p, key, master)
     if master then
         if LC.GiveOrDrop then LC.GiveOrDrop(p, "master_chip", 1) else LC.GiveItem(p, "master_chip") end
-        p:ChatPrint("[Resistance] The master terminal's data, all of it, on one core. This is the motherlode: the quartermaster can decode it (every unit marked for ten minutes), the dealer will pay a fortune, or plug it in and wipe every comrade's record.")
+        p:ChatPrint("[Resistance] The master terminal's data, all of it, on one core. This is the motherlode: the quartermaster can decode it (every Civil Protection unit marked for ten minutes), the dealer will pay a fortune, or plug it in and wipe every comrade's record.")
         return
     end
     if LC.HasItem(p, "data_shard") and p.lcShardKey ~= key then
@@ -238,7 +238,7 @@ function LC.DecodeChip(ply, id)
     local secs = master and cvMIntel:GetFloat() or cvIntel:GetFloat()
     SetGlobal2Float("lc_rebel_intel", CurTime() + secs)
     if LC.RadioNotice then
-        LC.RadioNotice("resistance", string.format("The data's decoded: unit positions, patrol routes, posts. Every unit is marked for you for %d seconds. Move.", secs))
+        LC.RadioNotice("resistance", string.format("The data's decoded: Civil Protection unit positions, patrol routes, posts. Every unit is marked for you for %d seconds. Move.", secs))
     end
     hook.Run("LivingCityDataDecoded", ply)
     return true

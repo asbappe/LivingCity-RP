@@ -205,7 +205,7 @@ T{
         local t = ready[1]
         return {
             title = "The master terminal " .. Place(t.pos, ply:GetPos()), reward = 120, limit = 900,
-            desc = "The Combine's master terminal " .. Place(t.pos, ply:GetPos()) .. ": everything they know, in one place. It takes a full minute to download, every alarm in the nexus goes off a third of the way in, and they'll send more than a squad. Bring the core home: the quartermaster's decoding marks every unit for ten minutes, the dealer pays a fortune, or it wipes every comrade's record.",
+            desc = "The Combine's master terminal " .. Place(t.pos, ply:GetPos()) .. ": everything they know, in one place. It takes a full minute to download, every alarm in the nexus goes off a third of the way in, and they'll send more than a squad. Bring the core home: the quartermaster's decoding marks every Civil Protection unit for ten minutes, the dealer pays a fortune, or it wipes every comrade's record.",
             stages = {
                 Goto(t.pos, "Get to the master terminal", 200),
                 Count("master_stolen", 1, "Download the master terminal (multitool, primary fire; hold on for a minute)", nil, false),

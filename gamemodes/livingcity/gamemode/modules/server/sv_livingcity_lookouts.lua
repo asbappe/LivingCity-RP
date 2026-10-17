@@ -17,7 +17,7 @@ LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvMinutes = CreateConVar("lc_lookout_minutes", "15", FLAGS, "How long a Resistance lookout keeps watch")
-local cvRange   = CreateConVar("lc_lookout_range", "1100", FLAGS, "How far a lookout sees units coming")
+local cvRange   = CreateConVar("lc_lookout_range", "1100", FLAGS, "How far a lookout sees Civil Protection units coming")
 local MAX_EACH = 2
 
 LC.Lookouts = LC.Lookouts or {} -- [npc] = { owner, pos, untilT, warnedAt }
@@ -104,7 +104,7 @@ function LC.LookoutTick(now)
             End(npc, "The lookout " .. Where(l.pos) .. " has gone quiet.")
         elseif st.state ~= "lookout" and (st.state == "detained" or st.state == "jailed" or st.state == "escorted"
             or st.state == "hostile" or st.state == "fighting") then
-            End(npc, "The lookout " .. Where(l.pos) .. " has been stopped by a unit.")
+            End(npc, "The lookout " .. Where(l.pos) .. " has been stopped by a Civil Protection unit.")
         elseif st.state ~= "lookout" then
             -- (spoken to, or briefly busy: back to the watch, not a reason to stand down)
             LC.SetState(npc, st, "lookout")
@@ -116,7 +116,7 @@ function LC.LookoutTick(now)
             if who then
                 l.warnedAt = now
                 npc:EmitSound(Vo(st.gender, math.random() < 0.5 and "combine01" or "combine02"), 80) -- "Combine!"
-                local what = who:IsPlayer() and "a unit" or (LC.NPCs[who] and LC.NPCs[who].role == "soldier" and "Overwatch" or "a unit")
+                local what = who:IsPlayer() and "a Civil Protection unit" or (LC.NPCs[who] and LC.NPCs[who].role == "soldier" and "Overwatch" or "a Civil Protection unit")
                 Tell(l, "Lookout " .. Where(l.pos) .. ": " .. what .. " coming.")
                 hook.Run("LivingCityLookoutWarned", npc, who)
             end

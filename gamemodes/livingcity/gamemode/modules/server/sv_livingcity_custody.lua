@@ -111,7 +111,7 @@ function LC.StartInterrogation(ply)
     end
     LC.Interrogations[ply] = { cop = cop, hits = 0, untilT = CurTime() + 45, next = CurTime() + 4 }
     ply:SetNW2Bool("lc_interrogated", true)
-    ply:ChatPrint("[Interrogation] A unit steps into your cell and switches on his baton. \"You will answer my questions.\" (Talk, and it stops: the choice is on your screen. Or don't.)")
+    ply:ChatPrint("[Interrogation] A Civil Protection unit steps into your cell and switches on his baton. \"You will answer my questions.\" (Talk, and it stops: the choice is on your screen. Or don't.)")
     ply:ChatPrint("[Interrogation] \"If you comply, I will grant you " .. COOP_REWARD .. " social credits.\"")
     if IsValid(cop) then cop:EmitSound("npc/metropolice/vo/apply.wav", 75) end
     hook.Run("LivingCityInterrogation", ply)
@@ -145,7 +145,7 @@ function LC.InterrogationTalk(ply)
         ply:SetNW2Float("lc_traitor_until", CurTime() + 1800)
         if LC.RadioNotice then LC.RadioNotice("resistance", ply:Nick() .. " talked in custody. Don't trust them.") end
     end
-    EndInterrogation(ply, "[Interrogation] You tell them" .. (where and where ~= "" and (" about the place " .. where) or " what you know") .. ". The unit nods, and leaves.")
+    EndInterrogation(ply, "[Interrogation] You tell them" .. (where and where ~= "" and (" about the place " .. where) or " what you know") .. ". The Civil Protection unit nods, and leaves.")
     return true
 end
 
@@ -154,7 +154,7 @@ local function InterrogationTick(now)
         if not IsValid(ply) or not (LC.Prisoners and LC.Prisoners[ply]) or not ply:Alive() then
             EndInterrogation(ply, nil)
         elseif now > it.untilT then
-            EndInterrogation(ply, "[Interrogation] \"We'll talk again.\" The unit leaves. You said nothing.")
+            EndInterrogation(ply, "[Interrogation] \"We'll talk again.\" The Civil Protection unit leaves. You said nothing.")
             if ply:GetNW2String("lcf_faction", "") == "resistance" and LC.AddXP then LC.AddXP(ply, 15, "said nothing under interrogation") end
         elseif now > it.next then
             it.next = now + math.Rand(6, 9)
@@ -303,7 +303,7 @@ hook.Add("LivingCityIncarcerated", "LivingCityCustody", function(ply, secs, reas
     if sev >= 6 and cvStalker:GetBool() then
         timer.Simple(20, function()
             if IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then
-                ply:ChatPrint("[Custody] Two units come for you. They don't say where.")
+                ply:ChatPrint("[Custody] Two Civil Protection units come for you. They don't say where.")
                 timer.Simple(5, function() if IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then LC.MakeStalker(ply) end end)
             end
         end)

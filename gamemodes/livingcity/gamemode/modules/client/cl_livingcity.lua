@@ -76,6 +76,24 @@ local cvShow  = CreateClientConVar("lc_show", "0", true, false, "Always show the
 local cvDebug = CreateClientConVar("lc_show_npcs", "1", true, false, "Show what the NPC you're looking at is doing, in the editor overlay")
 local cvAllNpcs = CreateClientConVar("lc_show_all_npcs", "0", true, false, "Show every nearby NPC's state and destination (cluttered)")
 local cvFill  = CreateClientConVar("lc_zone_fill", "1", true, false, "Shade zones on the ground in the editor")
+local cvMarkers = CreateClientConVar("lc_editor_markers", "1", true, false, "Show the editor's markers at all (0: hide them all)")
+local cvXray = CreateClientConVar("lc_editor_xray", "1", true, false, "See the editor's markers through walls (0: only what's in sight)")
+-- lines and boxes: drawn over everything, or hidden behind walls like anything else
+local function Z() return not cvXray:GetBool() end
+-- in sight from where you stand (for the labels, when not seeing through walls); kept a moment
+local seenCache = {}
+local function InSight(pos)
+    if cvXray:GetBool() then return true end
+    local key = math.floor(pos.x / 16) .. ":" .. math.floor(pos.y / 16) .. ":" .. math.floor(pos.z / 16)
+    local c = seenCache[key]
+    local now = CurTime()
+    if c and c.t > now then return c.v end
+    local eye = EyePos()
+    local tr = util.TraceLine({ start = eye, endpos = pos, mask = MASK_SOLID_BRUSHONLY, filter = LocalPlayer() })
+    local v = not tr.Hit or tr.HitPos:DistToSqr(pos) < 24 * 24
+    seenCache[key] = { v = v, t = now + 0.5 }
+    return v
+end
 
 local function ReadCompressed()
     local len = net.ReadUInt(32)
@@ -210,7 +228,7 @@ local function HoldingEditor()
     return IsValid(wep) and wep:GetClass() == "gmod_tool" and wep.GetMode and wep:GetMode() == "livingcity_editor"
 end
 
-local function Visible() return cvShow:GetBool() or HoldingEditor() end
+local function Visible() return (cvShow:GetBool() or HoldingEditor()) and cvMarkers:GetBool() end
 
 local wasVisible = false
 local npcCache, nextNpcScan = {}, 0
@@ -450,8 +468,8 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
             else
                 render.DrawSphere(base + UP8, 7, 12, 12, Color(col.r, col.g, col.b, 180))
             end
-            render.DrawLine(base, base + UP60, col, false)
-            render.DrawLine(base + UP8, base + UP8 + Angle(0, p.yaw, 0):Forward() * 36, col, false)
+            render.DrawLine(base, base + UP60, col, Z())
+            render.DrawLine(base + UP8, base + UP8 + Angle(0, p.yaw, 0):Forward() * 36, col, Z())
         end
     end
 
@@ -460,9 +478,9 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
         local near = false
         for _, sp in ipairs(seq.pts) do if sp.pos:DistToSqr(eye) < 1500 * 1500 then near = true break end end
         if near then
-            for i = 2, #seq.pts do render.DrawLine(seq.pts[i - 1].pos + UP8, seq.pts[i].pos + UP8, col, false) end
+            for i = 2, #seq.pts do render.DrawLine(seq.pts[i - 1].pos + UP8, seq.pts[i].pos + UP8, col, Z()) end
             if seq.kind == "patrol" and #seq.pts > 2 then
-                render.DrawLine(seq.pts[#seq.pts].pos + UP8, seq.pts[1].pos + UP8, Color(col.r, col.g, col.b, 90), false)
+                render.DrawLine(seq.pts[#seq.pts].pos + UP8, seq.pts[1].pos + UP8, Color(col.r, col.g, col.b, 90), Z())
             end
         end
     end
@@ -471,12 +489,12 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
         if n.pos:DistToSqr(eye) < MAX_DIST2 then
             local col = (LC_CL.selected == id) and SELECT_COLOR or (n.orphan and ORPHAN_COLOR or NODE_COLOR)
             if n == aimNode then
-                render.DrawWireframeBox(n.pos, angle_zero, Vector(-10, -10, 0), Vector(10, 10, 22), color_white, false)
+                render.DrawWireframeBox(n.pos, angle_zero, Vector(-10, -10, 0), Vector(10, 10, 22), color_white, Z())
             end
-            render.DrawWireframeBox(n.pos, angle_zero, Vector(-6, -6, 0), Vector(6, 6, 14), col, false)
+            render.DrawWireframeBox(n.pos, angle_zero, Vector(-6, -6, 0), Vector(6, 6, 14), col, Z())
             for _, other in ipairs(n.links) do
                 local o = LC_CL.nodes[other]
-                if o then render.DrawLine(n.pos + UP8, o.pos + UP8, LINK_COLOR, false) end
+                if o then render.DrawLine(n.pos + UP8, o.pos + UP8, LINK_COLOR, Z()) end
             end
         end
     end
@@ -493,7 +511,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
                     render.SetColorMaterial()
                     local a = z == aimZone and 60 or (fill and (aimZone and 6 or 16) or 0)
                     if a > 0 then render.DrawBox(vector_origin, angle_zero, z.box.mins, z.box.maxs, Color(col.r, col.g, col.b, a), true) end
-                    render.DrawWireframeBox(vector_origin, angle_zero, z.box.mins, z.box.maxs, Color(col.r, col.g, col.b, z == aimZone and 255 or (aimZone and 70 or 230)), false)
+                    render.DrawWireframeBox(vector_origin, angle_zero, z.box.mins, z.box.maxs, Color(col.r, col.g, col.b, z == aimZone and 255 or (aimZone and 70 or 230)), Z())
                     return
                 end
                 local d = ZoneDrape(z)
@@ -520,12 +538,12 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
         local tr = LocalPlayer():GetEyeTrace()
         local col = ZONE_COLORS[zoneKind] or color_white
         render.SetColorMaterial()
-        if tr.Hit then render.DrawWireframeBox(tr.HitPos, angle_zero, Vector(-8, -8, 0), Vector(8, 8, 16), Color(255, 255, 255, 220), false) end
+        if tr.Hit then render.DrawWireframeBox(tr.HitPos, angle_zero, Vector(-8, -8, 0), Vector(8, 8, 16), Color(255, 255, 255, 220), Z()) end
         if LC_CL.boxCorner and tr.Hit then
             local hcv = GetConVar("livingcity_editor_height")
             local b = LCZ.BoxFromCorners(LC_CL.boxCorner, tr.HitPos, hcv and hcv:GetFloat() or 192)
             render.DrawBox(vector_origin, angle_zero, b.mins, b.maxs, Color(col.r, col.g, col.b, 40), true)
-            render.DrawWireframeBox(vector_origin, angle_zero, b.mins, b.maxs, Color(255, 255, 255, 220), false)
+            render.DrawWireframeBox(vector_origin, angle_zero, b.mins, b.maxs, Color(255, 255, 255, 220), Z())
         end
         zoneKind = nil
     end
@@ -549,19 +567,20 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
     for _, d in ipairs(LC_CL.doors) do
         local door = Entity(d.idx)
         if IsValid(door) and door:GetPos():DistToSqr(eye) < MAX_DIST2 then
-            render.DrawWireframeBox(door:GetPos(), door:GetAngles(), door:OBBMins(), door:OBBMaxs(), DOOR_COLORS[d.tag] or color_white, false)
+            render.DrawWireframeBox(door:GetPos(), door:GetAngles(), door:OBBMins(), door:OBBMaxs(), DOOR_COLORS[d.tag] or color_white, Z())
         end
     end
 
     for _, e in ipairs(ShownNpcs(eye)) do
         if e:GetNW2String("lc_state", "") == "moving" then
             local dest = e:GetNW2Vector("lc_dest", vector_origin)
-            if dest ~= vector_origin then render.DrawLine(e:GetPos() + UP8, dest + UP8, Color(255, 255, 255, 120), false) end
+            if dest ~= vector_origin then render.DrawLine(e:GetPos() + UP8, dest + UP8, Color(255, 255, 255, 120), Z()) end
         end
     end
 end)
 
 local function Label(pos, text, col, font)
+    if not InSight(pos) then return end
     local s = pos:ToScreen()
     if s.visible then
         draw.SimpleTextOutlined(text, font or "DermaDefaultBold", s.x, s.y, col or color_white,
@@ -576,7 +595,7 @@ local function DrawAimInfo()
         local z = aimed.it
         local name = ZONE_NAMES[z.kind] or z.kind
         if z.kind == "block" then name = string.upper(BlockName(z.group)) end
-        text = string.format("%s   |   radius %d units (about %.1f m across)   |   right click removes", name, z.r, z.r * 2 * 0.019)
+        text = string.format("%s   |   radius %d Civil Protection units (about %.1f m across)   |   right click removes", name, z.r, z.r * 2 * 0.019)
         col = ZONE_COLORS[z.kind]
     elseif aimed.kind == "point" then
         local p = aimed.it
@@ -812,7 +831,7 @@ hook.Add("HUDPaint", "LivingCityHUD", function()
         elseif ephase == "with" then text = "Escorted by " .. who .. ": Combine doors open for you (E)"
         elseif ephase == "out" then text = "Escorted by " .. who .. ": they're walking you out"
         elseif ephase == "unattended" then
-            text = string.format("ESCORT CALLED AWAY: stay put, another unit is coming (%ds)", math.max(0, math.ceil(ply:GetNW2Float("lc_escort_grace", 0) - now)))
+            text = string.format("ESCORT CALLED AWAY: stay put, another Civil Protection unit is coming (%ds)", math.max(0, math.ceil(ply:GetNW2Float("lc_escort_grace", 0) - now)))
             col = Color(255, 210, 120)
         end
         draw.SimpleTextOutlined(text, "DermaDefaultBold", w / 2, y + 8, col, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
@@ -938,31 +957,82 @@ local function DrawHeld(self)
     self:SetRenderAngles()
 end
 
--- Carrying a box or a crate out in front (sv_livingcity_npcwork.lua): both arms forward and
--- bent under it. (On the arm bones yaw raises an arm forward, pitch takes it out to the side
--- or in, minus for the right arm; a forearm bends at the elbow on yaw.)
-local CARRY_ARMS = {
-    ["ValveBiped.Bip01_R_UpperArm"] = Angle(12, -38, 0), ["ValveBiped.Bip01_L_UpperArm"] = Angle(-12, -38, 0),
-    ["ValveBiped.Bip01_R_Forearm"] = Angle(0, -62, 0), ["ValveBiped.Bip01_L_Forearm"] = Angle(0, -62, 0),
-}
-local carryPosed = {}
-local function CarryPose(e, on)
-    for name, a in pairs(CARRY_ARMS) do
-        local id = e:LookupBone(name)
-        if id then e:ManipulateBoneAngles(id, on and a or Angle(0, 0, 0)) end
+-- Carrying a box or a crate out in front (sv_livingcity_npcwork.lua): each hand held on its side
+-- of the box, wherever the walk would swing the arm (the arms used to be bent on top of the
+-- walk, so the hands swung about under the box). Each arm reaches for its spot: the upper arm
+-- and forearm keep their lengths, the elbow bends down and out, and the hand (with its fingers)
+-- comes along.
+local function Turned(ang, from, to)
+    local axis = from:Cross(to)
+    local s = axis:Length()
+    if s < 1e-4 then return ang end
+    local a = Angle(ang.p, ang.y, ang.r)
+    a:RotateAroundAxis(axis / s, math.deg(math.atan2(s, from:Dot(to))))
+    return a
+end
+
+-- Every bone under this one (but not the arm's own next bone) moved as `move` moved its parent.
+local function Carry(e, bone, skip, move)
+    for _, c in ipairs(e.GetChildBones and e:GetChildBones(bone) or {}) do
+        if c ~= skip then
+            local m = e:GetBoneMatrix(c)
+            if m then e:SetBoneMatrix(c, move * m) Carry(e, c, nil, move) end
+        end
     end
 end
+
+local function Reach(e, side, target)
+    local pre = "ValveBiped.Bip01_" .. side .. "_"
+    local u, f, h = e:LookupBone(pre .. "UpperArm"), e:LookupBone(pre .. "Forearm"), e:LookupBone(pre .. "Hand")
+    if not (u and f and h) then return end
+    local mu, mf, mh = e:GetBoneMatrix(u), e:GetBoneMatrix(f), e:GetBoneMatrix(h)
+    if not (mu and mf and mh) then return end
+    local S, F, H = mu:GetTranslation(), mf:GetTranslation(), mh:GetTranslation()
+    local a, b = S:Distance(F), F:Distance(H)
+    if a < 1 or b < 1 then return end
+    local toT = target - S
+    local d = math.Clamp(toT:Length(), math.abs(a - b) + 0.5, a + b - 0.5)
+    local dir = toT:GetNormalized()
+    -- the elbow: down and out from the line shoulder to hand
+    local out = side == "R" and -e:GetRight() or e:GetRight()
+    local pole = (out * 0.5 - e:GetUp()) - dir * (out * 0.5 - e:GetUp()):Dot(dir)
+    if pole:LengthSqr() < 1e-4 then pole = -e:GetUp() end
+    pole:Normalize()
+    local x = (a * a - b * b + d * d) / (2 * d)
+    local E = S + dir * x + pole * math.sqrt(math.max(0, a * a - x * x))
+    local T = S + dir * d
+    -- the upper arm points at the elbow, the forearm at the hand, each turned the least it can
+    local nu = Matrix() nu:SetTranslation(S) nu:SetAngles(Turned(mu:GetAngles(), (F - S):GetNormalized(), (E - S):GetNormalized()))
+    local nf = Matrix() nf:SetTranslation(E) nf:SetAngles(Turned(mf:GetAngles(), (H - F):GetNormalized(), (T - E):GetNormalized()))
+    local nh = Matrix() nh:SetTranslation(T) nh:SetAngles(Turned(mh:GetAngles(), (H - F):GetNormalized(), (T - E):GetNormalized()))
+    e:SetBoneMatrix(u, nu)
+    e:SetBoneMatrix(f, nf)
+    e:SetBoneMatrix(h, nh)
+    Carry(e, u, f, nu * mu:GetInverseTR())
+    Carry(e, f, h, nf * mf:GetInverseTR())
+    Carry(e, h, nil, nh * mh:GetInverseTR())
+end
+
+local function HoldBox(e)
+    if not IsValid(e) or not e:GetNW2Bool("lc_carry_front", false) then return end
+    local hand = e:GetNW2Vector("lc_carry_hand", Vector(28, -10, 42))
+    Reach(e, "R", e:LocalToWorld(hand))
+    Reach(e, "L", e:LocalToWorld(Vector(hand.x, -hand.y, hand.z)))
+end
+LC_CL.CarryReach = Reach
+
+local carryPosed = {}
 timer.Create("LivingCityCarryFront", 0.25, 0, function()
     local seen = {}
     for _, e in ipairs(ents.FindByClass("npc_*")) do
         if IsValid(e) and e:GetNW2Bool("lc_carry_front", false) then
             seen[e] = true
-            if not carryPosed[e] then carryPosed[e] = true CarryPose(e, true) end
+            if not carryPosed[e] and e.AddCallback then carryPosed[e] = e:AddCallback("BuildBonePositions", HoldBox) or true end
         end
     end
-    for e in pairs(carryPosed) do
+    for e, id in pairs(carryPosed) do
         if not seen[e] then
-            if IsValid(e) then CarryPose(e, false) end
+            if IsValid(e) and e.RemoveCallback and id ~= true then e:RemoveCallback("BuildBonePositions", id) end
             carryPosed[e] = nil
         end
     end

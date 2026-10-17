@@ -221,6 +221,12 @@ function LC.UseToilet(ply)
             if not IsValid(p) then return end
             p:SetNW2Bool("lc_on_toilet", false)
             p:EmitSound("ambient/water/water_splash" .. math.random(1, 3) .. ".wav", 60)
+            -- then the flush (your own recording, sound/livingcity/flush1.wav, if the server has one)
+            timer.Simple(1.2, function()
+                if not IsValid(p) then return end
+                local own = file.Exists("sound/livingcity/flush1.wav", "GAME") and "livingcity/flush1.wav"
+                p:EmitSound(own or "ambient/water/wave3.wav", 62)
+            end)
             local urged = LC.Urge(p) > 1
             SetUrge(p, 0)
             p.lcUrgeWarn = 0

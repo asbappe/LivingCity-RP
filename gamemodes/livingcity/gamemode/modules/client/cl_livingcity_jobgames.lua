@@ -131,7 +131,7 @@ net.Receive("lc_papers_check", function()
     bar:Dock(BOTTOM)
     bar:SetTall(40)
     bar.Paint = nil
-    for i, b in ipairs({ { "Approve", "approve", Color(70, 140, 80) }, { "Deny", "deny", Color(150, 70, 60) }, { "Call a unit", "unit", Color(70, 90, 150) } }) do
+    for i, b in ipairs({ { "Approve", "approve", Color(70, 140, 80) }, { "Deny", "deny", Color(150, 70, 60) }, { "Call a Civil Protection unit", "unit", Color(70, 90, 150) } }) do
         local btn = vgui.Create("DButton", bar)
         btn:Dock(LEFT)
         btn:SetWide(150)

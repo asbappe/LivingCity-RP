@@ -29,7 +29,7 @@ LC = LC or {}
 LC.Marching = LC.Marching or {} -- [ply] = { lead, rear, seconds, reason, arrester, dest, startT, tries }
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvOn  = CreateConVar("lc_march", "1", FLAGS, "Units arresting someone walk them to the prison instead of putting them straight in a cell")
+local cvOn  = CreateConVar("lc_march", "1", FLAGS, "Civil Protection units arresting someone walk them to the prison instead of putting them straight in a cell")
 local cvMax = CreateConVar("lc_march_max", "240", FLAGS, "Seconds a march to the prison may take before they're simply taken in")
 
 local SLIP = 450   -- this far from the unit leading you, while he's busy fighting: you've slipped away
@@ -179,7 +179,7 @@ function LC.MarchToPrison(ply, arrester, seconds, reason)
     arrester:EmitSound("npc/metropolice/vo/movingtocode3.wav", 75)
 
     local where = LC.DescribePlace and LC.DescribePlace(ply:GetPos()) or ""
-    ply:ChatPrint("[Custody] Cuffed. " .. (IsValid(rear) and "Two units march" or "A unit marches") .. " you to the cells. Charge: " .. tostring(reason or "none given") .. ".")
+    ply:ChatPrint("[Custody] Cuffed. " .. (IsValid(rear) and "Two Civil Protection units march" or "A Civil Protection unit marches") .. " you to the cells. Charge: " .. tostring(reason or "none given") .. ".")
     if LC.Notice then
         LC.Notice(ply, "warn", "Under arrest", "You're being walked to the prison. Someone could still get you out on the way.")
     end
@@ -228,7 +228,7 @@ local function Tick(now)
         if not IsValid(ply) or not ply:Alive() then
             Finish(ply, m)
         elseif not Up(lead) or not ls then
-            Escaped(ply, m, "The unit leading you is down.")
+            Escaped(ply, m, "The Civil Protection unit leading you is down.")
         elseif now - m.startT > cvMax:GetFloat() then
             TakeIn(ply, m, "A van pulls up. They put you in the back, and the doors shut.")
         elseif ls.state == "hostile" then
@@ -244,10 +244,13 @@ local function Tick(now)
                     or "They unlock the prison door, walk you through, and lock you in a cell.")
             else
                 local going = true
-                if ls.state ~= "moving" then
-                    -- stopped (arrived somewhere else, or gave up): set off again, a few times
+                if ls.state ~= "moving" and now >= (m.nextTry or 0) then
+                    -- stopped (arrived somewhere else, or gave up): set off again, a few times, a couple
+                    -- of seconds apart (it used to be five tries a tenth of a second apart: half a
+                    -- second's pause and the van came, without a step walked)
                     m.tries = m.tries + 1
-                    if m.tries > 4 or not LC.GoTo(lead, ls, m.dest, false) then
+                    m.nextTry = now + 2
+                    if m.tries > 8 or not LC.GoTo(lead, ls, m.dest, false) then
                         TakeIn(ply, m, "A van pulls up. They put you in the back, and the doors shut.")
                         going = false
                     end

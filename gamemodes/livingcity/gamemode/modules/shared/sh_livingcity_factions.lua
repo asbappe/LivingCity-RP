@@ -114,7 +114,7 @@ LCF.Factions = {
                 id = "scanner_op", name = "Scanner Operator", max = 2, minRank = 1,
                 desc = "Two at a time, from any rank. Flies a city scanner from a Combine console or data terminal, " ..
                        "or anywhere in the Nexus (F1 > Unit tools). Photographs earn XP, and a rebel caught on camera " ..
-                       "goes out to every unit as a BOLO.",
+                       "goes out to every Civil Protection unit as a BOLO.",
                 models = { "models/player/police.mdl", "models/player/police_fem.mdl" },
                 loadout = { "weapon_lc_baton" },
                 armor = 25,
@@ -122,7 +122,7 @@ LCF.Factions = {
             {
                 id = "ow_commander", name = "Overwatch Commander", max = 1, minRank = 6, overwatch = true, hla = "elite",
                 desc = "One at a time, from the Elite. Calls in an Overwatch squad by dropship (F1 > Unit tools), " ..
-                       "every fifteen minutes, and commands every unit in the city.",
+                       "every fifteen minutes, and commands every Civil Protection unit in the city.",
                 models = { "models/player/combine_super_soldier.mdl" },
                 loadout = { "weapon_lc_baton", "weapon_ar2", "weapon_frag" },
                 health = 150, armor = 200,

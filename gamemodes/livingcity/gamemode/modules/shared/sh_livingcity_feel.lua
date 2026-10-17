@@ -24,7 +24,7 @@ LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 CreateConVar("lc_fov", "75", FLAGS, "The widest field of view anyone sees (Half-Life 2's is 75); 0 leaves it to each player")
-CreateConVar("lc_eye_height", "61", FLAGS, "Eye height in units (GMod's is 64): a little lower makes people and units stand over you")
+CreateConVar("lc_eye_height", "61", FLAGS, "Eye height in Civil Protection units (GMod's is 64): a little lower makes people and units stand over you")
 CreateConVar("lc_view_bob", "1", FLAGS, "A faint camera sway in step with your feet, and a dip when you land (players can turn theirs off with !bob)")
 CreateConVar("lc_view_bob_amount", "100", FLAGS, "How strong the camera sway and landing dip are, in percent (100 is the default, 50 half that)")
 CreateConVar("lc_quiet_hud", "1", FLAGS, "No running score on screen: XP, credits and standing are in the menus, hunger and thirst show when they're low")

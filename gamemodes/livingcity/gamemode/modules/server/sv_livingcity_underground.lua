@@ -26,8 +26,8 @@
                    Chat: !r <message>, and !ru <message> for the Union band.
       Lockpicks    open locked doors. Bypass charges open Combine doors too.
       Stash        8 extra slots in your own housing block (!stash, or F2
-                   while you're home). Searches don't reach it; inspection
-                   sweeps sometimes raid it.
+                   while you're home, or E on a stove or a fridge there).
+                   A street search doesn't reach it; a raid on your block can.
       Black market a dealer placed with the editor or, on maps without one,
                    rebel territory (!market). Units who find a dealer bust it.
 ]]
@@ -46,7 +46,7 @@ local cvStops     = CreateConVar("lc_stops", "1", FLAGS, "Civil Protection NPCs 
 local cvStopCD    = CreateConVar("lc_stop_cooldown", "480", FLAGS, "Seconds before NPCs can stop the same person again")
 local cvStopPct   = CreateConVar("lc_stop_chance", "15", FLAGS, "Percent chance per check that a cop at a checkpoint stops you (doubled during sweeps)")
 local cvStreetPct = CreateConVar("lc_street_stop_chance", "1", FLAGS, "Percent chance per check that a cop on the street stops you")
-local cvSearchCD  = CreateConVar("lc_search_cooldown", "120", FLAGS, "Seconds before units can search the same person again")
+local cvSearchCD  = CreateConVar("lc_search_cooldown", "120", FLAGS, "Seconds before Civil Protection units can search the same person again")
 local cvRisk      = CreateConVar("lc_disguise_risk", "5", FLAGS, "Percent chance per minute near security that a CP disguise is questioned")
 local cvIdentity  = CreateConVar("lc_identity_minutes", "30", FLAGS, "How long a forged identity holds")
 local cvStash     = CreateConVar("lc_stash_size", "8", FLAGS, "Slots in your hidden stash at home")
@@ -143,10 +143,10 @@ end)
 -- City notices reach radios before the loudspeakers.
 local EVENT_TITLES = { rations = "ration distribution", sweep = "civil status inspections", curfew = "curfew", lockdown = "lockdown", raid = "a housing block inspection" }
 local WHISPERS = {
-    sweep = "Units are gearing up for a sweep. Move anything you don't want found.",
+    sweep = "Civil Protection units are gearing up for a sweep. Move anything you don't want found.",
     curfew = "Curfew's coming. Get where you need to be.",
     lockdown = "Lockdown incoming. Get off the street.",
-    raid = "Units are about to go through a housing block. Anything they find is traced to whoever it belongs to.",
+    raid = "Civil Protection units are about to go through a housing block. Anything they find is traced to whoever it belongs to.",
     supply = "A Combine convoy is coming through. Lots of crates, not many guards.",
 }
 
@@ -167,7 +167,7 @@ hook.Add("LivingCityWanted", "LivingCityRadio", function(ply, reason)
     local alias = ply:GetNW2String("lcd_alias", "")
     timer.Simple(0, function()
         if not IsValid(ply) then return end
-        LC.RadioNotice("cp", string.format("Dispatch: all units, suspect %s, %s. Last seen %s.",
+        LC.RadioNotice("cp", string.format("Dispatch: all Civil Protection units, suspect %s, %s. Last seen %s.",
             alias ~= "" and ("citizen " .. alias) or ply:Nick(), string.lower(reason or "malcompliance"), Where(ply:GetPos())))
     end)
 end)
@@ -221,6 +221,7 @@ function LC.TakeOff(ply, quiet, lose)
     local kind = LC.Disguise(ply)
     if not kind then return false end
     ply:SetNW2String("lcd_disguise", "")
+    timer.Simple(0.2, function() if IsValid(ply) and LC.DressPlayer then LC.DressPlayer(ply) end end) -- (battle gear on or off with it)
     ply:SetNW2String("lcd_title", "")
     if ply.lcdOldModel and ply:Alive() then ply:SetModel(ply.lcdOldModel) end
     local id = ply.lcdItem
@@ -260,7 +261,7 @@ function LC.Wear(ply, id)
     if LC.Disguise(ply) then return false, "You're already in disguise. Take it off first." end
     if not Free(ply) or LC.PlayerIsZombie(ply) then return false, "Not now." end
     if LC.InCombat and LC.InCombat(ply) then return false, "Not in the middle of a fight." end
-    if it.wear == "cp" and LC.PlayerIsCP(ply) then return false, "You don't need a disguise to be a unit." end
+    if it.wear == "cp" and LC.PlayerIsCP(ply) then return false, "You don't need a disguise to be a Civil Protection unit." end
     if it.wear == "rebel" and ply:GetNW2String("lcf_faction", "") == "resistance" then return false, "You're one of them already. (!gearup puts your own gear on.)" end
     if not it.own then LC.TakeItem(ply, id) end
     ply.lcdOldModel = ply:GetModel()
@@ -269,20 +270,21 @@ function LC.Wear(ply, id)
     ply:SetModel(DisguiseModel(ply, it.wear))
     if ply.SetupHands then ply:SetupHands() end
     ply:SetNW2String("lcd_disguise", it.wear)
+    timer.Simple(0.2, function() if IsValid(ply) and LC.DressPlayer then LC.DressPlayer(ply) end end) -- (battle gear on or off with it)
     ply:SetNW2String("lcd_title", (it.wear == "cp" and string.format("CP %s-%d", Pick({ "05", "04", "03" }), math.random(1000, 9999)))
         or (it.wear == "rebel" and "Resistance") or "Citizen")
     ply:EmitSound("physics/body/body_medium_impact_soft" .. math.random(1, 7) .. ".wav", 55)
     if Watched(ply, 800) then
-        LC.BlowDisguise(ply, "A unit watched you change.")
+        LC.BlowDisguise(ply, "A Civil Protection unit watched you change.")
         return true
     end
     if it.wear == "cp" then
         if LC.CalmCops then LC.CalmCops(ply) end
-        ply:ChatPrint("[Disguise] You're a unit now, as far as anyone on the street can tell. Don't fight, don't linger near real units, and stay away from Combine doors unless you're feeling lucky.")
+        ply:ChatPrint("[Disguise] You're a Civil Protection unit now, as far as anyone on the street can tell. Don't fight, don't linger near real units, and stay away from Combine doors unless you're feeling lucky.")
     elseif it.wear == "rebel" then
-        ply:ChatPrint("[Disguise] Resistance colours. The fighters in rebel territory will take you for one of them, for a while. Out on the streets, units will take you for one of them too.")
+        ply:ChatPrint("[Disguise] Resistance colours. The fighters in rebel territory will take you for one of them, for a while. Out on the streets, Civil Protection units will take you for one of them too.")
     elseif it.own then
-        ply:ChatPrint("[Disguise] Plain clothes. You're just another citizen. Keep your gun out of sight: a unit who sees it will know. (F1 > Gear up to change back.)")
+        ply:ChatPrint("[Disguise] Plain clothes. You're just another citizen. Keep your gun out of sight: a Civil Protection unit who sees it will know. (F1 > Gear up to change back.)")
     else
         ply:ChatPrint("[Disguise] Union blue, like everyone else. Nobody looks twice at a citizen. Until they check your face.")
     end
@@ -309,7 +311,7 @@ end
 hook.Add("LivingCityWanted", "LivingCityDisguise", function(ply)
     if not IsValid(ply) or not ply:IsPlayer() then return end
     if LC.DisguisedAsCP(ply) then
-        LC.BlowDisguise(ply, "Units don't do that.")
+        LC.BlowDisguise(ply, "Civil Protection units don't do that.")
     elseif LC.PassesAsCitizen(ply) and LC.PlayerIsHunted and LC.PlayerIsHunted(ply) then
         LC.BlowDisguise(ply, "Someone recognized you.")
     end
@@ -317,9 +319,9 @@ end)
 
 -- Hanging around real units is the risky part.
 local DESIGNATION_FAILS = {
-    "A unit asks for your designation. You give one that doesn't exist.",
-    "A unit tries to sync with your mask radio. There's nothing to sync with.",
-    "A unit looks at your boots for a long second. They're civilian issue.",
+    "A Civil Protection unit asks for your designation. You give one that doesn't exist.",
+    "A Civil Protection unit tries to sync with your mask radio. There's nothing to sync with.",
+    "A Civil Protection unit looks at your boots for a long second. They're civilian issue.",
 }
 -- A gun in your hand gives plain clothes away.
 local FIREARMS = { weapon_pistol = true, weapon_357 = true, weapon_smg1 = true, weapon_ar2 = true, weapon_shotgun = true,
@@ -329,7 +331,7 @@ timer.Create("LivingCityDisguiseGuns", 2, 0, function()
         if ply:Alive() and LC.PassesAsCitizen(ply) then
             local w = ply:GetActiveWeapon()
             if IsValid(w) and FIREARMS[w:GetClass()] and Watched(ply, 700) then
-                LC.BlowDisguise(ply, "A unit saw the gun in your hand.")
+                LC.BlowDisguise(ply, "A Civil Protection unit saw the gun in your hand.")
             end
         end
     end
@@ -390,7 +392,7 @@ function LC.AssumeIdentity(ply, itemId)
     local it = LCS.Items[itemId]
     if not it or not it.papers or not LC.HasItem(ply, itemId) then return false end
     if not Free(ply) then return false, "Not now." end
-    if Watched(ply, 1000) then return false, "Not with a unit watching." end
+    if Watched(ply, 1000) then return false, "Not with a Civil Protection unit watching." end
     LC.TakeItem(ply, itemId)
     local alias = (LC.QB and LC.QB.CitizenID and LC.QB.CitizenID())
         or string.format("#%02d-%03d", math.random(10, 99), math.random(100, 999))
@@ -440,7 +442,7 @@ function LC.CurfewExcuse(ply, cop)
         LC.TakeItem(ply, "permit")
         ply.lcPermitSerial = LC.EventSerial
         if IsValid(cop) then cop:EmitSound("npc/metropolice/vo/allrightyoucango.wav", 75) end
-        ply:ChatPrint("[Civil Protection] The unit checks your permit and stamps it. You're cleared until this is over.")
+        ply:ChatPrint("[Civil Protection] The Civil Protection unit checks your permit and stamps it. You're cleared until this is over.")
         return true
     end
     if LC.Identity(ply) then
@@ -448,7 +450,7 @@ function LC.CurfewExcuse(ply, cop)
         if ok then
             ply.lcPermitSerial = LC.EventSerial
             if IsValid(cop) then cop:EmitSound("npc/metropolice/vo/allrightyoucango.wav", 75) end
-            ply:ChatPrint("[Civil Protection] Your papers say night shift. The unit waves you on.")
+            ply:ChatPrint("[Civil Protection] Your papers say night shift. The Civil Protection unit waves you on.")
         else
             LC.PapersFailed(ply, why)
         end
@@ -595,13 +597,13 @@ end
 
 function LC.StartSearch(cop, target)
     if IsValid(target) and LC.NPCs and LC.NPCs[target] then
-        if not (LC.PlayerIsCP(cop) or cop:IsAdmin()) then return false, "Only units can search people." end
+        if not (LC.PlayerIsCP(cop) or cop:IsAdmin()) then return false, "Only Civil Protection units can search people." end
         return LC.SearchNPC(cop, target)
     end
     if not IsValid(cop) or not IsValid(target) or not target:IsPlayer() then return false, "Search who?" end
-    if not (LC.PlayerIsCP(cop) or cop:IsAdmin()) then return false, "Only units can search people." end
+    if not (LC.PlayerIsCP(cop) or cop:IsAdmin()) then return false, "Only Civil Protection units can search people." end
     if not target:Alive() or (LC.Prisoners and LC.Prisoners[target]) then return false, "Not now." end
-    if LC.PlayerIsCP(target) and not cop:IsAdmin() then return false, "You don't search other units." end
+    if LC.PlayerIsCP(target) and not cop:IsAdmin() then return false, "You don't search other Civil Protection units." end
     if target:GetPos():DistToSqr(cop:GetPos()) > 120 * 120 then return false, "Get closer." end
     if target.lcBeingSearched then return false, "They're already being searched." end
     if (target.lcSearchedAt or -1e9) + cvSearchCD:GetFloat() > CurTime() and not cop:IsAdmin() then
@@ -946,7 +948,7 @@ function LC.Forge(ply, id)
     local it = LCS.Items[id]
     if not it or not it.forge or not LC.HasItem(ply, id) then return false end
     if not Private(ply) then return false, "Not with someone watching. Get out of sight first." end
-    if Watched(ply, 800) then return false, "Not with a unit watching." end
+    if Watched(ply, 800) then return false, "Not with a Civil Protection unit watching." end
     LC.TakeItem(ply, id)
     if Check(ply, "guile", 11) then
         LC.GiveOrDrop(ply, "papers_forged")
@@ -1060,7 +1062,7 @@ local BARRED = { ota = "Overwatch doesn't shop.", admin = "The Administrator has
 local DECODED = { data_chip = true, master_chip = true }
 
 function LC.MarketAccess(ply)
-    if LC.PlayerIsCP(ply) then return false, "Nobody here sells anything to a unit." end
+    if LC.PlayerIsCP(ply) then return false, "Nobody here sells anything to a Civil Protection unit." end
     if LC.PlayerIsZombie(ply) then return false, "..." end
     local f = Faction(ply)
     if BARRED[f] then return false, BARRED[f] end
@@ -1278,7 +1280,7 @@ function LC.UndergroundAction(ply, action, id)
         elseif it.wear then
             ok, why = LC.Wear(ply, id)
         elseif it.permit then
-            why = "Keep it on you. It's shown when a unit stops you during curfew."
+            why = "Keep it on you. It's shown when a Civil Protection unit stops you during curfew."
         elseif it.radio then
             why = "Talk with !r <message>" .. (it.radio == "resistance" and " (Freq 7), or !ru on the Union band." or ".")
         elseif it.rationCard then

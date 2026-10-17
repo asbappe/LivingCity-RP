@@ -168,7 +168,7 @@ end
 
 function LC.Salvage(ply)
     if not cvOn:GetBool() then return false end
-    if LC.PlayerIsCP(ply) then return false, "Units don't pick through junk." end
+    if LC.PlayerIsCP(ply) then return false, "Civil Protection units don't pick through junk." end
     if LC.Busy and LC.Busy(ply) then return false, "You're busy." end
     local key, pos, big, name = LC.JunkAt(ply)
     if not key then return false, "Look at some junk: a wreck, a radiator, pipes, a crate." end
@@ -318,7 +318,7 @@ timer.Create("LivingCityCrowbar", 2, 0, function()
             ply.lcCrowbarNext = now + 60
             if not (LC.PlayerIsWanted and LC.PlayerIsWanted(ply)) then
                 LC.ReportCrime(ply, "Carrying a weapon (a crowbar)", secs)
-                ply:ChatPrint("[Civil Protection] A unit saw the crowbar in your hand. That's a weapon.")
+                ply:ChatPrint("[Civil Protection] A Civil Protection unit saw the crowbar in your hand. That's a weapon.")
                 hook.Run("LivingCityCrowbarSeen", ply)
             end
         end
@@ -361,7 +361,7 @@ LC.ReclaimPrices = RECLAIM
 LC.Reclaimed = LC.Reclaimed or {} -- [ply] = { { t, n } }
 
 function LC.Reclaim(ply, ent)
-    if LC.PlayerIsCP(ply) then return false, "Units don't hand in scrap." end
+    if LC.PlayerIsCP(ply) then return false, "Civil Protection units don't hand in scrap." end
     local now = CurTime()
     local list, earned = {}, 0
     for _, e in ipairs(LC.Reclaimed[ply] or {}) do

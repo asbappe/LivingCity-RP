@@ -198,11 +198,12 @@ function LC_CL.OpenActions()
     Add(you, me:GetNW2Bool("lc_handsup", false) and "Lower my hands" or "Put my hands up", function() Send("handsup") end)
     Add(you, "Holster / draw", function() Send("holster") end)
     if me:GetNW2Bool("lc_tied", false) then Add(you, "Work at the ties", function() Send("struggle") end) end
-    if me:GetNW2Float("lc_wanted_until", 0) > now then Add(you, "Give myself up (near a unit)", function() Send("surrender") end) end
+    if me:GetNW2Float("lc_wanted_until", 0) > now then Add(you, "Give myself up (near a Civil Protection unit)", function() Send("surrender") end) end
     if me:GetNW2Bool("lc_interrogated", false) then
         Add(you, "Talk to the interrogator", function() net.Start("lc_interrogate_reply") net.WriteBool(true) net.SendToServer() end, "icon16/comment.png")
     end
     if me:GetNW2Bool("lc_hauling", false) then Add(you, "Let go of the body", function() Send("haul") end) end
+    if me:GetNW2String("lcj_job", "") == "mortuary" then Add(you, "Take a body cart, or leave it (by the incinerator or the morgue)", function() Send("bodycart") end, "icon16/lorry.png") end
     if IsValid(me:GetNW2Entity("lc_scanner")) then Add(you, "Disconnect from the scanner", function() Send("unlink") end) end
     local poses = you:AddSubMenu("Pose")
     for _, p in ipairs({ "sit", "kneel", "lie", "lean", "cower" }) do Add(poses, Title(p), function() Send(p) end) end
@@ -294,7 +295,7 @@ function LC_CL.OpenActions()
         Add(cp, "Records terminal", function() Send("records") end)
         Add(cp, "Find the Civil Protection Commissary (supplies; mark it)", function() Send("waypoint", "cpsupply") end, "icon16/map.png")
         Add(cp, "Mask voice lines", function() Send("vo") end)
-        Add(cp, "Issue a BOLO", function() Ask("BOLO", "What should units look out for?", "bolo") end)
+        Add(cp, "Issue a BOLO", function() Ask("BOLO", "What should Civil Protection units look out for?", "bolo") end)
         Add(cp, "Read the mail (at the post office)", function() Send("readmail") end, "icon16/email_open.png")
         Add(cp, "Deploy a turret here (at a checkpoint: near a power bank or forcefield)", function() Send("checkpoint", "turret") end, "icon16/gun.png")
         Add(cp, "Put up a power bank on this wall (officers)", function() Send("checkpoint", "bank") end, "icon16/lightning_add.png")
@@ -380,7 +381,7 @@ function LC_CL.EscortRequests()
     for _, p in ipairs(player.GetAll()) do
         local ph, esc = p:GetNW2String("lc_escort_phase", ""), p:GetNW2Entity("lc_escort")
         if p ~= escorting and (p:GetNW2Bool("lc_escort_wait", false) or ph == "unattended" or (ph ~= "" and IsValid(esc) and not esc:IsPlayer())) then
-            local why = (ph == "unattended" and "unattended") or (p:GetNW2Bool("lc_escort_wait", false) and "waiting") or "with an NPC unit"
+            local why = (ph == "unattended" and "unattended") or (p:GetNW2Bool("lc_escort_wait", false) and "waiting") or "with an NPC Civil Protection unit"
             out[#out + 1] = { ply = p, why = why }
         end
     end
@@ -433,7 +434,7 @@ net.Receive("lc_interrogate", function()
     l:DockMargin(8, 4, 8, 8)
     l:SetWrap(true)
     l:SetTall(54)
-    l:SetText("A unit stands over you with a stun baton. \"You will answer my questions.\"\n\nTalk, and the beating stops: you give up a Resistance hideout. Say nothing, and take it.")
+    l:SetText("A Civil Protection unit stands over you with a stun baton. \"You will answer my questions.\"\n\nTalk, and the beating stops: you give up a Resistance hideout. Say nothing, and take it.")
     local talk = vgui.Create("DButton", frame)
     talk:Dock(TOP)
     talk:DockMargin(8, 0, 8, 4)

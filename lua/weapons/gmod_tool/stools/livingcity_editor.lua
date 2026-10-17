@@ -54,7 +54,7 @@ local MODES = {
     { id = "vending",     label = "Fixture: water vending machine" },
     { id = "dispenser",   label = "Fixture: ration dispenser" },
     { id = "terminal",    label = "Fixture: commissary terminal" },
-    { id = "cpsupply",    label = "Fixture: Civil Protection Commissary (units are issued grenades, ammunition, armour and rations here)" },
+    { id = "cpsupply",    label = "Fixture: Civil Protection Commissary (Civil Protection units are issued grenades, ammunition, armour and rations here)" },
     { id = "conveyor",    label = "Fixture: factory conveyor (the Factory Worker's line runs parts along it)" },
     { id = "intake",      label = "Fixture: Civil Intake (registration: new people get their papers here; NPC arrivals queue in front)" },
     { id = "housingterm", label = "Fixture: Housing Allocation (registered new arrivals ask for a room here)" },
@@ -67,7 +67,7 @@ local MODES = {
     { id = "locker",      label = "Fixture: locker (people keep things in it)" },
     { id = "screen",      label = "Fixture: city screen (shows broadcasts)" },
     { id = "lawboard",    label = "Fixture: law board" },
-    { id = "console",     label = "Fixture: Combine console (fly a scanner: prisoners and units)" },
+    { id = "console",     label = "Fixture: Combine console (fly a scanner: prisoners and Civil Protection units)" },
     { id = "workbench",   label = "Fixture: Resistance lab (a scientist makes guns, ammunition, jammers and radios for the Resistance; one in every rebel base)" },
     { id = "recycler",    label = "Fixture: Union reclamation point (hand in scrap for credits)" },
     { id = "citybin",     label = "Street: bin (searchable; sanitation bin runs stop at it)" },
@@ -76,7 +76,7 @@ local MODES = {
     { id = "screen_big",  label = "Street: giant Breencast screen" },
     { id = "tv",          label = "Street: small TV (set it on a table)" },
     { id = "transformer", label = "Fixture: transformer (powers the district: lights, loudspeakers, screens, forcefields, Combine locks)" },
-    { id = "forcefield",  label = "Fixture: Combine forcefield (place it facing you, across a doorway; units pass)" },
+    { id = "forcefield",  label = "Fixture: Combine forcefield (place it facing you, across a doorway; Civil Protection units pass)" },
     { id = "incinerator", label = "Fixture: incinerator (the dead are hauled here; mortuary attendants)" },
     { id = "powerbank",   label = "Fixture: Combine power bank (a checkpoint's heart: turrets and forcefields near it run off it)" },
     { id = "turret",      label = "Fixture: Combine turret (at a checkpoint, near a power bank or forcefield; facing you)" },
@@ -91,13 +91,13 @@ local MODES = {
     { id = "link",        label = "Path: link / unlink two nodes" },
     { id = "ladder",      label = "Path: ladder end (give its bottom and top the same #; NPCs hop up it)", group = true },
     { id = "zone_nogo",   label = "Zone: no-go", radius = true },
-    { id = "zone_rebel",  label = "Zone: rebel territory (Resistance ground: street units stay out)", radius = true },
+    { id = "zone_rebel",  label = "Zone: rebel territory (Resistance ground: street Civil Protection units stay out)", radius = true },
     { id = "zone_block",  label = "Zone: housing block (block #)", radius = true, group = true },
     { id = "zone_prison", label = "Zone: prison area", radius = true },
     { id = "zone_combine", label = "Zone: Combine only (nexus, offices, armory)", radius = true },
     { id = "zone_infest", label = "Zone: infestation (zombies live here)", radius = true },
     { id = "door_cp",     label = "Door: Civil Protection only (its lock dies in a blackout)" },
-    { id = "door_prison", label = "Door: prison or cell (units only, stays locked in a blackout)" },
+    { id = "door_prison", label = "Door: prison or cell (Civil Protection units only, stays locked in a blackout)" },
     { id = "door_locked", label = "Door: always locked" },
     { id = "door_open",   label = "Door: always open" },
     { id = "door_ignore", label = "Door: NPCs ignore it" },
@@ -531,7 +531,7 @@ end
 -- change them itself, so the panel's checkboxes and sliders ask the server to
 -- (admins only), and show what the server has. (Your own display settings,
 -- lc_show and the like, stay yours.)
-local MINE = { lc_zone_fill = true, lc_show = true, lc_show_npcs = true, lc_show_all_npcs = true }
+local MINE = { lc_zone_fill = true, lc_show = true, lc_show_npcs = true, lc_show_all_npcs = true, lc_editor_markers = true, lc_editor_xray = true, lc_editor_arrange = true }
 local bound = {} -- [convar] = { control, kind }
 
 if CLIENT then
@@ -614,6 +614,8 @@ function TOOL.BuildCPanel(panel)
     panel:Help("Workplaces: every Union job has its own line under Workplaces. Put one (or a few) where that job is done: shifts happen there. Without any, shifts happen out on the streets.")
 
     panel:CheckBox("Shade zones on the ground", "lc_zone_fill")
+    panel:CheckBox("Show the editor's markers (untick to hide them all)", "lc_editor_markers")
+    panel:CheckBox("See markers through walls (untick: only what's in sight)", "lc_editor_xray")
     panel:Help("Aim at a zone to highlight it and see its radius. Aim at its center marker to pick it out of overlapping zones.")
 
     Header("Saving")
@@ -682,7 +684,7 @@ function TOOL.BuildCPanel(panel)
     panel:Button("Unlock all doors now", "lc_unlockdoors")
     panel:Button("Open all doors now", "lc_opendoors")
     Check("Unlock untagged doors on start", "lc_unlock_doors")
-    Check("Street units chase people into rebel territory (off: rebel ground is safe from street patrols)", "lc_rebel_pursuit")
+    Check("Street Civil Protection units chase people into rebel territory (off: rebel ground is safe from street patrols)", "lc_rebel_pursuit")
 
     Header("How it feels")
     panel:Help("A person in a city too big for them. Field of view: the widest anyone sees (75 is Half-Life 2's; 0 leaves it to each player). Eye height: 64 is GMod's; lower and people stand over you.")
@@ -719,13 +721,13 @@ function TOOL.BuildCPanel(panel)
     Slider("Checkpoint stop chance (%)", "lc_stop_chance", 0, 100, 0)
     Slider("Street stop chance (%)", "lc_street_stop_chance", 0, 20, 0)
     Slider("Seconds between stops (per person)", "lc_stop_cooldown", 60, 1800, 0)
-    Slider("Disguise risk near units (% per minute)", "lc_disguise_risk", 0, 50, 0)
+    Slider("Disguise risk near Civil Protection units (% per minute)", "lc_disguise_risk", 0, 50, 0)
     Slider("Sweeps raid stashes (%)", "lc_raid_chance", 0, 100, 0)
 
     Header("Prison and conduct")
     Slider("Sentence (seconds)", "lc_prison_time", 30, 1200, 0)
     Check("Security NPCs arrest instead of kill", "lc_npc_arrests")
-    Check("Units walk the arrested to the prison", "lc_march")
+    Check("Civil Protection units walk the arrested to the prison", "lc_march")
     Slider("Longest walk to the prison (seconds)", "lc_march_max", 30, 600, 0)
     Check("Judge player kills (anti-RDM)", "lc_conduct")
     Slider("Spawn protection (seconds)", "lc_spawn_protect", 0, 30, 0)

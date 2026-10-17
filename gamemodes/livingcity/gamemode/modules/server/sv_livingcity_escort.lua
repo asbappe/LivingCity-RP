@@ -40,8 +40,8 @@ LC.Recaptures = LC.Recaptures or {} -- { cop, prisoner, untilT }
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn       = CreateConVar("lc_escorts", "1", FLAGS, "Union workers on a job can ask for a Civil Protection escort through Combine doors")
-local cvRange    = CreateConVar("lc_escort_range", "6000", FLAGS, "How far away a unit can be sent from to escort someone")
-local cvHandover = CreateConVar("lc_escort_handover", "60", FLAGS, "Seconds an unattended worker is still covered while another unit comes")
+local cvRange    = CreateConVar("lc_escort_range", "6000", FLAGS, "How far away a Civil Protection unit can be sent from to escort someone")
+local cvHandover = CreateConVar("lc_escort_handover", "60", FLAGS, "Seconds an unattended worker is still covered while another Civil Protection unit comes")
 local cvBan      = CreateConVar("lc_escort_ban_minutes", "10", FLAGS, "Minutes nobody will escort a worker who let someone through twice on one job")
 
 local NEAR_DOOR = 450   -- how close the escort has to be for a door to open for them
@@ -65,7 +65,7 @@ local function NameOf(ply) return LC.CharacterName and LC.CharacterName(ply) or 
 
 -- What a unit is called on the radio.
 function LC.UnitDesignation(u)
-    if not IsValid(u) then return "A unit" end
+    if not IsValid(u) then return "A Civil Protection unit" end
     if u:IsPlayer() then
         local t = u:GetNW2String("lcf_title", "")
         return t ~= "" and t or u:Nick()
@@ -95,7 +95,7 @@ end
 function LC.MayHaveEscort(ply)
     if not cvOn:GetBool() then return false, "Escorts are off on this server." end
     if not IsValid(ply) or not ply:IsPlayer() or not ply:Alive() then return false end
-    if LC.PlayerIsCP(ply) then return false, "You're a unit. You open those doors yourself." end
+    if LC.PlayerIsCP(ply) then return false, "You're a Civil Protection unit. You open those doors yourself." end
     if LC.PlayerIsZombie(ply) then return false end
     if LC.InCustody and LC.InCustody(ply) then return false, "Not from in here." end
     if not (LC.Job and LC.Job(ply)) then return false, "Only Union workers get an escort: take a Union job from your board (F3)." end
@@ -264,7 +264,7 @@ function LC.RequestEscort(ply)
     if Dispatch(e) then return true end
     ply:SetNW2Bool("lc_escort_wait", true)
     Publish(e)
-    return true, "[Union] No unit's free right now. Dispatch has your request; wait for one."
+    return true, "[Union] No Civil Protection unit's free right now. Dispatch has your request; wait for one."
 end
 
 -- Dismiss it yourself.
@@ -279,7 +279,7 @@ end
 
 -- A player unit takes it on (from an NPC unit, or a request nobody's answered).
 function LC.TakeEscort(unit, worker)
-    if not IsValid(unit) or not LC.PlayerIsCP(unit) then return false, "Units only." end
+    if not IsValid(unit) or not LC.PlayerIsCP(unit) then return false, "Civil Protection units only." end
     if not IsValid(worker) or not worker:IsPlayer() then return false, "Look at the worker, or pick them from Escort requests." end
     local e = LC.Escorts[worker]
     if e and e.unit == unit then return false, "You're already escorting them." end
@@ -327,8 +327,8 @@ function LC.EscortUnattended(e, radioText, why)
     e.nextDispatch = CurTime() + 1.5 -- (the radio call first)
     e.lostSince = nil
     e.doors = {} -- (the next unit watches the doors it opens itself)
-    if radioText then Radio(radioText .. " Worker unattended: nearest free unit, take over.") end
-    Say(e.worker, "[Union] Your escort's been called away. Stay where you are: another unit is coming.")
+    if radioText then Radio(radioText .. " Worker unattended: nearest free Civil Protection unit, take over.") end
+    Say(e.worker, "[Union] Your escort's been called away. Stay where you are: another Civil Protection unit is coming.")
     Publish(e)
 end
 
@@ -402,7 +402,7 @@ local function Tailgated(e, intruder, entry)
     if st and LC.MakeOneHostile then LC.MakeOneHostile(u, st, intruder) end
     if LC.AddStanding then LC.AddStanding(w, -10, "someone followed you through a Combine door") end
     if LC.AddViolation then LC.AddViolation(w, "Under escort, let someone through a Combine door") end
-    Say(intruder, "[Civil Protection] \"Hold it!\" A unit saw you slip through behind the worker.")
+    Say(intruder, "[Civil Protection] \"Hold it!\" A Civil Protection unit saw you slip through behind the worker.")
     hook.Run("LivingCityEscortTricked", w, u, intruder, "intruder")
 end
 
@@ -419,7 +419,7 @@ local function PrisonerOut(e, prisoner, entry)
     end
     if LC.AddStanding then LC.AddStanding(w, -15, "a prisoner got out through a door your escort opened") end
     if LC.AddViolation then LC.AddViolation(w, "Under escort, had a cell door opened: a prisoner got out") end
-    Say(prisoner, "[Civil Protection] \"Don't move!\" The unit's seen you.")
+    Say(prisoner, "[Civil Protection] \"Don't move!\" The Civil Protection unit's seen you.")
     hook.Run("LivingCityEscortTricked", w, u, prisoner, "prisoner")
 end
 
@@ -600,7 +600,7 @@ local function TickOne(e, now)
     if u ~= nil then
         if u:IsPlayer() and IsValid(u) then
             if not u:Alive() or not LC.PlayerIsCP(u) then
-                return Unattended(e, Desig(u) .. ": escort of " .. NameOf(w) .. " interrupted, " .. Where(w:GetPos()) .. ".", "unit down")
+                return Unattended(e, Desig(u) .. ": escort of " .. NameOf(w) .. " interrupted, " .. Where(w:GetPos()) .. ".", "Civil Protection unit down")
             end
             if e.phase == "coming" and w:GetPos():DistToSqr(u:GetPos()) < ARRIVED * ARRIVED then
                 e.phase = e.resume == "out" and "out" or "with"
@@ -615,8 +615,8 @@ local function TickOne(e, now)
         if not st or u:Health() <= 0 or st.workEscort ~= e or st.state ~= "workescort" then
             -- called away (a crime nearby, someone shooting), or down
             local down = not st or not IsValid(u) or u:Health() <= 0
-            return Unattended(e, (down and "Dispatch: escort unit down" or (Desig(u) .. ": called away")) .. ", " .. Where(w:GetPos()) .. ".",
-                down and "unit down" or "called away")
+            return Unattended(e, (down and "Dispatch: escort Civil Protection unit down" or (Desig(u) .. ": called away")) .. ", " .. Where(w:GetPos()) .. ".",
+                down and "Civil Protection unit down" or "called away")
         end
         if e.phase ~= "coming" then
             WatchDoors(e, now)
@@ -633,11 +633,11 @@ local function TickOne(e, now)
         if Dispatch(e) then return end
     end
     if e.phase == "unattended" and now > (e.graceUntil or 0) then
-        Radio("Dispatch: no unit free to take over the escort of " .. NameOf(w) .. ".")
-        return End(e, "nobody came", "[Union] No unit came. You're on your own: leave the restricted area.")
+        Radio("Dispatch: no Civil Protection unit free to take over the escort of " .. NameOf(w) .. ".")
+        return End(e, "nobody came", "[Union] No Civil Protection unit came. You're on your own: leave the restricted area.")
     end
     if e.phase == "waiting" and now - (e.since or now) > WAIT_SECS then
-        return End(e, "lapsed", "[Union] No unit was free. Your escort request lapses; ask again later.")
+        return End(e, "lapsed", "[Union] No Civil Protection unit was free. Your escort request lapses; ask again later.")
     end
 end
 
@@ -652,7 +652,7 @@ local function Recaptures(now)
         elseif r.cop:GetPos():DistToSqr(r.prisoner:GetPos()) < 110 * 110 then
             table.remove(LC.Recaptures, i)
             Voice(r.cop, "movealong3")
-            if LC.ReturnToCell then LC.ReturnToCell(r.prisoner, "The unit marches you back to your cell.") end
+            if LC.ReturnToCell then LC.ReturnToCell(r.prisoner, "The Civil Protection unit marches you back to your cell.") end
             LC.SetState(r.cop, st, "idle")
             st.untilT = now + 3
         elseif now > r.nextGo then
@@ -679,7 +679,7 @@ hook.Add("PlayerDisconnected", "LivingCityEscort", function(ply)
     local e = LC.Escorts[ply]
     if e then End(e, "gone") end
     for _, o in pairs(LC.Escorts) do
-        if o.unit == ply then Unattended(o, "Dispatch: escort unit off the net.", "unit gone") end
+        if o.unit == ply then Unattended(o, "Dispatch: escort Civil Protection unit off the net.", "Civil Protection unit gone") end
     end
 end)
 

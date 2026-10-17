@@ -119,7 +119,7 @@ hook.Add("HUDPaint", "LivingCityExercise", function()
     Text(NAMES[EX.kind], "LCExTitle", cx, y, AMBER)
     if not citizen and not leader then return end
     if not inIt and not leader then
-        Text("You're missing it. Report to " .. GOAL[EX.kind] .. " (the marker), before a unit finds you.", "LCExText", cx, y + 24, RED)
+        Text("You're missing it. Report to " .. GOAL[EX.kind] .. " (the marker), before a Civil Protection unit finds you.", "LCExText", cx, y + 24, RED)
         return
     end
 

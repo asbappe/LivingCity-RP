@@ -25,7 +25,7 @@ if CLIENT then return end
 LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvOn       = CreateConVar("lc_response", "1", FLAGS, "Escalating response: armed units, Overwatch squads, lockdowns")
+local cvOn       = CreateConVar("lc_response", "1", FLAGS, "Escalating response: armed Civil Protection units, Overwatch squads, lockdowns")
 local cvSoldiers = CreateConVar("lc_response_soldiers", "6", FLAGS, "Most Overwatch soldiers sent after one person")
 
 local THRESHOLDS = { 1, 4, 8, 14 } -- heat needed for alert levels 1..4
@@ -148,8 +148,8 @@ local function Escalate(ply, level)
         end
     end
     if level == 2 then
-        ply:ChatPrint("[Overwatch] Alert 2: every unit in the sector has your description. They've drawn their weapons.")
-        if LC.RadioNotice then LC.RadioNotice("cp", "Dispatch: all units, suspect " .. ply:Nick() .. " is armed and dangerous. Weapons free.") end
+        ply:ChatPrint("[Overwatch] Alert 2: every Civil Protection unit in the sector has your description. They've drawn their weapons.")
+        if LC.RadioNotice then LC.RadioNotice("cp", "Dispatch: all Civil Protection units, suspect " .. ply:Nick() .. " is armed and dangerous. Weapons free.") end
     elseif level == 3 then
         ply:ChatPrint("[Overwatch] Alert 3: Overwatch has been dispatched. Lethal force is authorized.")
         if LC.Announce then LC.Announce("response", "npc/overwatch/cityvoice/f_protectionresponse_1_spkr.wav",
@@ -238,7 +238,7 @@ hook.Add("OnNPCKilled", "LivingCityResponse", function(npc, attacker)
     if st.role == "cop" then
         local first = FirstOffense(attacker)
         LC.ReportCrime(attacker, "Murder of a Civil Protection officer", first and 180 or 600)
-        LC.AddHeat(attacker, first and 3 or 4, "killed a unit")
+        LC.AddHeat(attacker, first and 3 or 4, "killed a Civil Protection unit")
     elseif st.role == "soldier" then
         local first = FirstOffense(attacker)
         LC.ReportCrime(attacker, "Murder of an Overwatch soldier", first and 240 or 600)
@@ -306,7 +306,7 @@ timer.Create("LivingCityResponse", 2, 0, function()
                         st.enemy = nil
                         LC.SetState(npc, st, "idle")
                     end
-                    if LC.StartLeaving then LC.StartLeaving(npc, st, false) end
+                    if LC.StartLeaving then LC.StartLeaving(npc, st, false, "a response squad going back") end
                 elseif st.state ~= "hostile" then
                     LC.MakeOneHostile(npc, st, target) -- they don't give up
                 end
@@ -336,7 +336,7 @@ end)
 --   lc_squad_delay (5 seconds)
 ------------------------------------------------------------------------
 
-local cvSquad    = CreateConVar("lc_squad", "1", FLAGS, "Alarms (data breaches, prison escapes) send a small squad of units after whoever set them off")
+local cvSquad    = CreateConVar("lc_squad", "1", FLAGS, "Alarms (data breaches, prison escapes) send a small squad of Civil Protection units after whoever set them off")
 local cvSqCops   = CreateConVar("lc_squad_cops", "2", FLAGS, "Armed metrocops in a response squad")
 local cvSqSold   = CreateConVar("lc_squad_soldiers", "1", FLAGS, "Overwatch soldiers in a response squad")
 local cvSqDelay  = CreateConVar("lc_squad_delay", "5", FLAGS, "Seconds after the alarm before the squad comes through the door")

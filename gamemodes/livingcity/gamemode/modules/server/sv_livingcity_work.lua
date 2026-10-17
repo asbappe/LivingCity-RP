@@ -64,6 +64,12 @@ function LC.SetJob(ply, id, force)
             return false, "You can change jobs again in " .. math.ceil(ply.lcjNext - CurTime()) .. " seconds."
         end
     end
+    -- the old job's shift goes with the old job (it stayed on the HUD and blocked the new one's)
+    local cur = LC.QuestOf and LC.QuestOf[ply]
+    if cur and not cur.done and cur.chain == "shift" and LC.AbandonQuest then
+        LC.AbandonQuest(ply)
+        ply.lcqNext = 0
+    end
     ply:SetNW2String("lcj_job", id)
     ply:SetPData("lcj_job", id)
     ply.lcjNext = CurTime() + cvCooldown:GetFloat()
@@ -76,6 +82,39 @@ function LC.SetJob(ply, id, force)
     hook.Run("LivingCityJobChanged", ply, id)
     return true
 end
+
+-- Everyone works (the owner: "everyone should be forced to work a job and the only ones who
+-- don't are the rebels"). A registered citizen with no job is given one by the Union, the
+-- post with fewest hands; they can ask for another (F3 > Jobs). The Resistance aren't
+-- assigned (one can still take a job, passing as a citizen).
+local cvAssign = CreateConVar("lc_assign_work", "1", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Every registered citizen without a job is assigned Union work (rebels aren't)")
+function LC.AssignWork(ply)
+    if not cvAssign:GetBool() or not IsValid(ply) or not ply:Alive() then return false end
+    if ply:GetNW2String("lcf_faction", "") ~= "citizen" or LC.Job(ply) then return false end
+    if (LC.IntakePending and LC.IntakePending(ply)) or not LC.CanWork(ply) then return false end
+    local counts = {}
+    for _, p in ipairs(player.GetAll()) do
+        local j = p:GetNW2String("lcj_job", "")
+        if j ~= "" then counts[j] = (counts[j] or 0) + 1 end
+    end
+    local best, bn = nil, nil
+    for _, o in ipairs(LCJ.Occupations or {}) do
+        if not LCJ.Closed(o) then
+            local n = counts[o.id] or 0
+            if not bn or n < bn or (n == bn and math.random() < 0.4) then best, bn = o, n end
+        end
+    end
+    if not best then return false end
+    if not LC.SetJob(ply, best.id, true) then return false end
+    ply.lcjNext = 0 -- (they can ask for another straight away)
+    if LC.Notice then
+        LC.Notice(ply, "event", "Union work assignment", "You are assigned: " .. best.name .. ". Report to the " .. string.lower(best.place)
+            .. ". Your shifts are on F3; ask for another post there.", 12)
+    end
+    return true
+end
+hook.Add("LivingCityRegistered", "LivingCityAssignWork", function(ply) timer.Simple(2, function() LC.AssignWork(ply) end) end)
+hook.Add("PlayerSpawn", "LivingCityAssignWork", function(ply) timer.Simple(5, function() LC.AssignWork(ply) end) end)
 
 net.Receive("lcj_set", function(_, ply)
     local ok, why = LC.SetJob(ply, net.ReadString())
@@ -236,13 +275,13 @@ SHIFTS.sanitation = {
                           Narrate(q, "Somebody will see that lambda tomorrow and feel a little less alone.")
                       end,
                       fail = function(q, p)
-                          Narrate(q, "A unit on the corner watches you skip it.")
+                          Narrate(q, "A Civil Protection unit on the corner watches you skip it.")
                           LC.ReportCrime(p, "Defacing city property", 90)
                       end },
-                    { text = "Report the name to a unit.", pick = function(q, p)
+                    { text = "Report the name to a Civil Protection unit.", pick = function(q, p)
                         Trait(p, "loyalty", 2)
                         LC.Bump(p, "reports")
-                        Insert(q, { Count("used_npc", 1, "Report the name to a unit (press E)", Q.IsCopNPC) })
+                        Insert(q, { Count("used_npc", 1, "Report the name to a Civil Protection unit (press E)", Q.IsCopNPC) })
                     end },
                 }),
                 Hold(sp, 5, "Scrub the wall (crouch)", 100, true),
@@ -332,7 +371,7 @@ SHIFTS.kitchen = {
                     { text = "Confiscate it, and report him.", pick = function(q, p)
                         Trait(p, "loyalty", 1)
                         q.bonus = 10
-                        Narrate(q, "A unit takes him by the arm. The card goes in the box with the others.")
+                        Narrate(q, "A Civil Protection unit takes him by the arm. The card goes in the box with the others.")
                     end },
                     { text = "Let it through.", pick = function(q, p)
                         Trait(p, "sympathy", 1)
@@ -444,7 +483,7 @@ SHIFTS.factory = {
                     { text = "Report him.", pick = function(q, p)
                         Trait(p, "loyalty", 1)
                         LC.Bump(p, "reports")
-                        Insert(q, { Count("used_npc", 1, "Report the foreman to a unit (press E)", Q.IsCopNPC) })
+                        Insert(q, { Count("used_npc", 1, "Report the foreman to a Civil Protection unit (press E)", Q.IsCopNPC) })
                     end },
                     { text = "Say nothing.", pick = function(q, p) LC.Bump(p, "silences") end },
                     { text = "Ask for your cut.", pick = function(q, p)
@@ -604,7 +643,7 @@ SHIFTS.maintenance = {
                           Narrate(q, "One line of the log becomes noise. Terminals glitch all the time.")
                       end,
                       fail = function(q, p)
-                          Narrate(q, "The terminal flags the edit. Every unit in the sector gets the alert.")
+                          Narrate(q, "The terminal flags the edit. Every Civil Protection unit in the sector gets the alert.")
                           LC.ReportCrime(p, "Tampering with a city terminal", 120)
                       end },
                 }),
@@ -700,11 +739,11 @@ SHIFTS.porter = {
                           q.data.dest, q.data.destR, q.data.destName = pos, r, name
                           Narrate(q, "He doesn't say thank you. He doesn't have to.")
                       end },
-                    { text = "Repeat the question to a unit.", pick = function(q, p)
+                    { text = "Repeat the question to a Civil Protection unit.", pick = function(q, p)
                         Trait(p, "loyalty", 2)
                         LC.Bump(p, "reports")
                         if IsValid(q.data.actor) and LC.ArrestNPC then LC.ArrestNPC(q.data.actor, nil) end
-                        Narrate(q, "A unit takes him by the arm. He looks back at you once.")
+                        Narrate(q, "A Civil Protection unit takes him by the arm. He looks back at you once.")
                         SkipNext(q)
                     end },
                 }),
@@ -739,14 +778,14 @@ SHIFTS.porter = {
                           LC.Bump(p, "thefts")
                       end,
                       fail = function(q, p)
-                          Narrate(q, "The latches snap open loud enough to turn heads. A unit is already walking over.")
+                          Narrate(q, "The latches snap open loud enough to turn heads. A Civil Protection unit is already walking over.")
                           LC.ReportCrime(p, "Theft from a traveler", 90)
                       end },
                     { text = "Hand it to Civil Protection.", pick = function(q, p)
                         Trait(p, "loyalty", 2)
                         LC.Bump(p, "reports")
                         SkipNext(q)
-                        Insert(q, { Count("used_npc", 1, "Hand the suitcase to a unit (press E)", Q.IsCopNPC) })
+                        Insert(q, { Count("used_npc", 1, "Hand the suitcase to a Civil Protection unit (press E)", Q.IsCopNPC) })
                     end },
                 }),
                 Q.Contact("Return the suitcase to its owner, " .. destName .. " (press E)", dest, "citizen", "'That's mine. I thought I'd lost it.' They don't say thank you."),
@@ -774,10 +813,10 @@ SHIFTS.porter = {
                           LC.ReportCrime(p, "Aiding unauthorized travel", 90)
                       end },
                     { text = "Turn her back.", pick = function(q, p) Trait(p, "loyalty", 1) end },
-                    { text = "Call a unit.", pick = function(q, p)
+                    { text = "Call a Civil Protection unit.", pick = function(q, p)
                         Trait(p, "loyalty", 2)
                         LC.Bump(p, "reports")
-                        Insert(q, { Count("used_npc", 1, "Report her to a unit (press E)", Q.IsCopNPC) })
+                        Insert(q, { Count("used_npc", 1, "Report her to a Civil Protection unit (press E)", Q.IsCopNPC) })
                     end },
                 }),
             },
@@ -976,7 +1015,7 @@ SHIFTS.scrap = {
             { text = "Report the cache.", pick = function(q, p)
                 Trait(p, "loyalty", 2)
                 LC.Bump(p, "reports")
-                Insert(q, { Count("used_npc", 1, "Report the cache to a unit (press E)", Q.IsCopNPC) })
+                Insert(q, { Count("used_npc", 1, "Report the cache to a Civil Protection unit (press E)", Q.IsCopNPC) })
             end },
             { text = "Leave it where it is.", pick = function(q, p)
                 LC.Bump(p, "silences")
@@ -986,7 +1025,7 @@ SHIFTS.scrap = {
                 p:Give("weapon_pistol")
                 p:GiveAmmo(18, "Pistol")
                 if LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then
-                    Narrate(q, "A unit saw the oilcloth come out of the rubble.")
+                    Narrate(q, "A Civil Protection unit saw the oilcloth come out of the rubble.")
                     LC.ReportCrime(p, "Possession of a firearm", 240)
                 else
                     Narrate(q, "It's cold and heavy and nobody saw.")
@@ -1106,6 +1145,34 @@ do
         if spec and GamesOn() then spec = Gamify(spec, 2, "line", LINE_TEXT) end
         return spec
     end
+    -- The loading dock (two crates, a long walk each way) is the Station Porter's work now; the
+    -- factory floor gets more of the line instead (the owner: "an absolute grind").
+    local dock = SHIFTS.factory[2]
+    SHIFTS.porter[#SHIFTS.porter + 1] = function(ply, job)
+        local spec = dock(ply, job)
+        if spec then
+            spec.title, spec.desc = "Freight from the dock", "Two crates off the loading dock, to the station."
+            for _, st in ipairs(spec.stages or {}) do
+                if st.text then st.text = string.gsub(st.text, "the factory floor", "the station") end
+            end
+        end
+        return spec
+    end
+    SHIFTS.factory[2] = function(ply, job)
+        local station = WorkSpot(ply, job.num)
+        if not station then return nil end
+        if GamesOn() then
+            return {
+                title = "Overtime on the line", reward = 10, limit = 600,
+                desc = "The quota went up again. The line doesn't stop for you.",
+                stages = { GameGo(station, "Report to the line", "line", { station = station }), GameStage(LINE_TEXT) },
+            }
+        end
+        return {
+            title = "Overtime on the line", reward = 20, limit = 420, desc = "The quota went up again.",
+            stages = { Goto(station, "Report to the line", 180), Hold(station, 40, "Work the line", 160) },
+        }
+    end
 
     -- Maintenance: every repair is a wiring panel
     for i, build in ipairs(SHIFTS.maintenance) do
@@ -1147,7 +1214,7 @@ do
     SHIFTS.porter[3] = function(ply, job)
         local spec = ticket(ply, job)
         if spec and GamesOn() then
-            spec = Gamify(spec, 2, "papers", "Check the travelers' papers: E on each, then approve, deny or call a unit")
+            spec = Gamify(spec, 2, "papers", "Check the travelers' papers: E on each, then approve, deny or call a Civil Protection unit")
             spec.title = "Papers check"
             spec.reward = 10
             spec.desc = "Papers and permits, everyone boarding. Today's rules are posted."
@@ -1178,7 +1245,7 @@ do
             desc = "Three parcels, against the clock. They aren't letters, and nobody says what's in them.",
             stages = {
                 GameGo(office, "Collect the parcels at the post office", "parcel", { stops = stops }),
-                GameStage("Deliver the parcels against the clock (marked): units stop couriers they get a good look at, so crouch past them"),
+                GameStage("Deliver the parcels against the clock (marked): Civil Protection units stop couriers they get a good look at, so crouch past them"),
             },
         }
     end
@@ -1212,7 +1279,7 @@ do
                 stages = { GameGo(at, go, kind), GameStage(text) } }
         end
     end
-    SHIFTS.laundry = { AtWork("laundry", "Sorting", "Civil Protection uniforms, washed and pressed, and every one back to its own division. Units leave things in their pockets.",
+    SHIFTS.laundry = { AtWork("laundry", "Sorting", "Civil Protection uniforms, washed and pressed, and every one back to its own division. Civil Protection units leave things in their pockets.",
         "Go to the Nexus laundry", "Sort the uniforms by division (the bins say which); bloodstained ones to the incident wash. E brings the pile back") }
     SHIFTS.clerk = { AtWork("filing", "Filing", "The in-tray, by citizen number. Anything that doesn't match the register goes in the discrepancy tray.",
         "Go to the civil records office", "File every form in its drawer; mismatches to the discrepancy tray. E brings the in-tray back") }

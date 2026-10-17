@@ -52,7 +52,7 @@ LCCP.Voice = {
     { "copy", "Copy.", MP .. "copy.wav", "Radio" },
     { "104", "10-4.", MP .. "ten4.wav", "Radio" },
     { "roger", "Roger that.", MP .. "rodgerthat.wav", "Radio" },
-    { "108", "Unit is on duty, 10-8.", MP .. "unitisonduty10-8.wav", "Radio" },
+    { "108", "Civil Protection unit is on duty, 10-8.", MP .. "unitisonduty10-8.wav", "Radio" },
     { "inposition", "In position.", MP .. "inposition.wav", "Radio" },
     { "sociostable", "We are sociostable at this location.", MP .. "wearesociostablethislocation.wav", "Radio" },
     { "searching", "Searching for suspect.", MP .. "searchingforsuspect.wav", "Radio" },
@@ -66,7 +66,7 @@ LCCP.Voice = {
     { "takecover", "Take cover!", MP .. "takecover.wav", "Radio" },
     { "goingin", "Cover me, I'm going in.", MP .. "covermegoingin.wav", "Radio" },
     { "grenade", "Grenade!", MP .. "grenade.wav", "Radio" },
-    { "movein", "All units, move in!", MP .. "allunitsmovein.wav", "Radio" },
+    { "movein", "All Civil Protection units, move in!", MP .. "allunitsmovein.wav", "Radio" },
 }
 
 -- Overwatch soldiers sound different.

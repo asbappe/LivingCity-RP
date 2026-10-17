@@ -23,14 +23,14 @@ function LC.StartUnshackle(ply)
     local tr = ply:GetEyeTrace()
     local vort = tr and tr.Entity
     if not Shackled(vort) or vort:GetPos():DistToSqr(ply:GetPos()) > 120 * 120 then return false, "Look at a shackled vortigaunt, up close." end
-    if LC.SeenBySecurity and LC.SeenBySecurity(ply, 900) then return false, "Not with a unit watching." end
+    if LC.SeenBySecurity and LC.SeenBySecurity(ply, 900) then return false, "Not with a Civil Protection unit watching." end
     vort:ChatPrint("[Living City] Someone is working at your shackles.")
     return LC.StartTask(ply, 10, "Cutting the shackles...", {
         maxMove = 40, cancelText = "You stop.",
         done = function(p)
             if not Shackled(vort) or p:GetPos():DistToSqr(vort:GetPos()) > 150 * 150 then return end
             if LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then
-                return p:ChatPrint("A unit is watching. Not now.")
+                return p:ChatPrint("A Civil Protection unit is watching. Not now.")
             end
             LC.SetFaction(vort, "resistance", "vortigaunt", true)
             vort:ChatPrint("[Living City] The shackles fall away. The vortessence is yours again: left click strikes, right click charges a vest (yours or a comrade's). The Combine will want you back.")

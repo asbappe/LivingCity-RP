@@ -750,7 +750,7 @@ end
 
 -- What the Combine's units say out loud, by what they're seeing. Missing
 -- files are left out (lc_ending_minge_chatter 0: none of it).
-local cvMingeChatter = CreateConVar("lc_ending_minge_chatter", "1", FLAGS, "The Harpies: the Combine's units talk on their radios, out loud, about what they're seeing (0 off)")
+local cvMingeChatter = CreateConVar("lc_ending_minge_chatter", "1", FLAGS, "The Harpies: the Combine's Civil Protection units talk on their radios, out loud, about what they're seeing (0 off)")
 local MP, CS = "npc/metropolice/vo/", "npc/combine_soldier/vo/"
 local function Lines(dir, list) local o = {} for _, n in ipairs(list) do o[#o + 1] = dir .. n .. ".wav" end return o end
 local CHATTER = {
@@ -940,7 +940,7 @@ TICK.harpies = function(now)
         local a, b = Speaker(), Speaker()
         Chatter(a, "fire")
         if b ~= a then timer.Simple(0.9, function() if E then Chatter(b, "fire") end end) end
-        for _, p in ipairs(player.GetAll()) do p:ChatPrint("[Civil Protection] \"All units, open fire! Take them down!\"") end
+        for _, p in ipairs(player.GetAll()) do p:ChatPrint("[Civil Protection] \"All Civil Protection units, open fire! Take them down!\"") end
         E.nextChatter = now + math.Rand(2.5, 3.5)
         for _, c in ipairs(E.folk or {}) do if math.random() < 0.5 then timer.Simple(math.Rand(0, 1.5), function() Scream(c) end) end end
     elseif mode == "rush" and was ~= "rush" then
@@ -1574,7 +1574,7 @@ end
 local cvBusSections = CreateConVar("lc_ending_bus_sections", "27:fly,149:drive,176:fast,220:end", FLAGS,
     "The Bus: the song's sections, second:kind (fly, drive, fast, end); before the first, it drives about the streets")
 local cvBusBPM   = CreateConVar("lc_ending_bus_bpm", "138", FLAGS, "The Bus: the song's beats per minute (its speed and the lights keep to it)")
-local cvBusCombine = CreateConVar("lc_ending_bus_combine", "6", FLAGS, "The Bus: how many of the Combine's units get on too")
+local cvBusCombine = CreateConVar("lc_ending_bus_combine", "6", FLAGS, "The Bus: how many of the Combine's Civil Protection units get on too")
 local BUS = { "models/props_vehicles/bus01_2.mdl", "models/props_vehicles/van001a_physics.mdl" }
 local RAINBOW = { { 255, 40, 40 }, { 255, 150, 30 }, { 255, 240, 40 }, { 60, 230, 80 }, { 60, 140, 255 }, { 170, 70, 255 } }
 local RING = "models/hunter/tubes/tube4x4x025.mdl"
@@ -2115,8 +2115,8 @@ end
 -- for it: a crowd surf over everyone's heads, a frenzied spin, or a jump for
 -- joy with a backflip, confetti and all (every lc_ending_hard_moment_beats
 -- beats in the "hard" parts; each unit gets a turn before anyone goes twice).
-local cvHardMoment = CreateConVar("lc_ending_hard_moment_beats", "5", FLAGS, "Hard: beats between another of the Combine's units going for it (a crowd surf, a spin, a backflip; 0 off)")
-local cvHardMomentMax = CreateConVar("lc_ending_hard_moment_max", "3", FLAGS, "Hard: how many of the Combine's units can be going for it at once")
+local cvHardMoment = CreateConVar("lc_ending_hard_moment_beats", "5", FLAGS, "Hard: beats between another of the Combine's Civil Protection units going for it (a crowd surf, a spin, a backflip; 0 off)")
+local cvHardMomentMax = CreateConVar("lc_ending_hard_moment_max", "3", FLAGS, "Hard: how many of the Combine's Civil Protection units can be going for it at once")
 local WOO = {
     "npc/metropolice/vo/affirmative.wav", "npc/metropolice/vo/rodgerthat.wav", "npc/metropolice/vo/ten4.wav",
     "npc/combine_soldier/vo/affirmative.wav", "npc/combine_soldier/vo/affirmative2.wav", "npc/combine_soldier/vo/copythat.wav",
@@ -2624,7 +2624,7 @@ local cvPlaneSections = CreateConVar("lc_ending_plane_sections", "17:board,26:ve
 local cvPlaneCaptions = CreateConVar("lc_ending_plane_captions", "15.1=MA-IA-HII|16.3=MA-IA-HUU|17.5=MA-IA-HOO|18.7=MA-IA-HAHA", FLAGS,
     "Plane: the sing-along captions, second=TEXT, separated by | (the choruses add their own)")
 local cvPlaneBPM = CreateConVar("lc_ending_plane_bpm", "130", FLAGS, "Plane: the song's beats per minute")
-local cvPlaneCombine = CreateConVar("lc_ending_plane_combine", "8", FLAGS, "Plane: how many of the Combine's units get on the wings too")
+local cvPlaneCombine = CreateConVar("lc_ending_plane_combine", "8", FLAGS, "Plane: how many of the Combine's Civil Protection units get on the wings too")
 local cvPlaneModelYaw = CreateConVar("lc_ending_plane_model_yaw", "-90", FLAGS, "Plane: which way its body model's nose points, turned to the way it flies (-90, 90, 0 or 180: whichever puts the nose in front)")
 local PLANE_BODY, PLANE_WING = { "models/xqm/jetbody3.mdl", "models/props_vehicles/van001a_physics.mdl" }, "models/xqm/airplanewing1.mdl"
 local FIREWORK = { { 255, 60, 60 }, { 255, 210, 60 }, { 80, 200, 255 }, { 120, 255, 120 }, { 255, 100, 230 } }
@@ -3019,7 +3019,7 @@ local cvFloodBPM   = CreateConVar("lc_ending_flood_bpm", "150", FLAGS, "The Floo
 local cvFloodRise  = CreateConVar("lc_ending_flood_rise", "900", FLAGS, "The Flood: how high the water rises over the landing zone by the outro")
 local cvFloodDrown = CreateConVar("lc_ending_flood_drown", "15", FLAGS, "The Flood: seconds under the water before you drown")
 local cvIcthys     = CreateConVar("lc_ending_flood_icthys", "8", FLAGS, "The Flood: how many ichthyosaurs at the worst of it")
-local cvFloodCrowd = CreateConVar("lc_ending_flood_crowd", "10", FLAGS, "The Flood: how many of the city's people and the Combine's units are on the stage too, headbanging (the big waves take them one by one)")
+local cvFloodCrowd = CreateConVar("lc_ending_flood_crowd", "10", FLAGS, "The Flood: how many of the city's people and the Combine's Civil Protection units are on the stage too, headbanging (the big waves take them one by one)")
 local cvFloodAttack = CreateConVar("lc_ending_flood_attack_from", "140", FLAGS, "The Flood: seconds into the song before the ichthyosaurs bite or leap at anyone (till then they circle)")
 local cvFloodBoats = CreateConVar("lc_ending_flood_boats", "6", FLAGS, "The Flood: rowboats floating round the stage (climb in from the water with Jump; the waves don't throw you out of them)")
 local BOATS = { "models/props_canal/boat001a.mdl", "models/props_canal/boat001b.mdl", "models/props_canal/boat002b.mdl", "models/hunter/plates/plate2x4.mdl" }

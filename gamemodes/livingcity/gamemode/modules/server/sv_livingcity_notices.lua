@@ -139,7 +139,7 @@ local PLACES = {
         local e = NearestEnt(ply:GetPos(), { "lc_cpsupply" })
         if IsValid(e) then return e:GetPos(), "Civil Protection Commissary" end
         e = NearestEnt(ply:GetPos(), { "lc_terminal" })
-        if IsValid(e) then return e:GetPos(), "Commissary (units are issued supplies here)" end
+        if IsValid(e) then return e:GetPos(), "Commissary (Civil Protection units are issued supplies here)" end
         return nil, "There's no Civil Protection Commissary in this city yet. Your grenades are topped up when you go on duty. (Staff: Living City Editor > Fixture: Civil Protection Commissary.)"
     end,
     intake = function(ply)

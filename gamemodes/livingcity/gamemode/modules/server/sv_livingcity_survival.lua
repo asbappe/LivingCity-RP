@@ -385,6 +385,24 @@ function LC.AimedAtProp(ply, tr)
     return not (brush.Hit and brush.HitPos:DistToSqr(tr.HitPos) < 3 * 3)
 end
 
+-- Pointing at one of the map's static props, even one it draws with nothing solid to hit
+-- (many sinks): your aim passes close by it, within reach, and nothing but air between
+-- your eyes and it (a sink the other side of a wall is behind brushwork, so not this).
+function LC.AimingAtFixture(ply, fx)
+    local eye = ply:EyePos()
+    local fwd = ply:EyeAngles():Forward()
+    for _, h in ipairs({ 10, 20, 30, 40 }) do
+        local c = fx.pos + Vector(0, 0, h)
+        local v = c - eye
+        local along = v:Dot(fwd)
+        if along > 0 and along < 110 and (v - fwd * along):Length() < 26 then
+            local tr = util.TraceLine({ start = eye, endpos = c, mask = MASK_SOLID_BRUSHONLY, filter = ply })
+            if not tr.Hit or tr.HitPos:DistToSqr(c) < 4 * 4 then return true end
+        end
+    end
+    return false
+end
+
 -- A sink: one the map has as a prop (dynamic or static), within reach and in view.
 function LC.NearSink(ply)
     local at = ply:GetPos() + Vector(0, 0, 40)
@@ -933,7 +951,9 @@ hook.Add("KeyPress", "LivingCityMapFixtures", function(ply, key)
     -- and only if you're looking at the prop itself. A bare wall (the ladder
     -- you just pressed E on) with a sink the other side of it is not a sink.
     local fx = LC.StaticFixtureNear and tr.Hit and LC.StaticFixtureNear(tr.HitPos, nil, 75)
-    if fx and LC.AimedAtProp(ply, tr) and LC.CanSeeFixture(ply, fx.pos) then UseFixture(ply, fx.kind, nil, fx) end
+    if fx and ((LC.AimedAtProp(ply, tr) and LC.CanSeeFixture(ply, fx.pos)) or LC.AimingAtFixture(ply, fx)) then
+        UseFixture(ply, fx.kind, nil, fx)
+    end
 end)
 
 -- The dispenser's own animation, if the model has one.
@@ -1016,7 +1036,7 @@ function LC.HackMachine(ply, ent)
                 or string.format("[Resistance] The machine shudders and drops %d cans. Free water, for once.", n))
             if LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then
                 LC.ReportCrime(p, "Tampering with Union property", 120)
-                p:ChatPrint("[Civil Protection] A unit saw you at it.")
+                p:ChatPrint("[Civil Protection] A Civil Protection unit saw you at it.")
             end
             if LC.QuestEvent then LC.QuestEvent("machine_hacked", p, ent) end
             hook.Run("LivingCityMachineHacked", p, ent)

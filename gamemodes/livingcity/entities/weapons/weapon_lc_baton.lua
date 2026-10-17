@@ -85,7 +85,7 @@ function SWEP:SecondaryAttack()
     if not IsValid(ent) then return end
 
     if ent:IsPlayer() then
-        if LC.PlayerIsCP(ent) and not owner:IsAdmin() then return Tell(owner, "You can't arrest another unit.") end
+        if LC.PlayerIsCP(ent) and not owner:IsAdmin() then return Tell(owner, "You can't arrest another Civil Protection unit.") end
         local done, err = LC.Incarcerate(ent, GetConVar("lc_prison_time"):GetInt(), "Arrested by " .. owner:Nick(), owner)
         Tell(owner, done and (ent:Nick() .. " is in custody.") or ("Couldn't arrest: " .. tostring(err)))
     elseif LC.NPCs and LC.NPCs[ent] then

@@ -30,7 +30,7 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvTime    = CreateConVar("lc_prison_time", "180", FLAGS, "Default sentence in seconds")
 local cvArrests = CreateConVar("lc_npc_arrests", "1", FLAGS, "Security NPCs arrest players instead of killing them when a cell is free")
 local cvEscape  = CreateConVar("lc_escape_wanted", "300", FLAGS, "Seconds an escaped prisoner stays wanted")
-local cvBuffer  = CreateConVar("lc_prison_buffer", "150", FLAGS, "Extra distance (units, about 16 per foot) beyond the prison area before leaving counts as escaping")
+local cvBuffer  = CreateConVar("lc_prison_buffer", "150", FLAGS, "Extra distance (Civil Protection units, about 16 per foot) beyond the prison area before leaving counts as escaping")
 local cvRejoin  = CreateConVar("lc_rejoin_penalty", "120", FLAGS, "Extra seconds added when someone disconnects mid-sentence and comes back")
 local cvStreet  = CreateConVar("lc_street_detention", "20", FLAGS, "Seconds you're held on the street when there are no prison cells")
 local cvFine    = CreateConVar("lc_street_fine", "25", FLAGS, "Credits fined on a street detention")
@@ -198,7 +198,7 @@ Escape = function(ply)
     if LC.Running then LC.MakeCopsHostile(ply, ply:GetPos(), 3000) end
     NotifyCP(ply:Nick() .. " has escaped custody!")
     LC.Log("info", "Escape: " .. ply:Nick())
-    Say(ply, "You escaped. Every unit in the sector is looking for you.")
+    Say(ply, "You escaped. Every Civil Protection unit in the sector is looking for you.")
     hook.Run("LivingCityEscaped", ply)
 end
 
@@ -305,7 +305,7 @@ hook.Add("PlayerDisconnected", "LivingCityDetention", function(ply) LC.Detained[
 
 function LC.Surrender(ply, unit)
     if not IsValid(ply) or not ply:Alive() or LC.InCustody(ply) then return false, "Not now." end
-    if LC.PlayerIsCP(ply) then return false, "Units don't surrender." end
+    if LC.PlayerIsCP(ply) then return false, "Civil Protection units don't surrender." end
     local reason = ply:GetNW2String("lc_wanted_reason", "")
     reason = "Surrendered" .. (reason ~= "" and (": " .. reason) or "")
     ply.lcSurrendered = true
@@ -338,7 +338,7 @@ hook.Add("PlayerSay", "LivingCitySurrender", function(ply, text)
         end
     end
     if not best then
-        ply:ChatPrint("[Civil Protection] There's no unit close enough to surrender to.")
+        ply:ChatPrint("[Civil Protection] There's no Civil Protection unit close enough to surrender to.")
     else
         local ok, why = LC.Surrender(ply, best)
         if not ok and why then ply:ChatPrint("[Civil Protection] " .. why) end
@@ -453,6 +453,7 @@ function LC.ReleaseNPCPrisoner(npc, st, now)
     st.untilT = now + math.Rand(2, 5)
     -- out, and off home: they don't hang about outside the prison
     st.leaveAt = now + math.Rand(4, 10)
+    st.leaveWhy = "let out of prison, and gone home"
 end
 
 -- Used by the Arrest Baton on NPC citizens (and by quests): cuffed, then a

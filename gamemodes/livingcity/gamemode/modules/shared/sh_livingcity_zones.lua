@@ -17,7 +17,7 @@
 LCZ = LCZ or {}
 
 local cvMercy = CreateConVar("lc_zone_mercy", "96", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED),
-    "Units of leeway at the edge of every zone: added where being inside keeps you safe, taken off where it gets you in trouble")
+    "Civil Protection units of leeway at the edge of every zone: added where being inside keeps you safe, taken off where it gets you in trouble")
 
 function LCZ.Mercy()
     local cv = cvMercy or GetConVar("lc_zone_mercy")

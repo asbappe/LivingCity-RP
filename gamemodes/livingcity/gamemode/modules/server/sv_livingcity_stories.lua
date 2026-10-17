@@ -129,7 +129,7 @@ LC.Chain{
                 stages = {
                     Goto(pos, "Report as summoned", 260),
                     Meet("Speak with the officer waiting for you", "cop", function() return pos end),
-                    Choice("The officer doesn't give a unit number. 'Your ration ledger doesn't add up, unit. " ..
+                    Choice("The officer doesn't give a Civil Protection unit number. 'Your ration ledger doesn't add up, unit. " ..
                         "Neither do the citizens who keep walking free on your shift.'", {
                         { text = "Confess. Ask for a chance to make it right.", pick = function(q, p)
                             Trait(p, "corruption", -1)
@@ -143,7 +143,7 @@ LC.Chain{
                               q.chainNext = "audit"
                           end,
                           fail = function(q)
-                              Narrate(q, "He doesn't even pretend to believe you. 'Someone will be keeping an eye on you, unit.'")
+                              Narrate(q, "He doesn't even pretend to believe you. 'Someone will be keeping an eye on you, Civil Protection unit.'")
                               q.chainNext = "watched"
                           end },
                         { text = "Offer him a cut.", when = function(q) return LC.Trait(q.owner, "corruption") >= 3 end,
@@ -213,8 +213,8 @@ LC.Chain{
                 q.data.shadow = Q.SpawnActor(q, "cop", p:GetPos() - p:GetForward() * 400, 5)
             end
             stages[#stages + 1] = Count("used_npc", 2, "Inspect two citizens while he watches", Q.IsCitizenNPC)
-            stages[#stages + 1] = Choice("The unit who has followed you all shift finally speaks. " ..
-                "'Name another unit who takes. Or we keep looking at you.'", {
+            stages[#stages + 1] = Choice("The Civil Protection unit who has followed you all shift finally speaks. " ..
+                "'Name another Civil Protection unit who takes. Or we keep looking at you.'", {
                 { text = "Give them a name.", pick = function(q, p)
                     Trait(p, "loyalty", 1)
                     q.chainEnd = "informer"
@@ -329,7 +329,7 @@ LC.Chain{
                             LC.Bump(p, "reports")
                             q.chainEnd = "reported"
                             Narrate(q, "He sees it in your face before you move. He's gone by the time you turn around.")
-                            Insert(q, { Count("used_npc", 1, "Report the stranger to a unit (press E)", Q.IsCopNPC) })
+                            Insert(q, { Count("used_npc", 1, "Report the stranger to a Civil Protection unit (press E)", Q.IsCopNPC) })
                         end },
                         { text = "Shut the door.", pick = function(q)
                             q.chainDecline = true
@@ -350,7 +350,7 @@ LC.Chain{
                 desc = "Carry a parcel across the district. Don't open it. Don't get caught.",
                 stages = {
                     Q.Contact("Take the parcel from your contact (press E)", a, "citizen", "'Straight there. Don't open it. Don't be late.'", { rebel = true }),
-                    Choice("Two units are checking papers at the corner ahead.", {
+                    Choice("Two Civil Protection units are checking papers at the corner ahead.", {
                         { text = "Walk past them, calmly.", check = { "guile", 11 },
                           success = function(q) Narrate(q, "One of them looks right at you. Then past you.") end,
                           fail = function(q, p)
@@ -469,15 +469,15 @@ LC.Chain{
                 stages = {
                     Goto(s, "Go and keep watch", 180),
                     Hold(s, 15, "Watch the comings and goings", 260),
-                    Count("used_npc", 1, "Tell a unit what you saw (press E)", Q.IsCopNPC),
+                    Count("used_npc", 1, "Tell a Civil Protection unit what you saw (press E)", Q.IsCopNPC),
                 },
             }
         end },
 
         neighbor = { num = 2, next = "payment", build = function()
             if not LC.Running or not Q.RandomCitizen() then return nil end -- nobody out to follow yet
-            local report = Count("used_npc", 1, "Report your neighbor to a unit (press E)", Q.IsCopNPC)
-            report.onEnter = function(q, st) st.text = Neighbor(q, "Report {him} to a unit (press E)") end
+            local report = Count("used_npc", 1, "Report your neighbor to a Civil Protection unit (press E)", Q.IsCopNPC)
+            report.onEnter = function(q, st) st.text = Neighbor(q, "Report {him} to a Civil Protection unit (press E)") end
             report.onDone = function(q)
                 local npc = q.data.target
                 local line = Neighbor(q, "By evening, {his} door is sealed with yellow tape.") -- before the arrest takes them away
@@ -542,7 +542,7 @@ local CAUSE_PROMPTS = {
 }
 
 LC.Chain{
-    id = "missing", name = "The Missing Unit", factions = { cp = true },
+    id = "missing", name = "The Missing Civil Protection unit", factions = { cp = true },
     unlock = function(ply)
         return Q.RankIndex(ply) >= 3 or (tonumber(ply:GetPData("lcq_done", 0)) or 0) >= 4
     end,
@@ -554,7 +554,7 @@ LC.Chain{
         left = "Overwatch cleans the area. They don't find him. You don't tell them where to look.",
         brought_in = "He's processed by morning. You never learn what happened to his daughter.",
         let_go = "Your report says killed in action. You'll never be sure that was a kindness.",
-        defected = "Somewhere in the canals, a man with a CP haircut is teaching rebels how units think.",
+        defected = "Somewhere in the canals, a man with a CP haircut is teaching rebels how Civil Protection units think.",
         fled = "He's out there somewhere, and now he knows your face.",
     },
     parts = {
@@ -792,7 +792,7 @@ LC.Chain{
                 stages = {
                     Goto(pos, "Report as ordered", 300),
                     Choice("A technician in a coat that has never been white. 'Transhuman conditioning. " ..
-                        "You won't remember your name, unit. You won't need to.'", {
+                        "You won't remember your name, Civil Protection unit. You won't need to.'", {
                         { text = "Accept. (The Overwatch ranks open to you: Prison Guard, Soldier, Elite. There's no undoing it.)", pick = function(q, p)
                             q.chainEnd = "transhuman"
                             timer.Simple(1.5, function() if IsValid(p) and LC.Condition then LC.Condition(p) end end)
@@ -859,7 +859,7 @@ LC.Chain{
     start = "note",
     endings = {
         loyal = "She was processed by morning. You were commended. You don't sleep well.",
-        defected = "You burned your uniform in a canal barrel. The Resistance has a fighter who knows exactly how units think.",
+        defected = "You burned your uniform in a canal barrel. The Resistance has a fighter who knows exactly how Civil Protection units think.",
         insider = "You still wear the mask. Now you know who you're wearing it for.",
         walked = "You never answer another note. Some nights you wonder.",
     },
@@ -903,13 +903,13 @@ LC.Chain{
             local dest, r, where = Q.SafeHouse(ply)
             return {
                 title = "Proof of good faith", reward = 35, limit = 720,
-                desc = "They want proof. A prisoner, released on your shift, walked to " .. where .. ". Don't let another unit see you.",
+                desc = "They want proof. A prisoner, released on your shift, walked to " .. where .. ". Don't let another Civil Protection unit see you.",
                 stages = {
                     FreePrisonerStage("Unlock the cell of the prisoner they named (press E)"),
                     { kind = "escort", pos = dest, r = r, vanish = true, text = "Walk them to " .. where .. " like it's routine",
                       onEnter = function(q, st) st.npc = q.data.target; if not IsValid(st.npc) then return false end end },
                 },
-                tick = Witnessed({ escort = true }, "A unit saw you walking a prisoner out of the block. He'll remember."),
+                tick = Witnessed({ escort = true }, "A Civil Protection unit saw you walking a prisoner out of the block. He'll remember."),
             }
         end },
 
@@ -954,7 +954,7 @@ OPS[#OPS + 1] = function(ply)
     if not s then return nil end
     local hold = Hold(s, 4, "Leave the patrol schedule at the dead drop (crouch)", 90, true)
     hold.onDone = function(q)
-        if LC.SeenBySecurity(q.owner, 800) then Suspect(q, q.owner, "A unit watched you crouch by that drainpipe. He'll wonder why.") end
+        if LC.SeenBySecurity(q.owner, 800) then Suspect(q, q.owner, "A Civil Protection unit watched you crouch by that drainpipe. He'll wonder why.") end
     end
     return {
         title = "Leak the schedule", reward = 25, limit = 420,
@@ -990,7 +990,7 @@ OPS[#OPS + 1] = function(ply)
         title = "Warn them first", reward = 30, limit = 240,
         desc = "Citizen " .. id .. " is on tomorrow's list. Get to them first. Quickly.",
         stages = { warn },
-        tick = Witnessed({ target = true }, "Another unit saw you whispering to someone on the list."),
+        tick = Witnessed({ target = true }, "Another Civil Protection unit saw you whispering to someone on the list."),
     }
 end
 
@@ -1006,7 +1006,7 @@ OPS[#OPS + 1] = function(ply)
             { kind = "collect", spots = Q.HideSpots(center, 2, 500), model = item[2], need = 2, text = "Collect the evidence (press E)" },
             Deliver(dest, "Take it to " .. where .. " instead of HQ", r),
         },
-        tick = Witnessed({ deliver = true }, "A unit saw you heading the wrong way with an evidence bag."),
+        tick = Witnessed({ deliver = true }, "A Civil Protection unit saw you heading the wrong way with an evidence bag."),
     }
 end
 
@@ -1036,7 +1036,7 @@ OPS[#OPS + 1] = function(ply)
         stages = {
             Goto(pos, "Go to file your sector report", 260),
             Count("used_npc", 1, "Hand your report to an officer (press E)", Q.IsCopNPC),
-            Choice("The officer skims your report. 'Canals. Anything to note, unit?'", {
+            Choice("The officer skims your report. 'Canals. Anything to note, Civil Protection unit?'", {
                 { text = "The canals were quiet. Completely quiet.", check = { "guile", 12 },
                   success = function(q, p) Trait(p, "sympathy", 1) Narrate(q, "He stamps it without looking up.") end,
                   fail = function(q, p) Suspect(q, p, "He reads it twice, then looks at you for a long moment.") end },
@@ -1101,7 +1101,7 @@ LC.Chain{
     start = "hunt",
     endings = {
         framed = "Unit 3-09 was taken in your place. You tell yourself he probably deserved it.",
-        ran = "You ran before they could knock. Every unit in the city has your face now.",
+        ran = "You ran before they could knock. Every Civil Protection unit in the city has your face now.",
         survived = "The mole hunt moves on to another sector. You breathe again. Carefully.",
         exposed = "Stripped of rank and mask. A citizen again, with a file that will never close.",
     },
@@ -1117,7 +1117,7 @@ LC.Chain{
                     Goto(pos, "Report for the briefing", 260),
                     Meet("Speak with the Internal Affairs officer", "cop", function() return pos end),
                     Choice("The officer spreads three files across the hood of an APC. One of them is yours. He hasn't noticed. Yet.", {
-                        { text = "Steer him toward another unit's file.", check = { "guile", 14 },
+                        { text = "Steer him toward another Civil Protection unit's file.", check = { "guile", 14 },
                           success = function(q, p)
                               Trait(p, "corruption", 1)
                               ClearSuspicion(p)

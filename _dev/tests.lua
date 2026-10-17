@@ -15,6 +15,8 @@ _setcvar("lc_stockpile", 0) -- (the city's ration stores: tested on their own, a
 _setcvar("lc_garrison", 0) -- (the nexus garrison: tested on its own)
 _setcvar("lc_units_spot_monsters", 0) -- (units going for zombies they see: tested on their own)
 _setcvar("lc_units_spot_rebels", 0) -- (units opening fire on armed rebels they see in the street: tested on their own)
+_setcvar("lc_assign_work", 0) -- (the Union assigning work to the jobless: tested on its own)
+_setcvar("lc_rebel_vorts", 0) -- (vortigaunts living in rebel ground from the start: tested on their own)
 _setcvar("lc_rebel_errands", 0) -- (scavenging runs: tested on their own)
 _setcvar("lc_blackout_share", 0) -- (a city-wide blackout: tested on its own, with the grid)
 local function has(list, needle)
@@ -11793,6 +11795,268 @@ section("Playtest fixes: switching faction where you stand, boxes in both hands,
 end)()
 
 ----------------------------------------------------------------------
+section("Playtest fixes, 17 October")
+;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
+    -- Warn the block: residents come out to be warned, anywhere in the block; the raid ending
+    -- with nobody warned pays nothing
+    local warner = newPlayer("Warner", "resistance")
+    local blocks = LC.ZonesOfKind("block")
+    if #blocks > 0 then
+        local wq = inject(warner, "res_warnblock")
+        ok(wq ~= nil, "the warn-the-block job starts")
+        if wq then
+            wq.posting = wq.posting or {}
+            local before = LC.Credits and LC.Credits(warner) or 0
+            LC.QB.Advance(wq)
+            local st = LC.QB.Stage(wq)
+            local spawned = 0
+            for _, e in ipairs(wq.ents or {}) do if IsValid(e) and LC.NPCs[e] and LC.NPCs[e].role == "citizen" then spawned = spawned + 1 end end
+            ok(st and st.kind == "count" and spawned >= 1, "an empty block has residents come out to be warned", spawned)
+            local was = LC.Event
+            LC.Event = nil
+            for _, list in pairs(LC.Postings) do for _, pp in ipairs(list) do if pp.q == wq then pp.during = { "raid" } end end end
+            hook.Run("LivingCityEventEnded", "raid")
+            LC.Event = was
+            ok(wq.done and (LC.Credits and LC.Credits(warner) or 0) == before, "the raid ending with nobody warned pays nothing (it used to pay in full)")
+        end
+    end
+    warner.valid = false
+    -- Changing jobs ends the old job's shift (it stayed on the HUD and blocked the new job's)
+    local hopper = newPlayer("JobHopper", "citizen")
+    local jobs = {}
+    for id in pairs(LCJ.ById) do jobs[#jobs + 1] = id end
+    table.sort(jobs)
+    LC.SetJob(hopper, jobs[1], true)
+    local sq
+    for _, t in ipairs(LC.QuestTemplates) do
+        if t.factions.citizen and not t.during then sq = inject(hopper, t.id) if sq then break end end
+    end
+    ok(sq ~= nil, "(a job to stand in for a shift)")
+    if sq then
+        sq.chain = "shift"
+        hopper.lcjNext = 0
+        LC.SetJob(hopper, jobs[2], true)
+        ok(sq.done and LC.QuestOf[hopper] == nil, "changing jobs ends the old job's shift, so the new job's can be taken")
+    end
+    hopper.valid = false
+    -- The Administrator waits for Overwatch to finish (she used to cut in on the warnings)
+    LC.OverwatchUntil = CurTime() + 10
+    local said = 0
+    local hk = function(voice) if voice == "administrator" then said = said + 1 end end
+    hook.Add("LivingCityCustomAnnouncement", "TestWaitsForOverwatch", hk)
+    _files["sound/livingcity/administrator/curfew_soon_firm1.wav"] = "RIFF" .. string.rep("\0", 3000)
+    LC.AnnounceRescan()
+    LC.CustomAnnounce("administrator", "curfew_soon", nil, true, 2)
+    _run(5)
+    local early = said
+    _run(8)
+    ok(early == 0 and said >= 1, "the Administrator waits till Overwatch has finished, then speaks", early .. " then " .. said)
+    hook.Remove("LivingCityCustomAnnouncement", "TestWaitsForOverwatch")
+    _files["sound/livingcity/administrator/curfew_soon_firm1.wav"] = nil
+    LC.AnnounceRescan()
+    -- Curfew: a unit on an event's duty (a post, a checkpoint) warns you too, and comes over
+    if LC.Event then LC.EndEvent(true) end
+    local P0 = Vector(-90000, 150000, 0)
+    local ec, est = LC.Spawners.cop(P0 + Vector(150, 0, 0))
+    est.routeGroup = nil est.untilT = 1e9 ec.sim = false
+    local late = newPlayer("OutLate", "citizen")
+    late:SetPos(P0)
+    late.chat = {}
+    LC.StartEvent("curfew", 3)
+    LC.EventGraceEnds = CurTime() - 1
+    late.lcCurfewGrace = 0
+    LC.SetState(ec, est, "event")
+    est.eventUntil = 1e9
+    _run(3)
+    ok(has(late.chat, "Warning 1 of 3"), "a unit on an event's duty warns someone out in the curfew (they used to let you walk past)", table.concat(late.chat, " | "))
+    LC.EndEvent(true)
+    LC.NPCs[ec] = nil ec:Remove()
+    late.valid = false
+    -- Your own apartment door: E opens it, E again shuts it (it used to open again and again)
+    local adoor = ents.Create("prop_door_rotating")
+    adoor.mapid = 9101
+    adoor:SetPos(Vector(-91000, 152000, 0))
+    adoor:Spawn()
+    LC.SetDoorTag(adoor, "rent")
+    local renter = newPlayer("Renter", "citizen")
+    renter:SetPos(Vector(-91060, 152000, 0))
+    renter.lookingAt = adoor
+    LC.AddCredits(renter, 500)
+    hook.Run("PlayerSay", renter, "!rent")
+    ok(adoor.locked, "(rented, and locked)")
+    hook.Run("PlayerUse", renter, adoor)
+    ok(adoor.isOpen, "your E opens your locked door", table.concat(adoor.fired or {}, ","))
+    hook.Run("PlayerUse", renter, adoor)
+    ok(not adoor.isOpen and adoor.locked, "and E again shuts it, locked again behind you")
+    renter.valid = false
+    -- Someone stopped right where you stand steps back, so you're not stuck in each other
+    local thief = newPlayer("Fingers", "citizen")
+    thief:SetPos(Vector(-92000, 153000, 0))
+    local mark, mst = LC.Spawners.citizen(Vector(-92000, 153010, 0))
+    mst.routeGroup = nil
+    LC.TalkStepAway(mark, thief)
+    ok(mark:GetPos():Distance(thief:GetPos()) > 36, "someone stopped on top of you (after a pickpocketing) takes a step back", tostring(mark:GetPos()))
+    LC.NPCs[mark] = nil mark:Remove()
+    thief.valid = false
+    -- Marched to the cells: a unit pausing on the way doesn't end the walk at once (half a
+    -- second's pause used to bring "the van" before a step was walked)
+    local MP = Vector(-2600, 2600, 0)
+    local walked = newPlayer("Walked", "citizen")
+    _run(0.3)
+    walked:SetPos(MP)
+    walked.lcGraceUntil = 0
+    LC.ReportCrime(walked, "Theft", 300)
+    local ml, mls = LC.Spawners.cop(MP + Vector(60, 0, 0))
+    mls.untilT = 1e9
+    hook.Run("EntityTakeDamage", walked, _dmg(ml, 20, DMG_CLUB))
+    ok(LC.Marching[walked] ~= nil, "(a march)")
+    local goWas = LC.GoTo
+    LC.GoTo = function() return true end -- (he says he's going, and stands there a moment)
+    LC.SetState(ml, mls, "idle")
+    _run(1.5)
+    ok(LC.Marching[walked] ~= nil and not LC.Prisoners[walked], "a unit pausing on the way doesn't end the march: still walking you there")
+    LC.GoTo = goWas
+    if LC.Marching[walked] then LC.Marching[walked] = nil end
+    if LC.IsTied(walked) then LC.Untie(walked, nil, true) end
+    if LC.Prisoners[walked] then LC.ReleasePrisoner(walked) end
+    ml:Remove()
+    walked.valid = false
+    -- A map sink with nothing solid to aim at still answers E; one the other side of a wall doesn't
+    local drinker = newPlayer("Drinker", "citizen")
+    local S0 = Vector(-93000, 154000, 0)
+    drinker:SetPos(S0)
+    drinker.ang = Angle(20, 0, 0)
+    local sink = { kind = "sink", pos = S0 + Vector(60, 0, 20), ang = Angle() }
+    ok(LC.AimingAtFixture(drinker, sink), "looking at a map sink in reach counts, even one the map gives nothing solid to hit")
+    local wall = { a = S0 + Vector(30, -100, 0), b = S0 + Vector(30, 100, 0) }
+    table.insert(_walls, wall)
+    ok(not LC.AimingAtFixture(drinker, sink), "a sink the other side of a wall doesn't")
+    for i, w in ipairs(_walls) do if w == wall then table.remove(_walls, i) break end end
+    drinker.valid = false
+    -- A ration line placed from the back is turned round: its front is the end at the dispenser
+    local L0 = Vector(-94000, 155000, 0)
+    local disp = ents.Create("lc_dispenser")
+    disp:SetPos(L0 + Vector(400, 0, 0))
+    disp:Spawn()
+    local tline = { slots = { { pos = L0 }, { pos = L0 + Vector(200, 0, 0) }, { pos = L0 + Vector(360, 0, 0) } }, q = {}, nextAdvance = 0 }
+    LC.OrientLine(tline)
+    ok(tline.slots[1].pos == L0 + Vector(360, 0, 0) and tline.reversed, "a line placed from the back is turned round, so the front is at the dispenser")
+    LC.OrientLine(tline)
+    ok(tline.slots[1].pos == L0 + Vector(360, 0, 0), "and one the right way round is left as it is")
+    disp:Remove()
+    -- The sweep's cart: the smaller one, turned the way you push it, up a step with you
+    local C0 = Vector(-95000, 156000, 0)
+    local sweeper = newPlayer("CartPusher", "citizen")
+    _run(0.3)
+    sweeper:SetPos(C0)
+    sweeper.eyeang = Angle(0, 0, 0)
+    sweeper.aim = Vector(1, 0, 0)
+    ok(LC.JobGameStart(sweeper, "sweep", nil, { depot = C0, spots = { C0 + Vector(400, 0, 0) } }), "(a street sweep)")
+    local sg = LC.JobGames[sweeper]
+    if sg and IsValid(sg.cart) then
+        ok(string.find(sg.cart:GetModel() or "", "laundry_cart002", 1, true) ~= nil, "the smaller laundry cart", sg.cart:GetModel())
+        ok(math.abs((sg.cart:GetAngles().y or 0) - 90) < 1, "turned the way you push it, not sideways", tostring(sg.cart:GetAngles().y))
+        local gfWas = _groundFn
+        _groundFn = function(x) return x > C0.x + 30 and 16 or 0 end
+        sg.pushing = true
+        _run(0.5)
+        ok(sg.cart:GetPos().z > 12, "pushed up a step, it goes up with you", tostring(sg.cart:GetPos()))
+        _groundFn = gfWas
+        LC.JobGameEnd(sweeper, "done")
+    end
+    sweeper.valid = false
+    -- Why people leave the city: counted, and in the debug report
+    local goer, gst = LC.Spawners.citizen(Vector(-96000, 157000, 0))
+    gst.leaveAt = CurTime() - 1
+    LC.StartLeaving(goer, gst, false)
+    local okr, rep = pcall(LC.BuildReport)
+    ok(okr and string.find(rep or "", "people who left since the map started", 1, true) and string.find(rep or "", "their time out was up", 1, true),
+        "the debug report says why people have been leaving the city")
+    LC.NPCs[goer] = nil goer:Remove()
+    -- A clothes pack's battle helmet or welding mask: only on the Resistance in the open
+    local wearer, wst = LC.Spawners.citizen(Vector(-97000, 158000, 0))
+    wearer.GetBodyGroups = function() return { { id = 3, name = "headwear", submodels = { [0] = "none", [1] = "ww2_helmet", [2] = "beanie" } } } end
+    local setTo
+    wearer.SetBodygroup = function(_, id, v) if id == 3 then setTo = v end end
+    LC.ApplyLook(wearer, nil, { headwear = 1 })
+    ok(setTo == 0, "a citizen in a pack's battle helmet goes without it", tostring(setTo))
+    LC.ApplyLook(wearer, nil, { headwear = 2 })
+    ok(setTo == 2, "a beanie's fine")
+    wst.role = "rebel"
+    LC.ApplyLook(wearer, nil, { headwear = 1 })
+    ok(setTo == 1, "a rebel fighter wears the helmet")
+    LC.NPCs[wearer] = nil wearer:Remove()
+    -- Everyone works: a citizen without a job is assigned one; a rebel isn't; and the factory's
+    -- loading dock run is the porters' now
+    _setcvar("lc_assign_work", 1)
+    local idle = newPlayer("NoJob", "citizen")
+    idle:SetNW2String("lcj_job", "")
+    ok(LC.AssignWork(idle) and LC.Job(idle) ~= nil, "a registered citizen with no job is given Union work", idle:GetNW2String("lcj_job", ""))
+    local reb = newPlayer("NoJobRebel", "resistance")
+    reb:SetNW2String("lcj_job", "")
+    ok(not LC.AssignWork(reb) and LC.Job(reb) == nil, "a rebel isn't")
+    idle.valid, reb.valid = false, false
+    _setcvar("lc_assign_work", 0)
+    -- Stealth: crouched behind a unit's back, or crouched at the edge of his sight, he doesn't see you
+    local SP = Vector(-98000, 159000, 0)
+    local sneak = newPlayer("Sneak", "citizen")
+    sneak:SetPos(SP)
+    local su, sst = LC.Spawners.cop(SP + Vector(600, 0, 0)) -- (facing +x: away from the sneak)
+    sst.routeGroup = nil
+    ok(LC.SeenBySecurity(sneak, 900), "standing up, 600 away in the open, a unit sees you, whichever way he faces")
+    sneak.crouch = true
+    ok(not LC.SeenBySecurity(sneak, 900), "crouched behind his back, he doesn't")
+    su.GetForward = function() return Vector(-1, 0, 0) end
+    ok(not LC.SeenBySecurity(sneak, 900), "crouched in front of him, 600 away, you're beyond his reach (about 380 now)")
+    sneak:SetPos(SP + Vector(300, 0, 0))
+    ok(LC.SeenBySecurity(sneak, 900), "closer than that, he sees you")
+    sneak.lcLight = 0.02
+    ok(not LC.SeenBySecurity(sneak, 900), "but not in the dark")
+    LC.NPCs[su] = nil su:Remove()
+    sneak.valid = false
+    -- A vortigaunt lives free in rebel territory from the start (not only once someone frees one)
+    if #LC.ZonesOfKind("rebel") > 0 then
+        local before = 0
+        for v in pairs(LC.RebelVorts) do if IsValid(v) then before = before + 1 end end
+        local wasR = LC.Running
+        LC.Running = true
+        _setcvar("lc_rebel_vorts", 1)
+        LC.VortHome()
+        _setcvar("lc_rebel_vorts", 0)
+        LC.Running = wasR
+        local after = 0
+        for v in pairs(LC.RebelVorts) do if IsValid(v) then after = after + 1 end end
+        ok(after >= 1, "a vortigaunt lives in rebel territory", before .. " -> " .. after)
+    end
+    -- The Mortician's body cart: bodies let go beside it go on it; E on the incinerator burns the lot, paid each
+    local BC = Vector(-99000, 160000, 0)
+    local mort = newPlayer("CartMortician", "citizen")
+    _run(0.3)
+    LC.SetJob(mort, "mortuary", true)
+    mort:SetPos(BC)
+    mort.aim = Vector(1, 0, 0)
+    local binc = ents.Create("lc_incinerator") binc:SetPos(BC + Vector(200, 0, 0)) binc:Spawn()
+    ok(LC.TakeBodyCart(mort), "a Mortician by the incinerator takes a body cart")
+    local cart = LC.BodyCarts[mort]
+    local bodies = {}
+    for i = 1, 2 do
+        local b = LC.SpawnBody("models/humans/group01/male_01.mdl", cart:GetPos() + Vector(0, 30 * i, 0))
+        bodies[i] = b
+        mort.lcNextBodyUse = 0
+        LC.StartHaul(mort, b)
+        b:SetPos(cart:GetPos() + Vector(0, 40, 0))
+        LC.StopHaul(mort)
+    end
+    ok(cart:GetNW2Int("lc_cart_bodies", 0) == 2 and IsValid(bodies[1]), "let go of a body beside it and it goes on the cart (two on it)")
+    local c1 = LC.Credits(mort)
+    mort.lcFedAt = 0
+    ok(LC.FeedIncinerator(mort, binc) and not IsValid(bodies[1]) and not IsValid(bodies[2]), "E on the incinerator with the cart beside it burns everything on it")
+    ok(LC.Credits(mort) > c1, "paid for each")
+    LC.DropBodyCart(mort)
+    binc:Remove()
+    mort.valid = false
+end)()
+
 section("The Endings menu: every ending's settings, and its dances tuned live")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     ok(LC.EndingSettingGroup("lc_ending_flood_boats") == "water" and LC.EndingSettingGroup("lc_ending_minge_max") == "harpies"

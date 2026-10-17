@@ -85,7 +85,7 @@ function LC.Craft(ply, rid)
             p:ChatPrint("Made: " .. out.name .. ".")
             if out.contraband and LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then
                 LC.ReportCrime(p, out.arms and "Manufacturing weapons" or "Manufacturing contraband", out.arms and 240 or 120)
-                p:ChatPrint("[Civil Protection] A unit saw what you were making.")
+                p:ChatPrint("[Civil Protection] A Civil Protection unit saw what you were making.")
             end
             hook.Run("LivingCityCrafted", p, r.out)
         end,

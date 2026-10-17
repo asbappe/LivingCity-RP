@@ -26,6 +26,7 @@ function VMT:Distance(o) return (self - o):Length() end
 function VMT:Normalize() local l = self:Length() if l > 0 then self.x, self.y, self.z = self.x / l, self.y / l, self.z / l end end
 function VMT:GetNormalized() local v = Vector(self.x, self.y, self.z) v:Normalize() return v end
 function VMT:Dot(o) return self.x * o.x + self.y * o.y + self.z * o.z end
+function VMT:Cross(o) return Vector(self.y * o.z - self.z * o.y, self.z * o.x - self.x * o.z, self.x * o.y - self.y * o.x) end
 function VMT:Angle() return Angle(0, math.deg(math.atan2(self.y, self.x)), 0) end
 vector_origin = Vector(0, 0, 0)
 local AMT = {}
@@ -107,6 +108,7 @@ function _setcvar(n, v) convars[n].v = v end
 
 hook = { t = {} }
 function hook.Add(ev, id, fn) hook.t[ev] = hook.t[ev] or {} hook.t[ev][id] = fn end
+function hook.Remove(ev, id) if hook.t[ev] then hook.t[ev][id] = nil end end
 function hook.Run(ev, ...)
     local hs = hook.t[ev]
     if not hs then return end

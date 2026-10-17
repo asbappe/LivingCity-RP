@@ -889,6 +889,13 @@ local okB, errB = pcall(LC_CL.BuildLayoutBrowser, panel, { { id = "dealer", labe
     { id = "zone_rebel", label = "Zone: rebel territory" }, { id = "inspect", label = "Inspect anything" } })
 if not okB then problems[#problems + 1] = "layout browser: " .. tostring(errB) end
 if LC_CL.LayoutCount("dealer") ~= 1 or LC_CL.LayoutCount("inspect") ~= nil then problems[#problems + 1] = "layout counts" end
+-- (and arranged by what it's for: rebels, prison, each job)
+local arr = GetConVar("lc_editor_arrange")
+if arr then arr.v = "use" end
+local okU, errU = pcall(LC_CL.BuildLayoutBrowser, panel, { { id = "dealer", label = "Fixture: black market dealer" },
+    { id = "zone_rebel", label = "Zone: rebel territory" }, { id = "work_factory", label = "Workplace: Factory" }, { id = "conveyor", label = "Fixture: factory conveyor" } })
+if not okU then problems[#problems + 1] = "layout browser, by use: " .. tostring(errU) end
+if arr then arr.v = "type" end
 panel.next = 0 -- (every control is this one mock panel, so their Think functions chain; a real number, not the mock's catch-all)
 local okT, errT = pcall(function() if panel.Think then panel:Think() end if panel.Paint then panel:Paint(200, 24) end end)
 if not okT then problems[#problems + 1] = "layout browser row: " .. tostring(errT) end
@@ -1486,6 +1493,50 @@ do
     end
     concommand.list.lc_sound_check()
     file.Find, sound.PlayFile = findWas, pfWas2
+end
+-- carrying a box: each hand reaches its side of the box (the arm's lengths kept), wherever the walk had it
+do
+    local mxWas = Matrix
+    local MM = {}
+    MM.__index = MM
+    MM.__mul = function(a, b) local m = setmetatable({ t = a.t + b.t, a = Angle() }, MM) return m end
+    function MM:SetTranslation(v) self.t = v end
+    function MM:GetTranslation() return self.t end
+    function MM:SetAngles(a) self.a = a end
+    function MM:GetAngles() return self.a end
+    function MM:GetInverseTR() return setmetatable({ t = -self.t, a = Angle() }, MM) end
+    Matrix = function() return setmetatable({ t = Vector(), a = Angle() }, MM) end
+    local mats = { [1] = Vector(0, -8, 60), [2] = Vector(0, -8, 48), [3] = Vector(0, -8, 37) }
+    local set = {}
+    local fake = {
+        LookupBone = function(_, n) return ({ ["ValveBiped.Bip01_R_UpperArm"] = 1, ["ValveBiped.Bip01_R_Forearm"] = 2, ["ValveBiped.Bip01_R_Hand"] = 3 })[n] end,
+        GetBoneMatrix = function(_, i) local m = Matrix() m:SetTranslation(mats[i]) return m end,
+        SetBoneMatrix = function(_, i, m) set[i] = m end,
+        GetRight = function() return Vector(0, -1, 0) end, GetUp = function() return Vector(0, 0, 1) end,
+        GetChildBones = function() return {} end,
+    }
+    local target = Vector(16, -12, 46)
+    LC_CL.CarryReach(fake, "R", target)
+    Matrix = mxWas
+    if not (set[3] and set[3]:GetTranslation():Distance(target) < 0.6) then return "carrying: the hand doesn't reach its side of the box" end
+    if math.abs(set[2]:GetTranslation():Distance(set[1]:GetTranslation()) - 12) > 0.1 then return "carrying: the upper arm changed length" end
+end
+-- sneaking: the bar, and a unit's sight on the ground (you in it: "A UNIT CAN SEE YOU")
+do
+    local crWas, fbcWas, velWas = _me.Crouching, ents.FindByClass, _me.GetVelocity
+    _me.Crouching = function() return true end
+    _me.GetVelocity = function() return Vector(0, 0, 0) end
+    local unit = { IsValid = function() return true end, GetNW2String = function(_, k, d) return k == "lc_role" and "cop" or d end,
+        GetPos = function() return _me:GetPos() + Vector(-200, 0, 0) end, GetForward = function() return Vector(1, 0, 0) end, GetAngles = function() return Angle() end }
+    ents.FindByClass = function(c) if c == "npc_*" then return { unit } end return fbcWas(c) end
+    if not LC_CL.StealthInside(unit, _me:GetPos(), 900 * LC_CL.StealthFactor()) then return "sneaking: a unit facing you, close by, doesn't see you" end
+    local q0 = _calls["render.DrawQuad"] or 0
+    hook.t.PostDrawTranslucentRenderables.LivingCityStealthCones(false, false)
+    if (_calls["render.DrawQuad"] or 0) <= q0 then return "sneaking: no sight painted on the ground" end
+    hook.t.HUDPaint.LivingCityStealthMeter()
+    unit.GetForward = function() return Vector(-1, 0, 0) end
+    if LC_CL.StealthInside(unit, _me:GetPos(), 900 * LC_CL.StealthFactor()) then return "sneaking: seen from behind his back" end
+    _me.Crouching, ents.FindByClass, _me.GetVelocity = crWas, fbcWas, velWas
 end
 -- the Endings menu: asks the server, opens on the ending playing, every tab built; a bone tuned on a
 -- dancer, lit up in the world; the stand-in; the shared settings; the list of changes

@@ -334,3 +334,9 @@ Undated, in order:
 - The owner to record jog lines and the latest Overwatch scripts
 - TODO.md: on-screen terminals, kick tuning, progression, faces (Workshop 534130993), Pose Recorder 2
 - Whether the SFTP problems of 10-07 were ever solved `?`
+
+## 2026-10-17: the 17 October playtest
+
+- ISSUE/FIX | playtest | the owner's notes, all fixed in one go (owner: "you are authorized to begin fixing them all"): the warn-the-block job paid when the raid ended with nobody warned (and the block had nobody in it); changing jobs left the old shift; the Administrator talked over Overwatch; units let people walk past in curfew; your locked apartment door wouldn't shut; stuck in someone after pickpocketing; the march to the cells gave up after half a second's pause; map sinks ignored E; the ration line stood empty (work came first during rations; lines placed from the back; dead dispensers); factory parts too heavy to pick up and rolling off the belt; carried boxes' hands swinging; the sweep cart sideways, hurting, stuck at stairs
+- FEAT | playtest | the owner's asks: bed with a mattress, a flush, the stash's wording, a fridge at home as the stash, "Civil Protection unit" everywhere, why people leave (debug report), the editor arranged by what it's for, hide markers and no x-ray, battle helmets only on the open Resistance, everyone assigned work (`lc_assign_work`), a stern "What now?", the factory's dock run to the porters, stealth (crouch, sight on the ground, a visibility bar, the dark; `lc_stealth`), vortigaunts living in rebel ground (`lc_rebel_vorts`), the Mortician's body cart
+- NOTE | answers | a dead drop is a bin or dumpster used to leave something for someone else (anyone who looks can take it); vortigaunts came to rebel ground only from the "Free a vortigaunt" job; a job ends if you're taken into custody or killed (the supply raid)

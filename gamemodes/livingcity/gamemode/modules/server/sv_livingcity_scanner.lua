@@ -47,12 +47,12 @@ if CLIENT then return end
 LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvOn      = CreateConVar("lc_scanner_link", "1", FLAGS, "Prisoners and units can fly a city scanner from a Combine console")
-local cvPenalty = CreateConVar("lc_scanner_penalty", "60", FLAGS, "Seconds added to a prisoner's sentence for flashing a unit with a linked scanner")
+local cvOn      = CreateConVar("lc_scanner_link", "1", FLAGS, "Prisoners and Civil Protection units can fly a city scanner from a Combine console")
+local cvPenalty = CreateConVar("lc_scanner_penalty", "60", FLAGS, "Seconds added to a prisoner's sentence for flashing a Civil Protection unit with a linked scanner")
 local cvRange   = CreateConVar("lc_scanner_range", "6000", FLAGS, "How far from where it went up a linked scanner can fly")
 
-local cvPhotoRange   = CreateConVar("lc_scanner_photo_range", "128", FLAGS, "How close a scanner has to be to photograph someone for a report (128 units, about ten feet)")
-local cvSpotSecs     = CreateConVar("lc_scanner_spotted", "60", FLAGS, "Seconds the people in a scanner report stay highlighted for units")
+local cvPhotoRange   = CreateConVar("lc_scanner_photo_range", "128", FLAGS, "How close a scanner has to be to photograph someone for a report (128 Civil Protection units, about ten feet)")
+local cvSpotSecs     = CreateConVar("lc_scanner_spotted", "60", FLAGS, "Seconds the people in a scanner report stay highlighted for Civil Protection units")
 local cvSpotCooldown = CreateConVar("lc_scanner_spot_cooldown", "300", FLAGS, "Seconds before the same person can be reported again (rebel ground: twice as long)")
 local cvSnitchCap    = CreateConVar("lc_scanner_snitch_cap", "100", FLAGS, "Most Civil Standing a pilot can earn from scanner reports in ten minutes")
 local cvRebelFire    = CreateConVar("lc_scanner_rebel_fire", "1", FLAGS, "Rebels who notice a flown scanner shoot at it")
@@ -179,7 +179,7 @@ function LC.StartScannerLink(ply, console)
     if ply.SelectWeapon and ply:HasWeapon("weapon_lc_hands") then ply:SelectWeapon("weapon_lc_hands") end -- nothing in the hands to fire
     ply:ChatPrint("[Scanner link] You're in the scanner. WASD to fly, Space and Ctrl up and down, Shift faster, left click to flash, R (or E, or F1 > Disconnect) to disconnect.")
     if Prisoner(ply) then
-        ply:ChatPrint(string.format("[Scanner link] Flash a unit and it's %d more seconds on your sentence.", cvPenalty:GetInt()))
+        ply:ChatPrint(string.format("[Scanner link] Flash a Civil Protection unit and it's %d more seconds on your sentence.", cvPenalty:GetInt()))
     end
     hook.Run("LivingCityScannerLinked", ply, sc)
     return true
@@ -316,10 +316,10 @@ function LC.ScannerFlash(ply)
         local add = cvPenalty:GetFloat()
         pr.untilT = pr.untilT + add
         ply:SetNW2Float("lc_jail_until", pr.untilT)
-        ply:ChatPrint(string.format("[Prison] You flashed a unit through the scanner. %d more seconds on your sentence (%d:%02d left).",
+        ply:ChatPrint(string.format("[Prison] You flashed a Civil Protection unit through the scanner. %d more seconds on your sentence (%d:%02d left).",
             add, math.floor((pr.untilT - now) / 60), math.floor((pr.untilT - now) % 60)))
         ply:EmitSound("buttons/combine_button_locked.wav", 60)
-        if LC.AddViolation then LC.AddViolation(ply, "Interfered with a unit through a city scanner, from custody") end
+        if LC.AddViolation then LC.AddViolation(ply, "Interfered with a Civil Protection unit through a city scanner, from custody") end
         hook.Run("LivingCityScannerPenalty", ply, add)
     end
     local report = LC.ScannerPhoto(ply, l, origin, aim)

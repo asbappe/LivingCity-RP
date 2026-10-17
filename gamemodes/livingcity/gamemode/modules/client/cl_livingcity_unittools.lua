@@ -121,11 +121,11 @@ function LC_CL.OpenUnitTools()
     end
 
     local s = Section("Dispatch")
-    Button(s, "Call for backup", "The nearest units come to you, and see where you are.", Do("backup"))
-    Button(s, "Send my 10-20", "Marks where you are on every unit's screen.", Do("10-20"))
-    Button(s, "Issue a BOLO...", "Something for every unit to look out for: a face, clothes, a name.", function()
+    Button(s, "Call for backup", "The nearest Civil Protection units come to you, and see where you are.", Do("backup"))
+    Button(s, "Send my 10-20", "Marks where you are on every Civil Protection unit's screen.", Do("10-20"))
+    Button(s, "Issue a BOLO...", "Something for every Civil Protection unit to look out for: a face, clothes, a name.", function()
         Close()
-        Ask("BOLO", "What should units look out for?", "bolo")
+        Ask("BOLO", "What should Civil Protection units look out for?", "bolo")
     end)
 
     s = Section("Records")
@@ -146,7 +146,7 @@ function LC_CL.OpenUnitTools()
             Button(s, "Cut the ties", "Let their hands go.", Do("untie"))
             Button(s, "Drag them along / let go", "Walk them where you're going.", Do("drag"))
         else
-            Button(s, "Zip-tie their hands", "Their hands up, down, stopped by a unit, or from behind.", Do("tie"))
+            Button(s, "Zip-tie their hands", "Their hands up, down, stopped by a Civil Protection unit, or from behind.", Do("tie"))
         end
         if who:GetNW2String("lcj_job", "") ~= "" and who:GetNW2Entity("lc_escorting") ~= me then
             Button(s, "Escort them", "A worker on a job behind Combine doors: they go through with you.", Do("escort", "", who))
@@ -179,7 +179,7 @@ function LC_CL.OpenUnitTools()
     local reqs = LC_CL.EscortRequests and LC_CL.EscortRequests() or {}
     s = Section("Escorts", #reqs > 0 and (#reqs .. " waiting") or nil)
     if IsValid(escorting) then
-        Button(s, "Hand back my escort", "You're escorting " .. (LC_CL.ICName and LC_CL.ICName(escorting) or "someone") .. ". Another unit takes over.", Do("escort", "drop"))
+        Button(s, "Hand back my escort", "You're escorting " .. (LC_CL.ICName and LC_CL.ICName(escorting) or "someone") .. ". Another Civil Protection unit takes over.", Do("escort", "drop"))
     end
     for _, r in ipairs(reqs) do
         Button(s, "Escort " .. (LC_CL.ICName and LC_CL.ICName(r.ply) or r.ply:Nick()), "A Union worker on a job (" .. r.why .. ").", Do("escort", "", r.ply))

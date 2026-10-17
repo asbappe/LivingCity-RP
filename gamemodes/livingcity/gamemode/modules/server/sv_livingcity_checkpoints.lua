@@ -52,7 +52,7 @@ LC.Breaches = LC.Breaches or {}               -- { pos, t }
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvRange   = CreateConVar("lc_checkpoint_range", "700", FLAGS, "How far a power bank's cables reach (turrets and forcefields run off the nearest one)")
-local cvPerUnit = CreateConVar("lc_turrets_per_unit", "2", FLAGS, "Turrets one unit can have up at once")
+local cvPerUnit = CreateConVar("lc_turrets_per_unit", "2", FLAGS, "Turrets one Civil Protection unit can have up at once")
 local cvPerPost = CreateConVar("lc_turrets_per_post", "4", FLAGS, "Turrets one power bank (or forcefield) can power")
 local cvContain = CreateConVar("lc_containment", "1", FLAGS, "A checkpoint with power stops the infestation spreading past it, and losing that power is a breach")
 local cvBreach  = CreateConVar("lc_breach_infected", "4", FLAGS, "Infected that come pouring out of a containment breach")
@@ -286,7 +286,7 @@ function LC.ContainmentBreach(post, z)
     for _, p in ipairs(player.GetAll()) do
         p:ChatPrint("[City] Containment failure" .. (where ~= "" and (" " .. where) or "") .. "! The infected are breaking out.")
     end
-    Radio("cp", "Dispatch: containment breach" .. (where ~= "" and (" " .. where) or "") .. ". All units, hold the line.")
+    Radio("cp", "Dispatch: containment breach" .. (where ~= "" and (" " .. where) or "") .. ". All Civil Protection units, hold the line.")
     -- the infestation surges over the checkpoint...
     local seed = z.grown and z.seed or z
     local grew = seed and LC.GrowTerritory and LC.GrowTerritory(seed, pos, 450, "breach") or nil
@@ -399,7 +399,7 @@ local function Owned(ply)
 end
 
 function LC.DeployTurret(ply)
-    if not LC.PlayerIsCP(ply) then return false, "Units only." end
+    if not LC.PlayerIsCP(ply) then return false, "Civil Protection units only." end
     if (ply.lcTurretNext or 0) > CurTime() then return false, "Give it a moment." end
     if Owned(ply) >= cvPerUnit:GetInt() then
         return false, "You've got " .. cvPerUnit:GetInt() .. " turrets up already. Pack one up first (E on it)."
@@ -442,8 +442,8 @@ function LC.DeployTurret(ply)
 end
 
 function LC.PackTurret(ply, t)
-    if not LC.PlayerIsCP(ply) then return false, "Units only." end
-    if not IsValid(t) or t:GetClass() ~= TURRET or not LC.DeployedTurrets[t] then return false, "Look at a turret a unit put up." end
+    if not LC.PlayerIsCP(ply) then return false, "Civil Protection units only." end
+    if not IsValid(t) or t:GetClass() ~= TURRET or not LC.DeployedTurrets[t] then return false, "Look at a turret a Civil Protection unit put up." end
     if t:GetPos():DistToSqr(ply:GetPos()) > 160 * 160 then return false, "Get closer." end
     LC.DeployedTurrets[t] = nil
     t:Remove()
@@ -453,7 +453,7 @@ end
 -- Officers put up a power bank: on the wall they're looking at.
 function LC.DeployPowerBank(ply)
     if not (LC.IsCPOfficer and LC.IsCPOfficer(ply)) then
-        return false, "Officers put up power banks (Division Leader and up). Any unit can deploy turrets at one."
+        return false, "Officers put up power banks (Division Leader and up). Any Civil Protection unit can deploy turrets at one."
     end
     if IsValid(ply.lcBank) then return false, "You've one up already. Take it down first (the actions menu, looking at it)." end
     local tr = ply:GetEyeTrace()

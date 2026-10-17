@@ -143,7 +143,7 @@ local function Context(me, unit, rebel)
     local now = CurTime()
     if me:GetNW2Float("lc_downed_until", 0) > now then Add("Give up (let go)", function() Send("giveup") end) end
     if me:GetNW2Bool("lc_tied", false) then Add("Work at the ties", function() Send("struggle") end) end
-    if not unit and me:GetNW2Float("lc_wanted_until", 0) > now then Add("Give myself up (near a unit)", function() Send("surrender") end) end
+    if not unit and me:GetNW2Float("lc_wanted_until", 0) > now then Add("Give myself up (near a Civil Protection unit)", function() Send("surrender") end) end
     if me:GetNW2Bool("lc_interrogated", false) then
         Add("Talk to the interrogator", function() net.Start("lc_interrogate_reply") net.WriteBool(true) net.SendToServer() end)
     end
@@ -228,7 +228,7 @@ function LC_CL.QuickRoot()
         items = {
             Item("Call for backup", function() Send("backup") end),
             Item("Send my 10-20", function() Send("10-20") end),
-            Item("Issue a BOLO...", function() Ask("BOLO", "What should units look out for?", "bolo") end),
+            Item("Issue a BOLO...", function() Ask("BOLO", "What should Civil Protection units look out for?", "bolo") end),
             Page("Voice lines", VoicePage),
             Item("Kick (" .. (LC_CL.KickKeyName and LC_CL.KickKeyName() or "G") .. ")", function() Send("kick") end),
         }

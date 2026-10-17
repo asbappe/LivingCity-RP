@@ -292,7 +292,7 @@ function LC.SwipeForcefield(ply, f)
     if LC.FieldPass(ply) then return true end
     if not (LC.HasItem and LC.HasItem(ply, "cp_keycard")) then
         f:EmitSound("buttons/combine_button_locked.wav", 65)
-        return false, "Access denied. (Units pass; a Combine keycard opens it for a moment.)"
+        return false, "Access denied. (Civil Protection units pass; a Combine keycard opens it for a moment.)"
     end
     ply:SetNW2Float("lc_ffpass_until", CurTime() + 4)
     LC.FieldRulesChanged(ply)

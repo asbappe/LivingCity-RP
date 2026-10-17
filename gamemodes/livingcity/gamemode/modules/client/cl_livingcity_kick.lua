@@ -11,7 +11,7 @@
 
 LC_CL = LC_CL or {}
 
-local cvKey = CreateClientConVar("lc_kick_key", "g", true, false, "Key for a unit's kick (a letter, or a key name like mouse4)")
+local cvKey = CreateClientConVar("lc_kick_key", "g", true, false, "Key for a Civil Protection unit's kick (a letter, or a key name like mouse4)")
 
 local LENGTH = 0.55
 

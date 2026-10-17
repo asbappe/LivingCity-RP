@@ -364,7 +364,7 @@ function LC.TerritoryNotice(kind, where)
         local list = table.concat(places, ", ", 1, math.min(#places, 3)) .. (#places > 3 and ", and elsewhere" or "")
         if kind == "rebel" then
             Radio("resistance", "We've taken more ground " .. list .. ". Hold it.")
-            Radio("cp", "Dispatch: anticitizen activity spreading " .. list .. ". Units are advised to push it back.")
+            Radio("cp", "Dispatch: anticitizen activity spreading " .. list .. ". Civil Protection units are advised to push it back.")
         else
             Radio("cp", "Dispatch: infestation spreading " .. list .. ". Containment teams required.")
         end
@@ -539,8 +539,8 @@ end)
 -- lc_containment_ammo 0/1.
 ------------------------------------------------------------------------
 
-local cvPay  = CreateConVar("lc_containment_pay", "3", FLAGS, "Credits a unit is paid for each infested they put down")
-local cvAmmo = CreateConVar("lc_containment_ammo", "1", FLAGS, "Units are resupplied with rounds for the infested they put down")
+local cvPay  = CreateConVar("lc_containment_pay", "3", FLAGS, "Credits a Civil Protection unit is paid for each infested they put down")
+local cvAmmo = CreateConVar("lc_containment_ammo", "1", FLAGS, "Civil Protection units are resupplied with rounds for the infested they put down")
 local PER_KILL = { Pistol = 8, SMG1 = 15, Buckshot = 3, AR2 = 10, ["357"] = 2, XBowBolt = 1 }
 LC.ContainmentTally = LC.ContainmentTally or {} -- [ply] = { kills, ammo = { [type] = kills }, last }
 

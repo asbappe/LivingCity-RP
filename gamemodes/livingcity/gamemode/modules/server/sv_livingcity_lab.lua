@@ -32,7 +32,7 @@ util.AddNetworkString("lc_lab_make")
 util.AddNetworkString("lc_lab_decode")
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvShut  = CreateConVar("lc_lab_shutdown", "600", FLAGS, "Seconds a Resistance lab stays shut after a unit finds it")
+local cvShut  = CreateConVar("lc_lab_shutdown", "600", FLAGS, "Seconds a Resistance lab stays shut after a Civil Protection unit finds it")
 local cvPrice = CreateConVar("lc_lab_price", "0.6", FLAGS, "What the Resistance's scientist charges, times the black market dealer's price")
 
 local NEAR = 170 -- how close to him you stand to deal with him
@@ -167,8 +167,8 @@ function LC.SendLab(ply, sci)
     for _, id in ipairs({ "data_chip", "master_chip" }) do
         if (inv[id] or 0) > 0 and LCS.Items[id] then
             decode[#decode + 1] = { id = id, name = LCS.Items[id].name, n = inv[id],
-                desc = id == "master_chip" and "150 XP, 150 credits, and every unit marked for the whole Resistance for ten minutes"
-                    or "50 XP, 50 credits, and every unit marked for the whole Resistance for five minutes" }
+                desc = id == "master_chip" and "150 XP, 150 credits, and every Civil Protection unit marked for the whole Resistance for ten minutes"
+                    or "50 XP, 50 credits, and every Civil Protection unit marked for the whole Resistance for five minutes" }
         end
     end
     LC.SendCompressed("lc_lab", { items = items, credits = credits, busy = busy, decode = decode }, { ply })

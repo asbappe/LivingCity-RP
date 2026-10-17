@@ -867,8 +867,34 @@ LC._JoinLine = function(npc, st)
     return true
 end
 
+-- The front of a line is the end at the dispenser, whichever end of it was placed first
+-- (placed from the back, the line stood the wrong way round: served at the far end).
+local function OrientLine(line)
+    local n = #line.slots
+    if n < 2 then return end
+    local a, b = line.slots[1].pos, line.slots[n].pos
+    local da, db
+    for _, e in ipairs(LC.EntsOf("lc_dispenser")) do
+        local p = e:GetPos()
+        da = math.min(da or math.huge, p:DistToSqr(a))
+        db = math.min(db or math.huge, p:DistToSqr(b))
+    end
+    if da and db < da and db < 600 * 600 then
+        local r = {}
+        for i = n, 1, -1 do r[#r + 1] = line.slots[i] end
+        line.slots = r
+        line.reversed = not line.reversed
+        return true
+    end
+end
+LC.OrientLine = OrientLine
+
 local function LineThink(now)
     for g, line in pairs(LC.Lines) do
+        if now > (line.nextOrient or 0) then
+            line.nextOrient = now + 10
+            if OrientLine(line) then ShuffleLine(g) end
+        end
         local changed = false
         local i = 1
         while i <= #line.q do
@@ -919,6 +945,7 @@ local function LineThink(now)
                 fs.servedUntil = now + 300 -- one ration each; don't rejoin straight away
                 if LC.Event == "rations" then
                     fs.leaveAt = math.min(fs.leaveAt or math.huge, now + math.Rand(20, 60))
+                    fs.leaveWhy = "had their ration and went home"
                 end
                 ShuffleLine(g)
                 line.nextAdvance = now + (LC.Event == "rations" and math.Rand(6, 10) or math.Rand(20, 40))
@@ -1031,7 +1058,14 @@ local function GoHome(npc, st, run)
     return GoTo(npc, st, spot, run, { kind = "spawn", pos = spot, yaw = math.random(0, 359) })
 end
 
-local function StartLeaving(npc, st, run)
+-- Why people left (for the debug report): [reason] = how many since the map started
+LC.LeaveCounts = LC.LeaveCounts or {}
+
+local function StartLeaving(npc, st, run, why)
+    if not st.leaving then
+        why = why or st.leaveWhy or "other"
+        LC.LeaveCounts[why] = (LC.LeaveCounts[why] or 0) + 1
+    end
     st.leaving = true
     LeaveLine(npc, st)
     CancelBusy(npc, st)
@@ -1122,6 +1156,7 @@ local function Register(npc, role)
         nextWarn = 0, nextUse = 0, nextBark = 0, nextFollow = 0, recoveries = 0, errors = 0,
         born = now,
         leaveAt = (role == "citizen" and life > 0) and now + life * math.Rand(0.6, 1.4) or nil,
+        leaveWhy = "their time out was up (lc_citizen_lifetime: a citizen stays about that long, then others come)",
     }
     npc:SetName("lc_npc_" .. npc:EntIndex())
     npc:SetNW2String("lc_role", role)
@@ -1503,18 +1538,23 @@ local function ChooseCitizenTask(npc, st, now)
     if LC.NPCWorkReset then LC.NPCWorkReset(npc, st) end
     local ev = LC.Event
     if not st.questLock and (ev == "curfew" or ev == "lockdown" or st.leaving or (st.leaveAt and now > st.leaveAt)) then
-        return StartLeaving(npc, st, ev == "lockdown")
+        return StartLeaving(npc, st, ev == "lockdown", (ev == "curfew" or ev == "lockdown") and "curfew or lockdown: gone home" or nil)
     end
 
     -- more people out than the hour calls for: home (sv_livingcity_rhythm.lua)
-    if not st.questLock and LC.RhythmGoHome and LC.RhythmGoHome(npc, st, now) then return StartLeaving(npc, st, false) end
+    if not st.questLock and LC.RhythmGoHome and LC.RhythmGoHome(npc, st, now) then
+        return StartLeaving(npc, st, false, "the time of day: fewer people out at this hour")
+    end
+
+    -- rations being handed out: the queue comes before work (work used to win, and the line stood empty)
+    local lineChance = (ev == "rations") and 0.85 or (LC.RhythmLineChance and LC.RhythmLineChance(0.18) or 0.18)
+    local served = st.servedUntil and now < st.servedUntil
+    if ev == "rations" and next(LC.Lines) and not served and math.random() < lineChance and JoinLine(npc, st) then return end
 
     -- their Union job: fix what's broken, haul, carry, deliver, heal (sv_livingcity_npcwork.lua)
     if LC.NPCWorkChoose and LC.NPCWorkChoose(npc, st, now) then return end
 
-    local lineChance = (ev == "rations") and 0.85 or (LC.RhythmLineChance and LC.RhythmLineChance(0.18) or 0.18)
-    local served = st.servedUntil and now < st.servedUntil
-    if next(LC.Lines) and not served and math.random() < lineChance and JoinLine(npc, st) then return end
+    if ev ~= "rations" and next(LC.Lines) and not served and math.random() < lineChance and JoinLine(npc, st) then return end
 
     if math.random() < (LC.RhythmSitChance and LC.RhythmSitChance(0.3) or 0.3) then
         local spots = FreePoints(SITTABLE, npc)
@@ -1838,7 +1878,7 @@ function LC.CopProvoked(npc, st, ply, now)
         ply:ViewPunch(Angle(-10, math.Rand(-6, 6), 0))
         npc:EmitSound(b.n == 3 and "physics/body/body_medium_impact_soft3.wav" or "Weapon_StunStick.Melee_Hit", 70)
         if b.n == 4 then ply:TakeDamage(5, npc, npc) end
-        ply:ChatPrint(b.n == 3 and "[Civil Protection] The unit shoves you back. Move along."
+        ply:ChatPrint(b.n == 3 and "[Civil Protection] The Civil Protection unit shoves you back. Move along."
             or "[Civil Protection] A crack across the ribs with the stick. Last warning.")
     elseif b.n > #BUMP_LINES then
         ply.lcBump = nil
@@ -2478,7 +2518,7 @@ local function Monsters()
     return out
 end
 
-local cvSpot = CreateConVar("lc_units_spot_monsters", "1", FLAGS, "Units who see a headcrab or a zombie close by go for it")
+local cvSpot = CreateConVar("lc_units_spot_monsters", "1", FLAGS, "Civil Protection units who see a headcrab or a zombie close by go for it")
 
 function LC.UnitsSpotMonsters()
     if not cvSpot:GetBool() then return 0 end
@@ -2506,7 +2546,7 @@ end
 timer.Create("LivingCityUnitsSpotMonsters", 1, 0, function()
     if not LC.Running then return end
     local ok, err = pcall(LC.UnitsSpotMonsters)
-    if not ok then LC.Error("units and monsters", err) end
+    if not ok then LC.Error("Civil Protection units and monsters", err) end
 end)
 
 hook.Add("PlayerUse", "LivingCityUse", function(ply, ent)
@@ -2649,7 +2689,7 @@ end)
 concommand.Add("lc_removepoint", function(ply)
     if not Allowed(ply) or not IsValid(ply) then return end
     local kind = LC.RemoveNearestPoint(ply:GetPos(), 150)
-    Say(ply, kind and ("Removed nearest " .. kind .. " point.") or "No point within 150 units.")
+    Say(ply, kind and ("Removed nearest " .. kind .. " point.") or "No point within 150 Civil Protection units.")
 end)
 
 concommand.Add("lc_status", function(ply)

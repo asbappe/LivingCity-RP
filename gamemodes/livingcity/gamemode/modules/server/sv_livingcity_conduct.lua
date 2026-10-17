@@ -183,7 +183,7 @@ function LC.JudgeKill(attacker, victim)
         return true, "enforcement"
     end
     if victimCP and IsHunted(attacker) then return true, "insurgency" end
-    if attackerCP and victimCP then return false, "killed another unit" end
+    if attackerCP and victimCP then return false, "killed another Civil Protection unit" end
 
     return false, "no roleplay reason found"
 end

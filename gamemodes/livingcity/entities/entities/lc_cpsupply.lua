@@ -56,7 +56,7 @@ if CLIENT then
             surface.SetDrawColor(BLUE.r, BLUE.g, BLUE.b, 180)
             surface.DrawOutlinedRect(-280, -60, 560, 120, 3)
             draw.SimpleText("CIVIL PROTECTION", "LCSupplySign", 0, -18, BLUE, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-            draw.SimpleText("Commissary: units are issued supplies here", "LCSupplySignSmall", 0, 26, INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            draw.SimpleText("Commissary: Civil Protection units are issued supplies here", "LCSupplySignSmall", 0, 26, INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         cam.End3D2D()
     end
 end

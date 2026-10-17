@@ -24,6 +24,33 @@ local CATS = {
     { key = "", title = "Tools" },
 }
 
+-- The other way to look at the same list: by what it's for, everything a part of the city needs
+-- in one place (building a rebel base: its zone, its lab, its beds, its lookouts, all together).
+-- A thing can be in more than one. Occupations get a folder each: their workplace and what goes with it.
+local USES = {
+    { title = "Citizens' daily life", ids = { "idle", "sit", "sitchair", "lean", "queue", "dispenser", "vending", "terminal", "stove", "bed",
+        "toilet", "bath", "fire", "locker", "tv", "screen", "lawboard", "citybin", "bin", "zone_block", "door_rent" } },
+    { title = "Arriving and leaving the city", ids = { "arrival", "intake", "housingterm", "platform", "spawn", "lz" } },
+    { title = "Civil Protection and the Combine", ids = { "patrol", "checkpoint", "cpsupply", "console", "sspawn", "powerbank", "turret",
+        "forcefield", "barricade_low", "barricade", "barricade_tall", "dataterm", "masterterm", "zone_combine", "door_cp", "studio", "loudspeaker", "screen_big" } },
+    { title = "Prison", ids = { "cell", "release", "zone_prison", "door_prison" } },
+    { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "rlookout", "bunk", "workbench", "dealer", "bed", "toilet", "stove",
+        "sit", "sitchair", "lean", "fire", "locker", "graffiti" } },
+    { title = "Infestation", ids = { "zone_infest", "zspawn" } },
+    { title = "Morning exercise", ids = { "jogroute", "yard", "parade" } },
+    { title = "Power and the street", ids = { "transformer", "streetlight", "loudspeaker", "screen_big", "pipe", "rubble", "salvage" } },
+    { title = "Paths, ladders and doors", ids = { "node", "link", "ladder", "zone_nogo", "door_locked", "door_open", "door_ignore", "door_force", "door_test" } },
+    { title = "Tools", ids = { "prop", "inspect", "walker" } },
+}
+-- an occupation's things beside its workplace
+local JOB_EXTRAS = {
+    sanitation = { "citybin", "bin", "graffiti", "toilet" }, kitchen = { "dispenser", "queue", "dock" }, medic = { "bed" },
+    factory = { "conveyor", "dock" }, courier = { "dock" }, maintenance = { "streetlight", "transformer", "pipe", "powerbank", "forcefield" },
+    porter = { "platform", "arrival", "dock" }, clerk = { "intake", "housingterm" }, laundry = {}, mortuary = { "incinerator" },
+    scrap = { "rubble", "salvage", "recycler" }, radio = {},
+}
+local cvArrange = CreateClientConVar("lc_editor_arrange", "type", true, false, "How the editor's list is arranged: type (points, fixtures...) or use (what it's for)")
+
 -- Add to a panel's Think without replacing its own (a category's open and
 -- close animation, a label stretching to fit its text).
 local function AlsoThink(pnl, fn)
@@ -111,14 +138,14 @@ local WANTED = {
     { "dispenser", "No ration dispenser." },
     { "queue", "No ration line." },
     { "spawn", "No spawn/exit doorways: NPCs appear out of sight." },
-    { "checkpoint", "No checkpoints for units to man." },
+    { "checkpoint", "No checkpoints for Civil Protection units to man." },
     { "zone_block", "No housing blocks: curfew has nowhere to send people." },
     { "zone_prison", "No prison area (optional; the cells work without it)." },
     { "zspawn", "No infestation spawns: zombies appear anywhere in infestation zones." },
     { "incinerator", "No incinerator: Morticians bag bodies at the morgue workplace, or have no collections." },
     { "sspawn", "No scanner launch spot: flown scanners go up in the open air near the console." },
     { "intake", "No Civil Intake (optional): new people are registered as they arrive, with a room handed to them." },
-    { "cpsupply", "No Civil Protection Commissary: units are issued their supplies at the Union Commissary instead." },
+    { "cpsupply", "No Civil Protection Commissary: Civil Protection units are issued their supplies at the Union Commissary instead." },
     { "workbench", "No Resistance lab: the Resistance can only get guns, jammers and radios from the black market." },
 }
 
@@ -165,9 +192,49 @@ function LC_CL.BuildLayoutBrowser(panel, modes)
     clear.DoClick = function() LC_CL.highlight = {} end
     panel:AddItem(clear)
 
-    for i, c in ipairs(CATS) do
-        local list = {}
-        for _, m in ipairs(modes) do if CatOf(m) == c.key then list[#list + 1] = m end end
+    -- arranged by type (points, fixtures...) or by what it's for: the list is rebuilt in place
+    local arrange = vgui.Create("DComboBox")
+    arrange:AddChoice("Arrange by type: points, fixtures, zones, doors", "type", cvArrange:GetString() ~= "use")
+    arrange:AddChoice("Arrange by what it's for: rebels, prison, each job...", "use", cvArrange:GetString() == "use")
+    panel:AddItem(arrange)
+    local holder = vgui.Create("DListLayout")
+    panel:AddItem(holder)
+    local Fill
+    arrange.OnSelect = function(_, _, _, v) RunConsoleCommand("lc_editor_arrange", v) timer.Simple(0.1, function() if IsValid(holder) then Fill() end end) end
+
+    local byId = {}
+    for _, m in ipairs(modes) do byId[m.id] = m end
+    local function Groups()
+        local out = {}
+        if cvArrange:GetString() == "use" then
+            for _, o in ipairs(LCJ and LCJ.Occupations or {}) do
+                local list = { byId["work_" .. o.id] }
+                for _, id in ipairs(JOB_EXTRAS[o.id] or {}) do if byId[id] then list[#list + 1] = byId[id] end end
+                out[#out + 1] = { title = "Job: " .. o.name, list = list, sorted = true }
+            end
+            for _, u in ipairs(USES) do
+                local list = {}
+                for _, id in ipairs(u.ids) do if byId[id] then list[#list + 1] = byId[id] end end
+                table.insert(out, #out + 1, { title = u.title, list = list })
+            end
+            -- (daily life first, the jobs after it)
+            local jobs = {}
+            for i = #out, 1, -1 do if string.StartWith(out[i].title, "Job: ") then table.insert(jobs, 1, table.remove(out, i)) end end
+            for i, j in ipairs(jobs) do table.insert(out, 1 + i, j) end
+        else
+            for _, c in ipairs(CATS) do
+                local list = {}
+                for _, m in ipairs(modes) do if CatOf(m) == c.key then list[#list + 1] = m end end
+                out[#out + 1] = { title = c.title, list = list }
+            end
+        end
+        return out
+    end
+
+    Fill = function()
+    holder:Clear()
+    for i, c in ipairs(Groups()) do
+        local list = c.list
         table.sort(list, function(a, b) return string.lower(Short(a)) < string.lower(Short(b)) end) -- A to Z
         if #list > 0 then
             local cat = vgui.Create("DCollapsibleCategory")
@@ -228,9 +295,11 @@ function LC_CL.BuildLayoutBrowser(panel, modes)
                 end
                 body:Add(row)
             end
-            panel:AddItem(cat)
+            holder:Add(cat)
         end
     end
+    end
+    Fill()
 end
 
 ------------------------------------------------------------------------

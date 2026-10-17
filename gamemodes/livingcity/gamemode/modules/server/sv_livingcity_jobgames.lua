@@ -160,7 +160,8 @@ end
 -- Street sweep (Sanitation)
 ------------------------------------------------------------------------
 
-local CARTS = { "models/props_wasteland/laundry_cart001.mdl", "models/props_wasteland/laundry_cart002.mdl", "models/props_junk/PushCart01a.mdl" }
+-- (the smaller laundry cart first: the big one was the biggest cart in the game)
+local CARTS = { "models/props_wasteland/laundry_cart002.mdl", "models/props_junk/PushCart01a.mdl", "models/props_wasteland/laundry_cart001.mdl" }
 local LITTER = {
     "models/props_junk/garbage_metalcan001a.mdl", "models/props_junk/PopCan01a.mdl", "models/props_junk/garbage_plasticbottle001a.mdl",
     "models/props_junk/garbage_glassbottle001a.mdl", "models/props_junk/garbage_milkcarton001a.mdl", "models/props_junk/garbage_newspaper001a.mdl",
@@ -192,13 +193,17 @@ local function Push(g, now)
     if ply:GetPos():DistToSqr(cart:GetPos()) > CART_REACH * CART_REACH * 2 then g.pushing = false return end
     local fwd = ply:GetAimVector() fwd.z = 0 fwd:Normalize()
     local want = ply:GetPos() + fwd * 58
+    -- the floor where it's going, so it goes up and down steps with you (it used to stay at one height)
+    local z = cart:GetPos().z
+    local tr = util.TraceLine({ start = want + Vector(0, 0, 40), endpos = want - Vector(0, 0, 80), mask = MASK_SOLID_BRUSHONLY, filter = { cart, ply } })
+    if tr and tr.Hit and math.abs(tr.HitPos.z + (g.cartLift or 4) - z) < 60 then z = tr.HitPos.z + (g.cartLift or 4) end
     local ph = Phys(cart)
     if ph and ph.ComputeShadowControl then
         ph:Wake()
-        ph:ComputeShadowControl({ secondstoarrive = 0.15, pos = Vector(want.x, want.y, cart:GetPos().z), angle = Angle(0, fwd:Angle().y + 90, 0),
+        ph:ComputeShadowControl({ secondstoarrive = 0.15, pos = Vector(want.x, want.y, z), angle = Angle(0, fwd:Angle().y + 90, 0),
             maxangular = 400, maxangulardamp = 800, maxspeed = 400, maxspeeddamp = 600, dampfactor = 0.8, teleportdistance = 0, deltatime = 0.1 })
     else
-        cart:SetPos(Vector(want.x, want.y, cart:GetPos().z))
+        cart:SetPos(Vector(want.x, want.y, z))
     end
 end
 
@@ -208,11 +213,15 @@ GAMES.sweep = {
         local depot = g.opts.depot or g.ply:GetPos()
         g.depot = depot
         local cartPos = depot + Vector(0, 0, 4)
-        g.cart = Spawn(FirstValid(CARTS), cartPos, Angle(0, g.ply:EyeAngles().y, 0))
+        -- (turned the way it's pushed: it used to stand sideways to you)
+        g.cart = Spawn(FirstValid(CARTS), cartPos, Angle(0, g.ply:EyeAngles().y + 90, 0))
         if not IsValid(g.cart) then error("no cart") end
         g.cart.lcCart = g
+        g.cartLift = 4
         local ph = Phys(g.cart)
         if ph then ph:SetMass(80) end
+        -- it doesn't knock into people (grabbing it spun it into you and hurt)
+        if g.cart.SetCollisionGroup and COLLISION_GROUP_DEBRIS then g.cart:SetCollisionGroup(COLLISION_GROUP_DEBRIS) end
         g.props[#g.props + 1] = g.cart
         g.cart:SetNW2Bool("lc_cart", true)
         g.litter, g.need, g.got, g.swish = {}, 0, 0, 0
@@ -320,7 +329,7 @@ hook.Add("AllowPlayerPickup", "LivingCityJobCart", function(ply, ent) if ent.lcC
 ------------------------------------------------------------------------
 
 local PARTS = {
-    "models/props_lab/reciever01a.mdl", "models/props_lab/reciever01b.mdl", "models/props_c17/canister01a.mdl",
+    "models/props_lab/reciever01a.mdl", "models/props_lab/reciever01b.mdl", "models/props_lab/box01a.mdl",
     "models/props_lab/harddrive01.mdl", "models/props_junk/metal_paintcan001a.mdl", "models/props_c17/TrapPropeller_Lever.mdl",
     "models/props_lab/tpplug.mdl", "models/props_junk/garbage_metalcan001a.mdl",
 }
@@ -415,10 +424,16 @@ GAMES.line = {
         -- the next part onto the belt, sooner as the shift goes on
         if g.spawned < TOTAL_PARTS and now >= g.nextPart then
             g.spawned = g.spawned + 1
-            local start = b.origin - b.dir * (b.len / 2 - 14) + Vector(0, 0, 10)
+            local start = b.origin - b.dir * (b.len / 2 - 14) + Vector(0, 0, 6)
             local L = LineOf(g)
             local e = Spawn(Pick(L.parts), start, Angle(0, math.random(0, 359), 0))
             if IsValid(e) then
+                -- light enough for anyone to pick up with E (some weren't), and not rolling about
+                local ph = Phys(e)
+                if ph then
+                    if ph.SetMass then ph:SetMass(8) end
+                    if ph.SetDamping then ph:SetDamping(0.5, 4) end
+                end
                 e.lcPart = { bad = math.random() < 0.32, rattle = g.spawned == g.rattle, t = now }
                 if e.lcPart.bad then
                     e:SetColor(L.bad)
@@ -458,7 +473,8 @@ GAMES.line = {
                     local ph = Phys(e)
                     if ph then
                         local v = ph:GetVelocity()
-                        ph:SetVelocity(b.dir * g.speed + Vector(0, 0, math.min(v.z, 0)))
+                        -- along the belt, and drawn back to its middle (round ones used to roll off the side)
+                        ph:SetVelocity(b.dir * g.speed - b.side * (across * 2) + Vector(0, 0, math.min(v.z, 0)))
                         ph:Wake()
                     else
                         e:SetPos(e:GetPos() + b.dir * g.speed * 0.1)
@@ -506,7 +522,7 @@ hook.Add("KeyPress", "LivingCityJobLine", function(ply, key)
     ply:ChatPrint(LineOf(g).tag .. " You work it open and palm what's inside: " .. (LCS.Items[what] and LCS.Items[what].name or what) .. ".")
     if LC.SeenBySecurity and LC.SeenBySecurity(ply, 700) then
         LC.ReportCrime(ply, "Theft from the factory floor", 120)
-        ply:ChatPrint("[Civil Protection] A unit saw that.")
+        ply:ChatPrint("[Civil Protection] A Civil Protection unit saw that.")
     end
     hook.Run("LivingCityLineContraband", ply, what)
 end)
@@ -616,7 +632,7 @@ GAMES.papers = {
         g.rules = Rules()
         g.today = 200 + math.random(0, 150)
         g.done, g.right, g.cites = 0, 0, 0
-        g.ply:ChatPrint("[Station] Travelers will come to you. E on one to check their papers against today's rules: approve, deny, or call a unit.")
+        g.ply:ChatPrint("[Station] Travelers will come to you. E on one to check their papers against today's rules: approve, deny, or call a Civil Protection unit.")
         g.hud = function(gg)
             local lines = { string.format("Travelers checked: %d of %d", gg.done, TRAVELERS), string.format("Right: %d    Citations: %d", gg.right, gg.cites), "Today's rules:" }
             for _, l in ipairs(RuleLines(gg.rules)) do lines[#lines + 1] = "  " .. l end
@@ -679,9 +695,9 @@ function LC.PapersDecide(ply, choice)
     local c = g.current
     local right, cite, note
     if c.forged then
-        if choice == "unit" then right = true g.pay = g.pay + 5 note = "A forgery: the seal reads " .. c.papers.seal .. ". A unit takes them away."
+        if choice == "unit" then right = true g.pay = g.pay + 5 note = "A forgery: the seal reads " .. c.papers.seal .. ". A Civil Protection unit takes them away."
             if LC.AddStanding then LC.AddStanding(ply, 2) end
-        elseif choice == "deny" then right = true g.pay = g.pay + 2 note = "Denied. (The seal was forged: a unit would have wanted to know.)"
+        elseif choice == "deny" then right = true g.pay = g.pay + 2 note = "Denied. (The seal was forged: a Civil Protection unit would have wanted to know.)"
         else
             right = false
             hook.Run("LivingCityPapersForgeryPassed", ply)

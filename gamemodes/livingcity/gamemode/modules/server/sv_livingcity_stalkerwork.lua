@@ -213,7 +213,7 @@ LC.Chain{
                     Hold(a, 12, "Scrub the floor here, on your knees (crouch)", 160, true),
                     Hold(b, 12, "And here (crouch)", 160, true),
                     Then(Hold(c, 12, "And here, where the drain is (crouch)", 160, true), function(q)
-                        Narrate(q, "A unit steps over you without looking down. You are furniture that moves.")
+                        Narrate(q, "A Civil Protection unit steps over you without looking down. You are furniture that moves.")
                     end),
                 },
             }
@@ -270,7 +270,7 @@ LC.Chain{
                         LC.StalkerEnergizer(q.owner, site, 3)
                         Narrate(q, "It hums. A ball of white light turns slowly inside it, and it is the most beautiful thing you have seen since they took you.")
                     end),
-                    Choice("The units have stopped watching you. The light turns, and turns. It would be very easy to step inside, and then there would be no more stalker.", {
+                    Choice("The Civil Protection units have stopped watching you. The light turns, and turns. It would be very easy to step inside, and then there would be no more stalker.", {
                         { text = "Step into the light. (This person ends for good: you start over as someone new.)", pick = function(q, p)
                             q.chainEnd = "light"
                             Narrate(q, "You step forward. It's warm.")

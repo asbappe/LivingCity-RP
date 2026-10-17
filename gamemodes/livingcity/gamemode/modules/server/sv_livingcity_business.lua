@@ -249,6 +249,14 @@ function LC.RentDoorUse(ply, door)
     local r, main = LC.RentalOf(door)
     if not r or not r.locked then return nil end
     if HasKey(ply, r) then
+        -- open already: E shuts it again (it used to open it again, so it never shut till unlocked)
+        if LC.DoorIsOpen and LC.DoorIsOpen(door) then
+            door:Fire("Close")
+            door:Fire("Lock", "", 1)
+            LC.OpenedDoors[door] = nil
+            LC.Relock[door] = nil
+            return false
+        end
         door:Fire("Unlock")
         door:Fire("Open", "", 0.1)
         LC.OpenedDoors[door] = CurTime() + 5

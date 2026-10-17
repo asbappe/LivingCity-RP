@@ -173,7 +173,7 @@ function LC.BreakOut(prisoner, by)
 end
 
 function LC.PrisonBreakAlarm(pos)
-    TellUnits("[CP net] PRISON BREAK " .. Where(pos) .. ". Anticitizens are at the cells. All units respond.")
+    TellUnits("[CP net] PRISON BREAK " .. Where(pos) .. ". Anticitizens are at the cells. All Civil Protection units respond.")
     MarkUnits("PRISON BREAK", pos, 120)
     if sound and sound.Play then sound.Play("ambient/alarms/apc_alarm_loop1.wav", pos, 85) end
     LC.LastPrisonBreak = { pos = pos, at = CurTime() }
@@ -239,7 +239,7 @@ end
 
 function LC.Inform(ply, target)
     if not cvInform:GetBool() then return false end
-    if Unit(ply) then return false, "You're a unit: arrest them." end
+    if Unit(ply) then return false, "You're a Civil Protection unit: arrest them." end
     if IsResistance(ply) then return false, "Inform on your own? No." end
     if not IsValid(target) or not target:IsPlayer() or target == ply then return false, "Look at who you want to report (or !inform <name>)." end
     if (ply.lcInformNext or 0) > CurTime() then return false, string.format("Civil Protection has your last report. (%ds)", math.ceil(ply.lcInformNext - CurTime())) end
@@ -281,7 +281,7 @@ end
 
 local MESSAGES = {
     "Citizens of City 17. They count your rations, your words, your children. Count theirs.",
-    "The Combine are not invincible. Every unit you see is a man in a mask. Remember that.",
+    "The Combine are not invincible. Every Civil Protection unit you see is a man in a mask. Remember that.",
     "Lambda lives. Help is closer than you think.",
     "Their cameras are blind tonight. Look out for one another.",
 }
@@ -326,7 +326,7 @@ function LC.HijackScreen(ply, screen)
         maxMove = 40, cancelText = "You pull the wires. The screen goes back to the Combine.",
         done = function(p)
             if LC.HijackStart(screen, p) then
-                p:ChatPrint("[Resistance] You're in. One minute: keep units off it.")
+                p:ChatPrint("[Resistance] You're in. One minute: keep Civil Protection units off it.")
                 if LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then LC.ReportCrime(p, "Sedition", 240) end
             end
         end,
@@ -523,7 +523,7 @@ local function Achieve(sk)
     if purpose == "heist" then
         if data.key and LC.TerminalReadyAt then LC.TerminalReadyAt[data.key] = CurTime() + 20 * 60 end
         SetGlobal2Float("lc_rebel_intel", CurTime() + 300)
-        Radio("resistance", "Our fighters got into the Combine's systems: unit positions for everyone, five minutes. Move.")
+        Radio("resistance", "Our fighters got into the Combine's systems: Civil Protection unit positions for everyone, five minutes. Move.")
         TellUnits("[CP net] Data stolen from a Combine terminal " .. Where(sk.target) .. ".")
     elseif purpose == "breakout" then
         if IsValid(data.prisoner) then LC.BreakOut(data.prisoner, nil) end
@@ -700,7 +700,7 @@ end)
 
 LC.RebelVorts = LC.RebelVorts or {}
 
-function LC.SettleVort(npc)
+function LC.SettleVort(npc, quiet)
     if not IsValid(npc) then return end
     LC.RebelVorts[npc] = true
     local st = LC.NPCs and LC.NPCs[npc]
@@ -710,8 +710,32 @@ function LC.SettleVort(npc)
         st.eventUntil = CurTime() + 1e6
     end
     npc:SetNW2String("lc_pname", "Freed vortigaunt")
-    Radio("resistance", "The vortigaunt is home. Stand near it and it will charge your vest.")
+    if not quiet then Radio("resistance", "The vortigaunt is home. Stand near it and it will charge your vest.") end
 end
+
+-- Vortigaunts already living free in rebel territory, whether or not anyone has freed one
+-- (they used to come only from the "Free a vortigaunt" job): this many, at a spot in rebel ground.
+local cvVorts = CreateConVar("lc_rebel_vorts", "1", FLAGS, "Freed vortigaunts living in rebel territory from the start (more come from the Free a vortigaunt job)")
+local nextVortHome = 0
+local function VortHome(now)
+    if now < nextVortHome or not LC.Running then return end
+    nextVortHome = now + 30
+    local have = 0
+    for v in pairs(LC.RebelVorts) do if IsValid(v) then have = have + 1 end end
+    if have >= cvVorts:GetInt() then return end
+    local zones = LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}
+    if #zones == 0 then return end
+    local spot = LC.SpotInZone and LC.SpotInZone(zones[math.random(#zones)])
+    if not spot then return end
+    local v = ents.Create("npc_vortigaunt")
+    if not IsValid(v) then return end
+    v:SetPos(spot + Vector(0, 0, 4))
+    v:Spawn()
+    v:Activate()
+    if LC.RegisterNPC then LC.RegisterNPC(v, "vortigaunt") end
+    LC.SettleVort(v, true)
+end
+LC.VortHome = function(now) nextVortHome = 0 VortHome(now or CurTime()) end -- (for tests)
 
 local function VortTick()
     for v in pairs(LC.RebelVorts) do
@@ -779,6 +803,7 @@ timer.Create("LivingCityResistanceOps", 1, 0, function()
         OpTick(now)
         DropTick(now)
         VortTick()
+        VortHome(now)
         if now >= nextSmuggle then nextSmuggle = now + 5 SmugglerTick() end
         if now >= nextReact then nextReact = now + 5 React(now) end
         if nextOps == 0 then nextOps = now + 180 end -- not in the first minutes of a city

@@ -54,7 +54,7 @@ LCS.Items = {
     ------------------------------------------------------------------------
     id_papers       = { name = "Identity papers", model = "models/props_c17/paper01.mdl", doc = true, kg = 0, sell = 0,
                         use = "papers", useLabel = "Show",
-                        desc = "Your name, your citizen number, your block. Show: to whoever you're looking at (units ask), or read them yourself" },
+                        desc = "Your name, your citizen number, your block. Show: to whoever you're looking at (Civil Protection units ask), or read them yourself" },
     ration_card     = { name = "Ration card", model = "models/props_c17/paper01.mdl", doc = true, kg = 0, sell = 0,
                         desc = "Union-issue. The ration dispensers want to see it. Lost? Civil Intake issues another, for a fee" },
     ------------------------------------------------------------------------
@@ -85,7 +85,7 @@ LCS.Items = {
                         desc = "Fill it in somewhere private and it becomes somebody" },
     papers_forged   = { name = "Forged papers", model = "models/props_c17/paper01.mdl", papers = "forged",
                         contraband = true, conceal = 0.5, sell = 30,
-                        desc = "A new name. Clears your wanted status if no unit is watching" },
+                        desc = "A new name. Clears your wanted status if no Civil Protection unit is watching" },
     papers_dead     = { name = "A dead man's papers", model = "models/props_c17/paper01.mdl", papers = "dead",
                         contraband = true, conceal = 0.5, sell = 25,
                         desc = "Genuine papers. Their owner won't be needing them" },
@@ -94,12 +94,12 @@ LCS.Items = {
                         desc = "One extra ration from any dispenser, whatever your standing" },
     uniform_cp      = { name = "Civil Protection uniform", model = "models/props_c17/BriefCase001a.mdl", wear = "cp",
                         contraband = true, conceal = 0, sell = 50,
-                        desc = "Mask and all. Units on the street will take you for one of them, mostly" },
+                        desc = "Mask and all. Civil Protection units on the street will take you for one of them, mostly" },
     cwu_overalls    = { name = "Union work overalls", model = "models/props_c17/suitcase_passenger_physics.mdl", wear = "citizen", sell = 6,
                         desc = "Union-issue, a little worn. Lets anyone pass as an ordinary citizen" },
     rebel_gear      = { name = "Resistance gear", model = "models/props_c17/BriefCase001a.mdl", wear = "rebel",
                         contraband = true, conceal = 0.15, sell = 25,
-                        desc = "Off a dead fighter. The fighters in rebel territory will take you for one of them. Units will too" },
+                        desc = "Off a dead fighter. The fighters in rebel territory will take you for one of them. Civil Protection units will too" },
     civvies         = { name = "Spare citizen clothes", model = "models/props_c17/suitcase_passenger_physics.mdl", wear = "citizen",
                         desc = "Union blue. Lets a hunted Resistance member pass as an ordinary citizen" },
     lockpick        = { name = "Lockpick set", model = "models/props_c17/tools_wrench01a.mdl", tool = "lockpick",
@@ -110,7 +110,7 @@ LCS.Items = {
                         desc = "Opens any door once, Combine doors included. Sometimes trips an alarm" },
     cp_keycard      = { name = "Civil Protection keycard", model = "models/props_c17/paper01.mdl", tool = "keycard",
                         contraband = true, conceal = 0.45, sell = 30,
-                        desc = "Off a dead unit. Opens one Combine door before someone reports it missing" },
+                        desc = "Off a dead Civil Protection unit. Opens one Combine door before someone reports it missing" },
     ------------------------------------------------------------------------
     -- Getting by (sv_livingcity_scavenge.lua)
     --   use      what "Use" does from your pockets: "fish", "plant", "spray"
@@ -128,7 +128,7 @@ LCS.Items = {
                         desc = "Stand in the canal, or look at the water, and wait. Keeps" },
     spraypaint      = { name = "Spray can", model = "models/props_junk/popcan01a.mdl", use = "spray", useLabel = "Spray",
                         contraband = true, conceal = 0.5, sell = 4,
-                        desc = "Look at a wall and spray the lambda. Don't let a unit see you do it" },
+                        desc = "Look at a wall and spray the lambda. Don't let a Civil Protection unit see you do it" },
     ------------------------------------------------------------------------
     -- Making things (sv_livingcity_crafting.lua)
     --   arms     weapons and ammunition: the quartermaster pays half as much again
@@ -139,7 +139,7 @@ LCS.Items = {
     chemicals       = { name = "Cleaning chemicals", model = "models/props_junk/garbage_plasticbottle001a.mdl", sell = 3,
                         desc = "Union-issue. Mixed with the right things, they do more than clean" },
     gun_parts       = { name = "Gun parts", model = "models/props_lab/box01a.mdl", contraband = true, conceal = 0.4, sell = 12,
-                        desc = "Springs, a barrel, a firing pin. Off a dead unit, or out of a smuggler's crate" },
+                        desc = "Springs, a barrel, a firing pin. Off a dead Civil Protection unit, or out of a smuggler's crate" },
     bandage         = { name = "Bandage", model = "models/props_junk/garbage_newspaper001a.mdl", use = "heal", useLabel = "Patch up", heal = 20,
                         desc = "Twenty health, give or take" },
     ammo_pistol     = { name = "Box of pistol rounds", model = "models/items/boxsrounds.mdl", use = "ammo", useLabel = "Load", ammo = { "Pistol", 18 },
@@ -170,7 +170,7 @@ LCS.Items = {
     -- Order (sv_livingcity_cp.lua)
     ------------------------------------------------------------------------
     zipties         = { name = "Zip ties", model = "models/props_lab/box01a.mdl", sell = 4,
-                        desc = "Tie someone's hands: !tie, looking at them (hands up, down, stopped, or from behind). Units carry their own" },
+                        desc = "Tie someone's hands: !tie, looking at them (hands up, down, stopped, or from behind). Civil Protection units carry their own" },
     request_device  = { name = "Request device", model = "models/props_lab/reciever01b.mdl", sell = 6,
                         desc = "Calls Civil Protection to where you are: /request <what's wrong>" },
     ------------------------------------------------------------------------
@@ -181,7 +181,7 @@ LCS.Items = {
     satchel         = { name = "Satchel", model = "models/props_c17/BriefCase001a.mdl", bag = { kg = 8, bulky = 1 }, sell = 10,
                         desc = "A canvas bag over the shoulder. Room for more, and for something large" },
     storage_crate   = { name = "Storage crate", model = "models/props_junk/wood_crate001a.mdl", place = "crate", sell = 12,
-                        desc = "Set it down somewhere (Set down, in your pockets) and it's yours: only you can open it. Units can" },
+                        desc = "Set it down somewhere (Set down, in your pockets) and it's yours: only you can open it. Civil Protection units can" },
     ------------------------------------------------------------------------
     -- Trade and writing (sv_livingcity_business.lua, sv_livingcity_writing.lua)
     ------------------------------------------------------------------------
@@ -194,7 +194,7 @@ LCS.Items = {
     scrap           = { name = "Scrap metal", model = "models/props_junk/garbage_metalcan002a.mdl", sell = 3,
                         desc = "Out of bins, junk and downed scanners. The dealer pays for it, and so does reclamation" },
     crowbar         = { name = "Crowbar", model = "models/weapons/w_crowbar.mdl", use = "arm", useLabel = "Draw", weapon = "weapon_crowbar",
-                        contraband = true, conceal = 0.05, sell = 14, desc = "Pries scrap out of junk. A weapon too, and every unit knows it" },
+                        contraband = true, conceal = 0.05, sell = 14, desc = "Pries scrap out of junk. A weapon too, and every Civil Protection unit knows it" },
     data_chip       = { name = "Combine data chip", model = "models/props_lab/harddrive02.mdl", use = "datachip", useLabel = "Decode / plug in",
                         contraband = true, conceal = 0.3, sell = 130,
                         desc = "Two terminals' data, put together. The dealer pays well; the lab decodes it; plugged into a terminal it wipes your record" },
@@ -203,9 +203,9 @@ LCS.Items = {
                         desc = "Half of what the Combine know: one terminal's data. Download another terminal's and the two make a whole chip" },
     master_chip     = { name = "Master data core", model = "models/props_lab/harddrive02.mdl", use = "datachip", useLabel = "Decode / plug in",
                         contraband = true, conceal = 0.2, sell = 400,
-                        desc = "Out of the Combine's master terminal: the motherlode. The dealer pays a fortune; the quartermaster's decoding marks every unit for ten minutes; plugged into a terminal it wipes every comrade's record" },
+                        desc = "Out of the Combine's master terminal: the motherlode. The dealer pays a fortune; the quartermaster's decoding marks every Civil Protection unit for ten minutes; plugged into a terminal it wipes every comrade's record" },
     jammer          = { name = "Radio jammer", model = "models/props_lab/reciever01b.mdl", use = "jammer", useLabel = "Set down",
-                        contraband = true, conceal = 0.3, sell = 35, desc = "Set it down: four minutes of static on every unit radio nearby, and no scanner photos get out" },
+                        contraband = true, conceal = 0.3, sell = 35, desc = "Set it down: four minutes of static on every Civil Protection unit radio nearby, and no scanner photos get out" },
     armor_vest      = { name = "Powered vest", model = "models/props_c17/SuitCase001a.mdl", use = "armor", useLabel = "Put on", armor = 30,
                         contraband = true, conceal = 0.15, sell = 30, desc = "Plates and salvaged charge cells: holds a charge (75), comes with thirty in it. Vortigaunts and batteries top it up" },
     ammo_357        = { name = "Box of .357 rounds", model = "models/items/357ammo.mdl", use = "ammo", useLabel = "Load", ammo = { "357", 6 },
@@ -291,18 +291,18 @@ LCS.Goods = {
     { id = "coffee", item = "coffee", price = 30, minStanding = 400, desc = "Real coffee. You'd forgotten the smell." },
     { id = "healthkit", name = "Medical kit", entity = "item_healthkit", price = 50, minStanding = 400, desc = "A full medical kit." },
     { id = "request_device", item = "request_device", price = 10, minStanding = 0, desc = "Something wrong? Call Civil Protection: /request." },
-    { id = "zipties", item = "zipties", count = 3, name = "Zip ties (3)", price = 6, cpOnly = true, desc = "Spares. Units never run out of their own." },
+    { id = "zipties", item = "zipties", count = 3, name = "Zip ties (3)", price = 6, cpOnly = true, desc = "Spares. Civil Protection units never run out of their own." },
     { id = "paper", item = "paper", count = 3, name = "Paper (3)", price = 2, minStanding = -50, desc = "For notes, letters and notices." },
     { id = "business_license", item = "business_license", price = 75, minStanding = 50, desc = "The Union's permission to trade from a stall." },
     { id = "vendor_stall", item = "vendor_stall", price = 60, minStanding = 50, desc = "Everything you need to sell. A license not included." },
     { id = "satchel", item = "satchel", price = 25, minStanding = -50, desc = "Carry more. Eight more kilos, and one more large thing." },
-    { id = "storage_crate", item = "storage_crate", price = 40, minStanding = 0, desc = "Somewhere of your own to keep things. Units can open it." },
+    { id = "storage_crate", item = "storage_crate", price = 40, minStanding = 0, desc = "Somewhere of your own to keep things. Civil Protection units can open it." },
     { id = "fishing_line", item = "fishing_line", price = 15, minStanding = -50, desc = "Line and a hook. The canal has fish, of a kind." },
     { id = "gren_smoke", item = "gren_smoke", price = 20, cpOnly = true, desc = "Cover for an advance, or a retreat." },
     { id = "gren_flash", item = "gren_flash", price = 35, cpOnly = true, minRank = 2, desc = "Metrocops and up. Don't look at it." },
     { id = "gren_gas", item = "gren_gas", price = 60, cpOnly = true, minRank = 3, desc = "Division Leaders and the Overwatch. For clearing anticitizen holdouts." },
     { id = "pistolammo", name = "Pistol ammunition", ammo = { "Pistol", 36 }, price = 10, cpOnly = true, desc = "Standard issue." },
-    { id = "smgammo", name = "SMG ammunition", ammo = { "SMG1", 90 }, price = 20, cpOnly = true, minStanding = 150, desc = "For units in good standing." },
+    { id = "smgammo", name = "SMG ammunition", ammo = { "SMG1", 90 }, price = 20, cpOnly = true, minStanding = 150, desc = "For Civil Protection units in good standing." },
     { id = "battery", name = "Suit battery", entity = "item_battery", price = 30, cpOnly = true, desc = "Armor recharge." },
 }
 
@@ -327,7 +327,7 @@ LCS.Black = {
     { id = "lockpick", item = "lockpick", price = 35, desc = "Picks, tension wrench, patience not included." },
     { id = "bypass", item = "bypass", price = 70, desc = "One use. Don't ask where it came from." },
     { id = "civvies", item = "civvies", price = 15, desc = "Clean, plain, forgettable." },
-    { id = "uniform_cp", item = "uniform_cp", price = 160, desc = "Off a unit who won't be needing it." },
+    { id = "uniform_cp", item = "uniform_cp", price = 160, desc = "Off a Civil Protection unit who won't be needing it." },
     { id = "tablets", item = "tablets", price = 20, desc = "No questions about why you need them." },
     { id = "crowbar", name = "Crowbar", weapon = "weapon_crowbar", price = 50, desc = "Every revolution starts somewhere." },
     { id = "multitool", name = "Multitool", weapon = "weapon_lc_multitool", price = 250, desc = "Opens Combine locks, screens and terminals. Very illegal. Don't get searched." },
@@ -335,7 +335,7 @@ LCS.Black = {
     { id = "chemicals", item = "chemicals", price = 6, desc = "Bought by the bottle. Nobody cleans that much." },
     { id = "seeds", item = "seeds", price = 12, desc = "Tomatoes, beans, maybe. Plant them in rebel territory." },
     { id = "canned_food", item = "canned_food", price = 14, desc = "Pre-war tins. Nobody asks where they come from." },
-    { id = "zipties", item = "zipties", count = 2, name = "Zip ties (2)", price = 20, desc = "For a unit who needs to stay put." },
+    { id = "zipties", item = "zipties", count = 2, name = "Zip ties (2)", price = 20, desc = "For a Civil Protection unit who needs to stay put." },
     { id = "satchel", item = "satchel", price = 30, desc = "No questions about what goes in it." },
     { id = "spraypaint", item = "spraypaint", count = 3, name = "Spray cans (3)", price = 25, desc = "Let the city know we're still here." },
     -- what the Resistance's lab makes (sv_livingcity_lab.lua); everyone else pays the dealer for it
@@ -349,7 +349,7 @@ LCS.Black = {
     { id = "gun_shotgun", item = "gun_shotgun", price = 210, desc = "Hard to hide. Hard to argue with." },
     { id = "gun_357", item = "gun_357", price = 240, desc = "Loud, heavy, final." },
     { id = "armor_vest", item = "armor_vest", price = 90, desc = "Plates and salvaged charge cells. Holds a charge; comes with thirty in it." },
-    { id = "jammer", item = "jammer", price = 150, desc = "Four minutes of static on every unit radio nearby." },
+    { id = "jammer", item = "jammer", price = 150, desc = "Four minutes of static on every Civil Protection unit radio nearby." },
 }
 
 LCS.BlackById = {}

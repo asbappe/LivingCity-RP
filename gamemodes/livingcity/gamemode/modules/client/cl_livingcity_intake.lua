@@ -200,7 +200,7 @@ function LC_CL.OpenDesk(t)
         Line(string.format("Credits: %d", t.credits or 0), DIM)
         if not t.papers then
             Button(string.format("Replace my identity papers (%d credits)", t.papersFee or 10), (t.credits or 0) >= (t.papersFee or 10),
-                function() LC_CL.DeskAct("papers") Close() end, "Units ask for papers; Housing Allocation wants to see them")
+                function() LC_CL.DeskAct("papers") Close() end, "Civil Protection units ask for papers; Housing Allocation wants to see them")
         end
         if not t.card then
             Button(string.format("Replace my ration card (%d credits)", t.cardFee or 15), (t.credits or 0) >= (t.cardFee or 15),

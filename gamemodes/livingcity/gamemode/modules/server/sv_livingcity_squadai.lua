@@ -26,7 +26,7 @@ if CLIENT then return end
 LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvOn = CreateConVar("lc_squads", "1", FLAGS, "Units hunting the same person move as a squad: a leader, the rest keeping with him and watching the angles")
+local cvOn = CreateConVar("lc_squads", "1", FLAGS, "Civil Protection units hunting the same person move as a squad: a leader, the rest keeping with him and watching the angles")
 
 local FAR, NEAR = 380, 220   -- (followers run past FAR, settle inside NEAR)
 local CS = "npc/combine_soldier/vo/"

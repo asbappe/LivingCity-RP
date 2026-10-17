@@ -20,7 +20,7 @@ LC_CL.marks = LC_CL.marks or {}
 
 local REBEL_COL, INFEST_COL, COMBINE_COL = Color(225, 150, 60), Color(125, 175, 60), Color(80, 140, 255)
 local ENTER = {
-    rebel = { "REBEL TERRITORY", "The Combine doesn't patrol here. Units get shot at.", REBEL_COL },
+    rebel = { "REBEL TERRITORY", "The Combine doesn't patrol here. Civil Protection units get shot at.", REBEL_COL },
     infest = { "QUARANTINE ZONE", "Infested ground. Nobody comes back the same.", INFEST_COL },
 }
 

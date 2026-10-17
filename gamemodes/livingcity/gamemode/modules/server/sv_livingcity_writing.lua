@@ -319,7 +319,7 @@ local DEFAULT_LAWS = {
     "Carry your identification. Present it when asked.",
     "Curfew is absolute. Be in your residence when it is called.",
     "Gatherings of more than three citizens require a permit.",
-    "Do not run. Do not loiter. Do not obstruct a unit.",
+    "Do not run. Do not loiter. Do not obstruct a Civil Protection unit.",
     "Possession of weapons, unregistered radios or Resistance materials is forbidden.",
     "Report anticitizen activity. Inaction is conspiracy.",
     "Rations are allocated by standing. Do not take what is not yours.",

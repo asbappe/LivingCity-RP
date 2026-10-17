@@ -19,8 +19,8 @@ LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvMax     = CreateConVar("lc_garrison", "6", FLAGS, "Most Combine units garrisoned in one Combine-only zone (0 = none)")
-local cvCops    = CreateConVar("lc_garrison_cops", "3", FLAGS, "Out of every ten garrison units, how many are metrocops (the rest are Overwatch soldiers)")
-local cvRespawn = CreateConVar("lc_garrison_respawn", "90", FLAGS, "Seconds before a lost garrison unit is replaced")
+local cvCops    = CreateConVar("lc_garrison_cops", "3", FLAGS, "Out of every ten garrison Civil Protection units, how many are metrocops (the rest are Overwatch soldiers)")
+local cvRespawn = CreateConVar("lc_garrison_respawn", "90", FLAGS, "Seconds before a lost garrison Civil Protection unit is replaced")
 
 LC.Garrison = LC.Garrison or {} -- [npc] = zone
 

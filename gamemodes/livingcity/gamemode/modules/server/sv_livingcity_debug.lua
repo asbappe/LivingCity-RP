@@ -178,11 +178,22 @@ function LC.BuildReport()
     end
     out[#out + 1] = "setup notes: " .. (#warn > 0 and "" or "none")
     for _, w in ipairs(warn) do out[#out + 1] = "  - " .. w end
+    do -- why people are leaving the city (a developer's question, not a player's)
+        local parts, total = {}, 0
+        for why, n in pairs(LC.LeaveCounts or {}) do total = total + n parts[#parts + 1] = { why, n } end
+        table.sort(parts, function(a, b) return a[2] > b[2] end)
+        out[#out + 1] = string.format("people who left since the map started: %d", total)
+        for _, p in ipairs(parts) do out[#out + 1] = string.format("  %d: %s", p[2], p[1]) end
+    end
     for g, line in SortedPairs(LC.Lines or {}) do
         local coming = 0
         for _, st in pairs(LC.NPCs or {}) do if st.lineHeading == g then coming = coming + 1 end end
-        out[#out + 1] = string.format("line %d: %d slots, %d queued, %d on their way, front waiting %ds", g, #line.slots, #line.q, coming,
-            (line.q[1] and line.frontSince) and math.floor(CurTime() - line.frontSince) or 0)
+        local disp = LC.LineDispenser and LC.LineDispenser(g)
+        local dnote = not IsValid(disp) and ", no dispenser by its front (a clerk hands rations out)"
+            or (disp:GetNW2Bool("lc_nopower", false) and ", its dispenser has NO POWER: nobody queues for a dead dispenser" or "")
+        out[#out + 1] = string.format("line %d: %d slots, %d queued, %d on their way, front waiting %ds%s%s", g, #line.slots, #line.q, coming,
+            (line.q[1] and line.frontSince) and math.floor(CurTime() - line.frontSince) or 0, dnote,
+            line.reversed and " (placed from the back: turned round so the front is at the dispenser)" or "")
     end
 
     Section(out, "NPCs")

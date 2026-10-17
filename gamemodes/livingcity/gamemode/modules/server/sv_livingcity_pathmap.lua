@@ -27,7 +27,7 @@ if CLIENT then return end
 LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvSpacing = CreateConVar("lc_pathmap_spacing", "130", FLAGS, "Units of walking between path nodes while path mapping")
+local cvSpacing = CreateConVar("lc_pathmap_spacing", "130", FLAGS, "Civil Protection units of walking between path nodes while path mapping")
 
 local JOIN = 70        -- standing this close to an existing node (and able to walk to it) joins it
 local LINK = 230       -- other nodes this close, and walkable, get linked too

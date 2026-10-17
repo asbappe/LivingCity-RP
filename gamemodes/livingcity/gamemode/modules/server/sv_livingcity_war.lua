@@ -430,7 +430,7 @@ function LC.Outbreak(seed)
             "The infestation " .. (LC.DescribePlace and LC.DescribePlace(seed.pos) or "") ..
             " has broken out into the streets. Infected are loose nearby. Get indoors, or get armed.")
     end
-    Radio("cp", "Dispatch: quarantine breach. All units, contain the infected.")
+    Radio("cp", "Dispatch: quarantine breach. All Civil Protection units, contain the infected.")
     if LC.StartEvent and not LC.Event then LC.StartEvent("lockdown", 3) end
     LC.Log("info", "Outbreak from " .. tostring(seed.pos) .. ": " .. made .. " infected loose")
     hook.Run("LivingCityOutbreak", seed, made)
@@ -476,7 +476,7 @@ local function Callsign(p)
 end
 
 function LC.Mark1020(ply, quiet)
-    if not IsUnitPlayer(ply) then return false, "Only units can call a 10-20." end
+    if not IsUnitPlayer(ply) then return false, "Only Civil Protection units can call a 10-20." end
     if LC.Jammed and LC.Jammed(ply:GetPos()) then return false, "Static. Your radio can't get through: there's a jammer nearby." end
     local now = CurTime()
     local m = { pos = ply:GetPos(), at = now, untilT = now + 90, credited = {}, name = Callsign(ply) }
@@ -491,13 +491,13 @@ function LC.Mark1020(ply, quiet)
         for _, p in ipairs(units) do
             if p ~= ply then p:ChatPrint("[CP net] 10-20: " .. m.name .. " is " .. where .. ". Respond for XP; the faster, the more.") end
         end
-        ply:ChatPrint("[CP net] Your 10-20 is out to every unit for 90 seconds.")
+        ply:ChatPrint("[CP net] Your 10-20 is out to every Civil Protection unit for 90 seconds.")
     end
     return true
 end
 
 function LC.CallBackup(ply)
-    if not IsUnitPlayer(ply) then return false, "Only units can call for backup." end
+    if not IsUnitPlayer(ply) then return false, "Only Civil Protection units can call for backup." end
     if LC.Jammed and LC.Jammed(ply:GetPos()) then return false, "Static. Your radio can't get through: there's a jammer nearby." end
     local now = CurTime()
     if (ply.lcBackupNext or 0) > now then
@@ -527,7 +527,7 @@ function LC.CallBackup(ply)
         if IsUnitPlayer(p) and p ~= ply then p:ChatPrint("[CP net] " .. Callsign(ply) .. " requests backup " .. where .. ". Respond for XP.") end
     end
     ply:ChatPrint(sent > 0 and string.format("[Dispatch] %d unit%s en route to you.", sent, sent == 1 and "" or "s")
-        or "[Dispatch] No units free nearby. Your 10-20 is out to every unit.")
+        or "[Dispatch] No Civil Protection units free nearby. Your 10-20 is out to every unit.")
     if sent > 0 then ply:EmitSound("npc/metropolice/vo/copy.wav", 60) end
     return true, sent
 end

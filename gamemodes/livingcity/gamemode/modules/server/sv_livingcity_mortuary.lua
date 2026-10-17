@@ -64,7 +64,7 @@ function LC.UnclaimedBody(pos, maxD)
     local best, bd = nil, (maxD or 3000) ^ 2
     for _, b in ipairs(LC.Bodies or {}) do
         local e = b.ent
-        if IsBody(e) and not e.lcBody.claimed and not LC.HauledBy(e) then
+        if IsBody(e) and not e.lcBody.claimed and not e.lcOnCart and not LC.HauledBy(e) then
             local d = e:GetPos():DistToSqr(pos)
             if d < bd then best, bd = e, d end
         end
@@ -143,6 +143,8 @@ function LC.StopHaul(ply, quiet, noDrop)
         ply.lcNextBodyUse = CurTime() + 0.8
     end
     if not IsValid(body) or noDrop then return true end
+    -- let go beside your body cart: it goes on the cart
+    if IsValid(ply) and LC.LoadBodyCart and LC.LoadBodyCart(ply, body) then return true end
     -- let go next to an incinerator, or at the morgue: that's where it stays
     local proc = LC.NearestBodyProcessor(body:GetPos(), 170)
     if proc and IsValid(ply) then return Cremate(ply, body, proc) end
@@ -164,9 +166,11 @@ function LC.FeedIncinerator(ply, inc)
     local mid = inc:WorldSpaceCenter()
     local proc = { pos = mid, ent = inc, name = "the incinerator" }
     local body = hauling[ply]
+    -- a body cart brought up to it: everything on it goes in
+    if not IsValid(body) and LC.UnloadBodyCart and LC.UnloadBodyCart(ply, proc) then return true end
     if not IsValid(body) then
         for _, b in ipairs(LC.Bodies or {}) do
-            if IsBody(b.ent) and not LC.HauledBy(b.ent) and b.ent:GetPos():DistToSqr(mid) < 160 * 160 then body = b.ent break end
+            if IsBody(b.ent) and not b.ent.lcOnCart and not LC.HauledBy(b.ent) and b.ent:GetPos():DistToSqr(mid) < 160 * 160 then body = b.ent break end
         end
     end
     if not IsValid(body) then return false, "The incinerator is roaring. You've nothing to put in it. (Haul a body here: E on a body, or the actions menu.)" end
@@ -222,3 +226,144 @@ hook.Add("LivingCityBodyUse", "LivingCityHauling", function(ply, body)
         return true
     end
 end)
+
+------------------------------------------------------------------------
+-- The body cart (Morticians, if they want one): take one at the incinerator
+-- or the morgue (F1 > Take a body cart, or !bodycart), let go of a body
+-- beside it and it goes on, push it (E on it; E again lets go), and E on the
+-- incinerator burns everything on it, paid for each. Four at a time.
+------------------------------------------------------------------------
+
+local CART_MODELS = { "models/props_wasteland/laundry_cart002.mdl", "models/props_junk/PushCart01a.mdl", "models/props_wasteland/laundry_cart001.mdl" }
+local CART_HOLDS = 4
+LC.BodyCarts = LC.BodyCarts or {} -- [ply] = cart
+
+local function CartOf(ply) local c = LC.BodyCarts[ply] return IsValid(c) and c or nil end
+
+function LC.TakeBodyCart(ply)
+    if not IsValid(ply) or not Attendant(ply) then return false, "Body carts are for Morticians." end
+    if CartOf(ply) then return false, "You've a cart out already (E on it to push it)." end
+    if not LC.NearestBodyProcessor(ply:GetPos(), 600) then return false, "Body carts are kept by the incinerator, or at the morgue. Go there for one." end
+    local model
+    for _, m in ipairs(CART_MODELS) do if not util.IsValidModel or util.IsValidModel(m) then model = m break end end
+    local fwd = ply:GetAimVector() fwd.z = 0 fwd:Normalize()
+    local cart = ents.Create("prop_physics")
+    if not IsValid(cart) then return false end
+    cart:SetModel(model or CART_MODELS[1])
+    cart:SetPos(ply:GetPos() + fwd * 70 + Vector(0, 0, 4))
+    cart:SetAngles(Angle(0, fwd:Angle().y + 90, 0))
+    cart:Spawn()
+    if cart.SetCollisionGroup and COLLISION_GROUP_DEBRIS then cart:SetCollisionGroup(COLLISION_GROUP_DEBRIS) end -- (it doesn't knock people about)
+    cart.lcBodyCart = { owner = ply, bodies = {}, pushing = false }
+    cart:SetNW2Bool("lc_bodycart", true)
+    cart:SetNW2Int("lc_cart_bodies", 0)
+    LC.BodyCarts[ply] = cart
+    ply:ChatPrint("[Mortuary] A body cart. E on it to push it (E again lets go). Let go of a body beside it and it goes on. Push it to the incinerator and press E on the incinerator.")
+    return true
+end
+
+-- Let go of a body beside your cart: on it goes (hidden under the sheet).
+function LC.LoadBodyCart(ply, body)
+    local cart = CartOf(ply)
+    if not cart or not IsBody(body) then return false end
+    local c = cart.lcBodyCart
+    if #c.bodies >= CART_HOLDS or body:GetPos():DistToSqr(cart:GetPos()) > 120 * 120 then return false end
+    body.lcOnCart = cart
+    body:SetNoDraw(true)
+    if body.SetNotSolid then body:SetNotSolid(true) end
+    c.bodies[#c.bodies + 1] = body
+    cart:SetNW2Int("lc_cart_bodies", #c.bodies)
+    cart:EmitSound("physics/body/body_medium_impact_soft" .. math.random(1, 7) .. ".wav", 65)
+    ply:ChatPrint(string.format("[Mortuary] On the cart (%d of %d).", #c.bodies, CART_HOLDS))
+    return true
+end
+
+-- E on the incinerator with your cart beside it: everything on it goes in.
+function LC.UnloadBodyCart(ply, proc)
+    local cart = CartOf(ply)
+    if not cart or not proc then return false end
+    local c = cart.lcBodyCart
+    if #c.bodies == 0 or cart:GetPos():DistToSqr(proc.pos) > 260 * 260 then return false end
+    local n = 0
+    for _, b in ipairs(c.bodies) do
+        if IsValid(b) then
+            b:SetNoDraw(false)
+            b:SetPos(proc.pos)
+            ply.lcFedAt = 0
+            if Cremate(ply, b, proc) then n = n + 1 end
+        end
+    end
+    c.bodies = {}
+    cart:SetNW2Int("lc_cart_bodies", 0)
+    return n > 0
+end
+
+-- Put it away: the bodies on it are left lying where it stood.
+function LC.DropBodyCart(ply)
+    local cart = LC.BodyCarts[ply]
+    LC.BodyCarts[ply] = nil
+    if not IsValid(cart) then return end
+    for _, b in ipairs(cart.lcBodyCart and cart.lcBodyCart.bodies or {}) do
+        if IsValid(b) then
+            b.lcOnCart = nil
+            b:SetNoDraw(false)
+            if b.SetNotSolid then b:SetNotSolid(false) end
+            b:SetPos(cart:GetPos() + Vector(0, 0, 10))
+        end
+    end
+    cart:Remove()
+end
+
+-- Pushing it: in front of you, turned the way you're going, up and down steps with you.
+hook.Add("Think", "LivingCityBodyCarts", function()
+    if next(LC.BodyCarts) == nil then return end
+    for ply, cart in pairs(LC.BodyCarts) do
+        if not IsValid(cart) or not IsValid(ply) then
+            LC.BodyCarts[ply] = nil
+        else
+            local c = cart.lcBodyCart
+            for _, b in ipairs(c.bodies) do if IsValid(b) then b:SetPos(cart:GetPos() + Vector(0, 0, 20)) end end -- (they go where it goes)
+            if c.pushing and ply:Alive() and ply:GetPos():DistToSqr(cart:GetPos()) < 220 * 220 then
+                local fwd = ply:GetAimVector() fwd.z = 0 fwd:Normalize()
+                local want = ply:GetPos() + fwd * 58
+                local z = cart:GetPos().z
+                local tr = util.TraceLine({ start = want + Vector(0, 0, 40), endpos = want - Vector(0, 0, 80), mask = MASK_SOLID_BRUSHONLY, filter = { cart, ply } })
+                if tr and tr.Hit and math.abs(tr.HitPos.z + 4 - z) < 60 then z = tr.HitPos.z + 4 end
+                local ph = cart:GetPhysicsObject()
+                if IsValid(ph) and ph.ComputeShadowControl then
+                    ph:Wake()
+                    ph:ComputeShadowControl({ secondstoarrive = 0.15, pos = Vector(want.x, want.y, z), angle = Angle(0, fwd:Angle().y + 90, 0),
+                        maxangular = 400, maxangulardamp = 800, maxspeed = 400, maxspeeddamp = 600, dampfactor = 0.8, teleportdistance = 0, deltatime = FrameTime() })
+                else
+                    cart:SetPos(Vector(want.x, want.y, z))
+                end
+            elseif c.pushing then
+                c.pushing = false
+            end
+        end
+    end
+end)
+
+hook.Add("KeyPress", "LivingCityBodyCarts", function(ply, key)
+    if key ~= IN_USE or hauling[ply] then return end
+    local tr = ply:GetEyeTrace()
+    local e = tr and tr.Entity
+    if IsValid(e) and e.lcBodyCart and e.lcBodyCart.owner == ply and tr.HitPos:DistToSqr(ply:EyePos()) < 140 * 140 then
+        e.lcBodyCart.pushing = not e.lcBodyCart.pushing
+    end
+end)
+hook.Add("AllowPlayerPickup", "LivingCityBodyCarts", function(_, ent) if ent.lcBodyCart then return false end end)
+hook.Add("PlayerDisconnected", "LivingCityBodyCarts", function(ply) LC.DropBodyCart(ply) end)
+hook.Add("LivingCityJobChanged", "LivingCityBodyCarts", function(ply) LC.DropBodyCart(ply) end)
+hook.Add("PlayerSay", "LivingCityBodyCarts", function(ply, text)
+    if string.lower(string.Trim(text)) ~= "!bodycart" then return end
+    if CartOf(ply) then
+        LC.DropBodyCart(ply)
+        ply:ChatPrint("[Mortuary] You leave the cart.")
+    else
+        local ok, why = LC.TakeBodyCart(ply)
+        if not ok and why then ply:ChatPrint(why) end
+    end
+    return ""
+end)
+

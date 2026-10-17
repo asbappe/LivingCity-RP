@@ -40,8 +40,8 @@ LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvLoads   = CreateConVar("lc_supply_loads", "5", FLAGS, "Loads a supply drop's crate holds")
-local cvPay     = CreateConVar("lc_supply_pay", "40", FLAGS, "Credits each unit near a supply drop is paid if the convoy leaves with supplies still in it")
-local cvGuards  = CreateConVar("lc_supply_guards", "3", FLAGS, "Units standing guard over a supply drop")
+local cvPay     = CreateConVar("lc_supply_pay", "40", FLAGS, "Credits each Civil Protection unit near a supply drop is paid if the convoy leaves with supplies still in it")
+local cvGuards  = CreateConVar("lc_supply_guards", "3", FLAGS, "Civil Protection units standing guard over a supply drop")
 local cvJamSecs = CreateConVar("lc_jammer_secs", "240", FLAGS, "Seconds a radio jammer runs")
 local cvJamR    = CreateConVar("lc_jammer_radius", "1000", FLAGS, "How far a radio jammer reaches")
 
@@ -308,7 +308,7 @@ function LC.LootSupply(ply, crate)
             crate:EmitSound("physics/wood/wood_box_break" .. math.random(1, 2) .. ".wav", 70)
             if LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then
                 LC.ReportCrime(p, "Looting Union supplies", 240)
-                p:ChatPrint("[Civil Protection] A unit saw you at the crate.")
+                p:ChatPrint("[Civil Protection] A Civil Protection unit saw you at the crate.")
             end
             if LC.QuestEvent then LC.QuestEvent("supply_looted", p, crate) end
             hook.Run("LivingCitySupplyLooted", p, got)
@@ -351,7 +351,7 @@ end
 
 -- Set one down from your pockets.
 function LC.PlaceJammer(ply)
-    if Unit(ply) then return false, "Units don't jam their own radios." end
+    if Unit(ply) then return false, "Civil Protection units don't jam their own radios." end
     if not LC.HasItem(ply, "jammer") then return false, "You don't have a jammer." end
     local j = ents.Create("lc_jammer")
     if not IsValid(j) then return false end
@@ -364,10 +364,10 @@ function LC.PlaceJammer(ply)
     j.lcUntil = CurTime() + cvJamSecs:GetFloat()
     j:SetNW2Float("lc_jam_until", j.lcUntil)
     table.insert(LC.Jammers, j)
-    ply:ChatPrint(string.format("[Jammer] It hisses into life. %d seconds of static for every unit radio within reach.", cvJamSecs:GetInt()))
+    ply:ChatPrint(string.format("[Jammer] It hisses into life. %d seconds of static for every Civil Protection unit radio within reach.", cvJamSecs:GetInt()))
     if LC.SeenBySecurity and LC.SeenBySecurity(ply, 700) then
         LC.ReportCrime(ply, "Operating a jamming device", 240)
-        ply:ChatPrint("[Civil Protection] A unit saw you set it down.")
+        ply:ChatPrint("[Civil Protection] A Civil Protection unit saw you set it down.")
     end
     hook.Run("LivingCityJammerPlaced", ply, j)
     return true, j

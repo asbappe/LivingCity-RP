@@ -60,11 +60,11 @@ local cvMuster   = CreateConVar("lc_exercise_muster", "75", FLAGS, "Seconds citi
 local cvBeat     = CreateConVar("lc_exercise_beat_dmg", "8", FLAGS, "Damage from one blow with the stick at morning exercise (never takes you below 15 health)")
 local cvBreakfast = CreateConVar("lc_exercise_breakfast", "1", FLAGS, "After morning exercise, citizens of good standing (Trusted and up) get breakfast")
 local cvNPCs     = CreateConVar("lc_exercise_npcs", "6", FLAGS, "How many NPC citizens take part in morning exercise")
-local cvPace     = CreateConVar("lc_jog_pace", "150", FLAGS, "How fast the pace marker goes round the jogging route (units a second; walking is 110, sprinting 190)")
+local cvPace     = CreateConVar("lc_jog_pace", "150", FLAGS, "How fast the pace marker goes round the jogging route (Civil Protection units a second; walking is 110, sprinting 190)")
 local cvBehind   = CreateConVar("lc_jog_behind", "450", FLAGS, "How far behind the pace marker a jogger can fall before the stick")
 local cvJogMin   = CreateConVar("lc_jog_min_speed", "0", FLAGS, "Slowest speed that counts as jogging (0: a bit over your walking speed)")
-local cvJogUnits = CreateConVar("lc_jog_units", "8", FLAGS, "Most units posted along the jogging route")
-local cvJogGap   = CreateConVar("lc_jog_gap", "600", FLAGS, "Distance between units posted along the jogging route")
+local cvJogUnits = CreateConVar("lc_jog_units", "8", FLAGS, "Most Civil Protection units posted along the jogging route")
+local cvJogGap   = CreateConVar("lc_jog_gap", "600", FLAGS, "Distance between Civil Protection units posted along the jogging route")
 local cvBoost    = CreateConVar("lc_jog_boost", "1.5", FLAGS, "Speed multiplier after the stick on the morning jog (1: none)")
 local cvBoostS   = CreateConVar("lc_jog_boost_secs", "4", FLAGS, "Seconds the speed boost after the stick lasts")
 local cvLaps     = CreateConVar("lc_jog_laps", "1", FLAGS, "Times round the jogging route")
@@ -73,7 +73,7 @@ local cvPaceD    = CreateConVar("lc_drill_pace", "3.5", FLAGS, "Seconds between 
 local cvWindow   = CreateConVar("lc_drill_window", "2.5", FLAGS, "Seconds to copy a move")
 local cvMistakes = CreateConVar("lc_drill_mistakes", "3", FLAGS, "Mistakes in the drill before the stick (then every two more)")
 local cvRope     = CreateConVar("lc_drill_rope", "1", FLAGS, "Skipping in the middle of the drill")
-local cvParadeN  = CreateConVar("lc_parade_units", "6", FLAGS, "Soldiers and units marching in the parade column")
+local cvParadeN  = CreateConVar("lc_parade_units", "6", FLAGS, "Soldiers and Civil Protection units marching in the parade column")
 local cvParadeMin = CreateConVar("lc_parade_min", "35", FLAGS, "Enthusiasm below this as the column passes earns the stick")
 local cvFull     = CreateConVar("lc_fullstomach", "1", FLAGS, "A full stomach (hunger 85+) gives 15% more XP from jobs and shifts and slow healing")
 
@@ -655,7 +655,7 @@ local function StartRun(now)
         else Tell(p, "Here they come. Cheer! (/cheer, /salute, chant in chat, jump.) Enthusiasm is watched.") end
     end
     for p in pairs(X.absent) do
-        if IsValid(p) then Tell(p, "You didn't report. Get there now: " .. Where(X.center) .. ". Units are looking for you.") end
+        if IsValid(p) then Tell(p, "You didn't report. Get there now: " .. Where(X.center) .. ". Civil Protection units are looking for you.") end
     end
     Send()
 end
@@ -1200,18 +1200,18 @@ function LC.ExerciseMeans(kind, ply)
     local where = X and Where(X.center) or "the assembly point"
     local secs = X and math.max(0, math.floor(X.musterEnds - CurTime())) or 60
     if LC.PlayerIsCP(ply) then
-        return NAMES[kind] .. ": citizens report " .. where .. " within " .. secs .. " seconds. Units are posted automatically; anyone shirking gets the stick."
+        return NAMES[kind] .. ": citizens report " .. where .. " within " .. secs .. " seconds. Civil Protection units are posted automatically; anyone shirking gets the stick."
     end
     if not Eligible(ply) then return NAMES[kind] .. " for citizens, " .. where .. "." end
     if kind == "jog" then
         return "Report to the start of the jogging route, " .. where .. ", within " .. secs .. " seconds (your HUD points the way). Then run it: " ..
-            "keep jogging and keep up with the pace marker, or units along the route use the stick (which does speed you up)."
+            "keep jogging and keep up with the pace marker, or Civil Protection units along the route use the stick (which does speed you up)."
     elseif kind == "drill" then
         return "Report to the exercise yard, " .. where .. ", within " .. secs .. " seconds. Take your place in the rows and copy every move " ..
             "(crouch, jump, spin, a step); jump on every beat when the rope comes out. Too many mistakes and you get the stick."
     end
     return "Line the parade route, " .. where .. ", within " .. secs .. " seconds, and cheer the column as it passes: /cheer, /salute, " ..
-        "chant in chat, jump. Your enthusiasm is on screen; let it drop as they pass and a unit sees to it."
+        "chant in chat, jump. Your enthusiasm is on screen; let it drop as they pass and a Civil Protection unit sees to it."
 end
 
 ------------------------------------------------------------------------

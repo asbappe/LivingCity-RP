@@ -182,7 +182,13 @@ end
 
 function LC.Scavenge(ply, key, pos, kind)
     local fridge = kind == "fridge"
-    if LC.PlayerIsCP(ply) then return false, fridge and "Units don't rummage through people's fridges." or "Units don't go through bins." end
+    -- a fridge at home is yours: your stash, like the stove (not a rummage through someone else's)
+    if fridge and LC.PlayerInOwnBlock and LC.PlayerInOwnBlock(ply) and not LC.PlayerIsCP(ply) then
+        if LC.SendInv then LC.SendInv(ply, true) end
+        ply:ChatPrint("[Home] Your fridge: your stash is in your pockets' window (F2).")
+        return true
+    end
+    if LC.PlayerIsCP(ply) then return false, fridge and "Civil Protection units don't rummage through people's fridges." or "Civil Protection units don't go through bins." end
     if LC.Busy(ply) then return false end
     local now = CurTime()
     if (searched[key] or 0) > now then
@@ -503,7 +509,7 @@ local function Spray(ply)
             SendTags()
             if LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then
                 LC.ReportCrime(p, "Vandalism", 90)
-                p:ChatPrint("[Civil Protection] A unit saw that.")
+                p:ChatPrint("[Civil Protection] A Civil Protection unit saw that.")
             elseif IsResistance(p) and LC.AddXP then
                 LC.AddXP(p, 3, "graffiti")
             end

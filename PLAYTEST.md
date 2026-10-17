@@ -131,6 +131,31 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **The Endings menu (C > Help > Endings menu, as superadmin):** opens with the ending playing already picked (or pick one and press Play it now). On The dance tab: pick a move and a bone on the body map; is the bone lit up yellow on the dancers, and does the close-up at the top show them (drag to turn round, wheel to zoom)? Do the three sliders turn the bone the way their labels say, live, on everyone (ask another player to watch), with the other side mirrored? Tick the stand-in with no ending playing: does someone do the move in front of you? Settings: do the sliders change the ending as it plays, and does "back to the default" work? Changes: does "Copy it all" give you a list to paste me? After a map change, is the tuning still there?
   Notes:
 
+## Fixes from the 17 October playtest (what to check)
+
+- [ ] **Warn the block:** in the block, residents come out to be warned (any wing of it); if the raid ends before you've warned three, it's not paid.
+- [ ] **Changing jobs:** the old shift goes from your HUD and the new job's shifts can be taken.
+- [ ] **The two voices:** the two-minute warnings and the "it's over" announcements: the Administrator waits till Overwatch has finished.
+- [ ] **Curfew:** a unit that sees you out (even one at a post) warns you and comes over; three warnings and you're wanted.
+- [ ] **Your apartment door:** E opens it, E again shuts it, locked again.
+- [ ] **Pickpocketing / talking:** nobody ends up stuck inside you.
+- [ ] **Arrested:** walked to the cells (a unit pausing on the way doesn't end the walk; only a long hold-up brings the van).
+- [ ] **Sinks:** E on the map's sinks works again (and not through walls).
+- [ ] **Ration line:** during a ration event people queue and move up to the dispenser. If not: copy the debug report and look at the "line" line (it says if the dispenser has no power, or the line was placed from the back).
+- [ ] **Factory line:** every red part can be picked up with E; no part rolls off the belt. The loading dock run is the Station Porter's now; the factory gets "Overtime on the line".
+- [ ] **Carrying boxes:** citizens' hands stay on the box as they walk.
+- [ ] **The bed fixture** is the bed with a mattress (Counter-Strike: Source's; HL2's if the server hasn't CS:S. Players without CS:S see an ERROR: tell me if that happens and I'll pick another). **The toilet** flushes after the splash. **Your fridge** at home opens your stash. The stash button no longer says searches don't reach it.
+- [ ] **"Civil Protection unit"** everywhere players read "unit" (say if one reads oddly).
+- [ ] **The sweep cart:** the smaller cart, the right way round, pushed up stairs, and it doesn't hurt you.
+- [ ] **Debug report:** the "people who left" lines.
+- [ ] **The editor:** "Arrange by what it's for" (each job, the rebels, the prison...), "Show the editor's markers", "See markers through walls".
+- [ ] **Helmets:** a pack's battle helmet or welding mask only on rebels in the open.
+- [ ] **Everyone works:** a new registered citizen is assigned a job (a notice says which); rebels aren't. The "What now?" line when you've nothing on is stern now.
+- [ ] **Sneaking:** crouch: the bar at the bottom, the units' sight on the ground (red when you're in it), creeping behind a unit's back unseen, the dark helping. A supply drop raided crouched from behind the crates.
+- [ ] **Vortigaunts:** one lives in rebel territory from the start (`lc_rebel_vorts`).
+- [ ] **The body cart** (Mortician): F1 > Take a body cart by the incinerator; bodies let go beside it go on; push it; E on the incinerator burns them all.
+  Notes:
+
 ## Morning exercise and more (from the other session)
 
 - [ ] **Morning exercise:** every second dawn, the jog (keep up with the pace marker), the drill (copy the leader on your ring, then the skipping rope) or the parade (cheer the column). Needs its editor points: jogging route, exercise yard, parade route.

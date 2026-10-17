@@ -203,7 +203,7 @@ end)
 -- Loyalty points: units award or deduct Civil Standing.
 local loyaltyNext = {} -- ["unit|target"] = time
 function LC.AdjustLoyalty(unit, target, n)
-    if not IsUnit(unit) then return false, "Units only." end
+    if not IsUnit(unit) then return false, "Civil Protection units only." end
     if not IsValid(target) or not target:IsPlayer() then return false, "They're not in the city right now." end
     if target == unit then return false, "Not on yourself." end
     local cap = LC.IsCPOfficer(unit) and 25 or 10
@@ -258,7 +258,7 @@ function LC.SyncBolos()
 end
 
 function LC.AddBOLO(unit, key, text, minutes)
-    if not IsUnit(unit) then return false, "Units only." end
+    if not IsUnit(unit) then return false, "Civil Protection units only." end
     text = string.Trim(tostring(text or ""))
     if #text < 3 then return false, "Say what to look out for." end
     minutes = math.Clamp(math.floor(tonumber(minutes) or cvBolo:GetFloat()), 5, 240)
@@ -280,7 +280,7 @@ function LC.AddBOLO(unit, key, text, minutes)
 end
 
 function LC.ClearBOLO(unit, id)
-    if not IsUnit(unit) then return false, "Units only." end
+    if not IsUnit(unit) then return false, "Civil Protection units only." end
     local list = Bolos()
     for i, b in ipairs(list) do
         if b.id == id then
@@ -454,7 +454,7 @@ function LC.CanTie(tier, target)
     local willing = target:GetNW2Bool("lc_handsup", false) or (LC.IsDowned and LC.IsDowned(target))
         or (LC.Stops and LC.Stops[target]) or (LC.Detained and LC.Detained[target])
     if not willing and not Behind(tier, target) then
-        return false, "They'd fight you off. Hands up, down, stopped by a unit, or from behind."
+        return false, "They'd fight you off. Hands up, down, stopped by a Civil Protection unit, or from behind."
     end
     return true
 end
@@ -526,7 +526,7 @@ function LC.StartUntie(ply, target)
     if LC.IsTied(ply) then return false, "Your own hands are tied." end
     if RealUnit(ply) then
         LC.Untie(target, ply, true)
-        target:ChatPrint("[Living City] A unit cuts your ties.")
+        target:ChatPrint("[Living City] A Civil Protection unit cuts your ties.")
         return true
     end
     return LC.StartTask(ply, 4, "Cutting the ties...", {
@@ -656,7 +656,7 @@ local SOCIO_MEANS = {
     green = { "Things are back to normal. Ordinary stops, ordinary days.", "Back to ordinary patrols." },
     yellow = { "More stop-and-searches on the street. Keep your papers ready and nothing on you you'd want found.",
         "Half as many stops again. Keep an eye out." },
-    red = { "Units may use lethal force as they see fit. Twice as many stops. Get indoors and stay out of sight.",
+    red = { "Civil Protection units may use lethal force as they see fit. Twice as many stops. Get indoors and stay out of sight.",
         "Twice the stops. Lethal force at your discretion: make it count." },
 }
 
@@ -683,6 +683,7 @@ local function AnnounceSocio(level, by)
     local info = LCCP.Socio[level]
     local custom, subtitle = nil, nil
     if LC.PickAnnounceClip then custom, subtitle = LC.PickAnnounceClip("overwatch", "socio_" .. tostring(level), true) end -- (sv_livingcity_announcer.lua)
+    if LC.OverwatchSpeaks then LC.OverwatchSpeaks(custom or SOCIO_VOICE[level]) end -- (the Administrator waits till he's done)
     net.Start("lc_announce")
     net.WriteString(custom or SOCIO_VOICE[level])
     net.WriteString(info.long)
@@ -738,7 +739,7 @@ LC.Requests = LC.Requests or {}
 function LC.CPRequest(ply, text)
     if not On() then return false, "Requests are off on this server." end
     text = string.Trim(tostring(text or ""))
-    if RealUnit(ply) then return false, "You're a unit. Use the radio, or !backup." end
+    if RealUnit(ply) then return false, "You're a Civil Protection unit. Use the radio, or !backup." end
     if not (LC.HasItem and LC.HasItem(ply, "request_device")) then return false, "You need a request device (the Commissary sells them)." end
     if #text < 3 then return false, "Say what's wrong: /request <what's wrong>" end
     if LC.Jammed and LC.Jammed(ply:GetPos()) then return false, "The request device crackles. Nothing gets through: something nearby is jamming it." end
@@ -777,7 +778,7 @@ function LC.CPRequest(ply, text)
     end
     ply:EmitSound("buttons/combine_button1.wav", 55)
     ply:ChatPrint(#units > 0 and "[Request] Sent. Civil Protection has your location."
-        or (sent and "[Request] Sent. A unit is on the way." or "[Request] Sent. Nobody answers."))
+        or (sent and "[Request] Sent. A Civil Protection unit is on the way." or "[Request] Sent. Nobody answers."))
     LC.Log("info", string.format("request from %s: %s", ply:Nick(), text))
     hook.Run("LivingCityRequest", ply, q)
     return true
@@ -814,7 +815,7 @@ end
 -- Play a line and say it. word: the line's short word, its number, or its words.
 function LC.CPVoice(ply, word)
     if not On() then return false end
-    if not CanUseVoice(ply) then return false, "Only units have the mask's voice." end
+    if not CanUseVoice(ply) then return false, "Only Civil Protection units have the mask's voice." end
     if not ply:Alive() or LC.IsTied(ply) then return false end
     local line = FindLine(ply, word)
     if not line then return false, "No such line. !vo opens the list." end
@@ -868,7 +869,7 @@ local COMMANDS = {
     request = function(ply, rest) local ok, why = LC.CPRequest(ply, rest) if not ok then ply:ChatPrint(why) end end,
     vo = function(ply, rest)
         if string.Trim(rest or "") == "" then
-            if not CanUseVoice(ply) then return ply:ChatPrint("Only units have the mask's voice.") end
+            if not CanUseVoice(ply) then return ply:ChatPrint("Only Civil Protection units have the mask's voice.") end
             net.Start("lc_vo_menu") net.Send(ply)
             return
         end
@@ -922,7 +923,7 @@ concommand.Add("lc_handsup", function(ply) if IsValid(ply) then LC.SetHandsUp(pl
 -- dispenser instead, just not both. Overwatch don't eat: coupons only.
 ------------------------------------------------------------------------
 
-local cvCoupons = CreateConVar("lc_cp_coupons", "8", FLAGS, "Credits in ration coupons a unit is issued each allocation (plus one per rank)")
+local cvCoupons = CreateConVar("lc_cp_coupons", "8", FLAGS, "Credits in ration coupons a Civil Protection unit is issued each allocation (plus one per rank)")
 
 function LC.IssueDutyAllocation(ply)
     if not On() or not RealUnit(ply) or not ply:Alive() then return false end

@@ -63,11 +63,11 @@ local cvSkirmInt = CreateConVar("lc_skirmish_interval", "25", FLAGS, "Average mi
 -- the old default (9) was far too busy: a server still on it moves to the new one
 timer.Simple(5, function() if cvSkirmInt:GetFloat() == 9 then RunConsoleCommand("lc_skirmish_interval", "25") end end)
 local cvDamage   = CreateConVar("lc_rebel_damage", "0.5", FLAGS, "Damage multiplier for Resistance NPCs shooting players")
-local cvWarn     = CreateConVar("lc_rebel_warning", "2", FLAGS, "Seconds the Resistance shouts before opening fire on a unit in their territory")
+local cvWarn     = CreateConVar("lc_rebel_warning", "2", FLAGS, "Seconds the Resistance shouts before opening fire on a Civil Protection unit in their territory")
 local cvPostWarn = CreateConVar("lc_lookout_post_warn", "1400", FLAGS, "How far a rebel lookout post sees the Combine coming (and warns Freq 7)")
 local cvPostFire = CreateConVar("lc_lookout_post_fire", "650", FLAGS, "How close the Combine can come to a rebel lookout post before he opens fire")
 local cvPostRe   = CreateConVar("lc_lookout_post_respawn", "120", FLAGS, "Seconds before a killed rebel lookout is replaced")
-local cvSpotReb  = CreateConVar("lc_units_spot_rebels", "600", FLAGS, "How close a unit has to be to notice an armed rebel outside rebel ground, and open fire (0: never)")
+local cvSpotReb  = CreateConVar("lc_units_spot_rebels", "600", FLAGS, "How close a Civil Protection unit has to be to notice an armed rebel outside rebel ground, and open fire (0: never)")
 
 -- Guerrillas, not an army: how close the Combine has to come before they act.
 local SPOT_RANGE   = 1100 -- a unit on our ground seen this close: the shout goes up
@@ -909,7 +909,7 @@ function LC.UnitsSpotRebels()
                                 SetFoe(npc, st, u, now) -- (a follower's squad marks it; anyone else fights, then heads home)
                                 if now > lastSpotRadio + 60 then
                                     lastSpotRadio = now
-                                    if LC.RadioNotice then LC.RadioNotice("cp", "Dispatch: armed anticitizen " .. (LC.DescribePlace and LC.DescribePlace(rp) or "in the city") .. ". Units engaging.") end
+                                    if LC.RadioNotice then LC.RadioNotice("cp", "Dispatch: armed anticitizen " .. (LC.DescribePlace and LC.DescribePlace(rp) or "in the city") .. ". Civil Protection units engaging.") end
                                 end
                                 break
                             end
@@ -923,7 +923,7 @@ end
 
 timer.Create("LivingCityUnitsSpotRebels", 1, 0, function()
     local ok, err = pcall(LC.UnitsSpotRebels)
-    if not ok then LC.Error("units spot rebels", err) end
+    if not ok then LC.Error("Civil Protection units spot rebels", err) end
 end)
 
 ------------------------------------------------------------------------
@@ -1036,7 +1036,7 @@ end
 local function StartSweep(z)
     z = z or Pick(RebelZones())
     if not z then return false, "no rebel territory on this map" end
-    if not LC.Spawners or not LC.Spawners.cop then return false, "no units" end
+    if not LC.Spawners or not LC.Spawners.cop then return false, "no Civil Protection units" end
     local stage = StagingSpot(z)
     if not stage then return false, "nowhere out of sight to gather a team" end
     -- make sure there's someone home to fight
@@ -1055,10 +1055,10 @@ local function StartSweep(z)
             sk.units[#sk.units + 1] = npc
         end
     end
-    if #sk.units == 0 then return false, "no units" end
+    if #sk.units == 0 then return false, "no Civil Protection units" end
     LC.Skirmish = sk
     local where = LC.DescribePlace and LC.DescribePlace(z.pos) or "rebel territory"
-    Radio("cp", "Dispatch: sweep team moving into anticitizen territory " .. where .. ". Units may assist.")
+    Radio("cp", "Dispatch: sweep team moving into anticitizen territory " .. where .. ". Civil Protection units may assist.")
     Radio("resistance", "Combine are moving on our people " .. where .. "! Everyone who can fight, get there.")
     LC.Log("info", string.format("Skirmish: Combine sweep of %d into %s", #sk.units, tostring(z.pos)))
     hook.Run("LivingCitySkirmish", "sweep", sk)
@@ -1114,7 +1114,7 @@ local function EndSkirmish(sk, why)
         Radio("cp", "Dispatch: anticitizen incursion " .. where .. " is over. Resume your beats.")
     else
         Radio("cp", "Dispatch: sweep team withdrawing.")
-        Radio("resistance", why == "units down" and "They're pulling back. We held." or "The Combine have pulled back.")
+        Radio("resistance", why == "Civil Protection units down" and "They're pulling back. We held." or "The Combine have pulled back.")
     end
     LC.Log("info", "Skirmish over: " .. sk.kind .. " (" .. (why or "time") .. ")")
     hook.Run("LivingCitySkirmishEnded", sk.kind, sk, why)
@@ -1135,8 +1135,8 @@ local function RunSkirmish(sk, now)
             end
             if sk.alerted then
                 if LC.Announce then LC.Announce("response", "npc/overwatch/cityvoice/f_anticitizenreport_spkr.wav",
-                    "Armed Resistance fighters are attacking " .. (sk.where or "in the city") .. ". Units nearby are fighting them; anyone else, keep clear.") end
-                Radio("cp", "Dispatch: armed anticitizens " .. (sk.where or "") .. ". All nearby units respond.")
+                    "Armed Resistance fighters are attacking " .. (sk.where or "in the city") .. ". Civil Protection units nearby are fighting them; anyone else, keep clear.") end
+                Radio("cp", "Dispatch: armed anticitizens " .. (sk.where or "") .. ". All nearby Civil Protection units respond.")
                 local near = {}
                 for npc, st in pairs(LC.NPCs) do
                     if IsValid(npc) and LC.IsSecurity(st) and st.state ~= "hostile" and not st.questLock
@@ -1175,7 +1175,7 @@ local function RunSkirmish(sk, now)
             end
         end
     else
-        if liveUnits == 0 then return EndSkirmish(sk, "units down") end
+        if liveUnits == 0 then return EndSkirmish(sk, "Civil Protection units down") end
         if liveRebels == 0 and CountIn(sk.zone) == 0 then return EndSkirmish(sk, "territory cleared") end
         -- the team pushes in; whoever they see, they fight
         for _, u in ipairs(sk.units) do

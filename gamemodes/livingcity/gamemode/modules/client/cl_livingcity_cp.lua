@@ -7,7 +7,7 @@
 
 LC_CL = LC_CL or {}
 
-local cvMask = CreateClientConVar("lc_mask_overlay", "1", true, false, "Units see through the mask's lenses")
+local cvMask = CreateClientConVar("lc_mask_overlay", "1", true, false, "Civil Protection units see through the mask's lenses")
 
 local function ReadCompressed()
     local len = net.ReadUInt(32)

@@ -94,13 +94,39 @@ function LC.OutfitFor(jobId, key, face, forPlayer)
     return path, skin, bg
 end
 
+-- Battle gear from a clothes pack (a soldier's helmet, a welding mask): worn only by the
+-- Resistance in the open, in their own gear (a rebel player not passing as a citizen, or one
+-- of the rebel fighters). Anyone else's piece is left off.
+local BATTLE_GEAR = { "helmet", "weld" }
+local function BattleGear(name)
+    name = string.lower(tostring(name or ""))
+    for _, w in ipairs(BATTLE_GEAR) do if string.find(name, w, 1, true) then return true end end
+    return false
+end
+LC.IsBattleGear = BattleGear
+local function OpenRebel(ent)
+    if ent:IsPlayer() then
+        return ent:GetNW2String("lcf_faction", "") == "resistance" and not (LC.PassesAsCitizen and LC.PassesAsCitizen(ent))
+    end
+    local st = LC.NPCs and LC.NPCs[ent]
+    return st ~= nil and st.role == "rebel"
+end
+
 -- Put a look on a body.
 function LC.ApplyLook(ent, skin, bg)
     if not IsValid(ent) then return end
     if skin and ent.SetSkin then ent:SetSkin(skin) end
     if bg and ent.GetBodyGroups then
+        local open = nil
         for _, g in ipairs(ent:GetBodyGroups() or {}) do
-            if bg[g.name] ~= nil then ent:SetBodygroup(g.id, bg[g.name]) end
+            local v = bg[g.name]
+            if v ~= nil then
+                if v > 0 and g.submodels and BattleGear(g.submodels[v] or g.name) then
+                    if open == nil then open = OpenRebel(ent) end
+                    if not open then v = 0 end
+                end
+                ent:SetBodygroup(g.id, v)
+            end
         end
     end
 end

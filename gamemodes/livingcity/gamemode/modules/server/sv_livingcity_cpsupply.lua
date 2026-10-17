@@ -26,8 +26,8 @@ if CLIENT then return end
 LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvCool   = CreateConVar("lc_cpsupply_cooldown", "120", FLAGS, "Seconds between a unit's issues at the Civil Protection Commissary")
-local cvRation = CreateConVar("lc_cpsupply_ration", "600", FLAGS, "Seconds between the ration a unit is issued at the Civil Protection Commissary")
+local cvCool   = CreateConVar("lc_cpsupply_cooldown", "120", FLAGS, "Seconds between a Civil Protection unit's issues at the Civil Protection Commissary")
+local cvRation = CreateConVar("lc_cpsupply_ration", "600", FLAGS, "Seconds between the ration a Civil Protection unit is issued at the Civil Protection Commissary")
 
 -- A full load, by ammunition type, for the weapons that use it.
 local LOAD = {
@@ -101,7 +101,7 @@ function LC.UseCPSupply(ply, ent)
     end
     local wait = (ply.lcSupplyNext or 0) - CurTime()
     if wait > 0 then
-        ply:ChatPrint(string.format("[CP Commissary] Your next issue is in %d seconds. The unit counter is open.", math.ceil(wait)))
+        ply:ChatPrint(string.format("[CP Commissary] Your next issue is in %d seconds. The Civil Protection unit counter is open.", math.ceil(wait)))
     else
         local got = LC.IssueSupplies(ply)
         if #got > 0 then
@@ -109,7 +109,7 @@ function LC.UseCPSupply(ply, ent)
             if IsValid(ent) then ent:EmitSound("items/ammo_pickup.wav", 65) end
             ply:ChatPrint("[CP Commissary] Issued: " .. table.concat(got, ", ") .. ".")
         else
-            ply:ChatPrint("[CP Commissary] You're fully supplied. The unit counter is open.")
+            ply:ChatPrint("[CP Commissary] You're fully supplied. The Civil Protection unit counter is open.")
         end
         hook.Run("LivingCitySupplied", ply, got)
     end

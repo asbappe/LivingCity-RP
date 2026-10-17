@@ -20,7 +20,7 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn     = CreateConVar("lc_ration_dock", "1", FLAGS, "Citizens near Resistance activity lose their next ration")
 local cvRadius = CreateConVar("lc_ration_dock_radius", "1500", FLAGS, "How close to Resistance activity costs you your next ration")
 
-local cvHeight = CreateConVar("lc_ration_dock_height", "150", FLAGS, "How many units above or below Resistance activity (about one floor) still costs you your next ration")
+local cvHeight = CreateConVar("lc_ration_dock_height", "150", FLAGS, "How many Civil Protection units above or below Resistance activity (about one floor) still costs you your next ration")
 
 local lastPA = 0
 

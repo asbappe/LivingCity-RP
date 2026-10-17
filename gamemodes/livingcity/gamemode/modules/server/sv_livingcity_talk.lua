@@ -166,6 +166,21 @@ local function Options(ply, npc, st)
     }
 end
 
+-- Someone stopped for you right where you stand: they take a step back, so neither of you
+-- is stuck inside the other (it happened after a pickpocketing)
+local function StepAway(npc, ply)
+    if not (IsValid(npc) and IsValid(ply)) then return end
+    local d = npc:GetPos() - ply:GetPos()
+    d.z = 0
+    if d:Length() > 36 then return end
+    if d:Length() < 1 then d = ply:GetForward() d.z = 0 end
+    d:Normalize()
+    local from = npc:GetPos() + Vector(0, 0, 4)
+    local tr = util.TraceHull({ start = from, endpos = from + d * 44, mins = npc:OBBMins(), maxs = npc:OBBMaxs(), filter = { npc, ply }, mask = MASK_NPCSOLID })
+    if tr and not tr.StartSolid then npc:SetPos(tr.HitPos - Vector(0, 0, 4)) end
+end
+LC.TalkStepAway = StepAway
+
 function LC.OpenTalk(ply, npc, said)
     local st = Usable(ply, npc)
     if not st then return false end
@@ -188,6 +203,7 @@ function LC.OpenTalk(ply, npc, said)
     net.WriteBool(o.recruit == true)
     net.Send(ply)
     -- they stop for you
+    StepAway(npc, ply)
     LC.Face(npc, ply:GetPos())
     if st.state == "moving" then npc:SetSchedule(SCHED_IDLE_STAND) LC.SetState(npc, st, "idle") end
     if st.state == "idle" then st.untilT = math.max(st.untilT or 0, CurTime() + 8) end
@@ -251,7 +267,7 @@ local function PickPocket(ply, npc, st)
     npc:EmitSound(Vo(st.gender, "gethellout"), 75)
     if LC.SeenBySecurity and LC.SeenBySecurity(ply, 900) then
         LC.ReportCrime(ply, "Theft", 120)
-        ply:ChatPrint("[Civil Protection] A unit saw that.")
+        ply:ChatPrint("[Civil Protection] A Civil Protection unit saw that.")
     end
     if LC.Scatter then
         timer.Simple(0.5, function() if IsValid(npc) and LC.NPCs[npc] then LC.Scatter(npc:GetPos(), 60) end end)
@@ -275,11 +291,11 @@ local function Inform(ply, npc, st)
             if IsValid(npc) and LC.NPCs[npc] and LC.ArrestNPC then LC.ArrestNPC(npc, nil) end
         end)
         hook.Run("LivingCityInformedOnNPC", ply, npc, true)
-        return "You give their name to a unit. He writes it down. (+15 standing) They'll be picked up.", true
+        return "You give their name to a Civil Protection unit. He writes it down. (+15 standing) They'll be picked up.", true
     end
     if LC.AddStanding then LC.AddStanding(ply, -5) end
     hook.Run("LivingCityInformedOnNPC", ply, npc, false)
-    return "You give their name to a unit. He checks it and looks at you instead. 'Waste of time.' (-5 standing)", true
+    return "You give their name to a Civil Protection unit. He checks it and looks at you instead. 'Waste of time.' (-5 standing)", true
 end
 
 net.Receive("lc_talk_do", function(_, ply)
@@ -297,6 +313,7 @@ net.Receive("lc_talk_do", function(_, ply)
         local ok, msg = LC.RecruitLookout(ply, npc)
         said, close = msg, ok
     else return end
+    StepAway(npc, ply)
     if close then
         if said then ply:ChatPrint(said) end
         net.Start("lc_talk") net.WriteEntity(NULL) net.Send(ply) -- (closes the window)

@@ -150,7 +150,7 @@ hook.Add("HUDPaint", "LivingCityScannerPilot", function()
     draw.SimpleText("WASD fly   SPACE up   CTRL down   SHIFT faster   LMB flash / photograph   R disconnect",
         "DermaDefault", cx, h - 44, DIM, TEXT_ALIGN_CENTER)
     if untilT > now then
-        draw.SimpleText("Flash a unit: more time.  Photograph a suspect up close: Civil Standing, never time off.",
+        draw.SimpleText("Flash a Civil Protection unit: more time.  Photograph a suspect up close: Civil Standing, never time off.",
             "DermaDefault", cx, h - 28, DIM, TEXT_ALIGN_CENTER)
     end
 end)

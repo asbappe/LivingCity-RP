@@ -340,6 +340,12 @@ end
 ------------------------------------------------------------------------
 
 local voiceNext = {} -- [voice] = earliest time for the next one
+
+-- Overwatch on the PA until this time: the Administrator waits for him (LC.Announce marks it too)
+function LC.OverwatchSpeaks(path)
+    local secs = (LC.AnnounceClipSecs and LC.AnnounceClipSecs(path)) or 6
+    LC.OverwatchUntil = math.max(LC.OverwatchUntil or 0, CurTime() + secs)
+end
 local trigNext = {}  -- [voice/trigger] = earliest time for this trigger again
 
 local function Say(voice, trig, only, force, tier)
@@ -349,6 +355,12 @@ local function Say(voice, trig, only, force, tier)
     local now = CurTime()
     if not force and ((voiceNext[voice] or 0) > now or (trigNext[voice .. "/" .. trig] or 0) > now) then return false end
     if voice == "administrator" and not only and (LC.LiveSpeaker or LC.LiveNPC) then return false end -- somebody is already on air
+    -- Overwatch still speaking: she waits for him to finish, then has her say (she used to talk over him)
+    if voice == "administrator" and not only and (LC.OverwatchUntil or 0) > now then
+        local wait = LC.OverwatchUntil - now + 1.5
+        timer.Simple(wait, function() Say(voice, trig, only, force, tier) end)
+        return false
+    end
     local path, text, used = LC.PickAnnounceClip(voice, trig, false, tier)
     if not path then return false end
     -- one just for somebody (their welcome) doesn't hold up the city's own
@@ -364,6 +376,7 @@ local function Say(voice, trig, only, force, tier)
         if #to == #player.GetAll() then to = nil end
     end
     if voice == "overwatch" then
+        if not only then LC.OverwatchSpeaks(path) end
         net.Start("lc_announce")
         net.WriteString(path)
         net.WriteString(TITLES[trig] or "City announcement")
@@ -398,6 +411,7 @@ local function ClipSecs(path)
     if d and d > 0.2 and d <= 60 then return d end
     return LC.WavDuration and LC.WavDuration(path) or 8
 end
+LC.AnnounceClipSecs = ClipSecs
 
 -- Both voices for one thing happening: Overwatch first, the Administrator a few seconds after.
 -- built-in: Overwatch already spoke for this one (an event or a sociostability change),

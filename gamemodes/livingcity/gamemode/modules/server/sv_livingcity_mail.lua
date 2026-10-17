@@ -213,7 +213,7 @@ hook.Add("ShutDown", "LivingCityMail", function() if dirty then Save() end end)
 ------------------------------------------------------------------------
 
 function LC.MailForInspection(ply)
-    if not LC.PlayerIsCP(ply) then return nil, "Units only." end
+    if not LC.PlayerIsCP(ply) then return nil, "Civil Protection units only." end
     if not AtPostOffice(ply) then return nil, "The mail's at the post office." end
     local out = {}
     for _, l in ipairs(Data().letters) do
