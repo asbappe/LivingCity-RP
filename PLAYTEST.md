@@ -156,6 +156,24 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **The body cart** (Mortician): F1 > Take a body cart by the incinerator; bodies let go beside it go on; push it; E on the incinerator burns them all.
   Notes:
 
+## Fixes from the 17 October evening playtest (what to check)
+
+- [ ] **Announcements:** only one voice for each thing (Overwatch or the Administrator, at random), never two at once (Half-Life 2's lines, your Overwatch and the Administrator wait for each other), fewer of them (the time of day, trains and skirmishes left out right after another), and no "new day" during a curfew.
+- [ ] **Small things:** a running tap when you fill a bottle at a sink; Father Grigori quiet but for a line a minute; clinic medics without helmets; the HUD's left side never overlapping (the needs box, the line under it, the What now? card, then the rest).
+- [ ] **Rebel territory:** fewer fighters in a small camp; nothing set down in a corridor or the sewer channel; fighters on dry ground first; sleepers lying on their mattresses with their eyes shut (if they still float or sink, `lc_rebel_bed_height`); hold E on a mattress, crate or chair to carry it and let go to set it down (R turns it); after a map change it's where you left it.
+- [ ] **Prices:** the quartermaster's radio costs what the lab's does; a forged ration card is 10.
+- [ ] **Stash:** at your stash, "On you: crowbar / pistol... Stash it", and Take to get it back (magazine and all).
+- [ ] **The law:** run from a search: units and soldiers chase and cuff you, no shooting, unless you hurt someone or draw a gun. A curfew about you: the unit knows you (no warnings). A daytime curfew only with unrest, and it says so.
+- [ ] **Sleep:** in bed you can't move; Jump gets you up; you heal as you sleep; the eyelids fade softly; tiredness kept over a restart.
+- [ ] **Sneaking:** the sight shown in 3D (walls and a lid), visible from below a slope.
+- [ ] **A squad:** C menu > Resistance > Squad: act casual (plain clothes, guns away: walk past units), guns out, and "meet me at the job's marker" (they go ahead and wait). Fired on while casual: guns out.
+- [ ] **Free a vortigaunt:** it waits shackled and harmless; the choice to cut the shackles or walk it out shackled; a unit may stop you; any rebel territory counts; it no longer hops up and down ladders.
+- [ ] **The labs:** Dr. Kleiner, Eli Vance and Dr. Magnusson, one at each.
+- [ ] **Factory line:** every part grabbable, none spinning through or falling off the back; workers at the line facing the belt, quieter; nothing left clanking after.
+- [ ] **Intake Processor** (was Station Porter): travelers walk up from the platform and away out of sight; the old woman's line reads right; the papers window gone when the shift's done; rations out mid-shift: Take a ration break.
+- [ ] **Raids:** a minute and a half before the Resistance hit the Combine, a notice and "Back up the raid" on your board (F3), with a waypoint.
+  Notes:
+
 ## Morning exercise and more (from the other session)
 
 - [ ] **Morning exercise:** every second dawn, the jog (keep up with the pace marker), the drill (copy the leader on your ring, then the skipping rope) or the parade (cheer the column). Needs its editor points: jogging route, exercise yard, parade route.

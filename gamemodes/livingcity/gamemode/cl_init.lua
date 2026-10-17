@@ -77,7 +77,10 @@ local GUIDE = {
     { "Staying out of trouble", {
         "Don't crowd Civil Protection. Warnings come first, then the stick.",
         "When a Civil Protection unit stops you, stand still. Anything illegal in your pockets may be found.",
-        "Crouch to sneak: a Civil Protection unit sees you at half the distance, less again creeping slowly or in the dark, and not at all behind his back. While you crouch, a bar shows how easily you're seen, and each unit's sight is painted on the ground (red: he sees you).",
+        "Crouch to sneak: a Civil Protection unit sees you at half the distance, less again creeping slowly or in the dark, and not at all behind his back. While you crouch, a bar shows how easily you're seen, and each unit's sight is shown in front of him (red: he sees you).",
+        "Wanted but you've hurt nobody? Units run you down and cuff you; they shoot at the violent (or at a gun in your hand).",
+        "Sleeping in a bed you lie still and heal; press Jump to get up. Rations out mid-shift? C menu > Take a ration break: the job waits.",
+        "Resistance: with fighters along, C menu > Resistance > Squad: act casual (plain clothes, guns away), guns out, or meet me at the job's marker. Hold E on a camp's mattress, crate or chair to move it (let go to set it down, R turns it). At your stash, Stash it puts away the weapon in your hands.",
         "Everyone works: the Union assigns a registered citizen a job if they have none (ask for another on F3 > Jobs). Idle hands are noticed.",
         "Curfew: you get a minute to reach your housing block (a fresh one each time you respawn into a curfew). A travel permit gets you past one stop.",
         "Morning exercise (every second dawn, mandatory for citizens): report where your HUD points. The jog: keep jogging and keep up with the pace marker, or the Civil Protection units along the route use the stick (which speeds you up for a few seconds). The drill: stay on your ring and copy every move (crouch, jump, turn around, a step), and jump on every beat when the rope comes out. The parade: cheer the column as it passes (/cheer, /salute, chant in chat, jump) and keep your enthusiasm bar up. Skipping it costs standing; doing it well earns some, and breakfast if your standing is Trusted or better.",
