@@ -53,11 +53,13 @@ announce voice overwatch
 chat command /act
 chat command /addlaw
 chat command /apartment
+chat command /back
 chat command /beckon
 chat command /bob
 chat command /bolo
 chat command /bow
 chat command /broadcast
+chat command /casual
 chat command /changeclothes
 chat command /characters
 chat command /chars
@@ -70,6 +72,7 @@ chat command /eatchip
 chat command /escort
 chat command /givekey
 chat command /guide
+chat command /gunsout
 chat command /halt
 chat command /handsup
 chat command /help
@@ -81,11 +84,13 @@ chat command /laws
 chat command /lean
 chat command /lie
 chat command /lock
+chat command /meet
 chat command /nod
 chat command /outfits
 chat command /papers
 chat command /point
 chat command /pose
+chat command /rationbreak
 chat command /records
 chat command /rent
 chat command /request
@@ -339,15 +344,18 @@ item vendor_stall
 item water
 item zipties
 layout file data/livingcity/<map>.json
+rebel camp layout data/livingcity/<map>_camp.json
 setting lc_acts = 1
 setting lc_administrator_model = models/mossman.mdl
 setting lc_administrator_name = The Administrator
 setting lc_administrator_stock_lines = 0
+setting lc_announce_admin_share = 50
 setting lc_announce_cat_gap = 90
 setting lc_announce_custom = 1
 setting lc_announce_custom_pct = 100
 setting lc_announce_gap = 25
 setting lc_announce_interval = 0
+setting lc_announce_quiet = 60
 setting lc_assign_work = 1
 setting lc_atmosphere = 1
 setting lc_auto_events = 1
@@ -530,6 +538,7 @@ setting lc_give_fists = 1
 setting lc_grid_radius = 1800
 setting lc_grigori = 1
 setting lc_grigori_respawn = 10
+setting lc_grigori_talk_gap = 60
 setting lc_gun_drops = 1
 setting lc_heist = 1
 setting lc_heist_cooldown = 20
@@ -644,12 +653,14 @@ setting lc_quiet_hud = 1
 setting lc_raid_chance = 25
 setting lc_raid_stash_chance = 60
 setting lc_raid_units = 3
+setting lc_raid_warning = 90
 setting lc_ration_dock = 1
 setting lc_ration_dock_height = 150
 setting lc_ration_dock_radius = 1500
 setting lc_ration_interval = 600
 setting lc_rdm_strikes_jail = 2
 setting lc_rdm_strikes_kick = 4
+setting lc_rebel_bed_height = 8
 setting lc_rebel_damage = 0.5
 setting lc_rebel_errand_minutes = 4
 setting lc_rebel_errands = 1
@@ -660,6 +671,7 @@ setting lc_rebel_ops_minutes = 30
 setting lc_rebel_pct = 12
 setting lc_rebel_pursuit = 0
 setting lc_rebel_react = 0.5
+setting lc_rebel_room = 350
 setting lc_rebel_spread_minutes = 20
 setting lc_rebel_vorts = 1
 setting lc_rebel_warning = 2
@@ -768,6 +780,7 @@ setting lc_view_bob = 1
 setting lc_view_bob_amount = 100
 setting lc_voice_range = 900
 setting lc_walk_speed = 110
+setting lc_walkway_clear = 100
 setting lc_weather_auto = 1
 setting lc_whatnow = 1
 setting lc_whatnow_minutes = 60

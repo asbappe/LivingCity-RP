@@ -1249,10 +1249,12 @@ _run(3.5)
 ok(LC.Stops[frisked] ~= nil and has(frisked.chat, "Stand still for inspection"), "a cop on the street stops a passer-by", copSt.state)
 copN.sim = true
 local standing0 = LC.Standing(frisked)
+frisked.lcViolentUntil = CurTime() + 1e6 -- (taken for violent: chased, not cuffed on the spot, so the wanted status can be checked)
 _run(8)
 ok(LC.Stops[frisked] == nil, "the stop finishes")
 ok(not LC.HasItem(frisked, "uniform_cp") and has(frisked.chat, "Confiscated: Civil Protection uniform"), "contraband is found and confiscated")
 ok(LC.PlayerIsWanted(frisked) and LC.Standing(frisked) < standing0, "and you're wanted, with less standing")
+frisked.lcViolentUntil = nil
 ok(frisked.lcStopNext > CurTime() + 300, "and won't be stopped again for a while")
 LC.ClearWanted(frisked)
 LC.CalmCops(frisked)
@@ -3123,8 +3125,9 @@ ok(left == 0, "and the team withdraws out of sight", left)
 _setcvar("lc_skirmishes", 1)
 _setcvar("lc_skirmish_interval", 1)
 local sawOne = false
-for _ = 1, 120 do _run(1) if LC.Skirmish then sawOne = true break end end
-ok(sawOne, "skirmishes start on their own now and then")
+for _ = 1, 120 do _run(1) if LC.Skirmish or LC.PlannedRaid then sawOne = true break end end
+ok(sawOne, "skirmishes start on their own now and then (a raid planned, the Resistance told first)")
+LC.PlannedRaid = nil
 if LC.Skirmish then LC.EndSkirmish(LC.Skirmish, "test") end
 _setcvar("lc_skirmishes", 0)
 
@@ -8187,6 +8190,7 @@ for _, h in ipairs(helpers) do if h.st.backupFor == caller and h.n:GetPos():Dist
 ok(arrived >= 2, "and they come running", arrived)
 local perp = newPlayer("BackupPerp", "citizen")
 perp:SetPos(B + Vector(300, 0, 0))
+perp.lcViolentUntil = CurTime() + 1e6 -- (taken for violent: the units close in to fight, not to cuff)
 LC.ReportCrime(perp, "Test", 60)
 _run(2)
 local onIt = false
