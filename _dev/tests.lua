@@ -3130,9 +3130,10 @@ ok(left == 0, "and the team withdraws out of sight", left)
 _setcvar("lc_skirmishes", 1)
 _setcvar("lc_skirmish_interval", 1)
 local sawOne = false
-for _ = 1, 120 do _run(1) if LC.Skirmish or LC.PlannedRaid then sawOne = true break end end
-ok(sawOne, "skirmishes start on their own now and then (a raid planned, the Resistance told first)")
+for _ = 1, 120 do _run(1) if LC.Skirmish or LC.PlannedRaid or LC.PlannedSweep then sawOne = true break end end
+ok(sawOne, "skirmishes start on their own now and then (planned a little ahead, each side's own told first)")
 LC.PlannedRaid = nil
+LC.PlannedSweep = nil
 if LC.Skirmish then LC.EndSkirmish(LC.Skirmish, "test") end
 _setcvar("lc_skirmishes", 0)
 
@@ -9885,21 +9886,66 @@ _run(0.3)
 mw:SetPos(K0)
 local c0 = LC.Credits(mw)
 local fixed = false
-ok(LC.JobGameStart(mw, "wiring", nil, { pos = K0, what = "the box", onFixed = function() fixed = true end }), "a panel of wires opens")
+ok(LC.JobGameStart(mw, "wiring", nil, { pos = K0, what = "the box", onFixed = function() fixed = true end }), "a board of circuit tiles opens")
 local g = LC.JobGames[mw]
-ok(g and #g.left >= 4 and _lastnet("lc_wire_open") ~= nil, "four or five wires, sent to their screen", g and #g.left)
--- a wrong one first
-local wrongJ
-for j, col in ipairs(g.right) do if col ~= g.left[1] then wrongJ = j break end end
-ok(LC.WireTry(mw, 1, wrongJ) == false and g.shocks == 1, "the wrong terminal bites")
--- out of time: the panel trips and starts again
+ok(g and g.w == 5 and g.h == 4 and #g.tiles == 20 and _lastnet("lc_wire_open") ~= nil, "five by four, sent to their screen", g and #g.tiles)
+local _, solved0 = LC.WireLit(g)
+ok(not solved0 and g.par >= 1, "it starts scrambled (the current doesn't reach the lamp), with a par to beat", g.par)
+-- the right way always exists: put each tile on it the right way round and the lamp lights
+;(function()
+    local saved = {}
+    for k, m in ipairs(g.tiles) do saved[k] = m end
+    for k, want in pairs(g.want) do
+        for _ = 1, 4 do if g.tiles[k] == want then break end g.tiles[k] = LC.WireTurn(g.tiles[k]) end
+    end
+    local _, s1 = LC.WireLit(g)
+    ok(s1, "there's always a way through (laid when the board was dealt)")
+    local bigG = { w = 6, h = 5, nSparks = 3 }
+    local fine = true
+    for _ = 1, 30 do
+        LC.WireDeal(bigG)
+        local _, sv = LC.WireLit(bigG)
+        local n = 0
+        for _ in pairs(bigG.want) do n = n + 1 end
+        if sv or n < 11 then fine = false end
+    end
+    ok(fine, "a terminal's board is six by five, never dealt solved, and the way through winds (not a straight line)")
+    for k, m in ipairs(saved) do g.tiles[k] = m end
+end)()
+-- a turn
+local k1 = 1
+while g.want[k1] do k1 = k1 + 1 end -- (a tile off the way through)
+for _, sp in ipairs(g.sparks) do sp.k, sp.moveAt = 999, CurTime() + 60 end
+local m0 = g.tiles[k1]
+ok(LC.WireTry(mw, k1, false) == true and g.tiles[k1] == LC.WireTurn(m0) and g.turns == 1, "a click turns a tile a quarter")
+LC.WireTry(mw, k1, true)
+ok(g.tiles[k1] == m0, "and a right-click turns it back")
+-- a spark bites
+g.sparks[1].k, g.sparks[1].since, g.sparks[1].moveAt = k1, CurTime() - 1, CurTime() + 60
+local lim = g.limit
+ok(LC.WireTry(mw, k1, false) == false and g.shocks == 1 and g.tiles[k1] == m0 and g.limit < lim, "turning a sparking tile bites (a shock, seconds off, and it doesn't turn)")
+g.sparks[1].since = CurTime()
+ok(LC.WireTry(mw, k1, false) == true, "(not when the spark has only just landed there: the click was on its way)")
+LC.WireTry(mw, k1, true)
+-- sparks jump about
+g.sparks[1].k = 999
+local at = g.sparks[2].k
+g.sparks[2].moveAt = CurTime() - 0.1
+Tick(1)
+ok(g.sparks[2].k ~= at and g.sparks[2].moveAt > CurTime(), "the sparks jump about the board")
+-- out of time: the breaker trips and it's a new board
 g.limit = CurTime() - 1
 Tick(1)
-ok(g.trips == 1 and next(g.linked) == nil and g.limit > CurTime(), "too slow: the panel trips and resets")
-for i, col in ipairs(g.left) do
-    for j, c in ipairs(g.right) do if c == col then LC.WireTry(mw, i, j) break end end
+ok(g.trips == 1 and g.turns == 0 and g.limit > CurTime(), "too slow: the breaker trips and the board scrambles again")
+-- solve it, keeping clear of the sparks
+for _, sp in ipairs(g.sparks) do sp.moveAt = CurTime() + 999 sp.k = 999 end
+for k, want in pairs(g.want) do
+    for _ = 1, 4 do
+        if not LC.JobGames[mw] or g.tiles[k] == want then break end
+        LC.WireTry(mw, k, false)
+    end
 end
-ok(not LC.JobGames[mw] and fixed, "every wire in: it's fixed")
+ok(not LC.JobGames[mw] and fixed, "the current reaches the lamp: it's fixed")
 ok(LC.Credits(mw) > c0, "and paid (less for the shock and the trip)", LC.Credits(mw) - c0)
 -- triage
 local md = newPlayer("Medic", "citizen")
@@ -12398,6 +12444,7 @@ section("Playtest fixes, 17 October (evening)")
     local rz = LC.AddZone(Vector(-102000, 190000, 0), 300, "rebel", 0)
     local zonesWas = LC.ZonesOfKindShared
     local backer = newPlayer("RaidBacker", "resistance")
+    local sweeper = newPlayer("SweepCop", "cp")
     _run(1)
     backer.chat = {}
     local tcop, tcst = LC.Spawners.cop(rz.pos + Vector(2500, 0, 0))
@@ -12409,7 +12456,23 @@ section("Playtest fixes, 17 October (evening)")
     ok(posted and has(backer.chat, "Back up the raid"), "the Resistance get a job to back it up, on their board, and told so")
     _run(GetConVar("lc_raid_warning"):GetFloat() + 3)
     ok(LC.PlannedRaid == nil and LC.Skirmish and LC.Skirmish.kind == "raid", "and when the time comes, the fighters go in")
+    local repel = false
+    for _, ps in ipairs(LC.Postings.cp or {}) do if ps.tmpl and ps.tmpl.id == "cp_repelraid" and not ps.dead then repel = true end end
+    ok(repel, "the Combine's own players get a job to put the raid down (Repel the attack)")
     if LC.Skirmish then LC.Skirmish.done = true LC.Skirmish = nil end
+    -- the reverse: a sweep coming, Civil Protection hear first and get a job to join it
+    sweeper.chat = {}
+    local swPlanned = LC.PlanCombineSweep()
+    ok(swPlanned and LC.PlannedSweep and not LC.Skirmish, "a sweep is planned a minute and a half ahead, not sprung at once")
+    local joinPosted = false
+    for _, ps in ipairs(LC.Postings.cp or {}) do if ps.tmpl and ps.tmpl.id == "cp_joinsweep" and not ps.dead then joinPosted = true end end
+    ok(joinPosted and has(sweeper.chat, "sweep"), "Civil Protection get a job to join the sweep, on their board, and told so")
+    ok(not has(backer.chat, "sweep team moves"), "(the Resistance don't hear the Combine's plans)")
+    _run(GetConVar("lc_sweep_warning"):GetFloat() + 3)
+    ok(LC.PlannedSweep == nil and LC.Skirmish and LC.Skirmish.kind == "sweep", "and when the time comes, the sweep team goes in", LC.Skirmish and LC.Skirmish.kind)
+    if LC.Skirmish then LC.EndSkirmish(LC.Skirmish, "test") end
+    LC.PlannedSweep = nil
+    sweeper.valid = false
     LC.NPCs[tcop] = nil tcop:Remove()
     backer.valid = false
     LC.RemoveZone(rz)

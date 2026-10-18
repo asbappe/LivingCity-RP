@@ -172,6 +172,8 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Factory line:** every part grabbable, none spinning through or falling off the back; workers at the line facing the belt, quieter; nothing left clanking after.
 - [ ] **Intake Processor** (was Station Porter): travelers walk up from the platform and away out of sight; the old woman's line reads right; the papers window gone when the shift's done; rations out mid-shift: Take a ration break.
 - [ ] **Raids:** a minute and a half before the Resistance hit the Combine, a notice and "Back up the raid" on your board (F3), with a waypoint.
+- [ ] **Sweeps (as Civil Protection or Overwatch):** a minute and a half before a sweep moves into rebel territory, a notice and "Join the sweep" on your board (F3), with a waypoint; when the Resistance raid the Combine, "Repel the attack" goes up at once.
+- [ ] **Rewiring (Maintenance):** the board of circuit tiles: click turns a tile, right-click turns it back; the current lights up as far as it gets; a sparking tile bites; beat par for a bonus. Hard enough now?
   Notes:
 
 ## Morning exercise and more (from the other session)

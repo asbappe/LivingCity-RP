@@ -1179,7 +1179,7 @@ do
         SHIFTS.maintenance[i] = function(ply, job)
             local spec = build(ply, job)
             if spec and GamesOn() then
-                spec = GamifyHolds(spec, "wiring", "Rewire it: click a wire, then the terminal of the same colour (a wrong one bites)",
+                spec = GamifyHolds(spec, "wiring", "Rewire it: turn the tiles till the current reaches the lamp (a sparking tile bites)",
                     { what = string.find(spec.title, "Terminal", 1, true) and "the terminal" or "the box" }, true)
             end
             return spec

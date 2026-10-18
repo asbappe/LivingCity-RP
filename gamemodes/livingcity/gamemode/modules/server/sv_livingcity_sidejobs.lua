@@ -324,6 +324,48 @@ T{
     end,
 }
 
+-- The Combine's side of it: a sweep team about to move into rebel territory (join it), and
+-- the Resistance hitting the Combine (put it down). sv_livingcity_rebels.lua posts these.
+local function RebelNear(pos, r)
+    return function(_, _, npc)
+        local st = LC.NPCs[npc]
+        return st ~= nil and st.role == "rebel" and IsValid(npc) and npc:GetPos():DistToSqr(pos) < r * r
+    end
+end
+T{
+    id = "cp_joinsweep", factions = { cp = true, ota = true }, violent = true, squad = 8,
+    available = function() return LC.PlannedSweep ~= nil or (LC.Skirmish ~= nil and LC.Skirmish.kind == "sweep") end,
+    build = function(ply)
+        local s = LC.PlannedSweep or LC.Skirmish
+        local z = s and s.zone
+        if not z then return nil end
+        return {
+            title = "Join the sweep " .. Place(z.pos, ply:GetPos()), reward = 55, limit = 420,
+            desc = "A sweep team is moving into anticitizen territory " .. Place(z.pos, ply:GetPos()) .. ". Join it, and take down the anticitizens who resist.",
+            stages = {
+                Goto(z.pos, "Join the sweep team at the edge of anticitizen territory", math.max(500, (z.r or 300) + 300)),
+                Count("killed", 2, "Take down two armed anticitizens there", RebelNear(z.pos, (z.r or 300) + 800)),
+            },
+        }
+    end,
+}
+T{
+    id = "cp_repelraid", factions = { cp = true, ota = true }, violent = true, squad = 8,
+    available = function() return LC.Skirmish ~= nil and LC.Skirmish.kind == "raid" end,
+    build = function(ply)
+        local r = LC.Skirmish
+        if not r or not r.target then return nil end
+        return {
+            title = "Repel the attack " .. Place(r.target, ply:GetPos()), reward = 50, limit = 360,
+            desc = "Armed anticitizens are attacking Civil Protection units " .. Place(r.target, ply:GetPos()) .. ". Get there and put it down.",
+            stages = {
+                Goto(r.target, "Get to the attack", 700),
+                Count("killed", 2, "Take down two of the attackers", RebelNear(r.target, 1400)),
+            },
+        }
+    end,
+}
+
 -- The Resistance's fighters are about to hit the Combine (sv_livingcity_rebels.lua): be there,
 -- and back them up.
 T{

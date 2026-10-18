@@ -59,6 +59,7 @@ LC.Thinkers = LC.Thinkers or {}
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvRebels   = CreateConVar("lc_rebels", "4", FLAGS, "Resistance fighters kept in rebel territory, spread across the rebel zones")
 local cvSkirm    = CreateConVar("lc_skirmishes", "1", FLAGS, "Rebels sometimes raid the Combine, and the Combine sometimes sweeps rebel territory")
+local cvSweepLead = CreateConVar("lc_sweep_warning", "90", FLAGS, "Seconds Civil Protection and Overwatch players hear (and get a job to join it) before a sweep team moves into rebel territory (0: no warning)")
 local cvRaidLead = CreateConVar("lc_raid_warning", "90", FLAGS, "Seconds the Resistance's own hear (and get a job to back it up) before their fighters hit the Combine (0: no warning)")
 local cvSkirmInt = CreateConVar("lc_skirmish_interval", "25", FLAGS, "Average minutes between skirmishes (each one comes 20% either side of it)")
 -- the old default (9) was far too busy: a server still on it moves to the new one
@@ -1079,6 +1080,8 @@ local function StartRaid(z, target, purpose, data)
     LC.Skirmish = sk
     local where = LC.DescribePlace and LC.DescribePlace(target) or "in the city"
     Radio("resistance", "Our people are hitting the Combine " .. where .. ". Stay clear, or lend a hand.")
+    -- the Combine's own players: a job to go and put it down ("Repel the attack", sv_livingcity_sidejobs.lua)
+    if not purpose and LC.PostDirective then LC.PostDirective("cp_repelraid") end
     -- dispatch hears about it once they're close
     sk.where = where
     LC.Log("info", string.format("Skirmish: rebel raid of %d from %s toward %s", #sk.rebels, tostring(z.pos), tostring(target)))
@@ -1162,6 +1165,31 @@ end
 
 LC.StartRebelRaid = StartRaid
 LC.StartCombineSweep = StartSweep
+
+-- A sweep planned a little ahead (lc_sweep_warning): the Combine's own players hear where,
+-- and get a job to join the team ("Join the sweep", sv_livingcity_sidejobs.lua).
+local function IsCombinePlayer(p)
+    local f = p:GetNW2String("lcf_faction", "")
+    return f == "cp" or f == "ota" or (LC.PlayerIsCP and LC.PlayerIsCP(p))
+end
+local function PlanSweep(now)
+    local z = Pick(RebelZones())
+    if not z then return false end
+    local lead = cvSweepLead:GetFloat()
+    if lead <= 0 then return StartSweep(z) end
+    LC.PlannedSweep = { zone = z, at = now + lead }
+    local where = LC.DescribePlace and LC.DescribePlace(z.pos) or "rebel territory"
+    local secs = math.floor(lead / 10 + 0.5) * 10
+    Radio("cp", "Dispatch: sweep team moves into anticitizen territory " .. where .. " in about " .. secs .. " seconds. All available Civil Protection units, assist.")
+    for _, p in ipairs(player.GetAll()) do
+        if IsCombinePlayer(p) and LC.Notice then
+            LC.Notice(p, "event", "A sweep is coming", "A sweep team moves into anticitizen territory " .. where .. " in about " .. secs .. " seconds. Join it: the job's on your board (F3).", 10)
+        end
+    end
+    if LC.PostDirective then LC.PostDirective("cp_joinsweep") end
+    return true
+end
+LC.PlanCombineSweep = function() return PlanSweep(CurTime()) end
 
 local function EndSkirmish(sk, why)
     if sk.done then return end
@@ -1324,22 +1352,27 @@ timer.Create("LivingCitySkirmishes", 2, 0, function()
         local sk = LC.Skirmish
         if sk then RunSkirmish(sk, now) end
         CleanupWithdrawn(now)
-        -- a planned raid, when its time comes
+        -- a planned raid, or sweep, when its time comes
         local pr = LC.PlannedRaid
         if pr and now >= pr.at then
             LC.PlannedRaid = nil
             if not LC.Skirmish and not (LC.Event == "curfew" or LC.Event == "lockdown") then StartRaid(pr.zone, pr.target) end
         end
-        if pr then return end
+        local ps = LC.PlannedSweep
+        if ps and now >= ps.at then
+            LC.PlannedSweep = nil
+            if not LC.Skirmish then StartSweep(ps.zone) end
+        end
+        if pr or ps then return end
         if LC.Skirmish or not cvSkirm:GetBool() or #RebelZones() == 0 or #player.GetAll() == 0 then return end
         nextSkirmish = nextSkirmish or (now + Interval())
         if now < nextSkirmish then return end
         nextSkirmish = now + Interval()
         if LC.Event == "curfew" or LC.Event == "lockdown" then return end -- the streets are locked down
-        local started = math.random() < 0.5 and PlanRaid(now) or StartSweep()
+        local started = math.random() < 0.5 and PlanRaid(now) or PlanSweep(now)
         if not started then
             -- if one kind can't happen on this map, try the other
-            if not PlanRaid(now) then StartSweep() end
+            if not PlanRaid(now) then PlanSweep(now) end
         end
     end)
     if not ok then LC.Error("skirmishes", err) end

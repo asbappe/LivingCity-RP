@@ -752,6 +752,7 @@ setting lc_supply_guards = 3
 setting lc_supply_loads = 5
 setting lc_supply_minutes = 6
 setting lc_supply_pay = 40
+setting lc_sweep_warning = 90
 setting lc_tag_minutes = 60
 setting lc_talk = 1
 setting lc_territory_calm = 10

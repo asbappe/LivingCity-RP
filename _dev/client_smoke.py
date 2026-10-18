@@ -914,23 +914,27 @@ local okJG, errJG = pcall(function()
     net.ReadString, util.JSONToTable = rS, rJ
     run("HUDPaint")
     LC_CL.PapersDecide("deny")
-    -- the wiring panel: opened, a wire right, closed
+    -- the wiring board: opened, a turn (and a spark's bite), drawn, closed
     local rS2, rJ2 = net.ReadString, util.JSONToTable
-    local wdoc = { left = { "red", "blue", "yellow", "green" }, right = { "blue", "green", "red", "yellow" }, secs = 30, what = "the box" }
+    local wdoc = { w = 5, h = 4, tiles = { 5, 3, 7, 10, 12, 5, 6, 9, 3, 10, 12, 5, 6, 9, 3, 10, 12, 5, 6, 9 }, feed = 2, lamp = 3,
+        lit = { 6, 7 }, sparks = { 4, 15 }, turns = 0, par = 7, shocks = 0, secs = 55, what = "the box" }
     net.ReadString = function() return "x" end
     util.JSONToTable = function() return wdoc end
     net.recv_lc_wire_open()
-    if not LC_CL.WireState() then error("no wiring panel") end
-    local rU, rB = net.ReadUInt, net.ReadBool
-    local q = { 1, 3 }
-    net.ReadUInt = function() return table.remove(q, 1) end
-    net.ReadBool = function() return true end
-    net.recv_lc_wire_result()
-    net.ReadUInt, net.ReadBool = rU, rB
-    if LC_CL.WireState().linked[1] ~= 3 then error("wire not linked") end
+    local ws = LC_CL.WireState()
+    if not ws or ws.w ~= 5 or not ws.lit[6] or not ws.sparks[15] then error("no wiring board") end
+    local fr = ws.frame
+    wdoc = { w = 5, h = 4, tiles = wdoc.tiles, feed = 2, lamp = 3, lit = { 6, 7, 8 }, sparks = { 1 }, zap = 4, turns = 1, par = 7, shocks = 1, secs = 50 }
+    net.recv_lc_wire_open()
+    ws = LC_CL.WireState()
+    if ws.frame ~= fr or ws.turns ~= 1 or not ws.lit[8] or not ws.zap or ws.zap.k ~= 4 then error("board didn't update in place") end
+    if fr.PaintOver then fr.PaintOver(fr, 420, 400) end
+    if fr.Paint then fr.Paint(fr, 64, 64) end
+    if fr.DoClick then fr.DoClick() end
+    if fr.DoRightClick then fr.DoRightClick() end
     wdoc = {}
     net.recv_lc_wire_open()
-    if LC_CL.WireState() then error("wiring panel didn't close") end
+    if LC_CL.WireState() then error("wiring board didn't close") end
     net.ReadString, util.JSONToTable = rS2, rJ2
 end)
 if not okJG then problems[#problems + 1] = "job games: " .. tostring(errJG) end

@@ -200,76 +200,93 @@ net.Receive("lc_papers_check", function()
 end)
 
 ------------------------------------------------------------------------
--- Rewiring: the panel of wires (click a wire, then its terminal)
+-- Rewiring: the board of circuit tiles (click turns a tile; right-click turns it back)
 ------------------------------------------------------------------------
 
-local WIRE_COL = {
-    red = Color(200, 50, 40), blue = Color(50, 90, 210), yellow = Color(230, 200, 40),
-    green = Color(50, 170, 70), white = Color(235, 235, 235), black = Color(30, 30, 30),
-}
-local wire -- { frame, left, right, linked = { [i] = j }, pick, flash, endsAt }
+local wire -- { frame, w, h, tiles, lit = { [k] = true }, sparks = { [k] = true }, feed, lamp, zap, turns, par, shocks, endsAt }
+local TILE = 64
+local COPPER, LIVE, BOARD = Color(120, 95, 70), Color(255, 210, 90), Color(28, 32, 30)
 
 local function CloseWires() if wire and IsValid(wire.frame) then wire.frame:Remove() end wire = nil end
 
+local function Arms(m, x, y, col)
+    local c, t = TILE / 2, 10
+    surface.SetDrawColor(col)
+    if bit.band(m, 1) ~= 0 then surface.DrawRect(x + c - t / 2, y, t, c + t / 2) end
+    if bit.band(m, 2) ~= 0 then surface.DrawRect(x + c - t / 2, y + c - t / 2, c + t / 2, t) end
+    if bit.band(m, 4) ~= 0 then surface.DrawRect(x + c - t / 2, y + c - t / 2, t, c + t / 2) end
+    if bit.band(m, 8) ~= 0 then surface.DrawRect(x, y + c - t / 2, c + t / 2, t) end
+end
+
 net.Receive("lc_wire_open", function()
     local t = util.JSONToTable(net.ReadString() or "") or {}
-    if not t.left then return CloseWires() end
-    CloseWires()
-    wire = { left = t.left, right = t.right, linked = {}, endsAt = CurTime() + (t.secs or 25) }
-    for i, j in pairs(t.done or {}) do wire.linked[tonumber(i)] = j end
+    if not t.tiles then return CloseWires() end
+    local fresh = not (wire and IsValid(wire.frame) and wire.w == t.w and wire.h == t.h)
+    if fresh then CloseWires() wire = {} end
+    wire.w, wire.h, wire.tiles, wire.feed, wire.lamp = t.w, t.h, t.tiles, t.feed, t.lamp
+    wire.turns, wire.par, wire.shocks, wire.what, wire.dark = t.turns or 0, t.par or 0, t.shocks or 0, t.what, t.dark
+    wire.endsAt = CurTime() + (t.secs or 30)
+    wire.lit, wire.sparks = {}, {}
+    for _, k in ipairs(t.lit or {}) do wire.lit[k] = true end
+    for _, k in ipairs(t.sparks or {}) do wire.sparks[k] = true end
+    if t.zap then wire.zap = { k = t.zap, t = CurTime() + 0.5 } end
+    if not fresh then return end
+    local ox, oy = 44, 40
     local f = vgui.Create("DFrame")
     wire.frame = f
-    f:SetTitle("Rewiring " .. tostring(t.what or "the panel") .. ": click a wire, then the terminal of the same colour")
-    f:SetSize(math.min(ScrW() - 40, 520), 120 + #t.left * 56)
+    f:SetTitle("Rewiring " .. tostring(t.what or "the panel"))
+    f:SetSize(ox * 2 + t.w * TILE, oy + t.h * TILE + 76)
     f:Center()
     f:MakePopup()
-    local W = f:GetWide()
-    local rowY = function(k) return 50 + (k - 1) * 56 end
     f.PaintOver = function(s, w, h)
-        -- the wires already in, straight across
-        for i, j in pairs(wire.linked) do
-            local c = WIRE_COL[wire.left[i]] or color_white
-            surface.SetDrawColor(c)
-            for o = -2, 2 do surface.DrawLine(130, rowY(i) + 20 + o, W - 130, rowY(j) + 20 + o) end
-        end
-        if wire.flash and wire.flash.t > CurTime() then
-            surface.SetDrawColor(255, 230, 120)
-            surface.DrawLine(130, rowY(wire.flash.i) + 20, W - 130, rowY(wire.flash.j) + 20)
-        end
+        if not wire then return end
+        -- the feed (left) and the lamp (right)
+        local fy, ly = oy + (wire.feed - 1) * TILE + TILE / 2, oy + (wire.lamp - 1) * TILE + TILE / 2
+        surface.SetDrawColor(LIVE)
+        surface.DrawRect(8, fy - 5, ox - 8, 10)
+        draw.SimpleText("FEED", "DermaDefault", 6, fy - 16, LIVE)
+        local lampOn = wire.lit[(wire.lamp - 1) * wire.w + wire.w] and bit.band(wire.tiles[(wire.lamp - 1) * wire.w + wire.w] or 0, 2) ~= 0
+        surface.SetDrawColor(lampOn and LIVE or COPPER)
+        surface.DrawRect(ox + wire.w * TILE, ly - 5, 14, 10)
+        draw.RoundedBox(10, w - 30, ly - 10, 20, 20, lampOn and LIVE or Color(70, 70, 60))
+        draw.SimpleText("LAMP", "DermaDefault", w - 6, ly - 24, INK, TEXT_ALIGN_RIGHT)
         local left = math.max(0, math.ceil(wire.endsAt - CurTime()))
-        draw.SimpleText(left .. " s", "LCJobTitle", w / 2, h - 30, left <= 5 and Color(255, 120, 90) or INK, TEXT_ALIGN_CENTER)
+        draw.SimpleText(string.format("%d s    Turns %d (par %d)    Shocks %d", left, wire.turns, wire.par, wire.shocks), "LCJobTitle", w / 2, h - 50,
+            left <= 10 and Color(255, 120, 90) or INK, TEXT_ALIGN_CENTER)
+        draw.SimpleText("Click turns a tile, right-click turns it back. Get the current to the lamp. Don't touch a sparking tile.", "DermaDefault",
+            w / 2, h - 22, INK, TEXT_ALIGN_CENTER)
     end
-    for side = 1, 2 do
-        local list = side == 1 and wire.left or wire.right
-        for k, colName in ipairs(list) do
-            local b = vgui.Create("DButton", f)
-            b:SetPos(side == 1 and 16 or W - 126, rowY(k))
-            b:SetSize(110, 40)
-            b:SetText(side == 1 and string.upper(colName) or "")
-            b:SetTextColor((colName == "white" or colName == "yellow") and Color(20, 20, 20) or color_white)
-            b.Paint = function(s, w, h)
-                local c = WIRE_COL[colName] or color_white
-                draw.RoundedBox(4, 0, 0, w, h, c)
-                if side == 1 and wire.pick == k then surface.SetDrawColor(255, 255, 255) surface.DrawOutlinedRect(0, 0, w, h, 3) end
-                if side == 2 then draw.SimpleText("o", "LCJobTitle", 12, h / 2, Color(0, 0, 0, 160), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER) end
-            end
-            b.DoClick = function()
-                if side == 1 then
-                    if not wire.linked[k] then wire.pick = k end
-                elseif wire.pick then
-                    net.Start("lc_wire_try") net.WriteUInt(wire.pick, 4) net.WriteUInt(k, 4) net.SendToServer()
-                    wire.flash = { i = wire.pick, j = k, t = CurTime() + 0.25 }
-                    wire.pick = nil
+    for k = 1, t.w * t.h do
+        local x, y = (k - 1) % t.w, math.floor((k - 1) / t.w)
+        local b = vgui.Create("DButton", f)
+        b:SetPos(ox + x * TILE, oy + y * TILE)
+        b:SetSize(TILE, TILE)
+        b:SetText("")
+        b.Paint = function(s, w, h)
+            if not wire then return end
+            draw.RoundedBox(4, 1, 1, w - 2, h - 2, s:IsHovered() and Color(44, 50, 46) or BOARD)
+            Arms(wire.tiles[k] or 0, 0, 0, wire.lit[k] and LIVE or COPPER)
+            if wire.sparks[k] then
+                -- a live spark: crackling, white-hot
+                local now = CurTime()
+                surface.SetDrawColor(255, 255, 200, 140 + 110 * math.abs(math.sin(now * 23 + k)))
+                for i = 1, 5 do
+                    local a = now * 9 + i * 1.3 + k
+                    surface.DrawLine(w / 2, h / 2, w / 2 + math.cos(a) * (14 + (i * 7) % 16), h / 2 + math.sin(a) * (14 + (i * 5) % 16))
                 end
+                surface.SetDrawColor(255, 240, 120)
+                surface.DrawOutlinedRect(0, 0, w, h, 2)
+            end
+            if wire.zap and wire.zap.k == k and wire.zap.t > CurTime() then
+                draw.RoundedBox(4, 0, 0, w, h, Color(255, 60, 40, 120))
             end
         end
+        local function Turn(ccw)
+            net.Start("lc_wire_try") net.WriteUInt(k, 6) net.WriteBool(ccw) net.SendToServer()
+        end
+        b.DoClick = function() Turn(false) end
+        b.DoRightClick = function() Turn(true) end
     end
-end)
-
-net.Receive("lc_wire_result", function()
-    local i, j, right = net.ReadUInt(4), net.ReadUInt(4), net.ReadBool()
-    if not wire then return end
-    if right then wire.linked[i] = j else wire.endsAt = wire.endsAt - 3 end
 end)
 LC_CL.WireState = function() return wire end
 

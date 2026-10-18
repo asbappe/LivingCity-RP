@@ -797,25 +797,141 @@ net.Receive("lc_papers_decide", function(_, ply)
 end)
 
 ------------------------------------------------------------------------
--- Rewiring (Maintenance): a fuse box, a streetlight or a terminal opens on
--- a tangle of coloured wires. Match each wire to its terminal before the
--- time runs out; a wrong one is a shock. During a blackout it pays double.
+-- Rewiring (Maintenance): the panel opens on a board of scrambled circuit
+-- tiles. Turn them (click: a quarter turn; right-click: back) until the
+-- current runs from the feed on the left to the lamp on the right; the
+-- tiles it reaches light up. Live sparks jump round the board: turn a tile
+-- while it's sparking and it bites (a shock, and seconds off the clock).
+-- Too slow and the breaker trips: the board scrambles again, for less pay.
+-- Done in no more turns than it needs (par, plus two) is a bonus; during a
+-- blackout it pays double. A terminal's board is bigger, with more sparks.
 ------------------------------------------------------------------------
 
-util.AddNetworkString("lc_wire_open")    -- server -> client: the panel
-util.AddNetworkString("lc_wire_try")     -- client -> server: wire i to terminal j
-util.AddNetworkString("lc_wire_result")  -- server -> client: i, j, right?
-
-local WIRES = { "red", "blue", "yellow", "green", "white", "black" }
+util.AddNetworkString("lc_wire_open")    -- server -> client: the board (and "{}" closes it)
+util.AddNetworkString("lc_wire_try")     -- client -> server: turn tile k (and which way)
 
 local function Shuffle(t)
     for i = #t, 2, -1 do local j = math.random(i) t[i], t[j] = t[j], t[i] end
     return t
 end
 
-local function SendWires(g)
+-- a tile is the sides it joins: N 1, E 2, S 4, W 8
+local N, E, S, W = 1, 2, 4, 8
+local DIRS = { { N, 0, -1, S }, { E, 1, 0, W }, { S, 0, 1, N }, { W, -1, 0, E } }
+local function TurnCW(m) return bit.band(bit.bor(bit.lshift(m, 1), bit.rshift(m, 3)), 15) end
+local function TurnCCW(m) return bit.band(bit.bor(bit.rshift(m, 1), bit.lshift(m, 3)), 15) end
+LC.WireTurn = TurnCW
+
+-- Which tiles the current reaches (from the feed, left of row g.feed), and whether it gets to the lamp.
+local function Lit(g)
+    local lit, w, h = {}, g.w, g.h
+    local start = (g.feed - 1) * w + 1
+    if bit.band(g.tiles[start], W) == 0 then return lit, false end
+    local q = { start }
+    lit[start] = true
+    while #q > 0 do
+        local k = table.remove(q)
+        local x, y = (k - 1) % w + 1, math.floor((k - 1) / w) + 1
+        for _, d in ipairs(DIRS) do
+            local nx, ny = x + d[2], y + d[3]
+            if bit.band(g.tiles[k], d[1]) ~= 0 and nx >= 1 and nx <= w and ny >= 1 and ny <= h then
+                local nk = (ny - 1) * w + nx
+                if not lit[nk] and bit.band(g.tiles[nk], d[4]) ~= 0 then lit[nk] = true q[#q + 1] = nk end
+            end
+        end
+    end
+    local lamp = (g.lamp - 1) * w + w
+    return lit, lit[lamp] == true and bit.band(g.tiles[lamp], E) ~= 0
+end
+LC.WireLit = Lit
+
+-- A winding way from the feed to the lamp (a random walk that backs out of dead ends).
+local function Route(w, h, from, to)
+    for _ = 1, 40 do
+        local path, seen, budget = { (from - 1) * w + 1 }, { [(from - 1) * w + 1] = true }, 600
+        local function Walk()
+            budget = budget - 1
+            if budget < 0 then return false end
+            local k = path[#path]
+            if k == (to - 1) * w + w then return #path >= w + h end
+            local x, y = (k - 1) % w + 1, math.floor((k - 1) / w) + 1
+            local order = { 1, 2, 3, 4 }
+            for i = 4, 2, -1 do local j = math.random(i) order[i], order[j] = order[j], order[i] end
+            for _, di in ipairs(order) do
+                local d = DIRS[di]
+                local nx, ny = x + d[2], y + d[3]
+                local nk = (ny - 1) * w + nx
+                if nx >= 1 and nx <= w and ny >= 1 and ny <= h and not seen[nk] then
+                    path[#path + 1], seen[nk] = nk, true
+                    if Walk() then return true end
+                    path[#path], seen[nk] = nil, nil
+                end
+            end
+            return false
+        end
+        if Walk() then return path end
+    end
+    -- (never in practice: straight along, then up or down the last column)
+    local path = {}
+    for x = 1, w do path[#path + 1] = (from - 1) * w + x end
+    local step = to > from and 1 or -1
+    for y = from + step, to, step do if from ~= to then path[#path + 1] = (y - 1) * w + w end end
+    return path
+end
+
+local function Side(w, a, b)
+    local d = b - a
+    if d == 1 then return E elseif d == -1 then return W elseif d == w then return S else return N end
+end
+
+-- A fresh board: the right way laid, odd tiles everywhere else, every one turned at random.
+local function Deal(g)
+    local w, h = g.w, g.h
+    g.feed, g.lamp = math.random(h), math.random(h)
+    local path = Route(w, h, g.feed, g.lamp)
+    local want, onPath = {}, {}
+    for i, k in ipairs(path) do
+        local m = 0
+        m = bit.bor(m, i == 1 and W or Side(w, k, path[i - 1]))
+        m = bit.bor(m, i == #path and E or Side(w, k, path[i + 1]))
+        want[k], onPath[k] = m, true
+    end
+    g.tiles = {}
+    for k = 1, w * h do
+        local m = want[k]
+        if not m then
+            local r = math.random()
+            m = r < 0.4 and (N + E) or r < 0.7 and (N + S) or (N + E + S) -- (bends, straights, tees)
+        end
+        for _ = 1, math.random(0, 3) do m = TurnCW(m) end
+        g.tiles[k] = m
+    end
+    local _, done = Lit(g)
+    if done then local k = path[math.random(#path)] g.tiles[k] = TurnCW(g.tiles[k]) end
+    -- par: the fewest quarter turns that put the right way down
+    g.par = 0
+    for k in pairs(onPath) do
+        local best, m = 4, g.tiles[k]
+        for r = 0, 3 do
+            if m == want[k] then best = math.min(best, r, 4 - r) end
+            m = TurnCW(m)
+        end
+        g.par = g.par + best
+    end
+    g.want, g.turns = want, 0
+    g.sparks = {}
+    for i = 1, g.nSparks do g.sparks[i] = { k = math.random(w * h), since = CurTime(), moveAt = CurTime() + 1 + math.random() * 1.5 } end
+end
+LC.WireDeal = Deal
+
+local function SendWires(g, zap)
+    local lit = Lit(g)
+    local litList, sparks = {}, {}
+    for k in pairs(lit) do litList[#litList + 1] = k end
+    for _, sp in ipairs(g.sparks) do sparks[#sparks + 1] = sp.k end
     net.Start("lc_wire_open")
-    net.WriteString(util.TableToJSON({ left = g.left, right = g.right, secs = math.max(1, math.ceil(g.limit - CurTime())), done = g.linked, what = g.what }))
+    net.WriteString(util.TableToJSON({ w = g.w, h = g.h, tiles = g.tiles, feed = g.feed, lamp = g.lamp, lit = litList, sparks = sparks,
+        zap = zap, turns = g.turns, par = g.par, shocks = g.shocks, secs = math.max(1, math.ceil(g.limit - CurTime())), what = g.what, dark = g.dark or false }))
     net.Send(g.ply)
 end
 
@@ -823,73 +939,93 @@ GAMES.wiring = {
     start = function(g)
         g.title = "Rewiring"
         g.what = g.opts.what or "the panel"
-        local n = math.random(4, 5)
-        local colors = Shuffle(table.Copy(WIRES))
-        g.left = {}
-        for i = 1, n do g.left[i] = colors[i] end
-        g.right = Shuffle(table.Copy(g.left))
-        g.linked, g.shocks = {}, 0
-        g.limit = CurTime() + 22 + n * 3
+        local big = g.what == "the terminal"
+        g.w, g.h, g.nSparks = big and 6 or 5, big and 5 or 4, big and 3 or 2
+        g.secs = big and 75 or 55
+        g.shocks = 0
+        Deal(g)
+        g.limit = CurTime() + g.secs
         g.dark = LC.CityDark or (LC.PoweredAt and g.opts.pos and not LC.PoweredAt(g.opts.pos))
         g.hud = function(gg)
             local left = math.max(0, math.ceil(gg.limit - CurTime()))
-            local done = 0
-            for _ in pairs(gg.linked) do done = done + 1 end
-            return { string.format("Wires: %d of %d", done, #gg.left), string.format("Shocks: %d", gg.shocks),
+            return { string.format("Turns: %d (par %d)", gg.turns, gg.par), string.format("Shocks: %d", gg.shocks),
                 (gg.dark and "Blackout: double pay. " or "") .. string.format("%d seconds", left) }
         end
         SendWires(g)
     end,
     tick = function(g, now)
         if now > g.limit then
-            -- the panel trips: start again, shuffled (and paid less)
+            -- the breaker trips: a new board (and paid less)
             g.trips = (g.trips or 0) + 1
-            g.right = Shuffle(table.Copy(g.left))
-            g.linked = {}
-            g.limit = now + 22 + #g.left * 3
+            Deal(g)
+            g.limit = now + g.secs
             g.ply:EmitSound("ambient/energy/spark" .. math.random(1, 6) .. ".wav", 70)
-            g.ply:ChatPrint("[Maintenance] Too slow: the panel trips and resets. Again.")
+            g.ply:ChatPrint("[Maintenance] Too slow: the breaker trips and the board scrambles. Again.")
             SendWires(g)
+            return
         end
+        -- the sparks jump about
+        local moved = false
+        for _, sp in ipairs(g.sparks) do
+            if now >= sp.moveAt then
+                local k
+                for _ = 1, 6 do
+                    k = math.random(g.w * g.h)
+                    local taken = false
+                    for _, o in ipairs(g.sparks) do if o ~= sp and o.k == k then taken = true end end
+                    if not taken and k ~= sp.k then break end
+                end
+                sp.k, sp.since, sp.moveAt = k, now, now + 1.2 + math.random() * 1.4
+                moved = true
+            end
+        end
+        if moved then SendWires(g) end
     end,
     finish = function(g)
         net.Start("lc_wire_open") net.WriteString("{}") net.Send(g.ply) -- (closes the panel)
     end,
 }
 
--- One connection: wire i (left) to terminal j (right). True when right.
-function LC.WireTry(ply, i, j)
+-- Turn tile k a quarter (ccw: back the other way). True when it turns, false when a spark bites.
+function LC.WireTry(ply, k, ccw)
     local g = LC.JobGames[ply]
-    if not g or g.kind ~= "wiring" or not g.left[i] or not g.right[j] or g.linked[i] then return nil end
-    local right = g.left[i] == g.right[j]
-    if right then
-        g.linked[i] = j
-        ply:EmitSound("buttons/lever7.wav", 60)
-    else
-        g.shocks = g.shocks + 1
-        g.limit = g.limit - 3
-        ply:EmitSound("ambient/energy/zap" .. math.random(1, 3) .. ".wav", 70)
-        local d = DamageInfo and DamageInfo()
-        if d and ply.TakeDamageInfo then d:SetDamage(4) d:SetDamageType(DMG_SHOCK) d:SetAttacker(game.GetWorld and game.GetWorld() or ply) ply:TakeDamageInfo(d) end
-        if EffectData then local fx = EffectData() fx:SetOrigin(ply:EyePos() + ply:GetAimVector() * 30) util.Effect("Sparks", fx, true, true) end
+    if not g or g.kind ~= "wiring" or not g.tiles[k] then return nil end
+    local now = CurTime()
+    for _, sp in ipairs(g.sparks) do
+        -- (a spark that only just landed there doesn't count: the click was on its way)
+        if sp.k == k and now - sp.since >= 0.3 then
+            g.shocks = g.shocks + 1
+            g.limit = g.limit - 4
+            ply:EmitSound("ambient/energy/zap" .. math.random(1, 3) .. ".wav", 70)
+            local d = DamageInfo and DamageInfo()
+            if d and ply.TakeDamageInfo then d:SetDamage(4) d:SetDamageType(DMG_SHOCK) d:SetAttacker(game.GetWorld and game.GetWorld() or ply) ply:TakeDamageInfo(d) end
+            if EffectData then local fx = EffectData() fx:SetOrigin(ply:EyePos() + ply:GetAimVector() * 30) util.Effect("Sparks", fx, true, true) end
+            SendWires(g, k)
+            return false
+        end
     end
-    net.Start("lc_wire_result") net.WriteUInt(i, 4) net.WriteUInt(j, 4) net.WriteBool(right) net.Send(ply)
-    local done = 0
-    for _ in pairs(g.linked) do done = done + 1 end
-    if done >= #g.left then
+    g.tiles[k] = ccw and TurnCCW(g.tiles[k]) or TurnCW(g.tiles[k])
+    g.turns = g.turns + 1
+    ply:EmitSound("buttons/lightswitch2.wav", 55, math.random(95, 110))
+    local _, done = Lit(g)
+    if done then
+        ply:EmitSound("buttons/lever7.wav", 60)
         local base = math.max(1, 3 + math.max(0, 3 - g.shocks) - 2 * (g.trips or 0))
+        if g.turns <= g.par + 2 then base = base + 2 g.notes[#g.notes + 1] = "Neat work: on par." end
         if g.dark then base = base * 2 g.notes[#g.notes + 1] = "Blackout rates." end
         g.pay = base
         if g.shocks == 0 then g.notes[#g.notes + 1] = "Clean: not a spark." end
         if g.opts.onFixed then pcall(g.opts.onFixed) end
         LC.JobGameEnd(ply, "done")
+        return true
     end
-    return right
+    SendWires(g)
+    return true
 end
 
 net.Receive("lc_wire_try", function(_, ply)
-    local i, j = net.ReadUInt(4), net.ReadUInt(4)
-    LC.WireTry(ply, i, j)
+    local k, ccw = net.ReadUInt(6), net.ReadBool()
+    LC.WireTry(ply, k, ccw)
 end)
 
 ------------------------------------------------------------------------
