@@ -30,3 +30,12 @@ hook.Add("SetupMove", "LivingCityTired", function(ply, mv)
     if mv:GetMaxSpeed() > walk then mv:SetMaxSpeed(walk) end
     if mv:KeyDown(IN_SPEED) then mv:SetButtons(bit.band(mv:GetButtons(), bit.bnot(IN_SPEED))) end
 end)
+
+-- Dazed by a stun baton (sv_livingcity_prison.lua): a stumbling walk for a few seconds.
+hook.Add("SetupMove", "LivingCityDazed", function(ply, mv)
+    if ply:GetNW2Float("lc_dazed_until", 0) <= CurTime() then return end
+    local slow = ply:GetWalkSpeed() * 0.6
+    if mv:GetMaxClientSpeed() > slow then mv:SetMaxClientSpeed(slow) end
+    if mv:GetMaxSpeed() > slow then mv:SetMaxSpeed(slow) end
+    if mv:KeyDown(IN_SPEED) then mv:SetButtons(bit.band(mv:GetButtons(), bit.bnot(IN_SPEED))) end
+end)

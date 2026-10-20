@@ -269,8 +269,9 @@ _setcvar("lc_march", 0)
 local cop2, cst2 = LC.Spawners.cop(Vector(-200, -200, 0))
 cst2.untilT = 1e9
 local dmg = _dmg(cop2, 20, DMG_CLUB)
+con.lcSubdue = { n = 2, t = CurTime() } -- (two blows already: cuffed once they're subdued, lc_subdue_hits)
 hook.Run("EntityTakeDamage", con, dmg)
-ok(LC.Prisoners[con] ~= nil, "a stunstick hit from a cop arrests a wanted player")
+ok(LC.Prisoners[con] ~= nil, "a stunstick hit from a cop arrests a wanted player (once they're subdued)")
 con.lcViolentUntil = nil
 ok(dmg:GetDamage() == 0, "instead of hurting them")
 LC.ReleasePrisoner(con)
@@ -7593,7 +7594,7 @@ LC.SetWeather("rain")
 ok(_globals.lc_weather == "rain" and LC.InRain(wet), "rain, and you're out in it")
 LC.GiveItem(wet, "bottle_empty")
 timer.list["LivingCityRainFill"].fn()
-ok(LC.HasItem(wet, "bottle_dirty") and not LC.HasItem(wet, "bottle_empty"), "an empty bottle fills with rain")
+ok(LC.HasItem(wet, "bottle_rain") and not LCS.Items.bottle_rain.parasite and not LC.HasItem(wet, "bottle_empty"), "an empty bottle fills with rain (rainwater: no boiling needed)")
 wet.chat = {}
 hook.Run("PlayerSay", wet, "!time")
 ok(has(wet.chat, "12:") and has(wet.chat, "rain"), "!time tells the time and the weather")
@@ -9652,6 +9653,7 @@ local lead, lst = LC.Spawners.cop(M0 + Vector(60, 0, 0))
 local rear, rst = LC.Spawners.cop(M0 + Vector(-200, 0, 0))
 lst.untilT, rst.untilT = 1e9, 1e9
 local dmg = _dmg(lead, 20, DMG_CLUB)
+con.lcSubdue = { n = 2, t = CurTime() } -- (beaten down: the third blow)
 hook.Run("EntityTakeDamage", con, dmg)
 ok(LC.Marching[con] ~= nil, "a stunstick hit starts a march to the cells, not a teleport")
 ok(LC.IsTied(con) and LC.InCustody(con) and not LC.PlayerIsWanted(con) and not LC.Prisoners[con], "tied, in custody, the search called off, not in a cell yet")
@@ -9671,17 +9673,27 @@ con:SetPos(M0)
 LC.ReportCrime(con, "Theft", 300)
 local lead2, lst2 = LC.Spawners.cop(M0 + Vector(60, 0, 0))
 lst2.untilT = 1e9
+con.lcSubdue = { n = 2, t = CurTime() }
 hook.Run("EntityTakeDamage", con, _dmg(lead2, 20, DMG_CLUB))
 ok(LC.Marching[con] ~= nil, "(another march)")
+-- with another unit about, he takes over
+local mrear = LC.Marching[con].rear
 lead2:Remove()
 _run(0.5)
+ok(LC.Marching[con] ~= nil and IsValid(LC.Marching[con].lead) and LC.Marching[con].lead ~= lead2, "the unit leading you goes down: another takes your arm (the one behind, or one nearby)")
+-- with nobody left
+for n, st in pairs(LC.NPCs) do if IsValid(n) and (st.role == "cop" or st.role == "soldier") then n:SetPos(Vector(-400000, 400000, 0)) end end
+local lead2b = LC.Marching[con] and LC.Marching[con].lead
+if IsValid(lead2b) then LC.NPCs[lead2b] = nil lead2b:Remove() end
+_run(0.5)
 ok(not LC.Marching[con] and LC.IsTied(con) and LC.PlayerIsWanted(con) and not LC.Prisoners[con],
-    "put the leading unit down: free, still tied, and wanted for it")
+    "nobody left to take you: free, still tied, and wanted for it")
 Unmarch(con)
 -- nowhere to walk: straight to a cell
 _setcvar("lc_march", 0)
 LC.ReportCrime(con, "Theft", 300)
 local lead3, lst3 = LC.Spawners.cop(M0 + Vector(60, 0, 0))
+con.lcSubdue = { n = 2, t = CurTime() }
 hook.Run("EntityTakeDamage", con, _dmg(lead3, 20, DMG_CLUB))
 ok(LC.Prisoners[con] ~= nil and not LC.Marching[con], "turned off: straight to a cell, as before")
 _setcvar("lc_march", 1)
@@ -11202,7 +11214,7 @@ ok(GetConVar("lc_ending_hard_moment_beats"):GetString() == "5" and GetConVar("lc
     "a setting still at an old default moves to the new one (a server that ran the old one gets it), one somebody chose is left alone")
 _setcvar("lc_ending_marrow_max", 80)
 ok(#LC.EndingSongs("harpies") == 1, "an ending's song is the file named for it")
-ok(LC.EndingSongVolume("harpies") == 2 and LC.EndingSongVolume("bus") == 1, "a quiet recording (the Harpies') plays louder (lc_ending_song_volume)")
+ok(LC.EndingSongVolume("harpies") == 4 and LC.EndingSongVolume("bus") == 1, "a quiet recording (the Harpies') plays louder (lc_ending_song_volume)")
 -- skipped
 ok(LC.TriggerEnding("harpies", a), "an ending is triggered")
 ok(LC.EndingSession().phase == "pending", "a few seconds pass first")
@@ -12044,6 +12056,7 @@ section("Playtest fixes, 17 October")
     LC.ReportCrime(walked, "Theft", 300)
     local ml, mls = LC.Spawners.cop(MP + Vector(60, 0, 0))
     mls.untilT = 1e9
+    walked.lcSubdue = { n = 2, t = CurTime() } -- (beaten down: the third blow, and cuffed)
     hook.Run("EntityTakeDamage", walked, _dmg(ml, 20, DMG_CLUB))
     ok(LC.Marching[walked] ~= nil, "(a march)")
     local goWas = LC.GoTo
@@ -12510,6 +12523,276 @@ section("Playtest fixes, 17 October (evening)")
     ok(not worker:GetNW2Bool("lc_ration_break", false), "and once the ration's in hand, back to work")
     LC.QuestOf[worker] = nil
     worker.valid = false
+end)()
+
+section("Playtest fixes, 20 October")
+;(function()
+    -- the announcer: how long a line runs comes from the file's own header first
+    local wd = LC.WavDuration
+    LC.WavDuration = function() return 5.5 end
+    ok(math.abs(LC.AnnounceKnownSecs("npc/overwatch/cityvoice/f_x_spkr.wav") - 5.5) < 0.01, "an announcement's length is read from the file's own header (no voices over each other)")
+    LC.WavDuration = wd
+    -- touching rebel zones are one territory: one quartermaster, one crate, one camp
+    local T0 = Vector(-200000, 200000, 0)
+    local a = LC.AddZone(nil, nil, "rebel", 0, { mins = T0 + Vector(0, 0, -16), maxs = T0 + Vector(600, 400, 192) })
+    local b = LC.AddZone(nil, nil, "rebel", 0, { mins = T0 + Vector(650, 0, -16), maxs = T0 + Vector(900, 300, 192) })
+    local far = LC.AddZone(nil, nil, "rebel", 0, { mins = T0 + Vector(5000, 0, -16), maxs = T0 + Vector(5400, 400, 192) })
+    ok(LC.RebelLeader(b) == a and LC.RebelLeader(a) == a and LC.RebelIsLeader(far), "two zones a few feet apart are one territory (its leader the bigger); one far off is its own")
+    local qms = function(z)
+        local n = 0
+        for npc, st in pairs(LC.NPCs) do if IsValid(npc) and st.quartermaster and (st.zone == a or st.zone == b) then n = n + 1 end end
+        return n
+    end
+    local rebelsWas = GetConVar("lc_rebels"):GetInt()
+    _setcvar("lc_rebels", 4)
+    LC.EnsureQuartermasters()
+    ok(qms() == 1, "one quartermaster for the two of them", qms())
+    -- a second one there (zones redrawn): sent away
+    local npc2, st2 = LC.SpawnRebel(T0 + Vector(700, 100, 4), b)
+    st2.quartermaster = true
+    LC.EnsureQuartermasters()
+    ok(qms() == 1, "a second quartermaster in the same territory goes", qms())
+    _setcvar("lc_rebels", rebelsWas)
+    -- Father Grigori moves on to another camp when nobody's about
+    local g = ents.Create("npc_monk") g:Spawn() g:SetPos(T0 + Vector(300, 200, 0))
+    g.lcGrigori, g.lcHome = true, a
+    local seenWas = LC.IsSeen
+    LC.IsSeen = function() return false end
+    for _, p in ipairs(player.GetAll()) do p.lcPosWas = p:GetPos() p:SetPos(Vector(-300000, -300000, 0)) end
+    ok(LC.GrigoriMove(g, CurTime(), true) and LC.RebelLeader(g.lcHome) ~= a, "Father Grigori moves on to another rebel territory, unseen")
+    for _, p in ipairs(player.GetAll()) do if p.lcPosWas then p:SetPos(p.lcPosWas) p.lcPosWas = nil end end
+    LC.IsSeen = seenWas
+    g:Remove()
+    for npc, st in pairs(LC.NPCs) do if IsValid(npc) and st.quartermaster and (st.zone == a or st.zone == b) then LC.NPCs[npc] = nil npc:Remove() end end
+    LC.RemoveZone(far) LC.RemoveZone(b) LC.RemoveZone(a)
+end)()
+;(function()
+    -- the quartermaster buys food back for next to nothing (it's free from his crate)
+    local eater = newPlayer("BeanSeller", "resistance")
+    local nqWas = LC.NearQuartermaster
+    LC.NearQuartermaster = function() return true end
+    ok((LC.SellPrice(eater, "canned_food") or 0) <= 2 and (LC.SellPrice(eater, "ration") or 0) <= 2, "the quartermaster pays at most 2 credits for food", LC.SellPrice(eater, "canned_food"))
+    LC.NearQuartermaster = nqWas
+    ok((LC.SellPrice(eater, "canned_food") or 0) > 2, "(the dealer in the city still pays his price)")
+    -- the vest: no charge from sleeping beside the camp's vortigaunt; ask it, or use a charge cell
+    eater:SetNW2Int("lc_vest_cap", 25)
+    eater:SetArmor(0)
+    local v = ents.Create("npc_vortigaunt") v:Spawn() v:SetPos(eater:GetPos() + Vector(60, 0, 0))
+    LC.RegisterNPC(v, "vortigaunt")
+    LC.SettleVort(v, true)
+    _run(5)
+    ok(eater:Armor() == 0, "standing (or sleeping) beside a vortigaunt doesn't charge your vest by itself")
+    eater:SetNW2Int("lc_vest_cap", 25)
+    local okC = LC.VortCharge(eater, v)
+    ok(okC and eater:Armor() == 25, "ask it (E) and it charges your vest", eater:Armor())
+    eater:SetArmor(0)
+    ok(not LC.VortCharge(eater, v) and eater:Armor() == 0, "(and not again for a while)")
+    LC.GiveItem(eater, "vest_cell", 1)
+    LC.ItemUse(eater, "vest_cell")
+    ok(eater:Armor() == 25 and not LC.HasItem(eater, "vest_cell"), "a charge cell charges the vest", eater:Armor())
+    ok(LCS.LabById.vest_cell ~= nil, "the lab makes charge cells")
+    _setcvar("lc_vest_cell_drop", 100)
+    local before = #ents.FindByClass("lc_item")
+    local c, cst = LC.Spawners.cop(Vector(-201000, 201000, 0))
+    hook.Run("OnNPCKilled", c, game.GetWorld())
+    local cell = false
+    for _, e in ipairs(ents.FindByClass("lc_item")) do if e:GetNW2String("lc_item", "") == "vest_cell" then cell = true end end
+    ok(cell and #ents.FindByClass("lc_item") > before, "a dead unit can drop a charge cell")
+    _setcvar("lc_vest_cell_drop", 25)
+    LC.NPCs[c] = nil c:Remove()
+    LC.RebelVorts[v] = nil LC.NPCs[v] = nil v:Remove()
+    eater.valid = false
+end)()
+;(function()
+    -- spawned inside someone: moved to the nearest clear spot
+    local stuck = newPlayer("StuckOne", "citizen")
+    stuck:SetPos(Vector(-205000, 205000, 0))
+    local n = ents.Create("npc_citizen") n:Spawn() n:SetPos(stuck:GetPos())
+    local th = util.TraceHull
+    util.TraceHull = function(t)
+        local inside = t.start:DistToSqr(n:GetPos()) < 20 * 20
+        return { Hit = inside, StartSolid = inside, HitPos = t.endpos, Entity = inside and n or NULL, Fraction = inside and 0 or 1 }
+    end
+    local tl = util.TraceLine
+    util.TraceLine = function(t)
+        local down = t.endpos.z < t.start.z - 50
+        return { Hit = down, HitPos = down and Vector(t.start.x, t.start.y, 0) or t.endpos, Fraction = down and 0.5 or 1, Entity = NULL }
+    end
+    local moved = LC.UnstickFromPeople(stuck)
+    util.TraceHull, util.TraceLine = th, tl
+    ok(moved and stuck:GetPos():Distance(n:GetPos()) >= 30, "spawned inside an NPC: moved out beside them (no noclip needed)", tostring(stuck:GetPos()))
+    n:Remove()
+    stuck.valid = false
+end)()
+;(function()
+    -- the radio repair: two minutes a set, and it says so when one runs out
+    local rr = newPlayer("RadioMan", "citizen")
+    ok(LC.JobGameStart(rr, "radio", nil, {}), "a radio on the bench")
+    local g = LC.JobGames[rr]
+    ok(g and g.radioEnd - CurTime() > 100, "two minutes for each set (it was 50 seconds)", g and math.floor(g.radioEnd - CurTime()))
+    g.radioEnd = CurTime() - 1
+    _run(0.5)
+    ok(g.last == "timeout" and g.n == 2, "out of time: the next set, and the window's told it was a timeout (not fixed)")
+    LC.JobGameEnd(rr, "quit")
+    rr.valid = false
+    -- the clipboard the right way up; rainwater straight from the sky
+    local ang = LC.CarryHandAngle("models/props_lab/clipboard.mdl")
+    ok(ang.r == 180 and ang.p == 0, "a clipboard carried in one hand is turned the right way up")
+    ok(concommand.GetTable and concommand.GetTable()["lc_outfits_edit"] ~= nil or LC.OpenOutfits ~= nil, "the editor's Job outfits button has its own command (lc_outfits_edit)")
+    ok(LC.EndingSongVolume("shalom") == 2 and LC.EndingSongVolume("harpies") == 4, "Shalom's song twice as loud, and the Harpies' twice what it was")
+end)()
+;(function()
+    -- stalkers: only killers among the Resistance; and a stalker is nothing else
+    local cit = newPlayer("PettyThief", "citizen")
+    cit:SetPData("lce_standing", -990)
+    cit:SetPData("lc_jailcount", 9)
+    ok(not LC.Heinous(cit, "Obstructing Civil Protection"), "a citizen locked up again and again for small things is never made a stalker")
+    local reb = newPlayer("CopKiller", "resistance", nil, 900)
+    ok(not LC.Heinous(reb, "Assaulting Civil Protection"), "(nor a rebel who's killed nobody)")
+    local c, cst = LC.Spawners.cop(Vector(-206000, 206000, 0))
+    hook.Run("OnNPCKilled", c, reb)
+    ok(LC.KillCount(reb) >= 1 and LC.Heinous(reb, "Assaulting Civil Protection"), "a rebel who has killed a unit is")
+    LC.NPCs[c] = nil if IsValid(c) then c:Remove() end
+    LC.GiveItem(reb, "canned_food", 2)
+    reb:SetNW2String("lcj_job", "radio")
+    LC.MakeStalker(reb)
+    ok(LC.PlayerIsStalker(reb) and not LC.HasItem(reb, "canned_food"), "made a stalker: what they had goes with who they were")
+    reb.superadmin = true
+    local okJ = LC.CanJoinFaction(reb, "resistance")
+    ok(not okJ, "a stalker can't take up another faction, even as a superadmin")
+    reb.superadmin = nil
+    local okS = LC.CanSwitchCharacter(reb)
+    ok(not okS, "nor switch to another character")
+    reb:SetNW2Float("lcn_hunger", 50)
+    _run(6)
+    ok(LC.Hunger(reb) >= 50, "a stalker doesn't go hungry", LC.Hunger(reb))
+    local cz = ents.Create("npc_citizen") cz:Spawn()
+    LC.NPCs[cz] = { role = "citizen", state = "idle", nextUse = 0, untilT = 0 }
+    ok(hook.Run("PlayerUse", reb, cz) == false, "a stalker can't talk to people (E)")
+    LC.NPCs[cz] = nil cz:Remove()
+    local posting = { id = 99001, title = "Union shift", reward = 5, tmpl = LC.QuestTemplates[1], expiresPost = CurTime() + 99 }
+    LC.Postings.citizen = LC.Postings.citizen or {}
+    table.insert(LC.Postings.citizen, posting)
+    reb.lcqNext = 0
+    ok(not LC.AcceptPosting(reb, 99001), "a stalker's board is its own work, nothing else")
+    for i, p in ipairs(LC.Postings.citizen) do if p == posting then table.remove(LC.Postings.citizen, i) break end end
+    LC.FreeStalker(reb)
+    reb.valid = false cit.valid = false
+end)()
+;(function()
+    -- cuffed only once they're subdued: a few blows of the baton, or standing still for it. Never in noclip.
+    if LC.Event then LC.EndEvent(true) end
+    local S0 = Vector(-207000, 207000, 0)
+    local u, ust = LC.Spawners.cop(S0 + Vector(40, 0, 0))
+    ust.routeGroup = nil ust.untilT = 1e9 u.sim = false
+    local runr = newPlayer("FastRunner", "citizen")
+    runr:SetPos(S0)
+    runr:SetVelocity(Vector(250, 0, 0))
+    runr.GetVelocity = function() return Vector(250, 0, 0) end
+    LC.ReportCrime(runr, "Ran from a search", 120)
+    local taken = LC.NPCSubdue(u, ust, runr, CurTime())
+    ok(not taken and LC.SubdueHits(runr) == 1 and runr:GetNW2Float("lc_dazed_until", 0) > CurTime(), "running past a unit: a blow of the baton (and dazed), not cuffs")
+    for _ = 1, 4 do _run(1.2) if LC.NPCSubdue(u, ust, runr, CurTime()) then break end end
+    ok(LC.Marching[runr] or (LC.Prisoners and LC.Prisoners[runr]) or LC.Detained[runr], "beaten down: cuffed")
+    if LC.Marching[runr] then LC.Marching[runr] = nil end
+    if LC.Prisoners then LC.Prisoners[runr] = nil end
+    runr.valid = false
+    local flyer = newPlayer("Noclipper", "citizen")
+    flyer:SetPos(S0)
+    flyer:SetMoveType(MOVETYPE_NOCLIP)
+    LC.ReportCrime(flyer, "Ran from a search", 120)
+    ust.nextSubdue = 0
+    ok(not LC.NPCSubdue(u, ust, flyer, CurTime()) and LC.SubdueHits(flyer) == 0, "someone in noclip is never laid hands on")
+    flyer.valid = false
+    LC.NPCs[u] = nil u:Remove()
+end)()
+;(function()
+    -- the search called off: out of sight long enough, the units lose track of you
+    local hider = newPlayer("LyingLow", "resistance")
+    hider:SetPos(Vector(-208000, 208000, 0))
+    LC.ReportCrime(hider, "Escaping custody", 600)
+    _run(1.5)
+    local sbs = LC.SeenBySecurity
+    LC.SeenBySecurity = function() return false end
+    _run(GetConVar("lc_wanted_lost"):GetFloat() + 3)
+    ok(LC.PlayerIsWanted(hider) and LC.WantedLost(hider), "still wanted, but the units have lost track of where you are")
+    local c, cst = LC.Spawners.cop(hider:GetPos() + Vector(600, 0, 0))
+    cst.routeGroup = nil cst.untilT = 1e9 c.sim = false
+    _run(2)
+    ok(cst.state ~= "hostile", "a unit who hasn't seen you doesn't come for you")
+    LC.SeenBySecurity = function() return true end
+    _run(2)
+    ok(cst.state == "hostile" and not LC.WantedLost(hider), "one who sees you does")
+    LC.SeenBySecurity = sbs
+    LC.ClearWanted(hider)
+    LC.CalmCops(hider)
+    LC.NPCs[c] = nil c:Remove()
+    hider.valid = false
+end)()
+;(function()
+    -- a new face at the lab
+    local pat = newPlayer("NewFace", "resistance", nil, 900)
+    _run(1) -- (settled where they spawned)
+    pat:SetPos(Vector(-210000, 210000, 0))
+    pat:SetNW2String("lc_model", "models/humans/group01/male_02.mdl")
+    pat:SetPData("lce_standing", -900)
+    LC.AddCredits(pat, 500)
+    LC.ReportCrime(pat, "Escaping custody", 600)
+    local sci = ents.Create("lc_scientist") sci:SetPos(pat:GetPos() + Vector(50, 0, 0)) sci:Spawn()
+    local snWas = LC.ScientistNear
+    LC.ScientistNear = function() return sci end
+    local okS, why = LC.LabSurgery(pat)
+    ok(okS, "the scientist will change your face (for the Resistance, for credits)", why)
+    _run(21)
+    ok(pat:GetNW2String("lc_model", "") ~= "models/humans/group01/male_02.mdl" and not LC.PlayerIsWanted(pat) and LC.Standing(pat) >= -50,
+        "you wake with a new face: not wanted, and the records can't put your old standing to it", pat:GetNW2String("lc_model", "") .. " " .. LC.Standing(pat))
+    ok(not LC.LabSurgery(pat), "(not again for a while)")
+    LC.ReportCrime(pat, "Assault", 60)
+    ok(pat:GetPData("lc_new_face", "0") ~= "1", "wanted again: they know the new face too")
+    LC.ScientistNear = snWas
+    sci:Remove()
+    LC.ClearWanted(pat)
+    pat.valid = false
+end)()
+;(function()
+    -- the supply drop: one soldier guarding (he warns you off), two metrocops carrying boxes away
+    if LC.Event then LC.EndEvent(true) end
+    local D0 = Vector(-209000, 209000, 0)
+    local fly = LC.FlyDropship
+    LC.FlyDropship = nil
+    local seenWas = LC.IsSeen
+    LC.IsSeen = function() return false end
+    LC.StartSupplyDrop(D0)
+    local s = LC.Supply
+    local soldiers, porters = 0, #(s and s.porters or {})
+    for _, gd in ipairs(s and s.guards or {}) do local st = LC.NPCs[gd] if st and st.role == "soldier" then soldiers = soldiers + 1 end end
+    ok(s and soldiers == 1 and porters == 2, "one soldier on guard, two metrocops unloading", soldiers .. " / " .. porters)
+    local carried = false
+    for _ = 1, 20 do
+        _run(0.5)
+        for _, pn in ipairs(s.porters) do local st = LC.NPCs[pn] if st and IsValid(st.carry) then carried = true end end
+        if carried then break end
+    end
+    ok(carried, "a metrocop picks up a box to carry off")
+    local nosy = newPlayer("NosyCitizen", "citizen")
+    nosy:SetPos(s.crate:GetPos() + Vector(60, 0, 0))
+    local us = LC.UnitSees
+    LC.UnitSees = function() return true end
+    for _ = 1, 25 do _run(1) if LC.PlayerIsWanted(nosy) then break end end
+    ok(LC.PlayerIsWanted(nosy) and has(nosy.chat, "Step away from the crates"), "hanging about the crates: warned twice, then wanted")
+    LC.UnitSees = us
+    LC.IsSeen = seenWas
+    LC.FlyDropship = fly
+    LC.EndSupplyDrop(true)
+    LC.ClearWanted(nosy) LC.CalmCops(nosy)
+    nosy.valid = false
+end)()
+;(function()
+    -- Bloom's hands: the tuning sent in is part of the code now (the saved copy dropped)
+    local tun = LC.EndingTuning()
+    tun.bones.ears = { L_Hand = { 0, 0, 180 }, R_Hand = { 0, 0, -180 }, Head = { 5, 0, 0 } }
+    ok(LC.EndingTuneBaked() and tun.bones.ears.L_Hand == nil and tun.bones.ears.Head ~= nil, "Bloom's hand tuning is in the code now: the saved copy goes (the rest stays)")
+    tun.bones.ears = nil
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")

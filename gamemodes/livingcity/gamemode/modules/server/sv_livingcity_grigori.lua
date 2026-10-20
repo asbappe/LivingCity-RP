@@ -2,8 +2,10 @@
     Living City: Father Grigori, in the flesh
 
     While no player is Father Grigori, the man himself keeps to the
-    Resistance's ground (the largest rebel territory), Annabelle in hand,
-    talking to himself and to God. E on him:
+    Resistance's ground (the largest rebel territory at first; every
+    lc_grigori_move_minutes, 12, he moves on to another camp, when nobody's
+    about to see him go), Annabelle in hand, talking to himself and to God.
+    E on him:
 
       Blessing  he lays a hand on you: 25 health back, and blessed for five
                 minutes (you take 15% less harm). Once every five minutes each.
@@ -29,6 +31,7 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn      = CreateConVar("lc_grigori", "1", FLAGS, "Father Grigori keeps to rebel territory when no player is him: blessings and sermons for the Resistance")
 local cvRespawn = CreateConVar("lc_grigori_respawn", "10", FLAGS, "Minutes before Father Grigori is back after he's killed")
 local cvTalk    = CreateConVar("lc_grigori_talk_gap", "60", FLAGS, "Seconds at the least between two things Father Grigori says out loud")
+local cvMove    = CreateConVar("lc_grigori_move_minutes", "12", FLAGS, "About how many minutes Father Grigori stays in one rebel territory before he moves on to another (only when nobody's about to see him go; 0: he stays put)")
 
 local BLESS_SECS, BLESS_EVERY = 300, 300
 local SERMON_SECS, SERMON_EVERY = 600, 600
@@ -112,14 +115,45 @@ function LC.GrigoriTick(now)
         if now - deadAt >= cvRespawn:GetFloat() * 60 then LC.SpawnGrigori() end
         return
     end
+    -- now and then he moves on to another of the Resistance's camps (when nobody's about to see him go)
+    if LC.GrigoriMove(g, now) then return end
     -- he keeps to his ground (and wanders it a little)
     local z = g.lcHome
-    if z and LCZ and not LCZ.Contains(z, g:GetPos(), 0) and g.SetLastPosition then
+    local inside = false
+    for _, part in ipairs(z and (LC.RebelPartsOf and LC.RebelPartsOf(z)) or { z }) do
+        if LCZ and LCZ.Contains(part, g:GetPos(), 0) then inside = true end
+    end
+    if z and LCZ and not inside and g.SetLastPosition then
         g:SetLastPosition(z.pos)
         g:SetSchedule(SCHED_FORCED_GO)
     elseif math.random() < 0.02 then
         Speak(g, 70) -- (talking to himself, and to God)
     end
+end
+
+-- Off to another camp: true when he went. Only with nobody near him, and nobody watching where he
+-- turns up; otherwise he tries again in a minute.
+function LC.GrigoriMove(g, now, force)
+    local mins = cvMove:GetFloat()
+    if not IsValid(g) or (mins <= 0 and not force) then return false end
+    g.lcMoveAt = g.lcMoveAt or (now + mins * 60 * math.Rand(0.7, 1.3))
+    if now < g.lcMoveAt and not force then return false end
+    local terr = LC.RebelTerritories and LC.RebelTerritories() or {}
+    local here = g.lcHome and LC.RebelLeader and LC.RebelLeader(g.lcHome) or g.lcHome
+    local others = {}
+    for _, t in ipairs(terr) do if t.leader ~= here and not t.leader.grown then others[#others + 1] = t.leader end end
+    if #others == 0 then g.lcMoveAt = now + mins * 60 return false end
+    local busy = LC.IsSeen and LC.IsSeen(g:GetPos() + Vector(0, 0, 40))
+    for _, p in ipairs(player.GetAll()) do if p:GetPos():DistToSqr(g:GetPos()) < 1500 * 1500 then busy = true end end
+    local to = Pick(others)
+    local pos = (LC.SpotInZone and LC.SpotInZone(to)) or to.pos
+    if LC.GroundAt then pos = LC.GroundAt(pos) or pos end
+    if busy or (LC.IsSeen and LC.IsSeen(pos + Vector(0, 0, 40))) then g.lcMoveAt = now + 60 return false end
+    g:SetPos(pos + Vector(0, 0, 4))
+    g.lcHome = to
+    g.lcMoveAt = now + mins * 60 * math.Rand(0.7, 1.3)
+    if LC.Log then LC.Log("info", "Father Grigori moved on to the rebel territory at " .. tostring(to.pos)) end
+    return true
 end
 
 timer.Create("LivingCityGrigori", 5, 0, function()

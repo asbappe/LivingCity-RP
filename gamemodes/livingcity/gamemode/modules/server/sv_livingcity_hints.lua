@@ -90,7 +90,7 @@ LC.HINTS = {
         text = { default = "The city goes dark from 21:00 to 05:00, and curfews come three times as often. {+menu_context} > The city tells you the hour.",
                  zombie = "Night. The streets are darker, and the living stay in." } },
     rain = { title = "Rain", when = function() local c = GetConVar("lc_atmosphere") return c and c:GetBool() end,
-        text = { default = "Stand out in it with an empty bottle or can and it fills (untreated: boil it before you drink)." } },
+        text = { default = "Stand out in it with an empty bottle or can and it fills: rainwater, clean enough to drink as it is." } },
     acts_intro = { title = "Acting", when = function() local c = GetConVar("lc_acts") return c and c:GetBool() end,
         text = { default = "{+menu_context} > Me > Pose: sit, kneel, lie, lean (move to stand up). Me > Gesture: wave, salute, bow, nod and more. Me > Put my hands up." } },
     slots_intro = { title = "More than one life", when = function() local c = GetConVar("lc_char_slots") return c and c:GetInt() > 1 end,

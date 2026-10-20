@@ -710,7 +710,7 @@ function LC.SettleVort(npc, quiet)
         st.eventUntil = CurTime() + 1e6
     end
     npc:SetNW2String("lc_pname", "Freed vortigaunt")
-    if not quiet then Radio("resistance", "The vortigaunt is home. Stand near it and it will charge your vest.") end
+    if not quiet then Radio("resistance", "The vortigaunt is home. Ask it (E) and it will charge your vest.") end
 end
 
 -- Vortigaunts already living free in rebel territory, whether or not anyone has freed one
@@ -739,17 +739,35 @@ LC.VortHome = function(now) nextVortHome = 0 VortHome(now or CurTime()) end -- (
 
 local function VortTick()
     for v in pairs(LC.RebelVorts) do
-        if not IsValid(v) or v:Health() <= 0 then
-            LC.RebelVorts[v] = nil
-        else
-            for _, p in ipairs(player.GetAll()) do
-                if IsResistance(p) and p:Alive() and p:GetPos():DistToSqr(v:GetPos()) < 260 * 260 and LC.ChargeVest and LC.ChargeVest(p, 5) > 0 then
-                    if math.random() < 0.3 then v:EmitSound("npc/vort/health_charge.wav", 60) end
-                end
-            end
-        end
+        if not IsValid(v) or v:Health() <= 0 then LC.RebelVorts[v] = nil end
     end
 end
+
+-- A freed vortigaunt charges your vest when you ask it (E), not by itself (not while you sleep
+-- beside it): once every lc_vort_charge_minutes.
+local cvVortCharge = CreateConVar("lc_vort_charge_minutes", "10", FLAGS, "Minutes before a freed vortigaunt will charge the same person's vest again (E on it)")
+function LC.VortCharge(ply, v)
+    if not IsValid(v) or not LC.RebelVorts[v] or not IsValid(ply) or not ply:Alive() then return false end
+    if not IsResistance(ply) then return false, "The vortigaunt looks at you, and through you." end
+    if not (LC.HasVest and LC.HasVest(ply)) then return false, "\"You wear no vessel for the vortessence, friend.\" (You've no powered vest on.)" end
+    if ply:Armor() >= LC.VestCap(ply) then return false, "\"Your vessel is full.\" (Your vest is fully charged.)" end
+    local now = CurTime()
+    if (ply.lcVortChargeNext or 0) > now then
+        return false, string.format("\"The vortessence needs time to gather.\" (%d min)", math.ceil((ply.lcVortChargeNext - now) / 60))
+    end
+    ply.lcVortChargeNext = now + cvVortCharge:GetFloat() * 60
+    LC.ChargeVest(ply, 25)
+    v:EmitSound("npc/vort/health_charge.wav", 65)
+    return true, "The vortigaunt's hands glow green, and your vest hums with charge."
+end
+hook.Add("PlayerUse", "LivingCityVortCharge", function(ply, ent)
+    if not (IsValid(ent) and LC.RebelVorts[ent]) then return end
+    if (ply.lcVortUse or 0) > CurTime() then return false end
+    ply.lcVortUse = CurTime() + 1
+    local ok, msg = LC.VortCharge(ply, ent)
+    if msg then ply:ChatPrint("[Vortigaunt] " .. msg) end
+    return false
+end)
 
 ------------------------------------------------------------------------
 -- Commands and the clock

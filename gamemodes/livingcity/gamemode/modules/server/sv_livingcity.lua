@@ -1829,6 +1829,13 @@ local STOP_LINES = { cop = { "npc/metropolice/vo/holdit.wav", "npc/metropolice/v
     soldier = { "npc/combine_soldier/vo/contact.wav", "npc/combine_soldier/vo/stayalert.wav" } }
 local function Pursue(npc, st, e, now)
     if now < (st.nextPursue or 0) then return end
+    -- lost them: nobody has seen them for a while, so nobody tells this unit where they are
+    if LC.WantedLost and LC.WantedLost(e) then
+        npc:SetEnemy(NULL)
+        SetRel(npc, st, e, D_NU)
+        CalmOne(npc, st, now)
+        return
+    end
     st.nextPursue = now + (st.arrestOnly and 0.3 or 1)
     -- after someone who's harmed nobody: run them down and lay hands on them (no shots).
     -- If they turn violent (hurt anyone, a gun in hand, the alert climbs), weapons free.
@@ -1840,7 +1847,8 @@ local function Pursue(npc, st, e, now)
             if LC.ArmForAlert then LC.ArmForAlert(npc, st, e) end
         else
             local epos = e:GetPos()
-            if npc:GetPos():DistToSqr(epos) < 90 * 90 and LC.NPCTakesIn and LC.NPCTakesIn(npc, e) then return end
+            -- (laid hands on only once they're subdued: beaten, down, or standing still for it)
+            if npc:GetPos():DistToSqr(epos) < 90 * 90 and LC.NPCSubdue and LC.NPCSubdue(npc, st, e, now) then return end
             if (st.nextShout or 0) < now then
                 st.nextShout = now + 7
                 local lines = STOP_LINES[st.role] or STOP_LINES.cop

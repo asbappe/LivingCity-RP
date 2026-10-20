@@ -36,14 +36,14 @@ local function Lid(w, h, lid, top)
 end
 
 -- How closed the eyes are right now (0 open, 1 shut): a slow droop every
--- seven seconds or so, held a moment, then opened with a start.
+-- seven seconds or so, shut all the way a moment, then opened with a start.
 function LC_CL.EyelidClose(t)
     local cycle = 7
     local p = (t % cycle) / cycle
     if p < 0.62 then return 0 end
-    if p < 0.86 then return 0.85 * ((p - 0.62) / 0.24) ^ 1.6 end
-    if p < 0.92 then return 0.85 end
-    return 0.85 * (1 - (p - 0.92) / 0.08)
+    if p < 0.86 then return ((p - 0.62) / 0.24) ^ 1.6 end
+    if p < 0.92 then return 1 end -- (shut, all the way)
+    return 1 - (p - 0.92) / 0.08
 end
 
 local sleepFade = 0
@@ -70,7 +70,7 @@ hook.Add("HUDPaint", "LivingCityRest", function()
     if me:GetNW2Bool("lc_tired", false) then
         local f = LC_CL.EyelidClose(CurTime())
         if f > 0.01 then
-            local lid = h / 2 * f
+            local lid = (h / 2 + FEATHER * 0.5) * f -- (at 1 the two meet: no gap left between them)
             -- the world blurs as they close
             blurMat = blurMat or (Material and Material("pp/blurscreen"))
             if blurMat and render and render.UpdateScreenEffectTexture and surface.SetMaterial then

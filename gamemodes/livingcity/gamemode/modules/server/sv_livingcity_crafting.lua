@@ -33,6 +33,7 @@ LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvQMBonus = CreateConVar("lc_quartermaster_arms_bonus", "1.5", FLAGS, "What the Resistance quartermaster pays for arms, times the black market price")
+local cvQMFood = CreateConVar("lc_qm_food_price", "2", FLAGS, "The most the Resistance quartermaster pays for food or drink (he gives it out free from the supply crate; 0: he won't buy it)")
 local cvGasDmg  = CreateConVar("lc_gas_damage", "6", FLAGS, "Chlorine gas damage per second to anyone without a mask")
 
 local function Pick(t) return t[math.random(#t)] end
@@ -104,6 +105,12 @@ function LC.SellPrice(ply, id)
     if it.arms and IsResistance(ply) and LC.NearQuartermaster and LC.NearQuartermaster(ply) then
         price = math.floor(price * cvQMBonus:GetFloat() + 0.5)
     end
+    -- food and drink: the quartermaster hands it out free from the supply crate, so he
+    -- buys it back for next to nothing (lc_qm_food_price, 2)
+    if (it.hunger or it.thirst) and LC.NearQuartermaster and LC.NearQuartermaster(ply) then
+        price = math.min(price, math.max(0, cvQMFood:GetInt()))
+        if price <= 0 then return nil end
+    end
     return price
 end
 
@@ -128,6 +135,13 @@ function LC.ArmsUse(ply, id)
         if ply:Armor() >= 100 then return false, "You can't wear any more." end
         LC.TakeItem(ply, id)
         ply:SetArmor(math.min(100, ply:Armor() + (it.armor or 25)))
+        ply:EmitSound("items/battery_pickup.wav", 55)
+        return true
+    elseif it.use == "charge" then
+        if not (LC.HasVest and LC.HasVest(ply)) then return false, "You've no powered vest on to charge." end
+        if ply:Armor() >= LC.VestCap(ply) then return false, "Your vest is fully charged." end
+        LC.TakeItem(ply, id)
+        LC.ChargeVest(ply, it.charge or 25)
         ply:EmitSound("items/battery_pickup.wav", 55)
         return true
     elseif it.use == "ammo" then

@@ -141,7 +141,7 @@ end)
 -- Why this person can't take up another faction (nil if they can).
 function LC.BoundTo(ply, fid)
     if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) and fid ~= "stalker" then
-        return "Combine property doesn't choose. Only death ends a stalker; another character (!characters) can be someone else."
+        return "Combine property doesn't choose. Only death ends a stalker."
     end
     if LC.Conditioned and LC.Conditioned(ply) and fid ~= "cp" then
         return "The conditioning can't be undone: this person is Overwatch for life. Another character (!characters) can be someone else."

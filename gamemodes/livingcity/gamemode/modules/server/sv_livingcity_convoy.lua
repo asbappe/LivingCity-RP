@@ -8,13 +8,22 @@
                     dropship brings them in, sets a cargo container down and
                     climbs away (and comes back for the container when it's
                     over); under a roof an APC is parked there. Beside it, a
-                    stack of crates and the one you can open, with a few
-                    units standing guard, for lc_supply_minutes (6). Units
+                    stack of crates and the one you can open, for
+                    lc_supply_minutes (6). An Overwatch soldier stands guard
+                    (lc_supply_guards, 1), turning to look about; he warns
+                    anyone hanging about the crates (twice), then they're
+                    wanted. Two metrocops (lc_supply_porters, 2) unload it:
+                    each walks to the stack, picks up a box in both hands,
+                    carries it off to a spot down the street and sets it
+                    down, and back again, the whole time: they come and go,
+                    and between them is when to sneak in. Units
                     get a directive to guard it; the Resistance get one to raid
                     it. Anyone who isn't a unit can press E on the crate and
                     take a load (eight seconds, keep still): gun parts,
                     ammunition, chemicals, rations, a medkit's worth of
-                    bandages. A unit who sees you at it makes you wanted. The
+                    bandages. Done quietly; but a unit who sees you at it, at
+                    any moment of the eight seconds, stops you and makes you
+                    wanted. The
                     crate holds lc_supply_loads loads (5). If any are left when
                     the convoy moves on, every unit within reach of it is paid
                     lc_supply_pay credits (40); if it's emptied, the city hears
@@ -41,7 +50,8 @@ LC = LC or {}
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvLoads   = CreateConVar("lc_supply_loads", "5", FLAGS, "Loads a supply drop's crate holds")
 local cvPay     = CreateConVar("lc_supply_pay", "40", FLAGS, "Credits each Civil Protection unit near a supply drop is paid if the convoy leaves with supplies still in it")
-local cvGuards  = CreateConVar("lc_supply_guards", "3", FLAGS, "Civil Protection units standing guard over a supply drop")
+local cvGuards  = CreateConVar("lc_supply_guards", "1", FLAGS, "Overwatch soldiers standing guard over a supply drop (they turn to look about, and warn anyone at the crates)")
+local cvPorters = CreateConVar("lc_supply_porters", "2", FLAGS, "Metrocops unloading a supply drop: carrying boxes from the stack to a spot down the street, and back, the whole time")
 local cvJamSecs = CreateConVar("lc_jammer_secs", "240", FLAGS, "Seconds a radio jammer runs")
 local cvJamR    = CreateConVar("lc_jammer_radius", "1000", FLAGS, "How far a radio jammer reaches")
 
@@ -156,7 +166,7 @@ local function Unload(s, ground, side)
             if Free(cand) then gp = cand break end
         end
         gp = gp or (ground + side * 260 + Vector(0, 0, 4))
-        local ok, npc, st = pcall(function() return (i == 1 and LC.Spawners and LC.Spawners.soldier or spawner)(gp) end)
+        local ok, npc, st = pcall(function() return (LC.Spawners and LC.Spawners.soldier or spawner)(gp) end)
         if ok and IsValid(npc) and st then
             st.unmanaged = true
             st.supplyGuard = true
@@ -164,6 +174,22 @@ local function Unload(s, ground, side)
             if LC.SetState then LC.SetState(npc, st, "event") end
             st.eventUntil = CurTime() + 3600
             s.guards[#s.guards + 1] = npc
+        end
+    end
+    -- and the ones unloading it: a box at a time, off down the street and back
+    s.porters = {}
+    s.dropAt = LC.SupplyDropOff(s, ground + side * 140)
+    for i = 1, cvPorters:GetInt() do
+        local gp = (LC.GroundAt and LC.GroundAt(ground + side * 140 + across * (i % 2 == 0 and 110 or -110))) or (ground + side * 140)
+        local ok, npc, st = pcall(function() return (LC.Spawners and LC.Spawners.cop or spawner)(gp + Vector(0, 0, 4)) end)
+        if ok and IsValid(npc) and st then
+            st.unmanaged = true
+            st.supplyGuard = true
+            st.supplyPorter = { phase = "pick", t = CurTime() + i * 3, stack = gp }
+            if LC.SetState then LC.SetState(npc, st, "event") end
+            st.eventUntil = CurTime() + 3600
+            s.guards[#s.guards + 1] = npc
+            s.porters[#s.porters + 1] = npc
         end
     end
     hook.Run("LivingCitySupplyUnloaded", s)
@@ -276,7 +302,8 @@ function LC.EndSupplyDrop(silent)
         local st = IsValid(g) and LC.NPCs and LC.NPCs[g]
         if st then
             -- the guards walk off with the convoy, and the city takes them back
-            st.unmanaged, st.supplyGuard, st.eventUntil = nil, nil, 0
+            if st.supplyPorter and IsValid(st.carry) and LC.NPCDropCarry then LC.NPCDropCarry(g, st) end
+            st.unmanaged, st.supplyGuard, st.supplyPorter, st.eventUntil = nil, nil, nil, 0
             st.leaveAt = CurTime() + 60
         end
     end
@@ -290,9 +317,13 @@ function LC.LootSupply(ply, crate)
     if Unit(ply) then return false, "[CP net] Union supplies. Guard them until the convoy moves on." end
     if LC.Busy and LC.Busy(ply) then return false, "You're busy." end
     if crate:GetNW2Int("lc_loads", 0) <= 0 then return false, "Cleaned out." end
+    s.prying = s.prying or {}
+    s.prying[ply] = true
     return LC.StartTask(ply, 8, "Prying a load out of the crate... keep still", {
         maxMove = 48, cancelText = "You leave it.",
+        cancel = function(p) if s.prying then s.prying[p] = nil end end,
         done = function(p)
+            if s.prying then s.prying[p] = nil end
             if LC.Supply ~= s or not IsValid(crate) then return end
             local n = crate:GetNW2Int("lc_loads", 0)
             if n <= 0 then p:ChatPrint("Someone beat you to it.") return end
@@ -305,7 +336,7 @@ function LC.LootSupply(ply, crate)
             end
             s.raided[p] = true
             p:ChatPrint("Taken from the supply drop: " .. table.concat(got, ", ") .. ".")
-            crate:EmitSound("physics/wood/wood_box_break" .. math.random(1, 2) .. ".wav", 70)
+            crate:EmitSound("physics/cardboard/cardboard_box_impact_soft" .. math.random(1, 3) .. ".wav", 45) -- (quietly)
             if LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then
                 LC.ReportCrime(p, "Looting Union supplies", 240)
                 p:ChatPrint("[Civil Protection] A Civil Protection unit saw you at the crate.")
@@ -320,6 +351,146 @@ function LC.LootSupply(ply, crate)
         end,
     })
 end
+
+-- Where the unloaded boxes go: a spot down the street, a walk away from the stack (on the
+-- units' own paths, not in rebel ground), else just along from it.
+function LC.SupplyDropOff(s, from)
+    local best
+    for _, p in ipairs(LC.NodePositions and LC.NodePositions("cop") or {}) do
+        local d = p:Distance(from)
+        if d > 450 and d < 900 and math.abs(p.z - from.z) < 80 and not (LC.InRebelZone and LC.InRebelZone(p)) then
+            best = p
+            if math.random() < 0.3 then break end
+        end
+    end
+    return best or ((LC.GroundAt and LC.GroundAt(from + Vector(500, 0, 30))) or (from + Vector(500, 0, 0)))
+end
+
+local BOXES = { "models/props_junk/cardboard_box001a.mdl", "models/props_junk/cardboard_box002a.mdl", "models/props_junk/cardboard_box003a.mdl" }
+local function Walk(npc, pos)
+    if not npc.SetLastPosition then return end
+    npc:SetLastPosition(pos)
+    npc:SetSchedule(SCHED_FORCED_GO)
+end
+
+-- A porter's round: to the stack, a box up in both hands, off to the drop, set it down, back.
+local function PorterStep(s, npc, st, now)
+    local P = st.supplyPorter
+    if st.state == "hostile" then
+        if IsValid(st.carry) and LC.NPCDropCarry then LC.NPCDropCarry(npc, st) end
+        return
+    end
+    if now < (P.t or 0) then return end
+    local pos = npc:GetPos()
+    local function Stuck(goal)
+        if P.lastPos and pos:DistToSqr(P.lastPos) < 20 * 20 then P.still = (P.still or 0) + 1 else P.still = 0 end
+        P.lastPos = pos
+        if P.still >= 16 and not (LC.IsSeen and LC.IsSeen(pos + Vector(0, 0, 40))) then npc:SetPos(goal + Vector(0, 0, 4)) P.still = 0 end
+    end
+    if P.phase == "pick" then
+        if pos:DistToSqr(P.stack) > 80 * 80 then Walk(npc, P.stack) Stuck(P.stack) P.t = now + 0.5 return end
+        if LC.Face and IsValid(s.crate) then LC.Face(npc, s.crate:GetPos()) end
+        if LC.PlayGesture then LC.PlayGesture(npc, { "ACT_PICKUP_GROUND", "ACT_PICKUP_RACK" }, 1.5) end
+        P.phase, P.t = "lift", now + 1.6
+    elseif P.phase == "lift" then
+        if LC.NPCCarry then LC.NPCCarry(npc, st, BOXES[math.random(#BOXES)]) end
+        P.phase, P.t = "carry", now + 0.3
+        Walk(npc, s.dropAt)
+    elseif P.phase == "carry" then
+        if pos:DistToSqr(s.dropAt) > 80 * 80 then Walk(npc, s.dropAt) Stuck(s.dropAt) P.t = now + 0.5 return end
+        if LC.NPCDropCarry then LC.NPCDropCarry(npc, st) end
+        -- set down: a pile that grows at the drop (cleared away with the rest after)
+        if #s.props < 30 then
+            local n = (s.dropped or 0)
+            s.dropped = n + 1
+            local at = s.dropAt + Vector((n % 3) * 26 - 26, math.floor(n / 3) % 2 * 26, 0)
+            local e = ents.Create("prop_physics")
+            if IsValid(e) then
+                e:SetModel(BOXES[math.random(#BOXES)])
+                e:SetPos(at + Vector(0, 0, 12 + math.floor(n / 6) * 18))
+                e:Spawn()
+                local ph = e:GetPhysicsObject()
+                if IsValid(ph) then ph:EnableMotion(false) end
+                e.lcDressing = true
+                s.props[#s.props + 1] = e
+            end
+        end
+        P.phase, P.t = "pick", now + 1.2
+        Walk(npc, P.stack)
+    end
+end
+LC.SupplyPorterStep = PorterStep
+
+local GUARD_WARN = { "npc/combine_soldier/vo/contained.wav", "npc/combine_soldier/vo/stayalert.wav" }
+-- The guard: turns to look about now and then; anyone at the crates (who isn't a unit) is
+-- warned off twice, then wanted. Anyone seen prying a load out is stopped there and then.
+local function GuardStep(s, now)
+    local crate = s.crate
+    if not IsValid(crate) then return end
+    local cpos = crate:GetPos()
+    for _, g in ipairs(s.guards) do
+        local st = IsValid(g) and LC.NPCs and LC.NPCs[g]
+        if st and not st.supplyPorter and st.state ~= "hostile" and now >= (st.lookNext or 0) then
+            st.lookNext = now + math.Rand(3, 6)
+            if LC.FaceYaw then LC.FaceYaw(g, g:GetAngles().y + math.random(-110, 110)) end
+        end
+    end
+    for _, p in ipairs(player.GetAll()) do
+        if p:Alive() and not Unit(p) and not (LC.DisguisedAsCP and LC.DisguisedAsCP(p)) then
+            local seenBy
+            for _, g in ipairs(s.guards) do
+                if IsValid(g) and g:Health() > 0 and LC.UnitSees and LC.UnitSees(g, p, 700) then
+                    local tr = util.TraceLine({ start = g:EyePos(), endpos = p:EyePos(), mask = MASK_OPAQUE, filter = g })
+                    if tr.Fraction > 0.97 then seenBy = g break end
+                end
+            end
+            -- caught at it
+            if seenBy and s.prying and s.prying[p] then
+                s.prying[p] = nil
+                if LC.CancelTask then LC.CancelTask(p) end
+                seenBy:EmitSound("npc/combine_soldier/vo/contact.wav", 80)
+                p:ChatPrint("[Civil Protection] Caught with your hands in the crate.")
+                LC.ReportCrime(p, "Looting Union supplies", 240)
+                if LC.MakeCopsHostile then LC.MakeCopsHostile(p, cpos, 1200) end
+            elseif seenBy and p:GetPos():DistToSqr(cpos) < 260 * 260 and not (LC.PlayerIsWanted and LC.PlayerIsWanted(p)) then
+                local w = p.lcSupplyWarn
+                if not w or now - w.t > 40 then w = { n = 0, t = 0 } p.lcSupplyWarn = w end
+                if now - w.t >= 6 then
+                    w.n, w.t = w.n + 1, now
+                    if LC.Face then LC.Face(seenBy, p:GetPos()) end
+                    if w.n <= 2 then
+                        seenBy:EmitSound(GUARD_WARN[w.n], 80)
+                        p:ChatPrint(w.n == 1 and "[Overwatch soldier] \"Restricted supply point. Step away from the crates.\""
+                            or "[Overwatch soldier] \"Final warning. Step away from the crates.\"")
+                    else
+                        p:ChatPrint("[Overwatch soldier] \"Noncompliance at the supply point.\" You're wanted.")
+                        LC.ReportCrime(p, "Loitering at a Union supply drop", 120)
+                        if LC.MakeCopsHostile then LC.MakeCopsHostile(p, cpos, 1200) end
+                        p.lcSupplyWarn = nil
+                    end
+                end
+            end
+        end
+    end
+end
+LC.SupplyGuardStep = GuardStep
+
+timer.Create("LivingCitySupplyCrew", 0.5, 0, function()
+    local s = LC.Supply
+    if not s then return end
+    local ok, err = pcall(function()
+        local now = CurTime()
+        for _, npc in ipairs(s.porters or {}) do
+            local st = IsValid(npc) and npc:Health() > 0 and LC.NPCs and LC.NPCs[npc]
+            if st and st.supplyPorter then PorterStep(s, npc, st, now) end
+        end
+        if (s.guardNext or 0) <= now then
+            s.guardNext = now + 1
+            GuardStep(s, now)
+        end
+    end)
+    if not ok and LC.Error then LC.Error("supply crew", err) end
+end)
 
 hook.Add("LivingCityEventStarted", "LivingCitySupply", function(name)
     if name == "supply" then

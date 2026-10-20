@@ -41,7 +41,7 @@ local cvEndVol = CreateClientConVar("lc_ending_volume", "1", true, false, "How l
 -- fight so it carries over the gunfire, times your own lc_ending_volume.
 function LC_CL.EndingSongVolume()
     local loud = S and S.client and S.client.loud and 1.5 or 1
-    return math.Clamp((S and S.songVolume or 1) * loud * cvEndVol:GetFloat(), 0, 3)
+    return math.Clamp((S and S.songVolume or 1) * loud * cvEndVol:GetFloat(), 0, 6)
 end
 local songVolSet
 hook.Add("Think", "LivingCityEndingSongVolume", function()
@@ -580,8 +580,10 @@ local function Dance(ent, beat, now, key)
         -- the wrist like ears flapping, rather than twisting)
         -- (the sway: a curve up the back over legs that stay put and straight; turning the
         -- hips, or bending a knee, lifts the feet off the floor)
-        if name == "R_Hand" then a.y = a.y + flap
-        elseif name == "L_Hand" then a.y = a.y - flap
+        -- (and on people, the hands turned right round: palms the right way; tuned in the
+        -- Endings menu, 20 October. The Combine's units' bones sit differently: not on them)
+        if name == "R_Hand" then a.y = a.y + flap if lift == 1 then a.r = a.r - 180 end
+        elseif name == "L_Hand" then a.y = a.y - flap if lift == 1 then a.r = a.r + 180 end
         elseif name == "R_Forearm" then a.r = a.r + (tonumber(Tuned(cvPalm)) or 90)
         elseif name == "L_Forearm" then a.r = a.r - (tonumber(Tuned(cvPalm)) or 90)
         elseif name == "Spine" then a.y = a.y + wave * SWAY

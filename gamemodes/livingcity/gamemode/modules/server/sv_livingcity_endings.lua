@@ -116,14 +116,14 @@ local cvMax     = CreateConVar("lc_ending_max", "180", FLAGS, "Longest a secret 
 local cvCool    = CreateConVar("lc_ending_cooldown", "60", FLAGS, "Minutes between secret endings (triggered, voted on or skipped)")
 local cvGman    = CreateConVar("lc_ending_gman_lines", "vo/citadel/gman_exit01.wav,vo/citadel/gman_exit02.wav", FLAGS,
     "The G-Man's lines when he stops time, in order (comma-separated sound paths)")
-local cvSongVol = CreateConVar("lc_ending_song_volume", "harpies=2", FLAGS, "How loud an ending's song plays, for a quiet recording: id=volume, comma-separated (1 is as it is; up to 3)")
+local cvSongVol = CreateConVar("lc_ending_song_volume", "harpies=4,shalom=2", FLAGS, "How loud an ending's song plays, for a quiet recording: id=volume, comma-separated (1 is as it is; up to 6)")
 local cvRadius  = CreateConVar("lc_ending_flight_radius", "2200", FLAGS, "How wide the flying endings circle the city, at most (narrower where buildings are in the way: they keep to open sky)")
 
 local ROOT = "livingcity/endings/"
 local EXT = { wav = true, mp3 = true, ogg = true }
 
 LC.Endings = {
-    harpies   = { name = "The Harpies", say = "The lights go out. Something is gathering out there in the dark." },
+    harpies   = { name = "They Return", say = "The lights go out. Something is gathering out there in the dark." },
     bus       = { name = "The Bus", say = "Hear that horn? All aboard." },
     plane     = { name = "Plane", say = "Alo, salut. Please fasten your seatbelts." },
     standup   = { name = "Standup", say = "Look up." },
@@ -209,7 +209,7 @@ end
 
 function LC.EndingSongVolume(id)
     for k, v in string.gmatch(cvSongVol:GetString() or "", "([%w_]+)%s*=%s*([%d%.]+)") do
-        if string.lower(k) == id then return math.Clamp(tonumber(v) or 1, 0, 3) end
+        if string.lower(k) == id then return math.Clamp(tonumber(v) or 1, 0, 6) end
     end
     return 1
 end
@@ -3982,6 +3982,7 @@ local RETUNED = {
     { "lc_ending_base_bombs", { "30" }, "60" },
     { "lc_ending_hard_moment_beats", { "16" }, "5" },
     { "lc_ending_flood_drown", { "10" }, "15" },
+    { "lc_ending_song_volume", { "harpies=2", "harpies=2,shalom=2" }, "harpies=4,shalom=2" }, -- (20 October: Shalom and the Harpies twice as loud)
     { "lc_ending_base_sections", { "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end" }, "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end" },
     { "lc_ending_base_lines", { "2.2=CAPTAIN: What happen ?|3.5=MECHANIC: Somebody set up us the bomb.|6.5=OPERATOR: We get signal.|9.5=CAPTAIN: What !|12.5=OPERATOR: Main screen turn on.|14.7=CAPTAIN: It's you !!|16.4=CATS: How are you gentlemen !!|18.4=CATS: All your base are belong to us.|20.4=CATS: You are on the way to destruction.|21.6=CAPTAIN: What you say !!|23.0=CATS: You have no chance to survive make your time.|26.0=CATS: Ha ha ha ha ....|34=CAPTAIN: Take off every 'ZIG' !!|126=CAPTAIN: Move 'ZIG'.|174=CAPTAIN: For great justice." }, "2.15=CAPTAIN: What happen ?|3.55=MECHANIC: Somebody set up us the bomb.|4.65=OPERATOR: We get signal.|6.5=CAPTAIN: What !|9.5=OPERATOR: Main screen turn on.|11.7=CAPTAIN: It's you !!|12.55=CATS: How are you gentlemen !!|14.7=CATS: All your base are belong to us.|18.45=CATS: You are on the way to destruction.|20.6=CAPTAIN: What you say !!|21.65=CATS: You have no chance to survive make your time.|26.0=CATS: Ha ha ha ha ....|34=CAPTAIN: Take off every 'ZIG' !!|126=CAPTAIN: Move 'ZIG'.|174=CAPTAIN: For great justice." },
 }

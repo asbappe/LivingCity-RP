@@ -628,7 +628,7 @@ function TOOL.BuildCPanel(panel)
     panel:Help("Pick an ending, play it, and tune its dances bone by bone and all its settings while it plays.")
 
     Header("City")
-    panel:Button("Job outfits (who wears what)", "lc_outfits")
+    panel:Button("Job outfits (who wears what)", "lc_outfits_edit")
     panel:Button("Start the city", "lc_start")
     panel:Button("Stop and clear NPCs", "lc_stop")
     panel:Button("Calm security", "lc_calm")

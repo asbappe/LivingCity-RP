@@ -64,12 +64,14 @@ end
 net.Receive("lc_jg_panel", function()
     local t = ReadCompressed() or {}
     if not t.kind or not BUILD[t.kind] then return Close(true) end
+    t.gotAt = CurTime() -- (a "secs" left counts down from here)
     if panel and panel.kind == t.kind and IsValid(panel.frame) and panel.update then
         panel.data = t
         panel.update(t)
         return
     end
     Close(true)
+    t.gotAt = t.gotAt or CurTime()
     panel = { kind = t.kind, data = t }
     BUILD[t.kind](t)
 end)
@@ -384,11 +386,17 @@ hook.Add("Think", "LivingCityRadioBench", function()
 end)
 LC_CL.RadioBenches = function() return benches end
 
--- A trimmer screw: turn it with the screwdriver (drag it, or the mouse wheel).
+-- A trimmer screw: turn it with the screwdriver. Hold the mouse on it and go round, clockwise
+-- or anticlockwise, like turning a real screw (or the mouse wheel, for the last little bit).
+local function ScrewAngle(s, cx, cy)
+    local x, y = s:LocalCursorPos()
+    return math.deg(math.atan2(x - cx, -(y - cy))) -- (0 at the top, going round clockwise)
+end
+LC_CL.ScrewAngle = ScrewAngle
 local function Screw(parent, name, get, set)
     local p = vgui.Create("DPanel", parent)
     p:SetSize(110, 96)
-    p:SetCursor("sizewe")
+    p:SetCursor("hand")
     p.Paint = function(s, w, h)
         local cx, cy, r = w / 2, 38, 26
         surface.SetDrawColor(110, 112, 118)
@@ -398,11 +406,22 @@ local function Screw(parent, name, get, set)
         local dx, dy = math.sin(a) * (r - 6), -math.cos(a) * (r - 6)
         surface.SetDrawColor(40, 40, 44)
         for o = -1, 1 do surface.DrawLine(cx - dx + o, cy - dy, cx + dx + o, cy + dy) end
+        if s:IsHovered() or s.turning then
+            -- which way is which
+            draw.SimpleText("-", "LCJobLine", cx - r - 8, cy, DIM, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            draw.SimpleText("+", "LCJobLine", cx + r + 8, cy, DIM, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        end
         draw.SimpleText(name, "LCJobLine", cx, h - 16, INK, TEXT_ALIGN_CENTER)
     end
-    p.OnMousePressed = function(s) s.dragX = gui.MouseX() s.dragFrom = get() s:MouseCapture(true) end
-    p.OnMouseReleased = function(s) s.dragX = nil s:MouseCapture(false) end
-    p.Think = function(s) if s.dragX then set(math.Clamp(s.dragFrom + (gui.MouseX() - s.dragX) / 400, 0, 1)) end end
+    p.OnMousePressed = function(s) s.turning = true s.lastA = ScrewAngle(s, s:GetWide() / 2, 38) s:MouseCapture(true) end
+    p.OnMouseReleased = function(s) s.turning = nil s:MouseCapture(false) end
+    p.Think = function(s)
+        if not s.turning then return end
+        local a = ScrewAngle(s, s:GetWide() / 2, 38)
+        local d = (a - (s.lastA or a) + 540) % 360 - 180 -- (the shortest way round since last time)
+        s.lastA = a
+        if d ~= 0 then set(math.Clamp(get() + d / 270, 0, 1)) end -- (three quarters of a turn: one end to the other)
+    end
     p.OnMouseWheeled = function(_, delta) set(math.Clamp(get() + delta * 0.015, 0, 1)) return true end
     return p
 end
@@ -443,7 +462,10 @@ BUILD.radio = function(t)
         draw.RoundedBox(2, 170, 9, bw * station, 14, station > 0.8 and GOOD or (station > 0.4 and WARN or BAD))
         draw.SimpleText("Static", "LCJobLine", 110, 32, DIM)
         draw.RoundedBox(2, 170, 33, bw * vs, 14, vs < 0.25 and GOOD or (vs < 0.6 and WARN or BAD))
-        draw.SimpleText(string.format("Set %d of %d   %d s", d.n or 1, d.of or 4, d.secs or 0), "LCJobLine", w - 10, h / 2, DIM, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+        -- the time left on this set, ticking down (red near the end: it goes back on the shelf unfixed)
+        local left = math.max(0, math.ceil((d.secs or 0) - (CurTime() - (d.gotAt or CurTime()))))
+        draw.SimpleText(string.format("Set %d of %d", d.n or 1, d.of or 4), "LCJobLine", w - 10, h / 2 - 9, DIM, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+        draw.SimpleText(string.format("%d:%02d left", math.floor(left / 60), left % 60), "LCJobLine", w - 10, h / 2 + 9, left <= 15 and BAD or INK, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
     end
     local bench = vgui.Create("DPanel", f)
     bench:Dock(TOP)
@@ -485,8 +507,30 @@ BUILD.radio = function(t)
     local function Upd(d)
         heard:SetVisible(d.heard ~= nil)
         lock:SetDisabled(d.heard ~= nil)
-        -- the next set off the shelf: its screws are wherever they were left
-        if panel and d.n ~= panel.set then panel.set = d.n panel.turn = table.Copy(d.turn or {}) end
+        -- the next set off the shelf: its screws are wherever they were left (and a moment to
+        -- see the last one done, as it's taken off the bench)
+        if panel and d.n ~= panel.set then
+            if panel.set and d.n and d.n > panel.set then
+                panel.between = { t = CurTime(), done = panel.set, of = d.of or 4, fixed = d.last ~= "timeout" }
+                surface.PlaySound(d.last == "timeout" and "buttons/button10.wav" or "buttons/button14.wav")
+            end
+            panel.set = d.n
+            panel.turn = table.Copy(d.turn or {})
+        end
+    end
+    f.PaintOver = function(s, w, h)
+        local b = panel and panel.between
+        if not b then return end
+        local k = (CurTime() - b.t) / 1.8
+        if k >= 1 then panel.between = nil return end
+        local a = k < 0.15 and k / 0.15 or (k > 0.75 and (1 - k) / 0.25 or 1)
+        draw.RoundedBox(4, 0, 24, w, h - 24, Color(12, 14, 16, 235 * a))
+        local col = b.fixed and GOOD or BAD
+        draw.SimpleText(b.fixed and string.format("Set %d of %d: clean. Off the bench it goes.", b.done, b.of)
+            or string.format("Set %d of %d: out of time. Back on the shelf, unfixed.", b.done, b.of), "DermaLarge", w / 2, h / 2 - 16, Color(col.r, col.g, col.b, 255 * a), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        if b.done < b.of then
+            draw.SimpleText("The next one from the shelf...", "LCJobLine", w / 2, h / 2 + 18, Color(INK.r, INK.g, INK.b, 255 * a), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        end
     end
     panel.update = Upd
     Upd(t)

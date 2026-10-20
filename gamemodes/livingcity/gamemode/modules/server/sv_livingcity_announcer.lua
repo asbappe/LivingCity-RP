@@ -406,19 +406,20 @@ local function Say(voice, trig, only, force, tier)
 end
 LC.CustomAnnounce = Say
 
--- How long a clip runs (SoundDuration can say 0 on a dedicated server; the wav's header then)
-local function ClipSecs(path)
-    local d = SoundDuration and SoundDuration(path) or 0
-    if d and d > 0.2 and d <= 60 then return d end
-    return LC.WavDuration and LC.WavDuration(path) or 8
-end
-LC.AnnounceClipSecs = ClipSecs
--- How long, if it can be told (0: leave it to the player's own game to work out)
+-- How long a clip runs: the file's own header first (exact), then SoundDuration (which can
+-- say 0, or come out short, on a dedicated server)
 function LC.AnnounceKnownSecs(path)
+    local h = LC.WavDuration and LC.WavDuration(path)
+    if h and h > 0.2 and h <= 120 then return h end
     local d = SoundDuration and SoundDuration(path) or 0
     if d and d > 0.2 and d <= 120 then return d end
-    return LC.WavDuration and LC.WavDuration(path) or 0
+    return 0
 end
+local function ClipSecs(path)
+    local d = LC.AnnounceKnownSecs(path)
+    return (d > 0.2 and d <= 60) and d or 8
+end
+LC.AnnounceClipSecs = ClipSecs
 
 -- Who says it: only one voice for each thing that happens, never both. The
 -- Administrator (lc_announce_admin_share percent of the time) or Overwatch,

@@ -284,7 +284,7 @@ local function EnsureRebelProps()
     if not LC.Running then return end
     local live = {}
     for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}) do
-        if not z.grown then
+        if not z.grown and (not LC.RebelIsLeader or LC.RebelIsLeader(z)) then -- (one crate for a whole territory)
             live[z] = true
             local r = LC.RebelProps[z] or { pots = {} }
             LC.RebelProps[z] = r

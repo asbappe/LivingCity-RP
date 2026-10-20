@@ -701,8 +701,27 @@ local function FollowThink(npc, st, now)
     return true
 end
 
+-- Crouched with nothing to crouch for (a scavenging or gardening animation that ended, or the
+-- engine's own taking cover): back on their feet.
+local CROUCHED = {}
+for _, n in ipairs({ "ACT_COVER_LOW", "ACT_CROUCHIDLE", "ACT_CROUCH", "ACT_WALK_CROUCH", "ACT_RUN_CROUCH", "ACT_COVER_SMG1_LOW",
+    "ACT_RANGE_AIM_SMG1_LOW", "ACT_RANGE_AIM_PISTOL_LOW", "ACT_RANGE_AIM_LOW", "ACT_WALK_CROUCH_AIM", "ACT_RUN_CROUCH_AIM" }) do
+    if _G[n] then CROUCHED[_G[n]] = true end
+end
+local function StandUp(npc, st, now)
+    if (st.nextStandCheck or 0) > now then return end
+    st.nextStandCheck = now + 2
+    if st.foe or st.state == "fighting" or st.state == "hostile" or st.life or st.sneak or not npc.GetActivity then return end
+    if CROUCHED[npc:GetActivity()] then
+        npc:SetSchedule(SCHED_IDLE_STAND)
+        if npc.SetIdealActivity and ACT_IDLE then npc:SetIdealActivity(ACT_IDLE) end
+    end
+end
+LC.RebelStandUp = StandUp
+
 local function ThinkRebel(npc, st, now)
     if (st.stunnedUntil or 0) > now then return end -- flashbanged
+    StandUp(npc, st, now)
     if st.state == "event" then
         if now > (st.eventUntil or 0) then LC.SetState(npc, st, "idle"); st.untilT = now + 1 end
         return
@@ -1693,16 +1712,27 @@ timer.Create("LivingCityLookoutPosts", 3, 0, function()
     if not ok then LC.Error("lookout posts", err) end
 end)
 
--- One quartermaster at the heart of each rebel zone you placed.
+-- One quartermaster at the heart of each rebel territory you placed (touching zones are one:
+-- LC.RebelTerritories, sv_livingcity_paths.lua). One whose zone was deleted, or a second one in
+-- the same territory (zones redrawn, or two zones merged into one), goes.
 LC.QMDead = LC.QMDead or {}
 local function EnsureQuartermasters()
     if not LC.Running or cvRebels:GetInt() <= 0 then return end
     local have = {}
+    local zones = RebelZones()
     for npc, st in pairs(LC.NPCs) do
-        if IsValid(npc) and st.quartermaster and npc:Health() > 0 then have[st.zone] = true end
+        if IsValid(npc) and st.quartermaster and npc:Health() > 0 then
+            local lead = st.zone and table.HasValue(zones, st.zone) and LC.RebelLeader(st.zone)
+            if not lead or have[lead] then
+                LC.NPCs[npc] = nil
+                npc:Remove()
+            else
+                have[lead] = true
+            end
+        end
     end
-    for _, z in ipairs(RebelZones()) do
-        if not z.grown and not have[z] and CurTime() > (LC.QMDead[z] or 0) then
+    for _, z in ipairs(zones) do
+        if not z.grown and LC.RebelIsLeader(z) and not have[z] and CurTime() > (LC.QMDead[z] or 0) then
             local p = HiddenSpot(z)
             if p then
                 local npc, st = SpawnRebel(p + Vector(0, 0, 4), z)
@@ -1721,7 +1751,7 @@ LC.EnsureQuartermasters = EnsureQuartermasters
 hook.Add("OnNPCKilled", "LivingCityQuartermaster", function(npc)
     local st = LC.NPCs[npc]
     if st and st.quartermaster and st.zone then
-        LC.QMDead[st.zone] = CurTime() + QM_RESPAWN
+        LC.QMDead[LC.RebelLeader(st.zone)] = CurTime() + QM_RESPAWN
         if LC.RadioNotice then LC.RadioNotice("resistance", "They got the quartermaster. Someone will take his place, give it time.") end
     end
 end)

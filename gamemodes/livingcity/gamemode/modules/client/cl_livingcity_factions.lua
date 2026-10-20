@@ -129,6 +129,18 @@ net.Receive("lcf_menu", function()
                     sd:SetTextColor(Color(200, 200, 200))
                     sd:SetText(s.desc or "")
                     sd:Dock(TOP)
+                    -- how a role sits with your rank: on top of it, not instead of it
+                    local kit = {}
+                    for _, w in ipairs(s.loadout or {}) do kit[#kit + 1] = (string.gsub(string.gsub(w, "^weapon_lc_", ""), "^weapon_", "")) end
+                    local myRank = f.ranks[entry.rank] and f.ranks[entry.rank].name or "your rank"
+                    local how = vgui.Create("DLabel", card)
+                    how:SetWrap(true)
+                    how:SetAutoStretchVertical(true)
+                    how:SetTextColor(Color(160, 190, 220))
+                    how:SetText(string.format("A role, not a rank: you stay %s and keep earning XP toward the next rank. While you hold it you carry its kit%s instead of your rank's%s. To give it up, press \"Join %s\" above: you're back to %s with %s kit.",
+                        myRank, #kit > 0 and (" (" .. table.concat(kit, ", ") .. ")") or "", s.models and " and wear its clothes" or "", f.name, myRank, myRank == "your rank" and "its" or "a " .. myRank .. "'s"))
+                    how:Dock(TOP)
+                    how:DockMargin(0, 2, 0, 0)
                     local mine = data.current == f.id and data.special == s.id
                     JoinButton(card, mine and "You hold this role" or (sp.ok and ("Take up the role of " .. s.name) or sp.why),
                         sp.ok and not mine, function() Join(f.id, s.id) end)
@@ -161,7 +173,8 @@ function LC_CL.IdentityLine()
     local ply = LocalPlayer()
     local rank = f.ranks[ply:GetNW2Int("lcf_rank", 1)] or f.ranks[1]
     local special = f.specialsById[ply:GetNW2String("lcf_special", "")]
-    local title = special and special.name or ply:GetNW2String("lcf_title", rank.name)
+    -- (a special role is held on top of your rank: "Hacker (Fighter)")
+    local title = special and (special.name .. " (" .. rank.name .. ")") or ply:GetNW2String("lcf_title", rank.name)
     local text = title
     if title ~= f.name and #f.ranks == 1 then text = f.name end
     local block = ply:GetNW2Int("lc_block", 0)
@@ -193,7 +206,7 @@ function LC_CL.XPInfo()
     lastXP = xp
     local rank, nextR = f.ranks[idx], f.ranks[idx + 1]
     local special = f.specialsById[ply:GetNW2String("lcf_special", "")]
-    local name = special and special.name or rank.name
+    local name = special and (special.name .. " (" .. rank.name .. ")") or rank.name
     local frac, label
     if nextR and nextR.overwatch and not ply:GetNW2Bool("lcf_transhuman", false) then
         -- (the Overwatch ranks wait on the conditioning: the Overwatch Candidate story)

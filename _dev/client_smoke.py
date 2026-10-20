@@ -938,6 +938,24 @@ local okJG, errJG = pcall(function()
     net.ReadString, util.JSONToTable = rS2, rJ2
 end)
 if not okJG then problems[#problems + 1] = "job games: " .. tostring(errJG) end
+-- 20 October: the eyelids shut all the way; how long a voice runs; the rank card; subtitles under
+-- a window; the screws turned round; a setting "changed" only when it really has
+local okOct, errOct = pcall(function()
+    local most = 0
+    for i = 0, 70 do most = math.max(most, LC_CL.EyelidClose(i / 10)) end
+    if most < 0.99 then error("the eyelids don't shut all the way: " .. most) end
+    if LC_CL.VoiceSecs("x.mp3", 7, 4) ~= 7 or LC_CL.VoiceSecs("x.mp3", 0, 4) ~= 4 then error("voice length") end
+    local was = _me.GetNW2String
+    _me.GetNW2String = function(self, k, d) if k == "lcf_faction" then return "resistance" end return was(self, k, d) end
+    if not LC_CL.RankCard(_me, 16, 160, 340) then error("no rank card for a Resistance member") end
+    _me.GetNW2String = function(self, k, d) if k == "lcf_faction" then return "citizen" end return was(self, k, d) end
+    if LC_CL.RankCard(_me, 16, 160, 340) then error("a rank card for a plain citizen") end
+    _me.GetNW2String = was
+    if type(LC_CL.SubsY(1920, 1080, 2)) ~= "number" then error("subtitle height") end
+    if not LC_CL.EndingSameValue("0.360000", "0.36") or LC_CL.EndingSameValue("0.4", "0.36") or not LC_CL.EndingSameValue("12.2:ignite,60.2:hop", "12.2:ignite,60.2:hop") then error("ending settings compared wrong") end
+    if not LC_CL.EndingCombineBody({ GetModel = function() return "models/player/police.mdl" end }) then error("a metrocop isn't a Combine body") end
+end)
+if not okOct then problems[#problems + 1] = "20 October: " .. tostring(errOct) end
 -- the other job games (cl_livingcity_moregames.lua): every panel opened, updated, closed
 local okMG, errMG = pcall(function()
     local rU, rD, rDc, rJ = net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable

@@ -45,6 +45,9 @@ LCS.Items = {
     bottle_empty    = { name = "Empty bottle", model = BOTTLE, fillTo = "bottle_dirty" },
     bottle_dirty    = { name = "Bottle of untreated water", model = BOTTLE, thirst = 45, parasite = 0.4, cooksTo = "bottle_clean", leaves = "bottle_empty" },
     bottle_clean    = { name = "Bottle of boiled water", model = BOTTLE, thirst = 45, leaves = "bottle_empty" },
+    -- rain caught straight from the sky: clean enough as it is (no boiling)
+    can_rain        = { name = "Can of rainwater", model = CAN, thirst = 30, leaves = "can_empty" },
+    bottle_rain     = { name = "Bottle of rainwater", model = BOTTLE, thirst = 45, leaves = "bottle_empty" },
 
     ------------------------------------------------------------------------
     -- Your own papers (sv_livingcity_intake.lua): Civil Intake issues them
@@ -207,7 +210,9 @@ LCS.Items = {
     jammer          = { name = "Radio jammer", model = "models/props_lab/reciever01b.mdl", use = "jammer", useLabel = "Set down",
                         contraband = true, conceal = 0.3, sell = 35, desc = "Set it down: four minutes of static on every Civil Protection unit radio nearby, and no scanner photos get out" },
     armor_vest      = { name = "Powered vest", model = "models/props_c17/SuitCase001a.mdl", use = "armor", useLabel = "Put on", armor = 30,
-                        contraband = true, conceal = 0.15, sell = 30, desc = "Plates and salvaged charge cells: holds a charge (75), comes with thirty in it. Vortigaunts and batteries top it up" },
+                        contraband = true, conceal = 0.15, sell = 30, desc = "Plates and salvaged charge cells: holds a charge (75), comes with thirty in it. Charge cells (the lab's, or off a dead unit or a downed scanner) top it up, and a vortigaunt will if you ask" },
+    vest_cell       = { name = "Charge cell", model = "models/items/battery.mdl", use = "charge", useLabel = "Charge your vest", charge = 25,
+                        contraband = true, conceal = 0.5, sell = 8, desc = "A salvaged suit cell: twenty-five charge into a powered vest you're wearing" },
     ammo_357        = { name = "Box of .357 rounds", model = "models/items/357ammo.mdl", use = "ammo", useLabel = "Load", ammo = { "357", 6 },
                         contraband = true, conceal = 0.4, sell = 20, arms = true, desc = "Six heavy rounds, hand-loaded" },
     gun_357         = { name = "Homemade revolver", model = "models/weapons/w_357.mdl", use = "arm", useLabel = "Draw", weapon = "weapon_357",
@@ -411,7 +416,8 @@ LCS.Lab = {
     { id = "gun_smg", out = "gun_smg", needs = { gun_parts = 4, scrap = 6, chemicals = 1 }, secs = 18, desc = "An SMG" },
     { id = "gun_shotgun", out = "gun_shotgun", needs = { gun_parts = 3, scrap = 5 }, secs = 15, desc = "A shotgun" },
     { id = "gun_357", out = "gun_357", needs = { gun_parts = 4, scrap = 6, chemicals = 1 }, secs = 20, desc = "A .357 revolver" },
-    { id = "armor_vest", out = "armor_vest", needs = { scrap = 6, cloth = 4, chemicals = 1 }, secs = 14, desc = "A powered vest: holds a charge (vortigaunts and batteries top it up)" },
+    { id = "armor_vest", out = "armor_vest", needs = { scrap = 6, cloth = 4, chemicals = 1 }, secs = 14, desc = "A powered vest: holds a charge (charge cells top it up)" },
+    { id = "vest_cell", out = "vest_cell", needs = { scrap = 2, chemicals = 2 }, secs = 6, desc = "A charge cell: twenty-five charge into your vest" },
     { id = "smokebomb", out = "smokebomb", needs = { chemicals = 2, can_empty = 1 }, secs = 5, desc = "Thick white smoke" },
     { id = "bypass", out = "bypass", needs = { gun_parts = 1, chemicals = 2, scrap = 2 }, secs = 10, desc = "Opens any door once" },
     { id = "radio_tuned", out = "radio_tuned", needs = { radio = 1 }, secs = 8, desc = "A Union radio, opened up and retuned to Freq 7" },

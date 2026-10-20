@@ -240,6 +240,8 @@ end
 
 local function Dress(z, d)
     local spots = DressSpots(z, d.want - #d.ents)
+    -- (one fire and one table for a territory, in its biggest zone)
+    if z.kind == "rebel" and LC.RebelIsLeader and not LC.RebelIsLeader(z) then d.fire, d.table = d.fire or true, true end
     for _, p in ipairs(spots) do
         if #d.ents >= d.want or KindCount(z.kind) >= PER_KIND_MAX then break end
         if not LC.IsSeen(p + Vector(0, 0, 30)) then -- nobody sees it appear
@@ -286,7 +288,10 @@ local function DressingTick()
                     for _, o in ipairs(LC.Zones) do
                         if o ~= z and o.kind == z.kind and o.r >= z.r and z.pos:DistToSqr(o.pos) < (o.r * 0.9) ^ 2 then inside = true break end
                     end
-                    d = { want = inside and 1 or math.Clamp(3 + math.floor(z.r / 250), 3, 8), ents = {} }
+                    -- (and the other zones of one rebel territory are more of the same camp: a few
+                    -- more beds, not a second camp: LC.RebelTerritories, sv_livingcity_paths.lua)
+                    local part = z.kind == "rebel" and LC.RebelIsLeader and not LC.RebelIsLeader(z)
+                    d = { want = inside and 1 or part and math.Clamp(1 + math.floor(z.r / 400), 1, 3) or math.Clamp(3 + math.floor(z.r / 250), 3, 8), ents = {} }
                     LC.Dressed[z] = d
                     -- a camp the players have arranged (sv_livingcity_campmove.lua): put back just as they left it
                     local keep = z.kind == "rebel" and LC.CampSaved and LC.CampSaved(z)
@@ -310,7 +315,7 @@ local function DressingTick()
                     end
                 end
                 for i = #d.ents, 1, -1 do if not IsValid(d.ents[i]) then table.remove(d.ents, i) end end
-                if not IsValid(d.fire) then d.fire = nil end
+                if d.fire ~= true and not IsValid(d.fire) then d.fire = nil end
                 if #d.ents < d.want and CurTime() > (d.nextTry or 0) then
                     d.nextTry = CurTime() + 20
                     Dress(z, d)

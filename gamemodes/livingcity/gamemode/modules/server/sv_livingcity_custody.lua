@@ -18,7 +18,11 @@
                          stalkers (lc_stalkers 1). Combine property: slow,
                          unarmed, unable to speak, put to work. There is no
                          way out but death (then, with permanent death off,
-                         you're back in the city as a broken citizen).
+                         you're back in the city as a broken citizen). Only
+                         for the Resistance's own (or anyone hunted as one)
+                         who have killed (a unit, a soldier or a citizen) or
+                         are brought in for murder: a citizen locked up again
+                         and again for small things is never made one.
 
       lc_custody_punish 0/1, lc_cripple_minutes (15), lc_stalkers 0/1,
       lc_stalker_model
@@ -188,6 +192,17 @@ end
 
 function LC.IsCrippled(ply) return IsValid(ply) and ply:GetNW2Float("lc_crippled_until", 0) > CurTime() end
 
+-- Blood on their hands: a unit, a soldier or a citizen killed by this person (this life;
+-- sv_livingcity_response.lua counts them), or brought in for murder.
+function LC.KillCount(ply) return tonumber(ply:GetPData("lc_killed", 0)) or 0 end
+function LC.Heinous(ply, reason)
+    if not IsValid(ply) then return false end
+    local rebel = ply:GetNW2String("lcf_faction", "") == "resistance" or (LC.PlayerIsHunted and LC.PlayerIsHunted(ply))
+    if not rebel then return false end
+    local r = string.lower(reason or "")
+    return LC.KillCount(ply) > 0 or string.find(r, "murder", 1, true) ~= nil or string.find(r, "kill", 1, true) ~= nil
+end
+
 local function RestoreCripple(ply)
     local t = tonumber(ply:GetPData("lc_crippled_until", 0)) or 0
     local left = t - os.time()
@@ -239,16 +254,68 @@ function LC.MakeStalker(ply)
         ply:SetNW2Float("lc_jail_until", 0)
         ply:RemovePData("lc_jail_left")
     end
+    -- whatever they were doing, and whatever they had, goes with who they were
+    if LC.QuestOf and LC.QuestOf[ply] and LC.AbandonQuest then pcall(LC.AbandonQuest, ply) end
+    if LC.Inventory and LC.TakeItem then
+        for id, n in pairs(table.Copy(LC.Inventory(ply) or {})) do LC.TakeItem(ply, id, n) end
+    end
+    if LC.SetJob then pcall(LC.SetJob, ply, "", true) end
+    if LC.Feed then LC.Feed(ply, 100, 100) end
     LC.SetFaction(ply, "stalker", nil, true)
     ply:StripWeapons()
     ply:Give("weapon_lc_hands")
-    ply:ChatPrint("[Custody] You aren't released. You're taken below, and what comes back up is a stalker: Combine property. You can't run, fight or speak, and you'll work. There is no way out of it but death.")
+    ply:Freeze(false)
+    ply:ChatPrint("[Custody] You come to, standing. Your body moves when they tell it to, not when you do. You are a stalker now: Combine property. You can't run, fight or speak, and you'll work. There is no way out of it but death.")
     if LC.Notice then LC.Notice(ply, "bad", "Combine property", "You are a stalker now. There is no way out of it but death. Your work is on your board (F3).", 10) end
     ply:ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 3, 1)
+    ply:EmitSound("npc/stalker/breathing3.wav", 70)
     for _, p in ipairs(player.GetAll()) do
         if p ~= ply then p:ChatPrint("[City] An anticitizen has been repurposed. Citizens are reminded that cooperation is mandatory.") end
     end
     hook.Run("LivingCityStalker", ply)
+    return true
+end
+
+-- How it happens: the cell door opens, two units come in with their batons, and it all goes
+-- black. In the dark: machinery, a long while of it. Then you wake as one.
+local SCENE = {
+    { 0, "door", "buttons/combine_button_locked.wav" },
+    { 0.6, nil, "npc/metropolice/vo/youwantamalcomplianceverdict.wav" },
+    { 2.5, "hit", "weapons/stunstick/stunstick_impact1.wav" },
+    { 3.2, "hit", "weapons/stunstick/stunstick_impact2.wav" },
+    { 3.6, "black" },
+    { 5, nil, "ambient/machines/spinup.wav" },
+    { 7.5, nil, "ambient/levels/labs/machine_moving_loop3.wav" },
+    { 9, nil, "ambient/machines/thumper_hit.wav" },
+    { 10.5, nil, "npc/stalker/stalker_scream1.wav" },
+    { 12.5, nil, "ambient/machines/spindown.wav" },
+    { 14, "done" },
+}
+function LC.StalkerScene(ply)
+    if not IsValid(ply) or ply.lcStalkerScene then return false end
+    ply.lcStalkerScene = true
+    ply:ChatPrint("[Custody] The cell door opens. Two Civil Protection units come in, batons out. They aren't here to ask questions.")
+    if LC.Notice then LC.Notice(ply, "bad", "They've come for you", "Two units, batons out. You're not being released.", 6) end
+    for _, step in ipairs(SCENE) do
+        timer.Simple(step[1], function()
+            if not IsValid(ply) then return end
+            if not (LC.Prisoners and LC.Prisoners[ply]) and step[2] ~= "done" then return end
+            if step[3] then ply:EmitSound(step[3], 75) end
+            if step[2] == "hit" then
+                ply:ViewPunch(Angle(math.random(8, 14), math.random(-8, 8), 0))
+                ply:ScreenFade(SCREENFADE.IN, Color(255, 255, 255, 120), 0.3, 0)
+            elseif step[2] == "black" then
+                ply:Freeze(true)
+                ply:ScreenFade(bit.bor(SCREENFADE.OUT or 2, SCREENFADE.STAYOUT or 8), Color(0, 0, 0, 255), 0.6, 0)
+                ply:ChatPrint("[Custody] Everything goes black.")
+            elseif step[2] == "done" then
+                ply.lcStalkerScene = nil
+                ply:ScreenFade(SCREENFADE.PURGE or 16, Color(0, 0, 0, 0), 0, 0)
+                ply:Freeze(false)
+                if LC.Prisoners and LC.Prisoners[ply] then LC.MakeStalker(ply) end
+            end
+        end)
+    end
     return true
 end
 
@@ -264,6 +331,18 @@ function LC.FreeStalker(ply, why)
     return true
 end
 
+-- (superadmin) let someone off being a stalker: lc_unstalker <part of a name>
+concommand.Add("lc_unstalker", function(ply, _, args)
+    if IsValid(ply) and not ply:IsSuperAdmin() then return end
+    local name = string.lower(args[1] or "")
+    for _, p in ipairs(player.GetAll()) do
+        if LC.PlayerIsStalker(p) and (name == "" or string.find(string.lower(p:Nick()), name, 1, true)) then
+            LC.FreeStalker(p, "[City] An administrator has let you off being a stalker.")
+            if IsValid(ply) then ply:ChatPrint("[Living City] " .. p:Nick() .. " is no longer a stalker.") end
+        end
+    end
+end)
+
 -- Stalkers can't speak: what they type comes out as a sound
 hook.Add("PlayerSay", "LivingCityStalkerVoice", function(ply, text)
     if not LC.PlayerIsStalker(ply) then return end
@@ -272,6 +351,18 @@ hook.Add("PlayerSay", "LivingCityStalkerVoice", function(ply, text)
     if string.sub(t, 1, 1) == "!" or string.sub(t, 1, 1) == "/" or string.sub(t, 1, 2) == "//" then return end -- commands and OOC still work
     ply:EmitSound("npc/stalker/go_alert2a.wav", 70)
     return "*a strained, wordless noise*"
+end)
+-- nor talk to anyone (E on a person does nothing: a stalker's work is the only thing it does)
+hook.Add("PlayerUse", "LivingCityStalkerUse", function(ply, ent)
+    if not LC.PlayerIsStalker(ply) or not IsValid(ent) then return end
+    if ent:IsNPC() or ent:IsPlayer() or ent:GetClass() == "lc_scientist" then
+        if (ply.lcStalkerUseNext or 0) < CurTime() then
+            ply.lcStalkerUseNext = CurTime() + 4
+            ply:EmitSound("npc/stalker/go_alert2a.wav", 65)
+            ply:ChatPrint("[Stalker] You try to speak. Nothing comes out but a noise.")
+        end
+        return false
+    end
 end)
 -- and can't pick up guns
 hook.Add("PlayerCanPickupWeapon", "LivingCityStalker", function(ply, wep)
@@ -300,12 +391,9 @@ hook.Add("LivingCityIncarcerated", "LivingCityCustody", function(ply, secs, reas
     local sev = LC.Severity(ply, reason)
     ply:SetPData("lc_jailcount", LC.JailCount(ply) + 1)
     if not cvOn:GetBool() then return end
-    if sev >= 6 and cvStalker:GetBool() then
+    if sev >= 6 and cvStalker:GetBool() and LC.Heinous(ply, reason) then
         timer.Simple(20, function()
-            if IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then
-                ply:ChatPrint("[Custody] Two Civil Protection units come for you. They don't say where.")
-                timer.Simple(5, function() if IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then LC.MakeStalker(ply) end end)
-            end
+            if IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then LC.StalkerScene(ply) end
         end)
         return
     end

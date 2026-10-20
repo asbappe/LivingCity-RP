@@ -146,6 +146,77 @@ function LC.RebelZoneAt(pos, margin)
     return best
 end
 
+-- Rebel zones you placed that touch, or nearly (lc_rebel_merge units apart or less), are one
+-- territory: a room that isn't a perfect box takes several zones to cover, and it's still one
+-- camp (one quartermaster, one supply crate, one camp's worth of beds). The leader of each is
+-- its biggest zone. (Territory the rebels took, "grown", stays as it is.)
+local cvMerge = CreateConVar("lc_rebel_merge", "128", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED),
+    "Rebel zones you placed this close (units) or touching are one territory: one quartermaster, one supply crate, one camp (0: every zone on its own)")
+local function Bounds(z)
+    if z.box then return z.box.mins, z.box.maxs end
+    local r, h = z.r or 300, z.h or z.r or 300
+    return Vector(z.pos.x - r, z.pos.y - r, z.pos.z - h), Vector(z.pos.x + r, z.pos.y + r, z.pos.z + h)
+end
+local function Area(z)
+    if z.box then return math.abs(z.box.maxs.x - z.box.mins.x) * math.abs(z.box.maxs.y - z.box.mins.y) end
+    return math.pi * (z.r or 300) ^ 2
+end
+LC.ZoneArea = Area
+local function Near(a, b, gap)
+    local amin, amax = Bounds(a)
+    local bmin, bmax = Bounds(b)
+    return amin.x <= bmax.x + gap and bmin.x <= amax.x + gap and amin.y <= bmax.y + gap and bmin.y <= amax.y + gap
+        and amin.z <= bmax.z + 64 and bmin.z <= amax.z + 64
+end
+local tc = {}
+function LC.RebelTerritories()
+    local zs = LC.ZonesOfKindShared("rebel")
+    local gap = cvMerge:GetFloat()
+    if tc.list == zs and tc.n == #zs and tc.gap == gap then return tc.out, tc.leader end
+    local placed = {}
+    for _, z in ipairs(zs) do if not z.grown then placed[#placed + 1] = z end end
+    local parent = {}
+    local function Find(z) while parent[z] ~= z do z = parent[z] end return z end
+    for _, z in ipairs(zs) do parent[z] = z end
+    if gap > 0 then
+        for i = 1, #placed do
+            for j = i + 1, #placed do
+                if Near(placed[i], placed[j], gap) then parent[Find(placed[i])] = Find(placed[j]) end
+            end
+        end
+    end
+    local groups, order = {}, {}
+    for _, z in ipairs(zs) do
+        local root = Find(z)
+        if not groups[root] then groups[root] = {} order[#order + 1] = root end
+        table.insert(groups[root], z)
+    end
+    local out, leader = {}, {}
+    for _, root in ipairs(order) do
+        local parts = groups[root]
+        local best = parts[1]
+        for _, z in ipairs(parts) do if Area(z) > Area(best) then best = z end end
+        out[#out + 1] = { leader = best, parts = parts }
+        for _, z in ipairs(parts) do leader[z] = best end
+    end
+    tc.list, tc.n, tc.gap, tc.out, tc.leader = zs, #zs, gap, out, leader
+    return out, leader
+end
+-- The zone that stands for z's whole territory (z itself, when it's on its own).
+function LC.RebelLeader(z)
+    if not z then return nil end
+    local _, leader = LC.RebelTerritories()
+    return leader[z] or z
+end
+-- The other zones of z's territory are just more of the same camp.
+function LC.RebelIsLeader(z) return LC.RebelLeader(z) == z end
+-- Every zone of z's territory.
+function LC.RebelPartsOf(z)
+    local lead = LC.RebelLeader(z)
+    for _, t in ipairs(LC.RebelTerritories()) do if t.leader == lead then return t.parts end end
+    return { z }
+end
+
 -- Your own list of the zones of a kind (change it as you like).
 function LC.ZonesOfKind(kind)
     local out = {}

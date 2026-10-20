@@ -188,6 +188,19 @@ function LC.CarryInFront(model)
     return (string.find(m, "box", 1, true) or string.find(m, "crate", 1, true) or string.find(m, "cardboard", 1, true)) and true or false
 end
 
+-- Held in one hand: some things need turning to sit right in it (a clipboard the right way
+-- up: lc_clipboard_angle, pitch yaw roll, to tune it).
+local cvClipAng = CreateConVar("lc_clipboard_angle", "0 0 180", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "How a clipboard carried in one hand is turned in it (pitch yaw roll); 0 0 0 was upside down")
+local function HandAngle(model)
+    local m = string.lower(model or "")
+    if string.find(m, "clipboard", 1, true) then
+        local p, y, r = string.match(cvClipAng:GetString(), "^%s*(%S+)%s+(%S+)%s+(%S+)")
+        return Angle(tonumber(p) or 0, tonumber(y) or 0, tonumber(r) or 180)
+    end
+    return Angle(0, 0, 0)
+end
+LC.CarryHandAngle = HandAngle
+
 local function Carry(npc, st, model)
     DropCarry(npc, st)
     local e = ents.Create("prop_dynamic")
@@ -229,7 +242,7 @@ local function Carry(npc, st, model)
             e:SetParent(npc)
             if e.SetLocalPos then e:SetLocalPos(Vector(16, 0, 40)) end
         end
-        if e.SetLocalAngles then e:SetLocalAngles(Angle(0, 0, 0)) end
+        if e.SetLocalAngles then e:SetLocalAngles(HandAngle(model)) end
     end
     e.lcCarried = true
     st.carry = e

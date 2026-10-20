@@ -176,6 +176,35 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Rewiring (Maintenance):** the board of circuit tiles: click turns a tile, right-click turns it back; the current lights up as far as it gets; a sparking tile bites; beat par for a bonus. Hard enough now?
   Notes:
 
+## Fixes from the 20 October playtest (what to check)
+
+- [ ] **Announcements:** never two voices over each other (Overwatch's own lines, your recordings, the Administrator).
+- [ ] **Spawning:** put back where you left off with someone standing there: you're moved beside them, not stuck.
+- [ ] **Rebel camp:** hold E on a mattress or crate, look down at your feet while carrying it, let go: pick it up again (it never sinks into the floor).
+- [ ] **One territory:** rebel zones that touch are one camp: one quartermaster, one supply crate, one fire. A quartermaster left from a deleted zone is gone.
+- [ ] **Rebels standing:** fighters stand up straight when there's nothing to crouch for (if you still see bent legs, tell me where and what they were doing).
+- [ ] **The quartermaster's words** show under his window, not behind it.
+- [ ] **Food at the quartermaster:** beans and rations sell for 2 at most.
+- [ ] **The vest:** sleeping doesn't charge it. Charge cells (the lab makes them; dead units and downed scanners drop them) do, and a freed vortigaunt does when you press E on it.
+- [ ] **Hacker:** F4 says a role sits on top of your rank (still a Fighter, its XP, the role's kit); the HUD shows "Hacker (Fighter)".
+- [ ] **A new face** (the lab, 300 credits): wake with another face, not wanted, standing up to -50.
+- [ ] **The corner of the screen** with a rank (Resistance, Civil Protection...): faction and rank, credits, standing, WANTED.
+- [ ] **Losing them:** wanted, out of every unit's sight 30 seconds: step out and only a unit who sees you comes.
+- [ ] **Cuffed only when subdued:** three blows of the baton (dazed between), or standing still for them; never in noclip.
+- [ ] **Walked to the cells:** doors stay open for you; the unit leading you down, another takes your arm; a unit alone is joined by another; timed out: "struck from behind ... you come to in a cell" (no van).
+- [ ] **Stalkers:** only a rebel who has killed (or is in for murder). The cell door, the blows, black, machinery, waking as one. Then: no talking (E), no hunger or tiredness, nothing in your pockets, your board only the Stalker's Lot, no F4, no !characters.
+- [ ] **The tired eyelids** shut all the way.
+- [ ] **Father Grigori** moves between camps now and then when nobody's about.
+- [ ] **The jog:** the pace marker green while you keep up, red when behind; the city's joggers keep up; fall behind and a unit comes; joining late counts.
+- [ ] **Radio repair:** two minutes a set (counting down), a moment between sets (fixed, or out of time), screws turned round and round.
+- [ ] **Supply drop:** one soldier turning to look about (warns you off twice, then wanted), two metrocops carrying boxes off down the street and back; prying a load is quiet, but a unit seeing you at it stops you.
+- [ ] **The courier's clipboard** the right way up (if not: `lc_clipboard_angle`, pitch yaw roll).
+- [ ] **Job outfits** button in the editor opens the window.
+- [ ] **Rainwater** drinkable as it is.
+- [ ] **Endings menu:** "Changes" lists only what you changed; Bloom's hands right on people, and "The dance, on the Combine's units only" to tune theirs.
+- [ ] **Shalom twice as loud, the Harpies twice as loud again; the Harpies' title on screen is THEY RETURN.**
+  Notes:
+
 ## Morning exercise and more (from the other session)
 
 - [ ] **Morning exercise:** every second dawn, the jog (keep up with the pace marker), the drill (copy the leader on your ring, then the skipping rope) or the parade (cheer the column). Needs its editor points: jogging route, exercise yard, parade route.

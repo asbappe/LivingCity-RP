@@ -31,10 +31,14 @@ LC = LC or {}
 util.AddNetworkString("lc_lab")
 util.AddNetworkString("lc_lab_make")
 util.AddNetworkString("lc_lab_decode")
+util.AddNetworkString("lc_lab_surgery")
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvShut  = CreateConVar("lc_lab_shutdown", "600", FLAGS, "Seconds a Resistance lab stays shut after a Civil Protection unit finds it")
 local cvPrice = CreateConVar("lc_lab_price", "0.6", FLAGS, "What the Resistance's scientist charges, times the black market dealer's price")
+local cvSurgery = CreateConVar("lc_surgery_price", "300", FLAGS, "Credits for a new face at the Resistance lab (0: no surgery)")
+local cvSurgeryWait = CreateConVar("lc_surgery_minutes", "60", FLAGS, "Minutes before the same person can have their face changed again")
+local cvSurgeryFloor = CreateConVar("lc_surgery_standing", "-50", FLAGS, "A new face: the city's records can't put a name to it, so a Civil Standing lower than this comes back up to it")
 
 local NEAR = 170 -- how close to him you stand to deal with him
 
@@ -198,7 +202,13 @@ function LC.SendLab(ply, sci)
                     or "50 XP, 50 credits, and every Civil Protection unit marked for the whole Resistance for five minutes" }
         end
     end
-    LC.SendCompressed("lc_lab", { items = items, credits = credits, busy = busy, decode = decode }, { ply })
+    -- a new face (LC.LabSurgery)
+    local surgery
+    if cvSurgery:GetInt() > 0 then
+        local ok, why = LC.SurgeryReady(ply)
+        surgery = { price = cvSurgery:GetInt(), ok = ok, why = why }
+    end
+    LC.SendCompressed("lc_lab", { items = items, credits = credits, busy = busy, decode = decode, surgery = surgery }, { ply })
 end
 
 local GREET = {
@@ -295,6 +305,102 @@ function LC.LabMake(ply, id, how)
     end
     return true
 end
+
+------------------------------------------------------------------------
+-- A new face. Papers in a dead man's name don't stop a unit who knows your
+-- face; the scientist can change it. Twenty seconds under (stay on the table),
+-- lc_surgery_price credits, and you wake with someone else's face, bandaged
+-- and slow on your feet for a few minutes. Nobody's looking for that face:
+-- your wanted status, any BOLO on you and the scanners' pictures are gone,
+-- a wanted notice won't match it, and a Civil Standing below
+-- lc_surgery_standing (-50) comes back up to it (the records can't put a name
+-- to the face). Get wanted again and they learn the new one.
+------------------------------------------------------------------------
+
+function LC.SurgeryReady(ply)
+    if not Rebel(ply) then return false, "He only works for the Resistance." end
+    local price = cvSurgery:GetInt()
+    if price <= 0 then return false, "\"Surgery? Here? Good heavens, no.\"" end
+    local next = tonumber(ply:GetPData("lc_surgery_next", 0)) or 0
+    if os.time() < next then return false, string.format("\"Your face needs to heal first.\" (%d min)", math.ceil((next - os.time()) / 60)) end
+    if not LC.Credits or LC.Credits(ply) < price then return false, string.format("%d credits, and you don't have them.", price) end
+    return true
+end
+
+local function NewFace(ply)
+    local cur = string.lower(ply:GetNW2String("lc_model", ply:GetModel() or ""))
+    local female = string.find(cur, "female", 1, true) ~= nil
+    local list = {}
+    for _, m in ipairs(LCF and LCF.CitizenModels or {}) do
+        if string.lower(m) ~= cur and (string.find(string.lower(m), "female", 1, true) ~= nil) == female then list[#list + 1] = m end
+    end
+    return #list > 0 and list[math.random(#list)] or nil
+end
+
+function LC.LabSurgery(ply)
+    local ok, why = LC.SurgeryReady(ply)
+    if not ok then return false, why end
+    local sci = LC.ScientistNear(ply:GetPos())
+    if not IsValid(sci) then return false, "Find the scientist in the lab." end
+    local job = sci.lcLabJob
+    if job and IsValid(job.ply) and job.untilT > CurTime() then return false, "He's in the middle of someone else's work." end
+    local price = cvSurgery:GetInt()
+    LC.AddCredits(ply, -price, "a new face")
+    job = { ply = ply, untilT = CurTime() + 20 }
+    sci.lcLabJob = job
+    local function Clear() if IsValid(sci) and sci.lcLabJob == job then sci.lcLabJob = nil end end
+    Say(ply, "\"Lie down, lie down. You'll feel a little... well. You won't feel anything, actually. Count backwards from ten.\"")
+    ply:ScreenFade(bit.bor(SCREENFADE.OUT or 2, SCREENFADE.STAYOUT or 8), Color(0, 0, 0, 255), 2, 0)
+    ply:EmitSound("items/medshot4.wav", 60)
+    local okT, whyT = LC.StartTask(ply, 20, "Under the knife... stay on the table", {
+        maxMove = 120,
+        done = function(p)
+            Clear()
+            p:ScreenFade(SCREENFADE.PURGE or 16, Color(0, 0, 0, 0), 0, 0)
+            p:ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 4, 1)
+            local model = NewFace(p)
+            if model and LC.SetCharacter then LC.SetCharacter(p, nil, model) end
+            if LC.ClearWanted then LC.ClearWanted(p) end
+            if LC.ResetHeat then LC.ResetHeat(p) end
+            if LC.CalmCops then LC.CalmCops(p) end
+            if LC.DropBolosFor and LC.RecordKey then LC.DropBolosFor(LC.RecordKey(p)) if LC.SyncBolos then LC.SyncBolos() end end
+            p:SetNW2Float("lc_spotted_until", 0)
+            p:SetPData("lc_new_face", "1")
+            local floor = cvSurgeryFloor:GetInt()
+            local s = LC.Standing and LC.Standing(p) or 0
+            if LC.AddStanding and s < floor then LC.AddStanding(p, floor - s, "a face the records don't know") end
+            p:SetPData("lc_surgery_next", os.time() + cvSurgeryWait:GetFloat() * 60)
+            p:SetNW2Float("lc_crippled_until", CurTime() + 180) -- (bandaged, and slow on your feet a while)
+            p:SetNW2Float("lc_bandaged_until", CurTime() + 300)
+            if IsValid(sci) then sci:EmitSound("vo/k_lab/kl_excellent.wav", 65) end
+            Say(p, "\"There. Nobody will know you. Well, I hardly do. Keep the bandages on a few minutes, and don't run.\"")
+            if LC.Notice then LC.Notice(p, "info", "A new face", "Nobody's looking for this face. Your wanted status, any BOLO and the scanners' pictures are gone, and a wanted notice won't match it. Get wanted again and they'll learn this one.", 10) end
+            hook.Run("LivingCitySurgery", p)
+        end,
+        cancel = function(p)
+            Clear()
+            if IsValid(p) then
+                p:ScreenFade(SCREENFADE.PURGE or 16, Color(0, 0, 0, 0), 0, 0)
+                LC.AddCredits(p, price, "the lab, handed back")
+            end
+        end,
+        cancelText = "[Scientist] You sit up too soon. \"No, no, no! We'll have to do this another time.\" He hands your credits back.",
+    })
+    if not okT then
+        Clear()
+        ply:ScreenFade(SCREENFADE.PURGE or 16, Color(0, 0, 0, 0), 0, 0)
+        LC.AddCredits(ply, price, "the lab, handed back")
+        return false, whyT
+    end
+    return true
+end
+
+net.Receive("lc_lab_surgery", function(_, ply)
+    if not IsValid(ply) or (ply.lcLabNext or 0) > CurTime() then return end
+    ply.lcLabNext = CurTime() + 0.5
+    local ok, why = LC.LabSurgery(ply)
+    if not ok and why then ply:ChatPrint("[Lab] " .. why) end
+end)
 
 net.Receive("lc_lab_decode", function(_, ply)
     local id = net.ReadString()

@@ -412,7 +412,8 @@ end
 -- Returns true if the papers hold up, or false and why not.
 function LC.CheckPapers(ply)
     local id = LC.Identity(ply)
-    if LC.PlayerIsHunted and LC.PlayerIsHunted(ply) and LC.PassesAsCitizen(ply) and not id then
+    -- (a face the lab changed isn't on any notice: sv_livingcity_lab.lua)
+    if LC.PlayerIsHunted and LC.PlayerIsHunted(ply) and LC.PassesAsCitizen(ply) and not id and ply:GetPData("lc_new_face", "0") ~= "1" then
         return false, "Your face matches a wanted notice."
     end
     if id then

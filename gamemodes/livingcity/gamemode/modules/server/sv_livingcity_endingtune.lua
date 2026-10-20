@@ -34,6 +34,28 @@ local function Load()
         tuning.bones = istable(t.bones) and t.bones or {}
         tuning.shared = istable(t.shared) and t.shared or {}
     end
+    LC.EndingTuneBaked()
+end
+
+-- Tuning sent in and now part of the code itself: the saved copy of it is dropped (once
+-- in the code, keeping it too would turn the bone twice). Each: move, bone, { p, y, r }.
+local BAKED = {
+    -- 20 October: Bloom's hands the right way round on people (the Combine's units have their own)
+    { "ears", "L_Hand", { 0, 0, 180 } }, { "ears", "R_Hand", { 0, 0, -180 } },
+}
+function LC.EndingTuneBaked()
+    local changed = false
+    for _, b in ipairs(BAKED) do
+        local m = tuning.bones[b[1]]
+        local o = m and m[b[2]]
+        if istable(o) then
+            local same = true
+            for i = 1, 3 do if math.abs((tonumber(o[i]) or 0) - b[3][i]) > 0.5 then same = false end end
+            if same then m[b[2]] = nil changed = true end
+            if next(m) == nil then tuning.bones[b[1]] = nil end
+        end
+    end
+    return changed
 end
 Load()
 
@@ -43,6 +65,8 @@ local function Save()
         file.Write(FILE, util.TableToJSON(tuning, true))
     end)
 end
+
+if LC.EndingTuneBaked() then Save() end -- (the saved copy, without what's in the code now)
 
 function LC.EndingTuning() return tuning end
 

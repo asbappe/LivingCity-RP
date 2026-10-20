@@ -77,6 +77,30 @@ function LC_CL.OpenLab(t)
             if IsValid(frame) then frame:Remove() end
         end
     end
+    -- a new face (sv_livingcity_lab.lua)
+    if t.surgery then
+        local sg = t.surgery
+        local row = vgui.Create("DPanel", scroll)
+        row:Dock(TOP)
+        row:DockMargin(0, 0, 0, 6)
+        row:SetTall(62)
+        row.Paint = function(self, w, h)
+            draw.RoundedBox(3, 0, 0, w, h, Color(52, 40, 46, 240))
+            draw.SimpleText(string.format("A new face (%d credits)", sg.price or 0), "LCLabItem", 10, 13, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            draw.SimpleText("Twenty seconds under. Nobody's looking for the face you wake with: wanted, BOLOs and", "DermaDefault", 10, 33, HAVE, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            draw.SimpleText(sg.ok and "photos gone, and the records can't put your old name (or your standing) to it." or (sg.why or ""), "DermaDefault", 10, 49, sg.ok and HAVE or DIM, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        end
+        local b = vgui.Create("DButton", row)
+        b:Dock(RIGHT)
+        b:DockMargin(4, 14, 6, 14)
+        b:SetWide(110)
+        b:SetText("Change it")
+        b:SetEnabled(sg.ok == true)
+        b.DoClick = function()
+            net.Start("lc_lab_surgery") net.SendToServer()
+            if IsValid(frame) then frame:Remove() end
+        end
+    end
     for _, it in ipairs(t.items or {}) do
         local row = vgui.Create("DPanel", scroll)
         row:Dock(TOP)

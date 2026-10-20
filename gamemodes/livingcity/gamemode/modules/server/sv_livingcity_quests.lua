@@ -3005,12 +3005,17 @@ function LC.SendBoard(ply)
     local list, f = LC.RefreshBoard(ply)
     local out = {}
     local mine = LC.QuestOf[ply]
+    -- a stalker's board has its work on it (The Stalker's Lot), and nothing else
+    local stalker = LC.PlayerIsStalker and LC.PlayerIsStalker(ply)
+    if stalker then list = {} end
     for _, p in ipairs(LC.StoryPostings and LC.StoryPostings(ply) or {}) do
-        out[#out + 1] = {
-            id = p.id, title = p.title, desc = p.desc, reward = p.reward, violent = false, limit = p.limit,
-            taken = p.q and 1 or 0, max = 1, mine = mine ~= nil and mine.posting == p,
-            story = true, chain = p.chainName, part = p.partNum,
-        }
+        if not stalker or p.chain == "stalker" then
+            out[#out + 1] = {
+                id = p.id, title = p.title, desc = p.desc, reward = p.reward, violent = false, limit = p.limit,
+                taken = p.q and 1 or 0, max = 1, mine = mine ~= nil and mine.posting == p,
+                story = true, chain = p.chainName, part = p.partNum,
+            }
+        end
     end
     for _, p in ipairs(list) do
         out[#out + 1] = {
@@ -3019,7 +3024,7 @@ function LC.SendBoard(ply)
         }
     end
     local jobs
-    if LC.CanWork and LC.CanWork(ply) and LCJ then
+    if not stalker and LC.CanWork and LC.CanWork(ply) and LCJ then
         jobs = { current = ply:GetNW2String("lcj_job", ""), list = {} }
         for _, o in ipairs(LCJ.Occupations) do
             if not LCJ.Closed(o) then jobs.list[#jobs.list + 1] = { id = o.id, name = o.name, desc = o.desc } end
@@ -3048,6 +3053,10 @@ function LC.AcceptPosting(ply, pid)
     end
     if not posting or posting.dead then ply:ChatPrint("[Living City] That posting is gone.") return false end
     if posting.story and posting.owner ~= ply then return false end
+    if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) and posting.chain ~= "stalker" then
+        ply:ChatPrint("[Living City] A stalker does the work it's given, and nothing else.")
+        return false
+    end
 
     if posting.q then
         if posting.story then return false end

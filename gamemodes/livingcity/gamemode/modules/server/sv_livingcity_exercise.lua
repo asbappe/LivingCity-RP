@@ -59,7 +59,7 @@ local cvKinds    = CreateConVar("lc_exercise_kinds", "jog,drill,parade", FLAGS, 
 local cvMuster   = CreateConVar("lc_exercise_muster", "75", FLAGS, "Seconds citizens have to report for morning exercise")
 local cvBeat     = CreateConVar("lc_exercise_beat_dmg", "8", FLAGS, "Damage from one blow with the stick at morning exercise (never takes you below 15 health)")
 local cvBreakfast = CreateConVar("lc_exercise_breakfast", "1", FLAGS, "After morning exercise, citizens of good standing (Trusted and up) get breakfast")
-local cvNPCs     = CreateConVar("lc_exercise_npcs", "6", FLAGS, "How many NPC citizens take part in morning exercise")
+local cvNPCs     = CreateConVar("lc_exercise_npcs", "10", FLAGS, "How many NPC citizens take part in morning exercise (the city's own first, topped up with new ones out of sight)")
 local cvPace     = CreateConVar("lc_jog_pace", "150", FLAGS, "How fast the pace marker goes round the jogging route (Civil Protection units a second; walking is 110, sprinting 190)")
 local cvBehind   = CreateConVar("lc_jog_behind", "450", FLAGS, "How far behind the pace marker a jogger can fall before the stick")
 local cvJogMin   = CreateConVar("lc_jog_min_speed", "0", FLAGS, "Slowest speed that counts as jogging (0: a bit over your walking speed)")
@@ -311,12 +311,41 @@ local function SendUnit(units, ply, why, reach)
             if d < (reach or 700) ^ 2 and (not bd or d < bd) then best, bd = u, d end
         end
     end
-    if not best then return false end
+    -- nobody posted near: any unit about who can see them steps in (and stays on it)
+    if not best then
+        local eye = ply:EyePos()
+        for npc, st in pairs(LC.NPCs or {}) do
+            if IsValid(npc) and LC.IsSecurity(st) and st.state ~= "hostile" and not st.exColumn then
+                local d = npc:GetPos():DistToSqr(pos)
+                if d < 1400 * 1400 and (not bd or d < bd) and LC.LineOfSight and LC.LineOfSight(npc:EyePos(), eye, npc) then best, bd = npc, d end
+            end
+        end
+        if best and X and not table.HasValue(X.units, best) then
+            X.units[#X.units + 1] = best
+            X.borrowed = X.borrowed or {}
+            X.borrowed[best] = true
+        end
+    end
+    -- and long out of everyone's reach: the nearest of the route's own units comes for them
+    if not best and X and (ply.lcxUnreached or 0) > 0 and CurTime() - ply.lcxUnreached > 12 then
+        for _, u in ipairs(units) do
+            local st = IsValid(u) and LC.NPCs[u]
+            if st and st.state ~= "hostile" then
+                local d = u:GetPos():DistToSqr(pos)
+                if not bd or d < bd then best, bd = u, d end
+            end
+        end
+    end
+    if not best then
+        ply.lcxUnreached = ply.lcxUnreached or CurTime()
+        return false
+    end
+    ply.lcxUnreached = nil
     if bd < 120 * 120 then return LC.ExerciseBeat(best, ply, why) end
     local st = LC.NPCs[best]
     local now = CurTime()
     if st.exChase ~= ply or now > (st.exChaseT or 0) then
-        st.exChase, st.exChaseT = ply, now + 1.5
+        st.exChase, st.exChaseT = ply, now + 1.5 + math.sqrt(bd) / 200
         if LC.GoTo then LC.GoTo(best, st, pos, true, nil) end
     end
     return false
@@ -369,14 +398,30 @@ local function EnlistCitizens(n, poiFor)
     local got = 0
     for npc, st in pairs(LC.NPCs or {}) do
         if got >= n then break end
-        if IsValid(npc) and st.role == "citizen" and st.state == "idle" and not st.unmanaged and not st.questLock
-            and not st.test and not st.leaving and not st.line and not st.npcWork then
+        if IsValid(npc) and st.role == "citizen" and (st.state == "idle" or st.state == "moving") and not st.unmanaged and not st.questLock
+            and not st.test and not st.leaving and not st.line and not st.npcWork and not st.carry then
             local pos, data = poiFor(got + 1, npc)
             if pos and LC.GoTo and LC.GoTo(npc, st, pos, X.kind == "jog", { kind = "exercise", pos = pos, yaw = data and data.yaw }) then
                 st.exCitizen = data or {}
                 X.npcs[npc] = true
                 got = got + 1
             end
+        end
+    end
+    -- not enough of them about: more come out of a doorway near by (out of sight)
+    local sp = LC.Spawners and LC.Spawners.citizen
+    for _ = got + 1, n do
+        local pos, data = poiFor(got + 1)
+        if not (pos and sp) then break end
+        local from = (LC.AlarmSquadSpot and LC.AlarmSquadSpot(pos)) or nil
+        if not from then break end
+        local ok, npc, st = pcall(sp, from)
+        if not (ok and IsValid(npc) and st) then break end
+        if LC.GoTo and LC.GoTo(npc, st, pos, X.kind == "jog", { kind = "exercise", pos = pos, yaw = data and data.yaw }) then
+            st.exCitizen = data or {}
+            st.exTemp = true
+            X.npcs[npc] = true
+            got = got + 1
         end
     end
 end
@@ -589,6 +634,7 @@ function LC.ExerciseBegin(kind)
     end
     X.ends = LC.EventEnds or (now + 420)
     for _, p in ipairs(player.GetAll()) do
+        p.lcxSeen, p.lcxUnreached = X, nil
         if Eligible(p) then X.absent[p] = true p:SetNW2Bool("lcx_in", false) end
     end
     Send()
@@ -714,8 +760,37 @@ local function Progress(ply, r)
 end
 LC.ExerciseProgress = function(ply) local r = Rec(ply) return r and r.cp and Progress(ply, r) or nil end
 
+-- The city's own joggers keep up with the pace marker: one who has fallen behind (lost the way,
+-- held up) catches up out of everyone's sight, a little behind the marker.
+local function NPCJoggers(now, pacer)
+    if (X.npcNext or 0) > now then return end
+    X.npcNext = now + 1
+    local k = 0
+    for npc in pairs(X.npcs) do
+        local st = IsValid(npc) and LC.NPCs[npc]
+        local c = st and st.exCitizen
+        if c and c.i then
+            k = k + 1
+            local _, along = OnRoute(X.route, X.cum, npc:GetPos())
+            local off = Dist2D and Dist2D(npc:GetPos(), (AlongRoute(X.route, X.cum, along))) or 0
+            local want = math.max(0, pacer - 60 - (k % 5) * 45)
+            if (along < want - 350 or off > 400) and not LC.IsSeen(npc:GetPos() + Vector(0, 0, 40)) then
+                local spot = AlongRoute(X.route, X.cum, want)
+                if spot and not LC.IsSeen(spot + Vector(0, 0, 40)) then
+                    spot = Ground(spot + Vector(math.Rand(-50, 50), math.Rand(-50, 50), 0)) or spot
+                    npc:SetPos(spot + Vector(0, 0, 4))
+                    c.i = #X.route
+                    for i = 2, #X.route do if X.cum[i] > want then c.i = i break end end
+                    LC.GoTo(npc, st, X.route[c.i], true, { kind = "exercise" })
+                end
+            end
+        end
+    end
+end
+
 local function JogThink(now)
     local pacer = math.min(X.total, (now - X.runStart) * X.pace)
+    NPCJoggers(now, pacer)
     local allDone = true
     for p, r in pairs(X.people) do
         if not IsValid(p) or not p:Alive() then
@@ -1097,6 +1172,7 @@ timer.Create("LivingCityExercise", 0.1, 0, function()
             -- people arriving
             if now >= X.musterEnds then return StartRun(now) end
             for _, p in ipairs(player.GetAll()) do
+                if not X.people[p] and not X.absent[p] and Eligible(p) then X.absent[p] = true p:SetNW2Bool("lcx_in", false) end
                 if X.absent[p] and InArea(p) then X.absent[p] = nil X.people[p] = nil Join(p, false) end
             end
             return
@@ -1104,6 +1180,15 @@ timer.Create("LivingCityExercise", 0.1, 0, function()
         ChaseThink(X.units, now)
         if (X.tick5 or 0) < now then
             X.tick5 = now + 0.5
+            -- anyone who's become a citizen since it started (joined the server, or a new life) is
+            -- expected too, and can join in
+            for _, p in ipairs(player.GetAll()) do
+                if not X.people[p] and not X.absent[p] and Eligible(p) and p.lcxSeen ~= X then
+                    p.lcxSeen = X
+                    X.absent[p] = true
+                    p:SetNW2Bool("lcx_in", false)
+                end
+            end
             Truants(now)
         end
         if X.kind == "jog" then JogThink(now)

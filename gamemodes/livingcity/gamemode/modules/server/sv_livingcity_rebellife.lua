@@ -952,7 +952,7 @@ timer.Create("LivingCityRebelErrands", 5, 0, function()
         if not LC.Running or not cvErrands:GetBool() or #player.GetAll() == 0 then return end
         local now = CurTime()
         for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}) do
-            if not z.grown then
+            if not z.grown and (not LC.RebelIsLeader or LC.RebelIsLeader(z)) then -- (one territory, one run at a time)
                 local t = nextErrand[z]
                 if not t then
                     nextErrand[z] = now + Interval() * math.Rand(0.3, 1)

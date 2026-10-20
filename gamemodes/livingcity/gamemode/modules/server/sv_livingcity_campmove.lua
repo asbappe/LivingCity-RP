@@ -42,17 +42,24 @@ end
 function LC.CampSaved(z) return Load()[LC.CampKey(z)] end
 function LC.CampForget() saved = {} Save() end
 
-local function ZoneOf(pos)
+local function ZoneOf(pos, m)
     for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}) do
-        if LCZ.Contains(z, pos, 0) then return z end
+        if LCZ.Contains(z, pos, m or 0) then return z end
     end
     return nil
+end
+-- Inside z's territory (any of its zones: touching zones are one, sv_livingcity_paths.lua)?
+local function InTerritory(z, pos)
+    for _, part in ipairs(LC.RebelPartsOf and LC.RebelPartsOf(z) or { z }) do
+        if LCZ.Contains(part, pos, 0) then return true end
+    end
+    return false
 end
 
 local function Movable(e)
     if not IsValid(e) then return false end
     if not (e.lcDressing or e.lcRebelProp or e:GetClass() == "lc_fire") then return false end
-    return ZoneOf(e:GetPos()) ~= nil
+    return e.lcCampZone ~= nil or ZoneOf(e:GetPos(), 64) ~= nil
 end
 LC.CampMovable = Movable
 
@@ -83,6 +90,11 @@ end
 
 local function Aimed(ply)
     local tr = util.TraceLine({ start = ply:EyePos(), endpos = ply:EyePos() + ply:EyeAngles():Forward() * 120, filter = ply })
+    if tr and Movable(tr.Entity) then return tr.Entity end
+    -- (a fatter look, for something low or half in the floor)
+    local th = util.TraceHull({ start = ply:EyePos(), endpos = ply:EyePos() + ply:EyeAngles():Forward() * 120, filter = ply,
+        mins = Vector(-10, -10, -10), maxs = Vector(10, 10, 10) })
+    if th and Movable(th.Entity) then return th.Entity end
     return tr and tr.Entity
 end
 
@@ -92,6 +104,10 @@ local function Drop(ply)
     if not c or not IsValid(c.e) then return end
     local e = c.e
     if e.SetCollisionGroup and c.cg then e:SetCollisionGroup(c.cg) end
+    -- (set down on the floor, never in it)
+    local p = e:GetPos()
+    local floor = LC.GroundAt and LC.GroundAt(p + Vector(0, 0, 40)) or nil
+    if floor and p.z < floor.z + c.lift - 1 then e:SetPos(Vector(p.x, p.y, floor.z + c.lift)) end
     local phys = e.GetPhysicsObject and e:GetPhysicsObject()
     if IsValid(phys) then phys:EnableMotion(false) end
     e.lcCarriedBy = nil
@@ -102,10 +118,17 @@ LC.CampDrop = Drop
 
 function LC.CampPickUp(ply, e)
     if not Allowed(ply) or not Movable(e) or e.lcCarriedBy then return false end
-    local z = ZoneOf(e:GetPos())
-    local mn = e.OBBMins and e:OBBMins() or Vector(0, 0, 0)
+    local z = e.lcCampZone or ZoneOf(e:GetPos(), 64)
+    e.lcCampZone = z
+    -- how far its origin sits above its lowest point, as it lies now (in the world, not the
+    -- model's own axes: a mattress laid flat is a model turned on its side)
+    local lift = 2
+    if e:GetClass() ~= "lc_fire" then
+        local wmin = e.WorldSpaceAABB and select(1, e:WorldSpaceAABB())
+        lift = wmin and math.max(0, e:GetPos().z - wmin.z) + 1 or (math.max(0, -(e.OBBMins and e:OBBMins() or Vector(0, 0, 0)).z) + 1)
+    end
     ply.lcCampCarry = { e = e, zone = z, rot = 0, cg = e.GetCollisionGroup and e:GetCollisionGroup() or nil,
-        lift = e:GetClass() == "lc_fire" and 2 or math.max(0, -mn.z) + 1, pitch = e:GetAngles().p, roll = e:GetAngles().r,
+        lift = lift, pitch = e:GetAngles().p, roll = e:GetAngles().r,
         yaw0 = e:GetAngles().y - ply:EyeAngles().y }
     e.lcCarriedBy = ply
     if e.SetCollisionGroup then e:SetCollisionGroup(COLLISION_GROUP_WORLD) end -- (it doesn't push you about while you carry it)
@@ -120,8 +143,16 @@ function LC.CampCarryStep(ply)
     if not IsValid(c.e) or not Allowed(ply) or not ply:KeyDown(IN_USE) then return Drop(ply) end
     local tr = util.TraceLine({ start = ply:EyePos(), endpos = ply:EyePos() + ply:EyeAngles():Forward() * REACH, filter = { ply, c.e } })
     local at = tr and tr.HitPos or (ply:EyePos() + ply:EyeAngles():Forward() * REACH)
-    local floor = LC.GroundAt and LC.GroundAt(at + Vector(0, 0, 20)) or at
-    if c.zone and not LCZ.Contains(c.zone, floor, 0) then return end -- (not out of its own camp)
+    -- looking down at your feet: it stays a step in front of you (not under you, not in the floor)
+    local fwd = ply:EyeAngles():Forward()
+    fwd = Vector(fwd.x, fwd.y, 0)
+    if fwd:Length() < 0.01 then fwd = ply:GetForward() end
+    fwd:Normalize()
+    local me = ply:GetPos()
+    local flat = Vector(at.x - me.x, at.y - me.y, 0)
+    if flat:Length() < 60 then at = Vector(me.x, me.y, at.z) + fwd * 60 end
+    local floor = LC.GroundAt and LC.GroundAt(at + Vector(0, 0, 40)) or at
+    if c.zone and not InTerritory(c.zone, floor) then return end -- (not out of its own camp)
     c.e:SetPos(floor + Vector(0, 0, c.lift))
     c.e:SetAngles(Angle(c.pitch or 0, ply:EyeAngles().y + c.yaw0 + c.rot, c.roll or 0))
 end

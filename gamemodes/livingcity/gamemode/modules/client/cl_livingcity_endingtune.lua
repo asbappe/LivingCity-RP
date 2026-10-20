@@ -39,7 +39,7 @@ local SHARED_OF = { bloom = { "lc_bloom_palm" }, water = { "lc_headbang_angle" }
 
 -- Each ending's moves: { move, what it is }
 local MOVES = {
-    bloom = { { "ears", "The dance: hands up, wrists flapping, hips swaying" } },
+    bloom = { { "ears", "The dance: hands up, wrists flapping, hips swaying" }, { "ears_combine", "The dance, on the Combine's units only (their bones sit differently)" } },
     marrow = { { "club", "Club dance (the kicks)" }, { "rave", "Rave dance (bigger kicks)" } },
     bus = { { "bus", "Sat down, arms up (Base's ZIG riders too)" } },
     base = { { "bus", "Sat in a ZIG, arms up (the Bus's riders too)" } },
@@ -51,6 +51,9 @@ local MOVES = {
     water = { { "bang", "Father Grigori headbanging (the heavy parts)" }, { "groove", "Father Grigori dancing (the calm parts)" } },
 }
 LC_CL.EndingMoves = MOVES
+-- (the moves that are tuned on the Combine's units on their own)
+local MOVES_COMBINE = {}
+for _, list in pairs(MOVES) do for _, m in ipairs(list) do if string.find(m[1], "_combine$") then MOVES_COMBINE[m[1]] = true end end end
 
 local FULL = { "Head", "Spine2", "Spine", "Pelvis", "R_UpperArm", "R_Forearm", "R_Hand", "L_UpperArm", "L_Forearm", "L_Hand", "R_Thigh", "R_Calf", "L_Thigh", "L_Calf" }
 local GRIGORI = { "Head", "Neck1", "Spine2", "Spine1", "Spine", "Pelvis", "R_UpperArm", "R_Forearm", "L_UpperArm", "L_Forearm" }
@@ -89,12 +92,28 @@ end
 -- The tuning itself, used by the dances (cl_livingcity_endings.lua)
 ------------------------------------------------------------------------
 
-function LC_CL.EndingTuneBone(ent, move, name, a)
-    if move == state.move and frame then seen[ent] = CurTime() end
-    local m = data.bones[move]
-    local off = m and m[name]
+-- The Combine's units (and any pack's Combine models) have bones that sit differently from
+-- people's: a move can be tuned for them on its own ("<move>_combine"), on top of the rest.
+local function CombineBody(ent)
+    local m = string.lower(ent.GetModel and ent:GetModel() or "")
+    return string.find(m, "police", 1, true) or string.find(m, "combine", 1, true) or string.find(m, "soldier", 1, true)
+        or string.find(m, "elite", 1, true) or string.find(m, "/hla", 1, true) or false
+end
+LC_CL.EndingCombineBody = CombineBody
+local function Add(a, off)
     if not off then return a end
     return Angle(a.p + (off[1] or 0), a.y + (off[2] or 0), a.r + (off[3] or 0))
+end
+function LC_CL.EndingTuneBone(ent, move, name, a)
+    local combine = CombineBody(ent) and true or false
+    if frame and (move == state.move and not (combine and MOVES_COMBINE[move .. "_combine"]) or (combine and state.move == move .. "_combine")) then seen[ent] = CurTime() end
+    local m = data.bones[move]
+    a = Add(a, m and m[name])
+    if combine then
+        local c = data.bones[move .. "_combine"]
+        a = Add(a, c and c[name])
+    end
+    return a
 end
 
 function LC_CL.EndingTunedCV(cv)
@@ -151,7 +170,10 @@ local function StandIn()
     local me = LocalPlayer()
     if not (state.standIn and frame and IsValid(frame) and IsValid(me) and state.move) then DropStandIn() return nil end
     if not IsValid(standIn) then
-        standIn = ClientsideModel and ClientsideModel(me:GetModel(), RENDERGROUP_OPAQUE)
+        -- (a move tuned on the Combine's units on its own: a metrocop stands in)
+        local mdl = MOVES_COMBINE[state.move] and "models/player/police.mdl" or me:GetModel()
+        standIn = ClientsideModel and ClientsideModel(mdl, RENDERGROUP_OPAQUE)
+        standIn.lcCombine = MOVES_COMBINE[state.move] or false
         if not IsValid(standIn) then standIn = nil return nil end
         for _, s in ipairs({ "idle_all_01", "idle_all_02", "idle_unarmed", "idle_subtle" }) do
             local seq = standIn.LookupSequence and standIn:LookupSequence(s) or -1
@@ -171,7 +193,8 @@ hook.Add("Think", "LivingCityEndingTuneStandIn", function()
     local s = StandIn()
     if not s then return end
     if s.SetCycle then s:SetCycle((CurTime() * 0.2) % 1) end
-    if LC_CL.EndingPoseMove then LC_CL.EndingPoseMove(s, state.move, CurTime() * state.bpm / 60) end
+    if s.lcCombine ~= nil and s.lcCombine ~= (MOVES_COMBINE[state.move] or false) then DropStandIn() return end -- (a metrocop for those, you for the rest)
+    if LC_CL.EndingPoseMove then LC_CL.EndingPoseMove(s, (string.gsub(state.move, "_combine$", "")), CurTime() * state.bpm / 60) end
 end)
 
 -- everyone doing the move now (the stand-in first)
@@ -333,13 +356,33 @@ end
 
 local Fill -- (below: builds the menu for the ending picked)
 
+-- The same setting? "0.360000" is 0.36: numbers (and lists of them) are compared as numbers.
+local function SameValue(a, b)
+    a, b = tostring(a or ""), tostring(b or "")
+    if a == b then return true end
+    local ta, tb = {}, {}
+    for w in string.gmatch(a, "[^%s,:]+") do ta[#ta + 1] = w end
+    for w in string.gmatch(b, "[^%s,:]+") do tb[#tb + 1] = w end
+    if #ta ~= #tb or #ta == 0 then return false end
+    for i = 1, #ta do
+        local x, y = tonumber(ta[i]), tonumber(tb[i])
+        if x and y then
+            if math.abs(x - y) > 1e-4 then return false end
+        elseif ta[i] ~= tb[i] then
+            return false
+        end
+    end
+    return true
+end
+LC_CL.EndingSameValue = SameValue
+
 local function Changes()
     local lines = { "Living City: ending tuning, from the Endings menu" }
     if info and info.settings then
         local any = false
         for g, list in pairs(info.settings) do
             for _, s in ipairs(list) do
-                if tostring(s.v) ~= tostring(s.d) then
+                if not SameValue(s.v, s.d) then
                     if not any then lines[#lines + 1] = "" lines[#lines + 1] = "Settings changed from their default:" any = true end
                     lines[#lines + 1] = string.format("  %s = %s   (default %s; %s)", s.name, s.v, s.d, g)
                 end

@@ -160,7 +160,7 @@ console command lc_newcharacter
 console command lc_npcwork
 console command lc_opendoors
 console command lc_outbreak
-console command lc_outfits
+console command lc_outfits_edit
 console command lc_pardon
 console command lc_pathmap
 console command lc_pathmap_undo
@@ -203,6 +203,7 @@ console command lc_train
 console command lc_unjail
 console command lc_unlockdoors
 console command lc_unregister
+console command lc_unstalker
 console command lc_vo
 console command lc_weather
 console command lce_shop
@@ -224,7 +225,7 @@ ending bus (The Bus)
 ending cooldown file data/livingcity/endings.json
 ending fire (Fire)
 ending hard (Hard)
-ending harpies (The Harpies)
+ending harpies (They Return)
 ending marrow (Marrow)
 ending plane (Plane)
 ending shalom (Shalom)
@@ -278,12 +279,14 @@ item bandage
 item bottle_clean
 item bottle_dirty
 item bottle_empty
+item bottle_rain
 item bread
 item business_license
 item bypass
 item can_clean
 item can_dirty
 item can_empty
+item can_rain
 item canned_food
 item chemicals
 item civvies
@@ -341,6 +344,7 @@ item tablets
 item uniform_cp
 item vegetables
 item vendor_stall
+item vest_cell
 item water
 item zipties
 layout file data/livingcity/<map>.json
@@ -391,6 +395,7 @@ setting lc_citizen_lifetime = 600
 setting lc_citizen_tint = 1
 setting lc_citizens = 14
 setting lc_city_effects = 1
+setting lc_clipboard_angle = 0 0 180
 setting lc_close_call_recover = 10
 setting lc_close_call_regen = 3
 setting lc_close_calls = 3
@@ -496,7 +501,7 @@ setting lc_ending_shalom_lift_beats = 8
 setting lc_ending_shalom_offset = 0.36
 setting lc_ending_shalom_sayings = 
 setting lc_ending_shalom_sections = 7.4:gather,35.7:walk,62.1:hora,111.5:lift,125.7:hora,153.9:in,157.4:hora,180.4:in,183.9:build,205.1:peak,219.2:hora,224.5:in,231.5:final,273.9:outro,288.5:end
-setting lc_ending_song_volume = harpies=2
+setting lc_ending_song_volume = harpies=4,shalom=2
 setting lc_ending_standup_bpm = 133
 setting lc_ending_standup_crowd = 14
 setting lc_ending_standup_drain = 4
@@ -515,7 +520,7 @@ setting lc_exercise_breakfast = 1
 setting lc_exercise_every = 2
 setting lc_exercise_kinds = jog,drill,parade
 setting lc_exercise_muster = 75
-setting lc_exercise_npcs = 6
+setting lc_exercise_npcs = 10
 setting lc_eye_height = 61
 setting lc_fixture_wear = 1
 setting lc_forcefield_breaks = 3
@@ -537,6 +542,7 @@ setting lc_gas_damage = 6
 setting lc_give_fists = 1
 setting lc_grid_radius = 1800
 setting lc_grigori = 1
+setting lc_grigori_move_minutes = 12
 setting lc_grigori_respawn = 10
 setting lc_grigori_talk_gap = 60
 setting lc_gun_drops = 1
@@ -644,12 +650,14 @@ setting lc_posters_per_person = 3
 setting lc_prison_buffer = 150
 setting lc_prison_time = 180
 setting lc_prisonguard_range = 3000
+setting lc_qm_food_price = 2
 setting lc_quartermaster_arms_bonus = 1.5
 setting lc_quest_cooldown = 30
 setting lc_quest_squad = 3
 setting lc_quest_violent_ratio = 8
 setting lc_quests = 1
 setting lc_quiet_hud = 1
+setting lc_radio_set_secs = 120
 setting lc_raid_chance = 25
 setting lc_raid_stash_chance = 60
 setting lc_raid_units = 3
@@ -666,6 +674,7 @@ setting lc_rebel_errand_minutes = 4
 setting lc_rebel_errands = 1
 setting lc_rebel_guard = 1
 setting lc_rebel_life = 1
+setting lc_rebel_merge = 128
 setting lc_rebel_ops = 1
 setting lc_rebel_ops_minutes = 30
 setting lc_rebel_pct = 12
@@ -748,10 +757,15 @@ setting lc_street_stop_chance = 1
 setting lc_strike_decay = 120
 setting lc_struggle_seconds = 30
 setting lc_stuck_cooldown = 300
-setting lc_supply_guards = 3
+setting lc_subdue_hits = 3
+setting lc_supply_guards = 1
 setting lc_supply_loads = 5
 setting lc_supply_minutes = 6
 setting lc_supply_pay = 40
+setting lc_supply_porters = 2
+setting lc_surgery_minutes = 60
+setting lc_surgery_price = 300
+setting lc_surgery_standing = -50
 setting lc_sweep_warning = 90
 setting lc_tag_minutes = 60
 setting lc_talk = 1
@@ -777,11 +791,14 @@ setting lc_urge_minutes = 6
 setting lc_vending_price = 2
 setting lc_vermin = 2
 setting lc_vest_capacity = 75
+setting lc_vest_cell_drop = 25
 setting lc_view_bob = 1
 setting lc_view_bob_amount = 100
 setting lc_voice_range = 900
+setting lc_vort_charge_minutes = 10
 setting lc_walk_speed = 110
 setting lc_walkway_clear = 100
+setting lc_wanted_lost = 30
 setting lc_weather_auto = 1
 setting lc_whatnow = 1
 setting lc_whatnow_minutes = 60

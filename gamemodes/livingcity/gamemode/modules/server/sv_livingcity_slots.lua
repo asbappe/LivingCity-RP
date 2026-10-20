@@ -138,6 +138,7 @@ function LC.CanSwitchCharacter(ply)
     if LC.IsTied and LC.IsTied(ply) then return false, "Not with your hands tied." end
     if LC.InCombat and LC.InCombat(ply) then return false, "Not in the middle of a fight." end
     if LC.QuestOf and LC.QuestOf[ply] then return false, "Finish or abandon your job first (!abandon)." end
+    if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) then return false, "A stalker has no other life to go back to. Only death ends it." end
     if (ply.lcSlotNext or 0) > CurTime() and not ply:IsAdmin() then
         return false, string.format("You can switch again in %ds.", math.ceil(ply.lcSlotNext - CurTime()))
     end

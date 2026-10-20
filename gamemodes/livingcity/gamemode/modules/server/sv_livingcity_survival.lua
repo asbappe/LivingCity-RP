@@ -232,6 +232,7 @@ local function Exempt(ply)
     if not ply:Alive() or LC.PlayerIsZombie(ply) then return true end
     if LC.Prisoners and LC.Prisoners[ply] then return true end
     if LCF.IsOverwatch(ply) then return true end
+    if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) then return true end -- (the Combine feed what they keep)
     return false
 end
 

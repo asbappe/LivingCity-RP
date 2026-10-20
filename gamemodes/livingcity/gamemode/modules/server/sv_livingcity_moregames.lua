@@ -721,7 +721,8 @@ LC.JobGameDefine("filing", {
 local RADIOS = 4
 local SCREWS = { "Volume trimmer", "Squelch", "Alignment" }
 local GOOD_SCREW = 0.7 -- (how close each must be: within about a tenth of a turn's range)
-local SET_SECS = 50
+-- (seconds for each set: lc_radio_set_secs)
+local cvSetSecs = CreateConVar("lc_radio_set_secs", "120", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Radio repair: seconds for each set on the bench before it goes back on the shelf unfixed")
 
 -- How right a screw is: 1 on the spot, 0 a third of the range off.
 local function ScrewQ(v, want) return math.Clamp(1 - math.abs((tonumber(v) or 0) - want) / 0.33, 0, 1) end
@@ -779,14 +780,14 @@ local function NewRadio(g)
         g.screws[i] = math.Rand(0.1, 0.9)
         repeat g.turn[i] = math.Rand(0, 1) until math.abs(g.turn[i] - g.screws[i]) > 0.3
     end
-    g.radioEnd = CurTime() + SET_SECS
+    g.radioEnd = CurTime() + math.max(20, cvSetSecs:GetFloat())
     g.heard = nil
     return true
 end
 
 local function RadioPanel(g)
     LC.JobGamePanel(g, { n = g.n, of = RADIOS, t = g.target, f7 = g.f7, heard = g.heard and g.f7msg or nil,
-        screws = g.screws, turn = g.turn, names = SCREWS,
+        screws = g.screws, turn = g.turn, names = SCREWS, last = g.last,
         static = g.staticClip, union = g.unionClip, clip7 = g.f7clip,
         secs = math.max(0, math.ceil(g.radioEnd - CurTime())) })
 end
@@ -817,7 +818,8 @@ LC.JobGameDefine("radio", {
     tick = function(g, now)
         if (g.benchAt or 0) <= now then g.benchAt = now + 0.25 Bench(g) end
         if now > g.radioEnd and not g.heard then
-            Say(g, "Radio", "It goes back on the shelf, still hissing.")
+            Say(g, "Radio", "Out of time: it goes back on the shelf, still hissing.")
+            g.last = "timeout"
             RadioDone(g)
         end
     end,
@@ -862,6 +864,7 @@ LC.JobGameDefine("radio", {
                 g.fixed = g.fixed + 1
                 g.pay = g.pay + 3 + math.floor(math.max(0, g.radioEnd - CurTime()) / 10)
                 g.ply:EmitSound("buttons/button3.wav", 60)
+                g.last = "fixed"
                 RadioDone(g)
                 return true
             elseif g.f7 and math.abs(f - g.f7) <= 0.3 then

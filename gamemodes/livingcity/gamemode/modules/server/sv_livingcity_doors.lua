@@ -204,8 +204,10 @@ end
 
 local function TryOpenFor(st, door)
     if not IsRealDoor(door) then return end
+    -- (walking a prisoner through: three times as long, so the door can't shut between them)
+    local hold = st.marching and 12 or 4
     if LC.OpenedDoors[door] then
-        LC.OpenedDoors[door] = math.max(LC.OpenedDoors[door], CurTime() + 4)
+        LC.OpenedDoors[door] = math.max(LC.OpenedDoors[door], CurTime() + hold)
         return
     end
     local locked = IsLocked(door)
@@ -216,7 +218,7 @@ local function TryOpenFor(st, door)
         door:Fire("Unlock")
     end
     door:Fire("Open")
-    LC.OpenedDoors[door] = CurTime() + 4
+    LC.OpenedDoors[door] = CurTime() + hold
     -- a pigeon in the swing would stop the door dead
     if LC.Wildlife and LC.ShooBird then
         for e, kind in pairs(LC.Wildlife) do
@@ -309,7 +311,7 @@ local function DoorThink()
             LC.OpenedDoors[door] = nil
             LC.Relock[door] = nil
         elseif now > closeAt then
-            if SomeoneNear(door) then
+            if SomeoneNear(door) or (LC.MarchNear and LC.MarchNear(door:WorldSpaceCenter(), 260)) then
                 LC.OpenedDoors[door] = now + 2
             else
                 door:Fire("Close")

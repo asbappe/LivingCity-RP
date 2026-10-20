@@ -369,6 +369,7 @@ net.Receive("lc_outfits_save", function(_, ply)
     ply:ChatPrint("[Outfits] " .. (ok and "Saved. Everyone with that job dresses the part now." or (why or "Not saved.")))
 end)
 
-concommand.Add("lc_outfits", function(ply) if IsValid(ply) then LC.OpenOutfits(ply) end end)
+-- (not "lc_outfits": that name is the on/off setting, and a setting and a command can't share a name)
+concommand.Add("lc_outfits_edit", function(ply) if IsValid(ply) and not LC.OpenOutfits(ply) then ply:ChatPrint("Admins only.") end end)
 LC.SlashCommands = LC.SlashCommands or {}
 LC.SlashCommands.outfits = function(ply) if not LC.OpenOutfits(ply) then ply:ChatPrint("Admins only.") end end

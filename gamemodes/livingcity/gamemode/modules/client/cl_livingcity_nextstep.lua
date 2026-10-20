@@ -52,17 +52,44 @@ local function Wrap(text, font, w)
     return lines
 end
 
+-- The rank card: faction and rank, credits, Civil Standing (and wanted, when you are).
+function LC_CL.RankCard(me, x, y, w)
+    local fid = me:GetNW2String("lcf_faction", "")
+    if fid == "" or fid == "citizen" then return false end
+    local f = LCF and LCF.Get and LCF.Get(fid)
+    local r = LCF and LCF.RankOf and LCF.RankOf(me)
+    if not f then return false end
+    local title = string.upper(f.name or fid) .. (r and r.name and (": " .. string.upper(r.name)) or "")
+    local lines = { string.format("Credits %d     Civil Standing %d", me:GetNW2Int("lce_credits", 0), me:GetNW2Int("lce_standing", 0)) }
+    local job = me:GetNW2String("lcj_job", "")
+    if job ~= "" and LCJ and LCJ.ById and LCJ.ById[job] then lines[#lines + 1] = "Union job: " .. LCJ.ById[job].name end
+    lines[#lines + 1] = "Jobs, orders and your story: F3"
+    local wanted = me:GetNW2Float("lc_wanted_until", 0) > CurTime()
+    local h = 26 + #lines * 15
+    draw.RoundedBox(4, x, y, w, h, BG)
+    draw.RoundedBox(0, x, y, 3, h, wanted and URGENT or NEXT)
+    draw.SimpleText(title, "LCNextStep", x + 10, y + 5, INK)
+    if wanted then draw.SimpleText("WANTED", "LCNextStep", x + w - 10, y + 5, URGENT, TEXT_ALIGN_RIGHT) end
+    for i, l in ipairs(lines) do draw.SimpleText(l, "LCNextWhy", x + 10, y + 7 + i * 15, i == #lines and NEXT or DIM) end
+    LC_CL.NextStepBottom, LC_CL.NextStepAt = y + h, CurTime()
+    return true
+end
+
 hook.Add("HUDPaint", "LivingCityNextStep", function()
     local me = LocalPlayer()
     if not IsValid(me) or not me:Alive() then return end
     local s = LC_CL.NextStep()
+    local w = math.min(340, ScrW() - 32)
+    local x, y = 16, (LC_CL.LeftColumnTop and LC_CL.LeftColumnTop() or 160) + 8
+    -- someone with a rank (the Resistance, Civil Protection, the administration...) knows where
+    -- the work is: in place of the nudges, who they are (rank, credits, standing). Only something
+    -- urgent still takes its place.
+    if LC_CL.RankCard and (not s or not s.urgent) and LC_CL.RankCard(me, x, y, w) then return end
     if not s then return end
     local mode = cvShow:GetInt()
     if mode == 0 or (mode == 1 and not s.new and not s.urgent) then return end
     -- Civil Intake has its own line on screen while you're being processed
     if me:GetNW2Bool("lc_unreg", false) or me:GetNW2Bool("lc_unhoused", false) then return end
-    local w = math.min(340, ScrW() - 32)
-    local x, y = 16, (LC_CL.LeftColumnTop and LC_CL.LeftColumnTop() or 160) + 8
     local why = Wrap(s.why, "LCNextWhy", w - 16)
     local h = 26 + #why * 15 + (s.way ~= "" and 15 or 0)
     draw.RoundedBox(4, x, y, w, h, BG)

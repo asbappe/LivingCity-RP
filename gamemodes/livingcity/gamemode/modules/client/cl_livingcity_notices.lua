@@ -194,10 +194,40 @@ local function DrawCards(now)
     end
 end
 
+-- Where the subtitles go: low in the middle, or, when a window is open there (the
+-- quartermaster's, the lab's...), just below it (or above it, with no room below):
+-- the HUD is drawn under windows, so words behind one can't be read.
+local function SubsY(W, H, rows)
+    local y = H * 0.76
+    local top, bottom
+    local ok = pcall(function()
+        local world = vgui and vgui.GetWorldPanel and vgui.GetWorldPanel()
+        for _, c in ipairs(world and world:GetChildren() or {}) do
+            if IsValid(c) and c:IsVisible() and (c.ClassName == "DFrame" or c.Base == "DFrame") then
+                local x, py = c:GetPos()
+                local cw, ch = c:GetSize()
+                if ch < H * 0.95 and x < W / 2 and x + cw > W / 2 and py < y and py + ch > y - rows * 26 then
+                    top = math.min(top or py, py)
+                    bottom = math.max(bottom or 0, py + ch)
+                end
+            end
+        end
+    end)
+    if not ok or not bottom then return y end
+    if bottom + 20 + rows * 26 <= H - 8 then return bottom + 20 + (rows - 1) * 26 end
+    return math.max(30 + (rows - 1) * 26, top - 20)
+end
+LC_CL.SubsY = SubsY
+
 local function DrawSubs(now)
     local W, H = ScrW(), ScrH()
     for i = #subs, 1, -1 do if subs[i].ends <= now then table.remove(subs, i) end end
-    local y = H * 0.76
+    local rows = 0
+    for _, c in ipairs(subs) do
+        c.lines = c.lines or Wrap(c.text, "LCSubtitle", math.min(W - 80, 900))
+        rows = rows + #c.lines
+    end
+    local y = rows > 0 and SubsY(W, H, rows) or H * 0.76
     for _, c in ipairs(subs) do
         local a = Alpha(c, now)
         c.lines = c.lines or Wrap(c.text, "LCSubtitle", math.min(W - 80, 900))

@@ -346,6 +346,64 @@ hook.Add("PlayerSay", "LivingCitySurrender", function(ply, text)
     return ""
 end)
 
+-- Nobody is cuffed till they're subdued: beaten (lc_subdue_hits blows of the baton, each one
+-- leaving them dazed, slow for a few seconds), shot or hurt down to under 20 health, downed, or
+-- giving up (standing still for them, hands where they can see them). Someone in noclip (an
+-- admin flying about) is never laid hands on at all.
+local cvSubdue = CreateConVar("lc_subdue_hits", "3", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Blows of the stun baton before a unit can cuff someone who's still on their feet and running")
+local function Flying(ply) return ply.GetMoveType and ply:GetMoveType() == MOVETYPE_NOCLIP end
+LC.NoclipFlying = Flying
+function LC.SubdueHits(ply)
+    local s = ply.lcSubdue
+    if not s or CurTime() - s.t > 25 then return 0 end
+    return s.n
+end
+function LC.Subdued(ply)
+    if not IsValid(ply) or not ply:Alive() or Flying(ply) then return false end
+    if LC.IsDowned and LC.IsDowned(ply) then return true end
+    if ply:Health() < 20 then return true end
+    if LC.SubdueHits(ply) >= math.max(1, cvSubdue:GetInt()) then return true end
+    -- given up: standing still for them, a second or more
+    local v = ply:GetVelocity()
+    if Vector(v.x, v.y, 0):Length() < 40 then
+        ply.lcStillSince = ply.lcStillSince or CurTime()
+        return CurTime() - ply.lcStillSince >= 1.2
+    end
+    ply.lcStillSince = nil
+    return false
+end
+-- A blow of the baton: counted, and they stumble.
+function LC.SubdueBlow(ply)
+    local s = ply.lcSubdue
+    if not s or CurTime() - s.t > 25 then s = { n = 0 } ply.lcSubdue = s end
+    s.n, s.t = s.n + 1, CurTime()
+    ply:SetNW2Float("lc_dazed_until", CurTime() + 2.5)
+    if ply.ViewPunch then ply:ViewPunch(Angle(math.random(6, 10), math.random(-6, 6), 0)) end
+end
+-- A unit right beside someone they're to bring in: cuffs them if they're subdued, or else a blow
+-- of the baton (a swing a second at most). True when they've been taken in.
+function LC.NPCSubdue(unit, st, ply, now)
+    if not IsValid(ply) or not ply:IsPlayer() or Flying(ply) then return false end
+    if LC.Subdued(ply) then return LC.NPCTakesIn(unit, ply) end
+    if (st.nextSubdue or 0) > now then return false end
+    st.nextSubdue = now + 1.1
+    if LC.Face then LC.Face(unit, ply:GetPos()) end
+    if unit.SetSchedule and SCHED_MELEE_ATTACK1 then unit:SetSchedule(SCHED_MELEE_ATTACK1) end
+    local d = DamageInfo and DamageInfo()
+    if d then
+        d:SetDamage(math.min(8, math.max(0, ply:Health() - 15)))
+        d:SetDamageType(DMG_CLUB)
+        d:SetAttacker(unit)
+        d:SetInflictor(unit)
+        ply.lcSubdueHit = true
+        ply:TakeDamageInfo(d)
+        ply.lcSubdueHit = nil
+    end
+    LC.SubdueBlow(ply)
+    unit:EmitSound("weapons/stunstick/stunstick_impact" .. math.random(1, 2) .. ".wav", 75)
+    return false
+end
+
 -- Security NPCs arrest instead of kill.
 hook.Add("EntityTakeDamage", "LivingCityNPCArrest", function(victim, dmg)
     if not victim:IsPlayer() or not cvArrests:GetBool() then return end
@@ -358,10 +416,13 @@ hook.Add("EntityTakeDamage", "LivingCityNPCArrest", function(victim, dmg)
     end
     if st.enemy ~= victim and not LC.PlayerIsWanted(victim) then return end
     if LC.AlertLevel and LC.AlertLevel(victim) >= 3 then return end -- lethal force authorized
+    if Flying(victim) or victim.lcSubdueHit then return end
 
     local inflictor = dmg:GetInflictor()
     local club = dmg:IsDamageType(DMG_CLUB) or (IsValid(inflictor) and inflictor:GetClass() == "weapon_stunstick")
-    if not club and victim:Health() - dmg:GetDamage() > 20 then return end
+    -- a blow of the baton counts toward subduing them (and they stumble); cuffed once they're down
+    if club then LC.SubdueBlow(victim) end
+    if victim:Health() - dmg:GetDamage() > 20 and not LC.Subdued(victim) then return end
 
     if LC.NPCTakesIn(attacker, victim) then
         dmg:SetDamage(0)

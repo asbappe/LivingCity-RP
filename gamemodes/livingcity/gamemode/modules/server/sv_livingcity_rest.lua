@@ -32,7 +32,10 @@ local TIRED_HP = 25
 
 local function DayLen() return math.max(60, GetGlobal2Float("lc_day_len", 1440)) end
 local function Notice(ply, kind, title, text, secs) if LC.Notice then LC.Notice(ply, kind, title, text, secs) else ply:ChatPrint(title .. ": " .. text) end end
-local function Exempt(ply) return not ply:Alive() or (LC.PlayerIsZombie and LC.PlayerIsZombie(ply)) or ply:GetNW2String("lcf_faction", "") == "admin" end
+local function Exempt(ply)
+    return not ply:Alive() or (LC.PlayerIsZombie and LC.PlayerIsZombie(ply)) or ply:GetNW2String("lcf_faction", "") == "admin"
+        or ply:GetNW2String("lcf_faction", "") == "stalker" -- (a stalker doesn't sleep: it works)
+end
 
 function LC.IsNight()
     local phase = LC.DayPhase and LC.DayPhase() or "day"

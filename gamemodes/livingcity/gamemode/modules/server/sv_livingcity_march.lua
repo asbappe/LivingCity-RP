@@ -37,9 +37,19 @@ local THERE = 170  -- this close to the spot by the cells: taken inside
 local CLOSE = 600  -- stopped this close to it (held up at the doors): taken inside too
 
 local function IsUnit(st) return st and (st.role == "cop" or st.role == "soldier") end
+local KNOCKED_OUT = "You're struck from behind, and everything goes black. When you come to, you're in a cell."
 local function Up(npc) return IsValid(npc) and npc:Health() > 0 end
 
 function LC.IsMarching(ply) return LC.Marching[ply] ~= nil end
+-- Someone being walked in (or a unit walking them) near pos: a door there stays open for them.
+function LC.MarchNear(pos, r)
+    for ply, m in pairs(LC.Marching) do
+        if IsValid(ply) and ply:GetPos():DistToSqr(pos) < r * r then return true end
+        if Up(m.lead) and m.lead:GetPos():DistToSqr(pos) < r * r then return true end
+        if Up(m.rear) and m.rear:GetPos():DistToSqr(pos) < r * r then return true end
+    end
+    return false
+end
 
 -- Where they walk you. Units open Civil Protection and prison doors as they
 -- walk up to them, and lock them again behind them (sv_livingcity_doors.lua),
@@ -127,6 +137,7 @@ local function TakeIn(ply, m, how)
     local ok = LC.Incarcerate(ply, m.seconds, m.reason, m.arrester)
     ply.lcPreferCell = nil
     if ok and how then ply:ChatPrint("[Civil Protection] " .. how) end
+    if ok and how == KNOCKED_OUT and ply.ScreenFade then ply:ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 3, 2) end
     if not ok and LC.DetainOnTheSpot then LC.DetainOnTheSpot(ply, m.arrester, m.reason) end
 end
 
@@ -221,16 +232,49 @@ local function Pull(ply, lead)
     end
 end
 
+-- The unit leading you goes down: the one behind takes your arm, or another unit nearby
+-- comes over and does. Only with nobody left to take you are you free. True when someone has you.
+function LC.MarchTakeOver(ply, m)
+    local new = Up(m.rear) and m.rear or SecondUnit(ply:GetPos(), m.lead)
+    if not new then return false end
+    if new == m.rear then m.rear = nil end
+    local st = LC.NPCs[new]
+    if st.state == "hostile" and LC.CalmOne then LC.CalmOne(new, st, CurTime()) end
+    if not LC.GoTo(new, st, m.dest, false) then return false end
+    st.marching, st.questLock = true, true
+    m.lead, m.tries, m.nextTry = new, 0, nil
+    new:EmitSound("npc/metropolice/vo/holdit.wav", 75)
+    if IsValid(ply) then ply:ChatPrint("[Custody] The unit leading you is down. Another takes your arm before you can run.") end
+    return true
+end
+
+-- A unit walking a prisoner alone: another nearby falls in behind.
+local function Reinforce(ply, m, now)
+    if Up(m.rear) or (m.nextReinforce or 0) > now then return end
+    m.nextReinforce = now + 3
+    local rear = SecondUnit(ply:GetPos(), m.lead)
+    if not rear then return end
+    local rs = LC.NPCs[rear]
+    LC.SetState(rear, rs, "event")
+    rs.eventUntil = now + cvMax:GetFloat() + 30
+    rs.marching, rs.questLock = true, true
+    m.rear = rear
+end
+
 local function Tick(now)
     for ply, m in pairs(LC.Marching) do
         local lead = m.lead
         local ls = IsValid(lead) and LC.NPCs and LC.NPCs[lead]
+        if (not Up(lead) or not ls) and IsValid(ply) and ply:Alive() and LC.MarchTakeOver(ply, m) then
+            lead = m.lead
+            ls = LC.NPCs[lead]
+        end
         if not IsValid(ply) or not ply:Alive() then
             Finish(ply, m)
         elseif not Up(lead) or not ls then
             Escaped(ply, m, "The Civil Protection unit leading you is down.")
         elseif now - m.startT > cvMax:GetFloat() then
-            TakeIn(ply, m, "A van pulls up. They put you in the back, and the doors shut.")
+            TakeIn(ply, m, KNOCKED_OUT)
         elseif ls.state == "hostile" then
             -- he's fighting: he lets go of you
             if ply:GetPos():DistToSqr(lead:GetPos()) > SLIP * SLIP then
@@ -251,12 +295,13 @@ local function Tick(now)
                     m.tries = m.tries + 1
                     m.nextTry = now + 2
                     if m.tries > 8 or not LC.GoTo(lead, ls, m.dest, false) then
-                        TakeIn(ply, m, "A van pulls up. They put you in the back, and the doors shut.")
+                        TakeIn(ply, m, KNOCKED_OUT)
                         going = false
                     end
                 end
                 if going then
                     Pull(ply, lead)
+                    Reinforce(ply, m, now)
                     -- the second unit keeps close behind
                     if Up(m.rear) and (m.nextRear or 0) < now then
                         m.nextRear = now + 0.8

@@ -14,10 +14,13 @@
                       lc_vest_capacity (75) and comes with some charge in it
 
     No vest, no charge: a suit battery or a charger does nothing for you.
-    Charging: the Combine's suit batteries and chargers, the Commissary for
-    units, and vortigaunts, whose vortessence charges a vest (the freed ones
-    in rebel territory charge everyone of ours nearby; a vortigaunt player's
-    right click charges whoever they look at). A worn vest is lost when you die.
+    Charging, and nothing else (sleeping doesn't): the Combine's suit
+    batteries and chargers, the Commissary for units, charge cells (made in
+    the Resistance lab, or found on a dead Combine unit, lc_vest_cell_drop
+    25%, or a downed scanner, 50%), and vortigaunts, whose vortessence charges
+    a vest when you ask (E on a freed one in rebel territory: once every
+    lc_vort_charge_minutes, 10; a vortigaunt player's right click charges
+    whoever they look at). A worn vest is lost when you die.
 ]]
 
 if CLIENT then return end
@@ -67,6 +70,20 @@ end
 
 hook.Add("PlayerSpawn", "LivingCityVest", function(ply)
     ply:SetNW2Bool("lc_vest", false) -- (a worn vest goes with the life it was worn in)
+end)
+
+-- Charge cells off the Combine: a dead unit sometimes has one, a downed scanner often.
+local cvCellDrop = CreateConVar("lc_vest_cell_drop", "25", FLAGS, "Percent chance a dead Combine unit drops a charge cell for a powered vest (a downed scanner: twice that)")
+hook.Add("OnNPCKilled", "LivingCityVestCells", function(npc)
+    if not IsValid(npc) or not LC.SpawnWorldItem then return end
+    local st = LC.NPCs and LC.NPCs[npc]
+    if st and st.test then return end
+    local cls = npc:GetClass()
+    local scanner = cls == "npc_cscanner" or cls == "npc_clawscanner" or (st and st.role == "scanner")
+    local unit = (st and (st.role == "cop" or st.role == "soldier")) or cls == "npc_metropolice" or cls == "npc_combine_s"
+    if not (scanner or unit) then return end
+    if math.random(100) > cvCellDrop:GetFloat() * (scanner and 2 or 1) then return end
+    LC.SpawnWorldItem("vest_cell", npc:GetPos() + Vector(0, 0, 16), nil, Vector(math.random(-40, 40), math.random(-40, 40), 60))
 end)
 
 -- Nobody holds more charge than their vest can.

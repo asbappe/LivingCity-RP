@@ -684,6 +684,19 @@ function LC_CL.SpeakerBrokenNear(pos)
     return v
 end
 
+-- How long a line runs: the longer of what the server worked out and what this
+-- game makes of the file itself (either one alone can come out short, and a
+-- short guess is a voice talking over the next one).
+local function VoiceSecs(path, said, fallback)
+    local mine = SoundDuration and SoundDuration(path) or 0
+    if not mine or mine <= 0.2 or mine > 120 then mine = 0 end
+    if string.lower(string.sub(path or "", -4)) ~= ".wav" then mine = 0 end -- (an MP3's or OGG's own guess is unreliable: the server reads those)
+    local d = math.max(said or 0, mine)
+    if d <= 0.2 or d > 120 then d = fallback end
+    return d
+end
+LC_CL.VoiceSecs = VoiceSecs
+
 local function PlayNextVoice()
     if CurTime() < voiceBusy or #voiceQueue == 0 then return end
     local v = table.remove(voiceQueue, 1)
@@ -697,10 +710,7 @@ local function PlayNextVoice()
             me:EmitSound(v.path, 0, 100, vol, CHAN_VOICE2)
             LC_CL.lastBreencast = v.path
         end
-        local d = v.dur or 0
-        if d <= 0.2 then d = SoundDuration and SoundDuration(v.path) or 0 end
-        if not d or d <= 0.2 or d > 120 then d = 6 end
-        voiceBusy = CurTime() + d + 0.6
+        voiceBusy = CurTime() + VoiceSecs(v.path, v.dur, 6) + 0.8
         return
     end
     if LC_CL.SpeakerBrokenNear(LocalPlayer():GetPos()) then
@@ -720,9 +730,8 @@ local function PlayNextVoice()
     elseif string.find(v.path, "^livingcity/") and LC_CL.SoundTrouble then
         LC_CL.SoundTrouble(v.path) -- (one of the server's own recordings: say it's missing here)
     end -- (a stock Half-Life 2 line this install doesn't have: the banner and the words, without the sound)
-    local dur = (v.dur and v.dur > 0.2) and v.dur or (SoundDuration and SoundDuration(v.path) or 0)
-    if not dur or dur <= 0.2 or dur > 120 then dur = 4.5 end
-    voiceBusy = CurTime() + dur + 0.6
+    local dur = VoiceSecs(v.path, v.dur, 4.5)
+    voiceBusy = CurTime() + dur + 0.8
     banner = { text = "CITY ANNOUNCEMENT", sub = v.title, untilT = CurTime() + math.max(7, dur + 1) }
 end
 -- admin: the Administrator's (over the loudspeakers); dur: how long, if the server knows

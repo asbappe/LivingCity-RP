@@ -105,6 +105,7 @@ function LC.ReportCrime(ply, reason, seconds)
     local r = string.lower(tostring(reason or ""))
     for _, w in ipairs(VIOLENT_WORDS) do if string.find(r, w, 1, true) then ply.lcViolentUntil = CurTime() + 120 break end end
     LC.SetWanted(ply, seconds or 180, reason)
+    ply:RemovePData("lc_new_face") -- (wanted again: now they know the new face too)
     return true
 end
 
@@ -128,6 +129,7 @@ end
 ------------------------------------------------------------------------
 
 local wasWanted = {}
+local cvLost = CreateConVar("lc_wanted_lost", "30", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Seconds out of every unit's sight before the units lose track of where a wanted person is (after that, only a unit who sees them comes for them)")
 
 timer.Create("LivingCityWanted", 1, 0, function()
     local now = CurTime()
@@ -143,9 +145,17 @@ timer.Create("LivingCityWanted", 1, 0, function()
             and not (LC.Prisoners and LC.Prisoners[ply])
             and not (LC.FoolsSecurity and LC.FoolsSecurity(ply)) -- in a stolen uniform, they don't know you
         if wanted then
-            -- the higher the alert, the wider the net
-            local alert = LC.AlertLevel and LC.AlertLevel(ply) or 0
-            LC.MakeCopsHostile(ply, ply:GetPos(), alert >= 3 and nil or (alert == 2 and 5000 or 1500))
+            -- they only know where you are while the hunt is hot: a unit sees you now, or one
+            -- did in the last lc_wanted_lost seconds (or you've only just become wanted). Out of
+            -- sight that long (lying low in rebel territory, slipping away), nobody knows where
+            -- you've gone: step out and only a unit who actually sees you comes for you.
+            if not wasWanted[ply] then ply.lcWantedSeen = now end
+            if LC.SeenBySecurity and LC.SeenBySecurity(ply, 1500) then ply.lcWantedSeen = now end
+            if now - (ply.lcWantedSeen or -1e9) <= cvLost:GetFloat() then
+                -- the higher the alert, the wider the net
+                local alert = LC.AlertLevel and LC.AlertLevel(ply) or 0
+                LC.MakeCopsHostile(ply, ply:GetPos(), alert >= 3 and nil or (alert == 2 and 5000 or 1500))
+            end
         elseif wasWanted[ply] then
             LC.CalmCops(ply)
         end
@@ -153,3 +163,9 @@ timer.Create("LivingCityWanted", 1, 0, function()
     end
 end)
 hook.Add("PlayerDisconnected", "LivingCityWanted", function(ply) wasWanted[ply] = nil end)
+-- Have the units lost track of this wanted person? (Not with Overwatch hunting them: alert 3 and up.)
+function LC.WantedLost(ply)
+    if not IsValid(ply) or not ply:IsPlayer() or not wasWanted[ply] then return false end
+    if LC.AlertLevel and LC.AlertLevel(ply) >= 3 then return false end
+    return CurTime() - (ply.lcWantedSeen or CurTime()) > cvLost:GetFloat()
+end

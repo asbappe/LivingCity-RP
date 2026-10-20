@@ -244,6 +244,57 @@ hook.Add("PlayerSpawn", "LivingCityFactions", function(ply)
     end)
 end)
 
+-- Never stuck inside someone: spawned (or put back where you left off) on top of an NPC or
+-- another player, you're moved to the nearest clear spot beside them. Checked after every spawn,
+-- and every second (two checks running stuck: moved), so nobody needs noclip to get free.
+local function StuckIn(ply, pos)
+    local tr = util.TraceHull({ start = pos, endpos = pos, mins = ply:OBBMins(), maxs = ply:OBBMaxs(), filter = ply, mask = MASK_PLAYERSOLID })
+    if not tr then return nil end
+    local e = tr.Entity
+    if tr.StartSolid or tr.AllSolid then
+        if IsValid(e) and (e:IsNPC() or e:IsPlayer() or e:GetClass() == "prop_physics") then return e end
+        if not IsValid(e) and pos == ply:GetPos() then return game.GetWorld and game.GetWorld() or true end
+    end
+    return nil
+end
+function LC.UnstickFromPeople(ply)
+    if not IsValid(ply) or not ply:Alive() then return false end
+    local pos = ply:GetPos()
+    if not StuckIn(ply, pos) then return false end
+    for _, r in ipairs({ 40, 64, 96, 140, 200 }) do
+        for i = 0, 7 do
+            local a = i / 8 * math.pi * 2
+            local p = pos + Vector(math.cos(a) * r, math.sin(a) * r, 4)
+            if not StuckIn(ply, p) then
+                local wall = util.TraceLine({ start = pos + Vector(0, 0, 36), endpos = p + Vector(0, 0, 36), filter = ply, mask = MASK_PLAYERSOLID_BRUSHONLY })
+                local down = util.TraceLine({ start = p, endpos = p - Vector(0, 0, 120), filter = ply, mask = MASK_PLAYERSOLID })
+                if wall and not wall.Hit and down and down.Hit then
+                    ply:SetPos(down.HitPos + Vector(0, 0, 2))
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+hook.Add("PlayerSpawn", "LivingCityUnstick", function(ply)
+    timer.Simple(0.6, function() if IsValid(ply) then LC.UnstickFromPeople(ply) end end)
+end)
+timer.Create("LivingCityUnstick", 1, 0, function()
+    for _, p in ipairs(player.GetAll()) do
+        local free = not p:Alive() or (p.GetMoveType and p:GetMoveType() == MOVETYPE_NOCLIP) or (p.InVehicle and p:InVehicle())
+            or p:GetNW2Bool("lc_sleeping", false) or (LC.IsTied and LC.IsTied(p)) or (LC.InCustody and LC.InCustody(p))
+            or (LC.IsDowned and LC.IsDowned(p)) or p.lcEndFrozen
+        local e = not free and StuckIn(p, p:GetPos())
+        if e and e ~= true and IsValid(e) and (e:IsNPC() or e:IsPlayer()) then
+            p.lcStuckN = (p.lcStuckN or 0) + 1
+            if p.lcStuckN >= 2 then p.lcStuckN = 0 LC.UnstickFromPeople(p) end
+        else
+            p.lcStuckN = 0
+        end
+    end
+end)
+
 hook.Add("LivingCityRestoreLoadout", "LivingCityFactions", function(ply)
     if not FactionOf(ply) then return end
     ApplyBody(ply) -- they may have changed faction while inside
@@ -267,7 +318,8 @@ end
 function LC.CanJoinFaction(ply, fid, sid)
     local f = LCF.Get(fid)
     if not f then return false, "No such faction." end
-    local bound = LC.BoundTo and not ply:IsSuperAdmin() and LC.BoundTo(ply, fid)
+    -- (a stalker is bound even as a superadmin: only death, or lc_unstalker, ends it)
+    local bound = LC.BoundTo and (not ply:IsSuperAdmin() or (LC.PlayerIsStalker and LC.PlayerIsStalker(ply))) and LC.BoundTo(ply, fid)
     if bound then return false, bound end -- (careers that can't be undone: sv_livingcity_progress.lua)
     if f.whitelist and not ply:IsSuperAdmin() and ply:GetPData("lcf_wl_" .. fid, "0") ~= "1" then
         return false, "Whitelist only."

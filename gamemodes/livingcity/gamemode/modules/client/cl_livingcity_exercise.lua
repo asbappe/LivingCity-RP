@@ -194,7 +194,9 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityExercise", function(depth,
         if EX.route[cp] then Beam(EX.route[cp], GREEN) end
         if EX.runStart and EX.pace then
             local p = Along(math.min(EX.total or 0, (CurTime() - EX.runStart) * EX.pace))
-            if p then render.DrawWireframeBox(p, Angle(0, 0, 0), Vector(-12, -12, 0), Vector(12, 12, 72), RED, false) end
+            -- the pace marker: green while you're keeping up with it, red when you've fallen behind
+            local col = (inIt and not me:GetNW2Bool("lcx_behind", false)) and GREEN or RED
+            if p then render.DrawWireframeBox(p, Angle(0, 0, 0), Vector(-12, -12, 0), Vector(12, 12, 72), col, false) end
         end
     elseif EX.kind == "drill" then
         local spot = me:GetNW2Vector("lcx_spot", nil)

@@ -175,11 +175,11 @@ end)
 timer.Create("LivingCityRainFill", 20, 0, function()
     for _, ply in ipairs(player.GetAll()) do
         if ply:Alive() and LC.InRain(ply) then
-            for _, pair in ipairs({ { "bottle_empty", "bottle_dirty" }, { "can_empty", "can_dirty" } }) do
+            for _, pair in ipairs({ { "bottle_empty", "bottle_rain" }, { "can_empty", "can_rain" } }) do
                 if LC.HasItem(ply, pair[1]) then
                     LC.TakeItem(ply, pair[1], 1)
                     LC.GiveItem(ply, pair[2], 1)
-                    ply:ChatPrint("[Living City] Rain fills your " .. (LCS.Items[pair[1]] and string.lower(LCS.Items[pair[1]].name) or pair[1]) .. ". Boil it before you drink it.")
+                    ply:ChatPrint("[Living City] Rain fills your " .. (LCS.Items[pair[1]] and string.lower(LCS.Items[pair[1]].name) or pair[1]) .. ". Rainwater: clean enough to drink as it is.")
                     break
                 end
             end
