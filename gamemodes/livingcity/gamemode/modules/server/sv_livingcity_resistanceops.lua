@@ -761,6 +761,7 @@ function LC.VortCharge(ply, v)
     return true, "The vortigaunt's hands glow green, and your vest hums with charge."
 end
 hook.Add("PlayerUse", "LivingCityVortCharge", function(ply, ent)
+    if LC.StalkerCantSpeak and LC.StalkerCantSpeak(ply, ent) then return false end
     if not (IsValid(ent) and LC.RebelVorts[ent]) then return end
     if (ply.lcVortUse or 0) > CurTime() then return false end
     ply.lcVortUse = CurTime() + 1

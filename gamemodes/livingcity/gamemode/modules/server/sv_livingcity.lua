@@ -2598,6 +2598,7 @@ end)
 hook.Add("PlayerUse", "LivingCityUse", function(ply, ent)
     local st = LC.NPCs[ent]
     if not st or st.test then return end
+    if LC.StalkerCantSpeak and LC.StalkerCantSpeak(ply, ent) then return false end -- (a stalker: sv_livingcity_custody.lua)
     -- the engine's own "use" makes citizens talk to you as Gordon Freeman; we handle it instead
     if CurTime() < st.nextUse then return st.role == "citizen" and false or nil end
     st.nextUse = CurTime() + 3

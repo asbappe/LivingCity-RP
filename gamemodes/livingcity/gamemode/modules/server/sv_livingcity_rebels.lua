@@ -1519,6 +1519,7 @@ hook.Add("PlayerInitialSpawn", "LivingCityRebelSquads", function(ply)
 end)
 
 hook.Add("PlayerUse", "LivingCityRebelsUse", function(ply, ent)
+    if LC.StalkerCantSpeak and LC.StalkerCantSpeak(ply, ent) then return false end
     local st = LC.NPCs[ent]
     if not st or st.role ~= "rebel" then return end
     -- the use key held down calls this every tick: only the press counts, or a long press

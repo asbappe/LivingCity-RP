@@ -187,6 +187,7 @@ function LC.UseGrigori(ply, g)
 end
 
 hook.Add("PlayerUse", "LivingCityGrigori", function(ply, ent)
+    if LC.StalkerCantSpeak and LC.StalkerCantSpeak(ply, ent) then return false end
     if IsValid(ent) and ent.lcGrigori then LC.UseGrigori(ply, ent) return false end
 end)
 

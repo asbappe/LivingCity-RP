@@ -219,6 +219,7 @@ local GREET = {
 
 function LC.UseScientist(ply, sci)
     if not IsValid(ply) or not IsValid(sci) or not ply:Alive() or LC.LabShut(sci) then return end
+    if LC.StalkerCantSpeak and LC.StalkerCantSpeak(ply, sci) then return end
     if (ply.lcLabUse or 0) > CurTime() then return end
     ply.lcLabUse = CurTime() + 0.8
     if LC.PlayerIsCP and LC.PlayerIsCP(ply) then return LC.ShutLab(ply, sci) end

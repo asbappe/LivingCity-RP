@@ -1,0 +1,801 @@
+announce folder sound/livingcity/<voice>/
+announce folder sound/livingcity/announce/<voice>/
+announce radio trigger freq7
+announce radio trigger freq7_curfew
+announce radio trigger freq7_dropship
+announce radio trigger freq7_incursion
+announce radio trigger freq7_lockdown
+announce radio trigger freq7_raid
+announce radio trigger freq7_song
+announce radio trigger freq7_supply
+announce radio trigger freq7_sweep
+announce radio trigger jam
+announce radio trigger static
+announce radio trigger union
+announce retired lockdown_soon
+announce retired raid_soon
+announce retired supply_soon
+announce retired sweep_soon
+announce trigger ambient
+announce trigger blackout
+announce trigger block_raided
+announce trigger breakout
+announce trigger curfew
+announce trigger curfew_soon
+announce trigger dawn
+announce trigger day
+announce trigger drill
+announce trigger dusk
+announce trigger ended
+announce trigger jog
+announce trigger lockdown
+announce trigger night
+announce trigger outbreak
+announce trigger overwatch_drop
+announce trigger parade
+announce trigger power_restored
+announce trigger raid
+announce trigger rations
+announce trigger rations_soon
+announce trigger response
+announce trigger skirmish_raid
+announce trigger skirmish_sweep
+announce trigger socio_green
+announce trigger socio_red
+announce trigger socio_yellow
+announce trigger supply
+announce trigger sweep
+announce trigger territory_grew
+announce trigger train_arrival
+announce trigger welcome
+announce voice administrator
+announce voice overwatch
+chat command /act
+chat command /addlaw
+chat command /apartment
+chat command /back
+chat command /beckon
+chat command /bob
+chat command /bolo
+chat command /bow
+chat command /broadcast
+chat command /casual
+chat command /changeclothes
+chat command /characters
+chat command /chars
+chat command /cheer
+chat command /cower
+chat command /cut
+chat command /dellaw
+chat command /dropship
+chat command /eatchip
+chat command /escort
+chat command /givekey
+chat command /gunsout
+chat command /halt
+chat command /handsup
+chat command /hu
+chat command /kick
+chat command /kneel
+chat command /laugh
+chat command /laws
+chat command /lean
+chat command /lie
+chat command /lock
+chat command /meet
+chat command /nod
+chat command /outfits
+chat command /papers
+chat command /point
+chat command /pose
+chat command /rationbreak
+chat command /records
+chat command /rent
+chat command /request
+chat command /salute
+chat command /scanner
+chat command /setlaw
+chat command /shake
+chat command /showpapers
+chat command /sit
+chat command /sleep
+chat command /socio
+chat command /stand
+chat command /struggle
+chat command /takekey
+chat command /tie
+chat command /unlock
+chat command /unrent
+chat command /unshackle
+chat command /untie
+chat command /vo
+chat command /wave
+chat command /ways
+chat command /write
+chat command /ziptie
+console command lc_1020
+console command lc_addpoint
+console command lc_admintools
+console command lc_announce
+console command lc_announce_clips
+console command lc_announce_rescan
+console command lc_announce_say
+console command lc_announce_tier
+console command lc_autolink
+console command lc_backup
+console command lc_backup_call
+console command lc_backups
+console command lc_blackout
+console command lc_breencast
+console command lc_broadcast
+console command lc_calm
+console command lc_characters
+console command lc_city
+console command lc_combine_models_list
+console command lc_conduct
+console command lc_creator
+console command lc_debugreport
+console command lc_drag
+console command lc_endevent
+console command lc_ending
+console command lc_ending_cancel
+console command lc_ending_reset_cooldown
+console command lc_ending_vote
+console command lc_endings
+console command lc_event
+console command lc_exercise
+console command lc_freq7_status
+console command lc_givecredits
+console command lc_giveitem
+console command lc_goto_layout
+console command lc_hack
+console command lc_handsup
+console command lc_holster
+console command lc_jail
+console command lc_kick
+console command lc_newcharacter
+console command lc_npcwork
+console command lc_opendoors
+console command lc_outbreak
+console command lc_outfits_edit
+console command lc_pardon
+console command lc_pathmap
+console command lc_pathmap_undo
+console command lc_people
+console command lc_pick
+console command lc_prisoners
+console command lc_profile
+console command lc_reassignblocks
+console command lc_rebel_errand
+console command lc_records
+console command lc_register
+console command lc_reload
+console command lc_removepoint
+console command lc_resetpeople
+console command lc_restore
+console command lc_salvage_now
+console command lc_savesettings
+console command lc_scanner_exit
+console command lc_scanprops
+console command lc_search
+console command lc_setalert
+console command lc_setblock
+console command lc_setjob
+console command lc_setname
+console command lc_setstanding
+console command lc_skirmish
+console command lc_staff
+console command lc_start
+console command lc_status
+console command lc_stock
+console command lc_stop
+console command lc_stuck
+console command lc_territory
+console command lc_territory_grow
+console command lc_territory_reset
+console command lc_throw
+console command lc_tie
+console command lc_time
+console command lc_train
+console command lc_unjail
+console command lc_unlockdoors
+console command lc_unregister
+console command lc_unstalker
+console command lc_vo
+console command lc_weather
+console command lce_shop
+console command lcf_demote
+console command lcf_menu
+console command lcf_promote
+console command lcf_setfaction
+console command lcf_setxp
+console command lcf_whitelist
+console command lci_inv
+console command lci_stash
+console command lcq_board
+console command lcq_resetstory
+console command lcq_startchain
+console command lcq_story
+ending base (Base)
+ending bloom (Bloom)
+ending bus (The Bus)
+ending cooldown file data/livingcity/endings.json
+ending fire (Fire)
+ending hard (Hard)
+ending harpies (They Return)
+ending marrow (Marrow)
+ending plane (Plane)
+ending shalom (Shalom)
+ending songs folder sound/livingcity/endings/
+ending standup (Standup)
+ending tuning file data/livingcity/ending_tuning.json
+ending water (The Flood)
+faction admin (City Administrator)
+faction admin rank 1 Administrator at 0 xp
+faction admin special propaganda_director
+faction citizen (Citizen)
+faction citizen rank 1 Citizen at 0 xp
+faction citizen rank 2 Union Worker at 120 xp
+faction citizen rank 3 Loyalist at 350 xp
+faction citizen rank 4 Model Citizen at 800 xp
+faction cp (Civil Protection)
+faction cp rank 1 Record Keeper at 0 xp
+faction cp rank 2 Metrocop at 150 xp
+faction cp rank 3 Division Leader at 600 xp
+faction cp rank 4 Combine Prison Guard at 1200 xp
+faction cp rank 5 Combine Soldier at 2000 xp
+faction cp rank 6 Elite Soldier at 3000 xp
+faction cp special ow_commander
+faction cp special scanner_op
+faction resistance (Resistance)
+faction resistance rank 1 Sympathizer at 0 xp
+faction resistance rank 2 Member at 150 xp
+faction resistance rank 3 Fighter at 400 xp
+faction resistance rank 4 Lieutenant at 900 xp
+faction resistance rank 5 Commander at 1800 xp
+faction resistance special chaplain
+faction resistance special hacker
+faction resistance special vortigaunt
+faction stalker (Stalker)
+faction stalker rank 1 Stalker at 0 xp
+faction vort (Vortigaunt)
+faction vort rank 1 Laborer at 0 xp
+faction vort rank 2 Trusted Laborer at 250 xp
+faction vort rank 3 Overseer's Hand at 700 xp
+faction zombie (Infested)
+faction zombie rank 1 Zombie at 0 xp
+faction zombie rank 2 Fast Zombie at 300 xp
+faction zombie rank 3 Zombine at 900 xp
+item ammo_357
+item ammo_buckshot
+item ammo_pistol
+item ammo_smg
+item armor_vest
+item arms_crate
+item bandage
+item bottle_clean
+item bottle_dirty
+item bottle_empty
+item bottle_rain
+item bread
+item business_license
+item bypass
+item can_clean
+item can_dirty
+item can_empty
+item can_rain
+item canned_food
+item chemicals
+item civvies
+item cloth
+item coffee
+item cooked_bird
+item cooked_fish
+item cooked_headcrab
+item cp_keycard
+item crowbar
+item cwu_overalls
+item data_chip
+item data_shard
+item fishing_line
+item gren_flash
+item gren_gas
+item gren_smoke
+item gun_357
+item gun_parts
+item gun_pistol
+item gun_shotgun
+item gun_smg
+item id_papers
+item jammer
+item keepsake
+item lockpick
+item master_chip
+item melon
+item milk
+item paper
+item papers_blank
+item papers_dead
+item papers_forged
+item permit
+item radio
+item radio_tuned
+item ration
+item ration_card
+item ration_forged
+item raw_bird
+item raw_fastcrab
+item raw_fish
+item raw_headcrab
+item raw_poisoncrab
+item rebel_gear
+item request_device
+item satchel
+item scrap
+item seeds
+item smokebomb
+item smuggled_supplies
+item spraypaint
+item storage_crate
+item tablets
+item uniform_cp
+item vegetables
+item vendor_stall
+item vest_cell
+item water
+item zipties
+layout file data/livingcity/<map>.json
+rebel camp layout data/livingcity/<map>_camp.json
+setting lc_acts = 1
+setting lc_administrator_model = models/mossman.mdl
+setting lc_administrator_name = The Administrator
+setting lc_administrator_stock_lines = 0
+setting lc_announce_admin_share = 50
+setting lc_announce_cat_gap = 90
+setting lc_announce_custom = 1
+setting lc_announce_custom_pct = 100
+setting lc_announce_gap = 25
+setting lc_announce_interval = 0
+setting lc_announce_quiet = 60
+setting lc_assign_work = 1
+setting lc_atmosphere = 1
+setting lc_auto_events = 1
+setting lc_autostart = 0
+setting lc_bank_loads = 2
+setting lc_bin_kg = 10
+setting lc_bin_minutes = 40
+setting lc_birds = 6
+setting lc_blackout_light = b
+setting lc_blackout_minutes = 8
+setting lc_blackout_share = 0.5
+setting lc_block_name = Habitation Block %02d
+setting lc_bodies = 1
+setting lc_body_time = 300
+setting lc_bolo_minutes = 30
+setting lc_breach_infected = 4
+setting lc_breen_broadcasts = 0
+setting lc_broadcast_camera = 1
+setting lc_broadcast_cooldown = 15
+setting lc_broadcast_seconds = 60
+setting lc_cache_max = 12
+setting lc_cache_trickle = 5
+setting lc_can_event = 1
+setting lc_card_fee = 15
+setting lc_carry_bulky = 1
+setting lc_carry_kg = 12
+setting lc_char_slots = 3
+setting lc_char_switch_cooldown = 300
+setting lc_chat_range = 350
+setting lc_chatter = 1
+setting lc_checkpoint_range = 700
+setting lc_citizen_lifetime = 600
+setting lc_citizen_tint = 1
+setting lc_citizens = 14
+setting lc_city_effects = 1
+setting lc_clipboard_angle = 0 0 180
+setting lc_close_call_recover = 10
+setting lc_close_call_regen = 3
+setting lc_close_calls = 3
+setting lc_combat_window = 30
+setting lc_combine_models = 1
+setting lc_conduct = 1
+setting lc_containment = 1
+setting lc_containment_ammo = 1
+setting lc_containment_pay = 3
+setting lc_cops = 4
+setting lc_cp_coupons = 8
+setting lc_cp_min_standing = 100
+setting lc_cp_scale = 1.05
+setting lc_cp_tools = 1
+setting lc_cpsupply_cooldown = 120
+setting lc_cpsupply_ration = 600
+setting lc_crate_kg = 35
+setting lc_crates_per_person = 2
+setting lc_cremation_pay = 6
+setting lc_cripple_minutes = 15
+setting lc_crowbar_wanted = 120
+setting lc_curfew_citizens = 0
+setting lc_curfew_enforce = 1
+setting lc_curfew_grace = 60
+setting lc_custody_punish = 1
+setting lc_daily_rhythm = 1
+setting lc_day_minutes = 60
+setting lc_daynight = -1
+setting lc_daynight_light = 1
+setting lc_debug = 0
+setting lc_directive_pay = 10
+setting lc_disguise_risk = 5
+setting lc_downed = 1
+setting lc_downed_secs = 90
+setting lc_dressing = 1
+setting lc_drill_cues = 14
+setting lc_drill_mistakes = 3
+setting lc_drill_pace = 3.5
+setting lc_drill_rope = 1
+setting lc_drill_window = 2.5
+setting lc_drop_cooldown = 30
+setting lc_drop_soldiers = 4
+setting lc_economy = 1
+setting lc_ending_base_bombs = 60
+setting lc_ending_base_bpm = 150
+setting lc_ending_base_lines = 2.15=CAPTAIN: What happen ?|3.55=MECHANIC: Somebody set up us the bomb.|4.65=OPERATOR: We get signal.|6.5=CAPTAIN: What !|9.5=OPERATOR: Main screen turn on.|11.7=CAPTAIN: It's you !!|12.55=CATS: How are you gentlemen !!|14.7=CATS: All your base are belong to us.|18.45=CATS: You are on the way to destruction.|20.6=CAPTAIN: What you say !!|21.65=CATS: You have no chance to survive make your time.|26.0=CATS: Ha ha ha ha ....|34=CAPTAIN: Take off every 'ZIG' !!|126=CAPTAIN: Move 'ZIG'.|174=CAPTAIN: For great justice.
+setting lc_ending_base_sections = 3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end
+setting lc_ending_bloom_bpm = 165
+setting lc_ending_bloom_launch_secs = 16
+setting lc_ending_bloom_offset = 0
+setting lc_ending_bloom_peak = 1.6
+setting lc_ending_bloom_ramp = 20
+setting lc_ending_bloom_speedup = 121
+setting lc_ending_bodies = 120
+setting lc_ending_bus_bpm = 138
+setting lc_ending_bus_combine = 6
+setting lc_ending_bus_sections = 27:fly,149:drive,176:fast,220:end
+setting lc_ending_cooldown = 60
+setting lc_ending_edict_limit = 7000
+setting lc_ending_fire_bpm = 100
+setting lc_ending_fire_crowd = 10
+setting lc_ending_fire_fly_speed = 0.35
+setting lc_ending_fire_hop = 22
+setting lc_ending_fire_offset = 0.18
+setting lc_ending_fire_sections = 12.2:ignite,60.2:hop,101:fly,146.6:launch,153:end
+setting lc_ending_flight_radius = 2200
+setting lc_ending_flood_attack_from = 140
+setting lc_ending_flood_boats = 6
+setting lc_ending_flood_bpm = 150
+setting lc_ending_flood_crowd = 10
+setting lc_ending_flood_drown = 15
+setting lc_ending_flood_icthys = 8
+setting lc_ending_flood_rise = 900
+setting lc_ending_flood_sections = 15:heavy,79:calm,102:heavy,134:calm,169:heavy,183:climax,212:calm,235:heavy,249:climax,264:outro,276:last,285:end
+setting lc_ending_gman_lines = vo/citadel/gman_exit01.wav,vo/citadel/gman_exit02.wav
+setting lc_ending_hard_bpm = 150
+setting lc_ending_hard_moment_beats = 5
+setting lc_ending_hard_moment_max = 3
+setting lc_ending_hard_sections = 6:hard,28:break,32:hard,150:passout,177:fade,188:end
+setting lc_ending_marrow_bpm = 128
+setting lc_ending_marrow_crowd = 10
+setting lc_ending_marrow_max = 80
+setting lc_ending_marrow_model = models/player/skeleton.mdl
+setting lc_ending_marrow_sections = 45:dance,75:attack,82:rave,112:attack,150:dance,180:attack,188:dance,217:outro,232:end
+setting lc_ending_max = 180
+setting lc_ending_minge_chatter = 1
+setting lc_ending_minge_crowd = 12
+setting lc_ending_minge_end = 120
+setting lc_ending_minge_max = 60
+setting lc_ending_minge_models = models/player/kleiner.mdl
+setting lc_ending_minge_pose = ragdoll
+setting lc_ending_minge_swell = 60
+setting lc_ending_pause = 4
+setting lc_ending_plane_bpm = 130
+setting lc_ending_plane_captions = 15.1=MA-IA-HII|16.3=MA-IA-HUU|17.5=MA-IA-HOO|18.7=MA-IA-HAHA
+setting lc_ending_plane_combine = 8
+setting lc_ending_plane_model_yaw = -90
+setting lc_ending_plane_sections = 17:board,26:verse,63:chorus,89:verse,122:chorus,148:break,167:final,210:climb,215:end
+setting lc_ending_shalom_bpm = 136
+setting lc_ending_shalom_candles = 35.7,62.1,86.8,111.5,125.7,153.9,183.9,205.1
+setting lc_ending_shalom_crowd = 12
+setting lc_ending_shalom_lift_beats = 8
+setting lc_ending_shalom_offset = 0.36
+setting lc_ending_shalom_sayings = 
+setting lc_ending_shalom_sections = 7.4:gather,35.7:walk,62.1:hora,111.5:lift,125.7:hora,153.9:in,157.4:hora,180.4:in,183.9:build,205.1:peak,219.2:hora,224.5:in,231.5:final,273.9:outro,288.5:end
+setting lc_ending_song_volume = harpies=4,shalom=2
+setting lc_ending_standup_bpm = 133
+setting lc_ending_standup_crowd = 14
+setting lc_ending_standup_drain = 4
+setting lc_ending_standup_max = 60
+setting lc_ending_standup_sections = 11:hang,104:last,110:end
+setting lc_ending_vote_secs = 30
+setting lc_endings_on = 1
+setting lc_escape_wanted = 300
+setting lc_escort_ban_minutes = 10
+setting lc_escort_handover = 60
+setting lc_escort_range = 6000
+setting lc_escorts = 1
+setting lc_event_interval = 12
+setting lc_exercise_beat_dmg = 8
+setting lc_exercise_breakfast = 1
+setting lc_exercise_every = 2
+setting lc_exercise_kinds = jog,drill,parade
+setting lc_exercise_muster = 75
+setting lc_exercise_npcs = 10
+setting lc_eye_height = 61
+setting lc_fixture_wear = 1
+setting lc_forcefield_breaks = 3
+setting lc_forcefield_down = 30
+setting lc_forcefield_fix_minutes = 6
+setting lc_forcefield_hp = 300
+setting lc_forcefield_needs_bank = 1
+setting lc_forcefield_regen = 15
+setting lc_fov = 75
+setting lc_freq7_hold = 18
+setting lc_freq7_jammed = 8
+setting lc_fridge_refill = 240
+setting lc_fullstomach = 1
+setting lc_garden_minutes = 8
+setting lc_garrison = 6
+setting lc_garrison_cops = 3
+setting lc_garrison_respawn = 90
+setting lc_gas_damage = 6
+setting lc_give_fists = 1
+setting lc_grid_radius = 1800
+setting lc_grigori = 1
+setting lc_grigori_move_minutes = 12
+setting lc_grigori_respawn = 10
+setting lc_grigori_talk_gap = 60
+setting lc_gun_drops = 1
+setting lc_heist = 1
+setting lc_heist_cooldown = 20
+setting lc_heist_intel_seconds = 300
+setting lc_heist_master_cooldown = 60
+setting lc_heist_master_intel_seconds = 600
+setting lc_heist_master_seconds = 60
+setting lc_heist_seconds = 30
+setting lc_hints = 1
+setting lc_hunger_minutes = 60
+setting lc_hygiene = 1
+setting lc_ic_chat = 1
+setting lc_identity_minutes = 30
+setting lc_infest_max = 30
+setting lc_infest_quiet_minutes = 10
+setting lc_infest_spread_minutes = 10
+setting lc_informants = 1
+setting lc_inherit_max = 200
+setting lc_inherit_pct = 25
+setting lc_intake = 1
+setting lc_intake_grace = 10
+setting lc_intake_secs = 8
+setting lc_inventory_size = 12
+setting lc_inventory_weight = 1
+setting lc_jammer_radius = 1000
+setting lc_jammer_secs = 240
+setting lc_job_cooldown = 120
+setting lc_jobgames = 1
+setting lc_jog_behind = 450
+setting lc_jog_boost = 1.5
+setting lc_jog_boost_secs = 4
+setting lc_jog_gap = 600
+setting lc_jog_laps = 1
+setting lc_jog_min_speed = 0
+setting lc_jog_pace = 150
+setting lc_jog_units = 8
+setting lc_kick = 1
+setting lc_kick_damage = 12
+setting lc_kick_door_back = 600
+setting lc_kick_door_kicks = 2
+setting lc_kick_door_power = 1
+setting lc_lab_price = 0.6
+setting lc_lab_shutdown = 600
+setting lc_learn_ladders = 1
+setting lc_levy_minutes = 30
+setting lc_levy_pct = 10
+setting lc_levy_threshold = 2000
+setting lc_locker_kg = 25
+setting lc_lod_distance = 3500
+setting lc_lookout_minutes = 15
+setting lc_lookout_post_fire = 650
+setting lc_lookout_post_respawn = 120
+setting lc_lookout_post_warn = 1400
+setting lc_lookout_range = 1100
+setting lc_machine_hack_cooldown = 10
+setting lc_machine_hack_out = 3
+setting lc_mail_minutes = 4
+setting lc_march = 1
+setting lc_march_max = 240
+setting lc_max_bodies = 16
+setting lc_morning_exercise = 1
+setting lc_needs = 1
+setting lc_net_tune = 1
+setting lc_night_population = 40
+setting lc_notes_kept = 8
+setting lc_npc_arrest_chance = 8
+setting lc_npc_arrests = 1
+setting lc_npc_budget = 60
+setting lc_npc_doors = 1
+setting lc_npc_sleep = 1
+setting lc_npc_work = 1
+setting lc_npc_work_grace = 60
+setting lc_npc_work_grace_players = 300
+setting lc_npc_work_pct = 85
+setting lc_npcmodel_elite = 
+setting lc_npcmodel_guard = 
+setting lc_npcmodel_guard_shotgun = 
+setting lc_npcmodel_shotgunner = 
+setting lc_npcmodel_soldier = 
+setting lc_ooc = 1
+setting lc_ooc_cooldown = 10
+setting lc_outbreaks = 1
+setting lc_outfits = 1
+setting lc_overwatch_drops = 1
+setting lc_papers_fee = 10
+setting lc_parade_min = 35
+setting lc_parade_units = 6
+setting lc_pathmap_spacing = 130
+setting lc_people_heights = 1
+setting lc_permadeath = 1
+setting lc_pickpocket_dc = 12
+setting lc_player_doors = 1
+setting lc_pm_elite = 
+setting lc_pm_guard = 
+setting lc_pm_guard_shotgun = 
+setting lc_pm_shotgunner = 
+setting lc_pm_soldier = 
+setting lc_poster_hours = 12
+setting lc_posters_per_person = 3
+setting lc_prison_buffer = 150
+setting lc_prison_time = 180
+setting lc_prisonguard_range = 3000
+setting lc_qm_food_price = 2
+setting lc_quartermaster_arms_bonus = 1.5
+setting lc_quest_cooldown = 30
+setting lc_quest_squad = 3
+setting lc_quest_violent_ratio = 8
+setting lc_quests = 1
+setting lc_quiet_hud = 1
+setting lc_radio_set_secs = 120
+setting lc_raid_chance = 25
+setting lc_raid_stash_chance = 60
+setting lc_raid_units = 3
+setting lc_raid_warning = 90
+setting lc_ration_dock = 1
+setting lc_ration_dock_height = 150
+setting lc_ration_dock_radius = 1500
+setting lc_ration_interval = 600
+setting lc_rdm_strikes_jail = 2
+setting lc_rdm_strikes_kick = 4
+setting lc_rebel_bed_height = 8
+setting lc_rebel_damage = 0.5
+setting lc_rebel_errand_minutes = 4
+setting lc_rebel_errands = 1
+setting lc_rebel_guard = 1
+setting lc_rebel_life = 1
+setting lc_rebel_merge = 128
+setting lc_rebel_ops = 1
+setting lc_rebel_ops_minutes = 30
+setting lc_rebel_pct = 12
+setting lc_rebel_pursuit = 0
+setting lc_rebel_react = 0.5
+setting lc_rebel_room = 350
+setting lc_rebel_spread_minutes = 20
+setting lc_rebel_vorts = 1
+setting lc_rebel_warning = 2
+setting lc_rebels = 4
+setting lc_reclaim_cap = 40
+setting lc_rehang_pay = 10
+setting lc_rejoin_penalty = 120
+setting lc_rent_hours = 3
+setting lc_rent_max = 1
+setting lc_rent_price = 40
+setting lc_request_cooldown = 60
+setting lc_resistance_plainclothes = 1
+setting lc_respawn_secs = 12
+setting lc_response = 1
+setting lc_response_soldiers = 6
+setting lc_roster_cops = 10
+setting lc_roster_size = 30
+setting lc_run_memory = 30
+setting lc_run_range = 500
+setting lc_run_react = 2
+setting lc_run_wanted = 60
+setting lc_running_cops = 1
+setting lc_salvage = 1
+setting lc_salvage_refill = 900
+setting lc_scanner_link = 1
+setting lc_scanner_penalty = 60
+setting lc_scanner_photo_range = 128
+setting lc_scanner_range = 6000
+setting lc_scanner_rebel_fire = 1
+setting lc_scanner_snitch_cap = 100
+setting lc_scanner_spot_cooldown = 300
+setting lc_scanner_spotted = 60
+setting lc_scanners = 1
+setting lc_scavenge_refill = 600
+setting lc_search_cooldown = 120
+setting lc_search_weapons = 1
+setting lc_shift_pay = 15
+setting lc_skirmish_interval = 25
+setting lc_skirmishes = 1
+setting lc_sleep = 1
+setting lc_sleep_seconds = 60
+setting lc_soldier_scale = 1.10
+setting lc_soldiers = 0
+setting lc_spawn_mindist = 900
+setting lc_spawn_protect = 8
+setting lc_squad = 1
+setting lc_squad_cops = 2
+setting lc_squad_delay = 5
+setting lc_squad_soldiers = 1
+setting lc_squads = 1
+setting lc_stagger_timers = 1
+setting lc_stalker_model = 
+setting lc_stalkers = 1
+setting lc_stall_kg = 30
+setting lc_stalls_per_person = 1
+setting lc_start_credits = 20
+setting lc_starve_damage = 3
+setting lc_stash_size = 8
+setting lc_stealth = 1
+setting lc_stink_spread = 0.03
+setting lc_stock_eat = 40
+setting lc_stock_max = 400
+setting lc_stockpile = 1
+setting lc_stop_chance = 15
+setting lc_stop_cooldown = 480
+setting lc_stops = 1
+setting lc_storage = 1
+setting lc_story_pacing = 45
+setting lc_street_detention = 20
+setting lc_street_fine = 25
+setting lc_street_stop_chance = 1
+setting lc_strike_decay = 120
+setting lc_struggle_seconds = 30
+setting lc_stuck_cooldown = 300
+setting lc_subdue_hits = 3
+setting lc_supply_guards = 1
+setting lc_supply_loads = 5
+setting lc_supply_minutes = 6
+setting lc_supply_pay = 40
+setting lc_supply_porters = 2
+setting lc_surgery_minutes = 60
+setting lc_surgery_price = 300
+setting lc_surgery_standing = -50
+setting lc_sweep_warning = 90
+setting lc_tag_minutes = 60
+setting lc_talk = 1
+setting lc_territory_calm = 10
+setting lc_territory_city_max = 45
+setting lc_territory_hits = 3
+setting lc_territory_max = 6
+setting lc_territory_spread = 1
+setting lc_think_budget_ms = 2.5
+setting lc_thirst_minutes = 40
+setting lc_tie_seconds = 3
+setting lc_tired_days = 1
+setting lc_train_minutes = 12
+setting lc_trains = 1
+setting lc_trespass_grace = 10
+setting lc_turrets_per_post = 4
+setting lc_turrets_per_unit = 2
+setting lc_units_spot_monsters = 1
+setting lc_units_spot_rebels = 600
+setting lc_unlock_doors = 1
+setting lc_unrest_share = 0.12
+setting lc_urge_minutes = 6
+setting lc_vending_price = 2
+setting lc_vermin = 2
+setting lc_vest_capacity = 75
+setting lc_vest_cell_drop = 25
+setting lc_view_bob = 1
+setting lc_view_bob_amount = 100
+setting lc_voice_range = 900
+setting lc_vort_charge_minutes = 10
+setting lc_walkway_clear = 100
+setting lc_wanted_lost = 30
+setting lc_weather_auto = 1
+setting lc_whatnow = 1
+setting lc_whatnow_minutes = 60
+setting lc_word_gets_around = 1
+setting lc_zombies = 6
+setting lc_zombies_max = 50
+setting lc_zone_mercy = 96
+setting lcf_admin_tools = 1
+setting lcf_switch_cooldown = 60

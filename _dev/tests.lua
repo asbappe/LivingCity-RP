@@ -12667,7 +12667,7 @@ end)()
     _run(6)
     ok(LC.Hunger(reb) >= 50, "a stalker doesn't go hungry", LC.Hunger(reb))
     local cz = ents.Create("npc_citizen") cz:Spawn()
-    LC.NPCs[cz] = { role = "citizen", state = "idle", nextUse = 0, untilT = 0 }
+    LC.NPCs[cz] = { role = "citizen", state = "idle", nextUse = 0, untilT = 0, gender = "male" }
     ok(hook.Run("PlayerUse", reb, cz) == false, "a stalker can't talk to people (E)")
     LC.NPCs[cz] = nil cz:Remove()
     local posting = { id = 99001, title = "Union shift", reward = 5, tmpl = LC.QuestTemplates[1], expiresPost = CurTime() + 99 }

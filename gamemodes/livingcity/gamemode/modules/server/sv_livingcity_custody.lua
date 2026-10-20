@@ -353,16 +353,19 @@ hook.Add("PlayerSay", "LivingCityStalkerVoice", function(ply, text)
     return "*a strained, wordless noise*"
 end)
 -- nor talk to anyone (E on a person does nothing: a stalker's work is the only thing it does)
-hook.Add("PlayerUse", "LivingCityStalkerUse", function(ply, ent)
-    if not LC.PlayerIsStalker(ply) or not IsValid(ent) then return end
-    if ent:IsNPC() or ent:IsPlayer() or ent:GetClass() == "lc_scientist" then
-        if (ply.lcStalkerUseNext or 0) < CurTime() then
-            ply.lcStalkerUseNext = CurTime() + 4
-            ply:EmitSound("npc/stalker/go_alert2a.wav", 65)
-            ply:ChatPrint("[Stalker] You try to speak. Nothing comes out but a noise.")
-        end
-        return false
+-- (asked first by every E-on-someone handler: sv_livingcity.lua, the rebels', Grigori's, the lab's)
+function LC.StalkerCantSpeak(ply, ent)
+    if not LC.PlayerIsStalker(ply) or not IsValid(ent) then return false end
+    if not (ent:IsNPC() or ent:IsPlayer() or ent:GetClass() == "lc_scientist") then return false end
+    if (ply.lcStalkerUseNext or 0) < CurTime() then
+        ply.lcStalkerUseNext = CurTime() + 4
+        ply:EmitSound("npc/stalker/go_alert2a.wav", 65)
+        ply:ChatPrint("[Stalker] You try to speak. Nothing comes out but a noise.")
     end
+    return true
+end
+hook.Add("PlayerUse", "LivingCityStalkerUse", function(ply, ent)
+    if LC.StalkerCantSpeak(ply, ent) then return false end
 end)
 -- and can't pick up guns
 hook.Add("PlayerCanPickupWeapon", "LivingCityStalker", function(ply, wep)
