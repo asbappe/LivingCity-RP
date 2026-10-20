@@ -1787,6 +1787,7 @@ ok(not LC.PrisonAvailable(), "the map has no cells")
 LC.GiveItem(runner2, "lockpick")
 local cr0 = LC.Credits(runner2)
 local hit = _dmg(copA, 10, DMG_CLUB)
+runner2.lcSubdue = { n = 2, t = CurTime() } -- (beaten down: the third blow cuffs them)
 hook.Run("EntityTakeDamage", runner2, hit)
 ok(LC.Detained[runner2] and runner2.frozen and hit:GetDamage() == 0, "the stick doesn't just beat you: you're cuffed on the street")
 ok(not LC.PlayerIsWanted(runner2) and not LC.HasItem(runner2, "lockpick") and LC.Credits(runner2) < cr0, "searched and fined, and no longer wanted")
@@ -4643,7 +4644,7 @@ ok(tonumber(bad:GetPData("lc_crippled_until", 0)) > os.time(), "and it lasts thr
 LC.ReleasePrisoner(bad)
 -- stalker
 LC.Incarcerate(worst, 600, "Killing a unit")
-_run(26)
+_run(40) -- (twenty seconds in the cell, then the cell door, the blows, the dark: about fourteen more)
 ok(LC.PlayerIsStalker(worst) and LC.Prisoners[worst] == nil, "the very worst aren't released: they're made stalkers")
 ok(LC.LooksCombine(worst), "Combine property, as far as anyone's concerned")
 local said = hook.Run("PlayerSay", worst, "help me")
@@ -4762,7 +4763,9 @@ hacker:SetNW2Bool("lc_vest", true)
 hacker:SetArmor(0)
 hacker:SetHealth(50)
 _run(2)
-ok(hacker:Armor() > 0 and hacker:Health() == 50, "a freed vortigaunt charges the Resistance's vests (it doesn't heal)")
+ok(hacker:Armor() == 0, "a freed vortigaunt doesn't charge a vest by itself")
+LC.VortCharge(hacker, vort)
+ok(hacker:Armor() > 0 and hacker:Health() == 50, "asked (E), it charges the Resistance's vests (it doesn't heal)")
 LC.RebelVorts[vort] = nil LC.NPCs[vort] = nil vort:Remove()
 for _, p in ipairs({ mild, bad, worst, units, hacker, inmate, snitch, plain, fore, worker }) do p:SetPos(Vector(-30000, 30000, 0)) end
 screen:Remove() door:Remove()
@@ -9677,7 +9680,8 @@ con.lcSubdue = { n = 2, t = CurTime() }
 hook.Run("EntityTakeDamage", con, _dmg(lead2, 20, DMG_CLUB))
 ok(LC.Marching[con] ~= nil, "(another march)")
 -- with another unit about, he takes over
-local mrear = LC.Marching[con].rear
+local helper, hst = LC.Spawners.cop(M0 + Vector(-150, 0, 0))
+hst.untilT = 1e9
 lead2:Remove()
 _run(0.5)
 ok(LC.Marching[con] ~= nil and IsValid(LC.Marching[con].lead) and LC.Marching[con].lead ~= lead2, "the unit leading you goes down: another takes your arm (the one behind, or one nearby)")
@@ -10472,7 +10476,8 @@ reb:SetHealth(50)
 local v = LC.Spawners.citizen(reb:GetPos() + Vector(60, 0, 0))
 LC.SettleVort(v)
 for _ = 1, 4 do _advance(5) _runtimers() end
-ok(reb:Armor() > 0 and reb:Health() == 50, "a freed vortigaunt charges our vests (and doesn't heal)", reb:Armor() .. " / " .. reb:Health())
+LC.VortCharge(reb, v)
+ok(reb:Armor() > 0 and reb:Health() == 50, "a freed vortigaunt charges our vests when asked (and doesn't heal)", reb:Armor() .. " / " .. reb:Health())
 LC.RebelVorts[v] = nil v:Remove()
 -- Father Grigori
 local z = LC.AddZone(V0 + Vector(6000, 0, 0), 600, "rebel", 0)
