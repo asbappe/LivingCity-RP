@@ -10222,7 +10222,7 @@ ok(LC.JobGameAct(rd, "lock", g.f7) == "freq7" and g.heard, "lock onto the cleare
 nearBy:SetPos(GONE)
 ok(LC.JobGameAct(rd, "lock", g.target) == nil, "(decide about it first)")
 LC.JobGameAct(rd, "freq7", "note")
-ok(not g.heard and LC.HasItem(rd, "paper"), "written down where nobody will look")
+ok(not g.heard and LC.HasItem(rd, "freq7_sheet"), "written down where nobody will look")
 local e0 = g.radioEnd
 ok(LC.JobGameAct(rd, "lock", g.target > 100 and g.target - 2 or g.target + 2) == false and g.radioEnd < e0, "static: time lost")
 ok(#g.screws == 3 and #g.turn == 3, "each set has three trimmer screws, left somewhere wrong")
@@ -10531,7 +10531,9 @@ local function Work(q, choose)
     if not q then return end
     for _ = 1, 12 do
         if q.done then break end
+        if LC.JobGames[stk] then LC.JobGameEnd(stk, "done") end -- (the work itself is a game now: played elsewhere)
         local st = q.stages[q.stage]
+        if q.done or not st then break end
         if st.kind == "choice" then LC.ResolveChoice(stk, q.id, choose) break end
         if st.pos then stk:SetPos(st.pos) end
         stk.crouch = st.crouch == true
