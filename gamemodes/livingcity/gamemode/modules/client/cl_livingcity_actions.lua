@@ -330,6 +330,7 @@ function LC_CL.OpenActions()
         Add(rs, "Find the lab (the scientist makes our guns; mark it)", function() Send("waypoint", "lab") end, "icon16/map.png")
         Add(rs, "Donate food to the supply crate", function() Send("donate") end)
         Add(rs, "Decode a data chip (at the lab)", function() Send("decode") end)
+        Add(rs, "Write down what you see (intel the quartermaster buys; needs paper)", function() Send("scout") end, "icon16/page_white_edit.png")
         if me:HasWeapon("weapon_lc_multitool") then Add(rs, "Hack the Combine door I'm looking at", function() Send("hack") end) end
         if me:GetNW2Int("lc_squad_n", 0) > 0 then
             Add(rs, "Squad: act casual (guns away, plain clothes: units take them for citizens)", function() Send("casual") end, "icon16/user_gray.png")

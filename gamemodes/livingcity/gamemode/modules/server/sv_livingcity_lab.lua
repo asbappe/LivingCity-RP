@@ -165,7 +165,7 @@ function LC.LabPrice(r)
         local qm = GetConVar("lc_quartermaster_arms_bonus")
         p = math.max(p, math.ceil((it.sell or 0) * (qm and qm:GetFloat() or 1.5)) + 2)
     end
-    return p
+    return p * (r.count or 1) -- (a batch: so many at once)
 end
 
 ------------------------------------------------------------------------
@@ -187,7 +187,7 @@ function LC.SendLab(ply, sci)
             end
             table.sort(mats, function(a, b) return a.name < b.name end)
             local price = LC.LabPrice(r)
-            items[#items + 1] = { id = r.id, name = it.name, desc = r.desc or it.desc, mats = mats, canMats = can,
+            items[#items + 1] = { id = r.id, name = it.name .. ((r.count or 1) > 1 and string.format(" (%d)", r.count) or ""), desc = r.desc or it.desc, mats = mats, canMats = can,
                 price = price, canPay = credits >= price, secs = r.secs }
         end
     end
@@ -291,7 +291,9 @@ function LC.LabMake(ply, id, how)
         done = function(p)
             settled = true
             Clear()
-            if not LC.GiveItem(p, r.out) and LC.SpawnWorldItem then LC.SpawnWorldItem(r.out, p:GetPos() + p:GetForward() * 30 + Vector(0, 0, 20)) end
+            for _ = 1, r.count or 1 do
+                if not LC.GiveItem(p, r.out) and LC.SpawnWorldItem then LC.SpawnWorldItem(r.out, p:GetPos() + p:GetForward() * 30 + Vector(0, 0, 20)) end
+            end
             if IsValid(sci) then sci:EmitSound("vo/k_lab/kl_excellent.wav", 65) end
             Say(p, "\"There. Do be careful with it.\" He hands you: " .. it.name .. ".")
             hook.Run("LivingCityLabMade", p, r.out, how)

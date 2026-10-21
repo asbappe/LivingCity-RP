@@ -37,6 +37,7 @@ local ALLOWED = {
     changeclothes = true, sleep = true, -- (sv_livingcity_hygiene.lua, sv_livingcity_rest.lua)
     bodycart = true, -- (a Mortician's body cart, sv_livingcity_mortuary.lua)
     casual = true, gunsout = true, meet = true, -- (orders for a Resistance squad, sv_livingcity_rebels.lua)
+    scout = true, -- (intel for the quartermaster, sv_livingcity_funding.lua)
     rationbreak = true, back = true, -- (a ration break from a shift, sv_livingcity_quests.lua)
     dropship = true, kick = true, scanner = true, ways = true, -- (the Overwatch Commander's squad, sv_livingcity_resistanceops.lua; a unit's kick, sv_livingcity_kick.lua)
 }

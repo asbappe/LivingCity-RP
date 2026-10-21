@@ -127,6 +127,7 @@ local GUIDE = {
         "Every rebel base needs a lab: its scientist makes guns, ammunition, armour, jammers, bypass charges, smoke bombs and Freq 7 radios, for the Resistance only. Bring the materials and it's free, or pay him (60% of the dealer's price). F1 > Resistance > Find the lab marks it.",
         "Everyone else buys guns, ammunition and jammers at the black market. A Civil Protection unit who finds the scientist shuts the lab for ten minutes.",
         "Citizens hear things. Press E on them now and then.",
+        "Money for the Resistance: write down what you see near a checkpoint or a unit (F1 > Resistance, with paper) and sell the notes to the quartermaster; skim good parts off the factory line (R while holding one); or have the lab make forged ration cards (but too many turning up brings a sweep on the camp).",
         "Rebel zones that touch are one camp: one quartermaster, one supply crate. He buys food back for 2 credits at most (it's free from his crate).",
         "A role (Hacker, Father Grigori...) sits on top of your rank: you're still a Fighter, earning toward Lieutenant, carrying the role's kit. Join the faction again in F4 to give it up.",
     } },

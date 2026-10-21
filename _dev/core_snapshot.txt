@@ -96,6 +96,7 @@ chat command /rent
 chat command /request
 chat command /salute
 chat command /scanner
+chat command /scout
 chat command /setlaw
 chat command /shake
 chat command /showpapers
@@ -310,6 +311,9 @@ item gun_pistol
 item gun_shotgun
 item gun_smg
 item id_papers
+item intel_checkpoint
+item intel_nexus
+item intel_patrol
 item jammer
 item keepsake
 item lockpick
@@ -342,6 +346,7 @@ item spraypaint
 item storage_crate
 item tablets
 item uniform_cp
+item union_goods
 item vegetables
 item vendor_stall
 item vest_cell
@@ -529,6 +534,8 @@ setting lc_forcefield_fix_minutes = 6
 setting lc_forcefield_hp = 300
 setting lc_forcefield_needs_bank = 1
 setting lc_forcefield_regen = 15
+setting lc_forgery_cool = 3
+setting lc_forgery_heat = 15
 setting lc_fov = 75
 setting lc_freq7_hold = 18
 setting lc_freq7_jammed = 8
@@ -567,6 +574,7 @@ setting lc_inherit_pct = 25
 setting lc_intake = 1
 setting lc_intake_grace = 10
 setting lc_intake_secs = 8
+setting lc_intel_minutes = 30
 setting lc_inventory_size = 12
 setting lc_inventory_weight = 1
 setting lc_jammer_radius = 1000

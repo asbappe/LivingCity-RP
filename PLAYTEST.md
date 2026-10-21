@@ -205,6 +205,13 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Shalom twice as loud, the Harpies twice as loud again; the Harpies' title on screen is THEY RETURN.**
   Notes:
 
+## The Resistance's money (what to check)
+
+- [ ] **Intel:** F1 > Resistance > Write down what you see, near a checkpoint, a unit or the Combine's ground (with paper): notes the quartermaster buys (20 to 35). A unit seeing you takes the paper.
+- [ ] **Skimming:** on the factory line, R while holding a good part: Union machine parts in your coat (dealer 8, quartermaster 12). Take several and the foreman may find the count short.
+- [ ] **Forged cards:** the lab makes five at a time. Sell enough (or use them) and a sweep comes for the camp nearest the lab.
+  Notes:
+
 ## Morning exercise and more (from the other session)
 
 - [ ] **Morning exercise:** every second dawn, the jog (keep up with the pace marker), the drill (copy the leader on your ring, then the skipping rope) or the parade (cheer the column). Needs its editor points: jogging route, exercise yard, parade route.

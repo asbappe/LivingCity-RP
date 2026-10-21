@@ -1082,6 +1082,7 @@ function LC.UseDispenser(ply, ent)
     if refused and LC.HasItem(ply, "ration_forged") and lvl ~= "empty" then
         -- a forged card: no questions, usually
         LC.TakeItem(ply, "ration_forged")
+        hook.Run("LivingCityForgedCard", ply, 1)
         if math.random() < 0.15 then
             beeper:EmitSound("buttons/combine_button_locked.wav", 65)
             ply:ChatPrint("[Rations] Card invalid. This incident has been logged.")

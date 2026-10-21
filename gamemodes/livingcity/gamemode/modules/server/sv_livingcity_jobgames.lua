@@ -15,7 +15,9 @@
           defective ones are rust-red and spark: grab them and throw them in
           the scrap bin before they reach the end. Good parts go through.
           It speeds up. One part rattles: R while you hold it pockets what's
-          inside (risky, if a unit sees).
+          inside (risky, if a unit sees). R on a good part skims it (Union
+          machine parts, for the dealer or the quartermaster); take more than
+          one and the foreman may find the count short.
 
       Papers check (Intake Processor)   Travelers step up to you one at a time.
           E on one opens their papers (a photo, name, district, expiry,
@@ -345,10 +347,10 @@ local TOTAL_PARTS = 20
 -- The same line, other work: the ration plant's sealing line (opts.variant = "rations").
 local LINES = {
     factory = { title = "On the line", tag = "[Factory]", word = "parts", parts = PARTS, bad = RUST,
-        intro = "The line's starting. Rust-red, sparking parts are bad: grab them (E) and throw them in the scrap bin. Let the good ones go through.",
+        intro = "The line's starting. Rust-red, sparking parts are bad: grab them (E) and throw them in the scrap bin. Let the good ones go through. (R while holding a good one slips it into your coat: the dealer and the quartermaster buy them. Not where a unit can see, and the foreman counts.)",
         rattle = "Something rattles inside this one. R while you're holding it to slip it in your pocket." },
     rations = { title = "The sealing line", tag = "[Ration plant]", word = "packs", parts = { "models/weapons/w_package.mdl" }, bad = Color(120, 140, 70),
-        intro = "The sealing line's starting. Split, leaking packs (the sickly green ones) go in the reject bin: grab them (E) and throw them in. Sealed ones go through to the dispensers.",
+        intro = "The sealing line's starting. Split, leaking packs (the sickly green ones) go in the reject bin: grab them (E) and throw them in. Sealed ones go through to the dispensers. (R while holding a sealed one slips it into your coat. Not where a unit can see, and the foreman counts.)",
         rattle = "This pack is heavier than a ration should be. R while you're holding it to slip it in your pocket." },
 }
 local function LineOf(g) return LINES[g and g.opts and g.opts.variant or "factory"] or LINES.factory end
@@ -505,6 +507,13 @@ GAMES.line = {
         end
         if g.spawned >= TOTAL_PARTS and #g.parts == 0 then
             local bad = g.caught + g.missed
+            -- the foreman counts what went through: skim more than one and he may find it short
+            local sk = g.skimmed or 0
+            if sk > 0 and math.random() < math.min(0.9, (sk - 1) * 0.25) then
+                g.pay = g.pay - 2 * sk
+                g.notes[#g.notes + 1] = string.format("The foreman's count is %d short. It comes out of your pay, and he'll remember.", sk)
+                if LC.AddStanding then LC.AddStanding(g.ply, -5 * sk, "The count was short on your shift") end
+            end
             if g.missed == 0 and g.wasted == 0 then
                 g.pay = g.pay + 6
                 g.notes[#g.notes + 1] = "A clean shift: not a single mistake."
@@ -522,12 +531,33 @@ GAMES.line = {
 
 local CONTRABAND = { "gun_parts", "ammo_pistol", "chemicals", "radio_tuned" }
 
--- R while holding the rattling part: what's inside goes in your pocket.
+-- Skimming (sv_livingcity_funding.lua): R while holding a good part pockets it. A unit who sees
+-- it makes you wanted; and the more you take, the likelier the foreman finds the count short.
+local SKIM = { factory = "union_goods", rations = "ration" }
+function LC.LineSkim(ply, g, e)
+    local what = SKIM[g.opts and g.opts.variant or "factory"] or "union_goods"
+    if not LCS.Items[what] then return false end
+    if e.lcPart.bad then ply:ChatPrint(LineOf(g).tag .. " That one's scrap: nobody would buy it.") return false end
+    for i, p in ipairs(g.parts) do if p == e then table.remove(g.parts, i) break end end
+    e.lcPart = nil
+    e:Remove()
+    LC.GiveOrDrop(ply, what, 1)
+    g.skimmed = (g.skimmed or 0) + 1
+    ply:ChatPrint(LineOf(g).tag .. " Into your coat: " .. LCS.Items[what].name .. ". The count will be one short.")
+    if LC.SeenBySecurity and LC.SeenBySecurity(ply, 700) then
+        LC.ReportCrime(ply, "Theft from the factory floor", 120)
+        ply:ChatPrint("[Civil Protection] A Civil Protection unit saw that.")
+    end
+    return true
+end
+
+-- R while holding the rattling part: what's inside goes in your pocket (a good part: skimmed).
 hook.Add("KeyPress", "LivingCityJobLine", function(ply, key)
     if key ~= IN_RELOAD then return end
     local g = LC.JobGames[ply]
     local e = ply.lcHolding
-    if not g or g.kind ~= "line" or not IsValid(e) or not (e.lcPart and e.lcPart.rattle) then return end
+    if not g or g.kind ~= "line" or not IsValid(e) or not e.lcPart then return end
+    if not e.lcPart.rattle then return LC.LineSkim(ply, g, e) end
     local what = Pick(CONTRABAND)
     if not LCS.Items[what] then what = "gun_parts" end
     e.lcPart.rattle = false

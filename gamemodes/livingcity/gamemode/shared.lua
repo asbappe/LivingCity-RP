@@ -136,6 +136,7 @@ LC_MODULES = {
         "sv_livingcity_vort",
         "sv_livingcity_war",
         "sv_livingcity_campmove",
+        "sv_livingcity_funding",
         "sv_livingcity_work",
         "sv_livingcity_stalkerwork",
         "sv_livingcity_writing",

@@ -12800,6 +12800,76 @@ end)()
     tun.bones.ears = nil
 end)()
 
+section("The Resistance's money: intel, skimming, forged cards")
+;(function()
+    -- intel: written down near a checkpoint, sold only to the quartermaster
+    local F0 = Vector(-215000, 215000, 0)
+    local cp = LC.AddPoint(F0 + Vector(300, 0, 0), 0, "checkpoint", 0)
+    local spy = newPlayer("Watcher", "resistance", nil, 400)
+    _run(1)
+    spy:SetPos(F0)
+    LC.GiveItem(spy, "paper", 2)
+    local sbs = LC.SeenBySecurity
+    LC.SeenBySecurity = function() return false end
+    ok(LC.Scout(spy), "a Resistance member near a checkpoint can write down what they see")
+    _run(16)
+    ok(LC.HasItem(spy, "intel_checkpoint") and (LC.Inventory(spy).paper or 0) == 1, "fifteen seconds: notes on the checkpoint (a sheet of paper used)")
+    local again, why = LC.Scout(spy)
+    ok(not again and string.find(why or "", "already", 1, true), "the same place again is old news for a while", why)
+    local nq = LC.NearQuartermaster
+    LC.NearQuartermaster = function() return false end
+    ok(LC.SellPrice(spy, "intel_checkpoint") == nil, "the dealer won't buy intel")
+    LC.NearQuartermaster = function() return true end
+    ok(LC.SellPrice(spy, "intel_checkpoint") == 25, "the quartermaster pays for it", LC.SellPrice(spy, "intel_checkpoint"))
+    ok(LC.SellPrice(spy, "union_goods") > LCS.Items.union_goods.sell, "and pays more than the dealer for skimmed parts")
+    LC.NearQuartermaster = nq
+    -- seen at it: the paper's taken
+    spy.lcIntelSeen = {}
+    LC.Scout(spy)
+    LC.SeenBySecurity = function() return true end
+    _run(1.5)
+    ok(not LC.Busy(spy) and (LC.Inventory(spy).paper or 0) == 0, "a unit who sees you writing takes the paper off you")
+    LC.SeenBySecurity = sbs
+    LC.RemovePoint(cp)
+    local cit = newPlayer("NotARebel", "citizen")
+    LC.GiveItem(cit, "paper", 1)
+    ok(not LC.Scout(cit), "(intel is the Resistance's trade)")
+    cit.valid = false
+    -- skimming the factory line
+    local worker = newPlayer("Skimmer", "citizen")
+    _run(1)
+    worker:SetPos(F0 + Vector(0, 3000, 0))
+    ok(LC.JobGameStart(worker, "line", nil, { station = worker:GetPos() }), "(a shift on the line)")
+    local g = LC.JobGames[worker]
+    local good
+    for _ = 1, 40 do
+        _run(0.5)
+        for _, e in ipairs(g.parts) do if IsValid(e) and e.lcPart and not e.lcPart.bad and not e.lcPart.rattle then good = e break end end
+        if good then break end
+    end
+    LC.SeenBySecurity = function() return false end
+    ok(good and LC.LineSkim(worker, g, good) and LC.HasItem(worker, "union_goods") and g.skimmed == 1, "R on a good part: it goes in your coat (Union machine parts)")
+    LC.SeenBySecurity = sbs
+    LC.JobGameEnd(worker, "quit")
+    worker.valid = false
+    -- forged cards: five at a time at the lab; enough turning up, and they come for the forger
+    ok(LCS.LabById.forged_batch and LCS.LabById.forged_batch.count == 5, "the lab makes forged ration cards five at a time")
+    local zr = LC.AddZone(F0 + Vector(0, -2000, 0), 300, "rebel", 0)
+    _setcvar("lc_forgery_heat", 3)
+    LC.PlannedSweep = nil
+    if LC.Skirmish then LC.Skirmish.done = true LC.Skirmish = nil end
+    LC.ForgeryMade(F0 + Vector(0, -1900, 0))
+    LC.ForgeryHeat = 0
+    hook.Run("LivingCityForgedCard", spy, 2)
+    ok(LC.PlannedSweep == nil, "a couple of forged cards turning up: nothing yet")
+    hook.Run("LivingCityForgedCard", spy, 1)
+    ok(LC.PlannedSweep and LC.PlannedSweep.zone == zr, "enough of them: a sweep planned on the rebel territory nearest the lab that made them")
+    LC.PlannedSweep = nil
+    _setcvar("lc_forgery_heat", 15)
+    LC.RemoveZone(zr)
+    spy.valid = false
+end)()
+
 section("The Endings menu: every ending's settings, and its dances tuned live")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     ok(LC.EndingSettingGroup("lc_ending_flood_boats") == "water" and LC.EndingSettingGroup("lc_ending_minge_max") == "harpies"

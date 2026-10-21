@@ -105,6 +105,8 @@ function LC.SellPrice(ply, id)
     if it.arms and IsResistance(ply) and LC.NearQuartermaster and LC.NearQuartermaster(ply) then
         price = math.floor(price * cvQMBonus:GetFloat() + 0.5)
     end
+    -- intel: only the quartermaster buys it
+    if it.intel and not (LC.NearQuartermaster and LC.NearQuartermaster(ply)) then return nil end
     -- food and drink: the quartermaster hands it out free from the supply crate, so he
     -- buys it back for next to nothing (lc_qm_food_price, 2)
     if (it.hunger or it.thirst) and LC.NearQuartermaster and LC.NearQuartermaster(ply) then

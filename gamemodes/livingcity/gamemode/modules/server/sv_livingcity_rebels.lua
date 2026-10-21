@@ -1191,8 +1191,8 @@ local function IsCombinePlayer(p)
     local f = p:GetNW2String("lcf_faction", "")
     return f == "cp" or f == "ota" or (LC.PlayerIsCP and LC.PlayerIsCP(p))
 end
-local function PlanSweep(now)
-    local z = Pick(RebelZones())
+local function PlanSweep(now, z)
+    z = z or Pick(RebelZones())
     if not z then return false end
     local lead = cvSweepLead:GetFloat()
     if lead <= 0 then return StartSweep(z) end
@@ -1208,7 +1208,7 @@ local function PlanSweep(now)
     if LC.PostDirective then LC.PostDirective("cp_joinsweep") end
     return true
 end
-LC.PlanCombineSweep = function() return PlanSweep(CurTime()) end
+LC.PlanCombineSweep = function(z) return PlanSweep(CurTime(), z) end -- (z: on that territory; else one at random)
 
 local function EndSkirmish(sk, why)
     if sk.done then return end

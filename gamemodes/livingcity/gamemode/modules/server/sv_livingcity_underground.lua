@@ -1235,6 +1235,8 @@ function LC.DealerSell(ply, id, all)
     local n = all and (LC.Inventory(ply)[id] or 1) or 1
     LC.TakeItem(ply, id, n)
     LC.AddCredits(ply, price * n)
+    if id == "ration_forged" then hook.Run("LivingCityForgedCard", ply, n) end -- (the search for the forger: sv_livingcity_funding.lua)
+    if it.intel and LC.AddXP then LC.AddXP(ply, 5 * n, "intel") end
     ply:ChatPrint(string.format("[Black market] Sold: %s%s, for %d credits.", it.name, n > 1 and (" x" .. n) or "", price * n))
     if it.arms and LC.NearQuartermaster and LC.NearQuartermaster(ply) and LC.AddTrait then LC.AddTrait(ply, "sympathy", 1) end
     return true
