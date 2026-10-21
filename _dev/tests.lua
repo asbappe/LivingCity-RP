@@ -7375,7 +7375,7 @@ local tenant = newPlayer("Tenant", "citizen")
 local visitor = newPlayer("Visitor", "citizen")
 local nosy = newPlayer("Nosy", "citizen")
 local cop = newPlayer("DoorUnit", "cp")
-for _, p in ipairs({ tenant, visitor, nosy, cop }) do p:SetPos(B0) p.lookingAt = door end
+for i, p in ipairs({ tenant, visitor, nosy, cop }) do p:SetPos(B0 + Vector(0, (i - 2.5) * 40, 0)) p.lookingAt = door end -- (side by side: never inside each other)
 LC.AddCredits(tenant, 200)
 local c0 = LC.Credits(tenant)
 hook.Run("PlayerSay", tenant, "!rent")
