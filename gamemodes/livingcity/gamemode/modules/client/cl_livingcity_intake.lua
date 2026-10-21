@@ -263,6 +263,27 @@ net.Receive("lc_intake_ui", function() LC_CL.OpenDesk(ReadCompressed()) end)
 local card -- { info, untilT }
 surface.CreateFont("LCPapersBig", { font = "Courier New", size = 22, weight = 700 })
 surface.CreateFont("LCPapers", { font = "Courier New", size = 16, weight = 600 })
+surface.CreateFont("LCPapersStamp", { font = "Impact", size = 58, weight = 800 })
+
+-- A stalker's papers carry one word across them in red ink, tilted like a hand stamp.
+function LC_CL.PapersStamp(x, y, word, a)
+    local col = Color(170, 25, 20, 210 * (a or 1))
+    local tilted = Matrix and cam and cam.PushModelMatrix
+    if tilted then
+        local m = Matrix()
+        m:Translate(Vector(x, y, 0))
+        m:Rotate(Angle(0, -14, 0))
+        m:Translate(Vector(-x, -y, 0))
+        cam.PushModelMatrix(m, true)
+    end
+    surface.SetFont("LCPapersStamp")
+    local w, h = surface.GetTextSize(word)
+    surface.SetDrawColor(col)
+    surface.DrawOutlinedRect(x - w / 2 - 12, y - h / 2 - 4, w + 24, h + 8, 3)
+    draw.SimpleText(word, "LCPapersStamp", x, y, col, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    if tilted then cam.PopModelMatrix() end
+    return true
+end
 
 net.Receive("lc_papers_card", function()
     local t = ReadCompressed()
@@ -288,5 +309,6 @@ hook.Add("HUDPaint", "LivingCityPapers", function()
     if #desc > 44 then desc = string.sub(desc, 1, 42) .. "..." end
     draw.SimpleText(desc, "DefaultSmall", x + 14, y + 122, Color(70, 64, 56, 255 * a), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     draw.SimpleText(t.card and "RATION CARD ATTACHED" or "NO RATION CARD", "DefaultSmall", x + 14, y + 142, ink, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+    if t.stalker then LC_CL.PapersStamp(x + W / 2, y + H / 2 + 10, "STALKER", a) end
     if t.from then draw.SimpleText("Held up by the person in front of you", "DefaultSmall", x + 14, y + H - 16, Color(70, 64, 56, 255 * a), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER) end
 end)

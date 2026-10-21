@@ -786,7 +786,7 @@ local function NewRadio(g)
 end
 
 local function RadioPanel(g)
-    LC.JobGamePanel(g, { n = g.n, of = RADIOS, t = g.target, f7 = g.f7, heard = g.heard and g.f7msg or nil,
+    LC.JobGamePanel(g, { n = g.n, of = RADIOS, t = g.target, f7 = g.f7, heard = g.heard and g.f7msg or nil, dial = g.dial,
         screws = g.screws, turn = g.turn, names = SCREWS, last = g.last,
         static = g.staticClip, union = g.unionClip, clip7 = g.f7clip,
         secs = math.max(0, math.ceil(g.radioEnd - CurTime())) })
@@ -886,8 +886,10 @@ LC.JobGameDefine("radio", {
             elseif arg == "note" then
                 Trait(g.ply, "sympathy", 1)
                 Bump(g.ply, "silences")
-                Give(g.ply, "paper", 1)
-                Say(g, "Radio", "You write it down where nobody will look, and tune the set back to the Union band.")
+                Give(g.ply, "freq7_sheet", 1)
+                g.ply.lcFreq7Heard = g.f7
+                Say(g, "Radio", "You copy it down where nobody will look: Freq 7, and the seven places on the dial it hides. "
+                    .. "A Freq 7 sheet, in your pockets (contraband: pass it on, or burn it).")
             else
                 Say(g, "Radio", "You tune past it. Nothing on this band is worth what it costs.")
             end
@@ -899,6 +901,21 @@ LC.JobGameDefine("radio", {
     end,
     finish = function(g) Bench(g, true) end,
 })
+
+-- A Freq 7 sheet, read: the rule, and the seven frequencies it gives.
+function LC.Freq7SheetText(heard)
+    local list = {}
+    for _, f in ipairs(LC.Freq7Freqs or {}) do list[#list + 1] = string.format("%.1f", f) end
+    return "FREQ 7\n\nThey only broadcast where the digits add up to seven. There are seven places on the dial:\n\n"
+        .. table.concat(list, "   ") .. "\n\n"
+        .. (heard and string.format("Heard it on %.1f at the repair bench. ", heard) or "")
+        .. "When the Combine find it, it moves: try the next one.\n\nListen low. Never where a unit can hear it."
+end
+function LC.ReadItem(ply, id)
+    if id ~= "freq7_sheet" or not LC.HasItem(ply, id) then return false end
+    if LC.SendRead then LC.SendRead(ply, { text = LC.Freq7SheetText(ply.lcFreq7Heard), sig = "(in a cramped hand)" }) end
+    return true
+end
 
 ------------------------------------------------------------------------
 -- Listening to a radio of your own (the Union radio, or one retuned to

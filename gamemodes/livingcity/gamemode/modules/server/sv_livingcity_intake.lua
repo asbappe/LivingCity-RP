@@ -833,6 +833,7 @@ function LC.PapersInfo(ply)
         block = n and LC.BlockName(n) or (LC.AwaitingHousing(ply) and "None yet: Housing Allocation" or "None on file"),
         desc = ply:GetNW2String("lc_desc", ""), card = LC.HasItem(ply, "ration_card"),
         model = ply:GetModel(),
+        stalker = (LC.PlayerIsStalker and LC.PlayerIsStalker(ply)) or nil, -- (stamped across: Combine property)
     }
     local id = LC.Identity and LC.Identity(ply)
     if id and id.alias then

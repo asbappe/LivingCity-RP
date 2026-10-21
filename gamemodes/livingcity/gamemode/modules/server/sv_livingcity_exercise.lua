@@ -437,6 +437,27 @@ local function ReleaseCitizens()
     end
 end
 
+-- The city's joggers each keep to their own lane, a little to the side of the route,
+-- so they don't all aim for the same spot and jostle round it in circles.
+local function JogTo(npc, st, c)
+    local i = c.i
+    local at = X.route[i]
+    if not at then return false end
+    local lane = c.lane or 0
+    if lane ~= 0 then
+        local a, b = X.route[math.max(1, i - 1)], X.route[i]
+        if a == b then b = X.route[i + 1] or b end
+        local dir = Flat(b - a)
+        if dir:LengthSqr() > 1 then
+            dir:Normalize()
+            local spot = Ground(at + Vector(-dir.y, dir.x, 0) * lane + Vector(0, 0, 30))
+            if spot and LC.GoTo(npc, st, spot, true, { kind = "exercise" }) then return true end
+        end
+    end
+    return LC.GoTo(npc, st, at, true, { kind = "exercise" })
+end
+LC.ExerciseJogTo = function(npc, st, c) return X and JogTo(npc, st, c) end
+
 -- An NPC arriving somewhere for the exercise (sv_livingcity.lua's Arrive hands them over).
 function LC.ExerciseArrive(npc, st, now)
     local c = st.exCitizen
@@ -457,7 +478,7 @@ function LC.ExerciseArrive(npc, st, now)
     if X.kind == "jog" and X.phase == "run" then
         c.i = (c.i or 1) + 1
         if c.i > #X.route then st.exCitizen = nil st.untilT = now + math.Rand(3, 8) return end
-        LC.GoTo(npc, st, X.route[c.i], true, { kind = "exercise" })
+        JogTo(npc, st, c)
         return
     end
     -- at their place: they stay put for it
@@ -609,6 +630,17 @@ local function Join(ply, late)
             local _, along = OnRoute(X.route, X.cum, ply:GetPos())
             r.cp = #X.route
             for i = 2, #X.route do if X.cum[i] > along then r.cp = i break end end
+            -- late: your own pace marker starts where you join, and the jog waits for you to finish it
+            local pacer = math.min(X.total, (CurTime() - (X.runStart or CurTime())) * X.pace)
+            r.lag = math.max(0, pacer - along)
+            ply:SetNW2Float("lcx_lag", r.lag)
+            local need = (X.runStart or CurTime()) + (X.total + r.lag) / X.pace + 70
+            if LC.EventEnds and LC.EventEnds < need then
+                LC.EventEnds = need
+                X.ends = need
+                if SetGlobal2Float then SetGlobal2Float("lc_event_ends", need) end
+                timer.Simple(0, function() if X then Send() end end)
+            end
         else
             r.cp = 2
         end
@@ -677,10 +709,19 @@ local function StartRun(now)
         X.nextCue = now + 3
         X.ropeAt = cvRope:GetBool() and math.floor(math.max(2, cvCues:GetInt()) / 2) or -1
     elseif X.kind == "jog" then
-        -- the NPC joggers set off
+        -- the NPC joggers set off, each in a lane of their own and a moment apart (not a scrum)
+        local k = 0
         for npc in pairs(X.npcs) do
             local st = IsValid(npc) and LC.NPCs[npc]
-            if st and st.exCitizen then st.exCitizen.i = 1 LC.ExerciseArrive(npc, st, now) end
+            if st and st.exCitizen then
+                k = k + 1
+                st.exCitizen.i = 1
+                st.exCitizen.lane = ((k % 5) - 2) * 40
+                local c, ex = st.exCitizen, X
+                timer.Simple((k - 1) * 0.6, function()
+                    if X == ex and IsValid(npc) and LC.NPCs[npc] == st and st.exCitizen == c then LC.ExerciseArrive(npc, st, CurTime()) end
+                end)
+            end
         end
     elseif X.kind == "parade" then
         for _, u in ipairs(X.column) do
@@ -781,7 +822,7 @@ local function NPCJoggers(now, pacer)
                     npc:SetPos(spot + Vector(0, 0, 4))
                     c.i = #X.route
                     for i = 2, #X.route do if X.cum[i] > want then c.i = i break end end
-                    LC.GoTo(npc, st, X.route[c.i], true, { kind = "exercise" })
+                    JogTo(npc, st, c)
                 end
             end
         end
@@ -812,7 +853,8 @@ local function JogThink(now)
                 local speed = Vector(v.x, v.y, 0):Length()
                 local slow = speed < JogSpeed(p)
                 if slow then r.slowSince = r.slowSince or now else r.slowSince = nil end
-                local behind = Progress(p, r) < pacer - cvBehind:GetFloat()
+                local mine = math.min(X.total, (now - X.runStart) * X.pace - (r.lag or 0)) -- (their own marker, if they joined late)
+                local behind = Progress(p, r) < mine - cvBehind:GetFloat()
                 local walking = r.slowSince and now - r.slowSince > 2.5 and not p.lcxBoost
                 p:SetNW2Bool("lcx_behind", behind)
                 if behind or walking then
@@ -826,8 +868,10 @@ local function JogThink(now)
             end
         end
     end
-    -- over once everyone's in, or a minute after the pace marker
-    if (allDone and next(X.people) ~= nil and now - X.runStart > 10) or (pacer >= X.total and now - X.runStart > X.total / X.pace + 60) then
+    -- over once everyone's in, or a minute after the pace marker (the latest joiner's own marker)
+    local lag = 0
+    for p, r in pairs(X.people) do if IsValid(p) and not r.done then lag = math.max(lag, r.lag or 0) end end
+    if (allDone and next(X.people) ~= nil and now - X.runStart > 10) or (now - X.runStart > (X.total + lag) / X.pace + 60) then
         LC.EndEvent(false)
     end
 end
@@ -1257,6 +1301,7 @@ function LC.ExerciseFinish()
         p:SetNW2Bool("lcx_in", false)
         p:SetNW2Bool("lcx_leader", false)
         p:SetNW2Bool("lcx_behind", false)
+        p:SetNW2Float("lcx_lag", 0)
         p:SetNW2Int("lcx_mistakes", 0)
         p:SetNW2Float("lcx_cheer", 0)
         p:SetNW2Int("lcx_cp", 0)

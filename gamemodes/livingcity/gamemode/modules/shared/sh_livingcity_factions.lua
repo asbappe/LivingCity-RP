@@ -170,11 +170,11 @@ LCF.Factions = {
         desc = "What the headcrabs left behind. NPC zombies are your kin. Everyone else is food, and knows it.",
         ranks = {
             { name = "Zombie", short = "ZMB", xp = 0, models = { "models/player/zombie_classic.mdl" },
-              loadout = { "weapon_lc_claws" }, health = 150, walk = 140, run = 200 },
+              loadout = { "weapon_lc_claws" }, health = 150, walk = 80, run = 120 },
             { name = "Fast Zombie", short = "FZM", xp = 300, models = { "models/player/zombie_fast.mdl" },
               health = 100, walk = 220, run = 380 },
             { name = "Zombine", short = "ZBN", xp = 900, models = { "models/player/zombie_soldier.mdl" },
-              health = 250, armor = 50, walk = 150, run = 230 },
+              health = 250, armor = 50, walk = 90, run = 170 },
         },
     },
 }

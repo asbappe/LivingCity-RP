@@ -547,6 +547,7 @@ local function CanThink(now)
                     if ply:Alive() and not ply:InVehicle() and now > (canCooldown[ply] or 0)
                         and not LC.PlayerIsCP(ply) and not LC.PlayerIsZombie(ply) and not (LC.Prisoners and LC.Prisoners[ply])
                         and not (LC.DisguisedAsCP and LC.DisguisedAsCP(ply)) and not (LC.Stops and LC.Stops[ply])
+                        and not (LC.PlayerIsStalker and LC.PlayerIsStalker(ply))
                         and ply:GetPos():DistToSqr(npc:GetPos()) < 250 * 250 then
                         return StartCan(npc, st, ply)
                     end

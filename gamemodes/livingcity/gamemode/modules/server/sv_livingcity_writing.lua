@@ -177,6 +177,7 @@ end)
 local function SendRead(ply, t)
     LC.SendCompressed("lc_read", t, ply)
 end
+LC.SendRead = SendRead
 
 function LC.ReadNoteEntity(ply, e)
     local id = e.lcNoteId

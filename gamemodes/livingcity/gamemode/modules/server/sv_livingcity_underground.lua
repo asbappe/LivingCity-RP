@@ -685,6 +685,7 @@ end
 local function Sees(npc, ply) return LC.LineOfSight(npc:EyePos(), ply:EyePos(), npc) end
 
 function LC.StartStop(cop, cst, ply)
+    if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) then return false end -- (Combine property: nobody stops it)
     local now = CurTime()
     LC.SetState(cop, cst, "event")
     cst.eventUntil = now + 30

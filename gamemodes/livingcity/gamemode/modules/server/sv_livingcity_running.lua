@@ -78,6 +78,7 @@ local function ExemptWhy(ply)
     if not ply:Alive() or ply:InVehicle() then return "dead or in a vehicle" end
     if ply:GetNW2Bool("lc_build", false) then return "build mode" end
     if LC.PlayerIsCP(ply) then return "a Civil Protection unit" end
+    if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) then return "a stalker (Combine property)" end
     if LC.FoolsSecurity and LC.FoolsSecurity(ply) then return "in a convincing uniform" end
     if LC.PlayerIsZombie and LC.PlayerIsZombie(ply) then return "infested" end
     if LC.PlayerIsWanted(ply) then return "already wanted" end -- already being chased

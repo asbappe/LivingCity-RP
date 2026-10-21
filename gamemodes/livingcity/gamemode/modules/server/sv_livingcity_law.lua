@@ -102,6 +102,8 @@ function LC.ReportCrime(ply, reason, seconds)
     local handled = hook.Run("LivingCityCrime", ply, reason)
     if handled ~= nil then return handled == true end
     if LC.PlayerIsCP(ply) then return false end
+    -- Combine property and the infested aren't booked for anything (no wanted notices, no murder announcements)
+    if (LC.PlayerIsStalker and LC.PlayerIsStalker(ply)) or (LC.PlayerIsZombie and LC.PlayerIsZombie(ply)) then return false end
     local r = string.lower(tostring(reason or ""))
     for _, w in ipairs(VIOLENT_WORDS) do if string.find(r, w, 1, true) then ply.lcViolentUntil = CurTime() + 120 break end end
     LC.SetWanted(ply, seconds or 180, reason)

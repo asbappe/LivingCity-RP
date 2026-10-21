@@ -23,6 +23,9 @@ LC_CL.ViewMods = LC_CL.ViewMods or {}
 LC_CL.ViewMods.scanner = { order = 10, fn = function(ply, view, ctx)
     local sc = Scanner(ply)
     if not sc then return end
+    -- where you're looking, not the body's physics angles (which bob and tip as it bumps things)
+    local eye = ply:EyeAngles()
+    view.angles = Angle(eye.p, eye.y, sc:GetNW2Float("lc_roll", 0))
     view.origin = sc:GetPos() + view.angles:Forward() * 12
     view.drawviewer = true
     ctx.remote = true

@@ -442,6 +442,10 @@ _me.nw.lc_scanner = scn
 _me.nw.lc_jail_until = CurTime() + 200
 local sview = LC_CL.CalcView(_me, { origin = Vector(0, 0, 64), angles = Angle(), fov = 75 })
 if not sview or sview.origin.x < 400 or not sview.drawviewer then problems[#problems + 1] = "scanner view isn't from the scanner" end
+-- the camera looks where you look, not where the scanner's body has tipped to
+local tipped = LC_CL.CalcView(_me, { origin = Vector(0, 0, 64), angles = Angle(-80, 30, 45), fov = 75 })
+local eyeA = _me:EyeAngles()
+if not tipped or math.abs(tipped.angles.r) > 0.01 or math.abs(tipped.angles.p - eyeA.p) > 0.01 then problems[#problems + 1] = "the scanner camera tips and rolls with the scanner's body" end
 if hook.t.PreDrawViewModel.LivingCityScanner() ~= true then problems[#problems + 1] = "viewmodel shows while flying a scanner" end
 local halos = 0
 halo = { Add = function(list) halos = halos + #list end }
@@ -715,7 +719,7 @@ do
         LC_CL.OpenLab({ credits = 50, items = { { id = "gun_pistol", name = "Homemade pistol", desc = "A pistol", secs = 12, price = 72, canPay = false, canMats = true,
             mats = { { name = "Gun parts", have = 2, need = 2 } } } } })
         LC_CL.OpenLab({ credits = 0, busy = 5, items = {} })
-        LC_CL.ShowPapersCard({ name = "Erika Hollis", cid = "#63-501", block = "Habitation Block 02", desc = "tall, grey coat", card = true, from = true })
+        LC_CL.ShowPapersCard({ name = "Erika Hollis", cid = "#63-501", block = "Habitation Block 02", desc = "tall, grey coat", card = true, from = true, stalker = true })
         LC_CL.AddNotice("warn", "Civil Protection", "Papers. None? Carry them at all times.", 0)
         LC_CL.AddNotice("warn", "Civil Protection", "Papers. None? Carry them at all times.", 0)
         LC_CL.AddNotice("speech", "Rebel", "Hey! Those are our supplies. Quit it.", 0)
@@ -1255,6 +1259,9 @@ net._q = { "jog", "run", CurTime() - 1, CurTime() + 400, { center = route[1], ro
 net.recv_lc_exercise()
 _me.nw.lcx_cp, _me.nw.lcx_behind, _me.nw.lcx_boost = 2, true, CurTime() + 3
 paint()
+_me.nw.lcx_lag = 500 -- (joined late: their own pace marker)
+paint()
+_me.nw.lcx_lag = nil
 _me.nw.lcx_cp = 4
 paint()
 net._q = { "drill", "run", CurTime() - 1, CurTime() + 400, { center = Vector(0, 0, 0), yard = Vector(0, 0, 0), yardYaw = 90 } }

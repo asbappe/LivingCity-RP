@@ -438,7 +438,8 @@ BUILD.radio = function(t)
     dial:SetMin(LOW)
     dial:SetMax(HIGH)
     dial:SetDecimals(1)
-    dial:SetValue(LOW + math.random() * (HIGH - LOW))
+    -- (opened again on the same set, it's still where you left it: the server remembers the dial)
+    dial:SetValue(tonumber(t.dial) or (LOW + math.random() * (HIGH - LOW)))
     panel.dialCtl = dial
     -- (the server passes the dial and the screws on to whoever is standing near the bench)
     local sentAt, sentVal = 0, nil

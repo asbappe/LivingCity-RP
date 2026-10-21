@@ -193,27 +193,49 @@ LC.Say = Say
 
 local function Allowed(ply) return LC.CanEdit(ply) end
 
+-- Where a player is looking from: their eyes, or the scanner (or camera) they're seeing through.
+function LC.ViewFrom(ply)
+    local ve = ply.GetViewEntity and ply:GetViewEntity()
+    if IsValid(ve) and ve ~= ply then return ve:GetPos(), ve end
+    local sc = ply.GetNW2Entity and ply:GetNW2Entity("lc_scanner")
+    if IsValid(sc) then return sc:GetPos(), sc end
+    return nil
+end
+
+-- Every place someone is: each player, and the scanner a pilot is flying (the city
+-- around it has to be as awake as the city around anyone standing there).
+function LC.ViewerPositions()
+    local list = {}
+    for _, ply in ipairs(player.GetAll()) do
+        list[#list + 1] = ply:GetPos()
+        local at = LC.ViewFrom(ply)
+        if at then list[#list + 1] = at end
+    end
+    return list
+end
+
 local function FarFromPlayers(pos, dist)
     local d2 = dist * dist
-    for _, ply in ipairs(player.GetAll()) do
-        if ply:GetPos():DistToSqr(pos) < d2 then return false end
+    for _, at in ipairs(LC.ViewerPositions()) do
+        if at:DistToSqr(pos) < d2 then return false end
     end
     return true
 end
 LC.FarFromPlayers = FarFromPlayers
 
--- Could any living player see this spot right now?
+-- Could any living player see this spot right now (through their own eyes, or a scanner's)?
 function LC.IsSeen(pos)
     for _, ply in ipairs(player.GetAll()) do
         if ply:Alive() then
-            local eye = ply:EyePos()
+            local remote, ve = LC.ViewFrom(ply)
+            local eye = remote or ply:EyePos()
             local dir = pos - eye
             local d2 = dir:LengthSqr()
             if d2 < 80 * 80 then return true end
             if d2 < 6000 * 6000 then
                 dir:Normalize()
                 if dir:Dot(ply:GetAimVector()) > 0.4 then
-                    local tr = util.TraceLine({ start = eye, endpos = pos, mask = MASK_OPAQUE, filter = ply })
+                    local tr = util.TraceLine({ start = eye, endpos = pos, mask = MASK_OPAQUE, filter = ve and { ply, ve } or ply })
                     if tr.Fraction > 0.97 then return true end
                 end
             end
@@ -512,7 +534,9 @@ function LC.RandomWanderPos(role, near)
     for _ = 1, 12 do
         local pool = pools[math.random(#pools)]
         local pos = pool[math.random(#pool)]
-        if (not LC.InNoGo or not LC.InNoGo(pos, role)) and not (LC.DestIsBad and LC.DestIsBad(pos)) then return pos end
+        if (not LC.InNoGo or not LC.InNoGo(pos, role)) and not (LC.DestIsBad and LC.DestIsBad(pos))
+            -- metrocops walk the streets: the Combine's own buildings are held by its soldiers (the garrison)
+            and not (role == "cop" and LC.CombineZoneAt and LC.CombineZoneAt(pos)) then return pos end
     end
     return nil
 end
@@ -1898,6 +1922,7 @@ function LC.CopProvoked(npc, st, ply, now)
     if not IsValid(ply) or not ply:Alive() or LC.PlayerIsCP(ply) or (LC.DisguisedAsCP and LC.DisguisedAsCP(ply)) then return end
     if LC.PlayerIsZombie and LC.PlayerIsZombie(ply) then return end
     if LC.InCustody and LC.InCustody(ply) then return end -- (a prisoner they're walking in, or one they've cuffed, isn't crowding them)
+    if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) then return end -- (Combine property in the way is just in the way)
     if LC.IsTied and LC.IsTied(ply) then return end
     local b = ply.lcBump
     if not b or now - b.last > 45 then
@@ -2260,7 +2285,7 @@ local function Think()
             if now >= (st.nextThink or 0) then queue[#queue + 1] = npc end
         end
     end
-    local players = player.GetAll()
+    local players = LC.ViewerPositions() -- (a flown scanner counts: the city near it stays awake)
     local lod2 = cvLodDist:GetFloat() ^ 2
     local budget = math.max(0.5, cvBudget:GetFloat()) / 1000
     while qi <= #queue do
@@ -2273,8 +2298,8 @@ local function Think()
             local near = st.test or st.state == "hostile"
             if not near then
                 local pos = npc:GetPos()
-                for _, ply in ipairs(players) do
-                    if ply:GetPos():DistToSqr(pos) < lod2 then near = true break end
+                for _, at in ipairs(players) do
+                    if at:DistToSqr(pos) < lod2 then near = true break end
                 end
             end
             st.nextThink = near and (now + 0.45) or (now + 2)

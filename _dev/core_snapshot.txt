@@ -302,6 +302,7 @@ item cwu_overalls
 item data_chip
 item data_shard
 item fishing_line
+item freq7_sheet
 item gren_flash
 item gren_gas
 item gren_smoke

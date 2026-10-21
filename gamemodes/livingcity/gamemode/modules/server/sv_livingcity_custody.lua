@@ -287,7 +287,7 @@ local SCENE = {
     { 5, nil, "ambient/machines/spinup.wav" },
     { 7.5, nil, "ambient/levels/labs/machine_moving_loop3.wav" },
     { 9, nil, "ambient/machines/thumper_hit.wav" },
-    { 10.5, nil, "npc/stalker/stalker_scream1.wav" },
+    { 10.5, nil, "npc/stalker/stalker_scream1.wav", 0.5 }, -- (at half volume: it was deafening)
     { 12.5, nil, "ambient/machines/spindown.wav" },
     { 14, "done" },
 }
@@ -300,7 +300,7 @@ function LC.StalkerScene(ply)
         timer.Simple(step[1], function()
             if not IsValid(ply) then return end
             if not (LC.Prisoners and LC.Prisoners[ply]) and step[2] ~= "done" then return end
-            if step[3] then ply:EmitSound(step[3], 75) end
+            if step[3] then ply:EmitSound(step[3], 75, 100, step[4] or 1) end
             if step[2] == "hit" then
                 ply:ViewPunch(Angle(math.random(8, 14), math.random(-8, 8), 0))
                 ply:ScreenFade(SCREENFADE.IN, Color(255, 255, 255, 120), 0.3, 0)
@@ -349,8 +349,8 @@ hook.Add("PlayerSay", "LivingCityStalkerVoice", function(ply, text)
     if LC.ICChatActive and LC.ICChatActive() then return end -- in-character chat turns it into the noise itself (sv_livingcity_rp.lua)
     local t = string.Trim(text)
     if string.sub(t, 1, 1) == "!" or string.sub(t, 1, 1) == "/" or string.sub(t, 1, 2) == "//" then return end -- commands and OOC still work
-    ply:EmitSound("npc/stalker/go_alert2a.wav", 70)
-    return "*a strained, wordless noise*"
+    ply:EmitSound("npc/stalker/go_alert2a.wav", 70, 100, 0.5)
+    return "*a strained, wordless scream*"
 end)
 -- nor talk to anyone (E on a person does nothing: a stalker's work is the only thing it does)
 -- (asked first by every E-on-someone handler: sv_livingcity.lua, the rebels', Grigori's, the lab's)
@@ -359,8 +359,8 @@ function LC.StalkerCantSpeak(ply, ent)
     if not (ent:IsNPC() or ent:IsPlayer() or ent:GetClass() == "lc_scientist") then return false end
     if (ply.lcStalkerUseNext or 0) < CurTime() then
         ply.lcStalkerUseNext = CurTime() + 4
-        ply:EmitSound("npc/stalker/go_alert2a.wav", 65)
-        ply:ChatPrint("[Stalker] You try to speak. Nothing comes out but a noise.")
+        ply:EmitSound("npc/stalker/go_alert2a.wav", 65, 100, 0.5)
+        ply:ChatPrint("[Stalker] You try to speak. Only a scream comes out: they left you a voice, not words.")
     end
     return true
 end
@@ -376,6 +376,21 @@ hook.Add("LivingCityNewCharacter", "LivingCityStalker", function(ply)
     ply:RemovePData("lc_stalker")
     ply:SetNW2Bool("lc_stalker", false)
 end)
+-- A stalker is kept in the Combine's own ground (the Nexus), not the station or the streets:
+-- that's where it wakes, and where it comes back.
+local function ToNexus(ply)
+    if not IsValid(ply) or not LC.PlayerIsStalker(ply) or not LC.StalkerSpot then return false end
+    local p = LC.StalkerSpot(ply)
+    if not p then return false end
+    ply:SetPos(p + Vector(0, 0, 4))
+    return true
+end
+LC.StalkerToNexus = ToNexus
+hook.Add("PlayerSpawn", "LivingCityStalkerSpawn", function(ply)
+    timer.Simple(0.5, function() ToNexus(ply) end) -- (after the other spawn hooks have placed them)
+end)
+hook.Add("LivingCityStalker", "LivingCityStalkerSpawn", function(ply) ToNexus(ply) end)
+
 hook.Add("PlayerDeath", "LivingCityStalker", function(ply)
     if LC.PlayerIsStalker(ply) then
         timer.Simple(0.5, function()

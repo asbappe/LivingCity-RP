@@ -762,11 +762,48 @@ local function ConveyorFace(pos)
 end
 LC.ConveyorFace = ConveyorFace
 
+-- Something that stays on a work point (a radio on the repair bench): put the point on a
+-- table or a bench and the thing sits there on top of it; whoever works it stands at it.
+LC.BenchProps = LC.BenchProps or {} -- [point] = prop
+local function BenchProp(p, model)
+    local e = LC.BenchProps[p]
+    if IsValid(e) then return e end
+    e = ents.Create("prop_dynamic")
+    if not IsValid(e) then return nil end
+    e:SetModel(model)
+    local tr = util.TraceLine({ start = p.pos + Vector(0, 0, 24), endpos = p.pos - Vector(0, 0, 80), mask = MASK_SOLID })
+    local top = (tr and tr.Hit and tr.HitPos) or p.pos
+    local lift = e.OBBMins and -e:OBBMins().z or 0
+    e:SetPos(top + Vector(0, 0, lift))
+    e:SetAngles(Angle(0, p.yaw or 0, 0))
+    e:Spawn()
+    if e.SetSolid then e:SetSolid(SOLID_VPHYSICS) end
+    e.lcBenchProp = true
+    LC.BenchProps[p] = e
+    return e
+end
+LC.NPCWorkBenchProp = BenchProp
+local function ClearBenchProps()
+    for _, e in pairs(LC.BenchProps) do if IsValid(e) then e:Remove() end end
+    LC.BenchProps = {}
+end
+hook.Add("LivingCityLayoutChanged", "LivingCityBenchProps", ClearBenchProps)
+hook.Add("LivingCityStopped", "LivingCityBenchProps", ClearBenchProps)
+
 local function Shift(job, id, label, opts)
     opts = opts or {}
     Task(job, { id = id, label = label, weight = opts.weight or 2, find = function(npc, st, now)
         local p = Nearest(JobPoints(job), npc:GetPos(), 4500)
         if not p then return nil end
+        -- the thing on the bench: they walk up to it and work on it where it sits (nothing in their hands)
+        local thing = opts.bench and BenchProp(p, opts.bench)
+        if IsValid(thing) then
+            local at = thing:GetPos()
+            return { steps = {
+                { pos = function(n) return Beside(at, n:GetPos(), 34) end, face = at, secs = math.Rand(opts.min or 30, opts.max or 70),
+                  anim = opts.anim or BENCH, sound = opts.sound, every = opts.every or 5, doing = label },
+            } }
+        end
         -- at the line: by the belt, facing it, beside the point (not wandering off it)
         local belt = opts.belt and ConveyorFace(p.pos)
         if belt then
@@ -854,7 +891,12 @@ end })
 Shift("scrap", "yard", "sorting scrap at the yard", { sound = METAL })
 
 -- Radio Repair, and Maintenance, when nothing's broken: at the bench, in the yard
-Shift("radio", "bench", "repairing radios at the bench", { sound = { "buttons/lever7.wav", "buttons/button16.wav" }, prop = "models/props_lab/citizenradio.mdl" })
+Shift("radio", "bench", "repairing radios at the bench", { sound = { "buttons/lever7.wav", "buttons/button16.wav" }, bench = "models/props_lab/citizenradio.mdl" })
+-- (the radios are on the benches whether anyone's working them or not)
+timer.Create("LivingCityRadioBenches", 10, 0, function()
+    if not LC.Running then return end
+    for _, p in ipairs(JobPoints("radio")) do BenchProp(p, "models/props_lab/citizenradio.mdl") end
+end)
 Shift("maintenance", "yard", "at the maintenance yard", { sound = METAL })
 Shift("sanitation", "depot", "at the sanitation depot", { anim = CROUCH, weight = 1 })
 

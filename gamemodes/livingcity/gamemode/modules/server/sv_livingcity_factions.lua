@@ -371,6 +371,7 @@ function LC.SetFaction(ply, fid, sid, quiet, stay)
     if ply:Alive() and not (LC.Prisoners and LC.Prisoners[ply]) then
         local pos, ang = ply:GetPos(), ply:EyeAngles()
         ply:Spawn()
+        if stay and LCF.Get(fid).zombie then stay = nil end -- (the infested rise in their nests, not where a person stood)
         if stay then
             -- (the new uniform and kit, right where you were standing; set again a moment
             -- later in case anything spawning moves you)
@@ -593,6 +594,28 @@ end)
 hook.Add("LivingCityIsZombie", "LivingCityFactions", function(ply)
     local f = FactionOf(ply)
     if f then return f.zombie == true end
+end)
+
+-- The infested have claws, not guns: they can't pick one up, and anything else they're
+-- holding when they turn is dropped from their hands.
+local ZOMBIE_HANDS = { weapon_lc_claws = true, weapon_lc_hands = true }
+hook.Add("PlayerCanPickupWeapon", "LivingCityInfested", function(ply, wep)
+    if LC.PlayerIsZombie(ply) and IsValid(wep) and not ZOMBIE_HANDS[wep:GetClass()] then return false end
+end)
+function LC.ZombieDisarm(ply)
+    if not IsValid(ply) or not LC.PlayerIsZombie(ply) then return 0 end
+    local n = 0
+    for _, w in ipairs(ply:GetWeapons()) do
+        if w and w.GetClass and not ZOMBIE_HANDS[w:GetClass()] then ply:StripWeapon(w:GetClass()) n = n + 1 end
+    end
+    if n > 0 and ply:HasWeapon("weapon_lc_claws") then ply:SelectWeapon("weapon_lc_claws") end
+    return n
+end
+hook.Add("PlayerSpawn", "LivingCityInfested", function(ply)
+    timer.Simple(0.2, function() LC.ZombieDisarm(ply) end)
+end)
+timer.Create("LivingCityInfested", 2, 0, function()
+    for _, p in ipairs(player.GetAll()) do if p:Alive() then LC.ZombieDisarm(p) end end
 end)
 
 -- Hunted people are anticitizens on sight, anywhere outside rebel territory.

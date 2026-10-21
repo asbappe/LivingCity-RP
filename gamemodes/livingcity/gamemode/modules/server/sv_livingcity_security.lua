@@ -28,6 +28,7 @@ local function MayEnter(ply)
     if LC.EscortCovers and LC.EscortCovers(ply) then return true end -- with a Civil Protection escort (sv_livingcity_escort.lua)
     if LC.FoolsSecurity and LC.FoolsSecurity(ply) then return true end
     if LC.PlayerIsZombie(ply) then return true end -- the infested don't read signs
+    if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) then return true end -- (a stalker is kept there)
     return false
 end
 

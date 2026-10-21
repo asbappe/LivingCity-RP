@@ -175,6 +175,7 @@ end
 function LC.AddHeat(ply, n, why)
     if not cvOn:GetBool() or not IsValid(ply) or not ply:IsPlayer() or not ply:Alive() then return end
     if LC.PlayerIsCP(ply) or (LC.InCustody and LC.InCustody(ply)) then return end
+    if LC.PlayerIsZombie(ply) then return end -- (the infested are shot on sight anyway, not hunted down as criminals)
     local before = LC.AlertLevel(ply)
     ply.lcHeat = math.min(30, LC.Heat(ply) + n)
     ply.lcHeatSeen = CurTime()
@@ -236,12 +237,13 @@ end
 local function CountKill(ply) ply:SetPData("lc_killed", (tonumber(ply:GetPData("lc_killed", 0)) or 0) + 1) end
 hook.Add("LivingCityNewCharacter", "LivingCityKillCount", function(ply) ply:RemovePData("lc_killed") end)
 hook.Add("PlayerDeath", "LivingCityKillCount", function(victim, _, attacker)
-    if IsValid(attacker) and attacker:IsPlayer() and attacker ~= victim and not LC.PlayerIsCP(attacker) then CountKill(attacker) end
+    if IsValid(attacker) and attacker:IsPlayer() and attacker ~= victim and not LC.PlayerIsCP(attacker) and not LC.PlayerIsZombie(attacker) then CountKill(attacker) end
 end)
 
 hook.Add("OnNPCKilled", "LivingCityResponse", function(npc, attacker)
     local st = LC.NPCs and LC.NPCs[npc]
     if not st or st.test or not IsValid(attacker) or not attacker:IsPlayer() then return end
+    if LC.PlayerIsZombie(attacker) then return end -- (what the infested kill is feeding, not murder)
     if (st.role == "cop" or st.role == "soldier" or st.role == "citizen") and not LC.PlayerIsCP(attacker) then CountKill(attacker) end
     if st.role == "cop" then
         local first = FirstOffense(attacker)

@@ -4654,7 +4654,7 @@ ok(LC.PlayerIsStalker(worst) and LC.Prisoners[worst] == nil, "the very worst are
 ok(LC.LooksCombine(worst), "Combine property, as far as anyone's concerned")
 local said = hook.Run("PlayerSay", worst, "help me")
 local heard = LC.LogBuffer[#LC.LogBuffer] or ""
-ok(said == "" and string.find(heard, "wordless noise", 1, true) and not string.find(heard, "help me", 1, true), "and they can't speak: only a noise comes out", heard)
+ok(said == "" and string.find(heard, "wordless", 1, true) and not string.find(heard, "help me", 1, true), "and they can't speak: only a scream comes out", heard)
 worst:Kill()
 _run(1)
 ok(not LC.PlayerIsStalker(worst), "death ends it: back as a citizen, on probation")
@@ -12873,6 +12873,169 @@ section("The Resistance's money: intel, skimming, forged cards")
     _setcvar("lc_forgery_heat", 15)
     LC.RemoveZone(zr)
     spy.valid = false
+end)()
+
+section("Playtest fixes, 21 October")
+;(function()
+    if LC.Event then LC.EndEvent(true) end
+    local W0 = Vector(-221000, 221000, 0)
+    -- a stalker: the units leave it alone, its papers say what it is, and it works (it doesn't just stand there)
+    local stk = newPlayer("Hollow", "citizen")
+    _run(1)
+    LC.MakeStalker(stk)
+    ok(LC.PlayerIsStalker(stk), "(a stalker)")
+    ok(not string.find(string.lower(LCF.Get("stalker").desc or ""), "sewn", 1, true), "nobody sews a stalker's mouth shut (it can scream)")
+    ok(LC.ReportCrime(stk, "Possession of contraband", 120) == false and not LC.PlayerIsWanted(stk), "a stalker is never booked for anything (no contraband arrests)")
+    ok(LC.PapersInfo(stk).stalker == true, "a stalker's papers carry the STALKER stamp")
+    local cit = newPlayer("PlainPapers", "citizen")
+    ok(not LC.PapersInfo(cit).stalker, "(a citizen's papers don't)")
+    stk:SetPos(W0)
+    ok(LC.JobGameStart(stk, "scrub", nil, { pos = W0 }), "the holding floor is a job to do: grime to sweep up")
+    local g = LC.JobGames[stk]
+    ok(g and #g.stains >= 4 and IsValid(g.broom) and g.broom:GetModel() == "models/props_c17/pushbroom.mdl", "a push broom in hand, and patches of grime about", g and #g.stains)
+    for _ = 1, 2 do
+        for _, e in ipairs(g and g.stains or {}) do
+            if IsValid(e) then stk:SetPos(e:GetPos()) hook.Run("PlayerUse", stk, e) _run(3) end
+        end
+    end
+    _run(1)
+    ok(LC.JobGames[stk] == nil, "every patch swept: done")
+    stk:SetPos(W0 + Vector(0, 2000, 0))
+    ok(LC.JobGameStart(stk, "assemble", nil, { pos = W0 + Vector(0, 2000, 0) }), "the frame is a job to do: cells to carry in, seams to weld")
+    g = LC.JobGames[stk]
+    ok(g and #g.cells == 4, "four containment cells lying about", g and #g.cells)
+    for _, e in ipairs(g and g.cells or {}) do if IsValid(e) then e:SetPos(g.center) end end
+    _run(1)
+    ok(g and g.seated == 4 and #g.seams == 4, "carried into the frame: seated, and four seams to weld", g and g.seated)
+    for _, e in ipairs(g and g.seams or {}) do
+        if IsValid(e) then stk:SetPos(e:GetPos()) hook.Run("PlayerUse", stk, e) _run(4) end
+    end
+    _run(1)
+    ok(LC.JobGames[stk] == nil, "welded shut: done")
+    if LC.Energizers[stk] then LC.Energizers[stk]:Remove() LC.Energizers[stk] = nil end
+    local tech = LC.StalkerTechnician(stk, stk:GetPos())
+    ok(IsValid(tech) and tech:GetNW2String("lc_pname", "") == "Overwatch technician", "a technician comes to fit the harness")
+    if IsValid(tech) then timer.Remove("LivingCityTech" .. tech:EntIndex()) LC.NPCs[tech] = nil tech:Remove() end
+    LC.FreeStalker(stk)
+    stk.valid = false cit.valid = false
+end)()
+;(function()
+    -- the infested: slower than a citizen, no guns, they rise in their nests, and killing isn't murder
+    local W0 = Vector(-222000, 222000, 0)
+    local nest = LC.AddZone(W0, 300, "infest", 0)
+    local z = newPlayer("Shambler", "citizen")
+    _run(1)
+    z:SetPos(W0 + Vector(4000, 0, 0))
+    LC.SetFaction(z, "zombie", nil, true, true)
+    _run(1)
+    ok(z:GetPos():Distance(W0 + Vector(4000, 0, 0)) > 300, "turned infested from the menu: up in a nest, not where they stood", z:GetPos())
+    local ref = newPlayer("Pedestrian", "citizen")
+    _run(1)
+    ok(z:GetRunSpeed() <= ref:GetRunSpeed() and z:GetWalkSpeed() <= ref:GetWalkSpeed(), "a zombie is no faster than a citizen", z:GetRunSpeed() .. " vs " .. ref:GetRunSpeed())
+    ref.valid = false
+    local gun = ents.Create("weapon_pistol") gun:Spawn()
+    ok(hook.Run("PlayerCanPickupWeapon", z, gun) == false, "a zombie can't pick up a gun")
+    gun:Remove()
+    z:Give("weapon_pistol")
+    LC.ZombieDisarm(z)
+    ok(not z:HasWeapon("weapon_pistol"), "and one in its hands is dropped")
+    local killed = tonumber(z:GetPData("lc_killed", 0)) or 0
+    local c = LC.Spawners.citizen(W0 + Vector(60, 0, 0))
+    hook.Run("OnNPCKilled", c, z)
+    ok(not LC.PlayerIsWanted(z) and LC.Heat(z) == 0 and (tonumber(z:GetPData("lc_killed", 0)) or 0) == killed, "what a zombie kills isn't murder: no wanted, no response, no kill counted")
+    LC.NPCs[c] = nil if IsValid(c) then c:Remove() end
+    LC.RemoveZone(nest)
+    z.valid = false
+end)()
+;(function()
+    -- metrocops walk the streets; the Combine's buildings are the soldiers'
+    local W0 = Vector(-223000, 223000, 0)
+    local hq = LC.AddZone(W0, 400, "combine", 0)
+    local np, fb = LC.NodePositions, LC.Fallback
+    LC.Fallback = {}
+    LC.NodePositions = function() return { W0, W0 + Vector(3000, 0, 0) } end
+    local inside = 0
+    for _ = 1, 30 do
+        local p = LC.RandomWanderPos("cop")
+        if p and p:Distance(W0) < 450 then inside = inside + 1 end
+    end
+    ok(inside == 0, "a metrocop on its beat never wanders into the Combine HQ", inside)
+    LC.NodePositions, LC.Fallback = np, fb
+    LC.RemoveZone(hq)
+    -- flying a scanner: the city around the scanner is as awake as around anyone standing there
+    local pilot = newPlayer("Flyer", "cp")
+    _run(1)
+    local sc = ents.Create("prop_physics") sc:Spawn() sc:SetPos(W0 + Vector(0, 9000, 200))
+    pilot:SetNW2Entity("lc_scanner", sc)
+    local near = false
+    for _, at in ipairs(LC.ViewerPositions()) do if at:Distance(sc:GetPos()) < 1 then near = true end end
+    ok(near and not LC.FarFromPlayers(sc:GetPos() + Vector(100, 0, -200), 500), "a flown scanner counts as somebody there (no NPCs asleep and hopping around it)")
+    pilot:SetNW2Entity("lc_scanner", NULL)
+    sc:Remove()
+    pilot.valid = false
+end)()
+;(function()
+    -- radio repair: Freq 7, written down, is a sheet you can read and pass on (and it's contraband);
+    -- and the bench radios sit on the bench, for the NPC repairers to work on
+    local it = LCS.Items.freq7_sheet
+    ok(it and it.contraband and it.use == "read", "a Freq 7 sheet: contraband, and it can be read")
+    local txt = LC.Freq7SheetText(102.4)
+    local all = true
+    for _, f in ipairs(LC.Freq7Freqs) do if not string.find(txt, string.format("%.1f", f), 1, true) then all = false end end
+    ok(all and string.find(txt, "102.4", 1, true), "it lists the seven frequencies, and where it was heard")
+    local rd = newPlayer("Tinkerer", "citizen")
+    _run(1)
+    LC.GiveItem(rd, "freq7_sheet", 1)
+    ok(LC.ItemUse(rd, "freq7_sheet"), "Read, from your pockets")
+    ok(LC.JobGameStart(rd, "radio", nil, { freq7 = 1 }), "(a radio on the bench)")
+    local g = LC.JobGames[rd]
+    local sent
+    local jp = LC.JobGamePanel
+    LC.JobGamePanel = function(gg, d) sent = d return jp(gg, d) end
+    LC.JobGameAct(rd, "dial", g.f7)
+    LC.JobGameAct(rd, "lock", { f = g.f7 })
+    ok(g.heard, "(Freq 7 on the dial)")
+    LC.JobGameAct(rd, "freq7", "note")
+    LC.JobGamePanel = jp
+    ok(LC.HasItem(rd, "freq7_sheet") and sent and sent.dial and math.abs(sent.dial - (g.dial or 0)) < 0.01, "Write it down: a Freq 7 sheet, and the dial stays where it was", sent and sent.dial)
+    LC.JobGameEnd(rd, "quit")
+    rd.valid = false
+    local W0 = Vector(-224000, 224000, 0)
+    local pt = { pos = W0, yaw = 90 }
+    local r1 = LC.NPCWorkBenchProp(pt, "models/props_lab/citizenradio.mdl")
+    ok(IsValid(r1) and r1:GetModel() == "models/props_lab/citizenradio.mdl" and r1:GetPos():Distance(W0) < 40, "a radio sits on the repair bench point")
+    ok(LC.NPCWorkBenchProp(pt, "models/props_lab/citizenradio.mdl") == r1, "(one, not a new one each time)")
+    r1:Remove()
+    LC.BenchProps[pt] = nil
+end)()
+;(function()
+    -- the jog: late, you get your own pace marker from where you join, and the jog waits for you
+    if LC.Event then LC.EndEvent(true) end
+    local E0 = Vector(-225000, 225000, 0)
+    local jp = {}
+    for i, off in ipairs({ Vector(0, 0, 0), Vector(1200, 0, 0), Vector(1200, 1200, 0), Vector(0, 1200, 0) }) do
+        jp[i] = LC.AddPoint(E0 + off, 0, "jogroute", 1)
+    end
+    local late = newPlayer("Latecomer", "citizen") late:SetPos(E0 + Vector(-9000, 0, 0))
+    _setcvar("lc_exercise_muster", 15)
+    ok(LC.StartEvent("jog"), "(the jog)")
+    local X = LC.ExerciseSession()
+    _run(16)
+    ok(X and X.phase == "run", "(off they go without the latecomer)")
+    local lanes = {}
+    for npc in pairs(X and X.npcs or {}) do local st = LC.NPCs[npc] if st and st.exCitizen and st.exCitizen.lane then lanes[st.exCitizen.lane] = true end end
+    ok(next(X and X.npcs or {}) == nil or table.Count(lanes) >= 2, "the city's joggers keep to lanes of their own (not one scrum on one spot)")
+    _run(20)
+    late:SetPos(E0 + Vector(30, 0, 0))
+    late.vel = Vector(200, 0, 0)
+    _run(1.5)
+    local r = X.people[late]
+    ok(r and r.late and (r.lag or 0) > 0, "late to the start: in it, with your own pace marker", r and r.lag)
+    ok(not late:GetNW2Bool("lcx_behind", false), "(and not behind it the moment you arrive)")
+    ok(LC.EventEnds >= X.runStart + (X.total + r.lag) / X.pace, "the jog lasts long enough for the latecomer to finish")
+    LC.EndEvent(true)
+    for _, p in ipairs(jp) do LC.RemovePoint(p) end
+    late.valid = false
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")

@@ -193,7 +193,8 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityExercise", function(depth,
         local cp = me:GetNW2Int("lcx_cp", 0)
         if EX.route[cp] then Beam(EX.route[cp], GREEN) end
         if EX.runStart and EX.pace then
-            local p = Along(math.min(EX.total or 0, (CurTime() - EX.runStart) * EX.pace))
+            -- (joined late: your own marker, started where you joined)
+            local p = Along(math.Clamp((CurTime() - EX.runStart) * EX.pace - me:GetNW2Float("lcx_lag", 0), 0, EX.total or 0))
             -- the pace marker: green while you're keeping up with it, red when you've fallen behind
             local col = (inIt and not me:GetNW2Bool("lcx_behind", false)) and GREEN or RED
             if p then render.DrawWireframeBox(p, Angle(0, 0, 0), Vector(-12, -12, 0), Vector(12, 12, 72), col, false) end

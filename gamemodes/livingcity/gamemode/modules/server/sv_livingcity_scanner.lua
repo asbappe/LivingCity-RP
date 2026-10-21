@@ -258,9 +258,12 @@ function LC.ScannerThink(sc)
     end
     l.lastPos = sc:GetPos()
     local phys = sc.GetPhysicsObject and sc:GetPhysicsObject()
+    if math.abs(sc:GetNW2Float("lc_roll", 0) - roll) > 0.2 then sc:SetNW2Float("lc_roll", roll) end
     if IsValid(phys) then
         phys:SetVelocity(vel)
         phys:SetAngles(Angle(ang.p, ang.y, roll))
+        -- no spin left over from bumping into things (it kept tipping and rolling the camera)
+        if phys.GetAngleVelocity and phys.AddAngleVelocity then phys:AddAngleVelocity(-phys:GetAngleVelocity()) end
         phys:Wake()
     else
         sc:SetPos(sc:GetPos() + vel * FrameTime())

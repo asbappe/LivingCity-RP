@@ -213,8 +213,8 @@ end
 local function Speak(ply, kind, text)
     -- a stalker has no words left (sv_livingcity_custody.lua): only the sound comes out
     if (kind == "say" or kind == "yell" or kind == "whisper") and LC.PlayerIsStalker and LC.PlayerIsStalker(ply) then
-        ply:EmitSound("npc/stalker/go_alert2a.wav", kind == "whisper" and 55 or 70)
-        kind, text = "me", "makes a strained, wordless noise."
+        ply:EmitSound("npc/stalker/go_alert2a.wav", kind == "whisper" and 55 or 70, 100, 0.5) -- (half volume: it's a scream)
+        kind, text = "me", "screams: a strained, wordless noise."
     end
     -- a unit saying one of the mask's lines word for word: heard in its voice too (sv_livingcity_cp.lua)
     if (kind == "say" or kind == "yell") and LC.VoiceForText then LC.VoiceForText(ply, text, kind) end

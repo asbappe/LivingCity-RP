@@ -212,6 +212,21 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Forged cards:** the lab makes five at a time. Sell enough (or use them) and a sweep comes for the camp nearest the lab.
   Notes:
 
+## Fixes from the 21 October playtest (what to check)
+
+- [ ] **Stalker scream:** half as loud. The job text no longer says their mouths are sewn shut.
+- [ ] **Stalker spawn:** wakes in the Combine's ground (a Combine-only zone), never at the station.
+- [ ] **Stalkers left alone:** no "restricted area" in the Combine's ground; no unit warns, searches, beats, books or tells it to pick up a can; contraband on it doesn't matter.
+- [ ] **Stalker papers:** a red STALKER stamp across them.
+- [ ] **Stalker jobs:** a technician walks up and fits the harness; the floors are a push broom and patches of grime (E each); cable is the rewiring board at two power banks; the frame is four cells to carry in and four seams to weld; the charge is the board again.
+- [ ] **Scanner far from its console:** the NPCs around it walk normally (no hopping or floating); the camera doesn't keep tipping up or rolling.
+- [ ] **Combine HQ:** mostly soldiers; metrocops on their beat don't wander in.
+- [ ] **Infested:** the Zombie and Zombine are no faster than a citizen; no picking up or holding guns; joining from F4 puts you in a nest; your kills don't make you wanted or bring announcements.
+- [ ] **The jog:** the city's joggers keep to lanes and don't circle round each other; miss the start, then join the route anywhere: your own marker, and time to finish.
+- [ ] **Radio repair:** "Write it down" on Freq 7 leaves the dial where it was and gives a Freq 7 sheet (Read it from your pockets: the seven frequencies; contraband).
+- [ ] **Radio repair NPCs:** put the work points on a table or bench: a radio sits there and the repairer stands at it working (nothing in their hands).
+  Notes:
+
 ## Morning exercise and more (from the other session)
 
 - [ ] **Morning exercise:** every second dawn, the jog (keep up with the pace marker), the drill (copy the leader on your ring, then the skipping rope) or the parade (cheer the column). Needs its editor points: jogging route, exercise yard, parade route.

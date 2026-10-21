@@ -213,6 +213,9 @@ LCS.Items = {
                         contraband = true, conceal = 0.15, sell = 30, desc = "Plates and salvaged charge cells: holds a charge (75), comes with thirty in it. Charge cells (the lab's, or off a dead unit or a downed scanner) top it up, and a vortigaunt will if you ask" },
     -- the Resistance's money (sv_livingcity_funding.lua): intel only the quartermaster buys, and
     -- parts skimmed off the factory line
+    freq7_sheet     = { name = "Freq 7 sheet", model = "models/props_c17/paper01.mdl", kg = 0, contraband = true, conceal = 0.85, sell = 6,
+                        use = "read", useLabel = "Read",
+                        desc = "Copied down at a radio repair bench: the rule, and the seven places on the dial Freq 7 hides. Pass it on, or burn it" },
     intel_patrol    = { name = "Notes on a patrol", model = "models/props_c17/paper01.mdl", kg = 0, contraband = true, conceal = 0.9, sell = 20, intel = true,
                         desc = "A unit's beat, written down: where he walks, and when. The quartermaster pays for it" },
     intel_checkpoint = { name = "Notes on a checkpoint", model = "models/props_c17/paper01.mdl", kg = 0, contraband = true, conceal = 0.9, sell = 25, intel = true,
