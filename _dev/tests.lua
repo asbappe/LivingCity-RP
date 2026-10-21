@@ -2295,6 +2295,11 @@ ok(qr.done and has(crook.chat, "Community service"), "each shift of service rest
 
 LC.ReportCrime(crook, "Theft", 300)
 local unit = cops()[1]
+if not unit then -- (none free on duty just now: one comes along)
+    local n, st = LC.Spawners.cop(crook:GetPos() + Vector(200, 0, 0))
+    st.untilT = 1e9
+    unit = { n = n, st = st }
+end
 crook:SetPos(unit.n:GetPos() + Vector(50, 0, 0))
 unit.st.nextUse = 0
 local s1 = LC.Standing(crook)
