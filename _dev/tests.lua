@@ -4956,7 +4956,7 @@ ok(not LC.PlayerMayUseCPDoor(sab, door), "(the door's locked to them again)")
 -- nobody fixes it: the emergency crews do, eventually
 LC.TransformerDown(t, nil, "damage")
 _setcvar("lc_blackout_minutes", 0.1)
-_run(16)
+_run(21) -- (the crews' check runs every ten seconds)
 ok(not t:GetNW2Bool("lc_down", true), "if nobody fixes it, the emergency crews do")
 _setcvar("lc_blackout_minutes", 8)
 -- the city's own maintenance crew
@@ -12855,7 +12855,10 @@ section("The Resistance's money: intel, skimming, forged cards")
         if good then break end
     end
     LC.SeenBySecurity = function() return false end
-    ok(good and LC.LineSkim(worker, g, good) and LC.HasItem(worker, "union_goods") and g.skimmed == 1, "R on a good part: it goes in your coat (Union machine parts)")
+    local nParts = #(g.parts or {})
+    local skimmed = good and LC.LineSkim(worker, g, good)
+    ok(skimmed and LC.HasItem(worker, "union_goods") and g.skimmed == 1, "R on a good part: it goes in your coat (Union machine parts)",
+        tostring(good) .. " parts=" .. nParts .. " skim=" .. tostring(skimmed) .. " inv=" .. tostring(LC.Inventory(worker).union_goods) .. " n=" .. tostring(g.skimmed))
     LC.SeenBySecurity = sbs
     LC.JobGameEnd(worker, "quit")
     worker.valid = false
