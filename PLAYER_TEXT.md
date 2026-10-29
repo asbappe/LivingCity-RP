@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 1c87212. Admin-only console messages and log lines are left out.
+Made from version 5c7e9a1. Admin-only console messages and log lines are left out.
 
-5723 lines, from 174 files.
+5728 lines, from 175 files.
 
 ## Contents
 
@@ -118,6 +118,7 @@ Made from version 1c87212. Admin-only console messages and log lines are left ou
 - [Freq 7, the Resistance's pirate broadcast](#freq-7-the-resistances-pirate-broadcast-svlivingcityfreq7lua) (6)
 - [the Resistance's money (besides raiding supply drops)](#the-resistances-money-besides-raiding-supply-drops-svlivingcityfundinglua) (16)
 - [Father Grigori, in the flesh](#father-grigori-in-the-flesh-svlivingcitygrigorilua) (16)
+- [flood guard](#flood-guard-svlivingcityguardlua) (3)
 - [stealing the Combine's data](#stealing-the-combines-data-svlivingcityheistlua) (32)
 - [tips that pop up the first time something happens](#tips-that-pop-up-the-first-time-something-happens-svlivingcityhintslua) (326)
 - [housing blocks](#housing-blocks-svlivingcityhousinglua) (5)
@@ -161,7 +162,7 @@ Made from version 1c87212. Admin-only console messages and log lines are left ou
 - [Combine-only areas](#combine-only-areas-svlivingcitysecuritylua) (10)
 - [jobs that come with supply drops, and Union work orders that](#jobs-that-come-with-supply-drops-and-union-work-orders-that-svlivingcitysidejobslua) (95)
 - [character slots](#character-slots-svlivingcityslotslua) (20)
-- [staff tools](#staff-tools-svlivingcitystafflua) (46)
+- [staff tools](#staff-tools-svlivingcitystafflua) (48)
 - [the stalker's lot](#the-stalkers-lot-svlivingcitystalkerworklua) (56)
 - [static map props](#static-map-props-svlivingcitystaticpropslua) (10)
 - [the city's stores](#the-citys-stores-svlivingcitystockpilelua) (8)
@@ -284,8 +285,8 @@ Made from version 1c87212. Admin-only console messages and log lines are left ou
 
 *When:* part of: use
 
-- "Picked up: {id}"  (chat message, line 39)
-- "Your pockets are full."  (chat message, line 43)
+- "Picked up: {id}"  (chat message, line 41)
+- "Your pockets are full."  (chat message, line 46)
 
 ## lc_item_ration.lua (lc_item_ration.lua)
 
@@ -4178,62 +4179,62 @@ Made from version 1c87212. Admin-only console messages and log lines are left ou
 
 *When:* pcall
 
-- "[???] %d to %d. Very well. He straightens his tie, and time starts again."  (message, line 3850)
-- "[???] Silence. He takes that as a yes."  (text, line 3853)
+- "[???] %d to %d. Very well. He straightens his tie, and time starts again."  (message, line 3852)
+- "[???] Silence. He takes that as a yes."  (text, line 3855)
 
 *When:* Triggers Father Grigori eats the motherlode.
 
-- "You'd break your teeth."  (text, line 3895)
-- "You've nothing like that to eat."  (text, line 3896)
-- "Not now."  (text, line 3897)
-- "It doesn't go down. Not yet."  (text, line 3898)
+- "You'd break your teeth."  (text, line 3897)
+- "You've nothing like that to eat."  (text, line 3898)
+- "Not now."  (text, line 3899)
+- "It doesn't go down. Not yet."  (text, line 3900)
 
 *When:* part of: eat chip
 
-- "** Father Grigori swallows a Combine data core whole. His eyes light up."  (chat message, line 3902)
+- "** Father Grigori swallows a Combine data core whole. His eyes light up."  (chat message, line 3904)
 
 *When:* For the admin
 
-- "[Living City] {m}"  (chat message, line 3916)
+- "[Living City] {m}"  (chat message, line 3918)
 
 *When:* the console command lc_endings
 
-- "{song} is a low-quality copy ({hz} Hz: it plays, but sounds muffled); a better copy would sound much better"  (text, line 3924)
-- "NO SONG FOUND (looking for {id}.mp3 in garrysmod/sound/{ROOT})"  (text, line 3926)
+- "{song} is a low-quality copy ({hz} Hz: it plays, but sounds muffled); a better copy would sound much better"  (text, line 3926)
+- "NO SONG FOUND (looking for {id}.mp3 in garrysmod/sound/{ROOT})"  (text, line 3928)
 
 *When:* everything that's actually there, so a file in the wrong place shows
 
-- "In sound/{ROOT}: {or}"  (text, line 3931)
-- "The folder {d}/ holds {inside} file(s) that never play: move them up one level, straight into sound/{ROOT}"  (text, line 3936)
+- "In sound/{ROOT}: {or}"  (text, line 3933)
+- "The folder {d}/ holds {inside} file(s) that never play: move them up one level, straight into sound/{ROOT}"  (text, line 3938)
 
 *When:* the console command lc_endings
 
-- "never plays: name it for its ending (harpies.mp3, bus.mp3 ...)"  (text, line 3942)
-- "isn't a sound the game plays (.mp3, .ogg or .wav)"  (text, line 3944)
-- "Next one possible in {left} minutes (lc_ending_reset_cooldown)."  (text, line 3948)
-- "One can happen now."  (text, line 3948)
+- "never plays: name it for its ending (harpies.mp3, bus.mp3 ...)"  (text, line 3944)
+- "isn't a sound the game plays (.mp3, .ogg or .wav)"  (text, line 3946)
+- "Next one possible in {left} minutes (lc_ending_reset_cooldown)."  (text, line 3950)
+- "One can happen now."  (text, line 3950)
 
 *When:* the console command lc_ending
 
-- "Ending triggered: {id}"  (text, line 3956)
+- "Ending triggered: {id}"  (text, line 3958)
 
 *When:* the console command lc_ending_cancel
 
-- "Ending cancelled. Time runs again."  (text, line 3961)
-- "No ending on."  (text, line 3961)
+- "Ending cancelled. Time runs again."  (text, line 3963)
+- "No ending on."  (text, line 3963)
 
 *When:* the console command lc_ending_reset_cooldown
 
-- "Secret ending cooldown cleared."  (text, line 3968)
+- "Secret ending cooldown cleared."  (text, line 3970)
 
 *When:* Settings are saved, so a default changed since would never reach a server that ran the old one: anything still exactly at an old default moves to the new one (once; a value someone chose themselves is left alone).
 
-- "harpies=2,shalom=2"  (text, line 3985)
-- "harpies=4,shalom=2"  (text, line 3985)
-- "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 3986)
-- "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 3986)
-- "2.2=CAPTAIN: What happen ?\|3.5=MECHANIC: Somebody set up us the bomb.\|6.5=OPERATOR: We get signal.\|9.5=CAPTAIN: What !\|12.5=OPERATOR: Main screen turn on.\|14.7=CAPTAIN: It's you !!\|16.4=CATS: How are you gentlemen !!\|18.4=CATS: All your base are belong to us.\|20.4=CATS: You are on the way to destruction.\|21.6=CAPTAIN: What you say !!\|23.0=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 3987)
-- "2.15=CAPTAIN: What happen ?\|3.55=MECHANIC: Somebody set up us the bomb.\|4.65=OPERATOR: We get signal.\|6.5=CAPTAIN: What !\|9.5=OPERATOR: Main screen turn on.\|11.7=CAPTAIN: It's you !!\|12.55=CATS: How are you gentlemen !!\|14.7=CATS: All your base are belong to us.\|18.45=CATS: You are on the way to destruction.\|20.6=CAPTAIN: What you say !!\|21.65=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 3987)
+- "harpies=2,shalom=2"  (text, line 3987)
+- "harpies=4,shalom=2"  (text, line 3987)
+- "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 3988)
+- "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 3988)
+- "2.2=CAPTAIN: What happen ?\|3.5=MECHANIC: Somebody set up us the bomb.\|6.5=OPERATOR: We get signal.\|9.5=CAPTAIN: What !\|12.5=OPERATOR: Main screen turn on.\|14.7=CAPTAIN: It's you !!\|16.4=CATS: How are you gentlemen !!\|18.4=CATS: All your base are belong to us.\|20.4=CATS: You are on the way to destruction.\|21.6=CAPTAIN: What you say !!\|23.0=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 3989)
+- "2.15=CAPTAIN: What happen ?\|3.55=MECHANIC: Somebody set up us the bomb.\|4.65=OPERATOR: We get signal.\|6.5=CAPTAIN: What !\|9.5=OPERATOR: Main screen turn on.\|11.7=CAPTAIN: It's you !!\|12.55=CATS: How are you gentlemen !!\|14.7=CATS: All your base are belong to us.\|18.45=CATS: You are on the way to destruction.\|20.6=CAPTAIN: What you say !!\|21.65=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 3989)
 
 ## escorts through Combine doors (sv_livingcity_escort.lua)
 
@@ -4873,6 +4874,20 @@ Made from version 1c87212. Admin-only console messages and log lines are left ou
 *When:* the game answering something done in a window (lc_grigori_ask)
 
 - "[Father Grigori] {why}"  (chat message, line 239)
+
+## flood guard (sv_livingcity_guard.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_guard.lua`
+
+
+*When:* part of: net allowed
+
+- "flood guard: kicked %s (%s) for flooding the server (%s)"  (message, line 56)
+- "Too many requests to the server"  (text, line 57)
+
+*When:* part of: chat allowed
+
+- "Slow down: you're sending messages too fast."  (chat message, line 83)
 
 ## stealing the Combine's data (sv_livingcity_heist.lua)
 
@@ -9191,97 +9206,99 @@ Made from version 1c87212. Admin-only console messages and log lines are left ou
 
 *When:* commands and out-of-character chat (in-character speech is logged where it's spoken)
 
-- "({SteamID}) joined"  (text, line 79)
-- "({SteamID}) left"  (text, line 80)
+- "({SteamID}) joined"  (text, line 91)
+- "({SteamID}) left"  (text, line 92)
 
 *When:* someone dying
 
-- "killed {victim} with {how}"  (text, line 86)
-- "died ({how})"  (text, line 88)
+- "killed {victim} with {how}"  (text, line 98)
+- "died ({how})"  (text, line 100)
 
 *When:* the game's living city incarcerated moment
 
-- "jailed {or}s: {or}{or}"  (text, line 93)
+- "jailed {or}s: {or}{or}"  (text, line 105)
 
 *When:* the game's living city wanted moment
 
-- "wanted: {or}"  (text, line 97)
+- "wanted: {or}"  (text, line 109)
 
 *When:* the game's living city strike moment
 
-- "conduct strike {n}: {or}"  (text, line 100)
+- "conduct strike {n}: {or}"  (text, line 112)
 
 *When:* part of: open ticket
 
-- "Say what you need: @ <message>"  (text, line 125)
-- "[Ticket #%d] %s adds: %s"  (message, line 130)
-- "#{id} {Who}: {text}"  (text, line 131)
-- "Added to your ticket. Staff will be with you."  (text, line 132)
-- "[Ticket #%d] %s: %s  (C > Help > Staff panel to answer)"  (message, line 143)
-- "#{id} opened by {Who}: {text}"  (text, line 146)
-- "Your ticket is in. Staff will be with you."  (text, line 147)
-- "Your ticket is in. No staff are on right now; it'll wait."  (text, line 147)
+- "Say what you need: @ <message>"  (text, line 137)
+- "Give staff a moment to read that before you add more."  (text, line 138)
+- "Your ticket is already long. Staff will read it: wait for an answer."  (text, line 143)
+- "[Ticket #%d] %s adds: %s"  (message, line 145)
+- "#{id} {Who}: {text}"  (text, line 146)
+- "Added to your ticket. Staff will be with you."  (text, line 147)
+- "[Ticket #%d] %s: %s  (C > Help > Staff panel to answer)"  (message, line 158)
+- "#{id} opened by {Who}: {text}"  (text, line 161)
+- "Your ticket is in. Staff will be with you."  (text, line 162)
+- "Your ticket is in. No staff are on right now; it'll wait."  (text, line 162)
 
 *When:* part of: ticket action
 
-- "No such ticket."  (text, line 156)
-- "[Staff] {me} is looking at your ticket."  (chat message, line 161)
-- "[Staff] {me}: {text}"  (chat message, line 166)
-- "[Staff] Your ticket was closed by {me}."  (chat message, line 169)
-- "They're not on."  (text, line 171)
-- "They're not on."  (text, line 174)
+- "No such ticket."  (text, line 171)
+- "[Staff] {me} is looking at your ticket."  (chat message, line 176)
+- "[Staff] {me}: {text}"  (chat message, line 181)
+- "[Staff] Your ticket was closed by {me}."  (chat message, line 184)
+- "They're not on."  (text, line 186)
+- "They're not on."  (text, line 189)
 
 *When:* part of: warn player
 
-- "Staff only."  (text, line 199)
-- "Player not found."  (text, line 200)
-- "Give a reason: !warn <name> <reason>"  (text, line 202)
-- "[Staff] You have been warned: %s (warning %d)"  (message, line 214)
-- "warned by {or}: {reason}"  (text, line 215)
-- "warned ({list} in total)."  (text, line 216)
+- "Staff only."  (text, line 214)
+- "Player not found."  (text, line 215)
+- "Give a reason: !warn <name> <reason>"  (text, line 217)
+- "[Staff] You have been warned: %s (warning %d)"  (message, line 229)
+- "warned by {or}: {reason}"  (text, line 230)
+- "warned ({list} in total)."  (text, line 231)
 
 *When:* part of: unwarn
 
-- "No such warning."  (text, line 224)
-- "warning {idx} struck off {sid} by {or}"  (text, line 227)
-- "Struck off."  (text, line 228)
+- "No such warning."  (text, line 239)
+- "warning {idx} struck off {sid} by {or}"  (text, line 242)
+- "Struck off."  (text, line 243)
 
 *When:* Is this name (a character's) banned?
 
-- "Staff only."  (text, line 253)
+- "Staff only."  (text, line 268)
 
 *When:* part of: char ban
 
-- "Player not found."  (text, line 254)
-- "Give a reason: !charban <name> <reason>"  (text, line 256)
-- "[Staff] %s is gone, by staff decision: %s. You're someone new."  (message, line 267)
-- "({cid}, {target}) banned by {or}: {reason}"  (text, line 268)
-- "is banned. {Nick} starts over as someone new."  (text, line 269)
+- "Player not found."  (text, line 269)
+- "Give a reason: !charban <name> <reason>"  (text, line 271)
+- "[Staff] %s is gone, by staff decision: %s. You're someone new."  (message, line 282)
+- "({cid}, {target}) banned by {or}: {reason}"  (text, line 283)
+- "is banned. {Nick} starts over as someone new."  (text, line 284)
 
 *When:* part of: char unban
 
-- "No such ban."  (text, line 275)
-- "ban on {or} lifted by {or}"  (text, line 278)
-- "The ban on {or} is lifted."  (text, line 279)
+- "No such ban."  (text, line 290)
+- "ban on {or} lifted by {or}"  (text, line 293)
+- "The ban on {or} is lifted."  (text, line 294)
 
 *When:* the game answering something done in a window (lc_staff_do)
 
-- "{action} {Nick}"  (text, line 324)
-- "[Staff] {msg}"  (chat message, line 327)
+- "{action} {Nick}"  (text, line 339)
+- "[Staff] {msg}"  (chat message, line 342)
 
 *When:* Chat
 
-- "[Tickets] {msg}"  (chat message, line 340)
+- "[Tickets] {msg}"  (chat message, line 355)
 
 *When:* typing in chat
 
-- "Staff only. Need help? @ <message>"  (chat message, line 346)
-- "Staff only."  (chat message, line 350)
-- "[Staff] {msg}"  (chat message, line 355)
+- "Staff only. Need help? @ <message>"  (chat message, line 361)
+- "Staff only."  (chat message, line 365)
+- "[Staff] {msg}"  (chat message, line 370)
 
 *When:* the console command lc_staff
 
-- "Staff only."  (chat message, line 360)
+- "Staff only."  (chat message, line 375)
 
 ## the stalker's lot (sv_livingcity_stalkerwork.lua)
 
@@ -10156,134 +10173,134 @@ Made from version 1c87212. Admin-only console messages and log lines are left ou
 
 *When:* Can they take n more of this? ok, or false and why.
 
-- "Your pockets are full."  (text, line 128)
+- "Your pockets are full."  (text, line 129)
 
 *When:* part of: can carry
 
-- "You've no room for something that size."  (text, line 139)
-- "That's more than you can carry."  (text, line 142)
+- "You've no room for something that size."  (text, line 140)
+- "That's more than you can carry."  (text, line 143)
 
 *When:* Give an item, or drop it at their feet if their pockets are full.
 
-- "Your pockets are full. {id} is on the ground."  (chat message, line 204)
+- "Your pockets are full. {id} is on the ground."  (chat message, line 205)
 
 *When:* part of: infect
 
-- "Your stomach turns. Something in that wasn't clean."  (chat message, line 227)
+- "Your stomach turns. Something in that wasn't clean."  (chat message, line 228)
 
 *When:* a timer (regularly)
 
-- "You're getting hungry."  (text, line 266)
-- "You're starving."  (text, line 266)
-- "Your mouth is dry."  (text, line 267)
-- "You're badly dehydrated."  (text, line 267)
-- "You are starving and dehydrated."  (chat message, line 279)
-- "You are starving."  (text, line 279)
-- "You are dehydrated."  (text, line 279)
+- "You're getting hungry."  (text, line 267)
+- "You're starving."  (text, line 267)
+- "Your mouth is dry."  (text, line 268)
+- "You're badly dehydrated."  (text, line 268)
+- "You are starving and dehydrated."  (chat message, line 280)
+- "You are starving."  (text, line 280)
+- "You are dehydrated."  (text, line 280)
 
 *When:* part of: breen water
 
-- "Where were you going again?"  (chat message, line 327)
+- "Where were you going again?"  (chat message, line 328)
 
 *When:* part of: consume
 
-- "The cramps ease."  (chat message, line 341)
-- "It burns all the way down. Your legs go out from under you."  (chat message, line 347)
+- "The cramps ease."  (chat message, line 342)
+- "It burns all the way down. Your legs go out from under you."  (chat message, line 348)
 
 *When:* part of: inv action
 
-- "Your hands are tied."  (chat message, line 466)
-- "You need to be standing in water."  (chat message, line 492)
-- "You can't eat that."  (chat message, line 498)
-- "Cooking won't help that."  (chat message, line 502)
-- "You need a stove or a fire."  (chat message, line 503)
-- "becomes {name}."  (chat message, line 507)
-- "Stand in water, or by a sink, to fill it."  (chat message, line 510)
+- "Your hands are tied."  (chat message, line 467)
+- "You need to be standing in water."  (chat message, line 493)
+- "You can't eat that."  (chat message, line 499)
+- "Cooking won't help that."  (chat message, line 503)
+- "You need a stove or a fire."  (chat message, line 504)
+- "becomes {name}."  (chat message, line 508)
+- "Stand in water, or by a sink, to fill it."  (chat message, line 511)
 
 *When:* the tap running into it (a splash was too loud for a sink); dipped in water, a soft slosh
 
-- "[Papers] You keep your papers on you. (Stash them at home if you must.)"  (chat message, line 517)
+- "[Papers] You keep your papers on you. (Stash them at home if you must.)"  (chat message, line 518)
 
 *When:* pressing E on something
 
-- "Picked up: {name}"  (chat message, line 556)
-- "Your pockets are full."  (chat message, line 558)
+- "Picked up: {name}"  (chat message, line 568)
+- "Your pockets are full."  (chat message, line 570)
 
 *When:* the game's physgun drop moment
 
-- "[Living City] Moved: the {kind} is saved where you put it."  (chat message, line 847)
+- "[Living City] Moved: the {kind} is saved where you put it."  (chat message, line 859)
 
 *When:* part of: use vending
 
-- "[Vending] Insert {price} credits."  (chat message, line 863)
+- "[Vending] Insert {price} credits."  (chat message, line 875)
 
 *When:* part of: use static vending
 
-- "[Vending] Insert {price} credits."  (chat message, line 910)
+- "[Vending] Insert {price} credits."  (chat message, line 922)
 
 *When:* part of: use fixture
 
-- "[Stove] Cook from your pockets (F2)."  (chat message, line 929)
-- "[Sink] Fill bottles and cans from your pockets (F2). Boil them before you drink."  (chat message, line 933)
+- "[Stove] Cook from your pockets (F2)."  (chat message, line 941)
+- "[Sink] Fill bottles and cans from your pockets (F2). Boil them before you drink."  (chat message, line 945)
 
 *When:* part of: dispense
 
-- "[Rations] The clerk at the counter hands you a ration packet."  (chat message, line 993)
+- "[Rations] The clerk at the counter hands you a ration packet."  (chat message, line 1005)
 
 *When:* Hacking them (the multitool): a vending machine spits out its water, a ration dispenser its packets, no credits and no coupon. Ten seconds, keep still; a unit who sees you at it makes you wanted. Then it's empty for lc_machine_hack_cooldown minutes (10).
 
-- "the vending machine"  (text, line 1004)
-- "the ration dispenser"  (text, line 1004)
-- "Aim at a vending machine or a ration dispenser."  (text, line 1007)
-- "You need a multitool to get into it."  (text, line 1008)
-- "You're busy."  (text, line 1009)
-- "It's dead: no power. Nothing to get out of it."  (text, line 1010)
+- "the vending machine"  (text, line 1016)
+- "the ration dispenser"  (text, line 1016)
+- "Aim at a vending machine or a ration dispenser."  (text, line 1019)
+- "You need a multitool to get into it."  (text, line 1020)
+- "You're busy."  (text, line 1021)
+- "It's dead: no power. Nothing to get out of it."  (text, line 1022)
 
 *When:* part of: hack machine
 
-- "Someone's already emptied it. It'll be restocked in about %d minutes."  (message, line 1013)
-- "Hacking {name}... keep still"  (progress bar, line 1017)
-- "You leave it."  (text, line 1018)
+- "Someone's already emptied it. It'll be restocked in about %d minutes."  (message, line 1025)
+- "Hacking {name}... keep still"  (progress bar, line 1029)
+- "You leave it."  (text, line 1030)
 
 *When:* part of: done
 
-- "[Resistance] The dispenser chokes, and spits out %d ration packets. No coupon, no record."  (message, line 1038)
-- "[Resistance] The machine shudders and drops %d cans. Free water, for once."  (message, line 1039)
-- "Tampering with Union property"  (text, line 1041)
-- "[Civil Protection] A Civil Protection unit saw you at it."  (chat message, line 1042)
+- "[Resistance] The dispenser chokes, and spits out %d ration packets. No coupon, no record."  (message, line 1050)
+- "[Resistance] The machine shudders and drops %d cans. Free water, for once."  (message, line 1051)
+- "Tampering with Union property"  (text, line 1053)
+- "[Civil Protection] A Civil Protection unit saw you at it."  (chat message, line 1054)
 
 *When:* ent may be nil: a line with no dispenser placed at its front.
 
-- "[Rations] No ration card on file. Register at Civil Intake first."  (text, line 1056)
-- "[Rations] Present your ration card. Lost it? Civil Intake issues another."  (text, line 1058)
+- "[Rations] No ration card on file. Register at Civil Intake first."  (text, line 1068)
+- "[Rations] Present your ration card. Lost it? Civil Intake issues another."  (text, line 1070)
 
 *When:* part of: use dispenser
 
-- "[Rations] Your ration privileges have been suspended."  (text, line 1060)
-- "[Rations] Next allocation in %d seconds."  (message, line 1062)
+- "[Rations] Your ration privileges have been suspended."  (text, line 1072)
+- "[Rations] Next allocation in %d seconds."  (message, line 1074)
 
 *When:* the PA said it: tolerating noncompliance costs this allocation (sv_livingcity_rations.lua)
 
-- "[Rations] Allocation withheld: five ration units deducted for tolerating noncompliance{why}. Your next allocation is as normal."  (text, line 1069)
+- "[Rations] Allocation withheld: five ration units deducted for tolerating noncompliance{why}. Your next allocation is as normal."  (text, line 1081)
 
 *When:* the city's stores (sv_livingcity_stockpile.lua): empty, nothing; low, sometimes nothing
 
-- "[Rations] Distribution suspended: the city's stores are empty."  (text, line 1076)
-- "[Rations] Supply shortfall. The dispenser whirs and gives nothing. Try again in a minute (the stores are low: kitchen and factory shifts, trains and supply drops fill them)."  (text, line 1079)
+- "[Rations] Distribution suspended: the city's stores are empty."  (text, line 1088)
+- "[Rations] Supply shortfall. The dispenser whirs and gives nothing. Try again in a minute (the stores are low: kitchen and factory shifts, trains and supply drops fill them)."  (text, line 1091)
 
 *When:* a forged card: no questions, usually
 
-- "[Rations] Card invalid. This incident has been logged."  (chat message, line 1088)
-- "Ration fraud"  (text, line 1089)
+- "[Rations] Card invalid. This incident has been logged."  (chat message, line 1100)
+- "Ration fraud"  (text, line 1101)
 
 *When:* part of: use dispenser
 
-- "[Rations] Card accepted."  (chat message, line 1092)
-- "ration coupon"  (text, line 1109)
+- "[Rations] Card accepted."  (chat message, line 1104)
+- "ration coupon"  (text, line 1121)
 
 *When:* part of: serve players at line
 
-- "[Rations] Wait at the counter."  (chat message, line 1125)
+- "[Rations] Wait at the counter."  (chat message, line 1137)
 
 ## talking to people (sv_livingcity_talk.lua)
 

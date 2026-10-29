@@ -7618,7 +7618,10 @@ hook.Run("PlayerSay", helpme, "@ I'm stuck in a wall")
 local t = LC.Tickets[#LC.Tickets]
 ok(t and t.msgs[1].text == "I'm stuck in a wall" and has(mod.chat, "[Ticket #" .. t.id .. "]"), "@ opens a ticket, and staff hear it")
 hook.Run("PlayerSay", helpme, "@ please")
-ok(#t.msgs == 2, "another @ adds to it")
+ok(#t.msgs == 1, "another @ straight away waits (a ticket can't be flooded)")
+_run(3.2)
+hook.Run("PlayerSay", helpme, "@ please")
+ok(#t.msgs == 2, "another @ a moment later adds to it")
 LC.TicketAction(mod, t.id, "reply", "On my way")
 ok(has(helpme.chat, "On my way"), "staff answer")
 LC.TicketAction(mod, t.id, "bring")
@@ -7648,7 +7651,8 @@ local found = false
 for _, e in ipairs(LC.StaffLog) do if e.kind == "kill" and string.find(e.text, "killed", 1, true) then found = true end end
 ok(found, "kills are in the staff log")
 local today = os.date("%Y-%m-%d")
-ok(_files["livingcity/logs/" .. today .. ".txt"] ~= nil, "and written to a file for the day")
+_run(5.2)
+ok(_files["livingcity/logs/" .. today .. ".txt"] ~= nil, "and written to a file for the day (a few times a minute)")
 for i, b in ipairs(LC.CharBanned and {} or {}) do end
 for _, p in ipairs({ vort, citizenF, freer, wet, helpme, mod }) do p:SetPos(FAR) p.lookingAt = nil end
 end
@@ -13041,6 +13045,48 @@ end)()
     LC.EndEvent(true)
     for _, p in ipairs(jp) do LC.RemovePoint(p) end
     late.valid = false
+end)()
+
+section("Safeguards for a public server: floods, piles, double pickups")
+;(function()
+    local G0 = Vector(-226000, 226000, 0)
+    local spam = newPlayer("Spammer", "citizen")
+    _run(1)
+    spam:SetPos(G0)
+    LC.TestMode = false
+    local passed = 0
+    for _ = 1, 200 do if LC.NetAllowed(spam, "lci_act") then passed = passed + 1 end end
+    ok(passed >= 20 and passed <= 30, "two hundred of one message at once: only a burst gets through", passed)
+    _advance(1)
+    ok(LC.NetAllowed(spam, "lci_act"), "a second later, the next goes through")
+    for _ = 1, 600 do LC.NetAllowed(spam, "lci_act") end
+    ok(spam.kicked ~= nil, "someone who keeps flooding is kicked", spam.kicked)
+    local mod = newPlayer("GuardStaff", "citizen") mod.admin = true
+    local all = true
+    for _ = 1, 200 do if not LC.NetAllowed(mod, "lci_act") then all = false end end
+    ok(all, "staff are never held back")
+    local chatty = newPlayer("Chatty", "citizen")
+    local let = 0
+    for i = 1, 12 do if LC.ChatAllowed(chatty) then let = let + 1 end end
+    ok(let == 6, "chat: six lines in three seconds, then the rest wait", let)
+    _advance(3.1)
+    ok(LC.ChatAllowed(chatty), "and they can talk again a moment later")
+    LC.TestMode = true
+    mod.valid = false chatty.valid = false spam.valid = false
+    -- dropping things: no endless piles
+    local dropper = newPlayer("Dropper", "citizen")
+    _run(1)
+    dropper:SetPos(G0 + Vector(0, 500, 0))
+    LC.GiveItem(dropper, "paper", 3)
+    for _ = 1, 3 do LC.InvAction(dropper, "drop", "paper") end
+    local first = dropper.lcDropped and dropper.lcDropped[1]
+    _setcvar("lc_drops_kept", 2)
+    LC.GiveItem(dropper, "paper", 1)
+    LC.InvAction(dropper, "drop", "paper")
+    ok(#dropper.lcDropped == 2 and not IsValid(first), "past lc_drops_kept on the ground, the oldest is cleared away", #(dropper.lcDropped or {}))
+    _setcvar("lc_drops_kept", 30)
+    for _, x in ipairs(dropper.lcDropped or {}) do if IsValid(x) then x:Remove() end end
+    dropper.valid = false
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")

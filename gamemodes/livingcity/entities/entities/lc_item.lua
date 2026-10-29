@@ -34,12 +34,15 @@ end
 if SERVER then
     function ENT:Use(activator)
         if not IsValid(activator) or not activator:IsPlayer() or not LC or not LC.GiveItem then return end
+        if self.lcTaken then return end -- (two people pressing E at the same moment: only one gets it)
         local id = self:GetNW2String("lc_item", "")
+        self.lcTaken = true
         if LC.GiveItem(activator, id, 1) then
             activator:ChatPrint("Picked up: " .. (LCS.Items[id] and LCS.Items[id].name or id))
             self:EmitSound("items/ammo_pickup.wav", 60)
             self:Remove()
         else
+            self.lcTaken = nil
             activator:ChatPrint("Your pockets are full.")
         end
     end

@@ -3826,7 +3826,9 @@ end
 
 net.Receive("lc_ending_vote", function(_, ply)
     if not E or E.phase ~= "gman" or not IsValid(ply) then return end
-    E.votes[ply] = net.ReadBool()
+    local yes = net.ReadBool()
+    if E.votes[ply] == yes then return end -- (the same vote again changes nothing: nothing to send everyone)
+    E.votes[ply] = yes
     Send()
 end)
 function LC.EndingVote(ply, yes)

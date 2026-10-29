@@ -34,6 +34,7 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvNeeds    = CreateConVar("lc_needs", "1", FLAGS, "Hunger and thirst (while the city runs)")
 local cvHunger   = CreateConVar("lc_hunger_minutes", "60", FLAGS, "Minutes from full to starving")
 local cvThirst   = CreateConVar("lc_thirst_minutes", "40", FLAGS, "Minutes from full to dehydrated")
+local cvDropsKept = CreateConVar("lc_drops_kept", "30", FLAGS, "Things one player has dropped on the ground at once; past that, the oldest is cleared away (stops endless piles)")
 local cvStarve   = CreateConVar("lc_starve_damage", "3", FLAGS, "Damage every 5 seconds at zero hunger or thirst")
 local cvSize     = CreateConVar("lc_inventory_size", "12", FLAGS, "How many items a person can carry")
 local cvWeighed  = CreateConVar("lc_inventory_weight", "1", FLAGS, "Pockets are limited by weight and size (1), or by number of items (0, lc_inventory_size)")
@@ -518,6 +519,17 @@ function LC.InvAction(ply, action, id)
         LC.TakeItem(ply, id)
         local dropped = LC.SpawnWorldItem(id, Front(ply))
         if dropped and LC.ClaimEntity then LC.ClaimEntity(ply, dropped) end -- a raid traces it back to you
+        -- no endless piles: past lc_drops_kept of your own on the ground, the oldest is cleared away
+        if IsValid(dropped) then
+            local mine = {}
+            for _, e in ipairs(ply.lcDropped or {}) do if IsValid(e) then mine[#mine + 1] = e end end
+            mine[#mine + 1] = dropped
+            while #mine > math.max(1, cvDropsKept:GetInt()) do
+                local old = table.remove(mine, 1)
+                if IsValid(old) then old:Remove() end
+            end
+            ply.lcDropped = mine
+        end
     end
 end
 

@@ -52,9 +52,21 @@ function LC.StaffLogAdd(kind, text, ply)
     if #log > MAX_LOG then table.remove(log, 1) end
     local ok, day = pcall(os.date, "%Y-%m-%d", e.t)
     local ok2, clock = pcall(os.date, "%H:%M:%S", e.t)
-    file.CreateDir(DIR .. "/logs")
-    file.Append(DIR .. "/logs/" .. (ok and day or "log") .. ".txt", string.format("[%s] %-8s %s\n", ok2 and clock or "", kind, e.text))
+    -- written to the day's file a few times a minute, not once a line (a flood of chat is a flood of disk writes)
+    local f = DIR .. "/logs/" .. (ok and day or "log") .. ".txt"
+    LC.StaffLogPending = LC.StaffLogPending or {}
+    local pend = LC.StaffLogPending
+    pend[f] = (pend[f] or "") .. string.format("[%s] %-8s %s\n", ok2 and clock or "", kind, string.sub(e.text, 1, 600))
 end
+function LC.StaffLogFlush()
+    local pend = LC.StaffLogPending
+    if not pend or next(pend) == nil then return end
+    LC.StaffLogPending = {}
+    file.CreateDir(DIR .. "/logs")
+    for f, text in pairs(pend) do file.Append(f, text) end
+end
+timer.Create("LivingCityStaffLogFlush", 5, 0, function() LC.StaffLogFlush() end)
+hook.Add("ShutDown", "LivingCityStaffLogFlush", function() LC.StaffLogFlush() end)
 
 -- Everything the game already logs comes here too.
 local baseLog = LC.Log
@@ -123,9 +135,12 @@ end
 function LC.OpenTicket(ply, text)
     text = string.Trim(tostring(text or ""))
     if #text < 2 then return false, "Say what you need: @ <message>" end
+    if not ply:IsAdmin() and (ply.lcTicketNext or 0) > CurTime() then return false, "Give staff a moment to read that before you add more." end
+    ply.lcTicketNext = CurTime() + 3
     text = string.sub(text, 1, 300)
     for _, t in ipairs(LC.Tickets) do
         if t.sid == ply:SteamID() and t.status ~= "closed" then
+            if #t.msgs >= 30 then return false, "Your ticket is already long. Staff will read it: wait for an answer." end
             t.msgs[#t.msgs + 1] = { from = ply:Nick(), text = text, t = os.time() }
             for _, s in ipairs(Staff()) do s:ChatPrint(string.format("[Ticket #%d] %s adds: %s", t.id, ply:Nick(), text)) end
             LC.StaffLogAdd("ticket", "#" .. t.id .. " " .. Who(ply) .. ": " .. text, ply)

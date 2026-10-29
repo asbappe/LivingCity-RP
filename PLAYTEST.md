@@ -227,6 +227,15 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Radio repair NPCs:** put the work points on a table or bench: a radio sits there and the repairer stands at it working (nothing in their hands).
   Notes:
 
+## Safeguards (29 October: what to check)
+
+- [ ] **Nothing normal is held back:** play as usual (menus, the radio dial, the rewiring board, shops, chat): nothing ignored, no "Slow down" unless you really type fast.
+- [ ] **Chat:** seven lines in a row as fast as you can: "Slow down" on the seventh.
+- [ ] **Dropping things:** drop more than 30 things from your pockets: the oldest on the ground disappears.
+- [ ] **Tickets:** two `@` messages in a row: the second asks you to wait a moment.
+- [ ] **Rent:** an apartment door says 15 credits.
+  Notes:
+
 ## Morning exercise and more (from the other session)
 
 - [ ] **Morning exercise:** every second dawn, the jog (keep up with the pace marker), the drill (copy the leader on your ring, then the skipping rope) or the parade (cheer the column). Needs its editor points: jogging route, exercise yard, parade route.
