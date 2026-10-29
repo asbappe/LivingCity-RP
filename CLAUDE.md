@@ -12,7 +12,7 @@ Living City is a Garry's Mod Half-Life 2 roleplay gamemode. The owner has put a 
 
 1. **Never use em dashes**, anywhere (code, comments, docs, commits, chat). `grep -rl $'\xe2\x80\x94' . --exclude-dir=.git` must print nothing.
 2. **Everything works through the in-game UI.** Console commands are extras for admins, never the only way. Important messages go through `LC.Notice`.
-3. **Every change keeps these up to date:** `README.md`, `PLAYTEST.md`, the guide in `gamemodes/livingcity/gamemode/cl_init.lua` (when players would notice), `_dev/tests.lua`, `_dev/client_smoke.py`, and `CORE.md` when it touches the core.
+3. **Every change keeps these up to date:** `README.md`, `PLAYTEST.md`, the guide in `gamemodes/livingcity/gamemode/cl_init.lua` (when players would notice), `_dev/tests.lua`, `_dev/client_smoke.py`, and `CORE.md` when it touches the core. When text players see changes, run `python3 _dev/player_text.py` so `PLAYER_TEXT.md` (every line of text a player sees, for the owner to correct) stays current.
 4. **Commit messages** say what changed in plain words, and end with the session's attribution lines. No model names or IDs in commits or code.
 5. **Work lean.** The owner has a limited budget: keep chat short, don't re-read large files you don't need.
 6. **Deliver a zip after each change:** `git archive HEAD` into a temp `livingcity/`, remove `livingcity/livingcity_sound` and `livingcity/pose_recorder`, zip it as `livingcity.zip`, send it as a file. Never send a sound zip that could replace the owner's sound folders.

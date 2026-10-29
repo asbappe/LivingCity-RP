@@ -29,7 +29,12 @@ LC = LC or {}
 LC.SlashCommands = LC.SlashCommands or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvPrice = CreateConVar("lc_rent_price", "40", FLAGS, "Credits for one rent period of an apartment")
+local cvPrice = CreateConVar("lc_rent_price", "15", FLAGS, "Credits for one rent period of an apartment")
+-- (29 October: 40 became 15. Settings are saved, so a server still on the old 40 moves to 15 once;
+-- a price someone chose themselves is left alone.)
+if cvPrice:GetString() == "40" then
+    if cvPrice.SetString then cvPrice:SetString("15") elseif RunConsoleCommand then RunConsoleCommand("lc_rent_price", "15") end
+end
 local cvHours = CreateConVar("lc_rent_hours", "3", FLAGS, "Hours (real time) one rent period lasts")
 local cvMax   = CreateConVar("lc_rent_max", "1", FLAGS, "Apartments one person can rent")
 
