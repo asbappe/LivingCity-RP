@@ -239,6 +239,13 @@ def describe(e):
                              "say": "spoken line", "line": "spoken line", "PrintName": "name"}.get(f)
     return how or "text"
 
+def version():
+    import subprocess
+    try:
+        return subprocess.check_output(["git", "-C", ROOT, "rev-parse", "--short", "HEAD"], text=True).strip()
+    except Exception:
+        return "unknown"
+
 def main():
     groups = []
     for base in ("gamemode", "entities"):
@@ -255,7 +262,12 @@ def main():
            "Grouped by the part of the game it belongs to. Each line: the text (parts the game fills in look like {name}, "
            "and %d, %s or %.1f are numbers or words filled in), how it shows (a chat message, an on-screen notice, a button...), "
            "and when: the code's own note above it, or the function it's in. The file and line are there so a correction can be found.", "",
-           "To fix a wording, copy the line here into a message with what it should say. Admin-only console messages and log lines are left out.", "",
+           "**How to correct it:** change the words inside the quotes, then send the whole file back. "
+           "Leave everything outside the quotes as it is (that's how each line is found in the code again). "
+           "Keep any {name} or %d / %s parts: the game fills those in. "
+           "A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. "
+           "A note for me about a line can go after it on the same line, starting with NOTE:.", "",
+           f"Made from version {version()}. Admin-only console messages and log lines are left out.", "",
            f"{total} lines, from {len(groups)} files.", ""]
     out.append("## Contents\n")
     for path, name, found in groups:

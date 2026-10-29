@@ -2,7 +2,9 @@
 
 Made by `python3 _dev/player_text.py` from the code itself, so it can be made again after any change. Grouped by the part of the game it belongs to. Each line: the text (parts the game fills in look like {name}, and %d, %s or %.1f are numbers or words filled in), how it shows (a chat message, an on-screen notice, a button...), and when: the code's own note above it, or the function it's in. The file and line are there so a correction can be found.
 
-To fix a wording, copy the line here into a message with what it should say. Admin-only console messages and log lines are left out.
+**How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
+
+Made from version 1c87212. Admin-only console messages and log lines are left out.
 
 5723 lines, from 174 files.
 
