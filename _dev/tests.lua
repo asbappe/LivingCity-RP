@@ -12792,11 +12792,18 @@ end)()
     ok(carried, "a metrocop picks up a box to carry off")
     local nosy = newPlayer("NosyCitizen", "citizen")
     nosy:SetPos(s.crate:GetPos() + Vector(60, 0, 0))
-    local us = LC.UnitSees
+    local us, walls = LC.UnitSees, _walls
     LC.UnitSees = function() return true end
-    for _ = 1, 25 do _run(1) if LC.PlayerIsWanted(nosy) then break end end
-    ok(LC.PlayerIsWanted(nosy) and has(nosy.chat, "Step away from the crates"), "hanging about the crates: warned twice, then wanted")
-    LC.UnitSees = us
+    _walls = {} -- (nothing left over from other tests between the guard and them)
+    for _ = 1, 25 do
+        _run(1)
+        nosy:SetPos(s.crate:GetPos() + Vector(60, 0, 0)) -- (they stay put by the crates)
+        if LC.PlayerIsWanted(nosy) then break end
+    end
+    local gd = s.guards and s.guards[1]
+    ok(LC.PlayerIsWanted(nosy) and has(nosy.chat, "Step away from the crates"), "hanging about the crates: warned twice, then wanted",
+        string.format("guard %s hp %s warned %s", tostring(IsValid(gd)), tostring(IsValid(gd) and gd:Health()), tostring(nosy.lcSupplyWarn and nosy.lcSupplyWarn.n)))
+    LC.UnitSees, _walls = us, walls
     LC.IsSeen = seenWas
     LC.FlyDropship = fly
     LC.EndSupplyDrop(true)
