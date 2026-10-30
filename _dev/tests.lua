@@ -12802,7 +12802,9 @@ end)()
     end
     local gd = s.guards and s.guards[1]
     ok(LC.PlayerIsWanted(nosy) and has(nosy.chat, "Step away from the crates"), "hanging about the crates: warned twice, then wanted",
-        string.format("guard %s hp %s warned %s", tostring(IsValid(gd)), tostring(IsValid(gd) and gd:Health()), tostring(nosy.lcSupplyWarn and nosy.lcSupplyWarn.n)))
+        string.format("guard %s hp %s warned %s alive %s hp %s drop %s cp %s", tostring(IsValid(gd)), tostring(IsValid(gd) and gd:Health()),
+            tostring(nosy.lcSupplyWarn and nosy.lcSupplyWarn.n), tostring(nosy:Alive()), tostring(nosy:Health()), tostring(LC.Supply == s),
+            tostring(LC.PlayerIsCP(nosy))))
     LC.UnitSees, _walls = us, walls
     LC.IsSeen = seenWas
     LC.FlyDropship = fly

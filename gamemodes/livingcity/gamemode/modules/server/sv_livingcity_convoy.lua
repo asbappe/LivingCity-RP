@@ -478,18 +478,20 @@ LC.SupplyGuardStep = GuardStep
 timer.Create("LivingCitySupplyCrew", 0.5, 0, function()
     local s = LC.Supply
     if not s then return end
-    local ok, err = pcall(function()
-        local now = CurTime()
-        for _, npc in ipairs(s.porters or {}) do
-            local st = IsValid(npc) and npc:Health() > 0 and LC.NPCs and LC.NPCs[npc]
-            if st and st.supplyPorter then PorterStep(s, npc, st, now) end
+    local now = CurTime()
+    -- (each on its own: a porter tripping over something never stops the guard keeping watch)
+    for _, npc in ipairs(s.porters or {}) do
+        local st = IsValid(npc) and npc:Health() > 0 and LC.NPCs and LC.NPCs[npc]
+        if st and st.supplyPorter then
+            local ok, err = pcall(PorterStep, s, npc, st, now)
+            if not ok and LC.Error then LC.Error("supply porter", err) end
         end
-        if (s.guardNext or 0) <= now then
-            s.guardNext = now + 1
-            GuardStep(s, now)
-        end
-    end)
-    if not ok and LC.Error then LC.Error("supply crew", err) end
+    end
+    if (s.guardNext or 0) <= now then
+        s.guardNext = now + 1
+        local ok, err = pcall(GuardStep, s, now)
+        if not ok and LC.Error then LC.Error("supply guard", err) end
+    end
 end)
 
 hook.Add("LivingCityEventStarted", "LivingCitySupply", function(name)
