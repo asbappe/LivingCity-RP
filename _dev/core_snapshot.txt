@@ -630,6 +630,7 @@ setting lc_lookout_post_fire = 650
 setting lc_lookout_post_respawn = 120
 setting lc_lookout_post_warn = 1400
 setting lc_lookout_range = 1100
+setting lc_loyalty_wait = 15
 setting lc_machine_hack_cooldown = 10
 setting lc_machine_hack_max = 8
 setting lc_machine_hack_out = 5

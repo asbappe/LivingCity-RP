@@ -898,6 +898,7 @@ LC.Bump(good, "suspicion", 3)
 LC.CheckUnlocks(good)
 ok(storyPosting(good, "insidework") == nil, "too much suspicion and the ops dry up")
 do -- (its own scope: the main chunk is at Lua's limit on locals)
+_setcvar("lc_loyalty_wait", 0) -- (the NPC prisoner here; the real-prisoner wait has its own test)
 local m1 = storyPosting(good, "molehunt")
 ok(m1 ~= nil and m1.title == "The loyalty test", "and the mole hunt starts with the loyalty test, in the cells", m1 and m1.title)
 LC.AcceptPosting(good, m1.id)
@@ -934,6 +935,7 @@ end
 ok(storyPosting(good, "insidework") ~= nil, "the ops resume")
 
 do
+_setcvar("lc_loyalty_wait", 0)
 LC.Bump(good, "suspicion", 3)
 local m2 = storyPosting(good, "molehunt")
 LC.AcceptPosting(good, m2.id)
@@ -13560,6 +13562,35 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     LC.Unmask(um)
     ok(um:GetNW2String("lcf_faction", "") == "resistance" and not LC.CanJoinFaction(um, "cp") and LC.CanWork(um) ~= false and not LC.PlayerIsWanted(um),
         "unmasked: an ordinary Resistance fighter, never Civil Protection again (and not wanted for it)")
+    -- with a Resistance player around, the test waits for one to be caught, and the units go looking
+    local lt2 = newPlayer("LoyaltyUnit2", "cp")
+    local rebelP = newPlayer("CaughtRebel", "resistance", nil, 200)
+    _run(0.3)
+    lt2:SetPos(Vector(-163000, -161000, 0)) rebelP:SetPos(Vector(-163000, -160000, 0))
+    LC.StoryFlag(lt2, "insider", true)
+    _setcvar("lc_loyalty_wait", 15)
+    local spec2 = LC.LoyaltyTestSpec(lt2)
+    ok(spec2 and spec2.data.wait and spec2.stages[1].event == "loyalty_prisoner", "Resistance players around: the test waits for a real prisoner")
+    local fq3 = { owner = lt2, data = spec2.data, stages = spec2.stages, stage = 1, done = false }
+    LC.QuestOf[lt2] = fq3
+    spec2.tick(fq3)
+    ok(LC.LoyaltyHunt(rebelP) and not LC.LoyaltyHunt(lt2), "meanwhile, units near a Resistance player almost always stop them")
+    LC.Prisoners[rebelP] = { cell = nil, untilT = CurTime() + 300 }
+    local qe = LC.QuestEvent
+    local got
+    LC.QuestEvent = function(name, ply, a) if name == "loyalty_prisoner" then got = a end end
+    spec2.tick(fq3)
+    LC.QuestEvent = qe
+    ok(got == rebelP and fq3.data.humanPrisoner == rebelP and LC.LoyaltyWaiting[lt2] == nil, "caught and in a cell: they're the prisoner")
+    fq3.stage, fq3.done = 2, true
+    LC.QuestOf[lt2] = nil
+    spec2.tick(fq3)
+    local sc2 = LC.LoyaltyTests[lt2]
+    ok(sc2 and sc2.human and sc2.prisoner == rebelP and rebelP.lcLoyaltyPrisoner == lt2, "the insider is pulled into the cell with the real prisoner in front of them")
+    LC.LoyaltyTestCleanup(lt2, true)
+    LC.Prisoners[rebelP] = nil
+    ok(rebelP.lcLoyaltyPrisoner == nil, "(and let go of afterwards, still in custody)")
+    for _, q in ipairs({ lt2, rebelP }) do q:SetPos(Vector(-150000, 150000, 0)) end
     LC.RemovePoint(cellPt)
     -- she, not he: a job about a woman says "her"
     local woman, wst = LC.Spawners.citizen(Vector(-162000, -162000, 0))

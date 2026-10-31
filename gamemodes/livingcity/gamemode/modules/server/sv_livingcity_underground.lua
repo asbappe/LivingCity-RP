@@ -884,6 +884,8 @@ local function ScanForStops(now)
                     if cop:GetPos():DistToSqr(ply:GetPos()) < range * range then
                         local pct = sweep and cvStopPct:GetFloat() * 2 or (atPost and cvStopPct:GetFloat() or cvStreetPct:GetFloat())
                         pct = pct * (LC.SocioStopMul and LC.SocioStopMul() or 1) -- sociostability (sv_livingcity_cp.lua)
+                        -- a loyalty test waiting for a real prisoner: the units go looking (sv_livingcity_stories.lua)
+                        if LC.LoyaltyHunt and LC.LoyaltyHunt(ply) then pct = math.max(pct, 90) end
                         if math.random() * 100 < pct and Sees(cop, ply) then
                             LC.StartStop(cop, cst, ply)
                             if table.Count(Stops) >= cap then return end

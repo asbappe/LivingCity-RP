@@ -422,6 +422,13 @@ local function SendMenu(ply)
         local xp = XP(ply, f.id)
         local ok, why = LC.CanJoinFaction(ply, f.id, nil)
         local entry = { id = f.id, xp = xp, rank = LCF.RankIndexFor(f, xp, Conditioned(ply)), ok = ok, why = why, specials = {} }
+        -- what Civil Protection asks of a citizen, as progress bars on the card (the owner asked)
+        if f.id == "cp" and ply:GetNW2String("lcf_faction", "") ~= "cp" then
+            entry.reqs = {
+                { label = "Civil Standing", have = LC.Standing and LC.Standing(ply) or 0, need = cvCPStanding:GetInt() },
+                { label = "Records Clerk shifts finished (F3 > Jobs)", have = LC.Counter and LC.Counter(ply, "clerk_shifts") or 0, need = cvCPClerk:GetInt() },
+            }
+        end
         for _, s in ipairs(f.specials or {}) do
             local sok, swhy = LC.CanJoinFaction(ply, f.id, s.id)
             entry.specials[#entry.specials + 1] = { id = s.id, ok = sok, why = swhy, taken = SpecialHolders(f.id, s.id) }

@@ -109,6 +109,23 @@ net.Receive("lcf_menu", function()
                 info:DockMargin(0, 4, 0, 0)
             end
 
+            -- what it asks of you, and how far along you are (Civil Protection: standing, and the records office)
+            for _, rq in ipairs(entry.reqs or {}) do
+                if (rq.need or 0) > 0 then
+                    local bar = vgui.Create("DPanel", card)
+                    bar:Dock(TOP)
+                    bar:SetTall(22)
+                    bar:DockMargin(0, 6, 0, 0)
+                    bar.Paint = function(self, w, h)
+                        local frac = math.Clamp((rq.have or 0) / rq.need, 0, 1)
+                        draw.RoundedBox(3, 0, 0, w, h, Color(40, 42, 50, 240))
+                        draw.RoundedBox(3, 0, 0, math.max(0, w * frac), h, frac >= 1 and Color(90, 160, 90, 230) or Color(f.color.r, f.color.g, f.color.b, 170))
+                        draw.SimpleText(string.format("%s: %d / %d%s", rq.label, math.max(0, rq.have or 0), rq.need, frac >= 1 and "  (done)" or ""),
+                            "DermaDefault", 8, h / 2, Color(235, 235, 235), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+                    end
+                end
+            end
+
             local isCurrent = data.current == f.id and data.special == ""
             JoinButton(card, isCurrent and "You are here" or (entry.ok and ("Join " .. f.name) or entry.why), entry.ok and not isCurrent,
                 function() Join(f.id) end)

@@ -264,6 +264,11 @@ made = 0
 okP, errP = pcall(net["recv_lc_slots"])
 if not okP then problems[#problems + 1] = "character list: " .. tostring(errP) end
 if made < 8 then problems[#problems + 1] = "character list built only " .. made .. " controls" end
+-- the faction screen, with Civil Protection's requirements as progress bars
+util.JSONToTable = function() return { current = "citizen", special = "", factions = { { id = "cp", xp = 0, rank = 1, ok = false, why = "Not yet", specials = {},
+    reqs = { { label = "Civil Standing", have = 40, need = 100 }, { label = "Records Clerk shifts finished", have = 2, need = 5 } } } } } end
+okP, errP = pcall(net["recv_lcf_menu"])
+if not okP then problems[#problems + 1] = "faction screen: " .. tostring(errP) end
 -- pockets by weight, with a locker open beside them
 util.JSONToTable = function() return { items = { bread = 2, gun_shotgun = 1, storage_crate = 1 }, size = 12, open = true,
     kg = 5.4, maxKg = 12, bulky = 2, maxBulky = 1,

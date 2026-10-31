@@ -292,7 +292,9 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **The loyalty test** (suspicion 3 as an Insider): the cell, the prisoner, fists only, two shotgun guards beside you. Beat him, kill him: weapons back. Refuse or walk out: shot down, bleeding, then made a stalker.
 - [ ] **The reckoning** starts by itself after it (no choosing it): pay the debt (starts at once) and the Inside menu comes back; take off the mask (Resistance, never a unit again); or done with the Resistance (the forced soldier conversion).
 - [ ] **The stalker's end:** the frame is built beside a power transformer; once charged, an arc jumps the gap; walking into it kills at once.
-- [ ] **Joining Civil Protection:** refused until 5 Records Clerk shifts (and 100 standing), and told so.
+- [ ] **Joining Civil Protection:** refused until 5 Records Clerk shifts (and 100 standing), and told so; F4 shows both as progress bars.
+- [ ] **The loyalty test with a Resistance player online:** the Insider waits; units near the Resistance player keep stopping them; once the rebel's in a cell, both are put in the scene, with the on-screen prompts.
+- [ ] **Done with the Resistance:** Proof (a sweep, two of their fighters down), then the conversion.
 - [ ] **No Union radio**: radios are Freq 7 radios (black market); the lab's transmitter needs one.
 - [ ] **Shackled vortigaunts** sweeping the streets (2); as Resistance, cut one loose (look at it, unshackle): it walks to rebel ground and stays. Playing a vortigaunt: no fists. If there's still no freed one in rebel ground, send the debug report's "vortigaunts" line.
 - [ ] **Secret endings** three hours apart.

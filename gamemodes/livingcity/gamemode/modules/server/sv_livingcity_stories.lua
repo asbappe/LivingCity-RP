@@ -1105,13 +1105,34 @@ local function ClearSuspicion(p) LC.Bump(p, "suspicion", -LC.Counter(p, "suspici
 
 local LT = {} -- [ply] = the scene: { q, spot, from, weps, ammo, prisoner, guards, phase }
 LC.LoyaltyTests = LT
+local cvWait = CreateConVar("lc_loyalty_wait", "15", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Minutes a loyalty test waits for a Resistance player to be caught and put in a cell (they're the prisoner then), before it uses an NPC")
+LC.LoyaltyWaiting = LC.LoyaltyWaiting or {} -- [insider] = the job, while it waits for a real prisoner
+
+local function RealRebel(p, notThis)
+    return IsValid(p) and p:IsPlayer() and p ~= notThis and p:Alive() and p:GetNW2String("lcf_faction", "") == "resistance"
+end
+-- While a loyalty test waits, Civil Protection goes looking: a unit near a Resistance player almost always
+-- stops and searches them (sv_livingcity_underground.lua asks). Nobody's told why.
+function LC.LoyaltyHunt(ply)
+    if not RealRebel(ply) then return false end
+    for ins, q in pairs(LC.LoyaltyWaiting) do
+        if IsValid(ins) and q and not q.done and ins ~= ply then return true end
+        if not IsValid(ins) or not q or q.done then LC.LoyaltyWaiting[ins] = nil end
+    end
+    return false
+end
 
 local function LTCleanup(ply, restore)
     local sc = LT[ply]
     if not sc then return end
     LT[ply] = nil
     for _, g in ipairs(sc.guards or {}) do if IsValid(g) then SafeRemoveEntityDelayed(g, restore and 0.2 or 6) end end
-    if IsValid(sc.prisoner) then SafeRemoveEntityDelayed(sc.prisoner, 8) end
+    if sc.human then
+        -- a real prisoner (if still alive) is let go of here and stays in custody
+        if IsValid(sc.prisoner) then sc.prisoner:Freeze(false) sc.prisoner.lcLoyaltyPrisoner = nil end
+    elseif IsValid(sc.prisoner) then
+        SafeRemoveEntityDelayed(sc.prisoner, 8)
+    end
     if not IsValid(ply) or not restore or not ply:Alive() then return end
     -- everything back as it was: their own gear, and where they came from
     ply:StripWeapons()
@@ -1179,8 +1200,23 @@ local function LTSetup(q)
     ply:SelectWeapon("weapon_fists")
     ply:SetPos(spot)
     ply:SetEyeAngles(Angle(0, q.data.yaw or 0, 0))
+    -- a real prisoner: a Resistance player out of their cell and into this one, in front of the unit
+    local hp = q.data.humanPrisoner
+    if RealRebel(hp, ply) then
+        hp:SetPos(spot + fwd * 60)
+        hp:SetEyeAngles(Angle(0, (q.data.yaw or 0) + 180, 0))
+        hp:Freeze(true)
+        hp.lcLoyaltyPrisoner = ply
+        sc.prisoner, sc.human = hp, true
+        q.data.target = hp
+        if LC.Notice then
+            LC.Notice(hp, "warn", "Interrogation", "The Civil Protection unit in front of you is another player, and Internal Affairs is watching them. "
+                .. "They've been told to get answers out of you, and then to finish you. Beg for your life, bargain, or refuse to say a word: it's up to you, and to them.", 16)
+            LC.Notice(ply, "warn", "The prisoner is a player", "The prisoner in front of you is a real person, from the Resistance. Talk to them. Beat answers out of them, then finish it, or refuse.", 12)
+        end
+    end
     -- the prisoner: Resistance, bloodied, unarmed, kept on his feet through the beating
-    local pnpc = LC.Spawners and LC.Spawners.citizen and LC.Spawners.citizen(spot + fwd * 60)
+    local pnpc = (not sc.human) and LC.Spawners and LC.Spawners.citizen and LC.Spawners.citizen(spot + fwd * 60)
     if IsValid(pnpc) then
         local pst = LC.NPCs[pnpc]
         if pst then LC.SetState(pnpc, pst, "event") pst.eventUntil, pst.questLock, pst.unmanaged = CurTime() + 900, true, true end
@@ -1240,16 +1276,33 @@ hook.Add("OnNPCKilled", "LivingCityLoyaltyTest", function(npc, attacker)
     local sc = ply and LT[ply]
     if sc and attacker == ply and sc.phase == "finish" then LC.QuestEvent("loyalty_kill", ply, npc) end
 end)
-hook.Add("PlayerDeath", "LivingCityLoyaltyTest", function(ply) if LT[ply] then LTCleanup(ply, false) end end)
+hook.Add("PlayerDeath", "LivingCityLoyaltyTest", function(ply, _, attacker)
+    -- the real prisoner, finished by the unit
+    local ins = ply.lcLoyaltyPrisoner
+    local sc = ins and LT[ins]
+    if sc and attacker == ins and sc.phase == "finish" then ply.lcLoyaltyPrisoner = nil LC.QuestEvent("loyalty_kill", ins, ply) end
+    if LT[ply] then LTCleanup(ply, false) end
+end)
 hook.Add("PlayerDisconnected", "LivingCityLoyaltyTest", function(ply) if LT[ply] then LTCleanup(ply, false) end end)
 
 -- No ignoring it: after the loyalty test, the reckoning starts by itself, and so does the debt (the owner:
 -- the Resistance would want answers). Whatever job they're on is dropped for it.
+-- The soldier conversion, forced: the transhuman conditioning and the Soldier rank, for good.
+function LC.MoleConvert(p)
+    if not IsValid(p) then return end
+    if LC.Condition then LC.Condition(p) end
+    local f = LCF and LCF.Get and LCF.Get("cp")
+    local need = f and f.ranks and f.ranks[5] and f.ranks[5].xp
+    if need and (tonumber(p:GetPData("lcf_xp_cp", 0)) or 0) < need then p:SetPData("lcf_xp_cp", need) end
+    if LC.AddXP then LC.AddXP(p, 0, "the conversion") end
+    if LC.Notice then LC.Notice(p, "warn", "The conversion", "You proved your loyalty, so Overwatch wants all of you. They come for you that night: the surgery is done before you wake. A soldier now, and there's no going back.", 14) end
+end
+
 local function ForceMoleHunt(ply, tries)
     tries = tries or 0
     if not IsValid(ply) or tries > 20 then return end
     local cs = LC.ChainState(ply, "molehunt")
-    if not cs or not cs.part or cs.done or (cs.part ~= "reckoning" and cs.part ~= "debt") then return end
+    if not cs or not cs.part or cs.done or (cs.part ~= "reckoning" and cs.part ~= "debt" and cs.part ~= "raid") then return end
     local busy = LC.QuestOf and LC.QuestOf[ply]
     if busy and not busy.done and busy.chain == "molehunt" then return end
     if not ply:Alive() or (LC.InCustody and LC.InCustody(ply)) then
@@ -1266,17 +1319,17 @@ local function ForceMoleHunt(ply, tries)
         return
     end
     if LC.Notice then
-        LC.Notice(ply, "warn", "The Resistance wants answers", cs.part == "debt" and "The debt starts now. They're watching." or "A note in your locker: they know what you did in that cell. They want to see you, now.", 10)
+        LC.Notice(ply, "warn", "The Resistance wants answers", cs.part == "debt" and "The debt starts now. They're watching." or (cs.part == "raid" and "Overwatch wants proof. A sweep team is waiting for you." or "A note in your locker: they know what you did in that cell. They want to see you, now."), 10)
     end
 end
 LC.ForceMoleHunt = ForceMoleHunt
 hook.Add("LivingCityQuestComplete", "LivingCityMoleHuntForced", function(p, q)
-    if q and q.chain == "molehunt" and (q.chainNext == "reckoning" or q.chainNext == "debt") then
+    if q and q.chain == "molehunt" and (q.chainNext == "reckoning" or q.chainNext == "debt" or q.chainNext == "raid") then
         timer.Simple(12, function() ForceMoleHunt(p) end)
     end
 end)
 hook.Add("LivingCityQuestFailed", "LivingCityMoleHuntForced", function(p, q)
-    if q and q.chain == "molehunt" and (q.chainPart == "reckoning" or q.chainPart == "debt") then
+    if q and q.chain == "molehunt" and (q.chainPart == "reckoning" or q.chainPart == "debt" or q.chainPart == "raid") then
         timer.Simple(20, function() ForceMoleHunt(p) end)
     end
 end)
@@ -1286,12 +1339,19 @@ local function TestSpec(ply)
     if #cells == 0 then return nil end
     local c = Pick(cells)
     local spot = LC.GroundAt and LC.GroundAt(c.pos + Vector(0, 0, 30)) or c.pos
+    -- with Resistance players in the city, the test waits for one of them to be caught (the owner: a real
+    -- person in the chair); the units go looking meanwhile. Otherwise, or if nobody's caught in time, an NPC.
+    local rebels = 0
+    for _, p in ipairs(player.GetAll()) do if RealRebel(p, ply) then rebels = rebels + 1 end end
+    local wait = rebels > 0 and cvWait:GetFloat() > 0
+    local first = wait and Count("loyalty_prisoner", 1, "Internal Affairs is bringing a Resistance prisoner in. Carry on, and wait to be called to the cells")
+        or Goto(spot, "Report to the cells (marked)", 220)
     return {
-        title = "The loyalty test", reward = 40, limit = 420,
-        desc = "Internal Affairs has a prisoner from the Resistance, and a question about you. Report to the cells " .. Place(spot, ply:GetPos()) .. ".",
-        data = { cell = spot, yaw = c.yaw or 0 },
+        title = "The loyalty test", reward = 40, limit = wait and (cvWait:GetFloat() * 60 + 420) or 420,
+        desc = "Internal Affairs has a prisoner from the Resistance, and a question about you." .. (wait and " You'll be called to the cells." or (" Report to the cells " .. Place(spot, ply:GetPos()) .. ".")),
+        data = { cell = spot, yaw = c.yaw or 0, wait = wait, waitUntil = wait and (CurTime() + cvWait:GetFloat() * 60) or nil },
         stages = {
-            Goto(spot, "Report to the cells (marked)", 220),
+            first,
             Choice("The prisoner looks up at you through one swollen eye. The guard on your left speaks without looking at you: 'He knows who the mole is. "
                 .. "Get it out of him. Then finish it.' The other guard's shotgun is pointed at the floor. For now.", {
                 { text = "Interrogate him. With your fists.", pick = function(q, p)
@@ -1308,6 +1368,25 @@ local function TestSpec(ply)
         },
         tick = function(q)
             local p = q.owner
+            -- waiting for a real prisoner: the first Resistance player in a cell; or, out of time, an NPC
+            if q.data.wait and q.stage == 1 and IsValid(p) then
+                if not LC.LoyaltyWaiting[p] then
+                    LC.LoyaltyWaiting[p] = q
+                    if LC.RadioNotice then LC.RadioNotice("cp", "Dispatch: Internal Affairs wants a member of the Resistance taken alive and put in the cells.") end
+                end
+                local caught
+                for _, r in ipairs(player.GetAll()) do
+                    if RealRebel(r, p) and LC.Prisoners and LC.Prisoners[r] and not r.lcLoyaltyPrisoner then caught = r break end
+                end
+                if caught or CurTime() > (q.data.waitUntil or 0) then
+                    LC.LoyaltyWaiting[p] = nil
+                    q.data.humanPrisoner = caught
+                    q.data.from = p:GetPos()
+                    LC.QuestEvent("loyalty_prisoner", p, caught or p)
+                end
+                return
+            end
+            if IsValid(p) then LC.LoyaltyWaiting[p] = nil end
             local sc = IsValid(p) and LT[p]
             if not sc and q.stage >= 2 and IsValid(p) and not q.data.setUp then q.data.setUp = true LTSetup(q) return end
             if not sc then return end
@@ -1378,23 +1457,47 @@ LC.Chain{
                             LC.StoryFlag(p, "disgraced", false)
                             timer.Simple(1.5, function() if IsValid(p) and LC.Unmask then LC.Unmask(p) end end)
                         end },
-                        { text = "Tell her you're done with the Resistance. (You stay with the Combine. They'll want all of you now.)", pick = function(q, p)
-                            q.chainEnd = "converted"
+                        { text = "Tell her you're done with the Resistance. (You stay with the Combine. They'll want proof, and then all of you.)", pick = function(q, p)
                             LC.StoryFlag(p, "insider", false)
                             LC.StoryFlag(p, "disgraced", false)
-                            timer.Simple(1.5, function()
-                                if not IsValid(p) then return end
-                                -- the transhuman surgery: a soldier of Overwatch, for good (sv_livingcity_factions.lua)
-                                if LC.Condition then LC.Condition(p) end
-                                local f = LCF and LCF.Get and LCF.Get("cp")
-                                local need = f and f.ranks and f.ranks[5] and f.ranks[5].xp
-                                if need and (tonumber(p:GetPData("lcf_xp_cp", 0)) or 0) < need then p:SetPData("lcf_xp_cp", need) end
-                                if LC.AddXP then LC.AddXP(p, 0, "the conversion") end
-                                if LC.Notice then LC.Notice(p, "warn", "The conversion", "You proved your loyalty, so Overwatch wants all of you. They come for you that night: the surgery is done before you wake. A soldier now, and there's no going back.", 14) end
-                            end)
+                            if #(LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}) > 0 then
+                                Narrate(q, "You walk out. Before morning, Overwatch has orders for you: they want proof.")
+                                q.chainNext = "raid"
+                            else
+                                q.chainEnd = "converted"
+                                timer.Simple(1.5, function() if IsValid(p) then LC.MoleConvert(p) end end)
+                            end
                         end },
                     }),
                 },
+            }
+        end },
+
+        -- done with the Resistance: the Combine want proof first. In with a sweep team, two of their fighters down,
+        -- and then the conversion (the owner: they'd push you further before they took all of you)
+        raid = { num = 4, build = function(ply)
+            local zones = LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}
+            if #zones == 0 then return nil end
+            local z = zones[math.random(#zones)]
+            local go = Goto(z.pos, "Join the sweep team at the edge of anticitizen territory (marked)", math.max(500, (z.r or 300) + 300))
+            go.onEnter = function() if not LC.Skirmish and LC.StartCombineSweep then pcall(LC.StartCombineSweep, z) end end
+            local zr = (z.r or 300) + 800
+            return {
+                title = "Proof", reward = 40, limit = 900,
+                desc = "You told the Resistance you're done with them. Overwatch wants proof: go in with the sweep team on their ground " .. Place(z.pos, ply:GetPos()) .. ", and put down two of their fighters.",
+                stages = {
+                    go,
+                    Count("killed", 2, "Take down two of the Resistance's fighters there", function(_, _, npc)
+                        local st = LC.NPCs[npc]
+                        return st ~= nil and st.role == "rebel" and IsValid(npc) and npc:GetPos():DistToSqr(z.pos) < zr * zr
+                    end),
+                },
+                onFinish = function(q, success)
+                    if not success then return end
+                    q.chainEnd = "converted"
+                    local p = q.owner
+                    timer.Simple(3, function() if IsValid(p) then LC.MoleConvert(p) end end)
+                end,
             }
         end },
 
