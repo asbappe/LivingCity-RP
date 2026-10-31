@@ -75,7 +75,7 @@ local cvMistakes = CreateConVar("lc_drill_mistakes", "3", FLAGS, "Mistakes in th
 local cvRope     = CreateConVar("lc_drill_rope", "1", FLAGS, "Skipping in the middle of the drill")
 local cvParadeN  = CreateConVar("lc_parade_units", "6", FLAGS, "Soldiers and Civil Protection units marching in the parade column")
 local cvParadeMin = CreateConVar("lc_parade_min", "35", FLAGS, "Enthusiasm below this as the column passes earns the stick")
-local cvFull     = CreateConVar("lc_fullstomach", "1", FLAGS, "A full stomach (hunger 85+) gives 15% more XP from jobs and shifts and slow healing")
+local cvFull     = CreateConVar("lc_fullstomach", "1", FLAGS, "A full stomach (hunger 85+) gives 15% more XP from jobs and shifts")
 
 LC.ExerciseKinds = { jog = true, drill = true, parade = true }
 local NAMES = { jog = "Morning jog", drill = "Morning drill", parade = "Morning parade" }
@@ -1419,11 +1419,8 @@ timer.Create("LivingCityFullStomach", 10, 0, function()
     if not cvFull:GetBool() then return end
     for _, p in ipairs(player.GetAll()) do
         local full = p:Alive() and LC.FullStomach(p)
-        if full and not p.lcxFull then p:ChatPrint("You're well fed. Work goes better on a full stomach (+15% XP), and you mend slowly.") end
+        if full and not p.lcxFull then p:ChatPrint("You're well fed. Work goes better on a full stomach (+15% XP).") end
         p.lcxFull = full
-        if full and p:Health() < p:GetMaxHealth() and CurTime() - (p.lcxHurtT or 0) > 15 then
-            p:SetHealth(math.min(p:GetMaxHealth(), p:Health() + 1))
-        end
     end
 end)
 hook.Add("EntityTakeDamage", "LivingCityFullStomach", function(ent)

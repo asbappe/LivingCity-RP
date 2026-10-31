@@ -71,8 +71,8 @@ local PARCELS = {
     { text = "Soft and lumpy, wrapped in newspaper. Something inside sloshes.", hot = true, inside = "a bottle of something that isn't water, and a rag for a fuse" },
     { text = "A flat tin, very light. It rattles when you turn it.", hot = false, say = "buttons, for the laundry", inside = "buttons, hundreds of them" },
     { text = "A shoebox tied up with wire. It's warm, somehow.", hot = true, inside = "a Combine battery cell, humming to itself" },
-    { text = "Medicine, by the label. The label is in somebody's handwriting.", hot = false, say = "my mother's medicine", inside = "painkillers, a few days' worth, in a paper twist" },
-    { text = "Books, by the weight. Nobody has said the word 'books' out loud in years.", hot = true, inside = "books, the kind the Union burns" },
+    { text = "The label says medicine, but the label is handwritten.", hot = false, say = "my mother's medicine", inside = "painkillers, a few days' worth, in a paper twist" },
+    { text = "It's as heavy as books. Nobody has said the word 'books' out loud in years.", hot = true, inside = "books, the kind the Union burns" },
     { text = "A small parcel, neatly wrapped. It weighs almost nothing.", hot = false, say = "a letter and some socks for my son", inside = "a letter, and a pair of darned socks" },
 }
 local SEARCH_SECS = 5
@@ -81,13 +81,13 @@ local SMUGGLE_BONUS = 8 -- (what a sender who owns up offers on top)
 -- The sender: an honest one says what's in it; a silent one won't; a bold one owns up to
 -- contraband and offers more. The courier takes it, hands it back, reports the sender to a
 -- Civil Protection unit (only when they wouldn't say, or owned up), or opens it (Civil
--- Standing, and half the pay: you opened somebody's mail).
+-- Standing, and 1 credit a delivery instead of 3: you opened somebody's mail).
 local function SenderLine(g)
     local pc = g.parcel
-    if g.openedSaw then return "You slit the tape and look. Inside: " .. pc.inside .. "." end
+    if g.openedSaw then return "You opened it. Inside: " .. pc.inside .. "." end
     if g.sender == "honest" then return pc.text .. " The sender says it's " .. (pc.say or "nothing much") .. "." end
-    if g.sender == "silent" then return pc.text .. " You ask what's in it. 'Don't ask. Just get it there.'" end
-    return pc.text .. " The sender leans in: 'It's not something a unit should see. " .. SMUGGLE_BONUS .. " credits extra when it gets there.'"
+    if g.sender == "silent" then return pc.text .. " You ask what's in it. The sender won't say: 'Don't ask. Just get it there.'" end
+    return pc.text .. " The sender admits it's contraband: 'It's not something a unit should see. " .. SMUGGLE_BONUS .. " credits extra when it gets there.'"
 end
 local function SenderChoices(g)
     local c = { "take", "refuse" }
@@ -103,13 +103,13 @@ local function ParcelSetOff(g)
     g.decided = true
     g.limit = CurTime() + g.allowed
     LC.JobGamePanel(g, nil)
-    Say(g, "Courier", "Three to go, against the clock. Civil Protection units stop couriers they get a good look at: crouch past them, or stand still for the search.")
+    Say(g, "Courier", "Deliver three parcels (follow the waypoint) before the timer runs out. If a Civil Protection unit watches you too long, they stop you for a search, so crouch near them to draw less attention. When stopped, stand still for 5 seconds, or run (you become wanted).")
     ParcelWay(g)
 end
 
 function ParcelWay(g)
     local s = g.stops[g.i]
-    if s and LC.SetWaypoint then LC.SetWaypoint(g.ply, s.pos, s.name or "The next parcel", 130) end
+    if s and LC.SetWaypoint then LC.SetWaypoint(g.ply, s.pos, s.name or "Next delivery", 130) end
 end
 
 LC.JobGameDefine("parcel", {
@@ -119,7 +119,7 @@ LC.JobGameDefine("parcel", {
         if #g.stops == 0 then error("no stops") end
         g.i, g.heat, g.searches = 1, 0, 0
         g.smuggle = g.opts.smuggle == true -- (a Resistance smuggling run: hot, and you know it)
-        g.parcel = g.opts.parcel or (g.smuggle and { text = "The cell's cargo, wrapped to look like nothing.", hot = true, inside = "guns and ammunition for the cell" }) or Pick(PARCELS)
+        g.parcel = g.opts.parcel or (g.smuggle and { text = "The Resistance cell's cargo, wrapped to look harmless.", hot = true, inside = "guns and ammunition for the cell" }) or Pick(PARCELS)
         local dist, from = 0, g.ply:GetPos()
         for _, s in ipairs(g.stops) do dist = dist + from:Distance(s.pos) from = s.pos end
         g.allowed = 45 + dist / 190
@@ -127,11 +127,11 @@ LC.JobGameDefine("parcel", {
         if g.smuggle then
             g.title = "Smuggling run"
             g.knowing, g.decided = true, true
-            Say(g, "Resistance", "The cell's cargo. Three drops, against the clock. Units search anyone who looks wrong: crouch past them, or stand still and hope.")
+            Say(g, "Resistance", "Deliver the Resistance cell's cargo to three drop points (follow the waypoint) before the timer runs out. If a Civil Protection unit watches you too long, they stop you for a search, so crouch near them to draw less attention. When stopped, stand still for 5 seconds and hope they miss it, or run (you become wanted).")
             ParcelWay(g)
         elseif g.opts.parcel and not g.opts.sender then
             g.decided = true -- (handed straight over: no word with the sender)
-            Say(g, "Courier", g.parcel.text .. " Three to go, against the clock. Civil Protection units stop couriers they get a good look at: crouch past them, or stand still for the search.")
+            Say(g, "Courier", g.parcel.text .. " Deliver three parcels (follow the waypoint) before the timer runs out. If a Civil Protection unit watches you too long, they stop you for a search, so crouch near them to draw less attention. When stopped, stand still for 5 seconds, or run (you become wanted).")
             ParcelWay(g)
         else
             -- the sender: honest about a harmless one most of the time; a hot one is never "honest"
@@ -140,14 +140,14 @@ LC.JobGameDefine("parcel", {
             SenderPanel(g)
         end
         g.hud = function(gg)
-            if not gg.decided then return { "The sender is waiting.", "Take it, hand it back, report them, or open it (the window; E brings it back)" } end
+            if not gg.decided then return { "The sender is waiting for your answer.", "Choose in the window: take the parcel, hand it back, report the sender, or open it (closed it? press E to bring it back)" } end
             local s = gg.stops[gg.i]
             local left = gg.limit - CurTime()
-            local lines = { string.format("Parcel %d of %d: %s", math.min(gg.i, #gg.stops), #gg.stops, s and s.name or "done"),
+            local lines = { string.format("Delivery %d of %d: %s", math.min(gg.i, #gg.stops), #gg.stops, s and s.name or "done"),
                 left > 0 and string.format("%d seconds", math.ceil(left)) or "LATE",
-                "Watched " .. Bar(gg.heat) }
-            if gg.stopped then lines[#lines + 1] = string.format("SEARCH: stand still (%d), or run", math.max(0, math.ceil(gg.stopped.untilT - CurTime())))
-            elseif gg.watched then lines[#lines + 1] = "A Civil Protection unit is looking at you. Crouch, or get out of sight." end
+                "Civil Protection attention (full means a search): " .. Bar(gg.heat) }
+            if gg.stopped then lines[#lines + 1] = string.format("SEARCH: stand still for %d more seconds, or run", math.max(0, math.ceil(gg.stopped.untilT - CurTime())))
+            elseif gg.watched then lines[#lines + 1] = "A Civil Protection unit is watching you. Crouch or get out of sight before the bar fills and they search you." end
             return lines
         end
     end,
@@ -160,7 +160,7 @@ LC.JobGameDefine("parcel", {
                 g.stopped, g.ran = nil, true
                 g.cool = now + 20
                 if LC.ReportCrime then LC.ReportCrime(ply, "Evading a search", 150) end
-                if LC.Notice then LC.Notice(ply, "warn", "You ran", "Every Civil Protection unit in the sector has your description now. Get the parcels there anyway.", 7) end
+                if LC.Notice then LC.Notice(ply, "warn", "You ran from a search", "You're now wanted for evading a search: every Civil Protection unit in the sector has your description. You can still deliver the parcels.", 7) end
             elseif now >= s.untilT then
                 g.stopped = nil
                 g.searches = g.searches + 1
@@ -168,11 +168,11 @@ LC.JobGameDefine("parcel", {
                 if g.parcel.hot and math.random() < (g.opts.searchFinds or 0.6) then
                     g.seized = true
                     if LC.ReportCrime then LC.ReportCrime(ply, "Carrying contraband", 180) end
-                    Note(g, "A Civil Protection unit opened the parcel. It's evidence now, and so are you.")
+                    Note(g, "A Civil Protection unit opened the parcel and found contraband. It's seized, you're wanted, and you get no pay.")
                     g.pay = 0
                     return LC.JobGameEnd(ply, "done")
                 end
-                Say(g, "Courier", "The Civil Protection unit turns it over, shakes it, and hands it back. 'Move along.'")
+                Say(g, "Courier", "The Civil Protection unit turns it over, shakes it, and hands it back. 'Move along.' You passed the search: carry on.")
             end
             return
         end
@@ -185,33 +185,33 @@ LC.JobGameDefine("parcel", {
             g.stopped = { by = w, at = ply:GetPos(), untilT = now + SEARCH_SECS }
             if LC.Face then LC.Face(w, ply:GetPos()) end
             w:EmitSound("npc/metropolice/vo/holditrightthere.wav", 75)
-            if LC.Notice then LC.Notice(ply, "warn", "Halt!", "A Civil Protection unit wants to see the parcel. Stand still for the search, or run.", 5) end
+            if LC.Notice then LC.Notice(ply, "warn", "Halt!", "A Civil Protection unit is stopping you to search the parcel. Stand still for 5 seconds, or run (you become wanted).", 5) end
             return
         end
         local s = g.stops[g.i]
         if ply:GetPos():DistToSqr(s.pos) < 130 * 130 then
             g.pay = g.pay + (g.smuggle and 6 or (g.opened and 1 or 3))
             ply:EmitSound("buttons/button9.wav", 60)
-            Say(g, "Courier", "Delivered, " .. (s.name or "here") .. ". Nobody signs for these.")
+            Say(g, "Courier", "Parcel delivered: " .. (s.name or "here") .. ". Nobody signs for these.")
             g.i = g.i + 1
             if g.i > #g.stops then
                 local left = g.limit - now
                 if left > 0 then
                     g.pay = g.pay + math.floor(left / 10)
-                    Note(g, string.format("%d seconds to spare.", math.floor(left)))
+                    Note(g, string.format("Finished with %d seconds to spare (1 extra credit for every 10 seconds).", math.floor(left)))
                 else
                     Note(g, "Late.")
                 end
-                if g.searches == 0 and not g.ran then g.pay = g.pay + 2 Note(g, "Never stopped once.") end
+                if g.searches == 0 and not g.ran then g.pay = g.pay + 2 Note(g, "Never stopped for a search: 2 credits bonus.") end
                 if g.smuggle then
                     g.pay = g.pay + 10
-                    Note(g, "The cargo got through. The cell won't forget it.")
+                    Note(g, "The cargo got through: 10 credits bonus. The cell won't forget it.")
                     if LC.AddXP then LC.AddXP(ply, 15, "a smuggling run") end
                 elseif g.sender == "bold" then
                     g.pay = g.pay + SMUGGLE_BONUS
-                    Note(g, string.format("The %d credits extra, as promised. You knew what you were carrying.", SMUGGLE_BONUS))
+                    Note(g, string.format("The sender's %d extra credits, as promised. You knew you were carrying contraband.", SMUGGLE_BONUS))
                 elseif g.parcel.hot then
-                    Note(g, "Whatever was in them, it got there.")
+                    Note(g, "Whatever was in the parcels, it got there.")
                 end
                 return LC.JobGameEnd(ply, "done")
             end
@@ -219,7 +219,7 @@ LC.JobGameDefine("parcel", {
         end
         if now > g.limit and not g.lateSaid then
             g.lateSaid = true
-            Say(g, "Courier", "You're late. The rest still has to get there.")
+            Say(g, "Courier", "Time's up, so there's no time bonus. Deliver the rest anyway.")
         end
     end,
     use = function(g) if not g.decided and not g.panelOpen then SenderPanel(g) return true end end,
@@ -231,7 +231,7 @@ LC.JobGameDefine("parcel", {
             ParcelSetOff(g)
             return true
         elseif arg == "refuse" then
-            Say(g, "Courier", "You hand it back. 'Find someone else.' No parcel, no pay.")
+            Say(g, "Courier", "You hand the parcel back: 'Find someone else.' The job ends, with no pay.")
             g.pay = 0
             LC.JobGamePanel(g, nil)
             LC.JobGameEnd(ply, "done")
@@ -242,10 +242,10 @@ LC.JobGameDefine("parcel", {
             Bump(ply, "reports")
             if g.parcel.hot then
                 Standing(ply, 4, "reported a sender of contraband")
-                Note(g, "You hand the parcel to a Civil Protection unit and point out the sender. Contraband: the unit takes it from there.")
+                Note(g, "You hand the parcel to a Civil Protection unit and point out the sender. It was contraband, so the unit takes it from there, and you gain Civil Standing.")
             else
                 Standing(ply, 1, "reported a sender")
-                Note(g, "You hand it to a Civil Protection unit. Inside: " .. g.parcel.inside .. ". The unit isn't pleased to be bothered.")
+                Note(g, "You hand it to a Civil Protection unit. It was harmless: " .. g.parcel.inside .. ". The unit isn't pleased you wasted their time.")
             end
             hook.Run("LivingCityParcelReported", ply, g.parcel.hot)
             LC.JobGamePanel(g, nil)
@@ -255,7 +255,7 @@ LC.JobGameDefine("parcel", {
             if g.opened then return nil end
             g.opened, g.openedSaw = true, true
             Standing(ply, -2, "opened somebody's parcel")
-            Say(g, "Courier", "You open it. Opening the mail costs you: Civil Standing, and half the pay if you deliver it.")
+            Say(g, "Courier", "You open it. Opening the mail costs you Civil Standing, and each delivery now pays 1 credit instead of 3.")
             SenderPanel(g)
             return true
         end
@@ -308,10 +308,10 @@ LC.JobGameDefine("hack", {
                 g.props[#g.props + 1] = e
             end
         end
-        Say(g, "Operations", "Stop the needle in the band (click, or space), four times. When the scanner comes over, keep your hands off the panel.")
+        Say(g, "Operations", "A needle swings back and forth: click (or press Space) while it's inside the marked band. Do it 4 times to get in; each miss sets you back one. When the scanner flies over, don't click: if it sees you twice, the alarm goes off and you become wanted.")
         g.hud = function(gg)
-            return { string.format("Bypassed: %d of %d", gg.got, HACK_NEED), string.format("Seen by the scanner: %d of 2", gg.alarms),
-                gg.sweep and "SCANNER OVERHEAD: hands off" or (gg.warn and "Scanner coming..." or "Clear") }
+            return { string.format("Hits: %d of %d needed", gg.got, HACK_NEED), string.format("Seen by the scanner: %d of 2 (2 sets off the alarm)", gg.alarms),
+                gg.sweep and "SCANNER OVERHEAD: don't click" or (gg.warn and "Scanner coming: get ready to stop clicking" or "Clear") }
         end
         HackPanel(g)
     end,
@@ -353,12 +353,12 @@ LC.JobGameDefine("hack", {
             if g.alarms >= 2 then
                 g.tripped = true
                 if LC.ReportCrime then LC.ReportCrime(g.ply, "Tampering with a Combine terminal", 180) end
-                Note(g, "The scanner saw you twice: the alarm's going. Get out.")
+                Note(g, "The scanner saw you twice and set off the alarm. You're wanted: get out.")
                 g.pay = g.got * 2
                 LC.JobGameEnd(g.ply, "done")
                 return false
             end
-            Say(g, "Operations", "The scanner's light catches your hands on the panel. Once more and it calls it in.")
+            Say(g, "Operations", "The scanner saw you working the panel. If it sees you once more, it sets off the alarm.")
             HackPanel(g)
             return false
         end
@@ -370,7 +370,7 @@ LC.JobGameDefine("hack", {
             g.ply:EmitSound("buttons/button14.wav", 60)
             if g.got >= HACK_NEED then
                 g.pay = 8 + (g.alarms == 0 and 6 or 0) + (g.misses == 0 and 2 or 0)
-                if g.alarms == 0 then Note(g, "The scanner never saw a thing.") end
+                if g.alarms == 0 then Note(g, "The scanner never saw you: 6 credits bonus.") end
                 if g.opts.onDone then pcall(g.opts.onDone, g.ply) end
                 LC.JobGameEnd(g.ply, "done")
                 return true
@@ -417,11 +417,11 @@ LC.JobGameDefine("drop", {
             end
         end
         if #g.spots == 0 then error("nowhere to hide it") end
-        Say(g, "Operations", "Three places to leave it. E on one, then crouch and keep still. If anyone sees you at it, that one's burned.")
+        Say(g, "Operations", "Three hiding places are outlined. Press E on one, then crouch close to it and stay there until it's hidden. If someone watches you while you hide it, the Seen bar fills; when it's full, that place is burned and you must try another.")
         g.hud = function(gg)
-            local lines = { "Seen " .. Bar(gg.seen), string.format("Places burned: %d of %d", gg.burned, #gg.spots) }
-            if gg.hiding then lines[#lines + 1] = gg.hiding.paused and "Crouch, close to it, to hide it" or ("Hiding it... " .. math.floor(100 * gg.hiding.t / HIDE_SECS) .. "%")
-            else lines[#lines + 1] = "E on a hiding place (outlined)" end
+            local lines = { "Seen bar (full means this place is burned): " .. Bar(gg.seen), string.format("Hiding places burned: %d of %d", gg.burned, #gg.spots) }
+            if gg.hiding then lines[#lines + 1] = gg.hiding.paused and "Crouch close to it to keep hiding it" or ("Hiding it (stay crouched): " .. math.floor(100 * gg.hiding.t / HIDE_SECS) .. "%")
+            else lines[#lines + 1] = "Press E on an outlined hiding place" end
             return lines
         end
     end,
@@ -449,9 +449,9 @@ LC.JobGameDefine("drop", {
                 h.ent.lcBurned = true
                 Mark(h.ent, ply, "danger")
                 g.burned, g.hiding, g.seen = g.burned + 1, nil, 0.4
-                if LC.Notice then LC.Notice(ply, "warn", "Burned", "Someone saw you at " .. h.ent.lcDropName .. ". Not that one: try another.", 6) end
+                if LC.Notice then LC.Notice(ply, "warn", "Burned", "Someone saw you at " .. h.ent.lcDropName .. ", so it's burned. Try another hiding place.", 6) end
                 if g.burned >= #g.spots then
-                    Note(g, "Every place was watched. The message goes home with you.")
+                    Note(g, "Someone saw you at every hiding place. You take the message home, with no pay.")
                     g.pay = 0
                     return LC.JobGameEnd(ply, "done")
                 end
@@ -459,8 +459,8 @@ LC.JobGameDefine("drop", {
             end
             if h.t >= HIDE_SECS then
                 g.pay = 6 + (g.burned == 0 and 4 or 0) + (g.maxSeen < 0.3 and 2 or 0)
-                Note(g, "Left in " .. h.ent.lcDropName .. ".")
-                if g.maxSeen < 0.3 then Note(g, "Nobody looked twice.") end
+                Note(g, "Hidden in " .. h.ent.lcDropName .. ".")
+                if g.maxSeen < 0.3 then Note(g, "Nobody noticed you: 2 credits bonus.") end
                 if g.opts.onDone then pcall(g.opts.onDone, ply) end
                 return LC.JobGameEnd(ply, "done")
             end
@@ -545,10 +545,10 @@ LC.JobGameDefine("search", {
         g.watching = false
         g.watchAt = CurTime() + math.Rand(8, 12)
         NextBody(g)
-        Say(g, "Morgue", "Three for the fire tonight. E on the body: every pocket before it goes in. Log it, keep it, or set it aside for the family. The overseer looks in now and then.")
+        Say(g, "Morgue", "Three bodies to search before they go in the incinerator. Press E on the body and search each pocket. For anything you find, choose: Log it (paid), Keep it, or Family (set it aside for them). Then press 'Done: into the fire'. The overseer looks in now and then: if he's watching when you keep something, you're caught.")
         g.hud = function(gg)
             return { string.format("Body %d of %d", math.min(gg.n, BODIES), BODIES), string.format("Logged: %d    Kept: %d", gg.logged, gg.kept),
-                gg.watching and "THE OVERSEER IS WATCHING" or "The overseer is out of the room", "E on the body to search it" }
+                gg.watching and "THE OVERSEER IS WATCHING" or "The overseer is out of the room (nobody is watching)", "Press E on the body to search it" }
         end
     end,
     tick = function(g, now)
@@ -557,9 +557,9 @@ LC.JobGameDefine("search", {
             g.watchAt = now + (g.watching and math.Rand(5, 7) or math.Rand(10, 16))
             if g.watching then
                 g.ply:EmitSound("doors/door1_move.wav", 60)
-                Say(g, "Morgue", "The door opens. The overseer leans on the frame, watching you work.")
+                Say(g, "Morgue", "The door opens. The overseer leans on the frame, watching you work. Don't keep anything while he's here.")
             else
-                Say(g, "Morgue", "The overseer goes back out. You're alone with them.")
+                Say(g, "Morgue", "The overseer goes back out. Nobody is watching now.")
             end
             if g.panelOpen then SearchPanel(g) end
         end
@@ -584,7 +584,7 @@ LC.JobGameDefine("search", {
                     g.caught = g.caught + 1
                     g.pay = g.pay - 3
                     Standing(g.ply, -3, "caught stealing from the dead")
-                    Say(g, "Morgue", "The overseer clears his throat. 'In the tray.' It goes in the tray, and in his notebook.")
+                    Say(g, "Morgue", "The overseer saw you: 'In the tray.' It's logged instead, and you lose pay and Civil Standing.")
                 else
                     k.done = "keep"
                     g.kept = g.kept + 1
@@ -599,12 +599,12 @@ LC.JobGameDefine("search", {
             Burn(g)
             if not NextBody(g) then
                 if g.caught == 0 then g.pay = g.pay + 3 end
-                Note(g, string.format("%d logged, %d kept.", g.logged, g.kept))
-                if g.caught > 0 then Note(g, "The overseer wrote your name down.") end
+                Note(g, string.format("%d items logged, %d kept.", g.logged, g.kept))
+                if g.caught > 0 then Note(g, "The overseer wrote your name down for stealing (no clean-work bonus).") end
                 LC.JobGameEnd(g.ply, "done")
                 return true
             end
-            Say(g, "Morgue", "Into the fire. The next one's on the slab.")
+            Say(g, "Morgue", "Into the incinerator. The next body is on the slab: press E on it.")
             LC.JobGamePanel(g, nil)
             return true
         else
@@ -662,7 +662,7 @@ LC.JobGameDefine("laundry", {
     end,
     tick = function(g, now)
         if now > g.limit then
-            Note(g, "The shift ran out with uniforms still on the pile.")
+            Note(g, "Time's up, with uniforms still on the pile.")
             g.pay = math.max(0, g.right - g.wrong)
             return LC.JobGameEnd(g.ply, "done")
         end
@@ -675,7 +675,7 @@ LC.JobGameDefine("laundry", {
             Give(g.ply, u.item, 1)
             if math.random() < 0.25 then
                 Standing(g.ply, -2, "a Civil Protection unit's pocket came back short")
-                Say(g, "Laundry", "The supervisor counts what comes out of the pockets. Tonight he counts one short, and looks at you.")
+                Say(g, "Laundry", "The supervisor counts what comes out of the pockets. Tonight he counts one short and suspects you: you lose Civil Standing.")
             end
             u.pocket = nil
         elseif action == "turnin" and u.pocket then
@@ -690,10 +690,10 @@ LC.JobGameDefine("laundry", {
             else right = b.divs[1] == u.div or b.divs[2] == u.div end
             if right then g.right = g.right + 1 g.pay = g.pay + 1 g.ply:EmitSound("physics/cardboard/cardboard_box_impact_soft2.wav", 55)
             else g.wrong = g.wrong + 1 g.pay = g.pay - 1 g.ply:EmitSound("buttons/button10.wav", 55) end
-            if u.pocket then Say(g, "Laundry", "Whatever was in the pocket went in with it.") end
+            if u.pocket then Say(g, "Laundry", "You didn't empty the pocket first, so whatever was in it went into the bin too.") end
             NextUniform(g)
             if not g.u then
-                if g.wrong == 0 then g.pay = g.pay + 3 Note(g, "Not one in the wrong bin.") end
+                if g.wrong == 0 then g.pay = g.pay + 3 Note(g, "No uniforms in the wrong bin: 3 credits bonus.") end
                 Note(g, string.format("%d of %d sorted right.", g.right, UNIFORMS))
                 LC.JobGameEnd(g.ply, "done")
                 return right
@@ -767,7 +767,7 @@ LC.JobGameDefine("filing", {
     end,
     tick = function(g, now)
         if now > g.limit then
-            Note(g, "Forms left in the in-tray. They'll be there tomorrow.")
+            Note(g, "Time's up, with forms still in the in-tray.")
             g.pay = math.max(0, g.right - g.wrong)
             return LC.JobGameEnd(g.ply, "done")
         end
@@ -779,11 +779,11 @@ LC.JobGameDefine("filing", {
             if K.Watcher(g.ply, 600) then
                 Standing(g.ply, -4, "caught taking a blank identity form")
                 if LC.ReportCrime then LC.ReportCrime(g.ply, "Theft of state forms", 120) end
-                Say(g, "Records", "A Civil Protection unit at the counter watches you put it back.")
+                Say(g, "Records", "A Civil Protection unit at the counter saw you take it. You put it back, but you're wanted and lose Civil Standing.")
             else
                 Give(g.ply, "papers_blank", 1)
                 Bump(g.ply, "thefts")
-                Say(g, "Records", "One blank identity form, folded into your sleeve.")
+                Say(g, "Records", "You slip a blank identity form into your sleeve. It's in your pockets now.")
             end
             FilingPanel(g)
             return true
@@ -797,7 +797,7 @@ LC.JobGameDefine("filing", {
         else g.wrong = g.wrong + 1 g.pay = g.pay - 1 g.ply:EmitSound("buttons/button10.wav", 55) end
         NextForm(g)
         if not g.form then
-            if g.wrong == 0 then g.pay = g.pay + 3 Note(g, "A clean in-tray.") end
+            if g.wrong == 0 then g.pay = g.pay + 3 Note(g, "No forms filed wrong: 3 credits bonus.") end
             Note(g, string.format("%d of %d filed right.", g.right, FORMS))
             LC.JobGameEnd(g.ply, "done")
             return right
@@ -891,8 +891,8 @@ end
 
 local function RadioDone(g)
     if not NewRadio(g) then
-        if g.fixed == RADIOS then g.pay = g.pay + 3 Note(g, "Every set on the shelf works.") end
-        Note(g, string.format("%d of %d fixed.", g.fixed, RADIOS))
+        if g.fixed == RADIOS then g.pay = g.pay + 3 Note(g, "You fixed every radio: 3 credits bonus.") end
+        Note(g, string.format("%d of %d radios fixed.", g.fixed, RADIOS))
         LC.JobGameEnd(g.ply, "done")
         return
     end
@@ -906,16 +906,16 @@ LC.JobGameDefine("radio", {
         g.staticClip = Clip("static")
         NewRadio(g)
         g.hud = function(gg)
-            return { string.format("Set %d of %d", math.min(gg.n, RADIOS), RADIOS), string.format("Fixed: %d", gg.fixed),
-                "Find its station, then the screws: by ear",
-                string.format("%d seconds on this one", math.max(0, math.ceil(gg.radioEnd - CurTime()))) }
+            return { string.format("Radio %d of %d", math.min(gg.n, RADIOS), RADIOS), string.format("Fixed: %d", gg.fixed),
+                "Turn the dial to its station, then adjust the screws until it sounds clear",
+                string.format("%d seconds left for this radio", math.max(0, math.ceil(gg.radioEnd - CurTime()))) }
         end
         RadioPanel(g)
     end,
     tick = function(g, now)
         if (g.benchAt or 0) <= now then g.benchAt = now + 0.25 Bench(g) end
         if now > g.radioEnd and not g.heard then
-            Say(g, "Radio", "Out of time: it goes back on the shelf, still hissing.")
+            Say(g, "Radio", "Out of time: this radio goes back on the shelf unfixed.")
             g.last = "timeout"
             RadioDone(g)
         end
@@ -953,8 +953,8 @@ LC.JobGameDefine("radio", {
                 if wq < GOOD_SCREW then
                     g.radioEnd = g.radioEnd - 2
                     g.ply:EmitSound("buttons/button10.wav", 55)
-                    Say(g, "Radio", ({ "It's there, but so faint you'd miss it. The volume trimmer.",
-                        "It's there, under a wall of hiss. The squelch.", "It's there, but smeared across the dial. The alignment." })[worst])
+                    Say(g, "Radio", ({ "Right station, but too faint. Adjust the volume trimmer.",
+                        "Right station, but buried in static. Adjust the squelch.", "Right station, but blurred and smeared. Adjust the alignment." })[worst])
                     RadioPanel(g)
                     return "adjust"
                 end
@@ -979,16 +979,16 @@ LC.JobGameDefine("radio", {
                 g.pay = g.pay + 2
                 Standing(g.ply, 2, "reported an illegal broadcast")
                 Bump(g.ply, "reports")
-                Say(g, "Radio", "You write the frequency on a slip for the Civil Protection units. Somebody will be listening for it now.")
+                Say(g, "Radio", "You report the frequency to Civil Protection: extra pay and Civil Standing. They'll be listening for it now.")
             elseif arg == "note" then
                 Trait(g.ply, "sympathy", 1)
                 Bump(g.ply, "silences")
                 Give(g.ply, "freq7_sheet", 1)
                 g.ply.lcFreq7Heard = g.f7
-                Say(g, "Radio", "You copy it down where nobody will look: Freq 7, and the seven places on the dial it hides. "
-                    .. "A Freq 7 sheet, in your pockets (contraband: pass it on, or burn it).")
+                Say(g, "Radio", "You secretly write down Freq 7 and the seven frequencies it broadcasts on. "
+                    .. "The Freq 7 sheet is in your pockets: it's contraband, so pass it on or burn it.")
             else
-                Say(g, "Radio", "You tune past it. Nothing on this band is worth what it costs.")
+                Say(g, "Radio", "You tune past it and leave Freq 7 alone. Nothing on this band is worth the risk.")
             end
             g.heard, g.f7, g.f7clip = nil, nil, nil
             RadioPanel(g)
@@ -1003,10 +1003,10 @@ LC.JobGameDefine("radio", {
 function LC.Freq7SheetText(heard)
     local list = {}
     for _, f in ipairs(LC.Freq7Freqs or {}) do list[#list + 1] = string.format("%.1f", f) end
-    return "FREQ 7\n\nThey only broadcast where the digits add up to seven. There are seven places on the dial:\n\n"
+    return "FREQ 7\n\nFreq 7 only broadcasts on frequencies whose digits add up to seven. These are the seven places on the dial:\n\n"
         .. table.concat(list, "   ") .. "\n\n"
         .. (heard and string.format("Heard it on %.1f at the repair bench. ", heard) or "")
-        .. "When the Combine find it, it moves: try the next one.\n\nListen low. Never where a unit can hear it."
+        .. "When the Combine find the broadcast, it moves to another of these: try the next one.\n\nKeep the volume low, and never listen where a Civil Protection unit can hear it."
 end
 function LC.ReadItem(ply, id)
     if id ~= "freq7_sheet" or not LC.HasItem(ply, id) then return false end
@@ -1064,7 +1064,7 @@ LC.RadioListenOff = ListenOff
 -- Listen (already on: the window again, where you left the dial; it has its own off switch).
 function LC.RadioListen(ply, id)
     if not IsValid(ply) then return false end
-    if LC.InCustody and LC.InCustody(ply) then return false, "Not in here." end
+    if LC.InCustody and LC.InCustody(ply) then return false, "You can't listen to a radio while you're in custody." end
     local u, f7 = LC.RadioStations()
     local l = LC.Listening[ply] or { item = id, dial = (id == "radio_tuned") and f7 or u, static = Clip("static"), union = Clip("union"), clip7 = Clip("freq7"), followed = f7 }
     LC.Listening[ply] = l
@@ -1098,7 +1098,7 @@ timer.Create("LivingCityRadioListen", 0.25, 0, function()
         elseif not ply:Alive() or (LC.InCustody and LC.InCustody(ply)) then
             ListenOff(ply)
         elseif not LC.HasItem(ply, l.item) then
-            ListenOff(ply, "Your radio's gone.")
+            ListenOff(ply, "Your radio is no longer in your pockets, so it switched off.")
         else
             -- a Resistance radio follows Freq 7 when it hops (the cell gave you the hop sheet)
             local _, f7 = LC.RadioStations()
@@ -1116,7 +1116,7 @@ timer.Create("LivingCityRadioListen", 0.25, 0, function()
                 and LC.SeenBySecurity and LC.SeenBySecurity(ply, 300) then
                 l.caughtAt = CurTime()
                 if LC.ReportCrime then LC.ReportCrime(ply, "Listening to an illegal broadcast", 120) end
-                if LC.Notice then LC.Notice(ply, "warn", "A Civil Protection unit heard that", "Freq 7, out loud, in front of Civil Protection. Turn it off, or run.", 6) end
+                if LC.Notice then LC.Notice(ply, "warn", "A Civil Protection unit heard that", "A Civil Protection unit heard Freq 7 playing from your radio. You're now wanted: switch it off, or run.", 6) end
             end
         end
     end
@@ -1161,8 +1161,8 @@ local function Verdict(g, v)
     local ply = g.ply
     if v == "confiscate" and not s.found then return nil end
     if v == "release" then
-        if s.hidden and not s.found then g.missed = g.missed + 1 Say(g, "CP", "They walk off lighter on their feet than they should.")
-        elseif s.found then Trait(ply, "sympathy", 1) Say(g, "CP", "You hand it back. They don't say thank you; they don't dare.")
+        if s.hidden and not s.found then g.missed = g.missed + 1 Say(g, "CP", "You let them go, but they were hiding something you missed.")
+        elseif s.found then Trait(ply, "sympathy", 1) Say(g, "CP", "You let them go and hand back what you found. They don't say thank you; they don't dare.")
         else g.right = g.right + 1 g.pay = g.pay + 2 end
         Unhold(g, s, true)
     elseif v == "confiscate" then
@@ -1179,7 +1179,7 @@ local function Verdict(g, v)
         else
             g.wrong = g.wrong + 1
             g.pay = g.pay - 3
-            Say(g, "CP", "Detained with nothing on them. Dispatch is not impressed, and neither is the street.")
+            Say(g, "CP", "You detained someone with nothing on them: a wrong call, and it comes out of your pay. Dispatch is not impressed, and neither is the street.")
             Unhold(g, s, true)
         end
     else
@@ -1189,7 +1189,7 @@ local function Verdict(g, v)
     g.done = g.done + 1
     LC.JobGamePanel(g, nil)
     if g.done >= g.need then
-        if g.wrong == 0 and g.missed == 0 then g.pay = g.pay + 3 Note(g, "Every call right.") end
+        if g.wrong == 0 and g.missed == 0 then g.pay = g.pay + 3 Note(g, "Every call right: 3 credits bonus.") end
         Note(g, string.format("%d searched, %d right.", g.done, g.right))
         LC.JobGameEnd(ply, "done")
     end
@@ -1202,10 +1202,10 @@ LC.JobGameDefine("patdown", {
         g.title = "Pat-down"
         g.need = g.opts.need or 3
         g.done, g.right, g.wrong, g.missed, g.bolted = 0, 0, 0, 0, 0
-        Say(g, "CP", "Stop citizens on the street: E on one. Pat them down a place at a time before they lose their nerve. Watch their hands.")
+        Say(g, "CP", "Press E on a citizen to stop them. In the window, pat down one place at a time: each empty place you check costs some of their nerve, and if it runs out they run off. Watch how they act, as it hints where something is hidden. Then choose: Release, Confiscate (if you found something) or Detain.")
         g.hud = function(gg)
             local lines = { string.format("Searched: %d of %d", gg.done, gg.need), string.format("Right calls: %d", gg.right) }
-            lines[#lines + 1] = gg.subject and string.format("Their nerve: %s", Bar(gg.subject.nerve / 4, 4)) or "E on a citizen to stop them"
+            lines[#lines + 1] = gg.subject and string.format("Their nerve (they run at zero): %s", Bar(gg.subject.nerve / 4, 4)) or "Press E on a citizen to stop and search them"
             return lines
         end
     end,
@@ -1216,7 +1216,7 @@ LC.JobGameDefine("patdown", {
         end
         local st = LC.NPCs and LC.NPCs[ent]
         if not st or st.role ~= "citizen" or st.questLock or st.test or st.state == "jailed" then return nil end
-        if st.patted and CurTime() - st.patted < 300 then Say(g, "CP", "You searched that one already.") return nil end
+        if st.patted and CurTime() - st.patted < 300 then Say(g, "CP", "You searched that citizen already. Pick someone else.") return nil end
         st.questLock = true
         if LC.SetState then LC.SetState(ent, st, "event") end
         st.eventUntil = CurTime() + 90
@@ -1257,8 +1257,8 @@ LC.JobGameDefine("patdown", {
                         s.npc:SetSchedule(SCHED_FORCED_GO_RUN)
                     end
                     s.npc:EmitSound("vo/npc/male01/runforyourlife01.wav", 75)
-                    Say(g, "CP", "They lose their nerve and bolt.")
-                    if s.hidden then Note(g, "One bolted with something on them.") end
+                    Say(g, "CP", "They lose their nerve and run off.")
+                    if s.hidden then Note(g, "One ran off with something hidden on them.") end
                     g.subject = nil
                     LC.JobGamePanel(g, nil)
                     if g.done >= g.need then
@@ -1315,7 +1315,7 @@ local function Room(g)
         end
     end
     g.ply:EmitSound("npc/metropolice/vo/getdown.wav", 80)
-    Say(g, "CP", "Everyone on the floor: E on each of them before they run or get rid of something. Then search the place (E on the furniture).")
+    Say(g, "CP", "Get everyone on the floor: press E on each person before they run or burn evidence. Then search the room: press E on each outlined piece of furniture.")
 end
 
 LC.JobGameDefine("breach", {
@@ -1333,18 +1333,18 @@ LC.JobGameDefine("breach", {
         if IsValid(best) and not g.opts.noDoor then
             g.door, g.phase = best, "door"
             Mark(best, g.ply, "target")
-            Say(g, "CP", "The door's locked. E on it to set the charge, then stand back.")
+            Say(g, "CP", "The door is locked. Press E on it to set a breaching charge, then stand back: it blows a moment later.")
         else
             Room(g)
         end
         g.hud = function(gg)
-            if gg.phase == "door" then return { gg.blowAt and "Charge set: stand back" or "E on the door to set the charge" } end
+            if gg.phase == "door" then return { gg.blowAt and "Charge set: stand back" or "Press E on the door to set the charge" } end
             local left = 0
             for _, r in ipairs(gg.res or {}) do if not r.done then left = left + 1 end end
             local unsearched = 0
             for _, e in ipairs(gg.stash or {}) do if IsValid(e) and not e.lcStash.searched then unsearched = unsearched + 1 end end
             return { string.format("On the floor: %d    Ran: %d    Still standing: %d", gg.secured, gg.fled, left),
-                string.format("Found: %d    Flushed: %d    To search: %d", gg.found, gg.flushed, unsearched),
+                string.format("Found: %d    Destroyed: %d    Left to search: %d", gg.found, gg.flushed, unsearched),
                 string.format("%d seconds", math.max(0, math.ceil((gg.limit or 0) - CurTime()))) }
         end
     end,
@@ -1374,7 +1374,7 @@ LC.JobGameDefine("breach", {
                 g.pay = g.pay + 3
                 Say(g, "CP", "Found: " .. s.what .. ".")
             else
-                Say(g, "CP", s.flushed and "Ash, and the smell of burnt paper. Too late." or "Nothing.")
+                Say(g, "CP", s.flushed and "Ash, and the smell of burnt paper. Someone destroyed what was here before you searched it." or "Nothing.")
             end
             return true
         end
@@ -1407,13 +1407,13 @@ LC.JobGameDefine("breach", {
                         g.flushed = g.flushed + 1
                         r.done = "flushed"
                         Mark(r.npc, g.ply, "danger")
-                        Say(g, "CP", "Somebody's burning something. Whatever it was, it's gone.")
+                        Say(g, "CP", "Someone you didn't get on the floor in time burned evidence. Whatever it was, it's gone.")
                     else
                         r.done = "fled"
                         g.fled = g.fled + 1
                         g.pay = g.pay - 1
                         K.Release(g, r.npc, r.npc:GetPos() + VectorRand():GetNormalized() * 1200, 15)
-                        Say(g, "CP", "One of them's out the back.")
+                        Say(g, "CP", "One of them ran out the back before you got them on the floor.")
                     end
                 end
             end
@@ -1422,7 +1422,7 @@ LC.JobGameDefine("breach", {
         for _, r in ipairs(g.res) do if not r.done then open = open + 1 end end
         for _, e in ipairs(g.stash) do if IsValid(e) and not e.lcStash.searched then open = open + 1 end end
         if open == 0 or now > g.limit then
-            if g.fled == 0 and g.flushed == 0 then g.pay = g.pay + 4 Note(g, "Nobody ran, nothing burned.") end
+            if g.fled == 0 and g.flushed == 0 then g.pay = g.pay + 4 Note(g, "Nobody ran and nothing was destroyed: 4 credits bonus.") end
             Note(g, string.format("%d on the floor, %d ran, %d found.", g.secured, g.fled, g.found))
             return LC.JobGameEnd(g.ply, "done")
         end

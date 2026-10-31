@@ -262,10 +262,13 @@ function LC.RentDoorUse(ply, door)
             LC.Relock[door] = nil
             return false
         end
-        door:Fire("Unlock")
-        door:Fire("Open", "", 0.1)
-        LC.OpenedDoors[door] = CurTime() + 5
-        LC.Relock[door] = true
+        -- locked is locked, for the one with the key too: the handle rattles. Unlock it first
+        -- (right click it with your hands out, or !unlock)
+        door:EmitSound("doors/door_locked2.wav", 60)
+        if (ply.lcRentLockedSaid or 0) < CurTime() then
+            ply.lcRentLockedSaid = CurTime() + 4
+            ply:ChatPrint("[Living City] It's locked. Unlock it first: right click it with your hands out (or !unlock).")
+        end
         return false
     end
     if LC.PlayerIsCP(ply) and LC.StartTask then

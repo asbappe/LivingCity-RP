@@ -213,6 +213,27 @@ end)
 
 hook.Add("PostCleanupMap", "LivingCityTagDecals", function() painted = {} end) -- (a map cleanup wipes every decal)
 
+-- Rain washes the marks off open ground near you (blood, scorch marks, bullet holes on the
+-- street): a few spots under the open sky every couple of seconds while it rains. Never near a
+-- graffiti tag (rain doesn't take paint off a wall). Under a roof, nothing changes.
+timer.Create("LivingCityRainWash", 2, 0, function()
+    local w = GetGlobal2String("lc_weather", "clear")
+    if (w ~= "rain" and w ~= "storm") or not util.RemoveDecalsAt or GetConVar("lc_rain_wash") and GetConVar("lc_rain_wash"):GetFloat() <= 0 then return end
+    local me = LocalPlayer()
+    if not IsValid(me) then return end
+    local base = me:GetPos()
+    for _ = 1, 6 do
+        local p = base + Vector(math.Rand(-900, 900), math.Rand(-900, 900), 64)
+        local down = util.TraceLine({ start = p, endpos = p - Vector(0, 0, 400), mask = MASK_SOLID_BRUSHONLY })
+        if down.Hit and not down.HitSky then
+            local up = util.TraceLine({ start = down.HitPos + Vector(0, 0, 8), endpos = down.HitPos + Vector(0, 0, 4000), mask = MASK_SOLID_BRUSHONLY })
+            local nearTag = false
+            for _, t in ipairs(LC_CL.tags or {}) do if t.pos:DistToSqr(down.HitPos) < 200 * 200 then nearTag = true break end end
+            if (not up.Hit or up.HitSky) and not nearTag then util.RemoveDecalsAt(down.HitPos, 48) end
+        end
+    end
+end)
+
 if surface and surface.CreateFont then
     surface.CreateFont("LCLambda", { font = "Arial", size = 120, weight = 900, antialias = true })
 end

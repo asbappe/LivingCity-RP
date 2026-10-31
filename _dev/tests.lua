@@ -1854,6 +1854,24 @@ _run(12)
 hook.t.LivingCityServed.TestServed = nil
 ok(servedFrom >= 1 and line.q[1] ~= waiting, "the person at the front is served from it")
 disp:Remove()
+-- a dispenser a few steps past the front: they walk up to it for their ration, then step away
+local far = ents.Create("lc_dispenser")
+far:SetPos(front + Vector(220, 0, 0))
+for _, n in ipairs(line.q) do local st2 = LC.NPCs[n] if st2 then LC.LeaveLine(n, st2) end end
+line.q = {}
+local walker, wst = LC.SpawnCitizen(front + Vector(-300, 0, 0))
+wst.leaveAt = nil
+line.nextAdvance = CurTime() + 1000
+LC.JoinLine(walker, wst)
+_run(8)
+line.nextAdvance = 0
+local reached = false
+servedFrom = 0
+hook.Add("LivingCityServed", "TestServed", function(n) if n == walker then servedFrom = servedFrom + 1 reached = walker:GetPos():Distance(far:GetPos()) < 100 end end)
+_run(20)
+hook.t.LivingCityServed.TestServed = nil
+ok(servedFrom == 1 and reached, "the front of the line walks up to the dispenser for their ration (not handed it where they stand)", tostring(walker:GetPos():Distance(far:GetPos())))
+far:Remove()
 
 ----------------------------------------------------------------------
 section("Citizens don't know Gordon Freeman")
@@ -7400,12 +7418,12 @@ local r = LC.RentalOf(door)
 ok(r and r.owner == tenant:GetNW2String("lc_cid", "") and door.locked and LC.Credits(tenant) == c0 - GetConVar("lc_rent_price"):GetInt(),
     "!rent at an apartment door: it's yours, and locked")
 ok(hook.Run("PlayerUse", nosy, door) == false and door.locked, "locked to anyone else")
-ok(hook.Run("PlayerUse", tenant, door) == false and not door.locked, "your E unlocks and opens it")
-door:Fire("Close") door:Fire("Lock")
+tenant.chat = {}
+ok(hook.Run("PlayerUse", tenant, door) == false and door.locked and has(tenant.chat, "It's locked"), "locked is locked for you too: the handle rattles till you unlock it")
 hook.Run("PlayerSay", tenant, "!givekey Visitor")
-hook.Run("PlayerUse", visitor, door)
-ok(not door.locked, "a key lets someone else in")
-door:Fire("Lock")
+hook.Run("PlayerSay", visitor, "!unlock")
+ok(not door.locked, "a key lets someone else unlock it")
+hook.Run("PlayerSay", tenant, "!lock")
 hook.Run("PlayerSay", tenant, "!takekey Visitor")
 ok(hook.Run("PlayerUse", visitor, door) == false and door.locked, "and taking it back keeps them out")
 hook.Run("PlayerSay", tenant, "!unlock")
@@ -13258,6 +13276,22 @@ section("The radio held up: chat and voice over the band")
     _run(2.5)
     ok(unit:HasWeapon("weapon_lc_radio"), "every unit has one (the CP net)")
     a.valid = false b.valid = false cit.valid = false close.valid = false unit.valid = false
+end)()
+
+section("Playtest fixes, 31 October")
+;(function()
+    -- healing comes from eating, sleeping and medicine: nobody mends on their own while awake
+    local h = newPlayer("Healer31", "citizen")
+    _run(1)
+    h:SetNW2Float("lcn_hunger", 100) h:SetNW2Float("lcn_thirst", 100)
+    h:SetHealth(50)
+    _run(30)
+    ok(h:Health() <= 50, "well fed and awake: no slow mending any more", h:Health())
+    LC.GiveItem(h, "ration", 1)
+    local before = h:Health()
+    LC.Consume(h, "ration")
+    ok(h:Health() > before, "eating food mends you a little as you eat it", h:Health() - before)
+    h.valid = false
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")

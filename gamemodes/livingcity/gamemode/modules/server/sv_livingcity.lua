@@ -913,8 +913,43 @@ local function OrientLine(line)
 end
 LC.OrientLine = OrientLine
 
+-- Their ration, at the dispenser: then off they go (out of the way of the next in line).
+local function ServedAt(n, s, disp, g, now)
+    if IsValid(disp) then
+        Face(n, disp:GetPos())
+        if LC.DispenserAnimate then LC.DispenserAnimate(disp) end
+    else
+        n:EmitSound(SERVE_SOUND, 65)
+    end
+    hook.Run("LivingCityServed", n, g)
+    SetState(n, s, "idle")
+    s.untilT = now + 1.5
+    s.servedUntil = now + 300 -- one ration each; don't rejoin straight away
+    if LC.Event == "rations" then
+        s.leaveAt = math.min(s.leaveAt or math.huge, now + math.Rand(20, 60))
+        s.leaveWhy = "had their ration and went home"
+    end
+    -- step away from the dispenser so the next person can get to it
+    timer.Simple(2, function()
+        if not IsValid(n) or LC.NPCs[n] ~= s or s.state ~= "idle" then return end
+        local wander = LC.RandomWanderPos and LC.RandomWanderPos(s.role, n:GetPos())
+        if wander then GoTo(n, s, wander, false, nil) end
+    end)
+end
+
 local function LineThink(now)
     for g, line in pairs(LC.Lines) do
+        -- walking up to the dispenser for their ration
+        for n, pk in pairs(line.pickups or {}) do
+            local s = IsValid(n) and LC.NPCs[n]
+            if not s then
+                line.pickups[n] = nil
+            elseif n:GetPos():DistToSqr(pk.spot) < 60 * 60 or now > pk.untilT then
+                line.pickups[n] = nil
+                if s.state == "moving" then n:SetSchedule(SCHED_IDLE_STAND) end
+                ServedAt(n, s, pk.disp, g, now)
+            end
+        end
         if now > (line.nextOrient or 0) then
             line.nextOrient = now + 10
             if OrientLine(line) then ShuffleLine(g) end
@@ -955,21 +990,20 @@ local function LineThink(now)
             local fs = LC.NPCs[front]
             if fs.state == "inline" then
                 local disp = LC.LineDispenser(g)
-                if IsValid(disp) then
-                    Face(front, disp:GetPos())
-                    if LC.DispenserAnimate then LC.DispenserAnimate(disp) end
-                else
-                    front:EmitSound(SERVE_SOUND, 65)
-                end
-                hook.Run("LivingCityServed", front, g)
                 fs.line, fs.slotIndex = nil, nil
                 table.remove(line.q, 1)
-                SetState(front, fs, "idle")
-                fs.untilT = now + 1.5
-                fs.servedUntil = now + 300 -- one ration each; don't rejoin straight away
-                if LC.Event == "rations" then
-                    fs.leaveAt = math.min(fs.leaveAt or math.huge, now + math.Rand(20, 60))
-                    fs.leaveWhy = "had their ration and went home"
+                if IsValid(disp) and disp:GetPos():DistToSqr(front:GetPos()) > 70 * 70 then
+                    -- up to the dispenser itself for it (not handed it at the head of the queue), then away
+                    local away = front:GetPos() - disp:GetPos()
+                    away.z = 0
+                    if away:LengthSqr() < 1 then away = disp:GetForward() end
+                    away:Normalize()
+                    local spot = disp:GetPos() + away * 40
+                    line.pickups = line.pickups or {}
+                    line.pickups[front] = { disp = disp, spot = spot, untilT = now + 20 }
+                    GoTo(front, fs, spot, false, { kind = "ration_pickup" })
+                else
+                    ServedAt(front, fs, disp, g, now)
                 end
                 ShuffleLine(g)
                 line.nextAdvance = now + (LC.Event == "rations" and math.Rand(6, 10) or math.Rand(20, 40))

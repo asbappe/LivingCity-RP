@@ -53,15 +53,15 @@ LC.GiveJobTools = GiveTools
 
 function LC.SetJob(ply, id, force)
     local job = LCJ.ById[id]
-    if id ~= "" and not job then return false, "No such job." end
-    if job and LCJ.Closed(job) and not force then return false, "The Union isn't taking anyone on for that." end
+    if id ~= "" and not job then return false, "That job doesn't exist." end
+    if job and LCJ.Closed(job) and not force then return false, "That job is closed right now. Pick a different one." end
     if not force then
-        if not LC.CanWork(ply) then return false, "The Union only employs citizens." end
+        if not LC.CanWork(ply) then return false, "Only citizens can take Union jobs." end
         if id ~= "" and LC.IntakePending and LC.IntakePending(ply) then
-            return false, "The Union only employs registered citizens. Register at Civil Intake first."
+            return false, "Only registered citizens can take Union jobs. Register at Civil Intake first, then pick a job."
         end
         if (ply.lcjNext or 0) > CurTime() then
-            return false, "You can change jobs again in " .. math.ceil(ply.lcjNext - CurTime()) .. " seconds."
+            return false, "You changed jobs recently. You can change again in " .. math.ceil(ply.lcjNext - CurTime()) .. " seconds."
         end
     end
     -- the old job's shift goes with the old job (it stayed on the HUD and blocked the new one's)
@@ -78,7 +78,7 @@ function LC.SetJob(ply, id, force)
     LC.SaveStory(ply)
     if ply.lcStoryPostings then ply.lcStoryPostings.shift = nil end
     GiveTools(ply)
-    if job then ply:ChatPrint("[Union] You are now employed as: " .. job.name .. ". Your shifts appear on your board (F3).") end
+    if job then ply:ChatPrint("[Union] Your job is now: " .. job.name .. ". Open your board (F3) to find your shifts.") end
     hook.Run("LivingCityJobChanged", ply, id)
     return true
 end
@@ -108,8 +108,8 @@ function LC.GiveUnionWork(ply)
     if not LC.SetJob(ply, best.id, true) then return false end
     ply.lcjNext = 0 -- (they can ask for another straight away)
     if LC.Notice then
-        LC.Notice(ply, "event", "Union work assignment", "You are assigned: " .. best.name .. ". Report to the " .. string.lower(best.place)
-            .. ". Your shifts are on F3; ask for another post there.", 12)
+        LC.Notice(ply, "event", "Union work assignment", "The Union has given you a job: " .. best.name .. ". Go to the " .. string.lower(best.place)
+            .. " to work. Your shifts are on your board (F3), and you can ask for a different job there.", 12)
     end
     return true
 end
@@ -139,7 +139,7 @@ timer.Create("LivingCityClosedJobs", 10, 0, function()
             local s = LC.Story and LC.Story(ply)
             if s and s.chains then s.chains.shift = nil if LC.SaveStory then LC.SaveStory(ply) end end
             if ply.lcStoryPostings then ply.lcStoryPostings.shift = nil end
-            ply:ChatPrint("[Union] Your post (" .. job.name .. ") has been closed. Pick another job on your board (F3).")
+            ply:ChatPrint("[Union] Your job (" .. job.name .. ") has been closed, so you don't have one now. Pick a new job on your board (F3).")
             if LC.SendBoard then LC.SendBoard(ply) end
         end
     end
@@ -228,9 +228,9 @@ SHIFTS.sanitation = {
         if not center then return nil end
         return {
             title = "Litter sweep", reward = 15, limit = 420,
-            desc = "Clear the litter " .. Place(center, ply:GetPos()) .. ".",
+            desc = "Pick up 5 pieces of litter " .. Place(center, ply:GetPos()) .. ".",
             stages = { { kind = "collect", spots = Q.HideSpots(center, 5, 700, true), models = Q.TRASH, need = 5,
-                text = "Pick up the litter (press E)" } },
+                text = "Pick up the litter: press E on each piece (5 in all)" } },
         }
     end,
     function(ply)
@@ -248,7 +248,7 @@ SHIFTS.sanitation = {
                 local tr = util.TraceLine({ start = sp + Vector(0, 0, 40), endpos = sp - Vector(0, 0, 300), mask = MASK_SOLID_BRUSHONLY })
                 if tr.Hit then sp = tr.HitPos end -- on the ground, not floating
             end
-            local h = Hold(sp, 6, string.format("Empty bin %d of 3, %s", i, Place(sp, ply:GetPos())), 110)
+            local h = Hold(sp, 6, string.format("Go to bin %d of 3 (%s) and stay next to it for 6 seconds to empty it", i, Place(sp, ply:GetPos())), 110)
             if bin then
                 h.item = bin.ent
             else
@@ -256,35 +256,35 @@ SHIFTS.sanitation = {
             end
             stages[i] = h
         end
-        return { title = "Bin round", reward = 15, limit = 480, desc = "Three bins, overflowing again.", stages = stages }
+        return { title = "Bin round", reward = 15, limit = 480, desc = "Three bins are overflowing. Go to each one and empty it.", stages = stages }
     end,
     function(ply)
         local sp = Marked("graffiti", ply) or Q.Spot(ply, 300, 2000)
         if not sp then return nil end
         return {
             title = "Graffiti removal", reward = 20, limit = 420,
-            desc = "Graffiti reported " .. Place(sp, ply:GetPos()) .. ".",
+            desc = "Someone reported graffiti " .. Place(sp, ply:GetPos()) .. ". Go there and scrub it off.",
             stages = {
-                Goto(sp, "Go to the reported graffiti", 150),
-                Choice("Someone has sprayed a lambda and a name across the wall. You know the name: your neighbor's boy.", {
-                    { text = "Scrub all of it off.", pick = function(q, p) Trait(p, "loyalty", 1) end },
-                    { text = "Scrub the name. Leave the lambda.", check = { "guile", 11 },
+                Goto(sp, "Go to the graffiti (marked)", 150),
+                Choice("Someone has sprayed a lambda (the Resistance symbol) and a name across the wall. You know the name: it's your neighbor's boy.", {
+                    { text = "Scrub off all of it, lambda and name.", pick = function(q, p) Trait(p, "loyalty", 1) end },
+                    { text = "Scrub off only the name and leave the lambda (if you're caught, you're wanted).", check = { "guile", 11 },
                       success = function(q, p)
                           Trait(p, "sympathy", 1)
                           LC.Bump(p, "silences")
                           Narrate(q, "Somebody will see that lambda tomorrow and feel a little less alone.")
                       end,
                       fail = function(q, p)
-                          Narrate(q, "A Civil Protection unit on the corner watches you skip it.")
+                          Narrate(q, "A Civil Protection unit on the corner saw you leave the lambda on the wall. You're now wanted.")
                           LC.ReportCrime(p, "Defacing city property", 90)
                       end },
-                    { text = "Report the name to a Civil Protection unit.", pick = function(q, p)
+                    { text = "Report the boy's name to a Civil Protection unit.", pick = function(q, p)
                         Trait(p, "loyalty", 2)
                         LC.Bump(p, "reports")
-                        Insert(q, { Count("used_npc", 1, "Report the name to a Civil Protection unit (press E)", Q.IsCopNPC) })
+                        Insert(q, { Count("used_npc", 1, "Find a Civil Protection unit and press E on them to report the name", Q.IsCopNPC) })
                     end },
                 }),
-                Hold(sp, 5, "Scrub the wall (crouch)", 100, true),
+                Hold(sp, 5, "Crouch at the wall for 5 seconds to scrub it clean", 100, true),
             },
         }
     end,
@@ -306,8 +306,8 @@ SHIFTS.kitchen = {
         if not station then return nil end
         return {
             title = "The sealing line", reward = 15, limit = 360,
-            desc = "Bars and gel, sealed in foil, by the thousand. Split packs don't leave the plant.",
-            stages = { Goto(station, "Go to the ration plant", 180), Hold(station, 40, "Seal ration packs on the line", 160) },
+            desc = "Ration bars and gel get sealed in foil here, thousands a day. Go to the ration plant and work the sealing line.",
+            stages = { Goto(station, "Go to the ration plant (marked)", 180), Hold(station, 40, "Stay at the line for 40 seconds to seal ration packs", 160) },
         }
     end,
     function(ply, job)
@@ -316,10 +316,10 @@ SHIFTS.kitchen = {
         if not truck or not dest then return nil end
         return {
             title = "Supply run", reward = 20, limit = 480,
-            desc = "The supply truck is waiting " .. Place(truck, ply:GetPos()) .. ". Bring the driver's crate of sealed packs in.",
+            desc = "The supply truck is waiting " .. Place(truck, ply:GetPos()) .. ". Get the crate of ration packs from the driver and take it to the dispenser attendant.",
             stages = {
-                Q.Contact("Get the ration crate from the truck driver (press E)", truck, "citizen", "'Sign here. No, nobody has a pen. Just take it.'"),
-                Q.Contact("Hand the crate to the dispenser attendant (press E)", dest, "citizen",
+                Q.Contact("Go to the truck driver (marked) and press E on them to take the ration crate", truck, "citizen", "'Sign here. No, nobody has a pen. Just take it.'"),
+                Q.Contact("Take the crate to the dispenser attendant (marked) and press E on them", dest, "citizen",
                     "She counts the packs twice and doesn't say what the number should have been."),
             },
         }
@@ -329,28 +329,28 @@ SHIFTS.kitchen = {
         if not at then return nil end
         return {
             title = "The count", reward = 20, limit = 420,
-            desc = "Every pack in the dispensers is on the register. Every pack. Count them.",
+            desc = "Every ration pack in the dispensers must match the register. Go to the dispensers and count them.",
             stages = {
-                Goto(at, "Go to the dispensers", 200),
-                Hold(at, 25, "Count the packs against the register", 180),
-                Choice("The count is three short. Nobody signed for them, and the register doesn't care whose fault that is.", {
-                    { text = "Report the shortfall.", pick = function(q, p)
+                Goto(at, "Go to the dispensers (marked)", 200),
+                Hold(at, 25, "Stay at the dispensers for 25 seconds to count the packs against the register", 180),
+                Choice("The count is three packs short. Nobody signed for them, and the register doesn't care whose fault that is.", {
+                    { text = "Report the missing packs to the supervisor.", pick = function(q, p)
                         Trait(p, "loyalty", 1)
                         q.bonus = 5
-                        Narrate(q, "The supervisor writes it down. Somebody is going to have a very bad week. It isn't you.")
+                        Narrate(q, "The supervisor writes it down. Somebody is going to have a very bad week. It isn't you. (5 extra XP for this shift.)")
                     end },
-                    { text = "Make the numbers match.", pick = function(q, p)
+                    { text = "Change the register so the numbers match.", pick = function(q, p)
                         Trait(p, "corruption", 1)
-                        Narrate(q, "A stroke of the pen and the register agrees with the shelves. Nobody will ever know. Probably.")
+                        Narrate(q, "A stroke of the pen and the register matches the shelves. Nobody will ever know. Probably.")
                     end },
-                    { text = "Make it six short, and pocket three.", check = { "guile", 12 },
+                    { text = "Write it down as six short and keep three packs for yourself (if you're caught, you're wanted).", check = { "guile", 12 },
                       success = function(q, p)
                           Trait(p, "corruption", 1)
                           if LC.GiveOrDrop then LC.GiveOrDrop(p, "ration", 3) end
-                          Narrate(q, "Three packs go up your sleeve. The register will blame whoever was here before you.")
+                          Narrate(q, "You take three ration packs for yourself. The register will blame whoever worked here before you.")
                       end,
                       fail = function(q, p)
-                          Narrate(q, "A dispenser attendant watches you do it. She doesn't say anything. She doesn't have to.")
+                          Narrate(q, "A dispenser attendant saw you take the packs. She doesn't say anything. She doesn't have to: you're now wanted for ration fraud.")
                           LC.ReportCrime(p, "Ration fraud", 120)
                       end },
                 }),
@@ -364,33 +364,33 @@ SHIFTS.kitchen = {
         local front = LC.Lines[g].slots[1].pos
         return {
             title = "The counter", reward = 25, limit = 600,
-            desc = "You check ration cards at line " .. g .. " today. One card, one pack, and forged cards don't get either.",
+            desc = "You're checking ration cards at line " .. g .. " today. Each valid card gets one ration pack. Forged cards get nothing.",
             stages = {
-                Goto(front, "Take your place at the counter", 220),
-                Choice("A card with a smudged stamp and a citizen number that's one digit too long. The man holding it is very thin.", {
-                    { text = "Confiscate it, and report him.", pick = function(q, p)
+                Goto(front, "Go to the ration counter (marked)", 220),
+                Choice("A card with a smudged stamp and a citizen number that's one digit too long: it's forged. The man holding it is very thin.", {
+                    { text = "Take the card and report him to Civil Protection.", pick = function(q, p)
                         Trait(p, "loyalty", 1)
                         q.bonus = 10
-                        Narrate(q, "A Civil Protection unit takes him by the arm. The card goes in the box with the others.")
+                        Narrate(q, "A Civil Protection unit takes him by the arm. The card goes in the box with the others. (10 extra XP for this shift.)")
                     end },
-                    { text = "Let it through.", pick = function(q, p)
+                    { text = "Accept the card and give him his ration.", pick = function(q, p)
                         Trait(p, "sympathy", 1)
                         LC.Bump(p, "silences")
                         Narrate(q, "He takes the pack and doesn't look back. Neither do you.")
                     end },
-                    { text = "Keep the card for yourself.", check = { "guile", 10 },
+                    { text = "Keep the forged card for yourself (if you're caught, you're wanted).", check = { "guile", 10 },
                       success = function(q, p)
                           Trait(p, "corruption", 1)
                           if LC.GiveOrDrop then LC.GiveOrDrop(p, "ration_forged", 1) end
-                          Narrate(q, "'Invalid,' you tell him, and it goes in your pocket instead of the box. He doesn't argue.")
+                          Narrate(q, "'Invalid,' you tell him, and the card goes in your pocket instead of the box. He doesn't argue.")
                       end,
                       fail = function(q, p)
-                          Narrate(q, "The supervisor saw the card go in your pocket. 'Ration fraud,' he says, almost bored.")
+                          Narrate(q, "The supervisor saw the card go in your pocket. 'Ration fraud,' he says, almost bored. You're now wanted.")
                           LC.ReportCrime(p, "Ration fraud", 120)
                       end },
                 }),
                 { kind = "count", event = "served", need = 3, pos = front, r = 320, distinct = false,
-                  text = "Hand out the rations (stay at the counter)" },
+                  text = "Stay at the counter until 3 citizens have been handed their rations" },
             },
         }
     end,
@@ -402,10 +402,10 @@ SHIFTS.medic = {
         if not center then return nil end
         return {
             title = "Clinic rounds", reward = 25, limit = 600,
-            desc = "Three patients waiting. Use your medkit on them until they're on their feet.",
+            desc = "Three injured patients are waiting at the clinic. Heal each one with your medkit until they're back on their feet.",
             stages = {
-                Goto(center, "Go to the clinic", 200),
-                Patients(Q.SpotsNear(center, 3, 300), "Treat the injured (medkit, primary fire)"),
+                Goto(center, "Go to the clinic (marked)", 200),
+                Patients(Q.SpotsNear(center, 3, 300), "Heal the patients: hold your medkit and press primary fire (left click) on each one until they're healed"),
             },
         }
     end,
@@ -414,10 +414,10 @@ SHIFTS.medic = {
         if not sp then return nil end
         return {
             title = "House call", reward = 25, limit = 480,
-            desc = "A man was hurt " .. Place(sp, ply:GetPos()) .. ". He can't walk to the clinic.",
+            desc = "A man was hurt " .. Place(sp, ply:GetPos()) .. " and can't walk to the clinic. Go to him and heal him.",
             stages = {
                 {
-                    kind = "target", action = "reach", r = 140, text = "Find the injured man (marked)", pos = sp,
+                    kind = "target", action = "reach", r = 140, text = "Go to the injured man (marked)", pos = sp,
                     onEnter = function(q, st)
                         local npc = Q.SpawnActor(q, "citizen", sp, 900)
                         if not npc then return false end
@@ -426,15 +426,15 @@ SHIFTS.medic = {
                         st.npc = npc
                     end,
                 },
-                Choice("Stunstick bruises, in neat rows. He grabs your wrist. 'Please. Don't write it down. Say I fell.'", {
-                    { text = "Log it truthfully.", pick = function(q, p) Trait(p, "loyalty", 1) end },
-                    { text = "Write 'fell down the stairs'.", pick = function(q, p)
+                Choice("Stunstick bruises, in neat rows: Civil Protection did this. He grabs your wrist. 'Please. Don't write it down. Say I fell.'", {
+                    { text = "Write down the truth: a stunstick beating.", pick = function(q, p) Trait(p, "loyalty", 1) end },
+                    { text = "Cover for him: write 'fell down the stairs'.", pick = function(q, p)
                         Trait(p, "sympathy", 1)
                         LC.Bump(p, "silences")
                         Narrate(q, "He closes his eyes. 'Thank you.'")
                     end },
                 }),
-                PatchOne("Treat him (medkit, primary fire)"),
+                PatchOne("Heal him: hold your medkit and press primary fire (left click) on him until he's healed"),
             },
         }
     end,
@@ -448,13 +448,13 @@ SHIFTS.factory = {
         if not b or b:DistToSqr(a) < 100 * 100 then b = Q.SpotsNear(a, 1, 500)[1] end
         return {
             title = "Assembly quota", reward = 25, limit = 600,
-            desc = "Today's quota is posted. Nobody asks what the parts are for.",
+            desc = "Today's quota is posted: work the line, then carry the finished part to the next station and fit it. Nobody asks what the parts are for.",
             stages = {
-                Goto(a, "Report to the line", 180),
-                Hold(a, 25, "Work the line", 160),
-                { kind = "pickup", pos = a, model = "models/props_junk/cardboard_box004a.mdl", text = "Take the finished part (press E)" },
-                Deliver(b, "Carry it to the next station", 150),
-                Hold(b, 15, "Fit the part", 160),
+                Goto(a, "Go to the factory line (marked)", 180),
+                Hold(a, 25, "Stay at the line for 25 seconds to work it", 160),
+                { kind = "pickup", pos = a, model = "models/props_junk/cardboard_box004a.mdl", text = "Pick up the finished part: press E on the box" },
+                Deliver(b, "Carry the part to the next station (marked)", 150),
+                Hold(b, 15, "Stay at the station for 15 seconds to fit the part", 160),
             },
         }
     end,
@@ -465,32 +465,32 @@ SHIFTS.factory = {
         local stages = {}
         for i = 1, 2 do
             stages[#stages + 1] = { kind = "pickup", pos = dock, model = "models/props_junk/cardboard_box004a.mdl",
-                text = string.format("Collect crate %d of 2 from the loading dock (press E)", i) }
-            stages[#stages + 1] = Deliver(station, string.format("Bring crate %d to the factory floor", i), 160)
+                text = string.format("Go to the loading dock (marked) and press E on crate %d of 2 to pick it up", i) }
+            stages[#stages + 1] = Deliver(station, string.format("Carry crate %d to the factory floor (marked)", i), 160)
         end
-        return { title = "Loading dock", reward = 25, limit = 600, desc = "Two crates, loading dock to the floor.", stages = stages }
+        return { title = "Loading dock", reward = 25, limit = 600, desc = "Carry two crates, one at a time, from the loading dock to the factory floor.", stages = stages }
     end,
     function(ply, job)
         local station = WorkSpot(ply, job.num)
         if not station then return nil end
         return {
             title = "Short count", reward = 20, limit = 420,
-            desc = "Another shift on the line.",
+            desc = "Another shift working the factory line.",
             stages = {
-                Goto(station, "Report to the line", 180),
-                Hold(station, 20, "Work the line", 160),
-                Choice("The parts count is short again. You watch the foreman slide a box under his coat, and he sees you watching.", {
-                    { text = "Report him.", pick = function(q, p)
+                Goto(station, "Go to the factory line (marked)", 180),
+                Hold(station, 20, "Stay at the line for 20 seconds to work it", 160),
+                Choice("The parts count is short again. You see the foreman slide a box of parts under his coat, and he sees you watching.", {
+                    { text = "Report the foreman to Civil Protection.", pick = function(q, p)
                         Trait(p, "loyalty", 1)
                         LC.Bump(p, "reports")
-                        Insert(q, { Count("used_npc", 1, "Report the foreman to a Civil Protection unit (press E)", Q.IsCopNPC) })
+                        Insert(q, { Count("used_npc", 1, "Find a Civil Protection unit and press E on them to report the foreman", Q.IsCopNPC) })
                     end },
                     { text = "Say nothing.", pick = function(q, p) LC.Bump(p, "silences") end },
-                    { text = "Ask for your cut.", pick = function(q, p)
+                    { text = "Ask him for a share of what he's stealing.", pick = function(q, p)
                         Trait(p, "corruption", 1)
                         LC.Bump(p, "bribes")
                         q.bonus = 10
-                        Narrate(q, "He grins like you've always been friends.")
+                        Narrate(q, "He grins like you've always been friends. (10 extra XP for this shift.)")
                     end },
                 }),
             },
@@ -506,7 +506,7 @@ SHIFTS.courier = {
         local office = WorkSpot(ply, job.num)
         local stages, carried = {}, {}
         if office then
-            stages[1] = Q.Contact("Collect today's letters from the postal clerk (press E)", office, "citizen",
+            stages[1] = Q.Contact("Go to the post office (marked) and press E on the postal clerk to collect today's letters", office, "citizen",
                 "'Real post, for once. Mind none of it goes astray.'")
         end
         for _, l in ipairs(letters) do
@@ -523,7 +523,7 @@ SHIFTS.courier = {
         for _, st in ipairs(stages) do
             if st.kind == "hold" then
                 n = n + 1
-                st.text = string.format("Deliver letter %d of %d to %s (push it under their door)", n, #carried, carried[n].toName or "someone")
+                st.text = string.format("Take letter %d of %d to %s (marked) and stay at their door for 3 seconds to push it under", n, #carried, carried[n].toName or "someone")
             end
         end
         -- they're yours from the moment you start
@@ -535,7 +535,7 @@ SHIFTS.courier = {
         end
         return {
             title = "The real mail", reward = 25, limit = 900,
-            desc = #carried .. " letter" .. (#carried == 1 and "" or "s") .. " from people in the city, to people in the city.",
+            desc = #carried .. " letter" .. (#carried == 1 and "" or "s") .. " written by people in the city, for you to deliver to other people in the city.",
             stages = stages,
             onFinish = function() for _, l in ipairs(carried) do if l.state == "out" then l.claimed = nil end end end,
         }
@@ -553,17 +553,17 @@ SHIFTS.courier = {
         end
         Q.Shuffle(doors)
         -- the mail comes from the clerk at the post office, and goes to people, by hand
-        local stages = { Q.Contact("Collect the mail from the postal clerk (press E)", office, "citizen",
+        local stages = { Q.Contact("Go to the post office (marked) and press E on the postal clerk to collect the mail", office, "citizen",
             "'Three for the district. Two are overdue. Don't tell them I said so.'") }
         for i = 1, 3 do
             local g = math.random() < 0.5 and "male" or "female"
             local name = LC.NewCharacterName(g)
-            stages[#stages + 1] = Q.Contact(string.format("Hand letter %d of 3 to %s, %s (press E)", i, name, doors[i][2]), doors[i][1], "citizen",
+            stages[#stages + 1] = Q.Contact(string.format("Hand letter %d of 3 to %s, %s (marked): go there and press E on them", i, name, doors[i][2]), doors[i][1], "citizen",
                 Pick({ "They take it without looking at who sent it.", "'Finally,' they say, and shut the door on the rest of the sentence.",
                     "A nod. Nobody says anything useful in this city out loud.", "They read the envelope twice before they put it away." }),
                 { gender = g }) -- whoever answers the door looks like the name on the envelope
         end
-        return { title = "Mail round", reward = 25, limit = 600, desc = "Three letters, three people. Collect them at the post office.", stages = stages }
+        return { title = "Mail round", reward = 25, limit = 600, desc = "Collect three letters from the clerk at the post office, then hand each one to the person it's addressed to.", stages = stages }
     end,
     function(ply, job)
         local office = WorkSpot(ply, job.num)
@@ -572,25 +572,25 @@ SHIFTS.courier = {
         if not office or not dest then return nil end
         return {
             title = "Sealed envelope", reward = 20, limit = 480,
-            desc = "One envelope, Civil Protection seal, to be delivered " .. Place(dest, ply:GetPos()) .. ".",
+            desc = "Collect an envelope with a Civil Protection seal from the post office and deliver it to someone " .. Place(dest, ply:GetPos()) .. ".",
             stages = {
-                Q.Contact("Collect the envelope from the clerk (press E)", office, "citizen", "'Hand it over in person. Nobody signs for these.'"),
-                Choice("The seal is a Combine stamp. It's not glued very well.", {
+                Q.Contact("Go to the post office (marked) and press E on the clerk to collect the envelope", office, "citizen", "'Hand it over in person. Nobody signs for these.'"),
+                Choice("The seal is a Combine stamp, and it's not glued very well. You could probably open it.", {
                     { text = "Deliver it unopened." },
-                    { text = "Steam it open.", check = { "guile", 12 },
+                    { text = "Steam it open and read it (the seal might tear).", check = { "guile", 12 },
                       success = function(q)
-                          Insert(q, { Choice("An eviction order. The family in 3B, the one with the twins. Effective tomorrow.", {
-                              { text = "Deliver it as addressed.", pick = function(q2, p) Trait(p, "loyalty", 1) end },
-                              { text = "Warn the family first.", pick = function(q2, p)
+                          Insert(q, { Choice("It's an eviction order for the family in 3B, the one with the twins. They have to be out by tomorrow.", {
+                              { text = "Deliver it as addressed and say nothing.", pick = function(q2, p) Trait(p, "loyalty", 1) end },
+                              { text = "Warn the family before you deliver it.", pick = function(q2, p)
                                   Trait(p, "sympathy", 1)
                                   LC.Bump(p, "silences")
-                                  if family then Insert(q2, { Goto(family, "Warn the family, quietly", 150) }) end
+                                  if family then Insert(q2, { Goto(family, "Go to the family's home (marked) to quietly warn them", 150) }) end
                               end },
                           }) })
                       end,
                       fail = function(q) Narrate(q, "The seal tears. You'll have to hope nobody checks.") end },
                 }),
-                Q.Contact("Hand the envelope to the addressee (press E)", dest, "citizen", "They take it with both hands, like it might go off."),
+                Q.Contact("Take the envelope to the person it's addressed to (marked) and press E on them", dest, "citizen", "They take it with both hands, like it might go off."),
             },
         }
     end,
@@ -604,25 +604,25 @@ SHIFTS.maintenance = {
             local stages = {}
             for i = 1, math.min(3, #lamps) do
                 local lamp = lamps[i]
-                local h = Hold(lamp:GetPos(), 8, string.format("Fix streetlight %d of %d, %s", i, math.min(3, #lamps), Place(lamp:GetPos(), ply:GetPos())), 130)
+                local h = Hold(lamp:GetPos(), 8, string.format("Go to streetlight %d of %d (%s) and stay next to it to repair it", i, math.min(3, #lamps), Place(lamp:GetPos(), ply:GetPos())), 130)
                 h.onDone = function()
                     Sound("ambient/energy/spark" .. math.random(1, 6) .. ".wav", lamp:GetPos())
                     if LC.RepairStreetFixture then LC.RepairStreetFixture(lamp) end
                 end
                 stages[i] = h
             end
-            return { title = "Lights out", reward = 20, limit = 540, desc = "Streetlights down across the district.", stages = stages }
+            return { title = "Lights out", reward = 20, limit = 540, desc = "Streetlights are broken across the district. Go to each one and repair it.", stages = stages }
         end
         local stages = {}
         for i = 1, 3 do
             local sp = Q.Spot(ply, 300, 2500)
             if not sp then return nil end
-            local h = Hold(sp, 6, string.format("Repair fuse box %d of 3, %s", i, Place(sp, ply:GetPos())), 100)
+            local h = Hold(sp, 6, string.format("Go to fuse box %d of 3 (%s) and stay next to it to repair it", i, Place(sp, ply:GetPos())), 100)
             h.onEnter = function(q) Q.SpawnItem(q, "models/props_lab/powerbox02a.mdl", sp) end
             h.onDone = function() Sound("ambient/energy/spark" .. math.random(1, 6) .. ".wav", sp) end
             stages[i] = h
         end
-        return { title = "Lights out", reward = 20, limit = 540, desc = "Three fuse boxes down across the district.", stages = stages }
+        return { title = "Lights out", reward = 20, limit = 540, desc = "Three fuse boxes are broken across the district. Go to each one and repair it.", stages = stages }
     end,
     function(ply)
         local cps = LC.PointsOfKind("checkpoint")
@@ -630,20 +630,20 @@ SHIFTS.maintenance = {
         if not pos then return nil end
         return {
             title = "Terminal fault", reward = 20, limit = 420,
-            desc = "A checkpoint scanner terminal is throwing faults.",
+            desc = "A scanner terminal at a checkpoint keeps breaking down. Go there and repair it.",
             stages = {
-                Goto(pos, "Go to the faulty terminal", 220),
-                Hold(pos, 20, "Repair the terminal", 200),
-                Choice("The terminal's log scrolls past while it reboots. One of last night's entries is your neighbor, at 3 a.m.", {
-                    { text = "Leave the log intact.", pick = function(q, p) Trait(p, "loyalty", 1) end },
-                    { text = "Corrupt that entry while you're in there.", check = { "guile", 12 },
+                Goto(pos, "Go to the broken terminal (marked)", 220),
+                Hold(pos, 20, "Stay next to the terminal to repair it", 200),
+                Choice("While the terminal reboots, its log scrolls past. One of last night's entries is your neighbor, out at 3 a.m.", {
+                    { text = "Leave the log as it is.", pick = function(q, p) Trait(p, "loyalty", 1) end },
+                    { text = "Erase your neighbor's entry while you're in there (if you're caught, you're wanted).", check = { "guile", 12 },
                       success = function(q, p)
                           Trait(p, "sympathy", 1)
                           LC.Bump(p, "silences")
                           Narrate(q, "One line of the log becomes noise. Terminals glitch all the time.")
                       end,
                       fail = function(q, p)
-                          Narrate(q, "The terminal flags the edit. Every Civil Protection unit in the sector gets the alert.")
+                          Narrate(q, "The terminal flags the edit. Every Civil Protection unit in the sector gets the alert. You're now wanted.")
                           LC.ReportCrime(p, "Tampering with a city terminal", 120)
                       end },
                 }),
@@ -716,10 +716,10 @@ SHIFTS.porter = {
         if not platform or not home then return nil end
         return {
             title = "New arrivals", reward = 20, limit = 540,
-            desc = "A train came in. One of the new arrivals needs walking to their assigned housing.",
+            desc = "A train has arrived. Meet one of the new arrivals on the platform and walk him to his assigned housing.",
             stages = {
                 {
-                    kind = "target", action = "reach", r = 140, text = "Meet the new arrival on the platform (marked)",
+                    kind = "target", action = "reach", r = 140, text = "Go to the new arrival on the platform (marked)",
                     onEnter = function(q, st)
                         local npc = Q.SpawnActor(q, "citizen", platform, 900)
                         if not npc then return false end
@@ -728,9 +728,9 @@ SHIFTS.porter = {
                         q.data.dest, q.data.destName, q.data.destR = home, homeName, homeR
                     end,
                 },
-                Choice("He's holding a transfer slip like it might bite him. Under his breath: 'Is there anywhere in this city they don't look?'", {
-                    { text = "'Your block. Keep your head down.'", pick = function(q, p) Trait(p, "loyalty", 1) end },
-                    { text = "Tell him about the canals, and walk him there instead.",
+                Choice("He's holding a transfer slip like it might bite him. Under his breath he asks: 'Is there anywhere in this city they don't look?'", {
+                    { text = "Tell him: 'Go to your block and keep your head down.'", pick = function(q, p) Trait(p, "loyalty", 1) end },
+                    { text = "Tell him about the canals (rebel territory) and walk him there instead.",
                       when = function() return #LC.ZonesOfKind("rebel") > 0 end,
                       pick = function(q, p)
                           Trait(p, "sympathy", 1)
@@ -739,7 +739,7 @@ SHIFTS.porter = {
                           q.data.dest, q.data.destR, q.data.destName = pos, r, name
                           Narrate(q, "He doesn't say thank you. He doesn't have to.")
                       end },
-                    { text = "Repeat the question to a Civil Protection unit.", pick = function(q, p)
+                    { text = "Report what he said to a Civil Protection unit.", pick = function(q, p)
                         Trait(p, "loyalty", 2)
                         LC.Bump(p, "reports")
                         if IsValid(q.data.actor) and LC.ArrestNPC then LC.ArrestNPC(q.data.actor, nil) end
@@ -748,7 +748,7 @@ SHIFTS.porter = {
                     end },
                 }),
                 {
-                    kind = "escort", vanish = true, text = "Walk him to his new home",
+                    kind = "escort", vanish = true, text = "Walk him to his new home (marked)",
                     onEnter = function(q, st)
                         st.npc = q.data.actor
                         if not IsValid(st.npc) then return false end
@@ -765,30 +765,30 @@ SHIFTS.porter = {
         if not platform or not dest then return nil end
         return {
             title = "Luggage", reward = 15, limit = 480,
-            desc = "A suitcase was left on the platform. It goes to its owner, " .. destName .. ".",
+            desc = "A suitcase was left on the train platform. Pick it up and return it to its owner, " .. destName .. ".",
             stages = {
                 { kind = "pickup", pos = platform, model = "models/props_c17/suitcase_passenger_physics.mdl",
-                  text = "Collect the suitcase from the platform (press E)" },
+                  text = "Go to the platform (marked) and press E on the suitcase to pick it up" },
                 Choice("The suitcase is heavier than clothes. Something inside slides and settles, like a stack of paper.", {
-                    { text = "Carry it. It's not your business." },
-                    { text = "Take a look inside.", check = { "guile", 11 },
+                    { text = "Just carry it. It's not your business." },
+                    { text = "Open it and look inside (if you're caught, you're wanted).", check = { "guile", 11 },
                       success = function(q, p)
                           Narrate(q, "Under the shirts: a stack of blank identity forms. You take one. Nobody counts them twice.")
                           Give(p, "papers_blank")
                           LC.Bump(p, "thefts")
                       end,
                       fail = function(q, p)
-                          Narrate(q, "The latches snap open loud enough to turn heads. A Civil Protection unit is already walking over.")
+                          Narrate(q, "The latches snap open loud enough to turn heads. A Civil Protection unit is already walking over. You're now wanted.")
                           LC.ReportCrime(p, "Theft from a traveler", 90)
                       end },
                     { text = "Hand it to Civil Protection.", pick = function(q, p)
                         Trait(p, "loyalty", 2)
                         LC.Bump(p, "reports")
                         SkipNext(q)
-                        Insert(q, { Count("used_npc", 1, "Hand the suitcase to a Civil Protection unit (press E)", Q.IsCopNPC) })
+                        Insert(q, { Count("used_npc", 1, "Find a Civil Protection unit and press E on them to hand over the suitcase", Q.IsCopNPC) })
                     end },
                 }),
-                Q.Contact("Return the suitcase to its owner, " .. destName .. " (press E)", dest, "citizen", "'That's mine. I thought I'd lost it.' They don't say thank you."),
+                Q.Contact("Take the suitcase to its owner, " .. destName .. " (marked), and press E on them", dest, "citizen", "'That's mine. I thought I'd lost it.' They don't say thank you."),
             },
         }
     end,
@@ -797,26 +797,26 @@ SHIFTS.porter = {
         if not platform then return nil end
         return {
             title = "Ticket check", reward = 20, limit = 540,
-            desc = "Tickets and transit permits, everyone boarding.",
+            desc = "Check the ticket and transit permit of everyone boarding the train.",
             stages = {
-                Goto(platform, "Go to the platform", 220),
-                Count("used_npc", 3, "Check three travelers' tickets (press E on citizens)", Q.IsCitizenNPC),
+                Goto(platform, "Go to the train platform (marked)", 220),
+                Count("used_npc", 3, "Check three travelers' tickets: press E on citizens on the platform", Q.IsCitizenNPC),
                 Choice("An old woman has a ticket, but no transit permit. \"I'm going to see my son,\" she says. \"He's in Nova Prospekt.\"", {
-                    { text = "Let her board.", check = { "guile", 10 },
+                    { text = "Let her board anyway (if you're caught, you're wanted).", check = { "guile", 10 },
                       success = function(q, p)
                           Trait(p, "sympathy", 1)
                           LC.Bump(p, "silences")
                           Narrate(q, "She squeezes your hand on the way past. It's the last train she'll ever take, and you both know it.")
                       end,
                       fail = function(q, p)
-                          Narrate(q, "The platform scanner flags her before she reaches the door. And you, for letting her through.")
+                          Narrate(q, "The platform scanner flags her before she reaches the door. And you, for letting her through: you're now wanted.")
                           LC.ReportCrime(p, "Aiding unauthorized travel", 90)
                       end },
-                    { text = "Turn her back.", pick = function(q, p) Trait(p, "loyalty", 1) end },
-                    { text = "Call a Civil Protection unit.", pick = function(q, p)
+                    { text = "Refuse, and send her back.", pick = function(q, p) Trait(p, "loyalty", 1) end },
+                    { text = "Report her to Civil Protection.", pick = function(q, p)
                         Trait(p, "loyalty", 2)
                         LC.Bump(p, "reports")
-                        Insert(q, { Count("used_npc", 1, "Report her to a Civil Protection unit (press E)", Q.IsCopNPC) })
+                        Insert(q, { Count("used_npc", 1, "Find a Civil Protection unit and press E on them to report her", Q.IsCopNPC) })
                     end },
                 }),
             },
@@ -864,7 +864,7 @@ SHIFTS.mortuary = {
         local spot = IsValid(body) and body:GetPos() or Q.Spot(ply, 400, 2500)
         local home, homeName = Residence(ply)
         if not spot then return nil end
-        local go = Goto(spot, "Collect the body " .. Place(spot, ply:GetPos()), 150)
+        local go = Goto(spot, "Go to the body " .. Place(spot, ply:GetPos()), 150)
         go.onEnter = function(q)
             if IsValid(body) and not body.lcBody.claimed and not (LC.HauledBy and LC.HauledBy(body)) then
                 q.data.body = body
@@ -881,23 +881,23 @@ SHIFTS.mortuary = {
         end
         return {
             title = "Collection", reward = 20, limit = 600,
-            desc = "A body was reported " .. Place(spot, ply:GetPos()) .. ". Nobody has claimed it.",
+            desc = "A body was reported " .. Place(spot, ply:GetPos()) .. ". Nobody has claimed it. Collect it and take it to the incinerator or morgue.",
             onFinish = Unclaim,
             stages = {
                 go,
                 Choice("His coat pocket holds identity papers, still valid. Nobody has reported him dead yet.", {
-                    { text = "Turn everything in.", pick = function(q, p) Trait(p, "loyalty", 1) end },
-                    { text = "Keep his papers.", pick = function(q, p)
+                    { text = "Hand everything in, papers included.", pick = function(q, p) Trait(p, "loyalty", 1) end },
+                    { text = "Keep his identity papers.", pick = function(q, p)
                         Give(p, "papers_dead")
                         LC.Bump(p, "thefts")
                         Narrate(q, "They're good papers. They'll be good for somebody.")
                     end },
-                    { text = "Find his family first.", pick = function(q, p)
+                    { text = "Tell his family before you take him away.", pick = function(q, p)
                         Trait(p, "sympathy", 1)
-                        if home then Insert(q, { Goto(home, "Tell his family, " .. homeName, 160) }) end
+                        if home then Insert(q, { Goto(home, "Go and tell his family: " .. homeName, 160) }) end
                     end },
                 }),
-                HaulStage("Haul him (E on the body to drag, E to let go)"),
+                HaulStage("Drag the body (press E on it to grab it, E again to let go) to the marked spot"),
             },
         }
     end,
@@ -911,11 +911,11 @@ SHIFTS.mortuary = {
         end
         if n < 2 then return nil end
         n = math.min(3, n)
-        local st = Count("cremated", n, string.format("Haul %d bodies off the streets to %s", n, proc.name), nil, false)
+        local st = Count("cremated", n, string.format("Drag %d bodies off the streets to %s (press E on a body to grab it, E again to let go)", n, proc.name), nil, false)
         st.pos, st.r = proc.pos, 200
         return {
             title = "Clear the streets", reward = 15 + 10 * n, limit = 900,
-            desc = "There's been trouble. The city wants the streets clean before morning.",
+            desc = "There's been trouble, and bodies are lying in the streets. Take them to the incinerator or morgue: the city wants them gone before morning.",
             stages = { st },
         }
     end,
@@ -924,21 +924,21 @@ SHIFTS.mortuary = {
         local inc = #incs > 0 and Pick(incs) or nil
         local morgue = IsValid(inc) and inc:GetPos() or WorkSpot(ply, job.num)
         if not morgue then return nil end
-        local work = Hold(morgue, 30, "Work the incinerator", 160)
+        local work = Hold(morgue, 30, "Stay at the incinerator for 30 seconds to burn the bodies", 160)
         work.onDone = function() if IsValid(inc) then inc:SetNW2Float("lc_burn_until", CurTime() + 8) end end
         return {
             title = "Incinerator", reward = 15, limit = 420,
-            desc = "The incinerator runs all night. Somebody has to feed it.",
+            desc = "The incinerator runs all night, and somebody has to feed it the bodies. Go there and work it.",
             stages = {
-                Goto(morgue, IsValid(inc) and "Go to the incinerator" or "Go to the morgue", 180),
+                Goto(morgue, IsValid(inc) and "Go to the incinerator (marked)" or "Go to the morgue (marked)", 180),
                 work,
-                Choice("The next one still has a wedding ring on.", {
-                    { text = "Leave it on her." },
-                    { text = "Pocket the ring.", pick = function(q, p)
+                Choice("The next body still has a wedding ring on.", {
+                    { text = "Leave the ring on her." },
+                    { text = "Keep the ring for yourself.", pick = function(q, p)
                         Trait(p, "corruption", 1)
                         Give(p, "keepsake")
                     end },
-                    { text = "Set it aside for the family.", pick = function(q, p) Trait(p, "sympathy", 1) end },
+                    { text = "Set the ring aside for her family.", pick = function(q, p) Trait(p, "sympathy", 1) end },
                 }),
             },
         }
@@ -963,15 +963,15 @@ SHIFTS.mortuary[#SHIFTS.mortuary + 1] = function(ply, job)
     end
     if #spots < 2 then return nil end
     local bag = { kind = "collect", spots = spots, models = { "models/headcrabclassic.mdl" }, need = #spots,
-        text = "Bag the dead headcrabs (press E on each)" }
+        text = "Find the dead headcrabs and press E on each one to bag it" }
     bag.onEnter = function(q)
         for _, e in ipairs(real) do if IsValid(e) then e:Remove() end end -- (the bag stage puts its own where they lay)
     end
-    local burn = Deliver(proc.pos, "Take them to " .. proc.name .. " and burn them", 200)
+    local burn = Deliver(proc.pos, "Take the bags to " .. proc.name .. " (marked) to burn them", 200)
     burn.onDone = function() if IsValid(proc.ent) then proc.ent:SetNW2Float("lc_burn_until", CurTime() + 8) end end
     return {
         title = "Headcrab collection", reward = 10 + 3 * #spots, limit = 600,
-        desc = "Dead headcrabs left lying in the street breed flies and worse. Bag them and burn them.",
+        desc = "Dead headcrabs left lying in the street breed flies and worse. Bag every one, then take them to be burned.",
         stages = { bag, burn },
     }
 end
@@ -987,18 +987,18 @@ SHIFTS.scrap = {
         if not yard or not center then return nil end
         return {
             title = "Scrap run", reward = 20, limit = 540,
-            desc = "Metal " .. Place(center, ply:GetPos()) .. ". The Union needs all of it.",
+            desc = "Scrap metal is lying " .. Place(center, ply:GetPos()) .. ". Collect 5 pieces and bring them to the reclamation yard. The Union needs all of it.",
             stages = {
                 { kind = "collect", spots = Q.HideSpots(center, 5, 700, true), models = METAL, need = 5,
-                  text = "Collect the scrap (press E)" },
+                  text = "Collect the scrap: press E on each piece (5 in all)" },
                 Choice("One good piece of copper wasn't on anybody's list.", {
-                    { text = "Log it.", pick = function(q, p) Trait(p, "loyalty", 1) end },
-                    { text = "Keep it for the dealer.", pick = function(q, p)
+                    { text = "Log it with the rest.", pick = function(q, p) Trait(p, "loyalty", 1) end },
+                    { text = "Keep it to sell to the dealer (you get 2 scrap).", pick = function(q, p)
                         Give(p, "scrap", 2)
                         LC.Bump(p, "thefts")
                     end },
                 }),
-                Deliver(yard, "Bring it to the reclamation yard", 180),
+                Deliver(yard, "Bring the scrap to the reclamation yard (marked)", 180),
             },
         }
     end,
@@ -1007,32 +1007,32 @@ SHIFTS.scrap = {
         for i = 1, 3 do
             local sp = Marked("rubble", ply, used) or Q.Spot(ply, 300, 2500)
             if not sp then return nil end
-            local h = Hold(sp, 8, string.format("Clear rubble %d of 3, %s", i, Place(sp, ply:GetPos())), 110)
+            local h = Hold(sp, 8, string.format("Go to rubble pile %d of 3 (%s) and stay next to it to clear it", i, Place(sp, ply:GetPos())), 110)
             h.onEnter = function(q) Q.SpawnItem(q, Pick(RUBBLE), sp) end
             stages[#stages + 1] = h
         end
         table.insert(stages, 3, Choice("Under the bricks: a canvas bag. Inside, a pistol and a magazine wrapped in oilcloth. Someone hid it here on purpose.", {
-            { text = "Report the cache.", pick = function(q, p)
+            { text = "Report the hidden gun to Civil Protection.", pick = function(q, p)
                 Trait(p, "loyalty", 2)
                 LC.Bump(p, "reports")
-                Insert(q, { Count("used_npc", 1, "Report the cache to a Civil Protection unit (press E)", Q.IsCopNPC) })
+                Insert(q, { Count("used_npc", 1, "Find a Civil Protection unit and press E on them to report the gun", Q.IsCopNPC) })
             end },
             { text = "Leave it where it is.", pick = function(q, p)
                 LC.Bump(p, "silences")
                 Narrate(q, "You put the bricks back exactly how they were.")
             end },
-            { text = "Take it.", pick = function(q, p)
+            { text = "Take the pistol (if a unit sees you take it, you're wanted).", pick = function(q, p)
                 p:Give("weapon_pistol")
                 p:GiveAmmo(18, "Pistol")
                 if LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then
-                    Narrate(q, "A Civil Protection unit saw the oilcloth come out of the rubble.")
+                    Narrate(q, "A Civil Protection unit saw you pull the gun out of the rubble. You're now wanted.")
                     LC.ReportCrime(p, "Possession of a firearm", 240)
                 else
                     Narrate(q, "It's cold and heavy and nobody saw.")
                 end
             end },
         }))
-        return { title = "Rubble clearing", reward = 20, limit = 600, desc = "Three rubble piles from the old city.", stages = stages }
+        return { title = "Rubble clearing", reward = 20, limit = 600, desc = "Clear three piles of rubble left over from the old city.", stages = stages }
     end,
 }
 
@@ -1097,7 +1097,7 @@ local function GamifyHolds(spec, kind, text, opts, keepEnter)
     return spec
 end
 
-local LINE_TEXT = "Work the line: rust-red, sparking parts in the scrap bin (E to grab, left click to throw); good ones through"
+local LINE_TEXT = "Work the line: throw the bad parts (rust-red and sparking) in the scrap bin and let the good ones pass. E grabs a part, left click throws it"
 
 do
     local litter = SHIFTS.sanitation[1]
@@ -1108,10 +1108,10 @@ do
         if not depot or #spots < 5 then return litter(ply, job) end
         return {
             title = "Street sweep", reward = 10, limit = 600,
-            desc = "Your cart's at the depot. The streets are a mess. Pay for every piece in the cart.",
+            desc = "Take your cart from the sanitation depot, fill it with rubbish from the streets and bring it back. You're paid credits for every piece in the cart.",
             stages = {
-                GameGo(depot, "Go to the sanitation depot: your cart's there", "sweep", { depot = depot, spots = spots }),
-                GameStage("Fill the cart and bring it back: E pushes it, E picks up rubbish, left click throws it in"),
+                GameGo(depot, "Go to the sanitation depot (marked): your cart is there", "sweep", { depot = depot, spots = spots }),
+                GameStage("Fill the cart and push it back to the depot. E on the cart grabs it to push (E again lets go). E picks up rubbish, left click throws it in the cart"),
             },
         }
     end
@@ -1123,8 +1123,8 @@ do
         if not station then return nil end
         return {
             title = "On the line", reward = 10, limit = 600,
-            desc = "The line runs all day. Bad parts don't leave the floor.",
-            stages = { GameGo(station, "Report to the line", "line", { station = station }), GameStage(LINE_TEXT) },
+            desc = "Work the factory line: throw the bad parts in the scrap bin before they reach the end. Good parts go through.",
+            stages = { GameGo(station, "Go to the factory line (marked)", "line", { station = station }), GameStage(LINE_TEXT) },
         }
     end
     local seal = SHIFTS.kitchen[1]
@@ -1134,9 +1134,9 @@ do
         if not station then return nil end
         return {
             title = "The sealing line", reward = 10, limit = 600,
-            desc = "Bars and gel, sealed in foil, by the thousand. Split packs don't leave the plant.",
-            stages = { GameGo(station, "Report to the sealing line", "line", { station = station, variant = "rations" }),
-                GameStage("Work the sealing line: split, leaking packs (sickly green) in the reject bin (E to grab, left click to throw); sealed ones through") },
+            desc = "Ration bars and gel get sealed in foil here, thousands a day. Throw the split packs in the reject bin: only sealed ones go through.",
+            stages = { GameGo(station, "Go to the sealing line at the ration plant (marked)", "line", { station = station, variant = "rations" }),
+                GameStage("Work the sealing line: throw split, leaking packs (sickly green) in the reject bin and let the sealed ones pass. E grabs a pack, left click throws it") },
         }
     end
     local short = SHIFTS.factory[3]
@@ -1151,7 +1151,7 @@ do
     SHIFTS.porter[#SHIFTS.porter + 1] = function(ply, job)
         local spec = dock(ply, job)
         if spec then
-            spec.title, spec.desc = "Freight from the dock", "Two crates off the loading dock, to the station."
+            spec.title, spec.desc = "Freight from the dock", "Carry two crates, one at a time, from the loading dock to the station."
             for _, st in ipairs(spec.stages or {}) do
                 if st.text then st.text = string.gsub(st.text, "the factory floor", "the station") end
             end
@@ -1164,13 +1164,13 @@ do
         if GamesOn() then
             return {
                 title = "Overtime on the line", reward = 10, limit = 600,
-                desc = "The quota went up again. The line doesn't stop for you.",
-                stages = { GameGo(station, "Report to the line", "line", { station = station }), GameStage(LINE_TEXT) },
+                desc = "The quota went up again. Work the factory line: bad parts in the scrap bin, good ones through. The line doesn't stop for you.",
+                stages = { GameGo(station, "Go to the factory line (marked)", "line", { station = station }), GameStage(LINE_TEXT) },
             }
         end
         return {
-            title = "Overtime on the line", reward = 20, limit = 420, desc = "The quota went up again.",
-            stages = { Goto(station, "Report to the line", 180), Hold(station, 40, "Work the line", 160) },
+            title = "Overtime on the line", reward = 20, limit = 420, desc = "The quota went up again. Go to the factory line and work it.",
+            stages = { Goto(station, "Go to the factory line (marked)", 180), Hold(station, 40, "Stay at the line for 40 seconds to work it", 160) },
         }
     end
 
@@ -1179,7 +1179,7 @@ do
         SHIFTS.maintenance[i] = function(ply, job)
             local spec = build(ply, job)
             if spec and GamesOn() then
-                spec = GamifyHolds(spec, "wiring", "Rewire it: turn the tiles till the current reaches the lamp (a sparking tile bites)",
+                spec = GamifyHolds(spec, "wiring", "Rewire it: click the tiles to turn them (right-click turns back) until the current reaches the lamp. Don't turn a tile while it's sparking: it shocks you",
                     { what = string.find(spec.title, "Terminal", 1, true) and "the terminal" or "the box" }, true)
             end
             return spec
@@ -1194,10 +1194,10 @@ do
         if not center then return nil end
         return {
             title = "Triage", reward = 10, limit = 600,
-            desc = "Patients coming in, and not enough of you. The worst first.",
+            desc = "Patients are coming into the clinic faster than you can treat them. Treat the worst hurt first.",
             stages = {
-                GameGo(center, "Go to the clinic", "triage", { center = center, spots = Q.SpotsNear(center, 4, 260) }),
-                GameStage("Treat them before they bleed out (medkit, primary fire): the bars over their heads say who's worst"),
+                GameGo(center, "Go to the clinic (marked)", "triage", { center = center, spots = Q.SpotsNear(center, 4, 260) }),
+                GameStage("Heal the patients with your medkit (primary fire, left click) before they bleed out. The bar over each one's head shows who's worst"),
             },
         }
     end
@@ -1206,7 +1206,7 @@ do
     local rubble = SHIFTS.scrap[2]
     SHIFTS.scrap[2] = function(ply, job)
         local spec = rubble(ply, job)
-        if spec and GamesOn() then spec = GamifyHolds(spec, "rubble", "Break up the rubble (crowbar, primary fire)") end
+        if spec and GamesOn() then spec = GamifyHolds(spec, "rubble", "Break up the rubble: hit it with your crowbar (primary fire, left click)") end
         return spec
     end
 
@@ -1214,10 +1214,10 @@ do
     SHIFTS.porter[3] = function(ply, job)
         local spec = ticket(ply, job)
         if spec and GamesOn() then
-            spec = Gamify(spec, 2, "papers", "Check the travelers' papers: E on each, then approve, deny or call a Civil Protection unit")
+            spec = Gamify(spec, 2, "papers", "Check the travelers' papers: press E on each traveler, then approve, deny, or call a Civil Protection unit")
             spec.title = "Papers check"
             spec.reward = 10
-            spec.desc = "Papers and permits, everyone boarding. Today's rules are posted."
+            spec.desc = "Check the papers and permits of everyone boarding the train. Today's rules are shown next to their papers."
         end
         return spec
     end
@@ -1242,10 +1242,10 @@ do
         end
         return {
             title = "Parcel run", reward = 10, limit = 900,
-            desc = "Three parcels, against the clock. They aren't letters, and nobody says what's in them.",
+            desc = "Deliver three parcels before time runs out: the faster you are, the more you're paid. They aren't letters, and nobody tells you what's in them.",
             stages = {
-                GameGo(office, "Collect the parcels at the post office", "parcel", { stops = stops }),
-                GameStage("Deliver the parcels against the clock (marked): Civil Protection units stop couriers they get a good look at, so crouch past them"),
+                GameGo(office, "Go to the post office (marked) to collect the parcels", "parcel", { stops = stops }),
+                GameStage("Deliver the parcels to the marked spots before time runs out. Civil Protection units stop couriers they get a good look at, so crouch when you pass them"),
             },
         }
     end
@@ -1261,10 +1261,10 @@ do
         local slab = IsValid(inc) and (inc:GetPos() + inc:GetForward() * 90) or morgue
         return {
             title = "Before the fire", reward = 10, limit = 600,
-            desc = "Three for the incinerator tonight. Every pocket first. Nobody checks your work, except when they do.",
+            desc = "Three bodies go in the incinerator tonight. Search every pocket first. The overseer checks on you now and then: don't get caught keeping anything.",
             stages = {
-                GameGo(morgue, IsValid(inc) and "Go to the incinerator" or "Go to the morgue", "search", { pos = slab, inc = inc }),
-                GameStage("Search the dead before they go in: E on the body, every pocket, then into the fire"),
+                GameGo(morgue, IsValid(inc) and "Go to the incinerator (marked)" or "Go to the morgue (marked)", "search", { pos = slab, inc = inc }),
+                GameStage("Search each body before it goes in: press E on it, check every pocket, then put it in the fire"),
             },
         }
     end
@@ -1279,12 +1279,12 @@ do
                 stages = { GameGo(at, go, kind), GameStage(text) } }
         end
     end
-    SHIFTS.laundry = { AtWork("laundry", "Sorting", "Civil Protection uniforms, washed and pressed, and every one back to its own division. Civil Protection units leave things in their pockets.",
-        "Go to the Nexus laundry", "Sort the uniforms by division (the bins say which); bloodstained ones to the incident wash. E brings the pile back") }
-    SHIFTS.clerk = { AtWork("filing", "Filing", "The in-tray, by citizen number. Anything that doesn't match the register goes in the discrepancy tray.",
-        "Go to the civil records office", "File every form in its drawer; mismatches to the discrepancy tray. E brings the in-tray back") }
-    SHIFTS.radio = { AtWork("radio", "Repairs", "Four sets on the shelf, all hissing. Find each one's station, then set its screws until it comes through clean.",
-        "Go to the radio repair shop", "Repair the sets: find the station on the dial, then turn the screws by ear until it's clean. E brings the bench back") }
+    SHIFTS.laundry = { AtWork("laundry", "Sorting", "Sort the washed and pressed Civil Protection uniforms back to their own divisions. Civil Protection units leave things in their pockets.",
+        "Go to the Nexus laundry (marked)", "Put each uniform in its division's bin (the bins are labelled). Bloodstained ones go to the incident wash. If you close the window, press E to open it again") }
+    SHIFTS.clerk = { AtWork("filing", "Filing", "File the in-tray by citizen number. Any form that doesn't match the register goes in the discrepancy tray.",
+        "Go to the civil records office (marked)", "File every form in its drawer by citizen number. Forms that don't match the register go in the discrepancy tray. If you close the window, press E to open it again") }
+    SHIFTS.radio = { AtWork("radio", "Repairs", "Four radio sets on the shelf, all hissing. Tune each one to its station, then adjust its screws until the sound comes through clean.",
+        "Go to the radio repair shop (marked)", "Repair the sets: turn the dial to the station, then turn the screws while you listen, until the static is gone. If you close the window, press E to open it again") }
 end
 
 -- (tests: finish a game at once)

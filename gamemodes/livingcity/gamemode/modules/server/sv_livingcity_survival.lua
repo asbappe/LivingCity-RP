@@ -342,6 +342,11 @@ function LC.Consume(ply, id)
     local it = LCS.Items[id]
     if not it or not (it.hunger or it.thirst or it.cures) then return false end
     LC.Feed(ply, it.hunger or 0, it.thirst or 0)
+    -- food mends you a little as you eat it (a quarter of what it fills you); drinks don't.
+    -- Healing comes from eating, sleeping and medicine, nothing else (no slow mending while awake)
+    if (it.hunger or 0) > 0 and not it.poison and ply:Health() < ply:GetMaxHealth() then
+        ply:SetHealth(math.min(ply:GetMaxHealth(), ply:Health() + math.max(1, math.floor(it.hunger / 4))))
+    end
     if it.cures == "parasites" then
         ply:SetNW2Float("lcn_parasites", 0)
         ply:ChatPrint("The cramps ease.")

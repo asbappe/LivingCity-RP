@@ -236,10 +236,14 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Rent:** an apartment door says 15 credits.
 - [ ] **Lab prices:** nothing at the lab is cheaper than the quartermaster pays for it (gun parts 13, not 11).
 - [ ] **Cuffs** (once zip ties) sell for 1 at the black market; every menu and message says cuffs; `!cuff` works.
-- [ ] **Couriers:** a parcel run opens with the sender's window: take it, hand it back, report (only when they won't say or own up), or open it (standing down, half pay). A sender who owns up pays 8 extra when it's delivered.
+- [ ] **Couriers:** a parcel run opens with the sender's window: take it, hand it back, report (only when they won't say or own up), or open it (standing down, 1 credit a delivery instead of 3). A sender who owns up pays 8 extra when it's delivered.
 - [ ] **Smuggler** (Resistance, F4): smuggling runs on the board (F3), from the quartermaster to three drops; pays far better.
 - [ ] **Radio transmitter:** a radio alone only listens (`!r` says so); nobody transmits on the Union band. Units, and anyone with a Freq 7 radio and a radio transmitter (black market or lab): a Radio transmitter next to Hands. A unit with both: right click switches between the CP net and Freq 7. Switch to it: what you type and say goes over the band (others on it read and hear you anywhere; someone right beside you hears you; nobody else). R or switching away puts it down. A soft static hiss plays (just for you) while it's up.
 - [ ] **Freq 7:** no music: a voice line, then static for a couple of minutes; warnings still cut in.
+- [ ] **Healing:** no mending on your own while awake (even well fed); eating food mends a little; sleeping in a bed, medkits, bandages, the clinic still heal.
+- [ ] **Your apartment door, locked:** E rattles the handle, even for you; right click with your hands out (or !unlock) to unlock it.
+- [ ] **Ration line:** the person at the front walks up to the dispenser, takes the ration, and steps away.
+- [ ] **Rain:** blood and marks on open ground near you fade while it rains; graffiti stays.
 - [ ] **Hacking** a vending machine or ration dispenser: a handful (5 to 8) comes out, not 3.
 - [ ] **A unit's issued grenades:** can't be sold, dropped, stashed or given to a citizen; can be given to another unit.
 - [ ] **BOLOs:** a second one straight away says to wait.

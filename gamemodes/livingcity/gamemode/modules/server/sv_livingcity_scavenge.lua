@@ -492,6 +492,10 @@ local function SendTags(target)
 end
 LC.SendTags = SendTags
 
+-- Rain washes marks (blood, scorch marks, bullet holes) off open ground, in each player's game
+-- (cl_livingcity_war.lua); never graffiti, which rain doesn't take off a wall. 0 turns it off.
+CreateConVar("lc_rain_wash", "1", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Rain washes blood and other marks off open ground (1), or doesn't (0). Graffiti stays either way")
+
 local function WallAhead(ply)
     local eye = ply:EyePos()
     local tr = util.TraceLine({ start = eye, endpos = eye + ply:GetAimVector() * 110, mask = MASK_SOLID, filter = ply })

@@ -684,6 +684,7 @@ setting lc_raid_chance = 25
 setting lc_raid_stash_chance = 60
 setting lc_raid_units = 3
 setting lc_raid_warning = 90
+setting lc_rain_wash = 1
 setting lc_ration_dock = 1
 setting lc_ration_dock_height = 150
 setting lc_ration_dock_radius = 1500

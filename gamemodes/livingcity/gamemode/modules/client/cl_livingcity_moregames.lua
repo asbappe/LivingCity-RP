@@ -241,7 +241,7 @@ BUILD.parcel = function(t)
         draw.RoundedBox(4, 0, 0, w, h, CARD)
         local lines = LC_CL.WrapText and LC_CL.WrapText(d.text or "", "LCJobLine", w - 20) or { d.text or "" }
         for i, l in ipairs(lines) do draw.SimpleText(l, "LCJobLine", 10, 10 + (i - 1) * 18, INK) end
-        if d.opened then draw.SimpleText("You opened it: Civil Standing lost, and half the pay if you deliver it.", "LCJobLine", 10, h - 22, WARN) end
+        if d.opened then draw.SimpleText("You opened it: Civil Standing lost, and 1 credit a delivery instead of 3.", "LCJobLine", 10, h - 22, WARN) end
     end
     local row = vgui.Create("DPanel", f)
     row:Dock(BOTTOM)

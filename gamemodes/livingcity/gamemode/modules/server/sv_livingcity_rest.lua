@@ -189,10 +189,6 @@ function LC.RestTick(now)
                 if tired then Notice(ply, "warn", "Exhausted", "You haven't slept in a day. Your eyes keep closing, you can't run, and you're weaker. Find a bed at night (F1 > What now? > Places).", 9) end
             end
             TiredHealth(ply, tired)
-            if LC.IsRested(ply) and (ply.lcRestHeal or 0) <= now and ply:Health() < ply:GetMaxHealth() then
-                ply.lcRestHeal = now + 10
-                ply:SetHealth(math.min(ply:GetMaxHealth(), ply:Health() + 1))
-            end
         end
     end
 end

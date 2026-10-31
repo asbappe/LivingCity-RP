@@ -109,7 +109,7 @@ function LC.JobGameEnd(ply, how)
         if g.q and g.q.title and string.find(g.q.title, "Community service", 1, true) then pay = 0 end
         if pay > 0 and LC.AddCredits then LC.AddCredits(ply, pay, g.title) end
         if IsValid(ply) and LC.Notice then
-            local text = (#g.notes > 0 and (table.concat(g.notes, " ") .. " ") or "") .. (pay > 0 and string.format("Paid %d credits for the work, on top of the shift.", pay) or "Nothing extra for that.")
+            local text = (#g.notes > 0 and (table.concat(g.notes, " ") .. " ") or "") .. (pay > 0 and string.format("You earned %d extra credits for this work, on top of your normal shift pay.", pay) or "No extra credits for this work.")
             LC.Notice(ply, "info", g.title .. ": done", text, 9)
         end
         if LC.QuestEvent then LC.QuestEvent("game_done", ply) end
@@ -176,10 +176,10 @@ local LITTER = {
 -- What's under the wrapper: { item, weight } (credits for "coins")
 local FINDS = { { "ration", 4 }, { "coins", 4 }, { "bandage", 2 }, { "ammo_pistol", 1 }, { "papers_blank", 1 }, { "note", 3 } }
 local NOTES = {
-    "A scrap of paper, folded small: 'Kleiner lives.' Underneath, a lambda.",
-    "A ration wrapper with a map drawn on the inside: the canal, and an X.",
-    "A note in a child's hand: 'Papa, they took the man from 4C. Come home the back way.'",
-    "Half a Combine notice, the rest torn away: '...relocation of all residents of Block...'",
+    "A small folded scrap of paper. It says 'Kleiner lives.', with a lambda (the Resistance symbol) drawn underneath.",
+    "A ration wrapper with a map drawn on the inside: it shows the canal, with an X marked on it.",
+    "A note written by a child: 'Papa, they took the man from 4C. Come home the back way.'",
+    "Half of a torn Combine notice. All that's left: '...relocation of all residents of Block...'",
 }
 local function RollFind()
     local total = 0
@@ -245,12 +245,12 @@ GAMES.sweep = {
                         if what == "coins" then
                             local n = math.random(3, 8)
                             if LC.AddCredits then LC.AddCredits(p, n, "found in the rubbish") end
-                            p:ChatPrint(string.format("[Sanitation] Wedged in it: %d credits in Union tokens. Finders keepers.", n))
+                            p:ChatPrint(string.format("[Sanitation] You found %d credits in Union tokens stuck in that rubbish. They're yours to keep.", n))
                         elseif what == "note" then
                             if LC.Notice then LC.Notice(p, "event", "Found in the rubbish", Pick(NOTES), 10) end
                         else
                             LC.GiveOrDrop(p, what, 1)
-                            p:ChatPrint("[Sanitation] Tucked inside it: " .. (LCS.Items[what] and LCS.Items[what].name or what) .. ". It's in your pockets.")
+                            p:ChatPrint("[Sanitation] You found " .. (LCS.Items[what] and LCS.Items[what].name or what) .. " hidden in that rubbish. It's in your pockets now.")
                         end
                     end
                 end
@@ -260,12 +260,12 @@ GAMES.sweep = {
             end
         end
         g.limit = CurTime() + 420
-        g.ply:ChatPrint("[Sanitation] Your cart's at the depot. E on it to push it (E again to let go). Pick up the rubbish with E and throw it in (left click). Bring the cart back when it's full.")
+        g.ply:ChatPrint("[Sanitation] Your cart is waiting at the depot. Look at it and press E to grab it and push it; press E again to let go. Pick up each piece of rubbish with E and throw it into the cart with left click (long throws pay extra). When the cart is full, push it back to the depot to finish. You have 7 minutes, and finishing in under 3 earns a bonus.")
         g.hud = function(gg)
             local left = math.max(0, math.ceil(gg.limit - CurTime()))
-            local lines = { string.format("In the cart: %d of %d", gg.got, gg.need) }
-            if gg.swish > 0 then lines[#lines + 1] = string.format("Long throws: %d", gg.swish) end
-            lines[#lines + 1] = gg.got >= gg.need and "Full: push the cart back to the depot" or (gg.pushing and "Pushing the cart (E to let go)" or "E on the cart to push it")
+            local lines = { string.format("Rubbish in the cart: %d of %d", gg.got, gg.need) }
+            if gg.swish > 0 then lines[#lines + 1] = string.format("Long throws (extra pay): %d", gg.swish) end
+            lines[#lines + 1] = gg.got >= gg.need and "Cart full: push it back to the depot to finish" or (gg.pushing and "Pushing the cart (press E to let go)" or "Press E on the cart to push it")
             lines[#lines + 1] = string.format("%d:%02d left", math.floor(left / 60), left % 60)
             return lines
         end
@@ -298,14 +298,14 @@ GAMES.sweep = {
         if g.got >= g.need and cart:GetPos():DistToSqr(g.depot) < 220 * 220 then
             if now - g.startT < 180 then
                 g.pay = g.pay + 5
-                g.notes[#g.notes + 1] = "Quick work: the foreman nods."
+                g.notes[#g.notes + 1] = "Done in under 3 minutes: 5 credits bonus."
             end
-            if g.swish >= 3 then g.notes[#g.notes + 1] = string.format("%d long throws into the cart.", g.swish) end
+            if g.swish >= 3 then g.notes[#g.notes + 1] = string.format("%d long throws into the cart (1 extra credit each).", g.swish) end
             cart:EmitSound("physics/metal/metal_solid_impact_hard" .. math.random(1, 5) .. ".wav", 75)
             return LC.JobGameEnd(g.ply, "done")
         end
         if now > g.limit then
-            g.notes[#g.notes + 1] = "Out of time: what's in the cart counts."
+            g.notes[#g.notes + 1] = "Time's up: you're paid for the rubbish already in the cart."
             return LC.JobGameEnd(g.ply, "done")
         end
     end,
@@ -320,7 +320,7 @@ hook.Add("KeyPress", "LivingCityJobCart", function(ply, key)
     local tr = ply:GetEyeTrace()
     if g.pushing then
         g.pushing = false
-        ply:ChatPrint("[Sanitation] You let go of the cart.")
+        ply:ChatPrint("[Sanitation] You let go of the cart. Press E on it to push it again.")
     elseif tr and tr.Entity == g.cart and ply:GetPos():DistToSqr(g.cart:GetPos()) < CART_REACH * CART_REACH then
         g.pushing = true
     end
@@ -346,12 +346,12 @@ local TOTAL_PARTS = 20
 
 -- The same line, other work: the ration plant's sealing line (opts.variant = "rations").
 local LINES = {
-    factory = { title = "On the line", tag = "[Factory]", word = "parts", parts = PARTS, bad = RUST,
-        intro = "The line's starting. Rust-red, sparking parts are bad: grab them (E) and throw them in the scrap bin. Let the good ones go through. (R while holding a good one slips it into your coat: the dealer and the quartermaster buy them. Not where a unit can see, and the foreman counts.)",
-        rattle = "Something rattles inside this one. R while you're holding it to slip it in your pocket." },
-    rations = { title = "The sealing line", tag = "[Ration plant]", word = "packs", parts = { "models/weapons/w_package.mdl" }, bad = Color(120, 140, 70),
-        intro = "The sealing line's starting. Split, leaking packs (the sickly green ones) go in the reject bin: grab them (E) and throw them in. Sealed ones go through to the dispensers. (R while holding a sealed one slips it into your coat. Not where a unit can see, and the foreman counts.)",
-        rattle = "This pack is heavier than a ration should be. R while you're holding it to slip it in your pocket." },
+    factory = { title = "Factory line", tag = "[Factory]", word = "parts", parts = PARTS, bad = RUST,
+        intro = "The conveyor belt is starting. Rust-red, sparking parts are faulty: pick them up with E and throw them (left click) into the scrap bin beside the belt. Leave the good parts on the belt so they reach the end. You're paid for each one you get right and lose pay for each mistake. (Stealing: press R while holding a good part to hide it in your coat; the dealer and the quartermaster buy them. If a Civil Protection unit sees you, you become wanted, and if you take more than one, the foreman may find the count short and dock your pay.)",
+        rattle = "Something rattles inside this part. Press R while holding it to open it and pocket what's hidden inside." },
+    rations = { title = "Ration sealing line", tag = "[Ration plant]", word = "packs", parts = { "models/weapons/w_package.mdl" }, bad = Color(120, 140, 70),
+        intro = "The ration sealing belt is starting. Split, leaking packs (the sickly green ones) are faulty: pick them up with E and throw them (left click) into the reject bin beside the belt. Leave the sealed packs on the belt so they reach the end and go on to the dispensers. You're paid for each one you get right and lose pay for each mistake. (Stealing: press R while holding a sealed pack to hide it in your coat. If a Civil Protection unit sees you, you become wanted, and if you take more than one, the foreman may find the count short and dock your pay.)",
+        rattle = "This pack is heavier than a ration should be. Press R while holding it to open it and pocket what's hidden inside." },
 }
 local function LineOf(g) return LINES[g and g.opts and g.opts.variant or "factory"] or LINES.factory end
 
@@ -420,8 +420,8 @@ GAMES.line = {
         g.hud = function(gg)
             return {
                 string.format("%s: %d of %d", w:sub(1, 1):upper() .. w:sub(2), gg.spawned, TOTAL_PARTS),
-                string.format("Bad %s binned: %d    Good %s through: %d", w, gg.caught, w, gg.shipped),
-                string.format("Bad %s let through: %d    Good %s binned: %d", w, gg.missed, w, gg.wasted),
+                string.format("Faulty %s binned: %d    Good %s passed: %d", w, gg.caught, w, gg.shipped),
+                string.format("Faulty %s missed: %d    Good %s binned by mistake: %d", w, gg.missed, w, gg.wasted),
             }
         end
     end,
@@ -471,10 +471,10 @@ GAMES.line = {
                 if IsValid(g.bin) and InBox(g.bin, e:GetPos(), 2) then
                     done = true
                     if p.bad then g.caught = g.caught + 1 g.pay = g.pay + 2 g.ply:EmitSound("physics/metal/metal_barrel_impact_soft" .. math.random(1, 4) .. ".wav", 60)
-                    else g.wasted = g.wasted + 1 g.pay = g.pay - 1 g.ply:ChatPrint("[Foreman] That one was good! Watch what you're binning.") end
+                    else g.wasted = g.wasted + 1 g.pay = g.pay - 1 g.ply:ChatPrint("[Foreman] That one was good! Binning good ones comes out of your pay.") end
                 elseif along > b.len / 2 - 4 and math.abs(across) < b.wid / 2 + 6 then
                     done = true
-                    if p.bad then g.missed = g.missed + 1 g.pay = g.pay - 2 g.ply:ChatPrint("[Foreman] A bad one went through! That comes out of your pay.")
+                    if p.bad then g.missed = g.missed + 1 g.pay = g.pay - 2 g.ply:ChatPrint("[Foreman] A faulty one reached the end of the belt! That comes out of your pay.")
                     else g.shipped = g.shipped + 1 g.pay = g.pay + 1 end
                 elseif up < -20 and now - (e.lcDroppedAt or p.t) > 4 then
                     done = true -- on the floor: lost
@@ -511,14 +511,14 @@ GAMES.line = {
             local sk = g.skimmed or 0
             if sk > 0 and math.random() < math.min(0.9, (sk - 1) * 0.25) then
                 g.pay = g.pay - 2 * sk
-                g.notes[#g.notes + 1] = string.format("The foreman's count is %d short. It comes out of your pay, and he'll remember.", sk)
-                if LC.AddStanding then LC.AddStanding(g.ply, -5 * sk, "The count was short on your shift") end
+                g.notes[#g.notes + 1] = string.format("The foreman found %d missing from his count. It comes out of your pay, and you lose Civil Standing.", sk)
+                if LC.AddStanding then LC.AddStanding(g.ply, -5 * sk, "Goods went missing on your shift") end
             end
             if g.missed == 0 and g.wasted == 0 then
                 g.pay = g.pay + 6
-                g.notes[#g.notes + 1] = "A clean shift: not a single mistake."
+                g.notes[#g.notes + 1] = "No mistakes all shift: 6 credits bonus."
             end
-            g.notes[#g.notes + 1] = string.format("%d of %d bad parts caught; %d good parts through.", g.caught, bad, g.shipped)
+            g.notes[#g.notes + 1] = string.format("Faulty parts binned: %d of %d. Good parts passed: %d.", g.caught, bad, g.shipped)
             return LC.JobGameEnd(g.ply, "done")
         end
     end,
@@ -537,16 +537,16 @@ local SKIM = { factory = "union_goods", rations = "ration" }
 function LC.LineSkim(ply, g, e)
     local what = SKIM[g.opts and g.opts.variant or "factory"] or "union_goods"
     if not LCS.Items[what] then return false end
-    if e.lcPart.bad then ply:ChatPrint(LineOf(g).tag .. " That one's scrap: nobody would buy it.") return false end
+    if e.lcPart.bad then ply:ChatPrint(LineOf(g).tag .. " That one is faulty: nobody would buy it, so it's not worth stealing.") return false end
     for i, p in ipairs(g.parts) do if p == e then table.remove(g.parts, i) break end end
     e.lcPart = nil
     e:Remove()
     LC.GiveOrDrop(ply, what, 1)
     g.skimmed = (g.skimmed or 0) + 1
-    ply:ChatPrint(LineOf(g).tag .. " Into your coat: " .. LCS.Items[what].name .. ". The count will be one short.")
+    ply:ChatPrint(LineOf(g).tag .. " You hid " .. LCS.Items[what].name .. " in your coat. The foreman's count will be one short.")
     if LC.SeenBySecurity and LC.SeenBySecurity(ply, 700) then
         LC.ReportCrime(ply, "Theft from the factory floor", 120)
-        ply:ChatPrint("[Civil Protection] A Civil Protection unit saw that.")
+        ply:ChatPrint("[Civil Protection] A Civil Protection unit saw you steal that. You're now wanted.")
     end
     return true
 end
@@ -562,10 +562,10 @@ hook.Add("KeyPress", "LivingCityJobLine", function(ply, key)
     if not LCS.Items[what] then what = "gun_parts" end
     e.lcPart.rattle = false
     LC.GiveOrDrop(ply, what, 1)
-    ply:ChatPrint(LineOf(g).tag .. " You work it open and palm what's inside: " .. (LCS.Items[what] and LCS.Items[what].name or what) .. ".")
+    ply:ChatPrint(LineOf(g).tag .. " You open it and pocket what was hidden inside: " .. (LCS.Items[what] and LCS.Items[what].name or what) .. ".")
     if LC.SeenBySecurity and LC.SeenBySecurity(ply, 700) then
         LC.ReportCrime(ply, "Theft from the factory floor", 120)
-        ply:ChatPrint("[Civil Protection] A Civil Protection unit saw that.")
+        ply:ChatPrint("[Civil Protection] A Civil Protection unit saw you steal that. You're now wanted.")
     end
     hook.Run("LivingCityLineContraband", ply, what)
 end)
@@ -606,7 +606,7 @@ local function Rules()
 end
 
 local function RuleLines(r)
-    local out = { "Papers must be in date.", "The photo must be the bearer." }
+    local out = { "Papers must not be expired.", "The photo must match the person in front of you." }
     if r.district then out[#out + 1] = "No entry from " .. r.banned .. "." end
     if r.permit then out[#out + 1] = "Every traveler needs a transit permit stamp." end
     if r.union then out[#out + 1] = "Travel for work needs a Union stamp." end
@@ -691,11 +691,11 @@ GAMES.papers = {
         g.rules = Rules()
         g.today = 200 + math.random(0, 150)
         g.done, g.right, g.cites = 0, 0, 0
-        g.ply:ChatPrint("[Station] Travelers will come to you. E on one to check their papers against today's rules: approve, deny, or call a Civil Protection unit.")
+        g.ply:ChatPrint("[Station] Travelers will walk up to you one at a time. Press E on each one to see their papers and check them against today's rules (listed on your screen). Then choose: approve them, deny them, or call a Civil Protection unit if the papers are forged (look closely at the seal). Right calls pay; wrong ones get you a citation and docked pay.")
         g.hud = function(gg)
-            local lines = { string.format("Travelers checked: %d of %d", gg.done, TRAVELERS), string.format("Right: %d    Citations: %d", gg.right, gg.cites), "Today's rules:" }
+            local lines = { string.format("Travelers checked: %d of %d", gg.done, TRAVELERS), string.format("Right calls: %d    Citations (mistakes): %d", gg.right, gg.cites), "Today's rules:" }
             for _, l in ipairs(RuleLines(gg.rules)) do lines[#lines + 1] = "  " .. l end
-            if gg.current and gg.current.arrived then lines[#lines + 1] = "E on the traveler to see their papers" end
+            if gg.current and gg.current.arrived then lines[#lines + 1] = "Press E on the traveler to see their papers" end
             return lines
         end
         NextTraveler(g)
@@ -719,9 +719,9 @@ GAMES.papers = {
     finish = function(g)
         if g.cites == 0 and g.done >= TRAVELERS then
             g.pay = g.pay + 5
-            g.notes[#g.notes + 1] = "Not a single citation."
+            g.notes[#g.notes + 1] = "No citations all shift: 5 credits bonus."
         end
-        g.notes[#g.notes + 1] = string.format("%d of %d calls right.", g.right, g.done)
+        g.notes[#g.notes + 1] = string.format("%d of %d decisions right.", g.right, g.done)
     end,
 }
 
@@ -777,33 +777,33 @@ function LC.PapersDecide(ply, choice)
     local c = g.current
     local right, cite, note
     if c.forged then
-        if choice == "unit" then right = true g.pay = g.pay + 5 note = "A forgery: the seal reads " .. c.papers.seal .. ". A Civil Protection unit takes them away."
+        if choice == "unit" then right = true g.pay = g.pay + 5 note = "Forged papers: the seal reads " .. c.papers.seal .. ". A Civil Protection unit takes the traveler away."
             if LC.AddStanding then LC.AddStanding(ply, 2) end
-        elseif choice == "deny" then right = true g.pay = g.pay + 2 note = "Denied. (The seal was forged: a Civil Protection unit would have wanted to know.)"
+        elseif choice == "deny" then right = true g.pay = g.pay + 2 note = "Denied. The seal was forged, so calling a Civil Protection unit would have paid more."
         else
             right = false
             hook.Run("LivingCityPapersForgeryPassed", ply)
-            if math.random() < 0.3 then cite = "Approved forged papers (the seal read " .. c.papers.seal .. ")." g.pay = g.pay - 4
+            if math.random() < 0.3 then cite = "You approved forged papers (the seal read " .. c.papers.seal .. ")." g.pay = g.pay - 4
                 if LC.AddStanding then LC.AddStanding(ply, -5) end
-            else note = "They walk through. Under their breath: 'Thank you.'" end
+            else note = "They walk through on forged papers. Under their breath: 'Thank you.' Nobody noticed this time." end
         end
     elseif c.wrong then
         if choice == "deny" or choice == "unit" then right = true g.pay = g.pay + 3
         else right = false g.pay = g.pay - 2
-            cite = ({ expiry = "Approved papers out of date.", photo = "Approved a traveler whose photo wasn't them.",
-                district = "Approved entry from " .. tostring(g.rules.banned) .. ".", permit = "Approved a traveler with no transit permit.",
-                union = "Approved work travel without a Union stamp." })[c.wrong]
+            cite = ({ expiry = "You approved papers that had expired.", photo = "You approved a traveler whose photo didn't match them.",
+                district = "You approved entry from a banned district, " .. tostring(g.rules.banned) .. ".", permit = "You approved a traveler with no transit permit stamp.",
+                union = "You approved travel for work without a Union stamp." })[c.wrong]
         end
     else
         if choice == "approve" then right = true g.pay = g.pay + 3
-        else right = false g.pay = g.pay - 2 cite = "Turned away a traveler whose papers were in order." end
+        else right = false g.pay = g.pay - 2 cite = "You turned away a traveler whose papers were all in order." end
     end
     g.done = g.done + 1
     if right then g.right = g.right + 1 end
     if cite then
         g.cites = g.cites + 1
         ply:EmitSound("buttons/combine_button_locked.wav", 60)
-        if LC.Notice then LC.Notice(ply, "warn", "Citation", cite .. " Pay docked.", 6) end
+        if LC.Notice then LC.Notice(ply, "warn", "Citation", cite .. " Your pay is docked for this.", 6) end
     elseif note then
         ply:ChatPrint("[Station] " .. note)
     end
@@ -978,8 +978,8 @@ GAMES.wiring = {
         g.dark = LC.CityDark or (LC.PoweredAt and g.opts.pos and not LC.PoweredAt(g.opts.pos))
         g.hud = function(gg)
             local left = math.max(0, math.ceil(gg.limit - CurTime()))
-            return { string.format("Turns: %d (par %d)", gg.turns, gg.par), string.format("Shocks: %d", gg.shocks),
-                (gg.dark and "Blackout: double pay. " or "") .. string.format("%d seconds", left) }
+            return { string.format("Turns used: %d (fewest possible: %d)", gg.turns, gg.par), string.format("Shocks: %d", gg.shocks),
+                (gg.dark and "Blackout: this job pays double. " or "") .. string.format("%d seconds", left) }
         end
         SendWires(g)
     end,
@@ -990,7 +990,7 @@ GAMES.wiring = {
             Deal(g)
             g.limit = now + g.secs
             g.ply:EmitSound("ambient/energy/spark" .. math.random(1, 6) .. ".wav", 70)
-            g.ply:ChatPrint("[Maintenance] Too slow: the breaker trips and the board scrambles. Again.")
+            g.ply:ChatPrint("[Maintenance] Too slow: the breaker tripped and the wires are scrambled. Start again (this job now pays less).")
             SendWires(g)
             return
         end
@@ -1041,10 +1041,10 @@ function LC.WireTry(ply, k, ccw)
     if done then
         ply:EmitSound("buttons/lever7.wav", 60)
         local base = math.max(1, 3 + math.max(0, 3 - g.shocks) - 2 * (g.trips or 0))
-        if g.turns <= g.par + 2 then base = base + 2 g.notes[#g.notes + 1] = "Neat work: on par." end
-        if g.dark then base = base * 2 g.notes[#g.notes + 1] = "Blackout rates." end
+        if g.turns <= g.par + 2 then base = base + 2 g.notes[#g.notes + 1] = "Finished in close to the fewest turns: 2 credits bonus." end
+        if g.dark then base = base * 2 g.notes[#g.notes + 1] = "Blackout: pay doubled." end
         g.pay = base
-        if g.shocks == 0 then g.notes[#g.notes + 1] = "Clean: not a spark." end
+        if g.shocks == 0 then g.notes[#g.notes + 1] = "Not shocked once." end
         if g.opts.onFixed then pcall(g.opts.onFixed) end
         LC.JobGameEnd(ply, "done")
         return true
@@ -1094,7 +1094,7 @@ GAMES.triage = {
             end
         end
         if #g.patients == 0 then error("no patients") end
-        g.ply:ChatPrint("[Clinic] Patients coming in. Medkit, primary fire. The worst first: they won't all wait.")
+        g.ply:ChatPrint("[Clinic] Patients are coming in, and their health keeps dropping. Aim your medkit at a patient and left click to heal them, until each one is almost fully healed. Treat the worst injuries first: a patient whose health reaches zero dies.")
         g.hud = function(gg)
             local lines = { string.format("Saved: %d    Lost: %d    Waiting: %d", gg.saved, gg.lost, #gg.patients - gg.saved - gg.lost) }
             for _, p in ipairs(gg.patients) do
@@ -1109,7 +1109,7 @@ GAMES.triage = {
                 local npc = p.npc
                 if not IsValid(npc) or npc:Health() <= 0 then
                     p.done, g.lost = true, g.lost + 1
-                    g.ply:ChatPrint("[Clinic] You've lost one. " .. p.injury.label .. ".")
+                    g.ply:ChatPrint("[Clinic] A patient has died: " .. p.injury.label .. ".")
                 else
                     -- the medkit heals them; the wound takes them back down
                     local hp = npc:Health()
@@ -1124,7 +1124,7 @@ GAMES.triage = {
                             p.done, g.lost = true, g.lost + 1
                             npc:SetNW2Bool("lc_patient", false)
                             if npc.TakeDamage then pcall(npc.TakeDamage, npc, 100, game.GetWorld and game.GetWorld() or npc) end
-                            g.ply:ChatPrint("[Clinic] You've lost one. " .. p.injury.label .. ".")
+                            g.ply:ChatPrint("[Clinic] A patient has died: " .. p.injury.label .. ".")
                         end
                     end
                     if not p.done and npc:Health() >= p.max * 0.9 then
@@ -1144,8 +1144,8 @@ GAMES.triage = {
         for _, p in ipairs(g.patients) do if not p.done then open = open + 1 end end
         if open == 0 then
             g.pay = g.saved * 4 - g.lost * 2
-            if g.lost == 0 then g.pay = g.pay + 6 g.notes[#g.notes + 1] = "Everyone walked out." end
-            g.notes[#g.notes + 1] = string.format("%d saved, %d lost.", g.saved, g.lost)
+            if g.lost == 0 then g.pay = g.pay + 6 g.notes[#g.notes + 1] = "Every patient survived: 6 credits bonus." end
+            g.notes[#g.notes + 1] = string.format("%d patients saved, %d lost.", g.saved, g.lost)
             -- the survivors go home in their own time
             for _, p in ipairs(g.patients) do
                 if IsValid(p.npc) and p.npc:Health() > 0 then
@@ -1198,8 +1198,8 @@ GAMES.rubble = {
         end
         g.ply.lcJobCrowbar = true
         if g.ply.SelectWeapon then g.ply:SelectWeapon("weapon_crowbar") end
-        g.ply:ChatPrint("[Reclamation] Break the pile up (crowbar, primary fire). Each block gives up a bit of scrap.")
-        g.hud = function(gg) return { string.format("Blocks broken: %d of %d", gg.broken, gg.total), "Crowbar, primary fire" } end
+        g.ply:ChatPrint("[Reclamation] Smash every block in the pile with your crowbar (left click). Each broken block drops a piece of scrap you can pick up, and sometimes something else. You're paid 1 credit per block.")
+        g.hud = function(gg) return { string.format("Blocks broken: %d of %d", gg.broken, gg.total), "Hit the blocks with the crowbar (left click)" } end
     end,
     tick = function(g)
         if g.broken >= g.total then
