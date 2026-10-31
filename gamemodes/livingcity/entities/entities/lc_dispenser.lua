@@ -39,7 +39,7 @@ if SERVER then
         if not IsValid(activator) or not activator:IsPlayer() or not LC then return end
         if self:GetNW2Bool("lc_nopower", false) then
             self:EmitSound("buttons/button8.wav", 60)
-            activator:ChatPrint("Dead. No power: no rations until it's back.")
+            activator:ChatPrint("Blackout: no rations until power is restored.")
             return
         end
         if LC.UseDispenser then LC.UseDispenser(activator, self) end

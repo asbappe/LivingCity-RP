@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 2dbb524. Admin-only console messages and log lines are left out.
+Made from version eb9b4fe. Admin-only console messages and log lines are left out.
 
 5776 lines, from 175 files.
 
@@ -224,7 +224,7 @@ Made from version 2dbb524. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: draw
 
-- "Commissary: Civil Protection units are issued supplies here"  (drawn on screen, line 59)
+- "Commissary: Issues supplies for Civil Protection units"  (drawn on screen, line 59)
 
 ## lc_crate.lua (lc_crate.lua)
 
@@ -252,7 +252,7 @@ Made from version 2dbb524. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: use
 
-- "Dead. No power: no rations until it's back."  (chat message, line 42)
+- "Blackout: no rations until power is restored."  (chat message, line 42)
 
 ## lc_dropship.lua (lc_dropship.lua)
 
@@ -342,7 +342,7 @@ Made from version 2dbb524. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): it winks out: a pop of energy and a spark, and nothing left behind. No debris and no scrap, so nobody risks their neck for parts that aren't there (it was put up from a console, and could be put up again and again)
 
-- "The scanner was shot down. The link drops."  (text, line 49)
+- "The scanner was destroyed; the link drops."  (text, line 49)
 
 ## lc_scientist.lua (lc_scientist.lua)
 
@@ -380,7 +380,7 @@ Made from version 2dbb524. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: use
 
-- "The screen's dark. No power."  (chat message, line 30)
+- "The screen's dark due to the blackout."  (chat message, line 30)
 
 ## lc_vending.lua (lc_vending.lua)
 
@@ -390,7 +390,7 @@ Made from version 2dbb524. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: use
 
-- "Dead. No power: the machine won't take your credits."  (chat message, line 30)
+- "Vending machines can't process credits or dispense during a blackout."  (chat message, line 30)
 
 ## lc_workbench.lua (lc_workbench.lua)
 
@@ -430,7 +430,7 @@ Made from version 2dbb524. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: primary attack
 
 - "[Blessing] The infected are beyond your help."  (chat message, line 85)
-- "[Blessing] Father Grigori lays a hand on your shoulder. You feel stronger."  (chat message, line 91)
+- "[Blessing] Father Grigori lays a hand on your head and blesses you; You feel stronger."  (chat message, line 91)
 
 > Note for you (not shown in game): part of: secondary attack
 
@@ -470,22 +470,22 @@ Made from version 2dbb524. Admin-only console messages and log lines are left ou
 
 - "Download the master terminal (the motherlode)"  (text, line 45)
 - "Hack the vending machine (free water)"  (text, line 46)
-- "Hack the ration dispenser (rations, no coupon)"  (text, line 47)
-- "Sabotage the transformer (the district goes dark)"  (text, line 48)
-- "Short out the power bank (its turrets and forcefields die with it)"  (text, line 50)
+- "Hack the ration dispenser (free rations)"  (text, line 47)
+- "Sabotage the transformer (causes a district-wide blackout)"  (text, line 48)
+- "Short out the power bank (connected turrets and forcefields will be powered off)"  (text, line 50)
 - "Short out the forcefield"  (text, line 53)
 - "Hack the Combine lock"  (text, line 55)
-- "Cut the vortigaunt's shackles"  (text, line 56)
+- "Unlock the vortigaunt's shackles"  (text, line 56)
 - "Download the master terminal (the motherlode)"  (text, line 61)
 - "Download the Combine's data"  (text, line 61)
 
 > Note for you (not shown in game): part of: primary attack
 
-- "Nothing here the multitool can work on. (A Combine door, a city screen, a data terminal, a shackled vortigaunt, a transformer, a forcefield, a power bank, a vending machine, a ration dispenser.)"  (text, line 89)
+- "Nothing here the multitool can work on. (Try: Combine doors, city screens, data terminals, shackled vortigaunts, transformers, forcefields, power banks, vending machines, and ration dispensers.)"  (text, line 89)
 
 > Note for you (not shown in game): part of: draw hud
 
-- "MULTITOOL: point at a Combine door, a city screen, a data terminal or a vending machine"  (text, line 101)
+- "MULTITOOL: point at electronics to hack them"  (text, line 101)
 
 ## weapon_lc_vort.lua (weapon_lc_vort.lua)
 
@@ -494,35 +494,35 @@ Made from version 2dbb524. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: primary attack
 
-- "The collar holds your vortessence in."  (chat message, line 51)
+- "The collar suppresses your vortessence."  (chat message, line 51)
 
 > Note for you (not shown in game): part of: secondary attack
 
-- "The collar holds your vortessence in."  (chat message, line 79)
+- "The collar suppresses your vortessence."  (chat message, line 79)
 - "Your vortessence is gathering (%ds)."  (message, line 82)
-- "There is nothing left in them to charge."  (chat message, line 87)
+- "There is nothing left to charge."  (chat message, line 87)
 
 > Note for you (not shown in game): the vortessence charges a vest (sv_livingcity_vest.lua); it doesn't knit flesh
 
 - "You wear nothing for the vortessence to charge."  (chat message, line 90)
 - "They wear no vest for the vortessence to charge."  (chat message, line 90)
-- "Your vest is full."  (chat message, line 92)
-- "Their vest is full."  (chat message, line 92)
+- "Your vest is fully charged."  (chat message, line 92)
+- "Their vest is fully charged."  (chat message, line 92)
 
 > Note for you (not shown in game): part of: secondary attack
 
-- "A warmth runs through your vest. The vortigaunt's hands glow green, and the cells hum."  (chat message, line 97)
-- "charging with the vortessence"  (text, line 98)
+- "The vortigaunt's hands glow green, the cells hum, and your vest feels warm."  (chat message, line 97)
+- "charging with vortessence"  (text, line 98)
 
 ## cl_init.lua (cl_init.lua)
 
 `gamemodes/livingcity/gamemode/cl_init.lua`
 
-- "F1  the quick menu: nine things on the number keys, for who you are and what's in front of you (0 closes; 9 is everything else)"  (text, line 29)
-- "Union work you do with your hands: Sanitation's street sweep (push the cart, throw the rubbish in), the Factory line (bin the rust-red parts), the Intake Processor's papers check (approve, deny, or call a Civil Protection unit)."  (text, line 30)
-- "More of it: Maintenance rewires circuit boards against the clock (turn the tiles till the current reaches the lamp; a sparking tile bites), Clinic Medics triage patients bleeding out, the Reclamation Crew breaks up rubble with a crowbar."  (text, line 31)
-- "And more: Couriers run parcels against the clock past Civil Protection units who want to search them (and can turn down, report or open a parcel whose sender won't say what's in it; the Resistance's Smugglers carry the cell's cargo knowingly), the Mortuary searches the dead before the fire (log it, keep it, or keep it for the family; mind the overseer), the Laundry sorts uniforms by division, Records Clerks file forms and catch mismatches, Radio Repair finds each set's station and turns its trimmer screws by ear until it's clean (and sometimes finds Freq 7; record your own broadcasts in sound/livingcity/radio/)."  (text, line 32)
-- "Some of the city's rarer moments have flashing lights and strobes: you're warned first, and lc_ending_calm 1 in the console leaves the flashing out, just for you."  (text, line 33)
+- "F1: the quick menu"  (text, line 29)
+- "Union work: Sanitation street sweep (push a cart, throw rubbish in), the Factory line (sort out rust-red parts), Intake Processor's papers check (review arrival's paperwork; approve, deny, or call CP Units to arrest)."  (text, line 30)
+- "More: Maintenance rewires circuit boards (redirect a current; don't get shocked), Clinic Medics triage injured patients, Reclamation Crew breaks up rubble with a crowbar."  (text, line 31)
+- "More (2): Couriers run parcels against the clock, Mortuary processes the dead, Laundry sorts uniforms, Records Clerks file forms and catch mismatches, Radio Repair fixes a radio by ear (and sometimes finds Freq 7.)"  (text, line 32)
+- "Some of the city's rarer moments have flashing lights and strobes: a warning is displayed with an opt-out, and lc_ending_calm 1 in the console stops the flashing for you."  (text, line 33)
 - "Got a radio? Open your pockets (F2) and press Listen on it. Turn the dial: 96.4 is the city's own station, and somewhere in the static is Freq 7, the Resistance's secret one. It plays out loud, so people near you hear it too, Civil Protection units included."  (text, line 34)
 - "Freq 7 is a rule, not a number: the Resistance only broadcast where the digits add up to seven. The Combine jam it when they find it, and it comes back on another; a Resistance radio follows it by itself."  (text, line 35)
 - "Write Freq 7 down at the repair bench and you carry a Freq 7 sheet: the seven frequencies, to read or pass on. It's contraband."  (text, line 36)

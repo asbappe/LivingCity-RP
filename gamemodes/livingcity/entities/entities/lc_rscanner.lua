@@ -46,7 +46,7 @@ if SERVER then
             fx:SetOrigin(self:GetPos())
             util.Effect("cball_explode", fx, true, true)
             self:EmitSound("npc/scanner/scanner_explode_crash2.wav", 80)
-            if IsValid(pilot) then LC.EndScannerLink(pilot, "The scanner was shot down. The link drops.") end
+            if IsValid(pilot) then LC.EndScannerLink(pilot, "The scanner was destroyed; the link drops.") end
         end
     end
 

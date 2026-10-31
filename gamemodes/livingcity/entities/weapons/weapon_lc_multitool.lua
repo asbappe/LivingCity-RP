@@ -44,16 +44,16 @@ local function Job(ply)
     if cls == "lc_dataterminal" then return "data", "Download the Combine's data" end
     if cls == "lc_masterterminal" then return "data", "Download the master terminal (the motherlode)" end
     if cls == "lc_vending" and not e:GetNW2Bool("lc_nopower", false) then return "machine", "Hack the vending machine (free water)" end
-    if cls == "lc_dispenser" and not e:GetNW2Bool("lc_nopower", false) then return "machine", "Hack the ration dispenser (rations, no coupon)" end
-    if cls == "lc_transformer" and not e:GetNW2Bool("lc_down", false) then return "power", "Sabotage the transformer (the district goes dark)" end
+    if cls == "lc_dispenser" and not e:GetNW2Bool("lc_nopower", false) then return "machine", "Hack the ration dispenser (free rations)" end
+    if cls == "lc_transformer" and not e:GetNW2Bool("lc_down", false) then return "power", "Sabotage the transformer (causes a district-wide blackout)" end
     if cls == "lc_powerbank" and not e:GetNW2Bool("lc_nopower", false) and e:GetNW2Float("lc_short_until", 0) < CurTime() then
-        return "bank", "Short out the power bank (its turrets and forcefields die with it)"
+        return "bank", "Short out the power bank (connected turrets and forcefields will be powered off)"
     end
     if cls == "lc_forcefield" and not e:GetNW2Bool("lc_nopower", false) and e:GetNW2Float("lc_short_until", 0) < CurTime() then
         return "field", "Short out the forcefield"
     end
     if cls == "func_door" or cls == "func_door_rotating" or cls == "prop_door_rotating" or cls == "func_movelinear" then return "door", "Hack the Combine lock" end
-    if e:IsPlayer() and e:GetNW2String("lcf_faction", "") == "vort" then return "vort", "Cut the vortigaunt's shackles" end
+    if e:IsPlayer() and e:GetNW2String("lcf_faction", "") == "vort" then return "vort", "Unlock the vortigaunt's shackles" end
     if cls ~= "lc_console" and cls ~= "lc_terminal" and not string.StartWith(cls, "lc_") then
         local m = string.lower(e:GetModel() or "")
         for _, t in ipairs(TERMINAL_HINTS) do
@@ -86,7 +86,7 @@ function SWEP:PrimaryAttack()
     elseif job == "bank" and LC.ShortPowerBank then ok, why = LC.ShortPowerBank(owner, owner:GetEyeTrace().Entity)
     elseif job == "machine" and LC.HackMachine then ok, why = LC.HackMachine(owner, owner:GetEyeTrace().Entity)
     elseif not job and LC.DataTerminalAt and LC.DataTerminalAt(owner) and LC.StealData then ok, why = LC.StealData(owner) -- (a terminal built into the map)
-    else why = "Nothing here the multitool can work on. (A Combine door, a city screen, a data terminal, a shackled vortigaunt, a transformer, a forcefield, a power bank, a vending machine, a ration dispenser.)" end
+    else why = "Nothing here the multitool can work on. (Try: Combine doors, city screens, data terminals, shackled vortigaunts, transformers, forcefields, power banks, vending machines, and ration dispensers.)" end
     if not ok and why then owner:ChatPrint(why) end
     if ok then owner:EmitSound("buttons/combine_button7.wav", 60) end
 end
@@ -98,7 +98,7 @@ if CLIENT then
         if label then
             draw.SimpleTextOutlined("LEFT CLICK: " .. string.upper(label), "DermaDefaultBold", x, y, Color(230, 150, 60), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
         else
-            draw.SimpleTextOutlined("MULTITOOL: point at a Combine door, a city screen, a data terminal or a vending machine", "DermaDefault", x, y, Color(200, 190, 180), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+            draw.SimpleTextOutlined("MULTITOOL: point at electronics to hack them", "DermaDefault", x, y, Color(200, 190, 180), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
         end
     end
 end

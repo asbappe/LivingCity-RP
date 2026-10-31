@@ -26,11 +26,11 @@ local INK, ACCENT = Color(232, 226, 210), Color(230, 180, 90)
 
 local GUIDE = {
     { "Keys", {
-        "F1  the quick menu: nine things on the number keys, for who you are and what's in front of you (0 closes; 9 is everything else)",
-        "Union work you do with your hands: Sanitation's street sweep (push the cart, throw the rubbish in), the Factory line (bin the rust-red parts), the Intake Processor's papers check (approve, deny, or call a Civil Protection unit).",
-        "More of it: Maintenance rewires circuit boards against the clock (turn the tiles till the current reaches the lamp; a sparking tile bites), Clinic Medics triage patients bleeding out, the Reclamation Crew breaks up rubble with a crowbar.",
-        "And more: Couriers run parcels against the clock past Civil Protection units who want to search them (and can turn down, report or open a parcel whose sender won't say what's in it; the Resistance's Smugglers carry the cell's cargo knowingly), the Mortuary searches the dead before the fire (log it, keep it, or keep it for the family; mind the overseer), the Laundry sorts uniforms by division, Records Clerks file forms and catch mismatches, Radio Repair finds each set's station and turns its trimmer screws by ear until it's clean (and sometimes finds Freq 7; record your own broadcasts in sound/livingcity/radio/).",
-        "Some of the city's rarer moments have flashing lights and strobes: you're warned first, and lc_ending_calm 1 in the console leaves the flashing out, just for you.",
+        "F1: the quick menu",
+        "Union work: Sanitation street sweep (push a cart, throw rubbish in), the Factory line (sort out rust-red parts), Intake Processor's papers check (review arrival's paperwork; approve, deny, or call CP Units to arrest).",
+        "More: Maintenance rewires circuit boards (redirect a current; don't get shocked), Clinic Medics triage injured patients, Reclamation Crew breaks up rubble with a crowbar.",
+        "More (2): Couriers run parcels against the clock, Mortuary processes the dead, Laundry sorts uniforms, Records Clerks file forms and catch mismatches, Radio Repair fixes a radio by ear (and sometimes finds Freq 7.)",
+        "Some of the city's rarer moments have flashing lights and strobes: a warning is displayed with an opt-out, and lc_ending_calm 1 in the console stops the flashing for you.",
         "Got a radio? Open your pockets (F2) and press Listen on it. Turn the dial: 96.4 is the city's own station, and somewhere in the static is Freq 7, the Resistance's secret one. It plays out loud, so people near you hear it too, Civil Protection units included.",
         "Freq 7 is a rule, not a number: the Resistance only broadcast where the digits add up to seven. The Combine jam it when they find it, and it comes back on another; a Resistance radio follows it by itself.",
         "Write Freq 7 down at the repair bench and you carry a Freq 7 sheet: the seven frequencies, to read or pass on. It's contraband.",

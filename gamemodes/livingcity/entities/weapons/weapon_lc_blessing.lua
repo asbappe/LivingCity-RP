@@ -88,7 +88,7 @@ function SWEP:PrimaryAttack()
     end
     if Heal(owner, ent, 20) > 0 then
         ent:EmitSound(HEAL_SOUND, 70)
-        if ent:IsPlayer() then ent:ChatPrint("[Blessing] Father Grigori lays a hand on your shoulder. You feel stronger.") end
+        if ent:IsPlayer() then ent:ChatPrint("[Blessing] Father Grigori lays a hand on your head and blesses you; You feel stronger.") end
     else
         self:SetNextPrimaryFire(CurTime() + 0.5)
     end
