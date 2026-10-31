@@ -26,14 +26,16 @@ def parse(text):
         m = re.match(r"^`(gamemodes/[^`]+)`", l.strip())
         if m: cur = m.group(1); continue
         m = LINE.match(l)
-        if m and cur: out.append((cur, int(m.group(3)), m.group(1), m.group(4).strip()))
+        if m and cur: out.append((cur, int(m.group(3)), m.group(1).replace("\\|", "|"), m.group(4).strip())) # (the file escapes | for its tables)
     return out
 
 def unesc(s): return re.sub(r"\\(.)", lambda m: {"n": "\n", "t": "\t"}.get(m.group(1), m.group(1)), s)
 def esc(s): return s.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
 
 def replace_whole(src, old, new):
-    hits = [m for m in STR.finditer(src) if unesc(m.group(1)) == old]
+    # (the file shows a line break as " / ": either way matches, and a " / " in the new text is a line break again)
+    hits = [m for m in STR.finditer(src) if unesc(m.group(1)) in (old, old.replace(" / ", "\n")) or unesc(m.group(1)).replace("\n", " / ") == old]
+    if hits and any("\n" in unesc(m.group(1)) for m in hits): new = new.replace(" / ", "\n")
     for m in sorted(hits, key=lambda m: -m.start()):
         src = src[:m.start()] + '"' + esc(new) + '"' + src[m.end():]
     return src, len(hits)
