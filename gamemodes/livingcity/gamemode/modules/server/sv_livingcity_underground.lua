@@ -129,9 +129,74 @@ function LC.RadioSay(ply, text, band)
     return true
 end
 
+-- The radio held up (weapon_lc_radio, next to Hands): everything typed and said goes out on the
+-- band instead, and only someone right beside you (lc_radio_overhear, 110 units, about two metres)
+-- hears you directly. You have the radio while you carry one (units always do).
+local cvOverhear = CreateConVar("lc_radio_overhear", "110", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "How close someone must stand to hear what you say into your radio (units)")
+local RADIO_SWEP = "weapon_lc_radio"
+
+function LC.RadioRaised(ply)
+    if not IsValid(ply) or not ply:Alive() then return false end
+    local w = ply.GetActiveWeapon and ply:GetActiveWeapon()
+    return IsValid(w) and w:GetClass() == RADIO_SWEP and LC.RadioBand(ply) ~= nil
+end
+
+local function Overheard(ply, listener)
+    local r = math.max(0, cvOverhear:GetFloat())
+    return listener ~= ply and listener:GetPos():DistToSqr(ply:GetPos()) < r * r
+end
+
+-- A line typed with the radio up. True if it went over the radio (so nothing else says it).
+function LC.RadioRaisedSay(ply, text)
+    if not LC.RadioRaised(ply) then return false end
+    local t = string.Trim(text or "")
+    if t == "" or string.find(t, "^[!/@%.]") then return false end -- (commands, /me, out of character: as usual)
+    if ply.lcRadioSaidAt == CurTime() and ply.lcRadioSaidText == t then return true end -- (both chat hooks see it)
+    ply.lcRadioSaidAt, ply.lcRadioSaidText = CurTime(), t
+    local band = LC.RadioBand(ply)
+    local ok, why = LC.RadioSay(ply, t)
+    if not ok then ply:ChatPrint("[Radio] " .. why) return true end
+    local name = LC.CharacterName and LC.CharacterName(ply) or ply:Nick()
+    for _, p in ipairs(player.GetAll()) do
+        if Overheard(ply, p) and not Hears(p, band) then p:ChatPrint(name .. " (into a radio): " .. t) end
+    end
+    return true
+end
+
+-- Voice with the radio up: everyone on the band hears it (wherever they are), anyone right beside
+-- you hears it from where you stand, and nobody else. Returns nil when the radio isn't up.
+function LC.RadioVoice(listener, talker)
+    if not LC.RadioRaised(talker) then return nil end
+    if Overheard(talker, listener) then return true, true end
+    local band = LC.RadioBand(talker)
+    if band == "cp" and LC.Jammed and LC.Jammed(talker:GetPos()) then return false, false end
+    if Hears(listener, band) then return true, false end
+    return false, false
+end
+
+-- Who has the radio: anyone with a radio in their pockets, and every unit.
+function LC.SyncRadioSwep(ply)
+    if not IsValid(ply) or not ply:Alive() or not ply.Give then return end
+    local has = ply:HasWeapon(RADIO_SWEP)
+    local should = LC.RadioBand(ply) ~= nil and not (LC.Prisoners and LC.Prisoners[ply])
+        and not (LC.PlayerIsZombie and LC.PlayerIsZombie(ply)) and not (LC.PlayerIsStalker and LC.PlayerIsStalker(ply))
+    if should and not has then
+        ply:Give(RADIO_SWEP)
+    elseif has and not should then
+        if LC.RadioRaised(ply) or (ply.GetActiveWeapon and IsValid(ply:GetActiveWeapon()) and ply:GetActiveWeapon():GetClass() == RADIO_SWEP) then
+            if ply:HasWeapon("weapon_lc_hands") then ply:SelectWeapon("weapon_lc_hands") end
+        end
+        ply:StripWeapon(RADIO_SWEP)
+    end
+end
+hook.Add("LivingCityInventoryChanged", "LivingCityRadioSwep", function(ply) timer.Simple(0, function() LC.SyncRadioSwep(ply) end) end)
+hook.Add("PlayerSpawn", "LivingCityRadioSwep", function(ply) timer.Simple(2, function() LC.SyncRadioSwep(ply) end) end)
+timer.Create("LivingCityRadioSwep", 5, 0, function() for _, p in ipairs(player.GetAll()) do LC.SyncRadioSwep(p) end end)
+
 local RADIO_CMDS = { ["!r"] = true, ["/r"] = true, ["!radio"] = true, ["/radio"] = true, ["!ru"] = "union", ["/ru"] = "union" }
 
 hook.Add("PlayerSay", "LivingCityRadio", function(ply, text)
+    if LC.RadioRaisedSay(ply, text) then return "" end
     local cmd, rest = string.match(text, "^(%S+)%s*(.*)$")
     local mode = cmd and RADIO_CMDS[string.lower(cmd)]
     if not mode then return end

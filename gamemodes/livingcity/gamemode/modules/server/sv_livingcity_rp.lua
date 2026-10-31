@@ -277,6 +277,7 @@ LC.Recognize = Recognize
 hook.Add("PlayerSay", "LivingCityICChat", function(ply, text, team)
     local raw = string.Trim(text or "")
     if raw == "" then return end
+    if LC.RadioRaisedSay and LC.RadioRaisedSay(ply, raw) then return "" end -- (the radio's up: it went over the band)
     local lower = string.lower(raw)
 
     -- always available, whatever the chat mode
@@ -353,6 +354,10 @@ end)
 -- Voice: heard near you, and from where you are.
 hook.Add("PlayerCanHearPlayersVoice", "LivingCityVoice", function(listener, talker)
     if LC.LiveSpeaker and talker == LC.LiveSpeaker then return end -- on air: the broadcast decides (sv_livingcity_propaganda.lua)
+    if LC.RadioVoice then -- (talking into a radio: the band, and whoever is right beside them)
+        local hear, near = LC.RadioVoice(listener, talker)
+        if hear ~= nil then return hear, near end
+    end
     local r = cvVoice:GetFloat()
     if r <= 0 or not Active() then return end
     if not talker:Alive() and listener:Alive() then return false, false end

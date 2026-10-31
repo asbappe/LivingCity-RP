@@ -1169,6 +1169,41 @@ for name in sorted(f[:-4] for f in os.listdir(ENTDIR) if f.endswith(".lua")):
     """)
     if err:
         problems = (problems + "\n" if problems else "") + name + " (client) " + str(err)
+# the radio held up (a weapon, next to Hands): drawn in your view and in your hand, and the soft static
+L.globals()._SRC = open(os.path.join(GMDIR, "entities", "weapons", "weapon_lc_radio.lua")).read()
+err = L.execute(r"""
+SWEP = {}
+local ok, err = pcall(function() assert(loadstring(_SRC, "weapon_lc_radio"))() end)
+if not ok then return "load: " .. tostring(err) end
+local def = SWEP
+local w = ents.Create("weapon_lc_radio")
+w.nw = w.nw or {}
+w.nw.lc_band, w.nw.lc_static = "resistance", "livingcity/radio/static.mp3"
+local inst = setmetatable({}, { __index = function(t, k)
+    if def[k] ~= nil then return def[k] end
+    local m = w[k]
+    if type(m) == "function" then return function(self, ...) return m(w, ...) end end
+    if m ~= nil then return m end
+    if k:match("^%u") then return function() end end
+end })
+w.GetOwner = function() return _me end
+w.GetClass = function() return "weapon_lc_radio" end
+for _, fn in ipairs({ "Initialize", "DrawHUD", "DrawWorldModel", "OnRemove" }) do
+    if def[fn] then
+        local ok2, err2 = pcall(def[fn], inst)
+        if not ok2 then return fn .. ": " .. tostring(err2) end
+    end
+end
+local gaw = _me.GetActiveWeapon
+_me.GetActiveWeapon = function() return w end
+local okT, errT = pcall(hook.t.Think.LivingCityRadioStatic)
+_me.GetActiveWeapon = gaw
+if not okT then return "static: " .. tostring(errT) end
+pcall(hook.t.Think.LivingCityRadioStatic)
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "weapon_lc_radio (client) " + str(err)
 # the city's music: a real sound channel is userdata (it can't carry fields of its own)
 err = L.execute(r"""
 local realExists, realValid = file.Exists, IsValid

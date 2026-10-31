@@ -238,6 +238,8 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Cuffs** (once zip ties) sell for 1 at the black market; every menu and message says cuffs; `!cuff` works.
 - [ ] **Couriers:** a parcel run opens with the sender's window: take it, hand it back, report (only when they won't say or own up), or open it (standing down, half pay). A sender who owns up pays 8 extra when it's delivered.
 - [ ] **Smuggler** (Resistance, F4): smuggling runs on the board (F3), from the quartermaster to three drops; pays far better.
+- [ ] **Radio:** carry a radio (units always): a Radio next to Hands. Switch to it: what you type and say goes over the band (others on it read and hear you anywhere; someone right beside you hears you; nobody else). R or switching away puts it down. A soft static hiss plays (just for you) while it's up.
+- [ ] **Freq 7:** no music: a voice line, then static for a couple of minutes; warnings still cut in.
 - [ ] **Hacking** a vending machine or ration dispenser: a handful (5 to 8) comes out, not 3.
 - [ ] **A unit's issued grenades:** can't be sold, dropped, stashed or given to a citizen; can be given to another unit.
 - [ ] **BOLOs:** a second one straight away says to wait.

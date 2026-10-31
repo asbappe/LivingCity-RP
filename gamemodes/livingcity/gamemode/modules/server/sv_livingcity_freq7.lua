@@ -7,8 +7,10 @@
     the whole instruction, and it fits in a whisper.
 
       One station      every radio on Freq 7 hears the same thing at once:
-                       a voice line, then a song, then a voice line (never two
-                       voice lines in a row)
+                       a voice line, then a quiet spell (just static,
+                       lc_freq7_quiet seconds, 120) so the band stays clear
+                       for people talking on it, then another voice line.
+                       lc_freq7_songs 1 puts songs back in the gaps
       Warnings         when something's coming for the Resistance (a sweep, a
                        raid, curfew, a supply convoy, an incursion into rebel
                        ground, a lockdown, a dropship) the warning cuts in at
@@ -45,6 +47,8 @@ LC = LC or {}
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvHold = CreateConVar("lc_freq7_hold", "18", FLAGS, "Minutes Freq 7 holds one frequency before the Combine find it, on green (yellow 60%, red 30%)")
 local cvJammed = CreateConVar("lc_freq7_jammed", "8", FLAGS, "Minutes a jammed frequency stays dead")
+local cvSongs  = CreateConVar("lc_freq7_songs", "0", FLAGS, "Songs on Freq 7 between the voice lines (0: off, so the band stays clear for talk; a quiet spell instead)")
+local cvQuiet  = CreateConVar("lc_freq7_quiet", "120", FLAGS, "Seconds of quiet (just static) between Freq 7's voice lines when there are no songs")
 
 LC.Freq7Freqs = { 100.6, 101.5, 102.4, 103.3, 104.2, 105.1, 106.0 }
 LC.Freq7Warnings = { "sweep", "raid", "curfew", "supply", "incursion", "lockdown", "dropship" }
@@ -131,8 +135,21 @@ local function Play(now, path, kind, text, loop)
     if kind ~= "jam" then S.lastKind = kind end
 end
 
--- Next on air: a song after a voice line, a voice line after a song.
+-- Next on air: a voice line, then (with songs off, the default) a quiet spell, just static,
+-- so the band stays clear for people talking on it; with lc_freq7_songs 1, a song instead.
 local function Next(now)
+    if not cvSongs:GetBool() then
+        if S.lastKind == "voice" then
+            S.seq = S.seq + 1
+            S.item = { kind = "quiet", ends = now + math.max(10, cvQuiet:GetFloat()) * math.Rand(0.75, 1.25) }
+            S.lastKind = "quiet"
+            return
+        end
+        local path, text = Clip("freq7")
+        if not path then S.item = nil S.lastKind = nil return end
+        Play(now, path, "voice", text)
+        return
+    end
     local want = S.lastKind == "voice" and "song" or "voice"
     local trig = { voice = "freq7", song = "freq7_song" }
     local path, text = Clip(trig[want])
@@ -162,11 +179,11 @@ local function Back(now)
     S.dark = false
     S.freq = PickFreq(now, S.jamFreq)
     S.holdUntil = now + HoldSecs()
-    S.lastKind = "song" -- (back on air with a voice: "we always come back")
+    S.lastKind = "song" -- (back on air with a voice: "we always come back"; anything but "voice" does it)
     Next(now)
 end
 
--- A warning for the Resistance cuts in now (and a song follows it).
+-- A warning for the Resistance cuts in now (and a quiet spell, or a song, follows it).
 function LC.Freq7Warn(name)
     if S.dark or not S.freq then return false end
     local path, text = Clip("freq7_" .. tostring(name))

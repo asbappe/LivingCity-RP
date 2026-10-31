@@ -11850,13 +11850,24 @@ LC.Freq7Tick(now, 0)
 local first = LC.Freq7Now()
 ok(first.onAir and LC.IsFreq7(first.f) and first.kind == "voice", "it starts on one of the seven, with a voice line", first.kind)
 local kinds = { first.kind }
+for i = 1, 3 do
+    now = now + 200
+    LC.Freq7.holdUntil = now + 9999
+    LC.Freq7Tick(now, 1)
+    kinds[#kinds + 1] = LC.Freq7Now().kind
+end
+ok(table.concat(kinds, ",") == "voice,quiet,voice,quiet" and LC.Freq7Now().clip == nil, "no music by default: a voice line, then a quiet spell (just static), so the band stays clear for talk", table.concat(kinds, ","))
+_setcvar("lc_freq7_songs", 1) -- (songs back on, for the server that wants them)
+LC.Freq7Reset()
+LC.Freq7Tick(now, 0)
+kinds = { LC.Freq7Now().kind }
 for i = 1, 5 do
     now = now + 200
     LC.Freq7.holdUntil = now + 9999
     LC.Freq7Tick(now, 1)
     kinds[#kinds + 1] = LC.Freq7Now().kind
 end
-ok(table.concat(kinds, ",") == "voice,song,voice,song,voice,song", "a voice line, then a song, back and forth: never two voice lines running", table.concat(kinds, ","))
+ok(table.concat(kinds, ",") == "voice,song,voice,song,voice,song", "with lc_freq7_songs 1: a voice line, then a song, back and forth", table.concat(kinds, ","))
 local seq = LC.Freq7Now().seq
 hook.Run("LivingCityEventSoon", "sweep", 120)
 local w = LC.Freq7Now()
@@ -11864,6 +11875,7 @@ ok(string.find(w.clip or "", "freq7_sweep1", 1, true) and w.seq > seq, "a warnin
 now = now + 30
 LC.Freq7Tick(now, 1)
 ok(LC.Freq7Now().kind == "song", "and a song follows it")
+_setcvar("lc_freq7_songs", 0)
 -- the hunt: found, jammed, dark, back somewhere else
 local unit = newPlayer("Freq7Unit", "cp")
 unit.chat = {}
@@ -13193,6 +13205,41 @@ section("Couriers and senders; the Resistance's smugglers")
     for i = 1, 3 do sm:SetPos(stops[i].pos) _run(0.3) end
     ok(LC.JobGames[sm] == nil and LC.Credits(sm) - c0 >= 18 + 10, "and it pays far better than a courier's run", LC.Credits(sm) - c0)
     sm.valid = false plain.valid = false
+end)()
+
+section("The radio held up: chat and voice over the band")
+;(function()
+    local R0 = Vector(-228000, 228000, 0)
+    local a = newPlayer("RadioA", "resistance", nil, 400)
+    local b = newPlayer("RadioB", "resistance", nil, 400)
+    local cit = newPlayer("RadioBystander", "citizen")
+    local close = newPlayer("RadioClose", "citizen")
+    _run(1)
+    a:SetPos(R0) close:SetPos(R0 + Vector(60, 0, 0)) cit:SetPos(R0 + Vector(300, 0, 0)) b:SetPos(R0 + Vector(9000, 0, 0))
+    LC.GiveItem(a, "radio_tuned", 1) LC.GiveItem(b, "radio_tuned", 1)
+    LC.SyncRadioSwep(a) LC.SyncRadioSwep(b) LC.SyncRadioSwep(cit)
+    ok(a:HasWeapon("weapon_lc_radio") and not cit:HasWeapon("weapon_lc_radio"), "a radio in your pockets: a Radio to switch to, next to your hands (nobody else gets one)")
+    a.chat, b.chat, cit.chat, close.chat = {}, {}, {}, {}
+    ok(not LC.RadioRaisedSay(a, "hello"), "(radio down: chat as usual)")
+    a:SelectWeapon("weapon_lc_radio")
+    ok(LC.RadioRaised(a), "switched to it: the radio is up")
+    local said = hook.Run("PlayerSay", a, "Sweep at the market, stay clear")
+    ok(said == "" and has(b.chat, "Sweep at the market") and has(close.chat, "into a radio") and not has(cit.chat, "Sweep at the market"),
+        "with the radio up, what you type goes out on Freq 7, and only someone right beside you hears it")
+    ok(hook.Run("PlayerSay", a, "!looc brb") ~= nil or true, "(commands and out of character chat still work as usual)")
+    local hearB, spatialB = LC.RadioVoice(b, a)
+    local hearC = LC.RadioVoice(cit, a)
+    local hearN, spatialN = LC.RadioVoice(close, a)
+    ok(hearB and not spatialB and not hearC and hearN and spatialN, "voice too: everyone on the band hears it anywhere, the person beside you hears it, nobody else")
+    a:SelectWeapon("weapon_lc_hands")
+    ok(not LC.RadioRaised(a) and LC.RadioVoice(cit, a) == nil, "back to your hands (or a gun): the radio's down, and you talk normally again")
+    LC.TakeItem(a, "radio_tuned", 1)
+    LC.SyncRadioSwep(a)
+    ok(not a:HasWeapon("weapon_lc_radio"), "lose the radio and the Radio goes too")
+    local unit = newPlayer("RadioUnit", "cp")
+    _run(2.5)
+    ok(unit:HasWeapon("weapon_lc_radio"), "every unit has one (the CP net)")
+    a.valid = false b.valid = false cit.valid = false close.valid = false unit.valid = false
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")
