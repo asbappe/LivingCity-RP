@@ -164,6 +164,8 @@ function LC.LabPrice(r)
     if it and it.arms then
         local qm = GetConVar("lc_quartermaster_arms_bonus")
         p = math.max(p, math.ceil((it.sell or 0) * (qm and qm:GetFloat() or 1.5)) + 2)
+    elseif it and it.sell then
+        p = math.max(p, it.sell + 1) -- (never less than it sells back for: no credits out of thin air)
     end
     return p * (r.count or 1) -- (a batch: so many at once)
 end

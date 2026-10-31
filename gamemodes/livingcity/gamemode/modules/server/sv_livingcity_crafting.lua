@@ -101,6 +101,7 @@ end
 function LC.SellPrice(ply, id)
     local it = LCS.Items[id]
     if not it or not it.sell or it.sell <= 0 then return nil end
+    if LC.IssuedLocked and LC.IssuedLocked(ply, id) then return nil end -- (a unit's issued grenades)
     local price = it.sell
     if it.arms and IsResistance(ply) and LC.NearQuartermaster and LC.NearQuartermaster(ply) then
         price = math.floor(price * cvQMBonus:GetFloat() + 0.5)
@@ -372,6 +373,17 @@ local ISSUE = {
     { faction = "cp", rank = 3, item = "gren_gas", n = 1 },
     { faction = "cp", rank = 4, item = "gren_gas", n = 2 },    -- the Overwatch
 }
+-- A unit's issued grenades are Combine issue: kept, thrown, or handed to another unit; never
+-- sold, dropped, stashed or passed to anyone else (they came back free with every respawn).
+local ISSUED_ITEM = {}
+for _, is in ipairs(ISSUE) do ISSUED_ITEM[is.item] = true end
+function LC.IssuedLocked(ply, id, to)
+    if not (IsValid(ply) and ISSUED_ITEM[id] and LC.PlayerIsCP(ply)) then return false end
+    if IsValid(to) and LC.PlayerIsCP(to) then return false end
+    return true
+end
+local ISSUED_WHY = "That's Combine issue: it stays with you (or another unit)."
+
 function LC.IssueGrenades(ply)
     if not IsValid(ply) or not LC.Inventory then return end
     local f, rank = ply:GetNW2String("lcf_faction", ""), ply:GetNW2Int("lcf_rank", 1)
@@ -401,6 +413,7 @@ function LC.GiveTo(ply, id)
     end
     if not LC.HasItem(ply, id) then return false end
     if LCS.Items[id] and LCS.Items[id].doc then return false, "Your papers stay with you. (Show them instead: Use.)" end
+    if LC.IssuedLocked(ply, id, target) then return false, ISSUED_WHY end
     if not LC.CanCarry(target, id, 1) then return false, "They can't carry any more." end
     local it = LCS.Items[id]
     local prisoner = LC.Prisoners and LC.Prisoners[target]

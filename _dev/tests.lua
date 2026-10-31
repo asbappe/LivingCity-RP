@@ -3779,6 +3779,7 @@ unit.chat = {}
 local okB, b = LC.AddBOLO(unit, key, "Red jacket, heading north")
 ok(okB and cit:GetNW2Bool("lc_bolo", false) and cit:GetNW2String("lc_bolo_text", "") == "Red jacket, heading north", "a BOLO on a record shows on that person's tag")
 ok(has(unit.chat, "BOLO"), "and every unit hears it")
+unit.lcBoloNext = 0 -- (a second one, after the half minute)
 local okD, d = LC.AddBOLO(unit, nil, "Male, grey coat")
 ok(okD and d.key == nil, "a BOLO can be just a description")
 ok(not LC.AddBOLO(cit, nil, "Unit 04 is corrupt"), "only units issue them")
@@ -13096,6 +13097,34 @@ section("Safeguards for a public server: floods, piles, double pickups")
     _setcvar("lc_drops_kept", 30)
     for _, x in ipairs(dropper.lcDropped or {}) do if IsValid(x) then x:Remove() end end
     dropper.valid = false
+end)()
+
+;(function()
+    -- no credits out of thin air: nothing at the lab costs less than it sells back for
+    ok(LC.LabPrice({ out = "gun_parts" }) > LCS.Items.gun_parts.sell, "gun parts at the lab cost more than the quartermaster pays for them", LC.LabPrice({ out = "gun_parts" }))
+    ok(LCS.Items.zipties.sell == 1, "zip ties sell for 1 (Civil Protection buy them three for 6)")
+    -- a unit's issued grenades are Combine issue
+    local unit = newPlayer("GrenadeUnit", "cp", nil, 900)
+    local other = newPlayer("OtherUnit", "cp", nil, 900)
+    local civ = newPlayer("GrenadeFriend", "citizen")
+    _run(2)
+    LC.GiveItem(unit, "gren_smoke", 1)
+    ok(LC.SellPrice(unit, "gren_smoke") == nil, "a unit can't sell an issued grenade")
+    LC.InvAction(unit, "drop", "gren_smoke")
+    ok(LC.HasItem(unit, "gren_smoke"), "or drop it")
+    ok(LC.IssuedLocked(unit, "gren_smoke", civ) and not LC.IssuedLocked(unit, "gren_smoke", other), "or hand it to anyone but another unit")
+    LC.GiveItem(civ, "gren_smoke", 1)
+    ok(LC.SellPrice(civ, "gren_smoke") ~= nil, "(one that's ended up in a citizen's hands sells as before)")
+    -- a unit's BOLOs: one every half minute
+    local okA = LC.AddBOLO(unit, nil, "a tall man in a grey coat", 10)
+    local okB = LC.AddBOLO(unit, nil, "another one", 10)
+    ok(okA and not okB, "a unit's second BOLO straight away waits (each one rings for every unit)")
+    -- the light level a player's game reports is only a hint
+    civ.lcLight = 0
+    civ.FlashlightIsOn = function() return true end
+    ok(LC.TrustedLight(civ) == 1, "claiming to be in the dark with a flashlight on doesn't hide you")
+    civ.FlashlightIsOn = function() return false end
+    unit.valid = false other.valid = false civ.valid = false
 end)()
 
 section("The Endings menu: every ending's settings, and its dances tuned live")

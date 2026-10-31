@@ -389,12 +389,17 @@ local function Result(ply, ok, msg)
 end
 
 net.Receive("lcc_submit", function(_, ply)
+    if (ply.lccNext or 0) > CurTime() then return Result(ply, false, "One moment.") end
+    ply.lccNext = CurTime() + 1
+    -- a new name and face is no way out of trouble
+    if (LC.PlayerIsWanted and LC.PlayerIsWanted(ply)) or (LC.InCustody and LC.InCustody(ply)) or (LC.Prisoners and LC.Prisoners[ply]) then
+        return Result(ply, false, "Not while you're wanted or in custody.")
+    end
     local name, model = net.ReadString(), net.ReadString()
     local desc = net.ReadString() or "" -- (the registration form's description)
     local skin = net.ReadUInt(8) or 0
-    local bg = util.JSONToTable(net.ReadString() or "") or {}
-    if (ply.lccNext or 0) > CurTime() then return Result(ply, false, "One moment.") end
-    ply.lccNext = CurTime() + 1
+    local raw = net.ReadString() or ""
+    local bg = (#raw < 2000 and util.JSONToTable(raw)) or {}
     if not ValidModel(model) then return Result(ply, false, "Choose one of the faces shown.") end
     local ok, clean = LC.ValidateCharacterName(name)
     if not ok then return Result(ply, false, clean) end

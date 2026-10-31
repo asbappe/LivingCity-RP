@@ -191,6 +191,7 @@ function LC.ContainerPut(ply, id)
     local mode, why = Access(ply, c)
     if mode ~= "open" then return false, why or "Not yours to fill." end
     if not LC.HasItem(ply, id) then return false end
+    if LC.IssuedLocked and LC.IssuedLocked(ply, id) then return false, "That's Combine issue: it stays with you (or another unit)." end
     if Weight(c.items) + LCS.Weight(id) > Capacity(c) + 0.001 then return false, "It won't fit." end
     LC.TakeItem(ply, id, 1)
     c.items[id] = (c.items[id] or 0) + 1

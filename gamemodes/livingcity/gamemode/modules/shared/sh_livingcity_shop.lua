@@ -172,7 +172,7 @@ LCS.Items = {
     ------------------------------------------------------------------------
     -- Order (sv_livingcity_cp.lua)
     ------------------------------------------------------------------------
-    zipties         = { name = "Zip ties", model = "models/props_lab/box01a.mdl", sell = 4,
+    zipties         = { name = "Zip ties", model = "models/props_lab/box01a.mdl", sell = 1, -- (1, not 4: Civil Protection buy them three for 6)
                         desc = "Tie someone's hands: !tie, looking at them (hands up, down, stopped, or from behind). Civil Protection units carry their own" },
     request_device  = { name = "Request device", model = "models/props_lab/reciever01b.mdl", sell = 6,
                         desc = "Calls Civil Protection to where you are: /request <what's wrong>" },

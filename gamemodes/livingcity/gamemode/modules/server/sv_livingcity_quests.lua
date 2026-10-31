@@ -420,7 +420,7 @@ function LC.StealthRange(ply, dist)
         f = f * 0.5
         if ply:GetVelocity():Length2D() < 60 then f = f * 0.85 end -- (creeping, or keeping still)
     end
-    local light = ply.lcLight
+    local light = LC.TrustedLight(ply)
     if light then
         if light < 0.06 then f = f * 0.55 elseif light < 0.15 then f = f * 0.75 end
     end
@@ -460,6 +460,20 @@ net.Receive("lc_light", function(_, ply)
     ply.lcLightAt = CurTime() + 0.5
     ply.lcLight = math.Clamp(net.ReadFloat() or 1, 0, 1)
 end)
+
+-- The light level comes from the player's own game (the server can't see light), so it's
+-- checked against what the server does know: a flashlight on, or open sky over them in the
+-- daytime, and they're not in the dark, whatever their game says.
+function LC.TrustedLight(ply)
+    local light = ply.lcLight
+    if not light or light >= 0.15 then return light end
+    if ply.FlashlightIsOn and ply:FlashlightIsOn() then return 1 end
+    if not (LC.IsNight and LC.IsNight()) then -- (open sky in daylight is never dark, power or no power)
+        local up = util.TraceLine({ start = ply:EyePos(), endpos = ply:EyePos() + Vector(0, 0, 4000), mask = MASK_SOLID_BRUSHONLY })
+        if up and up.HitSky then return 1 end
+    end
+    return light
+end
 
 local function NearestZone(kind, pos)
     local best, bd

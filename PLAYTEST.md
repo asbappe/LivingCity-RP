@@ -234,6 +234,11 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Dropping things:** drop more than 30 things from your pockets: the oldest on the ground disappears.
 - [ ] **Tickets:** two `@` messages in a row: the second asks you to wait a moment.
 - [ ] **Rent:** an apartment door says 15 credits.
+- [ ] **Lab prices:** nothing at the lab is cheaper than the quartermaster pays for it (gun parts 13, not 11).
+- [ ] **Zip ties** sell for 1 at the black market.
+- [ ] **A unit's issued grenades:** can't be sold, dropped, stashed or given to a citizen; can be given to another unit.
+- [ ] **BOLOs:** a second one straight away says to wait.
+- [ ] **Wanted:** the character form won't take a new name or face.
   Notes:
 
 ## Morning exercise and more (from the other session)

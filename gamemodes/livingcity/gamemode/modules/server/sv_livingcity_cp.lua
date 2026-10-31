@@ -261,6 +261,11 @@ function LC.AddBOLO(unit, key, text, minutes)
     if not IsUnit(unit) then return false, "Civil Protection units only." end
     text = string.Trim(tostring(text or ""))
     if #text < 3 then return false, "Say what to look out for." end
+    -- one every half minute (each one is a call and a sound for every unit)
+    if IsValid(unit) and not unit:IsAdmin() and (unit.lcBoloNext or 0) > CurTime() then
+        return false, string.format("The net's still busy with your last one. %d seconds.", math.ceil(unit.lcBoloNext - CurTime()))
+    end
+    if IsValid(unit) then unit.lcBoloNext = CurTime() + 30 end
     minutes = math.Clamp(math.floor(tonumber(minutes) or cvBolo:GetFloat()), 5, 240)
     local r = key and LoadRecords()[key]
     local list = Bolos()
@@ -727,6 +732,11 @@ function LC.SetSocio(ply, level, minutes)
         return true, "Sociostability is back to what the city makes it."
     end
     if not LCCP.Socio[level] then return false, "Green, yellow, red, or auto." end
+    -- (announced to the whole city each time: not more than once every half minute)
+    if IsValid(ply) and not ply:IsAdmin() and (ply.lcSocioNext or 0) > CurTime() then
+        return false, string.format("You've only just set it. %d seconds.", math.ceil(ply.lcSocioNext - CurTime()))
+    end
+    if IsValid(ply) then ply.lcSocioNext = CurTime() + 30 end
     minutes = math.Clamp(math.floor(tonumber(minutes) or 10), 1, 120)
     LC.SocioOverride = { level = level, untilT = CurTime() + minutes * 60, by = IsValid(ply) and Callsign(ply) or "Overwatch" }
     LC.RefreshSocio(false, true) -- announced even if it was already this
