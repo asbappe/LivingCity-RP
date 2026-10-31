@@ -952,8 +952,10 @@ local function UseFixture(ply, kind, ent, fx)
         if ent then LC.UseVending(ply, ent) else LC.UseStaticVending(ply, fx) end
     elseif kind == "stove" and (ply.lcStoveUse or 0) < CurTime() then
         ply.lcStoveUse = CurTime() + 1
-        if LC.SendInv then LC.SendInv(ply, true) end
-        ply:ChatPrint("[Stove] Cook from your pockets (F2).")
+        local home = LC.PlayerInOwnBlock and LC.PlayerInOwnBlock(ply) and not LC.PlayerIsCP(ply)
+        local at = (IsValid(ent) and ent:GetPos()) or (fx and fx.pos) or ply:GetPos()
+        if home and LC.OpenStashAt then LC.OpenStashAt(ply, at) elseif LC.SendInv then LC.SendInv(ply, true) end
+        ply:ChatPrint(home and "[Stove] Cook from your pockets (F2). Your stash is open there too, while you stand by the stove." or "[Stove] Cook from your pockets (F2).")
     elseif kind == "sink" then
         if (ply.lcSinkUse or 0) < CurTime() then
             ply.lcSinkUse = CurTime() + 1

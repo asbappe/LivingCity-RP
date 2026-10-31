@@ -1082,7 +1082,30 @@ local function StashCount(ply)
     return n
 end
 
-function LC.CanReachStash(ply) return Free(ply) and LC.PlayerInOwnBlock and LC.PlayerInOwnBlock(ply) == true end
+-- Your stash is kept in the furniture at home: press E on a stove, fridge, dresser, wardrobe or
+-- cupboard in your own block and it opens (F2 shows it while you stand by it). Not anywhere else.
+local STASH_FURNITURE = { "fridge", "refrigerator", "stove", "oven", "dresser", "wardrobe", "drawer", "cupboard", "cabinet", "closet", "shelf", "bookcase" }
+function LC.IsStashFurniture(ent)
+    if not IsValid(ent) or not ent.GetModel then return false end
+    local m = string.lower(ent:GetModel() or "")
+    for _, w in ipairs(STASH_FURNITURE) do if string.find(m, w, 1, true) then return true end end
+    return false
+end
+function LC.OpenStashAt(ply, pos)
+    ply.lcStashAt = pos
+    LC.SendInv(ply, true)
+end
+function LC.CanReachStash(ply)
+    if not (Free(ply) and LC.PlayerInOwnBlock and LC.PlayerInOwnBlock(ply) == true) then return false end
+    return ply.lcStashAt ~= nil and ply:GetPos():DistToSqr(ply.lcStashAt) < 160 * 160
+end
+hook.Add("PlayerUse", "LivingCityStashFurniture", function(ply, ent)
+    if LC.IsStashFurniture(ent) and LC.PlayerInOwnBlock and LC.PlayerInOwnBlock(ply) and not LC.PlayerIsCP(ply)
+        and (ply.lcStashUse or 0) < CurTime() then
+        ply.lcStashUse = CurTime() + 1
+        LC.OpenStashAt(ply, ent:GetPos())
+    end
+end)
 
 function LC.StashStore(ply, id)
     if not LC.CanReachStash(ply) then return false, "Your stash is at home, in your own block." end
@@ -1190,7 +1213,7 @@ concommand.Add("lci_stash", function(ply) if IsValid(ply) then LC.SendInv(ply, t
 hook.Add("PlayerSay", "LivingCityStashChat", function(ply, text)
     if string.lower(string.Trim(text)) ~= "!stash" then return end
     if not LC.CanReachStash(ply) then
-        ply:ChatPrint("[Stash] Your stash is at home, in " .. (LC.PlayerBlock and LC.PlayerBlock(ply) and LC.BlockName(LC.PlayerBlock(ply)) or "your housing block") .. ".")
+        ply:ChatPrint("[Stash] Your stash is at home, in " .. (LC.PlayerBlock and LC.PlayerBlock(ply) and LC.BlockName(LC.PlayerBlock(ply)) or "your housing block") .. ": press E on a stove, fridge, dresser or wardrobe there.")
     else
         LC.SendInv(ply, true)
     end

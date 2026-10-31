@@ -674,7 +674,7 @@ So nobody has to read all this first, the game explains itself as it happens. Th
 | Lockpick set | Black market | Locked doors (not Combine locks). Can snap. Being seen is breaking and entering |
 | Combine bypass charge | Black market | Opens any door once, Combine doors included. Sometimes trips an alarm |
 
-**Stash.** Eight hidden slots in your own housing block (`!stash`, or F2 while you're home, or E on a stove or your own fridge there). A street search doesn't reach it, but a raid on your block can. A Freq 7 radio warns you before a sweep.
+**Stash.** Eight hidden slots in your own housing block, kept in the furniture: press E on a stove, fridge, dresser, wardrobe or cupboard there and it opens in your pockets (F2) while you stand by it. Nowhere else. A street search doesn't reach it, but a raid on your block can. A Freq 7 radio warns you before a sweep.
 
 **Keeping out of sight.** Crouch to sneak. Crouched, a Civil Protection unit or soldier sees you at half the distance, creeping slowly a little less, and in the dark less again (your own game measures how lit you are, and the server checks it: a flashlight on, or open sky over you in the daytime, is never the dark); and crouched, he doesn't see you behind his back. While you crouch, a bar at the bottom of your screen says how easily you're seen ("A UNIT CAN SEE YOU" when one does), and each unit near you has his sight painted on the ground (red if you're in it; `lc_stealth_cones 0` hides it, your own setting). It counts for everything units notice: thefts, looting a supply drop, a curfew. `lc_stealth 0` turns it off. The sight is shown in 3D: on the ground (up slopes and steps), with see-through walls about waist high and a lid, so it shows from below too.
 
