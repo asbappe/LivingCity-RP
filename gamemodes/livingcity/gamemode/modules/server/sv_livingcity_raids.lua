@@ -158,20 +158,6 @@ local function Waypoints(zones, from)
     return ordered
 end
 
--- Units already standing about near the block (not ones walking over from the far
--- side of the map: they'd turn up after it was over).
-local NEAR_COPS = 1500
-local function FreeCops(center)
-    local out = {}
-    for npc, st in pairs(LC.NPCs or {}) do
-        if IsValid(npc) and st.role == "cop" and not st.test and not st.raid and not st.questLock
-            and st.state == "idle" and npc:GetPos():DistToSqr(center) < NEAR_COPS * NEAR_COPS then
-            out[#out + 1] = npc
-        end
-    end
-    return out
-end
-
 local function GiveStops(raid, npc, st, want)
     local pts = Waypoints(raid.zones, npc:GetPos())
     if #pts == 0 then return false end
@@ -186,8 +172,9 @@ local function GiveStops(raid, npc, st, want)
     return true
 end
 
--- The rest of the team comes from nearby, out of sight, so the raid really
--- happens where it was announced. They leave the same way when it's over.
+-- The team comes from nearby, out of sight, so the raid really happens where
+-- it was announced. (Not the city's own patrols: they were often too far away,
+-- or had no way there, and the raid was over before anyone arrived.) They leave the same way when it's over.
 LC.RaidLeaving = LC.RaidLeaving or {} -- [npc] = { spot, since }
 local function SpawnTeam(raid, want)
     if not LC.SpawnCop or #raid.units >= want then return end
@@ -216,18 +203,6 @@ local function SpawnTeam(raid, want)
             st.raidSpot = spot
             if not GiveStops(raid, npc, st, want) then npc:Remove() break end
         end
-    end
-end
-
-local function Recruit(raid)
-    local want = cvUnits:GetInt()
-    if #raid.units >= want then return end
-    local center = raid.zones[1].pos
-    local cops = FreeCops(center)
-    table.sort(cops, function(a, b) return a:GetPos():DistToSqr(center) < b:GetPos():DistToSqr(center) end)
-    for _, npc in ipairs(cops) do
-        if #raid.units >= want then break end
-        GiveStops(raid, npc, LC.NPCs[npc], want)
     end
 end
 
@@ -343,7 +318,6 @@ function LC.StartRaid(block)
     local raid = { block = block, zones = zones, units = {}, found = {}, names = {}, seen = {}, frisked = {}, startT = CurTime() }
     LC.Raid = raid
     LC.ExtraCops = math.max(LC.ExtraCops or 0, 2)
-    Recruit(raid)
     SpawnTeam(raid, cvUnits:GetInt())
     if #raid.units == 0 then
         LC.Raid = nil
@@ -411,7 +385,6 @@ timer.Create("LivingCityRaids", 2, 0, function()
     end
     local raid = LC.Raid
     if not raid then return end
-    if now - raid.startT < 30 then Recruit(raid) end
     local alive = false
     for _, u in ipairs(raid.units) do
         if IsValid(u) and LC.NPCs[u] and LC.NPCs[u].raid then alive = true end

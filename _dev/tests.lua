@@ -2576,11 +2576,14 @@ ok(not LC.ContrabandOf(legal) and not LC.ContrabandOf(table1), "rations and furn
 local raidCop, rcst = LC.Spawners.cop(zb.pos + Vector(150, 0, 0))
 rcst.routeGroup = nil
 ok(LC.StartRaid(1), "a raid can be started on a block")
-ok(LC.Raid and #LC.Raid.units == GetConVar("lc_raid_units"):GetInt(), "a full team goes: units already nearby, and the rest come from just out of sight", LC.Raid and #LC.Raid.units)
+ok(LC.Raid and #LC.Raid.units == GetConVar("lc_raid_units"):GetInt(), "a full team of its own goes, from just out of sight", LC.Raid and #LC.Raid.units)
+ok(rcst.raid == nil, "the city's own patrols aren't pulled in")
 local raidTeam = {}
 for _, u in ipairs(LC.Raid and LC.Raid.units or {}) do if LC.NPCs[u] and LC.NPCs[u].raidSpot then raidTeam[#raidTeam + 1] = u end end
 _run(8)
-ok(rcst.raid ~= nil or LC.Raid == nil, "units take it in turn to walk the block")
+local walking = 0
+for _, u in ipairs(raidTeam) do if IsValid(u) and LC.NPCs[u] and LC.NPCs[u].raid then walking = walking + 1 end end
+ok(walking > 0 or LC.Raid == nil, "units take it in turn to walk the block")
 _run(160)
 ok(LC.Raid == nil, "and the raid ends")
 ok(not IsValid(radioItem) and not IsValid(tv) and not IsValid(gun), "contraband is confiscated")
