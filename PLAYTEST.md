@@ -274,6 +274,12 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **A placed bin:** stand next to it, F2: the bin's section is there.
 - [ ] **The jog:** units say "Move it!"; finishing says what you earned (standing and 5 credits); skipping shows a reprimand and the next ration is withheld.
 
+## Terminals on their own screens (1 November: what to check)
+
+- [ ] **Civil Intake / Housing Allocation:** E shows the menu on a screen in front of the terminal; the button under your crosshair lights up; E presses it. Is the screen in a good spot (not inside the terminal, readable, not upside down or mirrored)?
+- [ ] **CP Commissary (as a unit):** the counter's goods on its screen; buying works.
+- [ ] **C > Settings > Terminals' menus:** switch to a window and back.
+
 ## The Resistance Insider (1 November: what to check)
 
 - [ ] **Recruited:** as a kind unit, The Man Inside on F3; stay inside at the crossroads.

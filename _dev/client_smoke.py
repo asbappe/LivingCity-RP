@@ -750,6 +750,25 @@ do
         _me:SetPos(Vector(0, 0, 0))
     end)
     if not okD then problems[#problems + 1] = "screens, lab, papers, notices: " .. tostring(errD) end
+    -- a terminal's menu on its own screen: the crosshair is the cursor, E presses
+    local okS, errS = pcall(function()
+        local term = ents.Create("lc_intake") term:SetPos(_me:GetPos() + Vector(60, 0, 0))
+        local pressed = false
+        if not LC_CL.ScreenOpen(term, "TEST", "sub", { { kind = "head", text = "Head" }, { kind = "button", text = "Press me", fn = function() pressed = true end } }) then error("didn't open") end
+        local aim = LC_CL.ScreenAim
+        LC_CL.ScreenAim = function() return 100, 46 + 26 + 5 end -- (on the second row: the button)
+        for id, fn in pairs(hook.t.Think or {}) do if id == "LivingCityScreens" then fn() end end
+        for id, fn in pairs(hook.t.PostDrawTranslucentRenderables or {}) do if id == "LivingCityScreens" then fn(false, false) end end
+        local swallowed = hook.t.PlayerBindPress.LivingCityScreens(_me, "+use", true)
+        if not pressed or swallowed ~= true then error("E on the button didn't press it") end
+        LC_CL.ScreenAim = aim
+        LC_CL.ScreenClose()
+        LC_CL.OpenDesk({ kind = "housing", awaiting = true, papers = true, blocks = { { n = 1, name = "Block 1", residents = 2 } } })
+        if not LC_CL.ScreenState() then error("Housing Allocation didn't open on its screen") end
+        LC_CL.ScreenClose()
+        term:Remove()
+    end)
+    if not okS then problems[#problems + 1] = "terminal screens: " .. tostring(errS) end
     -- every chat command, and where it is now
     local WHERE = {
         ["!handsup"] = "handsup", ["!holster"] = "holster", ["!surrender"] = "surrender", ["!struggle"] = "struggle", ["!stuck"] = "stuck",

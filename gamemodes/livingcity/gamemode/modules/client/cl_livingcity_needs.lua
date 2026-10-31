@@ -686,6 +686,20 @@ net.Receive("lce_shop", function()
     local t = ReadCompressed()
     if not t or not LCS then return end
     if IsValid(shopFrame) then shopFrame:Remove() end
+    -- the Civil Protection Commissary's counter, on its own screen (cl_livingcity_screens.lua), if this player has them on
+    local scr = t.cp and LC_CL.ScreenFor and LC_CL.ScreenFor({ "lc_cpsupply" })
+    if scr then
+        local tierS = LCS.TierFor(t.standing or 0)
+        local rows = { { kind = "line", text = string.format("%d credits   |   %s (%d)", t.credits or 0, tierS.name, t.standing or 0), col = tierS.color } }
+        for _, g in ipairs(t.goods or {}) do
+            local id = g.id
+            rows[#rows + 1] = { kind = "button", enabled = g.ok == true,
+                text = g.name .. (g.ok and ("   " .. g.price .. " credits") or ("   (" .. (g.why or "unavailable") .. ")")),
+                fn = function() net.Start("lce_buy") net.WriteString(id) net.SendToServer() end }
+        end
+        LC_CL.ScreenOpen(scr, "CIVIL PROTECTION COMMISSARY", "the unit counter", rows)
+        return
+    end
     shopFrame = vgui.Create("DFrame")
     shopFrame:SetTitle("")
     shopFrame:SetSize(math.min(ScrW() - 60, 620), math.min(ScrH() - 60, 600))

@@ -359,6 +359,9 @@ function LC_CL.OpenActions()
     local wm = wn and wn:GetInt() or 1
     Add(set, wm == 2 and "Next step on screen: always (change)" or (wm == 1 and "Next step on screen: new life and urgent (change)" or "Next step on screen: never (change)"),
         function() RunConsoleCommand("lc_whatnow_show", tostring((wm + 1) % 3)) end)
+    local scr = GetConVar("lc_screen_ui")
+    Add(set, (scr and scr:GetBool()) and "Terminals' menus: on their own screen (use a window)" or "Terminals' menus: in a window (use their own screen)",
+        function() RunConsoleCommand("lc_screen_ui", (scr and scr:GetBool()) and "0" or "1") end)
     local third = GetConVar("lc_act_thirdperson")
     Add(set, (third and third:GetBool() and "Third person while posing: on (turn off)") or "Third person while posing: off (turn on)",
         function() RunConsoleCommand("lc_act_thirdperson", (third and third:GetBool()) and "0" or "1") end)

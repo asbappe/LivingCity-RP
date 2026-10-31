@@ -146,6 +146,7 @@ LC_MODULES = {
     client = {
         "cl_livingcity",
         "cl_livingcity_view", -- (early: the camera the other modules add their touches to)
+        "cl_livingcity_screens", -- (terminals' menus on their own screens)
         "cl_livingcity_notices",
         "cl_livingcity_actions",
         "cl_livingcity_quick", -- (F1: the quick menu, nine things on the number keys)

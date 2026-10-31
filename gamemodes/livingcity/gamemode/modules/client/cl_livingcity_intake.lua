@@ -149,6 +149,16 @@ function LC_CL.OpenDesk(t)
     if IsValid(desk) then desk:Remove() end
     if not t then return end
     local housing = t.kind == "housing"
+    -- on the terminal's own screen, if this player has them on (cl_livingcity_screens.lua); else a window
+    local screenEnt = LC_CL.ScreenFor and LC_CL.ScreenFor({ "lc_intake" })
+    local rows = {}
+    local Close, Line, Head, Button
+    if screenEnt then
+        Close = function() if LC_CL.ScreenClose then LC_CL.ScreenClose() end end
+        Line = function(text, col) for _, s in ipairs(LC_CL.ScreenWrap(text)) do rows[#rows + 1] = { kind = "line", text = s, col = col } end end
+        Head = function(text) rows[#rows + 1] = { kind = "head", text = text } end
+        Button = function(text, enabled, fn) rows[#rows + 1] = { kind = "button", text = text, enabled = enabled ~= false, fn = fn } return { DockMargin = function() end } end
+    else
     local W, H = math.min(ScrW() - 40, 640), math.min(ScrH() - 40, housing and 600 or 420)
     desk = vgui.Create("DFrame")
     desk:SetTitle("")
@@ -166,8 +176,8 @@ function LC_CL.OpenDesk(t)
     scroll:Dock(FILL)
     scroll:DockMargin(8, 30, 8, 8)
 
-    local function Close() if IsValid(desk) then desk:Remove() end end
-    local function Line(text, col, font)
+    Close = function() if IsValid(desk) then desk:Remove() end end
+    Line = function(text, col, font)
         local l = vgui.Create("DLabel", scroll)
         l:Dock(TOP)
         l:DockMargin(4, 2, 4, 2)
@@ -178,8 +188,8 @@ function LC_CL.OpenDesk(t)
         l:SetText(text)
         return l
     end
-    local function Head(text) local l = Line(text, BLUE, "LCDeskHead") l:DockMargin(4, 10, 4, 4) end
-    local function Button(text, enabled, fn, tip)
+    Head = function(text) local l = Line(text, BLUE, "LCDeskHead") l:DockMargin(4, 10, 4, 4) end
+    Button = function(text, enabled, fn, tip)
         local b = vgui.Create("DButton", scroll)
         b:Dock(TOP)
         b:DockMargin(4, 3, 4, 3)
@@ -189,6 +199,7 @@ function LC_CL.OpenDesk(t)
         if tip then b:SetTooltip(tip) end
         b.DoClick = fn
         return b
+    end
     end
     local function Way(n, label) Button(label, true, function() LC_CL.DeskAct("way", n) Close() end) end
 
@@ -245,6 +256,10 @@ function LC_CL.OpenDesk(t)
         else
             Line(t.transferWhy or "Not now.", DIM)
         end
+    end
+    if screenEnt then
+        LC_CL.ScreenOpen(screenEnt, housing and "HOUSING ALLOCATION" or "CIVIL INTAKE", (t.name or "?") .. "   citizen " .. (t.cid or "?"), rows)
+        return
     end
     local close = Button("Close", true, Close)
     close:DockMargin(4, 12, 4, 3)
