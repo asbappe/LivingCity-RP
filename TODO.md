@@ -5,7 +5,7 @@
 - **Rewording, batches 6 and up** (plain words). Done: 1 to 3 (guide, tips, quests, jobs), 4 (Civil Intake, Housing Allocation), 5 (Civil Protection's tools, and the cuffs' leftover "ties" wording). City events were already plain. Left: underground (~170 lines), Resistance ops (~95), side jobs (~95), shop (~217).
 - **The owner's corrected PLAYER_TEXT.md**: apply with `_dev/apply_player_text.py` when it comes.
 - **A full test run** (none since rewording batch 2): when the owner asks.
-- **A local out-of-character text chat** (the owner's list of 2026-10-29): put off for usage, ask before building.
+- **A local out-of-character text chat** (the owner's list of 2026-10-29): it already exists (checked 2026-11-01): `/looc` (since 2026-10-17), also C > Talk > Out of character, nearby, and F1's quick menu. Asked the owner whether they meant something more (for example its own chat box); remove this line if not.
 
 
 - **Terminals with their UI on their own screens** (like Synapse's intake terminal). The menu is drawn on the prop's screen in the world, your crosshair is the cursor, E clicks. A reusable helper (where the crosshair meets the screen, highlight the button under it), then the Housing Allocation register and the Civil Protection Commissary on their own screens. Typing (the registration form's name and description) stays a small popup.
