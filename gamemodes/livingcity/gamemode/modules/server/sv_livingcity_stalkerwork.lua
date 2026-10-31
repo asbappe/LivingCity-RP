@@ -264,7 +264,10 @@ hook.Add("PlayerUse", "LivingCityStalkerScrub", function(ply, ent)
     ent.lcSweeping = true
     ply:EmitSound("physics/cardboard/cardboard_box_scrape_rough_loop1.wav", 55)
     LC.StartTask(ply, 2.5, "Sweeping it up...", { maxMove = 70,
-        cancel = function() if IsValid(ent) then ent.lcSweeping = nil end end,
+        cancel = function()
+            if IsValid(ent) then ent.lcSweeping = nil end
+            if IsValid(ply) and ply.StopSound then ply:StopSound("physics/cardboard/cardboard_box_scrape_rough_loop1.wav") end -- (a loop: stopped either way)
+        end,
         done = function(p)
             if p.StopSound then p:StopSound("physics/cardboard/cardboard_box_scrape_rough_loop1.wav") end
             if IsValid(ent) then ent:Remove() end

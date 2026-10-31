@@ -514,7 +514,11 @@ function LC.InvAction(ply, action, id)
         if not LC.NearHeat(ply) then return ply:ChatPrint("You need a stove or a fire.") end
         LC.TakeItem(ply, id)
         LC.GiveItem(ply, it.cooksTo)
-        ply:EmitSound("ambient/fire/fire_small" .. math.random(1, 3) .. ".wav", 60) -- a crackle and sizzle (the ignite sound was a small bang)
+        -- a crackle and sizzle (the ignite sound was a small bang). Half-Life 2's fire sounds loop
+        -- forever, so it's stopped after a moment (it used to keep crackling wherever you went)
+        local crackle = "ambient/fire/fire_small" .. math.random(1, 3) .. ".wav"
+        ply:EmitSound(crackle, 60)
+        timer.Simple(1.5, function() if IsValid(ply) and ply.StopSound then ply:StopSound(crackle) end end)
         ply:ChatPrint(it.name .. " becomes " .. string.lower(LCS.Items[it.cooksTo].name) .. ".")
     elseif action == "fill" then
         if not it.fillTo then return end
