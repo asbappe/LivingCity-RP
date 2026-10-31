@@ -1,5 +1,13 @@
 # Living City: to do later
 
+**Open right now** (2026-10-31):
+- **Map lights twinkle** on `rp_c18_ug`: waiting on the owner's Sandbox test of the same map.
+- **Rewording batches 4 and up** (plain words; drafts in `_dev/rewording/`): when the owner asks.
+- **The owner's corrected PLAYER_TEXT.md**: apply with `_dev/apply_player_text.py` when it comes.
+- **A full test run** (none since rewording batch 2): when the owner asks.
+- **A local out-of-character text chat** (the owner's list of 2026-10-29): put off for usage, ask before building.
+
+
 - **Terminals with their UI on their own screens** (like Synapse's intake terminal). The menu is drawn on the prop's screen in the world, your crosshair is the cursor, E clicks. A reusable helper (where the crosshair meets the screen, highlight the button under it), then the Housing Allocation register and the Civil Protection Commissary on their own screens. Typing (the registration form's name and description) stays a small popup.
 - **The kick, tuning.** The leg animation is bent in code (cl_livingcity_kick.lua, LC_CL.KickPose and LC_CL.KickAxes), so it may want adjusting by eye in game; likewise how far an Elite's door flies and how hard a Soldier's tips over (lc_kick_door_power).
 - **Progression, next steps.** Sideways legacy perks for players with many lives behind them (looks, titles, a starting background for a new character), never power or money; items that wear out, so credits keep moving.

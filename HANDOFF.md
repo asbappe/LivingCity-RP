@@ -6,14 +6,14 @@
 
 Living City is a Garry's Mod Half-Life 2 roleplay gamemode.
 
-- Repo: `asbappe/LivingCity-RP`. Work on branch `claude/youthful-rubin-j6lyfk` unless told otherwise. Push with `git push -u origin <branch>`. Do not open pull requests unless asked.
+- Repo: `asbappe/LivingCity-RP`. **`main` is the official branch** (the owner, 2026-10-16). Start from `main`, work on the session's branch, push it with `git push -u origin <branch>`, and when a change is finished and tested also fast-forward `main` (`git push origin HEAD:main`; merge first if `main` moved, never force). Do not open pull requests unless asked.
 - Layout:
   - `gamemodes/livingcity/`: the gamemode. Modules are in `gamemode/modules/server` (about 96 files) and `gamemode/modules/client` (about 42). `gamemode/cl_init.lua` holds the in-game guide text.
   - `livingcity_sound/`: notes only (the triggers' READMEs and ANNOUNCEMENT_SCRIPTS.md). The owner's recordings and songs live in the server's `garrysmod/sound/livingcity/`, the official folder; never ship this folder.
   - `pose_recorder/`: Pose Recorder, a separate tool addon (also meant for the Workshop): pose a ragdoll, snap keyframes, get ManipulateBoneAngles angles relative to the idle, as JSON. The owner poses dances with it and pastes the JSON; turn that into the endings' dances. Its maths is `pose_recorder/lua/pose_recorder/core.lua` (plain Lua, tested in the client smoke test).
   - `lua/`: a small shared addon part.
   - `_dev/`: the offline test harness (not shipped).
-- Last commit at handoff: `5db2d2e` (Bloom hips-only sway; no inspections, crimes or lost standing during endings).
+- Last commit at handoff: `ba243cd` on `main` (2026-10-31: the apartment TV's picture). The last session's branch was `claude/intelligent-curie-p02qp4`, same commit.
 
 ## The owner and their server
 
@@ -46,16 +46,36 @@ Living City is a Garry's Mod Half-Life 2 roleplay gamemode.
 ## Testing
 
 - Client smoke test: from the repo root, `python3 _dev/client_smoke.py`. It must end with `CLIENT SMOKE PASS`.
-- Full tests: from `_dev`, `timeout 1200 python3 run_tests.py tests.lua`. This uses lupa/LuaJIT with `gmod_stub.lua` and is slow. For only the ending tests, make a trimmed copy of tests.lua with these parts, in order:
+- **The owner asked (2026-10-31) to stop testing every single thing: it eats their usage.** Compile-check changed files and run only the test section you touched; run the full suite only when they ask (or before a big merge they ask for). Compile check: `python3 -c` with `from lupa import luajit21 as lupa` and `loadstring` on the file (the default lupa runtime has no loadstring).
+- One section only: copy the prelude of tests.lua (its first ~440 lines and the `withRoll` helper) plus the section, and run that file with `run_tests.py`. Watch for locals a section borrows from an earlier one (for example `FAR`).
+- Full tests: from `_dev`, `timeout 6900 python3 run_tests.py tests.lua` in the background (about 40 minutes). It includes the core snapshot check. **Not run since rewording batch 2 (commit `3cb0064`);** only the client smoke test and single sections since. To stop a run: ``kill $(pgrep -f "^python3 -u run_tests.py tests.lua")`` (a `pkill -f` with that pattern kills your own shell). For only the ending tests, make a trimmed copy of tests.lua with these parts, in order:
   - lines 1 to 404
   - lines 427 to 434
   - the `function EndingTests` block through the `EndingTests()` call
   - the file's last 3 lines
 
-  The last trimmed run gave 237 passed. That was before the last two commits; the full suite hasn't been run since.
 - Gaps in the stub: there's no IN_ATTACK, so build key lists with pairs, not ipairs. There's no HSVToColor. `Entity()` returns nil in the smoke test, and OBBMaxs defaults to (2,24,96). LerpAngle and MOVETYPE_NONE were added. Add whatever else is missing to `gmod_stub.lua`.
 
-## Recent focus: the secret endings
+## The last session (2026-10-29 to 10-31): getting ready to open the server
+
+Every commit says what it did; TIMELINE.md has the summary. The big pieces:
+
+- **PLAYER_TEXT.md**: every line of text a player sees, for the owner to correct and send back. Regenerate with `python3 _dev/player_text.py` whenever player text changes. When the owner sends a corrected copy back: `python3 _dev/apply_player_text.py EDITED.md ORIGINAL.md` (matches each changed line by its old text near its file and line; strings built from several pieces or ending in a placeholder may need doing by hand). Lines starting "> Note for you (not shown in game):" are the code's notes, not game text.
+- **Rewording into plain words** (the owner loved it: "can't you go through and reword everything in the game this way?"): batches 1 to 3 are in the code (the in-game guide, pop-up tips, the job board's quests and story chains, job text). Drafts and originals are in `_dev/rewording/`. **Batches 4 and up are waiting for the owner to ask** (largest left: underground ~170 lines, CP tools ~91, Resistance ops ~95, events ~78, intake ~75, side jobs ~95, shop ~217).
+- **Public server safeguards** (`sv_livingcity_guard.lua`: net message and chat flood limits), capped drops, one pickup per item, issued items can't be sold or passed on, cooldowns on BOLOs, tickets and character submits.
+- **Radio transmitter** (`weapon_lc_radio.lua`, contraband): held in the hands (no gun at the same time), tuned to the CP net or Freq 7, soft static while held. Plain radios only listen. No more music on Freq 7.
+- **Couriers** meet the sender (take, refuse, report or open the parcel); the Resistance has Smugglers.
+- Rent 15, cuffs (were zip ties), hacked machines pay out 5 to 8 items, healing only from food, sleep and medicine, a locked apartment door stays locked for its owner too, the ration line's front walks up to the dispenser, rain washes decals (never graffiti), the stove's crackle stops, the stash only opens from furniture at home, the editor shows only the held tool's markers when markers are hidden, people walk round turrets.
+- **Raids really happen now** (2026-10-31): a block raid spawns its own team just out of sight near the block (never the city's patrols, the owner's call), and is not announced at all if nobody can be sent. Sweeps into rebel territory start from a spot with a way in, use the city's routes, and their clock starts when they arrive.
+- **Admins holding the editor tool**: no hunger or thirst, and the units leave them alone (`LC.EditorHeld`).
+
+## Waiting on the owner (from the last session)
+
+- **The map's lights twinkle.** Not the day and night dimming (`lc_daynight_light` doesn't exist as a command; turning it off didn't help). Asked the owner to load `rp_c18_ug` in plain Sandbox: if it twinkles there too, it's the map or their graphics, not the gamemode.
+- In game: raids and sweeps visible, the editor-tool calm, the Radio transmitter in the hands (how it looks), the apartment TV's picture (moved back about 2 units and stretched to the glass's height; adjust `GLASS` in `entities/entities/lc_screen.lua` if needed), cuffs, machine hacking, the parcel sender.
+- Their corrected PLAYER_TEXT.md, whenever they send it.
+
+## The secret endings (reference)
 
 The main file is `modules/server/sv_livingcity_endings.lua`, with its client side in `modules/client/cl_livingcity_endings.lua`. The G-Man offers a vote; the endings are:
 
