@@ -262,6 +262,18 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Civil Intake's record screen and your papers** show how many ration cards you have; there's no "Replace my ration card" button any more.
 - [ ] **Hungry with no card:** What now? says to work a shift for a ration card.
 
+## The 1 November playtest's fixes (what to check)
+
+- [ ] **Infestations:** citizens, units and rebels walk round them, never through.
+- [ ] **Rebels on your beds:** at night, rebels lie down on the beds you placed in their camp.
+- [ ] **A sweep:** units arrest the lab scientist, smash the pots (the plant gone, a breaking sound) and empty the supply crates.
+- [ ] **Rebels at home** go down in about half the shots; your squad as before. Rebels: SMGs and shotguns only. Combine soldiers: pulse rifles and shotguns only.
+- [ ] **Triage:** a broken arm stays put; a gunshot wound drops fast.
+- [ ] **Top left:** credits, standing, and loyalty, sympathy, corruption.
+- [ ] **Medic to another job:** the medkit is gone.
+- [ ] **A placed bin:** stand next to it, F2: the bin's section is there.
+- [ ] **The jog:** units say "Move it!"; finishing says what you earned (standing and 5 credits); skipping shows a reprimand and the next ration is withheld.
+
 ## Beds (1 November: what to check)
 
 - [ ] **Citizens at curfew or night** walk into the habitation blocks and lie down on the beds you placed, asleep (eyes shut), and get up in the morning. Heads at the foot end? `lc_bed_head_flip 1`.

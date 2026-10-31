@@ -58,6 +58,8 @@ local cvEvery    = CreateConVar("lc_exercise_every", "2", FLAGS, "Hold morning e
 local cvKinds    = CreateConVar("lc_exercise_kinds", "jog,drill,parade", FLAGS, "Which morning exercises take turns (jog, drill, parade)")
 local cvMuster   = CreateConVar("lc_exercise_muster", "75", FLAGS, "Seconds citizens have to report for morning exercise")
 local cvBeat     = CreateConVar("lc_exercise_beat_dmg", "8", FLAGS, "Damage from one blow with the stick at morning exercise (never takes you below 15 health)")
+local cvPay       = CreateConVar("lc_exercise_pay", "5", FLAGS, "Credits a citizen is paid for finishing morning exercise well (0: none)")
+local cvSkipRation = CreateConVar("lc_exercise_skip_ration", "1", FLAGS, "A citizen who skips morning exercise has their next ration withheld")
 local cvBreakfast = CreateConVar("lc_exercise_breakfast", "1", FLAGS, "After morning exercise, citizens of good standing (Trusted and up) get breakfast")
 local cvNPCs     = CreateConVar("lc_exercise_npcs", "10", FLAGS, "How many NPC citizens take part in morning exercise (the city's own first, topped up with new ones out of sight)")
 local cvPace     = CreateConVar("lc_jog_pace", "150", FLAGS, "How fast the pace marker goes round the jogging route (Civil Protection units a second; walking is 110, sprinting 190)")
@@ -237,7 +239,8 @@ end
 ------------------------------------------------------------------------
 
 local SWING = { "pushplayer", "swinggesture", "ACT_MELEE_ATTACK_SWING_GESTURE", "ACT_MELEE_ATTACK1", "ACT_MELEE_ATTACK_SWING" }
-local COP_BARK = { "npc/metropolice/vo/movealong3.wav", "npc/metropolice/vo/firstwarningmove.wav", "npc/metropolice/vo/holdit.wav" }
+-- (on the jog: "Move it!", "Keep moving!", never "First warning, move away", which sounded like being told to get back)
+local COP_BARK = { "npc/metropolice/vo/moveit.wav", "npc/metropolice/vo/moveit2.wav", "npc/metropolice/vo/keepmoving.wav", "npc/metropolice/vo/movealong.wav" }
 local HIT = { jog = "Keep up, citizen.", drill = "Do it properly.", parade = "Louder, citizen. With feeling.", absent = "Exercise is mandatory." }
 
 local function Rec(ply) return X and X.people[ply] end
@@ -1279,12 +1282,27 @@ function LC.ExerciseFinish()
             end
             if r.late then gain = math.min(gain, 2) end
             if gain ~= 0 and LC.AddStanding then LC.AddStanding(p, gain, gain > 0 and NAMES[kind] or "Poor showing at the " .. string.lower(NAMES[kind])) end
+            -- said plainly, on screen: what it earned (the owner: a small reward for doing it)
+            local pay = (gain > 0 and Eligible(p)) and math.max(0, cvPay:GetInt()) or 0
+            if pay > 0 and LC.AddCredits then LC.AddCredits(p, pay, "morning exercise") end
+            if LC.Notice and gain ~= 0 then
+                LC.Notice(p, gain > 0 and "info" or "warn", NAMES[kind], gain > 0
+                    and string.format("Done. %+d Civil Standing%s.", gain, pay > 0 and string.format(" and %d credits", pay) or "")
+                    or string.format("A poor showing: %d Civil Standing.", gain), 8)
+            end
             if gain >= 0 then Breakfast(p, r) end
         end
     end
     if IsValid(x.leader) and LC.AddStanding then LC.AddStanding(x.leader, 10, "Led the morning drill") end
     for p in pairs(x.absent) do
-        if IsValid(p) and Eligible(p) and LC.AddStanding then LC.AddStanding(p, -10, "Skipped morning exercise") end
+        if IsValid(p) and Eligible(p) and LC.AddStanding then
+            LC.AddStanding(p, -10, "Skipped morning exercise")
+            -- and a reprimand they can't miss: their next ration is withheld (sv_livingcity_survival.lua)
+            if cvSkipRation:GetBool() then p.lcRationWithheld = "you skipped morning exercise" end
+            if LC.Notice then
+                LC.Notice(p, "warn", "Reprimand", "You skipped morning exercise: -10 Civil Standing" .. (cvSkipRation:GetBool() and ", and your next ration is withheld." or "."), 10)
+            end
+        end
     end
     -- everyone back to normal
     for _, u in ipairs(x.units) do Unpost(u) end

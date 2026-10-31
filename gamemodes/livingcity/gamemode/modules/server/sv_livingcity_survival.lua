@@ -1091,6 +1091,12 @@ function LC.UseDispenser(ply, ent)
         refused = "[Rations] Your ration privileges have been suspended."
     elseif CurTime() < (ply.lcnRationAt or 0) then
         refused = string.format("[Rations] Next allocation in %d seconds.", math.ceil(ply.lcnRationAt - CurTime()))
+    elseif ply.lcRationWithheld then
+        -- a reprimand (skipping morning exercise: sv_livingcity_exercise.lua): this one allocation
+        local why = ply.lcRationWithheld
+        ply.lcRationWithheld = nil
+        ply.lcnRationAt = CurTime() + cvRation:GetFloat() * (LC.Event == "rations" and 0.5 or 1)
+        refused = "[Rations] Allocation withheld: " .. why .. ". Your next allocation is as normal."
     elseif ply.lcRationDocked then
         -- the PA said it: tolerating noncompliance costs this allocation (sv_livingcity_rations.lua)
         local d = ply.lcRationDocked

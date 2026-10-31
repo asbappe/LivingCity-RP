@@ -68,16 +68,18 @@ hook.Add("HUDPaint", "LivingCityNeedsHUD", function()
     if not IsValid(ply) or not ply:Alive() then return end
     local quiet = LC_CL.QuietHUD()
     local needs = GetGlobal2Bool("lc_needs_on", false) and LC_CL.NeedsVisible(ply)
-    local econ = GetGlobal2Bool("lc_economy_on", true) and not quiet -- (the server's setting: sv_livingcity_economy.lua)
+    -- credits and standing always (the owner asked: "I desperately need to see my credits"), and the traits under them
+    local econ = GetGlobal2Bool("lc_economy_on", true) -- (the server's setting: sv_livingcity_economy.lua)
+    local traits = true
     local ident, identCol
     if LC_CL.IdentityLine then ident, identCol = LC_CL.IdentityLine() end
     local xpFrac, xpLabel, xpCol, xpGain
     if LC_CL.XPInfo then xpFrac, xpLabel, xpCol, xpGain = LC_CL.XPInfo() end -- (still asked, so a gain made while quiet isn't shown later)
     if quiet then xpFrac = nil end
-    if not needs and not econ and not ident and not xpFrac then LC_CL.HudBottom = LC_CL.HudY return end
+    if not needs and not econ and not ident and not xpFrac and not traits then LC_CL.HudBottom = LC_CL.HudY return end
 
     local x, y, w = LC_CL.HudX, LC_CL.HudY, LC_CL.HudW
-    local rows = (needs and 2 or 0) * 14 + (econ and 14 or 0) + (ident and 14 or 0) + (xpFrac and 14 or 0)
+    local rows = (needs and 2 or 0) * 14 + (econ and 14 or 0) + (ident and 14 or 0) + (xpFrac and 14 or 0) + (traits and 14 or 0)
     draw.RoundedBox(4, x, y, w, 8 + rows, Color(10, 12, 16, 170))
     local ry = y + 4
     if ident then
@@ -109,6 +111,12 @@ hook.Add("HUDPaint", "LivingCityNeedsHUD", function()
         local tier = LCS.TierFor(standing)
         draw.SimpleText(string.format("Credits: %d", ply:GetNW2Int("lce_credits", 0)), "DefaultSmall", x + 6, ry + 6, ACCENT, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         draw.SimpleText(string.format("%s (%d)", tier.name, standing), "DefaultSmall", x + w - 6, ry + 6, tier.color, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+        ry = ry + 14
+    end
+    if traits then
+        -- loyalty, sympathy, corruption: what your choices have made of you (they open up choices in jobs and stories)
+        draw.SimpleText(string.format("Loyalty %d   Sympathy %d   Corruption %d", ply:GetNW2Int("lcq_loyalty", 0), ply:GetNW2Int("lcq_sympathy", 0),
+            ply:GetNW2Int("lcq_corruption", 0)), "DefaultSmall", x + 6, ry + 6, DIM, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         ry = ry + 14
     end
     LC_CL.HudBottom = ry + 4

@@ -109,6 +109,24 @@ local function EntityContainer(e)
     return nil
 end
 
+-- A bin they're standing right by, even if they're not looking at it (the owner: "even though I'm touching it").
+-- Same keys as LC.BinAt (sv_livingcity_scavenge.lua), so it's the same bin either way.
+function LC.BinNextTo(ply)
+    local pos = ply:GetPos()
+    local best, bd
+    for _, e in ipairs(ents.FindInSphere(pos, 90)) do
+        if IsValid(e) and not e:IsPlayer() and not e:IsNPC() and not e.lcQuest and not e.lcDressing
+            and LC.IsBinModel and LC.IsBinModel(e:GetModel()) and not (LC.IsFridgeModel and LC.IsFridgeModel(string.lower(e:GetModel() or ""))) then -- (a fridge at home is the stash)
+            local d = e:GetPos():DistToSqr(pos)
+            if not bd or d < bd then best, bd = "e" .. e:EntIndex(), d end
+        end
+    end
+    if best then return best end
+    local bp = LC.BinPointAt and LC.BinPointAt(pos, 80)
+    if bp then return string.format("p%d:%d:%d", math.floor(bp.pos.x), math.floor(bp.pos.y), math.floor(bp.pos.z)) end
+    return nil
+end
+
 -- The container in front of this player: something they're looking at up close, or a bin.
 function LC.ContainerAt(ply)
     if not cvOn:GetBool() then return nil end
@@ -119,7 +137,7 @@ function LC.ContainerAt(ply)
         if id then return id, c end
     end
     if LC.BinAt then
-        local key = LC.BinAt(ply)
+        local key = LC.BinAt(ply) or LC.BinNextTo(ply)
         if key then
             local store = Load()
             local id = "bin:" .. key

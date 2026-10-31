@@ -1063,10 +1063,20 @@ end)
 -- them with the medkit (primary fire) before they're gone: the worst first.
 ------------------------------------------------------------------------
 
+-- How fast each gets worse (health a second, roughly): an emergency department's mix, not everyone
+-- bleeding out alike (the owner: a broken arm isn't dying like someone bleeding out). 0: stable, in pain, can wait.
 local INJURIES = {
-    { label = "Bleeding badly", rate = 2.2 }, { label = "Stab wound", rate = 1.6 },
-    { label = "Stunstick beating", rate = 1.0, beaten = true }, { label = "Burns", rate = 0.8 }, { label = "Broken arm", rate = 0.5 },
+    { label = "Gunshot wound, bleeding heavily", rate = 2.2 }, { label = "Stab wound", rate = 1.6 },
+    { label = "Electrocuted, heart racing", rate = 1.8 }, { label = "Head injury (blunt force)", rate = 1.2 },
+    { label = "Crushed under rubble", rate = 1.0 }, { label = "Stunstick beating", rate = 0.8, beaten = true },
+    { label = "Severe burns", rate = 0.5 }, { label = "Smoke inhalation", rate = 0.6 },
+    { label = "Broken arm", rate = 0 }, { label = "Dislocated shoulder", rate = 0 },
 }
+local function Urgency(inj)
+    if inj.rate <= 0 then return " (stable: can wait)" end
+    if inj.rate >= 1.6 then return " (critical)" end
+    return ""
+end
 
 GAMES.triage = {
     start = function(g)
@@ -1094,11 +1104,11 @@ GAMES.triage = {
             end
         end
         if #g.patients == 0 then error("no patients") end
-        g.ply:ChatPrint("[Clinic] Patients are coming in, and their health keeps dropping. Aim your medkit at a patient and left click to heal them, until each one is almost fully healed. Treat the worst injuries first: a patient whose health reaches zero dies.")
+        g.ply:ChatPrint("[Clinic] Patients are coming in, and their health keeps dropping. Aim your medkit at a patient and left click to heal them, until each one is almost fully healed. Treat the worst injuries first (critical ones go downhill fast; a broken arm can wait): a patient whose health reaches zero dies.")
         g.hud = function(gg)
             local lines = { string.format("Saved: %d    Lost: %d    Waiting: %d", gg.saved, gg.lost, #gg.patients - gg.saved - gg.lost) }
             for _, p in ipairs(gg.patients) do
-                if not p.done then lines[#lines + 1] = string.format("%s: %d%%", p.injury.label, math.floor(100 * p.hp / p.max)) end
+                if not p.done then lines[#lines + 1] = string.format("%s%s: %d%%", p.injury.label, Urgency(p.injury), math.floor(100 * p.hp / p.max)) end
             end
             return lines
         end

@@ -71,7 +71,19 @@ function LC.Trait(ply, name) return tonumber(ply:GetPData("lcq_" .. name, 0)) or
 function LC.AddTrait(ply, name, d)
     if not TRAITS[name] or not IsValid(ply) then return end
     ply:SetPData("lcq_" .. name, math.max(0, LC.Trait(ply, name) + d))
+    ply:SetNW2Int("lcq_" .. name, LC.Trait(ply, name))
 end
+-- Shown on the HUD, top left (cl_livingcity_needs.lua): kept up to date as they change, and now and then
+-- (a new life clears them elsewhere).
+local function SendTraits(ply)
+    if not IsValid(ply) then return end
+    for name in pairs(TRAITS) do
+        local v = LC.Trait(ply, name)
+        if ply:GetNW2Int("lcq_" .. name, -1) ~= v then ply:SetNW2Int("lcq_" .. name, v) end
+    end
+end
+hook.Add("PlayerSpawn", "LivingCityTraitsHUD", function(ply) timer.Simple(1, function() SendTraits(ply) end) end)
+timer.Create("LivingCityTraitsHUD", 15, 0, function() for _, p in ipairs(player.GetAll()) do SendTraits(p) end end)
 
 local SKILLS = {
     authority = function(ply)

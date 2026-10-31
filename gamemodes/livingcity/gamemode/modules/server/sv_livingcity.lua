@@ -1378,7 +1378,7 @@ local function SpawnSoldier(pos, kind)
     if not IsValid(npc) then return end
     if not kind and LC.NearPrisonCombine(pos) then kind = "guard" end
     local gun = kind == "elite" and "weapon_ar2" or (kind == "guard" and math.random() < 0.4 and "weapon_shotgun")
-        or (not kind and math.random() < 0.2 and "weapon_shotgun") or (math.random() < 0.7 and "weapon_smg1" or "weapon_ar2")
+        or (not kind and math.random() < 0.2 and "weapon_shotgun") or "weapon_ar2" -- (the owner: pulse rifles or shotguns, never SMGs)
     -- an installed Combine pack's model if there is one (sv_livingcity_combinemodels.lua), else Half-Life 2's
     local shot = gun == "weapon_shotgun"
     local hla = LC.CombineModel and LC.CombineModel(kind == "elite" and "elite" or (kind == "guard" and (shot and "guard_shotgun" or "guard")) or (shot and "shotgunner" or "soldier"), false)

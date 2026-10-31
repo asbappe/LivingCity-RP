@@ -72,6 +72,23 @@ local AVOID_SECURITY = { nogo = true, infest = true, rebel = true }
 
 local function IsSecurityRole(role) return role == "cop" or role == "soldier" end
 
+-- Inside an infestation: nobody goes there but the infested (routes go round it, jobs there are left).
+-- The answer for a spot is kept a few seconds, so route searches can ask it of every step.
+local infestSeen, infestAt = {}, 0
+function LC.InInfest(pos)
+    if not pos then return false end
+    local now = CurTime()
+    if now > infestAt then infestSeen, infestAt = {}, now + 5 end
+    local k = math.floor(pos.x / 32) .. ":" .. math.floor(pos.y / 32) .. ":" .. math.floor(pos.z / 32)
+    local v = infestSeen[k]
+    if v == nil then v = InZoneOfKinds(pos, INFEST) ~= nil infestSeen[k] = v end
+    return v
+end
+-- Does a step from a to b cross an infestation (either end, or its middle)?
+function LC.StepInfested(a, b)
+    return LC.InInfest(b) or LC.InInfest((a + b) * 0.5)
+end
+
 -- Places NPCs of this role should not go (security also stays out of rebel zones).
 function LC.InNoGo(pos, role)
     return InZoneOfKinds(pos, IsSecurityRole(role) and AVOID_SECURITY or AVOID) ~= nil
@@ -328,7 +345,7 @@ local function EntryNode(pos, avoidRebel, avoidCombine)
     return cands[1].n
 end
 
-local function AStar(start, goal, avoidRebel, avoidCombine)
+local function AStar(start, goal, avoidRebel, avoidCombine, avoidInfest)
     local open = { [start] = true }
     local came = {}
     local g = { [start] = 0 }
@@ -357,7 +374,7 @@ local function AStar(start, goal, avoidRebel, avoidCombine)
         for id in pairs(cur.links) do
             local nb = LC.Nodes[id]
             if nb and usable[nb] and not (avoidRebel and rebelNode[nb]) and not (avoidCombine and combineNode[nb])
-                and not LC.PathBlocked(cur.pos, nb.pos) then
+                and not LC.PathBlocked(cur.pos, nb.pos) and not (avoidInfest and LC.StepInfested(cur.pos, nb.pos)) then
                 local t = g[cur] + cur.pos:Distance(nb.pos)
                 if not g[nb] or t < g[nb] then
                     came[nb] = cur
@@ -394,7 +411,10 @@ function EditorRoute(from, to, role)
     local s, e = EntryNode(from, avoidRebel, avoidCombine), EntryNode(to, avoidRebel, avoidCombine)
     if not s or not e or s == e then return nil end
 
-    local path = AStar(s, e, avoidRebel, avoidCombine)
+    -- nobody walks through an infestation, unless they're already in it or going into it on purpose
+    local avoidInfest = role ~= "zombie" and not LC.InInfest(from) and not LC.InInfest(to)
+    local path = AStar(s, e, avoidRebel, avoidCombine, avoidInfest)
+    if not path and avoidInfest then return false end -- (the only way is through it: not going)
     if not path then return nil end
 
     local out = {}

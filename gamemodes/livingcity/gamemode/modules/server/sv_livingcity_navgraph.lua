@@ -173,7 +173,8 @@ end
 
 -- A* with a binary heap: a couple of thousand nodes is nothing.
 -- secure: a unit (cop or soldier), who may go through Civil Protection doors
-local function Path(s, e, seed, secure)
+-- avoidInfest: never through an infestation (sv_livingcity_paths.lua)
+local function Path(s, e, seed, secure, avoidInfest)
     local heap, n = {}, 0
     local function push(nd, f)
         n = n + 1
@@ -217,6 +218,7 @@ local function Path(s, e, seed, secure)
                 local nb = edge[1]
                 local extra = Penalty(cur, nb)
                 if edge.units and not secure then extra = false end -- (a Civil Protection door: units only)
+                if extra and avoidInfest and LC.StepInfested and LC.StepInfested(cur.pos, nb.pos) then extra = false end
                 if not closed[nb] and extra then
                     if seed then
                         extra = extra + TRAFFIC_COST * (LC.NavTraffic[nb] or 0) + STANDING_COST * (LC.NavStanding[nb] or 0)
@@ -249,7 +251,8 @@ function LC.NavRoute(from, to, role)
         stats.direct = stats.direct + 1
         return nil
     end
-    local path = Path(s, e, math.random(1, 100000), role == "cop" or role == "soldier")
+    local avoidInfest = role ~= "zombie" and LC.InInfest and not LC.InInfest(from) and not LC.InInfest(to)
+    local path = Path(s, e, math.random(1, 100000), role == "cop" or role == "soldier", avoidInfest)
     if not path then
         stats.unreachable = stats.unreachable + 1
         return false

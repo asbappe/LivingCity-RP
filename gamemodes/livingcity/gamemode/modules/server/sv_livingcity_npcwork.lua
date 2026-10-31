@@ -313,6 +313,7 @@ local function GoStep(npc, st, now)
     if s.check and not s.check(npc, st, w) then Drop(npc, st) Idle(npc, st, now) return false end
     local pos = Val(s.pos, npc, st, w)
     if not pos then Drop(npc, st) Idle(npc, st, now) return false end
+    if LC.InInfest and LC.InInfest(pos) then Drop(npc, st) Idle(npc, st, now) return false end -- (nobody works inside an infestation)
     w.at = pos
     SetDoing(npc, s.doing or w.label)
     if s.onGo then s.onGo(npc, st, w) end

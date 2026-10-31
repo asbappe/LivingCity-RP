@@ -13404,6 +13404,60 @@ section("The Endings menu: every ending's settings, and its dances tuned live")
     guest.valid, boss.valid = false, false
 end)()
 
+section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rations")
+;(function()
+    local O = Vector(-140000, 60000, 0)
+    -- nobody walks into an infestation
+    local iz = LC.AddZone(O + Vector(2000, 0, 0), 300, "infest", 0)
+    ok(LC.InInfest(iz.pos) and not LC.InInfest(O), "an infestation is known as one, and its outside isn't")
+    ok(LC.StepInfested(iz.pos - Vector(600, 0, 0), iz.pos + Vector(600, 0, 0)), "a step straight through it is one to go round")
+    LC.RemoveZone(iz)
+    -- a job's tools go with the job
+    local med = newPlayer("ToolsMedic", "citizen")
+    _run(0.3)
+    LC.SetJob(med, "medic", true)
+    ok(med:HasWeapon("weapon_medkit"), "(a medic has the medkit)")
+    LC.SetJob(med, "porter", true)
+    ok(not med:HasWeapon("weapon_medkit"), "a new job: the old job's medkit is taken back")
+    LC.SetJob(med, "", true)
+    -- the traits on the HUD
+    local l0 = LC.Trait(med, "loyalty")
+    LC.AddTrait(med, "loyalty", 2)
+    ok(med:GetNW2Int("lcq_loyalty", -1) == l0 + 2, "loyalty (and sympathy, corruption) are sent for the HUD", med:GetNW2Int("lcq_loyalty", -1))
+    -- a bin you're standing by
+    med:SetPos(O + Vector(0, 3000, 0))
+    local bin = ents.Create("prop_physics") bin:SetModel("models/props_junk/TrashBin01a.mdl") bin:SetPos(med:GetPos() + Vector(40, 0, 0)) bin:Spawn()
+    ok(LC.BinNextTo(med) == "e" .. bin:EntIndex(), "a bin you're standing right by counts, even if you're not looking at it", tostring(LC.BinNextTo(med)))
+    bin:Remove()
+    -- skipping exercise withholds the next ration
+    LC.GiveItem(med, "ration_card", 2)
+    med.lcnRationAt = 0
+    med.lcRationWithheld = "you skipped morning exercise"
+    med.chat = {}
+    ok(LC.UseDispenser(med, nil) == false and has(med.chat, "skipped morning exercise") and LC.Inventory(med).ration_card == 2, "skipped morning exercise: that ration is withheld (the card kept)")
+    -- soldiers carry pulse rifles or shotguns, never SMGs
+    local smg = false
+    for i = 1, 12 do
+        local s = LC.Spawners.soldier(O + Vector(i * 60, -2000, 0))
+        if IsValid(s) then
+            if s.kv and s.kv.additionalequipment == "weapon_smg1" then smg = true end
+            s:Remove()
+        end
+    end
+    ok(not smg, "Combine soldiers: pulse rifles or shotguns, never SMGs")
+    -- a sweep team smashes the pots and empties the crates
+    local rz = LC.AddZone(O + Vector(0, -6000, 0), 300, "rebel", 0)
+    local pot = ents.Create("prop_physics") pot:SetModel("models/props_junk/terracotta01.mdl") pot:SetPos(rz.pos) pot:Spawn()
+    pot.lcRebelProp = "pot" pot.lcPot = { state = "ripe" }
+    local u, ust = LC.Spawners.cop(rz.pos + Vector(40, 0, 0))
+    ust = ust or LC.NPCs[u]
+    local sk = { kind = "sweep", zone = rz, arrived = true, units = { u }, rebels = {} }
+    ok(LC.SweepChore(u, ust, sk, CurTime()) and pot.lcPot.state == "empty", "a sweep team member with nobody to fight smashes the pots", pot.lcPot.state)
+    pot:Remove() if IsValid(u) then u:Remove() end
+    LC.RemoveZone(rz)
+    med:SetPos(Vector(-150000, 150000, 0))
+end)()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

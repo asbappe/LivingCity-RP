@@ -69,6 +69,16 @@ function LC.SetJob(ply, id, force)
             return false, "You changed jobs recently. You can change again in " .. math.ceil(ply.lcjNext - CurTime()) .. " seconds."
         end
     end
+    -- the old job's tools go back too (a medic who left the clinic kept the medkit), unless the new job uses them
+    local old = LC.Job(ply)
+    local new = id ~= "" and LCJ.ById[id] or nil
+    if old and old ~= new and old.tools then
+        local keep = {}
+        for _, c in ipairs(new and new.tools or {}) do keep[c] = true end
+        for _, cls in ipairs(old.tools) do
+            if not keep[cls] and ply:HasWeapon(cls) then ply:StripWeapon(cls) end
+        end
+    end
     -- the old job's shift goes with the old job (it stayed on the HUD and blocked the new one's)
     local cur = LC.QuestOf and LC.QuestOf[ply]
     if cur and not cur.done and cur.chain == "shift" and LC.AbandonQuest then

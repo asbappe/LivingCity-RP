@@ -280,6 +280,21 @@ local function SetStock(e, n)
     e:SetNW2Int("lc_cache_stock", e.lcStock)
 end
 
+-- A sweep team at work (sv_livingcity_rebels.lua): a pot's plant torn up, a supply crate emptied.
+function LC.SweepPot(pot)
+    if not IsValid(pot) or not pot.lcPot or pot.lcPot.state == "empty" then return false end
+    SetPot(pot, "empty")
+    pot:EmitSound("physics/glass/glass_pottery_break" .. math.random(1, 4) .. ".wav", 70)
+    return true
+end
+function LC.SweepCache(cache)
+    if not IsValid(cache) or (cache.lcStock or 0) <= 0 then return false end
+    SetStock(cache, 0)
+    cache:EmitSound("physics/wood/wood_box_break" .. math.random(1, 2) .. ".wav", 70)
+    if LC.RadioNotice then LC.RadioNotice("resistance", "The Combine found our supplies. Everything's gone.") end
+    return true
+end
+
 local function EnsureRebelProps()
     if not LC.Running then return end
     local live = {}

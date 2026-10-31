@@ -410,6 +410,17 @@ Units are units: Civil Protection players still stop citizens with E.
 
 **Father Grigori** (the city's own, in rebel territory) says something once a minute at most (`lc_grigori_talk_gap`, 60), and none of the engine's idle chatter. As a player, Father Grigori is a special Resistance role: his shotgun is Annabelle, and holds **two shells** at a time (the rest stay in his pockets); The Blessing heals, preaching draws Civil Protection, and he's hunted on sight outside rebel territory. Edit `gamemodes/livingcity/gamemode/modules/shared/sh_livingcity_factions.lua` to rename ranks, change XP, models and loadouts.
 
+**The 1 November playtest** (all asked for by the owner):
+- **Infestations are no-go for everyone** but the infested: routes (the editor's paths and the map's own) go round them, and nobody takes a job inside one. Someone already inside, or sent there on purpose, still gets in and out.
+- **Rebels sleep on the beds you place** (the editor's "Fixture: bed") as well as the map's beds and mattresses. The "Point: bunk" is still useful where there's no bed to put: a spot on the floor to sleep on.
+- **Sweeps do the job**: a sweep team member with no rebel in sight takes the lab's scientist into custody, smashes the pots and empties the supply crates (nearest first, one unit each), then patrols.
+- **Rebels at home are half as tough** (`lc_rebel_home_hurt` 2: the damage they take, doubled); a player's squad isn't affected. **Rebels carry SMGs, now and then a shotgun** (never pulse rifles); **Combine soldiers carry pulse rifles or shotguns** (never SMGs).
+- **Triage**: injuries get worse at different rates (gunshot, stab wound and electrocution critical; head injury, crush, beating, burns and smoke slower; a broken arm or dislocated shoulder stable, never dying).
+- **HUD, top left**: credits and standing always (even with the quiet HUD), and loyalty, sympathy and corruption under them.
+- **Changing jobs takes back the old job's tools** (the medic's medkit), unless the new job uses them.
+- **A bin you're standing right by** opens in your pockets (F2) even if you're not aiming at it.
+- **Morning exercise**: on the jog the Civil Protection units shout "Move it!" and "Keep moving!" (not "First warning, move away"); finishing pays `lc_exercise_pay` (5) credits on top of the standing, said on screen; skipping costs 10 standing and your next ration (`lc_exercise_skip_ration` 1), with a reprimand on screen.
+
 ## Civil Protection's tools
 
 **The quick menu** (F1) has what a unit does most on the number keys: 1 Call for backup, 2 Send my 10-20, 3 Issue a BOLO, 4 the mask's most used voice lines, 5 the records terminal, and on 6 to 8 search, cuff, drag and escort for whoever you're looking at.

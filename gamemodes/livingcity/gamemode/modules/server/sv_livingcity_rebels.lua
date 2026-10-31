@@ -65,6 +65,7 @@ local cvSkirmInt = CreateConVar("lc_skirmish_interval", "25", FLAGS, "Average mi
 -- the old default (9) was far too busy: a server still on it moves to the new one
 timer.Simple(5, function() if cvSkirmInt:GetFloat() == 9 then RunConsoleCommand("lc_skirmish_interval", "25") end end)
 local cvDamage   = CreateConVar("lc_rebel_damage", "0.5", FLAGS, "Damage multiplier for Resistance NPCs shooting players")
+local cvHomeHurt = CreateConVar("lc_rebel_home_hurt", "2", FLAGS, "Damage multiplier for rebels who aren't following a player (2: half as tough; a player's squad isn't affected)")
 local cvWarn     = CreateConVar("lc_rebel_warning", "2", FLAGS, "Seconds the Resistance shouts before opening fire on a Civil Protection unit in their territory")
 local cvPostWarn = CreateConVar("lc_lookout_post_warn", "1400", FLAGS, "How far a rebel lookout post sees the Combine coming (and warns Freq 7)")
 local cvPostFire = CreateConVar("lc_lookout_post_fire", "650", FLAGS, "How close the Combine can come to a rebel lookout post before he opens fire")
@@ -95,7 +96,8 @@ local SECURITY_CLASSES = { "npc_metropolice", "npc_combine_s", "npc_cscanner" }
 local function Pick(t) return t[math.random(#t)] end
 local function Vo(st, name) return "vo/npc/" .. (st.gender or "male") .. "01/" .. name .. ".wav" end
 
-local WEAPONS = { { "weapon_smg1", 40 }, { "weapon_pistol", 35 }, { "weapon_shotgun", 15 }, { "weapon_ar2", 10 } }
+-- (the owner: rebels never carry pulse rifles; SMGs, and now and then a shotgun)
+local WEAPONS = { { "weapon_smg1", 80 }, { "weapon_shotgun", 20 } }
 local function PickWeapon()
     local total = 0
     for _, w in ipairs(WEAPONS) do total = total + w[2] end
@@ -104,7 +106,7 @@ local function PickWeapon()
         r = r - w[2]
         if r <= 0 then return w[1] end
     end
-    return "weapon_pistol"
+    return "weapon_smg1"
 end
 
 local SPOTTED = { "combine01", "combine02" } -- "Combine!"
@@ -906,6 +908,8 @@ hook.Add("EntityTakeDamage", "LivingCityRebels", function(victim, dmg)
 
     local vst = LC.NPCs[victim]
     if not vst or vst.role ~= "rebel" then return end
+    -- the ones at home go down quicker (the owner: half the health); a player's own squad doesn't
+    if not vst.follow and not vst.quartermaster then dmg:ScaleDamage(math.max(0, cvHomeHurt:GetFloat())) end
     local now = CurTime()
     if attacker:IsPlayer() then
         if IsResistance(attacker) then return end -- friendly fire, nobody's counting
@@ -1151,6 +1155,66 @@ local function StagingSpot(z)
     return nil
 end
 
+-- A sweep team member with nobody to fight does the sweep's work (the owner: they ran about staring
+-- at the floor): the lab's scientist taken in, the pots smashed, the supply crates emptied, nearest first,
+-- one unit to each. True while they're at one.
+local CHORE_DONE = {
+    scientist = function(e) return LC.LabShut and LC.LabShut(e) end,
+    pot = function(e) return not e.lcPot or e.lcPot.state == "empty" end,
+    cache = function(e) return (e.lcStock or 0) <= 0 end,
+}
+local CHORE_DO = {
+    scientist = function(u, e) if LC.ShutLab then LC.ShutLab(nil, e) end end,
+    pot = function(u, e)
+        if LC.PlayGesture then LC.PlayGesture(u, { "swinggesture", "ACT_MELEE_ATTACK_SWING_GESTURE", "ACT_MELEE_ATTACK1" }, 1) end
+        if LC.SweepPot then LC.SweepPot(e) end
+    end,
+    cache = function(u, e) if LC.SweepCache then LC.SweepCache(e) end end,
+}
+local function SweepChore(u, st, sk, now)
+    sk.taken = sk.taken or {}
+    local c = st.sweepChore
+    if c and (not IsValid(c.ent) or CHORE_DONE[c.kind](c.ent)) then sk.taken[c.ent or 0] = nil st.sweepChore, c = nil, nil end
+    if not c then
+        local best, bd
+        local function consider(ent, kind)
+            if not IsValid(ent) or CHORE_DONE[kind](ent) then return end
+            local who = sk.taken[ent]
+            if who and who ~= u and IsValid(who) and Alive(who) then return end
+            local d = ent:GetPos():DistToSqr(u:GetPos())
+            if not bd or d < bd then best, bd = { ent = ent, kind = kind }, d end
+        end
+        local sci = LC.ScientistNear and LC.ScientistNear(sk.zone.pos, (sk.zone.r or 300) + 300)
+        if sci then consider(sci, "scientist") end
+        for _, t in ipairs(LC.RebelZoneThings and LC.RebelZoneThings(sk.zone) or {}) do
+            if t.kind == "pot" then consider(t.ent, "pot")
+            elseif t.kind == "crate" and t.cache then consider(t.ent, "cache") end
+        end
+        if not best then return false end
+        st.sweepChore, sk.taken[best.ent], st.choreGo = best, u, 0
+        c = best
+        u:SetNW2String("lc_doing", c.kind == "scientist" and "arresting the scientist" or (c.kind == "pot" and "smashing the pots" or "confiscating supplies"))
+    end
+    local pos = c.ent:GetPos()
+    if u:GetPos():DistToSqr(pos) < 90 * 90 then
+        LC.Face(u, pos)
+        CHORE_DO[c.kind](u, c.ent)
+        sk.taken[c.ent] = nil
+        st.sweepChore = nil
+        u:SetNW2String("lc_doing", "")
+        return true
+    end
+    if now > (st.choreGo or 0) then
+        st.choreGo = now + 6
+        if not (LC.GoTo and LC.GoTo(u, st, pos, true)) then
+            u:SetLastPosition(pos)
+            u:SetSchedule(SCHED_FORCED_GO_RUN)
+        end
+    end
+    return true
+end
+LC.SweepChore = SweepChore -- (tests)
+
 local function StartSweep(z)
     z = z or Pick(RebelZones())
     if not z then return false, "no rebel territory on this map" end
@@ -1335,6 +1399,8 @@ local function RunSkirmish(sk, now)
                         st.provokedBy, st.provokedUntil = target, now + 120
                         local rst = LC.NPCs[target]
                         if rst and not rst.foe then SetFoe(target, rst, u, now) end
+                    elseif sk.arrived and SweepChore(u, st, sk, now) then
+                        -- (busy with the scientist, a pot or a crate)
                     elseif st.state == "sweep" and now > (st.nextSweepMove or 0) then
                         -- along the city's own routes (the engine alone often finds no way in)
                         st.nextSweepMove = now + 8
@@ -1618,7 +1684,7 @@ end)
 
 LC.LookoutPosts = LC.LookoutPosts or {} -- [key] = { npc, nextAt }
 local function PostKey(p) return string.format("%d_%d_%d", math.floor(p.pos.x), math.floor(p.pos.y), math.floor(p.pos.z)) end
-local POST_GUNS = { "weapon_smg1", "weapon_smg1", "weapon_ar2", "weapon_shotgun" }
+local POST_GUNS = { "weapon_smg1", "weapon_smg1", "weapon_smg1", "weapon_shotgun" }
 
 -- What a lookout sees coming: warn (a shout, and Freq 7) when the Combine is
 -- in sight on the way; open fire when they're close, or on our ground.

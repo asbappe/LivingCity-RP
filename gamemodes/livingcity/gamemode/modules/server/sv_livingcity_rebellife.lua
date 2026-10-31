@@ -143,6 +143,7 @@ local function ZoneThings(z)
             local kind
             if cls == "lc_fire" then kind = "fire"
             elseif cls == "lc_workbench" then kind = "bench"
+            elseif cls == "lc_bed" then kind = "bed" -- (the editor's "Fixture: bed": slept in like any other)
             elseif e.lcRebelProp == "pot" then kind = "pot"
             elseif e.lcRebelProp == "cache" then kind = "crate"
             elseif PROP_CLASSES[cls] then kind = KindOfModel(e:GetModel()) end
