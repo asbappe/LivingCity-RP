@@ -909,7 +909,7 @@ hook.Add("EntityTakeDamage", "LivingCityRebels", function(victim, dmg)
     local vst = LC.NPCs[victim]
     if not vst or vst.role ~= "rebel" then return end
     -- the ones at home go down quicker (the owner: half the health); a player's own squad doesn't
-    if not vst.follow and not vst.quartermaster then dmg:ScaleDamage(math.max(0, cvHomeHurt:GetFloat())) end
+    if not vst.follow and not vst.quartermaster then dmg:SetDamage(dmg:GetDamage() * math.max(0, cvHomeHurt:GetFloat())) end
     local now = CurTime()
     if attacker:IsPlayer() then
         if IsResistance(attacker) then return end -- friendly fire, nobody's counting
@@ -1423,7 +1423,9 @@ local function RunSkirmish(sk, now)
     end
     if sk.kind == "sweep" and not sk.arrived then
         for _, u in ipairs(sk.units) do
-            if IsValid(u) and Alive(u) and u:GetPos():DistToSqr(sk.zone.pos) < (sk.zone.r + 200) ^ 2 then
+            local ust = IsValid(u) and LC.NPCs[u]
+            -- there: at the edge of their ground, or already fighting them
+            if IsValid(u) and Alive(u) and (u:GetPos():DistToSqr(sk.zone.pos) < (sk.zone.r + 200) ^ 2 or (ust and ust.state == "hostile")) then
                 sk.arrived = true
                 sk.ends = math.max(sk.ends, now + 120) -- (a long walk in doesn't eat the sweep)
                 break

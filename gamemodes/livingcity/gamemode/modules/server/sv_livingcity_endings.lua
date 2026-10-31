@@ -94,7 +94,7 @@
 
       Nobody can be hurt during the vote or an ending (and "taken" isn't dead:
       no new character). The city's events wait. One ending (or a skipped one)
-      every lc_ending_cooldown minutes (60), remembered across the reload.
+      every lc_ending_cooldown minutes (180: three hours), remembered across the reload.
 
       Admins: lc_endings (the songs found, the cooldown), lc_ending <id> [now]
       (trigger one; now: no vote), lc_ending_cancel (stop one, no reload),
@@ -113,7 +113,7 @@ local cvOn      = CreateConVar("lc_endings_on", "1", FLAGS, "Secret endings (the
 local cvPause   = CreateConVar("lc_ending_pause", "4", FLAGS, "Seconds between a secret ending's trigger and the G-Man stopping time")
 local cvVote    = CreateConVar("lc_ending_vote_secs", "30", FLAGS, "Seconds the G-Man's vote stays open")
 local cvMax     = CreateConVar("lc_ending_max", "180", FLAGS, "Longest a secret ending runs before the reset")
-local cvCool    = CreateConVar("lc_ending_cooldown", "60", FLAGS, "Minutes between secret endings (triggered, voted on or skipped)")
+local cvCool    = CreateConVar("lc_ending_cooldown", "180", FLAGS, "Minutes between secret endings (triggered, voted on or skipped)")
 local cvGman    = CreateConVar("lc_ending_gman_lines", "vo/citadel/gman_exit01.wav,vo/citadel/gman_exit02.wav", FLAGS,
     "The G-Man's lines when he stops time, in order (comma-separated sound paths)")
 local cvSongVol = CreateConVar("lc_ending_song_volume", "harpies=4,shalom=2", FLAGS, "How loud an ending's song plays, for a quiet recording: id=volume, comma-separated (1 is as it is; up to 6)")
@@ -3980,6 +3980,7 @@ end)
 -- the old one: anything still exactly at an old default moves to the new one (once;
 -- a value someone chose themselves is left alone).
 local RETUNED = {
+    { "lc_ending_cooldown", { "60", "45" }, "180" }, -- (1 November: three hours between endings, the owner asked)
     { "lc_ending_marrow_max", { "40", "60" }, "80" },
     { "lc_ending_base_bombs", { "30" }, "60" },
     { "lc_ending_hard_moment_beats", { "16" }, "5" },

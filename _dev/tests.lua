@@ -654,7 +654,7 @@ for _ = 1, 2 do
     LC.ResolveChoice(dirty, qb.id, 3)
 end
 ok(LC.Counter(dirty, "bribes") == 2, "bribes are remembered")
-ok(has(dirty.chat, "Something has changed"), "the player is told something has changed")
+ok(has(dirty.chat, "A new story is available"), "the player is told something has changed")
 local ia = storyPosting(dirty, "ia")
 ok(ia and ia.part == "summons", "Internal Affairs appears on their board")
 LC.AcceptPosting(dirty, ia.id)
@@ -685,7 +685,7 @@ for npc, st in pairs(LC.NPCs) do
     end
 end
 ok(qp.done and LC.Story(dirty).chains.ia.done == "redeemed", "a clean shift closes the file: redeemed")
-ok(has(dirty.chat, "a number is quietly reset"), "and the ending is narrated")
+ok(has(dirty.chat, "slate is clean again"), "and the ending is narrated")
 ok(storyPosting(dirty, "ia") == nil, "the story is over")
 dirty.lcStory = nil
 ok(LC.Story(dirty).chains.ia.done == "redeemed", "story progress survives being reloaded from saved data")
@@ -815,7 +815,7 @@ qt3.stages[1].onEnter(qt3, qt3.stages[1])
 ok(qt3.stages[1].text:find("her sight", 1, true) and qt3.stages[1].text:find("she sees you", 1, true) and not qt3.stages[1].text:find(" he ", 1, true),
     "a woman neighbor is 'she' and 'her'", qt3.stages[1].text)
 qt3.stages[2].onEnter(qt3, qt3.stages[2])
-ok(qt3.stages[2].text == "Report her to a Civil Protection unit (press E)", "including when you report her", qt3.stages[2].text)
+ok(qt3.stages[2].text == "Report her: find any Civil Protection unit and press E on the unit", "including when you report her", qt3.stages[2].text)
 LC.AbandonQuest(loyal)
 
 section("Names and faces match")
@@ -1188,7 +1188,9 @@ local rebelR = newPlayer("RadioRebel", "resistance", nil, 150)
 local unitR = newPlayer("RadioUnit", "cp")
 local deaf = newPlayer("NoRadio", "citizen")
 LC.AddCredits(listener, 100)
-ok(LC.Buy(listener, "radio") and LC.RadioBand(listener) == "union", "a Union radio from the Commissary puts you on the Union band")
+ok(not LC.Buy(listener, "radio"), "no radio at the Union Commissary any more (a civilian with one is breaking the law)")
+LC.GiveItem(listener, "radio")
+ok(LC.RadioBand(listener) == "union" and LCS.Items.radio.contraband, "a radio set picks up the city's notices, and it's contraband")
 LC.GiveItem(rebelR, "radio_tuned")
 ok(LC.RadioBand(rebelR) == "resistance" and LC.RadioBand(unitR) == "cp", "a retuned radio is Freq 7; units are on the CP net")
 listener.chat, rebelR.chat, unitR.chat, deaf.chat = {}, {}, {}, {}
@@ -1522,6 +1524,7 @@ LC.GiveItem(tenant, "radio_tuned")
 tenant:SetPos(FAR)
 ok(not LC.StashStore(tenant, "radio_tuned"), "your stash is only reachable at home")
 tenant:SetPos(home)
+LC.OpenStashAt(tenant, home) -- (opened from furniture at home: a stove, fridge, dresser or wardrobe)
 ok(LC.StashStore(tenant, "radio_tuned") and not LC.HasItem(tenant, "radio_tuned"), "at home, you can hide things")
 LC.SendInv(tenant, true)
 local invmsg = _lastnet("lci_inv")
@@ -1691,7 +1694,7 @@ _setcvar("lc_jobgames", 0)
 local applicant2 = newPlayer("JobApplicant2", "citizen")
 applicant2:SetPos(FAR)
 local okA, whyA = LC.SetJob(applicant2, "radio")
-ok(not okA and whyA and string.find(whyA, "isn't taking anyone", 1, true), "with lc_jobgames 0 they're closed", whyA)
+ok(not okA and whyA and string.find(whyA, "is closed right now", 1, true), "with lc_jobgames 0 they're closed", whyA)
 applicant.chat = {}
 _advance(11) _runtimers()
 ok(applicant:GetNW2String("lcj_job", "") == "" and has(applicant.chat, "has been closed"), "and anyone who had one is told it's closed, and picks another")
@@ -2861,7 +2864,10 @@ ok(LC.Standing(applicant) == 0 and not LC.CanJoinFaction(applicant, "cp"), "you 
 local _, cpWhy = LC.CanJoinFaction(applicant, "cp")
 ok(cpWhy:find("100") and cpWhy:find("good standing"), "and you're told what it takes", tostring(cpWhy))
 LC.AddStanding(applicant, 100)
-ok(LC.CanJoinFaction(applicant, "cp"), "with 100 standing you can")
+local okC, whyC = LC.CanJoinFaction(applicant, "cp")
+ok(not okC and whyC and whyC:find("Records Clerk", 1, true), "good standing, but not through the records office yet", tostring(whyC))
+LC.Bump(applicant, "clerk_shifts", 5)
+ok(LC.CanJoinFaction(applicant, "cp"), "with 100 standing and five Records Clerk shifts you can")
 local tester2 = newPlayer("TestAdmin", "citizen")
 tester2.admin = true
 ok(LC.CanJoinFaction(tester2, "cp"), "admins can join regardless, to test")
@@ -3969,7 +3975,7 @@ ok(not find("cp", "cp_curfew") and not find("cp", "cp_rationduty") and not find(
 LC.PendingEvent = "curfew"
 hook.Run("LivingCityEventSoon", "curfew", 120)
 local post = find("cp", "cp_curfew")
-ok(post ~= nil and has(cops[1].chat, "New: Curfew enforcement"), "two minutes before a curfew, its directive goes up and units hear about it")
+ok(post ~= nil and has(cops[1].chat, "New job: Curfew enforcement"), "two minutes before a curfew, its directive goes up and units hear about it")
 ok(find("resistance", "res_curfewrun") ~= nil, "and the Resistance get theirs")
 LC.Event, LC.PendingEvent = "curfew", nil
 ok(post and LC.AcceptPosting(cops[1], post.id), "a unit takes it")
@@ -3981,7 +3987,7 @@ ok(find("cp", "cp_curfew") == post, "it stays up while the curfew's on")
 LC.Event = nil
 hook.Run("LivingCityEventEnded", "curfew")
 ok(post.dead and LC.QuestOf[cops[1]] == nil and LC.QuestOf[cops[6]] == nil, "when it's over, it's withdrawn")
-ok(has(cops[1].chat, "over before you got there"), "without holding it against anyone who hadn't got going")
+ok(has(cops[1].chat, "before you got started"), "without holding it against anyone who hadn't got going")
 for i = 1, 6 do cops[i].lcqNext = 0 end
 LC.Postings.cp = {}
 LC.RefreshBoard(cops[1])
@@ -3994,7 +4000,7 @@ table.insert(LC.Zones, seed) table.insert(LC.Zones, patch)
 cops[1].chat = {}
 hook.Run("LivingCityTerritoryGrew", seed, patch)
 local cont = find("cp", "cp_infest")
-ok(cont ~= nil and has(cops[1].chat, "New: Containment"), "the infestation spreads: a containment directive goes up at once")
+ok(cont ~= nil and has(cops[1].chat, "New job: Containment"), "the infestation spreads: a containment directive goes up at once")
 ok(cont and cont.squad and cont.squad >= 6, "for a squad")
 local before = #LC.Postings.cp
 hook.Run("LivingCityTerritoryGrew", seed, patch)
@@ -7829,7 +7835,7 @@ if gq then
     _run(1)
     ok(has(crate.fired or {}, "Break"), "the crate breaks open")
     ok(LC.HasItem(runner, "smuggled_supplies") and LCS.Items.smuggled_supplies.contraband, "and the supplies ride in your pockets, where a search will find them")
-    ok(has(runner.chat or {}, "supplies are in your pockets now") and not has(runner.chat or {}, "on the ground"), "(and it says so: nothing left lying on the ground)")
+    ok(has(runner.chat or {}, "put the supplies in your pockets") and not has(runner.chat or {}, "on the ground"), "(and it says so: nothing left lying on the ground)")
     local c1 = LC.Credits(runner)
     local wasParts = string.find(gq.title, "Parts", 1, true) ~= nil
     runner:SetPos(gq.stages[2].pos)
@@ -9254,7 +9260,9 @@ hook.Run("LivingCityQuestComplete", wk, { chain = "rehab", title = "Not a shift"
 ok(LC.Inventory(wk).ration_card == 1, "other jobs don't")
 wk.lcnRationAt = 0
 local wcr = LC.Credits(wk)
+_setcvar("lc_stockpile", 0) -- (whatever the city's stores are at by now)
 ok(LC.UseDispenser(wk, nil) == true and not LC.HasItem(wk, "ration_card") and LC.Credits(wk) == wcr, "a ration takes the card, and pays no credits", LC.Credits(wk) - wcr)
+_setcvar("lc_stockpile", 1)
 -- Civil Intake replaces them
 old:SetPos(B1 + Vector(40, 0, 0))
 LC.AddCredits(old, 100)
@@ -10537,12 +10545,14 @@ local bz = LC.AddZone(sl:GetPos() + Vector(0, -600, 0), 300, "block", 31)
 local hb = ents.Create("lc_bed") hb:SetPos(bz.pos + Vector(60, 0, 0)) hb:Spawn()
 local sleeper, sst = LC.SpawnCitizen(bz.pos + Vector(-60, 0, 0))
 sst.leaveAt = nil
+sleeper.seqs = { Lying_Down = 5 } -- (the offline stand-in's models have no animations unless given some)
 local bedtime = LC.Bedtime
 LC.Bedtime = function() return true end
 LC.StartLeaving(sleeper, sst, false, "test")
 ok(sst.bedKey ~= nil and sleeper:GetNW2String("lc_doing", "") == "going home to bed", "at curfew or night, a citizen heads for a free bed in a housing block", sleeper:GetNW2String("lc_doing", ""))
 for _ = 1, 40 do _run(0.5) if sst.state == "abed" then break end end
-ok(sst.state == "abed" and IsValid(sleeper) and sleeper:GetNW2String("lc_doing", "") == "asleep", "and lies down on it to sleep (not gone)", sst.state)
+ok(sst.state == "abed" and IsValid(sleeper) and sleeper:GetNW2String("lc_doing", "") == "asleep", "and lies down on it to sleep (not gone)",
+    tostring(sst.state) .. " seq=" .. tostring(sleeper.LookupSequence and sleeper:LookupSequence("Lying_Down")) .. " model=" .. tostring(sleeper:GetModel()))
 local other, ost = LC.SpawnCitizen(bz.pos + Vector(-90, 40, 0))
 ost.leaveAt = nil
 ok(LC.FreeBedIn(bz, other) == nil, "one sleeper to a bed")
@@ -12162,9 +12172,10 @@ section("Playtest fixes, 17 October")
     hook.Run("PlayerSay", renter, "!rent")
     ok(adoor.locked, "(rented, and locked)")
     hook.Run("PlayerUse", renter, adoor)
-    ok(adoor.isOpen, "your E opens your locked door", table.concat(adoor.fired or {}, ","))
+    ok(not adoor.isOpen and adoor.locked, "locked is locked, for you too: E on your own locked door just rattles the handle", table.concat(adoor.fired or {}, ","))
+    hook.Run("PlayerSay", renter, "!unlock")
     hook.Run("PlayerUse", renter, adoor)
-    ok(not adoor.isOpen and adoor.locked, "and E again shuts it, locked again behind you")
+    ok(adoor.isOpen and not adoor.locked, "unlocked, your E opens it", table.concat(adoor.fired or {}, ","))
     renter.valid = false
     -- Someone stopped right where you stand steps back, so you're not stuck in each other
     local thief = newPlayer("Fingers", "citizen")
@@ -13516,8 +13527,14 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     spec.tick(fq)
     ok(LC.LoyaltyTests[lt] ~= nil, "(the cell again)")
     LC.LoyaltyTestExecute(lt, "You lower your hands.")
-    _run(3)
-    ok(not lt:Alive() or lt:Health() <= 0, "refused: executed by the guards")
+    _run(10)
+    ok(LC.PlayerIsStalker(lt) and lt:Alive(), "refused: shot down bleeding, and made a stalker")
+    -- the reckoning's way out of the mask: Resistance, never a unit again
+    local um = newPlayer("UnmaskedUnit", "cp")
+    _run(0.3)
+    LC.Unmask(um)
+    ok(um:GetNW2String("lcf_faction", "") == "resistance" and not LC.CanJoinFaction(um, "cp") and LC.CanWork(um) ~= false and not LC.PlayerIsWanted(um),
+        "unmasked: an ordinary Resistance fighter, never Civil Protection again (and not wanted for it)")
     LC.RemovePoint(cellPt)
     -- she, not he: a job about a woman says "her"
     local woman, wst = LC.Spawners.citizen(Vector(-162000, -162000, 0))
@@ -13530,6 +13547,15 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     if wst then wst.gender = "male" end
     ok(LC.FitPronouns(fq2, line) == line, "and him for a man")
     if IsValid(woman) then woman:Remove() end
+    -- shackled vortigaunts on the streets
+    local seen = LC.IsSeen
+    LC.IsSeen = function() return false end
+    for _ = 1, 3 do LC.VortSlaveTick(CurTime()) end
+    LC.IsSeen = seen
+    local slaves = 0
+    for v in pairs(LC.VortSlaves) do if IsValid(v) and v:GetNW2Bool("lc_shackled", false) then slaves = slaves + 1 end end
+    ok(slaves >= 1 and slaves <= GetConVar("lc_vort_slaves"):GetInt(), "shackled vortigaunts sweep the streets (Combine property)", slaves)
+    for v in pairs(LC.VortSlaves) do if IsValid(v) then v:Remove() end end
 end)()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")

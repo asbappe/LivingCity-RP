@@ -27,6 +27,7 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvAdminTools = CreateConVar("lcf_admin_tools", "1", FLAGS, "Admins keep the physgun and toolgun in every faction")
 local cvCooldown   = CreateConVar("lcf_switch_cooldown", "60", FLAGS, "Seconds between faction changes")
 local cvCPStanding = CreateConVar("lc_cp_min_standing", "100", FLAGS, "Civil Standing needed to join Civil Protection")
+local cvCPClerk = CreateConVar("lc_cp_clerk_shifts", "5", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Records Clerk shifts a citizen must finish before Civil Protection takes them (the owner: they come up through the records office; 0: no need)")
 
 -- Anyone without a faction becomes a Citizen.
 local function EnrollEveryone()
@@ -320,7 +321,7 @@ function LC.CanJoinFaction(ply, fid, sid)
     if not f then return false, "No such faction." end
     -- a mole who was caught: Resistance for good (sv_livingcity_insider.lua)
     if fid ~= "resistance" and LC.InsiderBarred then
-        local why = LC.InsiderBarred(ply, "faction")
+        local why = LC.InsiderBarred(ply, "faction", fid)
         if why then return false, why end
     end
     -- (a stalker is bound even as a superadmin: only death, or lc_unstalker, ends it)
@@ -334,6 +335,12 @@ function LC.CanJoinFaction(ply, fid, sid)
         local have = LC.Standing(ply)
         if have < need then
             return false, string.format("Civil Protection only takes citizens in good standing (%d or more). Yours is %d.", need, have)
+        end
+        -- and who've come up through the civil records office (sv_livingcity_work.lua counts the shifts)
+        local shifts = cvCPClerk:GetInt()
+        local done = LC.Counter and LC.Counter(ply, "clerk_shifts") or 0
+        if shifts > 0 and done < shifts and ply:GetNW2String("lcf_faction", "") ~= "cp" then
+            return false, string.format("Civil Protection recruits from the civil records office: finish %d shifts as a Records Clerk first (F3 > Jobs). You've done %d.", shifts, done)
         end
     end
     if f.requires then

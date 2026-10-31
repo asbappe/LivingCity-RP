@@ -197,6 +197,15 @@ function LC.BuildReport()
     end
 
     Section(out, "NPCs")
+    do -- vortigaunts: the freed ones in rebel ground, and the shackled ones on the streets
+        local freed, slaves = 0, 0
+        for v in pairs(LC.RebelVorts or {}) do if IsValid(v) then freed = freed + 1 end end
+        for v in pairs(LC.VortSlaves or {}) do if IsValid(v) then slaves = slaves + 1 end end
+        local cf, cs = GetConVar("lc_rebel_vorts"), GetConVar("lc_vort_slaves")
+        local why = LC.VortHomeWhy and LC.VortHomeWhy()
+        out[#out + 1] = string.format("vortigaunts: %d freed in rebel ground (lc_rebel_vorts %s)%s, %d shackled on the streets (lc_vort_slaves %s)",
+            freed, cf and cf:GetString() or "?", why and (": " .. why) or "", slaves, cs and cs:GetString() or "?")
+    end
     local byRole, byState = {}, {}
     local rows = {}
     for npc, st in pairs(LC.NPCs or {}) do

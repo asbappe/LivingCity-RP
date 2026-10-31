@@ -202,9 +202,30 @@ function LC.BurnInsider(ply)
     if LC.RadioNotice then LC.RadioNotice("cp", "Dispatch: all units, a traitor in our ranks. Shoot on sight. No surrender accepted.") end
 end
 
+-- Unmasked (the reckoning, sv_livingcity_stories.lua): no longer undercover, an ordinary Resistance
+-- fighter; never Civil Protection (or anyone's man inside) again. Not wanted for it.
+function LC.Unmask(ply)
+    if not IsValid(ply) then return end
+    local cid = ply:GetNW2String("lc_cid", "")
+    if cid ~= "" then ply:SetPData("lc_unmasked", cid) end
+    LC.StoryFlag(ply, "insider", false)
+    if LC.SetFaction then LC.SetFaction(ply, "resistance", nil, true, true) end
+    if LC.Notice then LC.Notice(ply, "info", "Out of the mask", "You're Resistance now, in the open. Civil Protection will never have you back.", 10) end
+end
+function LC.InsiderUnmasked(ply)
+    if not IsValid(ply) or not ply:IsPlayer() then return false end
+    local cid = ply:GetNW2String("lc_cid", "")
+    return cid ~= "" and ply:GetPData("lc_unmasked", "") == cid
+end
+
 -- No deals for a traitor: no surrendering (sv_livingcity_prison.lua asks), no Combine role, no Union job.
-function LC.InsiderBarred(ply, what)
-    if not LC.InsiderBurned(ply) then return nil end
+local COMBINE_SIDE = { cp = true, ota = true, admin = true }
+function LC.InsiderBarred(ply, what, fid)
+    if not LC.InsiderBurned(ply) then
+        -- unmasked: just never a unit (or any Combine role) again
+        if what == "faction" and COMBINE_SIDE[fid or "cp"] and LC.InsiderUnmasked(ply) then return "You took off the mask for good. Civil Protection will never have you back: only the Resistance." end
+        return nil
+    end
     if what == "surrender" then return "They know what you did. There's no surrendering for you." end
     if what == "job" then return "The Union won't have a traitor on its books." end
     return "You're known as a traitor. Only the Resistance will have you now."

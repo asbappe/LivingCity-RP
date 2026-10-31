@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 2814762. Admin-only console messages and log lines are left out.
+Made from version 00a5b8c. Admin-only console messages and log lines are left out.
 
-5911 lines, from 178 files.
+5925 lines, from 178 files.
 
 ## Contents
 
@@ -46,7 +46,7 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 - [weapon_lc_multitool.lua](#weaponlcmultitoollua-weaponlcmultitoollua) (14)
 - [weapon_lc_radio.lua](#weaponlcradiolua-weaponlcradiolua) (6)
 - [weapon_lc_vort.lua](#weaponlcvortlua-weaponlcvortlua) (10)
-- [cl_init.lua](#clinitlua-clinitlua) (238)
+- [cl_init.lua](#clinitlua-clinitlua) (239)
 - [init.lua](#initlua-initlua) (5)
 - [cl_livingcity.lua](#cllivingcitylua-cllivingcitylua) (21)
 - [cl_livingcity_actions.lua](#cllivingcityactionslua-cllivingcityactionslua) (50)
@@ -108,7 +108,7 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 - [making things, grenades, the arms trade, and getting people out](#making-things-grenades-the-arms-trade-and-getting-people-out-svlivingcitycraftinglua) (28)
 - [what custody costs the worst anticitizens](#what-custody-costs-the-worst-anticitizens-svlivingcitycustodylua) (29)
 - [saved layout](#saved-layout-svlivingcitydatalua) (14)
-- [debugging](#debugging-svlivingcitydebuglua) (59)
+- [debugging](#debugging-svlivingcitydebuglua) (60)
 - [doors](#doors-svlivingcitydoorslua) (8)
 - [the Combine's dropship](#the-combines-dropship-svlivingcitydropshiplua) (7)
 - [economy and social credit](#economy-and-social-credit-svlivingcityeconomylua) (31)
@@ -116,7 +116,7 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 - [escorts through Combine doors](#escorts-through-combine-doors-svlivingcityescortlua) (73)
 - [city events](#city-events-svlivingcityeventslua) (78)
 - [morning exercise (mandatory for citizens)](#morning-exercise-mandatory-for-citizens-svlivingcityexerciselua) (60)
-- [sv_livingcity_factions.lua](#svlivingcityfactionslua-svlivingcityfactionslua) (31)
+- [sv_livingcity_factions.lua](#svlivingcityfactionslua-svlivingcityfactionslua) (32)
 - [Freq 7, the Resistance's pirate broadcast](#freq-7-the-resistances-pirate-broadcast-svlivingcityfreq7lua) (6)
 - [the Resistance's money (besides raiding supply drops)](#the-resistances-money-besides-raiding-supply-drops-svlivingcityfundinglua) (16)
 - [Father Grigori, in the flesh](#father-grigori-in-the-flesh-svlivingcitygrigorilua) (16)
@@ -125,7 +125,7 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 - [tips that pop up the first time something happens](#tips-that-pop-up-the-first-time-something-happens-svlivingcityhintslua) (325)
 - [housing blocks](#housing-blocks-svlivingcityhousinglua) (5)
 - [toilets, baths and what happens without them](#toilets-baths-and-what-happens-without-them-svlivingcityhygienelua) (48)
-- [the Resistance Insider (a Civil Protection unit secretly with the Resistance)](#the-resistance-insider-a-civil-protection-unit-secretly-with-the-resistance-svlivingcityinsiderlua) (38)
+- [the Resistance Insider (a Civil Protection unit secretly with the Resistance)](#the-resistance-insider-a-civil-protection-unit-secretly-with-the-resistance-svlivingcityinsiderlua) (41)
 - [Civil Intake (becoming somebody)](#civil-intake-becoming-somebody-svlivingcityintakelua) (73)
 - [work you actually do](#work-you-actually-do-svlivingcityjobgameslua) (99)
 - [the unit's kick](#the-units-kick-svlivingcitykicklua) (23)
@@ -154,7 +154,7 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 - ["ration units are being deducted"](#ration-units-are-being-deducted-svlivingcityrationslua) (5)
 - [rebel life](#rebel-life-svlivingcityrebellifelua) (34)
 - [the Resistance on the street](#the-resistance-on-the-street-svlivingcityrebelslua) (71)
-- [the Resistance's operations, and what the city does about them](#the-resistances-operations-and-what-the-city-does-about-them-svlivingcityresistanceopslua) (95)
+- [the Resistance's operations, and what the city does about them](#the-resistances-operations-and-what-the-city-does-about-them-svlivingcityresistanceopslua) (96)
 - [escalation](#escalation-svlivingcityresponselua) (24)
 - [sleep](#sleep-svlivingcityrestlua) (11)
 - [talking, knowing each other, and going down](#talking-knowing-each-other-and-going-down-svlivingcityrplua) (47)
@@ -170,7 +170,7 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 - [static map props](#static-map-props-svlivingcitystaticpropslua) (10)
 - [the city's stores](#the-citys-stores-svlivingcitystockpilelua) (8)
 - [places to keep things](#places-to-keep-things-svlivingcitystoragelua) (43)
-- [story chains](#story-chains-svlivingcitystorieslua) (326)
+- [story chains](#story-chains-svlivingcitystorieslua) (333)
 - [survival](#survival-svlivingcitysurvivallua) (58)
 - [talking to people](#talking-to-people-svlivingcitytalklua) (28)
 - [territory that spreads, and is pushed back](#territory-that-spreads-and-is-pushed-back-svlivingcityterritorylua) (28)
@@ -693,101 +693,102 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 - "F3 is your job board. Events add their own directives: they're posted two minutes before the event and taken down when it's over."  (text, line 196)
 - "Only rations and curfew are announced in advance. Sweeps, raids and supply convoys happen without warning, and a lockdown only happens after violence."  (text, line 197)
 - "Several people can take the same job: up to 8 for an event, 6 for containment or retaking ground, 4 for a chase."  (text, line 198)
-- "A Civil Protection unit who stays inside as the Resistance's spy (the story The Man Inside) gets a menu only they can see: C > Civil Protection > Inside. Tip off Freq 7, lose a record, take supplies for a dead drop, copy the records, or reveal yourself with the codeword, each only where nobody can see or hear you. Get caught, and you're Resistance for good: wanted, with no surrendering."  (text, line 199)
-- "When the infestation spreads or the Resistance take ground, a directive to deal with it is posted straight away."  (text, line 200)
-- "Civil Protection"  (text, line 202)
-- "Civil Protection units: F1 is your quick menu. 1 to 5: Call for backup, Send my 10-20, Issue a BOLO, Voice lines, Kick. 6 to 8: search, cuff or escort whoever you're looking at."  (text, line 203)
-- "Units: C > Unit tools lists everything a unit can do, with what each one does. The records terminal holds violations, notes, loyalty points, BOLOs and requests."  (text, line 204)
-- "Civil Protection units don't craft: the Civil Protection Commissary issues grenades, ammunition, armour, bandages and your ration (press E on it; once every two minutes). F2 marks the nearest one on your screen."  (text, line 205)
-- "Civil Protection units: actions menu > Civil Protection > Deploy a turret here, near a checkpoint's power bank or forcefield (each power bank runs two; press E on a turret to pack it up). Officers can put up power banks."  (text, line 206)
-- "Union workers can ask for an escort. Actions menu > Civil Protection > Escort requests to take one (or look at a worker > Escort them). Keep them close, open the doors they need, and walk them out to the release point when they're done."  (text, line 207)
-- "F1 > Voice lines has the mask's most used lines (or just say the words in chat); all of them are in Unit tools > Voice lines."  (text, line 208)
-- "C opens the full menu (so does 9 on the quick menu): everything you can do right now, based on who you are and what you're looking at, with this guide at the top. No chat commands to remember (though they still work)."  (text, line 209)
-- "A special role (Hacker, Father Grigori...) comes back with you when you rejoin, if there's still a free place in it."  (text, line 210)
-- "The multitool (the Resistance's two Hackers carry one; the black market sells them; contraband): aim it and left click at a locked Combine door (hacks it open), a city screen (hijacks it), a data terminal (steals its data), a vending machine or ration dispenser (free water or rations), or a shackled vortigaunt (unlocks its shackles and frees it)."  (text, line 211)
-- "The Director of Propaganda's microphone: left click to go on air over every loudspeaker and screen (one minute, once every fifteen minutes). A scanner flies down and films whoever holds it, live on every screen; its eye blinks red while it records. Shoot the scanner down to cut the picture. With no player in the job, the Administrator addresses the city herself now and then; kill her on air and her microphone is yours. Take the microphone off someone (hands up or cuffed, actions menu) and broadcasting with it is a pirate broadcast."  (text, line 212)
-- "Streetlights and loudspeakers break when shot or worn out: broken lights go dark, and nobody near a broken loudspeaker hears the PA. Maintenance and Radio Repair crews fix them."  (text, line 213)
-- "One data terminal gives half a chip (a fragment): hack a second, different terminal and the two fragments make a full data chip. The master terminal is the big prize: one download gives a master data core."  (text, line 214)
-- "A data chip: sell it to the black market dealer, take it to the lab and have the scientist Decode it (first on his list; marks every Civil Protection unit for five minutes), or Use it at a terminal to wipe your record."  (text, line 215)
-- "Dead soldiers drop their guns with about half a magazine loaded. The rest of their ammunition is on the body: search it."  (text, line 216)
-- "Shooting a scanner counts as damaging city property; killing one counts as destroying it. Neither counts as assaulting anyone."  (text, line 217)
-- "Ambush the landing: get to the landing zone before the dropship arrives, and attack the soldiers it drops off."  (text, line 218)
-- "Someone you're escorting runs when you run, and when there's shooting. If you climb a ladder, they follow you up it."  (text, line 219)
-- "Resistance: a small orange lambda over a citizen's head means they're secretly on our side. Members and up can ask them to keep watch (E, then the talk window)."  (text, line 220)
-- "Break your people out of the cells, ambush Overwatch landings, free a vortigaunt: you'll find these in Operations (F3)."  (text, line 221)
-- "Citizens: look at someone and choose F1 > Inform on them. Civil Protection pays you if it's true. If the Resistance see you do it, they'll know you're a traitor."  (text, line 222)
-- "Trusted citizens: actions menu > Getting by > Become a Union foreman. Then open the actions menu on a citizen > Give them a work order. You get a cut of what they're paid for it."  (text, line 223)
-- "The worst anticitizens face worse than prison time: interrogation (the interrogator offers 50 social credits if you talk), broken feet (no running), or being made a stalker."  (text, line 224)
-- "A stalker works down below, in the Combine areas: see The Stalker's Lot on your job board (F3). Units leave stalkers alone, their papers are stamped STALKER, and they can scream but not speak. The only way out of being a stalker is death. At the end of the stalker's story is a Combine ball energizer you built yourself; stepping into it is a way out, and that character is gone for good."  (text, line 225)
-- "Civil Protection is one career path: Record Keeper, Metrocop, Division Leader, then the Overwatch ranks (Prison Guard, Soldier, Elite). The Overwatch ranks need the transhuman conditioning, which the Overwatch Candidate story offers to Division Leaders."  (text, line 226)
-- "Not sure what to do? F1 > What now? > Ways to get by lists everything open to you, and what you need for the rest."  (text, line 227)
-- "Civil Protection units can kick: G (or F1 > Kick). Doors swing open, locked doors give way on the second kick, and people get knocked back. A Combine Soldier kicks a hinged door off its hinges; an Elite sends it flying and knocks out anyone it hits. Maintenance Technicians rehang fallen doors: E to lift it, carry it to the frame, E again."  (text, line 228)
-- "Scanner Operator (Civil Protection, F4): fly a scanner from a Combine console or from the Nexus (F1 > Unit tools). Reports earn XP; any rebel you photograph gets a BOLO."  (text, line 229)
-- "When you're released from prison, you get your fists back but not your guns or radio. Civil Protection units get their issued gear back."  (text, line 230)
-- "Rebel territory is deadly for units: a REBEL TERRITORY AHEAD warning appears just before you cross into it. Inside, rebels shoot Civil Protection units."  (text, line 231)
-- "Supply drop happening? Guard the crate: if anything is left in it when the convoy moves on, every Civil Protection unit nearby gets paid."  (text, line 232)
-- "RADIO JAMMED on your HUD means a jammer is nearby. Follow the beeping and press E on it to smash it."  (text, line 233)
-- "Civil Protection units: look at someone and choose F1 > Cuff them. Anyone with cuffs: C > their name > Cuff them. You can cuff someone whose hands are up, who is down, who has been stopped, or from behind. Drag walks them along; hitting them with the baton arrests them."  (text, line 234)
-- "Sociostability (green, yellow or red) is shown at the top of the screen. Officers set it in C > Unit tools. Red means a judgment waiver: metrocops have their pistols drawn."  (text, line 235)
-- "Set off an alarm (with a data chip, or during an escape) and a squad of two metrocops and a soldier comes through the door a few seconds later."  (text, line 236)
-- "The Nexus and every Combine-only area are guarded: mostly Overwatch soldiers, plus a metrocop or two."  (text, line 237)
-- "Citizens: C > Getting by > Request Civil Protection (needs a request device) calls a Civil Protection unit to you. Use C > Me > Put my hands up when a unit tells you to."  (text, line 238)
-- "Cuffed? Use C > Me > Work at the cuffs to get free, when nobody's looking. Anyone can uncuff you."  (text, line 239)
-- "The first time you come across something, a card on the right explains what it is and what you can do. Each card only shows once."  (text, line 242)
-- "C > Tips I've seen lists every tip you've had, to read again. C > Settings turns tips off or on, or starts them over."  (text, line 243)
-- "Talking, and knowing people"  (text, line 245)
-- "Chat is spoken out loud: only people nearby hear it. C > Talk lets you yell so people further away hear (/y), or whisper to whoever is right next to you (/w)."  (text, line 246)
-- "C > Talk: describe what your character does (/me lights a cigarette), describe the scene (/it), or roll 1 to 100 for everyone nearby to see (/roll)."  (text, line 247)
-- "C > Talk > Out of character: talk to the whole server (//, with a cooldown) or only to people nearby (/looc)."  (text, line 248)
-- "Voice chat works the same way: people only hear you if they're close enough."  (text, line 249)
-- "Strangers don't know your name; they see your description instead. Set it in C > Me > Change how strangers see me ("tall, with a scar over one eye")."  (text, line 250)
-- "To tell someone your name, look at them and choose F1 > Tell them my name. F1 > Tell everyone nearby my name tells everyone around you."  (text, line 251)
-- "While their mask is on, Civil Protection units are known by their designation, not their name."  (text, line 252)
-- "Going down"  (text, line 254)
-- "A killing blow puts you on the ground, bleeding out, instead of killing you outright. You can still whisper."  (text, line 255)
-- "Someone can press E on you to get you back up: it takes a few seconds bare-handed, and is quicker and better with a bandage."  (text, line 256)
-- "If a Civil Protection unit presses E on a downed wanted person, they cuff them where they lie."  (text, line 257)
-- "Shooting someone who's down kills them. To drag a downed person, look at them and choose F1 > Drag them along; choose it again to let go."  (text, line 258)
-- "C > Me > Give up lets you die if nobody is coming to help. Explosions and the like kill outright."  (text, line 259)
+- "Want to join Civil Protection? You need Civil Standing 100 and some shifts as a Records Clerk first (F3 > Jobs): units come up through the records office."  (text, line 199)
+- "A Civil Protection unit who stays inside as the Resistance's spy (the story The Man Inside) gets a menu only they can see: C > Civil Protection > Inside. Tip off Freq 7, lose a record, take supplies for a dead drop, copy the records, or reveal yourself with the codeword, each only where nobody can see or hear you. Get caught, and you're Resistance for good: wanted, with no surrendering."  (text, line 200)
+- "When the infestation spreads or the Resistance take ground, a directive to deal with it is posted straight away."  (text, line 201)
+- "Civil Protection"  (text, line 203)
+- "Civil Protection units: F1 is your quick menu. 1 to 5: Call for backup, Send my 10-20, Issue a BOLO, Voice lines, Kick. 6 to 8: search, cuff or escort whoever you're looking at."  (text, line 204)
+- "Units: C > Unit tools lists everything a unit can do, with what each one does. The records terminal holds violations, notes, loyalty points, BOLOs and requests."  (text, line 205)
+- "Civil Protection units don't craft: the Civil Protection Commissary issues grenades, ammunition, armour, bandages and your ration (press E on it; once every two minutes). F2 marks the nearest one on your screen."  (text, line 206)
+- "Civil Protection units: actions menu > Civil Protection > Deploy a turret here, near a checkpoint's power bank or forcefield (each power bank runs two; press E on a turret to pack it up). Officers can put up power banks."  (text, line 207)
+- "Union workers can ask for an escort. Actions menu > Civil Protection > Escort requests to take one (or look at a worker > Escort them). Keep them close, open the doors they need, and walk them out to the release point when they're done."  (text, line 208)
+- "F1 > Voice lines has the mask's most used lines (or just say the words in chat); all of them are in Unit tools > Voice lines."  (text, line 209)
+- "C opens the full menu (so does 9 on the quick menu): everything you can do right now, based on who you are and what you're looking at, with this guide at the top. No chat commands to remember (though they still work)."  (text, line 210)
+- "A special role (Hacker, Father Grigori...) comes back with you when you rejoin, if there's still a free place in it."  (text, line 211)
+- "The multitool (the Resistance's two Hackers carry one; the black market sells them; contraband): aim it and left click at a locked Combine door (hacks it open), a city screen (hijacks it), a data terminal (steals its data), a vending machine or ration dispenser (free water or rations), or a shackled vortigaunt (unlocks its shackles and frees it)."  (text, line 212)
+- "The Director of Propaganda's microphone: left click to go on air over every loudspeaker and screen (one minute, once every fifteen minutes). A scanner flies down and films whoever holds it, live on every screen; its eye blinks red while it records. Shoot the scanner down to cut the picture. With no player in the job, the Administrator addresses the city herself now and then; kill her on air and her microphone is yours. Take the microphone off someone (hands up or cuffed, actions menu) and broadcasting with it is a pirate broadcast."  (text, line 213)
+- "Streetlights and loudspeakers break when shot or worn out: broken lights go dark, and nobody near a broken loudspeaker hears the PA. Maintenance and Radio Repair crews fix them."  (text, line 214)
+- "One data terminal gives half a chip (a fragment): hack a second, different terminal and the two fragments make a full data chip. The master terminal is the big prize: one download gives a master data core."  (text, line 215)
+- "A data chip: sell it to the black market dealer, take it to the lab and have the scientist Decode it (first on his list; marks every Civil Protection unit for five minutes), or Use it at a terminal to wipe your record."  (text, line 216)
+- "Dead soldiers drop their guns with about half a magazine loaded. The rest of their ammunition is on the body: search it."  (text, line 217)
+- "Shooting a scanner counts as damaging city property; killing one counts as destroying it. Neither counts as assaulting anyone."  (text, line 218)
+- "Ambush the landing: get to the landing zone before the dropship arrives, and attack the soldiers it drops off."  (text, line 219)
+- "Someone you're escorting runs when you run, and when there's shooting. If you climb a ladder, they follow you up it."  (text, line 220)
+- "Resistance: a small orange lambda over a citizen's head means they're secretly on our side. Members and up can ask them to keep watch (E, then the talk window)."  (text, line 221)
+- "Break your people out of the cells, ambush Overwatch landings, free a vortigaunt: you'll find these in Operations (F3)."  (text, line 222)
+- "Citizens: look at someone and choose F1 > Inform on them. Civil Protection pays you if it's true. If the Resistance see you do it, they'll know you're a traitor."  (text, line 223)
+- "Trusted citizens: actions menu > Getting by > Become a Union foreman. Then open the actions menu on a citizen > Give them a work order. You get a cut of what they're paid for it."  (text, line 224)
+- "The worst anticitizens face worse than prison time: interrogation (the interrogator offers 50 social credits if you talk), broken feet (no running), or being made a stalker."  (text, line 225)
+- "A stalker works down below, in the Combine areas: see The Stalker's Lot on your job board (F3). Units leave stalkers alone, their papers are stamped STALKER, and they can scream but not speak. The only way out of being a stalker is death. At the end of the stalker's story is a Combine ball energizer you built yourself; stepping into it is a way out, and that character is gone for good."  (text, line 226)
+- "Civil Protection is one career path: Record Keeper, Metrocop, Division Leader, then the Overwatch ranks (Prison Guard, Soldier, Elite). The Overwatch ranks need the transhuman conditioning, which the Overwatch Candidate story offers to Division Leaders."  (text, line 227)
+- "Not sure what to do? F1 > What now? > Ways to get by lists everything open to you, and what you need for the rest."  (text, line 228)
+- "Civil Protection units can kick: G (or F1 > Kick). Doors swing open, locked doors give way on the second kick, and people get knocked back. A Combine Soldier kicks a hinged door off its hinges; an Elite sends it flying and knocks out anyone it hits. Maintenance Technicians rehang fallen doors: E to lift it, carry it to the frame, E again."  (text, line 229)
+- "Scanner Operator (Civil Protection, F4): fly a scanner from a Combine console or from the Nexus (F1 > Unit tools). Reports earn XP; any rebel you photograph gets a BOLO."  (text, line 230)
+- "When you're released from prison, you get your fists back but not your guns or radio. Civil Protection units get their issued gear back."  (text, line 231)
+- "Rebel territory is deadly for units: a REBEL TERRITORY AHEAD warning appears just before you cross into it. Inside, rebels shoot Civil Protection units."  (text, line 232)
+- "Supply drop happening? Guard the crate: if anything is left in it when the convoy moves on, every Civil Protection unit nearby gets paid."  (text, line 233)
+- "RADIO JAMMED on your HUD means a jammer is nearby. Follow the beeping and press E on it to smash it."  (text, line 234)
+- "Civil Protection units: look at someone and choose F1 > Cuff them. Anyone with cuffs: C > their name > Cuff them. You can cuff someone whose hands are up, who is down, who has been stopped, or from behind. Drag walks them along; hitting them with the baton arrests them."  (text, line 235)
+- "Sociostability (green, yellow or red) is shown at the top of the screen. Officers set it in C > Unit tools. Red means a judgment waiver: metrocops have their pistols drawn."  (text, line 236)
+- "Set off an alarm (with a data chip, or during an escape) and a squad of two metrocops and a soldier comes through the door a few seconds later."  (text, line 237)
+- "The Nexus and every Combine-only area are guarded: mostly Overwatch soldiers, plus a metrocop or two."  (text, line 238)
+- "Citizens: C > Getting by > Request Civil Protection (needs a request device) calls a Civil Protection unit to you. Use C > Me > Put my hands up when a unit tells you to."  (text, line 239)
+- "Cuffed? Use C > Me > Work at the cuffs to get free, when nobody's looking. Anyone can uncuff you."  (text, line 240)
+- "The first time you come across something, a card on the right explains what it is and what you can do. Each card only shows once."  (text, line 243)
+- "C > Tips I've seen lists every tip you've had, to read again. C > Settings turns tips off or on, or starts them over."  (text, line 244)
+- "Talking, and knowing people"  (text, line 246)
+- "Chat is spoken out loud: only people nearby hear it. C > Talk lets you yell so people further away hear (/y), or whisper to whoever is right next to you (/w)."  (text, line 247)
+- "C > Talk: describe what your character does (/me lights a cigarette), describe the scene (/it), or roll 1 to 100 for everyone nearby to see (/roll)."  (text, line 248)
+- "C > Talk > Out of character: talk to the whole server (//, with a cooldown) or only to people nearby (/looc)."  (text, line 249)
+- "Voice chat works the same way: people only hear you if they're close enough."  (text, line 250)
+- "Strangers don't know your name; they see your description instead. Set it in C > Me > Change how strangers see me ("tall, with a scar over one eye")."  (text, line 251)
+- "To tell someone your name, look at them and choose F1 > Tell them my name. F1 > Tell everyone nearby my name tells everyone around you."  (text, line 252)
+- "While their mask is on, Civil Protection units are known by their designation, not their name."  (text, line 253)
+- "Going down"  (text, line 255)
+- "A killing blow puts you on the ground, bleeding out, instead of killing you outright. You can still whisper."  (text, line 256)
+- "Someone can press E on you to get you back up: it takes a few seconds bare-handed, and is quicker and better with a bandage."  (text, line 257)
+- "If a Civil Protection unit presses E on a downed wanted person, they cuff them where they lie."  (text, line 258)
+- "Shooting someone who's down kills them. To drag a downed person, look at them and choose F1 > Drag them along; choose it again to let go."  (text, line 259)
+- "C > Me > Give up lets you die if nobody is coming to help. Explosions and the like kill outright."  (text, line 260)
 
 > Note for you (not shown in game): The guide: the full menu's first item (C, cl_livingcity_actions.lua), !help, or the console command lc_help. A list of topics on the left, the topic on the right, and a search box that looks through all of it.
 
-- "C > Help > Build mode (or !build) turns build mode on and off: spawn menu, context menu, physgun, toolgun (Living City Editor) and noclip."  (text, line 267)
-- "Civil Intake: place "Fixture: Civil Intake (registration)", "Fixture: Housing Allocation" and "Point: arrival". Settings: lc_intake, lc_intake_secs (8), lc_intake_grace (10 minutes), lc_papers_fee (10), lc_card_fee (15). Commands: lc_register <name>, lc_unregister <name> (sends them back through all of it, room included). With no desk on the map, people are registered and housed automatically as they arrive."  (text, line 268)
-- "Civil Protection Commissary (editor fixture): Civil Protection units get grenades, ammunition, armour, bandages and a ration there. lc_cpsupply_cooldown (120), lc_cpsupply_ration (600). If none is placed, the Union Commissary terminal issues them instead."  (text, line 269)
-- "Resistance lab (editor fixture, formerly the workbench): a lab bench and a scientist who makes the Resistance's guns. Place one in every rebel base. lc_lab_price (0.6 of the dealer's price), lc_lab_shutdown (600 seconds closed after a Civil Protection unit finds it)."  (text, line 270)
-- "How it feels (editor panel, How it feels): lc_fov (75, the widest view anyone gets; 0 leaves it to each player), lc_eye_height (61; GMod's default is 64), lc_view_bob (with lc_view_bob_amount, 100%, for how strong), lc_quiet_hud, lc_respawn_secs (12, how long the death card shows), lc_word_gets_around."  (text, line 271)
-- "C > Help > Admin testing tools (or the button on F4, or !admintools): give yourself XP, a rank, credits and Civil Standing, switch faction, or start over."  (text, line 273)
-- "Switching faction from F4 changes your uniform and kit on the spot: no need to go back to a spawn point."  (text, line 274)
-- "Chat commands: !givexp, !setrank, !givecredits, !givestanding <n> [name]; !resetxp, !resetcredits [name]; !resetme."  (text, line 275)
-- "C > Help > Staff panel (or !staff): logs, tickets, warnings, character bans. !warn <name> <reason>, !charban <name> <reason>."  (text, line 276)
-- "To black out the whole city for an event: !admintools > The city, or lc_blackout on\|off\|auto."  (text, line 278)
-- "Checkpoints in the editor: Combine power bank, Combine turret, Combine barricades. Place one at the edge of the infestation and the infestation stops spreading there, until the checkpoint loses power."  (text, line 279)
-- "Cell doors not locking? Tag them in the editor with Door: prison or cell. They stay locked during a blackout, and close themselves if anyone other than a Civil Protection unit opens them."  (text, line 280)
-- "Door: always open keeps a door open permanently: it's locked open, and opens again if anything shuts it."  (text, line 281)
-- "Your own announcements: put .wav files directly in the server's garrysmod/sound/livingcity/overwatch/ or .../administrator/ folder, named after the trigger (curfew1.wav, ambient2.wav). For the Administrator, the tone goes in the name too (curfew_firm1.wav, curfew_stern1.wav, curfew_furious1.wav; warm has no tone word). Each folder's README lists the triggers. lc_announce_clips lists the files it found (and any the game can't play: an MP3 renamed to .wav is silent, so keep .mp3 files as .mp3; a .wav must be 16-bit 44100 Hz). lc_announce_say <voice> <trigger> [tone] tests one. Each player's own computer plays them, so players get them through FastDL (press FastDL sync after adding one, then change the map). lc_sound_check tests a player's own copy."  (text, line 282)
-- "Secret endings (keep them secret): the G-Man stops time and everyone votes: 1 lets the city end, 2 skips it (if nobody votes, it ends). Nobody really dies; the map reloads afterwards. Songs go directly in the server's garrysmod/sound/livingcity/endings/ folder, named after the ending: harpies.mp3, bus.mp3, plane.mp3, standup.mp3, water.mp3, bloom.mp3, marrow.mp3, base.mp3, hard.mp3, shalom.mp3, fire.mp3. Father Grigori eating a master data core (Eat it in his pockets, or /eatchip) starts the flood (if an admin starts it, the city's own Father Grigori takes the stage; lc_ending_flood_crowd sets how many others are up there with him). Commands: lc_endings, lc_ending <id> [now], lc_ending_cancel, lc_ending_reset_cooldown. The Endings menu (C > Help > Endings menu, superadmins only, or lc_endings_menu): adjust any ending live while it plays, including its dances bone by bone (the selected bone lights up on the dancers) and all its settings, then copy what you changed. The Harpies (mingebags): lc_ending_minge_swell is the second the song swells, lc_ending_minge_end when it's all over, lc_ending_minge_max how many there are, lc_ending_minge_crowd how many of the city's people stand in the ring, lc_ending_minge_chatter 0 silences the Combine's radio chatter. Bloom (the dance): lc_ending_bloom_speedup, _ramp, _peak, _bpm; lc_bloom_preview and lc_bloom_pose tune the dance. Marrow (the skeletons): lc_ending_marrow_sections lines it up with the song (seconds:dance\|rave\|attack\|outro\|end). The Bus: lc_ending_bus_sections (seconds:fly\|drive\|fast\|end), lc_ending_bus_bpm. Base: lc_ending_base_sections, lc_ending_base_lines (the subtitles). Hard (party hard): lc_ending_hard_sections, lc_ending_hard_moment_beats (how often another Combine member joins in), lc_ending_hard_moment_max (how many at once). Plane (numa numa): lc_ending_plane_sections, lc_ending_plane_captions. Standup (the rope): lc_ending_standup_sections, lc_ending_standup_drain. The Flood: lc_ending_flood_attack_from (when the ichthyosaurs start biting), lc_ending_flood_boats (rowboats), each player's lc_headbang_angle (Father Grigori's nod). The Plane: lc_ending_plane_model_yaw (if it flies sideways). Marrow: lc_ending_marrow_crowd. Any ending: lc_ending_bodies (bodies left lying), lc_ending_edict_limit (spawning stops near the server's entity limit). Bloom: each player's lc_bloom_palm (-90 if the palms face backwards). Shalom (the hora): lc_ending_shalom_sections, lc_ending_shalom_candles (when each of the hanukkiah's candles is lit), lc_ending_shalom_lift_beats (how often someone is lifted up on a chair), lc_ending_shalom_sayings (extra sayings shown over heads, separated by \|); each player's lc_shalom_pose tunes the dance's arms and lc_shalom_kippah where the kippah sits. Fire (behinds on fire, then flying on them): lc_ending_fire_sections (seconds:ignite\|hop\|fly\|launch\|end), lc_ending_fire_hop (how high the hops are), lc_ending_fire_fly_speed, lc_ending_fire_crowd; the flying pose is tuned in the Endings menu (Pelvis tilts the whole body)."  (text, line 283)
-- "Freq 7 (the pirate broadcast): voice lines and songs take turns, and warnings cut in. The Combine jam it every lc_freq7_hold minutes on green (faster on yellow and red, never during a blackout). Recordings go in the sound addon's radio/ folder. lc_freq7_status shows where it is."  (text, line 284)
-- "Morning exercise: use the editor to place a jogging route (stops in order; the first is the start), an exercise yard (stand where the rows will be, and aim at the leader's spot) and a parade route (stops in order). Every lc_exercise_every dawns (2), one of them runs, taking turns (lc_exercise_kinds). lc_exercise <jog\|drill\|parade> starts one now, lc_exercise next shows which is next, lc_exercise stop ends it."  (text, line 285)
-- "NPCs losing track of you in a chase? Path mapping (editor panel, Paths and doors, or !pathmap) places path nodes as you walk the streets, stairs and alleys, links them and saves them with the map. Noclip pauses it; lc_pathmap_undo removes the nodes placed this session."  (text, line 286)
-- "Every setting in the editor panel is saved with the map as soon as you change it, so your values survive a restart."  (text, line 287)
-- "Persistent props: spawn a prop, place it, and click it with the editor's Prop: make persistent. It's saved with the layout, frozen, and comes back every time the map loads."  (text, line 288)
-- "Rebel lookout post (editor point): an armed fighter guards that spot. Place it from the side the Combine would come from, so he faces that way."  (text, line 289)
-- "Bunk (editor point): a bed rebels sleep on. Mattresses, beds, couches, chairs, workbenches and crates inside rebel territory are found automatically."  (text, line 290)
-- "Tag the Combine's doors with Door: Civil Protection only and Civil Protection units are routed through them, even where the map's navigation was cut off by the door."  (text, line 292)
-- "The Living City Editor places everything: street furniture (bins, streetlights, loudspeakers, big screens, TVs), an incinerator for bodies, and a workplace for each Union job, plus loading docks, graffiti walls, rubble piles and leaky pipes for the jobs that use them."  (text, line 293)
+- "C > Help > Build mode (or !build) turns build mode on and off: spawn menu, context menu, physgun, toolgun (Living City Editor) and noclip."  (text, line 268)
+- "Civil Intake: place "Fixture: Civil Intake (registration)", "Fixture: Housing Allocation" and "Point: arrival". Settings: lc_intake, lc_intake_secs (8), lc_intake_grace (10 minutes), lc_papers_fee (10), lc_card_fee (15). Commands: lc_register <name>, lc_unregister <name> (sends them back through all of it, room included). With no desk on the map, people are registered and housed automatically as they arrive."  (text, line 269)
+- "Civil Protection Commissary (editor fixture): Civil Protection units get grenades, ammunition, armour, bandages and a ration there. lc_cpsupply_cooldown (120), lc_cpsupply_ration (600). If none is placed, the Union Commissary terminal issues them instead."  (text, line 270)
+- "Resistance lab (editor fixture, formerly the workbench): a lab bench and a scientist who makes the Resistance's guns. Place one in every rebel base. lc_lab_price (0.6 of the dealer's price), lc_lab_shutdown (600 seconds closed after a Civil Protection unit finds it)."  (text, line 271)
+- "How it feels (editor panel, How it feels): lc_fov (75, the widest view anyone gets; 0 leaves it to each player), lc_eye_height (61; GMod's default is 64), lc_view_bob (with lc_view_bob_amount, 100%, for how strong), lc_quiet_hud, lc_respawn_secs (12, how long the death card shows), lc_word_gets_around."  (text, line 272)
+- "C > Help > Admin testing tools (or the button on F4, or !admintools): give yourself XP, a rank, credits and Civil Standing, switch faction, or start over."  (text, line 274)
+- "Switching faction from F4 changes your uniform and kit on the spot: no need to go back to a spawn point."  (text, line 275)
+- "Chat commands: !givexp, !setrank, !givecredits, !givestanding <n> [name]; !resetxp, !resetcredits [name]; !resetme."  (text, line 276)
+- "C > Help > Staff panel (or !staff): logs, tickets, warnings, character bans. !warn <name> <reason>, !charban <name> <reason>."  (text, line 277)
+- "To black out the whole city for an event: !admintools > The city, or lc_blackout on\|off\|auto."  (text, line 279)
+- "Checkpoints in the editor: Combine power bank, Combine turret, Combine barricades. Place one at the edge of the infestation and the infestation stops spreading there, until the checkpoint loses power."  (text, line 280)
+- "Cell doors not locking? Tag them in the editor with Door: prison or cell. They stay locked during a blackout, and close themselves if anyone other than a Civil Protection unit opens them."  (text, line 281)
+- "Door: always open keeps a door open permanently: it's locked open, and opens again if anything shuts it."  (text, line 282)
+- "Your own announcements: put .wav files directly in the server's garrysmod/sound/livingcity/overwatch/ or .../administrator/ folder, named after the trigger (curfew1.wav, ambient2.wav). For the Administrator, the tone goes in the name too (curfew_firm1.wav, curfew_stern1.wav, curfew_furious1.wav; warm has no tone word). Each folder's README lists the triggers. lc_announce_clips lists the files it found (and any the game can't play: an MP3 renamed to .wav is silent, so keep .mp3 files as .mp3; a .wav must be 16-bit 44100 Hz). lc_announce_say <voice> <trigger> [tone] tests one. Each player's own computer plays them, so players get them through FastDL (press FastDL sync after adding one, then change the map). lc_sound_check tests a player's own copy."  (text, line 283)
+- "Secret endings (keep them secret): the G-Man stops time and everyone votes: 1 lets the city end, 2 skips it (if nobody votes, it ends). Nobody really dies; the map reloads afterwards. Songs go directly in the server's garrysmod/sound/livingcity/endings/ folder, named after the ending: harpies.mp3, bus.mp3, plane.mp3, standup.mp3, water.mp3, bloom.mp3, marrow.mp3, base.mp3, hard.mp3, shalom.mp3, fire.mp3. Father Grigori eating a master data core (Eat it in his pockets, or /eatchip) starts the flood (if an admin starts it, the city's own Father Grigori takes the stage; lc_ending_flood_crowd sets how many others are up there with him). Commands: lc_endings, lc_ending <id> [now], lc_ending_cancel, lc_ending_reset_cooldown. The Endings menu (C > Help > Endings menu, superadmins only, or lc_endings_menu): adjust any ending live while it plays, including its dances bone by bone (the selected bone lights up on the dancers) and all its settings, then copy what you changed. The Harpies (mingebags): lc_ending_minge_swell is the second the song swells, lc_ending_minge_end when it's all over, lc_ending_minge_max how many there are, lc_ending_minge_crowd how many of the city's people stand in the ring, lc_ending_minge_chatter 0 silences the Combine's radio chatter. Bloom (the dance): lc_ending_bloom_speedup, _ramp, _peak, _bpm; lc_bloom_preview and lc_bloom_pose tune the dance. Marrow (the skeletons): lc_ending_marrow_sections lines it up with the song (seconds:dance\|rave\|attack\|outro\|end). The Bus: lc_ending_bus_sections (seconds:fly\|drive\|fast\|end), lc_ending_bus_bpm. Base: lc_ending_base_sections, lc_ending_base_lines (the subtitles). Hard (party hard): lc_ending_hard_sections, lc_ending_hard_moment_beats (how often another Combine member joins in), lc_ending_hard_moment_max (how many at once). Plane (numa numa): lc_ending_plane_sections, lc_ending_plane_captions. Standup (the rope): lc_ending_standup_sections, lc_ending_standup_drain. The Flood: lc_ending_flood_attack_from (when the ichthyosaurs start biting), lc_ending_flood_boats (rowboats), each player's lc_headbang_angle (Father Grigori's nod). The Plane: lc_ending_plane_model_yaw (if it flies sideways). Marrow: lc_ending_marrow_crowd. Any ending: lc_ending_bodies (bodies left lying), lc_ending_edict_limit (spawning stops near the server's entity limit). Bloom: each player's lc_bloom_palm (-90 if the palms face backwards). Shalom (the hora): lc_ending_shalom_sections, lc_ending_shalom_candles (when each of the hanukkiah's candles is lit), lc_ending_shalom_lift_beats (how often someone is lifted up on a chair), lc_ending_shalom_sayings (extra sayings shown over heads, separated by \|); each player's lc_shalom_pose tunes the dance's arms and lc_shalom_kippah where the kippah sits. Fire (behinds on fire, then flying on them): lc_ending_fire_sections (seconds:ignite\|hop\|fly\|launch\|end), lc_ending_fire_hop (how high the hops are), lc_ending_fire_fly_speed, lc_ending_fire_crowd; the flying pose is tuned in the Endings menu (Pelvis tilts the whole body)."  (text, line 284)
+- "Freq 7 (the pirate broadcast): voice lines and songs take turns, and warnings cut in. The Combine jam it every lc_freq7_hold minutes on green (faster on yellow and red, never during a blackout). Recordings go in the sound addon's radio/ folder. lc_freq7_status shows where it is."  (text, line 285)
+- "Morning exercise: use the editor to place a jogging route (stops in order; the first is the start), an exercise yard (stand where the rows will be, and aim at the leader's spot) and a parade route (stops in order). Every lc_exercise_every dawns (2), one of them runs, taking turns (lc_exercise_kinds). lc_exercise <jog\|drill\|parade> starts one now, lc_exercise next shows which is next, lc_exercise stop ends it."  (text, line 286)
+- "NPCs losing track of you in a chase? Path mapping (editor panel, Paths and doors, or !pathmap) places path nodes as you walk the streets, stairs and alleys, links them and saves them with the map. Noclip pauses it; lc_pathmap_undo removes the nodes placed this session."  (text, line 287)
+- "Every setting in the editor panel is saved with the map as soon as you change it, so your values survive a restart."  (text, line 288)
+- "Persistent props: spawn a prop, place it, and click it with the editor's Prop: make persistent. It's saved with the layout, frozen, and comes back every time the map loads."  (text, line 289)
+- "Rebel lookout post (editor point): an armed fighter guards that spot. Place it from the side the Combine would come from, so he faces that way."  (text, line 290)
+- "Bunk (editor point): a bed rebels sleep on. Mattresses, beds, couches, chairs, workbenches and crates inside rebel territory are found automatically."  (text, line 291)
+- "Tag the Combine's doors with Door: Civil Protection only and Civil Protection units are routed through them, even where the map's navigation was cut off by the door."  (text, line 293)
+- "The Living City Editor places everything: street furniture (bins, streetlights, loudspeakers, big screens, TVs), an incinerator for bodies, and a workplace for each Union job, plus loading docks, graffiti walls, rubble piles and leaky pipes for the jobs that use them."  (text, line 294)
 
 > Note for you (not shown in game): part of: paint
 
-- "C > Guide opens this guide. Tips also pop up the first time something happens (C > Tips I've seen lists them all)."  (drawn on screen, line 315)
+- "C > Guide opens this guide. Tips also pop up the first time something happens (C > Tips I've seen lists them all)."  (drawn on screen, line 316)
 
 > Note for you (not shown in game): part of: open guide
 
-- "Search the guide"  (text, line 320)
+- "Search the guide"  (text, line 321)
 
 > Note for you (not shown in game): part of: show search
 
-- "Nothing found for "{q}". Try a single word: cuffs, rent, curfew, fish..."  (text, line 362)
+- "Nothing found for "{q}". Try a single word: cuffs, rent, curfew, fish..."  (text, line 363)
 
 ## init.lua (init.lua)
 
@@ -3986,36 +3987,37 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 - ", its dispenser has NO POWER: nobody queues for a dead dispenser"  (text, line 193)
 - "line %d: %d slots, %d queued, %d on their way, front waiting %ds%s%s"  (message, line 194)
 - "(placed from the back: turned round so the front is at the dispenser)"  (message, line 196)
-- "chasing %s at %.0fu"  (message, line 210)
-- "%-8s %-16s hp %3d recov %d err %d hop %s/%s pos %s%s%s%s"  (message, line 213)
-- "beat {routeGroup}"  (text, line 217)
-- "line {line} slot {slotIndex}"  (text, line 218)
-- "heading to line {lineHeading}"  (text, line 218)
-- "by role: {out}{or}"  (text, line 225)
-- "stuck: %d moved on a step, %d far trips given up%s"  (message, line 229)
-- "routes: %s, %d trips not started (unreachable), %d places skipped as hard to reach"  (message, line 234)
-- "%d planned over the nodegraph, %d short enough to walk direct"  (message, line 235)
-- "no nodegraph links"  (message, line 235)
-- "route repairs: %d legs walked in single steps, %d links found unwalkable (%d avoided right now), %d trips re-planned around them"  (message, line 238)
-- "main loop: avg %.2f ms, last %.2f ms, worst %.2f ms over %d ticks"  (message, line 246)
-- "server tick interval %.4f, entity count %d"  (message, line 248)
-- "whole server frame (engine AI, physics, networking): avg %.2f ms, worst %.2f ms, %d of %d ticks late (%.1f%%), a tick should take %.1f ms"  (message, line 251)
-- "entities by class: {top}"  (text, line 264)
-- "NPCs on the map (all of them, Living City's and not): %d"  (message, line 267)
-- "asleep (far from everyone, engine AI off; lc_npc_sleep %s): %d now; %d times put to sleep, %d woken, %d route stops walked out of sight"  (message, line 270)
-- "%s [%s] step %d/%d (%s) %ds left: %s"  (message, line 281)
-- "active %d \| violent cap %d"  (message, line 286)
-- "prisoners: {prisoners} \| detained on the street: {held}"  (text, line 293)
-- "stops in progress: {stops} \| next event: {_}"  (text, line 296)
-- "disguise {GetNW2String}"  (text, line 304)
-- "alias {GetNW2String}"  (text, line 305)
-- "radio {GetNW2String}"  (text, line 306)
-- "contraband {illegal}"  (text, line 307)
-- "alert %d (heat %d, %d soldiers after them)"  (message, line 309)
-- "running check: {pl}"  (text, line 311)
-- "(rebel territory)"  (message, line 313)
-- "%s \| %s \| job %s \| block %s \| cp %s \| wanted %s \| hunger %d thirst %d \| credits %s standing %s%s%s"  (message, line 314)
-- "Recent log (newest last)"  (text, line 324)
+- "vortigaunts: %d freed in rebel ground (lc_rebel_vorts %s)%s, %d shackled on the streets (lc_vort_slaves %s)"  (message, line 206)
+- "chasing %s at %.0fu"  (message, line 219)
+- "%-8s %-16s hp %3d recov %d err %d hop %s/%s pos %s%s%s%s"  (message, line 222)
+- "beat {routeGroup}"  (text, line 226)
+- "line {line} slot {slotIndex}"  (text, line 227)
+- "heading to line {lineHeading}"  (text, line 227)
+- "by role: {out}{or}"  (text, line 234)
+- "stuck: %d moved on a step, %d far trips given up%s"  (message, line 238)
+- "routes: %s, %d trips not started (unreachable), %d places skipped as hard to reach"  (message, line 243)
+- "%d planned over the nodegraph, %d short enough to walk direct"  (message, line 244)
+- "no nodegraph links"  (message, line 244)
+- "route repairs: %d legs walked in single steps, %d links found unwalkable (%d avoided right now), %d trips re-planned around them"  (message, line 247)
+- "main loop: avg %.2f ms, last %.2f ms, worst %.2f ms over %d ticks"  (message, line 255)
+- "server tick interval %.4f, entity count %d"  (message, line 257)
+- "whole server frame (engine AI, physics, networking): avg %.2f ms, worst %.2f ms, %d of %d ticks late (%.1f%%), a tick should take %.1f ms"  (message, line 260)
+- "entities by class: {top}"  (text, line 273)
+- "NPCs on the map (all of them, Living City's and not): %d"  (message, line 276)
+- "asleep (far from everyone, engine AI off; lc_npc_sleep %s): %d now; %d times put to sleep, %d woken, %d route stops walked out of sight"  (message, line 279)
+- "%s [%s] step %d/%d (%s) %ds left: %s"  (message, line 290)
+- "active %d \| violent cap %d"  (message, line 295)
+- "prisoners: {prisoners} \| detained on the street: {held}"  (text, line 302)
+- "stops in progress: {stops} \| next event: {_}"  (text, line 305)
+- "disguise {GetNW2String}"  (text, line 313)
+- "alias {GetNW2String}"  (text, line 314)
+- "radio {GetNW2String}"  (text, line 315)
+- "contraband {illegal}"  (text, line 316)
+- "alert %d (heat %d, %d soldiers after them)"  (message, line 318)
+- "running check: {pl}"  (text, line 320)
+- "(rebel territory)"  (message, line 322)
+- "%s \| %s \| job %s \| block %s \| cp %s \| wanted %s \| hunger %d thirst %d \| credits %s standing %s%s%s"  (message, line 323)
+- "Recent log (newest last)"  (text, line 333)
 
 ## doors (sv_livingcity_doors.lua)
 
@@ -4323,12 +4325,12 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Settings are saved, so a default changed since would never reach a server that ran the old one: anything still exactly at an old default moves to the new one (once; a value someone chose themselves is left alone).
 
-- "harpies=2,shalom=2"  (text, line 3987)
-- "harpies=4,shalom=2"  (text, line 3987)
-- "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 3988)
-- "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 3988)
-- "2.2=CAPTAIN: What happen ?\|3.5=MECHANIC: Somebody set up us the bomb.\|6.5=OPERATOR: We get signal.\|9.5=CAPTAIN: What !\|12.5=OPERATOR: Main screen turn on.\|14.7=CAPTAIN: It's you !!\|16.4=CATS: How are you gentlemen !!\|18.4=CATS: All your base are belong to us.\|20.4=CATS: You are on the way to destruction.\|21.6=CAPTAIN: What you say !!\|23.0=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 3989)
-- "2.15=CAPTAIN: What happen ?\|3.55=MECHANIC: Somebody set up us the bomb.\|4.65=OPERATOR: We get signal.\|6.5=CAPTAIN: What !\|9.5=OPERATOR: Main screen turn on.\|11.7=CAPTAIN: It's you !!\|12.55=CATS: How are you gentlemen !!\|14.7=CATS: All your base are belong to us.\|18.45=CATS: You are on the way to destruction.\|20.6=CAPTAIN: What you say !!\|21.65=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 3989)
+- "harpies=2,shalom=2"  (text, line 3988)
+- "harpies=4,shalom=2"  (text, line 3988)
+- "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 3989)
+- "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 3989)
+- "2.2=CAPTAIN: What happen ?\|3.5=MECHANIC: Somebody set up us the bomb.\|6.5=OPERATOR: We get signal.\|9.5=CAPTAIN: What !\|12.5=OPERATOR: Main screen turn on.\|14.7=CAPTAIN: It's you !!\|16.4=CATS: How are you gentlemen !!\|18.4=CATS: All your base are belong to us.\|20.4=CATS: You are on the way to destruction.\|21.6=CAPTAIN: What you say !!\|23.0=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 3990)
+- "2.15=CAPTAIN: What happen ?\|3.55=MECHANIC: Somebody set up us the bomb.\|4.65=OPERATOR: We get signal.\|6.5=CAPTAIN: What !\|9.5=OPERATOR: Main screen turn on.\|11.7=CAPTAIN: It's you !!\|12.55=CATS: How are you gentlemen !!\|14.7=CATS: All your base are belong to us.\|18.45=CATS: You are on the way to destruction.\|20.6=CAPTAIN: What you say !!\|21.65=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 3990)
 
 ## escorts through Combine doors (sv_livingcity_escort.lua)
 
@@ -4818,79 +4820,86 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Anyone without a faction becomes a Citizen.
 
-- "[Factions] {msg}"  (chat message, line 39)
+- "[Factions] {msg}"  (chat message, line 40)
 
 > Note for you (not shown in game): part of: titles
 
-- "Resistance {hunted}"  (text, line 85)
+- "Resistance {hunted}"  (text, line 86)
 
 > Note for you (not shown in game): Returns ok, reason
 
-- "No such faction."  (text, line 320)
+- "No such faction."  (text, line 321)
 
 > Note for you (not shown in game): (a stalker is bound even as a superadmin: only death, or lc_unstalker, ends it)
 
-- "Whitelist only."  (text, line 330)
+- "Whitelist only."  (text, line 331)
 
 > Note for you (not shown in game): part of: can join faction
 
-- "Civil Protection only takes citizens in good standing (%d or more). Yours is %d."  (message, line 336)
-- "Requires %s in %s."  (message, line 342)
-- "No such role."  (text, line 347)
-- "Someone already holds that role."  (text, line 349)
-- "Requires {name} in {name}."  (text, line 351)
+- "Civil Protection only takes citizens in good standing (%d or more). Yours is %d."  (message, line 337)
+
+> Note for you (not shown in game): and who've come up through the civil records office (sv_livingcity_work.lua counts the shifts)
+
+- "Civil Protection recruits from the civil records office: finish %d shifts as a Records Clerk first (F3 > Jobs). You've done %d."  (message, line 343)
+
+> Note for you (not shown in game): part of: can join faction
+
+- "Requires %s in %s."  (message, line 349)
+- "No such role."  (text, line 354)
+- "Someone already holds that role."  (text, line 356)
+- "Requires {name} in {name}."  (text, line 358)
 
 > Note for you (not shown in game): part of: set faction
 
-- "You are now {name}."  (chat message, line 374)
+- "You are now {name}."  (chat message, line 381)
 
 > Note for you (not shown in game): the game answering something done in a window (lcf_join)
 
-- "Not while you're in custody."  (chat message, line 400)
-- "Not while you're wanted or in a fight."  (chat message, line 401)
-- "You can change faction again in {CurTime} seconds."  (chat message, line 403)
+- "Not while you're in custody."  (chat message, line 407)
+- "Not while you're wanted or in a fight."  (chat message, line 408)
+- "You can change faction again in {CurTime} seconds."  (chat message, line 410)
 
 > Note for you (not shown in game): only ever to give back what they had (never to take more away)
 
-- "Welcome back. You're still {name}."  (chat message, line 479)
+- "Welcome back. You're still {name}."  (chat message, line 486)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "You can't be %s right now: %s You're %s for now; take it again from the faction menu (F4) when there's a place."  (message, line 484)
-- "back to your rank"  (message, line 486)
+- "You can't be %s right now: %s You're %s for now; take it again from the faction menu (F4) when there's a place."  (message, line 491)
+- "back to your rank"  (message, line 493)
 
 > Note for you (not shown in game): XP The transhuman conditioning: the Overwatch ranks open, and whatever XP you've earned counts at once. There's no undoing it.
 
-- "the conditioning"  (text, line 501)
+- "the conditioning"  (text, line 508)
 
 > Note for you (not shown in game): part of: add xp
 
-- "Promoted to {name}!{or}"  (chat message, line 520)
-- "[%s] %s has been promoted to %s."  (message, line 525)
-- "Demoted to {name}."  (chat message, line 529)
+- "Promoted to {name}!{or}"  (chat message, line 527)
+- "[%s] %s has been promoted to %s."  (message, line 532)
+- "Demoted to {name}."  (chat message, line 536)
 
 > Note for you (not shown in game): Admin commands
 
-- "Player not found."  (text, line 647)
+- "Player not found."  (text, line 654)
 
 > Note for you (not shown in game): admin cmd
 
-- "Factions: citizen, resistance, cp, ota, admin, zombie"  (text, line 654)
-- "No such special role."  (text, line 656)
-- "set to {name}."  (text, line 658)
-- "Usage: lcf_setxp <name> <xp>"  (text, line 664)
-- "now has {xp} XP in {name}."  (text, line 667)
+- "Factions: citizen, resistance, cp, ota, admin, zombie"  (text, line 661)
+- "No such special role."  (text, line 663)
+- "set to {name}."  (text, line 665)
+- "Usage: lcf_setxp <name> <xp>"  (text, line 671)
+- "now has {xp} XP in {name}."  (text, line 674)
 
 > Note for you (not shown in game): part of: step
 
-- "by staff"  (text, line 676)
-- "is now {name}."  (text, line 677)
+- "by staff"  (text, line 683)
+- "is now {name}."  (text, line 684)
 
 > Note for you (not shown in game): admin cmd
 
-- "Usage: lcf_whitelist <name> <faction>"  (text, line 684)
-- "whitelisted for"  (text, line 688)
-- "removed from"  (text, line 688)
+- "Usage: lcf_whitelist <name> <faction>"  (text, line 691)
+- "whitelisted for"  (text, line 695)
+- "removed from"  (text, line 695)
 
 ## Freq 7, the Resistance's pirate broadcast (sv_livingcity_freq7.lua)
 
@@ -5375,10 +5384,10 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 - "Forge it from your pockets ({gm_showteam}) somewhere private, where no Civil Protection unit can see you."  (text, line 399)
 - "A forged ration card"  (title, line 400)
 - "Gets you one ration from any dispenser, whatever your Civil Standing and however recently you had one."  (text, line 401)
-- "A Union radio"  (title, line 402)
-- "City announcements come through it before events happen. To talk on it, use {+menu_context} > Talk > On my radio. Civil Protection listens to this channel."  (text, line 403)
+- "A radio set"  (title, line 402)
+- "Civilians aren't allowed radios: this is contraband, and a search will find it. It picks up the city's notices before the loudspeakers. The Resistance lab can retune it to Freq 7, or make a transmitter of it."  (text, line 403)
 - "A radio, on Freq 7"  (title, line 404)
-- "Freq 7 is the Resistance's secret channel, and you'll also hear what Civil Protection says when it thinks nobody's listening. {+menu_context} > Talk > On my radio talks on Freq 7; On the Union band talks on the city's channel. This radio is contraband."  (text, line 405)
+- "Freq 7 is the Resistance's secret channel, and you'll also hear what Civil Protection says when it thinks nobody's listening. With a radio transmitter too, {+menu_context} > Talk > On my radio talks on Freq 7. This radio is contraband."  (text, line 405)
 - "A travel permit"  (title, line 406)
 - "Keep it in your pockets. It gets you past one curfew stop."  (text, line 407)
 - "By hand, anywhere, from your pockets ({gm_showteam}): rags make bandages and scrap makes lockpicks. Guns, ammunition, smoke bombs and radio jammers are made from these by the Resistance lab's scientist, only for the Resistance. Everyone else buys them at the black market. Find more materials in bins, by prying junk apart with a crowbar, and on shot-down scanners."  (text, line 409)
@@ -5615,23 +5624,29 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 - "They know you were the Resistance's man inside. You're wanted, and there's no surrendering. You'll never wear the mask again, nor work for the city or the Union: you're Resistance now, for good."  (on-screen notice, line 199)
 - "Dispatch: all units, a traitor in our ranks. Shoot on sight. No surrender accepted."  (text, line 202)
 
-> Note for you (not shown in game): No deals for a traitor: no surrendering (sv_livingcity_prison.lua asks), no Combine role, no Union job.
+> Note for you (not shown in game): Unmasked (the reckoning, sv_livingcity_stories.lua): no longer undercover, an ordinary Resistance fighter; never Civil Protection (or anyone's man inside) again. Not wanted for it.
 
-- "They know what you did. There's no surrendering for you."  (text, line 208)
-- "The Union won't have a traitor on its books."  (text, line 209)
-- "You're known as a traitor. Only the Resistance will have you now."  (text, line 210)
+- "Out of the mask"  (on-screen notice, line 213)
+- "You're Resistance now, in the open. Civil Protection will never have you back."  (on-screen notice, line 213)
+
+> Note for you (not shown in game): unmasked: just never a unit (or any Combine role) again
+
+- "You took off the mask for good. Civil Protection will never have you back: only the Resistance."  (text, line 226)
+- "They know what you did. There's no surrendering for you."  (text, line 229)
+- "The Union won't have a traitor on its books."  (text, line 230)
+- "You're known as a traitor. Only the Resistance will have you now."  (text, line 231)
 
 > Note for you (not shown in game): newly recruited: the leaders hear of it
 
-- "[Freq 7] For the leaders only: we have a friend inside Civil Protection now. {p}. Keep it close."  (chat message, line 244)
+- "[Freq 7] For the leaders only: we have a friend inside Civil Protection now. {p}. Keep it close."  (chat message, line 265)
 
 > Note for you (not shown in game): A leader coming on hears who's inside, once.
 
-- "[Freq 7] For the leaders only: our friends inside Civil Protection: {names}."  (chat message, line 259)
+- "[Freq 7] For the leaders only: our friends inside Civil Protection: {names}."  (chat message, line 280)
 
 > Note for you (not shown in game): From the menus (and chat, as a backup)
 
-- "[Inside] {why}"  (chat message, line 268)
+- "[Inside] {why}"  (chat message, line 289)
 
 ## Civil Intake (becoming somebody) (sv_livingcity_intake.lua)
 
@@ -5972,28 +5987,28 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: start
 
-- "[Clinic] Patients are coming in, and their health keeps dropping. Aim your medkit at a patient and left click to heal them, until each one is almost fully healed. Treat the worst injuries first (critical ones go downhill fast; a broken arm can wait): a patient whose health reaches zero dies."  (chat message, line 1107)
+- "[Clinic] Patients are coming in, and their health keeps dropping. Aim your medkit at a patient and left click to heal them, until each one is almost fully healed. Treat the worst injuries first (critical ones go downhill fast; a broken arm can wait): a patient whose health reaches zero dies."  (chat message, line 1119)
 
 > Note for you (not shown in game): part of: hud
 
-- "Saved: %d    Lost: %d    Waiting: %d"  (message, line 1109)
+- "Saved: %d    Lost: %d    Waiting: %d"  (message, line 1121)
 
 > Note for you (not shown in game): part of: tick
 
-- "[Clinic] A patient has died: {label}."  (chat message, line 1122)
-- "[Clinic] A patient has died: {label}."  (chat message, line 1137)
-- "[Clinic] {or} grabs your wrist on the way out. 'Thank you. Please... don't write down what did this.'"  (chat message, line 1147)
-- "Every patient survived: 6 credits bonus."  (text, line 1159)
-- "%d patients saved, %d lost."  (message, line 1160)
+- "[Clinic] A patient has died: {label}."  (chat message, line 1134)
+- "[Clinic] A patient has died: {label}."  (chat message, line 1149)
+- "[Clinic] {or} grabs your wrist on the way out. 'Thank you. Please... don't write down what did this.'"  (chat message, line 1159)
+- "Every patient survived: 6 credits bonus."  (text, line 1171)
+- "%d patients saved, %d lost."  (message, line 1172)
 
 > Note for you (not shown in game): part of: start
 
-- "[Reclamation] Smash every block in the pile with your crowbar (left click). Each broken block drops a piece of scrap you can pick up, and sometimes something else. You're paid 1 credit per block."  (chat message, line 1213)
+- "[Reclamation] Smash every block in the pile with your crowbar (left click). Each broken block drops a piece of scrap you can pick up, and sometimes something else. You're paid 1 credit per block."  (chat message, line 1225)
 
 > Note for you (not shown in game): part of: hud
 
-- "Blocks broken: %d of %d"  (message, line 1214)
-- "Hit the blocks with the crowbar (left click)"  (text, line 1214)
+- "Blocks broken: %d of %d"  (message, line 1226)
+- "Hit the blocks with the crowbar (left click)"  (text, line 1226)
 
 ## the unit's kick (sv_livingcity_kick.lua)
 
@@ -8412,64 +8427,67 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 
 - "Civil Protection units down"  (text, line 1385)
 - "territory cleared"  (text, line 1386)
-- "never got there"  (text, line 1432)
+
+> Note for you (not shown in game): there: at the edge of their ground, or already fighting them
+
+- "never got there"  (text, line 1434)
 
 > Note for you (not shown in game): the console command lc_skirmish
 
-- "[Living City] Start the city first."  (chat message, line 1490)
-- "called off"  (text, line 1491)
-- "[Living City] Skirmish called off."  (chat message, line 1496)
-- "[Living City] Usage: lc_skirmish raid\|sweep\|end"  (chat message, line 1497)
-- "[Living City] {kind} started."  (text, line 1498)
-- "[Living City] Couldn't start a {kind}: {why}"  (text, line 1498)
+- "[Living City] Start the city first."  (chat message, line 1492)
+- "called off"  (text, line 1493)
+- "[Living City] Skirmish called off."  (chat message, line 1498)
+- "[Living City] Usage: lc_skirmish raid\|sweep\|end"  (chat message, line 1499)
+- "[Living City] {kind} started."  (text, line 1500)
+- "[Living City] Couldn't start a {kind}: {why}"  (text, line 1500)
 
 > Note for you (not shown in game): part of: dismiss follower
 
-- "[Resistance] '{GetNW2String}. I'll head back.'"  (chat message, line 1537)
+- "[Resistance] '{GetNW2String}. I'll head back.'"  (chat message, line 1539)
 
 > Note for you (not shown in game): part of: recruit
 
-- "[Resistance] 'I'm on watch. Find someone else.'"  (chat message, line 1546)
-- "[Resistance] They're busy."  (chat message, line 1546)
-- "[Resistance] 'Who are you? Get someone who's earned it to ask me.' (Members and up can lead fighters.)"  (chat message, line 1550)
-- "[Resistance] You've got {MAX_FOLLOWERS} with you already. Any more and you're a parade."  (chat message, line 1554)
-- "[Resistance] {GetNW2String} is with you, and stays with you. They hold their fire until you open up or the Combine do. E on them again to send them home."  (chat message, line 1570)
+- "[Resistance] 'I'm on watch. Find someone else.'"  (chat message, line 1548)
+- "[Resistance] They're busy."  (chat message, line 1548)
+- "[Resistance] 'Who are you? Get someone who's earned it to ask me.' (Members and up can lead fighters.)"  (chat message, line 1552)
+- "[Resistance] You've got {MAX_FOLLOWERS} with you already. Any more and you're a parade."  (chat message, line 1556)
+- "[Resistance] {GetNW2String} is with you, and stays with you. They hold their fire until you open up or the Combine do. E on them again to send them home."  (chat message, line 1572)
 
 > Note for you (not shown in game): pressing E on something
 
-- "[Resistance] The quartermaster looks you over. 'I don't know you. Come back with someone who does.'"  (chat message, line 1616)
-- "[Quartermaster] 'What do you need?' (Work: F3. Fighters: E on any of ours here, to bring them along.)"  (chat message, line 1622)
-- "[Quartermaster] 'Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it.'"  (chat message, line 1624)
+- "[Resistance] The quartermaster looks you over. 'I don't know you. Come back with someone who does.'"  (chat message, line 1618)
+- "[Quartermaster] 'What do you need?' (Work: F3. Fighters: E on any of ours here, to bring them along.)"  (chat message, line 1624)
+- "[Quartermaster] 'Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it.'"  (chat message, line 1626)
 
 > Note for you (not shown in game): Orders for the squad (F1 / the C menu, Resistance; or the chat shortcuts !casual, !gunsout, !meet).
 
-- "[Resistance] You've nobody with you."  (chat message, line 1637)
-- "[Resistance] Guns away, plain clothes on. They walk like anyone else now. (Shot at, they'll fight.)"  (text, line 1637)
-- "[Resistance] They're acting casual already."  (text, line 1637)
-- "[Resistance] You've nobody with you."  (chat message, line 1641)
-- "[Resistance] Guns out."  (text, line 1641)
-- "[Resistance] They're armed and ready already."  (text, line 1641)
+- "[Resistance] You've nobody with you."  (chat message, line 1639)
+- "[Resistance] Guns away, plain clothes on. They walk like anyone else now. (Shot at, they'll fight.)"  (text, line 1639)
+- "[Resistance] They're acting casual already."  (text, line 1639)
+- "[Resistance] You've nobody with you."  (chat message, line 1643)
+- "[Resistance] Guns out."  (text, line 1643)
+- "[Resistance] They're armed and ready already."  (text, line 1643)
 
 > Note for you (not shown in game): the chat command /meet
 
-- "[Resistance] You've nobody with you."  (chat message, line 1645)
-- "[Resistance] Meet you where? Take a job first: they go on ahead to where it's taking you."  (chat message, line 1647)
-- "[Resistance] 'We'll meet you there.' They go on ahead, acting casual, and wait for you near the job's marker."  (chat message, line 1657)
+- "[Resistance] You've nobody with you."  (chat message, line 1647)
+- "[Resistance] Meet you where? Take a job first: they go on ahead to where it's taking you."  (chat message, line 1649)
+- "[Resistance] 'We'll meet you there.' They go on ahead, acting casual, and wait for you near the job's marker."  (chat message, line 1659)
 
 > Note for you (not shown in game): What a lookout sees coming: warn (a shout, and Freq 7) when the Combine is in sight on the way; open fire when they're close, or on our ground.
 
-- "at a lookout post"  (text, line 1697)
+- "at a lookout post"  (text, line 1699)
 
 > Note for you (not shown in game): part of: post warn
 
-- "%s on lookout %s: Combine coming%s!"  (message, line 1699)
-- ", the city's own"  (message, line 1700)
-- "[Resistance] Someone shouts from up ahead: 'Combine! Coming in!' You've been seen."  (chat message, line 1702)
+- "%s on lookout %s: Combine coming%s!"  (message, line 1701)
+- ", the city's own"  (message, line 1702)
+- "[Resistance] Someone shouts from up ahead: 'Combine! Coming in!' You've been seen."  (chat message, line 1704)
 
 > Note for you (not shown in game): an NPC dying
 
-- "We lost the lookout {or}. Someone will take the post, give it time."  (text, line 1788)
-- "They got the quartermaster. Someone will take his place, give it time."  (text, line 1837)
+- "We lost the lookout {or}. Someone will take the post, give it time."  (text, line 1790)
+- "They got the quartermaster. Someone will take his place, give it time."  (text, line 1839)
 
 ## the Resistance's operations, and what the city does about them (sv_livingcity_resistanceops.lua)
 
@@ -8658,20 +8676,24 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 
 - "The vortigaunt is home. Ask it (E) and it will charge your vest."  (text, line 713)
 
+> Note for you (not shown in game): Why one didn't come (for the debug report).
+
+- "no rebel zones drawn"  (text, line 749)
+
 > Note for you (not shown in game): A freed vortigaunt charges your vest when you ask it (E), not by itself (not while you sleep beside it): once every lc_vort_charge_minutes.
 
-- "The vortigaunt looks at you, and through you."  (text, line 751)
-- ""You wear no vessel for the vortessence, friend." (You've no powered vest on.)"  (text, line 752)
-- ""Your vessel is full." (Your vest is fully charged.)"  (text, line 753)
+- "The vortigaunt looks at you, and through you."  (text, line 802)
+- ""You wear no vessel for the vortessence, friend." (You've no powered vest on.)"  (text, line 803)
+- ""Your vessel is full." (Your vest is fully charged.)"  (text, line 804)
 
 > Note for you (not shown in game): part of: vort charge
 
-- ""The vortessence needs time to gather." (%d min)"  (message, line 756)
-- "The vortigaunt's hands glow green, and your vest hums with charge."  (text, line 761)
+- ""The vortessence needs time to gather." (%d min)"  (message, line 807)
+- "The vortigaunt's hands glow green, and your vest hums with charge."  (text, line 812)
 
 > Note for you (not shown in game): pressing E on something
 
-- "[Vortigaunt] {msg}"  (chat message, line 769)
+- "[Vortigaunt] {msg}"  (chat message, line 820)
 
 ## escalation (sv_livingcity_response.lua)
 
@@ -9582,155 +9604,155 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: stalker step in
 
-- "Stepped into the energizer they had built. Nothing came back out."  (text, line 141)
-- "[City] A flash below the Nexus. Combine property has been written off."  (chat message, line 146)
+- "Walked into the gap between two power transformers. The current took them before they hit the floor."  (text, line 167)
+- "[City] A flash below the Nexus. Combine property has been written off."  (chat message, line 172)
 
 > Note for you (not shown in game): Turned away: back to work. The energizer stays, and so does the way out.
 
-- "Back to work"  (on-screen notice, line 156)
-- "The energizer hums behind you. It will still be there. E on it, twice, if you change your mind."  (on-screen notice, line 156)
+- "Back to work"  (on-screen notice, line 182)
+- "The current snaps across the gap behind you. It will still be there: walk into it, or E on it twice, if you change your mind."  (on-screen notice, line 182)
 
 > Note for you (not shown in game): part of: use energizer
 
-- "The light"  (on-screen notice, line 172)
-- "It would be very easy. Press E again to step in. There's no coming back."  (on-screen notice, line 172)
+- "The current"  (on-screen notice, line 198)
+- "It would be very easy. Press E again to step into the gap. There's no coming back."  (on-screen notice, line 198)
 
 > Note for you (not shown in game): The holding floor: grime here and there; a push broom (no kneeling: a stalker hasn't the legs for it). E on each patch sweeps it up (a couple of seconds).
 
-- "The holding floor"  (title, line 234)
+- "The holding floor"  (title, line 278)
 
 > Note for you (not shown in game): part of: start
 
-- "[Stalker] A push broom, and the floor. Walk to each patch of grime and sweep it up (E)."  (chat message, line 249)
+- "[Stalker] A push broom, and the floor. Walk to each patch of grime and sweep it up (E)."  (chat message, line 293)
 
 > Note for you (not shown in game): part of: hud
 
-- "Swept: %d of %d"  (message, line 250)
-- "E on the grime sweeps it up"  (text, line 250)
+- "Swept: %d of %d"  (message, line 294)
+- "E on the grime sweeps it up"  (text, line 294)
 
 > Note for you (not shown in game): pressing E on something
 
-- "Sweeping it up..."  (progress bar, line 266)
+- "Sweeping it up..."  (progress bar, line 310)
 
 > Note for you (not shown in game): The frame: four containment cells to carry over and seat in it (pick each up with E, set it in the frame), then the housing welded shut at four seams (E on each, a few seconds of sparks).
 
-- "The frame"  (title, line 284)
+- "The frame"  (title, line 328)
 
 > Note for you (not shown in game): part of: start
 
-- "[Stalker] Four containment cells lie about. Carry each one to the frame (E to pick it up) and set it in."  (chat message, line 302)
+- "[Stalker] Four containment cells lie about. Carry each one to the frame (E to pick it up) and set it in."  (chat message, line 346)
 
 > Note for you (not shown in game): part of: hud
 
-- "Cells seated: %d of %d"  (message, line 304)
-- "E picks a cell up; set it in the frame"  (text, line 304)
-- "Seams welded: %d of %d"  (message, line 305)
-- "E on each glowing seam"  (text, line 305)
+- "Cells seated: %d of %d"  (message, line 348)
+- "E picks a cell up; set it in the frame"  (text, line 348)
+- "Seams welded: %d of %d"  (message, line 349)
+- "E on each glowing seam"  (text, line 349)
 
 > Note for you (not shown in game): part of: tick
 
-- "[Stalker] The cells click home. Now the housing: weld the four seams (E on each)."  (chat message, line 318)
+- "[Stalker] The cells click home. Now the housing: weld the four seams (E on each)."  (chat message, line 362)
 
 > Note for you (not shown in game): pressing E on something
 
-- "Welding the seam..."  (progress bar, line 356)
+- "Welding the seam..."  (progress bar, line 400)
 
 > Note for you (not shown in game): part of: tech gone
 
-- "an Overwatch technician going back"  (text, line 401)
+- "an Overwatch technician going back"  (text, line 445)
 
 > Note for you (not shown in game): The story
 
-- "The Stalker's Lot"  (name, line 411)
-- "You stepped into the light you made. Nothing of the stalker came back out."  (text, line 415)
-- "You turned away from it, and went back to work. It's still down there, humming. So are you."  (text, line 416)
+- "The Stalker's Lot"  (name, line 455)
+- "You walked into the gap between the transformers. The current took the stalker that was you, all at once."  (text, line 459)
+- "You turned away from it, and went back to work. It's still down there, humming. So are you."  (text, line 460)
 
 > Note for you (not shown in game): part of: build
 
-- "They brought you up from below with a number where your name was, and a voice that can only scream. Report where you're kept. Stand still while they finish you."  (description, line 424)
-- "Report to the Nexus, where they keep you"  (quest step, line 426)
+- "They brought you up from below with a number where your name was, and a voice that can only scream. Report where you're kept. Stand still while they finish you."  (description, line 468)
+- "Report to the Nexus, where they keep you"  (quest step, line 470)
 
 > Note for you (not shown in game): then
 
-- "An Overwatch technician comes for you, tools in hand."  (quest narration, line 428)
+- "An Overwatch technician comes for you, tools in hand."  (quest narration, line 472)
 
 > Note for you (not shown in game): part of: build
 
-- "Stand still while the technician fits the harness"  (quest step, line 430)
+- "Stand still while the technician fits the harness"  (quest step, line 474)
 
 > Note for you (not shown in game): then
 
-- "Cold metal on your spine. A click. Your legs are yours to walk with, and nothing else."  (quest narration, line 432)
+- "Cold metal on your spine. A click. Your legs are yours to walk with, and nothing else."  (quest narration, line 476)
 
 > Note for you (not shown in game): part of: build
 
-- "The holding floors are never clean. That's what you're for now: a push broom, and the grime."  (description, line 445)
-- "Go to the holding floor: your push broom's waiting"  (text, line 447)
-- "Sweep up every patch of grime (E on each)"  (text, line 448)
+- "The holding floors are never clean. That's what you're for now: a push broom, and the grime."  (description, line 489)
+- "Go to the holding floor: your push broom's waiting"  (text, line 491)
+- "Sweep up every patch of grime (E on each)"  (text, line 492)
 
 > Note for you (not shown in game): then
 
-- "A Civil Protection unit steps over the broom without looking down. You are furniture that moves."  (quest narration, line 449)
+- "A Civil Protection unit steps over the broom without looking down. You are furniture that moves."  (quest narration, line 493)
 
 > Note for you (not shown in game): part of: build
 
-- "Something new is going in below the Nexus, and it needs power. The cable runs from the banks. You run the cable."  (description, line 460)
-- "Go to the power bank"  (text, line 462)
-- "the power bank"  (text, line 462)
-- "Splice the cable in: turn the tiles till the current reaches the bank (a sparking tile bites)"  (text, line 463)
-- "Now the next power bank"  (text, line 464)
-- "the power bank"  (text, line 464)
-- "Splice it in"  (text, line 465)
+- "Something new is going in below the Nexus, and it needs power. The cable runs from the banks. You run the cable."  (description, line 504)
+- "Go to the power bank"  (text, line 506)
+- "the power bank"  (text, line 506)
+- "Splice the cable in: turn the tiles till the current reaches the bank (a sparking tile bites)"  (text, line 507)
+- "Now the next power bank"  (text, line 508)
+- "the power bank"  (text, line 508)
+- "Splice it in"  (text, line 509)
 
 > Note for you (not shown in game): then
 
-- "The banks drop and surge. Somewhere under your feet, something drinks."  (quest narration, line 466)
+- "The banks drop and surge. Somewhere under your feet, something drinks."  (quest narration, line 510)
 
 > Note for you (not shown in game): part of: build
 
-- "Go to the frame they've set up"  (quest step, line 475)
-- "The frame"  (title, line 479)
-- "A Combine ball energizer, they call it on the work order. A frame of black metal, waiting for you."  (description, line 480)
-- "Carry the four containment cells to the frame and set them in (E), then weld the four seams (E on each)"  (text, line 483)
+- "Go to the frame they've set up, beside the power transformer"  (quest step, line 519)
+- "The frame"  (title, line 523)
+- "A second power transformer, to stand beside the city's own. A frame of black metal, waiting for you."  (description, line 524)
+- "Carry the four containment cells to the frame and set them in (E), then weld the four seams (E on each)"  (text, line 527)
 
 > Note for you (not shown in game): then
 
-- "Sparks, and then it's sealed. The light inside is brighter now. It doesn't flicker."  (quest narration, line 485)
+- "Sparks, and then it's sealed. It stands beside the other one like a twin, a body's width apart."  (quest narration, line 529)
 
 > Note for you (not shown in game): part of: build
 
-- "Go back to the energizer"  (quest step, line 494)
+- "Go back to the transformer you built"  (quest step, line 538)
 
 > Note for you (not shown in game): part of: on done
 
-- "the terminal"  (text, line 496)
+- "the terminal"  (text, line 540)
 
 > Note for you (not shown in game): part of: build
 
-- "The charge"  (title, line 498)
-- "It needs its first charge. Then it's finished, and so are you, one way or another."  (description, line 499)
-- "Route its first charge through the regulator: turn the tiles till the current reaches it"  (text, line 502)
+- "The charge"  (title, line 542)
+- "It needs its first charge. Then it's finished, and so are you, one way or another."  (description, line 543)
+- "Route its first charge through the regulator: turn the tiles till the current reaches it"  (text, line 546)
 
 > Note for you (not shown in game): then
 
-- "It hums. A ball of white light turns slowly inside it, and it is the most beautiful thing you have seen since they took you."  (quest narration, line 504)
+- "It hums, and then the current jumps the gap: a blue-white arc between the two transformers, snapping, never still. It is the most beautiful thing you have seen since they took you."  (quest narration, line 548)
 
 > Note for you (not shown in game): part of: build
 
-- "The Civil Protection units have stopped watching you. The light turns, and turns. It would be very easy to step inside, and then there would be no more stalker."  (quest choice, line 506)
-- "Step into the light. (This person ends for good: you start over as someone new.)"  (text, line 507)
+- "The Civil Protection units have stopped watching you. The arc snaps across the gap, and snaps again. It would be very easy to walk into it, and then there would be no more stalker."  (quest choice, line 550)
+- "Walk into the gap. (This person ends for good: you start over as someone new.)"  (text, line 551)
 
 > Note for you (not shown in game): part of: pick
 
-- "You step forward. It's warm."  (quest narration, line 509)
+- "You step into the gap."  (quest narration, line 553)
 
 > Note for you (not shown in game): part of: build
 
-- "Turn away, and go back to work."  (text, line 512)
+- "Turn away, and go back to work."  (text, line 556)
 
 > Note for you (not shown in game): part of: pick
 
-- "You turn your back on it. Behind you it hums, and hums."  (quest narration, line 514)
+- "You turn your back on it. Behind you it hums, and hums."  (quest narration, line 558)
 
 ## static map props (sv_livingcity_staticprops.lua)
 
@@ -10426,117 +10448,130 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 
 - "He picks up your file instead. 'Interesting.' You've been exposed as the mole."  (quest narration, line 1089)
 
-> Note for you (not shown in game): Executed: the guards turn and fire, and make sure.
+> Note for you (not shown in game): Refused: the guards open up, and you go down bleeding on the cell floor. They don't let you die: you're carried out, and the Combine make a stalker of you (the owner, 2026-11-01).
 
-- "[Loyalty test] {or} The guards raise their shotguns."  (chat message, line 1130)
+- "[Loyalty test] {or} The guards raise their shotguns."  (chat message, line 1131)
+
+> Note for you (not shown in game): a timer (regularly)
+
+- "[Loyalty test] You're down on the cell floor, bleeding out. They don't let you die. Someone lifts you by the arms."  (chat message, line 1149)
 
 > Note for you (not shown in game): part of: ltsetup
 
-- "[Loyalty test] The cell door shuts behind you. Your weapons are on a table outside. A guard either side of you, shotguns held low."  (chat message, line 1207)
+- "[Loyalty test] The cell door shuts behind you. Your weapons are on a table outside. A guard either side of you, shotguns held low."  (chat message, line 1213)
 
 > Note for you (not shown in game): a hand raised to a guard: that's the answer
 
-- "You turn on the guard."  (text, line 1215)
+- "You turn on the guard."  (text, line 1226)
+
+> Note for you (not shown in game): part of: force mole hunt
+
+- "The Resistance wants answers"  (on-screen notice, line 1269)
+- "The debt starts now. They're watching."  (on-screen notice, line 1269)
+- "A note in your locker: they know what you did in that cell. They want to see you, now."  (on-screen notice, line 1269)
 
 > Note for you (not shown in game): part of: test spec
 
-- "The loyalty test"  (title, line 1241)
-- "Internal Affairs has a prisoner from the Resistance, and a question about you. Report to the cells {GetPos}."  (description, line 1242)
-- "Report to the cells (marked)"  (quest step, line 1245)
-- "The prisoner looks up at you through one swollen eye. The guard on your left speaks without looking at you: 'He knows who the mole is. Get it out of him. Then finish it.' The other guard's shotgun is pointed at the floor. For now."  (quest choice, line 1246)
-- "Interrogate him. With your fists."  (text, line 1248)
+- "The loyalty test"  (title, line 1290)
+- "Internal Affairs has a prisoner from the Resistance, and a question about you. Report to the cells {GetPos}."  (description, line 1291)
+- "Report to the cells (marked)"  (quest step, line 1294)
+- "The prisoner looks up at you through one swollen eye. The guard on your left speaks without looking at you: 'He knows who the mole is. Get it out of him. Then finish it.' The other guard's shotgun is pointed at the floor. For now."  (quest choice, line 1295)
+- "Interrogate him. With your fists."  (text, line 1297)
 
 > Note for you (not shown in game): part of: pick
 
-- "You close your fists. He knows what's coming."  (quest narration, line 1251)
-- "Beat answers out of him (punch him, 6 times)"  (quest step, line 1253)
-- "He's told you everything he will. Finish it: kill him"  (quest step, line 1254)
+- "You close your fists. He knows what's coming."  (quest narration, line 1300)
+- "Beat answers out of him (punch him, 6 times)"  (quest step, line 1302)
+- "He's told you everything he will. Finish it: kill him"  (quest step, line 1303)
 
 > Note for you (not shown in game): part of: test spec
 
-- "Refuse. You won't do it."  (text, line 1257)
+- "Refuse. You won't do it."  (text, line 1306)
 
 > Note for you (not shown in game): part of: pick
 
-- "You lower your hands."  (text, line 1257)
+- "You lower your hands."  (text, line 1306)
 
 > Note for you (not shown in game): after the beating, the last of it
 
-- "He gives you a name. It's yours, though he doesn't know it. Then nothing more. 'Finish it,' says the guard."  (quest narration, line 1268)
+- "He gives you a name. It's yours, though he doesn't know it. Then nothing more. 'Finish it,' says the guard."  (quest narration, line 1317)
 
 > Note for you (not shown in game): leaving the cell is refusing
 
-- "You try to leave."  (text, line 1271)
+- "You try to leave."  (text, line 1320)
 
 > Note for you (not shown in game): you killed one of theirs: the Resistance wants a word (the reckoning, next on your board)
 
-- "[Loyalty test] The guard lowers his shotgun. 'Welcome back, officer.' Your weapons are handed back at the door."  (chat message, line 1283)
-- "You took too long."  (text, line 1286)
-- "Mole Hunt"  (name, line 1294)
-- "You passed their test. The prisoner's blood is on your hands, and nobody in Civil Protection doubts you now."  (text, line 1298)
-- "You let the Combine have all of you. The surgery took the rest: a soldier of Overwatch now, and nothing you were before. There's no going back."  (text, line 1299)
-- "The debt is paid. They don't forget what you did in that cell, but they let you back in. The Resistance has its man inside again."  (text, line 1300)
-- "You wouldn't do it. The guards did their duty. They found the mole, in the end."  (text, line 1301)
-- "Unit 3-09 was taken in your place. You tell yourself he probably deserved it."  (text, line 1302)
-- "You fled to the Resistance before they could knock. Every Civil Protection unit in the city has your face now."  (text, line 1303)
-- "The mole hunt moves on to another sector. You breathe again. Carefully."  (text, line 1304)
-- "Exposed as the mole, you're stripped of rank and mask. A citizen again, with a file that will never close."  (text, line 1305)
+- "[Loyalty test] The guard lowers his shotgun. 'Welcome back, officer.' Your weapons are handed back at the door."  (chat message, line 1332)
+- "You took too long."  (text, line 1335)
+- "Mole Hunt"  (name, line 1343)
+- "You passed their test. The prisoner's blood is on your hands, and nobody in Civil Protection doubts you now."  (text, line 1347)
+- "You let the Combine have all of you. The surgery took the rest: a soldier of Overwatch now, and nothing you were before. There's no going back."  (text, line 1348)
+- "The debt is paid. They don't forget what you did in that cell, but they let you back in. The Resistance has its man inside again."  (text, line 1349)
+- "You wouldn't do it. The guards did their duty. They found the mole, in the end."  (text, line 1350)
+- "You wouldn't do it. They shot you down on the cell floor and didn't let you die. What's left of you belongs to the Combine now."  (text, line 1351)
+- "You took off the mask for good. No more lies: you fight with the Resistance in the open now, and Civil Protection will never have you back."  (text, line 1352)
+- "Unit 3-09 was taken in your place. You tell yourself he probably deserved it."  (text, line 1353)
+- "You fled to the Resistance before they could knock. Every Civil Protection unit in the city has your face now."  (text, line 1354)
+- "The mole hunt moves on to another sector. You breathe again. Carefully."  (text, line 1355)
+- "Exposed as the mole, you're stripped of rank and mask. A citizen again, with a file that will never close."  (text, line 1356)
 
 > Note for you (not shown in game): after the loyalty test: you killed one of theirs, and the Resistance knows
 
-- "The reckoning"  (title, line 1313)
-- "Word reaches you through a note in your locker: the Resistance knows what you did in that cell. They want to see you ({where}). Until this is settled, they won't work with you."  (description, line 1314)
-- "Go to the meeting place ({where})"  (quest step, line 1316)
+- "The reckoning"  (title, line 1364)
+- "Word reaches you through a note in your locker: the Resistance knows what you did in that cell. They want to see you ({where}). Until this is settled, they won't work with you."  (description, line 1365)
+- "Go to the meeting place ({where})"  (quest step, line 1367)
 
 > Note for you (not shown in game): part of: build
 
-- "Find the woman from the note and walk up to her"  (text, line 1317)
-- "She doesn't sit down. 'He was one of ours. You beat him, and then you killed him, to keep your mask. Maybe you had to.' Her hand doesn't leave her pocket. 'So: are you still with us? Then you'll pay for him. Or walk away, and let them have all of you.'"  (quest choice, line 1318)
-- "Pay the debt. Whatever it takes. (A job for the Resistance, on your board.)"  (text, line 1320)
+- "Find the woman from the note and walk up to her"  (text, line 1368)
+- "She doesn't sit down. 'He was one of ours. You beat him, and then you killed him, to keep your mask. Maybe you had to.' Her hand doesn't leave her pocket. 'We want answers. Are you still with us? Then you'll pay for him. Or are you theirs now?'"  (quest choice, line 1369)
+- "Pay the debt. Whatever it takes. (It starts at once.)"  (text, line 1371)
 
 > Note for you (not shown in game): part of: pick
 
-- "'Then listen.' She tells you what it will cost."  (quest narration, line 1321)
+- "'Then listen.' She tells you what it will cost."  (quest narration, line 1372)
 
 > Note for you (not shown in game): part of: build
 
-- "Walk away from the Resistance. Let the Combine have all of you. (Overwatch's soldier conversion: there's no undoing it.)"  (text, line 1324)
+- "Take off the mask for good: leave Civil Protection and fight with the Resistance in the open. (You'll never be a unit, or anyone's man inside, again.)"  (text, line 1375)
+- "Tell her you're done with the Resistance. (You stay with the Combine. They'll want all of you now.)"  (text, line 1381)
 
 > Note for you (not shown in game): the transhuman surgery: a soldier of Overwatch, for good (sv_livingcity_factions.lua)
 
-- "the conversion"  (text, line 1335)
-- "The conversion"  (on-screen notice, line 1336)
-- "Overwatch takes you in. The surgery is done before you wake: a soldier now, and there's no going back."  (on-screen notice, line 1336)
+- "the conversion"  (text, line 1392)
+- "The conversion"  (on-screen notice, line 1393)
+- "You proved your loyalty, so Overwatch wants all of you. They come for you that night: the surgery is done before you wake. A soldier now, and there's no going back."  (on-screen notice, line 1393)
 
 > Note for you (not shown in game): the blood debt: a life for a life, out of the cells
 
-- "A blood debt"  (title, line 1350)
-- "A life for a life: get one of theirs out of the cells and walk them to safety ({where}). Don't let another Civil Protection unit see you."  (description, line 1351)
+- "A blood debt"  (title, line 1407)
+- "A life for a life: get one of theirs out of the cells and walk them to safety ({where}). Don't let another Civil Protection unit see you."  (description, line 1408)
 
 > Note for you (not shown in game): part of: build
 
-- "Go to the cells and press E on the marked prisoner to unlock their cell"  (text, line 1353)
-- "Lead the prisoner to safety ({where}). They follow you: act like it's routine"  (text, line 1354)
-- "A Civil Protection unit saw you walking a prisoner out. He'll remember."  (text, line 1357)
-- "A blood debt"  (title, line 1365)
-- "Make it right: what Civil Protection seized from the Resistance this week is lying {GetPos}. Get it back to them ({where})."  (description, line 1366)
-- "Find the 3 seized crates and press E on each"  (text, line 1368)
-- "Take them to the Resistance ({where})"  (text, line 1369)
-- "A Civil Protection unit saw you heading the wrong way with seized goods."  (text, line 1371)
+- "Go to the cells and press E on the marked prisoner to unlock their cell"  (text, line 1410)
+- "Lead the prisoner to safety ({where}). They follow you: act like it's routine"  (text, line 1411)
+- "A Civil Protection unit saw you walking a prisoner out. He'll remember."  (text, line 1414)
+- "A blood debt"  (title, line 1422)
+- "Make it right: what Civil Protection seized from the Resistance this week is lying {GetPos}. Get it back to them ({where})."  (description, line 1423)
+- "Find the 3 seized crates and press E on each"  (text, line 1425)
+- "Take them to the Resistance ({where})"  (text, line 1426)
+- "A Civil Protection unit saw you heading the wrong way with seized goods."  (text, line 1428)
 
 > Note for you (not shown in game): the loyalty test, in the cells; a map with no cells has the briefing instead
 
-- "The briefing"  (title, line 1384)
-- "Internal Affairs believes there's a mole in your division, and wants your help finding them. The mole is you."  (description, line 1385)
+- "The briefing"  (title, line 1441)
+- "Internal Affairs believes there's a mole in your division, and wants your help finding them. The mole is you."  (description, line 1442)
 
 > Note for you (not shown in game): part of: build
 
-- "Go to the marked spot for the briefing"  (quest step, line 1387)
-- "Walk up to the Internal Affairs officer"  (text, line 1388)
-- "The officer spreads three files across the hood of an APC. One of them is yours. He hasn't noticed. Yet."  (quest choice, line 1389)
-- "Steer him toward another Civil Protection unit's file, so they take the blame."  (text, line 1390)
-- "Excuse yourself. Run to the Resistance tonight (you'll be wanted for desertion)."  (text, line 1397)
-- "Keep your head down and ride it out."  (text, line 1403)
+- "Go to the marked spot for the briefing"  (quest step, line 1444)
+- "Walk up to the Internal Affairs officer"  (text, line 1445)
+- "The officer spreads three files across the hood of an APC. One of them is yours. He hasn't noticed. Yet."  (quest choice, line 1446)
+- "Steer him toward another Civil Protection unit's file, so they take the blame."  (text, line 1447)
+- "Excuse yourself. Run to the Resistance tonight (you'll be wanted for desertion)."  (text, line 1454)
+- "Keep your head down and ride it out."  (text, line 1460)
 
 ## survival (sv_livingcity_survival.lua)
 
@@ -11965,19 +12000,19 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 
 - "Union shift"  (name, line 1312)
 
-> Note for you (not shown in game): A finished shift earns a ration card: the only way to get one.
+> Note for you (not shown in game): the records office is the way into Civil Protection (sv_livingcity_factions.lua, lc_cp_clerk_shifts)
 
-- "[Rations] You earned %s for that shift. You have %d now: each ration at a dispenser takes one."  (message, line 1348)
+- "[Rations] You earned %s for that shift. You have %d now: each ration at a dispenser takes one."  (message, line 1351)
 
 > Note for you (not shown in game): the game's living city quest complete moment
 
-- "a ration card"  (message, line 1349)
-- "ration cards"  (text, line 1349)
-- "Civil rehabilitation"  (name, line 1367)
+- "a ration card"  (message, line 1352)
+- "ration cards"  (text, line 1352)
+- "Civil rehabilitation"  (name, line 1370)
 
 > Note for you (not shown in game): part of: build
 
-- "Community service: {desc}"  (title, line 1377)
+- "Community service: {desc}"  (title, line 1380)
 
 ## writing, broadcasts, and the law (sv_livingcity_writing.lua)
 
@@ -12248,154 +12283,153 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 - "Ration card"  (name, line 61)
 - "Earned by work: one for each Union shift you finish. A ration dispenser takes one card for each ration"  (description, line 62)
 
-> Note for you (not shown in game): Things that change what you can do (see sv_livingcity_underground.lua) contraband   illegal to carry: searches look for it conceal      base chance it slips past a search (Guile adds to it) sell         what the dealer pays for it radio        "union" (public band, early event notices) or "resistance" (Freq 7, plus intercepted CP dispatch) permit       excuses you from one curfew or lockdown stop papers       "forged" or "dead": assume a new identity, which clears your wanted status and passes inspections (mostly) forge        turn it into forged papers somewhere private (Guile check) rationCard   a free ration from any dispenser, whatever your standing wear         a disguise: "cp" fools security NPCs and opens CP doors, "citizen" lets hunted Resistance pass as ordinary citizens tool         "lockpick" for locked doors, "bypass" for Combine doors too
+> Note for you (not shown in game): Things that change what you can do (see sv_livingcity_underground.lua) contraband   illegal to carry: searches look for it conceal      base chance it slips past a search (Guile adds to it) sell         what the dealer pays for it radio        "union" (public band, early event notices) or "resistance" (Freq 7, plus intercepted CP dispatch) permit       excuses you from one curfew or lockdown stop papers       "forged" or "dead": assume a new identity, which clears your wanted status and passes inspections (mostly) forge        turn it into forged papers somewhere private (Guile check) rationCard   a free ration from any dispenser, whatever your standing wear         a disguise: "cp" fools security NPCs and opens CP doors, "citizen" lets hunted Resistance pass as ordinary citizens tool         "lockpick" for locked doors, "bypass" for Combine doors too (1 November, the owner: no Union radio any more; a civilian with any radio is breaking the law)
 
-- "Union radio"  (name, line 79)
-- "Union band. Hear city notices before the loudspeakers do. It only listens: nobody talks on the Union band, it's the city's"  (description, line 80)
-- "Tuned to Freq 7, the Resistance's: their chat, sweep warnings, and whatever Civil Protection says when it thinks nobody is listening. It only listens: to talk on Freq 7 you also need a radio transmitter"  (description, line 83)
-- "Radio transmitter"  (name, line 84)
-- "A hand-held set that sends, not just listens: with a Freq 7 radio, talk on Freq 7 (switch to it like a weapon, or !r). Contraband (units have their own, on the CP net)"  (description, line 85)
-- "Travel permit"  (name, line 86)
-- "Stamped and legal. Gets you past one curfew stop"  (description, line 87)
-- "Blank identity form"  (name, line 88)
-- "Fill it in somewhere private and it becomes somebody"  (description, line 90)
-- "Forged papers"  (name, line 91)
-- "A new name. Clears your wanted status if no Civil Protection unit is watching"  (description, line 93)
-- "A dead man's papers"  (name, line 94)
-- "Genuine papers. Their owner won't be needing them"  (description, line 96)
-- "Forged ration card"  (name, line 97)
-- "One extra ration from any dispenser, whatever your standing"  (description, line 99)
-- "Civil Protection uniform"  (name, line 100)
-- "Mask and all. Civil Protection units on the street will take you for one of them, mostly"  (description, line 102)
-- "Union work overalls"  (name, line 103)
-- "Union-issue, a little worn. Lets anyone pass as an ordinary citizen"  (description, line 104)
-- "Resistance gear"  (name, line 105)
-- "Off a dead fighter. The fighters in rebel territory will take you for one of them. Civil Protection units will too"  (description, line 107)
-- "Spare citizen clothes"  (name, line 108)
-- "Union blue. Lets a hunted Resistance member pass as an ordinary citizen"  (description, line 109)
-- "Lockpick set"  (name, line 110)
-- "Look at a locked door and use it. Not Combine locks"  (description, line 112)
-- "Combine bypass charge"  (name, line 113)
-- "Opens any door once, Combine doors included. Sometimes trips an alarm"  (description, line 115)
-- "Civil Protection keycard"  (name, line 116)
-- "Off a dead Civil Protection unit. Opens one Combine door before someone reports it missing"  (description, line 118)
+- "Radio set"  (name, line 80)
+- "An old receiver. Civilians aren't allowed radios: carrying one is an offence. The Resistance lab turns one into a Freq 7 radio or a transmitter"  (description, line 81)
+- "Tuned to Freq 7, the Resistance's: their chat, sweep warnings, and whatever Civil Protection says when it thinks nobody is listening. It only listens: to talk on Freq 7 you also need a radio transmitter"  (description, line 84)
+- "Radio transmitter"  (name, line 85)
+- "A hand-held set that sends, not just listens: with a Freq 7 radio, talk on Freq 7 (switch to it like a weapon, or !r). Contraband (units have their own, on the CP net)"  (description, line 86)
+- "Travel permit"  (name, line 87)
+- "Stamped and legal. Gets you past one curfew stop"  (description, line 88)
+- "Blank identity form"  (name, line 89)
+- "Fill it in somewhere private and it becomes somebody"  (description, line 91)
+- "Forged papers"  (name, line 92)
+- "A new name. Clears your wanted status if no Civil Protection unit is watching"  (description, line 94)
+- "A dead man's papers"  (name, line 95)
+- "Genuine papers. Their owner won't be needing them"  (description, line 97)
+- "Forged ration card"  (name, line 98)
+- "One extra ration from any dispenser, whatever your standing"  (description, line 100)
+- "Civil Protection uniform"  (name, line 101)
+- "Mask and all. Civil Protection units on the street will take you for one of them, mostly"  (description, line 103)
+- "Union work overalls"  (name, line 104)
+- "Union-issue, a little worn. Lets anyone pass as an ordinary citizen"  (description, line 105)
+- "Resistance gear"  (name, line 106)
+- "Off a dead fighter. The fighters in rebel territory will take you for one of them. Civil Protection units will too"  (description, line 108)
+- "Spare citizen clothes"  (name, line 109)
+- "Union blue. Lets a hunted Resistance member pass as an ordinary citizen"  (description, line 110)
+- "Lockpick set"  (name, line 111)
+- "Look at a locked door and use it. Not Combine locks"  (description, line 113)
+- "Combine bypass charge"  (name, line 114)
+- "Opens any door once, Combine doors included. Sometimes trips an alarm"  (description, line 116)
+- "Civil Protection keycard"  (name, line 117)
+- "Off a dead Civil Protection unit. Opens one Combine door before someone reports it missing"  (description, line 119)
 
 > Note for you (not shown in game): Getting by (sv_livingcity_scavenge.lua) use      what "Use" does from your pockets: "fish", "plant", "spray"
 
-- "Canned beans"  (name, line 123)
-- "Pre-war. The label's gone. Probably beans"  (description, line 124)
-- "Rooftop vegetables"  (name, line 125)
-- "Grown in a pot on a roof somewhere. Real food"  (description, line 126)
-- "Raw fish"  (name, line 127)
-- "From the canal. Cook it. Really, cook it"  (description, line 128)
-- "Fried fish"  (name, line 129)
-- "Seed packet"  (name, line 130)
-- "Plant them in a pot in rebel territory (look at it and press E, or Plant here)"  (description, line 131)
-- "Fishing line"  (name, line 132)
-- "Stand in the canal, or look at the water, and wait. Keeps"  (description, line 133)
-- "Spray can"  (name, line 134)
-- "Look at a wall and spray the lambda. Don't let a Civil Protection unit see you do it"  (description, line 136)
+- "Canned beans"  (name, line 124)
+- "Pre-war. The label's gone. Probably beans"  (description, line 125)
+- "Rooftop vegetables"  (name, line 126)
+- "Grown in a pot on a roof somewhere. Real food"  (description, line 127)
+- "Raw fish"  (name, line 128)
+- "From the canal. Cook it. Really, cook it"  (description, line 129)
+- "Fried fish"  (name, line 130)
+- "Seed packet"  (name, line 131)
+- "Plant them in a pot in rebel territory (look at it and press E, or Plant here)"  (description, line 132)
+- "Fishing line"  (name, line 133)
+- "Stand in the canal, or look at the water, and wait. Keeps"  (description, line 134)
+- "Spray can"  (name, line 135)
+- "Look at a wall and spray the lambda. Don't let a Civil Protection unit see you do it"  (description, line 137)
 
 > Note for you (not shown in game): Making things (sv_livingcity_crafting.lua) arms     weapons and ammunition: the quartermaster pays half as much again use      "heal", "ammo" (ammo = { type, amount }), "arm" (weapon = class), "throw" (grenade = smoke, flash or gas)
 
-- "Clean enough for a bandage"  (description, line 143)
-- "Cleaning chemicals"  (name, line 144)
-- "Union-issue. Mixed with the right things, they do more than clean"  (description, line 145)
-- "Gun parts"  (name, line 146)
-- "Springs, a barrel, a firing pin. Off a dead Civil Protection unit, or out of a smuggler's crate"  (description, line 147)
-- "Patch up"  (pocket button, line 148)
-- "Twenty health, give or take"  (description, line 149)
-- "Box of pistol rounds"  (name, line 150)
-- "Hand-loaded. Mostly reliable"  (description, line 151)
-- "Box of SMG rounds"  (name, line 152)
-- "Box of shells"  (name, line 154)
-- "Hand-packed shells"  (description, line 155)
-- "Homemade pistol"  (name, line 156)
-- "Put together on a kitchen table. It fires"  (description, line 157)
-- "Homemade shotgun"  (name, line 158)
-- "Hard to hide. Hard to argue with"  (description, line 159)
-- "It jams. Not often"  (description, line 161)
-- "Smoke bomb"  (name, line 162)
-- "A can of chemicals and a fuse. Thick white smoke"  (description, line 163)
-- "Smoke grenade"  (name, line 164)
-- "Civil Protection issue. Nobody sees through it"  (description, line 165)
-- "Blinds and deafens anyone who sees it go off"  (description, line 167)
-- "Chlorine gas grenade"  (name, line 168)
-- "A choking green cloud. Masks protect; nothing else does"  (description, line 169)
-- "Smuggled crate"  (name, line 170)
-- "Heavy, and it clinks. Get it where it's going"  (description, line 171)
-- "Smuggled supplies"  (name, line 172)
-- "Guns and parts wrapped in rags, out of a broken crate. Get them where they're going"  (description, line 173)
+- "Clean enough for a bandage"  (description, line 144)
+- "Cleaning chemicals"  (name, line 145)
+- "Union-issue. Mixed with the right things, they do more than clean"  (description, line 146)
+- "Gun parts"  (name, line 147)
+- "Springs, a barrel, a firing pin. Off a dead Civil Protection unit, or out of a smuggler's crate"  (description, line 148)
+- "Patch up"  (pocket button, line 149)
+- "Twenty health, give or take"  (description, line 150)
+- "Box of pistol rounds"  (name, line 151)
+- "Hand-loaded. Mostly reliable"  (description, line 152)
+- "Box of SMG rounds"  (name, line 153)
+- "Box of shells"  (name, line 155)
+- "Hand-packed shells"  (description, line 156)
+- "Homemade pistol"  (name, line 157)
+- "Put together on a kitchen table. It fires"  (description, line 158)
+- "Homemade shotgun"  (name, line 159)
+- "Hard to hide. Hard to argue with"  (description, line 160)
+- "It jams. Not often"  (description, line 162)
+- "Smoke bomb"  (name, line 163)
+- "A can of chemicals and a fuse. Thick white smoke"  (description, line 164)
+- "Smoke grenade"  (name, line 165)
+- "Civil Protection issue. Nobody sees through it"  (description, line 166)
+- "Blinds and deafens anyone who sees it go off"  (description, line 168)
+- "Chlorine gas grenade"  (name, line 169)
+- "A choking green cloud. Masks protect; nothing else does"  (description, line 170)
+- "Smuggled crate"  (name, line 171)
+- "Heavy, and it clinks. Get it where it's going"  (description, line 172)
+- "Smuggled supplies"  (name, line 173)
+- "Guns and parts wrapped in rags, out of a broken crate. Get them where they're going"  (description, line 174)
 
 > Note for you (not shown in game): Order (sv_livingcity_cp.lua)
 
-- "Cuff someone: !cuff, looking at them (hands up, down, stopped, or from behind). Civil Protection units carry their own"  (description, line 178)
-- "Request device"  (name, line 179)
-- "Calls Civil Protection to where you are: /request <what's wrong>"  (description, line 180)
+- "Cuff someone: !cuff, looking at them (hands up, down, stopped, or from behind). Civil Protection units carry their own"  (description, line 179)
+- "Request device"  (name, line 180)
+- "Calls Civil Protection to where you are: /request <what's wrong>"  (description, line 181)
 
 > Note for you (not shown in game): Carrying and keeping things (sv_livingcity_storage.lua) bag      extra kilograms and large things you can carry while you have it place    "crate": set down in the world as your own lockable crate
 
-- "A canvas bag over the shoulder. Room for more, and for something large"  (description, line 187)
-- "Storage crate"  (name, line 188)
-- "Set it down somewhere (Set down, in your pockets) and it's yours: only you can open it. Civil Protection units can"  (description, line 189)
+- "A canvas bag over the shoulder. Room for more, and for something large"  (description, line 188)
+- "Storage crate"  (name, line 189)
+- "Set it down somewhere (Set down, in your pockets) and it's yours: only you can open it. Civil Protection units can"  (description, line 190)
 
 > Note for you (not shown in game): Trade and writing (sv_livingcity_business.lua, sv_livingcity_writing.lua)
 
-- "CWU business license"  (name, line 193)
-- "Stamped by the Civil Workers' Union. Lets you set up a market stall and trade. Officers can revoke it"  (description, line 194)
-- "Market stall"  (name, line 195)
-- "A folding table and a sign. Set it down (with a license) and sell from it: you set the prices"  (description, line 196)
-- "Write a note to leave somewhere, a poster to put up, or one to keep"  (description, line 198)
-- "Scrap metal"  (name, line 199)
-- "Out of bins, junk and downed scanners. The dealer pays for it, and so does reclamation"  (description, line 200)
-- "Pries scrap out of junk. A weapon too, and every Civil Protection unit knows it"  (description, line 202)
-- "Combine data chip"  (name, line 203)
-- "Decode / plug in"  (pocket button, line 203)
-- "Two terminals' data, put together. The dealer pays well; the lab decodes it; plugged into a terminal it wipes your record"  (description, line 205)
-- "Combine data fragment"  (name, line 206)
-- "Half of what the Combine know: one terminal's data. Download another terminal's and the two make a whole chip"  (description, line 208)
-- "Master data core"  (name, line 209)
-- "Decode / plug in"  (pocket button, line 209)
-- "Out of the Combine's master terminal: the motherlode. The dealer pays a fortune; the quartermaster's decoding marks every Civil Protection unit for ten minutes; plugged into a terminal it wipes every comrade's record"  (description, line 211)
-- "Radio jammer"  (name, line 212)
-- "Set down"  (pocket button, line 212)
-- "Set it down: four minutes of static on every Civil Protection unit radio nearby, and no scanner photos get out"  (description, line 213)
-- "Powered vest"  (name, line 214)
-- "Put on"  (pocket button, line 214)
-- "Plates and salvaged charge cells: holds a charge (75), comes with thirty in it. Charge cells (the lab's, or off a dead unit or a downed scanner) top it up, and a vortigaunt will if you ask"  (description, line 215)
+- "CWU business license"  (name, line 194)
+- "Stamped by the Civil Workers' Union. Lets you set up a market stall and trade. Officers can revoke it"  (description, line 195)
+- "Market stall"  (name, line 196)
+- "A folding table and a sign. Set it down (with a license) and sell from it: you set the prices"  (description, line 197)
+- "Write a note to leave somewhere, a poster to put up, or one to keep"  (description, line 199)
+- "Scrap metal"  (name, line 200)
+- "Out of bins, junk and downed scanners. The dealer pays for it, and so does reclamation"  (description, line 201)
+- "Pries scrap out of junk. A weapon too, and every Civil Protection unit knows it"  (description, line 203)
+- "Combine data chip"  (name, line 204)
+- "Decode / plug in"  (pocket button, line 204)
+- "Two terminals' data, put together. The dealer pays well; the lab decodes it; plugged into a terminal it wipes your record"  (description, line 206)
+- "Combine data fragment"  (name, line 207)
+- "Half of what the Combine know: one terminal's data. Download another terminal's and the two make a whole chip"  (description, line 209)
+- "Master data core"  (name, line 210)
+- "Decode / plug in"  (pocket button, line 210)
+- "Out of the Combine's master terminal: the motherlode. The dealer pays a fortune; the quartermaster's decoding marks every Civil Protection unit for ten minutes; plugged into a terminal it wipes every comrade's record"  (description, line 212)
+- "Radio jammer"  (name, line 213)
+- "Set down"  (pocket button, line 213)
+- "Set it down: four minutes of static on every Civil Protection unit radio nearby, and no scanner photos get out"  (description, line 214)
+- "Powered vest"  (name, line 215)
+- "Put on"  (pocket button, line 215)
+- "Plates and salvaged charge cells: holds a charge (75), comes with thirty in it. Charge cells (the lab's, or off a dead unit or a downed scanner) top it up, and a vortigaunt will if you ask"  (description, line 216)
 
 > Note for you (not shown in game): the Resistance's money (sv_livingcity_funding.lua): intel only the quartermaster buys, and parts skimmed off the factory line
 
-- "Freq 7 sheet"  (name, line 218)
-- "Copied down at a radio repair bench: the rule, and the seven places on the dial Freq 7 hides. Pass it on, or burn it"  (description, line 220)
-- "Notes on a patrol"  (name, line 221)
-- "A unit's beat, written down: where he walks, and when. The quartermaster pays for it"  (description, line 222)
-- "Notes on a checkpoint"  (name, line 223)
-- "A checkpoint's shifts, its gate, its men. The quartermaster pays for it"  (description, line 224)
-- "Notes on the Combine's ground"  (name, line 225)
-- "The approaches to the Combine's own ground. The quartermaster pays well for it"  (description, line 226)
-- "Copied city records"  (name, line 227)
-- "The city's own records, copied out by someone inside: names, routes, who's being watched. The best intel there is"  (description, line 228)
-- "Union machine parts"  (name, line 229)
-- "Finished parts, skimmed off the factory line. The dealer moves them; the quartermaster pays more (they end up in guns)"  (description, line 230)
-- "Charge cell"  (name, line 231)
-- "Charge your vest"  (pocket button, line 231)
-- "A salvaged suit cell: twenty-five charge into a powered vest you're wearing"  (description, line 232)
-- "Box of .357 rounds"  (name, line 233)
-- "Six heavy rounds, hand-loaded"  (description, line 234)
-- "Homemade revolver"  (name, line 235)
-- "Machined at a workbench. Loud, heavy, final"  (description, line 236)
-- "Wedding ring"  (name, line 237)
-- "It belonged to somebody"  (description, line 238)
+- "Freq 7 sheet"  (name, line 219)
+- "Copied down at a radio repair bench: the rule, and the seven places on the dial Freq 7 hides. Pass it on, or burn it"  (description, line 221)
+- "Notes on a patrol"  (name, line 222)
+- "A unit's beat, written down: where he walks, and when. The quartermaster pays for it"  (description, line 223)
+- "Notes on a checkpoint"  (name, line 224)
+- "A checkpoint's shifts, its gate, its men. The quartermaster pays for it"  (description, line 225)
+- "Notes on the Combine's ground"  (name, line 226)
+- "The approaches to the Combine's own ground. The quartermaster pays well for it"  (description, line 227)
+- "Copied city records"  (name, line 228)
+- "The city's own records, copied out by someone inside: names, routes, who's being watched. The best intel there is"  (description, line 229)
+- "Union machine parts"  (name, line 230)
+- "Finished parts, skimmed off the factory line. The dealer moves them; the quartermaster pays more (they end up in guns)"  (description, line 231)
+- "Charge cell"  (name, line 232)
+- "Charge your vest"  (pocket button, line 232)
+- "A salvaged suit cell: twenty-five charge into a powered vest you're wearing"  (description, line 233)
+- "Box of .357 rounds"  (name, line 234)
+- "Six heavy rounds, hand-loaded"  (description, line 235)
+- "Homemade revolver"  (name, line 236)
+- "Machined at a workbench. Loud, heavy, final"  (description, line 237)
+- "Wedding ring"  (name, line 238)
+- "It belonged to somebody"  (description, line 239)
 
 > Note for you (not shown in game): The Union Commissary item      goes into your inventory entity    spawns in front of you (health vials, batteries) ammo      { type, amount } cpOnly    units only, and sold only at the Civil Protection Commissary's counter (the Union terminal sells them only in a city without one)
 
-- "Nutrient bar and a little water. It keeps you alive."  (description, line 302)
-- "Clean, cold, refreshing. Do not ask what is in it."  (description, line 303)
-- "An empty glass bottle, for whatever water you can find."  (description, line 304)
-- "For what the canal water gives you."  (description, line 305)
-- "Union-issue work clothes. Everyone looks the same in them."  (description, line 306)
-- "Union band. Notices before the loudspeakers, and a way to talk (!r)."  (description, line 307)
+- "Nutrient bar and a little water. It keeps you alive."  (description, line 303)
+- "Clean, cold, refreshing. Do not ask what is in it."  (description, line 304)
+- "An empty glass bottle, for whatever water you can find."  (description, line 305)
+- "For what the canal water gives you."  (description, line 306)
+- "Union-issue work clothes. Everyone looks the same in them."  (description, line 307)
 - "One night out after curfew, stamped and legal."  (description, line 308)
 - "Grey, dense, and real."  (description, line 309)
 - "Powdered, reconstituted, nearly milk."  (description, line 310)
@@ -12425,60 +12459,61 @@ Made from version 2814762. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): The black market (a dealer placed with the editor, or rebel territory) weapon    given straight to you Standing doesn't matter here. Credits do. Units who walk up to a dealer don't buy anything: they bust it.
 
 - "Already tuned to Freq 7."  (description, line 345)
-- "Good work. Not perfect work."  (description, line 346)
-- "For people with a steady hand."  (description, line 347)
-- "One more meal than the Union thinks you deserve."  (description, line 348)
-- "Picks, tension wrench, patience not included."  (description, line 349)
-- "One use. Don't ask where it came from."  (description, line 350)
-- "Clean, plain, forgettable."  (description, line 351)
-- "Off a Civil Protection unit who won't be needing it."  (description, line 352)
-- "No questions about why you need them."  (description, line 353)
-- "Every revolution starts somewhere."  (description, line 354)
-- "Opens Combine locks, screens and terminals. Very illegal. Don't get searched."  (description, line 355)
-- "Springs, barrels, pins. Make something with them."  (description, line 356)
-- "Bought by the bottle. Nobody cleans that much."  (description, line 357)
-- "Tomatoes, beans, maybe. Plant them in rebel territory."  (description, line 358)
-- "Pre-war tins. Nobody asks where they come from."  (description, line 359)
-- "For a Civil Protection unit who needs to stay put."  (description, line 360)
-- "No questions about what goes in it."  (description, line 361)
-- "Spray cans (3)"  (name, line 362)
-- "Let the city know we're still here."  (description, line 362)
+- "A plain receiver. The lab can retune it, or make a transmitter of it."  (description, line 346)
+- "Good work. Not perfect work."  (description, line 347)
+- "For people with a steady hand."  (description, line 348)
+- "One more meal than the Union thinks you deserve."  (description, line 349)
+- "Picks, tension wrench, patience not included."  (description, line 350)
+- "One use. Don't ask where it came from."  (description, line 351)
+- "Clean, plain, forgettable."  (description, line 352)
+- "Off a Civil Protection unit who won't be needing it."  (description, line 353)
+- "No questions about why you need them."  (description, line 354)
+- "Every revolution starts somewhere."  (description, line 355)
+- "Opens Combine locks, screens and terminals. Very illegal. Don't get searched."  (description, line 356)
+- "Springs, barrels, pins. Make something with them."  (description, line 357)
+- "Bought by the bottle. Nobody cleans that much."  (description, line 358)
+- "Tomatoes, beans, maybe. Plant them in rebel territory."  (description, line 359)
+- "Pre-war tins. Nobody asks where they come from."  (description, line 360)
+- "For a Civil Protection unit who needs to stay put."  (description, line 361)
+- "No questions about what goes in it."  (description, line 362)
+- "Spray cans (3)"  (name, line 363)
+- "Let the city know we're still here."  (description, line 363)
 
 > Note for you (not shown in game): what the Resistance's lab makes (sv_livingcity_lab.lua); everyone else pays the dealer for it
 
-- "Chemicals in a can, and a fuse."  (description, line 364)
-- "Eighteen rounds. Hand-loaded, mostly reliable."  (description, line 365)
-- "Twelve shells."  (description, line 366)
-- "Forty-five rounds."  (description, line 367)
-- "Six heavy rounds."  (description, line 368)
-- "Put together on somebody's kitchen table. It fires."  (description, line 369)
-- "It jams. Not often."  (description, line 370)
-- "Hard to hide. Hard to argue with."  (description, line 371)
-- "Loud, heavy, final."  (description, line 372)
-- "Plates and salvaged charge cells. Holds a charge; comes with thirty in it."  (description, line 373)
-- "Talk on your radio's band, not just listen. Contraband."  (description, line 374)
-- "Four minutes of static on every Civil Protection unit radio nearby."  (description, line 375)
+- "Chemicals in a can, and a fuse."  (description, line 365)
+- "Eighteen rounds. Hand-loaded, mostly reliable."  (description, line 366)
+- "Twelve shells."  (description, line 367)
+- "Forty-five rounds."  (description, line 368)
+- "Six heavy rounds."  (description, line 369)
+- "Put together on somebody's kitchen table. It fires."  (description, line 370)
+- "It jams. Not often."  (description, line 371)
+- "Hard to hide. Hard to argue with."  (description, line 372)
+- "Loud, heavy, final."  (description, line 373)
+- "Plates and salvaged charge cells. Holds a charge; comes with thirty in it."  (description, line 374)
+- "Talk on your radio's band, not just listen. Contraband."  (description, line 375)
+- "Four minutes of static on every Civil Protection unit radio nearby."  (description, line 376)
 
 > Note for you (not shown in game): Making things by hand (F2): just these, anywhere. Everything else (guns, ammunition, armour, jammers, bypass charges, smoke bombs, a radio tuned to Freq 7) is the Resistance lab's (LCS.Lab, below) or the black market's. private   out of any unit's sight (a tunnel or back room will do)
 
-- "Bent and filed scrap"  (description, line 415)
-- "Rags, torn into strips"  (description, line 416)
+- "Bent and filed scrap"  (description, line 416)
+- "Rags, torn into strips"  (description, line 417)
 
 > Note for you (not shown in game): The Resistance lab (sv_livingcity_lab.lua): what the scientist makes, for the Resistance only. Bring him the materials (needs) and he makes it for nothing; or pay him: 60% of the dealer's price (never less than the quartermaster pays for it). secs: how long he takes.
 
-- "Eighteen pistol rounds"  (description, line 429)
-- "Twelve shotgun shells"  (description, line 430)
-- "Forty-five SMG rounds"  (description, line 431)
-- "Six .357 rounds"  (description, line 432)
-- "A powered vest: holds a charge (charge cells top it up)"  (description, line 437)
-- "A charge cell: twenty-five charge into your vest"  (description, line 438)
-- "Five forged ration cards: the dealer buys them, the dispensers take them. The more turn up, the hotter the search for the forger"  (description, line 440)
-- "Thick white smoke"  (description, line 441)
-- "Opens any door once"  (description, line 442)
-- "A Union radio, opened up and retuned to Freq 7"  (description, line 443)
-- "A Union radio rebuilt to send as well as listen"  (description, line 444)
-- "A radio that only screams"  (description, line 445)
-- "Bar stock, heated and bent"  (description, line 446)
+- "Eighteen pistol rounds"  (description, line 430)
+- "Twelve shotgun shells"  (description, line 431)
+- "Forty-five SMG rounds"  (description, line 432)
+- "Six .357 rounds"  (description, line 433)
+- "A powered vest: holds a charge (charge cells top it up)"  (description, line 438)
+- "A charge cell: twenty-five charge into your vest"  (description, line 439)
+- "Five forged ration cards: the dealer buys them, the dispensers take them. The more turn up, the hotter the search for the forger"  (description, line 441)
+- "Thick white smoke"  (description, line 442)
+- "Opens any door once"  (description, line 443)
+- "A radio set, opened up and retuned to Freq 7"  (description, line 444)
+- "A radio set rebuilt to send as well as listen"  (description, line 445)
+- "A radio that only screams"  (description, line 446)
+- "Bar stock, heated and bent"  (description, line 447)
 
 ## shared.lua (shared.lua)
 

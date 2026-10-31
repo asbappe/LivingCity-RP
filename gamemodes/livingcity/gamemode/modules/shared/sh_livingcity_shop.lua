@@ -76,8 +76,9 @@ LCS.Items = {
     --                "citizen" lets hunted Resistance pass as ordinary citizens
     --   tool         "lockpick" for locked doors, "bypass" for Combine doors too
     ------------------------------------------------------------------------
-    radio           = { name = "Union radio", model = "models/props_lab/citizenradio.mdl", radio = "union", sell = 12, use = "listen", useLabel = "Listen",
-                        desc = "Union band. Hear city notices before the loudspeakers do. It only listens: nobody talks on the Union band, it's the city's" },
+    -- (1 November, the owner: no Union radio any more; a civilian with any radio is breaking the law)
+    radio           = { name = "Radio set", model = "models/props_lab/citizenradio.mdl", radio = "union", contraband = true, conceal = 0.3, sell = 12, use = "listen", useLabel = "Listen",
+                        desc = "An old receiver. Civilians aren't allowed radios: carrying one is an offence. The Resistance lab turns one into a Freq 7 radio or a transmitter" },
     radio_tuned     = { name = "Radio", model = "models/props_lab/citizenradio.mdl", radio = "resistance", use = "listen", useLabel = "Listen",
                         contraband = true, conceal = 0.25, sell = 20,
                         desc = "Tuned to Freq 7, the Resistance's: their chat, sweep warnings, and whatever Civil Protection says when it thinks nobody is listening. It only listens: to talk on Freq 7 you also need a radio transmitter" },
@@ -304,7 +305,6 @@ LCS.Goods = {
     { id = "bottle", item = "bottle_empty", price = 2, minStanding = -50, desc = "An empty glass bottle, for whatever water you can find." },
     { id = "tablets", item = "tablets", price = 15, minStanding = -50, desc = "For what the canal water gives you." },
     { id = "civvies", item = "civvies", price = 10, minStanding = -50, desc = "Union-issue work clothes. Everyone looks the same in them." },
-    { id = "radio", item = "radio", price = 40, minStanding = 0, desc = "Union band. Notices before the loudspeakers, and a way to talk (!r)." },
     { id = "permit", item = "permit", price = 35, minStanding = 150, desc = "One night out after curfew, stamped and legal." },
     { id = "bread", item = "bread", price = 8, minStanding = 0, desc = "Grey, dense, and real." },
     { id = "milk", item = "milk", price = 8, minStanding = 0, desc = "Powdered, reconstituted, nearly milk." },
@@ -343,6 +343,7 @@ end
 
 LCS.Black = {
     { id = "radio_tuned", item = "radio_tuned", price = 60, desc = "Already tuned to Freq 7." },
+    { id = "radio", item = "radio", price = 30, desc = "A plain receiver. The lab can retune it, or make a transmitter of it." },
     { id = "papers_forged", item = "papers_forged", price = 80, desc = "Good work. Not perfect work." },
     { id = "papers_blank", item = "papers_blank", price = 30, desc = "For people with a steady hand." },
     { id = "ration_forged", item = "ration_forged", price = 10, desc = "One more meal than the Union thinks you deserve." },
@@ -440,8 +441,8 @@ LCS.Lab = {
       desc = "Five forged ration cards: the dealer buys them, the dispensers take them. The more turn up, the hotter the search for the forger" },
     { id = "smokebomb", out = "smokebomb", needs = { chemicals = 2, can_empty = 1 }, secs = 5, desc = "Thick white smoke" },
     { id = "bypass", out = "bypass", needs = { gun_parts = 1, chemicals = 2, scrap = 2 }, secs = 10, desc = "Opens any door once" },
-    { id = "radio_tuned", out = "radio_tuned", needs = { radio = 1 }, secs = 8, desc = "A Union radio, opened up and retuned to Freq 7" },
-    { id = "radio_transmitter", out = "radio_transmitter", needs = { radio = 1, scrap = 2 }, secs = 12, desc = "A Union radio rebuilt to send as well as listen" },
+    { id = "radio_tuned", out = "radio_tuned", needs = { radio = 1 }, secs = 8, desc = "A radio set, opened up and retuned to Freq 7" },
+    { id = "radio_transmitter", out = "radio_transmitter", needs = { radio = 1, scrap = 2 }, secs = 12, desc = "A radio set rebuilt to send as well as listen" },
     { id = "jammer", out = "jammer", needs = { radio_tuned = 1, scrap = 2, chemicals = 1 }, secs = 15, desc = "A radio that only screams" },
     { id = "crowbar", out = "crowbar", needs = { scrap = 6 }, secs = 10, desc = "Bar stock, heated and bent" },
 }

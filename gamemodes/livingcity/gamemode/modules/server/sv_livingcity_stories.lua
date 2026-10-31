@@ -1122,7 +1122,8 @@ local function LTCleanup(ply, restore)
 end
 LC.LoyaltyTestCleanup = LTCleanup
 
--- Executed: the guards turn and fire, and make sure.
+-- Refused: the guards open up, and you go down bleeding on the cell floor. They don't let you die:
+-- you're carried out, and the Combine make a stalker of you (the owner, 2026-11-01).
 local function LTExecute(ply, why)
     local sc = LT[ply]
     if not sc or sc.phase == "executed" then return end
@@ -1132,27 +1133,32 @@ local function LTExecute(ply, why)
         if IsValid(g) then
             g:AddEntityRelationship(ply, D_HT, 99)
             if g.SetEnemy then g:SetEnemy(ply) end
-            if g.SetSchedule then g:SetSchedule(SCHED_SHOOT_ENEMY or SCHED_RANGE_ATTACK1 or 0) end
+            if g.SetSchedule then g:SetSchedule(SCHED_RANGE_ATTACK1 or 0) end
+            g:EmitSound("weapons/shotgun/shotgun_fire" .. math.random(6, 7) .. ".wav", 90)
         end
     end
-    timer.Simple(2.5, function()
-        if IsValid(ply) and ply:Alive() then
-            local g = sc.guards[1]
-            local d = DamageInfo and DamageInfo()
-            if d then
-                d:SetDamage(1000) d:SetDamageType(DMG_BUCKSHOT or DMG_BULLET)
-                if IsValid(g) then d:SetAttacker(g) d:SetInflictor(g) end
-                ply:TakeDamageInfo(d)
-            else
-                ply:Kill()
-            end
-        end
-        LTCleanup(ply, false)
-    end)
     LC.StoryFlag(ply, "insider", false)
     LC.StoryFlag(ply, "exposed", true)
     local q = sc.q
-    if q and not q.done then q.chainEnd = "executed" q.reward = 0 if LC.FinishQuest then LC.FinishQuest(q, true) end end
+    if q and not q.done then q.chainEnd = "stalker" q.reward = 0 if LC.FinishQuest then LC.FinishQuest(q, true) end end
+    timer.Simple(1.2, function()
+        if not IsValid(ply) or not ply:Alive() then LTCleanup(ply, false) return end
+        ply:SetHealth(math.min(ply:Health(), 5))
+        ply:ViewPunch(Angle(-20, math.Rand(-10, 10), 0))
+        ply:ScreenFade(SCREENFADE.OUT, Color(120, 0, 0, 200), 0.3, 2)
+        ply:ChatPrint("[Loyalty test] You're down on the cell floor, bleeding out. They don't let you die. Someone lifts you by the arms.")
+        ply:Freeze(true)
+    end)
+    timer.Simple(4, function()
+        if IsValid(ply) then ply:ScreenFade(SCREENFADE.OUT, Color(0, 0, 0, 255), 1, 6) ply:EmitSound("ambient/machines/spinup.wav", 70) end
+    end)
+    timer.Simple(9, function()
+        LTCleanup(ply, false)
+        if not IsValid(ply) or not ply:Alive() then return end
+        ply:Freeze(false)
+        ply:SetHealth(ply:GetMaxHealth())
+        if LC.MakeStalker then LC.MakeStalker(ply) end
+    end)
 end
 LC.LoyaltyTestExecute = LTExecute
 
@@ -1209,6 +1215,11 @@ end
 
 hook.Add("EntityTakeDamage", "LivingCityLoyaltyTest", function(ent, dmg)
     local att = dmg:GetAttacker()
+    -- shot down for refusing: bleeding, not dead (they want what's left of you)
+    if IsValid(ent) and ent:IsPlayer() and LT[ent] and LT[ent].phase == "executed" then
+        dmg:SetDamage(math.min(dmg:GetDamage(), math.max(0, ent:Health() - 5)))
+        return
+    end
     -- a hand raised to a guard: that's the answer
     if ent.lcLoyaltyGuard and IsValid(att) and att == ent.lcLoyaltyGuard then
         dmg:SetDamage(0)
@@ -1231,6 +1242,44 @@ hook.Add("OnNPCKilled", "LivingCityLoyaltyTest", function(npc, attacker)
 end)
 hook.Add("PlayerDeath", "LivingCityLoyaltyTest", function(ply) if LT[ply] then LTCleanup(ply, false) end end)
 hook.Add("PlayerDisconnected", "LivingCityLoyaltyTest", function(ply) if LT[ply] then LTCleanup(ply, false) end end)
+
+-- No ignoring it: after the loyalty test, the reckoning starts by itself, and so does the debt (the owner:
+-- the Resistance would want answers). Whatever job they're on is dropped for it.
+local function ForceMoleHunt(ply, tries)
+    tries = tries or 0
+    if not IsValid(ply) or tries > 20 then return end
+    local cs = LC.ChainState(ply, "molehunt")
+    if not cs or not cs.part or cs.done or (cs.part ~= "reckoning" and cs.part ~= "debt") then return end
+    local busy = LC.QuestOf and LC.QuestOf[ply]
+    if busy and not busy.done and busy.chain == "molehunt" then return end
+    if not ply:Alive() or (LC.InCustody and LC.InCustody(ply)) then
+        timer.Simple(30, function() ForceMoleHunt(ply, tries + 1) end)
+        return
+    end
+    if busy and not busy.done and LC.AbandonQuest then LC.AbandonQuest(ply) ply.lcqNext = 0 end
+    cs.readyAt = 0
+    if ply.lcStoryPostings then ply.lcStoryPostings.molehunt = nil end
+    if LC.StoryPostings then LC.StoryPostings(ply) end
+    local post = ply.lcStoryPostings and ply.lcStoryPostings.molehunt
+    if not post or not LC.AcceptPosting or not LC.AcceptPosting(ply, post.id) then
+        timer.Simple(30, function() ForceMoleHunt(ply, tries + 1) end)
+        return
+    end
+    if LC.Notice then
+        LC.Notice(ply, "warn", "The Resistance wants answers", cs.part == "debt" and "The debt starts now. They're watching." or "A note in your locker: they know what you did in that cell. They want to see you, now.", 10)
+    end
+end
+LC.ForceMoleHunt = ForceMoleHunt
+hook.Add("LivingCityQuestComplete", "LivingCityMoleHuntForced", function(p, q)
+    if q and q.chain == "molehunt" and (q.chainNext == "reckoning" or q.chainNext == "debt") then
+        timer.Simple(12, function() ForceMoleHunt(p) end)
+    end
+end)
+hook.Add("LivingCityQuestFailed", "LivingCityMoleHuntForced", function(p, q)
+    if q and q.chain == "molehunt" and (q.chainPart == "reckoning" or q.chainPart == "debt") then
+        timer.Simple(20, function() ForceMoleHunt(p) end)
+    end
+end)
 
 local function TestSpec(ply)
     local cells = LC.PointsOfKind("cell")
@@ -1299,6 +1348,8 @@ LC.Chain{
         converted = "You let the Combine have all of you. The surgery took the rest: a soldier of Overwatch now, and nothing you were before. There's no going back.",
         redeemed = "The debt is paid. They don't forget what you did in that cell, but they let you back in. The Resistance has its man inside again.",
         executed = "You wouldn't do it. The guards did their duty. They found the mole, in the end.",
+        stalker = "You wouldn't do it. They shot you down on the cell floor and didn't let you die. What's left of you belongs to the Combine now.",
+        unmasked = "You took off the mask for good. No more lies: you fight with the Resistance in the open now, and Civil Protection will never have you back.",
         framed = "Unit 3-09 was taken in your place. You tell yourself he probably deserved it.",
         ran = "You fled to the Resistance before they could knock. Every Civil Protection unit in the city has your face now.",
         survived = "The mole hunt moves on to another sector. You breathe again. Carefully.",
@@ -1316,12 +1367,18 @@ LC.Chain{
                     Goto(pos, "Go to the meeting place (" .. where .. ")", r),
                     Meet("Find the woman from the note and walk up to her", "citizen", function() return pos end, nil, nil, "female"),
                     Choice("She doesn't sit down. 'He was one of ours. You beat him, and then you killed him, to keep your mask. Maybe you had to.' "
-                        .. "Her hand doesn't leave her pocket. 'So: are you still with us? Then you'll pay for him. Or walk away, and let them have all of you.'", {
-                        { text = "Pay the debt. Whatever it takes. (A job for the Resistance, on your board.)", pick = function(q)
+                        .. "Her hand doesn't leave her pocket. 'We want answers. Are you still with us? Then you'll pay for him. Or are you theirs now?'", {
+                        { text = "Pay the debt. Whatever it takes. (It starts at once.)", pick = function(q)
                             Narrate(q, "'Then listen.' She tells you what it will cost.")
                             q.chainNext = "debt"
                         end },
-                        { text = "Walk away from the Resistance. Let the Combine have all of you. (Overwatch's soldier conversion: there's no undoing it.)", pick = function(q, p)
+                        { text = "Take off the mask for good: leave Civil Protection and fight with the Resistance in the open. (You'll never be a unit, or anyone's man inside, again.)", pick = function(q, p)
+                            q.chainEnd = "unmasked"
+                            LC.StoryFlag(p, "insider", false)
+                            LC.StoryFlag(p, "disgraced", false)
+                            timer.Simple(1.5, function() if IsValid(p) and LC.Unmask then LC.Unmask(p) end end)
+                        end },
+                        { text = "Tell her you're done with the Resistance. (You stay with the Combine. They'll want all of you now.)", pick = function(q, p)
                             q.chainEnd = "converted"
                             LC.StoryFlag(p, "insider", false)
                             LC.StoryFlag(p, "disgraced", false)
@@ -1333,7 +1390,7 @@ LC.Chain{
                                 local need = f and f.ranks and f.ranks[5] and f.ranks[5].xp
                                 if need and (tonumber(p:GetPData("lcf_xp_cp", 0)) or 0) < need then p:SetPData("lcf_xp_cp", need) end
                                 if LC.AddXP then LC.AddXP(p, 0, "the conversion") end
-                                if LC.Notice then LC.Notice(p, "warn", "The conversion", "Overwatch takes you in. The surgery is done before you wake: a soldier now, and there's no going back.", 12) end
+                                if LC.Notice then LC.Notice(p, "warn", "The conversion", "You proved your loyalty, so Overwatch wants all of you. They come for you that night: the surgery is done before you wake. A soldier now, and there's no going back.", 14) end
                             end)
                         end },
                     }),

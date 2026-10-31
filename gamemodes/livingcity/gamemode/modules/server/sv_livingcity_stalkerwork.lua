@@ -12,16 +12,18 @@
                      patch of grime)
       3 Cable        splice the cable into two power banks (a rewiring board
                      at each)
-      4 The frame    a Combine ball energizer: carry its four cells over and
-                     set them in, then weld its four seams
-      5 The charge   route its first charge (a bigger rewiring board). It
-                     hums. Nobody's watching.
+      4 The frame    a second power transformer, built right beside one of
+                     the city's own (the owner, 2026-11-01): carry its four
+                     cells over and set them in, then weld its four seams
+      5 The charge   route its first charge (a bigger rewiring board). The
+                     current jumps the gap between the two. Nobody's watching.
 
-    At the end you choose. Step into the light, and the stalker that was you is
-    gone for good: whatever permanent death is set to, you start over as a new
-    person. Or turn away and go back to work: there is no other way out of
-    being a stalker. The energizer stays where you built it, humming, and you
-    can walk back to it any time (E on it, twice) and step in after all.
+    At the end you choose. Walk into the gap between the two transformers, and
+    the current takes you at once: the stalker that was you is gone for good
+    (whatever permanent death is set to, you start over as a new person). Or
+    turn away and go back to work: there is no other way out of being a
+    stalker. The transformer stays where you built it, arcing, and you can
+    walk back into the gap any time (or E on it, twice).
 
     The stalker playermodel is Workshop 268895264 (lc_stalker_model in
     sv_livingcity_custody.lua).
@@ -86,17 +88,19 @@ end
 
 LC.Energizers = LC.Energizers or {}
 
-function LC.StalkerEnergizer(ply, pos, built)
+function LC.StalkerEnergizer(ply, pos, built, yaw, partner)
     local e = LC.Energizers[ply]
     if not IsValid(e) then
         if not pos then return nil end
         e = ents.Create("lc_energizer")
         if not IsValid(e) then return nil end
         e:SetPos(pos)
-        e:SetAngles(Angle(0, math.random(0, 359), 0))
+        e:SetAngles(Angle(0, yaw or math.random(0, 359), 0))
         e:Spawn()
         e.lcStalker = ply
         LC.Energizers[ply] = e
+        -- the city's own transformer beside it: the current jumps between the two (lc_energizer.lua draws it)
+        if IsValid(partner) then e:SetNW2Entity("lc_partner", partner) e.lcPartner = partner end
     end
     if built then e:SetNW2Int("lc_built", built) end
     return e
@@ -113,13 +117,32 @@ local function Unbuild(ply, delay)
     if delay and delay > 0 then timer.Simple(delay, Gone) else Gone() end
 end
 
+-- Where it's built: right beside one of the city's own power transformers (the nearest to the stalker's
+-- work), turned the same way, with a gap between them a person could walk into. With no transformer in
+-- the city, wherever the stalker works.
+local GAP = 46
 local function Site(ply, data)
     if not data.site then
-        local p = LC.StalkerSpot(ply)
-        if not p then return nil end
-        data.site = { p.x, p.y, p.z }
+        local base = LC.StalkerSpot(ply) or ply:GetPos()
+        local best, bd
+        for _, t in ipairs(LC.EntsOf and LC.EntsOf("lc_transformer") or {}) do
+            if IsValid(t) then
+                local d = t:GetPos():DistToSqr(base)
+                if not bd or d < bd then best, bd = t, d end
+            end
+        end
+        if IsValid(best) then
+            local mn, mx = best:OBBMins(), best:OBBMaxs()
+            local width = math.max(20, math.abs(mx.y - mn.y))
+            local p = Ground(best:GetPos() + best:GetRight() * (width + GAP) + Vector(0, 0, 20))
+            data.site, data.yaw, data.partner = { p.x, p.y, p.z }, best:GetAngles().y, best:EntIndex()
+        else
+            local p = base
+            if not p then return nil end
+            data.site = { p.x, p.y, p.z }
+        end
     end
-    return Vector(data.site[1], data.site[2], data.site[3])
+    return Vector(data.site[1], data.site[2], data.site[3]), data.yaw, data.partner and Entity(data.partner) or nil
 end
 
 -- The end of a stalker: into the light, and gone. A new person, whatever
@@ -129,16 +152,19 @@ function LC.StalkerStepIn(ply)
     local e = LC.Energizers[ply]
     if IsValid(e) then
         e:SetNW2Float("lc_flash", CurTime())
-        e:EmitSound("weapons/physcannon/energy_disintegrate4.wav", 90)
+        e:EmitSound("ambient/energy/zap" .. math.random(1, 3) .. ".wav", 95)
+        ply:EmitSound("ambient/energy/spark" .. math.random(1, 6) .. ".wav", 90)
         if util.Effect and EffectData then
             local fx = EffectData()
-            fx:SetOrigin(e:WorldSpaceCenter())
+            fx:SetOrigin(ply:WorldSpaceCenter())
+            fx:SetMagnitude(8) fx:SetScale(2) fx:SetRadius(40)
+            util.Effect("ElectricSpark", fx)
             util.Effect("cball_explode", fx)
         end
     end
-    ply:ScreenFade(SCREENFADE.OUT, Color(255, 255, 255, 255), 0.4, 2)
+    ply:ScreenFade(SCREENFADE.OUT, Color(200, 230, 255, 255), 0.2, 2)
     ply.lcEndOfLife = "energizer"
-    ply.lcDownCause = { "Stepped into the energizer they had built. Nothing came back out.", "combine" }
+    ply.lcDownCause = { "Walked into the gap between two power transformers. The current took them before they hit the floor.", "combine" }
     ply:Kill()
     ply.lcEndOfLife = nil
     Unbuild(ply, 60)
@@ -153,7 +179,7 @@ end
 function LC.StalkerEndure(ply)
     if not IsValid(ply) or not Stalker(ply) then return false end
     if LC.Notice then
-        LC.Notice(ply, "info", "Back to work", "The energizer hums behind you. It will still be there. E on it, twice, if you change your mind.", 8)
+        LC.Notice(ply, "info", "Back to work", "The current snaps across the gap behind you. It will still be there: walk into it, or E on it twice, if you change your mind.", 8)
     end
     return true
 end
@@ -169,9 +195,27 @@ function LC.UseEnergizer(ply, e)
         return LC.StalkerStepIn(ply)
     end
     ply.lcEnergizerArmed = CurTime() + 5
-    if LC.Notice then LC.Notice(ply, "bad", "The light", "It would be very easy. Press E again to step in. There's no coming back.", 5) end
+    if LC.Notice then LC.Notice(ply, "bad", "The current", "It would be very easy. Press E again to step into the gap. There's no coming back.", 5) end
     return true
 end
+-- Walking into the gap: the current takes you at once (the stalker who built it; the story asks first, while it's running).
+timer.Create("LivingCityStalkerGap", 0.2, 0, function()
+    for ply, e in pairs(LC.Energizers) do
+        local partner = IsValid(e) and e.lcPartner
+        if IsValid(ply) and ply:Alive() and IsValid(partner) and e:GetNW2Int("lc_built", 0) >= 3 and Stalker(ply)
+            and not (LC.QuestOf and LC.QuestOf[ply] and not LC.QuestOf[ply].done) then
+            local a, b = e:GetPos(), partner:GetPos()
+            local mid = (a + b) * 0.5
+            local pos = ply:GetPos()
+            local half = a:Distance(b) * 0.5
+            local dir = (b - a):GetNormalized()
+            local along = (pos - mid):Dot(dir)
+            local side = (pos - mid) - dir * along
+            side.z = 0
+            if math.abs(along) < half * 0.45 and side:Length() < 40 and math.abs(pos.z - mid.z) < 60 then LC.StalkerStepIn(ply) end
+        end
+    end
+end)
 hook.Add("PlayerDisconnected", "LivingCityStalkerWork", function(ply) Unbuild(ply) end)
 hook.Add("LivingCityStalkerFreed", "LivingCityStalkerWork", function(ply) Unbuild(ply, 300) end)
 hook.Add("LivingCityNewCharacter", "LivingCityStalkerWork", function(ply) Unbuild(ply, 60) end)
@@ -412,7 +456,7 @@ LC.Chain{
     unlock = Stalker, gate = Stalker, pace = 15,
     start = "processing",
     endings = {
-        light = "You stepped into the light you made. Nothing of the stalker came back out.",
+        light = "You walked into the gap between the transformers. The current took the stalker that was you, all at once.",
         endured = "You turned away from it, and went back to work. It's still down there, humming. So are you.",
     },
     parts = {
@@ -470,29 +514,29 @@ LC.Chain{
         end },
 
         frame = { num = 4, next = "charge", build = function(ply, data)
-            local site = Site(ply, data)
+            local site, yaw, partner = Site(ply, data)
             if not site then return nil end
-            local go = Goto(site, "Go to the frame they've set up", 200)
-            go.onEnter = function(q) if IsValid(q.owner) then LC.StalkerEnergizer(q.owner, site, 0) end end
+            local go = Goto(site, "Go to the frame they've set up, beside the power transformer", 200)
+            go.onEnter = function(q) if IsValid(q.owner) then LC.StalkerEnergizer(q.owner, site, 0, yaw, partner) end end
             go.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, "assemble", q, { pos = site }) end end
             return {
                 title = "The frame", reward = 0, limit = 900,
-                desc = "A Combine ball energizer, they call it on the work order. A frame of black metal, waiting for you.",
+                desc = "A second power transformer, to stand beside the city's own. A frame of black metal, waiting for you.",
                 stages = {
                     go,
                     Then(GameStage("Carry the four containment cells to the frame and set them in (E), then weld the four seams (E on each)"), function(q)
                         LC.StalkerEnergizer(q.owner, site, 2)
-                        Narrate(q, "Sparks, and then it's sealed. The light inside is brighter now. It doesn't flicker.")
+                        Narrate(q, "Sparks, and then it's sealed. It stands beside the other one like a twin, a body's width apart.")
                     end),
                 },
             }
         end },
 
         charge = { num = 5, build = function(ply, data)
-            local site = Site(ply, data)
+            local site, yaw, partner = Site(ply, data)
             if not site then return nil end
-            local go = Goto(site, "Go back to the energizer", 200)
-            go.onEnter = function(q) if IsValid(q.owner) then LC.StalkerEnergizer(q.owner, site, 2) end end
+            local go = Goto(site, "Go back to the transformer you built", 200)
+            go.onEnter = function(q) if IsValid(q.owner) then LC.StalkerEnergizer(q.owner, site, 2, yaw, partner) end end
             go.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, "wiring", q, { pos = site, what = "the terminal" }) end end
             return {
                 title = "The charge", reward = 0, limit = 900,
@@ -501,12 +545,12 @@ LC.Chain{
                     go,
                     Then(GameStage("Route its first charge through the regulator: turn the tiles till the current reaches it"), function(q)
                         LC.StalkerEnergizer(q.owner, site, 3)
-                        Narrate(q, "It hums. A ball of white light turns slowly inside it, and it is the most beautiful thing you have seen since they took you.")
+                        Narrate(q, "It hums, and then the current jumps the gap: a blue-white arc between the two transformers, snapping, never still. It is the most beautiful thing you have seen since they took you.")
                     end),
-                    Choice("The Civil Protection units have stopped watching you. The light turns, and turns. It would be very easy to step inside, and then there would be no more stalker.", {
-                        { text = "Step into the light. (This person ends for good: you start over as someone new.)", pick = function(q, p)
+                    Choice("The Civil Protection units have stopped watching you. The arc snaps across the gap, and snaps again. It would be very easy to walk into it, and then there would be no more stalker.", {
+                        { text = "Walk into the gap. (This person ends for good: you start over as someone new.)", pick = function(q, p)
                             q.chainEnd = "light"
-                            Narrate(q, "You step forward. It's warm.")
+                            Narrate(q, "You step into the gap.")
                             timer.Simple(1.5, function() if IsValid(p) then LC.StalkerStepIn(p) end end)
                         end },
                         { text = "Turn away, and go back to work.", pick = function(q, p)

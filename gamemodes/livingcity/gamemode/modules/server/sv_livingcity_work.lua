@@ -1340,6 +1340,9 @@ LC.Chain{
 -- A finished shift earns a ration card: the only way to get one.
 hook.Add("LivingCityQuestComplete", "LivingCityShiftRationCard", function(p, q)
     if not q or q.chain ~= "shift" or not IsValid(p) or not LC.GiveItem then return end
+    -- the records office is the way into Civil Protection (sv_livingcity_factions.lua, lc_cp_clerk_shifts)
+    local job = LC.Job(p)
+    if job and job.id == "clerk" and LC.Bump then LC.Bump(p, "clerk_shifts") end
     if LC.CarriesPapers and not LC.CarriesPapers(p) then return end
     local n = math.max(0, cvShiftCards:GetInt())
     if n < 1 then return end

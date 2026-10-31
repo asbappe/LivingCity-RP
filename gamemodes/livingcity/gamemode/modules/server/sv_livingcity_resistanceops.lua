@@ -742,6 +742,57 @@ local function VortTick()
         if not IsValid(v) or v:Health() <= 0 then LC.RebelVorts[v] = nil end
     end
 end
+-- Why one didn't come (for the debug report).
+function LC.VortHomeWhy()
+    local zones = LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}
+    if cvVorts:GetInt() <= 0 then return "lc_rebel_vorts is 0" end
+    if #zones == 0 then return "no rebel zones drawn" end
+    return nil
+end
+
+-- Shackled vortigaunts sweeping the streets (the owner: "at least 1 being a street sweep slave"):
+-- Combine property, collared, harming nobody and harmed by nobody, moving to a new stretch of
+-- street now and then. They come in out of sight.
+local cvSlaves = CreateConVar("lc_vort_slaves", "2", FLAGS, "Shackled vortigaunts the Combine keep sweeping the streets (Combine property: they harm nobody, and nobody harms them)")
+LC.VortSlaves = LC.VortSlaves or {}
+local nextSlave = 0
+local function SlaveTick(now)
+    if not LC.Running then return end
+    local have = 0
+    for v, s in pairs(LC.VortSlaves) do
+        if not IsValid(v) or v:Health() <= 0 then
+            LC.VortSlaves[v] = nil
+        else
+            have = have + 1
+            if now > (s.next or 0) then
+                s.next = now + math.Rand(25, 50)
+                local p = LC.RandomWanderPos and LC.RandomWanderPos("citizen", v:GetPos())
+                if p and not (LC.InInfest and LC.InInfest(p)) and v.SetLastPosition then
+                    v:SetLastPosition(p)
+                    v:SetSchedule(SCHED_FORCED_GO)
+                end
+            end
+        end
+    end
+    if now < nextSlave or have >= cvSlaves:GetInt() then return end
+    nextSlave = now + 20
+    local pos = LC.RandomWanderPos and LC.RandomWanderPos("citizen")
+    if not pos or (LC.InInfest and LC.InInfest(pos)) or (LC.InRebelZone and LC.InRebelZone(pos)) then return end
+    if LC.IsSeen and LC.IsSeen(pos + Vector(0, 0, 50)) then return end
+    local v = ents.Create("npc_vortigaunt")
+    if not IsValid(v) then return end
+    if not util.IsValidModel or util.IsValidModel("models/vortigaunt_slave.mdl") then v:SetModel("models/vortigaunt_slave.mdl") end
+    v:SetPos(pos + Vector(0, 0, 4))
+    v:Spawn()
+    v:Activate()
+    if LC.QuestVortPeaceful then LC.QuestVortPeaceful(v, true) end
+    v:SetNW2Bool("lc_shackled", true)
+    v:SetNW2String("lc_pname", "Shackled vortigaunt")
+    v:SetNW2String("lc_doing", "sweeping the street, collared")
+    v.lcVortSlave = true
+    LC.VortSlaves[v] = { next = 0 }
+end
+LC.VortSlaveTick = function(now) nextSlave = 0 SlaveTick(now or CurTime()) end -- (for tests)
 
 -- A freed vortigaunt charges your vest when you ask it (E), not by itself (not while you sleep
 -- beside it): once every lc_vort_charge_minutes.
@@ -823,6 +874,7 @@ timer.Create("LivingCityResistanceOps", 1, 0, function()
         DropTick(now)
         VortTick()
         VortHome(now)
+        SlaveTick(now)
         if now >= nextSmuggle then nextSmuggle = now + 5 SmugglerTick() end
         if now >= nextReact then nextReact = now + 5 React(now) end
         if nextOps == 0 then nextOps = now + 180 end -- not in the first minutes of a city
