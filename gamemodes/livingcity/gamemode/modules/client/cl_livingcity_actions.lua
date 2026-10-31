@@ -240,7 +240,6 @@ function LC_CL.OpenActions()
     Add(talk, "Out of character, nearby...", function() Say("Out of character", "Said out of character, to people nearby", "/looc ") end)
     Add(talk, "Out of character, everyone...", function() Say("Out of character", "Said out of character, to the whole server", "// ") end)
     Add(talk, "On my radio...", function() Ask("Radio", "What do you say on the radio?", "r") end, "icon16/transmit.png")
-    Add(talk, "On the Union band...", function() Ask("Union band", "What do you say on the Union band?", "ru") end)
 
     -- getting by
     local by, byo = menu:AddSubMenu("Getting by")

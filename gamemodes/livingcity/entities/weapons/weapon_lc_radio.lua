@@ -1,17 +1,20 @@
 --[[
-    Radio (Living City)
-    Your radio, held up to your mouth: switch to it like your hands or a gun
+    Radio transmitter (Living City)
+    Your radio transmitter, held up to your mouth: switch to it like your hands or a gun
     (it's next to Hands). While it's up, everything you type in chat and
-    everything you say on voice goes out over your radio's band (Freq 7 on a
-    Resistance radio, the CP net for units, the Union band on a Union radio),
+    everything you say on voice goes out over the frequency it's tuned to: the
+    CP net (units) or Freq 7 (a Freq 7 radio and a radio transmitter). Nobody
+    transmits on the Union band. Right click switches frequency, for someone
+    with both (a Resistance Insider),
     and only someone standing right beside you hears you directly. Your hands
     are full: no gun at the same time. R, or switching to anything else, puts
-    it away. You have it while you carry a radio (units always do).
+    it away. You have it while you carry a radio and a radio transmitter (a radio
+    alone only listens); units are issued theirs.
 ]]
 
 AddCSLuaFile()
 
-SWEP.PrintName    = "Radio"
+SWEP.PrintName    = "Radio transmitter"
 SWEP.Author       = "Living City"
 SWEP.Category     = "Living City"
 SWEP.Purpose      = "Talk over your radio."
@@ -30,22 +33,39 @@ SWEP.DrawCrosshair = false
 SWEP.Primary   = { ClipSize = -1, DefaultClip = -1, Automatic = false, Ammo = "none" }
 SWEP.Secondary = { ClipSize = -1, DefaultClip = -1, Automatic = false, Ammo = "none" }
 
-local MODEL = "models/props_lab/citizenradio.mdl"
-local BANDS = { resistance = "Freq 7", cp = "the CP net", union = "the Union band" }
+local MODEL = "models/props_lab/reciever01a.mdl"
+local BANDS = { resistance = "Freq 7", cp = "the CP net" }
 
 function SWEP:Initialize()
     self:SetHoldType(self.HoldType)
 end
 
 function SWEP:PrimaryAttack() end
-function SWEP:SecondaryAttack() end
+-- Right click: switch frequency, for someone who can send on more than one (a Resistance Insider:
+-- the CP net and Freq 7). Careful which one you're on.
+function SWEP:SecondaryAttack()
+    if CLIENT then return end
+    if (self.nextTune or 0) > CurTime() then return end
+    self.nextTune = CurTime() + 0.4
+    local owner = self:GetOwner()
+    if not IsValid(owner) or not (LC and LC.TuneTransmitter) then return end
+    local before = self:GetNW2String("lc_band", "")
+    local band = LC.TuneTransmitter(owner)
+    self:SetNW2String("lc_band", band or "")
+    self:SetNW2Int("lc_bands", #LC.TransmitBands(owner))
+    if band ~= before then
+        owner:EmitSound("buttons/button16.wav", 50)
+        owner:ChatPrint("[Radio] Now transmitting on " .. (BANDS[band] or "nothing") .. ".")
+    end
+end
 
 function SWEP:Deploy()
     if SERVER then
         local owner = self:GetOwner()
-        if IsValid(owner) and LC and LC.RadioBand then
-            local band = LC.RadioBand(owner)
+        if IsValid(owner) and LC and LC.TransmitBand then
+            local band = LC.TransmitBand(owner)
             self:SetNW2String("lc_band", band or "")
+            self:SetNW2Int("lc_bands", #LC.TransmitBands(owner))
             if not band or (LC.Prisoners and LC.Prisoners[owner]) then
                 timer.Simple(0, function() if IsValid(owner) and owner:HasWeapon("weapon_lc_hands") then owner:SelectWeapon("weapon_lc_hands") end end)
                 return true
@@ -143,8 +163,9 @@ if CLIENT then
         end
         local band = BANDS[self:GetNW2String("lc_band", "")] or "your radio"
         local w, h = ScrW(), ScrH()
-        draw.SimpleTextOutlined("RADIO UP: what you type and say goes out on " .. band, "DermaDefaultBold", w / 2, h - 120, Color(150, 220, 150), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
-        draw.SimpleTextOutlined("Only someone right beside you hears you directly. R puts it away.", "DermaDefault", w / 2, h - 102, Color(220, 220, 210), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+        draw.SimpleTextOutlined("TRANSMITTER UP: what you type and say goes out on " .. band, "DermaDefaultBold", w / 2, h - 120, Color(150, 220, 150), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+        draw.SimpleTextOutlined("Only someone right beside you hears you directly. R puts it away." .. (self:GetNW2Int("lc_bands", 1) > 1 and " Right click switches frequency." or ""),
+            "DermaDefault", w / 2, h - 102, Color(220, 220, 210), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     end
 
     function SWEP:OnRemove()

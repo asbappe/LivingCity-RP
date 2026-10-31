@@ -90,8 +90,10 @@ local function Hears(ply, band)
     local mine = LC.RadioBand(ply)
     if not mine then return false end
     if band == "union" then return true end -- every radio picks up the Union band, and CP monitors it
+    if band == "resistance" and LC.HasItem(ply, "radio_tuned") then return true end -- (a unit carrying a Freq 7 radio: an Insider, or a confiscated one)
     return mine == band
 end
+LC.HearsBand = Hears
 
 local function Garble(text)
     local out = {}
@@ -114,12 +116,42 @@ function LC.RadioNotice(band, text)
     end
 end
 
+-- What someone can transmit on: the CP net (every unit, issued), and Freq 7 (a Freq 7 radio and a
+-- radio transmitter, contraband). Nobody transmits on the Union band: it's the city's, for listening.
+-- A Resistance Insider (a unit with both) has the two, and switches between them (right click).
+function LC.TransmitBands(ply)
+    local out = {}
+    if not IsValid(ply) then return out end
+    if LC.PlayerIsCP(ply) then out[#out + 1] = "cp" end
+    if LC.HasItem(ply, "radio_tuned") and LC.HasItem(ply, "radio_transmitter") then out[#out + 1] = "resistance" end
+    return out
+end
+function LC.CanTransmit(ply) return #LC.TransmitBands(ply) > 0 end
+-- The frequency they're tuned to send on (kept while they still have it, else the first they have).
+function LC.TransmitBand(ply)
+    local bands = LC.TransmitBands(ply)
+    for _, b in ipairs(bands) do if b == ply.lcTxBand then return b end end
+    ply.lcTxBand = bands[1]
+    return bands[1]
+end
+function LC.TuneTransmitter(ply)
+    local bands = LC.TransmitBands(ply)
+    if #bands < 2 then return LC.TransmitBand(ply) end
+    local cur = LC.TransmitBand(ply)
+    for i, b in ipairs(bands) do if b == cur then ply.lcTxBand = bands[i % #bands + 1] break end end
+    return ply.lcTxBand
+end
+
 function LC.RadioSay(ply, text, band)
     local mine = LC.RadioBand(ply)
     if not mine then return false, "You don't have a radio." end
+    if band == "union" then return false, "Nobody talks on the Union band: it's the city's, for listening." end
+    if not LC.CanTransmit(ply) then
+        return false, "Your radio only listens. To talk on Freq 7 you need a radio transmitter (black market, or the Resistance lab) and a Freq 7 radio."
+    end
+    band = band or LC.TransmitBand(ply)
     if LC.Prisoners and LC.Prisoners[ply] then return false, "Your radio was taken when you were processed." end
-    band = band or mine
-    if band ~= "union" and band ~= mine then return false, "Your radio isn't on that band." end
+    if not table.HasValue(LC.TransmitBands(ply), band) then return false, "Your transmitter isn't on that band." end
     if band == "cp" and LC.Jammed and LC.Jammed(ply:GetPos()) then return false, "Static. Something nearby is jamming the band." end
     text = string.sub(string.Trim(text or ""), 1, 200)
     if text == "" then return false, "Say what?" end
@@ -129,7 +161,7 @@ function LC.RadioSay(ply, text, band)
     return true
 end
 
--- The radio held up (weapon_lc_radio, next to Hands): everything typed and said goes out on the
+-- The radio transmitter held up (weapon_lc_radio, next to Hands): everything typed and said goes out on the
 -- band instead, and only someone right beside you (lc_radio_overhear, 110 units, about two metres)
 -- hears you directly. You have the radio while you carry one (units always do).
 local cvOverhear = CreateConVar("lc_radio_overhear", "110", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "How close someone must stand to hear what you say into your radio (units)")
@@ -138,7 +170,7 @@ local RADIO_SWEP = "weapon_lc_radio"
 function LC.RadioRaised(ply)
     if not IsValid(ply) or not ply:Alive() then return false end
     local w = ply.GetActiveWeapon and ply:GetActiveWeapon()
-    return IsValid(w) and w:GetClass() == RADIO_SWEP and LC.RadioBand(ply) ~= nil
+    return IsValid(w) and w:GetClass() == RADIO_SWEP and LC.CanTransmit(ply)
 end
 
 local function Overheard(ply, listener)
@@ -153,7 +185,7 @@ function LC.RadioRaisedSay(ply, text)
     if t == "" or string.find(t, "^[!/@%.]") then return false end -- (commands, /me, out of character: as usual)
     if ply.lcRadioSaidAt == CurTime() and ply.lcRadioSaidText == t then return true end -- (both chat hooks see it)
     ply.lcRadioSaidAt, ply.lcRadioSaidText = CurTime(), t
-    local band = LC.RadioBand(ply)
+    local band = LC.TransmitBand(ply)
     local ok, why = LC.RadioSay(ply, t)
     if not ok then ply:ChatPrint("[Radio] " .. why) return true end
     local name = LC.CharacterName and LC.CharacterName(ply) or ply:Nick()
@@ -168,17 +200,17 @@ end
 function LC.RadioVoice(listener, talker)
     if not LC.RadioRaised(talker) then return nil end
     if Overheard(talker, listener) then return true, true end
-    local band = LC.RadioBand(talker)
+    local band = LC.TransmitBand(talker)
     if band == "cp" and LC.Jammed and LC.Jammed(talker:GetPos()) then return false, false end
     if Hears(listener, band) then return true, false end
     return false, false
 end
 
--- Who has the radio: anyone with a radio in their pockets, and every unit.
+-- Who has the transmitter to hold up: anyone with a radio and a radio transmitter in their pockets, and every unit.
 function LC.SyncRadioSwep(ply)
     if not IsValid(ply) or not ply:Alive() or not ply.Give then return end
     local has = ply:HasWeapon(RADIO_SWEP)
-    local should = LC.RadioBand(ply) ~= nil and not (LC.Prisoners and LC.Prisoners[ply])
+    local should = LC.CanTransmit(ply) and not (LC.Prisoners and LC.Prisoners[ply])
         and not (LC.PlayerIsZombie and LC.PlayerIsZombie(ply)) and not (LC.PlayerIsStalker and LC.PlayerIsStalker(ply))
     if should and not has then
         ply:Give(RADIO_SWEP)
@@ -193,7 +225,7 @@ hook.Add("LivingCityInventoryChanged", "LivingCityRadioSwep", function(ply) time
 hook.Add("PlayerSpawn", "LivingCityRadioSwep", function(ply) timer.Simple(2, function() LC.SyncRadioSwep(ply) end) end)
 timer.Create("LivingCityRadioSwep", 5, 0, function() for _, p in ipairs(player.GetAll()) do LC.SyncRadioSwep(p) end end)
 
-local RADIO_CMDS = { ["!r"] = true, ["/r"] = true, ["!radio"] = true, ["/radio"] = true, ["!ru"] = "union", ["/ru"] = "union" }
+local RADIO_CMDS = { ["!r"] = true, ["/r"] = true, ["!radio"] = true, ["/radio"] = true } -- (!ru is gone: nobody talks on the Union band)
 
 hook.Add("PlayerSay", "LivingCityRadio", function(ply, text)
     if LC.RadioRaisedSay(ply, text) then return "" end
@@ -1426,7 +1458,8 @@ function LC.UndergroundAction(ply, action, id)
         elseif it.permit then
             why = "Keep it on you. It's shown when a Civil Protection unit stops you during curfew."
         elseif it.radio then
-            why = "Talk with !r <message>" .. (it.radio == "resistance" and " (Freq 7), or !ru on the Union band." or ".")
+            why = it.radio == "resistance" and "It only listens. With a radio transmitter too, you can talk on Freq 7: switch to the Radio transmitter (next to Hands), or !r <message>."
+                or "It only listens: nobody talks on the Union band, it's the city's. Press Listen to hear it."
         elseif it.rationCard then
             why = "Use any ration dispenser."
         else

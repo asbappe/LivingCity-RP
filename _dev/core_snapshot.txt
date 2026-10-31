@@ -330,6 +330,7 @@ item papers_dead
 item papers_forged
 item permit
 item radio
+item radio_transmitter
 item radio_tuned
 item ration
 item ration_card

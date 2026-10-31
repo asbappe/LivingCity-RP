@@ -741,7 +741,7 @@ do
         ["!recognize"] = "recognize", ["!tie"] = "tie", ["!untie"] = "untie", ["!drag"] = "drag", ["!search"] = "search", ["!backup"] = "backup",
         ["!10-20"] = "10-20", ["!records"] = "records", ["!vo"] = "vo", ["!unshackle"] = "unshackle", ["!decode"] = "decode",
         ["!foreman"] = "foreman", ["!assign"] = "assign", ["!rent"] = "rent", ["!pick"] = "pick", ["!hack"] = "hack", ["!hijack"] = "hijack",
-        ["!inform"] = "inform", ["/request"] = "request", ["!r"] = "r", ["!ru"] = "ru", ["!unlink"] = "unlink",
+        ["!inform"] = "inform", ["/request"] = "request", ["!r"] = "r", ["!unlink"] = "unlink", ["!cuff"] = "tie", ["!uncuff"] = "untie",
         ["/sit"] = "sit", ["/kneel"] = "kneel", ["/lie"] = "lie", ["/lean"] = "lean", ["/cower"] = "cower", ["/stand"] = "stand", ["/pose"] = "pose",
         ["!socio"] = "socio", ["!bolo"] = "bolo", ["!giveup"] = "giveup", ["!talk"] = "net:lc_interrogate_reply", ["!papers"] = "papers",
         ["!credits"] = "credits", ["!characters"] = "characters", ["!character"] = "character", ["/chardesc"] = "chardesc",
