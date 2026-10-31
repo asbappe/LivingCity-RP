@@ -260,10 +260,10 @@ end
 function LC.AddBOLO(unit, key, text, minutes)
     if not IsUnit(unit) then return false, "Civil Protection units only." end
     text = string.Trim(tostring(text or ""))
-    if #text < 3 then return false, "Say what to look out for." end
+    if #text < 3 then return false, "Say who or what to look out for." end
     -- one every half minute (each one is a call and a sound for every unit)
     if IsValid(unit) and not unit:IsAdmin() and (unit.lcBoloNext or 0) > CurTime() then
-        return false, string.format("The net's still busy with your last one. %d seconds.", math.ceil(unit.lcBoloNext - CurTime()))
+        return false, string.format("You sent one just now. Wait %d seconds.", math.ceil(unit.lcBoloNext - CurTime()))
     end
     if IsValid(unit) then unit.lcBoloNext = CurTime() + 30 end
     minutes = math.Clamp(math.floor(tonumber(minutes) or cvBolo:GetFloat()), 5, 240)
@@ -277,7 +277,7 @@ function LC.AddBOLO(unit, key, text, minutes)
     while #list > 40 do table.remove(list, 1) end
     dirty = true
     LC.SyncBolos()
-    TellUnits(string.format("[CP net] BOLO from %s: %s%s (%d min)", b.by, b.name and (b.name .. ", " .. (b.cid or "") .. ": ") or "", b.text, minutes))
+    TellUnits(string.format("[CP net] BOLO (be on the lookout) from %s: %s%s (%d min)", b.by, b.name and (b.name .. ", " .. (b.cid or "") .. ": ") or "", b.text, minutes))
     for _, p in ipairs(Units()) do p:EmitSound("npc/overwatch/radiovoice/on1.wav", 50) end
     if r then Push(r.n, { t = os.time(), text = "BOLO: " .. b.text, by = b.by }, MAX_NOTES) SaveSoon() end
     hook.Run("LivingCityBOLO", b, unit)
@@ -366,7 +366,7 @@ local function OpenRecords(ply)
     if not On() then return ply:ChatPrint("The records terminal is off on this server.") end
     if not IsUnit(ply) then
         if LC.DisguisedAsCP and LC.DisguisedAsCP(ply) then
-            ply:ChatPrint("[Records] Biosignal not recognised. Access denied.")
+            ply:ChatPrint("[Records] Access denied: this terminal is for Civil Protection only.")
         else
             ply:ChatPrint("Civil Protection only.")
         end
@@ -459,7 +459,7 @@ function LC.CanTie(tier, target)
     local willing = target:GetNW2Bool("lc_handsup", false) or (LC.IsDowned and LC.IsDowned(target))
         or (LC.Stops and LC.Stops[target]) or (LC.Detained and LC.Detained[target])
     if not willing and not Behind(tier, target) then
-        return false, "They'd fight you off. Hands up, down, stopped by a Civil Protection unit, or from behind."
+        return false, "They'd fight you off. You can only cuff someone with their hands up, knocked down, stopped by a Civil Protection unit, or from behind."
     end
     return true
 end
@@ -477,8 +477,8 @@ function LC.TiePlayer(target, tier)
     LC.Tied[target] = t
     if IsValid(tier) and not RealUnit(tier) and LC.TakeItem then LC.TakeItem(tier, "zipties", 1) end
     target:EmitSound("physics/plastic/plastic_box_impact_soft2.wav", 60)
-    target:ChatPrint("[Living City] Your hands are cuffed. You can't use anything. F1 > Work at the cuffs, when nobody's looking.")
-    if IsValid(tier) then tier:ChatPrint("Cuffed. Looking at them, F1: drag them along, or uncuff them.") end
+    target:ChatPrint("[Living City] Your hands are cuffed, so you can't use anything. To try to get free: F1 > Work at the cuffs, when nobody's looking.")
+    if IsValid(tier) then tier:ChatPrint("Cuffed. Look at them and press F1 to drag them along or take the cuffs off.") end
     hook.Run("LivingCityTied", target, tier)
     return true
 end
@@ -512,8 +512,8 @@ function LC.StartTie(ply, target)
     target = target or EyeTarget(ply)
     local ok, why = LC.CanTie(ply, target)
     if not ok then return false, why end
-    target:ChatPrint("[Living City] Someone is tying your hands.")
-    return LC.StartTask(ply, cvTieSecs:GetFloat(), "Tying their hands...", {
+    target:ChatPrint("[Living City] Someone is putting cuffs on you.")
+    return LC.StartTask(ply, cvTieSecs:GetFloat(), "Cuffing them...", {
         maxMove = 40, cancelText = "You let go.",
         done = function(p)
             if not IsValid(target) or not target:Alive() or p:GetPos():DistToSqr(target:GetPos()) > 130 * 130 then
@@ -531,7 +531,7 @@ function LC.StartUntie(ply, target)
     if LC.IsTied(ply) then return false, "Your own hands are cuffed." end
     if RealUnit(ply) then
         LC.Untie(target, ply, true)
-        target:ChatPrint("[Living City] A Civil Protection unit cuts your ties.")
+        target:ChatPrint("[Living City] A Civil Protection unit takes your cuffs off.")
         return true
     end
     return LC.StartTask(ply, 4, "Uncuffing them...", {
@@ -539,7 +539,7 @@ function LC.StartUntie(ply, target)
         done = function(p)
             if IsValid(target) and LC.IsTied(target) and p:GetPos():DistToSqr(target:GetPos()) < 130 * 130 then
                 LC.Untie(target, p, true)
-                target:ChatPrint("[Living City] Someone cuts your ties. You're free.")
+                target:ChatPrint("[Living City] Someone gets your cuffs off. You're free.")
             end
         end,
     })
@@ -569,7 +569,7 @@ function LC.StartStruggle(ply)
                 return
             end
             LC.Untie(p, p, true)
-            p:ChatPrint("[Living City] The plastic gives. Your hands are free.")
+            p:ChatPrint("[Living City] The cuffs give. Your hands are free.")
         end,
     })
 end
@@ -660,9 +660,9 @@ local SOCIO_VOICE = {
 local SOCIO_MEANS = {
     green = { "Things are back to normal. Ordinary stops, ordinary days.", "Back to ordinary patrols." },
     yellow = { "More stop-and-searches on the street. Keep your papers ready and nothing on you you'd want found.",
-        "Half as many stops again. Keep an eye out." },
-    red = { "Civil Protection units may use lethal force as they see fit. Twice as many stops. Get indoors and stay out of sight.",
-        "Twice the stops. Lethal force at your discretion: make it count." },
+        "Half as many stops again as usual. Keep an eye out." },
+    red = { "Civil Protection units may shoot to kill as they see fit, and stop twice as many people. Get indoors and stay out of sight.",
+        "Twice as many stops. You may shoot to kill as you see fit: make it count." },
 }
 
 function LC.SocioAuto()
@@ -731,10 +731,10 @@ function LC.SetSocio(ply, level, minutes)
         LC.RefreshSocio()
         return true, "Sociostability is back to what the city makes it."
     end
-    if not LCCP.Socio[level] then return false, "Green, yellow, red, or auto." end
+    if not LCCP.Socio[level] then return false, "Pick green, yellow, red, or auto (the city decides)." end
     -- (announced to the whole city each time: not more than once every half minute)
     if IsValid(ply) and not ply:IsAdmin() and (ply.lcSocioNext or 0) > CurTime() then
-        return false, string.format("You've only just set it. %d seconds.", math.ceil(ply.lcSocioNext - CurTime()))
+        return false, string.format("You only just set it. Wait %d seconds.", math.ceil(ply.lcSocioNext - CurTime()))
     end
     if IsValid(ply) then ply.lcSocioNext = CurTime() + 30 end
     minutes = math.Clamp(math.floor(tonumber(minutes) or 10), 1, 120)

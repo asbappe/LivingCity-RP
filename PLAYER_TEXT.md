@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 7076e9c. Admin-only console messages and log lines are left out.
+Made from version d78c379. Admin-only console messages and log lines are left out.
 
 5797 lines, from 176 files.
 
@@ -3540,15 +3540,15 @@ Made from version 7076e9c. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: add bolo
 
 - "Civil Protection units only."  (text, line 261)
-- "Say what to look out for."  (text, line 263)
+- "Say who or what to look out for."  (text, line 263)
 
 > Note for you (not shown in game): one every half minute (each one is a call and a sound for every unit)
 
-- "The net's still busy with your last one. %d seconds."  (message, line 266)
+- "You sent one just now. Wait %d seconds."  (message, line 266)
 
 > Note for you (not shown in game): part of: add bolo
 
-- "[CP net] BOLO from %s: %s%s (%d min)"  (message, line 280)
+- "[CP net] BOLO (be on the lookout) from %s: %s%s (%d min)"  (message, line 280)
 
 > Note for you (not shown in game): part of: clear bolo
 
@@ -3559,7 +3559,7 @@ Made from version 7076e9c. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: open records
 
 - "The records terminal is off on this server."  (chat message, line 366)
-- "[Records] Biosignal not recognised. Access denied."  (chat message, line 369)
+- "[Records] Access denied: this terminal is for Civil Protection only."  (chat message, line 369)
 - "Civil Protection only."  (chat message, line 371)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_records_do)
@@ -3584,17 +3584,17 @@ Made from version 7076e9c. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: can tie
 
 - "You need cuffs."  (text, line 458)
-- "They'd fight you off. Hands up, down, stopped by a Civil Protection unit, or from behind."  (text, line 462)
+- "They'd fight you off. You can only cuff someone with their hands up, knocked down, stopped by a Civil Protection unit, or from behind."  (text, line 462)
 
 > Note for you (not shown in game): part of: tie player
 
-- "[Living City] Your hands are cuffed. You can't use anything. F1 > Work at the cuffs, when nobody's looking."  (chat message, line 480)
-- "Cuffed. Looking at them, F1: drag them along, or uncuff them."  (chat message, line 481)
+- "[Living City] Your hands are cuffed, so you can't use anything. To try to get free: F1 > Work at the cuffs, when nobody's looking."  (chat message, line 480)
+- "Cuffed. Look at them and press F1 to drag them along or take the cuffs off."  (chat message, line 481)
 
 > Note for you (not shown in game): part of: start tie
 
-- "[Living City] Someone is tying your hands."  (chat message, line 515)
-- "Tying their hands..."  (progress bar, line 516)
+- "[Living City] Someone is putting cuffs on you."  (chat message, line 515)
+- "Cuffing them..."  (progress bar, line 516)
 - "You let go."  (text, line 517)
 
 > Note for you (not shown in game): part of: done
@@ -3605,13 +3605,13 @@ Made from version 7076e9c. Admin-only console messages and log lines are left ou
 
 - "Look at someone whose hands are cuffed, up close."  (text, line 530)
 - "Your own hands are cuffed."  (text, line 531)
-- "[Living City] A Civil Protection unit cuts your ties."  (chat message, line 534)
+- "[Living City] A Civil Protection unit takes your cuffs off."  (chat message, line 534)
 - "Uncuffing them..."  (progress bar, line 537)
 - "You stop."  (text, line 538)
 
 > Note for you (not shown in game): part of: done
 
-- "[Living City] Someone cuts your ties. You're free."  (chat message, line 542)
+- "[Living City] Someone gets your cuffs off. You're free."  (chat message, line 542)
 
 > Note for you (not shown in game): part of: start struggle
 
@@ -3623,7 +3623,7 @@ Made from version 7076e9c. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: done
 
 - "[Living City] They see you working at the cuffs, and tighten them."  (chat message, line 568)
-- "[Living City] The plastic gives. Your hands are free."  (chat message, line 572)
+- "[Living City] The cuffs give. Your hands are free."  (chat message, line 572)
 
 > Note for you (not shown in game): !drag on someone tied: walk them along. Returns nil when it's not about a tied person.
 
@@ -3637,9 +3637,9 @@ Made from version 7076e9c. Admin-only console messages and log lines are left ou
 - "Things are back to normal. Ordinary stops, ordinary days."  (text, line 661)
 - "Back to ordinary patrols."  (text, line 661)
 - "More stop-and-searches on the street. Keep your papers ready and nothing on you you'd want found."  (text, line 662)
-- "Half as many stops again. Keep an eye out."  (text, line 663)
-- "Civil Protection units may use lethal force as they see fit. Twice as many stops. Get indoors and stay out of sight."  (text, line 664)
-- "Twice the stops. Lethal force at your discretion: make it count."  (text, line 665)
+- "Half as many stops again as usual. Keep an eye out."  (text, line 663)
+- "Civil Protection units may shoot to kill as they see fit, and stop twice as many people. Get indoors and stay out of sight."  (text, line 664)
+- "Twice as many stops. You may shoot to kill as you see fit: make it count."  (text, line 665)
 
 > Note for you (not shown in game): part of: announce socio
 
@@ -3650,11 +3650,11 @@ Made from version 7076e9c. Admin-only console messages and log lines are left ou
 
 - "Officers only (Division Leader and up, the Administrator)."  (text, line 727)
 - "Sociostability is back to what the city makes it."  (text, line 732)
-- "Green, yellow, red, or auto."  (text, line 734)
+- "Pick green, yellow, red, or auto (the city decides)."  (text, line 734)
 
 > Note for you (not shown in game): (announced to the whole city each time: not more than once every half minute)
 
-- "You've only just set it. %d seconds."  (message, line 737)
+- "You only just set it. Wait %d seconds."  (message, line 737)
 - "Sociostability set to %s for %d minutes."  (message, line 743)
 
 > Note for you (not shown in game): Requests

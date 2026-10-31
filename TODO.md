@@ -2,7 +2,7 @@
 
 **Open right now** (2026-10-31):
 - **Map lights twinkle** on `rp_c18_ug`: waiting on the owner's Sandbox test of the same map.
-- **Rewording batches 4 and up** (plain words; drafts in `_dev/rewording/`): when the owner asks.
+- **Rewording, batches 6 and up** (plain words). Done: 1 to 3 (guide, tips, quests, jobs), 4 (Civil Intake, Housing Allocation), 5 (Civil Protection's tools, and the cuffs' leftover "ties" wording). City events were already plain. Left: underground (~170 lines), Resistance ops (~95), side jobs (~95), shop (~217).
 - **The owner's corrected PLAYER_TEXT.md**: apply with `_dev/apply_player_text.py` when it comes.
 - **A full test run** (none since rewording batch 2): when the owner asks.
 - **A local out-of-character text chat** (the owner's list of 2026-10-29): put off for usage, ask before building.

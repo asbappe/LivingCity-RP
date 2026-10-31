@@ -74,7 +74,7 @@ Every commit says what it did; TIMELINE.md has the summary. The big pieces:
 - Ration cards come only from finished Union shifts (`lc_shift_ration_cards` 1); each ration takes one; no credits with a ration; Civil Intake no longer issues or replaces cards (`lc_card_fee` removed). Snapshot updated with the owner's request.
 - Citizens sleep on beds in habitation blocks at curfew, lockdown and night (`lc_citizens_sleep`, `lc_bed_head_flip`; sv_livingcity_rest.lua, GoHome in sv_livingcity.lua); players lie on the bed with the camera on the pillow (cl_livingcity_rest.lua, sh_livingcity_acts.lua).
 - **Not verified:** the full test suite was started but not finished (no failures in the part that ran); the new tests (PapersHousingTests, NextStepTests, HygieneTests) never completed a run. Client smoke test passes. Run the full suite first next time.
-- **Rewording batch 4** (Civil Intake and Housing Allocation) is in the code; originals in `_dev/rewording/batch4_intake.md`. Kept the phrases the tests look for. Not run through the full suite.
+- **Rewording batch 4** (Civil Intake and Housing Allocation) is in the code; originals in `_dev/rewording/batch4_intake.md`. Kept the phrases the tests look for. Batch 5 (Civil Protection's tools; the cuffs no longer say "ties" or "plastic") too.
 
 ## Waiting on the owner (from the last session)
 
