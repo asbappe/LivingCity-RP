@@ -228,7 +228,8 @@ local function HoldingEditor()
     return IsValid(wep) and wep:GetClass() == "gmod_tool" and wep.GetMode and wep:GetMode() == "livingcity_editor"
 end
 
-local function Visible() return (cvShow:GetBool() or HoldingEditor()) and cvMarkers:GetBool() end
+-- With the markers hidden, holding the editor still shows what the tool in hand places (Focus).
+local function Visible() return (cvShow:GetBool() or HoldingEditor()) and (cvMarkers:GetBool() or HoldingEditor()) end
 
 local wasVisible = false
 local npcCache, nextNpcScan = {}, 0
@@ -380,6 +381,23 @@ local function EditorMode()
     return cv and cv:GetString() or "idle"
 end
 
+-- "Show the editor's markers" off: holding the editor shows only the markers of the tool in hand
+-- (that kind of zone, that kind of point, or the path nodes). nil: show everything.
+local function Focus()
+    if cvMarkers:GetBool() or not HoldingEditor() then return nil end
+    local m = EditorMode()
+    if ZONE_MODE_KIND[m] then return { zone = ZONE_MODE_KIND[m] } end
+    if m == "node" then return { node = true } end
+    if string.StartWith(m, "work_") then return { point = "work" } end
+    return { point = m }
+end
+local function Shown(f, kind, what)
+    if not f then return true end
+    if what == "zone" then return f.zone == kind end
+    if what == "node" then return f.node == true end
+    return f.point == kind
+end
+
 -- mirrors LC.ZoneForEditing on the server
 local function ZoneForEditing(pos)
     local best, bd
@@ -452,12 +470,13 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
     render.SetColorMaterial()
 
     UpdateAim()
+    local focus = Focus()
     local aimZone = aimed and aimed.kind == "zone" and aimed.it or nil
     local aimPoint = aimed and aimed.kind == "point" and aimed.it or nil
     local aimNode = aimed and aimed.kind == "node" and aimed.it or nil
 
     for _, p in ipairs(LC_CL.points) do
-        if p.pos:DistToSqr(eye) < MAX_DIST2 then
+        if p.pos:DistToSqr(eye) < MAX_DIST2 and Shown(focus, p.kind, "point") then
             local col = POINT_COLORS[p.kind] or color_white
             local base = p.pos + Vector(0, 0, 2)
             if p == aimPoint then
@@ -477,6 +496,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
         local col = POINT_COLORS[seq.kind]
         local near = false
         for _, sp in ipairs(seq.pts) do if sp.pos:DistToSqr(eye) < 1500 * 1500 then near = true break end end
+        if not Shown(focus, seq.kind, "point") then near = false end
         if near then
             for i = 2, #seq.pts do render.DrawLine(seq.pts[i - 1].pos + UP8, seq.pts[i].pos + UP8, col, Z()) end
             if seq.kind == "patrol" and #seq.pts > 2 then
@@ -486,7 +506,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
     end
 
     for id, n in pairs(LC_CL.nodes) do
-        if n.pos:DistToSqr(eye) < MAX_DIST2 then
+        if n.pos:DistToSqr(eye) < MAX_DIST2 and Shown(focus, nil, "node") then
             local col = (LC_CL.selected == id) and SELECT_COLOR or (n.orphan and ORPHAN_COLOR or NODE_COLOR)
             if n == aimNode then
                 render.DrawWireframeBox(n.pos, angle_zero, Vector(-10, -10, 0), Vector(10, 10, 22), color_white, Z())
@@ -503,7 +523,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
     -- strongly with a bold edge, and the others dimmed so it stands out
     local fill = cvFill:GetBool()
     for _, z in ipairs(LC_CL.zones) do
-        if z.pos:DistToSqr(eye) < (3000 + z.r) ^ 2 then
+        if z.pos:DistToSqr(eye) < (3000 + z.r) ^ 2 and Shown(focus, z.kind, "zone") then
             local col = ZONE_COLORS[z.kind] or color_white
             local ok = pcall(function()
                 if z.box then
@@ -612,12 +632,13 @@ local function DrawAimInfo()
 end
 
 local function DrawEditorLabels()
+    local focus = Focus()
     DrawAimInfo()
     local eye = EyePos()
     local near = 450 * 450 -- text only for what's close; the thing you aim at is named under the crosshair
 
     for _, p in ipairs(LC_CL.points) do
-        if p.pos:DistToSqr(eye) < near then
+        if p.pos:DistToSqr(eye) < near and Shown(focus, p.kind, "point") then
             local txt = POINT_NAMES[p.kind] or string.upper(p.kind)
             if p.kind == "queue" and p.group > 0 then txt = string.format("LINE %d  #%d", p.group, p.order or 0)
             elseif p.kind == "queue" then txt = "STAND HERE"
@@ -632,11 +653,11 @@ local function DrawEditorLabels()
         end
     end
     for id, n in pairs(LC_CL.nodes) do
-        if n.orphan and n.pos:DistToSqr(eye) < near then Label(n.pos + Vector(0, 0, 22), "UNLINKED", ORPHAN_COLOR) end
+        if n.orphan and n.pos:DistToSqr(eye) < near and Shown(focus, nil, "node") then Label(n.pos + Vector(0, 0, 22), "UNLINKED", ORPHAN_COLOR) end
     end
     for _, z in ipairs(LC_CL.zones) do
         -- a zone's name floats at its center, but only when you're standing in it
-        if LCZ.Contains(z, eye, 0) then
+        if LCZ.Contains(z, eye, 0) and Shown(Focus(), z.kind, "zone") then
             local txt = ZONE_NAMES[z.kind] or z.kind
             if z.kind == "block" then txt = string.upper(BlockName(z.group)) end
             Label(z.pos + Vector(0, 0, 30), txt, ZONE_COLORS[z.kind])

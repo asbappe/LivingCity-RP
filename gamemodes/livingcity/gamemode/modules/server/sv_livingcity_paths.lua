@@ -281,6 +281,36 @@ end
 -- Routing
 ------------------------------------------------------------------------
 
+-- Things standing on the paths that people walk round, not into (a Combine turret set up on a
+-- walkway): any step that passes within reach of one is left out of the route, so a way round
+-- is taken if there is one. Kept up to date every few seconds.
+local blockers = {}
+local function Refresh()
+    blockers = {}
+    for _, cls in ipairs({ "npc_turret_floor" }) do
+        for _, e in ipairs(LC.EntsOf and LC.EntsOf(cls) or ents.FindByClass(cls)) do
+            if IsValid(e) then blockers[#blockers + 1] = e:GetPos() end
+        end
+    end
+end
+timer.Create("LivingCityPathBlockers", 3, 0, Refresh)
+LC.RefreshPathBlockers = Refresh
+local REACH2 = 48 * 48
+function LC.PathBlocked(a, b)
+    if #blockers == 0 then return false end
+    local ab = b - a
+    local len2 = ab:LengthSqr()
+    for _, p in ipairs(blockers) do
+        if math.abs(p.z - a.z) < 80 or math.abs(p.z - b.z) < 80 then
+            local t = len2 > 0 and math.Clamp((p - a):Dot(ab) / len2, 0, 1) or 0
+            local c = a + ab * t
+            local dx, dy = p.x - c.x, p.y - c.y
+            if dx * dx + dy * dy < REACH2 then return true end
+        end
+    end
+    return false
+end
+
 -- Nearest usable node we can walk straight to; falls back to plain nearest.
 local function EntryNode(pos, avoidRebel, avoidCombine)
     local cands = {}
@@ -326,7 +356,8 @@ local function AStar(start, goal, avoidRebel, avoidCombine)
         open[cur] = nil
         for id in pairs(cur.links) do
             local nb = LC.Nodes[id]
-            if nb and usable[nb] and not (avoidRebel and rebelNode[nb]) and not (avoidCombine and combineNode[nb]) then
+            if nb and usable[nb] and not (avoidRebel and rebelNode[nb]) and not (avoidCombine and combineNode[nb])
+                and not LC.PathBlocked(cur.pos, nb.pos) then
                 local t = g[cur] + cur.pos:Distance(nb.pos)
                 if not g[nb] or t < g[nb] then
                     came[nb] = cur
