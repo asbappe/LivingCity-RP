@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 741c15b. Admin-only console messages and log lines are left out.
+Made from version 3ecf56a. Admin-only console messages and log lines are left out.
 
 5731 lines, from 175 files.
 
@@ -5140,10 +5140,10 @@ Made from version 741c15b. Admin-only console messages and log lines are left ou
 - "Near a stove or fire you can cook raw meat and fish, and boil water, from your pockets ({gm_showteam})."  (text, line 227)
 - "Vending machine"  (title, line 228)
 - "Press {+use} to buy a can of Breen's Private Reserve. It quenches thirst, and leaves you a little dizzy."  (text, line 229)
-- "Press {+use} to buy a can. With a multitool, aim at it and fire: ten seconds and it drops three cans, free. Not where a Civil Protection unit can see you."  (text, line 230)
+- "Press {+use} to buy a can. With a multitool, aim at it and fire: ten seconds and it drops five to eight cans, free. Not where a Civil Protection unit can see you."  (text, line 230)
 - "Ration dispenser"  (title, line 231)
 - "Press {+use} for your ration: one per allocation, none if your standing is too low. A forged ration card gets one anyway."  (text, line 232)
-- "Press {+use} for your ration. With a multitool, aim at it and fire: ten seconds and it spits out three packets, no coupon, no record. Not where a Civil Protection unit can see you."  (text, line 233)
+- "Press {+use} for your ration. With a multitool, aim at it and fire: ten seconds and it spits out five to eight packets, no coupon, no record. Not where a Civil Protection unit can see you."  (text, line 233)
 - "Citizens get one ration per allocation here. Civil Protection units don't queue."  (text, line 234)
 - "Supply drop"  (title, line 235)
 - "Union supplies are coming in: a crate of them at the loading dock. Anyone can press {+use} on it to take a load, but a Civil Protection unit who sees you is trouble."  (text, line 236)
@@ -10195,135 +10195,135 @@ Made from version 741c15b. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Can they take n more of this? ok, or false and why.
 
-- "Your pockets are full."  (text, line 129)
+- "Your pockets are full."  (text, line 134)
 
 > Note for you (not shown in game): part of: can carry
 
-- "You've no room for something that size."  (text, line 140)
-- "That's more than you can carry."  (text, line 143)
+- "You've no room for something that size."  (text, line 145)
+- "That's more than you can carry."  (text, line 148)
 
 > Note for you (not shown in game): Give an item, or drop it at their feet if their pockets are full.
 
-- "Your pockets are full. {id} is on the ground."  (chat message, line 205)
+- "Your pockets are full. {id} is on the ground."  (chat message, line 210)
 
 > Note for you (not shown in game): part of: infect
 
-- "Your stomach turns. Something in that wasn't clean."  (chat message, line 228)
+- "Your stomach turns. Something in that wasn't clean."  (chat message, line 233)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "You're getting hungry."  (text, line 267)
-- "You're starving."  (text, line 267)
-- "Your mouth is dry."  (text, line 268)
-- "You're badly dehydrated."  (text, line 268)
-- "You are starving and dehydrated."  (chat message, line 280)
-- "You are starving."  (text, line 280)
-- "You are dehydrated."  (text, line 280)
+- "You're getting hungry."  (text, line 272)
+- "You're starving."  (text, line 272)
+- "Your mouth is dry."  (text, line 273)
+- "You're badly dehydrated."  (text, line 273)
+- "You are starving and dehydrated."  (chat message, line 285)
+- "You are starving."  (text, line 285)
+- "You are dehydrated."  (text, line 285)
 
 > Note for you (not shown in game): part of: breen water
 
-- "Where were you going again?"  (chat message, line 328)
+- "Where were you going again?"  (chat message, line 333)
 
 > Note for you (not shown in game): part of: consume
 
-- "The cramps ease."  (chat message, line 342)
-- "It burns all the way down. Your legs go out from under you."  (chat message, line 348)
+- "The cramps ease."  (chat message, line 347)
+- "It burns all the way down. Your legs go out from under you."  (chat message, line 353)
 
 > Note for you (not shown in game): part of: inv action
 
-- "Your hands are cuffed."  (chat message, line 467)
-- "You need to be standing in water."  (chat message, line 493)
-- "You can't eat that."  (chat message, line 499)
-- "Cooking won't help that."  (chat message, line 503)
-- "You need a stove or a fire."  (chat message, line 504)
-- "becomes {name}."  (chat message, line 508)
-- "Stand in water, or by a sink, to fill it."  (chat message, line 511)
+- "Your hands are cuffed."  (chat message, line 472)
+- "You need to be standing in water."  (chat message, line 498)
+- "You can't eat that."  (chat message, line 504)
+- "Cooking won't help that."  (chat message, line 508)
+- "You need a stove or a fire."  (chat message, line 509)
+- "becomes {name}."  (chat message, line 513)
+- "Stand in water, or by a sink, to fill it."  (chat message, line 516)
 
 > Note for you (not shown in game): the tap running into it (a splash was too loud for a sink); dipped in water, a soft slosh
 
-- "[Papers] You keep your papers on you. (Stash them at home if you must.)"  (chat message, line 518)
-- "That's Combine issue: it stays with you (or another unit)."  (chat message, line 519)
+- "[Papers] You keep your papers on you. (Stash them at home if you must.)"  (chat message, line 523)
+- "That's Combine issue: it stays with you (or another unit)."  (chat message, line 524)
 
 > Note for you (not shown in game): pressing E on something
 
-- "Picked up: {name}"  (chat message, line 569)
-- "Your pockets are full."  (chat message, line 571)
+- "Picked up: {name}"  (chat message, line 574)
+- "Your pockets are full."  (chat message, line 576)
 
 > Note for you (not shown in game): the game's physgun drop moment
 
-- "[Living City] Moved: the {kind} is saved where you put it."  (chat message, line 860)
+- "[Living City] Moved: the {kind} is saved where you put it."  (chat message, line 865)
 
 > Note for you (not shown in game): part of: use vending
 
-- "[Vending] Insert {price} credits."  (chat message, line 876)
+- "[Vending] Insert {price} credits."  (chat message, line 881)
 
 > Note for you (not shown in game): part of: use static vending
 
-- "[Vending] Insert {price} credits."  (chat message, line 923)
+- "[Vending] Insert {price} credits."  (chat message, line 928)
 
 > Note for you (not shown in game): part of: use fixture
 
-- "[Stove] Cook from your pockets (F2)."  (chat message, line 942)
-- "[Sink] Fill bottles and cans from your pockets (F2). Boil them before you drink."  (chat message, line 946)
+- "[Stove] Cook from your pockets (F2)."  (chat message, line 947)
+- "[Sink] Fill bottles and cans from your pockets (F2). Boil them before you drink."  (chat message, line 951)
 
 > Note for you (not shown in game): part of: dispense
 
-- "[Rations] The clerk at the counter hands you a ration packet."  (chat message, line 1006)
+- "[Rations] The clerk at the counter hands you a ration packet."  (chat message, line 1011)
 
-> Note for you (not shown in game): Hacking them (the multitool): a vending machine spits out its water, a ration dispenser its packets, no credits and no coupon. Ten seconds, keep still; a unit who sees you at it makes you wanted. Then it's empty for lc_machine_hack_cooldown minutes (10).
+> Note for you (not shown in game): Hacking them (the multitool): a vending machine spits out its water, a ration dispenser its packets (5 to 8 of them), no credits and no coupon. Ten seconds, keep still; a unit who sees you at it makes you wanted. Then it's empty for lc_machine_hack_cooldown minutes (10).
 
-- "the vending machine"  (text, line 1017)
-- "the ration dispenser"  (text, line 1017)
-- "Aim at a vending machine or a ration dispenser."  (text, line 1020)
-- "You need a multitool to get into it."  (text, line 1021)
-- "You're busy."  (text, line 1022)
-- "It's dead: no power. Nothing to get out of it."  (text, line 1023)
+- "the vending machine"  (text, line 1022)
+- "the ration dispenser"  (text, line 1022)
+- "Aim at a vending machine or a ration dispenser."  (text, line 1025)
+- "You need a multitool to get into it."  (text, line 1026)
+- "You're busy."  (text, line 1027)
+- "It's dead: no power. Nothing to get out of it."  (text, line 1028)
 
 > Note for you (not shown in game): part of: hack machine
 
-- "Someone's already emptied it. It'll be restocked in about %d minutes."  (message, line 1026)
-- "Hacking {name}... keep still"  (progress bar, line 1030)
-- "You leave it."  (text, line 1031)
+- "Someone's already emptied it. It'll be restocked in about %d minutes."  (message, line 1031)
+- "Hacking {name}... keep still"  (progress bar, line 1035)
+- "You leave it."  (text, line 1036)
 
 > Note for you (not shown in game): part of: done
 
-- "[Resistance] The dispenser chokes, and spits out %d ration packets. No coupon, no record."  (message, line 1051)
-- "[Resistance] The machine shudders and drops %d cans. Free water, for once."  (message, line 1052)
-- "Tampering with Union property"  (text, line 1054)
-- "[Civil Protection] A Civil Protection unit saw you at it."  (chat message, line 1055)
+- "[Resistance] The dispenser chokes, and spits out %d ration packets. No coupon, no record."  (message, line 1057)
+- "[Resistance] The machine shudders and drops %d cans. Free water, for once."  (message, line 1058)
+- "Tampering with Union property"  (text, line 1060)
+- "[Civil Protection] A Civil Protection unit saw you at it."  (chat message, line 1061)
 
 > Note for you (not shown in game): ent may be nil: a line with no dispenser placed at its front.
 
-- "[Rations] No ration card on file. Register at Civil Intake first."  (text, line 1069)
-- "[Rations] Present your ration card. Lost it? Civil Intake issues another."  (text, line 1071)
+- "[Rations] No ration card on file. Register at Civil Intake first."  (text, line 1075)
+- "[Rations] Present your ration card. Lost it? Civil Intake issues another."  (text, line 1077)
 
 > Note for you (not shown in game): part of: use dispenser
 
-- "[Rations] Your ration privileges have been suspended."  (text, line 1073)
-- "[Rations] Next allocation in %d seconds."  (message, line 1075)
+- "[Rations] Your ration privileges have been suspended."  (text, line 1079)
+- "[Rations] Next allocation in %d seconds."  (message, line 1081)
 
 > Note for you (not shown in game): the PA said it: tolerating noncompliance costs this allocation (sv_livingcity_rations.lua)
 
-- "[Rations] Allocation withheld: five ration units deducted for tolerating noncompliance{why}. Your next allocation is as normal."  (text, line 1082)
+- "[Rations] Allocation withheld: five ration units deducted for tolerating noncompliance{why}. Your next allocation is as normal."  (text, line 1088)
 
 > Note for you (not shown in game): the city's stores (sv_livingcity_stockpile.lua): empty, nothing; low, sometimes nothing
 
-- "[Rations] Distribution suspended: the city's stores are empty."  (text, line 1089)
-- "[Rations] Supply shortfall. The dispenser whirs and gives nothing. Try again in a minute (the stores are low: kitchen and factory shifts, trains and supply drops fill them)."  (text, line 1092)
+- "[Rations] Distribution suspended: the city's stores are empty."  (text, line 1095)
+- "[Rations] Supply shortfall. The dispenser whirs and gives nothing. Try again in a minute (the stores are low: kitchen and factory shifts, trains and supply drops fill them)."  (text, line 1098)
 
 > Note for you (not shown in game): a forged card: no questions, usually
 
-- "[Rations] Card invalid. This incident has been logged."  (chat message, line 1101)
-- "Ration fraud"  (text, line 1102)
+- "[Rations] Card invalid. This incident has been logged."  (chat message, line 1107)
+- "Ration fraud"  (text, line 1108)
 
 > Note for you (not shown in game): part of: use dispenser
 
-- "[Rations] Card accepted."  (chat message, line 1105)
-- "ration coupon"  (text, line 1122)
+- "[Rations] Card accepted."  (chat message, line 1111)
+- "ration coupon"  (text, line 1128)
 
 > Note for you (not shown in game): part of: serve players at line
 
-- "[Rations] Wait at the counter."  (chat message, line 1138)
+- "[Rations] Wait at the counter."  (chat message, line 1144)
 
 ## talking to people (sv_livingcity_talk.lua)
 

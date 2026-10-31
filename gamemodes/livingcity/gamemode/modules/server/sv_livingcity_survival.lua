@@ -44,7 +44,12 @@ local cvBirds    = CreateConVar("lc_birds", "6", FLAGS, "Birds around the city")
 local cvVermin   = CreateConVar("lc_vermin", "2", FLAGS, "Headcrabs roaming the city outside infestation zones")
 local cvRation   = CreateConVar("lc_ration_interval", "600", FLAGS, "Seconds between ration dispenser allocations (halved during rations)")
 local cvVend     = CreateConVar("lc_vending_price", "2", FLAGS, "Credits per can from a vending machine")
-local cvHackOut  = CreateConVar("lc_machine_hack_out", "3", FLAGS, "What a hacked vending machine or ration dispenser spits out (cans or ration packets)")
+local cvHackOut  = CreateConVar("lc_machine_hack_out", "5", FLAGS, "The fewest a hacked vending machine or ration dispenser spits out (cans or ration packets)")
+local cvHackMax  = CreateConVar("lc_machine_hack_max", "8", FLAGS, "The most a hacked vending machine or ration dispenser spits out (a random number from lc_machine_hack_out to this)")
+-- (31 October: 3 became 5 to 8, a risk worth taking. A server still on the old 3 moves to 5 once.)
+if cvHackOut:GetString() == "3" then
+    if cvHackOut.SetString then cvHackOut:SetString("5") elseif RunConsoleCommand then RunConsoleCommand("lc_machine_hack_out", "5") end
+end
 local cvHackCool = CreateConVar("lc_machine_hack_cooldown", "10", FLAGS, "Minutes before a hacked vending machine or ration dispenser can be hacked again")
 local cvFists    = CreateConVar("lc_give_fists", "1", FLAGS, "Everyone has fists")
 
@@ -1009,7 +1014,7 @@ end
 
 ------------------------------------------------------------------------
 -- Hacking them (the multitool): a vending machine spits out its water, a
--- ration dispenser its packets, no credits and no coupon. Ten seconds, keep
+-- ration dispenser its packets (5 to 8 of them), no credits and no coupon. Ten seconds, keep
 -- still; a unit who sees you at it makes you wanted. Then it's empty for
 -- lc_machine_hack_cooldown minutes (10).
 ------------------------------------------------------------------------
@@ -1033,7 +1038,8 @@ function LC.HackMachine(ply, ent)
             if not IsValid(ent) or (ent.lcHackedUntil or 0) > CurTime() then return end
             ent.lcHackedUntil = CurTime() + cvHackCool:GetFloat() * 60
             ent:EmitSound("ambient/energy/zap" .. math.random(1, 3) .. ".wav", 70)
-            local n = math.max(1, cvHackOut:GetInt())
+            local lo = math.max(1, cvHackOut:GetInt())
+            local n = math.random(lo, math.max(lo, cvHackMax:GetInt()))
             local dispenser = ent:GetClass() == "lc_dispenser"
             for i = 1, n do
                 timer.Simple(0.5 + (i - 1) * 0.6, function()

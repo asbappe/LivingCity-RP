@@ -5798,8 +5798,9 @@ for _, cls in ipairs({ "lc_vending", "lc_dispenser" }) do
     hk.lookingAt = m
     local before = #ents.FindByClass("lc_item")
     ok(LC.HackMachine(hk, m), "a Hacker gets into the " .. cls)
-    _run(13)
-    ok(#ents.FindByClass("lc_item") - before == GetConVar("lc_machine_hack_out"):GetInt(), "and it spits out what's in it, free", tostring(#ents.FindByClass("lc_item") - before))
+    _run(16) -- (ten seconds at it, then one after another)
+    local got = #ents.FindByClass("lc_item") - before
+    ok(got >= GetConVar("lc_machine_hack_out"):GetInt() and got <= GetConVar("lc_machine_hack_max"):GetInt() and got >= 5, "and it spits out a handful of what's in it (5 to 8), free", tostring(got))
     local okA, whyA = LC.HackMachine(hk, m)
     ok(not okA and string.find(whyA or "", "emptied", 1, true), "then it's empty for a while")
     for _, it in ipairs(ents.FindByClass("lc_item")) do if it:GetPos():Distance(M0) < 400 then it:Remove() end end
