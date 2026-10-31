@@ -64,6 +64,7 @@ chat command /changeclothes
 chat command /characters
 chat command /chars
 chat command /cheer
+chat command /copyrecords
 chat command /cower
 chat command /cuff
 chat command /cut
@@ -85,6 +86,7 @@ chat command /laws
 chat command /lean
 chat command /lie
 chat command /lock
+chat command /loserecord
 chat command /meet
 chat command /nod
 chat command /outfits
@@ -95,6 +97,7 @@ chat command /rationbreak
 chat command /records
 chat command /rent
 chat command /request
+chat command /reveal
 chat command /salute
 chat command /scanner
 chat command /scout
@@ -102,12 +105,14 @@ chat command /setlaw
 chat command /shake
 chat command /showpapers
 chat command /sit
+chat command /skim
 chat command /sleep
 chat command /socio
 chat command /stand
 chat command /struggle
 chat command /takekey
 chat command /tie
+chat command /tipoff
 chat command /uncuff
 chat command /unlock
 chat command /unrent
@@ -318,6 +323,7 @@ item id_papers
 item intel_checkpoint
 item intel_nexus
 item intel_patrol
+item intel_records
 item jammer
 item keepsake
 item lockpick
@@ -583,6 +589,8 @@ setting lc_infest_spread_minutes = 10
 setting lc_informants = 1
 setting lc_inherit_max = 200
 setting lc_inherit_pct = 25
+setting lc_insider = 1
+setting lc_insider_privacy = 700
 setting lc_intake = 1
 setting lc_intake_grace = 10
 setting lc_intake_secs = 8

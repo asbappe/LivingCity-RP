@@ -2177,7 +2177,7 @@ T{
                       success = function(q, p) LC.AddTrait(p, "sympathy", 1) Narrate(q, "She nods. It's enough. For now it's enough.") end,
                       fail = function(q) Narrate(q, "She lets go of your sleeve and doesn't look back.") end },
                 }),
-                Count("healed", 3, "Heal 3 different wounded people with The Blessing (primary fire)", nil, true),
+                Count("healed", 3, "Heal 3 different wounded people with The Blessing (left click)", nil, true),
                 Count("preached", 1, "Preach the Word: hold The Blessing and press reload where people can hear", nil, false),
             },
         }

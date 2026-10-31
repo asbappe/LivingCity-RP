@@ -195,6 +195,7 @@ local GUIDE = {
         "F3 is your job board. Events add their own directives: they're posted two minutes before the event and taken down when it's over.",
         "Only rations and curfew are announced in advance. Sweeps, raids and supply convoys happen without warning, and a lockdown only happens after violence.",
         "Several people can take the same job: up to 8 for an event, 6 for containment or retaking ground, 4 for a chase.",
+        "A Civil Protection unit who stays inside as the Resistance's spy (the story The Man Inside) gets a menu only they can see: C > Civil Protection > Inside. Tip off Freq 7, lose a record, take supplies for a dead drop, copy the records, or reveal yourself with the codeword, each only where nobody can see or hear you. Get caught, and you're Resistance for good: wanted, with no surrendering.",
         "When the infestation spreads or the Resistance take ground, a directive to deal with it is posted straight away.",
     } },
     { "Civil Protection", {

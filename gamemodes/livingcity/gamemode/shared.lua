@@ -129,6 +129,7 @@ LC_MODULES = {
         "sv_livingcity_stockpile",
         "sv_livingcity_storage",
         "sv_livingcity_stories",
+        "sv_livingcity_insider", -- (the Resistance's man inside Civil Protection)
         "sv_livingcity_survival",
         "sv_livingcity_talk",
         "sv_livingcity_territory",

@@ -224,6 +224,8 @@ LCS.Items = {
                         desc = "A checkpoint's shifts, its gate, its men. The quartermaster pays for it" },
     intel_nexus     = { name = "Notes on the Combine's ground", model = "models/props_c17/paper01.mdl", kg = 0, contraband = true, conceal = 0.9, sell = 35, intel = true,
                         desc = "The approaches to the Combine's own ground. The quartermaster pays well for it" },
+    intel_records   = { name = "Copied city records", model = "models/props_c17/paper01.mdl", kg = 0, contraband = true, conceal = 0.85, sell = 60, intel = true,
+                        desc = "The city's own records, copied out by someone inside: names, routes, who's being watched. The best intel there is" },
     union_goods     = { name = "Union machine parts", model = "models/props_lab/box01a.mdl", contraband = true, conceal = 0.4, sell = 8, arms = true,
                         desc = "Finished parts, skimmed off the factory line. The dealer moves them; the quartermaster pays more (they end up in guns)" },
     vest_cell       = { name = "Charge cell", model = "models/items/battery.mdl", use = "charge", useLabel = "Charge your vest", charge = 25,

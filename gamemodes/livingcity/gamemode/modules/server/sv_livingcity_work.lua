@@ -42,6 +42,7 @@ local WORKERS = { citizen = true, resistance = true }
 function LC.CanWork(ply)
     local f = LC.QuestFaction(ply)
     if not WORKERS[f] then return false end
+    if LC.InsiderBurned and LC.InsiderBurned(ply) then return false end -- (a caught mole: never the Union again)
     if f == "resistance" and LC.PlayerIsHunted(ply) and not (LC.PassesAsCitizen and LC.PassesAsCitizen(ply)) then return false end
     return true
 end
@@ -420,7 +421,7 @@ SHIFTS.medic = {
             desc = "Three injured patients are waiting at the clinic. Heal each one with your medkit until they're back on their feet.",
             stages = {
                 Goto(center, "Go to the clinic (marked)", 200),
-                Patients(Q.SpotsNear(center, 3, 300), "Heal the patients: hold your medkit and press primary fire (left click) on each one until they're healed"),
+                Patients(Q.SpotsNear(center, 3, 300), "Heal the patients: hold your medkit and left click on each one until they're healed"),
             },
         }
     end,
@@ -449,7 +450,7 @@ SHIFTS.medic = {
                         Narrate(q, "He closes his eyes. 'Thank you.'")
                     end },
                 }),
-                PatchOne("Heal him: hold your medkit and press primary fire (left click) on him until he's healed"),
+                PatchOne("Heal him: hold your medkit and left click on him until he's healed"),
             },
         }
     end,
@@ -1212,7 +1213,7 @@ do
             desc = "Patients are coming into the clinic faster than you can treat them. Treat the worst hurt first.",
             stages = {
                 GameGo(center, "Go to the clinic (marked)", "triage", { center = center, spots = Q.SpotsNear(center, 4, 260) }),
-                GameStage("Heal the patients with your medkit (primary fire, left click) before they bleed out. The bar over each one's head shows who's worst"),
+                GameStage("Heal the patients with your medkit (left click) before they bleed out. The bar over each one's head shows who's worst"),
             },
         }
     end
@@ -1221,7 +1222,7 @@ do
     local rubble = SHIFTS.scrap[2]
     SHIFTS.scrap[2] = function(ply, job)
         local spec = rubble(ply, job)
-        if spec and GamesOn() then spec = GamifyHolds(spec, "rubble", "Break up the rubble: hit it with your crowbar (primary fire, left click)") end
+        if spec and GamesOn() then spec = GamifyHolds(spec, "rubble", "Break up the rubble: hit it with your crowbar (left click)") end
         return spec
     end
 

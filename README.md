@@ -421,6 +421,14 @@ Units are units: Civil Protection players still stop citizens with E.
 - **A bin you're standing right by** opens in your pockets (F2) even if you're not aiming at it.
 - **Morning exercise**: on the jog the Civil Protection units shout "Move it!" and "Keep moving!" (not "First warning, move away"); finishing pays `lc_exercise_pay` (5) credits on top of the standing, said on screen; skipping costs 10 standing and your next ration (`lc_exercise_skip_ration` 1), with a reprimand on screen.
 
+**The Resistance Insider** (designed with the owner, 31 October). A unit who stays inside as the Resistance's spy (The Man Inside) gets their own menu, which only they see: C > Civil Protection > Inside. Each only works where nobody can see or hear them (no other player in sight within `lc_insider_privacy`, 700, or within 300; no unit watching), so they have to slip away first:
+- **Tip off Freq 7**: a message on the Resistance's band, unsigned, with the next planned sweep and how many BOLOs are out (once every 2 minutes).
+- **Lose a record**: a wanted person isn't wanted any more. Costs 25 Civil Standing: they look careless, never disloyal.
+- **Supplies for a dead drop**: at the Civil Protection Commissary, two bandages and a box of pistol rounds that aren't issued, so they can be passed on (once every 10 minutes; -10 standing).
+- **Copy the records**: "Copied city records", the best intel (the quartermaster pays 60; once every 15 minutes).
+- **Reveal myself**: the codeword, to the one person you're looking at.
+Ordinary Resistance players aren't told who the Insider is; the Resistance's top two ranks hear when one is recruited and when they come on. **Caught** (the Mole Hunt): that character is wanted and hunted with no surrendering, can never join Civil Protection, any Combine role or the city administration again, can't take Union jobs, and is Resistance for good. Opening Combine doors for a raid needs nothing new: units already can. `lc_insider` 0 turns it off.
+
 ## Civil Protection's tools
 
 **The quick menu** (F1) has what a unit does most on the number keys: 1 Call for backup, 2 Send my 10-20, 3 Issue a BOLO, 4 the mask's most used voice lines, 5 the records terminal, and on 6 to 8 search, cuff, drag and escort for whoever you're looking at.
@@ -458,7 +466,7 @@ Personal stories that unlock from what you've done, appear at the top of your bo
 | Story | Who it finds |
 |---|---|
 | Internal Affairs | Cops who take bribes |
-| The Man Inside | Kind, clean cops. Defect, or stay in uniform as a double agent with secret **Inside Work**, until **Suspicion** brings a **Mole Hunt** |
+| The Man Inside | Kind, clean cops. Defect, or stay in uniform as a double agent with secret **Inside Work**, until **Suspicion** brings a **Mole Hunt** (caught: wanted, no surrender, Resistance for good; see the Resistance Insider below) |
 | The Missing Unit | Experienced cops. Three different truths |
 | The Overwatch Candidate | Division Leaders. Accept the conditioning and the Overwatch ranks open, or keep your name and go no higher |
 | The Pamphleteer | Kind citizens. Can end with you joining the Resistance |

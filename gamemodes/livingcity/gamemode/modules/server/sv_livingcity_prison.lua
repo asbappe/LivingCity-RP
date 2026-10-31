@@ -306,6 +306,8 @@ hook.Add("PlayerDisconnected", "LivingCityDetention", function(ply) LC.Detained[
 function LC.Surrender(ply, unit)
     if not IsValid(ply) or not ply:Alive() or LC.InCustody(ply) then return false, "Not now." end
     if LC.PlayerIsCP(ply) then return false, "Civil Protection units don't surrender." end
+    local barred = LC.InsiderBarred and LC.InsiderBarred(ply, "surrender") -- (a caught mole: sv_livingcity_insider.lua)
+    if barred then return false, barred end
     local reason = ply:GetNW2String("lc_wanted_reason", "")
     reason = "Surrendered" .. (reason ~= "" and (": " .. reason) or "")
     ply.lcSurrendered = true

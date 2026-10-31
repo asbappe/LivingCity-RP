@@ -1088,8 +1088,8 @@ local function Expose(q, p)
     q.reward = 0
     Narrate(q, "He picks up your file instead. 'Interesting.' You've been exposed as the mole.")
     XP(p, -200)
-    LC.SetFaction(p, "citizen", nil, true)
-    if LC.PrisonAvailable() then LC.Incarcerate(p, 300, "Treason", nil) end
+    -- out of the system for good: wanted, no surrender, Resistance for life (sv_livingcity_insider.lua)
+    timer.Simple(1, function() if IsValid(p) and LC.BurnInsider then LC.BurnInsider(p) end end)
     return "complete"
 end
 

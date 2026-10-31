@@ -181,10 +181,10 @@ T{
         return {
             title = "Steal the Combine's data " .. Place(t1.pos, here), reward = 60, limit = 1200,
             desc = "Each Combine terminal only holds half the picture. Hit two: one " .. Place(t1.pos, here) .. ", then another " ..
-                Place(t2.pos, ply:GetPos()) .. ". Aim the multitool at each, primary fire, and stay with it while it downloads. Each sounds the alarm halfway, and a squad comes. The two fragments make a chip: the lab's scientist decodes it, or the dealer pays for it.",
+                Place(t2.pos, ply:GetPos()) .. ". Aim the multitool at each, left click, and stay with it while it downloads. Each sounds the alarm halfway, and a squad comes. The two fragments make a chip: the lab's scientist decodes it, or the dealer pays for it.",
             stages = {
                 Goto(t1.pos, "Get to the first terminal", 200),
-                Count("data_stolen", 1, "Download its half (multitool, primary fire; stay close)", first, false),
+                Count("data_stolen", 1, "Download its half (aim the multitool and left click; stay close)", first, false),
                 Goto(t2.pos, "Get to the second terminal", 200),
                 Count("data_stolen", 1, "Download the other half (a different terminal)", second, false),
             },
@@ -208,7 +208,7 @@ T{
             desc = "The Combine's master terminal " .. Place(t.pos, ply:GetPos()) .. ": everything they know, in one place. It takes a full minute to download, every alarm in the nexus goes off a third of the way in, and they'll send more than a squad. Bring the core home: the quartermaster's decoding marks every Civil Protection unit for ten minutes, the dealer pays a fortune, or it wipes every comrade's record.",
             stages = {
                 Goto(t.pos, "Get to the master terminal", 200),
-                Count("master_stolen", 1, "Download the master terminal (multitool, primary fire; hold on for a minute)", nil, false),
+                Count("master_stolen", 1, "Download the master terminal (aim the multitool and left click; hold on for a minute)", nil, false),
             },
         }
     end,

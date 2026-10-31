@@ -274,6 +274,16 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **A placed bin:** stand next to it, F2: the bin's section is there.
 - [ ] **The jog:** units say "Move it!"; finishing says what you earned (standing and 5 credits); skipping shows a reprimand and the next ration is withheld.
 
+## The Resistance Insider (1 November: what to check)
+
+- [ ] **Recruited:** as a kind unit, The Man Inside on F3; stay inside at the crossroads.
+- [ ] **C > Civil Protection > Inside** appears (and only for you). Each action refuses with someone nearby, works alone.
+- [ ] **Tip off Freq 7:** a Resistance player hears "A friend inside: ...".
+- [ ] **Lose a record:** a wanted player isn't wanted; your standing drops 25.
+- [ ] **At the Commissary:** bandages and pistol rounds you can give away. **Copy the records:** the quartermaster pays 60.
+- [ ] **Reveal myself:** the person you look at is told.
+- [ ] **Caught in the Mole Hunt:** Resistance, wanted, no surrendering; Civil Protection and Union jobs refused.
+
 ## Beds (1 November: what to check)
 
 - [ ] **Citizens at curfew or night** walk into the habitation blocks and lie down on the beds you placed, asleep (eyes shut), and get up in the morning. Heads at the foot end? `lc_bed_head_flip 1`.

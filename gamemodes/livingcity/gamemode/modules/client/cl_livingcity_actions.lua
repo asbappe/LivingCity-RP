@@ -46,6 +46,9 @@ local function Say(title, prompt, prefix)
     end)
 end
 
+-- Am I the Resistance's man inside? Told to me alone (sv_livingcity_insider.lua).
+net.Receive("lc_insider", function() LC_CL.Insider = net.ReadBool() end)
+
 local function Title(s) return string.upper(string.sub(s, 1, 1)) .. string.sub(s, 2) end
 
 -- Who someone is, to you: a unit's designation, a name you know, or what they look like.
@@ -314,6 +317,15 @@ function LC_CL.OpenActions()
                 local p = r.ply
                 Add(er, "Escort " .. LC_CL.ICName(p) .. " (" .. r.why .. ")", function() Send("escort", "", p) end)
             end
+        end
+        -- the Resistance's man inside (only they see this: sv_livingcity_insider.lua)
+        if LC_CL.Insider then
+            local ins = cp:AddSubMenu("Inside (only you see this)")
+            Add(ins, "Tip off Freq 7 (where nobody sees or hears you)...", function() Ask("Tip off Freq 7", "What do you tell the Resistance? (The next planned sweep, if any, goes with it.)", "tipoff") end, "icon16/transmit.png")
+            Add(ins, "Lose a wanted person's record (-25 standing)...", function() Ask("Lose a record", "Whose record goes missing? (Their name.)", "loserecord") end)
+            Add(ins, "Take supplies for a dead drop (at the Commissary; -10 standing)", function() Send("skim") end)
+            Add(ins, "Copy the city's records (the best intel)", function() Send("copyrecords") end)
+            Add(ins, "Reveal myself to whoever I'm looking at (the codeword)", function() Send("reveal") end)
         end
         local so = cp:AddSubMenu("Set sociostability (officers)")
         for _, l in ipairs({ "green", "yellow", "red", "auto" }) do Add(so, string.upper(l), function() Send("socio", l) end) end

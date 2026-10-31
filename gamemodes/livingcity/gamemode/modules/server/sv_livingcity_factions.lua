@@ -318,6 +318,11 @@ end
 function LC.CanJoinFaction(ply, fid, sid)
     local f = LCF.Get(fid)
     if not f then return false, "No such faction." end
+    -- a mole who was caught: Resistance for good (sv_livingcity_insider.lua)
+    if fid ~= "resistance" and LC.InsiderBarred then
+        local why = LC.InsiderBarred(ply, "faction")
+        if why then return false, why end
+    end
     -- (a stalker is bound even as a superadmin: only death, or lc_unstalker, ends it)
     local bound = LC.BoundTo and (not ply:IsSuperAdmin() or (LC.PlayerIsStalker and LC.PlayerIsStalker(ply))) and LC.BoundTo(ply, fid)
     if bound then return false, bound end -- (careers that can't be undone: sv_livingcity_progress.lua)

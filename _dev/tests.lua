@@ -13456,6 +13456,38 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     pot:Remove() if IsValid(u) then u:Remove() end
     LC.RemoveZone(rz)
     med:SetPos(Vector(-150000, 150000, 0))
+    -- the Resistance's man inside
+    local ins = newPlayer("InsiderUnit", "cp")
+    _run(0.3)
+    ins:SetPos(Vector(-160000, -160000, 0))
+    ok(not LC.IsInsider(ins) and LC.InsiderCopy(ins) == false, "an ordinary unit has none of it")
+    LC.StoryFlag(ins, "insider", true)
+    ok(LC.IsInsider(ins), "recruited (The Man Inside): an Insider")
+    local said
+    local rn = LC.RadioNotice
+    LC.RadioNotice = function(band, text) if band == "resistance" then said = text end end
+    ok(LC.InsiderTip(ins, "Patrols double at the canal tonight") and said and string.find(said, "friend inside", 1, true), "a tip-off goes out on Freq 7, unsigned", said)
+    LC.RadioNotice = rn
+    local okT2, whyT2 = LC.InsiderTip(ins, "again")
+    ok(not okT2 and string.find(whyT2 or "", "Not yet", 1, true), "not again straight away", whyT2)
+    local snoop = newPlayer("InsiderSnoop", "citizen")
+    _run(0.3)
+    snoop:SetPos(ins:GetPos() + Vector(120, 0, 0))
+    local okC, whyC = LC.InsiderCopy(ins)
+    ok(not okC and string.find(whyC or "", "nobody", 1, true), "never with someone close enough to hear", whyC)
+    snoop:SetPos(Vector(-150000, 150000, 0))
+    ok(LC.InsiderCopy(ins) and LC.HasItem(ins, "intel_records"), "alone: the city's records, copied out (the best intel)")
+    local wanted = newPlayer("InsiderWanted", "citizen")
+    _run(0.3)
+    LC.ReportCrime(wanted, "Test", 300)
+    local st0 = LC.Standing(ins)
+    ok(LC.InsiderLoseRecord(ins, wanted) and not LC.PlayerIsWanted(wanted) and LC.Standing(ins) == st0 - 25, "a wanted record goes missing, for 25 standing", LC.Standing(ins) - st0)
+    -- caught
+    LC.BurnInsider(ins)
+    ok(ins:GetNW2String("lcf_faction", "") == "resistance" and LC.PlayerIsWanted(ins), "caught: Resistance, and wanted")
+    local okJ = LC.CanJoinFaction(ins, "cp")
+    ok(not okJ and not LC.CanWork(ins) and not LC.Surrender(ins), "never Civil Protection again, never a Union job, no surrendering")
+    for _, q in ipairs({ ins, snoop, wanted }) do q:SetPos(Vector(-150000, 150000, 0)) end
 end)()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")

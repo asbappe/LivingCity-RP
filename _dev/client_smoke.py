@@ -645,6 +645,7 @@ do
         _me.IsAdmin = function() return admin == true end
         Look(nil)
         if setup then setup() end
+        LC_CL.Insider = faction == "cp" -- (the Resistance's man inside: their own menu)
         for _, m in ipairs(menus) do m.removed = true end
         local okO, errO = pcall(LC_CL.OpenActions)
         if not okO then problems[#problems + 1] = "F1 menu for " .. faction .. ": " .. tostring(errO) return end
@@ -771,6 +772,7 @@ do
         ["//"] = "say://", ["mail (units)"] = "readmail", ["turrets and power banks"] = "checkpoint", ["bodies"] = "searchbody",
         ["hauling"] = "haul", ["mask voice"] = "vo", ["third person while posing"] = "console:lc_act_thirdperson",
         ["!setlaw, !addlaw, !dellaw (the laws panel)"] = "laws", ["microphones"] = "takemic",
+        ["!tipoff"] = "tipoff", ["!loserecord"] = "loserecord", ["!skim"] = "skim", ["!copyrecords"] = "copyrecords", ["!reveal"] = "reveal",
     }
     for n in pairs(LCA.Gestures) do WHERE["/" .. n] = n end
     local missing = {}
