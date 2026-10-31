@@ -47,7 +47,7 @@ local function Patrol(ply, n, label)
     for i = 1, n do
         local sp = Q.Spot(ply, 500, 2500)
         if not sp then return nil end
-        stages[i] = Goto(sp, string.format("%s %d of %d, %s", label or "Patrol stop", i, n, Place(sp, ply:GetPos())), 150)
+        stages[i] = Goto(sp, string.format("%s %d of %d, %s", label or "Go to patrol stop", i, n, Place(sp, ply:GetPos())), 150)
     end
     return stages
 end
@@ -90,7 +90,7 @@ local function TakeBribe(q, p)
     LC.Bump(p, "bribes")
     q.reward = 0
     q.chainEnd = "busted"
-    Narrate(q, "The window across the street flashes. Internal Affairs was watching the whole time.")
+    Narrate(q, "A camera flashes in the window across the street. Internal Affairs was watching the whole time, and saw you take the bribe.")
     XP(p, -100)
     if LC.PrisonAvailable() then LC.Incarcerate(p, 120, "Corruption", nil) end
     return "complete"
@@ -100,7 +100,7 @@ local function RefuseBribe(q, p)
     Trait(p, "loyalty", 1)
     q.data.target = q.data.actor
     q.chainEnd = "cleared"
-    Insert(q, { Q.ArrestStage("Arrest him for attempted bribery (right click)") })
+    Insert(q, { Q.ArrestStage("Arrest him for attempted bribery with the Arrest Baton (right click)") })
 end
 
 LC.Chain{
@@ -108,15 +108,15 @@ LC.Chain{
     unlock = function(ply) return LC.Trait(ply, "corruption") >= 2 or LC.Counter(ply, "bribes") >= 2 end,
     start = "summons",
     endings = {
-        redeemed = "Your file is closed. Somewhere, a number is quietly reset.",
-        cleared = "Internal Affairs found nothing. This time.",
-        busted = "Caught in the act. Your record will follow you.",
-        informer = "Someone else is paying for what you did.",
-        demoted = "You lost your rank. You kept your conscience. In this city that is a bad trade, and you made it anyway.",
-        untouchable = "They'll never prove anything. They'll never stop watching.",
-        ring = "You work for them now. The money is very good.",
-        double = "You played both sides and walked away. For now.",
-        burned = "Internal Affairs knows exactly what you did with their crate.",
+        redeemed = "Internal Affairs closes your file. As far as they're concerned, your slate is clean again.",
+        cleared = "Internal Affairs found nothing on you. This time.",
+        busted = "Internal Affairs caught you taking a bribe. It stays on your record and will follow you.",
+        informer = "You named another unit, and now he's paying for what you did.",
+        demoted = "You took the blame and lost 100 XP. You kept your conscience. In this city that is a bad trade, and you made it anyway.",
+        untouchable = "You stared them down. Internal Affairs can't prove anything, but they'll never stop watching you.",
+        ring = "You work for the crooked officers now. The money is very good.",
+        double = "You sank the ring's weapons and reported them seized. You played both sides and got away with it. For now.",
+        burned = "Internal Affairs knows you dumped their crate of weapons in the canal.",
     },
     parts = {
         summons = { num = 1, build = function(ply)
@@ -125,31 +125,31 @@ LC.Chain{
             if not pos then return nil end
             return {
                 title = "A quiet word", reward = 10, limit = 480,
-                desc = "You've been summoned " .. Place(pos, ply:GetPos()) .. ". The message didn't say by whom. It didn't have to.",
+                desc = "You've been summoned " .. Place(pos, ply:GetPos()) .. ". The message isn't signed, but you can guess who sent it: Internal Affairs.",
                 stages = {
-                    Goto(pos, "Report as summoned", 260),
-                    Meet("Speak with the officer waiting for you", "cop", function() return pos end),
-                    Choice("The officer doesn't give a Civil Protection unit number. 'Your ration ledger doesn't add up, unit. " ..
+                    Goto(pos, "Go to the marked spot where you were summoned", 260),
+                    Meet("Walk up to the officer waiting for you there", "cop", function() return pos end),
+                    Choice("The officer won't give his unit number: he's Internal Affairs, and he knows about the bribes. 'Your ration ledger doesn't add up, unit. " ..
                         "Neither do the citizens who keep walking free on your shift.'", {
-                        { text = "Confess. Ask for a chance to make it right.", pick = function(q, p)
+                        { text = "Confess to the bribes, and ask for a chance to make it right.", pick = function(q, p)
                             Trait(p, "corruption", -1)
                             Trait(p, "loyalty", 1)
-                            Narrate(q, "He nods slowly. 'Then make it right. By the book, every step. We'll be counting.'")
+                            Narrate(q, "He nods slowly. 'Then make it right. Your next patrol goes by the book, every step. We'll be counting.'")
                             q.chainNext = "penance"
                         end },
-                        { text = "Explain it away.", check = { "guile", 13 },
+                        { text = "Talk your way out of it.", check = { "guile", 13 },
                           success = function(q)
-                              Narrate(q, "He writes something down. 'We'll be in touch.' It doesn't sound like a dismissal.")
+                              Narrate(q, "He writes something down. 'We'll be in touch.' It doesn't sound like you're off the hook.")
                               q.chainNext = "audit"
                           end,
                           fail = function(q)
-                              Narrate(q, "He doesn't even pretend to believe you. 'Someone will be keeping an eye on you, Civil Protection unit.'")
+                              Narrate(q, "He doesn't believe a word of it. 'From now on, someone will be watching you, Civil Protection unit.'")
                               q.chainNext = "watched"
                           end },
-                        { text = "Offer him a cut.", when = function(q) return LC.Trait(q.owner, "corruption") >= 3 end,
+                        { text = "Offer him a share of your bribes.", when = function(q) return LC.Trait(q.owner, "corruption") >= 3 end,
                           pick = function(q, p)
                               Trait(p, "corruption", 1)
-                              Narrate(q, "A long pause. Then he laughs, and holds out his hand.")
+                              Narrate(q, "A long pause. Then he laughs, and holds out his hand for the money. He's as crooked as you are.")
                               q.chainNext = "ring"
                           end },
                     }),
@@ -158,16 +158,16 @@ LC.Chain{
         end },
 
         penance = { num = 2, build = function(ply)
-            local stages = Patrol(ply, 3, "Clean patrol, stop")
+            local stages = Patrol(ply, 3, "Patrol by the book: go to stop")
             if not stages then return nil end
-            local inspect = Count("used_npc", 3, "Inspect three citizens. Properly.", Q.IsCitizenNPC)
+            local inspect = Count("used_npc", 3, "Inspect three different citizens by the book: walk up to each one and press E", Q.IsCitizenNPC)
             inspect.onDone = function(q)
                 q.chainEnd = "redeemed"
                 Trait(q.owner, "corruption", -2)
             end
             return {
                 title = "Penance", reward = 40, limit = 600,
-                desc = "Internal Affairs wants to see a model officer. Show them one.",
+                desc = "Internal Affairs wants to see a model officer. Patrol three stops and inspect three citizens, all by the book, while they watch.",
                 stages = Append(stages, { inspect }),
             }
         end },
@@ -177,27 +177,27 @@ LC.Chain{
             if not spot then return nil end
             return {
                 title = "The audit", reward = 30, limit = 480,
-                desc = "A routine patrol " .. Place(spot, ply:GetPos()) .. ". Nothing to worry about.",
+                desc = "You've been sent on a routine patrol " .. Place(spot, ply:GetPos()) .. ". Nothing to worry about, they say.",
                 stages = {
-                    Goto(spot, "Patrol the market", 200),
-                    Meet("A citizen is waving you over", "citizen", function() return spot end, nil, nil, "male"),
-                    Choice("A citizen presses a bundle of ration units into your hand. 'For your trouble, officer.' " ..
+                    Goto(spot, "Go to the marked spot and patrol there", 200),
+                    Meet("A citizen is waving you over: walk up to him", "citizen", function() return spot end, nil, nil, "male"),
+                    Choice("A citizen presses a bundle of ration units into your hand: a bribe. 'For your trouble, officer.' " ..
                         "His eyes flick to a window across the street.", {
                         { text = "Refuse, and arrest him for attempted bribery.", pick = RefuseBribe },
-                        { text = "Take it.", pick = TakeBribe },
-                        { text = "Glance at that window.", check = { "authority", 12 },
+                        { text = "Take the bribe.", pick = TakeBribe },
+                        { text = "Look at the window he glanced at.", check = { "authority", 12 },
                           success = function(q, p)
                               Trait(p, "loyalty", 2)
                               q.bonus = 20
                               q.chainEnd = "cleared"
-                              Narrate(q, "A lens glints behind the glass. A test. You hand the bundle back, loudly, and thank him for his loyalty.")
+                              Narrate(q, "A camera lens glints behind the glass: this is an Internal Affairs test. You hand the bundle back, loudly, and thank him for his loyalty.")
                               return "complete"
                           end,
                           fail = function(q)
-                              Narrate(q, "Just a window. The bundle is still in your hand, and he's still waiting.")
-                              Insert(q, { Choice("He's still waiting. The bundle is still warm.", {
+                              Narrate(q, "You see nothing but a window. The bundle is still in your hand, and he's still waiting for your answer.")
+                              Insert(q, { Choice("He's still waiting for you to decide. The bribe is still in your hand.", {
                                   { text = "Refuse, and arrest him.", pick = RefuseBribe },
-                                  { text = "Take it.", pick = TakeBribe },
+                                  { text = "Take the bribe.", pick = TakeBribe },
                               }) })
                           end },
                     }),
@@ -212,30 +212,30 @@ LC.Chain{
                 local p = q.owner
                 q.data.shadow = Q.SpawnActor(q, "cop", p:GetPos() - p:GetForward() * 400, 5)
             end
-            stages[#stages + 1] = Count("used_npc", 2, "Inspect two citizens while he watches", Q.IsCitizenNPC)
+            stages[#stages + 1] = Count("used_npc", 2, "Inspect two different citizens while he watches (walk up to each one and press E)", Q.IsCitizenNPC)
             stages[#stages + 1] = Choice("The Civil Protection unit who has followed you all shift finally speaks. " ..
-                "'Name another Civil Protection unit who takes. Or we keep looking at you.'", {
-                { text = "Give them a name.", pick = function(q, p)
+                "'Give us the name of another Civil Protection unit who takes bribes. Or we keep looking at you.'", {
+                { text = "Give them another unit's name.", pick = function(q, p)
                     Trait(p, "loyalty", 1)
                     q.chainEnd = "informer"
-                    Narrate(q, "Unit 4-17 is reassigned to the canals the next morning. You don't see him again.")
+                    Narrate(q, "Unit 4-17 is reassigned to the canals the next morning. You never see him again.")
                 end },
-                { text = "Take the fall.", pick = function(q, p)
+                { text = "Take the blame yourself (you lose 100 XP).", pick = function(q, p)
                     XP(p, -100)
                     Trait(p, "corruption", -3)
                     q.chainEnd = "demoted"
                 end },
-                { text = "Stare at the mask until he leaves.", check = { "nerve", 14 },
+                { text = "Say nothing. Stare at his mask until he gives up and leaves.", check = { "nerve", 14 },
                   success = function(q, p) Trait(p, "corruption", 1) q.chainEnd = "untouchable" end,
                   fail = function(q, p)
-                      Narrate(q, "You blink first.")
+                      Narrate(q, "You look away first. That's all the answer he needs.")
                       XP(p, -100)
                       q.chainEnd = "demoted"
                   end },
             })
             return {
                 title = "Under watch", reward = 35, limit = 720,
-                desc = "Internal Affairs has assigned you a shadow. Do your job. Do it well.",
+                desc = "Internal Affairs has put a unit on your tail, and he'll follow you all shift. Patrol three stops and inspect two citizens, and do it well.",
                 stages = stages,
                 tick = function(q)
                     local npc, p = q.data.shadow, q.owner
@@ -259,12 +259,12 @@ LC.Chain{
             local a, b = Q.Spot(ply, 400, 2000), Q.Spot(ply, 800, 3000)
             if not a or not b then return nil end
             return {
-                title = "The ring", reward = 60, limit = 600,
-                desc = "Your new friends need something moved. Quietly. Pick it up " .. Place(a, ply:GetPos()) .. ".",
+                title = "The smuggling ring", reward = 60, limit = 600,
+                desc = "Your new friends, the crooked officers, need a crate moved quietly. Pick it up " .. Place(a, ply:GetPos()) .. ".",
                 stages = {
-                    Q.Contact("Collect the crate from your new friends (press E)", a, "citizen", "'Careful with that one. It's not what the label says.'"),
-                    Choice("The crate rattles. Weapons. Rebel weapons, sold by the people whose job is hunting rebels.", {
-                        { text = "Deliver it. Business is business.", pick = function(q, p)
+                    Q.Contact("Collect the crate: walk up to your contact and press E", a, "citizen", "'Careful with that one. It's not what the label says.'"),
+                    Choice("The crate rattles. It's full of guns for the rebels, sold by the very officers whose job is hunting them.", {
+                        { text = "Deliver it to the buyer. Business is business.", pick = function(q, p)
                             Trait(p, "corruption", 1)
                             q.chainEnd = "ring"
                         end },
@@ -273,11 +273,11 @@ LC.Chain{
                               Trait(p, "loyalty", 1)
                               Trait(p, "sympathy", 1)
                               q.chainEnd = "double"
-                              Narrate(q, "The crate sinks. Your report is a work of art.")
+                              Narrate(q, "The crate sinks. Your report says it was seized, and it's convincing.")
                               return "complete"
                           end,
                           fail = function(q, p)
-                              Narrate(q, "Internal Affairs finds out within the hour.")
+                              Narrate(q, "Internal Affairs finds out what you did within the hour.")
                               XP(p, -150)
                               if LC.PrisonAvailable() then LC.Incarcerate(p, 90, "Theft from Internal Affairs", nil) end
                               q.reward = 0
@@ -285,7 +285,7 @@ LC.Chain{
                               return "complete"
                           end },
                     }),
-                    Q.Contact("Hand the crate to the buyer " .. Place(b, ply:GetPos()) .. " (press E)", b, "citizen", "The buyer doesn't count the money in front of you. That's how you know it's a lot."),
+                    Q.Contact("Take the crate to the buyer " .. Place(b, ply:GetPos()) .. " and press E on him", b, "citizen", "The buyer doesn't count the money in front of you. That's how you know it's a lot."),
                 },
             }
         end },
@@ -303,10 +303,10 @@ LC.Chain{
     end,
     start = "knock",
     endings = {
-        joined = "You are Resistance now. Your old life is a cover story.",
-        ally = "A friend of the Resistance. They'll call on you.",
-        reported = "The stranger never came back. Neither did the family in 4C.",
-        walked_away = "Some doors stay shut.",
+        joined = "You've joined the Resistance. Your old life is just a cover story now.",
+        ally = "You're a friend of the Resistance, not a member. They'll call on you when they need help.",
+        reported = "You reported the stranger. He never came back. Neither did the family in 4C.",
+        walked_away = "You shut the door on the Resistance. Some doors stay shut.",
     },
     parts = {
         knock = { num = 1, build = function(ply)
@@ -314,14 +314,14 @@ LC.Chain{
             if not home then return nil end
             return {
                 title = "A knock at night", reward = 10, limit = 420,
-                desc = "Go home to " .. name .. ". Someone is waiting.",
+                desc = "Go home (" .. name .. "). Someone is waiting for you there.",
                 stages = {
-                    Goto(home, "Go home to " .. name, 260),
-                    Meet("Someone is waiting outside your door", "citizen", function() return home end, nil, nil, "male"),
+                    Goto(home, "Go home (" .. name .. ")", 260),
+                    Meet("Someone is waiting outside your door: walk up to him", "citizen", function() return home end, nil, nil, "male"),
                     Choice("A stranger in a Union jacket that doesn't fit him. He says your name like he's known it for years. " ..
-                        "'You've been kind to the wrong people. We noticed. Can you be useful, too?'", {
+                        "'You've been kind to the people the Combine hunt. We noticed. Can you be useful to us, too?'", {
                         { text = "Listen.", pick = function(q)
-                            Narrate(q, "He talks for a long time. Mostly about you.")
+                            Narrate(q, "He talks for a long time, about the Resistance and what you could do for it. Mostly about you.")
                             q.chainNext = "nerve"
                         end },
                         { text = "Report him to Civil Protection.", pick = function(q, p)
@@ -329,9 +329,9 @@ LC.Chain{
                             LC.Bump(p, "reports")
                             q.chainEnd = "reported"
                             Narrate(q, "He sees it in your face before you move. He's gone by the time you turn around.")
-                            Insert(q, { Count("used_npc", 1, "Report the stranger to a Civil Protection unit (press E)", Q.IsCopNPC) })
+                            Insert(q, { Count("used_npc", 1, "Find a Civil Protection unit and press E on him to report the stranger", Q.IsCopNPC) })
                         end },
-                        { text = "Shut the door.", pick = function(q)
+                        { text = "Shut the door on him.", pick = function(q)
                             q.chainDecline = true
                             q.reward = 0
                             Narrate(q, "You lean against the door until his footsteps fade.")
@@ -347,21 +347,21 @@ LC.Chain{
             if not a or not b then return nil end
             return {
                 title = "Proof of nerve", reward = 30, limit = 600, failOnArrest = true,
-                desc = "Carry a parcel across the district. Don't open it. Don't get caught.",
+                desc = "The Resistance is testing you: carry a parcel across the district to a dead drop. Don't open it, and don't get arrested on the way, or the job fails.",
                 stages = {
-                    Q.Contact("Take the parcel from your contact (press E)", a, "citizen", "'Straight there. Don't open it. Don't be late.'", { rebel = true }),
-                    Choice("Two Civil Protection units are checking papers at the corner ahead.", {
+                    Q.Contact("Walk up to your contact and press E to take the parcel", a, "citizen", "'Straight there. Don't open it. Don't be late.'", { rebel = true }),
+                    Choice("Two Civil Protection units are checking papers at the corner ahead, and you're carrying the parcel.", {
                         { text = "Walk past them, calmly.", check = { "guile", 11 },
-                          success = function(q) Narrate(q, "One of them looks right at you. Then past you.") end,
+                          success = function(q) Narrate(q, "One of them looks right at you. Then past you. You're through.") end,
                           fail = function(q, p)
-                              Narrate(q, "'Citizen! Stop!' You don't.")
+                              Narrate(q, "'Citizen! Stop!' You keep walking, and now you're wanted for carrying contraband.")
                               LC.ReportCrime(p, "Carrying contraband", 120)
                           end },
                         { text = "Take the long way, through the alleys.", pick = function(q)
-                            if detour then Insert(q, { Goto(detour, "Take the long way round", 180) }) end
+                            if detour then Insert(q, { Goto(detour, "Take the long way round: go to the marked spot first", 180) }) end
                         end },
                     }),
-                    Deliver(b, "Leave it at the dead drop " .. Place(b, ply:GetPos()), 150),
+                    Deliver(b, "Take the parcel to the dead drop " .. Place(b, ply:GetPos()), 150),
                 },
             }
         end, next = "decision" },
@@ -371,21 +371,21 @@ LC.Chain{
             if not pos then return nil end
             return {
                 title = "The choice", reward = 25, limit = 600,
-                desc = "They want to meet you in " .. where .. ". In person, this time.",
+                desc = "The Resistance wants to meet you in person this time (" .. where .. ").",
                 stages = {
-                    Goto(pos, "Go to the meeting in " .. where, r),
-                    Meet("Find the stranger", "citizen", function() return pos end),
-                    Choice("The stranger is waiting with two others. One of them wears the lambda openly. 'Well?'", {
-                        { text = "I'm with you.", pick = function(q, p)
+                    Goto(pos, "Go to the meeting place (" .. where .. ")", r),
+                    Meet("Walk up to the stranger", "citizen", function() return pos end),
+                    Choice("The stranger is waiting with two others. One of them wears the Resistance's lambda openly. 'Well? Are you with us?'", {
+                        { text = "I'm with you. (You join the Resistance.)", pick = function(q, p)
                             Trait(p, "sympathy", 2)
                             q.chainEnd = "joined"
                             JoinLater(p, "resistance", 150)
                         end },
-                        { text = "Not yet. But I'll help when I can.", pick = function(q, p)
+                        { text = "Not yet. But I'll help when I can. (You stay a citizen, as a friend of the Resistance.)", pick = function(q, p)
                             Trait(p, "sympathy", 1)
                             q.chainEnd = "ally"
                         end },
-                        { text = "I've changed my mind.", pick = function(q) q.chainEnd = "walked_away" end },
+                        { text = "I've changed my mind. (You turn them down.)", pick = function(q) q.chainEnd = "walked_away" end },
                     }),
                 },
             }
@@ -411,8 +411,8 @@ end
 local function TailStage(secs)
     return {
         kind = "tail", min = 200, max = 1100, lost = 1700, secs = secs,
-        failText = "your neighbor isn't out on the streets right now. Try again once the city is busy",
-        text = "Follow your neighbor without being noticed",
+        failText = "your neighbor isn't out on the streets right now. Try again later, when the city is busier",
+        text = "Follow your neighbor (marked) without being noticed",
         onEnter = function(q, st)
             local npc = q.data.target
             if not IsValid(npc) then npc = Q.RandomCitizen() end
@@ -420,19 +420,19 @@ local function TailStage(secs)
             Q.Lock(q, npc)
             q.data.target = npc
             st.npc = npc
-            st.text = Neighbor(q, "Follow your neighbor without being noticed. Not too far, and stay out of {his} sight: the longer {he} sees you, the more suspicious {he} gets")
+            st.text = Neighbor(q, "Follow your neighbor (marked) without being noticed. Don't fall too far behind, and stay out of {his} sight: the longer {he} sees you, the more suspicious {he} gets")
             local nst = LC.NPCs[npc]
             if nst then nst.eventUntil = 0; LC.GoTo(npc, nst, LC.RandomWanderPos("citizen"), false, nil) end
         end,
         onNoticed = function(q)
-            Insert(q, { Choice(Neighbor(q, "{He} stops and turns around. {He} knows exactly who you are."), {
+            Insert(q, { Choice(Neighbor(q, "{He} stops and turns around. {He} has spotted you, and knows exactly who you are."), {
                 { text = "Pretend you were heading the other way.", check = { "guile", 12 },
                   success = function(q2)
-                      Narrate(q2, Neighbor(q2, "{He} shrugs and walks on. You give {him} a longer leash."))
+                      Narrate(q2, Neighbor(q2, "{He} shrugs and walks on. Keep following, but give {him} more room this time."))
                       Insert(q2, { TailStage(20) })
                   end,
                   fail = function(q2)
-                      Narrate(q2, Neighbor(q2, "{He} doesn't buy it. {He} runs."))
+                      Narrate(q2, Neighbor(q2, "{He} doesn't believe you. {He} runs off, and the job has failed."))
                       Q.Flee(q2)
                       return "fail"
                   end },
@@ -454,10 +454,10 @@ LC.Chain{
     end,
     start = "eyes",
     endings = {
-        paid = "Double rations. Your neighbors have started saying good morning a little too carefully.",
-        brother = "Your brother comes home thinner and quieter, and never asks how.",
+        paid = "You took the double rations. Your neighbors have started saying good morning a little too carefully.",
+        brother = "Your brother is released. He comes home thinner and quieter, and never asks how.",
         brother_lost = "Now they're watching your brother too. Because of you.",
-        zealot = "The city has no truer friend. The city does not have friends.",
+        zealot = "You refused any reward. The city has no truer friend. The city does not have friends.",
     },
     parts = {
         eyes = { num = 1, next = "neighbor", build = function(ply)
@@ -465,28 +465,28 @@ LC.Chain{
             if not s then return nil end
             return {
                 title = "Eyes and ears", reward = 20, limit = 480,
-                desc = "The Union asks its friends to keep watch " .. Place(s, ply:GetPos()) .. ".",
+                desc = "The Union wants you to keep watch " .. Place(s, ply:GetPos()) .. ", then report what you saw to Civil Protection.",
                 stages = {
-                    Goto(s, "Go and keep watch", 180),
-                    Hold(s, 15, "Watch the comings and goings", 260),
-                    Count("used_npc", 1, "Tell a Civil Protection unit what you saw (press E)", Q.IsCopNPC),
+                    Goto(s, "Go to the marked lookout spot", 180),
+                    Hold(s, 15, "Stay near the spot for 15 seconds and watch who comes and goes", 260),
+                    Count("used_npc", 1, "Report what you saw: find any Civil Protection unit and press E on him", Q.IsCopNPC),
                 },
             }
         end },
 
         neighbor = { num = 2, next = "payment", build = function()
             if not LC.Running or not Q.RandomCitizen() then return nil end -- nobody out to follow yet
-            local report = Count("used_npc", 1, "Report your neighbor to a Civil Protection unit (press E)", Q.IsCopNPC)
-            report.onEnter = function(q, st) st.text = Neighbor(q, "Report {him} to a Civil Protection unit (press E)") end
+            local report = Count("used_npc", 1, "Report your neighbor: find any Civil Protection unit and press E on him", Q.IsCopNPC)
+            report.onEnter = function(q, st) st.text = Neighbor(q, "Report {him}: find any Civil Protection unit and press E on the unit") end
             report.onDone = function(q)
                 local npc = q.data.target
-                local line = Neighbor(q, "By evening, {his} door is sealed with yellow tape.") -- before the arrest takes them away
+                local line = Neighbor(q, "Civil Protection comes for your neighbor. By evening, {his} door is sealed with yellow tape.") -- before the arrest takes them away
                 if IsValid(npc) and LC.PrisonAvailable() and LC.ArrestNPC then LC.ArrestNPC(npc, nil) end
                 Narrate(q, line)
             end
             return {
                 title = "The neighbor", reward = 35, limit = 720,
-                desc = "Your neighbor has been keeping strange hours. The Union would like to know where they go.",
+                desc = "Your neighbor has been keeping strange hours. The Union wants you to follow them without being seen, then report them to Civil Protection.",
                 stages = { TailStage(40), report },
             }
         end },
@@ -497,10 +497,10 @@ LC.Chain{
             if not pos then return nil end
             return {
                 title = "Payment", reward = 40, limit = 480,
-                desc = "Collect what you're owed " .. Place(pos, ply:GetPos()) .. ".",
+                desc = "Collect your reward for informing " .. Place(pos, ply:GetPos()) .. ".",
                 stages = {
-                    Goto(pos, "Go to collect your payment", 260),
-                    Count("used_npc", 1, "Speak with an officer (press E)", Q.IsCopNPC),
+                    Goto(pos, "Go to the marked spot to collect your payment", 260),
+                    Count("used_npc", 1, "Walk up to a Civil Protection officer and press E", Q.IsCopNPC),
                     Choice("The officer slides a ration card across. 'Double rations. The Union appreciates its friends.'", {
                         { text = "Take the card.", pick = function(q, p)
                             Trait(p, "loyalty", 1)
@@ -514,13 +514,13 @@ LC.Chain{
                               for npc, st in pairs(LC.NPCs) do
                                   if IsValid(npc) and st.state == "jailed" then LC.ReleaseNPCPrisoner(npc, st, CurTime()) break end
                               end
-                              Narrate(q, "A name is typed. Somewhere below your feet, a cell door opens.")
+                              Narrate(q, "A name is typed. Somewhere below your feet, a cell door opens: your brother is free.")
                           end,
                           fail = function(q)
                               q.chainEnd = "brother_lost"
                               Narrate(q, "'Your brother? Interesting. We'll look into him too.'")
                           end },
-                        { text = "Refuse it. You did it for the city.", pick = function(q, p)
+                        { text = "Refuse the reward. You did it for the city.", pick = function(q, p)
                             Trait(p, "loyalty", 2)
                             q.chainEnd = "zealot"
                         end },
@@ -536,9 +536,9 @@ LC.Chain{
 ------------------------------------------------------------------------
 
 local CAUSE_PROMPTS = {
-    rebels = "Lambda graffiti on the wall, the paint still wet. Drag marks lead toward the canals.",
-    infestation = "Headcrab shells, cracked open. A lot of them. His stunstick is bent nearly in half.",
-    deserted = "His mask is folded neatly on the ground. Like he took it off himself, and didn't want it damaged.",
+    rebels = "Lambda graffiti on the wall, the paint still wet, and drag marks leading toward the canals. Rebels took him.",
+    infestation = "Headcrab shells, cracked open. A lot of them. His stunstick is bent nearly in half. The infestation got him.",
+    deserted = "His mask is folded neatly on the ground, as if he took it off himself and didn't want it damaged. It looks like he deserted.",
 }
 
 LC.Chain{
@@ -548,14 +548,14 @@ LC.Chain{
     end,
     start = "dark",
     endings = {
-        silenced = "The radio is silent. So, for a while, is the Resistance.",
-        counterintel = "For a week, the Resistance follows your orders. Overwatch notices.",
-        mercy = "You file his tags with the others. Nobody asks how he died.",
+        silenced = "The radio is dead. For a while, the Resistance goes quiet too.",
+        counterintel = "For a week, the Resistance follows your false orders. Overwatch notices your work.",
+        mercy = "You put 6-12 down yourself and file his tags with the others. Nobody asks how he died.",
         left = "Overwatch cleans the area. They don't find him. You don't tell them where to look.",
         brought_in = "He's processed by morning. You never learn what happened to his daughter.",
-        let_go = "Your report says killed in action. You'll never be sure that was a kindness.",
-        defected = "Somewhere in the canals, a man with a CP haircut is teaching rebels how Civil Protection units think.",
-        fled = "He's out there somewhere, and now he knows your face.",
+        let_go = "You let him go and report him killed in action. You'll never be sure that was a kindness.",
+        defected = "6-12 made it to the Resistance. Somewhere in the canals, he's teaching rebels how Civil Protection units think.",
+        fled = "6-12 got away. He's out there somewhere, and now he knows your face.",
     },
     parts = {
         dark = { num = 1, build = function(ply, data)
@@ -567,14 +567,14 @@ LC.Chain{
             local nextPart = data.cause == "deserted" and "deserter" or "retaliation"
             return {
                 title = "Gone dark", reward = 25, limit = 600,
-                desc = "Unit 6-12 stopped answering dispatch " .. Place(spot, ply:GetPos()) .. ". Find out why.",
+                desc = "Unit 6-12 stopped answering dispatch " .. Place(spot, ply:GetPos()) .. ". Go there and find out what happened to him.",
                 stages = {
-                    Goto(spot, "Go to 6-12's last known position", 260),
+                    Goto(spot, "Go to 6-12's last known position (marked)", 260),
                     { kind = "collect", spots = Q.HideSpots(spot, 2, 500), need = 2,
                       models = { "models/weapons/w_stunbaton.mdl", "models/props_c17/paper01.mdl" },
-                      text = "Search the area for 6-12's things (press E)" },
+                      text = "Search the area: find 2 of 6-12's belongings and press E on each" },
                     Choice(CAUSE_PROMPTS[data.cause], {
-                        { text = "Report it up the chain.", pick = function(q) q.chainNext = nextPart end },
+                        { text = "Report it to your superiors.", pick = function(q) q.chainNext = nextPart end },
                         { text = "Keep it quiet and look into it yourself.", pick = function(q)
                             q.chainData.quiet = true
                             q.bonus = 5
@@ -590,34 +590,34 @@ LC.Chain{
                 local z = Pick(LC.ZonesOfKind("infest"))
                 return {
                     title = "What's left of him", reward = 40, limit = 600,
-                    desc = "The trail leads into the infestation.",
+                    desc = "The trail leads into the infestation. Go in and find 6-12.",
                     stages = {
-                        Goto(z.pos, "Enter the infestation", math.max(200, z.r)),
-                        Count("killed", 3, "Fight your way through", function(_, _, npc) return Q.IsZombieNPC(npc) end),
-                        Choice("Among the infested, a familiar uniform. His mask is still on.", {
+                        Goto(z.pos, "Go into the infestation (marked)", math.max(200, z.r)),
+                        Count("killed", 3, "Fight your way through: kill 3 zombies or headcrabs", function(_, _, npc) return Q.IsZombieNPC(npc) end),
+                        Choice("Among the zombies, a familiar uniform: it's 6-12, turned into one of them. His mask is still on.", {
                             { text = "Put him down yourself.", pick = function(q) q.chainEnd = "mercy" end },
-                            { text = "Leave him for Overwatch.", pick = function(q) q.chainEnd = "left" end },
+                            { text = "Leave him for Overwatch to deal with.", pick = function(q) q.chainEnd = "left" end },
                         }),
                     },
                 }
             end
             local z = Pick(LC.ZonesOfKind("rebel"))
-            local enter = Goto(z.pos, "Enter rebel territory. They'll be waiting", math.max(150, z.r * 0.8))
+            local enter = Goto(z.pos, "Go into rebel territory (marked). Armed rebels will be waiting", math.max(150, z.r * 0.8))
             -- the people who took him are in there, and they're armed
             enter.onEnter = function() if LC.ReinforceRebels then LC.ReinforceRebels(z, 3) end end
             return {
                 title = "Retaliation", reward = 40, limit = 600,
-                desc = "The drag marks lead into rebel territory. Go in, and hold long enough to find something. Expect a fight.",
+                desc = "The drag marks lead into rebel territory. Go in and stay inside for 45 seconds to search it. Armed rebels will fight you.",
                 stages = {
                     enter,
-                    { kind = "survive", secs = 45, text = "Search rebel territory (they know you're here)",
+                    { kind = "survive", secs = 45, text = "Stay alive inside rebel territory for 45 seconds while you search (the rebels know you're here)",
                       cond = function(_, p) return LC.InRebelZone(p:GetPos()) end },
                     Choice("You find his radio in a stairwell, still switched on. Someone has been listening to Civil Protection frequencies all week.", {
-                        { text = "Smash it.", pick = function(q) q.chainEnd = "silenced" end },
+                        { text = "Smash the radio.", pick = function(q) q.chainEnd = "silenced" end },
                         { text = "Leave it on, and feed them false orders.", check = { "guile", 13 },
                           success = function(q, p) Trait(p, "loyalty", 2) q.bonus = 30 q.chainEnd = "counterintel" end,
                           fail = function(q)
-                              Narrate(q, "They stop transmitting the moment you touch it.")
+                              Narrate(q, "They stop transmitting the moment you touch it. The trick won't work now.")
                               q.chainEnd = "silenced"
                           end },
                     }),
@@ -631,19 +631,19 @@ LC.Chain{
             local dest, r, safe = Q.SafeHouse(ply)
             return {
                 title = "The man in the stolen coat", reward = 45, limit = 600,
-                desc = "A citizen with a Civil Protection haircut was seen " .. Place(spot, ply:GetPos()) .. ".",
+                desc = "A man in citizen's clothes with a Civil Protection haircut was seen " .. Place(spot, ply:GetPos()) .. ". It might be 6-12.",
                 stages = {
-                    Meet("Find the man in the stolen coat (marked)", "citizen", function() return spot end, nil, nil, "male"),
-                    Choice("It's him. 6-12, in a stolen coat, his haircut already growing out. 'Please. I have a daughter in Block 4.'", {
-                        { text = "Bring him in.", pick = function(q, p)
+                    Meet("Find the man in the stolen coat (marked) and walk up to him", "citizen", function() return spot end, nil, nil, "male"),
+                    Choice("It's him: 6-12, in a stolen coat, his haircut already growing out. 'Please. I have a daughter in Block 4.'", {
+                        { text = "Arrest him and bring him in.", pick = function(q, p)
                             Trait(p, "loyalty", 2)
                             q.chainEnd = "brought_in"
                             if LC.PrisonAvailable() then
                                 q.data.target = q.data.actor
-                                Insert(q, { Q.ArrestStage("Arrest him (right click)") })
+                                Insert(q, { Q.ArrestStage("Arrest him with the Arrest Baton (right click)") })
                             end
                         end },
-                        { text = "Let him disappear.", pick = function(q, p)
+                        { text = "Let him go, and say nothing.", pick = function(q, p)
                             Trait(p, "sympathy", 2)
                             Trait(p, "corruption", 1)
                             q.chainEnd = "let_go"
@@ -653,11 +653,11 @@ LC.Chain{
                           success = function(q, p)
                               Trait(p, "sympathy", 3)
                               q.chainEnd = "defected"
-                              Insert(q, { { kind = "escort", pos = dest, r = r, vanish = true, text = "Get him to " .. safe,
+                              Insert(q, { { kind = "escort", pos = dest, r = r, vanish = true, text = "Lead him to safety (" .. safe .. "). He follows you",
                                   onEnter = function(q2, st) st.npc = q2.data.actor end } })
                           end,
                           fail = function(q)
-                              Narrate(q, "He doesn't trust you. He runs.")
+                              Narrate(q, "He doesn't trust you. He runs, and he's gone.")
                               q.data.target = q.data.actor
                               Q.Flee(q)
                               q.chainEnd = "fled"
@@ -679,19 +679,19 @@ LC.Chain{
     unlock = function() return true end,
     start = "lost",
     endings = {
-        forgiven = "He weeps through the whole blessing. He never informs again.",
-        cast_out = "He leaves without a word. The flock is smaller, and safer.",
-        betrayed = "Your chapel is ash by morning. You will find another. You always do.",
-        grace = "If he reports you, he'll have to report that too.",
+        forgiven = "You forgave the informant. He weeps through the whole blessing, and never informs again.",
+        cast_out = "You sent the informant away. He leaves without a word. The flock is smaller, and safer.",
+        betrayed = "The informant talked, and your chapel is burned to ash by morning. You will find another. You always do.",
+        grace = "You blessed the informant with the rest. If he reports you, he'll have to report that too.",
     },
     parts = {
         lost = { num = 1, next = "mass", build = function()
             return {
                 title = "Lost sheep", reward = 25, limit = 600,
-                desc = "The city is full of frightened people. Find some of them.",
+                desc = "The city is full of frightened people. Speak with three citizens, then heal two wounded people with The Blessing.",
                 stages = {
-                    Count("used_npc", 3, "Seek out frightened souls and speak with them (press E)", Q.IsCitizenNPC),
-                    Count("healed", 2, "Tend to their wounds (The Blessing)", nil, true),
+                    Count("used_npc", 3, "Speak with 3 different citizens: walk up to each one and press E", Q.IsCitizenNPC),
+                    Count("healed", 2, "Heal 2 wounded people with The Blessing (left click on someone who is hurt)", nil, true),
                 },
             }
         end },
@@ -699,7 +699,7 @@ LC.Chain{
         mass = { num = 2, build = function(ply)
             local pos, r, where = Q.SafeHouse(ply)
             if not pos then return nil end
-            local hold = Hold(pos, 60, "Hold a secret mass", math.max(220, r))
+            local hold = Hold(pos, 60, "Hold a secret mass: stay at the chapel for 60 seconds, out of sight of Civil Protection", math.max(220, r))
             hold.onEnter = function(q)
                 q.data.flock = {}
                 for _ = 1, 3 do
@@ -717,20 +717,20 @@ LC.Chain{
             end
             return {
                 title = "The secret mass", reward = 50, limit = 720,
-                desc = "Gather the faithful in " .. where .. ". Pray quietly. Pray quickly.",
+                desc = "Gather the faithful for a secret mass (" .. where .. "). Pray quietly, pray quickly, and keep out of sight of Civil Protection.",
                 stages = {
-                    Goto(pos, "Go to the hidden chapel in " .. where, math.max(200, r)),
+                    Goto(pos, "Go to the hidden chapel (" .. where .. ")", math.max(200, r)),
                     hold,
-                    Choice("As the last hymn ends, you notice one of your flock counting the others. Quietly. Like a man taking inventory.", {
-                        { text = "Find the informant among them.", check = { "empathy", 13 },
+                    Choice("As the last hymn ends, you notice one of your flock quietly counting the others, like a man taking notes for Civil Protection. There's an informant among you.", {
+                        { text = "Work out which of them is the informant.", check = { "empathy", 13 },
                           success = function(q)
-                              Insert(q, { Choice("He's young. He's frightened. They have his mother.", {
+                              Insert(q, { Choice("You find him. He's young and frightened: they're holding his mother.", {
                                   { text = "Forgive him.", pick = function(q2, p) Trait(p, "sympathy", 2) q2.chainEnd = "forgiven" end },
                                   { text = "Send him away.", pick = function(q2) q2.chainEnd = "cast_out" end },
                               }) })
                           end,
                           fail = function(q, p)
-                              Narrate(q, "You can't tell which of them it is. By morning, Civil Protection knows everything.")
+                              Narrate(q, "You can't tell which of them it is. By morning, Civil Protection knows everything, and you're wanted for unlawful worship.")
                               LC.ReportCrime(p, "Unlawful worship", 300)
                               q.chainEnd = "betrayed"
                           end },
@@ -745,7 +745,7 @@ LC.Chain{
                     local st = q.stages[q.stage]
                     if st and st.kind == "hold" and LC.SeenBySecurity(q.owner, 900) then
                         q.data.seen = true
-                        Narrate(q, "Boots on the stairs.")
+                        Narrate(q, "Boots on the stairs: Civil Protection saw the mass. You're wanted for unlawful worship.")
                         LC.ReportCrime(q.owner, "Unlawful worship", 240)
                     end
                 end,
@@ -763,7 +763,7 @@ LC.Chain{
     unlock = function(ply) return Q.RankIndex(ply) >= 3 and not (LC.Conditioned and LC.Conditioned(ply)) end, -- (Division Leaders)
     start = "evaluation",
     endings = {
-        transhuman = "You don't remember your name. You don't need to.",
+        transhuman = "You accepted the conditioning. You don't remember your name. You don't need to.",
         human = "You keep your name, your face, and the nightmares. Overwatch won't ask twice: you'll go no higher than Division Leader.",
     },
     parts = {
@@ -773,11 +773,11 @@ LC.Chain{
             if not pos then return nil end
             return {
                 title = "Evaluation", reward = 30, limit = 600,
-                desc = "Overwatch is watching your performance. Hold a checkpoint and inspect citizens. Flawlessly.",
+                desc = "Overwatch is judging whether you're fit for more. Hold a checkpoint for 90 seconds, then inspect three citizens. No mistakes.",
                 stages = {
-                    Goto(pos, "Report to the checkpoint", 260),
-                    Hold(pos, 90, "Hold the checkpoint under observation", 280),
-                    Count("used_npc", 3, "Inspect three citizens", Q.IsCitizenNPC),
+                    Goto(pos, "Go to the marked checkpoint", 260),
+                    Hold(pos, 90, "Stay at the checkpoint for 90 seconds while Overwatch observes you", 280),
+                    Count("used_npc", 3, "Inspect 3 different citizens (walk up to each one and press E)", Q.IsCitizenNPC),
                 },
             }
         end },
@@ -788,12 +788,12 @@ LC.Chain{
             if not pos then return nil end
             return {
                 title = "Conditioning", reward = 20, limit = 480,
-                desc = "Report " .. Place(pos, ply:GetPos()) .. ". Come alone.",
+                desc = "You've been ordered to report " .. Place(pos, ply:GetPos()) .. ". Come alone.",
                 stages = {
-                    Goto(pos, "Report as ordered", 300),
-                    Choice("A technician in a coat that has never been white. 'Transhuman conditioning. " ..
+                    Goto(pos, "Go to the marked spot as ordered", 300),
+                    Choice("A technician in a coat that has never been white. 'Transhuman conditioning. It will make you Overwatch. " ..
                         "You won't remember your name, Civil Protection unit. You won't need to.'", {
-                        { text = "Accept. (The Overwatch ranks open to you: Prison Guard, Soldier, Elite. There's no undoing it.)", pick = function(q, p)
+                        { text = "Accept. (You become Overwatch: the Prison Guard, Soldier and Elite ranks open to you. There's no undoing it.)", pick = function(q, p)
                             q.chainEnd = "transhuman"
                             timer.Simple(1.5, function() if IsValid(p) and LC.Condition then LC.Condition(p) end end)
                         end },
@@ -815,9 +815,9 @@ LC.Chain{
 local function Suspect(q, p, why)
     if not IsValid(p) then return end
     LC.Bump(p, "suspicion")
-    Narrate(q, why or "Someone saw that. They'll remember.")
+    Narrate(q, why or "Someone saw that, and they'll remember. Suspicion of you is growing.")
     if LC.Counter(p, "suspicion") >= 3 then
-        p:ChatPrint("[Story] You have a feeling you're being watched.")
+        p:ChatPrint("[Story] Too many people have seen you acting strangely. You have a feeling you're being watched.")
         if LC.CheckUnlocks then LC.CheckUnlocks(p) end
     end
 end
@@ -858,10 +858,10 @@ LC.Chain{
     end,
     start = "note",
     endings = {
-        loyal = "She was processed by morning. You were commended. You don't sleep well.",
-        defected = "You burned your uniform in a canal barrel. The Resistance has a fighter who knows exactly how Civil Protection units think.",
-        insider = "You still wear the mask. Now you know who you're wearing it for.",
-        walked = "You never answer another note. Some nights you wonder.",
+        loyal = "You arrested her. She was processed by morning, and you were commended. You don't sleep well.",
+        defected = "You joined the Resistance and burned your uniform in a canal barrel. They now have a fighter who knows exactly how Civil Protection units think.",
+        insider = "You stay in Civil Protection as a Resistance spy. You still wear the mask, but now you know who you're wearing it for.",
+        walked = "You walked away from both sides and never answer another note. Some nights you wonder.",
     },
     parts = {
         note = { num = 1, build = function(ply)
@@ -869,14 +869,14 @@ LC.Chain{
             if not spot then return nil end
             return {
                 title = "A note in your ration packet", reward = 15, limit = 480,
-                desc = "Someone slipped a note into your ration packet. One line: a place, " .. Place(spot, ply:GetPos()) .. ", and a time. Now.",
+                desc = "Someone slipped a note into your ration packet. It names a place, " .. Place(spot, ply:GetPos()) .. ", and a time: now.",
                 stages = {
-                    Goto(spot, "Go to the place named in the note", 220),
-                    Meet("Find whoever left it (marked)", "citizen", function() return spot end, nil, nil, "female"),
-                    Choice("A woman with a lambda tattooed on the inside of her wrist. 'People talk about you, officer. " ..
+                    Goto(spot, "Go to the place named in the note (marked)", 220),
+                    Meet("Find whoever left the note (marked) and walk up to them", "citizen", function() return spot end, nil, nil, "female"),
+                    Choice("A woman with the Resistance's lambda tattooed on the inside of her wrist. 'People talk about you, officer. " ..
                         "The one who looks the other way. The one who says please.' She doesn't blink. 'We could use someone like that.'", {
                         { text = "Hear her out.", pick = function(q)
-                            Narrate(q, "She talks fast and quiet. By the end, you know three names you shouldn't.")
+                            Narrate(q, "She talks fast and quiet. By the end, you know the names of three rebels, names you shouldn't know.")
                             q.chainNext = "proof"
                         end },
                         { text = "Arrest her.", pick = function(q, p)
@@ -884,7 +884,7 @@ LC.Chain{
                             q.chainEnd = "loyal"
                             if LC.PrisonAvailable() then
                                 q.data.target = q.data.actor
-                                Insert(q, { Q.ArrestStage("Arrest her (right click)") })
+                                Insert(q, { Q.ArrestStage("Arrest her with the Arrest Baton (right click)") })
                             end
                         end },
                         { text = "Pretend you never saw her.", pick = function(q)
@@ -903,10 +903,10 @@ LC.Chain{
             local dest, r, where = Q.SafeHouse(ply)
             return {
                 title = "Proof of good faith", reward = 35, limit = 720,
-                desc = "They want proof. A prisoner, released on your shift, walked to " .. where .. ". Don't let another Civil Protection unit see you.",
+                desc = "The Resistance wants proof you're on their side: free a prisoner from the cells and walk them to safety (" .. where .. "). Don't let another Civil Protection unit see you.",
                 stages = {
-                    FreePrisonerStage("Unlock the cell of the prisoner they named (press E)"),
-                    { kind = "escort", pos = dest, r = r, vanish = true, text = "Walk them to " .. where .. " like it's routine",
+                    FreePrisonerStage("Go to the cells and press E on the marked prisoner to unlock their cell"),
+                    { kind = "escort", pos = dest, r = r, vanish = true, text = "Lead the prisoner to safety (" .. where .. "). They follow you: act like it's routine",
                       onEnter = function(q, st) st.npc = q.data.target; if not IsValid(st.npc) then return false end end },
                 },
                 tick = Witnessed({ escort = true }, "A Civil Protection unit saw you walking a prisoner out of the block. He'll remember."),
@@ -918,22 +918,22 @@ LC.Chain{
             if not pos then return nil end
             return {
                 title = "The crossroads", reward = 30, limit = 600,
-                desc = "They want to meet in " .. where .. ". Come out of uniform if you can. Come alone either way.",
+                desc = "The Resistance wants to meet you (" .. where .. "). Come out of uniform if you can. Come alone either way.",
                 stages = {
-                    Goto(pos, "Go to the meeting in " .. where, r),
-                    Meet("Find her", "citizen", function() return pos end, nil, nil, "female"),
+                    Goto(pos, "Go to the meeting place (" .. where .. ")", r),
+                    Meet("Find the woman from the note and walk up to her", "citizen", function() return pos end, nil, nil, "female"),
                     Choice("She's waiting with a man in a lambda armband who doesn't take his hand off his rifle. " ..
-                        "'You've proven yourself. So: do you come over, or do you stay where you can do the most good?'", {
-                        { text = "Come over. Tonight.", pick = function(q, p)
+                        "'You've proven yourself. So: do you join us, or stay in Civil Protection where you can do the most good?'", {
+                        { text = "Come over. Tonight. (You join the Resistance.)", pick = function(q, p)
                             Trait(p, "sympathy", 2)
                             q.chainEnd = "defected"
                             JoinLater(p, "resistance", 400)
                         end },
-                        { text = "Stay inside. Be their eyes.", pick = function(q, p)
+                        { text = "Stay inside. Be their eyes. (You stay in Civil Protection as their spy.)", pick = function(q, p)
                             Trait(p, "sympathy", 1)
                             LC.StoryFlag(p, "insider", true)
                             q.chainEnd = "insider"
-                            Narrate(q, "He finally lets go of the rifle. 'Then you never met us. Watch your board.'")
+                            Narrate(q, "He finally lets go of the rifle. 'Then you never met us. Watch your job board (F3): we'll send you work there.'")
                         end },
                         { text = "Walk away from all of it.", pick = function(q) q.chainEnd = "walked" end },
                     }),
@@ -952,14 +952,14 @@ local OPS = {}
 OPS[#OPS + 1] = function(ply)
     local s = Q.Spot(ply, 500, 2500)
     if not s then return nil end
-    local hold = Hold(s, 4, "Leave the patrol schedule at the dead drop (crouch)", 90, true)
+    local hold = Hold(s, 4, "Crouch at the dead drop for 4 seconds to leave the patrol schedule", 90, true)
     hold.onDone = function(q)
         if LC.SeenBySecurity(q.owner, 800) then Suspect(q, q.owner, "A Civil Protection unit watched you crouch by that drainpipe. He'll wonder why.") end
     end
     return {
         title = "Leak the schedule", reward = 25, limit = 420,
-        desc = "Tomorrow's patrol routes, left where the right people will find them " .. Place(s, ply:GetPos()) .. ".",
-        stages = { Goto(s, "Go to the dead drop", 150), hold },
+        desc = "Leave tomorrow's patrol routes at a Resistance dead drop " .. Place(s, ply:GetPos()) .. ". Don't let other units see you.",
+        stages = { Goto(s, "Go to the dead drop (marked)", 150), hold },
     }
 end
 
@@ -967,7 +967,7 @@ OPS[#OPS + 1] = function(ply)
     local id = Q.CitizenID()
     local dest, r, where = Q.SafeHouse(ply)
     local warn = {
-        kind = "target", action = "use", text = "Warn citizen " .. id .. " before the raid (press E)",
+        kind = "target", action = "use", text = "Find citizen " .. id .. " (marked) and press E to warn them before the raid",
         onEnter = function(q, st)
             local npc = Q.RandomCitizen()
             if not npc then return false end
@@ -988,7 +988,7 @@ OPS[#OPS + 1] = function(ply)
     }
     return {
         title = "Warn them first", reward = 30, limit = 240,
-        desc = "Citizen " .. id .. " is on tomorrow's list. Get to them first. Quickly.",
+        desc = "Citizen " .. id .. " is on tomorrow's raid list. Warn them before Civil Protection gets there, and be quick.",
         stages = { warn },
         tick = Witnessed({ target = true }, "Another Civil Protection unit saw you whispering to someone on the list."),
     }
@@ -1001,10 +1001,10 @@ OPS[#OPS + 1] = function(ply)
     local item = Pick(Q.CONTRABAND)
     return {
         title = "Lose the evidence", reward = 30, limit = 480,
-        desc = "Evidence against a Resistance cell is sitting " .. Place(center, ply:GetPos()) .. ". It should never reach the evidence room.",
+        desc = "Evidence against a Resistance cell is lying " .. Place(center, ply:GetPos()) .. ". Collect it and take it to the Resistance instead of the evidence room.",
         stages = {
-            { kind = "collect", spots = Q.HideSpots(center, 2, 500), model = item[2], need = 2, text = "Collect the evidence (press E)" },
-            Deliver(dest, "Take it to " .. where .. " instead of HQ", r),
+            { kind = "collect", spots = Q.HideSpots(center, 2, 500), model = item[2], need = 2, text = "Find the 2 pieces of evidence and press E on each" },
+            Deliver(dest, "Take the evidence to the marked spot (" .. where .. "), not to HQ", r),
         },
         tick = Witnessed({ deliver = true }, "A Civil Protection unit saw you heading the wrong way with an evidence bag."),
     }
@@ -1016,10 +1016,10 @@ OPS[#OPS + 1] = function(ply)
     local dest = #rel > 0 and Pick(rel).pos or select(1, Q.SafeHouse(ply))
     return {
         title = "A quiet release", reward = 35, limit = 600,
-        desc = "Someone in the cells knows too much about the Resistance. Get them out before interrogation.",
+        desc = "Someone in the cells knows too much about the Resistance. Free them and walk them out before they're interrogated.",
         stages = {
-            FreePrisonerStage("Open their cell (press E)"),
-            { kind = "escort", pos = dest, r = 200, vanish = true, text = "Walk them out like it's paperwork",
+            FreePrisonerStage("Press E on the marked prisoner to open their cell"),
+            { kind = "escort", pos = dest, r = 200, vanish = true, text = "Lead the prisoner to the marked spot (they follow you). Act like it's routine paperwork",
               onEnter = function(q, st) st.npc = q.data.target; if not IsValid(st.npc) then return false end end },
         },
         tick = Witnessed({ escort = true }, "The desk officer is going to remember that release had no paperwork."),
@@ -1032,17 +1032,17 @@ OPS[#OPS + 1] = function(ply)
     if not pos then return nil end
     return {
         title = "Misdirection", reward = 20, limit = 420,
-        desc = "Your sector report is due. There was Resistance activity near the canals this week.",
+        desc = "Your sector report is due, and there was Resistance activity near the canals this week. Hand it in, and decide whether to cover for them.",
         stages = {
-            Goto(pos, "Go to file your sector report", 260),
-            Count("used_npc", 1, "Hand your report to an officer (press E)", Q.IsCopNPC),
+            Goto(pos, "Go to the marked spot to file your sector report", 260),
+            Count("used_npc", 1, "Walk up to a Civil Protection officer and press E to hand in your report", Q.IsCopNPC),
             Choice("The officer skims your report. 'Canals. Anything to note, Civil Protection unit?'", {
-                { text = "The canals were quiet. Completely quiet.", check = { "guile", 12 },
-                  success = function(q, p) Trait(p, "sympathy", 1) Narrate(q, "He stamps it without looking up.") end,
-                  fail = function(q, p) Suspect(q, p, "He reads it twice, then looks at you for a long moment.") end },
+                { text = "Lie: the canals were quiet. Completely quiet.", check = { "guile", 12 },
+                  success = function(q, p) Trait(p, "sympathy", 1) Narrate(q, "He stamps it without looking up. The lie worked.") end,
+                  fail = function(q, p) Suspect(q, p, "He reads it twice, then looks at you for a long moment. He doesn't believe you.") end },
                 { text = "Report it honestly. You can't risk it today.", pick = function(q, p)
                     Trait(p, "loyalty", 1)
-                    Narrate(q, "Somewhere in the canals, a cell has to move house tonight. They'll understand. Probably.")
+                    Narrate(q, "Because of your report, a Resistance cell in the canals has to move tonight. They'll understand. Probably.")
                 end },
             }),
         },
@@ -1086,7 +1086,7 @@ local function Expose(q, p)
     LC.StoryFlag(p, "insider", false)
     q.chainEnd = "exposed"
     q.reward = 0
-    Narrate(q, "He picks up your file instead. 'Interesting.'")
+    Narrate(q, "He picks up your file instead. 'Interesting.' You've been exposed as the mole.")
     XP(p, -200)
     LC.SetFaction(p, "citizen", nil, true)
     if LC.PrisonAvailable() then LC.Incarcerate(p, 300, "Treason", nil) end
@@ -1101,9 +1101,9 @@ LC.Chain{
     start = "hunt",
     endings = {
         framed = "Unit 3-09 was taken in your place. You tell yourself he probably deserved it.",
-        ran = "You ran before they could knock. Every Civil Protection unit in the city has your face now.",
+        ran = "You fled to the Resistance before they could knock. Every Civil Protection unit in the city has your face now.",
         survived = "The mole hunt moves on to another sector. You breathe again. Carefully.",
-        exposed = "Stripped of rank and mask. A citizen again, with a file that will never close.",
+        exposed = "Exposed as the mole, you're stripped of rank and mask. A citizen again, with a file that will never close.",
     },
     parts = {
         hunt = { num = 1, build = function(ply)
@@ -1112,19 +1112,19 @@ LC.Chain{
             if not pos then return nil end
             return {
                 title = "The briefing", reward = 30, limit = 480,
-                desc = "Internal Affairs believes there's a mole in your division. They want your help finding them.",
+                desc = "Internal Affairs believes there's a mole in your division, and wants your help finding them. The mole is you.",
                 stages = {
-                    Goto(pos, "Report for the briefing", 260),
-                    Meet("Speak with the Internal Affairs officer", "cop", function() return pos end),
+                    Goto(pos, "Go to the marked spot for the briefing", 260),
+                    Meet("Walk up to the Internal Affairs officer", "cop", function() return pos end),
                     Choice("The officer spreads three files across the hood of an APC. One of them is yours. He hasn't noticed. Yet.", {
-                        { text = "Steer him toward another Civil Protection unit's file.", check = { "guile", 14 },
+                        { text = "Steer him toward another Civil Protection unit's file, so they take the blame.", check = { "guile", 14 },
                           success = function(q, p)
                               Trait(p, "corruption", 1)
                               ClearSuspicion(p)
                               q.chainEnd = "framed"
                           end,
                           fail = function(q, p) return Expose(q, p) end },
-                        { text = "Excuse yourself. Run, tonight.", pick = function(q, p)
+                        { text = "Excuse yourself. Run to the Resistance tonight (you'll be wanted for desertion).", pick = function(q, p)
                             q.chainEnd = "ran"
                             LC.StoryFlag(p, "insider", false)
                             JoinLater(p, "resistance", 400)

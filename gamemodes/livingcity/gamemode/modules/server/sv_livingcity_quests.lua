@@ -139,7 +139,7 @@ end
 
 local CRIMES = {
     "hoarding ration units", "unauthorized assembly", "possession of contraband", "failing a loyalty check",
-    "breaking curfew", "anti-civil remarks", "trading ration units", "unregistered relocation",
+    "breaking curfew", "speaking out against the Combine", "trading ration units", "moving home without registering",
     "tampering with a city terminal", "harboring an anticitizen",
 }
 -- Half-Life 2 has no proper elderly citizen model; these are its older faces.
@@ -159,7 +159,7 @@ local TRASH = {
 }
 local NOTES = {
     "The note says only: the canal gate opens at four.",
-    "A child's drawing of a lambda, and an address you memorize and burn.",
+    "A child's drawing of a lambda (the Resistance symbol) and an address. You memorize the address and burn the note.",
     "Coordinates, and a single word: Ravenholm. You decide not to go.",
     "A list of Civil Protection unit numbers. Two are crossed out.",
 }
@@ -188,7 +188,7 @@ function LC.DescribePlace(pos, from)
     if near("queue", 600) then return "by the ration line" end
     if near("checkpoint", 500) then return "at a checkpoint" end
     if near("spawn", 400) then return "outside an apartment doorway" end
-    if from then return string.format("%d m %s of you", math.floor(from:Distance(pos) * 0.019), Compass(from, pos)) end
+    if from then return string.format("%d metres %s of you", math.floor(from:Distance(pos) * 0.019), Compass(from, pos)) end
     return "somewhere in the city"
 end
 local Place = LC.DescribePlace
@@ -674,7 +674,7 @@ function EnterStage(q)
     local st = Stage(q)
     st.got, st.progress, st.seen = 0, 0, {}
     if st.onEnter and st.onEnter(q, st) == false then
-        return Finish(q, false, st.failText or "the trail went cold")
+        return Finish(q, false, st.failText or "the job's target couldn't be found")
     end
     -- heading for a housing block (or rebel territory, or the prison): walking
     -- into the zone counts, not just its exact center
@@ -750,7 +750,7 @@ function SendState(ply)
         if st.kind == "tail" then t.suspicion, t.seen = math.floor(st.suspicion or 0), st.seen == true end
     end
     if forgetting then
-        t.objective = "You can't quite remember what you were doing."
+        t.objective = "You can't remember what you were doing: Breen's water has clouded your memory. It comes back in about a minute."
         t.progress, t.pos, t.ent, t.forget = nil, nil, nil, true
     end
     -- the client counts the time down itself: if nothing else changed, don't send it
@@ -777,7 +777,7 @@ LC.SendQuestState = function(ply) SendState(ply) end
 local function PollEscort(q, st)
     local npc = st.npc
     local nst = IsValid(npc) and LC.NPCs[npc]
-    if not nst then return Finish(q, false, "you lost them") end
+    if not nst then return Finish(q, false, "the person you were escorting is gone") end
     local leader, bd
     for _, p in ipairs(Members(q)) do
         if p:Alive() then
@@ -906,13 +906,13 @@ local function TailSuspicion(npc, p, st)
 end
 
 local function Poll(q, now)
-    if now > q.expires then return Finish(q, false, "out of time") end
+    if now > q.expires then return Finish(q, false, "you ran out of time") end
     local mem = Members(q)
-    if #mem == 0 then return Finish(q, false, "nobody left on the job") end
+    if #mem == 0 then return Finish(q, false, "everyone left the job") end
     if not IsValid(q.owner) or not table.HasValue(mem, q.owner) then q.owner = mem[1] end
     if q.failOnArrest then
         for _, p in ipairs(mem) do
-            if LC.Prisoners and LC.Prisoners[p] then return Finish(q, false, "taken into custody") end
+            if LC.Prisoners and LC.Prisoners[p] then return Finish(q, false, "you were arrested") end
         end
     end
 
@@ -924,7 +924,7 @@ local function Poll(q, now)
     if k == "tail" then
         -- follow someone: close enough to keep them in sight, far enough not to be noticed
         local npc = st.npc
-        if not IsValid(npc) or not LC.NPCs[npc] then return Finish(q, false, "you lost them") end
+        if not IsValid(npc) or not LC.NPCs[npc] then return Finish(q, false, "the person you were following is gone") end
         local best
         for _, p in ipairs(mem) do
             if p:Alive() then
@@ -942,15 +942,15 @@ local function Poll(q, now)
         local before = st.suspicion or 0
         st.suspicion = math.Clamp(before + (gain > 0 and gain or -TAIL_COOL) * 0.5, 0, 100)
         st.seen = gain > 0
-        if st.suspicion >= 50 and before < 50 then Narrate(q, "They keep glancing back. Get out of sight.") end
+        if st.suspicion >= 50 and before < 50 then Narrate(q, "They keep glancing back: they're getting suspicious. Get out of their sight before they spot you.") end
         if st.suspicion >= 100 then
             st.suspicion = 0
             if st.onNoticed then return st.onNoticed(q, st) end
-            return Finish(q, false, "they spotted you")
+            return Finish(q, false, "they noticed you following them")
         end
         if best > st.lost then
             st.away = (st.away or 0) + 0.5
-            if st.away >= 12 then return Finish(q, false, "you lost them") end
+            if st.away >= 12 then return Finish(q, false, "you fell too far behind and lost them") end
         else
             st.away = 0
         end
@@ -977,13 +977,13 @@ local function Poll(q, now)
         end
     elseif k == "target" then
         local npc = st.npc
-        if not IsValid(npc) or not LC.NPCs[npc] then return Finish(q, false, st.lostText or "the target is gone") end
+        if not IsValid(npc) or not LC.NPCs[npc] then return Finish(q, false, st.lostText or "your target is gone") end
         if st.action == "reach" and AnyMemberNear(q, npc:GetPos(), st.r or 150) then
             Advance(q)
         elseif st.action == "arrest" then
             local s = LC.NPCs[npc].state
             if s == "jailed" and not st.armed then
-                Narrate(q, "Another Civil Protection unit brought them in. Credit shared.")
+                Narrate(q, "Another Civil Protection unit arrested them first. You get half the reward.")
                 q.reward = math.floor(q.reward / 2)
                 Advance(q)
             end
@@ -1002,8 +1002,8 @@ function LC.RationBreak(ply, on)
     if not IsValid(ply) then return false end
     if on then
         local q = LC.QuestOf[ply]
-        if not q or q.done then return false, "You've no shift or job on to step away from." end
-        if LC.Event ~= "rations" then return false, "Rations aren't out right now." end
+        if not q or q.done then return false, "You don't have a shift or job running, so there's nothing to take a break from." end
+        if LC.Event ~= "rations" then return false, "Rations aren't being handed out right now, so you can't take a ration break." end
         ply.lcRationBreak = CurTime() + 300
         ply:SetNW2Bool("lc_ration_break", true)
         return true
@@ -1018,7 +1018,7 @@ local function OnBreak(q)
     if not IsValid(p) or not p.lcRationBreak then return false end
     if CurTime() > p.lcRationBreak then
         LC.RationBreak(p, false)
-        p:ChatPrint("[Work] Break's over. Back to it.")
+        p:ChatPrint("[Work] Your ration break is over (five minutes at most). Your job's timer is running again.")
         return false
     end
     return true
@@ -1026,7 +1026,7 @@ end
 hook.Add("LivingCityRationCollected", "LivingCityRationBreak", function(ply)
     if ply.lcRationBreak then
         LC.RationBreak(ply, false)
-        ply:ChatPrint("[Work] Ration in hand. Back to the job: it's waiting where you left it.")
+        ply:ChatPrint("[Work] You've got your ration, so your break is over. Your job carries on from where you left it.")
     end
 end)
 hook.Add("LivingCityEventStarted", "LivingCityRationBreak", function(name)
@@ -1034,17 +1034,17 @@ hook.Add("LivingCityEventStarted", "LivingCityRationBreak", function(name)
     for _, p in ipairs(player.GetAll()) do
         local q = LC.QuestOf[p]
         if q and not q.done and LC.Notice then
-            LC.Notice(p, "info", "Rations are out", "Your shift can wait: F1 > Take a ration break (it pauses the job till you've had your ration).", 9)
+            LC.Notice(p, "info", "Rations are being handed out", "To get your ration without failing your job, press F1 and choose Take a ration break. It pauses your job's timer until you've collected your ration (five minutes at most).", 9)
         end
     end
 end)
 LC.SlashCommands = LC.SlashCommands or {}
 LC.SlashCommands.rationbreak = function(ply)
     local ok, why = LC.RationBreak(ply, true)
-    ply:ChatPrint(ok and "[Work] You step away for your ration. The job waits (five minutes at most)." or ("[Work] " .. (why or "You can't now.")))
+    ply:ChatPrint(ok and "[Work] Ration break started. Your job's timer is paused until you collect your ration, for five minutes at most. Type /back to end the break early." or ("[Work] " .. (why or "You can't now.")))
 end
 LC.SlashCommands.back = function(ply)
-    ply:ChatPrint(LC.RationBreak(ply, false) and "[Work] Back to it." or "[Work] You're not on a break.")
+    ply:ChatPrint(LC.RationBreak(ply, false) and "[Work] Break ended. Your job's timer is running again." or "[Work] You're not on a break.")
 end
 
 timer.Create("LivingCityQuests", 0.5, 0, function()
@@ -1161,7 +1161,7 @@ local function Hold(pos, secs, text, r, crouch) return { kind = "hold", pos = po
 local function Count(event, need, text, filter, distinct)
     return { kind = "count", event = event, need = need, text = text, filter = filter, distinct = distinct ~= false }
 end
-local function Choice(prompt, options) return { kind = "choice", prompt = prompt, options = options, text = "Decide what to do" } end
+local function Choice(prompt, options) return { kind = "choice", prompt = prompt, options = options, text = "Choose what to do" } end
 
 -- Hands-on games (sv_livingcity_jobgames.lua, sv_livingcity_moregames.lua):
 -- arriving starts one (GameGo), or the stage starts it (GameNow); the stage
@@ -1271,10 +1271,10 @@ T{
         if #stops == 0 then stops = Route(ply, math.random(3, 4), 400, 1100) end
         if #stops < 2 then return nil end
         local stages = {}
-        for i, s in ipairs(stops) do stages[i] = Goto(s, string.format("Patrol stop %d of %d, %s", i, #stops, Place(s, ply:GetPos())), 150) end
+        for i, s in ipairs(stops) do stages[i] = Goto(s, string.format("Walk to patrol stop %d of %d, %s", i, #stops, Place(s, ply:GetPos())), 150) end
         return {
             title = "Patrol sweep " .. Place(stops[1], ply:GetPos()), reward = 15 + 5 * #stops, limit = 240 + 60 * #stops,
-            desc = "Walk the route and be seen. Visibility is the deterrent.", stages = stages,
+            desc = "Walk to each marked patrol stop in turn, so citizens see Civil Protection on the streets.", stages = stages,
             intro = Pick({ "Dispatch wants boots on the street. Yours will do.", "Overwatch reports elevated noncompliance. Show them the uniform." }),
         }
     end,
@@ -1288,8 +1288,8 @@ T{
         return {
             title = "Civil status inspections", reward = 10 + 5 * need, limit = 360,
             desc = string.format("Stop %d citizens and %s. Nobody is above suspicion.", need, GamesOn() and "pat them down" or "check their papers"),
-            stages = { GamesOn() and GameNow("patdown", string.format("Stop %d citizens and pat them down (E on one): release, confiscate or detain", need), { need = need })
-                or Count("used_npc", need, "Stop citizens for inspection (walk up and press E)", IsCitizenNPC) },
+            stages = { GamesOn() and GameNow("patdown", string.format("Pat down %d citizens: walk up to one and press E, search them, then release them, confiscate what they carry, or detain them", need), { need = need })
+                or Count("used_npc", need, "Inspect citizens: walk up to one and press E", IsCitizenNPC) },
         }
     end,
 }
@@ -1302,33 +1302,33 @@ T{
         local stash = Pick(CONTRABAND)
         return {
             title = "Apprehend citizen " .. id, reward = 35, limit = 420,
-            desc = string.format("Citizen %s is wanted for %s. An informant has marked them for you.", id, crime),
+            desc = string.format("Citizen %s is wanted for %s. An informant has given you their location: they're marked on your screen.", id, crime),
             stages = {
-                FindCitizenStage("Find citizen " .. id .. " (marked)", 140, function(q) Freeze(q.data.target, 40) end),
+                FindCitizenStage("Find citizen " .. id .. " (marked on your screen)", 140, function(q) Freeze(q.data.target, 40) end),
                 Choice(string.format("Citizen %s freezes. Their eyes go to your baton, then to the street behind you.", id), {
                     { text = "Detain them." },
                     { text = "Make them name their supplier.", check = { "authority", 12 },
                       success = function(q, p)
                           local spot = HideSpots(Spot(p, 300, 1500) or p:GetPos(), 1, 300)[1]
-                          Narrate(q, "They crack. There's " .. stash[1] .. " " .. Place(spot, p:GetPos()) .. ".")
+                          Narrate(q, "They crack and tell you: there's " .. stash[1] .. " hidden " .. Place(spot, p:GetPos()) .. ".")
                           LC.AddTrait(p, "loyalty", 1)
                           q.bonus = (q.bonus or 0) + 15
                           InsertStages(q, { { kind = "collect", spots = { spot }, model = stash[2], need = 1,
-                              text = "Seize " .. stash[1] .. " (press E)" } })
+                              text = "Find " .. stash[1] .. " (marked) and press E on it to seize it" } })
                       end,
                       fail = function(q)
-                          Narrate(q, "They shove past you and run!")
+                          Narrate(q, "They shove past you and run! Catch them.")
                           Flee(q)
                       end },
-                    { text = "Take their ration units and walk away.",
+                    { text = "Take their ration units as a bribe and let them go (ends the job, less XP).",
                       pick = function(q, p)
                           LC.AddTrait(p, "corruption", 1)
                           LC.Bump(p, "bribes")
                           q.reward = 10
-                          Narrate(q, "The Civil Protection units are warm from their pocket. Nobody will ever know. You will.")
+                          Narrate(q, "The ration units are still warm from their pocket. Nobody will ever know. You will.")
                           return "complete"
                       end },
-                    { text = "Let them go.",
+                    { text = "Let them go (ends the job, no XP).",
                       pick = function(q, p)
                           LC.AddTrait(p, "sympathy", 1)
                           LC.Bump(p, "mercies")
@@ -1351,8 +1351,8 @@ T{
         local secs = math.random(9, 14) * 10
         return {
             title = "Checkpoint duty " .. Place(p.pos, ply:GetPos()), reward = 25, limit = secs + 240,
-            desc = "Hold the checkpoint. Nobody passes without being looked at.",
-            stages = { Goto(p.pos, "Report to the checkpoint", 250), Hold(p.pos, secs, "Hold the checkpoint", 260) },
+            desc = "Go to the checkpoint and stand guard there until the timer is full. Nobody passes without being looked at.",
+            stages = { Goto(p.pos, "Go to the marked checkpoint", 250), Hold(p.pos, secs, "Stay at the checkpoint until the timer is full", 260) },
         }
     end,
 }
@@ -1365,9 +1365,9 @@ T{
         local kind = Pick(CONTRABAND)
         return {
             title = "Contraband sweep " .. Place(center, ply:GetPos()), reward = 30, limit = 420,
-            desc = "An informant reports " .. kind[1] .. " hidden around the area. Find all three.",
+            desc = "An informant reports " .. kind[1] .. " hidden around this area, in three places. Find and confiscate all three.",
             stages = { { kind = "collect", spots = HideSpots(center, 3, 700), model = kind[2], need = 3,
-                text = "Confiscate " .. kind[1] .. " (press E)" } },
+                text = "Confiscate " .. kind[1] .. ": find each one (marked) and press E on it" } },
         }
     end,
 }
@@ -1380,11 +1380,11 @@ T{
         if not center then return nil end
         return {
             title = "Disturbance " .. Place(center, ply:GetPos()), reward = 40, limit = 240,
-            desc = "Reports of a disturbance. Respond quickly.",
+            desc = "There's a disturbance nearby. Get there fast, then catch and arrest the suspect who runs.",
             stages = {
-                Goto(center, "Respond to the disturbance (hurry)", 300),
+                Goto(center, "Hurry to the marked disturbance", 300),
                 {
-                    kind = "target", action = "arrest", text = "Catch the suspect and detain them",
+                    kind = "target", action = "arrest", text = "Chase the suspect and arrest them with the Arrest Baton (right click)",
                     onEnter = function(q, st)
                         local p = q.owner
                         local npc = IsValid(p) and SuspectNear(p, center)
@@ -1400,7 +1400,7 @@ T{
                         st.npc = npc
                         Flee(q)
                     end,
-                    narrate = "Someone breaks from the crowd and runs!",
+                    narrate = "Someone breaks from the crowd and runs! That's your suspect.",
                 },
             },
         }
@@ -1415,9 +1415,9 @@ T{
         local front = LC.Lines[g].slots[1].pos
         return {
             title = "Ration line supervision", reward = 30, limit = 600,
-            desc = "Keep order at ration line " .. g .. " while Civil Protection units are distributed.",
+            desc = "Keep order at ration line " .. g .. " while rations are handed out.",
             stages = {
-                Goto(front, "Report to ration line " .. g, 220),
+                Goto(front, "Go to ration line " .. g .. " (marked)", 220),
                 Choice("The line is restless. A woman at the front is shaking, and the man behind her keeps looking at your hands.", {
                     { text = "Keep order, by the book.", pick = function(q, p) LC.AddTrait(p, "loyalty", 1) end },
                     { text = "Calm the line with a few quiet words.", check = { "empathy", 11 },
@@ -1431,7 +1431,7 @@ T{
                       pick = function(q, p) LC.AddTrait(p, "corruption", 1) LC.Bump(p, "bribes") end },
                 }),
                 { kind = "count", event = "served", need = 3, pos = front, r = 320, distinct = false,
-                  text = "Supervise the distribution (stay near the front)" },
+                  text = "Stay near the front of the line while 3 citizens collect their rations" },
             },
         }
     end,
@@ -1456,7 +1456,7 @@ T{
         local need = 5
         local surge = 4
         local area = math.max(700, z.r * 1.6)
-        local enter = Goto(z.pos, "Reach the infestation", math.max(200, z.r))
+        local enter = Goto(z.pos, "Go to the infested area (marked)", math.max(200, z.r))
         -- they know you're coming: a few more crawl out for this, and don't
         -- come back once they're down
         enter.onEnter = function(q)
@@ -1489,10 +1489,10 @@ T{
             end
             return n
         end
-        local kill = Count("killed", 9999, "Clear out every infested thing here", function(_, _, npc) return IsZombieNPC(npc) end)
+        local kill = Count("killed", 9999, "Kill every infested creature in this area", function(_, _, npc) return IsZombieNPC(npc) end)
         kill.poll = function(q, st)
             local left = Left()
-            local text = left > 0 and string.format("Clear out every infested thing here (%d left)", left) or "Area clear"
+            local text = left > 0 and string.format("Kill every infested creature in this area (%d left)", left) or "Area clear: every infested creature here is dead"
             if st.text ~= text then st.text = text SendStateAll(q) end
             if left == 0 and (st.got or 0) >= 1 then Advance(q) end
         end
@@ -1500,14 +1500,14 @@ T{
             -- a patch of it, gone, and quiet for a while
             if LC.QuietInfestation then LC.QuietInfestation(z.pos, area * 1.3) end
             if z.grown and LC.RecedeTerritory and LC.RecedeTerritory(z, "contained", q.owner) then
-                Narrate(q, "The line holds. This part of the infestation is contained, and nothing will crawl back for a while.")
+                Narrate(q, "The infestation is pushed back: this part of the infested zone is cleared, and nothing will crawl back for a while.")
             else
-                Narrate(q, "Area clear. Nothing will crawl back here for a while.")
+                Narrate(q, "Area clear. No infested creatures will appear here for a while.")
             end
         end
         return {
             title = "Containment " .. Place(z.pos, ply:GetPos()), reward = 45, limit = 1200,
-            desc = z.grown and "The infestation has spread past the line. Push it back." or "Infestation activity at the source. Thin it out before it spreads.",
+            desc = z.grown and "The infestation has spread into new ground. Go there and kill every infested creature to push it back." or "The infestation is active at its source. Go there and kill every infested creature before it spreads.",
             stages = { enter, kill },
             onFinish = function(q)
                 -- the hold on spawning lifts (a cleared area gets its own ten quiet minutes)
@@ -1539,19 +1539,19 @@ T{
         local z = grown[1]
         for _, g in ipairs(grown) do if g == focus then z = focus end end
         local where = Place(z.pos, ply:GetPos())
-        local move = Goto(z.pos, "Move on the rebel-held ground " .. where, math.max(200, z.r * 0.8))
+        local move = Goto(z.pos, "Go to the rebel-held ground " .. where .. " (marked)", math.max(200, z.r * 0.8))
         move.onEnter = function() if LC.ReinforceRebels then LC.ReinforceRebels(z, 3) end end
-        local hold = Hold(z.pos, 30, "Hold the ground until it's secure", math.max(260, z.r * 0.9))
+        local hold = Hold(z.pos, 30, "Stay on the ground for 30 seconds to secure it", math.max(260, z.r * 0.9))
         hold.onDone = function(q)
             if LC.RecedeTerritory then LC.RecedeTerritory(z, "retaken", q.owner) end
-            Narrate(q, "The ground is retaken. Whatever they built here comes down by morning.")
+            Narrate(q, "The ground is retaken: it's no longer rebel territory. Whatever they built here comes down by morning.")
         end
         return {
             title = "Retake the block " .. where, reward = 55, limit = 600,
-            desc = "Anticitizens have taken ground " .. where .. ". Clear them out and hold it. Expect them to fight.",
+            desc = "Anticitizens have taken over ground " .. where .. ". Go there, kill 3 of the rebels holding it, then stay on the ground for 30 seconds. Expect them to fight back.",
             stages = {
                 move,
-                Count("killed", 3, "Neutralize the anticitizens holding it", function(_, _, npc) return IsRebelNPC(npc) end),
+                Count("killed", 3, "Kill 3 of the rebels holding the ground", function(_, _, npc) return IsRebelNPC(npc) end),
                 hold,
             },
         }
@@ -1575,7 +1575,7 @@ T{
         local spot, r = LC.TerritoryGrowthSpot(seed)
         if not spot then return nil end
         local where = Place(spot, ply:GetPos())
-        local hold = Hold(spot, 60, "Hold the ground. Stay close; they'll come", 260)
+        local hold = Hold(spot, 60, "Stay on the spot for 60 seconds. Civil Protection units will come to stop you.", 260)
         hold.onEnter = function(q)
             -- dispatch hears about it, and sends whoever is nearest to look
             if LC.RadioNotice then LC.RadioNotice("cp", "Dispatch: anticitizens gathering " .. where .. ". Nearby Civil Protection units, investigate.") end
@@ -1596,12 +1596,12 @@ T{
         hold.onDone = function(q)
             local z = LC.GrowTerritory(seed, spot, r, "taken")
             if z and LC.ReinforceRebels then LC.ReinforceRebels(z, 2) end
-            Narrate(q, z and "The ground is ours. People are already moving in behind you." or "You held it, but there's no holding it for long.")
+            Narrate(q, z and "The ground is ours: it's rebel territory now. People are already moving in behind you." or "You held it, but it can't be kept: the ground doesn't become rebel territory.")
         end
         return {
             title = "Take ground " .. where, reward = 50, limit = 540,
-            desc = "We want the ground " .. where .. ". Get there and hold it for a minute, and it's ours. The Combine will notice.",
-            stages = { Goto(spot, "Get to the ground we want " .. where, 200), hold },
+            desc = "We want the ground " .. where .. ". Get there and stay on it for a minute, and it becomes rebel territory. Civil Protection units will be sent to stop you.",
+            stages = { Goto(spot, "Go to the marked ground " .. where, 200), hold },
         }
     end,
 }
@@ -1626,31 +1626,31 @@ T{
         local spot = HideSpots(src, 1, 400, true)[1] or src
         local where = Place(spot, ply:GetPos())
         local take = { kind = "pickup", pos = spot, model = "models/items/item_item_crate.mdl",
-            text = "Steal a crate of Union supplies " .. where .. " (press E)" }
+            text = "Steal the crate of Union supplies " .. where .. ": press E on it" }
         take.onDone = function(q)
             local p = q.owner
             if IsValid(p) and LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then
                 LC.ReportCrime(p, "Theft of Union supplies", 120)
-                Narrate(q, "A Civil Protection unit saw you take it. Run.")
+                Narrate(q, "A Civil Protection unit saw you take it. You're wanted now: run.")
             else
-                Narrate(q, "Nobody saw. Walk, don't run.")
+                Narrate(q, "Nobody saw you take it. Walk, don't run.")
             end
             -- word gets out: units can follow the smuggler on their screens (sv_livingcity_resistanceops.lua)
             if LC.TrackSmuggler then LC.TrackSmuggler(q) end
         end
-        local bring = Deliver(cache:GetPos(), "Get it to the Resistance stores in rebel territory", 180)
+        local bring = Deliver(cache:GetPos(), "Take it to the Resistance supply crate in rebel territory (marked)", 180)
         bring.onDone = function(q)
             local added = LC.AddToCache and LC.AddToCache(cache, 6) or 0
-            Narrate(q, string.format("Six meals' worth, into the crate. %d stored now.", IsValid(cache) and (cache.lcStock or 0) or added))
+            Narrate(q, string.format("You add six meals to the Resistance supply crate. It now holds %d.", IsValid(cache) and (cache.lcStock or 0) or added))
             -- and ammunition, packed under the food
             for _, m in ipairs(Members(q)) do
                 if IsValid(m) and LC.GiveOrDrop then LC.GiveOrDrop(m, math.random() < 0.5 and "ammo_pistol" or "ammo_smg", 1) end
             end
-            Narrate(q, "There was ammunition packed under the tins. Everyone gets a box.")
+            Narrate(q, "There was ammunition packed under the food. Everyone on the job gets a box.")
         end
         return {
             title = "Supply run " .. where, reward = 35, limit = 600, failOnArrest = true,
-            desc = "The stores are low. The Union keeps food " .. where .. ". Take a crate and bring it home.",
+            desc = "The Resistance's food stores are low. The Union keeps supplies " .. where .. ". Steal a crate and bring it to the Resistance supply crate in rebel territory.",
             stages = { take, bring },
         }
     end,
@@ -1680,33 +1680,33 @@ T{
         if not contact then return nil end
         local where = Place(contact, ply:GetPos())
         local take = { kind = "pickup", pos = HideSpots(contact, 1, 300, true)[1] or contact, model = "models/items/item_item_crate.mdl",
-            breakOpen = true, text = "Break open the crate from a contact " .. where .. " (press E)" }
+            breakOpen = true, text = "Find the crate a contact left " .. where .. " and press E to break it open" }
         take.onDone = function(q)
             local p = q.owner
             if not IsValid(p) then return end
             if LC.GiveItem(p, "smuggled_supplies", 1) then
-                Narrate(q, "The crate breaks open. The supplies are in your pockets now. Searches will find them. Don't get stopped.")
+                Narrate(q, "You break the crate open and put the supplies in your pockets. A search will find them, so don't get stopped.")
             else
                 LC.SpawnWorldItem("smuggled_supplies", p:GetPos() + p:GetForward() * 30 + Vector(0, 0, 10))
-                Narrate(q, "The crate breaks open, but your pockets are full. Make room (F2) and pick the supplies up.")
+                Narrate(q, "The crate breaks open, but your pockets are full. Make room in your pockets (F2), then pick the supplies up off the ground.")
             end
         end
         local destPos = partsRun and home or qm:GetPos()
-        local bring = Deliver(destPos, partsRun and ("Get it home to " .. homeName) or "Get it to the Resistance quartermaster", 200)
+        local bring = Deliver(destPos, partsRun and ("Take the supplies home to " .. homeName) or "Take the supplies to the Resistance quartermaster (marked)", 200)
         bring.onDone = function(q)
             local p = q.owner
             -- (the supplies; or a whole crate, from before crates were broken open)
             local carried = IsValid(p) and ((LC.HasItem(p, "smuggled_supplies") and "smuggled_supplies") or (LC.HasItem(p, "arms_crate") and "arms_crate"))
             if not carried then
                 q.reward = 0
-                Narrate(q, "You got there with empty pockets. Somebody's going to want to know where it went.")
+                Narrate(q, "You arrived without the supplies, so there's no reward. Somebody's going to want to know where they went.")
                 return
             end
             LC.TakeItem(p, carried)
             if partsRun then
                 LC.GiveItem(p, "gun_parts", 3)
                 LC.GiveItem(p, "chemicals", 1)
-                Narrate(q, "Gun parts, and something to clean them with. Make something worth selling.")
+                Narrate(q, "Inside: 3 gun parts and some chemicals, now in your pockets. Craft them into something worth selling.")
             else
                 if LC.AddCredits then LC.AddCredits(p, 60, "gun run") end
                 if LC.AddTrait then LC.AddTrait(p, "sympathy", 1) end
@@ -1715,8 +1715,8 @@ T{
         end
         return {
             title = partsRun and ("Parts pickup " .. where) or ("Gun run " .. where), reward = 30, limit = 720, failOnArrest = true,
-            desc = partsRun and ("A smuggler has gun parts for you " .. where .. ". Get them home without being searched.")
-                or ("A crate of guns " .. where .. " needs to reach the Resistance quartermaster. Sixty credits if it gets there."),
+            desc = partsRun and ("A smuggler has left gun parts for you " .. where .. ". Pick them up and take them home without getting searched.")
+                or ("A crate of guns is waiting " .. where .. ". Get it to the Resistance quartermaster and you're paid sixty credits."),
             stages = { take, bring },
         }
     end,
@@ -1739,7 +1739,7 @@ T{
         local place = Place(where, ply:GetPos())
         local pickup = {
             kind = "target", action = "reach", r = 140,
-            text = "Collect detainee " .. id .. " from the Civil Protection unit holding them " .. place .. " (walk up to them)",
+            text = "Take over detainee " .. id .. " from the Civil Protection unit holding them " .. place .. ": walk up to them (marked)",
             onEnter = function(q, st)
                 -- the detainee stands still, hands up; the unit beside them waits for you
                 local npc = LC.QB.SpawnActor(q, "citizen", where, 900)
@@ -1771,7 +1771,7 @@ T{
         }
         return {
             title = "Detainee transfer: " .. id, reward = 25, limit = 420,
-            desc = "A Civil Protection unit is holding citizen " .. id .. " " .. place .. " and has been called away. Collect the detainee, decide what to do with them, then detain them with the Arrest Baton to send them to the cells.",
+            desc = "A Civil Protection unit is holding citizen " .. id .. " " .. place .. " and has been called away. Take over the detainee, choose how to handle them, then arrest them with the Arrest Baton (right click) to send them to the cells.",
             stages = {
                 pickup,
                 Choice("The detainee was flagged by an informant. They swear they've done nothing, and their voice is steady.", {
@@ -1808,14 +1808,14 @@ T{
         local z = Pick(LC.ZonesOfKind("rebel"))
         return {
             title = "Incursion " .. Place(z.pos, ply:GetPos()), reward = 50, limit = 420,
-            desc = "Enter anticitizen territory and hold it. Sixty seconds.",
+            desc = "Go into rebel territory and stay alive inside it for sixty seconds. Expect rebels to fight back.",
             stages = {
                 (function()
-                    local g = Goto(z.pos, "Enter rebel territory", math.max(150, z.r * 0.8))
+                    local g = Goto(z.pos, "Go into the marked rebel territory", math.max(150, z.r * 0.8))
                     g.onEnter = function() if LC.ReinforceRebels then LC.ReinforceRebels(z, 3) end end
                     return g
                 end)(),
-                { kind = "survive", secs = 60, text = "Hold position inside rebel territory",
+                { kind = "survive", secs = 60, text = "Stay alive inside rebel territory for 60 seconds",
                   cond = function(_, p) return LC.InRebelZone(p:GetPos()) end },
             },
         }
@@ -1830,20 +1830,20 @@ T{
         if not pos then return nil end
         return {
             title = "Address the citizens", reward = 20, limit = 360,
-            desc = "The people need to hear their Administrator. Go out among them.",
+            desc = "The people need to hear their Administrator. Go to the plaza, speak to the crowd, then choose how to end your speech.",
             stages = {
-                Goto(pos, "Go to the plaza", 150),
-                Hold(pos, 40, "Deliver your address", 220),
+                Goto(pos, "Go to the plaza (marked)", 150),
+                Hold(pos, 40, "Stay there for 40 seconds while you give your speech", 220),
                 Choice("The crowd watches you in silence. How do you end it?", {
-                    { text = "Announce additional rations.", pick = function(q, p)
+                    { text = "Announce additional rations (starts a ration handout).", pick = function(q, p)
                         LC.AddTrait(p, "sympathy", 1)
                         if LC.Running then LC.StartEvent("rations") end
                         return "complete" end },
-                    { text = "Remind them of their duty to the city.", pick = function(q, p)
+                    { text = "Remind them of their duty to the city (starts an inspection sweep).", pick = function(q, p)
                         LC.AddTrait(p, "loyalty", 1)
                         if LC.Running then LC.StartEvent("sweep") end
                         return "complete" end },
-                    { text = "Declare a curfew. Effective immediately.", pick = function(q, p)
+                    { text = "Declare a curfew, effective immediately (starts a curfew).", pick = function(q, p)
                         LC.AddTrait(p, "loyalty", 2)
                         if LC.Running then LC.StartEvent("curfew") end
                         return "complete" end },
@@ -1860,8 +1860,8 @@ T{
         local need = math.min(3, math.max(1, CountRole("cop")))
         return {
             title = "Review the Civil Protection units", reward = 15, limit = 360,
-            desc = "See for yourself that Civil Protection is doing its job.",
-            stages = { Count("used_npc", need, "Speak with Civil Protection units (press E)", IsCopNPC) },
+            desc = "Check on Civil Protection in person: find units on the street and talk to them.",
+            stages = { Count("used_npc", need, "Talk to Civil Protection units: walk up to one and press E", IsCopNPC) },
         }
     end,
 }
@@ -1878,19 +1878,19 @@ T{
         local dest, r, where = SafeHouse(ply)
         return {
             title = "Supply run", reward = 35, limit = 480, failOnArrest = true,
-            desc = "A crate of medical supplies is waiting " .. Place(a, ply:GetPos()) .. ". Bring it home to " .. where .. ".",
+            desc = "A contact has a crate of medical supplies for you " .. Place(a, ply:GetPos()) .. ". Bring it to the Resistance's safe spot: " .. where .. ".",
             stages = {
-                LC.QB.Contact("Meet your contact and take the crate (press E)", a, "citizen", "'Don't thank me. Don't look back, either.'", { rebel = true }),
+                LC.QB.Contact("Find your contact (marked) and press E on them to take the crate", a, "citizen", "'Don't thank me. Don't look back, either.'", { rebel = true }),
                 Choice("The crate is heavier than it should be. There's a Civil Protection unit posted at the end of the street.", {
                     { text = "Walk it out in plain sight." },
                     { text = "Bury it under a coat and some laundry.", check = { "guile", 11 },
                       success = function(q) Narrate(q, "Nobody looks twice at a tired citizen with laundry.") end,
                       fail = function(q, p)
-                          Narrate(q, "A Civil Protection unit shouts after you. Run!")
+                          Narrate(q, "A Civil Protection unit shouts after you. You're wanted now: run!")
                           LC.ReportCrime(p, "Carrying contraband", 120)
                       end },
                 }),
-                LC.QB.Contact("Hand it to the quartermaster at " .. where .. " (press E)", dest, "citizen", "He's already prying the lid up. 'Good. We needed this yesterday.'", { rebel = true }),
+                LC.QB.Contact("Find the quartermaster at the safe spot (" .. where .. ") and press E on him to hand over the crate", dest, "citizen", "He's already prying the lid up. 'Good. We needed this yesterday.'", { rebel = true }),
             },
         }
     end,
@@ -1903,20 +1903,20 @@ T{
         if not spots[3] then return nil end
         local stages = {}
         for i, s in ipairs(spots) do
-            stages[i] = Hold(s, 3, string.format("Post flyer %d of 3 %s (crouch at the spot)", i, Place(s, ply:GetPos())), 90, true)
+            stages[i] = Hold(s, 3, string.format("Post flyer %d of 3 %s: crouch at the marked spot for 3 seconds", i, Place(s, ply:GetPos())), 90, true)
             stages[i].onDone = function(q)
                 local flyer = SpawnItem(q, "models/props_c17/paper01.mdl", s, true, true)
                 if IsValid(flyer) then SafeRemoveEntityDelayed(flyer, 600) end
                 local p = q.owner
                 if IsValid(p) and LC.SeenBySecurity(p, 700) then
-                    Narrate(q, "A Civil Protection unit saw that.")
+                    Narrate(q, "A Civil Protection unit saw you put that up. You're wanted now.")
                     LC.ReportCrime(p, "Distributing propaganda", 150)
                 end
             end
         end
         return {
             title = "Paper the walls", reward = 30, limit = 480, failOnArrest = true,
-            desc = "Three flyers, three places people will see them. Don't get seen putting them up.",
+            desc = "Put up three Resistance flyers in three marked places. If a Civil Protection unit sees you putting one up, you become wanted.",
             stages = stages,
         }
     end,
@@ -1928,7 +1928,7 @@ T{
     build = function(ply)
         local cp = Pick(LC.PointsOfKind("checkpoint"))
         local dest, r, where = SafeHouse(ply)
-        local plant = Hold(cp.pos, 5, "Plant the charge at the checkpoint (crouch)", 100, true)
+        local plant = Hold(cp.pos, 5, "Go to the marked checkpoint and crouch there for 5 seconds to plant the charge", 100, true)
         plant.onDone = function(q)
             Boom(cp.pos + Vector(0, 0, 20))
             cp.disabledUntil = CurTime() + 300
@@ -1937,12 +1937,12 @@ T{
                 LC.ReportCrime(p, "Sabotage", 240)
                 if LC.Running then LC.MakeCopsHostile(p, cp.pos, 1500) end
             end
-            Narrate(q, "The checkpoint goes up in a shower of sparks. Every Civil Protection unit in the sector heard that.")
+            Narrate(q, "The checkpoint goes up in a shower of sparks. You're wanted now, and every Civil Protection unit in the sector heard that.")
         end
         return {
             title = "Sabotage " .. Place(cp.pos, ply:GetPos()), reward = 45, limit = 480, failOnArrest = true,
-            desc = "Take that checkpoint offline for a while, then get clear.",
-            stages = { plant, Deliver(dest, "Get clear: reach " .. where, r) },
+            desc = "Blow up the checkpoint to put it out of action for five minutes, then escape to safety.",
+            stages = { plant, Deliver(dest, "Escape: get to the safe spot (" .. where .. ")", r) },
         }
     end,
 }
@@ -1959,10 +1959,10 @@ T{
         local dest, r, where = SafeHouse(ply)
         return {
             title = "Jailbreak: " .. id, reward = 50, limit = 600, failOnArrest = true,
-            desc = "Citizen " .. id .. " was taken last night. They know too much to stay in there.",
+            desc = "Citizen " .. id .. " was arrested last night, and they know too much to stay in a cell. Break them out of prison and lead them to safety.",
             stages = {
                 {
-                    kind = "target", action = "free", text = "Break them out (press E on them in their cell)",
+                    kind = "target", action = "free", text = "Go to their cell in the prison (marked) and press E on them to break them out",
                     onEnter = function(q, st)
                         local npc
                         for n, s in pairs(LC.NPCs) do if IsValid(n) and s.state == "jailed" and not s.questLock then npc = n break end end
@@ -1976,10 +1976,10 @@ T{
                     end,
                     onDone = function(q)
                         if IsValid(q.owner) then LC.ReportCrime(q.owner, "Aiding an escape", 240) end
-                        Narrate(q, "The lock gives. Alarms don't, yet. Move.")
+                        Narrate(q, "The lock gives. You're wanted for this now, and the alarms won't stay quiet for long. Move.")
                     end,
                 },
-                { kind = "escort", pos = dest, r = r, vanish = true, text = "Get them to " .. where,
+                { kind = "escort", pos = dest, r = r, vanish = true, text = "Lead them to the safe spot (" .. where .. "): they follow you",
                   onEnter = function(q, st) st.npc = q.data.target; if not IsValid(st.npc) then return false end end },
             },
         }
@@ -1993,11 +1993,11 @@ T{
         local last = 0
         return {
             title = "Sound out the neighbors", reward = 25, limit = 480,
-            desc = "Find three people who might be ready. Talk to them where Civil Protection can't see.",
-            stages = { Count("used_npc", 3, "Quietly talk to citizens (press E) away from Civil Protection", function(q, p, npc)
+            desc = "Find three citizens who might be ready to join the Resistance, and talk to them where no Civil Protection unit can see you.",
+            stages = { Count("used_npc", 3, "Talk to 3 citizens (walk up and press E) where no Civil Protection unit can see you", function(q, p, npc)
                 if not IsCitizenNPC(q, p, npc) then return false end
                 if LC.SeenBySecurity(p, 700) then
-                    if CurTime() > last then p:ChatPrint("[Operations] A Civil Protection unit is watching. Not here."); last = CurTime() + 5 end
+                    if CurTime() > last then p:ChatPrint("[Operations] A Civil Protection unit can see you, so that didn't count. Move somewhere out of sight."); last = CurTime() + 5 end
                     return false
                 end
                 return true
@@ -2013,17 +2013,17 @@ T{
         if not a or not b then return nil end
         return {
             title = "Dead drop", reward = 25, limit = 420,
-            desc = "Meet a contact, then leave a message where it'll be found.",
+            desc = "Meet a contact at the meeting point, then hide a message at the drop for the Resistance to find.",
             stages = {
-                Goto(a, "Go to the meeting point " .. Place(a, ply:GetPos()), 120),
-                Hold(a, 20, "Wait for your contact", 160),
+                Goto(a, "Go to the marked meeting point " .. Place(a, ply:GetPos()), 120),
+                Hold(a, 20, "Wait at the meeting point for 20 seconds for your contact", 160),
                 Choice("Your contact doesn't come. Instead, a child walks past and presses a folded note into your hand.", {
                     { text = "Read it.", pick = function(q) Narrate(q, Pick(NOTES)) end },
                     { text = "Burn it unread.", pick = function(q) Narrate(q, "Some things are safer not known.") end },
                 }),
-                GamesOn() and GameGo(b, "Take the message to the drop " .. Place(b, ply:GetPos()), "drop", { pos = b }, 140)
-                    or Goto(b, "Leave the message " .. Place(b, ply:GetPos()), 120),
-                GamesOn() and GameStage("Hide the message where nobody sees you do it: E on a hiding place, then crouch and keep still") or nil,
+                GamesOn() and GameGo(b, "Take the message to the marked drop " .. Place(b, ply:GetPos()), "drop", { pos = b }, 140)
+                    or Goto(b, "Go to the marked drop " .. Place(b, ply:GetPos()) .. " to leave the message", 120),
+                GamesOn() and GameStage("Hide the message: press E on one of the three marked hiding places, then crouch and keep still. If anyone sees you doing it, that hiding place is ruined.") or nil,
             },
         }
     end,
@@ -2046,10 +2046,10 @@ T{
         end
         return {
             title = "Smuggling run", reward = 20, limit = 900,
-            desc = "The cell's cargo: guns and ammunition, out to three drops in the city. You know what's in it, and so will any unit who searches you.",
+            desc = "Take the Resistance cell's cargo (guns and ammunition) to three drops around the city. If a Civil Protection unit searches you, they'll find it.",
             stages = {
-                GameGo(from, IsValid(qm) and "Collect the cargo from the quartermaster" or "Collect the cargo", "parcel", { stops = stops, smuggle = true }, 140),
-                GameStage("Get the cargo to the three drops (marked) against the clock: crouch past the units, or stand still for a search and hope"),
+                GameGo(from, IsValid(qm) and "Go to the quartermaster (marked) to collect the cargo" or "Go to the marked spot to collect the cargo", "parcel", { stops = stops, smuggle = true }, 140),
+                GameStage("Deliver the cargo to the three marked drops before time runs out. Crouch to sneak past Civil Protection units, or stand still for their search and hope for the best"),
             },
         }
     end,
@@ -2081,18 +2081,18 @@ T{
             if not who and IsValid(p) and LC.PlayerIsWanted(p) then who = p end
             if who then
                 LC.ClearWanted(who)
-                who:ChatPrint("[Operations] Your record is gone from the Combine's terminals. Somebody of ours did that.")
-                if IsValid(p) and p ~= who then p:ChatPrint("[Operations] " .. who:Nick() .. "'s record is gone.") end
+                who:ChatPrint("[Operations] A Resistance member wiped your record from the Combine's terminals: you're no longer wanted.")
+                if IsValid(p) and p ~= who then p:ChatPrint("[Operations] You wiped " .. who:Nick() .. "'s record: they're no longer wanted.") end
             elseif IsValid(p) then
-                p:ChatPrint("[Operations] Three names gone from the registers, and the scanner none the wiser.")
+                p:ChatPrint("[Operations] Nobody of ours was wanted, so you wiped three names from the registers instead. The scanner never noticed.")
             end
         end
         return {
             title = "Doctor the records", reward = 30, limit = 480, failOnArrest = true,
-            desc = "Some of ours are in the Combine's records. Get into " .. what .. " " .. Place(pos, ply:GetPos()) .. " and make them disappear.",
+            desc = "Some of ours are wanted by the Combine. Hack into " .. what .. " " .. Place(pos, ply:GetPos()) .. " and wipe a wanted Resistance member's record.",
             stages = {
-                GameGo(pos, "Go to " .. what .. " " .. Place(pos, ply:GetPos()), "hack", { pos = pos, what = what, onDone = Wipe }, 140),
-                GameStage("Get into the terminal: stop the needle in the band, and keep your hands off while the scanner passes"),
+                GameGo(pos, "Go to " .. what .. " " .. Place(pos, ply:GetPos()) .. " (marked)", "hack", { pos = pos, what = what, onDone = Wipe }, 140),
+                GameStage("Hack the terminal: stop the moving needle inside the band (click or space) four times. When the scanner passes over, stop touching the panel"),
             },
         }
     end,
@@ -2104,8 +2104,8 @@ T{
     build = function()
         return {
             title = "Ambush a patrol", reward = 40, limit = 480,
-            desc = "Fighters only. Take down two Civil Protection units and disappear.",
-            stages = { Count("killed", 2, "Take down Civil Protection units", function(_, _, npc)
+            desc = "For fighters only. Kill two Civil Protection units, then get away.",
+            stages = { Count("killed", 2, "Kill 2 Civil Protection units", function(_, _, npc)
                 local st = LC.NPCs[npc]
                 return st ~= nil and LC.IsSecurity(st)
             end) },
@@ -2122,10 +2122,10 @@ T{
         local dest, r, safe = SafeHouse(ply)
         return {
             title = "Extraction", reward = 40, limit = 600,
-            desc = "Someone on a CP list is hiding " .. Place(where, ply:GetPos()) .. ". Bring them in.",
+            desc = "Someone on a Civil Protection wanted list is hiding " .. Place(where, ply:GetPos()) .. ". Find them and lead them to safety.",
             stages = {
                 {
-                    kind = "target", action = "reach", r = 140, text = "Find the fugitive (marked)",
+                    kind = "target", action = "reach", r = 140, text = "Find the fugitive (marked on your screen)",
                     onEnter = function(q, st)
                         local npc = LC.Spawners.citizen(where + Vector(0, 0, 4))
                         if not IsValid(npc) then return false end
@@ -2135,7 +2135,7 @@ T{
                         st.npc = npc
                     end,
                 },
-                { kind = "escort", pos = dest, r = r, vanish = true, text = "Lead them to " .. safe,
+                { kind = "escort", pos = dest, r = r, vanish = true, text = "Lead them to the safe spot (" .. safe .. "): they follow you",
                   onEnter = function(q, st) st.npc = q.data.target; if not IsValid(st.npc) then return false end end },
             },
         }
@@ -2148,14 +2148,14 @@ T{
     build = function()
         return {
             title = "The ministry", reward = 30, limit = 600,
-            desc = "Tend to your flock. The Combine call it contraband. You call it Sunday.",
+            desc = "Tend to your flock: comfort a grieving woman, heal three wounded people with The Blessing, and preach once. The Combine call it unlawful worship. You call it Sunday.",
             stages = {
                 Choice("A woman catches your sleeve. Her husband was taken last night. She asks you to pray with her, here, in the open.", {
-                    { text = "Pray with her where she stands.", pick = function(q, p)
+                    { text = "Pray with her where she stands (if a Civil Protection unit sees, you become wanted).", pick = function(q, p)
                         LC.AddTrait(p, "sympathy", 1)
                         q.bonus = (q.bonus or 0) + 10
                         if LC.SeenBySecurity(p, 800) then
-                            Narrate(q, "You finish the prayer. Then you hear the boots.")
+                            Narrate(q, "You finish the prayer. Then you hear the boots: a Civil Protection unit saw you, and you're wanted now.")
                             LC.ReportCrime(p, "Unlawful worship", 180)
                         else
                             Narrate(q, "She holds your hand through all of it. Nobody comes.")
@@ -2165,8 +2165,8 @@ T{
                       success = function(q, p) LC.AddTrait(p, "sympathy", 1) Narrate(q, "She nods. It's enough. For now it's enough.") end,
                       fail = function(q) Narrate(q, "She lets go of your sleeve and doesn't look back.") end },
                 }),
-                Count("healed", 3, "Tend to the wounded with The Blessing", nil, true),
-                Count("preached", 1, "Preach the Word (reload) where people can hear", nil, false),
+                Count("healed", 3, "Heal 3 different wounded people with The Blessing (primary fire)", nil, true),
+                Count("preached", 1, "Preach the Word: hold The Blessing and press reload where people can hear", nil, false),
             },
         }
     end,
@@ -2184,8 +2184,8 @@ T{
         local front = LC.Lines[g].slots[1].pos
         return {
             title = "Collect your ration", reward = LC.Event == "rations" and 20 or 10, limit = 300,
-            desc = "Your ration allocation is ready at line " .. g .. ".",
-            stages = { Goto(front, "Go to ration line " .. g, 200), Hold(front, 10, "Wait at the front of the line", 110) },
+            desc = "Your ration is ready. Go to ration line " .. g .. " and wait at the front to collect it.",
+            stages = { Goto(front, "Go to ration line " .. g .. " (marked)", 200), Hold(front, 10, "Stand at the front of the line for 10 seconds", 110) },
         }
     end,
 }
@@ -2197,9 +2197,9 @@ T{
         if not center then return nil end
         return {
             title = "Union work order: sanitation", reward = 20, limit = 420,
-            desc = "Clear the litter " .. Place(center, ply:GetPos()) .. ". A clean city is a compliant city.",
+            desc = "Pick up four pieces of litter " .. Place(center, ply:GetPos()) .. ". A clean city is a compliant city.",
             stages = { { kind = "collect", spots = HideSpots(center, 4, 600, true), models = TRASH, need = 4,
-                text = "Pick up the litter (press E)" } },
+                text = "Pick up the litter: press E on each marked piece" } },
         }
     end,
 }
@@ -2225,14 +2225,14 @@ T{
         a = a or Spot(ply, 400, 2000)
         local b = Spot(ply, 600, 3000)
         if not a or not b then return nil end
-        local deliver = LC.QB.Contact("Give the parcel to her cousin " .. Place(b, ply:GetPos()) .. " (press E)", b, "citizen",
+        local deliver = LC.QB.Contact("Find her cousin " .. Place(b, ply:GetPos()) .. " (marked) and press E on them to hand over the parcel", b, "citizen",
             "'From Kleiner? Tell her I'm fine.' It's not true, and you both know it.")
         return {
             title = "A neighbor's errand", reward = 20, limit = 420,
-            desc = inBlock and "Mrs. Kleiner from the third floor has left a parcel in the block, to be carried across the district."
-                or "Mrs. Kleiner from the third floor needs a parcel carried across the district.",
+            desc = inBlock and "Mrs. Kleiner from the third floor needs a parcel carried across the district. Collect it from her inside the housing block, then deliver it to her cousin."
+                or "Mrs. Kleiner from the third floor needs a parcel carried across the district. Collect it from her, then deliver it to her cousin.",
             stages = {
-                LC.QB.Contact(inBlock and "Speak to Mrs. Kleiner inside the block (press E)" or "Speak to Mrs. Kleiner (press E)", a, "citizen",
+                LC.QB.Contact(inBlock and "Find Mrs. Kleiner inside the housing block (marked) and press E on her" or "Find Mrs. Kleiner (marked) and press E on her", a, "citizen",
                     "'It's only a little parcel. It's gone to the third floor and back already.' She presses it into your hands."),
                 Choice("The parcel is taped shut. It's light, and something inside slides when you tilt it.", {
                     { text = "Deliver it unopened." },
@@ -2243,7 +2243,7 @@ T{
                               { text = "Hand it to Civil Protection instead.", pick = function(q2, p)
                                   LC.AddTrait(p, "loyalty", 2)
                                   LC.Bump(p, "reports")
-                                  q2.stages[q2.stage + 1] = Count("used_npc", 1, "Hand it to a Civil Protection unit (press E)", IsCopNPC)
+                                  q2.stages[q2.stage + 1] = Count("used_npc", 1, "Hand the parcel to a Civil Protection unit: walk up to one and press E", IsCopNPC)
                               end },
                           }) })
                       end,
@@ -2276,7 +2276,7 @@ T{
         end
         local noun = (not bin or string.find(bin.model or "", "dumpster", 1, true)) and "the dumpster" or "the bins"
         local prompt = "Two people swap a bundle behind " .. noun .. ". One has a lambda scratched into his sleeve."
-        local look = Goto(s, "Go over to " .. noun .. ", casually", 170)
+        local look = Goto(s, "Walk over to " .. noun .. " (marked), casually", 170)
         local from = ply:GetPos()
         look.onEnter = function(q)
             if not bin then
@@ -2327,17 +2327,17 @@ T{
         end
         return {
             title = "Something you saw", reward = 20, limit = 420,
-            desc = "Neighbors whisper about something going on behind " .. (noun == "the bins" and "some bins " or "a dumpster ") .. Place(s, ply:GetPos()) .. ".",
+            desc = "Neighbors whisper about something going on behind " .. (noun == "the bins" and "some bins " or "a dumpster ") .. Place(s, ply:GetPos()) .. ". Go and see what it is.",
             stages = {
                 look,
-                Hold(s, 6, "Watch quietly", 220),
+                Hold(s, 6, "Stay nearby and watch quietly for 6 seconds", 220),
                 Choice(prompt, {
                     { text = "Report it to a Civil Protection unit.", pick = function(q, p)
                         LC.AddTrait(p, "loyalty", 1)
                         LC.Bump(p, "reports")
-                        InsertStages(q, { Count("used_npc", 1, "Tell a Civil Protection unit (press E)", IsCopNPC) })
+                        InsertStages(q, { Count("used_npc", 1, "Tell a Civil Protection unit: walk up to one and press E", IsCopNPC) })
                     end },
-                    { text = "Keep it to yourself.", pick = function(q, p)
+                    { text = "Keep it to yourself (ends the job, little XP).", pick = function(q, p)
                         LC.AddTrait(p, "sympathy", 1)
                         LC.Bump(p, "silences")
                         q.reward = 5
@@ -2367,10 +2367,10 @@ T{
         end
         return {
             title = "The confused old man", reward = 25, limit = 600,
-            desc = "An old man is wandering " .. Place(where, ply:GetPos()) .. ", asking everyone for directions.",
+            desc = "An old man is wandering " .. Place(where, ply:GetPos()) .. ", asking everyone for directions. Find him and walk him home.",
             stages = {
                 {
-                    kind = "target", action = "reach", r = 140, text = "Find the old man (marked)",
+                    kind = "target", action = "reach", r = 140, text = "Find the old man (marked on your screen)",
                     onEnter = function(q, st)
                         local npc = LC.Spawners.citizen(where + Vector(0, 0, 4))
                         if not IsValid(npc) then return false end
@@ -2388,7 +2388,7 @@ T{
                       fail = function(q) Narrate(q, "He shuffles after you anyway, still asking.") end },
                     { text = "Just lead the way." },
                 }),
-                { kind = "escort", pos = home, r = 200, vanish = true, walkOnly = true, text = "Walk him home to " .. homeName,
+                { kind = "escort", pos = home, r = 200, vanish = true, walkOnly = true, text = "Walk him home to " .. homeName .. ". He follows you, slowly.",
                   onEnter = function(q, st) st.npc = q.data.target; if not IsValid(st.npc) then return false end end },
             },
         }
@@ -2402,16 +2402,16 @@ T{
         local cp = Pick(LC.PointsOfKind("checkpoint"))
         return {
             title = "Loyalty check", reward = 15, limit = 360,
-            desc = "You've been summoned to a checkpoint for a routine loyalty check.",
+            desc = "You've been summoned for a routine loyalty check. Go to the checkpoint and present yourself to a Civil Protection officer.",
             stages = {
-                Goto(cp.pos, "Report to the checkpoint", 260),
-                Count("used_npc", 1, "Present yourself to an officer (press E)", IsCopNPC),
+                Goto(cp.pos, "Go to the marked checkpoint", 260),
+                Count("used_npc", 1, "Present yourself to a Civil Protection officer: walk up to one and press E", IsCopNPC),
                 Choice("The officer's mask tilts. Where were you last night, citizen?", {
                     { text = "Tell the truth.", pick = function(q, p) LC.AddTrait(p, "loyalty", 1) end },
                     { text = "Give a smooth, boring alibi.", check = { "guile", 12 },
                       success = function(q) q.bonus = (q.bonus or 0) + 5 Narrate(q, "He waves you through. Boring is safe.") end,
                       fail = function(q, p)
-                          Narrate(q, "He doesn't buy it.")
+                          Narrate(q, "He doesn't buy it. You're wanted now for failing a loyalty check.")
                           LC.ReportCrime(p, "Failing a loyalty check", 90)
                       end },
                 }),
@@ -2431,7 +2431,7 @@ T{
         return {
             title = "Hunger", reward = 30, limit = 480,
             desc = "Feed.",
-            stages = { Count("killed", 2, "Feed on citizens", function(_, _, npc)
+            stages = { Count("killed", 2, "Kill 2 citizens", function(_, _, npc)
                 local st = LC.NPCs[npc]
                 return st ~= nil and st.role == "citizen"
             end) },
@@ -2443,7 +2443,7 @@ T{
     id = "z_terrorize", factions = { zombie = true },
     available = function() return LC.Running and CountRole("citizen") >= 4 end,
     build = function()
-        local st = Count("near_citizen", 4, "Get close to the living (they'll scatter)", nil, true)
+        local st = Count("near_citizen", 4, "Get close to 4 different citizens (they'll run from you)", nil, true)
         st.poll = function(q, s)
             for _, p in ipairs(Members(q)) do
                 if p:Alive() then
@@ -2456,7 +2456,7 @@ T{
                 end
             end
         end
-        return { title = "Terror", reward = 20, limit = 420, desc = "Let them see you.", stages = { st } }
+        return { title = "Terror", reward = 20, limit = 420, desc = "Scare the living: get close to four different citizens.", stages = { st } }
     end,
 }
 
@@ -2466,8 +2466,8 @@ T{
     build = function()
         return {
             title = "Wander", reward = 25, limit = 400,
-            desc = "Leave the nest. Stay out.",
-            stages = { { kind = "survive", secs = 120, text = "Stay out of the infestation zones",
+            desc = "Leave the infested zones and survive outside them for two minutes.",
+            stages = { { kind = "survive", secs = 120, text = "Stay alive outside the infested zones for 2 minutes",
                 cond = function(_, p) return LC.InfestZoneAt(p:GetPos()) == nil end } },
         }
     end,
@@ -2568,7 +2568,7 @@ function LC.AdvanceChain(q, success)
     if success and q.chainDecline then
         cs.part = nil
         cs.readyAt = os.time() + 1800
-        ply:ChatPrint("[Story] " .. chain.name .. ": maybe another time.")
+        ply:ChatPrint("[Story] You turned down " .. chain.name .. ". It comes back to your board (F3) in about 30 minutes.")
     elseif success and q.chainEnd then
         cs.done, cs.part = q.chainEnd, nil
         local ending = chain.endings and chain.endings[q.chainEnd] or q.chainEnd
@@ -2588,7 +2588,7 @@ function LC.AdvanceChain(q, success)
     else
         cs.part = q.chainPart
         cs.readyAt = os.time() + pace
-        ply:ChatPrint("[Story] " .. chain.name .. ": that didn't go to plan. You'll get another chance.")
+        ply:ChatPrint("[Story] " .. chain.name .. ": that part failed. You can try it again: it comes back to your board (F3).")
     end
     LC.SaveStory(ply)
 end
@@ -2603,7 +2603,7 @@ function LC.CheckUnlocks(ply)
             if ok and yes then
                 s.notified[chain.id] = true
                 changed = true
-                ply:ChatPrint("[Story] Something has changed. Check your board (F3).")
+                ply:ChatPrint("[Story] A new story is available. Check your job board (F3).")
             end
         end
     end
@@ -2749,19 +2749,19 @@ T{
         local name = LC.BlockName and LC.BlockName(n) or ("Block " .. n)
         return {
             title = "Housing block inspection: " .. name, reward = 45, limit = 600,
-            desc = "The raid team is going through " .. name .. ". Back them up: stop residents and check their papers, then hold the entrance until it's done.",
+            desc = "The raid team is searching " .. name .. ". Back them up: inspect the residents, then guard the block until the search is done.",
             stages = GamesOn() and {
-                GameGo(z.pos, "Report to " .. name, "breach", { pos = z.pos }, math.max(250, z.r * 0.8)),
-                GameStage("Breach and search: blow the door, everyone on the floor (E), then search the furniture (E)"),
+                GameGo(z.pos, "Go to " .. name .. " (marked)", "breach", { pos = z.pos }, math.max(250, z.r * 0.8)),
+                GameStage("Breach and search: press E on the locked door to set the charge and stand back, press E on each resident to put them on the floor, then press E on the furniture to search it"),
             } or {
-                Goto(z.pos, "Report to " .. name, math.max(250, z.r * 0.8)),
+                Goto(z.pos, "Go to " .. name .. " (marked)", math.max(250, z.r * 0.8)),
                 { kind = "count", event = "used_npc", need = 3, distinct = true,
-                  text = "Inspect residents of " .. name .. " (walk up and press E)",
+                  text = "Inspect 3 residents of " .. name .. ": walk up to each one and press E",
                   filter = function(_, _, npc)
                       local st = LC.NPCs[npc]
                       return st ~= nil and st.role == "citizen" and LCZ.Contains(z, npc:GetPos(), 300)
                   end },
-                Hold(z.pos, 45, "Hold the block until the team is through", math.max(300, z.r)),
+                Hold(z.pos, 45, "Stay at the block for 45 seconds while the team finishes the search", math.max(300, z.r)),
             },
             intro = "Dispatch: all units, " .. name .. " is under inspection. Nobody leaves without papers.",
         }
@@ -2775,11 +2775,11 @@ T{
         local stops = Route(ply, 3, 400, 1100)
         if #stops == 0 then return nil end
         local stages = {}
-        for i, sp in ipairs(stops) do stages[#stages + 1] = Goto(sp, string.format("Clear the street, stop %d of %d, %s", i, #stops, Place(sp, ply:GetPos())), 180) end
-        stages[#stages + 1] = Hold(stops[#stops], 60, "Hold the street: anyone still out gets three warnings", 300)
+        for i, sp in ipairs(stops) do stages[#stages + 1] = Goto(sp, string.format("Clear the streets: go to stop %d of %d, %s", i, #stops, Place(sp, ply:GetPos())), 180) end
+        stages[#stages + 1] = Hold(stops[#stops], 60, "Stay on this street for 60 seconds. Anyone still outside gets three warnings before they become wanted", 300)
         return {
             title = "Curfew enforcement", reward = 35, limit = 540,
-            desc = "Curfew is in effect. Walk the streets, move people along, and hold your position until it's quiet.",
+            desc = "Curfew is in effect. Walk to each marked stop, moving people along as you go, then stay at the last stop for 60 seconds.",
             stages = stages,
         }
     end,
@@ -2793,8 +2793,8 @@ T{
         if not p then return nil end
         return {
             title = "Lockdown: hold the perimeter " .. Place(p, ply:GetPos()), reward = 45, limit = 480,
-            desc = "Lockdown is in effect. Nobody moves through your sector. Hold it until it lifts.",
-            stages = { Goto(p, "Take up position", 220), Hold(p, 90, "Hold the perimeter", 300) },
+            desc = "Lockdown is in effect. Go to your post and guard it for 90 seconds, or until the lockdown lifts. Nobody moves through your sector.",
+            stages = { Goto(p, "Go to your marked post", 220), Hold(p, 90, "Stay at your post for 90 seconds", 300) },
         }
     end,
 }
@@ -2808,11 +2808,11 @@ T{
         local name = LC.BlockName and LC.BlockName(n) or ("Block " .. n)
         return {
             title = "Warn " .. name, reward = 30, limit = 420,
-            desc = "Civil Protection units are going through " .. name .. ". Get there first and tell people to move what they're hiding.",
+            desc = "Civil Protection units are about to search " .. name .. ". Get there first and warn three residents to move what they're hiding.",
             stages = {
-                Goto(z.pos, "Get to " .. name .. " before the Civil Protection units do", math.max(250, z.r * 0.8)),
+                Goto(z.pos, "Get to " .. name .. " (marked) before the Civil Protection units do", math.max(250, z.r * 0.8)),
                 { kind = "count", event = "used_npc", need = 3, distinct = true,
-                  text = "Warn residents (walk up and press E)",
+                  text = "Warn 3 residents: walk up to each one and press E",
                   -- (anyone in any wing of the block)
                   filter = function(_, _, npc)
                       local st = LC.NPCs[npc]
@@ -2846,11 +2846,11 @@ T{
         if not to then return nil end
         return {
             title = "Run supplies under curfew", reward = 40, limit = 480,
-            desc = "The streets are empty and the Civil Protection units are busy. A contact left a crate " .. Place(from, ply:GetPos()) .. ". Get it to " .. toName .. ".",
+            desc = "The streets are empty and the Civil Protection units are busy. A contact left a crate " .. Place(from, ply:GetPos()) .. ". Pick it up and bring it to the safe spot: " .. toName .. ".",
             stages = {
                 { kind = "collect", spots = HideSpots(from, 1, 300, true), model = "models/items/item_item_crate.mdl", need = 1,
-                  text = "Pick up the crate (press E)" },
-                Deliver(to, "Bring it to " .. toName, r),
+                  text = "Find the crate (marked) and press E to pick it up" },
+                Deliver(to, "Bring it to the safe spot (" .. toName .. ")", r),
             },
         }
     end,
@@ -2987,7 +2987,7 @@ function LC.PostDirective(tid, focus)
                     local board = BOARDS[f] or "Jobs"
                     local room = math.max(cvSquad:GetInt(), spec.squad or 0)
                     for _, p in ipairs(people) do
-                        p:ChatPrint(string.format("[%s] New: %s. Take it from your board (F3); up to %d of you can work it together.", board, spec.title, room))
+                        p:ChatPrint(string.format("[%s] New job: %s. Take it from your job board (F3). Up to %d people can work on it together.", board, spec.title, room))
                     end
                 end
             end
@@ -3017,12 +3017,12 @@ hook.Add("LivingCityEventEnded", "LivingCityDirectives", function(was)
                     local st = Stage(p.q)
                     local short = st and st.kind == "count" and (st.got or 0) < (st.need or 1)
                     if short and (p.q.stage or 1) > 1 then
-                        Finish(p.q, false, string.format("it's over, and only %d of %d done", st.got or 0, st.need or 1))
+                        Finish(p.q, false, string.format("the event ended with only %d of %d done", st.got or 0, st.need or 1))
                     elseif (p.q.stage or 1) > 1 then
-                        Narrate(p.q, "It's over. Good work.")
+                        Narrate(p.q, "The event is over. Good work: the job counts as done.")
                         Finish(p.q, true)
                     else
-                        Finish(p.q, false, "it's over before you got there; no harm done")
+                        Finish(p.q, false, "the event ended before you got started, so it doesn't count against you")
                     end
                 end
                 p.dead = true
@@ -3082,7 +3082,7 @@ function LC.AcceptPosting(ply, pid)
     if not cvOn:GetBool() then return false end
     if LC.QuestOf[ply] then ply:ChatPrint("[Living City] Finish or abandon your current job first.") return false end
     if (ply.lcqNext or 0) > CurTime() then
-        ply:ChatPrint("[Living City] Take a breath. Next job in " .. math.ceil(ply.lcqNext - CurTime()) .. "s.")
+        ply:ChatPrint("[Living City] You have to wait before taking another job. Next job in " .. math.ceil(ply.lcqNext - CurTime()) .. "s.")
         return false
     end
     local f = LC.QuestFaction(ply)
@@ -3091,10 +3091,10 @@ function LC.AcceptPosting(ply, pid)
     if not posting and ply.lcStoryPostings then
         for _, p in pairs(ply.lcStoryPostings) do if p.id == pid then posting = p end end
     end
-    if not posting or posting.dead then ply:ChatPrint("[Living City] That posting is gone.") return false end
+    if not posting or posting.dead then ply:ChatPrint("[Living City] That job is no longer available.") return false end
     if posting.story and posting.owner ~= ply then return false end
     if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) and posting.chain ~= "stalker" then
-        ply:ChatPrint("[Living City] A stalker does the work it's given, and nothing else.")
+        ply:ChatPrint("[Living City] Stalkers can only do stalker work. You can't take this job.")
         return false
     end
 
@@ -3104,7 +3104,7 @@ function LC.AcceptPosting(ply, pid)
         if #Members(q) >= math.max(cvSquad:GetInt(), posting.squad or 0) then ply:ChatPrint("[Living City] That job has enough people.") return false end
         table.insert(q.members, ply)
         LC.QuestOf[ply] = q
-        Narrate(q, ply:Nick() .. " has joined.")
+        Narrate(q, ply:Nick() .. " has joined the job.")
         SendStateAll(q)
         return true
     end
@@ -3160,7 +3160,7 @@ function LC.ResolveChoice(ply, qid, idx)
     if o.check then
         local roll, mod = math.random(20), LC.SkillMod(ply, o.check[1])
         success = (roll ~= 1) and (roll == 20 or roll + mod >= o.check[2])
-        Narrate(q, string.format("%s check: rolled %d + %d = %d against %d. %s", string.upper(o.check[1]), roll, mod,
+        Narrate(q, string.format("%s check: rolled %d + %d skill = %d, needed %d. %s", string.upper(o.check[1]), roll, mod,
             roll + mod, o.check[2], success and "Success." or "Failure."))
     end
     local fn = o.pick
