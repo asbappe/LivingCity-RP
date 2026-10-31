@@ -254,6 +254,19 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Wanted:** the character form won't take a new name or face.
   Notes:
 
+## Ration cards from work (1 November: what to check)
+
+- [ ] **A new character:** registering at Civil Intake gives papers but no ration card; a dispenser says "No ration card" and tells you to work a shift.
+- [ ] **Finish a Union shift:** "[Rations] You earned a ration card" on screen; F2 shows the card (and how many).
+- [ ] **Take a ration:** the dispenser takes one card, and no credits come with it (standing still goes up by 1).
+- [ ] **Civil Intake's record screen and your papers** show how many ration cards you have; there's no "Replace my ration card" button any more.
+- [ ] **Hungry with no card:** What now? says to work a shift for a ration card.
+
+## Beds (1 November: what to check)
+
+- [ ] **Citizens at curfew or night** walk into the habitation blocks and lie down on the beds you placed, asleep (eyes shut), and get up in the morning. Heads at the foot end? `lc_bed_head_flip 1`.
+- [ ] **You in a bed:** E on it at night: you lie on it, others see you lying there, your view is from the pillow. Jump: back beside the bed.
+
 ## Morning exercise and more (from the other session)
 
 - [ ] **Morning exercise:** every second dawn, the jog (keep up with the pace marker), the drill (copy the leader on your ring, then the skipping rope) or the parade (cheer the column). Needs its editor points: jogging route, exercise yard, parade route.

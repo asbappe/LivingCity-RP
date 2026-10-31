@@ -88,6 +88,11 @@ end
 function LCA.IsVortModel(ply) return string.find(string.lower(ply:GetModel() or ""), "vortigaunt", 1, true) ~= nil end
 
 hook.Add("CalcMainActivity", "LivingCityActs", function(ply, vel)
+    -- asleep in a bed: lying down on it (sv_livingcity_rest.lua, cl_livingcity_rest.lua)
+    if ply:GetNW2Bool("lc_sleeping", false) then
+        local r = LCA.Resolve(ply, "lie")
+        if r then return r.act or ACT_HL2MP_IDLE, r.seq end
+    end
     local name = LCA.Current(ply)
     if not name and LCA.IsVortModel(ply) then
         if ply.lcVortModel ~= ply:GetModel() then ply.lcVortSeq, ply.lcVortModel = nil, ply:GetModel() end

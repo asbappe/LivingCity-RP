@@ -196,17 +196,13 @@ function LC_CL.OpenDesk(t)
         Head("YOUR RECORD")
         Line("Housing: " .. (t.blockName or (t.awaiting and "none yet" or "none on file")))
         Line("Identity papers: " .. (t.papers and "on you" or "NOT on you"), t.papers and GOOD or BAD)
-        Line("Ration card: " .. (t.card and "on you" or "NOT on you"), t.card and GOOD or BAD)
+        Line(string.format("Ration cards: %d (you earn one for each Union shift you finish)", t.cards or 0), (t.cards or 0) > 0 and GOOD or BAD)
         Line(string.format("Credits: %d", t.credits or 0), DIM)
         if not t.papers then
             Button(string.format("Replace my identity papers (%d credits)", t.papersFee or 10), (t.credits or 0) >= (t.papersFee or 10),
                 function() LC_CL.DeskAct("papers") Close() end, "Civil Protection units ask for papers; Housing Allocation wants to see them")
         end
-        if not t.card then
-            Button(string.format("Replace my ration card (%d credits)", t.cardFee or 15), (t.credits or 0) >= (t.cardFee or 15),
-                function() LC_CL.DeskAct("card") Close() end, "The ration dispensers want to see it")
-        end
-        if t.papers and t.card then Line("Your papers are in order.", GOOD) end
+        if t.papers then Line("Your papers are in order.", GOOD) end
         if t.awaiting and t.housingDesk then
             Head("NEXT")
             Line("You have no room yet. Housing Allocation assigns one.")
@@ -308,7 +304,7 @@ hook.Add("HUDPaint", "LivingCityPapers", function()
     local desc = t.desc or ""
     if #desc > 44 then desc = string.sub(desc, 1, 42) .. "..." end
     draw.SimpleText(desc, "DefaultSmall", x + 14, y + 122, Color(70, 64, 56, 255 * a), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-    draw.SimpleText(t.card and "RATION CARD ATTACHED" or "NO RATION CARD", "DefaultSmall", x + 14, y + 142, ink, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+    draw.SimpleText((t.cards or 0) > 0 and string.format("RATION CARDS: %d", t.cards) or "NO RATION CARD", "DefaultSmall", x + 14, y + 142, ink, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     if t.stalker then LC_CL.PapersStamp(x + W / 2, y + H / 2 + 10, "STALKER", a) end
     if t.from then draw.SimpleText("Held up by the person in front of you", "DefaultSmall", x + 14, y + H - 16, Color(70, 64, 56, 255 * a), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER) end
 end)

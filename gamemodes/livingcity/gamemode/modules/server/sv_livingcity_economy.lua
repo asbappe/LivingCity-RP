@@ -1,9 +1,9 @@
 --[[
     Living City: economy and social credit
 
-    Credits         money. Earned from Union shifts, directives, operations and
-                    ration coupons. Spent at the Union Commissary and vending
-                    machines.
+    Credits         money. Earned from Union shifts, directives and operations
+                    (a ration comes with none). Spent at the Union Commissary
+                    and vending machines.
     Civil Standing  the city's opinion of you, from -1000 to 1000. Rises with
                     work, compliance and reports; falls with crimes, arrests,
                     escapes and conduct strikes. Your standing tier decides what

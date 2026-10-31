@@ -68,10 +68,11 @@ function LC.Amenities(kind)
     for cls, k in pairs(CLASS_KIND) do
         if k == kind then for _, e in ipairs(LC.EntsOf and LC.EntsOf(cls) or {}) do out[#out + 1] = { pos = e:GetPos(), ent = e } end end
     end
-    for _, fx in ipairs(LC.StaticFixtures or {}) do if fx.kind == kind then out[#out + 1] = { pos = fx.pos } end end
+    for _, fx in ipairs(LC.StaticFixtures or {}) do if fx.kind == kind then out[#out + 1] = { pos = fx.pos, ang = fx.ang } end end
     if kind == "bed" then
-        for _, r in ipairs(LC.StaticRest or {}) do if r.kind == "bed" then out[#out + 1] = { pos = r.pos } end end
-        for _, p in ipairs(LC.PointsOfKind and LC.PointsOfKind("bunk") or {}) do out[#out + 1] = { pos = p.pos } end
+        -- (ang and point: which way it lies, for lying on it: sv_livingcity_rest.lua)
+        for _, r in ipairs(LC.StaticRest or {}) do if r.kind == "bed" then out[#out + 1] = { pos = r.pos, ang = r.ang } end end
+        for _, p in ipairs(LC.PointsOfKind and LC.PointsOfKind("bunk") or {}) do out[#out + 1] = { pos = p.pos, point = true, yaw = p.yaw or 0 } end
     end
     -- loose ones the map placed as props (looked for once a minute, not every time)
     LC.AmenityProps = LC.AmenityProps or {}

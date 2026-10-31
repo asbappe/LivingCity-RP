@@ -3,6 +3,8 @@
 
     A new person (the first time you join, after a permanent death, a new
     character slot) arrives with nothing: no papers, no room, no ration card.
+    Ration cards aren't handed out here: each Union shift you finish earns
+    one, and each ration at a dispenser takes one (sv_livingcity_work.lua).
     They step off at an arrival point ("Point: arrival", or failing that the
     train platform) and have to ask the city for each of those things:
 
@@ -10,10 +12,10 @@
          registration form: a name, a face and a description, entered into
          the terminal, not handed out. It takes lc_intake_secs (8) to process
          you; stay at it. Then you're on the register, with a citizen number,
-         and your identity papers and ration card are in your pockets (F2).
+         and your identity papers are in your pockets (F2).
          The screen then points you to Housing Allocation.
          Registered, E shows your record, and replaces lost papers (10
-         credits) or a lost ration card (15): lc_papers_fee, lc_card_fee.
+         credits): lc_papers_fee.
       2. Housing Allocation ("Fixture: Housing Allocation"). E opens the
          housing register: every block, how many live there, how far. Present
          your papers and apply for one (or "any block"); it takes as long
@@ -25,7 +27,7 @@
 
     Your papers: a unit who stops you asks for them, and carrying none costs
     a little standing. Show them to someone from F2 (Use) or the quick menu.
-    The ration dispensers want the card (a forged one still works).
+    The ration dispensers take a card for each ration (a forged one still works).
 
     Until you're registered: no rations (a forged ration card still works),
     no Union job, no Commissary, and a unit who stops you tells you to get
@@ -42,7 +44,7 @@
     map with no Civil Intake desk registers people as they arrive (as before),
     and lc_intake 0 turns all of it off.
 
-      lc_intake, lc_intake_secs, lc_intake_grace, lc_papers_fee, lc_card_fee
+      lc_intake, lc_intake_secs, lc_intake_grace, lc_papers_fee
       Players: !papers.  Admin: lc_register <name>, lc_unregister <name>
       (back through all of it: papers, register, and a room).
 ]]
@@ -56,7 +58,6 @@ local cvOn    = CreateConVar("lc_intake", "1", FLAGS, "New people arrive with no
 local cvSecs  = CreateConVar("lc_intake_secs", "8", FLAGS, "Seconds a Civil Intake or Housing Allocation terminal takes to process someone")
 local cvGrace = CreateConVar("lc_intake_grace", "10", FLAGS, "Minutes a new arrival has to register before a Civil Protection unit who stops them makes it a crime")
 local cvPapersFee = CreateConVar("lc_papers_fee", "10", FLAGS, "Credits Civil Intake charges to replace lost identity papers")
-local cvCardFee   = CreateConVar("lc_card_fee", "15", FLAGS, "Credits Civil Intake charges to replace a lost ration card")
 
 util.AddNetworkString("lc_intake_ui")
 util.AddNetworkString("lc_intake_act")
@@ -187,12 +188,11 @@ end
 -- Being processed
 ------------------------------------------------------------------------
 
--- Their identity papers and ration card, in their pockets (what they don't already have).
-function LC.IssueDocuments(ply, only)
+-- Their identity papers, in their pockets (if they don't already have them).
+-- Ration cards are earned, a shift at a time (sv_livingcity_work.lua), never issued here.
+function LC.IssueDocuments(ply)
     if not IsValid(ply) or not LC.GiveItem then return end
-    for _, id in ipairs({ "id_papers", "ration_card" }) do
-        if (not only or only == id) and not LC.HasItem(ply, id) then LC.GiveItem(ply, id) end
-    end
+    if not LC.HasItem(ply, "id_papers") then LC.GiveItem(ply, "id_papers") end
     ply:SetPData("lc_docs", "1")
     ply.lcDocs = true
 end
@@ -202,9 +202,13 @@ local function Documented(ply)
 end
 LC.HasBeenIssuedPapers = Documented
 
--- Has a card on file but none in their pockets: the dispensers say no (sv_livingcity_survival.lua).
+-- A citizen with no ration card in their pockets: the dispensers say no (sv_livingcity_survival.lua).
+-- (Civil Protection eat at their Commissary and need none.)
 function LC.LacksRationCard(ply)
-    return IsValid(ply) and ply:IsPlayer() and Papered(ply) and Documented(ply) and not LC.HasItem(ply, "ration_card")
+    return IsValid(ply) and ply:IsPlayer() and Papered(ply) and not LC.HasItem(ply, "ration_card")
+end
+function LC.RationCards(ply)
+    return LC.Inventory and (LC.Inventory(ply).ration_card or 0) or 0
 end
 
 function LC.RegisterPerson(ply, how)
@@ -215,9 +219,9 @@ function LC.RegisterPerson(ply, how)
     local name = LC.CharacterName and LC.CharacterName(ply) or ply:Nick()
     local cid = ply:GetNW2String("lc_cid", "")
     if how == "custody" then
-        ply:ChatPrint(string.format("[Civil Intake] You were processed while in custody: %s, citizen %s. Your papers and ration card are in your pockets (F2).", name, cid))
+        ply:ChatPrint(string.format("[Civil Intake] You were processed while in custody: %s, citizen %s. Your papers are in your pockets (F2). Ration cards come from work: each Union shift you finish earns one.", name, cid))
     else
-        ply:ChatPrint(string.format("[Civil Intake] Registration complete. %s, citizen %s. Your identity papers and ration card are in your pockets (F2). Keep them on you.", name, cid))
+        ply:ChatPrint(string.format("[Civil Intake] Registration complete. %s, citizen %s. Your identity papers are in your pockets (F2): keep them on you. Ration cards come from work: each Union shift you finish earns one.", name, cid))
     end
     local n = LC.PlayerBlock and LC.PlayerBlock(ply)
     if LC.AwaitingHousing(ply) and HasDesk("housing") then
@@ -348,11 +352,10 @@ local DOING = {
     housing = { "Searching the housing register", "[Housing Allocation] Stand still. Searching the housing register." },
     transfer = { "Processing your transfer request", "[Housing Allocation] Stand still. Processing your transfer request." },
     papers = { "Printing your identity papers", "[Civil Intake] Stand still. Printing new papers." },
-    card = { "Issuing a new ration card", "[Civil Intake] Stand still. Issuing a new ration card." },
 }
 
 local function Process(ply, ent, what, data)
-    local secs = math.max(1, cvSecs:GetFloat() * ((what == "papers" or what == "card") and 0.5 or 1))
+    local secs = math.max(1, cvSecs:GetFloat() * (what == "papers" and 0.5 or 1))
     local now = CurTime()
     Jobs[ply] = { ent = ent, what = what, data = data or {}, untilT = now + secs, beep = now + 1.5 }
     Hold(ent, ply, secs + 2)
@@ -369,18 +372,16 @@ local function Finish(ply, j)
     if j.what == "register" then LC.RegisterPerson(ply, "terminal")
     elseif j.what == "housing" then LC.HousePerson(ply, j.data.pref)
     elseif j.what == "transfer" then LC.TransferPerson(ply, j.data.pref)
-    elseif j.what == "papers" or j.what == "card" then
-        local id = j.what == "papers" and "id_papers" or "ration_card"
-        local fee = j.what == "papers" and cvPapersFee:GetInt() or cvCardFee:GetInt()
+    elseif j.what == "papers" then
+        local id, fee = "id_papers", cvPapersFee:GetInt()
         if LC.HasItem(ply, id) then return end
         if fee > 0 and LC.Credits and LC.Credits(ply) < fee then
             ply:ChatPrint("[Civil Intake] Insufficient credits. The replacement costs " .. fee .. ".")
             return
         end
         if fee > 0 and LC.AddCredits then LC.AddCredits(ply, -fee, "replacement " .. j.what) end
-        LC.IssueDocuments(ply, id)
-        ply:ChatPrint(j.what == "papers" and ("[Civil Intake] New identity papers issued (" .. fee .. " credits). Keep them on you.")
-            or ("[Civil Intake] New ration card issued (" .. fee .. " credits)."))
+        LC.IssueDocuments(ply)
+        ply:ChatPrint("[Civil Intake] New identity papers issued (" .. fee .. " credits). Keep them on you.")
     end
 end
 
@@ -444,9 +445,9 @@ function LC.SendDesk(ply, ent)
         kind = kind, name = LC.CharacterName and LC.CharacterName(ply) or ply:Nick(), cid = ply:GetNW2String("lc_cid", ""),
         pending = LC.IntakePending(ply), awaiting = LC.AwaitingHousing(ply), block = n or 0,
         blockName = n and LC.BlockName(n) or nil, how = ply:GetPData("lc_housed_how", ""),
-        papers = LC.HasItem(ply, "id_papers"), card = LC.HasItem(ply, "ration_card"),
+        papers = LC.HasItem(ply, "id_papers"), cards = LC.RationCards(ply),
         credits = LC.Credits and LC.Credits(ply) or 0, standing = LC.Standing and LC.Standing(ply) or 0,
-        papersFee = cvPapersFee:GetInt(), cardFee = cvCardFee:GetInt(), good = GOOD_STANDING, transferStanding = TRANSFER_STANDING,
+        papersFee = cvPapersFee:GetInt(), good = GOOD_STANDING, transferStanding = TRANSFER_STANDING,
         transfer = okT and true or false, transferWhy = whyT, housingDesk = HasDesk("housing"), blocks = {},
     }
     if kind == "housing" then
@@ -488,11 +489,14 @@ function LC.DeskAction(ply, ent, action, arg)
         Process(ply, ent, "transfer", { pref = tonumber(arg) or 0 })
         return true
     end
-    if kind == "register" and (action == "papers" or action == "card") then
+    if kind == "register" and action == "card" then
+        ply:ChatPrint(title .. "Ration cards aren't issued here. You earn one for each Union shift you finish.")
+        return false
+    end
+    if kind == "register" and action == "papers" then
         if LC.IntakePending(ply) then return false end
-        local id = action == "papers" and "id_papers" or "ration_card"
-        if LC.HasItem(ply, id) then ply:ChatPrint(title .. "You already have " .. (action == "papers" and "your papers" or "a ration card") .. " on you.") return false end
-        local fee = action == "papers" and cvPapersFee:GetInt() or cvCardFee:GetInt()
+        if LC.HasItem(ply, "id_papers") then ply:ChatPrint(title .. "You already have your papers on you.") return false end
+        local fee = cvPapersFee:GetInt()
         if fee > 0 and LC.Credits and LC.Credits(ply) < fee then
             ply:ChatPrint(title .. "A replacement costs " .. fee .. " credits. You don't have them.")
             return false
@@ -602,7 +606,7 @@ hook.Add("PlayerSpawn", "LivingCityIntake", function(ply)
         timer.Simple(1, function()
             if not IsValid(ply) or Documented(ply) or LC.IntakePending(ply) or not Papered(ply) then return end
             LC.IssueDocuments(ply)
-            ply:ChatPrint("[Papers] Your identity papers and ration card are in your pockets (F2). Keep them on you: Civil Protection units ask for papers, and the dispensers want the card.")
+            ply:ChatPrint("[Papers] Your identity papers are in your pockets (F2). Keep them on you: Civil Protection units ask for them.")
         end)
     end
     -- a new arrival (or someone still not registered) steps off where arrivals do, in a city with the desks
@@ -831,7 +835,7 @@ function LC.PapersInfo(ply)
     local t = {
         name = LC.CharacterName and LC.CharacterName(ply) or ply:Nick(), cid = ply:GetNW2String("lc_cid", ""),
         block = n and LC.BlockName(n) or (LC.AwaitingHousing(ply) and "None yet: Housing Allocation" or "None on file"),
-        desc = ply:GetNW2String("lc_desc", ""), card = LC.HasItem(ply, "ration_card"),
+        desc = ply:GetNW2String("lc_desc", ""), cards = LC.RationCards(ply),
         model = ply:GetModel(),
         stalker = (LC.PlayerIsStalker and LC.PlayerIsStalker(ply)) or nil, -- (stamped across: Combine property)
     }

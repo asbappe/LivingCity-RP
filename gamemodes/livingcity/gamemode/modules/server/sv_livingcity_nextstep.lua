@@ -203,12 +203,15 @@ function LC.NextStep(ply)
     if needs and civ and hunger < HUNGRY then
         local food = HasFood(ply)
         if food then return { key = "eat_own", text = "Eat something", why = "You're hungry, and you have " .. string.lower(food) .. ": F2, then use it.", urgent = true } end
-        if RationReady(ply) then return { key = "eat_ration", text = "Collect your ration", why = "You're hungry and your allocation is ready: the dispenser (show your ration card).", way = "dispenser", urgent = true } end
+        if RationReady(ply) then return { key = "eat_ration", text = "Collect your ration", why = "You're hungry and your allocation is ready: go to the dispenser (it takes one ration card).", way = "dispenser", urgent = true } end
         local buy = Cheapest(ply, "hunger")
         if buy then return { key = "eat_buy", text = "Buy food at the Commissary", why = string.format("You're hungry. %s costs %d credits; you have enough.", LCS.Items[buy.item].name, buy.price), way = "shop", urgent = true } end
+        if LC.LacksRationCard and LC.LacksRationCard(ply) and LC.Job and LC.Job(ply) then
+            return { key = "eat_work", text = "Work a shift for a ration card", why = "You're hungry and have no ration card. Each Union shift you finish earns one: F3 has your next shift. Until then, search bins.", way = "work", urgent = true }
+        end
         local wait = math.max(0, math.ceil((ply.lcnRationAt or 0) - CurTime()))
         return { key = "eat_scrounge", text = "Find something to eat", why = (wait > 0 and string.format("Your next ration is in %d minutes. ", math.ceil(wait / 60)) or "")
-            .. "Until then: search bins, or work a shift for credits.", way = "bin", urgent = true }
+            .. "Until then: search bins, or work a shift (it pays credits and a ration card).", way = "bin", urgent = true }
     end
     if needs and civ and thirst < THIRSTY then
         local drink = HasDrink(ply)
@@ -226,10 +229,10 @@ function LC.NextStep(ply)
             return { key = "on_job", text = "Finish what you're doing", why = (q.title and (q.title .. ": ") or "") .. "its next step is on your screen, and on F3." }
         end
         if f ~= "resistance" and LC.Job and not LC.Job(ply) then
-            return { key = "job", text = "Get a Union job", why = "Jobs pay credits and standing, a shift at a time. F3 > Jobs: pick one." }
+            return { key = "job", text = "Get a Union job", why = "Jobs pay credits, standing and a ration card for each shift. No job, no rations. F3 > Jobs: pick one." }
         end
         if RationReady(ply) and hunger < 75 then
-            return { key = "ration", text = "Collect your ration", why = "Your allocation is ready: the dispenser (show your ration card).", way = "dispenser" }
+            return { key = "ration", text = "Collect your ration", why = "Your allocation is ready: go to the dispenser (it takes one ration card).", way = "dispenser" }
         end
         if (LC.Credits and LC.Credits(ply) or 0) < 15 and LC.Job and LC.Job(ply) then
             return { key = "shift", text = "Work a shift", why = "You're short of credits. F3 has your next shift.", way = "work" }

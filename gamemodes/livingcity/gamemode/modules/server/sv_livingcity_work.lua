@@ -9,6 +9,10 @@
 
     Shifts pay Credits and Civil Standing (see sv_livingcity_economy.lua) and
     faction XP, and some carry small moral choices that feed your traits.
+
+    A finished shift also earns a ration card (lc_shift_ration_cards, 1).
+    It's the only way to get one: each ration at a dispenser takes a card,
+    so no work, no rations (the owner: "workers need to WORK!").
 ]]
 
 if CLIENT then return end
@@ -21,6 +25,7 @@ if not Q or not LCJ then return end
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvCooldown = CreateConVar("lc_job_cooldown", "120", FLAGS, "Seconds between changing jobs")
+local cvShiftCards = CreateConVar("lc_shift_ration_cards", "1", FLAGS, "Ration cards a citizen earns for each Union shift they finish (the only way to get one; each ration takes one)")
 
 local Goto, Deliver, Hold, Count, Choice = Q.Goto, Q.Deliver, Q.Hold, Q.Count, Q.Choice
 local Narrate, Insert, Pick, Place = Q.Narrate, Q.InsertStages, Q.Pick, Q.Place
@@ -1320,6 +1325,18 @@ LC.Chain{
         end },
     },
 }
+
+-- A finished shift earns a ration card: the only way to get one.
+hook.Add("LivingCityQuestComplete", "LivingCityShiftRationCard", function(p, q)
+    if not q or q.chain ~= "shift" or not IsValid(p) or not LC.GiveItem then return end
+    if LC.CarriesPapers and not LC.CarriesPapers(p) then return end
+    local n = math.max(0, cvShiftCards:GetInt())
+    if n < 1 then return end
+    LC.GiveItem(p, "ration_card", n)
+    local have = LC.Inventory and (LC.Inventory(p).ration_card or 0) or n
+    p:ChatPrint(string.format("[Rations] You earned %s for that shift. You have %d now: each ration at a dispenser takes one.",
+        n == 1 and "a ration card" or (n .. " ration cards"), have))
+end)
 
 ------------------------------------------------------------------------
 -- Civil rehabilitation: community service for anyone whose Civil Standing

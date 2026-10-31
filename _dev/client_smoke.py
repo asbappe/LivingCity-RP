@@ -350,6 +350,21 @@ util.TraceHull = function(t) return { HitPos = t.endpos } end
 local view = LC_CL.CalcView(_me, { origin = Vector(0, 0, 64), angles = Angle(), fov = 75 })
 if not view or not view.drawviewer then problems[#problems + 1] = "third person while posing" end
 _me.nw.lc_act = ""
+-- asleep in a bed: lying on it, and the camera at the head on the pillow
+_me.nw.lc_sleeping = true
+_me.nw.lc_bed_top = Vector(100, 0, 20)
+_me.nw.lc_bed_yaw = 90
+_me.SetRenderOrigin = function(self, v) self.ro = v end
+_me.SetRenderAngles = function(self, a) self.ra = a end
+_me.LookupBone = function(self, n) return n == "ValveBiped.Bip01_Head1" and 6 or 0 end
+_me.GetBonePosition = function(self, b) local o = self.ro or Vector(0, 0, 0) return o + (b == 6 and Vector(0, 30, 4) or Vector(0, 2, 4)) end
+for _ = 1, 3 do run("PrePlayerDraw", _me) run("PostPlayerDraw", _me) end
+local bedv = LC_CL.CalcView(_me, { origin = Vector(0, 0, 64), angles = Angle(), fov = 75 })
+if not bedv or bedv.origin:Distance(Vector(100, 0, 20)) > 60 or bedv.drawviewer then problems[#problems + 1] = "asleep in a bed: the camera isn't on the pillow: " .. tostring(bedv and bedv.origin) end
+if not _me.ra or _me.ra.y ~= 90 then problems[#problems + 1] = "asleep in a bed: not turned along it" end
+if _me.ro ~= nil then problems[#problems + 1] = "asleep in a bed: the drawing spot isn't put back after drawing" end
+_me.nw.lc_sleeping = false
+_me.SetRenderOrigin, _me.SetRenderAngles, _me.LookupBone, _me.GetBonePosition = nil, nil, nil, nil
 -- the one camera: the field of view is capped, whatever else moves it
 if hook.t.CalcView and (hook.t.CalcView.LivingCityActs or hook.t.CalcView.LivingCityScanner or hook.t.CalcView.LivingCityDizzy) then
     problems[#problems + 1] = "a camera hook outside the camera: it would take the view from the others"
@@ -708,10 +723,10 @@ do
     Quick("cp", function() Look(ents.Create("lc_powerbank")) end)
     -- the terminals' screens, the lab, the papers card, notices and a waypoint
     local okD, errD = pcall(function()
-        local base = { name = "Erika Hollis", cid = "#63-501", credits = 30, standing = 10, papersFee = 10, cardFee = 15, good = 50,
+        local base = { name = "Erika Hollis", cid = "#63-501", credits = 30, standing = 10, papersFee = 10, good = 50,
             blocks = { { n = 1, name = "Habitation Block 01", residents = 2, m = 40 }, { n = 2, name = "Habitation Block 02", residents = 6 } } }
         local function With(t) local o = table.Copy and table.Copy(base) or {} for k, v in pairs(base) do o[k] = v end for k, v in pairs(t) do o[k] = v end return o end
-        LC_CL.OpenDesk(With({ kind = "register", papers = false, card = true, awaiting = true, housingDesk = true }))
+        LC_CL.OpenDesk(With({ kind = "register", papers = false, cards = 2, awaiting = true, housingDesk = true }))
         LC_CL.OpenDesk(With({ kind = "housing", pending = true }))
         LC_CL.OpenDesk(With({ kind = "housing", awaiting = true, papers = true }))
         LC_CL.OpenDesk(With({ kind = "housing", block = 2, blockName = "Habitation Block 02", how = "auto", transfer = true, papers = true }))
@@ -719,7 +734,7 @@ do
         LC_CL.OpenLab({ credits = 50, items = { { id = "gun_pistol", name = "Homemade pistol", desc = "A pistol", secs = 12, price = 72, canPay = false, canMats = true,
             mats = { { name = "Gun parts", have = 2, need = 2 } } } } })
         LC_CL.OpenLab({ credits = 0, busy = 5, items = {} })
-        LC_CL.ShowPapersCard({ name = "Erika Hollis", cid = "#63-501", block = "Habitation Block 02", desc = "tall, grey coat", card = true, from = true, stalker = true })
+        LC_CL.ShowPapersCard({ name = "Erika Hollis", cid = "#63-501", block = "Habitation Block 02", desc = "tall, grey coat", cards = 3, from = true, stalker = true })
         LC_CL.AddNotice("warn", "Civil Protection", "Papers. None? Carry them at all times.", 0)
         LC_CL.AddNotice("warn", "Civil Protection", "Papers. None? Carry them at all times.", 0)
         LC_CL.AddNotice("speech", "Rebel", "Hey! Those are our supplies. Quit it.", 0)

@@ -69,6 +69,13 @@ Every commit says what it did; TIMELINE.md has the summary. The big pieces:
 - **Raids really happen now** (2026-10-31): a block raid spawns its own team just out of sight near the block (never the city's patrols, the owner's call), and is not announced at all if nobody can be sent. Sweeps into rebel territory start from a spot with a way in, use the city's routes, and their clock starts when they arrive.
 - **Admins holding the editor tool**: no hunger or thirst, and the units leave them alone (`LC.EditorHeld`).
 
+## This session (2026-11-01), cut short (out of usage)
+
+- Ration cards come only from finished Union shifts (`lc_shift_ration_cards` 1); each ration takes one; no credits with a ration; Civil Intake no longer issues or replaces cards (`lc_card_fee` removed). Snapshot updated with the owner's request.
+- Citizens sleep on beds in habitation blocks at curfew, lockdown and night (`lc_citizens_sleep`, `lc_bed_head_flip`; sv_livingcity_rest.lua, GoHome in sv_livingcity.lua); players lie on the bed with the camera on the pillow (cl_livingcity_rest.lua, sh_livingcity_acts.lua).
+- **Not verified:** the full test suite was started but not finished (no failures in the part that ran); the new tests (PapersHousingTests, NextStepTests, HygieneTests) never completed a run. Client smoke test passes. Run the full suite first next time.
+- **Rewording batch 4 not done.** Picked: Civil Intake and Housing Allocation (`_dev/rewording/batch4_intake.md` holds the originals; no draft yet).
+
 ## Waiting on the owner (from the last session)
 
 - **The map's lights twinkle.** Not the day and night dimming (`lc_daynight_light` doesn't exist as a command; turning it off didn't help). Asked the owner to load `rp_c18_ug` in plain Sandbox: if it twinkles there too, it's the map or their graphics, not the gamemode.

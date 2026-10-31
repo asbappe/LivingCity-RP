@@ -47,6 +47,7 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvLife    = CreateConVar("lc_rebel_life", "1", FLAGS, "Rebels at home keep busy: patrols, the workbench, crates, the garden, the fire, sitting, sleeping")
 local cvErrands = CreateConVar("lc_rebel_errands", "1", FLAGS, "Rebels slip out in ones and twos to scavenge, keeping out of sight, and bring it home")
 local cvErrandM = CreateConVar("lc_rebel_errand_minutes", "4", FLAGS, "Average minutes between scavenging runs, for each rebel zone")
+local cvHeadFlip = CreateConVar("lc_bed_head_flip", "0", FLAGS, "1 turns everyone lying on an editor-placed bed (Fixture: bed) round the other way, if their heads are at the foot end")
 local cvBedLift = CreateConVar("lc_rebel_bed_height", "8", FLAGS, "How far above a mattress or bed a sleeping fighter's hips lie (they're settled onto it by this; more if they sink into it, less if they float)")
 
 -- Lying down, settled onto the bed: the lying animations carry their own height (they were made
@@ -312,9 +313,13 @@ local function BedSpot(t)
         local g = Floor(Vector(c.x, c.y, top.z) + short * ((half + 24) * sgn))
         if math.abs(g.z - top.z) < 64 and Standable(g) then stand = g break end
     end
-    local yaw = long:Angle().y + (math.random() < 0.5 and 180 or 0)
+    -- an editor-placed bed: always the same way along it (lc_bed_head_flip turns it round); anything else, either way
+    local fixed = IsValid(t.ent) and t.ent:GetClass() == "lc_bed"
+    local yaw = long:Angle().y + (fixed and (cvHeadFlip:GetBool() and 180 or 0) or (math.random() < 0.5 and 180 or 0))
     return { top = top, yaw = yaw, stand = stand }
 end
+
+LC.RebelBedSpot = BedSpot
 
 ------------------------------------------------------------------------
 -- Doing things
@@ -366,6 +371,23 @@ local function BusyLoop(npc, L, kind, pos, yaw, moveTo)
     if not loop then return false end
     local entry = LC.BusySeqName(npc, names[1])
     return Loop(npc, L, pos, yaw, entry, loop, moveTo or 1)
+end
+
+-- Any NPC lying down on a bed spot b ({ top, yaw }): L.ss is the animation, L.asleep if lying
+-- (failing a lying animation, sitting on the bed). True if either. (Citizens at night: sv_livingcity_rest.lua.)
+function LC.NPCLieOnBed(npc, L, b)
+    local seq = SeqFor(npc, LYING)
+    local lying = seq ~= nil and Loop(npc, L, b.top + Vector(0, 0, 1), b.yaw, seq, seq, 4)
+    local ok = lying or BusyLoop(npc, L, "sit", b.top + Vector(0, 0, 1), b.yaw, 4)
+    if not ok then return false end
+    L.onBed = true
+    L.asleep = lying == true
+    HideGun(npc, L, true)
+    if L.asleep then
+        npc:SetNW2Bool("lc_eyes_shut", true)
+        timer.Simple(0.6, function() SettleOnBed(npc, L, b.top.z) end)
+    end
+    return true
 end
 
 local function End(npc, st)

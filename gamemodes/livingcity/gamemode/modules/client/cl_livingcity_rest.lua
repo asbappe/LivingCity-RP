@@ -53,7 +53,8 @@ hook.Add("HUDPaint", "LivingCityRest", function()
     if not IsValid(me) or not me:Alive() then sleepFade = 0 return end
     local w, h = ScrW(), ScrH()
     -- asleep: dark, and a little reassurance
-    sleepFade = math.Approach(sleepFade, me:GetNW2Bool("lc_sleeping", false) and 1 or 0, FrameTime() * 0.7)
+    -- (slowly: a few seconds looking up from the pillow before your eyes close)
+    sleepFade = math.Approach(sleepFade, me:GetNW2Bool("lc_sleeping", false) and 1 or 0, FrameTime() * (me:GetNW2Bool("lc_sleeping", false) and 0.25 or 0.7))
     if sleepFade > 0.01 then
         surface.SetDrawColor(0, 0, 0, 245 * sleepFade)
         surface.DrawRect(0, 0, w, h)
@@ -159,6 +160,9 @@ do
             for _, e in ipairs(ents.FindByClass and ents.FindByClass("npc_*") or {}) do
                 if IsValid(e) and e.GetNW2Bool and e:GetNW2Bool("lc_eyes_shut", false) then sleepers[#sleepers + 1] = e end
             end
+            for _, p in ipairs(player.GetAll()) do -- (players asleep in a bed too)
+                if p:GetNW2Bool("lc_sleeping", false) then sleepers[#sleepers + 1] = p end
+            end
         end
         for _, e in ipairs(sleepers) do
             if IsValid(e) and e.SetFlexWeight then
@@ -167,3 +171,62 @@ do
         end
     end)
 end
+
+------------------------------------------------------------------------
+-- Asleep in a bed: lying on it, seen by everyone, and your view from the pillow
+------------------------------------------------------------------------
+
+local BED_LIFT = 6 -- (how far above the mattress the hips lie)
+
+-- Lay a sleeping player's model along their bed: turned the bed's way, the hips
+-- over its middle. Returns where their head is, or nil if they're not in a bed.
+function LC_CL.BedPlace(ply)
+    if not IsValid(ply) or not ply:GetNW2Bool("lc_sleeping", false) then return nil end
+    local top = ply:GetNW2Vector("lc_bed_top", Vector(0, 0, 0))
+    if not top or (top.x == 0 and top.y == 0 and top.z == 0) then return nil end
+    if not ply.SetRenderOrigin or not ply.SetRenderAngles then return nil end
+    local yaw = ply:GetNW2Float("lc_bed_yaw", 0)
+    ply:SetRenderAngles(Angle(0, yaw, 0))
+    local off = ply.lcBedOff or Vector(0, 0, 0)
+    local origin = top + Vector(0, 0, BED_LIFT) - off
+    ply:SetRenderOrigin(origin)
+    if ply.InvalidateBoneCache then ply:InvalidateBoneCache() end
+    if ply.SetupBones then ply:SetupBones() end
+    local pelvis = ply.LookupBone and ply:LookupBone("ValveBiped.Bip01_Pelvis")
+    local pp = pelvis and ply:GetBonePosition(pelvis)
+    if pp then
+        -- (the lying animation carries the body away from its feet: measured, and the hips put back on the bed next frame)
+        local measured = pp - origin
+        if measured:LengthSqr() < 120 * 120 then ply.lcBedOff = measured end
+    end
+    local head = ply.LookupBone and ply:LookupBone("ValveBiped.Bip01_Head1")
+    local hp = head and ply:GetBonePosition(head)
+    return hp or (top + Vector(0, 0, BED_LIFT + 8))
+end
+
+hook.Add("PrePlayerDraw", "LivingCityBed", function(ply)
+    if LC_CL.BedPlace(ply) then ply.lcBedDrawn = true end
+end)
+hook.Add("PostPlayerDraw", "LivingCityBed", function(ply)
+    if ply.lcBedDrawn then
+        ply.lcBedDrawn = nil
+        ply:SetRenderOrigin(nil)
+    end
+end)
+hook.Add("Think", "LivingCityBedForget", function()
+    for _, ply in ipairs(player.GetAll()) do
+        if ply.lcBedOff and not ply:GetNW2Bool("lc_sleeping", false) then ply.lcBedOff = nil end
+    end
+end)
+
+-- (one of the camera's steps: cl_livingcity_view.lua) your eyes on the pillow, looking about as you like
+LC_CL.ViewMods = LC_CL.ViewMods or {}
+LC_CL.ViewMods.bed = { order = 15, fn = function(ply, view, ctx)
+    if ctx.remote or ctx.vehicle then return end
+    local head = LC_CL.BedPlace(ply)
+    if not head then return end
+    if ply.SetRenderOrigin then ply:SetRenderOrigin(nil) end
+    view.origin = head + Vector(0, 0, 4)
+    view.drawviewer = false
+    ctx.remote = true -- (not from your standing eyes: no step sway)
+end }

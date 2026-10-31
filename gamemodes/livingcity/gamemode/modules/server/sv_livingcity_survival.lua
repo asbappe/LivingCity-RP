@@ -1084,9 +1084,9 @@ function LC.UseDispenser(ply, ent)
     local econ = GetConVar("lc_economy")
     local refused
     if LC.IntakePending and LC.IntakePending(ply) then
-        refused = "[Rations] No ration card on file. Register at Civil Intake first." -- (sv_livingcity_intake.lua)
+        refused = "[Rations] You aren't registered, so you can't have a ration card. Register at Civil Intake, then work a Union shift to earn one." -- (sv_livingcity_intake.lua)
     elseif LC.LacksRationCard and LC.LacksRationCard(ply) then
-        refused = "[Rations] Present your ration card. Lost it? Civil Intake issues another."
+        refused = "[Rations] No ration card. You earn one for each Union shift you finish (your board, F3), and each ration takes one card."
     elseif econ and econ:GetBool() and LC.Standing(ply) < -50 then
         refused = "[Rations] Your ration privileges have been suspended."
     elseif CurTime() < (ply.lcnRationAt or 0) then
@@ -1135,9 +1135,11 @@ function LC.UseDispenser(ply, ent)
         * (LC.StockIntervalMul and LC.StockIntervalMul() or 1) -- and while the stores are low
     ply.lcnRationAt = CurTime() + interval
     if LC.StockTake then LC.StockTake(1) end
+    -- each ration takes one ration card, earned by finishing a Union shift (sv_livingcity_work.lua);
+    -- no credits come with it (the owner: workers need to work)
+    if LC.CarriesPapers and LC.CarriesPapers(ply) and LC.TakeItem then LC.TakeItem(ply, "ration_card", 1) end
     Dispense(ent, ply)
     if LC.AddStanding then LC.AddStanding(ply, 1) end
-    if LC.AddCredits then LC.AddCredits(ply, 2, "ration coupon") end
     hook.Run("LivingCityRationCollected", ply)
     return true
 end

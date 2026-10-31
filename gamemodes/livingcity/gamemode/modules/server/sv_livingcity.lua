@@ -1118,6 +1118,21 @@ local function GoHome(npc, st, run)
     table.sort(blocks, function(a, b) return a.pos:DistToSqr(from) < b.pos:DistToSqr(from) end)
     -- their own block if they have one; otherwise one of the nearest two
     local z = LC.HomeZoneFor and LC.HomeZoneFor(st) or blocks[math.min(#blocks, math.random(1, 2))]
+    -- bedtime: a free bed in a block, their own first, then the nearest with one; they sleep
+    -- there till morning (sv_livingcity_rest.lua). No bed free: indoors and gone, as before.
+    if st.role == "citizen" and LC.NPCTakeBed and LC.Bedtime and LC.Bedtime() then
+        local order = { z }
+        for _, b in ipairs(blocks) do if b ~= z then order[#order + 1] = b end end
+        local at, bz, b = LC.NPCTakeBed(npc, st, order)
+        if at then
+            st.homeBlock = bz
+            if GoTo(npc, st, at, run, { kind = "homebed", pos = at, yaw = b.yaw or 0 }) then
+                npc:SetNW2String("lc_doing", "going home to bed")
+                return true
+            end
+            LC.NPCBedUp(npc, st)
+        end
+    end
     local spot = LC.SpotInZone(z)
     if not spot then return false end
     st.homeBlock = z
@@ -1139,7 +1154,9 @@ local function StartLeaving(npc, st, run, why)
     -- curfew: people walk home to a housing block and go inside, rather than
     -- trooping off to the edge of the map
     local ev = LC.Event
-    if (ev == "curfew" or ev == "lockdown") and GoHome(npc, st, run) then return true end
+    -- (and at night, to bed: sv_livingcity_rest.lua)
+    local night = st.role == "citizen" and LC.CitizensSleep and LC.CitizensSleep() and LC.IsNight and LC.IsNight()
+    if (ev == "curfew" or ev == "lockdown" or night) and GoHome(npc, st, run) then return true end
     -- a train's in: leaving the city means boarding it, suitcase and all (sv_livingcity_trains.lua)
     local board = LC.TrainBoardingPos and LC.TrainBoardingPos()
     if board and GoTo(npc, st, board, run, { kind = "spawn", pos = board, yaw = math.random(0, 359) }) then
@@ -1180,6 +1197,12 @@ function Arrive(npc, st, now)
         SetState(npc, st, "inline")
     elseif k == "lineapproach" then
         EnterQueue(npc, st, poi.line, now)
+    elseif k == "homebed" then
+        -- home, to bed (sv_livingcity_rest.lua); if they can't lie down, indoors and gone, as before
+        if not (LC.NPCBedDown and LC.NPCBedDown(npc, st, now)) then
+            SetState(npc, st, "exiting")
+            st.untilT = now + 6
+        end
     elseif k == "spawn" and st.leaving then
         SetState(npc, st, "exiting")
         st.untilT = now + (st.homeBlock and 6 or 15) -- going indoors takes a moment, not a quarter of a minute
@@ -1535,7 +1558,7 @@ local function MaintainPopulation()
         if not IsValid(npc) or npc:Health() <= 0 then
             CleanupNPC(npc, st)
             LC.NPCs[npc] = nil
-        elseif not st.test and not st.unmanaged then
+        elseif not st.test and not st.unmanaged and st.state ~= "abed" then -- (asleep at home: not out in the city)
             counts[st.role] = (counts[st.role] or 0) + 1
         end
     end
@@ -1605,6 +1628,7 @@ local WORK = { work = true }
 
 local function ChooseCitizenTask(npc, st, now)
     Release(npc, st)
+    if st.bedKey and LC.NPCBedUp then LC.NPCBedUp(npc, st) end -- (a bed they never got to)
     if LC.NPCWorkReset then LC.NPCWorkReset(npc, st) end
     local ev = LC.Event
     if not st.questLock and (ev == "curfew" or ev == "lockdown" or st.leaving or (st.leaveAt and now > st.leaveAt)) then
@@ -1668,6 +1692,7 @@ end
 
 local function ThinkCitizen(npc, st, now)
     local s = st.state
+    if st.bedL and s ~= "abed" and LC.NPCBedUp then LC.NPCBedUp(npc, st) end -- (taken out of bed by something else: arrested, say)
     if s == "event" or s == "escorted" then
         if now > (st.eventUntil or 0) and s == "event" then SetState(npc, st, "idle"); st.untilT = now + 1 end
         if s == "escorted" then return HandleMoving(npc, st, now) end
@@ -1683,6 +1708,10 @@ local function ThinkCitizen(npc, st, now)
     end
     if s == "exiting" then
         if not LC.IsSeen(npc:GetPos() + UP) or now > st.untilT then npc:Remove() end
+        return
+    end
+    if s == "abed" then -- asleep at home (sv_livingcity_rest.lua)
+        if LC.NPCBedThink then LC.NPCBedThink(npc, st, now) else SetState(npc, st, "idle") end
         return
     end
     if s == "moving" then return HandleMoving(npc, st, now) end

@@ -8,7 +8,9 @@
 
     Sleep in a bed (E on it: the editor's "Fixture: bed", a bunk point, or any
     bed or mattress the map has, a cell's too) at night, or any time you're
-    exhausted. You lie there and can't move: Jump gets you up. It takes
+    exhausted. You lie down on it (the camera goes with you, to your head on
+    the pillow; others see you lying there) and can't move: Jump gets you up,
+    beside the bed again. It takes
     lc_sleep_seconds (60) to sleep; get up before then, or get hurt, and
     you've not slept. You heal as you sleep, to full by the end of it, and
     stay asleep until you press Jump. A good night leaves you well rested for
@@ -16,7 +18,17 @@
     you slowly heal (a point every ten seconds, up to full). How long you've
     been awake is kept over a server restart.
 
-      lc_sleep 0/1, lc_sleep_seconds (60), lc_tired_days (1)
+    Citizens sleep too: at curfew, in a lockdown and at night, the city's
+    people walk home to a free bed in a housing block (their own block first,
+    then the nearest with one free), lie down on it and sleep till morning,
+    getting up a few at a time. Beds: the editor's "Fixture: bed", bunk
+    points, and the map's own beds, inside a "block" zone. With no bed free
+    they go indoors and are gone, as before. Hurt one and they wake.
+    lc_bed_head_flip 1 turns everyone on an editor bed round, if heads end up
+    at the foot (sv_livingcity_rebellife.lua).
+
+      lc_sleep 0/1, lc_sleep_seconds (60), lc_tired_days (1),
+      lc_citizens_sleep 0/1 (1)
 ]]
 
 if CLIENT then return end
@@ -27,6 +39,7 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn   = CreateConVar("lc_sleep", "1", FLAGS, "People need sleep: tired after a day without it, well rested after a night in a bed")
 local cvSecs = CreateConVar("lc_sleep_seconds", "60", FLAGS, "Seconds it takes to sleep in a bed")
 local cvDays = CreateConVar("lc_tired_days", "1", FLAGS, "In-game days awake before you're tired")
+local cvHomeSleep = CreateConVar("lc_citizens_sleep", "1", FLAGS, "At curfew and at night, citizens walk to a free bed in a housing block and sleep on it till morning (with none free, they go indoors and are gone, as before)")
 
 local TIRED_HP = 25
 
@@ -58,23 +71,59 @@ local function TiredHealth(ply, tired)
     end
 end
 
--- Find a bed where they're looking, or the nearest one within reach.
+-- Find a bed where they're looking, or the nearest one within reach: its spot, and the bed ({ pos, ent?, ang?, point?, yaw? }).
 local function BedAt(ply, ent)
-    if IsValid(ent) and (ent:GetClass() == "lc_bed" or (LC.AmenityKindOf and LC.AmenityKindOf(ent) == "bed")) then return ent:GetPos() end
+    if IsValid(ent) and (ent:GetClass() == "lc_bed" or (LC.AmenityKindOf and LC.AmenityKindOf(ent) == "bed")) then return ent:GetPos(), { pos = ent:GetPos(), ent = ent } end
     local best, bd
     for _, a in ipairs(LC.Amenities and LC.Amenities("bed") or {}) do
         local d = a.pos:DistToSqr(ply:GetPos())
-        if d < 110 * 110 and (not bd or d < bd) then best, bd = a.pos, d end
+        if d < 110 * 110 and (not bd or d < bd) then best, bd = a, d end
     end
-    return best
+    return best and best.pos, best
 end
 LC.BedNear = BedAt
+
+------------------------------------------------------------------------
+-- Who's in which bed (players and citizens alike)
+------------------------------------------------------------------------
+
+LC.BedSleepers = LC.BedSleepers or {} -- [bed key] = the player or NPC in it (or on their way to it)
+
+function LC.BedKey(a)
+    if IsValid(a.ent) then return "e" .. a.ent:EntIndex() end
+    return string.format("s%d_%d_%d", math.floor(a.pos.x), math.floor(a.pos.y), math.floor(a.pos.z))
+end
+
+function LC.BedFree(key, who)
+    local e = LC.BedSleepers[key]
+    if e == nil or e == who then return true end
+    if IsValid(e) then
+        if e:IsPlayer() then
+            if e.lcSleep and e.lcBedKey == key then return false end
+        else
+            local st = LC.NPCs and LC.NPCs[e]
+            if st and st.bedKey == key then return false end
+        end
+    end
+    LC.BedSleepers[key] = nil
+    return true
+end
+
+-- Where to lie on a bed: { top, yaw, stand } (sv_livingcity_rebellife.lua works it out).
+function LC.BedLie(a)
+    if not a then return nil end
+    local b = LC.RebelBedSpot and LC.RebelBedSpot({ ent = a.ent, pos = a.pos, ang = a.ang, point = a.point, yaw = a.yaw })
+    return b and b.top and b or nil
+end
 
 -- Sleep in a bed. True, or false and why not. You lie still (you can't move) till you press Jump.
 function LC.SleepIn(ply, ent)
     if not cvOn:GetBool() or not IsValid(ply) or not ply:Alive() then return false end
     if ply.lcSleep then return false end
-    if not BedAt(ply, ent) then return false, "There's no bed here." end
+    local where, bed = BedAt(ply, ent)
+    if not where then return false, "There's no bed here." end
+    local key = LC.BedKey(bed)
+    if not LC.BedFree(key, ply) then return false, "Someone's already asleep in this bed." end
     if not LC.IsNight() and not LC.IsTired(ply) then return false, "You're not tired, and it's broad daylight. Beds are for the night (or when you're exhausted)." end
     if LC.IsRested(ply) and not LC.IsTired(ply) then return false, "You slept already. You couldn't sleep again if you tried." end
     local now = CurTime()
@@ -82,6 +131,21 @@ function LC.SleepIn(ply, ent)
     ply:SetNW2Bool("lc_sleeping", true)
     ply:SetNW2Float("lc_sleep_done", ply.lcSleep.done)
     ply:SetVelocity(-ply:GetVelocity())
+    -- onto the bed, lying down (the pose and the camera: sh_livingcity_acts.lua, cl_livingcity_rest.lua)
+    LC.BedSleepers[key] = ply
+    ply.lcBedKey = key
+    if LC.StopAct then LC.StopAct(ply) end
+    if ply:HasWeapon("weapon_lc_hands") then ply:SelectWeapon("weapon_lc_hands") end
+    local b = LC.BedLie(bed)
+    if b then
+        ply.lcBedFrom = ply:GetPos()
+        local up = b.top + Vector(0, 0, 2)
+        -- on top of it if they fit there (under a bunk's upper bed they may not): otherwise just beside it
+        local tr = util.TraceHull({ start = up, endpos = up, mins = ply:OBBMins(), maxs = ply:OBBMaxs(), filter = ply })
+        if tr and not tr.StartSolid then ply:SetPos(up) end
+        ply:SetNW2Vector("lc_bed_top", b.top)
+        ply:SetNW2Float("lc_bed_yaw", b.yaw or 0)
+    end
     return true
 end
 
@@ -92,6 +156,16 @@ function LC.WakeUp(ply, how)
     ply.lcSleep = nil
     ply:SetNW2Bool("lc_sleeping", false)
     ply:SetNW2Float("lc_sleep_done", 0)
+    if ply.lcBedKey and LC.BedSleepers[ply.lcBedKey] == ply then LC.BedSleepers[ply.lcBedKey] = nil end
+    ply.lcBedKey = nil
+    ply:SetNW2Vector("lc_bed_top", Vector(0, 0, 0))
+    -- off the bed: back where they stood to get in, if nobody's standing there now
+    local from = ply.lcBedFrom
+    ply.lcBedFrom = nil
+    if from and ply:Alive() then
+        local tr = util.TraceHull({ start = from + Vector(0, 0, 2), endpos = from + Vector(0, 0, 2), mins = ply:OBBMins(), maxs = ply:OBBMaxs(), filter = ply })
+        if tr and not tr.StartSolid then ply:SetPos(from + Vector(0, 0, 2)) end
+    end
     if not s.slept and how ~= "quiet" then
         ply:ChatPrint(how == "hurt" and "You wake with a start. You've not slept." or "You get up before you've really slept.")
     end
@@ -229,3 +303,105 @@ function LC.RestStep(ply)
     end
     return nil
 end
+
+------------------------------------------------------------------------
+-- Citizens asleep at home: at curfew, in a lockdown and at night, people
+-- go to a free bed in a housing block and sleep on it till morning
+-- (sv_livingcity.lua sends them home; this puts them to bed and up again)
+------------------------------------------------------------------------
+
+function LC.CitizensSleep() return cvHomeSleep:GetBool() end
+function LC.Bedtime() return LC.Event == "curfew" or LC.Event == "lockdown" or LC.IsNight() end
+
+-- A free bed in a housing block zone: the bed (with .key), or nil.
+function LC.FreeBedIn(z, who)
+    if not z or not LCZ or not LCZ.Contains then return nil end
+    local list = {}
+    for _, a in ipairs(LC.Amenities and LC.Amenities("bed") or {}) do
+        if LCZ.Contains(z, a.pos, 0) then
+            a.key = LC.BedKey(a)
+            if LC.BedFree(a.key, who) then list[#list + 1] = a end
+        end
+    end
+    if #list == 0 then return nil end
+    return list[math.random(#list)]
+end
+
+-- Take a bed for this citizen: where to walk to, or nil. Their own block first, then the nearest with one free.
+function LC.NPCTakeBed(npc, st, zones)
+    if not cvHomeSleep:GetBool() then return nil end
+    for _, z in ipairs(zones) do
+        local a = LC.FreeBedIn(z, npc)
+        local b = a and LC.BedLie(a)
+        if b then
+            LC.BedSleepers[a.key] = npc
+            st.bedKey, st.bedSpot = a.key, b
+            return b.stand or b.top, z, b
+        end
+    end
+    return nil
+end
+
+-- Arrived at their bed: lie down on it. False if they can't (no lying or sitting animation).
+function LC.NPCBedDown(npc, st, now)
+    local b = st.bedSpot
+    if not b or not LC.NPCLieOnBed then LC.NPCBedUp(npc, st) return false end
+    local L = { standAt = npc:GetPos() }
+    if not LC.NPCLieOnBed(npc, L, b) then LC.NPCBedUp(npc, st) return false end
+    st.bedL = L
+    st.ss = L.ss -- (so it goes with them if they're removed: sv_livingcity.lua)
+    st.wakeAt = nil
+    LC.SetState(npc, st, "abed")
+    npc:SetNW2String("lc_doing", L.asleep and "asleep" or "resting")
+    return true
+end
+
+-- Up again (or never got there): the bed's free.
+function LC.NPCBedUp(npc, st)
+    if not st then return end
+    local L = st.bedL
+    if st.bedKey and LC.BedSleepers[st.bedKey] == npc then LC.BedSleepers[st.bedKey] = nil end
+    st.bedKey, st.bedSpot, st.bedL, st.wakeAt = nil, nil, nil, nil
+    if not L then return end
+    if IsValid(L.ss) then
+        L.ss:Fire("CancelSequence")
+        SafeRemoveEntityDelayed(L.ss, 0.5)
+    end
+    if st.ss == L.ss then st.ss = nil end
+    if IsValid(npc) then
+        if L.gunHidden then local w = npc.GetActiveWeapon and npc:GetActiveWeapon() if IsValid(w) and w.SetNoDraw then w:SetNoDraw(false) end end
+        if L.standAt then npc:SetPos(L.standAt + Vector(0, 0, 4)) end -- (up, and off the bed)
+        if L.asleep then npc:SetNW2Bool("lc_eyes_shut", false) end
+        npc:SetNW2String("lc_doing", "")
+        if npc.SetSchedule then npc:SetSchedule(SCHED_IDLE_STAND) end
+    end
+end
+
+-- In bed: asleep till morning, then up, a few at a time, and out into the day.
+function LC.NPCBedThink(npc, st, now)
+    if not (st.bedL and IsValid(st.bedL.ss)) then
+        LC.NPCBedUp(npc, st)
+        LC.SetState(npc, st, "idle")
+        st.untilT = now + 2
+        return
+    end
+    if LC.Bedtime() and cvHomeSleep:GetBool() then st.wakeAt = nil return end
+    st.wakeAt = st.wakeAt or (now + math.Rand(2, 45))
+    if now < st.wakeAt then return end
+    LC.NPCBedUp(npc, st)
+    st.leaving, st.homeBlock = nil, nil
+    LC.SetState(npc, st, "idle")
+    st.untilT = now + math.Rand(2, 6)
+end
+
+-- Hurt in bed: awake at once.
+hook.Add("EntityTakeDamage", "LivingCityBedWake", function(ent, dmg)
+    if not IsValid(ent) or not ent:IsNPC() or dmg:GetDamage() <= 0 then return end
+    local st = LC.NPCs and LC.NPCs[ent]
+    if st and st.state == "abed" then
+        LC.NPCBedUp(ent, st)
+        st.leaving = nil
+        LC.SetState(ent, st, "idle")
+        st.untilT = CurTime() + 1
+    end
+end)

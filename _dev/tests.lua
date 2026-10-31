@@ -1165,6 +1165,7 @@ ok(not IsValid(vend), "removing the point removes the machine")
 LC.AddPoint(Vector(2600, -2500, 0), 0, "dispenser", 0)
 _run(1)
 local dsp = ents.FindByClass("lc_dispenser")[1]
+LC.GiveItem(buyer, "ration_card", 2) -- (each ration takes a card, earned by a shift)
 ok(IsValid(dsp) and LC.UseDispenser(buyer, dsp), "the ration dispenser serves you")
 ok(not LC.UseDispenser(buyer, dsp), "once per allocation")
 
@@ -1462,6 +1463,7 @@ ok(LC.HasItem(forger, "papers_forged") and not LC.HasItem(forger, "papers_blank"
 local hungry = newPlayer("Hungry", "citizen")
 local disp2 = ents.Create("lc_dispenser")
 disp2:SetPos(hungry:GetPos() + Vector(40, 0, 0))
+LC.GiveItem(hungry, "ration_card", 2)
 LC.UseDispenser(hungry, disp2)
 ok(not LC.UseDispenser(hungry, disp2), "the dispenser makes you wait")
 LC.GiveItem(hungry, "ration_forged")
@@ -1837,6 +1839,7 @@ ok(nearSt.line == 1 and nearSt.slotIndex and line.q[nearSt.slotIndex] == nearCit
 local eater = newPlayer("Eater", "citizen")
 eater:SetPos(front)
 eater.lcnRationAt = 0
+LC.GiveItem(eater, "ration_card", 3)
 ok(waitFor(function() return LC.HasItem(eater, "ration") end, 8) and has(eater.chat, "hands you a ration packet"),
     "a player waiting at the front of the line is handed a ration")
 local waiting = line.q[1]
@@ -4550,6 +4553,7 @@ local near = newPlayer("DockNear", "citizen") near.chat = {}
 local far = newPlayer("DockFar", "citizen")
 _run(3)
 near:SetPos(P + Vector(3000, 0, 0)) far:SetPos(P + Vector(9000, 0, 0))
+LC.GiveItem(near, "ration_card", 3) LC.GiveItem(far, "ration_card", 3)
 local docked = LC.DockRations(P + Vector(3200, 0, 0), "Resistance graffiti")
 ok(#docked == 1 and docked[1] == near, "citizens near Resistance activity lose their next ration", tostring(#docked))
 ok(has(near.chat, "next ration allocation is forfeit"), "and are told on the spot")
@@ -6711,6 +6715,7 @@ n:Remove()
 -- rations come out of them
 local eater = newPlayer("StockEater", "citizen")
 eater.lcnRationAt = 0
+LC.GiveItem(eater, "ration_card", 50)
 local before = LC.Stock()
 ok(LC.UseDispenser(eater, nil) and LC.Stock() == before - 1, "every ration handed out is one fewer")
 LC.StockAdd(-LC.Stock() + 40)
@@ -8987,7 +8992,7 @@ ok(new:GetPos():Distance(arrPt.pos) < 120, "where new people arrive", tostring(n
 ok(has(new.chat, "Report to Civil Intake"), "and is told where to go")
 ok(LC.PlayerBlock(new) == nil and LC.AssignBlock(new) == nil, "with no room to their name")
 new.chat = {}
-ok(LC.UseDispenser(new, nil) == false and has(new.chat, "No ration card"), "no papers, no rations")
+ok(LC.UseDispenser(new, nil) == false and has(new.chat, "aren't registered"), "no papers, no rations")
 local okJ, whyJ = LC.SetJob(new, "porter")
 ok(not okJ and whyJ and string.find(whyJ, "registered", 1, true), "no Union job", whyJ)
 new.chat = {}
@@ -9043,13 +9048,13 @@ ok(has(new.chat, "Housing Allocation"), "and told where to ask for a room")
 LC.IntakeFlags(new)
 ok(not new:GetNW2Bool("lc_unreg", true) and new:GetNW2Bool("lc_unhoused", false), "your screen points there next")
 new.chat = {}
-LC.UseDispenser(new, nil)
-ok(not has(new.chat, "No ration card"), "your ration card works now")
+new.lcnRationAt = 0
+ok(LC.UseDispenser(new, nil) == false and has(new.chat, "No ration card") and has(new.chat, "Union shift"), "registered, but no ration card until a shift is worked", new.chat[1])
 local okJ2 = LC.SetJob(new, "porter")
 ok(okJ2, "and the Union will take you on")
 LC.SetJob(new, "", true)
 
-ok(LC.HasItem(new, "id_papers") and LC.HasItem(new, "ration_card"), "your identity papers and ration card are in your pockets")
+ok(LC.HasItem(new, "id_papers") and not LC.HasItem(new, "ration_card"), "your identity papers are in your pockets, and no ration card: that's earned")
 ok(_lastnet("lc_waypoint") ~= nil and _lastnet("lc_waypoint").data[3] == "Housing Allocation", "and Housing Allocation is marked on your screen")
 
 -- a room
@@ -9199,7 +9204,8 @@ old:RemovePData("lc_intake")
 LC.IntakeForget(old)
 old:Spawn()
 Later(1.5)
-ok(LC.HasItem(old, "id_papers") and LC.HasItem(old, "ration_card"), "everyone on the register is handed identity papers and a ration card")
+ok(LC.HasItem(old, "id_papers") and not LC.HasItem(old, "ration_card"), "everyone on the register is handed identity papers (no ration card: that's earned)")
+LC.GiveItem(old, "ration_card")
 ok(has(old.chat, "in your pockets (F2)"), "and told so")
 ok(LCS.Weight("id_papers") == 0 and LCS.Items.id_papers.doc and LCS.Items.ration_card.doc, "they weigh nothing")
 local count = LC.InvCount(old)
@@ -9237,7 +9243,18 @@ LC.TakeItem(old, "ration_card")
 old.lcnRationAt = 0
 old.chat = {}
 LC.UseDispenser(old, nil)
-ok(has(old.chat, "Present your ration card"), "the dispensers want your ration card", old.chat[1])
+ok(has(old.chat, "No ration card"), "the dispensers want a ration card", old.chat[1])
+-- a ration card from a finished shift; each ration takes one, and pays no credits
+local wk = newPlayer("ShiftCardWorker", "citizen")
+Later(0.3)
+wk.chat = {}
+hook.Run("LivingCityQuestComplete", wk, { chain = "shift", title = "Test shift" })
+ok(LC.Inventory(wk).ration_card == 1 and has(wk.chat, "earned a ration card"), "a finished Union shift earns a ration card", wk.chat[1])
+hook.Run("LivingCityQuestComplete", wk, { chain = "rehab", title = "Not a shift" })
+ok(LC.Inventory(wk).ration_card == 1, "other jobs don't")
+wk.lcnRationAt = 0
+local wcr = LC.Credits(wk)
+ok(LC.UseDispenser(wk, nil) == true and not LC.HasItem(wk, "ration_card") and LC.Credits(wk) == wcr, "a ration takes the card, and pays no credits", LC.Credits(wk) - wcr)
 -- Civil Intake replaces them
 old:SetPos(B1 + Vector(40, 0, 0))
 LC.AddCredits(old, 100)
@@ -9245,17 +9262,18 @@ local cr0 = LC.Credits(old)
 net.sent = {}
 LC.UseIntake(old, reg)
 local rec = Payload("lc_intake_ui")
-ok(rec and rec.kind == "register" and rec.papers == false and rec.card == false, "E at Civil Intake, registered: your record, with what's missing", rec and tostring(rec.papers))
+ok(rec and rec.kind == "register" and rec.papers == false and rec.cards == 0, "E at Civil Intake, registered: your record, with what's missing", rec and tostring(rec.papers))
 _netcall("lc_intake_act", old, "papers", 0)
 Later(5)
 ok(LC.HasItem(old, "id_papers") and LC.Credits(old) == cr0 - 10, "new papers, for ten credits", LC.Credits(old) - cr0)
 Later(1)
+old.chat = {}
 _netcall("lc_intake_act", old, "card", 0)
 Later(5)
-ok(LC.HasItem(old, "ration_card") and LC.Credits(old) == cr0 - 25, "a new ration card, for fifteen", LC.Credits(old) - cr0)
+ok(not LC.HasItem(old, "ration_card") and LC.Credits(old) == cr0 - 10 and has(old.chat, "aren't issued here"), "Civil Intake doesn't hand out ration cards", old.chat[1])
 old.chat = {}
 Later(1)
-_netcall("lc_intake_act", old, "card", 0)
+_netcall("lc_intake_act", old, "papers", 0)
 ok(has(old.chat, "already have"), "not twice")
 
 -- the housing register: a request, a crowded block, a transfer
@@ -9844,7 +9862,14 @@ ok(s and s.key == "eat_own" and string.find(s.why, "bread", 1, true), "food in y
 LC.TakeItem(p, "bread", 1)
 p.lcnRationAt = CurTime() + 900
 s = Step()
-ok(s and (s.key == "eat_scrounge" or s.key == "eat_buy"), "no ration due and no food: buy some, or search bins", s and s.key)
+ok(s and (s.key == "eat_scrounge" or s.key == "eat_buy" or s.key == "eat_work"), "no ration due and no food: buy some, work for a ration card, or search bins", s and s.key)
+p:SetNW2String("lcj_job", "porter")
+local cr = LC.Credits(p)
+LC.AddCredits(p, -cr)
+s = Step()
+ok(s and s.key == "eat_work" and s.way == "work", "hungry, broke, with a job and no ration card: work a shift for one", s and s.key)
+LC.AddCredits(p, cr)
+p:SetNW2String("lcj_job", "")
 -- thirsty
 p:SetNW2Float("lcn_hunger", 90)
 p:SetNW2Float("lcn_thirst", 10)
@@ -10496,10 +10521,38 @@ ok(LC.SleepIn(sl, bed), "exhausted: you can sleep any time")
 _run(GetConVar("lc_sleep_seconds"):GetFloat() + 1)
 Tick(1)
 ok(not LC.IsTired(sl) and LC.IsRested(sl) and sl:GetMaxHealth() == max0, "slept: rested, and back to full strength")
+ok(sl:GetNW2Bool("lc_sleeping", false) and sl:GetNW2Vector("lc_bed_top", Vector(0, 0, 0)):Distance(bed:GetPos()) < 80, "lying on the bed (its spot is sent, for the pose and the camera)")
+ok(LC.BedSleepers[LC.BedKey({ ent = bed, pos = bed:GetPos() })] == sl, "and the bed is taken")
+local stoodAt = sl.lcBedFrom
 LC.IsNight = function() return true end
 ok(not LC.SleepIn(sl, bed), "(and you can't sleep again straight away)")
 LC.WakeUp(sl, "jump")
+ok(not sl:GetNW2Bool("lc_sleeping", false) and (not stoodAt or sl:GetPos():Distance(stoodAt) < 10) and LC.BedSleepers[LC.BedKey({ ent = bed, pos = bed:GetPos() })] == nil,
+    "Jump: up, back beside the bed, and it's free again")
+-- citizens at bedtime: a free bed in a housing block, asleep on it till morning
+local bz = LC.AddZone(sl:GetPos() + Vector(0, -600, 0), 300, "block", 31)
+local hb = ents.Create("lc_bed") hb:SetPos(bz.pos + Vector(60, 0, 0)) hb:Spawn()
+local sleeper, sst = LC.SpawnCitizen(bz.pos + Vector(-60, 0, 0))
+sst.leaveAt = nil
+local bedtime = LC.Bedtime
+LC.Bedtime = function() return true end
+LC.StartLeaving(sleeper, sst, false, "test")
+ok(sst.bedKey ~= nil and sleeper:GetNW2String("lc_doing", "") == "going home to bed", "at curfew or night, a citizen heads for a free bed in a housing block", sleeper:GetNW2String("lc_doing", ""))
+for _ = 1, 40 do _run(0.5) if sst.state == "abed" then break end end
+ok(sst.state == "abed" and IsValid(sleeper) and sleeper:GetNW2String("lc_doing", "") == "asleep", "and lies down on it to sleep (not gone)", sst.state)
+local other, ost = LC.SpawnCitizen(bz.pos + Vector(-90, 40, 0))
+ost.leaveAt = nil
+ok(LC.FreeBedIn(bz, other) == nil, "one sleeper to a bed")
+_run(31)
+ok(sst.state == "abed", "asleep all night")
+LC.Bedtime = function() return false end
+for _ = 1, 60 do _run(1) if sst.state ~= "abed" then break end end
+ok(IsValid(sleeper) and sst.state ~= "abed" and sst.bedKey == nil and not sst.leaving, "morning: up again, and out into the day", sst.state)
+LC.Bedtime = bedtime
 LC.IsNight = isNight
+for _, n in ipairs({ sleeper, other }) do if IsValid(n) then n:Remove() end end
+hb:Remove()
+LC.RemoveZone(bz)
 for _, e in ipairs({ loo, tub, bed }) do e:Remove() end
 for _, q in ipairs({ p, sw, sl }) do q:SetPos(Vector(-150000, 150000, 0)) end
 end

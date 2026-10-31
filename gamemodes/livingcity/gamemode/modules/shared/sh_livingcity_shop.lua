@@ -59,7 +59,7 @@ LCS.Items = {
                         use = "papers", useLabel = "Show",
                         desc = "Your name, your citizen number, your block. Show: to whoever you're looking at (Civil Protection units ask), or read them yourself" },
     ration_card     = { name = "Ration card", model = "models/props_c17/paper01.mdl", doc = true, kg = 0, sell = 0,
-                        desc = "Union-issue. The ration dispensers want to see it. Lost? Civil Intake issues another, for a fee" },
+                        desc = "Earned by work: one for each Union shift you finish. A ration dispenser takes one card for each ration" },
     ------------------------------------------------------------------------
     -- Things that change what you can do (see sv_livingcity_underground.lua)
     --   contraband   illegal to carry: searches look for it
