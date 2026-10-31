@@ -2576,6 +2576,9 @@ ok(not LC.ContrabandOf(legal) and not LC.ContrabandOf(table1), "rations and furn
 local raidCop, rcst = LC.Spawners.cop(zb.pos + Vector(150, 0, 0))
 rcst.routeGroup = nil
 ok(LC.StartRaid(1), "a raid can be started on a block")
+ok(LC.Raid and #LC.Raid.units == GetConVar("lc_raid_units"):GetInt(), "a full team goes: units already nearby, and the rest come from just out of sight", LC.Raid and #LC.Raid.units)
+local raidTeam = {}
+for _, u in ipairs(LC.Raid and LC.Raid.units or {}) do if LC.NPCs[u] and LC.NPCs[u].raidSpot then raidTeam[#raidTeam + 1] = u end end
 _run(8)
 ok(rcst.raid ~= nil or LC.Raid == nil, "units take it in turn to walk the block")
 _run(160)
@@ -2585,6 +2588,10 @@ ok(IsValid(legal) and IsValid(table1), "everything else is left alone")
 ok(LC.PlayerIsWanted(raided) and has(raided.chat, "3 contraband items"), "and whoever owned it is wanted, for everything found under their name")
 LC.ClearWanted(raided)
 raidCop:Remove()
+_run(12)
+local stayed = 0
+for _, u in ipairs(raidTeam) do if IsValid(u) then stayed = stayed + 1 end end
+ok(#raidTeam > 0 and stayed == 0, "the team that came for the raid leaves again", #raidTeam .. " came, " .. stayed .. " stayed")
 
 section("A new life")
 ok(true, "(permanent death is covered with the gamemode, above)")

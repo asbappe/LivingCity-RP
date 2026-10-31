@@ -158,36 +158,76 @@ local function Waypoints(zones, from)
     return ordered
 end
 
-local function FreeCops()
+-- Units already standing about near the block (not ones walking over from the far
+-- side of the map: they'd turn up after it was over).
+local NEAR_COPS = 1500
+local function FreeCops(center)
     local out = {}
     for npc, st in pairs(LC.NPCs or {}) do
         if IsValid(npc) and st.role == "cop" and not st.test and not st.raid and not st.questLock
-            and (st.state == "idle" or st.state == "moving") then
+            and st.state == "idle" and npc:GetPos():DistToSqr(center) < NEAR_COPS * NEAR_COPS then
             out[#out + 1] = npc
         end
     end
     return out
 end
 
+local function GiveStops(raid, npc, st, want)
+    local pts = Waypoints(raid.zones, npc:GetPos())
+    if #pts == 0 then return false end
+    -- each unit takes its own share of the stops
+    local share = {}
+    for i = #raid.units % math.max(1, want) + 1, #pts, math.max(1, want) do share[#share + 1] = pts[i] end
+    if #share == 0 then share = pts end
+    st.raid = { owner = raid, pts = share, i = 0, phase = "start" }
+    st.untilT = 0
+    raid.units[#raid.units + 1] = npc
+    if LC.Release then pcall(LC.Release, npc, st) end
+    return true
+end
+
+-- The rest of the team comes from nearby, out of sight, so the raid really
+-- happens where it was announced. They leave the same way when it's over.
+LC.RaidLeaving = LC.RaidLeaving or {} -- [npc] = { spot, since }
+local function SpawnTeam(raid, want)
+    if not LC.SpawnCop or #raid.units >= want then return end
+    local center = raid.zones[1].pos
+    local spot = LC.AlarmSquadSpot and LC.AlarmSquadSpot(center)
+    if not spot then
+        -- nowhere a walk away: a corner of the block itself nobody's looking at (or, failing that, any)
+        local any
+        for _ = 1, 12 do
+            local z = raid.zones[math.random(#raid.zones)]
+            local p = LC.SpotInZone(z)
+            if p then
+                any = any or p
+                if not (LC.IsSeen and LC.IsSeen(p + Vector(0, 0, 40))) then spot = p break end
+            end
+        end
+        spot = spot or any
+    end
+    if not spot then return end
+    local n = 0
+    while #raid.units < want and n < want * 2 do
+        n = n + 1
+        local npc, st = LC.SpawnCop(spot + Vector(math.cos(n * 2) * 40, math.sin(n * 2) * 40, 4))
+        if IsValid(npc) and st then
+            st.unmanaged, st.leaveAt, st.routeGroup = true, nil, nil -- (on top of the city's own numbers)
+            st.raidSpot = spot
+            if not GiveStops(raid, npc, st, want) then npc:Remove() break end
+        end
+    end
+end
+
 local function Recruit(raid)
     local want = cvUnits:GetInt()
     if #raid.units >= want then return end
     local center = raid.zones[1].pos
-    local cops = FreeCops()
+    local cops = FreeCops(center)
     table.sort(cops, function(a, b) return a:GetPos():DistToSqr(center) < b:GetPos():DistToSqr(center) end)
     for _, npc in ipairs(cops) do
         if #raid.units >= want then break end
-        local st = LC.NPCs[npc]
-        local pts = Waypoints(raid.zones, npc:GetPos())
-        if #pts > 0 then
-            -- each unit takes its own share of the stops
-            local share = {}
-            for i = #raid.units % math.max(1, want) + 1, #pts, math.max(1, want) do share[#share + 1] = pts[i] end
-            if #share == 0 then share = pts end
-            st.raid = { owner = raid, pts = share, i = 0, phase = "start" }
-            raid.units[#raid.units + 1] = npc
-            if LC.Release then pcall(LC.Release, npc, st) end
-        end
+        GiveStops(raid, npc, LC.NPCs[npc], want)
     end
 end
 
@@ -214,7 +254,7 @@ local function Scan(npc, raid, pos)
     for _, ply in ipairs(player.GetAll()) do
         if ply:Alive() and not raid.frisked[ply] and ply:GetPos():DistToSqr(pos) < (SCAN_RADIUS + 50) ^ 2
             and LC.InBlock(ply:GetPos(), raid.block) and not LC.PlayerIsCP(ply)
-            and not (LC.InCustody and LC.InCustody(ply)) then
+            and not (LC.InCustody and LC.InCustody(ply)) and not (LC.EditorHeld and LC.EditorHeld(ply)) then
             raid.frisked[ply] = true
             ply:ChatPrint("[Civil Protection] Block inspection. Stand still and cooperate.")
             ply:SetNW2Float("lcu_stop_until", CurTime() + 4)
@@ -228,7 +268,13 @@ local function Finish(raid)
     LC.Raid = nil
     for _, npc in ipairs(raid.units) do
         local st = IsValid(npc) and LC.NPCs[npc]
-        if st then st.raid = nil end
+        if st then
+            st.raid = nil
+            if st.raidSpot then -- the team that came for it walks back off
+                LC.RaidLeaving[npc] = { spot = st.raidSpot, since = CurTime() }
+                if LC.GoTo then LC.GoTo(npc, st, st.raidSpot, false) end
+            end
+        end
     end
 
     -- hidden stashes of the block's residents
@@ -298,6 +344,12 @@ function LC.StartRaid(block)
     LC.Raid = raid
     LC.ExtraCops = math.max(LC.ExtraCops or 0, 2)
     Recruit(raid)
+    SpawnTeam(raid, cvUnits:GetInt())
+    if #raid.units == 0 then
+        LC.Raid = nil
+        return false, "No Civil Protection units could get to " .. LC.BlockName(block) .. "."
+    end
+    LC.Log("info", string.format("Raid on block %d: %d unit(s) sent", block, #raid.units))
     for _, ply in ipairs(player.GetAll()) do
         if LC.PlayerBlock(ply) == block then
             ply:ChatPrint("[Civil Protection] Inspection of " .. LC.BlockName(block) .. " is under way. Stay in your residence.")
@@ -338,7 +390,7 @@ function LC.RaidThink(npc, st, now)
         return false
     end
     r.phase = "scanning"
-    if not LC.GoTo(npc, st, pt, false, { kind = "raidpoint", pos = pt, yaw = npc:GetAngles().y }) then
+    if not LC.GoTo(npc, st, pt, r.i == 1, { kind = "raidpoint", pos = pt, yaw = npc:GetAngles().y }) then
         r.phase = "searched" -- can't reach this stop; try the next
         st.untilT = now + 0.5
     end
@@ -346,9 +398,19 @@ function LC.RaidThink(npc, st, now)
 end
 
 timer.Create("LivingCityRaids", 2, 0, function()
+    local now = CurTime()
+    -- the team that came for a raid is gone once it's out of sight
+    for npc, l in pairs(LC.RaidLeaving) do
+        if not IsValid(npc) then
+            LC.RaidLeaving[npc] = nil
+        elseif now - l.since > 4 and not (LC.Raid and LC.NPCs[npc] and LC.NPCs[npc].raid)
+            and (not (LC.IsSeen and LC.IsSeen(npc:GetPos() + Vector(0, 0, 40))) or now - l.since > 180) then
+            LC.RaidLeaving[npc] = nil
+            npc:Remove()
+        end
+    end
     local raid = LC.Raid
     if not raid then return end
-    local now = CurTime()
     if now - raid.startT < 30 then Recruit(raid) end
     local alive = false
     for _, u in ipairs(raid.units) do
@@ -361,6 +423,10 @@ hook.Add("LivingCityEventEnded", "LivingCityRaids", function(name) if name == "r
 hook.Add("LivingCityEventStarted", "LivingCityRaids", function(name)
     if name == "raid" then
         local ok, why = LC.StartRaid()
-        if not ok then LC.Log("info", "Raid not started: " .. tostring(why)) end
+        if not ok then
+            -- nobody to send: no raid, and no announcement of one (sv_livingcity_events.lua checks)
+            LC.Log("info", "Raid not started: " .. tostring(why))
+            if LC.EndEvent then LC.EndEvent(true) end
+        end
     end
 end)

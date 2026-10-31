@@ -1140,7 +1140,8 @@ local function StagingSpot(z)
         local p = LC.RandomWanderPos("cop")
         if p then
             local d = p:Distance(z.pos)
-            if d > z.r + 400 and d < z.r + 2500 and not LC.IsSeen(p + UP) and LC.ClearSpot(p) then return p end
+            if d > z.r + 400 and d < z.r + 2500 and not LC.IsSeen(p + UP) and LC.ClearSpot(p)
+                and (not LC.NavReachable or LC.NavReachable(p, z.pos)) then return p end -- (and a way in from there)
         end
     end
     for _ = 1, 20 do
@@ -1323,8 +1324,8 @@ local function RunSkirmish(sk, now)
         for _, u in ipairs(sk.units) do
             local st = IsValid(u) and LC.NPCs[u]
             if st and Alive(u) then
-                if st.state == "idle" or st.state == "moving" then LC.SetState(u, st, "sweep") end
-                if st.state == "sweep" then
+                if st.state == "idle" then LC.SetState(u, st, "sweep") end
+                if st.state == "sweep" or st.state == "moving" then
                     local target
                     for r, rst in pairs(LC.NPCs) do
                         if IsValid(r) and rst.role == "rebel" and r:Health() > 0 and CanSee(u, r, 1600) then target = r break end
@@ -1334,11 +1335,14 @@ local function RunSkirmish(sk, now)
                         st.provokedBy, st.provokedUntil = target, now + 120
                         local rst = LC.NPCs[target]
                         if rst and not rst.foe then SetFoe(target, rst, u, now) end
-                    elseif now > (st.nextSweepMove or 0) then
+                    elseif st.state == "sweep" and now > (st.nextSweepMove or 0) then
+                        -- along the city's own routes (the engine alone often finds no way in)
                         st.nextSweepMove = now + 8
                         local spot = LC.SpotInZone(sk.zone) or sk.zone.pos
-                        u:SetLastPosition(spot)
-                        u:SetSchedule(SCHED_FORCED_GO_RUN)
+                        if not (LC.GoTo and LC.GoTo(u, st, spot, true)) then
+                            u:SetLastPosition(spot)
+                            u:SetSchedule(SCHED_FORCED_GO_RUN)
+                        end
                     end
                 end
             end
@@ -1350,6 +1354,17 @@ local function RunSkirmish(sk, now)
                 sk.rebels[#sk.rebels + 1] = r
             end
         end
+    end
+    if sk.kind == "sweep" and not sk.arrived then
+        for _, u in ipairs(sk.units) do
+            if IsValid(u) and Alive(u) and u:GetPos():DistToSqr(sk.zone.pos) < (sk.zone.r + 200) ^ 2 then
+                sk.arrived = true
+                sk.ends = math.max(sk.ends, now + 120) -- (a long walk in doesn't eat the sweep)
+                break
+            end
+        end
+        if not sk.arrived and now - sk.started > 300 then return EndSkirmish(sk, "never got there") end
+        if not sk.arrived then return end
     end
     if now > sk.ends then EndSkirmish(sk, "time") end
 end

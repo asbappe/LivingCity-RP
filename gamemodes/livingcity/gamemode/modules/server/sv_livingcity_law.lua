@@ -99,6 +99,7 @@ end)
 function LC.ReportCrime(ply, reason, seconds)
     if not IsValid(ply) or not ply:IsPlayer() then return false end
     if LC.EndingSession and LC.EndingSession() then return false end -- (the city's ending: nobody's booked for anything now)
+    if LC.EditorHeld and LC.EditorHeld(ply) then return false end -- (an admin with the editor tool out is at work)
     local handled = hook.Run("LivingCityCrime", ply, reason)
     if handled ~= nil then return handled == true end
     if LC.PlayerIsCP(ply) then return false end

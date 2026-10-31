@@ -773,6 +773,7 @@ local function Stoppable(ply, now)
         and not LC.PlayerIsWanted(ply) -- the wanted get chased, not frisked
         and not (LC.InRebelZone and LC.InRebelZone(ply:GetPos()))
         and not (LC.InCombat and LC.InCombat(ply))
+        and not (LC.EditorHeld and LC.EditorHeld(ply)) -- (an admin at work with the editor tool)
 end
 
 local function CopFree(st)

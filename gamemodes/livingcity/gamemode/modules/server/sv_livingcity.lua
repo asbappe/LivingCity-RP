@@ -223,6 +223,14 @@ local function FarFromPlayers(pos, dist)
 end
 LC.FarFromPlayers = FarFromPlayers
 
+-- An admin with the Living City editor tool in hand is working on the city, not
+-- living in it: no hunger or thirst, and the units leave them alone.
+function LC.EditorHeld(ply)
+    if not IsValid(ply) or not ply:IsPlayer() or not ply:IsAdmin() then return false end
+    local wep = ply:GetActiveWeapon()
+    return IsValid(wep) and wep:GetClass() == "gmod_tool" and wep.GetMode ~= nil and wep:GetMode() == "livingcity_editor"
+end
+
 -- Could any living player see this spot right now (through their own eyes, or a scanner's)?
 function LC.IsSeen(pos)
     for _, ply in ipairs(player.GetAll()) do
@@ -2030,14 +2038,15 @@ local function ThinkSecurity(npc, st, now)
                     and not (LC.DisguisedAsCP and LC.DisguisedAsCP(ply))
                     and not (LC.Stops and LC.Stops[ply]) and (ply.lcCopTalkUntil or 0) < now
                     and not (LC.QuestWantsCop and LC.QuestWantsCop(ply))
-                    and not (LC.EscortCovers and LC.EscortCovers(ply)) then -- (a worker with an escort has business here)
+                    and not (LC.EscortCovers and LC.EscortCovers(ply)) -- (a worker with an escort has business here)
+                    and not LC.EditorHeld(ply) then
                     LC.CopProvoked(npc, st, ply, now)
                     st.nextWarn = now + 4
                     break
                 end
             end
         end
-        if now > st.nextInspect and (s == "idle" or s == "moving") and not st.raid and not st.npcWork then
+        if now > st.nextInspect and (s == "idle" or s == "moving") and not st.raid and not st.npcWork and not st.skirmish then
             TryStartInspection(npc, st, now)
             if st.state ~= "idle" and st.state ~= "moving" then return end
         end
@@ -2492,6 +2501,7 @@ function LC.MakeOneHostile(npc, st, target)
 end
 
 function LC.MakeCopsHostile(target, origin, radius)
+    if LC.EditorHeld(target) then return end -- (an admin at work)
     local r2 = radius and radius * radius
     for npc, st in pairs(LC.NPCs) do
         if IsValid(npc) and IsSecurity(st) and st.enemy ~= target and (not r2 or npc:GetPos():DistToSqr(origin) < r2) then

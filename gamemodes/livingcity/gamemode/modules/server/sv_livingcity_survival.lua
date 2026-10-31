@@ -239,6 +239,7 @@ local function Exempt(ply)
     if LC.Prisoners and LC.Prisoners[ply] then return true end
     if LCF.IsOverwatch(ply) then return true end
     if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) then return true end -- (the Combine feed what they keep)
+    if LC.EditorHeld and LC.EditorHeld(ply) then return true end -- (an admin at work with the editor tool)
     return false
 end
 

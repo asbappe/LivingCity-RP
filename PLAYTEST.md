@@ -38,6 +38,10 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **Civil Protection:** pat-downs and breach raids.
   Notes:
+- [ ] **Block raid you can see:** `lc_event raid`, go to the block it names: units are there within a minute, walk it stop by stop, and leave when it's over. A sweep (`lc_skirmish sweep`): the team really reaches rebel territory and fights.
+  Notes:
+- [ ] **Editor tool in hand (admin):** hunger and thirst stay put, and units don't stop, frisk or chase you.
+  Notes:
 - [ ] **Ration Production** (was Ration Kitchen): the sealing line, supply runs, the count against the register, forged ration cards at the counter.
   Notes:
 - [ ] **Every job staffed:** the city's NPCs cover every job, more of them as the city grows.

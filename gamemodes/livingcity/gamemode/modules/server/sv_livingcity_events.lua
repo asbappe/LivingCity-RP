@@ -307,6 +307,7 @@ function LC.StartEvent(name, minutes)
 
     LC.Log("info", string.format("Event started: %s (%s min)", name, tostring(minutes)))
     hook.Run("LivingCityEventStarted", name, minutes)
+    if LC.Event ~= name then return false end -- (it couldn't happen after all, e.g. no units for a raid: say nothing)
     LC.Announce(name) -- after the event has set itself up, so the explanation can say which block
     return true
 end
