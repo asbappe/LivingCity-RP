@@ -64,6 +64,7 @@ chat command /changeclothes
 chat command /characters
 chat command /chars
 chat command /cheer
+chat command /copyrecords
 chat command /cower
 chat command /cuff
 chat command /cut
@@ -85,6 +86,7 @@ chat command /laws
 chat command /lean
 chat command /lie
 chat command /lock
+chat command /loserecord
 chat command /meet
 chat command /nod
 chat command /outfits
@@ -95,6 +97,7 @@ chat command /rationbreak
 chat command /records
 chat command /rent
 chat command /request
+chat command /reveal
 chat command /salute
 chat command /scanner
 chat command /scout
@@ -102,12 +105,14 @@ chat command /setlaw
 chat command /shake
 chat command /showpapers
 chat command /sit
+chat command /skim
 chat command /sleep
 chat command /socio
 chat command /stand
 chat command /struggle
 chat command /takekey
 chat command /tie
+chat command /tipoff
 chat command /uncuff
 chat command /unlock
 chat command /unrent
@@ -318,6 +323,7 @@ item id_papers
 item intel_checkpoint
 item intel_nexus
 item intel_patrol
+item intel_records
 item jammer
 item keepsake
 item lockpick
@@ -418,6 +424,7 @@ setting lc_containment = 1
 setting lc_containment_ammo = 1
 setting lc_containment_pay = 3
 setting lc_cops = 4
+setting lc_cp_clerk_shifts = 5
 setting lc_cp_coupons = 8
 setting lc_cp_min_standing = 100
 setting lc_cp_scale = 1.05
@@ -466,7 +473,7 @@ setting lc_ending_bodies = 120
 setting lc_ending_bus_bpm = 138
 setting lc_ending_bus_combine = 6
 setting lc_ending_bus_sections = 27:fly,149:drive,176:fast,220:end
-setting lc_ending_cooldown = 60
+setting lc_ending_cooldown = 180
 setting lc_ending_edict_limit = 7000
 setting lc_ending_fire_bpm = 100
 setting lc_ending_fire_crowd = 10
@@ -583,6 +590,8 @@ setting lc_infest_spread_minutes = 10
 setting lc_informants = 1
 setting lc_inherit_max = 200
 setting lc_inherit_pct = 25
+setting lc_insider = 1
+setting lc_insider_privacy = 700
 setting lc_intake = 1
 setting lc_intake_grace = 10
 setting lc_intake_secs = 8
@@ -824,6 +833,7 @@ setting lc_view_bob = 1
 setting lc_view_bob_amount = 100
 setting lc_voice_range = 900
 setting lc_vort_charge_minutes = 10
+setting lc_vort_slaves = 2
 setting lc_walk_speed = 110
 setting lc_walkway_clear = 100
 setting lc_wanted_lost = 30

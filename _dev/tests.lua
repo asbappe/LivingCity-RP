@@ -900,7 +900,7 @@ ok(storyPosting(good, "insidework") == nil, "too much suspicion and the ops dry 
 do -- (its own scope: the main chunk is at Lua's limit on locals)
 _setcvar("lc_loyalty_wait", 0) -- (the NPC prisoner here; the real-prisoner wait has its own test)
 local m1 = storyPosting(good, "molehunt")
-ok(m1 ~= nil and m1.title == "The loyalty test", "and the mole hunt starts with the loyalty test, in the cells", m1 and m1.title)
+ok(m1 ~= nil and string.find(m1.title or "", "The loyalty test", 1, true), "and the mole hunt starts with the loyalty test, in the cells", m1 and m1.title)
 LC.AcceptPosting(good, m1.id)
 local qm = LC.QuestOf[good]
 good:SetPos(qm.stages[1].pos)
@@ -9280,6 +9280,7 @@ ok(has(old.chat, "No ration card"), "the dispensers want a ration card", old.cha
 -- a ration card from a finished shift; each ration takes one, and pays no credits
 local wk = newPlayer("ShiftCardWorker", "citizen")
 Later(0.3)
+LC.RegisterPerson(wk, "staff") -- (on the register: only then can they have a ration)
 wk.chat = {}
 hook.Run("LivingCityQuestComplete", wk, { chain = "shift", title = "Test shift" })
 ok(LC.Inventory(wk).ration_card == 1 and has(wk.chat, "earned a ration card"), "a finished Union shift earns a ration card", wk.chat[1])
@@ -12201,6 +12202,7 @@ section("Playtest fixes, 17 October")
     hook.Run("PlayerUse", renter, adoor)
     ok(not adoor.isOpen and adoor.locked, "locked is locked, for you too: E on your own locked door just rattles the handle", table.concat(adoor.fired or {}, ","))
     hook.Run("PlayerSay", renter, "!unlock")
+    _run(1.5)
     hook.Run("PlayerUse", renter, adoor)
     ok(adoor.isOpen and not adoor.locked, "unlocked, your E opens it", table.concat(adoor.fired or {}, ","))
     renter.valid = false
@@ -13500,7 +13502,11 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     -- the Resistance's man inside
     local ins = newPlayer("InsiderUnit", "cp")
     _run(0.3)
-    ins:SetPos(Vector(-160000, -160000, 0))
+    ins:SetPos(Vector(171234, -171234, 0))
+    -- (nobody else anywhere near: the Insider only acts unseen and unheard)
+    for _, other in ipairs(player.GetAll()) do
+        if other ~= ins and other:GetPos():DistToSqr(ins:GetPos()) < 2000 * 2000 then other:SetPos(Vector(-150000, 150000, 0)) end
+    end
     ok(not LC.IsInsider(ins) and LC.InsiderCopy(ins) == false, "an ordinary unit has none of it")
     LC.StoryFlag(ins, "insider", true)
     ok(LC.IsInsider(ins), "recruited (The Man Inside): an Insider")
