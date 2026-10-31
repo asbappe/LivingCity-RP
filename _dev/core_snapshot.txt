@@ -65,6 +65,7 @@ chat command /characters
 chat command /chars
 chat command /cheer
 chat command /cower
+chat command /cuff
 chat command /cut
 chat command /dellaw
 chat command /dropship
@@ -107,6 +108,7 @@ chat command /stand
 chat command /struggle
 chat command /takekey
 chat command /tie
+chat command /uncuff
 chat command /unlock
 chat command /unrent
 chat command /unshackle
