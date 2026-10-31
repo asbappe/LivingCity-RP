@@ -225,11 +225,11 @@ function LC.RegisterPerson(ply, how)
     end
     local n = LC.PlayerBlock and LC.PlayerBlock(ply)
     if LC.AwaitingHousing(ply) and HasDesk("housing") then
-        ply:ChatPrint("[Civil Intake] Next: Housing Allocation, for a room. It's marked on your screen.")
+        ply:ChatPrint("[Civil Intake] Next, go to Housing Allocation to get a room. It's marked on your screen.")
         if LC.WaypointTo then LC.WaypointTo(ply, "housing") end
         if LC.Hint then LC.Hint(ply, "intake_housing") end
     elseif n then
-        ply:ChatPrint("[Civil Intake] Your file already lists a room: " .. LC.BlockName(n) .. ". Housing Allocation can tell you more.")
+        ply:ChatPrint("[Civil Intake] You already have a room: " .. LC.BlockName(n) .. ". Ask at Housing Allocation if you want to know more.")
     elseif LC.AssignBlock then
         n = LC.AssignBlock(ply, false, true) -- (no housing desk here: a room comes with the papers)
         if n then
@@ -290,12 +290,12 @@ function LC.HousePerson(ply, pref)
     if n then
         SetBlock(ply, n, "allocation")
         if granted == false then
-            ply:ChatPrint("[Housing Allocation] " .. LC.BlockName(tonumber(pref) or 0) .. " is full; your request was declined. Assigned: a room in " .. LC.BlockName(n) .. ".")
+            ply:ChatPrint("[Housing Allocation] " .. LC.BlockName(tonumber(pref) or 0) .. " is full, so your request was declined. You've been given a room in " .. LC.BlockName(n) .. ".")
         end
-        ply:ChatPrint("[Housing Allocation] Approved: a room in " .. LC.BlockName(n) .. ". It's marked on your screen. Curfew finds you at home from now on.")
+        ply:ChatPrint("[Housing Allocation] Approved: a room in " .. LC.BlockName(n) .. ". It's marked on your screen. From now on, go home there when curfew starts.")
         if LC.WaypointTo then LC.WaypointTo(ply, "home") end
     else
-        ply:ChatPrint("[Housing Allocation] No rooms on file in this city.")
+        ply:ChatPrint("[Housing Allocation] This city has no rooms to give out.")
     end
     Flags(ply)
     hook.Run("LivingCityHoused", ply, n)
@@ -305,12 +305,12 @@ end
 -- A housed citizen moving to another block.
 function LC.CanTransfer(ply)
     local n = LC.PlayerBlock and LC.PlayerBlock(ply)
-    if not n then return false, "You have no room to transfer from." end
+    if not n then return false, "You have no room to move from." end
     if LC.Standing and LC.Standing(ply) < TRANSFER_STANDING then
         return false, "Transfers are for citizens in good standing (" .. TRANSFER_STANDING .. " or more)."
     end
     local wait = (tonumber(ply:GetPData("lc_transfer_at", 0)) or 0) + TRANSFER_WAIT - os.time()
-    if wait > 0 then return false, string.format("Your last transfer is too recent. Ask again in %d minutes.", math.ceil(wait / 60)), wait end
+    if wait > 0 then return false, string.format("You moved blocks too recently. Ask again in %d minutes.", math.ceil(wait / 60)), wait end
     return true
 end
 
@@ -319,9 +319,9 @@ function LC.TransferPerson(ply, pref)
     if not ok then ply:ChatPrint("[Housing Allocation] " .. why) return nil end
     local from = LC.PlayerBlock(ply)
     local n, granted = LC.ChooseBlock(ply, pref, from)
-    if not n then ply:ChatPrint("[Housing Allocation] There's nowhere to transfer you to.") return nil end
+    if not n then ply:ChatPrint("[Housing Allocation] There's no other block to move you to.") return nil end
     if granted == false then
-        ply:ChatPrint("[Housing Allocation] Transfer declined: " .. LC.BlockName(tonumber(pref) or 0) .. " is full. You stay in " .. LC.BlockName(from) .. ".")
+        ply:ChatPrint("[Housing Allocation] Transfer declined: " .. LC.BlockName(tonumber(pref) or 0) .. " is full, so you can't move there. You stay in " .. LC.BlockName(from) .. ".")
         return nil
     end
     SetBlock(ply, n, "transfer")
@@ -348,10 +348,10 @@ LC.IntakeBusyWith = BusyWith
 local Jobs = {} -- [ply] = { ent, what, untilT, beep }
 
 local DOING = {
-    register = { "Processing your registration", "[Civil Intake] Stand still. Processing." },
-    housing = { "Searching the housing register", "[Housing Allocation] Stand still. Searching the housing register." },
-    transfer = { "Processing your transfer request", "[Housing Allocation] Stand still. Processing your transfer request." },
-    papers = { "Printing your identity papers", "[Civil Intake] Stand still. Printing new papers." },
+    register = { "Processing your registration", "[Civil Intake] Stand still next to the terminal while it registers you." },
+    housing = { "Searching the housing register", "[Housing Allocation] Stand still next to the terminal while it finds you a room." },
+    transfer = { "Processing your transfer request", "[Housing Allocation] Stand still next to the terminal while it processes your move." },
+    papers = { "Printing your identity papers", "[Civil Intake] Stand still next to the terminal while it prints your new papers." },
 }
 
 local function Process(ply, ent, what, data)
@@ -376,7 +376,7 @@ local function Finish(ply, j)
         local id, fee = "id_papers", cvPapersFee:GetInt()
         if LC.HasItem(ply, id) then return end
         if fee > 0 and LC.Credits and LC.Credits(ply) < fee then
-            ply:ChatPrint("[Civil Intake] Insufficient credits. The replacement costs " .. fee .. ".")
+            ply:ChatPrint("[Civil Intake] You don't have enough credits. New papers cost " .. fee .. ".")
             return
         end
         if fee > 0 and LC.AddCredits then LC.AddCredits(ply, -fee, "replacement " .. j.what) end
@@ -406,13 +406,13 @@ function LC.UseIntake(ply, ent)
     local kind = Kind(ent)
     local title = kind == "housing" and "[Housing Allocation] " or "[Civil Intake] "
     if not cvOn:GetBool() then
-        return ply:ChatPrint(title .. "The screen reads CLOSED. New arrivals are registered as they come in.")
+        return ply:ChatPrint(title .. "The screen says CLOSED. In this city, new arrivals are registered automatically.")
     end
     if Jobs[ply] then return end -- (already being processed)
     if LC.PlayerIsCP and LC.PlayerIsCP(ply) then
         return ply:ChatPrint(title .. string.format("%d waiting in line.", QueueCount(ent)))
     end
-    if not Papered(ply) then return ply:ChatPrint(title .. "The terminal only processes citizens.") end
+    if not Papered(ply) then return ply:ChatPrint(title .. "This terminal is only for citizens.") end
     -- the registered (and anyone at Housing Allocation): the terminal's own screen
     if kind ~= "register" or not LC.IntakePending(ply) then return LC.SendDesk(ply, ent) end
     local who = BusyWith(ent)
@@ -474,9 +474,9 @@ function LC.DeskAction(ply, ent, action, arg)
         return false
     end
     if kind == "housing" and (action == "apply" or action == "transfer") then
-        if LC.IntakePending(ply) then ply:ChatPrint(title .. "No record of you. Register at Civil Intake first.") return false end
+        if LC.IntakePending(ply) then ply:ChatPrint(title .. "You're not registered. Register at Civil Intake first.") return false end
         if not LC.HasItem(ply, "id_papers") then
-            ply:ChatPrint(title .. "Present your identity papers. You have none on you: Civil Intake replaces lost papers.")
+            ply:ChatPrint(title .. "Present your identity papers. You have none on you: Civil Intake can give you new ones.")
             return false
         end
         if action == "apply" then
@@ -498,7 +498,7 @@ function LC.DeskAction(ply, ent, action, arg)
         if LC.HasItem(ply, "id_papers") then ply:ChatPrint(title .. "You already have your papers on you.") return false end
         local fee = cvPapersFee:GetInt()
         if fee > 0 and LC.Credits and LC.Credits(ply) < fee then
-            ply:ChatPrint(title .. "A replacement costs " .. fee .. " credits. You don't have them.")
+            ply:ChatPrint(title .. "New papers cost " .. fee .. " credits, and you don't have enough.")
             return false
         end
         Process(ply, ent, action)
@@ -518,7 +518,7 @@ net.Receive("lc_intake_act", function(_, ply)
     end
     local ent = ply.lcDeskEnt
     if not IsValid(ent) or ply:GetPos():DistToSqr(ent:GetPos()) > (NEAR + 60) * (NEAR + 60) then
-        return ply:ChatPrint("[Civil Intake] Step back up to the terminal.")
+        return ply:ChatPrint("[Civil Intake] Go back and stand next to the terminal.")
     end
     LC.DeskAction(ply, ent, action, arg)
 end)
@@ -528,11 +528,11 @@ function LC.IntakeFormCheck(ply, desc)
     local ent = ply.lcIntakeTerm
     if not IsValid(ent) then return true end
     if ply:GetPos():DistToSqr(ent:GetPos()) > (NEAR + 60) * (NEAR + 60) then
-        return false, "Step back up to the terminal to enter your details."
+        return false, "Stand next to the terminal to fill in your details."
     end
     desc = string.Trim(tostring(desc or ""))
-    if #desc < 8 then return false, "Describe yourself for the register: how a stranger would know you (8 characters at least)." end
-    if #desc > 120 then return false, "A shorter description, please (120 characters at most)." end
+    if #desc < 8 then return false, "Describe yourself: what a stranger would notice about you (at least 8 characters)." end
+    if #desc > 120 then return false, "Your description is too long (120 characters at most)." end
     return true
 end
 
@@ -561,7 +561,7 @@ timer.Create("LivingCityIntake", 0.25, 0, function()
             EndJob(ply, j)
         elseif ply:GetPos():DistToSqr(j.ent:GetPos()) > NEAR * NEAR then
             j.ent:EmitSound("buttons/combine_button_locked.wav", 65)
-            ply:ChatPrint("[Civil Intake] You walked away from the terminal. Start again.")
+            ply:ChatPrint("[Civil Intake] You walked away from the terminal, so it stopped. Go back to it to carry on.")
             EndJob(ply, j)
         elseif now >= j.untilT then
             EndJob(ply, j)
@@ -635,9 +635,9 @@ hook.Add("PlayerSpawn", "LivingCityIntake", function(ply)
         if ply.lcArrive then
             ply.lcArrive = nil
             if LC.IntakePending(ply) then
-                ply:ChatPrint("[Civil Intake] You've arrived in the city with nothing: no papers, no room, no ration card. Report to Civil Intake to register. Your screen points the way.")
+                ply:ChatPrint("[Civil Intake] You've arrived in the city with nothing: no papers and no room. Report to Civil Intake to register. Your screen shows the way.")
             else
-                ply:ChatPrint("[Housing Allocation] You've arrived in the city with nowhere to sleep. Ask Housing Allocation for a room. Your screen points the way.")
+                ply:ChatPrint("[Housing Allocation] You have nowhere to sleep yet. Go to Housing Allocation and ask for a room. Your screen shows the way.")
             end
             if not first and LC.AnnounceWelcome then LC.AnnounceWelcome(ply) end -- (someone joining hears it anyway)
         end
@@ -676,9 +676,9 @@ end
 hook.Add("LivingCitySearched", "LivingCityIntake", function(searcher, target)
     if not (IsValid(searcher) and searcher:IsPlayer() and IsValid(target) and target:IsPlayer()) then return end
     if LC.IntakePending(target) then
-        searcher:ChatPrint("[Records] No papers: not on the register. New arrivals report to Civil Intake.")
+        searcher:ChatPrint("[Records] No papers, and not registered: a new arrival who has to register at Civil Intake.")
     elseif Papered(target) and Documented(target) and not LC.HasItem(target, "id_papers") and not target.lcIdentity then
-        searcher:ChatPrint("[Records] On the register, but carrying no papers.")
+        searcher:ChatPrint("[Records] Registered, but not carrying their papers.")
     end
 end)
 
@@ -834,7 +834,7 @@ function LC.PapersInfo(ply)
     local n = LC.PlayerBlock and LC.PlayerBlock(ply)
     local t = {
         name = LC.CharacterName and LC.CharacterName(ply) or ply:Nick(), cid = ply:GetNW2String("lc_cid", ""),
-        block = n and LC.BlockName(n) or (LC.AwaitingHousing(ply) and "None yet: Housing Allocation" or "None on file"),
+        block = n and LC.BlockName(n) or (LC.AwaitingHousing(ply) and "None yet (ask Housing Allocation)" or "None on file"),
         desc = ply:GetNW2String("lc_desc", ""), cards = LC.RationCards(ply),
         model = ply:GetModel(),
         stalker = (LC.PlayerIsStalker and LC.PlayerIsStalker(ply)) or nil, -- (stamped across: Combine property)
@@ -856,7 +856,7 @@ function LC.ShowPapers(ply)
     if not IsValid(ply) then return false end
     if LC.IntakePending(ply) then return false, "[Papers] You have none. Report to Civil Intake to register." end
     local has = LC.HasItem(ply, "id_papers") or ply.lcIdentity ~= nil
-    if not has then return false, "[Papers] You have no papers on you. Civil Intake replaces lost papers." end
+    if not has then return false, "[Papers] You have no papers on you. Civil Intake can give you new ones." end
     local tr = ply:GetEyeTrace()
     local other = tr and tr.Entity
     local info = LC.PapersInfo(ply)
@@ -929,5 +929,5 @@ concommand.Add("lc_unregister", function(ply, _, args)
     target.lcIntakeState = nil
     target.lcIntakeSince = CurTime()
     Flags(target)
-    target:ChatPrint("[Living City] Staff sent you back through Civil Intake: register, then ask Housing Allocation for a room.")
+    target:ChatPrint("[Living City] Staff have unregistered you. Register again at Civil Intake, then ask Housing Allocation for a room.")
 end)

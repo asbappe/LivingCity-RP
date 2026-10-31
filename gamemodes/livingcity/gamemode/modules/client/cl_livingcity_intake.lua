@@ -74,7 +74,7 @@ hook.Add("HUDPaint", "LivingCityIntake", function()
         draw.SimpleText(ply:GetNW2String("lc_intake_doing", "Processing") .. "...", "DermaDefaultBold", cx, cy - 13, BLUE, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         draw.RoundedBox(2, cx - 170, cy + 2, 340, 10, Color(40, 44, 50, 230))
         draw.RoundedBox(2, cx - 170, cy + 2, 340 * frac, 10, BLUE)
-        draw.SimpleText("Stay at the terminal", "DefaultSmall", cx, cy + 20, DIM, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        draw.SimpleText("Stay next to the terminal", "DefaultSmall", cx, cy + 20, DIM, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     end
 
     local step = LC_CL.IntakeStep(ply)
@@ -104,7 +104,7 @@ function LC_CL.DrawIntakeSign(ent)
     surface.SetDrawColor(BLUE.r, BLUE.g, BLUE.b, 180)
     surface.DrawOutlinedRect(-300, -70, 600, 140, 3)
     draw.SimpleText(housing and "HOUSING ALLOCATION" or "CIVIL INTAKE", "LCIntakeSign", 0, -24, BLUE, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-    draw.SimpleText(housing and "Registered arrivals: request a room" or "New arrivals: registration", "LCIntakeSignSmall", 0, 30, INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    draw.SimpleText(housing and "Registered? Ask for a room here" or "New here? Register here", "LCIntakeSignSmall", 0, 30, INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 end
 
 ------------------------------------------------------------------------
@@ -132,9 +132,9 @@ local GOOD, BAD = Color(120, 210, 140), Color(230, 110, 90)
 local HOW = {
     allocation = "Allocated here, at Housing Allocation.",
     transfer = "Transferred here at your request.",
-    papers = "Came with your papers (there was no Housing Allocation desk then).",
-    staff = "Assigned by the city administration.",
-    auto = "Already on file before you came to this desk: assigned when you first arrived in the city.",
+    papers = "Given to you with your papers (there was no Housing Allocation desk then).",
+    staff = "Given to you by the city's staff.",
+    auto = "Given to you when you first arrived in the city.",
 }
 
 local desk
@@ -200,48 +200,48 @@ function LC_CL.OpenDesk(t)
         Line(string.format("Credits: %d", t.credits or 0), DIM)
         if not t.papers then
             Button(string.format("Replace my identity papers (%d credits)", t.papersFee or 10), (t.credits or 0) >= (t.papersFee or 10),
-                function() LC_CL.DeskAct("papers") Close() end, "Civil Protection units ask for papers; Housing Allocation wants to see them")
+                function() LC_CL.DeskAct("papers") Close() end, "Civil Protection units ask to see them, and Housing Allocation needs them to give you a room")
         end
         if t.papers then Line("Your papers are in order.", GOOD) end
         if t.awaiting and t.housingDesk then
             Head("NEXT")
-            Line("You have no room yet. Housing Allocation assigns one.")
+            Line("You have no room yet. Housing Allocation gives you one.")
             Way(2, "Show me the way to Housing Allocation")
         elseif (t.block or 0) > 0 then
             Way(3, "Show me the way home")
         end
     elseif t.pending then
         Head("NO RECORD")
-        Line("The terminal can't find you on the register. Register at Civil Intake first; then come back with your papers.")
+        Line("You're not registered yet. Register at Civil Intake first, then come back here with your papers.")
         Way(1, "Show me the way to Civil Intake")
     elseif t.awaiting then
         Head("APPLICATION FOR HOUSING")
-        Line("Present your papers and pick a block. Any block is approved at once (the least crowded). A crowded block is only granted to citizens in good standing ("
-            .. (t.good or 50) .. " or more). Yours: " .. (t.standing or 0) .. ".", DIM)
+        Line("Show your papers and pick a block. \"Any block\" is approved at once and gives you the least crowded one. A crowded block needs Civil Standing "
+            .. (t.good or 50) .. " or more. Yours is " .. (t.standing or 0) .. ".", DIM)
         Line("Papers: " .. (t.papers and "presented" or "NOT on you (Civil Intake replaces them)"), t.papers and GOOD or BAD)
         Button("Any block (approved at once)", t.papers, function() LC_CL.DeskAct("apply", 0) Close() end)
         local least
         for _, b in ipairs(t.blocks or {}) do least = math.min(least or b.residents, b.residents) end
         for _, b in ipairs(t.blocks or {}) do
             local crowded = b.residents > (least or 0) + 1
-            Button(string.format("Apply for %s   (%d living there%s%s)", b.name, b.residents, b.m and (", " .. b.m .. " m away") or "",
+            Button(string.format("Ask for %s   (%d live there%s%s)", b.name, b.residents, b.m and (", " .. b.m .. " m away") or "",
                 crowded and ", crowded" or ""), t.papers, function() LC_CL.DeskAct("apply", b.n) Close() end)
         end
-        if #(t.blocks or {}) == 0 then Line("No blocks on file in this city.", BAD) end
+        if #(t.blocks or {}) == 0 then Line("This city has no housing blocks.", BAD) end
     else
         Head("ASSIGNED: " .. string.upper(t.blockName or "no room"))
         Line(HOW[t.how or ""] or HOW.auto, DIM)
         if (t.block or 0) > 0 then Way(3, "Show me the way home") end
         Head("REQUEST A TRANSFER")
         if t.transfer then
-            Line("Move to another block (once every half hour). A crowded block needs good standing (" .. (t.good or 50) .. ").", DIM)
+            Line("Move to another block (once every half hour). A crowded block needs Civil Standing " .. (t.good or 50) .. ".", DIM)
             for _, b in ipairs(t.blocks or {}) do
                 if b.n ~= t.block then
-                    Button(string.format("Transfer to %s   (%d living there%s)", b.name, b.residents, b.m and (", " .. b.m .. " m away") or ""),
+                    Button(string.format("Move to %s   (%d live there%s)", b.name, b.residents, b.m and (", " .. b.m .. " m away") or ""),
                         t.papers, function() LC_CL.DeskAct("transfer", b.n) Close() end)
                 end
             end
-            if not t.papers then Line("Present your papers to apply: you have none on you.", BAD) end
+            if not t.papers then Line("You need your papers to apply, and you have none on you.", BAD) end
         else
             Line(t.transferWhy or "Not now.", DIM)
         end
@@ -306,5 +306,5 @@ hook.Add("HUDPaint", "LivingCityPapers", function()
     draw.SimpleText(desc, "DefaultSmall", x + 14, y + 122, Color(70, 64, 56, 255 * a), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     draw.SimpleText((t.cards or 0) > 0 and string.format("RATION CARDS: %d", t.cards) or "NO RATION CARD", "DefaultSmall", x + 14, y + 142, ink, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     if t.stalker then LC_CL.PapersStamp(x + W / 2, y + H / 2 + 10, "STALKER", a) end
-    if t.from then draw.SimpleText("Held up by the person in front of you", "DefaultSmall", x + 14, y + H - 16, Color(70, 64, 56, 255 * a), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER) end
+    if t.from then draw.SimpleText("Shown to you by the person in front of you", "DefaultSmall", x + 14, y + H - 16, Color(70, 64, 56, 255 * a), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER) end
 end)
