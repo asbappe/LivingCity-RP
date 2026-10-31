@@ -115,9 +115,9 @@ function LC_CL.OpenActions()
         if not unit then Add(sub, "Show them my papers", function() Send("showpapers") end, "icon16/vcard.png") end
         if not unit and not rebel then Add(sub, "Inform on them to Civil Protection", function() Send("inform", "", person) end, "icon16/eye.png") end
         if me:GetNW2Bool("lc_foreman", false) then Add(sub, "Give them a work order (foreman)", function() Send("assign", "", person) end, "icon16/wrench.png") end
-        Add(sub, "Zip-tie their hands", function() Send("tie") end)
+        Add(sub, "Cuff them", function() Send("tie") end)
         if person:GetNW2Bool("lc_tied", false) then
-            Add(sub, "Cut the ties", function() Send("untie") end)
+            Add(sub, "Uncuff them", function() Send("untie") end)
             Add(sub, "Drag them along / let go", function() Send("drag") end)
         end
         if unit then Add(sub, "Search them", function() Send("search") end, "icon16/magnifier.png") end
@@ -197,7 +197,7 @@ function LC_CL.OpenActions()
     if downed then Add(you, "Give up (let go)", function() Send("giveup") end, "icon16/cross.png") end
     Add(you, me:GetNW2Bool("lc_handsup", false) and "Lower my hands" or "Put my hands up", function() Send("handsup") end)
     Add(you, "Holster / draw", function() Send("holster") end)
-    if me:GetNW2Bool("lc_tied", false) then Add(you, "Work at the ties", function() Send("struggle") end) end
+    if me:GetNW2Bool("lc_tied", false) then Add(you, "Work at the cuffs", function() Send("struggle") end) end
     if me:GetNW2Float("lc_wanted_until", 0) > now then Add(you, "Give myself up (near a Civil Protection unit)", function() Send("surrender") end) end
     if me:GetNW2Bool("lc_interrogated", false) then
         Add(you, "Talk to the interrogator", function() net.Start("lc_interrogate_reply") net.WriteBool(true) net.SendToServer() end, "icon16/comment.png")

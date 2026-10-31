@@ -135,7 +135,7 @@ function LC.CanSwitchCharacter(ply)
     if LC.PlayerIsWanted and LC.PlayerIsWanted(ply) then return false, "Not while you're wanted." end
     if (LC.InCustody and LC.InCustody(ply)) or (LC.Prisoners and LC.Prisoners[ply]) then return false, "Not while you're in custody." end
     if LC.IsDowned and LC.IsDowned(ply) then return false, "Not while you're down." end
-    if LC.IsTied and LC.IsTied(ply) then return false, "Not with your hands tied." end
+    if LC.IsTied and LC.IsTied(ply) then return false, "Not with your hands cuffed." end
     if LC.InCombat and LC.InCombat(ply) then return false, "Not in the middle of a fight." end
     if LC.QuestOf and LC.QuestOf[ply] then return false, "Finish or abandon your job first (!abandon)." end
     if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) then return false, "A stalker has no other life to go back to. Only death ends it." end

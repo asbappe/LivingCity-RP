@@ -143,10 +143,10 @@ function LC_CL.OpenUnitTools()
         local tied, hands = who:GetNW2Bool("lc_tied", false), who:GetNW2Bool("lc_handsup", false)
         Button(s, "Search them", "Pat them down for contraband (your baton's reload does it too).", Do("search"))
         if tied then
-            Button(s, "Cut the ties", "Let their hands go.", Do("untie"))
+            Button(s, "Uncuff them", "Let their hands go.", Do("untie"))
             Button(s, "Drag them along / let go", "Walk them where you're going.", Do("drag"))
         else
-            Button(s, "Zip-tie their hands", "Their hands up, down, stopped by a Civil Protection unit, or from behind.", Do("tie"))
+            Button(s, "Cuff them", "Their hands up, down, stopped by a Civil Protection unit, or from behind.", Do("tie"))
         end
         if who:GetNW2String("lcj_job", "") ~= "" and who:GetNW2Entity("lc_escorting") ~= me then
             Button(s, "Escort them", "A worker on a job behind Combine doors: they go through with you.", Do("escort", "", who))

@@ -266,7 +266,7 @@ function LC.TakeMicrophone(ply, target)
     if target:GetPos():DistToSqr(ply:GetPos()) > 130 * 130 then return false, "Get closer." end
     if not target:HasWeapon("weapon_lc_microphone") then return false, "They haven't got a microphone." end
     if not (target:GetNW2Bool("lc_tied", false) or target:GetNW2Bool("lc_handsup", false)) then
-        return false, "Not while they can stop you: hands up, or tied."
+        return false, "Not while they can stop you: hands up, or cuffed."
     end
     if LC.LiveSpeaker == target then LC.StopBroadcast("seized") end
     target:StripWeapon("weapon_lc_microphone")

@@ -172,8 +172,8 @@ LCS.Items = {
     ------------------------------------------------------------------------
     -- Order (sv_livingcity_cp.lua)
     ------------------------------------------------------------------------
-    zipties         = { name = "Zip ties", model = "models/props_lab/box01a.mdl", sell = 1, -- (1, not 4: Civil Protection buy them three for 6)
-                        desc = "Tie someone's hands: !tie, looking at them (hands up, down, stopped, or from behind). Civil Protection units carry their own" },
+    zipties         = { name = "Cuffs", model = "models/props_lab/box01a.mdl", sell = 1, -- (1, not 4: Civil Protection buy them three for 6)
+                        desc = "Cuff someone: !cuff, looking at them (hands up, down, stopped, or from behind). Civil Protection units carry their own" },
     request_device  = { name = "Request device", model = "models/props_lab/reciever01b.mdl", sell = 6,
                         desc = "Calls Civil Protection to where you are: /request <what's wrong>" },
     ------------------------------------------------------------------------
@@ -309,7 +309,7 @@ LCS.Goods = {
     { id = "coffee", item = "coffee", price = 30, minStanding = 400, desc = "Real coffee. You'd forgotten the smell." },
     { id = "healthkit", name = "Medical kit", entity = "item_healthkit", price = 50, minStanding = 400, desc = "A full medical kit." },
     { id = "request_device", item = "request_device", price = 10, minStanding = 0, desc = "Something wrong? Call Civil Protection: /request." },
-    { id = "zipties", item = "zipties", count = 3, name = "Zip ties (3)", price = 6, cpOnly = true, desc = "Spares. Civil Protection units never run out of their own." },
+    { id = "zipties", item = "zipties", count = 3, name = "Cuffs (3)", price = 6, cpOnly = true, desc = "Spares. Civil Protection units never run out of their own." },
     { id = "paper", item = "paper", count = 3, name = "Paper (3)", price = 2, minStanding = -50, desc = "For notes, letters and notices." },
     { id = "business_license", item = "business_license", price = 75, minStanding = 50, desc = "The Union's permission to trade from a stall." },
     { id = "vendor_stall", item = "vendor_stall", price = 60, minStanding = 50, desc = "Everything you need to sell. A license not included." },
@@ -353,7 +353,7 @@ LCS.Black = {
     { id = "chemicals", item = "chemicals", price = 6, desc = "Bought by the bottle. Nobody cleans that much." },
     { id = "seeds", item = "seeds", price = 12, desc = "Tomatoes, beans, maybe. Plant them in rebel territory." },
     { id = "canned_food", item = "canned_food", price = 14, desc = "Pre-war tins. Nobody asks where they come from." },
-    { id = "zipties", item = "zipties", count = 2, name = "Zip ties (2)", price = 20, desc = "For a Civil Protection unit who needs to stay put." },
+    { id = "zipties", item = "zipties", count = 2, name = "Cuffs (2)", price = 20, desc = "For a Civil Protection unit who needs to stay put." },
     { id = "satchel", item = "satchel", price = 30, desc = "No questions about what goes in it." },
     { id = "spraypaint", item = "spraypaint", count = 3, name = "Spray cans (3)", price = 25, desc = "Let the city know we're still here." },
     -- what the Resistance's lab makes (sv_livingcity_lab.lua); everyone else pays the dealer for it

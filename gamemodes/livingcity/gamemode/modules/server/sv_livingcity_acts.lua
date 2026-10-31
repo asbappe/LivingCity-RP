@@ -24,7 +24,7 @@ function LC.StartAct(ply, name)
     local p = LCA.Poses[name]
     if not p then return false, "No such pose." end
     if not ply:Alive() then return false end
-    if LC.IsTied and LC.IsTied(ply) then return false, "Not with your hands tied." end
+    if LC.IsTied and LC.IsTied(ply) then return false, "Not with your hands cuffed." end
     if LC.IsDowned and LC.IsDowned(ply) then return false end
     if not ply:IsOnGround() then return false, "Get your feet on the ground first." end
     if ply:GetVelocity():Length2DSqr() > 30 * 30 then return false, "Stand still first." end

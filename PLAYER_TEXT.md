@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version e5e3a89. Admin-only console messages and log lines are left out.
+Made from version 2f8d67c. Admin-only console messages and log lines are left out.
 
-5735 lines, from 175 files.
+5731 lines, from 175 files.
 
 ## Contents
 
@@ -120,7 +120,7 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 - [Father Grigori, in the flesh](#father-grigori-in-the-flesh-svlivingcitygrigorilua) (16)
 - [flood guard](#flood-guard-svlivingcityguardlua) (3)
 - [stealing the Combine's data](#stealing-the-combines-data-svlivingcityheistlua) (32)
-- [tips that pop up the first time something happens](#tips-that-pop-up-the-first-time-something-happens-svlivingcityhintslua) (326)
+- [tips that pop up the first time something happens](#tips-that-pop-up-the-first-time-something-happens-svlivingcityhintslua) (325)
 - [housing blocks](#housing-blocks-svlivingcityhousinglua) (5)
 - [toilets, baths and what happens without them](#toilets-baths-and-what-happens-without-them-svlivingcityhygienelua) (48)
 - [Civil Intake (becoming somebody)](#civil-intake-becoming-somebody-svlivingcityintakelua) (75)
@@ -183,7 +183,7 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 - [sh_livingcity_cp.lua](#shlivingcitycplua-shlivingcitycplua) (44)
 - [sh_livingcity_factions.lua](#shlivingcityfactionslua-shlivingcityfactionslua) (30)
 - [sh_livingcity_jobs.lua](#shlivingcityjobslua-shlivingcityjobslua) (32)
-- [sh_livingcity_shop.lua](#shlivingcityshoplua-shlivingcityshoplua) (217)
+- [sh_livingcity_shop.lua](#shlivingcityshoplua-shlivingcityshoplua) (214)
 - [shared.lua](#sharedlua-sharedlua) (1)
 
 ## lc_barricade.lua (lc_barricade.lua)
@@ -590,7 +590,7 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 - "The Resistance (Member and up) can ask a sympathizer to keep watch: they warn Freq 7 when Civil Protection units come."  (text, line 104)
 - "The city keeps to the clock: work in the morning, ration lines at midday, quiet evenings, and thin streets at night (only the night shift works)."  (text, line 105)
 - "Trains come into the station now and then: new arrivals with suitcases, and anyone leaving the city boards before it pulls out."  (text, line 106)
-- "Arrested by a Civil Protection unit, you're tied and walked to the cells by two of them. On the way anyone can get you out: put the leading unit down, then {gm_showhelp} > Work at the ties."  (text, line 107)
+- "Arrested by a Civil Protection unit, you're cuffed and walked to the cells by two of them. On the way anyone can get you out: put the leading unit down, then {gm_showhelp} > Work at the cuffs."  (text, line 107)
 - "Rations come out of the city's stores (under the clock). Kitchen and factory work fills them; when they run low, so do the rations, and people grow restless."  (text, line 108)
 - "Transformers power their district: its lights (the map's switchable ones too), screens and TVs, dispensers, vending machines, the commissary and Combine door locks. Sabotage one (multitool) and the district goes dark and its Combine doors open, until maintenance fixes it. Prison doors stay locked."  (text, line 109)
 - "Half the grid down at once and the whole city goes dark, the map's own lighting included: switch on your flashlight (F)."  (text, line 110)
@@ -702,12 +702,12 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 - "Rebel ground has no mercy: REBEL TERRITORY AHEAD warns you a step before it. Inside, they shoot Civil Protection units."  (text, line 226)
 - "Supply drop on? Guard the crate: if anything's left when the convoy moves on, every Civil Protection unit nearby is paid."  (text, line 227)
 - "RADIO JAMMED on your HUD: a jammer is close. Follow the beeping and press E on it."  (text, line 228)
-- "Civil Protection units: look at someone, F1 > Zip-tie them. Anyone with zip ties: C > their name > Zip-tie their hands. Hands up, down, stopped, or from behind. Drag walks them along; the baton arrests them."  (text, line 229)
+- "Civil Protection units: look at someone, F1 > Cuff them. Anyone with cuffs: C > their name > Cuff them. Hands up, down, stopped, or from behind. Drag walks them along; the baton arrests them."  (text, line 229)
 - "Sociostability (green, yellow, red) is at the top of the screen. Officers set it in C > Unit tools. Red is a judgment waiver: metrocops have their pistols out."  (text, line 230)
 - "Set off an alarm (a data chip, an escape) and a squad of two metrocops and a soldier comes through the door a few seconds later."  (text, line 231)
 - "The nexus and every Combine-only zone are garrisoned: mostly Overwatch soldiers, a metrocop or two."  (text, line 232)
 - "Citizens: C > Getting by > Request Civil Protection (with a request device) calls a Civil Protection unit. C > Me > Put my hands up when a unit tells you to."  (text, line 233)
-- "Tied up? C > Me > Work at the ties, when nobody's looking. Anyone can cut you free."  (text, line 234)
+- "Cuffed? C > Me > Work at the cuffs, when nobody's looking. Anyone can uncuff you."  (text, line 234)
 - "The first time you run into something, a card on the right says what it is and what you can do. Each one shows once."  (text, line 237)
 - "C > Tips I've seen has every tip you've had, to read again. C > Settings turns them off or on, or starts them over."  (text, line 238)
 - "Talking, and knowing people"  (text, line 240)
@@ -1116,7 +1116,7 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 
 *When:* on screen
 
-- "!struggle to work at the ties when nobody's looking"  (text, line 385)
+- "!struggle to work at the cuffs when nobody's looking"  (text, line 385)
 - "HANDS UP  (!handsup to lower them)"  (text, line 387)
 
 ## secret endings, on your screen (sv_livingcity_endings.lua) (cl_livingcity_endings.lua)
@@ -1410,7 +1410,7 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 *When:* what units know: a BOLO out on them, hands tied, hands up (sv_livingcity_cp.lua)
 
 - "BOLO: {GetNW2String}"  (text, line 376)
-- "Hands tied"  (text, line 377)
+- "Hands cuffed"  (text, line 377)
 - "Hands up"  (text, line 378)
 
 ## cl_livingcity_grigori.lua (cl_livingcity_grigori.lua)
@@ -2517,11 +2517,11 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 - "In front of you"  (text, line 141)
 - "Search them"  (button, line 144)
 - "Pat them down for contraband (your baton's reload does it too)."  (button, line 144)
-- "Cut the ties"  (button, line 146)
+- "Uncuff them"  (button, line 146)
 - "Let their hands go."  (button, line 146)
 - "Drag them along / let go"  (button, line 147)
 - "Walk them where you're going."  (button, line 147)
-- "Zip-tie their hands"  (button, line 149)
+- "Cuff them"  (button, line 149)
 - "Their hands up, down, stopped by a Civil Protection unit, or from behind."  (button, line 149)
 - "Escort them"  (button, line 152)
 - "A worker on a job behind Combine doors: they go through with you."  (button, line 152)
@@ -2816,7 +2816,7 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 
 - "Acts are off on this server."  (text, line 23)
 - "No such pose."  (text, line 25)
-- "Not with your hands tied."  (text, line 27)
+- "Not with your hands cuffed."  (text, line 27)
 - "Get your feet on the ground first."  (text, line 29)
 - "Stand still first."  (text, line 30)
 - "(This model has no animation for that, but you hold still.)"  (chat message, line 43)
@@ -3541,23 +3541,23 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 
 *When:* Can this person tie that one up? ok, or false and why.
 
-- "Zip ties are off on this server."  (text, line 451)
+- "Cuffs are off on this server."  (text, line 451)
 - "Look at someone, up close."  (text, line 452)
 - "Not yourself."  (text, line 453)
-- "Your hands are tied."  (text, line 454)
-- "Their hands are already tied."  (text, line 455)
+- "Your hands are cuffed."  (text, line 454)
+- "Their hands are already cuffed."  (text, line 455)
 - "They're already in custody."  (text, line 456)
 - "Get closer."  (text, line 457)
 
 *When:* part of: can tie
 
-- "You need zip ties."  (text, line 458)
+- "You need cuffs."  (text, line 458)
 - "They'd fight you off. Hands up, down, stopped by a Civil Protection unit, or from behind."  (text, line 462)
 
 *When:* part of: tie player
 
-- "[Living City] Your hands are tied. You can't use anything. F1 > Work at the ties, when nobody's looking."  (chat message, line 480)
-- "Tied. Looking at them, F1: drag them along, or cut the ties."  (chat message, line 481)
+- "[Living City] Your hands are cuffed. You can't use anything. F1 > Work at the cuffs, when nobody's looking."  (chat message, line 480)
+- "Cuffed. Looking at them, F1: drag them along, or uncuff them."  (chat message, line 481)
 
 *When:* part of: start tie
 
@@ -3571,10 +3571,10 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 
 *When:* part of: start untie
 
-- "Look at someone whose hands are tied, up close."  (text, line 530)
-- "Your own hands are tied."  (text, line 531)
+- "Look at someone whose hands are cuffed, up close."  (text, line 530)
+- "Your own hands are cuffed."  (text, line 531)
 - "[Living City] A Civil Protection unit cuts your ties."  (chat message, line 534)
-- "Cutting the ties..."  (progress bar, line 537)
+- "Uncuffing them..."  (progress bar, line 537)
 - "You stop."  (text, line 538)
 
 *When:* part of: done
@@ -3583,14 +3583,14 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 
 *When:* part of: start struggle
 
-- "Your hands aren't tied."  (text, line 560)
+- "Your hands aren't cuffed."  (text, line 560)
 - "Not while they've got hold of you."  (text, line 561)
-- "Working at the ties..."  (progress bar, line 562)
-- "You stop working at the ties."  (text, line 563)
+- "Working at the cuffs..."  (progress bar, line 562)
+- "You stop working at the cuffs."  (text, line 563)
 
 *When:* part of: done
 
-- "[Living City] They see you working at the ties, and pull them tighter."  (chat message, line 568)
+- "[Living City] They see you working at the cuffs, and tighten them."  (chat message, line 568)
 - "[Living City] The plastic gives. Your hands are free."  (chat message, line 572)
 
 *When:* !drag on someone tied: walk them along. Returns nil when it's not about a tied person.
@@ -3599,7 +3599,7 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 
 *When:* part of: try escort
 
-- "Your hands are tied."  (text, line 588)
+- "Your hands are cuffed."  (text, line 588)
 - "You take them by the arm. (F1 > Drag them along again to let go.)"  (chat message, line 590)
 - "[Living City] You're being walked along."  (chat message, line 591)
 - "Things are back to normal. Ordinary stops, ordinary days."  (text, line 661)
@@ -3648,19 +3648,19 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 
 *When:* part of: vo
 
-- "Only Civil Protection units have the mask's voice."  (chat message, line 889)
+- "Only Civil Protection units have the mask's voice."  (chat message, line 891)
 
 *When:* part of: socio
 
-- "[Overwatch] Sociostability: %s%s"  (message, line 901)
-- "(set by %s, %d min left)"  (message, line 902)
+- "[Overwatch] Sociostability: %s%s"  (message, line 903)
+- "(set by %s, %d min left)"  (message, line 904)
 
 *When:* part of: issue duty allocation
 
-- "a ration packet"  (text, line 956)
-- "a ration packet (your pockets are full: collect it from a dispenser)"  (text, line 956)
-- "credits in ration coupons"  (text, line 958)
-- "[Civil Protection] Duty allocation issued: {got}."  (chat message, line 959)
+- "a ration packet"  (text, line 958)
+- "a ration packet (your pockets are full: collect it from a dispenser)"  (text, line 958)
+- "credits in ration coupons"  (text, line 960)
+- "[Civil Protection] Duty allocation issued: {got}."  (chat message, line 961)
 
 ## the Civil Protection Commissary (units' supplies) (sv_livingcity_cpsupply.lua)
 
@@ -5008,7 +5008,7 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 - "Your Arrest Baton: {+attack} strikes, {+attack2} arrests, {+reload} searches. Your directives are on {gm_showspare1}. Your quick menu ({gm_showhelp}) has backup, your 10-20, a BOLO, the mask's voice and records on the number keys, and search and ties for whoever you're looking at. Everything else: {+menu_context} > Unit tools. Supplies: the Civil Protection Commissary ({gm_showteam} marks the way)."  (text, line 79)
 - "Your claws: {+attack} swipes, {+attack2} moans. The infestation is home. You don't eat, and you don't go down: you just die."  (text, line 81)
 - "Your tools"  (title, line 82)
-- "{+menu_context} > Unit tools has it all, each with what it does: the records terminal (CIDs, violations, loyalty points, BOLOs and requests), the mask's voice lines, and for whoever you're looking at, search, zip-tie and drag (the quick menu, {gm_showhelp}, has the ones you use most). You don't queue for rations: your ration, ammunition and grenades are issued at the Civil Protection Commissary ({gm_showteam} marks the way)."  (text, line 83)
+- "{+menu_context} > Unit tools has it all, each with what it does: the records terminal (CIDs, violations, loyalty points, BOLOs and requests), the mask's voice lines, and for whoever you're looking at, search, cuff and drag (the quick menu, {gm_showhelp}, has the ones you use most). You don't queue for rations: your ration, ammunition and grenades are issued at the Civil Protection Commissary ({gm_showteam} marks the way)."  (text, line 83)
 - "Chat is spoken out loud: only people near you hear it. {+menu_context} > Talk yells, whispers, describes what you do or the scene, and talks out of character (in chat: /y, /w, /me, /it, //)."  (text, line 85)
 - "Chat is spoken out loud: only people near you hear it. // is out of character, for everyone."  (text, line 86)
 - "Need a hand?"  (title, line 87)
@@ -5042,8 +5042,8 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 - "A soldier squad is hunting you, with lethal force. Break line of sight and keep it broken. Rebel territory cools you down twice as fast."  (text, line 117)
 - "Stop and search"  (title, line 118)
 - "A Civil Protection unit is searching you. Stand still (hands up doesn't hurt: {+menu_context} > Me). Walk off and you're wanted for evading inspection. Anything illegal they find is confiscated."  (text, line 119)
-- "Your hands are tied"  (title, line 120)
-- "You can't use anything, and you can only walk. Someone can cut you free. Left alone, {+menu_context} > Me > Work at the ties; if anyone sees, they pull them tighter."  (text, line 121)
+- "Your hands are cuffed"  (title, line 120)
+- "You can't use anything, and you can only walk. Someone can uncuff you. Left alone, {+menu_context} > Me > Work at the cuffs; if anyone sees, they tighten them."  (text, line 121)
 - "Sociostability: marginal"  (title, line 122)
 - "More stop-and-searches on the street. Keep your papers ready and nothing on you you'd want found. The level is at the top of your screen."  (text, line 123)
 - "Half as many stops again. The level is on your mask's readout; officers can set it in {+menu_context} > Unit tools."  (text, line 124)
@@ -5305,8 +5305,7 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 - "Throw it from {gm_showteam}. Smoke hides anyone in it from Civil Protection units and rebels alike."  (text, line 419)
 - "Antiparasitic tablets"  (title, line 420)
 - "Take them from {gm_showteam} if untreated water has given you parasites."  (text, line 421)
-- "Zip ties"  (title, line 422)
-- "Look at someone up close, {+menu_context} > their name > Zip-tie their hands: their hands up, down, stopped by a Civil Protection unit, or from behind. Drag walks them along; Cut the ties lets them go."  (text, line 423)
+- "Look at someone up close, {+menu_context} > their name > Cuff them: their hands up, down, stopped by a Civil Protection unit, or from behind. Drag walks them along; Uncuff them lets them go."  (text, line 423)
 - "A request device"  (title, line 424)
 - "/request <what's wrong> calls Civil Protection to where you are. Civil Protection units see it on their screens. Once a minute, and false requests go on your record."  (text, line 425)
 - "While you carry it you can take more: eight more kilos, and one more large thing. Your pockets ({gm_showteam}) show the weight."  (text, line 427)
@@ -6138,7 +6137,7 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 *When:* Got away: still tied, and wanted for it.
 
 - "Free, for now"  (on-screen notice, line 148)
-- "Your hands are still tied: F1 > Work at the ties, or have someone cut them."  (on-screen notice, line 148)
+- "Your hands are still cuffed: F1 > Work at the cuffs, or have someone uncuff them."  (on-screen notice, line 148)
 - "[Custody] {how}"  (chat message, line 149)
 - "Escaping custody"  (text, line 151)
 
@@ -7154,7 +7153,7 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 - "Look at who has it."  (text, line 265)
 - "Get closer."  (text, line 266)
 - "They haven't got a microphone."  (text, line 267)
-- "Not while they can stop you: hands up, or tied."  (text, line 269)
+- "Not while they can stop you: hands up, or cuffed."  (text, line 269)
 
 *When:* part of: take microphone
 
@@ -9190,7 +9189,7 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 - "Not while you're wanted."  (text, line 135)
 - "Not while you're in custody."  (text, line 136)
 - "Not while you're down."  (text, line 137)
-- "Not with your hands tied."  (text, line 138)
+- "Not with your hands cuffed."  (text, line 138)
 - "Not in the middle of a fight."  (text, line 139)
 
 *When:* part of: can switch character
@@ -10232,7 +10231,7 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 
 *When:* part of: inv action
 
-- "Your hands are tied."  (chat message, line 467)
+- "Your hands are cuffed."  (chat message, line 467)
 - "You need to be standing in water."  (chat message, line 493)
 - "You can't eat that."  (chat message, line 499)
 - "Cooking won't help that."  (chat message, line 503)
@@ -11616,7 +11615,7 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 
 - "Write something."  (text, line 128)
 - "You need paper."  (text, line 129)
-- "Your hands are tied."  (text, line 130)
+- "Your hands are cuffed."  (text, line 130)
 
 *When:* part of: write note
 
@@ -11950,8 +11949,7 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 
 *When:* Order (sv_livingcity_cp.lua)
 
-- "Zip ties"  (name, line 175)
-- "Tie someone's hands: !tie, looking at them (hands up, down, stopped, or from behind). Civil Protection units carry their own"  (description, line 176)
+- "Cuff someone: !cuff, looking at them (hands up, down, stopped, or from behind). Civil Protection units carry their own"  (description, line 176)
 - "Request device"  (name, line 177)
 - "Calls Civil Protection to where you are: /request <what's wrong>"  (description, line 178)
 
@@ -12026,7 +12024,6 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 - "Medical kit"  (name, line 310)
 - "A full medical kit."  (description, line 310)
 - "Something wrong? Call Civil Protection: /request."  (description, line 311)
-- "Zip ties (3)"  (name, line 312)
 - "Spares. Civil Protection units never run out of their own."  (description, line 312)
 - "For notes, letters and notices."  (description, line 313)
 - "The Union's permission to trade from a stall."  (description, line 314)
@@ -12060,7 +12057,6 @@ Made from version e5e3a89. Admin-only console messages and log lines are left ou
 - "Bought by the bottle. Nobody cleans that much."  (description, line 353)
 - "Tomatoes, beans, maybe. Plant them in rebel territory."  (description, line 354)
 - "Pre-war tins. Nobody asks where they come from."  (description, line 355)
-- "Zip ties (2)"  (name, line 356)
 - "For a Civil Protection unit who needs to stay put."  (description, line 356)
 - "No questions about what goes in it."  (description, line 357)
 - "Spray cans (3)"  (name, line 358)

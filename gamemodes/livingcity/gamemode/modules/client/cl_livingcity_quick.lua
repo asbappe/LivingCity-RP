@@ -142,7 +142,7 @@ local function Context(me, unit, rebel)
     local function Add(label, run) out[#out + 1] = { label = label, run = run, ctx = true } end
     local now = CurTime()
     if me:GetNW2Float("lc_downed_until", 0) > now then Add("Give up (let go)", function() Send("giveup") end) end
-    if me:GetNW2Bool("lc_tied", false) then Add("Work at the ties", function() Send("struggle") end) end
+    if me:GetNW2Bool("lc_tied", false) then Add("Work at the cuffs", function() Send("struggle") end) end
     if not unit and me:GetNW2Float("lc_wanted_until", 0) > now then Add("Give myself up (near a Civil Protection unit)", function() Send("surrender") end) end
     if me:GetNW2Bool("lc_interrogated", false) then
         Add("Talk to the interrogator", function() net.Start("lc_interrogate_reply") net.WriteBool(true) net.SendToServer() end)
@@ -162,9 +162,9 @@ local function Context(me, unit, rebel)
             Add("Search " .. n, function() Send("search") end)
             if tied then
                 Add("Drag " .. n .. " along / let go", function() Send("drag") end)
-                Add("Cut " .. n .. "'s ties", function() Send("untie") end)
+                Add("Uncuff " .. n, function() Send("untie") end)
             else
-                Add("Zip-tie " .. n, function() Send("tie") end)
+                Add("Cuff " .. n, function() Send("tie") end)
             end
             if e:GetNW2String("lcj_job", "") ~= "" and e:GetNW2Entity("lc_escorting") ~= me then Add("Escort " .. n, function() Send("escort", "", e) end) end
             if tied or e:GetNW2Bool("lc_handsup", false) then Add("Take " .. n .. "'s microphone", function() Send("takemic", "", e) end) end
@@ -172,7 +172,7 @@ local function Context(me, unit, rebel)
             Add("Tell " .. n .. " my name", function() Send("recognize") end)
             Add("Show " .. n .. " my papers", function() Send("showpapers") end)
             if tied then
-                Add("Cut " .. n .. "'s ties", function() Send("untie") end)
+                Add("Uncuff " .. n, function() Send("untie") end)
                 Add("Drag " .. n .. " along / let go", function() Send("drag") end)
             end
             if me:GetNW2Bool("lc_foreman", false) then Add("Give " .. n .. " a work order", function() Send("assign", "", e) end) end

@@ -382,7 +382,7 @@ hook.Add("HUDPaint", "LivingCityCPHUD", function()
     end
     if ply:GetNW2Bool("lc_tied", false) then
         draw.SimpleTextOutlined("YOUR HANDS ARE TIED", "DermaDefaultBold", w / 2, h * 0.82, AMBER, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
-        draw.SimpleTextOutlined("!struggle to work at the ties when nobody's looking", "DermaDefault", w / 2, h * 0.82 + 18, INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+        draw.SimpleTextOutlined("!struggle to work at the cuffs when nobody's looking", "DermaDefault", w / 2, h * 0.82 + 18, INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     elseif ply:GetNW2Bool("lc_handsup", false) then
         draw.SimpleTextOutlined("HANDS UP  (!handsup to lower them)", "DermaDefaultBold", w / 2, h * 0.82, Color(200, 220, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     end

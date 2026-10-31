@@ -374,7 +374,7 @@ hook.Add("HUDDrawTargetID", "LivingCityFactionsTargetID", function()
     -- what units know: a BOLO out on them, hands tied, hands up (sv_livingcity_cp.lua)
     local extra = {}
     if SECURITY[mine] and ent:GetNW2Bool("lc_bolo", false) then extra[#extra + 1] = { "BOLO: " .. ent:GetNW2String("lc_bolo_text", ""), Color(255, 90, 80) } end
-    if ent:GetNW2Bool("lc_tied", false) then extra[#extra + 1] = { "Hands tied", Color(235, 200, 90) }
+    if ent:GetNW2Bool("lc_tied", false) then extra[#extra + 1] = { "Hands cuffed", Color(235, 200, 90) }
     elseif ent:GetNW2Bool("lc_handsup", false) then extra[#extra + 1] = { "Hands up", Color(200, 220, 255) } end
     local ey = y + (flagged and 58 or 40)
     for _, e in ipairs(extra) do

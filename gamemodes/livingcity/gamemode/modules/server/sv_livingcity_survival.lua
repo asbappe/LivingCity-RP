@@ -464,7 +464,7 @@ function LC.NearHeat(ply)
 end
 
 function LC.InvAction(ply, action, id)
-    if LC.IsTied and LC.IsTied(ply) then ply:ChatPrint("Your hands are tied.") return end
+    if LC.IsTied and LC.IsTied(ply) then ply:ChatPrint("Your hands are cuffed.") return end
     -- bins, lockers and crates (sv_livingcity_storage.lua)
     local STORAGE = { cput = true, ctake = true, crelease = true, place = true, cstock = true, cbuy = true, ccollect = true, creopen = true }
     if STORAGE[action] and LC.StorageAction then

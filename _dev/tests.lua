@@ -3799,7 +3799,7 @@ target:SetPos(C + Vector(0, 4000, 0))
 target:Give("weapon_pistol")
 tier:SetPos(target:GetPos() + Vector(60, 0, 0)) -- in front of them (they face +x)
 local okT, why = LC.CanTie(tier, target)
-ok(not okT and string.find(why, "zip ties", 1, true), "you need zip ties", why)
+ok(not okT and string.find(why, "cuffs", 1, true), "you need cuffs", why)
 LC.GiveItem(tier, "zipties", 2)
 okT, why = LC.CanTie(tier, target)
 ok(not okT and string.find(why, "fight you off", 1, true), "and they won't let you, face to face", why)
@@ -3812,7 +3812,7 @@ ok(LC.IsTied(target) and target:GetNW2Bool("lc_tied", false) and not target:HasW
 ok(LC.InvCount(tier) == 1 or not LC.HasItem(tier, "zipties", 2), "it uses a zip tie")
 target.chat = {}
 LC.InvAction(target, "use", "bread")
-ok(has(target.chat, "hands are tied"), "tied hands can't use anything")
+ok(has(target.chat, "hands are cuffed"), "cuffed hands can't use anything")
 hook.Run("PlayerSay", tier, "!drag")
 ok(LC.Tied[target].escort == tier, "!drag takes them by the arm")
 tier:SetPos(tier:GetPos() + Vector(0, 400, 0))
@@ -13102,7 +13102,12 @@ end)()
 ;(function()
     -- no credits out of thin air: nothing at the lab costs less than it sells back for
     ok(LC.LabPrice({ out = "gun_parts" }) > LCS.Items.gun_parts.sell, "gun parts at the lab cost more than the quartermaster pays for them", LC.LabPrice({ out = "gun_parts" }))
-    ok(LCS.Items.zipties.sell == 1, "zip ties sell for 1 (Civil Protection buy them three for 6)")
+    local cuffer = newPlayer("Cuffer", "citizen")
+    cuffer.chat = {}
+    local said = hook.Run("PlayerSay", cuffer, "!cuff")
+    ok(LCS.Items.zipties.name == "Cuffs" and said == "" and has(cuffer.chat, "Look at someone"), "zip ties are cuffs now, and !cuff works like !tie", table.concat(cuffer.chat, " | "))
+    cuffer.valid = false
+    ok(LCS.Items.zipties.sell == 1, "cuffs (zip ties once) sell for 1 (Civil Protection buy them three for 6)")
     -- a unit's issued grenades are Combine issue
     local unit = newPlayer("GrenadeUnit", "cp", nil, 900)
     local other = newPlayer("OtherUnit", "cp", nil, 900)

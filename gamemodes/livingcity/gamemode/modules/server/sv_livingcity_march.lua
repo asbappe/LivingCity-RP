@@ -145,7 +145,7 @@ end
 local function Escaped(ply, m, how)
     Finish(ply, m)
     if not IsValid(ply) or not ply:Alive() then return end
-    if LC.Notice then LC.Notice(ply, "warn", "Free, for now", how .. " Your hands are still tied: F1 > Work at the ties, or have someone cut them.") end
+    if LC.Notice then LC.Notice(ply, "warn", "Free, for now", how .. " Your hands are still cuffed: F1 > Work at the cuffs, or have someone uncuff them.") end
     ply:ChatPrint("[Custody] " .. how)
     local esc = GetConVar("lc_escape_wanted")
     if LC.ReportCrime then LC.ReportCrime(ply, "Escaping custody", esc and esc:GetFloat() or 300) end

@@ -127,7 +127,7 @@ function LC.WriteNote(ply, text, mode, signed, sigAs)
     text = Clean(text)
     if #text < 2 then return false, "Write something." end
     if not LC.HasItem(ply, "paper") then return false, "You need paper." end
-    if LC.IsTied and LC.IsTied(ply) then return false, "Your hands are tied." end
+    if LC.IsTied and LC.IsTied(ply) then return false, "Your hands are cuffed." end
     local sig = sigAs or (signed and CharName(ply)) or nil
     if mode == "keep" then
         local list = LC.Notes(ply)

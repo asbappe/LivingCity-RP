@@ -60,11 +60,11 @@ LC = LC or {}
 LC.SlashCommands = LC.SlashCommands or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvOn       = CreateConVar("lc_cp_tools", "1", FLAGS, "Civil Protection's toolset: records, BOLOs, zip ties, sociostability, requests, voice lines")
+local cvOn       = CreateConVar("lc_cp_tools", "1", FLAGS, "Civil Protection's toolset: records, BOLOs, cuffs, sociostability, requests, voice lines")
 local cvBolo     = CreateConVar("lc_bolo_minutes", "30", FLAGS, "How long a BOLO stays out unless set otherwise")
 local cvReqWait  = CreateConVar("lc_request_cooldown", "60", FLAGS, "Seconds between requests from one citizen")
-local cvTieSecs  = CreateConVar("lc_tie_seconds", "3", FLAGS, "Seconds to zip-tie someone")
-local cvStruggle = CreateConVar("lc_struggle_seconds", "30", FLAGS, "Seconds for a tied person to work themselves free")
+local cvTieSecs  = CreateConVar("lc_tie_seconds", "3", FLAGS, "Seconds to cuff someone")
+local cvStruggle = CreateConVar("lc_struggle_seconds", "30", FLAGS, "Seconds for a cuffed person to work themselves free")
 
 local DIR = "livingcity"
 local RECORDS_FILE = DIR .. "/records.json"
@@ -448,14 +448,14 @@ end
 
 -- Can this person tie that one up? ok, or false and why.
 function LC.CanTie(tier, target)
-    if not On() then return false, "Zip ties are off on this server." end
+    if not On() then return false, "Cuffs are off on this server." end
     if not IsValid(target) or not target:IsPlayer() or not target:Alive() then return false, "Look at someone, up close." end
     if tier == target then return false, "Not yourself." end
-    if LC.IsTied(tier) then return false, "Your hands are tied." end
-    if LC.IsTied(target) then return false, "Their hands are already tied." end
+    if LC.IsTied(tier) then return false, "Your hands are cuffed." end
+    if LC.IsTied(target) then return false, "Their hands are already cuffed." end
     if LC.Prisoners and LC.Prisoners[target] then return false, "They're already in custody." end
     if tier:GetPos():DistToSqr(target:GetPos()) > 110 * 110 then return false, "Get closer." end
-    if not RealUnit(tier) and not (LC.HasItem and LC.HasItem(tier, "zipties")) then return false, "You need zip ties." end
+    if not RealUnit(tier) and not (LC.HasItem and LC.HasItem(tier, "zipties")) then return false, "You need cuffs." end
     local willing = target:GetNW2Bool("lc_handsup", false) or (LC.IsDowned and LC.IsDowned(target))
         or (LC.Stops and LC.Stops[target]) or (LC.Detained and LC.Detained[target])
     if not willing and not Behind(tier, target) then
@@ -477,8 +477,8 @@ function LC.TiePlayer(target, tier)
     LC.Tied[target] = t
     if IsValid(tier) and not RealUnit(tier) and LC.TakeItem then LC.TakeItem(tier, "zipties", 1) end
     target:EmitSound("physics/plastic/plastic_box_impact_soft2.wav", 60)
-    target:ChatPrint("[Living City] Your hands are tied. You can't use anything. F1 > Work at the ties, when nobody's looking.")
-    if IsValid(tier) then tier:ChatPrint("Tied. Looking at them, F1: drag them along, or cut the ties.") end
+    target:ChatPrint("[Living City] Your hands are cuffed. You can't use anything. F1 > Work at the cuffs, when nobody's looking.")
+    if IsValid(tier) then tier:ChatPrint("Cuffed. Looking at them, F1: drag them along, or uncuff them.") end
     hook.Run("LivingCityTied", target, tier)
     return true
 end
@@ -527,14 +527,14 @@ end
 
 function LC.StartUntie(ply, target)
     target = target or EyeTarget(ply)
-    if not IsValid(target) or not LC.IsTied(target) then return false, "Look at someone whose hands are tied, up close." end
-    if LC.IsTied(ply) then return false, "Your own hands are tied." end
+    if not IsValid(target) or not LC.IsTied(target) then return false, "Look at someone whose hands are cuffed, up close." end
+    if LC.IsTied(ply) then return false, "Your own hands are cuffed." end
     if RealUnit(ply) then
         LC.Untie(target, ply, true)
         target:ChatPrint("[Living City] A Civil Protection unit cuts your ties.")
         return true
     end
-    return LC.StartTask(ply, 4, "Cutting the ties...", {
+    return LC.StartTask(ply, 4, "Uncuffing them...", {
         maxMove = 40, cancelText = "You stop.",
         done = function(p)
             if IsValid(target) and LC.IsTied(target) and p:GetPos():DistToSqr(target:GetPos()) < 130 * 130 then
@@ -557,15 +557,15 @@ end
 
 function LC.StartStruggle(ply)
     local t = LC.Tied[ply]
-    if not t then return false, "Your hands aren't tied." end
+    if not t then return false, "Your hands aren't cuffed." end
     if IsValid(t.escort) or hook.Run("LivingCityCanStruggle", ply) == false then return false, "Not while they've got hold of you." end
-    return LC.StartTask(ply, cvStruggle:GetFloat(), "Working at the ties...", {
-        maxMove = 30, cancelText = "You stop working at the ties.",
+    return LC.StartTask(ply, cvStruggle:GetFloat(), "Working at the cuffs...", {
+        maxMove = 30, cancelText = "You stop working at the cuffs.",
         done = function(p)
             local tt = LC.Tied[p]
             if not tt then return end
             if IsValid(tt.escort) or UnitSees(p, 700) then
-                p:ChatPrint("[Living City] They see you working at the ties, and pull them tighter.")
+                p:ChatPrint("[Living City] They see you working at the cuffs, and tighten them.")
                 return
             end
             LC.Untie(p, p, true)
@@ -585,7 +585,7 @@ function LC.TryEscort(ply)
     end
     local target = EyeTarget(ply, 130)
     if not target or not LC.IsTied(target) then return nil end
-    if LC.IsTied(ply) then return false, "Your hands are tied." end
+    if LC.IsTied(ply) then return false, "Your hands are cuffed." end
     LC.Tied[target].escort = ply
     ply:ChatPrint("You take them by the arm. (F1 > Drag them along again to let go.)")
     target:ChatPrint("[Living City] You're being walked along.")
@@ -881,6 +881,8 @@ local COMMANDS = {
     records = function(ply) OpenRecords(ply) end,
     tie = function(ply) Reply(ply, LC.StartTie(ply)) end,
     untie = function(ply) Reply(ply, LC.StartUntie(ply)) end,
+    cuff = function(ply) Reply(ply, LC.StartTie(ply)) end, -- (the same as !tie and !untie: they're cuffs now)
+    uncuff = function(ply) Reply(ply, LC.StartUntie(ply)) end,
     struggle = function(ply) Reply(ply, LC.StartStruggle(ply)) end,
     handsup = function(ply) LC.SetHandsUp(ply) end,
     request = function(ply, rest) local ok, why = LC.CPRequest(ply, rest) if not ok then ply:ChatPrint(why) end end,
