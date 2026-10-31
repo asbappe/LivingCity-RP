@@ -76,6 +76,14 @@ Every commit says what it did; TIMELINE.md has the summary. The big pieces:
 - **Not verified:** the full test suite was started but not finished (no failures in the part that ran); the new tests (PapersHousingTests, NextStepTests, HygieneTests) never completed a run. Client smoke test passes. Run the full suite first next time.
 - **Rewording batch 4** (Civil Intake and Housing Allocation) is in the code; originals in `_dev/rewording/batch4_intake.md`. Kept the phrases the tests look for. Batch 5 (Civil Protection's tools; the cuffs no longer say "ties" or "plastic") too.
 
+## Later the same session (2026-11-01)
+
+- The owner's playtest notes, all fixed (README, "The 1 November playtest"): infestations no-go for NPCs, rebels on the editor's beds, sweep teams doing the job (scientist, pots, crates), rebel health and weapons, Combine weapons, triage injuries, credits and traits on the HUD, job tools taken back, bins you stand by, the jog's barks, reward and reprimand.
+- Rewording finished (batch 5: Civil Protection's tools, cuffs; "primary fire" is "left click"; the rest was already plain).
+- The Resistance Insider built (`sv_livingcity_insider.lua`): the Inside menu, the leaders told, caught means Resistance for good.
+- Terminals on their own screens (`cl_livingcity_screens.lua`): Civil Intake, Housing Allocation, the CP Commissary. Where the screen stands is a guess (in front, 54 units up): adjust `Frame` if the owner says.
+- The "Move it" bark file names are from memory: if a unit goes silent on the jog, a file name is wrong.
+
 ## Waiting on the owner (from the last session)
 
 - **The map's lights twinkle.** Not the day and night dimming (`lc_daynight_light` doesn't exist as a command; turning it off didn't help). Asked the owner to load `rp_c18_ug` in plain Sandbox: if it twinkles there too, it's the map or their graphics, not the gamemode.
