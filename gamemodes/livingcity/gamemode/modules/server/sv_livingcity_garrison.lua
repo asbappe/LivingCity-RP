@@ -51,11 +51,17 @@ local function Count(z)
     return n, cops
 end
 
--- A spot for one to turn up: inside the zone, out of sight, not on top of anyone.
+-- A spot for one to turn up: inside the zone, out of sight, not on top of anyone, and not in a
+-- doorway (one stood in a sliding door gets stuck inside it when it closes).
+local DOORS = { func_door = true, func_door_rotating = true, prop_door_rotating = true, func_movelinear = true }
+local function NearDoor(p)
+    for _, e in ipairs(ents.FindInSphere(p, 80)) do if IsValid(e) and DOORS[e:GetClass()] then return true end end
+    return false
+end
 local function SpawnSpot(z)
     for _ = 1, 8 do
         local p = LC.SpotInZone(z)
-        if p and (not LC.CombineZoneAt or LC.CombineZoneAt(p) == z)
+        if p and (not LC.CombineZoneAt or LC.CombineZoneAt(p) == z) and not NearDoor(p)
             and not (LC.IsSeen and LC.IsSeen(p + Vector(0, 0, 40)))
             and (not LC.FarFromPlayers or LC.FarFromPlayers(p, 300)) then
             return p

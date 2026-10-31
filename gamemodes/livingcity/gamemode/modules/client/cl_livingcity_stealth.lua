@@ -30,6 +30,11 @@ timer.Create("LivingCityStealthLight", 1, 0, function()
     local c = render.GetLightColor(me:GetPos() + Vector(0, 0, 32))
     if not c or not c.x then return end
     light = math.Clamp(math.max(c.x, c.y, c.z), 0, 1)
+    -- the server only cares whether you're in the dark, the half-dark or the light (the stealth
+    -- thresholds): tell it when that changes, and now and then anyway, not every second
+    local band = light < 0.06 and 0 or (light < 0.15 and 1 or 2)
+    if band == LC_CL.lightBand and CurTime() < (LC_CL.lightSentAt or 0) + 30 then return end
+    LC_CL.lightBand, LC_CL.lightSentAt = band, CurTime()
     net.Start("lc_light")
     net.WriteFloat(light)
     net.SendToServer()
