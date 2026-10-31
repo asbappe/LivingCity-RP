@@ -80,7 +80,7 @@ local BAND_NAMES = { union = "Union band", resistance = "Freq 7", cp = "CP net" 
 function LC.RadioBand(ply)
     if LC.PlayerIsCP(ply) then return "cp" end
     if LC.HasItem(ply, "radio_tuned") then return "resistance" end
-    if LC.HasItem(ply, "radio") then return "union" end
+    if LC.HasItem(ply, "radio") then return "resistance" end -- (an old one: Freq 7, like every civilian radio now)
     return nil
 end
 
@@ -1586,5 +1586,16 @@ hook.Add("PlayerSpawn", "LivingCityPlainClothes", function(ply)
         if LC.Wear(ply, "plain") then
             ply:ChatPrint("[Resistance] You're in plain clothes. F1 > Gear up when it's time to fight.")
         end
+    end)
+end)
+
+-- The Union radio is gone (the owner, 2026-11-01): one still in someone's pockets becomes the Freq 7 radio
+-- every civilian radio now is.
+hook.Add("PlayerSpawn", "LivingCityNoUnionRadio", function(ply)
+    timer.Simple(2, function()
+        if not IsValid(ply) or not LC.HasItem or not LC.HasItem(ply, "radio") then return end
+        local n = (LC.Inventory(ply) or {}).radio or 1
+        LC.TakeItem(ply, "radio", n)
+        LC.GiveItem(ply, "radio_tuned", n)
     end)
 end)

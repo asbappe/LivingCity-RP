@@ -293,7 +293,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **The reckoning** starts by itself after it (no choosing it): pay the debt (starts at once) and the Inside menu comes back; take off the mask (Resistance, never a unit again); or done with the Resistance (the forced soldier conversion).
 - [ ] **The stalker's end:** the frame is built beside a power transformer; once charged, an arc jumps the gap; walking into it kills at once.
 - [ ] **Joining Civil Protection:** refused until 5 Records Clerk shifts (and 100 standing), and told so.
-- [ ] **No Union radio** at the Commissary; a radio set at the black market, contraband.
+- [ ] **No Union radio**: radios are Freq 7 radios (black market); the lab's transmitter needs one.
 - [ ] **Shackled vortigaunts** sweeping the streets (2). If there's still no freed one in rebel ground, send the debug report's "vortigaunts" line.
 - [ ] **Secret endings** three hours apart.
 - [ ] **She, not he:** a job about a woman (a patient, a neighbour, a prisoner) says her.

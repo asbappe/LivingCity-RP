@@ -897,29 +897,53 @@ LC.AbandonQuest(good)
 LC.Bump(good, "suspicion", 3)
 LC.CheckUnlocks(good)
 ok(storyPosting(good, "insidework") == nil, "too much suspicion and the ops dry up")
+do -- (its own scope: the main chunk is at Lua's limit on locals)
 local m1 = storyPosting(good, "molehunt")
-ok(m1 ~= nil, "and Internal Affairs starts a mole hunt")
+ok(m1 ~= nil and m1.title == "The loyalty test", "and the mole hunt starts with the loyalty test, in the cells", m1 and m1.title)
 LC.AcceptPosting(good, m1.id)
 local qm = LC.QuestOf[good]
 good:SetPos(qm.stages[1].pos)
 _run(1)
-reach(good, qm.data.actor)
-withRoll(20, function() LC.ResolveChoice(good, qm.id, 3) end)
-ok(LC.Counter(good, "suspicion") == 0 and LC.Story(good).chains.molehunt == nil, "riding it out clears suspicion, and IA can come back another day")
+local lts = LC.LoyaltyTests[good]
+ok(lts and IsValid(lts.prisoner) and #lts.guards == 2 and good:HasWeapon("weapon_fists"), "in the cell: the prisoner, two guards, your fists")
+LC.ResolveChoice(good, qm.id, 1)
+for _ = 1, 6 do if lts then hook.Run("EntityTakeDamage", lts.prisoner, _dmg(good, 5, DMG_CLUB)) end end
+_run(1)
+ok(lts and lts.phase == "finish" and lts.prisoner:Health() > 0, "the beating: he stays on his feet, then he's to be finished", lts and lts.phase)
+if lts then hook.Run("OnNPCKilled", lts.prisoner, good, nil) end
+_run(1)
+ok(LC.Counter(good, "suspicion") == 0 and LC.StoryFlag(good, "disgraced") == true and LC.LoyaltyTests[good] == nil, "killed him: suspicion cleared, and the Resistance shuts you out")
+_run(15)
+local qr = LC.QuestOf[good]
+ok(qr and qr.chain == "molehunt" and qr.chainPart == "reckoning", "the reckoning starts by itself: no choosing it", qr and qr.chainPart)
+if qr then
+    good:SetPos(qr.stages[1].pos)
+    _run(1)
+    reach(good, qr.data.actor)
+    LC.ResolveChoice(good, qr.id, 1)
+    _run(15)
+end
+local qd = LC.QuestOf[good]
+ok(qd and qd.chainPart == "debt", "paying the debt starts at once", qd and qd.chainPart)
+LC.AbandonQuest(good)
+-- (the debt paid)
+LC.StoryFlag(good, "disgraced", false)
+LC.Story(good).chains.molehunt = nil
+LC.Story(good).notified.molehunt = nil
+end
 ok(storyPosting(good, "insidework") ~= nil, "the ops resume")
 
+do
 LC.Bump(good, "suspicion", 3)
 local m2 = storyPosting(good, "molehunt")
 LC.AcceptPosting(good, m2.id)
 local qm2 = LC.QuestOf[good]
 good:SetPos(qm2.stages[1].pos)
 _run(1)
-reach(good, qm2.data.actor)
-withRoll(1, function() LC.ResolveChoice(good, qm2.id, 3) end)
-_run(2)
-ok(LC.StoryFlag(good, "exposed") == true and LC.Prisoners[good] ~= nil, "a failed bluff gets you exposed and jailed")
-ok(good:GetNW2String("lcf_faction", "") == "citizen", "stripped back to citizen")
-LC.ReleasePrisoner(good)
+LC.ResolveChoice(good, qm2.id, 2)
+_run(10)
+ok(LC.StoryFlag(good, "exposed") == true and LC.PlayerIsStalker(good), "refusing: shot down, and made a stalker")
+end
 
 local brave = newPlayer("BraveCop", "cp")
 local bcs = LC.ChainState(brave, "inside")
@@ -1188,9 +1212,10 @@ local rebelR = newPlayer("RadioRebel", "resistance", nil, 150)
 local unitR = newPlayer("RadioUnit", "cp")
 local deaf = newPlayer("NoRadio", "citizen")
 LC.AddCredits(listener, 100)
-ok(not LC.Buy(listener, "radio"), "no radio at the Union Commissary any more (a civilian with one is breaking the law)")
-LC.GiveItem(listener, "radio")
-ok(LC.RadioBand(listener) == "union" and LCS.Items.radio.contraband, "a radio set picks up the city's notices, and it's contraband")
+ok(not LC.Buy(listener, "radio") and not LCS.BlackById.radio, "no plain radio anywhere: every radio that isn't Civil Protection's is a Freq 7 radio")
+LC.GiveItem(listener, "radio_tuned")
+ok(LC.RadioBand(listener) == "resistance" and LCS.Items.radio_tuned.contraband, "a civilian's radio is a Freq 7 radio, and contraband")
+ok(LCS.LabById.radio_transmitter and LCS.LabById.radio_transmitter.needs.radio_tuned == 1, "the lab makes the transmitter from a Freq 7 radio")
 LC.GiveItem(rebelR, "radio_tuned")
 ok(LC.RadioBand(rebelR) == "resistance" and LC.RadioBand(unitR) == "cp", "a retuned radio is Freq 7; units are on the CP net")
 listener.chat, rebelR.chat, unitR.chat, deaf.chat = {}, {}, {}, {}
