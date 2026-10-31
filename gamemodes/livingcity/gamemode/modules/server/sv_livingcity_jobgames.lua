@@ -1082,11 +1082,23 @@ GAMES.triage = {
     start = function(g)
         g.title = "Triage"
         local center = g.opts.center or g.ply:GetPos()
-        local spots = g.opts.spots or {}
-        if #spots == 0 then for i = 1, 4 do spots[i] = center + Vector(math.cos(i * 1.6) * 90, math.sin(i * 1.6) * 90, 0) end end
+        -- as many patients going downhill as ever (3 or 4), and one more who's stable on top: someone who
+        -- can wait doesn't make the shift easier (the owner)
+        local deadly, stable = {}, {}
+        for _, inj in ipairs(Shuffle(table.Copy(INJURIES))) do
+            if inj.rate > 0 then deadly[#deadly + 1] = inj else stable[#stable + 1] = inj end
+        end
+        local inj = {}
+        for i = 1, math.random(3, 4) do inj[#inj + 1] = deadly[(i - 1) % #deadly + 1] end
+        if #stable > 0 then inj[#inj + 1] = stable[1] end
+        local spots = {}
+        for i, v in ipairs(g.opts.spots or {}) do spots[i] = v end
+        while #spots < #inj do
+            local k = #spots + 1
+            spots[k] = center + Vector(math.cos(k * 1.25) * 110, math.sin(k * 1.25) * 110, 0)
+        end
         g.patients, g.saved, g.lost = {}, 0, 0
-        local inj = Shuffle(table.Copy(INJURIES))
-        for i = 1, math.min(#spots, math.random(3, 4)) do
+        for i = 1, #inj do
             if not (LC.Spawners and LC.Spawners.citizen) then break end
             local npc, st = LC.Spawners.citizen(spots[i])
             if IsValid(npc) and st then

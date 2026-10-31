@@ -268,7 +268,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Rebels on your beds:** at night, rebels lie down on the beds you placed in their camp.
 - [ ] **A sweep:** units arrest the lab scientist, smash the pots (the plant gone, a breaking sound) and empty the supply crates.
 - [ ] **Rebels at home** go down in about half the shots; your squad as before. Rebels: SMGs and shotguns only. Combine soldiers: pulse rifles and shotguns only.
-- [ ] **Triage:** a broken arm stays put; a gunshot wound drops fast.
+- [ ] **Triage:** three or four patients going downhill plus one stable (a broken arm stays put); a gunshot wound drops fast.
 - [ ] **Top left:** credits, standing, and loyalty, sympathy, corruption.
 - [ ] **Medic to another job:** the medkit is gone.
 - [ ] **A placed bin:** stand next to it, F2: the bin's section is there.

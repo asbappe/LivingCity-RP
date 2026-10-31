@@ -10049,8 +10049,11 @@ md:SetPos(K0 + Vector(3000, 0, 0))
 c0 = LC.Credits(md)
 ok(LC.JobGameStart(md, "triage", nil, { center = md:GetPos() }), "patients come in")
 g = LC.JobGames[md]
-ok(g and #g.patients >= 3, "three or four of them", g and #g.patients)
-local dying = g.patients[#g.patients]
+local nDying, nStable = 0, 0
+for _, p in ipairs(g and g.patients or {}) do if p.injury.rate > 0 then nDying = nDying + 1 else nStable = nStable + 1 end end
+ok(g and nDying >= 3 and nDying <= 4 and nStable == 1, "three or four going downhill, and one more who's stable (a broken arm doesn't make it easier)", nDying .. " + " .. nStable)
+local dying
+for _, p in ipairs(g.patients) do if p.injury.rate > 0 then dying = p break end end
 dying.npc:SetHealth(1)
 for _, p in ipairs(g.patients) do if p ~= dying then p.npc:SetHealth(p.max) end end
 Tick(20)
@@ -13520,10 +13523,12 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     local woman, wst = LC.Spawners.citizen(Vector(-162000, -162000, 0))
     if wst then wst.gender = "female" end
     local fq2 = { data = { target = woman }, stages = { {} }, stage = 1 }
-    ok(LC.FitPronouns(fq2, "Bring him home. He is waiting. A unit sees him.") == "Bring her home. She is waiting. A unit sees him.",
-        "a job about a woman: her, not him (a sentence about a unit left alone)", LC.FitPronouns(fq2, "Bring him home. He is waiting. A unit sees him."))
+    -- (a real line from the Clinic Medic's job, sv_livingcity_work.lua)
+    local line = "Heal him: hold your medkit and left click on him until he's healed. A Civil Protection unit is watching him."
+    ok(LC.FitPronouns(fq2, line) == "Heal her: hold your medkit and left click on her until she's healed. A Civil Protection unit is watching him.",
+        "a job about a woman: her, not him (a sentence about a unit left alone)", LC.FitPronouns(fq2, line))
     if wst then wst.gender = "male" end
-    ok(LC.FitPronouns(fq2, "Bring him home.") == "Bring him home.", "and him for a man")
+    ok(LC.FitPronouns(fq2, line) == line, "and him for a man")
     if IsValid(woman) then woman:Remove() end
 end)()
 

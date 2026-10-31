@@ -417,7 +417,7 @@ Units are units: Civil Protection players still stop citizens with E.
 - **Rebels sleep on the beds you place** (the editor's "Fixture: bed") as well as the map's beds and mattresses. The "Point: bunk" is still useful where there's no bed to put: a spot on the floor to sleep on.
 - **Sweeps do the job**: a sweep team member with no rebel in sight takes the lab's scientist into custody, smashes the pots and empties the supply crates (nearest first, one unit each), then patrols.
 - **Rebels at home are half as tough** (`lc_rebel_home_hurt` 2: the damage they take, doubled); a player's squad isn't affected. **Rebels carry SMGs, now and then a shotgun** (never pulse rifles); **Combine soldiers carry pulse rifles or shotguns** (never SMGs).
-- **Triage**: injuries get worse at different rates (gunshot, stab wound and electrocution critical; head injury, crush, beating, burns and smoke slower; a broken arm or dislocated shoulder stable, never dying).
+- **Triage**: injuries get worse at different rates (gunshot, stab wound and electrocution critical; head injury, crush, beating, burns and smoke slower; a broken arm or dislocated shoulder stable, never dying). Still three or four patients going downhill, with one stable patient on top, so it's no easier.
 - **HUD, top left**: credits and standing always (even with the quiet HUD), and loyalty, sympathy and corruption under them.
 - **Changing jobs takes back the old job's tools** (the medic's medkit), unless the new job uses them.
 - **A bin you're standing right by** opens in your pockets (F2) even if you're not aiming at it.
