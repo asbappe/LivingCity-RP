@@ -13133,6 +13133,68 @@ end)()
     unit.valid = false other.valid = false civ.valid = false
 end)()
 
+section("Couriers and senders; the Resistance's smugglers")
+;(function()
+    local P0 = Vector(-227000, 227000, 0)
+    local stops = { { pos = P0 + Vector(400, 0, 0), name = "A" }, { pos = P0 + Vector(800, 0, 0), name = "B" }, { pos = P0 + Vector(1200, 0, 0), name = "C" } }
+    local cu = newPlayer("Courier21", "citizen")
+    _run(1)
+    cu:SetPos(P0)
+    local function Standing(p) return tonumber(p:GetPData("lce_standing", 0)) or 0 end
+    local clean = { text = "A flat tin.", hot = false, say = "buttons", inside = "buttons" }
+    local hot = { text = "A heavy box.", hot = true, inside = "pistol rounds" }
+    -- an honest sender: no reporting them, just take it or not (or open it)
+    LC.JobGameStart(cu, "parcel", nil, { stops = stops, parcel = clean, sender = "honest" })
+    local g = LC.JobGames[cu]
+    ok(g and not g.decided, "the sender hands it over first: nothing moves till you decide")
+    ok(LC.JobGameAct(cu, "sender", "report") == nil, "an honest sender who said what's in it can't be reported")
+    ok(LC.JobGameAct(cu, "sender", "take") and g.decided and cu.lcWaypoint ~= nil, "take it: the clock starts and the first door is marked")
+    LC.JobGameEnd(cu, "quit")
+    -- a sender who won't say: report them
+    local s0 = Standing(cu)
+    LC.JobGameStart(cu, "parcel", nil, { stops = stops, parcel = hot, sender = "silent" })
+    ok(LC.JobGameAct(cu, "sender", "report") and LC.JobGames[cu] == nil and Standing(cu) > s0, "a sender who won't say what's in it can be reported to Civil Protection (standing up, contraband found)", Standing(cu) - s0)
+    -- open it: standing down, and you know what's inside
+    s0 = Standing(cu)
+    LC.JobGameStart(cu, "parcel", nil, { stops = stops, parcel = hot, sender = "silent" })
+    g = LC.JobGames[cu]
+    LC.JobGameAct(cu, "sender", "open")
+    ok(g.opened and Standing(cu) < s0, "opening somebody's parcel costs Civil Standing", Standing(cu) - s0)
+    ok(LC.JobGameAct(cu, "sender", "open") == nil, "(once is enough)")
+    LC.JobGameAct(cu, "sender", "take")
+    ok(g.knowing, "seen what's in it and taken it anyway: you know what you're carrying")
+    LC.JobGameEnd(cu, "quit")
+    -- hand it back
+    local c0 = LC.Credits(cu)
+    LC.JobGameStart(cu, "parcel", nil, { stops = stops, parcel = clean, sender = "honest" })
+    ok(LC.JobGameAct(cu, "sender", "refuse") and LC.JobGames[cu] == nil and LC.Credits(cu) == c0, "hand it back: no parcel, no pay")
+    -- a bold sender: the extra, when it gets there
+    LC.JobGameStart(cu, "parcel", nil, { stops = stops, parcel = hot, sender = "bold", searchFinds = 0 })
+    g = LC.JobGames[cu]
+    LC.JobGameAct(cu, "sender", "take")
+    c0 = LC.Credits(cu)
+    for i = 1, 3 do cu:SetPos(stops[i].pos) _run(0.3) end
+    ok(LC.JobGames[cu] == nil and LC.Credits(cu) - c0 >= 8 + 9, "a sender who owned up pays the extra when it gets there", LC.Credits(cu) - c0)
+    cu.valid = false
+    -- the Resistance's smugglers
+    local f = LCF.Get("resistance")
+    ok(f.specialsById.smuggler ~= nil, "the Resistance has a Smuggler role")
+    local sm = newPlayer("Runner21", "resistance", "smuggler", 400)
+    local plain = newPlayer("NotASmuggler", "resistance", nil, 400)
+    _run(1)
+    local tmpl
+    for _, t in ipairs(LC.QuestTemplates) do if t.id == "res_smuggle" then tmpl = t end end
+    ok(tmpl and tmpl.available(sm) and not tmpl.available(plain), "smuggling runs are on a Smuggler's board, nobody else's")
+    sm:SetPos(P0)
+    local started = LC.JobGameStart(sm, "parcel", nil, { stops = stops, smuggle = true, searchFinds = 0 })
+    g = LC.JobGames[sm]
+    ok(g and g.decided and g.knowing and g.parcel.hot and g.title == "Smuggling run", "a smuggling run: hot cargo, no questions, straight off")
+    c0 = LC.Credits(sm)
+    for i = 1, 3 do sm:SetPos(stops[i].pos) _run(0.3) end
+    ok(LC.JobGames[sm] == nil and LC.Credits(sm) - c0 >= 18 + 10, "and it pays far better than a courier's run", LC.Credits(sm) - c0)
+    sm.valid = false plain.valid = false
+end)()
+
 section("The Endings menu: every ending's settings, and its dances tuned live")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     ok(LC.EndingSettingGroup("lc_ending_flood_boats") == "water" and LC.EndingSettingGroup("lc_ending_minge_max") == "harpies"

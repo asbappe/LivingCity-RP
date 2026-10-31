@@ -2029,6 +2029,32 @@ T{
     end,
 }
 
+-- The Smuggler's trade (a Resistance role, F4): the cell's cargo from the quartermaster, out
+-- to three drops in the city past the units, knowing exactly what's in it.
+T{
+    id = "res_smuggle", factions = { resistance = true },
+    available = function(ply) return IsValid(ply) and ply:GetNW2String("lcf_special", "") == "smuggler" and GamesOn() end,
+    build = function(ply)
+        local qm = Quartermaster()
+        local from = IsValid(qm) and qm:GetPos() or Spot(ply, 300, 1500)
+        if not from then return nil end
+        local stops = {}
+        for _ = 1, 3 do
+            local sp = Spot(ply, 800, 3500)
+            if not sp then return nil end
+            stops[#stops + 1] = { pos = sp, name = "the drop " .. Place(sp, from) }
+        end
+        return {
+            title = "Smuggling run", reward = 20, limit = 900,
+            desc = "The cell's cargo: guns and ammunition, out to three drops in the city. You know what's in it, and so will any unit who searches you.",
+            stages = {
+                GameGo(from, IsValid(qm) and "Collect the cargo from the quartermaster" or "Collect the cargo", "parcel", { stops = stops, smuggle = true }, 140),
+                GameStage("Get the cargo to the three drops (marked) against the clock: crouch past the units, or stand still for a search and hope"),
+            },
+        }
+    end,
+}
+
 T{
     id = "res_terminal", factions = { resistance = true },
     available = function() return GamesOn() end,

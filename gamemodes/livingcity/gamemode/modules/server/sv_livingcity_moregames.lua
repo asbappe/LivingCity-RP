@@ -65,17 +65,49 @@ end
 -- Parcel run (Courier)
 ------------------------------------------------------------------------
 
+-- text: what it looks like; say: what an honest sender calls it; inside: what's really in it
 local PARCELS = {
-    { text = "A heavy little box, taped twice. It smells of gun oil.", hot = true },
-    { text = "Soft and lumpy, wrapped in newspaper. Something inside sloshes.", hot = true },
-    { text = "A flat tin, very light. It rattles when you turn it.", hot = false },
-    { text = "A shoebox tied up with wire. It's warm, somehow.", hot = true },
-    { text = "Medicine, by the label. The label is in somebody's handwriting.", hot = false },
-    { text = "Books, by the weight. Nobody has said the word 'books' out loud in years.", hot = true },
+    { text = "A heavy little box, taped twice. It smells of gun oil.", hot = true, inside = "pistol rounds, loose in a sock" },
+    { text = "Soft and lumpy, wrapped in newspaper. Something inside sloshes.", hot = true, inside = "a bottle of something that isn't water, and a rag for a fuse" },
+    { text = "A flat tin, very light. It rattles when you turn it.", hot = false, say = "buttons, for the laundry", inside = "buttons, hundreds of them" },
+    { text = "A shoebox tied up with wire. It's warm, somehow.", hot = true, inside = "a Combine battery cell, humming to itself" },
+    { text = "Medicine, by the label. The label is in somebody's handwriting.", hot = false, say = "my mother's medicine", inside = "painkillers, a few days' worth, in a paper twist" },
+    { text = "Books, by the weight. Nobody has said the word 'books' out loud in years.", hot = true, inside = "books, the kind the Union burns" },
+    { text = "A small parcel, neatly wrapped. It weighs almost nothing.", hot = false, say = "a letter and some socks for my son", inside = "a letter, and a pair of darned socks" },
 }
 local SEARCH_SECS = 5
+local SMUGGLE_BONUS = 8 -- (what a sender who owns up offers on top)
 
-local function ParcelWay(g)
+-- The sender: an honest one says what's in it; a silent one won't; a bold one owns up to
+-- contraband and offers more. The courier takes it, hands it back, reports the sender to a
+-- Civil Protection unit (only when they wouldn't say, or owned up), or opens it (Civil
+-- Standing, and half the pay: you opened somebody's mail).
+local function SenderLine(g)
+    local pc = g.parcel
+    if g.openedSaw then return "You slit the tape and look. Inside: " .. pc.inside .. "." end
+    if g.sender == "honest" then return pc.text .. " The sender says it's " .. (pc.say or "nothing much") .. "." end
+    if g.sender == "silent" then return pc.text .. " You ask what's in it. 'Don't ask. Just get it there.'" end
+    return pc.text .. " The sender leans in: 'It's not something a unit should see. " .. SMUGGLE_BONUS .. " credits extra when it gets there.'"
+end
+local function SenderChoices(g)
+    local c = { "take", "refuse" }
+    if g.sender ~= "honest" or (g.openedSaw and g.parcel.hot) then c[#c + 1] = "report" end
+    if not g.opened then c[#c + 1] = "open" end
+    return c
+end
+local function SenderPanel(g)
+    LC.JobGamePanel(g, { text = SenderLine(g), choices = SenderChoices(g), opened = g.opened or nil })
+end
+local ParcelWay
+local function ParcelSetOff(g)
+    g.decided = true
+    g.limit = CurTime() + g.allowed
+    LC.JobGamePanel(g, nil)
+    Say(g, "Courier", "Three to go, against the clock. Civil Protection units stop couriers they get a good look at: crouch past them, or stand still for the search.")
+    ParcelWay(g)
+end
+
+function ParcelWay(g)
     local s = g.stops[g.i]
     if s and LC.SetWaypoint then LC.SetWaypoint(g.ply, s.pos, s.name or "The next parcel", 130) end
 end
@@ -86,13 +118,29 @@ LC.JobGameDefine("parcel", {
         g.stops = g.opts.stops or {}
         if #g.stops == 0 then error("no stops") end
         g.i, g.heat, g.searches = 1, 0, 0
-        g.parcel = g.opts.parcel or Pick(PARCELS)
+        g.smuggle = g.opts.smuggle == true -- (a Resistance smuggling run: hot, and you know it)
+        g.parcel = g.opts.parcel or (g.smuggle and { text = "The cell's cargo, wrapped to look like nothing.", hot = true, inside = "guns and ammunition for the cell" }) or Pick(PARCELS)
         local dist, from = 0, g.ply:GetPos()
         for _, s in ipairs(g.stops) do dist = dist + from:Distance(s.pos) from = s.pos end
-        g.limit = CurTime() + 45 + dist / 190
-        Say(g, "Courier", g.parcel.text .. " Three to go, against the clock. Civil Protection units stop couriers they get a good look at: crouch past them, or stand still for the search.")
-        ParcelWay(g)
+        g.allowed = 45 + dist / 190
+        g.limit = CurTime() + g.allowed
+        if g.smuggle then
+            g.title = "Smuggling run"
+            g.knowing, g.decided = true, true
+            Say(g, "Resistance", "The cell's cargo. Three drops, against the clock. Units search anyone who looks wrong: crouch past them, or stand still and hope.")
+            ParcelWay(g)
+        elseif g.opts.parcel and not g.opts.sender then
+            g.decided = true -- (handed straight over: no word with the sender)
+            Say(g, "Courier", g.parcel.text .. " Three to go, against the clock. Civil Protection units stop couriers they get a good look at: crouch past them, or stand still for the search.")
+            ParcelWay(g)
+        else
+            -- the sender: honest about a harmless one most of the time; a hot one is never "honest"
+            g.sender = g.opts.sender or (g.parcel.hot and (math.random() < 0.5 and "silent" or "bold")) or (math.random() < 0.7 and "honest" or "silent")
+            g.decided = false
+            SenderPanel(g)
+        end
         g.hud = function(gg)
+            if not gg.decided then return { "The sender is waiting.", "Take it, hand it back, report them, or open it (the window; E brings it back)" } end
             local s = gg.stops[gg.i]
             local left = gg.limit - CurTime()
             local lines = { string.format("Parcel %d of %d: %s", math.min(gg.i, #gg.stops), #gg.stops, s and s.name or "done"),
@@ -105,6 +153,7 @@ LC.JobGameDefine("parcel", {
     end,
     tick = function(g, now)
         local ply = g.ply
+        if not g.decided then return end
         if g.stopped then
             local s = g.stopped
             if ply:GetPos():DistToSqr(s.at) > 110 * 110 then
@@ -141,7 +190,7 @@ LC.JobGameDefine("parcel", {
         end
         local s = g.stops[g.i]
         if ply:GetPos():DistToSqr(s.pos) < 130 * 130 then
-            g.pay = g.pay + 3
+            g.pay = g.pay + (g.smuggle and 6 or (g.opened and 1 or 3))
             ply:EmitSound("buttons/button9.wav", 60)
             Say(g, "Courier", "Delivered, " .. (s.name or "here") .. ". Nobody signs for these.")
             g.i = g.i + 1
@@ -154,7 +203,16 @@ LC.JobGameDefine("parcel", {
                     Note(g, "Late.")
                 end
                 if g.searches == 0 and not g.ran then g.pay = g.pay + 2 Note(g, "Never stopped once.") end
-                if g.parcel.hot then Note(g, "Whatever was in them, it got there.") end
+                if g.smuggle then
+                    g.pay = g.pay + 10
+                    Note(g, "The cargo got through. The cell won't forget it.")
+                    if LC.AddXP then LC.AddXP(ply, 15, "a smuggling run") end
+                elseif g.sender == "bold" then
+                    g.pay = g.pay + SMUGGLE_BONUS
+                    Note(g, string.format("The %d credits extra, as promised. You knew what you were carrying.", SMUGGLE_BONUS))
+                elseif g.parcel.hot then
+                    Note(g, "Whatever was in them, it got there.")
+                end
                 return LC.JobGameEnd(ply, "done")
             end
             ParcelWay(g)
@@ -163,6 +221,45 @@ LC.JobGameDefine("parcel", {
             g.lateSaid = true
             Say(g, "Courier", "You're late. The rest still has to get there.")
         end
+    end,
+    use = function(g) if not g.decided and not g.panelOpen then SenderPanel(g) return true end end,
+    act = function(g, action, arg)
+        if action ~= "sender" or g.decided then return nil end
+        local ply = g.ply
+        if arg == "take" then
+            if g.sender == "bold" or (g.openedSaw and g.parcel.hot) then g.knowing = true end
+            ParcelSetOff(g)
+            return true
+        elseif arg == "refuse" then
+            Say(g, "Courier", "You hand it back. 'Find someone else.' No parcel, no pay.")
+            g.pay = 0
+            LC.JobGamePanel(g, nil)
+            LC.JobGameEnd(ply, "done")
+            return true
+        elseif arg == "report" then
+            if not table.HasValue(SenderChoices(g), "report") then return nil end
+            g.pay = 2
+            Bump(ply, "reports")
+            if g.parcel.hot then
+                Standing(ply, 4, "reported a sender of contraband")
+                Note(g, "You hand the parcel to a Civil Protection unit and point out the sender. Contraband: the unit takes it from there.")
+            else
+                Standing(ply, 1, "reported a sender")
+                Note(g, "You hand it to a Civil Protection unit. Inside: " .. g.parcel.inside .. ". The unit isn't pleased to be bothered.")
+            end
+            hook.Run("LivingCityParcelReported", ply, g.parcel.hot)
+            LC.JobGamePanel(g, nil)
+            LC.JobGameEnd(ply, "done")
+            return true
+        elseif arg == "open" then
+            if g.opened then return nil end
+            g.opened, g.openedSaw = true, true
+            Standing(ply, -2, "opened somebody's parcel")
+            Say(g, "Courier", "You open it. Opening the mail costs you: Civil Standing, and half the pay if you deliver it.")
+            SenderPanel(g)
+            return true
+        end
+        return nil
     end,
     finish = function(g) if IsValid(g.ply) and LC.SetWaypoint then LC.SetWaypoint(g.ply, nil) end end,
 })

@@ -261,6 +261,7 @@ faction resistance rank 4 Lieutenant at 900 xp
 faction resistance rank 5 Commander at 1800 xp
 faction resistance special chaplain
 faction resistance special hacker
+faction resistance special smuggler
 faction resistance special vortigaunt
 faction stalker (Stalker)
 faction stalker rank 1 Stalker at 0 xp

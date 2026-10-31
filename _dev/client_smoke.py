@@ -976,6 +976,8 @@ local okMG, errMG = pcall(function()
         { kind = "laundry", bins = { { label = "UNION / JURY" }, { label = "KING / TAP" }, { label = "Incident wash" } }, tag = "UNION-07", stain = true, pocket = "a folded note", n = 1, of = 12, secs = 90 },
         { kind = "filing", drawers = { "00-24", "25-49", "50-74", "75-99", "Discrepancy" }, name = "Mira Kesler", cid = "12-345", status = "Active", regName = "Mira Kessler", regCid = "12-345", n = 1, of = 10, secs = 100, blank = true },
         { kind = "radio", n = 1, of = 4, t = 95.5, f7 = 101.2, heard = "'...this is Freq 7...'", secs = 20, screws = { 0.3, 0.6, 0.5 }, turn = { 0.9, 0.1, 0.1 }, names = { "Volume trimmer", "Squelch", "Alignment" } },
+        { kind = "parcel", text = "A heavy box. You ask what's in it. 'Don't ask. Just get it there.'", choices = { "take", "refuse", "report", "open" } },
+        { kind = "parcel", text = "You slit the tape and look. Inside: pistol rounds.", choices = { "take", "refuse", "report" }, opened = true },
         { kind = "patdown", zones = { { name = "Coat", done = true }, { name = "Bag", done = true, found = "a lockpick" }, { name = "Boots", done = false } }, tell = "They hold the bag tight.", nerve = 2, found = "a lockpick", n = 1, of = 3 },
     }
     for _, d in ipairs(docs) do

@@ -71,6 +71,12 @@ LCF.Factions = {
                 loadout = { "weapon_crowbar", "weapon_pistol", "weapon_lc_multitool" },
             },
             {
+                id = "smuggler", name = "Smuggler", max = 2, minRank = 2,
+                desc = "Moving the cell's cargo is your trade: guns, ammunition and worse, out past the units to drops all over the city. " ..
+                       "Your board (F3) has smuggling runs on it, better paid than anything a courier carries. A search that finds the cargo finds you.",
+                loadout = { "weapon_crowbar", "weapon_pistol" },
+            },
+            {
                 id = "chaplain", name = "Father Grigori", max = 1, minRank = 2,
                 desc = "Chaplain of the Resistance. A priest who will not let faith die under the Combine. " ..
                        "He tends the wounded with his Blessing and preaches the Word aloud. The Combine have " ..

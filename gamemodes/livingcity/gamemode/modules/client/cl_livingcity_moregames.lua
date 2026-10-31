@@ -225,6 +225,43 @@ end
 -- Filing
 ------------------------------------------------------------------------
 
+-- The courier and the sender: take it, hand it back, report them, or open it
+local SENDER_BTN = {
+    take = { "Take it", GOOD }, refuse = { "Hand it back", Color(90, 90, 95) },
+    report = { "Report the sender", Color(70, 90, 150) }, open = { "Open it", WARN },
+}
+BUILD.parcel = function(t)
+    local f = Frame("A parcel to deliver", 560, 260)
+    panel.frame = f
+    local body = vgui.Create("DPanel", f)
+    body:Dock(FILL)
+    body:DockMargin(10, 10, 10, 8)
+    body.Paint = function(s, w, h)
+        local d = panel and panel.data or t
+        draw.RoundedBox(4, 0, 0, w, h, CARD)
+        local lines = LC_CL.WrapText and LC_CL.WrapText(d.text or "", "LCJobLine", w - 20) or { d.text or "" }
+        for i, l in ipairs(lines) do draw.SimpleText(l, "LCJobLine", 10, 10 + (i - 1) * 18, INK) end
+        if d.opened then draw.SimpleText("You opened it: Civil Standing lost, and half the pay if you deliver it.", "LCJobLine", 10, h - 22, WARN) end
+    end
+    local row = vgui.Create("DPanel", f)
+    row:Dock(BOTTOM)
+    row:SetTall(36)
+    row:DockMargin(10, 0, 10, 10)
+    row.Paint = nil
+    local function Upd(d)
+        row:Clear()
+        for _, c in ipairs(d.choices or {}) do
+            local spec = SENDER_BTN[c] or { c, DIM }
+            local b = Button(row, spec[1], spec[2], function() Act("sender", c) end)
+            b:Dock(LEFT)
+            b:SetWide(126)
+            b:DockMargin(0, 0, 8, 0)
+        end
+    end
+    panel.update = Upd
+    Upd(t)
+end
+
 BUILD.filing = function(t)
     local f = Frame("Filing: by citizen number; anything that doesn't match the register, to the discrepancy tray", 640, 400)
     panel.frame = f
