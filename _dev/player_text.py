@@ -261,7 +261,10 @@ def main():
            "Made by `python3 _dev/player_text.py` from the code itself, so it can be made again after any change. "
            "Grouped by the part of the game it belongs to. Each line: the text (parts the game fills in look like {name}, "
            "and %d, %s or %.1f are numbers or words filled in), how it shows (a chat message, an on-screen notice, a button...), "
-           "and when: the code's own note above it, or the function it's in. The file and line are there so a correction can be found.", "",
+           "and when it appears. The lines starting with \"Note for you\" are never shown to players: they're the programmer's own note "
+           "from the code, about what's going on in the game at that moment, so you know where the text below them comes up. "
+           "Only the text in quotes is what players see. Where it says \"text\" instead of \"chat message\" or \"on-screen notice\", "
+           "the script couldn't tell how it's shown: ask if it matters for a wording. The file and line are there so a correction can be found.", "",
            "**How to correct it:** change the words inside the quotes, then send the whole file back. "
            "Leave everything outside the quotes as it is (that's how each line is found in the code again). "
            "Keep any {name} or %d / %s parts: the game fills those in. "
@@ -282,7 +285,7 @@ def main():
             fn = e["fn"]
             why = e["why"] or ((fn[1:] if fn.startswith("@") else ("part of: " + words(fn))) if fn else None)
             if why and why != last_why:
-                out.append(f"\n*When:* {why}\n")
+                out.append(f"\n> Note for you (not shown in game): {why}\n")
                 last_why = why
             txt = e["text"].replace("\n", " / ").replace("|", "\\|").strip()
             out.append(f"- \"{txt}\"  ({describe(e)}, line {e['line']})")
