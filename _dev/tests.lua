@@ -899,6 +899,7 @@ LC.CheckUnlocks(good)
 ok(storyPosting(good, "insidework") == nil, "too much suspicion and the ops dry up")
 do -- (its own scope: the main chunk is at Lua's limit on locals)
 _setcvar("lc_loyalty_wait", 0) -- (the NPC prisoner here; the real-prisoner wait has its own test)
+if good.lcStoryPostings then good.lcStoryPostings.molehunt = nil end -- (built again, now it won't wait)
 local m1 = storyPosting(good, "molehunt")
 ok(m1 ~= nil and string.find(m1.title or "", "The loyalty test", 1, true), "and the mole hunt starts with the loyalty test, in the cells", m1 and m1.title)
 LC.AcceptPosting(good, m1.id)
@@ -937,6 +938,7 @@ ok(storyPosting(good, "insidework") ~= nil, "the ops resume")
 do
 _setcvar("lc_loyalty_wait", 0)
 LC.Bump(good, "suspicion", 3)
+if good.lcStoryPostings then good.lcStoryPostings.molehunt = nil end
 local m2 = storyPosting(good, "molehunt")
 LC.AcceptPosting(good, m2.id)
 local qm2 = LC.QuestOf[good]
