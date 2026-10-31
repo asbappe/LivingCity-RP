@@ -58,6 +58,7 @@ local function Say(ply, text) if IsValid(ply) then ply:ChatPrint(text) end end
 function LC.IsInsider(ply)
     return IsValid(ply) and ply:IsPlayer() and cvOn:GetBool() and LC.PlayerIsCP and LC.PlayerIsCP(ply)
         and LC.StoryFlag and LC.StoryFlag(ply, "insider") == true and not LC.StoryFlag(ply, "exposed")
+        and not LC.StoryFlag(ply, "disgraced") -- (killed one of theirs in the loyalty test: not until the debt's paid)
 end
 
 -- Burned: this character was caught as the mole.

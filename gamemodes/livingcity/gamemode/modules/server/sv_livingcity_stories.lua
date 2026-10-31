@@ -1053,7 +1053,7 @@ LC.Chain{
     id = "insidework", name = "Inside Work", factions = { cp = true }, flat = true,
     unlock = function(ply) return LC.StoryFlag(ply, "insider") == true end,
     gate = function(ply)
-        return LC.StoryFlag(ply, "insider") == true and not LC.StoryFlag(ply, "exposed") and LC.Counter(ply, "suspicion") < 3
+        return LC.StoryFlag(ply, "insider") == true and not LC.StoryFlag(ply, "exposed") and not LC.StoryFlag(ply, "disgraced") and LC.Counter(ply, "suspicion") < 3
     end,
     start = "op",
     parts = {
@@ -1095,18 +1095,288 @@ end
 
 local function ClearSuspicion(p) LC.Bump(p, "suspicion", -LC.Counter(p, "suspicion")) end
 
+------------------------------------------------------------------------
+-- The loyalty test (the owner, 2026-11-01): suspicion too high, and the mole
+-- hunt starts in a cell. A Resistance prisoner, your fists and nothing else,
+-- and two prison guards with shotguns either side of you. Beat him for
+-- answers and then kill him (suspicion cleared), or refuse and be executed.
+-- Leaving the cell or raising a hand to a guard is refusing.
+------------------------------------------------------------------------
+
+local LT = {} -- [ply] = the scene: { q, spot, from, weps, ammo, prisoner, guards, phase }
+LC.LoyaltyTests = LT
+
+local function LTCleanup(ply, restore)
+    local sc = LT[ply]
+    if not sc then return end
+    LT[ply] = nil
+    for _, g in ipairs(sc.guards or {}) do if IsValid(g) then SafeRemoveEntityDelayed(g, restore and 0.2 or 6) end end
+    if IsValid(sc.prisoner) then SafeRemoveEntityDelayed(sc.prisoner, 8) end
+    if not IsValid(ply) or not restore or not ply:Alive() then return end
+    -- everything back as it was: their own gear, and where they came from
+    ply:StripWeapons()
+    for _, cls in ipairs(sc.weps or {}) do ply:Give(cls) end
+    for id, n in pairs(sc.ammo or {}) do ply:SetAmmo(n, id) end
+    if ply:HasWeapon("weapon_lc_hands") then ply:SelectWeapon("weapon_lc_hands") end
+    if sc.from then ply:SetPos(sc.from) end
+end
+LC.LoyaltyTestCleanup = LTCleanup
+
+-- Executed: the guards turn and fire, and make sure.
+local function LTExecute(ply, why)
+    local sc = LT[ply]
+    if not sc or sc.phase == "executed" then return end
+    sc.phase = "executed"
+    if IsValid(ply) then ply:ChatPrint("[Loyalty test] " .. (why or "You refuse.") .. " The guards raise their shotguns.") end
+    for _, g in ipairs(sc.guards) do
+        if IsValid(g) then
+            g:AddEntityRelationship(ply, D_HT, 99)
+            if g.SetEnemy then g:SetEnemy(ply) end
+            if g.SetSchedule then g:SetSchedule(SCHED_SHOOT_ENEMY or SCHED_RANGE_ATTACK1 or 0) end
+        end
+    end
+    timer.Simple(2.5, function()
+        if IsValid(ply) and ply:Alive() then
+            local g = sc.guards[1]
+            local d = DamageInfo and DamageInfo()
+            if d then
+                d:SetDamage(1000) d:SetDamageType(DMG_BUCKSHOT or DMG_BULLET)
+                if IsValid(g) then d:SetAttacker(g) d:SetInflictor(g) end
+                ply:TakeDamageInfo(d)
+            else
+                ply:Kill()
+            end
+        end
+        LTCleanup(ply, false)
+    end)
+    LC.StoryFlag(ply, "insider", false)
+    LC.StoryFlag(ply, "exposed", true)
+    local q = sc.q
+    if q and not q.done then q.chainEnd = "executed" q.reward = 0 if LC.FinishQuest then LC.FinishQuest(q, true) end end
+end
+LC.LoyaltyTestExecute = LTExecute
+
+-- The scene: in the cell, stripped to your fists, the prisoner in front, a guard either side.
+local function LTSetup(q)
+    local ply = q.owner
+    if not IsValid(ply) then return end
+    local spot = q.data.cell
+    local fwd = Angle(0, q.data.yaw or 0, 0):Forward()
+    local right = Vector(fwd.y, -fwd.x, 0)
+    local sc = { q = q, spot = spot, from = q.data.from, phase = "choose", guards = {} }
+    sc.weps = {}
+    for _, w in ipairs(ply:GetWeapons()) do if w and w.GetClass then sc.weps[#sc.weps + 1] = w:GetClass() end end
+    sc.ammo = ply.GetAmmo and ply:GetAmmo() or {}
+    LT[ply] = sc
+    ply:StripWeapons()
+    ply:Give("weapon_fists")
+    ply:SelectWeapon("weapon_fists")
+    ply:SetPos(spot)
+    ply:SetEyeAngles(Angle(0, q.data.yaw or 0, 0))
+    -- the prisoner: Resistance, bloodied, unarmed, kept on his feet through the beating
+    local pnpc = LC.Spawners and LC.Spawners.citizen and LC.Spawners.citizen(spot + fwd * 60)
+    if IsValid(pnpc) then
+        local pst = LC.NPCs[pnpc]
+        if pst then LC.SetState(pnpc, pst, "event") pst.eventUntil, pst.questLock, pst.unmanaged = CurTime() + 900, true, true end
+        if pnpc.SetMaxHealth then pnpc:SetMaxHealth(100) end
+        pnpc:SetHealth(100)
+        if pnpc.SetSchedule then pnpc:SetSchedule(SCHED_IDLE_STAND) end
+        LC.Face(pnpc, spot)
+        pnpc:SetNW2String("lc_doing", "a Resistance prisoner")
+        pnpc.lcLoyaltyPrisoner = ply
+        sc.prisoner = pnpc
+        q.data.target = pnpc
+    end
+    -- the guards: Nova Prospekt's, shotguns, either side of you, not yet aiming at you
+    for _, side in ipairs({ 1, -1 }) do
+        local g = ents.Create("npc_combine_s")
+        if IsValid(g) then
+            local m = LC.CombineModel and LC.CombineModel("guard_shotgun", false) or "models/combine_soldier_prisonguard.mdl"
+            if m and (not util.IsValidModel or util.IsValidModel(m)) then g:SetModel(m) end
+            g:SetPos(spot + right * (55 * side) - fwd * 10)
+            g:SetAngles(Angle(0, q.data.yaw or 0, 0))
+            g:SetKeyValue("additionalequipment", "weapon_shotgun")
+            g:Spawn()
+            g:Activate()
+            g:AddEntityRelationship(ply, D_LI, 99)
+            if IsValid(pnpc) then g:AddEntityRelationship(pnpc, D_NU, 99) end
+            g.lcLoyaltyGuard = ply
+            sc.guards[#sc.guards + 1] = g
+        end
+    end
+    ply:ChatPrint("[Loyalty test] The cell door shuts behind you. Your weapons are on a table outside. A guard either side of you, shotguns held low.")
+end
+
+hook.Add("EntityTakeDamage", "LivingCityLoyaltyTest", function(ent, dmg)
+    local att = dmg:GetAttacker()
+    -- a hand raised to a guard: that's the answer
+    if ent.lcLoyaltyGuard and IsValid(att) and att == ent.lcLoyaltyGuard then
+        dmg:SetDamage(0)
+        LTExecute(att, "You turn on the guard.")
+        return true
+    end
+    local ply = ent.lcLoyaltyPrisoner
+    local sc = ply and LT[ply]
+    if not sc or att ~= ply then return end
+    if sc.phase ~= "finish" then
+        -- the interrogation: he takes the beating, and stays on his feet
+        dmg:SetDamage(math.min(dmg:GetDamage(), math.max(0, ent:Health() - 25)))
+        if sc.phase == "beat" then LC.QuestEvent("loyalty_hit", ply, ent) end
+    end
+end)
+hook.Add("OnNPCKilled", "LivingCityLoyaltyTest", function(npc, attacker)
+    local ply = npc.lcLoyaltyPrisoner
+    local sc = ply and LT[ply]
+    if sc and attacker == ply and sc.phase == "finish" then LC.QuestEvent("loyalty_kill", ply, npc) end
+end)
+hook.Add("PlayerDeath", "LivingCityLoyaltyTest", function(ply) if LT[ply] then LTCleanup(ply, false) end end)
+hook.Add("PlayerDisconnected", "LivingCityLoyaltyTest", function(ply) if LT[ply] then LTCleanup(ply, false) end end)
+
+local function TestSpec(ply)
+    local cells = LC.PointsOfKind("cell")
+    if #cells == 0 then return nil end
+    local c = Pick(cells)
+    local spot = LC.GroundAt and LC.GroundAt(c.pos + Vector(0, 0, 30)) or c.pos
+    return {
+        title = "The loyalty test", reward = 40, limit = 420,
+        desc = "Internal Affairs has a prisoner from the Resistance, and a question about you. Report to the cells " .. Place(spot, ply:GetPos()) .. ".",
+        data = { cell = spot, yaw = c.yaw or 0 },
+        stages = {
+            Goto(spot, "Report to the cells (marked)", 220),
+            Choice("The prisoner looks up at you through one swollen eye. The guard on your left speaks without looking at you: 'He knows who the mole is. "
+                .. "Get it out of him. Then finish it.' The other guard's shotgun is pointed at the floor. For now.", {
+                { text = "Interrogate him. With your fists.", pick = function(q, p)
+                    local sc = LT[p]
+                    if sc then sc.phase = "beat" end
+                    Narrate(q, "You close your fists. He knows what's coming.")
+                    Insert(q, {
+                        Count("loyalty_hit", 6, "Beat answers out of him (punch him, 6 times)", nil, false),
+                        Count("loyalty_kill", 1, "He's told you everything he will. Finish it: kill him"),
+                    })
+                end },
+                { text = "Refuse. You won't do it.", pick = function(q, p) LTExecute(p, "You lower your hands.") end },
+            }),
+        },
+        tick = function(q)
+            local p = q.owner
+            local sc = IsValid(p) and LT[p]
+            if not sc and q.stage >= 2 and IsValid(p) and not q.data.setUp then q.data.setUp = true LTSetup(q) return end
+            if not sc then return end
+            -- after the beating, the last of it
+            if sc.phase == "beat" and q.stages[q.stage] and q.stages[q.stage].event == "loyalty_kill" then
+                sc.phase = "finish"
+                Narrate(q, "He gives you a name. It's yours, though he doesn't know it. Then nothing more. 'Finish it,' says the guard.")
+            end
+            -- leaving the cell is refusing
+            if sc.phase ~= "executed" and p:GetPos():DistToSqr(sc.spot) > 140 * 140 then LTExecute(p, "You try to leave.") end
+        end,
+        onFinish = function(q, success)
+            local p = q.owner
+            local sc = IsValid(p) and LT[p]
+            if not sc then return end
+            if success and sc.phase == "finish" then
+                ClearSuspicion(p)
+                Trait(p, "loyalty", 2)
+                -- you killed one of theirs: the Resistance wants a word (the reckoning, next on your board)
+                LC.StoryFlag(p, "disgraced", true)
+                q.chainNext = "reckoning"
+                p:ChatPrint("[Loyalty test] The guard lowers his shotgun. 'Welcome back, officer.' Your weapons are handed back at the door.")
+                LTCleanup(p, true)
+            elseif sc.phase ~= "executed" then
+                LTExecute(p, "You took too long.")
+            end
+        end,
+    }
+end
+LC.LoyaltyTestSpec = TestSpec
+
 LC.Chain{
     id = "molehunt", name = "Mole Hunt", factions = { cp = true },
     unlock = function(ply) return LC.StoryFlag(ply, "insider") == true and LC.Counter(ply, "suspicion") >= 3 end,
     start = "hunt",
     endings = {
+        passed = "You passed their test. The prisoner's blood is on your hands, and nobody in Civil Protection doubts you now.",
+        converted = "You let the Combine have all of you. The surgery took the rest: a soldier of Overwatch now, and nothing you were before. There's no going back.",
+        redeemed = "The debt is paid. They don't forget what you did in that cell, but they let you back in. The Resistance has its man inside again.",
+        executed = "You wouldn't do it. The guards did their duty. They found the mole, in the end.",
         framed = "Unit 3-09 was taken in your place. You tell yourself he probably deserved it.",
         ran = "You fled to the Resistance before they could knock. Every Civil Protection unit in the city has your face now.",
         survived = "The mole hunt moves on to another sector. You breathe again. Carefully.",
         exposed = "Exposed as the mole, you're stripped of rank and mask. A citizen again, with a file that will never close.",
     },
     parts = {
+        -- after the loyalty test: you killed one of theirs, and the Resistance knows
+        reckoning = { num = 2, build = function(ply)
+            local pos, r, where = Q.SafeHouse(ply)
+            if not pos then return nil end
+            return {
+                title = "The reckoning", reward = 0, limit = 900,
+                desc = "Word reaches you through a note in your locker: the Resistance knows what you did in that cell. They want to see you (" .. where .. "). Until this is settled, they won't work with you.",
+                stages = {
+                    Goto(pos, "Go to the meeting place (" .. where .. ")", r),
+                    Meet("Find the woman from the note and walk up to her", "citizen", function() return pos end, nil, nil, "female"),
+                    Choice("She doesn't sit down. 'He was one of ours. You beat him, and then you killed him, to keep your mask. Maybe you had to.' "
+                        .. "Her hand doesn't leave her pocket. 'So: are you still with us? Then you'll pay for him. Or walk away, and let them have all of you.'", {
+                        { text = "Pay the debt. Whatever it takes. (A job for the Resistance, on your board.)", pick = function(q)
+                            Narrate(q, "'Then listen.' She tells you what it will cost.")
+                            q.chainNext = "debt"
+                        end },
+                        { text = "Walk away from the Resistance. Let the Combine have all of you. (Overwatch's soldier conversion: there's no undoing it.)", pick = function(q, p)
+                            q.chainEnd = "converted"
+                            LC.StoryFlag(p, "insider", false)
+                            LC.StoryFlag(p, "disgraced", false)
+                            timer.Simple(1.5, function()
+                                if not IsValid(p) then return end
+                                -- the transhuman surgery: a soldier of Overwatch, for good (sv_livingcity_factions.lua)
+                                if LC.Condition then LC.Condition(p) end
+                                local f = LCF and LCF.Get and LCF.Get("cp")
+                                local need = f and f.ranks and f.ranks[5] and f.ranks[5].xp
+                                if need and (tonumber(p:GetPData("lcf_xp_cp", 0)) or 0) < need then p:SetPData("lcf_xp_cp", need) end
+                                if LC.AddXP then LC.AddXP(p, 0, "the conversion") end
+                                if LC.Notice then LC.Notice(p, "warn", "The conversion", "Overwatch takes you in. The surgery is done before you wake: a soldier now, and there's no going back.", 12) end
+                            end)
+                        end },
+                    }),
+                },
+            }
+        end },
+
+        -- the blood debt: a life for a life, out of the cells
+        debt = { num = 3, build = function(ply)
+            local dest, r, where = Q.SafeHouse(ply)
+            if not dest then return nil end
+            if #LC.PointsOfKind("cell") > 0 then
+                return {
+                    title = "A blood debt", reward = 40, limit = 720,
+                    desc = "A life for a life: get one of theirs out of the cells and walk them to safety (" .. where .. "). Don't let another Civil Protection unit see you.",
+                    stages = {
+                        FreePrisonerStage("Go to the cells and press E on the marked prisoner to unlock their cell"),
+                        { kind = "escort", pos = dest, r = r, vanish = true, text = "Lead the prisoner to safety (" .. where .. "). They follow you: act like it's routine",
+                          onEnter = function(q, st) st.npc = q.data.target; if not IsValid(st.npc) then return false end end },
+                    },
+                    tick = Witnessed({ escort = true }, "A Civil Protection unit saw you walking a prisoner out. He'll remember."),
+                    onFinish = function(q, success) if success then q.chainEnd = "redeemed" LC.StoryFlag(q.owner, "disgraced", false) end end,
+                }
+            end
+            local center = Q.Spot(ply, 500, 2000)
+            if not center then return nil end
+            local item = Pick(Q.CONTRABAND)
+            return {
+                title = "A blood debt", reward = 40, limit = 600,
+                desc = "Make it right: what Civil Protection seized from the Resistance this week is lying " .. Place(center, ply:GetPos()) .. ". Get it back to them (" .. where .. ").",
+                stages = {
+                    { kind = "collect", spots = Q.HideSpots(center, 3, 500), model = item[2], need = 3, text = "Find the 3 seized crates and press E on each" },
+                    Deliver(dest, "Take them to the Resistance (" .. where .. ")", r),
+                },
+                tick = Witnessed({ deliver = true }, "A Civil Protection unit saw you heading the wrong way with seized goods."),
+                onFinish = function(q, success) if success then q.chainEnd = "redeemed" LC.StoryFlag(q.owner, "disgraced", false) end end,
+            }
+        end },
+
         hunt = { num = 1, build = function(ply)
+            -- the loyalty test, in the cells; a map with no cells has the briefing instead
+            local test = TestSpec(ply)
+            if test then return test end
             local cps = LC.PointsOfKind("checkpoint")
             local pos = #cps > 0 and Pick(cps).pos or Q.Spot(ply, 400, 2000)
             if not pos then return nil end
@@ -1145,7 +1415,7 @@ LC.Chain{
 
 -- If you live through a mole hunt, Internal Affairs can always come back.
 hook.Add("LivingCityStoryEnded", "LivingCityMoleHuntReturns", function(ply, chainId, ending)
-    if chainId == "molehunt" and (ending == "framed" or ending == "survived") then
+    if chainId == "molehunt" and (ending == "framed" or ending == "survived" or ending == "redeemed") then
         local s = LC.Story(ply)
         s.chains.molehunt = nil
         s.notified.molehunt = nil

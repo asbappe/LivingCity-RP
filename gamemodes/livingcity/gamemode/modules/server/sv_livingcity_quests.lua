@@ -600,7 +600,34 @@ end
 
 local SendState, SendStateAll, EnterStage
 
+-- She, not he: when the person a job is about is a woman, the job's words follow her (the owner
+-- noticed "him" for women). Sentence by sentence: one that's about a unit, a guard, a father or
+-- another fixed man is left alone. The person: the stage's own NPC, or the job's target or actor.
+local SHE = { he = "she", him = "her", his = "her", himself = "herself", He = "She", Him = "Her", His = "Her", Himself = "Herself" }
+local FIXED_MALE = { "unit", "units", "officer", "guard", "guards", "soldier", "soldiers", "quartermaster", "kleiner", "grigori", "father", "brother",
+    "son", "man", "men", "foreman", "dispatch", "metrocop", "overwatch", "boy", "husband", "papa", "dad", "priest", "technician", "supervisor", "scientist", "elite", "stalker" }
+local function FocusGender(q, st)
+    local d = q and q.data or {}
+    local e = (st and IsValid(st.npc) and st.npc) or (IsValid(d.target) and d.target) or (IsValid(d.actor) and d.actor) or nil
+    local s = e and LC.NPCs[e]
+    if s and s.gender then return s.gender end
+    if IsValid(e) and e.GetModel and string.find(string.lower(e:GetModel() or ""), "female", 1, true) then return "female" end
+    return nil
+end
+function LC.FitPronouns(q, text, st)
+    if type(text) ~= "string" or text == "" or not q then return text end
+    if FocusGender(q, st or (q.stages and q.stages[q.stage])) ~= "female" then return text end
+    return (string.gsub(text, "[^%.!%?]+[%.!%?]*", function(sent)
+        local low = string.lower(sent)
+        for _, w in ipairs(FIXED_MALE) do
+            if string.find(low, "%f[%a]" .. w .. "%f[%A]") then return sent end
+        end
+        return (string.gsub(sent, "%f[%a](%a+)%f[%A]", function(w) return SHE[w] or w end))
+    end))
+end
+
 local function Narrate(q, text)
+    text = LC.FitPronouns(q, text)
     q.narration = text
     for _, p in ipairs(Members(q)) do p:ChatPrint("[" .. q.board .. "] " .. text) end
 end
@@ -673,13 +700,13 @@ local function OpenChoice(q, st)
     for i, o in ipairs(st.options) do
         if not o.when or o.when(q) then
             opts[#opts + 1] = {
-                i = i, text = o.text,
+                i = i, text = LC.FitPronouns(q, o.text, st),
                 skill = o.check and o.check[1], dc = o.check and o.check[2],
                 mod = o.check and LC.SkillMod(q.owner, o.check[1]),
             }
         end
     end
-    LC.SendCompressed("lcq_choice_open", { qid = q.id, title = q.title, prompt = st.prompt, options = opts }, { q.owner })
+    LC.SendCompressed("lcq_choice_open", { qid = q.id, title = q.title, prompt = LC.FitPronouns(q, st.prompt, st), options = opts }, { q.owner })
 end
 
 function EnterStage(q)
@@ -744,7 +771,7 @@ function SendState(ply)
     local st = Stage(q)
     local forgetting = (ply.lcForgetUntil or 0) > CurTime()
     local t = {
-        active = true, id = q.id, title = q.title, board = q.board, objective = st and st.text or "",
+        active = true, id = q.id, title = q.title, board = q.board, objective = LC.FitPronouns(q, st and st.text or "", st),
         left = math.max(0, math.floor(q.expires - CurTime())), members = #Members(q),
         narration = q.narration, step = q.stage, steps = #q.stages, owner = q.owner == ply,
     }

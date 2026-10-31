@@ -13488,6 +13488,43 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     local okJ = LC.CanJoinFaction(ins, "cp")
     ok(not okJ and not LC.CanWork(ins) and not LC.Surrender(ins), "never Civil Protection again, never a Union job, no surrendering")
     for _, q in ipairs({ ins, snoop, wanted }) do q:SetPos(Vector(-150000, 150000, 0)) end
+    -- the loyalty test: suspicion too high, a prisoner, your fists, two shotguns
+    local lt = newPlayer("LoyaltyUnit", "cp")
+    _run(0.3)
+    lt:SetPos(Vector(-161000, -161000, 0))
+    lt:Give("weapon_pistol")
+    LC.StoryFlag(lt, "insider", true)
+    local cellPt = LC.AddPoint(Vector(-161000, -160500, 0), 0, "cell", 0)
+    local spec = LC.LoyaltyTestSpec(lt)
+    ok(spec and spec.title == "The loyalty test", "too much suspicion: the mole hunt starts with the loyalty test, in the cells")
+    local fq = { owner = lt, data = spec.data, stages = spec.stages, stage = 2, done = true }
+    spec.tick(fq)
+    local sc = LC.LoyaltyTests[lt]
+    ok(sc and lt:HasWeapon("weapon_fists") and not lt:HasWeapon("weapon_pistol") and #sc.guards == 2 and IsValid(sc.prisoner),
+        "in the cell: your fists only, a prisoner in front of you, two guards with shotguns")
+    LC.Bump(lt, "suspicion", 3)
+    sc.phase = "finish"
+    spec.onFinish(fq, true)
+    ok(LC.LoyaltyTests[lt] == nil and lt:HasWeapon("weapon_pistol") and LC.Counter(lt, "suspicion") == 0 and fq.chainNext == "reckoning",
+        "killed him: suspicion cleared, your weapons back, and the Resistance wants a word",
+        tostring(LC.LoyaltyTests[lt]) .. " " .. tostring(lt:HasWeapon("weapon_pistol")) .. " " .. tostring(LC.Counter(lt, "suspicion")) .. " " .. tostring(fq.chainNext))
+    ok(LC.StoryFlag(lt, "disgraced") == true and not LC.IsInsider(lt), "until the debt's paid (or you walk away into the conversion), no Inside menu")
+    fq.data.setUp = nil
+    spec.tick(fq)
+    ok(LC.LoyaltyTests[lt] ~= nil, "(the cell again)")
+    LC.LoyaltyTestExecute(lt, "You lower your hands.")
+    _run(3)
+    ok(not lt:Alive() or lt:Health() <= 0, "refused: executed by the guards")
+    LC.RemovePoint(cellPt)
+    -- she, not he: a job about a woman says "her"
+    local woman, wst = LC.Spawners.citizen(Vector(-162000, -162000, 0))
+    if wst then wst.gender = "female" end
+    local fq2 = { data = { target = woman }, stages = { {} }, stage = 1 }
+    ok(LC.FitPronouns(fq2, "Bring him home. He is waiting. A unit sees him.") == "Bring her home. She is waiting. A unit sees him.",
+        "a job about a woman: her, not him (a sentence about a unit left alone)", LC.FitPronouns(fq2, "Bring him home. He is waiting. A unit sees him."))
+    if wst then wst.gender = "male" end
+    ok(LC.FitPronouns(fq2, "Bring him home.") == "Bring him home.", "and him for a man")
+    if IsValid(woman) then woman:Remove() end
 end)()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")

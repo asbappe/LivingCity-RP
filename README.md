@@ -421,6 +421,7 @@ Units are units: Civil Protection players still stop citizens with E.
 - **HUD, top left**: credits and standing always (even with the quiet HUD), and loyalty, sympathy and corruption under them.
 - **Changing jobs takes back the old job's tools** (the medic's medkit), unless the new job uses them.
 - **A bin you're standing right by** opens in your pockets (F2) even if you're not aiming at it.
+- **She, not he**: a job's steps, narration and choices say she and her when the person the job is about is a woman (a sentence about a unit, a guard or a father is left alone).
 - **Morning exercise**: on the jog the Civil Protection units shout "Move it!" and "Keep moving!" (not "First warning, move away"); finishing pays `lc_exercise_pay` (5) credits on top of the standing, said on screen; skipping costs 10 standing and your next ration (`lc_exercise_skip_ration` 1), with a reprimand on screen.
 
 **The Resistance Insider** (designed with the owner, 31 October). A unit who stays inside as the Resistance's spy (The Man Inside) gets their own menu, which only they see: C > Civil Protection > Inside. Each only works where nobody can see or hear them (no other player in sight within `lc_insider_privacy`, 700, or within 300; no unit watching), so they have to slip away first:
@@ -430,6 +431,8 @@ Units are units: Civil Protection players still stop citizens with E.
 - **Copy the records**: "Copied city records", the best intel (the quartermaster pays 60; once every 15 minutes).
 - **Reveal myself**: the codeword, to the one person you're looking at.
 Ordinary Resistance players aren't told who the Insider is; the Resistance's top two ranks hear when one is recruited and when they come on. **Caught** (the Mole Hunt): that character is wanted and hunted with no surrendering, can never join Civil Protection, any Combine role or the city administration again, can't take Union jobs, and is Resistance for good. Opening Combine doors for a raid needs nothing new: units already can. `lc_insider` 0 turns it off.
+
+**The loyalty test** (the owner, 1 November). When an Insider's suspicion gets too high, the Mole Hunt starts in the cells (a map with no cells has the old Internal Affairs briefing instead): a Resistance prisoner in front of you, your weapons taken (your fists only), and two Nova Prospekt guards with shotguns either side of you. Beat answers out of him (six punches; he stays on his feet) and then kill him, and your suspicion is cleared and your weapons handed back. Refuse, leave the cell, raise a hand to a guard or run out of time, and the guards execute you. **Killing him has consequences**: the Resistance shuts you out (no Inside menu, no Inside Work) until **The reckoning**, a meeting with your contact, where you choose: **pay the blood debt** (free one of theirs from the cells and walk them to safety, or on a map without cells get seized supplies back to them), which lets you back in; or **walk away from the Resistance**, and Overwatch puts you through the soldier conversion (the transhuman conditioning and the Soldier rank, for good).
 
 ## Civil Protection's tools
 

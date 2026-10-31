@@ -289,6 +289,9 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **At the Commissary:** bandages and pistol rounds you can give away. **Copy the records:** the quartermaster pays 60.
 - [ ] **Reveal myself:** the person you look at is told.
 - [ ] **Caught in the Mole Hunt:** Resistance, wanted, no surrendering; Civil Protection and Union jobs refused.
+- [ ] **The loyalty test** (suspicion 3 as an Insider): the cell, the prisoner, fists only, two shotgun guards beside you. Beat him, kill him: weapons back. Refuse or walk out: shot.
+- [ ] **The reckoning** after it: the contact; pay the debt (a prisoner out, or seized supplies back) and the Inside menu comes back; or walk away: the soldier conversion.
+- [ ] **She, not he:** a job about a woman (a patient, a neighbour, a prisoner) says her.
 
 ## Beds (1 November: what to check)
 

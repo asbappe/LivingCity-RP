@@ -1140,9 +1140,11 @@ GAMES.triage = {
                     if not p.done and npc:Health() >= p.max * 0.9 then
                         p.done, g.saved = true, g.saved + 1
                         npc:SetNW2Bool("lc_patient", false)
-                        npc:EmitSound("vo/npc/male01/thanks0" .. math.random(1, 2) .. ".wav", 70)
+                        npc:EmitSound("vo/npc/" .. (((LC.NPCs[npc] or {}).gender == "female") and "female01" or "male01") .. "/thanks0" .. math.random(1, 2) .. ".wav", 70)
                         if p.injury.beaten then
-                            g.ply:ChatPrint("[Clinic] He grabs your wrist on the way out. 'Thank you. Please... don't write down what did this.'")
+                            local pst = LC.NPCs[npc]
+                            local she = (pst and pst.gender == "female") or string.find(string.lower(npc:GetModel() or ""), "female", 1, true)
+                            g.ply:ChatPrint("[Clinic] " .. (she and "She" or "He") .. " grabs your wrist on the way out. 'Thank you. Please... don't write down what did this.'")
                         end
                     end
                     p.hp = npc:Health()
