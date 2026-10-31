@@ -15,6 +15,23 @@ LC = LC or {}
 LC.SlashCommands = LC.SlashCommands or {}
 
 local function Shackled(ply) return IsValid(ply) and ply:IsPlayer() and ply:GetNW2String("lcf_faction", "") == "vort" end
+-- one of the city's own, sweeping the streets in a collar (sv_livingcity_resistanceops.lua)
+local function StreetSlave(e) return IsValid(e) and e.lcVortSlave == true end
+
+-- A vortigaunt has no fists (and no hands for them in the model): they're taken away whenever given.
+function LC.IsVortPlayer(ply)
+    if not IsValid(ply) or not ply:IsPlayer() then return false end
+    return ply:GetNW2String("lcf_faction", "") == "vort" or ply:GetNW2String("lcf_special", "") == "vortigaunt"
+        or string.find(string.lower(ply:GetModel() or ""), "vortigaunt", 1, true) ~= nil
+end
+hook.Add("WeaponEquip", "LivingCityVortNoFists", function(wep, ply)
+    if IsValid(wep) and wep:GetClass() == "weapon_fists" and LC.IsVortPlayer(ply) then
+        timer.Simple(0, function() if IsValid(ply) and ply:HasWeapon("weapon_fists") then ply:StripWeapon("weapon_fists") end end)
+    end
+end)
+hook.Add("PlayerSpawn", "LivingCityVortNoFists", function(ply)
+    timer.Simple(1, function() if IsValid(ply) and LC.IsVortPlayer(ply) and ply:HasWeapon("weapon_fists") then ply:StripWeapon("weapon_fists") end end)
+end)
 
 function LC.StartUnshackle(ply)
     if ply:GetNW2String("lcf_faction", "") ~= "resistance" or ply:GetNW2Int("lcf_rank", 1) < 2 then
@@ -22,13 +39,19 @@ function LC.StartUnshackle(ply)
     end
     local tr = ply:GetEyeTrace()
     local vort = tr and tr.Entity
-    if not Shackled(vort) or vort:GetPos():DistToSqr(ply:GetPos()) > 120 * 120 then return false, "Look at a shackled vortigaunt, up close." end
+    if not (Shackled(vort) or StreetSlave(vort)) or vort:GetPos():DistToSqr(ply:GetPos()) > 120 * 120 then return false, "Look at a shackled vortigaunt, up close." end
     if LC.SeenBySecurity and LC.SeenBySecurity(ply, 900) then return false, "Not with a Civil Protection unit watching." end
-    vort:ChatPrint("[Living City] Someone is working at your shackles.")
+    if vort:IsPlayer() then vort:ChatPrint("[Living City] Someone is working at your shackles.") end
     return LC.StartTask(ply, 10, "Cutting the shackles...", {
         maxMove = 40, cancelText = "You stop.",
         done = function(p)
-            if not Shackled(vort) or p:GetPos():DistToSqr(vort:GetPos()) > 150 * 150 then return end
+            if not (Shackled(vort) or StreetSlave(vort)) or p:GetPos():DistToSqr(vort:GetPos()) > 150 * 150 then return end
+            if StreetSlave(vort) then
+                -- one of the city's own: it goes home to rebel ground and lives there, free
+                if LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then return p:ChatPrint("A Civil Protection unit is watching. Not now.") end
+                if LC.FreeStreetVort then LC.FreeStreetVort(vort, p) end
+                return
+            end
             if LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then
                 return p:ChatPrint("A Civil Protection unit is watching. Not now.")
             end

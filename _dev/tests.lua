@@ -13580,7 +13580,24 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     local slaves = 0
     for v in pairs(LC.VortSlaves) do if IsValid(v) and v:GetNW2Bool("lc_shackled", false) then slaves = slaves + 1 end end
     ok(slaves >= 1 and slaves <= GetConVar("lc_vort_slaves"):GetInt(), "shackled vortigaunts sweep the streets (Combine property)", slaves)
+    local slave = next(LC.VortSlaves)
+    local freer = newPlayer("VortFreer", "resistance", nil, 900)
+    _run(0.3)
+    ok(slave and LC.FreeStreetVort(slave, freer) and not slave.lcVortSlave and not slave:GetNW2Bool("lc_shackled", true), "a street vortigaunt can be cut loose by the Resistance")
+    LC.IsSeen = function() return false end
+    _run(125)
+    LC.IsSeen = seen
+    ok(slave and IsValid(slave) and LC.RebelVorts[slave], "and it goes home to rebel ground, free")
     for v in pairs(LC.VortSlaves) do if IsValid(v) then v:Remove() end end
+    if slave and IsValid(slave) then LC.RebelVorts[slave] = nil slave:Remove() end
+    -- a vortigaunt has no fists
+    local vp = newPlayer("VortPlayer", "vort")
+    _run(0.3)
+    vp:Give("weapon_fists")
+    hook.Run("PlayerSpawn", vp)
+    _run(2)
+    ok(not vp:HasWeapon("weapon_fists"), "a vortigaunt player has no fists")
+    vp:SetPos(Vector(-150000, 150000, 0)) freer:SetPos(Vector(-150000, 150000, 0))
 end)()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")

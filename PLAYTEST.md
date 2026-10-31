@@ -294,7 +294,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **The stalker's end:** the frame is built beside a power transformer; once charged, an arc jumps the gap; walking into it kills at once.
 - [ ] **Joining Civil Protection:** refused until 5 Records Clerk shifts (and 100 standing), and told so.
 - [ ] **No Union radio**: radios are Freq 7 radios (black market); the lab's transmitter needs one.
-- [ ] **Shackled vortigaunts** sweeping the streets (2). If there's still no freed one in rebel ground, send the debug report's "vortigaunts" line.
+- [ ] **Shackled vortigaunts** sweeping the streets (2); as Resistance, cut one loose (look at it, unshackle): it walks to rebel ground and stays. Playing a vortigaunt: no fists. If there's still no freed one in rebel ground, send the debug report's "vortigaunts" line.
 - [ ] **Secret endings** three hours apart.
 - [ ] **She, not he:** a job about a woman (a patient, a neighbour, a prisoner) says her.
 

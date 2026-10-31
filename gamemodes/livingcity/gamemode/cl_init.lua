@@ -185,6 +185,7 @@ local GUIDE = {
     } },
     { "Vortigaunts, time and weather", {
         "Shackled vortigaunts work the Union's shifts; their collar stops them using their vortessence powers.",
+        "The city keeps shackled vortigaunts sweeping the streets. Resistance (Member and up): look at one up close and unshackle it (C > Resistance, or !unshackle), with no Civil Protection unit watching, and it goes home to rebel ground.",
         "The Resistance (Member rank and up) can free one (look at it, then C): it takes ten seconds, and nobody must see you. Once free, it can attack (left click) and charge vests (right click), and the Combine hunt it.",
         "Armour is the charge stored in a powered vest. Civil Protection units have one built into the uniform, rebel ranks come with one, and anyone else needs one from the lab. Vortigaunts can charge it.",
         "When no player is Father Grigori, he stays in rebel territory: press E on him for a blessing, a sermon, or a few words.",

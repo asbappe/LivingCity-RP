@@ -794,6 +794,44 @@ local function SlaveTick(now)
 end
 LC.VortSlaveTick = function(now) nextSlave = 0 SlaveTick(now or CurTime()) end -- (for tests)
 
+-- Cut loose (!unshackle, sv_livingcity_vort.lua): the collar comes off, it heads for rebel ground, and
+-- lives there free (charging vests on request). The Combine want it back: hunted on the way.
+function LC.FreeStreetVort(v, by)
+    if not IsValid(v) or not v.lcVortSlave then return false end
+    LC.VortSlaves[v] = nil
+    v.lcVortSlave = nil
+    if not util.IsValidModel or util.IsValidModel("models/vortigaunt.mdl") then v:SetModel("models/vortigaunt.mdl") end
+    v:SetNW2Bool("lc_shackled", false)
+    v:SetNW2String("lc_pname", "Freed vortigaunt")
+    v:SetNW2String("lc_doing", "heading for rebel ground")
+    if LC.QuestVortPeaceful then LC.QuestVortPeaceful(v, false) end
+    v:EmitSound("npc/vort/vort_foot" .. math.random(1, 4) .. ".wav", 70)
+    if IsValid(by) then
+        by:ChatPrint("[Living City] The collar falls. The vortigaunt looks at you a long moment, then heads for rebel ground.")
+        if LC.AddXP then LC.AddXP(by, 30, "freeing a vortigaunt") end
+    end
+    Radio("resistance", "A vortigaunt has been freed from the street crews. It's on its way to us. Welcome it.")
+    local zones = LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}
+    local spot = #zones > 0 and LC.SpotInZone and LC.SpotInZone(zones[math.random(#zones)])
+    if not spot then LC.SettleVort(v, true) return true end
+    local started = CurTime()
+    local function Walk()
+        if not IsValid(v) or v:Health() <= 0 then return end
+        if v:GetPos():DistToSqr(spot) < 200 * 200 or CurTime() - started > 120 then
+            -- home (or near enough, and out of sight: it finds its own way the rest)
+            if v:GetPos():DistToSqr(spot) >= 200 * 200 and not (LC.IsSeen and LC.IsSeen(v:GetPos() + Vector(0, 0, 50))) then v:SetPos(spot + Vector(0, 0, 4)) end
+            v:SetNW2String("lc_doing", "")
+            LC.SettleVort(v, true)
+            return
+        end
+        if v.SetLastPosition then v:SetLastPosition(spot) v:SetSchedule(SCHED_FORCED_GO_RUN) end
+        timer.Simple(3, Walk)
+    end
+    Walk()
+    hook.Run("LivingCityVortFreed", v, by)
+    return true
+end
+
 -- A freed vortigaunt charges your vest when you ask it (E), not by itself (not while you sleep
 -- beside it): once every lc_vort_charge_minutes.
 local cvVortCharge = CreateConVar("lc_vort_charge_minutes", "10", FLAGS, "Minutes before a freed vortigaunt will charge the same person's vest again (E on it)")
