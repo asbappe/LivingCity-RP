@@ -303,7 +303,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 ## Vortigaunts (1 November: what to check)
 
 - [ ] **As a shackled vortigaunt:** C > Reach out through the vortessence: Resistance players and free vortigaunts are told where you are; with a unit watching, the collar bites. The Collar on F3: sweep, the crate, the quiet corner.
-- [ ] **As a free vortigaunt:** Free your kin (a street vortigaunt, marked) and Read the Combine (watch a checkpoint, get intel) on the Resistance's board.
+- [ ] **As a free vortigaunt:** left click a power bank, forcefield or turret from a distance: it goes down for 45 seconds, then comes back. Free your kin (a street vortigaunt, marked) and Read the Combine (watch a checkpoint, get intel) on the Resistance's board.
 - [ ] **Freed vortigaunts in rebel ground** walk about the camp and the fire.
 
 ## Beds (1 November: what to check)

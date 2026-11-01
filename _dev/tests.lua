@@ -13655,6 +13655,12 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     local kinT, senseT
     for _, t in ipairs(LC.QuestTemplates) do if t.id == "res_vort_kin" then kinT = t elseif t.id == "res_vort_sense" then senseT = t end end
     ok(kinT and senseT and senseT.available(fv) and not senseT.available(freer), "a free vortigaunt has its own jobs: Free your kin, Read the Combine")
+    -- a free vortigaunt's bolt shorts out Combine machinery from a distance
+    local bank = ents.Create("lc_powerbank") bank:SetPos(Vector(-164000, -164000, 0)) bank:Spawn()
+    ok(LC.PowerBankLive(bank) and LC.VortZapTech(fv, bank) and not LC.PowerBankLive(bank), "a free vortigaunt's bolt knocks out a power bank")
+    _advance(GetConVar("lc_vort_zap_secs"):GetFloat() + 1)
+    ok(LC.PowerBankLive(bank), "and it comes back on by itself")
+    bank:Remove()
     fv:SetPos(Vector(-150000, 150000, 0)) vp:SetPos(Vector(-150000, 150000, 0)) freer:SetPos(Vector(-150000, 150000, 0))
 end)()
 

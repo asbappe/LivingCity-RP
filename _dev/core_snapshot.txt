@@ -837,6 +837,7 @@ setting lc_voice_range = 900
 setting lc_vort_call_minutes = 10
 setting lc_vort_charge_minutes = 10
 setting lc_vort_slaves = 2
+setting lc_vort_zap_secs = 45
 setting lc_walk_speed = 110
 setting lc_walkway_clear = 100
 setting lc_wanted_lost = 30

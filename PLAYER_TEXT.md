@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version ce894b3. Admin-only console messages and log lines are left out.
+Made from version 5a0dbc4. Admin-only console messages and log lines are left out.
 
-5977 lines, from 179 files.
+5978 lines, from 179 files.
 
 ## Contents
 
@@ -99,7 +99,7 @@ Made from version ce894b3. Admin-only console messages and log lines are left ou
 - [apartments and trade](#apartments-and-trade-svlivingcitybusinesslua) (38)
 - [rearranging a rebel camp](#rearranging-a-rebel-camp-svlivingcitycampmovelua) (3)
 - [characters and permanent death](#characters-and-permanent-death-svlivingcitycharacterlua) (28)
-- [checkpoints, turrets, and holding the infestation back](#checkpoints-turrets-and-holding-the-infestation-back-svlivingcitycheckpointslua) (48)
+- [checkpoints, turrets, and holding the infestation back](#checkpoints-turrets-and-holding-the-infestation-back-svlivingcitycheckpointslua) (49)
 - [Half-Life: Alyx-style Combine models](#half-life-alyx-style-combine-models-svlivingcitycombinemodelslua) (3)
 - [conduct (anti-RDM and anti-combat-logging)](#conduct-anti-rdm-and-anti-combat-logging-svlivingcityconductlua) (26)
 - [supply drops, radio jammers](#supply-drops-radio-jammers-svlivingcityconvoylua) (33)
@@ -519,21 +519,21 @@ Made from version ce894b3. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: secondary attack
 
-- "The collar suppresses your vortessence."  (chat message, line 79)
-- "Your vortessence is gathering (%ds)."  (message, line 82)
-- "There is nothing left to charge."  (chat message, line 87)
+- "The collar suppresses your vortessence."  (chat message, line 81)
+- "Your vortessence is gathering (%ds)."  (message, line 84)
+- "There is nothing left to charge."  (chat message, line 89)
 
 > Note for you (not shown in game): the vortessence charges a vest (sv_livingcity_vest.lua); it doesn't knit flesh
 
-- "You wear nothing for the vortessence to charge."  (chat message, line 90)
-- "They wear no vest for the vortessence to charge."  (chat message, line 90)
-- "Your vest is fully charged."  (chat message, line 92)
-- "Their vest is fully charged."  (chat message, line 92)
+- "You wear nothing for the vortessence to charge."  (chat message, line 92)
+- "They wear no vest for the vortessence to charge."  (chat message, line 92)
+- "Your vest is fully charged."  (chat message, line 94)
+- "Their vest is fully charged."  (chat message, line 94)
 
 > Note for you (not shown in game): part of: secondary attack
 
-- "The vortigaunt's hands glow green, the cells hum, and your vest feels warm."  (chat message, line 97)
-- "charging with vortessence"  (text, line 98)
+- "The vortigaunt's hands glow green, the cells hum, and your vest feels warm."  (chat message, line 99)
+- "charging with vortessence"  (text, line 100)
 
 ## cl_init.lua (cl_init.lua)
 
@@ -684,7 +684,7 @@ Made from version ce894b3. Admin-only console messages and log lines are left ou
 - "C > Me > Gesture: wave, salute, bow, nod, shake, point, beckon, halt, cheer, laugh. C > Me > Put my hands up."  (text, line 184)
 - "Vortigaunts, time and weather"  (text, line 186)
 - "Shackled vortigaunts work the Union's shifts; their collar stops them using their vortessence powers."  (text, line 187)
-- "A shackled vortigaunt can reach out through the vortessence (C menu), unseen, to tell the Resistance where it is, and has its own story on the board, The Collar. A free vortigaunt has jobs of its own on the Resistance's board: Free your kin, and Read the Combine."  (text, line 188)
+- "A shackled vortigaunt can reach out through the vortessence (C menu), unseen, to tell the Resistance where it is, and has its own story on the board, The Collar. A free vortigaunt has jobs of its own on the Resistance's board: Free your kin, and Read the Combine. Its bolt (left click) shorts out a power bank, forcefield or turret from a distance for 45 seconds."  (text, line 188)
 - "The city keeps shackled vortigaunts sweeping the streets. Resistance (Member and up): look at one up close and unshackle it (C > Resistance, or !unshackle), with no Civil Protection unit watching, and it goes home to rebel ground."  (text, line 189)
 - "The Resistance (Member rank and up) can free one (look at it, then C): it takes ten seconds, and nobody must see you. Once free, it can attack (left click) and charge vests (right click), and the Combine hunt it."  (text, line 190)
 - "Armour is the charge stored in a powered vest. Civil Protection units have one built into the uniform, rebel ranks come with one, and anyone else needs one from the lab. Vortigaunts can charge it."  (text, line 191)
@@ -3356,35 +3356,39 @@ Made from version ce894b3. Admin-only console messages and log lines are left ou
 - "Shorting the power bank..."  (progress bar, line 508)
 - "You pull your hands back."  (text, line 509)
 
+> Note for you (not shown in game): part of: vort zap tech
+
+- "Combine machinery shorted out"  (text, line 550)
+
 > Note for you (not shown in game): part of: forcefield break
 
-- "A forcefield is broken"  (on-screen notice, line 602)
-- "The forcefield {where} is broken. E on it to repair it (ten seconds, paid)."  (on-screen notice, line 602)
-- "[CP net] The forcefield {where} is broken. Maintenance has been told."  (chat message, line 604)
+- "A forcefield is broken"  (on-screen notice, line 634)
+- "The forcefield {where} is broken. E on it to repair it (ten seconds, paid)."  (on-screen notice, line 634)
+- "[CP net] The forcefield {where} is broken. Maintenance has been told."  (chat message, line 636)
 
 > Note for you (not shown in game): part of: forcefield repaired
 
-- "Forcefield repaired"  (text, line 617)
-- "Forcefield repaired"  (on-screen notice, line 618)
-- "It hums back up. 15 credits."  (on-screen notice, line 618)
+- "Forcefield repaired"  (text, line 649)
+- "Forcefield repaired"  (on-screen notice, line 650)
+- "It hums back up. 15 credits."  (on-screen notice, line 650)
 
 > Note for you (not shown in game): (the city's maintenance crews normally get there first: the task at the end)
 
-- "[CP net] City crews have repaired the forcefield {GetPos}."  (chat message, line 688)
+- "[CP net] City crews have repaired the forcefield {GetPos}."  (chat message, line 720)
 
 > Note for you (not shown in game): E on a broken one: a Maintenance Technician repairs it.
 
-- "It's broken: sparks and a dead hum. A Maintenance Technician could fix it."  (text, line 710)
-- "Repairing the forcefield..."  (progress bar, line 712)
-- "You leave it half done."  (text, line 713)
+- "It's broken: sparks and a dead hum. A Maintenance Technician could fix it."  (text, line 742)
+- "Repairing the forcefield..."  (progress bar, line 744)
+- "You leave it half done."  (text, line 745)
 
 > Note for you (not shown in game): The city's own maintenance crews walk out and repair a broken forcefield (after the players have had their chance); the timer above is only for a city with no crew to send.
 
-- "repairing a forcefield"  (label, line 722)
+- "repairing a forcefield"  (label, line 754)
 
 > Note for you (not shown in game): part of: find
 
-- "repairing a forcefield"  (what someone is doing, line 737)
+- "repairing a forcefield"  (what someone is doing, line 769)
 
 ## Half-Life: Alyx-style Combine models (sv_livingcity_combinemodels.lua)
 

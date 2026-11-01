@@ -12,7 +12,7 @@ AddCSLuaFile()
 SWEP.PrintName    = "Vortessence"
 SWEP.Author       = "Living City"
 SWEP.Category     = "Living City"
-SWEP.Instructions = "Primary: a bolt of vortessence. Secondary: charge a vest. (Shackled: the collar holds it in.)"
+SWEP.Instructions = "Primary: a bolt of vortessence (it shorts out power banks, forcefields and turrets too). Secondary: charge a vest. (Shackled: the collar holds it in.)"
 SWEP.Spawnable    = true
 SWEP.AdminOnly    = true
 
@@ -58,6 +58,8 @@ function SWEP:PrimaryAttack()
     end
     owner:EmitSound(ZAP_SOUND, 80)
     local ent = tr.Entity
+    -- Combine machinery (a power bank, a forcefield, a turret): shorted out for a while (sv_livingcity_checkpoints.lua)
+    if IsValid(ent) and LC and LC.VortZapTech and LC.VortZapTech(owner, ent) then return end
     if IsValid(ent) and (ent:IsPlayer() or ent:IsNPC()) then
         local dmg = DamageInfo()
         dmg:SetDamage(25)

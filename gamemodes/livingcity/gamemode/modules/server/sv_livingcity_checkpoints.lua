@@ -338,7 +338,7 @@ function LC.CheckpointTick(now)
         if not t.lcTurret then Init(t) end
         local src = LC.TurretSource(t)
         if t:GetNW2Entity("lc_cable") ~= (src or NULL) then t:SetNW2Entity("lc_cable", src or NULL) end
-        local on = src ~= nil and SourceLive(src)
+        local on = src ~= nil and SourceLive(src) and (t.lcZappedUntil or 0) < now -- (zapped by a vortigaunt: down a while)
         if t.lcPowered ~= on then
             t.lcPowered = on
             t:Fire(on and "Enable" or "Disable")
@@ -522,6 +522,38 @@ function LC.ShortPowerBank(ply, b)
             hook.Run("LivingCityPowerBankShorted", b, p)
         end,
     })
+end
+
+-- A free vortigaunt's bolt (weapon_lc_vort.lua): a power bank, a forcefield or a turret shorts out from a
+-- distance, for lc_vort_zap_secs (45). (A bank or forcefield going down takes what hangs off it too.)
+local cvZap = CreateConVar("lc_vort_zap_secs", "45", FLAGS, "Seconds a free vortigaunt's bolt knocks out a power bank, forcefield or turret")
+function LC.VortZapTech(ply, ent)
+    if not IsValid(ent) then return false end
+    local cls = ent:GetClass()
+    local now, secs = CurTime(), math.max(1, cvZap:GetFloat())
+    if cls == "lc_powerbank" or cls == "lc_forcefield" then
+        ent:SetNW2Float("lc_short_until", math.max(ent:GetNW2Float("lc_short_until", 0), now + secs))
+    elseif cls == TURRET and ent.lcTurret then
+        ent.lcZappedUntil = now + secs
+    else
+        return false
+    end
+    ent:EmitSound("ambient/energy/zap" .. math.random(5, 9) .. ".wav", 85)
+    if EffectData then
+        local fx = EffectData()
+        fx:SetOrigin(ent:WorldSpaceCenter())
+        fx:SetMagnitude(4) fx:SetScale(1)
+        util.Effect("Sparks", fx, true, true)
+    end
+    if IsValid(ply) then
+        if LC.SeenBySecurity and LC.SeenBySecurity(ply, 900) then LC.ReportCrime(ply, "Sabotage", 240) end
+        if LC.AddXP then LC.AddXP(ply, 5, "Combine machinery shorted out") end
+    end
+    LC.CheckpointTick(now)
+    -- back on by itself: the tick after the time's up
+    timer.Simple(secs + 0.5, function() if LC.CheckpointTick then LC.CheckpointTick(CurTime()) end end)
+    hook.Run("LivingCityVortZap", ply, ent)
+    return true
 end
 
 -- Only units handle turrets: nobody else picks one up, carries it off or knocks it over by hand.
