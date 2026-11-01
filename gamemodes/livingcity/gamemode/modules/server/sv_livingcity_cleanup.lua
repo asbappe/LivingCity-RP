@@ -127,13 +127,27 @@ local function EnsureOutfit()
 end
 LC.EnsureCleanupOutfit = EnsureOutfit
 
+-- Weedkiller for a job that sprays (Infestation Cleanup, the Groundskeeper): issued when they take
+-- the job, again at each shift, and whenever they go to spray with none left.
+local SPRAYERS = { cleanup = true, groundskeeper = true }
+function LC.IssueWeedkiller(ply, quiet)
+    local job = IsValid(ply) and LC.Job and LC.Job(ply)
+    if not job or not SPRAYERS[job.id] or LC.HasItem(ply, "weedkiller") then return false end
+    if not LC.GiveOrDrop then LC.GiveItem(ply, "weedkiller", 1) else LC.GiveOrDrop(ply, "weedkiller", 1) end
+    if not quiet then ply:ChatPrint("[Union] A canister of weedkiller from your kit.") end
+    return true
+end
+
 hook.Add("LivingCityJobChanged", "LivingCityCleanup", function(ply, id)
     if not IsValid(ply) then return end
-    EnsureOutfit()
     if id == "cleanup" then
-        if LC.GiveItem and not LC.HasItem(ply, "weedkiller") then LC.GiveItem(ply, "weedkiller", 1) end
-        ply:ChatPrint("[Union] You're issued a respirator and weedkiller. Shifts take you into the infestation: look at a growth and press E to spray it. Civil Protection will guard you.")
+        if not LC.HasItem(ply, "weedkiller") then
+            if LC.GiveOrDrop then LC.GiveOrDrop(ply, "weedkiller", 1) else LC.GiveItem(ply, "weedkiller", 1) end
+        end
+        ply:ChatPrint("[Union] You're issued a respirator, weedkiller (the sprayer) and a hoover. Accept a shift (F3): it takes you into the infestation. Civil Protection will guard you.")
     end
+    local ok, err = pcall(EnsureOutfit)
+    if not ok and LC.Error then LC.Error("cleanup outfit", err) end
 end)
 timer.Simple(1, EnsureOutfit)
 for _, n in ipairs({ "lc_cleanup_suit", "lc_cleanup_model" }) do
@@ -204,9 +218,17 @@ end
 -- warning post at the edge of each infestation, and a sprayed growth bagged up for a while.
 ------------------------------------------------------------------------
 
-local cvPosts = CreateConVar("lc_infest_hazard_posts", "1", FLAGS, "A Combine warning post (sign, lamp, barrel) at the edge of each infestation, if the server has the hazard props")
+local cvPosts = CreateConVar("lc_infest_hazard_posts", "1", FLAGS, "A Combine warning post (sign, lamp, and an infestation control barrel) at the edge of each infestation")
 local HZ = "models/hlvr/combine_hazardprops/combinehazardprops_"
-local POST = { { "warningsign", 0, 0 }, { "lamp", 50, 30 }, { "barrel", -45, 25 } } -- (model, sideways, back)
+-- (model, sideways, back; the stand-in where the server hasn't the pack: Half-Life 2's traffic cones)
+local POST = { { HZ .. "warningsign.mdl", 0, 0, "models/props_junk/TrafficCone001a.mdl" }, { HZ .. "lamp.mdl", 50, 30, "models/props_junk/TrafficCone001a.mdl" } }
+
+-- The pack's workshop items: players who join download them (resource.AddWorkshop), so they see the
+-- growths, posts and suits instead of ERRORs. The server needs them as well (its workshop collection).
+local cvPacks = CreateConVar("lc_workshop_packs", "2043900984,3185145650", FLAGS, "Workshop items players download when they join (the Alyx hazard props and Infestation Control workers), comma separated")
+if resource and resource.AddWorkshop then
+    for id in string.gmatch(cvPacks:GetString(), "%d+") do resource.AddWorkshop(id) end
+end
 
 local function Prop(model, pos, ang)
     if not Valid(model) then return nil end
@@ -227,21 +249,43 @@ local function Reach(z)
     return z.r or 300
 end
 
+-- Open ground for a post: on the floor, nothing solid in the way from the zone's middle, room to stand.
+local function OpenSpot(centre, at)
+    if not util.TraceLine then return true end
+    local tr = util.TraceLine({ start = centre + Vector(0, 0, 50), endpos = at + Vector(0, 0, 50), mask = MASK_SOLID_BRUSHONLY })
+    if tr and tr.Hit and tr.Fraction < 0.95 then return false end
+    if util.TraceHull then
+        local h = util.TraceHull({ start = at + Vector(0, 0, 40), endpos = at + Vector(0, 0, 41), mins = Vector(-40, -40, 0), maxs = Vector(40, 40, 40), mask = MASK_SOLID_BRUSHONLY })
+        if h and h.Hit then return false end
+    end
+    return true
+end
+
+function LC.HazardBarrel(pos, ang)
+    local e = ents.Create("lc_hazbarrel")
+    if not IsValid(e) then return nil end
+    e:SetPos(pos)
+    e:SetAngles(ang or Angle(0, 0, 0))
+    e:Spawn()
+    return e
+end
+
 function LC.HazardPost(z)
-    if not Valid(HZ .. "warningsign.mdl") then return nil end
     local centre = z.box and (z.box.mins + z.box.maxs) / 2 or z.pos
-    for _ = 1, 8 do
+    for try = 1, 16 do
         local yaw = math.random(0, 359)
         local dir = Angle(0, yaw, 0):Forward()
-        local at = (LC.GroundAt or function(p) return p end)(centre + dir * (Reach(z) + 50) + Vector(0, 0, 30))
-        if not (LC.InInfest and LC.InInfest(at)) then
+        local at = (LC.GroundAt or function(p) return p end)(centre + dir * (Reach(z) + 60) + Vector(0, 0, 30))
+        if not (LC.InInfest and LC.InInfest(at)) and (try > 12 or OpenSpot(centre, at)) then
             local face = Angle(0, yaw, 0) -- (the sign faces out, at whoever's walking in)
             local right, back = face:Right(), -dir
             local made = {}
             for _, p in ipairs(POST) do
-                local e = Prop(HZ .. p[1] .. ".mdl", at + right * p[2] + back * p[3], face)
+                local e = Prop(Valid(p[1]) and p[1] or p[4], at + right * p[2] + back * p[3], face)
                 if e then e.lcHazardZone = z made[#made + 1] = e end
             end
+            local b = LC.HazardBarrel(at - right * 45 + back * 25, face)
+            if b then b.lcHazardZone = z made[#made + 1] = b end
             return made
         end
     end
@@ -249,8 +293,10 @@ function LC.HazardPost(z)
 end
 
 local function PostTick(zones, alive)
-    for _, e in ipairs(ents.FindByClass("prop_physics")) do
-        if IsValid(e) and e.lcHazardZone and (not alive[e.lcHazardZone] or not cvPosts:GetBool()) then e:Remove() end
+    for _, cls in ipairs({ "prop_physics", "lc_hazbarrel" }) do
+        for _, e in ipairs(ents.FindByClass(cls)) do
+            if IsValid(e) and e.lcHazardZone and (not alive[e.lcHazardZone] or not cvPosts:GetBool()) then e:Remove() end
+        end
     end
     if not cvPosts:GetBool() then return end
     for _, z in ipairs(zones) do
@@ -260,7 +306,7 @@ end
 
 -- a sprayed growth, bagged by the cleanup crew, left for collection
 local function Bag(pos)
-    local e = Prop(HZ .. "trashbag.mdl", pos + Vector(0, 0, 4), Angle(0, math.random(0, 359), 0))
+    local e = Prop(Valid(HZ .. "trashbag.mdl") and (HZ .. "trashbag.mdl") or "models/props_junk/garbage_bag001a.mdl", pos + Vector(0, 0, 4), Angle(0, math.random(0, 359), 0))
     if e then timer.Simple(90, function() if IsValid(e) then e:Remove() end end) end
     return e
 end
@@ -280,11 +326,13 @@ function LC.ClearNest(e, by, how)
     local z = e.lcZone
     if how == "npc" then Bag(e:GetPos()) end -- (the city's crew bags it up)
     if how ~= "vacuum" and e.EmitSound then e:EmitSound("npc/barnacle/barnacle_die" .. math.random(1, 2) .. ".wav", 70) end
-    e:Remove()
+    -- (told before it's gone: a removed entity can't tell one growth from the next, and a job counting
+    -- them saw every one after the first as the same growth)
     if IsValid(by) and by:IsPlayer() then
         LC.QuestEvent("nest_cleared", by, e)
         if how == "vacuum" then LC.QuestEvent("nest_vacuumed", by, e) end
     end
+    e:Remove()
     hook.Run("LivingCityNestCleared", by, z)
     if not z then return true end
     z.lcNestNext = CurTime() + math.max(1, cvRegrow:GetFloat()) * 60
@@ -323,6 +371,7 @@ end
 function LC.SprayNest(ply, e)
     if not IsValid(e) or e:GetClass() ~= "lc_nest" then return false end
     if LC.NestDead(e) then return false, OnCleanup(ply) and "It's dead already: vacuum it up with your hoover (hold left click on it)." or "It's dead already. The cleanup crew will take it away." end
+    LC.IssueWeedkiller(ply)
     if not LC.HasItem(ply, "weedkiller") then return false, "You'd need weedkiller to spray it (the Union Commissary sells it)." end
     if (ply.lcSprayNext or 0) > CurTime() then return false end
     ply.lcSprayNext = CurTime() + 0.5
@@ -370,6 +419,7 @@ end)
 
 LC.CleanupGuards = LC.CleanupGuards or {} -- [worker] = { units = {}, nextLook }
 
+local Behind
 local FREE = { idle = true, moving = true, working = true }
 local function FreeUnit(npc, st, now)
     return IsValid(npc) and LC.IsSecurity(st) and st.role ~= "scanner" and npc:Health() > 0 and FREE[st.state]
@@ -381,6 +431,7 @@ local function Release(npc)
     local st = IsValid(npc) and LC.NPCs and LC.NPCs[npc]
     if not st then return end
     st.cleanGuard = nil
+    if st.lcGuardLock then st.questLock, st.lcGuardLock = nil, nil end
     if npc.SetNW2String then npc:SetNW2String("lc_doing", "") end
     if st.state == "cleanguard" then
         LC.SetState(npc, st, "idle")
@@ -388,13 +439,29 @@ local function Release(npc)
     end
 end
 
+-- A spot on the ground behind the worker, dist away, out of their sight if it can be.
+Behind = function(worker, dist)
+    local fwd = worker.GetForward and worker:GetForward() or Vector(1, 0, 0)
+    fwd.z = 0
+    for _, side in ipairs({ 0, 60, -60, 120, -120 }) do
+        local dir = Angle(0, fwd:Angle().y + 180 + side, 0):Forward()
+        local p = worker:GetPos() + dir * dist + Vector(0, 0, 40)
+        local tr = util.TraceLine and util.TraceLine({ start = worker:GetPos() + Vector(0, 0, 40), endpos = p, mask = MASK_NPCSOLID_BRUSHONLY })
+        if not tr or not tr.Hit then return LC.GroundAt and LC.GroundAt(p) or p end
+    end
+    return worker:GetPos() - fwd * 60
+end
+
 local function Assign(worker, g, now)
     local want = math.max(0, cvGuards:GetInt())
     local live = {}
     for _, u in ipairs(g.units) do
         local st = IsValid(u) and LC.NPCs[u]
-        if st and u:Health() > 0 and st.cleanGuard == worker and st.state == "cleanguard" then live[#live + 1] = u
-        elseif st and st.cleanGuard == worker then st.cleanGuard = nil end
+        if st and u:Health() > 0 and st.cleanGuard == worker then
+            -- (a fight pulls them off for a moment: back to guarding when it's over)
+            if st.state ~= "cleanguard" and st.state ~= "hostile" then LC.SetState(u, st, "cleanguard") end
+            live[#live + 1] = u
+        end
     end
     g.units = live
     if #live >= want or now < (g.nextLook or 0) then return end
@@ -408,11 +475,22 @@ local function Assign(worker, g, now)
         end
     end
     table.sort(cands, function(a, b) return a.d < b.d end)
+    -- nobody free: dispatch sends one (a unit walks in from out of sight)
+    if #cands == 0 and LC.SpawnCop and now >= (g.nextSpawn or 0) then
+        g.nextSpawn = now + 20
+        local spot = Behind(worker, 500)
+        if spot then
+            local npc, st = LC.SpawnCop(spot + Vector(0, 0, 4))
+            if IsValid(npc) and st then cands[1] = { npc = npc, st = st, d = 0 } end
+        end
+    end
     for i = 1, math.min(#cands, want - #live) do
         local c = cands[i]
         if LC.Release then LC.Release(c.npc, c.st) end
         if LC.NPCWorkReset then LC.NPCWorkReset(c.npc, c.st) end
         c.st.cleanGuard = worker
+        -- (held to it: nothing else sends them off, and they don't leave the city mid-job)
+        if not c.st.questLock then c.st.questLock, c.st.lcGuardLock = true, true end
         c.st.route, c.st.routeTo, c.st.goingTo = nil, nil, nil
         LC.SetState(c.npc, c.st, "cleanguard")
         if c.npc.SetNW2String then c.npc:SetNW2String("lc_doing", "guarding the cleanup crew") end
@@ -447,7 +525,16 @@ local function Drive(worker, g, now)
                 if u.IsCurrentSchedule and u.SetSchedule and not u:IsCurrentSchedule(SCHED_RANGE_ATTACK1) then
                     u:SetSchedule(u:GetPos():DistToSqr(z:GetPos()) > 700 * 700 and SCHED_CHASE_ENEMY or SCHED_RANGE_ATTACK1)
                 end
-            else
+            end
+            -- left behind (stuck, or lost on the way): back beside the worker
+            local far = u:GetPos():DistToSqr(worker:GetPos()) > 700 * 700
+            if far then u.lcFarSince = u.lcFarSince or CurTime() else u.lcFarSince = nil end
+            if far and CurTime() - u.lcFarSince > 4 then
+                u.lcFarSince = nil
+                local spot = Behind(worker, 90)
+                if spot then u:SetPos(spot + Vector(0, 0, 4)) if u.SetSchedule then u:SetSchedule(SCHED_IDLE_STAND) end end
+            end
+            if not IsValid(z) then
                 -- keep close, one on each side
                 local d = u:GetPos():DistToSqr(worker:GetPos())
                 if d > 170 * 170 and u.SetLastPosition and u.SetSchedule then
@@ -550,9 +637,7 @@ function LC.VacuumNest(ply, e)
     return true
 end
 
-local function IsBarrel(e)
-    return IsValid(e) and e.lcHazardProp and string.find(e:GetModel() or "", "combinehazardprops_barrel", 1, true) ~= nil
-end
+local function IsBarrel(e) return IsValid(e) and e:GetClass() == "lc_hazbarrel" end
 LC.IsHazardBarrel = IsBarrel
 -- an infestation control barrel within reach of a walk (none: a bag will do)
 function LC.BarrelNear(ply)
@@ -593,14 +678,17 @@ function LC.BagHoover(ply)
     return true
 end
 
-hook.Add("PlayerUse", "LivingCityHooverBarrel", function(ply, ent)
-    if not IsBarrel(ent) or Load(ply) < 1 then return end
-    if (ply.lcDumpNext or 0) > CurTime() then return false end
+-- E on the barrel (entities/entities/lc_hazbarrel.lua)
+function LC.UseHazardBarrel(ply, ent)
+    if (ply.lcDumpNext or 0) > CurTime() then return end
     ply.lcDumpNext = CurTime() + 1
+    if Load(ply) < 1 then
+        ply:ChatPrint("An infestation control barrel. Empty a cleanup worker's hoover into it (E, with something in the hoover).")
+        return
+    end
     local ok, why = LC.DumpHoover(ply, ent)
     if not ok and why then ply:ChatPrint(why) end
-    return false
-end)
+end
 hook.Add("LivingCityJobChanged", "LivingCityHooverEmpty", function(ply) if IsValid(ply) then ply:SetNW2Int("lc_hoover_load", 0) end end)
 
 ------------------------------------------------------------------------

@@ -40,6 +40,7 @@ LC.POINT_KINDS = {
     cpsupply = true, -- the Civil Protection Commissary (sv_livingcity_cpsupply.lua)
     studio = true, -- where Dr. Breen speaks when no player is Director of Propaganda (sv_livingcity_propaganda.lua)
     incinerator = true, -- where the dead go (sv_livingcity_mortuary.lua)
+    hazbarrel = true, -- an infestation control barrel: cleanup workers empty their hoovers here (sv_livingcity_cleanup.lua)
     dock = true, graffiti = true, rubble = true, pipe = true, -- loading docks, walls that get tagged, rubble piles (Union shifts)
     ladder = true, -- two with the same number: a ladder NPCs can use (sv_livingcity_navgraph.lua)
     zspawn = true, rspawn = true, -- infested and resistance respawn/spawn points

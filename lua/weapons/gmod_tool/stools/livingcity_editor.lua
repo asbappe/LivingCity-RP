@@ -78,6 +78,7 @@ local MODES = {
     { id = "transformer", label = "Fixture: transformer (powers the district: lights, loudspeakers, screens, forcefields, Combine locks)" },
     { id = "forcefield",  label = "Fixture: Combine forcefield (place it facing you, across a doorway; Civil Protection units pass)" },
     { id = "incinerator", label = "Fixture: incinerator (the dead are hauled here; mortuary attendants)" },
+    { id = "hazbarrel",   label = "Fixture: infestation control barrel (Infestation Cleanup workers empty their hoovers into it; every infestation's warning post has one too)" },
     { id = "powerbank",   label = "Fixture: Combine power bank (a checkpoint's heart: turrets and forcefields near it run off it)" },
     { id = "turret",      label = "Fixture: Combine turret (at a checkpoint, near a power bank or forcefield; facing you)" },
     { id = "barricade_low",  label = "Fixture: Combine barricade, low (facing you)" },
@@ -119,7 +120,7 @@ else
 end
 
 -- sit, bench and lean spots, and fixtures, face the person placing them
-local FACE_PLACER = { bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, screen = true, lawboard = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, yard = true }
+local FACE_PLACER = { bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, screen = true, lawboard = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, hazbarrel = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, yard = true }
 
 local function ModeIndex(id)
     for i, m in ipairs(MODES) do if m.id == id then return i end end

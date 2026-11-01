@@ -76,6 +76,11 @@ local function JoinLater(ply, faction, minXP)
         if minXP then
             local key = "lcf_xp_" .. faction
             ply:SetPData(key, math.max(tonumber(ply:GetPData(key, 0)) or 0, minXP))
+            -- (a story that makes someone a Fighter has proved them: the Resistance trusts them already)
+            if faction == "resistance" and LC.ResistanceTrust and LC.Bump then
+                local have, need = LC.ResistanceTrust(ply)
+                if have < need then LC.Bump(ply, "res_jobs", need - have) end
+            end
         end
         LC.SetFaction(ply, faction, nil)
     end)

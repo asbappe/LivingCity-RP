@@ -92,10 +92,11 @@ hook.Add("Think", "LivingCityInfest", function()
     LC_CL.InfestHaze = math.Approach(LC_CL.InfestHaze, target, FrameTime() * 0.4)
     if LC_CL.InfestHaze > 0.05 then LC_CL.InfestMotes(me, LC_CL.InfestHaze, now) end
     -- the geiger counter: a click now and then at the edge, a rattle in the middle of it
+    -- (the owner, 1 November: 40% calmer, clicks and loudness both; it went wild at the very edge)
     if target > 0 and now > nextClick then
-        local rate = 1.5 + target * 12
+        local rate = (1.5 + target * 12) * 0.6
         nextClick = now + math.Rand(0.3, 1.7) / rate
-        me:EmitSound("player/geiger" .. math.random(1, 3) .. ".wav", 55, 100, 0.25 + target * 0.35)
+        me:EmitSound("player/geiger" .. math.random(1, 3) .. ".wav", 55, 100, (0.25 + target * 0.35) * 0.6)
     end
 end)
 

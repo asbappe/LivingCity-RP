@@ -40,10 +40,10 @@ LCJ.Occupations = {
       desc = "Collect scrap metal and clear rubble from the old city. Some of what's buried there was hidden on purpose." },
     { id = "radio", num = 12, name = "Radio Repair", place = "Radio repair shop", gameOnly = true,
       desc = "Repair loudspeakers and Union radios. Some come in tuned to frequencies that aren't supposed to exist." },
-    { id = "groundskeeper", num = 14, name = "Groundskeeper", place = "the streets", noWorkplace = true,
+    { id = "groundskeeper", num = 14, name = "Groundskeeper", place = "the streets", noWorkplace = true, tools = { "weapon_lc_sprayer" },
       desc = "Spray the weeds coming up through the cracks before they take over: a tuft is quick, a bush takes a while. You're issued weedkiller." },
     -- (the owner, 2026-11-01: like contamination cleanup elsewhere; a faster way into Civil Protection than the records office)
-    { id = "cleanup", num = 15, name = "Infestation Cleanup", place = "the infestation", noWorkplace = true, tools = { "weapon_lc_hoover" },
+    { id = "cleanup", num = 15, name = "Infestation Cleanup", place = "the infestation", noWorkplace = true, tools = { "weapon_lc_sprayer", "weapon_lc_hoover" },
       desc = "Into the infestation in a respirator, with weedkiller and a hoover: spray its growths dead, vacuum them up, and empty the hoover into the infestation control barrel. Civil Protection guards you; it's dangerous. Each shift counts double towards joining Civil Protection." },
     -- (the owner, 2026-11-01: something for the city's most loyal) players only, Exemplary standing; no workplace: your own block
     { id = "warden", num = 13, name = "Block Warden", place = "your housing block", minStanding = 400, playersOnly = true, noWorkplace = true,

@@ -435,6 +435,8 @@ local function newPlayer(name, faction, special, xp)
     local p = _makeplayer(name, Vector(0, -500, 0))
     hook.Run("PlayerInitialSpawn", p)
     if xp then p:SetPData("lcf_xp_" .. faction, xp) end
+    -- (an established fighter: the Resistance trusts them already, lc_fighter_trust_jobs)
+    if faction == "resistance" and xp and xp >= 400 and LC.Bump then LC.Bump(p, "res_jobs", 99) end
     LC.SetFaction(p, faction, special, true)
     return p
 end
@@ -7690,8 +7692,8 @@ wet:SetPos(V0 + Vector(0, 2000, 0))
 LC.SetWeather("rain")
 ok(_globals.lc_weather == "rain" and LC.InRain(wet), "rain, and you're out in it")
 LC.GiveItem(wet, "bottle_empty")
-timer.list["LivingCityRainFill"].fn()
-ok(LC.HasItem(wet, "bottle_rain") and not LCS.Items.bottle_rain.parasite and not LC.HasItem(wet, "bottle_empty"), "an empty bottle fills with rain (rainwater: no boiling needed)")
+ok(timer.list["LivingCityRainFill"] == nil and LC.HasItem(wet, "bottle_empty"), "rain no longer fills bottles and cans (the owner asked)")
+LC.TakeItem(wet, "bottle_empty")
 wet.chat = {}
 hook.Run("PlayerSay", wet, "!time")
 ok(has(wet.chat, "12:") and has(wet.chat, "rain"), "!time tells the time and the weather")
@@ -12810,7 +12812,7 @@ end)()
     ok(g.last == "timeout" and g.n == 2, "out of time: the next set, and the window's told it was a timeout (not fixed)")
     LC.JobGameEnd(rr, "quit")
     rr.valid = false
-    -- the clipboard the right way up; rainwater straight from the sky
+    -- the clipboard the right way up
     local ang = LC.CarryHandAngle("models/props_lab/clipboard.mdl")
     ok(ang.r == 180 and ang.p == 0, "a clipboard carried in one hand is turned the right way up")
     ok(concommand.GetTable and concommand.GetTable()["lc_outfits_edit"] ~= nil or LC.OpenOutfits ~= nil, "the editor's Job outfits button has its own command (lc_outfits_edit)")
@@ -13758,6 +13760,8 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     _run(0.3)
     LC.SetJob(cln, "cleanup", true)
     ok(LC.HasItem(cln, "weedkiller"), "Infestation Cleanup is issued weedkiller")
+    LC.TakeItem(cln, "weedkiller", 1)
+    ok(LC.IssueWeedkiller(cln, true) and LC.HasItem(cln, "weedkiller"), "out of weedkiller on the job: the kit tops it up")
     _run(2.5)
     ok(not string.find(cln:GetModel() or "", "worker_", 1, true), "off shift, a cleanup worker is in their own clothes", cln:GetModel())
     LC.QuestOf[cln] = { chain = "shift", owner = cln }
@@ -13803,7 +13807,9 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     ok(IsValid(n1) and IsValid(n2) and LC.NestsIn(patch) == 2, "an infestation has growths in it")
     ok(n1.lcModel == "models/hlvr/distillery_gunk/distillerygunk_gunk.mdl", "with the owner's workshop pack, the growths are Xen gunk", n1.lcModel)
     local post = LC.HazardPost(patch)
-    ok(post and #post == 3, "a Combine warning post (sign, lamp, barrel) at the edge of the infestation", post and #post)
+    local hasBarrel = false
+    for _, e in ipairs(post or {}) do if LC.IsHazardBarrel(e) then hasBarrel = true end end
+    ok(post and #post == 3 and hasBarrel, "a Combine warning post (sign, lamp, and an infestation control barrel) at the edge of the infestation", post and #post)
     for _, e in ipairs(post or {}) do e:Remove() end
     cln:SetPos(patch.pos)
     local okN, whyN = LC.SprayNest(ctz, n1)
@@ -13816,7 +13822,11 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     _run(5)
     ok(IsValid(n2) and LC.NestDead(n2) and table.HasValue(LC.Zones, patch), "sprayed, a growth dies, and lies there dead")
     cln:SetNW2Int("lc_hoover_load", 0)
+    local qeWas, toldValid = LC.QuestEvent, nil
+    LC.QuestEvent = function(name, p, a, ...) if name == "nest_vacuumed" then toldValid = IsValid(a) end return qeWas(name, p, a, ...) end
     ok(LC.VacuumNest(cln, n2) and LC.HooverLoad(cln) == 1, "the hoover sucks up a dead growth")
+    LC.QuestEvent = qeWas
+    ok(toldValid == true, "the job is told which growth while it still exists (each one counts, not just the first)")
     ok(not IsValid(n2) and not table.HasValue(LC.Zones, patch), "every growth gone: the patch goes, the infestation shrinks")
     local okB, whyB = LC.BagHoover(cln)
     ok(okB and LC.HooverLoad(cln) == 0, "no barrel near: sealed in a bag", whyB)
@@ -13860,6 +13870,34 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     ok(woman:GetModel() == "models/player/worker_female.mdl", "and on a shift she wears the female hazmat suit", woman:GetModel())
     LC.QuestOf[woman] = nil
     LC.SetJob(woman, "", true)
+    -- trust before a gun: a member with the XP for Fighter, but no jobs done for the Resistance yet
+    local recruit = newPlayer("TrustRecruit", "citizen")
+    recruit:SetPData("lcf_xp_resistance", 500)
+    LC.SetFaction(recruit, "resistance", nil, true)
+    local fRes = LCF.Get("resistance")
+    ok(fRes.ranks[recruit:GetNW2Int("lcf_rank", 1)].name == "Member", "joining the Resistance, XP alone doesn't make a Fighter: not trusted yet", fRes.ranks[recruit:GetNW2Int("lcf_rank", 1)].name)
+    for _ = 1, 3 do hook.Run("LivingCityQuestComplete", recruit, { chain = "resjob" }) end
+    ok(fRes.ranks[recruit:GetNW2Int("lcf_rank", 1)].name == "Fighter", "three jobs done for them, and they trust you: Fighter", fRes.ranks[recruit:GetNW2Int("lcf_rank", 1)].name)
+    recruit:SetPos(Vector(-150000, 150000, 0))
+    -- a map's burning barrel made with a fire particle is somewhere to boil water
+    local cook = newPlayer("BarrelCook", "citizen")
+    cook:SetPos(Vector(-173000, -173000, 0))
+    local fx = ents.Create("info_particle_system") fx:SetPos(cook:GetPos() + Vector(40, 0, 30)) fx:Spawn()
+    fx.GetKeyValues = function() return { effect_name = "barrel_fire_01" } end
+    ok(LC.NearHeat(cook), "a burning barrel (a fire particle) is heat to boil water by")
+    fx:Remove()
+    cook:SetPos(Vector(-150000, 150000, 0))
+    -- sociostability: an outbreak is red only while its infected are loose in the city, and says why
+    local evWas, obWas = LC.Event, LC.LastOutbreak
+    LC.Event, LC.LastOutbreak = nil, CurTime()
+    local lvl0 = LC.SocioAuto()
+    ok(lvl0 ~= "red", "an outbreak with nobody loose in the city: not red (headcrabs in the infestation are no concern)", lvl0)
+    local zb = ents.Create("npc_zombie") zb:SetPos(Vector(-174000, -174000, 0)) zb:Spawn() zb:SetHealth(50)
+    LC.NPCs[zb] = { role = "zombie", unmanaged = true, state = "idle" }
+    local lvl1, why1 = LC.SocioAuto()
+    ok(lvl1 == "red" and why1 == "infected loose in the city", "infected that broke out, loose in the streets: red, and it says why", tostring(lvl1) .. " " .. tostring(why1))
+    LC.NPCs[zb] = nil zb:Remove()
+    LC.Event, LC.LastOutbreak = evWas, obWas
     local crew = ents.Create("npc_citizen") crew:SetPos(Vector(-171000, -171000, 0)) crew:Spawn()
     local plain = "models/humans/group01/female_02.mdl"
     crew:SetModel(plain)

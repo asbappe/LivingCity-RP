@@ -111,20 +111,28 @@ timer.Create("LivingCityWeeds", 5, 0, function()
     if not ok and LC.Error then LC.Error("weeds", err) end
 end)
 
+-- How long one takes to spray: a moment for a tuft, longer for a bush.
+function LC.WeedSpraySecs(e) return ({ 1.5, 3, 5 })[IsValid(e) and e.lcStage or 1] or 3 end
+-- Sprayed: gone (the event told before it's removed, so a job counts each one).
+function LC.KillWeed(e, p)
+    if not IsValid(e) or e.lcKilled then return false end
+    e.lcKilled = true
+    e:EmitSound("ambient/water/water_spray1.wav", 60)
+    LC.QuestEvent("weed_killed", p, e)
+    hook.Run("LivingCityWeedKilled", p)
+    e:Remove()
+    return true
+end
+
 -- Spraying one: a moment for a tuft, longer for a bush.
 function LC.SprayWeed(ply, e)
     if not IsValid(e) or e:GetClass() ~= "lc_weed" then return false end
+    if LC.IssueWeedkiller then LC.IssueWeedkiller(ply) end
     if not LC.HasItem(ply, "weedkiller") then return false, "You'd need weedkiller (the Union Commissary sells it; the Groundskeeper is issued it)." end
     if (ply.lcSprayNext or 0) > CurTime() then return false end
     ply.lcSprayNext = CurTime() + 0.5
-    local secs = ({ 1.5, 3, 5 })[e.lcStage or 1] or 3
-    local function Done(p)
-        if not IsValid(e) then return end
-        e:EmitSound("ambient/water/water_spray1.wav", 60)
-        e:Remove()
-        LC.QuestEvent("weed_killed", p, e)
-        hook.Run("LivingCityWeedKilled", p)
-    end
+    local secs = LC.WeedSpraySecs(e)
+    local function Done(p) LC.KillWeed(e, p) end
     if not LC.StartTask then Done(ply) return true end
     ply:EmitSound("ambient/water/water_spray1.wav", 55)
     return LC.StartTask(ply, secs, "Spraying the weeds...", { maxMove = 50, cancelText = "You stop spraying.", done = Done })

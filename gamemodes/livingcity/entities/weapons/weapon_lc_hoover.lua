@@ -23,7 +23,7 @@ SWEP.AdminOnly    = true
 SWEP.Slot         = 4
 SWEP.SlotPos      = 6
 SWEP.ViewModel    = "models/weapons/c_arms.mdl"
-SWEP.WorldModel   = ""
+SWEP.WorldModel   = "models/props_junk/gascan001a.mdl" -- (never shown: the hoover is drawn in its place; with none, nothing in the hand was drawn at all)
 SWEP.UseHands     = false
 SWEP.HoldType     = "physgun"
 SWEP.DrawAmmo     = false
@@ -33,7 +33,7 @@ SWEP.Primary   = { ClipSize = -1, DefaultClip = -1, Automatic = true, Ammo = "no
 SWEP.Secondary = { ClipSize = -1, DefaultClip = -1, Automatic = false, Ammo = "none" }
 
 local PACK = "models/hlvr/combine_hazardprops/combinehazardprops_hoover.mdl"
-local STANDIN = "models/props_junk/propane_tank001a.mdl"
+local STANDIN = "models/props_junk/gascan001a.mdl"
 local function Model() return (not util.IsValidModel or util.IsValidModel(PACK)) and PACK or STANDIN end
 
 local REACH, SECS, STEP = 140, 2.4, 0.2
@@ -103,8 +103,8 @@ if CLIENT then
         return self.lcProp
     end
 
-    -- no hands model of its own: the hoover in front of you instead of fists
-    function SWEP:PreDrawViewModel() return true end
+    -- no first-person model of its own: the hoover drawn in front of you (the arms model under it is empty;
+    -- hiding it outright stopped the hoover being drawn at all)
     function SWEP:PostDrawViewModel()
         local p = Prop(self)
         if not IsValid(p) then return end

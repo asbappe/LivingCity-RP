@@ -550,14 +550,24 @@ SHIFTS.cleanup = {
         end
         if not best then return nil end
         local edge = best:GetPos()
+        if LC.IssueWeedkiller then LC.IssueWeedkiller(ply, true) end
+        -- the barrel nearest the growth, marked for the last step (none: a bag will do)
+        local barrel, bd2
+        for _, b in ipairs(ents.FindByClass("lc_hazbarrel")) do
+            local d = b:GetPos():DistToSqr(edge)
+            if IsValid(b) and (not bd2 or d < bd2) then barrel, bd2 = b, d end
+        end
+        local dump = Count("nest_dumped", 3, barrel and "Empty your hoover into the infestation control barrel (marked): E on it"
+            or "Seal the hoover's load in a bag: right click with the hoover (there's no infestation control barrel near)", nil, false)
+        if barrel then dump.pos, dump.r = barrel:GetPos(), 120 end
         return {
             title = "Clearing the infestation", reward = 30, limit = 900,
             desc = "The infestation is spreading. Go in with your respirator, weedkiller and hoover: kill its growths, vacuum them up, and get rid of them. Civil Protection will guard you: stay close to them.",
             stages = {
                 Goto(edge, "Go to the infestation (marked): Civil Protection meets you there", 600),
-                Count("nest_killed", 3, "Spray 3 growths dead: the glowing ones (look at one and press E)"),
-                Count("nest_vacuumed", 3, "Vacuum up the dead growths: your hoover out, hold left click on one"),
-                Count("nest_dumped", 3, "Empty your hoover into the infestation control barrel at the edge (E on it); where there's none, seal it in a bag (right click)"),
+                Count("nest_killed", 3, "Spray 3 growths dead: the glowing ones (the sprayer out, hold left click on one; or E)"),
+                Count("nest_vacuumed", 3, "Vacuum up the dead growths: the hoover out, hold left click on one"),
+                dump,
             },
         }
     end,

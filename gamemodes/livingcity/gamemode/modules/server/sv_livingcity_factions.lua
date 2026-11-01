@@ -100,12 +100,32 @@ local function Publish(ply)
     ply:SetNW2Int("lcf_xp", f and XP(ply, f.id) or 0)
 end
 
+-- Trust before a gun (the owner, 1 November): the Resistance's ranks that carry arms (Fighter and up, the
+-- first "hunted" rank) also need lc_fighter_trust_jobs (3) jobs done for it, whatever the XP: put up the
+-- posters, run the errands, before the SMG and the gear. (Counted on "res_jobs": any job from the board
+-- finished as one of them, but a Union shift.)
+local cvTrust = CreateConVar("lc_fighter_trust_jobs", "3", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Jobs a Resistance member must finish for it before they're trusted as a Fighter (with the XP)")
+function LC.ResistanceTrust(ply) return LC.Counter and LC.Counter(ply, "res_jobs") or 0, math.max(0, cvTrust:GetInt()) end
+local function RankFor(ply, f, xp)
+    local idx = LCF.RankIndexFor(f, xp or XP(ply, f.id), Conditioned(ply))
+    if f.id == "resistance" then
+        local have, need = LC.ResistanceTrust(ply)
+        if have < need then
+            for i, r in ipairs(f.ranks) do
+                if r.hunted then idx = math.min(idx, math.max(1, i - 1)) break end
+            end
+        end
+    end
+    return idx
+end
+LC.FactionRankFor = RankFor
+
 local function RecomputeRank(ply)
     local f = FactionOf(ply)
     if not f then return false end
     local old = ply:GetNW2Int("lcf_rank", 1)
     ply:SetNW2Bool("lcf_transhuman", Conditioned(ply))
-    local new = LCF.RankIndexFor(f, XP(ply, f.id), Conditioned(ply))
+    local new = RankFor(ply, f)
     ply:SetNW2Int("lcf_rank", new)
     Publish(ply)
     return new ~= old, new > old
@@ -345,7 +365,7 @@ function LC.CanJoinFaction(ply, fid, sid)
     end
     if f.requires then
         local rf = LCF.Get(f.requires.faction)
-        if rf and LCF.RankIndexFor(rf, XP(ply, rf.id), Conditioned(ply)) < f.requires.rank and not ply:IsSuperAdmin() then
+        if rf and RankFor(ply, rf) < f.requires.rank and not ply:IsSuperAdmin() then
             return false, string.format("Requires %s in %s.", rf.ranks[f.requires.rank].name, rf.name)
         end
     end
@@ -354,7 +374,7 @@ function LC.CanJoinFaction(ply, fid, sid)
         if not s then return false, "No such role." end
         local mine = ply:GetNW2String("lcf_faction", "") == fid and ply:GetNW2String("lcf_special", "") == sid
         if not mine and SpecialHolders(fid, sid) >= (s.max or 1) then return false, "Someone already holds that role." end
-        if LCF.RankIndexFor(f, XP(ply, fid), Conditioned(ply)) < (s.minRank or 1) and not ply:IsSuperAdmin() then
+        if RankFor(ply, f) < (s.minRank or 1) and not ply:IsSuperAdmin() then
             return false, "Requires " .. f.ranks[s.minRank].name .. " in " .. f.name .. "."
         end
     end
@@ -419,9 +439,11 @@ local function SendMenu(ply)
     local data = { current = ply:GetNW2String("lcf_faction", ""), special = ply:GetNW2String("lcf_special", ""), factions = {},
         admin = ply:IsAdmin() or nil }
     for _, f in ipairs(LCF.Factions) do
+      -- (the owner: a stalker is a punishment, never a choice: not on the screen, unless it's what you are)
+      if not f.stalker or data.current == f.id then
         local xp = XP(ply, f.id)
         local ok, why = LC.CanJoinFaction(ply, f.id, nil)
-        local entry = { id = f.id, xp = xp, rank = LCF.RankIndexFor(f, xp, Conditioned(ply)), ok = ok, why = why, specials = {} }
+        local entry = { id = f.id, xp = xp, rank = RankFor(ply, f, xp), ok = ok, why = why, specials = {} }
         -- what Civil Protection asks of a citizen, as progress bars on the card (the owner asked)
         if f.id == "cp" and ply:GetNW2String("lcf_faction", "") ~= "cp" then
             entry.reqs = {
@@ -429,11 +451,18 @@ local function SendMenu(ply)
                 { label = "Records Clerk shifts finished (F3 > Jobs; Infestation Cleanup counts double)", have = LC.Counter and LC.Counter(ply, "clerk_shifts") or 0, need = cvCPClerk:GetInt() },
             }
         end
+        if f.id == "resistance" then
+            local have, need = LC.ResistanceTrust(ply)
+            if need > 0 and have < need then
+                entry.reqs = { { label = "Jobs done for the Resistance, to be trusted as a Fighter (their board, F3)", have = have, need = need } }
+            end
+        end
         for _, s in ipairs(f.specials or {}) do
             local sok, swhy = LC.CanJoinFaction(ply, f.id, s.id)
             entry.specials[#entry.specials + 1] = { id = s.id, ok = sok, why = swhy, taken = SpecialHolders(f.id, s.id) }
         end
         data.factions[#data.factions + 1] = entry
+      end
     end
     LC.SendCompressed("lcf_menu", data, { ply })
 end
@@ -700,4 +729,18 @@ AdminCmd("lcf_whitelist", function(target, args, out)
     local on = target:GetPData(key, "0") ~= "1"
     target:SetPData(key, on and "1" or "0")
     out(target:Nick() .. (on and " whitelisted for " or " removed from ") .. f.name .. ".")
+end)
+
+-- A job done for the Resistance builds their trust; the last one needed makes a Fighter of a member with the XP.
+hook.Add("LivingCityQuestComplete", "LivingCityResistanceTrust", function(p, q)
+    if not IsValid(p) or not q or q.chain == "shift" or p:GetNW2String("lcf_faction", "") ~= "resistance" then return end
+    local before = LC.ResistanceTrust(p)
+    if LC.Bump then LC.Bump(p, "res_jobs") end
+    local have, need = LC.ResistanceTrust(p)
+    if before < need and have >= need then
+        p:ChatPrint("[Resistance] You've proved yourself. They trust you now.")
+        LC.AddXP(p, 0, "trusted by the Resistance") -- (the rank it earns, now it's trusted)
+    elseif have < need then
+        p:ChatPrint(string.format("[Resistance] They're starting to trust you: %d of %d jobs before they'd arm you as a Fighter.", have, need))
+    end
 end)

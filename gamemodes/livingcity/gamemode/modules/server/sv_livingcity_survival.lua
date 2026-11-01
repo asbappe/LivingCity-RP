@@ -459,12 +459,19 @@ end)
 -- Cooking and filling
 ------------------------------------------------------------------------
 
-local HEAT_CLASSES = { lc_stove = true, lc_fire = true, env_fire = true, entityflame = true }
+-- (a map's burning barrel can be any of these: the engine's fire, its smoke and source, a fire particle)
+local HEAT_CLASSES = { lc_stove = true, lc_fire = true, env_fire = true, entityflame = true, env_firesource = true, _firesmoke = true, env_fire_trail = true }
 
 function LC.NearHeat(ply)
-    if LC.StaticFixtureNear and LC.StaticFixtureNear(ply:GetPos() + Vector(0, 0, 40), "stove", 150) then return true end
-    for _, e in ipairs(ents.FindInSphere(ply:GetPos(), 150)) do
-        if HEAT_CLASSES[e:GetClass()] then return true end
+    local at = ply:GetPos() + Vector(0, 0, 40)
+    if LC.StaticFixtureNear and (LC.StaticFixtureNear(at, "stove", 150) or LC.StaticFixtureNear(at, "fire", 150)) then return true end
+    for _, e in ipairs(ents.FindInSphere(at, 170)) do
+        local cls = e:GetClass()
+        if HEAT_CLASSES[cls] then return true end
+        if cls == "info_particle_system" and e.GetKeyValues then
+            local fx = string.lower(tostring((e:GetKeyValues() or {}).effect_name or ""))
+            if string.find(fx, "fire", 1, true) or string.find(fx, "flame", 1, true) or string.find(fx, "burn", 1, true) then return true end
+        end
         local m = string.lower(e:GetModel() or "")
         if m ~= "" and (string.find(m, "stove", 1, true) or string.find(m, "furnace", 1, true) or string.find(m, "oven", 1, true)) then
             return true
@@ -808,6 +815,7 @@ local FIXTURE_CLASS = {
     vending = "lc_vending", dispenser = "lc_dispenser", terminal = "lc_terminal", stove = "lc_stove", fire = "lc_fire",
     dealer = "lc_dealer", locker = "lc_locker", screen = "lc_screen", lawboard = "lc_lawboard", console = "lc_console",
     workbench = "lc_workbench", recycler = "lc_recycler", dataterm = "lc_dataterminal", masterterm = "lc_masterterminal", incinerator = "lc_incinerator",
+    hazbarrel = "lc_hazbarrel", -- (sv_livingcity_cleanup.lua)
     transformer = "lc_transformer", forcefield = "lc_forcefield",
     powerbank = "lc_powerbank", turret = "npc_turret_floor", -- checkpoints (sv_livingcity_checkpoints.lua)
     barricade_low = "lc_barricade", barricade = "lc_barricade", barricade_tall = "lc_barricade",

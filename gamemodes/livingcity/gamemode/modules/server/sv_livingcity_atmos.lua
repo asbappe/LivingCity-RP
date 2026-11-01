@@ -171,21 +171,8 @@ timer.Create("LivingCityAtmos", 2, 0, function()
     end
 end)
 
--- Rain fills an empty bottle or can held out to it.
-timer.Create("LivingCityRainFill", 20, 0, function()
-    for _, ply in ipairs(player.GetAll()) do
-        if ply:Alive() and LC.InRain(ply) then
-            for _, pair in ipairs({ { "bottle_empty", "bottle_rain" }, { "can_empty", "can_rain" } }) do
-                if LC.HasItem(ply, pair[1]) then
-                    LC.TakeItem(ply, pair[1], 1)
-                    LC.GiveItem(ply, pair[2], 1)
-                    ply:ChatPrint("[Living City] Rain fills your " .. (LCS.Items[pair[1]] and string.lower(LCS.Items[pair[1]].name) or pair[1]) .. ". Rainwater: clean enough to drink as it is.")
-                    break
-                end
-            end
-        end
-    end
-end)
+-- (Rain used to fill empty bottles and cans with clean water. Gone, the owner asked, 1 November: water
+-- comes from the vending machines, the taps, and the canal (boiled). Rainwater already carried still drinks.)
 
 hook.Add("PlayerInitialSpawn", "LivingCityAtmos", function(ply)
     timer.Simple(3, function()

@@ -36,7 +36,7 @@ local USES = {
     { title = "Prison", ids = { "cell", "release", "zone_prison", "door_prison" } },
     { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "rlookout", "bunk", "workbench", "dealer", "bed", "toilet", "stove",
         "sit", "sitchair", "lean", "fire", "locker", "graffiti" } },
-    { title = "Infestation", ids = { "zone_infest", "zspawn" } },
+    { title = "Infestation", ids = { "zone_infest", "zspawn", "hazbarrel" } },
     { title = "Morning exercise", ids = { "jogroute", "yard", "parade" } },
     { title = "Power and the street", ids = { "transformer", "streetlight", "loudspeaker", "screen_big", "pipe", "rubble", "salvage" } },
     { title = "Paths, ladders and doors", ids = { "node", "link", "ladder", "zone_nogo", "door_locked", "door_open", "door_ignore", "door_force", "door_test" } },
@@ -46,7 +46,7 @@ local USES = {
 local JOB_EXTRAS = {
     sanitation = { "citybin", "bin", "graffiti", "toilet" }, kitchen = { "dispenser", "queue", "dock" }, medic = { "bed" },
     factory = { "conveyor", "dock" }, courier = { "dock" }, maintenance = { "streetlight", "transformer", "pipe", "powerbank", "forcefield" },
-    porter = { "platform", "arrival", "dock" }, clerk = { "intake", "housingterm" }, laundry = {}, mortuary = { "incinerator" },
+    porter = { "platform", "arrival", "dock" }, clerk = { "intake", "housingterm" }, laundry = {}, mortuary = { "incinerator" }, cleanup = { "zone_infest", "hazbarrel" },
     scrap = { "rubble", "salvage", "recycler" }, radio = {},
 }
 local cvArrange = CreateClientConVar("lc_editor_arrange", "type", true, false, "How the editor's list is arranged: type (points, fixtures...) or use (what it's for)")
@@ -152,7 +152,7 @@ local WANTED = {
 local function Glance()
     local pts, fx, zones, doors = 0, 0, #(LC_CL.zones or {}), #(LC_CL.doors or {})
     local FIX = { vending = true, dispenser = true, terminal = true, stove = true, fire = true, dealer = true, locker = true,
-        screen = true, lawboard = true, console = true, workbench = true, recycler = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, intake = true, housingterm = true, cpsupply = true, conveyor = true, bed = true, toilet = true, bath = true }
+        screen = true, lawboard = true, console = true, workbench = true, recycler = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, hazbarrel = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, intake = true, housingterm = true, cpsupply = true, conveyor = true, bed = true, toilet = true, bath = true }
     for _, p in ipairs(LC_CL.points or {}) do if FIX[p.kind] then fx = fx + 1 else pts = pts + 1 end end
     local npcs = 0
     for _, e in ipairs(ents.FindByClass("npc_*")) do if e:GetNW2String("lc_role", "") ~= "" then npcs = npcs + 1 end end
@@ -208,11 +208,11 @@ function LC_CL.BuildLayoutBrowser(panel, modes)
         local out = {}
         if cvArrange:GetString() == "use" then
             for _, o in ipairs(LCJ and LCJ.Occupations or {}) do
-              if not o.noWorkplace then -- (the Block Warden works their own block: no workplace to place)
-                local list = { byId["work_" .. o.id] }
-                for _, id in ipairs(JOB_EXTRAS[o.id] or {}) do if byId[id] then list[#list + 1] = byId[id] end end
-                out[#out + 1] = { title = "Job: " .. o.name, list = list, sorted = true }
-              end
+              -- (no workplace to place for the Block Warden or Infestation Cleanup; Cleanup still has its barrels and zones)
+              local list = {}
+              if not o.noWorkplace then list[1] = byId["work_" .. o.id] end
+              for _, id in ipairs(JOB_EXTRAS[o.id] or {}) do if byId[id] then list[#list + 1] = byId[id] end end
+              if #list > 0 then out[#out + 1] = { title = "Job: " .. o.name, list = list, sorted = true } end
             end
             for _, u in ipairs(USES) do
                 local list = {}

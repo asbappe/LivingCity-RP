@@ -33,8 +33,21 @@ if SERVER then
 end
 
 if CLIENT then
+    -- the server has a model this game hasn't (a workshop pack not downloaded): a stand-in, never an ERROR
+    local STANDINS = { "models/antlion_grub.mdl", "models/props_junk/garbage_bag001a.mdl" }
+    local function Has(m) return not util.IsValidModel or util.IsValidModel(m) end
     function ENT:Draw()
-        self:DrawModel()
+        if Has(self:GetModel()) then self:DrawModel() return end
+        if not IsValid(self.lcStandin) and ClientsideModel then
+            local m = Has(STANDINS[1]) and STANDINS[1] or STANDINS[2]
+            self.lcStandin = ClientsideModel(m, RENDERGROUP_OPAQUE)
+            if IsValid(self.lcStandin) then self.lcStandin:SetNoDraw(true) self.lcStandin:SetModelScale(1.6, 0) end
+        end
+        if IsValid(self.lcStandin) then
+            self.lcStandin:SetPos(self:GetPos()) self.lcStandin:SetAngles(self:GetAngles())
+            self.lcStandin:SetColor(self:GetColor())
+            self.lcStandin:DrawModel()
+        end
     end
 
     -- a slow green pulse, and spores drifting up, while you're near enough to see it
@@ -74,5 +87,6 @@ if CLIENT then
 
     function ENT:OnRemove()
         if self.lcEmitter then self.lcEmitter:Finish() self.lcEmitter = nil end
+        if IsValid(self.lcStandin) then self.lcStandin:Remove() end
     end
 end

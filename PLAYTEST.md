@@ -5,37 +5,48 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 
 # Part 1: new since your 1 November playtest
 
-## Infestation Cleanup (new: try first)
+## Infestation Cleanup (fixed after your notes: try first)
 
-You need two workshop packs on the server **and** in your workshop collection, so players download them: the Half-Life: Alyx Combine hazard props (2043900984) and Infestation Control workers (3185145650). Without them it all still works, with stand-in looks.
+Players now download both workshop packs when they join (the Alyx hazard props 2043900984, the Infestation Control workers 3185145650). The server needs them too: put both in its workshop collection. Anyone missing a model sees a stand-in, never an ERROR.
 
-- [ ] **Growths** in each infestation: Xen gunk (with the pack), glowing green, spores drifting up. Any ERROR models? Say which.
+- [ ] **Growths:** Xen gunk with the pack (or a stand-in), glowing green, spores drifting up. Still any ERROR? Say where.
   Notes:
-- [ ] **A Combine warning post** (sign, lamp, barrel) at the edge of each infestation, facing out. Does it stand sensibly (not in a wall, not floating)?
+- [ ] **A warning post at each infestation's edge:** sign, lamp and a yellow infestation control barrel (cones and an oil drum without the pack). Found it? Standing sensibly?
   Notes:
-- [ ] **Take the job** (F3 > Jobs > Infestation Cleanup): weedkiller and a hoover; still in your own clothes.
+- [ ] **Your own barrels:** the editor's "Fixture: infestation control barrel" (in the "by use" view: Job: Infestation Cleanup, and Infestation).
   Notes:
-- [ ] **Accept a shift:** you're in the hazmat suit (a woman in the female one, a man in the male one), with matching hands. The shift over (done or failed): your own clothes again.
+- [ ] **Take the job** (F3 > Jobs > Infestation Cleanup): weedkiller, a **sprayer** and a **hoover** in your weapons; own clothes until a shift.
   Notes:
-- [ ] **Two guards** (units or soldiers) come when you get near the infestation, stay by you, and shoot the zombies.
+- [ ] **Accept a shift:** the hazmat suit (a woman the female one, a man the male one). Hands nearer than before? If not right yet, try `lc_suit_hands "-6 0 0"` with other numbers (forward right up) and send me what looks right.
   Notes:
-- [ ] **Spray a growth** (look at it, E): it dies (dark, no glow) but stays there.
+- [ ] **Guards:** two come; if one falls behind (stuck, lost) for a few seconds, they're back beside you; after a fight they come back; nobody free, a unit's sent. Do they stay with you now?
   Notes:
-- [ ] **The hoover:** hold left click on a dead growth: a bar fills, it's gone, "Hoover: 1 of 3" on screen. A live one: "spray it first".
+- [ ] **Spray:** sprayer out, hold left click on a glowing growth: green mist, a bar, it dies (dark, stays there). E still works too.
   Notes:
-- [ ] **How does the hoover look** in your view, and in your hands to someone else? To move it in your view: `lc_hoover_view "26 11 -15"` (forward, right, up). Send me the numbers that look right.
+- [ ] **Vacuum:** hoover out, hold left click on a dead growth: a bar, gone, "Hoover: 1 of 3". **All three count now** (the job said "2 more" before: fixed).
   Notes:
-- [ ] **Empty it:** E on the barrel at the warning post. Without the pack (no barrels): right click seals it in a bag.
+- [ ] **Do you see the sprayer and the hoover** in first person, and in your hands in third person? Placement: `lc_sprayer_view "18 9 -10"`, `lc_hoover_view "26 11 -15"` (forward right up): send me numbers that look right.
   Notes:
-- [ ] **Clear every growth in a patch that grew:** the patch goes (haze and stains too). In a zone you placed: nothing spawns there for a while. Growths come back over time; dead ones nobody collects rot away after 10 minutes.
+- [ ] **Empty it:** the last step marks the nearest barrel; E on it. No barrel near: right click with the hoover bags it.
   Notes:
-- [ ] **NPC cleanup crews** suit up, go in with a guard, spray then vacuum, and change back going home.
+- [ ] **The geiger counter** at the edge of a zone: calmer now (40% fewer clicks, quieter)?
   Notes:
-- [ ] **Joining Civil Protection:** a cleanup shift counts as two Records Clerk shifts on the F4 bar.
+- [ ] **Clear every growth in a patch that grew:** the patch goes. Dead growths nobody collects rot after 10 minutes.
   Notes:
-- [ ] **Chlorine** doesn't hurt you on the cleanup job (the respirator).
+- [ ] **Joining Civil Protection:** a cleanup shift counts as two Records Clerk shifts.
   Notes:
-- [ ] **Engineer overalls:** Morticians, Sanitation Workers and the Reclamation Crew (players and NPCs) wear them while working, not off duty.
+
+## Also fixed from your notes
+
+- [ ] **F4:** a header for each faction; click to open its ranks and roles. Free Vortigaunt and Overwatch Commander no longer cut off. No Stalker on it.
+  Notes:
+- [ ] **Joining the Resistance:** you start as a Member at most, in your own clothes, whatever your XP: do 3 jobs from their board and they trust you (Fighter: the gear and the guns). F4 shows how many.
+  Notes:
+- [ ] **Boiling water at a burning barrel:** works now? (If not, tell me what the barrel is: a map prop, or the editor's "Fixture: fire".)
+  Notes:
+- [ ] **Rain** no longer fills bottles or cans.
+  Notes:
+- [ ] **Sociostability** when it changes: the chat line says why (curfew, a sweep, lockdown, infected loose in the city...). Headcrabs inside an infestation shouldn't change it. If it still drops for no good reason, send me that line.
   Notes:
 
 ## Weedkiller as a weapon, and the Combine's gas

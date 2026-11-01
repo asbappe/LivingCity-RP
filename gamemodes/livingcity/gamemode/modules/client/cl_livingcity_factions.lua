@@ -70,24 +70,35 @@ net.Receive("lcf_menu", function()
     local scroll = vgui.Create("DScrollPanel", menu)
     scroll:Dock(FILL)
 
+    -- (the owner, 1 November: a header for each faction, its roles shown when you open it; was one tall scroll)
     for _, entry in ipairs(data.factions) do
         local f = LCF.Get(entry.id)
         if f then
-            local card = vgui.Create("DPanel", scroll)
-            card:Dock(TOP)
-            card:DockMargin(4, 4, 4, 6)
-            card:DockPadding(14, 10, 10, 10)
+            local mine = data.current == f.id
+            local cat = vgui.Create("DCollapsibleCategory", scroll)
+            cat:Dock(TOP)
+            cat:DockMargin(4, 4, 4, 2)
+            cat:SetExpanded(mine)
+            local roles = #(entry.specials or {})
+            cat:SetLabel(f.name .. (mine and "   (yours)" or "") .. (roles > 0 and string.format("   %d special role%s", roles, roles == 1 and "" or "s") or ""))
+            if type(cat.Header) ~= "function" and IsValid(cat.Header) then
+                cat.Header:SetTall(30)
+                cat.Header:SetFont("DermaDefaultBold")
+                cat.Header:SetTextColor(Color(240, 240, 240))
+                cat.Header.Paint = function(self, w, h)
+                    draw.RoundedBox(4, 0, 0, w, h, self:IsHovered() and Color(44, 48, 58, 245) or Color(32, 35, 43, 245))
+                    draw.RoundedBox(0, 0, 0, 5, h, f.color)
+                    draw.SimpleText(cat:GetExpanded() and "-" or "+", "DermaDefaultBold", w - 14, h / 2, Color(200, 200, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+                end
+            end
+            cat.Paint = function() end
+            local card = vgui.Create("DPanel")
+            cat:SetContents(card)
+            card:DockPadding(14, 8, 10, 10)
             card.Paint = function(self, w, h)
                 draw.RoundedBox(6, 0, 0, w, h, Color(24, 26, 32, 235))
                 draw.RoundedBox(0, 0, 0, 5, h, f.color)
             end
-
-            local title = vgui.Create("DLabel", card)
-            title:SetFont("DermaLarge")
-            title:SetTextColor(f.color)
-            title:SetText(f.name .. (data.current == f.id and "   (current)" or ""))
-            title:SizeToContents()
-            title:Dock(TOP)
 
             local desc = vgui.Create("DLabel", card)
             desc:SetWrap(true)
@@ -166,6 +177,23 @@ net.Receive("lcf_menu", function()
 
             card:InvalidateLayout(true)
             card:SizeToChildren(false, true)
+            -- wrapped text only finds its height a frame or two later: keep the card as tall as what's in it
+            -- (it was measured too soon, and a long card, a special role's, was cut off by the next one)
+            card.Think = function(self)
+                local need = 0
+                for _, c in ipairs(self:GetChildren()) do
+                    if IsValid(c) and c:IsVisible() then
+                        local _, y = c:GetPos()
+                        local _, _, _, mb = c:GetDockMargin()
+                        need = math.max(need, y + c:GetTall() + (mb or 0))
+                    end
+                end
+                need = need + 10
+                if math.abs(self:GetTall() - need) > 1 then
+                    self:SetTall(need)
+                    if IsValid(cat) then cat:InvalidateLayout(true) end
+                end
+            end
         end
     end
 end)

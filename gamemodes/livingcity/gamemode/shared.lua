@@ -172,7 +172,7 @@ LC_MODULES = {
         "cl_livingcity_factions",
         "cl_livingcity_hints",
         "cl_livingcity_stealth", -- (sneaking: how seen you are, and the units' sight on the ground)
-        "cl_livingcity_infest",
+        "cl_livingcity_infest", "cl_livingcity_suit",
         "cl_livingcity_intake",
         "cl_livingcity_kick",
         "cl_livingcity_ways",

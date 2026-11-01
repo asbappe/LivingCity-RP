@@ -665,18 +665,34 @@ local SOCIO_MEANS = {
         "Twice as many stops. You may shoot to kill as you see fit: make it count." },
 }
 
+-- Infected that broke out of an infestation (sv_livingcity_war.lua's outbreak) still loose in the city:
+-- out of every infestation zone. The ordinary infested, in their own ground, are no concern of the city's.
+local function LooseInfected()
+    for npc, st in pairs(LC.NPCs or {}) do
+        if IsValid(npc) and st.role == "zombie" and st.unmanaged and npc:Health() > 0
+            and not (LC.InInfest and LC.InInfest(npc:GetPos())) then return true end
+    end
+    return false
+end
+LC.LooseInfected = LooseInfected
+
+-- The level, and why (said with it when it changes: the owner, 1 November, couldn't tell why it fell).
 function LC.SocioAuto()
-    if LC.Event == "lockdown" then return "red" end
+    if LC.Event == "lockdown" then return "red", "lockdown" end
     local now = CurTime()
-    if LC.LastOutbreak and now - LC.LastOutbreak < 300 then return "red" end
-    local yellow = LC.Event == "curfew" or LC.Event == "sweep" or LC.Event == "raid"
-        or (LC.CityState and LC.CityState() == "unrest") or LC.Skirmish ~= nil
+    -- an outbreak: red only while its infected are actually loose in the city (at most 5 minutes);
+    -- headcrabs and zombies in the infestation itself don't touch it
+    if LC.LastOutbreak and now - LC.LastOutbreak < 300 and LooseInfected() then return "red", "infected loose in the city" end
+    local why
+    if LC.Event == "curfew" or LC.Event == "sweep" or LC.Event == "raid" then why = LC.Event
+    elseif LC.CityState and LC.CityState() == "unrest" then why = "civil unrest"
+    elseif LC.Skirmish ~= nil then why = "fighting in the streets" end
     for _, p in ipairs(player.GetAll()) do
         local lvl = LC.AlertLevel and LC.AlertLevel(p) or 0
-        if lvl >= 3 then return "red" end
-        if lvl >= 2 then yellow = true end
+        if lvl >= 3 then return "red", "an anticitizen at large" end
+        if lvl >= 2 then why = why or "a wanted anticitizen" end
     end
-    return yellow and "yellow" or "green"
+    return why and "yellow" or "green", why
 end
 
 function LC.SocioStopMul()
@@ -711,12 +727,13 @@ end
 function LC.RefreshSocio(quiet, force)
     local o = LC.SocioOverride
     if o and o.untilT <= CurTime() then LC.SocioOverride, o = nil, nil end
-    local level = (o and o.level) or LC.SocioAuto()
+    local auto, why = LC.SocioAuto()
+    local level = (o and o.level) or auto
     SetGlobal2String("lc_socio", level)
     if level ~= LC.Socio or force then
         local old = LC.Socio or "green"
         LC.Socio = level
-        if not quiet then AnnounceSocio(level, o and o.by or nil) end
+        if not quiet then AnnounceSocio(level, (o and o.by) or why) end
         LC.Log("info", "Sociostability: " .. old .. " -> " .. level)
         hook.Run("LivingCitySocioChanged", level, old)
     end
