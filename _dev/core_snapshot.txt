@@ -616,6 +616,7 @@ setting lc_hunger_minutes = 60
 setting lc_hygiene = 1
 setting lc_ic_chat = 1
 setting lc_identity_minutes = 30
+setting lc_infest_hazard_posts = 1
 setting lc_infest_max = 30
 setting lc_infest_nest_models = 
 setting lc_infest_nests = 1

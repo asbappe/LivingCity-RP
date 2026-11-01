@@ -8,7 +8,10 @@
       weedkiller (look at it, E) and it shrivels away. Spray every growth in a patch that grew and the
       patch goes: the infestation shrinks. Spray out the zone you placed and nothing grows or spawns
       there for a while. Growths come back, one at a time, every lc_nest_regrow_minutes (6).
-      lc_infest_nest_models: your own models for them (comma separated), e.g. from a workshop pack.
+      They're Half-Life: Alyx's Xen gunk when the server has the owner's workshop pack (2043900984),
+      else built-in Half-Life 2 and Episode 2 models. lc_infest_nest_models: your own (comma separated).
+      With that pack, a Combine warning post (sign, lamp, barrel) stands at the edge of each
+      infestation (lc_infest_hazard_posts), and the cleanup crew bags up what they spray.
 
     Infestation Cleanup (a Union job, the 15th)
       Into the infestation in a respirator (it keeps out gas, chlorine and weedkiller alike), with
@@ -33,7 +36,7 @@
     lc_fouled_minutes (20) every unit's mask lets gas through, theirs and the Resistance's alike.
 
       lc_infest_nests 0/1 (1), lc_infest_nests_per_patch (4), lc_nest_regrow_minutes (6),
-      lc_infest_nest_models (""), lc_cleanup_guards (2), lc_cleanup_shift_counts (2),
+      lc_infest_nest_models (""), lc_infest_hazard_posts (1), lc_cleanup_guards (2), lc_cleanup_shift_counts (2),
       lc_cleanup_model (""), lc_firebomb_secs (12), lc_sweep_gas (0.5), lc_fouled_minutes (20)
 ]]
 
@@ -109,6 +112,9 @@ local BUILTIN = {
     { "models/props_wasteland/antlionhill.mdl", 0.15, Color(130, 160, 80) },
 }
 local FALLBACK = { "models/props_junk/garbage_bag001a.mdl", 1.2, Color(120, 170, 80) }
+-- Half-Life: Alyx's Xen gunk, from the owner's workshop pack (2043900984): used instead whenever the server has it
+local GUNK = "models/hlvr/distillery_gunk/distillerygunk_gunk.mdl"
+local GUNKS = { { GUNK, 0.7, Color(255, 255, 255) }, { GUNK, 1, Color(255, 255, 255) }, { GUNK, 1.3, Color(255, 255, 255) } }
 
 local function Valid(m) return not util.IsValidModel or util.IsValidModel(m) end
 
@@ -117,7 +123,7 @@ local function PickLook()
     for m in string.gmatch(cvModels:GetString(), "[^,%s]+") do if Valid(m) then own[#own + 1] = m end end
     if #own > 0 then return own[math.random(#own)], 1, Color(255, 255, 255) end
     local ok = {}
-    for _, b in ipairs(BUILTIN) do if Valid(b[1]) then ok[#ok + 1] = b end end
+    for _, b in ipairs(Valid(GUNK) and GUNKS or BUILTIN) do if Valid(b[1]) then ok[#ok + 1] = b end end
     local b = #ok > 0 and ok[math.random(#ok)] or FALLBACK
     return b[1], b[2], b[3]
 end
@@ -155,6 +161,73 @@ function LC.SpawnNest(z, pos)
     return e
 end
 
+------------------------------------------------------------------------
+-- The Combine's hazard props (the same workshop pack; nothing if the server hasn't got it): a
+-- warning post at the edge of each infestation, and a sprayed growth bagged up for a while.
+------------------------------------------------------------------------
+
+local cvPosts = CreateConVar("lc_infest_hazard_posts", "1", FLAGS, "A Combine warning post (sign, lamp, barrel) at the edge of each infestation, if the server has the hazard props")
+local HZ = "models/hlvr/combine_hazardprops/combinehazardprops_"
+local POST = { { "warningsign", 0, 0 }, { "lamp", 50, 30 }, { "barrel", -45, 25 } } -- (model, sideways, back)
+
+local function Prop(model, pos, ang)
+    if not Valid(model) then return nil end
+    local e = ents.Create("prop_physics")
+    if not IsValid(e) then return nil end
+    e:SetModel(model)
+    e:SetPos(pos)
+    e:SetAngles(ang or Angle(0, 0, 0))
+    e:Spawn()
+    local phys = e.GetPhysicsObject and e:GetPhysicsObject()
+    if IsValid(phys) then phys:EnableMotion(false) end
+    e.lcHazardProp = true
+    return e
+end
+
+local function Reach(z)
+    if z.box then return math.min(z.box.maxs.x - z.box.mins.x, z.box.maxs.y - z.box.mins.y) / 2 end
+    return z.r or 300
+end
+
+function LC.HazardPost(z)
+    if not Valid(HZ .. "warningsign.mdl") then return nil end
+    local centre = z.box and (z.box.mins + z.box.maxs) / 2 or z.pos
+    for _ = 1, 8 do
+        local yaw = math.random(0, 359)
+        local dir = Angle(0, yaw, 0):Forward()
+        local at = (LC.GroundAt or function(p) return p end)(centre + dir * (Reach(z) + 50) + Vector(0, 0, 30))
+        if not (LC.InInfest and LC.InInfest(at)) then
+            local face = Angle(0, yaw, 0) -- (the sign faces out, at whoever's walking in)
+            local right, back = face:Right(), -dir
+            local made = {}
+            for _, p in ipairs(POST) do
+                local e = Prop(HZ .. p[1] .. ".mdl", at + right * p[2] + back * p[3], face)
+                if e then e.lcHazardZone = z made[#made + 1] = e end
+            end
+            return made
+        end
+    end
+    return nil
+end
+
+local function PostTick(zones, alive)
+    for _, e in ipairs(ents.FindByClass("prop_physics")) do
+        if IsValid(e) and e.lcHazardZone and (not alive[e.lcHazardZone] or not cvPosts:GetBool()) then e:Remove() end
+    end
+    if not cvPosts:GetBool() then return end
+    for _, z in ipairs(zones) do
+        if not z.lcPostTried then z.lcPostTried = true LC.HazardPost(z) end
+    end
+end
+
+-- a sprayed growth, bagged by the cleanup crew, left for collection
+local function Bag(pos)
+    local e = Prop(HZ .. "trashbag.mdl", pos + Vector(0, 0, 4), Angle(0, math.random(0, 359), 0))
+    if e then timer.Simple(90, function() if IsValid(e) then e:Remove() end end) end
+    return e
+end
+LC.HazardBag = Bag
+
 local function InfestZones()
     local out = {}
     for _, z in ipairs(LC.Zones or {}) do if z.kind == "infest" then out[#out + 1] = z end end
@@ -166,6 +239,7 @@ function LC.ClearNest(e, by)
     if not IsValid(e) or e:GetClass() ~= "lc_nest" or e.lcCleared then return false end
     e.lcCleared = true
     local z = e.lcZone
+    if IsValid(by) and (by:IsPlayer() and OnCleanup(by) or not by:IsPlayer()) then Bag(e:GetPos()) end -- (the crew bags it up)
     if e.EmitSound then e:EmitSound("npc/barnacle/barnacle_die" .. math.random(1, 2) .. ".wav", 70) end
     e:Remove()
     if IsValid(by) and by:IsPlayer() then
@@ -208,6 +282,7 @@ local function NestTick(now)
     local zones, alive = InfestZones(), {}
     for _, z in ipairs(zones) do alive[z] = true end
     for _, e in ipairs(Nests()) do if not alive[e.lcZone] then e:Remove() end end -- (its patch is gone)
+    PostTick(zones, alive)
     local per = math.max(0, cvPer:GetInt())
     for _, z in ipairs(zones) do
         local n = NestsIn(z)

@@ -308,7 +308,8 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 
 ## Weedkiller against the infestation (1 November, later: what to check)
 
-- [ ] **Growths** in each infestation: glowing green, spores drifting up. Which models show? (An ERROR model: say so, and which.) E with weedkiller sprays one away.
+- [ ] **Growths** in each infestation: glowing green, spores drifting up; with the Alyx hazard props pack, Xen gunk. (An ERROR model: the pack isn't on the server or the player's game.) E with weedkiller sprays one away; a cleanup worker leaves a hazard bag.
+- [ ] **A Combine warning post** (sign, lamp, barrel) at the edge of each infestation, facing out. Does it stand sensibly (not in a wall, not floating)?
 - [ ] **Spray every growth** in a patch that grew: the patch goes (the haze and the stains with it). In the zone you placed: nothing new spawns there for a while. They grow back over time.
 - [ ] **Infestation Cleanup** (F3 > Jobs): respirator (chlorine doesn't hurt you) and weedkiller; the shift takes you to the infestation; two units or soldiers come, stay by you, and shoot the zombies. NPC cleanup crews go in with a guard of their own.
 - [ ] **Joining Civil Protection:** a cleanup shift counts as two Records Clerk shifts on the F4 bar.

@@ -13791,6 +13791,10 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     local n1 = LC.SpawnNest(patch, patch.pos + Vector(20, 0, 0))
     local n2 = LC.SpawnNest(patch, patch.pos + Vector(-20, 0, 0))
     ok(IsValid(n1) and IsValid(n2) and LC.NestsIn(patch) == 2, "an infestation has growths in it")
+    ok(n1.lcModel == "models/hlvr/distillery_gunk/distillerygunk_gunk.mdl", "with the owner's workshop pack, the growths are Xen gunk", n1.lcModel)
+    local post = LC.HazardPost(patch)
+    ok(post and #post == 3, "a Combine warning post (sign, lamp, barrel) at the edge of the infestation", post and #post)
+    for _, e in ipairs(post or {}) do e:Remove() end
     cln:SetPos(patch.pos)
     local okN, whyN = LC.SprayNest(ctz, n1)
     ok(not okN and string.find(whyN or "", "weedkiller", 1, true), "spraying a growth needs weedkiller")
