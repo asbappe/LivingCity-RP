@@ -500,7 +500,8 @@ end
 local function SafeHouse(ply)
     local z = NearestZone("rebel", ply:GetPos())
     if z then return z.pos, math.max(150, z.r * 0.8), "rebel territory" end
-    local p = Spot(ply, 1500, 5000)
+    local p = Spot(ply, 1500, 5000) or Spot(ply, 300, 1500) -- (somewhere nearer, if nothing far off will do)
+    if not p then return nil end -- (nowhere to meet right now: the job waits and tries again, rather than an error)
     return p, 150, Place(p, ply:GetPos())
 end
 

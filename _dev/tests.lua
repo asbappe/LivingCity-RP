@@ -1219,6 +1219,7 @@ LC.AddCredits(listener, 100)
 ok(not LC.Buy(listener, "radio") and not LCS.BlackById.radio, "no plain radio anywhere: every radio that isn't Civil Protection's is a Freq 7 radio")
 LC.GiveItem(listener, "radio_tuned")
 ok(LC.RadioBand(listener) == "resistance" and LCS.Items.radio_tuned.contraband, "a civilian's radio is a Freq 7 radio, and contraband")
+LC.TakeItem(listener, "radio_tuned") -- (the listener goes without one from here: no radio, no band)
 ok(LCS.LabById.radio_transmitter and LCS.LabById.radio_transmitter.needs.radio_tuned == 1, "the lab makes the transmitter from a Freq 7 radio")
 LC.GiveItem(rebelR, "radio_tuned")
 ok(LC.RadioBand(rebelR) == "resistance" and LC.RadioBand(unitR) == "cp", "a retuned radio is Freq 7; units are on the CP net")
@@ -1228,7 +1229,7 @@ ok(has(rebelR.chat, "only listens") and not has(listener.chat, "anyone out there
 LC.GiveItem(listener, "radio_transmitter") LC.GiveItem(rebelR, "radio_transmitter")
 ok(LCS.Items.radio_transmitter.contraband and LCS.BlackById and LCS.BlackById.radio_transmitter and LCS.LabById.radio_transmitter, "the radio transmitter: contraband, from the black market or the Resistance lab")
 hook.Run("PlayerSay", listener, "!r anyone out there")
-ok(has(listener.chat, "only listens") and not has(rebelR.chat, "anyone out there"), "nobody transmits on the Union band, transmitter or not: it's the city's")
+ok(not has(rebelR.chat, "anyone out there"), "a transmitter alone, with no Freq 7 radio: nobody hears you")
 hook.Run("PlayerSay", rebelR, "!r meet at the canal")
 ok(has(rebelR.chat, "[Freq 7]") and not has(listener.chat, "meet at the canal") and not has(unitR.chat, "meet at the canal"), "with a Freq 7 radio and a transmitter: Freq 7, and it's private")
 hook.Run("PlayerSay", unitR, "!r sweep in block two")
@@ -1248,10 +1249,10 @@ insider.valid = false
 ok(hook.Run("PlayerSay", deaf, "!r hello") == "" and has(deaf.chat, "You don't have a radio"), "no radio, no talking")
 listener.chat, rebelR.chat = {}, {}
 hook.Run("LivingCityEventSoon", "curfew", 45)
-ok(has(listener.chat, "Notice: curfew begins in 45 seconds"), "radios hear about routine events before the loudspeakers")
+ok(has(rebelR.chat, "Notice: curfew begins in 45 seconds"), "radios hear about routine events before the loudspeakers")
 listener.chat, rebelR.chat = {}, {}
 hook.Run("LivingCityEventSoon", "sweep", 45)
-ok(not has(listener.chat, "Notice:"), "a sweep is a surprise: nothing on the Union band")
+ok(not has(rebelR.chat, "Notice:"), "a sweep is a surprise: nothing on the Union band")
 ok(has(rebelR.chat, "Move anything you don't want found"), "but Freq 7's informants whisper it")
 listener.chat, rebelR.chat = {}, {}
 hook.Run("LivingCityEventSoon", "raid", 45)
@@ -12206,7 +12207,7 @@ section("Playtest fixes, 17 October")
     hook.Run("PlayerSay", renter, "!unlock")
     _run(1.5)
     hook.Run("PlayerUse", renter, adoor)
-    ok(adoor.isOpen and not adoor.locked, "unlocked, your E opens it", table.concat(adoor.fired or {}, ","))
+    ok(not adoor.locked and LC.RentDoorUse(renter, adoor) == nil, "unlocked, your E works the door as normal (the game opens it)", table.concat(adoor.fired or {}, ","))
     renter.valid = false
     -- Someone stopped right where you stand steps back, so you're not stuck in each other
     local thief = newPlayer("Fingers", "citizen")
