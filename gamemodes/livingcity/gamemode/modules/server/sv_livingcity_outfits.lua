@@ -71,9 +71,20 @@ end
 
 local function Hash(s) return tonumber(util.CRC(s)) or 0 end
 
+-- A woman's model? Every female model in Half-Life 2 and the packs says "female" in its path, and no male one does.
+function LC.ModelIsFemale(path) return string.find(string.lower(tostring(path or "")), "female", 1, true) ~= nil end
+-- A player character's sex: from the face they chose in the creator (lc_model), else the body they're in now
+-- (never from a job's clothes, which could be a uniform of either).
+function LC.PlayerSex(ply)
+    local own = ply:GetNW2String("lc_model", "")
+    if own == "" then own = ply:GetModel() end
+    return LC.ModelIsFemale(own) and "female" or "male"
+end
+
 -- The look this person wears for this job: model, skin, { bodygroup name = value }.
 -- key keeps it the same person to person; face is their own face (male_03).
-function LC.OutfitFor(jobId, key, face, forPlayer)
+-- sex: "male" or "female" when it's known (the person's own record); else from their face
+function LC.OutfitFor(jobId, key, face, forPlayer, sex)
     if not cvOn:GetBool() or not jobId or jobId == "" then return nil end
     local o = Outfits()[jobId]
     local list = o and o.list
@@ -86,7 +97,8 @@ function LC.OutfitFor(jobId, key, face, forPlayer)
         path = string.gsub(path, "{face}", face or "male_01")
     end
     -- {sex}: male or female, by the person's own face (a pack with one model of each)
-    path = string.gsub(path, "{sex}", (face and string.sub(face, 1, 6) == "female") and "female" or "male")
+    if sex ~= "male" and sex ~= "female" then sex = (face and string.sub(face, 1, 6) == "female") and "female" or "male" end
+    path = string.gsub(path, "{sex}", sex)
     local skin
     if istable(e.skins) and #e.skins > 0 then skin = e.skins[Hash(key .. "skin") % #e.skins + 1] end
     local bg = {}
@@ -160,7 +172,8 @@ function LC.DressPerson(npc, p)
     if not IsValid(npc) or not p then return false end
     -- a height of their own (a few percent either way), the same every time
     if cvHeights:GetBool() and npc.SetModelScale then npc:SetModelScale(0.96 + (Hash("h" .. tostring(p.id)) % 81) / 1000, 0) end
-    local path, skin, bg = LC.OutfitFor(p.job or EVERYONE, "p" .. tostring(p.id), LC.FaceOf(p.model), false)
+    local sex = (p.gender == "female" or p.gender == "male") and p.gender or (LC.ModelIsFemale(p.model) and "female" or "male")
+    local path, skin, bg = LC.OutfitFor(p.job or EVERYONE, "p" .. tostring(p.id), LC.FaceOf(p.model), false, sex)
     if not Valid(path) then return false end
     npc:SetModel(path)
     LC.ApplyLook(npc, skin, bg)
@@ -172,7 +185,8 @@ local function PlayerLook(ply)
     if ply:GetNW2String("lcf_faction", "") ~= "citizen" then return nil end
     local job = ply:GetNW2String("lcj_job", "")
     if job == "" then job = EVERYONE end
-    return LC.OutfitFor(job, ply:GetNW2String("lc_cid", ply:SteamID()), LC.FaceOf(ply:GetNW2String("lc_model", "")), true)
+    local own = ply:GetNW2String("lc_model", "")
+    return LC.OutfitFor(job, ply:GetNW2String("lc_cid", ply:SteamID()), LC.FaceOf(own), true, LC.PlayerSex(ply))
 end
 
 LC.ModelOverrides = LC.ModelOverrides or {}

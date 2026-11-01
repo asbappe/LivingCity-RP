@@ -13819,6 +13819,18 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     LC.SetJob(cln, "", true)
     _run(0.5)
     ok(LC.OutfitFor("cleanup", "x", "female_02", false) == "models/npc/worker_female.mdl", "the city's own cleanup crews wear it too (a woman, the female suit)")
+    ok(LC.OutfitFor("cleanup", "x", nil, false, "female") == "models/npc/worker_female.mdl" and LC.OutfitFor("cleanup", "x", nil, false, "male") == "models/npc/worker_male.mdl",
+        "a woman always gets the female suit and a man the male one, whatever her face model is called")
+    ok(LC.OutfitFor("mortuary", "x", nil, false, "female") == "models/npc/engineer_female.mdl" and LC.OutfitFor("sanitation", "y", nil, true, "male") == "models/player/engineer_male.mdl"
+        and LC.OutfitFor("scrap", "z", nil, false, "male") == "models/npc/engineer_male.mdl", "the dirty jobs (Mortician, Sanitation, Reclamation) wear the engineer overalls")
+    local woman = newPlayer("SuitWoman", "citizen")
+    woman:SetNW2String("lc_model", "models/player/somepack/female_custom.mdl")
+    ok(LC.PlayerSex(woman) == "female", "a woman on a pack's face model is still a woman")
+    LC.SetJob(woman, "cleanup", true)
+    _run(0.5)
+    ok(woman:GetModel() == "models/player/worker_female.mdl", "and she wears the female hazmat suit", woman:GetModel())
+    LC.SetJob(woman, "", true)
+    woman:SetPos(Vector(-150000, 150000, 0))
     ok(not string.find(cln:GetModel() or "", "worker_", 1, true), "off the job, their own clothes again", cln:GetModel())
     -- a barnacle that eats weedkiller dies
     local bn = ents.Create("npc_barnacle") bn:SetPos(Vector(-170000, -170000, 200)) bn:Spawn() bn:SetHealth(35)

@@ -20,8 +20,9 @@
       that come for them. The city's own cleanup crews do it too, with a guard of their own. A cleanup
       shift counts as lc_cleanup_shift_counts (2) Records Clerk shifts towards joining Civil
       Protection. With the owner's Infestation Control pack (3185145650) on the server, players on
-      the job and the city's own crews wear its suits (lc_cleanup_suit: worker or engineer), each a
-      random skin; lc_cleanup_model: another player model instead.
+      the job and the city's own crews wear its hazmat suit ("worker"), a man the male one and a woman
+      the female one, each their own skin (lc_cleanup_suit; lc_cleanup_model: another model instead);
+      and Morticians, Sanitation Workers and the Reclamation Crew wear its "engineer" overalls.
 
     Barnacles
       A barnacle eats whatever it pulls up. Drop weedkiller (or anything tainted with it) under one:
@@ -82,16 +83,18 @@ end
 LC.OnCleanupJob = OnCleanup
 function LC.CleanupRespirator(ply) return IsValid(ply) and ply:IsPlayer() and OnCleanup(ply) end
 
--- The Infestation Control crew from Half-Life: Alyx (the owner's workshop pack 3185145650): the cleanup
--- job's clothes, through Job outfits (sv_livingcity_outfits.lua), so the city's own crews wear them too.
--- Only while the job has no outfit of its own: set one in the editor (Job outfits) and that's worn instead.
--- lc_cleanup_suit: "worker" or "engineer"; lc_cleanup_model: another player model instead.
+-- The Infestation Control crew from Half-Life: Alyx (the owner's workshop pack 3185145650), through Job
+-- outfits (sv_livingcity_outfits.lua), so the city's own people in these jobs wear them too: a man the
+-- male model, a woman the female one, each their own skin. The owner, 2026-11-01: the "worker" suits are
+-- the hazmat suits (filter and air tank), for Infestation Cleanup; the "engineer" ones have neither, for
+-- the dirty jobs (Mortician, Sanitation Worker, Reclamation Crew). Only while a job has no outfit of its
+-- own: set one in the editor (Job outfits) and that's worn instead. lc_cleanup_suit: the cleanup job's
+-- suit (worker); lc_cleanup_model: another player model for it instead.
 local function Valid(m) return not util.IsValidModel or util.IsValidModel(m) end
-local cvSuit = CreateConVar("lc_cleanup_suit", "worker", FLAGS, "Which Infestation Control suit cleanup workers wear, if the server has the pack: worker or engineer")
-function LC.CleanupOutfit()
-    local own = cvModel:GetString()
-    if own ~= "" and Valid(own) then return { pm = own } end
-    local suit = cvSuit:GetString() == "engineer" and "engineer" or "worker"
+local cvSuit = CreateConVar("lc_cleanup_suit", "worker", FLAGS, "Which Infestation Control suit cleanup workers wear, if the server has the pack: worker (the hazmat suit) or engineer")
+local DIRTY = { mortuary = "engineer", sanitation = "engineer", scrap = "engineer" }
+
+local function SuitOutfit(suit)
     local pm, npc = "models/player/" .. suit .. "_{sex}.mdl", "models/npc/" .. suit .. "_{sex}.mdl"
     if not Valid((string.gsub(pm, "{sex}", "male"))) then return nil end
     -- every skin it has, each person their own
@@ -104,13 +107,22 @@ function LC.CleanupOutfit()
     for i = 0, n - 1 do skins[#skins + 1] = i end
     return { pm = pm, npc = npc, skins = skins }
 end
+function LC.CleanupOutfit()
+    local own = cvModel:GetString()
+    if own ~= "" and Valid(own) then return { pm = own } end
+    return SuitOutfit(cvSuit:GetString() == "engineer" and "engineer" or "worker")
+end
 local function EnsureOutfit()
     local all = LC.Outfits or (LC.LoadOutfits and LC.LoadOutfits())
     if not all then return end
-    local cur = all.cleanup
-    if cur and not cur.lcAuto then return end -- (the owner's own outfit for the job)
-    local e = LC.CleanupOutfit()
-    all.cleanup = e and { list = { e }, lcAuto = true } or nil
+    local want = { cleanup = LC.CleanupOutfit() }
+    for job, suit in pairs(DIRTY) do want[job] = SuitOutfit(suit) end
+    for job, e in pairs(want) do
+        local cur = all[job]
+        if not cur or cur.lcAuto then -- (never over the owner's own outfit for the job)
+            all[job] = e and { list = { e }, lcAuto = true } or nil
+        end
+    end
 end
 LC.EnsureCleanupOutfit = EnsureOutfit
 
