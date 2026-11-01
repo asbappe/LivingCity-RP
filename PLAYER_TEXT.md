@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 72ab28c. Admin-only console messages and log lines are left out.
+Made from version c53c331. Admin-only console messages and log lines are left out.
 
 6236 lines, from 189 files.
 
@@ -7493,22 +7493,22 @@ Made from version 72ab28c. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The designer (cl_livingcity_outfits.lua)
 
-- "Everyone else (no job)"  (name, line 368)
-- "New characters choose from"  (name, line 369)
+- "Everyone else (no job)"  (name, line 424)
+- "New characters choose from"  (name, line 425)
 
 > Note for you (not shown in game): What the designer sends back for one job, cleaned up.
 
-- "Admins only."  (text, line 376)
-- "No such job."  (text, line 377)
+- "Admins only."  (text, line 432)
+- "No such job."  (text, line 433)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_outfits_save)
 
-- "[Outfits] {or}"  (chat message, line 411)
+- "[Outfits] {or}"  (chat message, line 467)
 
 > Note for you (not shown in game): (not "lc_outfits": that name is the on/off setting, and a setting and a command can't share a name)
 
-- "Admins only."  (chat message, line 415)
-- "Admins only."  (chat message, line 417)
+- "Admins only."  (chat message, line 471)
+- "Admins only."  (chat message, line 473)
 
 ## path mapping, drawing the walkable network by walking it (sv_livingcity_pathmap.lua)
 

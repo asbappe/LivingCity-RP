@@ -11084,9 +11084,39 @@ if st and st.profile then
     ok(string.find(npc:GetModel(), "group03m", 1, true) ~= nil, "the city's own medics dress the part", npc:GetModel())
     ok(npc.mscale and npc.mscale >= 0.96 and npc.mscale <= 1.04, "and everyone is their own height", npc.mscale)
 end
+ok(string.find(LC.OutfitFor("_none", "pf", nil, false, "female") or "", "female_01", 1, true) ~= nil, "a woman with no numbered face (a pack's look) gets a woman's face from a look that keeps faces")
 LC.SetOutfit(admin, "factory", {})
 LC.SetOutfit(admin, "_none", {})
 LC.SetOutfit(admin, "medic", {})
+-- the Black Mesa citizens pack, when the server has it
+local oldValidBMS = util.IsValidModel
+util.IsValidModel = function() return true end
+if st and st.profile then
+    local oldId, oldGender = st.profile.id, st.profile.gender
+    st.profile.job = nil
+    local worn, wrong = 0, 0
+    for i = 1, 40 do
+        st.profile.id = "bmstest" .. i
+        st.profile.gender = (i % 2 == 0) and "female" or "male"
+        if LC.DressPerson(npc, st.profile) then
+            worn = worn + 1
+            local fem = string.find(npc:GetModel(), "female_bms", 1, true) ~= nil
+            if not string.find(npc:GetModel(), "_bms_", 1, true) or fem ~= (i % 2 == 0) then wrong = wrong + 1 end
+        end
+    end
+    ok(worn >= 8 and worn <= 32, "with the Black Mesa pack on the server, about half the people without a job wear it", worn)
+    ok(wrong == 0, "a woman in its woman's model, a man in the man's", wrong)
+    LC.SetOutfit(admin, "_none", { { pm = "models/player/group01/" .. "{face}" .. ".mdl" } })
+    st.profile.id = "bmstest2"
+    LC.DressPerson(npc, st.profile)
+    ok(not string.find(npc:GetModel(), "_bms_", 1, true), "not once the owner sets looks for people without a job", npc:GetModel())
+    LC.SetOutfit(admin, "_none", {})
+    st.profile.id, st.profile.gender = oldId, oldGender
+end
+local bmsOffered = false
+for _, c in ipairs(LC.CreatorChoices()) do if string.find(c.path, "bms_citizens/female_refugee_player", 1, true) then bmsOffered = true end end
+ok(bmsOffered, "and the character creator offers its citizens and refugees")
+util.IsValidModel = oldValidBMS
 -- squads
 local tgt = newPlayer("SquadTarget", "citizen")
 _run(0.3)

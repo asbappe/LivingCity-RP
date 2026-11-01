@@ -100,11 +100,12 @@ function LC.OutfitFor(jobId, key, face, forPlayer, sex)
     local e = list[h % #list + 1]
     local path = forPlayer and e.pm or (e.npc or (e.pm and string.gsub(e.pm, "^models/player/", "models/humans/")))
     if not path or path == "" then return nil end
-    if string.find(path, FACE, 1, true) then
-        path = string.gsub(path, "{face}", face or "male_01")
-    end
     -- {sex}: male or female, by the person's own face (a pack with one model of each)
     if sex ~= "male" and sex ~= "female" then sex = (face and string.sub(face, 1, 6) == "female") and "female" or "male" end
+    if string.find(path, FACE, 1, true) then
+        -- (no numbered face: a pack's look, like Black Mesa's; a Half-Life 2 face of their own sex)
+        path = string.gsub(path, "{face}", face or (sex == "female" and "female_01" or "male_01"))
+    end
     path = string.gsub(path, "{sex}", sex)
     local skin
     if istable(e.skins) and #e.skins > 0 then skin = e.skins[Hash(key .. "skin") % #e.skins + 1] end
@@ -183,6 +184,50 @@ function LC.PlayerOnDuty(ply)
     return q ~= nil and q.chain == "shift"
 end
 
+-- The Black Mesa citizens pack (Workshop 534130993): when the server has it and no looks are set for
+-- "Everyone else (no job)", about half the city's people without a job wear its citizens and refugees
+-- (each person always the same), the rest keep their Half-Life 2 faces. Players are never changed by it.
+local BMS_WSID = "534130993"
+local cvBMS = CreateConVar("lc_bms_people", "50", FLAGS, "Percent of the city's people without a job who wear the Black Mesa citizens pack's looks, when the server has it (0: none)")
+local BMS_NPC = { "models/humans/group01/{sex}_bms_citizen_npc.mdl", "models/humans/group02/{sex}_bms_refugee_npc.mdl" }
+local BMS_PM = {
+    "models/sirgibs/ragdolls/bms_citizens/male_citizen_player.mdl", "models/sirgibs/ragdolls/bms_citizens/female_citizen_player.mdl",
+    "models/sirgibs/ragdolls/bms_citizens/male_refugee_player.mdl", "models/sirgibs/ragdolls/bms_citizens/female_refugee_player.mdl",
+}
+local function HasModel(path) return util.IsValidModel ~= nil and util.IsValidModel(path) == true end
+function LC.HasBlackMesa() return HasModel("models/humans/group01/male_bms_citizen_npc.mdl") end
+local bmsSkins = {}
+function LC.BlackMesaLook(p, sex)
+    if not p or cvBMS:GetInt() <= 0 then return nil end
+    local o = Outfits()[EVERYONE]
+    if o and istable(o.list) and #o.list > 0 then return nil end -- (the owner's own looks for them)
+    local h = Hash("bms" .. tostring(p.id))
+    if h % 100 >= cvBMS:GetInt() then return nil end
+    local path = string.gsub(BMS_NPC[math.floor(h / 100) % 3 == 0 and 2 or 1], "{sex}", sex == "female" and "female" or "male") -- (a third refugees)
+    if not HasModel(path) then return nil end
+    if not bmsSkins[path] then
+        local n = 1
+        pcall(function()
+            local info = util.GetModelInfo and util.GetModelInfo(path)
+            n = math.max(1, tonumber(info and info.SkinCount) or 1)
+        end)
+        bmsSkins[path] = n
+    end
+    return path, Hash("bmsskin" .. tostring(p.id)) % bmsSkins[path]
+end
+-- Each body part the model has (a coat, a cap, glasses), picked for this person and kept.
+local function OwnParts(ent, key)
+    if not ent.GetBodyGroups or not ent.SetBodygroup then return end
+    for _, g in ipairs(ent:GetBodyGroups() or {}) do
+        local n = tonumber(g.num) or 1
+        if n > 1 and g.id then ent:SetBodygroup(g.id, Hash(key .. tostring(g.name)) % n) end
+    end
+end
+-- Joining players download the pack, or they'd see the ERROR model.
+hook.Add("InitPostEntity", "LivingCityBlackMesa", function()
+    if LC.HasBlackMesa() and resource and resource.AddWorkshop then resource.AddWorkshop(BMS_WSID) end
+end)
+
 -- One of the city's people, as they're put into the world (sv_livingcity_people.lua).
 -- onDuty: they're at their job's work now (for an onDuty outfit; put into the world, they aren't).
 function LC.DressPerson(npc, p, onDuty)
@@ -196,6 +241,15 @@ function LC.DressPerson(npc, p, onDuty)
         if p.model and npc:GetModel() ~= p.model then npc:SetModel(p.model) if npc.SetSkin then npc:SetSkin(0) end end
     end
     local path, skin, bg = LC.OutfitFor(job, "p" .. tostring(p.id), LC.FaceOf(p.model), false, sex)
+    if not Valid(path) and job == EVERYONE then
+        local bms, bskin = LC.BlackMesaLook(p, sex)
+        if bms then
+            npc:SetModel(bms)
+            if npc.SetSkin then npc:SetSkin(bskin or 0) end
+            OwnParts(npc, "bms" .. tostring(p.id))
+            return true
+        end
+    end
     if not Valid(path) then return false end
     npc:SetModel(path)
     if npc.SetBodyGroups then npc:SetBodyGroups("000000000000000") end
@@ -297,6 +351,8 @@ function LC.CreatorChoices()
     end
     table.sort(extra)
     for _, p in ipairs(extra) do Add(p) end
+    -- the Black Mesa citizens and refugees, if the server has the pack (its names aren't male_NN)
+    for _, p in ipairs(BMS_PM) do if HasModel(p) then Add(p) end end
     return out
 end
 

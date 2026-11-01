@@ -423,6 +423,7 @@ setting lc_blackout_light = b
 setting lc_blackout_minutes = 8
 setting lc_blackout_share = 0.5
 setting lc_block_name = Habitation Block %02d
+setting lc_bms_people = 50
 setting lc_bodies = 1
 setting lc_body_time = 300
 setting lc_bolo_minutes = 30

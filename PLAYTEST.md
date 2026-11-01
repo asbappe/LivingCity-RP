@@ -558,6 +558,7 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 
 ## Looks
 
+- [ ] **Black Mesa faces:** with the pack (534130993) on the server, about half the jobless NPCs wear its citizens and refugees (women in the women's models); the character creator also offers its citizen and refugee looks; no ERROR models.
 - [ ] **Outfit designer:** editor panel > Job outfits (or !outfits). No job is dressed by default (the Clinic Medic is in their own clothes now).
   Notes:
 - [ ] **Welcome announcement:** plays when an unregistered person joins (or a new character arrives), and not when someone already registered rejoins.
