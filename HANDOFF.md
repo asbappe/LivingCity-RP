@@ -84,6 +84,11 @@ Every commit says what it did; TIMELINE.md has the summary. The big pieces:
 - Terminals on their own screens (`cl_livingcity_screens.lua`): Civil Intake, Housing Allocation, the CP Commissary. Where the screen stands is a guess (in front, 54 units up): adjust `Frame` if the owner says.
 - The "Move it" bark file names are from memory: if a unit goes silent on the jog, a file name is wrong.
 
+## Testing state (2026-11-01)
+
+- **The owner asked: no full test suite for a while.** Use the client smoke test and single sections only.
+- The last full run that finished (2026-10-31 night): 2869 passed, 9 failed. All 9 were fixed and the touched sections re-run (UndergroundTests, the Mole Hunt, the 1 November section: all pass). Not run since: the vortigaunt additions, the loyalty test's real prisoner, Proof, the faction progress bars (each has its own passing tests in "The 1 November playtest" section).
+
 ## Waiting on the owner (from the last session)
 
 - **The map's lights twinkle.** Not the day and night dimming (`lc_daynight_light` doesn't exist as a command; turning it off didn't help). Asked the owner to load `rp_c18_ug` in plain Sandbox: if it twinkles there too, it's the map or their graphics, not the gamemode.
