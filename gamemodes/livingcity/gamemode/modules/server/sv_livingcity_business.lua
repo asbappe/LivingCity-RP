@@ -2,7 +2,7 @@
     Living City: apartments and trade
 
       Apartments    Doors tagged "Door: apartment people can rent" in the editor.
-                    Look at one and !rent: lc_rent_price credits (40) for
+                    Look at one and !rent: lc_rent_price credits (50) for
                     lc_rent_hours hours (3) of real time. !rent again extends
                     it (up to a day ahead). A double door is rented together.
                     While it's yours it's locked to everyone but you and
@@ -29,7 +29,7 @@ LC = LC or {}
 LC.SlashCommands = LC.SlashCommands or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvPrice = CreateConVar("lc_rent_price", "15", FLAGS, "Credits for one rent period of an apartment")
+local cvPrice = CreateConVar("lc_rent_price", "50", FLAGS, "Credits for one rent period of an apartment (units and citizens of high standing pay nothing)")
 -- (the owner, 2026-11-01: loyalty pays) one apartment rent-free for the city's best citizens, and for units
 local cvFreeStanding = CreateConVar("lc_free_rent_standing", "400", FLAGS, "Civil Standing at which a citizen's apartment is rent-free (400: Exemplary; 0: nobody)")
 local cvFreeCP = CreateConVar("lc_free_rent_cp", "1", FLAGS, "Civil Protection units get their apartment rent-free")
@@ -42,10 +42,10 @@ function LC.RentPrice(ply)
     end
     return cvPrice:GetInt()
 end
--- (29 October: 40 became 15. Settings are saved, so a server still on the old 40 moves to 15 once;
--- a price someone chose themselves is left alone.)
-if cvPrice:GetString() == "40" then
-    if cvPrice.SetString then cvPrice:SetString("15") elseif RunConsoleCommand then RunConsoleCommand("lc_rent_price", "15") end
+-- (29 October: 40 became 15; 1 November: 15 became 50, the owner asked. Settings are saved, so a server
+-- still on an old default moves to 50 once; a price someone chose themselves is left alone.)
+if cvPrice:GetString() == "40" or cvPrice:GetString() == "15" then
+    if cvPrice.SetString then cvPrice:SetString("50") elseif RunConsoleCommand then RunConsoleCommand("lc_rent_price", "50") end
 end
 local cvHours = CreateConVar("lc_rent_hours", "3", FLAGS, "Hours (real time) one rent period lasts")
 local cvMax   = CreateConVar("lc_rent_max", "1", FLAGS, "Apartments one person can rent")
