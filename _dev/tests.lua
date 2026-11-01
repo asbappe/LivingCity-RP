@@ -7407,6 +7407,7 @@ locker:SetPos(a:GetPos() + Vector(60, 0, 0))
 locker:Spawn()
 locker.lcFixtureKey = "locker_test_1"
 a.lookingAt, b.lookingAt, u.lookingAt = locker, locker, locker
+for _, who in ipairs({ a, b }) do if LC.Standing(who) < 150 then LC.AddStanding(who, 150 - LC.Standing(who)) end end -- (lockers are for good standing: lc_locker_standing)
 LC.GiveItem(a, "bread") LC.GiveItem(a, "lockpick")
 a.chat = {}
 LC.InvAction(a, "cput", "bread")
@@ -7423,6 +7424,7 @@ ok(LC.ContainerTake(u, "lockpick") and LC.PlayerIsWanted(a), "and takes what isn
 local rec = LC.RecordOf(a)
 ok(string.find(rec.v[#rec.v].text, "locker", 1, true), "and it's on their record")
 LC.ClearWanted(a)
+if LC.Standing(a) < 150 then LC.AddStanding(a, 150 - LC.Standing(a)) end -- (the contraband cost them standing: back over the locker line)
 LC.InvAction(a, "ctake", "bread")
 LC.InvAction(a, "crelease")
 local _, lc = LC.ContainerAt(a)
