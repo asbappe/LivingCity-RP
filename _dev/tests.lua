@@ -14103,20 +14103,28 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     recruitCP:SetPos(Vector(-150000, 150000, 0))
     hook.Run("PlayerSpawn", recruitCP)
     _run(0.3)
-    ok(recruitCP:GetPos():Distance(cz.pos) < 400, "a Civil Protection unit spawns in a Combine zone", recruitCP:GetPos())
+    local inCZ = false
+    for _, z in ipairs(LC.ZonesOfKind("combine")) do
+        if z.pos and z.r and recruitCP:GetPos():Distance(z.pos) < z.r + 100 then inCZ = true end
+    end
+    ok(inCZ, "a Civil Protection unit spawns in a Combine zone (this one, or another test's)", recruitCP:GetPos())
     for i = #LC.Zones, 1, -1 do if LC.Zones[i] == cz then table.remove(LC.Zones, i) end end
     recruitCP:SetPos(Vector(-150000, 150000, 0))
     -- sociostability: an outbreak is red only while its infected are loose in the city, and says why
-    local evWas, obWas = LC.Event, LC.LastOutbreak
+    local evWas, obWas, alWas = LC.Event, LC.LastOutbreak, LC.AlertLevel
     LC.Event, LC.LastOutbreak = nil, CurTime()
-    local lvl0 = LC.SocioAuto()
-    ok(lvl0 ~= "red", "an outbreak with nobody loose in the city: not red (headcrabs in the infestation are no concern)", lvl0)
+    LC.AlertLevel = function() return 0 end -- (nobody wanted from the other tests)
+    local infWas = {}
+    for n, s2 in pairs(LC.NPCs) do if s2.role == "zombie" or s2.role == "headcrab" then infWas[n] = s2 LC.NPCs[n] = nil end end -- (nor their infected)
+    local lvl0, why0 = LC.SocioAuto()
+    ok(lvl0 ~= "red", "an outbreak with nobody loose in the city: not red (headcrabs in the infestation are no concern)", tostring(lvl0) .. " " .. tostring(why0))
     local zb = ents.Create("npc_zombie") zb:SetPos(Vector(-174000, -174000, 0)) zb:Spawn() zb:SetHealth(50)
     LC.NPCs[zb] = { role = "zombie", unmanaged = true, state = "idle" }
     local lvl1, why1 = LC.SocioAuto()
     ok(lvl1 == "red" and why1 == "infected loose in the city", "infected that broke out, loose in the streets: red, and it says why", tostring(lvl1) .. " " .. tostring(why1))
     LC.NPCs[zb] = nil zb:Remove()
-    LC.Event, LC.LastOutbreak = evWas, obWas
+    for n, s2 in pairs(infWas) do LC.NPCs[n] = s2 end
+    LC.Event, LC.LastOutbreak, LC.AlertLevel = evWas, obWas, alWas
     local crew = ents.Create("npc_citizen") crew:SetPos(Vector(-171000, -171000, 0)) crew:Spawn()
     local plain = "models/humans/group01/female_02.mdl"
     crew:SetModel(plain)
