@@ -14025,9 +14025,9 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     local cand = newPlayer("Candidate", "citizen")
     cand:SetPData("lc_played_min", 0)
     local okS, whyS = LC.StandForAdministrator(cand)
-    ok(not okS and string.find(whyS or "", "hours", 1, true), "standing for Administrator needs 8 hours played", whyS)
+    ok(not okS and string.find(whyS or "", "hours", 1, true), "running for Administrator needs 8 hours played", whyS)
     cand:SetPData("lc_played_min", 8 * 60 + 1)
-    ok(LC.StandForAdministrator(cand) and LC.Election ~= nil, "with 8 hours, they stand, and a vote opens")
+    ok(LC.StandForAdministrator(cand) and LC.Election ~= nil, "with 8 hours, they run, and a vote opens")
     LC.Election.votes[cand] = cand
     LC.Election.ends = 0
     LC.ElectionTick(CurTime())
@@ -14052,9 +14052,9 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     local wearer = newPlayer("Wearer", "citizen")
     LC.GiveItem(wearer, "lockpick", 1)
     local rWas = math.random
-    _setcvar("lc_wear_uses", 8)
+    _setcvar("lc_wear_uses", 10)
     math.random = function(a, b) if a == nil then return 0 end return rWas(a, b) end
-    ok(LC.WearOut(wearer, "lockpick") and not LC.HasItem(wearer, "lockpick"), "a worn tool is gone (one use in eight, on average)")
+    ok(LC.WearOut(wearer, "lockpick") and not LC.HasItem(wearer, "lockpick"), "a worn tool is gone (one use in ten, on average)")
     math.random = rWas
     _setcvar("lc_wear_uses", 0)
     wearer:SetPData("lc_legacy", util.TableToJSON({ lives = 6 }))

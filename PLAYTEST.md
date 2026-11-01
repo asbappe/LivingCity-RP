@@ -38,7 +38,7 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 
 ## Also fixed from your notes
 
-- [ ] **City Administrator:** C > Me > Stand for City Administrator (8 hours played; staff: `lua_run` your hours up, or set `lc_admin_hours 0` to test). A vote window; win it: the tablet, two Elites at your side. Right click the tablet: the office (events, rations, prices, job bonus, commend, pardon, housing, permits). Left click at someone: the Elites kill them.
+- [ ] **City Administrator:** C > Me > Run for City Administrator (8 hours played; staff: `lua_run` your hours up, or set `lc_admin_hours 0` to test). A vote window; win it: the tablet, two Elites at your side. Right click the tablet: the office (events, rations, prices, job bonus, commend, pardon, housing, permits). Left click at someone: the Elites kill them.
   Notes:
 - [ ] **AFK:** idle 5 minutes: AFK under your name; 15: kicked (not staff).
   Notes:

@@ -100,6 +100,7 @@ chat command /records
 chat command /rent
 chat command /request
 chat command /reveal
+chat command /run
 chat command /salute
 chat command /scanner
 chat command /scout
@@ -902,7 +903,7 @@ setting lc_vort_zap_secs = 45
 setting lc_walk_speed = 110
 setting lc_walkway_clear = 100
 setting lc_wanted_lost = 30
-setting lc_wear_uses = 8
+setting lc_wear_uses = 10
 setting lc_weather_auto = 1
 setting lc_weed_grow_minutes = 8
 setting lc_weed_model = 

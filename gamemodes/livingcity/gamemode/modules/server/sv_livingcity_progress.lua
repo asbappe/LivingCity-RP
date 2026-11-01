@@ -246,8 +246,9 @@ end)
 -- Things wear out (the owner, 1 November: so credits keep moving), and a legacy that shows
 ------------------------------------------------------------------------
 
--- A tool used is a little worn: one use in lc_wear_uses (8, on average) is its last.
-local cvWear = CreateConVar("lc_wear_uses", "8", FLAGS, "About how many uses a lockpick, a fishing line or a canister of weedkiller lasts (0: never wears out)")
+-- A tool used is a little worn: one use in lc_wear_uses (10, on average) is its last. (A job's own weedkiller is
+-- topped up by the job: LC.IssueWeedkiller.)
+local cvWear = CreateConVar("lc_wear_uses", "10", FLAGS, "About how many uses a lockpick, a fishing line or a canister of weedkiller lasts (0: never wears out)")
 function LC.WearOut(ply, id, msg)
     local n = cvWear:GetFloat()
     if n <= 0 or not IsValid(ply) or not LC.HasItem(ply, id) then return false end

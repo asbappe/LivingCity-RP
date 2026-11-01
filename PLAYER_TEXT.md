@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 637f3cf. Admin-only console messages and log lines are left out.
+Made from version 72ab28c. Admin-only console messages and log lines are left out.
 
 6236 lines, from 189 files.
 
@@ -3526,83 +3526,83 @@ Made from version 637f3cf. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "Idle for {kick} minutes"  (text, line 77)
+- "Idle for {kick} minutes"  (text, line 78)
 
 > Note for you (not shown in game): part of: stand for administrator
 
-- "There's an Administrator already: {OfficeHeld}."  (text, line 112)
-- "The city elects only those it knows: %d hours played. You have %.1f."  (message, line 115)
-- "An election"  (on-screen notice, line 122)
-- "The office of City Administrator is open, and {Name} is standing. Vote on screen."  (on-screen notice, line 122)
-- "You're standing already."  (text, line 125)
+- "There's an Administrator already: {OfficeHeld}."  (text, line 113)
+- "The city elects only those it knows: %d hours played. You have %.1f."  (message, line 116)
+- "An election"  (on-screen notice, line 123)
+- "The office of City Administrator is open, and {Name} is running. Vote on screen."  (on-screen notice, line 123)
+- "You're already running."  (text, line 126)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_election_vote)
 
-- "[Election] Your vote is cast."  (chat message, line 138)
+- "[Election] Your vote is cast."  (chat message, line 140)
 
 > Note for you (not shown in game): part of: election tick
 
-- "The city has chosen"  (on-screen notice, line 154)
-- "is City Administrator ({bn} vote{or})."  (on-screen notice, line 154)
+- "The city has chosen"  (on-screen notice, line 156)
+- "is City Administrator ({bn} vote{or})."  (on-screen notice, line 156)
 
 > Note for you (not shown in game): part of: cool
 
-- "Not yet: %d more minute%s."  (message, line 193)
+- "Not yet: %d more minute%s."  (message, line 195)
 
 > Note for you (not shown in game): part of: daily
 
-- "That's all of those for today."  (text, line 202)
+- "That's all of those for today."  (text, line 204)
 
 > Note for you (not shown in game): part of: announce
 
-- "The City Administrator"  (on-screen notice, line 207)
-- "a ration day"  (text, line 210)
-- "an inspection sweep"  (text, line 210)
-- "a Combine parade"  (text, line 210)
+- "The City Administrator"  (on-screen notice, line 209)
+- "a ration day"  (text, line 212)
+- "an inspection sweep"  (text, line 212)
+- "a Combine parade"  (text, line 212)
 
 > Note for you (not shown in game): One of the office's acts. arg: the event, "generous"/"austere", a price factor, a job id, or a target player.
 
-- "Only the City Administrator."  (text, line 214)
-- "That can't happen right now (or the map has nowhere for it)."  (text, line 219)
-- "By order of the City Administrator: {arg}."  (text, line 220)
+- "Only the City Administrator."  (text, line 216)
+- "That can't happen right now (or the map has nowhere for it)."  (text, line 221)
+- "By order of the City Administrator: {arg}."  (text, line 222)
 
 > Note for you (not shown in game): part of: admin do
 
-- "Rations are increased for the hour. The Union provides."  (text, line 227)
-- "Rations are reduced for the hour. Sacrifice strengthens us."  (text, line 227)
-- "Rations are as usual."  (text, line 227)
-- "Commissary prices are %s for the hour (%d%%)."  (message, line 234)
-- "as usual"  (text, line 234)
-- "For the hour, {name} shifts pay half again. The city needs hands there."  (text, line 242)
+- "Rations are increased for the hour. The Union provides."  (text, line 229)
+- "Rations are reduced for the hour. Sacrifice strengthens us."  (text, line 229)
+- "Rations are as usual."  (text, line 229)
+- "Commissary prices are %s for the hour (%d%%)."  (message, line 236)
+- "as usual"  (text, line 236)
+- "For the hour, {name} shifts pay half again. The city needs hands there."  (text, line 244)
 
 > Note for you (not shown in game): the rest are about a person
 
-- "Look at someone, or pick them."  (text, line 246)
-- "Commended by the Administrator"  (text, line 251)
-- "Censured by the Administrator"  (text, line 251)
-- "is commended for their service to the city."  (text, line 252)
-- "is censured. Let them remember it."  (text, line 252)
+- "Look at someone, or pick them."  (text, line 248)
+- "Commended by the Administrator"  (text, line 253)
+- "Censured by the Administrator"  (text, line 253)
+- "is commended for their service to the city."  (text, line 254)
+- "is censured. Let them remember it."  (text, line 254)
 
 > Note for you (not shown in game): part of: admin do
 
-- "They aren't wanted."  (text, line 255)
-- "Not for that. Not even the Administrator."  (text, line 258)
-- "is pardoned. The city is merciful."  (text, line 263)
-- "[City] The Administrator grants you a week's rent-free housing."  (chat message, line 269)
-- "[City] The Administrator issues you a curfew permit."  (chat message, line 275)
+- "They aren't wanted."  (text, line 257)
+- "Not for that. Not even the Administrator."  (text, line 260)
+- "is pardoned. The city is merciful."  (text, line 265)
+- "[City] The Administrator grants you a week's rent-free housing."  (chat message, line 271)
+- "[City] The Administrator issues you a curfew permit."  (chat message, line 277)
 
 > Note for you (not shown in game): a week's free housing (the office): read by the rent
 
-- "rent-free, by the Administrator's grant"  (text, line 285)
+- "rent-free, by the Administrator's grant"  (text, line 287)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_admin_do)
 
-- "[Office] Done."  (chat message, line 293)
-- "[Office] {or}"  (text, line 293)
+- "[Office] Done."  (chat message, line 295)
+- "[Office] {or}"  (text, line 295)
 
 > Note for you (not shown in game): part of: admin order kill
 
-- "Threat to the City Administrator"  (text, line 347)
+- "Threat to the City Administrator"  (text, line 349)
 
 ## weedkiller against the infestation, and against the Combine (the owner, 2026-11-01) (sv_livingcity_cleanup.lua)
 
@@ -7782,20 +7782,20 @@ Made from version 637f3cf. Admin-only console messages and log lines are left ou
 - "Union levy"  (on-screen notice, line 231)
 - "%d credits redistributed: holdings above %d are shared with the Union. Spend it, or lose it slowly."  (message, line 231)
 
-> Note for you (not shown in game): Things wear out (the owner, 1 November: so credits keep moving), and a legacy that shows A tool used is a little worn: one use in lc_wear_uses (8, on average) is its last.
+> Note for you (not shown in game): Things wear out (the owner, 1 November: so credits keep moving), and a legacy that shows A tool used is a little worn: one use in lc_wear_uses (10, on average) is its last. (A job's own weedkiller is topped up by the job: LC.IssueWeedkiller.)
 
-- "Your {id} is worn out."  (text, line 256)
+- "Your {id} is worn out."  (text, line 257)
 
 > Note for you (not shown in game): A title for a player with many lives behind them (shown under their name), never power or money.
 
-- "Legend of the canals"  (text, line 261)
-- "Ghost of the old city"  (text, line 261)
-- "Old hand"  (text, line 261)
+- "Legend of the canals"  (text, line 262)
+- "Ghost of the old city"  (text, line 262)
+- "Old hand"  (text, line 262)
 
 > Note for you (not shown in game): A new person, after another's end: something of the last one comes with them (a keepsake: theirs to keep, or sell), from the second life on.
 
-- "Something of {oldName}"  (on-screen notice, line 279)
-- "Among your things: {oldName}'s ring. You don't remember how you came by it."  (on-screen notice, line 279)
+- "Something of {oldName}"  (on-screen notice, line 280)
+- "Among your things: {oldName}'s ring. You don't remember how you came by it."  (on-screen notice, line 280)
 
 ## street furniture, and the city's voice (sv_livingcity_propaganda.lua)
 

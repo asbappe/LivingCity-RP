@@ -1,8 +1,8 @@
 --[[
     Living City: the City Administrator's office, and idle players (the owner, 1 November)
 
-    Who: anyone with lc_admin_hours (8) played on the server in all, elected. Stand for the post (C >
-    Me > Stand for City Administrator, or /stand) while nobody holds it: a city vote opens for
+    Who: anyone with lc_admin_hours (8) played on the server in all, elected. Run for the post (C >
+    Me > Run for City Administrator, or /run) while nobody holds it: a city vote opens for
     lc_admin_vote_minutes (2), every player votes on screen, and the winner is the Administrator
     (staff can still whitelist someone as before). Hours count only while you're not idle.
 
@@ -31,7 +31,7 @@ LC = LC or {}
 LC.SlashCommands = LC.SlashCommands or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvHours   = CreateConVar("lc_admin_hours", "8", FLAGS, "Hours played on the server, in all, before someone can stand for City Administrator")
+local cvHours   = CreateConVar("lc_admin_hours", "8", FLAGS, "Hours played on the server, in all, before someone can run for City Administrator")
 local cvVote    = CreateConVar("lc_admin_vote_minutes", "2", FLAGS, "Minutes a City Administrator election stays open")
 local cvGuards  = CreateConVar("lc_admin_guards", "2", FLAGS, "Overwatch Elites guarding the City Administrator")
 local cvAfk     = CreateConVar("lc_afk_minutes", "5", FLAGS, "Minutes without input before a player is AFK")
@@ -120,16 +120,17 @@ function LC.StandForAdministrator(ply)
         e = { candidates = {}, votes = {}, ends = CurTime() + math.max(0.5, cvVote:GetFloat()) * 60 }
         LC.Election = e
         for _, p in ipairs(player.GetAll()) do
-            if LC.Notice then LC.Notice(p, "event", "An election", "The office of City Administrator is open, and " .. Name(ply) .. " is standing. Vote on screen.", 10) end
+            if LC.Notice then LC.Notice(p, "event", "An election", "The office of City Administrator is open, and " .. Name(ply) .. " is running. Vote on screen.", 10) end
         end
     end
-    if table.HasValue(e.candidates, ply) then return false, "You're standing already." end
+    if table.HasValue(e.candidates, ply) then return false, "You're already running." end
     e.candidates[#e.candidates + 1] = ply
     Broadcast()
     return true
 end
-LC.SlashCommands.stand = function(ply) local ok, why = LC.StandForAdministrator(ply) if not ok and why then Say(ply, why) end end
-if LC.MenuActions then LC.MenuActions.stand = true end
+LC.SlashCommands.run = function(ply) local ok, why = LC.StandForAdministrator(ply) if not ok and why then Say(ply, why) end end
+LC.SlashCommands.stand = LC.SlashCommands.run -- (the first name for it)
+if LC.MenuActions then LC.MenuActions.run = true LC.MenuActions.stand = true end
 
 net.Receive("lc_election_vote", function(_, ply)
     local e = LC.Election
