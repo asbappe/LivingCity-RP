@@ -13758,9 +13758,15 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     _run(0.3)
     LC.SetJob(cln, "cleanup", true)
     ok(LC.HasItem(cln, "weedkiller"), "Infestation Cleanup is issued weedkiller")
-    _run(0.5)
+    _run(2.5)
+    ok(not string.find(cln:GetModel() or "", "worker_", 1, true), "off shift, a cleanup worker is in their own clothes", cln:GetModel())
+    LC.QuestOf[cln] = { chain = "shift", owner = cln }
+    LC.OutfitDutyTick(CurTime())
     ok(cln:GetModel() == "models/player/worker_male.mdl" or cln:GetModel() == "models/player/worker_female.mdl",
-        "with the owner's Infestation Control pack, a cleanup worker wears its suit", cln:GetModel())
+        "on a shift, they wear the pack's hazmat suit", cln:GetModel())
+    LC.QuestOf[cln] = nil
+    LC.OutfitDutyTick(CurTime())
+    ok(not string.find(cln:GetModel() or "", "worker_", 1, true), "the shift over, out of it again", cln:GetModel())
     local gpos = Vector(-168000, -168000, 0)
     ctz:SetPos(gpos) mcp:SetPos(gpos + Vector(30, 0, 0)) cln:SetPos(gpos + Vector(-30, 0, 0))
     ctz:SetHealth(100) mcp:SetHealth(100) cln:SetHealth(100)
@@ -13827,9 +13833,28 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     woman:SetNW2String("lc_model", "models/player/somepack/female_custom.mdl")
     ok(LC.PlayerSex(woman) == "female", "a woman on a pack's face model is still a woman")
     LC.SetJob(woman, "cleanup", true)
-    _run(0.5)
-    ok(woman:GetModel() == "models/player/worker_female.mdl", "and she wears the female hazmat suit", woman:GetModel())
+    LC.QuestOf[woman] = { chain = "shift", owner = woman }
+    LC.OutfitDutyTick(CurTime())
+    ok(woman:GetModel() == "models/player/worker_female.mdl", "and on a shift she wears the female hazmat suit", woman:GetModel())
+    LC.QuestOf[woman] = nil
     LC.SetJob(woman, "", true)
+    local crew = ents.Create("npc_citizen") crew:SetPos(Vector(-171000, -171000, 0)) crew:Spawn()
+    local plain = "models/humans/group01/female_02.mdl"
+    crew:SetModel(plain)
+    local cst = { role = "citizen", state = "idle", profile = { id = 99901, job = "cleanup", gender = "female", model = plain } }
+    LC.NPCs[crew] = cst
+    LC.OutfitDutyTick(CurTime())
+    ok(crew:GetModel() == plain, "one of the city's cleanup crew, not working: her own clothes", crew:GetModel())
+    cst.npcWork = { steps = {} }
+    LC.OutfitDutyTick(CurTime())
+    ok(crew:GetModel() == "models/npc/worker_female.mdl", "at the work: the female hazmat suit", crew:GetModel())
+    cst.npcWork = nil
+    LC.OutfitDutyTick(CurTime())
+    ok(crew:GetModel() == "models/npc/worker_female.mdl", "between one task and the next, she keeps it on")
+    cst.state = "abed"
+    LC.OutfitDutyTick(CurTime())
+    ok(crew:GetModel() == plain, "off to bed: out of it", crew:GetModel())
+    LC.NPCs[crew] = nil crew:Remove()
     woman:SetPos(Vector(-150000, 150000, 0))
     ok(not string.find(cln:GetModel() or "", "worker_", 1, true), "off the job, their own clothes again", cln:GetModel())
     -- a barnacle that eats weedkiller dies

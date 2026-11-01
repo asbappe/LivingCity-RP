@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 11c9d38. Admin-only console messages and log lines are left out.
+Made from version 7d792f6. Admin-only console messages and log lines are left out.
 
 6085 lines, from 183 files.
 
@@ -3419,37 +3419,37 @@ Made from version 11c9d38. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game's living city job changed moment
 
-- "[Union] You're issued a respirator and weedkiller. Shifts take you into the infestation: look at a growth and press E to spray it. Civil Protection will guard you."  (chat message, line 134)
+- "[Union] You're issued a respirator and weedkiller. Shifts take you into the infestation: look at a growth and press E to spray it. Civil Protection will guard you."  (chat message, line 135)
 
 > Note for you (not shown in game): part of: clear nest
 
-- "Infestation growth cleared"  (text, line 284)
-- "sprayed out"  (text, line 291)
+- "Infestation growth cleared"  (text, line 285)
+- "sprayed out"  (text, line 292)
 
 > Note for you (not shown in game): the zone you placed is never taken away: it goes quiet for a while instead
 
-- "[Union] The last of the growth here shrivels. It'll be quiet for a while, but it always comes back."  (chat message, line 297)
+- "[Union] The last of the growth here shrivels. It'll be quiet for a while, but it always comes back."  (chat message, line 298)
 
 > Note for you (not shown in game): Spraying one: a few seconds, close up.
 
-- "You'd need weedkiller to spray it (the Union Commissary sells it)."  (text, line 305)
+- "You'd need weedkiller to spray it (the Union Commissary sells it)."  (text, line 306)
 
 > Note for you (not shown in game): part of: spray nest
 
-- "Spraying the growth..."  (progress bar, line 311)
-- "You stop spraying."  (text, line 311)
+- "Spraying the growth..."  (progress bar, line 312)
+- "You stop spraying."  (text, line 312)
 
 > Note for you (not shown in game): part of: assign
 
-- "[Union] Civil Protection is sending you a guard. Stay close to them in there."  (chat message, line 399)
+- "[Union] Civil Protection is sending you a guard. Stay close to them in there."  (chat message, line 400)
 
 > Note for you (not shown in game): The city's own cleanup crews: spray the growths, with a guard.
 
-- "clearing the infestation"  (label, line 487)
+- "clearing the infestation"  (label, line 488)
 
 > Note for you (not shown in game): part of: find
 
-- "spraying the infestation"  (what someone is doing, line 497)
+- "spraying the infestation"  (what someone is doing, line 498)
 
 ## Half-Life: Alyx-style Combine models (sv_livingcity_combinemodels.lua)
 
@@ -7191,22 +7191,22 @@ Made from version 11c9d38. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The designer (cl_livingcity_outfits.lua)
 
-- "Everyone else (no job)"  (name, line 342)
-- "New characters choose from"  (name, line 343)
+- "Everyone else (no job)"  (name, line 357)
+- "New characters choose from"  (name, line 358)
 
 > Note for you (not shown in game): What the designer sends back for one job, cleaned up.
 
-- "Admins only."  (text, line 350)
-- "No such job."  (text, line 351)
+- "Admins only."  (text, line 365)
+- "No such job."  (text, line 366)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_outfits_save)
 
-- "[Outfits] {or}"  (chat message, line 385)
+- "[Outfits] {or}"  (chat message, line 400)
 
 > Note for you (not shown in game): (not "lc_outfits": that name is the on/off setting, and a setting and a command can't share a name)
 
-- "Admins only."  (chat message, line 389)
-- "Admins only."  (chat message, line 391)
+- "Admins only."  (chat message, line 404)
+- "Admins only."  (chat message, line 406)
 
 ## path mapping, drawing the walkable network by walking it (sv_livingcity_pathmap.lua)
 

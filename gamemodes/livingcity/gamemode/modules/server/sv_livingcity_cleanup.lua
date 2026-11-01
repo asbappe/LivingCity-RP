@@ -88,7 +88,8 @@ function LC.CleanupRespirator(ply) return IsValid(ply) and ply:IsPlayer() and On
 -- male model, a woman the female one, each their own skin. The owner, 2026-11-01: the "worker" suits are
 -- the hazmat suits (filter and air tank), for Infestation Cleanup; the "engineer" ones have neither, for
 -- the dirty jobs (Mortician, Sanitation Worker, Reclamation Crew). Only while a job has no outfit of its
--- own: set one in the editor (Job outfits) and that's worn instead. lc_cleanup_suit: the cleanup job's
+-- own: set one in the editor (Job outfits) and that's worn instead. Worn only for the work (the owner): a
+-- player on a shift, one of the city's people doing the job; going home, their own clothes. lc_cleanup_suit: the cleanup job's
 -- suit (worker); lc_cleanup_model: another player model for it instead.
 local function Valid(m) return not util.IsValidModel or util.IsValidModel(m) end
 local cvSuit = CreateConVar("lc_cleanup_suit", "worker", FLAGS, "Which Infestation Control suit cleanup workers wear, if the server has the pack: worker (the hazmat suit) or engineer")
@@ -120,7 +121,7 @@ local function EnsureOutfit()
     for job, e in pairs(want) do
         local cur = all[job]
         if not cur or cur.lcAuto then -- (never over the owner's own outfit for the job)
-            all[job] = e and { list = { e }, lcAuto = true } or nil
+            all[job] = e and { list = { e }, lcAuto = true, onDuty = true } or nil -- (worn only for the work)
         end
     end
 end

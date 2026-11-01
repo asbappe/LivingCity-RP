@@ -167,13 +167,28 @@ end
 
 local function Valid(path) return path and (not util.IsValidModel or util.IsValidModel(path)) end
 
+-- Work clothes only for the work (a hazmat suit: sv_livingcity_cleanup.lua): a job whose outfit says onDuty
+-- is worn only on a shift (players) or while doing the job (the city's people); otherwise their own clothes.
+local function DutyOnly(jobId) local o = jobId and Outfits()[jobId] return o ~= nil and o.onDuty == true end
+LC.OutfitDutyOnly = DutyOnly
+function LC.PlayerOnDuty(ply)
+    local q = LC.QuestOf and LC.QuestOf[ply]
+    return q ~= nil and q.chain == "shift"
+end
+
 -- One of the city's people, as they're put into the world (sv_livingcity_people.lua).
-function LC.DressPerson(npc, p)
+-- onDuty: they're at their job's work now (for an onDuty outfit; put into the world, they aren't).
+function LC.DressPerson(npc, p, onDuty)
     if not IsValid(npc) or not p then return false end
     -- a height of their own (a few percent either way), the same every time
     if cvHeights:GetBool() and npc.SetModelScale then npc:SetModelScale(0.96 + (Hash("h" .. tostring(p.id)) % 81) / 1000, 0) end
     local sex = (p.gender == "female" or p.gender == "male") and p.gender or (LC.ModelIsFemale(p.model) and "female" or "male")
-    local path, skin, bg = LC.OutfitFor(p.job or EVERYONE, "p" .. tostring(p.id), LC.FaceOf(p.model), false, sex)
+    local job = p.job or EVERYONE
+    if DutyOnly(job) and not onDuty then
+        job = EVERYONE
+        if p.model and npc:GetModel() ~= p.model then npc:SetModel(p.model) if npc.SetSkin then npc:SetSkin(0) end end
+    end
+    local path, skin, bg = LC.OutfitFor(job, "p" .. tostring(p.id), LC.FaceOf(p.model), false, sex)
     if not Valid(path) then return false end
     npc:SetModel(path)
     LC.ApplyLook(npc, skin, bg)
@@ -184,7 +199,7 @@ end
 local function PlayerLook(ply)
     if ply:GetNW2String("lcf_faction", "") ~= "citizen" then return nil end
     local job = ply:GetNW2String("lcj_job", "")
-    if job == "" then job = EVERYONE end
+    if job == "" or (DutyOnly(job) and not LC.PlayerOnDuty(ply)) then job = EVERYONE end
     local own = ply:GetNW2String("lc_model", "")
     return LC.OutfitFor(job, ply:GetNW2String("lc_cid", ply:SteamID()), LC.FaceOf(own), true, LC.PlayerSex(ply))
 end
@@ -389,3 +404,46 @@ end)
 concommand.Add("lc_outfits_edit", function(ply) if IsValid(ply) and not LC.OpenOutfits(ply) then ply:ChatPrint("Admins only.") end end)
 LC.SlashCommands = LC.SlashCommands or {}
 LC.SlashCommands.outfits = function(ply) if not LC.OpenOutfits(ply) then ply:ChatPrint("Admins only.") end end
+
+------------------------------------------------------------------------
+-- Into the work clothes for the work, and out of them after (onDuty outfits)
+------------------------------------------------------------------------
+
+local OFF_GRACE = 90 -- (seconds between one task and the next before the city's people change back)
+local function DutyTick(now)
+    for _, ply in ipairs(player.GetAll()) do
+        local job = ply:GetNW2String("lcj_job", "")
+        local want = job ~= "" and DutyOnly(job) and LC.PlayerOnDuty(ply) or false
+        if ply.lcDutyDressed ~= want and ply:Alive() then
+            local was = ply.lcDutyDressed
+            ply.lcDutyDressed = want
+            if was ~= nil or want then
+                if LC.RefreshModel then LC.RefreshModel(ply) end
+                DressPlayer(ply)
+                if ply.SetupHands then ply:SetupHands() end
+            end
+        end
+    end
+    for npc, st in pairs(LC.NPCs or {}) do
+        local p = st.profile
+        if IsValid(npc) and p and p.job and DutyOnly(p.job) then
+            local want
+            if st.npcWork then
+                want, st.lcOffSince = true, nil
+            else
+                st.lcOffSince = st.lcOffSince or now
+                local home = st.state == "abed" or st.leaving or LC.Event == "curfew" or LC.Event == "lockdown" or (LC.Bedtime and LC.Bedtime())
+                want = st.lcDuty == true and not home and now - st.lcOffSince < OFF_GRACE
+            end
+            if want ~= (st.lcDuty == true) then
+                st.lcDuty = want
+                LC.DressPerson(npc, p, want)
+            end
+        end
+    end
+end
+LC.OutfitDutyTick = DutyTick
+timer.Create("LivingCityDutyClothes", 2, 0, function()
+    local ok, err = pcall(DutyTick, CurTime())
+    if not ok and LC.Error then LC.Error("duty clothes", err) end
+end)
