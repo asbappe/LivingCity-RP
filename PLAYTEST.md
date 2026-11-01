@@ -1,7 +1,175 @@
 # Playtest checklist
 
-Everything added since the 8 October playtest. None of it has been played in game yet (only the offline tests).
+Updated 1 November 2026. **Part 1** is everything new since your 1 November playtest: try those first. **Part 2** is older items (from 8 October on); skip any you've already checked.
 Tick a box when you've tried it, and write what you saw after **Notes:** (works, broken, feels off, ideas).
+
+# Part 1: new since your 1 November playtest
+
+## Infestation Cleanup (new: try first)
+
+You need two workshop packs on the server **and** in your workshop collection, so players download them: the Half-Life: Alyx Combine hazard props (2043900984) and Infestation Control workers (3185145650). Without them it all still works, with stand-in looks.
+
+- [ ] **Growths** in each infestation: Xen gunk (with the pack), glowing green, spores drifting up. Any ERROR models? Say which.
+  Notes:
+- [ ] **A Combine warning post** (sign, lamp, barrel) at the edge of each infestation, facing out. Does it stand sensibly (not in a wall, not floating)?
+  Notes:
+- [ ] **Take the job** (F3 > Jobs > Infestation Cleanup): weedkiller and a hoover; still in your own clothes.
+  Notes:
+- [ ] **Accept a shift:** you're in the hazmat suit (a woman in the female one, a man in the male one), with matching hands. The shift over (done or failed): your own clothes again.
+  Notes:
+- [ ] **Two guards** (units or soldiers) come when you get near the infestation, stay by you, and shoot the zombies.
+  Notes:
+- [ ] **Spray a growth** (look at it, E): it dies (dark, no glow) but stays there.
+  Notes:
+- [ ] **The hoover:** hold left click on a dead growth: a bar fills, it's gone, "Hoover: 1 of 3" on screen. A live one: "spray it first".
+  Notes:
+- [ ] **How does the hoover look** in your view, and in your hands to someone else? To move it in your view: `lc_hoover_view "26 11 -15"` (forward, right, up). Send me the numbers that look right.
+  Notes:
+- [ ] **Empty it:** E on the barrel at the warning post. Without the pack (no barrels): right click seals it in a bag.
+  Notes:
+- [ ] **Clear every growth in a patch that grew:** the patch goes (haze and stains too). In a zone you placed: nothing spawns there for a while. Growths come back over time; dead ones nobody collects rot away after 10 minutes.
+  Notes:
+- [ ] **NPC cleanup crews** suit up, go in with a guard, spray then vacuum, and change back going home.
+  Notes:
+- [ ] **Joining Civil Protection:** a cleanup shift counts as two Records Clerk shifts on the F4 bar.
+  Notes:
+- [ ] **Chlorine** doesn't hurt you on the cleanup job (the respirator).
+  Notes:
+- [ ] **Engineer overalls:** Morticians, Sanitation Workers and the Reclamation Crew (players and NPCs) wear them while working, not off duty.
+  Notes:
+
+## Weedkiller as a weapon, and the Combine's gas
+
+- [ ] **Firebomb** (the Resistance lab: 2 weedkiller, an empty bottle, a rag): a burning bottle; it breaks where it lands and burns a while; units in it burn, armour or not; a power bank, forcefield or turret next to it goes down; a growth in it burns away.
+  Notes:
+- [ ] **Barnacle:** drop weedkiller under one (F2 > Drop): it pulls it up, crunches, dies.
+  Notes:
+- [ ] **Poison gas bomb** (units only now: the CP Commissary, 40): thrown, a green cloud; citizens choke, units not at all.
+  Notes:
+- [ ] **A sweep into rebel ground** sometimes opens with a gas bomb; the units walk into it unharmed.
+  Notes:
+- [ ] **As an Insider,** at the Commissary with weedkiller: Foul the filters, then gas hurts units too (and they're told their filter's no good). Spike the food: other units are poisoned over the next few minutes.
+  Notes:
+- [ ] **Poison:** F2 > Weedkiller > Poison food or drink: the food looks the same; give it to someone, they're poisoned when they eat it. A unit watching: wanted.
+  Notes:
+
+## Weeds and the Groundskeeper
+
+- [ ] **Weeds** come up on open ground and grow (a tuft, weeds, a bush). Which plant shows? (An ERROR model: say so.)
+  Notes:
+- [ ] **Groundskeeper** (F3 > Jobs): issued weedkiller; E on a weed sprays it; the shift is three weeds. NPC groundskeepers spray them too.
+  Notes:
+
+## Rations
+
+- [ ] **A new character:** registering at Civil Intake gives papers but no ration card; a dispenser says "No ration card" and tells you to work a shift.
+  Notes:
+- [ ] **Finish a Union shift:** "[Rations] You earned a ration card" on screen; F2 shows the card (and how many).
+  Notes:
+- [ ] **Take a ration:** the dispenser takes one card, and no credits come with it (standing still goes up by 1).
+  Notes:
+- [ ] **Civil Intake's record screen and your papers** show how many ration cards you have; there's no "Replace my ration card" button any more.
+  Notes:
+- [ ] **Hungry with no card:** What now? says to work a shift for a ration card.
+  Notes:
+- [ ] **Short rations:** below 150 standing the dispenser gives a short ration (and says so); at 150+ the full packet.
+  Notes:
+
+## Fixes from your 1 November playtest
+
+- [ ] **Infestations:** citizens, units and rebels walk round them, never through.
+  Notes:
+- [ ] **Rebels on your beds:** at night, rebels lie down on the beds you placed in their camp.
+  Notes:
+- [ ] **A sweep:** units arrest the lab scientist, smash the pots (the plant gone, a breaking sound) and empty the supply crates.
+  Notes:
+- [ ] **Rebels at home** go down in about half the shots; your squad as before. Rebels: SMGs and shotguns only. Combine soldiers: pulse rifles and shotguns only.
+  Notes:
+- [ ] **Triage:** three or four patients going downhill plus one stable (a broken arm stays put); a gunshot wound drops fast.
+  Notes:
+- [ ] **Top left:** credits, standing, and loyalty, sympathy, corruption.
+  Notes:
+- [ ] **Medic to another job:** the medkit is gone.
+  Notes:
+- [ ] **A placed bin:** stand next to it, F2: the bin's section is there.
+  Notes:
+- [ ] **The jog:** units say "Move it!"; finishing says what you earned (standing and 5 credits); skipping shows a reprimand and the next ration is withheld.
+  Notes:
+
+## Terminals on their own screens
+
+- [ ] **Civil Intake / Housing Allocation:** E shows the menu on a screen in front of the terminal; the button under your crosshair lights up; E presses it. Is the screen in a good spot (not inside the terminal, readable, not upside down or mirrored)?
+  Notes:
+- [ ] **CP Commissary (as a unit):** the counter's goods on its screen; buying works.
+  Notes:
+- [ ] **C > Settings > Terminals' menus:** switch to a window and back.
+  Notes:
+
+## The Resistance Insider, the loyalty test, and more
+
+- [ ] **Recruited:** as a kind unit, The Man Inside on F3; stay inside at the crossroads.
+  Notes:
+- [ ] **C > Civil Protection > Inside** appears (and only for you). Each action refuses with someone nearby, works alone.
+  Notes:
+- [ ] **Tip off Freq 7:** a Resistance player hears "A friend inside: ...".
+  Notes:
+- [ ] **Lose a record:** a wanted player isn't wanted; your standing drops 25.
+  Notes:
+- [ ] **At the Commissary:** bandages and pistol rounds you can give away. **Copy the records:** the quartermaster pays 60.
+  Notes:
+- [ ] **Reveal myself:** the person you look at is told.
+  Notes:
+- [ ] **Caught in the Mole Hunt:** Resistance, wanted, no surrendering; Civil Protection and Union jobs refused.
+  Notes:
+- [ ] **The loyalty test** (suspicion 3 as an Insider): the cell, the prisoner, fists only, two shotgun guards beside you. Beat him, kill him: weapons back. Refuse or walk out: shot down, bleeding, then made a stalker.
+  Notes:
+- [ ] **The reckoning** starts by itself after it (no choosing it): pay the debt (starts at once) and the Inside menu comes back; take off the mask (Resistance, never a unit again); or done with the Resistance (the forced soldier conversion).
+  Notes:
+- [ ] **The stalker's end:** the frame is built beside a power transformer; once charged, an arc jumps the gap; walking into it kills at once.
+  Notes:
+- [ ] **Joining Civil Protection:** refused until 5 Records Clerk shifts (and 100 standing), and told so; F4 shows both as progress bars.
+  Notes:
+- [ ] **The loyalty test with a Resistance player online:** the Insider waits; units near the Resistance player keep stopping them; once the rebel's in a cell, both are put in the scene, with the on-screen prompts.
+  Notes:
+- [ ] **Done with the Resistance:** Proof (a sweep, two of their fighters down), then the conversion.
+  Notes:
+- [ ] **No Union radio**: radios are Freq 7 radios (black market); the lab's transmitter needs one.
+  Notes:
+- [ ] **Shackled vortigaunts** sweeping the streets (2); as Resistance, cut one loose (look at it, unshackle): it walks to rebel ground and stays. Playing a vortigaunt: no fists. If there's still no freed one in rebel ground, send the debug report's "vortigaunts" line.
+  Notes:
+- [ ] **Secret endings** three hours apart.
+  Notes:
+- [ ] **She, not he:** a job about a woman (a patient, a neighbour, a prisoner) says her.
+  Notes:
+
+## What loyalty earns
+
+- [ ] **At 150+ standing:** fewer stops, shifts pay a bit more, the Commissary is cheaper, and lockers open (refused below 150).
+  Notes:
+- [ ] **At 400+:** stops are a papers glance; two ration cards a shift; waved through once a curfew; a curfew slip is a warning; the Administrator names you on screen now and then; MODEL CITIZEN on your papers; Block Warden on F3 > Jobs (refused below 400).
+  Notes:
+
+## Vortigaunts, and rent
+
+- [ ] **As a shackled vortigaunt:** C > Reach out through the vortessence: Resistance players and free vortigaunts are told where you are; with a unit watching, the collar bites. The Collar on F3: sweep, the crate, the quiet corner.
+  Notes:
+- [ ] **As a free vortigaunt:** right click another vortigaunt: a second's glow, then +25 health (not again for 10 seconds, by anyone). A freed NPC vortigaunt walks over and mends you when you're hurt. Left click a power bank, forcefield or turret from a distance: it goes down for 45 seconds, then comes back. Free your kin (a street vortigaunt, marked) and Read the Combine (watch a checkpoint, get intel) on the Resistance's board.
+  Notes:
+- [ ] **Freed vortigaunts in rebel ground** walk about the camp and the fire; free a street one and the two talk in their own tongue now and then.
+  Notes:
+- [ ] **The hive mind:** with two free vortigaunts about, within 15 minutes a Freq 7 line about a sweep, or a door code on a scrap by them; the code opens a Combine door once.
+  Notes:
+- [ ] **Rent:** 50 credits for an ordinary citizen; as a unit, or a citizen with 200+ standing, nothing (the question says so).
+  Notes:
+
+## Beds
+
+- [ ] **Citizens at curfew or night** walk into the habitation blocks and lie down on the beds you placed, asleep (eyes shut), and get up in the morning. Heads at the foot end? `lc_bed_head_flip 1`.
+  Notes:
+- [ ] **You in a bed:** E on it at night: you lie on it, others see you lying there, your view is from the pillow. Jump: back beside the bed.
+  Notes:
+
+# Part 2: older items (from 8 October on)
 
 ## Knowing what to do
 
@@ -253,92 +421,6 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **BOLOs:** a second one straight away says to wait.
 - [ ] **Wanted:** the character form won't take a new name or face.
   Notes:
-
-## Ration cards from work (1 November: what to check)
-
-- [ ] **A new character:** registering at Civil Intake gives papers but no ration card; a dispenser says "No ration card" and tells you to work a shift.
-- [ ] **Finish a Union shift:** "[Rations] You earned a ration card" on screen; F2 shows the card (and how many).
-- [ ] **Take a ration:** the dispenser takes one card, and no credits come with it (standing still goes up by 1).
-- [ ] **Civil Intake's record screen and your papers** show how many ration cards you have; there's no "Replace my ration card" button any more.
-- [ ] **Hungry with no card:** What now? says to work a shift for a ration card.
-
-## The 1 November playtest's fixes (what to check)
-
-- [ ] **Infestations:** citizens, units and rebels walk round them, never through.
-- [ ] **Rebels on your beds:** at night, rebels lie down on the beds you placed in their camp.
-- [ ] **A sweep:** units arrest the lab scientist, smash the pots (the plant gone, a breaking sound) and empty the supply crates.
-- [ ] **Rebels at home** go down in about half the shots; your squad as before. Rebels: SMGs and shotguns only. Combine soldiers: pulse rifles and shotguns only.
-- [ ] **Triage:** three or four patients going downhill plus one stable (a broken arm stays put); a gunshot wound drops fast.
-- [ ] **Top left:** credits, standing, and loyalty, sympathy, corruption.
-- [ ] **Medic to another job:** the medkit is gone.
-- [ ] **A placed bin:** stand next to it, F2: the bin's section is there.
-- [ ] **The jog:** units say "Move it!"; finishing says what you earned (standing and 5 credits); skipping shows a reprimand and the next ration is withheld.
-
-## Terminals on their own screens (1 November: what to check)
-
-- [ ] **Civil Intake / Housing Allocation:** E shows the menu on a screen in front of the terminal; the button under your crosshair lights up; E presses it. Is the screen in a good spot (not inside the terminal, readable, not upside down or mirrored)?
-- [ ] **CP Commissary (as a unit):** the counter's goods on its screen; buying works.
-- [ ] **C > Settings > Terminals' menus:** switch to a window and back.
-
-## The Resistance Insider (1 November: what to check)
-
-- [ ] **Recruited:** as a kind unit, The Man Inside on F3; stay inside at the crossroads.
-- [ ] **C > Civil Protection > Inside** appears (and only for you). Each action refuses with someone nearby, works alone.
-- [ ] **Tip off Freq 7:** a Resistance player hears "A friend inside: ...".
-- [ ] **Lose a record:** a wanted player isn't wanted; your standing drops 25.
-- [ ] **At the Commissary:** bandages and pistol rounds you can give away. **Copy the records:** the quartermaster pays 60.
-- [ ] **Reveal myself:** the person you look at is told.
-- [ ] **Caught in the Mole Hunt:** Resistance, wanted, no surrendering; Civil Protection and Union jobs refused.
-- [ ] **The loyalty test** (suspicion 3 as an Insider): the cell, the prisoner, fists only, two shotgun guards beside you. Beat him, kill him: weapons back. Refuse or walk out: shot down, bleeding, then made a stalker.
-- [ ] **The reckoning** starts by itself after it (no choosing it): pay the debt (starts at once) and the Inside menu comes back; take off the mask (Resistance, never a unit again); or done with the Resistance (the forced soldier conversion).
-- [ ] **The stalker's end:** the frame is built beside a power transformer; once charged, an arc jumps the gap; walking into it kills at once.
-- [ ] **Joining Civil Protection:** refused until 5 Records Clerk shifts (and 100 standing), and told so; F4 shows both as progress bars.
-- [ ] **The loyalty test with a Resistance player online:** the Insider waits; units near the Resistance player keep stopping them; once the rebel's in a cell, both are put in the scene, with the on-screen prompts.
-- [ ] **Done with the Resistance:** Proof (a sweep, two of their fighters down), then the conversion.
-- [ ] **No Union radio**: radios are Freq 7 radios (black market); the lab's transmitter needs one.
-- [ ] **Shackled vortigaunts** sweeping the streets (2); as Resistance, cut one loose (look at it, unshackle): it walks to rebel ground and stays. Playing a vortigaunt: no fists. If there's still no freed one in rebel ground, send the debug report's "vortigaunts" line.
-- [ ] **Secret endings** three hours apart.
-- [ ] **She, not he:** a job about a woman (a patient, a neighbour, a prisoner) says her.
-
-## Weeds and weedkiller (1 November: what to check)
-
-- [ ] **Weeds** come up on open ground and grow (a tuft, weeds, a bush). Which plant model shows? (An ERROR model means the server's plant needs a game the players don't have: say so.)
-- [ ] **Groundskeeper** (F3 > Jobs): issued weedkiller; E on a weed sprays it; the shift is three weeds. NPC groundskeepers spray them too.
-- [ ] **Poison gas bomb** (units only now: the Civil Protection Commissary, 40): thrown, a green cloud; citizens choke, units not at all.
-
-## Weedkiller against the infestation (1 November, later: what to check)
-
-- [ ] **Growths** in each infestation: glowing green, spores drifting up; with the Alyx hazard props pack, Xen gunk. (An ERROR model: the pack isn't on the server or the player's game.) E with weedkiller sprays one away; a cleanup worker leaves a hazard bag.
-- [ ] **A Combine warning post** (sign, lamp, barrel) at the edge of each infestation, facing out. Does it stand sensibly (not in a wall, not floating)?
-- [ ] **Sprayed, a growth dies:** dark, no glow, still there. **The hoover** (Infestation Cleanup, in your weapons): hold left click on a dead one: a bar fills, it's gone, "Hoover: 1 of 3". Full: E on the barrel at the warning post empties it. Without the pack (no barrels): right click bags it. How does the hoover sit in your view and in your hands? (`lc_hoover_view` moves it in yours: tell me the numbers that look right.) Dead growths left alone rot away after 10 minutes.
-- [ ] **Clear every growth** in a patch that grew: the patch goes (the haze and the stains with it). In the zone you placed: nothing new spawns there for a while. They grow back over time.
-- [ ] **Infestation Cleanup** (F3 > Jobs): respirator (chlorine doesn't hurt you) and weedkiller; the shift takes you to the infestation; two units or soldiers come, stay by you, and shoot the zombies. NPC cleanup crews go in with a guard of their own.
-- [ ] **The suit** (with the Infestation Control pack): take the job and you're still in your own clothes; accept a shift and you're in the hazmat suit; the shift over (done or failed), your own clothes again. NPC crews suit up when they start working and change back going home. On a shift you're in the hazmat suit (female characters, the female one), with hands to match; leave it and you're back in your own clothes. NPC cleanup crews wear it too. A woman (player or NPC) is always in the female suit, a man in the male one. Morticians, Sanitation Workers and the Reclamation Crew (players and NPCs) wear the engineer overalls.
-- [ ] **Joining Civil Protection:** a cleanup shift counts as two Records Clerk shifts on the F4 bar.
-- [ ] **Barnacle:** drop weedkiller under one (F2 > Drop): it pulls it up, crunches, dies.
-- [ ] **Firebomb** (the lab: 2 weedkiller, an empty bottle, a rag): a burning bottle; it breaks where it lands and burns a while; units in it burn; a power bank, forcefield or turret next to it goes down; a growth in it burns away.
-- [ ] **A sweep into rebel ground** sometimes opens with a gas bomb; the units walk into it unharmed.
-- [ ] **As an Insider,** at the Commissary with weedkiller: Foul the filters, then a gas bomb hurts units too (and they're told their filter's no good). Spike the food: other units are poisoned over the next few minutes.
-- [ ] **Short rations:** below 150 standing the dispenser gives a short ration (says so); at 150+ the full packet.
-- [ ] **Poison:** F2 > Weedkiller > Poison food or drink: the food looks the same; give it to someone, they're poisoned when they eat it. A unit watching: wanted.
-
-## What loyalty earns (1 November: what to check)
-
-- [ ] **At 150+ standing:** fewer stops, shifts pay a bit more, the Commissary is cheaper, and lockers open (refused below 150).
-- [ ] **At 400+:** stops are a papers glance; two ration cards a shift; waved through once a curfew; a curfew slip is a warning; the Administrator names you on screen now and then; MODEL CITIZEN on your papers; Block Warden on F3 > Jobs (refused below 400).
-
-## Vortigaunts (1 November: what to check)
-
-- [ ] **As a shackled vortigaunt:** C > Reach out through the vortessence: Resistance players and free vortigaunts are told where you are; with a unit watching, the collar bites. The Collar on F3: sweep, the crate, the quiet corner.
-- [ ] **As a free vortigaunt:** right click another vortigaunt: a second's glow, then +25 health (not again for 10 seconds, by anyone). A freed NPC vortigaunt walks over and mends you when you're hurt. Left click a power bank, forcefield or turret from a distance: it goes down for 45 seconds, then comes back. Free your kin (a street vortigaunt, marked) and Read the Combine (watch a checkpoint, get intel) on the Resistance's board.
-- [ ] **Freed vortigaunts in rebel ground** walk about the camp and the fire; free a street one and the two talk in their own tongue now and then.
-- [ ] **The hive mind:** with two free vortigaunts about, within 15 minutes a Freq 7 line about a sweep, or a door code on a scrap by them; the code opens a Combine door once.
-- [ ] **Rent:** 50 credits for an ordinary citizen; as a unit, or a citizen with 200+ standing, nothing (the question says so).
-
-## Beds (1 November: what to check)
-
-- [ ] **Citizens at curfew or night** walk into the habitation blocks and lie down on the beds you placed, asleep (eyes shut), and get up in the morning. Heads at the foot end? `lc_bed_head_flip 1`.
-- [ ] **You in a bed:** E on it at night: you lie on it, others see you lying there, your view is from the pillow. Jump: back beside the bed.
 
 ## Morning exercise and more (from the other session)
 
