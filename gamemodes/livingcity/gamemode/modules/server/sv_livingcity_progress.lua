@@ -241,3 +241,41 @@ timer.Create("LivingCityLevy", 30, 0, function()
     nextLevy = now + every
     for _, p in ipairs(player.GetAll()) do LC.Levy(p) end
 end)
+
+------------------------------------------------------------------------
+-- Things wear out (the owner, 1 November: so credits keep moving), and a legacy that shows
+------------------------------------------------------------------------
+
+-- A tool used is a little worn: one use in lc_wear_uses (8, on average) is its last.
+local cvWear = CreateConVar("lc_wear_uses", "8", FLAGS, "About how many uses a lockpick, a fishing line or a canister of weedkiller lasts (0: never wears out)")
+function LC.WearOut(ply, id, msg)
+    local n = cvWear:GetFloat()
+    if n <= 0 or not IsValid(ply) or not LC.HasItem(ply, id) then return false end
+    if math.random() >= 1 / n then return false end
+    LC.TakeItem(ply, id, 1)
+    ply:ChatPrint(msg or ("Your " .. string.lower(LCS.Items[id] and LCS.Items[id].name or id) .. " is worn out."))
+    return true
+end
+
+-- A title for a player with many lives behind them (shown under their name), never power or money.
+local TITLES = { { 20, "Legend of the canals" }, { 10, "Ghost of the old city" }, { 6, "Old hand" }, { 3, "Survivor" } }
+function LC.LegacyTitle(ply)
+    local lives = LC.Legacy(ply).lives or 0
+    for _, t in ipairs(TITLES) do if lives >= t[1] then return t[2], lives end end
+    return "", lives
+end
+local function ShowTitle(ply) if IsValid(ply) then ply:SetNW2String("lc_legacy_title", (LC.LegacyTitle(ply))) end end
+hook.Add("PlayerInitialSpawn", "LivingCityLegacyTitle", function(ply) timer.Simple(3, function() ShowTitle(ply) end) end)
+
+-- A new person, after another's end: something of the last one comes with them (a keepsake: theirs to keep,
+-- or sell), from the second life on.
+hook.Add("LivingCityNewCharacter", "LivingCityLegacyKeepsake", function(ply, oldName)
+    ShowTitle(ply)
+    local t = LC.Legacy(ply)
+    if (t.lives or 0) < 1 or not oldName or oldName == "" then return end
+    timer.Simple(6, function()
+        if not IsValid(ply) then return end
+        if LC.GiveOrDrop then LC.GiveOrDrop(ply, "keepsake", 1) end
+        if Notice then Notice(ply, "info", "Something of " .. oldName, "Among your things: " .. oldName .. "'s ring. You don't remember how you came by it.", 8) end
+    end)
+end)

@@ -380,6 +380,7 @@ item tainted_ration
 item tainted_ration_short
 item tainted_vegetables
 item tainted_water
+item transfer_order
 item uniform_clean
 item uniform_cp
 item union_goods
@@ -392,9 +393,14 @@ item zipties
 layout file data/livingcity/<map>.json
 rebel camp layout data/livingcity/<map>_camp.json
 setting lc_acts = 1
+setting lc_admin_guards = 2
+setting lc_admin_hours = 8
+setting lc_admin_vote_minutes = 2
 setting lc_administrator_model = models/mossman.mdl
 setting lc_administrator_name = The Administrator
 setting lc_administrator_stock_lines = 0
+setting lc_afk_kick_minutes = 15
+setting lc_afk_minutes = 5
 setting lc_announce_admin_share = 50
 setting lc_announce_cat_gap = 90
 setting lc_announce_custom = 1
@@ -675,6 +681,7 @@ setting lc_lookout_post_fire = 650
 setting lc_lookout_post_respawn = 120
 setting lc_lookout_post_warn = 1400
 setting lc_lookout_range = 1100
+setting lc_lowered_weapons = 1
 setting lc_loyalty_praise_minutes = 20
 setting lc_loyalty_rewards = 1
 setting lc_loyalty_wait = 15
@@ -895,6 +902,7 @@ setting lc_vort_zap_secs = 45
 setting lc_walk_speed = 110
 setting lc_walkway_clear = 100
 setting lc_wanted_lost = 30
+setting lc_wear_uses = 8
 setting lc_weather_auto = 1
 setting lc_weed_grow_minutes = 8
 setting lc_weed_model = 

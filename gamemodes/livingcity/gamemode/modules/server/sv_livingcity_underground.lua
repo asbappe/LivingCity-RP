@@ -1052,6 +1052,7 @@ local function FinishPick(ply, p)
             end
             return ply:ChatPrint("The lock won't give. Try again.")
         end
+        if LC.WearOut then LC.WearOut(ply, p.id, "The pick's bent out of true: it won't do another lock.") end
     elseif it.tool == "keycard" then
         LC.TakeItem(ply, p.id) -- flagged as stolen the moment it's used
         p.door:EmitSound("buttons/combine_button1.wav", 65)

@@ -14,6 +14,7 @@ _setcvar("lc_daily_rhythm", 0) -- (the city keeps to the clock; tested on its ow
 _setcvar("lc_stockpile", 0) -- (the city's ration stores: tested on their own, at the end)
 _setcvar("lc_garrison", 0) -- (the nexus garrison: tested on its own)
 _setcvar("lc_search_fight_choice", 0) -- (fight or comply: tested on its own, in the 1 November section)
+_setcvar("lc_wear_uses", 0) -- (tools wearing out at random: tested on its own)
 _setcvar("lc_units_spot_monsters", 0) -- (units going for zombies they see: tested on their own)
 _setcvar("lc_units_spot_rebels", 0) -- (units opening fire on armed rebels they see in the street: tested on their own)
 _setcvar("lc_assign_work", 0) -- (the Union assigning work to the jobless: tested on its own)
@@ -14007,6 +14008,44 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
         cit:Remove()
     end
     asker:SetPos(Vector(-150000, 150000, 0))
+    -- the City Administrator: hours played, an election, the office, the bodyguard
+    local cand = newPlayer("Candidate", "citizen")
+    cand:SetPData("lc_played_min", 0)
+    local okS, whyS = LC.StandForAdministrator(cand)
+    ok(not okS and string.find(whyS or "", "hours", 1, true), "standing for Administrator needs 8 hours played", whyS)
+    cand:SetPData("lc_played_min", 8 * 60 + 1)
+    ok(LC.StandForAdministrator(cand) and LC.Election ~= nil, "with 8 hours, they stand, and a vote opens")
+    LC.Election.votes[cand] = cand
+    LC.Election.ends = 0
+    LC.ElectionTick(CurTime())
+    ok(cand:GetNW2String("lcf_faction", "") == "admin", "the vote over, they're City Administrator", cand:GetNW2String("lcf_faction", ""))
+    local okR = LC.AdminDo(cand, "rations", "austere")
+    ok(okR and LC.RationFor(cand) == "ration_short", "the office: rations austere for the hour")
+    LC.AdminState.rationsUntil = 0 -- (back to usual: the office itself waits 15 minutes between changes)
+    local cit2 = newPlayer("Commended", "citizen")
+    local s0 = LC.Standing(cit2)
+    ok(LC.AdminDo(cand, "commend", "15", cit2) and LC.Standing(cit2) == s0 + 15, "commend: +15 standing", LC.Standing(cit2) - s0)
+    LC.AdminGuardTick(CurTime() + 100)
+    local guards = 0
+    for npc, who in pairs(LC.AdminGuards) do if who == cand and IsValid(npc) then guards = guards + 1 end end
+    ok(guards >= 1, "an Overwatch Elite comes to guard the Administrator", guards)
+    ok(LC.AdminOrderKill(cand, cit2), "pointing the tablet at someone: the bodyguard is on them")
+    for npc in pairs(LC.AdminGuards) do if IsValid(npc) then npc:Remove() end end
+    LC.AdminGuards = {}
+    LC.SetFaction(cand, "citizen", nil, true)
+    cand:SetPos(Vector(-150000, 150000, 0)) cit2:SetPos(Vector(-150000, 150000, 0))
+    -- things wear out; and a player with many lives behind them has a title
+    local wearer = newPlayer("Wearer", "citizen")
+    LC.GiveItem(wearer, "lockpick", 1)
+    local rWas = math.random
+    _setcvar("lc_wear_uses", 8)
+    math.random = function(a, b) if a == nil then return 0 end return rWas(a, b) end
+    ok(LC.WearOut(wearer, "lockpick") and not LC.HasItem(wearer, "lockpick"), "a worn tool is gone (one use in eight, on average)")
+    math.random = rWas
+    _setcvar("lc_wear_uses", 0)
+    wearer:SetPData("lc_legacy", util.TableToJSON({ lives = 6 }))
+    ok(LC.LegacyTitle(wearer) == "Old hand", "six lives behind them: a title under their name, 'Old hand'")
+    wearer:SetPData("lc_legacy", "")
     -- a job's item never goes where nobody can reach it (under stairs, walled-off space)
     local tlWas = util.TraceLine
     util.TraceLine = function(t) if t.endpos and t.start and t.endpos.z > t.start.z + 20 then return { Hit = true, Fraction = 0.2, HitPos = t.start } end return tlWas(t) end

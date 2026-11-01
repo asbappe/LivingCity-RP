@@ -38,6 +38,16 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 
 ## Also fixed from your notes
 
+- [ ] **City Administrator:** C > Me > Stand for City Administrator (8 hours played; staff: `lua_run` your hours up, or set `lc_admin_hours 0` to test). A vote window; win it: the tablet, two Elites at your side. Right click the tablet: the office (events, rations, prices, job bonus, commend, pardon, housing, permits). Left click at someone: the Elites kill them.
+  Notes:
+- [ ] **AFK:** idle 5 minutes: AFK under your name; 15: kicked (not staff).
+  Notes:
+- [ ] **The Man Inside, part 2:** the choice (transfer order, a fire, a false report): the guards go off to the fire or the report; the order mostly passes.
+  Notes:
+- [ ] **Guns lowered:** pistol out: pointing down, no crosshair; hold R raises it; click while down raises it; tap R reloads. Does the gun use Half-Life 2's lowered pose?
+  Notes:
+- [ ] **Wear and legacy:** lockpicks, fishing lines and weedkiller run out after a while; a title under your name after 3 lives; a ring with each new person.
+  Notes:
 - [ ] **Contraband found** in a street search: a FIGHT / COMPLY box, five seconds. Fight: you keep it, wanted. Comply or wait: taken.
   Notes:
 - [ ] **Sleeping rebels** wake when you walk up as a unit. **Multitool:** unshackles street vortigaunts; hacks the CP Commissary; its text low on screen.

@@ -30,6 +30,7 @@ LC_MODULES = {
     shared = {
         "sh_livingcity_cache", -- (first: quick lookups the rest use)
         "sh_livingcity_acts",
+        "sh_livingcity_lowered", -- (guns carried lowered until raised: hold R)
         "sh_livingcity_cp",
         "sh_livingcity_custody",
         "sh_livingcity_feel",
@@ -140,6 +141,7 @@ LC_MODULES = {
         "sv_livingcity_vortwork", -- (things to do as a vortigaunt, and the freed ones' camp life)
         "sv_livingcity_weeds", -- (weeds on open ground, the Groundskeeper, weedkiller as poison)
         "sv_livingcity_cleanup", -- (the infestation's growths, Infestation Cleanup, the firebomb, barnacles, fouled filters)
+        "sv_livingcity_cityadmin", -- (the City Administrator: the election, the office, the bodyguard; idle players)
         "sv_livingcity_war",
         "sv_livingcity_campmove",
         "sv_livingcity_funding",
@@ -172,7 +174,7 @@ LC_MODULES = {
         "cl_livingcity_factions",
         "cl_livingcity_hints",
         "cl_livingcity_stealth", -- (sneaking: how seen you are, and the units' sight on the ground)
-        "cl_livingcity_infest", "cl_livingcity_suit",
+        "cl_livingcity_infest", "cl_livingcity_suit", "cl_livingcity_cityadmin",
         "cl_livingcity_intake",
         "cl_livingcity_kick",
         "cl_livingcity_ways",

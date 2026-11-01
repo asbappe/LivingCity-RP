@@ -118,6 +118,7 @@ function LC.KillWeed(e, p)
     if not IsValid(e) or e.lcKilled then return false end
     e.lcKilled = true
     e:EmitSound("ambient/water/water_spray1.wav", 60)
+    if IsValid(p) and p:IsPlayer() and LC.WearOut then LC.WearOut(p, "weedkiller", "That's the last of that canister of weedkiller.") end
     LC.QuestEvent("weed_killed", p, e)
     hook.Run("LivingCityWeedKilled", p)
     e:Remove()

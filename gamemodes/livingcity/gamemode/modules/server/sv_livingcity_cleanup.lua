@@ -402,7 +402,7 @@ function LC.SprayNest(ply, e)
     if not LC.HasItem(ply, "weedkiller") then return false, "You'd need weedkiller to spray it (the Union Commissary sells it)." end
     if (ply.lcSprayNext or 0) > CurTime() then return false end
     ply.lcSprayNext = CurTime() + 0.5
-    local function Done(p) LC.KillNest(e, p) end
+    local function Done(p) LC.KillNest(e, p) if LC.WearOut then LC.WearOut(p, "weedkiller", "That's the last of that canister of weedkiller.") end end
     if not LC.StartTask then Done(ply) return true end
     ply:EmitSound("ambient/water/water_spray1.wav", 55)
     return LC.StartTask(ply, 4, "Spraying the growth...", { maxMove = 60, cancelText = "You stop spraying.", done = Done })

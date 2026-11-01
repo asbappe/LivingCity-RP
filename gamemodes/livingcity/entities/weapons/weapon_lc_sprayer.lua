@@ -91,6 +91,7 @@ function SWEP:PrimaryAttack()
             if LC.KillWeed then LC.KillWeed(e, owner) end
         elseif LC.KillNest then
             LC.KillNest(e, owner)
+            if LC.WearOut then LC.WearOut(owner, "weedkiller", "That's the last of that canister of weedkiller.") end
         end
     end
 end

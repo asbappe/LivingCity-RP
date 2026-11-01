@@ -242,6 +242,7 @@ local function Fish(ply)
                 p:ChatPrint(id == "raw_fish" and "A bite! A fish, of a kind. Cook it." or ("You reel in... " .. string.lower(LCS.Items[id].name) .. "."))
                 hook.Run("LivingCityFished", p, id)
             end
+            if LC.WearOut then LC.WearOut(p, "fishing_line", "Your fishing line finally frays and snaps.") end
         end,
     })
 end

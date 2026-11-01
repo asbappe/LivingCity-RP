@@ -421,6 +421,9 @@ hook.Add("HUDDrawTargetID", "LivingCityFactionsTargetID", function()
     if SECURITY[mine] and ent:GetNW2Bool("lc_bolo", false) then extra[#extra + 1] = { "BOLO: " .. ent:GetNW2String("lc_bolo_text", ""), Color(255, 90, 80) } end
     if ent:GetNW2Bool("lc_tied", false) then extra[#extra + 1] = { "Hands cuffed", Color(235, 200, 90) }
     elseif ent:GetNW2Bool("lc_handsup", false) then extra[#extra + 1] = { "Hands up", Color(200, 220, 255) } end
+    if ent:GetNW2Bool("lc_afk", false) then extra[#extra + 1] = { "AFK", Color(170, 170, 170) } end
+    local legacy = ent:GetNW2String("lc_legacy_title", "")
+    if legacy ~= "" then extra[#extra + 1] = { legacy, Color(190, 170, 120) } end -- (many lives behind them: sv_livingcity_progress.lua) -- (idle: sv_livingcity_cityadmin.lua)
     local ey = y + (flagged and 58 or 40)
     for _, e in ipairs(extra) do
         draw.SimpleTextOutlined(e[1], "DermaDefaultBold", x, ey, e[2], TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)

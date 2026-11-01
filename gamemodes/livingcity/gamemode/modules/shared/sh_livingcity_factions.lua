@@ -149,7 +149,7 @@ LCF.Factions = {
         id = "admin", name = "City Administrator", color = Color(235, 235, 235), cp = true, whitelist = true,
         desc = "The face of the city's government. Whitelisted by staff.",
         ranks = {
-            { name = "Administrator", short = "ADM", xp = 0, models = { "models/player/breen.mdl" }, loadout = { "weapon_fists" } },
+            { name = "Administrator", short = "ADM", xp = 0, models = { "models/player/breen.mdl" }, loadout = { "weapon_fists", "weapon_lc_admin" } },
         },
         specials = {
             {

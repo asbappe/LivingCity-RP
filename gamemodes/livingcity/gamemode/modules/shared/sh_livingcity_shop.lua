@@ -128,6 +128,8 @@ LCS.Items = {
                         desc = "A ration packet, cut by a third: what the Union gives a citizen who hasn't earned more (Trusted citizens get the full ration)" },
     weedkiller      = { name = "Weedkiller", model = "models/props_junk/garbage_plasticbottle001a.mdl", use = "poison", useLabel = "Poison food or drink",
                         desc = "For the weeds in the cracks and the infestation's growths (look at one, E). A few drops in someone's food or drink, and it's for them. A barnacle that eats it dies" },
+    transfer_order  = { name = "Transfer order", model = "models/props_c17/paper01.mdl", contraband = true, conceal = 0.8, kg = 0,
+                        desc = "Forged: a prisoner to be moved, stamped and signed. It passes a glance, not a close look" },
     door_code       = { name = "A Combine door code", model = "models/props_c17/paper01.mdl", tool = "keycard", kg = 0,
                         contraband = true, conceal = 0.8, sell = 25,
                         desc = "Seen by the vortigaunts through the vortessence, scratched on a scrap: opens one Combine door before the code is changed" },

@@ -831,6 +831,15 @@ end
 local function Witnessed(kinds, why)
     return function(q)
         if q.data.witnessed or not IsValid(q.owner) then return end
+        -- the guards drawn off (a fire, a false report): nobody's looking
+        if (q.data.distractedUntil or 0) > CurTime() then return end
+        -- a transfer order: it looks like paperwork, mostly (one unit in six looks closer, once)
+        if q.data.order then
+            if q.data.orderChecked or not LC.SeenBySecurity(q.owner, 700) then return end
+            q.data.orderChecked = true
+            if math.random() > 1 / 6 then return end
+            why = "A unit looked closely at your transfer order. The stamp's wrong, and he knows it."
+        end
         local st = q.stages[q.stage]
         if st and kinds[st.kind] and LC.SeenBySecurity(q.owner, 700) then
             q.data.witnessed = true
@@ -909,10 +918,54 @@ LC.Chain{
         proof = { num = 2, next = "crossroads", build = function(ply)
             if #LC.PointsOfKind("cell") == 0 then return nil end
             local dest, r, where = Q.SafeHouse(ply)
+            -- (the owner, 1 November: walking a prisoner out of a prison full of guards couldn't be done) a way
+            -- in: a forged transfer order, or the guards drawn off by a fire or a false report
+            local cells = LC.PointsOfKind("cell")
+            local cellAt = cells[1].pos
+            local function FarSpot()
+                for _ = 1, 30 do
+                    local p = LC.RandomWanderPos and LC.RandomWanderPos("citizen", cellAt)
+                    if p then local d = p:Distance(cellAt) if d > 700 and d < 2200 then return p end end
+                end
+                return cellAt + Vector(900, 0, 0)
+            end
+            local function Distract(q, spot, secs)
+                q.data.distractedUntil = CurTime() + secs
+                for npc, st in pairs(LC.NPCs or {}) do
+                    if IsValid(npc) and LC.IsSecurity(st) and st.state ~= "hostile" and npc:GetPos():DistToSqr(cellAt) < 2500 * 2500 then
+                        st.holdPos = spot
+                        if LC.GoTo then LC.GoTo(npc, st, spot, true, nil) end
+                        timer.Simple(secs, function() if IsValid(npc) and st.holdPos == spot then st.holdPos = nil end end)
+                    end
+                end
+                if IsValid(q.owner) then q.owner:ChatPrint(string.format("[The Man Inside] The guards are off to look. You've about %d seconds.", secs)) end
+            end
+            local how = Choice("Your contact's note: 'Two ways in. Pick one.'", {
+                { text = "A forged transfer order: walk them out like it's paperwork.", pick = function(q, p)
+                    q.data.order = true
+                    if LC.GiveOrDrop then LC.GiveOrDrop(p, "transfer_order", 1) end
+                    Narrate(q, "A transfer order, stamped and signed, in your pocket. To anyone who glances at it, you're moving a prisoner. Hope nobody looks closer.")
+                end },
+                { text = "Set a fire at the far end of the block (marked): the guards will go to it.", pick = function(q, p)
+                    local spot = FarSpot()
+                    local go = Goto(spot, "Get to the spot (marked) and set the fire", 120)
+                    go.onDone = function(qq)
+                        if LC.Firebomb then LC.Firebomb(spot, nil) end
+                        Distract(qq, spot, 90)
+                    end
+                    Q.InsertStages(q, { go })
+                end },
+                { text = "Call in a false report on the Civil Protection net: they'll all go to look.", pick = function(q, p)
+                    local spot = FarSpot()
+                    if LC.RadioNotice then LC.RadioNotice("cp", "Dispatch: shots fired " .. (LC.DescribePlace and LC.DescribePlace(spot) or "nearby") .. ". All units respond.") end
+                    Distract(q, spot, 60)
+                end },
+            })
             return {
                 title = "Proof of good faith", reward = 35, limit = 720,
                 desc = "The Resistance wants proof you're on their side: free a prisoner from the cells and walk them to safety (" .. where .. "). Don't let another Civil Protection unit see you.",
                 stages = {
+                    how,
                     FreePrisonerStage("Go to the cells and press E on the marked prisoner to unlock their cell"),
                     { kind = "escort", pos = dest, r = r, vanish = true, text = "Lead the prisoner to safety (" .. where .. "). They follow you: act like it's routine",
                       onEnter = function(q, st) st.npc = q.data.target; if not IsValid(st.npc) then return false end end },
