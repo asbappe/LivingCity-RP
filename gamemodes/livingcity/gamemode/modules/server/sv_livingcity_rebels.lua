@@ -791,6 +791,22 @@ local function ThinkRebel(npc, st, now)
     end
     if st.provokedBy and now > (st.provokedUntil or 0) then st.provokedBy = nil end
 
+    -- asleep, and a unit comes right up (the owner, 1 November: the whole camp slept through a metrocop in
+    -- the yard): footsteps close by wake them, closer still if the unit's creeping, and they raise the alarm
+    if LC.RebelAsleep and LC.RebelAsleep(st) and now >= (st.nextStir or 0) then
+        st.nextStir = now + 0.5
+        for _, ply in ipairs(player.GetAll()) do
+            local near = ply:Crouching() and 110 or 260
+            if ply:GetPos():DistToSqr(npc:GetPos()) < near * near and LooksCombine(ply) then
+                if LC.RebelLifeEnd then LC.RebelLifeEnd(npc, st) end
+                local z = st.zone or ZoneAt(npc:GetPos(), 300)
+                if z then Alert(z, ply:GetPos(), now) end
+                npc:EmitSound(Vo(st, Pick(SPOTTED)), 85)
+                st.nextLook = 0
+                break
+            end
+        end
+    end
     -- looking for trouble, twice a second at most (not in their sleep: the shouting wakes them)
     if now >= (st.nextLook or 0) and not (LC.RebelAsleep and LC.RebelAsleep(st)) then
         st.nextLook = now + 0.5

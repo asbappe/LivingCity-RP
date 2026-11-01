@@ -570,7 +570,11 @@ SHIFTS.cleanup = {
             stages = {
                 Goto(edge, "Go to the infestation (marked): Civil Protection meets you there", 600),
                 -- (one step, not two: spraying one, vacuuming it, then the next, only counted the last; the owner, 1 November)
-                Count("nest_vacuumed", 3, "Clear 3 growths: spray each dead (sprayer, hold left click; or E), then vacuum it up (hoover, hold left click)"),
+                (function()
+                    local c = Count("nest_vacuumed", 3, "Clear 3 growths: spray each dead (sprayer, hold left click; or E), then vacuum it up (hoover, hold left click)")
+                    c.pos, c.r = edge, 500 -- (marked: the owner, 1 November, lost the way once inside)
+                    return c
+                end)(),
                 dump,
             },
         }

@@ -54,6 +54,8 @@ local function Job(ply)
     end
     if cls == "func_door" or cls == "func_door_rotating" or cls == "prop_door_rotating" or cls == "func_movelinear" then return "door", "Hack the Combine lock" end
     if e:IsPlayer() and e:GetNW2String("lcf_faction", "") == "vort" then return "vort", "Unlock the vortigaunt's shackles" end
+    if e:IsNPC() and e:GetNW2Bool("lc_shackled", false) then return "vort", "Unlock the vortigaunt's shackles" end -- (the city's own: the owner, 1 November)
+    if cls == "lc_cpsupply" and e:GetNW2Float("lc_hacked_until", 0) < CurTime() then return "cpsupply", "Hack the Civil Protection Commissary (supplies off the books)" end
     if cls ~= "lc_console" and cls ~= "lc_terminal" and not string.StartWith(cls, "lc_") then
         local m = string.lower(e:GetModel() or "")
         for _, t in ipairs(TERMINAL_HINTS) do
@@ -85,8 +87,9 @@ function SWEP:PrimaryAttack()
     elseif job == "field" and LC.ShortForcefield then ok, why = LC.ShortForcefield(owner, owner:GetEyeTrace().Entity)
     elseif job == "bank" and LC.ShortPowerBank then ok, why = LC.ShortPowerBank(owner, owner:GetEyeTrace().Entity)
     elseif job == "machine" and LC.HackMachine then ok, why = LC.HackMachine(owner, owner:GetEyeTrace().Entity)
+    elseif job == "cpsupply" and LC.HackCPSupply then ok, why = LC.HackCPSupply(owner, owner:GetEyeTrace().Entity)
     elseif not job and LC.DataTerminalAt and LC.DataTerminalAt(owner) and LC.StealData then ok, why = LC.StealData(owner) -- (a terminal built into the map)
-    else why = "Nothing here the multitool can work on. (Try: Combine doors, city screens, data terminals, shackled vortigaunts, transformers, forcefields, power banks, vending machines, and ration dispensers.)" end
+    else why = "Nothing here the multitool can work on. (Try: Combine doors, city screens, data terminals, shackled vortigaunts, transformers, forcefields, power banks, vending machines, ration dispensers, and the Civil Protection Commissary.)" end
     if not ok and why then owner:ChatPrint(why) end
     if ok then owner:EmitSound("buttons/combine_button7.wav", 60) end
 end
@@ -94,7 +97,7 @@ end
 if CLIENT then
     function SWEP:DrawHUD()
         local _, label = Job(LocalPlayer())
-        local x, y = ScrW() / 2, ScrH() / 2 + 40
+        local x, y = ScrW() / 2, ScrH() * 0.72 -- (low, clear of the names floating over people and things)
         if label then
             draw.SimpleTextOutlined("LEFT CLICK: " .. string.upper(label), "DermaDefaultBold", x, y, Color(230, 150, 60), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
         else

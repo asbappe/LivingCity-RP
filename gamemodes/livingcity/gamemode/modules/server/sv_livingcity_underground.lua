@@ -612,6 +612,32 @@ local function Describe(found, guns)
     return table.concat(names, ", ")
 end
 
+-- Found something on a player, stopped by one of the city's units: five seconds to choose, FIGHT or COMPLY
+-- (the owner, 1 November: a picked-up shotgun just went). Comply, or say nothing: it's taken, as before.
+-- Fight: you keep it, and you're wanted for resisting, with the unit right there.
+util.AddNetworkString("lc_contraband_prompt")
+util.AddNetworkString("lc_contraband_answer")
+local cvChoice = CreateConVar("lc_search_fight_choice", "1", FLAGS, "A player a unit finds contraband on gets five seconds to choose: fight, or comply")
+LC.SearchChoices = LC.SearchChoices or {}
+local function Resolve(target, fight)
+    local c = LC.SearchChoices[target]
+    if not c then return end
+    LC.SearchChoices[target] = nil
+    if not IsValid(target) then return end
+    if fight then
+        target:ChatPrint("[Civil Protection] You shove the unit's hands away and keep what's yours. Now you're resisting.")
+        LC.ReportCrime(target, "Resisting a search", 300)
+        if IsValid(c.searcher) then c.searcher:EmitSound("npc/metropolice/vo/getdown.wav", 80) end
+        hook.Run("LivingCitySearchResisted", c.searcher, target)
+    else
+        target.lcSearchComply = true
+        LC.Search(c.searcher, target)
+        target.lcSearchComply = nil
+    end
+end
+net.Receive("lc_contraband_answer", function(_, ply) Resolve(ply, net.ReadBool()) end)
+LC.SearchResolve = Resolve
+
 -- searcher: a unit (player) or a security NPC.
 function LC.Search(searcher, target)
     local byPlayer = IsValid(searcher) and searcher:IsPlayer()
@@ -636,6 +662,19 @@ function LC.Search(searcher, target)
     end
 
     local list = Describe(found, guns)
+    -- one of the city's units, a player who could still fight it: give the choice first (the pockets are put back
+    -- as they were until they answer)
+    if not byPlayer and cvChoice:GetBool() and IsValid(target) and target:IsPlayer() and not target.lcSearchComply
+        and not LC.SearchChoices[target] and not (LC.InCustody and LC.InCustody(target)) then
+        for _, f in ipairs(found) do
+            if isstring(f.id) and string.sub(f.id, 1, 2) == "w:" then target:Give(string.sub(f.id, 3)) else LC.GiveItem(target, f.id, f.n) end
+        end
+        for _, cls in ipairs(guns) do target:Give(cls) end
+        LC.SearchChoices[target] = { searcher = searcher, at = CurTime() }
+        net.Start("lc_contraband_prompt") net.WriteString(list) net.WriteFloat(5) net.Send(target)
+        timer.Simple(5.5, function() if LC.SearchChoices[target] then Resolve(target, false) end end)
+        return 0, {}, {}
+    end
     target:ChatPrint(tag .. " Confiscated: " .. list .. ".")
     if LC.AddStanding then LC.AddStanding(target, -10 * total, "Contraband confiscated") end
     LC.ReportCrime(target, "Possession of contraband", math.min(600, 120 + 60 * total))

@@ -136,6 +136,13 @@ end
 
 hook.Add("OnNPCKilled", "LivingCityBodies", function(npc, attacker)
     if not cvOn:GetBool() then return end
+    -- a vortigaunt (a shackled street sweeper, a freed one): a body the morticians collect too (the owner,
+    -- 1 November: one lay in the street for twenty minutes; the engine's own ragdoll is nobody's to collect)
+    if IsValid(npc) and npc:GetClass() == "npc_vortigaunt" and npc:GetNW2Bool("lc_noragdoll", false) then
+        local ok, err = pcall(LC.MakeBody, npc, "vortigaunt")
+        if not ok then LC.Error("bodies", err) end
+        return
+    end
     local st = LC.NPCs and LC.NPCs[npc]
     if not st or st.test or not LOOT[st.role] or not npc:GetNW2Bool("lc_noragdoll", false) then return end
     local ok, err = pcall(LC.MakeBody, npc, st.role)

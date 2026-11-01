@@ -601,7 +601,32 @@ function TOOL.BuildCPanel(panel)
         combo.OnSelect = function(_, _, _, id) RunConsoleCommand("livingcity_editor_mode", id) end
     end
 
-    panel:NumSlider("Line / beat / block number", "livingcity_editor_group", 0, 32, 0)
+    local groupSl = panel:NumSlider("Line / beat / block number", "livingcity_editor_group", 0, 32, 0)
+    -- (the owner, 1 November: hard to remember which numbers are taken) a tick under each number already used by
+    -- a zone, in that kind of zone's colour (a number only groups zones of one kind: a rebel 30 and an
+    -- infestation 30 are separate)
+    if IsValid(groupSl) and IsValid(groupSl.Slider) then
+        local base = groupSl.Slider.Paint
+        groupSl.Slider.Paint = function(self, w, h)
+            if base then base(self, w, h) end
+            local used = {}
+            for _, z in ipairs(LC_CL and LC_CL.zones or {}) do
+                local g = tonumber(z.group) or 0
+                if g > 0 and g <= 32 then used[g] = used[g] or {} used[g][z.kind] = true end
+            end
+            for g, kinds in pairs(used) do
+                local x = math.floor(g / 32 * (w - 14) + 7)
+                local row = 0
+                for kind in pairs(kinds) do
+                    local col = (LC_CL.ZONE_COLORS and LC_CL.ZONE_COLORS[kind]) or Color(255, 255, 255)
+                    surface.SetDrawColor(col.r, col.g, col.b, 255)
+                    surface.DrawRect(x - 1, h - 4 - row * 4, 3, 3)
+                    row = row + 1
+                end
+            end
+        end
+    end
+    panel:Help("Coloured ticks under the number: numbers already used, by zone kind (its colour). A number only groups zones of the same kind.")
     local shape = panel:ComboBox("Zone shape")
     shape:AddChoice("Box: click two opposite corners (fits rooms)", "box")
     shape:AddChoice("Circle: one click, at the radius below", "circle")

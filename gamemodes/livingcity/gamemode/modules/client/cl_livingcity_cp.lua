@@ -387,3 +387,38 @@ hook.Add("HUDPaint", "LivingCityCPHUD", function()
         draw.SimpleTextOutlined("HANDS UP  (!handsup to lower them)", "DermaDefaultBold", w / 2, h * 0.82, Color(200, 220, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     end
 end)
+
+-- Contraband found by a unit (sv_livingcity_underground.lua): five seconds, two big buttons. Saying nothing complies.
+net.Receive("lc_contraband_prompt", function()
+    local list, secs = net.ReadString(), net.ReadFloat()
+    if IsValid(LC_CL.ContrabandFrame) then LC_CL.ContrabandFrame:Remove() end
+    local f = vgui.Create("DFrame")
+    LC_CL.ContrabandFrame = f
+    f:SetTitle("")
+    f:SetSize(420, 170)
+    f:Center()
+    f:MakePopup()
+    f:ShowCloseButton(false)
+    local until_ = CurTime() + (secs or 5)
+    local function Send(fight)
+        net.Start("lc_contraband_answer") net.WriteBool(fight) net.SendToServer()
+        if IsValid(f) then f:Remove() end
+    end
+    f.Paint = function(self, w, h)
+        draw.RoundedBox(6, 0, 0, w, h, Color(25, 20, 20, 240))
+        draw.SimpleText("CONTRABAND FOUND", "DermaLarge", w / 2, 26, Color(240, 90, 80), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        draw.SimpleText(string.sub(list or "", 1, 60), "DermaDefault", w / 2, 54, Color(220, 220, 220), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        draw.SimpleText(string.format("%d", math.max(0, math.ceil(until_ - CurTime()))), "DermaLarge", w - 24, 26, Color(200, 200, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    end
+    f.Think = function() if CurTime() > until_ then Send(false) end end
+    local fight = vgui.Create("DButton", f)
+    fight:SetPos(20, 80) fight:SetSize(180, 70) fight:SetText("FIGHT") fight:SetFont("DermaLarge")
+    fight:SetTextColor(Color(255, 255, 255))
+    fight.Paint = function(self, w, h) draw.RoundedBox(6, 0, 0, w, h, self:IsHovered() and Color(190, 50, 40) or Color(150, 40, 30)) end
+    fight.DoClick = function() Send(true) end
+    local comply = vgui.Create("DButton", f)
+    comply:SetPos(220, 80) comply:SetSize(180, 70) comply:SetText("COMPLY") comply:SetFont("DermaLarge")
+    comply:SetTextColor(Color(255, 255, 255))
+    comply.Paint = function(self, w, h) draw.RoundedBox(6, 0, 0, w, h, self:IsHovered() and Color(70, 100, 150) or Color(50, 75, 120)) end
+    comply.DoClick = function() Send(false) end
+end)

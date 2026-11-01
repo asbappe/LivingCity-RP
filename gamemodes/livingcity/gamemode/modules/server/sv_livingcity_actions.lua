@@ -62,6 +62,10 @@ net.Receive("lc_action", function(_, ply)
     if (ply.lcActionNext or 0) > CurTime() then return end
     ply.lcActionNext = CurTime() + 0.3
     local cmd, rest, target = net.ReadString(), net.ReadString(), net.ReadEntity()
+    if cmd == "askname" or cmd == "recruitnpc" or cmd == "sendaway" then
+        if LC.CitizenNPCAction then LC.CitizenNPCAction(ply, cmd, target) end
+        return
+    end
     if cmd == "inform" then
         local ok, why
         if LC.Inform then ok, why = LC.Inform(ply, target) end
@@ -133,3 +137,49 @@ net.Receive("lc_interrogate_reply", function(_, ply)
         ply:ChatPrint("[Interrogation] You say nothing.")
     end
 end)
+
+-- One of the city's people in front of you (the owner, 1 November): ask their name (anyone), and if they've
+-- wandered into rebel ground, a Resistance member can bring them in, and anyone else can send them on their way.
+local FIRST_M = { "Arne", "Bogdan", "Dmitri", "Emil", "Feliks", "Gregor", "Ivo", "Jakub", "Karel", "Lev", "Milan", "Oskar", "Pavel", "Stefan", "Tomas", "Viktor" }
+local FIRST_F = { "Alena", "Daria", "Eva", "Hana", "Irina", "Jana", "Katya", "Lena", "Marta", "Nadia", "Olga", "Petra", "Sonja", "Vera", "Zora" }
+function LC.CitizenNPCAction(ply, cmd, npc)
+    local st = IsValid(npc) and LC.NPCs and LC.NPCs[npc]
+    if not st or st.role ~= "citizen" or npc:GetPos():DistToSqr(ply:GetPos()) > 160 * 160 then return false end
+    if (npc.lcTalkNext or 0) > CurTime() then return false end
+    npc.lcTalkNext = CurTime() + 1
+    if LC.Face then LC.Face(npc, ply:GetPos()) end
+    if cmd == "askname" then
+        local name = npc:GetNW2String("lc_pname", "")
+        if name == "" then
+            local fem = st.gender == "female" or string.find(string.lower(npc:GetModel() or ""), "female", 1, true)
+            name = (fem and FIRST_F or FIRST_M)[math.random(#(fem and FIRST_F or FIRST_M))]
+            npc:SetNW2String("lc_pname", name)
+            if st.profile then st.profile.name = st.profile.name or name end
+        end
+        npc:SetNW2Bool("lc_introduced", true)
+        ply:ChatPrint(string.format("\"%s,\" they say. %s", name, LC.PlayerIsCP(ply) and "They don't meet the mask's eyes." or "They give you a nod."))
+        return true
+    end
+    local inRebel = LC.InRebelZone and LC.InRebelZone(npc:GetPos())
+    if not inRebel then ply:ChatPrint("They're not on rebel ground.") return false end
+    if cmd == "recruitnpc" then
+        if ply:GetNW2String("lcf_faction", "") ~= "resistance" then return false end
+        st.rebel = true
+        if st.profile then st.profile.rebel = true end
+        npc:SetNW2Bool("lc_prebel", true)
+        ply:ChatPrint("They listen. They nod, slowly. One of us now: a sympathizer, back out in the city.")
+        if LC.AddXP then LC.AddXP(ply, 5, "a new sympathizer") end
+        return true
+    end
+    if cmd == "sendaway" then
+        -- out of rebel ground, back to where people belong
+        local p = LC.RandomWanderPos and LC.RandomWanderPos("citizen")
+        for _ = 1, 10 do
+            if not p or not (LC.InRebelZone and LC.InRebelZone(p)) then break end
+            p = LC.RandomWanderPos("citizen")
+        end
+        if p and LC.GoTo then LC.GoTo(npc, st, p, true, nil) end
+        ply:ChatPrint("\"Go on, this is no place for you.\" They hurry off.")
+        return true
+    end
+end

@@ -135,6 +135,7 @@ local ZONE_COLORS = {
     nogo = Color(255, 60, 60), infest = Color(170, 220, 40), prison = Color(255, 140, 40),
     block = Color(180, 120, 255), rebel = Color(230, 150, 70), combine = Color(70, 140, 255),
 }
+LC_CL.ZONE_COLORS = ZONE_COLORS
 local ZONE_NAMES = { nogo = "NO-GO", infest = "INFESTATION", prison = "PRISON", block = "BLOCK", rebel = "REBEL TERRITORY", combine = "COMBINE ONLY" }
 local DOOR_COLORS = {
     cp = Color(80, 150, 255), prison = Color(255, 140, 40), locked = Color(255, 70, 70), open = Color(90, 220, 120),

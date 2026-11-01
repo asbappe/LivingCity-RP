@@ -38,6 +38,16 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 
 ## Also fixed from your notes
 
+- [ ] **Contraband found** in a street search: a FIGHT / COMPLY box, five seconds. Fight: you keep it, wanted. Comply or wait: taken.
+  Notes:
+- [ ] **Sleeping rebels** wake when you walk up as a unit. **Multitool:** unshackles street vortigaunts; hacks the CP Commissary; its text low on screen.
+  Notes:
+- [ ] **Street vortigaunts:** shackled, left alone by the Combine, sweeping when they stop. **Dead vortigaunts:** morticians collect them.
+  Notes:
+- [ ] **C menu on a citizen:** This person > Ask their name; on rebel ground, Bring them in (Resistance) / Tell them to leave.
+  Notes:
+- [ ] **Editor:** coloured ticks under used numbers on the number slider.
+  Notes:
 - [ ] **Cleanup:** one step, "Clear 3 growths": spray one and vacuum it, in any order; all three count. Guards are soldiers, and they kill zombies fast now. Warning posts by a path node at the edge. 
   Notes:
 - [ ] **Prison:** two Nova Prospekt guards, tough; no metrocops or soldiers garrisoned there. A prisoner a job's about stays in until the job ends.

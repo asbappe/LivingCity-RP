@@ -733,6 +733,7 @@ local function VortHome(now)
     v:Spawn()
     v:Activate()
     if LC.RegisterNPC then LC.RegisterNPC(v, "vortigaunt") end
+    v:SetNW2Bool("lc_noragdoll", true) -- (dead: a body the morticians collect)
     LC.SettleVort(v, true)
 end
 LC.VortHome = function(now) nextVortHome = 0 VortHome(now or CurTime()) end -- (for tests)
@@ -764,6 +765,23 @@ local function SlaveTick(now)
             LC.VortSlaves[v] = nil
         else
             have = have + 1
+            -- (the owner, 1 November: they walked at the Combine and were shot) Combine property: the units
+            -- and the vortigaunt leave each other be, and it bothers nobody
+            for npc, st in pairs(LC.NPCs or {}) do
+                if IsValid(npc) and npc ~= v and not (s.calm and s.calm[npc]) and npc.AddEntityRelationship then
+                    s.calm = s.calm or setmetatable({}, { __mode = "k" })
+                    s.calm[npc] = true
+                    npc:AddEntityRelationship(v, D_NU, 99)
+                    v:AddEntityRelationship(npc, D_NU, 99)
+                end
+            end
+            for _, p in ipairs(player.GetAll()) do v:AddEntityRelationship(p, D_NU, 99) end
+            -- standing still: sweeping, as in Half-Life 2's first streets
+            local walking = v.IsCurrentSchedule and (v:IsCurrentSchedule(SCHED_FORCED_GO) or v:IsCurrentSchedule(SCHED_FORCED_GO_RUN))
+            if not walking and now > (s.sweepAt or 0) and LC.PlayGesture then
+                s.sweepAt = now + 8
+                LC.PlayGesture(v, { "sweep", "Sweep", "sweep_idle", "Sweep_idle", "broom", "sweeping" }, 8)
+            end
             if now > (s.next or 0) then
                 s.next = now + math.Rand(25, 50)
                 local p = LC.RandomWanderPos and LC.RandomWanderPos("citizen", v:GetPos())
@@ -785,8 +803,12 @@ local function SlaveTick(now)
     v:SetPos(pos + Vector(0, 0, 4))
     v:Spawn()
     v:Activate()
+    -- (set again after it's spawned: the engine's vortigaunt puts its own model back, and they walked about
+    -- without their shackles, the owner saw; only the body had them)
+    if not util.IsValidModel or util.IsValidModel("models/vortigaunt_slave.mdl") then v:SetModel("models/vortigaunt_slave.mdl") end
     if LC.QuestVortPeaceful then LC.QuestVortPeaceful(v, true) end
     v:SetNW2Bool("lc_shackled", true)
+    v:SetNW2Bool("lc_noragdoll", true) -- (dead: a body the morticians collect, sv_livingcity_bodies.lua)
     v:SetNW2String("lc_pname", "Shackled vortigaunt")
     v:SetNW2String("lc_doing", "sweeping the street, collared")
     v.lcVortSlave = true

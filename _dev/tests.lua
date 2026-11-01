@@ -13,6 +13,7 @@ local function section(name) table.insert(results.lines, "== " .. name) end
 _setcvar("lc_daily_rhythm", 0) -- (the city keeps to the clock; tested on its own, at the end)
 _setcvar("lc_stockpile", 0) -- (the city's ration stores: tested on their own, at the end)
 _setcvar("lc_garrison", 0) -- (the nexus garrison: tested on its own)
+_setcvar("lc_search_fight_choice", 0) -- (fight or comply: tested on its own, in the 1 November section)
 _setcvar("lc_units_spot_monsters", 0) -- (units going for zombies they see: tested on their own)
 _setcvar("lc_units_spot_rebels", 0) -- (units opening fire on armed rebels they see in the street: tested on their own)
 _setcvar("lc_assign_work", 0) -- (the Union assigning work to the jobless: tested on its own)
@@ -13980,6 +13981,32 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     ok(guards == 2 and extra == 0, "the prison is guarded by two Nova Prospekt guards, and nobody else", guards .. " / " .. extra)
     for npc, gz in pairs(LC.Garrison) do if gz == pz then if IsValid(npc) then npc:Remove() end LC.Garrison[npc] = nil end end
     for i = #LC.Zones, 1, -1 do if LC.Zones[i] == pz then table.remove(LC.Zones, i) end end
+    -- contraband found by one of the city's units: fight or comply
+    _setcvar("lc_search_fight_choice", 1)
+    local smug = newPlayer("Smuggler2", "citizen")
+    local sc = LC.SpawnCop(Vector(-182000, -182000, 4))
+    LC.GiveItem(smug, "uniform_cp", 1)
+    local n0 = LC.Search(sc, smug)
+    ok(n0 == 0 and LC.SearchChoices[smug] and LC.HasItem(smug, "uniform_cp"), "contraband found: the choice comes first, and nothing's gone yet")
+    LC.SearchResolve(smug, true)
+    ok(LC.HasItem(smug, "uniform_cp") and LC.PlayerIsWanted(smug), "fight: you keep it, and you're wanted for resisting")
+    LC.ClearWanted(smug)
+    LC.Search(sc, smug)
+    LC.SearchResolve(smug, false)
+    ok(not LC.HasItem(smug, "uniform_cp"), "comply: it's taken, as before")
+    _setcvar("lc_search_fight_choice", 0)
+    if IsValid(sc) then sc:Remove() end
+    -- ask one of the city's people their name
+    local asker = newPlayer("Asker", "citizen")
+    asker:SetPos(Vector(-183000, -183000, 0))
+    local cit = LC.Spawners.citizen(Vector(-183000 + 60, -183000, 4))
+    if IsValid(cit) then
+        cit:SetNW2String("lc_pname", "")
+        LC.CitizenNPCAction(asker, "askname", cit)
+        ok(cit:GetNW2String("lc_pname", "") ~= "" and cit:GetNW2Bool("lc_introduced", false), "ask one of the city's people their name, and they tell you", cit:GetNW2String("lc_pname", ""))
+        cit:Remove()
+    end
+    asker:SetPos(Vector(-150000, 150000, 0))
     -- a job's item never goes where nobody can reach it (under stairs, walled-off space)
     local tlWas = util.TraceLine
     util.TraceLine = function(t) if t.endpos and t.start and t.endpos.z > t.start.z + 20 then return { Hit = true, Fraction = 0.2, HitPos = t.start } end return tlWas(t) end

@@ -1,7 +1,6 @@
 # Living City: to do later
 
 **Pending from the 1 November playtest (late)**:
-- **Sleeping rebels wake when a unit comes close** (a camp slept through a metrocop in the yard). Written once and taken out: it broke the RebelTests check "inside rebel territory". Redo: wake a sleeper when a unit is within ~260 (110 crouched) and raise the alarm (`Alert`), without breaking that test.
 - **The Administration path** leads nowhere yet (City Administrator is whitelisted, one slot). Ask the owner: a non-whitelisted Administration faction with clerk ranks unlocked by Records Clerk shifts?
 - **Existing Resistance Fighters** drop to Member until 3 trust jobs (`lc_fighter_trust_jobs`): owner to say if existing Fighters should keep their rank.
 - **Metrocop first-person hands:** done as the unit's own body with all but the arms shrunk (`lc_cp_hands own`); unconfirmed in game.
@@ -9,16 +8,11 @@
 - **Unconfirmed in game:** sleeping NPCs as a ragdoll copy (head end: `lc_bed_head_flip`, height `lc_bed_npc_lift`), the hoover/sprayer/radio view placement (`lc_hoover_view`, `lc_sprayer_view`, `lc_radio_view`), suit hands (`lc_suit_hands`), Grigori's death (engine "vital ally"), boiling at the owner's fire barrels (if still failing: is it a map prop or the editor's fire?), the warning post placement, guards' teleporting, NPCs stepping aside.
 - **The workshop packs on the server:** the owner's growths showed ERROR: the server likely lacks the hazard props pack; both packs (2043900984, 3185145650) need to be in the server's workshop collection.
 
-- **From the owner's long list (1 November, late), not done yet:**
-  - Contraband found in a search: a quick prompt, FIGHT or COMPLY (5 seconds), instead of just losing it.
-  - Morticians didn't collect a dead vortigaunt in the street (20 minutes): check the body pickup includes vortigaunts.
-  - Editor: the zone number slider could show a coloured tick for numbers already used, by zone kind (same colours as the zones); and say whether numbers clash across kinds (a rebel 30 and an infest 30).
-  - "Introduce myself" to any citizen (some have it, some don't); citizens who wander into rebel ground: recruit them, or tell them to leave.
-  - Hacker's multitool: didn't work on a shackled vortigaunt (said nothing to work on, 20 tries); its on-screen text overlaps the vortigaunt's floating label; and it should do something at the CP Commissary.
-  - Shackled street vortigaunts: look unshackled, walk at the Combine and get shot; should do Half-Life 2's sweeping animation.
-  - Quest markers vanishing (when exhausted, and on cleanup jobs): find why.
-  - Low standing and Infestation Cleanup: the owner at -1 standing felt the job wasn't given; check whether any standing gate applies to cleanup shifts (CP itself needs 100 standing).
-  - The Man Inside part 2 (free a prisoner from a prison full of guards): needs a way to do it (a distraction, a shift change, a forged transfer order); the prison now has only two guards, which may be enough.
+- **From the owner's long list (1 November, late):** done: fight or comply on contraband, morticians and vortigaunt bodies, the editor's number ticks, "This person" (ask a name, recruit, send away), the multitool (NPC vortigaunts, the CP Commissary, its text placement), street vortigaunts (shackled, left alone, sweeping: the sweep animation's name is a guess, check in game), cleanup markers. Still open:
+  - Quest markers vanishing when exhausted: likely the "Get some sleep" step taking over the marker; check in game.
+  - The Man Inside part 2 (free a prisoner from the prison): needs a way to do it (a distraction, a forged transfer order); the prison now has two guards only.
+  - Low standing and the CP path: Infestation Cleanup has no standing gate; joining CP still needs 100 standing. The owner may want that lower.
+- **Sleeping rebels waking:** done (1 November, late).
 
 **Open right now** (2026-10-31):
 - **Map lights twinkle** on `rp_c18_ug`: waiting on the owner's Sandbox test of the same map.

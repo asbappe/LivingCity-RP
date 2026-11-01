@@ -138,3 +138,33 @@ function LC.NearCPSupply(ply)
     end
     return false
 end
+
+-- A Resistance hacker's multitool on the Commissary (the owner, 1 November): ten seconds at it, unseen, and it
+-- hands out what it would to a unit, off the books: bandages, pistol rounds, a vest cell, now and then a smoke
+-- grenade. Then it's locked down for lc_cpsupply_hack_minutes (10). Seen at it: wanted.
+local cvHack = CreateConVar("lc_cpsupply_hack_minutes", "10", FLAGS, "Minutes a Civil Protection Commissary stays locked after a hacker's been at it")
+function LC.HackCPSupply(ply, ent)
+    if not IsValid(ent) or ent:GetClass() ~= "lc_cpsupply" then return false end
+    if ent:GetNW2Float("lc_hacked_until", 0) > CurTime() then return false, "It's locked down after the last time. Not yet." end
+    if ent:GetPos():DistToSqr(ply:GetPos()) > 130 * 130 then return false, "Get up close to it." end
+    if LC.SeenBySecurity and LC.SeenBySecurity(ply, 900) then
+        LC.ReportCrime(ply, "Tampering with a Civil Protection terminal", 240)
+        return false, "A unit saw you at it. You're wanted."
+    end
+    if not LC.StartTask then return false end
+    return LC.StartTask(ply, 10, "Into the Commissary's issue system...", { maxMove = 40, cancelText = "You pull the multitool away.", done = function(p)
+        if not IsValid(ent) or (LC.SeenBySecurity and LC.SeenBySecurity(p, 900)) then
+            if IsValid(p) and LC.ReportCrime then LC.ReportCrime(p, "Tampering with a Civil Protection terminal", 240) end
+            return
+        end
+        ent:SetNW2Float("lc_hacked_until", CurTime() + math.max(1, cvHack:GetFloat()) * 60)
+        local got = {}
+        if LC.GiveItem(p, "bandage", 2) then got[#got + 1] = "2 bandages" end
+        if LCS.Items.ammo_pistol and LC.GiveItem(p, "ammo_pistol", 1) then got[#got + 1] = "a box of pistol rounds" end
+        if LCS.Items.vest_cell and LC.GiveItem(p, "vest_cell", 1) then got[#got + 1] = "a vest cell" end
+        if math.random() < 0.4 and LCS.Items.gren_smoke and LC.GiveItem(p, "gren_smoke", 1) then got[#got + 1] = "a smoke grenade" end
+        ent:EmitSound("buttons/combine_button2.wav", 60)
+        p:ChatPrint("[Resistance] The Commissary thinks you're a unit, for a moment: " .. (#got > 0 and table.concat(got, ", ") or "nothing you can carry") .. ". It locks itself down behind you.")
+        if LC.AddXP then LC.AddXP(p, 10, "the Combine's own supplies") end
+    end })
+end

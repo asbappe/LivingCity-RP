@@ -144,6 +144,15 @@ function LC_CL.OpenActions()
         Add(sub, unit and "Help them up, or cuff them if they're wanted: hold E on them" or "Help them up: hold E on them", function() end)
     end
 
+    -- one of the city's people (the owner, 1 November: no way to learn who they are; and citizens on rebel ground)
+    if close and IsValid(e) and e:IsNPC() and e:GetNW2String("lc_role", "") == "citizen" then
+        local sub, opt = menu:AddSubMenu("This person")
+        opt:SetIcon("icon16/user.png")
+        Add(sub, "Ask their name", function() Send("askname", "", e) end, "icon16/user_comment.png")
+        if rebel then Add(sub, "Bring them into the Resistance (on rebel ground)", function() Send("recruitnpc", "", e) end, "icon16/user_add.png") end
+        Add(sub, "Tell them to leave (on rebel ground)", function() Send("sendaway", "", e) end, "icon16/user_go.png")
+    end
+
     -- a body
     if close and IsValid(e) and e:GetNW2Bool("lc_body", false) then
         local sub, opt = menu:AddSubMenu("This body")
