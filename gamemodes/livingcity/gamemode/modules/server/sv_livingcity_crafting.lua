@@ -131,6 +131,8 @@ function LC.ArmsUse(ply, id)
         return true
     elseif it.use == "datachip" then
         return LC.UseDataChip and LC.UseDataChip(ply, id) or false
+    elseif it.use == "poison" then
+        return LC.PoisonFood and LC.PoisonFood(ply) or false -- (weedkiller into food or drink: sv_livingcity_weeds.lua)
     elseif it.use == "jammer" then
         return LC.PlaceJammer and LC.PlaceJammer(ply) or false
     elseif it.use == "armor" then

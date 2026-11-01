@@ -452,9 +452,11 @@ Ordinary Resistance players aren't told who the Insider is; the Resistance's top
 - **Curfew leniency**: a minute longer to get home (Trusted and Exemplary), and an Exemplary citizen is waved through once a curfew.
 - **A slip forgiven**: once an in-game day, a minor offence by an Exemplary citizen (a curfew slip, loitering, defacing, trespass) is a warning instead of wanted.
 - **Public praise**: every `lc_loyalty_praise_minutes` (20) the Administrator commends an Exemplary citizen by name, on everyone's screen (and 5 standing), and their papers carry a **MODEL CITIZEN** stamp.
-- **A bigger stash** at home: 4 more places (Trusted), 8 more (Exemplary).
+- **Lockers** are for citizens in good standing: below `lc_locker_standing` (150) a citizen can't open one (units always can).
 - **Block Warden**, a Union job for Exemplary citizens only (players, never NPCs, and never handed out): walk two corners of your own block, have a word with a neighbour, and report them or not. A report that holds up (45%) pays 10 credits and 15 standing; one that doesn't costs 10 standing.
 `lc_loyalty_rewards 0` turns all of it off.
+
+**Weeds, the Groundskeeper, and weedkiller** (the owner, 1 November). Weeds come up through the cracks on open ground (somewhere the sky is straight overhead, never in a camp or a Combine area), now and then: a tuft, then weeds, then a bush, a size every `lc_weed_grow_minutes` (8); a bush left alone seeds another nearby; at most `lc_weeds_max` (30). They use the first plant model the server has (Counter-Strike: Source's small bush first; everyone needs that game installed to see it). The **Groundskeeper**, a Union job (and the city's own groundskeepers, NPCs), is issued **weedkiller** and sprays them: look at one and press E (a tuft in a moment, a bush in five seconds). The Union Commissary sells weedkiller (15). **It's poison too**: from your pockets (F2 > Weedkiller > Poison food or drink), one canister goes into the first food or drink you carry, which then looks exactly the same, to you and to whoever you give it to, and poisons whoever eats or drinks it (a unit who sees you do it calls it attempted murder). Two canisters cook down into chemicals at the Resistance lab, for its recipes. `lc_weeds 0` turns weeds off.
 
 ## Civil Protection's tools
 

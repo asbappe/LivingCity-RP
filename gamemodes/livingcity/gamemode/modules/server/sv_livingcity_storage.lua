@@ -149,8 +149,12 @@ function LC.ContainerAt(ply)
 end
 
 -- What this player may do with it: "open" (their own, or a bin), "search" (a unit), or nil and why.
+local cvLockerStanding = CreateConVar("lc_locker_standing", "150", FLAGS, "Civil Standing a citizen needs to use a locker (the owner: lockers are for those in good standing; units always can)")
 local function Access(ply, c)
     if c.kind == "bin" then return "open" end
+    if c.kind == "locker" and not RealUnit(ply) and LC.Standing and LC.Standing(ply) < cvLockerStanding:GetInt() then
+        return nil, string.format("Lockers are for citizens in good standing (Civil Standing %d). Yours is %d.", cvLockerStanding:GetInt(), LC.Standing(ply))
+    end
     if not c.owner or c.owner == OwnerKey(ply) then return "open" end
     if RealUnit(ply) then return "search" end
     if c.kind == "stall" then

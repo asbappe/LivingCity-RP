@@ -12,7 +12,8 @@
                          warning instead of wanted, once a day
       Public praise      now and then the Administrator commends an Exemplary citizen by name, and their
                          papers carry a MODEL CITIZEN stamp
-      A bigger stash     4 more places at home (Trusted), 8 more (Exemplary)
+      Lockers            only citizens in good standing (lc_locker_standing, 150) can use a locker
+                         (sv_livingcity_storage.lua)
       Block Warden       a Union job for Exemplary citizens: walk your block, have a word with the
                          neighbours, and report what isn't right (paid when it holds up)
     (Free rent from 200 is in sv_livingcity_business.lua.)
@@ -25,7 +26,7 @@ if CLIENT then return end
 LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvOn     = CreateConVar("lc_loyalty_rewards", "1", FLAGS, "Trusted and Exemplary citizens get fewer stops, better pay, a discount, more food, curfew leniency, a slip forgiven, praise and a bigger stash")
+local cvOn     = CreateConVar("lc_loyalty_rewards", "1", FLAGS, "Trusted and Exemplary citizens get fewer stops, better pay, a discount, more food, curfew leniency, a slip forgiven and praise")
 local cvPraise = CreateConVar("lc_loyalty_praise_minutes", "20", FLAGS, "Minutes between the Administrator commending an Exemplary citizen by name (0: never)")
 
 local TRUSTED, EXEMPLARY = 150, 400
@@ -54,7 +55,7 @@ function LC.LoyalPayMul(ply) return By(ply, 1.10, 1.25, 1) end
 function LC.LoyalPriceMul(ply) return By(ply, 0.90, 0.80, 1) end
 function LC.LoyalExtraCards(ply) return By(ply, 0, 1, 0) end
 function LC.LoyalCurfewGrace(ply) return By(ply, 60, 60, 0) end
-function LC.LoyalStashExtra(ply) return By(ply, 4, 8, 0) end
+function LC.LoyalStashExtra(ply) return 0 end -- (no bigger stash: lockers are the reward now, sv_livingcity_storage.lua)
 function LC.LoyalNoSearch(ply) return LC.LoyalTier(ply) == "exemplary" end
 function LC.ModelCitizen(ply) return LC.LoyalTier(ply) == "exemplary" end
 

@@ -116,6 +116,8 @@ LCS.Items = {
     bypass          = { name = "Combine bypass charge", model = "models/props_lab/reciever01b.mdl", tool = "bypass",
                         contraband = true, conceal = 0.35, sell = 25,
                         desc = "Opens any door once, Combine doors included. Sometimes trips an alarm" },
+    weedkiller      = { name = "Weedkiller", model = "models/props_junk/garbage_plasticbottle001a.mdl", use = "poison", useLabel = "Poison food or drink",
+                        desc = "For the weeds in the cracks (look at one, E). A few drops in someone's food or drink, and it's for them" },
     door_code       = { name = "A Combine door code", model = "models/props_c17/paper01.mdl", tool = "keycard", kg = 0,
                         contraband = true, conceal = 0.8, sell = 25,
                         desc = "Seen by the vortigaunts through the vortessence, scratched on a scrap: opens one Combine door before the code is changed" },
@@ -251,6 +253,21 @@ LCS.Items = {
 -- override.
 ------------------------------------------------------------------------
 
+-- Tainted with weedkiller (sv_livingcity_weeds.lua): every food and drink has a twin that looks exactly
+-- the same, in the pockets and to whoever's given it, and poisons whoever eats or drinks it.
+do
+    local add = {}
+    for id, it in pairs(LCS.Items) do
+        if (it.hunger or it.thirst) and not it.cooksTo and not string.find(id, "^raw_") then
+            local t = table.Copy and table.Copy(it) or {}
+            if not table.Copy then for k, v in pairs(it) do t[k] = v end end
+            t.poison, t.tainted, t.parasite = 40, true, nil
+            add["tainted_" .. id] = t
+        end
+    end
+    for id, t in pairs(add) do LCS.Items[id] = t end
+end
+
 LCS.Weights = {
     ration = 0.3, water = 0.4, bread = 0.5, milk = 0.6, melon = 3.0, coffee = 0.3, tablets = 0.05,
     raw_bird = 0.6, cooked_bird = 0.5, raw_headcrab = 1.2, raw_fastcrab = 1.0, raw_poisoncrab = 1.4, cooked_headcrab = 1.0,
@@ -264,6 +281,13 @@ LCS.Weights = {
     request_device = 0.3, scrap = 0.5, keepsake = 0.01, satchel = 0.8, storage_crate = 6.0,
     business_license = 0.02, vendor_stall = 7.0, paper = 0.02,
 }
+-- (a tainted twin weighs what the real thing does: sv_livingcity_weeds.lua)
+for id, it in pairs(LCS.Items) do
+    if it.tainted then
+        local real = string.sub(id, 9)
+        if LCS.Weights[real] then LCS.Weights[id] = LCS.Weights[real] end
+    end
+end
 LCS.Bulky = { melon = true, uniform_cp = true, rebel_gear = true, gun_shotgun = true, gun_smg = true, arms_crate = true, storage_crate = true, vendor_stall = true }
 
 function LCS.Weight(id)
@@ -310,6 +334,7 @@ LCS.Goods = {
     { id = "bottle", item = "bottle_empty", price = 2, minStanding = -50, desc = "An empty glass bottle, for whatever water you can find." },
     { id = "tablets", item = "tablets", price = 15, minStanding = -50, desc = "For what the canal water gives you." },
     { id = "civvies", item = "civvies", price = 10, minStanding = -50, desc = "Union-issue work clothes. Everyone looks the same in them." },
+    { id = "weedkiller", item = "weedkiller", price = 15, minStanding = 0, desc = "For the weeds in the cracks. Keep it away from food." },
     { id = "permit", item = "permit", price = 35, minStanding = 150, desc = "One night out after curfew, stamped and legal." },
     { id = "bread", item = "bread", price = 8, minStanding = 0, desc = "Grey, dense, and real." },
     { id = "milk", item = "milk", price = 8, minStanding = 0, desc = "Powdered, reconstituted, nearly milk." },
@@ -445,6 +470,7 @@ LCS.Lab = {
       desc = "Five forged ration cards: the dealer buys them, the dispensers take them. The more turn up, the hotter the search for the forger" },
     { id = "smokebomb", out = "smokebomb", needs = { chemicals = 2, can_empty = 1 }, secs = 5, desc = "Thick white smoke" },
     { id = "bypass", out = "bypass", needs = { gun_parts = 1, chemicals = 2, scrap = 2 }, secs = 10, desc = "Opens any door once" },
+    { id = "chemicals_weedkiller", out = "chemicals", needs = { weedkiller = 2 }, secs = 6, desc = "Two canisters of weedkiller, cooked down into chemicals" },
     { id = "radio_transmitter", out = "radio_transmitter", needs = { radio_tuned = 1, scrap = 2 }, secs = 12, desc = "A Freq 7 radio rebuilt to send as well as listen" },
     { id = "jammer", out = "jammer", needs = { radio_tuned = 1, scrap = 2, chemicals = 1 }, secs = 15, desc = "A radio that only screams" },
     { id = "crowbar", out = "crowbar", needs = { scrap = 6 }, secs = 10, desc = "Bar stock, heated and bent" },

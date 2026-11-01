@@ -300,9 +300,15 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Secret endings** three hours apart.
 - [ ] **She, not he:** a job about a woman (a patient, a neighbour, a prisoner) says her.
 
+## Weeds and weedkiller (1 November: what to check)
+
+- [ ] **Weeds** come up on open ground and grow (a tuft, weeds, a bush). Which plant model shows? (An ERROR model means the server's plant needs a game the players don't have: say so.)
+- [ ] **Groundskeeper** (F3 > Jobs): issued weedkiller; E on a weed sprays it; the shift is three weeds. NPC groundskeepers spray them too.
+- [ ] **Poison:** F2 > Weedkiller > Poison food or drink: the food looks the same; give it to someone, they're poisoned when they eat it. A unit watching: wanted.
+
 ## What loyalty earns (1 November: what to check)
 
-- [ ] **At 150+ standing:** fewer stops, shifts pay a bit more, the Commissary is cheaper, a bigger stash.
+- [ ] **At 150+ standing:** fewer stops, shifts pay a bit more, the Commissary is cheaper, and lockers open (refused below 150).
 - [ ] **At 400+:** stops are a papers glance; two ration cards a shift; waved through once a curfew; a curfew slip is a warning; the Administrator names you on screen now and then; MODEL CITIZEN on your papers; Block Warden on F3 > Jobs (refused below 400).
 
 ## Vortigaunts (1 November: what to check)

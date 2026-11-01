@@ -517,6 +517,29 @@ SHIFTS.factory = {
     end,
 }
 
+-- Groundskeeper: the weeds near you, sprayed (sv_livingcity_weeds.lua); a few come up for the shift if there aren't enough.
+SHIFTS.groundskeeper = {
+    function(ply, job)
+        local near = {}
+        for _, e in ipairs(LC.Weeds and LC.Weeds() or {}) do if e:GetPos():DistToSqr(ply:GetPos()) < 2500 * 2500 then near[#near + 1] = e end end
+        for try = 1, 9 do
+            if #near >= 3 then break end
+            local p = Q.Spot(ply, 300, 1800)
+            -- open ground if it can be found; failing that, wherever (the shift's own weeds)
+            if p and LC.SpawnWeed and (try > 6 or (LC.WeedOpenGround and LC.WeedOpenGround(p))) then
+                local e = LC.SpawnWeed(p, math.random(1, 2))
+                if IsValid(e) then near[#near + 1] = e end
+            end
+        end
+        if #near < 3 then return nil end
+        return {
+            title = "Weeding", reward = 15, limit = 600,
+            desc = "Weeds are coming up through the cracks nearby. Spray them before they become bushes.",
+            stages = { Count("weed_killed", 3, "Spray 3 weeds: look at one and press E (your weedkiller does the rest)") },
+        }
+    end,
+}
+
 -- Block Warden: walk your own block, a word with a neighbour, and report what isn't right (or don't).
 SHIFTS.warden = {
     function(ply, job)

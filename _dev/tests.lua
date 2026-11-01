@@ -1296,7 +1296,8 @@ frisked:SetPos(copN:GetPos() + Vector(150, 0, 0))
 LC.Release(copN, copSt) -- not at a checkpoint post: this is a street stop
 _setcvar("lc_street_stop_chance", 100)
 _run(3.5)
-ok(LC.Stops[frisked] ~= nil and has(frisked.chat, "Stand still for inspection"), "a cop on the street stops a passer-by", copSt.state)
+ok(LC.Stops[frisked] ~= nil and has(frisked.chat, "Stand still for inspection"), "a cop on the street stops a passer-by",
+    tostring(copSt.state) .. " foe=" .. tostring(IsValid(copSt.target) and (copSt.target.Nick and copSt.target:Nick() or copSt.target:GetClass())) .. " prov=" .. tostring(IsValid(copSt.provokedBy) and (copSt.provokedBy.Nick and copSt.provokedBy:Nick() or copSt.provokedBy:GetClass())) .. " wanted=" .. tostring(LC.PlayerIsWanted(frisked)))
 copN.sim = true
 local standing0 = LC.Standing(frisked)
 frisked.lcViolentUntil = CurTime() + 1e6 -- (taken for violent: chased, not cuffed on the spot, so the wanted status can be checked)
@@ -1714,7 +1715,7 @@ for _, id in ipairs({ "porter", "mortuary", "scrap", "warden" }) do
     end
 end
 ok(done == total, "every new job's shifts can be worked start to finish", missing[1])
-ok(#LCJ.Occupations == 13 and LCJ.ById.warden and LCJ.ById.warden.playersOnly, "thirteen occupations in all (the Block Warden, for players only, the newest)")
+ok(#LCJ.Occupations == 14 and LCJ.ById.warden and LCJ.ById.warden.playersOnly and LCJ.ById.groundskeeper, "fourteen occupations in all (the Groundskeeper, and the Block Warden for players only, the newest)")
 local gameOnly = {}
 for _, o in ipairs(LCJ.Occupations) do if o.gameOnly then gameOnly[#gameOnly + 1] = o.id end end
 table.sort(gameOnly)
@@ -13714,7 +13715,7 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     ok(LC.ReportCrime(ex, "Curfew violation", 60) == false and not LC.PlayerIsWanted(ex), "a minor slip forgiven: a warning, not wanted")
     ok(LC.ReportCrime(ex, "Curfew violation", 60) == true, "but only once a day")
     LC.ClearWanted(ex)
-    ok(LC.LoyalStashExtra(ex) == 8 and LC.LoyalStashExtra(tr) == 4, "a bigger stash at home")
+    ok(LC.LoyalStashExtra(ex) == 0, "(no bigger stash: lockers instead)")
     ok(LC.PapersInfo(ex).model and not LC.PapersInfo(plain).model, "a MODEL CITIZEN stamp on their papers")
     ex.chat = {}
     LC.LoyalPraise(CurTime())
@@ -13723,7 +13724,41 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     local okW2 = LC.SetJob(ex, "warden")
     ok(not okW1 and okW2, "Block Warden: a job for Exemplary citizens only")
     LC.SetJob(ex, "", true)
-    for _, q in ipairs({ ex, tr }) do q:SetPos(Vector(-150000, 150000, 0)) end
+    -- weeds, the Groundskeeper, and weedkiller as poison
+    local gk = newPlayer("Groundskeeper", "citizen")
+    _run(0.3)
+    gk:SetPos(Vector(-166000, -166000, 0))
+    local w = LC.SpawnWeed(gk:GetPos() + Vector(50, 0, 0), 3)
+    ok(IsValid(w) and w:GetNW2Int("lc_stage", 0) == 3, "weeds grow on open ground (a tuft, weeds, a bush)")
+    local okS, whyS = LC.SprayWeed(gk, w)
+    ok(not okS and string.find(whyS or "", "weedkiller", 1, true), "spraying needs weedkiller")
+    LC.SetJob(gk, "groundskeeper", true)
+    ok(LC.HasItem(gk, "weedkiller"), "the Groundskeeper is issued weedkiller")
+    LC.SprayWeed(gk, w)
+    _run(6)
+    ok(not IsValid(w), "a sprayed weed is gone (a bush takes a few seconds)")
+    LC.SetJob(gk, "", true)
+    LC.GiveItem(gk, "bread", 1)
+    ok(LC.PoisonFood(gk) and LC.HasItem(gk, "tainted_bread") and not LC.HasItem(gk, "weedkiller") and LCS.Items.tainted_bread.name == LCS.Items.bread.name,
+        "weedkiller into food: it looks exactly the same")
+    gk:SetHealth(100)
+    LC.Consume(gk, "tainted_bread")
+    ok(gk:Health() < 100, "and whoever eats it is poisoned", gk:Health())
+    ok(LCS.LabById.chemicals_weedkiller and LCS.LabById.chemicals_weedkiller.needs.weedkiller == 2, "two canisters cook down into chemicals at the lab")
+    gk:SetPos(Vector(-150000, 150000, 0))
+    -- lockers: only for citizens in good standing
+    local lk = ents.Create("lc_locker") lk:SetPos(Vector(-167000, -167000, 0)) lk:Spawn()
+    local low = newPlayer("LockerLow", "citizen")
+    _run(0.3)
+    low:SetPos(lk:GetPos() + Vector(40, 0, 0)) tr:SetPos(lk:GetPos() + Vector(-40, 0, 0))
+    low.lookingAt, tr.lookingAt = lk, lk
+    LC.GiveItem(low, "bread", 1) LC.GiveItem(tr, "bread", 1)
+    low.chat, tr.chat = {}, {}
+    LC.OpenContainer(low, lk) LC.OpenContainer(tr, lk)
+    ok(has(low.chat, "Lockers are for citizens in good standing"), "a locker isn't for a citizen of ordinary standing", low.chat[1])
+    ok(not has(tr.chat, "Lockers are for citizens in good standing"), "a Trusted citizen can use one", tr.chat[1])
+    lk:Remove()
+    for _, q in ipairs({ ex, tr, low }) do q:SetPos(Vector(-150000, 150000, 0)) end
     for _, q in ipairs({ unitR, best, plain }) do q:SetPos(Vector(-150000, 150000, 0)) end
     fv:SetPos(Vector(-150000, 150000, 0)) vp:SetPos(Vector(-150000, 150000, 0)) freer:SetPos(Vector(-150000, 150000, 0))
 end)()

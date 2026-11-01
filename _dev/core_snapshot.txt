@@ -92,6 +92,7 @@ chat command /nod
 chat command /outfits
 chat command /papers
 chat command /point
+chat command /poison
 chat command /pose
 chat command /rationbreak
 chat command /records
@@ -358,12 +359,28 @@ item smuggled_supplies
 item spraypaint
 item storage_crate
 item tablets
+item tainted_bottle_clean
+item tainted_bottle_rain
+item tainted_bread
+item tainted_can_clean
+item tainted_can_rain
+item tainted_canned_food
+item tainted_coffee
+item tainted_cooked_bird
+item tainted_cooked_fish
+item tainted_cooked_headcrab
+item tainted_melon
+item tainted_milk
+item tainted_ration
+item tainted_vegetables
+item tainted_water
 item uniform_cp
 item union_goods
 item vegetables
 item vendor_stall
 item vest_cell
 item water
+item weedkiller
 item zipties
 layout file data/livingcity/<map>.json
 rebel camp layout data/livingcity/<map>_camp.json
@@ -628,6 +645,7 @@ setting lc_levy_minutes = 30
 setting lc_levy_pct = 10
 setting lc_levy_threshold = 2000
 setting lc_locker_kg = 25
+setting lc_locker_standing = 150
 setting lc_lod_distance = 3500
 setting lc_lookout_minutes = 15
 setting lc_lookout_post_fire = 650
@@ -848,6 +866,9 @@ setting lc_walk_speed = 110
 setting lc_walkway_clear = 100
 setting lc_wanted_lost = 30
 setting lc_weather_auto = 1
+setting lc_weed_grow_minutes = 8
+setting lc_weeds = 1
+setting lc_weeds_max = 30
 setting lc_whatnow = 1
 setting lc_whatnow_minutes = 60
 setting lc_word_gets_around = 1
