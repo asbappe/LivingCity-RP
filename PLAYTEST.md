@@ -38,6 +38,8 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 
 ## Also fixed from your notes
 
+- [ ] **Clinic Medic:** own citizen clothes, no rebel medic outfit, no welding helmet.
+  Notes:
 - [ ] **Job items** (6-12's belongings, evidence, anything to find): never under stairs or in walled-off space; always somewhere you can walk up to.
   Notes:
 - [ ] **Sleeping citizens:** lying flat on the bed, eyes shut, not sitting up through it. Heads at the pillow end? (If at the foot: `lc_bed_head_flip 1`.) Too high or sunk in? `lc_bed_npc_lift` (9). Shoot one: they wake.
@@ -516,7 +518,7 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 
 ## Looks
 
-- [ ] **Outfit designer:** editor panel > Job outfits (or !outfits). The Clinic Medic wears HL2's medic clothes by default.
+- [ ] **Outfit designer:** editor panel > Job outfits (or !outfits). No job is dressed by default (the Clinic Medic is in their own clothes now).
   Notes:
 - [ ] **Welcome announcement:** plays when an unregistered person joins (or a new character arrives), and not when someone already registered rejoins.
 - [ ] **Sound files:** `lc_sound_check` (your console) counts the city's sounds on your computer and test-plays one; a sound you can't hear shows a "Sound missing" notice. `lc_announce_clips` shows no CAN'T PLAY lines (an MP3 renamed .wav, or a WAV that isn't 16-bit 44100 Hz), and a superadmin gets a notice on joining if there are any. MP3 announcements queue properly (the Administrator, then Overwatch, for the welcome).

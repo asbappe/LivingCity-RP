@@ -11048,8 +11048,7 @@ StaffingTests()
 
 function OutfitSquadTests()
 section("Job outfits, a little variety, and squads")
-ok(LC.OutfitFor("medic", "p1", "male_03", false) == "models/humans/group03m/male_03.mdl", "a Clinic Medic wears Half-Life 2's medic clothes, with their own face")
-ok(LC.OutfitFor("medic", "p1", "female_02", true) == "models/player/group03m/female_02.mdl", "(and a medic player too)")
+ok(LC.OutfitFor("medic", "p1", "male_03", false) == nil, "a Clinic Medic isn't put in Half-Life 2's medic clothes (those are the Resistance's): their own clothes")
 local admin = newPlayer("OutfitAdmin", "citizen") admin.admin = true
 ok(LC.SetOutfit(admin, "factory", { { pm = "models/player/hostage/hostage_01.mdl", skins = { 0, 1 }, bg = { hat = { 0, 1 } } } }), "an admin dresses a job")
 local m1, s1, b1 = LC.OutfitFor("factory", "p7", nil, false)
@@ -11059,6 +11058,7 @@ ok(m1 == m2 and s1 == s2 and b1.hat == b2.hat and (s1 == 0 or s1 == 1), "each pe
 local pleb = newPlayer("OutfitPleb", "citizen")
 ok(not LC.SetOutfit(pleb, "factory", {}), "only admins")
 ok(LC.SetOutfit(admin, "_none", { { pm = "models/player/group01/" .. "{face}" .. ".mdl", bg = { glasses = { 0, 1 } } } }), "people without a job can have looks too")
+ok(LC.SetOutfit(admin, "medic", { { pm = "models/player/group03m/" .. "{face}" .. ".mdl", npc = "models/humans/group03m/" .. "{face}" .. ".mdl" } }), "(an admin can still dress the job: a test outfit)")
 local med = newPlayer("OutfitMedic", "citizen")
 LC.SetJob(med, "medic", true)
 med:SetNW2String("lc_model", "models/player/group01/male_04.mdl")
@@ -11073,6 +11073,7 @@ if st and st.profile then
 end
 LC.SetOutfit(admin, "factory", {})
 LC.SetOutfit(admin, "_none", {})
+LC.SetOutfit(admin, "medic", {})
 -- squads
 local tgt = newPlayer("SquadTarget", "citizen")
 _run(0.3)

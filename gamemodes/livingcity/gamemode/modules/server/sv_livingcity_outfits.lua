@@ -11,8 +11,8 @@
     Set them up in game, no files to edit: the editor's panel, Job outfits
     (or !outfits, admin). Pick a job, a model from whatever's installed (the
     stock citizens and medics, the hostages, a Workshop pack), tick the
-    skins and bodygroup pieces that fit, add it, save. The Clinic Medic
-    starts out in Half-Life 2's own medic clothes.
+    skins and bodygroup pieces that fit, add it, save. (No job is dressed
+    by default: Half-Life 2's medic clothes are the Resistance's.)
 
     "Everyone else" is for the people without a job: give them glasses,
     beanies or caps from a pack, and each picks their own.
@@ -45,15 +45,22 @@ local FILE = "livingcity/outfits.json"
 local FACE = "{face}" -- (in a model path: the person's own face, male_03 and so on; {sex}: male or female, to match)
 
 -- Each job: { list = { { pm = player model, npc = NPC model (optional), skins = { n, ... }, bg = { [name] = { n, ... } } } } }
-local DEFAULTS = {
-    medic = { list = { { pm = "models/player/group03m/" .. FACE .. ".mdl", npc = "models/humans/group03m/" .. FACE .. ".mdl" } } },
-}
+-- (none: the Clinic Medic used to start in Half-Life 2's medic clothes, group03m, but those are the
+-- Resistance's medics, armband and all; the owner, 1 November: a city medic in rebel clothes. A city clinic
+-- has no uniform of its own in Half-Life 2, so they wear their own clothes unless an admin dresses the job.)
+local DEFAULTS = {}
+local OLD_MEDIC = "models/player/group03m/" .. FACE .. ".mdl"
 
 LC.Outfits = LC.Outfits or nil
 
 function LC.LoadOutfits()
     local t = file.Exists(FILE, "DATA") and util.JSONToTable(file.Read(FILE, "DATA") or "") or nil
     LC.Outfits = istable(t) and t or table.Copy(DEFAULTS)
+    -- a server still on the old default medic outfit (the rebel medics): taken off
+    local m = LC.Outfits.medic
+    if istable(m) and istable(m.list) and #m.list == 1 and m.list[1].pm == OLD_MEDIC and not m.list[1].skins and not m.list[1].bg then
+        LC.Outfits.medic = nil
+    end
     return LC.Outfits
 end
 
@@ -191,6 +198,7 @@ function LC.DressPerson(npc, p, onDuty)
     local path, skin, bg = LC.OutfitFor(job, "p" .. tostring(p.id), LC.FaceOf(p.model), false, sex)
     if not Valid(path) then return false end
     npc:SetModel(path)
+    if npc.SetBodyGroups then npc:SetBodyGroups("000000000000000") end
     LC.ApplyLook(npc, skin, bg)
     return true
 end
@@ -236,6 +244,9 @@ local function DressPlayer(ply)
         return
     end
     if ply:GetModel() ~= path and LC.RefreshModel then LC.RefreshModel(ply) end
+    -- (their own look's pieces were numbered for their own model: on a job's model they turned into other
+    -- things, a welding helmet on a medic; the outfit starts bare and adds only its own)
+    if ply.SetBodyGroups then ply:SetBodyGroups("000000000000000") end
     LC.ApplyLook(ply, skin, bg)
 end
 LC.DressPlayer = DressPlayer
