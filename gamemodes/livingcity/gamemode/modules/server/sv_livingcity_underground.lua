@@ -1420,11 +1420,11 @@ function LC.QuickPick(ply)
         return false, "Look at a locked door, up close."
     end
     local cp = DoorLockKind(door)
-    local order = cp and { "cp_keycard", "bypass" } or { "lockpick" }
+    local order = cp and { "door_code", "cp_keycard", "bypass" } or { "lockpick" } -- (a vortigaunts' door code first: sv_livingcity_vortwork.lua)
     for _, id in ipairs(order) do
         if LC.HasItem(ply, id) then return LC.StartPick(ply, id) end
     end
-    return false, cp and "That's a Combine lock. You need a keycard or a bypass charge." or "You don't have a lockpick. Make one from four pieces of scrap (F2), or find the dealer."
+    return false, cp and "That's a Combine lock. You need a keycard, a door code or a bypass charge." or "You don't have a lockpick. Make one from four pieces of scrap (F2), or find the dealer."
 end
 
 concommand.Add("lc_pick", function(ply)

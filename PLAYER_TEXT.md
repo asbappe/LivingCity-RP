@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 620e178. Admin-only console messages and log lines are left out.
+Made from version 7bf39a3. Admin-only console messages and log lines are left out.
 
 5993 lines, from 179 files.
 
@@ -11281,7 +11281,7 @@ Made from version 620e178. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: quick pick
 
-- "That's a Combine lock. You need a keycard or a bypass charge."  (text, line 1427)
+- "That's a Combine lock. You need a keycard, a door code or a bypass charge."  (text, line 1427)
 - "You don't have a lockpick. Make one from four pieces of scrap (F2), or find the dealer."  (text, line 1427)
 
 > Note for you (not shown in game): bend four bits of scrap into something that opens a lock
