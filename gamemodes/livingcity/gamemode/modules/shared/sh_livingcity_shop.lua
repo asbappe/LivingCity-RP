@@ -108,6 +108,8 @@ LCS.Items = {
     rebel_gear      = { name = "Resistance gear", model = "models/props_c17/BriefCase001a.mdl", wear = "rebel",
                         contraband = true, conceal = 0.15, sell = 25,
                         desc = "Off a dead fighter. The fighters in rebel territory will take you for one of them. Civil Protection units will too" },
+    uniform_clean   = { name = "Clean uniform", model = "models/props_c17/BriefCase001a.mdl",
+                        desc = "A fresh Civil Protection uniform, pressed and bagged, for when yours is past saving (put it on: F1 > What now? > Change into clean clothes)" },
     civvies         = { name = "Spare citizen clothes", model = "models/props_c17/suitcase_passenger_physics.mdl", wear = "citizen",
                         desc = "Union blue. Lets a hunted Resistance member pass as an ordinary citizen" },
     lockpick        = { name = "Lockpick set", model = "models/props_c17/tools_wrench01a.mdl", tool = "lockpick",
@@ -190,10 +192,10 @@ LCS.Items = {
     ------------------------------------------------------------------------
     -- Order (sv_livingcity_cp.lua)
     ------------------------------------------------------------------------
-    zipties         = { name = "Cuffs", model = "models/props_lab/box01a.mdl", sell = 1, -- (1, not 4: Civil Protection buy them three for 6)
+    zipties         = { name = "Cuffs", model = "models/props_lab/box01a.mdl", sell = 1, -- (1, not 4: a unit's own never run out)
                         desc = "Cuff someone: !cuff, looking at them (hands up, down, stopped, or from behind). Civil Protection units carry their own" },
-    request_device  = { name = "Request device", model = "models/props_lab/reciever01b.mdl", sell = 6,
-                        desc = "Calls Civil Protection to where you are: /request <what's wrong>" },
+    request_device  = { name = "Civil Protection call box", model = "models/props_lab/reciever01b.mdl", sell = 6,
+                        desc = "A little handset that calls Civil Protection to where you are, and tells them what's wrong (F1 > Request Civil Protection, or /request <what's wrong>)" },
     ------------------------------------------------------------------------
     -- Carrying and keeping things (sv_livingcity_storage.lua)
     --   bag      extra kilograms and large things you can carry while you have it
@@ -332,6 +334,7 @@ end
 --   item      goes into your inventory
 --   entity    spawns in front of you (health vials, batteries)
 --   ammo      { type, amount }
+--   civOnly   never offered to units (citizen clothes: the owner, 1 November)
 --   cpOnly    units only, and sold only at the Civil Protection Commissary's
 --             counter (the Union terminal sells them only in a city without one)
 ------------------------------------------------------------------------
@@ -341,7 +344,7 @@ LCS.Goods = {
     { id = "water", item = "water", price = 2, minStanding = -50, desc = "Clean, cold, refreshing. Do not ask what is in it." },
     { id = "bottle", item = "bottle_empty", price = 2, minStanding = -50, desc = "An empty glass bottle, for whatever water you can find." },
     { id = "tablets", item = "tablets", price = 15, minStanding = -50, desc = "For what the canal water gives you." },
-    { id = "civvies", item = "civvies", price = 10, minStanding = -50, desc = "Union-issue work clothes. Everyone looks the same in them." },
+    { id = "civvies", item = "civvies", price = 10, minStanding = -50, civOnly = true, desc = "Union-issue work clothes. Everyone looks the same in them." },
     { id = "weedkiller", item = "weedkiller", price = 15, minStanding = 0, desc = "For the weeds in the cracks. Keep it away from food." },
     { id = "permit", item = "permit", price = 35, minStanding = 150, desc = "One night out after curfew, stamped and legal." },
     { id = "bread", item = "bread", price = 8, minStanding = 0, desc = "Grey, dense, and real." },
@@ -350,8 +353,8 @@ LCS.Goods = {
     { id = "melon", item = "melon", price = 25, minStanding = 400, desc = "A whole watermelon. Exemplary citizens only." },
     { id = "coffee", item = "coffee", price = 30, minStanding = 400, desc = "Real coffee. You'd forgotten the smell." },
     { id = "healthkit", name = "Medical kit", entity = "item_healthkit", price = 50, minStanding = 400, desc = "A full medical kit." },
-    { id = "request_device", item = "request_device", price = 10, minStanding = 0, desc = "Something wrong? Call Civil Protection: /request." },
-    { id = "zipties", item = "zipties", count = 3, name = "Cuffs (3)", price = 6, cpOnly = true, desc = "Spares. Civil Protection units never run out of their own." },
+    { id = "request_device", item = "request_device", price = 10, minStanding = 0, desc = "Something wrong? It calls Civil Protection to where you are." },
+    -- (no spare cuffs for sale: a unit's own never run out, and it read as though they had to buy them; the owner, 1 November)
     { id = "paper", item = "paper", count = 3, name = "Paper (3)", price = 2, minStanding = -50, desc = "For notes, letters and notices." },
     { id = "business_license", item = "business_license", price = 75, minStanding = 50, desc = "The Union's permission to trade from a stall." },
     { id = "vendor_stall", item = "vendor_stall", price = 60, minStanding = 50, desc = "Everything you need to sell. A license not included." },
@@ -362,6 +365,7 @@ LCS.Goods = {
     { id = "gren_flash", item = "gren_flash", price = 35, cpOnly = true, minRank = 2, desc = "Metrocops and up. Don't look at it." },
     { id = "gren_gas", item = "gren_gas", price = 60, cpOnly = true, minRank = 3, desc = "Division Leaders and the Overwatch. For clearing anticitizen holdouts." },
     { id = "gas_bomb", item = "gas_bomb", price = 40, cpOnly = true, desc = "Weedkiller gas: worse than chlorine, and your mask keeps it out." },
+    { id = "uniform_clean", item = "uniform_clean", price = 5, cpOnly = true, desc = "A clean uniform, for when yours is past saving. It happens to the best of us." },
     { id = "pistolammo", name = "Pistol ammunition", ammo = { "Pistol", 36 }, price = 10, cpOnly = true, desc = "Standard issue." },
     { id = "smgammo", name = "SMG ammunition", ammo = { "SMG1", 90 }, price = 20, cpOnly = true, minStanding = 150, desc = "For Civil Protection units in good standing." },
     { id = "battery", name = "Suit battery", entity = "item_battery", price = 30, cpOnly = true, desc = "Armor recharge." },

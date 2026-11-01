@@ -36,7 +36,7 @@
                      [minutes], !socio auto. Yellow means half as many stops
                      again; red, twice as many.
 
-      /request       A citizen with a request device (Commissary) calls Civil
+      /request       A citizen with a Civil Protection call box (Commissary) calls Civil
                      Protection to where they are: /request <what's wrong>.
                      Units get a marker and the message; with no units on,
                      the nearest Civil Protection NPC walks over. Once a minute.
@@ -774,9 +774,9 @@ function LC.CPRequest(ply, text)
     if not On() then return false, "Requests are off on this server." end
     text = string.Trim(tostring(text or ""))
     if RealUnit(ply) then return false, "You're a Civil Protection unit. Use the radio, or !backup." end
-    if not (LC.HasItem and LC.HasItem(ply, "request_device")) then return false, "You need a request device (the Commissary sells them)." end
+    if not (LC.HasItem and LC.HasItem(ply, "request_device")) then return false, "You need a Civil Protection call box (the Union Commissary sells them)." end
     if #text < 3 then return false, "Say what's wrong: /request <what's wrong>" end
-    if LC.Jammed and LC.Jammed(ply:GetPos()) then return false, "The request device crackles. Nothing gets through: something nearby is jamming it." end
+    if LC.Jammed and LC.Jammed(ply:GetPos()) then return false, "The call box crackles. Nothing gets through: something nearby is jamming it." end
     local now = CurTime()
     if (ply.lcRequestNext or 0) > now then
         return false, string.format("The device is still recharging (%ds).", math.ceil(ply.lcRequestNext - now))

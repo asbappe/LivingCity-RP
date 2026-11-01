@@ -34,7 +34,7 @@
                     pockets and hisses for lc_jammer_secs (240). Within
                     lc_jammer_radius (1000): units' radios are static (they
                     can't call a 10-20, backup or talk on the CP band, and what
-                    reaches them is garbled), request devices don't get
+                    reaches them is garbled), call boxes don't get
                     through, and a scanner's photographs never reach Civil
                     Protection. It beeps; units can find it and smash it (E,
                     for XP), and anyone can shoot it.

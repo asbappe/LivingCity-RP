@@ -380,6 +380,7 @@ item tainted_ration
 item tainted_ration_short
 item tainted_vegetables
 item tainted_water
+item uniform_clean
 item uniform_cp
 item union_goods
 item vegetables

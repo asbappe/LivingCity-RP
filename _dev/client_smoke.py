@@ -767,6 +767,11 @@ do
         for id, fn in pairs(hook.t.PostDrawTranslucentRenderables or {}) do if id == "LivingCityScreens" then fn(false, false) end end
         local swallowed = hook.t.PlayerBindPress.LivingCityScreens(_me, "+use", true)
         if not pressed or swallowed ~= true then error("E on the button didn't press it") end
+        -- the Close button at the bottom lights up when it's aimed at (it never did: made anew each layout)
+        LC_CL.ScreenOpen(term, "TEST", "sub", { { kind = "head", text = "Head" }, { kind = "button", text = "Press me", fn = function() end } })
+        LC_CL.ScreenAim = function() return 100, 46 + 26 * 2 + 6 + 5 end
+        for id, fn in pairs(hook.t.Think or {}) do if id == "LivingCityScreens" then fn() end end
+        if LC_CL.ScreenState().hover ~= 46 + 26 * 2 + 6 then error("the Close button didn't light up when aimed at: " .. tostring(LC_CL.ScreenState().hover)) end
         LC_CL.ScreenAim = aim
         LC_CL.ScreenClose()
         LC_CL.OpenDesk({ kind = "housing", awaiting = true, papers = true, blocks = { { n = 1, name = "Block 1", residents = 2 } } })

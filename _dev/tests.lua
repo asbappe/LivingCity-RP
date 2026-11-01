@@ -3955,7 +3955,7 @@ ok(LC.SocioOverride == nil, "!socio auto gives it back to the city")
 section("CP toolset: /request")
 cit.chat, unit.chat = {}, {}
 local okR, whyR = LC.CPRequest(cit, "Someone is breaking into my block")
-ok(not okR and string.find(whyR, "request device", 1, true), "you need a request device")
+ok(not okR and string.find(whyR, "call box", 1, true), "you need a Civil Protection call box")
 LC.GiveItem(cit, "request_device")
 net.sent = {}
 hook.Run("PlayerSay", cit, "/request Someone is breaking into my block")
@@ -13271,7 +13271,7 @@ end)()
     local said = hook.Run("PlayerSay", cuffer, "!cuff")
     ok(LCS.Items.zipties.name == "Cuffs" and said == "" and has(cuffer.chat, "Look at someone"), "zip ties are cuffs now, and !cuff works like !tie", table.concat(cuffer.chat, " | "))
     cuffer.valid = false
-    ok(LCS.Items.zipties.sell == 1, "cuffs (zip ties once) sell for 1 (Civil Protection buy them three for 6)")
+    ok(LCS.Items.zipties.sell == 1, "cuffs (zip ties once) sell for 1")
     -- a unit's issued grenades are Combine issue
     local unit = newPlayer("GrenadeUnit", "cp", nil, 900)
     local other = newPlayer("OtherUnit", "cp", nil, 900)
@@ -13891,6 +13891,11 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     ok(LC.NearHeat(cook), "a burning barrel (a fire particle) is heat to boil water by")
     fx:Remove()
     cook:SetPos(Vector(-150000, 150000, 0))
+    -- a unit is never offered civilian clothes; a clean uniform does after an accident
+    local unitC = newPlayer("CleanUnit", "cp")
+    local okCv = LC.CanBuy(unitC, LCS.GoodsById.civvies)
+    ok(not okCv, "units can't buy civilian clothes")
+    ok(LCS.GoodsById.uniform_clean and LCS.GoodsById.uniform_clean.cpOnly and LC.CleanClothes.uniform_clean, "the CP Commissary has a clean uniform, and it counts as clean clothes")
     -- a job's item never goes where nobody can reach it (under stairs, walled-off space)
     local tlWas = util.TraceLine
     util.TraceLine = function(t) if t.endpos and t.start and t.endpos.z > t.start.z + 20 then return { Hit = true, Fraction = 0.2, HitPos = t.start } end return tlWas(t) end

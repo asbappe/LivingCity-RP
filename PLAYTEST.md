@@ -38,6 +38,12 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 
 ## Also fixed from your notes
 
+- [ ] **CP Commissary:** no civilian clothes, no cuffs for sale (a unit's own never run out); a Clean uniform (5) that puts right a soiled unit.
+  Notes:
+- [ ] **Terminal screens** just below eye level; Next page and Close light up when aimed at.
+  Notes:
+- [ ] **The "Request device"** is now the "Civil Protection call box" everywhere.
+  Notes:
 - [ ] **Clinic Medic:** own citizen clothes, no rebel medic outfit, no welding helmet.
   Notes:
 - [ ] **Job items** (6-12's belongings, evidence, anything to find): never under stairs or in walled-off space; always somewhere you can walk up to.

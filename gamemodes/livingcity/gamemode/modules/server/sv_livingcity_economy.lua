@@ -197,6 +197,7 @@ function LC.CanBuy(ply, g)
     if not cvOn:GetBool() then return false, "The commissary is closed." end
     if LC.PlayerIsZombie(ply) then return false, "The terminal doesn't recognize you. It doesn't recognize anything like you." end
     if g.cpOnly and not LC.PlayerIsCP(ply) then return false, "Civil Protection units only." end
+    if g.civOnly and LC.PlayerIsCP(ply) then return false, "Not for units: the Civil Protection Commissary has clean uniforms." end
     if g.cpOnly and not AtUnitCounter(ply) then return false, "Issued at the Civil Protection Commissary, not here." end
     if g.minRank and ply:GetNW2Int("lcf_rank", 1) < g.minRank and not (LCF.IsOverwatch and LCF.IsOverwatch(ply)) then
         return false, "Not at your rank."
@@ -250,8 +251,9 @@ function LC.OpenShop(ply, viaTerminal)
     end
     local goods = {}
     local counter = LC.PlayerIsCP(ply) and AtUnitCounter(ply)
+    local unit = LC.PlayerIsCP(ply)
     for _, g in ipairs(LCS.Goods) do
-        if not g.cpOnly or counter then
+        if (not g.cpOnly or counter) and not (g.civOnly and unit) then
             local ok, why = LC.CanBuy(ply, g)
             goods[#goods + 1] = {
                 id = g.id, name = g.name, price = LC.GoodsPrice(ply, g), desc = g.desc, ok = ok, why = why,

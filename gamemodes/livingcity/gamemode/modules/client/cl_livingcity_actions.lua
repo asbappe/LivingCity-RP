@@ -255,7 +255,7 @@ function LC_CL.OpenActions()
     Add(by, "Write something (needs paper)", function() Send("write") end, "icon16/pencil.png")
     Add(by, "Fish (needs a line, at water)", function() Send("fish") end)
     Add(by, "Salvage the junk I'm looking at (crowbar)", function() Send("salvage") end)
-    Add(by, "Request Civil Protection (request device)", function() Ask("Request", "What's wrong?", "request") end)
+    Add(by, "Request Civil Protection (with a call box)", function() Ask("Request", "What's wrong?", "request") end)
     -- a Union worker whose job is behind Combine doors (sv_livingcity_escort.lua)
     if not unit and me:GetNW2String("lcj_job", "") ~= "" then
         if me:GetNW2String("lc_escort_phase", "") ~= "" or me:GetNW2Bool("lc_escort_wait", false) then

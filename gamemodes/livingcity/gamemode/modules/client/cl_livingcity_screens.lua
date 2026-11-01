@@ -57,6 +57,9 @@ local function Frame(ent, h)
     ang:RotateAroundAxis(ang:Forward(), 90)
     local maxs = ent.OBBMaxs and ent:OBBMaxs() or Vector(16, 16, 60)
     local center = ent:GetPos() + ent:GetForward() * (math.max(8, maxs.x) + 10) + ent:GetUp() * 54
+    -- (the owner, 1 November: it stood at crotch height. Its middle a hair below your eyes, as they were
+    -- when it opened, wherever the terminal's own origin is)
+    if S and S.ent == ent and S.eyeZ then center.z = S.eyeZ - 8 end
     local tl = center - ang:Forward() * (W / 2 * SCALE) - ang:Right() * (h / 2 * SCALE)
     return tl, ang
 end
@@ -84,7 +87,9 @@ end
 
 function LC_CL.ScreenOpen(ent, title, sub, rows)
     if not IsValid(ent) then return false end
-    S = { ent = ent, title = title or "", sub = sub or "", rows = rows or {}, page = 1, opened = CurTime() }
+    local me = LocalPlayer()
+    S = { ent = ent, title = title or "", sub = sub or "", rows = rows or {}, page = 1, opened = CurTime(),
+        eyeZ = IsValid(me) and me.EyePos and me:EyePos().z or nil }
     return true
 end
 function LC_CL.ScreenClose() S = nil end
@@ -133,7 +138,9 @@ hook.Add("Think", "LivingCityScreens", function()
         return
     end
     local l = Hovered()
-    S.hover = l and l.r or nil
+    -- (by where it is: the paging and Close buttons are made anew each time the screen's laid out, so the
+    -- one under the crosshair was never the same one being drawn, and never lit up)
+    S.hover = l and l.y or nil
 end)
 
 -- E (or left click) on a button presses it, and nothing else happens (the terminal isn't used again).
@@ -157,7 +164,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityScreens", function(depth, 
         for _, l in ipairs(lay) do
             local r = l.r
             if r.kind == "button" then
-                local hot = S.hover == r
+                local hot = S.hover == l.y
                 local off = r.enabled == false
                 draw.RoundedBox(4, 10, l.y, W - 20, ROW - 4, hot and Color(HOT.r, HOT.g, HOT.b, off and 60 or 120) or Color(30, 40, 52, 230))
                 draw.SimpleText((hot and "> " or "") .. (r.text or ""), "LCScreenText", 20, l.y + (ROW - 4) / 2, off and DIM or INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)

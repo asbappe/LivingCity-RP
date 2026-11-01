@@ -33,7 +33,7 @@ local cvOn     = CreateConVar("lc_hygiene", "1", FLAGS, "Parasites make you need
 local cvUrge   = CreateConVar("lc_urge_minutes", "6", FLAGS, "Minutes for parasites to take you from fine to can't-hold-it")
 local cvSpread = CreateConVar("lc_stink_spread", "0.03", FLAGS, "Chance every five seconds that someone close to a filthy person catches their parasites")
 
-local CLOTHES = { civvies = true, cwu_overalls = true }
+local CLOTHES = { civvies = true, cwu_overalls = true, uniform_clean = true } -- (a unit: a clean uniform, the CP Commissary)
 
 local function Pick(t) return t[math.random(#t)] end
 local function Notice(ply, kind, title, text, secs) if LC.Notice then LC.Notice(ply, kind, title, text, secs) else ply:ChatPrint(title .. ": " .. text) end end
@@ -277,7 +277,8 @@ function LC.ChangeClothes(ply, id)
     if not Needs(ply).clothes then return false, "Your clothes are clean enough." end
     if not id then for c in pairs(CLOTHES) do if LC.HasItem(ply, c) then id = c break end end end
     if not id or not CLOTHES[id] or not LC.HasItem(ply, id) then
-        return false, "You need clean clothes: spare citizen clothes or Union overalls (the Commissary sells them)."
+        return false, LC.PlayerIsCP(ply) and "You need a clean uniform (the Civil Protection Commissary has them)."
+            or "You need clean clothes: spare citizen clothes or Union overalls (the Commissary sells them)."
     end
     LC.TakeItem(ply, id)
     Needs(ply).clothes = nil
@@ -397,6 +398,9 @@ function LC.HygieneStep(ply)
         local have
         for c in pairs(CLOTHES) do if LC.HasItem(ply, c) then have = c break end end
         if have then return { key = "clothes", text = "Change into clean clothes", why = "Your clothes are filthy. Choose this to change into the clean ones in your pockets.", action = "changeclothes", urgent = true } end
+        if LC.PlayerIsCP(ply) then
+            return { key = "clothes", text = "Get a clean uniform", why = "Your uniform is filthy. The Civil Protection Commissary has clean ones; then change into it.", way = "shop", urgent = true }
+        end
         return { key = "clothes", text = "Get clean clothes", why = "Your clothes are filthy. The Commissary sells spare clothes; then change into them.", way = "shop", urgent = true }
     end
     return nil
