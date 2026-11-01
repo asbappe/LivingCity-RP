@@ -64,7 +64,7 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
   Notes:
 - [ ] **The radio transmitter** (CP and Freq 7) is well up in view now. Adjust: `lc_radio_view "20 9 -3"`.
   Notes:
-- [ ] **Metrocop hands:** find a workshop metrocop hands pack, then `lc_cp_hands <its model>` (send me its model list with the same command as before and I'll set it).
+- [ ] **Metrocop hands:** fists (or any weapon with hands) as a metrocop: your own sleeves and gloves now, not the soldier's. Anything odd (bits of body floating in view, stretched shapes)? If it's bad, `lc_cp_hands ""` puts Garry's Mod's back.
   Notes:
 - [ ] **Records Clerk filing:** the instructions at the top make sense? The register shows a status now; anything different (name, number, status) is a Discrepancy; after each form it says right or wrong and why. The blank form button is red and says it's a crime.
   Notes:

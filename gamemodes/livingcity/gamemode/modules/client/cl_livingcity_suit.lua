@@ -1,5 +1,5 @@
 --[[
-    Living City (client): the hands of the Infestation Control suits
+    Living City (client): first-person hands: the Infestation Control suits', and a unit's own
 
     The workshop pack's hands for its suits sit too far out in front of you, so you see through
     the open ends of the sleeves. While you're wearing one of its suits (models/player/worker_*
@@ -26,4 +26,23 @@ hook.Add("CalcViewModelView", "LivingCitySuitHands", function(wep, vm, oldPos, o
     for n in string.gmatch(cvHands:GetString(), "%-?[%d%.]+") do parts[#parts + 1] = tonumber(n) end
     local f, r, u = parts[1] or -6, parts[2] or 0, parts[3] or 0
     return pos + ang:Forward() * f + ang:Right() * r + ang:Up() * u, ang
+end)
+
+-- A unit's own body as their first-person hands (lc_cp_hands "own", sv_livingcity_factions.lua): everything
+-- but the arms and hands shrunk to nothing, so only their own sleeves and gloves show in front of them.
+local ARM = { "clavicle", "upperarm", "forearm", "hand", "finger", "ulna", "wrist", "elbow", "bicep" }
+local function IsArm(name)
+    name = string.lower(name or "")
+    if not string.find(name, "_l_", 1, true) and not string.find(name, "_r_", 1, true) then return false end
+    for _, a in ipairs(ARM) do if string.find(name, a, 1, true) then return true end end
+    return false
+end
+hook.Add("PreDrawPlayerHands", "LivingCityOwnHands", function(hands, vm, ply, wep)
+    if not IsValid(hands) or not hands.GetNW2Bool or not hands:GetNW2Bool("lc_own_hands", false) then return end
+    local m = hands:GetModel()
+    if hands.lcShrunkFor == m or not hands.GetBoneCount or not hands.ManipulateBoneScale then return end
+    hands.lcShrunkFor = m
+    for i = 0, hands:GetBoneCount() - 1 do
+        hands:ManipulateBoneScale(i, IsArm(hands:GetBoneName(i)) and Vector(1, 1, 1) or Vector(0, 0, 0))
+    end
 end)

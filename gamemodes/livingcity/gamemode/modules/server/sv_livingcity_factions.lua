@@ -769,12 +769,22 @@ hook.Add("LivingCityQuestComplete", "LivingCityResistanceTrust", function(p, q)
 end)
 
 -- A metrocop's own hands in first person (the owner, 1 November: they had the Overwatch soldier's sleeves,
--- Garry's Mod's own for the police model, which has no metrocop arms of its own). Set lc_cp_hands to a
--- workshop pack's metrocop hands model (models/weapons/c_...mdl) and Civil Protection units wear those.
-local cvHands = CreateConVar("lc_cp_hands", "", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "First-person hands model for Civil Protection units (a workshop pack's metrocop hands; empty: Garry's Mod's own)")
+-- Garry's Mod's own for the police model, which has no metrocop arms of its own, and there's no pack for it).
+-- "own" (the default): the unit's own body is the hands model, everything but the arms and hands shrunk away
+-- in their own game (cl_livingcity_suit.lua), so it's their own sleeves and gloves. A model path instead: a
+-- workshop pack's hands. Empty: Garry's Mod's own. The Overwatch keep Garry's Mod's, which are theirs.
+local cvHands = CreateConVar("lc_cp_hands", "own", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "First-person hands for Civil Protection units: own (their own body's arms), a hands model path, or empty (Garry's Mod's)")
 hook.Add("PlayerSetHandsModel", "LivingCityCPHands", function(ply, ent)
     local m = cvHands:GetString()
     if m == "" or not IsValid(ply) or ply:GetNW2String("lcf_faction", "") ~= "cp" then return end
+    if LCF.IsOverwatch and LCF.IsOverwatch(ply) then return end
+    if m == "own" then
+        m = ply:GetModel()
+        ent:SetModel(m)
+        ent:SetSkin(ply:GetSkin() or 0)
+        ent:SetNW2Bool("lc_own_hands", true)
+        return true
+    end
     if util.IsValidModel and not util.IsValidModel(m) then return end
     ent:SetModel(m)
     ent:SetSkin(0)
