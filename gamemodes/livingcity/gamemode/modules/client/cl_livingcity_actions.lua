@@ -103,6 +103,8 @@ function LC_CL.OpenActions()
         for _, it in ipairs(LC_CL.PlacesPage().items) do Add(places, it.label, it.run) end
     end
     if unit then Add(menu, "Unit tools (Civil Protection)", function() if LC_CL.OpenUnitTools then LC_CL.OpenUnitTools() end end, "icon16/shield.png") end
+    -- a shackled vortigaunt: calling the Resistance through the vortessence (sv_livingcity_vortwork.lua)
+    if f == "vort" then Add(menu, "Reach out through the vortessence (call the Resistance to free you)", function() Send("vortcall") end, "icon16/transmit.png") end
     Add(menu, "Guide / manual", function() if LC_OpenGuide then LC_OpenGuide(me:IsAdmin()) else RunConsoleCommand("lc_help") end end, "icon16/book_open.png")
     Add(menu, "My pockets (F2)", function() RunConsoleCommand("gm_showteam") end, "icon16/briefcase.png")
     Add(menu, "My board: jobs and stories (F3)", function() RunConsoleCommand("gm_showspare1") end, "icon16/page_white_text.png")

@@ -119,6 +119,7 @@ chat command /unrent
 chat command /unshackle
 chat command /untie
 chat command /vo
+chat command /vortcall
 chat command /wave
 chat command /ways
 chat command /write
@@ -833,6 +834,7 @@ setting lc_vest_cell_drop = 25
 setting lc_view_bob = 1
 setting lc_view_bob_amount = 100
 setting lc_voice_range = 900
+setting lc_vort_call_minutes = 10
 setting lc_vort_charge_minutes = 10
 setting lc_vort_slaves = 2
 setting lc_walk_speed = 110

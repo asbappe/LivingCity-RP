@@ -300,6 +300,12 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Secret endings** three hours apart.
 - [ ] **She, not he:** a job about a woman (a patient, a neighbour, a prisoner) says her.
 
+## Vortigaunts (1 November: what to check)
+
+- [ ] **As a shackled vortigaunt:** C > Reach out through the vortessence: Resistance players and free vortigaunts are told where you are; with a unit watching, the collar bites. The Collar on F3: sweep, the crate, the quiet corner.
+- [ ] **As a free vortigaunt:** Free your kin (a street vortigaunt, marked) and Read the Combine (watch a checkpoint, get intel) on the Resistance's board.
+- [ ] **Freed vortigaunts in rebel ground** walk about the camp and the fire.
+
 ## Beds (1 November: what to check)
 
 - [ ] **Citizens at curfew or night** walk into the habitation blocks and lie down on the beds you placed, asleep (eyes shut), and get up in the morning. Heads at the foot end? `lc_bed_head_flip 1`.

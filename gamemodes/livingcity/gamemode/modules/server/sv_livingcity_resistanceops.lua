@@ -829,6 +829,7 @@ function LC.FreeStreetVort(v, by)
     end
     Walk()
     hook.Run("LivingCityVortFreed", v, by)
+    if IsValid(by) and LC.QuestEvent then LC.QuestEvent("vort_freed", by, v) end -- (the Free your kin job: sv_livingcity_vortwork.lua)
     return true
 end
 

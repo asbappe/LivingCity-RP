@@ -675,6 +675,7 @@ do
     Run("cp", false, function() other.nw.lc_tied, other.nw.lcj_job = true, "porter" Look(other) end)
     Run("cp", false, function() other.nw.lc_tied = false other.nw.lc_handsup = true Look(other) end)
     Run("resistance", false, function() Look(other) end)
+    Run("vort", false, function() Look(nil) end)
     Run("citizen", true, function()
         local door = ents.Create("prop_door_rotating") Look(door)
     end)
@@ -796,7 +797,7 @@ do
         ["//"] = "say://", ["mail (units)"] = "readmail", ["turrets and power banks"] = "checkpoint", ["bodies"] = "searchbody",
         ["hauling"] = "haul", ["mask voice"] = "vo", ["third person while posing"] = "console:lc_act_thirdperson",
         ["!setlaw, !addlaw, !dellaw (the laws panel)"] = "laws", ["microphones"] = "takemic",
-        ["!tipoff"] = "tipoff", ["!loserecord"] = "loserecord", ["!skim"] = "skim", ["!copyrecords"] = "copyrecords", ["!reveal"] = "reveal",
+        ["!vortcall"] = "vortcall", ["!tipoff"] = "tipoff", ["!loserecord"] = "loserecord", ["!skim"] = "skim", ["!copyrecords"] = "copyrecords", ["!reveal"] = "reveal",
     }
     for n in pairs(LCA.Gestures) do WHERE["/" .. n] = n end
     local missing = {}

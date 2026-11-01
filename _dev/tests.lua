@@ -13637,7 +13637,25 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     hook.Run("PlayerSpawn", vp)
     _run(2)
     ok(not vp:HasWeapon("weapon_fists"), "a vortigaunt player has no fists")
-    vp:SetPos(Vector(-150000, 150000, 0)) freer:SetPos(Vector(-150000, 150000, 0))
+    -- things to do as a vortigaunt
+    vp:SetPos(Vector(173000, -173000, 0))
+    for _, other in ipairs(player.GetAll()) do if other ~= vp and other:GetPos():DistToSqr(vp:GetPos()) < 2000 * 2000 then other:SetPos(Vector(-150000, 150000, 0)) end end
+    local heard
+    local rn2 = LC.RadioNotice
+    LC.RadioNotice = function(band, text) if band == "resistance" then heard = text end end
+    ok(LC.VortCall(vp), "a shackled vortigaunt can reach out through the vortessence")
+    _run(9)
+    LC.RadioNotice = rn2
+    ok(heard and string.find(heard, "shackled vortigaunt calls out", 1, true), "and the Resistance hears where it is", heard)
+    local okAgain = LC.VortCall(vp)
+    ok(not okAgain, "not again for a while")
+    ok(LC.Chains.collar and LC.Chains.collar.unlock(vp) and not LC.Chains.collar.unlock(freer), "The Collar: a story only for a shackled vortigaunt")
+    local fv = newPlayer("FreeVortPlayer", "resistance", "vortigaunt", 900)
+    _run(0.3)
+    local kinT, senseT
+    for _, t in ipairs(LC.QuestTemplates) do if t.id == "res_vort_kin" then kinT = t elseif t.id == "res_vort_sense" then senseT = t end end
+    ok(kinT and senseT and senseT.available(fv) and not senseT.available(freer), "a free vortigaunt has its own jobs: Free your kin, Read the Combine")
+    fv:SetPos(Vector(-150000, 150000, 0)) vp:SetPos(Vector(-150000, 150000, 0)) freer:SetPos(Vector(-150000, 150000, 0))
 end)()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
