@@ -14020,6 +14020,8 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     end
     asker:SetPos(Vector(-150000, 150000, 0))
     -- the City Administrator: hours played, an election, the office, the bodyguard
+    local sitting = {}
+    for _, p in ipairs(player.GetAll()) do if p:GetNW2String("lcf_faction", "") == "admin" then sitting[#sitting + 1] = p LC.SetFaction(p, "citizen", nil, true) end end -- (the post open for the test)
     local cand = newPlayer("Candidate", "citizen")
     cand:SetPData("lc_played_min", 0)
     local okS, whyS = LC.StandForAdministrator(cand)
@@ -14044,6 +14046,7 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     for npc in pairs(LC.AdminGuards) do if IsValid(npc) then npc:Remove() end end
     LC.AdminGuards = {}
     LC.SetFaction(cand, "citizen", nil, true)
+    for _, p in ipairs(sitting) do if IsValid(p) then LC.SetFaction(p, "admin", nil, true) end end
     cand:SetPos(Vector(-150000, 150000, 0)) cit2:SetPos(Vector(-150000, 150000, 0))
     -- things wear out; and a player with many lives behind them has a title
     local wearer = newPlayer("Wearer", "citizen")
