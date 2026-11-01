@@ -15,6 +15,7 @@ _setcvar("lc_stockpile", 0) -- (the city's ration stores: tested on their own, a
 _setcvar("lc_garrison", 0) -- (the nexus garrison: tested on its own)
 _setcvar("lc_search_fight_choice", 0) -- (fight or comply: tested on its own, in the 1 November section)
 _setcvar("lc_wear_uses", 0) -- (tools wearing out at random: tested on its own)
+_setcvar("lc_afk_kick_minutes", 0) -- (the test's people never touch a key: no kicking them for it)
 _setcvar("lc_units_spot_monsters", 0) -- (units going for zombies they see: tested on their own)
 _setcvar("lc_units_spot_rebels", 0) -- (units opening fire on armed rebels they see in the street: tested on their own)
 _setcvar("lc_assign_work", 0) -- (the Union assigning work to the jobless: tested on its own)

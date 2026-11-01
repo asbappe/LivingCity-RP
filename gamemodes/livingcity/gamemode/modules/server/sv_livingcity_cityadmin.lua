@@ -73,7 +73,7 @@ timer.Create("LivingCityAFK", 30, 0, function()
             ply:SetNW2Bool("lc_afk", true)
         end
         local kick = cvAfkKick:GetFloat()
-        if kick > 0 and idle > kick * 60 and not ply:IsAdmin() and not ply:IsBot() then
+        if kick > 0 and idle > kick * 60 and not ply:IsAdmin() and not (ply.IsBot and ply:IsBot()) then
             ply:Kick("Idle for " .. math.floor(kick) .. " minutes")
         end
     end
