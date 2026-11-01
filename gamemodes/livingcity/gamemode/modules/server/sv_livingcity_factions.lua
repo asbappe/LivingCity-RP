@@ -340,7 +340,7 @@ function LC.CanJoinFaction(ply, fid, sid)
         local shifts = cvCPClerk:GetInt()
         local done = LC.Counter and LC.Counter(ply, "clerk_shifts") or 0
         if shifts > 0 and done < shifts and ply:GetNW2String("lcf_faction", "") ~= "cp" then
-            return false, string.format("Civil Protection recruits from the civil records office: finish %d shifts as a Records Clerk first (F3 > Jobs). You've done %d.", shifts, done)
+            return false, string.format("Civil Protection recruits from the civil records office and the cleanup crews: finish %d shifts as a Records Clerk first, or half as many in Infestation Cleanup (F3 > Jobs). You've done %d.", shifts, done)
         end
     end
     if f.requires then
@@ -426,7 +426,7 @@ local function SendMenu(ply)
         if f.id == "cp" and ply:GetNW2String("lcf_faction", "") ~= "cp" then
             entry.reqs = {
                 { label = "Civil Standing", have = LC.Standing and LC.Standing(ply) or 0, need = cvCPStanding:GetInt() },
-                { label = "Records Clerk shifts finished (F3 > Jobs)", have = LC.Counter and LC.Counter(ply, "clerk_shifts") or 0, need = cvCPClerk:GetInt() },
+                { label = "Records Clerk shifts finished (F3 > Jobs; Infestation Cleanup counts double)", have = LC.Counter and LC.Counter(ply, "clerk_shifts") or 0, need = cvCPClerk:GetInt() },
             }
         end
         for _, s in ipairs(f.specials or {}) do

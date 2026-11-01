@@ -540,6 +540,27 @@ SHIFTS.groundskeeper = {
     end,
 }
 
+-- Infestation Cleanup: into the nearest infestation, guarded, to spray its growths (sv_livingcity_cleanup.lua).
+SHIFTS.cleanup = {
+    function(ply, job)
+        local best, bd
+        for _, e in ipairs(LC.Nests and LC.Nests() or {}) do
+            local d = e:GetPos():DistToSqr(ply:GetPos())
+            if not bd or d < bd then best, bd = e, d end
+        end
+        if not best then return nil end
+        local edge = best:GetPos()
+        return {
+            title = "Clearing the infestation", reward = 30, limit = 900,
+            desc = "The infestation is spreading. Go in with your respirator and weedkiller and spray its growths. Civil Protection will guard you: stay close to them.",
+            stages = {
+                Goto(edge, "Go to the infestation (marked): Civil Protection meets you there", 600),
+                Count("nest_cleared", 3, "Spray 3 growths: the glowing ones (look at one and press E)"),
+            },
+        }
+    end,
+}
+
 -- Block Warden: walk your own block, a word with a neighbour, and report what isn't right (or don't).
 SHIFTS.warden = {
     function(ply, job)
@@ -1408,6 +1429,8 @@ hook.Add("LivingCityQuestComplete", "LivingCityShiftRationCard", function(p, q)
     -- the records office is the way into Civil Protection (sv_livingcity_factions.lua, lc_cp_clerk_shifts)
     local job = LC.Job(p)
     if job and job.id == "clerk" and LC.Bump then LC.Bump(p, "clerk_shifts") end
+    -- so is Infestation Cleanup, faster (each shift counts as lc_cleanup_shift_counts, 2)
+    if job and job.id == "cleanup" and LC.Bump then LC.Bump(p, "clerk_shifts", LC.CleanupShiftCounts and LC.CleanupShiftCounts() or 2) end
     if LC.CarriesPapers and not LC.CarriesPapers(p) then return end
     local n = math.max(0, cvShiftCards:GetInt())
     if n < 1 then return end

@@ -1715,7 +1715,7 @@ for _, id in ipairs({ "porter", "mortuary", "scrap", "warden" }) do
     end
 end
 ok(done == total, "every new job's shifts can be worked start to finish", missing[1])
-ok(#LCJ.Occupations == 14 and LCJ.ById.warden and LCJ.ById.warden.playersOnly and LCJ.ById.groundskeeper, "fourteen occupations in all (the Groundskeeper, and the Block Warden for players only, the newest)")
+ok(#LCJ.Occupations == 15 and LCJ.ById.warden and LCJ.ById.warden.playersOnly and LCJ.ById.groundskeeper and LCJ.ById.cleanup, "fifteen occupations in all (the Groundskeeper, the Block Warden for players only, and Infestation Cleanup, the newest)")
 local gameOnly = {}
 for _, o in ipairs(LCJ.Occupations) do if o.gameOnly then gameOnly[#gameOnly + 1] = o.id end end
 table.sort(gameOnly)
@@ -13745,20 +13745,79 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     LC.Consume(gk, "tainted_bread")
     ok(gk:Health() < 100, "and whoever eats it is poisoned", gk:Health())
     ok(LCS.LabById.chemicals_weedkiller and LCS.LabById.chemicals_weedkiller.needs.weedkiller == 2, "two canisters cook down into chemicals at the lab")
-    ok(LCS.LabById.gas_bomb and LCS.Items.gas_bomb.grenade == "poison", "weedkiller makes a poison gas bomb at the lab")
-    -- the gas: a citizen choked, a metrocop at half, an Overwatch soldier not at all
+    do
+    ok(not LCS.LabById.gas_bomb and LCS.LabById.firebomb and LCS.LabById.firebomb.needs.weedkiller == 2 and LCS.Items.firebomb.grenade == "fire",
+        "the lab makes a firebomb from weedkiller now, not poison gas")
+    local soldGas
+    for _, g in ipairs(LCS.Goods) do if g.id == "gas_bomb" and g.cpOnly then soldGas = true end end
+    ok(soldGas, "poison gas bombs are sold to units at the Civil Protection Commissary")
+    -- the gas: a citizen choked; a unit's mask keeps it out, until an Insider fouls the filters
     local ctz = newPlayer("GasCitizen", "citizen")
     local mcp = newPlayer("GasCop", "cp")
+    local cln = newPlayer("GasCleaner", "citizen")
     _run(0.3)
+    LC.SetJob(cln, "cleanup", true)
+    ok(LC.HasItem(cln, "weedkiller"), "Infestation Cleanup is issued weedkiller")
     local gpos = Vector(-168000, -168000, 0)
-    ctz:SetPos(gpos) mcp:SetPos(gpos + Vector(30, 0, 0))
-    ctz:SetHealth(100) mcp:SetHealth(100)
+    ctz:SetPos(gpos) mcp:SetPos(gpos + Vector(30, 0, 0)) cln:SetPos(gpos + Vector(-30, 0, 0))
+    ctz:SetHealth(100) mcp:SetHealth(100) cln:SetHealth(100)
+    LC.FouledUntil = 0
     LC.Detonate("poison", gpos, gk)
     _run(3)
     local lostC, lostM = 100 - ctz:Health(), 100 - mcp:Health()
-    ok(lostC > 0 and lostM > 0 and lostM < lostC, "the poison gas chokes a citizen, and a metrocop at half (through the mask)", lostC .. " / " .. lostM)
+    ok(lostC > 0 and lostM == 0, "the poison gas chokes a citizen; a metrocop's mask keeps it out", lostC .. " / " .. lostM)
+    ok(cln:Health() == 100, "a cleanup worker's respirator keeps it out", cln:Health())
     LC.GasClouds = {}
-    ctz:SetPos(Vector(-150000, 150000, 0)) mcp:SetPos(Vector(-150000, 150000, 0))
+    mcp:SetHealth(100)
+    LC.FoulFilters(600)
+    LC.Detonate("poison", gpos, gk)
+    _run(3)
+    ok(mcp:Health() < 100, "with the filters fouled, the gas gets through a unit's mask", mcp:Health())
+    LC.GasClouds = {}
+    LC.FouledUntil = 0
+    local okF, whyF = LC.InsiderFoul(ctz)
+    ok(not okF and whyF, "only an Insider can foul the filters", whyF)
+    -- the firebomb: burns a unit, armour or not
+    mcp:SetHealth(100) mcp:SetArmor(100)
+    LC.Firebomb(gpos, ctz)
+    _run(2)
+    ok(mcp:Health() < 100, "a firebomb burns a unit, armour and all", mcp:Health())
+    LC.Fires = {}
+    -- growths in the infestation: spray every one in a patch that grew, and the patch goes
+    local seed = { kind = "infest", pos = Vector(-169000, -169000, 0), r = 400, group = 0 }
+    local patch = { kind = "infest", pos = Vector(-169000, -168400, 0), r = 300, h = 200, group = 0, grown = true, seed = seed }
+    seed.lcNestFirst, seed.lcNestNext, patch.lcNestFirst, patch.lcNestNext = true, 1e9, true, 1e9 -- (no regrowth mid-test)
+    table.insert(LC.Zones, seed) table.insert(LC.Zones, patch)
+    local n1 = LC.SpawnNest(patch, patch.pos + Vector(20, 0, 0))
+    local n2 = LC.SpawnNest(patch, patch.pos + Vector(-20, 0, 0))
+    ok(IsValid(n1) and IsValid(n2) and LC.NestsIn(patch) == 2, "an infestation has growths in it")
+    cln:SetPos(patch.pos)
+    local okN, whyN = LC.SprayNest(ctz, n1)
+    ok(not okN and string.find(whyN or "", "weedkiller", 1, true), "spraying a growth needs weedkiller")
+    LC.ClearNest(n1, cln)
+    ok(table.HasValue(LC.Zones, patch), "one growth gone: the patch is still there")
+    LC.SprayNest(cln, n2)
+    _run(5)
+    ok(not IsValid(n2) and not table.HasValue(LC.Zones, patch), "every growth sprayed: the patch goes, the infestation shrinks")
+    local n3 = LC.SpawnNest(seed, seed.pos)
+    LC.Firebomb(seed.pos, ctz)
+    _run(1)
+    ok(not IsValid(n3) and LC.InfestQuietAt(seed.pos), "fire burns a growth away; the placed zone sprayed out goes quiet")
+    LC.Fires = {}
+    for i = #LC.Zones, 1, -1 do if LC.Zones[i] == seed then table.remove(LC.Zones, i) end end
+    -- a cleanup shift counts double towards Civil Protection
+    local before = LC.Counter(cln, "clerk_shifts")
+    hook.Run("LivingCityQuestComplete", cln, { chain = "shift" })
+    ok(LC.Counter(cln, "clerk_shifts") == before + 2, "an Infestation Cleanup shift counts as two Records Clerk shifts", LC.Counter(cln, "clerk_shifts") - before)
+    LC.SetJob(cln, "", true)
+    -- a barnacle that eats weedkiller dies
+    local bn = ents.Create("npc_barnacle") bn:SetPos(Vector(-170000, -170000, 200)) bn:Spawn() bn:SetHealth(35)
+    LC.SpawnWorldItem("weedkiller", bn:GetPos() - Vector(0, 0, 40))
+    LC.BarnacleTick()
+    _run(2)
+    ok(bn:Health() <= 0 or not IsValid(bn), "a barnacle that eats weedkiller dies", IsValid(bn) and bn:Health() or "gone")
+    for _, q in ipairs({ ctz, mcp, cln }) do q:SetPos(Vector(-150000, 150000, 0)) end
+    end
     -- short rations below Trusted
     ok(LC.RationFor(plain) == "ration_short" and LC.RationFor(tr) == "ration" and LCS.Items.ration_short.hunger < LCS.Items.ration.hunger * 0.75,
         "a citizen below Trusted gets a short ration (a third less); a Trusted one, the full packet")

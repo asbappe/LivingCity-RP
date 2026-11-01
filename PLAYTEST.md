@@ -304,7 +304,18 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 
 - [ ] **Weeds** come up on open ground and grow (a tuft, weeds, a bush). Which plant model shows? (An ERROR model means the server's plant needs a game the players don't have: say so.)
 - [ ] **Groundskeeper** (F3 > Jobs): issued weedkiller; E on a weed sprays it; the shift is three weeds. NPC groundskeepers spray them too.
-- [ ] **Poison gas bomb** (the lab: 2 weedkiller + an empty can): thrown, a green cloud; citizens choke, metrocops less, Overwatch soldiers not at all.
+- [ ] **Poison gas bomb** (units only now: the Civil Protection Commissary, 40): thrown, a green cloud; citizens choke, units not at all.
+
+## Weedkiller against the infestation (1 November, later: what to check)
+
+- [ ] **Growths** in each infestation: glowing green, spores drifting up. Which models show? (An ERROR model: say so, and which.) E with weedkiller sprays one away.
+- [ ] **Spray every growth** in a patch that grew: the patch goes (the haze and the stains with it). In the zone you placed: nothing new spawns there for a while. They grow back over time.
+- [ ] **Infestation Cleanup** (F3 > Jobs): respirator (chlorine doesn't hurt you) and weedkiller; the shift takes you to the infestation; two units or soldiers come, stay by you, and shoot the zombies. NPC cleanup crews go in with a guard of their own.
+- [ ] **Joining Civil Protection:** a cleanup shift counts as two Records Clerk shifts on the F4 bar.
+- [ ] **Barnacle:** drop weedkiller under one (F2 > Drop): it pulls it up, crunches, dies.
+- [ ] **Firebomb** (the lab: 2 weedkiller, an empty bottle, a rag): a burning bottle; it breaks where it lands and burns a while; units in it burn; a power bank, forcefield or turret next to it goes down; a growth in it burns away.
+- [ ] **A sweep into rebel ground** sometimes opens with a gas bomb; the units walk into it unharmed.
+- [ ] **As an Insider,** at the Commissary with weedkiller: Foul the filters, then a gas bomb hurts units too (and they're told their filter's no good). Spike the food: other units are poisoned over the next few minutes.
 - [ ] **Short rations:** below 150 standing the dispenser gives a short ration (says so); at 150+ the full packet.
 - [ ] **Poison:** F2 > Weedkiller > Poison food or drink: the food looks the same; give it to someone, they're poisoned when they eat it. A unit watching: wanted.
 

@@ -83,6 +83,7 @@ Every commit says what it did; TIMELINE.md has the summary. The big pieces:
 - The Resistance Insider built (`sv_livingcity_insider.lua`): the Inside menu, the leaders told, caught means Resistance for good.
 - Terminals on their own screens (`cl_livingcity_screens.lua`): Civil Intake, Housing Allocation, the CP Commissary. Where the screen stands is a guess (in front, 54 units up): adjust `Frame` if the owner says.
 - The "Move it" bark file names are from memory: if a unit goes silent on the jog, a file name is wrong.
+- Weedkiller against the infestation (`sv_livingcity_cleanup.lua`, `entities/entities/lc_nest.lua`): growths in infestations, Infestation Cleanup (15th job) with guards (NPC state `cleanguard`), barnacles, the firebomb, poison gas for units only, fouled filters and spiked food for the Insider, sweeps opening with gas. The growths' built-in model paths are from memory (antlionhill, antlion_grub, charple01, then a rubbish bag): check what shows. The owner has a workshop pack (id 2043900984) with infestation props and a hazmat suit: once they send its model list, set the defaults for `lc_infest_nest_models` / `lc_cleanup_model` or tell them what to type.
 
 ## Testing state (2026-11-01)
 

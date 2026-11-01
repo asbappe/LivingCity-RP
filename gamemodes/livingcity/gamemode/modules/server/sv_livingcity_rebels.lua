@@ -1428,6 +1428,7 @@ local function RunSkirmish(sk, now)
             if IsValid(u) and Alive(u) and (u:GetPos():DistToSqr(sk.zone.pos) < (sk.zone.r + 200) ^ 2 or (ust and ust.state == "hostile")) then
                 sk.arrived = true
                 sk.ends = math.max(sk.ends, now + 120) -- (a long walk in doesn't eat the sweep)
+                hook.Run("LivingCitySweepArrived", sk, u) -- (a gas bomb lobbed in first: sv_livingcity_cleanup.lua)
                 break
             end
         end

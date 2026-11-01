@@ -798,6 +798,7 @@ do
         ["hauling"] = "haul", ["mask voice"] = "vo", ["third person while posing"] = "console:lc_act_thirdperson",
         ["!setlaw, !addlaw, !dellaw (the laws panel)"] = "laws", ["microphones"] = "takemic",
         ["!vortcall"] = "vortcall", ["!tipoff"] = "tipoff", ["!loserecord"] = "loserecord", ["!skim"] = "skim", ["!copyrecords"] = "copyrecords", ["!reveal"] = "reveal",
+        ["!foulfilters"] = "foulfilters", ["!spikefood"] = "spikefood",
     }
     for n in pairs(LCA.Gestures) do WHERE["/" .. n] = n end
     local missing = {}

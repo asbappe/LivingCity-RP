@@ -25,6 +25,10 @@
       Copy the records       the city's own records, written out: the best
                              intel there is (the quartermaster pays 60). Once
                              every 15 minutes.
+      Foul the filters       at the Commissary, with weedkiller: for lc_fouled_minutes (20)
+                             every unit's mask lets gas through (once every 20 minutes).
+      Spike the food         at the Commissary, with weedkiller: the units who eat at the
+                             station fall sick over the next few minutes (once every 20).
       Reveal myself          to the one person you're looking at: they learn
                              you're the Resistance's friend inside (the
                              codeword).
@@ -172,6 +176,56 @@ function LC.InsiderCopy(ply)
     return true
 end
 
+-- At the Civil Protection Commissary, with weedkiller: foul the filter stock (every unit's mask lets
+-- gas through for lc_fouled_minutes), or spike the station's food (units fall sick).
+local FOUL_GAP, SPIKE_GAP = 1200, 1200
+function LC.InsiderFoul(ply)
+    local ok, why = CanAct(ply)
+    if not ok then return false, why end
+    if LC.NearCPSupply and not LC.NearCPSupply(ply) then return false, "Only at the Civil Protection Commissary, where the spare filters are kept." end
+    if not LC.HasItem(ply, "weedkiller") then return false, "You'd need weedkiller to soak them in." end
+    ok, why = Ready(ply, "foul", FOUL_GAP)
+    if not ok then return false, why end
+    LC.TakeItem(ply, "weedkiller", 1)
+    if LC.FoulFilters then LC.FoulFilters() end
+    Used(ply, "foul", FOUL_GAP)
+    Say(ply, "[Inside] You soak the spare filter canisters and put them back. For a while, every unit's mask will let gas straight through: theirs as much as anyone's.")
+    if LC.RadioNotice then LC.RadioNotice("resistance", "A friend inside: their mask filters are fouled. For a while, gas will get to them too.") end
+    hook.Run("LivingCityInsiderAct", ply, "foul")
+    return true
+end
+
+function LC.InsiderSpike(ply)
+    local ok, why = CanAct(ply)
+    if not ok then return false, why end
+    if LC.NearCPSupply and not LC.NearCPSupply(ply) then return false, "Only at the Civil Protection Commissary, where the station's food is kept." end
+    if not LC.HasItem(ply, "weedkiller") then return false, "You'd need weedkiller." end
+    ok, why = Ready(ply, "spike", SPIKE_GAP)
+    if not ok then return false, why end
+    LC.TakeItem(ply, "weedkiller", 1)
+    Used(ply, "spike", SPIKE_GAP)
+    local at = ply:GetPos()
+    Say(ply, "[Inside] A few drops into the station's coffee and rations. Over the next few minutes, the units who eat here will be sick. Don't eat here yourself.")
+    -- each unit eats sometime in the next few minutes
+    for _, p in ipairs(player.GetAll()) do
+        if p ~= ply and LC.PlayerIsCP(p) then
+            timer.Simple(math.Rand(30, 240), function()
+                if not IsValid(p) or not p:Alive() or not LC.PlayerIsCP(p) then return end
+                p:SetHealth(math.max(1, p:Health() - 30))
+                p:EmitSound("ambient/voices/cough" .. math.random(1, 4) .. ".wav", 70)
+                if LC.Notice then LC.Notice(p, "warn", "Something you ate", "The station's coffee tasted wrong. Your stomach turns over: you've been poisoned.", 8) end
+            end)
+        end
+    end
+    for npc, st in pairs(LC.NPCs or {}) do
+        if IsValid(npc) and st.role == "cop" and npc:GetPos():DistToSqr(at) < 3000 * 3000 then
+            timer.Simple(math.Rand(30, 240), function() if IsValid(npc) and npc:Health() > 0 then npc:TakeDamage(30, game.GetWorld(), game.GetWorld()) end end)
+        end
+    end
+    hook.Run("LivingCityInsiderAct", ply, "spike")
+    return true
+end
+
 function LC.InsiderReveal(ply, target)
     if not LC.IsInsider(ply) then return false, "Nothing like that is open to you." end
     if not IsValid(target) or not target:IsPlayer() or target == ply then return false, "Look at the one person you want to tell." end
@@ -306,6 +360,8 @@ LC.SlashCommands.loserecord = function(ply, rest) Reply(ply, LC.InsiderLoseRecor
 LC.SlashCommands.skim = function(ply) Reply(ply, LC.InsiderSkim(ply)) end
 LC.SlashCommands.copyrecords = function(ply) Reply(ply, LC.InsiderCopy(ply)) end
 LC.SlashCommands.reveal = function(ply) Reply(ply, LC.InsiderReveal(ply, Looked(ply))) end
+LC.SlashCommands.foulfilters = function(ply) Reply(ply, LC.InsiderFoul(ply)) end
+LC.SlashCommands.spikefood = function(ply) Reply(ply, LC.InsiderSpike(ply)) end
 if LC.MenuActions then
-    for _, c in ipairs({ "tipoff", "loserecord", "skim", "copyrecords", "reveal" }) do LC.MenuActions[c] = true end
+    for _, c in ipairs({ "tipoff", "loserecord", "skim", "copyrecords", "reveal", "foulfilters", "spikefood" }) do LC.MenuActions[c] = true end
 end

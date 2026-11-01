@@ -327,6 +327,8 @@ function LC_CL.OpenActions()
             Add(ins, "Lose a wanted person's record (-25 standing)...", function() Ask("Lose a record", "Whose record goes missing? (Their name.)", "loserecord") end)
             Add(ins, "Take supplies for a dead drop (at the Commissary; -10 standing)", function() Send("skim") end)
             Add(ins, "Copy the city's records (the best intel)", function() Send("copyrecords") end)
+            Add(ins, "Foul the spare mask filters (at the Commissary; weedkiller)", function() Send("foulfilters") end)
+            Add(ins, "Spike the station's food (at the Commissary; weedkiller)", function() Send("spikefood") end)
             Add(ins, "Reveal myself to whoever I'm looking at (the codeword)", function() Send("reveal") end)
         end
         local so = cp:AddSubMenu("Set sociostability (officers)")

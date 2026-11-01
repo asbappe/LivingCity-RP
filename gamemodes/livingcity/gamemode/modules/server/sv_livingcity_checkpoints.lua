@@ -527,10 +527,12 @@ end
 -- A free vortigaunt's bolt (weapon_lc_vort.lua): a power bank, a forcefield or a turret shorts out from a
 -- distance, for lc_vort_zap_secs (45). (A bank or forcefield going down takes what hangs off it too.)
 local cvZap = CreateConVar("lc_vort_zap_secs", "45", FLAGS, "Seconds a free vortigaunt's bolt knocks out a power bank, forcefield or turret")
-function LC.VortZapTech(ply, ent)
+-- secs: how long (a firebomb burns them out for longer: sv_livingcity_cleanup.lua); else lc_vort_zap_secs.
+function LC.VortZapTech(ply, ent, secs)
     if not IsValid(ent) then return false end
     local cls = ent:GetClass()
-    local now, secs = CurTime(), math.max(1, cvZap:GetFloat())
+    local now = CurTime()
+    secs = secs or math.max(1, cvZap:GetFloat())
     if cls == "lc_powerbank" or cls == "lc_forcefield" then
         ent:SetNW2Float("lc_short_until", math.max(ent:GetNW2Float("lc_short_until", 0), now + secs))
     elseif cls == TURRET and ent.lcTurret then

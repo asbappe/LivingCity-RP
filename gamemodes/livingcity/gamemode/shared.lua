@@ -139,6 +139,7 @@ LC_MODULES = {
         "sv_livingcity_vort",
         "sv_livingcity_vortwork", -- (things to do as a vortigaunt, and the freed ones' camp life)
         "sv_livingcity_weeds", -- (weeds on open ground, the Groundskeeper, weedkiller as poison)
+        "sv_livingcity_cleanup", -- (the infestation's growths, Infestation Cleanup, the firebomb, barnacles, fouled filters)
         "sv_livingcity_war",
         "sv_livingcity_campmove",
         "sv_livingcity_funding",

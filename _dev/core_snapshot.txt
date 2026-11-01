@@ -72,6 +72,7 @@ chat command /dellaw
 chat command /dropship
 chat command /eatchip
 chat command /escort
+chat command /foulfilters
 chat command /givekey
 chat command /guide
 chat command /gunsout
@@ -109,6 +110,7 @@ chat command /sit
 chat command /skim
 chat command /sleep
 chat command /socio
+chat command /spikefood
 chat command /stand
 chat command /struggle
 chat command /takekey
@@ -312,6 +314,7 @@ item cwu_overalls
 item data_chip
 item data_shard
 item door_code
+item firebomb
 item fishing_line
 item freq7_sheet
 item gas_bomb
@@ -435,6 +438,9 @@ setting lc_citizen_tint = 1
 setting lc_citizens = 14
 setting lc_citizens_sleep = 1
 setting lc_city_effects = 1
+setting lc_cleanup_guards = 2
+setting lc_cleanup_model = 
+setting lc_cleanup_shift_counts = 2
 setting lc_clipboard_angle = 0 0 180
 setting lc_close_call_recover = 10
 setting lc_close_call_regen = 3
@@ -566,6 +572,7 @@ setting lc_exercise_npcs = 10
 setting lc_exercise_pay = 5
 setting lc_exercise_skip_ration = 1
 setting lc_eye_height = 61
+setting lc_firebomb_secs = 12
 setting lc_fixture_wear = 1
 setting lc_forcefield_breaks = 3
 setting lc_forcefield_down = 30
@@ -575,6 +582,7 @@ setting lc_forcefield_needs_bank = 1
 setting lc_forcefield_regen = 15
 setting lc_forgery_cool = 3
 setting lc_forgery_heat = 15
+setting lc_fouled_minutes = 20
 setting lc_fov = 75
 setting lc_free_rent_cp = 1
 setting lc_free_rent_standing = 200
@@ -609,6 +617,9 @@ setting lc_hygiene = 1
 setting lc_ic_chat = 1
 setting lc_identity_minutes = 30
 setting lc_infest_max = 30
+setting lc_infest_nest_models = 
+setting lc_infest_nests = 1
+setting lc_infest_nests_per_patch = 4
 setting lc_infest_quiet_minutes = 10
 setting lc_infest_spread_minutes = 10
 setting lc_informants = 1
@@ -668,6 +679,7 @@ setting lc_march_max = 240
 setting lc_max_bodies = 16
 setting lc_morning_exercise = 1
 setting lc_needs = 1
+setting lc_nest_regrow_minutes = 6
 setting lc_net_burst = 25
 setting lc_net_kick = 400
 setting lc_net_rate = 10
@@ -832,6 +844,7 @@ setting lc_supply_porters = 2
 setting lc_surgery_minutes = 60
 setting lc_surgery_price = 300
 setting lc_surgery_standing = -50
+setting lc_sweep_gas = 0.5
 setting lc_sweep_warning = 90
 setting lc_tag_minutes = 60
 setting lc_talk = 1

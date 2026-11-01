@@ -2056,6 +2056,7 @@ local function ThinkSecurity(npc, st, now)
     if s == "inspect_approach" or s == "inspect_talk" then return ThinkInspection(npc, st, now) end
     if s == "escort" then return ThinkEscort(npc, st, now) end
     if s == "workescort" then return end -- escorting a worker (sv_livingcity_escort.lua drives them)
+    if s == "cleanguard" then return end -- guarding an infestation cleanup worker (sv_livingcity_cleanup.lua drives them)
 
     if st.role == "cop" then
         -- tell people crowding them to move along, and escalate if they don't
