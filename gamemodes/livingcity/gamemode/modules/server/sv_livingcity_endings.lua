@@ -439,14 +439,51 @@ local function CombineNPCs()
     return out
 end
 
+-- n spots round a centre, from radius r0 out, each one clear of the others (taken: spots already
+-- given out, which it adds to) and of walls. A ring that's full spills onto the next one out
+-- (the owner, 1 November: with 100+ NPCs, the endings' rings had them standing inside each other,
+-- and the engine pushed some through the floor). Returns { { pos =, a = angle }, ... }.
+local RING_GAP = 46
+local function RingFree(g, taken)
+    for _, t in ipairs(taken) do
+        if math.abs(t.z - g.z) < 60 and (t.x - g.x) ^ 2 + (t.y - g.y) ^ 2 < (RING_GAP * 0.9) ^ 2 then return false end
+    end
+    if util.TraceHull then
+        local tr = util.TraceHull({ start = g + Vector(0, 0, 6), endpos = g + Vector(0, 0, 8), mins = Vector(-16, -16, 0), maxs = Vector(16, 16, 64), mask = MASK_SOLID_BRUSHONLY })
+        if tr and (tr.Hit or tr.StartSolid) then return false end
+    end
+    return true
+end
+function LC.EndingRingSpots(centre, r0, n, taken, turn)
+    taken = taken or {}
+    local out, r = {}, math.max(r0 or 60, 24)
+    for ring = 1, 40 do
+        if #out >= n then break end
+        local slots = math.max(6, math.floor(2 * math.pi * r / RING_GAP))
+        local left = n - #out
+        local step = left < slots and slots / left or 1 -- (a ring that isn't filled: spread round it)
+        local k = 0
+        while k < slots and #out < n do
+            local a = (turn or 0) + ring * 0.37 + math.floor(k) / slots * math.pi * 2
+            local g = Ground(centre + Vector(math.cos(a) * r, math.sin(a) * r, 0))
+            if g and RingFree(g, taken) then out[#out + 1] = { pos = g, a = a } taken[#taken + 1] = g end
+            k = k + step
+        end
+        r = r + RING_GAP
+    end
+    -- (a tiny room with no space left: the rest by the centre, as before)
+    while #out < n do out[#out + 1] = { pos = Ground(centre) or centre, a = #out } end
+    return out
+end
+local RingSpots = LC.EndingRingSpots
+
 -- The Combine's units, to the landing zone with everyone (a ring outside the players).
-local function GatherCombine(centre, r)
+local function GatherCombine(centre, r, taken)
     local list = CombineNPCs()
+    local spots = RingSpots(centre, r, #list, taken, 0.3)
     for i, npc in ipairs(list) do
-        local a = (i / math.max(1, #list)) * math.pi * 2 + 0.3
-        local spot = centre + Vector(math.cos(a) * r, math.sin(a) * r, 0)
-        npc:SetPos((Ground(spot) or centre)) -- (right on the ground: time's stopped, so nothing would drop them onto it)
-        npc:SetAngles(Angle(0, math.deg(a), 0))
+        npc:SetPos(spots[i].pos) -- (right on the ground: time's stopped, so nothing would drop them onto it)
+        npc:SetAngles(Angle(0, math.deg(spots[i].a), 0))
     end
     return list
 end
@@ -879,29 +916,31 @@ SETUP.harpies = function()
     if LC.OpenEveryDoor then LC.OpenEveryDoor() E.doorsOpen = true end -- (every door locked open: nothing stuck behind one, them or us)
     -- everyone to the landing zone, facing out into the dark
     local ps = player.GetAll()
+    local taken = {}
+    local pspots = RingSpots(E.lz, 60, #ps, taken)
     for i, p in ipairs(ps) do
         if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
-        local a = (i / math.max(1, #ps)) * math.pi * 2
-        local r = 60 + 12 * #ps
-        local spot = E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)
-        p:SetPos((Ground(spot) or E.lz) + Vector(0, 0, 4))
+        local a = pspots[i].a
+        p:SetPos(pspots[i].pos + Vector(0, 0, 4))
         if p.SetEyeAngles then p:SetEyeAngles(Angle(0, math.deg(a), 0)) end
         if p:Health() < 100 then p:SetHealth(100) end
     end
     -- the city stops, and the Combine's units are out there with everyone, in a ring round them
     LC.TimeStopped = true
     if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
-    E.ringR = 210 + 12 * #ps
-    E.combine = GatherCombine(E.lz, E.ringR)
-    for _, n in ipairs(E.combine) do n.lcRing = true end
-    -- and the city's people stand with them (never the Resistance), between everyone and the Combine
+    -- the city's people stand with them (never the Resistance), between everyone and the Combine
     E.folk = {}
     local folk = CityFolk()
     for i = #folk + 1, cvMingeCrowd:GetInt() do folk[#folk + 1] = i end -- (the rest: citizens, spawned below)
-    local rf = 120 + 12 * #ps
+    local fspots = RingSpots(E.lz, 120 + 12 * #ps, #folk, taken, 0.15)
+    local outerR = 0
+    for _, sp in ipairs(fspots) do outerR = math.max(outerR, (sp.pos - E.lz):Length2D()) end
+    E.ringR = math.max(210 + 12 * #ps, outerR + RING_GAP)
+    E.combine = GatherCombine(E.lz, E.ringR, taken)
+    for _, n in ipairs(E.combine) do n.lcRing = true end
     for i, c in ipairs(folk) do
-        local a = (i / math.max(1, #folk)) * math.pi * 2 + 0.15
-        local spot = (Ground(E.lz + Vector(math.cos(a) * rf, math.sin(a) * rf, 0)) or E.lz) + Vector(0, 0, 4)
+        local a = fspots[i].a
+        local spot = fspots[i].pos + Vector(0, 0, 4)
         if type(c) == "number" then c = SpawnFolk(spot, c) elseif IsValid(c) then c:SetPos(spot) end
         if IsValid(c) then
             c:SetAngles(Angle(0, math.deg(a), 0))
@@ -1119,13 +1158,13 @@ SETUP.bloom = function()
     local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
     E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
     local ps = player.GetAll()
+    local taken = {}
+    local pspots = RingSpots(E.lz, 70, #ps, taken)
     for i, p in ipairs(ps) do
         if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
-        local a = (i / math.max(1, #ps)) * math.pi * 2
-        local r = 70 + 14 * #ps
-        p:SetPos((Ground(E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)) or E.lz)) -- (frozen, nobody drops: on the floor, not over it)
+        p:SetPos(pspots[i].pos) -- (frozen, nobody drops: on the floor, not over it)
     end
-    GatherCombine(E.lz, 150 + 14 * #ps)
+    GatherCombine(E.lz, 150 + 14 * #ps, taken)
     -- ...and dances
     for _, p in ipairs(player.GetAll()) do
         if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
@@ -1420,24 +1459,24 @@ SETUP.marrow = function()
     LC.TimeStopped = true
     if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
     local ps = player.GetAll()
+    local taken = {}
+    local pspots = RingSpots(E.lz, 60, #ps, taken)
     for i, p in ipairs(ps) do
         if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
-        local a = (i / math.max(1, #ps)) * math.pi * 2
-        local r = 60 + 12 * #ps
-        p:SetPos((Ground(E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)) or E.lz) + Vector(0, 0, 4))
+        p:SetPos(pspots[i].pos + Vector(0, 0, 4))
         if p:Health() < 100 then p:SetHealth(100) end
     end
-    E.combine = GatherCombine(E.lz, 100 + 12 * #ps)
-    for _, n in ipairs(E.combine) do n.lcRing = true end
     -- the city's people with everyone, between the players and the Combine (never the Resistance)
     E.folk = {}
     local folk = CityFolk()
     for i = #folk + 1, cvMarrowCrowd:GetInt() do folk[i] = i end
     while #folk > cvMarrowCrowd:GetInt() do table.remove(folk) end
-    local rf = 80 + 12 * #ps
+    local fspots = RingSpots(E.lz, 80 + 12 * #ps, #folk, taken, 0.15)
+    E.combine = GatherCombine(E.lz, 100 + 12 * #ps, taken)
+    for _, n in ipairs(E.combine) do n.lcRing = true end
     for i, c in ipairs(folk) do
-        local a = (i / math.max(1, #folk)) * math.pi * 2 + 0.15
-        local spot = (Ground(E.lz + Vector(math.cos(a) * rf, math.sin(a) * rf, 0)) or E.lz)
+        local a = fspots[i].a
+        local spot = fspots[i].pos
         if type(c) == "number" then c = SpawnFolk(spot, c) elseif IsValid(c) then c:SetPos(spot) end
         if IsValid(c) then
             c:SetAngles(Angle(0, math.deg(a), 0))
@@ -2230,16 +2269,16 @@ SETUP.hard = function()
     LC.TimeStopped = true
     if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
     local ps = player.GetAll()
+    local taken = {}
+    local pspots = RingSpots(E.lz, 60, #ps, taken)
     for i, p in ipairs(ps) do
         if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
-        local a = (i / math.max(1, #ps)) * math.pi * 2
-        local r = 60 + 14 * #ps
-        p:SetPos((Ground(E.lz + Vector(math.cos(a) * r, math.sin(a) * r, 0)) or E.lz))
+        p:SetPos(pspots[i].pos)
         p.lcEndFrozen = true
         p:Freeze(true)
         p:SetNW2Bool("lc_dancing", true)
     end
-    GatherCombine(E.lz, 120 + 14 * #ps)
+    GatherCombine(E.lz, 120 + 14 * #ps, taken)
     for npc in pairs(LC.NPCs or {}) do if IsValid(npc) then npc:SetNW2Bool("lc_dancing", true) end end
     E.dark = true
     LC.EndingDark = "e"

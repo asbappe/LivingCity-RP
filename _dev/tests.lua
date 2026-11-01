@@ -14173,6 +14173,31 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     fv:SetPos(Vector(-150000, 150000, 0)) vp:SetPos(Vector(-150000, 150000, 0)) freer:SetPos(Vector(-150000, 150000, 0))
 end)()
 
+section("NPCs that fall out of the map")
+;(function()
+    local npc = LC.Spawners.citizen(Vector(-160000, -160000, 0))
+    if not IsValid(npc) then ok(false, "a citizen to drop") return end
+    local wasIn = util.IsInWorld
+    util.IsInWorld = function(p) return p.z > -1000 end
+    LC.RescueFallen(CurTime())
+    npc:SetPos(Vector(-160000, -160000, -50000))
+    LC.RescueFallen(CurTime())
+    ok(npc:GetPos().z < -1000, "not moved at once (a moment out of the map is let be)")
+    LC.RescueFallen(CurTime() + 3)
+    ok(IsValid(npc) and npc:GetPos().z > -1000, "fallen out of the map for two seconds: put back where it last stood", npc:GetPos())
+    npc.lcGoodPos = nil
+    npc:SetPos(Vector(-160000, -160000, -50000))
+    LC.RescueFallen(CurTime())
+    LC.RescueFallen(CurTime() + 3)
+    ok(not IsValid(npc), "nowhere to put it back: taken away")
+    util.IsInWorld = wasIn
+    -- an ending's ring with a crowd: everyone their own spot, spilling onto more rings
+    local spots = LC.EndingRingSpots(Vector(-160000, 160000, 0), 60, 120, {})
+    local close = 0
+    for i = 1, #spots do for j = i + 1, #spots do if spots[i].pos:Distance(spots[j].pos) < 40 then close = close + 1 end end end
+    ok(#spots == 120 and close == 0, "an ending's ring with 120 people in it: nobody stands inside anybody", close)
+end)()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

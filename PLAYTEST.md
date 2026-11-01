@@ -442,6 +442,7 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 - [ ] **The courier's clipboard** the right way up (if not: `lc_clipboard_angle`, pitch yaw roll).
 - [ ] **Job outfits** button in the editor opens the window.
 - [ ] **Rainwater** drinkable as it is.
+- [ ] **Endings with a big crowd (100+ NPCs):** `lc_ending marrow now`: everyone in rings with room between them, nobody inside anybody, no NPC falling through the floor, no lag or disconnects. The console shows no "Ignoring unreasonable position" lines.
 - [ ] **Endings menu:** "Changes" lists only what you changed; Bloom's hands right on people, and "The dance, on the Combine's units only" to tune theirs.
 - [ ] **Shalom twice as loud, the Harpies twice as loud again; the Harpies' title on screen is THEY RETURN.**
   Notes:

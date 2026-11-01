@@ -1533,6 +1533,35 @@ local SPAWNERS = {
     zombie = function(pos, zone) return SpawnZombie(pos, zone) end,
 }
 local ROLE_ORDER = { "citizen", "cop", "soldier", "scanner", "zombie", "rebel" }
+
+-- Never spawned inside someone (the owner, 1 November: with 100+ NPCs, new ones came in on top of
+-- others and the engine pushed some through the floor): a spot with someone already standing in it
+-- moves to the nearest clear one round it, on the ground there.
+local function SpotClear(pos)
+    if not util.TraceHull then return true end
+    local tr = util.TraceHull({ start = pos + Vector(0, 0, 4), endpos = pos + Vector(0, 0, 6), mins = Vector(-16, -16, 0), maxs = Vector(16, 16, 70), mask = MASK_NPCSOLID })
+    return not (tr and (tr.Hit or tr.StartSolid))
+end
+function LC.FreeSpawnPos(pos)
+    if not pos or SpotClear(pos) then return pos end
+    for ring = 1, 3 do
+        local r = 40 * ring
+        for k = 0, 7 do
+            local a = k / 8 * math.pi * 2 + ring * 0.4
+            local p = pos + Vector(math.cos(a) * r, math.sin(a) * r, 0)
+            local tr = util.TraceLine({ start = p + Vector(0, 0, 40), endpos = p - Vector(0, 0, 120), mask = MASK_SOLID_BRUSHONLY })
+            if tr and tr.Hit and not tr.StartSolid then
+                p = tr.HitPos + Vector(0, 0, 4)
+                if SpotClear(p) then return p end
+            end
+        end
+    end
+    return pos
+end
+for _, role in ipairs({ "citizen", "cop", "soldier", "zombie" }) do
+    local fn = SPAWNERS[role]
+    SPAWNERS[role] = function(pos, ...) return fn(LC.FreeSpawnPos(pos), ...) end
+end
 LC.Spawners = SPAWNERS
 
 -- How many NPCs the city's settings want in all (lc_citizens, lc_cops and the rest).
@@ -2905,4 +2934,46 @@ LC.MakeWayTick = MakeWay
 timer.Create("LivingCityMakeWay", 0.25, 0, function()
     local ok, err = pcall(MakeWay, CurTime())
     if not ok and LC.Error then LC.Error("make way", err) end
+end)
+
+------------------------------------------------------------------------
+-- Fallen out of the map (the owner's console, 1 November: NPCs that had dropped through the floor kept
+-- falling for good, the engine printing "Ignoring unreasonable position" every tick for each one). Once a
+-- second, every NPC outside the map for two seconds running is put back where it last stood inside it,
+-- or taken away if there's nowhere to put it (the city's numbers bring a new one).
+------------------------------------------------------------------------
+
+local function OutOfMap(pos)
+    return util.IsInWorld ~= nil and not util.IsInWorld(pos + Vector(0, 0, 8))
+end
+function LC.RescueFallen(now)
+    local list = ents.FindByClass("npc_*")
+    for npc in pairs(LC.NPCs or {}) do list[#list + 1] = npc end
+    local seen = {}
+    for _, npc in ipairs(list) do
+        if IsValid(npc) and not seen[npc] and not IsValid(npc:GetParent()) then
+            seen[npc] = true
+            local pos = npc:GetPos()
+            if not OutOfMap(pos) then
+                npc.lcGoodPos, npc.lcOutSince = pos, nil
+            else
+                npc.lcOutSince = npc.lcOutSince or now
+                if now - npc.lcOutSince >= 2 then
+                    npc.lcOutSince = nil
+                    local back = npc.lcGoodPos
+                    if back and not OutOfMap(back) then
+                        npc:SetPos(back)
+                        if npc.SetLocalVelocity then npc:SetLocalVelocity(Vector(0, 0, 0)) end
+                    else
+                        if LC.Log then LC.Log("info", "Took away " .. npc:GetClass() .. " (fell out of the map at " .. tostring(pos) .. ")") end
+                        npc:Remove()
+                    end
+                end
+            end
+        end
+    end
+end
+timer.Create("LivingCityFallen", 1, 0, function()
+    local ok, err = pcall(LC.RescueFallen, CurTime())
+    if not ok and LC.Error then LC.Error("fallen NPCs", err) end
 end)
