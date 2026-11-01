@@ -129,8 +129,7 @@ function LC.StandForAdministrator(ply)
     return true
 end
 LC.SlashCommands.run = function(ply) local ok, why = LC.StandForAdministrator(ply) if not ok and why then Say(ply, why) end end
-LC.SlashCommands.stand = LC.SlashCommands.run -- (the first name for it)
-if LC.MenuActions then LC.MenuActions.run = true LC.MenuActions.stand = true end
+if LC.MenuActions then LC.MenuActions.run = true end
 
 net.Receive("lc_election_vote", function(_, ply)
     local e = LC.Election
