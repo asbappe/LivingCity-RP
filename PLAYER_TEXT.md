@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 9e98d19. Admin-only console messages and log lines are left out.
+Made from version 462ee39. Admin-only console messages and log lines are left out.
 
 6135 lines, from 186 files.
 
@@ -2041,49 +2041,55 @@ Made from version 9e98d19. Admin-only console messages and log lines are left ou
 - "Put in"  (text, line 506)
 - "Into {or}"  (text, line 506)
 - "Set down"  (text, line 507)
-- "Eat it"  (text, line 514)
-- "Swallow the motherlode whole. You have a feeling about what happens next."  (text, line 514)
-- "Hand one to the person in front of you"  (text, line 516)
-- "Look at a locked door first. Or type !pick, or bind a key to lc_pick."  (text, line 517)
-- "Become someone else. Clears your wanted status if no Civil Protection unit is watching."  (text, line 519)
-- "Out of sight of any Civil Protection unit."  (text, line 520)
-- "Visit a Civil Protection Commissary to be issued supplies: grenades for your rank, ammunition, armour, bandages and your ration."  (label or button, line 542)
-- "Mark the nearest Civil Protection Commissary on my screen"  (label or button, line 547)
+
+> Note for you (not shown in game): (a grenade is thrown from the Grenades weapon, not from your pockets; the owner, 1 November)
+
+- "Eat it"  (text, line 515)
+- "Swallow the motherlode whole. You have a feeling about what happens next."  (text, line 515)
+- "Hand one to the person in front of you"  (text, line 517)
+- "Look at a locked door first. Or type !pick, or bind a key to lc_pick."  (text, line 518)
+- "Become someone else. Clears your wanted status if no Civil Protection unit is watching."  (text, line 520)
+
+> Note for you (not shown in game): part of: open inventory
+
+- "Out of sight of any Civil Protection unit."  (text, line 521)
+- "Visit a Civil Protection Commissary to be issued supplies: grenades for your rank, ammunition, armour, bandages and your ration."  (label or button, line 543)
+- "Mark the nearest Civil Protection Commissary on my screen"  (label or button, line 548)
 
 > Note for you (not shown in game): the lab (sv_livingcity_lab.lua) makes the Resistance's guns; everyone else buys them
 
-- "Guns, ammunition, jammers, radios: the scientist in the lab makes them (mark the lab)"  (label or button, line 560)
+- "Guns, ammunition, jammers, radios: the scientist in the lab makes them (mark the lab)"  (label or button, line 561)
 
 > Note for you (not shown in game): part of: paint
 
-- "(at a workbench)"  (text, line 592)
-- "(out of sight)"  (text, line 592)
+- "(at a workbench)"  (text, line 593)
+- "(out of sight)"  (text, line 593)
 
 > Note for you (not shown in game): part of: open inventory
 
-- "Nothing hidden here yet."  (label or button, line 620)
+- "Nothing hidden here yet."  (label or button, line 621)
 
 > Note for you (not shown in game): what's in your hands: a crowbar, a gun (not what your faction issued you)
 
-- "On you: {name}{TEXT_ALIGN_CENTER}"  (label, line 654)
+- "On you: {name}{TEXT_ALIGN_CENTER}"  (label, line 655)
 
 > Note for you (not shown in game): part of: open inventory
 
-- "Stash it"  (label or button, line 663)
-- "Hide it at home, magazine and all. (A raid on your block can still find it.)"  (tooltip, line 664)
+- "Stash it"  (label or button, line 664)
+- "Hide it at home, magazine and all. (A raid on your block can still find it.)"  (tooltip, line 665)
 
 > Note for you (not shown in game): the Civil Protection Commissary's counter, on its own screen (cl_livingcity_screens.lua), if this player has them on
 
-- "{price} credits"  (text, line 697)
+- "{price} credits"  (text, line 698)
 
 > Note for you (not shown in game): the game answering something done in a window (lce_shop)
 
-- "the unit counter"  (text, line 700)
+- "the unit counter"  (text, line 701)
 
 > Note for you (not shown in game): the game answering something done in a window (lcu_market)
 
-- "Sell for {price}"  (text, line 819)
-- "Sell all for {n}"  (text, line 826)
+- "Sell for {price}"  (text, line 820)
+- "Sell all for {n}"  (text, line 827)
 
 ## cl_livingcity_nextstep.lua (cl_livingcity_nextstep.lua)
 
@@ -3956,28 +3962,28 @@ Made from version 9e98d19. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The Grenades weapon asks for one of a kind
 
-- "None left."  (text, line 385)
+- "None left."  (text, line 389)
 
 > Note for you (not shown in game): A unit's issued grenades are Combine issue: kept, thrown, or handed to another unit; never sold, dropped, stashed or passed to anyone else (they came back free with every respawn).
 
-- "That's Combine issue: it stays with you (or another unit)."  (text, line 410)
+- "That's Combine issue: it stays with you (or another unit)."  (text, line 414)
 
 > Note for you (not shown in game): Passing things on (and smuggling them into a cell)
 
-- "Look at the person you want to give it to, up close."  (text, line 437)
-- "Your papers stay with you. (Show them instead: Use.)"  (text, line 440)
+- "Look at the person you want to give it to, up close."  (text, line 441)
+- "Your papers stay with you. (Show them instead: Use.)"  (text, line 444)
 
 > Note for you (not shown in game): part of: give to
 
-- "They can't carry any more."  (text, line 442)
-- "Smuggling contraband into custody"  (text, line 447)
-- "[Civil Protection] A guard saw you pass something through the bars. It's confiscated, and so is your freedom."  (chat message, line 448)
-- "You hand over: {name}."  (chat message, line 453)
-- "slips you: {name}.{or}"  (chat message, line 454)
+- "They can't carry any more."  (text, line 446)
+- "Smuggling contraband into custody"  (text, line 451)
+- "[Civil Protection] A guard saw you pass something through the bars. It's confiscated, and so is your freedom."  (chat message, line 452)
+- "You hand over: {name}."  (chat message, line 457)
+- "slips you: {name}.{or}"  (chat message, line 458)
 
 > Note for you (not shown in game): typing in chat
 
-- "You don't have anything like that."  (chat message, line 468)
+- "You don't have anything like that."  (chat message, line 472)
 
 ## what custody costs the worst anticitizens (sv_livingcity_custody.lua)
 

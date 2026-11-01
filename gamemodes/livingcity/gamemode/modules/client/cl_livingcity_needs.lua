@@ -509,7 +509,8 @@ local function OpenInventory()
             if it.cooksTo then Btn(it.fillTo == nil and it.thirst and "Boil" or "Cook", "cook") end
             if it.hunger or it.thirst or it.cures then Btn(it.hunger and "Eat" or (it.cures and "Take" or "Drink"), "use") end
             if it.wear then Btn("Wear", "wear") end
-            if it.use then Btn(it.useLabel or "Use", "use", it.desc) end
+            -- (a grenade is thrown from the Grenades weapon, not from your pockets; the owner, 1 November)
+            if it.use and it.use ~= "throw" then Btn(it.useLabel or "Use", "use", it.desc) end
             if id == "master_chip" and LocalPlayer():GetNW2String("lcf_special", "") == "chaplain" then
                 Btn("Eat it", "eatchip", "Swallow the motherlode whole. You have a feeling about what happens next.")
             end

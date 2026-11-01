@@ -357,11 +357,14 @@ function LC.ThrowGrenade(ply, id)
 end
 
 -- What the Grenades weapon shows: how many of each you're carrying.
-local KINDS = { { "gren_smoke", "smoke" }, { "smokebomb", "smoke" }, { "gren_flash", "flash" }, { "gren_gas", "gas" } }
+-- (the owner, 1 November: a poison gas bomb bought at the Commissary was only throwable from F2. Everything
+-- you throw is on the Grenades weapon now: the poison gas bomb and the firebomb too)
+local KINDS = { { "gren_smoke", "smoke" }, { "smokebomb", "smoke" }, { "gren_flash", "flash" }, { "gren_gas", "gas" },
+    { "gas_bomb", "poison" }, { "firebomb", "fire" } }
 function LC.SyncGrenades(ply)
     if not IsValid(ply) then return end
     local any = false
-    local counts = { smoke = 0, flash = 0, gas = 0 }
+    local counts = { smoke = 0, flash = 0, gas = 0, poison = 0, fire = 0 }
     local inv = LC.Inventory and LC.Inventory(ply) or {}
     for _, k in ipairs(KINDS) do
         local n = inv[k[1]] or 0
@@ -378,7 +381,8 @@ end
 
 -- The Grenades weapon asks for one of a kind
 function LC.ThrowKind(ply, kind)
-    local order = kind == "smoke" and { "gren_smoke", "smokebomb" } or (kind == "flash" and { "gren_flash" }) or { "gren_gas" }
+    local order = kind == "smoke" and { "gren_smoke", "smokebomb" } or (kind == "flash" and { "gren_flash" })
+        or (kind == "poison" and { "gas_bomb" }) or (kind == "fire" and { "firebomb" }) or { "gren_gas" }
     for _, id in ipairs(order) do
         if LC.HasItem(ply, id) then return LC.ThrowGrenade(ply, id) end
     end

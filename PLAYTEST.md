@@ -38,6 +38,8 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 
 ## Also fixed from your notes
 
+- [ ] **Poison gas bomb / firebomb:** bought or made, it's on your Grenades weapon (R to pick it, left click throws). No Throw button in F2.
+  Notes:
 - [ ] **Units in doorways:** walk into one: it shuffles aside and steps clear.
   Notes:
 - [ ] **Metrocop with no pistol:** E at the CP Commissary issues it again (or respawning does).

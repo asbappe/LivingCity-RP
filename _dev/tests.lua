@@ -13901,6 +13901,9 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     if unitC:HasWeapon("weapon_pistol") then unitC:StripWeapon("weapon_pistol") end
     LC.IssueSupplies(unitC)
     ok(unitC:HasWeapon("weapon_pistol"), "a Metrocop who's lost their pistol is issued it again at the CP Commissary")
+    LC.GiveItem(unitC, "gas_bomb", 1)
+    LC.SyncGrenades(unitC)
+    ok(unitC:HasWeapon("weapon_lc_grenades") and unitC:GetNW2Int("lcg_poison", 0) == 1, "a poison gas bomb bought is on the Grenades weapon, not just in your pockets")
     -- walk into a unit standing in your way and it steps aside
     local walker = newPlayer("DoorWalker", "cp")
     walker:SetPos(Vector(-178000, -178000, 0))
