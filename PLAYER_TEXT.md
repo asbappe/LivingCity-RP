@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 5d015a5. Admin-only console messages and log lines are left out.
+Made from version 9e98d19. Admin-only console messages and log lines are left out.
 
 6135 lines, from 186 files.
 
@@ -3890,23 +3890,23 @@ Made from version 5d015a5. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): ammunition for what they carry
 
-- "{load} rounds"  (text, line 66)
+- "{load} rounds"  (text, line 78)
 
 > Note for you (not shown in game): armour
 
-- "armour, to {want}"  (text, line 74)
+- "armour, to {want}"  (text, line 86)
 
 > Note for you (not shown in game): the ration allocation
 
-- "a ration packet"  (text, line 84)
+- "a ration packet"  (text, line 96)
 
 > Note for you (not shown in game): part of: use cpsupply
 
-- "[CP Commissary] Restricted: Civil Protection only."  (chat message, line 95)
-- "[CP Commissary] The screen's dark. No power."  (chat message, line 99)
-- "[CP Commissary] Your next issue is in %d seconds. The Civil Protection unit counter is open."  (message, line 104)
-- "[CP Commissary] Issued: {got}."  (chat message, line 110)
-- "[CP Commissary] You're fully supplied. The Civil Protection unit counter is open."  (chat message, line 112)
+- "[CP Commissary] Restricted: Civil Protection only."  (chat message, line 107)
+- "[CP Commissary] The screen's dark. No power."  (chat message, line 111)
+- "[CP Commissary] Your next issue is in %d seconds. The Civil Protection unit counter is open."  (message, line 116)
+- "[CP Commissary] Issued: {got}."  (chat message, line 122)
+- "[CP Commissary] You're fully supplied. The Civil Protection unit counter is open."  (chat message, line 124)
 
 ## making things, grenades, the arms trade, and getting people out (sv_livingcity_crafting.lua)
 
@@ -4982,96 +4982,96 @@ Made from version 5d015a5. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Returns ok, reason
 
-- "No such faction."  (text, line 358)
+- "No such faction."  (text, line 364)
 
 > Note for you (not shown in game): (a stalker is bound even as a superadmin: only death, or lc_unstalker, ends it)
 
-- "Whitelist only."  (text, line 368)
+- "Whitelist only."  (text, line 374)
 
 > Note for you (not shown in game): part of: can join faction
 
-- "Civil Protection only takes citizens in good standing (%d or more). Yours is %d."  (message, line 374)
+- "Civil Protection only takes citizens in good standing (%d or more). Yours is %d."  (message, line 380)
 
 > Note for you (not shown in game): and who've come up the Civil Protection path: Intake Processor, or Infestation Cleanup (sv_livingcity_work.lua counts the shifts)
 
-- "Civil Protection recruits from the train station's Intake Processors and the infestation cleanup crews: finish %d Intake Processor shifts first, or half as many in Infestation Cleanup (F3 > Jobs). You've done %d."  (message, line 380)
+- "Civil Protection recruits from the train station's Intake Processors and the infestation cleanup crews: finish %d Intake Processor shifts first, or half as many in Infestation Cleanup (F3 > Jobs). You've done %d."  (message, line 386)
 
 > Note for you (not shown in game): part of: can join faction
 
-- "Requires %s in %s."  (message, line 386)
-- "No such role."  (text, line 391)
-- "Someone already holds that role."  (text, line 393)
-- "Requires {name} in {name}."  (text, line 395)
+- "Requires %s in %s."  (message, line 392)
+- "No such role."  (text, line 397)
+- "Someone already holds that role."  (text, line 399)
+- "Requires {name} in {name}."  (text, line 401)
 
 > Note for you (not shown in game): part of: set faction
 
-- "You are now {name}."  (chat message, line 418)
+- "You are now {name}."  (chat message, line 424)
 
 > Note for you (not shown in game): the game answering something done in a window (lcf_join)
 
-- "Not while you're in custody."  (chat message, line 444)
-- "Not while you're wanted or in a fight."  (chat message, line 445)
-- "You can change faction again in {CurTime} seconds."  (chat message, line 447)
+- "Not while you're in custody."  (chat message, line 450)
+- "Not while you're wanted or in a fight."  (chat message, line 451)
+- "You can change faction again in {CurTime} seconds."  (chat message, line 453)
 
 > Note for you (not shown in game): what Civil Protection asks of a citizen, as progress bars on the card (the owner asked)
 
-- "Civil Standing"  (label, line 467)
-- "Intake Processor shifts finished (F3 > Jobs; Infestation Cleanup counts double)"  (label, line 468)
+- "Civil Standing"  (label, line 473)
+- "Intake Processor shifts finished (F3 > Jobs; Infestation Cleanup counts double)"  (label, line 474)
 
 > Note for you (not shown in game): part of: send menu
 
-- "Jobs done for the Resistance, to be trusted as a Fighter (their board, F3)"  (label, line 474)
+- "Jobs done for the Resistance, to be trusted as a Fighter (their board, F3)"  (label, line 480)
 
 > Note for you (not shown in game): only ever to give back what they had (never to take more away)
 
-- "Welcome back. You're still {name}."  (chat message, line 539)
+- "Welcome back. You're still {name}."  (chat message, line 545)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "You can't be %s right now: %s You're %s for now; take it again from the faction menu (F4) when there's a place."  (message, line 544)
-- "back to your rank"  (message, line 546)
+- "You can't be %s right now: %s You're %s for now; take it again from the faction menu (F4) when there's a place."  (message, line 550)
+- "back to your rank"  (message, line 552)
 
 > Note for you (not shown in game): XP The transhuman conditioning: the Overwatch ranks open, and whatever XP you've earned counts at once. There's no undoing it.
 
-- "the conditioning"  (text, line 561)
+- "the conditioning"  (text, line 567)
 
 > Note for you (not shown in game): part of: add xp
 
-- "Promoted to {name}!{or}"  (chat message, line 580)
-- "[%s] %s has been promoted to %s."  (message, line 585)
-- "Demoted to {name}."  (chat message, line 589)
+- "Promoted to {name}!{or}"  (chat message, line 586)
+- "[%s] %s has been promoted to %s."  (message, line 591)
+- "Demoted to {name}."  (chat message, line 595)
 
 > Note for you (not shown in game): Admin commands
 
-- "Player not found."  (text, line 707)
+- "Player not found."  (text, line 713)
 
 > Note for you (not shown in game): admin cmd
 
-- "Factions: citizen, resistance, cp, ota, admin, zombie"  (text, line 714)
-- "No such special role."  (text, line 716)
-- "set to {name}."  (text, line 718)
-- "Usage: lcf_setxp <name> <xp>"  (text, line 724)
-- "now has {xp} XP in {name}."  (text, line 727)
+- "Factions: citizen, resistance, cp, ota, admin, zombie"  (text, line 720)
+- "No such special role."  (text, line 722)
+- "set to {name}."  (text, line 724)
+- "Usage: lcf_setxp <name> <xp>"  (text, line 730)
+- "now has {xp} XP in {name}."  (text, line 733)
 
 > Note for you (not shown in game): part of: step
 
-- "by staff"  (text, line 736)
-- "is now {name}."  (text, line 737)
+- "by staff"  (text, line 742)
+- "is now {name}."  (text, line 743)
 
 > Note for you (not shown in game): admin cmd
 
-- "Usage: lcf_whitelist <name> <faction>"  (text, line 744)
-- "whitelisted for"  (text, line 748)
-- "removed from"  (text, line 748)
+- "Usage: lcf_whitelist <name> <faction>"  (text, line 750)
+- "whitelisted for"  (text, line 754)
+- "removed from"  (text, line 754)
 
 > Note for you (not shown in game): A job done for the Resistance builds their trust; the last one needed makes a Fighter of a member with the XP.
 
-- "[Resistance] You've proved yourself. They trust you now."  (chat message, line 758)
-- "trusted by the Resistance"  (text, line 759)
+- "[Resistance] You've proved yourself. They trust you now."  (chat message, line 764)
+- "trusted by the Resistance"  (text, line 765)
 
 > Note for you (not shown in game): the game's living city quest complete moment
 
-- "[Resistance] They're starting to trust you: %d of %d jobs before they'd arm you as a Fighter."  (message, line 761)
+- "[Resistance] They're starting to trust you: %d of %d jobs before they'd arm you as a Fighter."  (message, line 767)
 
 ## Freq 7, the Resistance's pirate broadcast (sv_livingcity_freq7.lua)
 

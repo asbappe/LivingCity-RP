@@ -2855,3 +2855,53 @@ concommand.Add("lc_status", function(ply)
         LC.LinkCount and LC.LinkCount() or 0, LC.OrphanNodes and #LC.OrphanNodes() or 0,
         #(LC.Zones or {}), lines, beats))
 end)
+
+------------------------------------------------------------------------
+-- Out of the way (the owner, 1 November: units stood in doorways and wouldn't move). Walk into one of the
+-- city's people, a unit or a citizen, and they step aside: a shuffle sideways at once, then a few steps clear.
+-- Not someone busy with you or someone else (a stop, a chase, an escort, a guard, asleep, in a cell).
+------------------------------------------------------------------------
+
+local cvMakeWay = CreateConVar("lc_npc_make_way", "1", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "The city's people (units too) step aside when a player walks into them")
+local BUSY = { hostile = true, inspect_approach = true, inspect_talk = true, escort = true, workescort = true, cleanguard = true,
+    abed = true, event = true, jailed = true, escorted = true, inline = true }
+local function MakeWay(now)
+    if not cvMakeWay:GetBool() then return end
+    for _, ply in ipairs(player.GetAll()) do
+        local vel = ply:GetVelocity()
+        vel.z = 0
+        if ply:Alive() and vel:LengthSqr() > 40 * 40 then
+            local dir = vel:GetNormalized()
+            for _, npc in ipairs(ents.FindInSphere(ply:GetPos() + dir * 30, 40)) do
+                local st = IsValid(npc) and npc:IsNPC() and LC.NPCs[npc]
+                if st and not BUSY[st.state] and not st.questLock and not st.subject and npc:Health() > 0
+                    and (st.makeWayAt or 0) < now and (npc:GetPos() - ply:GetPos()):GetNormalized():Dot(dir) > 0.4 then
+                    st.makeWayAt = now + 2
+                    -- to whichever side is open, away from the line you're walking
+                    local side = Vector(-dir.y, dir.x, 0)
+                    if (npc:GetPos() - ply:GetPos()):Dot(side) < 0 then side = -side end
+                    local to
+                    for _, s in ipairs({ side, -side }) do
+                        local p = npc:GetPos() + s * 60 + dir * 20
+                        local tr = util.TraceHull({ start = npc:GetPos() + Vector(0, 0, 8), endpos = p + Vector(0, 0, 8),
+                            mins = Vector(-14, -14, 0), maxs = Vector(14, 14, 60), filter = { npc, ply }, mask = MASK_NPCSOLID })
+                        if tr and not tr.Hit then to = p break end
+                    end
+                    if to then
+                        npc:SetPos(npc:GetPos() + (to - npc:GetPos()):GetNormalized() * 16) -- (a shuffle at once)
+                        if npc.SetLastPosition and npc.SetSchedule then
+                            npc:SetLastPosition(to)
+                            npc:SetSchedule(SCHED_FORCED_GO)
+                        end
+                        if st.role == "cop" and math.random() < 0.3 then npc:EmitSound("npc/metropolice/vo/affirmative.wav", 60) end
+                    end
+                end
+            end
+        end
+    end
+end
+LC.MakeWayTick = MakeWay
+timer.Create("LivingCityMakeWay", 0.25, 0, function()
+    local ok, err = pcall(MakeWay, CurTime())
+    if not ok and LC.Error then LC.Error("make way", err) end
+end)

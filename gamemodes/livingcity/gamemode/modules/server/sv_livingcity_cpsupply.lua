@@ -5,6 +5,7 @@
     what they need at a Civil Protection Commissary ("Fixture: Civil
     Protection Commissary", entities/lc_cpsupply.lua). E there, as a unit:
 
+      Weapons      any their rank carries that they've lost (taken in custody, say)
       Grenades     by rank, as when you go on duty (sv_livingcity_crafting.lua)
       Ammunition   the issued weapons you carry, back up to a full load
       Armour       up to 50 (officers 75, Overwatch 100)
@@ -53,6 +54,17 @@ function LC.IssueSupplies(ply)
         for id, n in pairs(before) do
             local more = (LC.Inventory(ply)[id] or 0) - n
             if more > 0 then got[#got + 1] = more .. " " .. string.lower(LCS.Items[id] and LCS.Items[id].name or id) end
+        end
+    end
+    -- the weapons their rank carries, any that have gone missing (taken in custody, a scene, a test; the
+    -- owner, 1 November: a Metrocop with no pistol): issued again
+    if LC.RankLoadout then
+        for _, cls in ipairs(LC.RankLoadout(ply)) do
+            if not ply:HasWeapon(cls) then
+                ply:Give(cls)
+                local w = weapons and weapons.Get and weapons.Get(cls)
+                got[#got + 1] = "a " .. string.lower((w and w.PrintName) or (string.gsub(string.gsub(cls, "^weapon_lc_", ""), "^weapon_", "")))
+            end
         end
     end
     -- ammunition for what they carry

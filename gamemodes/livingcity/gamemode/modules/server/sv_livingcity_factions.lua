@@ -214,6 +214,12 @@ local function GiveLoadout(ply, keep)
     if LC.GiveHands then LC.GiveHands(ply, true) end -- start with your hands down; what you carry is a key away
 end
 
+-- The weapons a player's rank (or special role) carries.
+function LC.RankLoadout(ply)
+    local prof = Profile(ply)
+    return prof and prof.loadout or {}
+end
+
 -- True if the faction hands you this weapon (so selling it would be free money).
 function LC.IsIssuedWeapon(ply, cls)
     local prof = Profile(ply)

@@ -38,6 +38,10 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 
 ## Also fixed from your notes
 
+- [ ] **Units in doorways:** walk into one: it shuffles aside and steps clear.
+  Notes:
+- [ ] **Metrocop with no pistol:** E at the CP Commissary issues it again (or respawning does).
+  Notes:
 - [ ] **CP Commissary:** no civilian clothes, no fishing line, no cuffs for sale (a unit's own never run out); a Clean uniform (5) that puts right a soiled unit; poison gas only from Division Leader up.
   Notes:
 - [ ] **Terminal screens** just below eye level; Next page and Close light up when aimed at.
