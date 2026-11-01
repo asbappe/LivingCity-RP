@@ -38,6 +38,8 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 
 ## Also fixed from your notes
 
+- [ ] **Job items** (6-12's belongings, evidence, anything to find): never under stairs or in walled-off space; always somewhere you can walk up to.
+  Notes:
 - [ ] **Sleeping citizens:** lying flat on the bed, eyes shut, not sitting up through it. Heads at the pillow end? (If at the foot: `lc_bed_head_flip 1`.) Too high or sunk in? `lc_bed_npc_lift` (9). Shoot one: they wake.
   Notes:
 - [ ] **Career paths on F3:** jobs grouped (Civil Protection path: Intake Processor, Infestation Cleanup; Administration path: Records Clerk, Block Warden; Union work). F4's Civil Protection bar counts Intake Processor shifts.

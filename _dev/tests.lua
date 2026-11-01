@@ -13890,6 +13890,12 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     ok(LC.NearHeat(cook), "a burning barrel (a fire particle) is heat to boil water by")
     fx:Remove()
     cook:SetPos(Vector(-150000, 150000, 0))
+    -- a job's item never goes where nobody can reach it (under stairs, walled-off space)
+    local tlWas = util.TraceLine
+    util.TraceLine = function(t) if t.endpos and t.start and t.endpos.z > t.start.z + 20 then return { Hit = true, Fraction = 0.2, HitPos = t.start } end return tlWas(t) end
+    ok(LC.ItemSpotOK(Vector(-177000, -177000, 0)) == false, "no room to stand over it (under the stairs): not a spot for an item")
+    util.TraceLine = tlWas
+    ok(LC.ItemSpotOK(Vector(-177000, -177000, 0)) == true, "open ground with room overhead (and no path nodes to say otherwise): fine")
     -- a unit spawns on the Combine's own ground (the owner: not at the train station)
     local cz = { kind = "combine", pos = Vector(-176000, -176000, 0), r = 300, group = 0 }
     table.insert(LC.Zones, cz)

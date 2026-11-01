@@ -346,7 +346,7 @@ local function SurfaceSpots(center, radius, out, n)
     for _, c in ipairs(cands) do
         if #out >= n then break end
         local top = TopOf(c.pos, c.ent)
-        if top and not NearDoor(top, 120) and FarFromAll(out, top, 90) then out[#out + 1] = top end
+        if top and not NearDoor(top, 120) and FarFromAll(out, top, 90) and ItemSpotOK(top, 24) then out[#out + 1] = top end
     end
 end
 
@@ -368,6 +368,29 @@ local function WallSpot(base)
     return nil
 end
 
+-- Somewhere a person can actually get to and pick it up (the owner, 1 November: a job's item went under
+-- some stairs, into space walled off by the map): near a path node on the same floor, in plain sight of
+-- it, with room to stand over it. (A map with no path nodes: only the room overhead is checked.)
+local function ItemSpotOK(p, head)
+    if not p or not util.TraceLine then return true end
+    local up = util.TraceLine({ start = p + Vector(0, 0, 2), endpos = p + Vector(0, 0, head or 56), mask = MASK_SOLID_BRUSHONLY })
+    if up and (up.Hit or up.StartSolid) then return false end
+    local nodes = {}
+    for _, nd in ipairs(LC.NavNodesNear and LC.NavNodesNear(p, 320) or {}) do nodes[#nodes + 1] = nd.pos end
+    for _, nd in pairs(LC.Nodes or {}) do
+        if nd.pos and nd.pos:DistToSqr(p) < 320 * 320 then nodes[#nodes + 1] = nd.pos end
+    end
+    if #nodes == 0 then return true end
+    for _, np in ipairs(nodes) do
+        if math.abs(np.z - p.z) < 64 then
+            local tr = util.TraceLine({ start = np + Vector(0, 0, 36), endpos = p + Vector(0, 0, 12), mask = MASK_SOLID_BRUSHONLY })
+            if tr and not tr.StartSolid and (not tr.Hit or tr.Fraction > 0.97) then return true end
+        end
+    end
+    return false
+end
+LC.ItemSpotOK = ItemSpotOK
+
 local function HideSpots(center, n, radius, floorOnly)
     local out = {}
     if not floorOnly then SurfaceSpots(center, radius, out, math.min(n, math.random(1, n))) end
@@ -380,15 +403,21 @@ local function HideSpots(center, n, radius, floorOnly)
             base = LC.GroundAt and LC.GroundAt(base) or base
         end
         local w = WallSpot(base)
-        if w and w:DistToSqr(center) < (radius * 1.3) ^ 2 and FarFromAll(out, w, 110) then out[#out + 1] = w end
+        if w and w:DistToSqr(center) < (radius * 1.3) ^ 2 and FarFromAll(out, w, 110) and ItemSpotOK(w) then out[#out + 1] = w end
     end
     if not floorOnly and #out < n then SurfaceSpots(center, radius, out, n) end
     -- last resort: open ground, but still not in a doorway
     if #out < n then
         for _, p in ipairs(SpotsNear(center, (n - #out) * 3, radius)) do
             if #out >= n then break end
-            if not NearDoor(p, 130) and FarFromAll(out, p, 100) then out[#out + 1] = p end
+            if not NearDoor(p, 130) and FarFromAll(out, p, 100) and ItemSpotOK(p) then out[#out + 1] = p end
         end
+    end
+    -- still short: where people walk (a wander spot near it), never a guess in the open
+    for _ = 1, 40 do
+        if #out >= n then break end
+        local p = LC.RandomWanderPos("citizen", center)
+        if p and p:DistToSqr(center) < (radius * 1.5) ^ 2 and FarFromAll(out, p, 80) then out[#out + 1] = p end
     end
     if #out < n then
         for _, p in ipairs(SpotsNear(center, n - #out, radius)) do out[#out + 1] = p end
@@ -570,6 +599,19 @@ local function SpawnItem(q, model, pos, keep, loose)
     if not IsValid(e) then return nil end
     e:SetModel(model)
     local ground = GroundAt(pos)
+    -- somewhere nobody can get to (under stairs, walled-off space): the nearest spot where people walk instead
+    if LC.ItemSpotOK and not LC.ItemSpotOK(ground, 24) then
+        local best, bd
+        for _, nd in ipairs(LC.NavNodesNear and LC.NavNodesNear(ground, 500) or {}) do
+            local d = nd.pos:DistToSqr(ground)
+            if (not bd or d < bd) and math.abs(nd.pos.z - ground.z) < 120 then best, bd = nd.pos, d end
+        end
+        if not best then
+            local w = LC.RandomWanderPos and LC.RandomWanderPos("citizen", ground)
+            if w and w:DistToSqr(ground) < 600 * 600 then best = w end
+        end
+        if best then ground = GroundAt(best + Vector(math.Rand(-20, 20), math.Rand(-20, 20), 0)) end
+    end
     local lift = e.OBBMins and -e:OBBMins().z or 0
     e:SetPos(ground + Vector(0, 0, math.max(0, lift) + 2)) -- resting on the floor, not in it
     e:SetAngles(Angle(0, math.random(0, 359), 0))
