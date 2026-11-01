@@ -359,6 +359,7 @@ LC.BlockName = BlockName
 -- middle, at a walking pace with some to spare), before the warnings start.
 local function PersonalGrace(ply)
     local secs = LC.CurfewGrace()
+    secs = secs + (LC.LoyalCurfewGrace and LC.LoyalCurfewGrace(ply) or 0) -- (a minute more for the loyal: sv_livingcity_loyalty.lua)
     local n = LC.PlayerBlock and LC.PlayerBlock(ply)
     if n and LC.ZonesOfKind then
         local best
@@ -401,6 +402,8 @@ local function EnforceCurfew(now)
         end
         if not exempt and LC.IntakeShelter and LC.IntakeShelter(ply) then exempt = true end -- no room yet, waiting by Civil Intake
         if not exempt and now < (ply.lcCurfewGrace or 0) then exempt = true end -- just arrived: time to get home
+        -- the loyal get a minute longer to get home (sv_livingcity_loyalty.lua)
+        if not exempt and LC.LoyalCurfewGrace and now < (LC.EventGraceEnds or 0) + LC.LoyalCurfewGrace(ply) then exempt = true end
         if exempt then
             warnings[ply] = nil
         else

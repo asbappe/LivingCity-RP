@@ -444,6 +444,18 @@ Ordinary Resistance players aren't told who the Insider is; the Resistance's top
 - **The city's own**: freed vortigaunts in rebel ground walk the camp, stand by the fire and hum to themselves, instead of standing in one spot. Two in the same camp (one that's always there, and one the Resistance freed from the street crews) turn to each other every few minutes and talk in their own tongue, like the pair at Sandtraps.
 - **The hive mind**: with two or more free vortigaunts in the city (the freed NPCs and Free Vortigaunt players together), every `lc_vort_commune_minutes` (15) they commune through the vortessence, and the Resistance gains by it: word on Freq 7 of the next planned sweep or raid, or else a **Combine door code** scratched on a scrap beside them in camp (or in a free vortigaunt player's pockets): it opens one Combine door, like a keycard.
 
+**What loyalty earns** (the owner, 1 November). For citizens (and anyone passing as one) by Civil Standing tier, Trusted (150) and Exemplary (400), on top of the Commissary's tiers, breakfast after exercise and free rent from 200:
+- **Fewer stops**: units stop a Trusted citizen half as often, an Exemplary one rarely, and stopping an Exemplary citizen is a glance at the papers, not a search.
+- **Better pay**: Union shifts pay 10% more (Trusted) or 25% more (Exemplary).
+- **A discount** at the Union Commissary: 10% (Trusted) or 20% (Exemplary).
+- **More food**: an Exemplary citizen earns two ration cards for each finished shift.
+- **Curfew leniency**: a minute longer to get home (Trusted and Exemplary), and an Exemplary citizen is waved through once a curfew.
+- **A slip forgiven**: once an in-game day, a minor offence by an Exemplary citizen (a curfew slip, loitering, defacing, trespass) is a warning instead of wanted.
+- **Public praise**: every `lc_loyalty_praise_minutes` (20) the Administrator commends an Exemplary citizen by name, on everyone's screen (and 5 standing), and their papers carry a **MODEL CITIZEN** stamp.
+- **A bigger stash** at home: 4 more places (Trusted), 8 more (Exemplary).
+- **Block Warden**, a Union job for Exemplary citizens only (players, never NPCs, and never handed out): walk two corners of your own block, have a word with a neighbour, and report them or not. A report that holds up (45%) pays 10 credits and 15 standing; one that doesn't costs 10 standing.
+`lc_loyalty_rewards 0` turns all of it off.
+
 ## Civil Protection's tools
 
 **The quick menu** (F1) has what a unit does most on the number keys: 1 Call for backup, 2 Send my 10-20, 3 Issue a BOLO, 4 the mask's most used voice lines, 5 the records terminal, and on 6 to 8 search, cuff, drag and escort for whoever you're looking at.

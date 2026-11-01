@@ -838,6 +838,7 @@ function LC.PapersInfo(ply)
         desc = ply:GetNW2String("lc_desc", ""), cards = LC.RationCards(ply),
         model = ply:GetModel(),
         stalker = (LC.PlayerIsStalker and LC.PlayerIsStalker(ply)) or nil, -- (stamped across: Combine property)
+        model = (LC.ModelCitizen and LC.ModelCitizen(ply)) or nil, -- (stamped: MODEL CITIZEN, sv_livingcity_loyalty.lua)
     }
     local id = LC.Identity and LC.Identity(ply)
     if id and id.alias then

@@ -536,6 +536,7 @@ end
 function LC.CurfewExcuse(ply, cop)
     if LC.DisguisedAsCP(ply) then return true end
     if ply.lcPermitSerial and ply.lcPermitSerial == LC.EventSerial then return true end
+    if LC.LoyalCurfewPass and LC.LoyalCurfewPass(ply, cop) then return true end -- (once a curfew, a model citizen)
     if LC.HasItem(ply, "permit") then
         LC.TakeItem(ply, "permit")
         ply.lcPermitSerial = LC.EventSerial
@@ -822,6 +823,12 @@ local function Resolve(ply, s)
         LC.PapersFailed(ply, why)
         return
     end
+    -- a model citizen: a glance at the papers, no search (sv_livingcity_loyalty.lua)
+    if LC.LoyalNoSearch and LC.LoyalNoSearch(ply) then
+        cop:EmitSound(Pick(CLEAR_LINES), 75)
+        ply:ChatPrint("[Civil Protection] Papers in order. A model citizen: the unit waves you on without a search.")
+        return
+    end
     local total = LC.Search(cop, ply)
     if total > 0 then
         cop:EmitSound("npc/metropolice/vo/prepareforjudgement.wav", 78)
@@ -885,7 +892,8 @@ local function ScanForStops(now)
                         local pct = sweep and cvStopPct:GetFloat() * 2 or (atPost and cvStopPct:GetFloat() or cvStreetPct:GetFloat())
                         pct = pct * (LC.SocioStopMul and LC.SocioStopMul() or 1) -- sociostability (sv_livingcity_cp.lua)
                         -- a loyalty test waiting for a real prisoner: the units go looking (sv_livingcity_stories.lua)
-                        if LC.LoyaltyHunt and LC.LoyaltyHunt(ply) then pct = math.max(pct, 90) end
+                        if LC.LoyaltyHunt and LC.LoyaltyHunt(ply) then pct = math.max(pct, 90)
+                        elseif LC.LoyalStopMul then pct = pct * LC.LoyalStopMul(ply) end -- (fewer stops for the loyal: sv_livingcity_loyalty.lua)
                         if math.random() * 100 < pct and Sees(cop, ply) then
                             LC.StartStop(cop, cst, ply)
                             if table.Count(Stops) >= cap then return end
@@ -1114,7 +1122,7 @@ function LC.StashStore(ply, id)
     if not LC.CanReachStash(ply) then return false, "Your stash is at home, in your own block." end
     if not LC.HasItem(ply, id) then return false end
     if LC.IssuedLocked and LC.IssuedLocked(ply, id) then return false, "That's Combine issue: it stays with you (or another unit)." end
-    if StashCount(ply) >= cvStash:GetInt() then return false, "Your stash is full." end
+    if StashCount(ply) >= cvStash:GetInt() + (LC.LoyalStashExtra and LC.LoyalStashExtra(ply) or 0) then return false, "Your stash is full." end
     LC.TakeItem(ply, id)
     local st = LC.Stash(ply)
     st[id] = (st[id] or 0) + 1
@@ -1156,7 +1164,7 @@ function LC.StashStoreWeapon(ply, cls)
     if not isstring(cls) or not LCS.SellWeapons[cls] or not ply:HasWeapon(cls) then return false end
     local w = ply.GetWeapon and ply:GetWeapon(cls)
     if LC.IsIssuedWeapon and LC.IsIssuedWeapon(ply, cls) then return false, "That was issued to you. It stays with you." end
-    if StashCount(ply) >= cvStash:GetInt() then return false, "Your stash is full." end
+    if StashCount(ply) >= cvStash:GetInt() + (LC.LoyalStashExtra and LC.LoyalStashExtra(ply) or 0) then return false, "Your stash is full." end
     local st = LC.Stash(ply)
     local key = "w:" .. cls
     st[key] = (st[key] or 0) + 1
@@ -1506,7 +1514,7 @@ function LC.InvExtras(ply, t)
     if LC.CanReachStash(ply) then
         t.stash = {}
         for k, v in pairs(LC.Stash(ply)) do if isnumber(v) then t.stash[k] = v end end
-        t.stashSize = cvStash:GetInt()
+        t.stashSize = cvStash:GetInt() + (LC.LoyalStashExtra and LC.LoyalStashExtra(ply) or 0)
         t.stashWeapons = LC.StashableWeapons(ply)
     end
 end

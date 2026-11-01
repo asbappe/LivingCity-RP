@@ -300,6 +300,11 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Secret endings** three hours apart.
 - [ ] **She, not he:** a job about a woman (a patient, a neighbour, a prisoner) says her.
 
+## What loyalty earns (1 November: what to check)
+
+- [ ] **At 150+ standing:** fewer stops, shifts pay a bit more, the Commissary is cheaper, a bigger stash.
+- [ ] **At 400+:** stops are a papers glance; two ration cards a shift; waved through once a curfew; a curfew slip is a warning; the Administrator names you on screen now and then; MODEL CITIZEN on your papers; Block Warden on F3 > Jobs (refused below 400).
+
 ## Vortigaunts (1 November: what to check)
 
 - [ ] **As a shackled vortigaunt:** C > Reach out through the vortessence: Resistance players and free vortigaunts are told where you are; with a unit watching, the collar bites. The Collar on F3: sweep, the crate, the quiet corner.

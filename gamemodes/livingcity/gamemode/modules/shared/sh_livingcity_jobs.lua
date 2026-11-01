@@ -40,6 +40,9 @@ LCJ.Occupations = {
       desc = "Collect scrap metal and clear rubble from the old city. Some of what's buried there was hidden on purpose." },
     { id = "radio", num = 12, name = "Radio Repair", place = "Radio repair shop", gameOnly = true,
       desc = "Repair loudspeakers and Union radios. Some come in tuned to frequencies that aren't supposed to exist." },
+    -- (the owner, 2026-11-01: something for the city's most loyal) players only, Exemplary standing; no workplace: your own block
+    { id = "warden", num = 13, name = "Block Warden", place = "your housing block", minStanding = 400, playersOnly = true, noWorkplace = true,
+      desc = "Exemplary citizens only (Civil Standing 400). Walk your own block, have a word with the neighbours, and report what isn't right. Paid when a report holds up; a false one costs you." },
 }
 
 -- Closed to players: an NPC-only post, or a games-only one with the games off.

@@ -208,9 +208,11 @@ function LC_CL.BuildLayoutBrowser(panel, modes)
         local out = {}
         if cvArrange:GetString() == "use" then
             for _, o in ipairs(LCJ and LCJ.Occupations or {}) do
+              if not o.noWorkplace then -- (the Block Warden works their own block: no workplace to place)
                 local list = { byId["work_" .. o.id] }
                 for _, id in ipairs(JOB_EXTRAS[o.id] or {}) do if byId[id] then list[#list + 1] = byId[id] end end
                 out[#out + 1] = { title = "Job: " .. o.name, list = list, sorted = true }
+              end
             end
             for _, u in ipairs(USES) do
                 local list = {}

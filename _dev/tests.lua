@@ -968,9 +968,10 @@ LC.SetFaction(tester.chaplain, "citizen", nil, true)
 local cast = { cp = newPlayer("SCop", "cp", nil, 1000), citizen = newPlayer("SCit", "citizen") }
 cast.chaplain = newPlayer("SPriest", "resistance", "chaplain", 200)
 cast.stalker = newPlayer("SStalker", "stalker")
+cast.vort = newPlayer("SVort", "vort") -- (The Collar: a shackled vortigaunt's story)
 local problems2, started2, total2 = {}, 0, 0
 for _, chain in ipairs(LC.ChainList) do
-    local p = chain.special and cast.chaplain or (chain.id == "stalker" and cast.stalker) or (chain.factions.cp and cast.cp or cast.citizen)
+    local p = chain.special and cast.chaplain or (chain.id == "stalker" and cast.stalker) or (chain.id == "collar" and cast.vort) or (chain.factions.cp and cast.cp or cast.citizen)
     for partId in pairs(chain.parts) do
         local variants = { false }
         if chain.id == "missing" then variants = { "rebels", "infestation", "deserted" } end
@@ -1689,11 +1690,12 @@ local function shiftTitled(p, title)
 end
 local newJobs = { porter = { "New arrivals", "Luggage", "Papers check" }, clerk = { "Filing", "Permit desk", "Supply cabinet" },
     laundry = { "Wash cycle", "Pressed uniforms", "Stains" }, mortuary = { "Collection", "Before the fire" },
-    scrap = { "Scrap run", "Rubble clearing" }, radio = { "Loudspeakers", "Repair bench", "Union radio order" } }
+    scrap = { "Scrap run", "Rubble clearing" }, radio = { "Loudspeakers", "Repair bench", "Union radio order" },
+    warden = { "Block patrol" } }
 local jobber = newPlayer("Jobber", "citizen")
 local jobInc = ents.Create("lc_incinerator") jobInc:SetPos(Vector(-2600, 2600, 0)) jobInc:Spawn() -- the morgue's (bodies are hauled here)
 local done, total, missing = 0, 0, {}
-for _, id in ipairs({ "porter", "mortuary", "scrap" }) do
+for _, id in ipairs({ "porter", "mortuary", "scrap", "warden" }) do
     LC.SetJob(jobber, id, true)
     for _, title in ipairs(newJobs[id]) do
         total = total + 1
@@ -1712,7 +1714,7 @@ for _, id in ipairs({ "porter", "mortuary", "scrap" }) do
     end
 end
 ok(done == total, "every new job's shifts can be worked start to finish", missing[1])
-ok(#LCJ.Occupations == 12, "twelve occupations in all")
+ok(#LCJ.Occupations == 13 and LCJ.ById.warden and LCJ.ById.warden.playersOnly, "thirteen occupations in all (the Block Warden, for players only, the newest)")
 local gameOnly = {}
 for _, o in ipairs(LCJ.Occupations) do if o.gameOnly then gameOnly[#gameOnly + 1] = o.id end end
 table.sort(gameOnly)
@@ -11022,7 +11024,7 @@ LC.StaffRoster()
 local count = {}
 for _, p in ipairs(P.list) do if p.alive and p.role == "citizen" and p.job then count[p.job] = (count[p.job] or 0) + 1 end end
 local short = {}
-for _, o in ipairs(LCJ.Occupations) do if (count[o.id] or 0) < math.min(target, math.floor(alive / #LCJ.Occupations)) then short[#short + 1] = o.id end end
+for _, o in ipairs(LCJ.Occupations) do if not o.playersOnly and (count[o.id] or 0) < math.min(target, math.floor(alive / #LCJ.Occupations)) then short[#short + 1] = o.id end end
 ok(#short == 0, "every Union job has its people", short[1])
 -- a job left empty is filled first
 local any
@@ -13685,6 +13687,33 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     LC.AddStanding(best, 250) -- (200 or more: rent-free)
     ok(LC.RentPrice(unitR) == 0 and LC.RentPrice(best) == 0 and LC.RentPrice(plain) == GetConVar("lc_rent_price"):GetInt(),
         "an apartment is rent-free for a unit and for a citizen of high standing; everyone else pays")
+    -- what loyalty earns
+    local ex = newPlayer("LoyalExemplary", "citizen")
+    local tr = newPlayer("LoyalTrusted", "citizen")
+    _run(0.3)
+    LC.AddStanding(ex, 450 - LC.Standing(ex)) LC.AddStanding(tr, 200 - LC.Standing(tr))
+    ok(LC.LoyalTier(ex) == "exemplary" and LC.LoyalTier(tr) == "trusted" and LC.LoyalTier(plain) == nil and LC.LoyalTier(unitR) == nil, "standing tiers: Trusted and Exemplary (citizens only)")
+    ok(LC.LoyalStopMul(tr) == 0.5 and LC.LoyalStopMul(ex) < 0.5 and LC.LoyalNoSearch(ex) and not LC.LoyalNoSearch(tr), "fewer stops, and no search for a model citizen")
+    ok(LC.LoyalPayMul(tr) > 1 and LC.LoyalPayMul(ex) > LC.LoyalPayMul(tr), "better pay for shifts")
+    local g = LCS.GoodsById.ration
+    ok(g and LC.GoodsPrice(ex, g) < g.price and LC.GoodsPrice(plain, g) == g.price, "a discount at the Commissary")
+    hook.Run("LivingCityQuestComplete", ex, { chain = "shift", title = "Test shift" })
+    ok((LC.Inventory(ex).ration_card or 0) >= 2, "two ration cards a shift for an Exemplary citizen", LC.Inventory(ex).ration_card)
+    LC.EventSerial = (LC.EventSerial or 0) + 1
+    ok(LC.LoyalCurfewPass(ex, nil) and not LC.LoyalCurfewPass(ex, nil), "waved through once a curfew")
+    ok(LC.ReportCrime(ex, "Curfew violation", 60) == false and not LC.PlayerIsWanted(ex), "a minor slip forgiven: a warning, not wanted")
+    ok(LC.ReportCrime(ex, "Curfew violation", 60) == true, "but only once a day")
+    LC.ClearWanted(ex)
+    ok(LC.LoyalStashExtra(ex) == 8 and LC.LoyalStashExtra(tr) == 4, "a bigger stash at home")
+    ok(LC.PapersInfo(ex).model and not LC.PapersInfo(plain).model, "a MODEL CITIZEN stamp on their papers")
+    ex.chat = {}
+    LC.LoyalPraise(CurTime())
+    ok(ex.lcPraisedAt ~= nil, "the Administrator commends an Exemplary citizen by name")
+    local okW1 = LC.SetJob(tr, "warden")
+    local okW2 = LC.SetJob(ex, "warden")
+    ok(not okW1 and okW2, "Block Warden: a job for Exemplary citizens only")
+    LC.SetJob(ex, "", true)
+    for _, q in ipairs({ ex, tr }) do q:SetPos(Vector(-150000, 150000, 0)) end
     for _, q in ipairs({ unitR, best, plain }) do q:SetPos(Vector(-150000, 150000, 0)) end
     fv:SetPos(Vector(-150000, 150000, 0)) vp:SetPos(Vector(-150000, 150000, 0)) freer:SetPos(Vector(-150000, 150000, 0))
 end)()

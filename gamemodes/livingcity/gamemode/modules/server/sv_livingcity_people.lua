@@ -139,7 +139,7 @@ function LC.NeediestJob()
     local best, bn
     for _, o in ipairs(LCJ.Occupations) do
         local n = count[o.id] or 0
-        if n < target and (not bn or n < bn or (n == bn and math.random() < 0.5)) then best, bn = o.id, n end
+        if not o.playersOnly and n < target and (not bn or n < bn or (n == bn and math.random() < 0.5)) then best, bn = o.id, n end
     end
     return best
 end
@@ -149,7 +149,9 @@ local function RandomJob()
     local need = LC.NeediestJob()
     if need then return need end
     if math.random() > 0.6 then return nil end -- every job is covered: the rest are between jobs, or extra hands
-    return Pick(LCJ.Occupations).id
+    local open = {}
+    for _, o in ipairs(LCJ.Occupations) do if not o.playersOnly then open[#open + 1] = o end end
+    return #open > 0 and Pick(open).id or nil
 end
 
 -- Fill the gaps, the emptiest job first: from the unemployed, then from the
@@ -164,7 +166,7 @@ function LC.StaffRoster()
         local need, nn
         for _, o in ipairs(LCJ.Occupations) do
             local n = count[o.id] or 0
-            if n < target and (not nn or n < nn) then need, nn = o, n end
+            if not o.playersOnly and n < target and (not nn or n < nn) then need, nn = o, n end
         end
         if not need then break end
         local p = table.remove(idle)

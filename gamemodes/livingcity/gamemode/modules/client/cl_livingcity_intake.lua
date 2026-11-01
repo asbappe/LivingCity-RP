@@ -320,6 +320,7 @@ hook.Add("HUDPaint", "LivingCityPapers", function()
     if #desc > 44 then desc = string.sub(desc, 1, 42) .. "..." end
     draw.SimpleText(desc, "DefaultSmall", x + 14, y + 122, Color(70, 64, 56, 255 * a), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     draw.SimpleText((t.cards or 0) > 0 and string.format("RATION CARDS: %d", t.cards) or "NO RATION CARD", "DefaultSmall", x + 14, y + 142, ink, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-    if t.stalker then LC_CL.PapersStamp(x + W / 2, y + H / 2 + 10, "STALKER", a) end
+    if t.stalker then LC_CL.PapersStamp(x + W / 2, y + H / 2 + 10, "STALKER", a)
+    elseif t.model then LC_CL.PapersStamp(x + W / 2, y + H / 2 + 10, "MODEL CITIZEN", a) end
     if t.from then draw.SimpleText("Shown to you by the person in front of you", "DefaultSmall", x + 14, y + H - 16, Color(70, 64, 56, 255 * a), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER) end
 end)

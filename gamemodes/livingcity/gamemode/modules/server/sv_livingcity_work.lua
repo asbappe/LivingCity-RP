@@ -63,6 +63,9 @@ function LC.SetJob(ply, id, force)
     if job and LCJ.Closed(job) and not force then return false, "That job is closed right now. Pick a different one." end
     if not force then
         if not LC.CanWork(ply) then return false, "Only citizens can take Union jobs." end
+        if job and job.minStanding and LC.Standing and LC.Standing(ply) < job.minStanding then
+            return false, string.format("%s is only for citizens with Civil Standing %d or more. Yours is %d.", job.name, job.minStanding, LC.Standing(ply))
+        end
         if id ~= "" and LC.IntakePending and LC.IntakePending(ply) then
             return false, "Only registered citizens can take Union jobs. Register at Civil Intake first, then pick a job."
         end
@@ -115,7 +118,7 @@ function LC.GiveUnionWork(ply)
     end
     local best, bn = nil, nil
     for _, o in ipairs(LCJ.Occupations or {}) do
-        if not LCJ.Closed(o) then
+        if not LCJ.Closed(o) and not o.minStanding then -- (a post you have to earn isn't handed out)
             local n = counts[o.id] or 0
             if not bn or n < bn or (n == bn and math.random() < 0.4) then best, bn = o, n end
         end
@@ -507,6 +510,45 @@ SHIFTS.factory = {
                         LC.Bump(p, "bribes")
                         q.bonus = 10
                         Narrate(q, "He grins like you've always been friends. (10 extra XP for this shift.)")
+                    end },
+                }),
+            },
+        }
+    end,
+}
+
+-- Block Warden: walk your own block, a word with a neighbour, and report what isn't right (or don't).
+SHIFTS.warden = {
+    function(ply, job)
+        local n = LC.PlayerBlock and LC.PlayerBlock(ply)
+        local zone
+        for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("block") or {}) do if (z.group or 0) == n then zone = z break end end
+        local function spot() return (zone and LC.SpotInZone and LC.SpotInZone(zone)) or Q.Spot(ply, 200, 1200) end
+        local a, b = spot(), spot()
+        if not a or not b then return nil end
+        return {
+            title = "Block patrol", reward = 20, limit = 600,
+            desc = "Walk your block, and keep your eyes open. The Union trusts you to know your neighbours.",
+            stages = {
+                Goto(a, "Walk your block: the first corner (marked)", 160),
+                Goto(b, "And the next (marked)", 160),
+                Count("used_npc", 1, "Have a word with a neighbour (walk up to one and press E)", Q.IsCitizenNPC),
+                Choice("They answer your questions a little too quickly, and won't quite meet your eye.", {
+                    { text = "Report them: something about them isn't right.", pick = function(q, p)
+                        if math.random() < 0.45 then
+                            if LC.AddStanding then LC.AddStanding(p, 15, "A report that held up") end
+                            if LC.AddCredits then LC.AddCredits(p, 10, "a report that held up") end
+                            Narrate(q, "Civil Protection looks into it. Your report holds up: 10 credits and 15 standing. You don't see the neighbour again.")
+                        else
+                            if LC.AddStanding then LC.AddStanding(p, -10, "A report that came to nothing") end
+                            Narrate(q, "Civil Protection looks into it, and finds nothing. Wasted time is noted: 10 standing.")
+                        end
+                        Trait(p, "loyalty", 1)
+                    end },
+                    { text = "Nothing to report. Nervous people are just nervous.", pick = function(q, p)
+                        if LC.AddStanding then LC.AddStanding(p, 3, "A quiet patrol") end
+                        Trait(p, "sympathy", 1)
+                        Narrate(q, "You write it up as a quiet patrol.")
                     end },
                 }),
             },
@@ -1346,6 +1388,7 @@ hook.Add("LivingCityQuestComplete", "LivingCityShiftRationCard", function(p, q)
     if LC.CarriesPapers and not LC.CarriesPapers(p) then return end
     local n = math.max(0, cvShiftCards:GetInt())
     if n < 1 then return end
+    n = n + (LC.LoyalExtraCards and LC.LoyalExtraCards(p) or 0) -- (an Exemplary citizen eats better: sv_livingcity_loyalty.lua)
     LC.GiveItem(p, "ration_card", n)
     local have = LC.Inventory and (LC.Inventory(p).ration_card or 0) or n
     p:ChatPrint(string.format("[Rations] You earned %s for that shift. You have %d now: each ration at a dispenser takes one.",

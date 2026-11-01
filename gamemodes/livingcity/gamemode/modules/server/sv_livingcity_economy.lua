@@ -120,7 +120,7 @@ hook.Add("LivingCityQuestComplete", "LivingCityEconomy", function(p, q)
     if q.chain == "rehab" then
         LC.AddStanding(p, 40, "Community service")
     elseif q.chain == "shift" then
-        LC.AddCredits(p, cvShiftPay:GetInt(), "shift complete")
+        LC.AddCredits(p, math.floor(cvShiftPay:GetInt() * (LC.LoyalPayMul and LC.LoyalPayMul(p) or 1) + 0.5), "shift complete") -- (more for the loyal: sv_livingcity_loyalty.lua)
         LC.AddStanding(p, 5, "Union shift completed")
     elseif q.chain == "insidework" or SECRET_BOARDS[q.board] then
         if q.board ~= "Urges" then LC.AddCredits(p, cvJobPay:GetInt(), "paid quietly") end
@@ -203,9 +203,16 @@ function LC.CanBuy(ply, g)
     end
     local need = g.minStanding or -50
     if LC.Standing(ply) < need then return false, "Requires " .. LCS.TierFor(need).name .. " standing." end
-    if LC.Credits(ply) < g.price then return false, "Not enough credits." end
+    if LC.Credits(ply) < LC.GoodsPrice(ply, g) then return false, "Not enough credits." end
     if g.item and LC.CanCarry then local okC, whyC = LC.CanCarry(ply, g.item, g.count or 1) if not okC then return false, whyC end end
     return true
+end
+
+-- What it costs this person: the loyal get a discount at the Union Commissary (sv_livingcity_loyalty.lua).
+function LC.GoodsPrice(ply, g)
+    if not g then return 0 end
+    if g.cpOnly then return g.price end
+    return math.max(1, math.floor(g.price * (LC.LoyalPriceMul and LC.LoyalPriceMul(ply) or 1) + 0.5))
 end
 
 function LC.Buy(ply, id)
@@ -216,7 +223,7 @@ function LC.Buy(ply, id)
         ply:ChatPrint("[Commissary] " .. why)
         return false
     end
-    LC.AddCredits(ply, -g.price)
+    LC.AddCredits(ply, -LC.GoodsPrice(ply, g))
     if g.item then
         LC.GiveItem(ply, g.item, g.count or 1)
     elseif g.entity then
@@ -228,7 +235,7 @@ function LC.Buy(ply, id)
     elseif g.ammo then
         ply:GiveAmmo(g.ammo[2], g.ammo[1])
     end
-    ply:ChatPrint(string.format("[Commissary] Purchased: %s (%d credits)", g.name, g.price))
+    ply:ChatPrint(string.format("[Commissary] Purchased: %s (%d credits)", g.name, LC.GoodsPrice(ply, g)))
     ply:EmitSound("buttons/button14.wav", 60)
     return true
 end
@@ -247,7 +254,7 @@ function LC.OpenShop(ply, viaTerminal)
         if not g.cpOnly or counter then
             local ok, why = LC.CanBuy(ply, g)
             goods[#goods + 1] = {
-                id = g.id, name = g.name, price = g.price, desc = g.desc, ok = ok, why = why,
+                id = g.id, name = g.name, price = LC.GoodsPrice(ply, g), desc = g.desc, ok = ok, why = why,
                 tier = LCS.TierFor(g.minStanding or -50).name,
             }
         end
