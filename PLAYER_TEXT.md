@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 7bf39a3. Admin-only console messages and log lines are left out.
+Made from version c5b4ada. Admin-only console messages and log lines are left out.
 
 5993 lines, from 179 files.
 
@@ -685,7 +685,7 @@ Made from version 7bf39a3. Admin-only console messages and log lines are left ou
 - "Vortigaunts, time and weather"  (text, line 186)
 - "Shackled vortigaunts work the Union's shifts; their collar stops them using their vortessence powers."  (text, line 187)
 - "A shackled vortigaunt can reach out through the vortessence (C menu), unseen, to tell the Resistance where it is, and has its own story on the board, The Collar. A free vortigaunt has jobs of its own on the Resistance's board: Free your kin, and Read the Combine. Its bolt (left click) shorts out a power bank, forcefield or turret from a distance for 45 seconds. With two or more free vortigaunts about, they commune now and then: news of a sweep for the Resistance, or a Combine door code on a scrap."  (text, line 188)
-- "Loyalty pays: Civil Protection units, and citizens with 400 Civil Standing or more, rent their apartment for free."  (text, line 189)
+- "Loyalty pays: Civil Protection units, and citizens with 200 Civil Standing or more, rent their apartment for free."  (text, line 189)
 - "The city keeps shackled vortigaunts sweeping the streets. Resistance (Member and up): look at one up close and unshackle it (C > Resistance, or !unshackle), with no Civil Protection unit watching, and it goes home to rebel ground."  (text, line 190)
 - "The Resistance (Member rank and up) can free one (look at it, then C): it takes ten seconds, and nobody must see you. Once free, it can attack (left click) and charge vests (right click), and the Combine hunt it."  (text, line 191)
 - "Armour is the charge stored in a powered vest. Civil Protection units have one built into the uniform, rebel ranks come with one, and anyone else needs one from the lab. Vortigaunts can charge it."  (text, line 192)
@@ -3108,104 +3108,104 @@ Made from version 7bf39a3. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): What this person pays for a rent period, and why it's free if it is.
 
-- "Civil Protection housing: no rent for a unit"  (text, line 39)
-- "rent-free, for a citizen of your standing"  (text, line 41)
+- "Civil Protection housing: no rent for a unit"  (text, line 43)
+- "rent-free, for a citizen of your standing"  (text, line 45)
 
 > Note for you (not shown in game): part of: hm
 
-- "%dh %02dm"  (message, line 161)
+- "%dh %02dm"  (message, line 165)
 
 > Note for you (not shown in game): Why this person can't rent this door right now (nil if they can).
 
-- "Someone already lives here."  (text, line 167)
-- "You already rent somewhere. !unrent it first."  (text, line 168)
-- "It's paid up for as long as the landlord will take."  (text, line 169)
-- "The rent is %d credits."  (message, line 170)
+- "Someone already lives here."  (text, line 171)
+- "You already rent somewhere. !unrent it first."  (text, line 172)
+- "It's paid up for as long as the landlord will take."  (text, line 173)
+- "The rent is %d credits."  (message, line 174)
 
 > Note for you (not shown in game): part of: rent
 
-- "Look at an apartment door that's for rent."  (text, line 176)
-- "%s It's yours for %s more."  (message, line 187)
-- "No charge: {free}."  (text, line 187)
+- "Look at an apartment door that's for rent."  (text, line 180)
+- "%s It's yours for %s more."  (message, line 191)
+- "No charge: {free}."  (text, line 191)
 
 > Note for you (not shown in game): the other half of a double door comes with it
 
-- "It's yours for %s%s. Locked to everyone but you. !givekey <name> to let someone in."  (message, line 199)
+- "It's yours for %s%s. Locked to everyone but you. !givekey <name> to let someone in."  (message, line 203)
 
 > Note for you (not shown in game): part of: unrent
 
-- "You don't rent anywhere."  (text, line 204)
-- "You've moved out."  (text, line 210)
+- "You don't rent anywhere."  (text, line 208)
+- "You've moved out."  (text, line 214)
 
 > Note for you (not shown in game): part of: set apartment lock
 
-- "Look at your apartment door."  (text, line 216)
-- "You don't have a key."  (text, line 217)
-- "Unlocked: anyone can come in."  (text, line 222)
+- "Look at your apartment door."  (text, line 220)
+- "You don't have a key."  (text, line 221)
+- "Unlocked: anyone can come in."  (text, line 226)
 
 > Note for you (not shown in game): part of: give key
 
-- "You don't rent anywhere."  (text, line 227)
+- "You don't rent anywhere."  (text, line 231)
 
 > Note for you (not shown in game): or the person in front of you
 
-- "Who? Name them, or look at them."  (text, line 234)
+- "Who? Name them, or look at them."  (text, line 238)
 
 > Note for you (not shown in game): part of: give key
 
-- "[Living City] {OwnerName} gave you a key to their apartment."  (chat message, line 239)
-- "[Living City] {OwnerName} took back the key to their apartment."  (chat message, line 242)
-- "You gave {target} a key."  (text, line 245)
-- "You took {target}'s key back."  (text, line 245)
+- "[Living City] {OwnerName} gave you a key to their apartment."  (chat message, line 243)
+- "[Living City] {OwnerName} took back the key to their apartment."  (chat message, line 246)
+- "You gave {target} a key."  (text, line 249)
+- "You took {target}'s key back."  (text, line 249)
 
 > Note for you (not shown in game): part of: apartment info
 
-- "You don't rent anywhere, but you have keys to: {keys}'s."  (text, line 253)
-- "You don't rent anywhere. Look at an apartment door that's for rent and !rent."  (text, line 254)
-- "Your apartment, %s: %s left, %s. Keys: %s."  (message, line 261)
-- "just you"  (message, line 262)
+- "You don't rent anywhere, but you have keys to: {keys}'s."  (text, line 257)
+- "You don't rent anywhere. Look at an apartment door that's for rent and !rent."  (text, line 258)
+- "Your apartment, %s: %s left, %s. Keys: %s."  (message, line 265)
+- "just you"  (message, line 266)
 
 > Note for you (not shown in game): locked is locked, for the one with the key too: the handle rattles. Unlock it first (right click it with your hands out, or !unlock)
 
-- "[Living City] It's locked. Unlock it first: right click it with your hands out (or !unlock)."  (chat message, line 284)
+- "[Living City] It's locked. Unlock it first: right click it with your hands out (or !unlock)."  (chat message, line 288)
 
 > Note for you (not shown in game): part of: rent door use
 
-- "Forcing the door..."  (progress bar, line 291)
-- "You stop."  (text, line 292)
+- "Forcing the door..."  (progress bar, line 295)
+- "You stop."  (text, line 296)
 
 > Note for you (not shown in game): part of: done
 
-- "[Living City] Civil Protection forced the door of {or}'s apartment."  (chat message, line 301)
+- "[Living City] Civil Protection forced the door of {or}'s apartment."  (chat message, line 305)
 
 > Note for you (not shown in game): part of: rent door use
 
-- "Locked. (Someone lives here.)"  (chat message, line 310)
+- "Locked. (Someone lives here.)"  (chat message, line 314)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "[Living City] Your rent ran out. The apartment isn't yours any more."  (chat message, line 325)
-- "[Living City] Your rent runs out in 10 minutes. Look at the door, F1 > Rent / lock this door to pay more."  (chat message, line 331)
+- "[Living City] Your rent ran out. The apartment isn't yours any more."  (chat message, line 329)
+- "[Living City] Your rent runs out in 10 minutes. Look at the door, F1 > Rent / lock this door to pay more."  (chat message, line 335)
 
 > Note for you (not shown in game): part of: hands right click
 
-- "Someone lives here."  (chat message, line 366)
+- "Someone lives here."  (chat message, line 370)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_rent_confirm)
 
-- "Someone already lives here."  (chat message, line 375)
+- "Someone already lives here."  (chat message, line 379)
 
 > Note for you (not shown in game): Licenses An officer takes a trader's license away; their stalls close.
 
-- "Officers only."  (text, line 386)
-- "They're not in the city right now."  (text, line 387)
-- "Business license revoked"  (text, line 391)
-- "[Civil Workers' Union] Your business license has been revoked. Your stalls are closed."  (chat message, line 392)
+- "Officers only."  (text, line 390)
+- "They're not in the city right now."  (text, line 391)
+- "Business license revoked"  (text, line 395)
+- "[Civil Workers' Union] Your business license has been revoked. Your stalls are closed."  (chat message, line 396)
 
 > Note for you (not shown in game): part of: revoke license
 
-- "'s license is revoked."  (text, line 393)
-- "They had no license; their stalls are closed."  (text, line 393)
+- "'s license is revoked."  (text, line 397)
+- "They had no license; their stalls are closed."  (text, line 397)
 
 ## rearranging a rebel camp (sv_livingcity_campmove.lua)
 

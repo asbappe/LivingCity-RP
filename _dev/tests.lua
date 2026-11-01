@@ -13682,7 +13682,7 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     local best = newPlayer("RentBest", "citizen")
     local plain = newPlayer("RentPlain", "citizen")
     _run(0.3)
-    LC.AddStanding(best, 500)
+    LC.AddStanding(best, 250) -- (200 or more: rent-free)
     ok(LC.RentPrice(unitR) == 0 and LC.RentPrice(best) == 0 and LC.RentPrice(plain) == GetConVar("lc_rent_price"):GetInt(),
         "an apartment is rent-free for a unit and for a citizen of high standing; everyone else pays")
     for _, q in ipairs({ unitR, best, plain }) do q:SetPos(Vector(-150000, 150000, 0)) end

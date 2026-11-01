@@ -31,7 +31,11 @@ LC.SlashCommands = LC.SlashCommands or {}
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvPrice = CreateConVar("lc_rent_price", "50", FLAGS, "Credits for one rent period of an apartment (units and citizens of high standing pay nothing)")
 -- (the owner, 2026-11-01: loyalty pays) one apartment rent-free for the city's best citizens, and for units
-local cvFreeStanding = CreateConVar("lc_free_rent_standing", "400", FLAGS, "Civil Standing at which a citizen's apartment is rent-free (400: Exemplary; 0: nobody)")
+local cvFreeStanding = CreateConVar("lc_free_rent_standing", "200", FLAGS, "Civil Standing at which a citizen's apartment is rent-free (0: nobody)")
+-- (it started at 400 the same day: a server that got that moves to 200 once, the owner asked)
+if cvFreeStanding:GetString() == "400" then
+    if cvFreeStanding.SetString then cvFreeStanding:SetString("200") elseif RunConsoleCommand then RunConsoleCommand("lc_free_rent_standing", "200") end
+end
 local cvFreeCP = CreateConVar("lc_free_rent_cp", "1", FLAGS, "Civil Protection units get their apartment rent-free")
 -- What this person pays for a rent period, and why it's free if it is.
 function LC.RentPrice(ply)
