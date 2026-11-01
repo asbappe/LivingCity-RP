@@ -13677,6 +13677,16 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     for _, e in ipairs(ents.FindByClass("lc_item")) do if e:GetNW2String("lc_item", "") == "door_code" then codes = codes + 1 end end
     ok(codes == codes0 + 1 and LCS.Items.door_code.tool == "keycard", "scratched on a scrap beside them: one Combine door, like a keycard")
     LC.PlannedSweep, LC.PlannedRaid = ps, pr
+    -- vortigaunts mend vortigaunts: a second's charge, then 25; once every 10 seconds each
+    vp:SetPos(v1:GetPos() + Vector(60, 0, 0))
+    vp:SetHealth(40)
+    ok(LC.VortHeal(v1, vp) == true and vp:Health() == 40, "a vortigaunt gathers the vortessence (nothing yet)")
+    _run(1.5)
+    ok(vp:Health() == 65, "a second later, its kin is mended", vp:Health())
+    local again, whyAgain = LC.VortHeal(v2, vp)
+    ok(again == false and string.find(whyAgain or "", "moment", 1, true), "but not again straight away, by anyone (no healing cannon)", whyAgain)
+    ok(LC.VortHeal(v1, freer) == nil, "anyone else: not a vortigaunt, so the vest instead")
+    LC.PlannedSweep, LC.PlannedRaid = ps, pr
     LC.RebelVorts[v1], LC.RebelVorts[v2] = nil, nil
     v1:Remove() v2:Remove()
     -- free rent for units and the city's best citizens

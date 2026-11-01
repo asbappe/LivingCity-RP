@@ -12,7 +12,7 @@ AddCSLuaFile()
 SWEP.PrintName    = "Vortessence"
 SWEP.Author       = "Living City"
 SWEP.Category     = "Living City"
-SWEP.Instructions = "Primary: a bolt of vortessence (it shorts out power banks, forcefields and turrets too). Secondary: charge a vest. (Shackled: the collar holds it in.)"
+SWEP.Instructions = "Primary: a bolt of vortessence (it shorts out power banks, forcefields and turrets too). Secondary: charge a vest, or mend another vortigaunt (a second to gather it). (Shackled: the collar holds it in.)"
 SWEP.Spawnable    = true
 SWEP.AdminOnly    = true
 
@@ -85,6 +85,14 @@ function SWEP:SecondaryAttack()
     end
     local tr = util.TraceLine({ start = owner:GetShootPos(), endpos = owner:GetShootPos() + owner:GetAimVector() * 110, filter = owner })
     local target = tr.Entity
+    -- another vortigaunt (a player or an NPC): mended, after a second's charge (sv_livingcity_vortwork.lua)
+    if LC and LC.VortHeal then
+        local began, why = LC.VortHeal(owner, target)
+        if began ~= nil then
+            if began then self.nextHeal = CurTime() + 15 else Tell(owner, why) end
+            return
+        end
+    end
     if not (IsValid(target) and target:IsPlayer() and target:Alive()) then target = owner end
     if LC and LC.PlayerIsZombie and LC.PlayerIsZombie(target) then return Tell(owner, "There is nothing left to charge.") end
     -- the vortessence charges a vest (sv_livingcity_vest.lua); it doesn't knit flesh

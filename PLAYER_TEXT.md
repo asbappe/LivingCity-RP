@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 0136944. Admin-only console messages and log lines are left out.
+Made from version d26b646. Admin-only console messages and log lines are left out.
 
-6019 lines, from 180 files.
+6025 lines, from 180 files.
 
 ## Contents
 
@@ -179,7 +179,7 @@ Made from version 0136944. Admin-only console messages and log lines are left ou
 - [the underground](#the-underground-svlivingcityundergroundlua) (180)
 - [powered vests ("suit power")](#powered-vests-suit-power-svlivingcityvestlua) (4)
 - [vortigaunts](#vortigaunts-svlivingcityvortlua) (12)
-- [things to do as a vortigaunt (and for the city's own)](#things-to-do-as-a-vortigaunt-and-for-the-citys-own-svlivingcityvortworklua) (41)
+- [things to do as a vortigaunt (and for the city's own)](#things-to-do-as-a-vortigaunt-and-for-the-citys-own-svlivingcityvortworklua) (47)
 - [the state of the city](#the-state-of-the-city-svlivingcitywarlua) (58)
 - [ways to get by](#ways-to-get-by-svlivingcitywayslua) (5)
 - [occupations](#occupations-svlivingcityworklua) (295)
@@ -522,19 +522,19 @@ Made from version 0136944. Admin-only console messages and log lines are left ou
 
 - "The collar suppresses your vortessence."  (chat message, line 81)
 - "Your vortessence is gathering (%ds)."  (message, line 84)
-- "There is nothing left to charge."  (chat message, line 89)
+- "There is nothing left to charge."  (chat message, line 97)
 
 > Note for you (not shown in game): the vortessence charges a vest (sv_livingcity_vest.lua); it doesn't knit flesh
 
-- "You wear nothing for the vortessence to charge."  (chat message, line 92)
-- "They wear no vest for the vortessence to charge."  (chat message, line 92)
-- "Your vest is fully charged."  (chat message, line 94)
-- "Their vest is fully charged."  (chat message, line 94)
+- "You wear nothing for the vortessence to charge."  (chat message, line 100)
+- "They wear no vest for the vortessence to charge."  (chat message, line 100)
+- "Your vest is fully charged."  (chat message, line 102)
+- "Their vest is fully charged."  (chat message, line 102)
 
 > Note for you (not shown in game): part of: secondary attack
 
-- "The vortigaunt's hands glow green, the cells hum, and your vest feels warm."  (chat message, line 99)
-- "charging with vortessence"  (text, line 100)
+- "The vortigaunt's hands glow green, the cells hum, and your vest feels warm."  (chat message, line 107)
+- "charging with vortessence"  (text, line 108)
 
 ## cl_init.lua (cl_init.lua)
 
@@ -685,7 +685,7 @@ Made from version 0136944. Admin-only console messages and log lines are left ou
 - "C > Me > Gesture: wave, salute, bow, nod, shake, point, beckon, halt, cheer, laugh. C > Me > Put my hands up."  (text, line 184)
 - "Vortigaunts, time and weather"  (text, line 186)
 - "Shackled vortigaunts work the Union's shifts; their collar stops them using their vortessence powers."  (text, line 187)
-- "A shackled vortigaunt can reach out through the vortessence (C menu), unseen, to tell the Resistance where it is, and has its own story on the board, The Collar. A free vortigaunt has jobs of its own on the Resistance's board: Free your kin, and Read the Combine. Its bolt (left click) shorts out a power bank, forcefield or turret from a distance for 45 seconds. With two or more free vortigaunts about, they commune now and then: news of a sweep for the Resistance, or a Combine door code on a scrap."  (text, line 188)
+- "A shackled vortigaunt can reach out through the vortessence (C menu), unseen, to tell the Resistance where it is, and has its own story on the board, The Collar. A free vortigaunt has jobs of its own on the Resistance's board: Free your kin, and Read the Combine. Its bolt (left click) shorts out a power bank, forcefield or turret from a distance for 45 seconds. Its right click mends another vortigaunt (a second to gather, then 25 health; once every 10 seconds for each). With two or more free vortigaunts about, they commune now and then: news of a sweep for the Resistance, or a Combine door code on a scrap."  (text, line 188)
 - "Loyalty pays: Civil Protection units, and citizens with 200 Civil Standing or more, rent their apartment for free."  (text, line 189)
 - "More for the loyal: from Trusted (150 standing), fewer stops, better pay, a Commissary discount and a bigger stash; at Exemplary (400), no searches, two ration cards a shift, waved through once a curfew, a minor slip forgiven once a day, praise from the Administrator, MODEL CITIZEN on your papers, and the Block Warden job."  (text, line 190)
 - "The city keeps shackled vortigaunts sweeping the streets. Resistance (Member and up): look at one up close and unshackle it (C > Resistance, or !unshackle), with no Civil Protection unit watching, and it goes home to rebel ground."  (text, line 191)
@@ -11460,22 +11460,37 @@ Made from version 0136944. Admin-only console messages and log lines are left ou
 
 - "[Vortessence] Shifts, the gate, the men: it all settles into your mind, and you write it down. The quartermaster pays for this."  (chat message, line 235)
 
+> Note for you (not shown in game): True if it's begun, false and why if not, nil if the target isn't a vortigaunt at all (a vest, then).
+
+- "Their body is whole."  (text, line 263)
+- "Their vortessence needs a moment before it can take more."  (text, line 265)
+
+> Note for you (not shown in game): part of: vort heal
+
+- "[Vortessence] You gather it in your hands..."  (chat message, line 268)
+
+> Note for you (not shown in game): a timer (regularly)
+
+- "[Vortessence] Too far: it slips away."  (chat message, line 272)
+- "[Vortessence] Green light, and warmth: your kin mends you."  (chat message, line 282)
+- "mending your kin"  (text, line 283)
+
 > Note for you (not shown in game): part of: vort commune
 
-- "[Vortessence] Your kin reach for one another, and for a moment you are many. Something is seen."  (chat message, line 355)
+- "[Vortessence] Your kin reach for one another, and for a moment you are many. Something is seen."  (chat message, line 425)
 
 > Note for you (not shown in game): what's seen: a sweep or raid on its way, if one is; else a door code
 
-- "The vortigaunts have seen it in the vortessence: a sweep into our ground %s, in about %d seconds. Move what you can."  (message, line 359)
-- "The vortigaunts have seen it in the vortessence: our raid {target} will meet more Combine than we planned for."  (text, line 362)
+- "The vortigaunts have seen it in the vortessence: a sweep into our ground %s, in about %d seconds. Move what you can."  (message, line 429)
+- "The vortigaunts have seen it in the vortessence: our raid {target} will meet more Combine than we planned for."  (text, line 432)
 
 > Note for you (not shown in game): a door code: on a scrap by an NPC vortigaunt in camp, or in a free vortigaunt player's pockets
 
-- "The vortigaunts have seen a Combine door code in the vortessence. It's scratched on a scrap beside them, {GetPos}. One door, before they change it."  (text, line 372)
+- "The vortigaunts have seen a Combine door code in the vortessence. It's scratched on a scrap beside them, {GetPos}. One door, before they change it."  (text, line 442)
 
 > Note for you (not shown in game): part of: vort commune
 
-- "[Vortessence] A string of numbers settles in your mind: a Combine door code. You scratch it down (it's in your pockets). One door, before they change it."  (chat message, line 377)
+- "[Vortessence] A string of numbers settles in your mind: a Combine door code. You scratch it down (it's in your pockets). One door, before they change it."  (chat message, line 447)
 
 ## the state of the city (sv_livingcity_war.lua)
 

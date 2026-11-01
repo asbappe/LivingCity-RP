@@ -243,12 +243,82 @@ T{
 -- The city's own: freed vortigaunts living in rebel ground
 ------------------------------------------------------------------------
 
+------------------------------------------------------------------------
+-- Vortigaunts heal vortigaunts (the owner, 2026-11-01): the one healing there is outside food, sleep
+-- and medicine. A second's charge first, then 25; each vortigaunt can take it once every 10 seconds
+-- (so a crowd of them can't keep one standing forever), and the healer waits 15 between.
+------------------------------------------------------------------------
+
+local function IsVortBody(e)
+    if not IsValid(e) then return false end
+    if e:IsPlayer() then return e:Alive() and LC.IsVortPlayer ~= nil and LC.IsVortPlayer(e) end
+    return e:IsNPC() and e:GetClass() == "npc_vortigaunt" and e:Health() > 0
+end
+LC.IsVortBody = IsVortBody
+
+-- True if it's begun, false and why if not, nil if the target isn't a vortigaunt at all (a vest, then).
+function LC.VortHeal(healer, target)
+    if not IsValid(healer) or not IsVortBody(target) or target == healer then return nil end
+    local max = target:GetMaxHealth() > 0 and target:GetMaxHealth() or 100
+    if target:Health() >= max then return false, "Their body is whole." end
+    local now = CurTime()
+    if (target.lcVortHealedAt or -1e9) + 10 > now then return false, "Their vortessence needs a moment before it can take more." end
+    target.lcVortHealedAt = now
+    healer:EmitSound("npc/vort/attack_charge.wav", 70)
+    if healer:IsPlayer() then healer:ChatPrint("[Vortessence] You gather it in your hands...") end
+    timer.Simple(1, function()
+        if not (IsValid(healer) and IsValid(target)) or healer:Health() <= 0 or not IsVortBody(target) then return end
+        if healer:GetPos():DistToSqr(target:GetPos()) > 170 * 170 then
+            if healer:IsPlayer() then healer:ChatPrint("[Vortessence] Too far: it slips away.") end
+            target.lcVortHealedAt = nil
+            return
+        end
+        if healer:IsPlayer() then
+            local w = healer:GetActiveWeapon()
+            if not (IsValid(w) and w:GetClass() == "weapon_lc_vort") then target.lcVortHealedAt = nil return end
+        end
+        target:SetHealth(math.min(max, target:Health() + 25))
+        target:EmitSound("npc/vort/health_charge.wav", 70)
+        if target:IsPlayer() then target:ChatPrint("[Vortessence] Green light, and warmth: your kin mends you.") end
+        if healer:IsPlayer() and LC.AddXP then LC.AddXP(healer, 2, "mending your kin") end
+        hook.Run("LivingCityVortHealed", healer, target)
+    end)
+    return true
+end
+
+-- The freed ones in camp tend their own: a hurt vortigaunt nearby (a player or one of them) is walked to and mended.
+local function TendKin(v, now)
+    if (v.lcHealNext or 0) > now then return false end
+    local best, bd
+    for _, e in ipairs(ents.FindInSphere(v:GetPos(), 500)) do
+        if e ~= v and IsVortBody(e) and e:Health() < (e:GetMaxHealth() > 0 and e:GetMaxHealth() or 100) * 0.8
+            and (e.lcVortHealedAt or -1e9) + 10 <= now then
+            local d = e:GetPos():DistToSqr(v:GetPos())
+            if not bd or d < bd then best, bd = e, d end
+        end
+    end
+    if not best then return false end
+    if bd > 130 * 130 then
+        if v.SetLastPosition then v:SetLastPosition(best:GetPos()) v:SetSchedule(SCHED_FORCED_GO_RUN) end
+        v.lcVortNext = now + 6
+        return true
+    end
+    if LC.Face then LC.Face(v, best:GetPos()) end
+    if LC.VortHeal(v, best) then
+        v.lcHealNext = now + 15
+        v:SetNW2String("lc_doing", "mending its kin")
+    end
+    return true
+end
+LC.VortTendKin = TendKin
+
 local HUMS = { "npc/vort/vort_foot1.wav", "npc/vort/vort_foot2.wav", "npc/vort/vort_foot3.wav", "npc/vort/vort_foot4.wav" }
 local nextLife = 0
 local function VortLife(now)
     if now < nextLife or not LC.RebelVorts then return end
     nextLife = now + 5
     for v in pairs(LC.RebelVorts) do
+        if IsValid(v) and v:Health() > 0 then TendKin(v, now) end
         if IsValid(v) and v:Health() > 0 and now > (v.lcVortNext or 0) then
             v.lcVortNext = now + math.Rand(25, 55)
             -- somewhere in its own camp: by the fire if there is one, else anywhere in the zone
