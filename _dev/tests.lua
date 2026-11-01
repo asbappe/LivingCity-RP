@@ -13963,6 +13963,23 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     if IsValid(LC.Grigori) then LC.Grigori:Remove() end
     LC.Grigori = nil
     for i = #LC.Zones, 1, -1 do if LC.Zones[i] == rz then table.remove(LC.Zones, i) end end
+    -- the prison: two Nova Prospekt guards only, half again a soldier's health
+    local pz = { kind = "prison", pos = Vector(-181000, -181000, 0), r = 500, group = 0 }
+    table.insert(LC.Zones, pz)
+    _setcvar("lc_garrison", 6)
+    LC.GarrisonTick(CurTime() + 1000)
+    LC.GarrisonTick(CurTime() + 2000)
+    _setcvar("lc_garrison", 0)
+    local guards, extra = 0, 0
+    for npc, gz in pairs(LC.Garrison) do
+        if gz == pz and IsValid(npc) then
+            local gst = LC.NPCs[npc]
+            if gst and gst.prisonGuard then guards = guards + 1 else extra = extra + 1 end
+        end
+    end
+    ok(guards == 2 and extra == 0, "the prison is guarded by two Nova Prospekt guards, and nobody else", guards .. " / " .. extra)
+    for npc, gz in pairs(LC.Garrison) do if gz == pz then if IsValid(npc) then npc:Remove() end LC.Garrison[npc] = nil end end
+    for i = #LC.Zones, 1, -1 do if LC.Zones[i] == pz then table.remove(LC.Zones, i) end end
     -- a job's item never goes where nobody can reach it (under stairs, walled-off space)
     local tlWas = util.TraceLine
     util.TraceLine = function(t) if t.endpos and t.start and t.endpos.z > t.start.z + 20 then return { Hit = true, Fraction = 0.2, HitPos = t.start } end return tlWas(t) end

@@ -38,6 +38,14 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 
 ## Also fixed from your notes
 
+- [ ] **Cleanup:** one step, "Clear 3 growths": spray one and vacuum it, in any order; all three count. Guards are soldiers, and they kill zombies fast now. Warning posts by a path node at the edge. 
+  Notes:
+- [ ] **Prison:** two Nova Prospekt guards, tough; no metrocops or soldiers garrisoned there. A prisoner a job's about stays in until the job ends.
+  Notes:
+- [ ] **Turrets:** knocked over: E as a unit sets it upright where it stood; NPC units right ones they pass.
+  Notes:
+- [ ] **Firebomb:** a much wider fire. **Lab:** text wraps, no "Homemade", scientists' own voices. **Weeds:** easier to find, one marked on the shift. **Sweep cart:** on the floor.
+  Notes:
 - [ ] **Poison gas bomb / firebomb:** bought or made, it's on your Grenades weapon (R to pick it, left click throws). No Throw button in F2.
   Notes:
 - [ ] **Units in doorways:** walk into one: it shuffles aside and steps clear.

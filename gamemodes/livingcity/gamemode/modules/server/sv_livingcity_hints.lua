@@ -297,7 +297,7 @@ LC.HINTS = {
         text = "A scanner photographed you. For a minute, every Civil Protection unit can see where you are. Get out of sight, shoot the scanner down, or throw a smoke grenade: a scanner can't photograph anyone inside or behind smoke." },
     terminal = { title = "The Commissary",
         text = { default = "Press {+use} to shop. The higher your Civil Standing, the more it will sell you.",
-                 cp = "Press {+use} to shop: ammunition, batteries and grenades for Civil Protection units. (A Civil Protection Commissary hands these out for free.)" } },
+                 cp = "Press {+use} to shop. (This is the Union Commissary, for citizens: your ammunition, grenades and armour come from the Civil Protection Commissary, {gm_showteam} marks the way.)" } },
     cpsupply = { title = "Civil Protection Commissary",
         text = { cp = "Press {+use} to be issued supplies: grenades for your rank, ammunition for your weapons, armour, bandages and your ration. You can do this once every two minutes; in between, the unit counter there is open to buy extras.",
                  ota = "Press {+use} to be issued supplies: grenades, ammunition, armour, bandages and a ration. You can do this once every two minutes.",

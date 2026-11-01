@@ -11,6 +11,8 @@
                             zone gets fewer (about one per 15x15 metres of floor)
       lc_garrison_cops      out of every ten, how many are metrocops (3)
       lc_garrison_respawn   seconds before a lost unit is replaced (90)
+      lc_prison_guards      the prison: only Nova Prospekt guards, this many (2),
+                            half again a soldier's health; nobody else garrisoned in it
 ]]
 
 if CLIENT then return end
@@ -39,6 +41,11 @@ function LC.GarrisonSize(z)
     return math.Clamp(math.floor(area / (600 * 600) + 0.5), math.min(2, most), most)
 end
 
+-- The prison (the owner, 1 November): only Nova Prospekt guards, lc_prison_guards (2) of them; no
+-- metrocops or soldiers garrisoned in it (a Combine zone that takes it in leaves it to them).
+local cvPrison = CreateConVar("lc_prison_guards", "2", FLAGS, "Nova Prospekt prison guards garrisoned in each prison zone (only they guard it)")
+LC.GarrisonPrisonGuards = function() return math.max(0, cvPrison:GetInt()) end
+
 local function Count(z)
     local n, cops = 0, 0
     for npc, gz in pairs(LC.Garrison) do
@@ -58,10 +65,14 @@ local function NearDoor(p)
     for _, e in ipairs(ents.FindInSphere(p, 80)) do if IsValid(e) and DOORS[e:GetClass()] then return true end end
     return false
 end
-local function SpawnSpot(z)
+local function InPrison(p)
+    for _, pz in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("prison") or {}) do if LCZ.Contains(pz, p, 0) then return true end end
+    return false
+end
+local function SpawnSpot(z, prison)
     for _ = 1, 8 do
         local p = LC.SpotInZone(z)
-        if p and (not LC.CombineZoneAt or LC.CombineZoneAt(p) == z) and not NearDoor(p)
+        if p and (prison or not LC.CombineZoneAt or LC.CombineZoneAt(p) == z) and (prison or not InPrison(p)) and not NearDoor(p)
             and not (LC.IsSeen and LC.IsSeen(p + Vector(0, 0, 40)))
             and (not LC.FarFromPlayers or LC.FarFromPlayers(p, 300)) then
             return p
@@ -70,9 +81,9 @@ local function SpawnSpot(z)
 end
 
 function LC.GarrisonOne(z, role)
-    local p = SpawnSpot(z)
+    local p = SpawnSpot(z, z.kind == "prison")
     if not p then return nil end
-    local spawn = role == "cop" and LC.SpawnCop or LC.SpawnSoldier
+    local spawn = role == "cop" and LC.SpawnCop or LC.SpawnSoldier -- (a prison "guard" is a soldier, dressed and armoured below)
     if not spawn then return nil end
     local npc, st = spawn(p + Vector(0, 0, 4))
     if not IsValid(npc) or not st then return nil end
@@ -81,6 +92,14 @@ function LC.GarrisonOne(z, role)
     st.routeGroup = nil -- (no beat out on the streets)
     st.garrison = true
     LC.Garrison[npc] = z
+    if role == "guard" then
+        -- a Nova Prospekt prison guard: all that armour, half again a soldier's health
+        if util.IsValidModel == nil or util.IsValidModel("models/combine_soldier_prisonguard.mdl") then npc:SetModel("models/combine_soldier_prisonguard.mdl") end
+        local hp = math.floor(npc:Health() * 1.5)
+        if npc.SetMaxHealth then npc:SetMaxHealth(hp) end
+        npc:SetHealth(hp)
+        st.prisonGuard = true
+    end
     return npc, st
 end
 
@@ -93,6 +112,12 @@ function LC.GarrisonTick(now)
         elseif not table.HasValue(LC.Zones or {}, z) and not (LC.IsSeen and LC.IsSeen(npc:GetPos() + Vector(0, 0, 40))) then
             LC.Garrison[npc] = nil
             npc:Remove()
+        end
+    end
+    for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("prison") or {}) do
+        local n = Count(z)
+        if cvMax:GetInt() > 0 and n < cvPrison:GetInt() and now >= (nextFill[z] or 0) then -- (lc_garrison 0: no garrison anywhere)
+            nextFill[z] = now + (LC.GarrisonOne(z, "guard") and 2 or 5)
         end
     end
     for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("combine") or {}) do

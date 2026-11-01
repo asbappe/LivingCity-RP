@@ -270,8 +270,35 @@ function LC.HazardBarrel(pos, ang)
     return e
 end
 
+local function PostAt(z, at, centre)
+    local dir = at - centre
+    dir.z = 0
+    if dir:LengthSqr() < 1 then dir = Vector(1, 0, 0) end
+    dir:Normalize()
+    local face = dir:Angle() -- (the sign faces out, at whoever's walking in)
+    local right, back = face:Right(), -dir
+    local made = {}
+    for _, p in ipairs(POST) do
+        local e = Prop(Valid(p[1]) and p[1] or p[4], at + right * p[2] + back * p[3], face)
+        if e then e.lcHazardZone = z made[#made + 1] = e end
+    end
+    local b = LC.HazardBarrel(at - right * 45 + back * 25, face)
+    if b then b.lcHazardZone = z made[#made + 1] = b end
+    return made
+end
+
 function LC.HazardPost(z)
     local centre = z.box and (z.box.mins + z.box.maxs) / 2 or z.pos
+    -- (the owner, 1 November: none to be seen, likely in walls) where people walk: the nearest path node just
+    -- outside the infestation, on open ground
+    local best, bd
+    for _, nd in ipairs(LC.NavNodesNear and LC.NavNodesNear(centre, Reach(z) + 600) or {}) do
+        local p = nd.pos
+        local d = p:DistToSqr(centre)
+        if math.abs(p.z - centre.z) < 120 and not (LC.InInfest and LC.InInfest(p)) and (not bd or d < bd)
+            and (not LC.ItemSpotOK or LC.ItemSpotOK(p, 72)) then best, bd = p, d end
+    end
+    if best then return PostAt(z, (LC.GroundAt and LC.GroundAt(best + Vector(0, 0, 20))) or best, centre) end
     for try = 1, 16 do
         local yaw = math.random(0, 359)
         local dir = Angle(0, yaw, 0):Forward()
@@ -474,13 +501,18 @@ local function Assign(worker, g, now)
             if d < 6000 * 6000 then cands[#cands + 1] = { npc = npc, st = st, d = d } end
         end
     end
-    table.sort(cands, function(a, b) return a.d < b.d end)
+    -- soldiers first (it's the infested: the owner wants the Overwatch's guns, not stunsticks), then the nearest
+    table.sort(cands, function(a, b)
+        local sa, sb = a.st.role == "soldier", b.st.role == "soldier"
+        if sa ~= sb then return sa end
+        return a.d < b.d
+    end)
     -- nobody free: dispatch sends one (a unit walks in from out of sight)
     if #cands == 0 and LC.SpawnCop and now >= (g.nextSpawn or 0) then
         g.nextSpawn = now + 20
         local spot = Behind(worker, 500)
         if spot then
-            local npc, st = LC.SpawnCop(spot + Vector(0, 0, 4))
+            local npc, st = (LC.SpawnSoldier or LC.SpawnCop)(spot + Vector(0, 0, 4))
             if IsValid(npc) and st then cands[1] = { npc = npc, st = st, d = 0 } end
         end
     end
@@ -726,7 +758,7 @@ end)
 -- The firebomb
 ------------------------------------------------------------------------
 
-local FIRE_R = 170
+local FIRE_R = 400 -- (the owner, 1 November: five times wider; it was too precise for a bottle that bounces first)
 LC.Fires = LC.Fires or {}
 
 function LC.Firebomb(pos, owner)
@@ -741,7 +773,7 @@ function LC.Firebomb(pos, owner)
         if not IsValid(f) then return end
         f:SetPos(pos)
         f:SetKeyValue("health", tostring(secs))
-        f:SetKeyValue("firesize", "110")
+        f:SetKeyValue("firesize", "220")
         f:SetKeyValue("fireattack", "1")
         f:SetKeyValue("damagescale", "0")
         f:SetKeyValue("spawnflags", tostring(4 + 128))
@@ -806,4 +838,15 @@ hook.Add("LivingCitySweepArrived", "LivingCityCleanupGas", function(sk, u)
     end
     spot = spot or sk.zone.pos
     timer.Simple(1.5, function() LC.Detonate("poison", spot, IsValid(u) and u or nil) end)
+end)
+
+-- A cleanup guard's shots tell on the infested: four times the damage (the owner, 1 November: the soldiers
+-- plinked away while the zombies mauled the worker).
+local cvGuardDmg = CreateConVar("lc_cleanup_guard_damage", "4", FLAGS, "How many times harder a cleanup worker's guards hit the infested")
+hook.Add("EntityTakeDamage", "LivingCityCleanupGuardDamage", function(victim, dmg)
+    local att = dmg:GetAttacker()
+    local ast = IsValid(att) and LC.NPCs and LC.NPCs[att]
+    if not ast or not ast.cleanGuard then return end
+    local vst = LC.NPCs[victim]
+    if vst and vst.role == "zombie" then dmg:ScaleDamage(math.max(1, cvGuardDmg:GetFloat())) end
 end)

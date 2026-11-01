@@ -100,7 +100,7 @@ local function WeedTick(now)
     end
     -- a new one now and then
     if now >= nextSprout then
-        nextSprout = now + math.Rand(45, 120)
+        nextSprout = now + math.Rand(20, 50) -- (the owner, 1 November: a Groundskeeper couldn't find any)
         local p = LC.RandomWanderPos and LC.RandomWanderPos("citizen")
         if p and OpenGround(p) and not (LC.IsSeen and LC.IsSeen(p + Vector(0, 0, 20))) then LC.SpawnWeed(p, 1) end
     end

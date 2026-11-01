@@ -101,33 +101,46 @@ function LC_CL.OpenLab(t)
             if IsValid(frame) then frame:Remove() end
         end
     end
+    -- (the owner, 1 November: long descriptions ran under the buttons: wrapped now, clear of them)
+    local function Wrap(text, font, maxw)
+        surface.SetFont(font)
+        local lines, cur = {}, ""
+        for word in string.gmatch(text or "", "%S+") do
+            local try = cur == "" and word or (cur .. " " .. word)
+            if (surface.GetTextSize(try) or 0) > maxw and cur ~= "" then lines[#lines + 1] = cur cur = word else cur = try end
+        end
+        if cur ~= "" then lines[#lines + 1] = cur end
+        return lines
+    end
     for _, it in ipairs(t.items or {}) do
         local row = vgui.Create("DPanel", scroll)
         row:Dock(TOP)
         row:DockMargin(0, 0, 0, 4)
-        row:SetTall(50)
+        row:SetTall(76)
         local mats = {}
         for _, m in ipairs(it.mats or {}) do mats[#mats + 1] = string.format("%s %d/%d", string.lower(m.name), m.have, m.need) end
         local matsText = table.concat(mats, ", ")
         row.Paint = function(self, w, h)
             draw.RoundedBox(3, 0, 0, w, h, ROW)
-            draw.SimpleText(it.name, "LCLabItem", 10, 13, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-            surface.SetFont("LCLabItem")
-            local nw = surface.GetTextSize(it.name) or 0
-            draw.SimpleText((it.desc or "") .. string.format("   (%ds)", it.secs or 0), "DermaDefault", 22 + nw, 13, DIM,
-                TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-            draw.SimpleText(matsText, "DermaDefault", 10, 35, it.canMats and HAVE or LACK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            draw.SimpleText(it.name .. string.format("   (%ds)", it.secs or 0), "LCLabItem", 10, 12, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            local lines = Wrap(it.desc or "", "DermaDefault", math.max(100, w - 270))
+            for i = 1, math.min(2, #lines) do
+                local txt = lines[i]
+                if i == 2 and #lines > 2 then txt = txt .. "..." end
+                draw.SimpleText(txt, "DermaDefault", 10, 17 + i * 13, DIM, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            end
+            draw.SimpleText(matsText, "DermaDefault", 10, 62, it.canMats and HAVE or LACK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         end
         local pay = vgui.Create("DButton", row)
         pay:Dock(RIGHT)
-        pay:DockMargin(4, 10, 6, 10)
+        pay:DockMargin(4, 22, 6, 22)
         pay:SetWide(110)
         pay:SetText("Pay " .. (it.price or 0) .. " credits")
         pay:SetEnabled(it.canPay == true and not t.busy)
         pay.DoClick = function() Make(it.id, "pay") end
         local own = vgui.Create("DButton", row)
         own:Dock(RIGHT)
-        own:DockMargin(4, 10, 0, 10)
+        own:DockMargin(4, 22, 0, 22)
         own:SetWide(130)
         own:SetText("Use my materials")
         own:SetEnabled(it.canMats == true and not t.busy)

@@ -65,6 +65,19 @@ LC.SCIENTISTS = {
     { id = "eli", name = "Eli Vance", model = "models/eli.mdl" },
     { id = "magnusson", name = "Dr. Magnusson", model = "models/magnusson.mdl" },
 }
+-- Each scientist's own voice (the owner, 1 November: they all spoke in Dr. Kleiner's): Kleiner his lab
+-- lines, the others an ordinary man's (Half-Life 2 has none of theirs for these).
+local SCI_VOICE = {
+    kleiner = { ohdear = "vo/k_lab/kl_ohdear.wav", excellent = "vo/k_lab/kl_excellent.wav" },
+    other = { ohdear = "vo/npc/male01/ohno.wav", excellent = "vo/npc/male01/yeah02.wav" },
+}
+local function SciSay(sci, kind, lvl)
+    if not IsValid(sci) then return end
+    local v = SCI_VOICE[sci.lcWho == "kleiner" and "kleiner" or "other"]
+    sci:EmitSound(v[kind] or v.excellent, lvl or 65)
+end
+LC.ScientistSay = SciSay
+
 function LC.PickScientist(bench)
     local taken = {}
     for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_scientist") or ents.FindByClass("lc_scientist")) do
@@ -226,7 +239,7 @@ function LC.UseScientist(ply, sci)
     ply.lcLabUse = CurTime() + 0.8
     if LC.PlayerIsCP and LC.PlayerIsCP(ply) then return LC.ShutLab(ply, sci) end
     if not Rebel(ply) then
-        sci:EmitSound("vo/k_lab/kl_ohdear.wav", 70)
+        SciSay(sci, "ohdear", 70)
         Say(ply, "He steps between you and the bench. \"I'm terribly sorry, I don't believe we've met. This is a private... laboratory. Please, go.\"")
         return
     end
@@ -296,7 +309,7 @@ function LC.LabMake(ply, id, how)
             for _ = 1, r.count or 1 do
                 if not LC.GiveItem(p, r.out) and LC.SpawnWorldItem then LC.SpawnWorldItem(r.out, p:GetPos() + p:GetForward() * 30 + Vector(0, 0, 20)) end
             end
-            if IsValid(sci) then sci:EmitSound("vo/k_lab/kl_excellent.wav", 65) end
+            SciSay(sci, "excellent", 65)
             Say(p, "\"There. Do be careful with it.\" He hands you: " .. it.name .. ".")
             hook.Run("LivingCityLabMade", p, r.out, how)
         end,
@@ -377,7 +390,7 @@ function LC.LabSurgery(ply)
             p:SetPData("lc_surgery_next", os.time() + cvSurgeryWait:GetFloat() * 60)
             p:SetNW2Float("lc_crippled_until", CurTime() + 180) -- (bandaged, and slow on your feet a while)
             p:SetNW2Float("lc_bandaged_until", CurTime() + 300)
-            if IsValid(sci) then sci:EmitSound("vo/k_lab/kl_excellent.wav", 65) end
+            SciSay(sci, "excellent", 65)
             Say(p, "\"There. Nobody will know you. Well, I hardly do. Keep the bandages on a few minutes, and don't run.\"")
             if LC.Notice then LC.Notice(p, "info", "A new face", "Nobody's looking for this face. Your wanted status, any BOLO and the scanners' pictures are gone, and a wanted notice won't match it. Get wanted again and they'll learn this one.", 10) end
             hook.Run("LivingCitySurgery", p)

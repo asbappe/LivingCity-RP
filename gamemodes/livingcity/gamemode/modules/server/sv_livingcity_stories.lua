@@ -517,7 +517,7 @@ LC.Chain{
                               Trait(p, "sympathy", 1)
                               q.chainEnd = "brother"
                               for npc, st in pairs(LC.NPCs) do
-                                  if IsValid(npc) and st.state == "jailed" then LC.ReleaseNPCPrisoner(npc, st, CurTime()) break end
+                                  if IsValid(npc) and st.state == "jailed" then LC.ReleaseNPCPrisoner(npc, st, CurTime(), true) break end
                               end
                               Narrate(q, "A name is typed. Somewhere below your feet, a cell door opens: your brother is free.")
                           end,
@@ -858,6 +858,9 @@ end
 
 LC.Chain{
     id = "inside", name = "The Man Inside", factions = { cp = true },
+    -- the Resistance doesn't reach out to a unit who's been killing them (the owner, 1 November: it stayed on
+    -- the board after a dozen dead rebels): three in the last half hour, and it's off the board
+    gate = function(ply) return LC.RecentRebelKills == nil or LC.RecentRebelKills(ply) < 3 end,
     unlock = function(ply)
         return LC.Trait(ply, "corruption") <= 1 and (LC.Trait(ply, "sympathy") >= 3 or LC.Counter(ply, "mercies") >= 2)
     end,
@@ -1586,4 +1589,19 @@ hook.Add("LivingCityStoryEnded", "LivingCityMoleHuntReturns", function(ply, chai
         s.notified.molehunt = nil
         LC.SaveStory(ply)
     end
+end)
+
+-- Rebels a unit has killed lately (The Man Inside's gate).
+function LC.RecentRebelKills(ply)
+    local n, now = 0, CurTime()
+    for _, t in ipairs(ply.lcRebelKills or {}) do if now - t < 1800 then n = n + 1 end end
+    return n
+end
+hook.Add("OnNPCKilled", "LivingCityRebelKillsTally", function(npc, attacker)
+    local st = LC.NPCs and LC.NPCs[npc]
+    if not st or st.role ~= "rebel" or not IsValid(attacker) or not attacker:IsPlayer() or not LC.PlayerIsCP(attacker) then return end
+    attacker.lcRebelKills = attacker.lcRebelKills or {}
+    table.insert(attacker.lcRebelKills, CurTime())
+    while #attacker.lcRebelKills > 10 do table.remove(attacker.lcRebelKills, 1) end
+    if LC.RecentRebelKills(attacker) >= 3 and attacker.lcStoryPostings then attacker.lcStoryPostings.inside = nil end
 end)

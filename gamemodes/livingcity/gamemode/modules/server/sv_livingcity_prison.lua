@@ -512,7 +512,22 @@ end
 
 -- Cells sit behind doors that lock themselves, which NPCs can't walk through,
 -- so prisoners are moved in and out the way players are: put straight there.
-function LC.ReleaseNPCPrisoner(npc, st, now)
+-- Someone's job is about them (the owner, 1 November: a prisoner they'd come to free was let out first)
+local function InSomeonesJob(npc, st)
+    if st.questLock then return true end
+    for q in pairs(LC.ActiveQuests or {}) do
+        if not q.done then
+            for _, s in ipairs(q.stages or {}) do if s.npc == npc then return true end end
+            if q.data and (q.data.actor == npc or q.data.prisoner == npc) then return true end
+        end
+    end
+    return false
+end
+LC.InSomeonesJob = InSomeonesJob
+
+function LC.ReleaseNPCPrisoner(npc, st, now, force)
+    -- not while a job's about them: they stay put until it's done (force: the job itself letting them out)
+    if not force and InSomeonesJob(npc, st) then st.untilT = (now or CurTime()) + 15 return end
     LC.Release(npc, st)
     st.jailUntil = nil
     local rel = LC.PointsOfKind("release")

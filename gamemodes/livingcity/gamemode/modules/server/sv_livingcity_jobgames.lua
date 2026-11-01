@@ -221,7 +221,12 @@ GAMES.sweep = {
         g.cart = Spawn(FirstValid(CARTS), cartPos, Angle(0, g.ply:EyeAngles().y + 90, 0))
         if not IsValid(g.cart) then error("no cart") end
         g.cart.lcCart = g
-        g.cartLift = 4
+        -- standing on the floor, whatever the model's origin (the owner, 1 November: it came up out of the ground
+        -- with only its handle showing): lifted by how far its bottom sits below its origin
+        local mins = g.cart.OBBMins and g.cart:OBBMins()
+        g.cartLift = math.max(4, (mins and -mins.z or 0) + 2)
+        local ground = LC.GroundAt and LC.GroundAt(depot) or depot
+        g.cart:SetPos(ground + Vector(0, 0, g.cartLift))
         local ph = Phys(g.cart)
         if ph then ph:SetMass(80) end
         -- it doesn't knock into people (grabbing it spun it into you and hurt)

@@ -535,7 +535,11 @@ SHIFTS.groundskeeper = {
         return {
             title = "Weeding", reward = 15, limit = 600,
             desc = "Weeds are coming up through the cracks nearby. Spray them before they become bushes.",
-            stages = { Count("weed_killed", 3, "Spray 3 weeds: look at one and press E (your weedkiller does the rest)") },
+            stages = { (function()
+                local c = Count("weed_killed", 3, "Spray 3 weeds (the nearest is marked): the sprayer out, hold left click on one, or E")
+                c.pos, c.r = near[1]:GetPos(), 60
+                return c
+            end)() },
         }
     end,
 }
@@ -565,8 +569,8 @@ SHIFTS.cleanup = {
             desc = "The infestation is spreading. Go in with your respirator, weedkiller and hoover: kill its growths, vacuum them up, and get rid of them. Civil Protection will guard you: stay close to them.",
             stages = {
                 Goto(edge, "Go to the infestation (marked): Civil Protection meets you there", 600),
-                Count("nest_killed", 3, "Spray 3 growths dead: the glowing ones (the sprayer out, hold left click on one; or E)"),
-                Count("nest_vacuumed", 3, "Vacuum up the dead growths: the hoover out, hold left click on one"),
+                -- (one step, not two: spraying one, vacuuming it, then the next, only counted the last; the owner, 1 November)
+                Count("nest_vacuumed", 3, "Clear 3 growths: spray each dead (sprayer, hold left click; or E), then vacuum it up (hoover, hold left click)"),
                 dump,
             },
         }

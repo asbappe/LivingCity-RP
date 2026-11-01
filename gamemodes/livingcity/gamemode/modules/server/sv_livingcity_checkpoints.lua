@@ -559,10 +559,48 @@ function LC.VortZapTech(ply, ent, secs)
 end
 
 -- Only units handle turrets: nobody else picks one up, carries it off or knocks it over by hand.
+-- Knocked over: set upright again where it stood (the owner, 1 November: a unit had no way but the physgun)
+local function Tipped(e) return IsValid(e) and e:GetUp().z < 0.8 end
+function LC.RightTurret(ent)
+    if not IsValid(ent) then return false end
+    local pt = ent.lcFixturePoint
+    local pos = (pt and pt.pos) or ent.lcStoodAt or ent:GetPos()
+    local yaw = (pt and pt.yaw) or (ent.lcStoodYaw) or ent:GetAngles().y
+    ent:SetPos(pos + Vector(0, 0, 2))
+    ent:SetAngles(Angle(0, yaw, 0))
+    local phys = ent:GetPhysicsObject()
+    if IsValid(phys) then phys:SetVelocity(Vector(0, 0, 0)) phys:Sleep() end
+    ent:EmitSound("npc/turret_floor/deploy.wav", 65)
+    return true
+end
+-- the city's own units set one right when they come by it
+timer.Create("LivingCityTurretsUpright", 4, 0, function()
+    for _, e in ipairs(ents.FindByClass(TURRET)) do
+        if IsValid(e) and e.lcTurret then
+            if not Tipped(e) then
+                e.lcStoodAt, e.lcStoodYaw = e:GetPos(), e:GetAngles().y
+            else
+                for npc, st in pairs(LC.NPCs or {}) do
+                    if IsValid(npc) and LC.IsSecurity(st) and st.state ~= "hostile" and npc:GetPos():DistToSqr(e:GetPos()) < 500 * 500 then
+                        LC.RightTurret(e)
+                        npc:EmitSound("npc/metropolice/vo/affirmative.wav", 60)
+                        break
+                    end
+                end
+            end
+        end
+    end
+end)
+
 hook.Add("PlayerUse", "LivingCityTurrets", function(ply, ent)
     if not IsValid(ent) or ent:GetClass() ~= TURRET or not ent.lcTurret then return end
     if (ply.lcTurretUseNext or 0) > CurTime() then return false end
     ply.lcTurretUseNext = CurTime() + 0.6
+    if LC.PlayerIsCP(ply) and Tipped(ent) then
+        LC.RightTurret(ent)
+        ply:ChatPrint("[Civil Protection] You set the turret upright again.")
+        return false
+    end
     if LC.PlayerIsCP(ply) and LC.DeployedTurrets[ent] then
         local _, msg = LC.PackTurret(ply, ent)
         if msg then ply:ChatPrint(msg) end

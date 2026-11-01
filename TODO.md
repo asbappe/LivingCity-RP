@@ -9,6 +9,17 @@
 - **Unconfirmed in game:** sleeping NPCs as a ragdoll copy (head end: `lc_bed_head_flip`, height `lc_bed_npc_lift`), the hoover/sprayer/radio view placement (`lc_hoover_view`, `lc_sprayer_view`, `lc_radio_view`), suit hands (`lc_suit_hands`), Grigori's death (engine "vital ally"), boiling at the owner's fire barrels (if still failing: is it a map prop or the editor's fire?), the warning post placement, guards' teleporting, NPCs stepping aside.
 - **The workshop packs on the server:** the owner's growths showed ERROR: the server likely lacks the hazard props pack; both packs (2043900984, 3185145650) need to be in the server's workshop collection.
 
+- **From the owner's long list (1 November, late), not done yet:**
+  - Contraband found in a search: a quick prompt, FIGHT or COMPLY (5 seconds), instead of just losing it.
+  - Morticians didn't collect a dead vortigaunt in the street (20 minutes): check the body pickup includes vortigaunts.
+  - Editor: the zone number slider could show a coloured tick for numbers already used, by zone kind (same colours as the zones); and say whether numbers clash across kinds (a rebel 30 and an infest 30).
+  - "Introduce myself" to any citizen (some have it, some don't); citizens who wander into rebel ground: recruit them, or tell them to leave.
+  - Hacker's multitool: didn't work on a shackled vortigaunt (said nothing to work on, 20 tries); its on-screen text overlaps the vortigaunt's floating label; and it should do something at the CP Commissary.
+  - Shackled street vortigaunts: look unshackled, walk at the Combine and get shot; should do Half-Life 2's sweeping animation.
+  - Quest markers vanishing (when exhausted, and on cleanup jobs): find why.
+  - Low standing and Infestation Cleanup: the owner at -1 standing felt the job wasn't given; check whether any standing gate applies to cleanup shifts (CP itself needs 100 standing).
+  - The Man Inside part 2 (free a prisoner from a prison full of guards): needs a way to do it (a distraction, a shift change, a forged transfer order); the prison now has only two guards, which may be enough.
+
 **Open right now** (2026-10-31):
 - **Map lights twinkle** on `rp_c18_ug`: waiting on the owner's Sandbox test of the same map.
 - **Rewording:** finished (2026-11-01). Batches 1 to 5 reworded; the rest (side jobs, Resistance ops, the underground, the shop) were already plain; "primary fire" now reads "left click".
