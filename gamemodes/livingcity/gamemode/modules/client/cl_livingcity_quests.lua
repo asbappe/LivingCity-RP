@@ -73,7 +73,19 @@ net.Receive("lcq_board", function()
         combo:SetWide(230)
         combo:DockMargin(0, 12, 0, 12)
         combo:SetValue("Change job...")
-        for _, j in ipairs(data.jobs.list) do combo:AddChoice(j.name, j.id) end
+        -- grouped by career path: the Civil Protection path, the Administration path, then the rest of Union work
+        local first = true
+        for _, path in ipairs(LCJ and LCJ.Paths or { { id = "", name = "" } }) do
+            local any = false
+            for _, j in ipairs(data.jobs.list) do
+                if (j.path or "") == path.id then
+                    if not any and not first and combo.AddSpacer then combo:AddSpacer() end
+                    any = true
+                    combo:AddChoice(j.name .. "   (" .. path.name .. ")", j.id)
+                end
+            end
+            if any then first = false end
+        end
         combo.OnSelect = function(_, _, _, id)
             net.Start("lcj_set")
             net.WriteString(id)

@@ -160,6 +160,9 @@ do
             for _, e in ipairs(ents.FindByClass and ents.FindByClass("npc_*") or {}) do
                 if IsValid(e) and e.GetNW2Bool and e:GetNW2Bool("lc_eyes_shut", false) then sleepers[#sleepers + 1] = e end
             end
+            for _, e in ipairs(ents.FindByClass and ents.FindByClass("prop_ragdoll") or {}) do -- (an NPC asleep, laid on its bed)
+                if IsValid(e) and e.GetNW2Bool and e:GetNW2Bool("lc_eyes_shut", false) then sleepers[#sleepers + 1] = e end
+            end
             for _, p in ipairs(player.GetAll()) do -- (players asleep in a bed too)
                 if p:GetNW2Bool("lc_sleeping", false) then sleepers[#sleepers + 1] = p end
             end

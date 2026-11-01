@@ -2900,9 +2900,11 @@ local _, cpWhy = LC.CanJoinFaction(applicant, "cp")
 ok(cpWhy:find("100") and cpWhy:find("good standing"), "and you're told what it takes", tostring(cpWhy))
 LC.AddStanding(applicant, 100)
 local okC, whyC = LC.CanJoinFaction(applicant, "cp")
-ok(not okC and whyC and whyC:find("Records Clerk", 1, true), "good standing, but not through the records office yet", tostring(whyC))
+ok(not okC and whyC and whyC:find("Intake Processor", 1, true), "good standing, but not up the Civil Protection path yet (Intake Processor)", tostring(whyC))
 LC.Bump(applicant, "clerk_shifts", 5)
-ok(LC.CanJoinFaction(applicant, "cp"), "with 100 standing and five Records Clerk shifts you can")
+ok(not LC.CanJoinFaction(applicant, "cp"), "Records Clerk shifts don't count: that's the Administration path now")
+LC.Bump(applicant, "cp_shifts", 5)
+ok(LC.CanJoinFaction(applicant, "cp"), "with 100 standing and five Intake Processor shifts you can")
 local tester2 = newPlayer("TestAdmin", "citizen")
 tester2.admin = true
 ok(LC.CanJoinFaction(tester2, "cp"), "admins can join regardless, to test")
@@ -13723,10 +13725,10 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     ex.chat = {}
     LC.LoyalPraise(CurTime())
     ok(ex.lcPraisedAt ~= nil, "the Administrator commends an Exemplary citizen by name")
-    local okW1 = LC.SetJob(tr, "warden")
-    local okW2 = LC.SetJob(ex, "warden")
-    ok(not okW1 and okW2, "Block Warden: a job for Exemplary citizens only")
-    LC.SetJob(ex, "", true)
+    local okW1 = LC.SetJob(plain, "warden")
+    local okW2 = LC.SetJob(tr, "warden")
+    ok(not okW1 and okW2, "Block Warden: only for loyal citizens (100 standing)")
+    LC.SetJob(tr, "", true)
     -- weeds, the Groundskeeper, and weedkiller as poison
     local gk = newPlayer("Groundskeeper", "citizen")
     _run(0.3)
@@ -13852,9 +13854,9 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     LC.Fires = {}
     for i = #LC.Zones, 1, -1 do if LC.Zones[i] == seed then table.remove(LC.Zones, i) end end
     -- a cleanup shift counts double towards Civil Protection
-    local before = LC.Counter(cln, "clerk_shifts")
+    local before = LC.Counter(cln, "cp_shifts")
     hook.Run("LivingCityQuestComplete", cln, { chain = "shift" })
-    ok(LC.Counter(cln, "clerk_shifts") == before + 2, "an Infestation Cleanup shift counts as two Records Clerk shifts", LC.Counter(cln, "clerk_shifts") - before)
+    ok(LC.Counter(cln, "cp_shifts") == before + 2, "an Infestation Cleanup shift counts as two Intake Processor shifts towards Civil Protection", LC.Counter(cln, "cp_shifts") - before)
     LC.SetJob(cln, "", true)
     _run(0.5)
     ok(LC.OutfitFor("cleanup", "x", "female_02", false) == "models/npc/worker_female.mdl", "the city's own cleanup crews wear it too (a woman, the female suit)")
@@ -13888,6 +13890,16 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     ok(LC.NearHeat(cook), "a burning barrel (a fire particle) is heat to boil water by")
     fx:Remove()
     cook:SetPos(Vector(-150000, 150000, 0))
+    -- a unit spawns on the Combine's own ground (the owner: not at the train station)
+    local cz = { kind = "combine", pos = Vector(-176000, -176000, 0), r = 300, group = 0 }
+    table.insert(LC.Zones, cz)
+    local recruitCP = newPlayer("SpawnUnit", "cp")
+    recruitCP:SetPos(Vector(-150000, 150000, 0))
+    hook.Run("PlayerSpawn", recruitCP)
+    _run(0.3)
+    ok(recruitCP:GetPos():Distance(cz.pos) < 400, "a Civil Protection unit spawns in a Combine zone", recruitCP:GetPos())
+    for i = #LC.Zones, 1, -1 do if LC.Zones[i] == cz then table.remove(LC.Zones, i) end end
+    recruitCP:SetPos(Vector(-150000, 150000, 0))
     -- sociostability: an outbreak is red only while its infected are loose in the city, and says why
     local evWas, obWas = LC.Event, LC.LastOutbreak
     LC.Event, LC.LastOutbreak = nil, CurTime()

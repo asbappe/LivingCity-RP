@@ -28,9 +28,9 @@ LCJ.Occupations = {
       desc = "Deliver letters, parcels and sealed envelopes to people all over the district." },
     { id = "maintenance", num = 6, name = "Maintenance Technician", place = "Maintenance yard",
       desc = "Repair fuse boxes, streetlights and Combine terminals. You get to see what the terminals have logged." },
-    { id = "porter", num = 7, name = "Intake Processor", place = "Train station",
+    { id = "porter", num = 7, name = "Intake Processor", place = "Train station", path = "cp",
       desc = "Check travelers' tickets and papers at the train station, return lost luggage, carry freight from the loading dock, and walk new arrivals to their housing." },
-    { id = "clerk", num = 8, name = "Records Clerk", place = "Civil records office", gameOnly = true,
+    { id = "clerk", num = 8, name = "Records Clerk", place = "Civil records office", gameOnly = true, path = "admin",
       desc = "File forms by citizen number at the civil records office. The cabinet of blank identity forms is rarely locked." },
     { id = "laundry", num = 9, name = "Uniform Laundry", place = "Nexus laundry", gameOnly = true,
       desc = "Sort washed and pressed Civil Protection uniforms by division. They're supposed to be counted, and usually are." },
@@ -43,11 +43,19 @@ LCJ.Occupations = {
     { id = "groundskeeper", num = 14, name = "Groundskeeper", place = "the streets", noWorkplace = true, tools = { "weapon_lc_sprayer" },
       desc = "Spray the weeds coming up through the cracks before they take over: a tuft is quick, a bush takes a while. You're issued weedkiller." },
     -- (the owner, 2026-11-01: like contamination cleanup elsewhere; a faster way into Civil Protection than the records office)
-    { id = "cleanup", num = 15, name = "Infestation Cleanup", place = "the infestation", noWorkplace = true, tools = { "weapon_lc_sprayer", "weapon_lc_hoover" },
+    { id = "cleanup", num = 15, name = "Infestation Cleanup", place = "the infestation", noWorkplace = true, path = "cp", tools = { "weapon_lc_sprayer", "weapon_lc_hoover" },
       desc = "Into the infestation in a respirator, with weedkiller and a hoover: spray its growths dead, vacuum them up, and empty the hoover into the infestation control barrel. Civil Protection guards you; it's dangerous. Each shift counts double towards joining Civil Protection." },
     -- (the owner, 2026-11-01: something for the city's most loyal) players only, Exemplary standing; no workplace: your own block
-    { id = "warden", num = 13, name = "Block Warden", place = "your housing block", minStanding = 400, playersOnly = true, noWorkplace = true,
-      desc = "Exemplary citizens only (Civil Standing 400). Walk your own block, have a word with the neighbours, and report what isn't right. Paid when a report holds up; a false one costs you." },
+    -- (the owner, 1 November: for the loyal, 100 standing; and not listed at all for anyone below it)
+    { id = "warden", num = 13, name = "Block Warden", place = "your housing block", minStanding = 100, playersOnly = true, noWorkplace = true, path = "admin",
+      desc = "For loyal citizens only (Civil Standing 100). Walk your own block, have a word with the neighbours, and report what isn't right. Paid when a report holds up; a false one costs you." },
+}
+
+-- Career paths (the owner, 1 November): which jobs lead where, as the board groups them.
+LCJ.Paths = {
+    { id = "cp", name = "Civil Protection path" },
+    { id = "admin", name = "Administration path" },
+    { id = "", name = "Union work" },
 }
 
 -- Closed to players: an NPC-only post, or a games-only one with the games off.

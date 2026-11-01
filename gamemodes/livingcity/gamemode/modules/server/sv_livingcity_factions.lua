@@ -27,7 +27,9 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvAdminTools = CreateConVar("lcf_admin_tools", "1", FLAGS, "Admins keep the physgun and toolgun in every faction")
 local cvCooldown   = CreateConVar("lcf_switch_cooldown", "60", FLAGS, "Seconds between faction changes")
 local cvCPStanding = CreateConVar("lc_cp_min_standing", "100", FLAGS, "Civil Standing needed to join Civil Protection")
-local cvCPClerk = CreateConVar("lc_cp_clerk_shifts", "5", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Records Clerk shifts a citizen must finish before Civil Protection takes them (the owner: they come up through the records office; 0: no need)")
+-- (the setting keeps its old name, so a server's own number carries over; since 1 November it counts Intake
+-- Processor shifts, the Civil Protection path, the owner asked: the Records Clerk is the Administration path now)
+local cvCPClerk = CreateConVar("lc_cp_clerk_shifts", "5", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Intake Processor shifts a citizen must finish before Civil Protection takes them (an Infestation Cleanup shift counts double; 0: no need)")
 
 -- Anyone without a faction becomes a Citizen.
 local function EnrollEveryone()
@@ -255,6 +257,21 @@ hook.Add("PlayerSpawn", "LivingCityFactions", function(ply)
                 local spot = LC.SpotInZone(zones[math.random(#zones)])
                 if spot then ply:SetPos(spot + Vector(0, 0, 4)) end
             end
+        elseif LC.PlayerIsCP(ply) and not ply:GetNW2Bool("lc_build", false) then
+            -- units (and the Overwatch) start at the Combine's own ground: the nexus, the station, wherever
+            -- the editor's Combine zones are (the owner: not the train station); failing that, by the
+            -- Civil Protection Commissary
+            local here = ply:GetPos()
+            if not (LC.CombineZoneAt and LC.CombineZoneAt(here)) then
+                local zones = LC.ZonesOfKind and LC.ZonesOfKind("combine") or {}
+                local spot = #zones > 0 and LC.SpotInZone and LC.SpotInZone(zones[math.random(#zones)]) or nil
+                if not spot then
+                    local sup = LC.EntsOf and LC.EntsOf("lc_cpsupply") or {}
+                    local e = sup[math.random(math.max(1, #sup))]
+                    if IsValid(e) then spot = (LC.GroundAt and LC.GroundAt(e:GetPos() + e:GetForward() * 70 + Vector(0, 0, 30))) or e:GetPos() + e:GetForward() * 70 end
+                end
+                if spot then ply:SetPos(spot + Vector(0, 0, 4)) end
+            end
         elseif not LC.PlayerIsCP(ply) and not ply:GetNW2Bool("lc_build", false) and LC.SafeCitizenSpot and LC.CitizenSpotOK then
             local here = ply:GetPos()
             if LC.OnCombineSurface(here) or LC.CombineZoneAt(here) then
@@ -356,11 +373,11 @@ function LC.CanJoinFaction(ply, fid, sid)
         if have < need then
             return false, string.format("Civil Protection only takes citizens in good standing (%d or more). Yours is %d.", need, have)
         end
-        -- and who've come up through the civil records office (sv_livingcity_work.lua counts the shifts)
+        -- and who've come up the Civil Protection path: Intake Processor, or Infestation Cleanup (sv_livingcity_work.lua counts the shifts)
         local shifts = cvCPClerk:GetInt()
-        local done = LC.Counter and LC.Counter(ply, "clerk_shifts") or 0
+        local done = LC.Counter and LC.Counter(ply, "cp_shifts") or 0
         if shifts > 0 and done < shifts and ply:GetNW2String("lcf_faction", "") ~= "cp" then
-            return false, string.format("Civil Protection recruits from the civil records office and the cleanup crews: finish %d shifts as a Records Clerk first, or half as many in Infestation Cleanup (F3 > Jobs). You've done %d.", shifts, done)
+            return false, string.format("Civil Protection recruits from the train station's Intake Processors and the infestation cleanup crews: finish %d Intake Processor shifts first, or half as many in Infestation Cleanup (F3 > Jobs). You've done %d.", shifts, done)
         end
     end
     if f.requires then
@@ -448,7 +465,7 @@ local function SendMenu(ply)
         if f.id == "cp" and ply:GetNW2String("lcf_faction", "") ~= "cp" then
             entry.reqs = {
                 { label = "Civil Standing", have = LC.Standing and LC.Standing(ply) or 0, need = cvCPStanding:GetInt() },
-                { label = "Records Clerk shifts finished (F3 > Jobs; Infestation Cleanup counts double)", have = LC.Counter and LC.Counter(ply, "clerk_shifts") or 0, need = cvCPClerk:GetInt() },
+                { label = "Intake Processor shifts finished (F3 > Jobs; Infestation Cleanup counts double)", have = LC.Counter and LC.Counter(ply, "cp_shifts") or 0, need = cvCPClerk:GetInt() },
             }
         end
         if f.id == "resistance" then
@@ -743,4 +760,18 @@ hook.Add("LivingCityQuestComplete", "LivingCityResistanceTrust", function(p, q)
     elseif have < need then
         p:ChatPrint(string.format("[Resistance] They're starting to trust you: %d of %d jobs before they'd arm you as a Fighter.", have, need))
     end
+end)
+
+-- A metrocop's own hands in first person (the owner, 1 November: they had the Overwatch soldier's sleeves,
+-- Garry's Mod's own for the police model, which has no metrocop arms of its own). Set lc_cp_hands to a
+-- workshop pack's metrocop hands model (models/weapons/c_...mdl) and Civil Protection units wear those.
+local cvHands = CreateConVar("lc_cp_hands", "", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "First-person hands model for Civil Protection units (a workshop pack's metrocop hands; empty: Garry's Mod's own)")
+hook.Add("PlayerSetHandsModel", "LivingCityCPHands", function(ply, ent)
+    local m = cvHands:GetString()
+    if m == "" or not IsValid(ply) or ply:GetNW2String("lcf_faction", "") ~= "cp" then return end
+    if util.IsValidModel and not util.IsValidModel(m) then return end
+    ent:SetModel(m)
+    ent:SetSkin(0)
+    ent:SetBodyGroups("0000000")
+    return true
 end)

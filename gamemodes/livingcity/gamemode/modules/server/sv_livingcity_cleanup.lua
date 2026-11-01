@@ -18,7 +18,7 @@
       weedkiller, to spray the growths. While they're near an infestation on a shift, lc_cleanup_guards
       (2) Civil Protection units or Overwatch soldiers come and guard them, and shoot the infested
       that come for them. The city's own cleanup crews do it too, with a guard of their own. A cleanup
-      shift counts as lc_cleanup_shift_counts (2) Records Clerk shifts towards joining Civil
+      shift counts as lc_cleanup_shift_counts (2) Intake Processor shifts towards joining Civil
       Protection. With the owner's Infestation Control pack (3185145650) on the server, players on
       the job and the city's own crews wear its hazmat suit ("worker"), a man the male one and a woman
       the female one, each their own skin (lc_cleanup_suit; lc_cleanup_model: another model instead);
@@ -53,7 +53,7 @@ local cvPer     = CreateConVar("lc_infest_nests_per_patch", "4", FLAGS, "Growths
 local cvRegrow  = CreateConVar("lc_nest_regrow_minutes", "6", FLAGS, "Minutes for a growth to come back in a patch that's lost one")
 local cvModels  = CreateConVar("lc_infest_nest_models", "", FLAGS, "Your own models for the growths, comma separated (empty: the built-in ones)")
 local cvGuards  = CreateConVar("lc_cleanup_guards", "2", FLAGS, "Civil Protection units or soldiers who guard a cleanup worker near an infestation")
-local cvCounts  = CreateConVar("lc_cleanup_shift_counts", "2", FLAGS, "Records Clerk shifts each Infestation Cleanup shift counts as, towards joining Civil Protection")
+local cvCounts  = CreateConVar("lc_cleanup_shift_counts", "2", FLAGS, "Intake Processor shifts each Infestation Cleanup shift counts as, towards joining Civil Protection")
 local cvModel   = CreateConVar("lc_cleanup_model", "", FLAGS, "A player model for Infestation Cleanup workers (a hazmat suit, say; empty: their own)")
 local cvFire    = CreateConVar("lc_firebomb_secs", "12", FLAGS, "Seconds a firebomb burns where it breaks")
 local cvSweep   = CreateConVar("lc_sweep_gas", "0.5", FLAGS, "Chance a sweep into rebel ground opens with a poison gas bomb (0 to 1)")

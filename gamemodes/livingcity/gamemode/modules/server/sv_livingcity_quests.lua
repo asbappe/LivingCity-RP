@@ -3107,7 +3107,9 @@ function LC.SendBoard(ply)
     if not stalker and LC.CanWork and LC.CanWork(ply) and LCJ then
         jobs = { current = ply:GetNW2String("lcj_job", ""), list = {} }
         for _, o in ipairs(LCJ.Occupations) do
-            if not LCJ.Closed(o) then jobs.list[#jobs.list + 1] = { id = o.id, name = o.name, desc = o.desc } end
+            -- (a post you have to earn isn't even listed until you have: the Block Warden)
+            local earned = not o.minStanding or (LC.Standing and LC.Standing(ply) >= o.minStanding)
+            if not LCJ.Closed(o) and earned then jobs.list[#jobs.list + 1] = { id = o.id, name = o.name, desc = o.desc, path = o.path or "" } end
         end
     end
     LC.SendCompressed("lcq_board", {

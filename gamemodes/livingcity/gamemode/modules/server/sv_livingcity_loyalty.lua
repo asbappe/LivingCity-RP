@@ -14,7 +14,7 @@
                          papers carry a MODEL CITIZEN stamp
       Lockers            only citizens in good standing (lc_locker_standing, 150) can use a locker
                          (sv_livingcity_storage.lua)
-      Block Warden       a Union job for Exemplary citizens: walk your block, have a word with the
+      Block Warden       a Union job for loyal citizens (100 standing, sh_livingcity_jobs.lua): walk your block, have a word with the
                          neighbours, and report what isn't right (paid when it holds up)
     (Free rent from 200 is in sv_livingcity_business.lua.)
 

@@ -1438,11 +1438,13 @@ LC.Chain{
 -- A finished shift earns a ration card: the only way to get one.
 hook.Add("LivingCityQuestComplete", "LivingCityShiftRationCard", function(p, q)
     if not q or q.chain ~= "shift" or not IsValid(p) or not LC.GiveItem then return end
-    -- the records office is the way into Civil Protection (sv_livingcity_factions.lua, lc_cp_clerk_shifts)
+    -- the career paths (the owner, 1 November): Intake Processor is the way into Civil Protection, Infestation
+    -- Cleanup too and twice as fast (sv_livingcity_factions.lua, lc_cp_clerk_shifts); the Records Clerk is Administration
     local job = LC.Job(p)
     if job and job.id == "clerk" and LC.Bump then LC.Bump(p, "clerk_shifts") end
     -- so is Infestation Cleanup, faster (each shift counts as lc_cleanup_shift_counts, 2)
-    if job and job.id == "cleanup" and LC.Bump then LC.Bump(p, "clerk_shifts", LC.CleanupShiftCounts and LC.CleanupShiftCounts() or 2) end
+    if job and job.id == "porter" and LC.Bump then LC.Bump(p, "cp_shifts") end
+    if job and job.id == "cleanup" and LC.Bump then LC.Bump(p, "cp_shifts", LC.CleanupShiftCounts and LC.CleanupShiftCounts() or 2) end
     if LC.CarriesPapers and not LC.CarriesPapers(p) then return end
     local n = math.max(0, cvShiftCards:GetInt())
     if n < 1 then return end

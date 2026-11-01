@@ -376,17 +376,90 @@ end
 
 -- Any NPC lying down on a bed spot b ({ top, yaw }): L.ss is the animation, L.asleep if lying
 -- (failing a lying animation, sitting on the bed). True if either. (Citizens at night: sv_livingcity_rest.lua.)
+-- No lying-down animation (Half-Life 2's citizens have none: they sat up on the bed, eyes open, through
+-- the mattress, the owner's playtest): a still, sleeping copy of them laid flat along the bed instead,
+-- their own model, face, clothes and all, eyes shut, while the real one waits out of sight in its place.
+local cvLift = CreateConVar("lc_bed_npc_lift", "9", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "How far above a mattress a sleeping NPC's back lies")
+local function LieDouble(npc, L, b)
+    if not util.IsValidModel or not npc.SetupBones or not npc.LookupBone then return false end
+    local rag = ents.Create("prop_ragdoll")
+    if not IsValid(rag) then return false end
+    local ok = pcall(function()
+        rag:SetModel(npc:GetModel())
+        rag:SetSkin(npc:GetSkin() or 0)
+        for i = 0, (npc.GetNumBodyGroups and npc:GetNumBodyGroups() or 1) - 1 do rag:SetBodygroup(i, npc:GetBodygroup(i)) end
+        rag:SetPos(npc:GetPos())
+        rag:SetAngles(Angle(0, npc:GetAngles().y, 0))
+        rag:Spawn()
+        rag:Activate()
+        rag:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+        -- the standing body, turned onto its back along the bed: its height runs head-ward along the bed,
+        -- its front faces the ceiling, the hips over the middle
+        npc:SetupBones()
+        local head = Angle(0, b.yaw or 0, 0):Forward()
+        local m = Matrix()
+        m:SetForward(Vector(0, 0, 1)) m:SetUp(head) m:SetRight(Vector(0, 0, 1):Cross(head))
+        local lieAng = m:GetAngles()
+        local pelvis = npc:LookupBone("ValveBiped.Bip01_Pelvis")
+        local pp = pelvis and npc:GetBonePosition(pelvis)
+        local hipH = pp and (pp.z - npc:GetPos().z) or 38
+        local origin = b.top - head * hipH + Vector(0, 0, cvLift:GetFloat())
+        local base, baseAng = npc:GetPos(), Angle(0, npc:GetAngles().y, 0)
+        for i = 0, rag:GetPhysicsObjectCount() - 1 do
+            local phys = rag:GetPhysicsObjectNum(i)
+            local bone = rag:TranslatePhysBoneToBone(i)
+            local bpos, bang = npc:GetBonePosition(bone)
+            if IsValid(phys) and bpos then
+                local lp, la = WorldToLocal(bpos, bang, base, baseAng)
+                local wp, wa = LocalToWorld(lp, la, origin, lieAng)
+                phys:SetPos(wp)
+                phys:SetAngles(wa)
+                phys:EnableMotion(false)
+            end
+        end
+    end)
+    if not ok then rag:Remove() return false end
+    rag:SetNW2Bool("lc_eyes_shut", true)
+    rag.lcSleeper = npc
+    L.double = rag
+    npc:SetNoDraw(true)
+    if npc.SetNotSolid then npc:SetNotSolid(true) end
+    npc:CallOnRemove("LivingCityBedDouble", function() if IsValid(rag) then rag:Remove() end end)
+    return true
+end
+
+-- Up again: the copy goes, the real one's back.
+function LC.NPCBedDoubleGone(npc, L)
+    if not L or not L.double then return end
+    if IsValid(L.double) then L.double:Remove() end
+    L.double = nil
+    if IsValid(npc) then
+        npc:SetNoDraw(false)
+        if npc.SetNotSolid then npc:SetNotSolid(false) end
+        if npc.RemoveCallOnRemove then npc:RemoveCallOnRemove("LivingCityBedDouble") end
+    end
+end
+
+-- Hurt in their sleep (the copy shot): the real one feels it, and wakes.
+hook.Add("EntityTakeDamage", "LivingCityBedDouble", function(ent, dmg)
+    local npc = IsValid(ent) and ent.lcSleeper
+    if IsValid(npc) and npc:Health() > 0 then npc:TakeDamageInfo(dmg) return true end
+end)
+
 function LC.NPCLieOnBed(npc, L, b)
     local seq = SeqFor(npc, LYING)
     local lying = seq ~= nil and Loop(npc, L, b.top + Vector(0, 0, 1), b.yaw, seq, seq, 4)
+    -- (the copy lies there; the real one waits under it, a sitting sequence holding it still)
+    local double = not lying and LieDouble(npc, L, b)
     local ok = lying or BusyLoop(npc, L, "sit", b.top + Vector(0, 0, 1), b.yaw, 4)
+    if double then lying, ok = true, true end
     if not ok then return false end
     L.onBed = true
     L.asleep = lying == true
     HideGun(npc, L, true)
     if L.asleep then
         npc:SetNW2Bool("lc_eyes_shut", true)
-        timer.Simple(0.6, function() SettleOnBed(npc, L, b.top.z) end)
+        if not L.double then timer.Simple(0.6, function() SettleOnBed(npc, L, b.top.z) end) end
     end
     return true
 end
@@ -402,6 +475,7 @@ local function End(npc, st)
         L.ss:Fire("CancelSequence")
         SafeRemoveEntityDelayed(L.ss, 0.5)
     end
+    LC.NPCBedDoubleGone(npc, L)
     if IsValid(npc) then
         if L.gunHidden then HideGun(npc, L, false) end
         if st.carry and LC.NPCDropCarry then LC.NPCDropCarry(npc, st) end

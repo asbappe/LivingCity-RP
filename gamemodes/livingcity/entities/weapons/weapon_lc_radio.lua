@@ -146,14 +146,18 @@ if CLIENT then
         m:DrawModel()
     end
 
-    -- In your own view: the radio held up, low on the right, and what it does.
+    -- In your own view: the radio held up, low on the right, and what it does. (The owner, 1 November: it
+    -- sat so low it was barely on screen; raised well up. lc_radio_view "forward right up" moves it, yours.)
+    local cvView = CreateClientConVar("lc_radio_view", "20 9 -3", true, false, "Where your radio transmitter sits in your view: forward right up")
     function SWEP:DrawHUD()
         local m = Prop(self)
         if IsValid(m) and cam and cam.Start3D then
             local eye, ang = EyePos(), EyeAngles()
             cam.Start3D(eye, ang, 60)
             m:SetModelScale(0.5, 0)
-            m:SetPos(eye + ang:Forward() * 22 + ang:Right() * 9 - ang:Up() * 9)
+            local v = {}
+            for n in string.gmatch(cvView:GetString(), "%-?[%d%.]+") do v[#v + 1] = tonumber(n) end
+            m:SetPos(eye + ang:Forward() * (v[1] or 20) + ang:Right() * (v[2] or 9) + ang:Up() * (v[3] or -3))
             local a = Angle(ang.p, ang.y, ang.r)
             a:RotateAroundAxis(a:Up(), 160)
             m:SetAngles(a)

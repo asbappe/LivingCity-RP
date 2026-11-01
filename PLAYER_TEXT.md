@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 26cae1f. Admin-only console messages and log lines are left out.
+Made from version 01740c7. Admin-only console messages and log lines are left out.
 
-6126 lines, from 186 files.
+6129 lines, from 186 files.
 
 ## Contents
 
@@ -193,7 +193,7 @@ Made from version 26cae1f. Admin-only console messages and log lines are left ou
 - [acts (shared)](#acts-shared-shlivingcityactslua) (2)
 - [sh_livingcity_cp.lua](#shlivingcitycplua-shlivingcitycplua) (44)
 - [sh_livingcity_factions.lua](#shlivingcityfactionslua-shlivingcityfactionslua) (31)
-- [sh_livingcity_jobs.lua](#shlivingcityjobslua-shlivingcityjobslua) (40)
+- [sh_livingcity_jobs.lua](#shlivingcityjobslua-shlivingcityjobslua) (43)
 - [sh_livingcity_shop.lua](#shlivingcityshoplua-shlivingcityshoplua) (231)
 - [shared.lua](#sharedlua-sharedlua) (1)
 
@@ -536,9 +536,9 @@ Made from version 26cae1f. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: draw hud
 
-- "your radio"  (text, line 164)
-- "TRANSMITTER UP: what you type and say goes out on {band}"  (text, line 166)
-- "Only someone right beside you hears you directly. R puts it away.{or}"  (text, line 167)
+- "your radio"  (text, line 168)
+- "TRANSMITTER UP: what you type and say goes out on {band}"  (text, line 170)
+- "Only someone right beside you hears you directly. R puts it away.{or}"  (text, line 171)
 
 ## Infestation Cleanup and the Groundskeeper) (weapon_lc_sprayer.lua)
 
@@ -728,7 +728,7 @@ Made from version 26cae1f. Admin-only console messages and log lines are left ou
 - "Shackled vortigaunts work the Union's shifts; their collar stops them using their vortessence powers."  (text, line 187)
 - "A shackled vortigaunt can reach out through the vortessence (C menu), unseen, to tell the Resistance where it is, and has its own story on the board, The Collar. A free vortigaunt has jobs of its own on the Resistance's board: Free your kin, and Read the Combine. Its bolt (left click) shorts out a power bank, forcefield or turret from a distance for 45 seconds. Its right click mends another vortigaunt (a second to gather, then 25 health; once every 10 seconds for each). With two or more free vortigaunts about, they commune now and then: news of a sweep for the Resistance, or a Combine door code on a scrap."  (text, line 188)
 - "Loyalty pays: Civil Protection units, and citizens with 200 Civil Standing or more, rent their apartment for free."  (text, line 189)
-- "More for the loyal: from Trusted (150 standing), fewer stops, better pay, a Commissary discount and the use of a locker; at Exemplary (400), no searches, two ration cards a shift, waved through once a curfew, a minor slip forgiven once a day, praise from the Administrator, MODEL CITIZEN on your papers, and the Block Warden job."  (text, line 190)
+- "More for the loyal: from Trusted (150 standing), fewer stops, better pay, a Commissary discount and the use of a locker; at Exemplary (400), no searches, two ration cards a shift, waved through once a curfew, a minor slip forgiven once a day, praise from the Administrator, MODEL CITIZEN on your papers. (From 100 standing, the Block Warden job.)"  (text, line 190)
 - "Weeds come up through the cracks on open ground and grow into bushes. The Groundskeeper (a Union job) sprays them with weedkiller: look at one and press E. Weedkiller is poison too: F2 > Weedkiller > Poison food or drink, and it looks no different. At the Resistance lab it makes a firebomb: armour doesn't keep out fire, and it burns out Combine machinery. Drop it under a barnacle and the barnacle dies."  (text, line 191)
 - "The infestation has growths in it that glow green. Spray them with weedkiller (E) and they die; cleared away, the infestation shrinks. Infestation Cleanup (a Union job) does it for a living, in a respirator, guarded by Civil Protection: spray them dead with the sprayer (hold left click), vacuum them up with the hoover (hold left click), and empty it into an infestation control barrel (E; the last step marks one). Each shift counts double towards joining Civil Protection."  (text, line 192)
 - "Below Trusted standing (150) the ration dispensers give a short ration, a third less food: birds and headcrabs make up the rest. Good standing earns the full packet."  (text, line 193)
@@ -2224,33 +2224,33 @@ Made from version 26cae1f. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): the game answering something done in a window (lcq_board)
 
 - "Change job..."  (text, line 75)
-- "You can take another job in {wait} seconds."  (label or button, line 89)
-- "Nothing posted right now. Check back soon."  (label or button, line 97)
-- "\|   %d/%d on it"  (message, line 140)
-- "\|   up to %d together"  (message, line 140)
-- "Join the squad"  (label or button, line 158)
-- "Take the job"  (label or button, line 161)
-- "ahead left"  (text, line 355)
-- "behind left"  (text, line 355)
-- "behind right"  (text, line 355)
-- "ahead right"  (text, line 355)
+- "You can take another job in {wait} seconds."  (label or button, line 101)
+- "Nothing posted right now. Check back soon."  (label or button, line 109)
+- "\|   %d/%d on it"  (message, line 152)
+- "\|   up to %d together"  (message, line 152)
+- "Join the squad"  (label or button, line 170)
+- "Take the job"  (label or button, line 173)
+- "ahead left"  (text, line 367)
+- "behind left"  (text, line 367)
+- "behind right"  (text, line 367)
+- "ahead right"  (text, line 367)
 
 > Note for you (not shown in game): anything more than a flight of stairs away counts: 48 units is "other level", then about 144 to a floor
 
-- "same level"  (text, line 367)
+- "same level"  (text, line 379)
 
 > Note for you (not shown in game): on screen
 
-- "A choice is waiting (it may be behind other windows)"  (drawn on screen, line 418)
-- "Your squad leader is deciding..."  (drawn on screen, line 418)
+- "A choice is waiting (it may be behind other windows)"  (drawn on screen, line 430)
+- "Your squad leader is deciding..."  (drawn on screen, line 430)
 
 > Note for you (not shown in game): being seen while tailing someone: right where you're looking, so you notice in time to duck back
 
-- "out of sight"  (text, line 447)
+- "out of sight"  (text, line 459)
 
 > Note for you (not shown in game): on screen
 
-- "objective  {dist} m"  (text, line 464)
+- "objective  {dist} m"  (text, line 476)
 
 ## cl_livingcity_quick.lua (cl_livingcity_quick.lua)
 
@@ -4973,104 +4973,104 @@ Made from version 26cae1f. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Anyone without a faction becomes a Citizen.
 
-- "[Factions] {msg}"  (chat message, line 40)
+- "[Factions] {msg}"  (chat message, line 42)
 
 > Note for you (not shown in game): part of: titles
 
-- "Resistance {hunted}"  (text, line 86)
+- "Resistance {hunted}"  (text, line 88)
 
 > Note for you (not shown in game): Returns ok, reason
 
-- "No such faction."  (text, line 341)
+- "No such faction."  (text, line 358)
 
 > Note for you (not shown in game): (a stalker is bound even as a superadmin: only death, or lc_unstalker, ends it)
 
-- "Whitelist only."  (text, line 351)
+- "Whitelist only."  (text, line 368)
 
 > Note for you (not shown in game): part of: can join faction
 
-- "Civil Protection only takes citizens in good standing (%d or more). Yours is %d."  (message, line 357)
+- "Civil Protection only takes citizens in good standing (%d or more). Yours is %d."  (message, line 374)
 
-> Note for you (not shown in game): and who've come up through the civil records office (sv_livingcity_work.lua counts the shifts)
+> Note for you (not shown in game): and who've come up the Civil Protection path: Intake Processor, or Infestation Cleanup (sv_livingcity_work.lua counts the shifts)
 
-- "Civil Protection recruits from the civil records office and the cleanup crews: finish %d shifts as a Records Clerk first, or half as many in Infestation Cleanup (F3 > Jobs). You've done %d."  (message, line 363)
+- "Civil Protection recruits from the train station's Intake Processors and the infestation cleanup crews: finish %d Intake Processor shifts first, or half as many in Infestation Cleanup (F3 > Jobs). You've done %d."  (message, line 380)
 
 > Note for you (not shown in game): part of: can join faction
 
-- "Requires %s in %s."  (message, line 369)
-- "No such role."  (text, line 374)
-- "Someone already holds that role."  (text, line 376)
-- "Requires {name} in {name}."  (text, line 378)
+- "Requires %s in %s."  (message, line 386)
+- "No such role."  (text, line 391)
+- "Someone already holds that role."  (text, line 393)
+- "Requires {name} in {name}."  (text, line 395)
 
 > Note for you (not shown in game): part of: set faction
 
-- "You are now {name}."  (chat message, line 401)
+- "You are now {name}."  (chat message, line 418)
 
 > Note for you (not shown in game): the game answering something done in a window (lcf_join)
 
-- "Not while you're in custody."  (chat message, line 427)
-- "Not while you're wanted or in a fight."  (chat message, line 428)
-- "You can change faction again in {CurTime} seconds."  (chat message, line 430)
+- "Not while you're in custody."  (chat message, line 444)
+- "Not while you're wanted or in a fight."  (chat message, line 445)
+- "You can change faction again in {CurTime} seconds."  (chat message, line 447)
 
 > Note for you (not shown in game): what Civil Protection asks of a citizen, as progress bars on the card (the owner asked)
 
-- "Civil Standing"  (label, line 450)
-- "Records Clerk shifts finished (F3 > Jobs; Infestation Cleanup counts double)"  (label, line 451)
+- "Civil Standing"  (label, line 467)
+- "Intake Processor shifts finished (F3 > Jobs; Infestation Cleanup counts double)"  (label, line 468)
 
 > Note for you (not shown in game): part of: send menu
 
-- "Jobs done for the Resistance, to be trusted as a Fighter (their board, F3)"  (label, line 457)
+- "Jobs done for the Resistance, to be trusted as a Fighter (their board, F3)"  (label, line 474)
 
 > Note for you (not shown in game): only ever to give back what they had (never to take more away)
 
-- "Welcome back. You're still {name}."  (chat message, line 522)
+- "Welcome back. You're still {name}."  (chat message, line 539)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "You can't be %s right now: %s You're %s for now; take it again from the faction menu (F4) when there's a place."  (message, line 527)
-- "back to your rank"  (message, line 529)
+- "You can't be %s right now: %s You're %s for now; take it again from the faction menu (F4) when there's a place."  (message, line 544)
+- "back to your rank"  (message, line 546)
 
 > Note for you (not shown in game): XP The transhuman conditioning: the Overwatch ranks open, and whatever XP you've earned counts at once. There's no undoing it.
 
-- "the conditioning"  (text, line 544)
+- "the conditioning"  (text, line 561)
 
 > Note for you (not shown in game): part of: add xp
 
-- "Promoted to {name}!{or}"  (chat message, line 563)
-- "[%s] %s has been promoted to %s."  (message, line 568)
-- "Demoted to {name}."  (chat message, line 572)
+- "Promoted to {name}!{or}"  (chat message, line 580)
+- "[%s] %s has been promoted to %s."  (message, line 585)
+- "Demoted to {name}."  (chat message, line 589)
 
 > Note for you (not shown in game): Admin commands
 
-- "Player not found."  (text, line 690)
+- "Player not found."  (text, line 707)
 
 > Note for you (not shown in game): admin cmd
 
-- "Factions: citizen, resistance, cp, ota, admin, zombie"  (text, line 697)
-- "No such special role."  (text, line 699)
-- "set to {name}."  (text, line 701)
-- "Usage: lcf_setxp <name> <xp>"  (text, line 707)
-- "now has {xp} XP in {name}."  (text, line 710)
+- "Factions: citizen, resistance, cp, ota, admin, zombie"  (text, line 714)
+- "No such special role."  (text, line 716)
+- "set to {name}."  (text, line 718)
+- "Usage: lcf_setxp <name> <xp>"  (text, line 724)
+- "now has {xp} XP in {name}."  (text, line 727)
 
 > Note for you (not shown in game): part of: step
 
-- "by staff"  (text, line 719)
-- "is now {name}."  (text, line 720)
+- "by staff"  (text, line 736)
+- "is now {name}."  (text, line 737)
 
 > Note for you (not shown in game): admin cmd
 
-- "Usage: lcf_whitelist <name> <faction>"  (text, line 727)
-- "whitelisted for"  (text, line 731)
-- "removed from"  (text, line 731)
+- "Usage: lcf_whitelist <name> <faction>"  (text, line 744)
+- "whitelisted for"  (text, line 748)
+- "removed from"  (text, line 748)
 
 > Note for you (not shown in game): A job done for the Resistance builds their trust; the last one needed makes a Fighter of a member with the XP.
 
-- "[Resistance] You've proved yourself. They trust you now."  (chat message, line 741)
-- "trusted by the Resistance"  (text, line 742)
+- "[Resistance] You've proved yourself. They trust you now."  (chat message, line 758)
+- "trusted by the Resistance"  (text, line 759)
 
 > Note for you (not shown in game): the game's living city quest complete moment
 
-- "[Resistance] They're starting to trust you: %d of %d jobs before they'd arm you as a Fighter."  (message, line 744)
+- "[Resistance] They're starting to trust you: %d of %d jobs before they'd arm you as a Fighter."  (message, line 761)
 
 ## Freq 7, the Resistance's pirate broadcast (sv_livingcity_freq7.lua)
 
@@ -8387,40 +8387,40 @@ Made from version 26cae1f. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: accept posting
 
-- "[Living City] Finish or abandon your current job first."  (chat message, line 3123)
-- "[Living City] You have to wait before taking another job. Next job in {CurTime}s."  (chat message, line 3125)
-- "[Living City] That job is no longer available."  (chat message, line 3134)
-- "[Living City] Stalkers can only do stalker work. You can't take this job."  (chat message, line 3137)
-- "[Living City] That job has enough people."  (chat message, line 3144)
-- "has joined the job."  (quest narration, line 3147)
-- "[{board}] {title}. {or}"  (chat message, line 3169)
-- "Quest accepted: %s [%s] by %s"  (message, line 3171)
+- "[Living City] Finish or abandon your current job first."  (chat message, line 3125)
+- "[Living City] You have to wait before taking another job. Next job in {CurTime}s."  (chat message, line 3127)
+- "[Living City] That job is no longer available."  (chat message, line 3136)
+- "[Living City] Stalkers can only do stalker work. You can't take this job."  (chat message, line 3139)
+- "[Living City] That job has enough people."  (chat message, line 3146)
+- "has joined the job."  (quest narration, line 3149)
+- "[{board}] {title}. {or}"  (chat message, line 3171)
+- "Quest accepted: %s [%s] by %s"  (message, line 3173)
 
 > Note for you (not shown in game): part of: abandon quest
 
-- "left the job."  (quest narration, line 3185)
+- "left the job."  (quest narration, line 3187)
 
 > Note for you (not shown in game): part of: resolve choice
 
-- "%s check: rolled %d + %d skill = %d, needed %d. %s"  (message, line 3203)
+- "%s check: rolled %d + %d skill = %d, needed %d. %s"  (message, line 3205)
 
 > Note for you (not shown in game): the console command lcq_startchain
 
-- "[Story] Chains: {ids}. Usage: lcq_startchain <chain> [player]"  (text, line 3255)
-- "[Story] Player not found."  (text, line 3257)
-- "[Story] {name} is ready on {Nick}'s board (F3)."  (text, line 3262)
+- "[Story] Chains: {ids}. Usage: lcq_startchain <chain> [player]"  (text, line 3257)
+- "[Story] Player not found."  (text, line 3259)
+- "[Story] {name} is ready on {Nick}'s board (F3)."  (text, line 3264)
 
 > Note for you (not shown in game): the console command lcq_story
 
-- "[Story] Player not found."  (text, line 3269)
-- "[Story] %s: loyalty %d, sympathy %d, corruption %d"  (message, line 3271)
-- "counters: {or}"  (text, line 3275)
-- "ended ({done})"  (text, line 3277)
-- "at {part}"  (text, line 3277)
+- "[Story] Player not found."  (text, line 3271)
+- "[Story] %s: loyalty %d, sympathy %d, corruption %d"  (message, line 3273)
+- "counters: {or}"  (text, line 3277)
+- "ended ({done})"  (text, line 3279)
+- "at {part}"  (text, line 3279)
 
 > Note for you (not shown in game): the console command lcq_resetstory
 
-- "[Story] Your story has been reset."  (chat message, line 3289)
+- "[Story] Your story has been reset."  (chat message, line 3291)
 
 ## habitation block raids (sv_livingcity_raids.lua)
 
@@ -8486,82 +8486,82 @@ Made from version 26cae1f. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: patrol
 
-- "on patrol"  (what someone is doing, line 518)
-- "on patrol"  (what someone is doing, line 522)
+- "on patrol"  (what someone is doing, line 592)
+- "on patrol"  (what someone is doing, line 596)
 
 > Note for you (not shown in game): At a workbench or the camp table.
 
-- "cleaning a gun"  (text, line 529)
-- "going over a map"  (text, line 529)
-- "fixing something"  (text, line 529)
-- "working at the bench"  (text, line 529)
-- "fixing a gun"  (text, line 529)
-- "making something"  (text, line 529)
+- "cleaning a gun"  (text, line 603)
+- "going over a map"  (text, line 603)
+- "fixing something"  (text, line 603)
+- "working at the bench"  (text, line 603)
+- "fixing a gun"  (text, line 603)
+- "making something"  (text, line 603)
 
 > Note for you (not shown in game): Going through a crate.
 
-- "going through the crates"  (text, line 537)
-- "checking the supplies"  (text, line 537)
-- "counting rounds"  (text, line 537)
+- "going through the crates"  (text, line 611)
+- "checking the supplies"  (text, line 611)
+- "counting rounds"  (text, line 611)
 
 > Note for you (not shown in game): Tending a pot.
 
-- "tending the garden"  (what someone is doing, line 545)
+- "tending the garden"  (what someone is doing, line 619)
 
 > Note for you (not shown in game): part of: carry
 
-- "fetching supplies"  (what someone is doing, line 559)
-- "carrying supplies"  (text, line 564)
-- "putting it down"  (what someone is doing, line 564)
+- "fetching supplies"  (what someone is doing, line 633)
+- "carrying supplies"  (text, line 638)
+- "putting it down"  (what someone is doing, line 638)
 
 > Note for you (not shown in game): part of: fire
 
-- "warming up by the fire"  (what someone is doing, line 583)
+- "warming up by the fire"  (what someone is doing, line 657)
 
 > Note for you (not shown in game): On a chair, a couch, a bench.
 
-- "taking a break"  (text, line 599)
-- "sitting down"  (text, line 599)
+- "taking a break"  (text, line 673)
+- "sitting down"  (text, line 673)
 
 > Note for you (not shown in game): The editor's sit, bench and lean points inside the zone.
 
-- "leaning on the wall"  (what someone is doing, line 613)
+- "leaning on the wall"  (what someone is doing, line 687)
 
 > Note for you (not shown in game): Sleeping on a mattress, a bed, a bunk.
 
-- "turning in"  (text, line 628)
+- "turning in"  (text, line 702)
 
 > Note for you (not shown in game): the zone's on alert: on their feet, facing the trouble
 
-- "on alert"  (text, line 719)
+- "on alert"  (text, line 793)
 
 > Note for you (not shown in game): part of: start errand
 
-- "fewer than three fighters at home"  (text, line 821)
-- "nowhere to scavenge"  (text, line 823)
-- "out scavenging"  (text, line 835)
-- "Rebel scavenging run: %d out of %s toward %s"  (message, line 837)
+- "fewer than three fighters at home"  (text, line 895)
+- "nowhere to scavenge"  (text, line 897)
+- "out scavenging"  (text, line 909)
+- "Rebel scavenging run: %d out of %s toward %s"  (message, line 911)
 
 > Note for you (not shown in game): part of: deliver
 
-- "%s is back from a scavenging run: %d meal%s for the stores."  (message, line 870)
+- "%s is back from a scavenging run: %d meal%s for the stores."  (message, line 944)
 
 > Note for you (not shown in game): part of: rebel errand think
 
-- "keeping out of sight"  (text, line 899)
-- "out scavenging"  (text, line 914)
+- "keeping out of sight"  (text, line 973)
+- "out scavenging"  (text, line 988)
 
 > Note for you (not shown in game): home, with whatever they found
 
-- "bringing back what they found"  (text, line 950)
-- "heading home"  (text, line 950)
+- "bringing back what they found"  (text, line 1024)
+- "heading home"  (text, line 1024)
 
 > Note for you (not shown in game): the console command lc_rebel_errand
 
-- "[Living City] Start the city first."  (chat message, line 996)
-- "[Living City] No rebel territory on this map."  (chat message, line 1003)
-- "[Living City] A scavenging run is heading out of the nearest rebel zone."  (chat message, line 1005)
-- "[Living City] Couldn't send one: {why}"  (text, line 1005)
+- "[Living City] Start the city first."  (chat message, line 1070)
+- "[Living City] No rebel territory on this map."  (chat message, line 1077)
+- "[Living City] A scavenging run is heading out of the nearest rebel zone."  (chat message, line 1079)
+- "[Living City] Couldn't send one: {why}"  (text, line 1079)
 
 ## the Resistance on the street (sv_livingcity_rebels.lua)
 
@@ -12464,19 +12464,16 @@ Made from version 26cae1f. Admin-only console messages and log lines are left ou
 
 - "Union shift"  (name, line 1410)
 
-> Note for you (not shown in game): so is Infestation Cleanup, faster (each shift counts as lc_cleanup_shift_counts, 2)
-
-- "[Rations] You earned %s for that shift. You have %d now: each ration at a dispenser takes one."  (message, line 1452)
-
 > Note for you (not shown in game): the game's living city quest complete moment
 
-- "a ration card"  (message, line 1453)
-- "ration cards"  (text, line 1453)
-- "Civil rehabilitation"  (name, line 1471)
+- "[Rations] You earned %s for that shift. You have %d now: each ration at a dispenser takes one."  (message, line 1454)
+- "a ration card"  (message, line 1455)
+- "ration cards"  (text, line 1455)
+- "Civil rehabilitation"  (name, line 1473)
 
 > Note for you (not shown in game): part of: build
 
-- "Community service: {desc}"  (title, line 1481)
+- "Community service: {desc}"  (title, line 1483)
 
 ## writing, broadcasts, and the law (sv_livingcity_writing.lua)
 
@@ -12717,11 +12714,17 @@ Made from version 26cae1f. Admin-only console messages and log lines are left ou
 - "the infestation"  (text, line 46)
 - "Into the infestation in a respirator, with weedkiller and a hoover: spray its growths dead, vacuum them up, and empty the hoover into the infestation control barrel. Civil Protection guards you; it's dangerous. Each shift counts double towards joining Civil Protection."  (description, line 47)
 
-> Note for you (not shown in game): (the owner, 2026-11-01: something for the city's most loyal) players only, Exemplary standing; no workplace: your own block
+> Note for you (not shown in game): (the owner, 2026-11-01: something for the city's most loyal) players only, Exemplary standing; no workplace: your own block (the owner, 1 November: for the loyal, 100 standing; and not listed at all for anyone below it)
 
-- "Block Warden"  (name, line 49)
-- "your housing block"  (text, line 49)
-- "Exemplary citizens only (Civil Standing 400). Walk your own block, have a word with the neighbours, and report what isn't right. Paid when a report holds up; a false one costs you."  (description, line 50)
+- "Block Warden"  (name, line 50)
+- "your housing block"  (text, line 50)
+- "For loyal citizens only (Civil Standing 100). Walk your own block, have a word with the neighbours, and report what isn't right. Paid when a report holds up; a false one costs you."  (description, line 51)
+
+> Note for you (not shown in game): Career paths (the owner, 1 November): which jobs lead where, as the board groups them.
+
+- "Civil Protection path"  (name, line 56)
+- "Administration path"  (name, line 57)
+- "Union work"  (name, line 58)
 
 ## sh_livingcity_shop.lua (sh_livingcity_shop.lua)
 

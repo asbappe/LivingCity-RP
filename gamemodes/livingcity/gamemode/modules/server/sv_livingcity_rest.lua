@@ -363,6 +363,7 @@ function LC.NPCBedUp(npc, st)
     if st.bedKey and LC.BedSleepers[st.bedKey] == npc then LC.BedSleepers[st.bedKey] = nil end
     st.bedKey, st.bedSpot, st.bedL, st.wakeAt = nil, nil, nil, nil
     if not L then return end
+    if LC.NPCBedDoubleGone then LC.NPCBedDoubleGone(npc, L) end
     if IsValid(L.ss) then
         L.ss:Fire("CancelSequence")
         SafeRemoveEntityDelayed(L.ss, 0.5)
@@ -379,7 +380,7 @@ end
 
 -- In bed: asleep till morning, then up, a few at a time, and out into the day.
 function LC.NPCBedThink(npc, st, now)
-    if not (st.bedL and IsValid(st.bedL.ss)) then
+    if not (st.bedL and (IsValid(st.bedL.ss) or IsValid(st.bedL.double))) then
         LC.NPCBedUp(npc, st)
         LC.SetState(npc, st, "idle")
         st.untilT = now + 2

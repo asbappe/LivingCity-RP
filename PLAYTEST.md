@@ -33,11 +33,23 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
   Notes:
 - [ ] **Clear every growth in a patch that grew:** the patch goes. Dead growths nobody collects rot after 10 minutes.
   Notes:
-- [ ] **Joining Civil Protection:** a cleanup shift counts as two Records Clerk shifts.
+- [ ] **Joining Civil Protection:** a cleanup shift counts as two Intake Processor shifts.
   Notes:
 
 ## Also fixed from your notes
 
+- [ ] **Sleeping citizens:** lying flat on the bed, eyes shut, not sitting up through it. Heads at the pillow end? (If at the foot: `lc_bed_head_flip 1`.) Too high or sunk in? `lc_bed_npc_lift` (9). Shoot one: they wake.
+  Notes:
+- [ ] **Career paths on F3:** jobs grouped (Civil Protection path: Intake Processor, Infestation Cleanup; Administration path: Records Clerk, Block Warden; Union work). F4's Civil Protection bar counts Intake Processor shifts.
+  Notes:
+- [ ] **Block Warden:** not listed below 100 standing; listed and takeable at 100.
+  Notes:
+- [ ] **Join Civil Protection:** you spawn in a Combine zone, not the train station.
+  Notes:
+- [ ] **The radio transmitter** (CP and Freq 7) is well up in view now. Adjust: `lc_radio_view "20 9 -3"`.
+  Notes:
+- [ ] **Metrocop hands:** find a workshop metrocop hands pack, then `lc_cp_hands <its model>` (send me its model list with the same command as before and I'll set it).
+  Notes:
 - [ ] **Records Clerk filing:** the instructions at the top make sense? The register shows a status now; anything different (name, number, status) is a Discrepancy; after each form it says right or wrong and why. The blank form button is red and says it's a crime.
   Notes:
 - [ ] **F4:** a header for each faction; click to open its ranks and roles. Free Vortigaunt and Overwatch Commander no longer cut off. No Stalker on it.
@@ -140,7 +152,7 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
   Notes:
 - [ ] **The stalker's end:** the frame is built beside a power transformer; once charged, an arc jumps the gap; walking into it kills at once.
   Notes:
-- [ ] **Joining Civil Protection:** refused until 5 Records Clerk shifts (and 100 standing), and told so; F4 shows both as progress bars.
+- [ ] **Joining Civil Protection:** refused until 5 Intake Processor shifts (and 100 standing), and told so; F4 shows both as progress bars.
   Notes:
 - [ ] **The loyalty test with a Resistance player online:** the Insider waits; units near the Resistance player keep stopping them; once the rebel's in a cell, both are put in the scene, with the on-screen prompts.
   Notes:
