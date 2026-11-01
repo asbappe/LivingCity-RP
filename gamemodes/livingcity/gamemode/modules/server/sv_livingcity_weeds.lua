@@ -30,11 +30,12 @@ local cvOn   = CreateConVar("lc_weeds", "1", FLAGS, "Weeds grow on open ground, 
 local cvMax  = CreateConVar("lc_weeds_max", "30", FLAGS, "Most weeds growing at once")
 local cvGrow = CreateConVar("lc_weed_grow_minutes", "8", FLAGS, "Minutes for a weed to grow a size (a tuft, weeds, a bush)")
 
--- Whatever plant the server has (each player needs the same game installed to see it): the first that exists.
-local MODELS = { "models/props/de_inferno/bushgreensmall.mdl", "models/props/cs_militia/fern01.mdl", "models/props_foliage/shrub_01a.mdl",
+-- The first plant that exists. Garry's Mod has shipped with the Episode 2 and Counter-Strike: Source models built in
+-- since July 2025, so every player sees these.
+local MODELS = { "models/props_foliage/shrub_01a.mdl", "models/props/de_inferno/bushgreensmall.mdl", "models/props/cs_militia/fern01.mdl",
     "models/props/cs_office/plant01.mdl", "models/props_lab/cactus.mdl" }
 local chosen
-local cvModel = CreateConVar("lc_weed_model", "", FLAGS, "The weeds' model (empty: the first plant the server has; e.g. one from Episode 2 if everyone has it)")
+local cvModel = CreateConVar("lc_weed_model", "", FLAGS, "The weeds' model (empty: the first plant the server has, an Episode 2 shrub first)")
 function LC.WeedModel()
     local m = cvModel:GetString()
     if m ~= "" and (not util.IsValidModel or util.IsValidModel(m)) then return m end
