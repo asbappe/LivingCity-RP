@@ -263,8 +263,15 @@ BUILD.parcel = function(t)
 end
 
 BUILD.filing = function(t)
-    local f = Frame("Filing: by citizen number; anything that doesn't match the register, to the discrepancy tray", 640, 400)
+    local f = Frame("Filing", 640, 470)
     panel.frame = f
+    -- how it works, in plain words (there were none)
+    local help = vgui.Create("DLabel", f)
+    help:Dock(TOP)
+    help:SetWrap(true)
+    help:SetTall(52)
+    help:SetTextColor(Color(225, 225, 225))
+    help:SetText("Compare the form (left) with the register (right). If the name, number and status all match, file it by the first two digits of the citizen number: 37-412 goes in 25-49. If anything is different, even one letter or digit, or the status, it goes in Discrepancy.")
     local card = vgui.Create("DPanel", f)
     card:Dock(TOP)
     card:SetTall(170)
@@ -281,8 +288,15 @@ BUILD.filing = function(t)
         draw.SimpleText("THE REGISTER SAYS", "LCJobTitle", x + 10, 10, ACC)
         draw.SimpleText(tostring(d.regName or ""), "LCJobTitle", x + 10, 46, INK)
         draw.SimpleText(tostring(d.regCid or ""), "LCJobTitle", x + 10, 76, INK)
+        draw.SimpleText(tostring(d.regStatus or ""), "LCJobTitle", x + 10, 106, INK)
         draw.SimpleText(string.format("Form %d of %d    %d s", d.n or 1, d.of or 10, d.secs or 0), "LCJobLine", x + 10, h - 24, DIM)
     end
+    -- what happened to the last one, and why
+    local last = vgui.Create("DLabel", f)
+    last:Dock(TOP)
+    last:SetTall(24)
+    last:DockMargin(0, 6, 0, 0)
+    last:SetText("")
     local drawers = vgui.Create("DPanel", f)
     drawers:Dock(FILL)
     drawers:DockMargin(0, 8, 0, 0)
@@ -293,10 +307,15 @@ BUILD.filing = function(t)
         b:SetWide(math.floor((f:GetWide() - 30) / 5) - 4)
         b:DockMargin(0, 0, 4, 60)
     end
-    local blank = Button(f, "Take a blank identity form from the cabinet", Color(90, 70, 50), function() Act("blank") end)
+    -- (the owner: it looked like part of the job. It's a crime, and says so)
+    local blank = Button(f, "CRIME: steal a blank identity form (for forged papers; a unit who sees it: wanted, and you lose standing)", Color(150, 40, 40), function() Act("blank") end)
     blank:Dock(BOTTOM)
     blank:SetTall(28)
-    local function Upd(d) blank:SetVisible(d.blank == true) end
+    local function Upd(d)
+        blank:SetVisible(d.blank == true)
+        last:SetText(d.last or "")
+        last:SetTextColor(d.lastRight and Color(140, 220, 140) or Color(240, 140, 120))
+    end
     panel.update = Upd
     Upd(t)
 end

@@ -729,16 +729,25 @@ local function NextForm(g)
     if g.n > FORMS then g.form = nil return end
     local name = Pick(FILE_NAMES)
     local cid = string.format("%02d-%03d", math.random(0, 99), math.random(100, 999))
-    local f = { name = name, cid = cid, status = Pick(STATUSES), regName = name, regCid = cid }
+    local status = Pick(STATUSES)
+    local f = { name = name, cid = cid, status = status, regName = name, regCid = cid, regStatus = status }
+    -- (the owner, 1 November: the status meant nothing and nothing said so. Now the register has one
+    -- too, and a form that differs from the register in anything, name, number or status, is a discrepancy)
     if math.random() < 0.3 then
         f.bad = true
-        if math.random() < 0.5 then
+        local r = math.random()
+        if r < 0.35 then
             local m = Misspell(name)
             if m == name then m = name .. "a" end
-            f.name = m
-        else
+            f.name, f.why = m, "the name is spelled differently"
+        elseif r < 0.7 then
             local a, b = string.match(cid, "^(%d)(%d)")
             f.cid = (a == b) and string.format("%02d-%s", (tonumber(a .. b) + 11) % 100, string.sub(cid, 4)) or (b .. a .. string.sub(cid, 3))
+            f.why = "the citizen number is different"
+        else
+            local other
+            repeat other = Pick(STATUSES) until other ~= status
+            f.regStatus, f.why = other, "the status is different"
         end
     end
     g.form = f
@@ -750,6 +759,7 @@ LC.FilingDrawerOf = DrawerOf
 local function FilingPanel(g)
     local f = g.form or {}
     LC.JobGamePanel(g, { drawers = DRAWERS, name = f.name, cid = f.cid, status = f.status, regName = f.regName, regCid = f.regCid,
+        regStatus = f.regStatus, last = g.last, lastRight = g.lastRight,
         n = g.n, of = FORMS, secs = math.max(0, math.ceil(g.limit - CurTime())), blank = not g.tookBlank })
 end
 
@@ -795,6 +805,18 @@ LC.JobGameDefine("filing", {
         local right = (f.bad and d == 5) or (not f.bad and d == DrawerOf(f.cid))
         if right then g.right = g.right + 1 g.pay = g.pay + 1 g.ply:EmitSound("physics/wood/wood_box_impact_soft1.wav", 55)
         else g.wrong = g.wrong + 1 g.pay = g.pay - 1 g.ply:EmitSound("buttons/button10.wav", 55) end
+        -- why, every time (it was right or wrong with no reason given)
+        local drawer = DRAWERS[DrawerOf(f.cid)]
+        if right then
+            g.last = f.bad and ("Right: " .. f.why .. ", so it's a discrepancy.") or ("Right: it matches, and " .. string.sub(f.cid, 1, 2) .. " goes in " .. drawer .. ".")
+        elseif f.bad then
+            g.last = "Wrong: " .. f.why .. " from the register, so it goes in Discrepancy."
+        elseif d == 5 then
+            g.last = "Wrong: it matched the register exactly, so it's filed by number: " .. string.sub(f.cid, 1, 2) .. " goes in " .. drawer .. "."
+        else
+            g.last = "Wrong drawer: the number starts " .. string.sub(f.cid, 1, 2) .. ", so it goes in " .. drawer .. "."
+        end
+        g.lastRight = right
         NextForm(g)
         if not g.form then
             if g.wrong == 0 then g.pay = g.pay + 3 Note(g, "No forms filed wrong: 3 credits bonus.") end

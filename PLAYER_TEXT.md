@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 111a336. Admin-only console messages and log lines are left out.
+Made from version 26cae1f. Admin-only console messages and log lines are left out.
 
-6118 lines, from 186 files.
+6126 lines, from 186 files.
 
 ## Contents
 
@@ -140,7 +140,7 @@ Made from version 111a336. Admin-only console messages and log lines are left ou
 - [what loyalty earns (the owner, 2026-11-01: "other rewards for high standing civilians? All of them")](#what-loyalty-earns-the-owner-2026-11-01-other-rewards-for-high-standing-civilians-all-of-them-svlivingcityloyaltylua) (5)
 - [letters](#letters-svlivingcitymaillua) (14)
 - [marched to the cells](#marched-to-the-cells-svlivingcitymarchlua) (17)
-- [more work you actually do (the engine is sv_livingcity_jobgames.lua)](#more-work-you-actually-do-the-engine-is-svlivingcityjobgameslua-svlivingcitymoregameslua) (210)
+- [more work you actually do (the engine is sv_livingcity_jobgames.lua)](#more-work-you-actually-do-the-engine-is-svlivingcityjobgameslua-svlivingcitymoregameslua) (218)
 - [hauling the dead](#hauling-the-dead-svlivingcitymortuarylua) (20)
 - [routes over the map's own nodegraph](#routes-over-the-maps-own-nodegraph-svlivingcitynavgraphlua) (1)
 - [what now?](#what-now-svlivingcitynextsteplua) (37)
@@ -1910,52 +1910,52 @@ Made from version 111a336. Admin-only console messages and log lines are left ou
 
 - "You opened it: Civil Standing lost, and 1 credit a delivery instead of 3."  (drawn on screen, line 244)
 
-> Note for you (not shown in game): part of: filing
+> Note for you (not shown in game): how it works, in plain words (there were none)
 
-- "Filing: by citizen number; anything that doesn't match the register, to the discrepancy tray"  (window title, line 266)
+- "Compare the form (left) with the register (right). If the name, number and status all match, file it by the first two digits of the citizen number: 37-412 goes in 25-49. If anything is different, even one letter or digit, or the status, it goes in Discrepancy."  (label or button, line 274)
 
 > Note for you (not shown in game): part of: paint
 
-- "Citizen no."  (drawn on screen, line 277)
-- "Form %d of %d    %d s"  (message, line 284)
+- "Citizen no."  (drawn on screen, line 284)
+- "Form %d of %d    %d s"  (message, line 292)
 
-> Note for you (not shown in game): part of: filing
+> Note for you (not shown in game): (the owner: it looked like part of the job. It's a crime, and says so)
 
-- "Take a blank identity form from the cabinet"  (button, line 296)
+- "CRIME: steal a blank identity form (for forged papers; a unit who sees it: wanted, and you lose standing)"  (button, line 311)
 
 > Note for you (not shown in game): part of: radio
 
-- "Radio repair: find its station, then set the screws by ear until it's clean"  (window title, line 467)
+- "Radio repair: find its station, then set the screws by ear until it's clean"  (window title, line 486)
 
 > Note for you (not shown in game): the time left on this set, ticking down (red near the end: it goes back on the shelf unfixed)
 
-- "Set %d of %d"  (message, line 505)
+- "Set %d of %d"  (message, line 524)
 
 > Note for you (not shown in game): part of: radio
 
-- "Volume trimmer"  (text, line 514)
-- "Test it: is it clean?"  (button, line 522)
-- "Report the frequency"  (text, line 539)
-- "Write it down"  (text, line 539)
-- "Tune past it"  (text, line 539)
+- "Volume trimmer"  (text, line 533)
+- "Test it: is it clean?"  (button, line 541)
+- "Report the frequency"  (text, line 558)
+- "Write it down"  (text, line 558)
+- "Tune past it"  (text, line 558)
 
 > Note for you (not shown in game): part of: paint over
 
-- "Set %d of %d: clean. Off the bench it goes."  (message, line 567)
-- "Set %d of %d: out of time. Back on the shelf, unfixed."  (message, line 568)
-- "The next one from the shelf..."  (drawn on screen, line 570)
+- "Set %d of %d: clean. Off the bench it goes."  (message, line 586)
+- "Set %d of %d: out of time. Back on the shelf, unfixed."  (message, line 587)
+- "The next one from the shelf..."  (drawn on screen, line 589)
 
 > Note for you (not shown in game): part of: listen window
 
-- "Radio (retuned)"  (window title, line 598)
-- "Union radio"  (window title, line 598)
-- "Switch it off"  (button, line 633)
-- "Anyone within about twenty feet hears it too. Close this and it keeps playing."  (label or button, line 641)
+- "Radio (retuned)"  (window title, line 617)
+- "Union radio"  (window title, line 617)
+- "Switch it off"  (button, line 652)
+- "Anyone within about twenty feet hears it too. Close this and it keeps playing."  (label or button, line 660)
 
 > Note for you (not shown in game): part of: paint
 
-- "They stand very still and look at nothing."  (drawn on screen, line 679)
-- "Their nerve: %d    Citizen %d of %d"  (message, line 680)
+- "They stand very still and look at nothing."  (drawn on screen, line 698)
+- "Their nerve: %d    Citizen %d of %d"  (message, line 699)
 
 ## cl_livingcity_needs.lua (cl_livingcity_needs.lua)
 
@@ -6796,165 +6796,185 @@ Made from version 111a336. Admin-only console messages and log lines are left ou
 - "Rosa Kalnin"  (text, line 716)
 - "Dmitri Arkov"  (text, line 716)
 
+> Note for you (not shown in game): (the owner, 1 November: the status meant nothing and nothing said so. Now the register has one too, and a form that differs from the register in anything, name, number or status, is a discrepancy)
+
+- "the name is spelled differently"  (text, line 742)
+
+> Note for you (not shown in game): part of: next form
+
+- "the citizen number is different"  (text, line 746)
+- "the status is different"  (text, line 750)
+
 > Note for you (not shown in game): part of: hud
 
-- "Forms: %d of %d"  (message, line 763)
-- "Right: %d    Wrong: %d"  (message, line 763)
+- "Forms: %d of %d"  (message, line 773)
+- "Right: %d    Wrong: %d"  (message, line 773)
 
 > Note for you (not shown in game): part of: tick
 
-- "Time's up, with forms still in the in-tray."  (text, line 770)
+- "Time's up, with forms still in the in-tray."  (text, line 780)
 
 > Note for you (not shown in game): part of: act
 
-- "caught taking a blank identity form"  (text, line 780)
-- "Theft of state forms"  (text, line 781)
-- "A Civil Protection unit at the counter saw you take it. You put it back, but you're wanted and lose Civil Standing."  (chat message, line 782)
-- "You slip a blank identity form into your sleeve. It's in your pockets now."  (chat message, line 786)
-- "No forms filed wrong: 3 credits bonus."  (text, line 800)
-- "%d of %d filed right."  (message, line 801)
+- "caught taking a blank identity form"  (text, line 790)
+- "Theft of state forms"  (text, line 791)
+- "A Civil Protection unit at the counter saw you take it. You put it back, but you're wanted and lose Civil Standing."  (chat message, line 792)
+- "You slip a blank identity form into your sleeve. It's in your pockets now."  (chat message, line 796)
+
+> Note for you (not shown in game): why, every time (it was right or wrong with no reason given)
+
+- "Right: {why}, so it's a discrepancy."  (text, line 811)
+- "Right: it matches, and {cid} goes in {drawer}."  (text, line 811)
+- "Wrong: {why} from the register, so it goes in Discrepancy."  (text, line 813)
+- "Wrong: it matched the register exactly, so it's filed by number: {cid} goes in {drawer}."  (text, line 815)
+
+> Note for you (not shown in game): part of: act
+
+- "Wrong drawer: the number starts {cid}, so it goes in {drawer}."  (text, line 817)
+- "No forms filed wrong: 3 credits bonus."  (text, line 822)
+- "%d of %d filed right."  (message, line 823)
 
 > Note for you (not shown in game): Radio repair: a set's trimmer screws, set by ear. Tune it to its station (the dial), then turn the screws with the screwdriver until it comes through clean: the volume trimmer brings the station up, the squelch pushes the static down, the alignment pulls a smeared signal into focus. Sometimes the clearest thing on the band is Freq 7.
 
-- "Volume trimmer"  (text, line 819)
+- "Volume trimmer"  (text, line 841)
 
 > Note for you (not shown in game): How right a screw is: 1 on the spot, 0 a third of the range off.
 
-- "'...this is Freq 7. They count the rations and they count you. Count them back...'"  (text, line 828)
-- "'...the third shift at the station is short two Civil Protection units on Tuesdays. Freq 7, out...'"  (text, line 829)
-- "'...if you can hear this, you are not alone. Freq 7...'"  (text, line 830)
-- "'...the Administrator's broadcasts are recorded. She is not in the city. Freq 7...'"  (text, line 831)
+- "'...this is Freq 7. They count the rations and they count you. Count them back...'"  (text, line 850)
+- "'...the third shift at the station is short two Civil Protection units on Tuesdays. Freq 7, out...'"  (text, line 851)
+- "'...if you can hear this, you are not alone. Freq 7...'"  (text, line 852)
+- "'...the Administrator's broadcasts are recorded. She is not in the city. Freq 7...'"  (text, line 853)
 
 > Note for you (not shown in game): part of: new radio
 
-- "A voice comes through the static, on Freq 7."  (text, line 871)
+- "A voice comes through the static, on Freq 7."  (text, line 893)
 
 > Note for you (not shown in game): part of: radio done
 
-- "You fixed every radio: 3 credits bonus."  (text, line 894)
-- "%d of %d radios fixed."  (message, line 895)
+- "You fixed every radio: 3 credits bonus."  (text, line 916)
+- "%d of %d radios fixed."  (message, line 917)
 
 > Note for you (not shown in game): part of: start
 
-- "Radio repair"  (title, line 904)
+- "Radio repair"  (title, line 926)
 
 > Note for you (not shown in game): part of: hud
 
-- "Radio %d of %d"  (message, line 909)
-- "Turn the dial to its station, then adjust the screws until it sounds clear"  (text, line 910)
-- "%d seconds left for this radio"  (message, line 911)
+- "Radio %d of %d"  (message, line 931)
+- "Turn the dial to its station, then adjust the screws until it sounds clear"  (text, line 932)
+- "%d seconds left for this radio"  (message, line 933)
 
 > Note for you (not shown in game): part of: tick
 
-- "Out of time: this radio goes back on the shelf unfixed."  (chat message, line 918)
+- "Out of time: this radio goes back on the shelf unfixed."  (chat message, line 940)
 
 > Note for you (not shown in game): part of: act
 
-- "Right station, but too faint. Adjust the volume trimmer."  (text, line 956)
-- "Right station, but buried in static. Adjust the squelch."  (text, line 957)
-- "Right station, but blurred and smeared. Adjust the alignment."  (text, line 957)
-- "reported an illegal broadcast"  (text, line 980)
-- "You report the frequency to Civil Protection: extra pay and Civil Standing. They'll be listening for it now."  (chat message, line 982)
-- "You secretly write down Freq 7 and the seven frequencies it broadcasts on. The Freq 7 sheet is in your pockets: it's contraband, so pass it on or burn it."  (chat message, line 988)
-- "You tune past it and leave Freq 7 alone. Nothing on this band is worth the risk."  (chat message, line 991)
+- "Right station, but too faint. Adjust the volume trimmer."  (text, line 978)
+- "Right station, but buried in static. Adjust the squelch."  (text, line 979)
+- "Right station, but blurred and smeared. Adjust the alignment."  (text, line 979)
+- "reported an illegal broadcast"  (text, line 1002)
+- "You report the frequency to Civil Protection: extra pay and Civil Standing. They'll be listening for it now."  (chat message, line 1004)
+- "You secretly write down Freq 7 and the seven frequencies it broadcasts on. The Freq 7 sheet is in your pockets: it's contraband, so pass it on or burn it."  (chat message, line 1010)
+- "You tune past it and leave Freq 7 alone. Nothing on this band is worth the risk."  (chat message, line 1013)
 
 > Note for you (not shown in game): A Freq 7 sheet, read: the rule, and the seven frequencies it gives.
 
-- "FREQ 7 /  / Freq 7 only broadcasts on frequencies whose digits add up to seven. These are the seven places on the dial: /  / {list} /  / {or}When the Combine find the broadcast, it moves to another of these: try the next one. /  / Keep the volume low, and never listen where a Civil Protection unit can hear it."  (text, line 1006)
+- "FREQ 7 /  / Freq 7 only broadcasts on frequencies whose digits add up to seven. These are the seven places on the dial: /  / {list} /  / {or}When the Combine find the broadcast, it moves to another of these: try the next one. /  / Keep the volume low, and never listen where a Civil Protection unit can hear it."  (text, line 1028)
 
 > Note for you (not shown in game): part of: read item
 
-- "(in a cramped hand)"  (text, line 1013)
+- "(in a cramped hand)"  (text, line 1035)
 
 > Note for you (not shown in game): part of: listen off
 
-- "[Radio] {why}"  (chat message, line 1059)
+- "[Radio] {why}"  (chat message, line 1081)
 
 > Note for you (not shown in game): Listen (already on: the window again, where you left the dial; it has its own off switch).
 
-- "You can't listen to a radio while you're in custody."  (text, line 1067)
+- "You can't listen to a radio while you're in custody."  (text, line 1089)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "Your radio is no longer in your pockets, so it switched off."  (text, line 1101)
+- "Your radio is no longer in your pockets, so it switched off."  (text, line 1123)
 
 > Note for you (not shown in game): the pirate band, out loud, where a unit can hear it
 
-- "Listening to an illegal broadcast"  (text, line 1118)
-- "A Civil Protection unit heard that"  (on-screen notice, line 1119)
-- "A Civil Protection unit heard Freq 7 playing from your radio. You're now wanted: switch it off, or run."  (on-screen notice, line 1119)
+- "Listening to an illegal broadcast"  (text, line 1140)
+- "A Civil Protection unit heard that"  (on-screen notice, line 1141)
+- "A Civil Protection unit heard Freq 7 playing from your radio. You're now wanted: switch it off, or run."  (on-screen notice, line 1141)
 
 > Note for you (not shown in game): Pat-down (Civil Protection)
 
-- "Left pocket"  (text, line 1131)
-- "Right pocket"  (text, line 1131)
-- "They hold their coat closed with one hand."  (text, line 1133)
-- "Their left hand keeps drifting to their pocket."  (text, line 1133)
-- "They keep their right side turned away from you."  (text, line 1134)
-- "They won't stop tugging their shirt down."  (text, line 1134)
-- "They shift their weight off one foot."  (text, line 1135)
-- "They hold the bag tight against them."  (text, line 1135)
-- "a pistol magazine"  (text, line 1137)
-- "a Resistance leaflet"  (text, line 1137)
-- "a forged ration card"  (text, line 1137)
-- "a data chip"  (text, line 1138)
+- "Left pocket"  (text, line 1153)
+- "Right pocket"  (text, line 1153)
+- "They hold their coat closed with one hand."  (text, line 1155)
+- "Their left hand keeps drifting to their pocket."  (text, line 1155)
+- "They keep their right side turned away from you."  (text, line 1156)
+- "They won't stop tugging their shirt down."  (text, line 1156)
+- "They shift their weight off one foot."  (text, line 1157)
+- "They hold the bag tight against them."  (text, line 1157)
+- "a pistol magazine"  (text, line 1159)
+- "a Resistance leaflet"  (text, line 1159)
+- "a forged ration card"  (text, line 1159)
+- "a data chip"  (text, line 1160)
 
 > Note for you (not shown in game): part of: verdict
 
-- "You let them go, but they were hiding something you missed."  (chat message, line 1164)
-- "You let them go and hand back what you found. They don't say thank you; they don't dare."  (chat message, line 1165)
-- "Confiscated: {what}. Logged as evidence."  (chat message, line 1171)
-- "You detained someone with nothing on them: a wrong call, and it comes out of your pay. Dispatch is not impressed, and neither is the street."  (chat message, line 1182)
-- "Every call right: 3 credits bonus."  (text, line 1192)
-- "%d searched, %d right."  (message, line 1193)
+- "You let them go, but they were hiding something you missed."  (chat message, line 1186)
+- "You let them go and hand back what you found. They don't say thank you; they don't dare."  (chat message, line 1187)
+- "Confiscated: {what}. Logged as evidence."  (chat message, line 1193)
+- "You detained someone with nothing on them: a wrong call, and it comes out of your pay. Dispatch is not impressed, and neither is the street."  (chat message, line 1204)
+- "Every call right: 3 credits bonus."  (text, line 1214)
+- "%d searched, %d right."  (message, line 1215)
 
 > Note for you (not shown in game): part of: start
 
-- "Press E on a citizen to stop them. In the window, pat down one place at a time: each empty place you check costs some of their nerve, and if it runs out they run off. Watch how they act, as it hints where something is hidden. Then choose: Release, Confiscate (if you found something) or Detain."  (chat message, line 1205)
+- "Press E on a citizen to stop them. In the window, pat down one place at a time: each empty place you check costs some of their nerve, and if it runs out they run off. Watch how they act, as it hints where something is hidden. Then choose: Release, Confiscate (if you found something) or Detain."  (chat message, line 1227)
 
 > Note for you (not shown in game): part of: hud
 
-- "Searched: %d of %d"  (message, line 1207)
-- "Right calls: %d"  (message, line 1207)
-- "Their nerve (they run at zero): %s"  (message, line 1208)
-- "Press E on a citizen to stop and search them"  (text, line 1208)
+- "Searched: %d of %d"  (message, line 1229)
+- "Right calls: %d"  (message, line 1229)
+- "Their nerve (they run at zero): %s"  (message, line 1230)
+- "Press E on a citizen to stop and search them"  (text, line 1230)
 
 > Note for you (not shown in game): part of: use
 
-- "You searched that citizen already. Pick someone else."  (chat message, line 1219)
+- "You searched that citizen already. Pick someone else."  (chat message, line 1241)
 
 > Note for you (not shown in game): part of: act
 
-- "They lose their nerve and run off."  (chat message, line 1260)
-- "One ran off with something hidden on them."  (text, line 1261)
-- "%d searched, %d right."  (message, line 1265)
+- "They lose their nerve and run off."  (chat message, line 1282)
+- "One ran off with something hidden on them."  (text, line 1283)
+- "%d searched, %d right."  (message, line 1287)
 
 > Note for you (not shown in game): part of: room
 
-- "Get everyone on the floor: press E on each person before they run or burn evidence. Then search the room: press E on each outlined piece of furniture."  (chat message, line 1318)
+- "Get everyone on the floor: press E on each person before they run or burn evidence. Then search the room: press E on each outlined piece of furniture."  (chat message, line 1340)
 
 > Note for you (not shown in game): part of: start
 
-- "The door is locked. Press E on it to set a breaching charge, then stand back: it blows a moment later."  (chat message, line 1336)
+- "The door is locked. Press E on it to set a breaching charge, then stand back: it blows a moment later."  (chat message, line 1358)
 
 > Note for you (not shown in game): part of: hud
 
-- "Charge set: stand back"  (text, line 1341)
-- "Press E on the door to set the charge"  (text, line 1341)
-- "On the floor: %d    Ran: %d    Still standing: %d"  (message, line 1346)
-- "Found: %d    Destroyed: %d    Left to search: %d"  (message, line 1347)
+- "Charge set: stand back"  (text, line 1363)
+- "Press E on the door to set the charge"  (text, line 1363)
+- "On the floor: %d    Ran: %d    Still standing: %d"  (message, line 1368)
+- "Found: %d    Destroyed: %d    Left to search: %d"  (message, line 1369)
 
 > Note for you (not shown in game): part of: use
 
-- "Found: {what}."  (chat message, line 1375)
-- "Ash, and the smell of burnt paper. Someone destroyed what was here before you searched it."  (chat message, line 1377)
+- "Found: {what}."  (chat message, line 1397)
+- "Ash, and the smell of burnt paper. Someone destroyed what was here before you searched it."  (chat message, line 1399)
 
 > Note for you (not shown in game): part of: tick
 
-- "Someone you didn't get on the floor in time burned evidence. Whatever it was, it's gone."  (chat message, line 1410)
-- "One of them ran out the back before you got them on the floor."  (chat message, line 1416)
-- "Nobody ran and nothing was destroyed: 4 credits bonus."  (text, line 1425)
-- "%d on the floor, %d ran, %d found."  (message, line 1426)
+- "Someone you didn't get on the floor in time burned evidence. Whatever it was, it's gone."  (chat message, line 1432)
+- "One of them ran out the back before you got them on the floor."  (chat message, line 1438)
+- "Nobody ran and nothing was destroyed: 4 credits bonus."  (text, line 1447)
+- "%d on the floor, %d ran, %d found."  (message, line 1448)
 
 ## hauling the dead (sv_livingcity_mortuary.lua)
 
@@ -12433,9 +12453,9 @@ Made from version 111a336. Admin-only console messages and log lines are left ou
 - "Sort the washed and pressed Civil Protection uniforms back to their own divisions. Civil Protection units leave things in their pockets."  (text, line 1396)
 - "Go to the Nexus laundry (marked)"  (text, line 1397)
 - "Put each uniform in its division's bin (the bins are labelled). Bloodstained ones go to the incident wash. If you close the window, press E to open it again"  (text, line 1397)
-- "File the in-tray by citizen number. Any form that doesn't match the register goes in the discrepancy tray."  (text, line 1398)
+- "File the in-tray: check each form against the register. If it all matches, file it by the first two digits of the citizen number; if anything differs, it goes in Discrepancy."  (text, line 1398)
 - "Go to the civil records office (marked)"  (text, line 1399)
-- "File every form in its drawer by citizen number. Forms that don't match the register go in the discrepancy tray. If you close the window, press E to open it again"  (text, line 1399)
+- "File every form: all matching the register, by the first two digits of the citizen number (37-412 in 25-49); anything different, in Discrepancy. If you close the window, press E to open it again"  (text, line 1399)
 - "Four radio sets on the shelf, all hissing. Tune each one to its station, then adjust its screws until the sound comes through clean."  (text, line 1400)
 - "Go to the radio repair shop (marked)"  (text, line 1401)
 - "Repair the sets: turn the dial to the station, then turn the screws while you listen, until the static is gone. If you close the window, press E to open it again"  (text, line 1401)

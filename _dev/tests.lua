@@ -10303,15 +10303,16 @@ local honest = true
 local function rightDrawer(f) return f.bad and 5 or LC.FilingDrawerOf(f.cid) end
 ok(LC.FilingDrawerOf("07-123") == 1 and LC.FilingDrawerOf("49-001") == 2 and LC.FilingDrawerOf("99-999") == 4, "drawers by citizen number")
 ok(LC.JobGameAct(fl, "file", rightDrawer(g.form) == 1 and 2 or 1) == false and g.wrong == 1, "the wrong drawer is wrong")
+ok(string.find(g.last or "", "Wrong", 1, true) and string.find(g.last or "", "goes in", 1, true), "and it says why, and where it should have gone", g.last)
 ok(LC.JobGameAct(fl, "blank") and LC.HasItem(fl, "papers_blank"), "a blank identity form, from the cabinet nobody locks")
 ok(LC.JobGameAct(fl, "blank") == nil, "(once a shift)")
 for _ = 1, 20 do
     local f = g.form
     if not f then break end
-    if (f.bad == true) ~= (f.name ~= f.regName or f.cid ~= f.regCid) then honest = false end
+    if (f.bad == true) ~= (f.name ~= f.regName or f.cid ~= f.regCid or f.status ~= f.regStatus) then honest = false end
     LC.JobGameAct(fl, "file", rightDrawer(f))
 end
-ok(honest, "a form that doesn't match the register really doesn't (and the rest do)")
+ok(honest, "a form that doesn't match the register (name, number or status) really doesn't (and the rest do)")
 ok(not LC.JobGames[fl] and g.right == 9 and LC.Credits(fl) > c0, "the tray filed: paid", LC.Credits(fl) - c0)
 fl:SetPos(GONE)
 

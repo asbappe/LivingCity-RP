@@ -38,6 +38,8 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 
 ## Also fixed from your notes
 
+- [ ] **Records Clerk filing:** the instructions at the top make sense? The register shows a status now; anything different (name, number, status) is a Discrepancy; after each form it says right or wrong and why. The blank form button is red and says it's a crime.
+  Notes:
 - [ ] **F4:** a header for each faction; click to open its ranks and roles. Free Vortigaunt and Overwatch Commander no longer cut off. No Stalker on it.
   Notes:
 - [ ] **Joining the Resistance:** you start as a Member at most, in your own clothes, whatever your XP: do 3 jobs from their board and they trust you (Fighter: the gear and the guns). F4 shows how many.

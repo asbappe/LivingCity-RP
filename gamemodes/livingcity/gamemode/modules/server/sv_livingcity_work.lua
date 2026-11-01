@@ -1395,8 +1395,8 @@ do
     end
     SHIFTS.laundry = { AtWork("laundry", "Sorting", "Sort the washed and pressed Civil Protection uniforms back to their own divisions. Civil Protection units leave things in their pockets.",
         "Go to the Nexus laundry (marked)", "Put each uniform in its division's bin (the bins are labelled). Bloodstained ones go to the incident wash. If you close the window, press E to open it again") }
-    SHIFTS.clerk = { AtWork("filing", "Filing", "File the in-tray by citizen number. Any form that doesn't match the register goes in the discrepancy tray.",
-        "Go to the civil records office (marked)", "File every form in its drawer by citizen number. Forms that don't match the register go in the discrepancy tray. If you close the window, press E to open it again") }
+    SHIFTS.clerk = { AtWork("filing", "Filing", "File the in-tray: check each form against the register. If it all matches, file it by the first two digits of the citizen number; if anything differs, it goes in Discrepancy.",
+        "Go to the civil records office (marked)", "File every form: all matching the register, by the first two digits of the citizen number (37-412 in 25-49); anything different, in Discrepancy. If you close the window, press E to open it again") }
     SHIFTS.radio = { AtWork("radio", "Repairs", "Four radio sets on the shelf, all hissing. Tune each one to its station, then adjust its screws until the sound comes through clean.",
         "Go to the radio repair shop (marked)", "Repair the sets: turn the dial to the station, then turn the screws while you listen, until the static is gone. If you close the window, press E to open it again") }
 end
