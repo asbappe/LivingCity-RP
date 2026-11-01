@@ -261,6 +261,12 @@ function LC.Detonate(kind, pos, owner)
         Cloud(pos, "gas", 18)
         LC.GasClouds[#LC.GasClouds + 1] = { pos = pos + Vector(0, 0, 30), r = GAS_R, untilT = now + 18, owner = owner }
         if sound and sound.Play then sound.Play("ambient/gas/steam2.wav", pos, 80) end
+    elseif kind == "poison" then
+        -- the Resistance's weedkiller gas (sv_livingcity_weeds.lua): the same green cloud, but it gets
+        -- past a metrocop's mask (half), and only an Overwatch soldier's sealed suit keeps it out
+        Cloud(pos, "gas", 16)
+        LC.GasClouds[#LC.GasClouds + 1] = { pos = pos + Vector(0, 0, 30), r = GAS_R, untilT = now + 16, owner = owner, poison = true }
+        if sound and sound.Play then sound.Play("ambient/gas/steam2.wav", pos, 80) end
     end
     hook.Run("LivingCityGrenade", kind, pos, owner)
 end
@@ -277,25 +283,36 @@ timer.Create("LivingCityGas", 1, 0, function()
             local r2 = g.r * g.r
             local attacker = IsValid(g.owner) and g.owner or game.GetWorld()
             for _, ply in ipairs(player.GetAll()) do
-                if ply:Alive() and ply:GetPos():DistToSqr(g.pos) < r2 and not Masked(ply) then
+                -- poison gas: through a metrocop's mask at half strength; an Overwatch soldier's suit keeps it out
+                local mul = 1
+                if g.poison then
+                    if LCF and LCF.IsOverwatch and LCF.IsOverwatch(ply) then mul = 0
+                    elseif LC.PlayerIsCP(ply) or (LC.DisguisedAsCP and LC.DisguisedAsCP(ply)) then mul = 0.5
+                    elseif LC.PlayerIsZombie and LC.PlayerIsZombie(ply) then mul = 0 end
+                elseif Masked(ply) then
+                    mul = 0
+                end
+                if ply:Alive() and ply:GetPos():DistToSqr(g.pos) < r2 and mul > 0 then
                     local dmg = DamageInfo and DamageInfo()
                     if dmg then
-                        dmg:SetDamage(cvGasDmg:GetFloat())
+                        dmg:SetDamage(cvGasDmg:GetFloat() * mul)
                         dmg:SetDamageType(DMG_NERVEGAS or 65536)
                         dmg:SetAttacker(attacker)
                         dmg:SetInflictor(attacker)
                         ply:TakeDamageInfo(dmg)
                     else
-                        ply:TakeDamage(cvGasDmg:GetFloat(), attacker, attacker)
+                        ply:TakeDamage(cvGasDmg:GetFloat() * mul, attacker, attacker)
                     end
                     ply:EmitSound(Pick(COUGHS), 70)
                     if ply.ViewPunch then ply:ViewPunch(Angle(math.Rand(2, 5), math.Rand(-2, 2), 0)) end
                 end
             end
             for npc, st in pairs(LC.NPCs or {}) do
-                if IsValid(npc) and npc:Health() > 0 and not LC.IsSecurity(st) and st.role ~= "scanner"
+                local nmul = 1
+                if LC.IsSecurity(st) then nmul = (g.poison and st.role == "cop") and 0.5 or 0 end -- (poison gas: half through a metrocop's mask; soldiers are sealed)
+                if IsValid(npc) and npc:Health() > 0 and nmul > 0 and st.role ~= "scanner"
                     and npc:GetPos():DistToSqr(g.pos) < r2 then
-                    npc:TakeDamage(cvGasDmg:GetFloat() + 2, attacker, attacker)
+                    npc:TakeDamage((cvGasDmg:GetFloat() + 2) * nmul, attacker, attacker)
                     -- get out of it
                     if npc:Health() > 0 and npc.SetLastPosition then
                         local away = npc:GetPos() - g.pos

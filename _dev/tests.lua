@@ -1876,7 +1876,7 @@ local eater = newPlayer("Eater", "citizen")
 eater:SetPos(front)
 eater.lcnRationAt = 0
 LC.GiveItem(eater, "ration_card", 3)
-ok(waitFor(function() return LC.HasItem(eater, "ration") end, 8) and has(eater.chat, "hands you a ration packet"),
+ok(waitFor(function() return LC.HasItem(eater, "ration_short") or LC.HasItem(eater, "ration") end, 8) and (has(eater.chat, "hands you a ration packet") or has(eater.chat, "short ration")),
     "a player waiting at the front of the line is handed a ration")
 local waiting = line.q[1]
 line.nextAdvance = 0
@@ -13745,6 +13745,23 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     LC.Consume(gk, "tainted_bread")
     ok(gk:Health() < 100, "and whoever eats it is poisoned", gk:Health())
     ok(LCS.LabById.chemicals_weedkiller and LCS.LabById.chemicals_weedkiller.needs.weedkiller == 2, "two canisters cook down into chemicals at the lab")
+    ok(LCS.LabById.gas_bomb and LCS.Items.gas_bomb.grenade == "poison", "weedkiller makes a poison gas bomb at the lab")
+    -- the gas: a citizen choked, a metrocop at half, an Overwatch soldier not at all
+    local ctz = newPlayer("GasCitizen", "citizen")
+    local mcp = newPlayer("GasCop", "cp")
+    _run(0.3)
+    local gpos = Vector(-168000, -168000, 0)
+    ctz:SetPos(gpos) mcp:SetPos(gpos + Vector(30, 0, 0))
+    ctz:SetHealth(100) mcp:SetHealth(100)
+    LC.Detonate("poison", gpos, gk)
+    _run(3)
+    local lostC, lostM = 100 - ctz:Health(), 100 - mcp:Health()
+    ok(lostC > 0 and lostM > 0 and lostM < lostC, "the poison gas chokes a citizen, and a metrocop at half (through the mask)", lostC .. " / " .. lostM)
+    LC.GasClouds = {}
+    ctz:SetPos(Vector(-150000, 150000, 0)) mcp:SetPos(Vector(-150000, 150000, 0))
+    -- short rations below Trusted
+    ok(LC.RationFor(plain) == "ration_short" and LC.RationFor(tr) == "ration" and LCS.Items.ration_short.hunger < LCS.Items.ration.hunger * 0.75,
+        "a citizen below Trusted gets a short ration (a third less); a Trusted one, the full packet")
     gk:SetPos(Vector(-150000, 150000, 0))
     -- lockers: only for citizens in good standing
     local lk = ents.Create("lc_locker") lk:SetPos(Vector(-167000, -167000, 0)) lk:Spawn()

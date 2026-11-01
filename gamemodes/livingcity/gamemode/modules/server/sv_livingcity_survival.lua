@@ -1008,19 +1008,29 @@ end
 
 -- From a dispenser, the packet drops out in front of it. Without one, the
 -- ration clerk at the counter hands it straight to you.
+-- (the owner, 2026-11-01) a citizen below Trusted gets a short ration: a third less, cutting it close,
+-- so birds and headcrabs make up the rest; good standing, or joining the Resistance, is the way out
+local cvFullRation = CreateConVar("lc_ration_full_standing", "150", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Civil Standing for the full ration at a dispenser (below it, a short ration: a third less food; 0: everyone gets the full one)")
+function LC.RationFor(ply)
+    local need = cvFullRation:GetInt()
+    if need <= 0 or not IsValid(ply) or (LC.PlayerIsCP and LC.PlayerIsCP(ply)) then return "ration" end
+    return (LC.Standing and LC.Standing(ply) >= need) and "ration" or "ration_short"
+end
 local function Dispense(ent, ply)
+    local id = LC.RationFor(ply)
     if IsValid(ent) then
         LC.DispenserAnimate(ent)
         timer.Simple(0.8, function()
             if IsValid(ent) then
                 local mins, maxs = ent:OBBMins(), ent:OBBMaxs()
-                LC.SpawnWorldItem("ration", FrontSlot(ent, (maxs.z - mins.z) * 0.3, 6), nil, ent:GetForward() * 40)
+                LC.SpawnWorldItem(id, FrontSlot(ent, (maxs.z - mins.z) * 0.3, 6), nil, ent:GetForward() * 40)
             end
         end)
     elseif IsValid(ply) then
         ply:EmitSound("items/ammo_pickup.wav", 60)
-        LC.GiveOrDrop(ply, "ration")
-        ply:ChatPrint("[Rations] The clerk at the counter hands you a ration packet.")
+        LC.GiveOrDrop(ply, id)
+        ply:ChatPrint(id == "ration" and "[Rations] The clerk at the counter hands you a ration packet."
+            or "[Rations] The clerk hands you a short ration: a third less than the full one. Good standing (Trusted) earns the full packet.")
     end
 end
 

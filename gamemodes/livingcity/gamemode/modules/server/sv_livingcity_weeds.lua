@@ -34,7 +34,10 @@ local cvGrow = CreateConVar("lc_weed_grow_minutes", "8", FLAGS, "Minutes for a w
 local MODELS = { "models/props/de_inferno/bushgreensmall.mdl", "models/props/cs_militia/fern01.mdl", "models/props_foliage/shrub_01a.mdl",
     "models/props/cs_office/plant01.mdl", "models/props_lab/cactus.mdl" }
 local chosen
+local cvModel = CreateConVar("lc_weed_model", "", FLAGS, "The weeds' model (empty: the first plant the server has; e.g. one from Episode 2 if everyone has it)")
 function LC.WeedModel()
+    local m = cvModel:GetString()
+    if m ~= "" and (not util.IsValidModel or util.IsValidModel(m)) then return m end
     if chosen then return chosen end
     for _, m in ipairs(MODELS) do if not util.IsValidModel or util.IsValidModel(m) then chosen = m return m end end
     chosen = MODELS[#MODELS]
