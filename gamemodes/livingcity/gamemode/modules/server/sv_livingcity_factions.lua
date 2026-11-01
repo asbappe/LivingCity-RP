@@ -245,6 +245,7 @@ end)
 
 hook.Add("PlayerSpawn", "LivingCityFactions", function(ply)
     if not FactionOf(ply) then return end
+    local spawnedAt = ply:GetPos()
     timer.Simple(0, function()
         if not IsValid(ply) then return end
         ApplyBody(ply)
@@ -268,7 +269,8 @@ hook.Add("PlayerSpawn", "LivingCityFactions", function(ply)
             -- the editor's Combine zones are (the owner: not the train station); failing that, by the
             -- Civil Protection Commissary
             local here = ply:GetPos()
-            if not (LC.CombineZoneAt and LC.CombineZoneAt(here)) then
+            -- (not if something else has already put them somewhere since they spawned)
+            if here:DistToSqr(spawnedAt) < 4 and not (LC.CombineZoneAt and LC.CombineZoneAt(here)) then
                 local zones = LC.ZonesOfKind and LC.ZonesOfKind("combine") or {}
                 local spot = #zones > 0 and LC.SpotInZone and LC.SpotInZone(zones[math.random(#zones)]) or nil
                 if not spot then
