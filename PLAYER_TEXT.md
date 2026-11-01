@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 2971ce3. Admin-only console messages and log lines are left out.
+Made from version 5d015a5. Admin-only console messages and log lines are left out.
 
 6135 lines, from 186 files.
 
@@ -12949,7 +12949,7 @@ Made from version 2971ce3. Admin-only console messages and log lines are left ou
 - "Cover for an advance, or a retreat."  (description, line 364)
 - "Metrocops and up. Don't look at it."  (description, line 365)
 - "Division Leaders and the Overwatch. For clearing anticitizen holdouts."  (description, line 366)
-- "Weedkiller gas: worse than chlorine, and your mask keeps it out."  (description, line 367)
+- "Division Leaders and the Overwatch. Weedkiller gas: worse than chlorine, and your mask keeps it out."  (description, line 367)
 - "A clean uniform, for when yours is past saving. It happens to the best of us."  (description, line 368)
 - "Pistol ammunition"  (name, line 369)
 - "Standard issue."  (description, line 369)

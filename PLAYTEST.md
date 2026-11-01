@@ -38,7 +38,7 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 
 ## Also fixed from your notes
 
-- [ ] **CP Commissary:** no civilian clothes, no cuffs for sale (a unit's own never run out); a Clean uniform (5) that puts right a soiled unit.
+- [ ] **CP Commissary:** no civilian clothes, no fishing line, no cuffs for sale (a unit's own never run out); a Clean uniform (5) that puts right a soiled unit; poison gas only from Division Leader up.
   Notes:
 - [ ] **Terminal screens** just below eye level; Next page and Close light up when aimed at.
   Notes:

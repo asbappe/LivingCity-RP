@@ -13896,6 +13896,7 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     local okCv = LC.CanBuy(unitC, LCS.GoodsById.civvies)
     ok(not okCv, "units can't buy civilian clothes")
     ok(LCS.GoodsById.uniform_clean and LCS.GoodsById.uniform_clean.cpOnly and LC.CleanClothes.uniform_clean, "the CP Commissary has a clean uniform, and it counts as clean clothes")
+    ok(LCS.GoodsById.gas_bomb.minRank == 3 and LCS.GoodsById.fishing_line.civOnly, "poison gas only for Division Leaders and the Overwatch; no fishing line for units")
     -- a job's item never goes where nobody can reach it (under stairs, walled-off space)
     local tlWas = util.TraceLine
     util.TraceLine = function(t) if t.endpos and t.start and t.endpos.z > t.start.z + 20 then return { Hit = true, Fraction = 0.2, HitPos = t.start } end return tlWas(t) end
