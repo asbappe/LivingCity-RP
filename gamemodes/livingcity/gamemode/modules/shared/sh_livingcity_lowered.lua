@@ -32,7 +32,7 @@ end
 
 -- holding R toggles; a click while lowered raises; nothing fires while lowered
 hook.Add("StartCommand", "LivingCityLowered", function(ply, cmd)
-    if not cvOn:GetBool() then return end
+    if not cvOn:GetBool() or not cmd.KeyDown or not cmd.RemoveKey then return end
     local w = ply:GetActiveWeapon()
     if not IsValid(w) or not GUNS[w:GetClass()] then ply.lcRHeld = nil return end
     if cmd:KeyDown(IN_RELOAD) then

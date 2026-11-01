@@ -52,7 +52,8 @@ LC.IsCityAdministrator = IsAdministrator
 ------------------------------------------------------------------------
 
 hook.Add("StartCommand", "LivingCityAFK", function(ply, cmd)
-    if cmd:GetButtons() ~= 0 or cmd:GetMouseX() ~= 0 or cmd:GetMouseY() ~= 0 then
+    if not cmd.GetButtons then return end
+    if cmd:GetButtons() ~= 0 or (cmd.GetMouseX and (cmd:GetMouseX() ~= 0 or cmd:GetMouseY() ~= 0)) then
         ply.lcLastInput = CurTime()
         if ply.lcAfk then ply.lcAfk = false ply:SetNW2Bool("lc_afk", false) end
     end
