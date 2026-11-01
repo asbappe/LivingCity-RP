@@ -860,7 +860,10 @@ local g2 = storyPosting(good, "inside")
 ok(g2 and g2.part == "proof", "hearing her out leads to a test")
 LC.AcceptPosting(good, g2.id)
 local qp2 = LC.QuestOf[good]
-local prisoner = qp2.stages[1].npc
+ok(qp2.stages[1].kind == "choice", "first, how to get them out: a transfer order, a fire, or a false report")
+LC.ResolveChoice(good, qp2.id, 1) -- (the forged transfer order)
+ok(LC.HasItem(good, "transfer_order"), "the forged transfer order, in your pocket")
+local prisoner = qp2.stages[qp2.stage].npc
 ok(IsValid(prisoner), "a real prisoner is named")
 for _ = 1, 30 do
     if LC.NPCs[prisoner].state == "jailed" then break end
@@ -1062,6 +1065,11 @@ ok(LC.SetJob(worker, "sanitation") and LC.Job(worker).id == "sanitation", "a cit
 local unitJ = newPlayer("UnitJob", "cp")
 ok(not LC.SetJob(unitJ, "kitchen"), "units can't take Union jobs")
 local sp1 = storyPosting(worker, "shift")
+for _ = 1, 5 do -- (a shift that finds no spot this time: another try, as the board would later)
+    if sp1 then break end
+    if worker.lcStoryPostings then worker.lcStoryPostings.shift = nil end
+    sp1 = storyPosting(worker, "shift")
+end
 ok(sp1 and string.find(sp1.title, "Union shift: Sanitation Worker: ", 1, true) == 1, "shifts appear on the board", sp1 and sp1.title)
 local c0, s0 = LC.Credits(worker), LC.Standing(worker)
 LC.AcceptPosting(worker, sp1.id)
