@@ -313,7 +313,7 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 
 ## Civil Protection career
 
-- [ ] **Ranks:** Record Keeper > Metrocop > Division Leader > Combine Prison Guard > Combine Soldier > Elite Soldier.
+- [ ] **Ranks:** Recruit > Metrocop > Division Leader > Combine Prison Guard > Combine Soldier > Elite Soldier.
   Notes:
 - [ ] **The conditioning:** the Overwatch ranks need it; the Overwatch Candidate story offers it to Division Leaders.
   Notes:

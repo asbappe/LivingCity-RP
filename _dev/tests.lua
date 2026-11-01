@@ -43,7 +43,7 @@ LC.HintScan = function() end
 ----------------------------------------------------------------------
 section("Load")
 ok(#_errors == 0, "no errors while loading every file", _errors[1])
-ok(LCF and LCF.Get("cp") and #LCF.Get("cp").ranks == 6, "faction config loaded, CP has 6 ranks (Record Keeper to Elite Soldier)")
+ok(LCF and LCF.Get("cp") and #LCF.Get("cp").ranks == 6, "faction config loaded, CP has 6 ranks (Recruit to Elite Soldier)")
 ok(LCF.Get("cp").ranks[3].loadout[2] == "weapon_pistol", "ranks inherit loadouts from the rank below")
 ok(LCF.Get("resistance").ranks[4].hunted == true, "Lieutenant inherits hunted from Fighter")
 
@@ -324,7 +324,7 @@ hook.Run("PlayerInitialSpawn", rec)
 ok(rec:GetNW2String("lcf_faction", "") == "citizen", "new players start as citizens")
 ok(LCF.Get("ota") == nil, "Overwatch is no faction of its own: it's Civil Protection's top ranks")
 LC.SetFaction(rec, "cp", nil, true)
-ok(LC.PlayerIsCP(rec) and rec:GetNW2Int("lcf_rank", 1) == 1, "joining Civil Protection makes you CP to Living City, a Record Keeper")
+ok(LC.PlayerIsCP(rec) and rec:GetNW2Int("lcf_rank", 1) == 1, "joining Civil Protection makes you CP to Living City, a Recruit")
 LC.AddXP(rec, 2500)
 ok(rec:GetNW2Int("lcf_rank", 1) == 3, "XP takes you as far as Division Leader without the conditioning", rec:GetNW2Int("lcf_rank", 1))
 ok(has(rec.chat, "Promoted to Division Leader"), "with a promotion message")

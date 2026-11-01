@@ -104,7 +104,7 @@ LCF.Factions = {
         desc = "Civil Protection: the records office, the Metropolice, and for the best of them, the Overwatch. " ..
                "Earn your way up. Past Division Leader there is no going back to being human.",
         ranks = {
-            { name = "Record Keeper", short = "RCK", xp = 0, models = { "models/player/police.mdl", "models/player/police_fem.mdl" },
+            { name = "Recruit", short = "RCT", xp = 0, models = { "models/player/police.mdl", "models/player/police_fem.mdl" },
               loadout = { "weapon_lc_baton" }, armor = 25 },
             { name = "Metrocop", short = "MPF", xp = 150, loadout = { "weapon_lc_baton", "weapon_pistol" }, armor = 50 },
             { name = "Division Leader", short = "DvL", xp = 600, loadout = { "weapon_lc_baton", "weapon_pistol", "weapon_smg1" }, armor = 75 },

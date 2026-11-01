@@ -1,5 +1,14 @@
 # Living City: to do later
 
+**Pending from the 1 November playtest (late)**:
+- **Sleeping rebels wake when a unit comes close** (a camp slept through a metrocop in the yard). Written once and taken out: it broke the RebelTests check "inside rebel territory". Redo: wake a sleeper when a unit is within ~260 (110 crouched) and raise the alarm (`Alert`), without breaking that test.
+- **The Administration path** leads nowhere yet (City Administrator is whitelisted, one slot). Ask the owner: a non-whitelisted Administration faction with clerk ranks unlocked by Records Clerk shifts?
+- **Existing Resistance Fighters** drop to Member until 3 trust jobs (`lc_fighter_trust_jobs`): owner to say if existing Fighters should keep their rank.
+- **Metrocop first-person hands:** the owner to find a workshop metrocop hands pack; set `lc_cp_hands` (send the model list with the same command as the other packs).
+- **Union Commissary standing tiers** (a melon at Exemplary, coffee too): owner to say if any should change.
+- **Unconfirmed in game:** sleeping NPCs as a ragdoll copy (head end: `lc_bed_head_flip`, height `lc_bed_npc_lift`), the hoover/sprayer/radio view placement (`lc_hoover_view`, `lc_sprayer_view`, `lc_radio_view`), suit hands (`lc_suit_hands`), Grigori's death (engine "vital ally"), boiling at the owner's fire barrels (if still failing: is it a map prop or the editor's fire?), the warning post placement, guards' teleporting, NPCs stepping aside.
+- **The workshop packs on the server:** the owner's growths showed ERROR: the server likely lacks the hazard props pack; both packs (2043900984, 3185145650) need to be in the server's workshop collection.
+
 **Open right now** (2026-10-31):
 - **Map lights twinkle** on `rp_c18_ug`: waiting on the owner's Sandbox test of the same map.
 - **Rewording:** finished (2026-11-01). Batches 1 to 5 reworded; the rest (side jobs, Resistance ops, the underground, the shop) were already plain; "primary fire" now reads "left click".

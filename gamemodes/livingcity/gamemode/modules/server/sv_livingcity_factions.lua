@@ -4,7 +4,7 @@
       - Everyone starts as a Citizen. F4, !faction or lcf_menu opens the faction menu.
       - XP is kept separately per faction and saved by SteamID. Ranks are earned
         automatically as XP crosses each threshold (sh_livingcity_factions.lua).
-      - Civil Protection is one career: Record Keeper, Metrocop, Division Leader,
+      - Civil Protection is one career: Recruit, Metrocop, Division Leader,
         then the Overwatch ranks, which need the transhuman conditioning first
         (the Overwatch Candidate story; LC.Condition). City Administrator is
         whitelist only. Father Grigori is one player at a time.

@@ -254,7 +254,7 @@ faction citizen rank 2 Union Worker at 120 xp
 faction citizen rank 3 Loyalist at 350 xp
 faction citizen rank 4 Model Citizen at 800 xp
 faction cp (Civil Protection)
-faction cp rank 1 Record Keeper at 0 xp
+faction cp rank 1 Recruit at 0 xp
 faction cp rank 2 Metrocop at 150 xp
 faction cp rank 3 Division Leader at 600 xp
 faction cp rank 4 Combine Prison Guard at 1200 xp
