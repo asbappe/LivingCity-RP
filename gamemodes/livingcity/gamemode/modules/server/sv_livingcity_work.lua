@@ -552,10 +552,12 @@ SHIFTS.cleanup = {
         local edge = best:GetPos()
         return {
             title = "Clearing the infestation", reward = 30, limit = 900,
-            desc = "The infestation is spreading. Go in with your respirator and weedkiller and spray its growths. Civil Protection will guard you: stay close to them.",
+            desc = "The infestation is spreading. Go in with your respirator, weedkiller and hoover: kill its growths, vacuum them up, and get rid of them. Civil Protection will guard you: stay close to them.",
             stages = {
                 Goto(edge, "Go to the infestation (marked): Civil Protection meets you there", 600),
-                Count("nest_cleared", 3, "Spray 3 growths: the glowing ones (look at one and press E)"),
+                Count("nest_killed", 3, "Spray 3 growths dead: the glowing ones (look at one and press E)"),
+                Count("nest_vacuumed", 3, "Vacuum up the dead growths: your hoover out, hold left click on one"),
+                Count("nest_dumped", 3, "Empty your hoover into the infestation control barrel at the edge (E on it); where there's none, seal it in a bag (right click)"),
             },
         }
     end,

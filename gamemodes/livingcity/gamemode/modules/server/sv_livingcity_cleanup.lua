@@ -273,16 +273,17 @@ local function InfestZones()
 end
 
 -- A growth gone (sprayed, burned): the patch it was in may go with it.
-function LC.ClearNest(e, by)
+-- how: "vacuum" (a cleanup worker's hoover), "fire", "rot" (dead and left too long), "npc" (the city's crew)
+function LC.ClearNest(e, by, how)
     if not IsValid(e) or e:GetClass() ~= "lc_nest" or e.lcCleared then return false end
     e.lcCleared = true
     local z = e.lcZone
-    if IsValid(by) and (by:IsPlayer() and OnCleanup(by) or not by:IsPlayer()) then Bag(e:GetPos()) end -- (the crew bags it up)
-    if e.EmitSound then e:EmitSound("npc/barnacle/barnacle_die" .. math.random(1, 2) .. ".wav", 70) end
+    if how == "npc" then Bag(e:GetPos()) end -- (the city's crew bags it up)
+    if how ~= "vacuum" and e.EmitSound then e:EmitSound("npc/barnacle/barnacle_die" .. math.random(1, 2) .. ".wav", 70) end
     e:Remove()
     if IsValid(by) and by:IsPlayer() then
         LC.QuestEvent("nest_cleared", by, e)
-        if LC.AddXP then LC.AddXP(by, 3, "Infestation growth cleared") end
+        if how == "vacuum" then LC.QuestEvent("nest_vacuumed", by, e) end
     end
     hook.Run("LivingCityNestCleared", by, z)
     if not z then return true end
@@ -295,18 +296,37 @@ function LC.ClearNest(e, by)
         if LC.QuietInfestation then LC.QuietInfestation(z.pos, (z.r or 400) + 200) end
         local s = LC.TerritoryState and LC.TerritoryState[z]
         if s then s.nextGrow = math.max(s.nextGrow or 0, CurTime() + 600) end
-        if IsValid(by) and by:IsPlayer() then by:ChatPrint("[Union] The last of the growth here shrivels. It'll be quiet for a while, but it always comes back.") end
+        if IsValid(by) and by:IsPlayer() then by:ChatPrint("[Union] That's the last of the growth here. It'll be quiet for a while, but it always comes back.") end
     end
+    return true
+end
+
+-- Killed (sprayed): it withers, stops glowing, and lies there dead until it's vacuumed up (or rots away).
+local cvRot = CreateConVar("lc_nest_rot_minutes", "10", FLAGS, "Minutes a dead growth lies there before it rots away by itself (vacuumed up, it goes at once)")
+function LC.NestDead(e) return IsValid(e) and e:GetNW2Bool("lc_dead", false) end
+function LC.KillNest(e, by)
+    if not IsValid(e) or e:GetClass() ~= "lc_nest" or LC.NestDead(e) then return false end
+    e:SetNW2Bool("lc_dead", true)
+    e.lcDeadAt = CurTime()
+    if e.SetColor then e:SetColor(Color(70, 60, 40)) end
+    if e.EmitSound then e:EmitSound("npc/barnacle/barnacle_die" .. math.random(1, 2) .. ".wav", 70) end
+    if IsValid(by) and by:IsPlayer() then
+        LC.QuestEvent("nest_killed", by, e)
+        if LC.AddXP then LC.AddXP(by, 3, "Infestation growth killed") end
+        if OnCleanup(by) then by:ChatPrint("[Union] It shrivels and dies. Now vacuum it up with your hoover (hold left click on it).") end
+    end
+    hook.Run("LivingCityNestKilled", by, e)
     return true
 end
 
 -- Spraying one: a few seconds, close up.
 function LC.SprayNest(ply, e)
     if not IsValid(e) or e:GetClass() ~= "lc_nest" then return false end
+    if LC.NestDead(e) then return false, OnCleanup(ply) and "It's dead already: vacuum it up with your hoover (hold left click on it)." or "It's dead already. The cleanup crew will take it away." end
     if not LC.HasItem(ply, "weedkiller") then return false, "You'd need weedkiller to spray it (the Union Commissary sells it)." end
     if (ply.lcSprayNext or 0) > CurTime() then return false end
     ply.lcSprayNext = CurTime() + 0.5
-    local function Done(p) LC.ClearNest(e, p) end
+    local function Done(p) LC.KillNest(e, p) end
     if not LC.StartTask then Done(ply) return true end
     ply:EmitSound("ambient/water/water_spray1.wav", 55)
     return LC.StartTask(ply, 4, "Spraying the growth...", { maxMove = 60, cancelText = "You stop spraying.", done = Done })
@@ -321,6 +341,8 @@ local function NestTick(now)
     for _, z in ipairs(zones) do alive[z] = true end
     for _, e in ipairs(Nests()) do if not alive[e.lcZone] then e:Remove() end end -- (its patch is gone)
     PostTick(zones, alive)
+    local rot = math.max(1, cvRot:GetFloat()) * 60
+    for _, e in ipairs(Nests()) do if LC.NestDead(e) and now - (e.lcDeadAt or now) > rot then LC.ClearNest(e, nil, "rot") end end
     local per = math.max(0, cvPer:GetInt())
     for _, z in ipairs(zones) do
         local n = NestsIn(z)
@@ -495,12 +517,91 @@ if LC.AddNPCTask then
         local e = best
         return { key = "nest" .. e:EntIndex(), steps = {
             { infest = true, pos = function(n) return LC.NPCWorkBeside and LC.NPCWorkBeside(e:GetPos(), n:GetPos(), 50) or e:GetPos() end,
-              face = function() return e:GetPos() end, check = function() return IsValid(e) end, secs = 6, doing = "spraying the infestation",
-              onGo = function(n) LC.CleanupGuard(n, 120) end,
-              done = function(n) if IsValid(e) then e:EmitSound("ambient/water/water_spray1.wav", 60) LC.ClearNest(e, n) end n.lcGuardUntil = 0 end },
+              face = function() return e:GetPos() end, check = function() return IsValid(e) end, secs = 5, doing = "spraying the infestation",
+              onGo = function(n) LC.CleanupGuard(n, 150) end,
+              done = function(n) if IsValid(e) then e:EmitSound("ambient/water/water_spray1.wav", 60) LC.KillNest(e, n) end end },
+            { infest = true, pos = function(n) return LC.NPCWorkBeside and LC.NPCWorkBeside(e:GetPos(), n:GetPos(), 50) or e:GetPos() end,
+              face = function() return e:GetPos() end, check = function() return IsValid(e) end, secs = 5, doing = "vacuuming up the dead growth",
+              done = function(n) if IsValid(e) then e:EmitSound("ambient/water/water_spray1.wav", 55, 60) LC.ClearNest(e, n, "npc") end n.lcGuardUntil = 0 end },
         } }
     end })
 end
+
+------------------------------------------------------------------------
+-- The hoover (weapon_lc_hoover, the cleanup job's): dead growths in, emptied into an infestation
+-- control barrel (the warning post's), or, where there are none, sealed in a bag
+------------------------------------------------------------------------
+
+local cvCap = CreateConVar("lc_hoover_capacity", "3", FLAGS, "Dead growths a cleanup worker's hoover holds before it has to be emptied")
+local function Load(ply) return ply:GetNW2Int("lc_hoover_load", 0) end
+LC.HooverLoad = Load
+
+function LC.VacuumNest(ply, e)
+    if not IsValid(e) or e:GetClass() ~= "lc_nest" then return false end
+    if not LC.NestDead(e) then return false, "It's still alive: spray it with weedkiller first (look at it, E)." end
+    local cap = math.max(1, cvCap:GetInt())
+    if Load(ply) >= cap then return false, "Your hoover's full: empty it into an infestation control barrel (E on one)." end
+    ply:SetNW2Int("lc_hoover_load", Load(ply) + 1)
+    ply:EmitSound("physics/flesh/flesh_squishy_impact_hard" .. math.random(1, 4) .. ".wav", 60)
+    LC.ClearNest(e, ply, "vacuum")
+    if Load(ply) >= cap then
+        ply:ChatPrint("[Union] Your hoover's full. Empty it into an infestation control barrel (E on one)" .. (LC.BarrelNear(ply) and "." or ", or seal it in a bag (right click)."))
+    end
+    return true
+end
+
+local function IsBarrel(e)
+    return IsValid(e) and e.lcHazardProp and string.find(e:GetModel() or "", "combinehazardprops_barrel", 1, true) ~= nil
+end
+LC.IsHazardBarrel = IsBarrel
+-- an infestation control barrel within reach of a walk (none: a bag will do)
+function LC.BarrelNear(ply)
+    for _, e in ipairs(ents.FindInSphere(ply:GetPos(), 3000)) do if IsBarrel(e) then return e end end
+    return nil
+end
+
+local function Emptied(ply, n, how)
+    ply:SetNW2Int("lc_hoover_load", 0)
+    for _ = 1, n do LC.QuestEvent("nest_dumped", ply) end
+    if LC.AddXP then LC.AddXP(ply, n * 2, "Infestation waste disposed of") end
+    ply:ChatPrint(string.format("[Union] %s: %d dead growth%s disposed of.", how, n, n == 1 and "" or "s"))
+end
+
+function LC.DumpHoover(ply, barrel)
+    local n = Load(ply)
+    if n < 1 then return false, "Your hoover's empty." end
+    if not IsBarrel(barrel) then return false end
+    barrel:EmitSound("physics/metal/metal_barrel_impact_soft" .. math.random(1, 4) .. ".wav", 70)
+    Emptied(ply, n, "Into the barrel")
+    return true
+end
+
+function LC.BagHoover(ply)
+    local n = Load(ply)
+    if n < 1 then return false, "Your hoover's empty." end
+    if LC.BarrelNear(ply) then return false, "There's an infestation control barrel near here: empty it into that (E on it)." end
+    local at = ply:GetPos() + ply:GetForward() * 30
+    if not Bag(at) then
+        local e = ents.Create("prop_physics")
+        if IsValid(e) then
+            e:SetModel("models/props_junk/garbage_bag001a.mdl") e:SetPos(at + Vector(0, 0, 8)) e:Spawn()
+            timer.Simple(90, function() if IsValid(e) then e:Remove() end end)
+        end
+    end
+    ply:EmitSound("physics/plastic/plastic_box_impact_soft" .. math.random(1, 4) .. ".wav", 60)
+    Emptied(ply, n, "Sealed in a bag")
+    return true
+end
+
+hook.Add("PlayerUse", "LivingCityHooverBarrel", function(ply, ent)
+    if not IsBarrel(ent) or Load(ply) < 1 then return end
+    if (ply.lcDumpNext or 0) > CurTime() then return false end
+    ply.lcDumpNext = CurTime() + 1
+    local ok, why = LC.DumpHoover(ply, ent)
+    if not ok and why then ply:ChatPrint(why) end
+    return false
+end)
+hook.Add("LivingCityJobChanged", "LivingCityHooverEmpty", function(ply) if IsValid(ply) then ply:SetNW2Int("lc_hoover_load", 0) end end)
 
 ------------------------------------------------------------------------
 -- Barnacles eat weedkiller
@@ -581,7 +682,7 @@ local function FireTick(now)
             for _, e in ipairs(ents.FindInSphere(f.pos, FIRE_R)) do
                 if IsValid(e) then
                     if e:GetClass() == "lc_nest" then
-                        LC.ClearNest(e, IsValid(f.owner) and f.owner or nil)
+                        LC.ClearNest(e, IsValid(f.owner) and f.owner or nil, "fire")
                     elseif (e:IsPlayer() and e:Alive()) or (e.IsNPC and e:IsNPC() and e:Health() > 0) then
                         if e.Ignite then e:Ignite(3) end
                         e:TakeDamage(6, attacker, attacker)

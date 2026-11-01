@@ -13796,6 +13796,7 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     local seed = { kind = "infest", pos = Vector(-169000, -169000, 0), r = 400, group = 0 }
     local patch = { kind = "infest", pos = Vector(-169000, -168400, 0), r = 300, h = 200, group = 0, grown = true, seed = seed }
     seed.lcNestFirst, seed.lcNestNext, patch.lcNestFirst, patch.lcNestNext = true, 1e9, true, 1e9 -- (no regrowth mid-test)
+    seed.lcPostTried, patch.lcPostTried = true, true -- (and no warning posts of their own)
     table.insert(LC.Zones, seed) table.insert(LC.Zones, patch)
     local n1 = LC.SpawnNest(patch, patch.pos + Vector(20, 0, 0))
     local n2 = LC.SpawnNest(patch, patch.pos + Vector(-20, 0, 0))
@@ -13809,9 +13810,30 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     ok(not okN and string.find(whyN or "", "weedkiller", 1, true), "spraying a growth needs weedkiller")
     LC.ClearNest(n1, cln)
     ok(table.HasValue(LC.Zones, patch), "one growth gone: the patch is still there")
+    local okV, whyV = LC.VacuumNest(cln, n2)
+    ok(not okV and string.find(whyV or "", "spray it", 1, true), "a live growth can't be vacuumed: spray it first", whyV)
     LC.SprayNest(cln, n2)
     _run(5)
-    ok(not IsValid(n2) and not table.HasValue(LC.Zones, patch), "every growth sprayed: the patch goes, the infestation shrinks")
+    ok(IsValid(n2) and LC.NestDead(n2) and table.HasValue(LC.Zones, patch), "sprayed, a growth dies, and lies there dead")
+    cln:SetNW2Int("lc_hoover_load", 0)
+    ok(LC.VacuumNest(cln, n2) and LC.HooverLoad(cln) == 1, "the hoover sucks up a dead growth")
+    ok(not IsValid(n2) and not table.HasValue(LC.Zones, patch), "every growth gone: the patch goes, the infestation shrinks")
+    local okB, whyB = LC.BagHoover(cln)
+    ok(okB and LC.HooverLoad(cln) == 0, "no barrel near: sealed in a bag", whyB)
+    local dz = { kind = "infest", pos = Vector(-172000, -172000, 0), r = 300, group = 0, lcNestFirst = true, lcNestNext = 1e9 }
+    local dpost = LC.HazardPost(dz)
+    local barrel
+    for _, e in ipairs(dpost or {}) do if LC.IsHazardBarrel(e) then barrel = e end end
+    cln:SetPos(dz.pos) cln:SetNW2Int("lc_hoover_load", 2)
+    local okB2 = LC.BagHoover(cln)
+    ok(not okB2 and LC.HooverLoad(cln) == 2, "with an infestation control barrel near, no bagging: the barrel")
+    ok(barrel and LC.DumpHoover(cln, barrel) and LC.HooverLoad(cln) == 0, "emptied into the barrel")
+    for _, e in ipairs(dpost or {}) do e:Remove() end
+    local rotten = LC.SpawnNest(seed, seed.pos + Vector(60, 0, 0))
+    LC.KillNest(rotten, nil)
+    rotten.lcDeadAt = CurTime() - 100000
+    LC.NestTick(CurTime())
+    ok(not IsValid(rotten), "a dead growth nobody takes away rots, in time")
     local n3 = LC.SpawnNest(seed, seed.pos)
     LC.Firebomb(seed.pos, ctz)
     _run(1)

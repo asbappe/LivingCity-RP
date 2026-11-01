@@ -43,8 +43,8 @@ LCJ.Occupations = {
     { id = "groundskeeper", num = 14, name = "Groundskeeper", place = "the streets", noWorkplace = true,
       desc = "Spray the weeds coming up through the cracks before they take over: a tuft is quick, a bush takes a while. You're issued weedkiller." },
     -- (the owner, 2026-11-01: like contamination cleanup elsewhere; a faster way into Civil Protection than the records office)
-    { id = "cleanup", num = 15, name = "Infestation Cleanup", place = "the infestation", noWorkplace = true,
-      desc = "Into the infestation in a respirator, with weedkiller, to spray its growths away and push it back. Civil Protection guards you; it's dangerous. Each shift counts double towards joining Civil Protection." },
+    { id = "cleanup", num = 15, name = "Infestation Cleanup", place = "the infestation", noWorkplace = true, tools = { "weapon_lc_hoover" },
+      desc = "Into the infestation in a respirator, with weedkiller and a hoover: spray its growths dead, vacuum them up, and empty the hoover into the infestation control barrel. Civil Protection guards you; it's dangerous. Each shift counts double towards joining Civil Protection." },
     -- (the owner, 2026-11-01: something for the city's most loyal) players only, Exemplary standing; no workplace: your own block
     { id = "warden", num = 13, name = "Block Warden", place = "your housing block", minStanding = 400, playersOnly = true, noWorkplace = true,
       desc = "Exemplary citizens only (Civil Standing 400). Walk your own block, have a word with the neighbours, and report what isn't right. Paid when a report holds up; a false one costs you." },

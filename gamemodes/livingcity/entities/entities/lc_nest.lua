@@ -1,6 +1,7 @@
 --[[ A growth in the infestation (Living City, sv_livingcity_cleanup.lua): Xen growth,
      grubs, what the infestation took. It glows a sickly green and gives off spores,
-     so the infestation shows from the street. Weedkiller (E) or fire clears it. ]]
+     so the infestation shows from the street. Weedkiller (E) kills it (lc_dead: withered, dark);
+     a cleanup worker's hoover takes it away. Fire burns it away. ]]
 
 AddCSLuaFile()
 
@@ -40,6 +41,7 @@ if CLIENT then
     function ENT:Think()
         local me = LocalPlayer()
         if not IsValid(me) or me:GetPos():DistToSqr(self:GetPos()) > 2500 * 2500 then return end
+        if self:GetNW2Bool("lc_dead", false) then return end -- (dead: no glow, no spores)
         local t = CurTime()
         local d = DynamicLight and DynamicLight(self:EntIndex())
         if d then

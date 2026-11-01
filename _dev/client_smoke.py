@@ -1247,6 +1247,37 @@ return nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "weapon_lc_radio (client) " + str(err)
+# the cleanup crew's hoover: drawn in your view and in your hand, and its HUD
+L.globals()._SRC = open(os.path.join(GMDIR, "entities", "weapons", "weapon_lc_hoover.lua")).read()
+err = L.execute(r"""
+SWEP = {}
+local ok, err = pcall(function() assert(loadstring(_SRC, "weapon_lc_hoover"))() end)
+if not ok then return "load: " .. tostring(err) end
+local def = SWEP
+local w = ents.Create("weapon_lc_hoover")
+local inst = setmetatable({}, { __index = function(t, k)
+    if def[k] ~= nil then return def[k] end
+    local m = w[k]
+    if type(m) == "function" then return function(self, ...) return m(w, ...) end end
+    if m ~= nil then return m end
+    if k:match("^%u") then return function() end end
+end })
+w.GetOwner = function() return _me end
+local cmWas, drawn = ClientsideModel, 0
+ClientsideModel = function() return { IsValid = function() return true end, SetNoDraw = function() end, SetPos = function() end,
+    SetAngles = function() end, DrawModel = function() drawn = drawn + 1 end, Remove = function() end } end
+for _, fn in ipairs({ "Initialize", "PreDrawViewModel", "PostDrawViewModel", "DrawWorldModel", "DrawHUD", "OnRemove" }) do
+    if def[fn] then
+        local ok2, err2 = pcall(def[fn], inst)
+        if not ok2 then ClientsideModel = cmWas return fn .. ": " .. tostring(err2) end
+    end
+end
+ClientsideModel = cmWas
+if drawn < 2 then return "the hoover wasn't drawn (in view and in hand): " .. drawn end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "weapon_lc_hoover (client) " + str(err)
 # the city's music: a real sound channel is userdata (it can't carry fields of its own)
 err = L.execute(r"""
 local realExists, realValid = file.Exists, IsValid
