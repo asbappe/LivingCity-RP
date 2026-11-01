@@ -441,6 +441,7 @@ setting lc_city_effects = 1
 setting lc_cleanup_guards = 2
 setting lc_cleanup_model = 
 setting lc_cleanup_shift_counts = 2
+setting lc_cleanup_suit = worker
 setting lc_clipboard_angle = 0 0 180
 setting lc_close_call_recover = 10
 setting lc_close_call_regen = 3

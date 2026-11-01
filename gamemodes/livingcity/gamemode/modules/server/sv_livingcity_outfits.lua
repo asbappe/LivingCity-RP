@@ -42,7 +42,7 @@ local EVERYONE = "_none" -- (the looks for people without a job)
 local CREATOR = "_creator" -- (what a new character may choose from: the character creator)
 
 local FILE = "livingcity/outfits.json"
-local FACE = "{face}" -- (in a model path: the person's own face, male_03 and so on)
+local FACE = "{face}" -- (in a model path: the person's own face, male_03 and so on; {sex}: male or female, to match)
 
 -- Each job: { list = { { pm = player model, npc = NPC model (optional), skins = { n, ... }, bg = { [name] = { n, ... } } } } }
 local DEFAULTS = {
@@ -85,6 +85,8 @@ function LC.OutfitFor(jobId, key, face, forPlayer)
     if string.find(path, FACE, 1, true) then
         path = string.gsub(path, "{face}", face or "male_01")
     end
+    -- {sex}: male or female, by the person's own face (a pack with one model of each)
+    path = string.gsub(path, "{sex}", (face and string.sub(face, 1, 6) == "female") and "female" or "male")
     local skin
     if istable(e.skins) and #e.skins > 0 then skin = e.skins[Hash(key .. "skin") % #e.skins + 1] end
     local bg = {}

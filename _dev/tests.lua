@@ -13758,6 +13758,9 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     _run(0.3)
     LC.SetJob(cln, "cleanup", true)
     ok(LC.HasItem(cln, "weedkiller"), "Infestation Cleanup is issued weedkiller")
+    _run(0.5)
+    ok(cln:GetModel() == "models/player/worker_male.mdl" or cln:GetModel() == "models/player/worker_female.mdl",
+        "with the owner's Infestation Control pack, a cleanup worker wears its suit", cln:GetModel())
     local gpos = Vector(-168000, -168000, 0)
     ctz:SetPos(gpos) mcp:SetPos(gpos + Vector(30, 0, 0)) cln:SetPos(gpos + Vector(-30, 0, 0))
     ctz:SetHealth(100) mcp:SetHealth(100) cln:SetHealth(100)
@@ -13814,6 +13817,9 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     hook.Run("LivingCityQuestComplete", cln, { chain = "shift" })
     ok(LC.Counter(cln, "clerk_shifts") == before + 2, "an Infestation Cleanup shift counts as two Records Clerk shifts", LC.Counter(cln, "clerk_shifts") - before)
     LC.SetJob(cln, "", true)
+    _run(0.5)
+    ok(LC.OutfitFor("cleanup", "x", "female_02", false) == "models/npc/worker_female.mdl", "the city's own cleanup crews wear it too (a woman, the female suit)")
+    ok(not string.find(cln:GetModel() or "", "worker_", 1, true), "off the job, their own clothes again", cln:GetModel())
     -- a barnacle that eats weedkiller dies
     local bn = ents.Create("npc_barnacle") bn:SetPos(Vector(-170000, -170000, 200)) bn:Spawn() bn:SetHealth(35)
     LC.SpawnWorldItem("weedkiller", bn:GetPos() - Vector(0, 0, 40))

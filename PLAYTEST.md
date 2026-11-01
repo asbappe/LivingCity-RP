@@ -312,6 +312,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **A Combine warning post** (sign, lamp, barrel) at the edge of each infestation, facing out. Does it stand sensibly (not in a wall, not floating)?
 - [ ] **Spray every growth** in a patch that grew: the patch goes (the haze and the stains with it). In the zone you placed: nothing new spawns there for a while. They grow back over time.
 - [ ] **Infestation Cleanup** (F3 > Jobs): respirator (chlorine doesn't hurt you) and weedkiller; the shift takes you to the infestation; two units or soldiers come, stay by you, and shoot the zombies. NPC cleanup crews go in with a guard of their own.
+- [ ] **The suit** (with the Infestation Control pack): take the job and you're in the hazmat suit (female characters, the female one), with hands to match; leave it and you're back in your own clothes. NPC cleanup crews wear it too. If it's the wrong suit (worker vs engineer): `lc_cleanup_suit engineer`.
 - [ ] **Joining Civil Protection:** a cleanup shift counts as two Records Clerk shifts on the F4 bar.
 - [ ] **Barnacle:** drop weedkiller under one (F2 > Drop): it pulls it up, crunches, dies.
 - [ ] **Firebomb** (the lab: 2 weedkiller, an empty bottle, a rag): a burning bottle; it breaks where it lands and burns a while; units in it burn; a power bank, forcefield or turret next to it goes down; a growth in it burns away.

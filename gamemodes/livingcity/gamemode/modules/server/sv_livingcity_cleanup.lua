@@ -19,7 +19,9 @@
       (2) Civil Protection units or Overwatch soldiers come and guard them, and shoot the infested
       that come for them. The city's own cleanup crews do it too, with a guard of their own. A cleanup
       shift counts as lc_cleanup_shift_counts (2) Records Clerk shifts towards joining Civil
-      Protection. lc_cleanup_model: a player model for them (a hazmat suit from a workshop pack, say).
+      Protection. With the owner's Infestation Control pack (3185145650) on the server, players on
+      the job and the city's own crews wear its suits (lc_cleanup_suit: worker or engineer), each a
+      random skin; lc_cleanup_model: another player model instead.
 
     Barnacles
       A barnacle eats whatever it pulls up. Drop weedkiller (or anything tainted with it) under one:
@@ -37,7 +39,7 @@
 
       lc_infest_nests 0/1 (1), lc_infest_nests_per_patch (4), lc_nest_regrow_minutes (6),
       lc_infest_nest_models (""), lc_infest_hazard_posts (1), lc_cleanup_guards (2), lc_cleanup_shift_counts (2),
-      lc_cleanup_model (""), lc_firebomb_secs (12), lc_sweep_gas (0.5), lc_fouled_minutes (20)
+      lc_cleanup_model (""), lc_cleanup_suit (worker), lc_firebomb_secs (12), lc_sweep_gas (0.5), lc_fouled_minutes (20)
 ]]
 
 if CLIENT then return end
@@ -80,25 +82,50 @@ end
 LC.OnCleanupJob = OnCleanup
 function LC.CleanupRespirator(ply) return IsValid(ply) and ply:IsPlayer() and OnCleanup(ply) end
 
-local function Suit(ply)
-    local m = cvModel:GetString()
-    if m == "" or not IsValid(ply) or not OnCleanup(ply) then return end
-    if util.IsValidModel and not util.IsValidModel(m) then return end
-    if ply:GetModel() ~= m then ply.lcPreSuit = ply.lcPreSuit or ply:GetModel() ply:SetModel(m) end
+-- The Infestation Control crew from Half-Life: Alyx (the owner's workshop pack 3185145650): the cleanup
+-- job's clothes, through Job outfits (sv_livingcity_outfits.lua), so the city's own crews wear them too.
+-- Only while the job has no outfit of its own: set one in the editor (Job outfits) and that's worn instead.
+-- lc_cleanup_suit: "worker" or "engineer"; lc_cleanup_model: another player model instead.
+local function Valid(m) return not util.IsValidModel or util.IsValidModel(m) end
+local cvSuit = CreateConVar("lc_cleanup_suit", "worker", FLAGS, "Which Infestation Control suit cleanup workers wear, if the server has the pack: worker or engineer")
+function LC.CleanupOutfit()
+    local own = cvModel:GetString()
+    if own ~= "" and Valid(own) then return { pm = own } end
+    local suit = cvSuit:GetString() == "engineer" and "engineer" or "worker"
+    local pm, npc = "models/player/" .. suit .. "_{sex}.mdl", "models/npc/" .. suit .. "_{sex}.mdl"
+    if not Valid((string.gsub(pm, "{sex}", "male"))) then return nil end
+    -- every skin it has, each person their own
+    local n = 1
+    pcall(function()
+        local info = util.GetModelInfo and util.GetModelInfo((string.gsub(npc, "{sex}", "male")))
+        n = math.max(1, tonumber(info and info.SkinCount) or 1)
+    end)
+    local skins = {}
+    for i = 0, n - 1 do skins[#skins + 1] = i end
+    return { pm = pm, npc = npc, skins = skins }
 end
+local function EnsureOutfit()
+    local all = LC.Outfits or (LC.LoadOutfits and LC.LoadOutfits())
+    if not all then return end
+    local cur = all.cleanup
+    if cur and not cur.lcAuto then return end -- (the owner's own outfit for the job)
+    local e = LC.CleanupOutfit()
+    all.cleanup = e and { list = { e }, lcAuto = true } or nil
+end
+LC.EnsureCleanupOutfit = EnsureOutfit
 
 hook.Add("LivingCityJobChanged", "LivingCityCleanup", function(ply, id)
     if not IsValid(ply) then return end
+    EnsureOutfit()
     if id == "cleanup" then
         if LC.GiveItem and not LC.HasItem(ply, "weedkiller") then LC.GiveItem(ply, "weedkiller", 1) end
         ply:ChatPrint("[Union] You're issued a respirator and weedkiller. Shifts take you into the infestation: look at a growth and press E to spray it. Civil Protection will guard you.")
-        Suit(ply)
-    elseif ply.lcPreSuit then
-        ply:SetModel(ply.lcPreSuit)
-        ply.lcPreSuit = nil
     end
 end)
-hook.Add("PlayerSpawn", "LivingCityCleanupSuit", function(ply) timer.Simple(1, function() Suit(ply) end) end)
+timer.Simple(1, EnsureOutfit)
+for _, n in ipairs({ "lc_cleanup_suit", "lc_cleanup_model" }) do
+    cvars.AddChangeCallback(n, function() EnsureOutfit() end, "LivingCityCleanup")
+end
 
 ------------------------------------------------------------------------
 -- Growths
@@ -115,8 +142,6 @@ local FALLBACK = { "models/props_junk/garbage_bag001a.mdl", 1.2, Color(120, 170,
 -- Half-Life: Alyx's Xen gunk, from the owner's workshop pack (2043900984): used instead whenever the server has it
 local GUNK = "models/hlvr/distillery_gunk/distillerygunk_gunk.mdl"
 local GUNKS = { { GUNK, 0.7, Color(255, 255, 255) }, { GUNK, 1, Color(255, 255, 255) }, { GUNK, 1.3, Color(255, 255, 255) } }
-
-local function Valid(m) return not util.IsValidModel or util.IsValidModel(m) end
 
 local function PickLook()
     local own = {}
