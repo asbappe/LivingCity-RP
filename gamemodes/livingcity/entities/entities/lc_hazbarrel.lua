@@ -14,7 +14,10 @@ ENT.Spawnable = false
 
 local PACK = "models/hlvr/combine_hazardprops/combinehazardprops_barrel.mdl"
 local STANDIN = "models/props_c17/oildrum001.mdl"
-local function Has(m) return not util.IsValidModel or util.IsValidModel(m) end
+local function Has(m)
+    if CLIENT and file and file.Exists then return file.Exists(m, "GAME") end -- (a player's own game: ask for the file itself)
+    return not util.IsValidModel or util.IsValidModel(m)
+end
 
 function ENT:Initialize()
     if CLIENT then return end

@@ -35,7 +35,10 @@ end
 if CLIENT then
     -- the server has a model this game hasn't (a workshop pack not downloaded): a stand-in, never an ERROR
     local STANDINS = { "models/antlion_grub.mdl", "models/props_junk/garbage_bag001a.mdl" }
-    local function Has(m) return not util.IsValidModel or util.IsValidModel(m) end
+    local function Has(m)
+    if CLIENT and file and file.Exists then return file.Exists(m, "GAME") end -- (a player's own game: ask for the file itself)
+    return not util.IsValidModel or util.IsValidModel(m)
+end
     function ENT:Draw()
         if Has(self:GetModel()) then self:DrawModel() return end
         if not IsValid(self.lcStandin) and ClientsideModel then

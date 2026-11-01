@@ -34,7 +34,13 @@ SWEP.Secondary = { ClipSize = -1, DefaultClip = -1, Automatic = false, Ammo = "n
 
 local PACK = "models/hlvr/combine_hazardprops/combinehazardprops_hoover.mdl"
 local STANDIN = "models/props_junk/gascan001a.mdl"
-local function Model() return (not util.IsValidModel or util.IsValidModel(PACK)) and PACK or STANDIN end
+-- (in a player's own game util.IsValidModel only knows models already loaded, and the hoover is drawn there
+-- alone, so it always said no and the stand-in showed: the owner, 1 November. The file itself is asked.)
+local function Has(m)
+    if CLIENT and file and file.Exists then return file.Exists(m, "GAME") end
+    return not util.IsValidModel or util.IsValidModel(m)
+end
+local function Model() return Has(PACK) and PACK or STANDIN end
 
 local REACH, SECS, STEP = 140, 2.4, 0.2
 
