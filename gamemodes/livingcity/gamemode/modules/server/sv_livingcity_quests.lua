@@ -346,7 +346,7 @@ local function SurfaceSpots(center, radius, out, n)
     for _, c in ipairs(cands) do
         if #out >= n then break end
         local top = TopOf(c.pos, c.ent)
-        if top and not NearDoor(top, 120) and FarFromAll(out, top, 90) and ItemSpotOK(top, 24) then out[#out + 1] = top end
+        if top and not NearDoor(top, 120) and FarFromAll(out, top, 90) and (not LC.ItemSpotOK or LC.ItemSpotOK(top, 24)) then out[#out + 1] = top end
     end
 end
 
