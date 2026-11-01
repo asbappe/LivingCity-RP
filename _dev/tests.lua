@@ -13919,6 +13919,50 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
         bc:Remove()
     end
     walker:SetPos(Vector(-150000, 150000, 0))
+    -- out of time, but standing at the spot doing it: the job waits for you
+    local holder = newPlayer("Holder", "citizen")
+    local HP = Vector(-179000, -179000, 0)
+    local hspec = { id = 70001, tmpl = { id = "holdtest" }, title = "Hold test", reward = 1, limit = 300, desc = "", faction = "citizen", expiresPost = CurTime() + 999, data = {},
+        stages = { { kind = "hold", pos = HP, secs = 10, r = 150, text = "Stand here" } } }
+    LC.Postings.citizen = LC.Postings.citizen or {}
+    table.insert(LC.Postings.citizen, hspec)
+    holder.lcqNext = 0
+    LC.AcceptPosting(holder, 70001)
+    local hq = LC.QuestOf[holder]
+    if hq then
+        holder:SetPos(HP)
+        _run(2)
+        hq.expires = CurTime() - 1
+        _run(1.5)
+        ok(LC.QuestOf[holder] == hq and not hq.done, "out of time mid-hold, still standing there: the job isn't called off")
+        holder:SetPos(HP + Vector(3000, 0, 0))
+        _run(1.5)
+        ok(hq.done, "walk away after the time's up: then it's over")
+    else
+        ok(false, "(the hold test job didn't start)")
+    end
+    holder:SetPos(Vector(-150000, 150000, 0))
+    -- Father Grigori can be killed (Half-Life 2 made him immune to players)
+    local rz = { kind = "rebel", pos = Vector(-180000, -180000, 0), r = 400, group = 0 }
+    table.insert(LC.Zones, rz)
+    if IsValid(LC.Grigori) then LC.Grigori:Remove() LC.Grigori = nil end
+    local gg = LC.SpawnGrigori and LC.SpawnGrigori()
+    if IsValid(gg) then
+        local shooter = newPlayer("GrigoriShooter", "cp")
+        ok(gg:Health() == 100, "Father Grigori has an ordinary man's health", gg:Health())
+        local function Dmg(n, by) local t = { n = n } function t:GetDamage() return self.n end function t:SetDamage(v) self.n = v end function t:GetAttacker() return by end function t:ScaleDamage(f) self.n = self.n * f end return t end
+        local mortal = hook.t.EntityTakeDamage.LivingCityGrigoriMortal
+        local d = Dmg(60, shooter)
+        mortal(gg, d)
+        ok(gg:Health() == 40, "a player's shots take it off", gg:Health())
+        mortal(gg, Dmg(60, shooter))
+        _run(0.3)
+        ok(not IsValid(gg) or gg:Health() <= 0, "and enough of them kill him", IsValid(gg) and gg:Health() or "gone")
+        shooter:SetPos(Vector(-150000, 150000, 0))
+    end
+    if IsValid(LC.Grigori) then LC.Grigori:Remove() end
+    LC.Grigori = nil
+    for i = #LC.Zones, 1, -1 do if LC.Zones[i] == rz then table.remove(LC.Zones, i) end end
     -- a job's item never goes where nobody can reach it (under stairs, walled-off space)
     local tlWas = util.TraceLine
     util.TraceLine = function(t) if t.endpos and t.start and t.endpos.z > t.start.z + 20 then return { Hit = true, Fraction = 0.2, HitPos = t.start } end return tlWas(t) end

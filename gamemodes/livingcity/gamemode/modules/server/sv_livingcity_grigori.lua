@@ -97,6 +97,9 @@ function LC.SpawnGrigori()
     npc:SetNW2String("lc_doing", "keeping watch over the flock")
     npc.lcGrigori = true
     npc.lcHome = z
+    -- an ordinary man's health (the owner, 1 November: he couldn't be killed)
+    if npc.SetMaxHealth then npc:SetMaxHealth(100) end
+    npc:SetHealth(100)
     LC.Grigori = npc
     return npc
 end
@@ -252,6 +255,31 @@ hook.Add("EntityTakeDamage", "LivingCityGrigoriGifts", function(victim, dmg)
             or (victim:IsNPC() and LC.NPCs and LC.NPCs[victim] and LC.IsSecurity and LC.IsSecurity(LC.NPCs[victim]))
         if combine then dmg:ScaleDamage(1.1) end
     end
+end)
+
+-- Half-Life 2 makes him one of the player's vital allies, and the engine throws away any damage a player
+-- (or a friendly) does to those: he couldn't be killed. So it's taken off his health here, and when it's gone,
+-- he dies (of the world's damage, which the engine lets through).
+hook.Add("EntityTakeDamage", "LivingCityGrigoriMortal", function(victim, dmg)
+    if not IsValid(victim) or not victim.lcGrigori or victim.lcDying then return end
+    local att = dmg:GetAttacker()
+    if not IsValid(att) or att == game.GetWorld() or att == victim then return end
+    local hp = victim:Health() - dmg:GetDamage()
+    dmg:SetDamage(0)
+    if hp > 0 then victim:SetHealth(hp) return end
+    victim.lcDying = true
+    victim.lcKilledBy = att
+    timer.Simple(0, function()
+        if not IsValid(victim) or victim:Health() <= 0 then return end
+        victim:SetHealth(1)
+        if not DamageInfo then victim:TakeDamage(1000, game.GetWorld(), game.GetWorld()) return end
+        local d = DamageInfo()
+        d:SetDamage(1000)
+        d:SetDamageType(DMG_BULLET)
+        d:SetAttacker(game.GetWorld())
+        d:SetInflictor(game.GetWorld())
+        victim:TakeDamageInfo(d)
+    end)
 end)
 
 hook.Add("PlayerSpawn", "LivingCityGrigoriGifts", function(ply)

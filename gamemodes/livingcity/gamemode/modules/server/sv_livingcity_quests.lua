@@ -988,7 +988,19 @@ local function TailSuspicion(npc, p, st)
 end
 
 local function Poll(q, now)
-    if now > q.expires then return Finish(q, false, "you ran out of time") end
+    if now > q.expires then
+        -- out of time, but standing there doing it (a hold or a holdout already under way): the clock waits for
+        -- them to finish (the owner, 1 November: 15 seconds into 45 at the spot, and the job was called off)
+        local st = Stage(q)
+        local still = st and (st.progress or 0) > 0 and ((st.kind == "hold" and AnyMemberNear(q, st.pos, st.r or 150, st.crouch))
+            or (st.kind == "survive"))
+        if not still then return Finish(q, false, "you ran out of time") end
+        q.expires = now + 1
+        if not q.overtimeTold and IsValid(q.owner) then
+            q.overtimeTold = true
+            q.owner:ChatPrint("[Job] Time's up, but you're at it: finish it and it still counts.")
+        end
+    end
     local mem = Members(q)
     if #mem == 0 then return Finish(q, false, "everyone left the job") end
     if not IsValid(q.owner) or not table.HasValue(mem, q.owner) then q.owner = mem[1] end
