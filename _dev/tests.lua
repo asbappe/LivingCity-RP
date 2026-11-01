@@ -13661,6 +13661,31 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     _advance(GetConVar("lc_vort_zap_secs"):GetFloat() + 1)
     ok(LC.PowerBankLive(bank), "and it comes back on by itself")
     bank:Remove()
+    -- two in a camp talk; two or more commune, and the Resistance gains by it
+    local v1 = ents.Create("npc_vortigaunt") v1:SetPos(Vector(-165000, -165000, 0)) v1:Spawn()
+    local v2 = ents.Create("npc_vortigaunt") v2:SetPos(Vector(-165000, -164940, 0)) v2:Spawn()
+    LC.RebelVorts[v1], LC.RebelVorts[v2] = true, true
+    ok(LC.VortConverse(v1, v2) and v1:GetNW2String("lc_doing", "") == "speaking with its kin", "two freed vortigaunts talk to each other in their own tongue")
+    local ps, pr = LC.PlannedSweep, LC.PlannedRaid
+    LC.PlannedSweep, LC.PlannedRaid = nil, nil
+    local codes0 = 0
+    for _, e in ipairs(ents.FindByClass("lc_item")) do if e:GetNW2String("lc_item", "") == "door_code" then codes0 = codes0 + 1 end end
+    ok(LC.VortCommune(CurTime()) == "code", "communing, they see a Combine door code")
+    local codes = 0
+    for _, e in ipairs(ents.FindByClass("lc_item")) do if e:GetNW2String("lc_item", "") == "door_code" then codes = codes + 1 end end
+    ok(codes == codes0 + 1 and LCS.Items.door_code.tool == "keycard", "scratched on a scrap beside them: one Combine door, like a keycard")
+    LC.PlannedSweep, LC.PlannedRaid = ps, pr
+    LC.RebelVorts[v1], LC.RebelVorts[v2] = nil, nil
+    v1:Remove() v2:Remove()
+    -- free rent for units and the city's best citizens
+    local unitR = newPlayer("RentUnit", "cp")
+    local best = newPlayer("RentBest", "citizen")
+    local plain = newPlayer("RentPlain", "citizen")
+    _run(0.3)
+    LC.AddStanding(best, 500)
+    ok(LC.RentPrice(unitR) == 0 and LC.RentPrice(best) == 0 and LC.RentPrice(plain) == GetConVar("lc_rent_price"):GetInt(),
+        "an apartment is rent-free for a unit and for a citizen of high standing; everyone else pays")
+    for _, q in ipairs({ unitR, best, plain }) do q:SetPos(Vector(-150000, 150000, 0)) end
     fv:SetPos(Vector(-150000, 150000, 0)) vp:SetPos(Vector(-150000, 150000, 0)) freer:SetPos(Vector(-150000, 150000, 0))
 end)()
 

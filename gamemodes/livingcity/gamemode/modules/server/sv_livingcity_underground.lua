@@ -951,7 +951,7 @@ function LC.StartPick(ply, id)
     if LC.DoorPicked(door) then return false, "It's already open." end
     local secs = (it.tool == "keycard" and 1.5) or (it.tool == "bypass" and 4) or (prisoner and 14) or 7
     Picking[ply] = { door = door, id = id, untilT = CurTime() + secs, cp = cp, locked = locked, prisoner = prisoner ~= nil }
-    ply:SetNW2String("lcu_progress", it.tool == "keycard" and "Swiping the card..." or "Working the lock... keep looking at it")
+    ply:SetNW2String("lcu_progress", id == "door_code" and "Punching in the code..." or (it.tool == "keycard" and "Swiping the card..." or "Working the lock... keep looking at it"))
     ply:SetNW2Float("lcu_pick_start", CurTime())
     ply:SetNW2Float("lcu_pick_until", CurTime() + secs)
     ply:EmitSound((it.tool == "bypass" or it.tool == "keycard") and "buttons/combine_button2.wav" or "doors/door_locked2.wav", 55)
@@ -1017,7 +1017,7 @@ local function FinishPick(ply, p)
     end
     p.door:EmitSound("doors/door_latch3.wav", 65)
     OpenPicked(p.door, p.locked)
-    ply:ChatPrint(it.tool == "keycard" and "The reader blinks green. The card won't work twice." or "The lock gives.")
+    ply:ChatPrint(p.id == "door_code" and "You punch in the code. The reader blinks green: they'll have changed it by tomorrow." or (it.tool == "keycard" and "The reader blinks green. The card won't work twice." or "The lock gives."))
     if Watched(ply, 900) then
         LC.ReportCrime(ply, it.tool == "keycard" and "Unauthorized use of a Civil Protection keycard" or "Breaking and entering", 180)
     end

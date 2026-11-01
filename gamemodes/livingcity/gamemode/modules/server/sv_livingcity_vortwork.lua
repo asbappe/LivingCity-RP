@@ -24,7 +24,16 @@
                        it doesn't heal: healing is food, sleep and medicine.)
 
     The city's own: freed vortigaunts in rebel ground walk the camp, stand by
-    the fire and hum to themselves, instead of standing in one spot.
+    the fire and hum to themselves, instead of standing in one spot. Two in
+    the same camp turn to each other now and then and talk in their own
+    tongue (like the pair at Sandtraps).
+
+    The hive mind: with two or more free vortigaunts in the city (the freed
+    NPCs, and players in the Free Vortigaunt role), every
+    lc_vort_commune_minutes (15) they commune through the vortessence, and
+    something comes of it for the Resistance: word of the next planned sweep
+    or raid, or a Combine door code, scratched on a scrap left by them in
+    camp (a one-use code: it opens one Combine door, like a keycard).
 ]]
 
 if CLIENT then return end
@@ -38,6 +47,7 @@ local Goto, Hold, Count, Choice, Narrate, Place, Pick = Q.Goto, Q.Hold, Q.Count,
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvCallGap = CreateConVar("lc_vort_call_minutes", "10", FLAGS, "Minutes between a shackled vortigaunt's calls to the Resistance through the vortessence")
+local cvCommune = CreateConVar("lc_vort_commune_minutes", "15", FLAGS, "Minutes between the free vortigaunts communing through the vortessence (two or more of them: news of a sweep, or a Combine door code, for the Resistance)")
 
 local function Shackled(ply) return IsValid(ply) and ply:IsPlayer() and ply:GetNW2String("lcf_faction", "") == "vort" end
 local function FreeVort(ply) return IsValid(ply) and ply:IsPlayer() and ply:GetNW2String("lcf_special", "") == "vortigaunt" end
@@ -263,6 +273,128 @@ local function VortLife(now)
     end
 end
 LC.VortLifeTick = function(now) nextLife = 0 VortLife(now or CurTime()) end -- (for tests)
+
+------------------------------------------------------------------------
+-- Two in one camp: they talk, in their own tongue
+------------------------------------------------------------------------
+
+local VORTIGESE = {}
+for i = 2, 12 do VORTIGESE[#VORTIGESE + 1] = string.format("vo/npc/vortigaunt/vortigese%02d.wav", i) end
+local talkNext = {} -- [zone] = when next
+
+local function ZoneOf(pos)
+    for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}) do
+        if LCZ and LCZ.Contains and LCZ.Contains(z, pos, 200) then return z end
+    end
+    return nil
+end
+
+function LC.VortConverse(a, b)
+    if not (IsValid(a) and IsValid(b)) then return false end
+    if LC.Face then LC.Face(a, b:GetPos()) LC.Face(b, a:GetPos()) end
+    for _, v in ipairs({ a, b }) do
+        if v.SetSchedule then v:SetSchedule(SCHED_IDLE_STAND) end
+        v:SetNW2String("lc_doing", "speaking with its kin")
+        v.lcVortNext = CurTime() + 25 -- (it stays put for the conversation)
+    end
+    local lines = math.random(4, 6)
+    for i = 1, lines do
+        timer.Simple((i - 1) * 2.6, function()
+            local who = (i % 2 == 1) and a or b
+            if IsValid(who) and who:Health() > 0 then who:EmitSound(VORTIGESE[math.random(#VORTIGESE)], 70, math.random(95, 105)) end
+        end)
+    end
+    timer.Simple(lines * 2.6 + 1, function()
+        for _, v in ipairs({ a, b }) do if IsValid(v) then v:SetNW2String("lc_doing", "") end end
+    end)
+    return true
+end
+
+local function VortTalk(now)
+    local byZone = {}
+    for v in pairs(LC.RebelVorts or {}) do
+        if IsValid(v) and v:Health() > 0 then
+            local z = ZoneOf(v:GetPos())
+            if z then byZone[z] = byZone[z] or {} table.insert(byZone[z], v) end
+        end
+    end
+    for z, list in pairs(byZone) do
+        if #list >= 2 and now >= (talkNext[z] or 0) then
+            talkNext[z] = now + math.Rand(120, 300)
+            local a = table.remove(list, math.random(#list))
+            local b = list[math.random(#list)]
+            -- close enough to talk: the second walks over first
+            if b:GetPos():DistToSqr(a:GetPos()) > 120 * 120 and b.SetLastPosition then
+                b:SetLastPosition(a:GetPos() + (b:GetPos() - a:GetPos()):GetNormalized() * 60)
+                b:SetSchedule(SCHED_FORCED_GO)
+                b.lcVortNext = now + 30
+                timer.Simple(5, function() LC.VortConverse(a, b) end)
+            else
+                LC.VortConverse(a, b)
+            end
+        end
+    end
+end
+
+------------------------------------------------------------------------
+-- The hive mind: two or more free vortigaunts commune, and the Resistance gains by it
+------------------------------------------------------------------------
+
+local nextCommune = 0
+local function FreeVorts()
+    local npcs, players = {}, {}
+    for v in pairs(LC.RebelVorts or {}) do if IsValid(v) and v:Health() > 0 then npcs[#npcs + 1] = v end end
+    for _, p in ipairs(player.GetAll()) do if FreeVort(p) and p:Alive() then players[#players + 1] = p end end
+    return npcs, players
+end
+
+function LC.VortCommune(now)
+    now = now or CurTime()
+    local npcs, players = FreeVorts()
+    if #npcs + #players < 2 then return false end
+    for _, p in ipairs(players) do p:ChatPrint("[Vortessence] Your kin reach for one another, and for a moment you are many. Something is seen.") end
+    -- what's seen: a sweep or raid on its way, if one is; else a door code
+    local news
+    if LC.PlannedSweep and LC.PlannedSweep.zone then
+        news = string.format("The vortigaunts have seen it in the vortessence: a sweep into our ground %s, in about %d seconds. Move what you can.",
+            Where(LC.PlannedSweep.zone.pos), math.max(0, math.ceil((LC.PlannedSweep.at or now) - now)))
+    elseif LC.PlannedRaid and LC.PlannedRaid.target then
+        news = "The vortigaunts have seen it in the vortessence: our raid " .. Where(LC.PlannedRaid.target) .. " will meet more Combine than we planned for."
+    end
+    if news then
+        if LC.RadioNotice then LC.RadioNotice("resistance", news) end
+        return "news"
+    end
+    -- a door code: on a scrap by an NPC vortigaunt in camp, or in a free vortigaunt player's pockets
+    local by = npcs[1]
+    if IsValid(by) and LC.SpawnWorldItem then
+        LC.SpawnWorldItem("door_code", by:GetPos() + Vector(20, 0, 10))
+        if LC.RadioNotice then LC.RadioNotice("resistance", "The vortigaunts have seen a Combine door code in the vortessence. It's scratched on a scrap beside them, " .. Where(by:GetPos()) .. ". One door, before they change it.") end
+        return "code"
+    end
+    local p = players[1]
+    if IsValid(p) and LC.GiveItem and LC.GiveItem(p, "door_code", 1) then
+        p:ChatPrint("[Vortessence] A string of numbers settles in your mind: a Combine door code. You scratch it down (it's in your pockets). One door, before they change it.")
+        return "code"
+    end
+    return false
+end
+
+local function Commune(now)
+    if now < nextCommune then return end
+    local npcs, players = FreeVorts()
+    if #npcs + #players < 2 then nextCommune = now + 30 return end
+    nextCommune = now + math.max(1, cvCommune:GetFloat()) * 60
+    LC.VortCommune(now)
+end
+
+timer.Create("LivingCityVortKin", 2, 0, function()
+    local now = CurTime()
+    local ok, err = pcall(VortTalk, now)
+    if not ok and LC.Error then LC.Error("vortigaunt talk", err) end
+    ok, err = pcall(Commune, now)
+    if not ok and LC.Error then LC.Error("vortigaunt commune", err) end
+end)
 timer.Create("LivingCityVortLife", 1, 0, function()
     local ok, err = pcall(VortLife, CurTime())
     if not ok and LC.Error then LC.Error("vortigaunt life", err) end

@@ -79,7 +79,8 @@ net.Receive("lc_rent_ask", function()
         net.SendToServer()
     end
     local h = hours == math.floor(hours) and tostring(math.floor(hours)) or tostring(hours)
-    local text = string.format("Rent this apartment for %d credits? It is yours for %s hours, locked to everyone but you and whoever you give a key.", price, h)
+    local text = price > 0 and string.format("Rent this apartment for %d credits? It is yours for %s hours, locked to everyone but you and whoever you give a key.", price, h)
+        or string.format("Take this apartment? No rent for you (Civil Protection, or a citizen of high standing). It is yours for %s hours at a time, locked to everyone but you and whoever you give a key.", h)
     LC_CL.RentAskLast = { door = door, price = price, hours = hours, yes = yes }
     if Derma_Query then
         asking = true

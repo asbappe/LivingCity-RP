@@ -310,6 +310,7 @@ item crowbar
 item cwu_overalls
 item data_chip
 item data_shard
+item door_code
 item fishing_line
 item freq7_sheet
 item gren_flash
@@ -555,6 +556,8 @@ setting lc_forcefield_regen = 15
 setting lc_forgery_cool = 3
 setting lc_forgery_heat = 15
 setting lc_fov = 75
+setting lc_free_rent_cp = 1
+setting lc_free_rent_standing = 400
 setting lc_freq7_hold = 18
 setting lc_freq7_jammed = 8
 setting lc_freq7_quiet = 120
@@ -836,6 +839,7 @@ setting lc_view_bob_amount = 100
 setting lc_voice_range = 900
 setting lc_vort_call_minutes = 10
 setting lc_vort_charge_minutes = 10
+setting lc_vort_commune_minutes = 15
 setting lc_vort_slaves = 2
 setting lc_vort_zap_secs = 45
 setting lc_walk_speed = 110

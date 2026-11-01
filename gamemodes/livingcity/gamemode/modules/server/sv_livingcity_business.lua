@@ -30,6 +30,18 @@ LC.SlashCommands = LC.SlashCommands or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvPrice = CreateConVar("lc_rent_price", "15", FLAGS, "Credits for one rent period of an apartment")
+-- (the owner, 2026-11-01: loyalty pays) one apartment rent-free for the city's best citizens, and for units
+local cvFreeStanding = CreateConVar("lc_free_rent_standing", "400", FLAGS, "Civil Standing at which a citizen's apartment is rent-free (400: Exemplary; 0: nobody)")
+local cvFreeCP = CreateConVar("lc_free_rent_cp", "1", FLAGS, "Civil Protection units get their apartment rent-free")
+-- What this person pays for a rent period, and why it's free if it is.
+function LC.RentPrice(ply)
+    if IsValid(ply) then
+        if cvFreeCP:GetBool() and LC.PlayerIsCP and LC.PlayerIsCP(ply) then return 0, "Civil Protection housing: no rent for a unit" end
+        local need = cvFreeStanding:GetInt()
+        if need > 0 and LC.Standing and LC.Standing(ply) >= need then return 0, "rent-free, for a citizen of your standing" end
+    end
+    return cvPrice:GetInt()
+end
 -- (29 October: 40 became 15. Settings are saved, so a server still on the old 40 moves to 15 once;
 -- a price someone chose themselves is left alone.)
 if cvPrice:GetString() == "40" then
@@ -150,7 +162,7 @@ local function Hm(secs) return string.format("%dh %02dm", math.floor(secs / 3600
 
 -- Why this person can't rent this door right now (nil if they can).
 local function RentBlock(ply, door)
-    local price, period = cvPrice:GetInt(), cvHours:GetFloat() * 3600
+    local price, period = LC.RentPrice(ply), cvHours:GetFloat() * 3600
     local r = LC.RentalOf(door)
     if r and r.owner ~= OwnerKey(ply) then return "Someone already lives here." end
     if not r and #MyRentals(ply) >= cvMax:GetInt() then return "You already rent somewhere. !unrent it first." end
@@ -163,14 +175,16 @@ function LC.Rent(ply, door)
     door = IsRentDoor(door) and door or DoorAhead(ply)
     if not door then return false, "Look at an apartment door that's for rent." end
     local price, period = cvPrice:GetInt(), cvHours:GetFloat() * 3600
+    local free
+    price, free = LC.RentPrice(ply)
     local r, main = LC.RentalOf(door)
     local why = RentBlock(ply, door)
     if why then return false, why end
-    if LC.AddCredits then LC.AddCredits(ply, -price) end
+    if price > 0 and LC.AddCredits then LC.AddCredits(ply, -price) end
     if r then
         r.untilT = r.untilT + period
         Save()
-        return true, string.format("Paid. It's yours for %s more.", Hm(Left(r)))
+        return true, string.format("%s It's yours for %s more.", free and ("No charge: " .. free .. ".") or "Paid.", Hm(Left(r)))
     end
     main = door:MapCreationID()
     r = { owner = OwnerKey(ply), ownerName = OwnerName(ply), untilT = os.time() + period, keys = {}, locked = true, doors = {} }
@@ -182,7 +196,7 @@ function LC.Rent(ply, door)
     Save()
     Relock(r, main)
     hook.Run("LivingCityRented", ply, main)
-    return true, string.format("It's yours for %s. Locked to everyone but you. !givekey <name> to let someone in.", Hm(Left(r)))
+    return true, string.format("It's yours for %s%s. Locked to everyone but you. !givekey <name> to let someone in.", Hm(Left(r)), free and (", " .. free) or "")
 end
 
 function LC.Unrent(ply)
@@ -339,7 +353,7 @@ function LC.HandsRightClick(ply)
         if why then ply:ChatPrint(why) return true end
         net.Start("lc_rent_ask")
         net.WriteEntity(door)
-        net.WriteUInt(math.Clamp(cvPrice:GetInt(), 0, 65535), 16)
+        net.WriteUInt(math.Clamp(LC.RentPrice(ply), 0, 65535), 16)
         net.WriteFloat(cvHours:GetFloat())
         net.Send(ply)
         return true
