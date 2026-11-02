@@ -14299,6 +14299,15 @@ section("The v2.7 pieces: stamina, brandishing, obituaries, detentions, citizen 
     local h, n = LC.AdminHours(clerk)
     ok(n == 6 and math.abs(h - 2) < 0.01, "each Records Clerk shift counts towards the hours to run for City Administrator", h)
     clerk:SetPos(Vector(-30000, 30000, 0))
+    -- a unit facing a locked door a kick would open is told how
+    local kd = ents.Create("prop_door_rotating")
+    kd.mapid = 7702
+    kd:SetPos(Vector(-160600, 160600, 0))
+    kd.locked = true
+    ok(LC.KickWouldOpen(kd), "a locked hinged door: a kick would open it (and a unit facing it is told how)")
+    LC.SetDoorTag(kd, "locked")
+    ok(not LC.KickWouldOpen(kd), "an always-locked door: no reminder (a kick doesn't give)")
+    LC.SetDoorTag(kd, nil)
     -- the City Administrator's office door
     local odoor = ents.Create("func_door")
     odoor.mapid = 7701

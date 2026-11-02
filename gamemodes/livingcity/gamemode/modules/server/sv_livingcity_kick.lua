@@ -488,3 +488,28 @@ end
 hook.Add("LivingCityStopped", "LivingCityKick", function()
     for door in pairs(LC.BlownDoors) do LC.RehangDoor(door) end
 end)
+
+------------------------------------------------------------------------
+-- A reminder (the owner, 2 November): a unit facing a locked door a kick would open, close up, is told on
+-- screen how to kick it (cl_livingcity_kick.lua names their own keys).
+------------------------------------------------------------------------
+
+function LC.KickWouldOpen(door)
+    if not IsValid(door) or door:GetClass() ~= "prop_door_rotating" or door.lcBlown then return false end
+    if not (door.GetInternalVariable and door:GetInternalVariable("m_bLocked") == true) then return false end
+    local tag = LC.GetDoorTag and LC.GetDoorTag(door)
+    local auto = not tag and LC.AutoDoorTag and LC.AutoDoorTag(door) or nil
+    return not (tag == "prison" or auto == "prison" or tag == "locked" or tag == "open" or tag == "office")
+end
+timer.Create("LivingCityKickHint", 0.3, 0, function()
+    if not cvOn:GetBool() then return end
+    for _, p in ipairs(player.GetAll()) do
+        local door = NULL
+        if LC.CanKick(p) then
+            local tr = p:GetEyeTrace()
+            local e = tr and tr.Entity
+            if IsValid(e) and tr.HitPos:DistToSqr(p:EyePos()) < 100 * 100 and LC.KickWouldOpen(e) then door = e end
+        end
+        if p:GetNW2Entity("lc_kick_hint") ~= door then p:SetNW2Entity("lc_kick_hint", door) end
+    end
+end)

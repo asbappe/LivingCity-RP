@@ -497,6 +497,15 @@ if not rb then problems[#problems + 1] = "no recall box" else
     if not okB then problems[#problems + 1] = "the recall box errors: " .. tostring(errB) end
 end
 _me.nw.lc_gman_rival_until = nil
+-- the kick reminder at a locked door, with the keys looked up live
+local kdoor = ents.Create("prop_door_rotating")
+_me.nw.lc_kick_hint = kdoor
+local kh = hook.t.HUDPaint and hook.t.HUDPaint.LivingCityKickHint
+if not kh then problems[#problems + 1] = "no kick reminder" else
+    local okK, errK = pcall(kh)
+    if not okK then problems[#problems + 1] = "the kick reminder errors: " .. tostring(errK) end
+end
+_me.nw.lc_kick_hint = nil
 if LC_CL.GmanVision then
     LC_CL.GmanVision("summon", "", "Come back. / Come back here, now.")
     local gv = hook.t.HUDPaint and hook.t.HUDPaint.LivingCityGmanVision

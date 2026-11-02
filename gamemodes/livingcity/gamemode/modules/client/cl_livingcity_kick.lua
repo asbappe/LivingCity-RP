@@ -170,3 +170,15 @@ LC_CL.ViewMods.knocked = { order = 41, fn = function(ply, view)
     view.angles = view.angles + Angle(math.sin(t * 1.1) * 5 * d, math.sin(t * 0.7) * 4 * d, math.sin(t * 1.6) * 14 * d)
     view.fov = view.fov + math.sin(t * 0.9) * 9 * d
 end }
+
+-- Facing a locked door a kick would open (the server says which: sv_livingcity_kick.lua), a reminder of how,
+-- with this player's own kick key and wherever Kick is in F1 right now.
+local kickF1, kickF1At = nil, 0
+hook.Add("HUDPaint", "LivingCityKickHint", function()
+    local me = LocalPlayer()
+    if not IsValid(me) or not IsValid(me:GetNW2Entity("lc_kick_hint")) then return end
+    if CurTime() > kickF1At then kickF1At = CurTime() + 1 kickF1 = LC_CL.QuickSlot and LC_CL.QuickSlot("kick") end
+    local how = "press " .. LC_CL.KickKeyName()
+    if kickF1 then how = how .. " (or " .. (LC_CL.QuickKeyName and LC_CL.QuickKeyName() or "F1") .. " > " .. kickF1 .. ")" end
+    draw.SimpleTextOutlined("Locked. To kick it in: " .. how, "DermaDefaultBold", ScrW() / 2, ScrH() * 0.62, Color(240, 230, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 220))
+end)

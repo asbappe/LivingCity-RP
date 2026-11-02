@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 045bce2. Admin-only console messages and log lines are left out.
+Made from version eadfb1a. Admin-only console messages and log lines are left out.
 
-6364 lines, from 194 files.
+6365 lines, from 194 files.
 
 ## Contents
 
@@ -71,7 +71,7 @@ Made from version 045bce2. Admin-only console messages and log lines are left ou
 - [cl_livingcity_infest.lua](#cllivingcityinfestlua-cllivingcityinfestlua) (9)
 - [cl_livingcity_intake.lua](#cllivingcityintakelua-cllivingcityintakelua) (32)
 - [cl_livingcity_jobgames.lua](#cllivingcityjobgameslua-cllivingcityjobgameslua) (11)
-- [cl_livingcity_kick.lua](#cllivingcitykicklua-cllivingcitykicklua) (11)
+- [cl_livingcity_kick.lua](#cllivingcitykicklua-cllivingcitykicklua) (12)
 - [cl_livingcity_lab.lua](#cllivingcitylablua-cllivingcitylablua) (9)
 - [cl_livingcity_lagwatch.lua](#cllivingcitylagwatchlua-cllivingcitylagwatchlua) (27)
 - [cl_livingcity_layoutbrowser.lua](#cllivingcitylayoutbrowserlua-cllivingcitylayoutbrowserlua) (33)
@@ -1825,6 +1825,10 @@ Made from version 045bce2. Admin-only console messages and log lines are left ou
 - "$pp_colour_mulg"  (text, line 160)
 - "$pp_colour_mulb"  (text, line 160)
 
+> Note for you (not shown in game): Facing a locked door a kick would open (the server says which: sv_livingcity_kick.lua), a reminder of how, with this player's own kick key and wherever Kick is in F1 right now.
+
+- "Locked. To kick it in: {how}"  (text, line 183)
+
 ## cl_livingcity_lab.lua (cl_livingcity_lab.lua)
 
 `gamemodes/livingcity/gamemode/modules/client/cl_livingcity_lab.lua`
@@ -2501,7 +2505,13 @@ Made from version 045bce2. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: quick root
 
 - "Voice lines"  (text, line 233)
+
+> Note for you (not shown in game): ,
+
 - "Kick ({or})"  (menu option, line 234)
+
+> Note for you (not shown in game): part of: quick root
+
 - "Unit tools (everything a unit has)"  (menu option, line 237)
 - "My directives (F3)"  (menu option, line 238)
 - "Gear up (Resistance clothes)"  (menu option, line 247)

@@ -231,7 +231,7 @@ function LC_CL.QuickRoot()
             Item("Send my 10-20", function() Send("10-20") end),
             Item("Issue a BOLO...", function() Ask("BOLO", "What should Civil Protection units look out for?", "bolo") end),
             Page("Voice lines", VoicePage),
-            Item("Kick (" .. (LC_CL.KickKeyName and LC_CL.KickKeyName() or "G") .. ")", function() Send("kick") end),
+            (function() local k = Item("Kick (" .. (LC_CL.KickKeyName and LC_CL.KickKeyName() or "G") .. ")", function() Send("kick") end) k.id = "kick" return k end)(),
         }
         usual = {
             Item("Unit tools (everything a unit has)", function() if LC_CL.OpenUnitTools then LC_CL.OpenUnitTools() end end),
@@ -367,3 +367,16 @@ hook.Add("HUDPaint", "LivingCityQuick", function()
     local key = input and input.LookupBinding and input.LookupBinding("+menu_context")
     draw.SimpleText((key and string.upper(key) or "C") .. ": the full menu", "DermaDefault", x + W - 12, y + H - 13, DIM, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 end)
+
+-- Where something is on the first page of F1, for hints that name the keys (LC_CL.QuickSlot("kick") -> 5),
+-- and the key that opens it (whatever F1's bound to). Looked up live, so a hint stays right if things move.
+function LC_CL.QuickSlot(id)
+    local ok, root = pcall(LC_CL.QuickRoot)
+    if not ok or not root then return nil end
+    for n = 1, 9 do local it = root.items[n] if it and it.id == id then return n end end
+    return nil
+end
+function LC_CL.QuickKeyName()
+    local k = input and input.LookupBinding and input.LookupBinding("gm_showhelp")
+    return string.upper(k or "F1")
+end
