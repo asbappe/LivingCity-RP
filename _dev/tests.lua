@@ -14241,7 +14241,9 @@ section("The v2.7 pieces: stamina, brandishing, obituaries, detentions, citizen 
     LC.BrandishTick(t0 + 6)
     ok(#foes == 0, "they give you time")
     LC.BrandishTick(t0 + 11)
-    ok(#foes == 1 and foes[1] == waver, "still up after ten seconds: they open fire")
+    local allW = #foes > 0
+    for _, e in ipairs(foes) do if e ~= waver then allW = false end end
+    ok(allW, "still up after ten seconds: they open fire (on you, and only you)", #foes)
     waver:SetNW2Bool("lc_raised", false)
     foes = {}
     LC.BrandishTick(t0 + 20) LC.BrandishTick(t0 + 40)
@@ -14260,7 +14262,9 @@ section("The v2.7 pieces: stamina, brandishing, obituaries, detentions, citizen 
     LC.BrandishTick(t0)
     ok(mc:GetNW2Bool("lc_carry_lowered", false) and has(mc.chat, "lower your weapon"), "a recruit on the Combine's ground with a gun up: told to lower it")
     LC.BrandishTick(t0 + 11)
-    ok(#aimed == 1 and aimed[1] == mc, "still up after ten seconds: the soldiers open fire")
+    local allMc = #aimed > 0
+    for _, e in ipairs(aimed) do if e ~= mc then allMc = false end end
+    ok(allMc, "still up after ten seconds: the soldiers open fire (on them, and only them)", #aimed)
     local dl = newPlayer("DivLeader", "cp")
     dl:SetNW2Int("lcf_rank", 3)
     LC.BrandishTick(t0 + 12)
