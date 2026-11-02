@@ -1,7 +1,12 @@
 --[[
     Living City: guns carried lowered (the owner, 1 November: one of the lost v2.7 pieces)
 
-    A gun comes out lowered: pointed at the ground, no crosshair, and it won't fire. Hold R (half a second)
+    Where it counts (the owner, 2 November): in rebel territory (anyone), and for Civil Protection's
+    metrocops and recruits on the Combine's own ground (the Combine don't trust a unit who hasn't been
+    through the Overwatch's conditioning). Everywhere else a gun is simply ready. The server marks who
+    must carry lowered (lc_carry_lowered, sv_livingcity_streetlife.lua); walking in, your gun goes down.
+
+    There, a gun comes out lowered: pointed at the ground, no crosshair, and it won't fire. Hold R (half a second)
     to raise it, and again to lower it; a left click while it's lowered raises it instead of firing.
     Tapping R still reloads. In your own view it's Half-Life 2's lowered animation where the gun has one
     (the anniversary update's), and tipped down otherwise. Switching weapon lowers it again.
@@ -18,8 +23,9 @@ local GUNS = { weapon_pistol = true, weapon_357 = true, weapon_smg1 = true, weap
 LCL.Guns = GUNS
 local HOLD = 0.5
 
+function LCL.MustLower(ply) return IsValid(ply) and ply:GetNW2Bool("lc_carry_lowered", false) end
 function LCL.Lowered(ply)
-    if not cvOn:GetBool() or not IsValid(ply) then return false end
+    if not cvOn:GetBool() or not IsValid(ply) or not LCL.MustLower(ply) then return false end
     local w = ply.GetActiveWeapon and ply:GetActiveWeapon()
     return IsValid(w) and GUNS[w:GetClass()] == true and not ply:GetNW2Bool("lc_raised", false)
 end
@@ -34,7 +40,7 @@ end
 hook.Add("StartCommand", "LivingCityLowered", function(ply, cmd)
     if not cvOn:GetBool() or not cmd.KeyDown or not cmd.RemoveKey then return end
     local w = ply:GetActiveWeapon()
-    if not IsValid(w) or not GUNS[w:GetClass()] then ply.lcRHeld = nil return end
+    if not IsValid(w) or not GUNS[w:GetClass()] or not LCL.MustLower(ply) then ply.lcRHeld = nil return end
     if cmd:KeyDown(IN_RELOAD) then
         ply.lcRHeld = ply.lcRHeld or CurTime()
         if not ply.lcRDone and CurTime() - ply.lcRHeld > HOLD then

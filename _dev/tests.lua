@@ -14208,25 +14208,62 @@ section("The v2.7 pieces: stamina, brandishing, obituaries, detentions, citizen 
     jogger:SetNW2Float("lc_rested_until", CurTime() + 1000)
     ok(base == 1 and math.abs(LCS.RegenMul(jogger) - 1.5) < 0.01, "slept well and fed: your breath comes back faster", LCS.RegenMul(jogger))
     jogger:SetPos(Vector(-30000, 30000, 0))
-    -- brandishing
+    -- guns: on the streets, any gun in a citizen's hand is wanted at once
+    local sbs, irz, cza, rcs, rsf, us, moh = LC.SeenBySecurity, LC.InRebelZone, LC.CombineZoneAt, LC.RebelCanSee, LC.RebelSetFoe, LC.UnitSees, LC.MakeOneHostile
     local waver = newPlayer("Waver", "citizen")
     if not waver:HasWeapon("weapon_pistol") then waver:Give("weapon_pistol") end
     waver:SelectWeapon("weapon_pistol")
-    waver:SetNW2Bool("lc_raised", true)
-    local sbs = LC.SeenBySecurity
     LC.SeenBySecurity = function() return true end
+    LC.InRebelZone = function() return false end
+    LC.CombineZoneAt = function() return nil end
     LC.BrandishTick(CurTime())
-    ok(has(waver.chat, "Lower that weapon") and not LC.PlayerIsWanted(waver), "a raised gun in sight of a unit: told to lower it")
-    LC.BrandishTick(CurTime() + 6)
-    ok(LC.PlayerIsWanted(waver), "still up after the warning: wanted for brandishing a weapon")
+    ok(LC.PlayerIsWanted(waver) and has(waver.chat, "Weapon! Drop it"), "a citizen seen with a gun on the streets: wanted at once")
+    ok(not waver:GetNW2Bool("lc_carry_lowered", false) and not LCL.Lowered(waver), "and on the streets a gun isn't carried lowered")
     LC.ClearWanted(waver)
+    -- rebel ground: a stranger's raised gun, a warning, then the fighters open up
+    LC.InRebelZone = function() return true end
+    local fake = LC.Spawners.citizen(waver:GetPos() + Vector(200, 0, 0))
+    local fst = LC.NPCs[fake]
+    fst.role = "rebel"
+    LC.RebelCanSee = function() return true end
+    local foes = {}
+    LC.RebelSetFoe = function(n, st2, e) foes[#foes + 1] = e end
     waver.chat = {}
+    LC.BrandishTick(CurTime())
+    ok(waver:GetNW2Bool("lc_carry_lowered", false) and LCL.Lowered(waver) and not has(waver.chat, "Lower that gun"), "walking onto rebel ground, the gun goes down")
+    waver:SetNW2Bool("lc_raised", true)
+    LC.BrandishTick(CurTime())
+    ok(has(waver.chat, "Lower that gun") and #foes == 0, "raise it where the fighters can see: told to lower it")
+    LC.BrandishTick(CurTime() + 6)
+    ok(#foes == 1 and foes[1] == waver, "still up after the warning: they open fire")
     waver:SetNW2Bool("lc_raised", false)
-    LC.BrandishTick(CurTime() + 20)
-    ok(not has(waver.chat, "Lower that weapon"), "carried lowered: nothing said")
-    LC.SeenBySecurity = sbs
-    waver.active = nil
-    waver:SetPos(Vector(-30000, 30000, 0))
+    foes = {}
+    LC.BrandishTick(CurTime() + 20) LC.BrandishTick(CurTime() + 30)
+    ok(#foes == 0, "carried lowered on their ground: left alone")
+    fst.role = "citizen"
+    -- the Combine's ground: a metrocop's raised gun where the Overwatch can see it
+    LC.InRebelZone = function() return false end
+    LC.CombineZoneAt = function() return { kind = "combine" } end
+    local mc = newPlayer("Metrocop", "cp")
+    if not mc:HasWeapon("weapon_pistol") then mc:Give("weapon_pistol") end
+    mc:SelectWeapon("weapon_pistol")
+    fst.role = "soldier"
+    LC.UnitSees = function() return true end
+    local aimed = {}
+    LC.MakeOneHostile = function(n, st2, e) aimed[#aimed + 1] = e end
+    LC.BrandishTick(CurTime())
+    ok(mc:GetNW2Bool("lc_carry_lowered", false) and LCL.Lowered(mc), "a metrocop on the Combine's ground carries lowered")
+    mc:SetNW2Bool("lc_raised", true)
+    LC.BrandishTick(CurTime())
+    ok(has(mc.chat, "lower your weapon"), "raise it where the Overwatch can see: told to lower it")
+    LC.BrandishTick(CurTime() + 6)
+    ok(#aimed == 1 and aimed[1] == mc, "still up: a mark against them, and the soldiers' guns on them")
+    fst.role = "citizen"
+    LC.SeenBySecurity, LC.InRebelZone, LC.CombineZoneAt, LC.RebelCanSee, LC.RebelSetFoe, LC.UnitSees, LC.MakeOneHostile = sbs, irz, cza, rcs, rsf, us, moh
+    if IsValid(fake) then fake:Remove() end
+    waver.active, mc.active = nil, nil
+    waver:SetNW2Bool("lc_carry_lowered", false) mc:SetNW2Bool("lc_carry_lowered", false)
+    waver:SetPos(Vector(-30000, 30000, 0)) mc:SetPos(Vector(-30000, 30000, 0))
     -- obituaries
     local dead = newPlayer("Departed", "citizen")
     dead:SetNW2String("lc_cid", "48213")

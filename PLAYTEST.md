@@ -443,7 +443,7 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 - [ ] **Job outfits** button in the editor opens the window.
 - [ ] **Rainwater** drinkable as it is.
 - [ ] **Stamina:** sprint until the bar low on the screen runs out: "Out of breath", walking only, no jumping, the view breathing hard; it comes back after a rest, faster after a good night's sleep and when you're fed. The morning drill tires you too.
-- [ ] **Brandishing:** raise a pistol (hold R) in front of a unit: "Lower that weapon!" on screen; keep it up 5 seconds: wanted. Lower it in time: nothing.
+- [ ] **Guns:** a citizen with a pistol out in front of a unit on the streets: wanted at once. On rebel ground your gun goes down by itself; raise it (hold R) near the fighters (not as the Resistance): "Lower that gun", then they open fire after 5 seconds. As a metrocop on the Combine's ground: the gun goes down; raise it near Overwatch soldiers: told to lower it, then XP off and their guns on you. Elsewhere guns are ready, no lowering.
 - [ ] **Obituary:** die (or watch someone die): "[Obituary] Name, citizen #..., ..." in chat.
 - [ ] **Street detention:** wanted for a few minutes, caught where there are no cells: held longer than 20 seconds (up to a minute).
 - [ ] **Colour grading:** the city looks a touch colder and greyer; `lc_my_color_grade 0` turns it off for you.

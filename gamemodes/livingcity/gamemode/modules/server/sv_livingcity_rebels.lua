@@ -365,6 +365,7 @@ local function SetFoe(npc, st, e, now)
     end
     LC.SetState(npc, st, "fighting")
 end
+LC.RebelSetFoe = SetFoe
 
 local function DropFoe(npc, st, now)
     ClearFoe(npc, st)
