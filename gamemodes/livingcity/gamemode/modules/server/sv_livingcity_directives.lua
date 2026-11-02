@@ -15,7 +15,7 @@
       may be rejoining)
 
     Refused by the Administrator, the G-Man won't take no for an answer: he appears to them ("We'll see
-    about that"; later "Not for long"), word gets around (G-Man dreams for lc_gman_rumour_share percent
+    for long"; later, harsher, "We'll see about that"), word gets around (G-Man dreams for lc_gman_rumour_share percent
     of the players: the Administrator is keeping something from them), and he forces their hand:
     supply crates with guns and charged vests, then the infestation spreading, then more. He comes back
     with the same directive after 30 minutes, then 10, then 7 (lc_gman_return_minutes); refused a fourth
@@ -406,12 +406,13 @@ end
 -- His three Episode One lines are only in the pre-release Episode One files, so each is a setting:
 -- put the file on the server (under garrysmod/sound/, and sync FastDL) and point the setting at it, or
 -- use any other line. Missing, it's skipped (the subtitle still shows). Files found are sent to players.
-local cvSeeAbout = CreateConVar("lc_gman_line_refused", "vo/episode_1/npc/gman/gman_wellseeaboutthat.wav", FLAGS, "The G-Man's line when the Administrator first refuses him (\"We'll see about that\")")
-local cvNotLong  = CreateConVar("lc_gman_line_refused_again", "vo/episode_1/npc/gman/gman_notforlong.wav", FLAGS, "The G-Man's line when the Administrator refuses him again (\"Not for long\")")
+-- (the owner, 2 November: "Not for long" first, "We'll see about that" after: the actor is harsher in that one)
+local cvFirst = CreateConVar("lc_gman_line_refused", "vo/episode_1/npc/gman/gman_notforlong.wav", FLAGS, "The G-Man's line when the Administrator first refuses him (\"Not for long\")")
+local cvAgain = CreateConVar("lc_gman_line_refused_again", "vo/episode_1/npc/gman/gman_wellseeaboutthat.wav", FLAGS, "The G-Man's line when the Administrator refuses him again (\"We'll see about that\", the harsher one)")
 local cvNotThis  = CreateConVar("lc_gman_line_vote_no", "vo/episode_1/npc/gman/gman_notthistime.wav", FLAGS, "The G-Man's line when his vote says no (\"Not this time\")")
 local LINES = {
-    seeabout = { cvSeeAbout, "vo/episode_1/intro/gman_wellseeaboutthat.wav" },
-    notforlong = { cvNotLong },
+    first = { cvFirst },
+    again = { cvAgain, "vo/episode_1/intro/gman_wellseeaboutthat.wav" },
     notthistime = { cvNotThis },
 }
 function LC.GmanLine(key)
@@ -568,11 +569,11 @@ function LC.DirectiveAnswer(ply, id, sign)
     local n = S.refusals[id]
     S.offer = nil
     if n >= 4 then
-        LC.Vision(ply, "visit", LC.GmanLine("notforlong"), "Not for long.")
+        LC.Vision(ply, "visit", LC.GmanLine("again"), "We'll see about that.")
         Start(id, true)
         return true
     end
-    LC.Vision(ply, "visit", LC.GmanLine(n == 1 and "seeabout" or "notforlong"), n == 1 and "We'll see about that." or "Not for long.")
+    LC.Vision(ply, "visit", LC.GmanLine(n == 1 and "first" or "again"), n == 1 and "Not for long." or "We'll see about that.")
     Escalate(id, n, Now())
     return true
 end
