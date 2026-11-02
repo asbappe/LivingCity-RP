@@ -481,6 +481,21 @@ if not lp then problems[#problems + 1] = "no lower-your-weapon prompt" else
     if not okP then problems[#problems + 1] = "the lower-your-weapon prompt errors: " .. tostring(errP) end
 end
 _me.nw.lc_lowered_ground = nil
+-- the sealed directive reminder, and the G-Man's summons with its envelope
+_me.nw.lc_directive_until, _me.nw.lc_directive_urgent = CurTime() + 120, true
+local rem = hook.t.HUDPaint and hook.t.HUDPaint.LivingCityDirectiveReminder
+if not rem then problems[#problems + 1] = "no sealed directive reminder" else
+    local okR, errR = pcall(rem)
+    if not okR then problems[#problems + 1] = "the directive reminder errors: " .. tostring(errR) end
+end
+_me.nw.lc_directive_until, _me.nw.lc_directive_urgent = nil, nil
+if LC_CL.GmanVision then
+    LC_CL.GmanVision("summon", "", "Come back. / Come back here, now.")
+    local gv = hook.t.HUDPaint and hook.t.HUDPaint.LivingCityGmanVision
+    local okV, errV = pcall(gv)
+    if not okV then problems[#problems + 1] = "the G-Man's summons errors: " .. tostring(errV) end
+    _advance(10) pcall(gv)
+else problems[#problems + 1] = "no G-Man vision" end
 -- flying a scanner: the view leaves the body, and units see who a report caught
 local scn = ents.Create("lc_rscanner")
 scn:SetPos(Vector(500, 0, 200))

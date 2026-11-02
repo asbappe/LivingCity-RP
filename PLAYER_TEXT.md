@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version b789c15. Admin-only console messages and log lines are left out.
+Made from version 981a8d3. Admin-only console messages and log lines are left out.
 
-6336 lines, from 194 files.
+6340 lines, from 194 files.
 
 ## Contents
 
@@ -61,7 +61,7 @@ Made from version b789c15. Admin-only console messages and log lines are left ou
 - [cl_livingcity_character.lua](#cllivingcitycharacterlua-cllivingcitycharacterlua) (14)
 - [cl_livingcity_cityadmin.lua](#cllivingcitycityadminlua-cllivingcitycityadminlua) (24)
 - [cl_livingcity_cp.lua](#cllivingcitycplua-cllivingcitycplua) (26)
-- [cl_livingcity_directives.lua](#cllivingcitydirectiveslua-cllivingcitydirectiveslua) (10)
+- [cl_livingcity_directives.lua](#cllivingcitydirectiveslua-cllivingcitydirectiveslua) (12)
 - [secret endings, on your screen (sv_livingcity_endings.lua)](#secret-endings-on-your-screen-svlivingcityendingslua-cllivingcityendingslua) (65)
 - [the Endings menu (superadmins): tune the secret endings live](#the-endings-menu-superadmins-tune-the-secret-endings-live-cllivingcityendingtunelua) (69)
 - [morning exercise, on your screen (sv_livingcity_exercise.lua)](#morning-exercise-on-your-screen-svlivingcityexerciselua-cllivingcityexerciselua) (11)
@@ -119,7 +119,7 @@ Made from version b789c15. Admin-only console messages and log lines are left ou
 - [what custody costs the worst anticitizens](#what-custody-costs-the-worst-anticitizens-svlivingcitycustodylua) (29)
 - [saved layout](#saved-layout-svlivingcitydatalua) (14)
 - [debugging](#debugging-svlivingcitydebuglua) (60)
-- [sv_livingcity_directives.lua](#svlivingcitydirectiveslua-svlivingcitydirectiveslua) (50)
+- [sv_livingcity_directives.lua](#svlivingcitydirectiveslua-svlivingcitydirectiveslua) (52)
 - [doors](#doors-svlivingcitydoorslua) (9)
 - [the Combine's dropship](#the-combines-dropship-svlivingcitydropshiplua) (7)
 - [economy and social credit](#economy-and-social-credit-svlivingcityeconomylua) (32)
@@ -1297,24 +1297,32 @@ Made from version b789c15. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the seal: whole, or broken
 
-- "Sealed directive {i}"  (text, line 49)
+- "Sealed directive {i}"  (text, line 53)
 
 > Note for you (not shown in game): part of: paint
 
-- "%d:%02d left to answer"  (message, line 54)
+- "%d:%02d left to answer"  (message, line 58)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_directives)
 
-- "Sign it"  (label or button, line 58)
-- "Refuse it"  (label or button, line 62)
+- "Sign it"  (label or button, line 62)
+- "Refuse it"  (label or button, line 66)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_directive_staff)
 
-- "A sealed directive has broken its seal"  (window title, line 72)
-- "There's no City Administrator here to answer it, so it's yours. The ending: {name}. / "{riddle}""  (label or button, line 78)
-- "Start it now"  (text, line 79)
-- "Put it to the G-Man's vote"  (text, line 79)
-- "Let it pass"  (text, line 79)
+- "A sealed directive has broken its seal"  (window title, line 76)
+- "There's no City Administrator here to answer it, so it's yours. The ending: {name}. / "{riddle}""  (label or button, line 82)
+- "Start it now"  (text, line 83)
+- "Put it to the G-Man's vote"  (text, line 83)
+- "Let it pass"  (text, line 83)
+
+> Note for you (not shown in game): a summons: the envelope beside him, so it's plain what he's calling them back to
+
+- "Your sealed directive is waiting"  (text, line 172)
+
+> Note for you (not shown in game): on screen
+
+- "Right click with your Administrator's device: the office, Sealed directives. Sign it or refuse it."  (drawn on screen, line 199)
 
 ## secret endings, on your screen (sv_livingcity_endings.lua) (cl_livingcity_endings.lua)
 
@@ -4502,48 +4510,59 @@ Made from version b789c15. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): An unlocked one: to the first on the list who's here
 
-- "[???] One of your sealed directives has broken its seal. Your device, the office: Sealed directives."  (chat message, line 462)
-- "A seal has broken"  (on-screen notice, line 463)
-- "A sealed directive is open on your device (right click: the office, Sealed directives). Sign it or refuse it."  (on-screen notice, line 463)
+- "[???] One of your sealed directives has broken its seal. Your device, the office: Sealed directives."  (chat message, line 499)
+
+> Note for you (not shown in game): part of: route
+
+- "A seal has broken"  (on-screen notice, line 500)
+- "A sealed directive is open on your device (right click: the office, Sealed directives). Sign it or refuse it."  (on-screen notice, line 500)
 
 > Note for you (not shown in game): part of: spread
 
-- "something unseen"  (text, line 510)
+- "something unseen"  (text, line 547)
 
 > Note for you (not shown in game): at
 
-- "[???] Crates have turned up around the city. Nobody saw who left them."  (text, line 522)
-- "[City] The infestation is spreading faster than the crews can hold it."  (text, line 523)
-- "[City] The grid is failing, block by block."  (text, line 526)
-- "[City] They're out of the infestation, in the streets."  (text, line 529)
+- "[???] Crates have turned up around the city. Nobody saw who left them."  (text, line 559)
+- "[City] The infestation is spreading faster than the crews can hold it."  (text, line 560)
+- "[City] The grid is failing, block by block."  (text, line 563)
+- "[City] They're out of the infestation, in the streets."  (text, line 566)
 
 > Note for you (not shown in game): part of: directive answer
 
-- "That directive isn't yours to answer."  (text, line 543)
+- "That directive isn't yours to answer."  (text, line 580)
 
 > Note for you (not shown in game): refused
 
-- "Not for long."  (text, line 553)
+- "We'll see about that."  (text, line 591)
 
 > Note for you (not shown in game): part of: directive answer
 
-- "We'll see about that."  (text, line 557)
-- "Not for long."  (text, line 557)
+- "Not for long."  (text, line 595)
+- "We'll see about that."  (text, line 595)
 
 > Note for you (not shown in game): he comes back with the same directive
 
-- "The same directive. Again."  (text, line 591)
+- "The same directive. Again."  (text, line 629)
+
+> Note for you (not shown in game): the last call: he appears and calls them back to it, and the reminder turns urgent
+
+- "Come back. / Come back here, now."  (text, line 640)
 
 > Note for you (not shown in game): Dreams: the riddles, and (after a refusal) the rumours
 
-- "The Administrator holds a sealed order meant for all of you, and keeps it in a drawer."  (text, line 632)
-- "Ask the Administrator what they refused. Ask them why."  (text, line 633)
-- "The city could be changed tonight. One signature stands in the way."  (text, line 634)
-- "Your Administrator has been offered a choice, and chose for you."  (text, line 635)
+- "The Administrator holds a sealed order meant for all of you, and keeps it in a drawer."  (text, line 677)
+- "Ask the Administrator what they refused. Ask them why."  (text, line 678)
+- "The city could be changed tonight. One signature stands in the way."  (text, line 679)
+- "Your Administrator has been offered a choice, and chose for you."  (text, line 680)
+
+> Note for you (not shown in game): the envelope window closed without an answer: once a directive, he calls them back
+
+- "Get back here..."  (text, line 736)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_directive_act)
 
-- "[???] Very well. It passes, for now."  (chat message, line 694)
+- "[???] Very well. It passes, for now."  (chat message, line 746)
 
 ## doors (sv_livingcity_doors.lua)
 

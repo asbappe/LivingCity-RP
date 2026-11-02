@@ -33,6 +33,10 @@ net.Receive("lc_directives", function()
     frame:MakePopup()
     local scroll = vgui.Create("DScrollPanel", frame)
     scroll:Dock(FILL)
+    -- closed with an open one left unanswered: he notices (once a directive: sv_livingcity_directives.lua)
+    local openId, answered
+    for _, d in ipairs(list) do if d.open then openId = d.id end end
+    frame.OnRemove = function() if openId and not answered then Act("walkaway", openId) end end
     for i, d in ipairs(list) do
         local card = scroll:Add("DPanel")
         card:Dock(TOP)
@@ -57,11 +61,11 @@ net.Receive("lc_directives", function()
             local sign = vgui.Create("DButton", card)
             sign:SetText("Sign it")
             sign:SetPos(64, 76) sign:SetSize(120, 26)
-            sign.DoClick = function() Act("sign", d.id) frame:Remove() end
+            sign.DoClick = function() answered = true Act("sign", d.id) frame:Remove() end
             local no = vgui.Create("DButton", card)
             no:SetText("Refuse it")
             no:SetPos(194, 76) no:SetSize(120, 26)
-            no.DoClick = function() Act("refuse", d.id) frame:Remove() end
+            no.DoClick = function() answered = true Act("refuse", d.id) frame:Remove() end
         end
     end
 end)
@@ -103,7 +107,7 @@ function LC_CL.GmanVision(mode, snd, text)
     V = { mode = mode, text = text or "", t0 = CurTime() }
     if snd and snd ~= "" then surface.PlaySound(snd) end
     if mode == "voice" then V.dur = 4 return end
-    V.dur = mode == "dream" and 9 or 7
+    V.dur = mode == "dream" and 9 or (mode == "summon" and 8 or 7)
     if not ClientsideModel then return end
     local m = ClientsideModel("models/gman_high.mdl", RENDERGROUP_OPAQUE)
     if not IsValid(m) then return end
@@ -158,6 +162,15 @@ hook.Add("HUDPaint", "LivingCityGmanVision", function()
             render.SuppressEngineLighting(false)
         cam.End3D()
     end
+    -- a summons: the envelope beside him, so it's plain what he's calling them back to
+    if V.mode == "summon" then
+        local ex, ey = w * 0.68, h * 0.42
+        draw.RoundedBox(4, ex - 60, ey - 38, 120, 76, Color(222, 210, 180, 255 * a))
+        surface.SetDrawColor(120, 100, 70, 255 * a)
+        surface.DrawLine(ex - 60, ey - 38, ex, ey) surface.DrawLine(ex + 60, ey - 38, ex, ey)
+        draw.RoundedBox(12, ex - 13, ey - 8, 26, 26, Color(150, 30, 30, 255 * a))
+        draw.SimpleTextOutlined("Your sealed directive is waiting", "DermaDefaultBold", ex, ey + 54, Color(235, 225, 200, 255 * a), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 200 * a))
+    end
     -- his words, under him
     if V.text ~= "" then
         local lines = {}
@@ -166,4 +179,23 @@ hook.Add("HUDPaint", "LivingCityGmanVision", function()
             draw.SimpleTextOutlined(line, "DermaLarge", w / 2, h * 0.78 + (i - 1) * 34, Color(225, 225, 210, 255 * a), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 200 * a))
         end
     end
+end)
+
+-- The reminder: while a directive waits on the Administrator, a bar at the top of the screen says so,
+-- how long is left, and how to open it; red and pulsing once the G-Man has called them back to it.
+hook.Add("HUDPaint", "LivingCityDirectiveReminder", function()
+    local me = LocalPlayer()
+    if not IsValid(me) then return end
+    local left = me:GetNW2Float("lc_directive_until", 0) - CurTime()
+    if left <= 0 then return end
+    local urgent = me:GetNW2Bool("lc_directive_urgent", false)
+    local w = ScrW()
+    local pulse = urgent and (0.55 + 0.45 * math.abs(math.sin(CurTime() * 3))) or 1
+    local bg = urgent and Color(120, 20, 20, 220 * pulse) or Color(40, 32, 20, 200)
+    local bw = math.min(w - 40, 640)
+    draw.RoundedBox(4, w / 2 - bw / 2, 8, bw, 46, bg)
+    draw.SimpleText((urgent and "THE G-MAN IS WAITING: " or "A SEALED DIRECTIVE IS WAITING: ") .. string.format("%d:%02d left", math.floor(left / 60), math.floor(left % 60)),
+        "DermaDefaultBold", w / 2, 20, Color(245, 225, 190), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    draw.SimpleText("Right click with your Administrator's device: the office, Sealed directives. Sign it or refuse it.",
+        "DermaDefault", w / 2, 40, Color(235, 225, 205), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 end)

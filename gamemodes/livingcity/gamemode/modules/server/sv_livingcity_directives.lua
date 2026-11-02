@@ -410,10 +410,15 @@ end
 local cvFirst = CreateConVar("lc_gman_line_refused", "vo/episode_1/npc/gman/gman_notforlong.wav", FLAGS, "The G-Man's line when the Administrator first refuses him (\"Not for long\")")
 local cvAgain = CreateConVar("lc_gman_line_refused_again", "vo/episode_1/npc/gman/gman_wellseeaboutthat.wav", FLAGS, "The G-Man's line when the Administrator refuses him again (\"We'll see about that\", the harsher one)")
 local cvNotThis  = CreateConVar("lc_gman_line_vote_no", "vo/episode_1/npc/gman/gman_notthistime.wav", FLAGS, "The G-Man's line when his vote says no (\"Not this time\")")
+local cvCallLine = CreateConVar("lc_gman_line_last_call", "vo/episode_1/npc/gman/gman_comebacknow.wav", FLAGS, "The G-Man's line when the Administrator has lc_directive_last_call_minutes left to answer (\"Come back. Come back here, now.\": splice out \"Oh no, Freeman\")")
+local cvAwayLine = CreateConVar("lc_gman_line_walk_away", "vo/episode_1/npc/gman/gman_getbackhere.wav", FLAGS, "The G-Man's line when the Administrator closes an open directive without answering it (\"Get back here...\")")
+local cvLastCall = CreateConVar("lc_directive_last_call_minutes", "5", FLAGS, "Minutes before an unanswered directive passes the Administrator by when the G-Man calls them back to it (0: never)")
 local LINES = {
     first = { cvFirst },
     again = { cvAgain, "vo/episode_1/intro/gman_wellseeaboutthat.wav" },
     notthistime = { cvNotThis },
+    lastcall = { cvCallLine },
+    walkaway = { cvAwayLine },
 }
 function LC.GmanLine(key)
     for _, p in ipairs(LINES[key] or {}) do
@@ -447,7 +452,18 @@ local function SendEnvelopes(ply)
 end
 LC.SendEnvelopes = SendEnvelopes
 
+-- The reminder on the Administrator's screen (cl_livingcity_directives.lua): the directive waiting, how long
+-- they have, and how to open it; urgent (red, pulsing) once the G-Man has called them back to it.
+local function Mark(ply, deadline, urgent)
+    if not IsValid(ply) then return end
+    ply:SetNW2Float("lc_directive_until", deadline or 0)
+    ply:SetNW2Bool("lc_directive_urgent", urgent == true)
+end
+LC.DirectiveMark = Mark
+local function Unmark(o) if o and IsValid(o.to) then Mark(o.to, 0, false) end end
+
 local function Start(id, vote, by)
+    Unmark(S.offer)
     S.offer = nil
     LC.DirectiveCalm()
     if not LC.TriggerEnding then return false end
@@ -478,6 +494,8 @@ local function Route(o, now, skipAdmin)
         local admin = OnlineAdministrator()
         if admin then
             o.stage, o.deadline, o.to = "admin", now + math.max(1, cvSign:GetFloat()) * 60, admin
+            o.called, o.walkedAway = nil, nil
+            Mark(admin, o.deadline, false)
             admin:ChatPrint("[???] One of your sealed directives has broken its seal. Your device, the office: Sealed directives.")
             if LC.Notice then LC.Notice(admin, "event", "A seal has broken", "A sealed directive is open on your device (right click: the office, Sealed directives). Sign it or refuse it.", 10) end
             return
@@ -567,6 +585,7 @@ function LC.DirectiveAnswer(ply, id, sign)
     -- refused
     S.refusals[id] = (S.refusals[id] or 0) + 1
     local n = S.refusals[id]
+    Unmark(o)
     S.offer = nil
     if n >= 4 then
         LC.Vision(ply, "visit", LC.GmanLine("again"), "We'll see about that.")
@@ -614,7 +633,14 @@ function LC.DirectiveTick(now)
     -- an open offer
     local o = S.offer
     if o then
+        if o.stage == "admin" and IsValid(o.to) and not o.called and cvLastCall:GetFloat() > 0 and o.deadline - now <= cvLastCall:GetFloat() * 60 and now < o.deadline then
+            -- the last call: he appears and calls them back to it, and the reminder turns urgent
+            o.called = true
+            Mark(o.to, o.deadline, true)
+            LC.Vision(o.to, "summon", LC.GmanLine("lastcall"), "Come back. / Come back here, now.")
+        end
         if o.stage == "admin" and (not IsValid(o.to) or now >= o.deadline) then
+            Unmark(o)
             Route(o, now, true) -- (not answered: down the list)
         elseif o.stage == "staff" and now >= o.deadline then
             o.stage = "vote"
@@ -702,6 +728,13 @@ net.Receive("lc_directive_act", function(_, ply)
     local what, id = net.ReadString(), net.ReadString()
     if what == "open" then
         if IsAdministrator(ply) then SendEnvelopes(ply) end
+    elseif what == "walkaway" then
+        -- the envelope window closed without an answer: once a directive, he calls them back
+        local o = S.offer
+        if o and o.id == id and o.stage == "admin" and o.to == ply and not o.walkedAway then
+            o.walkedAway = true
+            LC.Vision(ply, "visit", LC.GmanLine("walkaway"), "Get back here...")
+        end
     elseif what == "sign" or what == "refuse" then
         local ok, why = LC.DirectiveAnswer(ply, id, what == "sign")
         if not ok and why then ply:ChatPrint("[???] " .. why) end
