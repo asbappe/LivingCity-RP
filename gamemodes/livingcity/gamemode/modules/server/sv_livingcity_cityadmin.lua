@@ -106,8 +106,10 @@ local function OfficeHeld()
 end
 
 -- Who votes for (and recalls) the City Administrator (the owner, 2 November): Civil Protection (the
--- Overwatch included) and the Administration, not the citizens.
-local function Voter(p) return IsValid(p) and ((LC.PlayerIsCP and LC.PlayerIsCP(p)) or p:GetNW2String("lcf_faction", "") == "admin") end
+-- Overwatch included) and the Administration. Not citizens, the Resistance, vortigaunts, stalkers or
+-- the infested; by faction, so a rebel in a stolen uniform doesn't get a vote either.
+local VOTERS = { cp = true, admin = true }
+local function Voter(p) return IsValid(p) and p:IsPlayer() and VOTERS[p:GetNW2String("lcf_faction", "")] == true end
 LC.AdminVoter = Voter
 local function Voters() local out = {} for _, p in ipairs(player.GetAll()) do if Voter(p) then out[#out + 1] = p end end return out end
 

@@ -14385,6 +14385,14 @@ section("Sealed directives: how the endings start, and the G-Man's hand")
     local unit = newPlayer("RecallUnit", "cp")
     local cit2 = newPlayer("RecallCitizen", "citizen")
     ok(LC.AdminVoter(unit) and not LC.AdminVoter(cit2), "Civil Protection votes on the Administrator; citizens don't")
+    local noVote = true
+    for _, f in ipairs({ "resistance", "vort", "zombie", "stalker" }) do
+        local q = newPlayer("NoVote" .. f, "citizen")
+        q:SetNW2String("lcf_faction", f)
+        if LC.AdminVoter(q) then noVote = false end
+        q:SetPos(Vector(-30000, 30000, 0))
+    end
+    ok(noVote, "nor do rebels, vortigaunts, stalkers or the infected")
     ok(LC.CallRecall(hopeful) and LC.Recall ~= nil, "the rival calls a recall")
     LC.Recall.votes[unit] = true
     LC.Recall.ends = CurTime() - 1
