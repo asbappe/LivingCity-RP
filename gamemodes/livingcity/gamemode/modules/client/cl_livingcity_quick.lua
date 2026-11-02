@@ -143,6 +143,7 @@ local function Context(me, unit, rebel)
     local now = CurTime()
     if me:GetNW2Float("lc_downed_until", 0) > now then Add("Give up (let go)", function() Send("giveup") end) end
     if me:GetNW2Bool("lc_tied", false) then Add("Work at the cuffs", function() Send("struggle") end) end
+    if me:GetNW2Float("lc_gman_rival_until", 0) > now then Add("Call a vote to remove the City Administrator", function() Send("recall") end) end
     if not unit and me:GetNW2Float("lc_wanted_until", 0) > now then Add("Give myself up (near a Civil Protection unit)", function() Send("surrender") end) end
     if me:GetNW2Bool("lc_interrogated", false) then
         Add("Talk to the interrogator", function() net.Start("lc_interrogate_reply") net.WriteBool(true) net.SendToServer() end)

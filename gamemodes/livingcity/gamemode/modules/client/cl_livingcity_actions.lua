@@ -210,7 +210,7 @@ function LC_CL.OpenActions()
     yo:SetIcon("icon16/user_gray.png")
     if downed then Add(you, "Give up (let go)", function() Send("giveup") end, "icon16/cross.png") end
     if f ~= "admin" then Add(you, "Run for City Administrator (an election; 8 hours played, Records Clerk shifts count)", function() Send("run") end, "icon16/award_star_gold_1.png") end
-    if me:GetNW2Float("lc_gman_rival_until", 0) > CurTime() then Add(you, "Call a recall vote on the Administrator (the G-Man's choice)", function() Send("recall") end, "icon16/user_delete.png") end
+    if me:GetNW2Float("lc_gman_rival_until", 0) > CurTime() then Add(you, "Call a vote to remove the City Administrator", function() Send("recall") end, "icon16/user_delete.png") end
     Add(you, me:GetNW2Bool("lc_handsup", false) and "Lower my hands" or "Put my hands up", function() Send("handsup") end)
     Add(you, "Holster / draw", function() Send("holster") end)
     if me:GetNW2Bool("lc_tied", false) then Add(you, "Work at the cuffs", function() Send("struggle") end) end

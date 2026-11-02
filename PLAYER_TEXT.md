@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 91c9823. Admin-only console messages and log lines are left out.
+Made from version 045bce2. Admin-only console messages and log lines are left out.
 
-6357 lines, from 194 files.
+6364 lines, from 194 files.
 
 ## Contents
 
@@ -61,7 +61,7 @@ Made from version 91c9823. Admin-only console messages and log lines are left ou
 - [cl_livingcity_character.lua](#cllivingcitycharacterlua-cllivingcitycharacterlua) (14)
 - [cl_livingcity_cityadmin.lua](#cllivingcitycityadminlua-cllivingcitycityadminlua) (28)
 - [cl_livingcity_cp.lua](#cllivingcitycplua-cllivingcitycplua) (26)
-- [cl_livingcity_directives.lua](#cllivingcitydirectiveslua-cllivingcitydirectiveslua) (12)
+- [cl_livingcity_directives.lua](#cllivingcitydirectiveslua-cllivingcitydirectiveslua) (19)
 - [secret endings, on your screen (sv_livingcity_endings.lua)](#secret-endings-on-your-screen-svlivingcityendingslua-cllivingcityendingslua) (65)
 - [the Endings menu (superadmins): tune the secret endings live](#the-endings-menu-superadmins-tune-the-secret-endings-live-cllivingcityendingtunelua) (69)
 - [morning exercise, on your screen (sv_livingcity_exercise.lua)](#morning-exercise-on-your-screen-svlivingcityexerciselua-cllivingcityexerciselua) (11)
@@ -1337,6 +1337,19 @@ Made from version 91c9823. Admin-only console messages and log lines are left ou
 
 - "Right click with your Administrator's device: the office, Sealed directives. Sign it or refuse it."  (drawn on screen, line 199)
 
+> Note for you (not shown in game): The recall: while someone can call one (sv_livingcity_directives.lua, lc_gman_rival_until), a box at the side of their screen says so in plain words, how to do it, and how long they have.
+
+- "You can call a vote to remove the City Administrator."  (text, line 251)
+- "If it passes, you become the new Administrator."  (text, line 252)
+
+> Note for you (not shown in game): on screen
+
+- "Press F1 and choose "Call a vote to remove the City Administrator""  (text, line 253)
+- "(or type /recall in chat)."  (text, line 254)
+- "Civil Protection and the Administration vote."  (text, line 255)
+- "Time left to call it: %d:%02d"  (message, line 256)
+- "Recall vote"  (drawn on screen, line 265)
+
 ## secret endings, on your screen (sv_livingcity_endings.lua) (cl_livingcity_endings.lua)
 
 `gamemodes/livingcity/gamemode/modules/client/cl_livingcity_endings.lua`
@@ -2467,43 +2480,43 @@ Made from version 91c9823. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The first page: who you are
 
-- "Lower my hands"  (menu option, line 219)
-- "Put my hands up"  (menu option, line 219)
+- "Lower my hands"  (menu option, line 220)
+- "Put my hands up"  (menu option, line 220)
 
 > Note for you (not shown in game): part of: quick root
 
-- "My pockets (F2)"  (menu option, line 220)
-- "My board: jobs (F3)"  (menu option, line 221)
+- "My pockets (F2)"  (menu option, line 221)
+- "My board: jobs (F3)"  (menu option, line 222)
 
 > Note for you (not shown in game): slot 1 for anyone living in the city: the next step, and the way to everywhere (cl_livingcity_nextstep.lua)
 
-- "What now?"  (text, line 223)
-- "Call for backup"  (menu option, line 229)
-- "Send my 10-20"  (menu option, line 230)
+- "What now?"  (text, line 224)
+- "Call for backup"  (menu option, line 230)
+- "Send my 10-20"  (menu option, line 231)
 
 > Note for you (not shown in game): item
 
-- "What should Civil Protection units look out for?"  (text, line 231)
+- "What should Civil Protection units look out for?"  (text, line 232)
 
 > Note for you (not shown in game): part of: quick root
 
-- "Voice lines"  (text, line 232)
-- "Kick ({or})"  (menu option, line 233)
-- "Unit tools (everything a unit has)"  (menu option, line 236)
-- "My directives (F3)"  (menu option, line 237)
-- "Gear up (Resistance clothes)"  (menu option, line 246)
-- "Change into plain clothes"  (menu option, line 246)
-- "Black market"  (menu option, line 248)
-- "My papers"  (menu option, line 256)
+- "Voice lines"  (text, line 233)
+- "Kick ({or})"  (menu option, line 234)
+- "Unit tools (everything a unit has)"  (menu option, line 237)
+- "My directives (F3)"  (menu option, line 238)
+- "Gear up (Resistance clothes)"  (menu option, line 247)
+- "Change into plain clothes"  (menu option, line 247)
+- "Black market"  (menu option, line 249)
+- "My papers"  (menu option, line 257)
 
 > Note for you (not shown in game): 6 to 8: what's in front of you first, then your usual three
 
-- "Everything else (full menu)"  (menu option, line 265)
+- "Everything else (full menu)"  (menu option, line 266)
 
 > Note for you (not shown in game): on screen
 
-- "+menu_context"  (text, line 366)
-- ": the full menu"  (drawn on screen, line 367)
+- "+menu_context"  (text, line 367)
+- ": the full menu"  (drawn on screen, line 368)
 
 ## apartment doors (client) (cl_livingcity_rent.lua)
 
@@ -3627,100 +3640,100 @@ Made from version 91c9823. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: stand for administrator
 
-- "There's an Administrator already: {OfficeHeld}."  (text, line 128)
-- "The city elects only those it knows: %d hours played. You have %.1f (each Records Clerk shift counts as %d minutes; you've done %d)."  (message, line 132)
-- "An election"  (on-screen notice, line 140)
-- "The office of City Administrator is open, and {Name} is running. {or}"  (on-screen notice, line 140)
-- "You're already running."  (text, line 144)
+- "There's an Administrator already: {OfficeHeld}."  (text, line 130)
+- "The city elects only those it knows: %d hours played. You have %.1f (each Records Clerk shift counts as %d minutes; you've done %d)."  (message, line 134)
+- "An election"  (on-screen notice, line 142)
+- "The office of City Administrator is open, and {Name} is running. {or}"  (on-screen notice, line 142)
+- "You're already running."  (text, line 146)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_election_vote)
 
-- "[Election] Your vote is cast."  (chat message, line 157)
+- "[Election] Your vote is cast."  (chat message, line 159)
 
 > Note for you (not shown in game): part of: election tick
 
-- "The city has chosen"  (on-screen notice, line 173)
-- "is City Administrator ({bn} vote{or})."  (on-screen notice, line 173)
+- "The city has chosen"  (on-screen notice, line 175)
+- "is City Administrator ({bn} vote{or})."  (on-screen notice, line 175)
 
 > Note for you (not shown in game): The recall (the owner, 2 November): someone the G-Man has chosen (sv_livingcity_directives.lua, lc_gman_rival_until) can put the sitting Administrator to a vote of Civil Protection and the Administration. More yes than no, and the Administrator is out and they're in.
 
-- "Only someone the city has chosen can call a recall."  (text, line 190)
-- "There's no Administrator to recall."  (text, line 192)
-- "A vote is already under way."  (text, line 193)
+- "Only someone the city has chosen can call a recall."  (text, line 192)
+- "There's no Administrator to recall."  (text, line 194)
+- "A vote is already under way."  (text, line 195)
 
 > Note for you (not shown in game): part of: call recall
 
-- "calls for {sitting} to be removed as City Administrator. {or}"  (on-screen notice, line 198)
+- "calls for {sitting} to be removed as City Administrator. {or}"  (on-screen notice, line 200)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_recall_vote)
 
-- "[Recall] Your vote is cast."  (chat message, line 214)
+- "[Recall] Your vote is cast."  (chat message, line 216)
 
 > Note for you (not shown in game): part of: recall tick
 
-- "replaces {sitting} as City Administrator ({yes} to {no})."  (on-screen notice, line 228)
-- "The recall fails"  (on-screen notice, line 233)
-- "The Administrator"  (text, line 233)
-- "keeps the office ({yes} to {no})."  (on-screen notice, line 233)
+- "replaces {sitting} as City Administrator ({yes} to {no})."  (on-screen notice, line 230)
+- "The recall fails"  (on-screen notice, line 235)
+- "The Administrator"  (text, line 235)
+- "keeps the office ({yes} to {no})."  (on-screen notice, line 235)
 
 > Note for you (not shown in game): part of: cool
 
-- "Not yet: %d more minute%s."  (message, line 273)
+- "Not yet: %d more minute%s."  (message, line 275)
 
 > Note for you (not shown in game): part of: daily
 
-- "That's all of those for today."  (text, line 282)
+- "That's all of those for today."  (text, line 284)
 
 > Note for you (not shown in game): part of: announce
 
-- "The City Administrator"  (on-screen notice, line 287)
-- "a ration day"  (text, line 290)
-- "an inspection sweep"  (text, line 290)
-- "a Combine parade"  (text, line 290)
+- "The City Administrator"  (on-screen notice, line 289)
+- "a ration day"  (text, line 292)
+- "an inspection sweep"  (text, line 292)
+- "a Combine parade"  (text, line 292)
 
 > Note for you (not shown in game): One of the office's acts. arg: the event, "generous"/"austere", a price factor, a job id, or a target player.
 
-- "Only the City Administrator."  (text, line 294)
-- "That can't happen right now (or the map has nowhere for it)."  (text, line 299)
-- "By order of the City Administrator: {arg}."  (text, line 300)
+- "Only the City Administrator."  (text, line 296)
+- "That can't happen right now (or the map has nowhere for it)."  (text, line 301)
+- "By order of the City Administrator: {arg}."  (text, line 302)
 
 > Note for you (not shown in game): part of: admin do
 
-- "Rations are increased for the hour. The Union provides."  (text, line 307)
-- "Rations are reduced for the hour. Sacrifice strengthens us."  (text, line 307)
-- "Rations are as usual."  (text, line 307)
-- "Commissary prices are %s for the hour (%d%%)."  (message, line 314)
-- "as usual"  (text, line 314)
-- "For the hour, {name} shifts pay half again. The city needs hands there."  (text, line 322)
+- "Rations are increased for the hour. The Union provides."  (text, line 309)
+- "Rations are reduced for the hour. Sacrifice strengthens us."  (text, line 309)
+- "Rations are as usual."  (text, line 309)
+- "Commissary prices are %s for the hour (%d%%)."  (message, line 316)
+- "as usual"  (text, line 316)
+- "For the hour, {name} shifts pay half again. The city needs hands there."  (text, line 324)
 
 > Note for you (not shown in game): the rest are about a person
 
-- "Look at someone, or pick them."  (text, line 326)
-- "Commended by the Administrator"  (text, line 331)
-- "Censured by the Administrator"  (text, line 331)
-- "is commended for their service to the city."  (text, line 332)
-- "is censured. Let them remember it."  (text, line 332)
+- "Look at someone, or pick them."  (text, line 328)
+- "Commended by the Administrator"  (text, line 333)
+- "Censured by the Administrator"  (text, line 333)
+- "is commended for their service to the city."  (text, line 334)
+- "is censured. Let them remember it."  (text, line 334)
 
 > Note for you (not shown in game): part of: admin do
 
-- "They aren't wanted."  (text, line 335)
-- "Not for that. Not even the Administrator."  (text, line 338)
-- "is pardoned. The city is merciful."  (text, line 343)
-- "[City] The Administrator grants you a week's rent-free housing."  (chat message, line 349)
-- "[City] The Administrator issues you a curfew permit."  (chat message, line 355)
+- "They aren't wanted."  (text, line 337)
+- "Not for that. Not even the Administrator."  (text, line 340)
+- "is pardoned. The city is merciful."  (text, line 345)
+- "[City] The Administrator grants you a week's rent-free housing."  (chat message, line 351)
+- "[City] The Administrator issues you a curfew permit."  (chat message, line 357)
 
 > Note for you (not shown in game): a week's free housing (the office): read by the rent
 
-- "rent-free, by the Administrator's grant"  (text, line 365)
+- "rent-free, by the Administrator's grant"  (text, line 367)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_admin_do)
 
-- "[Office] Done."  (chat message, line 373)
-- "[Office] {or}"  (text, line 373)
+- "[Office] Done."  (chat message, line 375)
+- "[Office] {or}"  (text, line 375)
 
 > Note for you (not shown in game): part of: admin order kill
 
-- "Threat to the City Administrator"  (text, line 427)
+- "Threat to the City Administrator"  (text, line 429)
 
 ## weedkiller against the infestation, and against the Combine (the owner, 2026-11-01) (sv_livingcity_cleanup.lua)
 
@@ -4608,7 +4621,7 @@ Made from version 91c9823. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "[???] You may call for the Administrator's recall: C > Me > Call a recall vote (or /recall), within {GetFloat} minutes. Civil Protection and the Administration will decide."  (chat message, line 799)
+- "[City] You can now call a vote to remove the City Administrator and take their place: press F1 and choose "Call a vote to remove the City Administrator" (or type /recall). You have {GetFloat} minutes. Civil Protection and the Administration vote."  (chat message, line 799)
 
 > Note for you (not shown in game): A new Administrator (elected, or by recall): he pays a visit; and if he's forcing the old one's hand, he brings the directive to the new one soon
 

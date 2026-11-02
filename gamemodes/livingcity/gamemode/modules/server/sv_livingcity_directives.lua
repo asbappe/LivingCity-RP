@@ -796,7 +796,7 @@ function LC.GmanRival(now)
     rival:SetNW2Float("lc_gman_rival_until", now + math.max(1, cvRivalMin:GetFloat()) * 60)
     LC.Vision(rival, "visit", LC.GmanLine("rival"), "A previous hire has been unable, or unwilling, to perform the tasks laid before him. / We have struggled to find a suitable replacement. Until now.")
     timer.Simple(9, function()
-        if IsValid(rival) then rival:ChatPrint("[???] You may call for the Administrator's recall: C > Me > Call a recall vote (or /recall), within " .. math.floor(cvRivalMin:GetFloat()) .. " minutes. Civil Protection and the Administration will decide.") end
+        if IsValid(rival) then rival:ChatPrint("[City] You can now call a vote to remove the City Administrator and take their place: press F1 and choose \"Call a vote to remove the City Administrator\" (or type /recall). You have " .. math.floor(cvRivalMin:GetFloat()) .. " minutes. Civil Protection and the Administration vote.") end
     end)
     return rival
 end

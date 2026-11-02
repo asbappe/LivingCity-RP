@@ -239,3 +239,29 @@ hook.Add("Think", "LivingCityGmanGlimpse", function()
     local looking = me:GetAimVector():Dot(to:GetNormalized()) > 0.995 and CurTime() - G.t0 > 0.6
     if looking or d < 250 or CurTime() - G.t0 > 7 then m:Remove() G = nil end
 end)
+
+-- The recall: while someone can call one (sv_livingcity_directives.lua, lc_gman_rival_until), a box at the
+-- side of their screen says so in plain words, how to do it, and how long they have.
+hook.Add("HUDPaint", "LivingCityRecallReminder", function()
+    local me = LocalPlayer()
+    if not IsValid(me) then return end
+    local left = me:GetNW2Float("lc_gman_rival_until", 0) - CurTime()
+    if left <= 0 then return end
+    local lines = {
+        "You can call a vote to remove the City Administrator.",
+        "If it passes, you become the new Administrator.",
+        "Press F1 and choose \"Call a vote to remove the City Administrator\"",
+        "(or type /recall in chat).",
+        "Civil Protection and the Administration vote.",
+        string.format("Time left to call it: %d:%02d", math.floor(left / 60), math.floor(left % 60)),
+    }
+    surface.SetFont("DermaDefault")
+    local bw = 0
+    for _, l in ipairs(lines) do bw = math.max(bw, (surface.GetTextSize(l))) end
+    bw = bw + 24
+    local bh = 26 + #lines * 16
+    local x, y = ScrW() - bw - 16, ScrH() * 0.32
+    draw.RoundedBox(6, x, y, bw, bh, Color(25, 30, 40, 215))
+    draw.SimpleText("Recall vote", "DermaDefaultBold", x + 12, y + 8, Color(255, 215, 130))
+    for i, l in ipairs(lines) do draw.SimpleText(l, "DermaDefault", x + 12, y + 10 + i * 16, Color(230, 230, 225)) end
+end)

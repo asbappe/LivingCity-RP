@@ -489,6 +489,14 @@ if not rem then problems[#problems + 1] = "no sealed directive reminder" else
     if not okR then problems[#problems + 1] = "the directive reminder errors: " .. tostring(errR) end
 end
 _me.nw.lc_directive_until, _me.nw.lc_directive_urgent = nil, nil
+-- the recall box, while someone can call one
+_me.nw.lc_gman_rival_until = CurTime() + 600
+local rb = hook.t.HUDPaint and hook.t.HUDPaint.LivingCityRecallReminder
+if not rb then problems[#problems + 1] = "no recall box" else
+    local okB, errB = pcall(rb)
+    if not okB then problems[#problems + 1] = "the recall box errors: " .. tostring(errB) end
+end
+_me.nw.lc_gman_rival_until = nil
 if LC_CL.GmanVision then
     LC_CL.GmanVision("summon", "", "Come back. / Come back here, now.")
     local gv = hook.t.HUDPaint and hook.t.HUDPaint.LivingCityGmanVision
