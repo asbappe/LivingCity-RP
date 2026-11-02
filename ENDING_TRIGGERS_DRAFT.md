@@ -4,14 +4,25 @@ Nothing here is built yet. Pick, change or cross out, and I'll build what you ch
 
 ## How it would work
 
+- **The office.** A door tagged with the editor's "Door: the City Administrator's office" (built, 2 November): locked to everyone but the Administrator and staff. The Administrator's guards are brought to their side when they're stuck on it (or anything else).
 - **What a sealed directive is.** A page on the Administrator's device (the one they already carry; right click opens their office): "Sealed Directives", eleven envelopes, each with a wax seal and a rhyming riddle on the front (the " / " marks the line break), and a mark that warms from cold to warm to hot as the city gets closer to it. When one is unlocked, its seal breaks and the envelope glows, with a "Sign it" button.
 - **What unlocks one.** Either the Administrator running the city in the strange way its riddle hints at, or the city doing it by itself in play (both are listed for each ending below).
 - **Who decides, once one is unlocked** (the owner, 2 November):
-  1. **An Administrator playing right now** (online, not away): it's theirs. The envelope glows on their device and they choose whether to sign it, within 20 minutes.
+  1. **An Administrator playing right now** (online, not away: away means 20 minutes idle, and that's when they're kicked too, built 2 November): it's theirs. The envelope glows on their device and they sign it or refuse it, within 20 minutes. If they do neither, it goes down the list (2, 3, 4).
   2. **No Administrator, but a superadmin online:** a popup for the superadmin: start it now, put it to the G-Man's vote, or let it pass.
   3. **No superadmin either, but an admin online:** the same popup for the admin.
   4. **Nobody at all** (no Administrator, superadmin or admin): the G-Man's vote, by itself.
   The G-Man's vote only ever comes from step 2 or 3 (when they choose it) or step 4.
+- **A grace period for leaving** (10 minutes): when the Administrator (or the last superadmin or admin) leaves, nothing moves down the list for 10 minutes, in case they're rejoining or rebooting. If they (or someone higher on the list) join within that time, it's theirs again.
+- **If the Administrator refuses** (the G-Man won't take no for an answer):
+  1. The G-Man appears to the Administrator, says "We'll see about that" (his line from Episode One's opening), turns, and fades away walking off.
+  2. **Word gets around.** For the rest of the map, about 60% of players get G-Man dreams when they sleep (and now and then while awake): the Administrator is keeping something from the people. Meant to stir up resentment, and maybe open rebellion.
+  3. **He forces their hand**, in stages:
+     - After about 10 minutes: supply crates appear around the city (press E, like the rebel supply crates) with SMGs, shotguns and fully charged vests.
+     - After about 20 minutes, if that hasn't done it: the infestation spreads at a rate nobody can hold back.
+     - (Room for more: the grid failing, the prison doors opening, rations running out.)
+  4. After about 30 minutes the G-Man reappears to the Administrator and presents the same sealed directive again.
+- **The G-Man subplot.** The riddles and hints reach everyone through him: dreams when you sleep, a torn page, a line in passing. He always turns up around whoever's about to matter.
 - **Hints for everyone else.** Other players find hints in the world: a line from the G-Man in someone's sleep, graffiti, a Kleiner lab note, a dispatch call. So the Administrator has a reason to do odd things, and everyone else has a reason to wonder why.
 - **Limits.** The usual cooldown between endings (`lc_ending_cooldown`, 180 minutes) still applies, plus at least 4 players online. Every number below is a setting.
 
@@ -83,8 +94,12 @@ Nothing here is built yet. Pick, change or cross out, and I'll build what you ch
 - **The Administrator:** permits worship (a permit to Father Grigori's flock) and holds a ration event in Ravenholm's direction.
 - **Hint:** the rain gets heavier each time the flock meets.
 
-## Questions for you
-1. ~~Two ways in, or the Administrator only?~~ Answered: both, and who decides is above.
-2. Should players other than the Administrator see the riddles anywhere (a torn page, the G-Man)?
-3. Any ending you'd rather keep admin-only?
-4. If the Administrator lets an unlocked ending pass (doesn't sign it in 20 minutes): gone until it's unlocked again, or offered to an admin, then the G-Man's vote, like when there's no Administrator?
+## Decided (the owner, 2 November)
+1. Both ways in (the Administrator's, and the city's own), and who decides is above.
+2. Everyone sees riddles and hints, through the G-Man: dreams, a torn page, lines in passing.
+3. No ending stays admin-only, for now.
+4. Not signed or refused within 20 minutes: down the list (an admin's popup, then the G-Man's vote). Refused: the G-Man's escalation above.
+
+## Still to decide
+1. If the Administrator refuses a second time (when he comes back after 30 minutes): does it escalate further, or does the G-Man start it anyway?
+2. While he's forcing their hand, can the Administrator stop it by signing (yes, I'd assume), and does anything wind back (the crates, the infestation) once they do?

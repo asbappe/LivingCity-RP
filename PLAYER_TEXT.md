@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 9c8a9fa. Admin-only console messages and log lines are left out.
+Made from version 6d82cb6. Admin-only console messages and log lines are left out.
 
-6262 lines, from 191 files.
+6263 lines, from 191 files.
 
 ## Contents
 
@@ -117,7 +117,7 @@ Made from version 9c8a9fa. Admin-only console messages and log lines are left ou
 - [what custody costs the worst anticitizens](#what-custody-costs-the-worst-anticitizens-svlivingcitycustodylua) (29)
 - [saved layout](#saved-layout-svlivingcitydatalua) (14)
 - [debugging](#debugging-svlivingcitydebuglua) (60)
-- [doors](#doors-svlivingcitydoorslua) (8)
+- [doors](#doors-svlivingcitydoorslua) (9)
 - [the Combine's dropship](#the-combines-dropship-svlivingcitydropshiplua) (7)
 - [economy and social credit](#economy-and-social-credit-svlivingcityeconomylua) (32)
 - [secret endings](#secret-endings-svlivingcityendingslua) (76)
@@ -3546,83 +3546,83 @@ Made from version 9c8a9fa. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "Idle for {kick} minutes"  (text, line 86)
+- "Idle for {kick} minutes"  (text, line 87)
 
 > Note for you (not shown in game): part of: stand for administrator
 
-- "There's an Administrator already: {OfficeHeld}."  (text, line 121)
-- "The city elects only those it knows: %d hours played. You have %.1f (each Records Clerk shift counts as %d minutes; you've done %d)."  (message, line 125)
-- "An election"  (on-screen notice, line 133)
-- "The office of City Administrator is open, and {Name} is running. Vote on screen."  (on-screen notice, line 133)
-- "You're already running."  (text, line 136)
+- "There's an Administrator already: {OfficeHeld}."  (text, line 122)
+- "The city elects only those it knows: %d hours played. You have %.1f (each Records Clerk shift counts as %d minutes; you've done %d)."  (message, line 126)
+- "An election"  (on-screen notice, line 134)
+- "The office of City Administrator is open, and {Name} is running. Vote on screen."  (on-screen notice, line 134)
+- "You're already running."  (text, line 137)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_election_vote)
 
-- "[Election] Your vote is cast."  (chat message, line 149)
+- "[Election] Your vote is cast."  (chat message, line 150)
 
 > Note for you (not shown in game): part of: election tick
 
-- "The city has chosen"  (on-screen notice, line 165)
-- "is City Administrator ({bn} vote{or})."  (on-screen notice, line 165)
+- "The city has chosen"  (on-screen notice, line 166)
+- "is City Administrator ({bn} vote{or})."  (on-screen notice, line 166)
 
 > Note for you (not shown in game): part of: cool
 
-- "Not yet: %d more minute%s."  (message, line 204)
+- "Not yet: %d more minute%s."  (message, line 205)
 
 > Note for you (not shown in game): part of: daily
 
-- "That's all of those for today."  (text, line 213)
+- "That's all of those for today."  (text, line 214)
 
 > Note for you (not shown in game): part of: announce
 
-- "The City Administrator"  (on-screen notice, line 218)
-- "a ration day"  (text, line 221)
-- "an inspection sweep"  (text, line 221)
-- "a Combine parade"  (text, line 221)
+- "The City Administrator"  (on-screen notice, line 219)
+- "a ration day"  (text, line 222)
+- "an inspection sweep"  (text, line 222)
+- "a Combine parade"  (text, line 222)
 
 > Note for you (not shown in game): One of the office's acts. arg: the event, "generous"/"austere", a price factor, a job id, or a target player.
 
-- "Only the City Administrator."  (text, line 225)
-- "That can't happen right now (or the map has nowhere for it)."  (text, line 230)
-- "By order of the City Administrator: {arg}."  (text, line 231)
+- "Only the City Administrator."  (text, line 226)
+- "That can't happen right now (or the map has nowhere for it)."  (text, line 231)
+- "By order of the City Administrator: {arg}."  (text, line 232)
 
 > Note for you (not shown in game): part of: admin do
 
-- "Rations are increased for the hour. The Union provides."  (text, line 238)
-- "Rations are reduced for the hour. Sacrifice strengthens us."  (text, line 238)
-- "Rations are as usual."  (text, line 238)
-- "Commissary prices are %s for the hour (%d%%)."  (message, line 245)
-- "as usual"  (text, line 245)
-- "For the hour, {name} shifts pay half again. The city needs hands there."  (text, line 253)
+- "Rations are increased for the hour. The Union provides."  (text, line 239)
+- "Rations are reduced for the hour. Sacrifice strengthens us."  (text, line 239)
+- "Rations are as usual."  (text, line 239)
+- "Commissary prices are %s for the hour (%d%%)."  (message, line 246)
+- "as usual"  (text, line 246)
+- "For the hour, {name} shifts pay half again. The city needs hands there."  (text, line 254)
 
 > Note for you (not shown in game): the rest are about a person
 
-- "Look at someone, or pick them."  (text, line 257)
-- "Commended by the Administrator"  (text, line 262)
-- "Censured by the Administrator"  (text, line 262)
-- "is commended for their service to the city."  (text, line 263)
-- "is censured. Let them remember it."  (text, line 263)
+- "Look at someone, or pick them."  (text, line 258)
+- "Commended by the Administrator"  (text, line 263)
+- "Censured by the Administrator"  (text, line 263)
+- "is commended for their service to the city."  (text, line 264)
+- "is censured. Let them remember it."  (text, line 264)
 
 > Note for you (not shown in game): part of: admin do
 
-- "They aren't wanted."  (text, line 266)
-- "Not for that. Not even the Administrator."  (text, line 269)
-- "is pardoned. The city is merciful."  (text, line 274)
-- "[City] The Administrator grants you a week's rent-free housing."  (chat message, line 280)
-- "[City] The Administrator issues you a curfew permit."  (chat message, line 286)
+- "They aren't wanted."  (text, line 267)
+- "Not for that. Not even the Administrator."  (text, line 270)
+- "is pardoned. The city is merciful."  (text, line 275)
+- "[City] The Administrator grants you a week's rent-free housing."  (chat message, line 281)
+- "[City] The Administrator issues you a curfew permit."  (chat message, line 287)
 
 > Note for you (not shown in game): a week's free housing (the office): read by the rent
 
-- "rent-free, by the Administrator's grant"  (text, line 296)
+- "rent-free, by the Administrator's grant"  (text, line 297)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_admin_do)
 
-- "[Office] Done."  (chat message, line 304)
-- "[Office] {or}"  (text, line 304)
+- "[Office] Done."  (chat message, line 305)
+- "[Office] {or}"  (text, line 305)
 
 > Note for you (not shown in game): part of: admin order kill
 
-- "Threat to the City Administrator"  (text, line 358)
+- "Threat to the City Administrator"  (text, line 359)
 
 ## weedkiller against the infestation, and against the Combine (the owner, 2026-11-01) (sv_livingcity_cleanup.lua)
 
@@ -4386,24 +4386,28 @@ Made from version 9c8a9fa. Admin-only console messages and log lines are left ou
 
 - "[Living City] {msg}"  (chat message, line 42)
 
+> Note for you (not shown in game): pressing E on something
+
+- "[City] The City Administrator's office. Locked."  (chat message, line 434)
+
 > Note for you (not shown in game): Editor helpers: inspect and test
 
-- "%s (map id %s)"  (message, line 463)
-- "none: spawned, can't be tagged"  (message, line 463)
+- "%s (map id %s)"  (message, line 478)
+- "none: spawned, can't be tagged"  (message, line 478)
 
 > Note for you (not shown in game): part of: door info
 
-- "A prison door, automatically: it's by a cell or the release point, or in the prison area. Locked to all but Civil Protection units, even in a blackout (tag it to override)"  (text, line 468)
-- "Locked automatically: it's in a Combine-only area. Its lock goes dead in a blackout (tag it to override)"  (text, line 470)
-- "NPCs treat it as a door: {lines}{or}"  (text, line 474)
+- "A prison door, automatically: it's by a cell or the release point, or in the prison area. Locked to all but Civil Protection units, even in a blackout (tag it to override)"  (text, line 483)
+- "Locked automatically: it's in a Combine-only area. Its lock goes dead in a blackout (tag it to override)"  (text, line 485)
+- "NPCs treat it as a door: {lines}{or}"  (text, line 489)
 
 > Note for you (not shown in game): the console command lc_unlockdoors
 
-- "Unlocked {n} doors (locked-tagged doors left alone)."  (chat message, line 504)
+- "Unlocked {n} doors (locked-tagged doors left alone)."  (chat message, line 519)
 
 > Note for you (not shown in game): the console command lc_opendoors
 
-- "Opened {n} doors. They will stay open."  (chat message, line 557)
+- "Opened {n} doors. They will stay open."  (chat message, line 572)
 
 ## the Combine's dropship (sv_livingcity_dropship.lua)
 
@@ -4681,15 +4685,12 @@ Made from version 9c8a9fa. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): the console command lc_ending_reset_cooldown
 
 - "Secret ending cooldown cleared."  (text, line 4009)
-
-> Note for you (not shown in game): Settings are saved, so a default changed since would never reach a server that ran the old one: anything still exactly at an old default moves to the new one (once; a value someone chose themselves is left alone).
-
-- "harpies=2,shalom=2"  (text, line 4027)
-- "harpies=4,shalom=2"  (text, line 4027)
-- "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4028)
-- "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4028)
-- "2.2=CAPTAIN: What happen ?\|3.5=MECHANIC: Somebody set up us the bomb.\|6.5=OPERATOR: We get signal.\|9.5=CAPTAIN: What !\|12.5=OPERATOR: Main screen turn on.\|14.7=CAPTAIN: It's you !!\|16.4=CATS: How are you gentlemen !!\|18.4=CATS: All your base are belong to us.\|20.4=CATS: You are on the way to destruction.\|21.6=CAPTAIN: What you say !!\|23.0=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4029)
-- "2.15=CAPTAIN: What happen ?\|3.55=MECHANIC: Somebody set up us the bomb.\|4.65=OPERATOR: We get signal.\|6.5=CAPTAIN: What !\|9.5=OPERATOR: Main screen turn on.\|11.7=CAPTAIN: It's you !!\|12.55=CATS: How are you gentlemen !!\|14.7=CATS: All your base are belong to us.\|18.45=CATS: You are on the way to destruction.\|20.6=CAPTAIN: What you say !!\|21.65=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4029)
+- "harpies=2,shalom=2"  (text, line 4029)
+- "harpies=4,shalom=2"  (text, line 4029)
+- "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4030)
+- "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4030)
+- "2.2=CAPTAIN: What happen ?\|3.5=MECHANIC: Somebody set up us the bomb.\|6.5=OPERATOR: We get signal.\|9.5=CAPTAIN: What !\|12.5=OPERATOR: Main screen turn on.\|14.7=CAPTAIN: It's you !!\|16.4=CATS: How are you gentlemen !!\|18.4=CATS: All your base are belong to us.\|20.4=CATS: You are on the way to destruction.\|21.6=CAPTAIN: What you say !!\|23.0=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4031)
+- "2.15=CAPTAIN: What happen ?\|3.55=MECHANIC: Somebody set up us the bomb.\|4.65=OPERATOR: We get signal.\|6.5=CAPTAIN: What !\|9.5=OPERATOR: Main screen turn on.\|11.7=CAPTAIN: It's you !!\|12.55=CATS: How are you gentlemen !!\|14.7=CATS: All your base are belong to us.\|18.45=CATS: You are on the way to destruction.\|20.6=CAPTAIN: What you say !!\|21.65=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4031)
 
 ## escorts through Combine doors (sv_livingcity_escort.lua)
 

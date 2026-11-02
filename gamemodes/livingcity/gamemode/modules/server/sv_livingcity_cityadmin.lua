@@ -19,10 +19,11 @@
     damage. Left click with the tablet at someone: "kill them", at once. Anyone who hurts the
     Administrator is theirs too.
 
-    Idle: no input for lc_afk_minutes (5) and you're AFK (shown to everyone; no pay or XP for the time);
-    lc_afk_kick_minutes (15) and you're kicked (staff never).
+    Idle: no input for lc_afk_minutes (20) and you're AFK (shown to everyone; no pay or XP for the time),
+    and at lc_afk_kick_minutes (20) you're kicked (staff never). (The owner, 2 November: 20 for both, so a
+    short break never counts as away when an ending is waiting on the Administrator.)
 
-      lc_admin_hours (8), lc_admin_vote_minutes (2), lc_admin_guards (2), lc_afk_minutes (5), lc_afk_kick_minutes (15)
+      lc_admin_hours (8), lc_admin_vote_minutes (2), lc_admin_guards (2), lc_afk_minutes (20), lc_afk_kick_minutes (20)
 ]]
 
 if CLIENT then return end
@@ -34,8 +35,8 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvHours   = CreateConVar("lc_admin_hours", "8", FLAGS, "Hours played on the server, in all, before someone can run for City Administrator")
 local cvVote    = CreateConVar("lc_admin_vote_minutes", "2", FLAGS, "Minutes a City Administrator election stays open")
 local cvGuards  = CreateConVar("lc_admin_guards", "2", FLAGS, "Overwatch Elites guarding the City Administrator")
-local cvAfk     = CreateConVar("lc_afk_minutes", "5", FLAGS, "Minutes without input before a player is AFK")
-local cvAfkKick = CreateConVar("lc_afk_kick_minutes", "15", FLAGS, "Minutes without input before a player is kicked (0: never; staff never)")
+local cvAfk     = CreateConVar("lc_afk_minutes", "20", FLAGS, "Minutes without input before a player is AFK")
+local cvAfkKick = CreateConVar("lc_afk_kick_minutes", "20", FLAGS, "Minutes without input before a player is kicked (0: never; staff never)")
 
 util.AddNetworkString("lc_election")
 util.AddNetworkString("lc_election_vote")
@@ -385,7 +386,13 @@ local function GuardTick(now)
                 else
                     if st then st.adminTarget = nil end
                     local d = npc:GetPos():DistToSqr(admin:GetPos())
-                    if d > 900 * 900 then
+                    -- stuck (a door, a corner: the owner, 2 November): not moving for 4 seconds while
+                    -- more than 250 units behind, and they're brought to the Administrator's side
+                    local moved = not npc.lcGuardLast or npc:GetPos():DistToSqr(npc.lcGuardLast) > 20 * 20
+                    if moved or d < 250 * 250 then npc.lcGuardLast, npc.lcGuardStill = npc:GetPos(), now end
+                    local stuck = d > 250 * 250 and now - (npc.lcGuardStill or now) > 4
+                    if stuck then npc.lcGuardStill = now end
+                    if d > 900 * 900 or stuck then
                         npc:SetPos(admin:GetPos() - admin:GetForward() * 90 + admin:GetRight() * (i % 2 == 0 and 50 or -50) + Vector(0, 0, 4))
                     elseif d > 160 * 160 and npc.SetLastPosition and npc.SetSchedule then
                         npc:SetLastPosition(admin:GetPos() - admin:GetForward() * 70 + admin:GetRight() * (i % 2 == 0 and 50 or -50))

@@ -150,7 +150,7 @@ function LC.ApplyDoorState(door)
     LC.PrisonDoors[door] = (tag == "prison" or auto == "prison") or nil
     LC.KeptOpen[door] = tag == "open" or nil
     HoldOpen(door, tag == "open")
-    if tag == "locked" then
+    if tag == "locked" or tag == "office" then -- (the Administrator's office: locked, but theirs to open)
         door:Fire("Close")
         door:Fire("Lock", "", 0.1)
     elseif tag == "prison" or auto == "prison" then
@@ -420,6 +420,21 @@ hook.Add("PlayerUse", "LivingCityDoorUse", function(ply, ent)
     end
 
     if tag == "open" then return false end -- kept open
+    -- the City Administrator's office (the owner, 2 November): the Administrator and staff open it
+    -- (their guards follow them through, or are brought to them: sv_livingcity_cityadmin.lua)
+    if tag == "office" and not (LC.DoorPicked and LC.DoorPicked(ent)) then
+        if ply:GetNW2String("lcf_faction", "") == "admin" or ply:IsAdmin() then
+            ent:Fire("Unlock")
+            ent:Fire("Open", "", 0.1)
+            LC.OpenedDoors[ent] = CurTime() + 5
+            LC.Relock[ent] = true
+        elseif (nextUse[ent] or 0) < CurTime() then
+            ent:EmitSound(LOCKED_SOUND, 70)
+            nextUse[ent] = CurTime() + 1
+            ply:ChatPrint("[City] The City Administrator's office. Locked.")
+        end
+        return false
+    end
     local denied = tag == "locked" or (UnitsOnly(tag) and not LC.PlayerMayUseCPDoor(ply, ent))
     -- somebody in custody doesn't open doors, whoever they are
     if LC.Prisoners and LC.Prisoners[ply] then denied = true end

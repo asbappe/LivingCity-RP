@@ -442,6 +442,8 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 - [ ] **The courier's clipboard** the right way up (if not: `lc_clipboard_angle`, pitch yaw roll).
 - [ ] **Job outfits** button in the editor opens the window.
 - [ ] **Rainwater** drinkable as it is.
+- [ ] **The Administrator's office:** tag a door with the editor's "Door: the City Administrator's office": locked to citizens ("Locked"), opens for the Administrator and staff, locks again; the Administrator's guards come through or appear beside them when stuck.
+- [ ] **AFK:** 20 minutes idle: AFK and kicked (not at 5).
 - [ ] **Stamina:** sprint until the bar low on the screen runs out: "Out of breath", walking only, no jumping, the view breathing hard; it comes back after a rest, faster after a good night's sleep and when you're fed. The morning drill tires you too.
 - [ ] **Guns:** a citizen with a pistol out in front of a unit on the streets: wanted at once. Walk up to rebel ground with a gun out: LOWER YOUR WEAPON: hold R on screen before you're in, gone the moment you lower it; the fighters who can see you turn and face you and call out ("Heads up!", "Watch what you're doing!"); keep it up 10 seconds inside and they open fire; lower it and they leave you be. The same as a recruit or metrocop on the Combine's ground with the Overwatch's soldiers (not as a Division Leader or the Overwatch). NPCs never turn on each other over it. Elsewhere guns are ready, no lowering.
 - [ ] **Obituary:** die (or watch someone die): "[Obituary] Name, citizen #..., ..." in chat.

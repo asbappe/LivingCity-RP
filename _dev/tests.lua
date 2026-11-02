@@ -14292,6 +14292,20 @@ section("The v2.7 pieces: stamina, brandishing, obituaries, detentions, citizen 
     local h, n = LC.AdminHours(clerk)
     ok(n == 6 and math.abs(h - 2) < 0.01, "each Records Clerk shift counts towards the hours to run for City Administrator", h)
     clerk:SetPos(Vector(-30000, 30000, 0))
+    -- the City Administrator's office door
+    local odoor = ents.Create("func_door")
+    odoor.mapid = 7701
+    odoor:SetPos(Vector(-160500, 160500, 0))
+    LC.SetDoorTag(odoor, "office")
+    local outsider = newPlayer("Outsider", "citizen")
+    odoor.fired = {}
+    ok(hook.Run("PlayerUse", outsider, odoor) == false and not has(odoor.fired, "Open") and has(outsider.chat, "Administrator's office"), "the Administrator's office: locked to a citizen")
+    local boss = newPlayer("TheAdministrator", "admin")
+    odoor.fired = {}
+    hook.Run("PlayerUse", boss, odoor)
+    ok(has(odoor.fired, "Unlock") and has(odoor.fired, "Open"), "and opens for the Administrator", table.concat(odoor.fired, ","))
+    LC.SetDoorTag(odoor, nil)
+    outsider:SetPos(Vector(-30000, 30000, 0)) boss:SetPos(Vector(-30000, 30000, 0))
 end)()
 
 section("NPCs that fall out of the map")

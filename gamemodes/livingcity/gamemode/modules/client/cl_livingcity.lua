@@ -141,7 +141,7 @@ local DOOR_COLORS = {
     cp = Color(80, 150, 255), prison = Color(255, 140, 40), locked = Color(255, 70, 70), open = Color(90, 220, 120),
     ignore = Color(160, 160, 160), force = Color(240, 200, 60), rent = Color(120, 200, 160),
 }
-local DOOR_LABELS = { cp = "CP ONLY", prison = "PRISON DOOR", locked = "LOCKED", open = "ALWAYS OPEN", ignore = "NPCS IGNORE", force = "FORCED DOOR", rent = "FOR RENT" }
+local DOOR_LABELS = { cp = "CP ONLY", prison = "PRISON DOOR", locked = "LOCKED", open = "ALWAYS OPEN", ignore = "NPCS IGNORE", force = "FORCED DOOR", rent = "FOR RENT", office = "ADMINISTRATOR'S OFFICE" }
 local LINK_COLOR, NODE_COLOR, ORPHAN_COLOR, SELECT_COLOR = Color(0, 200, 255), Color(0, 160, 255), Color(255, 50, 50), Color(255, 230, 0)
 
 local function BlockName(n)

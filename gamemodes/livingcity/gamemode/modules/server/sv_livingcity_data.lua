@@ -49,7 +49,7 @@ LC.POINT_KINDS = {
     jogroute = true, yard = true, parade = true, -- morning exercise: the jogging route, the drill yard, the parade route (sv_livingcity_exercise.lua)
 }
 LC.ZONE_KINDS = { nogo = true, infest = true, prison = true, block = true, rebel = true, combine = true }
-LC.DOOR_TAGS = { cp = true, prison = true, locked = true, open = true, ignore = true, force = true, rent = true }
+LC.DOOR_TAGS = { cp = true, prison = true, locked = true, open = true, ignore = true, force = true, rent = true, office = true }
 
 local DOOR_CLASSES = { prop_door_rotating = true, func_door = true, func_door_rotating = true, func_movelinear = true } -- (movelinear: the Combine's sliding doors, on some maps)
 local SETTINGS = { "lc_citizens", "lc_cops", "lc_soldiers", "lc_scanners", "lc_zombies", "lc_rebels" }

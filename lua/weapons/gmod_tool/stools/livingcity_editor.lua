@@ -104,6 +104,7 @@ local MODES = {
     { id = "door_ignore", label = "Door: NPCs ignore it" },
     { id = "door_force",  label = "Door: force NPCs to treat it as a door" },
     { id = "door_rent",   label = "Door: apartment people can rent (!rent)" },
+    { id = "door_office", label = "Door: the City Administrator's office (the Administrator, their guards and staff)" },
     { id = "door_test",   label = "Door: test open / close" },
     { id = "prop",        label = "Prop: make persistent (spawn a prop, place it, zap it: saved with the layout, frozen)" },
     { id = "inspect",     label = "Inspect anything" },
