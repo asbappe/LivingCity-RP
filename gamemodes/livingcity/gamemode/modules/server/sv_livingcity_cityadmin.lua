@@ -105,6 +105,12 @@ local function OfficeHeld()
     return nil
 end
 
+-- Who votes for (and recalls) the City Administrator (the owner, 2 November): Civil Protection (the
+-- Overwatch included) and the Administration, not the citizens.
+local function Voter(p) return IsValid(p) and ((LC.PlayerIsCP and LC.PlayerIsCP(p)) or p:GetNW2String("lcf_faction", "") == "admin") end
+LC.AdminVoter = Voter
+local function Voters() local out = {} for _, p in ipairs(player.GetAll()) do if Voter(p) then out[#out + 1] = p end end return out end
+
 local function Broadcast()
     local e = LC.Election
     if not e then return end
@@ -114,7 +120,7 @@ local function Broadcast()
     net.WriteFloat(e.ends - CurTime())
     net.WriteUInt(#names, 6)
     for _, n in ipairs(names) do net.WriteUInt(n.i, 6) net.WriteString(n.name) end
-    net.Broadcast()
+    net.Send(Voters())
 end
 
 function LC.StandForAdministrator(ply)
@@ -131,7 +137,8 @@ function LC.StandForAdministrator(ply)
         e = { candidates = {}, votes = {}, ends = CurTime() + math.max(0.5, cvVote:GetFloat()) * 60 }
         LC.Election = e
         for _, p in ipairs(player.GetAll()) do
-            if LC.Notice then LC.Notice(p, "event", "An election", "The office of City Administrator is open, and " .. Name(ply) .. " is running. Vote on screen.", 10) end
+            if LC.Notice then LC.Notice(p, "event", "An election", "The office of City Administrator is open, and " .. Name(ply) .. " is running. " ..
+                (Voter(p) and "Vote on screen." or "Civil Protection and the Administration choose."), 10) end
         end
     end
     if table.HasValue(e.candidates, ply) then return false, "You're already running." end
@@ -145,7 +152,7 @@ if LC.MenuActions then LC.MenuActions.run = true end
 net.Receive("lc_election_vote", function(_, ply)
     local e = LC.Election
     local i = net.ReadUInt(6)
-    if not e or not IsValid(e.candidates[i]) then return end
+    if not e or not IsValid(e.candidates[i]) or not Voter(ply) then return end
     e.votes[ply] = e.candidates[i]
     Say(ply, "[Election] Your vote is cast.")
 end)
@@ -166,8 +173,69 @@ function LC.ElectionTick(now)
         if LC.Notice then LC.Notice(p, "event", "The city has chosen", Name(best) .. " is City Administrator (" .. bn .. " vote" .. (bn == 1 and "" or "s") .. ").", 10) end
     end
     if LC.SetFaction then LC.SetFaction(best, "admin", nil, true) end
+    hook.Run("LivingCityAdministratorChosen", best, "elected")
 end
 timer.Create("LivingCityElection", 2, 0, function() pcall(LC.ElectionTick, CurTime()) end)
+
+------------------------------------------------------------------------
+-- The recall (the owner, 2 November): someone the G-Man has chosen (sv_livingcity_directives.lua,
+-- lc_gman_rival_until) can put the sitting Administrator to a vote of Civil Protection and the
+-- Administration. More yes than no, and the Administrator is out and they're in.
+------------------------------------------------------------------------
+
+util.AddNetworkString("lc_recall")
+util.AddNetworkString("lc_recall_vote")
+function LC.CallRecall(ply)
+    if not IsValid(ply) then return false end
+    if ply:GetNW2Float("lc_gman_rival_until", 0) < CurTime() then return false, "Only someone the city has chosen can call a recall." end
+    local sitting = OfficeHeld()
+    if not IsValid(sitting) or sitting == ply then return false, "There's no Administrator to recall." end
+    if LC.Recall or LC.Election then return false, "A vote is already under way." end
+    local r = { rival = ply, sitting = sitting, votes = {}, ends = CurTime() + math.max(0.5, cvVote:GetFloat()) * 60 }
+    LC.Recall = r
+    ply:SetNW2Float("lc_gman_rival_until", 0)
+    for _, p in ipairs(player.GetAll()) do
+        if LC.Notice then LC.Notice(p, "event", "A recall", Name(ply) .. " calls for " .. Name(sitting) .. " to be removed as City Administrator. " ..
+            (Voter(p) and "Vote on screen." or "Civil Protection and the Administration decide."), 10) end
+    end
+    net.Start("lc_recall")
+    net.WriteFloat(r.ends - CurTime())
+    net.WriteString(Name(sitting))
+    net.WriteString(Name(ply))
+    net.Send(Voters())
+    return true
+end
+LC.SlashCommands.recall = function(ply) local ok, why = LC.CallRecall(ply) if not ok and why then Say(ply, why) end end
+if LC.MenuActions then LC.MenuActions.recall = true end
+net.Receive("lc_recall_vote", function(_, ply)
+    local r = LC.Recall
+    if not r or not Voter(ply) then return end
+    r.votes[ply] = net.ReadBool()
+    Say(ply, "[Recall] Your vote is cast.")
+end)
+function LC.RecallTick(now)
+    local r = LC.Recall
+    if not r or now < r.ends then return end
+    LC.Recall = nil
+    local yes, no = 0, 0
+    for _, v in pairs(r.votes) do if v then yes = yes + 1 else no = no + 1 end end
+    if yes > no and IsValid(r.rival) and IsValid(r.sitting) then
+        r.sitting:SetPData("lcf_wl_admin", "0")
+        if LC.SetFaction then LC.SetFaction(r.sitting, "citizen", nil, true) end
+        r.rival:SetPData("lcf_wl_admin", "1")
+        if LC.SetFaction then LC.SetFaction(r.rival, "admin", nil, true) end
+        for _, p in ipairs(player.GetAll()) do
+            if LC.Notice then LC.Notice(p, "event", "Recalled", Name(r.rival) .. " replaces " .. Name(r.sitting) .. " as City Administrator (" .. yes .. " to " .. no .. ").", 10) end
+        end
+        hook.Run("LivingCityAdministratorChosen", r.rival, "recall")
+    else
+        for _, p in ipairs(player.GetAll()) do
+            if LC.Notice then LC.Notice(p, "event", "The recall fails", (IsValid(r.sitting) and Name(r.sitting) or "The Administrator") .. " keeps the office (" .. yes .. " to " .. no .. ").", 10) end
+        end
+    end
+    return yes > no
+end
+timer.Create("LivingCityRecall", 2, 0, function() pcall(LC.RecallTick, CurTime()) end)
 
 ------------------------------------------------------------------------
 -- The office

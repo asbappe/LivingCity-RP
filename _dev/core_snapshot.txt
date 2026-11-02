@@ -96,6 +96,7 @@ chat command /point
 chat command /poison
 chat command /pose
 chat command /rationbreak
+chat command /recall
 chat command /records
 chat command /rent
 chat command /request
@@ -626,12 +627,19 @@ setting lc_gas_damage = 6
 setting lc_give_fists = 1
 setting lc_gman_crates = 6
 setting lc_gman_dream_chance = 30
+setting lc_gman_glimpse_minutes = 8
+setting lc_gman_glimpses = 1
+setting lc_gman_line_crates = vo/gman_misc/gman_03.wav
+setting lc_gman_line_elected = vo/citadel/gman_exit05.wav
+setting lc_gman_line_glimpse = vo/episode_1/npc/gman/gman_inhale.wav
 setting lc_gman_line_last_call = vo/episode_1/npc/gman/gman_comebacknow.wav
 setting lc_gman_line_refused = vo/episode_1/npc/gman/gman_notforlong.wav
 setting lc_gman_line_refused_again = vo/episode_1/npc/gman/gman_wellseeaboutthat.wav
+setting lc_gman_line_rival = livingcity/gman/gman_replacement.wav
 setting lc_gman_line_vote_no = vo/episode_1/npc/gman/gman_notthistime.wav
 setting lc_gman_line_walk_away = vo/episode_1/npc/gman/gman_getbackhere.wav
 setting lc_gman_return_minutes = 30,10,7
+setting lc_gman_rival_minutes = 30
 setting lc_gman_rumour_share = 60
 setting lc_grid_radius = 1800
 setting lc_grigori = 1

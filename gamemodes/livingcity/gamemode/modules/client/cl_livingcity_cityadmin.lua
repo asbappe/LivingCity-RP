@@ -16,6 +16,28 @@ local function Act(what, arg, target)
     net.Start("lc_admin_do") net.WriteString(what) net.WriteString(arg or "") net.WriteEntity(IsValid(target) and target or NULL) net.SendToServer()
 end
 
+-- A recall (sv_livingcity_cityadmin.lua): Civil Protection and the Administration vote yes or no
+net.Receive("lc_recall", function()
+    local secs, sitting, rival = net.ReadFloat(), net.ReadString(), net.ReadString()
+    if IsValid(LC_CL.RecallFrame) then LC_CL.RecallFrame:Remove() end
+    local f = vgui.Create("DFrame")
+    LC_CL.RecallFrame = f
+    f:SetTitle("Recall: City Administrator")
+    f:SetSize(380, 170)
+    f:Center()
+    f:MakePopup()
+    local ends = CurTime() + secs
+    local lbl = vgui.Create("DLabel", f)
+    lbl:Dock(TOP) lbl:SetTall(48) lbl:SetWrap(true)
+    lbl.Think = function(s) s:SetText(string.format("%s calls for %s to be removed, and to take the office. The vote closes in %d seconds.", rival, sitting, math.max(0, math.ceil(ends - CurTime())))) end
+    for _, b in ipairs({ { "Yes: remove " .. sitting, true }, { "No: " .. sitting .. " stays", false } }) do
+        local btn = vgui.Create("DButton", f)
+        btn:Dock(TOP) btn:SetTall(34) btn:DockMargin(0, 4, 0, 0)
+        btn:SetText(b[1])
+        btn.DoClick = function() net.Start("lc_recall_vote") net.WriteBool(b[2]) net.SendToServer() f:Remove() end
+    end
+end)
+
 net.Receive("lc_election", function()
     local secs = net.ReadFloat()
     local n = net.ReadUInt(6)

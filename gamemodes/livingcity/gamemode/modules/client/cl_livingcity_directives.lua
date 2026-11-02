@@ -199,3 +199,43 @@ hook.Add("HUDPaint", "LivingCityDirectiveReminder", function()
     draw.SimpleText("Right click with your Administrator's device: the office, Sealed directives. Sign it or refuse it.",
         "DermaDefault", w / 2, 40, Color(235, 225, 205), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 end)
+
+-- A glimpse of him (sv_livingcity_directives.lua): standing a way off, somewhere in plain sight, facing
+-- you; he's gone when you look straight at him, get close, or after a few seconds.
+local G
+net.Receive("lc_gman_glimpse", function()
+    local snd = net.ReadString()
+    local me = LocalPlayer()
+    if not IsValid(me) or not ClientsideModel or (G and IsValid(G.model)) then return end
+    local eye = me:EyePos()
+    for _ = 1, 12 do
+        local yaw = me:EyeAngles().y + (math.random(2) == 1 and 1 or -1) * math.Rand(12, 35) -- (off to one side: glimpsed, not stared at)
+        local dist = math.Rand(450, 1100)
+        local dir = Angle(0, yaw, 0):Forward()
+        local tr = util.TraceLine({ start = eye, endpos = eye + dir * dist, filter = me, mask = MASK_SOLID })
+        if not tr.Hit then
+            local down = util.TraceLine({ start = tr.HitPos, endpos = tr.HitPos - Vector(0, 0, 400), mask = MASK_SOLID_BRUSHONLY })
+            if down.Hit and not down.StartSolid then
+                local m = ClientsideModel("models/gman_high.mdl", RENDERGROUP_OPAQUE)
+                if not IsValid(m) then return end
+                m:SetPos(down.HitPos)
+                m:SetAngles(Angle(0, yaw + 180, 0))
+                local idle = m:LookupSequence("idle_subtle")
+                if idle and idle >= 0 then m:ResetSequence(idle) end
+                G = { model = m, t0 = CurTime() }
+                if snd ~= "" then sound.Play(snd, down.HitPos, 60, 100, 0.8) end
+                return
+            end
+        end
+    end
+end)
+hook.Add("Think", "LivingCityGmanGlimpse", function()
+    if not G then return end
+    local me = LocalPlayer()
+    local m = G.model
+    if not IsValid(m) or not IsValid(me) then G = nil return end
+    local to = m:GetPos() + Vector(0, 0, 60) - me:EyePos()
+    local d = to:Length()
+    local looking = me:GetAimVector():Dot(to:GetNormalized()) > 0.995 and CurTime() - G.t0 > 0.6
+    if looking or d < 250 or CurTime() - G.t0 > 7 then m:Remove() G = nil end
+end)

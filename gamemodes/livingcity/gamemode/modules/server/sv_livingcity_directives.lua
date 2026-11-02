@@ -412,12 +412,23 @@ local cvAgain = CreateConVar("lc_gman_line_refused_again", "vo/episode_1/npc/gma
 local cvNotThis  = CreateConVar("lc_gman_line_vote_no", "vo/episode_1/npc/gman/gman_notthistime.wav", FLAGS, "The G-Man's line when his vote says no (\"Not this time\")")
 local cvCallLine = CreateConVar("lc_gman_line_last_call", "vo/episode_1/npc/gman/gman_comebacknow.wav", FLAGS, "The G-Man's line when the Administrator has lc_directive_last_call_minutes left to answer (\"Come back. Come back here, now.\": splice out \"Oh no, Freeman\")")
 local cvAwayLine = CreateConVar("lc_gman_line_walk_away", "vo/episode_1/npc/gman/gman_getbackhere.wav", FLAGS, "The G-Man's line when the Administrator closes an open directive without answering it (\"Get back here...\")")
+local cvRivalLine = CreateConVar("lc_gman_line_rival", "livingcity/gman/gman_replacement.wav", FLAGS, "The G-Man's line to the rival he picks after a refusal (Half-Life: Alyx: \"A previous hire has been unable, or unwilling... Until now.\")")
+local cvElected  = CreateConVar("lc_gman_line_elected", "vo/citadel/gman_exit05.wav", FLAGS, "The G-Man's line to a newly chosen City Administrator (\"...interesting offers for your services... extraordinary times\")")
+local cvCrateLine = CreateConVar("lc_gman_line_crates", "vo/gman_misc/gman_03.wav", FLAGS, "The G-Man's line when someone first looks at one of his crates (\"The right man in the wrong place can make all the difference in the world\")")
+local cvGlimpseLine = CreateConVar("lc_gman_line_glimpse", "vo/episode_1/npc/gman/gman_inhale.wav", FLAGS, "The sound when someone glimpses the G-Man about the city (his inhale; empty: silent)")
+local cvGlimpses = CreateConVar("lc_gman_glimpses", "1", FLAGS, "As a sealed directive warms up, players now and then glimpse the G-Man about the city, gone when they look again")
+local cvGlimpseMin = CreateConVar("lc_gman_glimpse_minutes", "8", FLAGS, "The fewest minutes between one player's glimpses of the G-Man")
+local cvRivalMin = CreateConVar("lc_gman_rival_minutes", "30", FLAGS, "Minutes the rival the G-Man picks has to call a recall vote on the Administrator")
 local cvLastCall = CreateConVar("lc_directive_last_call_minutes", "5", FLAGS, "Minutes before an unanswered directive passes the Administrator by when the G-Man calls them back to it (0: never)")
 local LINES = {
     first = { cvFirst },
     again = { cvAgain, "vo/episode_1/intro/gman_wellseeaboutthat.wav" },
     notthistime = { cvNotThis },
     lastcall = { cvCallLine },
+    rival = { cvRivalLine },
+    elected = { cvElected },
+    crates = { cvCrateLine },
+    glimpse = { cvGlimpseLine },
     walkaway = { cvAwayLine },
 }
 function LC.GmanLine(key)
@@ -529,7 +540,10 @@ local function CrateSpot()
     local pts = LC.PointsOfKind and LC.PointsOfKind("idle") or {}
     if #pts > 0 then return pts[math.random(#pts)].pos + Vector(0, 0, 8) end
 end
+-- (each player, the first time they look at one of his crates, hears him: once a round of crates)
+S.crateRound = S.crateRound or 0
 local function DropCrates(n)
+    S.crateRound = S.crateRound + 1
     for _ = 1, n do
         local pos = CrateSpot()
         if pos then
@@ -555,6 +569,7 @@ local function Escalate(id, level, now)
     S.esc.returnAt = now + (back[level] or back[#back] or 10) * 60
     local crates = math.max(0, cvCrates:GetInt())
     local function At(mins, fn) S.esc.steps = S.esc.steps or {} S.esc.steps[#S.esc.steps + 1] = { t = now + mins * 60, fn = fn } end
+    At(2, function() LC.GmanRival() end) -- (a rival, who may call a recall)
     if level == 1 then
         At(10, function() DropCrates(crates) All("[???] Crates have turned up around the city. Nobody saw who left them.") end)
         At(20, function() S.esc.spreading = true All("[City] The infestation is spreading faster than the crews can hold it.") end)
@@ -748,4 +763,73 @@ net.Receive("lc_directive_act", function(_, ply)
             Start(id, what == "vote", ply)
         end
     end
+end)
+
+------------------------------------------------------------------------
+-- His crates, his rival, the new Administrator, and glimpses of him (the owner, 2 November)
+------------------------------------------------------------------------
+
+timer.Create("LivingCityGmanCrateLook", 0.5, 0, function()
+    if not S.crates or #S.crates == 0 then return end
+    for _, p in ipairs(player.GetAll()) do
+        if p:Alive() and (p.lcCrateHeard or 0) < S.crateRound then
+            local tr = p:GetEyeTrace()
+            local e = tr and tr.Entity
+            if IsValid(e) and e:GetClass() == "lc_gmancrate" and e:GetPos():DistToSqr(p:GetPos()) < 350 * 350 then
+                p.lcCrateHeard = S.crateRound
+                LC.Vision(p, "voice", LC.GmanLine("crates"), "The right man in the wrong place / can make all the difference in the world.")
+            end
+        end
+    end
+end)
+
+-- After a refusal: a rival, someone who could run for the office, is visited and may call a recall
+function LC.GmanRival(now)
+    now = now or Now()
+    local need = GetConVar("lc_admin_hours") and GetConVar("lc_admin_hours"):GetFloat() or 8
+    local pool = {}
+    for _, p in ipairs(player.GetAll()) do
+        if not IsAdministrator(p) and not Away(p) and p:Alive() and (not LC.AdminHours or LC.AdminHours(p) >= need) then pool[#pool + 1] = p end
+    end
+    if #pool == 0 then return nil end
+    local rival = pool[math.random(#pool)]
+    rival:SetNW2Float("lc_gman_rival_until", now + math.max(1, cvRivalMin:GetFloat()) * 60)
+    LC.Vision(rival, "visit", LC.GmanLine("rival"), "A previous hire has been unable, or unwilling, to perform the tasks laid before him. / We have struggled to find a suitable replacement. Until now.")
+    timer.Simple(9, function()
+        if IsValid(rival) then rival:ChatPrint("[???] You may call for the Administrator's recall: C > Me > Call a recall vote (or /recall), within " .. math.floor(cvRivalMin:GetFloat()) .. " minutes. Civil Protection and the Administration will decide.") end
+    end)
+    return rival
+end
+
+-- A new Administrator (elected, or by recall): he pays a visit; and if he's forcing the old one's
+-- hand, he brings the directive to the new one soon
+hook.Add("LivingCityAdministratorChosen", "LivingCityDirectives", function(ply, how)
+    if not cvOn:GetBool() or not IsValid(ply) then return end
+    timer.Simple(4, function()
+        if IsValid(ply) then LC.Vision(ply, "visit", LC.GmanLine("elected"), "I've received some interesting offers for your services. / These are extraordinary times.") end
+    end)
+    if S.esc and not S.offer then S.esc.returnAt = math.min(S.esc.returnAt, Now() + 90) end
+end)
+
+-- Glimpses: as a directive warms, now and then someone sees him at a distance (their game finds the spot)
+util.AddNetworkString("lc_gman_glimpse")
+function LC.GmanGlimpseTick(now)
+    if not cvOn:GetBool() or not cvGlimpses:GetBool() then return end
+    local warmest = 0
+    for _, id in ipairs(LC.DirectiveOrder) do warmest = math.max(warmest, (LC.DirectiveHeat(id, now))) end
+    if S.esc then warmest = 1 end
+    if warmest < 0.34 then return end
+    local chance = warmest >= 0.67 and 0.3 or 0.12
+    for _, p in ipairs(player.GetAll()) do
+        if p:Alive() and not p:GetNW2Bool("lc_sleeping", false) and now >= (p.lcGlimpseNext or 0) and math.random() < chance then
+            p.lcGlimpseNext = now + math.max(1, cvGlimpseMin:GetFloat()) * 60
+            net.Start("lc_gman_glimpse")
+            net.WriteString(LC.GmanLine("glimpse"))
+            net.Send(p)
+        end
+    end
+end
+timer.Create("LivingCityGmanGlimpses", 60, 0, function()
+    local ok, err = pcall(LC.GmanGlimpseTick, CurTime())
+    if not ok and LC.Error then LC.Error("G-Man glimpses", err) end
 end)

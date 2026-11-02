@@ -14374,6 +14374,34 @@ section("Sealed directives: how the endings start, and the G-Man's hand")
     LC.DirectiveTick(CurTime() + 11 * 60)
     ok(calls[#calls].id == "fire" and calls[#calls].now == false, "ten minutes and nobody back: the G-Man's vote")
     player.GetAll = ga
+    -- the rival, and the recall (Civil Protection and the Administration vote, not citizens)
+    local sittingAdm = newPlayer("SittingAdmin", "admin")
+    local hopeful = newPlayer("Hopeful", "citizen")
+    hopeful:SetPData("lc_played_min", 60 * 20)
+    local ga2 = player.GetAll
+    player.GetAll = function() return { sittingAdm, hopeful } end
+    ok(LC.GmanRival() == hopeful and hopeful:GetNW2Float("lc_gman_rival_until", 0) > CurTime(), "after a refusal, the G-Man picks a rival who could run for the office")
+    player.GetAll = ga2
+    local unit = newPlayer("RecallUnit", "cp")
+    local cit2 = newPlayer("RecallCitizen", "citizen")
+    ok(LC.AdminVoter(unit) and not LC.AdminVoter(cit2), "Civil Protection votes on the Administrator; citizens don't")
+    ok(LC.CallRecall(hopeful) and LC.Recall ~= nil, "the rival calls a recall")
+    LC.Recall.votes[unit] = true
+    LC.Recall.ends = CurTime() - 1
+    ok(LC.RecallTick(CurTime()) and hopeful:GetNW2String("lcf_faction", "") == "admin" and sittingAdm:GetNW2String("lcf_faction", "") ~= "admin", "more yes than no: the Administrator is out, and the rival is in")
+    LC.SetFaction(hopeful, "citizen", nil, true)
+    for _, p in ipairs({ sittingAdm, hopeful, unit, cit2 }) do p:SetPos(Vector(-30000, 30000, 0)) end
+    -- glimpses of him, as a directive warms
+    local seer = newPlayer("Seer", "citizen")
+    S.esc = { id = "bus", level = 1, at = CurTime(), returnAt = CurTime() + 9999, steps = {}, spreads = 0 }
+    local mr = math.random
+    math.random = function(a, b) if a == nil then return 0 end return mr(a, b) end
+    seer.lcGlimpseNext = 0
+    LC.GmanGlimpseTick(CurTime())
+    math.random = mr
+    ok(seer.lcGlimpseNext > CurTime(), "someone glimpses the G-Man about the city")
+    S.esc = nil
+    seer:SetPos(Vector(-30000, 30000, 0))
     -- dreams
     local dreamer = newPlayer("Dreamer", "citizen")
     _setcvar("lc_gman_dream_chance", 100)
