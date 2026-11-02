@@ -14209,19 +14209,19 @@ section("The v2.7 pieces: stamina, brandishing, obituaries, detentions, citizen 
     ok(base == 1 and math.abs(LCS.RegenMul(jogger) - 1.5) < 0.01, "slept well and fed: your breath comes back faster", LCS.RegenMul(jogger))
     jogger:SetPos(Vector(-30000, 30000, 0))
     -- guns: on the streets, any gun in a citizen's hand is wanted at once
-    local sbs, irz, cza, rcs, rsf, us, moh = LC.SeenBySecurity, LC.InRebelZone, LC.CombineZoneAt, LC.RebelCanSee, LC.RebelSetFoe, LC.UnitSees, LC.MakeOneHostile
+    local sbs, irz, cza, rcs, rsf, us, moh, nrz, ncz = LC.SeenBySecurity, LC.InRebelZone, LC.CombineZoneAt, LC.RebelCanSee, LC.RebelSetFoe, LC.UnitSees, LC.MakeOneHostile, LC.NearRebelZone, LC.NearCombineZone
     local waver = newPlayer("Waver", "citizen")
     if not waver:HasWeapon("weapon_pistol") then waver:Give("weapon_pistol") end
     waver:SelectWeapon("weapon_pistol")
     LC.SeenBySecurity = function() return true end
-    LC.InRebelZone = function() return false end
-    LC.CombineZoneAt = function() return nil end
+    LC.InRebelZone = function() return false end LC.NearRebelZone = LC.InRebelZone
+    LC.CombineZoneAt = function() return nil end LC.NearCombineZone = LC.CombineZoneAt
     LC.BrandishTick(CurTime())
     ok(LC.PlayerIsWanted(waver) and has(waver.chat, "Weapon! Drop it"), "a citizen seen with a gun on the streets: wanted at once")
     ok(not waver:GetNW2Bool("lc_carry_lowered", false) and not LCL.Lowered(waver), "and on the streets a gun isn't carried lowered")
     LC.ClearWanted(waver)
-    -- rebel ground: a stranger's raised gun, a warning, then the fighters open up
-    LC.InRebelZone = function() return true end
+    -- rebel ground: walking in with a gun up, a card; the fighters stand to; 10 seconds, then they fire
+    LC.InRebelZone = function() return true end LC.NearRebelZone = LC.InRebelZone
     local fake = LC.Spawners.citizen(waver:GetPos() + Vector(200, 0, 0))
     local fst = LC.NPCs[fake]
     fst.role = "rebel"
@@ -14229,21 +14229,24 @@ section("The v2.7 pieces: stamina, brandishing, obituaries, detentions, citizen 
     local foes = {}
     LC.RebelSetFoe = function(n, st2, e) foes[#foes + 1] = e end
     waver.chat = {}
-    LC.BrandishTick(CurTime())
-    ok(waver:GetNW2Bool("lc_carry_lowered", false) and LCL.Lowered(waver) and not has(waver.chat, "Lower that gun"), "walking onto rebel ground, the gun goes down")
-    waver:SetNW2Bool("lc_raised", true)
-    LC.BrandishTick(CurTime())
-    ok(has(waver.chat, "Lower that gun") and #foes == 0, "raise it where the fighters can see: told to lower it")
-    LC.BrandishTick(CurTime() + 6)
-    ok(#foes == 1 and foes[1] == waver, "still up after the warning: they open fire")
+    local t0 = CurTime()
+    LC.BrandishTick(t0)
+    ok(waver:GetNW2Bool("lc_carry_lowered", false) and waver:GetNW2Bool("lc_raised", false) and not LCL.Lowered(waver), "walking onto rebel ground with a gun out: it's still up")
+    ok(has(waver.chat, "Lower that gun") and fst.lcAimAt == waver, "the fighters stand to, guns on you, and tell you to lower it")
+    LC.BrandishTick(t0 + 4.5)
+    ok(has(waver.chat, "Watch what you're doing"), "and again, a few seconds on")
+    LC.BrandishTick(t0 + 6)
+    ok(#foes == 0, "they give you time")
+    LC.BrandishTick(t0 + 11)
+    ok(#foes == 1 and foes[1] == waver, "still up after ten seconds: they open fire")
     waver:SetNW2Bool("lc_raised", false)
     foes = {}
-    LC.BrandishTick(CurTime() + 20) LC.BrandishTick(CurTime() + 30)
-    ok(#foes == 0, "carried lowered on their ground: left alone")
+    LC.BrandishTick(t0 + 20) LC.BrandishTick(t0 + 40)
+    ok(#foes == 0 and LCL.Lowered(waver), "lowered (hold R) on their ground: left alone")
+    -- the Combine's ground: the same for a recruit or metrocop, with the Overwatch's soldiers
     fst.role = "citizen"
-    -- the Combine's ground: a metrocop's raised gun where the Overwatch can see it
-    LC.InRebelZone = function() return false end
-    LC.CombineZoneAt = function() return { kind = "combine" } end
+    LC.InRebelZone = function() return false end LC.NearRebelZone = LC.InRebelZone
+    LC.CombineZoneAt = function() return { kind = "combine" } end LC.NearCombineZone = LC.CombineZoneAt
     local mc = newPlayer("Metrocop", "cp")
     if not mc:HasWeapon("weapon_pistol") then mc:Give("weapon_pistol") end
     mc:SelectWeapon("weapon_pistol")
@@ -14251,15 +14254,17 @@ section("The v2.7 pieces: stamina, brandishing, obituaries, detentions, citizen 
     LC.UnitSees = function() return true end
     local aimed = {}
     LC.MakeOneHostile = function(n, st2, e) aimed[#aimed + 1] = e end
-    LC.BrandishTick(CurTime())
-    ok(mc:GetNW2Bool("lc_carry_lowered", false) and LCL.Lowered(mc), "a metrocop on the Combine's ground carries lowered")
-    mc:SetNW2Bool("lc_raised", true)
-    LC.BrandishTick(CurTime())
-    ok(has(mc.chat, "lower your weapon"), "raise it where the Overwatch can see: told to lower it")
-    LC.BrandishTick(CurTime() + 6)
-    ok(#aimed == 1 and aimed[1] == mc, "still up: a mark against them, and the soldiers' guns on them")
+    LC.BrandishTick(t0)
+    ok(mc:GetNW2Bool("lc_carry_lowered", false) and has(mc.chat, "lower your weapon"), "a recruit on the Combine's ground with a gun up: told to lower it")
+    LC.BrandishTick(t0 + 11)
+    ok(#aimed == 1 and aimed[1] == mc, "still up after ten seconds: the soldiers open fire")
+    local dl = newPlayer("DivLeader", "cp")
+    dl:SetNW2Int("lcf_rank", 3)
+    LC.BrandishTick(t0 + 12)
+    ok(not dl:GetNW2Bool("lc_carry_lowered", false), "a Division Leader carries as they like")
+    dl:SetPos(Vector(-30000, 30000, 0))
     fst.role = "citizen"
-    LC.SeenBySecurity, LC.InRebelZone, LC.CombineZoneAt, LC.RebelCanSee, LC.RebelSetFoe, LC.UnitSees, LC.MakeOneHostile = sbs, irz, cza, rcs, rsf, us, moh
+    LC.SeenBySecurity, LC.InRebelZone, LC.CombineZoneAt, LC.RebelCanSee, LC.RebelSetFoe, LC.UnitSees, LC.MakeOneHostile, LC.NearRebelZone, LC.NearCombineZone = sbs, irz, cza, rcs, rsf, us, moh, nrz, ncz
     if IsValid(fake) then fake:Remove() end
     waver.active, mc.active = nil, nil
     waver:SetNW2Bool("lc_carry_lowered", false) mc:SetNW2Bool("lc_carry_lowered", false)

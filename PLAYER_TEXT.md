@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 23ea05f. Admin-only console messages and log lines are left out.
+Made from version 9c8a9fa. Admin-only console messages and log lines are left out.
 
-6258 lines, from 190 files.
+6262 lines, from 191 files.
 
 ## Contents
 
@@ -180,7 +180,7 @@ Made from version 23ea05f. Admin-only console messages and log lines are left ou
 - [the city's stores](#the-citys-stores-svlivingcitystockpilelua) (8)
 - [places to keep things](#places-to-keep-things-svlivingcitystoragelua) (44)
 - [story chains](#story-chains-svlivingcitystorieslua) (352)
-- [sv_livingcity_streetlife.lua](#svlivingcitystreetlifelua-svlivingcitystreetlifelua) (10)
+- [sv_livingcity_streetlife.lua](#svlivingcitystreetlifelua-svlivingcitystreetlifelua) (12)
 - [survival](#survival-svlivingcitysurvivallua) (59)
 - [talking to people](#talking-to-people-svlivingcitytalklua) (28)
 - [territory that spreads, and is pushed back](#territory-that-spreads-and-is-pushed-back-svlivingcityterritorylua) (28)
@@ -198,6 +198,7 @@ Made from version 23ea05f. Admin-only console messages and log lines are left ou
 - [sh_livingcity_cp.lua](#shlivingcitycplua-shlivingcitycplua) (44)
 - [sh_livingcity_factions.lua](#shlivingcityfactionslua-shlivingcityfactionslua) (30)
 - [sh_livingcity_jobs.lua](#shlivingcityjobslua-shlivingcityjobslua) (43)
+- [guns carried lowered (the owner, 1 November: one of the lost v2.7 pieces)](#guns-carried-lowered-the-owner-1-november-one-of-the-lost-v27-pieces-shlivingcityloweredlua) (2)
 - [sh_livingcity_shop.lua](#shlivingcityshoplua-shlivingcityshoplua) (232)
 - [shared.lua](#sharedlua-sharedlua) (1)
 
@@ -618,7 +619,7 @@ Made from version 23ea05f. Admin-only console messages and log lines are left ou
 - "C (when not in build mode): the full menu. Everything you can do, with this guide, your pockets, job board, factions and tips at the top."  (text, line 41)
 - "E on a person: talk to citizens, or report to Civil Protection units. E on an object: pick it up or use it."  (text, line 42)
 - "Running and jumping tire you: the bar low on the screen. Run it all out and you're out of breath, and can only walk until you get it back. A good night's sleep and a full stomach bring it back faster."  (text, line 43)
-- "Guns are contraband: a citizen seen by a unit with a gun in hand is wanted at once. On rebel ground everyone carries lowered (hold R to raise); raise one near the fighters and they'll tell you to lower it, then shoot. Metrocops and recruits carry lowered on the Combine's own ground too: the Overwatch don't trust them."  (text, line 44)
+- "Guns are contraband: a citizen seen by a unit with a gun in hand is wanted at once. On rebel ground everyone carries lowered (hold R): a gun kept up where the fighters can see you for ten seconds and they open fire. Recruits and metrocops carry lowered on the Combine's own ground too: the Overwatch don't trust them."  (text, line 44)
 - "Everything you can do is in the menus (Civil Protection units: C > Unit tools). Chat commands like !backup still work, but you never need them."  (text, line 45)
 - "Warnings and announcements appear on screen as well as in chat: people talking to you appear as subtitles, everything else as cards at the top. C > Settings turns the cards off."  (text, line 46)
 - "Death, and close calls"  (text, line 48)
@@ -11105,30 +11106,29 @@ Made from version 23ea05f. Admin-only console messages and log lines are left ou
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_streetlife.lua`
 
 
-> Note for you (not shown in game): rebel ground: a stranger's raised gun is a threat (the Combine's own are fought anyway)
+> Note for you (not shown in game): What they say over the ten seconds (Half-Life 2's own lines), at about 0, 40% and 80% of the grace; the subtitle goes on screen with each. A woman fighter's from female01. Missing files are skipped.
 
-- "[Rebel] Whoa! Lower that gun, now, or we drop you!"  (text, line 115)
-
-> Note for you (not shown in game): a metrocop or recruit on the Combine's ground, gun up where the Overwatch can see it
-
-- "[Overwatch] Unit: lower your weapon. You are not cleared to bear arms here."  (text, line 121)
-- "noncompliance on Overwatch ground"  (text, line 122)
-- "[Overwatch] Noncompliance logged. Weapons on the unit."  (chat message, line 123)
+- "[Rebel] Heads up! Lower that gun, now!"  (text, line 98)
+- "[Rebel] Watch what you're doing! Put it down!"  (text, line 99)
+- "[Rebel] Last chance. Lower it!"  (text, line 100)
+- "[Overwatch] Unit: lower your weapon. You are not cleared to bear arms here."  (text, line 103)
+- "[Overwatch] Weapons off safe. Lower it, unit."  (text, line 104)
+- "[Overwatch] Final warning."  (text, line 105)
 
 > Note for you (not shown in game): out on the streets: any gun in a citizen's hand, seen by a unit, is the end of it
 
-- "[Civil Protection] Weapon! Drop it! (You're wanted: carrying a weapon.)"  (chat message, line 135)
-- "Armed: carrying a weapon"  (text, line 136)
+- "[Civil Protection] Weapon! Drop it! (You're wanted: carrying a weapon.)"  (chat message, line 176)
+- "Armed: carrying a weapon"  (text, line 177)
 
 > Note for you (not shown in game): Obituaries
 
-- "was killed by Civil Protection"  (text, line 154)
-- "was killed"  (text, line 155)
-- "was killed by Civil Protection"  (text, line 158)
+- "was killed by Civil Protection"  (text, line 194)
+- "was killed"  (text, line 195)
+- "was killed by Civil Protection"  (text, line 198)
 
 > Note for you (not shown in game): part of: obituary
 
-- "[Obituary] {name}{or}, {inflictor}."  (spoken line, line 171)
+- "[Obituary] {name}{or}, {inflictor}."  (spoken line, line 211)
 
 ## survival (sv_livingcity_survival.lua)
 
@@ -13033,6 +13033,16 @@ Made from version 23ea05f. Admin-only console messages and log lines are left ou
 - "Civil Protection path"  (name, line 56)
 - "Administration path"  (name, line 57)
 - "Union work"  (name, line 58)
+
+## guns carried lowered (the owner, 1 November: one of the lost v2.7 pieces) (sh_livingcity_lowered.lua)
+
+`gamemodes/livingcity/gamemode/modules/shared/sh_livingcity_lowered.lua`
+
+
+> Note for you (not shown in game): On rebel ground, or the Combine's for a recruit or metrocop, from the edge in: while a gun is up, a prompt in the middle of the screen says to lower it; it goes the moment it's down.
+
+- "Rebel ground: keep your gun lowered, or the fighters open fire."  (text, line 72)
+- "Overwatch ground: recruits and metrocops carry lowered, or the soldiers open fire."  (text, line 73)
 
 ## sh_livingcity_shop.lua (sh_livingcity_shop.lua)
 

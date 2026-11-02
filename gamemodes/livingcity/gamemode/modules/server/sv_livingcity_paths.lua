@@ -148,6 +148,7 @@ end
 
 -- without mercy: you're only trespassing well inside a Combine-only zone, not at its edge
 function LC.CombineZoneAt(pos) return InZoneOfKinds(pos, COMBINE, -LCZ.Mercy()) end
+function LC.NearCombineZone(pos) return InZoneOfKinds(pos, COMBINE, LCZ.Mercy()) end -- (inside, or about to walk in)
 function LC.InfestZoneAt(pos) return InZoneOfKinds(pos, INFEST) end
 function LC.PrisonZoneAt(pos) return InZoneOfKinds(pos, PRISON) end
 

@@ -66,6 +66,25 @@ if SERVER then
 end
 
 if CLIENT then
+    -- On rebel ground, or the Combine's for a recruit or metrocop, from the edge in: while a gun is up,
+    -- a prompt in the middle of the screen says to lower it; it goes the moment it's down.
+    local WHERE = {
+        rebel = "Rebel ground: keep your gun lowered, or the fighters open fire.",
+        combine = "Overwatch ground: recruits and metrocops carry lowered, or the soldiers open fire.",
+    }
+    hook.Add("HUDPaint", "LivingCityLowerPrompt", function()
+        local me = LocalPlayer()
+        if not IsValid(me) or not cvOn:GetBool() then return end
+        local ground = me:GetNW2String("lc_lowered_ground", "")
+        if ground == "" or not WHERE[ground] then return end
+        local w = me:GetActiveWeapon()
+        if not IsValid(w) or not GUNS[w:GetClass()] or LCL.Lowered(me) then return end
+        local pulse = 180 + 75 * math.abs(math.sin(CurTime() * 4))
+        local x, y = ScrW() / 2, ScrH() * 0.3
+        draw.SimpleTextOutlined("LOWER YOUR WEAPON: hold R", "DermaLarge", x, y, Color(255, 200, 80, pulse), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, Color(0, 0, 0, 200))
+        draw.SimpleTextOutlined(WHERE[ground], "DermaDefaultBold", x, y + 30, Color(235, 235, 225, 230), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 200))
+    end)
+
     -- no crosshair while it's down
     hook.Add("HUDShouldDraw", "LivingCityLowered", function(name)
         if name == "CHudCrosshair" and LCL.Lowered(LocalPlayer()) then return false end

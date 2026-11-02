@@ -473,6 +473,14 @@ if not stamHud then problems[#problems + 1] = "no stamina bar" else
 end
 _me.nw.lc_winded, _me.nw.lc_stamina = nil, nil
 if not (hook.t.RenderScreenspaceEffects and hook.t.RenderScreenspaceEffects.LivingCityColorGrade) then problems[#problems + 1] = "no colour grading" end
+-- the "lower your weapon" prompt on rebel ground
+_me.nw.lc_lowered_ground = "rebel"
+local lp = hook.t.HUDPaint and hook.t.HUDPaint.LivingCityLowerPrompt
+if not lp then problems[#problems + 1] = "no lower-your-weapon prompt" else
+    local okP, errP = pcall(lp)
+    if not okP then problems[#problems + 1] = "the lower-your-weapon prompt errors: " .. tostring(errP) end
+end
+_me.nw.lc_lowered_ground = nil
 -- flying a scanner: the view leaves the body, and units see who a report caught
 local scn = ents.Create("lc_rscanner")
 scn:SetPos(Vector(500, 0, 200))
