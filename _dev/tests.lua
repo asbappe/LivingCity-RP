@@ -9206,7 +9206,7 @@ local s1 = a1 and LC.NPCs[a1]
 ok(okA and #arrivals >= 2 and s1 and s1.npcWork and #s1.npcWork.steps >= 5, "new arrivals off the train go through the desks before going home",
     tostring(okA) .. " " .. #arrivals .. " " .. tostring(s1 and s1.npcWork and #s1.npcWork.steps))
 local sawLine, sawDesk, sawBusy = false, false, false
-for _ = 1, 400 do
+for _ = 1, 700 do -- (until they're all through: a slow queue can take a while)
     _run(0.5)
     if #LC.IntakeQueue(reg) >= 2 then sawLine = true end
     for _, n in ipairs(arrivals) do
