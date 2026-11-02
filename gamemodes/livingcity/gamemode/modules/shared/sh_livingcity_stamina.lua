@@ -33,10 +33,10 @@ end
 LCS.Free = Free
 
 hook.Add("SetupMove", "LivingCityStamina", function(ply, mv)
-    if not cvOn:GetBool() or Free(ply) then return end
+    if not cvOn:GetBool() or not mv or not mv.SetButtons or not mv.KeyPressed or Free(ply) then return end
     if ply:GetNW2Bool("lc_winded", false) then
         local walk = ply:GetWalkSpeed()
-        if mv:GetMaxClientSpeed() > walk then mv:SetMaxClientSpeed(walk) end
+        if mv.GetMaxClientSpeed and mv:GetMaxClientSpeed() > walk then mv:SetMaxClientSpeed(walk) end
         mv:SetButtons(bit.band(mv:GetButtons(), bit.bnot(bit.bor(IN_JUMP, IN_SPEED))))
     elseif mv:KeyPressed(IN_JUMP) and ply:GetNW2Float("lc_stamina", 100) < cvJump:GetFloat() then
         mv:SetButtons(bit.band(mv:GetButtons(), bit.bnot(IN_JUMP)))
