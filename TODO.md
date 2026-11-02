@@ -1,7 +1,6 @@
 # Living City: to do later
 
 **Waiting on the owner:**
-- **The City Administrator, more powers:** "we will come up with more later".
 
 **Pending from the 1 November playtest (late)**:
 - **Marrow with 100+ NPCs:** the crowding is fixed (rings spill outward, spawns avoid people, fallen NPCs come back). Unconfirmed: whether the `SendData reliable data too big (744335)` that dropped the owner in a loop came from the pile-up. If it happens again: the console log and the debug report.
@@ -25,5 +24,5 @@
 - **Faces.** Enhanced Citizen v5 Faces only sharpens the existing 15; its Playermodels add-on is about 590 MB, so skipped. (The Black Mesa citizens pack is in: `lc_bms_people`.)
 - **Pose Recorder 2: make it self-serve for the whole community** (pose_recorder/, before publishing it to the Workshop), so nobody needs a coder in the middle. First, in one update: (1) playback built in: `pose_play <name>` on yourself and a context-menu "Play animation" on NPCs, seen by everyone, loop, once, speed or hold the last pose; the server only sends "this entity plays this from now", each client eases the bones itself; (2) smoothing as buttons: easing per keyframe (smooth, snappy, bouncy, linear), mirror left and right, each keyframe's length, wrap the loop or stop; (5) sharing: animations as small files, packs bundled in other addons' `data_static/pose_recorder/` and picked up automatically, and `PoseRecorder.Play(ent, "wave")` for Lua coders. Then a second update: (3) a timeline strip (click a keyframe to jump back to it, reorder, duplicate, delete, scrub), and (4) putting a saved pose back onto a ragdoll (a pose library for screenshots and comics). The limit to say on the Workshop page: these are bone turns on top of the model's idle, not compiled animations, so they can't change walking or running; exporting real animation files (SMD) for modelers is a separate, later project.
 - **The lost "v2.7" pieces:** all rebuilt (2026-11-02): stamina, lowered guns, brandishing, obituaries, longer detentions, finding by citizen number, breathing sway and colour grading. (Citizen numbers themselves already existed.)
-- **Secret endings: how they start** (2026-11-02): the owner wants the City Administrator able to start them once unlocked by odd ways of running the city, with clues, and some to start in play by themselves. Draft sent: ENDING_TRIGGERS_DRAFT.md. Waiting on the owner's picks, then build.
+- **Sealed directives** (built 2026-11-02): check in game; the G-Man's Episode One lines may not be on the server (the owner's list from the sound search). Still open: the city's own way into All your base (the master data core to a lab scientist); more Administrator powers later.
 - **Resistance Insider:** built (2026-11-01; README, "The Resistance Insider"). Waiting on the owner's playtest. Not built from the design: letting a prisoner slip on the march (Inside Work's "A quiet release" covers the cells).

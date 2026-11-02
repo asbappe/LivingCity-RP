@@ -16,6 +16,7 @@ _setcvar("lc_garrison", 0) -- (the nexus garrison: tested on its own)
 _setcvar("lc_search_fight_choice", 0) -- (fight or comply: tested on its own, in the 1 November section)
 _setcvar("lc_wear_uses", 0) -- (tools wearing out at random: tested on its own)
 _setcvar("lc_afk_kick_minutes", 0) -- (the test's people never touch a key: no kicking them for it)
+_setcvar("lc_directives", 0) -- (no sealed directive breaking open in the middle of other tests; its own section turns it on)
 _setcvar("lc_units_spot_monsters", 0) -- (units going for zombies they see: tested on their own)
 _setcvar("lc_units_spot_rebels", 0) -- (units opening fire on armed rebels they see in the street: tested on their own)
 _setcvar("lc_assign_work", 0) -- (the Union assigning work to the jobless: tested on its own)
@@ -14308,6 +14309,70 @@ section("The v2.7 pieces: stamina, brandishing, obituaries, detentions, citizen 
     ok(has(odoor.fired, "Unlock") and has(odoor.fired, "Open"), "and opens for the Administrator", table.concat(odoor.fired, ","))
     LC.SetDoorTag(odoor, nil)
     outsider:SetPos(Vector(-30000, 30000, 0)) boss:SetPos(Vector(-30000, 30000, 0))
+end)()
+
+section("Sealed directives: how the endings start, and the G-Man's hand")
+;(function()
+    _run(0.1) -- (the office's acts are noted once everything's loaded)
+    _setcvar("lc_directives", 1)
+    local S = LC.DirectiveState
+    local calls = {}
+    local te, ga = LC.TriggerEnding, player.GetAll
+    LC.TriggerEnding = function(id, by, now) calls[#calls + 1] = { id = id, by = by, now = now } return true end
+    S.offer, S.esc = nil, nil
+    -- the bus: cheap bread, full bowls and a bonus, with six or more about
+    local admin = newPlayer("Administrator", "admin")
+    local crowd = {}
+    for i = 1, 6 do crowd[i] = newPlayer("Crowd" .. i, "citizen") end
+    local h0 = LC.DirectiveHeat("bus")
+    LC.DirectiveNote("prices", "0.75")
+    LC.DirectiveNote("rations", "generous")
+    local h1, open1 = LC.DirectiveHeat("bus")
+    ok(h1 > h0 and not open1, "the riddle's acts warm a directive up", h1)
+    LC.DirectiveNote("bonus", "factory")
+    local h2, open2 = LC.DirectiveHeat("bus")
+    ok(open2, "all of them, and its seal breaks", h2)
+    -- the Administrator's: sign or refuse
+    S.offer = { id = "bus" }
+    LC.DirectiveRoute(S.offer, CurTime())
+    ok(S.offer.stage == "admin" and S.offer.to == admin, "an Administrator playing now gets it")
+    ok(LC.DirectiveAnswer(admin, "bus", false) and S.esc and S.esc.level == 1 and S.refusals.bus == 1, "refused: the G-Man's escalation begins")
+    ok(_lastnet("lc_gman_vision") ~= nil, "and he appears to the Administrator")
+    LC.DirectiveTick(CurTime() + 21 * 60)
+    ok(S.esc.spreading, "twenty minutes on, the infestation spreads")
+    LC.DirectiveTick(CurTime() + 31 * 60)
+    ok(S.offer and S.offer.id == "bus" and S.offer.stage == "admin", "thirty minutes on, he brings the same directive back")
+    ok(LC.DirectiveAnswer(admin, "bus", true) and calls[#calls].id == "bus" and calls[#calls].now == true and S.esc == nil, "signed: the ending starts, and his hand comes off the city")
+    -- an order from the office
+    LC.AdminDo(admin, "weedkiller")
+    ok(LC.WeedkillerBanned(), "the Administrator can ban weedkiller (one of the new orders)")
+    -- nobody to answer: a superadmin's popup
+    admin:SetNW2String("lcf_faction", "citizen")
+    local boss = newPlayer("SuperBoss", "citizen") boss.superadmin = true boss.admin = true
+    S.offer = { id = "marrow" }
+    LC.DirectiveRoute(S.offer, CurTime())
+    ok(S.offer.stage == "staff" and _lastnet("lc_directive_staff") ~= nil, "no Administrator: a superadmin's popup")
+    -- nobody at all: ten minutes' grace, then the G-Man's vote
+    local plain = newPlayer("Nobody", "citizen")
+    player.GetAll = function() return { plain } end
+    S.deciderLeftAt = CurTime()
+    S.offer = { id = "fire" }
+    LC.DirectiveRoute(S.offer, CurTime())
+    ok(S.offer.stage == "waiting", "the last one to decide just left: it waits for them")
+    LC.DirectiveTick(CurTime() + 11 * 60)
+    ok(calls[#calls].id == "fire" and calls[#calls].now == false, "ten minutes and nobody back: the G-Man's vote")
+    player.GetAll = ga
+    -- dreams
+    local dreamer = newPlayer("Dreamer", "citizen")
+    _setcvar("lc_gman_dream_chance", 100)
+    ok(LC.GmanDream(dreamer) == "riddle", "asleep, the G-Man recites a riddle")
+    _setcvar("lc_gman_dream_chance", 30)
+    LC.TriggerEnding = te
+    S.offer, S.esc, S.deciderLeftAt = nil, nil, nil
+    for _, p in ipairs(crowd) do p:SetPos(Vector(-30000, 30000, 0)) end
+    for _, p in ipairs({ admin, boss, plain, dreamer }) do p:SetPos(Vector(-30000, 30000, 0)) end
+    boss.superadmin, boss.admin = false, false
+    _setcvar("lc_directives", 0)
 end)()
 
 section("NPCs that fall out of the map")

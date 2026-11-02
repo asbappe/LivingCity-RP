@@ -100,6 +100,7 @@ Nothing here is built yet. Pick, change or cross out, and I'll build what you ch
 3. No ending stays admin-only, for now.
 4. Not signed or refused within 20 minutes: down the list (an admin's popup, then the G-Man's vote). Refused: the G-Man's escalation above.
 
-## Still to decide
-1. If the Administrator refuses a second time (when he comes back after 30 minutes): does it escalate further, or does the G-Man start it anyway?
-2. While he's forcing their hand, can the Administrator stop it by signing (yes, I'd assume), and does anything wind back (the crates, the infestation) once they do?
+## Also decided (the owner, 2 November, later)
+5. Refused again when he comes back: he escalates further (never into an unplayable mess; an apocalyptic stretch is fine for a short while) and comes back 10 minutes later; refused again, he escalates once more and comes back 7 minutes later; refused once more, he appears to everyone for the vote.
+6. Signed: the ending starts, and his escalation stops (the crates go, the infestation stops spreading).
+7. His lines: the vote, only `gman_exit02` (`exit01` says "Dr. Freeman", and nobody here is); a vote that says no, `gman_notthistime`; the Administrator refusing, `gman_wellseeaboutthat` the first time and `gman_notforlong` after (sound/vo/episode_1/npc/gman, and the intro folder).

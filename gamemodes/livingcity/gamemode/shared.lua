@@ -144,6 +144,7 @@ LC_MODULES = {
         "sv_livingcity_cleanup", -- (the infestation's growths, Infestation Cleanup, the firebomb, barnacles, fouled filters)
         "sv_livingcity_cityadmin", -- (the City Administrator: the election, the office, the bodyguard; idle players)
         "sv_livingcity_streetlife", -- (brandishing a gun, obituaries, longer street detentions, players found by citizen number)
+        "sv_livingcity_directives", -- (the sealed directives: how the secret endings start; the G-Man's hand)
         "sv_livingcity_war",
         "sv_livingcity_campmove",
         "sv_livingcity_funding",
@@ -176,7 +177,7 @@ LC_MODULES = {
         "cl_livingcity_factions",
         "cl_livingcity_hints",
         "cl_livingcity_stealth", -- (sneaking: how seen you are, and the units' sight on the ground)
-        "cl_livingcity_infest", "cl_livingcity_suit", "cl_livingcity_cityadmin",
+        "cl_livingcity_infest", "cl_livingcity_suit", "cl_livingcity_cityadmin", "cl_livingcity_directives",
         "cl_livingcity_intake",
         "cl_livingcity_kick",
         "cl_livingcity_ways",

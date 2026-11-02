@@ -577,6 +577,7 @@ end })
 
 Task("mortuary", { id = "haul", label = "collecting the dead", urgent = true, find = function(npc, st, now)
     if not LC.NearestBodyProcessor or not LC.StartHaulNPC then return nil end
+    if LC.MorticiansSuspended and LC.MorticiansSuspended() then return nil end -- (stood down by the Administrator's order)
     local grace = math.min(Grace("mortuary"), 200) -- before the street cleaners take them anyway
     local best, bd
     for _, b in ipairs(LC.Bodies or {}) do

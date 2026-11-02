@@ -114,7 +114,7 @@ local cvPause   = CreateConVar("lc_ending_pause", "4", FLAGS, "Seconds between a
 local cvVote    = CreateConVar("lc_ending_vote_secs", "30", FLAGS, "Seconds the G-Man's vote stays open")
 local cvMax     = CreateConVar("lc_ending_max", "180", FLAGS, "Longest a secret ending runs before the reset")
 local cvCool    = CreateConVar("lc_ending_cooldown", "180", FLAGS, "Minutes between secret endings (triggered, voted on or skipped)")
-local cvGman    = CreateConVar("lc_ending_gman_lines", "vo/citadel/gman_exit01.wav,vo/citadel/gman_exit02.wav", FLAGS,
+local cvGman    = CreateConVar("lc_ending_gman_lines", "vo/citadel/gman_exit02.wav", FLAGS,
     "The G-Man's lines when he stops time, in order (comma-separated sound paths)")
 local cvSongVol = CreateConVar("lc_ending_song_volume", "harpies=4,shalom=2", FLAGS, "How loud an ending's song plays, for a quiet recording: id=volume, comma-separated (1 is as it is; up to 6)")
 local cvRadius  = CreateConVar("lc_ending_flight_radius", "2200", FLAGS, "How wide the flying endings circle the city, at most (narrower where buildings are in the way: they keep to open sky)")
@@ -3889,6 +3889,8 @@ timer.Create("LivingCityEndings", 0.1, 0, function()
                 local yes, skip = Tally()
                 if skip > yes then
                     All(string.format("[???] %d to %d. Very well. He straightens his tie, and time starts again.", skip, yes))
+                    -- "Not this time." (the owner, 2 November; Episode One's G-Man, where the game has it)
+                    if LC.Vision and LC.GmanLine then LC.Vision(nil, "voice", LC.GmanLine("notthistime"), "Not this time.") end
                     LC.CancelEnding()
                 else
                     All(yes + skip == 0 and "[???] Silence. He takes that as a yes." or string.format("[???] %d to %d.", yes, skip))
@@ -4019,9 +4021,10 @@ end)
 -- the old one: anything still exactly at an old default moves to the new one (once;
 -- a value someone chose themselves is left alone).
 local RETUNED = {
-    { "lc_ending_cooldown", { "60", "45" }, "180" },
+    { "lc_ending_cooldown", { "60", "45" }, "180" }, -- (1 November: three hours between endings, the owner asked)
     { "lc_afk_minutes", { "5" }, "20" }, -- (2 November: away at 20 minutes, the owner asked; sv_livingcity_cityadmin.lua)
-    { "lc_afk_kick_minutes", { "15" }, "20" }, -- (1 November: three hours between endings, the owner asked)
+    { "lc_ending_gman_lines", { "vo/citadel/gman_exit01.wav,vo/citadel/gman_exit02.wav" }, "vo/citadel/gman_exit02.wav" }, -- (2 November: exit01 calls everyone "Doctor Freeman")
+    { "lc_afk_kick_minutes", { "15" }, "20" },
     { "lc_ending_marrow_max", { "40", "60" }, "80" },
     { "lc_ending_base_bombs", { "30" }, "60" },
     { "lc_ending_hard_moment_beats", { "16" }, "5" },
