@@ -40,7 +40,7 @@ local GUIDE = {
         "F2: your pockets (and your stash at home)        F3: your job board (jobs, stories, Union employment)        F4: factions",
         "C (when not in build mode): the full menu. Everything you can do, with this guide, your pockets, job board, factions and tips at the top.",
         "E on a person: talk to citizens, or report to Civil Protection units. E on an object: pick it up or use it.",
-        "Running and jumping tire you: the bar low on the screen. Run it all out and you're out of breath, and can only walk until you get it back.",
+        "Running and jumping tire you: the bar low on the screen. Run it all out and you're out of breath, and can only walk until you get it back. A good night's sleep and a full stomach bring it back faster.",
         "Guns are carried lowered (hold R to raise one). Raise a gun where a Civil Protection unit can see it and you'll be told to lower it; keep it up and you're wanted.",
         "Everything you can do is in the menus (Civil Protection units: C > Unit tools). Chat commands like !backup still work, but you never need them.",
         "Warnings and announcements appear on screen as well as in chat: people talking to you appear as subtitles, everything else as cards at the top. C > Settings turns the cards off.",

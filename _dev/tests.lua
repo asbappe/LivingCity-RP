@@ -14197,10 +14197,16 @@ section("The v2.7 pieces: stamina, brandishing, obituaries, detentions, citizen 
     for _ = 1, 100 do LCS.Tick(CurTime(), 0.2) end
     ok(jogger:GetNW2Float("lc_stamina", 100) == 0 and jogger:GetNW2Bool("lc_winded", false), "running tires you out: winded", jogger:GetNW2Float("lc_stamina", 100))
     jogger.keys, jogger.vel = nil, nil
-    for _ = 1, 10 do LCS.Tick(CurTime() + 5, 0.2) end
+    for _ = 1, 5 do LCS.Tick(CurTime() + 5, 0.2) end
     ok(jogger:GetNW2Bool("lc_winded", false), "and you stay winded a while")
     for _ = 1, 30 do LCS.Tick(CurTime() + 5, 0.2) end
     ok(not jogger:GetNW2Bool("lc_winded", false) and jogger:GetNW2Float("lc_stamina", 0) > 50, "rested, you get your breath back", jogger:GetNW2Float("lc_stamina", 0))
+    jogger:SetNW2Float("lcn_hunger", 20)
+    jogger:SetNW2Float("lc_rested_until", 0)
+    local base = LCS.RegenMul(jogger)
+    jogger:SetNW2Float("lcn_hunger", 80)
+    jogger:SetNW2Float("lc_rested_until", CurTime() + 1000)
+    ok(base == 1 and math.abs(LCS.RegenMul(jogger) - 1.5) < 0.01, "slept well and fed: your breath comes back faster", LCS.RegenMul(jogger))
     jogger:SetPos(Vector(-30000, 30000, 0))
     -- brandishing
     local waver = newPlayer("Waver", "citizen")

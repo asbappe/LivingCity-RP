@@ -6,7 +6,10 @@
     once you stop running (lc_stamina_regen a second, after a second's rest). Run
     it all out and you're winded: you can only walk, and can't jump, until it's
     back to lc_stamina_winded. The Overwatch's soldiers tire at half the rate; the
-    infested, noclip, a morning drill and an ending don't tire anyone. A bar at
+    infested, noclip and an ending don't tire anyone (the morning drill does: the
+    owner, 2 November, it makes it harder). A good night's sleep, and a stomach
+    above lc_stamina_fed_hunger, each bring it back a little faster
+    (lc_stamina_rested_bonus, lc_stamina_fed_bonus). A bar at
     the bottom of the screen shows it while it isn't full. lc_stamina 0 turns it off.
 ]]
 
@@ -18,6 +21,9 @@ local cvRun    = CreateConVar("lc_stamina_run", "6", FLAGS, "Stamina (of 100) a 
 local cvJump   = CreateConVar("lc_stamina_jump", "10", FLAGS, "Stamina (of 100) a jump costs")
 local cvRegen  = CreateConVar("lc_stamina_regen", "12", FLAGS, "Stamina (of 100) that comes back each second you're not running")
 local cvWinded = CreateConVar("lc_stamina_winded", "30", FLAGS, "Run out, and you can't run or jump until your stamina is back to this")
+local cvRested = CreateConVar("lc_stamina_rested_bonus", "25", FLAGS, "Percent faster your stamina comes back after a good night's sleep")
+local cvFed    = CreateConVar("lc_stamina_fed_bonus", "25", FLAGS, "Percent faster your stamina comes back while you're fed (hunger above lc_stamina_fed_hunger)")
+local cvFedAt  = CreateConVar("lc_stamina_fed_hunger", "30", FLAGS, "Hunger (of 100) above which you count as fed, for stamina")
 
 function LCS.On() return cvOn:GetBool() end
 function LCS.Get(ply) return ply:GetNW2Float("lc_stamina", 100) end
@@ -27,7 +33,6 @@ local function Free(ply)
     if not ply:Alive() or ply:GetMoveType() == MOVETYPE_NOCLIP or (ply.InVehicle and ply:InVehicle()) then return true end
     if ply:GetNW2String("lcf_faction", "") == "zombie" then return true end
     if GetGlobal2Bool("lc_timestop", false) then return true end
-    if SERVER and LC.ExerciseSession and LC.ExerciseSession() then return true end -- (the morning drill: everyone keeps up)
     return false
 end
 LCS.Free = Free
@@ -44,6 +49,14 @@ hook.Add("SetupMove", "LivingCityStamina", function(ply, mv)
 end)
 
 if CLIENT then return end
+
+-- slept well, and fed: a little faster each
+function LCS.RegenMul(ply)
+    local mul = 1
+    if LC.IsRested and LC.IsRested(ply) then mul = mul + math.max(0, cvRested:GetFloat()) / 100 end
+    if LC.Hunger and LC.Hunger(ply) > cvFedAt:GetFloat() then mul = mul + math.max(0, cvFed:GetFloat()) / 100 end
+    return mul
+end
 
 -- running: the run key down, on the ground, moving faster than a walk
 local function Running(ply)
@@ -65,7 +78,7 @@ function LCS.Tick(now, dt)
             s = s - cvRun:GetFloat() * mul * dt
             ply.lcRanAt = now
         elseif now - (ply.lcRanAt or 0) > 1 then
-            s = s + cvRegen:GetFloat() * dt
+            s = s + cvRegen:GetFloat() * LCS.RegenMul(ply) * dt
         end
         s = math.Clamp(s, 0, 100)
         if math.abs(s - was) >= 0.5 or (s == 100 and was ~= 100) or (s == 0 and was ~= 0) then ply:SetNW2Float("lc_stamina", s) end

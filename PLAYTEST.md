@@ -442,7 +442,7 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 - [ ] **The courier's clipboard** the right way up (if not: `lc_clipboard_angle`, pitch yaw roll).
 - [ ] **Job outfits** button in the editor opens the window.
 - [ ] **Rainwater** drinkable as it is.
-- [ ] **Stamina:** sprint until the bar low on the screen runs out: "Out of breath", walking only, no jumping, the view breathing hard; it comes back after a rest. The morning drill doesn't tire you.
+- [ ] **Stamina:** sprint until the bar low on the screen runs out: "Out of breath", walking only, no jumping, the view breathing hard; it comes back after a rest, faster after a good night's sleep and when you're fed. The morning drill tires you too.
 - [ ] **Brandishing:** raise a pistol (hold R) in front of a unit: "Lower that weapon!" on screen; keep it up 5 seconds: wanted. Lower it in time: nothing.
 - [ ] **Obituary:** die (or watch someone die): "[Obituary] Name, citizen #..., ..." in chat.
 - [ ] **Street detention:** wanted for a few minutes, caught where there are no cells: held longer than 20 seconds (up to a minute).

@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 10d07e8. Admin-only console messages and log lines are left out.
+Made from version db55624. Admin-only console messages and log lines are left out.
 
 6254 lines, from 190 files.
 
@@ -617,7 +617,7 @@ Made from version 10d07e8. Admin-only console messages and log lines are left ou
 - "F2: your pockets (and your stash at home)        F3: your job board (jobs, stories, Union employment)        F4: factions"  (text, line 40)
 - "C (when not in build mode): the full menu. Everything you can do, with this guide, your pockets, job board, factions and tips at the top."  (text, line 41)
 - "E on a person: talk to citizens, or report to Civil Protection units. E on an object: pick it up or use it."  (text, line 42)
-- "Running and jumping tire you: the bar low on the screen. Run it all out and you're out of breath, and can only walk until you get it back."  (text, line 43)
+- "Running and jumping tire you: the bar low on the screen. Run it all out and you're out of breath, and can only walk until you get it back. A good night's sleep and a full stomach bring it back faster."  (text, line 43)
 - "Guns are carried lowered (hold R to raise one). Raise a gun where a Civil Protection unit can see it and you'll be told to lower it; keep it up and you're wanted."  (text, line 44)
 - "Everything you can do is in the menus (Civil Protection units: C > Unit tools). Chat commands like !backup still work, but you never need them."  (text, line 45)
 - "Warnings and announcements appear on screen as well as in chat: people talking to you appear as subtitles, everything else as cards at the top. C > Settings turns the cards off."  (text, line 46)
