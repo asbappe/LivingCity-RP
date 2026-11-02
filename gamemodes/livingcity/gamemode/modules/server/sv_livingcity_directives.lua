@@ -403,15 +403,33 @@ function LC.Vision(ply, mode, sound, text)
     net.WriteString(text or "")
     if ply then net.Send(ply) else net.Broadcast() end
 end
+-- His three Episode One lines are only in the pre-release Episode One files, so each is a setting:
+-- put the file on the server (under garrysmod/sound/, and sync FastDL) and point the setting at it, or
+-- use any other line. Missing, it's skipped (the subtitle still shows). Files found are sent to players.
+local cvSeeAbout = CreateConVar("lc_gman_line_refused", "vo/episode_1/npc/gman/gman_wellseeaboutthat.wav", FLAGS, "The G-Man's line when the Administrator first refuses him (\"We'll see about that\")")
+local cvNotLong  = CreateConVar("lc_gman_line_refused_again", "vo/episode_1/npc/gman/gman_notforlong.wav", FLAGS, "The G-Man's line when the Administrator refuses him again (\"Not for long\")")
+local cvNotThis  = CreateConVar("lc_gman_line_vote_no", "vo/episode_1/npc/gman/gman_notthistime.wav", FLAGS, "The G-Man's line when his vote says no (\"Not this time\")")
 local LINES = {
-    seeabout = { "vo/episode_1/intro/gman_wellseeaboutthat.wav", "vo/episode_1/npc/gman/gman_wellseeaboutthat.wav" },
-    notforlong = { "vo/episode_1/npc/gman/gman_notforlong.wav" },
-    notthistime = { "vo/episode_1/npc/gman/gman_notthistime.wav" },
+    seeabout = { cvSeeAbout, "vo/episode_1/intro/gman_wellseeaboutthat.wav" },
+    notforlong = { cvNotLong },
+    notthistime = { cvNotThis },
 }
 function LC.GmanLine(key)
-    for _, p in ipairs(LINES[key] or {}) do if not LC.SoundExists or LC.SoundExists(p) then return p end end
+    for _, p in ipairs(LINES[key] or {}) do
+        if type(p) ~= "string" then p = p:GetString() end
+        if p ~= "" and (not LC.SoundExists or LC.SoundExists(p)) then return p end
+    end
     return ""
 end
+hook.Add("InitPostEntity", "LivingCityGmanLines", function()
+    if not (resource and resource.AddFile) then return end
+    for _, list in pairs(LINES) do
+        for _, p in ipairs(list) do
+            if type(p) ~= "string" then p = p:GetString() end
+            if p ~= "" and file.Exists("sound/" .. p, "GAME") then resource.AddFile("sound/" .. p) end
+        end
+    end
+end)
 
 local function SendEnvelopes(ply)
     local now = Now()
