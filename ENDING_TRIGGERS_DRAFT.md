@@ -4,10 +4,15 @@ Nothing here is built yet. Pick, change or cross out, and I'll build what you ch
 
 ## How it would work
 
-- **Two ways in for every ending.**
-  1. **The city does it by itself** (no admin, no Administrator): something big happens in play and the ending starts.
-  2. **The City Administrator unlocks it** by running the city in a strange way: the right mix of edicts, events and orders. When an ending is unlocked, a sealed directive appears in the Administrator's office (right click with the Administrator's device), and they can sign it to start the ending. It stays there for 20 minutes, then the seal breaks and it's gone.
-- **Clues.** The office lists every ending as a sealed directive with a rhyming riddle (the " / " marks the line break) and a "readiness" mark (cold, warm, hot) that warms as the Administrator gets closer. Other players find hints in the world too: a line from the G-Man in someone's sleep, graffiti, a Kleiner lab note, a dispatch call. So the Administrator has a reason to do odd things, and everyone else has a reason to wonder why.
+- **What a sealed directive is.** A page on the Administrator's device (the one they already carry; right click opens their office): "Sealed Directives", eleven envelopes, each with a wax seal and a rhyming riddle on the front (the " / " marks the line break), and a mark that warms from cold to warm to hot as the city gets closer to it. When one is unlocked, its seal breaks and the envelope glows, with a "Sign it" button.
+- **What unlocks one.** Either the Administrator running the city in the strange way its riddle hints at, or the city doing it by itself in play (both are listed for each ending below).
+- **Who decides, once one is unlocked** (the owner, 2 November):
+  1. **An Administrator playing right now** (online, not away): it's theirs. The envelope glows on their device and they choose whether to sign it, within 20 minutes.
+  2. **No Administrator, but a superadmin online:** a popup for the superadmin: start it now, put it to the G-Man's vote, or let it pass.
+  3. **No superadmin either, but an admin online:** the same popup for the admin.
+  4. **Nobody at all** (no Administrator, superadmin or admin): the G-Man's vote, by itself.
+  The G-Man's vote only ever comes from step 2 or 3 (when they choose it) or step 4.
+- **Hints for everyone else.** Other players find hints in the world: a line from the G-Man in someone's sleep, graffiti, a Kleiner lab note, a dispatch call. So the Administrator has a reason to do odd things, and everyone else has a reason to wonder why.
 - **Limits.** The usual cooldown between endings (`lc_ending_cooldown`, 180 minutes) still applies, plus at least 4 players online. Every number below is a setting.
 
 ## The endings
@@ -79,6 +84,7 @@ Nothing here is built yet. Pick, change or cross out, and I'll build what you ch
 - **Hint:** the rain gets heavier each time the flock meets.
 
 ## Questions for you
-1. Two ways in, as above? Or the Administrator only?
+1. ~~Two ways in, or the Administrator only?~~ Answered: both, and who decides is above.
 2. Should players other than the Administrator see the riddles anywhere (a torn page, the G-Man)?
 3. Any ending you'd rather keep admin-only?
+4. If the Administrator lets an unlocked ending pass (doesn't sign it in 20 minutes): gone until it's unlocked again, or offered to an admin, then the G-Man's vote, like when there's no Administrator?
