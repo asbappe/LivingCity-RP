@@ -14324,6 +14324,10 @@ section("Sealed directives: how the endings start, and the G-Man's hand")
     local te, ga = LC.TriggerEnding, player.GetAll
     LC.TriggerEnding = function(id, by, now) calls[#calls + 1] = { id = id, by = by, now = now } return true end
     S.offer, S.esc = nil, nil
+    -- (anyone left in the post by an earlier test steps down, so the directive comes to this one)
+    for _, p in ipairs(player.GetAll()) do
+        if p:GetNW2String("lcf_faction", "") == "admin" then LC.SetFaction(p, "citizen", nil, true) end
+    end
     -- the bus: cheap bread, full bowls and a bonus, with six or more about
     local admin = newPlayer("Administrator", "admin")
     local crowd = {}
@@ -14343,7 +14347,7 @@ section("Sealed directives: how the endings start, and the G-Man's hand")
     ok(LC.DirectiveAnswer(admin, "bus", false) and S.esc and S.esc.level == 1 and S.refusals.bus == 1, "refused: the G-Man's escalation begins")
     ok(_lastnet("lc_gman_vision") ~= nil, "and he appears to the Administrator")
     LC.DirectiveTick(CurTime() + 21 * 60)
-    ok(S.esc.spreading, "twenty minutes on, the infestation spreads")
+    ok(S.esc and S.esc.spreading, "twenty minutes on, the infestation spreads")
     LC.DirectiveTick(CurTime() + 31 * 60)
     ok(S.offer and S.offer.id == "bus" and S.offer.stage == "admin", "thirty minutes on, he brings the same directive back")
     ok(LC.DirectiveAnswer(admin, "bus", true) and calls[#calls].id == "bus" and calls[#calls].now == true and S.esc == nil, "signed: the ending starts, and his hand comes off the city")
