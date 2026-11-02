@@ -1301,7 +1301,9 @@ for n, s in pairs(LC.NPCs) do if IsValid(n) and s.role == "cop" and not s.test a
 ok(IsValid(copN), "there's a unit on the street")
 -- (the Resistance's fighters out of the way while this unit does its job: one wandering by started a fight)
 local rebelsAway = {}
-for n, s in pairs(LC.NPCs) do if IsValid(n) and s.role == "rebel" then rebelsAway[n] = n:GetPos() n:SetPos(Vector(-195000, -195000, 0)) end end
+for n, s in pairs(LC.NPCs) do
+    if IsValid(n) and n ~= copN and (s.role == "rebel" or (n.GetClass and n:GetClass() == "npc_citizen")) then rebelsAway[n] = n:GetPos() n:SetPos(Vector(-195000, -195000, 0)) end
+end
 copSt.provokedBy, copSt.provokedUntil, copSt.target = nil, 0, nil
 local frisked = newPlayer("Frisked", "citizen")
 frisked.lcStopNext = 0
@@ -1314,7 +1316,7 @@ LC.Release(copN, copSt) -- not at a checkpoint post: this is a street stop
 _setcvar("lc_street_stop_chance", 100)
 _run(3.5)
 ok(LC.Stops[frisked] ~= nil and has(frisked.chat, "Stand still for inspection"), "a cop on the street stops a passer-by",
-    tostring(copSt.state) .. " foe=" .. tostring(IsValid(copSt.target) and (copSt.target.Nick and copSt.target:Nick() or copSt.target:GetClass())) .. " prov=" .. tostring(IsValid(copSt.provokedBy) and (copSt.provokedBy.Nick and copSt.provokedBy:Nick() or copSt.provokedBy:GetClass())) .. " wanted=" .. tostring(LC.PlayerIsWanted(frisked)))
+    tostring(copSt.state) .. " provRole=" .. tostring(IsValid(copSt.provokedBy) and LC.NPCs[copSt.provokedBy] and LC.NPCs[copSt.provokedBy].role) .. " foe=" .. tostring(IsValid(copSt.target) and (copSt.target.Nick and copSt.target:Nick() or copSt.target:GetClass())) .. " prov=" .. tostring(IsValid(copSt.provokedBy) and (copSt.provokedBy.Nick and copSt.provokedBy:Nick() or copSt.provokedBy:GetClass())) .. " wanted=" .. tostring(LC.PlayerIsWanted(frisked)))
 copN.sim = true
 local standing0 = LC.Standing(frisked)
 frisked.lcViolentUntil = CurTime() + 1e6 -- (taken for violent: chased, not cuffed on the spot, so the wanted status can be checked)
@@ -1870,7 +1872,7 @@ ok(hit2:GetDamage() == 0, "nobody beats someone who's already cuffed")
 local hostile = 0
 for n, s in pairs(LC.NPCs) do if IsValid(n) and s.state == "hostile" and s.enemy == runner2 then hostile = hostile + 1 end end
 ok(hostile == 0 and copAst.state == "event", "the other units stand down, and the arresting one stands guard")
-_run(21)
+for _ = 1, 7 do _run(10) if not LC.Detained[runner2] then break end end -- (held longer the longer they were wanted: up to a minute)
 ok(not LC.Detained[runner2] and not runner2.frozen and has(runner2.chat, "Released with a warning"), "then you're let go with a warning")
 for _, c in ipairs(savedCells) do LC.AddPoint(c.pos, c.yaw, "cell", 0) end
 ok(LC.PrisonAvailable(), "cells back for the rest of the tests")
