@@ -31,6 +31,7 @@ LC_MODULES = {
         "sh_livingcity_cache", -- (first: quick lookups the rest use)
         "sh_livingcity_acts",
         "sh_livingcity_lowered", -- (guns carried lowered until raised: hold R)
+        "sh_livingcity_stamina", -- (running and jumping tire you)
         "sh_livingcity_cp",
         "sh_livingcity_custody",
         "sh_livingcity_feel",
@@ -142,6 +143,7 @@ LC_MODULES = {
         "sv_livingcity_weeds", -- (weeds on open ground, the Groundskeeper, weedkiller as poison)
         "sv_livingcity_cleanup", -- (the infestation's growths, Infestation Cleanup, the firebomb, barnacles, fouled filters)
         "sv_livingcity_cityadmin", -- (the City Administrator: the election, the office, the bodyguard; idle players)
+        "sv_livingcity_streetlife", -- (brandishing a gun, obituaries, longer street detentions, players found by citizen number)
         "sv_livingcity_war",
         "sv_livingcity_campmove",
         "sv_livingcity_funding",

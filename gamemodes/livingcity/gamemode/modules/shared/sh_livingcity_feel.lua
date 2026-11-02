@@ -27,6 +27,7 @@ CreateConVar("lc_fov", "75", FLAGS, "The widest field of view anyone sees (Half-
 CreateConVar("lc_eye_height", "61", FLAGS, "Eye height in Civil Protection units (GMod's is 64): a little lower makes people and units stand over you")
 CreateConVar("lc_view_bob", "1", FLAGS, "A faint camera sway in step with your feet, and a dip when you land (players can turn theirs off with !bob)")
 CreateConVar("lc_view_bob_amount", "100", FLAGS, "How strong the camera sway and landing dip are, in percent (100 is the default, 50 half that)")
+CreateConVar("lc_color_grade", "1", FLAGS, "The city's colours a touch drained and cold, Half-Life 2's grey-green (players can turn theirs off: lc_my_color_grade 0)")
 CreateConVar("lc_quiet_hud", "1", FLAGS, "No running score on screen: XP, credits and standing are in the menus, hunger and thirst show when they're low")
 
 -- GMod's standing and crouched eyes are 64 and 28; the crouch comes down in proportion.

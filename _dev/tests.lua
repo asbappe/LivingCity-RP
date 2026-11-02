@@ -1299,6 +1299,10 @@ _run(1)
 local copN, copSt
 for n, s in pairs(LC.NPCs) do if IsValid(n) and s.role == "cop" and not s.test and not s.questLock then copN, copSt = n, s break end end
 ok(IsValid(copN), "there's a unit on the street")
+-- (the Resistance's fighters out of the way while this unit does its job: one wandering by started a fight)
+local rebelsAway = {}
+for n, s in pairs(LC.NPCs) do if IsValid(n) and s.role == "rebel" then rebelsAway[n] = n:GetPos() n:SetPos(Vector(-195000, -195000, 0)) end end
+copSt.provokedBy, copSt.provokedUntil, copSt.target = nil, 0, nil
 local frisked = newPlayer("Frisked", "citizen")
 frisked.lcStopNext = 0
 LC.GiveItem(frisked, "uniform_cp")
@@ -1361,14 +1365,17 @@ ok(LC.Stops[sweepGuy] == nil, "outside a sweep, a unit with nothing to do leaves
 _setcvar("lc_stop_chance", 15)
 _setcvar("lc_stop_chance", 50)
 LC.StartEvent("sweep", 1)
+copSt.provokedBy, copSt.provokedUntil, copSt.target = nil, 0, nil
+if copSt.state == "hostile" then LC.SetState(copN, copSt, "idle") end
 _run(3.5)
-ok(LC.Stops[sweepGuy] ~= nil, "during an inspection sweep, units stop people from further away, far more often")
+ok(LC.Stops[sweepGuy] ~= nil, "during an inspection sweep, units stop people from further away, far more often", tostring(copSt.state))
 copN.sim = true
 _run(8)
 LC.EndEvent(true)
 _setcvar("lc_stop_chance", 15)
 _setcvar("lc_street_stop_chance", 1)
 sweepGuy:SetPos(Vector(-30000, 30000, 0))
+for n, pos in pairs(rebelsAway) do if IsValid(n) then n:SetPos(pos) end end
 
 -- Units (players) search people
 local searcher = newPlayer("Searcher", "cp")
@@ -13070,10 +13077,18 @@ section("The Resistance's money: intel, skimming, forged cards")
     ok(LC.JobGameStart(worker, "line", nil, { station = worker:GetPos() }), "(a shift on the line)")
     local g = LC.JobGames[worker]
     local good
-    for _ = 1, 40 do
-        _run(0.5)
-        for _, e in ipairs(g.parts) do if IsValid(e) and e.lcPart and not e.lcPart.bad and not e.lcPart.rattle then good = e break end end
+    -- (a good part: about two in three are; if the shift ended under it before one came, once more)
+    for attempt = 1, 2 do
+        for _ = 1, 40 do
+            _run(0.5)
+            for _, e in ipairs(g.parts or {}) do if IsValid(e) and e.lcPart and not e.lcPart.bad and not e.lcPart.rattle then good = e break end end
+            if good or LC.JobGames[worker] ~= g then break end
+        end
         if good then break end
+        if LC.JobGames[worker] == g then LC.JobGameEnd(worker, "done") end
+        worker:SetPos(F0 + Vector(0, 3000, 0))
+        LC.JobGameStart(worker, "line", nil, { station = worker:GetPos() })
+        g = LC.JobGames[worker] or g
     end
     LC.SeenBySecurity = function() return false end
     local nParts = #(g.parts or {})
@@ -14171,6 +14186,64 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     for _, q in ipairs({ ex, tr, low }) do q:SetPos(Vector(-150000, 150000, 0)) end
     for _, q in ipairs({ unitR, best, plain }) do q:SetPos(Vector(-150000, 150000, 0)) end
     fv:SetPos(Vector(-150000, 150000, 0)) vp:SetPos(Vector(-150000, 150000, 0)) freer:SetPos(Vector(-150000, 150000, 0))
+end)()
+
+section("The v2.7 pieces: stamina, brandishing, obituaries, detentions, citizen numbers, the Administration path")
+;(function()
+    -- stamina
+    local jogger = newPlayer("Jogger", "citizen")
+    jogger.keys = { [IN_SPEED] = true }
+    jogger.vel = Vector(250, 0, 0)
+    for _ = 1, 100 do LCS.Tick(CurTime(), 0.2) end
+    ok(jogger:GetNW2Float("lc_stamina", 100) == 0 and jogger:GetNW2Bool("lc_winded", false), "running tires you out: winded", jogger:GetNW2Float("lc_stamina", 100))
+    jogger.keys, jogger.vel = nil, nil
+    for _ = 1, 10 do LCS.Tick(CurTime() + 5, 0.2) end
+    ok(jogger:GetNW2Bool("lc_winded", false), "and you stay winded a while")
+    for _ = 1, 30 do LCS.Tick(CurTime() + 5, 0.2) end
+    ok(not jogger:GetNW2Bool("lc_winded", false) and jogger:GetNW2Float("lc_stamina", 0) > 50, "rested, you get your breath back", jogger:GetNW2Float("lc_stamina", 0))
+    jogger:SetPos(Vector(-30000, 30000, 0))
+    -- brandishing
+    local waver = newPlayer("Waver", "citizen")
+    if not waver:HasWeapon("weapon_pistol") then waver:Give("weapon_pistol") end
+    waver:SelectWeapon("weapon_pistol")
+    waver:SetNW2Bool("lc_raised", true)
+    local sbs = LC.SeenBySecurity
+    LC.SeenBySecurity = function() return true end
+    LC.BrandishTick(CurTime())
+    ok(has(waver.chat, "Lower that weapon") and not LC.PlayerIsWanted(waver), "a raised gun in sight of a unit: told to lower it")
+    LC.BrandishTick(CurTime() + 6)
+    ok(LC.PlayerIsWanted(waver), "still up after the warning: wanted for brandishing a weapon")
+    LC.ClearWanted(waver)
+    waver.chat = {}
+    waver:SetNW2Bool("lc_raised", false)
+    LC.BrandishTick(CurTime() + 20)
+    ok(not has(waver.chat, "Lower that weapon"), "carried lowered: nothing said")
+    LC.SeenBySecurity = sbs
+    waver.active = nil
+    waver:SetPos(Vector(-30000, 30000, 0))
+    -- obituaries
+    local dead = newPlayer("Departed", "citizen")
+    dead:SetNW2String("lc_cid", "48213")
+    local line = LC.Obituary(dead, dead, nil)
+    ok(line and line:find("48213", 1, true) and line:find("died", 1, true), "an obituary names them and their citizen number", line)
+    -- finding by citizen number
+    ok(LC.FindPlayer("#48213") == dead and LC.FindPlayer("48213") == dead, "admin commands find a player by citizen number")
+    -- longer detentions the longer you were wanted
+    local held = newPlayer("HeldLong", "citizen")
+    LC.SetWanted(held, 600, "test")
+    held.lcWantedSince = CurTime() - 240
+    LC.DetainOnTheSpot(held, nil, "test")
+    local secs = LC.Detained[held] and (LC.Detained[held].untilT - CurTime()) or 0
+    ok(secs > 55 and secs <= 60.5, "wanted four minutes: held on the street longer (up to a minute)", secs)
+    LC.Detained[held] = nil held:Freeze(false) LC.ClearWanted(held)
+    held:SetPos(Vector(-30000, 30000, 0))
+    -- the Administration path
+    local clerk = newPlayer("ClerkPath", "citizen")
+    clerk:SetPData("lc_played_min", 0)
+    LC.Bump(clerk, "clerk_shifts", 6)
+    local h, n = LC.AdminHours(clerk)
+    ok(n == 6 and math.abs(h - 2) < 0.01, "each Records Clerk shift counts towards the hours to run for City Administrator", h)
+    clerk:SetPos(Vector(-30000, 30000, 0))
 end)()
 
 section("NPCs that fall out of the map")

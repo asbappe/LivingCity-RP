@@ -61,6 +61,8 @@ end
 
 function LC.SetWanted(ply, seconds, reason)
     hook.Run("LivingCityWanted", ply, reason, seconds)
+    local was = LC.LocalWanted[ply]
+    if not (was and was.untilT > CurTime()) then ply.lcWantedSince = CurTime() end -- (how long they've been wanted: longer street detentions)
     LC.LocalWanted[ply] = { untilT = CurTime() + seconds, reason = reason }
     ply:SetNW2Float("lc_wanted_until", CurTime() + seconds)
     ply:SetNW2String("lc_wanted_reason", reason or "")

@@ -170,3 +170,43 @@ LC_CL.ViewMods.bob = { order = 30, fn = function(ply, view, ctx)
     view.origin = view.origin + Vector(0, 0, up) + view.angles:Right() * side
     view.angles = view.angles + Angle(PITCH * a * c2 - dip * 0.3, 0, ROLL * a * s)
 end }
+
+-- Breathing (the owner, 2 November: the v2.7 view sway): standing still, the view rises and falls a
+-- hair with each breath; winded (sh_livingcity_stamina.lua), faster and deeper until you get it back.
+-- Part of the sway: !bob (lc_my_view_bob 0) and lc_view_bob 0 turn it off too.
+local breath = { phase = 0, depth = 0, t = nil }
+LC_CL.Breath = breath
+LC_CL.ViewMods.breath = { order = 31, fn = function(ply, view, ctx)
+    local now = Clock()
+    local dt = breath.t and math.Clamp(now - breath.t, 0, 0.1) or 0
+    breath.t = now
+    if not LC_CL.BobOn() or not FirstPerson(ply, view, ctx) then breath.depth = 0 return end
+    local winded = ply:GetNW2Bool("lc_winded", false)
+    local tired = 1 - math.Clamp(ply:GetNW2Float("lc_stamina", 100) / 100, 0, 1)
+    local still = 1 - math.Clamp(ply:GetVelocity():Length2D() / 60, 0, 1)
+    local want = still * 0.35 + tired * 0.9 + (winded and 0.6 or 0)
+    breath.depth = breath.depth + (want - breath.depth) * math.min(dt * 2, 1)
+    local rate = 0.25 + tired * 0.45 + (winded and 0.3 or 0) -- (breaths a second)
+    breath.phase = (breath.phase + dt * rate * math.pi * 2) % (math.pi * 2)
+    local amt = GetConVar("lc_view_bob_amount")
+    local k = math.Clamp((amt and amt:GetFloat() or 100) / 100, 0, 3) * breath.depth
+    if k <= 0 then return end
+    local s = math.sin(breath.phase)
+    view.origin = view.origin + Vector(0, 0, 0.35 * k * s)
+    view.angles = view.angles + Angle(-0.25 * k * s, 0, 0.08 * k * math.cos(breath.phase * 0.5))
+end }
+
+-- Colour grading (the v2.7 look): the city a touch drained and cold, Half-Life 2's grey-green.
+-- Each player's own: lc_my_color_grade 0 turns it off; the server's lc_color_grade 0 for everyone.
+local cvGrade = CreateClientConVar("lc_my_color_grade", "1", true, false, "The city's colours a touch drained and cold (0 keeps the map's own colours)")
+local GRADE = {
+    ["$pp_colour_addr"] = 0, ["$pp_colour_addg"] = 0.004, ["$pp_colour_addb"] = 0.008,
+    ["$pp_colour_brightness"] = -0.01, ["$pp_colour_contrast"] = 1.05, ["$pp_colour_colour"] = 0.86,
+    ["$pp_colour_mulr"] = 0, ["$pp_colour_mulg"] = 0, ["$pp_colour_mulb"] = 0,
+}
+LC_CL.Grade = GRADE
+hook.Add("RenderScreenspaceEffects", "LivingCityColorGrade", function()
+    local sv = GetConVar("lc_color_grade")
+    if (sv and not sv:GetBool()) or not cvGrade:GetBool() or not DrawColorModify then return end
+    DrawColorModify(GRADE)
+end)

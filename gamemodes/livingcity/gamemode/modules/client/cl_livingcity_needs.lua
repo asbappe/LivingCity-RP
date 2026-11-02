@@ -852,3 +852,23 @@ hook.Add("CreateClientsideRagdoll", "LivingCityNoDuplicates", function(ent, rag)
         timer.Simple(0, function() if IsValid(rag) then pcall(rag.Remove, rag) end end)
     end
 end)
+
+-- Stamina (sh_livingcity_stamina.lua): a thin bar low in the middle of the screen while it isn't full,
+-- red while you're winded. It fades away once you've got your breath back.
+local stamAlpha = 0
+hook.Add("HUDPaint", "LivingCityStaminaHUD", function()
+    local ply = LocalPlayer()
+    local sv = GetConVar("lc_stamina")
+    if not IsValid(ply) or not ply:Alive() or (sv and not sv:GetBool()) then return end
+    local s = math.Clamp(ply:GetNW2Float("lc_stamina", 100), 0, 100)
+    local winded = ply:GetNW2Bool("lc_winded", false)
+    stamAlpha = Lerp(FrameTime() * 4, stamAlpha, (s < 99 or winded) and 1 or 0)
+    if stamAlpha < 0.02 then return end
+    local w, h = 220, 6
+    local x, y = ScrW() / 2 - w / 2, ScrH() - 90
+    surface.SetDrawColor(0, 0, 0, 150 * stamAlpha)
+    surface.DrawRect(x - 1, y - 1, w + 2, h + 2)
+    if winded then surface.SetDrawColor(200, 70, 60, 230 * stamAlpha) else surface.SetDrawColor(225, 225, 210, 200 * stamAlpha) end
+    surface.DrawRect(x, y, w * s / 100, h)
+    if winded then draw.SimpleText("Out of breath", "DermaDefault", ScrW() / 2, y - 4, Color(230, 120, 110, 230 * stamAlpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM) end
+end)

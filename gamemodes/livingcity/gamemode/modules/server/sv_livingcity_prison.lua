@@ -33,6 +33,8 @@ local cvEscape  = CreateConVar("lc_escape_wanted", "300", FLAGS, "Seconds an esc
 local cvBuffer  = CreateConVar("lc_prison_buffer", "150", FLAGS, "Extra distance (Civil Protection units, about 16 per foot) beyond the prison area before leaving counts as escaping")
 local cvRejoin  = CreateConVar("lc_rejoin_penalty", "120", FLAGS, "Extra seconds added when someone disconnects mid-sentence and comes back")
 local cvStreet  = CreateConVar("lc_street_detention", "20", FLAGS, "Seconds you're held on the street when there are no prison cells")
+local cvStreetPer = CreateConVar("lc_street_detention_per_minute", "10", FLAGS, "Seconds more you're held on the street for each minute you were wanted")
+local cvStreetMax = CreateConVar("lc_street_detention_max", "60", FLAGS, "The most seconds you're held on the street, however long you were wanted")
 local cvFine    = CreateConVar("lc_street_fine", "25", FLAGS, "Credits fined on a street detention")
 
 local function Say(ply, msg)
@@ -256,6 +258,13 @@ end
 function LC.DetainOnTheSpot(ply, cop, reason)
     if not IsValid(ply) or LC.Detained[ply] or LC.Prisoners[ply] then return false end
     local secs = math.max(5, cvStreet:GetFloat())
+    -- the longer they were wanted, the longer they're held (the owner, 2 November: the v2.7 detentions)
+    local since = ply.lcWantedSince
+    if since and CurTime() - since < 3600 then
+        local mins = (CurTime() - since) / 60
+        secs = math.min(math.max(secs, cvStreetMax:GetFloat()), secs + mins * math.max(0, cvStreetPer:GetFloat()))
+    end
+    ply.lcWantedSince = nil
     LC.Detained[ply] = { untilT = CurTime() + secs, cop = cop, reason = reason }
     ply:Freeze(true)
     ply:ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 230), 1.5, 0.5)
@@ -585,6 +594,13 @@ local function FindPlayer(name)
     name = string.lower(name)
     for _, p in ipairs(player.GetAll()) do
         if string.find(string.lower(p:Nick()), name, 1, true) then return p end
+    end
+    -- or by citizen number (with or without the #), or the character's name
+    local num = string.match(name, "^#?(%d+)$")
+    for _, p in ipairs(player.GetAll()) do
+        if num and p:GetNW2String("lc_cid", "") == num then return p end
+        local char = LC.CharacterName and LC.CharacterName(p)
+        if not num and char and string.find(string.lower(char), name, 1, true) then return p end
     end
     return nil
 end

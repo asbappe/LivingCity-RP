@@ -64,6 +64,14 @@ function LC.PlayedHours(ply)
     return (tonumber(ply:GetPData("lc_played_min", "0")) or 0) / 60
 end
 
+-- The Administration path (the owner, 2 November): each Records Clerk shift counts towards the hours
+-- needed to run for City Administrator, on top of the time played.
+local cvClerkMin = CreateConVar("lc_admin_clerk_minutes", "20", FLAGS, "Minutes each Records Clerk shift counts for, towards the hours needed to run for City Administrator")
+function LC.AdminHours(ply)
+    local shifts = LC.Counter and LC.Counter(ply, "clerk_shifts") or 0
+    return LC.PlayedHours(ply) + shifts * math.max(0, cvClerkMin:GetFloat()) / 60, shifts
+end
+
 timer.Create("LivingCityAFK", 30, 0, function()
     local now = CurTime()
     for _, ply in ipairs(player.GetAll()) do
@@ -111,9 +119,11 @@ end
 function LC.StandForAdministrator(ply)
     if not IsValid(ply) then return false end
     if OfficeHeld() then return false, "There's an Administrator already: " .. Name(OfficeHeld()) .. "." end
-    local need, have = cvHours:GetFloat(), LC.PlayedHours(ply)
+    local need = cvHours:GetFloat()
+    local have, shifts = LC.AdminHours(ply)
     if have < need and not ply:IsSuperAdmin() then
-        return false, string.format("The city elects only those it knows: %d hours played. You have %.1f.", need, have)
+        return false, string.format("The city elects only those it knows: %d hours played. You have %.1f (each Records Clerk shift counts as %d minutes; you've done %d).",
+            need, have, math.floor(cvClerkMin:GetFloat()), shifts)
     end
     local e = LC.Election
     if not e then

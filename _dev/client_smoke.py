@@ -453,6 +453,26 @@ okB, bvB = pcall(LC_CL.CalcView, _me, { origin = Vector(0, 0, 61), angles = Angl
 if #_errors ~= 1 then problems[#problems + 1] = "a failed camera step keeps running (and erroring)" end
 LC_CL.ViewMods.broken_test = nil
 _errors = {}
+-- breathing: winded, the view rises and falls while you stand still; the stamina bar draws
+_me.nw = _me.nw or {}
+_me.nw.lc_winded, _me.nw.lc_stamina = true, 5
+_me.vel = Vector(0, 0, 0)
+local zs = {}
+for i = 1, 12 do
+    _advance(0.1)
+    local bz = LC_CL.CalcView(_me, { origin = Vector(0, 0, 61), angles = Angle(), fov = 75 })
+    zs[#zs + 1] = bz.origin.z
+end
+local lo, hi = math.huge, -math.huge
+for _, z in ipairs(zs) do lo, hi = math.min(lo, z), math.max(hi, z) end
+if hi - lo < 0.05 then problems[#problems + 1] = "winded, the view doesn't breathe" end
+local stamHud = hook.t.HUDPaint and hook.t.HUDPaint.LivingCityStaminaHUD
+if not stamHud then problems[#problems + 1] = "no stamina bar" else
+    local okS, errS = pcall(stamHud)
+    if not okS then problems[#problems + 1] = "the stamina bar errors: " .. tostring(errS) end
+end
+_me.nw.lc_winded, _me.nw.lc_stamina = nil, nil
+if not (hook.t.RenderScreenspaceEffects and hook.t.RenderScreenspaceEffects.LivingCityColorGrade) then problems[#problems + 1] = "no colour grading" end
 -- flying a scanner: the view leaves the body, and units see who a report caught
 local scn = ents.Create("lc_rscanner")
 scn:SetPos(Vector(500, 0, 200))
