@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version eadfb1a. Admin-only console messages and log lines are left out.
+Made from version 7a0aaf3. Admin-only console messages and log lines are left out.
 
 6365 lines, from 194 files.
 
@@ -2495,38 +2495,32 @@ Made from version eadfb1a. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): slot 1 for anyone living in the city: the next step, and the way to everywhere (cl_livingcity_nextstep.lua)
 
 - "What now?"  (text, line 224)
-- "Call for backup"  (menu option, line 230)
-- "Send my 10-20"  (menu option, line 231)
 
-> Note for you (not shown in game): item
+> Note for you (not shown in game): (the owner, 2 November: Unit tools, everything a unit has, up to 2; voice lines down to the usual three)
 
-- "What should Civil Protection units look out for?"  (text, line 232)
-
-> Note for you (not shown in game): part of: quick root
-
-- "Voice lines"  (text, line 233)
-
-> Note for you (not shown in game): ,
-
-- "Kick ({or})"  (menu option, line 234)
+- "Unit tools (everything a unit has)"  (menu option, line 230)
+- "Call for backup"  (menu option, line 233)
+- "Send my 10-20"  (menu option, line 235)
+- "What should Civil Protection units look out for?"  (text, line 236)
+- "Kick ({or})"  (menu option, line 237)
 
 > Note for you (not shown in game): part of: quick root
 
-- "Unit tools (everything a unit has)"  (menu option, line 237)
-- "My directives (F3)"  (menu option, line 238)
-- "Gear up (Resistance clothes)"  (menu option, line 247)
-- "Change into plain clothes"  (menu option, line 247)
-- "Black market"  (menu option, line 249)
-- "My papers"  (menu option, line 257)
+- "Voice lines"  (text, line 240)
+- "My directives (F3)"  (menu option, line 241)
+- "Gear up (Resistance clothes)"  (menu option, line 250)
+- "Change into plain clothes"  (menu option, line 250)
+- "Black market"  (menu option, line 252)
+- "My papers"  (menu option, line 260)
 
 > Note for you (not shown in game): 6 to 8: what's in front of you first, then your usual three
 
-- "Everything else (full menu)"  (menu option, line 266)
+- "Everything else (full menu)"  (menu option, line 269)
 
 > Note for you (not shown in game): on screen
 
-- "+menu_context"  (text, line 367)
-- ": the full menu"  (drawn on screen, line 368)
+- "+menu_context"  (text, line 370)
+- ": the full menu"  (drawn on screen, line 371)
 
 ## apartment doors (client) (cl_livingcity_rent.lua)
 

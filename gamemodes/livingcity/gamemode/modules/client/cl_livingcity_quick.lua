@@ -226,15 +226,18 @@ function LC_CL.QuickRoot()
     if unit then
         title = me:GetNW2String("lcf_title", "") ~= "" and me:GetNW2String("lcf_title", "") or ((LCF and LCF.IsOverwatch and LCF.IsOverwatch(me)) and "OVERWATCH" or "CIVIL PROTECTION")
         accent = ACCENT.cp
+        -- (the owner, 2 November: Unit tools, everything a unit has, up to 2; voice lines down to the usual three)
+        local tools = Item("Unit tools (everything a unit has)", function() if LC_CL.OpenUnitTools then LC_CL.OpenUnitTools() end end)
+        tools.id = "unittools"
         items = {
             Item("Call for backup", function() Send("backup") end),
+            tools,
             Item("Send my 10-20", function() Send("10-20") end),
             Item("Issue a BOLO...", function() Ask("BOLO", "What should Civil Protection units look out for?", "bolo") end),
-            Page("Voice lines", VoicePage),
             (function() local k = Item("Kick (" .. (LC_CL.KickKeyName and LC_CL.KickKeyName() or "G") .. ")", function() Send("kick") end) k.id = "kick" return k end)(),
         }
         usual = {
-            Item("Unit tools (everything a unit has)", function() if LC_CL.OpenUnitTools then LC_CL.OpenUnitTools() end end),
+            Page("Voice lines", VoicePage),
             Item("My directives (F3)", function() RunConsoleCommand("gm_showspare1") end),
             officer and Page("Sociostability", SocioPage) or pockets,
         }

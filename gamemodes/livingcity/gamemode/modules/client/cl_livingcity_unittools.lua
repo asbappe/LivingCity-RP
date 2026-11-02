@@ -15,7 +15,7 @@
       Sociostability    officers set it
       Your work         your directives (F3)
 
-    C > Unit tools (the full menu), F1 > 6 when nothing's in front of you, or
+    C > Unit tools (the full menu), F1 > 2, or
     bind a key to lc_unittools. Every button runs the same action as the
     menus (cl_livingcity_actions.lua, cl_livingcity_quick.lua).
 ]]

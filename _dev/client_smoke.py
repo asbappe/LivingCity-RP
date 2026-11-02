@@ -752,6 +752,9 @@ do
         local okQ, root = pcall(LC_CL.QuickRoot)
         if not okQ then problems[#problems + 1] = "quick menu for " .. faction .. ": " .. tostring(root) return end
         for i = 1, 9 do if not root.items[i] then problems[#problems + 1] = "quick menu for " .. faction .. ": slot " .. i .. " is empty" end end
+        if faction == "cp" and not (root.items[2] and root.items[2].id == "unittools" and root.items[5] and root.items[5].id == "kick") then
+            problems[#problems + 1] = "a unit's F1: Unit tools should be 2 and Kick 5"
+        end
         local function WalkQ(page, depth)
             for i = 1, 9 do
                 local it = page.items[i]
