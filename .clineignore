@@ -1,0 +1,9 @@
+# Big generated or reference text. Do not read these into a session.
+# PLAYER_TEXT.md is made by `python3 _dev/player_text.py` and never hand-edited.
+# The core snapshot is compared by the test suite (use `diff` in a shell if needed).
+# README.md is now a short index; the specification is in docs/features/ (read only the file you need).
+PLAYER_TEXT.md
+_dev/core_snapshot.txt
+_dev/core_snapshot.new.txt
+_dev/rewording/
+livingcity_sound/

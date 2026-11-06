@@ -1,0 +1,25 @@
+# Escalation, and the dead
+
+### Escalation
+
+Violence gets a proportionate answer. Your alert level shows under the WANTED banner.
+
+| Alert | What happens |
+|---|---|
+| 1 | Wanted. Units nearby come for you and arrest you if they can. |
+| 2 | Every unit in the sector has your description, and they draw pistols. Killing a unit gets you here straight away. |
+| 3 | Overwatch dispatched: a soldier squad deploys out of sight and hunts you, into rebel territory if need be. Lethal force: no more arrests. |
+| 4 | A second squad, and the sector goes into lockdown. |
+
+**City scanners are eyes for the units:** one that sees a fugitive (wanted, or a hunted rebel not passing as a citizen) within 900 units flashes them and tells every unit on duty where they are, and the units nearby come after them (once per 25 seconds per person). Shooting a scanner is Damaging city property (-10 standing, reported at most every five seconds); wrecking one is Destroying city property (-50). What raises it: hitting a unit, killing a citizen, a unit, or a soldier, or wrecking a scanner. **The first kill in ten minutes is answered lightly** (accidents and friendly fire happen): a citizen, a unit or a soldier killed raises the alert to 1 at most, with a short charge (two to four minutes wanted), and no Overwatch. A second kill soon after gets the full response. **The Resistance pay for killing civilians:** a Resistance member who kills a citizen (NPC or player) loses a rank each time, and their XP drops to the bottom of the rank they fall to. Getting arrested or killed resets it. Staying out of sight of every unit for 45 seconds cools it down (twice as fast in rebel territory), and the squads go home once you drop below alert 3. A unit you shoot remembers you however far away you were, and follows you into rebel territory. Settings: `lc_response`, `lc_response_soldiers`; admins can test with `lc_setalert <name> <level>`.
+
+**Alarms bring a squad.** Set off an alarm (downloading a data chip, a prison escape) and about five seconds later a small squad comes for you: two metrocops with pistols and an Overwatch soldier, turning up out of sight a walk away (on a route to you, not on top of you) and coming through the door. When it's over (you're caught, or gone, or no longer wanted) they leave. Editor panel, Events: "Alarms send a response squad" and its sliders (`lc_squad`, `lc_squad_cops` 2, `lc_squad_soldiers` 1, `lc_squad_delay` 5).
+
+### The dead
+
+Citizens, metrocops and soldiers leave a body when they die. Press E on one and stay with it for a few seconds to search it.
+- **Citizens:** rations, water, a few credits, sometimes their identity papers.
+- **Metrocops:** pistol ammunition, credits, sometimes a stunstick or their **keycard**, which opens one Combine door before it's reported missing.
+- **Soldiers:** rifle ammunition, grenades, health vials.
+
+Searching a body in front of a unit is a crime. **The body cart** (Morticians, if they want one): F1 > Take a body cart, by the incinerator or the morgue. Let go of a body beside it and it goes on (four at a time); E on the cart pushes it (E again lets go); E on the incinerator with the cart beside it burns everything on it, paid for each. The same action leaves the cart. **Hauling:** anyone can drag a body (look at it: F1 > Haul the body); a **Mortician** does it with E. You walk slowly with it, it follows at your heels, and E lets go. Let go next to an **incinerator** (placed with the editor: a spent headcrab canister with a burner roaring out of its back end), or press E on it, and in it goes: Attendants are paid `lc_cremation_pay` credits (6) for each. Their **Collection** shift sends them to a real body the city has left lying about, or a reported one if there isn't one, and their **Clear the streets** shift (after a fight leaves two or more) pays for hauling all of them. With no incinerator, the morgue workplace takes the bodies; with neither, there are no collections. A body somebody is hauling, or a shift is about, isn't cleared away. Bodies stay for 5 minutes (`lc_body_time`), up to 16 at once (`lc_max_bodies`). Birds and headcrabs leave a carcass item instead of a ragdoll, so nothing appears twice. **A citizen attacked by a headcrab or a zombie** screams for help and runs, away from it; everyone round them scatters, and the two nearest units come and deal with it. Units deal with them anyway: one a headcrab bites stops whatever he's doing and fights it, and one who sees a headcrab or a zombie close by goes for it (`lc_units_spot_monsters`). **Guns hit the floor:** a dead Overwatch soldier drops his SMG or pulse rifle, and an armed unit or a rebel their gun, with about half a clip in it, for anyone to pick up (`lc_gun_drops`); the rest of their ammunition is found by searching the body. A gun nobody takes is cleared away, out of sight, after a few minutes, and there are never more than a dozen lying about.

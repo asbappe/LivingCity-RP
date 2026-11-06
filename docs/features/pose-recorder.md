@@ -1,0 +1,3 @@
+# Pose Recorder (a separate tool)
+
+The `pose_recorder/` folder is its own addon (install it as `garrysmod/addons/pose_recorder/`, from `pose_recorder.zip`), made for posing the endings' dances and fit for the Workshop on its own. Tools, Poser, Pose Recorder: spawn a mannequin or pick any ragdoll, pose it with the physgun, right click to snap keyframes (or record it moving), reload to watch a blue ghost play the loop to the beat, then copy it or save it to `garrysmod/data/pose_recorder/<name>.json`. Each bone's angle is what `ManipulateBoneAngles` needs, relative to the model standing in its idle. Paste the JSON to whoever's working on the code. Details, the file format and publishing to the Workshop: `pose_recorder/README.md`.

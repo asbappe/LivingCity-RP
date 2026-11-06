@@ -1,0 +1,25 @@
+# Jobs and quests (F3), and story chains
+
+**Finding the objective.** The tracker on the right shows a compass for whatever you're after: a pointer relative to where you're facing, the distance in meters, a heading (ahead, behind left, ...) and whether it's on your level, a floor or more **UP**, or **DOWN**. It works even when the target is far enough away that the game isn't drawing it. Quests never send you to the infestation or onto Combine ground. Deliveries are made to **people**: the mail comes from the postal clerk and goes to named residents, Mrs. Kleiner hands you her parcel herself, luggage goes back to its owner, uniforms go to the unit at the checkpoint. Ration crates come from the truck driver and go to the dispenser attendant, and the Resistance's supply runs, the weapons ring and the proof-of-nerve parcel are handed over by and to contacts. Each person waits at a marked spot; walk up and press E.
+
+Each faction has a board of radiant jobs built from your actual map: Directives, Protocols, Agenda, Operations, Assignments, Urges. Many have **choices with d20 checks** (Authority, Empathy, Guile, Nerve), and your choices build three traits that stick: **Loyalty, Sympathy, Corruption**.
+
+Built for crowded servers: no job ever targets a player, boards are finite and scale with faction size, violent jobs are capped city-wide, and people can squad up.
+
+**Directives for what's happening now.** The city's events bring their own jobs, posted two minutes before an event starts (units are briefed early even for a surprise sweep or raid) and as it begins, shown only while it's on, and withdrawn when it ends (whoever was already working one is paid; whoever hadn't started isn't held to it). Units get **Ration line supervision** (rations), **Civil status inspections** (sweeps: pat-downs), **Housing block inspection** (block raids: breach the door, get everyone down, search the place), **Curfew enforcement** and **Lockdown: hold the perimeter**; the Resistance get **Warn the block** (raids) and **Run supplies under curfew** (curfew and lockdown). When the infestation spreads or the Resistance take ground, **Containment** or **Retake the block** goes up at once for that patch, and every unit is told. These, and the chases (Apprehend, Disturbance), are squad jobs: up to 4 to 8 people work one together (the rest of the board takes `lc_quest_squad`, 3). Take it from the board and the others join you from theirs.
+
+## Story chains
+
+Personal stories that unlock from what you've done, appear at the top of your board marked **Your Story**, and branch on your choices:
+
+| Story | Who it finds |
+|---|---|
+| Internal Affairs | Cops who take bribes |
+| The Man Inside | Kind, clean cops. Defect, or stay in uniform as a double agent with secret **Inside Work**, until **Suspicion** brings a **Mole Hunt** (caught: wanted, no surrender, Resistance for good; see the Resistance Insider below) |
+| The Missing Unit | Experienced cops. Three different truths |
+| The Overwatch Candidate | Division Leaders. Accept the conditioning and the Overwatch ranks open, or keep your name and go no higher |
+| The Pamphleteer | Kind citizens. Can end with you joining the Resistance |
+| The Informant | Loyal citizens. Includes tailing a neighbor: a suspicion meter fills while he can see you (faster the closer you are and when you run, slower crouched) and drains when you get out of sight, so stepping round a corner into view gives you time to duck back |
+| Father Grigori's Flock | The chaplain. A secret mass, and a traitor among the faithful |
+
+Admins can start any chain directly: `lcq_startchain <ia|inside|missing|candidate|pamphleteer|informant|flock> [player]`. `lcq_story <name>` shows someone's traits, counters and progress; `lcq_resetstory <name>` starts them over.
