@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """Write docs/dev/modules.md: a map from each module to its files, key functions and tests.
 
-    python3 _dev/make_modules_map.py
+    python3 _dev/make_modules_map.py                  regenerate the map
+    python3 _dev/make_modules_map.py --module NAME    one module: its row, plus a line-range outline of
+                                                      each of its files over 20K (NAME may be part of a name)
+    python3 _dev/make_modules_map.py --outline PATH   line-range outline of any Lua file
+                                                      (add --grep TEXT to keep only matching entries)
 
 One row per module name (sv_livingcity_X, cl_livingcity_X and sh_livingcity_X are the same
 module X). For each: the title from the file's header comment, the server / client / shared
@@ -10,7 +14,7 @@ grepping for), and the test units in _dev/tests.lua that call the module's own f
 the most. Everything comes from the code, so rerun it after adding a module or a test unit
 and commit the result; never hand-edit docs/dev/modules.md.
 """
-import collections, os, re, sys
+import argparse, collections, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -79,7 +83,104 @@ def test_regions(t):
     return [(label, set(re.findall(r"[A-Za-z_]\w*", text))) for label, text in regions]
 
 
+BIG = 20 * 1024
+RULE = re.compile(r"^-{20,}\s*$")
+TOPDEF = re.compile(r"^(?:local\s+)?function\s+([A-Za-z_][\w.:]*)\s*\(|^([A-Za-z_][\w.]*)\s*=\s*function\s*\(")
+TOPHOOK = re.compile(r"^(hook\.Add|net\.Receive|concommand\.Add)\(\s*\"([^\"]+)\"(?:\s*,\s*\"([^\"]+)\")?")
+ONELINE = re.compile(r"\bend\)*[;,]?\s*(--.*)?$")
+
+
+def outline(text):
+    """-> [(start, end, label)] for a Lua file: section banners (end None), top-level functions,
+    hooks, net receivers and console commands. A top-level block ends at the next line that starts
+    with 'end' in column 0; a definition whose first line already ends in 'end' is one line."""
+    lines = text.split("\n")
+    out, open_def, in_banner = [], None, False
+    for i, line in enumerate(lines, 1):
+        if open_def is not None:
+            if line.startswith("end"):
+                out.append((open_def[0], i, open_def[1]))
+                open_def = None
+            continue
+        if RULE.match(line):
+            in_banner = not in_banner
+            continue
+        if in_banner:
+            if line.startswith("--") and not any(o[2] is None and o[0] == i - 1 for o in out):
+                prev = out[-1] if out else None
+                if not (prev and prev[1] is None and prev[0] >= i - 3):
+                    out.append((i, None, line.lstrip("-").strip()[:70]))
+            continue
+        m = TOPDEF.match(line)
+        if m:
+            label = ("local " if line.startswith("local") else "") + (m.group(1) or m.group(2))
+        else:
+            h = TOPHOOK.match(line)
+            if not h:
+                continue
+            label = "%s %s" % (h.group(1), " / ".join(g for g in h.group(2, 3) if g))
+            if "function" not in line:
+                continue
+        if ONELINE.search(line):
+            out.append((i, i, label))
+        else:
+            open_def = (i, label)
+    return out
+
+
+def print_outline(path, grep=None):
+    text = open(path).read()
+    rel = os.path.relpath(path, ROOT)
+    rows = outline(text)
+    if grep:
+        g = grep.lower()
+        rows = [r for r in rows if g in r[2].lower()]
+    print("## %s (%dK, %d lines)" % (rel, round(len(text) / 1024), text.count("\n") + 1))
+    for a, b, label in rows:
+        if b is None:
+            print("%d  # %s" % (a, label))
+        else:
+            print("%s %s" % ("%d" % a if a == b else "%d-%d" % (a, b), label))
+
+
+def lookup(name, grep=None, everything=False):
+    """print the map rows that match NAME and an outline of each of their big files"""
+    rows = [l for l in open(OUT) if l.startswith("| `")]
+    key = name.lower().strip("`")
+    hit = [l for l in rows if l.split("`")[1] == key] or [l for l in rows if key in l.split("`")[1]]
+    if not hit:
+        sys.exit("no module matches %r (try: grep -n TEXT docs/dev/modules.md | cut -c1-300)" % name)
+    if len(hit) > 8:
+        sys.exit("%d modules match %r: %s" % (len(hit), name, ", ".join(l.split("`")[1] for l in hit)))
+    for l in hit:
+        cells = [c.strip() for c in l.strip().strip("|").split(" | ")]
+        print("module %s: %s" % (cells[0].strip("`"), cells[1]))
+        for label, c in zip(("server", "client", "shared"), cells[2:5]):
+            if c != "-":
+                print("  %s: %s" % (label, c))
+        print("  key functions: %s" % cells[5])
+        print("  tests: %s" % cells[6])
+        for c in cells[2:5]:
+            if c == "-":
+                continue
+            path = os.path.join(MODS, c.split("`")[1])
+            if everything or os.path.getsize(path) > BIG:
+                print()
+                print_outline(path, grep)
+        print()
+
+
 def main():
+    ap = argparse.ArgumentParser(description="module code map")
+    ap.add_argument("--module", metavar="NAME", help="print one module's row and an outline of its big files")
+    ap.add_argument("--outline", metavar="PATH", help="print the line-range outline of one Lua file")
+    ap.add_argument("--grep", metavar="TEXT", help="with --module/--outline: keep only entries containing TEXT")
+    ap.add_argument("--all", action="store_true", help="with --module: outline small files too")
+    a = ap.parse_args()
+    if a.outline:
+        return print_outline(os.path.abspath(a.outline), a.grep)
+    if a.module:
+        return lookup(a.module, a.grep, a.all)
     files = load_files()
     t = rs.Tests()
     pub, owners = public_functions(files)
@@ -117,8 +218,11 @@ def main():
 
     out = ["# Code map: module to files, key functions and tests", "",
            "Generated by `python3 _dev/make_modules_map.py`. Never hand-edit; rerun it after adding a module or a test unit.",
-           "Paths are under `gamemodes/livingcity/gamemode/modules/`. To find code: `grep -n 'function LC.Name' PATH | cut -c1-160`,",
-           "then read a line range. Never open a file over about 20K whole.", "",
+           "**Do not read this file whole (30K).** One module: `python3 _dev/make_modules_map.py --module NAME` prints its row and, for each",
+           "file over 20K, an outline of `start-end name` for every top-level function, hook and section (add `--grep TEXT` to",
+           "narrow it; `--outline PATH` does any Lua file). Read just that line range with `sed -n 'A,Bp' PATH`.",
+           "To find a feature by word: `grep -n TEXT docs/dev/modules.md | cut -c1-300`. Paths are under",
+           "`gamemodes/livingcity/gamemode/modules/`. Never open a file over about 20K whole.", "",
            "**Key functions** are this module's own public functions that the rest of the code and the tests use most.",
            "**Tests** are the test units (or top-level sections) in `_dev/tests.lua` that call the most of this module's own",
            "functions, with the number of distinct functions hit. Run one with `python3 _dev/run_section.py --unit NAME`",
