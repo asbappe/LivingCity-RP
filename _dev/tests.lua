@@ -1067,6 +1067,7 @@ ok(LC.SetJob(worker, "sanitation") and LC.Job(worker).id == "sanitation", "a cit
 local unitJ = newPlayer("UnitJob", "cp")
 ok(not LC.SetJob(unitJ, "kitchen"), "units can't take Union jobs")
 -- (7 November) the Union's kit comes back after prison; the job goes with a unit's badge, or an anticitizen's name
+do
 local kit = newPlayer("Kit", "citizen")
 ok(LC.SetJob(kit, "cleanup", true) and kit:HasWeapon("weapon_lc_sprayer") and kit:HasWeapon("weapon_lc_hoover"), "Infestation Cleanup is issued the sprayer and the hoover")
 kit:StripWeapons()
@@ -1090,6 +1091,7 @@ LC.CheckUnionJob(anti)
 LC.PlayerIsHunted = wasHunted
 ok(LC.Job(anti) == nil and not anti:HasWeapon("weapon_lc_hoover"), "an anticitizen's Union job is revoked, the hoover with it")
 ok(anti:HasWeapon("weapon_lc_sprayer") and LC.HasItem(anti, "weedkiller"), "but they keep the weedkiller")
+end
 local sp1 = storyPosting(worker, "shift")
 for _ = 1, 5 do -- (a shift that finds no spot this time: another try, as the board would later)
     if sp1 then break end
