@@ -88,6 +88,7 @@ local GUIDE = {
     { "Staying out of trouble", {
         "Don't crowd Civil Protection units. They warn you first, then hit you with the stunstick.",
         "When a Civil Protection unit stops you, stand still. They may search you and find anything illegal in your pockets.",
+        "A unit player searching you pats you down one spot at a time (Jacket, Waist, Legs, Boots): a panel shows which. Stand still. Once a spot has been checked you may press R, once, to try to slip something into it; it works more often than not, but if they feel it, it's found.",
         "Crouch to sneak: a Civil Protection unit only spots you from half the usual distance, even less if you move slowly or stay in the dark, and never from behind. While crouching, a bar shows how visible you are, and each unit's line of sight is drawn in front of him (red means he can see you).",
         "Wanted but haven't hurt anyone? Units chase you down and cuff you. They shoot at violent suspects, and at anyone with a gun in their hand.",
         "Sleeping in a bed, you lie still and heal; press Jump to get up. Rations being handed out during your shift? C menu > Take a ration break: your job waits for you.",
@@ -219,6 +220,7 @@ local GUIDE = {
         "When the infestation spreads or the Resistance take ground, a directive to deal with it is posted straight away.",
     } },
     { "Civil Protection", {
+        "Searching someone (baton reload, !search, F2) opens a pat-down: click Jacket, Waist, Legs and Boots to check each for a second. Only the spots you check give up what's there, so check them all, then press Done. Watch for \"They tried to move something\": that's found too.",
         "Civil Protection units: F2 is your unit's quick menu. 1 to 6: Voice lines, Unit tools, Kick, Call for backup, Issue a BOLO, Send my 10-20. 7 and 8: search, cuff or escort whoever you're looking at. F1 has what everyone has (papers, talking, poses).",
         "Units: C > Unit tools lists everything a unit can do, with what each one does. The records terminal holds violations, notes, loyalty points, BOLOs and requests, and its Manpower tab shows the Combine's reserves.",
         "Civil Protection units don't craft: the Civil Protection Commissary issues grenades, ammunition, armour, bandages and your ration (press E on it; once every two minutes). F3 marks the nearest one on your screen.",

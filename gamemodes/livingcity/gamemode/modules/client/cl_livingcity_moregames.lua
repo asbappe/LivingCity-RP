@@ -60,6 +60,8 @@ local function Button(parent, text, col, click)
     b.DoClick = click
     return b
 end
+-- (the same look for the pat-down a unit's search opens: cl_livingcity_patsearch.lua)
+LC_CL.JobLook = { BG = BG, CARD = CARD, INK = INK, DIM = DIM, ACC = ACC, GOOD = GOOD, BAD = BAD, WARN = WARN, Button = Button }
 
 net.Receive("lc_jg_panel", function()
     local t = ReadCompressed() or {}

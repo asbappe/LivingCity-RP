@@ -1309,6 +1309,60 @@ local okMG, errMG = pcall(function()
     run("PreDrawHalos")
 end)
 if not okMG then problems[#problems + 1] = "more job games: " .. tostring(errMG) end
+-- a unit's search as a pat-down (cl_livingcity_patsearch.lua): the unit's window builds, updates, paints; the panel
+-- for the person searched; both close; a window that can't be built hands back to the old search
+local psSaved = { net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteUInt }
+local okPS, errPS = pcall(function()
+    local doc, sent, made = nil, {}, {}
+    local curName
+    net.ReadString = function() return "x" end
+    util.JSONToTable = function() return doc end
+    net.Start = function(n) curName = n end
+    net.WriteUInt = function() end
+    net.SendToServer = function() sent[#sent + 1] = curName end
+    local function P()
+        local t = {}
+        made[#made + 1] = t
+        return setmetatable(t, { __index = function(_, k)
+            if string.sub(k, 1, 2) == "lc" or string.sub(k, 1, 1) == "_" or k == "silent" or k == "spots" or k == "wasDown" then return nil end
+            if k == "IsValid" then return function() return not t._removed end end
+            if k == "Remove" then return function() t._removed = true if t.OnRemove then t.OnRemove(t) end end end
+            if k == "GetWide" or k == "GetTall" then return function() return 380 end end
+            if k == "IsHovered" or k == "GetDisabled" then return function() return false end end
+            return function() return P() end
+        end })
+    end
+    vgui = { Create = function() return P() end, GetKeyboardFocus = function() return nil end }
+    local four = function(a, b, c, d) return { { name = "Jacket", state = a }, { name = "Waist", state = b }, { name = "Legs", state = c }, { name = "Boots", state = d } } end
+    doc = { role = "unit", who = "Citizen", live = false, secs = 1, spots = four(0, 0, 0, 0) }
+    net.recv_lc_pat_open()
+    if not IsValid(LC_CL.PatSearchWindow()) then error("the unit's pat-down window didn't build") end
+    if sent[#sent] ~= "lc_pat_check" then error("the window didn't tell the server it's open") end
+    doc = { role = "unit", who = "Citizen", live = true, checking = 2, secs = 1, flash = "They tried to move something: Lockpick", flashId = 1, spots = four(2, 1, 2, 0) }
+    doc.spots[1].text, doc.spots[3].text = "Lockpick", "Nothing."
+    net.recv_lc_pat_open()
+    doc = { role = "target", who = "Unit", key = "R", slip = "ready", checking = 2, spots = four(2, 1, 0, 0) }
+    for _, s in ipairs(doc.spots) do s.mine = "" end
+    doc.spots[2].mine = "Old radio"
+    net.recv_lc_pat_open()
+    if not IsValid(LC_CL.PatSearchPanel()) then error("no panel for the person searched") end
+    for _, pnl in ipairs(made) do
+        for _, k in ipairs({ "Paint", "Think", "PerformLayout", "DoClick" }) do
+            local f = rawget(pnl, k)
+            if f then local okp, e = pcall(f, pnl, 380, 240) if not okp then error("a panel's " .. k .. " fails: " .. tostring(e)) end end
+        end
+    end
+    local n0 = #sent
+    net.recv_lc_pat_close()
+    if IsValid(LC_CL.PatSearchWindow()) or IsValid(LC_CL.PatSearchPanel()) then error("the pat-down didn't close") end
+    if #sent ~= n0 then error("closing on the server's word sent a close back") end
+    vgui = { Create = function() error("no vgui") end, GetKeyboardFocus = function() return nil end }
+    doc = { role = "unit", who = "Citizen", live = false, secs = 1, spots = four(0, 0, 0, 0) }
+    net.recv_lc_pat_open()
+    if sent[#sent] ~= "lc_pat_close" or IsValid(LC_CL.PatSearchWindow()) then error("a window that fails to build doesn't hand back") end
+end)
+net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteUInt = psSaved[1], psSaved[2], psSaved[3], psSaved[4], psSaved[5], psSaved[6]
+if not okPS then problems[#problems + 1] = "pat-down search: " .. tostring(errPS) end
 -- what now? (cl_livingcity_nextstep.lua): the line on screen, and its F1 page
 local okWN, errWN = pcall(function()
     _me:SetNW2String("lc_next", "Find water")
