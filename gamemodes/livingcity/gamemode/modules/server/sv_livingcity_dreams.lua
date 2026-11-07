@@ -5,15 +5,16 @@
       players can experience together at a set time at night".
 
       With a dream point placed on the map (the editor's "Point: dream", somewhere out of the
-      map), a secret ending no longer ends the city: it waits for tonight's dream. About a minute
+      map), the Administrator can choose a dream for tonight (below). About a minute
       (lc_dream_delay, 60 seconds) after the Administrator says good night (the night
       announcement; or the night coming, if nobody says it), everyone asleep in a bed who hasn't
       opted out dreams it together at the dream point. The rest of the city carries on as if
       nothing happened: no time stop, no vote, no freeze, no reload.
 
-      One dream a night at most, and only when an ending is waiting for it (which ending, and
-      when it can be, is as it always was: the sealed directives, /eatchip, the cooldown).
-      lc_dream_every_night 1 dreams a random one on a night with nothing waiting.
+      One dream a night at most, and only when one is waiting for it: the Administrator's pick,
+      or with lc_dream_every_night 1 a random one on a night with nothing waiting. Endings set
+      off in play (/eatchip, an admin's lc_ending) are the whole city's, as they always were:
+      the G-Man is kept for a future endings setup (the owner, 7 November).
 
       With no dream point, nothing changes: the endings are as they always were.
 
@@ -32,8 +33,7 @@
       stays inside it (without one, within lc_dream_radius of the point).
 
       The Administrator chooses tonight's dream on their tablet, by mood: Happy, Neutral or
-      Nightmare (lc_dream_moods). A sealed directive's (the G-Man's) comes first; the pick ignores
-      the endings' cooldown, still one dream a night. A dreamer taken out of the ending watches the
+      Nightmare (lc_dream_moods). The pick ignores the endings' cooldown, still one dream a night. A dreamer taken out of the ending watches the
       rest, flying only inside the dream and watching only the other dreamers.
 
       Players: C > Settings > Shared dreams (on, or opt out; and "Wake up" in a dream), or
@@ -881,24 +881,16 @@ function LC.DreamStart(id, by, vote, also, force)
     return true, dream
 end
 
--- A secret ending, triggered with a dream point placed: it waits for tonight's dream.
--- Returns took (the dream has it), and then ok, why for whoever triggered it.
-function LC.DreamDivert(id, by, now)
-    if not LC.DreamReady() then return false end
-    if S.queued and S.queued.source ~= "admin" and S.queued.source ~= "nightly" then return true, false, "Something is already waiting for tonight's dream." end
-    -- (the G-Man's comes first: the Administrator's pick gives way, and they're told)
-    local was = S.queued
-    if was and was.source == "admin" and IsValid(was.by) then
-        Notice(was.by, "warn", "Tonight's dream", "Something else has taken tonight's dream out of your hands. The dream you chose won't come.", 10)
-    end
-    S.queued = { id = id, by = IsValid(by) and by or nil, vote = not now, t = os.time(), source = "directive" }
-    Log("info", "Secret ending " .. id .. " waits for tonight's dream")
-    for _, p in ipairs(player.GetAll()) do p:ChatPrint("[???] Something stirs. Tonight, the city will dream.") end
-    -- (night already, and tonight's not dreamt yet: in a minute, or when the good night says)
+-- Queue an ending for tonight's dream (the Administrator's pick uses this; kept for a future
+-- endings setup to call). source: who chose it. Endings set off in play don't come here: they're
+-- the whole city's (the owner, 7 November: dreams are a bonus, the G-Man is kept for the endings).
+function LC.DreamQueueEnding(id, by, source)
+    if not LC.DreamReady() or not (LC.Endings and LC.Endings[id]) then return false end
+    S.queued = { id = id, by = IsValid(by) and by or nil, vote = false, t = os.time(), source = source or "admin" }
     if LC.DayPhase and LC.DayPhase() == "night" and S.dreamedNight ~= S.night then
         S.at, S.warned = math.max(S.at or 0, CurTime() + math.max(5, cvDelay:GetFloat())), nil
     end
-    return true, true
+    return true
 end
 function LC.DreamQueued() return S.queued end
 
@@ -917,7 +909,7 @@ function LC.DreamOffice()
     end
     local q = S.queued
     if q and q.source ~= "nightly" then
-        out.waiting = { id = q.id, name = LC.Endings[q.id] and LC.Endings[q.id].name or q.id, mood = LC.DreamMoodNames[LC.DreamMood(q.id)], yours = q.source == "admin" }
+        out.waiting = { id = q.id, name = LC.Endings[q.id] and LC.Endings[q.id].name or q.id, mood = LC.DreamMoodNames[LC.DreamMood(q.id)], yours = true }
     end
     out.dreamt = (S.dreamedNight == S.night) and LC.DayPhase and LC.DayPhase() == "night" or nil
     out.at = S.at and math.max(0, math.floor(S.at - CurTime())) or nil
@@ -926,24 +918,21 @@ function LC.DreamOffice()
 end
 
 -- The Administrator picks tonight's dream (id), or none ("none"). True, or false and why not.
--- The G-Man's (a sealed directive, /eatchip) comes first; the pick ignores the endings' cooldown,
--- and there's still one dream a night; it can be changed until the dream begins.
+-- The pick ignores the endings' cooldown, and there's still one dream a night; it can be changed
+-- until the dream begins. (The G-Man has no part in dreams: the owner, 7 November.)
 function LC.DreamAdminPick(ply, id)
     if not (LC.IsAdministrator and LC.IsAdministrator(ply)) then return false, "Only the City Administrator chooses the city's dreams." end
     if not cvOn:GetBool() then return false, "Dreams are switched off on this server." end
     if not LC.DreamPoint() then return false, "There's nowhere for the city to dream yet (no dream point on this map)." end
     local q = S.queued
-    if q and q.source ~= "admin" and q.source ~= "nightly" then
-        return false, "Something else already waits for tonight's dream (" .. (LC.Endings[q.id] and LC.Endings[q.id].name or q.id) .. "). It isn't yours to change."
-    end
     id = string.lower(tostring(id or ""))
     if id == "none" or id == "" then
-        if q and q.source == "admin" then S.queued = nil end
+        if q then S.queued = nil end
         Notice(ply, "info", "Tonight's dream", "No dream tonight. The city sleeps without one.", 7)
         return true
     end
     if not (LC.Endings and LC.Endings[id]) then return false, "No such dream." end
-    S.queued = { id = id, by = ply, vote = false, t = os.time(), source = "admin" }
+    LC.DreamQueueEnding(id, ply, "admin")
     local mood = LC.DreamMoodNames[LC.DreamMood(id)]
     local tonight = not (S.dreamedNight == S.night and LC.DayPhase and LC.DayPhase() == "night")
     if tonight and LC.DayPhase and LC.DayPhase() == "night" then

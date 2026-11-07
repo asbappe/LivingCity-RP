@@ -16,6 +16,7 @@ _setcvar("lc_garrison", 0) -- (the nexus garrison: tested on its own)
 _setcvar("lc_search_fight_choice", 0) -- (fight or comply: tested on its own, in the 1 November section)
 _setcvar("lc_wear_uses", 0) -- (tools wearing out at random: tested on its own)
 _setcvar("lc_quest_allies", 0) -- (friendly NPCs on violent jobs: tested on their own, in QuestSquadTests)
+_setcvar("lc_directives", 1) -- (the G-Man's directives are off by default now, set aside by the owner; still tested as they are)
 _setcvar("lc_market_demand", 0) -- (demand moving black market prices: tested on its own, in MarketTests)
 _setcvar("lc_afk_kick_minutes", 0) -- (the test's people never touch a key: no kicking them for it)
 _setcvar("lc_directives", 0) -- (no sealed directive breaking open in the middle of other tests; its own section turns it on)
@@ -13420,11 +13421,12 @@ local dp = LC.AddPoint(DREAM, 0, "dream")
 ok(dp and LC.DreamReady() and LC.DreamPoint() == dp, "the editor's dream point: dreams are on")
 ok(LC.ZONE_KINDS.dream and LC.POINT_KINDS.dream, "(a dream point and a dream zone are things the editor places)")
 
--- a secret ending now waits for tonight's dream
-local okQ = LC.TriggerEnding("hard", s1)
+-- an ending set off in play is still the whole city's (the owner, 7 November: the G-Man is kept for the endings)
+ok(LC.DreamDivert == nil, "with a dream point placed, an ending set off in play is still the whole city's (dreams are chosen, not set off: DreamMoodTests)")
+-- tonight's dream, queued (the Administrator's pick does this)
+local okQ = LC.DreamQueueEnding("hard", s1, "admin")
 ok(okQ and LC.EndingAny() == nil and LC.DreamQueued() and LC.DreamQueued().id == "hard",
-    "a secret ending, with a dream point placed, waits for tonight's dream (the city carries on)")
-ok(not LC.TriggerEnding("bus", s1), "one at a time: another can't wait as well")
+    "a dream chosen for tonight waits for the night (the city carries on)")
 
 -- opting out (C > Settings, or /dream off)
 LC.SlashCommands.dream(s2, "off")
@@ -13469,9 +13471,9 @@ ok(#s1.weps == 1 and s1.weps[1] == "weapon_lc_hands" and next(s1.ammoT) == nil, 
 ok(LC.BedSleepers[bed1] == s1 and not LC.BedFree(bed1, s2), "their bed stays theirs")
 _run(5)
 E = LC.EndingAny()
-ok(E and E.phase == "gman" and s1.frozen and s3.frozen, "the G-Man's vote, for the dreamers")
+ok(E and E.phase ~= "gman", "no G-Man's vote in a dream (the owner, 7 November: the G-Man is kept for the endings)", E and E.phase)
 ok(not aw.frozen and aw:GetPos():Distance(awPos) < 1 and #aw.weps == awWeps and not s2.frozen, "the awake (and whoever opted out) aren't touched: not frozen, not moved",
-    tostring(aw.frozen) .. " " .. tostring(aw:GetPos():Distance(awPos)) .. " " .. #aw.weps .. "/" .. awWeps .. " " .. tostring(s2.frozen))
+    tostring(aw.frozen) .. " " .. tostring(aw:GetPos():Distance(awPos)) .. " " .. #aw.weps .. "/" .. awWeps .. " " .. tostring(s2.frozen) .. " " .. table.concat(aw.weps, ","))
 ok(not LC.TimeStopped and LC.StartEvent ~= nil, "and the city's time goes on")
 _run(31)
 E = LC.EndingAny()
@@ -13656,19 +13658,18 @@ ok(LC.AdminDo(adm, "dream", "bus") and LC.DreamQueued().id == "bus" and LC.Dream
 ok(LC.AdminDo(adm, "dream", "harpies") and LC.DreamQueued().id == "harpies" and LC.DreamOffice().waiting.mood == "Nightmare", "and can change it before the night")
 ok(LC.AdminDo(adm, "dream", "none") and LC.DreamQueued() == nil, "or choose no dream tonight")
 
--- the G-Man's comes first
+-- the G-Man has no part in dreams (the owner, 7 November): an ending set off in play leaves tonight's dream alone
 LC.DreamAdminPick(adm, "bus")
-ok(LC.TriggerEnding("shalom", cit) and LC.DreamQueued().id == "shalom" and LC.DreamQueued().source == "directive",
-    "an ending from a sealed directive takes tonight's dream over from the Administrator's pick")
-ok(ToldTo(adm, "out of your hands"), "(and the Administrator is told)")
-ok(not LC.DreamAdminPick(adm, "harpies") and LC.DreamQueued().id == "shalom" and not LC.DreamOffice().waiting.yours,
-    "the Administrator can't change it then (the tablet says it isn't theirs)")
+ok(LC.TriggerEnding("shalom", cit) and LC.EndingSession() ~= nil and LC.DreamQueued().id == "bus",
+    "an ending set off in play is the whole city's; the Administrator's dream still waits for tonight")
+LC.CancelEnding()
+ok(LC_SettingInfo and LC_SettingInfo.lc_directives and LC_SettingInfo.lc_directives.d == "0", "the G-Man's sealed directives, sleep visits and talks are off by default (set aside for a future endings setup)")
 LC.DreamForget()
 
 -- the cooldown doesn't stop the Administrator's (there's still one a night)
 local t0 = os.time() - 60
 _files["livingcity/endings.json"] = util.TableToJSON({ last = t0 })
-ok(LC.EndingCooldownLeft() > 0 and not LC.TriggerEnding("bus", cit), "(the endings' cooldown is running: a directive's can't come)")
+ok(LC.EndingCooldownLeft() > 0 and not LC.TriggerEnding("bus", cit), "(the endings' cooldown is running: an ending can't be set off)")
 ok(LC.DreamAdminPick(adm, "harpies"), "the Administrator's pick doesn't wait for the cooldown")
 Asleep(cit, CITY)
 Asleep(cit2, CITY + Vector(0, 200, 0))

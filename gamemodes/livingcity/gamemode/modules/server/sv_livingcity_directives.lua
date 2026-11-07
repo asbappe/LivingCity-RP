@@ -37,7 +37,7 @@ util.AddNetworkString("lc_directive_act")    -- sign, refuse, open; a staff memb
 util.AddNetworkString("lc_directive_staff")  -- the popup for a superadmin or admin
 util.AddNetworkString("lc_gman_vision")      -- the G-Man on someone's screen (a visit, a dream, his voice)
 
-local cvOn      = CreateConVar("lc_directives", "1", FLAGS, "Secret endings start from sealed directives: unlocked by the City Administrator or the city itself, then signed, refused, or put to the G-Man's vote")
+local cvOn      = CreateConVar("lc_directives", "0", FLAGS, "(Off: set aside for a future endings setup, the owner, 7 November.) Secret endings start from sealed directives: unlocked by the City Administrator or the city itself, then signed, refused, or put to the G-Man's vote")
 local cvSign    = CreateConVar("lc_directive_sign_minutes", "20", FLAGS, "Minutes the Administrator has to sign or refuse an unlocked directive before it goes down the list")
 local cvStaff   = CreateConVar("lc_directive_staff_minutes", "5", FLAGS, "Minutes a superadmin or admin has to answer the popup before it goes to the G-Man's vote")
 local cvGrace   = CreateConVar("lc_directive_grace_minutes", "10", FLAGS, "Minutes after the last Administrator, superadmin or admin leaves before an unlocked directive goes down the list (they may be rejoining)")

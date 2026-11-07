@@ -3874,11 +3874,8 @@ function LC.TriggerEnding(id, by, now)
     if E then return false, "One's already under way." end
     if not cvOn:GetBool() then return false, "Secret endings are off." end
     if LC.EndingCooldownLeft() > 0 and not (LC.DreamPending and LC.DreamPending.force) then return false, "Not yet (" .. math.ceil(LC.EndingCooldownLeft() / 60) .. " minutes)." end -- (the Administrator's dream: no cooldown)
-    -- (with a dream point placed, the ending waits for tonight's dream: sv_livingcity_dreams.lua)
-    if not LC.DreamPending and not LC.EndingClassic and LC.DreamDivert then
-        local took, okd, why = LC.DreamDivert(id, by, now)
-        if took then return okd, why end
-    end
+    -- (an ending set off in play is the whole city's, dream point or not: dreams are the Administrator's
+    -- choice, sv_livingcity_dreams.lua. The owner, 7 November: the G-Man is kept for the endings.)
     E = { id = id, by = by, phase = "pending", phaseT = CurTime(), ents = {}, votes = {}, dream = LC.DreamPending }
     LC.DreamPending = nil
     if LC.Event and LC.EndEvent and not E.dream then LC.EndEvent(true) end
@@ -3992,7 +3989,7 @@ function LC.EatChip(ply)
     if not (LC.HasItem and LC.HasItem(ply, "master_chip")) then return false, "You've nothing like that to eat." end
     if E then return false, "Not now." end
     if LC.EndingCooldownLeft() > 0 or not cvOn:GetBool() then return false, "It doesn't go down. Not yet." end
-    if LC.DreamQueued and LC.DreamQueued() then return false, "It doesn't go down. Something else is coming tonight." end -- (one dream a night: sv_livingcity_dreams.lua)
+    if LC.DreamActive then return false, "Not now." end -- (the city's dreaming: sv_livingcity_dreams.lua)
     LC.TakeItem(ply, "master_chip", 1)
     ply:EmitSound("physics/metal/metal_box_break1.wav", 70)
     for _, p in ipairs(player.GetAll()) do
@@ -4081,7 +4078,8 @@ local RETUNED = {
     { "lc_afk_minutes", { "5" }, "20" }, -- (2 November: away at 20 minutes, the owner asked; sv_livingcity_cityadmin.lua)
     { "lc_ending_gman_lines", { "vo/citadel/gman_exit01.wav,vo/citadel/gman_exit02.wav" }, "vo/citadel/gman_exit02.wav" }, -- (2 November: exit01 calls everyone "Doctor Freeman")
     { "lc_afk_kick_minutes", { "15" }, "20" },
-    { "lc_job_cooldown", { "120" }, "900" }, -- (7 November: one Union job change every 15 minutes, the owner asked; sv_livingcity_work.lua)
+    { "lc_job_cooldown", { "120" }, "900" },
+    { "lc_directives", { "1" }, "0" }, -- (7 November, the owner: the G-Man's sealed directives, his sleep visits and talks with the Administrator set aside for a future endings setup) -- (7 November: one Union job change every 15 minutes, the owner asked; sv_livingcity_work.lua)
     -- (7 November, the owner: "slow down the pacing so events are more sparse": the city's own happenings about twice as far apart,
     -- and the PA quiet a minute and a half before a routine announcement: docs/dev/pacing-audit.md)
     { "lc_announce_quiet", { "60" }, "90" },
