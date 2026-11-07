@@ -731,6 +731,7 @@ local function ScrollTo(panel, n)
 end
 -- what's wrong with buying it, beside the name (the price always shows on the button)
 local SHORT = Color(230, 110, 90)
+local MARKET = Color(235, 190, 90) -- (the market's line: restricted, scarce, in demand; sv_livingcity_market.lua)
 local function ShortNote(g)
     if g.ok then return nil end
     return (g.why or "Unavailable") .. (g.short and string.format(", %d short", g.short) or "")
@@ -749,7 +750,7 @@ net.Receive("lce_shop", function()
         for _, g in ipairs(t.goods or {}) do
             local id = g.id
             rows[#rows + 1] = { kind = "button", enabled = g.ok == true,
-                text = g.name .. "   " .. g.price .. " credits" .. (g.ok and "" or ("   (" .. ShortNote(g) .. ")")),
+                text = g.name .. "   " .. g.price .. " credits" .. (g.ok and "" or ("   (" .. ShortNote(g) .. ")")) .. (g.market and ("   [" .. g.market .. "]") or ""),
                 fn = function() net.Start("lce_buy") net.WriteString(id) net.SendToServer() end }
         end
         LC_CL.ScreenOpen(scr, "CIVIL PROTECTION COMMISSARY", "the unit counter", rows)
@@ -774,7 +775,7 @@ net.Receive("lce_shop", function()
         local row = vgui.Create("DPanel", scroll)
         row:Dock(TOP)
         row:DockMargin(0, 0, 0, 6)
-        row:SetTall(54)
+        row:SetTall(g.market and 70 or 54)
         local note = ShortNote(g)
         row.Paint = function(self, w, h)
             draw.RoundedBox(3, 0, 0, w, h, Color(30, 28, 24, 240))
@@ -785,6 +786,7 @@ net.Receive("lce_shop", function()
                 draw.SimpleText(note, "DermaDefault", 18 + tw, 14, SHORT)
             end
             draw.SimpleText(g.desc or "", "DermaDefault", 10, 32, DIM)
+            if g.market then draw.SimpleText(g.market, "DermaDefault", 10, 50, MARKET) end
         end
         local b = vgui.Create("DButton", row)
         b:Dock(RIGHT)
@@ -828,11 +830,12 @@ net.Receive("lcu_market", function()
     marketFrame.lcScroll = scroll
 
     -- note: what's wrong with buying it ("Not enough credits, 25 short"), beside the name
-    local function Row(name, desc, buttonText, enabled, onClick, nameCol, note)
+    -- market: the market's line under it ("Hard to get in the city: in demand"; sv_livingcity_market.lua)
+    local function Row(name, desc, buttonText, enabled, onClick, nameCol, note, market)
         local row = vgui.Create("DPanel", scroll)
         row:Dock(TOP)
         row:DockMargin(0, 0, 0, 6)
-        row:SetTall(desc and 54 or 34)
+        row:SetTall(desc and (market and 70 or 54) or 34)
         row.Paint = function(self, w, h)
             draw.RoundedBox(3, 0, 0, w, h, Color(30, 24, 22, 240))
             draw.SimpleText(name, "DermaDefaultBold", 10, desc and 14 or h / 2, nameCol or INK, TEXT_ALIGN_LEFT, desc and TEXT_ALIGN_TOP or TEXT_ALIGN_CENTER)
@@ -842,6 +845,12 @@ net.Receive("lcu_market", function()
                 draw.SimpleText(note, "DermaDefault", 18 + tw, desc and 14 or h / 2, SHORT, TEXT_ALIGN_LEFT, desc and TEXT_ALIGN_TOP or TEXT_ALIGN_CENTER)
             end
             if desc then draw.SimpleText(desc, "DermaDefault", 10, 32, DIM) end
+            if desc and market then draw.SimpleText(market, "DermaDefault", 10, 50, MARKET) end
+            if market and not desc then
+                surface.SetFont("DermaDefaultBold")
+                local tw = surface.GetTextSize(name)
+                draw.SimpleText(market, "DermaDefault", 18 + tw, h / 2, MARKET, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            end
         end
         local b = vgui.Create("DButton", row)
         b:Dock(RIGHT)
@@ -876,7 +885,7 @@ net.Receive("lcu_market", function()
             net.Start("lcu_buy")
             net.WriteString(g.id)
             net.SendToServer()
-        end, g.ok and INK or DIM, ShortNote(g))
+        end, g.ok and INK or DIM, ShortNote(g), g.market)
     end
 
     if #(t.sell or {}) > 0 then
@@ -893,7 +902,7 @@ net.Receive("lcu_market", function()
                 net.WriteString(sitem.id)
                 net.WriteBool(false)
                 net.SendToServer()
-            end)
+            end, nil, nil, sitem.market)
             if sitem.n > 1 then
                 Row("   all " .. sitem.n, nil, "Sell all for " .. (sitem.price * sitem.n), true, function()
                     net.Start("lcu_sell")

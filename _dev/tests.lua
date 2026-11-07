@@ -16,6 +16,7 @@ _setcvar("lc_garrison", 0) -- (the nexus garrison: tested on its own)
 _setcvar("lc_search_fight_choice", 0) -- (fight or comply: tested on its own, in the 1 November section)
 _setcvar("lc_wear_uses", 0) -- (tools wearing out at random: tested on its own)
 _setcvar("lc_quest_allies", 0) -- (friendly NPCs on violent jobs: tested on their own, in QuestSquadTests)
+_setcvar("lc_market_demand", 0) -- (demand moving black market prices: tested on its own, in MarketTests)
 _setcvar("lc_afk_kick_minutes", 0) -- (the test's people never touch a key: no kicking them for it)
 _setcvar("lc_directives", 0) -- (no sealed directive breaking open in the middle of other tests; its own section turns it on)
 _setcvar("lc_units_spot_monsters", 0) -- (units going for zombies they see: tested on their own)
@@ -17099,6 +17100,166 @@ function MissingZombineTests()
     for zi = #LC.Zones, 1, -1 do if LC.Zones[zi] == iz then table.remove(LC.Zones, zi) end end
 end
 MissingZombineTests()
+
+function MarketTests() -- (the owner, 7 November: the Administrator's say over the Commissary; every seller playing off each other)
+    section("The market: the Administrator's Commissary controls, demand, and the black market following shortages")
+    _setcvar("lc_market", 1)
+    _setcvar("lc_market_demand", 1)
+    _setcvar("lc_market_unrest", 4)
+    _setcvar("lc_market_scarce_stock", 2)
+    local MS = LC.MarketState
+    MS.rules, MS.stock, MS.restockAt, MS.demand = {}, {}, {}, {}
+    local boss = newPlayer("MarketBoss", "admin")
+    local cit = newPlayer("MarketCitizen", "citizen")
+    local cop = newPlayer("MarketCop", "cp")
+    LC.AddCredits(cit, 2000)
+    local bread, coffee, healthkit = LCS.GoodsById.bread, LCS.GoodsById.coffee, LCS.GoodsById.healthkit
+    -- untouched: everything as it was
+    ok(LC.MarketCommissaryMul(bread) == 1 and LC.MarketMinStanding(bread) == bread.minStanding and LC.MarketBlackMul(LCS.BlackById.lockpick) == 1
+        and #LC.MarketBlackList() == #LCS.Black and #LC.MarketLabList() == #LCS.Lab and LC.MarketBuyback("gun_pistol", 72) == 72,
+        "nothing touched and nothing bought: every price, standing and list is as it always was")
+    -- only the Administrator
+    local okC, whyC = LC.MarketSet(cit, "bread", "restrict", "1")
+    local okP = LC.MarketSet(cop, "bread", "price", "3")
+    ok(not okC and not okP and whyC == "Only the City Administrator." and not LC.MarketRestricted(bread), "only the City Administrator can change the Commissary")
+    ok(not LC.MarketSet(boss, "gren_gas", "restrict", "1"), "Civil Protection's own issue isn't hers to restrict")
+    local panels = 0
+    local realSend = LC.SendCompressed
+    LC.SendCompressed = function(msg, tbl, rec) if msg == "lc_market_admin" then panels = panels + 1 end return realSend(msg, tbl, rec) end
+    ok(not LC.MarketOpenAdmin(cit) and LC.MarketOpenAdmin(boss) and panels == 1, "the panel opens for the Administrator only")
+    LC.SendCompressed = realSend
+    -- restrict
+    ok(LC.MarketSet(boss, "bread", "restrict", "1") and LC.MarketRestricted(bread), "she restricts bread")
+    local c0 = LC.Credits(cit)
+    ok(not LC.Buy(cit, "bread") and LC.Credits(cit) == c0, "a restricted good can't be bought")
+    local can, why = LC.CanBuy(cit, bread)
+    ok(not can and why == "Restricted by the Administrator.", "and the shop says why", why)
+    local shopT
+    LC.SendCompressed = function(msg, tbl, rec) if msg == "lce_shop" then shopT = tbl end return realSend(msg, tbl, rec) end
+    LC.OpenShop(cit, true)
+    LC.SendCompressed = realSend
+    local row
+    for _, g in ipairs(shopT and shopT.goods or {}) do if g.id == "bread" then row = g end end
+    ok(row and row.ok == false and row.market == "Restricted by the Administrator", "it's still on the shelf, greyed, marked restricted", row and tostring(row.market))
+    -- it turns up on the black market, at a premium
+    local bm = LC.MarketBlackById("mkt_bread")
+    local listed = false
+    for _, g in ipairs(LC.MarketBlackList()) do if g.id == "mkt_bread" then listed = true end end
+    ok(bm and listed and LC.BlackPrice(bm) > math.ceil(bread.price * 1.5), "restricted at the Commissary: the dealer has it, at a premium", bm and LC.BlackPrice(bm))
+    ok(LC.MarketBlackNote(bm) == "Hard to get in the city", "and his window says why", tostring(LC.MarketBlackNote(bm)))
+    local realAccess = LC.MarketAccess
+    LC.MarketAccess = function() return true end
+    local cb, bp = LC.Credits(cit), LC.BlackPrice(bm)
+    ok(LC.BlackBuy(cit, "mkt_bread") and LC.HasItem(cit, "bread") and LC.Credits(cit) == cb - bp, "and sells it")
+    -- the Resistance's side: the quartermaster's price and the scientist (tablets: he can make them)
+    ok(LC.MarketSet(boss, "tablets", "restrict", "1"), "she restricts water tablets")
+    local tabBM = LCS.BlackById.tablets
+    ok(LC.BlackPrice(tabBM) >= math.floor(tabBM.price * 1.9), "the dealer's usual tablets double in price", LC.BlackPrice(tabBM))
+    local labHas = LC.MarketLabById("mkt_tablets")
+    ok(labHas and labHas.needs and labHas.needs.chemicals == 1 and LC.LabPrice(labHas) > 0, "the Resistance's scientist can make them while the Commissary won't sell them")
+    ok(LC.QuartermasterPrice(tabBM) < LC.BlackPrice(tabBM), "the quartermaster sells them to his own cheaper than the dealer")
+    -- unrestricted: it drops off again
+    ok(LC.MarketSet(boss, "bread", "restrict", "0") and LC.MarketBlackById("mkt_bread") == nil and LC.MarketLabById("mkt_tablets") ~= nil,
+        "on sale again: the dealer stops carrying bread")
+    ok(not LC.BlackBuy(cit, "mkt_bread"), "and can't sell it any more")
+    -- price
+    ok(LC.MarketSet(boss, "coffee", "price", "2") and LC.GoodsPrice(cit, coffee) == math.max(1, math.floor(coffee.price * 2 * (LC.LoyalPriceMul(cit) or 1) + 0.5)),
+        "a price at twice the usual costs twice as much")
+    ok(LC.MarketSet(boss, "coffee", "price", "99") and LC.MarketCommissaryMul(coffee) == 5, "never more than five times")
+    ok(LC.MarketSet(boss, "coffee", "price", "0.01") and LC.MarketCommissaryMul(coffee) == 0.5, "never less than half")
+    ok(LC.MarketBlackById("mkt_coffee") == nil, "cheap at the Commissary: nothing for the dealer")
+    LC.MarketSet(boss, "coffee", "price", "5")
+    ok(LC.MarketBlackById("mkt_coffee") ~= nil, "five times the price: the dealer picks it up")
+    -- standing
+    ok(LC.MarketSet(boss, "bread", "standing", "400") and LC.MarketMinStanding(bread) == 400, "bread for the Exemplary only")
+    local cs, wb = LC.CanBuy(cit, bread)
+    ok(not cs and wb == "Requires Exemplary standing.", "a citizen is told what it needs", wb)
+    LC.MarketSet(boss, "bread", "standing", "250")
+    local _, wb2 = LC.CanBuy(cit, bread)
+    ok(wb2 == "Requires 250 Civil Standing.", "a number of hers is said as it is", wb2)
+    LC.AddStanding(cit, 300 - LC.Standing(cit))
+    ok(LC.Buy(cit, "bread"), "with the standing, it's sold")
+    ok(LC.MarketSet(boss, "bread", "standing", "default") and LC.MarketMinStanding(bread) == bread.minStanding, "and back to the usual")
+    -- supply: scarce
+    ok(LC.MarketSet(boss, "healthkit", "supply", "scarce") and LC.MarketStock("healthkit") == 2, "a medical kit made scarce: two at a time")
+    LC.AddStanding(cit, 500 - LC.Standing(cit))
+    ok(LC.Buy(cit, "healthkit") and LC.MarketStock("healthkit") == 1, "one bought, one left")
+    ok(string.find(LC.MarketCommissaryNote(healthkit) or "", "Scarce: 1 left, more in", 1, true) ~= nil, "the shop says how many and when more come", LC.MarketCommissaryNote(healthkit))
+    ok(LC.Buy(cit, "healthkit") and not LC.Buy(cit, "healthkit"), "then it's sold out")
+    ok(LC.MarketBlackById("mkt_healthkit") ~= nil, "sold out at the Commissary: the dealer has them")
+    MS.restockAt.healthkit = CurTime() - 1
+    LC.MarketTick()
+    ok(LC.MarketStock("healthkit") == 1, "one more comes in, slowly")
+    LC.MarketSet(boss, "healthkit", "supply", "plentiful")
+    ok(LC.MarketStock("healthkit") == nil and LC.MarketBlackById("mkt_healthkit") == nil, "plentiful: no limit, and the dealer drops them")
+    -- demand
+    _setcvar("lc_market_demand_halflife", 30)
+    MS.demand = {}
+    local lp = LCS.BlackById.lockpick
+    local base = LC.BlackPrice(lp)
+    for _ = 1, 8 do LC.MarketBought(lp, "black") end
+    local up = LC.BlackPrice(lp)
+    ok(up > base and up <= math.floor(base * 1.5 + 1), "everyone buying lockpicks puts the price up, within the cap", base .. " -> " .. up)
+    ok(string.find(LC.MarketBlackNote(lp) or "", "In demand: price up", 1, true) ~= nil, "the dealer's window says so", LC.MarketBlackNote(lp))
+    for _ = 1, 200 do LC.MarketBought(lp, "black") end
+    ok(LC.BlackPrice(lp) <= math.floor(lp.price * 1.5 * (LC.BlackPriceMul and LC.BlackPriceMul() or 1) + 1), "never past the cap, however much is bought")
+    _setcvar("lc_market_demand_halflife", 1)
+    for _ = 1, 12 do LC.MarketTick() end
+    ok(LC.BlackPrice(lp) == base, "demand cools, and the price comes back down", LC.BlackPrice(lp))
+    for _ = 1, 8 do LC.MarketBought(lp, "black") end
+    local hot = LC.BlackPrice(lp)
+    LC.MarketSold("lockpick", 10)
+    ok(LC.BlackPrice(lp) < hot, "selling them to the dealer brings it down too")
+    _setcvar("lc_market_demand_halflife", 30)
+    -- the quartermaster pays more for what's in demand, never what anyone could buy it for
+    MS.demand = {}
+    local gp = LCS.BlackById.gun_pistol
+    local qmBase = math.floor(LCS.Items.gun_pistol.sell * 1.5 + 0.5)
+    for _ = 1, 10 do LC.MarketBought(gp, "black") end
+    local qmNow = LC.MarketBuyback("gun_pistol", qmBase)
+    ok(qmNow > qmBase and qmNow < LC.QuartermasterPrice(gp) and qmNow < LC.BlackPrice(gp),
+        "the quartermaster's buy-back follows demand, and stays under every price to buy one", qmBase .. " -> " .. qmNow)
+    MS.demand = {}
+    -- consequences
+    _setcvar("lc_market_unrest", 2)
+    LC.MarketSet(boss, "bread", "restrict", "1")
+    ok(LC.MarketHeavy(), "two restrictions at a threshold of two: the shelves are bare")
+    local lvl = LC.SocioAuto()
+    ok(lvl ~= "green", "sociostability doesn't sit at green", tostring(lvl))
+    local s0 = LC.Trait(cit, "sympathy")
+    LC.Buy(cit, "bread")
+    LC.Buy(cit, "tablets")
+    ok(LC.Trait(cit, "sympathy") == s0 + 1, "a citizen turned away warms to the Resistance, once in a while")
+    -- announced
+    cit.chat = {}
+    LC.MarketFlushAnnounce()
+    local heard = false
+    for _, m in ipairs(cit.chat or {}) do if string.find(m, "By order of the City Administrator", 1, true) then heard = true end end
+    ok(heard, "the city is told")
+    -- persistence
+    LC.MarketSet(boss, "coffee", "price", "3")
+    LC.MarketSet(boss, "milk", "supply", "scarce")
+    LC.MarketSave()
+    ok(file.Exists(LC.MarketFile(), "DATA"), "saved per map", LC.MarketFile())
+    LC.MarketReload()
+    ok(LC.MarketRestricted(bread) and LC.MarketCommissaryMul(coffee) == 3 and LC.MarketStock("milk") == 2,
+        "after a restart: restrictions, prices and supply are as she left them")
+    -- off
+    _setcvar("lc_market", 0)
+    ok(LC.MarketCommissaryMul(coffee) == 1 and LC.MarketCommissaryBlock(cit, bread) == nil and #LC.MarketBlackList() == #LCS.Black,
+        "lc_market 0: all of it off, prices as fixed")
+    _setcvar("lc_market", 1)
+    -- tidy up for whatever runs next
+    LC.MarketAccess = realAccess
+    MS.rules, MS.stock, MS.restockAt, MS.demand = {}, {}, {}, {}
+    LC.MarketSave()
+    LC.MarketFlushAnnounce()
+    _setcvar("lc_market_demand", 0)
+    _setcvar("lc_market_unrest", 4)
+    _setcvar("lc_market_scarce_stock", 5)
+    for _, p in ipairs({ boss, cit, cop }) do p:SetPos(Vector(-150000, 150000, 0)) end
+end
+MarketTests()
 
 function CareerTests()
     local function FieldPost(p, spec, tid, violent)

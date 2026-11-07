@@ -131,6 +131,7 @@ net.Receive("lc_admin_office", function()
     local jb, o4 = menu:AddSubMenu("A Union job bonus for the hour")
     o4:SetIcon("icon16/coins.png")
     for _, j in ipairs(t.jobs or {}) do jb:AddOption(j.name, function() Act("bonus", j.id) end) end
+    menu:AddOption("The Commissary and the market", function() net.Start("lc_market_open") net.SendToServer() end):SetIcon("icon16/cart.png") -- (cl_livingcity_market.lua)
     menu:AddSpacer()
     for _, p in ipairs(t.people or {}) do
         p.ent = Entity(p.idx or 0)

@@ -2424,6 +2424,77 @@ return nil
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
 
+# the Administrator's Commissary and market panel (cl_livingcity_market.lua), and the market's lines in
+# the Commissary's and the black market's windows (cl_livingcity_needs.lua)
+err = L.execute(r"""
+local made, sent = {}, {}
+local function P()
+    local t = {}
+    made[#made + 1] = t
+    return setmetatable(t, { __index = function(_, k)
+        if string.sub(k, 1, 2) == "lc" or string.sub(k, 1, 1) == "_" then return nil end
+        if k == "IsValid" then return function() return not t._removed end end
+        if k == "Remove" then return function() t._removed = true end end
+        if k == "GetActiveTab" then return function() return nil end end
+        if k == "GetWide" or k == "GetTall" then return function() return 400 end end
+        return function() return P() end
+    end })
+end
+local vgWas, stsWas, startWas, wsWas = vgui, net.SendToServer, net.Start, net.WriteString
+local rU, rD, rDc, rJ = net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable
+vgui = { Create = function() return P() end, GetKeyboardFocus = function() return nil end }
+local cur
+net.Start = function(n) cur = { name = n, data = {} } end
+net.WriteString = function(v) if cur then table.insert(cur.data, v) end end
+net.SendToServer = function() sent[#sent + 1] = cur end
+net.ReadUInt = function() return 1 end
+net.ReadData = function() return "x" end
+util.Decompress = function(s) return s end
+local doc
+util.JSONToTable = function() return doc end
+local okM, errM = pcall(function()
+    doc = { on = true, unrest = 4, heavy = false, restricted = { "Bread" },
+        tiers = { { name = "Probationary", min = -50 }, { name = "Citizen", min = 0 }, { name = "Trusted", min = 150 }, { name = "Exemplary", min = 400 } },
+        goods = { { id = "bread", name = "Bread", price = 8, now = 8, restricted = true, mul = 1, standing = 0, baseStanding = 0, supply = "normal", note = "Restricted by the Administrator", demand = 0, black = 18 },
+            { id = "healthkit", name = "Medical kit", price = 50, now = 100, restricted = false, mul = 2, standing = 400, baseStanding = 400, supply = "scarce", stock = 3, demand = 15 } },
+        black = { { name = "Bread", price = 18, usual = 12, note = "Hard to get in the city", demand = 0, extra = true },
+            { name = "Lockpick", price = 42, usual = 35, note = "In demand: price up 20%", demand = 20 } } }
+    net.recv_lc_market_admin()
+    local f = LC_CL.MarketAdminFrame()
+    if not (f and f:IsValid()) then error("the market panel didn't open") end
+    for _, pnl in ipairs(made) do
+        for _, k in ipairs({ "Paint", "DoClick" }) do
+            local fn = rawget(pnl, k)
+            if fn then fn(pnl, 400, 60) end
+        end
+        if rawget(pnl, "OnSelect") then pnl.OnSelect(pnl, 1, "x", 2) end
+        if rawget(pnl, "OnChange") then pnl.OnChange(pnl, true) end
+    end
+    local asked = 0
+    for _, m in ipairs(sent) do if m and m.name == "lc_market_set" then asked = asked + 1 end end
+    if asked < 4 then error("the panel's controls don't reach the server (" .. asked .. ")") end
+    doc = { on = false }
+    net.recv_lc_market_admin()
+    -- the Commissary and the black market, with the market's lines
+    doc = { credits = 50, standing = 0, goods = { { id = "bread", name = "Bread", price = 8, desc = "Grey.", ok = false, why = "Restricted by the Administrator.", market = "Restricted by the Administrator", tier = "Citizen" },
+        { id = "milk", name = "Milk", price = 8, desc = "Nearly milk.", ok = true, tier = "Citizen" } } }
+    net.recv_lce_shop()
+    doc = { credits = 50, goods = { { id = "mkt_bread", name = "Bread", price = 18, desc = "Off a lorry.", ok = true, market = "Hard to get in the city" } },
+        sell = { { id = "gun_pistol", name = "Pistol", n = 2, price = 80, market = "In demand: he pays more" } } }
+    net.recv_lcu_market()
+    for _, pnl in ipairs(made) do
+        local fn = rawget(pnl, "Paint")
+        if fn then fn(pnl, 400, 60) end
+    end
+end)
+vgui, net.SendToServer, net.Start, net.WriteString = vgWas, stsWas, startWas, wsWas
+net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable = rU, rD, rDc, rJ
+if not okM then return "market panel: " .. tostring(errM) end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
 # the official folder for recordings and songs is the server's garrysmod/sound/livingcity/ (CORE.md):
 # what players read in the guide and the sound check must send them there, never to the old sound addon
 _guide = open(os.path.join(GMDIR, "gamemode", "cl_init.lua")).read()
