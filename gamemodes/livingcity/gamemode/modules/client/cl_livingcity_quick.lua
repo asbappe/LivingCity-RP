@@ -236,10 +236,9 @@ function LC_CL.QuickRoot()
             Item("Issue a BOLO...", function() Ask("BOLO", "What should Civil Protection units look out for?", "bolo") end),
             Item("Send my 10-20", function() Send("10-20") end),
         }
-        -- only the Administrator sets sociostability (the owner, 7 November)
         usual = {
             Item("My directives (F3)", function() RunConsoleCommand("gm_showspare1") end),
-            f == "admin" and Page("Sociostability", SocioPage) or pockets,
+            pockets,
         }
     elseif rebel then
         title, accent = "RESISTANCE", ACCENT.resistance
@@ -262,6 +261,8 @@ function LC_CL.QuickRoot()
             pockets,
         }
         usual = { Page("Pose", PosePage), Page("Gesture", GesturePage), (f == "admin" and me:IsAdmin()) and Page("Staff", StaffPage) or board }
+        -- only the Administrator sets sociostability (the owner, 7 November): first of their usual pages
+        if f == "admin" then table.insert(usual, 1, Page("Sociostability", SocioPage)) end
     end
     -- after the fixed slots, up to 8: what's in front of you first, then your usual ones
     local ctx = Context(me, unit, rebel)
