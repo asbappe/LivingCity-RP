@@ -36,7 +36,7 @@ local function CharKeys()
     local map = game.GetMap()
     local keys = {
         "lc_char", "lc_cid", "lc_model", "lc_chosen", "lc_desc", "lc_recog", "lc_lived", "lc_lived_full", "lc_intake", "lc_registered",
-        "lce_credits", "lce_standing", "lcf_faction", "lcf_special", "lci_inv", "lci_stash_" .. map, "lc_block_" .. map,
+        "lce_credits", "lce_standing", "lcf_faction", "lcf_special", "lci_inv", "lci_spoil", "lci_line_uses", "lci_stash_" .. map, "lc_block_" .. map,
         "lcj_job", "lcq_story", "lcq_done", "lcq_loyalty", "lcq_sympathy", "lcq_corruption", "lc_notes",
         "lc_docs", "lc_housed_how", "lc_transfer_at",
         "lcf_transhuman", "lc_stalker", "lc_close_used", "lc_close_at", "lc_skin", "lc_bgs", -- (the conditioning, a stalker, close calls: the person's, not the player's)
@@ -96,7 +96,7 @@ end
 
 -- Everything held in memory for the old person, thrown away and read again.
 local function Reload(ply, snap)
-    ply.lcInv, ply.lcStash, ply.lcStashMap = nil, nil, nil
+    ply.lcInv, ply.lcStash, ply.lcStashMap, ply.lcSpoil, ply.lcLineUses = nil, nil, nil, nil, nil
     ply.lcStory, ply.lcStoryPostings = nil, nil
     ply.lcRecog = nil
     ply.lcNotes = nil

@@ -245,6 +245,12 @@ local function Act(action, id)
     net.SendToServer()
 end
 
+-- Meat and fish: the city hours left before it goes off, as the pockets screen says it.
+function LC_CL.SpoilText(hrs)
+    if hrs < 1 then return "spoils within the hour" end
+    return string.format("spoils in %dh", math.ceil(hrs))
+end
+
 local function OpenInventory()
     if IsValid(invFrame) then invFrame:Remove() end
     if not LCS then return end
@@ -353,9 +359,14 @@ local function OpenInventory()
                     row.Paint = function(self, w, h)
                         draw.RoundedBox(3, 0, 0, w, h, Color(36, 34, 30, 240))
                         local price = box.prices and box.prices[id]
-                        draw.SimpleText(string.format("%s  x%d%s", it.name, box.items[id] or 0, price and string.format("   %d credits", price) or ""),
-                            "DermaDefault", 10, h / 2, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+                        local text = string.format("%s  x%d%s", it.name, box.items[id] or 0, price and string.format("   %d credits", price) or "")
+                        draw.SimpleText(text, "DermaDefault", 10, h / 2, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
                         if it.contraband then draw.SimpleText("contraband", "DermaDefault", w - 110, h / 2, ILLEGAL, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER) end
+                        local hrs = box.spoil and box.spoil[id]
+                        if hrs then
+                            surface.SetFont("DermaDefault")
+                            draw.SimpleText(LC_CL.SpoilText(hrs), "DermaDefault", 18 + surface.GetTextSize(text), h / 2, hrs < 3 and ILLEGAL or DIM, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+                        end
                     end
                     if box.mode == "shop" then
                         local b = vgui.Create("DButton", row)
@@ -472,10 +483,16 @@ local function OpenInventory()
                         "DermaDefault", w - 8 - btnW, h / 2, DIM, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
                 end
                 draw.SimpleText(label, "DermaDefaultBold", 10, h / 2, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+                surface.SetFont("DermaDefaultBold")
+                local tx = 18 + surface.GetTextSize(label)
                 if it.contraband then
-                    surface.SetFont("DermaDefaultBold")
-                    local tw = surface.GetTextSize(label)
-                    draw.SimpleText("contraband", "DermaDefault", 18 + tw, h / 2, ILLEGAL, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+                    draw.SimpleText("contraband", "DermaDefault", tx, h / 2, ILLEGAL, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+                    surface.SetFont("DermaDefault")
+                    tx = tx + surface.GetTextSize("contraband") + 10
+                end
+                local hrs = lastInv.spoil and lastInv.spoil[id] -- meat and fish: city hours before it goes off
+                if hrs then
+                    draw.SimpleText(LC_CL.SpoilText(hrs), "DermaDefault", tx, h / 2, hrs < 3 and ILLEGAL or DIM, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
                 end
             end
             if it.desc then row:SetTooltip(it.desc) end
@@ -673,7 +690,7 @@ net.Receive("lci_inv", function()
     if not t then return end
     lastInv = { items = t.items or {}, size = t.size or 12, stash = t.stash, stashSize = t.stashSize, stashWeapons = t.stashWeapons,
         disguise = t.disguise, alias = t.alias, kg = t.kg, maxKg = t.maxKg, bulky = t.bulky, maxBulky = t.maxBulky,
-        container = t.container, notes = t.notes }
+        container = t.container, notes = t.notes, spoil = t.spoil }
     if t.open or IsValid(invFrame) then OpenInventory() end
 end)
 

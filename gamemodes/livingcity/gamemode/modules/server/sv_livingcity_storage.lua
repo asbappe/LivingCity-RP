@@ -56,7 +56,7 @@ local function Save()
     for id, c in pairs(Load()) do
         if c.kind ~= "bin" then
             out[id] = { kind = c.kind, items = c.items, owner = c.owner, ownerName = c.ownerName, pos = c.pos, ang = c.ang,
-                prices = c.prices, till = c.till, closed = c.closed }
+                prices = c.prices, till = c.till, closed = c.closed, spoil = c.spoil }
         end
     end
     file.CreateDir(DIR)
@@ -164,14 +164,36 @@ local function Access(ply, c)
     return nil, (c.kind == "locker" and "The locker is locked. It's someone else's." or "The crate is locked. It isn't yours.")
 end
 
+-- Meat and fish in a container go off like meat in a pocket (sv_livingcity_survival.lua): each unit's
+-- stamp travels with it (c.spoil[id] = stamps, oldest first). What's gone off is thrown out when the
+-- container is looked at. Returns id -> city hours the oldest unit has left, or nil.
+function LC.ContainerSpoilCheck(c)
+    if not c.spoil or not LC.SpoilHoursLeft then return nil end
+    local view, any = {}, false
+    for id, s in pairs(c.spoil) do
+        local k = 0
+        while s[1] and LC.SpoilHoursLeft(s[1]) <= 0 do table.remove(s, 1) k = k + 1 end
+        if k > 0 then
+            c.items[id] = (c.items[id] or 0) - k
+            if c.items[id] <= 0 then c.items[id] = nil end
+            if c.kind ~= "bin" then dirty = true end
+        end
+        if not c.items[id] or #s == 0 then c.spoil[id] = nil
+        else view[id] = math.floor(LC.SpoilHoursLeft(s[1]) * 10 + 0.5) / 10 any = true end
+    end
+    if not next(c.spoil) then c.spoil = nil end
+    return any and view or nil
+end
+
 -- For the pockets screen: what's in the container in front of them.
 function LC.ContainerView(ply)
     local id, c = LC.ContainerFocused(ply)
     if not id then return nil end
     local mode, why = Access(ply, c)
+    local spoil = LC.ContainerSpoilCheck(c)
     local v = { id = id, kind = c.kind, name = NAMES[c.kind], mode = mode, why = why, kg = Weight(c.items), maxKg = Capacity(c),
         owner = c.ownerName, mine = c.owner ~= nil and c.owner == OwnerKey(ply) or nil }
-    if mode then v.items = c.items end
+    if mode then v.items = c.items v.spoil = spoil end
     if c.kind == "stall" then
         v.prices = c.prices or {}
         if mode == "open" then v.till = c.till or 0 v.closed = c.closed or nil end
@@ -215,8 +237,15 @@ function LC.ContainerPut(ply, id)
     if not LC.HasItem(ply, id) then return false end
     if LC.IssuedLocked and LC.IssuedLocked(ply, id) then return false, "That's Combine issue: it stays with you (or another unit)." end
     if Weight(c.items) + LCS.Weight(id) > Capacity(c) + 0.001 then return false, "It won't fit." end
+    local born = LC.SpoilOldest and LC.SpoilOldest(ply, id) -- (meat: its age goes in with it)
     LC.TakeItem(ply, id, 1)
     c.items[id] = (c.items[id] or 0) + 1
+    if born then
+        c.spoil = c.spoil or {}
+        c.spoil[id] = c.spoil[id] or {}
+        table.insert(c.spoil[id], born)
+        table.sort(c.spoil[id])
+    end
     c.touched = CurTime()
     if c.kind == "locker" and not c.owner then
         c.owner, c.ownerName = OwnerKey(ply), OwnerName(ply)
@@ -243,7 +272,9 @@ function LC.ContainerTake(ply, id)
     if not okC then return false, whyC end
     c.items[id] = c.items[id] - 1
     if c.items[id] <= 0 then c.items[id] = nil end
-    LC.GiveItem(ply, id, 1)
+    local born = c.spoil and c.spoil[id] and table.remove(c.spoil[id], 1) or nil -- (meat: the oldest, with its age)
+    if c.spoil and c.spoil[id] and #c.spoil[id] == 0 then c.spoil[id] = nil end
+    LC.GiveItem(ply, id, 1, born)
     if c.kind ~= "bin" then dirty = true end
     if mode == "search" then
         if LC.AddXP then LC.AddXP(ply, 5, "Contraband seized") end

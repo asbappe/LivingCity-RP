@@ -226,6 +226,29 @@ LC.WaterAhead = WaterAhead
 
 local CATCH = { { "raw_fish", 58 }, { nil, 30 }, { "can_empty", 6 }, { "scrap", 4 }, { "keepsake", 2 } }
 
+-- A fishing line is good for four to eight casts, fish or no fish, then snaps
+-- (the owner, 7 November: two casts for 15 credits was bonkers). The count
+-- is the line in use; it's forgotten when you have no line left.
+local function LineCast(ply)
+    local left = ply.lcLineUses or tonumber(ply:GetPData("lci_line_uses", "")) or 0
+    if left <= 0 then left = math.random(4, 8) end
+    left = left - 1
+    if left <= 0 then
+        ply.lcLineUses = nil
+        ply:SetPData("lci_line_uses", "")
+        LC.TakeItem(ply, "fishing_line", 1)
+        ply:ChatPrint("Your fishing line frays and snaps." .. (LC.HasItem(ply, "fishing_line") and " You have another." or ""))
+    else
+        ply.lcLineUses = left
+        ply:SetPData("lci_line_uses", tostring(left))
+        if left == 1 then ply:ChatPrint("The line's fraying. One more cast in it, maybe.") end
+    end
+end
+LC.LineCast = LineCast
+hook.Add("LivingCityInventoryChanged", "LivingCityLineUses", function(ply)
+    if ply.lcLineUses and not LC.HasItem(ply, "fishing_line") then ply.lcLineUses = nil ply:SetPData("lci_line_uses", "") end
+end)
+
 local function Fish(ply)
     if not WaterAhead(ply) then return false, "You need water: stand in the canal, or look at it." end
     if LC.InvSpace(ply) < 1 then return false, "Your pockets are full." end
@@ -242,7 +265,7 @@ local function Fish(ply)
                 p:ChatPrint(id == "raw_fish" and "A bite! A fish, of a kind. Cook it." or ("You reel in... " .. string.lower(LCS.Items[id].name) .. "."))
                 hook.Run("LivingCityFished", p, id)
             end
-            if LC.WearOut then LC.WearOut(p, "fishing_line", "Your fishing line finally frays and snaps.") end
+            LineCast(p)
         end,
     })
 end
