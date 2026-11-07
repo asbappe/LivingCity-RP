@@ -63,7 +63,7 @@ local function Settings()
         "lc_prison_time", "lc_npc_arrests", "lc_escape_wanted", "lc_rejoin_penalty", "lc_street_detention", "lc_street_fine", "lc_block_name",
         "lc_needs", "lc_hunger_minutes", "lc_thirst_minutes", "lc_birds", "lc_vermin", "lc_economy", "lc_story_pacing",
         "lc_stops", "lc_stop_cooldown", "lc_stop_chance", "lc_street_stop_chance", "lc_search_cooldown", "lc_disguise_risk",
-        "lc_identity_minutes", "lc_stash_size", "lc_raid_chance", "lc_search_weapons", "lc_response", "lc_response_soldiers", "lc_squad", "lc_squad_cops", "lc_squad_soldiers", "lc_squad_delay", "lc_garrison", "lc_garrison_cops", "lc_garrison_respawn",
+        "lc_identity_minutes", "lc_stash_size", "lc_raid_chance", "lc_search_weapons", "lc_response", "lc_response_soldiers", "lc_squad", "lc_squad_cops", "lc_squad_soldiers", "lc_squad_delay", "lc_garrison", "lc_garrison_cops", "lc_garrison_respawn", "lc_zone_stalkers",
         "lc_quests", "lc_quest_violent_ratio", "lc_quest_squad", "lc_quest_cooldown", "lc_conduct", "lc_rdm_strikes_jail", "lc_rdm_strikes_kick", "lc_spawn_protect", "lc_debug",
         "lc_fov", "lc_eye_height", "lc_view_bob", "lc_view_bob_amount", "lc_quiet_hud", "lc_respawn_secs", "lc_word_gets_around",
         "lc_intake", "lc_intake_secs", "lc_intake_grace",
@@ -250,6 +250,7 @@ function LC.BuildReport()
     end
     for _, r in ipairs(rows) do out[#out + 1] = r end
     if LC.NPCWorkSummary then out[#out + 1] = LC.NPCWorkSummary() end
+    if LC.StalkerSummary then out[#out + 1] = LC.StalkerSummary() end
 
     Section(out, "Performance")
     local p = LC.Perf or {}

@@ -21,7 +21,7 @@ The city's own people have these jobs too, and when no player is doing the work,
 
 And **Civil Protection units take back a hijacked city screen** if no player unit does it first.
 
-**Not inside a Combine-only zone.** The city's citizens stay out of those (the owner, 7 November), so their work in there is left alone; a stalker clears up in there instead (see editor-placing.md, Zones).
+**Not inside a Combine-only zone.** The city's citizens stay out of those (the owner, 7 November), so their work in there is left alone; each zone's own stalkers clean up and repair the streetlights and loudspeakers in there instead (see editor-placing.md, Zones).
 
 **How they carry things.** A box or a crate is held out in front in both hands, the arms bent under it; luggage hangs from a hand at the side; small things (a clipboard, a can) are in the hand.
 
