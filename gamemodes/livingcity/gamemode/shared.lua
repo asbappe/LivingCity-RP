@@ -150,6 +150,7 @@ LC_MODULES = {
         "sv_livingcity_funding",
         "sv_livingcity_work",
         "sv_livingcity_stalkerwork",
+        "sv_livingcity_combineground", -- (soldiers stay in Combine zones, citizens stay out, a stalker clears up in there)
         "sv_livingcity_writing",
     },
     client = {

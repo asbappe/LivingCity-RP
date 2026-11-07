@@ -8,8 +8,8 @@ The city's own people have these jobs too, and when no player is doing the work,
 |---|---|
 | Maintenance | Fix broken streetlights; otherwise, the maintenance yard |
 | Radio Repair | Fix broken loudspeakers; otherwise, the repair bench |
-| Sanitation | Scrub graffiti, pick up empty cans and bottles left in the street, empty the bins and take the bags to the depot |
-| Mortuary | Haul the dead to the incinerator (dragged, like a player does it); bag dead headcrabs left lying about a minute and a half |
+| Sanitation | Scrub graffiti, pick up empty cans and bottles left in the street (and dead headcrabs left lying a minute and a half), empty the bins and take the bags to the depot |
+| Mortuary | Haul the dead to the incinerator (dragged, like a player does it); bag dead headcrabs left lying about a minute and a half. A dead headcrab nobody clears or takes is gone after `lc_body_time` seconds (300), once nobody is near enough to see it, the way bodies go |
 | Clinic Medic | Run to a citizen who's down and get them back on their feet (not the wanted, not in a fight on rebel, infested or Combine ground), patch up wounded citizens, and at the clinic see to any player standing with them (+10 health a few seconds apart) |
 | Ration Production | Carry crates of sealed packs in from the loading dock; work the sealing line |
 | Factory | Carry parts from the dock and between stations, work the line |
@@ -20,6 +20,8 @@ The city's own people have these jobs too, and when no player is doing the work,
 | Reclamation | Clear rubble piles, carry the scrap to the reclamation point |
 
 And **Civil Protection units take back a hijacked city screen** if no player unit does it first.
+
+**Not inside a Combine-only zone.** The city's citizens stay out of those (the owner, 7 November), so their work in there is left alone; a stalker clears up in there instead (see editor-placing.md, Zones).
 
 **How they carry things.** A box or a crate is held out in front in both hands, the arms bent under it; luggage hangs from a hand at the side; small things (a clipboard, a can) are in the hand.
 

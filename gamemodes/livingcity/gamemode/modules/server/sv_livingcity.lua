@@ -617,6 +617,11 @@ end
 
 function LC.GoTo(npc, st, pos, run, poi)
     if not pos or not IsValid(npc) then return false end
+    -- citizens never walk into a Combine-only zone (prisoners aside: sv_livingcity_combineground.lua)
+    if st and st.role == "citizen" and LC.CitizenBarredAt and LC.CitizenBarredAt(npc, st, pos) then
+        if LC.CombineGroundStats then LC.CombineGroundStats.barred = LC.CombineGroundStats.barred + 1 end
+        return false
+    end
     local now = CurTime()
     local route = LC.BuildRoute and LC.BuildRoute(npc:GetPos(), pos, st.role)
     if route == false then
@@ -1558,6 +1563,12 @@ local function FindSpawnPos(role)
 
     if role == "rebel" then return LC.RebelSpawnPos and LC.RebelSpawnPos() end
 
+    -- the city's own soldiers come out of the Combine's own buildings (sv_livingcity_combineground.lua)
+    if role == "soldier" and LC.SoldierHomeSpawnPos then
+        local p = LC.SoldierHomeSpawnPos()
+        if p then return p end
+    end
+
     local citizen = role == "citizen"
     local spawns = PointsOfKind("spawn")
     if role ~= "scanner" and #spawns > 0 then
@@ -1977,6 +1988,9 @@ local function ChooseSecurityTask(npc, st, now)
         end
         st.guardZone = nil
     end
+
+    -- Overwatch soldiers stay inside the Combine zones unless deployed (sv_livingcity_combineground.lua)
+    if st.role == "soldier" and LC.SoldierGoHome and LC.SoldierGoHome(npc, st, now, run) then return end
 
     if st.routeGroup then
         local pts = LC.RoutePoints(st.routeGroup)

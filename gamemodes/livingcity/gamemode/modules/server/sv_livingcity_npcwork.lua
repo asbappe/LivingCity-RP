@@ -120,6 +120,12 @@ local function Claimed(key, npc)
 end
 LC.NPCWorkClaimed = function(key) return Claimed(key, nil) end
 
+-- Inside a Combine-only zone: not a citizen's work (a stalker sees to it: sv_livingcity_combineground.lua).
+local function OffLimits(npc, st, pos)
+    return LC.CitizenBarredAt ~= nil and LC.CitizenBarredAt(npc, st or (LC.NPCs and LC.NPCs[npc]), pos)
+end
+LC.NPCWorkOffLimits = OffLimits
+
 -- One of these sounds, of the ones this install has.
 local function Sound(e, list, lvl)
     if not IsValid(e) or not list then return end
@@ -400,6 +406,17 @@ local function Start(npc, st, now, task, plan)
     return GoStep(npc, st, now)
 end
 
+-- Where a plan first takes them (a point, or its first step), for the Combine-zone check.
+local function PlanBarred(npc, st, plan)
+    if not LC.CitizenBarredAt then return false end
+    local pos = plan.point and plan.point.pos
+    if not pos and plan.steps and plan.steps[1] then
+        local ok, p = pcall(Val, plan.steps[1].pos, npc, st, { data = plan.data or {}, steps = plan.steps, i = 1 })
+        pos = ok and p or nil
+    end
+    return pos ~= nil and OffLimits(npc, st, pos)
+end
+
 -- Something for this NPC to do, from their job. Called when they choose
 -- what to do next (sv_livingcity.lua).
 function LC.NPCWorkChoose(npc, st, now)
@@ -420,7 +437,7 @@ function LC.NPCWorkChoose(npc, st, now)
         local ok, plan = pcall(o.t.find, npc, st, now)
         if not ok then
             if LC.Error then LC.Error("npc work find " .. o.t.id, plan) end
-        elseif plan and (not plan.key or not Claimed(plan.key, npc)) then
+        elseif plan and (not plan.key or not Claimed(plan.key, npc)) and not PlanBarred(npc, st, plan) then
             return Start(npc, st, now, o.t, plan)
         end
     end
@@ -499,7 +516,7 @@ Task("sanitation", { id = "graffiti", label = "scrubbing graffiti", urgent = tru
     local grace = Grace("sanitation")
     local best, bd
     for _, t in ipairs(LC.Tags or {}) do
-        if now - (t.at or 0) >= grace and not Claimed("tag" .. tostring(t.pos), npc) then
+        if now - (t.at or 0) >= grace and not Claimed("tag" .. tostring(t.pos), npc) and not OffLimits(npc, st, t.pos) then
             local d = t.pos:DistToSqr(npc:GetPos())
             if d < 4000 * 4000 and (not bd or d < bd) then best, bd = t, d end
         end
@@ -523,14 +540,18 @@ Task("sanitation", { id = "graffiti", label = "scrubbing graffiti", urgent = tru
     } }
 end })
 
--- Junk left lying in the street: empty cans and bottles, rags.
+-- Junk left lying in the street: empty cans and bottles, rags. And dead headcrabs (the owner,
+-- 7 November: nobody was clearing them), a minute and a half after they die, as the morgue does.
 local JUNK = { can_empty = true, bottle_empty = true, cloth = true, ration_wrapper = true }
 LC.NPCJunkItems = JUNK
 Task("sanitation", { id = "litter", label = "picking up litter", weight = 2, find = function(npc, st, now)
     local best, bd
     for _, e in ipairs(LC.EntsOf("lc_item")) do
-        local born = e.lcDroppedAt or (e.GetCreationTime and e:GetCreationTime()) or now
-        if IsValid(e) and JUNK[e:GetNW2String("lc_item", "")] and now - born > 300 and not Claimed("item" .. e:EntIndex(), npc) then
+        local crab = LC.CrabCarcass and LC.CrabCarcass(e)
+        local born = e.lcDroppedAt or (crab and e.lcBorn) or (e.GetCreationTime and e:GetCreationTime()) or now
+        if IsValid(e) and ((crab and not e.lcBagging and now - born > 90) or (JUNK[e:GetNW2String("lc_item", "")] and now - born > 300))
+            and not e.lcStalkerTaken and not Claimed("item" .. e:EntIndex(), npc) and not Claimed("crab" .. e:EntIndex(), npc)
+            and not OffLimits(npc, st, e:GetPos()) then
             local d = e:GetPos():DistToSqr(npc:GetPos())
             if d < 3000 * 3000 and (not bd or d < bd) then best, bd = e, d end
         end
@@ -555,7 +576,7 @@ end
 Task("sanitation", { id = "bins", label = "emptying bins", weight = 3, find = function(npc, st, now)
     local fresh = {}
     for _, b in ipairs(Near(AllBins(), npc:GetPos(), 3000)) do
-        if now - (recent[b.key] or -1e9) > 900 and not Claimed(b.key, npc) then fresh[#fresh + 1] = b end
+        if now - (recent[b.key] or -1e9) > 900 and not Claimed(b.key, npc) and not OffLimits(npc, st, b.pos) then fresh[#fresh + 1] = b end
     end
     local bin = Nearest(fresh, npc:GetPos())
     if not bin then return nil end
@@ -582,7 +603,8 @@ Task("mortuary", { id = "haul", label = "collecting the dead", urgent = true, fi
     local best, bd
     for _, b in ipairs(LC.Bodies or {}) do
         local e = b.ent
-        if IsValid(e) and e.lcBody and not e.lcBody.claimed and not (LC.HauledBy and LC.HauledBy(e)) and now - (b.born or now) >= grace then
+        if IsValid(e) and e.lcBody and not e.lcBody.claimed and not (LC.HauledBy and LC.HauledBy(e)) and now - (b.born or now) >= grace
+            and not OffLimits(npc, st, e:GetPos()) then
             local d = e:GetPos():DistToSqr(npc:GetPos())
             if d < 3500 * 3500 and (not bd or d < bd) then best, bd = e, d end
         end
@@ -908,7 +930,8 @@ LC.CrabCarcass = function(e) return IsValid(e) and e:GetClass() == "lc_item" and
 Task("mortuary", { id = "crabs", label = "bagging dead headcrabs", find = function(npc, st, now)
     local best, bd
     for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_item") or {}) do
-        if LC.CrabCarcass(e) and not e.lcBagging and now - (e.lcBorn or 0) > 90 then -- (a while for a player to pick it up first)
+        if LC.CrabCarcass(e) and not e.lcBagging and not e.lcStalkerTaken and now - (e.lcBorn or 0) > 90 -- (a while for a player to pick it up first)
+            and not Claimed("item" .. e:EntIndex(), npc) and not OffLimits(npc, st, e:GetPos()) then
             local d = e:GetPos():DistToSqr(npc:GetPos())
             if d < 3000 * 3000 and (not bd or d < bd) then best, bd = e, d end
         end
@@ -931,7 +954,7 @@ Task("sanitation", { id = "stain", label = "scrubbing up a mess", urgent = true,
     local grace = Grace("sanitation")
     local best, bd
     for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_stain") or {}) do
-        if now - (e.lcBorn or 0) >= grace then
+        if now - (e.lcBorn or 0) >= grace and not e.lcStalkerTaken and not OffLimits(npc, st, e:GetPos()) then
             local d = e:GetPos():DistToSqr(npc:GetPos())
             if d < 4000 * 4000 and (not bd or d < bd) then best, bd = e, d end
         end

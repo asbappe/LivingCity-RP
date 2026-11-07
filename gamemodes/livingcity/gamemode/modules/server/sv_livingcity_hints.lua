@@ -672,7 +672,7 @@ function LC.HintScan(ply)
     -- where you are
     local z = LC.ZoneAt and LC.ZoneAt(pos)
     if z then
-        if z.kind == "rebel" and Due(ply, "zone_rebel") then return Try("zone_rebel") end
+        if z.kind == "rebel" and Due(ply, "zone_rebel") and not (LC.InCombineZone and LC.InCombineZone(pos)) then return Try("zone_rebel") end
         if z.kind == "infest" and Due(ply, "zone_infest") then return Try("zone_infest") end
     end
     if Due(ply, "home_block") and LC.PlayerInOwnBlock and LC.PlayerInOwnBlock(ply) == true then return Try("home_block") end
