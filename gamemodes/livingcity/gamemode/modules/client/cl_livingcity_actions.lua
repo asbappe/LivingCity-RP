@@ -342,8 +342,10 @@ function LC_CL.OpenActions()
             Add(ins, "Spike the station's food (at the Commissary; weedkiller)", function() Send("spikefood") end)
             Add(ins, "Reveal myself to whoever I'm looking at (the codeword)", function() Send("reveal") end)
         end
-        local so = cp:AddSubMenu("Set sociostability (officers)")
-        for _, l in ipairs({ "green", "yellow", "red", "auto" }) do Add(so, string.upper(l), function() Send("socio", l) end) end
+        if f == "admin" then
+            local so = cp:AddSubMenu("Set sociostability (the Administrator)")
+            for _, l in ipairs({ "green", "yellow", "red", "auto" }) do Add(so, string.upper(l), function() Send("socio", l) end) end
+        end
     end
 
     -- the Resistance

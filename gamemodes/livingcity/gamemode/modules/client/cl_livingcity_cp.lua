@@ -157,7 +157,7 @@ local function BuildRecords()
         draw.RoundedBox(0, 0, 24, w, 2, CYAN)
     end
 
-    -- sociostability across the top; officers can set it
+    -- sociostability across the top; the Administrator can set it
     local top = vgui.Create("DPanel", recFrame)
     top:Dock(TOP)
     top:SetTall(28)
@@ -166,7 +166,7 @@ local function BuildRecords()
     top.Paint = function(self, w, h)
         if level then draw.SimpleText("SOCIOSTABILITY: " .. level.name, "DermaDefaultBold", 4, h / 2, level.color, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER) end
     end
-    if rec.officer then
+    if rec.socioctl then
         local holder = vgui.Create("DPanel", top)
         holder:Dock(RIGHT)
         holder:SetWide(330)

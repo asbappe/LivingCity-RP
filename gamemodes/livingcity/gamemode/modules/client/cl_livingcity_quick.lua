@@ -216,7 +216,6 @@ function LC_CL.QuickRoot()
     local unit = me:GetNW2Bool("lc_unit", false) or f == "cp"
     local rebel = f == "resistance"
     local rank = me:GetNW2Int("lcf_rank", 1)
-    local officer = me:IsAdmin() or (f == "cp" and rank >= 3)
     local hands = Item(me:GetNW2Bool("lc_handsup", false) and "Lower my hands" or "Put my hands up", function() Send("handsup") end)
     local pockets = Item("My pockets (F2)", function() RunConsoleCommand("gm_showteam") end)
     local board = Item("My board: jobs (F3)", function() RunConsoleCommand("gm_showspare1") end)
@@ -226,20 +225,21 @@ function LC_CL.QuickRoot()
     if unit then
         title = me:GetNW2String("lcf_title", "") ~= "" and me:GetNW2String("lcf_title", "") or ((LCF and LCF.IsOverwatch and LCF.IsOverwatch(me)) and "OVERWATCH" or "CIVIL PROTECTION")
         accent = ACCENT.cp
-        -- (the owner, 2 November: Unit tools, everything a unit has, up to 2; voice lines down to the usual three)
+        -- (the owner, 7 November: 1 Voice lines, 2 Unit tools, 3 Kick, 4 Call for backup, 5 BOLO, 6 Send my 10-20)
         local tools = Item("Unit tools (everything a unit has)", function() if LC_CL.OpenUnitTools then LC_CL.OpenUnitTools() end end)
         tools.id = "unittools"
         items = {
-            Item("Call for backup", function() Send("backup") end),
-            tools,
-            Item("Send my 10-20", function() Send("10-20") end),
-            Item("Issue a BOLO...", function() Ask("BOLO", "What should Civil Protection units look out for?", "bolo") end),
-            (function() local k = Item("Kick (" .. (LC_CL.KickKeyName and LC_CL.KickKeyName() or "G") .. ")", function() Send("kick") end) k.id = "kick" return k end)(),
-        }
-        usual = {
             Page("Voice lines", VoicePage),
+            tools,
+            (function() local k = Item("Kick (" .. (LC_CL.KickKeyName and LC_CL.KickKeyName() or "G") .. ")", function() Send("kick") end) k.id = "kick" return k end)(),
+            Item("Call for backup", function() Send("backup") end),
+            Item("Issue a BOLO...", function() Ask("BOLO", "What should Civil Protection units look out for?", "bolo") end),
+            Item("Send my 10-20", function() Send("10-20") end),
+        }
+        -- only the Administrator sets sociostability (the owner, 7 November)
+        usual = {
             Item("My directives (F3)", function() RunConsoleCommand("gm_showspare1") end),
-            officer and Page("Sociostability", SocioPage) or pockets,
+            f == "admin" and Page("Sociostability", SocioPage) or pockets,
         }
     elseif rebel then
         title, accent = "RESISTANCE", ACCENT.resistance
@@ -263,9 +263,10 @@ function LC_CL.QuickRoot()
         }
         usual = { Page("Pose", PosePage), Page("Gesture", GesturePage), (f == "admin" and me:IsAdmin()) and Page("Staff", StaffPage) or board }
     end
-    -- 6 to 8: what's in front of you first, then your usual three
+    -- after the fixed slots, up to 8: what's in front of you first, then your usual ones
     local ctx = Context(me, unit, rebel)
-    for i = 1, 3 do items[5 + i] = ctx[i] or table.remove(usual, 1) end
+    local n = #items
+    for i = 1, 8 - n do items[n + i] = ctx[i] or table.remove(usual, 1) end
     items[9] = Item("Everything else (full menu)", function() if LC_CL.OpenActions then LC_CL.OpenActions() end end)
     return { title = string.upper(title), items = items, accent = accent }
 end

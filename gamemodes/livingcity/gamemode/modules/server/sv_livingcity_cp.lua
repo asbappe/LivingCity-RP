@@ -90,6 +90,11 @@ function LC.IsCPOfficer(ply)
     return (f == "cp" and Rank(ply) >= 3) or f == "admin"
 end
 
+-- Only the Administrator sets sociostability (the owner, 7 November: not recruits, not staff by rank).
+function LC.IsAdministrator(ply)
+    return IsValid(ply) and ply:IsPlayer() and Faction(ply) == "admin"
+end
+
 ------------------------------------------------------------------------
 -- Records
 ------------------------------------------------------------------------
@@ -332,7 +337,7 @@ end
 function LC.SendRecords(unit, search)
     if not IsUnit(unit) then return false end
     local recs = LoadRecords()
-    local data = { people = {}, bolos = {}, requests = {}, officer = LC.IsCPOfficer(unit) or nil, socio = LC.Socio or "green" }
+    local data = { people = {}, bolos = {}, requests = {}, officer = LC.IsCPOfficer(unit) or nil, socioctl = LC.IsAdministrator(unit) or nil, socio = LC.Socio or "green" }
     local shown = {}
     for _, p in ipairs(player.GetAll()) do
         if not RealUnit(p) or p == unit then
@@ -741,7 +746,7 @@ function LC.RefreshSocio(quiet, force)
 end
 
 function LC.SetSocio(ply, level, minutes)
-    if IsValid(ply) and not LC.IsCPOfficer(ply) then return false, "Officers only (Division Leader and up, the Administrator)." end
+    if IsValid(ply) and not LC.IsAdministrator(ply) then return false, "Only the Administrator sets sociostability." end
     level = string.lower(tostring(level or ""))
     if level == "auto" then
         LC.SocioOverride = nil

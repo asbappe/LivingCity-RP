@@ -12,7 +12,7 @@
       Checkpoints       a turret, a power bank
       Escorts           workers waiting for one; handing yours back
       Post office       reading the mail
-      Sociostability    officers set it
+      Sociostability    the Administrator sets it
       Your work         your directives (F3)
 
     C > Unit tools (the full menu), F1 > 2, or
@@ -189,7 +189,8 @@ function LC_CL.OpenUnitTools()
     s = Section("Post office")
     Button(s, "Read the mail", "At the post office: open citizens' letters, looking for contraband and conspiracy.", Do("readmail"))
 
-    s = Section("Sociostability", "officers")
+    if LocalPlayer():GetNW2String("lcf_faction", "") == "admin" then
+    s = Section("Sociostability", "the Administrator")
     local row = vgui.Create("DPanel", s)
     row:Dock(TOP)
     row:SetTall(28)
@@ -204,6 +205,7 @@ function LC_CL.OpenUnitTools()
     end
     Grow(s, 32)
     Note(s, "Green, yellow or red sets how hard the city is policed; auto lets the city's mood decide.")
+    end
 
     s = Section("Your work")
     Button(s, "My directives (F3)", "What Overwatch wants done: patrols, stops, arrests, for XP and rank.", function() Close() RunConsoleCommand("gm_showspare1") end)
