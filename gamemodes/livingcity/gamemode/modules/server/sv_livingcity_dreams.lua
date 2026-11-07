@@ -36,6 +36,13 @@
       Nightmare (lc_dream_moods). The pick ignores the endings' cooldown, still one dream a night. A dreamer taken out of the ending watches the
       rest, flying only inside the dream and watching only the other dreamers.
 
+      Nightmares are different (the owner, 7 November: "they can opt out if it's a neutral or
+      positive dream, not out of a nightmare, and they have to play a nightmare unless they take a
+      stimulant to keep themselves awake"): everyone asleep dreams a nightmare, opted out or not,
+      and nobody wakes themselves from one until they're out of it (out of lives in a dream you
+      play, or taken out of an ending). A stimulant shot (sv_livingcity_vices.lua) keeps you from
+      sleeping at all, so a nightmare can't have you.
+
       Players: C > Settings > Shared dreams (on, or opt out; and "Wake up" in a dream), or
       /dream off, /dream on, /dream wake. Admins: C > Help > Dreams (what's waiting, dream it
       now, wake everyone, put back anyone's things), lc_dream_restore <name>, lc_dream_now.
@@ -185,13 +192,32 @@ function LC.DreamersOf(dream)
     return out
 end
 
--- Asleep in a bed right now, alive, and willing.
-function LC.DreamSleepers()
+-- Asleep in a bed right now, alive, and willing (mood: tonight's; a nightmare takes the
+-- unwilling too: only a stimulant keeps you out of one, by keeping you awake).
+function LC.DreamSleepers(mood)
     local out = {}
     for _, p in ipairs(player.GetAll()) do
-        if p.lcSleep and p:Alive() and not p.lcDreaming and not LC.DreamOptedOut(p) and not (p.InVehicle and p:InVehicle()) then out[#out + 1] = p end
+        if p.lcSleep and p:Alive() and not p.lcDreaming and (mood == "nightmare" or not LC.DreamOptedOut(p)) and not (LC.Wired and LC.Wired(p))
+            and not (p.InVehicle and p:InVehicle()) then out[#out + 1] = p end
     end
     return out
+end
+-- Can they wake themselves now? Not from a nightmare, until they're out of it. True, or false and why not.
+function LC.DreamCanWake(p)
+    local dream = LC.DreamActive
+    if not IsValid(p) or not dream or dream.id ~= p.lcDreaming or dream.mood ~= "nightmare" then return true end
+    local g = dream.game
+    if g and g.pl and g.pl[p] and g.pl[p].done then return true end
+    if p.lcEndSpectating then return true end
+    return false, "You can't wake yourself from a nightmare. You have to see it through (or be out of it)."
+end
+-- Wake up, if they may (C > Settings, /dream wake, the dream games' button).
+function LC.DreamWakeAsked(p)
+    if not IsValid(p) or not p.lcDreaming then return false end
+    local ok, why = LC.DreamCanWake(p)
+    if not ok then Notice(p, "warn", "A nightmare", why, 6) return false end
+    LC.DreamWakeOne(p, "optout")
+    return true
 end
 
 ------------------------------------------------------------------------
@@ -728,6 +754,7 @@ local function Enter(p, dream, spot)
     p.lcDreaming = dream.id
     p.lcNoPermadeath = true -- (whatever happens in a dream, nobody's character dies)
     p:SetNW2Bool("lc_dreaming", true)
+    p:SetNW2Bool("lc_nightmare", dream.mood == "nightmare") -- (their screen: no waking yourself from this one)
     -- just their hands: nothing to drop, spend or lose
     if p.StripWeapons then p:StripWeapons() end
     if p.RemoveAllAmmo then p:RemoveAllAmmo() end
@@ -775,6 +802,7 @@ function LC.DreamWakeOne(p, why)
     p.lcDreaming = nil
     p.lcDreamBed = nil
     p:SetNW2Bool("lc_dreaming", false)
+    p:SetNW2Bool("lc_nightmare", false)
     if dream and dream.list then
         -- (everyone gone: the ending has nobody left to be for)
         if #LC.DreamersOf(dream) == 0 then timer.Simple(0, function()
@@ -791,6 +819,7 @@ function LC.DreamWakeOne(p, why)
         if not IsValid(p) then return end
         LC.DreamRestore(p, snap, function(ok)
             if not IsValid(p) then return end
+            hook.Run("LivingCityDreamWoke", p, ok, why)
             if ok then
                 Notice(p, "info", why == "optout" and "Awake" or "You wake up", why == "optout" and "You wake from the dream, in your bed, with everything as it was."
                     or "You wake in your bed, with everything just as it was. Press Jump to get up.", 9)
@@ -873,7 +902,7 @@ function LC.DreamStart(id, by, vote, also, force)
     if LC.EndingBusy and LC.EndingBusy() then return false, "An ending is already under way." end
     if LC.DreamActive then return false, "A dream is already under way." end
     if not force and not game and LC.EndingCooldownLeft and LC.EndingCooldownLeft() > 0 then return false, "Not yet (" .. math.ceil(LC.EndingCooldownLeft() / 60) .. " minutes of the endings' cooldown left)." end
-    local who = LC.DreamSleepers()
+    local who = LC.DreamSleepers(LC.DreamMood(id))
     if IsValid(also) and not also.lcDreaming and also:Alive() and not table.HasValue(who, also) then who[#who + 1] = also end
     if #who == 0 then return false, "Nobody is asleep to dream it." end
     S.nextId = (S.nextId or 0) + 1
@@ -1030,9 +1059,10 @@ timer.Create("LivingCityDreams", 1, 0, function()
                 S.warned = true
                 local q = Nightly()
                 local mood = q and LC.DreamMood(q.id) or "neutral"
-                for _, p in ipairs(LC.DreamSleepers()) do
+                for _, p in ipairs(LC.DreamSleepers(mood)) do
                     Notice(p, mood == "nightmare" and "warn" or "info", "A dream is coming", MOOD_LINES[mood] .. " It's shared with everyone asleep, and you'll wake in your bed with everything you had. "
-                        .. "Not tonight? C > Settings > Shared dreams: opt out.", 12)
+                        .. (mood == "nightmare" and "There's no opting out of a nightmare: only a stimulant before bed would have kept you awake."
+                            or "Not tonight? C > Settings > Shared dreams: opt out."), 12)
                 end
             end
             if now >= S.at and not (LC.EndingBusy and LC.EndingBusy()) and not LC.DreamActive then LC.DreamTonight() end
@@ -1178,7 +1208,7 @@ function LC.SetDreamOptOut(p, out)
     if not IsValid(p) then return end
     p:SetPData("lc_dream_optout", out and "1" or "0")
     p:SetNW2Bool("lc_dream_optout", out and true or false)
-    if out and p.lcDreaming then LC.DreamWakeOne(p, "optout") end
+    if out and p.lcDreaming and LC.DreamCanWake(p) then LC.DreamWakeOne(p, "optout") end
     Notice(p, "info", "Shared dreams", out and "You've opted out: you sleep without the city's dreams. (C > Settings > Shared dreams to opt back in.)"
         or "You'll dream with everyone else asleep. You always wake in your bed, with everything you had.", 8)
 end
@@ -1188,7 +1218,7 @@ local function DreamCommand(p, rest)
     if a == "off" or a == "out" then LC.SetDreamOptOut(p, true)
     elseif a == "on" or a == "in" then LC.SetDreamOptOut(p, false)
     elseif a == "wake" then
-        if p.lcDreaming then LC.DreamWakeOne(p, "optout") else p:ChatPrint("[Dreams] You're not dreaming.") end
+        if p.lcDreaming then LC.DreamWakeAsked(p) else p:ChatPrint("[Dreams] You're not dreaming.") end
     else
         p:ChatPrint("[Dreams] Shared dreams are " .. (LC.DreamOptedOut(p) and "off for you" or "on for you") .. ". /dream off, /dream on, /dream wake (or C > Settings).")
     end
@@ -1274,7 +1304,7 @@ net.Receive("lc_dream_act", function(_, p)
     local what, arg = net.ReadString(), net.ReadString()
     if what == "optout" then LC.SetDreamOptOut(p, true) return end
     if what == "optin" then LC.SetDreamOptOut(p, false) return end
-    if what == "wake" then if p.lcDreaming then LC.DreamWakeOne(p, "optout") end return end
+    if what == "wake" then LC.DreamWakeAsked(p) return end
     if not p:IsAdmin() then return end
     local msg
     if what == "status" then SendStatus(p) return

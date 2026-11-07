@@ -13812,19 +13812,30 @@ b:SetPos(c2.e:GetPos())
 _run(0.2)
 ok((c2.home or 0) > CurTime() and g.pl[b].lives == 3, "and touching one then sends him back to the middle")
 g.afraid = 0
--- out of lives: awake, with everything back
+-- a nightmare: nobody wakes themselves while they're still in it
+ok(not LC.DreamWakeAsked(b) and b.lcDreaming and not LC.DreamCanWake(b), "in a nightmare you can't wake yourself while you're still in it")
+-- out of lives: out of it, watching (or wake now); waking, shaken
 s.safe, s.lives = 0, 1
+local hpA = a:Health()
 LC.DreamGameHit(g, a, "Caught", "Test.")
-_run(1.5)
-ok(not a.lcDreaming and a.lcSleep and a:GetPos():Distance(CITY) < 1, "no lives left: you jolt awake in your bed, everything as it was")
+ok(g.pl[a].how == "out" and a.lcGameWatching and a.lcDreaming and LC.DreamCanWake(a), "no lives left: out of it, watching the rest, free to wake")
+local sentOut = false
+for _, m in ipairs(net.sent) do if m.name == "lc_dreamgame" and m.to == a and type(m.data[1]) == "table" and m.data[1].k == "out" then sentOut = true end end
+ok(sentOut, "(their screen asks: wake up now, or watch until it's over)")
+ok(LC.DreamWakeAsked(a), "they choose to wake")
+_run(2.5)
+ok(not a.lcDreaming and not a.lcGameWatching and a.lcSleep and a:GetPos():Distance(CITY) < 1, "awake in their bed, everything as it was")
+ok(LC.Shaken(a) and a:Health() == math.max(1, hpA - 15), "and lost: they wake shaken (hurt, thirsty, the shakes)", a:Health())
 -- every token gone: the rest win, and the arena goes
+local crB = b:GetNW2Int("lce_credits", 0)
 local ents0 = g.ents
 for _, t in ipairs(g.tokens) do t.got = true end
 g.left = 0
-_run(1.5)
+_run(2.5)
 local gone = true
 for _, e in ipairs(ents0) do if IsValid(e) then gone = false end end
-ok(g.pl[b].how == "won" and not b.lcDreaming and LC.DreamActive == nil and gone and #g.won == 1, "every token picked up: those left win, wake, and the maze is gone")
+ok(g.pl[b].how == "won" and not b.lcDreaming and LC.DreamActive == nil and gone and #g.won == 1, "every token picked up: those left win; nobody's left in it, so it's over, everyone wakes, and the maze is gone")
+ok(b:GetNW2Int("lce_credits", 0) == crB + 25, "a winner wakes well rested (25 credits, and more)", b:GetNW2Int("lce_credits", 0) - crB)
 
 -- The Barrel Tower
 Asleep(a, CITY)
@@ -13843,8 +13854,9 @@ ok(sa.lives == 2 and (not IsValid(br.e)) and a:GetPos():Distance(sa.start) < 1, 
 b:SetPos(gb.topAt + Vector(0, 0, 2))
 _run(0.2)
 ok(gb.pl[b].how == "won", "reaching the top wins")
+ok(b.lcGameWatching, "(a winner may watch the rest too)")
 LC.DreamGameStop(d2, "test")
-_run(1.5)
+_run(2.5)
 ok(not a.lcDreaming and not b.lcDreaming and LC.DreamActive == nil, "(and when it's over, everyone wakes)")
 
 -- The Crumbling Floor
@@ -13862,8 +13874,8 @@ _run(1.2)
 ok(tile.gone and not IsValid(tile.e), "and falls away a moment later")
 a:SetPos(a:GetPos() - Vector(0, 0, 40))
 _run(0.2)
-ok(gc.pl[a].how == "out" and gc.pl[b].how == "won", "fall and you wake; the last one standing wins")
-_run(1.5)
+ok(gc.pl[a].how == "out" and gc.pl[b].how == "won", "fall and you're out; the last one standing wins")
+_run(2.5)
 ok(LC.DreamActive == nil and not b.lcDreaming, "(then it's over)")
 
 -- Freeze, Citizen
@@ -13886,7 +13898,7 @@ _run(0.2)
 ok(gf.pl[b].how == "won", "reaching the line by him wins")
 -- the admins can wake everyone
 LC.DreamGameStop(d4, "admin")
-_run(1.5)
+_run(2.5)
 ok(not a.lcDreaming and LC.DreamActive == nil, "waking everyone ends it")
 
 LC.DreamForget()
@@ -13901,6 +13913,81 @@ _walls = savedWalls
 ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 DreamGameTests()
+
+-- Cigarettes, alcohol and stimulants (sv_livingcity_vices.lua), and who a nightmare takes
+local function ViceTests()
+section("Cigarettes, alcohol and stimulants; nobody opts out of a nightmare")
+local errs0 = #_errors
+local p = newPlayer("ViceA", "citizen")
+local q = newPlayer("ViceB", "citizen")
+_run(3)
+local okItems = true
+for _, id in ipairs({ "cig_union", "cig_rolled", "beer", "vodka", "moonshine", "stimulant" }) do if not (LCS.Items[id] and LCS.Items[id].use == "vice") then okItems = false end end
+ok(okItems and LCS.GoodsById.cig_union and LCS.GoodsById.vodka and LCS.BlackById.cig_rolled and LCS.BlackById.beer and LCS.BlackById.moonshine and LCS.BlackById.stimulant,
+    "cigarettes, alcohol and stimulants exist: Union cigarettes and vodka at the Commissary, the rest on the black market")
+ok(LCS.Items.stimulant.contraband and LCS.Items.moonshine.contraband and not LCS.Items.cig_union.contraband, "(the black market's are contraband; the Union's aren't)")
+-- a cigarette steadies the shakes
+p:SetNW2Float("lc_shaken_until", CurTime() + 100)
+LC.GiveItem(p, "cig_union", 1)
+ok(LC.ItemUse(p, "cig_union") and not LC.HasItem(p, "cig_union") and not LC.Shaken(p), "a cigarette is smoked from your pockets, and steadies the shakes")
+-- drink: drunker with each, a tenth less from a hit, then sick
+LC.GiveItem(p, "beer", 1)
+LC.GiveItem(p, "vodka", 1)
+LC.ItemUse(p, "beer")
+ok(LC.Drunk(p) == 1 and LC.HasItem(p, "bottle_empty"), "beer: a little drunk (and the bottle's left)")
+LC.ItemUse(p, "vodka")
+local dmg = { ScaleDamage = function(self, f) self.f = f end }
+hook.t.EntityTakeDamage.LivingCityVices(p, dmg)
+ok(LC.Drunk(p) == 3 and dmg.f == 0.9, "vodka: drunker; tipsy, you take a tenth less from a hit")
+p.lcSoberAt = CurTime() - 1
+_run(1.1)
+ok(LC.Drunk(p) == 2, "it wears off, one at a time")
+LC.SetDrunk(p, 5)
+local bad = LCS.Items.moonshine.badChance
+LCS.Items.moonshine.badChance = 0
+LC.GiveItem(p, "moonshine", 1)
+LC.ItemUse(p, "moonshine")
+LCS.Items.moonshine.badChance = bad
+ok(LC.Drunk(p) == 3, "too much: you throw up, and sober up some")
+LC.SetDrunk(p, 0)
+-- a stimulant: wide awake, no sleep, no dreams; a second hurts; then the crash
+LC.GiveItem(p, "stimulant", 2)
+LC.ItemUse(p, "stimulant")
+local okS, whyS = LC.SleepIn(p, nil)
+ok(LC.Wired(p) and not okS and string.find(tostring(whyS), "wired", 1, true), "a stimulant: you can't fall asleep", whyS)
+local hp = p:Health()
+LC.ItemUse(p, "stimulant")
+ok(p:Health() == math.max(1, hp - 10), "a second on top of the first: your heart pounds (health lost)")
+p:SetNW2Float("lc_wired_until", CurTime() - 1)
+_run(1.1)
+ok(LC.Crashing(p), "when it wears off you crash (no running for a while)")
+-- who a nightmare takes: the opted out too, never the wired
+p:SetNW2Float("lc_crash_until", 0)
+p.lcSleep, q.lcSleep = { t0 = CurTime() }, { t0 = CurTime() }
+p:SetPData("lc_dream_optout", "1")
+local function Has(list, x) for _, v in ipairs(list) do if v == x then return true end end return false end
+ok(not Has(LC.DreamSleepers("happy"), p) and Has(LC.DreamSleepers("happy"), q), "opted out: no happy or neutral dreams")
+ok(Has(LC.DreamSleepers("nightmare"), p), "but a nightmare takes everyone asleep, opted out or not")
+q:SetNW2Float("lc_wired_until", CurTime() + 60)
+ok(not Has(LC.DreamSleepers("nightmare"), q), "(only a stimulant keeps you out of one)")
+p.lcSleep, q.lcSleep = nil, nil
+p:SetPData("lc_dream_optout", "0")
+q:SetNW2Float("lc_wired_until", 0)
+-- how a dream you played leaves you
+local cr = p:GetNW2Int("lce_credits", 0)
+p:SetHealth(50)
+LC.DreamOutcome(p, "won", "The Patrol Maze")
+ok(p:GetNW2Int("lce_credits", 0) == cr + 25 and p:Health() == p:GetMaxHealth(), "won: well rested (credits, fully healed)")
+LC.DreamOutcome(p, "time", "The Patrol Maze")
+ok(p:GetNW2Int("lce_credits", 0) == cr + 35, "lasted it out: a little")
+p:SetHealth(100)
+LC.DreamOutcome(p, "out", "The Patrol Maze")
+ok(p:Health() == 85 and LC.Shaken(p), "lost every life: shaken")
+p:SetNW2Float("lc_shaken_until", 0)
+for _, x in ipairs({ p, q }) do x:SetPos(Vector(-122000, -122000, 0)) end
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+ViceTests()
 
 ----------------------------------------------------------------------
 

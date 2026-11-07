@@ -162,6 +162,7 @@ function LC.SleepIn(ply, ent)
     if not cvOn:GetBool() or not IsValid(ply) or not ply:Alive() then return false end
     if ply.lcSleep then return false end
     if ply:GetNW2String("lcf_faction", "") == "stalker" then return false, "A stalker doesn't sleep. It doesn't get tired either: it only works." end
+    if LC.Wired and LC.Wired(ply) then return false, "You're far too wired to sleep: the stimulant has your heart racing. (It wears off in a while.)" end
     local where, bed = BedAt(ply, ent)
     if not where then return false, "There's no bed here." end
     local key = LC.BedKey(bed)

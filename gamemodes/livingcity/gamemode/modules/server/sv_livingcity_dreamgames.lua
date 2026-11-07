@@ -28,8 +28,13 @@
           you wake). Reach the line in front of him to win.
 
       Each has a time limit: when it's up, whoever is still in it wakes as the nightmare fades.
-      Winners wake first, with a line for the morning. The random dream (lc_dream_every_night)
-      still picks only from the endings.
+      Out of lives, or won (the owner, 7 November: "give players the option to wake up if they run
+      out of lives, otherwise they can spectate til it's over"): a choice on screen, wake up now or
+      watch the rest (flying about inside the arena) until it's over. Waking, a winner is well
+      rested and whoever lasted to the end gets a little; whoever lost every life wakes shaken
+      (LC.DreamOutcome, sv_livingcity_vices.lua). Nobody wakes themselves from a nightmare while
+      they're still in it (sv_livingcity_dreams.lua). The random dream (lc_dream_every_night) still
+      picks only from the endings.
 ]]
 
 if CLIENT then return end
@@ -196,16 +201,33 @@ local function ToStart(g, p, grace)
     s.safe = CurTime() + (grace or 2.5)
 end
 
--- Out of the game: woken (won, caught too often, fallen, or the time's up).
+-- Out of it, watching the rest: flying about inside the arena until it's over.
+local function Watch(g, p)
+    local s = g.pl[p]
+    s.watching = true
+    p.lcGameWatching = true
+    p:SetNW2Bool("lc_game_watching", true)
+    if p.Spectate then p:Spectate(OBS_MODE_ROAMING or 6) end
+    p:SetPos(g.watchAt or (g.dream.pos + Vector(0, 0, 350)))
+end
+-- Out of the game (won, caught too often, fallen, or the time's up). Won or out: wake now, or
+-- watch the rest (their choice, on screen); the time's up: awake.
 local function Done(g, p, how, title, text)
     local s = g.pl[p]
     if not s or s.done then return end
     s.done, s.how = true, how
+    p.lcDreamGameResult = { how = how, name = g.def.name } -- (how they wake: LC.DreamOutcome)
     if how == "won" then g.won[#g.won + 1] = p end
-    Send(g, { k = "stop", how = how }, p)
     if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, how == "won" and Color(255, 245, 210, 255) or Color(0, 0, 0, 255), 1.2, 0.2) end
     Notice(p, how == "won" and "info" or "warn", title, text, 8)
-    if LC.DreamWakeOne then LC.DreamWakeOne(p, "game") end
+    if how == "time" then
+        Send(g, { k = "stop", how = how }, p)
+        if LC.DreamWakeOne then LC.DreamWakeOne(p, "game") end
+        return
+    end
+    Watch(g, p)
+    Send(g, { k = "out", how = how, title = title, text = text }, p)
+    g.dirty = true
 end
 LC.DreamGameDone = Done
 
@@ -215,7 +237,7 @@ local function Hit(g, p, title, text)
     if not s or s.done or CurTime() < (s.safe or 0) then return false end
     s.lives = s.lives - 1
     if s.lives <= 0 then
-        Done(g, p, "out", title, text .. " You jolt awake.")
+        Done(g, p, "out", title, text .. " You're out of it.")
         return true
     end
     if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(160, 0, 0, 200), 0.6, 0.1) end
@@ -445,7 +467,7 @@ do
         g.wasAfraid = afraid
         -- every token gone: they win
         if g.left <= 0 then
-            for _, p in ipairs(players) do Win(g, p, "Every token picked up. The officers fade into the dark, and you wake.") end
+            for _, p in ipairs(players) do Win(g, p, "Every token picked up. The officers fade into the dark.") end
             return
         end
         -- the officers
@@ -659,7 +681,7 @@ do
         for _, p in ipairs(players) do
             local pp = p:GetPos()
             if pp.z > g.topZ - 30 and (pp.x - g.topAt.x) ^ 2 + (pp.y - g.topAt.y) ^ 2 < (S / 2 + 20) ^ 2 then
-                Win(g, p, "You reached the top. The giant crumbles to dust, and you wake.")
+                Win(g, p, "You reached the top. The giant crumbles to dust.")
             elseif pp.z < g.base - 140 then
                 ToStart(g, p, 1)
             end
@@ -761,15 +783,15 @@ do
             local onTop = pp.z <= g.top + 6 and pp.z >= g.top - 2
             if t and not t.gone and onTop and not calm then Crack(g, t) end
             if pp.z < g.top - 1 and (not t or t.gone) or pp.z < g.top - 60 then
-                Done(g, p, "out", "You fell", "The floor gives way, and you fall, and fall... and wake with a start.")
+                Done(g, p, "out", "You fell", "The floor gives way, and you fall, and fall, into the dark.")
             end
         end
         -- the last one standing
         local left = InPlay(g)
         if g.started >= 2 and #left == 1 then
-            Win(g, left[1], "Last one standing. The floor holds, and you wake.")
+            Win(g, left[1], "Last one standing. The floor holds.")
         elseif g.started == 1 and #left == 1 and now >= g.t0 + 90 then
-            Win(g, left[1], "You kept your feet for ninety seconds. The floor holds, and you wake.")
+            Win(g, left[1], "You kept your feet for ninety seconds. The floor holds.")
         end
     end
 
@@ -834,7 +856,7 @@ do
         for _, p in ipairs(players) do
             local pp = p:GetPos()
             if pp.x >= g.finishX then
-                Win(g, p, "You reached him without being seen. He's gone, and you wake.")
+                Win(g, p, "You reached him without being seen. He's gone.")
             elseif g.phase == "red" and now >= (g.redFrom or 0) then
                 local v = p.GetVelocity and p:GetVelocity() or Vector(0, 0, 0)
                 if v:Length2D() > 45 and Hit(g, p, "Seen", "He saw you move.") then
@@ -872,7 +894,7 @@ local function Tick()
         if g.dirty or now >= (g.sentAt or 0) + 1 then
             g.dirty, g.sentAt = nil, now
             for p, s in pairs(g.pl) do
-                if IsValid(p) and not s.done then
+                if IsValid(p) and (not s.done or s.watching) then -- (watchers see how it goes on too)
                     local t = g.def.state(g) or {}
                     t.k, t.lives = "state", s.lives
                     Send(g, t, p)
@@ -891,7 +913,7 @@ function LC.DreamGameStart(dream)
     local def = dream and G[dream.ending]
     if not def then return false, "No such dream." end
     if ents.GetEdictCount and ents.GetEdictCount() > 7600 then return false, "The server has too many things in it right now to build that dream." end
-    local g = { def = def, id = def.id, dream = dream, ents = {}, pl = {}, won = {}, t0 = CurTime(), last = CurTime() }
+    local g = { def = def, id = def.id, dream = dream, ents = {}, pl = {}, won = {}, t0 = CurTime(), last = CurTime(), watchAt = dream.pos + Vector(0, 0, 350) }
     g.ends = g.t0 + def.secs
     dream.game = g
     local ok, err = pcall(def.build, g, dream)
@@ -930,7 +952,35 @@ function LC.DreamGameLeave(p, dream)
     p.lcDreamGame = nil
     if p.lcEndFrozen or (p.IsFrozen and p:IsFrozen()) then p:Freeze(false) end
     p.lcEndFrozen = nil
+    if p.lcGameWatching then
+        p.lcGameWatching = nil
+        p:SetNW2Bool("lc_game_watching", false)
+        if p.UnSpectate then p:UnSpectate() if p.Spawn then p:Spawn() end end
+    end
 end
+
+-- Watching: never past the arena's edge (a little above it is fine).
+hook.Add("SetupMove", "LivingCityDreamGameWatch", function(p, mv)
+    if not p.lcGameWatching then return end
+    local dream = LC.DreamActive
+    local g = dream and dream.game
+    local b = g and g.bounds
+    if not b then return end
+    local o = mv:GetOrigin()
+    local x, y, z = math.Clamp(o.x, b.mins.x, b.maxs.x), math.Clamp(o.y, b.mins.y, b.maxs.y), math.Clamp(o.z, b.mins.z, b.maxs.z + 800)
+    if x ~= o.x or y ~= o.y or z ~= o.z then
+        mv:SetOrigin(Vector(x, y, z))
+        mv:SetVelocity(Vector(0, 0, 0))
+    end
+end)
+
+-- Back in bed with everything put back: now how the dream leaves them (sv_livingcity_vices.lua).
+hook.Add("LivingCityDreamWoke", "LivingCityDreamGames", function(p)
+    local r = IsValid(p) and p.lcDreamGameResult
+    if not r then return end
+    p.lcDreamGameResult = nil
+    if LC.DreamOutcome then LC.DreamOutcome(p, r.how, r.name) end
+end)
 
 -- The game's over: its props gone, and everyone still in it woken.
 function LC.DreamGameStop(dream, why)

@@ -28,8 +28,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 2026-11-07 (part 3): four nightmare dreams you play, on the Administrator's tablet under Nightmare: The Patrol Maze, The Barrel Tower, The Crumbling Floor, Freeze, Citizen (`sv_livingcity_dreamgames.lua`, `cl_livingcity_dreamgames.lua`; spec in `docs/features/endings.md`, "Nightmare dreams you play"). Each builds its own arena of props at the dream point and removes it after; no new settings or commands.
-- `sv_livingcity_dreams.lua` now accepts a game id wherever it took an ending id (`LC.DreamKnown`, `LC.DreamTitle`); the endings behave exactly as before, and the random nightly dream still picks endings only.
-- Tests: `DreamGameTests` (30) pass, `DreamTests` and `DreamMoodTests` still pass, client smoke passes. Nothing checked in game: PLAYTEST.md "Nightmare dreams you play".
-- Unchecked guesses to confirm in game: the prop models' orientation (maze walls, the finish strip), the officers' run animation on a prop, ramp walkability.
-- Earlier: the full suite still hasn't been rerun since 2026-11-02 (run it when the owner asks). `TODO.md` "To build later" has the rest.
+- 2026-11-07 (part 3b): nightmare rules and vices. Opting out covers Happy and Neutral dreams only; a Nightmare takes everyone asleep and nobody wakes themselves while still in it (`LC.DreamSleepers(mood)`, `LC.DreamCanWake`, `LC.DreamWakeAsked` in `sv_livingcity_dreams.lua`). In a dream you play, out of lives or won: wake now or watch (spectate inside the arena); outcome on waking via the `LivingCityDreamWoke` hook and `LC.DreamOutcome`.
+- New `sv_livingcity_vices.lua` / `cl_livingcity_vices.lua`: cigarettes, beer, vodka, moonshine, stimulant shot (items in `sh_livingcity_shop.lua`, `use = "vice"`); a stimulant blocks sleep (`sv_livingcity_rest.lua`). Spec: `docs/features/survival-and-credit.md`, `docs/features/endings.md`; core line in `CORE.md`, entry in `CORE_CHANGELOG.md`.
+- **Waiting on the owner:** `_dev/core_snapshot.txt` needs six new lines (`item beer`, `item cig_rolled`, `item cig_union`, `item moonshine`, `item stimulant`, `item vodka`); the edit was blocked in this session, so the full suite's core check will fail on exactly those until they're added with the owner's OK.
+- Tests: `DreamGameTests` (37), `ViceTests` (17), `DreamMoodTests` pass; `DreamTests` has one flaky check (an awake player's random job loadout), it passed on rerun. Client smoke passes. Nothing checked in game: PLAYTEST.md, the last two sections.
+- The full suite hasn't been rerun since 2026-11-02 (run it when the owner asks).

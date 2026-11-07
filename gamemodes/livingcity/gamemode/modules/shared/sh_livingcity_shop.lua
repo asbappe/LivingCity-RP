@@ -31,6 +31,21 @@ LCS.Items = {
     coffee          = { name = "Real coffee", model = "models/props_junk/garbage_coffeemug001a.mdl", hunger = 5, thirst = 25, uplift = true },
     tablets         = { name = "Antiparasitic tablets", model = "models/props_lab/jar01b.mdl", cures = "parasites" },
 
+    -- Cigarettes, alcohol and stimulants (sv_livingcity_vices.lua; the owner, 7 November). From your
+    -- pockets: Smoke, Drink or Take. vice = what it does, strength = how much of it.
+    cig_union       = { name = "Union cigarette", model = "models/props_lab/box01a.mdl", use = "vice", useLabel = "Smoke", vice = "smoke", strength = 1, kg = 0.01,
+                        desc = "Union-approved tobacco, mostly. Steadies the nerves, takes the edge off hunger" },
+    cig_rolled      = { name = "Hand-rolled cigarette", model = "models/props_lab/box01a.mdl", use = "vice", useLabel = "Smoke", vice = "smoke", strength = 2, kg = 0.01,
+                        contraband = true, conceal = 0.8, desc = "Real tobacco from somewhere. Harsher than the Union's: more cough, more calm" },
+    beer            = { name = "Homebrew beer", model = BOTTLE, use = "vice", useLabel = "Drink", vice = "drink", strength = 1, quench = 8, leaves = "bottle_empty",
+                        contraband = true, conceal = 0.4, desc = "Brewed in a bathtub. A little drunk, a little less thirsty" },
+    vodka           = { name = "Pre-war vodka", model = "models/props_junk/glassjug01.mdl", use = "vice", useLabel = "Drink", vice = "drink", strength = 2, quench = -6,
+                        desc = "A Commissary privilege for exemplary citizens. Strong" },
+    moonshine       = { name = "Moonshine", model = "models/props_junk/glassjug01.mdl", use = "vice", useLabel = "Drink", vice = "drink", strength = 3, quench = -10, badChance = 0.2,
+                        contraband = true, conceal = 0.4, desc = "Very strong, very cheap, and one jar in five is a bad batch" },
+    stimulant       = { name = "Stimulant shot", model = "models/props_lab/jar01a.mdl", use = "vice", useLabel = "Take", vice = "stim", kg = 0.05,
+                        contraband = true, conceal = 0.7, desc = "Combine-issue, for units on double shifts. Fifteen minutes you couldn't sleep through if you tried: no dream can take you. Then the crash" },
+
     -- Meat and fish, raw or cooked, go off after one city day (spoils = true; sv_livingcity_survival.lua,
     -- the owner, 7 November). A dead bird leaves its own kind: pigeon, crow or gull, all roast the same.
     raw_bird        = { name = "Raw pigeon", model = "models/pigeon.mdl", hunger = 10, parasite = 0.7, cooksTo = "cooked_bird", spoils = true },
@@ -291,6 +306,7 @@ do
 end
 
 LCS.Weights = {
+    beer = 0.6, vodka = 0.9, moonshine = 0.9,
     ration = 0.3, water = 0.4, bread = 0.5, milk = 0.6, melon = 3.0, coffee = 0.3, tablets = 0.05,
     raw_bird = 0.6, raw_crow = 0.6, raw_gull = 0.7, cooked_bird = 0.5, raw_headcrab = 1.2, raw_fastcrab = 1.0, raw_poisoncrab = 1.4, cooked_headcrab = 1.0,
     can_empty = 0.05, can_dirty = 0.4, can_clean = 0.4, bottle_empty = 0.3, bottle_dirty = 0.8, bottle_clean = 0.8,
@@ -364,6 +380,8 @@ LCS.Goods = {
     { id = "healthvial", name = "Health vial", entity = "item_healthvial", price = 25, minStanding = 150, desc = "For the trusted." },
     { id = "melon", item = "melon", price = 25, minStanding = 400, desc = "A whole watermelon. Exemplary citizens only." },
     { id = "coffee", item = "coffee", price = 30, minStanding = 400, desc = "Real coffee. You'd forgotten the smell." },
+    { id = "cig_union", item = "cig_union", count = 5, name = "Union cigarettes (5)", price = 12, minStanding = 150, civOnly = true, desc = "A pack of five. Union-approved. Mildly." },
+    { id = "vodka", item = "vodka", price = 45, minStanding = 600, civOnly = true, desc = "Pre-war vodka. For citizens the Union is proud of." },
     { id = "healthkit", name = "Medical kit", entity = "item_healthkit", price = 50, minStanding = 400, desc = "A full medical kit." },
     { id = "request_device", item = "request_device", price = 10, minStanding = 0, desc = "Something wrong? It calls Civil Protection to where you are." },
     -- (no spare cuffs for sale: a unit's own never run out, and it read as though they had to buy them; the owner, 1 November)
@@ -406,6 +424,11 @@ LCS.Black = {
     { id = "civvies", item = "civvies", price = 15, desc = "Clean, plain, forgettable." },
     { id = "uniform_cp", item = "uniform_cp", price = 160, desc = "Off a Civil Protection unit who won't be needing it." },
     { id = "tablets", item = "tablets", price = 20, desc = "No questions about why you need them." },
+    { id = "cig_rolled", item = "cig_rolled", count = 5, name = "Hand-rolled cigarettes (5)", price = 10, desc = "Real tobacco. Don't ask from where." },
+    { id = "beer", item = "beer", price = 8, desc = "Bathtub beer. It's wet, and it works." },
+    { id = "moonshine", item = "moonshine", price = 10, desc = "Strong enough to strip paint. Mostly safe." },
+    { id = "vodka_black", item = "vodka", price = 70, desc = "Pre-war vodka, for people the Union isn't proud of." },
+    { id = "stimulant", item = "stimulant", price = 35, desc = "Stolen from a Civil Protection depot. Keeps you awake all night, nightmares and all." },
     { id = "crowbar", name = "Crowbar", weapon = "weapon_crowbar", price = 50, desc = "Every revolution starts somewhere." },
     { id = "multitool", name = "Multitool", weapon = "weapon_lc_multitool", price = 250, desc = "Opens Combine locks, screens and terminals. Very illegal. Don't get searched." },
     { id = "gun_parts", item = "gun_parts", price = 18, desc = "Springs, barrels, pins. Make something with them." },

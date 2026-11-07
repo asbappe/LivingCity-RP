@@ -409,12 +409,13 @@ function LC_CL.OpenActions()
     Add(set, "Tips: show me them all again, from the start", function() Send("hints", "reset") end)
     -- shared dreams (cl_livingcity_dreams.lua)
     if me:GetNW2Bool("lc_dreaming", false) then
-        Add(set, "Shared dreams: wake up now (you wake in your bed, with everything you had)", function() if LC_CL.DreamAct then LC_CL.DreamAct("wake") end end, "icon16/weather_sun.png")
+        Add(set, me:GetNW2Bool("lc_nightmare", false) and "Shared dreams: wake up now (not from a nightmare, until you're out of it)"
+            or "Shared dreams: wake up now (you wake in your bed, with everything you had)", function() if LC_CL.DreamAct then LC_CL.DreamAct("wake") end end, "icon16/weather_sun.png")
     end
     if me:GetNW2Bool("lc_dream_optout", false) then
         Add(set, "Shared dreams: off for you (opt back in)", function() if LC_CL.DreamAct then LC_CL.DreamAct("optin") end end, "icon16/weather_clouds.png")
     else
-        Add(set, "Shared dreams: on (opt out: sleep without them)", function() if LC_CL.DreamAct then LC_CL.DreamAct("optout") end end, "icon16/weather_clouds.png")
+        Add(set, "Shared dreams: on (opt out of happy and neutral ones; nightmares take everyone asleep)", function() if LC_CL.DreamAct then LC_CL.DreamAct("optout") end end, "icon16/weather_clouds.png")
     end
 
     -- help, and staff

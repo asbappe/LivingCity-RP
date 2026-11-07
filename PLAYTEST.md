@@ -863,3 +863,17 @@ Notes:
   Notes:
 - [ ] **All four:** after each one, are you back in your bed with everything you had, and is the arena gone from the dream point?
   Notes:
+
+## Nightmares, wake or watch, cigarettes, alcohol and stimulants (7 November, part 3)
+- [ ] **Out of lives in a dream you play:** does the window ask "Wake up now" or "Watch until it's over"? Watching, can you fly about inside the arena but not leave it? Waking, are you back in bed with everything?
+  Notes:
+- [ ] **Bonus and penalty:** win one: 25 credits, a little XP, full health on waking? Lose every life: hurt, thirsty and a shaky grey view for 3 minutes?
+  Notes:
+- [ ] **No opting out of a nightmare:** opted out, asleep, with a nightmare chosen: does it still take you? Does "Wake up" refuse while you're still in it? A happy or neutral dream still skips you?
+  Notes:
+- [ ] **Stimulant:** buy one from the black market, take it (F3): can you not sleep in a bed for 15 minutes, then crash (no running)? A second one hurts?
+  Notes:
+- [ ] **Cigarettes:** Union cigarettes at the Commissary (standing 150), hand-rolled at the black market. Do you and others see smoke? Three quickly: coughing fit?
+  Notes:
+- [ ] **Alcohol:** beer, vodka, moonshine: does the screen sway more as you drink, no running when drunk, throwing up past 7, the empty beer bottle left over?
+  Notes:

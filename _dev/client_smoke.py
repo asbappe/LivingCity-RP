@@ -1578,6 +1578,38 @@ return (not ok) and tostring(e) or nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "dream games (client) " + str(err)
+# cigarettes, alcohol, stimulants and the shakes (cl_livingcity_vices.lua); the dream games' wake-or-watch window
+err = L.execute(r"""
+local ok, e = pcall(function()
+    net._q = { "smoke", _me, 2 }
+    net["recv_lc_vice"]()
+    _me:SetNW2Int("lc_drunk", 4)
+    _me:SetNW2Float("lc_wired_until", CurTime() + 60)
+    _me:SetNW2Float("lc_shaken_until", CurTime() + 60)
+    hook.t.RenderScreenspaceEffects.LivingCityVices()
+    local view = { angles = Angle(0, 0, 0), fov = 90, origin = Vector(0, 0, 0) }
+    LC_CL.ViewMods.vices.fn(_me, view)
+    _me:SetNW2Int("lc_drunk", 0)
+    _me:SetNW2Float("lc_wired_until", 0)
+    _me:SetNW2Float("lc_shaken_until", 0)
+    _me:SetNW2Float("lc_crash_until", CurTime() + 60)
+    hook.t.RenderScreenspaceEffects.LivingCityVices()
+    _me:SetNW2Float("lc_crash_until", 0)
+    _me:SetNW2Bool("lc_dreaming", true)
+    _me:SetNW2Bool("lc_nightmare", true)
+    hook.t.HUDPaint.LivingCityDreams()
+    local function Msg(t) net._q = { t } net["recv_lc_dreamgame"]() end
+    Msg({ k = "start", id = "maze", name = "The Patrol Maze", goal = "Tokens.", ends = CurTime() + 300, lives = 3, maxLives = 3, tokens = {}, left = 0 })
+    Msg({ k = "out", how = "out", title = "Caught", text = "You're out of it." })
+    hook.t.HUDPaint.LivingCityDreamGames()
+    Msg({ k = "stop", how = "over" })
+    _me:SetNW2Bool("lc_nightmare", false)
+    _me:SetNW2Bool("lc_dreaming", false)
+end)
+return (not ok) and tostring(e) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "vices (client) " + str(err)
 # the cleanup crew's hoover: drawn in your view and in your hand, and its HUD
 L.globals()._SRC = open(os.path.join(GMDIR, "entities", "weapons", "weapon_lc_hoover.lua")).read()
 err = L.execute(r"""
