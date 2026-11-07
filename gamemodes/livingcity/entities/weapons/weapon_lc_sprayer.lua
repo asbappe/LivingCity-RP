@@ -147,12 +147,15 @@ if CLIENT then
 
     function SWEP:OnRemove() if IsValid(self.lcProp) then self.lcProp:Remove() end end
 
+    -- (made once here, not every frame)
+    local C_0_0_0_200 = Color(0, 0, 0, 200)
+    local C_220_230_200 = Color(220, 230, 200)
     function SWEP:DrawHUD()
         local frac = LocalPlayer():GetNW2Float("lc_spray_frac", 0)
         if frac <= 0 then return end
         local x, y = ScrW() / 2, ScrH() * 0.62
         surface.SetDrawColor(0, 0, 0, 160) surface.DrawRect(x - 80, y + 12, 160, 8)
         surface.SetDrawColor(150, 220, 90, 220) surface.DrawRect(x - 79, y + 13, 158 * frac, 6)
-        draw.SimpleTextOutlined("Spraying...", "DermaDefault", x, y + 30, Color(220, 230, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 200))
+        draw.SimpleTextOutlined("Spraying...", "DermaDefault", x, y + 30, C_220_230_200, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, C_0_0_0_200)
     end
 end

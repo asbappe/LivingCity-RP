@@ -346,6 +346,8 @@ hook.Add("HUDPaintBackground", "LivingCityMaskLenses", function()
     if IsValid(ply) and ply:Alive() and MaskOn(ply) then DrawLenses(ScrW(), ScrH()) end
 end)
 
+-- (made once here, not every frame)
+local C_150_210_240_200 = Color(150, 210, 240, 200)
 local function DrawMask(w, h, level)
     -- the readout, top centre
     local ply = LocalPlayer()
@@ -354,7 +356,7 @@ local function DrawMask(w, h, level)
     if ply:GetNW2String("lcd_disguise", "") == "cp" then who = ply:GetNW2String("lcd_title", "CP") end
     local bolos = math.floor(GetGlobal2Float("lc_bolos", 0))
     local cx = w / 2
-    draw.SimpleText("CIVIL PROTECTION  ::  " .. string.upper(who ~= "" and who or "UNIT"), "DermaDefaultBold", cx, 8, Color(150, 210, 240, 200), TEXT_ALIGN_CENTER)
+    draw.SimpleText("CIVIL PROTECTION  ::  " .. string.upper(who ~= "" and who or "UNIT"), "DermaDefaultBold", cx, 8, C_150_210_240_200, TEXT_ALIGN_CENTER)
     draw.SimpleText("SOCIOSTABILITY: " .. socio.name .. (bolos > 0 and ("     BOLO: " .. bolos) or ""), "DermaDefault", cx, 24,
         Color(socio.color.r, socio.color.g, socio.color.b, 220), TEXT_ALIGN_CENTER)
     -- the biosignal tick, so the readout feels alive
@@ -366,6 +368,8 @@ local function DrawMask(w, h, level)
     surface.DrawRect(cx - bw / 2, 42, bw * hp, 3)
 end
 
+-- (made once here, not every frame)
+local C_12_14_18_210 = Color(12, 14, 18, 210)
 local function DrawSocioPill(w, level)
     local s = LCCP and LCCP.Socio[level]
     if not s then return end
@@ -375,11 +379,13 @@ local function DrawSocioPill(w, level)
     local pw = tw + 24
     local x, y = w / 2 - pw / 2, 8
     local pulse = level == "red" and (0.6 + 0.4 * math.abs(math.sin(CurTime() * 3))) or 1
-    draw.RoundedBox(4, x, y, pw, 22, Color(12, 14, 18, 210))
+    draw.RoundedBox(4, x, y, pw, 22, C_12_14_18_210)
     draw.RoundedBox(0, x, y + 20, pw, 2, Color(s.color.r, s.color.g, s.color.b, 255 * pulse))
     draw.SimpleText(text, "DermaDefaultBold", w / 2, y + 11, Color(s.color.r, s.color.g, s.color.b, 255 * pulse), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 end
 
+-- (made once here, not every frame)
+local C_200_220_255 = Color(200, 220, 255)
 hook.Add("HUDPaint", "LivingCityCPHUD", function()
     local ply = LocalPlayer()
     if not IsValid(ply) or not ply:Alive() then return end
@@ -394,7 +400,7 @@ hook.Add("HUDPaint", "LivingCityCPHUD", function()
         draw.SimpleTextOutlined("YOUR HANDS ARE TIED", "DermaDefaultBold", w / 2, h * 0.82, AMBER, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
         draw.SimpleTextOutlined("!struggle to work at the cuffs when nobody's looking", "DermaDefault", w / 2, h * 0.82 + 18, INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     elseif ply:GetNW2Bool("lc_handsup", false) then
-        draw.SimpleTextOutlined("HANDS UP  (!handsup to lower them)", "DermaDefaultBold", w / 2, h * 0.82, Color(200, 220, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+        draw.SimpleTextOutlined("HANDS UP  (!handsup to lower them)", "DermaDefaultBold", w / 2, h * 0.82, C_200_220_255, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     end
 end)
 

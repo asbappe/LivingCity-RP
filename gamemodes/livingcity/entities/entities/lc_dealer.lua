@@ -82,6 +82,8 @@ if SERVER then
         self.lcBusyUntil = CurTime() + math.Clamp(secs, 0.5, 6)
     end
 
+    -- (made once here, not every frame)
+    local V_0_0_64 = Vector(0, 0, 64)
     function ENT:Think()
         local now = CurTime()
         if self.lcBusyUntil and now >= self.lcBusyUntil then self:Idle()
@@ -98,7 +100,7 @@ if SERVER then
             end
             local yaw, pitch = 0, 0
             if best then
-                local dir = (best:EyePos() - (self:GetPos() + Vector(0, 0, 64))):Angle()
+                local dir = (best:EyePos() - (self:GetPos() + V_0_0_64)):Angle()
                 yaw = math.Clamp(math.NormalizeAngle(dir.y - self:GetAngles().y), -60, 60)
                 pitch = math.Clamp(math.NormalizeAngle(dir.p), -30, 30)
             end

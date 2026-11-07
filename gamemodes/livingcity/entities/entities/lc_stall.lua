@@ -31,14 +31,19 @@ end
 
 if CLIENT then
     -- the sign: whose stall it is
+    -- (made once here, not every frame)
+    local C_200_200_200 = Color(200, 200, 200)
+    local C_20_22_26_220 = Color(20, 22, 26, 220)
+    local C_235_200_120 = Color(235, 200, 120)
+    local V_0_0_48 = Vector(0, 0, 48)
     function ENT:Draw()
         self:DrawModel()
         local owner = self:GetNW2String("lc_owner_name", "")
         if owner == "" or LocalPlayer():GetPos():DistToSqr(self:GetPos()) > 600 * 600 then return end
-        cam.Start3D2D(self:GetPos() + Vector(0, 0, 48), Angle(0, LocalPlayer():EyeAngles().y - 90, 90), 0.12)
-            draw.RoundedBox(6, -170, -30, 340, 60, Color(20, 22, 26, 220))
-            draw.SimpleText(owner .. "'s stall", "DermaLarge", 0, -8, Color(235, 200, 120), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-            draw.SimpleText("Licensed by the CWU. Press E", "DermaDefault", 0, 16, Color(200, 200, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        cam.Start3D2D(self:GetPos() + V_0_0_48, Angle(0, LocalPlayer():EyeAngles().y - 90, 90), 0.12)
+            draw.RoundedBox(6, -170, -30, 340, 60, C_20_22_26_220)
+            draw.SimpleText(owner .. "'s stall", "DermaLarge", 0, -8, C_235_200_120, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            draw.SimpleText("Licensed by the CWU. Press E", "DermaDefault", 0, 16, C_200_200_200, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         cam.End3D2D()
     end
 end

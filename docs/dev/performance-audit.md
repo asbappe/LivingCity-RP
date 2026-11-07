@@ -32,3 +32,25 @@ Most of the obvious traps were dealt with in earlier passes and are not repeated
 9. **Client HUD colours:** many HUD and 3D2D hooks make `Color(...)` tables every frame. Small each; hoisting them touches many lines of UI code other work is changing, so it's left.
 
 `GetConVar("name")` inside functions was looked at too: the game keeps its own table of convars by name, so these are a table lookup, not a search, and were left alone.
+
+## Client pass (7 November)
+
+Same rule as above: nothing a player sees changes. Every per-frame client hook (`HUDPaint`, `HUDPaintBackground`, `PostDraw/PreDraw...Renderables`, `PreDrawHalos`, `RenderScreenspaceEffects`, `CalcView`, `Think`, `Post/PrePlayerDraw`, `HUDDrawTargetID`, `RenderScene`) in `modules/client`, the shared files and the entities' and weapons' `Draw`, `DrawTranslucent`, `DrawHUD` and client `Think` was listed and read for entity searches, fonts, materials, text measuring and objects made fresh each frame.
+
+### What changed
+
+- **Job games** (cl_livingcity_jobgames.lua, cl_livingcity_moregames.lua): the sweep's outlines, the cart's count, the triage labels and the job marks searched every entity within 900 to 1200 units on every frame (the 3D labels more than once a frame, as `PostDrawTranslucentRenderables` runs per view). Each list is now kept for a fifth of a second and searched again at once if anything on it is gone; outlines and labels still draw every frame. At 60 fps that is about 5 searches a second per list instead of 60 to 120, each of which read networked values from every prop, NPC and player in range.
+- **The "what you can do" panel** (cl_livingcity_context.lua, on screen nearly all the time): it made a new colour for every line it drew, every frame, measured each key's width every frame and capitalised each title every frame. The faint colours, key widths and capitalised titles are now kept. Roughly 20 to 40 tables and a few text measurements a frame gone.
+- **The recall box** (cl_livingcity_directives.lua): each line's width is measured once (only the time left changes, once a second).
+- **Fixed colours, offsets and angles** (`Color(...)`, `Vector(...)`, `Angle(...)` with only numbers in them) inside per-frame drawing are made once when the file loads, in 50-odd files: the main HUD banners, needs and quest panels, scanner, stealth, arrest, rent, grigori, rp, kick, dreams, intake, terminal screens, the editor overlay, the endings, and the entities' world labels (`lc_stall`, `lc_supply`, `lc_recycler`, `lc_note`, `lc_powerbank`, `lc_item`, `lc_incinerator`, `lc_jammer`, `lc_energizer`, ...) and weapon HUDs. Only ones never changed afterwards were moved (each is passed straight to a draw call or added to a position). A typical frame with the HUD up and a few labelled entities nearby made 50 to 150 of these; now close to none.
+- **Smaller ones:** the water ending's monk microphones look the monks up twice a second instead of every frame; the traitor labels walk the players through `LC.Players()` (no new list each frame); the editor's zone edges use one shared lift instead of two new vectors per segment.
+
+Checked with `_dev/client_smoke.py` (CLIENT SMOKE PASS), a compile of every changed file, and the job-game hooks driven in the client stub (searches per frame counted, a removed piece of rubbish looked for again at once).
+
+### What's left (client)
+
+- **Colours made from a changing alpha** (pulses, fades: `Color(r, g, b, alpha)` each frame) and `Angle(0, ang.y - 90, 90)` for each 3D label: small, and caching them needs a table per value.
+- **Menu windows' `Paint` functions** build colours each frame while a window is open: only while open, and spread over many UI files; left alone.
+- **Left alone on purpose, because other work is changing those lines:** the war HUD and territory drawing (cl_livingcity_war.lua), the name and job labels over people (`HUDDrawTargetID` in cl_livingcity_factions.lua) and the hijacked city screen (cl_livingcity_resistance.lua). Each makes a few colours a frame.
+- **The terminal screen's layout** (cl_livingcity_screens.lua) is rebuilt every frame while one is open (a small table per row). Keeping it would mean tracking when the rows or page change: left.
+- Searches that were already throttled (the overlay's NPC list once a second, sleepers' eyes once a second, the ending dancers once a second, lab smoke every 2 seconds, sympathizers every 0.4 s, rebel intel every 0.5 s) were left as they are.

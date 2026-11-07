@@ -51,6 +51,11 @@ local function Fonts()
     surface.CreateFont("LCRentSub", { font = "Tahoma", size = 17, weight = 600, extended = true })
 end
 
+-- (made once here, not every frame)
+local C_0_0_0_220 = Color(0, 0, 0, 220)
+local C_130_230_150 = Color(130, 230, 150)
+local C_190_200_215 = Color(190, 200, 215)
+local C_235_235_240 = Color(235, 235, 240)
 hook.Add("HUDPaint", "LivingCityRentLabel", function()
     local me = LocalPlayer()
     if not IsValid(me) or not me:Alive() then return end
@@ -62,10 +67,10 @@ hook.Add("HUDPaint", "LivingCityRentLabel", function()
     Fonts()
     local x, y = ScrW() / 2, ScrH() / 2 + 46
     local free = Parse(e:GetNW2String("lc_rent", "")).free
-    local col = free and Color(130, 230, 150) or Color(235, 235, 240)
-    draw.SimpleTextOutlined(a, "LCRentMain", x, y, col, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, Color(0, 0, 0, 220))
-    if b then y = y + 26 draw.SimpleTextOutlined(b, "LCRentSub", x, y, Color(235, 235, 240), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, Color(0, 0, 0, 220)) end
-    if c then y = y + 22 draw.SimpleTextOutlined(c, "LCRentSub", x, y, Color(190, 200, 215), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, Color(0, 0, 0, 220)) end
+    local col = free and C_130_230_150 or C_235_235_240
+    draw.SimpleTextOutlined(a, "LCRentMain", x, y, col, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, C_0_0_0_220)
+    if b then y = y + 26 draw.SimpleTextOutlined(b, "LCRentSub", x, y, C_235_235_240, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, C_0_0_0_220) end
+    if c then y = y + 22 draw.SimpleTextOutlined(c, "LCRentSub", x, y, C_190_200_215, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, C_0_0_0_220) end
 end)
 
 local asking = false

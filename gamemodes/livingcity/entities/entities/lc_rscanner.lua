@@ -71,12 +71,14 @@ if CLIENT then
         self:DrawModel()
     end
 
+    -- (made once here, not every frame)
+    local C_255_200_190 = Color(255, 200, 190)
     function ENT:DrawTranslucent()
         if self:GetNW2Entity("lc_pilot") == LocalPlayer() then return end
         local pulse = 0.8 + 0.2 * math.sin(CurTime() * 4)
         render.SetMaterial(GLOW)
         render.DrawSprite(Eye(self), 26 * pulse, 26 * pulse, RED)
-        render.DrawSprite(Eye(self), 10, 10, Color(255, 200, 190))
+        render.DrawSprite(Eye(self), 10, 10, C_255_200_190)
     end
 
     function ENT:Think()

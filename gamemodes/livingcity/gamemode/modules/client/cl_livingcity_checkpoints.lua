@@ -37,6 +37,8 @@ end
 
 local FED = { "npc_turret_floor", "lc_forcefield" }
 
+-- (made once here, not every frame)
+local V_0_0_6 = Vector(0, 0, 6)
 hook.Add("PostDrawOpaqueRenderables", "LivingCityCables", function(depth, sky)
     if depth or sky then return end
     local eye = EyePos()
@@ -48,7 +50,7 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityCables", function(depth, sky)
                 if IsValid(src) and src ~= e then
                     if not drew then render.SetMaterial(CABLE) drew = true end
                     -- into a turret's body, not between its legs; a forcefield's at the foot of its post
-                    local from = cls == "npc_turret_floor" and (e:GetPos() + e:GetUp() * 34) or (e:GetPos() + Vector(0, 0, 6))
+                    local from = cls == "npc_turret_floor" and (e:GetPos() + e:GetUp() * 34) or (e:GetPos() + V_0_0_6)
                     DrawCable(from, Plug(src))
                 end
             end

@@ -296,6 +296,34 @@ function LC_CL.ContextShown()
     return cvShow:GetBool()
 end
 
+-- Made once, not every frame: the faint copy of each colour, a key's width, a title in capitals.
+local faded = {}
+local function Faded(c)
+    local f = faded[c]
+    if not f then f = Color(c.r, c.g, c.b, (c.a or 255) * FAINT) faded[c] = f end
+    return f
+end
+local keyW = {}
+local function KeyWidth(k)
+    local kw = keyW[k]
+    if not kw then
+        surface.SetFont("LCCtxLine")
+        kw = surface.GetTextSize(k)
+        keyW[k] = kw
+    end
+    return kw
+end
+local upper, upperN = {}, 0
+local function Upper(t)
+    local u = upper[t]
+    if not u then
+        if upperN > 200 then upper, upperN = {}, 0 end -- (titles are few; never let it grow)
+        u = string.upper(t)
+        upper[t], upperN = u, upperN + 1
+    end
+    return u
+end
+
 hook.Add("HUDPaint", "LivingCityContext", function()
     local me = LocalPlayer()
     if not IsValid(me) or not me:Alive() or not cvShow:GetBool() then return end
@@ -336,21 +364,20 @@ hook.Add("HUDPaint", "LivingCityContext", function()
     LC_CL.ContextDrawn = shown
     if #shown == 0 then return end
 
-    local alpha = (now - cache.changed < BRIGHT_SECS) and 1 or FAINT
-    local function A(c) return Color(c.r, c.g, c.b, (c.a or 255) * alpha) end
+    local faint = not (now - cache.changed < BRIGHT_SECS)
+    local function A(c) return faint and Faded(c) or c end
     local x, y = ScrW() - W - 20, top
     draw.RoundedBox(4, x, y, W, h, A(BG))
     local ly = y + 5
     for _, g in ipairs(shown) do
-        draw.SimpleText(string.upper(g.title), "LCCtxHead", x + 9, ly, A(HEAD))
+        draw.SimpleText(Upper(g.title), "LCCtxHead", x + 9, ly, A(HEAD))
         ly = ly + ROW
         for _, r in ipairs(g.rows or {}) do
             -- the keys stand out: a row that starts with one has it in amber
             local k, rest = string.match(r, "^(%b[])(.*)$")
             if k then
                 draw.SimpleText(k, "LCCtxLine", x + 9, ly, A(KEY))
-                surface.SetFont("LCCtxLine")
-                local kw = surface.GetTextSize(k)
+                local kw = KeyWidth(k)
                 draw.SimpleText(rest, "LCCtxLine", x + 9 + kw, ly, A(INK))
             else
                 draw.SimpleText(r, "LCCtxLine", x + 9, ly, A(INK))

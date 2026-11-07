@@ -54,6 +54,9 @@ end
     end
 
     -- a slow green pulse, and spores drifting up, while you're near enough to see it
+    -- (made once here, not every frame)
+    local V_0_0_10 = Vector(0, 0, 10)
+    local V_0_0_24 = Vector(0, 0, 24)
     function ENT:Think()
         local me = LocalPlayer()
         if not IsValid(me) or me:GetPos():DistToSqr(self:GetPos()) > 2500 * 2500 then return end
@@ -61,7 +64,7 @@ end
         local t = CurTime()
         local d = DynamicLight and DynamicLight(self:EntIndex())
         if d then
-            d.pos = self:GetPos() + Vector(0, 0, 24)
+            d.pos = self:GetPos() + V_0_0_24
             d.r, d.g, d.b = 120, 255, 60
             d.brightness = 1 + math.sin(t * 1.7 + self:EntIndex()) * 0.4
             d.size = 170
@@ -73,7 +76,7 @@ end
             self.lcEmitter = self.lcEmitter or ParticleEmitter(self:GetPos())
             local em = self.lcEmitter
             if em then
-                local p = em:Add("particle/particle_glow_04", self:GetPos() + VectorRand() * 25 + Vector(0, 0, 10))
+                local p = em:Add("particle/particle_glow_04", self:GetPos() + VectorRand() * 25 + V_0_0_10)
                 if p then
                     p:SetVelocity(Vector(math.Rand(-6, 6), math.Rand(-6, 6), math.Rand(12, 30)))
                     p:SetDieTime(math.Rand(2.5, 4))

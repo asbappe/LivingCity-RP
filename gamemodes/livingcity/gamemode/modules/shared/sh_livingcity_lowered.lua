@@ -72,6 +72,9 @@ if CLIENT then
         rebel = "Rebel ground: keep your gun lowered, or the fighters open fire.",
         combine = "Overwatch ground: recruits and metrocops carry lowered, or the soldiers open fire.",
     }
+    -- (made once here, not every frame)
+    local C_0_0_0_200 = Color(0, 0, 0, 200)
+    local C_235_235_225_230 = Color(235, 235, 225, 230)
     hook.Add("HUDPaint", "LivingCityLowerPrompt", function()
         local me = LocalPlayer()
         if not IsValid(me) or not cvOn:GetBool() then return end
@@ -81,8 +84,8 @@ if CLIENT then
         if not IsValid(w) or not GUNS[w:GetClass()] or LCL.Lowered(me) then return end
         local pulse = 180 + 75 * math.abs(math.sin(CurTime() * 4))
         local x, y = ScrW() / 2, ScrH() * 0.3
-        draw.SimpleTextOutlined("LOWER YOUR WEAPON: hold R", "DermaLarge", x, y, Color(255, 200, 80, pulse), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, Color(0, 0, 0, 200))
-        draw.SimpleTextOutlined(WHERE[ground], "DermaDefaultBold", x, y + 30, Color(235, 235, 225, 230), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 200))
+        draw.SimpleTextOutlined("LOWER YOUR WEAPON: hold R", "DermaLarge", x, y, Color(255, 200, 80, pulse), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, C_0_0_0_200)
+        draw.SimpleTextOutlined(WHERE[ground], "DermaDefaultBold", x, y + 30, C_235_235_225_230, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, C_0_0_0_200)
     end)
 
     -- no crosshair while it's down

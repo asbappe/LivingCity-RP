@@ -180,17 +180,22 @@ if CLIENT then
         return IsValid(me) and me:GetPos():DistToSqr(self:GetPos()) <= d * d
     end
 
+    -- (made once here, not every frame)
+    local V_60_60_60 = Vector(60, 60, 60)
     function ENT:Draw()
         self:DrawModel()
         -- (the sprites and flames reach past the model: drawn whenever any of it could be seen)
         if not self.lcBoundsSet and self.SetRenderBounds then
             self.lcBoundsSet = true
             local mins, maxs = self:OBBMins(), self:OBBMaxs()
-            if mins and maxs then self:SetRenderBounds(mins - Vector(60, 60, 60), maxs + Vector(60, 60, 60)) end
+            if mins and maxs then self:SetRenderBounds(mins - V_60_60_60, maxs + V_60_60_60) end
         end
         if Near(self, 1500) then Fire(self, CurTime()) end
     end
 
+    -- (made once here, not every frame)
+    local C_255_120_45_210 = Color(255, 120, 45, 210)
+    local C_255_160_70 = Color(255, 160, 70)
     function ENT:DrawTranslucent()
         if not Near(self, 2000) then return end
         local burning = self:GetNW2Float("lc_burn_until", 0) > CurTime()
@@ -198,7 +203,7 @@ if CLIENT then
         render.SetMaterial(GLOW)
         -- the burner, roaring out of the back
         local s = (burning and 110 or 70) + math.sin(CurTime() * 9) * 8
-        render.DrawSprite(back + out * 6, s, s, burning and Color(255, 160, 70) or Color(255, 120, 45, 210))
+        render.DrawSprite(back + out * 6, s, s, burning and C_255_160_70 or C_255_120_45_210)
         -- and the glow of the furnace at the hatch
         local m = (burning and 44 or 22) + math.sin(CurTime() * 7) * 3
         render.DrawSprite(front, m, m, Color(255, 110, 40, burning and 200 or 110))

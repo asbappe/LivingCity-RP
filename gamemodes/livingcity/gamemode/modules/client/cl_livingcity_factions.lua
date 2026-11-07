@@ -289,6 +289,9 @@ local function Lambda(x, y, s, a)
     end
 end
 
+-- (made once here, not every frame)
+local V_0_0_80 = Vector(0, 0, 80)
+local V_0_0_82 = Vector(0, 0, 82)
 hook.Add("HUDPaint", "LivingCitySympathizers", function()
     local me = LocalPlayer()
     if not IsValid(me) or me:GetNW2String("lcf_faction", "") ~= "resistance" or not me:Alive() then return end
@@ -299,7 +302,7 @@ hook.Add("HUDPaint", "LivingCitySympathizers", function()
         local eye = me:EyePos()
         for _, e in ipairs(ents.FindByClass("npc_citizen")) do
             if LC_CL.IsSympathizer(e) and not e:GetNW2Bool("lc_lookout", false) then
-                local head = e:GetPos() + Vector(0, 0, 80)
+                local head = e:GetPos() + V_0_0_80
                 local d = head:Distance(eye)
                 if d < 600 then
                     local tr = util.TraceLine({ start = eye, endpos = head, mask = MASK_OPAQUE, filter = { me, e } })
@@ -310,7 +313,7 @@ hook.Add("HUDPaint", "LivingCitySympathizers", function()
     end
     for _, it in ipairs(sympList) do
         if IsValid(it.e) then
-            local sp = (it.e:GetPos() + Vector(0, 0, 82)):ToScreen()
+            local sp = (it.e:GetPos() + V_0_0_82):ToScreen()
             if sp.visible then Lambda(sp.x, sp.y, 6, math.Clamp(1.2 - it.d / 600, 0.25, 1)) end
         end
     end

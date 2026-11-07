@@ -117,6 +117,11 @@ local function Fan(e, r, now)
     return c
 end
 LC_CL.StealthFan = Fan
+-- (made once here, not every frame)
+local C_255_150_40_12 = Color(255, 150, 40, 12)
+local C_255_150_40_18 = Color(255, 150, 40, 18)
+local C_255_40_40_28 = Color(255, 40, 40, 28)
+local C_255_40_40_45 = Color(255, 40, 40, 45)
 hook.Add("PostDrawTranslucentRenderables", "LivingCityStealthCones", function(_, sky)
     if sky or not cvCones:GetBool() or not On() then return end
     local r = REACH * LC_CL.StealthFactor()
@@ -126,8 +131,8 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityStealthCones", function(_,
     local up = Vector(0, 0, HEIGHT)
     for _, e in ipairs(Units()) do
         local inside = Inside(e, me, r)
-        local floor = inside and Color(255, 40, 40, 45) or Color(255, 150, 40, 18)
-        local wall = inside and Color(255, 40, 40, 28) or Color(255, 150, 40, 12)
+        local floor = inside and C_255_40_40_45 or C_255_150_40_18
+        local wall = inside and C_255_40_40_28 or C_255_150_40_12
         local f = Fan(e, r, now)
         local o, pts = f.o, f.pts
         for i = 2, #pts do
@@ -143,6 +148,11 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityStealthCones", function(_,
 end)
 
 -- how seen you are, while you sneak
+-- (made once here, not every frame)
+local C_10_12_16_190 = Color(10, 12, 16, 190)
+local C_220_170_60 = Color(220, 170, 60)
+local C_230_60_50 = Color(230, 60, 50)
+local C_90_170_110 = Color(90, 170, 110)
 hook.Add("HUDPaint", "LivingCityStealthMeter", function()
     if not On() then return end
     local f = LC_CL.StealthFactor()
@@ -152,9 +162,9 @@ hook.Add("HUDPaint", "LivingCityStealthMeter", function()
     for _, e in ipairs(Units()) do if Inside(e, me, r) then seen = true break end end
     local w, h = 220, 34
     local x, y = ScrW() / 2 - w / 2, ScrH() - 120
-    draw.RoundedBox(6, x, y, w, h, Color(10, 12, 16, 190))
+    draw.RoundedBox(6, x, y, w, h, C_10_12_16_190)
     local fill = math.Clamp(f, 0, 1)
-    local col = seen and Color(230, 60, 50) or (fill < 0.35 and Color(90, 170, 110) or Color(220, 170, 60))
+    local col = seen and C_230_60_50 or (fill < 0.35 and C_90_170_110 or C_220_170_60)
     draw.RoundedBox(4, x + 8, y + 22, (w - 16) * fill, 6, col)
     local word = seen and "A UNIT CAN SEE YOU" or (fill < 0.3 and "IN SHADOW" or (fill < 0.45 and "HARD TO SEE" or "SNEAKING"))
     draw.SimpleText(word, "DermaDefaultBold", x + w / 2, y + 10, col, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
