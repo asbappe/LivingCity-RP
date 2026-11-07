@@ -9,31 +9,31 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 
 Players now download both workshop packs when they join (the Alyx hazard props 2043900984, the Infestation Control workers 3185145650). The server needs them too: put both in its workshop collection. Anyone missing a model sees a stand-in, never an ERROR.
 
-- [ ] **Growths:** Xen gunk with the pack (or a stand-in), glowing green, spores drifting up. Still any ERROR? Say where.
+- [x] **Growths:** Xen gunk with the pack (or a stand-in), glowing green, spores drifting up. Still any ERROR? Say where.
   Notes:
-- [ ] **A warning post at each infestation's edge:** sign, lamp and a yellow infestation control barrel (cones and an oil drum without the pack). Found it? Standing sensibly?
+- [x] **A warning post at each infestation's edge:** sign, lamp and a yellow infestation control barrel (cones and an oil drum without the pack). Found it? Standing sensibly?
   Notes:
-- [ ] **Your own barrels:** the editor's "Fixture: infestation control barrel" (in the "by use" view: Job: Infestation Cleanup, and Infestation).
+- [x] **Your own barrels:** the editor's "Fixture: infestation control barrel" (in the "by use" view: Job: Infestation Cleanup, and Infestation).
   Notes:
-- [ ] **Take the job** (F3 > Jobs > Infestation Cleanup): weedkiller, a **sprayer** and a **hoover** in your weapons; own clothes until a shift.
+- [x] **Take the job** (F3 > Jobs > Infestation Cleanup): weedkiller, a **sprayer** and a **hoover** in your weapons; own clothes until a shift.
   Notes:
-- [ ] **Accept a shift:** the hazmat suit (a woman the female one, a man the male one). Hands nearer than before? If not right yet, try `lc_suit_hands "-6 0 0"` with other numbers (forward right up) and send me what looks right.
+- [x] **Accept a shift:** the hazmat suit (a woman the female one, a man the male one). Hands nearer than before? If not right yet, try `lc_suit_hands "-6 0 0"` with other numbers (forward right up) and send me what looks right.
   Notes:
-- [ ] **Guards:** two come; if one falls behind (stuck, lost) for a few seconds, they're back beside you; after a fight they come back; nobody free, a unit's sent. Do they stay with you now?
+- [x] **Guards:** two come; if one falls behind (stuck, lost) for a few seconds, they're back beside you; after a fight they come back; nobody free, a unit's sent. Do they stay with you now?
   Notes:
-- [ ] **Spray:** sprayer out, hold left click on a glowing growth: green mist, a bar, it dies (dark, stays there). E still works too.
+- [x] **Spray:** sprayer out, hold left click on a glowing growth: green mist, a bar, it dies (dark, stays there). E still works too.
   Notes:
-- [ ] **Vacuum:** hoover out, hold left click on a dead growth: a bar, gone, "Hoover: 1 of 3". **All three count now** (the job said "2 more" before: fixed).
+- [x] **Vacuum:** hoover out, hold left click on a dead growth: a bar, gone, "Hoover: 1 of 3". **All three count now** (the job said "2 more" before: fixed).
   Notes:
 - [ ] **Do you see the sprayer and the hoover** in first person, and in your hands in third person? Placement: `lc_sprayer_view "18 9 -10"`, `lc_hoover_view "26 11 -15"` (forward right up): send me numbers that look right.
   Notes:
-- [ ] **Empty it:** the last step marks the nearest barrel; E on it. No barrel near: right click with the hoover bags it.
+- [x] **Empty it:** the last step marks the nearest barrel; E on it. No barrel near: right click with the hoover bags it.
   Notes:
-- [ ] **The geiger counter** at the edge of a zone: calmer now (40% fewer clicks, quieter)?
+- [x] **The geiger counter** at the edge of a zone: calmer now (40% fewer clicks, quieter)?
   Notes:
-- [ ] **Clear every growth in a patch that grew:** the patch goes. Dead growths nobody collects rot after 10 minutes.
+- [x] **Clear every growth in a patch that grew:** the patch goes. Dead growths nobody collects rot after 10 minutes.
   Notes:
-- [ ] **Joining Civil Protection:** a cleanup shift counts as two Intake Processor shifts.
+- [x] **Joining Civil Protection:** a cleanup shift counts as two Intake Processor shifts.
   Notes:
 
 ## Also fixed from your notes
