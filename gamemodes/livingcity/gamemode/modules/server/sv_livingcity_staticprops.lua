@@ -28,6 +28,7 @@ LC.StaticBins = LC.StaticBins or {}
 LC.StaticSurfaces = LC.StaticSurfaces or {}
 LC.StaticJunk = LC.StaticJunk or {}
 LC.StaticRest = LC.StaticRest or {}
+LC.StaticTerminals = LC.StaticTerminals or {}
 
 local KINDS = {
     { "stove", "stove" }, { "furnace", "stove" }, { "oven", "stove" },
@@ -98,6 +99,17 @@ function LC.IsJunkModel(model)
     return false
 end
 
+-- Combine consoles and terminals (the stalkers who look after the Combine's buildings work them:
+-- sv_livingcity_zonestalkers.lua). They go in LC.StaticTerminals.
+LC.TERMINAL_MODELS = { "props_combine/combine_interface", "props_combine/combine_intmonitor", "props_combine/combine_smallmonitor",
+    "props_combine/combine_monitorbay", "props_combine/combine_intwallunit", "props_combine/breenconsole", "props_combine/combine_console" }
+function LC.IsTerminalModel(model)
+    model = string.lower(model or "")
+    if model == "" then return false end
+    for _, pat in ipairs(LC.TERMINAL_MODELS) do if string.find(model, pat, 1, true) then return true end end
+    return false
+end
+
 function LC.FixtureKindForModel(model)
     model = string.lower(model or "")
     if model == "" then return nil end
@@ -142,7 +154,7 @@ function LC.ReadStaticFixtures(path)
         local name = f:Read(128) or ""
         name = string.match(name, "^[^%z]*") or ""
         local kind = LC.FixtureKindForModel(name) or (LC.IsBinModel(name) and "bin") or (LC.IsSurfaceModel(name) and "surface")
-            or (LC.RestKindForModel(name) and "rest") or (LC.IsJunkModel(name) and "junk")
+            or (LC.RestKindForModel(name) and "rest") or (LC.IsJunkModel(name) and "junk") or (LC.IsTerminalModel(name) and "terminal")
         kinds[i] = kind and { kind, string.lower(name) } or false
     end
     local leafN = f:ReadLong()
@@ -173,9 +185,10 @@ end
 function LC.ScanStaticProps()
     local list, why = LC.ReadStaticFixtures("maps/" .. game.GetMap() .. ".bsp")
     LC.StaticFixtures, LC.StaticBins, LC.StaticSurfaces, LC.StaticJunk, LC.StaticRest = {}, {}, {}, {}, {}
+    LC.StaticTerminals = {}
     for _, fx in ipairs(list or {}) do
         if fx.kind == "rest" then fx.kind = LC.RestKindForModel(fx.model) or "seat" end
-        table.insert(fx.kind == "bin" and LC.StaticBins or fx.kind == "surface" and LC.StaticSurfaces
+        table.insert(fx.kind == "terminal" and LC.StaticTerminals or fx.kind == "bin" and LC.StaticBins or fx.kind == "surface" and LC.StaticSurfaces
             or fx.kind == "junk" and LC.StaticJunk or (fx.kind == "bed" or fx.kind == "couch" or fx.kind == "seat") and LC.StaticRest
             or LC.StaticFixtures, fx)
     end

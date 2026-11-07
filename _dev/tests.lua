@@ -16340,6 +16340,15 @@ local terms = LC.StalkerTerminals(hq, CurTime())
 ok(#terms == 1 and terms[1].key == "e" .. con:EntIndex(), "no terminal point: a Combine console prop in the zone will do", #terms)
 con:Remove()
 LC.StalkerConsolePropsReset()
+-- one built into the map (prop_static, read from the map file like the sinks and stoves)
+local stWas = LC.StaticTerminals
+ok(LC.IsTerminalModel("models/props_combine/combine_interface002.mdl") and not LC.IsTerminalModel("models/props_c17/furnituresink001a.mdl"),
+    "the map file's Combine consoles are known by their model (and a sink isn't one)")
+LC.StaticTerminals = { { kind = "terminal", pos = Z + Vector(120, 120, 0), ang = Angle(0, 90, 0), model = "models/props_combine/combine_interface002.mdl" } }
+local sterms = LC.StalkerTerminals(hq, CurTime())
+local syaw = sterms[1] and ((sterms[1].yaw % 360) + 360) % 360 or -1
+ok(#sterms == 1 and sterms[1].key == "s1" and math.abs(syaw - 270) < 1, "a Combine console built into the map will do too: the stalker stands in front of it, facing it", #sterms .. " " .. tostring(sterms[1] and sterms[1].key) .. " " .. syaw)
+LC.StaticTerminals = stWas
 ok(#LC.StalkerTerminals(hq, CurTime()) == 0, "(neither: it stands where it is)")
 -- one killed is replaced, a while later, out of sight
 local old = res.npc

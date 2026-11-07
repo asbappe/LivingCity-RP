@@ -13,7 +13,8 @@
       - a "Point: stalker terminal" placed with the editor in front of one of
         the map's terminals (stand where the stalker should stand, facing the
         terminal, and aim at the floor at your feet), or else
-      - a Combine console prop inside the zone (combine_interface,
+      - one of the map's own Combine consoles in the zone, read from the map file
+        like the sinks and stoves (sv_livingcity_staticprops.lua), or a console prop (combine_interface,
         combine_intmonitor, combine_smallmonitor and the like), or else
       - wherever it stands.
     Which animation that is depends on the stalker model installed: a few
@@ -128,16 +129,11 @@ end
 -- Terminals
 ------------------------------------------------------------------------
 
--- The map's Combine consoles, when they're props we can see (prop_static ones aren't: place a point).
-LC.STALKER_CONSOLE_MODELS = { "props_combine/combine_interface", "props_combine/combine_intmonitor", "props_combine/combine_smallmonitor",
-    "props_combine/combine_monitorbay", "props_combine/combine_intwallunit", "props_combine/breenconsole", "props_combine/combine_console" }
+-- The map's Combine consoles: the ones built into the map (prop_static, read from the map file like the
+-- sinks and stoves: LC.StaticTerminals, sv_livingcity_staticprops.lua), and any that are props.
 local PROP_CLASSES = { "prop_physics", "prop_physics_multiplayer", "prop_dynamic", "prop_dynamic_override" }
 
-local function ConsoleModel(m)
-    m = string.lower(m or "")
-    for _, pat in ipairs(LC.STALKER_CONSOLE_MODELS) do if string.find(m, pat, 1, true) then return true end end
-    return false
-end
+local function ConsoleModel(m) return LC.IsTerminalModel and LC.IsTerminalModel(m) or false end
 
 local propCache, propAt = {}, -1000
 local function ConsoleProps(now)
@@ -160,15 +156,19 @@ function LC.StalkerTerminals(z, now)
         if LCZ.Contains(z, p.pos, 0) then out[#out + 1] = { pos = p.pos, yaw = p.yaw or 0, key = "p" .. i } end
     end
     if #out > 0 then return out end
+    local function Front(pos, ang, key)
+        local fwd = ang:Forward()
+        fwd.z = 0
+        if fwd:LengthSqr() < 0.01 then fwd = Vector(1, 0, 0) end
+        fwd:Normalize()
+        local stand = (LC.GroundAt and LC.GroundAt(pos + fwd * 40)) or (pos + fwd * 40)
+        out[#out + 1] = { pos = stand, yaw = (-fwd):Angle().y, key = key }
+    end
+    for i, t in ipairs(LC.StaticTerminals or {}) do
+        if LCZ.Contains(z, t.pos, 0) then Front(t.pos, t.ang or Angle(0, 0, 0), "s" .. i) end
+    end
     for _, e in ipairs(ConsoleProps(now or CurTime())) do
-        if IsValid(e) and LCZ.Contains(z, e:GetPos(), 0) then
-            local fwd = e:GetForward()
-            fwd.z = 0
-            if fwd:LengthSqr() < 0.01 then fwd = Vector(1, 0, 0) end
-            fwd:Normalize()
-            local stand = (LC.GroundAt and LC.GroundAt(e:GetPos() + fwd * 40)) or (e:GetPos() + fwd * 40)
-            out[#out + 1] = { pos = stand, yaw = (-fwd):Angle().y, key = "e" .. e:EntIndex() }
-        end
+        if IsValid(e) and LCZ.Contains(z, e:GetPos(), 0) then Front(e:GetPos(), e:GetAngles(), "e" .. e:EntIndex()) end
     end
     return out
 end
