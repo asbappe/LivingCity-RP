@@ -13730,6 +13730,178 @@ ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 DreamMoodTests()
 
+-- Nightmare dreams you play (sv_livingcity_dreamgames.lua): the maze, the barrel tower, the crumbling floor, freeze
+local function DreamGameTests()
+section("Shared dreams: the nightmare dreams you play (maze, barrel tower, crumbling floor, freeze)")
+local errs0 = #_errors
+local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
+_walls = {}
+LC.EndEvent(true)
+_setcvar("lc_needs", 0)
+LC.EndingReload = function() end
+_files["livingcity/endings.json"] = nil
+local CITY, DREAM = Vector(150000, -150000, 0), Vector(210000, -210000, 0)
+local adm = newPlayer("DGAdmin", "admin")
+local a = newPlayer("DGA", "citizen")
+local b = newPlayer("DGB", "citizen")
+_run(3)
+local function Asleep(p, at)
+    p:SetPos(at)
+    local key = string.format("s%d_%d_%d", math.floor(at.x), math.floor(at.y), math.floor(at.z))
+    p.lcSleep = { t0 = CurTime() - 70, done = CurTime() - 10, last = CurTime(), slept = true }
+    p:SetNW2Bool("lc_sleeping", true)
+    p.lcBedKey, p.lcBedFrom = key, at + Vector(40, 0, 0)
+    LC.BedSleepers[key] = p
+end
+player.GetAll = function() return { adm, a, b } end
+local dp = LC.AddPoint(DREAM, 0, "dream")
+
+-- on the tablet, under Nightmare
+local off = LC.DreamOffice()
+local found = {}
+for _, e in ipairs(off.groups[3].endings) do if e.game then found[e.id] = e.name end end
+ok(found.maze == "The Patrol Maze" and found.barrels == "The Barrel Tower" and found.crumble == "The Crumbling Floor" and found.freeze == "Freeze, Citizen",
+    "the four dreams you play are on the Administrator's tablet, under Nightmare")
+ok(LC.DreamMood("maze") == "nightmare" and LC.DreamMoods("maze=happy").maze == "happy", "they're Nightmares unless lc_dream_moods says otherwise")
+ok(LC.DreamAdminPick(adm, "maze") and LC.DreamQueued().id == "maze" and LC.DreamOffice().waiting.name == "The Patrol Maze", "the Administrator can choose one for tonight")
+LC.DreamForget()
+local status = LC.DreamStatus()
+local inList = false
+for _, e in ipairs(status.endings) do if e.id == "freeze" then inList = true end end
+ok(inList, "(and an admin can dream one now from C > Help > Dreams)")
+
+-- a maze: every cell can be reached
+local open = LC.DreamMaze(7, 6, 5)
+local seen, q = { ["1_1"] = true }, { "1_1" }
+while #q > 0 do local c = table.remove(q) for n in pairs(open[c]) do if not seen[n] then seen[n] = true q[#q + 1] = n end end end
+ok(table.Count(seen) == 42, "the maze's every corridor can be reached (and there's more than one way round)", table.Count(seen))
+
+-- The Patrol Maze
+local goodA = { hp = a:Health(), pos = CITY }
+Asleep(a, CITY)
+Asleep(b, CITY + Vector(0, 200, 0))
+local okM, dream = LC.DreamStart("maze", adm, false, nil, true)
+local g = okM and dream.game
+ok(okM and g and g.id == "maze" and #g.ents > 30 and #g.cops >= 2 and g.left > 40, "the maze is built at the dream point: floor, walls, tokens, giant officers", okM and #(g and g.ents or {}) or dream)
+ok(a.lcDreaming and b.lcDreaming and a:GetPos():Distance(DREAM) < 1200 and LC.EndingAny() == nil, "everyone asleep is in it (no ending, nothing else stops)")
+ok(LC.DreamStart("crumble", adm, false, nil, true) == false, "(one dream at a time)")
+_run(0.2) -- (whatever's under them at the start, picked up)
+local t1 = g.tokens[1]
+for _, t in ipairs(g.tokens) do if not t.big and not t.got and t.pos:Distance(a:GetPos()) > 150 and t.pos:Distance(b:GetPos()) > 150 then t1 = t break end end
+local left0 = g.left
+a:SetPos(t1.pos - Vector(0, 0, 36))
+_run(0.2)
+ok(t1.got and g.left == left0 - 1, "walking over a token picks it up")
+_run(4) -- (the start's safety has passed; the officers are out)
+local c1 = g.cops[1]
+c1.home = 0
+local s = g.pl[a]
+a:SetPos(c1.e:GetPos())
+_run(0.2)
+ok(s.lives == 2 and a:GetPos():Distance(s.start) < 1, "a giant officer catches you: a life gone, back to the start", s.lives)
+-- a golden token: they're afraid, and you send one back to the middle
+local big
+for _, t in ipairs(g.tokens) do if t.big and not t.got then big = t break end end
+s.safe = 0
+b:SetPos(big.pos - Vector(0, 0, 36))
+_run(0.2)
+ok(big.got and g.afraid and g.afraid > CurTime(), "a golden token frightens the officers")
+local c2 = g.cops[2] or c1
+c2.home = 0
+b:SetPos(c2.e:GetPos())
+_run(0.2)
+ok((c2.home or 0) > CurTime() and g.pl[b].lives == 3, "and touching one then sends him back to the middle")
+g.afraid = 0
+-- out of lives: awake, with everything back
+s.safe, s.lives = 0, 1
+LC.DreamGameHit(g, a, "Caught", "Test.")
+_run(1.5)
+ok(not a.lcDreaming and a.lcSleep and a:GetPos():Distance(CITY) < 1, "no lives left: you jolt awake in your bed, everything as it was")
+-- every token gone: the rest win, and the arena goes
+local ents0 = g.ents
+for _, t in ipairs(g.tokens) do t.got = true end
+g.left = 0
+_run(1.5)
+local gone = true
+for _, e in ipairs(ents0) do if IsValid(e) then gone = false end end
+ok(g.pl[b].how == "won" and not b.lcDreaming and LC.DreamActive == nil and gone and #g.won == 1, "every token picked up: those left win, wake, and the maze is gone")
+
+-- The Barrel Tower
+Asleep(a, CITY)
+Asleep(b, CITY + Vector(0, 200, 0))
+local okB, d2 = LC.DreamStart("barrels", adm, false, nil, true)
+local gb = okB and d2.game
+ok(okB and gb and #gb.ents > 8 and IsValid(gb.giant), "the barrel tower is built: ramps, landings, the giant at the top")
+_run(5)
+local br = gb.barrels[1]
+ok(br and IsValid(br.e), "the giant rolls a barrel down")
+local hitAt = br and br.e:GetPos()
+local sa = gb.pl[a]
+a:SetPos(hitAt - Vector(0, 0, 13))
+_run(0.1)
+ok(sa.lives == 2 and (not IsValid(br.e)) and a:GetPos():Distance(sa.start) < 1, "touching a barrel blows it up: a life gone, back to the bottom", sa.lives)
+b:SetPos(gb.topAt + Vector(0, 0, 2))
+_run(0.2)
+ok(gb.pl[b].how == "won", "reaching the top wins")
+LC.DreamGameStop(d2, "test")
+_run(1.5)
+ok(not a.lcDreaming and not b.lcDreaming and LC.DreamActive == nil, "(and when it's over, everyone wakes)")
+
+-- The Crumbling Floor
+Asleep(a, CITY)
+Asleep(b, CITY + Vector(0, 200, 0))
+local okC, d3 = LC.DreamStart("crumble", adm, false, nil, true)
+local gc = okC and d3.game
+ok(okC and gc and gc.n >= 4 and table.Count(gc.tiles) == gc.n * gc.n, "the crumbling floor is built: tiles over a drop, a scanner overhead")
+_run(3.2)
+local tile = LC.DreamTileAt(gc, a:GetPos())
+a:SetPos(Vector(a:GetPos().x, a:GetPos().y, gc.top))
+_run(0.2)
+ok(tile and tile.crack, "a tile you stand on cracks")
+_run(1.2)
+ok(tile.gone and not IsValid(tile.e), "and falls away a moment later")
+a:SetPos(a:GetPos() - Vector(0, 0, 40))
+_run(0.2)
+ok(gc.pl[a].how == "out" and gc.pl[b].how == "won", "fall and you wake; the last one standing wins")
+_run(1.5)
+ok(LC.DreamActive == nil and not b.lcDreaming, "(then it's over)")
+
+-- Freeze, Citizen
+Asleep(a, CITY)
+Asleep(b, CITY + Vector(0, 200, 0))
+local okF, d4 = LC.DreamStart("freeze", adm, false, nil, true)
+local gf = okF and d4.game
+ok(okF and gf and IsValid(gf.cop) and gf.finishX > gf.startX, "the yard is built, with the giant officer at the far end")
+_run(3.2)
+gf.phase, gf.phaseAt, gf.redFrom = "red", CurTime() + 5, CurTime() - 1
+a:SetPos(a:GetPos() + Vector(200, 0, 0))
+a.vel = Vector(200, 0, 0)
+_run(0.1)
+a.vel = nil
+ok(gf.pl[a].lives == 2 and a:GetPos():Distance(gf.pl[a].start) < 1, "moving when he's turned round: seen, back to the start")
+ok(gf.pl[b].lives == 3, "(standing still is safe)")
+gf.phase, gf.phaseAt = "green", CurTime() + 5
+b:SetPos(Vector(gf.finishX + 5, b:GetPos().y, b:GetPos().z))
+_run(0.2)
+ok(gf.pl[b].how == "won", "reaching the line by him wins")
+-- the admins can wake everyone
+LC.DreamGameStop(d4, "admin")
+_run(1.5)
+ok(not a.lcDreaming and LC.DreamActive == nil, "waking everyone ends it")
+
+LC.DreamForget()
+LC.RemovePoint(dp)
+for _, p in ipairs({ adm, a, b }) do
+    if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
+    p:SetPos(Vector(-121000, -121000, 0))
+end
+player.GetAll, LC.EndingReload = realGetAll, realReload
+_setcvar("lc_needs", 1)
+_walls = savedWalls
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+DreamGameTests()
+
 ----------------------------------------------------------------------
 
 ----------------------------------------------------------------------

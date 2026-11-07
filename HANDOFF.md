@@ -28,8 +28,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 2026-11-07 (part 2): both of the owner's 7 November lists and everything they added in the chat are merged to `main` (details: `docs/dev/handoff-2026-11-07-part2.md`, plus later: Administrator voice and microphone, dream moods on the tablet, the G-Man set aside, the market, zone stalkers, the F1-F4 layout, real rebel raids with `docs/dev/rebel-activity-audit.md`).
-- Nothing is checked in game. PLAYTEST.md has every item under "7 November, part 2".
-- Core changes in `CORE_CHANGELOG.md` (2026-11-07 part 2) are approved by the owner and the core snapshot is updated (only the two workers' new settings, still to come, will need their OK).
-- The full suite was started but stopped (usage); each piece's own units and the smoke test passed. Run the full suite next.
-- Stopped unfinished for usage, in `TODO.md` "To build later": manpower pools, territory growth along path nodes (and why it never grows), a fair share of the NPC budget.
+- 2026-11-07 (part 3): four nightmare dreams you play, on the Administrator's tablet under Nightmare: The Patrol Maze, The Barrel Tower, The Crumbling Floor, Freeze, Citizen (`sv_livingcity_dreamgames.lua`, `cl_livingcity_dreamgames.lua`; spec in `docs/features/endings.md`, "Nightmare dreams you play"). Each builds its own arena of props at the dream point and removes it after; no new settings or commands.
+- `sv_livingcity_dreams.lua` now accepts a game id wherever it took an ending id (`LC.DreamKnown`, `LC.DreamTitle`); the endings behave exactly as before, and the random nightly dream still picks endings only.
+- Tests: `DreamGameTests` (30) pass, `DreamTests` and `DreamMoodTests` still pass, client smoke passes. Nothing checked in game: PLAYTEST.md "Nightmare dreams you play".
+- Unchecked guesses to confirm in game: the prop models' orientation (maze walls, the finish strip), the officers' run animation on a prop, ramp walkability.
+- Earlier: the full suite still hasn't been rerun since 2026-11-02 (run it when the owner asks). `TODO.md` "To build later" has the rest.

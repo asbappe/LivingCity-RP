@@ -1549,6 +1549,35 @@ return (not ok) and tostring(e) or nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "dreams (client) " + str(err)
+# the nightmare dreams you play (cl_livingcity_dreamgames.lua): tokens, lives, time, FREEZE
+err = L.execute(r"""
+local ok, e = pcall(function()
+    _me:SetNW2Bool("lc_dreaming", true)
+    local function Msg(t) net._q = { t } net["recv_lc_dreamgame"]() end
+    Msg({ k = "start", id = "maze", name = "The Patrol Maze", goal = "Pick up every token.", ends = CurTime() + 300, lives = 3, maxLives = 3,
+        tokens = { { 0, 0, 36, 0 }, { 10, 0, 36, 1 } }, left = 2 })
+    Msg({ k = "got", i = 1 })
+    Msg({ k = "state", lives = 2, left = 1, afraid = CurTime() + 5 })
+    hook.t.PostDrawTranslucentRenderables.LivingCityDreamGames(false, false)
+    hook.t.HUDPaint.LivingCityDreamGames()
+    if not LC_CL.DreamGame() or LC_CL.DreamGame().left ~= 1 then error("the game's state on screen") end
+    Msg({ k = "start", id = "freeze", name = "Freeze, Citizen", goal = "Stand still when he turns.", ends = CurTime() + 100, lives = 3, maxLives = 3 })
+    Msg({ k = "state", lives = 3, phase = "red" })
+    hook.t.HUDPaint.LivingCityDreamGames()
+    Msg({ k = "state", lives = 3, phase = "green" })
+    hook.t.HUDPaint.LivingCityDreamGames()
+    Msg({ k = "start", id = "crumble", name = "The Crumbling Floor", goal = "Keep moving.", ends = CurTime() + 100, lives = 1, maxLives = 1 })
+    Msg({ k = "state", lives = 1, alive = 2 })
+    hook.t.HUDPaint.LivingCityDreamGames()
+    Msg({ k = "stop", how = "won" })
+    hook.t.HUDPaint.LivingCityDreamGames()
+    if LC_CL.DreamGame() then error("still on screen after it stopped") end
+    _me:SetNW2Bool("lc_dreaming", false)
+end)
+return (not ok) and tostring(e) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "dream games (client) " + str(err)
 # the cleanup crew's hoover: drawn in your view and in your hand, and its HUD
 L.globals()._SRC = open(os.path.join(GMDIR, "entities", "weapons", "weapon_lc_hoover.lua")).read()
 err = L.execute(r"""

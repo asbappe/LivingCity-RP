@@ -851,3 +851,15 @@ Notes:
   Notes:
 - [ ] **Manpower after a restart (7 November, part 2):** note the reserves, restart the map: they're the same.
   Notes:
+
+## Nightmare dreams you play (7 November)
+- [ ] **The Patrol Maze:** as Administrator pick it on the tablet (Nightmare), or C > Help > Dreams: dream it now (with me). Does the maze fit at the dream point, are the walls solid, do the tokens glow and get picked up, do the giant officers run (not slide) and chase you round corners, does a golden token turn them blue and let you send one back to the middle?
+  Notes:
+- [ ] **The Barrel Tower:** can you walk up every ramp, do barrels roll down the middle and lanes (not float), does touching one explode it and send you back, can you jump over one, does reaching the red top win?
+  Notes:
+- [ ] **The Crumbling Floor (try with two players):** do tiles crack yellow then red then vanish, does the scanner fly over marking tiles, does falling wake you, does the last one standing win?
+  Notes:
+- [ ] **Freeze, Citizen:** does the giant officer turn round and shout, does the screen say FREEZE in red, does moving then send you back, does standing still keep you safe, does the red line win?
+  Notes:
+- [ ] **All four:** after each one, are you back in your bed with everything you had, and is the arena gone from the dream point?
+  Notes:
