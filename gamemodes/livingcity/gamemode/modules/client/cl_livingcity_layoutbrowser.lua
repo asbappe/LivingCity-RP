@@ -32,7 +32,7 @@ local USES = {
         "toilet", "bath", "fire", "locker", "tv", "screen", "lawboard", "citybin", "bin", "zone_block", "door_rent" } },
     { title = "Arriving and leaving the city", ids = { "arrival", "intake", "laborterm", "housingterm", "platform", "spawn", "lz" } },
     { title = "Civil Protection and the Combine", ids = { "patrol", "checkpoint", "cpsupply", "console", "sspawn", "powerbank", "turret",
-        "forcefield", "barricade_low", "barricade", "barricade_tall", "dataterm", "masterterm", "zone_combine", "door_cp", "door_office", "studio", "loudspeaker", "screen_big" } },
+        "forcefield", "barricade_low", "barricade", "barricade_tall", "dataterm", "masterterm", "zone_combine", "sterm", "door_cp", "door_office", "studio", "loudspeaker", "screen_big" } },
     { title = "Prison", ids = { "cell", "release", "zone_prison", "door_prison" } },
     { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "rlookout", "bunk", "workbench", "dealer", "bed", "toilet", "stove",
         "sit", "sitchair", "lean", "fire", "locker", "graffiti" } },

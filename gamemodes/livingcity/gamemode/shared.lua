@@ -155,7 +155,8 @@ LC_MODULES = {
         "sv_livingcity_labor", -- (after work: Labor Assignment, where Union work is given out and changed)
         "sv_livingcity_reconcile", -- (a new faction or rank: the old job, its clothes and kit go)
         "sv_livingcity_stalkerwork",
-        "sv_livingcity_combineground", -- (soldiers stay in Combine zones, citizens stay out, a stalker clears up in there)
+        "sv_livingcity_combineground", -- (soldiers stay in Combine zones, citizens stay out)
+        "sv_livingcity_zonestalkers", -- (each Combine zone's stalkers: its terminals, its cleaning and repairs)
         "sv_livingcity_writing",
         "sv_livingcity_guidance", -- (the quest trail's way, and where you are for the panel of what you can do)
         "sv_livingcity_fieldops", -- (after the quests and the war: backup's guns, squads for violent jobs, flashbangs, rebel ground)

@@ -483,7 +483,7 @@ local function FixBroken(job, cls, id, label, what)
         local best, bd
         for _, e in ipairs(LC.EntsOf(cls)) do
             if IsValid(e) and e:GetNW2Bool("lc_broken", false) and now - (e.lcBrokenAt or 0) >= grace
-                and not Claimed(id .. e:EntIndex(), npc) then
+                and not Claimed(id .. e:EntIndex(), npc) and not e.lcStalkerTaken and not OffLimits(npc, st, e:GetPos()) then
                 local d = e:GetPos():DistToSqr(npc:GetPos())
                 if d < 4000 * 4000 and (not bd or d < bd) then best, bd = e, d end
             end

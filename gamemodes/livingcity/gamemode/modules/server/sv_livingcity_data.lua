@@ -49,6 +49,7 @@ LC.POINT_KINDS = {
     bunk = true, -- a rebel sleeps here now and then (sv_livingcity_rebellife.lua)
     jogroute = true, yard = true, parade = true, -- morning exercise: the jogging route, the drill yard, the parade route (sv_livingcity_exercise.lua)
     dream = true, -- where the shared dreams happen, out of the map (sv_livingcity_dreams.lua)
+    sterm = true, -- a Combine zone's stalker works the map's terminal here (sv_livingcity_zonestalkers.lua)
 }
 LC.ZONE_KINDS = { nogo = true, infest = true, prison = true, block = true, rebel = true, combine = true,
     dream = true } -- (the shared dreams' edge: sv_livingcity_dreams.lua)

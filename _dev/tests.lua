@@ -16165,26 +16165,23 @@ local chores = LC.CombineChores(CurTime())
 local seen = {}
 for _, j in ipairs(chores) do if j.ent then seen[j.ent] = j.kind end end
 ok(seen[can] == "item" and seen[body] == "body", "what needs clearing inside a Combine zone: the litter and the body", #chores)
-local started = LC.StalkerCleanStart(CurTime())
-ok(started ~= nil and IsValid(started.npc) and started.npc:GetClass() == "npc_stalker", "a stalker comes for it", started and IsValid(started.npc) and started.npc:GetClass())
-ok(started ~= nil and not LC.IsSeen(started.npc:GetPos() + Vector(0, 0, 40)) and LC.InCombineZone(started.npc:GetPos()) == hq, "out of sight, inside the zone")
-ok(LC.StalkerCleanStart(CurTime()) == nil, "(one at a time)")
-local stalkers = {}
-for _ = 1, 160 do
-    for _, cl in ipairs(LC.StalkerCleaners) do stalkers[cl.npc] = true end
+_setcvar("lc_zone_stalkers", 1)
+LC.ZoneStalkersStaff(CurTime())
+local res
+for _, r in pairs(LC.ZoneStalkers) do if r.zone == hq then res = r end end
+ok(res ~= nil and IsValid(res.npc) and res.npc:GetClass() == "npc_stalker", "the zone's own stalker comes for it", res and IsValid(res.npc) and res.npc:GetClass())
+ok(res ~= nil and not LC.IsSeen(res.npc:GetPos() + Vector(0, 0, 40)) and LC.InCombineZone(res.npc:GetPos()) == hq, "it appeared out of sight, inside the zone")
+for _ = 1, 240 do
     _run(0.5)
-    LC.StalkerCleanTick(CurTime())
-    if #LC.StalkerCleaners == 0 then
-        if not IsValid(can) and not IsValid(body) then break end
-        LC.StalkerCleanStart(CurTime())
-    end
+    LC.ZoneStalkersTick(CurTime())
+    if not IsValid(can) and not IsValid(body) then break end
 end
-ok(not IsValid(can) and not IsValid(body), "the stalker picks each up, walks off out of sight, and it's gone", tostring(IsValid(can)) .. " " .. tostring(IsValid(body)))
-local left = 0
-for n in pairs(stalkers) do if IsValid(n) then left = left + 1 end end
-ok(left == 0 and #LC.StalkerCleaners == 0, "and so is the stalker", left)
+ok(not IsValid(can) and not IsValid(body), "the stalker picks each up (drags the body), takes it off out of sight, and it's gone", tostring(IsValid(can)) .. " " .. tostring(IsValid(body)))
+ok(res ~= nil and IsValid(res.npc) and res.chore == nil, "and the stalker stays, for the next job")
 for i = #LC.Bodies, 1, -1 do if LC.Bodies[i].ent == body then table.remove(LC.Bodies, i) end end
 LC.RemoveZone(hq)
+LC.ZoneStalkersTick(CurTime())
+ok(res == nil or not IsValid(res.npc), "(the zone gone, so is its stalker)")
 LC.Event = evWas
 end
 CombineCitizensOutTests()
@@ -16254,6 +16251,121 @@ can:Remove()
 npc:Remove()
 end
 CrabCarcassCleanupTests()
+
+function ZoneStalkerTests()
+section("Each Combine zone's stalkers: terminals, repairs, the animation")
+-- the animation: a likely name first, then the model's own list, by what's in the names
+local fake = ents.Create("npc_stalker")
+fake:SetModel("models/test_stalker_a.mdl")
+fake.seqs = { console_work = 7 }
+local n1, i1 = LC.StalkerConsoleSequence(fake, true)
+ok(n1 == "console_work" and i1 == 7, "a model with one of the likely names: that one", tostring(n1) .. " " .. tostring(i1))
+fake:SetModel("models/test_stalker_b.mdl")
+fake.seqs = { typing_loop = 2 }
+fake.GetSequenceList = function() return { [0] = "idle01", [1] = "walk_all", [2] = "typing_loop", [3] = "death_console", [4] = "beamattack" } end
+local n2, i2 = LC.StalkerConsoleSequence(fake, true)
+ok(n2 == "typing_loop" and i2 == 2, "none of them: the model's own sequence that sounds most like console work (not a death or an attack)", tostring(n2) .. " " .. tostring(i2))
+ok(LC.StalkerSequenceUsed == "typing_loop" and string.find(LC.StalkerSummary(), "typing_loop", 1, true) ~= nil, "the one used is in the debug report", LC.StalkerSummary())
+fake:SetModel("models/test_stalker_c.mdl")
+fake.seqs = {}
+fake.GetSequenceList = function() return { [0] = "idle01", [1] = "walk_all" } end
+local n3 = LC.StalkerConsoleSequence(fake, true)
+ok(n3 == nil and LC.StalkerSequenceUsed == "none found", "nothing like it: none (they just stand at the terminal), and the report says so")
+fake:Remove()
+
+local evWas = LC.Event
+LC.Event = nil
+_setcvar("lc_zone_stalkers", 1)
+local Z = Vector(-195000, 195000, 0)
+local hq = LC.AddZone(Z, 500, "combine", 0)
+local term = LC.AddPoint(Z + Vector(200, 0, 0), 90, "sterm", 0)
+local now = CurTime()
+LC.ZoneStalkersStaff(now)
+local res
+for _, r in pairs(LC.ZoneStalkers) do if r.zone == hq then res = r end end
+ok(res ~= nil and IsValid(res.npc), "a Combine zone gets its resident stalker, out of sight")
+if not res then LC.RemovePoint(term) LC.RemoveZone(hq) LC.Event = evWas return end
+LC.ZoneStalkersStaff(now)
+local count = 0
+for _, r in pairs(LC.ZoneStalkers) do if r.zone == hq then count = count + 1 end end
+ok(count == 1, "(as many as lc_zone_stalkers: one)", count)
+res.npc.seqs = { console_work = 3 }
+LC.StalkerConsoleSequence(res.npc, true)
+for _ = 1, 60 do
+    _run(0.5)
+    LC.ZoneStalkersTick(CurTime())
+    if res.phase == "working" then break end
+end
+ok(res.phase == "working" and res.npc:GetPos():Distance(term.pos) < 60 and res.term and res.term.key == "p1",
+    "with nothing to do, it goes to the stalker terminal placed in its zone", tostring(res.phase) .. " " .. tostring(res.npc:GetPos()))
+ok(IsValid(res.ss) and res.ss:GetClass() == "scripted_sequence", "and works it, the console animation looping")
+-- a broken streetlight in there: the stalker's job, not the city's repairmen
+local lamp = ents.Create("lc_streetlight") lamp:SetPos(Z + Vector(-250, 150, 0)) lamp:Spawn()
+lamp:SetNW2Bool("lc_broken", true)
+lamp.lcBrokenAt = CurTime() - 1000
+local fixer = ents.Create("npc_citizen") fixer:SetPos(Z + Vector(1500, 0, 0)) fixer:Spawn()
+local fst = { role = "citizen", state = "idle", profile = { job = "maintenance" } }
+local lampTask
+for _, t in ipairs(LC.NPCWorkTasks.maintenance or {}) do if t.id == "lamp" then lampTask = t end end
+ok(lampTask ~= nil and lampTask.find(fixer, fst, CurTime()) == nil, "a broken streetlight inside a Combine zone: the city's repairman leaves it")
+fixer:Remove()
+local wentOut = false
+for _ = 1, 120 do
+    _run(0.5)
+    LC.ZoneStalkersTick(CurTime())
+    if res.chore then wentOut = true end
+    if not lamp:GetNW2Bool("lc_broken", false) then break end
+end
+ok(wentOut and not lamp:GetNW2Bool("lc_broken", false), "the stalker leaves its terminal and repairs it", tostring(lamp:GetNW2Bool("lc_broken", false)))
+for _ = 1, 60 do
+    _run(0.5)
+    LC.ZoneStalkersTick(CurTime())
+    if res.phase == "working" then break end
+end
+ok(res.phase == "working" and res.npc:GetPos():Distance(term.pos) < 60, "and goes back to the terminal after", res.phase)
+local spk = ents.Create("lc_loudspeaker") spk:SetPos(Z + Vector(0, -250, 0)) spk:Spawn()
+spk:SetNW2Bool("lc_broken", true)
+spk.lcBrokenAt = CurTime() - 1000
+for _ = 1, 120 do
+    _run(0.5)
+    LC.ZoneStalkersTick(CurTime())
+    if not spk:GetNW2Bool("lc_broken", false) then break end
+end
+ok(not spk:GetNW2Bool("lc_broken", false), "a broken loudspeaker in there too")
+-- the map's own Combine console props, with no point placed
+LC.RemovePoint(term)
+local con = ents.Create("prop_physics") con:SetModel("models/props_combine/combine_interface001.mdl") con:SetPos(Z + Vector(-150, -150, 0)) con:Spawn()
+LC.StalkerConsolePropsReset()
+local terms = LC.StalkerTerminals(hq, CurTime())
+ok(#terms == 1 and terms[1].key == "e" .. con:EntIndex(), "no terminal point: a Combine console prop in the zone will do", #terms)
+con:Remove()
+LC.StalkerConsolePropsReset()
+ok(#LC.StalkerTerminals(hq, CurTime()) == 0, "(neither: it stands where it is)")
+-- one killed is replaced, a while later, out of sight
+local old = res.npc
+old:SetHealth(0)
+now = CurTime()
+LC.ZoneStalkersThink(now)
+ok(LC.ZoneStalkers[old] == nil, "a stalker killed is gone from the zone")
+old:Remove()
+LC.ZoneStalkersStaff(now + 10)
+count = 0
+for _, r in pairs(LC.ZoneStalkers) do if r.zone == hq then count = count + 1 end end
+ok(count == 0, "(not replaced at once)")
+LC.ZoneStalkersStaff(now + 125)
+count = 0
+for _, r in pairs(LC.ZoneStalkers) do if r.zone == hq then count = count + 1 res = r end end
+ok(count == 1, "replaced a couple of minutes later", count)
+_setcvar("lc_zone_stalkers", 0)
+LC.ZoneStalkersStaff(now + 130)
+ok(not IsValid(res.npc), "lc_zone_stalkers 0: none")
+_setcvar("lc_zone_stalkers", 1)
+lamp:Remove() spk:Remove()
+LC.RemoveZone(hq)
+LC.ZoneStalkersTick(CurTime())
+LC.Event = evWas
+end
+ZoneStalkerTests()
 
 section("NPCs that fall out of the map")
 ;(function()

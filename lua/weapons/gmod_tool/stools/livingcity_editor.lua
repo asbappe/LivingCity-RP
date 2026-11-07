@@ -46,6 +46,7 @@ local MODES = {
     { id = "jogroute",    label = "Point: jogging route stop (morning jog: place them in order round the route, the first is the start; route #)", group = true },
     { id = "yard",        label = "Point: exercise yard (morning drill: stand where the rows of citizens will be and aim at where the leader stands)" },
     { id = "parade",      label = "Point: parade route stop (morning parade: in order, the first is where the column forms up; route #)", group = true },
+    { id = "sterm",       label = "Point: stalker terminal (a Combine zone's stalker works a terminal here: stand where it should stand, facing the terminal, and aim at the floor at your feet)" },
     { id = "lz",          label = "Point: Overwatch landing zone (a dropship brings soldiers down here: open sky above it)" },
     { id = "dream",       label = "Point: dream (the secret endings play here as shared dreams for everyone asleep: put it out of the map, where nobody can walk to)" },
     { id = "dock",        label = "Point: loading dock (supply drops come in here, by dropship under open sky; supply trucks, crates)" },
@@ -706,6 +707,7 @@ function TOOL.BuildCPanel(panel)
     Slider("Squad: seconds after the alarm", "lc_squad_delay", 0, 30, 0)
     Slider("Garrison per Combine-only zone", "lc_garrison", 0, 12, 0)
     Slider("Garrison metrocops (out of 10)", "lc_garrison_cops", 0, 10, 0)
+    Slider("Stalkers per Combine-only zone (its terminals, cleaning, repairs)", "lc_zone_stalkers", 0, 4, 0)
 
     Header("Paths and doors")
     panel:Button("Path mapping: on / off (walk to draw nodes)", "lc_pathmap")
