@@ -16094,7 +16094,20 @@ ok(okM and LC.Marching[con] and LC.IsTied(con), "(a prisoner being marched to th
 ok(LC.InsiderLetSlip(ins) == false, "an ordinary unit can't let anyone go")
 LC.StoryFlag(ins, "insider", true)
 ok(LC.InsiderMarchNear(ins) == con, "an Insider beside the march: the prisoner is within reach (the Inside menu offers it)")
+local function SlipSent()
+    for i = #net.sent, 1, -1 do local m = net.sent[i] if m.name == "lc_insider_slip" and m.to == ins then return m end end
+end
 nosy:SetPos(S0 + Vector(0, 250, 0))
+local tS, whyS = LC.InsiderSlipState(ins)
+LC.InsiderSlipTick()
+local mS = SlipSent()
+ok(tS == con and whyS == "watched" and mS and mS.data[1] == true and mS.data[2] == con and mS.data[3] == "watched",
+    "the Insider's own screen is told: a marched prisoner within reach, but someone's watching (the hint goes faint, F2 greys it)", tostring(whyS))
+local nSent = #net.sent
+LC.InsiderSlipTick()
+local resent = false
+for i = nSent + 1, #net.sent do if net.sent[i].name == "lc_insider_slip" then resent = true end end
+ok(not resent, "(told only when it changes)")
 local okN, whyN = LC.InsiderLetSlip(ins)
 ok(not okN and LC.Marching[con] and string.find(whyN or "", "nobody", 1, true), "not with someone else close enough to hear", whyN)
 nosy:SetPos(far)
@@ -16103,6 +16116,12 @@ cst2.untilT = 1e9
 local okW, whyW = LC.InsiderLetSlip(ins)
 ok(not okW and LC.Marching[con] and string.find(whyW or "", "unit can see", 1, true), "nor with another unit watching", whyW)
 cop2:Remove() LC.NPCs[cop2] = nil
+local tP, whyP = LC.InsiderSlipState(ins)
+LC.InsiderSlipTick()
+mS = SlipSent()
+ok(tP == con and whyP == "" and mS and mS.data[3] == "", "and unseen: it can be done now (the hint is bright, F2 > 7 lets them slip)", tostring(whyP))
+local tO = LC.InsiderSlipState(con)
+ok(tO == nil, "(nobody but the Insider is told anything)")
 local st0 = LC.Standing(ins)
 local radio, notes = {}, {}
 local rn, nw = LC.RadioNotice, LC.Notice
@@ -16116,6 +16135,9 @@ ok(not LC.Marching[con] and not LC.IsTied(con) and not LC.PlayerIsWanted(con) an
     "the march is over: uncuffed, not wanted, not in a cell, and the escort goes back to its day")
 ok(LC.Standing(ins) == st0 - 20, "it got away from the Insider: -20 Civil Standing", LC.Standing(ins) - st0)
 ok(has(notes, "Go. Now"), "the prisoner is told on screen to run", notes[#notes])
+LC.InsiderSlipTick()
+mS = SlipSent()
+ok(LC.InsiderSlipState(ins) == nil and mS and mS.data[1] == false, "no march left near them: the line and the F2 entry go")
 local okA, whyA = LC.InsiderLetSlip(ins)
 ok(not okA and (string.find(whyA or "", "Nobody", 1, true) or string.find(whyA or "", "Not yet", 1, true)), "(and nobody else to let go)", whyA)
 -- out of sight by the end of the head start: clean away
@@ -16128,6 +16150,7 @@ LC.Untie(con, nil, true)
 local okM2, lead2 = March()
 local okC, whyC = LC.InsiderLetSlip(ins)
 ok(okM2 and not okC and string.find(whyC or "", "Not yet", 1, true) and LC.Marching[con], "once every 20 minutes", whyC)
+ok(select(2, LC.InsiderSlipState(ins)) == "soon", "(and their screen says not yet)", tostring(select(2, LC.InsiderSlipState(ins))))
 -- still in sight when the head start runs out: wanted for escaping
 ins.lcInsiderNext.slip = 0
 ok(LC.InsiderLetSlip(ins), "(let go again)")

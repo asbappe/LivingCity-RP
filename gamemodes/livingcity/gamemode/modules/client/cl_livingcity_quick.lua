@@ -18,6 +18,8 @@
            call; a stalker's work; a worker's job tools (an escort, a ration break, the
            body cart, foreman); staff tools. Then what only your side does to what's in
            front of you (a unit: search, cuff, escort). Nothing of the kind: it says so.
+           The Resistance's man inside, beside a prisoner being marched to the cells: 7
+           lets them slip (greyed while someone can see).
 
     9 on either is everything else: the full menu (cl_livingcity_actions.lua), also on C.
     A ">" opens a page of its own (voice lines, talking, poses).
@@ -314,6 +316,17 @@ function LC_CL.QuickRoleRoot()
         Add(Item("Call for backup", function() Send("backup") end))
         Add(Item("Issue a BOLO...", function() Ask("BOLO", "What should Civil Protection units look out for?", "bolo") end))
         Add(Item("Send my 10-20", function() Send("10-20") end))
+        -- the Resistance's man inside, beside a prisoner being marched to the cells (sv_livingcity_insider.lua):
+        -- right after the six, only while it's there; greyed while someone can see
+        local slipT, slipWhy = nil, nil
+        if LC_CL.InsiderSlipNow then slipT, slipWhy = LC_CL.InsiderSlipNow(me) end
+        if slipT then
+            local whyNot = LC_CL.InsiderSlipWhyNot and LC_CL.InsiderSlipWhyNot(slipWhy)
+            local slip = Item("Let " .. Name(slipT) .. " slip away" .. (whyNot and (" (" .. (slipWhy == "watched" and "someone can see you" or "not yet") .. ")") or ""),
+                function() Send("letslip") end)
+            slip.id, slip.disabled = "letslip", whyNot ~= nil
+            Add(slip)
+        end
         usual = { Item("My directives (F4)", function() Hub("jobs") end), Item("Records terminal", function() Send("records") end) }
     elseif rebel then
         title, accent = "RESISTANCE", ACCENT.resistance
@@ -387,7 +400,7 @@ function LC_CL.QuickPick(n)
         return
     end
     local it = open.page.items[n]
-    if not it then return end
+    if not it or it.disabled then return end
     if it.page then
         local accent = open.page.accent
         table.insert(open.stack, open.page)
@@ -454,7 +467,7 @@ hook.Add("HUDPaint", "LivingCityQuick", function()
         local it = page.items[i]
         local ry = y + 34 + (i - 1) * 26
         if it then
-            local col = it.ctx and CONTEXT or INK
+            local col = it.disabled and DIM or (it.ctx and CONTEXT or INK)
             draw.SimpleText(tostring(i), "LCQuickNum", x + 16, ry + 12, accent, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
             it.fit = it.fit or Fit(it.label .. (it.page and "  >" or ""), "LCQuickItem", W - 46)
             draw.SimpleText(it.fit, "LCQuickItem", x + 34, ry + 12, col, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
