@@ -8,7 +8,9 @@
 
     There's no first-person model for it in Half-Life 2 or the hazard props pack, so the hoover
     itself (the pack's, else a stand-in) is drawn in front of you, and in your hands for everyone
-    else. lc_hoover_view "forward right up" (yours) moves it in your view.
+    else. lc_hoover_view "forward right up" (yours) moves it in your view (the owner, 7 November:
+    about two feet further out than it was, so the pack isn't in your face).
+    While it vacuums, the airboat's fan motor runs under its own sounds (the owner, 7 November).
 ]]
 
 AddCSLuaFile()
@@ -43,8 +45,29 @@ end
 local function Model() return Has(PACK) and PACK or STANDIN end
 
 local REACH, SECS, STEP = 140, 2.4, 0.2
+local MOTOR = "vehicles/airboat/fan_motor_fullthrottle_loop1.wav" -- (the airboat's fan motor, added to the hoover's own sounds)
 
 function SWEP:Initialize() self:SetHoldType(self.HoldType) end
+
+-- The motor runs while something is being vacuumed, and stops a moment after (server; everyone near hears it).
+local function Motor(self, on)
+    if not SERVER then return end
+    if on then
+        local owner = self:GetOwner()
+        if not self.lcMotor and CreateSound and IsValid(owner) then
+            self.lcMotor = CreateSound(owner, MOTOR)
+            if self.lcMotor then self.lcMotor:PlayEx(0.55, 95) end
+        end
+        self.lcMotorUntil = CurTime() + 0.45
+    elseif self.lcMotor then
+        self.lcMotor:Stop()
+        self.lcMotor = nil
+    end
+end
+
+function SWEP:Think()
+    if SERVER and self.lcMotor and (self.lcMotorUntil or 0) < CurTime() then Motor(self, false) end
+end
 
 local function Aimed(owner)
     local start = owner:GetShootPos()
@@ -62,7 +85,7 @@ function SWEP:PrimaryAttack()
     local owner = self:GetOwner()
     if not IsValid(owner) or not LC then return end
     local e = Aimed(owner)
-    if not e then owner.lcVac = nil owner:SetNW2Float("lc_vac_frac", 0) return end
+    if not e then owner.lcVac = nil owner:SetNW2Float("lc_vac_frac", 0) Motor(self, false) return end
     if not (LC.NestDead and LC.NestDead(e)) then
         if (owner.lcVacTold or 0) < CurTime() then
             owner.lcVacTold = CurTime() + 3
@@ -73,6 +96,7 @@ function SWEP:PrimaryAttack()
     local v = owner.lcVac
     if not v or v.e ~= e then v = { e = e, t = 0 } owner.lcVac = v end
     v.t = v.t + STEP
+    Motor(self, true)
     if (v.snd or 0) < CurTime() then v.snd = CurTime() + 1 owner:EmitSound("ambient/water/water_spray1.wav", 60, 55) end
     owner:SetNW2Float("lc_vac_frac", math.min(1, v.t / SECS))
     if v.t >= SECS then
@@ -95,11 +119,21 @@ end
 function SWEP:Holster()
     local owner = self:GetOwner()
     if SERVER and IsValid(owner) then owner.lcVac = nil owner:SetNW2Float("lc_vac_frac", 0) end
+    Motor(self, false)
     return true
 end
 
+if SERVER then
+    function SWEP:OnRemove() Motor(self, false) end
+    function SWEP:OnDrop() Motor(self, false) end
+end
+
 if CLIENT then
-    local cvView = CreateClientConVar("lc_hoover_view", "26 11 -15", true, false, "Where your hoover sits in your view: forward right up")
+    -- (was "26 11 -15": the owner, 7 November, "the backpack is in my face... move it back about 2 feet". A game
+    -- still on exactly the old setting moves to the new one; a position someone chose themselves is left alone.)
+    local VIEW_OLD, VIEW_NEW = "26 11 -15", "50 11 -15"
+    local cvView = CreateClientConVar("lc_hoover_view", VIEW_NEW, true, false, "Where your hoover sits in your view: forward right up")
+    if cvView:GetString() == VIEW_OLD and cvView.SetString then cvView:SetString(VIEW_NEW) end
 
     local function Prop(self)
         if not IsValid(self.lcProp) and ClientsideModel then
@@ -116,7 +150,7 @@ if CLIENT then
         if not IsValid(p) then return end
         local parts = {}
         for n in string.gmatch(cvView:GetString(), "%-?[%d%.]+") do parts[#parts + 1] = tonumber(n) end
-        local f, r, u = parts[1] or 26, parts[2] or 11, parts[3] or -15
+        local f, r, u = parts[1] or 50, parts[2] or 11, parts[3] or -15
         local ang = EyeAngles()
         local bob = math.sin(CurTime() * 6) * ((LocalPlayer():GetNW2Float("lc_vac_frac", 0) > 0) and 0.4 or 0)
         p:SetPos(EyePos() + ang:Forward() * f + ang:Right() * r + ang:Up() * (u + bob))

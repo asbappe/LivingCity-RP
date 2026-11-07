@@ -97,14 +97,35 @@ hook.Add("HUDPaint", "LivingCityIntake", function()
     end
 end)
 
--- The sign on the terminal itself (lc_intake.lua draws it, in 3D).
-function LC_CL.DrawIntakeSign(ent)
-    local housing = DeskKind(ent) == "housing"
+-- A terminal's sign: a title and a line under it, the Civil Intake style. The Commissaries (Union and
+-- Civil Protection: lc_terminal.lua, lc_cpsupply.lua) wear the same one (the owner, 7 November: they
+-- "just look like static map props").
+function LC_CL.DrawTerminalSign(title, line)
     draw.RoundedBox(6, -300, -70, 600, 140, Color(8, 16, 26, 230))
     surface.SetDrawColor(BLUE.r, BLUE.g, BLUE.b, 180)
     surface.DrawOutlinedRect(-300, -70, 600, 140, 3)
-    draw.SimpleText(housing and "HOUSING ALLOCATION" or "CIVIL INTAKE", "LCIntakeSign", 0, -24, BLUE, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-    draw.SimpleText(housing and "Registered? Ask for a room here" or "New here? Register here", "LCIntakeSignSmall", 0, 30, INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    draw.SimpleText(title, "LCIntakeSign", 0, -24, BLUE, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    draw.SimpleText(line, "LCIntakeSignSmall", 0, 30, INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+end
+
+-- Where a terminal's sign floats, and how it faces (the same for every terminal that has one).
+function LC_CL.TerminalSign(ent, title, line)
+    if LocalPlayer():GetPos():DistToSqr(ent:GetPos()) > 700 * 700 then return end
+    local ang = ent:GetAngles()
+    ang:RotateAroundAxis(ang:Up(), 90)
+    ang:RotateAroundAxis(ang:Forward(), 90)
+    local maxs = ent:OBBMaxs()
+    local up = math.max(78, ((maxs and maxs.z) or 60) + 14)
+    cam.Start3D2D(ent:GetPos() + ent:GetUp() * up + ent:GetForward() * 4, ang, 0.08)
+        LC_CL.DrawTerminalSign(title, line)
+    cam.End3D2D()
+end
+
+-- The sign on the terminal itself (lc_intake.lua draws it, in 3D).
+function LC_CL.DrawIntakeSign(ent)
+    local housing = DeskKind(ent) == "housing"
+    LC_CL.DrawTerminalSign(housing and "HOUSING ALLOCATION" or "CIVIL INTAKE",
+        housing and "Registered? Ask for a room here" or "New here? Register here")
 end
 
 ------------------------------------------------------------------------

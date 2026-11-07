@@ -71,11 +71,20 @@ local function OpenGround(pos)
 end
 LC.WeedOpenGround = OpenGround
 
+-- On the floor under the spot: wander spots and path nodes can sit a little above the ground, and
+-- a weed hung there (the owner, 7 November: "2-3 feet floating off the ground").
+local function Planted(pos)
+    local tr = util.TraceLine({ start = pos + Vector(0, 0, 32), endpos = pos - Vector(0, 0, 400), mask = MASK_SOLID_BRUSHONLY })
+    if tr and tr.Hit and not tr.StartSolid and tr.HitPos then return tr.HitPos end
+    return pos
+end
+LC.WeedPlanted = Planted
+
 function LC.SpawnWeed(pos, stage)
     if not pos or #Weeds() >= cvMax:GetInt() then return nil end
     local e = ents.Create("lc_weed")
     if not IsValid(e) then return nil end
-    e:SetPos(pos)
+    e:SetPos(Planted(pos))
     e:SetAngles(Angle(0, math.random(0, 359), 0))
     e:Spawn()
     SetStage(e, stage or 1)

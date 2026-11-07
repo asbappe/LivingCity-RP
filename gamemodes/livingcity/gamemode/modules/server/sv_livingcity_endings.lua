@@ -4025,6 +4025,7 @@ local RETUNED = {
     { "lc_afk_minutes", { "5" }, "20" }, -- (2 November: away at 20 minutes, the owner asked; sv_livingcity_cityadmin.lua)
     { "lc_ending_gman_lines", { "vo/citadel/gman_exit01.wav,vo/citadel/gman_exit02.wav" }, "vo/citadel/gman_exit02.wav" }, -- (2 November: exit01 calls everyone "Doctor Freeman")
     { "lc_afk_kick_minutes", { "15" }, "20" },
+    { "lc_job_cooldown", { "120" }, "900" }, -- (7 November: one Union job change every 15 minutes, the owner asked; sv_livingcity_work.lua)
     { "lc_ending_marrow_max", { "40", "60" }, "80" },
     { "lc_ending_base_bombs", { "30" }, "60" },
     { "lc_ending_hard_moment_beats", { "16" }, "5" },

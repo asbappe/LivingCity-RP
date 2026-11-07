@@ -37,3 +37,12 @@ if SERVER then
         if LC.OpenShop then LC.OpenShop(activator, true) end
     end
 end
+
+if CLIENT then
+    -- its sign, the Civil Intake terminals' style (cl_livingcity_intake.lua; the owner, 7 November: the
+    -- Commissaries "just look like static map props")
+    function ENT:Draw()
+        self:DrawModel()
+        if LC_CL and LC_CL.TerminalSign then LC_CL.TerminalSign(self, "UNION COMMISSARY", "Goods for citizens, by Civil Standing. Press E") end
+    end
+end

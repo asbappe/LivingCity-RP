@@ -1066,6 +1066,30 @@ ok(storyPosting(worker, "shift") == nil, "no job, no shifts")
 ok(LC.SetJob(worker, "sanitation") and LC.Job(worker).id == "sanitation", "a citizen can take a Union job")
 local unitJ = newPlayer("UnitJob", "cp")
 ok(not LC.SetJob(unitJ, "kitchen"), "units can't take Union jobs")
+-- (7 November) the Union's kit comes back after prison; the job goes with a unit's badge, or an anticitizen's name
+local kit = newPlayer("Kit", "citizen")
+ok(LC.SetJob(kit, "cleanup", true) and kit:HasWeapon("weapon_lc_sprayer") and kit:HasWeapon("weapon_lc_hoover"), "Infestation Cleanup is issued the sprayer and the hoover")
+kit:StripWeapons()
+hook.Run("LivingCityReleased", kit)
+_run(0.5)
+ok(kit:HasWeapon("weapon_lc_sprayer") and kit:HasWeapon("weapon_lc_hoover"), "and gets them back on release from prison")
+local okc, whyc = LC.SetJob(kit, "sanitation")
+ok(not okc and whyc ~= nil and string.find(whyc, "minutes", 1, true) ~= nil, "one job change every 15 minutes: the refusal says the minutes left", whyc)
+LC.GiveItem(kit, "weedkiller", 1)
+kit:SetNW2String("lcf_faction", "cp")
+LC.CheckUnionJob(kit)
+ok(LC.Job(kit) == nil and not kit:HasWeapon("weapon_lc_sprayer") and not kit:HasWeapon("weapon_lc_hoover") and not LC.HasItem(kit, "weedkiller"),
+    "a Civil Protection recruit loses the Union job, the hoover and the weedkiller")
+local anti = newPlayer("Anti", "citizen")
+LC.SetJob(anti, "cleanup", true)
+LC.GiveItem(anti, "weedkiller", 1)
+anti.lcWasHunted = false
+local wasHunted = LC.PlayerIsHunted
+LC.PlayerIsHunted = function(p) return p == anti or wasHunted(p) end
+LC.CheckUnionJob(anti)
+LC.PlayerIsHunted = wasHunted
+ok(LC.Job(anti) == nil and not anti:HasWeapon("weapon_lc_hoover"), "an anticitizen's Union job is revoked, the hoover with it")
+ok(anti:HasWeapon("weapon_lc_sprayer") and LC.HasItem(anti, "weedkiller"), "but they keep the weedkiller")
 local sp1 = storyPosting(worker, "shift")
 for _ = 1, 5 do -- (a shift that finds no spot this time: another try, as the board would later)
     if sp1 then break end

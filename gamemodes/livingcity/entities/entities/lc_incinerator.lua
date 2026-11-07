@@ -19,7 +19,7 @@ ENT.RenderGroup = RENDERGROUP_BOTH
 local MODELS = { "models/props_combine/headcrabcannister01a.mdl", "models/props_c17/furnitureboiler001a.mdl", "models/props_wasteland/kitchen_stove002a.mdl" }
 
 function ENT:Initialize()
-    if CLIENT then return end
+    if CLIENT then return end -- (the client's own Initialize is below, with the fire)
     local m
     for _, c in ipairs(MODELS) do
         if not util.IsValidModel or util.IsValidModel(c) then m = c break end
@@ -107,37 +107,34 @@ if CLIENT then
         return back, self:LocalToWorld(self.lcFrontLocal), out
     end
 
-    function ENT:Draw()
-        self:DrawModel()
+    -- The fire didn't show until the incinerator was moved (the owner, 7 November): the flames hung
+    -- on the client think alone. Now the draw pass lights it too, each incinerator has its own
+    -- emitter (with a box it's always drawn in), and the client think is asked for on creation.
+    function ENT:Initialize()
+        if SERVER then return end
+        self:SetNextClientThink(CurTime())
+        self.lcNextFlame = 0
     end
 
-    function ENT:DrawTranslucent()
-        if LocalPlayer():GetPos():DistToSqr(self:GetPos()) > 2000 * 2000 then return end
-        local burning = self:GetNW2Float("lc_burn_until", 0) > CurTime()
-        local back, front, out = Ends(self)
-        render.SetMaterial(GLOW)
-        -- the burner, roaring out of the back
-        local s = (burning and 110 or 70) + math.sin(CurTime() * 9) * 8
-        render.DrawSprite(back + out * 6, s, s, burning and Color(255, 160, 70) or Color(255, 120, 45, 210))
-        -- and the glow of the furnace at the hatch
-        local m = (burning and 44 or 22) + math.sin(CurTime() * 7) * 3
-        render.DrawSprite(front, m, m, Color(255, 110, 40, burning and 200 or 110))
-    end
-
-    local emitter
-    function ENT:Think()
-        local me = LocalPlayer()
-        if not IsValid(me) or me:GetPos():DistToSqr(self:GetPos()) > 1500 * 1500 then
-            if self.lcRoar then self.lcRoar:Stop() self.lcRoar = nil end
-            return
+    local function Emitter(self, at)
+        if self.lcEmitter and (not self.lcEmitter.IsValid or self.lcEmitter:IsValid()) then return self.lcEmitter end
+        if not ParticleEmitter then return nil end
+        local em = ParticleEmitter(at)
+        if em then
+            if em.SetBBox then em:SetBBox(at - Vector(200, 200, 200), at + Vector(200, 200, 200)) end
+            if em.SetNoDraw then em:SetNoDraw(false) end
         end
-        local now = CurTime()
+        self.lcEmitter = em
+        return em
+    end
+
+    -- The flames, the glow of the light and the roar: from Think when it runs, from the draw pass otherwise.
+    local function Fire(self, now)
         local burning = self:GetNW2Float("lc_burn_until", 0) > now
         local back, _, out = Ends(self)
-        -- flames in the broad, open end
-        if ParticleEmitter and now > (self.lcNextFlame or 0) then
+        if now > (self.lcNextFlame or 0) then
             self.lcNextFlame = now + (burning and 0.04 or 0.08)
-            emitter = emitter or ParticleEmitter(back)
+            local emitter = Emitter(self, back)
             if emitter then
                 -- a fire burning in the mouth of it, filling it, and licking out
                 local r = math.min(self:GetNW2Float("lc_mouth_r", 16), 40) * 0.6
@@ -158,14 +155,17 @@ if CLIENT then
                 end
             end
         end
-        local d = DynamicLight(self:EntIndex())
-        if d then
-            d.pos = back + out * 20
-            d.r, d.g, d.b = 255, 120, 40
-            d.brightness = burning and 3 or 1.5
-            d.size = burning and 300 or 180
-            d.decay = 600
-            d.dietime = now + 0.2
+        if (self.lcNextLight or 0) <= now then
+            self.lcNextLight = now + 0.03
+            local d = DynamicLight(self:EntIndex())
+            if d then
+                d.pos = back + out * 20
+                d.r, d.g, d.b = 255, 120, 40
+                d.brightness = burning and 3 or 1.5
+                d.size = burning and 300 or 180
+                d.decay = 600
+                d.dietime = now + 0.2
+            end
         end
         -- the burner's roar
         if not self.lcRoar and CreateSound then
@@ -173,11 +173,51 @@ if CLIENT then
             if self.lcRoar then self.lcRoar:PlayEx(0.5, 100) end
         end
         if self.lcRoar then self.lcRoar:ChangeVolume(burning and 0.9 or 0.5, 0.5) end
+    end
+
+    local function Near(self, d)
+        local me = LocalPlayer()
+        return IsValid(me) and me:GetPos():DistToSqr(self:GetPos()) <= d * d
+    end
+
+    function ENT:Draw()
+        self:DrawModel()
+        -- (the sprites and flames reach past the model: drawn whenever any of it could be seen)
+        if not self.lcBoundsSet and self.SetRenderBounds then
+            self.lcBoundsSet = true
+            local mins, maxs = self:OBBMins(), self:OBBMaxs()
+            if mins and maxs then self:SetRenderBounds(mins - Vector(60, 60, 60), maxs + Vector(60, 60, 60)) end
+        end
+        if Near(self, 1500) then Fire(self, CurTime()) end
+    end
+
+    function ENT:DrawTranslucent()
+        if not Near(self, 2000) then return end
+        local burning = self:GetNW2Float("lc_burn_until", 0) > CurTime()
+        local back, front, out = Ends(self)
+        render.SetMaterial(GLOW)
+        -- the burner, roaring out of the back
+        local s = (burning and 110 or 70) + math.sin(CurTime() * 9) * 8
+        render.DrawSprite(back + out * 6, s, s, burning and Color(255, 160, 70) or Color(255, 120, 45, 210))
+        -- and the glow of the furnace at the hatch
+        local m = (burning and 44 or 22) + math.sin(CurTime() * 7) * 3
+        render.DrawSprite(front, m, m, Color(255, 110, 40, burning and 200 or 110))
+    end
+
+    function ENT:Think()
+        local now = CurTime()
+        if not Near(self, 1500) then
+            if self.lcRoar then self.lcRoar:Stop() self.lcRoar = nil end
+        else
+            Fire(self, now)
+        end
         self:SetNextClientThink(now + 0.03)
         return true
     end
 
     function ENT:OnRemove()
         if self.lcRoar then self.lcRoar:Stop() self.lcRoar = nil end
+        if self.lcEmitter and self.lcEmitter.Finish then self.lcEmitter:Finish() end
+        self.lcEmitter = nil
     end
 end

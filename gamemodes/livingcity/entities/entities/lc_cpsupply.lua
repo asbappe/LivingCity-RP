@@ -40,23 +40,9 @@ if SERVER then
 end
 
 if CLIENT then
-    surface.CreateFont("LCSupplySign", { font = "Trebuchet MS", size = 44, weight = 700 })
-    surface.CreateFont("LCSupplySignSmall", { font = "Trebuchet MS", size = 26, weight = 500 })
-    local BLUE, INK = Color(120, 190, 255), Color(225, 230, 235)
-
+    -- its sign, the Civil Intake terminals' style (cl_livingcity_intake.lua; the owner, 7 November)
     function ENT:Draw()
         self:DrawModel()
-        if LocalPlayer():GetPos():DistToSqr(self:GetPos()) > 600 * 600 then return end
-        local ang = self:GetAngles()
-        ang:RotateAroundAxis(ang:Up(), 90)
-        ang:RotateAroundAxis(ang:Forward(), 90)
-        local maxs = self:OBBMaxs()
-        cam.Start3D2D(self:GetPos() + self:GetUp() * ((maxs and maxs.z or 60) + 14), ang, 0.08)
-            draw.RoundedBox(6, -280, -60, 560, 120, Color(8, 16, 26, 230))
-            surface.SetDrawColor(BLUE.r, BLUE.g, BLUE.b, 180)
-            surface.DrawOutlinedRect(-280, -60, 560, 120, 3)
-            draw.SimpleText("CIVIL PROTECTION", "LCSupplySign", 0, -18, BLUE, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-            draw.SimpleText("Commissary: Issues supplies for Civil Protection units", "LCSupplySignSmall", 0, 26, INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-        cam.End3D2D()
+        if LC_CL and LC_CL.TerminalSign then LC_CL.TerminalSign(self, "CP COMMISSARY", "Units: your issue is here. Press E") end
     end
 end
