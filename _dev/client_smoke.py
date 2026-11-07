@@ -2453,7 +2453,7 @@ util.Decompress = function(s) return s end
 local doc
 util.JSONToTable = function() return doc end
 local okM, errM = pcall(function()
-    doc = { on = true, rebels = 1, opsMul = 0.9, restricted = { "Bread" },
+    doc = { on = true, mood = "There's some grumbling in the ration lines about the restriction.", restricted = { "Bread" },
         tiers = { { name = "Probationary", min = -50 }, { name = "Citizen", min = 0 }, { name = "Trusted", min = 150 }, { name = "Exemplary", min = 400 } },
         goods = { { id = "bread", name = "Bread", price = 8, now = 8, restricted = true, mul = 1, standing = 0, baseStanding = 0, supply = "normal", note = "Restricted by the Administrator", demand = 0, black = 18 },
             { id = "healthkit", name = "Medical kit", price = 50, now = 100, restricted = false, mul = 2, standing = 400, baseStanding = 400, supply = "scarce", stock = 3, demand = 15 } },

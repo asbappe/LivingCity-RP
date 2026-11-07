@@ -35,8 +35,10 @@
                      kept in rebel territory (lc_market_rebels_per, 1, at most
                      lc_market_rebels_max, 6, and never more than the zones have room for),
                      and the Resistance's operations come sooner (lc_market_ops_speedup, 10%
-                     sooner per restriction, at most half the wait). Sociostability and
-                     players' sympathy aren't touched.
+                     sooner per restriction, at most half the wait). A citizen turned away by a
+                     restriction warms to the Resistance (sympathy, once in half an hour).
+                     Sociostability itself isn't touched. The Administrator hears about it in
+                     plain words on the market page (LC.MarketMood), not numbers.
     Bounded: the Commissary's multiplier is 0.5x to 5x; the black market's 0.5x to 4x, never
     below what the dealer pays back. With nothing touched and nothing bought, every price is
     as it always was. lc_market 0 turns all of it off.
@@ -435,7 +437,26 @@ function LC.MarketOpsMul()
     if n <= 0 then return 1 end
     return math.max(0.5, 1 - n * math.max(0, cvOpsSpeed:GetFloat()) / 100)
 end
-function LC.MarketRefused() end -- (a citizen turned away: no sympathy change any more; the owner, 7 November)
+-- A citizen turned away by a restriction warms to the Resistance (sympathy, at most once in half an hour).
+-- (The owner, 7 November: players' sympathy may move; sociostability itself isn't touched.)
+local SYMPATHY_GAP = 1800
+function LC.MarketRefused(ply, g)
+    if not IsValid(ply) or not LC.MarketRestricted(g) then return end
+    if LC.PlayerIsCP and LC.PlayerIsCP(ply) then return end
+    if (ply.lcMarketSympathy or 0) > CurTime() then return end
+    ply.lcMarketSympathy = CurTime() + SYMPATHY_GAP
+    if LC.AddTrait then LC.AddTrait(ply, "sympathy", 1) end
+end
+
+-- What the Administrator hears about it: plain talk, not numbers (the owner, 7 November).
+function LC.MarketMood()
+    local n = LC.MarketRestrictedCount()
+    if n <= 0 then return nil end
+    if n == 1 then return "There's some grumbling in the ration lines about the restriction." end
+    if n <= 3 then return "These restrictions are stirring some citizens to think about joining the Resistance." end
+    if n <= 5 then return "Word is that citizens are calling the restrictions unfair, and some have gone to join the Resistance. Expect them to be busier." end
+    return "Citizens are calling the restrictions draconian. More of them are leaving to fight with the Resistance, and the rebels are getting bolder."
+end
 
 ------------------------------------------------------------------------
 -- The Administrator changes something
@@ -557,7 +578,7 @@ function LC.MarketAdminData()
     end
     local restricted = {}
     for _, g in ipairs(LCS.Goods) do if LC.MarketRestricted(g) then restricted[#restricted + 1] = g.name end end
-    return { on = On(), goods = goods, black = black, restricted = restricted, rebels = LC.MarketRebelBonus(), opsMul = LC.MarketOpsMul(),
+    return { on = On(), goods = goods, black = black, restricted = restricted, mood = LC.MarketMood(),
         tiers = LCS.Tiers and (function() local t = {} for _, x in ipairs(LCS.Tiers) do if x.min > -1e8 then t[#t + 1] = { name = x.name, min = x.min } end end return t end)() or {} }
 end
 

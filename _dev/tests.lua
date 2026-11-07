@@ -17228,9 +17228,14 @@ function MarketTests() -- (the owner, 7 November: the Administrator's say over t
     ok(math.abs(LC.MarketOpsMul() - math.max(0.5, 1 - nR * 0.1)) < 0.001, "and the Resistance's operations come sooner (10% a restriction, at most half the wait)", LC.MarketOpsMul())
     ok(not LC.RebelTarget or LC.RebelTarget() >= base, "rebel territory's own target counts them (as room allows)")
     local lvl = LC.SocioAuto and LC.SocioAuto()
+    cit.lcMarketSympathy = nil -- (an earlier refusal in this unit used the half hour)
     local s0 = LC.Trait(cit, "sympathy")
     LC.Buy(cit, "bread")
-    ok(LC.Trait(cit, "sympathy") == s0, "sympathy and sociostability aren't touched by restrictions (the owner, 7 November: it changes too much as it is)")
+    LC.Buy(cit, "bread")
+    ok(LC.Trait(cit, "sympathy") == s0 + 1, "a citizen turned away warms to the Resistance, once in a while")
+    ok(lvl == nil or LC.SocioAuto() == lvl, "sociostability itself isn't touched by restrictions (the owner, 7 November)")
+    local mood = LC.MarketMood()
+    ok(type(mood) == "string" and string.find(mood, "Resistance", 1, true) ~= nil and not string.find(mood, "%d"), "the Administrator hears it in plain words, not numbers", mood)
     -- announced
     cit.chat = {}
     LC.MarketFlushAnnounce()
