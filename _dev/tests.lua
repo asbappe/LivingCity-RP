@@ -13140,6 +13140,12 @@ _setcvar("lc_trail", "0")
 LC.TrailTick(now + 25)
 ok(walker.lcTrail == nil, "lc_trail 0: nobody does")
 _setcvar("lc_trail", "1")
+LC.TrailTick(now + 25.5)
+ok(walker.lcTrail ~= nil, "(on again: a trail)")
+walker.lcForgetUntil = CurTime() + 60
+LC.TrailTick(now + 25.6)
+ok(walker.lcTrail == nil and payload() and payload().p == nil, "Breen's water clouds their memory: the trail goes too, as the quest tracker does")
+walker.lcForgetUntil = nil
 walker.lcTestGoal = nil
 LC.TrailTick(now + 26)
 ok(walker.lcTrail == nil, "no quest, no trail")
