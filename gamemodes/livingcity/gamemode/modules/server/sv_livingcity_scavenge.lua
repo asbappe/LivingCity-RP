@@ -12,10 +12,13 @@
                     in a few minutes, harvest real vegetables. Anyone can
                     harvest a ripe pot (so watch yours). Units uproot them.
       Supplies      every rebel zone keeps a supply crate the Resistance eat
-                    from: one tin each every few minutes. It fills slowly by
-                    itself, faster with supply runs (a Resistance job) and
-                    donations (!donate next to it). A unit who finds it
-                    confiscates the lot.
+                    from: one tin each every few minutes. Supplies come in
+                    every lc_food_restock_minutes or so, sized to how many
+                    Resistance are online, enough for about half of what they
+                    eat (lc_food_availability): it runs out regularly whether
+                    two are fighting or forty. Supply runs (a Resistance job),
+                    donations (!donate next to it) and the rebels' scavenging
+                    runs fill it too. A unit who finds it confiscates the lot.
       Graffiti      a spray can and a wall: the lambda goes up for everyone to
                     see. Seen doing it, you're wanted for vandalism. Tags near
                     rebel ground help it spread. Units and loyal citizens scrub
@@ -23,8 +26,11 @@
 
       lc_scavenge_refill <s>   seconds before a bin is worth searching again (600)
       lc_garden_minutes <m>    minutes for a pot to ripen (8)
-      lc_cache_max <n>         most meals a supply crate holds (12)
-      lc_cache_trickle <m>     minutes per meal the crate gains by itself (5)
+      lc_cache_max <n>         most meals a supply crate holds (12; more when many Resistance are online)
+      lc_cache_trickle <m>     minutes per meal the crate gains by itself (5; only with lc_food_scaling 0)
+      lc_food_scaling <0/1>    supplies sized to the Resistance online (1)
+      lc_food_availability <f> share of what they eat that the crates bring in (0.5)
+      lc_food_restock_minutes <m> minutes between supplies, give or take a quarter (20)
       lc_tag_minutes <m>       how long a tag stays up if nobody cleans it (60)
 ]]
 
@@ -39,7 +45,10 @@ local cvRefill  = CreateConVar("lc_scavenge_refill", "600", FLAGS, "Seconds befo
 local cvFridge  = CreateConVar("lc_fridge_refill", "240", FLAGS, "Seconds before a searched fridge has anything in it again")
 local cvGarden  = CreateConVar("lc_garden_minutes", "8", FLAGS, "Minutes for a planted pot to ripen")
 local cvCacheMax = CreateConVar("lc_cache_max", "12", FLAGS, "Most meals a Resistance supply crate holds")
-local cvTrickle = CreateConVar("lc_cache_trickle", "5", FLAGS, "Minutes per meal a supply crate gains on its own")
+local cvTrickle = CreateConVar("lc_cache_trickle", "5", FLAGS, "Minutes per meal a supply crate gains on its own (only with lc_food_scaling 0)")
+local cvFoodScale = CreateConVar("lc_food_scaling", "1", FLAGS, "Resistance supply crates are restocked for how many Resistance players are online (0: the old fixed trickle, lc_cache_trickle)")
+local cvFoodShare = CreateConVar("lc_food_availability", "0.5", FLAGS, "Share of what the Resistance online eat that their supply crates bring in (0.5: food about half the time; the rest is fishing, hunting, the pots, citizens and the quartermaster)")
+local cvFoodEvery = CreateConVar("lc_food_restock_minutes", "20", FLAGS, "Minutes between supplies reaching a Resistance supply crate (give or take a quarter)")
 local cvTagLife = CreateConVar("lc_tag_minutes", "60", FLAGS, "Minutes a graffiti tag stays up if nobody cleans it")
 
 local UP = Vector(0, 0, 50)
@@ -299,8 +308,16 @@ local function SetPot(e, state, readyAt)
     e:SetNW2Float("lc_pot_ready", readyAt or 0)
 end
 
+-- the most a crate holds: lc_cache_max, or twice what a restock fills it to when many Resistance are online
+local function HardCap(e)
+    if not cvFoodScale:GetBool() then return cvCacheMax:GetInt() end
+    return math.max(cvCacheMax:GetInt(), 2 * (e.lcFoodCap or 0))
+end
+LC.CacheHardCap = HardCap
+
 local function SetStock(e, n)
-    e.lcStock = math.Clamp(n, 0, cvCacheMax:GetInt())
+    -- (a crate already over its cap, from when more were online, keeps what it has)
+    e.lcStock = math.Clamp(n, 0, math.max(HardCap(e), e.lcStock or 0))
     e:SetNW2Int("lc_cache_stock", e.lcStock)
 end
 
@@ -387,6 +404,100 @@ function LC.AddToCache(cache, n)
     return cache.lcStock - before
 end
 
+------------------------------------------------------------------------
+-- Feeding the Resistance, sized to how many there are (the owner, 7 November:
+-- playing solo the crate was an endless feast, with 32 or 64 on the server it
+-- would be a famine). Every lc_food_restock_minutes (20, give or take a
+-- quarter) a crate gets what its share of the Resistance online would eat in
+-- that time, times lc_food_availability (0.5), give or take half. So it's
+-- empty about half the time whether two are fighting or forty, and the rest
+-- comes from fishing, headcrabs and birds, the pots, citizens and the
+-- quartermaster. A restock tops a crate up to one period's full need at most
+-- (so food doesn't pile up while nobody eats it); what players and rebels bring
+-- in can go past that. NPC rebels don't eat from it: they bring food in from
+-- their scavenging runs (sv_livingcity_rebellife.lua).
+------------------------------------------------------------------------
+
+local MEAL = 35 -- the hunger a tin gives
+
+-- Meals one fighter eats in this many minutes.
+function LC.FoodNeedPerHead(minutes)
+    local cv = GetConVar("lc_hunger_minutes")
+    local full = math.max(1, cv and cv:GetFloat() or 60)
+    return (minutes or 1) * 100 / (full * MEAL)
+end
+
+function LC.ResistanceHeadcount()
+    local n = 0
+    for _, p in ipairs(player.GetAll()) do if IsResistance(p) then n = n + 1 end end
+    return n
+end
+
+local function Every() return math.max(1, cvFoodEvery:GetFloat()) end
+
+-- What a restock fills a crate to, at most, for this many fighters: one period's full need.
+function LC.FoodRestockCap(heads)
+    return math.max(2, math.ceil(LC.FoodNeedPerHead(Every()) * math.max(0, heads or 0)))
+end
+
+-- Meals one restock brings a camp feeding this many fighters (random: the average is
+-- lc_food_availability of what they'd eat in that time).
+function LC.FoodRestockSize(heads, minutes)
+    if (heads or 0) <= 0 then return 0 end
+    local want = LC.FoodNeedPerHead(minutes or Every()) * heads * math.Clamp(cvFoodShare:GetFloat(), 0, 1)
+    want = want * (0.5 + math.random())
+    return math.floor(want + math.random())
+end
+
+local function RebelCrates()
+    local out = {}
+    for _, r in pairs(LC.RebelProps) do if IsValid(r.cache) then out[#out + 1] = r.cache end end
+    return out
+end
+
+local function SetCap(c, share)
+    c.lcFoodCap = LC.FoodRestockCap(share)
+    c:SetNW2Int("lc_cache_cap", c.lcFoodCap)
+end
+
+local function NextRestock(c, now)
+    c.lcFoodNext = now + Every() * 60 * (0.75 + 0.5 * math.random())
+    c:SetNW2Float("lc_cache_next", c.lcFoodNext)
+end
+
+-- One delivery to these crates (default: every camp's), for `heads` Resistance (default:
+-- those online) shared among `camps` camps (default: every camp). Returns the meals added.
+function LC.FoodRestock(heads, crates, camps)
+    local all = RebelCrates()
+    crates = crates or all
+    if #crates == 0 then return 0 end
+    heads = heads or LC.ResistanceHeadcount()
+    local share = heads / math.max(1, camps or #all)
+    local now, added = CurTime(), 0
+    for _, c in ipairs(crates) do
+        if IsValid(c) then
+            SetCap(c, share)
+            local before = c.lcStock or 0
+            local n = math.min(LC.FoodRestockSize(share), math.max(0, c.lcFoodCap - before))
+            if n > 0 then SetStock(c, before + n) added = added + (c.lcStock - before) end
+            NextRestock(c, now)
+        end
+    end
+    return added
+end
+
+-- What the crate says when it's empty: where else to find food.
+function LC.CacheEmptyText(cache)
+    local t = "The crate's empty: supplies come in slower than the Resistance eat. Fish the canal, hunt headcrabs or birds "
+        .. "(cook them first), pick the vegetable pots, ask citizens to bring food (anyone can donate it here), or trade with the quartermaster."
+    local due = IsValid(cache) and cvFoodScale:GetBool() and cache.lcFoodNext and (cache.lcFoodNext - CurTime()) or nil
+    if due and due > 0 then
+        local m = math.max(1, math.ceil(due / 60))
+        t = t .. string.format(" More supplies due in about %d minute%s.", m, m == 1 and "" or "s")
+    end
+    return t
+end
+
 local function UseCache(ply, cache)
     if LC.PlayerIsCP(ply) then
         local n = cache.lcStock or 0
@@ -411,7 +522,9 @@ local function UseCache(ply, cache)
         return
     end
     if (cache.lcStock or 0) <= 0 then
-        ply:ChatPrint("[Resistance] The crate's empty. Somebody needs to make a supply run (F3), or bring food (C > Resistance > Donate food).")
+        local t = LC.CacheEmptyText(cache)
+        ply:ChatPrint("[Resistance] " .. t)
+        if LC.Notice then LC.Notice(ply, "info", "Resistance supplies", t) end
         return
     end
     if not LC.GiveItem(ply, "canned_food") then ply:ChatPrint("Your pockets are full.") return end
@@ -473,7 +586,20 @@ timer.Create("LivingCityRebelSupplies", 5, 0, function()
                 if IsValid(pot) and pot.lcPot and pot.lcPot.state == "growing" and now >= pot.lcPot.readyAt then SetPot(pot, "ripe") end
             end
         end
-        if now >= nextTrickle then
+        if cvFoodScale:GetBool() then
+            -- each crate's next delivery (LC.FoodRestock), for the Resistance online, shared among the camps
+            local all, due = RebelCrates(), {}
+            for _, c in ipairs(all) do
+                if not c.lcFoodNext then
+                    SetCap(c, LC.ResistanceHeadcount() / #all)
+                    NextRestock(c, now)
+                elseif now >= c.lcFoodNext then
+                    due[#due + 1] = c
+                end
+            end
+            if #due > 0 then LC.FoodRestock(nil, due, #all) end
+            nextTrickle = 0
+        elseif now >= nextTrickle then
             if nextTrickle > 0 then
                 for _, r in pairs(LC.RebelProps) do if IsValid(r.cache) then SetStock(r.cache, (r.cache.lcStock or 0) + 1) end end
             end
@@ -500,14 +626,14 @@ function LC.Donate(ply)
     if LC.PlayerIsCP(ply) then return false, "That's not how confiscation works." end
     local given = 0
     for id in pairs(FOOD) do
-        while LC.HasItem(ply, id) and (cache.lcStock or 0) < cvCacheMax:GetInt() do
+        while LC.HasItem(ply, id) and (cache.lcStock or 0) < HardCap(cache) do
             LC.TakeItem(ply, id)
             LC.AddToCache(cache, 1)
             given = given + 1
         end
     end
     if given == 0 then
-        return false, (cache.lcStock or 0) >= cvCacheMax:GetInt() and "The crate's full. Eat something." or "You've no proper food to give (rations, tins, bread, vegetables, cooked meat)."
+        return false, (cache.lcStock or 0) >= HardCap(cache) and "The crate's full. Eat something." or "You've no proper food to give (rations, tins, bread, vegetables, cooked fish, birds or headcrabs)."
     end
     if IsResistance(ply) and LC.AddXP then LC.AddXP(ply, 2 * given, "fed the Resistance") end
     if LC.AddTrait then LC.AddTrait(ply, "sympathy", 1) end
