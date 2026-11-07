@@ -3939,7 +3939,7 @@ LC.AddXP(riser, 400, "test")
 ok(riser:GetNW2Int("lcf_rank", 1) >= 2 and tip(riser, "promoted_member"), "made a Member: fighters will follow you now", riser:GetNW2Int("lcf_rank", 1))
 free(looker)
 hook.Run("PlayerSay", looker, "!hints")
-ok(has(looker.chat or {}, "last few") and has(looker.chat, "[F2]") and not has(looker.chat, "{gm_"), "!hints shows the last few again, with keys spelled out")
+ok(has(looker.chat or {}, "last few") and has(looker.chat, "[F3]") and not has(looker.chat, "{gm_"), "!hints shows the last few again, with keys spelled out")
 ok(hook.Run("PlayerSay", looker, "!hints off") == "" and not LC.Hint(looker, "birds"), "!hints off stops them")
 hook.Run("PlayerSay", looker, "!hints on")
 ok(LC.Hint(looker, "birds"), "!hints on brings them back")
@@ -9541,7 +9541,7 @@ old:Spawn()
 Later(1.5)
 ok(LC.HasItem(old, "id_papers") and not LC.HasItem(old, "ration_card"), "everyone on the register is handed identity papers (no ration card: that's earned)")
 LC.GiveItem(old, "ration_card")
-ok(has(old.chat, "in your pockets (F2)"), "and told so")
+ok(has(old.chat, "in your pockets (F3)"), "and told so")
 ok(LCS.Weight("id_papers") == 0 and LCS.Items.id_papers.doc and LCS.Items.ration_card.doc, "they weigh nothing")
 local count = LC.InvCount(old)
 LC.TakeItem(old, "ration_card")
@@ -11315,7 +11315,7 @@ local function find(list, text) for _, w in ipairs(list) do if w.text == text th
 local ways = LC.WaysToGetBy(cit)
 local stall = find(ways, "Sell from a market stall")
 ok(stall and stall.need and string.find(stall.need, "Civil Standing 50", 1, true), "a stall says the one thing missing: standing", stall and stall.need)
-ok(find(ways, "Get a Union job") and find(ways, "Get a Union job").open == "f3", "no job: the board is where to get one")
+ok(find(ways, "Get a Union job") and find(ways, "Get a Union job").open == "jobs", "no job: the board is where to get one")
 ok(ways[1].need == nil and ways[#ways].need ~= nil, "what you can do now comes first")
 LC.GiveItem(cit, "business_license")
 ok(find(LC.WaysToGetBy(cit), "Sell from a market stall").need == nil, "with a license, it's ready")
@@ -12482,7 +12482,7 @@ LC.BatonArrest(off, cit2)
 _run(1)
 ok(LC.NPCCustody[cit2] and LC.NPCCustody[cit2].leader == off, "nobody free: the prisoner follows the officer")
 off.lookingAt = nil
-ok(LC.ToggleDrag(off) and LC.NPCCustody[cit2].leader == nil, "F1 > Walk them to the cells / let go: let go of them")
+ok(LC.ToggleDrag(off) and LC.NPCCustody[cit2].leader == nil, "F2 > Walk them to the cells / let go: let go of them")
 off.lookingAt = cit2
 cit2:SetPos(off:GetPos() + Vector(50, 0, 0))
 ok(LC.ToggleDrag(off) and LC.NPCCustody[cit2].leader == off, "and take them by the arm again")
@@ -17159,6 +17159,56 @@ function LabDamageTests()
     GAMEMODE = savedGM
 end
 LabDamageTests()
+
+function KeyLayoutTests()
+    section("The keys: F1 quick menu, F2 your side's quick menu, F3 pockets, F4 jobs, career and factions in one window")
+    -- (the owner, 7 November: "make F4 the hotkey for this, and then move inventory to F3 ... F2 can be the same BUT contextual")
+    local kp = newPlayer("KeyLayout", "cp", nil, 200)
+    local function Names()
+        local t = {}
+        for _, m in ipairs(net.sent) do t[#t + 1] = m.name end
+        return table.concat(t, ",")
+    end
+    net.sent = {}
+    GAMEMODE:ShowHelp(kp)
+    ok(_lastnet("lcg_help") ~= nil, "F1 is still the quick menu (and the guide)")
+    net.sent = {}
+    GAMEMODE:ShowTeam(kp)
+    hook.Run("ShowTeam", kp)
+    local q2 = _lastnet("lcg_quick2")
+    ok(q2 ~= nil and q2.to == kp and _lastnet("lci_inv") == nil, "F2 opens the second quick menu (your side, rank and job), not the pockets", Names())
+    net.sent = {}
+    hook.Run("ShowSpare1", kp)
+    ok(_lastnet("lci_inv") ~= nil and _lastnet("lcq_board") == nil, "F3 opens the pockets, not the board", Names())
+    net.sent = {}
+    hook.Run("ShowSpare2", kp)
+    ok(net.sent[1] and net.sent[1].name == "lc_hub" and _lastnet("lcq_board") and _lastnet("lcf_menu") and _lastnet("lc_career") and _lastnet("lci_inv") == nil,
+        "F4 opens one window, then sends its tabs: the board (Jobs), the career and the factions", Names())
+    net.sent = {}
+    hook.Run("PlayerSay", kp, "!inv")
+    hook.Run("PlayerSay", kp, "!jobs")
+    hook.Run("PlayerSay", kp, "!faction")
+    ok(_lastnet("lci_inv") and _lastnet("lcq_board") and _lastnet("lcf_menu"), "!inv, !jobs and !faction still open what they did", Names())
+    -- the tips name the new keys: pockets are {gm_showspare1} (F3), the board {gm_showspare2} (F4)
+    local wrong = {}
+    for key, h in pairs(LC.HINTS or {}) do
+        local texts = type(h.text) == "table" and h.text or { h.text }
+        for _, t in pairs(texts) do
+            if type(t) == "string" and (string.find(t, "pockets ({gm_showteam}", 1, true) or string.find(t, "board ({gm_showspare1}", 1, true)
+                or string.find(t, "{gm_showspare1} board", 1, true) or string.find(t, "pockets, {gm_showteam}", 1, true)) then
+                wrong[#wrong + 1] = key
+            end
+        end
+    end
+    ok(#wrong == 0, "every tip names F3 for the pockets and F4 for the board", table.concat(wrong, ", "))
+    ok(string.find(LC.HintPlain(LC.HINTS.menus.text.default), "[F2] has what your side", 1, true) and string.find(LC.HintPlain(LC.HINTS.menus.text.default), "[F3] opens your pockets", 1, true),
+        "the tip about the menus: F2 your side's, F3 pockets, F4 the rest", LC.HintPlain(LC.HINTS.menus.text.default))
+    local ways = LC.WaysToGetBy and LC.WaysToGetBy(kp) or {}
+    local opens = {}
+    for _, w in ipairs(ways) do if w.open then opens[w.open] = true end end
+    ok(not (opens.f2 or opens.f3 or opens.f4), "Ways to get by open the pockets or a tab of F4 by name, not by an old key")
+end
+KeyLayoutTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

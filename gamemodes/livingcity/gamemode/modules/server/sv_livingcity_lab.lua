@@ -21,7 +21,7 @@
     down: the scientist is taken away for lc_lab_shutdown (600) seconds.
 
     Every rebel base needs a lab for its guns. Lockpicks and bandages are
-    still made by hand, from F2, anywhere.
+    still made by hand, from F3, anywhere.
 ]]
 
 if CLIENT then return end
@@ -246,8 +246,8 @@ function LC.UseScientist(ply, sci)
     -- wrecked by the Combine: nothing to work with until it's fixed (sv_livingcity_labdamage.lua)
     if LC.LabBroken and LC.LabBroken(sci) then
         SciSay(sci, "ohdear", 70)
-        Say(ply, "He waves at the smoking bench. \"Look at it! I can't make so much as a fuse until this is repaired. Spare parts, and a pair of hands: the job's on your board (F3), 'Get the lab running'.\"")
-        if LC.Notice then LC.Notice(ply, "warn", "The lab is wrecked", "Nothing can be made, decoded or done here until it's repaired. Take the job 'Get the lab running' from your board (F3).", 7) end
+        Say(ply, "He waves at the smoking bench. \"Look at it! I can't make so much as a fuse until this is repaired. Spare parts, and a pair of hands: the job's on your board (F4), 'Get the lab running'.\"")
+        if LC.Notice then LC.Notice(ply, "warn", "The lab is wrecked", "Nothing can be made, decoded or done here until it's repaired. Take the job 'Get the lab running' from your board (F4).", 7) end
         return
     end
     if (ply.lcLabGreet or 0) < CurTime() then

@@ -9,7 +9,7 @@
                        hears where you are ("cut it loose"), and so do the free
                        vortigaunts. Once every lc_vort_call_minutes (10). Seen
                        by a unit, the collar bites instead.
-      The Collar       a story on the board (F3), in three parts: a street to
+      The Collar       a story on the board (F4), in three parts: a street to
                        sweep for the Overseer, a crate to carry to a
                        checkpoint (and whether to slip a warning into its
                        manifest), and a quiet corner to reach out from.

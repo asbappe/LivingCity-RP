@@ -2,7 +2,7 @@
     Living City: the unit's kick
 
     Every rank of Civil Protection (the Overwatch included) can kick: G by
-    default (lc_kick_key on the client), or F1 > Kick. No weapon to switch to.
+    default (lc_kick_key on the client), or F2 > Kick. No weapon to switch to.
 
       A door that isn't locked     swings open, away from you
       A locked door                gives on the second kick (lc_kick_door_kicks);

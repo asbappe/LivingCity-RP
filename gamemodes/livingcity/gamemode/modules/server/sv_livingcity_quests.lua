@@ -19,7 +19,7 @@
       - violent jobs are capped city-wide (one per lc_quest_violent_ratio players)
       - others in your faction can join your job as a squad (lc_quest_squad)
 
-    F3, !jobs or lcq_board opens your board.
+    F4, !jobs or lcq_board opens your board.
 ]]
 
 if CLIENT then return end
@@ -1105,7 +1105,7 @@ end
 
 -- A ration break: rations are out mid-shift, so the job waits (its clock stopped, nothing
 -- failing for your being away) till you've had your ration, five minutes are up, or you
--- go back to it. F1 > Take a ration break (or !rationbreak; !back to carry on).
+-- go back to it. F2 > Take a ration break (or !rationbreak; !back to carry on).
 function LC.RationBreak(ply, on)
     if not IsValid(ply) then return false end
     if on then
@@ -1142,7 +1142,7 @@ hook.Add("LivingCityEventStarted", "LivingCityRationBreak", function(name)
     for _, p in ipairs(player.GetAll()) do
         local q = LC.QuestOf[p]
         if q and not q.done and LC.Notice then
-            LC.Notice(p, "info", "Rations are being handed out", "To get your ration without failing your job, press F1 and choose Take a ration break. It pauses your job's timer until you've collected your ration (five minutes at most).", 9)
+            LC.Notice(p, "info", "Rations are being handed out", "To get your ration without failing your job, press F2 and choose Take a ration break. It pauses your job's timer until you've collected your ration (five minutes at most).", 9)
         end
     end
 end)
@@ -1843,7 +1843,7 @@ T{
                 Narrate(q, "You break the crate open and put the supplies in your pockets. A search will find them, so don't get stopped.")
             else
                 LC.SpawnWorldItem("smuggled_supplies", p:GetPos() + p:GetForward() * 30 + Vector(0, 0, 10))
-                Narrate(q, "The crate breaks open, but your pockets are full. Make room in your pockets (F2), then pick the supplies up off the ground.")
+                Narrate(q, "The crate breaks open, but your pockets are full. Make room in your pockets (F3), then pick the supplies up off the ground.")
             end
         end
         local destPos = partsRun and home or qm:GetPos()
@@ -2760,7 +2760,7 @@ function LC.AdvanceChain(q, success)
     if success and q.chainDecline then
         cs.part = nil
         cs.readyAt = os.time() + 1800
-        ply:ChatPrint("[Story] You turned down " .. chain.name .. ". It comes back to your board (F3) in about 30 minutes.")
+        ply:ChatPrint("[Story] You turned down " .. chain.name .. ". It comes back to your board (F4) in about 30 minutes.")
     elseif success and q.chainEnd then
         cs.done, cs.part = q.chainEnd, nil
         local ending = chain.endings and chain.endings[q.chainEnd] or q.chainEnd
@@ -2772,7 +2772,7 @@ function LC.AdvanceChain(q, success)
         if nextPart and chain.parts[nextPart] then
             cs.part = nextPart
             cs.readyAt = os.time() + pace
-            ply:ChatPrint("[Story] " .. chain.name .. " continues." .. (pace > 0 and " Check your board (F3) in a little while." or " Check your board (F3)."))
+            ply:ChatPrint("[Story] " .. chain.name .. " continues." .. (pace > 0 and " Check your board (F4) in a little while." or " Check your board (F4)."))
         else
             cs.done, cs.part = "complete", nil
             ply:ChatPrint("[Story] " .. chain.name .. " has ended.")
@@ -2780,7 +2780,7 @@ function LC.AdvanceChain(q, success)
     else
         cs.part = q.chainPart
         cs.readyAt = os.time() + pace
-        ply:ChatPrint("[Story] " .. chain.name .. ": that part failed. You can try it again: it comes back to your board (F3).")
+        ply:ChatPrint("[Story] " .. chain.name .. ": that part failed. You can try it again: it comes back to your board (F4).")
     end
     LC.SaveStory(ply)
 end
@@ -2795,7 +2795,7 @@ function LC.CheckUnlocks(ply)
             if ok and yes then
                 s.notified[chain.id] = true
                 changed = true
-                ply:ChatPrint("[Story] A new story is available. Check your job board (F3).")
+                ply:ChatPrint("[Story] A new story is available. Check your job board (F4).")
             end
         end
     end
@@ -3179,7 +3179,7 @@ function LC.PostDirective(tid, focus)
                     local board = BOARDS[f] or "Jobs"
                     local room = math.max(cvSquad:GetInt(), spec.squad or 0)
                     for _, p in ipairs(people) do
-                        p:ChatPrint(string.format("[%s] New job: %s. Take it from your job board (F3). Up to %d people can work on it together.", board, spec.title, room))
+                        p:ChatPrint(string.format("[%s] New job: %s. Take it from your job board (F4). Up to %d people can work on it together.", board, spec.title, room))
                     end
                 end
             end
@@ -3386,7 +3386,7 @@ net.Receive("lcq_request", function(_, ply)
     if st and st.kind == "choice" and not st.resolved and q.owner == ply then OpenChoice(q, st) end
 end)
 
-hook.Add("ShowSpare1", "LivingCityQuests", function(ply) LC.SendBoard(ply) end)
+-- (the board is F4's Jobs tab now: sv_livingcity_factions.lua sends it with the rest of F4)
 concommand.Add("lcq_board", function(ply) if IsValid(ply) then LC.SendBoard(ply) end end)
 hook.Add("PlayerSay", "LivingCityQuestsChat", function(ply, text)
     local t = string.lower(string.Trim(text))
@@ -3418,7 +3418,7 @@ concommand.Add("lcq_startchain", function(ply, _, args)
     s.chains[chain.id] = { part = chain.start, data = {}, readyAt = 0 }
     LC.SaveStory(target)
     if target.lcStoryPostings then target.lcStoryPostings[chain.id] = nil end
-    out("[Story] " .. chain.name .. " is ready on " .. target:Nick() .. "'s board (F3).")
+    out("[Story] " .. chain.name .. " is ready on " .. target:Nick() .. "'s board (F4).")
 end)
 
 concommand.Add("lcq_story", function(ply, _, args)

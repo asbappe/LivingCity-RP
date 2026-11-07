@@ -9,7 +9,7 @@
 LCS = LCS or {}
 
 ------------------------------------------------------------------------
--- Items you can carry (inventory: F2 or !inv)
+-- Items you can carry (inventory: F3 or !inv)
 --   hunger, thirst   how much they restore (0 to 100 scale)
 --   parasite         chance of catching parasites when consumed
 --   breen            Dr. Breen's Private Reserve side effects
@@ -207,7 +207,7 @@ LCS.Items = {
     zipties         = { name = "Cuffs", model = "models/props_lab/box01a.mdl", sell = 1, -- (1, not 4: a unit's own never run out)
                         desc = "Tie someone's hands: up close, looking at them, C > their name > Cuff them. Only someone with their hands up, knocked down, stopped by a unit, or taken from behind. Cuffed, they can't use anything; Drag walks them along, Uncuff lets them go. Units carry their own" },
     request_device  = { name = "Civil Protection call box", model = "models/props_lab/reciever01b.mdl", sell = 6,
-                        desc = "A little handset that calls Civil Protection to where you are and tells them what's wrong: Call for help, beside it in your pockets (F2), or C > Getting by > Request Civil Protection" },
+                        desc = "A little handset that calls Civil Protection to where you are and tells them what's wrong: Call for help, beside it in your pockets (F3), or C > Getting by > Request Civil Protection" },
     ------------------------------------------------------------------------
     -- Carrying and keeping things (sv_livingcity_storage.lua)
     --   bag      extra kilograms and large things you can carry while you have it
@@ -460,7 +460,7 @@ do
 end
 
 ------------------------------------------------------------------------
--- Making things by hand (F2): just these, anywhere. Everything else (guns,
+-- Making things by hand (F3): just these, anywhere. Everything else (guns,
 -- ammunition, armour, jammers, bypass charges, smoke bombs, a radio tuned to
 -- Freq 7) is the Resistance lab's (LCS.Lab, below) or the black market's.
 --   private   out of any unit's sight (a tunnel or back room will do)

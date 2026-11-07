@@ -1,5 +1,5 @@
 --[[
-    Living City quests (client): the job board (F3 / !jobs), the dialogue
+    Living City quests (client): the job board (F4 > Jobs / !jobs), the dialogue
     window for choices, and the tracker with an objective marker.
 ]]
 
@@ -23,7 +23,6 @@ local SKILL_COLORS = {
 }
 
 local state = { active = false }
-local board
 
 ------------------------------------------------------------------------
 -- Board
@@ -33,29 +32,23 @@ local function Trait(name, v)
     return string.format("%s %d", name, v or 0)
 end
 
-net.Receive("lcq_board", function()
-    local data = ReadCompressed()
-    if not data then return end
-    if IsValid(board) then board:Remove() end
+-- The board, built into F4's Jobs tab (cl_livingcity_hub.lua). Its buttons shut the window, as the board's did.
+local function Close() if LC_CL.CloseHub then LC_CL.CloseHub() end end
 
-    board = vgui.Create("DFrame")
-    board:SetTitle("")
-    board:SetSize(math.min(ScrW() - 60, 760), math.min(ScrH() - 60, 640))
-    board:Center()
-    board:MakePopup()
-    board.Paint = function(self, w, h)
-        draw.RoundedBox(4, 0, 0, w, h, PANEL)
-        draw.SimpleText(string.upper(data.board), "DermaLarge", 18, 14, ACCENT)
+local function BuildBoard(parent, data)
+    local head = vgui.Create("DPanel", parent)
+    head:Dock(TOP)
+    head:SetTall(40)
+    head.Paint = function(self, w, h)
+        draw.SimpleText(string.upper(data.board or ""), "DermaLarge", 12, 4, ACCENT)
         local t = data.traits or {}
         draw.SimpleText(Trait("Loyalty", t.loyalty) .. "     " .. Trait("Sympathy", t.sympathy) .. "     " .. Trait("Corruption", t.corruption),
-            "DermaDefault", w - 40, 24, DIM, TEXT_ALIGN_RIGHT)
+            "DermaDefault", w - 12, 14, DIM, TEXT_ALIGN_RIGHT)
     end
 
-    local scroll = vgui.Create("DScrollPanel", board)
+    local scroll = vgui.Create("DScrollPanel", parent)
     scroll:Dock(FILL)
-    scroll:DockMargin(6, 26, 6, 6)
-
-    if LC_CL.CareerButton then LC_CL.CareerButton(scroll, board) end -- (your career, at the top of the board: the owner, 7 November)
+    scroll:DockMargin(4, 0, 4, 4)
 
     if data.jobs then
         local card = vgui.Create("DPanel", scroll)
@@ -81,7 +74,7 @@ net.Receive("lcq_board", function()
             way:SetTooltip("Jobs are given out and changed at a Labor Assignment terminal, in person.")
             way.DoClick = function()
                 if LC_CL.SendAction then LC_CL.SendAction("waypoint", "labor") end
-                board:Close()
+                Close()
             end
         end
         local combo = (not desk) and vgui.Create("DComboBox", card)
@@ -107,7 +100,7 @@ net.Receive("lcq_board", function()
                 net.Start("lcj_set")
                 net.WriteString(id)
                 net.SendToServer()
-                board:Close()
+                Close()
             end
         end
     end
@@ -179,7 +172,7 @@ net.Receive("lcq_board", function()
             b.DoClick = function()
                 net.Start("lcq_abandon")
                 net.SendToServer()
-                board:Close()
+                Close()
             end
         elseif p.story then
             b:SetText("Begin")
@@ -196,13 +189,20 @@ net.Receive("lcq_board", function()
                 net.Start("lcq_accept")
                 net.WriteUInt(p.id, 32)
                 net.SendToServer()
-                board:Close()
+                Close()
             end
         end
 
         card:InvalidateLayout(true)
         card:SizeToChildren(false, true)
     end
+end
+
+net.Receive("lcq_board", function()
+    local data = ReadCompressed()
+    if not data then return end
+    data.postings = data.postings or {}
+    if LC_CL.HubFill then LC_CL.HubFill("jobs", function(p) BuildBoard(p, data) end) end
 end)
 
 ------------------------------------------------------------------------

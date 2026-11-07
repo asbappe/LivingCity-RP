@@ -18,13 +18,16 @@ local function ReadCompressed()
     return json and util.JSONToTable(json) or nil
 end
 
-local OPEN = { f2 = "gm_showteam", f3 = "gm_showspare1", f4 = "gm_showspare2" }
+-- where a way is done: your pockets (F3), or a tab of F4 (cl_livingcity_hub.lua)
+local OPEN = { pockets = "gm_showspare1" }
+local TAB = { jobs = true, factions = true, career = true }
 
 local function Go(w)
     if IsValid(frame) then frame:Remove() end
     if w.way and w.way ~= "" and LC_CL.SendAction then LC_CL.SendAction("waypoint", w.way) end
     if w.open == "characters" and LC_CL.SendAction then LC_CL.SendAction("characters")
-    elseif w.open and OPEN[w.open] then RunConsoleCommand(OPEN[w.open]) end
+    elseif w.open and OPEN[w.open] then RunConsoleCommand(OPEN[w.open])
+    elseif w.open and TAB[w.open] then if LC_CL.OpenHub then LC_CL.OpenHub(w.open) else RunConsoleCommand("gm_showspare2") end end
 end
 
 function LC_CL.OpenWays(list)

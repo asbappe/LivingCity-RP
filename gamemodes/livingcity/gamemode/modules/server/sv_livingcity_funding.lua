@@ -2,7 +2,7 @@
     Living City: the Resistance's money (besides raiding supply drops)
 
       Intel         a Resistance member watches the Combine and writes it down
-                    (F1 > Resistance > Write down what you see, or !scout; a
+                    (F2 > Resistance > Write down what you see, or !scout; a
                     sheet of paper from your pockets): fifteen seconds where no
                     unit sees you doing it, near a checkpoint, the Combine's own
                     ground, or a unit on his beat. The notes are a report in

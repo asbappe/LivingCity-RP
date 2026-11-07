@@ -194,7 +194,7 @@ function LC.Scavenge(ply, key, pos, kind)
     -- a fridge at home is yours: your stash, like the stove (not a rummage through someone else's)
     if fridge and LC.PlayerInOwnBlock and LC.PlayerInOwnBlock(ply) and not LC.PlayerIsCP(ply) then
         if LC.OpenStashAt then LC.OpenStashAt(ply, pos) elseif LC.SendInv then LC.SendInv(ply, true) end
-        ply:ChatPrint("[Home] Your fridge: your stash is open (F2) while you stand by it.")
+        ply:ChatPrint("[Home] Your fridge: your stash is open (F3) while you stand by it.")
         return true
     end
     if LC.PlayerIsCP(ply) then return false, fridge and "Civil Protection units don't rummage through people's fridges." or "Civil Protection units don't go through bins." end

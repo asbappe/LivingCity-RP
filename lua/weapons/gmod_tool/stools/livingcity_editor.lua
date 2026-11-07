@@ -736,7 +736,7 @@ function TOOL.BuildCPanel(panel)
     Slider("Minutes to register before it's a crime", "lc_intake_grace", 1, 60, 0)
 
     Header("Labor Assignment")
-    panel:Help("Place \"Fixture: Labor Assignment\" and Union work is given out and changed only there, in person: a new citizen goes there after Civil Intake, before Housing Allocation, and stays on the job for a stint. Without one, the Union assigns work and the board (F3) changes it, as before.")
+    panel:Help("Place \"Fixture: Labor Assignment\" and Union work is given out and changed only there, in person: a new citizen goes there after Civil Intake, before Housing Allocation, and stays on the job for a stint. Without one, the Union assigns work and the board (F4) changes it, as before.")
     Slider("Minutes on an assignment before it can change", "lc_labor_min_minutes", 0, 240, 0)
     Slider("Or this many shifts, whichever comes first", "lc_labor_min_shifts", 0, 20, 0)
     Slider("Civil Standing for Infestation Cleanup", "lc_labor_cleanup_standing", 0, 200, 0)

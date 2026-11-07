@@ -17,7 +17,7 @@
          arrest; an NPC runs flat out, the whole way, to somewhere well away
          from the officer, and the nearest free unit goes after them.
       3. Held: cuffed where they stand. The officer can walk them to the
-         cells himself (F1 > Walk them to the cells, or Drag them along for a
+         cells himself (F2 > Walk them to the cells, or Drag them along for a
          player), or leave it: the nearest free unit walks over and walks
          them in, the way a unit walks in anyone it arrests
          (sv_livingcity_march.lua). Nobody free to come for lc_arrest_wait
@@ -435,13 +435,13 @@ local function CustodyTick(npc, c, now)
         end
     elseif IsValid(o) and o:IsPlayer() and o:Alive() and c.declined ~= o and o:GetPos():DistToSqr(npc:GetPos()) < LET_GO * LET_GO then
         LC.NPCCustodyLead(npc, o)
-        Notice(o, "info", "Your prisoner", "No unit is free to take them: they follow you. Walk them to the cells. (F1 > Walk them to the cells / let go, to leave them for a unit.)")
+        Notice(o, "info", "Your prisoner", "No unit is free to take them: they follow you. Walk them to the cells. (F2 > Walk them to the cells / let go, to leave them for a unit.)")
     elseif now - (c.aloneSince or now) > cvWait:GetFloat() then
         Jail(npc, c)
     end
 end
 
--- F1 > Walk them to the cells / let go (the same as Drag them along, on a cuffed NPC).
+-- F2 > Walk them to the cells / let go (the same as Drag them along, on a cuffed NPC).
 -- nil when it isn't about a cuffed NPC.
 function LC.NPCCustodyDrag(ply)
     for npc, c in pairs(LC.NPCCustody) do
@@ -459,7 +459,7 @@ function LC.NPCCustodyDrag(ply)
     if e:GetPos():DistToSqr(ply:GetPos()) > 160 * 160 then return false, "Get closer." end
     LC.NPCCustodyLead(e, ply)
     LC.NPCCustody[e].declined = nil
-    Tell(ply, "You take them by the arm. Walk them to the cells: at the cell, they're locked in. (F1 > Walk them to the cells / let go again, to leave them for a unit.)")
+    Tell(ply, "You take them by the arm. Walk them to the cells: at the cell, they're locked in. (F2 > Walk them to the cells / let go again, to leave them for a unit.)")
     return true
 end
 
@@ -604,7 +604,7 @@ local function Resolve(target, s, why)
         else
             local ok, err = LC.ArrestNPC(target, officer)
             if ok then
-                Tell(officer, "Cuffed. A unit is called to walk them to the cells, or walk them in yourself (F1 > Walk them to the cells).")
+                Tell(officer, "Cuffed. A unit is called to walk them to the cells, or walk them in yourself (F2 > Walk them to the cells).")
             else
                 Tell(officer, "Couldn't arrest: " .. tostring(err))
             end
@@ -733,7 +733,7 @@ function LC.BatonArrest(officer, ent)
     end
     local done, err = LC.ArrestNPC(ent, officer)
     if not done then return false, "Couldn't arrest: " .. tostring(err) end
-    return true, "Cuffed. A unit is called to walk them to the cells, or walk them in yourself (F1 > Walk them to the cells)."
+    return true, "Cuffed. A unit is called to walk them to the cells, or walk them in yourself (F2 > Walk them to the cells)."
 end
 
 ------------------------------------------------------------------------

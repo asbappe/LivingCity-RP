@@ -17,6 +17,7 @@ include("shared.lua")
 LC_LoadModules("server")
 
 util.AddNetworkString("lcg_help")
+util.AddNetworkString("lcg_quick2")
 
 local function Builder(ply) return GAMEMODE:LCBuilder(ply) end
 
@@ -108,6 +109,13 @@ function GM:ShowHelp(ply)
     net.Send(ply)
 end
 
+-- F2: the second quick menu, for your side, rank and job (cl_livingcity_quick.lua). (The owner,
+-- 7 November: F1 general, F2 the same but for your class, rank and faction; pockets moved to F3.)
+function GM:ShowTeam(ply)
+    net.Start("lcg_quick2")
+    net.Send(ply)
+end
+
 ------------------------------------------------------------------------
 -- Build mode
 ------------------------------------------------------------------------
@@ -163,7 +171,7 @@ end)
 hook.Add("PlayerInitialSpawn", "LivingCityGamemode", function(ply)
     timer.Simple(6, function()
         if not IsValid(ply) then return end
-        ply:ChatPrint("[Living City] Welcome to the city. F1: what you can do (and the guide). F2 pockets, F3 your board, F4 factions.")
+        ply:ChatPrint("[Living City] Welcome to the city. F1: what you can do (and the guide). F2: what your side and job can do. F3 pockets, F4 your jobs, career and factions.")
         if ply:IsAdmin() then
             ply:ChatPrint("[Living City] You're an admin: !build switches to build mode for the editor, physgun and noclip.")
         end

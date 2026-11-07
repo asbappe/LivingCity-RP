@@ -2,7 +2,7 @@
     Living City (client): the actions menu (the full menu)
 
     C (the context menu key; in build mode it's still the build menu), or 9
-    on the quick menu (F1, cl_livingcity_quick.lua).
+    on the quick menus (F1 and F2, cl_livingcity_quick.lua).
     Everything you can do, for who you are and what you're looking at, so no
     chat command ever has to be remembered: every one of them is in here
     somewhere (the client smoke test checks), and chat commands still work as
@@ -106,12 +106,14 @@ function LC_CL.OpenActions()
     -- a shackled vortigaunt: calling the Resistance through the vortessence (sv_livingcity_vortwork.lua)
     if f == "vort" then Add(menu, "Reach out through the vortessence (call the Resistance to free you)", function() Send("vortcall") end, "icon16/transmit.png") end
     Add(menu, "Guide / manual", function() if LC_OpenGuide then LC_OpenGuide(me:IsAdmin()) else RunConsoleCommand("lc_help") end end, "icon16/book_open.png")
-    Add(menu, "My pockets (F2)", function() RunConsoleCommand("gm_showteam") end, "icon16/briefcase.png")
-    Add(menu, "My board: jobs and stories (F3)", function() RunConsoleCommand("gm_showspare1") end, "icon16/page_white_text.png")
-    Add(menu, "Factions (F4)", function() RunConsoleCommand("gm_showspare2") end, "icon16/group.png")
+    Add(menu, "My pockets (F3)", function() RunConsoleCommand("gm_showspare1") end, "icon16/briefcase.png")
+    -- F4: one window, Jobs, Career and Factions (cl_livingcity_hub.lua)
+    local function Hub(tab) if LC_CL.OpenHub then LC_CL.OpenHub(tab) else RunConsoleCommand("gm_showspare2") end end
+    Add(menu, "My board: jobs and stories (F4)", function() Hub("jobs") end, "icon16/page_white_text.png")
+    Add(menu, "Factions (F4 > Factions)", function() Hub("factions") end, "icon16/group.png")
     -- (the owner, 7 November: "as a metrocop, I have no idea what I'm working towards") cl_livingcity_career.lua
     if f ~= "" and LC_CL.AskCareer then
-        Add(menu, unit and "My career: rank, XP and the way to the Overwatch" or "My career: rank, XP and the way up", function() LC_CL.AskCareer("") end, "icon16/chart_bar.png")
+        Add(menu, unit and "My career: rank, XP and the way to the Overwatch (F4 > Career)" or "My career: rank, XP and the way up (F4 > Career)", function() Hub("career") end, "icon16/chart_bar.png")
     end
     Add(menu, "Tips I've seen (read them again)", function() net.Start("lc_hints_list") net.SendToServer() end, "icon16/lightbulb.png")
     menu:AddSpacer()
@@ -458,12 +460,12 @@ concommand.Add("lc_actions", function() LC_CL.OpenActions() end)
 function LC_CL.ActionsOpen() return IsValid(menu) end
 
 -- F1: the quick menu (cl_livingcity_quick.lua), whose 9 is this one. F1 again
--- closes whichever is open, or the guide if that's what's open.
+-- closes whichever is open, or the guide if that's what's open. With F2's menu up, F1 swaps to its own.
 local f1Was = false
 hook.Add("Think", "LivingCityActionsKey", function()
     local down = input.IsKeyDown(KEY_F1)
     if down and not f1Was and not gui.IsGameUIVisible() and not vgui.GetKeyboardFocus() then
-        if LC_CL.QuickOpen and LC_CL.QuickOpen() then LC_CL.CloseQuick()
+        if LC_CL.QuickOpen and LC_CL.QuickOpen("general") then LC_CL.CloseQuick()
         elseif IsValid(menu) then menu:Remove() menu = nil
         elseif LC_GuideOpen and LC_GuideOpen() then LC_CloseGuide()
         elseif LC_CL.OpenQuick then LC_CL.OpenQuick()

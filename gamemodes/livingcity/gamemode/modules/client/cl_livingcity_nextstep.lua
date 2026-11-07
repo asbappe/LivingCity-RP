@@ -64,7 +64,7 @@ function LC_CL.RankCard(me, x, y, w)
     local job = me:GetNW2String("lcj_job", "")
     -- (only the Resistance hold Union jobs among the factions with a card: a unit's is never shown, even for the moment before it's taken)
     if job ~= "" and fid == "resistance" and LCJ and LCJ.ById and LCJ.ById[job] then lines[#lines + 1] = "Union job: " .. LCJ.ById[job].name end
-    lines[#lines + 1] = "Jobs, orders and your story: F3"
+    lines[#lines + 1] = "Jobs, orders and your story: F4"
     local wanted = me:GetNW2Float("lc_wanted_until", 0) > CurTime()
     local h = 26 + #lines * 15
     draw.RoundedBox(4, x, y, w, h, BG)

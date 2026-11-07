@@ -2,7 +2,7 @@
     Living City: occupations
 
     Citizens (and Resistance members who still pass for citizens, or who wear
-    citizen clothes) take a Union job from their board (F3). Each job hands them a steady stream of shifts,
+    citizen clothes) take a Union job from their board (F4). Each job hands them a steady stream of shifts,
     one at a time, as a personal posting called "Union shift". Shifts happen at
     workplaces marked with the editor ("Point: workplace", number = job number
     in sh_livingcity_jobs.lua), or on the streets around you if there are none.
@@ -108,14 +108,14 @@ function LC.SetJob(ply, id, force, viaDesk)
     LC.SaveStory(ply)
     if ply.lcStoryPostings then ply.lcStoryPostings.shift = nil end
     GiveTools(ply)
-    if job then ply:ChatPrint("[Union] Your job is now: " .. job.name .. ". Open your board (F3) to find your shifts.") end
+    if job then ply:ChatPrint("[Union] Your job is now: " .. job.name .. ". Open your board (F4) to find your shifts.") end
     hook.Run("LivingCityJobChanged", ply, id)
     return true
 end
 
 -- Everyone works (the owner: "everyone should be forced to work a job and the only ones who
 -- don't are the rebels"). A registered citizen with no job is given one by the Union, the
--- post with fewest hands; they can ask for another (F3 > Jobs). The Resistance aren't
+-- post with fewest hands; they can ask for another (F4 > Jobs). The Resistance aren't
 -- assigned (one can still take a job, passing as a citizen).
 local cvAssign = CreateConVar("lc_assign_work", "1", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Every registered citizen without a job is assigned Union work (rebels aren't)")
 function LC.GiveUnionWork(ply)
@@ -140,7 +140,7 @@ function LC.GiveUnionWork(ply)
     ply.lcjNext = 0 -- (they can ask for another straight away)
     if LC.Notice then
         LC.Notice(ply, "event", "Union work assignment", "The Union has given you a job: " .. best.name .. ". Go to the " .. string.lower(best.place)
-            .. " to work. Your shifts are on your board (F3), and you can ask for a different job there.", 12)
+            .. " to work. Your shifts are on your board (F4), and you can ask for a different job there.", 12)
     end
     return true
 end
@@ -230,7 +230,7 @@ timer.Create("LivingCityClosedJobs", 10, 0, function()
             if s and s.chains then s.chains.shift = nil if LC.SaveStory then LC.SaveStory(ply) end end
             if ply.lcStoryPostings then ply.lcStoryPostings.shift = nil end
             ply:ChatPrint("[Union] Your job (" .. job.name .. ") has been closed, so you don't have one now. "
-                .. ((LC.LaborDesk and LC.LaborDesk()) and "Go to a Labor Assignment terminal for a new one." or "Pick a new job on your board (F3)."))
+                .. ((LC.LaborDesk and LC.LaborDesk()) and "Go to a Labor Assignment terminal for a new one." or "Pick a new job on your board (F4)."))
             if LC.SendBoard then LC.SendBoard(ply) end
         end
     end

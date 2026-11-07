@@ -1,4 +1,4 @@
-# Jobs and quests (F3), and story chains
+# Jobs and quests (F4), and story chains
 
 **Finding the objective.** The tracker on the right shows a compass for whatever you're after: a pointer relative to where you're facing, the distance in meters, a heading (ahead, behind left, ...) and whether it's on your level, a floor or more **UP**, or **DOWN**. It works even when the target is far enough away that the game isn't drawing it. Quests never send you to the infestation or onto Combine ground. Deliveries are made to **people**: the mail comes from the postal clerk and goes to named residents, Mrs. Kleiner hands you her parcel herself, luggage goes back to its owner, uniforms go to the unit at the checkpoint. Ration crates come from the truck driver and go to the dispenser attendant, and the Resistance's supply runs, the weapons ring and the proof-of-nerve parcel are handed over by and to contacts. Each person waits at a marked spot; walk up and press E.
 

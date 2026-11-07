@@ -9,7 +9,7 @@ This file is only an index. The specification of how everything behaves (the agr
 - [Install and first run, and what is left of Sandbox](docs/features/install.md): Unzip, pick the gamemode, first steps, build mode; the gamemode versus Sandbox
 - [Permanent death, and a slower pace](docs/features/permanent-death.md): Close calls, careers for life, what passes on, movement, the view, choosing who you are
 - [Civil Intake: arriving with nothing](docs/features/civil-intake.md): Intake desk, Housing Allocation, papers, sleeping in beds, rations and ration cards, registration
-- [What now, the quick menu (F1) and the full menu (C)](docs/features/menus-and-what-now.md): What now? steps, ways to get by, F1 and C menus, on-screen notices
+- [What now, the quick menus (F1, F2), F4 and the full menu (C)](docs/features/menus-and-what-now.md): What now? steps, ways to get by, the F1 and F2 quick menus, F4 (jobs, career, factions), the C menu, on-screen notices
 - [Building a map with the editor](docs/features/editor.md): Build mode, the editor tool, saving, backups, moving to a server
 - [The editor: placing things, path mapping](docs/features/editor-placing.md): The editor's panel, every fixture and zone, path mapping, doors
 - [Custom announcements (Overwatch and the Administrator)](docs/features/custom-announcements.md): Where recordings go, how files are named, triggers and tones
@@ -25,7 +25,7 @@ This file is only an index. The specification of how everything behaves (the agr
 - [Things to do as a vortigaunt, and what loyalty earns](docs/features/loyalty-and-vortigaunts.md): Vortigaunt jobs, loyalty rewards for citizens
 - [Weeds, the Groundskeeper and weedkiller](docs/features/infestation-cleanup.md): Infestation Cleanup, the hoover, weedkiller against growths and against the Combine
 - [Civil Protection's tools](docs/features/civil-protection-tools.md): The unit's quick menu, the Commissary, unit tools
-- [Jobs and quests (F3), and story chains](docs/features/jobs-and-quests.md): The job board, objectives, directives, story chains
+- [Jobs and quests (F4), and story chains](docs/features/jobs-and-quests.md): The job board, objectives, directives, story chains
 - [Union jobs, and escorts through Combine doors](docs/features/union-jobs.md): Everyone works, mini-game shifts, ration breaks, escorts
 - [Radios](docs/features/radios.md): The CP net, Freq 7, your own radio, the transmitter
 - [The city does its own work, and the city's stores](docs/features/city-work-and-stores.md): NPC repairs and errands, how they carry things, the stores

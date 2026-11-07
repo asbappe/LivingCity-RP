@@ -46,7 +46,7 @@ function LC_CL.LaborRows(t, Line, Head, Button, Way, Close)
     end
 
     Head(l.jobName and ("ASSIGNED: " .. string.upper(l.jobName)) or "NO WORK ASSIGNMENT")
-    if l.jobName and l.place then Line("Work at the " .. string.lower(l.place) .. ". Your shifts are on your board (F3).", DIM) end
+    if l.jobName and l.place then Line("Work at the " .. string.lower(l.place) .. ". Your shifts are on your board (F4).", DIM) end
     if l.locked then
         Line(string.format("You're tied to this assignment for %s more, or %s more, whichever comes first (so far: %s and %s).",
             Plural(l.minsLeft or 0, "minute", "minutes"), Plural(l.shiftsLeft or 0, "shift", "shifts"),

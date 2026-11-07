@@ -1,7 +1,7 @@
 --[[
     Living City: making things, grenades, the arms trade, and getting people out
 
-      Crafting      F2 lists what you can make by hand from what you're
+      Crafting      F3 lists what you can make by hand from what you're
                     carrying, anywhere: lockpicks and bandages. Everything
                     with more to it (guns, ammunition, armour, jammers, bypass
                     charges, smoke bombs, a radio tuned to Freq 7) the
@@ -21,7 +21,7 @@
                     weapon throws them (R picks which). Smoke hides you from
                     units and rebels; a flashbang blinds and deafens; gas
                     chokes anyone without a mask.
-      Passing it on !give, or F2 > Give, hands one of something to the person
+      Passing it on !give, or F3 > Give, hands one of something to the person
                     you're looking at. Slipping a prisoner a lockpick under a
                     guard's nose is a crime; unseen, they can pick their own
                     cell door (it takes a while).
@@ -365,7 +365,7 @@ function LC.ThrowGrenade(ply, id)
 end
 
 -- What the Grenades weapon shows: how many of each you're carrying.
--- (the owner, 1 November: a poison gas bomb bought at the Commissary was only throwable from F2. Everything
+-- (the owner, 1 November: a poison gas bomb bought at the Commissary was only throwable from F3. Everything
 -- you throw is on the Grenades weapon now: the poison gas bomb and the firebomb too)
 local KINDS = { { "gren_smoke", "smoke" }, { "smokebomb", "smoke" }, { "gren_flash", "flash" }, { "gren_gas", "gas" },
     { "gas_bomb", "poison" }, { "firebomb", "fire" } }
@@ -464,7 +464,7 @@ function LC.GiveTo(ply, id)
     LC.GiveItem(target, id)
     ply:ChatPrint("You hand over: " .. it.name .. ".")
     target:ChatPrint((ply:GetNW2String("lc_char", "") ~= "" and ply:GetNW2String("lc_char", "") or ply:Nick()) .. " slips you: " .. it.name .. "." ..
-        (prisoner and id == "lockpick" and " Pick your cell door with it (look at it, F2 > Use). Don't let a guard see." or ""))
+        (prisoner and id == "lockpick" and " Pick your cell door with it (look at it, F3 > Use). Don't let a guard see." or ""))
     hook.Run("LivingCityGave", ply, target, id)
     return true
 end

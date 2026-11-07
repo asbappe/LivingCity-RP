@@ -12,7 +12,7 @@
          registration form: a name, a face and a description, entered into
          the terminal, not handed out. It takes lc_intake_secs (8) to process
          you; stay at it. Then you're on the register, with a citizen number,
-         and your identity papers are in your pockets (F2).
+         and your identity papers are in your pockets (F3).
          The screen then points you to Housing Allocation.
          Registered, E shows your record, and replaces lost papers (10
          credits): lc_papers_fee.
@@ -29,7 +29,7 @@
          Allocation only houses citizens with work (sv_livingcity_labor.lua).
 
     Your papers: a unit who stops you asks for them, and carrying none costs
-    a little standing. Show them to someone from F2 (Use) or the quick menu.
+    a little standing. Show them to someone from F3 (Use) or the quick menu.
     The ration dispensers take a card for each ration (a forged one still works).
 
     Until you're registered: no rations (a forged ration card still works),
@@ -226,9 +226,9 @@ function LC.RegisterPerson(ply, how)
     local name = LC.CharacterName and LC.CharacterName(ply) or ply:Nick()
     local cid = ply:GetNW2String("lc_cid", "")
     if how == "custody" then
-        ply:ChatPrint(string.format("[Civil Intake] You were processed while in custody: %s, citizen %s. Your papers are in your pockets (F2). Ration cards come from work: each Union shift you finish earns one.", name, cid))
+        ply:ChatPrint(string.format("[Civil Intake] You were processed while in custody: %s, citizen %s. Your papers are in your pockets (F3). Ration cards come from work: each Union shift you finish earns one.", name, cid))
     else
-        ply:ChatPrint(string.format("[Civil Intake] Registration complete. %s, citizen %s. Your identity papers are in your pockets (F2): keep them on you. Ration cards come from work: each Union shift you finish earns one.", name, cid))
+        ply:ChatPrint(string.format("[Civil Intake] Registration complete. %s, citizen %s. Your identity papers are in your pockets (F3): keep them on you. Ration cards come from work: each Union shift you finish earns one.", name, cid))
     end
     local n = LC.PlayerBlock and LC.PlayerBlock(ply)
     -- a Labor Assignment terminal in this city: work first, then a room (sv_livingcity_labor.lua)
@@ -649,7 +649,7 @@ hook.Add("PlayerSpawn", "LivingCityIntake", function(ply)
         timer.Simple(1, function()
             if not IsValid(ply) or Documented(ply) or LC.IntakePending(ply) or not Papered(ply) then return end
             LC.IssueDocuments(ply)
-            ply:ChatPrint("[Papers] Your identity papers are in your pockets (F2). Keep them on you: Civil Protection units ask for them.")
+            ply:ChatPrint("[Papers] Your identity papers are in your pockets (F3). Keep them on you: Civil Protection units ask for them.")
         end)
     end
     -- a new arrival (or someone still not registered) steps off where arrivals do, in a city with the desks

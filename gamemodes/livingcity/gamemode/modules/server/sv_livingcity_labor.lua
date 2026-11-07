@@ -27,7 +27,7 @@
         a job they can't have yet is listed with the reason. A job picked here
         holds for the same stint. The Union's own wait between job changes
         (lc_job_cooldown, 900 seconds) still counts.
-      - Jobs are changed nowhere else: the board (F3) says "Go to a Labor
+      - Jobs are changed nowhere else: the board (F4) says "Go to a Labor
         Assignment terminal to change your assignment" and marks the nearest.
         Staff (lc_setjob) still can. Losing the job (a Civil Protection unit,
         an anticitizen) works as before, and ends the stint.
@@ -315,7 +315,7 @@ function LC.LaborFinish(ply, data)
     local mins, shifts = cvMinutes:GetInt(), cvShifts:GetInt()
     local tied = (mins > 0 and shifts > 0) and string.format(" You're tied to it for %s or %s, whichever comes first; then come back here if you want a change.",
         Plural(mins, "minute", "minutes"), Plural(shifts, "shift", "shifts")) or ""
-    ply:ChatPrint(title .. "Assignment approved: " .. pick.name .. ". Go to the " .. string.lower(pick.place) .. " to work; your shifts are on your board (F3)." .. tied)
+    ply:ChatPrint(title .. "Assignment approved: " .. pick.name .. ". Go to the " .. string.lower(pick.place) .. " to work; your shifts are on your board (F4)." .. tied)
     if LC.Notice then LC.Notice(ply, "event", "Work assignment", "Labor Assignment has given you a job: " .. pick.name .. "." .. tied, 12) end
     if LC.AwaitingHousing and LC.AwaitingHousing(ply) and LC.IntakeHasDesk and LC.IntakeHasDesk("housing") then
         ply:ChatPrint(title .. "Next, Housing Allocation gives you a room. It's marked on your screen.")
@@ -336,7 +336,7 @@ local function TellStaff(ply)
     if LC.IntakeOn and not LC.IntakeOn() then return end
     ply.lcLaborTold = true
     if LC.Notice then
-        LC.Notice(ply, "info", "Labor Assignment", "This map has no Labor Assignment terminal, so new citizens are given Union work automatically and change jobs on their board (F3)."
+        LC.Notice(ply, "info", "Labor Assignment", "This map has no Labor Assignment terminal, so new citizens are given Union work automatically and change jobs on their board (F4)."
             .. " To make them walk to one, place \"Fixture: Labor Assignment\" with the Living City Editor.", 14)
     end
 end

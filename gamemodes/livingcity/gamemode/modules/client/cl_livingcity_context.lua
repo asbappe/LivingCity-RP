@@ -20,7 +20,7 @@
               "faction": citizen, resistance, cp, vort, zombie, admin... (lcf_faction)
               "quest": the step's kind (hold, tail, escort, pickup, collect...), or "_any"
         text  keys in braces: {+use}, {+reload}, {+attack2}, {+duck}, {+walk},
-              {gm_showteam}, {+menu_context}, {kick} (a unit's kick), {quick} (F1)
+              {gm_showspare1}, {+menu_context}, {kick} (a unit's kick), {quick} (F1), {quick2} (F2)
         when  optional function(me, ctx) -> true when the line applies
       LC_CL.SetContextTitle(kind, key, title)
 
@@ -58,6 +58,7 @@ local NICE = { MOUSE1 = "Left click", MOUSE2 = "Right click", MOUSE3 = "Middle c
 function LC_CL.ContextKey(name)
     if name == "kick" then return LC_CL.KickKeyName and LC_CL.KickKeyName() or "G" end
     if name == "quick" then return LC_CL.QuickKeyName and LC_CL.QuickKeyName() or "F1" end
+    if name == "quick2" then return LC_CL.QuickRoleKeyName and LC_CL.QuickRoleKeyName() or "F2" end
     local k = input and input.LookupBinding and input.LookupBinding(name)
     k = k and string.upper(k) or DEFAULT_KEYS[name]
     if not k then return nil end
@@ -107,14 +108,14 @@ local DATA = {
             { "{+use} on a citizen: they stop and wait, so you can search them", Unit },
             "{+reload} on someone: search them (or let a prisoner go)",
             "{+attack2} on someone: arrest them and send them to a cell",
-            { "Cuff and drag: {quick} > Unit tools", Unit } },
+            { "Cuff and drag: {quick2} > Unit tools", Unit } },
         weapon_lc_hoover = { "Hoover",
             "Hold {+attack} on a dead growth: vacuum it up",
             "{+use} on an infestation control barrel: empty it",
             "{+attack2} with no barrel near: seal it in a bag" },
         weapon_lc_sprayer = { "Weedkiller sprayer",
             "Hold {+attack} on a weed or a glowing growth: spray it dead",
-            "Runs on the weedkiller in your pockets ({gm_showteam}): the job tops it up" },
+            "Runs on the weedkiller in your pockets ({gm_showspare1}): the job tops it up" },
         weapon_lc_radio = { "Radio transmitter",
             "While it's up, your chat and voice go out over the radio",
             "Only someone right beside you hears you directly",
@@ -152,12 +153,12 @@ local DATA = {
     zone = {
         rebel = { "Rebel territory",
             { "The black market is open ({+menu_context} > Getting by), and the bins have better finds", Fac("citizen") },
-            { "Make guns and ammunition here ({gm_showteam})", Fac("resistance") },
+            { "Make guns and ammunition here ({gm_showspare1})", Fac("resistance") },
             { "Fighters shout one warning, then open fire. Kills here win ground back", Unit } },
         infest = { "The infestation",
             { "Kills here push the infestation back", Unit } },
         home = { "Your block",
-            "Make things here ({gm_showteam})",
+            "Make things here ({gm_showspare1})",
             "Your stash: {+menu_context} > Getting by",
             "When a curfew starts, be here" },
         combine = { "Combine only",
@@ -168,9 +169,9 @@ local DATA = {
     faction = {
         cp = { "Civil Protection",
             "{kick}: kick (a door in, someone back)",
-            "{quick}: voice lines, unit tools, backup, BOLO, your 10-20" },
+            "{quick2}: voice lines, unit tools, backup, BOLO, your 10-20" },
         resistance = { "Resistance",
-            "{quick}: gear up, or plain clothes (units leave plain clothes alone)" },
+            "{quick2}: gear up, or plain clothes (units leave plain clothes alone)" },
         citizen = { "Citizen",
             "Stopped by a unit? {quick} > Put my hands up" },
     },

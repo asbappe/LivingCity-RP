@@ -145,7 +145,7 @@ local WANTED = {
     { "incinerator", "No incinerator: Morticians bag bodies at the morgue workplace, or have no collections." },
     { "sspawn", "No scanner launch spot: flown scanners go up in the open air near the console." },
     { "intake", "No Civil Intake (optional): new people are registered as they arrive, with a room handed to them." },
-    { "laborterm", "No Labor Assignment (optional): the Union assigns work by itself and the board (F3) changes jobs." },
+    { "laborterm", "No Labor Assignment (optional): the Union assigns work by itself and the board (F4) changes jobs." },
     { "cpsupply", "No Civil Protection Commissary: Civil Protection units are issued their supplies at the Union Commissary instead." },
     { "workbench", "No Resistance lab: the Resistance can only get guns, jammers and radios from the black market." },
 }

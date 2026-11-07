@@ -155,7 +155,7 @@ local PLACES = {
     labor = function(ply)
         local e = LC.NearestIntake and LC.NearestIntake(ply:GetPos(), "labor")
         if IsValid(e) then return e:GetPos(), "Labor Assignment" end
-        return nil, "This city has no Labor Assignment terminal: ask for work on your board (F3)."
+        return nil, "This city has no Labor Assignment terminal: ask for work on your board (F4)."
     end,
     home = function(ply)
         local n = LC.PlayerBlock and LC.PlayerBlock(ply)

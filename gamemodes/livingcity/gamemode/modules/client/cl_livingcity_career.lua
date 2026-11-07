@@ -1,5 +1,5 @@
 --[[
-    Living City (client): "My career", from the full menu (C)
+    Living City (client): "My career", F4's Career tab (cl_livingcity_hub.lua); C > My career opens it too
 
     Your rank, the XP to the next one, every rank of your faction and what it takes, and the
     way up in plain words (for Civil Protection, the way to the Overwatch). A button to ask
@@ -22,26 +22,6 @@ local function ReadCompressed()
     return json and util.JSONToTable(json) or nil
 end
 
-local frame
-
--- A "My career" button for the top of the job board (F3) and the faction menu (F4): the owner, 7 November,
--- "this needs to be visible in F3 or F4". close: the menu it sits in, shut when the page opens.
-function LC_CL.CareerButton(parent, close)
-    local f = IsValid(LocalPlayer()) and LocalPlayer():GetNW2String("lcf_faction", "") or ""
-    local unit = f == "cp" or f == "ota"
-    local b = vgui.Create("DButton", parent)
-    b:Dock(TOP)
-    b:SetTall(28)
-    b:DockMargin(4, 2, 4, 6)
-    b:SetText(unit and "My career: rank, XP to the next, and the way to the Overwatch" or "My career: rank, XP to the next, and the way up")
-    b:SetTooltip("Your rank, what the next one takes, and where your stories stand. (Also C > My career.)")
-    b.DoClick = function()
-        LC_CL.AskCareer("")
-        if IsValid(close) then close:Remove() end
-    end
-    return b
-end
-
 function LC_CL.AskCareer(what)
     net.Start("lc_career_ask")
     net.WriteString(what or "")
@@ -60,24 +40,20 @@ local function Label(parent, text, col, font)
     return l
 end
 
-function LC_CL.OpenCareer(t)
-    if IsValid(frame) then frame:Remove() end
-    if not t then return end
-    frame = vgui.Create("DFrame")
-    frame:SetTitle("")
-    frame:SetSize(math.min(ScrW() - 40, 620), math.min(ScrH() - 40, 600))
-    frame:Center()
-    frame:MakePopup()
+local function BuildCareer(page, t)
     local col = Color(80, 140, 255)
-    frame.Paint = function(self, w, h)
-        draw.RoundedBox(6, 0, 0, w, h, PANEL)
-        draw.SimpleText("MY CAREER" .. (t.faction and (": " .. string.upper(t.faction)) or ""), "LCCareerTitle", 16, 8, col)
+    local head = vgui.Create("DPanel", page)
+    head:Dock(TOP)
+    head:SetTall(34)
+    head.Paint = function(self, w, h)
+        draw.RoundedBox(4, 0, 0, w, h, PANEL)
+        draw.SimpleText("MY CAREER" .. (t.faction and (": " .. string.upper(t.faction)) or ""), "LCCareerTitle", 12, 4, col)
     end
-    local scroll = vgui.Create("DScrollPanel", frame)
+    local scroll = vgui.Create("DScrollPanel", page)
     scroll:Dock(FILL)
-    scroll:DockMargin(8, 28, 8, 8)
+    scroll:DockMargin(4, 4, 4, 4)
     if t.none then
-        Label(scroll, "Your side has no ranks to climb. Your board (F3) still has work for you.", DIM)
+        Label(scroll, "Your side has no ranks to climb. The Jobs tab still has work for you.", DIM)
         return
     end
     local ranks = t.ranks or {}
@@ -130,6 +106,12 @@ function LC_CL.OpenCareer(t)
         b:SetEnabled(t.canReassess == true)
         b.DoClick = function() LC_CL.AskCareer("reassess") end
     end
+end
+
+-- the server's answer (lc_career): into F4's Career tab, opening the window on it if it was shut
+function LC_CL.OpenCareer(t)
+    if not t or not LC_CL.HubFill then return end
+    LC_CL.HubFill("career", function(p) BuildCareer(p, t) end)
 end
 
 net.Receive("lc_career", function() LC_CL.OpenCareer(ReadCompressed()) end)

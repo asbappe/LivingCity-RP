@@ -19,6 +19,7 @@
 if CLIENT then return end
 
 util.AddNetworkString("lcf_menu")
+util.AddNetworkString("lc_hub")
 util.AddNetworkString("lcf_join")
 
 LC = LC or {}
@@ -399,7 +400,7 @@ function LC.CanJoinFaction(ply, fid, sid)
         local shifts = cvCPClerk:GetInt()
         local done = LC.Counter and LC.Counter(ply, "cp_shifts") or 0
         if shifts > 0 and done < shifts and ply:GetNW2String("lcf_faction", "") ~= "cp" then
-            return false, string.format("Civil Protection recruits from the train station's Intake Processors and the infestation cleanup crews: finish %d Intake Processor shifts first, or half as many in Infestation Cleanup (F3 > Jobs). You've done %d.", shifts, done)
+            return false, string.format("Civil Protection recruits from the train station's Intake Processors and the infestation cleanup crews: finish %d Intake Processor shifts first, or half as many in Infestation Cleanup (F4 > Jobs). You've done %d.", shifts, done)
         end
     end
     if f.requires then
@@ -493,13 +494,13 @@ local function SendMenu(ply)
         if f.id == "cp" and ply:GetNW2String("lcf_faction", "") ~= "cp" then
             entry.reqs = {
                 { label = "Civil Standing", have = LC.Standing and LC.Standing(ply) or 0, need = cvCPStanding:GetInt() },
-                { label = "Intake Processor shifts finished (F3 > Jobs; Infestation Cleanup counts double)", have = LC.Counter and LC.Counter(ply, "cp_shifts") or 0, need = cvCPClerk:GetInt() },
+                { label = "Intake Processor shifts finished (F4 > Jobs; Infestation Cleanup counts double)", have = LC.Counter and LC.Counter(ply, "cp_shifts") or 0, need = cvCPClerk:GetInt() },
             }
         end
         if f.id == "resistance" then
             local have, need = LC.ResistanceTrust(ply)
             if need > 0 and have < need then
-                entry.reqs = { { label = "Jobs done for the Resistance, to be trusted as a Fighter (their board, F3)", have = have, need = need } }
+                entry.reqs = { { label = "Jobs done for the Resistance, to be trusted as a Fighter (their board, F4)", have = have, need = need } }
             end
         end
         for _, s in ipairs(f.specials or {}) do
@@ -512,7 +513,17 @@ local function SendMenu(ply)
     LC.SendCompressed("lcf_menu", data, { ply })
 end
 
-hook.Add("ShowSpare2", "LivingCityFactions", function(ply) SendMenu(ply) end)
+-- F4: one window with tabs, Jobs, Career and Factions (cl_livingcity_hub.lua). (The owner, 7 November:
+-- "consolidate F3 and F4".) lc_hub opens it on the tab last looked at; then every tab's content.
+function LC.OpenHub(ply)
+    if not IsValid(ply) then return end
+    net.Start("lc_hub")
+    net.Send(ply)
+    if LC.SendBoard then LC.SendBoard(ply) end
+    SendMenu(ply)
+    if LC.SendCareer then LC.SendCareer(ply) end
+end
+hook.Add("ShowSpare2", "LivingCityFactions", function(ply) LC.OpenHub(ply) end)
 concommand.Add("lcf_menu", function(ply) if IsValid(ply) then SendMenu(ply) end end)
 hook.Add("PlayerSay", "LivingCityFactionsChat", function(ply, text)
     local t = string.lower(string.Trim(text))
