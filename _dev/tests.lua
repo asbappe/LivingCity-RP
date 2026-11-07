@@ -16377,6 +16377,23 @@ section("Sealed directives: how the endings start, and the G-Man's hand")
     _setcvar("lc_gman_dream_chance", 100)
     ok(LC.GmanDream(dreamer) == "riddle", "asleep, the G-Man recites a riddle")
     _setcvar("lc_gman_dream_chance", 30)
+    -- All your base, the city's own way: the master data core decoded at the Resistance's lab
+    S.coreDecodedAt = nil
+    local _, openB0 = LC.DirectiveHeat("base")
+    local carrier = newPlayer("CoreCarrier", "resistance")
+    local sciNear = LC.ScientistNear
+    LC.ScientistNear = function() return true end -- (at the lab, by the scientist)
+    LC.GiveItem(carrier, "data_chip", 1)
+    ok(LC.DecodeChip(carrier, "data_chip") and S.coreDecodedAt == nil, "an ordinary data chip decoded doesn't touch All your base")
+    LC.GiveItem(carrier, "master_chip", 1)
+    ok(LC.DecodeChip(carrier, "master_chip"), "(the master data core, decoded by the lab's scientist)")
+    local hB, openB, wayB = LC.DirectiveHeat("base")
+    ok(not openB0 and openB and wayB == "city" and hB == 1, "the master data core carried to the lab: All your base's seal breaks, the city's own way", tostring(openB0) .. " " .. tostring(wayB))
+    local _, openB2 = LC.DirectiveHeat("base", CurTime() + 31 * 60)
+    ok(not openB2, "for half an hour (then it's cold again)")
+    LC.ScientistNear = sciNear
+    S.coreDecodedAt = nil
+    carrier:SetPos(Vector(-30000, 30000, 0))
     LC.TriggerEnding = te
     S.offer, S.esc, S.deciderLeftAt = nil, nil, nil
     for _, p in ipairs(crowd) do p:SetPos(Vector(-30000, 30000, 0)) end
