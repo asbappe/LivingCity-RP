@@ -160,10 +160,8 @@ function LC_CL.OpenUnitTools()
         Note(s, "Your baton: left click strikes, right click arrests, reload searches.")
     end
 
-    if me:GetNW2String("lcf_special", "") == "scanner_op" then
-        s = Section("Scanner Operator")
-        Button(s, "Fly a scanner", "From a Combine console, a data terminal, or anywhere in the Nexus. Photographs earn XP; rebels go out as BOLOs.", Do("scanner"))
-    end
+    s = Section("Scanner")
+    Button(s, "Fly a scanner", "From a Combine console, a data terminal, or anywhere in the Nexus. Photographs earn XP; rebels go out as BOLOs.", Do("scanner"))
 
     if me:GetNW2String("lcf_special", "") == "ow_commander" then
         local left = me:GetNW2Float("lc_cmd_drop_at", 0) - CurTime()
@@ -171,9 +169,14 @@ function LC_CL.OpenUnitTools()
         Button(s, "Call in a squad", "A dropship lands an Overwatch squad at the landing zone nearest you. One every fifteen minutes.", Do("dropship"))
     end
 
-    s = Section("Checkpoints")
-    Button(s, "Deploy a turret here", "At a checkpoint: near a power bank or a forcefield.", Do("checkpoint", "turret"))
-    Button(s, "Put up a power bank", "Officers. On the wall you're facing; it powers turrets and forcefields near it.", Do("checkpoint", "bank"))
+    if LCF.IsOverwatch(me) or me:IsAdmin() then
+        s = Section("Checkpoints", "the Overwatch")
+        Button(s, "Deploy a turret here", "At a checkpoint: near a power bank or a forcefield.", Do("checkpoint", "turret"))
+        Button(s, "Put up a power bank", "On the wall you're facing; it powers turrets and forcefields near it.", Do("checkpoint", "bank"))
+    else
+        s = Section("Checkpoints")
+        Note(s, "Turrets and power banks are the Overwatch's to put up. Any unit can read a power bank (E), pack a turret up, or recharge a vest at a live bank.")
+    end
 
     local escorting = me:GetNW2Entity("lc_escorting")
     local reqs = LC_CL.EscortRequests and LC_CL.EscortRequests() or {}

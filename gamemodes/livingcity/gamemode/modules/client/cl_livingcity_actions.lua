@@ -316,8 +316,10 @@ function LC_CL.OpenActions()
         Add(cp, "Mask voice lines", function() Send("vo") end)
         Add(cp, "Issue a BOLO", function() Ask("BOLO", "What should Civil Protection units look out for?", "bolo") end)
         Add(cp, "Read the mail (at the post office)", function() Send("readmail") end, "icon16/email_open.png")
-        Add(cp, "Deploy a turret here (at a checkpoint: near a power bank or forcefield)", function() Send("checkpoint", "turret") end, "icon16/gun.png")
-        Add(cp, "Put up a power bank on this wall (officers)", function() Send("checkpoint", "bank") end, "icon16/lightning_add.png")
+        if LCF.IsOverwatch(me) or me:IsAdmin() then -- (the Overwatch's, the owner, 7 November)
+            Add(cp, "Deploy a turret here (at a checkpoint: near a power bank or forcefield)", function() Send("checkpoint", "turret") end, "icon16/gun.png")
+            Add(cp, "Put up a power bank on this wall", function() Send("checkpoint", "bank") end, "icon16/lightning_add.png")
+        end
         -- workers waiting for an escort, or left without one, or with an NPC unit a player can take over from
         local escorting = me:GetNW2Entity("lc_escorting")
         if IsValid(escorting) then

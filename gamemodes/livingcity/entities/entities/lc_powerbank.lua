@@ -57,7 +57,32 @@ if CLIENT then
 
     function ENT:Draw() self:DrawModel() end
 
+    -- Up close, it says what it is: to a unit, that E recharges the vest; to anyone else, that
+    -- touching it is a crime (the owner, 7 November).
+    local LABEL_RANGE = 110
+    local function Unit(me) return me:GetNW2Bool("lc_unit", false) or me:GetNW2String("lcf_faction", "") == "cp" or me:GetNW2String("lcf_faction", "") == "admin" end
+    function ENT:DrawLabel()
+        local me = LocalPlayer()
+        if not IsValid(me) or not me:Alive() then return end
+        local center = self:WorldSpaceCenter()
+        if center:DistToSqr(me:EyePos()) > LABEL_RANGE * LABEL_RANGE then return end
+        local live = self:Live()
+        local top = center + Vector(0, 0, (self:OBBMaxs().z - self:OBBMins().z) / 2 + 8)
+        local ang = me:EyeAngles()
+        ang:RotateAroundAxis(ang:Forward(), 90)
+        ang:RotateAroundAxis(ang:Right(), 90)
+        local title = "COMBINE POWER BANK: " .. (live and "LIVE" or "DEAD")
+        local line
+        if Unit(me) then line = live and "E: read it, and recharge your vest" or "No power: nothing charges here"
+        else line = live and "Tampering with it is a crime" or "Dead. Leave it be" end
+        cam.Start3D2D(top, Angle(0, ang.y, 90), 0.07)
+            draw.SimpleTextOutlined(title, "DermaLarge", 0, -22, live and Color(150, 215, 255) or Color(200, 200, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 200))
+            draw.SimpleTextOutlined(line, "DermaLarge", 0, 10, Unit(me) and Color(235, 235, 235) or Color(255, 170, 120), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 200))
+        cam.End3D2D()
+    end
+
     function ENT:DrawTranslucent()
+        self:DrawLabel()
         if self:GetNW2Float("lc_short_until", 0) > CurTime() then
             -- shorted: a spit of sparks now and then
             if math.random() < 0.15 then

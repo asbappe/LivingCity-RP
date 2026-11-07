@@ -398,8 +398,18 @@ local function Owned(ply)
     return n
 end
 
-function LC.DeployTurret(ply)
+-- Turrets and power banks are the Overwatch's to put up (the owner, 7 November: not recruits, and
+-- not the ordinary ranks either), or an admin's. Any unit reads a bank, packs a turret up.
+local function OverwatchOnly(ply)
     if not LC.PlayerIsCP(ply) then return false, "Civil Protection units only." end
+    if (LCF and LCF.IsOverwatch and LCF.IsOverwatch(ply)) or ply:IsAdmin() then return true end
+    return false, "The Overwatch puts those up. Civil Protection ranks read a power bank (E), pack a turret up, and recharge at a live bank."
+end
+LC.CanDeployCheckpoint = OverwatchOnly
+
+function LC.DeployTurret(ply)
+    local ok, why = OverwatchOnly(ply)
+    if not ok then return false, why end
     if (ply.lcTurretNext or 0) > CurTime() then return false, "Give it a moment." end
     if Owned(ply) >= cvPerUnit:GetInt() then
         return false, "You've got " .. cvPerUnit:GetInt() .. " turrets up already. Pack one up first (E on it)."
@@ -452,9 +462,8 @@ end
 
 -- Officers put up a power bank: on the wall they're looking at.
 function LC.DeployPowerBank(ply)
-    if not (LC.IsCPOfficer and LC.IsCPOfficer(ply)) then
-        return false, "Officers put up power banks (Division Leader and up). Any Civil Protection unit can deploy turrets at one."
-    end
+    local ok, why = OverwatchOnly(ply)
+    if not ok then return false, why end
     if IsValid(ply.lcBank) then return false, "You've one up already. Take it down first (the actions menu, looking at it)." end
     local tr = ply:GetEyeTrace()
     local n = tr.HitNormal
@@ -474,7 +483,7 @@ function LC.DeployPowerBank(ply)
     ply.lcBank = b
     if LC.RefreshPower then LC.RefreshPower() end
     LC.CheckpointTick(CurTime())
-    return true, "Power bank up. Turrets and forcefields near it run off it now."
+    return true, "Power bank up. Turrets and forcefields near it run off it now, and units recharge their vests at it."
 end
 
 function LC.PackPowerBank(ply, b)
@@ -487,17 +496,37 @@ function LC.PackPowerBank(ply, b)
     return true, "You take the power bank down."
 end
 
--- E on a bank: units read what it's powering. (The multitool's primary fire shorts it out.)
+-- E on a bank: a unit's vest charges off it (BANK_CHARGE a press, the owner, 7 November), and he reads
+-- what it's powering. Anyone else's vest charges too, but that's tampering with Combine property: a
+-- unit who sees it books you. (The multitool's primary fire shorts it out.)
+local BANK_CHARGE = 15
 function LC.UsePowerBank(ply, b)
     local turrets, fields = 0, 0
     for _, t in ipairs(Turrets()) do if LC.TurretSource(t) == b then turrets = turrets + 1 end end
     for _, f in ipairs(LC.EntsOf("lc_forcefield")) do if LC.BankLoads()[f] == b then fields = fields + 1 end end
     if b:GetNW2Float("lc_short_until", 0) > CurTime() then return false, "It spits sparks. Shorted out." end
-    if LC.PlayerIsCP(ply) then
-        return true, string.format("Power bank: %s. Feeding %d turret%s and %d forcefield%s (it can feed %d).", LC.PowerBankLive(b) and "live" or "DEAD (no power)",
-            turrets, turrets == 1 and "" or "s", fields, fields == 1 and "" or "s", cvLoads:GetInt())
+    local live = LC.PowerBankLive(b)
+    local charged = 0
+    if live and LC.ChargeVest and LC.HasVest and LC.HasVest(ply) and (ply.lcBankChargeNext or 0) <= CurTime() then
+        ply.lcBankChargeNext = CurTime() + 0.9
+        charged = LC.ChargeVest(ply, BANK_CHARGE)
+        if charged > 0 then ply:EmitSound("items/suitcharge1.wav", 60) end
     end
-    return false, LC.PowerBankLive(b) and "It hums. A Combine power bank." or "Dead. No power."
+    if LC.PlayerIsCP(ply) then
+        local vest = ""
+        if live then
+            vest = charged > 0 and string.format(" Vest charging: +%d, now %d. Hold E for more.", charged, ply:Armor())
+                or (LC.HasVest and LC.HasVest(ply) and ply:Armor() >= (LC.VestCap and LC.VestCap(ply) or 0)) and " Your vest is full." or ""
+        end
+        return true, string.format("Power bank: %s. Feeding %d turret%s and %d forcefield%s (it can feed %d).%s", live and "live" or "DEAD (no power)",
+            turrets, turrets == 1 and "" or "s", fields, fields == 1 and "" or "s", cvLoads:GetInt(), vest)
+    end
+    if not live then return false, "Dead. No power." end
+    if charged > 0 then
+        if LC.SeenBySecurity and LC.SeenBySecurity(ply, 900) and LC.ReportCrime then LC.ReportCrime(ply, "Tampering with a Combine power bank", 120) end
+        return true, string.format("You pull charge off it into your vest: +%d, now %d. Tampering with Combine property: a unit who sees it books you.", charged, ply:Armor())
+    end
+    return false, "It hums. A Combine power bank. Tampering with it is a crime" .. ((LC.HasVest and LC.HasVest(ply)) and " (your vest is full anyway)." or " (a powered vest would charge off it).")
 end
 
 -- A multitool: eight seconds, and it's dead for two minutes, with everything on its cables.

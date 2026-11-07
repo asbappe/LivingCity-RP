@@ -10,8 +10,15 @@
     one and press E to give yourself up, as with any other charge.
 
     Units, people in a convincing uniform, the infested, people in custody,
-    the wanted (already being chased), admins in build mode, rebel territory
-    and the curfew grace period (when you're told to hurry home) are exempt.
+    the wanted (already being chased), admins in build mode, rebel territory,
+    the infestation zone (nobody is told to walk there) and the curfew grace
+    period (when you're told to hurry home) are exempt.
+
+    Caught, the first and second time in an hour, you're not jailed (the
+    owner, 7 November): the unit cuffs you, gives you a few of the stick for
+    disobeying, then takes the cuffs off with a laugh and "All right, you can
+    go." No standing lost. The third time within the hour it's the cells, as
+    for any other charge.
 
       lc_running_cops     1 on, 0 off
       lc_run_range        how close a unit has to be to notice (500)
@@ -31,7 +38,7 @@ local cvReact  = CreateConVar("lc_run_react", "2", FLAGS, "Seconds to stop runni
 local cvMemory = CreateConVar("lc_run_memory", "30", FLAGS, "Seconds a metrocop remembers telling you to stop running")
 local cvWanted = CreateConVar("lc_run_wanted", "60", FLAGS, "Seconds wanted for running from Civil Protection")
 
-local SHOUTS = { "npc/metropolice/vo/holdit.wav", "npc/metropolice/vo/freeze.wav" }
+local SHOUTS = { "npc/metropolice/vo/holdit.wav", "npc/metropolice/vo/dontmove.wav" }
 local CHASE_LINES = { "npc/metropolice/vo/finalwarning.wav", "npc/metropolice/vo/holdit.wav" }
 
 LC.Runners = LC.Runners or {} -- [ply] = { warnedAt, by, ranFor }
@@ -86,6 +93,7 @@ local function ExemptWhy(ply)
     if LC.Stops and LC.Stops[ply] then return "being stopped" end -- walking off from a stop is handled there
     if ply:GetNW2String("lcf_faction", "") == "admin" or LCF.IsOverwatch(ply) then return "Overwatch or the Administrator" end
     if LC.InRebelZone and LC.InRebelZone(ply:GetPos()) then return "in rebel territory" end
+    if LC.InInfest and LC.InInfest(ply:GetPos()) then return "in the infestation zone" end -- (the owner, 7 November: you run for your life there)
     -- told to hurry home: running is what they want
     if (LC.Event == "curfew" or LC.Event == "lockdown") and (LC.EventGraceEnds or 0) > CurTime() then return "curfew grace period" end
     return nil
@@ -121,12 +129,32 @@ function LC.RunningStatus(ply)
         IsValid(cop) and ("Civil Protection unit watching at " .. math.floor(cop:GetPos():Distance(ply:GetPos()))) or ("no Civil Protection unit in sight within " .. cvRange:GetInt()))
 end
 
+-- Running offences in the last hour (the chases that started), newest kept.
+LC.RunOffences = LC.RunOffences or {} -- [ply] = { CurTime, ... }
+function LC.RunningOffences(ply)
+    local list, now, n = LC.RunOffences[ply], CurTime(), 0
+    if not list then return 0 end
+    for i = #list, 1, -1 do
+        if now - list[i] <= 3600 then n = n + 1 else table.remove(list, i) end
+    end
+    return n
+end
+local function CountOffence(ply)
+    local list = LC.RunOffences[ply] or {}
+    LC.RunOffences[ply] = list
+    list[#list + 1] = CurTime()
+    while #list > 6 do table.remove(list, 1) end
+    return LC.RunningOffences(ply)
+end
+
 local function Chase(ply, cop)
     Runners[ply] = nil
+    local n = CountOffence(ply)
     local pos = IsValid(cop) and cop:GetPos() or ply:GetPos()
     if IsValid(cop) then cop:EmitSound(LC.Pick(CHASE_LINES), 85) end
     LC.CopShout(ply, cop, "I said stop running!", 4)
     ply:ChatPrint("[Civil Protection] You ran from a Civil Protection unit. Units are after you. Press E on one to give yourself up.")
+    if n >= 3 then ply:ChatPrint("[Civil Protection] That's the third time this hour. This time it's the cells.") end
     LC.ReportCrime(ply, "Fleeing Civil Protection", cvWanted:GetFloat())
     LC.MakeCopsHostile(ply, pos, 1500)
 end
@@ -137,6 +165,78 @@ local function Warn(ply, cop, now)
     LC.Face(cop, ply:GetPos())
     cop:EmitSound(LC.Pick(SHOUTS), 85)
     LC.CopShout(ply, cop, "Stop running!", 3)
+end
+
+-- Caught for running, the first or second time in an hour: cuffed, a few of the stick, and let
+-- go with a laugh (sv_livingcity_prison.lua asks before anyone is locked up or detained).
+-- True when this took the place of an arrest.
+LC.RoughingUp = LC.RoughingUp or {} -- [ply] = true while it happens
+local BLOWS = 3
+function LC.RunningBeating(unit, ply, reason)
+    if not IsValid(ply) or not ply:IsPlayer() or not ply:Alive() then return false end
+    if tostring(reason or "") ~= "Fleeing Civil Protection" then return false end
+    if LC.RoughingUp[ply] or (LC.InCustody and LC.InCustody(ply)) then return false end
+    if LC.RunningOffences(ply) >= 3 then return false end -- (the third time this hour: the cells)
+    LC.RoughingUp[ply] = true
+    Runners[ply] = nil
+    if LC.ClearWanted then LC.ClearWanted(ply) end
+    if LC.CalmCops then LC.CalmCops(ply) end
+    local st = IsValid(unit) and LC.NPCs and LC.NPCs[unit]
+    if st and LC.SetState then
+        LC.SetState(unit, st, "event")
+        st.eventUntil = CurTime() + 10
+        if unit.SetSchedule and SCHED_IDLE_STAND then unit:SetSchedule(SCHED_IDLE_STAND) end
+        LC.Face(unit, ply:GetPos())
+        unit:EmitSound(LC.Pick(LC.Sounds and LC.Sounds.COP_ARREST or SHOUTS), 78)
+    end
+    if ply:InVehicle() then ply:ExitVehicle() end
+    local tied = LC.TiePlayer and LC.TiePlayer(ply, nil)
+    ply:Freeze(true)
+    ply:ChatPrint("[Civil Protection] Cuffed. The unit has a few words, and the stick, for someone who runs when told to stop.")
+    if LC.Notice then LC.Notice(ply, "warn", "Caught running", "You're cuffed for a moment. Run from a unit three times in an hour and it's the cells.", 6) end
+    local function Alive() return IsValid(ply) and ply:Alive() and LC.RoughingUp[ply] end
+    local function Done()
+        LC.RoughingUp[ply] = nil
+        if not IsValid(ply) then return end
+        ply:Freeze(false)
+        if tied and LC.IsTied and LC.IsTied(ply) then LC.Untie(ply, unit, true) end
+        ply.lcGraceUntil = CurTime() + 60
+        if ply:Alive() then
+            ply:ChatPrint("[Civil Protection] The cuffs come off. \"All right, you can go.\" A warning, this time: a third time in the hour is the cells.")
+        end
+        if IsValid(unit) then
+            unit:EmitSound("npc/metropolice/vo/allrightyoucango.wav", 78)
+            local ust = LC.NPCs and LC.NPCs[unit]
+            if ust and ust.state == "event" then ust.eventUntil = CurTime() + 1 end
+        end
+    end
+    for i = 1, BLOWS do
+        timer.Simple(1.2 + (i - 1) * 1.3, function()
+            if not Alive() then return end
+            if IsValid(unit) then
+                LC.Face(unit, ply:GetPos())
+                if unit.SetSchedule and SCHED_MELEE_ATTACK1 then unit:SetSchedule(SCHED_MELEE_ATTACK1) end
+                unit:EmitSound("weapons/stunstick/stunstick_impact" .. math.random(1, 2) .. ".wav", 75)
+            end
+            local d = DamageInfo and DamageInfo()
+            if d then
+                d:SetDamage(math.min(8, math.max(0, ply:Health() - 15))) -- (never past the point of dropping them)
+                d:SetDamageType(DMG_CLUB)
+                if IsValid(unit) then d:SetAttacker(unit) d:SetInflictor(unit) end
+                ply.lcSubdueHit = true
+                ply:TakeDamageInfo(d)
+                ply.lcSubdueHit = nil
+            end
+            ply:SetNW2Float("lc_dazed_until", CurTime() + 2)
+            if ply.ViewPunch then ply:ViewPunch(Angle(math.random(6, 10), math.random(-6, 6), 0)) end
+        end)
+    end
+    timer.Simple(1.2 + BLOWS * 1.3, function()
+        if not Alive() then return end
+        if IsValid(unit) then unit:EmitSound("npc/metropolice/vo/chuckle.wav", 78) end
+    end)
+    timer.Simple(2.4 + BLOWS * 1.3, function() if LC.RoughingUp[ply] then Done() end end)
+    return true
 end
 
 function LC.RunningTick(now, dt)
@@ -174,5 +274,8 @@ timer.Create("LivingCityRunning", 0.5, 0, function()
     if not ok and LC.Error then LC.Error("running", err) end
 end)
 
-hook.Add("PlayerDeath", "LivingCityRunning", function(ply) Runners[ply] = nil end)
-hook.Add("PlayerDisconnected", "LivingCityRunning", function(ply) Runners[ply] = nil end)
+hook.Add("PlayerDeath", "LivingCityRunning", function(ply)
+    Runners[ply] = nil
+    if LC.RoughingUp[ply] then LC.RoughingUp[ply] = nil ply:Freeze(false) end
+end)
+hook.Add("PlayerDisconnected", "LivingCityRunning", function(ply) Runners[ply] = nil LC.RoughingUp[ply] = nil LC.RunOffences[ply] = nil end)

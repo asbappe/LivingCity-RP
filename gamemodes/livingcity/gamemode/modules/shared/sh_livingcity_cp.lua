@@ -36,7 +36,8 @@ LCCP.Voice = {
     -- warnings and arrests
     { "holdit", "Hold it right there!", MP .. "holditrightthere.wav", "Warnings" },
     { "dontmove", "Don't move!", MP .. "dontmove.wav", "Warnings" },
-    { "freeze", "Freeze!", MP .. "freeze.wav", "Warnings" },
+    -- (the owner, 7 November: "Freeze!" played nothing; the mask's recording of it is "Don't move!")
+    { "freeze", "Freeze! Don't move!", MP .. "dontmove.wav", "Warnings" },
     { "getdown", "Get down!", MP .. "getdown.wav", "Warnings" },
     { "first", "First warning, move away.", MP .. "firstwarningmove.wav", "Warnings" },
     { "second", "This is your second warning!", MP .. "thisisyoursecondwarning.wav", "Warnings" },

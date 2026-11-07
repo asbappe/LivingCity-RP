@@ -1897,7 +1897,7 @@ local function ChooseSecurityTask(npc, st, now)
     if st.guardZone then
         if table.HasValue(LC.Zones or {}, st.guardZone) then
             if math.random() < 0.4 then st.untilT = now + math.Rand(8, 25) return end
-            local p = LC.SpotInZone(st.guardZone)
+            local p = (LC.GuardPostSpot and LC.GuardPostSpot(st.guardZone)) or LC.SpotInZone(st.guardZone)
             if p and GoTo(npc, st, p, run, nil) then return end
             st.untilT = now + 5
             return
@@ -2024,6 +2024,10 @@ function LC.CopProvoked(npc, st, ply, now)
     if LC.InCustody and LC.InCustody(ply) then return end -- (a prisoner they're walking in, or one they've cuffed, isn't crowding them)
     if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) then return end -- (Combine property in the way is just in the way)
     if LC.IsTied and LC.IsTied(ply) then return end
+    -- (the owner, 7 November) no "move back" in the infestation zone, and never to the one they're
+    -- escorting or who called them for backup
+    if LC.InInfest and LC.InInfest(ply:GetPos()) then return end
+    if st and (st.workEscort == ply or st.backupFor == ply) then return end
     local b = ply.lcBump
     if not b or now - b.last > 45 then
         b = { n = 0, last = 0 }
