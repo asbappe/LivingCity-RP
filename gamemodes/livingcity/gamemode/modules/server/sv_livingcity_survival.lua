@@ -1370,7 +1370,10 @@ function LC.UseDispenser(ply, ent)
         ply:ChatPrint(refused)
         return false
     end
-    local interval = cvRation:GetFloat() * (LC.Event == "rations" and 0.5 or 1) * (LC.RationIntervalMul and LC.RationIntervalMul() or 1) -- cuts during unrest
+    local base = cvRation:GetFloat()
+    -- a unit's allocation stays every 10 minutes (the owner, 7 November: only citizens feel the slower dispenser)
+    if LC.PlayerIsCP and LC.PlayerIsCP(ply) and LC.DUTY_ALLOCATION_SECONDS then base = math.min(base, LC.DUTY_ALLOCATION_SECONDS) end
+    local interval = base * (LC.Event == "rations" and 0.5 or 1) * (LC.RationIntervalMul and LC.RationIntervalMul() or 1) -- cuts during unrest
         * (LC.StockIntervalMul and LC.StockIntervalMul() or 1) -- and while the stores are low
     ply.lcnRationAt = CurTime() + interval
     if LC.StockTake then LC.StockTake(1) end

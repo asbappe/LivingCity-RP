@@ -4349,6 +4349,9 @@ LC.UseDispenser(dutyU, nil)
 ok(has(dutyU.chat, "Next allocation"), "it's the same allocation the dispenser gives, so not both")
 dutyU.lcnRationAt = 0
 ok(LC.UseDispenser(dutyU, nil), "but a unit can still take theirs from a dispenser")
+ok(dutyU.lcnRationAt - CurTime() <= 601, "and a unit's next allocation is still 10 minutes away, not the citizens' slower dispenser (the owner, 7 November)", tostring(dutyU.lcnRationAt - CurTime()))
+do dutyU.lcnRationAt = 0 LC.TakeItem(dutyU, "ration_voucher", 99) LC.IssueDutyAllocation(dutyU)
+ok(math.abs(dutyU.lcnRationAt - CurTime() - 600) < 1, "a unit's duty allocation comes every 10 minutes", tostring(dutyU.lcnRationAt - CurTime())) end
 local citD = newPlayer("DutyCitizen", "citizen")
 citD:SetPos(FAR)
 citD.lcnRationAt = 0

@@ -1010,13 +1010,15 @@ concommand.Add("lc_handsup", function(ply) if IsValid(ply) then LC.SetHandsUp(pl
 
 local cvCoupons = CreateConVar("lc_cp_coupons", "8", FLAGS, "Credits in ration coupons a Civil Protection unit is issued each allocation (plus one per rank)")
 
+LC.DUTY_ALLOCATION_SECONDS = 600
+
 function LC.IssueDutyAllocation(ply)
     if not On() or not RealUnit(ply) or not ply:Alive() then return false end
     if LC.InCustody and LC.InCustody(ply) then return false end
     local now = CurTime()
     if now < (ply.lcnRationAt or 0) then return false end
-    local rv = GetConVar("lc_ration_interval")
-    ply.lcnRationAt = now + (rv and rv:GetFloat() or 1500)
+    -- every 10 minutes, as before the dispenser was slowed (the owner, 7 November: only citizens feel the scarcity)
+    ply.lcnRationAt = now + LC.DUTY_ALLOCATION_SECONDS
     local credits = math.max(0, cvCoupons:GetInt()) + math.max(0, Rank(ply) - 1)
     local eats = not LCF.IsOverwatch(ply) -- (the Overwatch are fed through the suit)
     local got = {}
