@@ -39,6 +39,8 @@ This is the master technical document. It lists what the owner's server, files, 
 | The city's named people (citizens and cops, who they are) | `data/livingcity/<map>_people.json` | sv_livingcity_people.lua |
 | Charges waiting for raided players who were offline | `data/livingcity/pending_raid.json` | sv_livingcity_raids.lua |
 | Each player's record (character, credits, standing, XP, faction) | PData: the server's `garrysmod/sv.db`, table `playerpdata` | |
+| Dream snapshots (everything about a dreamer, until it's all put back) | `data/livingcity/dreams/<steamid64>.json` | sv_livingcity_dreams.lua |
+| The Administrator's Commissary rules and the market's stock and demand | `data/livingcity/<map>_market.json` | sv_livingcity_market.lua |
 | Pose Recorder recordings | the player's `data/pose_recorder/<name>.json` | pose_recorder/ |
 
 Every recording and song is sent to players with `resource.AddFile` when the map starts.
@@ -55,9 +57,10 @@ Every recording and song is sent to players with `resource.AddFile` when the map
 
 Things players and the owner rely on that were settled in conversation:
 
+- **The keys (approved 7 November):** F1 the quick menu (what everyone can do), F2 the same for your side, rank and job, F3 your pockets, F4 Jobs, Career and Factions as tabs.
 - **Everything works through the in-game UI.** Console commands are extras for admins, never the only way. Important messages go through `LC.Notice`.
 - **Switching faction from the F4 menu keeps you where you stand** (a new character, another of your characters, or an admin setting your faction starts you at a spawn point).
-- **Secret endings:** the G-Man stops time, everyone votes (no votes is a yes), nobody can be hurt, the city's events and announcer are quiet, and the map reloads afterwards; one per `lc_ending_cooldown` minutes. Each ending's timing comes from its song (`lc_ending_<id>_sections`).
+- **Secret endings:** the G-Man stops time, everyone votes (no votes is a yes), nobody can be hurt, the city's events and announcer are quiet, and the map reloads afterwards; one per `lc_ending_cooldown` minutes. (Approved 7 November: with a "Point: dream" placed, the Administrator can choose a dream for tonight from the tablet, played for sleepers only at the dream point, with no reload and everything put back on waking; the G-Man's sealed directives, sleep visits and talks are off by default, `lc_directives` 0, kept for a future endings setup.) Each ending's timing comes from its song (`lc_ending_<id>_sections`).
 - **NPCs carry boxes and crates in front in both hands,** luggage at the side, small things in the hand.
 
 ## How the code must be written (or things break)

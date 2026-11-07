@@ -69,6 +69,7 @@ chat command /cower
 chat command /cuff
 chat command /cut
 chat command /dellaw
+chat command /dream
 chat command /dropship
 chat command /eatchip
 chat command /escort
@@ -153,6 +154,8 @@ console command lc_conduct
 console command lc_creator
 console command lc_debugreport
 console command lc_drag
+console command lc_dream_now
+console command lc_dream_restore
 console command lc_endevent
 console command lc_ending
 console command lc_ending_cancel
@@ -233,6 +236,7 @@ console command lcq_board
 console command lcq_resetstory
 console command lcq_startchain
 console command lcq_story
+dream snapshots data/livingcity/dreams/<steamid64>.json
 ending base (Base)
 ending bloom (Bloom)
 ending bus (The Bus)
@@ -263,7 +267,6 @@ faction cp rank 4 Combine Prison Guard at 1200 xp
 faction cp rank 5 Combine Soldier at 2000 xp
 faction cp rank 6 Elite Soldier at 3000 xp
 faction cp special ow_commander
-faction cp special scanner_op
 faction resistance (Resistance)
 faction resistance rank 1 Sympathizer at 0 xp
 faction resistance rank 2 Member at 150 xp
@@ -351,9 +354,12 @@ item ration
 item ration_card
 item ration_forged
 item ration_short
+item ration_voucher
 item raw_bird
+item raw_crow
 item raw_fastcrab
 item raw_fish
+item raw_gull
 item raw_headcrab
 item raw_poisoncrab
 item rebel_gear
@@ -410,7 +416,12 @@ setting lc_announce_custom = 1
 setting lc_announce_custom_pct = 100
 setting lc_announce_gap = 25
 setting lc_announce_interval = 0
-setting lc_announce_quiet = 60
+setting lc_announce_quiet = 90
+setting lc_arrest_struggle = 1
+setting lc_arrest_struggle_chance = 25
+setting lc_arrest_struggle_ratio = 1.25
+setting lc_arrest_struggle_time = 4
+setting lc_arrest_wait = 60
 setting lc_assign_work = 1
 setting lc_atmosphere = 1
 setting lc_auto_events = 1
@@ -437,6 +448,7 @@ setting lc_breen_broadcasts = 0
 setting lc_broadcast_camera = 1
 setting lc_broadcast_cooldown = 15
 setting lc_broadcast_seconds = 60
+setting lc_broom_hold = 34 -6 2 -35 0 0
 setting lc_cache_max = 12
 setting lc_cache_trickle = 5
 setting lc_can_event = 1
@@ -479,6 +491,7 @@ setting lc_cp_tools = 1
 setting lc_cpsupply_cooldown = 120
 setting lc_cpsupply_hack_minutes = 10
 setting lc_cpsupply_ration = 600
+setting lc_cpsupply_recharge = 5
 setting lc_crate_kg = 35
 setting lc_crates_per_person = 2
 setting lc_cremation_pay = 6
@@ -499,17 +512,23 @@ setting lc_directive_min_players = 4
 setting lc_directive_pay = 10
 setting lc_directive_sign_minutes = 20
 setting lc_directive_staff_minutes = 5
-setting lc_directives = 1
+setting lc_directives = 0
 setting lc_disguise_risk = 5
 setting lc_downed = 1
 setting lc_downed_secs = 90
+setting lc_dream_combine = 6
+setting lc_dream_delay = 60
+setting lc_dream_every_night = 0
+setting lc_dream_moods = bus=happy,plane=happy,hard=happy,shalom=happy,bloom=neutral,fire=neutral,base=neutral,harpies=nightmare,marrow=nightmare,water=nightmare,standup=nightmare
+setting lc_dream_radius = 1500
+setting lc_dreams = 1
 setting lc_dressing = 1
 setting lc_drill_cues = 14
 setting lc_drill_mistakes = 3
 setting lc_drill_pace = 3.5
 setting lc_drill_rope = 1
 setting lc_drill_window = 2.5
-setting lc_drop_cooldown = 30
+setting lc_drop_cooldown = 60
 setting lc_drop_soldiers = 4
 setting lc_drops_kept = 30
 setting lc_economy = 1
@@ -588,7 +607,8 @@ setting lc_escort_ban_minutes = 10
 setting lc_escort_handover = 60
 setting lc_escort_range = 6000
 setting lc_escorts = 1
-setting lc_event_interval = 12
+setting lc_event_interval = 24
+setting lc_event_npc_allowance = 0
 setting lc_exercise_beat_dmg = 8
 setting lc_exercise_breakfast = 1
 setting lc_exercise_every = 2
@@ -601,6 +621,9 @@ setting lc_eye_height = 61
 setting lc_fighter_trust_jobs = 3
 setting lc_firebomb_secs = 12
 setting lc_fixture_wear = 1
+setting lc_food_availability = 0.5
+setting lc_food_restock_minutes = 20
+setting lc_food_scaling = 1
 setting lc_forcefield_breaks = 3
 setting lc_forcefield_down = 30
 setting lc_forcefield_fix_minutes = 6
@@ -630,6 +653,7 @@ setting lc_gman_dream_chance = 30
 setting lc_gman_glimpse_minutes = 8
 setting lc_gman_glimpses = 1
 setting lc_gman_line_crates = vo/gman_misc/gman_03.wav
+setting lc_gman_line_dream = vo/episode_1/npc/gman/gman_inhale.wav
 setting lc_gman_line_elected = vo/citadel/gman_exit05.wav
 setting lc_gman_line_glimpse = vo/episode_1/npc/gman/gman_inhale.wav
 setting lc_gman_line_last_call = vo/episode_1/npc/gman/gman_comebacknow.wav
@@ -647,6 +671,7 @@ setting lc_grigori_move_minutes = 12
 setting lc_grigori_respawn = 10
 setting lc_grigori_talk_gap = 60
 setting lc_gun_drops = 1
+setting lc_gunfire_fear = 700
 setting lc_heist = 1
 setting lc_heist_cooldown = 20
 setting lc_heist_intel_seconds = 300
@@ -680,7 +705,7 @@ setting lc_inventory_size = 12
 setting lc_inventory_weight = 1
 setting lc_jammer_radius = 1000
 setting lc_jammer_secs = 240
-setting lc_job_cooldown = 120
+setting lc_job_cooldown = 900
 setting lc_jobgames = 1
 setting lc_jog_behind = 450
 setting lc_jog_boost = 1.5
@@ -697,8 +722,13 @@ setting lc_kick_damage = 12
 setting lc_kick_door_back = 600
 setting lc_kick_door_kicks = 2
 setting lc_kick_door_power = 1
+setting lc_lab_health = 250
 setting lc_lab_price = 0.6
 setting lc_lab_shutdown = 600
+setting lc_labor_cleanup_standing = 25
+setting lc_labor_min_minutes = 30
+setting lc_labor_min_shifts = 4
+setting lc_labor_porter_standing = 50
 setting lc_learn_ladders = 1
 setting lc_levy_minutes = 30
 setting lc_levy_pct = 10
@@ -712,7 +742,7 @@ setting lc_lookout_post_respawn = 120
 setting lc_lookout_post_warn = 1400
 setting lc_lookout_range = 1100
 setting lc_lowered_weapons = 1
-setting lc_loyalty_praise_minutes = 20
+setting lc_loyalty_praise_minutes = 40
 setting lc_loyalty_rewards = 1
 setting lc_loyalty_wait = 15
 setting lc_machine_hack_cooldown = 10
@@ -722,6 +752,19 @@ setting lc_mail_minutes = 4
 setting lc_mantle_height = 108
 setting lc_march = 1
 setting lc_march_max = 240
+setting lc_market = 1
+setting lc_market_bm_markup = 1.5
+setting lc_market_bm_premium = 1
+setting lc_market_demand = 1
+setting lc_market_demand_cap = 0.5
+setting lc_market_demand_halflife = 30
+setting lc_market_demand_step = 0.05
+setting lc_market_ops_speedup = 10
+setting lc_market_raid_max = 6
+setting lc_market_rebels_max = 6
+setting lc_market_rebels_per = 1
+setting lc_market_restock_minutes = 20
+setting lc_market_scarce_stock = 5
 setting lc_max_bodies = 16
 setting lc_morning_exercise = 1
 setting lc_needs = 1
@@ -765,6 +808,7 @@ setting lc_player_doors = 1
 setting lc_pm_elite = 
 setting lc_pm_guard = 
 setting lc_pm_guard_shotgun = 
+setting lc_pm_metrocop = 
 setting lc_pm_shotgunner = 
 setting lc_pm_soldier = 
 setting lc_poster_hours = 12
@@ -775,6 +819,7 @@ setting lc_prison_time = 180
 setting lc_prisonguard_range = 3000
 setting lc_qm_food_price = 2
 setting lc_quartermaster_arms_bonus = 1.5
+setting lc_quest_allies = 2
 setting lc_quest_cooldown = 30
 setting lc_quest_squad = 3
 setting lc_quest_violent_ratio = 8
@@ -803,12 +848,12 @@ setting lc_rebel_home_hurt = 2
 setting lc_rebel_life = 1
 setting lc_rebel_merge = 128
 setting lc_rebel_ops = 1
-setting lc_rebel_ops_minutes = 30
+setting lc_rebel_ops_minutes = 60
 setting lc_rebel_pct = 12
 setting lc_rebel_pursuit = 0
 setting lc_rebel_react = 0.5
 setting lc_rebel_room = 350
-setting lc_rebel_spread_minutes = 20
+setting lc_rebel_spread_minutes = 40
 setting lc_rebel_vorts = 1
 setting lc_rebel_warning = 2
 setting lc_rebels = 4
@@ -848,7 +893,7 @@ setting lc_search_fight_choice = 1
 setting lc_search_weapons = 1
 setting lc_shift_pay = 15
 setting lc_shift_ration_cards = 1
-setting lc_skirmish_interval = 25
+setting lc_skirmish_interval = 50
 setting lc_skirmishes = 1
 setting lc_sleep = 1
 setting lc_sleep_seconds = 60
@@ -918,7 +963,8 @@ setting lc_think_budget_ms = 2.5
 setting lc_thirst_minutes = 40
 setting lc_tie_seconds = 3
 setting lc_tired_days = 1
-setting lc_train_minutes = 12
+setting lc_trail = 1
+setting lc_train_minutes = 24
 setting lc_trains = 1
 setting lc_trespass_grace = 10
 setting lc_turrets_per_post = 4
@@ -956,5 +1002,6 @@ setting lc_workshop_packs = 2043900984,3185145650
 setting lc_zombies = 6
 setting lc_zombies_max = 50
 setting lc_zone_mercy = 96
+setting lc_zone_stalkers = 1
 setting lcf_admin_tools = 1
 setting lcf_switch_cooldown = 60
