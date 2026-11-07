@@ -857,7 +857,7 @@ local function ThinkRebel(npc, st, now)
             npc:Remove()
             return
         end
-        st.expires, st.unmanaged = nil, nil -- stays on as one of the regulars
+        st.expires, st.unmanaged, st.eventNPC = nil, nil, nil -- stays on as one of the regulars
     end
 
     -- out with a Resistance player: staying with them comes first, fighting included
@@ -966,7 +966,8 @@ local function ThinkRebel(npc, st, now)
             st.unmanaged = true
             st.expires = now + 60
         else
-            HeadFor(npc, st, r.target, true)
+            -- along the city's routes, and past anything they're stuck on out of sight (sv_livingcity_rebelevents.lua)
+            if not (LC.RaidWalk and LC.RaidWalk(npc, st, r, now)) then HeadFor(npc, st, r.target, true) end
             return
         end
     end
@@ -1193,21 +1194,39 @@ local function StartRaid(z, target, purpose, data)
     if not z then return false, "no rebel territory on this map" end
     target = target or RaidTarget(z)
     if not target then return false, "nothing of the Combine's to hit" end
-    local sk = { kind = "raid", zone = z, target = target, started = CurTime(), ends = CurTime() + (purpose and 240 or 150), rebels = {}, units = {},
+    -- (the raid's own clock starts when the fighters get there: until then, time to walk it,
+    -- sv_livingcity_rebelevents.lua)
+    local sk = { kind = "raid", zone = z, target = target, started = CurTime(), ends = CurTime() + (LC.RaidWalkSecs or 360) + 10, rebels = {}, units = {},
         purpose = purpose, data = data or {} }
-    -- the fighters already there go, plus a couple who came for this
-    for npc, st in pairs(LC.NPCs) do
-        if #sk.rebels >= 2 then break end
-        if IsValid(npc) and st.role == "rebel" and st.zone == z and not st.foe and not st.raid and not st.follow
-            and not st.post and not st.quartermaster and not st.errand then
-            sk.rebels[#sk.rebels + 1] = npc
+    -- bigger while the Commissary's restricted (sv_livingcity_rebelevents.lua)
+    local party = LC.RaidPartySize and LC.RaidPartySize() or 4
+    if LC.EventOpen then LC.EventOpen(sk) end
+    -- the fighters already there go first, as many as it needs (the owner, 7 November: "just
+    -- literally move those NPCs to the raid"); never the quartermaster, a lookout on his post,
+    -- one out scavenging or anyone a player is with
+    if LC.RaidTakeFromZone then
+        for _, npc in ipairs(LC.RaidTakeFromZone(z, party)) do sk.rebels[#sk.rebels + 1] = npc end
+    else
+        for npc, st in pairs(LC.NPCs) do
+            if #sk.rebels >= 2 then break end
+            if IsValid(npc) and st.role == "rebel" and st.zone == z and not st.foe and not st.raid and not st.follow
+                and not st.post and not st.quartermaster and not st.errand then
+                sk.rebels[#sk.rebels + 1] = npc
+            end
         end
     end
-    for _ = 1, 4 - #sk.rebels do
+    -- still short: room under the NPC cap, or a spare NPC nobody can see swapped for a fighter at
+    -- the raid's hidden spot (the city's count doesn't go up); the last-resort allowance after that
+    for _ = 1, party - #sk.rebels do
+        if LC.EventSlot and not LC.EventSlot(sk, { "rebel", "citizen" }, z) then break end
         local p = HiddenSpot(z, true)
         if p then
             local npc, st = SpawnRebel(p + Vector(0, 0, 4), z)
-            if IsValid(npc) then st.unmanaged = true sk.rebels[#sk.rebels + 1] = npc end
+            if IsValid(npc) then
+                st.unmanaged = true
+                sk.rebels[#sk.rebels + 1] = npc
+                if LC.EventNPCAdd then LC.EventNPCAdd(sk, npc, st) end -- (counted from the start: the next one may need a swap)
+            end
         end
     end
     if #sk.rebels == 0 then return false, "no fighters" end
@@ -1218,6 +1237,7 @@ local function StartRaid(z, target, purpose, data)
         st.raid = { target = target + Vector(math.random(-120, 120), math.random(-120, 120), 0), ends = sk.ends, sk = sk }
         st.skirmish = sk
         st.unmanaged = true
+        if LC.EventNPCAdd then LC.EventNPCAdd(sk, npc, st) end -- (still counted against lc_npc_budget, until home or gone)
         npc:SetSchedule(SCHED_IDLE_STAND)
         LC.SetState(npc, st, "moving")
     end
@@ -1392,7 +1412,11 @@ local function StartSweep(z)
     LC.ReinforceRebels(z, 2)
     local sk = { kind = "sweep", zone = z, stage = stage, started = CurTime(), ends = CurTime() + 150, rebels = {}, units = {} }
     local soldiers = GetConVar("lc_soldiers")
+    if LC.EventOpen then LC.EventOpen(sk) end
     for i = 1, 4 do
+        -- room under the NPC cap, or an idle unit or citizen nobody can see swapped for one of the
+        -- team (the city's count doesn't go up: sv_livingcity_rebelevents.lua)
+        if LC.EventSlot and not LC.EventSlot(sk, { "cop", "soldier", "citizen" }) then break end
         local useSoldier = i == 4 and soldiers and soldiers:GetInt() > 0 and LC.Spawners.soldier
         local spawn = useSoldier and LC.Spawners.soldier or LC.Spawners.cop
         local npc, st = spawn(stage + Vector(math.random(-80, 80), math.random(-80, 80), 4))
@@ -1402,6 +1426,7 @@ local function StartSweep(z)
             LC.ArmUnit(npc, st)
             LC.SetState(npc, st, "sweep")
             sk.units[#sk.units + 1] = npc
+            if LC.EventNPCAdd then LC.EventNPCAdd(sk, npc, st) end
         end
     end
     if #sk.units == 0 then return false, "no Civil Protection units" end
@@ -1493,7 +1518,12 @@ local function EndSkirmish(sk, why)
     end
     local where = sk.where or (LC.DescribePlace and LC.DescribePlace(sk.zone.pos)) or ""
     if sk.kind == "raid" then
-        Radio("cp", "Dispatch: anticitizen incursion " .. where .. " is over. Resume your beats.")
+        if sk.alerted then
+            Radio("cp", "Dispatch: anticitizen incursion " .. where .. " is over. Resume your beats.")
+        else
+            -- (they never got there: nobody pretends there was a fight)
+            Radio("resistance", "Our fighters couldn't get through " .. where .. ". They're on their way home.")
+        end
     else
         Radio("cp", "Dispatch: sweep team withdrawing.")
         Radio("resistance", why == "Civil Protection units down" and "They're pulling back. We held." or "The Combine have pulled back.")
@@ -1541,6 +1571,9 @@ local function RunSkirmish(sk, now)
                         if rst and not rst.foe then SetFoe(raider, rst, u.npc, now) end
                     end
                 end
+                -- the fight is on: its clock starts, units are sent if too few are here, the
+                -- Combine's players see where it is (sv_livingcity_rebelevents.lua)
+                if LC.RaidArrived then LC.RaidArrived(sk, now) end
             end
         end
         -- units whose raider went down pick the next one
@@ -1644,7 +1677,10 @@ timer.Create("LivingCitySkirmishes", 2, 0, function()
         local pr = LC.PlannedRaid
         if pr and now >= pr.at then
             LC.PlannedRaid = nil
-            if not LC.Skirmish and not (LC.Event == "curfew" or LC.Event == "lockdown") then StartRaid(pr.zone, pr.target) end
+            local started = false
+            if not LC.Skirmish and not (LC.Event == "curfew" or LC.Event == "lockdown") then started = StartRaid(pr.zone, pr.target) end
+            -- (announced ahead: if it can't go, the Resistance are told so, not left waiting for it)
+            if not started then Radio("resistance", "The raid's off: our fighters can't go just now.") end
         end
         local ps = LC.PlannedSweep
         if ps and now >= ps.at then
