@@ -234,7 +234,7 @@ util.JSONToTable = function() return {
       { key = "#99-000", name = "Old Record", cid = "#99-000", seen = 1700000000, violations = 0, v = {}, n = {} } },
     bolos = { { id = "1-1", key = "#12-345", name = "Ada Grey", cid = "#12-345", text = "red jacket", by = "CP 04", at = 1700000000, untilT = 1900000000 } },
     requests = { { name = "Ada Grey", cid = "#12-345", text = "help", where = "by the ration line", t = 1700000000 } },
-    officer = true, socio = "yellow" } end
+    officer = true, socioctl = true, socio = "yellow" } end -- (socioctl: the Administrator's buttons)
 made = 0
 okP, errP = pcall(net["recv_lc_records"])
 if not okP then problems[#problems + 1] = "records terminal: " .. tostring(errP) end
@@ -746,6 +746,7 @@ do
     Run("cp", false, function() other.nw.lc_tied = false other.nw.lc_handsup = true Look(other) end)
     Run("resistance", false, function() Look(other) end)
     Run("vort", false, function() Look(nil) end)
+    Run("admin", false, function() Look(nil) end) -- (the Administrator: sociostability is theirs alone)
     Run("citizen", true, function()
         local door = ents.Create("prop_door_rotating") Look(door)
     end)
@@ -762,8 +763,8 @@ do
         local okQ, root = pcall(LC_CL.QuickRoot)
         if not okQ then problems[#problems + 1] = "quick menu for " .. faction .. ": " .. tostring(root) return end
         for i = 1, 9 do if not root.items[i] then problems[#problems + 1] = "quick menu for " .. faction .. ": slot " .. i .. " is empty" end end
-        if faction == "cp" and not (root.items[2] and root.items[2].id == "unittools" and root.items[5] and root.items[5].id == "kick") then
-            problems[#problems + 1] = "a unit's F1: Unit tools should be 2 and Kick 5"
+        if faction == "cp" and not (root.items[2] and root.items[2].id == "unittools" and root.items[3] and root.items[3].id == "kick") then
+            problems[#problems + 1] = "a unit's F1: Unit tools should be 2 and Kick 3"
         end
         local function WalkQ(page, depth)
             for i = 1, 9 do

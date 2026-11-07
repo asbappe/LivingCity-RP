@@ -303,6 +303,11 @@ function LC_CL.OpenActions()
     if me:IsAdmin() or f == "admin" or (f == "cp" and me:GetNW2Int("lcf_rank", 1) >= 3) then
         Add(city, "Broadcast to the whole city...", function() Ask("Broadcast", "What does the city hear?", "broadcast") end, "icon16/sound.png")
     end
+    -- only the Administrator sets sociostability (the owner, 7 November)
+    if f == "admin" then
+        local so = city:AddSubMenu("Set sociostability (the Administrator)")
+        for _, l in ipairs({ "green", "yellow", "red", "auto" }) do Add(so, string.upper(l), function() Send("socio", l) end) end
+    end
 
     -- Civil Protection
     if unit then
@@ -341,10 +346,6 @@ function LC_CL.OpenActions()
             Add(ins, "Foul the spare mask filters (at the Commissary; weedkiller)", function() Send("foulfilters") end)
             Add(ins, "Spike the station's food (at the Commissary; weedkiller)", function() Send("spikefood") end)
             Add(ins, "Reveal myself to whoever I'm looking at (the codeword)", function() Send("reveal") end)
-        end
-        if f == "admin" then
-            local so = cp:AddSubMenu("Set sociostability (the Administrator)")
-            for _, l in ipairs({ "green", "yellow", "red", "auto" }) do Add(so, string.upper(l), function() Send("socio", l) end) end
         end
     end
 
