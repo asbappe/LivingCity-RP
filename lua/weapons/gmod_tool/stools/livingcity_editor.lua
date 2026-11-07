@@ -349,7 +349,8 @@ local function Inspect(ply, trace)
     local z = LC.ZoneAt(trace.HitPos)
     if z then
         Tell(ply, string.format("%s zone, %s%s", z.kind,
-            z.box and string.format("a box %d by %d", z.box.maxs.x - z.box.mins.x, z.box.maxs.y - z.box.mins.y) or ("radius " .. z.r),
+            z.cells and string.format("grown along the path nodes: %d cells in %d rectangles, 8 feet tall", z.n or 0, #(z.rects or {}))
+            or z.box and string.format("a box %d by %d", z.box.maxs.x - z.box.mins.x, z.box.maxs.y - z.box.mins.y) or ("radius " .. z.r),
             (z.group or 0) > 0 and (", #" .. z.group) or ""))
         return true
     end

@@ -112,7 +112,7 @@ local function Snapshot()
     local zones = {}
     for _, z in ipairs(LC.Zones) do
         zones[#zones + 1] = { x = z.pos.x, y = z.pos.y, z = z.pos.z, r = z.r, h = z.h, kind = z.kind, group = z.group or 0, grown = z.grown or nil,
-            box = LCZ.PackBox(z.box) }
+            box = LCZ.PackBox(z.box), ground = z.cells and LCZ.PackGround(z) or nil }
     end
     local doors = {}
     for id, tag in pairs(LC.DoorTags) do

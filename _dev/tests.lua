@@ -17467,6 +17467,194 @@ end
 LabDamageTests()
 
 function KeyLayoutTests()
+
+local function TerritoryPathTests()
+    section("Territory grows along the path nodes, eight feet tall (the owner, 7 November)")
+    -- (the owner: "I have not seen rebel territory, nor infestation territory, expand a single time for
+    -- weeks ... can we please make it so the territory expansion happens along path nodes?")
+    for _, z in ipairs(LC.ZonesOfKind("rebel")) do LC.RemoveZone(z) end
+    for _, z in ipairs(LC.ZonesOfKind("infest")) do LC.RemoveZone(z) end
+    for n, st in pairs(LC.NPCs) do if IsValid(n) and (st.role == "zombie" or st.role == "rebel") then n:Remove() end end
+    _setcvar("lc_territory_spread", 1)
+    _setcvar("lc_zombies", 0)
+    local wallsWas, groundWas = _walls, _groundFn
+    _walls = {}
+    -- an underground layout like rp_c18_ug's: a 600 x 600 room with two corridors 192 wide out of it,
+    -- solid wall everywhere else; at the east end a ramp up, and a floor above the corridor
+    local B = Vector(90000, 90000, 0)
+    local function Room(x, y) return math.abs(x - B.x) <= 300 and math.abs(y - B.y) <= 300 end
+    local function East(x, y) return x >= B.x + 300 and x <= B.x + 2300 and math.abs(y - B.y) <= 96 end
+    local function North(x, y) return y >= B.y + 300 and y <= B.y + 1800 and math.abs(x - B.x) <= 96 end
+    local function Ramp(x, y) return x > B.x + 2300 and x <= B.x + 2700 and math.abs(y - B.y) <= 96 end
+    _groundFn = function(x, y)
+        if x < 0 then return 0 end -- (open ground, far away: for the territory with no path nodes near it)
+        if Room(x, y) or East(x, y) or North(x, y) then return 0 end
+        if Ramp(x, y) then return (x - B.x - 2300) * 0.3 end
+        return nil
+    end
+    local seed = LC.AddZone(nil, nil, "rebel", 0, { mins = B + Vector(-300, -300, -16), maxs = B + Vector(300, 300, 192) })
+    -- the path nodes: one in the room, every 250 units down each corridor, up the ramp, and
+    -- two links that climb: one straight up to the floor above, one far too steep for stairs
+    local R0 = LC.AddNode(B, true)
+    local E, N = {}, {}
+    local prev = R0
+    for i = 1, 8 do E[i] = LC.AddNode(B + Vector(300 + (i - 1) * 250, 0, 0), true) LC.ToggleLink(prev, E[i], true) prev = E[i] end
+    prev = R0
+    for i = 1, 6 do N[i] = LC.AddNode(B + Vector(0, 300 + (i - 1) * 250, 0), true) LC.ToggleLink(prev, N[i], true) prev = N[i] end
+    local RP = LC.AddNode(B + Vector(2600, 0, 90), true) LC.ToggleLink(E[8], RP, true)
+    local U = LC.AddNode(B + Vector(590, 0, 256), true) LC.ToggleLink(E[2], U, true)
+    local U2 = LC.AddNode(B + Vector(900, 0, 256), true) LC.ToggleLink(U, U2, true)
+    local S = LC.AddNode(B + Vector(1150, 60, 150), true) LC.ToggleLink(E[4], S, true)
+    LC.SaveData()
+
+    -- why it never grew: the old way looks for a round patch of floor at least ~280 units across
+    -- past the edge, and a corridor is narrower than that; then waited a whole interval to try again
+    local oldFails = 0
+    for _ = 1, 20 do if not LC.TerritoryGrowthSpot(seed) then oldFails = oldFails + 1 end end
+    ok(oldFails == 20, "the cause: in a room with corridors out of it, the old growth never found anywhere to go", oldFails .. " of 20 failed")
+
+    -- the clock: due, but nobody holds it, so it tries again in a minute, not 40 minutes later
+    local grewHeard = 0
+    hook.Add("LivingCityTerritoryGrew", "TerritoryPathTests", function() grewHeard = grewHeard + 1 end)
+    LC.TerritoryState[seed] = { nextGrow = 0, hits = 0, lastHit = -1e9 }
+    _run(11)
+    local st = LC.TerritoryState[seed]
+    ok(LC.GrownCount("rebel") == 0 and grewHeard == 0, "with nobody holding it, it doesn't grow, and nothing is announced")
+    ok(st.nextGrow - CurTime() <= 61 and st.lastWhy and string.find(st.lastWhy, "Resistance fighters", 1, true),
+        "it tries again within a minute, and says why it didn't grow", tostring(st.lastWhy) .. " / " .. math.floor(st.nextGrow - CurTime()))
+    local reb = LC.SpawnRebel(B + Vector(0, 0, 4), seed)
+    st.nextGrow = 0
+    _run(11)
+    ok(LC.GrownCount("rebel") == 1 and grewHeard == 1, "held by a fighter, it grows on schedule, and that's announced once", LC.GrownCount("rebel") .. " / " .. grewHeard)
+    ok(st.nextGrow - CurTime() > 25 * 60, "and the next growth is a whole lc_rebel_spread_minutes away", math.floor(st.nextGrow - CurTime()))
+    local G = LC.TerritoryGround(seed)
+    local function In(v) return LC.InRebelZone(B + v) end
+    ok(G and G.cells and In(Vector(550, 0, 8)) and In(Vector(0, 550, 8)) and not In(Vector(800, 0, 8)),
+        "the first growth takes the links out of the room's edge (both corridors), along the path nodes, no further")
+    ok(G and G.where and G.where ~= "", "and where it grew is said", G and G.where)
+
+    section("It follows the links outward, never up through a floor")
+    _setcvar("lc_territory_max", 40)
+    for _ = 1, 30 do if not LC.GrowTerritory(seed) then break end end
+    local grownZones = 0
+    for _, z in ipairs(LC.Zones) do if z.grown and z.seed == seed then grownZones = grownZones + 1 end end
+    ok(grownZones == 1, "however far it grows, it's one zone (its cells), not one per link", grownZones)
+    local allIn = true
+    for _, n in ipairs(E) do if not LC.InRebelZone(n.pos + Vector(0, 0, 8)) then allIn = false end end
+    for _, n in ipairs(N) do if not LC.InRebelZone(n.pos + Vector(0, 0, 8)) then allIn = false end end
+    ok(allIn and LC.InRebelZone(RP.pos + Vector(0, 0, 8)), "every corridor node is taken, and up the ramp")
+    ok(not LC.InRebelZone(U.pos + Vector(0, 0, 8)) and not LC.InRebelZone(U2.pos + Vector(0, 0, 8)) and not LC.InRebelZone(S.pos + Vector(0, 0, 8)),
+        "never the link straight up to the floor above, nor one steeper than stairs")
+    ok(In(Vector(925, 0, 90)) and not In(Vector(925, 0, 110)), "it's eight feet (96 units) tall, from the floor")
+    ok(not In(Vector(700, 0, 260)), "the floor above the corridor isn't rebel ground")
+    ok(not In(Vector(1300, 330, 10)) and not In(Vector(600, 600, 10)), "nor the solid ground either side of the corridors")
+    ok(In(Vector(1300, 0, 10)) and LC.TerritorySeedAt(B + Vector(1300, 0, 10), "rebel") == seed,
+        "the corridor is: everything that asks \"is this rebel ground\" sees it")
+    ok(G.n >= 30 and #G.rects <= 14, "its cells are kept as a few rectangles", G.n .. " cells, " .. #G.rects .. " rectangles")
+    local why = select(2, LC.GrowTerritory(seed))
+    ok(why and string.find(why, "climb", 1, true), "with only the links that climb left, it says so", why)
+
+    section("In the open it spreads wide, and fills the gaps")
+    -- (the owner: "if there is a large open area we don't want the territory only expanding in a narrow corridor")
+    local P = Vector(-60000, 60000, 0)
+    local plaza = LC.AddZone(nil, nil, "rebel", 0, { mins = P + Vector(-100, -100, -16), maxs = P + Vector(100, 100, 192) })
+    local grid = {}
+    for i = 0, 4 do
+        grid[i] = {}
+        for j = 0, 4 do
+            grid[i][j] = LC.AddNode(P + Vector(i * 400, j * 400, 0), true)
+            if i > 0 then LC.ToggleLink(grid[i - 1][j], grid[i][j], true) end
+            if j > 0 then LC.ToggleLink(grid[i][j - 1], grid[i][j], true) end
+        end
+    end
+    LC.SaveData()
+    local function Taken()
+        local n = 0
+        for i = 0, 4 do for j = 0, 4 do if LC.InRebelZone(grid[i][j].pos + Vector(0, 0, 8)) then n = n + 1 end end end
+        return n
+    end
+    for _ = 1, 3 do LC.GrowTerritory(plaza) end
+    ok(Taken() >= 7, "a few links at a time, so three growths reach well out across a square", Taken())
+    local PG = LC.TerritoryGround(plaza)
+    local cap = PG.n + 12
+    _setcvar("lc_territory_cells", cap)
+    for _ = 1, 10 do LC.GrowTerritory(plaza) end
+    local capWhy = select(2, LC.GrowTerritory(plaza))
+    ok(PG.n <= cap and capWhy and string.find(capWhy, "big", 1, true), "never more cells than lc_territory_cells", PG.n .. " of " .. cap .. ": " .. tostring(capWhy))
+    _setcvar("lc_territory_cells", 600)
+    for _ = 1, 30 do if not LC.GrowTerritory(plaza) then break end end
+    local holes = 0
+    for i = 0, 3 do for j = 0, 3 do if not LC.InRebelZone(P + Vector(200 + i * 400, 200 + j * 400, 8)) then holes = holes + 1 end end end
+    ok(Taken() == 25 and holes == 0, "in the end the whole square, the gaps between the links filled in", Taken() .. " nodes, " .. holes .. " gaps")
+    ok(#PG.rects * 10 <= PG.n, "and its cells merge into a handful of rectangles (one for every ten cells or fewer)", #PG.rects .. " for " .. PG.n)
+    local t0 = os.clock()
+    for k = 1, 20000 do LC.InRebelZone(P + Vector((k * 37) % 1700, (k * 53) % 1700, 8)) end
+    ok(os.clock() - t0 < 2, "asking whether a spot is rebel ground is a lookup, not a search", string.format("%.3fs for 20000", os.clock() - t0))
+
+    section("Grown ground comes back after a restart")
+    local n0, s0 = G.n, G.steps
+    LC.LoadData(false)
+    for _, z in ipairs(LC.ZonesOfKind("rebel")) do
+        if not z.grown and z.pos:Distance(B) < 50 then seed = z end
+        if not z.grown and z.pos:Distance(P) < 50 then plaza = z end
+    end
+    G = LC.TerritoryGround(seed)
+    ok(G and G.n == n0 and G.steps == s0 and In(Vector(1300, 0, 10)) and not In(Vector(700, 0, 260)),
+        "all of it, cell for cell, attached to the zone you placed", G and (G.n .. " / " .. n0))
+    ok(#(_files["livingcity/rp_test_territory.json"] or "") < 8000, "and the file it's kept in stays small", #(_files["livingcity/rp_test_territory.json"] or ""))
+
+    section("Taken back the way it came: the furthest out first")
+    local before = LC.TerritoryCellDistances(G, seed)
+    local cop = newPlayer("PathRetaker", "cp")
+    cop:SetPos(B + Vector(0, 200, 0))
+    for _ = 1, 3 do
+        local r = LC.SpawnRebel(B + Vector(60, 60, 4), seed)
+        r:SetHealth(0)
+        hook.Run("OnNPCKilled", r, cop)
+    end
+    _run(1)
+    local minGone, maxLeft = 1e9, -1
+    for k, d in pairs(before) do
+        if G.cells[k] then maxLeft = math.max(maxLeft, d) else minGone = math.min(minGone, d) end
+    end
+    ok(G.n < n0 and minGone >= maxLeft - 0.01, "three kills take back the cells furthest from where it started", G.n .. " left; gone from " .. minGone .. ", left up to " .. maxLeft)
+    ok(not LC.InRebelZone(RP.pos + Vector(0, 0, 8)) and In(Vector(550, 0, 8)), "the top of the ramp goes first, the room's doorway last")
+    for _ = 1, 40 do if not LC.TerritoryGround(seed) then break end LC.RecedeTerritory(LC.TerritoryGround(seed), "test", cop) end
+    ok(LC.TerritoryGround(seed) == nil and table.HasValue(LC.Zones, seed), "pushed all the way back, the zone you placed is still there")
+
+    section("Staff can grow it now, from the admin tools")
+    local sa, ad = newPlayer("PathSuper", "citizen"), newPlayer("PathAdmin", "citizen")
+    sa.admin, sa.superadmin, ad.admin = true, true, true
+    local okA, msgA = LC.AdminTool(ad, ad, "territory", "rebel")
+    ok(not okA and msgA == "Superadmins only.", "an admin can't", msgA)
+    local nBefore = LC.GrownCount("rebel")
+    local okS, msgS = LC.AdminTool(sa, sa, "territory", "rebel")
+    ok(okS and LC.GrownCount("rebel") == nBefore + 1 and string.find(msgS, "path nodes", 1, true), "a superadmin can: it grows one link, and says where", msgS)
+    local status = LC.TerritoryStatus("rebel")
+    ok(#status == 2 and string.find(status[1], "Rebel ground", 1, true), "the panel shows how each territory is doing", status[1])
+
+    section("No path nodes near it: it grows the old way")
+    local far = LC.AddZone(Vector(-90000, 90000, 0), 400, "rebel", 0)
+    local round = LC.GrowTerritory(far)
+    ok(round and not round.strip and round.r >= 200 and round.pos:Distance(far.pos) > far.r * 0.7,
+        "a round patch out past its edge, on open floor, as before", round and round.r)
+
+    hook.Remove("LivingCityTerritoryGrew", "TerritoryPathTests")
+    if IsValid(reb) then reb:Remove() end
+    for n, st2 in pairs(LC.NPCs) do if IsValid(n) and st2.role == "rebel" then n:Remove() end end
+    LC.RemoveZone(far)
+    LC.RemoveZone(plaza)
+    LC.RemoveZone(seed)
+    for i = 0, 4 do for j = 0, 4 do LC.RemoveNode(grid[i][j]) end end
+    for _, n in ipairs({ R0, RP, U, U2, S }) do LC.RemoveNode(n) end
+    for _, n in ipairs(E) do LC.RemoveNode(n) end
+    for _, n in ipairs(N) do LC.RemoveNode(n) end
+    cop:SetPos(Vector(-30000, 30000, 0))
+    _setcvar("lc_territory_max", 6)
+    _setcvar("lc_territory_spread", 0)
+    _walls, _groundFn = wallsWas, groundWas
+end
+TerritoryPathTests()
     section("The keys: F1 quick menu, F2 your side's quick menu, F3 pockets, F4 jobs, career and factions in one window")
     -- (the owner, 7 November: "make F4 the hotkey for this, and then move inventory to F3 ... F2 can be the same BUT contextual")
     local kp = newPlayer("KeyLayout", "cp", nil, 200)

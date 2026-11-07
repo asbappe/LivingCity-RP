@@ -115,7 +115,8 @@ local function PublicSnapshot()
     local territory = {}
     for _, z in ipairs(LC.Zones or {}) do
         if z.kind == "rebel" or z.kind == "infest" or z.kind == "combine" then
-            territory[#territory + 1] = { k = z.kind, x = z.pos.x, y = z.pos.y, z = z.pos.z, r = z.r, h = z.h, box = LCZ.PackBox(z.box) }
+            territory[#territory + 1] = { k = z.kind, x = z.pos.x, y = z.pos.y, z = z.pos.z, r = z.r, h = z.h, box = LCZ.PackBox(z.box),
+                ground = z.cells and LCZ.PackGround(z) or nil }
         end
     end
     return { blocks = blocks, territory = territory }

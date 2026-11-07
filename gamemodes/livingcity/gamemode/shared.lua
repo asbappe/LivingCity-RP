@@ -140,6 +140,7 @@ LC_MODULES = {
         "sv_livingcity_survival",
         "sv_livingcity_talk",
         "sv_livingcity_territory",
+        "sv_livingcity_territorypaths", -- (territory grows along the path nodes)
         "sv_livingcity_trains",
         "sv_livingcity_underground",
         "sv_livingcity_vort",

@@ -3,12 +3,15 @@
 
     The rebel zones and infestation zones you place in the editor are seeds.
     Left alone, each one slowly spreads: every so often a new patch of
-    territory grows out from its edge, in a random direction, over ground
-    people can walk to. Rebels and zombies move in, and more of them turn up.
+    territory grows out from its edge along the path nodes you laid
+    (sv_livingcity_territorypaths.lua: a block eight feet tall along the next
+    link out); with no path nodes near it, a round patch in a random direction,
+    over ground people can walk to. Rebels and zombies move in, and more of them turn up.
 
     Fighting back pushes it in. Every rebel or zombie killed in the territory
     (by a player or a unit) is a hit against it, and a run of hits takes the
-    outermost patch away. Clear a patch out completely and it goes at once.
+    outermost patch away (along the path nodes: one growth's worth of the ground
+    furthest out). Clear a patch out completely and it goes at once (the same).
     A territory that's been hit doesn't grow again for a while. The seed you
     placed is never taken away: it's where it all starts again.
 
@@ -23,7 +26,8 @@
       lc_territory_calm <m>            minutes after a hit before it grows again (10)
 
       lc_territory                     what's grown where (admin)
-      lc_territory_grow rebel|infest   grow one now (admin)
+      lc_territory_grow rebel|infest   grow one now (admin; superadmins also have it in
+                                       C > Help > Admin testing tools > The city)
       lc_territory_reset               take back everything that grew (admin)
 
     Grown patches are kept across restarts in garrysmod/data/livingcity/<map>_territory.json,
@@ -101,11 +105,12 @@ end
 
 -- Placed zones of one kind that touch or overlap are one territory: an area drawn
 -- with many small circles spreads, and is reported, like one place, not like forty.
-local clusterCache, clusterKey, clusterAt = nil, nil, 0
+local clusterCache, clusterKey, clusterAt, clusterOf = nil, nil, 0, nil
 local function Clusters()
-    -- worked out again when the zones change, or every few seconds
+    -- worked out again when the zones change (a layout reload makes new ones), or every few seconds
     local key = #LC.Zones
-    if clusterCache and clusterKey == key and CurTime() - clusterAt < 5 then return clusterCache end
+    if clusterCache and clusterKey == key and clusterOf == LC.Zones and CurTime() - clusterAt < 5 then return clusterCache end
+    clusterOf = LC.Zones
     local seeds = Seeds()
     local parent = {}
     local function Find(z) while parent[z] ~= z do z = parent[z] end return z end
@@ -136,15 +141,22 @@ local function ClusterOf(seed)
     return { seed }
 end
 
+LC.TerritoryClusterOf = ClusterOf
+
+-- How much a grown zone counts for: a round patch is one; ground grown along the path
+-- nodes counts each time it grew (one growth, one "patch", as lc_territory_max counts them).
+local function Patches(z) return z.cells and math.max(1, z.steps or 1) or 1 end
+LC.TerritoryPatches = Patches
+
 local function ClusterGrown(cluster)
     local n = 0
-    for _, seed in ipairs(cluster) do n = n + #Grown(seed) end
+    for _, seed in ipairs(cluster) do for _, z in ipairs(Grown(seed)) do n = n + Patches(z) end end
     return n
 end
 
 function LC.GrownCount(kind)
     local n = 0
-    for _, z in ipairs(LC.Zones) do if z.grown and z.kind == kind then n = n + 1 end end
+    for _, z in ipairs(LC.Zones) do if z.grown and z.kind == kind then n = n + Patches(z) end end
     return n
 end
 
@@ -186,7 +198,9 @@ function LC.SaveTerritory()
     for _, z in ipairs(LC.Zones) do
         if z.grown and z.seed then
             out[#out + 1] = { kind = z.kind, x = z.pos.x, y = z.pos.y, z = z.pos.z, r = z.r, h = z.h,
-                sx = z.seed.pos.x, sy = z.seed.pos.y, sz = z.seed.pos.z }
+                sx = z.seed.pos.x, sy = z.seed.pos.y, sz = z.seed.pos.z,
+                -- (grown along the path nodes: its cells, as the few rectangles they merge into)
+                ground = z.cells and LCZ.PackGround(z) or nil, steps = z.cells and z.steps or nil }
         end
     end
     file.CreateDir("livingcity")
@@ -205,12 +219,20 @@ function LC.RestoreTerritory()
             for _, z in ipairs(LC.Zones) do
                 if IsSeed(z) and z.kind == t.kind and z.pos:DistToSqr(sp) < 64 then seed = z break end
             end
+            if seed and istable(t.ground) then
+                -- grown along the path nodes: back cell for cell
+                local z = LCZ.UnpackGround(t.ground, { kind = t.kind, grown = true, seed = seed, group = 0, h = 96,
+                    steps = math.max(1, tonumber(t.steps) or 1), pos = Vector(t.x, t.y, t.z), born = CurTime() })
+                z.r = math.max(200, math.sqrt((z.n or 0) * LCZ.CELL * LCZ.CELL / math.pi))
+                if (z.n or 0) > 0 then LC.Zones[#LC.Zones + 1] = z end
+                seed = nil
+            end
             -- A patch an older version grew out over thin air, off a roof's edge, isn't
             -- put back; one that reaches past the edge comes back shrunk to the floor it's on.
             local pos = Vector(t.x, t.y, t.z)
             local r = tonumber(t.r) or 300
-            local floating = LC.FloorUnder and not LC.FloorUnder(pos + Vector(0, 0, 8))
-            if not floating and LC.TerritoryFitRadius then
+            local floating = seed and LC.FloorUnder and not LC.FloorUnder(pos + Vector(0, 0, 8))
+            if seed and not floating and LC.TerritoryFitRadius then
                 r = LC.TerritoryFitRadius(pos, r)
                 floating = r == nil
             end
@@ -405,15 +427,32 @@ function LC.TerritorySeeds(kind)
 end
 
 function LC.GrowTerritory(seed, atPos, atR, why)
-    if not LC.TerritoryCanGrow(seed) then return nil, "it's as big as it gets (lc_territory_max)" end
-    local pos, r = atPos, atR
-    if not pos then pos, r = GrowthSpot(seed) end
-    if not pos then return nil, "nowhere to grow" end
-    r = r or math.Clamp(seed.r * 0.7, 200, 700)
-    local z = { pos = pos, r = r, h = GROWN_H, kind = seed.kind, group = 0, grown = true, seed = seed, born = CurTime(), why = why }
-    LC.Zones[#LC.Zones + 1] = z
+    if not LC.TerritoryCanGrow(seed) then
+        return nil, "it's as big as it gets (lc_territory_max, lc_infest_max, lc_territory_city_max)"
+    end
+    local z, front, links
+    -- along the path nodes: a few links out, and the gaps between (sv_livingcity_territorypaths.lua)
+    if not atPos and LC.TerritoryGrowAlongNodes then
+        local g, at, n = LC.TerritoryGrowAlongNodes(seed)
+        if g then
+            z, front, links = g, at, n
+        elseif at ~= "nonodes" then
+            return nil, at
+        end
+    end
+    -- no path nodes in it or near it: a round patch out past its edge, the way it always grew
+    if not z then
+        local pos, r = atPos, atR
+        if not pos then pos, r = GrowthSpot(seed) end
+        if not pos then return nil, "nowhere to grow: no path nodes lead out of it, and no open floor round its edge is big enough for a round patch (lay path nodes out of it in the editor)" end
+        r = r or math.Clamp(seed.r * 0.7, 200, 700)
+        z = { pos = pos, r = r, h = GROWN_H, kind = seed.kind, group = 0, grown = true, seed = seed, born = CurTime(), why = why }
+        LC.Zones[#LC.Zones + 1] = z
+    end
     Changed()
-    LC.TerritoryNotice(seed.kind, LC.DescribePlace and LC.DescribePlace(pos) or "nearby")
+    -- (where it grew to: the furthest it reached)
+    z.where = LC.DescribePlace and LC.DescribePlace(front or z.pos) or "nearby"
+    LC.TerritoryNotice(seed.kind, z.where)
     -- someone moves in
     if seed.kind == "rebel" and LC.ReinforceRebels then
         LC.ReinforceRebels(z, 1)
@@ -421,7 +460,9 @@ function LC.GrowTerritory(seed, atPos, atR, why)
         local spot = LC.SpotInZone(z)
         if spot and not LC.IsSeen(spot + UP) then LC.SpawnZombie(spot + Vector(0, 0, 4), z) end
     end
-    LC.Log("info", string.format("Territory: %s grew at %s (r %d), %d patches now", seed.kind, tostring(pos), r, #Grown(seed)))
+    LC.Log("info", string.format("Territory: %s grew at %s (%s), %d patches now", seed.kind, tostring(front or z.pos),
+        z.cells and string.format("along %d path node link%s: %d cells in %d rectangles", links or 0, links == 1 and "" or "s", z.n or 0, #(z.rects or {}))
+        or ("r " .. math.floor(z.r)), ClusterGrown(ClusterOf(seed))))
     hook.Run("LivingCityTerritoryGrew", seed, z)
     return z
 end
@@ -448,37 +489,47 @@ end
 LC.Callsign = LC.Callsign or Callsign
 
 -- by: the player whose work it was, if any. The whole city hears who did it.
+-- Ground grown along the path nodes goes back one growth's worth at a time, the
+-- cells furthest out first; a round patch goes all at once.
 function LC.RecedeTerritory(z, why, by)
     if not z or not z.grown then return false end
-    for i, q in ipairs(LC.Zones) do
-        if q == z then
-            table.remove(LC.Zones, i)
-            Changed()
-            local where = LC.DescribePlace and LC.DescribePlace(z.pos) or ""
-            if where == "somewhere in the city" then where = "" end
-            local who = IsValid(by) and by:IsPlayer() and Callsign(by) or nil
-            local place = where ~= "" and (" " .. where) or ""
-            if z.kind == "rebel" then
-                Radio("cp", who and ("Dispatch: " .. who .. " has retaken anticitizen ground" .. place .. ".") or ("Dispatch: anticitizen ground" .. place .. " is retaken."))
-                Radio("resistance", "We've lost the ground" .. place .. ".")
-            else
-                Radio("cp", who and ("Dispatch: " .. who .. " has contained the infestation" .. place .. ".") or ("Dispatch: infestation" .. place .. " is contained."))
-            end
-            if who then
-                local line = z.kind == "rebel" and (who .. " has retaken ground from the Resistance" .. place .. ".")
-                    or (who .. " has contained the infestation" .. place .. ".")
-                for _, p in ipairs(player.GetAll()) do p:ChatPrint("[City] " .. line) end
-            end
-            LC.Log("info", "Territory: " .. z.kind .. " patch at " .. tostring(z.pos) .. " lost (" .. (why or "pushed back") .. ")")
-            hook.Run("LivingCityTerritoryReceded", z.seed, z, why)
-            return true
-        end
+    local idx
+    for i, q in ipairs(LC.Zones) do if q == z then idx = i break end end
+    if not idx then return false end
+    local lost = z -- (what the hooks hear about: the patch, or where the ground was lost)
+    if z.cells and LC.TerritoryShrinkGround then
+        local at, gone = LC.TerritoryShrinkGround(z)
+        if gone then table.remove(LC.Zones, idx) end
+        lost = { kind = z.kind, pos = at, r = 300, grown = true, seed = z.seed, ground = z }
+    else
+        table.remove(LC.Zones, idx)
     end
-    return false
+    Changed()
+    local where = LC.DescribePlace and LC.DescribePlace(lost.pos) or ""
+    if where == "somewhere in the city" then where = "" end
+    local who = IsValid(by) and by:IsPlayer() and Callsign(by) or nil
+    local place = where ~= "" and (" " .. where) or ""
+    if z.kind == "rebel" then
+        Radio("cp", who and ("Dispatch: " .. who .. " has retaken anticitizen ground" .. place .. ".") or ("Dispatch: anticitizen ground" .. place .. " is retaken."))
+        Radio("resistance", "We've lost the ground" .. place .. ".")
+    else
+        Radio("cp", who and ("Dispatch: " .. who .. " has contained the infestation" .. place .. ".") or ("Dispatch: infestation" .. place .. " is contained."))
+    end
+    if who then
+        local line = z.kind == "rebel" and (who .. " has retaken ground from the Resistance" .. place .. ".")
+            or (who .. " has contained the infestation" .. place .. ".")
+        for _, p in ipairs(player.GetAll()) do p:ChatPrint("[City] " .. line) end
+    end
+    LC.Log("info", "Territory: " .. z.kind .. " ground at " .. tostring(lost.pos) .. " lost (" .. (why or "pushed back") .. ")")
+    hook.Run("LivingCityTerritoryReceded", z.seed, lost, why)
+    return true
 end
 
--- the patch farthest out from the seed
+-- What to give up first: ground grown along the path nodes (its outermost cells),
+-- else the round patch farthest out from the seed.
 local function Outermost(seed)
+    local g = LC.TerritoryGround and LC.TerritoryGround(seed)
+    if g then return g end
     local best, bd
     for _, z in ipairs(Grown(seed)) do
         local d = z.pos:DistToSqr(seed.pos)
@@ -599,6 +650,44 @@ end)
 -- Ticking
 ------------------------------------------------------------------------
 
+-- Due to grow but couldn't (nobody holding it, nowhere to go, fought over): tried again
+-- this soon, not a whole lc_rebel_spread_minutes later, so it grows as soon as it can.
+local RETRY = 60
+
+-- One territory's turn to grow. Returns the patch, or nil and why not (also kept in its
+-- state, for lc_territory and the admin tools).
+local function TryGrow(cluster, now)
+    local s = StateOf(cluster[1])
+    local role = cluster[1].kind == "rebel" and "rebel" or "zombie"
+    local lastHit, held = -1e9, {}
+    for _, seed in ipairs(cluster) do
+        lastHit = math.max(lastHit, StateOf(seed).lastHit)
+        local n = 0
+        for _, z in ipairs(Family(seed)) do n = n + LivingIn(z, role) end
+        if n > 0 then held[#held + 1] = seed end
+    end
+    local grew, why
+    -- only while unchallenged, and only from where someone actually holds it
+    if now - lastHit < cvCalm:GetFloat() * 60 then
+        why = "it was fought over in the last " .. cvCalm:GetInt() .. " minutes (lc_territory_calm)"
+    elseif #held == 0 then
+        why = role == "rebel" and "no Resistance fighters are in it to hold it" or "nothing infested is in it to spread it"
+    elseif not LC.TerritoryCanGrow(cluster[1]) then
+        why = "it's as big as it gets (lc_territory_max, lc_infest_max, lc_territory_city_max)"
+    else
+        for i = #held, 2, -1 do local j = math.random(i) held[i], held[j] = held[j], held[i] end
+        for _, seed in ipairs(held) do
+            local whyNot
+            grew, whyNot = LC.GrowTerritory(seed)
+            if grew then break end
+            why = why or whyNot
+        end
+    end
+    s.lastTry, s.lastWhy = now, (not grew) and why or nil
+    return grew, why
+end
+LC.TerritoryTryGrow = TryGrow
+
 timer.Create("LivingCityTerritory", 10, 0, function()
     local ok, err = pcall(function()
         if not LC.Running or not cvOn:GetBool() then return end
@@ -607,27 +696,51 @@ timer.Create("LivingCityTerritory", 10, 0, function()
         for _, cluster in ipairs(Clusters()) do
             local s = StateOf(cluster[1])
             if now >= s.nextGrow then
-                s.nextGrow = now + Interval(cluster[1].kind)
-                local role = cluster[1].kind == "rebel" and "rebel" or "zombie"
-                local lastHit, held = -1e9, {}
-                for _, seed in ipairs(cluster) do
-                    lastHit = math.max(lastHit, StateOf(seed).lastHit)
-                    local n = 0
-                    for _, z in ipairs(Family(seed)) do n = n + LivingIn(z, role) end
-                    if n > 0 then held[#held + 1] = seed end
-                end
-                -- only while unchallenged, and only from where someone actually holds it
-                if now - lastHit >= cvCalm:GetFloat() * 60 and #held > 0 and LC.TerritoryCanGrow(cluster[1]) then
-                    for i = #held, 2, -1 do local j = math.random(i) held[i], held[j] = held[j], held[i] end
-                    for _, seed in ipairs(held) do
-                        if LC.GrowTerritory(seed) then break end
-                    end
-                end
+                local grew = TryGrow(cluster, now)
+                s.nextGrow = now + (grew and Interval(cluster[1].kind) or RETRY)
             end
         end
     end)
     if not ok then LC.Error("territory", err) end
 end)
+
+-- Grow one territory of this kind now, whatever the clock says (the admin tools and
+-- lc_territory_grow). Returns the patch, or nil and why not.
+function LC.TerritoryGrowNow(kind)
+    local cands = {}
+    for _, seed in ipairs(Seeds()) do if seed.kind == kind then cands[#cands + 1] = seed end end
+    if #cands == 0 then return nil, "no " .. (kind == "rebel" and "rebel" or "infestation") .. " zones are placed" end
+    for i = #cands, 2, -1 do local j = math.random(i) cands[i], cands[j] = cands[j], cands[i] end
+    local why
+    for _, seed in ipairs(cands) do
+        local z, whyNot = LC.GrowTerritory(seed, nil, nil, "staff")
+        if z then
+            local s = StateOf(ClusterOf(seed)[1])
+            s.nextGrow = CurTime() + Interval(kind)
+            return z
+        end
+        why = why or whyNot
+    end
+    return nil, why
+end
+
+-- How each territory is doing, a line each (lc_territory, the admin tools).
+function LC.TerritoryStatus(kind)
+    local out = {}
+    for _, cluster in ipairs(Clusters()) do
+        local seed = cluster[1]
+        if not kind or seed.kind == kind then
+            local s = StateOf(seed)
+            local n = ClusterGrown(cluster)
+            local due = math.max(0, math.floor(s.nextGrow - CurTime()))
+            out[#out + 1] = string.format("%s %s: %d patch%s grown (most %d), next growth %s, %d hit%s since the last push-back%s",
+                seed.kind == "rebel" and "Rebel ground" or "Infestation", LC.DescribePlace and LC.DescribePlace(seed.pos) or tostring(seed.pos),
+                n, n == 1 and "" or "es", MaxFor(seed.kind), due > 0 and ("in " .. (due >= 120 and (math.floor(due / 60) .. " min") or (due .. "s"))) or "due now",
+                s.hits, s.hits == 1 and "" or "s", s.lastWhy and (". Last try didn't grow: " .. s.lastWhy) or "")
+        end
+    end
+    return out
+end
 
 ------------------------------------------------------------------------
 -- Commands
@@ -638,25 +751,19 @@ local function Admin(ply) return not IsValid(ply) or ply:IsAdmin() end
 
 concommand.Add("lc_territory", function(ply)
     if not Admin(ply) then return end
-    local seeds = Seeds()
-    if #seeds == 0 then return Say(ply, "[Living City] No rebel or infestation zones placed.") end
-    for _, seed in ipairs(seeds) do
-        local s = StateOf(seed)
-        Say(ply, string.format("[Living City] %s at %s: %d patch%s grown, next growth in %ds, %d hit%s since the last push-back",
-            seed.kind, LC.DescribePlace and LC.DescribePlace(seed.pos) or tostring(seed.pos), #Grown(seed), #Grown(seed) == 1 and "" or "es",
-            math.max(0, math.floor(s.nextGrow - CurTime())), s.hits, s.hits == 1 and "" or "s"))
-    end
+    local lines = LC.TerritoryStatus()
+    if #lines == 0 then return Say(ply, "[Living City] No rebel or infestation zones placed.") end
+    for _, l in ipairs(lines) do Say(ply, "[Living City] " .. l) end
 end)
 
 concommand.Add("lc_territory_grow", function(ply, _, args)
     if not Admin(ply) then return end
     local kind = string.lower(args[1] or "")
     if not KINDS[kind] then return Say(ply, "[Living City] Usage: lc_territory_grow rebel|infest") end
-    local cands = {}
-    for _, seed in ipairs(Seeds()) do if seed.kind == kind then cands[#cands + 1] = seed end end
-    if #cands == 0 then return Say(ply, "[Living City] No " .. kind .. " zones placed.") end
-    local z, why = LC.GrowTerritory(Pick(cands))
-    Say(ply, z and ("[Living City] Grew " .. kind .. " territory " .. (LC.DescribePlace and LC.DescribePlace(z.pos) or "")) or ("[Living City] Couldn't grow: " .. tostring(why)))
+    local z, why = LC.TerritoryGrowNow(kind)
+    Say(ply, z and ("[Living City] Grew " .. kind .. " territory " .. (z.where or "")
+        .. (z.cells and " (along the path nodes)" or " (a round patch: no path nodes near it)"))
+        or ("[Living City] Couldn't grow: " .. tostring(why)))
 end)
 
 concommand.Add("lc_territory_reset", function(ply)

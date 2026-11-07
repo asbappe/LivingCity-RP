@@ -25,7 +25,7 @@ local OUTSIDE, INSIDE = 300, 500
 -- its middle is still as thick as it gets).
 local function Full(z)
     local b = z.box
-    local half = b and math.min(b.maxs.x - b.mins.x, b.maxs.y - b.mins.y) / 2 or (z.r or 0)
+    local half = b and math.min(b.maxs.x - b.mins.x, b.maxs.y - b.mins.y) / 2 or (z.cells and LCZ.CELL) or (z.r or 0)
     return math.Clamp(half * 0.7, 60, INSIDE)
 end
 
@@ -45,6 +45,7 @@ end
 -- does across (into the tunnels under it, or the street over them).
 local function SameFloor(z, pos)
     if z.box then return pos.z >= z.box.mins.z - 16 and pos.z <= z.box.maxs.z end
+    if z.cells then return z.mins ~= nil and pos.z >= z.mins.z - 32 and pos.z <= z.maxs.z end
     return pos.z >= z.pos.z - 48 and pos.z <= z.pos.z + math.min(z.h or 256, 256)
 end
 
@@ -52,6 +53,17 @@ end
 local function NearestIn(z, pos)
     if z.box then
         return Vector(math.Clamp(pos.x, z.box.mins.x, z.box.maxs.x), math.Clamp(pos.y, z.box.mins.y, z.box.maxs.y), pos.z)
+    end
+    if z.rects then
+        -- the nearest point of the nearest of its rectangles
+        local best, bd
+        local C = LCZ.CELL
+        for _, r in ipairs(z.rects) do
+            local q = Vector(math.Clamp(pos.x, r.x0 * C, (r.x1 + 1) * C), math.Clamp(pos.y, r.y0 * C, (r.y1 + 1) * C), pos.z)
+            local d = q:DistToSqr(pos)
+            if not bd or d < bd then best, bd = q, d end
+        end
+        if best then return best end
     end
     local d = Vector(pos.x - z.pos.x, pos.y - z.pos.y, 0)
     local len = d:Length()
@@ -164,12 +176,14 @@ function LC_CL.StainZone(z)
     stainMats = stainMats or Mats(STAINS)
     scorchMats = scorchMats or Mats(SCORCH)
     if #stainMats + #scorchMats == 0 or not util.DecalEx then return 0 end
-    local area = z.box and ((z.box.maxs.x - z.box.mins.x) * (z.box.maxs.y - z.box.mins.y)) or math.pi * z.r * z.r
+    local area = z.box and ((z.box.maxs.x - z.box.mins.x) * (z.box.maxs.y - z.box.mins.y))
+        or (z.cells and (z.n or 0) * LCZ.CELL * LCZ.CELL) or math.pi * z.r * z.r
     local n, painted = math.Clamp(math.floor(area / 9000), 24, 180), 0
     local world = game.GetWorld()
     for _ = 1, n do
         local p = LCZ.RandomInside(z, 0.95)
-        local tr = util.TraceLine({ start = p + Vector(0, 0, 120), endpos = p - Vector(0, 0, 300), mask = MASK_SOLID_BRUSHONLY })
+        -- (a patch along a path node link is one floor: from just above its floor, never from the floor above)
+        local tr = util.TraceLine({ start = p + Vector(0, 0, z.cells and 48 or 120), endpos = p - Vector(0, 0, z.cells and 64 or 300), mask = MASK_SOLID_BRUSHONLY })
         if tr.Hit and tr.HitWorld and tr.HitNormal.z > 0.6 then
             local scorch = #scorchMats > 0 and (#stainMats == 0 or math.random() < 0.3)
             local m = scorch and scorchMats[math.random(#scorchMats)] or stainMats[math.random(#stainMats)]
