@@ -1371,10 +1371,15 @@ section("Stop and search")
 -- everyone else (hunted rebels included) goes somewhere far away, and only our test subjects get stopped
 for _, p in ipairs(player.GetAll()) do p.lcStopNext = 1e9 p:SetPos(Vector(-30000, 30000, 0)) end
 _setcvar("lc_can_event", 0)
+-- (a sweep a story chain started earlier in the run can still be on: its team stands in rebel ground,
+-- fighting, and a unit picked from it was pulled into the fight first. Called off, and the team gone.)
+if LC.Skirmish then LC.EndSkirmish(LC.Skirmish, "test") end
+LC.PlannedRaid, LC.PlannedSweep = nil, nil
+for n, s in pairs(LC.NPCs) do if IsValid(n) and s.withdrawing then n:Remove() end end
 LC.CalmCops(nil)
 _run(1)
 local copN, copSt
-for n, s in pairs(LC.NPCs) do if IsValid(n) and s.role == "cop" and not s.test and not s.questLock then copN, copSt = n, s break end end
+for n, s in pairs(LC.NPCs) do if IsValid(n) and s.role == "cop" and not s.test and not s.questLock and not s.skirmish and not s.unmanaged then copN, copSt = n, s break end end
 ok(IsValid(copN), "there's a unit on the street")
 -- (the Resistance's fighters out of the way while this unit does its job: one wandering by started a fight)
 local rebelsAway = {}
@@ -14736,10 +14741,12 @@ section("The Resistance's money: intel, skimming, forged cards")
     ok(LC.JobGameStart(worker, "line", nil, { station = worker:GetPos() }), "(a shift on the line)")
     local g = LC.JobGames[worker]
     local good
-    -- (a good part: about two in three are; if the shift ended under it before one came, once more)
+    -- (a good part: about two in three are; if the shift ended under it before one came, once more.
+    -- Looked for every tick: on the test's short belt a part is only on it for two ticks, so a look
+    -- every half second missed it whenever the spawn fell between looks, which moved run to run.)
     for attempt = 1, 2 do
-        for _ = 1, 40 do
-            _run(0.5)
+        for _ = 1, 200 do
+            _run(0.1)
             for _, e in ipairs(g.parts or {}) do if IsValid(e) and e.lcPart and not e.lcPart.bad and not e.lcPart.rattle then good = e break end end
             if good or LC.JobGames[worker] ~= g then break end
         end
