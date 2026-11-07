@@ -60,7 +60,7 @@ timer.Simple(0, function()
         local live = GetGlobal2Entity("lc_live")
         if IsValid(live) and live:IsPlayer() then return live, live:Nick() end
         if IsValid(live) or GetGlobal2Bool("lc_live_npc", false) then
-            local n = IsValid(live) and live:GetNW2String("lc_pname", "") or ""
+            local n = IsValid(live) and LC.NPCStr(live, "lc_pname", "") or ""
             if n == "" then n = GetGlobal2String("lc_live_name", "") end
             return live, n ~= "" and n or "The Administrator"
         end

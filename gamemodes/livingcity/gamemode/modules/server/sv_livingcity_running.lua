@@ -47,7 +47,7 @@ local Runners = LC.Runners
 -- A shout from a unit: chat, and the words across the middle of the screen.
 function LC.CopShout(ply, npc, text, secs)
     if not IsValid(ply) then return end
-    local who = IsValid(npc) and npc:GetNW2String("lc_pname", "") or ""
+    local who = IsValid(npc) and LC.NPCStr(npc, "lc_pname", "") or ""
     ply:ChatPrint("[Civil Protection] " .. (who ~= "" and ("Unit " .. who .. ": ") or "") .. text)
     ply:SetNW2String("lc_shout", string.upper(text))
     ply:SetNW2Float("lc_shout_until", CurTime() + (secs or 3))

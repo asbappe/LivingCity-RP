@@ -755,7 +755,7 @@ local function StartRun(now)
                     st.eventUntil = math.huge
                     npc:SetPos(X.yard.pos + Vector(0, 0, 4))
                     LC.FaceYaw(npc, X.yard.yaw)
-                    npc:SetNW2String("lc_pname", "Union fitness instructor")
+                    LC.SetNPCStr(npc, "lc_pname", "Union fitness instructor")
                     X.instructor = npc
                 end
             end

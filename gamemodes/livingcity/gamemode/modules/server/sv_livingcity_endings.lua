@@ -3475,7 +3475,7 @@ SETUP.water = function()
             g = ents.Create("npc_monk")
             if IsValid(g) then
                 g:Spawn()
-                g:SetNW2String("lc_pname", "Father Grigori")
+                LC.SetNPCStr(g, "lc_pname", "Father Grigori")
                 E.ents[#E.ents + 1] = g
             end
         end

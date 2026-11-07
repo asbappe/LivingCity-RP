@@ -21,7 +21,7 @@ Nothing here changes what players see, a setting, a default or a command.
 
 Engine side (not changed, listed for the owner):
 
-- **NPC networked variables.** NPCs carry several NW2 strings each (`lc_pname`, `lc_pjob`, `lc_doing`, `lc_model`, `lc_desc` and more; about 115 different NW2 names are set across the gamemode, `lc_doing` from 28 places). NW2 values ride the entity updates, not the reliable stream, but every one of them is part of a joining player's first full update: 100 NPCs with 10 strings of about 20 bytes is about 20 KB, more with long `lc_doing` lines. Cutting this down would change what the HUD and the talk window show, so it is left as it is.
+- **NPC networked variables.** NPCs used to carry their name, job and what they are doing as NW2 strings (`lc_pname`, `lc_pjob`, `lc_doing`) in every joining player's first full update. These three now come on demand instead (see "NPC name tags, on demand" below). What is left on NPCs is short: `lc_role` and `lc_state` (a word each), the rare `lc_injury` and `lc_jg_mark` in the job games, and NW2 bools and ints.
 - **Entity count.** Every NPC, prop and city entity is in the joining player's full update. `lc_npc_budget` (default 60) is the owner's control for that.
 - **String tables** sent on joining: precached models and sounds, and every `resource.AddFile` recording and song (the downloads list). These grow with the owner's sound folders, not with the code.
 - No old-style `SetNW*` (NW1) or `SetGlobal*` (non-2) networking is used anywhere.
@@ -47,3 +47,15 @@ Tests: `NetSafetyTests` in `_dev/tests.lua` (pieces, pace, loading in, once a se
 - `LC.SaveData` still writes the whole layout file on every territory change (disk work, not network: for the performance pass).
 - The pacing uses a fixed 64 KB a second per player. A player whose `rate` is set lower than that is still protected by the 256 KB limit only through the queue; if it ever shows up, lower `LC.Net.RATE`.
 - Direct `net.Start` messages (notices, waypoints, announcements) don't go through the queue. Each is small, so it would take thousands in one moment to matter.
+
+## NPC name tags, on demand (2026-11-07, approved by the owner)
+
+`sh_livingcity_npcstr.lua` (shared, new). The server keeps `lc_pname`, `lc_pjob` and `lc_doing` in a Lua table (`LC.NPCStrNet.vals`) instead of NW2 strings. Every writer calls `LC.SetNPCStr(ent, key, value)` and every reader, server or client, calls `LC.NPCStr(ent, key, default)`, which reads like `GetNW2String` did (the default only when never set, `""` stays `""`). Any other key passed to them goes to the engine's string as before.
+
+- Each player's game asks (`lc_npcstr_ask`) about once a second, once it has loaded. The server answers (`lc_npcstr`) with the values of everyone within 1,500 units, nearest first, and only what changed since it last told that player (about 16 KB at most per answer, the rest next time). It also tells the game which entities were removed so a reused entity index never shows an old name.
+- Far ones: when a label reads an NPC that is out of range or not answered yet (the look-at name tag on someone across the square, the Administrator on air on the city screens), the game puts its index in the next ask (asked within a quarter of a second for a new one) and keeps asking after it while it is being read.
+- Readers covered: the look-at name tag, job and doing (`cl_livingcity_factions.lua`), the sympathizer check, the on-air name on the city screens (`cl_livingcity_resistance.lua`), the editor's NPC labels (`cl_livingcity.lua`), and every server reader (talk window header, chat lines, radio notices, the war and work code, the sleeping rebel's ragdoll). The records terminal, staff panels and talk window already get names in their own messages from the server, so nothing changed there.
+- Estimated saving on joining, at 100 NPCs: a name is about 12 characters, a job 15 to 40, a doing line 10 to 35, plus a few bytes each for the engine, so about 60 to 120 bytes per NPC: **6 to 12 KB less** in the first full update (more on a map full of long job lines). The same values now arrive a second or so after loading, a few KB, only for the people near the player. Changes of what someone is doing (28 places set it) also stop going to every player and go only to those near.
+- What players might notice: right after joining, or when looking at someone far away for the first time, the name tag can take up to about a second to appear.
+
+Tests: `NPCStrTests` in `_dev/tests.lua` (the table, defaults, the ask and answer, only changes, far ones on request, removal, the pace, a crowd split over answers). The client smoke test feeds an answer through the receiver, reads it back, checks a far NPC is asked after and a removed one forgotten.

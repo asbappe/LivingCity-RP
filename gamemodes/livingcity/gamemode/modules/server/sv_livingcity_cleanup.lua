@@ -551,7 +551,7 @@ local function Release(npc)
     if not st then return end
     st.cleanGuard = nil
     if st.lcGuardLock then st.questLock, st.lcGuardLock = nil, nil end
-    if npc.SetNW2String then npc:SetNW2String("lc_doing", "") end
+    if npc.SetNW2String then LC.SetNPCStr(npc, "lc_doing", "") end
     if st.state == "cleanguard" then
         LC.SetState(npc, st, "idle")
         st.untilT = CurTime() + 2
@@ -658,7 +658,7 @@ local function Assign(worker, g, now)
         c.st.route, c.st.routeTo, c.st.goingTo = nil, nil, nil
         LC.SetState(c.npc, c.st, "cleanguard")
         if c.npc.SetCurrentWeaponProficiency then c.npc:SetCurrentWeaponProficiency(WEAPON_PROFICIENCY_VERY_GOOD or 3) end
-        if c.npc.SetNW2String then c.npc:SetNW2String("lc_doing", "guarding the cleanup crew") end
+        if c.npc.SetNW2String then LC.SetNPCStr(c.npc, "lc_doing", "guarding the cleanup crew") end
         g.units[#g.units + 1] = c.npc
         if worker:IsPlayer() and not g.told then
             g.told = true

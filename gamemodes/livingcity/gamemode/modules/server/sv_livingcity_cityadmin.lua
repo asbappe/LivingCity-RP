@@ -409,7 +409,7 @@ local function SpawnGuard(admin)
     npc:SetHealth(hp)
     st.unmanaged, st.questLock, st.adminGuard = true, true, admin
     LC.SetState(npc, st, "adminguard")
-    npc:SetNW2String("lc_doing", "guarding the City Administrator")
+    LC.SetNPCStr(npc, "lc_doing", "guarding the City Administrator")
     LC.AdminGuards[npc] = admin
     return npc
 end

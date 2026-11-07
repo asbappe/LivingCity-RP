@@ -661,7 +661,7 @@ local function BackupTick(now)
                 elseif not st.backupJoined and npc:GetPos():DistToSqr(caller:GetPos()) < 350 * 350 then
                     -- there: in the squad, and the caller hears so
                     st.backupJoined = true
-                    local who = npc:GetNW2String("lc_pname", "")
+                    local who = LC.NPCStr(npc, "lc_pname", "")
                     caller:ChatPrint("[CP net] " .. (who ~= "" and ("Unit " .. who) or "A unit") .. " is with you: in your squad. They follow you and fight what you fight.")
                     npc:EmitSound(st.role == "soldier" and "npc/combine_soldier/vo/affirmative.wav" or "npc/metropolice/vo/affirmative.wav", 70)
                     if LC.Notice and (caller.lcBackupNoticeAt or 0) < now - 20 then
@@ -772,7 +772,7 @@ hook.Add("LivingCityPlayerUsedNPC", "LivingCityRumors", function(ply, npc, st)
     if st.state ~= "idle" and st.state ~= "moving" and st.state ~= "inline" then return end
     local now = CurTime()
     if (ply.lcRumorNext or 0) > now then return end
-    local name = npc:GetNW2String("lc_pname", "")
+    local name = LC.NPCStr(npc, "lc_pname", "")
     local who = name ~= "" and name or "A citizen"
     if LC.PlayerIsCP(ply) then
         if math.random() < 0.3 then

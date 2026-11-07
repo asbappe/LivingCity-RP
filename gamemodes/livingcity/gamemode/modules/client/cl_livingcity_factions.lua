@@ -271,7 +271,7 @@ end
 LC_CL = LC_CL or {}
 function LC_CL.IsSympathizer(ent)
     if not IsValid(ent) or ent:GetClass() ~= "npc_citizen" or not ent:GetNW2Bool("lc_prebel", false) then return false end
-    return not string.find(ent:GetNW2String("lc_pjob", ""), "Resistance", 1, true) -- (the fighters wear it openly)
+    return not string.find(LC.NPCStr(ent, "lc_pjob", ""), "Resistance", 1, true) -- (the fighters wear it openly)
 end
 
 local SYMP_COL, SYMP_OUT = Color(235, 150, 70), Color(0, 0, 0, 200)
@@ -333,12 +333,12 @@ hook.Add("HUDDrawTargetID", "LivingCityFactionsTargetID", function()
     local ent = tr.Entity
     -- the city's named people: who they are, what they do, and (to the Resistance) who's with us
     if IsValid(ent) and (ent:IsNPC() or ent:GetNW2Bool("lc_sleeper", false)) and tr.HitPos:DistToSqr(tr.StartPos) < 350 * 350 then
-        local pname = ent:GetNW2String("lc_pname", "")
+        local pname = LC.NPCStr(ent, "lc_pname", "")
         if pname ~= "" then
             local x, y = ScrW() / 2, ScrH() / 2 + 40
             draw.SimpleTextOutlined(pname, "LCNameMain", x, y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
-            local job = ent:GetNW2String("lc_pjob", "")
-            local doing = ent:GetNW2String("lc_doing", "") -- what they're at right now (sv_livingcity_npcwork.lua)
+            local job = LC.NPCStr(ent, "lc_pjob", "")
+            local doing = LC.NPCStr(ent, "lc_doing", "") -- what they're at right now (sv_livingcity_npcwork.lua)
             if doing ~= "" then job = (job ~= "" and (job .. ", ") or "") .. doing end
             if job ~= "" then
                 draw.SimpleTextOutlined(job, "LCNameSub", x, y + 20, Color(190, 190, 190), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)

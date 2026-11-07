@@ -1328,7 +1328,7 @@ local function LTSetup(q)
         pnpc:SetHealth(100)
         if pnpc.SetSchedule then pnpc:SetSchedule(SCHED_IDLE_STAND) end
         LC.Face(pnpc, spot)
-        pnpc:SetNW2String("lc_doing", "a Resistance prisoner")
+        LC.SetNPCStr(pnpc, "lc_doing", "a Resistance prisoner")
         pnpc.lcLoyaltyPrisoner = ply
         sc.prisoner = pnpc
         q.data.target = pnpc

@@ -273,7 +273,7 @@ local BODY  = { "physics/body/body_medium_impact_soft1.wav", "physics/body/body_
 -- The work itself
 ------------------------------------------------------------------------
 
-local function SetDoing(npc, text) if IsValid(npc) then npc:SetNW2String("lc_doing", text or "") end end
+local function SetDoing(npc, text) if IsValid(npc) then LC.SetNPCStr(npc, "lc_doing", text or "") end end
 
 local function Drop(npc, st, finished)
     local w = st and st.npcWork
@@ -670,7 +670,7 @@ Task("medic", { id = "revive", label = "helping someone who's down", urgent = tr
           secs = 6, anim = HEAL, doing = "helping someone who's down",
           done = function(n)
               if LC.Revive and LC.Revive(ply, 30, nil) then
-                  local who = n:GetNW2String("lc_pname", "")
+                  local who = LC.NPCStr(n, "lc_pname", "")
                   ply:ChatPrint("[Living City] " .. (who ~= "" and who or "A Union medic") .. ", a Union medic, patches you up enough to stand.")
                   hook.Run("LivingCityNPCRevived", n, ply)
               end

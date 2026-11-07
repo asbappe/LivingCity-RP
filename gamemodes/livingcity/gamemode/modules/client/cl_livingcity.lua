@@ -694,7 +694,7 @@ local function DrawEditorLabels()
         if p.pos:DistToSqr(eye) < near then Label(p.pos + Vector(0, 0, 16), "PERSISTENT PROP", Color(150, 230, 150)) end
     end
     for _, e in ipairs(ShownNpcs(eye)) do
-        local who = e:GetNW2String("lc_pname", "")
+        local who = LC.NPCStr(e, "lc_pname", "")
         Label(e:GetPos() + Vector(0, 0, 84), string.upper(e:GetNW2String("lc_role", "")) .. (who ~= "" and (" " .. who) or "") .. ": " .. e:GetNW2String("lc_state", ""),
             Color(255, 255, 255, 220), "DermaDefault")
     end

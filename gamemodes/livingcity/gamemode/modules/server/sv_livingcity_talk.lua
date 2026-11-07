@@ -146,7 +146,7 @@ local function Usable(ply, npc)
 end
 
 local function Doing(npc)
-    local d = npc:GetNW2String("lc_doing", "")
+    local d = LC.NPCStr(npc, "lc_doing", "")
     if d ~= "" then return d end
     local st = LC.NPCs[npc]
     if st and st.state == "inline" then return "waiting in the ration line" end
@@ -189,8 +189,8 @@ function LC.OpenTalk(ply, npc, said)
     if kind == "afraid" and not said then said = Pick(AFRAID_LINES) end
     net.Start("lc_talk")
     net.WriteEntity(npc)
-    net.WriteString(npc:GetNW2String("lc_pname", "A citizen"))
-    net.WriteString(npc:GetNW2String("lc_pjob", ""))
+    net.WriteString(LC.NPCStr(npc, "lc_pname", "A citizen"))
+    net.WriteString(LC.NPCStr(npc, "lc_pjob", ""))
     net.WriteString(Doing(npc))
     net.WriteString(mood)
     net.WriteString(kind)

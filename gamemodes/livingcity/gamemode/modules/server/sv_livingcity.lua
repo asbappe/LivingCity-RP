@@ -1199,7 +1199,7 @@ local function GoHome(npc, st, run)
         if at then
             st.homeBlock = bz
             if GoTo(npc, st, at, run, { kind = "homebed", pos = at, yaw = b.yaw or 0 }) then
-                npc:SetNW2String("lc_doing", "going home to bed")
+                LC.SetNPCStr(npc, "lc_doing", "going home to bed")
                 return true
             end
             LC.NPCBedUp(npc, st)
@@ -1233,7 +1233,7 @@ local function StartLeaving(npc, st, run, why)
     local board = LC.TrainBoardingPos and LC.TrainBoardingPos()
     if board and GoTo(npc, st, board, run, { kind = "spawn", pos = board, yaw = math.random(0, 359) }) then
         if LC.NPCCarry then LC.NPCCarry(npc, st, "models/props_c17/suitcase001a.mdl") end
-        npc:SetNW2String("lc_doing", "leaving the city by train")
+        LC.SetNPCStr(npc, "lc_doing", "leaving the city by train")
         return true
     end
     local spawns = PointsOfKind("spawn")

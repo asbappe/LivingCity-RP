@@ -2542,6 +2542,47 @@ return nil
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
 
+# the people's name tags (sh_livingcity_npcstr.lua): the server's answer fills the game's copy, readers
+# read it through LC.NPCStr, a removed one is forgotten, and the game asks after a far one it reads
+err = L.execute(r"""
+local S = LC.NPCStrNet
+if not (S and S.Take and S.Ask and net["recv_lc_npcstr"] and timer.list.LivingCityNPCStr) then
+    return "npc tags: the receiver, the asking or its timer is missing"
+end
+local npc = ents.Create("npc_citizen")
+npc:SetPos(Vector(90000, 0, 0))
+local idx = npc:EntIndex()
+if LC.NPCStr(npc, "lc_pname", "none") ~= "none" then return "npc tags: an NPC with no answer yet should read as the default" end
+local rU, rS = net.ReadUInt, net.ReadString
+local q, qs = { 0, 1, idx, 2, 1, 3 }, { "Mira Holt", "fixing a streetlight" } -- (none gone; one NPC: name and doing)
+net.ReadUInt = function() return table.remove(q, 1) end
+net.ReadString = function() return table.remove(qs, 1) end
+local okT, errT = pcall(net["recv_lc_npcstr"])
+net.ReadUInt, net.ReadString = rU, rS
+if not okT then return "npc tags receive: " .. tostring(errT) end
+if LC.NPCStr(npc, "lc_pname", "") ~= "Mira Holt" or LC.NPCStr(npc, "lc_doing", "") ~= "fixing a streetlight" then return "npc tags: the name sent didn't reach LC.NPCStr" end
+local sentAsk, wrote = false, {}
+local wS, wU, sts = net.WriteUInt, net.Start, net.SendToServer
+net.Start = function(n) if n == "lc_npcstr_ask" then sentAsk = true end end
+net.WriteUInt = function(v) wrote[#wrote + 1] = v end
+net.SendToServer = function() end
+local okA, errA = pcall(S.Ask)
+net.WriteUInt, net.Start, net.SendToServer = wS, wU, sts
+if not okA then return "npc tags ask: " .. tostring(errA) end
+if not sentAsk or wrote[1] ~= 1 or wrote[2] ~= idx then return "npc tags: a far NPC read on screen isn't asked after" end
+q = { 1, idx, 0 }
+net.ReadUInt = function() return table.remove(q, 1) end
+pcall(net["recv_lc_npcstr"])
+net.ReadUInt = rU
+if LC.NPCStr(npc, "lc_pname", "gone") ~= "gone" then return "npc tags: a removed NPC's tags weren't forgotten" end
+local okF, errF = pcall(timer.list.LivingCityNPCStr.fn)
+if not okF then return "npc tags timer: " .. tostring(errF) end
+npc:Remove()
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
 # the official folder for recordings and songs is the server's garrysmod/sound/livingcity/ (CORE.md):
 # what players read in the guide and the sound check must send them there, never to the old sound addon
 _guide = open(os.path.join(GMDIR, "gamemode", "cl_init.lua")).read()

@@ -30,6 +30,7 @@ LC_MODULES = {
     shared = {
         "sh_livingcity_cache", -- (first: quick lookups the rest use)
         "sh_livingcity_net", -- (big and frequent sends to players, made safe: before anything sends)
+        "sh_livingcity_npcstr", -- (the people's names, jobs and doings: sent only to players near them)
         "sh_livingcity_acts",
         "sh_livingcity_lowered", -- (guns carried lowered until raised: hold R)
         "sh_livingcity_stamina", -- (running and jumping tire you)

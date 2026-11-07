@@ -493,7 +493,7 @@ function LC.SpawnMissingZombine(q, z)
     if not IsValid(npc) or not st then return nil end
     st.unmanaged = true
     if LC.QB and LC.QB.Lock then LC.QB.Lock(q, npc) end
-    npc:SetNW2String("lc_pname", "6-12")
+    LC.SetNPCStr(npc, "lc_pname", "6-12")
     q.data.zombine = npc
     q.ents[#q.ents + 1] = npc -- (left to the infestation: the cleanup crew deals with him when the job's over)
     if IsValid(owner) then

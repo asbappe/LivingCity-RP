@@ -286,8 +286,8 @@ local function SpawnRebel(pos, zone, weapon)
     st.gender = string.find(string.lower(npc:GetModel() or ""), "female", 1, true) and "female" or "male"
     st.leaveAt = nil
     st.nextLook = 0
-    npc:SetNW2String("lc_pname", Pick(st.gender == "female" and NAMES_F or NAMES_M))
-    npc:SetNW2String("lc_pjob", "Resistance")
+    LC.SetNPCStr(npc, "lc_pname", Pick(st.gender == "female" and NAMES_F or NAMES_M))
+    LC.SetNPCStr(npc, "lc_pjob", "Resistance")
     npc:SetNW2Bool("lc_prebel", true)
     for _, ply in ipairs(player.GetAll()) do
         LC.SetRel(npc, st, ply, LC.RebelDisposition(npc, st, ply, LC.PlayerIsZombie and LC.PlayerIsZombie(ply)))
@@ -692,7 +692,7 @@ local function FollowThink(npc, st, now)
         st.nextThink = now + 0.5
         if leader:GetPos():DistToSqr(st.meetAt) < 350 * 350 and leader:GetPos():DistToSqr(pos) < 600 * 600 then
             st.meetAt = nil
-            leader:ChatPrint("[Resistance] " .. npc:GetNW2String("lc_pname", "A fighter") .. " falls in with you.")
+            leader:ChatPrint("[Resistance] " .. LC.NPCStr(npc, "lc_pname", "A fighter") .. " falls in with you.")
         elseif pos:DistToSqr(st.meetAt) > 140 * 140 then
             HeadFor(npc, st, st.meetAt, false)
             LC.SetState(npc, st, "moving")
@@ -1342,7 +1342,7 @@ local function SweepChore(u, st, sk, now)
         if not best then return false end
         st.sweepChore, sk.taken[best.ent], st.choreGo = best, u, 0
         c = best
-        u:SetNW2String("lc_doing", c.kind == "scientist" and "arresting the scientist" or (c.kind == "pot" and "smashing the pots" or "confiscating supplies"))
+        LC.SetNPCStr(u, "lc_doing", c.kind == "scientist" and "arresting the scientist" or (c.kind == "pot" and "smashing the pots" or "confiscating supplies"))
     end
     local pos = c.ent:GetPos()
     if u:GetPos():DistToSqr(pos) < 90 * 90 then
@@ -1350,7 +1350,7 @@ local function SweepChore(u, st, sk, now)
         CHORE_DO[c.kind](u, c.ent)
         sk.taken[c.ent] = nil
         st.sweepChore = nil
-        u:SetNW2String("lc_doing", "")
+        LC.SetNPCStr(u, "lc_doing", "")
         return true
     end
     if now > (st.choreGo or 0) then
@@ -1779,7 +1779,7 @@ function LC.DismissFollower(npc, st, quiet)
         st.returning, st.unmanaged, st.expires = true, true, CurTime() + 60
     end
     if st.foe then DropFoe(npc, st, CurTime()) end
-    if not quiet and IsValid(leader) then leader:ChatPrint("[Resistance] '" .. npc:GetNW2String("lc_pname", "Right") .. ". I'll head back.'") end
+    if not quiet and IsValid(leader) then leader:ChatPrint("[Resistance] '" .. LC.NPCStr(npc, "lc_pname", "Right") .. ". I'll head back.'") end
 end
 
 local function Recruit(ply, npc, st)
@@ -1812,7 +1812,7 @@ local function Recruit(ply, npc, st)
     st.unmanaged = true -- someone else holds the fort while they're out
     st.returning, st.expires, st.raid, st.errand = nil, nil, nil, nil
     npc:EmitSound(Vo(st, Pick({ "okimready01", "okimready02", "letsgo01", "letsgo02", "leadtheway01" })), 75)
-    ply:ChatPrint("[Resistance] " .. npc:GetNW2String("lc_pname", "A fighter") .. " is with you, and stays with you. They hold their fire until you open up or the Combine do. E on them again to send them home.")
+    ply:ChatPrint("[Resistance] " .. LC.NPCStr(npc, "lc_pname", "A fighter") .. " is with you, and stays with you. They hold their fire until you open up or the Combine do. E on them again to send them home.")
 end
 
 -- A squad belongs to the connection that formed it. Anyone still marked as
@@ -1941,7 +1941,7 @@ local function PostWarn(npc, st, who, now)
     LC.Face(npc, who:GetPos())
     local where = LC.DescribePlace and LC.DescribePlace(st.post.pos) or "at a lookout post"
     if LC.RadioNotice then
-        LC.RadioNotice("resistance", string.format("%s on lookout %s: Combine coming%s!", npc:GetNW2String("lc_pname", "Our lookout"), where,
+        LC.RadioNotice("resistance", string.format("%s on lookout %s: Combine coming%s!", LC.NPCStr(npc, "lc_pname", "Our lookout"), where,
             who:IsPlayer() and "" or ", the city's own"))
     end
     if who:IsPlayer() then who:ChatPrint("[Resistance] Someone shouts from up ahead: 'Combine! Coming in!' You've been seen.") end
@@ -2001,7 +2001,7 @@ function LC.EnsureLookoutPosts()
                     st.unmanaged = true
                     st.post = { pos = p.pos, yaw = p.yaw or 0 }
                     made:SetAngles(Angle(0, p.yaw or 0, 0))
-                    made:SetNW2String("lc_pjob", "Resistance lookout")
+                    LC.SetNPCStr(made, "lc_pjob", "Resistance lookout")
                     made:SetNW2Bool("lc_lookout", true)
                     slot.npc, slot.diedAt = made, nil
                 end
@@ -2066,8 +2066,8 @@ local function EnsureQuartermasters()
                 if IsValid(npc) then
                     st.quartermaster, st.unmanaged = true, true
                     st.qmHome = p + Vector(0, 0, 4)
-                    npc:SetNW2String("lc_pname", "Quartermaster " .. npc:GetNW2String("lc_pname", ""))
-                    npc:SetNW2String("lc_pjob", "Resistance quartermaster: gear and work")
+                    LC.SetNPCStr(npc, "lc_pname", "Quartermaster " .. LC.NPCStr(npc, "lc_pname", ""))
+                    LC.SetNPCStr(npc, "lc_pjob", "Resistance quartermaster: gear and work")
                 end
             end
         end

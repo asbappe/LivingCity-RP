@@ -126,8 +126,8 @@ function LC.SetupLab(bench)
             s.lcModel, s.lcWho = who.model, who.id
             LC.PlaceScientist(bench, s)
             s:Spawn()
-            s:SetNW2String("lc_pname", who.name)
-            s:SetNW2String("lc_pjob", "The Resistance's scientist: decodes chips, makes what a cell needs")
+            LC.SetNPCStr(s, "lc_pname", who.name)
+            LC.SetNPCStr(s, "lc_pjob", "The Resistance's scientist: decodes chips, makes what a cell needs")
             s.lcLab = bench
             bench.lcScientist = s
         end

@@ -93,8 +93,8 @@ function LC.SpawnGrigori()
     npc:SetKeyValue("spawnflags", "2") -- (gagged: none of the engine's own idle chatter; he talks when we say)
     npc:Spawn()
     npc:Activate()
-    npc:SetNW2String("lc_pname", "Father Grigori")
-    npc:SetNW2String("lc_doing", "keeping watch over the flock")
+    LC.SetNPCStr(npc, "lc_pname", "Father Grigori")
+    LC.SetNPCStr(npc, "lc_doing", "keeping watch over the flock")
     npc.lcGrigori = true
     npc.lcHome = z
     -- an ordinary man's health (the owner, 1 November: he couldn't be killed)

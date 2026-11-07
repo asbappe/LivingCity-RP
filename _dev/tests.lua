@@ -855,7 +855,7 @@ local fem = LC.QB.SpawnActor({ ents = {}, marked = {}, data = {} }, "citizen", V
 ok(IsValid(fem) and LC.NPCs[fem].gender == "female" and fem:GetModel():find("female", 1, true), "a story can ask for a woman, and gets one")
 if IsValid(fem) then fem:Remove() end
 local man = LC.QB.SpawnActor({ ents = {}, marked = {}, data = {} }, "citizen", Vector(9000, 9000, 0), 5, nil, { gender = "male" })
-ok(IsValid(man) and LC.NPCs[man].gender == "male" and LC.NameGender(man:GetNW2String("lc_pname", "")) == "male", "or a man, with a man's name")
+ok(IsValid(man) and LC.NPCs[man].gender == "male" and LC.NameGender(LC.NPCStr(man, "lc_pname", "")) == "male", "or a man, with a man's name")
 if IsValid(man) then man:Remove() end
 
 
@@ -2888,7 +2888,7 @@ LC.TopUpPeople()
 ok(#P.list == 5, "the roster is filled to its size, citizens and units", #P.list)
 local n1, s1 = LC.Spawners.citizen(Vector(9000, 9100, 0))
 local prof = s1.profile
-ok(prof and n1:GetNW2String("lc_pname", "") == prof.name and n1:GetModel() == prof.model and prof.model:find("group01"), "a citizen on the street is a named person with their own model")
+ok(prof and LC.NPCStr(n1, "lc_pname", "") == prof.name and n1:GetModel() == prof.model and prof.model:find("group01"), "a citizen on the street is a named person with their own model")
 ok(s1.gender == prof.gender, "and their own voice")
 local n2, s2 = LC.Spawners.citizen(Vector(9000, 9200, 0))
 ok(s2.profile ~= prof, "nobody is out there twice")
@@ -2897,7 +2897,7 @@ n1:Remove()
 prof.lastSeen = 1
 for _, o in ipairs(P.list) do if o.role == "citizen" and o ~= prof and o ~= s2.profile then o.lastSeen = os.time() + 1000 end end
 local n3, s3 = LC.Spawners.citizen(Vector(9000, 9300, 0))
-ok(s3.profile == prof and n3:GetNW2String("lc_pname", "") == name1 and n3:GetModel() == prof.model, "the same person comes back, with the same face, after time away")
+ok(s3.profile == prof and LC.NPCStr(n3, "lc_pname", "") == name1 and n3:GetModel() == prof.model, "the same person comes back, with the same face, after time away")
 -- jobs and homes
 prof.job, prof.home = "kitchen", 1
 ok(LC.HomeZoneFor(s3) and LC.HomeZoneFor(s3).group == 1, "they go home to their own block for curfew")
@@ -6390,7 +6390,7 @@ for _ = 1, 90 do
     _run(1)
     for _, r in ipairs(rebs) do
         if r.st.life then seen[r.st.life.kind] = true end
-        local d = r.n:GetNW2String("lc_doing", "")
+        local d = LC.NPCStr(r.n, "lc_doing", "")
         if d ~= "" and d ~= "on alert" then doing = true end
     end
 end
@@ -6404,7 +6404,7 @@ LC.RebelAlert(hz, H0 + Vector(500, 0, 0), CurTime())
 _run(2.5) -- (nobody near: they think every two seconds)
 local still = 0
 for _, r in ipairs(rebs) do if r.st.life then still = still + 1 end end
-ok(still == 0 and rebs[2].n:GetNW2String("lc_doing", "") == "on alert", "a shout goes up: they put it down, on their feet")
+ok(still == 0 and LC.NPCStr(rebs[2].n, "lc_doing", "") == "on alert", "a shout goes up: they put it down, on their feet")
 _advance(26)
 _run(1)
 for _, r in ipairs(rebs) do LC.RebelLifeEnd(r.n, r.st) r.st.untilT = CurTime() + 1000 end
@@ -6414,7 +6414,7 @@ local bunkThing
 for _, t in ipairs(LC.RebelZoneThings(hz)) do if t.kind == "bunk" then bunkThing = t end end
 ok(LC.RebelLifeDo(sl.n, sl.st, "sleep", bunkThing), "a fighter turns in at a bunk")
 for _ = 1, 30 do _run(0.5) if LC.RebelAsleep(sl.st) then break end end
-ok(LC.RebelAsleep(sl.st) and sl.n:GetNW2String("lc_doing", "") == "asleep", "and sleeps there")
+ok(LC.RebelAsleep(sl.st) and LC.NPCStr(sl.n, "lc_doing", "") == "asleep", "and sleeps there")
 LC.RebelAlert(hz, H0, CurTime())
 _run(2.5)
 ok(not LC.RebelAsleep(sl.st) and sl.st.life == nil and sl.n:GetPos().z < 10, "a shout wakes them, up and off the bed")
@@ -6450,7 +6450,7 @@ local okE, why = LC.StartRebelErrand(ez)
 ok(okE, "a scavenging run sets out", why)
 local runner
 for _, r in ipairs(rs) do if r.st.errand then runner = r end end
-ok(runner and runner.st.errand.phase == "out" and runner.n:GetNW2String("lc_doing", "") == "out scavenging", "one of them, out scavenging")
+ok(runner and runner.st.errand.phase == "out" and LC.NPCStr(runner.n, "lc_doing", "") == "out scavenging", "one of them, out scavenging")
 if runner then
     _run(1)
     ok(runner.n.sched == SCHED_FORCED_GO, "walking, not running")
@@ -6458,7 +6458,7 @@ if runner then
     watcher.sim = false
     wst.untilT, wst.nextInspect = CurTime() + 1000, CurTime() + 1000
     _run(2.5)
-    ok(runner.st.errand.hides >= 1 and runner.n:GetNW2String("lc_doing", "") == "keeping out of sight", "a unit up ahead: they back off and keep out of sight")
+    ok(runner.st.errand.hides >= 1 and LC.NPCStr(runner.n, "lc_doing", "") == "keeping out of sight", "a unit up ahead: they back off and keep out of sight")
     LC.NPCs[watcher] = nil
     watcher:Remove()
     local searched
@@ -7206,7 +7206,7 @@ local function worker(job, at)
     local n, s = LC.SpawnCitizen(at or W0)
     s.leaveAt = nil
     s.profile = { job = job, name = "Test " .. tostring(job) }
-    n:SetNW2String("lc_pname", "Test " .. tostring(job))
+    LC.SetNPCStr(n, "lc_pname", "Test " .. tostring(job))
     return n, s
 end
 local function runUntil(cond, secs) for _ = 1, secs * 2 do if cond() then return true end _run(0.5) end return cond() end
@@ -7218,9 +7218,9 @@ local m, ms = worker("maintenance")
 ok(not LC.NPCWorkChoose(m, ms, CurTime()), "a light that just broke waits for a player first")
 lamp.lcBrokenAt = CurTime() - 1000
 ok(LC.NPCWorkChoose(m, ms, CurTime()) and ms.npcWork and ms.npcWork.id == "lamp", "then the city's maintenance worker goes to fix it")
-ok(m:GetNW2String("lc_doing", "") == "fixing a streetlight", "and you can see what they're doing")
+ok(LC.NPCStr(m, "lc_doing", "") == "fixing a streetlight", "and you can see what they're doing")
 ok(runUntil(function() return not lamp:GetNW2Bool("lc_broken", true) end, 40), "the light is fixed", ms.state)
-ok(ms.npcWork == nil and m:GetNW2String("lc_doing", "x") == "", "and they're done")
+ok(ms.npcWork == nil and LC.NPCStr(m, "lc_doing", "x") == "", "and they're done")
 
 -- radio repair: a loudspeaker
 local spk = ents.Create("lc_loudspeaker") spk:SetPos(W0 + Vector(0, 600, 0))
@@ -7318,7 +7318,7 @@ SetGlobal2Float("lc_live_next", 0)
 if LC.LiveSpeaker then LC.StopBroadcast("test") end
 ok(LC.StartNPCBroadcast(), "the Administrator goes on air")
 local breen = LC.LiveNPC and LC.LiveNPC.npc
-ok(IsValid(breen) and breen:GetClass() == "npc_citizen" and breen:GetNW2String("lc_pname", "") == "The Administrator" and breen:GetPos():Distance(B0) < 20, "at the broadcast studio")
+ok(IsValid(breen) and breen:GetClass() == "npc_citizen" and LC.NPCStr(breen, "lc_pname", "") == "The Administrator" and breen:GetPos():Distance(B0) < 20, "at the broadcast studio")
 ok(GetGlobal2Bool("lc_live_npc", false) and GetGlobal2Entity("lc_live") == breen, "every screen shows her")
 local bcam = GetGlobal2Entity("lc_live_cam")
 ok(IsValid(bcam) and bcam:GetNW2Entity("lc_subject") == breen, "the camera scanner films her")
@@ -9504,7 +9504,7 @@ for _ = 1, 700 do -- (until they're all through: a slow queue can take a while)
     _run(0.5)
     if #LC.IntakeQueue(reg) >= 2 then sawLine = true end
     for _, n in ipairs(arrivals) do
-        if IsValid(n) and n:GetNW2String("lc_doing", "") == "being registered at Civil Intake" then sawDesk = true end
+        if IsValid(n) and LC.NPCStr(n, "lc_doing", "") == "being registered at Civil Intake" then sawDesk = true end
     end
     if LC.IntakeBusyWith(reg) and not LC.IntakeBusyWith(reg):IsPlayer() then sawBusy = true end
     local busy = false
@@ -10905,9 +10905,9 @@ sleeper.seqs = { Lying_Down = 5 } -- (the offline stand-in's models have no anim
 local bedtime = LC.Bedtime
 LC.Bedtime = function() return true end
 LC.StartLeaving(sleeper, sst, false, "test")
-ok(sst.bedKey ~= nil and sleeper:GetNW2String("lc_doing", "") == "going home to bed", "at curfew or night, a citizen heads for a free bed in a housing block", sleeper:GetNW2String("lc_doing", ""))
+ok(sst.bedKey ~= nil and LC.NPCStr(sleeper, "lc_doing", "") == "going home to bed", "at curfew or night, a citizen heads for a free bed in a housing block", LC.NPCStr(sleeper, "lc_doing", ""))
 for _ = 1, 40 do _run(0.5) if sst.state == "abed" then break end end
-ok(sst.state == "abed" and IsValid(sleeper) and sleeper:GetNW2String("lc_doing", "") == "asleep", "and lies down on it to sleep (not gone)",
+ok(sst.state == "abed" and IsValid(sleeper) and LC.NPCStr(sleeper, "lc_doing", "") == "asleep", "and lies down on it to sleep (not gone)",
     tostring(sst.state) .. " seq=" .. tostring(sleeper.LookupSequence and sleeper:LookupSequence("Lying_Down")) .. " model=" .. tostring(sleeper:GetModel()))
 local other, ost = LC.SpawnCitizen(bz.pos + Vector(-90, 40, 0))
 ost.leaveAt = nil
@@ -14342,7 +14342,7 @@ section("Playtest fixes, 17 October (evening)")
         benches[i] = b
         local sc = LC.SetupLab(b)
         if IsValid(sc) and sc.lcWho then who[sc.lcWho] = (who[sc.lcWho] or 0) + 1 end
-        ok(IsValid(sc) and sc:GetNW2String("lc_pname", "") ~= "", "(the scientist has a name tag)", IsValid(sc) and sc:GetNW2String("lc_pname", ""))
+        ok(IsValid(sc) and LC.NPCStr(sc, "lc_pname", "") ~= "", "(the scientist has a name tag)", IsValid(sc) and LC.NPCStr(sc, "lc_pname", ""))
     end
     ok(who.kleiner == 1 and who.eli == 1 and who.magnusson == 1, "three labs: Dr. Kleiner, Eli Vance and Dr. Magnusson, one each (no Kleiner clones)")
     for _, b in ipairs(benches) do if IsValid(b.lcScientist) then b.lcScientist:Remove() end b:Remove() end
@@ -14918,7 +14918,7 @@ section("Playtest fixes, 21 October")
     ok(LC.JobGames[stk] == nil, "welded shut: done")
     if LC.Energizers[stk] then LC.Energizers[stk]:Remove() LC.Energizers[stk] = nil end
     local tech = LC.StalkerTechnician(stk, stk:GetPos())
-    ok(IsValid(tech) and tech:GetNW2String("lc_pname", "") == "Overwatch technician", "a technician comes to fit the harness")
+    ok(IsValid(tech) and LC.NPCStr(tech, "lc_pname", "") == "Overwatch technician", "a technician comes to fit the harness")
     if IsValid(tech) then timer.Remove("LivingCityTech" .. tech:EntIndex()) LC.NPCs[tech] = nil tech:Remove() end
     LC.FreeStalker(stk)
     stk.valid = false cit.valid = false
@@ -15539,7 +15539,7 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     local v1 = ents.Create("npc_vortigaunt") v1:SetPos(Vector(-165000, -165000, 0)) v1:Spawn()
     local v2 = ents.Create("npc_vortigaunt") v2:SetPos(Vector(-165000, -164940, 0)) v2:Spawn()
     LC.RebelVorts[v1], LC.RebelVorts[v2] = true, true
-    ok(LC.VortConverse(v1, v2) and v1:GetNW2String("lc_doing", "") == "speaking with its kin", "two freed vortigaunts talk to each other in their own tongue")
+    ok(LC.VortConverse(v1, v2) and LC.NPCStr(v1, "lc_doing", "") == "speaking with its kin", "two freed vortigaunts talk to each other in their own tongue")
     local ps, pr = LC.PlannedSweep, LC.PlannedRaid
     LC.PlannedSweep, LC.PlannedRaid = nil, nil
     local codes0 = 0
@@ -15925,9 +15925,9 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     asker:SetPos(Vector(-183000, -183000, 0))
     local cit = LC.Spawners.citizen(Vector(-183000 + 60, -183000, 4))
     if IsValid(cit) then
-        cit:SetNW2String("lc_pname", "")
+        LC.SetNPCStr(cit, "lc_pname", "")
         LC.CitizenNPCAction(asker, "askname", cit)
-        ok(cit:GetNW2String("lc_pname", "") ~= "" and cit:GetNW2Bool("lc_introduced", false), "ask one of the city's people their name, and they tell you", cit:GetNW2String("lc_pname", ""))
+        ok(LC.NPCStr(cit, "lc_pname", "") ~= "" and cit:GetNW2Bool("lc_introduced", false), "ask one of the city's people their name, and they tell you", LC.NPCStr(cit, "lc_pname", ""))
         cit:Remove()
     end
     asker:SetPos(Vector(-150000, 150000, 0))
@@ -17806,6 +17806,117 @@ function NetSafetyTests()
     p:Remove() q:Remove()
 end
 NetSafetyTests()
+
+-- The people's names, jobs and what they're doing are kept off a joining player's first update:
+-- the server keeps them in a table and answers each game's asks with the ones near it, only what
+-- changed (sh_livingcity_npcstr.lua, docs/dev/network-audit.md).
+function NPCStrTests()
+    local S = LC.NPCStrNet
+    section("NPC name tags: kept on the server, sent only near the player, only what changed")
+    local O = Vector(9000, 9000, 0)
+    local near = ents.Create("npc_citizen") near:SetPos(O + Vector(400, 0, 0))
+    local far = ents.Create("npc_citizen") far:SetPos(O + Vector(6000, 0, 0))
+    local p = newPlayer("TagWatcher", "citizen")
+    p:SetPos(O)
+
+    LC.SetNPCStr(near, "lc_pname", "Anya Petrova")
+    LC.SetNPCStr(near, "lc_pjob", "Ration depot clerk")
+    LC.SetNPCStr(near, "lc_doing", "sorting ration packs")
+    LC.SetNPCStr(far, "lc_pname", "Viktor Lenz")
+    ok(LC.NPCStr(near, "lc_pname", "x") == "Anya Petrova" and near:GetNW2String("lc_pname", "none") == "none",
+        "a name is kept on the server, not as an engine networked string")
+    ok(LC.NPCStr(far, "lc_doing", "idle") == "idle" and LC.NPCStr(nil, "lc_pname", "d") == "d",
+        "never set: the default, as GetNW2String gave")
+    LC.SetNPCStr(far, "lc_doing", "")
+    ok(LC.NPCStr(far, "lc_doing", "x") == "", "set to nothing: nothing (not the default), as before")
+    LC.SetNPCStr(near, "lc_role_test", "abc")
+    ok(near:GetNW2String("lc_role_test", "") == "abc" and LC.NPCStr(near, "lc_role_test", "") == "abc",
+        "any other key is still the engine's networked string")
+    near:SetNW2String("lc_role_test", nil)
+
+    -- what one answer to this player holds: { [idx] = { key = value } }, and the removed ones
+    local function Ask(want)
+        _advance(1)
+        local n0 = #net.sent
+        _netcall("lc_npcstr_ask", p, #(want or {}), unpack(want or {}))
+        local m
+        for i = n0 + 1, #net.sent do if net.sent[i].name == "lc_npcstr" and net.sent[i].to == p then m = net.sent[i] end end
+        if not m then return nil end
+        local d, i = m.data, 1
+        local function R() local v = d[i] i = i + 1 return v end
+        local got, gone = {}, {}
+        for _ = 1, R() do gone[R()] = true end
+        for _ = 1, R() do
+            local idx, t = R(), {}
+            for _ = 1, R() do local id = R() t[S.KEYS[id]] = R() end
+            got[idx] = t
+        end
+        return got, gone
+    end
+    local got = Ask()
+    local a = got and got[near:EntIndex()]
+    ok(a and a.lc_pname == "Anya Petrova" and a.lc_pjob == "Ration depot clerk" and a.lc_doing == "sorting ration packs",
+        "a game that asks is sent the name, job and doing of the people near it")
+    ok(got and got[far:EntIndex()] == nil, "but not of someone across the map")
+    got = Ask()
+    ok(got == nil or got[near:EntIndex()] == nil, "asking again with nothing changed sends nothing about them")
+    LC.SetNPCStr(near, "lc_doing", "on a break")
+    got = Ask()
+    a = got and got[near:EntIndex()]
+    ok(a and a.lc_doing == "on a break" and a.lc_pname == nil and a.lc_pjob == nil, "a change sends only that value")
+    got = Ask({ far:EntIndex() })
+    local b = got and got[far:EntIndex()]
+    ok(b and b.lc_pname == "Viktor Lenz" and b.lc_doing == "", "someone far away a label is reading is sent when the game asks after them")
+    LC.SetNPCStr(far, "lc_doing", "walking home")
+    got = Ask()
+    ok(got == nil or got[far:EntIndex()] == nil, "once the game stops asking, far changes wait")
+    far:SetPos(O + Vector(800, 0, 0))
+    got = Ask()
+    b = got and got[far:EntIndex()]
+    ok(b and b.lc_doing == "walking home" and b.lc_pname == nil, "and come when they're near again, only what changed")
+
+    -- removed: the game is told to forget that entity's tags
+    local idx = near:EntIndex()
+    near:Remove()
+    ok(S.vals[near] == nil, "a removed NPC's tags are dropped on the server")
+    local _, gone = Ask()
+    ok(gone and gone[idx], "and the game is told to forget them")
+
+    -- a game can't ask faster than about four times a second
+    _advance(1)
+    local n0 = #net.sent
+    LC.SetNPCStr(far, "lc_doing", "a")
+    _netcall("lc_npcstr_ask", p, 0)
+    LC.SetNPCStr(far, "lc_doing", "b")
+    _netcall("lc_npcstr_ask", p, 0)
+    local c = 0
+    for i = n0 + 1, #net.sent do if net.sent[i].name == "lc_npcstr" and net.sent[i].to == p then c = c + 1 end end
+    ok(c == 1, "two asks in the same moment get one answer", c)
+
+    -- what an answer can hold: many people at once stay well under one message's limit
+    local crowd = {}
+    for i = 1, 120 do
+        local e = ents.Create("npc_citizen") e:SetPos(O + Vector(i * 5, 50, 0))
+        LC.SetNPCStr(e, "lc_pname", "Citizen " .. i)
+        LC.SetNPCStr(e, "lc_pjob", string.rep("j", 100))
+        LC.SetNPCStr(e, "lc_doing", string.rep("d", 100))
+        crowd[i] = e
+    end
+    local out1 = S.Changes(p)
+    local bytes = 0
+    for _, e in ipairs(out1) do for _, kv in ipairs(e[2]) do bytes = bytes + #kv[2] + 2 end end
+    local out2 = S.Changes(p)
+    ok(#out1 < 120 and bytes <= S.MAX_BYTES + 200 and #out1 + #out2 >= 120, "a crowd comes over two answers, each well under 64 KB", #out1 .. "+" .. #out2)
+    LC.SetNPCStr(far, "lc_pname", "")
+    local cl = S.Changes(p)
+    ok(#cl == 1 and cl[1][1] == far:EntIndex() and cl[1][2][1][1] == 1 and cl[1][2][1][2] == "", "a cleared name is sent too (as nothing)")
+
+    for _, e in ipairs(crowd) do e:Remove() end
+    far:Remove()
+    p:Remove()
+    ok(S.sent[p] == nil and S.vals[far] == nil, "a player who leaves and the NPCs removed leave nothing behind")
+end
+NPCStrTests()
 
 function KeyLayoutTests()
 

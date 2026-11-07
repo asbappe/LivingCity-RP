@@ -505,7 +505,7 @@ function LC.StalkerTechnician(ply, pos)
     st.unmanaged, st.questLock = true, true
     if LC.SetState then LC.SetState(npc, st, "event") end
     st.eventUntil = CurTime() + TECH_SECS
-    npc:SetNW2String("lc_pname", "Overwatch technician")
+    LC.SetNPCStr(npc, "lc_pname", "Overwatch technician")
     npc.lcTechFor = ply
     if LC.NPCCarry then pcall(LC.NPCCarry, npc, st, HarnessModel()) end
     if LC.Face then LC.Face(npc, ply:GetPos()) end

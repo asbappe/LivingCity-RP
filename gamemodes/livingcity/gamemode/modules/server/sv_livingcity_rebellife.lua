@@ -343,7 +343,7 @@ LC.RebelBedSpot = BedSpot
 -- Doing things
 ------------------------------------------------------------------------
 
-local function SetDoing(npc, text) if IsValid(npc) then npc:SetNW2String("lc_doing", text or "") end end
+local function SetDoing(npc, text) if IsValid(npc) then LC.SetNPCStr(npc, "lc_doing", text or "") end end
 
 local function HideGun(npc, L, hide)
     local w = npc.GetActiveWeapon and npc:GetActiveWeapon()
@@ -446,9 +446,9 @@ local function LieDouble(npc, L, b)
     if not ok then rag:Remove() return false end
     rag:SetNW2Bool("lc_eyes_shut", true)
     rag:SetNW2Bool("lc_sleeper", true) -- (looked at: their name and "asleep", as the real one would show)
-    rag:SetNW2String("lc_pname", npc:GetNW2String("lc_pname", ""))
-    rag:SetNW2String("lc_pjob", npc:GetNW2String("lc_pjob", ""))
-    rag:SetNW2String("lc_doing", "asleep")
+    LC.SetNPCStr(rag, "lc_pname", LC.NPCStr(npc, "lc_pname", ""))
+    LC.SetNPCStr(rag, "lc_pjob", LC.NPCStr(npc, "lc_pjob", ""))
+    LC.SetNPCStr(rag, "lc_doing", "asleep")
     rag.lcSleeper = npc
     L.double = rag
     npc:SetNoDraw(true)
@@ -979,7 +979,7 @@ local function Deliver(npc, st, E, now)
     local added = IsValid(cache) and LC.AddToCache and LC.AddToCache(cache, found) or 0
     if added > 0 and now > lastHaulRadio + 300 and LC.RadioNotice then
         lastHaulRadio = now
-        LC.RadioNotice("resistance", string.format("%s is back from a scavenging run: %d meal%s for the stores.", npc:GetNW2String("lc_pname", "One of ours"), added, added == 1 and "" or "s"))
+        LC.RadioNotice("resistance", string.format("%s is back from a scavenging run: %d meal%s for the stores.", LC.NPCStr(npc, "lc_pname", "One of ours"), added, added == 1 and "" or "s"))
     end
     hook.Run("LivingCityRebelHaul", npc, found)
 end
