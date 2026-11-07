@@ -4092,6 +4092,13 @@ local RETUNED = {
     { "lc_drop_cooldown", { "30" }, "60" },
     { "lc_rebel_ops_minutes", { "30" }, "60" },
     { "lc_loyalty_praise_minutes", { "20" }, "40" },
+    -- (7 November, the owner: food scarcity, docs/dev/scarcity-audit.md)
+    { "lc_ration_interval", { "600" }, "1500" },
+    { "lc_stock_eat", { "40" }, "20" },
+    { "lc_rebel_errand_minutes", { "4" }, "12" },
+    { "lc_birds", { "6" }, "4" },
+    { "lc_scavenge_refill", { "600" }, "1800" },
+    { "lc_fridge_refill", { "240" }, "900" },
     { "lc_ending_marrow_max", { "40", "60" }, "80" },
     { "lc_ending_base_bombs", { "30" }, "60" },
     { "lc_ending_hard_moment_beats", { "16" }, "5" },

@@ -352,15 +352,15 @@ end
 ------------------------------------------------------------------------
 
 LCS.Goods = {
-    { id = "ration", item = "ration", price = 5, minStanding = -50, desc = "Nutrient bar and a little water. It keeps you alive." },
+    { id = "ration", item = "ration", price = 15, minStanding = -50, desc = "Nutrient bar and a little water. It keeps you alive." },
     { id = "water", item = "water", price = 2, minStanding = -50, desc = "Clean, cold, refreshing. Do not ask what is in it." },
     { id = "bottle", item = "bottle_empty", price = 2, minStanding = -50, desc = "An empty glass bottle, for whatever water you can find." },
     { id = "tablets", item = "tablets", price = 15, minStanding = -50, desc = "For what the canal water gives you." },
     { id = "civvies", item = "civvies", price = 10, minStanding = -50, civOnly = true, desc = "Union-issue work clothes. Everyone looks the same in them." },
     { id = "weedkiller", item = "weedkiller", price = 15, minStanding = 0, desc = "For the weeds in the cracks. Keep it away from food." },
     { id = "permit", item = "permit", price = 35, minStanding = 150, desc = "One night out after curfew, stamped and legal." },
-    { id = "bread", item = "bread", price = 8, minStanding = 0, desc = "Grey, dense, and real." },
-    { id = "milk", item = "milk", price = 8, minStanding = 0, desc = "Powdered, reconstituted, nearly milk." },
+    { id = "bread", item = "bread", price = 15, minStanding = 0, desc = "Grey, dense, and real." },
+    { id = "milk", item = "milk", price = 15, minStanding = 0, desc = "Powdered, reconstituted, nearly milk." },
     { id = "healthvial", name = "Health vial", entity = "item_healthvial", price = 25, minStanding = 150, desc = "For the trusted." },
     { id = "melon", item = "melon", price = 25, minStanding = 400, desc = "A whole watermelon. Exemplary citizens only." },
     { id = "coffee", item = "coffee", price = 30, minStanding = 400, desc = "Real coffee. You'd forgotten the smell." },

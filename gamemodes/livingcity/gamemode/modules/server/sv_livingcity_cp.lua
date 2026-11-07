@@ -1016,7 +1016,7 @@ function LC.IssueDutyAllocation(ply)
     local now = CurTime()
     if now < (ply.lcnRationAt or 0) then return false end
     local rv = GetConVar("lc_ration_interval")
-    ply.lcnRationAt = now + (rv and rv:GetFloat() or 600)
+    ply.lcnRationAt = now + (rv and rv:GetFloat() or 1500)
     local credits = math.max(0, cvCoupons:GetInt()) + math.max(0, Rank(ply) - 1)
     local eats = not LCF.IsOverwatch(ply) -- (the Overwatch are fed through the suit)
     local got = {}

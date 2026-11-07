@@ -1146,7 +1146,7 @@ section("Social credit and the Commissary")
 local shopper = newPlayer("Shopper", "citizen")
 ok(LC.Credits(shopper) == 20, "new players start with 20 credits")
 ok(LC.Buy(shopper, "ration") and LC.HasItem(shopper, "ration"), "buying a ration puts it in your pockets")
-ok(LC.Credits(shopper) == 15, "and costs 5 credits")
+ok(LC.Credits(shopper) == 5, "and costs 15 credits (7 November, food scarcity; it was 5)")
 ok(not LC.Buy(shopper, "melon"), "watermelon is for exemplary citizens only")
 LC.AddStanding(shopper, 450)
 LC.AddCredits(shopper, 100)
@@ -8297,7 +8297,7 @@ ok(not nofish and nwhy and nwhy:find("water"), "you need water to fish")
 fisher.water = 1
 fixRandom(0.1)
 ok(LC.ItemUse(fisher, "fishing_line"), "standing in the canal, you cast a line")
-_run(24)
+_run(46) -- (a cast is 25 to 45 seconds since 7 November, food scarcity)
 math.random = realRandom
 ok(LC.HasItem(fisher, "raw_fish"), "and with patience, catch a fish")
 ok(LCS.Items.raw_fish.cooksTo == "cooked_fish", "which wants cooking")
@@ -8309,7 +8309,7 @@ fisher.water = 1
 fisher.lcLineUses = 1 -- (the last cast in it)
 fixRandom(0.1)
 ok(LC.ItemUse(fisher, "fishing_line"), "cast the last of the line")
-_run(24)
+_run(46)
 math.random = realRandom
 ok(not LC.HasItem(fisher, "fishing_line") and fisher.lcLineUses == nil, "a line is good for four to eight casts, then it snaps")
 fisher.water = 0
@@ -8349,7 +8349,7 @@ ok(LC.HasItem(reb, "canned_food") and cache.lcStock == s0 - 1, "the Resistance e
 reb.lcPropUseNext = 0
 reb.chat = {}
 hook.Run("PlayerUse", reb, cache)
-ok(has(reb.chat, "Everyone eats"), "one tin each, every few minutes")
+ok(has(reb.chat, "Everyone eats") and (reb.lcCacheNext or 0) - CurTime() > 840, "one tin each, every 15 minutes (7 November, food scarcity; it was 4)")
 thief.lcPropUseNext = 0
 thief.chat = {}
 hook.Run("PlayerUse", thief, cache)
@@ -10189,7 +10189,7 @@ cop:Remove()
 tagger.lcRationDocked = nil
 tagger:SetNW2String("lc_ration_docked", "")
 -- the city eats less
-ok(GetConVar("lc_stock_eat") and GetConVar("lc_stock_eat"):GetInt() == 40, "the city eats a ration a minute per 40 citizens")
+ok(GetConVar("lc_stock_eat") and GetConVar("lc_stock_eat"):GetInt() == 20, "the city eats a ration a minute per 20 citizens (7 November, food scarcity; it was 40)")
 for _, p in ipairs({ walker, tagger }) do p:SetPos(Vector(-150000, 150000, 0)) end
 end
 BatchFixTests()
@@ -16734,6 +16734,76 @@ _setcvar("lc_train_minutes", 24)
 _setcvar("lc_announce_quiet", 0)
 end
 PacingTests()
+
+function ScarcityTests() -- (later on 7 November, the owner: food scarcity, docs/dev/scarcity-audit.md items 1 to 8)
+section("Food scarcity: slower rations, dearer food, emptier stores, fewer runs, birds and fish")
+local want = { lc_ration_interval = "1500", lc_stock_eat = "20", lc_rebel_errand_minutes = "12", lc_birds = "4",
+    lc_scavenge_refill = "1800", lc_fridge_refill = "900" }
+local okD, bad = true, nil
+for k, v in pairs(want) do if (_cvarDefaults or {})[k] ~= v then okD, bad = false, k .. "=" .. tostring((_cvarDefaults or {})[k]) end end
+ok(okD, "a ration every 25 minutes, the city eats one per 20 out, rebel runs every 12 minutes, 4 birds, bins half an hour, fridges a quarter", bad)
+_setcvar("lc_ration_interval", 600)
+_setcvar("lc_fridge_refill", 300)
+LC.EndingRetune()
+ok(GetConVar("lc_ration_interval"):GetString() == "1500" and GetConVar("lc_fridge_refill"):GetString() == "300",
+    "a server still on the old default moves to the new one; a value someone chose stays",
+    GetConVar("lc_ration_interval"):GetString() .. "/" .. GetConVar("lc_fridge_refill"):GetString())
+_setcvar("lc_fridge_refill", 900)
+local G1 = LCS.GoodsById
+ok(G1.ration.price == 15 and G1.bread.price == 15 and G1.milk.price == 15, "a ration, bread and milk cost 15 credits at the Commissary",
+    tostring(G1.ration.price) .. "/" .. tostring(G1.bread.price) .. "/" .. tostring(G1.milk.price))
+-- fishing: a longer cast, and a fish 30% of the time
+local realR = math.random
+local fisher = newPlayer("ScarceFisher", "citizen")
+fisher:SetPos(Vector(-141000, 71000, 0))
+fisher.water = 1
+LC.GiveItem(fisher, "fishing_line")
+fisher.lcLineUses = 5
+math.random = function(a, b) if a == nil then return 0.4 end if b == nil then return realR(a) end return realR(a, b) end
+ok(LC.ItemUse(fisher, "fishing_line"), "cast a line")
+_run(30)
+ok(LC.Busy(fisher), "a cast takes 25 to 45 seconds (it was 10 to 22)")
+_run(16)
+math.random = realR
+ok(not LC.Busy(fisher) and not LC.HasItem(fisher, "raw_fish"), "and a roll that used to land a fish (58%) now comes up empty (30%)")
+fisher:SetPos(Vector(-150000, 150000, 0))
+-- birds: a killed one is replaced only after 90 seconds, one of a kind at a time
+local wt = timer.list["LivingCityWildlife"]
+local wasW, wasRun, wasRWP = LC.Wildlife, LC.Running, LC.RandomWanderPos
+local wasVermin = GetConVar("lc_vermin"):GetInt()
+LC.Wildlife, LC.WildlifeOwed, LC.WildlifeNextAt, LC.Running = {}, {}, {}, true
+LC.RandomWanderPos = function() return Vector(-160000 + realR(-300, 300), 160000 + realR(-300, 300), 0) end
+_setcvar("lc_birds", 2)
+_setcvar("lc_vermin", 0)
+local function Birds()
+    local n, one = 0, nil
+    for e, kind in pairs(LC.Wildlife) do if IsValid(e) and kind == "bird" then n, one = n + 1, e end end
+    return n, one
+end
+local function Ticks(n) for _ = 1, n do wt.fn() end end
+Ticks(10)
+ok(Birds() == 2, "the city fills up with birds straight away", Birds())
+local _, b1 = Birds()
+hook.Run("OnNPCKilled", b1, fisher)
+b1:Remove()
+Ticks(10)
+ok(Birds() == 1, "a bird that is killed isn't replaced at once", Birds())
+_advance(91)
+Ticks(10)
+ok(Birds() == 2, "but is, a minute and a half later", Birds())
+for e in pairs(LC.Wildlife) do if IsValid(e) then hook.Run("OnNPCKilled", e, fisher) e:Remove() end end
+_advance(91)
+Ticks(10)
+ok(Birds() == 1, "two killed: only one comes back after 90 seconds", Birds())
+_advance(91)
+Ticks(10)
+ok(Birds() == 2, "and the other 90 seconds after that", Birds())
+for e in pairs(LC.Wildlife) do if IsValid(e) then e:Remove() end end
+LC.Wildlife, LC.WildlifeOwed, LC.WildlifeNextAt, LC.Running, LC.RandomWanderPos = wasW, {}, {}, wasRun, wasRWP
+_setcvar("lc_birds", 4)
+_setcvar("lc_vermin", wasVermin)
+end
+ScarcityTests()
 
 function CombineMusicTests() -- (the owner, 7 November: "as the combine nothing plays at all")
 section("Civil Protection in action: a fight, a violent job, a raid or a sweep (their action music)")
