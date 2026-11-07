@@ -18131,6 +18131,118 @@ function ManpowerTests()
 end
 ManpowerTests()
 
+function CrabHuntTests() -- (the owner, 7 November: Resistance jobs to bring raw headcrabs back from the infestation for the crate)
+    local CH = LC.CrabHunt
+    local FAR = Vector(-33000, 33000, 0)
+    local R0, I0 = Vector(-52000, 52000, 0), Vector(-50800, 52000, 0)
+    local rz = LC.AddZone(R0, 400, "rebel", 0)
+    local iz = LC.AddZone(I0, 400, "infest", 0)
+    LC.EnsureRebelProps()
+    local rp = LC.RebelProps[rz]
+    local cache = rp and rp.cache
+    -- every other camp's crate well stocked for now, so only ours is low
+    local saved = {}
+    for _, r in pairs(LC.RebelProps) do
+        if IsValid(r.cache) and r.cache ~= cache then saved[r.cache] = r.cache.lcStock r.cache.lcStock = 99 end
+    end
+    local hunter = newPlayer("CrabHunter", "resistance", nil, 900)
+    hunter:SetPos(R0 + Vector(0, 300, 0))
+
+    section("Headcrab hunt: offered more while the crate is low, always when it's empty")
+    ok(CH ~= nil and IsValid(cache), "(a camp with a crate, and infested ground nearby)")
+    if not (CH and IsValid(cache)) then return end
+    local realR = math.random
+    math.random = function(a, b) if a == nil then return 0.99 end if b == nil then return realR(a) end return realR(a, b) end
+    cache.lcStock = 50
+    ok(not CH.Low(cache) and not CH.Available(), "a well-stocked crate: it comes up only now and then (not on this roll)")
+    cache.lcStock = 2
+    ok(CH.Low(cache) and CH.Available(), "a crate down to two meals: always on the board")
+    math.random = function(a, b) if a == nil then return 0.01 end if b == nil then return realR(a) end return realR(a, b) end
+    cache.lcStock = 50
+    ok(CH.Available(), "and on a lucky roll even while the crate is full")
+    math.random = realR
+
+    section("Headcrab hunt: into the infested ground, kill headcrabs, bring the meat to the crate")
+    LC.SweepCache(cache)
+    ok((cache.lcStock or 0) == 0, "(an empty crate)")
+    local q = inject(hunter, "res_crabhunt")
+    ok(q ~= nil and string.find(q.title, "Headcrab hunt", 1, true) ~= nil and #q.stages == 3, "a Resistance member can take a headcrab hunt", q and q.title)
+    if q then
+        ok(string.find(q.desc, "empty", 1, true) ~= nil and string.find(q.desc, "headcrabs", 1, true) ~= nil, "it says the crate is empty and what to bring", q.desc)
+        ok(q.stages[1].pos == iz.pos, "the hunting ground is the infested ground nearest the camp")
+        ok(not q.violent, "no squad of fighters: it isn't a fight with the Combine")
+        hunter:SetPos(I0)
+        _run(1)
+        ok(q.stage == 2, "in the infested ground, the hunt starts", q.stage)
+        local crabs = q.data.crabs or {}
+        ok(#crabs >= CH.NEED + 1, "a few more headcrabs crawl out for it", #crabs)
+        local extra = #crabs > 0
+        for _, n in ipairs(crabs) do if not (LC.NPCs[n] and LC.NPCs[n].unmanaged) then extra = false end end
+        ok(extra, "on top of the usual number, and nothing replaces them")
+        -- a zombie, or a headcrab far from the infestation, doesn't count
+        local zomb = LC.SpawnZombie(I0 + Vector(30, 0, 4), iz, "npc_zombie")
+        if IsValid(zomb) then zomb:SetHealth(0) hook.Run("OnNPCKilled", zomb, hunter) end
+        local stray = ents.Create("npc_headcrab")
+        stray:SetPos(FAR + Vector(3000, 0, 0))
+        stray:Spawn()
+        stray:SetHealth(0)
+        hook.Run("OnNPCKilled", stray, hunter)
+        ok((q.stages[2].got or 0) == 0, "a zombie, or a headcrab out in the city, doesn't count", q.stages[2].got)
+        for i = 1, CH.NEED do
+            local n = crabs[i]
+            if IsValid(n) then n:SetHealth(0) hook.Run("OnNPCKilled", n, hunter) end
+        end
+        ok(q.stage == 3, "four headcrabs down: now bring the meat home", q.stage .. " " .. tostring(q.stages[2].got))
+        _run(1)
+        -- the meat: two now, two later
+        LC.GiveItem(hunter, "raw_headcrab", 2)
+        hunter:SetPos(cache:GetPos() + Vector(-60, 0, 0))
+        _run(1)
+        ok(q.stages[3].got == 2 and cache.lcStock == 2 and not LC.HasItem(hunter, "raw_headcrab"), "standing by the crate, the meat goes in: a meal each",
+            tostring(q.stages[3].got) .. " " .. tostring(cache.lcStock))
+        ok(not q.done, "half of it isn't the job done")
+        local xp, realXP = {}, LC.AddXP
+        LC.AddXP = function(p, n, why) if p == hunter then xp[#xp + 1] = n end return realXP(p, n, why) end
+        LC.GiveItem(hunter, "raw_fastcrab")
+        LC.GiveItem(hunter, "raw_poisoncrab")
+        _run(1)
+        LC.AddXP = realXP
+        ok(q.done and cache.lcStock == 4, "any kind of headcrab will do: four in the crate, the job's done", cache.lcStock)
+        ok(q.bonus == CH.EMPTY_BONUS and (xp[1] or 0) >= CH.REWARD + CH.EMPTY_BONUS, "and pays more for filling an empty crate", tostring(xp[1]))
+    end
+    hunter:SetPos(FAR)
+
+    section("Headcrab hunt: a crate that runs empty puts it up straight away, with a notice")
+    for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and p.tmpl.id == "res_crabhunt" then p.dead = true end end
+    LC.SweepCache(cache)
+    CH.nextPost = 0
+    local notices, realNotice = {}, LC.Notice
+    LC.Notice = function(p, kind, title, text, secs) if p == hunter then notices[#notices + 1] = text end return realNotice(p, kind, title, text, secs) end
+    hunter.chat = {}
+    local posted = CH.Check(CurTime())
+    ok(posted ~= nil and posted.tmpl.id == "res_crabhunt" and posted.urgent, "an empty crate: a headcrab hunt goes up on the Operations board")
+    ok(has(notices, "headcrab hunt") and has(hunter.chat, "Headcrab hunt"), "and the Resistance are told (on screen, and in chat)", notices[1])
+    notices = {}
+    ok(CH.Check(CurTime()) == nil and #notices == 0, "not again for a while")
+    CH.nextPost = 0
+    ok(CH.Check(CurTime()) == nil, "nor while one is still up")
+    LC.Notice = realNotice
+    if posted then posted.dead = true end
+    LC.AddToCache(cache, 3)
+    CH.nextPost = 0
+    ok(CH.Check(CurTime()) == nil, "a crate with food in it posts nothing")
+
+    -- put things back
+    for c, n in pairs(saved) do if IsValid(c) then c.lcStock = n end end
+    for n, st in pairs(LC.NPCs) do if IsValid(n) and st.zone == iz then n:Remove() end end
+    CH.nextPost = CurTime() + 99999
+    LC.RemoveZone(iz)
+    LC.RemoveZone(rz)
+    hunter.valid = false
+    _run(1)
+end
+CrabHuntTests()
+
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
