@@ -13080,6 +13080,48 @@ section("Playtest fixes, 17 October (evening)")
     ok(LC.PlannedSweep == nil and LC.Skirmish and LC.Skirmish.kind == "sweep", "and when the time comes, the sweep team goes in", LC.Skirmish and LC.Skirmish.kind)
     if LC.Skirmish then LC.EndSkirmish(LC.Skirmish, "test") end
     LC.PlannedSweep = nil
+    do -- (the owner, 7 November: "joined a sweep and no one showed up")
+        local titles, wasN = {}, LC.Notice
+        LC.Notice = function(pl, kind, title, ...) if pl == sweeper then titles[#titles + 1] = title end return wasN(pl, kind, title, ...) end
+        LC.QuestOf[sweeper] = nil
+        LC.PlanCombineSweep(rz)
+        local pid
+        for _, ps in ipairs(LC.Postings.cp or {}) do if ps.tmpl and ps.tmpl.id == "cp_joinsweep" and not ps.dead then pid = ps.id end end
+        ok(pid and LC.AcceptPosting(sweeper, pid) and #LC.SweepJoiners() == 1, "(the unit takes the sweep job)")
+        sweeper:SetPos(rz.pos + Vector((rz.r or 300) + 250, 0, 0))
+        local blocker = { kind = "raid", done = true, rebels = {}, units = {}, zone = rz, ends = CurTime() + 1e6, started = CurTime() }
+        LC.Skirmish = blocker
+        _run(GetConVar("lc_sweep_warning"):GetFloat() + 3)
+        ok(LC.PlannedSweep ~= nil and LC.Skirmish == blocker, "another fight still on: the sweep waits for it instead of quietly never coming")
+        LC.Skirmish = nil
+        _run(25)
+        local sk = LC.Skirmish
+        ok(sk and sk.kind == "sweep" and sk.rally and sk.rally[1] == sweeper, "once it's over the sweep goes, and the team's told to meet the unit who joined")
+        local u = sk and sk.units[1]
+        if u then
+            local ust = LC.NPCs[u]
+            ust.sweepRallied = nil
+            u:SetPos(sweeper:GetPos() + Vector(1500, 0, 0))
+            local to = LC.SweepRallyPoint(sk, u, CurTime())
+            ok(to and to:Distance(sweeper:GetPos()) < 1, "a team member far off heads to the unit first")
+            u:SetPos(sweeper:GetPos() + Vector(100, 0, 0))
+            ok(LC.SweepRallyPoint(sk, u, CurTime()) == nil and ust.sweepRallied and has(titles, "The sweep team is with you"), "and once with them, goes in, and the unit's told the team is with them")
+        else ok(false, "(no sweep unit spawned)") end
+        if LC.Skirmish then LC.EndSkirmish(LC.Skirmish, "test") end
+        -- one that can't start at all is called off, and the job ends
+        LC.QuestOf[sweeper] = nil
+        LC.PlanCombineSweep(rz)
+        for _, ps in ipairs(LC.Postings.cp or {}) do if ps.tmpl and ps.tmpl.id == "cp_joinsweep" and not ps.dead then pid = ps.id end end
+        LC.AcceptPosting(sweeper, pid)
+        local copSp = LC.Spawners.cop
+        LC.Spawners.cop = nil
+        _run(GetConVar("lc_sweep_warning"):GetFloat() + 3)
+        LC.Spawners.cop = copSp
+        ok(LC.QuestOf[sweeper] == nil and has(titles, "Sweep called off"), "a sweep that can't start is called off: whoever joined is told, and the job ends")
+        LC.Notice = wasN
+        if LC.Skirmish then LC.EndSkirmish(LC.Skirmish, "test") end
+        LC.PlannedSweep = nil
+    end
     sweeper.valid = false
     LC.NPCs[tcop] = nil tcop:Remove()
     backer.valid = false

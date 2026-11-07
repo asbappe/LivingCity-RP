@@ -1331,6 +1331,52 @@ local function SweepChore(u, st, sk, now)
 end
 LC.SweepChore = SweepChore -- (tests)
 
+-- The Combine players on the "Join the sweep" job (sv_livingcity_sidejobs.lua).
+function LC.SweepJoiners()
+    local out = {}
+    for _, p in ipairs(player.GetAll()) do
+        local q = LC.QuestOf and LC.QuestOf[p]
+        if q and q.tmpl and q.tmpl.id == "cp_joinsweep" and p:Alive() then out[#out + 1] = p end
+    end
+    return out
+end
+
+-- A planned sweep that can't start: whoever joined it hears why, and the job ends without blame.
+function LC.SweepCalledOff(why)
+    LC.Log("info", "Planned sweep called off: " .. tostring(why))
+    for _, p in ipairs(LC.SweepJoiners()) do
+        if LC.Notice then LC.Notice(p, "warn", "Sweep called off", "Dispatch: the sweep is called off (" .. tostring(why or "no team free") .. "). Stand down.", 8) end
+        local q = LC.QuestOf[p]
+        if q and LC.FinishQuest then LC.FinishQuest(q, false, "the sweep was called off") end
+    end
+end
+
+-- Where a sweep team member still heads to meet the players who joined, or nil to push in: the
+-- nearest joiner within reach of the territory, until the unit is with them (or the minute is up).
+function LC.SweepRallyPoint(sk, u, now)
+    if not sk.rally or #sk.rally == 0 or now > (sk.rallyUntil or 0) then return nil end
+    local st = LC.NPCs[u]
+    if not st or st.sweepRallied then return nil end
+    local best, bd
+    for _, p in ipairs(sk.rally) do
+        if IsValid(p) and p:Alive() and p:GetPos():DistToSqr(sk.zone.pos) < ((sk.zone.r or 300) + 2500) ^ 2 then
+            local d = p:GetPos():DistToSqr(u:GetPos())
+            if not bd or d < bd then best, bd = p, d end
+        end
+    end
+    if not best then return nil end
+    if bd < 300 * 300 then
+        st.sweepRallied = true
+        if not sk.toldRally then
+            sk.toldRally = true
+            if LC.Notice then LC.Notice(best, "event", "The sweep team is with you", "The team's here. Go in with them: they fight whoever you fight.", 6) end
+            u:EmitSound("npc/metropolice/vo/affirmative.wav", 70)
+        end
+        return nil
+    end
+    return best:GetPos()
+end
+
 local function StartSweep(z)
     z = z or Pick(RebelZones())
     if not z then return false, "no rebel territory on this map" end
@@ -1354,6 +1400,14 @@ local function StartSweep(z)
         end
     end
     if #sk.units == 0 then return false, "no Civil Protection units" end
+    -- the team meets the players who joined the sweep before going in (the owner, 7 November: "joined a
+    -- sweep and no one showed up"), up to a minute, then pushes in with them
+    sk.rally = {}
+    for _, p in ipairs(LC.SweepJoiners and LC.SweepJoiners() or {}) do sk.rally[#sk.rally + 1] = p end
+    sk.rallyUntil = CurTime() + 60
+    for _, p in ipairs(sk.rally) do
+        if LC.Notice then LC.Notice(p, "event", "The sweep team is coming", "Dispatch: the sweep team is on its way to you. Hold where you are: they meet you, then go in with you.", 8) end
+    end
     LC.Skirmish = sk
     local where = LC.DescribePlace and LC.DescribePlace(z.pos) or "rebel territory"
     Radio("cp", "Dispatch: sweep team moving into anticitizen territory " .. where .. ". Civil Protection units may assist.")
@@ -1505,7 +1559,17 @@ local function RunSkirmish(sk, now)
             local st = IsValid(u) and LC.NPCs[u]
             if st and Alive(u) then
                 if st.state == "idle" then LC.SetState(u, st, "sweep") end
-                if st.state == "sweep" or st.state == "moving" then
+                local rallyTo = not sk.arrived and LC.SweepRallyPoint and LC.SweepRallyPoint(sk, u, now)
+                if rallyTo and st.state ~= "hostile" then
+                    -- to the player who joined, first (they go in together)
+                    if now > (st.nextSweepMove or 0) then
+                        st.nextSweepMove = now + 3
+                        if not (LC.GoTo and LC.GoTo(u, st, rallyTo, true)) then
+                            u:SetLastPosition(rallyTo)
+                            u:SetSchedule(SCHED_FORCED_GO_RUN)
+                        end
+                    end
+                elseif st.state == "sweep" or st.state == "moving" then
                     local target
                     for r, rst in pairs(LC.NPCs) do
                         if IsValid(r) and rst.role == "rebel" and r:Health() > 0 and CanSee(u, r, 1600) then target = r break end
@@ -1579,8 +1643,17 @@ timer.Create("LivingCitySkirmishes", 2, 0, function()
         end
         local ps = LC.PlannedSweep
         if ps and now >= ps.at then
-            LC.PlannedSweep = nil
-            if not LC.Skirmish then StartSweep(ps.zone) end
+            -- (the owner, 7 November: "joined a sweep and no one showed up") another fight still on: the
+            -- sweep waits for it, up to five minutes, rather than quietly never coming; one that can't
+            -- start at all is called off, and whoever joined it is told so
+            if LC.Skirmish and (ps.waited or 0) < 300 then
+                ps.waited, ps.at = (ps.waited or 0) + 20, now + 20
+            else
+                LC.PlannedSweep = nil
+                local started, why = false, "another fight is still on"
+                if not LC.Skirmish then started, why = StartSweep(ps.zone) end
+                if not started then LC.SweepCalledOff(why) end
+            end
         end
         if pr or ps then return end
         if LC.Skirmish or not cvSkirm:GetBool() or #RebelZones() == 0 or #player.GetAll() == 0 then return end
