@@ -209,7 +209,7 @@ function LC_CL.DrawCityScreen(ent)
     draw.RoundedBox(4, -320, -180, 640, 360, SCREEN_BG)
     draw.RoundedBox(0, -320, -180, 640, 4, SCREEN_HEAD)
     draw.SimpleText("THE CITY ADMINISTRATOR", "DermaLarge", 0, -150, SCREEN_HEAD, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-    local text = GetGlobal2String("lc_broadcast", "")
+    local text = LC.GetGlobalLong("lc_broadcast", "")
     if text == "" then text = "Compliance is its own reward. Your cooperation is noted." end
     if screenCache.text ~= text then screenCache = { text = text, lines = LC_CL.WrapText(text, "DermaLarge", 580) } end
     for i = 1, math.min(#screenCache.lines, 8) do
@@ -227,7 +227,7 @@ end
 
 local lawCache = {}
 local function CurrentLaws()
-    local raw = GetGlobal2String("lc_laws", "")
+    local raw = LC.GetGlobalLong("lc_laws", "")
     if lawCache.raw ~= raw then lawCache = { raw = raw, list = util.JSONToTable(raw) or {} } end
     return lawCache.list
 end

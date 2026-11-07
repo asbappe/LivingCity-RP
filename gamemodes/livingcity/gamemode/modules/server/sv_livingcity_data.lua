@@ -78,16 +78,13 @@ function LC.IsDoorEntity(ent)
 end
 
 ------------------------------------------------------------------------
--- Compressed table sending (layouts can get big)
+-- Compressed table sending (layouts can get big). Small ones go at once as
+-- they always did; big or many go in pieces and at a pace each player's game
+-- can take, and wait while it loads in (sh_livingcity_net.lua).
 ------------------------------------------------------------------------
 
 function LC.SendCompressed(msg, tbl, recipients)
-    local data = util.Compress(util.TableToJSON(tbl))
-    if not data then return end
-    net.Start(msg)
-    net.WriteUInt(#data, 32)
-    net.WriteData(data, #data)
-    net.Send(recipients)
+    return LC.Net.SendCompressed(msg, tbl, recipients)
 end
 
 local function Editors()

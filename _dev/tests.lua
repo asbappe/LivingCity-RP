@@ -27,6 +27,7 @@ _setcvar("lc_assign_work", 0) -- (the Union assigning work to the jobless: teste
 _setcvar("lc_rebel_vorts", 0) -- (vortigaunts living in rebel ground from the start: tested on their own)
 _setcvar("lc_rebel_errands", 0) -- (scavenging runs: tested on their own)
 _setcvar("lc_blackout_share", 0) -- (a city-wide blackout: tested on its own, with the grid)
+LC.Net.READY_WAIT = 0 -- (the test's players have no game loading in: nothing waits for one; NetSafetyTests turns it on)
 local function has(list, needle)
     for _, v in ipairs(list or {}) do if string.find(tostring(v), needle, 1, true) then return true end end
     return false
@@ -17466,6 +17467,151 @@ function LabDamageTests()
     GAMEMODE = savedGM
 end
 LabDamageTests()
+
+-- The owner was once dropped into a reconnect loop with "SendData reliable data too big (744335)"
+-- with about 100 NPCs on the map: big and frequent sends to players are made safe
+-- (sh_livingcity_net.lua, docs/dev/network-audit.md).
+function NetSafetyTests()
+    local N = LC.Net
+    section("Network: big sends go in pieces, at a pace, and wait while a game loads")
+    local function Since(n0, name)
+        local out = {}
+        for i = n0 + 1, #net.sent do if not name or net.sent[i].name == name then out[#out + 1] = net.sent[i] end end
+        return out
+    end
+    local function Blob(n, seed)
+        local t, x = {}, seed or 7
+        for i = 1, n do x = (x * 1103515245 + 12345) % 2147483648 t[i] = string.char(97 + x % 26) end
+        return table.concat(t)
+    end
+    local function Pump(secs) for _ = 1, math.floor(secs * 10 + 0.5) do _advance(0.1) N.PumpAll() end end
+
+    -- cutting up and putting back together
+    local data = Blob(70001)
+    local pieces = N.Split(data, N.PIECE)
+    ok(#pieces == 3 and #pieces[1] == N.PIECE and table.concat(pieces) == data and #N.Split("", 10) == 1,
+        "a big send is cut into pieces of 30 KB (and nothing is still one piece)")
+    local store = {}
+    ok(N.Assemble(store, "x#1", 1, 3, pieces[1]) == nil and N.Assemble(store, "x#1", 2, 3, pieces[2]) == nil
+        and N.Assemble(store, "x#1", 2, 3, pieces[2]) == nil, "the pieces wait for the rest (one that comes twice counts once)")
+    ok(N.Assemble(store, "x#1", 3, 3, pieces[3]) == data and next(store) == nil, "the last piece in gives back the whole send, and nothing is left over")
+    ok(N.Assemble(store, "y#2", 1, 1, "abc") == "abc", "a send in one piece is just that piece")
+
+    local p = newPlayer("NetWatcher", "citizen")
+    N.players[p], N.busy[p] = nil, nil
+    local savedWait = N.READY_WAIT
+    N.READY_WAIT = 90
+
+    -- small: at once, exactly as before
+    local n0 = #net.sent
+    LC.SendCompressed("lc_nettest", { hello = "world" }, { p })
+    local got = Since(n0)
+    ok(#got == 1 and got[1].name == "lc_nettest" and got[1].data[1] == #got[1].data[2] and string.find(got[1].data[2], "world", 1, true) ~= nil,
+        "a small send goes at once, as one message (its length, then the data)")
+
+    -- big: in pieces, put back together into the same message
+    n0 = #net.sent
+    local big = { blob = Blob(150000, 3) }
+    LC.SendCompressed("lc_nettest", big, p)
+    ok(#Since(n0) == 0, "a send over 60 KB doesn't go as one message (the game couldn't take it)")
+    Pump(4)
+    local parts = Since(n0, "lc_big")
+    local cstore, back = {}, nil
+    for _, m in ipairs(parts) do
+        local d = m.data
+        local w = N.Assemble(cstore, d[1] .. "#" .. d[2], d[3], d[4], d[6])
+        if w then back = { msg = d[1], data = w } end
+    end
+    ok(#parts == 6 and back and back.msg == "lc_nettest" and (util.JSONToTable(back.data) or {}).blob == big.blob,
+        "it goes in pieces of 30 KB that put back together into the same send", #parts)
+
+    -- a pace the game can take: never more than about 128 KB at once
+    N.players[p], N.busy[p] = nil, nil
+    n0 = #net.sent
+    for i = 1, 4 do LC.SendCompressed("lc_nettest", { blob = Blob(50000, i) }, p) end
+    local first = 0
+    for _, m in ipairs(Since(n0)) do first = first + #(m.data[2] or "") end
+    ok(first <= N.BURST + N.ONE_MAX and first < 4 * 50000, "four big sends at once don't all go in the same moment", first)
+    Pump(6)
+    ok(#Since(n0, "lc_nettest") == 4 and N.busy[p] == nil, "but they all get there, a few seconds at most", #Since(n0, "lc_nettest"))
+
+    -- loading in: big sends wait for the game to be ready
+    N.players[p], N.busy[p] = nil, nil
+    N.Joining(p) -- (what joining does: hook PlayerInitialSpawn "LivingCityNet")
+    n0 = #net.sent
+    LC.SendCompressed("lc_nettest", { small = true }, p)
+    LC.SendCompressed("lc_nettest", { blob = Blob(20000, 9) }, p)
+    Pump(2)
+    local sent = Since(n0, "lc_nettest")
+    ok(#sent == 1 and string.find(sent[1].data[2], "small", 1, true) ~= nil, "while a game is loading in, small sends go and big ones wait")
+    _netcall("lc_net_ready", p)
+    Pump(0.1)
+    ok(#Since(n0, "lc_nettest") == 2, "once the game says it's ready, the big one goes")
+    N.Joining(p) -- (what joining does: hook PlayerInitialSpawn "LivingCityNet")
+    n0 = #net.sent
+    LC.SendCompressed("lc_nettest", { blob = Blob(20000, 10) }, p)
+    _advance(N.READY_WAIT + 1) N.PumpAll()
+    ok(#Since(n0, "lc_nettest") == 1, "and a game that never says so gets it after 90 seconds anyway")
+    N.Joining(p)
+    n0 = #net.sent
+    for i = 1, 8 do LC.SendCompressed("lc_nettest", { blob = Blob(12000, 20 + i) }, p) end
+    Pump(2)
+    local early = #Since(n0, "lc_nettest")
+    _netcall("lc_net_ready", p)
+    Pump(2)
+    ok(early >= 4 and early < 8 and #Since(n0, "lc_nettest") == 8, "a game loading in gets 64 KB in all; the rest waits for it, then follows", early)
+    N.READY_WAIT = savedWait
+
+    -- whole-state messages: at most once a second, the newest wins
+    N.players[p], N.busy[p] = nil, nil
+    n0 = #net.sent
+    LC.SendCompressed("lc_public", { v = 1 }, { p })
+    LC.SendCompressed("lc_public", { v = 2 }, { p })
+    LC.SendCompressed("lc_public", { v = 3 }, { p })
+    local pubs = Since(n0, "lc_public")
+    ok(#pubs == 1 and (util.JSONToTable(pubs[1].data[2]) or {}).v == 1, "the territory map goes at once the first time")
+    Pump(1.2)
+    pubs = Since(n0, "lc_public")
+    ok(#pubs == 2 and (util.JSONToTable(pubs[2].data[2]) or {}).v == 3, "changes in the same second are one more send, of the newest", #pubs)
+    LC.SendCompressed("lc_public", { v = 3 }, { p })
+    Pump(1.2)
+    ok(#Since(n0, "lc_public") == 2, "the very same map again within the second isn't sent twice")
+
+    -- everyone at once: one message, to the same list, as before
+    local q = newPlayer("NetWatcher2", "citizen")
+    N.players[p], N.busy[p] = nil, nil
+    n0 = #net.sent
+    local both = { p, q }
+    LC.SendCompressed("lc_nettest", { all = 1 }, both)
+    got = Since(n0)
+    ok(#got == 1 and got[1].to == both, "a small send to several players is still one message to all of them")
+
+    -- long global strings: the city's laws and the Administrator's broadcast past 511 characters
+    local long = Blob(1300, 5)
+    LC.SetGlobalLong("lc_nettest_g", long)
+    ok(LC.GetGlobalLong("lc_nettest_g", "") == long and #(_globals.lc_nettest_g or "") <= 500, "a long global string is kept in parts of 500 and read back whole")
+    LC.SetGlobalLong("lc_nettest_g", "short")
+    ok(LC.GetGlobalLong("lc_nettest_g", "") == "short" and _globals.lc_nettest_g == "short", "a short one is one string, as before")
+    local before = #(util.JSONToTable(LC.GetGlobalLong("lc_laws", "")) or {})
+    local okL = LC.SetLaw(nil, nil, string.rep("Citizens will stand still when a unit passes. ", 4))
+    local laws = util.JSONToTable(LC.GetGlobalLong("lc_laws", "")) or {}
+    ok(okL and #laws == before + 1 and before > 0, "a law added past 511 characters of laws still reaches every law board", before .. " -> " .. #laws)
+    LC.SetLaw(nil, #laws, "")
+
+    -- the Endings menu's tuning, shared while a slider is dragged: at once, then at most twice a second
+    _run(1)
+    n0 = #net.sent
+    LC.EndingTuneShare(nil)
+    LC.EndingTuneShare(nil)
+    LC.EndingTuneShare(nil)
+    ok(#Since(n0, "lc_tune_all") == 1, "a burst of tuning changes is sent to everyone once at first")
+    _run(0.6)
+    ok(#Since(n0, "lc_tune_all") == 2, "and the latest once more, half a second later")
+
+    N.players[p], N.busy[p], N.players[q], N.busy[q] = nil, nil, nil, nil
+    p:Remove() q:Remove()
+end
+NetSafetyTests()
 
 function KeyLayoutTests()
 
