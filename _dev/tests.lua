@@ -13583,6 +13583,15 @@ _setcvar("lc_dream_delay", 60)
 _setcvar("lc_dream_combine", 6)
 _files["livingcity/endings.json"] = nil
 _walls = savedWalls
+do -- (the owner, 7 November: the flood's water in a dream, but only in the dream zone)
+    local mins, maxs = LC.FloodDreamBounds({ pos = Vector(5000, 6000, 100) })
+    local r = GetConVar("lc_dream_radius"):GetFloat()
+    ok(mins.x == 5000 - r and maxs.y == 6000 + r and GetGlobal2Vector("lc_flood_max") == maxs, "a flood in a dream fills the circle round the dream point (its square), not the whole view")
+    local bx = { pos = Vector(0, 0, 0), zone = { box = { mins = Vector(-300, -200, 0), maxs = Vector(400, 500, 900) } } }
+    local m2, x2 = LC.FloodDreamBounds(bx)
+    ok(m2.x == -300 and x2.y == 500, "and with a dream zone box, exactly the box")
+    SetGlobal2Vector("lc_flood_min", Vector(0, 0, 0)) SetGlobal2Vector("lc_flood_max", Vector(0, 0, 0))
+end
 ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 DreamTests()

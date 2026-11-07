@@ -304,6 +304,7 @@ function GetGlobal2String(k, d) local v = _globals[k] if v == nil then return d 
 GetGlobal2Float, GetGlobal2Bool, GetGlobal2Int = GetGlobal2String, GetGlobal2String, GetGlobal2String
 SetGlobal2Entity, GetGlobal2Entity = SetGlobal2String, GetGlobal2String
 SetGlobal2Int, GetGlobal2Int = SetGlobal2String, GetGlobal2String
+SetGlobal2Vector, GetGlobal2Vector = SetGlobal2String, GetGlobal2String
 IN_USE = 32
 ACT_HL2MP_IDLE, ACT_HL2MP_SIT = 1780, 1977
 IN_SPEED = 131072

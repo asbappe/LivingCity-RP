@@ -284,6 +284,19 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityEndings", function(_, sky)
     if z == 0 then return end
     local eye = EyePos()
     render.SetColorMaterial()
+    -- in a dream, only the dream zone fills (lc_flood_min / lc_flood_max: sv_livingcity_dreams.lua)
+    local bmin, bmax = GetGlobal2Vector("lc_flood_min", Vector(0, 0, 0)), GetGlobal2Vector("lc_flood_max", Vector(0, 0, 0))
+    if bmax.x > bmin.x and bmax.y > bmin.y then
+        render.DrawBox(Vector(0, 0, z), Angle(0, 0, 0), Vector(bmin.x, bmin.y, -4000), Vector(bmax.x, bmax.y, 0), Color(25, 60, 85, 170), true)
+        if Material and render.DrawQuadEasy then
+            if floodMatName ~= cvFloodMat:GetString() then floodMatName = cvFloodMat:GetString() floodMat = Material(floodMatName) end
+            if floodMat and not (floodMat.IsError and floodMat:IsError()) then
+                render.SetMaterial(floodMat)
+                render.DrawQuadEasy(Vector((bmin.x + bmax.x) / 2, (bmin.y + bmax.y) / 2, z + 1), Vector(0, 0, 1), bmax.x - bmin.x, bmax.y - bmin.y, Color(255, 255, 255, 200), 0)
+            end
+        end
+        return
+    end
     render.DrawBox(Vector(eye.x, eye.y, z), Angle(0, 0, 0), Vector(-20000, -20000, -4000), Vector(20000, 20000, 0), Color(25, 60, 85, 170), true)
     if Material and render.DrawQuadEasy then
         if floodMatName ~= cvFloodMat:GetString() then floodMatName = cvFloodMat:GetString() floodMat = Material(floodMatName) end

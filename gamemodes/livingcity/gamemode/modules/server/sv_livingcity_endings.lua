@@ -3441,6 +3441,8 @@ SETUP.water = function()
     -- mapper's own rising water, the way Half-Life 2 does it). Then the engine
     -- does the swimming; otherwise the water is drawn and the swimming is ours.
     local real = not E.dream and ents.FindByName and ents.FindByName("lc_flood")[1] -- (a dream: never the city's own water)
+    -- (a dream: the drawn flood fills the dream zone only, not the whole view: the owner, 7 November)
+    if E.dream and LC.FloodDreamBounds then LC.FloodDreamBounds(E.dream) end
     if IsValid(real) then
         E.realWater = real
         SetGlobal2Bool("lc_flood_real", true)
@@ -3796,6 +3798,8 @@ local function Clear()
     end
     SetGlobal2Float("lc_flood_z", 0)
     SetGlobal2Float("lc_flood_slosh", 0)
+    SetGlobal2Vector("lc_flood_min", Vector(0, 0, 0))
+    SetGlobal2Vector("lc_flood_max", Vector(0, 0, 0))
     SetGlobal2Bool("lc_storm_max", false)
     SetGlobal2Bool("lc_flood_real", false)
     for _, p in ipairs(LC.EndingPlayers()) do if p.SetGravity then p:SetGravity(1) end p.lcEndUnder = nil end

@@ -99,6 +99,22 @@ function LC.DreamRadius(dream)
     if z then return z.r end
     return math.max(200, cvRadius:GetFloat())
 end
+-- The flood in a dream: its water fills the dream zone (its box, or the circle round the point, as a
+-- square), not the whole view. Sets lc_flood_min / lc_flood_max for the dreamers' games to draw within.
+function LC.FloodDreamBounds(dream)
+    local z = dream and dream.zone
+    local mins, maxs
+    if z and z.box then
+        mins, maxs = Vector(z.box.mins.x, z.box.mins.y, 0), Vector(z.box.maxs.x, z.box.maxs.y, 0)
+    else
+        local c, r = z and z.pos or dream.pos, LC.DreamRadius(dream)
+        mins, maxs = Vector(c.x - r, c.y - r, 0), Vector(c.x + r, c.y + r, 0)
+    end
+    SetGlobal2Vector("lc_flood_min", mins)
+    SetGlobal2Vector("lc_flood_max", maxs)
+    return mins, maxs
+end
+
 -- How high things in it may fly (the dream zone's top; no zone, no limit of its own).
 function LC.DreamTop(dream)
     local z = dream and dream.zone

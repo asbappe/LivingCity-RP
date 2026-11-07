@@ -47,6 +47,7 @@ function string.FormattedTime(s, fmt) return string.format(fmt or "%02i:%02i", m
 function GetGlobal2String(k, d) return _globals[k] or d end
 function GetGlobal2Float(k, d) return _globals[k] or d end
 function GetGlobal2Entity(k, d) return _globals[k] or d end
+function GetGlobal2Vector(k, d) return _globals[k] or d end
 function GetGlobal2Int(k, d) return _globals[k] or d end
 function GetGlobal2Bool(k, d) local v = _globals[k] if v == nil then return d end return v end
 function Entity() return nil end
