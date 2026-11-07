@@ -17,3 +17,14 @@
 - **Voice lines.** Units speak in the mask's voice: `!vo` (or bind a key to `lc_vo_menu`) for a menu of about fifty lines, `/vo <word>`, or say a line's exact words in chat ("Move along."). Overwatch have their own. The list is in `gamemodes/livingcity/gamemode/modules/shared/sh_livingcity_cp.lua`.
 
 `lc_cp_tools 0` turns all of this off.
+
+**Changes from the 7 November playtest.**
+- **Running isn't prison:** caught running the first or second time in an hour, a unit cuffs you, gives you three blows of the baton, laughs and says "All right, you can go." No cell and no standing lost. The third time in an hour is prison as before. Giving yourself up for running goes the same way.
+- **No shove for your own:** a unit never shoves the player it is escorting or who called it for backup, and nobody is told to stop running or move back in the infestation zone.
+- **Turrets and power banks are the Overwatch's** (and admins'): ordinary units and recruits no longer deploy them, and the buttons are hidden from them.
+- **No Scanner Operator role:** any unit flies a scanner from a terminal (F1 > Unit tools).
+- **"Freeze"** plays "Don't move!" (the clip it pointed at isn't in the metrocop voice set).
+- **Backup joins your squad** for 5 minutes (was 2): chat says as each unit arrives, and they attack whoever you hit or whoever hurts you.
+- **Killing a rebel** gives a unit +5 standing, +2 credits and a box of rounds for the gun in hand, with a notice (as well as the XP).
+- **Vests at a power bank:** hold E on a live bank to add 15 charge a press. Anyone who isn't a unit commits "Tampering" if a unit sees it; up close, the bank says which applies to you.
+- **Prison guards** keep out of cells, the release spot and the prison doors, so a door is never held open by a guard standing in it.

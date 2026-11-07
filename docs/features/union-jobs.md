@@ -47,3 +47,12 @@ The unit watches the doors it opens. If **someone slips through behind you** (a 
 **When your job's done**, your escort walks you out to the **release point** (the way out of the prison, outside the Combine area) and leaves you there. With no release point on the map, they see you out of the Combine area; if you never went through a Combine door, they just go back to their beat. Player units can hand an escort back to dispatch from their menu.
 
 (Half-Life 2's own "follow me" squads only work for rebels, not Civil Protection, so units follow the city's own way, the same as a Resistance fighter does.) `lc_escorts 0` turns escorts off; `lc_escort_range` (6000) is how far a unit is sent from.
+
+**Changes from the 7 November playtest.**
+- **One job change every 15 minutes** (the owner: "can we make it so a person can't switch union jobs more than once every 15 minutes?"): `lc_job_cooldown` is 900 (was 120); a server still on 120 is moved to 900. The refusal says how many minutes are left.
+- **Tools come back** after a rejoin or prison for anyone still in the job; becoming a unit or an anticitizen revokes the job (see Infestation Cleanup for what is kept).
+- **Work clothes stay on for the whole shift:** a sanitation worker (and the mortuary and scrap crews) only changes back at bedtime or on leaving, not after every bin.
+- **The hoover** is drawn about 2 feet further from your face, and the airboat's fan motor runs under its own sounds while vacuuming.
+- **Weeds** sit on the floor under their spot (some floated 2 to 3 feet up).
+- **The incinerator's fire** shows from the start (each has its own flames; before, it only lit after being moved).
+- **Both Commissaries** have a floating sign in the Civil Intake style: "UNION COMMISSARY / Goods for citizens, by Civil Standing. Press E" and "CP COMMISSARY / Units: your issue is here. Press E".

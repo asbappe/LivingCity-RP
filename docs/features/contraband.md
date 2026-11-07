@@ -33,3 +33,11 @@ Admin helpers: `lc_giveitem <name> <item> [count]`, `lc_search <name>`.
 ## Conduct
 
 Every player kill is judged; unjustified ones earn strikes (2: prison, 4: kick), and leaving mid-fight (or wanted, or being chased) is remembered, but only if you chose to leave: a server restart or map change, a crash or dropped connection, or a kick isn't held against anyone. Admins clear someone's strikes from the admin tools (Handy > Clear conduct strikes) or with `lc_pardon <name>`. New spawns get 8 seconds of protection. Logged to `garrysmod/data/livingcity/conduct_log.txt`.
+
+**Changes from the 7 November playtest.**
+- **Shops** (black market, quartermaster, Union Commissary) always show the price; when you can't buy, a red note by the name says why ("Not enough credits, 25 short"). Buying or selling keeps the list where you scrolled.
+- **The bypass charge** says what it does; for its first 10 seconds the door is checked every half second and opened again if it isn't open, then it stays passable for the rest of its 30 seconds.
+- **Cuffs** say plainly who can be cuffed: anyone with cuffs can cuff someone whose hands are up, who is down, who a unit stopped, or from behind.
+- **The call box** has a "Call for help" button in your pockets (F2); its tip points there.
+- **Pockets:** a refusal now says which limit you hit, with the numbers (large items: 1, or 2 with a satchel; a uniform is a large item), not only "pockets full".
+- **The CP disguise** wears the HL:Alyx metrocop playermodel when one is installed or named in `lc_pm_metrocop`; with none, nothing changes.

@@ -23,3 +23,5 @@ Personal stories that unlock from what you've done, appear at the top of your bo
 | Father Grigori's Flock | The chaplain. A secret mass, and a traitor among the faithful |
 
 Admins can start any chain directly: `lcq_startchain <ia|inside|missing|candidate|pamphleteer|informant|flock> [player]`. `lcq_story <name>` shows someone's traits, counters and progress; `lcq_resetstory <name>` starts them over.
+
+**Changes from the 7 November playtest.** A story quest ("Your story") waits until the character has done 2 to 4 ordinary jobs (drawn once and saved; existing characters too, from now); Union shifts, rehabilitation, Insider operations, the stalker's lot, the collar and chains already started are never held back, and a tip says when stories open. In the missing unit's story, the infestation leaves headcrab blood smeared up the wall and across the floor (it said "headcrab shells").

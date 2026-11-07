@@ -31,3 +31,15 @@ The record of every change to the core the owner approved, with the date and the
 - 2026-10-16: the Endings menu added (a new feature, the owner asked: "make this now for all ending variables and have a dropdown to select the ending"); its tuning is kept in `data/livingcity/ending_tuning.json` (a new line in the snapshot).
 - 2026-10-16: `garrysmod/sound/livingcity/` made the official folder for recordings and songs in every instruction (README, guide, messages); `addons/livingcity/` the one official place for the gamemode. The older sound places are still read.
 - 2026-10-15: NPCs carry boxes in front in both hands (the owner: "can we make them use both hands to carry boxes out in front of them?").
+- 2026-11-07: from the owner's 7 November playtest list, each asked for in their words:
+  - Only the Administrator sets sociostability ("CP Recruits should not be able to change the sociostability; only the Administrator"); was officers, Division Leader and up, and admins.
+  - A unit's F1: 1 Voice lines, 2 Unit tools, 3 Kick, 4 Call for backup, 5 BOLO, 6 Send my 10-20 ("Can we also put the F1 Voice Lines menu up to slot 1?").
+  - `lc_job_cooldown` 120 to 900, with a retune for servers on 120 ("can we make it so a person can't switch union jobs more than once every 15 minutes?").
+  - The Scanner Operator role removed ("scanner operator should NOT be a role").
+  - Turrets and power banks deployed by the Overwatch and admins only ("CP Recruits should NOT have access to powerbanks and turrets. I kind of don't think even standard CP units should, that seems to me to be more of a overwatch privilege").
+  - Running: a beating and "you can go" for the first two times in an hour, prison on the third ("I think if the running offense happens maybe 3 times in an hour, then ok to prison, but otherwise no just a beating").
+  - Infestation Cleanup guards are two Overwatch soldiers, never metrocops ("I WANT 2 SOLDIERS, ONE WITH A SHOTGUN AND ONE WITH A PULSE RIFLE"). The `lc_cleanup_guards` help text still says "Civil Protection units or soldiers": not reworded.
+  - The Administrator wears Mossman (women) or Breen (men) ("please make a player with a female model ... adopt a Judith Mossman playermodel ... while males adopt a Dr Breen playermodel").
+  - New items `raw_crow` and `raw_gull`, `raw_bird` named "Raw pigeon", raw and cooked fish models changed, `spoils` on ten meat and fish items ("Raw AND cooked headcrabs and birds and fish should expire after an in-game day").
+  - New settings: `lc_gman_line_dream` (the G-Man's sound in a dream), `lc_broom_hold` (where the stalker's broom sits), `lc_gunfire_fear` (how far citizens hear gunfire), `lc_pm_metrocop` (an HL:Alyx metrocop playermodel for the disguise).
+  - **Not yet OK'd, for the owner to check:** a new character's first ration is never the docked one (the dock moves to the next ration); Civil Protection street ranks also wear the HL:Alyx metrocop model when one is installed (`lc_pm_metrocop`); `_dev/core_snapshot.txt` not updated: once these are OK, the full suite writes `_dev/core_snapshot.new.txt` to copy over it.

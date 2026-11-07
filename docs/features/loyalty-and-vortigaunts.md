@@ -17,3 +17,5 @@
 - **Lockers** are for citizens in good standing: below `lc_locker_standing` (150) a citizen can't open one (units always can).
 - **Block Warden**, a Union job for loyal citizens only, Civil Standing 100 (was Exemplary, 400; the owner asked), and not even listed on the board below it (players, never NPCs, and never handed out): walk two corners of your own block, have a word with a neighbour, and report them or not. A report that holds up (45%) pays 10 credits and 15 standing; one that doesn't costs 10 standing.
 `lc_loyalty_rewards 0` turns all of it off.
+
+**Changes from the 7 November playtest.** The city's collared vortigaunts sweep for real, a push broom in hand, pacing a short stretch; they step aside when a person or NPC walks into them, and new sweeping spots keep out of doorways. A shackled vortigaunt never zaps: it runs from any headcrab or zombie within 400 units.

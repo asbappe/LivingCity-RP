@@ -37,3 +37,5 @@ So nobody has to read all this first, the game explains itself as it happens. Th
 - **How you're doing:** hungry, thirsty, parasites, hurt, standing below zero, or high enough to join Civil Protection.
 
 `!hints` shows the last few again in chat, `!hints off` and `!hints on` turn them off and on for you, and `!hints reset` starts them over. `lc_hints 0` turns them off for the whole server. The tips themselves are a table at the top of `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_hints.lua`, easy to reword or add to.
+
+**Changes from the 7 November playtest.** The cards at the top of the screen come one at a time, with a short gap and a "+N more" count (a warning goes first), taking turns with the tips on the right. A new character no longer gets the last one's wedding ring (rings still turn up in bins, the canal and on the dead).

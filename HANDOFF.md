@@ -28,11 +28,9 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 2026-11-07, performance pass (no behaviour or settings changed, core snapshot untouched):
-  - Server: `LC.CachePData` (sv_livingcity_perf.lua) keeps each player's PData reads in memory, write-through; missing keys remembered too (GMod queried twice for those).
-  - Server: `LC.IsSeen` and `LC.ViewerPositions` build the players' views once per tick (`engine.TickCount`); tests (`LC.TestMode`) still ask fresh.
-  - Client: rain skips streaks behind the camera (about half the draws); stealth cones use `LC.EntsOf` for npc_metropolice/npc_combine_s; scanner reports scan players and `npc_*` only.
-  - Tests: new unit `PerfCacheTests`; smoke test checks rain culling and the cones via the entity cache; the smoke stub's `ents.FindByClass` now takes `npc_*`.
-  - Considered and left alone: job game HUD and radio resends (small messages, little to gain); entity Think every tick on the dealer, dispenser and scientist (likely what keeps their animations playing).
-  - Unverified in game: rain looks the same, cones show while crouched near units, scanner reports outline for units, credits/standing correct after reconnect (PLAYTEST.md).
+- 2026-11-07: the owner's 7 November playtest list is done and merged to `main`. The full list, what to check in game, the core changes and what is pending are in `docs/dev/handoff-2026-11-07.md`.
+- Nothing is checked in game. Every item has a "(7 November)" line in `PLAYTEST.md`. The client smoke test and every touched test unit pass. The full suite was not run.
+- The core changed: the list is in `CORE_CHANGELOG.md` (2026-11-07). Three items are not yet OK'd. `_dev/core_snapshot.txt` is not updated, so the snapshot test fails until the owner says yes.
+- The owner is handling the pending design items themselves: Labor Assignment terminal, shared dreams, rebel food scaling, the economy audit (`docs/dev/economy-audit.md`), stimulants, Workshop dances.
+- Not started: the CP kick showing the mask, and the sweep job with nobody showing up.
 - Open items and what waits on the owner are in `TODO.md`.

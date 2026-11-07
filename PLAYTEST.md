@@ -604,3 +604,117 @@ Notes:
   Notes:
 - [ ] **Dealer and scientist (7 November):** they move: idles change every so often, the head follows you when you stand near, E makes the dealer reach to his rack and the scientist reach for his work; a unit busting the dealer sees him cower.
   Notes:
+- [ ] **Cleanup guards (7 November):** take an Infestation Cleanup shift. Two Overwatch soldiers should arrive (one shotgun, one pulse rifle), standing apart, and no metrocops. When the shift ends they walk off.
+  Notes:
+- [ ] **Cleanup guards fighting (7 November):** with a zombie behind a wall, the soldiers walk round to it rather than shooting the wall. In the open, the pulse rifle fires steady bursts.
+  Notes:
+- [ ] **Guard in a doorway (7 November):** walk into a guard blocking a doorway. They step aside.
+  Notes:
+- [ ] **Warning posts (7 November):** at each infestation's edge, the sign, lamp and barrel stand beside the way in, not on the marked path, and none is inside a wall or floating.
+  Notes:
+- [ ] **Longer cleanup shifts (7 November):** the first shift asks for 3 growths, the next 5, then 7. With all visible growths cleared, more appear where you aren't looking.
+  Notes:
+- [ ] **Bags (7 November):** NPCs and you walk through the bags the cleanup crew leaves.
+  Notes:
+- [ ] **Union kit after a reboot (7 November):** as a Groundskeeper or Infestation Cleanup, rejoin after a server restart, and get released from prison: the sprayer (and hoover) are back.
+  Notes:
+- [ ] **Union job revoked (7 November):** as Infestation Cleanup, become a CP recruit: hoover, sprayer and weedkiller are gone. As a worker, become an anticitizen: the job and hoover go, the weedkiller stays.
+  Notes:
+- [ ] **Job change limit (7 November):** change Union job twice in a row from F3: the second is refused with the minutes left (15 minutes).
+  Notes:
+- [ ] **Sanitation worker clothes (7 November):** watch a city sanitation worker empty several bins, also at curfew: the hazmat suit stays on.
+  Notes:
+- [ ] **Hoover (7 November):** hold it: the pack sits about 2 feet further out; vacuuming a dead growth plays the airboat motor under the usual hiss, and it stops when you let go.
+  Notes:
+- [ ] **Weeds (7 November):** look at several weeds around the city: all sit on the ground.
+  Notes:
+- [ ] **Incinerator (7 November):** after a map change, walk to the mortician's incinerator without touching it: fire is burning in it.
+  Notes:
+- [ ] **Commissary signs (7 November):** the Union Commissary and the CP Commissary have a floating blue sign like Civil Intake's.
+  Notes:
+- [ ] **Running (7 November):** run past a metrocop until he chases you and let him catch you. You should be cuffed, hit three times, hear a laugh and "All right, you can go", and lose no standing. Do it three times within an hour: the third time is prison.
+  Notes:
+- [ ] **Infestation zone (7 November):** sprint past a unit inside an infestation zone and bump into one there. No "STOP RUNNING" and no shove.
+  Notes:
+- [ ] **Escort shove (7 November):** walk into the unit escorting you on a job. He should not shove you.
+  Notes:
+- [ ] **Prison guards (7 November):** get jailed and look at your cell. No guard or soldier should stand inside it, and the door should stay shut.
+  Notes:
+- [ ] **Overwatch Commander (7 November):** as a Recruit (even as superadmin), open F4. Overwatch Commander should be refused.
+  Notes:
+- [ ] **Turrets and power banks (7 November):** as a Recruit or Division Leader, open Unit tools. There should be no deploy buttons; as Overwatch there are.
+  Notes:
+- [ ] **Scanner (7 November):** as any unit, F1 > Unit tools > Fly a scanner at a Combine console. F4 should no longer list a Scanner Operator role.
+  Notes:
+- [ ] **Freeze (7 November):** as a Recruit, play the "Freeze" voice line. You should hear "Don't move!".
+  Notes:
+- [ ] **Backup squad (7 November):** call for backup. When the units reach you, chat should say they're in your squad, and they should follow you and attack whoever you shoot.
+  Notes:
+- [ ] **Rebel kill (7 November):** as a unit, kill a rebel. You should get +5 standing, +2 credits and a box of rounds, with a notice.
+  Notes:
+- [ ] **Power bank vest (7 November):** stand close to a live power bank. The label should show; as a unit, hold E to recharge your vest. As a citizen with a vest, it charges but a watching unit books you.
+  Notes:
+- [ ] **Ration line, front of the line (7 November):** During a distribution, watch the citizen in spot 1. They walk up to the dispenser, take a packet and leave, and the line moves up.
+  Notes:
+- [ ] **Ration line, your ration (7 November):** With a ration card, stand at the front of the line during a distribution. You get a packet within a few seconds. If you are refused, the citizens behind you go on past you to the dispenser.
+  Notes:
+- [ ] **Ration line, docked newcomer (7 November):** As a new character, get docked by a nearby Resistance attack, then collect your first ration. You get it, and chat says the deduction comes off the next one.
+  Notes:
+- [ ] **Ration line supervision (CP) (7 November):** Take the job during a distribution. Citizens come to the line. "The line is restless" appears only after the first citizen has collected, and the job completes after two more.
+  Notes:
+- [ ] **Beds, taken (7 November):** At night, try several empty beds. None says "Someone's already asleep in this bed" unless someone is lying in it.
+  Notes:
+- [ ] **Beds, sleepers (7 November):** Visit a housing block and a rebel camp at night, also by noclipping in fast. Sleepers lie flat on the mattress with eyes shut and no guns, nobody stands on a bed marked "asleep", and looking at a sleeper shows their name and "asleep".
+  Notes:
+- [ ] **Beds, waking (7 November):** Watch sleepers get up in the morning, or when hurt. They stand beside the bed in the same room, not through the wall and not in the ceiling.
+  Notes:
+- [ ] **Street vortigaunts make way (7 November):** walk into a collared sweeper in a doorway, and watch a metrocop walk at one. It should step aside.
+  Notes:
+- [ ] **Street vortigaunts sweep (7 November):** watch one for 20 seconds. It should hold a push broom, swing it, and pace back and forth. Say if the broom sits wrong.
+  Notes:
+- [ ] **Shackled vortigaunts run from headcrabs (7 November):** spawn a headcrab next to a collared sweeper. It should run, never zap.
+  Notes:
+- [ ] **Rebels spread out (7 November):** visit a small rebel zone. There should be fewer fighters, on open floor, not packed into doorways or hallways.
+  Notes:
+- [ ] **Citizens under gunfire (7 November):** fire a gun near citizens. They should run from you, and some should crouch and cover their heads first.
+  Notes:
+- [ ] **Raw fish prop (7 November):** drop a raw fish: a grey pod, not a newspaper; fried fish is a takeout carton.
+  Notes:
+- [ ] **Bird carcasses (7 November):** punch a crow, a pigeon and a gull: each leaves its own body (crow, pigeon, gull), named Raw crow / Raw pigeon / Raw gull; all roast to Roast bird.
+  Notes:
+- [ ] **Spoilage (7 November):** carry a raw and a roast bird: F2 shows "spoils in 24h" counting down in city hours (lc_day_minutes 60: one real hour); after a city day they vanish with a "gone off" card. Put one in a locker and come back a day later: it's gone from the locker too. Drop one and pick it up: the hours left carry over.
+  Notes:
+- [ ] **Fishing line (7 November):** buy one line (15 credits) and fish until it snaps: 4 to 8 casts, with a "fraying" warning before the last.
+  Notes:
+- [ ] **Birds outdoors only (7 November):** walk the underground and indoor areas for a while: no pigeons, crows or gulls; they still turn up where the sky is open.
+  Notes:
+- [ ] **Shop prices (7 November):** at the black market, quartermaster or Union Commissary with too few credits, check each item shows its price and "Not enough credits, N short" beside its name.
+  Notes:
+- [ ] **Shop scroll (7 November):** sell something far down the black market list; the list should stay where you were.
+  Notes:
+- [ ] **Bypass charge (7 November):** use one on a glitchy Combine door, and try having a unit work it from the other side; it should stay open for 10 seconds and then be passable until 30.
+  Notes:
+- [ ] **Cuffs text (7 November):** read the cuffs description in the shop and in your pockets; it should say who you can cuff and how.
+  Notes:
+- [ ] **Call box (7 November):** buy one, open F2, press Call for help beside it, type what's wrong; units should get the request. The tip should name F2.
+  Notes:
+- [ ] **Full pockets (7 November):** with a satchel and two large things, take off a bought CP uniform; the message should say it's the large-things limit and how to make room.
+  Notes:
+- [ ] **CP disguise model (7 November):** with an HL:Alyx metrocop playermodel installed (or set with lc_pm_metrocop), put on a bought CP uniform as a rebel; you should wear the same model as the units.
+  Notes:
+- [ ] **Popups (7 November):** make a new character; the cards at the top and the tips on the right should come one at a time, each readable, never piled up.
+  Notes:
+- [ ] **No ring (7 November):** die and make a new character; no "wedding ring" popup or ring in your pockets.
+  Notes:
+- [ ] **Your story (7 November):** as a new character, F3 shows no "YOUR STORY" quest until you've finished 2 to 4 ordinary jobs; Union shifts still show from the start.
+  Notes:
+- [ ] **Gestures (7 November):** F1 > Gesture > Wave (and the others) with a camera on yourself; the body should play each one.
+  Notes:
+- [ ] **Hands up (7 November):** F1 > 2 with a camera on yourself; the body should not slide forward or back. Get searched by a unit: a tip says to put your hands up.
+  Notes:
+- [ ] **Administrator (7 November):** become Administrator with a female face (Mossman) and with a male face (Breen); step down and get your own face back.
+  Notes:
+- [ ] **Missing unit (7 November):** the infestation version of "Gone dark" talks about headcrab blood, not shells.
+  Notes:
+- [ ] **The can (7 November):** a cop's "pick up that can" should only happen near a bin, never in the infestation zone or on a job; pick it up and a marker shows the bin.
+  Notes:
