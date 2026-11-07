@@ -610,7 +610,7 @@ LC.Chain{
                         for _, p in ipairs(Q.Members(q)) do
                             if p:GetPos():DistToSqr(z.pos) < out * out then q.data.wentIn = true end
                             if LC.Notice then
-                                LC.Notice(p, "warn", "This must be 6-12", "A zombine in a Civil Protection uniform, his mask still on. Kill him to end his suffering, " ..
+                                LC.Notice(p, "warn", "This must be 6-12", "A zombine in a Civil Protection uniform, a headcrab where his face used to be. Kill him to end his suffering, " ..
                                     "or leave the infestation and let a cleanup crew deal with him.", 10)
                             end
                         end
