@@ -718,3 +718,76 @@ Notes:
   Notes:
 - [ ] **The can (7 November):** a cop's "pick up that can" should only happen near a bin, never in the infestation zone or on a job; pick it up and a marker shows the bin.
   Notes:
+
+## 7 November, part 2 (the second list)
+
+- [ ] **First ration (7 November, part 2):** as a new character near a Resistance attack, your first ration is docked like any other (you said no to the exception).
+  Notes:
+- [ ] **CP uniform back in your pockets (7 November, part 2):** buy a CP uniform as a rebel, fill your pockets with large things while wearing it, change to plain clothes: the uniform goes back in your pockets, not on the ground.
+  Notes:
+- [ ] **Kick, legs only (7 November, part 2):** kick as a unit with the HL:Alyx model: in first person only the legs show, no mask.
+  Notes:
+- [ ] **Join the sweep (7 November, part 2):** take "Join the sweep" and wait at the edge: the team comes to you ("The sweep team is with you") and goes in with you. If another fight is on, the sweep waits for it; if it can't happen, you're told it's called off.
+  Notes:
+- [ ] **Rebel food scaling (7 November, part 2):** as the only Resistance player, eat from the supply crate for an hour: about one tin every 40 minutes, and it is often empty. Empty, it says so on screen with where else to find food and when more is due. Look at the crate: meals stored and "More supplies in about N minutes". Donate cooked fish, a headcrab or a bird as a citizen: it goes in.
+  Notes:
+- [ ] **Labor Assignment (7 November, part 2):** place "Fixture: Labor Assignment" with the editor. As a new character: register at Civil Intake, try Housing Allocation (it refuses and marks Labor Assignment), get your assignment at the terminal (the job with fewest people), then get a room. F3 shows no job list, only "Go to a Labor Assignment terminal" and a way button. The terminal refuses a change before 30 minutes or 4 shifts, also after a rejoin; after that, pick a new job, with Infestation Cleanup locked below standing 25 and Intake Processor below 50. As superadmin on a map without the terminal, you get one notice.
+  Notes:
+- [ ] **Shared dreams (7 November, part 2):** place Point: dream out of the map (and Zone: dream round it), trigger an ending (C > Help > Dreams > dream it now, or a directive), sleep at night with a second player awake: the awake one sees nothing, the sleeper dreams it at the dream point, then wakes in bed with weapons, rounds, ammo, pockets, credits, hunger and clothes as before. Try opting out mid-dream (C > Settings > Shared dreams), disconnecting mid-dream and rejoining, and C > Help > Dreams > Put back.
+  Notes:
+- [ ] **Old job gone on becoming a unit (7 November, part 2):** as Infestation Cleanup, become a metrocop, then reconnect after a restart: no job on the card, no suit gloves or skin on any viewmodel, no hoover or sprayer.
+  Notes:
+- [ ] **Ration voucher (7 November, part 2):** as a unit, the duty allocation is a voucher, not a packet; E at the CP Commissary or a dispenser swaps it.
+  Notes:
+- [ ] **CP Commissary kit and vest (7 November, part 2):** one health vial and bandage a city day; stand there with low armour and watch it charge (not with the power out).
+  Notes:
+- [ ] **Radio away (7 November, part 2):** as a metrocop, raise the radio and press R: it goes away and stays away.
+  Notes:
+- [ ] **Editor tool and sleep (7 November, part 2):** hold the editor tool for a long while: never exhausted.
+  Notes:
+- [ ] **Rebel bodies (7 November, part 2):** kill rebels: their bodies keep the rebel clothes.
+  Notes:
+- [ ] **Baton arrest (7 November, part 2):** arrest a citizen: a unit walks over and walks them to the cells, no teleport. With no unit about, the cuffed NPC follows you; F1 > Walk them to the cells / let go.
+  Notes:
+- [ ] **Struggle (7 November, part 2):** arrest a player and a rebel: the bar shows on both screens and pressing E fast decides it. Broke free: the officer is shoved back and the NPC runs flat out. Arrested yourself: press E fast to break free, or hands up to go quietly.
+  Notes:
+- [ ] **Apprehend job (7 November, part 2):** a failed Authority check: the suspect shoves you back and runs off properly, a real chase.
+  Notes:
+- [ ] **Soldiers stay home (7 November, part 2):** with a Combine zone placed, idle Overwatch soldiers stay inside it; a lockdown, red sociostability, a raid or a backup call brings them out.
+  Notes:
+- [ ] **Citizens out of Combine zones (7 November, part 2):** no sanitation workers or groundskeepers inside; drop a can inside, wait 5 minutes: a stalker appears out of sight, picks it up and leaves.
+  Notes:
+- [ ] **Rebel warning in the Combine building (7 November, part 2):** in the Combine zone under the rebel zone, no rebel warning or banner; up in the rebel zone, it shows.
+  Notes:
+- [ ] **Dead headcrabs (7 November, part 2):** sanitation workers pick them up, and ones left alone vanish after about 5 minutes when nobody is near.
+  Notes:
+- [ ] **Retake the block (7 November, part 2):** every rebel on the ground must go, none respawn while you clear them, then a wave hits while you hold.
+  Notes:
+- [ ] **Backup armed (7 November, part 2):** call backup with a gun out or after being shot at: they come with pistols and SMGs, not sticks.
+  Notes:
+- [ ] **Allies on violent jobs (7 November, part 2):** take a violent job as Civil Protection, the Overwatch and the Resistance: two of your own side follow and fight with you.
+  Notes:
+- [ ] **Flashbangs (7 November, part 2):** flash rebels: each rubs their eyes and stumbles 4 to 9 seconds, no shooting.
+  Notes:
+- [ ] **Missing Unit part 2 (7 November, part 2):** after the zombies, a zombine appears with a notice and no choice window; kill him, or walk out of the infestation.
+  Notes:
+- [ ] **My career (7 November, part 2):** C > My career as a Metrocop shows rank, XP to the next and the way to the Overwatch; a declined candidate can ask again after an hour.
+  Notes:
+- [ ] **Contraband sweep (7 November, part 2):** after the stashes: a clue, a witness, then the suspect to find and arrest.
+  Notes:
+- [ ] **Lab damage (7 November, part 2):** shoot a Resistance lab bench: parts blow and smoke, then it's wrecked and the lab shop is shut; a rebel repairs it with the F3 job "Get the lab running".
+  Notes:
+- [ ] **What you can do here panel (7 November, part 2):** as a unit with the Arrest Baton out, the panel on the right says E on a citizen stops them, R searches, right click arrests. It never covers the quest tracker or a tip card, fades after a few seconds, and C > Settings turns it off.
+  Notes:
+- [ ] **Quest trail (7 November, part 2):** take a quest with a far objective: chevrons on the ground flow toward it, points behind you vanish, walking off brings a new trail within a second or two, and it goes at the objective. C > Settings hides it.
+  Notes:
+- [ ] **Panting, again (7 November, part 2):** run out of stamina several times: the panting stops each time, with no snd_restart.
+  Notes:
+- [ ] **Rain (7 November, part 2):** rain outdoors is about 30% quieter.
+  Notes:
+- [ ] **Sleep warnings (7 November, part 2):** "Getting tired" about 6 minutes before and "Very tired" about 2 minutes before; a bed works from the first; the job box stays visible as your eyes close; your eyes don't close in the middle of a fight; as a citizen you're only tired in the evening and at night.
+  Notes:
+- [ ] **Pacing (7 November, part 2):** an hour of play has far fewer announcements and events, and never two voices at once; stock HL2 Overwatch lines only where you have no recording.
+  Notes:
+- [ ] **Combat music for units (7 November, part 2):** as Civil Protection in a sweep, a violent job or a firefight, action music plays.
+  Notes:

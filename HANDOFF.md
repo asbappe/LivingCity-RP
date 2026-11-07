@@ -28,9 +28,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 2026-11-07: the owner's 7 November playtest list is done and merged to `main`. The full list, what to check in game, the core changes and what is pending are in `docs/dev/handoff-2026-11-07.md`.
-- Nothing is checked in game. Every item has a "(7 November)" line in `PLAYTEST.md`. The client smoke test and every touched test unit pass. The full suite was not run.
-- The core changed: the list is in `CORE_CHANGELOG.md` (2026-11-07). Three items are not yet OK'd. `_dev/core_snapshot.txt` is not updated, so the snapshot test fails until the owner says yes.
-- The owner is handling the pending design items themselves: Labor Assignment terminal, shared dreams, rebel food scaling, the economy audit (`docs/dev/economy-audit.md`), stimulants, Workshop dances.
-- Not started: the CP kick showing the mask, and the sweep job with nobody showing up.
-- Open items and what waits on the owner are in `TODO.md`.
+- 2026-11-07 (part 2): the owner's answers, the rest of their first 7 November list and their whole second list are built and merged to `main`. What was built and where: `docs/dev/handoff-2026-11-07-part2.md` (the first batch: `docs/dev/handoff-2026-11-07.md`).
+- Nothing is checked in game. Every item has a line in `PLAYTEST.md` under "7 November, part 2".
+- The core changed a lot (new settings, an item, commands, retuned defaults): all listed in `CORE_CHANGELOG.md` (2026-11-07 part 2) as not yet OK'd. `_dev/core_snapshot.txt` is not updated, so the snapshot test fails until the owner says yes.
+- Questions waiting on the owner (a Black sociostability level, which voice says what, lights in Combine zones, the audit, stimulants, G-Man events, Workshop dances) are in `TODO.md`.
+- Tests: `_dev/tests.lua` sets `lc_quest_allies` 0 at the top (allies on violent jobs are tested in their own unit).

@@ -399,3 +399,8 @@ Every commit says what it did; TIMELINE.md has the summary. The big pieces:
 
 - **The owner asked: no full test suite for a while.** Use the client smoke test and single sections only.
 - The last full run that finished (2026-10-31 night): 2869 passed, 9 failed. All 9 were fixed and the touched sections re-run (UndergroundTests, the Mole Hunt, the 1 November section: all pass). Not run since: the vortigaunt additions, the loyalty test's real prisoner, Proof, the faction progress bars (each has its own passing tests in "The 1 November playtest" section).
+
+## 2026-11-07: the 7 November playtest lists
+
+- First chats: the first list (handoff in `docs/dev/handoff-2026-11-07.md`).
+- This chat (part 2): the owner's answers on three core items, the rest of the first list (Labor Assignment, rebel food scaling, shared dreams, the pockets, the kick, sweeps) and the whole second list (faction cleanup, arrests, Combine ground, field ops, guidance, pacing), built with nine workers in worktrees and merged. Details: `docs/dev/handoff-2026-11-07-part2.md`.
