@@ -125,6 +125,59 @@ local function Routes(kind)
 end
 LC.ExerciseRoutes = Routes
 
+-- A path node under every stop of the jogging route (the owner, 7 November: with none there,
+-- the city's joggers lost the way). Each stop gets a node (one already within NODE_NEAR of it
+-- is used), linked to the stops either side of it round the route and to the nearest other
+-- node within LINK_REACH that can be walked to, so the route joins the rest of the paths.
+-- Nothing is laid twice: on the next load every stop already has its node. Called when a
+-- jogging stop is placed and when the layout loads (sv_livingcity_data.lua). Returns true if
+-- the layout changed (the caller saves it).
+local NODE_NEAR, LINK_REACH = 48, 450
+function LC.LayJogNodes()
+    if not (LC.Nodes and LC.AddNode and LC.NearestNode) then return false end
+    local changed = false
+    local function Link(a, b)
+        if not a or not b or a == b then return false end
+        if a.links[b.id] then return true end
+        if LC.Walkable and not LC.Walkable(a.pos, b.pos) then return false end
+        a.links[b.id], b.links[a.id] = true, true
+        changed = true
+        return true
+    end
+    for _, route in ipairs(Routes("jogroute")) do
+        local nodes, own = {}, {}
+        for i, p in ipairs(route) do
+            local n = LC.NearestNode(p.pos, NODE_NEAR)
+            if not n then
+                n = LC.AddNode(p.pos, true)
+                changed = true
+            end
+            nodes[i], own[n] = n, true
+        end
+        for i, n in ipairs(nodes) do
+            Link(n, nodes[i % #nodes + 1]) -- (the next stop; the last one back round to the start)
+            local joined = false
+            for id in pairs(n.links) do
+                local o = LC.Nodes[id]
+                if o and not own[o] then joined = true break end
+            end
+            if not joined then
+                -- the nearest nodes that aren't the route's own, nearest first, till one can be walked to
+                local near = {}
+                for _, o in pairs(LC.Nodes) do
+                    local d = o.pos:DistToSqr(n.pos)
+                    if not own[o] and d < LINK_REACH * LINK_REACH then near[#near + 1] = { o, d } end
+                end
+                table.sort(near, function(a, b) return a[2] < b[2] end)
+                for k = 1, math.min(3, #near) do
+                    if Link(n, near[k][1]) then break end
+                end
+            end
+        end
+    end
+    return changed
+end
+
 local function Yards()
     local out = {}
     for _, p in ipairs(LC.Points or {}) do if p.kind == "yard" then out[#out + 1] = p end end

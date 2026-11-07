@@ -301,6 +301,8 @@ function LC.LoadData(applySettings)
 
     if LC.PropsFromSave then LC.PropsFromSave(t and t.props or {}) end
     if LC.RestoreTerritory then LC.RestoreTerritory() end
+    -- path nodes under the jogging route, for a layout laid out before there were any (sv_livingcity_exercise.lua)
+    if LC.LayJogNodes and LC.LayJogNodes() then migrated = true end
     if migrated then LC.SaveData() else Changed(); LC.SendData(nil) end
 end
 
@@ -332,6 +334,7 @@ function LC.AddPoint(pos, yaw, kind, group)
     if not LC.POINT_KINDS[kind] then return nil end
     local p = { pos = pos, yaw = yaw or 0, kind = kind, group = math.max(0, math.floor(tonumber(group) or 0)) }
     LC.Points[#LC.Points + 1] = p
+    if kind == "jogroute" and LC.LayJogNodes then LC.LayJogNodes() end -- (a path node under every jogging stop: sv_livingcity_exercise.lua)
     LC.SaveData()
     return p
 end
@@ -366,12 +369,12 @@ end
 -- Path nodes and links
 ------------------------------------------------------------------------
 
-function LC.AddNode(pos)
+function LC.AddNode(pos, noSave)
     local id = LC.NextNodeId
     LC.NextNodeId = id + 1
     local n = { id = id, pos = pos, links = {} }
     LC.Nodes[id] = n
-    LC.SaveData()
+    if not noSave then LC.SaveData() end
     return n
 end
 

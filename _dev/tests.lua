@@ -10781,6 +10781,19 @@ for _ = 1, 4 do _advance(60) _runtimers() end
 ok(LC.PlayerIsStalker(stk), "and you're still a stalker: there's no way out but death")
 stk.lcqNext = 0
 ok(LC.UseEnergizer(stk, e) and LC.PlayerIsStalker(stk) and stk:Alive(), "E on the energizer asks first")
+-- the holding floor's grime: on the floor near the spot, never in a wall; the broom out in front
+-- (the owner, 7 November)
+local S1 = Vector(-141000, -41000, 0)
+ok(LC.JobGameStart(stk, "scrub", nil, { pos = S1 }), "the holding floor game starts")
+local sg = LC.JobGames[stk]
+local onFloor = sg ~= nil and #sg.stains > 0
+for _, st in ipairs(sg and sg.stains or {}) do
+    if math.abs(st:GetPos().z) > 2 or st:GetPos():Distance(S1) > 330 then onFloor = false end
+end
+ok(onFloor, "every patch of grime is on the floor near the spot", sg and #sg.stains)
+ok(sg ~= nil and IsValid(sg.broom) and sg.broom:GetParent() == stk, "the push broom is in the stalker's hands")
+LC.JobGameEnd(stk, "quit")
+ok(LC.JobGames[stk] == nil and not IsValid(sg.broom), "and goes with the game")
 -- again, and this time step in
 LC.MakeStalker(stk)
 ok(posting(stk) ~= nil and posting(stk).part == "processing", "a new term starts the story over")
@@ -11239,6 +11252,15 @@ for i, off in ipairs({ Vector(0, 0, 0), Vector(1200, 0, 0), Vector(1200, 1200, 0
     jp[i] = LC.AddPoint(E0 + off, 0, "jogroute", 1)
 end
 ok(LC.ExerciseReady("jog"), "a route of two or more stops is enough")
+-- a path node under every stop, linked round the route (the owner, 7 November: without one the
+-- city's joggers lost the way)
+local jn = {}
+for i, p in ipairs(jp) do jn[i] = LC.NearestNode(p.pos, 48) end
+ok(jn[1] ~= nil and jn[2] ~= nil and jn[3] ~= nil and jn[4] ~= nil, "placing a jogging stop lays a path node under it")
+ok(jn[1] ~= nil and jn[2] ~= nil and jn[4] ~= nil and jn[1].links[jn[2].id] == true and jn[4].links[jn[1].id] == true,
+    "the stops' nodes are linked in order, and the last back round to the start")
+local nodesBefore = table.Count(LC.Nodes)
+ok(LC.LayJogNodes() == false and table.Count(LC.Nodes) == nodesBefore, "laying them again adds nothing")
 local runner = newPlayer("Jogger", "citizen") runner:SetPos(E0 + Vector(40, 0, 0))
 local skiver = newPlayer("Skiver", "citizen") skiver:SetPos(E0 + Vector(-9000, 0, 0))
 local unitP = newPlayer("ExCop", "cp") unitP:SetPos(E0 + Vector(0, -200, 0))
@@ -11301,6 +11323,7 @@ ok(LC.ExerciseSession() == nil and LC.Event == nil, "everyone in: the jog is ove
 ok(tonumber(skiver:GetPData("lce_standing", 0)) < 0, "skipping it costs Civil Standing", skiver:GetPData("lce_standing", 0))
 ok(LC.NPCs[u] == nil or LC.NPCs[u].holdPos == nil, "the posted units go back to their beats")
 for _, p in ipairs(jp) do LC.RemovePoint(p) end
+for _, n in ipairs(jn) do if n then LC.RemoveNode(n) end end
 for _, p in ipairs({ runner, skiver, unitP }) do p:SetPos(Vector(-120000, -120000, 0)) end
 _walls = savedWalls
 end
