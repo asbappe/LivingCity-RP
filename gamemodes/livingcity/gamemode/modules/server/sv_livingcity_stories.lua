@@ -542,7 +542,7 @@ LC.Chain{
 
 local CAUSE_PROMPTS = {
     rebels = "Lambda graffiti on the wall, the paint still wet, and drag marks leading toward the canals. Rebels took him.",
-    infestation = "Headcrab shells, cracked open. A lot of them. His stunstick is bent nearly in half. The infestation got him.",
+    infestation = "Headcrab blood, smeared up the wall and splattered across the floor. A lot of it. His stunstick is bent nearly in half. The infestation got him.",
     deserted = "His mask is folded neatly on the ground, as if he took it off himself and didn't want it damaged. It looks like he deserted.",
 }
 

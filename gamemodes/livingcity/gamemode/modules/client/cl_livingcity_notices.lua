@@ -2,9 +2,12 @@
     Living City (client): on the screen, not just in chat
 
       Cards       warnings (red edge), notices (blue edge) and the city's
-                  announcements (amber), stacked at the top under the status
-                  boxes. The same line again bumps a counter instead of
-                  stacking up.
+                  announcements (amber), at the top under the status boxes.
+                  One at a time (the owner, 7 November: eight at once on a
+                  new character couldn't be read), the rest wait their turn;
+                  a warning goes to the front. The same line again bumps a
+                  counter instead of queueing up. Cards and tips take turns
+                  (cl_livingcity_hints.lua).
       Subtitles   someone talking to you, low in the middle.
       Waypoint    a marker on a place you asked the way to, with how far it
                   is; at the edge of the screen when it's behind you. Gone
@@ -28,7 +31,11 @@ surface.CreateFont("LCNoticeTitle", { font = "Trebuchet MS", size = 18, weight =
 surface.CreateFont("LCNoticeText", { font = "Trebuchet MS", size = 17, weight = 500 })
 surface.CreateFont("LCSubtitle", { font = "Trebuchet MS", size = 22, weight = 600 })
 
-local cards, subs = {}, {}
+local cards, subs = {}, {} -- cards: waiting their turn (cards[1] is next)
+local cur                   -- the card on screen
+local cardFreeAt = 0        -- a short gap after one card before the next
+
+function LC_CL.NoticeShowing() return cur ~= nil end
 
 local function Wrap(text, font, width)
     surface.SetFont(font)
@@ -54,16 +61,41 @@ function LC_CL.AddNotice(kind, title, text, secs)
     local speech = kind == "speech"
     local list = speech and subs or cards
     local dur = (secs and secs > 0) and secs or ((speech and 4.5 or (kind == "event" and 10 or 7)) + math.min(6, #text / 45))
-    for _, c in ipairs(list) do
-        if c.title == title and c.text == text and c.ends > now then
-            c.n = c.n + 1
-            c.ends = now + dur
-            return
+    if speech then
+        for _, c in ipairs(list) do
+            if c.title == title and c.text == text and c.ends > now then
+                c.n = c.n + 1
+                c.ends = now + dur
+                return
+            end
         end
+        table.insert(list, 1, { kind = kind, title = title or "", text = text, born = now, ends = now + dur, n = 1 })
+        while #list > 3 do table.remove(list) end
+        return
     end
-    table.insert(list, 1, { kind = kind, title = title or "", text = text, born = now, ends = now + dur, n = 1 })
-    while #list > (speech and 3 or 4) do table.remove(list) end
-    if kind == "warn" and surface and surface.PlaySound then surface.PlaySound("buttons/blip2.wav") end
+    -- the same line again: a count on the one showing, or the one waiting
+    if cur and cur.title == title and cur.text == text then
+        cur.n = cur.n + 1
+        cur.ends = math.max(cur.ends or now, now + dur)
+        return
+    end
+    for _, c in ipairs(cards) do
+        if c.title == title and c.text == text then c.n = c.n + 1 return end
+    end
+    local card = { kind = kind, title = title or "", text = text, dur = dur, n = 1 }
+    if kind == "warn" then
+        -- straight to the front; whatever was showing comes back afterwards
+        table.insert(cards, 1, card)
+        if cur and cur.kind ~= "warn" then
+            cur.born, cur.ends = nil, nil
+            table.insert(cards, 2, cur)
+            cur = nil
+        end
+        if surface and surface.PlaySound then surface.PlaySound("buttons/blip2.wav") end
+    else
+        cards[#cards + 1] = card
+    end
+    while #cards > 8 do table.remove(cards) end -- (chat keeps every line anyway)
 end
 
 -- A sound the server asked for that this computer can't play: said once per
@@ -178,19 +210,29 @@ local function DrawCards(now)
     local cw = math.min(W - 40, 560)
     local x = W / 2 - cw / 2
     local y = math.max((LC_CL.StatusBottom or 0) + 6, math.floor(H * 0.12))
-    for i = #cards, 1, -1 do if cards[i].ends <= now then table.remove(cards, i) end end
-    for _, c in ipairs(cards) do
-        local a = Alpha(c, now)
-        c.lines = c.lines or Wrap(c.text, "LCNoticeText", cw - 28)
-        local h = 30 + #c.lines * 19
-        draw.RoundedBox(4, x, y, cw, h, A(BG, a))
-        draw.RoundedBox(0, x, y, 4, h, A(EDGE[c.kind] or EDGE.info, a))
-        local title = string.upper(c.title ~= "" and c.title or "Notice") .. (c.n > 1 and ("  x" .. c.n) or "")
-        draw.SimpleText(title, "LCNoticeTitle", x + 14, y + 6, A(EDGE[c.kind] or EDGE.info, a))
-        for i, l in ipairs(c.lines) do
-            draw.SimpleText(l, "LCNoticeText", x + 14, y + 8 + i * 19, A(i == 1 and INK or BODY, a))
+    if cur and cur.ends and cur.ends <= now then cur = nil cardFreeAt = now + 0.8 end
+    if not cur then
+        local nxt = cards[1]
+        if not nxt then return end
+        -- its turn: after a short gap, and not over a tip (a warning doesn't wait)
+        if nxt.kind ~= "warn" then
+            if now < cardFreeAt then return end
+            if LC_CL.HintShowing and LC_CL.HintShowing() then return end
         end
-        y = y + h + 6
+        cur = table.remove(cards, 1)
+    end
+    local c = cur
+    if not c.born then c.born, c.ends = now, now + c.dur end
+    local a = Alpha(c, now)
+    c.lines = c.lines or Wrap(c.text, "LCNoticeText", cw - 28)
+    local h = 30 + #c.lines * 19
+    draw.RoundedBox(4, x, y, cw, h, A(BG, a))
+    draw.RoundedBox(0, x, y, 4, h, A(EDGE[c.kind] or EDGE.info, a))
+    local title = string.upper(c.title ~= "" and c.title or "Notice") .. (c.n > 1 and ("  x" .. c.n) or "")
+    draw.SimpleText(title, "LCNoticeTitle", x + 14, y + 6, A(EDGE[c.kind] or EDGE.info, a))
+    if #cards > 0 then draw.SimpleText("+" .. #cards .. " more", "LCNoticeTitle", x + cw - 12, y + 6, A(BODY, a * 0.7), TEXT_ALIGN_RIGHT) end
+    for i, l in ipairs(c.lines) do
+        draw.SimpleText(l, "LCNoticeText", x + 14, y + 8 + i * 19, A(i == 1 and INK or BODY, a))
     end
 end
 
@@ -297,6 +339,6 @@ hook.Add("HUDPaint", "LivingCityNotices", function()
     if not IsValid(me) then return end
     local now = CurTime()
     if me:Alive() then DrawWaypoint() end
-    if #cards > 0 then DrawCards(now) end
+    if cur or #cards > 0 then DrawCards(now) end
     if #subs > 0 then DrawSubs(now) end
 end)

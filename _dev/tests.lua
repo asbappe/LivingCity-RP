@@ -649,7 +649,18 @@ ok(#(LC.Postings.cp or {}) <= 10, "a packed faction's board stays finite", #(LC.
 ----------------------------------------------------------------------
 section("Stories: Internal Affairs (bribes have consequences)")
 _setcvar("lc_story_pacing", 0)
+do -- a story waits for 2 to 4 ordinary jobs (the owner, 7 November); a Union shift never waits
+    local fresh = newPlayer("FreshCit", "citizen")
+    LC.Story(fresh).flags.story_gate = nil
+    local g = LC.StoryGate(fresh)
+    ok(g.need >= 2 and g.need <= 4, "the number of jobs before a story is 2 to 4", g.need)
+    ok(not LC.StoryGateOpen(fresh), "a new character's board has no story yet")
+    fresh:SetPData("lcq_done", (tonumber(fresh:GetPData("lcq_done", 0)) or 0) + g.need)
+    ok(LC.StoryGateOpen(fresh), "after that many jobs, stories can come up")
+    ok(LC.StoryGate(fresh).need == g.need, "the number is kept, not drawn again")
+end
 local function storyPosting(p, chainId)
+    if not LC.StoryGateOpen(p) then LC.Story(p).flags.story_gate = { need = 0, base = 0 } p.lcStoryPostings = nil end -- (these tests are about the stories themselves)
     for _, sp in ipairs(LC.StoryPostings(p)) do if sp.chain == chainId then return sp end end
 end
 local dirty = newPlayer("DirtyCop", "cp")
@@ -7365,6 +7376,44 @@ hook.Run("PlayerSay", a, "/sit")
 ok(a:GetNW2String("lc_act", "") == "sit", "in-character chat: /sit")
 hook.Run("PlayerSay", a, "/stand")
 ok(a:GetNW2String("lc_act", "") == "", "/stand")
+do -- (the owner, 7 November) gestures as the player's own animation event; the Administrator's body; the can
+    local oldWave = ACT_GMOD_GESTURE_WAVE
+    ACT_GMOD_GESTURE_WAVE = 1610
+    a.DoCustomAnimEvent = function(self, ev, data) self.animEv = { ev, data } end
+    a.lcGestureNext = 0
+    a.cmds = {}
+    ok(LC.Gesture(a, "wave") and a.animEv and a.animEv[2] == 1610 and #a.cmds == 0, "a gesture plays as the player's animation event")
+    a.DoCustomAnimEvent, ACT_GMOD_GESTURE_WAVE = nil, oldWave
+    ok(LC.IsFemaleModel("models/player/group01/female_03.mdl") and not LC.IsFemaleModel("models/player/group01/male_02.mdl"), "a woman's model is told from a man's")
+    local adm = newPlayer("AdmF", "citizen")
+    adm:SetNW2String("lc_model", "models/player/group01/female_03.mdl")
+    LC.SetFaction(adm, "admin", nil, true)
+    LC.RefreshModel(adm)
+    ok(adm:GetModel() == "models/player/mossman.mdl", "a woman made Administrator becomes Judith Mossman", adm:GetModel())
+    local adm2 = newPlayer("AdmM", "citizen")
+    adm2:SetNW2String("lc_model", "models/player/group01/male_02.mdl")
+    LC.SetFaction(adm2, "admin", nil, true)
+    LC.RefreshModel(adm2)
+    ok(adm2:GetModel() == "models/player/breen.mdl", "a man made Administrator becomes Dr Breen", adm2:GetModel())
+    LC.SetFaction(adm, "citizen", nil, true)
+    LC.SetFaction(adm2, "citizen", nil, true)
+    LC.RefreshModel(adm)
+    ok(adm:GetModel() == "models/player/group01/female_03.mdl", "and goes back to her own face after", adm:GetModel())
+    if LC.CanCandidate then
+        local cop = ents.Create("npc_metropolice")
+        cop:SetPos(a:GetPos())
+        LC.QuestOf[a] = { title = "test" }
+        ok(LC.CanCandidate(a, cop) == nil, "no 'pick up that can' while on a job")
+        LC.QuestOf[a] = nil
+        local savedBins = LC.StaticBins
+        LC.StaticBins = {}
+        ok(LC.CanCandidate(a, cop) == nil, "no 'pick up that can' without a bin nearby")
+        LC.StaticBins = { { pos = a:GetPos() + Vector(100, 0, 0), model = "models/props_junk/trashbin01a.mdl" } }
+        ok(LC.CanCandidate(a, cop) ~= nil, "a bin nearby: the can can happen, with that bin to point to")
+        LC.StaticBins = savedBins
+        cop:Remove()
+    end
+end
 a:SetPos(FAR)
 GAMEMODE = savedGM
 end

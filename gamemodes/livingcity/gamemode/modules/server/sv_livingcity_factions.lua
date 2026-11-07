@@ -137,6 +137,13 @@ end
 -- Applying a faction to a body
 ------------------------------------------------------------------------
 
+-- Is this a woman's model? (the city's citizens, Mossman, Alyx, the female cop)
+function LC.IsFemaleModel(model)
+    local m = string.lower(tostring(model or ""))
+    return string.find(m, "female", 1, true) ~= nil or string.find(m, "mossman", 1, true) ~= nil
+        or string.find(m, "alyx", 1, true) ~= nil or string.find(m, "_fem", 1, true) ~= nil
+end
+
 -- The model for this rank: the one the player chose, if the rank has it (or its
 -- counterpart, such as the same face in the Resistance's clothes); else by unit number.
 local function PickModel(ply, models)
@@ -147,6 +154,13 @@ local function PickModel(ply, models)
         if m then return m end
     end
     local chosen = ply:GetNW2String("lc_model", "")
+    -- a rank with a body for each sex (the Administrator: Breen or Mossman) goes by the face the player chose
+    if models.byGender then
+        local fem = LC.IsFemaleModel(chosen)
+        for _, m in ipairs(models) do
+            if LC.IsFemaleModel(m) == fem then return m end
+        end
+    end
     if chosen ~= "" then
         local base = string.match(chosen, "[^/]+$")
         for _, m in ipairs(models) do

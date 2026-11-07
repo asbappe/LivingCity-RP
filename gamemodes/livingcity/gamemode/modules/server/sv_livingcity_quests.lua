@@ -2607,11 +2607,48 @@ local function NextPart(ply, chain)
     return nil
 end
 
+-- A story of your own waits until you've done a few ordinary jobs (the owner, 7 November: "at least
+-- 2 to 4 standard jobs before one even appears"). The number is drawn once per character and kept in
+-- the story memory; the count is the quests completed since then (lcq_done). A chain already under
+-- way is never held back.
+function LC.StoryGate(ply)
+    local st = LC.Story(ply)
+    local g = st.flags.story_gate
+    if not istable(g) then
+        g = { need = math.random(2, 4), base = tonumber(ply:GetPData("lcq_done", 0)) or 0 }
+        st.flags.story_gate = g
+        LC.SaveStory(ply)
+    end
+    return g
+end
+
+-- Not stories but somebody's work, never held back: the flat chains (a Union shift, rehabilitation,
+-- an insider's ops), a stalker's lot and a shackled vortigaunt's collar.
+local WORK_CHAINS = { stalker = true, collar = true }
+
+-- Open?, and how many more jobs it takes.
+function LC.StoryGateOpen(ply)
+    if not IsValid(ply) or not ply:IsPlayer() then return false, 0 end
+    local g = LC.StoryGate(ply)
+    local done = (tonumber(ply:GetPData("lcq_done", 0)) or 0) - (g.base or 0)
+    return done >= (g.need or 0), math.max(0, (g.need or 0) - done)
+end
+
+hook.Add("LivingCityNewCharacter", "LivingCityStoryGate", function(ply)
+    if not IsValid(ply) or not ply:IsPlayer() then return end
+    LC.Story(ply).flags.story_gate = nil
+    LC.StoryGate(ply)
+    ply.lcStoryPostings = nil
+end)
+
 function LC.StoryPostings(ply)
     ply.lcStoryPostings = ply.lcStoryPostings or {}
     local out = {}
+    local open = LC.StoryGateOpen(ply)
     for _, chain in ipairs(LC.ChainList) do
-        if ChainFits(chain, ply) then
+        local cs = LC.Story(ply).chains[chain.id]
+        local underWay = cs and (cs.part or cs.done) and true or false
+        if ChainFits(chain, ply) and (open or underWay or chain.flat or WORK_CHAINS[chain.id]) then
             local part = NextPart(ply, chain)
             local cached = ply.lcStoryPostings[chain.id]
             if cached and cached.q and not cached.dead then

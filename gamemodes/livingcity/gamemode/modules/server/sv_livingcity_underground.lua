@@ -751,7 +751,8 @@ function LC.StartSearch(cop, target)
     target.lcBeingSearched = cop
     target:SetNW2Float("lcu_stop_until", CurTime() + 3)
     target:ChatPrint("[Civil Protection] " .. cop:Nick() .. " is searching you. Stay still.")
-    cop:ChatPrint("[Search] Searching " .. target:Nick() .. "...")
+    cop:ChatPrint("[Search] Searching " .. target:Nick() .. (target:GetNW2Bool("lc_handsup", false) and " (hands up, cooperating)..." or " (hands down)..."))
+    if LC.Hint then LC.Hint(target, "stopped") end -- (put your hands up: sv_livingcity_hints.lua)
     cop:EmitSound("npc/metropolice/vo/apply.wav", 65)
     timer.Simple(3, function()
         if not IsValid(target) then return end
