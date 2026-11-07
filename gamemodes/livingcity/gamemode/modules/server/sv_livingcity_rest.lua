@@ -62,6 +62,8 @@ local function Exempt(ply)
         or ply:GetNW2String("lcf_faction", "") == "stalker" -- (a stalker doesn't sleep: it works)
 end
 
+-- Night or dusk: bedtime, the city's sleepers, daytime curfews and the rest all use this.
+-- Night alone (21:00 to 05:00) is LC.IsDeepNight (sv_livingcity_atmos.lua).
 function LC.IsNight()
     local phase = LC.DayPhase and LC.DayPhase() or "day"
     return phase == "night" or phase == "dusk"
