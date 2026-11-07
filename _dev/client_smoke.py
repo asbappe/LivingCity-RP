@@ -28,6 +28,16 @@ function ScrW() return 1920 end
 function ScrH() return 1080 end
 function EyePos() return Vector(0, 0, 64) end
 function EyeAngles() return Angle() end
+-- (the game's ents.FindByClass takes a trailing * for "every class that starts with": npc_*)
+do
+    local exact, every = ents.FindByClass, ents.GetAll
+    function ents.FindByClass(c)
+        if type(c) ~= "string" or string.sub(c, -1) ~= "*" then return exact(c) end
+        local pre, o = string.sub(c, 1, -2), {}
+        for _, e in ipairs(every()) do if string.sub(e:GetClass() or "", 1, #pre) == pre then o[#o + 1] = e end end
+        return o
+    end
+end
 function CreateMaterial() return {} end
 function Material() return setmetatable({}, { __index = function(_, k) if k == "IsError" then return function() return false end end return function() end end }) end
 MATERIAL_TRIANGLES, MASK_SOLID_BRUSHONLY = 2, 5
@@ -1797,12 +1807,15 @@ do
 end
 -- sneaking: the bar, and a unit's sight on the ground (you in it: "A UNIT CAN SEE YOU")
 do
-    local crWas, fbcWas, velWas = _me.Crouching, ents.FindByClass, _me.GetVelocity
+    local crWas, velWas = _me.Crouching, _me.GetVelocity
     _me.Crouching = function() return true end
     _me.GetVelocity = function() return Vector(0, 0, 0) end
     local unit = { IsValid = function() return true end, GetNW2String = function(_, k, d) return k == "lc_role" and "cop" or d end,
+        GetClass = function() return "npc_metropolice" end,
         GetPos = function() return _me:GetPos() + Vector(-200, 0, 0) end, GetForward = function() return Vector(1, 0, 0) end, GetAngles = function() return Angle() end }
-    ents.FindByClass = function(c) if c == "npc_*" then return { unit } end return fbcWas(c) end
+    -- (the unit arrives the way a real one does: the city's list of units hears of it, sh_livingcity_cache.lua)
+    LC.EntsOf("npc_metropolice")
+    hook.t.OnEntityCreated.LivingCityRegistry(unit)
     if not LC_CL.StealthInside(unit, _me:GetPos(), 900 * LC_CL.StealthFactor()) then return "sneaking: a unit facing you, close by, doesn't see you" end
     local q0 = _calls["render.DrawQuad"] or 0
     hook.t.PostDrawTranslucentRenderables.LivingCityStealthCones(false, false)
@@ -1811,7 +1824,36 @@ do
     hook.t.HUDPaint.LivingCityStealthMeter()
     unit.GetForward = function() return Vector(-1, 0, 0) end
     if LC_CL.StealthInside(unit, _me:GetPos(), 900 * LC_CL.StealthFactor()) then return "sneaking: seen from behind his back" end
-    _me.Crouching, ents.FindByClass, _me.GetVelocity = crWas, fbcWas, velWas
+    hook.t.EntityRemoved.LivingCityRegistry(unit)
+    local q1 = _calls["render.DrawQuad"] or 0
+    hook.t.PostDrawTranslucentRenderables.LivingCityStealthCones(false, false)
+    if (_calls["render.DrawQuad"] or 0) ~= q1 then return "sneaking: a unit that's gone still has its sight painted" end
+    _me.Crouching, _me.GetVelocity = crWas, velWas
+end
+-- rain: the streaks in front of the camera are drawn, the ones behind it aren't (each one is a draw)
+do
+    local wWas, epWas, eaWas = _globals.lc_weather, EyePos, EyeAngles
+    _globals.lc_weather = "rain"
+    EyePos = function() return _me:EyePos() end
+    local trWas = util.TraceLine
+    util.TraceLine = function(t) return { Hit = true, HitSky = true, HitPos = t.endpos, Fraction = 1 } end
+    _advance(1)
+    hook.t.Think.LivingCityRain() -- (open sky above: outdoors)
+    util.TraceLine = trWas
+    local function Beams(fwd) -- (which way the camera faces; the stub's angles leave out pitch)
+        EyeAngles = function() return { Forward = function() return fwd end } end
+        local b0 = _calls["render.DrawBeam"] or 0
+        hook.t.PostDrawTranslucentRenderables.LivingCityRain(false, false)
+        return (_calls["render.DrawBeam"] or 0) - b0
+    end
+    local ahead, up, down = Beams(Vector(1, 0, 0)), Beams(Vector(0, 0, 1)), Beams(Vector(0, 0, -1))
+    _globals.lc_weather, EyePos, EyeAngles = wWas, epWas, eaWas
+    _advance(1)
+    hook.t.Think.LivingCityRain() -- (and back under the roof the stub's traces say is there)
+    print(string.format("rain streaks drawn: ahead %d, looking up %d, at your feet %d (of 1120)", ahead, up, down))
+    if ahead < 400 or ahead > 800 then return "rain: looking ahead, about half the streaks should be drawn" end
+    if up < 1000 then return "rain: looking up, nearly every streak is in view and drawn" end
+    if down > 100 then return "rain: looking at your feet, the streaks above you shouldn't be drawn" end
 end
 -- the Endings menu: asks the server, opens on the ending playing, every tab built; a bone tuned on a
 -- dancer, lit up in the world; the stand-in; the shared settings; the list of changes

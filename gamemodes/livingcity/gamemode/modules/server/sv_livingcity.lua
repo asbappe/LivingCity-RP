@@ -204,14 +204,31 @@ end
 
 -- Every place someone is: each player, and the scanner a pilot is flying (the city
 -- around it has to be as awake as the city around anyone standing there).
-function LC.ViewerPositions()
-    local list = {}
+--
+-- Who is looking, and from where, is worked out once per server tick, not on every
+-- question: LC.IsSeen is asked for each NPC on its turn, for every spawn spot tried
+-- and more, and went through every player (and their view) each time. Players only
+-- move between ticks. (Tests ask fresh every time.)
+local viewers, viewersTick = nil, nil
+local function Viewers()
+    local tick = engine.TickCount and not LC.TestMode and engine.TickCount() or nil
+    if tick and tick == viewersTick then return viewers end
+    local list, positions = {}, {}
     for _, ply in ipairs(player.GetAll()) do
-        list[#list + 1] = ply:GetPos()
-        local at = LC.ViewFrom(ply)
-        if at then list[#list + 1] = at end
+        local remote, ve = LC.ViewFrom(ply)
+        positions[#positions + 1] = ply:GetPos()
+        if remote then positions[#positions + 1] = remote end
+        if ply:Alive() then
+            list[#list + 1] = { eye = remote or ply:EyePos(), aim = ply:GetAimVector(), filter = ve and { ply, ve } or ply }
+        end
     end
+    list.positions = positions
+    viewers, viewersTick = list, tick
     return list
+end
+
+function LC.ViewerPositions()
+    return Viewers().positions
 end
 
 local function FarFromPlayers(pos, dist)
@@ -233,19 +250,16 @@ end
 
 -- Could any living player see this spot right now (through their own eyes, or a scanner's)?
 function LC.IsSeen(pos)
-    for _, ply in ipairs(player.GetAll()) do
-        if ply:Alive() then
-            local remote, ve = LC.ViewFrom(ply)
-            local eye = remote or ply:EyePos()
-            local dir = pos - eye
-            local d2 = dir:LengthSqr()
-            if d2 < 80 * 80 then return true end
-            if d2 < 6000 * 6000 then
-                dir:Normalize()
-                if dir:Dot(ply:GetAimVector()) > 0.4 then
-                    local tr = util.TraceLine({ start = eye, endpos = pos, mask = MASK_OPAQUE, filter = ve and { ply, ve } or ply })
-                    if tr.Fraction > 0.97 then return true end
-                end
+    for _, v in ipairs(Viewers()) do
+        local eye = v.eye
+        local dir = pos - eye
+        local d2 = dir:LengthSqr()
+        if d2 < 80 * 80 then return true end
+        if d2 < 6000 * 6000 then
+            dir:Normalize()
+            if dir:Dot(v.aim) > 0.4 then
+                local tr = util.TraceLine({ start = eye, endpos = pos, mask = MASK_OPAQUE, filter = v.filter })
+                if tr.Fraction > 0.97 then return true end
             end
         end
     end

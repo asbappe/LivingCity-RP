@@ -586,3 +586,5 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 ## Anything else you noticed
 
 Notes:
+- [ ] **Performance pass (2026-11-07):** in the rain, look ahead, up and down: the streaks look as before. Crouch near a unit: the sight cones show. As a unit, a scanner photo outlines the suspect. Earn or spend credits, reconnect: the amount is right.
+  Notes:

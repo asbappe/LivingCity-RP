@@ -60,10 +60,15 @@ local function On()
     return not st or st:GetBool()
 end
 
+-- (from the city's own lists of unit NPCs, sh_livingcity_cache.lua: not a search through every
+-- NPC in the map, twice a frame, the whole time you sneak; units are never any other class)
+local UNIT_CLASSES = { "npc_metropolice", "npc_combine_s" }
 local function Units()
     local out, me = {}, LocalPlayer():GetPos()
-    for _, e in ipairs(ents.FindByClass("npc_*")) do
-        if IsValid(e) and SECURITY[e:GetNW2String("lc_role", "")] and e:GetPos():DistToSqr(me) < 1600 * 1600 then out[#out + 1] = e end
+    for _, cls in ipairs(UNIT_CLASSES) do
+        for _, e in ipairs(LC.EntsOf(cls)) do
+            if IsValid(e) and SECURITY[e:GetNW2String("lc_role", "")] and e:GetPos():DistToSqr(me) < 1600 * 1600 then out[#out + 1] = e end
+        end
     end
     return out
 end

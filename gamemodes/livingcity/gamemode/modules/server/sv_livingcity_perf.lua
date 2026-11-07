@@ -83,3 +83,52 @@ concommand.Add("lc_profile", function(ply, _, args)
         Say(string.format("  NPC loop: %.2f ms average, %.2f worst, over %d runs", perf.total / perf.samples, perf.max, perf.samples))
     end
 end)
+
+------------------------------------------------------------------------
+-- Saved player data (PData), read from memory
+--
+-- Each ply:GetPData is a query on the server's sv.db (two when the key isn't
+-- there: GMod looks under the old key name as well), and the city asks for
+-- credits, standing, XP and the like many times a second. The first read of
+-- each key is kept in memory for that player; writes and removals still go to
+-- the database exactly as before, and update the copy in memory, so a read
+-- always gives what was last written. (Nothing writes an online player's
+-- saved data any other way.)
+------------------------------------------------------------------------
+
+local ABSENT = {} -- (remembered as not saved, so a missing key isn't looked up twice every time)
+
+function LC.CachePData(meta)
+    if not meta or not meta.GetPData or not meta.SetPData or not meta.RemovePData or meta.lcPDataCached then return false end
+    meta.lcPDataCached = true
+    local get, set, remove = meta.GetPData, meta.SetPData, meta.RemovePData
+    local function Copy(ply)
+        local c = ply.lcPData
+        if not c then c = {} ply.lcPData = c end
+        return c
+    end
+    meta.GetPData = function(ply, name, default)
+        local c, k = Copy(ply), tostring(name)
+        local v = c[k]
+        if v == nil then
+            v = get(ply, name, nil)
+            if v == nil then v = ABSENT end
+            c[k] = v
+        end
+        if v == ABSENT then return default end
+        return v
+    end
+    meta.SetPData = function(ply, name, value)
+        local r = set(ply, name, value)
+        -- (stored as text, as the database does; a write it refused is read from it again)
+        Copy(ply)[tostring(name)] = r ~= false and tostring(value) or nil
+        return r
+    end
+    meta.RemovePData = function(ply, name)
+        local r = remove(ply, name)
+        Copy(ply)[tostring(name)] = r ~= false and ABSENT or nil
+        return r
+    end
+    return true
+end
+LC.CachePData(FindMetaTable and FindMetaTable("Player"))
