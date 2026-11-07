@@ -253,11 +253,8 @@ local known, word
 local dirtyK, dirtyW = false, false
 
 local function Load(path)
-    if file and file.Exists and file.Exists(path, "DATA") then
-        local t = util.JSONToTable(file.Read(path, "DATA") or "")
-        if istable(t) then return t end
-    end
-    return {}
+    local t = LC.SafeReadJSON(path)
+    return istable(t) and t or {}
 end
 local function Known() if not known then known = Load(KNOWN_FILE) end return known end
 local function Word() if not word then word = Load(WORD_FILE) end return word end
@@ -266,8 +263,8 @@ local function Save()
     if not dirtyK and not dirtyW then return end
     if not file or not file.Write then return end
     if file.CreateDir then file.CreateDir("livingcity") end
-    if dirtyK then file.Write(KNOWN_FILE, util.TableToJSON(Known())) dirtyK = false end
-    if dirtyW then file.Write(WORD_FILE, util.TableToJSON(Word())) dirtyW = false end
+    if dirtyK then LC.SafeWrite(KNOWN_FILE, util.TableToJSON(Known())) dirtyK = false end
+    if dirtyW then LC.SafeWrite(WORD_FILE, util.TableToJSON(Word())) dirtyW = false end
 end
 LC.SaveLifeData = Save
 timer.Create("LivingCityLifeSave", 10, 0, Save)

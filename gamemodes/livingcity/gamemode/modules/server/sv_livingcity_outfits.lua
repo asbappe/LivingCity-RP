@@ -54,7 +54,7 @@ local OLD_MEDIC = "models/player/group03m/" .. FACE .. ".mdl"
 LC.Outfits = LC.Outfits or nil
 
 function LC.LoadOutfits()
-    local t = file.Exists(FILE, "DATA") and util.JSONToTable(file.Read(FILE, "DATA") or "") or nil
+    local t = LC.SafeReadJSON(FILE)
     LC.Outfits = istable(t) and t or table.Copy(DEFAULTS)
     -- a server still on the old default medic outfit (the rebel medics): taken off
     local m = LC.Outfits.medic
@@ -65,8 +65,7 @@ function LC.LoadOutfits()
 end
 
 function LC.SaveOutfits()
-    file.CreateDir("livingcity")
-    file.Write(FILE, util.TableToJSON(LC.Outfits or {}, true))
+    LC.SafeWrite(FILE, util.TableToJSON(LC.Outfits or {}, true))
 end
 
 local function Outfits() return LC.Outfits or LC.LoadOutfits() end

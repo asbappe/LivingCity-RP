@@ -381,14 +381,14 @@ function LC.ManpowerSave()
         out[side] = { reserve = math.min(math.max(p.reserve, Max(side)), p.reserve + (outNow[side] or 0)),
             progress = math.floor(p.progress), lost = p.lost, day = p.day }
     end
-    file.Write(File(), util.TableToJSON(out))
+    LC.SafeWrite(File(), util.TableToJSON(out))
     dirty = false
 end
 
 function LC.ManpowerLoad()
     LC.Manpower = {}
     LC.ManpowerOut = {}
-    local t = file and file.Read and util.JSONToTable(file.Read(File(), "DATA") or "") or nil
+    local t = LC.SafeReadJSON(File())
     for _, side in ipairs(SIDES) do
         local p = LC.ManpowerPool(side)
         local s = type(t) == "table" and t[side]

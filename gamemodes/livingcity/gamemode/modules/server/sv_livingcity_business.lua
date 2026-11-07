@@ -64,16 +64,14 @@ LC.Rentals = LC.Rentals or nil -- [doorId] = { owner, ownerName, untilT (os.time
 
 local function Load()
     if LC.Rentals then return LC.Rentals end
-    local raw = file.Read(FilePath(), "DATA")
-    local t = raw and util.JSONToTable(raw) or {}
+    local t = LC.SafeReadJSON(FilePath()) or {}
     LC.Rentals = {}
     for k, v in pairs(istable(t) and t or {}) do LC.Rentals[tonumber(k) or k] = v end
     return LC.Rentals
 end
 
 local function Save()
-    file.CreateDir(DIR)
-    file.Write(FilePath(), util.TableToJSON(Load()))
+    LC.SafeWrite(FilePath(), util.TableToJSON(Load()))
 end
 
 local function OwnerKey(ply)

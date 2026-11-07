@@ -2353,6 +2353,7 @@ ok(has(admin.chat, "backups in data/livingcity/backups/rp_test"), "lc_backups li
 
 local good = _files[layoutPath]
 _files[layoutPath] = "{ this is not json"
+_files[layoutPath .. ".bak.txt"], _files[layoutPath .. ".tmp.txt"] = nil, nil -- (and no backup beside it: SafeFileTests covers falling back to one)
 LC.LoadData(false)
 ok(LC.LayoutBroken == true, "an unreadable layout file is noticed")
 LC.AddPoint(Vector(100, 100, 0), 0, "idle", 0)
@@ -18782,6 +18783,99 @@ function EvidenceTests()
     _run(1)
 end
 EvidenceTests()
+
+-- The owner, later on 7 November: save files are written safely (sv_livingcity_safefile.lua). A checked
+-- copy first, the previous good file kept as <name>.bak.txt, an unreadable file read from its backup,
+-- and one that can't be read at all never saved over with an empty default.
+function SafeFileTests()
+    local P = "livingcity/safetest.json"
+    local TMP, BAK, UNR = LC.SafeTmpPath(P), LC.SafeBakPath(P), LC.SafeUnreadablePath(P)
+    local function Clear() for _, p in ipairs({ P, TMP, BAK, UNR }) do _files[p] = nil end LC.SafeFileAllow(P) end
+    local function V(p) local t = _files[p] and util.JSONToTable(_files[p]) return t and t.v end
+    Clear()
+
+    section("Save files: written through a checked copy, the previous one kept as a backup")
+    ok(LC.SafeWrite(P, util.TableToJSON({ v = 1 })) == true and V(P) == 1, "a new save file is written and holds what was saved")
+    ok(_files[TMP] == nil and _files[BAK] == nil, "the checked copy is gone once it's in place, and there's nothing to back up yet")
+    LC.SafeWrite(P, util.TableToJSON({ v = 2 }))
+    ok(V(P) == 2 and V(BAK) == 1, "saved again: the previous good file is kept as .bak.txt", tostring(V(BAK)))
+    ok(BAK == P .. ".bak.txt" and TMP == P .. ".tmp.txt", "the extra files sit next to it and end in .txt (the data folder takes it)", BAK)
+    local realWrite = file.Write
+    file.Write = function(p, s) if p == TMP then s = string.sub(s, 1, 3) end return realWrite(p, s) end -- (a full disk: cut short)
+    local okCut = LC.SafeWrite(P, util.TableToJSON({ v = 3 }))
+    file.Write = realWrite
+    ok(not okCut and V(P) == 2 and V(BAK) == 1 and _files[TMP] == nil, "a copy that doesn't read back whole changes nothing")
+    local moved = 0
+    file.Rename = function(a, b)
+        if _files[a] == nil or _files[b] ~= nil then return false end
+        _files[b], _files[a] = _files[a], nil
+        moved = moved + 1
+        return true
+    end
+    LC.SafeWrite(P, util.TableToJSON({ v = 4 }))
+    file.Rename = nil
+    ok(moved == 2 and V(P) == 4 and V(BAK) == 2 and _files[TMP] == nil, "with file.Rename (newer Garry's Mod) the files are moved, not copied", moved)
+
+    section("Save files: an unreadable file is read from its backup")
+    _files[P] = '{"v": 4, "cut sh'
+    local t, how = LC.SafeReadJSON(P)
+    ok(how == "backup" and istable(t) and t.v == 2, "a cut-off file loads its .bak.txt instead", how)
+    ok(not LC.SafeFileBlocked(P), "and can be saved again")
+    LC.SafeWrite(P, util.TableToJSON({ v = 5 }))
+    ok(V(P) == 5 and V(BAK) == 2, "an unreadable file never becomes the backup", tostring(V(BAK)))
+    ok(_files[UNR] == '{"v": 4, "cut sh', "it's kept aside once, as .unreadable.txt")
+    _files[TMP], _files[P] = util.TableToJSON({ v = 6 }), nil
+    t, how = LC.SafeReadJSON(P)
+    ok(how == "backup" and t.v == 6, "gone in the middle of a swap: the checked copy (the newest) is used", how)
+    _files[TMP] = nil
+    t, how = LC.SafeReadJSON(P)
+    ok(t == nil and how == "missing" and _files[BAK] ~= nil, "deleted by hand (to start it over): stays deleted, its old backup isn't brought back", how)
+    Clear()
+    t, how = LC.SafeReadJSON(P)
+    ok(t == nil and how == "missing" and not LC.SafeFileBlocked(P), "no file at all: start fresh (nothing to protect)", how)
+
+    section("Save files: a file nothing can read is never saved over")
+    _files[P] = "{ broken"
+    t, how = LC.SafeReadJSON(P)
+    ok(t == nil and how == "failed" and LC.SafeFileBlocked(P), "nothing readable: the file is marked, not loaded", how)
+    ok(LC.SafeWrite(P, util.TableToJSON({})) == false and _files[P] == "{ broken", "the empty default isn't saved over it")
+    local sa, ad = newPlayer("SafeSuper", "citizen"), newPlayer("SafeAdmin", "citizen")
+    sa.admin, sa.superadmin, ad.admin = true, true, true
+    local okA, msgA = LC.AdminTool(ad, ad, "savefiles", "allow")
+    ok(not okA and LC.SafeFileBlocked(P), "an admin can't let the city save over it", msgA)
+    local okS, msgS = LC.AdminTool(sa, sa, "savefiles", "allow")
+    ok(okS and not LC.SafeFileBlocked(P), "a superadmin can, from the admin tools", msgS)
+    ok(LC.SafeWrite(P, util.TableToJSON({ v = 7 })) and V(P) == 7 and _files[UNR] == "{ broken", "then it saves, the unreadable file kept aside")
+    _files[P], _files[BAK] = "{ broken", nil
+    LC.SafeReadJSON(P)
+    _files[P] = util.TableToJSON({ v = 8 })
+    t, how = LC.SafeReadJSON(P)
+    ok(how == "ok" and t.v == 8 and not LC.SafeFileBlocked(P), "a file that reads again lifts the mark")
+    LC.SafeWrite(P, util.TableToJSON({ v = 9 }))
+    LC.SafeDelete(P)
+    ok(_files[P] == nil and _files[BAK] == nil and _files[TMP] == nil and LC.SafeReadJSON(P) == nil, "deleted with its backup (a dream snapshot put back never comes back)")
+    Clear()
+
+    section("Save files: a module's data isn't wiped by an unreadable file (outfits)")
+    local OF = "livingcity/outfits.json"
+    local keepMain, keepBak, keepOutfits = _files[OF], _files[OF .. ".bak.txt"], LC.Outfits
+    LC.Outfits = { testjob = { list = { { pm = "models/test.mdl" } } } }
+    LC.SaveOutfits()
+    LC.Outfits.otherjob = { list = { { pm = "models/test2.mdl" } } }
+    LC.SaveOutfits()
+    _files[OF] = '{"testjob": {"li'
+    LC.LoadOutfits()
+    ok(istable(LC.Outfits.testjob), "a cut-off outfits file loads from its backup")
+    _files[OF], _files[OF .. ".bak.txt"] = '{"testjob": {"li', nil
+    LC.LoadOutfits()
+    ok(LC.Outfits.testjob == nil and LC.SafeFileBlocked(OF), "with no backup either, the defaults are used and the file is marked")
+    LC.SaveOutfits()
+    ok(_files[OF] == '{"testjob": {"li', "saving the defaults doesn't wipe the real file")
+    LC.SafeFileAllow(OF)
+    _files[OF], _files[OF .. ".bak.txt"], _files[OF .. ".tmp.txt"], _files[OF .. ".unreadable.txt"] = keepMain, keepBak, nil, nil
+    LC.Outfits = keepOutfits
+end
+SafeFileTests()
 
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")

@@ -203,14 +203,11 @@ end
 local COOL_FILE = "livingcity/endings.json"
 LC.EndingRoot, LC.EndingCooldownFile = ROOT, COOL_FILE -- (core: CORE.md)
 local function LastEnding()
-    local raw = file.Read(COOL_FILE, "DATA")
-    if not raw or raw == "" then return 0 end
-    local t = util.JSONToTable(raw) or {}
-    return tonumber(t.last) or 0
+    local t = LC.SafeReadJSON(COOL_FILE)
+    return istable(t) and tonumber(t.last) or 0
 end
 local function MarkEnding()
-    if file.CreateDir then file.CreateDir("livingcity") end
-    file.Write(COOL_FILE, util.TableToJSON({ last = os.time() }))
+    LC.SafeWrite(COOL_FILE, util.TableToJSON({ last = os.time() }), { force = true }) -- (one time, nothing to lose)
 end
 function LC.EndingCooldownLeft()
     return math.max(0, LastEnding() + cvCool:GetFloat() * 60 - os.time())
@@ -4059,8 +4056,7 @@ end)
 
 concommand.Add("lc_ending_reset_cooldown", function(ply)
     if IsValid(ply) and not ply:IsSuperAdmin() then return end
-    if file.CreateDir then file.CreateDir("livingcity") end
-    file.Write(COOL_FILE, util.TableToJSON({ last = 0 }))
+    LC.SafeWrite(COOL_FILE, util.TableToJSON({ last = 0 }), { force = true })
     Reply(ply, "Secret ending cooldown cleared.")
 end)
 

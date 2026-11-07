@@ -452,20 +452,18 @@ function LC.DreamSave(snap)
     if file.CreateDir then file.CreateDir("livingcity") file.CreateDir("livingcity/dreams") end
     local json = util.TableToJSON(ForDisk(snap))
     if not json or json == "" then return false end
-    file.Write(FileOf(snap.sid), json)
+    if not LC.SafeWrite(FileOf(snap.sid), json) then return false end
     -- (read back: only a snapshot that's really there counts)
     local back = file.Read(FileOf(snap.sid), "DATA")
     local t = back and util.JSONToTable(back)
     return istable(t) and t.sid == snap.sid
 end
 function LC.DreamLoad(sid)
-    local raw = file.Read(FileOf(sid), "DATA")
-    if not raw or raw == "" then return nil end
-    return FromDisk(util.JSONToTable(raw))
+    return FromDisk(LC.SafeReadJSON(FileOf(sid)))
 end
 local function Forget(sid)
     LC.DreamSnaps[sid] = nil
-    if file.Exists(FileOf(sid), "DATA") then file.Delete(FileOf(sid)) end
+    LC.SafeDelete(FileOf(sid)) -- (and its backup: a snapshot put back never comes back)
 end
 
 ------------------------------------------------------------------------

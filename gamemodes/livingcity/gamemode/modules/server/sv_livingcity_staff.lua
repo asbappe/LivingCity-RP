@@ -203,12 +203,11 @@ end
 local warnings
 local function Warnings()
     if not warnings then
-        local raw = file.Read(WARN_FILE, "DATA")
-        warnings = raw and util.JSONToTable(raw) or {}
+        warnings = LC.SafeReadJSON(WARN_FILE) or {}
     end
     return warnings
 end
-local function SaveWarnings() file.CreateDir(DIR) file.Write(WARN_FILE, util.TableToJSON(Warnings())) end
+local function SaveWarnings() LC.SafeWrite(WARN_FILE, util.TableToJSON(Warnings())) end
 
 function LC.WarnPlayer(admin, target, reason)
     if not IsStaff(admin) then return false, "Staff only." end
@@ -250,12 +249,11 @@ end
 local bans
 local function Bans()
     if not bans then
-        local raw = file.Read(BAN_FILE, "DATA")
-        bans = raw and util.JSONToTable(raw) or {}
+        bans = LC.SafeReadJSON(BAN_FILE) or {}
     end
     return bans
 end
-local function SaveBans() file.CreateDir(DIR) file.Write(BAN_FILE, util.TableToJSON(Bans())) end
+local function SaveBans() LC.SafeWrite(BAN_FILE, util.TableToJSON(Bans())) end
 
 -- Is this name (a character's) banned?
 function LC.CharBanned(name)

@@ -203,14 +203,12 @@ function LC.SaveTerritory()
                 ground = z.cells and LCZ.PackGround(z) or nil, steps = z.cells and z.steps or nil }
         end
     end
-    file.CreateDir("livingcity")
-    file.Write(Path(), util.TableToJSON(out, true))
+    LC.SafeWrite(Path(), util.TableToJSON(out, true))
 end
 
 -- Called at the end of every layout load: put the grown patches back.
 function LC.RestoreTerritory()
-    local raw = file.Read(Path(), "DATA")
-    local list = raw and util.JSONToTable(raw) or nil
+    local list = LC.SafeReadJSON(Path())
     if not istable(list) then return end
     for _, t in ipairs(list) do
         if KINDS[t.kind] and t.x and t.sx then

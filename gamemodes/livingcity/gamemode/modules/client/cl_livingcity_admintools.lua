@@ -169,6 +169,15 @@ local function Build()
         el:Dock(FILL)
         el:SetWrap(true)
     end
+    -- save files that couldn't be read: kept as they are until a superadmin says otherwise (sv_livingcity_safefile.lua)
+    if state.savefiles then
+        local fr = Row(cs)
+        Label(fr, "Save files:", 70)
+        Btn(fr, "Let the city save over them", function() Do("savefiles", "allow") end, 200)
+        local fl = Label(Row(cs, 34), "Couldn't be read, kept as they are and not saved over: " .. table.concat(state.savefiles, ", "), 600)
+        fl:Dock(FILL)
+        fl:SetWrap(true)
+    end
     -- territory: grow it now, for testing (superadmins; it grows along the path nodes)
     if state.superadmin then
         local tr = Row(cs)

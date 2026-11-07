@@ -67,14 +67,14 @@ function LC.SavePeople()
             memory = p.memory, -- how each player's character has treated them (sv_livingcity_talk.lua)
         }
     end
-    file.Write(File(), util.TableToJSON(out))
+    LC.SafeWrite(File(), util.TableToJSON(out))
 end
 
 function LC.LoadPeople()
     P.loaded = true
     P.list, P.next = {}, 1
-    if file and file.Exists and file.Exists(File(), "DATA") then
-        local t = util.JSONToTable(file.Read(File(), "DATA") or "")
+    do
+        local t = LC.SafeReadJSON(File())
         if istable(t) and istable(t.list) then
             P.next = tonumber(t.next) or 1
             for _, p in ipairs(t.list) do

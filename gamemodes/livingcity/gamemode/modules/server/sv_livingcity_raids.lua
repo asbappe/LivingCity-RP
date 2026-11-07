@@ -81,17 +81,15 @@ local pending
 local function LoadPending()
     if pending then return pending end
     pending = {}
-    if file and file.Exists and file.Exists(PENDING_FILE, "DATA") then
-        local t = util.JSONToTable(file.Read(PENDING_FILE, "DATA") or "")
-        if istable(t) then pending = t end
-    end
+    local t = LC.SafeReadJSON(PENDING_FILE)
+    if istable(t) then pending = t end
     return pending
 end
 
 local function SavePending()
     if not file or not file.Write then return end
     if file.CreateDir then file.CreateDir("livingcity") end
-    file.Write(PENDING_FILE, util.TableToJSON(LoadPending()))
+    LC.SafeWrite(PENDING_FILE, util.TableToJSON(LoadPending()))
 end
 
 -- Charge someone with what was found under their name.

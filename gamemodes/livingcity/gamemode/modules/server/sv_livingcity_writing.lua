@@ -89,8 +89,7 @@ LC.WorldNotes = LC.WorldNotes or nil -- [id] = { text, by, sig, poster, pos, ang
 
 local function LoadNotes()
     if LC.WorldNotes then return LC.WorldNotes end
-    local raw = file.Read(NotesFile(), "DATA")
-    local t = raw and util.JSONToTable(raw) or {}
+    local t = LC.SafeReadJSON(NotesFile()) or {}
     LC.WorldNotes = istable(t) and t or {}
     return LC.WorldNotes
 end
@@ -99,8 +98,7 @@ local function SaveWorldNotes()
     for id, n in pairs(LoadNotes()) do
         out[id] = { text = n.text, sig = n.sig, poster = n.poster, pos = n.pos, ang = n.ang, untilT = n.untilT, owner = n.owner }
     end
-    file.CreateDir(DIR)
-    file.Write(NotesFile(), util.TableToJSON(out))
+    LC.SafeWrite(NotesFile(), util.TableToJSON(out))
 end
 
 local function SpawnNote(id, n)
@@ -329,16 +327,14 @@ local DEFAULT_LAWS = {
 LC.Laws = LC.Laws or nil
 local function Laws()
     if not LC.Laws then
-        local raw = file.Read(LAWS_FILE, "DATA")
-        local t = raw and util.JSONToTable(raw) or nil
+        local t = LC.SafeReadJSON(LAWS_FILE)
         LC.Laws = istable(t) and t or table.Copy(DEFAULT_LAWS)
         LC.SetGlobalLong("lc_laws", util.TableToJSON(LC.Laws)) -- (in parts: past 511 characters one string is cut)
     end
     return LC.Laws
 end
 local function SaveLaws()
-    file.CreateDir(DIR)
-    file.Write(LAWS_FILE, util.TableToJSON(Laws()))
+    LC.SafeWrite(LAWS_FILE, util.TableToJSON(Laws()))
     LC.SetGlobalLong("lc_laws", util.TableToJSON(Laws()))
 end
 hook.Add("InitPostEntity", "LivingCityLaws", function() Laws() end)
