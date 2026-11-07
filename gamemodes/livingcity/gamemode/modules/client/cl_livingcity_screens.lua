@@ -24,6 +24,7 @@ local cvOn = CreateClientConVar("lc_screen_ui", "1", true, false, "Terminals sho
 local W, ROW, HEAD, PER_PAGE = 600, 26, 46, 11
 local SCALE = 0.055
 local BG, EDGE, INK, DIM, HOT = Color(10, 16, 22, 235), Color(110, 170, 230), Color(220, 230, 240), Color(140, 150, 160), Color(110, 170, 230)
+local HOT_ON, HOT_OFF, BTN = Color(HOT.r, HOT.g, HOT.b, 120), Color(HOT.r, HOT.g, HOT.b, 60), Color(30, 40, 52, 230) -- (made once, not every frame)
 
 surface.CreateFont("LCScreenTitle", { font = "Trebuchet MS", size = 30, weight = 700 })
 surface.CreateFont("LCScreenText", { font = "Trebuchet MS", size = 20, weight = 500 })
@@ -166,7 +167,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityScreens", function(depth, 
             if r.kind == "button" then
                 local hot = S.hover == l.y
                 local off = r.enabled == false
-                draw.RoundedBox(4, 10, l.y, W - 20, ROW - 4, hot and Color(HOT.r, HOT.g, HOT.b, off and 60 or 120) or Color(30, 40, 52, 230))
+                draw.RoundedBox(4, 10, l.y, W - 20, ROW - 4, hot and (off and HOT_OFF or HOT_ON) or BTN)
                 draw.SimpleText((hot and "> " or "") .. (r.text or ""), "LCScreenText", 20, l.y + (ROW - 4) / 2, off and DIM or INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
             else
                 local text = r.text or ""
