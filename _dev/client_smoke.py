@@ -312,6 +312,19 @@ if LC_CL.IntakeStep(_me) ~= "housing" then problems[#problems + 1] = "registered
 run("HUDPaint")
 local okSg, errSg = pcall(LC_CL.DrawIntakeSign, desk)
 if not okSg then problems[#problems + 1] = "intake sign: " .. tostring(errSg) end
+-- Labor Assignment: after registering, before a room (sv_livingcity_labor.lua)
+local laborDesk = ents.Create("lc_intake")
+laborDesk:SetPos(Vector(300, 0, 0))
+laborDesk.nw.lc_ikind = "labor"
+_me.nw.lc_unassigned = true
+if LC_CL.IntakeStep(_me) ~= "labor" then problems[#problems + 1] = "registered with no work: Labor Assignment is next, before Housing Allocation" end
+_advance(1.5) -- (the terminals are looked for once a second)
+if LC_CL.NearestDesk("labor") ~= laborDesk then problems[#problems + 1] = "the way to Labor Assignment isn't found" end
+run("HUDPaint")
+local okLs, errLs = pcall(LC_CL.DrawIntakeSign, laborDesk)
+if not okLs then problems[#problems + 1] = "Labor Assignment sign: " .. tostring(errLs) end
+_me.nw.lc_unassigned = false
+laborDesk:Remove()
 _me.nw.lc_unhoused, _me.nw.lc_intake_until = false, 0
 if LC_CL.IntakeStep(_me) ~= nil then problems[#problems + 1] = "nothing next once you're through intake" end
 util.JSONToTable = function() return { intake = true, name = "", model = LCF.CitizenModels[1], models = LCF.CitizenModels, cid = "#12-345",
@@ -640,6 +653,16 @@ net._q = { 1 }
 okO, errO = pcall(net["recv_lc_obituary"])
 _advance(4) run("PostDrawHUD")
 if not okO then problems[#problems + 1] = "short death card: " .. tostring(errO) end
+-- the board (F3) in a city with a Labor Assignment terminal: no job list, the way to the terminal instead
+do
+    local j2t = util.JSONToTable
+    util.JSONToTable = function() return { board = "Jobs", faction = "citizen", postings = {}, active = false, traits = {}, wait = 0,
+        jobs = { current = "courier", list = {}, desk = true, lockLine = "Tied to this job for 12 minutes more or 3 shifts more, whichever comes first; then a Labor Assignment terminal can change it." } } end
+    net._q = { 1 }
+    local okB, errB = pcall(net["recv_lcq_board"])
+    if not okB then problems[#problems + 1] = "the board with a Labor Assignment terminal: " .. tostring(errB) end
+    util.JSONToTable = j2t
+end
 _me.alive = true
 run("PostDrawHUD")
 -- smoke and gas clouds: grey particles, drawn here and thinned out over time
@@ -830,6 +853,17 @@ do
         LC_CL.OpenDesk(With({ kind = "housing", awaiting = true, papers = true }))
         LC_CL.OpenDesk(With({ kind = "housing", block = 2, blockName = "Habitation Block 02", how = "auto", transfer = true, papers = true }))
         LC_CL.OpenDesk(With({ kind = "housing", block = 2, blockName = "Habitation Block 02", how = "allocation", transfer = false, transferWhy = "Too soon." }))
+        LC_CL.OpenDesk(With({ kind = "register", papers = true, needWork = true, laborDesk = true, awaiting = true, housingDesk = true }))
+        LC_CL.OpenDesk(With({ kind = "housing", awaiting = true, needWork = true, papers = true }))
+        LC_CL.OpenDesk(With({ kind = "labor", labor = { registered = false } }))
+        LC_CL.OpenDesk(With({ kind = "labor", labor = { registered = true, canWork = false } }))
+        LC_CL.OpenDesk(With({ kind = "labor", labor = { registered = true, canWork = true, papers = true, first = true, minMinutes = 30, minShifts = 4, housingNext = true } }))
+        LC_CL.OpenDesk(With({ kind = "labor", labor = { registered = true, canWork = true, papers = true, jobName = "Courier", place = "Post office", locked = true,
+            minsLeft = 12, shiftsLeft = 3, mins = 18, shifts = 1 } }))
+        LC_CL.OpenDesk(With({ kind = "labor", labor = { registered = true, canWork = true, papers = false, standing = 30, wait = 200, minMinutes = 30, minShifts = 4,
+            jobs = { { num = 5, id = "courier", name = "Courier", place = "Post office", current = true },
+                { num = 15, id = "cleanup", name = "Infestation Cleanup", place = "the infestation", desc = "Into the infestation." },
+                { num = 7, id = "porter", name = "Intake Processor", place = "Train station", locked = "needs Civil Standing 50 (yours is 30)" } } } }))
         LC_CL.OpenLab({ credits = 50, items = { { id = "gun_pistol", name = "Homemade pistol", desc = "A pistol", secs = 12, price = 72, canPay = false, canMats = true,
             mats = { { name = "Gun parts", have = 2, need = 2 } } } } })
         LC_CL.OpenLab({ credits = 0, busy = 5, items = {} })

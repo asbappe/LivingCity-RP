@@ -12593,6 +12593,267 @@ do
 end
 end
 RebelFoodTests()
+function LaborTests()
+section("Labor Assignment: Union work given out in person")
+local savedGM = GAMEMODE
+GAMEMODE = { IsLivingCity = true }
+local function Later(secs) _advance(secs) _runtimers() end
+local function Payload(name)
+    local m = _lastnet(name)
+    return m and util.JSONToTable(m.data[2]) or nil
+end
+local function Noticed(txt)
+    for _, m in ipairs(net.sent or {}) do
+        if m.name == "lc_notice" then
+            for _, v in ipairs(m.data or {}) do if isstring(v) and string.find(v, txt, 1, true) then return true end end
+        end
+    end
+    return false
+end
+local function Listed(info, id)
+    for _, j in ipairs(info and info.jobs or {}) do if j.id == id then return j end end
+    return nil
+end
+local FAR5 = Vector(-150000, 150000, 0)
+local B0 = Vector(71000, -71000, 0)
+_setcvar("lc_intake", 1)
+_setcvar("lc_intake_secs", 8)
+_setcvar("lc_assign_work", 1)
+_setcvar("lc_labor_min_minutes", 30)
+_setcvar("lc_labor_min_shifts", 4)
+_setcvar("lc_job_cooldown", 900)
+local blockZone = LC.AddZone(B0 + Vector(0, 3000, 0), 400, "block", 41)
+local regPt = LC.AddPoint(B0, 0, "intake", 0)
+local housePt = LC.AddPoint(B0 + Vector(0, 900, 0), 0, "housingterm", 0)
+local arrPt = LC.AddPoint(B0 + Vector(-1500, 0, 0), 90, "arrival", 0)
+LC.SyncFixtures()
+local house
+for _, e in ipairs(LC.EntsOf("lc_intake")) do
+    if LC.IntakeKind(e) == "housing" and e:GetPos():Distance(housePt.pos) < 50 then house = e end
+end
+
+-- no Labor Assignment terminal: as before
+ok(LC.POINT_KINDS.laborterm, "the editor places Labor Assignment terminals")
+ok(not LC.LaborDesk(), "(none placed yet)")
+local before = newPlayer("LaborBefore", "citizen")
+Later(0.3)
+before:SetPData("lc_chosen", "1")
+LC.RegisterPerson(before, "staff")
+Later(3)
+ok(LC.Job(before) ~= nil, "with no terminal, the Union gives a newly registered citizen work by itself, as before", LC.Job(before) and LC.Job(before).id)
+before.lcjNext = 0
+ok(LC.SetJob(before, "courier") == true, "and the board still changes jobs")
+local boss = newPlayer("LaborBoss", "citizen")
+boss.superadmin = true
+LC.FlushNotices()
+net.sent = {}
+LC.LaborTellStaff(boss)
+LC.LaborTellStaff(boss)
+Later(0.2)
+local told = 0
+for _, m in ipairs(net.sent or {}) do if m.name == "lc_notice" then told = told + 1 end end
+ok(Noticed("no Labor Assignment terminal") and told == 1, "a superadmin is told, once, that the map has none", told)
+
+-- the terminal
+local laborPt = LC.AddPoint(B0 + Vector(0, 450, 0), 0, "laborterm", 0)
+LC.SyncFixtures()
+local labor
+for _, e in ipairs(LC.EntsOf("lc_intake")) do if LC.IntakeKind(e) == "labor" then labor = e end end
+ok(IsValid(labor) and labor:GetClass() == "lc_intake" and LC.LaborDesk(), "Labor Assignment is a terminal in the world, the same kind as Civil Intake's")
+ok(LC.NoticeForChat("[Labor Assignment] Approved.") == "info", "its messages go on screen")
+
+-- no more changing jobs by magic
+before.lcjNext = 0
+local okM, whyM = LC.SetJob(before, "factory")
+ok(not okM and whyM == LC.LABOR_GO and LC.Job(before).id == "courier", "the board can't change your job any more", whyM)
+before.chat = {}
+net.sent = {}
+_netcall("lcj_set", before, "factory")
+ok(has(before.chat, "Go to a Labor Assignment terminal to change your assignment"), "it says where to go")
+ok(_lastnet("lc_waypoint") ~= nil and _lastnet("lc_waypoint").data[3] == "Labor Assignment", "and marks the nearest terminal")
+net.sent = {}
+LC.SendBoard(before)
+local bd = Payload("lcq_board")
+ok(bd and bd.jobs and bd.jobs.desk == true and string.find(bd.jobs.lockLine or "", "Labor Assignment", 1, true), "the board (F3) sends you to the terminal instead of a job list")
+ok(LC.SetJob(before, "factory", true) == true, "staff can still set a job")
+LC.SetJob(before, "courier", true)
+
+-- a new arrival: Civil Intake, then Labor Assignment, then a room
+local n = newPlayer("LaborArrival", "citizen")
+Later(0.3)
+ok(LC.IntakePending(n), "(a new arrival)")
+n:SetPData("lc_chosen", "1")
+n.chat = {}
+net.sent = {}
+LC.RegisterPerson(n, "terminal")
+ok(has(n.chat, "Labor Assignment"), "registered, you're told to go to Labor Assignment next")
+ok(_lastnet("lc_waypoint") ~= nil and _lastnet("lc_waypoint").data[3] == "Labor Assignment", "and it's marked on your screen")
+Later(3)
+ok(LC.Job(n) == nil and LC.AwaitingLabor(n), "the Union doesn't hand you work from afar: you walk to it")
+LC.IntakeFlags(n)
+ok(n:GetNW2Bool("lc_unassigned", false), "your screen says so")
+local step = LC.NextStep(n)
+ok(step and step.key == "labor" and step.way == "labor", "and so does your next step", step and step.key)
+n:SetPos(house:GetPos() + Vector(60, 0, 0))
+Later(1)
+net.sent = {}
+LC.UseIntake(n, house)
+local hp = Payload("lc_intake_ui")
+ok(hp and hp.kind == "housing" and hp.needWork == true, "Housing Allocation's screen says you need work first")
+n.chat = {}
+Later(1)
+_netcall("lc_intake_act", n, "apply", 0)
+ok(has(n.chat, "Labor Assignment first") and LC.AwaitingHousing(n) and n:GetNW2Float("lc_intake_until", 0) == 0, "and won't give you a room until you have it", n.chat[1])
+
+-- the first assignment
+n:SetPos(labor:GetPos() + Vector(60, 0, 0))
+Later(1)
+net.sent = {}
+LC.UseIntake(n, labor)
+local lp = Payload("lc_intake_ui")
+ok(lp and lp.kind == "labor" and lp.labor and lp.labor.first == true, "E at Labor Assignment: your first assignment, given by the Union")
+n.chat = {}
+Later(1)
+_netcall("lc_intake_act", n, "choose", LCJ.ById.factory.num)
+ok(has(n.chat, "first assignment comes from the Union") and LC.Job(n) == nil, "you don't pick the first one yourself")
+n.chat = {}
+Later(1)
+_netcall("lc_intake_act", n, "assign", 0)
+ok(has(n.chat, "Stand still"), "ask for it and the terminal works on you")
+Later(9)
+local job = LC.Job(n)
+ok(job ~= nil and has(n.chat, "Assignment approved"), "and after a while you have Union work", n.chat[#n.chat])
+ok(job and job.id ~= "cleanup" and job.id ~= "porter" and not job.minStanding, "never Infestation Cleanup, Intake Processor or the Block Warden", job and job.id)
+local counts = {}
+for _, p in ipairs(player.GetAll()) do
+    local j = p:GetNW2String("lcj_job", "")
+    if j ~= "" and p ~= n then counts[j] = (counts[j] or 0) + 1 end
+end
+local fewest = true
+for _, o in ipairs(LCJ.Occupations) do
+    if not LCJ.Closed(o) and not o.minStanding and o.id ~= "cleanup" and o.id ~= "porter" and (counts[o.id] or 0) < (counts[job.id] or 0) then fewest = false end
+end
+ok(fewest, "the post with the most openings (the fewest people on it)", job and job.id)
+ok(has(n.chat, "Housing Allocation") and not LC.AwaitingLabor(n), "then you're sent on to Housing Allocation")
+ok(LC.LaborLocked(n), "and you're tied to the job")
+
+-- tied to it
+n.lcjNext = 0
+n.chat = {}
+Later(1)
+_netcall("lc_intake_act", n, "choose", LCJ.ById.factory.num == (job and job.num) and LCJ.ById.courier.num or LCJ.ById.factory.num)
+ok(has(n.chat, "Tied to this job for 30 minutes more or 4 shifts more"), "the terminal won't change it before 30 minutes or 4 shifts", n.chat[1])
+net.sent = {}
+LC.SendBoard(n)
+bd = Payload("lcq_board")
+ok(bd and string.find(bd.jobs.lockLine or "", "Tied to this job", 1, true), "the board says how long")
+Later(1)
+net.sent = {}
+LC.UseIntake(n, labor)
+lp = Payload("lc_intake_ui")
+ok(lp and lp.labor and lp.labor.locked == true and #(lp.labor.jobs or {}) == 0, "nor does the terminal's screen offer other jobs yet")
+
+-- a room now
+n:SetPos(house:GetPos() + Vector(60, 0, 0))
+Later(1)
+LC.UseIntake(n, house)
+Later(1)
+_netcall("lc_intake_act", n, "apply", 0)
+Later(9)
+ok(LC.PlayerBlock(n) ~= nil, "with work, Housing Allocation gives you a room")
+
+-- time on the job counts, and is kept over a rejoin
+local s0 = LC.LaborStint(n).secs
+Later(6)
+ok(LC.LaborStint(n).secs > s0, "time on the job counts", LC.LaborStint(n).secs)
+hook.Run("LivingCityQuestComplete", n, { chain = "shift" })
+hook.Run("PlayerDisconnected", n)
+n.lcLabor = nil
+ok(LC.LaborLocked(n) and LC.LaborStint(n).shifts == 1 and LC.LaborStint(n).job == job.id, "kept over a rejoin (saved data)")
+ok(has(LC.CharKeys(), "lc_labor_job") and has(LC.CharKeys(), "lc_labor_done"), "each character keeps their own")
+
+-- four shifts (or 30 minutes) and they're free to ask for another
+LC.FlushNotices()
+net.sent = {}
+for _ = 1, 3 do hook.Run("LivingCityQuestComplete", n, { chain = "shift" }) end
+Later(0.2)
+ok(not LC.LaborLocked(n) and n:GetPData("lc_labor_done", "0") == "1", "after 4 shifts they're free")
+ok(Noticed("done your stint"), "and told so")
+local t2 = newPlayer("LaborTimer", "citizen")
+Later(0.3)
+t2:SetPData("lc_chosen", "1")
+LC.RegisterPerson(t2, "staff")
+t2.lcIdentity = nil
+if not LC.HasItem(t2, "id_papers") then LC.GiveItem(t2, "id_papers") end
+LC.LaborFinish(t2, {})
+ok(LC.LaborLocked(t2), "(another, just assigned)")
+Later(6)
+LC.LaborStint(t2).secs = 30 * 60 - 3
+Later(6)
+ok(not LC.LaborLocked(t2), "or after 30 minutes on the job", LC.LaborStint(t2).secs)
+
+-- what they're offered, by Civil Standing
+LC.AddStanding(n, 10 - LC.Standing(n), "test")
+n:SetPos(labor:GetPos() + Vector(60, 0, 0))
+Later(1)
+net.sent = {}
+LC.UseIntake(n, labor)
+lp = Payload("lc_intake_ui")
+local cl, po = Listed(lp and lp.labor, "cleanup"), Listed(lp and lp.labor, "porter")
+ok(cl and cl.locked and string.find(cl.locked, "25", 1, true) and po and po.locked and string.find(po.locked, "50", 1, true),
+    "Infestation Cleanup (25) and Intake Processor (50) are listed, locked, with the reason", cl and cl.locked)
+ok(not Listed(lp and lp.labor, "warden") and Listed(lp and lp.labor, job.id) and Listed(lp and lp.labor, job.id).current, "the Block Warden isn't listed below 100; your own job is marked")
+n.chat = {}
+Later(1)
+_netcall("lc_intake_act", n, "choose", LCJ.ById.cleanup.num)
+ok(has(n.chat, "needs Civil Standing 25") and LC.Job(n).id == job.id, "and can't be had yet")
+-- the Union's own wait between job changes still counts
+LC.AddStanding(n, 30 - LC.Standing(n), "test")
+n.lcjNext = CurTime() + 300
+n.chat = {}
+Later(1)
+_netcall("lc_intake_act", n, "choose", LCJ.ById.cleanup.num)
+ok(has(n.chat, "changed jobs recently"), "the 15 minutes between job changes still holds", n.chat[1])
+n.lcjNext = 0
+Later(1)
+net.sent = {}
+LC.UseIntake(n, labor)
+lp = Payload("lc_intake_ui")
+cl, po = Listed(lp and lp.labor, "cleanup"), Listed(lp and lp.labor, "porter")
+ok(cl and not cl.locked and po and po.locked, "at 25 Infestation Cleanup opens; Intake Processor waits for 50")
+n.chat = {}
+Later(1)
+_netcall("lc_intake_act", n, "choose", LCJ.ById.cleanup.num)
+Later(9)
+ok(LC.Job(n) and LC.Job(n).id == "cleanup" and n:HasWeapon("weapon_lc_hoover") and n:HasWeapon("weapon_lc_sprayer"), "picked at the terminal: Infestation Cleanup, kit and all")
+ok(LC.LaborLocked(n), "a job picked here holds for a stint too")
+
+-- losing the job works as before, and ends the stint
+LC.SetFaction(n, "cp", nil, true)
+LC.CheckUnionJob(n)
+ok(LC.Job(n) == nil and not n:HasWeapon("weapon_lc_hoover") and LC.LaborStint(n).job == "", "a Civil Protection unit loses the job and its kit, and the stint")
+LC.SetFaction(n, "citizen", nil, true)
+Later(1)
+ok(LC.AwaitingLabor(n), "back as a citizen, Labor Assignment again")
+net.sent = {}
+LC.UseIntake(n, labor)
+lp = Payload("lc_intake_ui")
+ok(lp and lp.labor and lp.labor.first == false and #(lp.labor.jobs or {}) > 0, "having done a stint, you pick for yourself")
+ok(LC.SetJob(n, "medic", true) and not LC.LaborLocked(n), "staff setting a job isn't a stint")
+
+-- the terminal taken away: nobody is stuck
+LC.RemovePoint(laborPt)
+LC.SyncFixtures()
+before.lcjNext = 0
+ok(not LC.LaborDesk() and LC.SetJob(before, "factory") == true, "take the terminal away and the board changes jobs again")
+
+LC.RemovePoint(regPt) LC.RemovePoint(housePt) LC.RemovePoint(arrPt)
+LC.SyncFixtures()
+if blockZone then LC.RemoveZone(blockZone) end
+for _, p in ipairs({ before, boss, n, t2 }) do LC.SetJob(p, "", true) p:SetPos(FAR5) end
+GAMEMODE = savedGM
+end
+LaborTests()
 
 ----------------------------------------------------------------------
 

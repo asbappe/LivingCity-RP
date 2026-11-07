@@ -107,6 +107,7 @@ end)
 Add("work", function(ply)
     local p, job = WorkPos(ply)
     if p then return p, job.name or "Your workplace" end
+    if not job and LC.LaborDesk and LC.LaborDesk() then return nil, "You have no job. Labor Assignment gives you one." end
     return nil, job and "Your job has no workplace on this map: shifts come to you (F3)." or "You have no job. F3 > Jobs."
 end)
 Add("shop", function(ply)
@@ -195,6 +196,9 @@ function LC.NextStep(ply)
     if civ and LC.IntakePending and LC.IntakePending(ply) then
         return { key = "intake", text = "Register at Civil Intake", why = "Until you're on the register you get no rations, no job and no room.", way = "intake", urgent = true }
     end
+    if civ and LC.AwaitingLabor and LC.AwaitingLabor(ply) and LC.AwaitingHousing and LC.AwaitingHousing(ply) then
+        return { key = "labor", text = "Get your work assignment", why = "You're registered. Next, work: press E on the Labor Assignment terminal. Housing Allocation only houses citizens with a work assignment.", way = "labor", urgent = true }
+    end
     if civ and LC.AwaitingHousing and LC.AwaitingHousing(ply) then
         return { key = "housing", text = "Ask Housing Allocation for a room", why = "You're registered. Next, a room: press E on the Housing Allocation terminal.", way = "housing", urgent = true }
     end
@@ -227,6 +231,9 @@ function LC.NextStep(ply)
         if LC.QuestOf and LC.QuestOf[ply] then
             local q = LC.QuestOf[ply]
             return { key = "on_job", text = "Finish what you're doing", why = (q.title and (q.title .. ": ") or "") .. "its next step is on your screen, and on F3." }
+        end
+        if f ~= "resistance" and LC.Job and not LC.Job(ply) and LC.LaborDesk and LC.LaborDesk() then
+            return { key = "job", text = "Get a Union job", why = "Jobs pay credits, standing and a ration card for each shift. No job, no rations. Labor Assignment gives you one: press E on its terminal.", way = "labor" }
         end
         if f ~= "resistance" and LC.Job and not LC.Job(ply) then
             return { key = "job", text = "Get a Union job", why = "Jobs pay credits, standing and a ration card for each shift. No job, no rations. F3 > Jobs: pick one." }

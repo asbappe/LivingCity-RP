@@ -114,7 +114,7 @@ local PLACES = {
     { "home", "My block" }, { "work", "My workplace" }, { "shop", "The Commissary" },
     { "toilet", "Toilet" }, { "bath", "Bathtub or shower" },
 }
-local MORE_PLACES = { { "bed", "A bed" }, { "intake", "Civil Intake" }, { "housing", "Housing Allocation" } }
+local MORE_PLACES = { { "bed", "A bed" }, { "intake", "Civil Intake" }, { "housing", "Housing Allocation" }, { "labor", "Labor Assignment" } }
 
 local function MorePlacesPage()
     local me = LocalPlayer()

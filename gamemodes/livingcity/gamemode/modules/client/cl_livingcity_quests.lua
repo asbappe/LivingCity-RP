@@ -60,37 +60,53 @@ net.Receive("lcq_board", function()
         card:Dock(TOP)
         card:DockMargin(0, 0, 0, 10)
         card:DockPadding(14, 10, 10, 10)
-        card:SetTall(66)
+        local desk = data.jobs.desk -- (a Labor Assignment terminal in the city: jobs are changed there, in person)
+        card:SetTall(desk and 92 or 66)
         card.Paint = function(self, w, h)
             draw.RoundedBox(4, 0, 0, w, h, Color(30, 28, 24, 240))
             draw.RoundedBox(0, 0, 0, 3, h, Color(200, 150, 100))
             local cur = LCJ and LCJ.ById[data.jobs.current]
             draw.SimpleText("UNION EMPLOYMENT", "DermaDefault", 14, 10, DIM)
             draw.SimpleText(cur and cur.name or "Unemployed", "DermaLarge", 14, 26, INK)
+            if desk then draw.SimpleText(data.jobs.lockLine or "Go to a Labor Assignment terminal to change your assignment.", "DermaDefault", 14, 68, ACCENT) end
         end
-        local combo = vgui.Create("DComboBox", card)
-        combo:Dock(RIGHT)
-        combo:SetWide(230)
-        combo:DockMargin(0, 12, 0, 12)
-        combo:SetValue("Change job...")
-        -- grouped by career path: the Civil Protection path, the Administration path, then the rest of Union work
-        local first = true
-        for _, path in ipairs(LCJ and LCJ.Paths or { { id = "", name = "" } }) do
-            local any = false
-            for _, j in ipairs(data.jobs.list) do
-                if (j.path or "") == path.id then
-                    if not any and not first and combo.AddSpacer then combo:AddSpacer() end
-                    any = true
-                    combo:AddChoice(j.name .. "   (" .. path.name .. ")", j.id)
-                end
+        if desk then
+            local way = vgui.Create("DButton", card)
+            way:Dock(RIGHT)
+            way:SetWide(230)
+            way:DockMargin(0, 12, 0, 36)
+            way:SetText("Show me the way to Labor Assignment")
+            way:SetTooltip("Jobs are given out and changed at a Labor Assignment terminal, in person.")
+            way.DoClick = function()
+                if LC_CL.SendAction then LC_CL.SendAction("waypoint", "labor") end
+                board:Close()
             end
-            if any then first = false end
         end
-        combo.OnSelect = function(_, _, _, id)
-            net.Start("lcj_set")
-            net.WriteString(id)
-            net.SendToServer()
-            board:Close()
+        local combo = (not desk) and vgui.Create("DComboBox", card)
+        if combo then
+            combo:Dock(RIGHT)
+            combo:SetWide(230)
+            combo:DockMargin(0, 12, 0, 12)
+            combo:SetValue("Change job...")
+            -- grouped by career path: the Civil Protection path, the Administration path, then the rest of Union work
+            local first = true
+            for _, path in ipairs(LCJ and LCJ.Paths or { { id = "", name = "" } }) do
+                local any = false
+                for _, j in ipairs(data.jobs.list) do
+                    if (j.path or "") == path.id then
+                        if not any and not first and combo.AddSpacer then combo:AddSpacer() end
+                        any = true
+                        combo:AddChoice(j.name .. "   (" .. path.name .. ")", j.id)
+                    end
+                end
+                if any then first = false end
+            end
+            combo.OnSelect = function(_, _, _, id)
+                net.Start("lcj_set")
+                net.WriteString(id)
+                net.SendToServer()
+                board:Close()
+            end
         end
     end
 

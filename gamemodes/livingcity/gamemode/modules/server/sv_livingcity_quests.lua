@@ -3200,6 +3200,11 @@ function LC.SendBoard(ply)
     local jobs
     if not stalker and LC.CanWork and LC.CanWork(ply) and LCJ then
         jobs = { current = ply:GetNW2String("lcj_job", ""), list = {} }
+        -- (a Labor Assignment terminal in the city: jobs are changed there, in person, not from here: sv_livingcity_labor.lua)
+        if LC.LaborDesk and LC.LaborDesk() then
+            jobs.desk = true
+            jobs.lockLine = LC.LaborLockLine and LC.LaborLockLine(ply) or nil
+        end
         for _, o in ipairs(LCJ.Occupations) do
             -- (a post you have to earn isn't even listed until you have: the Block Warden)
             local earned = not o.minStanding or (LC.Standing and LC.Standing(ply) >= o.minStanding)

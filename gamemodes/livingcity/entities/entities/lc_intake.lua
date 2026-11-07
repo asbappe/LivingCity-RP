@@ -1,9 +1,10 @@
 --[[
     Civil Intake terminal (Living City). Place it with the Living City Editor:
-    "Fixture: Civil Intake (registration)" or "Fixture: Housing Allocation".
-    New arrivals register at the first (their name, face and description,
-    and a citizen number), then ask the second for a room. Press E.
-    See sv_livingcity_intake.lua.
+    "Fixture: Civil Intake (registration)", "Fixture: Housing Allocation" or
+    "Fixture: Labor Assignment". New arrivals register at the first (their
+    name, face and description, and a citizen number), are given Union work
+    at Labor Assignment (when the map has one), then ask Housing Allocation
+    for a room. Press E. See sv_livingcity_intake.lua and sv_livingcity_labor.lua.
 ]]
 
 AddCSLuaFile()
@@ -26,8 +27,9 @@ function ENT:Initialize()
     self:SetUseType(SIMPLE_USE)
     local phys = self:GetPhysicsObject()
     if IsValid(phys) then phys:EnableMotion(false) end
-    -- which desk this is (the editor's point kind): "register" or "housing"
-    self:SetNW2String("lc_ikind", self.lcFixtureKind == "housingterm" and "housing" or "register")
+    -- which desk this is (the editor's point kind): "register", "housing" or "labor"
+    local k = self.lcFixtureKind
+    self:SetNW2String("lc_ikind", (k == "housingterm" and "housing") or (k == "laborterm" and "labor") or "register")
 end
 
 if SERVER then

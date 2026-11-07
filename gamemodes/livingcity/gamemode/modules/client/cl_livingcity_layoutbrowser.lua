@@ -30,7 +30,7 @@ local CATS = {
 local USES = {
     { title = "Citizens' daily life", ids = { "idle", "sit", "sitchair", "lean", "queue", "dispenser", "vending", "terminal", "stove", "bed",
         "toilet", "bath", "fire", "locker", "tv", "screen", "lawboard", "citybin", "bin", "zone_block", "door_rent" } },
-    { title = "Arriving and leaving the city", ids = { "arrival", "intake", "housingterm", "platform", "spawn", "lz" } },
+    { title = "Arriving and leaving the city", ids = { "arrival", "intake", "laborterm", "housingterm", "platform", "spawn", "lz" } },
     { title = "Civil Protection and the Combine", ids = { "patrol", "checkpoint", "cpsupply", "console", "sspawn", "powerbank", "turret",
         "forcefield", "barricade_low", "barricade", "barricade_tall", "dataterm", "masterterm", "zone_combine", "door_cp", "door_office", "studio", "loudspeaker", "screen_big" } },
     { title = "Prison", ids = { "cell", "release", "zone_prison", "door_prison" } },
@@ -145,6 +145,7 @@ local WANTED = {
     { "incinerator", "No incinerator: Morticians bag bodies at the morgue workplace, or have no collections." },
     { "sspawn", "No scanner launch spot: flown scanners go up in the open air near the console." },
     { "intake", "No Civil Intake (optional): new people are registered as they arrive, with a room handed to them." },
+    { "laborterm", "No Labor Assignment (optional): the Union assigns work by itself and the board (F3) changes jobs." },
     { "cpsupply", "No Civil Protection Commissary: Civil Protection units are issued their supplies at the Union Commissary instead." },
     { "workbench", "No Resistance lab: the Resistance can only get guns, jammers and radios from the black market." },
 }
@@ -152,7 +153,7 @@ local WANTED = {
 local function Glance()
     local pts, fx, zones, doors = 0, 0, #(LC_CL.zones or {}), #(LC_CL.doors or {})
     local FIX = { vending = true, dispenser = true, terminal = true, stove = true, fire = true, dealer = true, locker = true,
-        screen = true, lawboard = true, console = true, workbench = true, recycler = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, hazbarrel = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, intake = true, housingterm = true, cpsupply = true, conveyor = true, bed = true, toilet = true, bath = true }
+        screen = true, lawboard = true, console = true, workbench = true, recycler = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, hazbarrel = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, conveyor = true, bed = true, toilet = true, bath = true }
     for _, p in ipairs(LC_CL.points or {}) do if FIX[p.kind] then fx = fx + 1 else pts = pts + 1 end end
     local npcs = 0
     for _, e in ipairs(ents.FindByClass("npc_*")) do if e:GetNW2String("lc_role", "") ~= "" then npcs = npcs + 1 end end

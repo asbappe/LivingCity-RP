@@ -58,6 +58,7 @@ local MODES = {
     { id = "conveyor",    label = "Fixture: factory conveyor (the Factory Worker's line runs parts along it)" },
     { id = "intake",      label = "Fixture: Civil Intake (registration: new people get their papers here; NPC arrivals queue in front)" },
     { id = "housingterm", label = "Fixture: Housing Allocation (registered new arrivals ask for a room here)" },
+    { id = "laborterm",   label = "Fixture: Labor Assignment (citizens are given Union work here, and change jobs here; before Housing Allocation)" },
     { id = "stove",       label = "Fixture: stove" },
     { id = "bed",         label = "Fixture: bed (sleep here at night; the map's own beds work too)" },
     { id = "toilet",      label = "Fixture: toilet (for parasites; the map's own toilets work too)" },
@@ -121,7 +122,7 @@ else
 end
 
 -- sit, bench and lean spots, and fixtures, face the person placing them
-local FACE_PLACER = { bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, screen = true, lawboard = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, hazbarrel = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, yard = true }
+local FACE_PLACER = { bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, screen = true, lawboard = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, hazbarrel = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, yard = true }
 
 local function ModeIndex(id)
     for i, m in ipairs(MODES) do if m.id == id then return i end end
@@ -729,6 +730,13 @@ function TOOL.BuildCPanel(panel)
     Check("New arrivals go through Civil Intake", "lc_intake")
     Slider("Seconds a desk takes to process someone", "lc_intake_secs", 2, 30, 0)
     Slider("Minutes to register before it's a crime", "lc_intake_grace", 1, 60, 0)
+
+    Header("Labor Assignment")
+    panel:Help("Place \"Fixture: Labor Assignment\" and Union work is given out and changed only there, in person: a new citizen goes there after Civil Intake, before Housing Allocation, and stays on the job for a stint. Without one, the Union assigns work and the board (F3) changes it, as before.")
+    Slider("Minutes on an assignment before it can change", "lc_labor_min_minutes", 0, 240, 0)
+    Slider("Or this many shifts, whichever comes first", "lc_labor_min_shifts", 0, 20, 0)
+    Slider("Civil Standing for Infestation Cleanup", "lc_labor_cleanup_standing", 0, 200, 0)
+    Slider("Civil Standing for Intake Processor", "lc_labor_porter_standing", 0, 200, 0)
 
     Header("Survival and economy")
     Check("Hunger and thirst", "lc_needs")
