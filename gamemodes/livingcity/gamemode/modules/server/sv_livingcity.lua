@@ -49,7 +49,7 @@ local cvAutostart = CreateConVar("lc_autostart", "0", FLAGS, "Start Living City 
 local cvSpawnDist = CreateConVar("lc_spawn_mindist", "900", FLAGS, "Random spawns happen at least this far from players")
 local cvLifetime  = CreateConVar("lc_citizen_lifetime", "600", FLAGS, "Average seconds a citizen stays before going home (0 = forever)")
 local cvArrestChance = CreateConVar("lc_npc_arrest_chance", "8", FLAGS, "Percent chance an inspection ends with the citizen being taken to a cell")
-local cvBudget    = CreateConVar("lc_npc_budget", "60", FLAGS, "Hard cap on Living City NPCs, whatever the individual targets say")
+local cvBudget    = CreateConVar("lc_npc_budget", "100", FLAGS, "Hard cap on Living City NPCs, whatever the individual targets say")
 local cvLodDist   = CreateConVar("lc_lod_distance", "3500", FLAGS, "NPCs farther than this from every player think less often")
 local cvRebelPursuit = CreateConVar("lc_rebel_pursuit", "0", FLAGS, "Security NPCs chase people into rebel zones")
 
@@ -1695,7 +1695,7 @@ local function MaintainPopulation()
             for _, p in ipairs(player.GetAll()) do
                 if p:IsSuperAdmin() then
                     LC.Notice(p, "warn", "NPC cap", string.format("lc_npc_budget is %d, but the city's settings want %d NPCs: no more will spawn (units and citizens included). "
-                        .. "60 is the default: lc_npc_budget 60.", cvBudget:GetInt(), want), 14)
+                        .. "100 is the default: lc_npc_budget 100.", cvBudget:GetInt(), want), 14)
                 end
             end
             LC.Log("warn", string.format("lc_npc_budget (%d) is below what the city's settings want (%d): nothing more spawns", cvBudget:GetInt(), want))
