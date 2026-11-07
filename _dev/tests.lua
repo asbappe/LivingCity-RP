@@ -11105,6 +11105,15 @@ local s0, c0 = LC.Standing(dl), LC.Credits(dl)
 LC.RebelKillReward(dl)
 ok(LC.Standing(dl) == s0 + 5 and LC.Credits(dl) == c0 + 2, "a rebel put down: +5 standing and +2 credits for the unit", LC.Standing(dl) - s0 .. " " .. LC.Credits(dl) - c0)
 ok((LC.Inventory(dl).ammo_pistol or 0) >= 1, "and an ammunition allocation, a box of rounds")
+-- with the AR2 in hand: AR2 rounds straight in, not an SMG box (there's no AR2 ammo item; the owner, 7 November)
+do
+    dl:Give("weapon_ar2")
+    dl:SelectWeapon("weapon_ar2")
+    local smg0, ar0 = LC.Inventory(dl).ammo_smg or 0, (dl.ammo or {}).AR2 or 0
+    LC.RebelKillReward(dl)
+    ok(((dl.ammo or {}).AR2 or 0) == ar0 + 30 and (LC.Inventory(dl).ammo_smg or 0) == smg0, "an AR2 in hand: 30 AR2 rounds, and no SMG box", tostring((dl.ammo or {}).AR2))
+    dl:StripWeapon("weapon_ar2")
+end
 LC.CommanderDropAt = 0
 if LC.OverwatchDrop then LC.EndOverwatchDrop() end
 cmd:SetPos(M0)
@@ -12589,6 +12598,29 @@ for _ = 1, 20 do _run(0.5) if LC.Marching[res] then marched = true break end end
 ok(marched and LC.Marching[res].arrester == off, "a unit walks over and walks them to the cells (and it's still the officer's arrest)")
 if LC.Marching[res] then LC.Marching[res] = nil end
 if LC.IsTied(res) then LC.Untie(res, nil, true) end
+-- the officer walks off mid-struggle: it just ends, not a win (the owner, 7 November)
+do
+    LC.ArrestHolds[res] = nil
+    res.lcBrokeFree = 0
+    res:SetPos(A0 + Vector(50, 200, 0))
+    off:SetPos(A0 + Vector(0, 200, 0))
+    off.pushed = nil
+    LC.ClearWanted(res)
+    local seen = {}
+    local realNotice = LC.Notice
+    LC.Notice = function(p, kind, title, text, secs) if p == res then seen[#seen + 1] = tostring(title) .. "|" .. tostring(text) end return realNotice(p, kind, title, text, secs) end
+    LC.BatonArrest(off, res)
+    local began = LC.Struggles[res] ~= nil
+    for _ = 1, 10 do _netcall("lc_struggle_press", res) _run(0.05) end
+    off:SetPos(A0 + Vector(0, 900, 0))
+    _run(0.5)
+    LC.Notice = realNotice
+    local said = table.concat(seen, " / ")
+    ok(began and LC.Struggles[res] == nil and not LC.IsTied(res) and res:GetNW2Float("lc_struggle_until", 0) == 0, "the officer walks off mid-struggle: it ends, and they're let go")
+    ok(not LC.PlayerIsWanted(res) and off.pushed == nil and (res.lcBrokeFree or 0) <= CurTime(), "not a win: not wanted for resisting, no shove, no 'broke free'", said)
+    ok(said:find("The officer is gone: the struggle is over.", 1, true) and not said:find("broke free", 1, true), "a plain word that it's over, not 'You broke free'", said)
+    LC.ClearWanted(res)
+end
 -- hands up: going quietly
 res:SetNW2Bool("lc_handsup", true)
 LC.BatonArrest(off, res)
@@ -12972,6 +13004,48 @@ Later(6)
 LC.LaborStint(t2).secs = 30 * 60 - 3
 Later(6)
 ok(not LC.LaborLocked(t2), "or after 30 minutes on the job", LC.LaborStint(t2).secs)
+-- a 0 means that condition doesn't apply; both 0: no stint at all (the owner, 7 November)
+do
+    local function Assigned(name)
+        local z = newPlayer(name, "citizen")
+        Later(0.3)
+        z:SetPData("lc_chosen", "1")
+        LC.RegisterPerson(z, "staff")
+        z.lcIdentity = nil
+        if not LC.HasItem(z, "id_papers") then LC.GiveItem(z, "id_papers") end
+        LC.FlushNotices()
+        net.sent = {}
+        LC.LaborFinish(z, {})
+        Later(12)
+        LC.FlushNotices()
+        return z
+    end
+    _setcvar("lc_labor_min_shifts", 0)
+    local z1 = Assigned("LaborZeroShifts")
+    local line1 = LC.LaborLockLine(z1) or ""
+    ok(LC.Job(z1) and LC.LaborLocked(z1) and not Noticed("done your stint"), "lc_labor_min_shifts 0: no 'done your stint' seconds after the job is given")
+    ok(line1:find("minutes more;", 1, true) and not line1:find("shift", 1, true), "only the minutes count", line1)
+    LC.LaborStint(z1).secs = 30 * 60 - 3
+    Later(6)
+    LC.FlushNotices()
+    ok(not LC.LaborLocked(z1) and Noticed("done your stint"), "and after 30 minutes, the stint's done")
+    _setcvar("lc_labor_min_shifts", 4)
+    _setcvar("lc_labor_min_minutes", 0)
+    local z2 = Assigned("LaborZeroMinutes")
+    local line2 = LC.LaborLockLine(z2) or ""
+    ok(LC.Job(z2) and LC.LaborLocked(z2) and not Noticed("done your stint"), "lc_labor_min_minutes 0: no 'done your stint' seconds after the job is given")
+    ok(line2:find("4 shifts more;", 1, true) and not line2:find("minute", 1, true), "only the shifts count", line2)
+    for _ = 1, 4 do hook.Run("LivingCityQuestComplete", z2, { chain = "shift" }) end
+    Later(0.2)
+    LC.FlushNotices()
+    ok(not LC.LaborLocked(z2) and Noticed("done your stint"), "and after 4 shifts, the stint's done")
+    _setcvar("lc_labor_min_shifts", 0)
+    local z3 = Assigned("LaborNoStint")
+    ok(LC.Job(z3) and not LC.LaborLocked(z3) and not Noticed("done your stint") and not Noticed("tied to it"), "both 0: no stint at all, and nothing said about one")
+    _setcvar("lc_labor_min_minutes", 30)
+    _setcvar("lc_labor_min_shifts", 4)
+    for _, z in ipairs({ z1, z2, z3 }) do LC.SetJob(z, "", true) z:SetPos(FAR5) end
+end
 
 -- what they're offered, by Civil Standing
 LC.AddStanding(n, 10 - LC.Standing(n), "test")
@@ -17556,6 +17630,25 @@ function LabDamageTests()
     bench.lcLabHitAt = CurTime() - 700
     _run(11)
     ok(bench:GetNW2Int("lc_lab_dmg", 0) == 0, "left alone a while, the scientist patches up a bench that's only damaged")
+    -- who is paid for wrecking it: a unit, not a citizen (the owner, 7 November)
+    do
+        local paid = {}
+        local realXP, realCr = LC.AddXP, LC.AddCredits
+        LC.AddXP = function(p, n, why) paid[#paid + 1] = { p = p, what = "xp", n = n } end
+        LC.AddCredits = function(p, n, why) paid[#paid + 1] = { p = p, what = "cr", n = n } end
+        local civ = newPlayer("LabWrecker", "citizen", nil, 300)
+        local function Paid(p) local n = 0 for _, e in ipairs(paid) do if e.p == p then n = n + 1 end end return n end
+        local b2 = ents.Create("lc_workbench") b2:SetPos(LB + Vector(3000, 0, 0))
+        civ.chat = {}
+        LC.WreckLab(b2, civ)
+        ok(LC.LabBroken(b2) and Paid(civ) == 0 and not has(civ.chat, "[Civil Protection]"), "a citizen who wrecks a lab: wrecked, but no XP, no credits, no Civil Protection line", table.concat(civ.chat, " | "))
+        local b3 = ents.Create("lc_workbench") b3:SetPos(LB + Vector(3000, 400, 0))
+        cop.chat = {}
+        LC.WreckLab(b3, cop)
+        ok(Paid(cop) == 2 and has(cop.chat, "[Civil Protection]"), "a unit who wrecks one is paid, as before", Paid(cop))
+        LC.AddXP, LC.AddCredits = realXP, realCr
+        b2:Remove() b3:Remove()
+    end
     _setcvar("lc_lab_health", 0)
     hook.Run("EntityTakeDamage", bench, _dmg(cop, 999))
     ok(bench:GetNW2Int("lc_lab_dmg", 0) == 0, "lc_lab_health 0: it can't be damaged")

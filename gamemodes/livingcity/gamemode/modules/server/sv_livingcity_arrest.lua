@@ -16,6 +16,8 @@
          gives anyone crowding him) and run. A player is wanted for resisting
          arrest; an NPC runs flat out, the whole way, to somewhere well away
          from the officer, and the nearest free unit goes after them.
+         (The officer dead, gone, or more than 220 units off during the
+         struggle is not a win: it just ends, nobody wanted, nobody free.)
       3. Held: cuffed where they stand. The officer can walk them to the
          cells himself (F2 > Walk them to the cells, or Drag them along for a
          player), or leave it: the nearest free unit walks over and walks
@@ -592,7 +594,19 @@ local function Resolve(target, s, why)
     local officer = s.officer
     if IsValid(target) and target:IsPlayer() then target:SetNW2Float("lc_struggle_until", 0) end
     if not IsValid(target) or (target:IsPlayer() and not target:Alive()) or (not target:IsPlayer() and not LC.NPCs[target]) then return end
-    local free = why == "gone" or LC.StruggleWouldWin(s)
+    if why == "gone" then
+        -- the officer is dead, gone, or walked off: the struggle just ends (the owner, 7 November).
+        -- Not a win: nobody is wanted for it, and nobody "broke free".
+        if target:IsPlayer() then
+            Notice(target, "info", "The struggle is over", "The officer is gone: the struggle is over.")
+        else
+            local st = LC.NPCs[target]
+            st.eventUntil = 0
+            if st.state == "event" then LC.SetState(target, st, "idle") end
+        end
+        return
+    end
+    local free = LC.StruggleWouldWin(s)
     hook.Run("LivingCityArrestStruggled", target, officer, not free)
     if not free then
         -- held: cuffed
@@ -612,7 +626,7 @@ local function Resolve(target, s, why)
         return
     end
     -- free: a shove, and away
-    if why ~= "gone" then LC.ShoveOff(target, officer) end
+    LC.ShoveOff(target, officer)
     if target:IsPlayer() then
         target.lcBrokeFree = CurTime() + 2.5
         Notice(target, "warn", "You broke free", "You shove the officer back. Run!")

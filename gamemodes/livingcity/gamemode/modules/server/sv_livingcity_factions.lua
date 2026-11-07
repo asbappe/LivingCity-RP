@@ -663,7 +663,8 @@ end)
 -- A rebel put down by a Civil Protection or Overwatch player (the owner, 7 November): standing, two
 -- credits, and an ammunition allocation (a box of rounds for the gun in hand), so sweeping in on them
 -- is worth the danger. (The XP for it: sv_livingcity_rebels.lua.)
-local AMMO_BOX = { weapon_pistol = "ammo_pistol", weapon_smg1 = "ammo_smg", weapon_shotgun = "ammo_buckshot", weapon_357 = "ammo_357", weapon_ar2 = "ammo_smg" }
+local AMMO_BOX = { weapon_pistol = "ammo_pistol", weapon_smg1 = "ammo_smg", weapon_shotgun = "ammo_buckshot", weapon_357 = "ammo_357" }
+LCF.XP.rebel_kill_ar2 = 30 -- (no AR2 ammo item: a magazine of AR2 rounds straight in, the owner, 7 November)
 LCF.XP.rebel_kill_standing, LCF.XP.rebel_kill_credits = 5, 2
 local function RebelKillReward(unit)
     if not IsValid(unit) or not unit:IsPlayer() or not LC.PlayerIsCP(unit) then return end
@@ -672,7 +673,10 @@ local function RebelKillReward(unit)
     local w = unit.GetActiveWeapon and unit:GetActiveWeapon()
     local box = (IsValid(w) and AMMO_BOX[w:GetClass()]) or "ammo_pistol"
     local got
-    if LCS and LCS.Items and LCS.Items[box] and LC.GiveItem and LC.GiveItem(unit, box, 1) then
+    if IsValid(w) and w:GetClass() == "weapon_ar2" then
+        unit:GiveAmmo(LCF.XP.rebel_kill_ar2, "AR2", true)
+        got = LCF.XP.rebel_kill_ar2 .. " AR2 rounds"
+    elseif LCS and LCS.Items and LCS.Items[box] and LC.GiveItem and LC.GiveItem(unit, box, 1) then
         got = string.lower(LCS.Items[box].name)
     elseif IsValid(w) and w.GetPrimaryAmmoType and (w:GetPrimaryAmmoType() or -1) >= 0 then
         unit:GiveAmmo(12, w:GetPrimaryAmmoType(), true) -- (pockets full: the rounds go straight in)
