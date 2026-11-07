@@ -18528,11 +18528,19 @@ GrownGroundTests()
         for _, m in ipairs(net.sent) do t[#t + 1] = m.name end
         return table.concat(t, ",")
     end
+    -- (the gamemode's own F1 and F2, loaded as "Load the gamemode" does: the file's stand-in gamemode has neither)
+    local G = { BaseClass = { PhysgunPickup = function() return true end, PlayerDeath = function() end,
+        CanTool = function() return true end, PlayerSpawnProp = function() return true end } }
+    local GMWas, incWas, derWas = GM, include, DeriveGamemode
+    GM, include, DeriveGamemode = G, function() end, function() end
+    assert(loadstring(_GMSRC_SHARED, "gamemode/shared.lua"))()
+    assert(loadstring(_GMSRC_INIT, "gamemode/init.lua"))()
+    GM, include, DeriveGamemode = GMWas, incWas, derWas
     net.sent = {}
-    GAMEMODE:ShowHelp(kp)
+    G:ShowHelp(kp)
     ok(_lastnet("lcg_help") ~= nil, "F1 is still the quick menu (and the guide)")
     net.sent = {}
-    GAMEMODE:ShowTeam(kp)
+    G:ShowTeam(kp)
     hook.Run("ShowTeam", kp)
     local q2 = _lastnet("lcg_quick2")
     ok(q2 ~= nil and q2.to == kp and _lastnet("lci_inv") == nil, "F2 opens the second quick menu (your side, rank and job), not the pockets", Names())
