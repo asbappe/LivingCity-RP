@@ -571,7 +571,8 @@ local ILLEGAL_WEAPONS = {
     weapon_shotgun = 0, weapon_crossbow = 0, weapon_frag = 0.25, weapon_rpg = 0, weapon_slam = 0.2,
 }
 
-local function SearchWeapons(ply, extra)
+-- dry: only work out what would be found, taking nothing (the pat-down game, sv_livingcity_patsearch.lua)
+local function SearchWeapons(ply, extra, dry)
     local out = {}
     if not cvGuns:GetBool() then return out end
     local guile = Skill(ply, "guile") * 0.03
@@ -580,12 +581,13 @@ local function SearchWeapons(ply, extra)
         local conceal = ILLEGAL_WEAPONS[cls]
         if conceal and math.random() >= math.Clamp(conceal + guile - (extra or 0), 0, 0.85) then out[#out + 1] = cls end
     end
-    for _, cls in ipairs(out) do ply:StripWeapon(cls) end
+    if not dry then for _, cls in ipairs(out) do ply:StripWeapon(cls) end end
     return out
 end
+LC.SearchWeapons = SearchWeapons
 
--- Go through someone's pockets. Returns { { id, n } } of what was found and taken.
-function LC.SearchPockets(ply, thoroughness)
+-- Go through someone's pockets. Returns { { id, n } } of what was found and taken (dry: found, not taken).
+function LC.SearchPockets(ply, thoroughness, dry)
     local inv = LC.Inventory(ply)
     local guile = Skill(ply, "guile") * 0.03
     local found = {}
@@ -600,7 +602,7 @@ function LC.SearchPockets(ply, thoroughness)
             if caught > 0 then found[#found + 1] = { id = id, n = caught } end
         end
     end
-    for _, f in ipairs(found) do LC.TakeItem(ply, f.id, f.n) end
+    if not dry then for _, f in ipairs(found) do LC.TakeItem(ply, f.id, f.n) end end
     return found
 end
 
@@ -614,6 +616,7 @@ local function Describe(found, guns)
     for _, cls in ipairs(guns or {}) do names[#names + 1] = string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ") end
     return table.concat(names, ", ")
 end
+LC.SearchDescribe = Describe
 
 -- Found something on a player, stopped by one of the city's units: five seconds to choose, FIGHT or COMPLY
 -- (the owner, 1 November: a picked-up shotgun just went). Comply, or say nothing: it's taken, as before.
@@ -656,6 +659,28 @@ function LC.Search(searcher, target)
     local total = #guns
     for _, f in ipairs(found) do total = total + f.n end
 
+    -- one of the city's units, a player who could still fight it: give the choice first (the pockets are put back
+    -- as they were until they answer)
+    if total > 0 and not byPlayer and cvChoice:GetBool() and IsValid(target) and target:IsPlayer() and not target.lcSearchComply
+        and not LC.SearchChoices[target] and not (LC.InCustody and LC.InCustody(target)) then
+        for _, f in ipairs(found) do
+            if isstring(f.id) and string.sub(f.id, 1, 2) == "w:" then target:Give(string.sub(f.id, 3)) else LC.GiveItem(target, f.id, f.n) end
+        end
+        for _, cls in ipairs(guns) do target:Give(cls) end
+        LC.SearchChoices[target] = { searcher = searcher, at = CurTime() }
+        net.Start("lc_contraband_prompt") net.WriteString(Describe(found, guns)) net.WriteFloat(5) net.Send(target)
+        timer.Simple(5.5, function() if LC.SearchChoices[target] then Resolve(target, false) end end)
+        return 0, {}, {}
+    end
+    return LC.SearchOutcome(searcher, target, found, guns)
+end
+
+-- What a search found (already taken), and what follows: the messages, standing, the crime, the unit's reward,
+-- and the LivingCitySearched hook (records, the evidence stock...). The pat-down game ends through here too.
+function LC.SearchOutcome(searcher, target, found, guns)
+    local byPlayer = IsValid(searcher) and searcher:IsPlayer()
+    local total = #guns
+    for _, f in ipairs(found) do total = total + f.n end
     local tag = byPlayer and ("[" .. searcher:Nick() .. "]") or "[Civil Protection]"
     if total == 0 then
         target:ChatPrint(tag .. " Search complete. Nothing found.")
@@ -663,21 +688,7 @@ function LC.Search(searcher, target)
         hook.Run("LivingCitySearched", searcher, target, found, guns)
         return 0, found, guns
     end
-
     local list = Describe(found, guns)
-    -- one of the city's units, a player who could still fight it: give the choice first (the pockets are put back
-    -- as they were until they answer)
-    if not byPlayer and cvChoice:GetBool() and IsValid(target) and target:IsPlayer() and not target.lcSearchComply
-        and not LC.SearchChoices[target] and not (LC.InCustody and LC.InCustody(target)) then
-        for _, f in ipairs(found) do
-            if isstring(f.id) and string.sub(f.id, 1, 2) == "w:" then target:Give(string.sub(f.id, 3)) else LC.GiveItem(target, f.id, f.n) end
-        end
-        for _, cls in ipairs(guns) do target:Give(cls) end
-        LC.SearchChoices[target] = { searcher = searcher, at = CurTime() }
-        net.Start("lc_contraband_prompt") net.WriteString(list) net.WriteFloat(5) net.Send(target)
-        timer.Simple(5.5, function() if LC.SearchChoices[target] then Resolve(target, false) end end)
-        return 0, {}, {}
-    end
     target:ChatPrint(tag .. " Confiscated: " .. list .. ".")
     if LC.AddStanding then LC.AddStanding(target, -10 * total, "Contraband confiscated") end
     LC.ReportCrime(target, "Possession of contraband", math.min(600, 120 + 60 * total))
@@ -719,23 +730,35 @@ function LC.SearchNPC(cop, npc)
     if LC.PlayGesture and LC.FRISKED_ANIMS then LC.PlayGesture(npc, LC.FRISKED_ANIMS, 4) end
     cop:EmitSound("npc/metropolice/vo/apply.wav", 65)
     cop:ChatPrint("[Search] Patting them down...")
+    local game = LC.PatSearchOffer and LC.PatSearchOffer(cop, npc) -- (the pat-down window: sv_livingcity_patsearch.lua)
     timer.Simple(3, function()
+        if game and game.live then return end -- (the unit's window opened: the game has it from here)
+        if game then LC.PatSearchDrop(game) end -- (no window: the search as it always was)
         if not IsValid(npc) or not LC.NPCs[npc] then return end
         st.beingSearched = nil
         if not IsValid(cop) or not cop:Alive() then return end
-        if math.random() < (st.rebel and 0.5 or 0.1) then
-            st.contraband = Pick(NPC_CONTRABAND)
-            if LC.EvidenceAdd then LC.EvidenceAdd(nil, 1, "search", st.contraband) end -- (sv_livingcity_evidence.lua)
-            npc:EmitSound(LC.Sounds and LC.Sounds.Vo(st.gender or "male", "no02") or "", 70)
-            cop:ChatPrint("[Search] Found " .. st.contraband .. ". Confiscated. Right click with the baton to detain them.")
-            if LC.AddXP then LC.AddXP(cop, 3, "search") end
-            st.untilT = CurTime() + 15 -- they stay put a while, waiting to see what you'll do
-        else
-            cop:ChatPrint("[Search] Nothing on them. Papers in order.")
-            st.untilT = CurTime() + 1.5
-        end
+        local what = LC.SearchNPCRoll(st)
+        if what then LC.SearchNPCFound(cop, npc, st, what) else LC.SearchNPCClean(cop, st) end
     end)
     return true
+end
+
+-- What a citizen has on them (nil: nothing), and what happens when a unit finds it, or finds nothing.
+-- (Shared with the pat-down game, sv_livingcity_patsearch.lua.)
+function LC.SearchNPCRoll(st)
+    if math.random() < (st.rebel and 0.5 or 0.1) then return Pick(NPC_CONTRABAND) end
+end
+function LC.SearchNPCFound(cop, npc, st, what)
+    st.contraband = what
+    if LC.EvidenceAdd then LC.EvidenceAdd(nil, 1, "search", st.contraband) end -- (sv_livingcity_evidence.lua)
+    npc:EmitSound(LC.Sounds and LC.Sounds.Vo(st.gender or "male", "no02") or "", 70)
+    cop:ChatPrint("[Search] Found " .. st.contraband .. ". Confiscated. Right click with the baton to detain them.")
+    if LC.AddXP then LC.AddXP(cop, 3, "search") end
+    st.untilT = CurTime() + 15 -- they stay put a while, waiting to see what you'll do
+end
+function LC.SearchNPCClean(cop, st)
+    cop:ChatPrint("[Search] Nothing on them. Papers in order.")
+    st.untilT = CurTime() + 1.5
 end
 
 function LC.StartSearch(cop, target)
@@ -758,7 +781,10 @@ function LC.StartSearch(cop, target)
     cop:ChatPrint("[Search] Searching " .. target:Nick() .. (target:GetNW2Bool("lc_handsup", false) and " (hands up, cooperating)..." or " (hands down)..."))
     if LC.Hint then LC.Hint(target, "stopped") end -- (put your hands up: sv_livingcity_hints.lua)
     cop:EmitSound("npc/metropolice/vo/apply.wav", 65)
+    local game = LC.PatSearchOffer and LC.PatSearchOffer(cop, target) -- (the pat-down window: sv_livingcity_patsearch.lua)
     timer.Simple(3, function()
+        if game and game.live then return end -- (the unit's window opened: the game has it from here)
+        if game then LC.PatSearchDrop(game) end -- (no window: the search as it always was)
         if not IsValid(target) then return end
         target.lcBeingSearched = nil
         target:SetNW2Float("lcu_stop_until", 0)

@@ -3143,6 +3143,187 @@ officer:SetPos(Vector(-30000, 30000, 0))
 end
 NPCArrestTests()
 
+function PatSearchTests()
+section("A unit's search: the pat-down game")
+-- (math.random scripted: a number for math.random(), and a queue for math.random(n))
+local function scripted(v, ints, fn)
+    local r = math.random
+    math.random = function(a, b)
+        if a == nil then return v end
+        if b == nil and #ints > 0 then return math.min(a, table.remove(ints, 1)) end
+        if b == nil then return r(a) end
+        return r(a, b)
+    end
+    local okr, err = pcall(fn)
+    math.random = r
+    if not okr then error(err) end
+end
+local function lastTo(name, ply)
+    for i = #net.sent, 1, -1 do local m = net.sent[i] if m.name == name and m.to == ply then return m end end
+end
+local function stateOf(ply) local m = lastTo("lc_pat_open", ply) return m and util.JSONToTable(m.data[1] or "") or {} end
+local spot = Vector(-21000, 21000, 0)
+_setcvar("lc_jobgames", 1)
+local unit = newPlayer("PatUnit", "cp")
+local guy = newPlayer("PatGuy", "citizen")
+guy:StripWeapons()
+guy:SetPos(spot)
+unit:SetPos(spot + Vector(60, 0, 0))
+LC.GiveItem(guy, "lockpick")
+LC.GiveItem(guy, "papers_forged")
+guy:Give("weapon_crowbar")
+local lockName, papersName = LC.PatSearchItemName({ id = "lockpick", n = 1 }), LC.PatSearchItemName({ id = "papers_forged", n = 1 })
+ok(LC.StartSearch(unit, guy), "a unit starts a search")
+local S = LC.PatSearchOf(guy)
+ok(S and not S.live and lastTo("lc_pat_open", unit) and stateOf(unit).role == "unit", "the unit is offered the pat-down window")
+ok(not lastTo("lc_pat_open", guy), "the person searched sees nothing until the window is open")
+-- the window opens (the client answers "check 0"): lockpick in the jacket, the papers in the legs, the crowbar at the waist
+scripted(0.99, { 1, 3, 2 }, function() _netcall("lc_pat_check", unit, 0) end)
+ok(S.live and #S.spots[1].items == 1 and #S.spots[2].items == 1 and #S.spots[3].items == 1 and #S.spots[4].items == 0,
+    "what a search would find is spread over the four spots")
+local uj = lastTo("lc_pat_open", unit).data[1]
+ok(not string.find(uj, lockName, 1, true) and not string.find(uj, papersName, 1, true) and not string.find(uj, "crowbar", 1, true),
+    "nothing in a spot is sent to the unit before it's checked", uj)
+local ts = stateOf(guy)
+ok(ts.role == "target" and ts.key == "R" and ts.spots and string.find(ts.spots[1].mine or "", lockName, 1, true) and ts.slip == "wait",
+    "the person searched sees their own four spots, and R for later")
+ok(LC.HasItem(guy, "lockpick") and guy:HasWeapon("weapon_crowbar"), "nothing is taken before a spot is checked")
+_netcall("lc_pat_check", unit, 1)
+ok(S.checking == 1 and stateOf(guy).spots[1].state == 1, "checking the jacket: the person searched sees which spot")
+ok(not LC.PatSearchCheck(unit, 2), "one spot at a time")
+local stranger = newPlayer("PatStranger", "citizen")
+ok(not LC.PatSearchCheck(stranger, 2), "only the unit searching can check a spot")
+_run(1.4)
+ok(not LC.HasItem(guy, "lockpick") and LC.HasItem(guy, "papers_forged") and guy:HasWeapon("weapon_crowbar"),
+    "a checked spot gives up only what was in it")
+ok(string.find(stateOf(unit).spots[1].text or "", lockName, 1, true), "and the unit's window shows what was there", stateOf(unit).spots[1].text)
+-- a slip that works: the papers (legs) into the jacket, already checked
+ok(stateOf(guy).slip == "ready", "with a spot checked, the person searched may slip something")
+scripted(0.1, { 2, 1 }, function() ok(LC.PatSearchSlip(guy), "R: they try to slip something") end)
+ok(S.slipUsed and #S.spots[3].items == 0 and S.spots[1].items[1] and S.spots[1].items[1].id == "papers_forged" and has(guy.chat, "didn't notice"),
+    "60% of the time it works: the papers are moved into the checked jacket")
+ok(not LC.PatSearchSlip(guy), "once per search")
+_netcall("lc_pat_check", unit, 3)
+_run(1.4)
+ok(LC.HasItem(guy, "papers_forged") and stateOf(unit).spots[3].text == "Nothing.", "the legs are empty now")
+local ev0 = LC.EvidenceTotal()
+unit.chat = {}
+_netcall("lc_pat_close", unit)
+ok(LC.PatSearchOf(guy) == nil and guy.lcBeingSearched == nil and lastTo("lc_pat_close", unit) and lastTo("lc_pat_close", guy), "Done ends it, for both")
+ok(guy:HasWeapon("weapon_crowbar") and LC.HasItem(guy, "papers_forged"), "a spot never checked keeps what's in it")
+ok(has(unit.chat, "was carrying") and has(guy.chat, "Confiscated: " .. lockName) and LC.PlayerIsWanted(guy),
+    "what was found is confiscated as a search always has: the messages, wanted")
+ok(LC.EvidenceTotal() == ev0 + 1, "and it goes into the evidence stock", LC.EvidenceTotal() .. " vs " .. ev0)
+LC.ClearWanted(guy)
+LC.CalmCops(guy)
+_run(3.5)
+ok(LC.HasItem(guy, "papers_forged"), "the old three-second search doesn't run as well")
+
+-- a slip that fails, then walking off
+local guy2 = newPlayer("PatGuy2", "citizen")
+guy2:StripWeapons()
+guy2:SetPos(spot + Vector(0, 300, 0))
+unit:SetPos(guy2:GetPos() + Vector(60, 0, 0))
+LC.GiveItem(guy2, "lockpick")
+ok(LC.StartSearch(unit, guy2), "a second search")
+local S2 = LC.PatSearchOf(guy2)
+scripted(0.9, { 2 }, function() _netcall("lc_pat_check", unit, 0) end)
+_netcall("lc_pat_check", unit, 1)
+_run(1.4)
+ok(stateOf(unit).spots[1].text == "Nothing.", "an empty spot says so")
+unit.chat = {}
+scripted(0.9, { 1 }, function() LC.PatSearchSlip(guy2) end)
+ok(not LC.HasItem(guy2, "lockpick") and string.find(stateOf(unit).flash or "", "They tried to move something: " .. lockName, 1, true)
+    and has(unit.chat, "tried to move something"), "a slip that fails: the unit's window flashes, and the thing is found there and then")
+guy2:SetPos(guy2:GetPos() + Vector(2000, 0, 0))
+_run(0.5)
+ok(S2.ended and LC.PatSearchOf(guy2) == nil and LC.PlayerIsWanted(guy2) and has(unit.chat, "walked away"), "walking off during the pat-down is evading a search")
+ok(has(guy2.chat, "Confiscated: " .. lockName), "and what was already found is still confiscated")
+LC.ClearWanted(guy2)
+LC.CalmCops(guy2)
+
+-- nothing on them; the unit walks off
+local guy3 = newPlayer("PatGuy3", "citizen")
+guy3:StripWeapons()
+guy3:SetPos(spot + Vector(0, 600, 0))
+unit:SetPos(guy3:GetPos() + Vector(60, 0, 0))
+LC.StartSearch(unit, guy3)
+local S3 = LC.PatSearchOf(guy3)
+_netcall("lc_pat_check", unit, 0)
+for i = 1, 4 do _netcall("lc_pat_check", unit, i) _run(1.3) end
+local all = true
+for i = 1, 4 do if (stateOf(unit).spots or {})[i] == nil or stateOf(unit).spots[i].text ~= "Nothing." then all = false end end
+ok(all, "someone carrying nothing: every spot says Nothing.")
+unit:SetPos(unit:GetPos() + Vector(0, 2000, 0))
+_run(0.5)
+ok(S3 and S3.ended and not LC.PlayerIsWanted(guy3) and has(guy3.chat, "Nothing found"), "the unit walking off ends it, and the person isn't evading")
+
+-- an NPC citizen: the same window, the old odds, put in one spot
+local npc, nst = LC.Spawners.citizen(spot + Vector(0, 900, 0))
+npc.sim = false
+nst.rebel = true
+unit:SetPos(npc:GetPos() + Vector(60, 0, 0))
+unit.chat = {}
+ok(LC.StartSearch(unit, npc), "a unit searches an NPC citizen")
+local SN = LC.PatSearchOf(npc)
+scripted(0.01, { 1, 2 }, function() _netcall("lc_pat_check", unit, 0) end)
+ok(SN and SN.live and #SN.spots[2].items == 1, "what they carry goes in one spot")
+_netcall("lc_pat_check", unit, 1) _run(1.3)
+ok(not nst.contraband and not has(unit.chat, "Found "), "not in the jacket")
+_netcall("lc_pat_check", unit, 2) _run(1.3)
+ok(nst.contraband == "a Resistance pamphlet" and has(unit.chat, "Found a Resistance pamphlet"), "found at the waist, as the old search found things")
+_netcall("lc_pat_close", unit)
+ok(not has(unit.chat, "Nothing on them") and nst.state == "detained", "and they stay put for the unit")
+local npc2, nst2 = LC.Spawners.citizen(spot + Vector(0, 1200, 0))
+npc2.sim = false
+nst2.rebel = false
+unit:SetPos(npc2:GetPos() + Vector(60, 0, 0))
+unit.chat = {}
+LC.StartSearch(unit, npc2)
+scripted(0.99, {}, function() _netcall("lc_pat_check", unit, 0) end)
+_netcall("lc_pat_close", unit)
+ok(has(unit.chat, "Nothing on them") and not nst2.contraband, "an NPC with nothing: papers in order")
+npc:Remove() npc2:Remove()
+
+-- the old search: job games off, the window never opening, or opening too late
+_setcvar("lc_jobgames", 0)
+local guy4 = newPlayer("PatGuy4", "citizen")
+guy4:StripWeapons()
+guy4:SetPos(spot + Vector(0, 1500, 0))
+unit:SetPos(guy4:GetPos() + Vector(60, 0, 0))
+LC.GiveItem(guy4, "uniform_cp")
+ok(LC.StartSearch(unit, guy4) and LC.PatSearchOf(guy4) == nil, "with lc_jobgames off there's no window")
+_run(3.5)
+ok(not LC.HasItem(guy4, "uniform_cp"), "and the search is the old one")
+LC.ClearWanted(guy4)
+_setcvar("lc_jobgames", 1)
+local guy5 = newPlayer("PatGuy5", "citizen")
+guy5:StripWeapons()
+guy5:SetPos(spot + Vector(0, 1800, 0))
+unit:SetPos(guy5:GetPos() + Vector(60, 0, 0))
+LC.GiveItem(guy5, "uniform_cp")
+LC.StartSearch(unit, guy5)
+local S5 = LC.PatSearchOf(guy5)
+_run(3.5)
+ok(S5 and S5.ended and not S5.live and not LC.HasItem(guy5, "uniform_cp"), "the unit's window never answering: the old search")
+_netcall("lc_pat_check", unit, 0)
+ok(lastTo("lc_pat_close", unit) ~= nil and LC.PatSearchOf(guy5) == nil, "a window opening too late is told to close")
+LC.ClearWanted(guy5)
+local guy6 = newPlayer("PatGuy6", "citizen")
+guy6:StripWeapons()
+guy6:SetPos(spot + Vector(0, 2100, 0))
+unit:SetPos(guy6:GetPos() + Vector(60, 0, 0))
+LC.GiveItem(guy6, "uniform_cp")
+LC.StartSearch(unit, guy6)
+_netcall("lc_pat_close", unit) -- (the client couldn't build the window)
+ok(LC.PatSearchOf(guy6) == nil and guy6.lcBeingSearched == unit, "a window that can't open hands back to the old search")
+_run(3.5)
+ok(not LC.HasItem(guy6, "uniform_cp"), "which still finds things")
+LC.ClearWanted(guy6)
+for _, p in ipairs({ unit, guy, guy2, guy3, guy4, guy5, guy6, stranger }) do p:SetPos(Vector(-30000, 30000, 0)) end
+end
+PatSearchTests()
+
 function RunningTests()
 section("Running in front of Civil Protection")
 _setcvar("lc_stops", 0)

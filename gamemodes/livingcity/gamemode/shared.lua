@@ -147,6 +147,7 @@ LC_MODULES = {
         "sv_livingcity_territorypaths", -- (territory grows along the path nodes)
         "sv_livingcity_trains",
         "sv_livingcity_underground",
+        "sv_livingcity_patsearch", -- (a unit's search as a short pat-down: sv_livingcity_underground.lua starts it)
         "sv_livingcity_vort",
         "sv_livingcity_vortwork", -- (things to do as a vortigaunt, and the freed ones' camp life)
         "sv_livingcity_weeds", -- (weeds on open ground, the Groundskeeper, weedkiller as poison)
@@ -187,6 +188,7 @@ LC_MODULES = {
         "cl_livingcity_grigori", -- (his window; the vest's charge on screen)
         "cl_livingcity_rest", -- (drooping eyelids, the stink's flies, sleeping, what you still have to do)
         "cl_livingcity_moregames", -- (their panels, and the outline on what the game wants you to look at)
+        "cl_livingcity_patsearch", -- (the pat-down window a unit's search opens, and the panel for the person searched)
         "cl_livingcity_atmos",
         "cl_livingcity_character",
         "cl_livingcity_checkpoints",
