@@ -2189,9 +2189,17 @@ PR_DIR = os.path.join(HERE, "..", "pose_recorder", "lua")
 L.globals()["_pr_core"] = open(os.path.join(PR_DIR, "pose_recorder", "core.lua")).read()
 L.globals()["_pr_auto"] = open(os.path.join(PR_DIR, "autorun", "pose_recorder.lua")).read()
 L.globals()["_pr_tool"] = open(os.path.join(PR_DIR, "weapons", "gmod_tool", "stools", "pose_recorder.lua")).read()
+L.globals()["_pr_play"] = open(os.path.join(PR_DIR, "pose_recorder", "play.lua")).read()
 err = L.execute(r"""
 local ok, e = pcall(function()
-    include = function(p) if p == "pose_recorder/core.lua" then assert(loadstring(_pr_core, "core.lua"))() end end
+    include = function(p)
+        if p == "pose_recorder/core.lua" then assert(loadstring(_pr_core, "core.lua"))() end
+        if p == "pose_recorder/play.lua" then assert(loadstring(_pr_play, "play.lua"))() end
+    end
+    net.WriteDouble = net.WriteDouble or net.WriteFloat
+    net.ReadDouble = net.ReadDouble or net.ReadFloat
+    local props = {}
+    properties = { Add = function(n, t) props[n] = t end }
     AddCSLuaFile = function() end
     surface.PlaySound = function() end
     chat = chat or {}
@@ -2263,6 +2271,50 @@ local ok, e = pcall(function()
     language = language or {}
     language.Add = function() end
     assert(loadstring(_pr_tool, "stool.lua"))()
+    TOOL.BuildCPanel(cp)
+
+    -- Pose Recorder 2: easing and length per keyframe, mirror, and playing it on someone
+    concommand.list.pose_recorder_clear()
+    PR.sel = { ent = rag, phys = { ["ValveBiped.Bip01_Pelvis"] = true, ["ValveBiped.Bip01_Spine2"] = true, ["ValveBiped.Bip01_R_UpperArm"] = true } }
+    rag.GetBoneMatrix = function(_, i) local a = raised[i + 1] return M(a[1], a[2], a[3]) end
+    raised = { { 0, 0, 90 }, { -80, 0, 90 }, { -20, 10, 0 } }
+    concommand.list.pose_recorder_snap()
+    concommand.list.pose_recorder_snap()
+    if PR.frames[1].ease ~= "smooth" then error("pose recorder: a new keyframe has no easing") end
+    concommand.list.pose_recorder_key_ease(nil, nil, { "bouncy", "2" })
+    concommand.list.pose_recorder_key_beats(nil, nil, { "3", "all" })
+    if PR.frames[2].ease ~= "bouncy" or PR.frames[1].ease ~= "smooth" or PR.frames[1].beats ~= 3 then error("pose recorder: easing or length not set on the keyframes asked") end
+    concommand.list.pose_recorder_mirror(nil, nil, { "1" })
+    if not PR.frames[1].bones["ValveBiped.Bip01_L_UpperArm"] or PR.frames[1].bones["ValveBiped.Bip01_R_UpperArm"] then error("pose recorder: mirror didn't move the right arm to the left") end
+    concommand.list.pose_recorder_mirror_add()
+    if #PR.frames ~= 4 then error("pose recorder: no mirrored copy added") end
+    local d = PR.Data()
+    if d.format ~= 2 or d.wrap ~= true then error("pose recorder: the file has no format or wrap") end
+    net.sent = {}
+    local sent
+    local sts = net.SendToServer
+    net.SendToServer = function() sent = true end
+    concommand.list.pose_recorder_play_mine()
+    net.SendToServer = sts
+    if not sent then error("pose recorder: playing it on me sent nothing to the server") end
+    -- the server says an NPC plays it: this client turns the bones itself
+    local npc = Fake(standing)
+    npc.IsNPC = function() return true end
+    local clean = PR.Sanitize(d)
+    PR.Library["~1/mydance"] = { data = clean, crc = "42" }
+    net._q = { npc, "~1/mydance", "42", CurTime(), "loop", 1 }
+    net.recv_pose_recorder_play()
+    _advance(0.3)
+    for _, h in pairs(hook.t["Think"] or {}) do h() end
+    if not next(npc.manip) then error("pose recorder: the NPC's bones weren't turned") end
+    if not props.pose_recorder_play or not props.pose_recorder_play.Filter(props.pose_recorder_play, npc) then error("pose recorder: no Play animation in the context menu for an NPC") end
+    local sub = setmetatable({}, { __index = function() return function() end end })
+    props.pose_recorder_play.MenuOpen(props.pose_recorder_play, { AddSubMenu = function() return sub end }, npc)
+    net._q = { npc }
+    net.recv_pose_recorder_stop()
+    if PR.Active[npc] then error("pose recorder: stop didn't stop it") end
+    for _, v in pairs(npc.manip) do if v.p ~= 0 or v.y ~= 0 or v.r ~= 0 then error("pose recorder: the bones weren't put back after stopping") end end
+    concommand.list.pose_play(nil, nil, {})
     TOOL.BuildCPanel(cp)
 end)
 return (not ok) and tostring(e) or nil
