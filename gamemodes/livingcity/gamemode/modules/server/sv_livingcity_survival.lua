@@ -1258,8 +1258,10 @@ function LC.UseDispenser(ply, ent)
         ply.lcRationWithheld = nil
         ply.lcnRationAt = CurTime() + cvRation:GetFloat() * (LC.Event == "rations" and 0.5 or 1)
         refused = "[Rations] Allocation withheld: " .. why .. ". Your next allocation is as normal."
-    elseif ply.lcRationDocked then
-        -- the PA said it: tolerating noncompliance costs this allocation (sv_livingcity_rations.lua)
+    elseif ply.lcRationDocked and not (LC.FirstRationDue and LC.FirstRationDue(ply)) then
+        -- the PA said it: tolerating noncompliance costs this allocation (sv_livingcity_rations.lua).
+        -- (A new life's first ration is never the one withheld: the deduction waits for the next.
+        -- The owner, 7 November: two shifts, two cards, and no ration at all.)
         local d = ply.lcRationDocked
         ply.lcRationDocked = nil
         ply:SetNW2String("lc_ration_docked", "")
@@ -1306,29 +1308,36 @@ function LC.UseDispenser(ply, ent)
     -- no credits come with it (the owner: workers need to work)
     if LC.CarriesPapers and LC.CarriesPapers(ply) and LC.TakeItem then LC.TakeItem(ply, "ration_card", 1) end
     Dispense(ent, ply)
+    if ply.lcRationDocked then ply:ChatPrint("[Rations] A new life's first ration is never withheld. The deduction you were told of comes off your next allocation.") end
     if LC.AddStanding then LC.AddStanding(ply, 1) end
     hook.Run("LivingCityRationCollected", ply)
     return true
 end
 
 -- Players at the head of a ration line get served too: stand at the counter
--- for a few seconds. The NPCs behind you wait their turn.
+-- for a few seconds. The NPCs behind you wait their turn while you're being
+-- served; once you've been (or been refused) and just stand there, they go
+-- on past you to the dispenser. (The owner, 7 November: refused at the
+-- counter, they stood watching the citizen in spot 1, who never moved: the
+-- line waited for them for as long as they stayed.)
 function LC.ServePlayersAtLine(g, line, now)
     local front = line.slots[1] and line.slots[1].pos
     if not front then return false end
     local busy = false
     for _, ply in ipairs(player.GetAll()) do
         if ply:Alive() and ply:GetPos():DistToSqr(front) < 80 * 80 and not (LC.InCustody and LC.InCustody(ply)) then
-            busy = true
             if ply.lcCounterLine ~= g then
                 ply.lcCounterLine, ply.lcCounterAt = g, now + 3
+                ply.lcCounterHold = now + 3.5
                 ply:ChatPrint("[Rations] Wait at the counter.")
             elseif now >= ply.lcCounterAt then
                 -- served: not again for a while; refused: not until they step away and come back
                 -- (it used to try again by itself, and a ration dropped out for someone gone AFK)
                 local served = LC.UseDispenser(ply, LC.LineDispenser and LC.LineDispenser(g) or nil)
                 ply.lcCounterAt = served and (now + 30) or math.huge
+                ply.lcCounterHold = now + 5 -- (the packet comes out; then the line moves on round them)
             end
+            if now < (ply.lcCounterHold or 0) then busy = true end
         elseif ply.lcCounterLine == g then
             ply.lcCounterLine = nil
         end

@@ -336,7 +336,7 @@ hook.Add("HUDDrawTargetID", "LivingCityFactionsTargetID", function()
     local tr = LocalPlayer():GetEyeTrace()
     local ent = tr.Entity
     -- the city's named people: who they are, what they do, and (to the Resistance) who's with us
-    if IsValid(ent) and ent:IsNPC() and tr.HitPos:DistToSqr(tr.StartPos) < 350 * 350 then
+    if IsValid(ent) and (ent:IsNPC() or ent:GetNW2Bool("lc_sleeper", false)) and tr.HitPos:DistToSqr(tr.StartPos) < 350 * 350 then
         local pname = ent:GetNW2String("lc_pname", "")
         if pname ~= "" then
             local x, y = ScrW() / 2, ScrH() / 2 + 40

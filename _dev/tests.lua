@@ -2017,6 +2017,41 @@ _run(20)
 hook.t.LivingCityServed.TestServed = nil
 ok(servedFrom == 1 and reached, "the front of the line walks up to the dispenser for their ration (not handed it where they stand)", tostring(walker:GetPos():Distance(far:GetPos())))
 far:Remove()
+do -- (the owner, 7 November: nobody came to the line, and refused at the counter, the line stood still)
+    for _, n in ipairs(line.q) do local s2 = LC.NPCs[n] if s2 then LC.LeaveLine(n, s2) end end
+    line.q = {}
+    local caller, cst2 = LC.SpawnCitizen(front + Vector(9000, 0, 0))
+    cst2.leaveAt = nil
+    cst2.untilT = CurTime() + 1000
+    local evWas = LC.Event
+    LC.Event = "rations"
+    line.nextCall, line.nextAdvance = 0, CurTime() + 1000
+    _run(1)
+    local heading = 0
+    for _, s2 in pairs(LC.NPCs) do if s2.lineHeading == 1 or s2.line == 1 then heading = heading + 1 end end
+    ok(heading >= 1, "rations: a short line calls citizens to it from across the city", tostring(cst2.state))
+    LC.Event = evWas
+    for _, n in ipairs(line.q) do local s2 = LC.NPCs[n] if s2 then LC.LeaveLine(n, s2) end end
+    line.q = {}
+    if IsValid(caller) then caller:Remove() end
+    local idler = newPlayer("Idler", "citizen")
+    idler:SetPos(front)
+    idler.lcnRationAt = CurTime() + 999
+    local held = LC.ServePlayersAtLine(1, line, CurTime())
+    _run(10)
+    ok(held and not LC.ServePlayersAtLine(1, line, CurTime()), "a player refused at the counter doesn't hold the line up for as long as they stand there")
+    idler:SetPos(FAR)
+    local newbie = newPlayer("Newbie", "citizen")
+    newbie:SetNW2String("lc_cid", "cid-newbie")
+    LC.GiveItem(newbie, "ration_card", 2)
+    newbie.lcnRationAt = 0
+    newbie.lcRationDocked = { why = "a Resistance attack", where = "" }
+    newbie.chat = {}
+    ok(LC.UseDispenser(newbie, nil) and newbie.lcRationDocked ~= nil, "a new life's first ration is never the one withheld")
+    newbie.lcnRationAt = 0
+    ok(not LC.UseDispenser(newbie, nil) and has(newbie.chat, "five ration units deducted"), "the deduction comes off the next one")
+    newbie:SetPos(FAR)
+end
 
 ----------------------------------------------------------------------
 section("Citizens don't know Gordon Freeman")
@@ -10786,6 +10821,14 @@ ok(sst.state == "abed" and IsValid(sleeper) and sleeper:GetNW2String("lc_doing",
 local other, ost = LC.SpawnCitizen(bz.pos + Vector(-90, 40, 0))
 ost.leaveAt = nil
 ok(LC.FreeBedIn(bz, other) == nil, "one sleeper to a bed")
+do -- (the owner, 7 November: "already asleep in this bed" on empty beds)
+    local bk, stWas = sst.bedKey, sst.state
+    sst.state = "idle"
+    ok(LC.BedFree(bk, other), "a bed is taken only while its sleeper is in it (or on the way): up and about, it's free")
+    sst.state = stWas
+    LC.BedSleepers[bk] = sleeper
+    ok(not LC.BedFree(bk, other), "(and taken again while they lie in it)")
+end
 _run(31)
 ok(sst.state == "abed", "asleep all night")
 LC.Bedtime = function() return false end

@@ -213,6 +213,23 @@ local function Standable(p)
     return p and LC.ClearSpot and LC.ClearSpot(p)
 end
 
+-- A spot to stand beside a bed, `dist` along `dir` from its middle c: on the bed's own floor and
+-- in the open from it. Not through the wall the bed is pushed against, and not on the floor of
+-- the room above a low one (the owner's playtest, 7 November: a sleeper stood in the hallway on
+-- the other side of the wall, and a fighter got up with his feet in the ceiling). Nil if not.
+local function StandBeside(c, top, dir, dist)
+    local p = Vector(c.x, c.y, top.z) + dir * dist
+    local tr = util.TraceLine({ start = Vector(p.x, p.y, top.z + 16), endpos = Vector(p.x, p.y, top.z - 110), mask = MASK_NPCSOLID_BRUSHONLY })
+    if not (tr and tr.Hit) or tr.StartSolid then return nil end
+    local g = tr.HitPos
+    if g.z > top.z + 4 then return nil end
+    local see = util.TraceLine({ start = Vector(c.x, c.y, top.z + 20), endpos = Vector(g.x, g.y, g.z + 20), mask = MASK_SOLID_BRUSHONLY })
+    if see and see.Hit and see.Fraction < 0.98 then return nil end
+    if not Standable(g) then return nil end
+    return g
+end
+LC.BedStandBeside = StandBeside
+
 -- A spot beside something, on the side the NPC is coming from (sv_livingcity_npcwork.lua).
 local function Beside(pos, from, d)
     if LC.NPCWorkBeside then return LC.NPCWorkBeside(pos, from, d) end
@@ -282,8 +299,8 @@ local function BedSpot(t)
         local side = Vector(f.y, -f.x, 0)
         local stand
         for _, s in ipairs({ 40, -40, 60, -60 }) do
-            local g = Floor(p + side * s)
-            if math.abs(g.z - p.z) < 64 and Standable(g) then stand = g break end
+            stand = StandBeside(p, p, side, s)
+            if stand then break end
         end
         return { top = p, yaw = t.yaw or 0, stand = stand }
     end
@@ -310,9 +327,9 @@ local function BedSpot(t)
         half = 22
     end
     local stand
-    for _, sgn in ipairs({ 1, -1 }) do
-        local g = Floor(Vector(c.x, c.y, top.z) + short * ((half + 24) * sgn))
-        if math.abs(g.z - top.z) < 64 and Standable(g) then stand = g break end
+    for _, d in ipairs({ half + 24, -(half + 24), half + 40, -(half + 40) }) do
+        stand = StandBeside(c, top, short, d)
+        if stand then break end
     end
     -- an editor-placed bed: always the same way along it (lc_bed_head_flip turns it round); anything else, either way
     local fixed = IsValid(t.ent) and t.ent:GetClass() == "lc_bed"
@@ -393,6 +410,14 @@ local function LieDouble(npc, L, b)
         rag:Spawn()
         rag:Activate()
         rag:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+        -- a plain standing pose to copy (not mid-stride, not a gun held up)
+        if npc.SelectWeightedSequence and npc.ResetSequence then
+            local idle = npc:SelectWeightedSequence(ACT_IDLE)
+            if idle and idle >= 0 then
+                npc:ResetSequence(idle)
+                if npc.SetCycle then npc:SetCycle(0) end
+            end
+        end
         -- the standing body, turned onto its back along the bed: its height runs head-ward along the bed,
         -- its front faces the ceiling, the hips over the middle
         npc:SetupBones()
@@ -420,10 +445,16 @@ local function LieDouble(npc, L, b)
     end)
     if not ok then rag:Remove() return false end
     rag:SetNW2Bool("lc_eyes_shut", true)
+    rag:SetNW2Bool("lc_sleeper", true) -- (looked at: their name and "asleep", as the real one would show)
+    rag:SetNW2String("lc_pname", npc:GetNW2String("lc_pname", ""))
+    rag:SetNW2String("lc_pjob", npc:GetNW2String("lc_pjob", ""))
+    rag:SetNW2String("lc_doing", "asleep")
     rag.lcSleeper = npc
     L.double = rag
     npc:SetNoDraw(true)
     if npc.SetNotSolid then npc:SetNotSolid(true) end
+    -- the real one waits beside the bed, out of sight, where it gets up again
+    if L.standAt then npc:SetPos(L.standAt + Vector(0, 0, 2)) end
     npc:CallOnRemove("LivingCityBedDouble", function() if IsValid(rag) then rag:Remove() end end)
     return true
 end
@@ -447,12 +478,23 @@ hook.Add("EntityTakeDamage", "LivingCityBedDouble", function(ent, dmg)
 end)
 
 function LC.NPCLieOnBed(npc, L, b)
-    local seq = SeqFor(npc, LYING)
-    local lying = seq ~= nil and Loop(npc, L, b.top + Vector(0, 0, 1), b.yaw, seq, seq, 4)
-    -- (the copy lies there; the real one waits under it, a sitting sequence holding it still)
-    local double = not lying and LieDouble(npc, L, b)
+    -- The still copy first: it can't get up and stand on the bed, and its eyes stay shut. The
+    -- model's own lying animation only where no copy can be made. (The owner's playtest,
+    -- 7 November: fighters stood on their beds, "asleep", eyes open, guns out, once a scripted
+    -- lying animation had been broken, by an alert or a player arriving.)
+    local double = LieDouble(npc, L, b)
+    local lying = double
+    if not lying then
+        local seq = SeqFor(npc, LYING)
+        lying = seq ~= nil and Loop(npc, L, b.top + Vector(0, 0, 1), b.yaw, seq, seq, 4)
+    end
     local ok = lying or BusyLoop(npc, L, "sit", b.top + Vector(0, 0, 1), b.yaw, 4)
-    if double then lying, ok = true, true end
+    if double then
+        -- (the copy lies there; the real one waits beside the bed, a sitting sequence holding it still)
+        if not BusyLoop(npc, L, "sit", (L.standAt or npc:GetPos()) + Vector(0, 0, 1), b.yaw, 4) and npc.SetSchedule then
+            npc:SetSchedule(SCHED_IDLE_STAND)
+        end
+    end
     if not ok then return false end
     L.onBed = true
     L.asleep = lying == true
@@ -705,19 +747,11 @@ function A.sleep(npc, st, z, now, t)
     local stand = b.stand or Beside(b.top, npc:GetPos(), 40)
     return Start(npc, st, now, "sleep", { { at = stand, near = 60, face = b.top, secs = night and { 150, 360 } or { 60, 180 }, doing = "asleep", going = "turning in", key = t.key, direct = true,
         onArrive = function(n, s, L)
-            L.standAt = n:GetPos()
-            local seq = SeqFor(n, LYING)
-            local lying = seq ~= nil and Loop(n, L, b.top + Vector(0, 0, 1), b.yaw, seq, seq, 4)
-            local ok = lying or BusyLoop(n, L, "sit", b.top + Vector(0, 0, 1), b.yaw, 4) -- (no lying down in this model: sitting on the bed, then)
-            if not ok then return false end
-            L.onBed = true
-            L.asleep = lying == true
+            -- where they get up again: the spot beside the bed, not wherever they came to a stop
+            -- (the owner, 7 November: one got up with his feet in the ceiling)
+            L.standAt = b.stand or Beside(b.top, n:GetPos(), 40)
+            if not LC.NPCLieOnBed(n, L, b) then return false end -- (the same as a citizen at home: sv_livingcity_rest.lua)
             SetDoing(n, L.asleep and "asleep" or "resting")
-            HideGun(n, L, true)
-            if L.asleep then
-                n:SetNW2Bool("lc_eyes_shut", true) -- (eyes closed: cl_livingcity_rest.lua)
-                timer.Simple(0.6, function() SettleOnBed(n, L, b.top.z) end)
-            end
         end } })
 end
 

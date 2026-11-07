@@ -833,6 +833,27 @@ LC.LeaveLine = LeaveLine
 local LINE_REACH, LINE_REACH_RATIONS = 3000, 5000
 
 local function LineFront(line) return line.slots[1] and line.slots[1].pos end
+local function FlatDistSqr(a, b) local dx, dy = a.x - b.x, a.y - b.y return dx * dx + dy * dy end
+
+-- Where to stand to be served at a dispenser: on the floor just in front of it (it hangs on a
+-- wall at chest height, so its own position is no place to walk to); if that spot isn't clear,
+-- a step back from it toward `from`.
+function LC.DispenserStandSpot(disp, from)
+    local dp = disp:GetPos()
+    local maxs = disp.OBBMaxs and disp:OBBMaxs() or Vector(8, 8, 8)
+    local function floored(p)
+        local tr = util.TraceLine({ start = p + Vector(0, 0, 10), endpos = p - Vector(0, 0, 200), mask = MASK_NPCSOLID_BRUSHONLY })
+        if tr and tr.Hit and not tr.StartSolid then return tr.HitPos end
+        return nil
+    end
+    local spot = floored(dp + disp:GetForward() * (math.max(maxs.x, 4) + 30))
+    if spot and ClearSpot(spot) then return spot end
+    local away = from - dp
+    away.z = 0
+    if away:LengthSqr() < 1 then away = disp:GetForward() end
+    away:Normalize()
+    return floored(dp + away * 40) or Vector(dp.x + away.x * 40, dp.y + away.y * 40, from.z)
+end
 
 -- Who's on their way to line g: walking there, set off in the last two
 -- minutes. (Anyone who stopped, gave up or never set off isn't coming: left
@@ -966,11 +987,17 @@ local function LineThink(now)
             local s = IsValid(n) and LC.NPCs[n]
             if not s then
                 line.pickups[n] = nil
-            elseif n:GetPos():DistToSqr(pk.spot) < 60 * 60 or now > pk.untilT then
+            elseif FlatDistSqr(n:GetPos(), pk.spot) < 48 * 48 or now > pk.untilT then
                 line.pickups[n] = nil
                 if s.state == "moving" then n:SetSchedule(SCHED_IDLE_STAND) end
                 ServedAt(n, s, pk.disp, g, now)
             end
+        end
+        -- rations being handed out and the line short: people are called to it from across the city
+        -- (the owner, 7 November: the line stood empty, and the supervision job couldn't be done)
+        if LC.Event == "rations" and now > (line.nextCall or 0) then
+            line.nextCall = now + 6
+            if #line.q + Coming(g) < math.min(#line.slots, 3) then LC.CallToLine(g) end
         end
         if now > (line.nextOrient or 0) then
             line.nextOrient = now + 10
@@ -1014,16 +1041,18 @@ local function LineThink(now)
                 local disp = LC.LineDispenser(g)
                 fs.line, fs.slotIndex = nil, nil
                 table.remove(line.q, 1)
-                if IsValid(disp) and disp:GetPos():DistToSqr(front:GetPos()) > 70 * 70 then
+                if IsValid(disp) and FlatDistSqr(disp:GetPos(), front:GetPos()) > 40 * 40 then
                     -- up to the dispenser itself for it (not handed it at the head of the queue), then away
-                    local away = front:GetPos() - disp:GetPos()
-                    away.z = 0
-                    if away:LengthSqr() < 1 then away = disp:GetForward() end
-                    away:Normalize()
-                    local spot = disp:GetPos() + away * 40
+                    -- (the owner, 7 November: the one at the front walks up to the dispenser on their own)
+                    local spot = LC.DispenserStandSpot(disp, front:GetPos())
                     line.pickups = line.pickups or {}
                     line.pickups[front] = { disp = disp, spot = spot, untilT = now + 20 }
-                    GoTo(front, fs, spot, false, { kind = "ration_pickup" })
+                    if not GoTo(front, fs, spot, false, { kind = "ration_pickup" }) then
+                        -- no way to walk there from here: served where they stand (never left standing
+                        -- "inline" outside the queue, which is how one stood in spot 1 for good)
+                        line.pickups[front] = nil
+                        ServedAt(front, fs, disp, g, now)
+                    end
                 else
                     ServedAt(front, fs, disp, g, now)
                 end
@@ -1042,6 +1071,29 @@ end
 ------------------------------------------------------------------------
 -- Abandoning, recovering, cleaning up
 ------------------------------------------------------------------------
+
+-- Rations being handed out and line g short of people: the nearest idle citizen, wherever they
+-- are in the city, is sent to it (the usual choice only takes people within a few thousand units,
+-- and a thin city left the line empty). True if someone set off.
+function LC.CallToLine(g)
+    local line = LC.Lines[g]
+    local front = line and LineFront(line)
+    if not front then return false end
+    local now = CurTime()
+    local best, bd
+    for npc, st in pairs(LC.NPCs) do
+        if IsValid(npc) and st.role == "citizen" and st.state == "idle" and not st.test and not st.questLock and not st.leaving
+            and not st.line and not st.lineHeading and not (st.servedUntil and now < st.servedUntil) and now > (st.lineNoWay or 0) then
+            local d = npc:GetPos():DistToSqr(front)
+            if not bd or d < bd then best, bd = npc, d end
+        end
+    end
+    if not best then return false end
+    local st = LC.NPCs[best]
+    if JoinLine(best, st, true) then return true end
+    st.lineNoWay = now + 120 -- (no way there from where they are: somebody else next time)
+    return false
+end
 
 local function CancelBusy(npc, st) EndBusy(npc, st, false) end
 LC.CancelBusy = CancelBusy -- (gunfire: sv_livingcity_streetlife.lua)
