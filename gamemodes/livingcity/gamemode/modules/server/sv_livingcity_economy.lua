@@ -199,21 +199,29 @@ function LC.CanBuy(ply, g)
     if g.cpOnly and not LC.PlayerIsCP(ply) then return false, "Civil Protection units only." end
     if g.civOnly and LC.PlayerIsCP(ply) then return false, "Not for units: the Civil Protection Commissary has clean uniforms." end
     if g.cpOnly and not AtUnitCounter(ply) then return false, "Issued at the Civil Protection Commissary, not here." end
+    -- the Administrator's restrictions, and a scarce good sold out (sv_livingcity_market.lua)
+    local blocked = LC.MarketCommissaryBlock and LC.MarketCommissaryBlock(ply, g)
+    if blocked then return false, blocked end
     if g.minRank and ply:GetNW2Int("lcf_rank", 1) < g.minRank and not (LCF.IsOverwatch and LCF.IsOverwatch(ply)) then
         return false, "Not at your rank."
     end
-    local need = g.minStanding or -50
-    if LC.Standing(ply) < need then return false, "Requires " .. LCS.TierFor(need).name .. " standing." end
+    local need = LC.MarketMinStanding and LC.MarketMinStanding(g) or (g.minStanding or -50)
+    if LC.Standing(ply) < need then
+        local hers = need ~= (g.minStanding or -50) and LC.MarketStandingText -- (a number the Administrator set: said as it is)
+        return false, "Requires " .. (hers and LC.MarketStandingText(need) or (LCS.TierFor(need).name .. " standing")) .. "."
+    end
     if LC.Credits(ply) < LC.GoodsPrice(ply, g) then return false, "Not enough credits." end
     if g.item and LC.CanCarry then local okC, whyC = LC.CanCarry(ply, g.item, g.count or 1) if not okC then return false, whyC end end
     return true
 end
 
--- What it costs this person: the loyal get a discount at the Union Commissary (sv_livingcity_loyalty.lua).
+-- What it costs this person: the loyal get a discount at the Union Commissary (sv_livingcity_loyalty.lua),
+-- on the price the Administrator set (sv_livingcity_market.lua).
 function LC.GoodsPrice(ply, g)
     if not g then return 0 end
     if g.cpOnly then return g.price end
-    return math.max(1, math.floor(g.price * (LC.LoyalPriceMul and LC.LoyalPriceMul(ply) or 1) + 0.5))
+    local set = LC.MarketCommissaryMul and LC.MarketCommissaryMul(g) or 1
+    return math.max(1, math.floor(g.price * set * (LC.LoyalPriceMul and LC.LoyalPriceMul(ply) or 1) + 0.5))
 end
 
 function LC.Buy(ply, id)
@@ -222,9 +230,12 @@ function LC.Buy(ply, id)
     local ok, why = LC.CanBuy(ply, g)
     if not ok then
         ply:ChatPrint("[Commissary] " .. why)
+        if LC.MarketRefused then LC.MarketRefused(ply, g) end
         return false
     end
-    LC.AddCredits(ply, -LC.GoodsPrice(ply, g))
+    local paid = LC.GoodsPrice(ply, g)
+    LC.AddCredits(ply, -paid)
+    if LC.MarketBought then LC.MarketBought(g, "commissary") end
     if g.item then
         LC.GiveItem(ply, g.item, g.count or 1)
     elseif g.entity then
@@ -236,7 +247,7 @@ function LC.Buy(ply, id)
     elseif g.ammo then
         ply:GiveAmmo(g.ammo[2], g.ammo[1])
     end
-    ply:ChatPrint(string.format("[Commissary] Purchased: %s (%d credits)", g.name, LC.GoodsPrice(ply, g)))
+    ply:ChatPrint(string.format("[Commissary] Purchased: %s (%d credits)", g.name, paid))
     ply:EmitSound("buttons/button14.wav", 60)
     return true
 end
@@ -257,7 +268,8 @@ function LC.OpenShop(ply, viaTerminal)
             local ok, why = LC.CanBuy(ply, g)
             goods[#goods + 1] = {
                 id = g.id, name = g.name, price = LC.GoodsPrice(ply, g), desc = g.desc, ok = ok, why = why,
-                tier = LCS.TierFor(g.minStanding or -50).name,
+                tier = LCS.TierFor(LC.MarketMinStanding and LC.MarketMinStanding(g) or (g.minStanding or -50)).name,
+                market = LC.MarketCommissaryNote and LC.MarketCommissaryNote(g) or nil,
             }
         end
     end

@@ -1341,13 +1341,15 @@ function LC.OpenMarket(ply)
     local goods, sell = {}, {}
     -- the quartermaster (and no dealer here): he won't buy the Combine's data; the lab decodes it
     local qm = LC.AtQuartermaster(ply) or nil
-    for _, g in ipairs(LCS.Black) do
+    -- his usual stock, and whatever the Commissary is short of (sv_livingcity_market.lua)
+    for _, g in ipairs(LC.MarketBlackList and LC.MarketBlackList() or LCS.Black) do
         local can, reason = true, nil
         local price = LC.MarketPrice(ply, g)
         local short -- (how many credits short: shown beside the name; the owner, 7 November)
         if credits < price then can, reason, short = false, "Not enough credits", price - credits end
         if can and g.item and not LC.CanCarry(ply, g.item, g.count or 1) then can, reason = false, "Too much to carry" end
-        goods[#goods + 1] = { id = g.id, name = g.name, price = price, desc = g.desc, ok = can, why = reason, short = short }
+        goods[#goods + 1] = { id = g.id, name = g.name, price = price, desc = g.desc, ok = can, why = reason, short = short,
+            market = LC.MarketBlackNote and LC.MarketBlackNote(g) or nil }
     end
     local inv = LC.Inventory(ply)
     local ids = table.GetKeys(inv)
@@ -1355,7 +1357,11 @@ function LC.OpenMarket(ply)
     for _, id in ipairs(ids) do
         local it = LCS.Items[id]
         local price = LC.SellPrice and LC.SellPrice(ply, id) or (it and it.sell)
-        if it and price and not (qm and DECODED[id]) then sell[#sell + 1] = { id = id, name = it.name, n = inv[id], price = price } end
+        if it and price and not (qm and DECODED[id]) then
+            -- (the quartermaster pays more for what's in demand: sv_livingcity_market.lua)
+            local hot = qm and it.sell and price > it.sell and LC.MarketBuybackMul and LC.MarketBuybackMul(id) > 1 and "In demand: he pays more" or nil
+            sell[#sell + 1] = { id = id, name = it.name, n = inv[id], price = price, market = hot }
+        end
     end
     -- weapons you're carrying, unless your faction issued them
     for _, w in ipairs(ply:GetWeapons()) do
@@ -1379,9 +1385,13 @@ net.Receive("lcu_decode", function(_, ply)
     LC.OpenMarket(ply)
 end)
 
--- what the city's state does to prices (sv_livingcity_war.lua)
+-- what the city's state does to prices (sv_livingcity_war.lua), and the market: shortages at the
+-- Commissary and demand (sv_livingcity_market.lua); never down to what he pays back for it
 function LC.BlackPrice(g)
-    return math.max(1, math.floor(g.price * (LC.BlackPriceMul and LC.BlackPriceMul() or 1) + 0.5))
+    local m = LC.MarketBlackMul and LC.MarketBlackMul(g) or 1
+    local p = math.max(1, math.floor(g.price * (LC.BlackPriceMul and LC.BlackPriceMul() or 1) * m + 0.5))
+    if m < 1 and g.item and LCS.Items[g.item] and LCS.Items[g.item].sell then p = math.max(p, LCS.Items[g.item].sell + 1) end
+    return p
 end
 
 -- Buying from the quartermaster (a Resistance member at his post, no dealer about): he charges
@@ -1399,7 +1409,7 @@ function LC.MarketPrice(ply, g)
 end
 
 function LC.BlackBuy(ply, id)
-    local g = LCS.BlackById[id]
+    local g = LC.MarketBlackById and LC.MarketBlackById(id) or LCS.BlackById[id]
     if not g then return false end
     local ok, why = LC.MarketAccess(ply)
     if not ok then return false, why end
@@ -1407,7 +1417,12 @@ function LC.BlackBuy(ply, id)
     if LC.Credits(ply) < price then return false, "Not enough credits." end
     if g.item then local okC, whyC = LC.CanCarry(ply, g.item, g.count or 1) if not okC then return false, whyC end end
     LC.AddCredits(ply, -price)
-    if g.item then LC.GiveItem(ply, g.item, g.count or 1) elseif g.weapon then ply:Give(g.weapon) end
+    if g.item then LC.GiveItem(ply, g.item, g.count or 1) elseif g.weapon then ply:Give(g.weapon)
+    elseif g.entity then -- (a Commissary good he picked up in a shortage: a health vial, a medical kit)
+        local e = ents.Create(g.entity)
+        if IsValid(e) then e:SetPos(ply:GetPos() + ply:GetForward() * 40 + Vector(0, 0, 20)) e:Spawn() end
+    end
+    if LC.MarketBought then LC.MarketBought(g, "black") end
     ply:ChatPrint(string.format("[Black market] %s, for %d credits. You didn't get it here.", g.name, price))
     return true
 end
@@ -1435,6 +1450,7 @@ function LC.DealerSell(ply, id, all)
     local n = all and (LC.Inventory(ply)[id] or 1) or 1
     LC.TakeItem(ply, id, n)
     LC.AddCredits(ply, price * n)
+    if LC.MarketSold then LC.MarketSold(id, n) end -- (more of it about: less wanted)
     if id == "ration_forged" then hook.Run("LivingCityForgedCard", ply, n) end -- (the search for the forger: sv_livingcity_funding.lua)
     if it.intel and LC.AddXP then LC.AddXP(ply, 5 * n, "intel") end
     ply:ChatPrint(string.format("[Black market] Sold: %s%s, for %d credits.", it.name, n > 1 and (" x" .. n) or "", price * n))

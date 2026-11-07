@@ -171,9 +171,10 @@ function LC.LabShut(sci) return IsValid(sci) and sci:GetNW2Float("lc_away_until"
 
 -- What he charges for one, in credits.
 function LC.LabPrice(r)
-    local g = LCS.BlackById and LCS.BlackById[r.out]
+    -- the dealer's price for it, as the market has it (sv_livingcity_market.lua: shortages and demand)
+    local g = (LC.MarketBlackById and LC.MarketBlackById(r.black or r.out)) or (LCS.BlackById and LCS.BlackById[r.out])
     local it = LCS.Items[r.item or r.out]
-    local p = math.ceil((g and g.price or 50) * cvPrice:GetFloat())
+    local p = math.ceil((g and g.price or 50) * (g and LC.MarketBlackMul and LC.MarketBlackMul(g) or 1) * cvPrice:GetFloat())
     if it and it.arms then
         local qm = GetConVar("lc_quartermaster_arms_bonus")
         p = math.max(p, math.ceil((it.sell or 0) * (qm and qm:GetFloat() or 1.5)) + 2)
@@ -191,7 +192,8 @@ function LC.SendLab(ply, sci)
     local credits = LC.Credits and LC.Credits(ply) or 0
     local inv = LC.Inventory and LC.Inventory(ply) or {}
     local items = {}
-    for _, r in ipairs(LCS.Lab or {}) do
+    -- (and what he makes while the Commissary won't sell it: sv_livingcity_market.lua)
+    for _, r in ipairs(LC.MarketLabList and LC.MarketLabList() or LCS.Lab or {}) do
         local it = LCS.Items[r.out]
         if it then
             local can, mats = true, {}
@@ -264,7 +266,7 @@ end
 
 -- Have him make one. how: "mats" (from your pockets) or "pay". True, or false and why not.
 function LC.LabMake(ply, id, how)
-    local r = LCS.LabById and LCS.LabById[id]
+    local r = (LC.MarketLabById and LC.MarketLabById(id)) or (LCS.LabById and LCS.LabById[id])
     if not r or not IsValid(ply) then return false end
     if not Rebel(ply) then return false, "He only works for the Resistance." end
     local sci = LC.ScientistNear(ply:GetPos())

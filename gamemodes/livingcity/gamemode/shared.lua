@@ -131,6 +131,7 @@ LC_MODULES = {
         "sv_livingcity_staff",
         "sv_livingcity_staticprops",
         "sv_livingcity_stockpile",
+        "sv_livingcity_market", -- (the Administrator's say over the Commissary; demand, and the black market following shortages)
         "sv_livingcity_storage",
         "sv_livingcity_stories",
         "sv_livingcity_insider", -- (the Resistance's man inside Civil Protection)
@@ -197,6 +198,7 @@ LC_MODULES = {
         "cl_livingcity_ways",
         "cl_livingcity_outfits",
         "cl_livingcity_lab",
+        "cl_livingcity_market", -- (the Administrator's Commissary and market panel)
         "cl_livingcity_labdamage", -- (a shot-up lab's smoke and sparks)
         "cl_livingcity_career", -- (C > My career)
         "cl_livingcity_layoutbrowser",

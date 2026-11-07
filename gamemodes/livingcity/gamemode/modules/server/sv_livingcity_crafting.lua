@@ -108,6 +108,11 @@ function LC.SellPrice(ply, id)
     end
     -- intel: only the quartermaster buys it
     if it.intel and not (LC.NearQuartermaster and LC.NearQuartermaster(ply)) then return nil end
+    -- the quartermaster pays more for what's in demand or short in the city, never what anyone could
+    -- buy it for (sv_livingcity_market.lua)
+    if IsResistance(ply) and LC.NearQuartermaster and LC.NearQuartermaster(ply) and not (it.hunger or it.thirst) and LC.MarketBuyback then
+        price = LC.MarketBuyback(id, price)
+    end
     -- food and drink: the quartermaster hands it out free from the supply crate, so he
     -- buys it back for next to nothing (lc_qm_food_price, 2)
     if (it.hunger or it.thirst) and LC.NearQuartermaster and LC.NearQuartermaster(ply) then
