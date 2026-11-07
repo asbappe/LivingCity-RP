@@ -198,6 +198,10 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityRain", function(depth, sky
     -- the same few hundred drops recycled, and the same two vectors moved about:
     -- nothing new made each frame
     local ox, oy, oz = origin.x, origin.y, origin.z
+    -- only the streaks in front of the camera are drawn: the ones behind it can't be seen,
+    -- and each one is a draw of its own (about half of them, every frame it rains)
+    local cam, fwd = EyePos(), EyeAngles():Forward()
+    local cx, cy, cz, fx, fy, fz = cam.x, cam.y, cam.z, fwd.x, fwd.y, fwd.z
     for i = 1, n do
         local d = drops[i]
         if not d then d = {} drops[i] = d end
@@ -206,9 +210,12 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityRain", function(depth, sky
             d.dieAt = now + d.z / d.speed + 0.2
         end
         local tz = oz + d.z - (now - d.born) * d.speed
-        RAIN_TOP.x, RAIN_TOP.y, RAIN_TOP.z = ox + d.x, oy + d.y, tz
-        RAIN_BOT.x, RAIN_BOT.y, RAIN_BOT.z = ox + d.x - 2, oy + d.y - 1, tz - 17
-        render.DrawBeam(RAIN_TOP, RAIN_BOT, 0.3, 0, 1, RAIN_COL)
+        local x, y = ox + d.x, oy + d.y
+        if (x - cx) * fx + (y - cy) * fy + (tz - 8 - cz) * fz > -24 then
+            RAIN_TOP.x, RAIN_TOP.y, RAIN_TOP.z = x, y, tz
+            RAIN_BOT.x, RAIN_BOT.y, RAIN_BOT.z = x - 2, y - 1, tz - 17
+            render.DrawBeam(RAIN_TOP, RAIN_BOT, 0.3, 0, 1, RAIN_COL)
+        end
     end
 end)
 

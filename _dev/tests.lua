@@ -12126,6 +12126,60 @@ end
 Freq7Tests()
 
 ----------------------------------------------------------------------
+section("Speed: saved data from memory, who is looking worked out once a tick")
+function PerfCacheTests()
+-- saved player data (sv_livingcity_perf.lua): the first read of each key is kept, writes update it
+do
+    local store, reads, refuse = {}, 0, false
+    local meta = {}
+    function meta.GetPData(p, k, d) reads = reads + 1 local v = store[k] if v == nil then return d end return v end
+    function meta.SetPData(p, k, v) if refuse then return false end store[k] = tostring(v) return true end
+    function meta.RemovePData(p, k) store[k] = nil return true end
+    ok(LC.CachePData(meta), "saved data reads are kept in memory")
+    ok(not LC.CachePData(meta), "(wrapped only once)")
+    local p = {}
+    ok(meta.GetPData(p, "lce_credits", 20) == 20 and reads == 1, "not saved: the default")
+    ok(meta.GetPData(p, "lce_credits", 7) == 7 and reads == 1, "asked again: the default given, without asking the database")
+    meta.SetPData(p, "lce_credits", 35)
+    ok(store.lce_credits == "35", "a write still goes to the database")
+    ok(meta.GetPData(p, "lce_credits", 20) == "35" and reads == 1, "and is read back as text, as the database gives it, from memory")
+    meta.RemovePData(p, "lce_credits")
+    ok(store.lce_credits == nil and meta.GetPData(p, "lce_credits", 5) == 5 and reads == 1, "removed: gone, and the default again")
+    store.lc_desc = "tall"
+    local q = {}
+    ok(meta.GetPData(q, "lc_desc", "") == "tall" and meta.GetPData(q, "lc_desc", "") == "tall" and reads == 2, "each player has their own copy, read once")
+    refuse = true
+    meta.SetPData(q, "lc_desc", "short")
+    ok(meta.GetPData(q, "lc_desc", "") == "tall" and reads == 3, "a write the database refused isn't remembered: it's read from the database again")
+end
+-- LC.IsSeen and LC.ViewerPositions (sv_livingcity.lua): the players' views are worked out once per tick
+do
+    local tickWas, testWas = engine.TickCount, LC.TestMode
+    local tick = 1
+    engine.TickCount = function() return tick end
+    LC.TestMode = false
+    local far = Vector(300000, 300000, 0)
+    local looker = newPlayer("PerfLooker", "citizen")
+    looker:SetPos(far)
+    ok(LC.IsSeen(far + Vector(30, 0, 0)), "a spot right beside a player is seen")
+    local list = LC.ViewerPositions()
+    ok(list == LC.ViewerPositions(), "the same list for the rest of the tick")
+    local found = false
+    for _, at in ipairs(list) do if at:DistToSqr(far) < 1 then found = true end end
+    ok(found, "with each player in it")
+    looker:SetPos(far + Vector(0, 50000, 0))
+    ok(LC.IsSeen(far + Vector(30, 0, 0)), "within the same tick, where they stood is still where they are")
+    tick = 2
+    ok(not LC.IsSeen(far + Vector(30, 0, 0)), "the next tick, they've moved on")
+    ok(LC.ViewerPositions() ~= list, "and the list is made again")
+    engine.TickCount, LC.TestMode = tickWas, testWas
+    looker:SetPos(Vector(-120000, -120000, 0))
+    ok(not LC.TestMode or LC.ViewerPositions() ~= LC.ViewerPositions(), "(in tests, asked fresh every time)")
+end
+end
+PerfCacheTests()
+
+----------------------------------------------------------------------
 
 ----------------------------------------------------------------------
 section("Playtest fixes: switching faction where you stand, boxes in both hands, the NPC cap")

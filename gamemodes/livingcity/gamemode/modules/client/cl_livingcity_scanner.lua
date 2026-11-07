@@ -190,10 +190,14 @@ end)
 
 local RED = Color(255, 70, 60)
 
+-- (only players and NPCs are ever photographed or tipped off, so only they are looked at, not every
+-- entity in the map)
 local function Spotted()
     local now, list = CurTime(), {}
-    for _, ent in ipairs(ents.GetAll()) do
-        if IsValid(ent) and ent:GetNW2Float("lc_spotted_until", 0) > now then list[#list + 1] = ent end
+    for _, set in ipairs({ player.GetAll(), ents.FindByClass("npc_*") }) do
+        for _, ent in ipairs(set) do
+            if IsValid(ent) and ent:GetNW2Float("lc_spotted_until", 0) > now then list[#list + 1] = ent end
+        end
     end
     return list
 end
