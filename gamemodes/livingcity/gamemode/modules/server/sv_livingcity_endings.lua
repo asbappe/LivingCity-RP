@@ -270,6 +270,7 @@ LC.EndingFreeze = Freeze
 -- "Taken": out of it, not dead (no new character). Frozen, hidden, the screen goes.
 local function Take(p, how)
     if not IsValid(p) or p.lcEndTaken then return end
+    if E and E.dream and LC.EndingSpectator then return LC.EndingSpectator(p, how) end -- (a dream: out of it, they watch the rest)
     p.lcEndTaken = true
     p:Freeze(true)
     if p.SetNoDraw then p:SetNoDraw(true) end
@@ -597,7 +598,7 @@ end
 local function Watch(p, dir)
     local list = {}
     for _, q in ipairs(Living()) do list[#list + 1] = q end
-    for _, m in ipairs(E and E.minges or {}) do if IsValid(m) then list[#list + 1] = m end end
+    for _, m in ipairs(E and not E.dream and E.minges or {}) do if IsValid(m) then list[#list + 1] = m end end -- (a dream: only the other dreamers)
     if #list == 0 then return end
     p.lcEndWatchI = ((p.lcEndWatchI or 0) + (dir or 1) - 1) % #list + 1
     p.lcEndWatching = list[p.lcEndWatchI]
@@ -624,8 +625,10 @@ local function Spectator(p, how, col)
     Watch(p, 1)
     if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, col or Color(140, 0, 0, 220), 2, 0) end
     p:ChatPrint(how or "You're out of it. Watch the rest.")
+    if E and E.dream then p:ChatPrint("You watch the rest of the dream: click to watch another dreamer, Jump to fly about inside it. You wake when it ends.") end
     hook.Run("LivingCityEndingTook", p, E and E.id)
 end
+LC.EndingSpectator = Spectator
 LC.EndingSpectator = Spectator
 
 local function Slaughter(p, how)
@@ -3838,7 +3841,7 @@ local function GoTo(phase)
         E.lines = {}
         for p in string.gmatch(cvGman:GetString() or "", "[^,]+") do E.lines[#E.lines + 1] = string.Trim(p) end
         All("[???] Time stops. A man in a blue suit is standing in front of you. He'd like a word, and your vote: 1 to let it happen, 2 to skip it.")
-        MarkEnding()
+        if not (E.dream and E.dream.force) then MarkEnding() end -- (the Administrator's dream doesn't hold the G-Man's back)
     elseif phase == "apocalypse" then
         Freeze(false)
         local songs = LC.EndingSongs(E.id)
@@ -3870,7 +3873,7 @@ function LC.TriggerEnding(id, by, now)
     if not LC.Endings[id] then return false, "No such ending." end
     if E then return false, "One's already under way." end
     if not cvOn:GetBool() then return false, "Secret endings are off." end
-    if LC.EndingCooldownLeft() > 0 then return false, "Not yet (" .. math.ceil(LC.EndingCooldownLeft() / 60) .. " minutes)." end
+    if LC.EndingCooldownLeft() > 0 and not (LC.DreamPending and LC.DreamPending.force) then return false, "Not yet (" .. math.ceil(LC.EndingCooldownLeft() / 60) .. " minutes)." end -- (the Administrator's dream: no cooldown)
     -- (with a dream point placed, the ending waits for tonight's dream: sv_livingcity_dreams.lua)
     if not LC.DreamPending and not LC.EndingClassic and LC.DreamDivert then
         local took, okd, why = LC.DreamDivert(id, by, now)
@@ -3882,7 +3885,7 @@ function LC.TriggerEnding(id, by, now)
     LC.Log("info", "Secret ending triggered: " .. id .. (IsValid(by) and (" by " .. by:Nick()) or ""))
     hook.Run("LivingCityEndingTriggered", id, by)
     if now then
-        MarkEnding()
+        if not (E.dream and E.dream.force) then MarkEnding() end -- (the Administrator's dream doesn't hold the G-Man's back)
         GoTo("apocalypse")
     end
     return true

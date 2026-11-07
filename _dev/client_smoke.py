@@ -1426,6 +1426,21 @@ local ok, e = pcall(function()
     net["recv_lc_dream"]()
     LC_CL.DreamsMenu()
     LC_CL.DreamAct("optout")
+    -- the Administrator's tablet: tonight's dream, by mood
+    local office = { jobs = {}, people = {}, dream = { ready = true, at = 30,
+        groups = { { mood = "happy", name = "Happy", endings = { { id = "bus", name = "The Bus" } } }, { mood = "neutral", name = "Neutral", endings = {} },
+            { mood = "nightmare", name = "Nightmare", endings = { { id = "water", name = "The Flood" } } } },
+        waiting = { id = "bus", name = "The Bus", mood = "Happy", yours = true } } }
+    for _, d in ipairs({ office.dream, { ready = true, groups = office.dream.groups, waiting = { id = "water", name = "The Flood", mood = "Nightmare" } },
+        { ready = true, dreamt = true, groups = office.dream.groups }, { ready = false, why = "No dream point" } }) do
+        office.dream = d
+        local j2t = util.JSONToTable
+        util.JSONToTable = function() return office end
+        net._q = { 1, "x" }
+        local okO, errO = pcall(net["recv_lc_admin_office"])
+        util.JSONToTable = j2t
+        if not okO then error("the office: " .. tostring(errO)) end
+    end
 end)
 return (not ok) and tostring(e) or nil
 """)

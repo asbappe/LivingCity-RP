@@ -13597,6 +13597,137 @@ end
 DreamTests()
 
 ----------------------------------------------------------------------
+-- Shared dreams, the Administrator's choice (sv_livingcity_dreams.lua): moods, the tablet, and watching once you're out
+local function DreamMoodTests()
+section("Shared dreams: Happy, Neutral or Nightmare, chosen on the Administrator's tablet")
+local errs0 = #_errors
+local savedWalls, realGetAll, realReload, realPhase, realNotice = _walls, player.GetAll, LC.EndingReload, LC.DayPhase, LC.Notice
+_walls = {}
+LC.EndEvent(true)
+_setcvar("lc_needs", 0)
+_setcvar("lc_dream_delay", 10)
+_setcvar("lc_dream_combine", 2)
+LC.EndingReload = function() end
+_files["livingcity/endings.json"] = nil
+local phase = "dusk"
+LC.DayPhase = function() return phase end
+LC.AtmosPhase = phase -- (the city's clock sees the same: no second night or dawn from it)
+local told = {}
+LC.Notice = function(p, kind, title, text, secs) told[#told + 1] = { p = p, title = title, text = text } return realNotice(p, kind, title, text, secs) end
+local function ToldTo(p, needle) for _, n in ipairs(told) do if n.p == p and string.find(n.text or "", needle, 1, true) then return true end end return false end
+
+-- the moods (lc_dream_moods)
+local m = LC.DreamMoods()
+ok(m.bus == "happy" and m.plane == "happy" and m.hard == "happy" and m.shalom == "happy" and m.bloom == "neutral" and m.fire == "neutral" and m.base == "neutral"
+    and m.harpies == "nightmare" and m.marrow == "nightmare" and m.water == "nightmare" and m.standup == "nightmare", "every ending has a mood: happy, neutral or nightmare")
+local m2 = LC.DreamMoods("bus=Nightmare, plane = happy, fire=gloomy")
+ok(m2.bus == "nightmare" and m2.plane == "happy" and m2.fire == "neutral" and m2.hard == "neutral", "the setting is read as id=mood (any case); unknown or unlisted is neutral")
+
+local CITY, DREAM = Vector(170000, -170000, 0), Vector(200000, -200000, 0)
+local adm = newPlayer("DMAdmin", "admin")
+local cit = newPlayer("DMCit", "citizen")
+local cit2 = newPlayer("DMCit2", "citizen")
+_run(3)
+local function Asleep(p, at)
+    p:SetPos(at)
+    local key = string.format("s%d_%d_%d", math.floor(at.x), math.floor(at.y), math.floor(at.z))
+    p.lcSleep = { t0 = CurTime() - 70, done = CurTime() - 10, last = CurTime(), slept = true }
+    p:SetNW2Bool("lc_sleeping", true)
+    p.lcBedKey, p.lcBedFrom = key, at + Vector(40, 0, 0)
+    LC.BedSleepers[key] = p
+end
+player.GetAll = function() return { adm, cit, cit2 } end
+
+-- no dream point: the tablet says why
+local off = LC.DreamOffice()
+ok(not off.ready and off.why ~= nil and not LC.DreamAdminPick(adm, "bus"), "with no dream point the tablet says the city can't dream, and nothing can be picked")
+local dp = LC.AddPoint(DREAM, 0, "dream")
+off = LC.DreamOffice()
+local happy = off.groups[1]
+local hasBus = false
+for _, e in ipairs(happy.endings) do if e.id == "bus" and e.name == LC.Endings.bus.name then hasBus = true end end
+ok(off.ready and #off.groups == 3 and happy.mood == "happy" and off.groups[3].mood == "nightmare" and hasBus,
+    "the tablet lists the endings under Happy, Neutral and Nightmare, by their titles")
+
+-- only the Administrator
+ok(not LC.DreamAdminPick(cit, "harpies") and LC.AdminDo(cit, "dream", "harpies") == false and LC.DreamQueued() == nil, "only the Administrator can choose")
+ok(LC.AdminDo(adm, "dream", "bus") and LC.DreamQueued().id == "bus" and LC.DreamOffice().waiting.yours, "the Administrator picks one on the tablet: it waits for tonight")
+ok(LC.AdminDo(adm, "dream", "harpies") and LC.DreamQueued().id == "harpies" and LC.DreamOffice().waiting.mood == "Nightmare", "and can change it before the night")
+ok(LC.AdminDo(adm, "dream", "none") and LC.DreamQueued() == nil, "or choose no dream tonight")
+
+-- the G-Man's comes first
+LC.DreamAdminPick(adm, "bus")
+ok(LC.TriggerEnding("shalom", cit) and LC.DreamQueued().id == "shalom" and LC.DreamQueued().source == "directive",
+    "an ending from a sealed directive takes tonight's dream over from the Administrator's pick")
+ok(ToldTo(adm, "out of your hands"), "(and the Administrator is told)")
+ok(not LC.DreamAdminPick(adm, "harpies") and LC.DreamQueued().id == "shalom" and not LC.DreamOffice().waiting.yours,
+    "the Administrator can't change it then (the tablet says it isn't theirs)")
+LC.DreamForget()
+
+-- the cooldown doesn't stop the Administrator's (there's still one a night)
+local t0 = os.time() - 60
+_files["livingcity/endings.json"] = util.TableToJSON({ last = t0 })
+ok(LC.EndingCooldownLeft() > 0 and not LC.TriggerEnding("bus", cit), "(the endings' cooldown is running: a directive's can't come)")
+ok(LC.DreamAdminPick(adm, "harpies"), "the Administrator's pick doesn't wait for the cooldown")
+Asleep(cit, CITY)
+Asleep(cit2, CITY + Vector(0, 200, 0))
+phase = "night"
+LC.AtmosPhase = phase
+hook.Run("LivingCityDayPhase", "night", "dusk")
+_run(6)
+ok(ToldTo(cit, LC.DreamMoodLines.nightmare) and ToldTo(cit2, LC.DreamMoodLines.nightmare), "the sleepers feel it coming: an uneasy line for a nightmare")
+_run(10)
+local E = LC.EndingAny()
+ok(E and E.dream and E.id == "harpies" and E.dream.force and E.dream.mood == "nightmare", "that night everyone asleep dreams the Administrator's pick, cooldown or not", E and E.id)
+ok(cit.lcDreaming and cit2.lcDreaming and not adm.lcDreaming, "(the sleepers, not the awake Administrator)")
+local cd = util.JSONToTable(_files["livingcity/endings.json"] or "{}") or {}
+ok(tonumber(cd.last) == t0, "and it doesn't start the endings' cooldown over (the G-Man's aren't held back by it)")
+
+-- out of it in a dream: watching the rest, only the other dreamers, inside its edge
+local dream = E.dream
+LC.EndingTake(cit, "Gone.")
+ok(cit.lcEndSpectating and cit.lcEndWatching == cit2, "taken out (drowned, killed, taken) in a dream: they watch the rest, the other dreamers only")
+LC.EndingTake(cit2, "Gone too.")
+ok(cit2.lcEndSpectating and cit2.lcEndWatching ~= adm, "(never the awake)")
+local origin = DREAM + Vector(9000, 0, 6000)
+local mv = { GetOrigin = function(self) return self.o end, SetOrigin = function(self, v) self.o = v end, SetVelocity = function() end, o = origin }
+hook.Run("SetupMove", cit, mv)
+ok(LC.DreamHolds(dream, mv.o, true) and mv.o.z <= DREAM.z + 2000, "flying free while watching, they can't leave the dream's edge (or fly above it)")
+ok(LC.DreamClamp(dream, DREAM + Vector(100, 0, 50)) == nil, "(inside it, they fly where they like)")
+local mvAwake = { GetOrigin = function(self) return self.o end, SetOrigin = function(self, v) self.o = v end, SetVelocity = function() end, o = origin }
+hook.Run("SetupMove", adm, mvAwake)
+ok(mvAwake.o == origin, "(the awake fly as ever)")
+LC.CancelEnding()
+_run(4)
+ok(not cit.lcDreaming and not cit.lcEndSpectating and cit.lcSleep and cit:GetPos():Distance(CITY) < 1, "when it ends they wake in their beds like everyone else")
+
+-- one dream a night: a new pick waits for tomorrow
+ok(LC.DreamAdminPick(adm, "bus") and LC.DreamOffice().dreamt, "one dream a night: a pick now waits for tomorrow night")
+_run(15)
+ok(LC.EndingAny() == nil, "(no second dream tonight)")
+-- the morning after
+phase = "dawn"
+LC.AtmosPhase = phase
+hook.Run("LivingCityDayPhase", "dawn", "night")
+ok(has(cit.chat, "slept badly"), "the next morning the city hears how it slept (by the dream's mood)")
+LC.DreamForget()
+LC.RemovePoint(dp)
+for _, p in ipairs({ adm, cit, cit2 }) do
+    if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
+    p:SetPos(Vector(-120000, -120000, 0))
+end
+player.GetAll, LC.EndingReload, LC.DayPhase, LC.Notice = realGetAll, realReload, realPhase, realNotice
+LC.AtmosPhase = realPhase and realPhase() or LC.AtmosPhase
+_setcvar("lc_needs", 1)
+_setcvar("lc_dream_delay", 60)
+_setcvar("lc_dream_combine", 6)
+_files["livingcity/endings.json"] = nil
+_walls = savedWalls
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+DreamMoodTests()
+
+----------------------------------------------------------------------
 
 ----------------------------------------------------------------------
 section("Playtest fixes: switching faction where you stand, boxes in both hands, the NPC cap")

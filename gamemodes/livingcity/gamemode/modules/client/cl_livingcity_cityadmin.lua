@@ -83,6 +83,37 @@ net.Receive("lc_admin_office", function()
     od:AddOption("Declare a Day of Cleansing", function() Act("cleansing") end)
     od:AddOption("Permit Father Grigori's flock to worship", function() Act("worship") end)
     od:AddOption("An amnesty: open every cell", function() Act("amnesty") end)
+    -- tonight's dream (sv_livingcity_dreams.lua): Happy, Neutral or Nightmare, for everyone asleep
+    local d = t.dream
+    if d then
+        local dm, od2 = menu:AddSubMenu("Tonight's dream")
+        od2:SetIcon("icon16/weather_clouds.png")
+        local function Note(text) local o = dm:AddOption(text) if o.SetTextColor then o:SetTextColor(Color(120, 120, 130)) end end
+        if not d.ready then
+            Note(d.why or "The city can't dream yet.")
+        else
+            if d.busy then Note("The city is dreaming right now.") end
+            if d.waiting then
+                Note("Waiting: " .. d.waiting.name .. " (" .. d.waiting.mood .. ")" .. (d.waiting.yours and "" or ", and it isn't yours to change")
+                    .. (d.at and string.format(", in about %d seconds", d.at) or ", a minute after you say good night"))
+            else
+                Note(d.dreamt and "Tonight's dream has been dreamt. A pick now waits for tomorrow night." or "Nothing chosen: no dream tonight.")
+            end
+            if not d.waiting or d.waiting.yours then
+                dm:AddSpacer()
+                local icons = { happy = "icon16/emoticon_smile.png", neutral = "icon16/emoticon_waii.png", nightmare = "icon16/exclamation.png" }
+                local blurb = { happy = "Happy (a reward: they've been obedient)", neutral = "Neutral", nightmare = "Nightmare (a punishment)" }
+                for _, g in ipairs(d.groups or {}) do
+                    if #(g.endings or {}) > 0 then
+                        local gm, go = dm:AddSubMenu(blurb[g.mood] or g.name)
+                        go:SetIcon(icons[g.mood] or "icon16/weather_clouds.png")
+                        for _, e in ipairs(g.endings) do gm:AddOption(e.name, function() Act("dream", e.id) end) end
+                    end
+                end
+                dm:AddOption("No dream tonight", function() Act("dream", "none") end):SetIcon("icon16/cancel.png")
+            end
+        end
+    end
     local ev, o1 = menu:AddSubMenu("Call a city event")
     o1:SetIcon("icon16/bell.png")
     ev:AddOption("A curfew", function() Act("event", "curfew") end)

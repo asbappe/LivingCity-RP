@@ -294,6 +294,10 @@ local EVENTS = { curfew = "a curfew", rations = "a ration day", sweep = "an insp
 -- One of the office's acts. arg: the event, "generous"/"austere", a price factor, a job id, or a target player.
 function LC.AdminDo(ply, what, arg, target)
     if not IsAdministrator(ply) then return false, "Only the City Administrator." end
+    if what == "dream" then -- (tonight's dream: sv_livingcity_dreams.lua)
+        if not LC.DreamAdminPick then return false end
+        return LC.DreamAdminPick(ply, arg)
+    end
     if what == "event" then
         if not EVENTS[arg] then return false end
         local ok, why = Cool(ply, "event", 600)
@@ -381,7 +385,7 @@ function LC.OpenAdminOffice(ply)
     for _, o in ipairs(LCJ and LCJ.Occupations or {}) do if not LCJ.Closed(o) then jobs[#jobs + 1] = { id = o.id, name = o.name } end end
     local people = {}
     for _, p in ipairs(player.GetAll()) do if p ~= ply then people[#people + 1] = { idx = p:EntIndex(), name = Name(p), wanted = LC.PlayerIsWanted and LC.PlayerIsWanted(p) or false } end end
-    LC.SendCompressed("lc_admin_office", { jobs = jobs, people = people }, { ply })
+    LC.SendCompressed("lc_admin_office", { jobs = jobs, people = people, dream = LC.DreamOffice and LC.DreamOffice() or nil }, { ply })
 end
 
 ------------------------------------------------------------------------

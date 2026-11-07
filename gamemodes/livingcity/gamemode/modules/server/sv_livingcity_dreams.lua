@@ -31,6 +31,11 @@
       The editor's "Zone: dream" (optional) is the dream's edge: everything the ending puts out
       stays inside it (without one, within lc_dream_radius of the point).
 
+      The Administrator chooses tonight's dream on their tablet, by mood: Happy, Neutral or
+      Nightmare (lc_dream_moods). A sealed directive's (the G-Man's) comes first; the pick ignores
+      the endings' cooldown, still one dream a night. A dreamer taken out of the ending watches the
+      rest, flying only inside the dream and watching only the other dreamers.
+
       Players: C > Settings > Shared dreams (on, or opt out; and "Wake up" in a dream), or
       /dream off, /dream on, /dream wake. Admins: C > Help > Dreams (what's waiting, dream it
       now, wake everyone, put back anyone's things), lc_dream_restore <name>, lc_dream_now.
@@ -49,6 +54,8 @@ local cvDelay   = CreateConVar("lc_dream_delay", "60", FLAGS, "Seconds after the
 local cvRadius  = CreateConVar("lc_dream_radius", "1500", FLAGS, "How far from the dream point an ending's people, props and flying may go, with no dream zone placed")
 local cvNightly = CreateConVar("lc_dream_every_night", "0", FLAGS, "On a night with no ending waiting, dream a random one anyway (when the cooldown allows)")
 local cvCombine = CreateConVar("lc_dream_combine", "6", FLAGS, "Civil Protection units a dream brings along for the endings that have the Combine in them (never the city's own)")
+local cvMoods   = CreateConVar("lc_dream_moods", "bus=happy,plane=happy,hard=happy,shalom=happy,bloom=neutral,fire=neutral,base=neutral,harpies=nightmare,marrow=nightmare,water=nightmare,standup=nightmare",
+    FLAGS, "Each ending's mood as a dream, for the Administrator's tablet: id=happy, id=neutral or id=nightmare, comma-separated (an ending not listed is neutral)")
 
 local DIR = "livingcity/dreams/"
 LC.DreamDir = DIR
@@ -78,6 +85,36 @@ function LC.DreamZone()
 end
 -- Dreams happen: switched on, and a dream point on this map.
 function LC.DreamReady() return cvOn:GetBool() and LC.DreamPoint() ~= nil end
+
+------------------------------------------------------------------------
+-- Moods: Happy, Neutral or Nightmare (the owner, 7 November: "the administrator can choose a
+-- good, happy dream if everyone has been obedient and compliant, but can choose a nightmare")
+------------------------------------------------------------------------
+
+LC.DreamMoodOrder = { "happy", "neutral", "nightmare" }
+LC.DreamMoodNames = { happy = "Happy", neutral = "Neutral", nightmare = "Nightmare" }
+-- Every ending's mood, from lc_dream_moods: { [id] = "happy" | "neutral" | "nightmare" }.
+function LC.DreamMoods(str)
+    local out = {}
+    for k, v in string.gmatch(string.lower(str or cvMoods:GetString() or ""), "([%w_]+)%s*=%s*([%a]+)") do
+        if LC.DreamMoodNames[v] then out[k] = v end
+    end
+    for _, id in ipairs(LC.EndingOrder or {}) do out[id] = out[id] or "neutral" end
+    return out
+end
+function LC.DreamMood(id) return LC.DreamMoods()[id] or "neutral" end
+-- What the sleepers feel just before it, and the city's line the morning after (by mood).
+local MOOD_LINES = {
+    happy = "You drift off. Tonight's dream feels warm and light, like a song you used to know.",
+    neutral = "You drift off. Tonight's dream feels strange: neither good nor bad, just strange.",
+    nightmare = "You drift off, and something is wrong. Tonight's dream feels cold, and close, and hungry.",
+}
+LC.DreamMoodLines = MOOD_LINES
+local MORNING_LINES = {
+    happy = "The city slept well last night. People wake up smiling, and can't say why.",
+    neutral = "The city slept strangely last night. Nobody quite remembers the dream.",
+    nightmare = "The city slept badly last night. People wake shaking, and nobody wants to talk about the dream.",
+}
 
 -- Is a spot inside the dream? (air: anywhere above it too, for things that fly)
 function LC.DreamHolds(dream, pos, air)
@@ -812,19 +849,19 @@ end
 
 -- Dream an ending now, with everyone asleep (also: an admin testing it, awake). vote: the G-Man's
 -- vote first (among the dreamers). True, or false and why not.
-function LC.DreamStart(id, by, vote, also)
+function LC.DreamStart(id, by, vote, also, force)
     if not cvOn:GetBool() then return false, "Dreams are off (lc_dreams 0)." end
     local pt = LC.DreamPoint()
     if not pt then return false, "There's no dream point on this map: place one with the Living City Editor (Point: dream)." end
     if not (LC.Endings and LC.Endings[id]) then return false, "No such ending." end
     if LC.EndingBusy and LC.EndingBusy() then return false, "An ending is already under way." end
-    if LC.EndingCooldownLeft and LC.EndingCooldownLeft() > 0 then return false, "Not yet (" .. math.ceil(LC.EndingCooldownLeft() / 60) .. " minutes of the endings' cooldown left)." end
+    if not force and LC.EndingCooldownLeft and LC.EndingCooldownLeft() > 0 then return false, "Not yet (" .. math.ceil(LC.EndingCooldownLeft() / 60) .. " minutes of the endings' cooldown left)." end
     local who = LC.DreamSleepers()
     if IsValid(also) and not also.lcDreaming and also:Alive() and not table.HasValue(who, also) then who[#who + 1] = also end
     if #who == 0 then return false, "Nobody is asleep to dream it." end
     S.nextId = (S.nextId or 0) + 1
     local dream = { id = S.nextId, ending = id, pos = pt.pos, yaw = pt.yaw or 0, zone = LC.DreamZone(), list = {}, snaps = {}, npcs = {}, combine = {},
-        made = setmetatable({}, { __mode = "k" }), started = CurTime() }
+        made = setmetatable({}, { __mode = "k" }), started = CurTime(), force = force or nil, mood = LC.DreamMood(id) }
     local spots = LC.EndingRingSpots and LC.EndingRingSpots(pt.pos, 60, #who) or {}
     for i, p in ipairs(who) do
         local ok, err = pcall(Enter, p, dream, spots[i] and spots[i].pos or pt.pos)
@@ -848,8 +885,13 @@ end
 -- Returns took (the dream has it), and then ok, why for whoever triggered it.
 function LC.DreamDivert(id, by, now)
     if not LC.DreamReady() then return false end
-    if S.queued then return true, false, "Something is already waiting for tonight's dream." end
-    S.queued = { id = id, by = IsValid(by) and by or nil, vote = not now, t = os.time() }
+    if S.queued and S.queued.source ~= "admin" and S.queued.source ~= "nightly" then return true, false, "Something is already waiting for tonight's dream." end
+    -- (the G-Man's comes first: the Administrator's pick gives way, and they're told)
+    local was = S.queued
+    if was and was.source == "admin" and IsValid(was.by) then
+        Notice(was.by, "warn", "Tonight's dream", "Something else has taken tonight's dream out of your hands. The dream you chose won't come.", 10)
+    end
+    S.queued = { id = id, by = IsValid(by) and by or nil, vote = not now, t = os.time(), source = "directive" }
     Log("info", "Secret ending " .. id .. " waits for tonight's dream")
     for _, p in ipairs(player.GetAll()) do p:ChatPrint("[???] Something stirs. Tonight, the city will dream.") end
     -- (night already, and tonight's not dreamt yet: in a minute, or when the good night says)
@@ -859,25 +901,88 @@ function LC.DreamDivert(id, by, now)
     return true, true
 end
 function LC.DreamQueued() return S.queued end
+
+-- The Administrator's tablet (sv_livingcity_cityadmin.lua): tonight's dream, by mood.
+function LC.DreamOffice()
+    local out = { ready = LC.DreamReady(), groups = {} }
+    if not cvOn:GetBool() then out.why = "Dreams are switched off on this server."
+    elseif not LC.DreamPoint() then out.why = "There's nowhere for the city to dream yet (no dream point on this map)." end
+    local moods = LC.DreamMoods()
+    for _, m in ipairs(LC.DreamMoodOrder) do
+        local g = { mood = m, name = LC.DreamMoodNames[m], endings = {} }
+        for _, id in ipairs(LC.EndingOrder or {}) do
+            if moods[id] == m then g.endings[#g.endings + 1] = { id = id, name = LC.Endings[id] and LC.Endings[id].name or id } end
+        end
+        out.groups[#out.groups + 1] = g
+    end
+    local q = S.queued
+    if q and q.source ~= "nightly" then
+        out.waiting = { id = q.id, name = LC.Endings[q.id] and LC.Endings[q.id].name or q.id, mood = LC.DreamMoodNames[LC.DreamMood(q.id)], yours = q.source == "admin" }
+    end
+    out.dreamt = (S.dreamedNight == S.night) and LC.DayPhase and LC.DayPhase() == "night" or nil
+    out.at = S.at and math.max(0, math.floor(S.at - CurTime())) or nil
+    out.busy = LC.DreamActive ~= nil or nil
+    return out
+end
+
+-- The Administrator picks tonight's dream (id), or none ("none"). True, or false and why not.
+-- The G-Man's (a sealed directive, /eatchip) comes first; the pick ignores the endings' cooldown,
+-- and there's still one dream a night; it can be changed until the dream begins.
+function LC.DreamAdminPick(ply, id)
+    if not (LC.IsAdministrator and LC.IsAdministrator(ply)) then return false, "Only the City Administrator chooses the city's dreams." end
+    if not cvOn:GetBool() then return false, "Dreams are switched off on this server." end
+    if not LC.DreamPoint() then return false, "There's nowhere for the city to dream yet (no dream point on this map)." end
+    local q = S.queued
+    if q and q.source ~= "admin" and q.source ~= "nightly" then
+        return false, "Something else already waits for tonight's dream (" .. (LC.Endings[q.id] and LC.Endings[q.id].name or q.id) .. "). It isn't yours to change."
+    end
+    id = string.lower(tostring(id or ""))
+    if id == "none" or id == "" then
+        if q and q.source == "admin" then S.queued = nil end
+        Notice(ply, "info", "Tonight's dream", "No dream tonight. The city sleeps without one.", 7)
+        return true
+    end
+    if not (LC.Endings and LC.Endings[id]) then return false, "No such dream." end
+    S.queued = { id = id, by = ply, vote = false, t = os.time(), source = "admin" }
+    local mood = LC.DreamMoodNames[LC.DreamMood(id)]
+    local tonight = not (S.dreamedNight == S.night and LC.DayPhase and LC.DayPhase() == "night")
+    if tonight and LC.DayPhase and LC.DayPhase() == "night" then
+        S.at, S.warned = math.max(S.at or 0, CurTime() + math.max(5, cvDelay:GetFloat())), nil
+    end
+    Log("info", "Dream: the Administrator chose " .. id .. " (" .. mood .. ")")
+    Notice(ply, "info", "Tonight's dream", string.format("%s (%s). %s", LC.Endings[id].name, mood,
+        tonight and "Everyone asleep will dream it tonight, a minute after you say good night." or "Tonight's dream has been dreamt already: it waits for tomorrow night."), 9)
+    return true
+end
 function LC.DreamForget() S.queued = nil end
 
 -- Tonight's dream, if there's one to dream: the one waiting (or, lc_dream_every_night, any).
-local function Pick()
-    if S.queued then return S.queued.id, S.queued.by, S.queued.vote end
-    if not cvNightly:GetBool() then return nil end
+-- (lc_dream_every_night: tonight's random one, chosen once, as the warning goes out)
+local function Nightly()
+    if S.queued or not cvNightly:GetBool() then return S.queued end
     local ok = {}
     for _, id in ipairs(LC.EndingOrder or {}) do if #(LC.EndingSongs and LC.EndingSongs(id) or { 1 }) > 0 then ok[#ok + 1] = id end end
-    if #ok == 0 then return nil end
-    return ok[math.random(#ok)], nil, false
+    if #ok > 0 then S.queued = { id = ok[math.random(#ok)], vote = false, t = os.time(), source = "nightly" } end
+    return S.queued
+end
+local function Pick()
+    local q = Nightly()
+    if q then return q.id, IsValid(q.by) and q.by or nil, q.vote, q.source == "admin" end
+    return nil
 end
 function LC.DreamTonight()
     S.at, S.warned = nil, nil
     S.dreamedNight = S.night
     if not LC.DreamReady() then return false, "no dream point" end
-    local id, by, vote = Pick()
+    local id, by, vote, force = Pick()
     if not id then return false, "nothing to dream" end
-    local ok, why = LC.DreamStart(id, by, vote)
-    if ok then S.queued = nil else Log("info", "Tonight's dream didn't happen: " .. tostring(why)) end
+    local ok, why = LC.DreamStart(id, by, vote, nil, force)
+    if ok then
+        S.queued, S.lastMood = nil, LC.DreamMood(id)
+    else
+        Log("info", "Tonight's dream didn't happen: " .. tostring(why))
+        if S.queued and S.queued.source == "nightly" then S.queued = nil end
+    end
     return ok, why
 end
 
@@ -891,6 +996,12 @@ hook.Add("LivingCityDayPhase", "LivingCityDreams", function(phase)
         S.at, S.warned = CurTime() + 4 + math.max(5, cvDelay:GetFloat()), nil -- (nobody says it: from the night coming)
     else
         S.at, S.warned = nil, nil
+        -- (the morning after a dream: a line for the whole city, by its mood)
+        if (phase == "dawn" or phase == "day") and S.lastMood then
+            local line = MORNING_LINES[S.lastMood]
+            S.lastMood = nil
+            if line then for _, p in ipairs(player.GetAll()) do p:ChatPrint("[City] " .. line) end end
+        end
     end
 end)
 hook.Add("LivingCityCustomAnnouncement", "LivingCityDreams", function(voice, trig, path)
@@ -906,8 +1017,10 @@ timer.Create("LivingCityDreams", 1, 0, function()
             -- the sleepers, warned (and the way out)
             if not S.warned and now >= S.at - math.min(30, cvDelay:GetFloat()) then
                 S.warned = true
+                local q = Nightly()
+                local mood = q and LC.DreamMood(q.id) or "neutral"
                 for _, p in ipairs(LC.DreamSleepers()) do
-                    Notice(p, "info", "A dream is coming", "In your sleep, you feel a dream coming, shared with everyone asleep. You'll wake in your bed with everything you had. "
+                    Notice(p, mood == "nightmare" and "warn" or "info", "A dream is coming", MOOD_LINES[mood] .. " It's shared with everyone asleep, and you'll wake in your bed with everything you had. "
                         .. "Not tonight? C > Settings > Shared dreams: opt out.", 12)
                 end
             end
@@ -924,7 +1037,10 @@ timer.Create("LivingCityDreams", 1, 0, function()
                 end
             end
             for _, p in ipairs(LC.DreamersOf(dream)) do
-                if not p.lcEndRide and not LC.DreamHolds(dream, p:GetPos(), p.lcEndSpectating) then
+                if p.lcEndSpectating then
+                    local at = LC.DreamClamp(dream, p:GetPos()) -- (watching: kept inside its edge)
+                    if at then p:SetPos(at) end
+                elseif not p.lcEndRide and not LC.DreamHolds(dream, p:GetPos()) then
                     p:SetPos(dream.pos + Vector(0, 0, 8)) -- (wandered off the edge of it: back in the middle)
                 end
             end
@@ -935,6 +1051,40 @@ timer.Create("LivingCityDreams", 1, 0, function()
         end
     end)
     if not ok and LC.Error then LC.Error("dreams", err) end
+end)
+
+-- The nearest spot inside the dream to pos, for a dreamer who's out of it and watching the rest
+-- (drowned, taken, burst into sparkles): nil when it's inside already. In the dream zone's box (up
+-- to its top), or without one, within lc_dream_radius and a little above and below the point.
+function LC.DreamClamp(dream, pos)
+    if not dream or not pos then return nil end
+    local z = dream.zone
+    local x, y, h, lo, hi = pos.x, pos.y, pos.z, nil, nil
+    if z and z.box then
+        local b = z.box
+        x, y = math.Clamp(x, b.mins.x + 8, b.maxs.x - 8), math.Clamp(y, b.mins.y + 8, b.maxs.y - 8)
+        lo, hi = b.mins.z, b.maxs.z - 16
+    else
+        local c, r = z and z.pos or dream.pos, math.max(32, LC.DreamRadius(dream) - 8)
+        local dx, dy = x - c.x, y - c.y
+        local d = math.sqrt(dx * dx + dy * dy)
+        if d > r then x, y = c.x + dx / d * r, c.y + dy / d * r end
+        lo, hi = c.z - 400, math.min(LC.DreamTop(dream), c.z + 2000) - 16
+    end
+    h = math.Clamp(h, lo, math.max(lo, hi))
+    if math.abs(x - pos.x) < 0.01 and math.abs(y - pos.y) < 0.01 and math.abs(h - pos.z) < 0.01 then return nil end
+    return Vector(x, y, h)
+end
+-- (flying free while watching: never past the dream's edge, every tick)
+hook.Add("SetupMove", "LivingCityDreamWatch", function(p, mv)
+    if not p.lcDreaming or not p.lcEndSpectating then return end
+    local dream = LC.DreamActive
+    if not dream or dream.id ~= p.lcDreaming then return end
+    local at = LC.DreamClamp(dream, mv:GetOrigin())
+    if at then
+        mv:SetOrigin(at)
+        mv:SetVelocity(Vector(0, 0, 0))
+    end
 end)
 
 -- Everything that appears while a dream is on (whatever's inside it at the end goes).
