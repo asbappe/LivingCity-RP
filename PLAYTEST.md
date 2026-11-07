@@ -602,3 +602,5 @@ Notes:
   Notes:
 - [ ] **Sociostability (7 November):** as a recruit (even as a server admin) no Sociostability in F1, Unit tools, C or the records terminal; as the Administrator it is there (F1, C > The city).
   Notes:
+- [ ] **Dealer and scientist (7 November):** they move: idles change every so often, the head follows you when you stand near, E makes the dealer reach to his rack and the scientist reach for his work; a unit busting the dealer sees him cower.
+  Notes:

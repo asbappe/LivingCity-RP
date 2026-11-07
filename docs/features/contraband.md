@@ -26,7 +26,7 @@
 
 **Lockpicks:** besides buying one from the dealer, you can **make one from four pieces of scrap** (F2, "Make pick"; scrap comes from the Reclamation job). Use it by looking at a locked door and typing `!pick`, or bind a key: `bind p lc_pick`. `!pick` also uses a keycard or bypass charge on a Combine door.
 
-A unit who walks up to the dealer busts it: it vanishes for 15 minutes, the unit gets paid, and Freq 7 hears about it. Edit `gamemodes/livingcity/gamemode/modules/shared/sh_livingcity_shop.lua` for prices and items.
+The dealer isn't a statue (the owner, 7 November): he shifts between the citizens' idles (another one every 8 to 16 seconds, so none can run out and freeze him), turns his head to whoever is nearest within 300 units, reaches to his rack when someone deals with him, and cowers when a unit takes him. A unit who walks up to the dealer busts it: it vanishes for 15 minutes, the unit gets paid, and Freq 7 hears about it. Edit `gamemodes/livingcity/gamemode/modules/shared/sh_livingcity_shop.lua` for prices and items.
 
 Admin helpers: `lc_giveitem <name> <item> [count]`, `lc_search <name>`.
 
