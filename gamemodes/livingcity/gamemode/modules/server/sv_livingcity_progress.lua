@@ -268,15 +268,7 @@ end
 local function ShowTitle(ply) if IsValid(ply) then ply:SetNW2String("lc_legacy_title", (LC.LegacyTitle(ply))) end end
 hook.Add("PlayerInitialSpawn", "LivingCityLegacyTitle", function(ply) timer.Simple(3, function() ShowTitle(ply) end) end)
 
--- A new person, after another's end: something of the last one comes with them (a keepsake: theirs to keep,
--- or sell), from the second life on.
-hook.Add("LivingCityNewCharacter", "LivingCityLegacyKeepsake", function(ply, oldName)
-    ShowTitle(ply)
-    local t = LC.Legacy(ply)
-    if (t.lives or 0) < 1 or not oldName or oldName == "" then return end
-    timer.Simple(6, function()
-        if not IsValid(ply) then return end
-        if LC.GiveOrDrop then LC.GiveOrDrop(ply, "keepsake", 1) end
-        if Notice then Notice(ply, "info", "Something of " .. oldName, "Among your things: " .. oldName .. "'s ring. You don't remember how you came by it.", 8) end
-    end)
-end)
+-- A new person, after another's end, used to find the last one's wedding ring among their things.
+-- Gone (the owner, 7 November: a ring that isn't yours on spawning made no sense); a ring is still
+-- found in bins, in the canal and on the dead (sv_livingcity_scavenge.lua, sv_livingcity_moregames.lua).
+hook.Add("LivingCityNewCharacter", "LivingCityLegacyKeepsake", function(ply) ShowTitle(ply) end)

@@ -476,6 +476,31 @@ local can           -- the active encounter, if any
 local canCooldown = {} -- [ply] = time they can be picked on again
 local nextCanCheck = 0
 
+-- The nearest bin to put it in: the map's own, the city's (lc_citybin), or any trash model.
+local function NearestBin(pos, maxDist)
+    maxDist = maxDist or 450
+    local best, bd = nil, maxDist * maxDist
+    for _, b in ipairs(LC.StaticBins or {}) do
+        local d = b.pos:DistToSqr(pos)
+        if d < bd then best, bd = b.pos, d end
+    end
+    for _, e in ipairs(ents.FindByClass("lc_citybin")) do
+        if IsValid(e) then
+            local d = e:GetPos():DistToSqr(pos)
+            if d < bd then best, bd = e:GetPos(), d end
+        end
+    end
+    for _, e in ipairs(ents.FindInSphere(pos, maxDist)) do
+        local m = string.lower(e:GetModel() or "")
+        if string.find(m, "trash", 1, true) or string.find(m, "dumpster", 1, true) or string.find(m, "garbage", 1, true) then
+            local d = e:GetPos():DistToSqr(pos)
+            if d < bd then best, bd = e:GetPos(), d end
+        end
+    end
+    return best
+end
+LC.NearestBin = NearestBin
+
 local function EndCan(success)
     if not can then return end
     local c = can
@@ -486,9 +511,20 @@ local function EndCan(success)
         c.cst.untilT = CurTime() + 3
     end
     if IsValid(c.prop) then SafeRemoveEntityDelayed(c.prop, success and 5 or 30) end
+    -- the marker to the bin goes with it
+    if IsValid(c.ply) and c.marked and c.ply.lcWaypoint and c.ply.lcWaypoint.pos == c.bin and LC.SetWaypoint then LC.SetWaypoint(c.ply, nil) end
 end
 
-local function StartCan(cop, cst, ply)
+-- Only with a bin near enough to point at (the owner, 7 November), never in the infestation and
+-- never on somebody's job: the officer wants the can in a bin, not a chase.
+local function CanCandidate(ply, cop)
+    if LC.QuestOf and LC.QuestOf[ply] then return nil end
+    if LC.InInfest and (LC.InInfest(ply:GetPos()) or LC.InInfest(cop:GetPos())) then return nil end
+    return NearestBin(ply:GetPos())
+end
+LC.CanCandidate = CanCandidate
+
+local function StartCan(cop, cst, ply, bin)
     local prop = ents.Create("prop_physics")
     if not IsValid(prop) then return end
     prop:SetModel("models/props_junk/popcan01a.mdl")
@@ -504,7 +540,7 @@ local function StartCan(cop, cst, ply)
     LC.SetState(cop, cst, "event")
     cst.eventUntil = CurTime() + 45
     cop:EmitSound("npc/metropolice/vo/pickupthecan1.wav", 78)
-    can = { prop = prop, cop = cop, cst = cst, ply = ply, stage = "dropped", t = CurTime() }
+    can = { prop = prop, cop = cop, cst = cst, ply = ply, stage = "dropped", t = CurTime(), bin = bin }
     canCooldown[ply] = CurTime() + 600
 end
 
@@ -516,6 +552,11 @@ local function OnPickup(ply, ent)
             timer.Simple(0.6, function()
                 if can and IsValid(can.cop) then can.cop:EmitSound("npc/metropolice/vo/putitinthetrash1.wav", 78) end
             end)
+        end
+        -- "now put it in the trash": a marker to the nearest bin, in case it isn't in plain sight
+        if can.bin and LC.SetWaypoint and IsValid(can.ply) then
+            LC.SetWaypoint(can.ply, can.bin, "The bin", 90)
+            can.marked = true
         end
     end
 end
@@ -529,7 +570,7 @@ local function NearTrash(pos)
     end
     for _, e in ipairs(ents.FindInSphere(pos, 70)) do
         local m = string.lower(e:GetModel() or "")
-        if string.find(m, "trash", 1, true) or string.find(m, "dumpster", 1, true) or string.find(m, "garbage", 1, true) then
+        if e:GetClass() == "lc_citybin" or string.find(m, "trash", 1, true) or string.find(m, "dumpster", 1, true) or string.find(m, "garbage", 1, true) then
             return true
         end
     end
@@ -553,7 +594,8 @@ local function CanThink(now)
                         and not (LC.DisguisedAsCP and LC.DisguisedAsCP(ply)) and not (LC.Stops and LC.Stops[ply])
                         and not (LC.PlayerIsStalker and LC.PlayerIsStalker(ply))
                         and ply:GetPos():DistToSqr(npc:GetPos()) < 250 * 250 then
-                        return StartCan(npc, st, ply)
+                        local bin = CanCandidate(ply, npc)
+                        if bin then return StartCan(npc, st, ply, bin) end
                     end
                 end
             end

@@ -1,7 +1,9 @@
 --[[
     Living City (client): the tip cards that slide in on the right.
     One at a time; urgent ones go straight to the front. Keys are shown as
-    the player's own bindings.
+    the player's own bindings. Tips and the notice cards at the top take
+    turns (the owner, 7 November: one thing on the screen at a time), with a
+    short gap between them; an urgent tip doesn't wait.
 ]]
 
 LC_CL = LC_CL or {}
@@ -89,13 +91,20 @@ end)
 
 local function Ease(f) f = math.Clamp(f, 0, 1) return 1 - (1 - f) * (1 - f) * (1 - f) end
 
+function LC_CL.HintShowing() return LC_CL.hintCur ~= nil end
+
 hook.Add("HUDPaint", "LivingCityHints", function()
     local now = CurTime()
     local h = LC_CL.hintCur
-    if h and h.start and now - h.start > h.dur then h = nil LC_CL.hintCur = nil end
+    if h and h.start and now - h.start > h.dur then h = nil LC_CL.hintCur = nil LC_CL.hintFreeAt = now + 1.5 end
     if not h then
+        local nxt = LC_CL.hintQueue[1]
+        if not nxt then return end
+        if not nxt.urgent then
+            if now < (LC_CL.hintFreeAt or 0) then return end
+            if LC_CL.NoticeShowing and LC_CL.NoticeShowing() then return end
+        end
         h = table.remove(LC_CL.hintQueue, 1)
-        if not h then return end
         LC_CL.hintCur = h
     end
     if not h.start then

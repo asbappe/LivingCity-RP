@@ -116,7 +116,7 @@ LC.HINTS = {
     alert3 = { title = "Overwatch is coming", urgent = true,
         text = "A squad of Overwatch soldiers is hunting you, and they shoot to kill. Get out of their line of sight and stay hidden. Your wanted level drops twice as fast in rebel territory." },
     stopped = { title = "Stop and search", urgent = true,
-        text = "A Civil Protection unit is searching you. Stand still (putting your hands up helps: {+menu_context} > Me). If you walk away, you'll be wanted for evading inspection. Anything illegal they find is taken from you." },
+        text = "A Civil Protection unit is searching you. Stand still and put your hands up ({gm_showhelp}, then 2: Put my hands up). If you walk away, you'll be wanted for evading inspection. Anything illegal they find is taken from you." },
     tied_self = { title = "Your hands are cuffed", urgent = true,
         text = "You can't use anything, and you can only walk. Someone else can uncuff you. If nobody is around, try {+menu_context} > Me > Work at the cuffs to get free; if anyone sees you doing it, they tighten the cuffs." },
     socio_yellow = { title = "Sociostability: marginal",
@@ -127,6 +127,8 @@ LC.HINTS = {
                  cp = "You may use lethal force at your own discretion, and units stop twice as many people. It ends when the city calms down, or when an officer ends it." } },
     searched = { title = "Searched",
         text = "Any contraband (illegal items) in your pockets will be found in a search. Your stash at home ({+menu_context} > Getting by) is never searched, but inspection sweeps sometimes raid it." },
+    story_open = { title = "Your story",
+        text = "You've done enough ordinary jobs that a story of your own can come up on your board ({gm_showspare1}): a quest with choices, marked as your story. It stays posted until you take it." },
     running = { title = "Don't run in front of Civil Protection units", urgent = true,
         text = "A Civil Protection unit told you to stop running. Stop within two seconds and nothing more happens. If you keep running, you'll be wanted for fleeing." },
     jailed = { title = "In custody",
@@ -794,6 +796,10 @@ hook.Add("LivingCityAlert", "LivingCityHints", function(ply, level)
 end)
 hook.Add("LivingCityPlayerStopped", "LivingCityHints", function(ply) if IsPly(ply) then LC.Hint(ply, "stopped") end end)
 hook.Add("LivingCitySearched", "LivingCityHints", function(_, target) if IsPly(target) then LC.Hint(target, "searched") end end)
+-- a story of your own, once the ordinary jobs are done (sv_livingcity_quests.lua, LC.StoryGateOpen)
+hook.Add("LivingCityQuestComplete", "LivingCityHintsStory", function(ply)
+    if IsPly(ply) and LC.StoryGateOpen and LC.StoryGateOpen(ply) then LC.Hint(ply, "story_open") end
+end)
 hook.Add("LivingCityScannerReport", "LivingCityHints", function(pilot, report)
     for _, p in ipairs(player.GetAll()) do
         if IsPly(p) and LC.PlayerIsCP and LC.PlayerIsCP(p) then LC.Hint(p, "scanreport") end

@@ -45,13 +45,33 @@ function LC.StartAct(ply, name)
     return true
 end
 
+-- The engine activity behind each gesture (what the game's own "act" command plays), and whether it's
+-- a gesture layered over the body (you keep standing or walking) or a whole-body taunt.
+local GESTURE_ACTS = {
+    wave = { "ACT_GMOD_GESTURE_WAVE", gesture = true }, bow = { "ACT_GMOD_GESTURE_BOW", gesture = true },
+    nod = { "ACT_GMOD_GESTURE_AGREE", gesture = true }, shake = { "ACT_GMOD_GESTURE_DISAGREE", gesture = true },
+    beckon = { "ACT_GMOD_GESTURE_BECON", gesture = true }, point = { "ACT_SIGNAL_FORWARD", gesture = true },
+    halt = { "ACT_SIGNAL_HALT", gesture = true },
+    salute = { "ACT_GMOD_TAUNT_SALUTE" }, cheer = { "ACT_GMOD_TAUNT_CHEER" }, laugh = { "ACT_GMOD_TAUNT_LAUGH" },
+}
+LC.GestureActs = GESTURE_ACTS
+
 function LC.Gesture(ply, name)
     if not cvActs:GetBool() then return false end
     local g = LCA.Gestures[name]
     if not g or not ply:Alive() or (LC.IsTied and LC.IsTied(ply)) then return false end
     if (ply.lcGestureNext or 0) > CurTime() then return false end
     ply.lcGestureNext = CurTime() + 1.5
-    ply:ConCommand("act " .. g)
+    -- Played as the player's own animation event, which the engine shows to everyone; sending the
+    -- player the "act" command instead did nothing on the owner's server (7 November).
+    local def, act = GESTURE_ACTS[name], nil
+    for _, n in ipairs(def or {}) do act = _G[n] if act then break end end
+    if act and ply.DoCustomAnimEvent then
+        ply:DoCustomAnimEvent(PLAYERANIMEVENT_CUSTOM_GESTURE or 20, act) -- (the base gamemode plays it in the custom gesture slot)
+        ply.lcGestureAct = act
+    else
+        ply:ConCommand("act " .. g)
+    end
     hook.Run("LivingCityGesture", ply, name) -- (the morning parade counts cheers: sv_livingcity_exercise.lua)
     return true
 end
