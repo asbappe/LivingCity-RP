@@ -2503,6 +2503,45 @@ return nil
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
 
+# big sends in pieces (sh_livingcity_net.lua): put back together and handed to the message's own
+# receiver, which reads its length and data as if it came in one message; long global strings in parts
+err = L.execute(r"""
+local N = LC.Net
+if not (N and N.Deliver and N.Assemble and net["recv_lc_big"] and hook.t.InitPostEntity and hook.t.InitPostEntity.LivingCityNetReady) then
+    return "net: the pieces receiver or the ready handshake is missing"
+end
+local rU, rD, rS, rcv = net.ReadUInt, net.ReadData, net.ReadString, net.Receivers
+local whole = string.rep("abcdefghij", 7000)
+local got
+net.Receivers = { lc_nettest = function()
+    local len = net.ReadUInt(32)
+    got = net.ReadData(len)
+    if #got ~= len then got = "bad length" end
+end }
+local pieces = N.Split(whole, N.PIECE)
+local okR, errR = pcall(function()
+    for i, piece in ipairs(pieces) do
+        local q = { 7, i, #pieces, #piece }
+        net.ReadString = function() return "lc_nettest" end
+        net.ReadUInt = function() return table.remove(q, 1) end
+        net.ReadData = function() return piece end
+        net["recv_lc_big"]()
+    end
+end)
+net.ReadUInt, net.ReadData, net.ReadString, net.Receivers = rU, rD, rS, rcv
+if not okR then return "net pieces: " .. tostring(errR) end
+if got ~= whole then return "net: a send in pieces didn't reach its receiver whole" end
+if net.ReadUInt ~= rU or net.ReadData ~= rD then return "net: the readers weren't put back" end
+local okH, errH = pcall(hook.t.InitPostEntity.LivingCityNetReady)
+if not okH then return "net ready: " .. tostring(errH) end
+_globals.lc_nettest_g, _globals.lc_nettest_g_2, _globals.lc_nettest_g_parts = "abc", "def", 2
+if LC.GetGlobalLong("lc_nettest_g", "") ~= "abcdef" then return "net: a long global string isn't read back whole" end
+_globals.lc_nettest_g, _globals.lc_nettest_g_2, _globals.lc_nettest_g_parts = nil, nil, nil
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
 # the official folder for recordings and songs is the server's garrysmod/sound/livingcity/ (CORE.md):
 # what players read in the guide and the sound check must send them there, never to the old sound addon
 _guide = open(os.path.join(GMDIR, "gamemode", "cl_init.lua")).read()

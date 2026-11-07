@@ -299,7 +299,7 @@ function LC.Broadcast(ply, text)
     if IsValid(ply) then ply.lcBroadcastNext = CurTime() + 60 end
     local who = IsValid(ply) and ((ply:GetNW2String("lcf_faction", "") == "admin" or ply:IsAdmin()) and "The City Administrator"
         or ply:GetNW2String("lcf_title", "Civil Protection")) or "The City Administrator"
-    SetGlobal2String("lc_broadcast", text)
+    LC.SetGlobalLong("lc_broadcast", text) -- (up to 600 characters: in parts, see sh_livingcity_net.lua)
     SetGlobal2String("lc_broadcast_by", who)
     SetGlobal2Float("lc_broadcast_at", CurTime())
     net.Start("lc_broadcast")
@@ -332,14 +332,14 @@ local function Laws()
         local raw = file.Read(LAWS_FILE, "DATA")
         local t = raw and util.JSONToTable(raw) or nil
         LC.Laws = istable(t) and t or table.Copy(DEFAULT_LAWS)
-        SetGlobal2String("lc_laws", util.TableToJSON(LC.Laws))
+        LC.SetGlobalLong("lc_laws", util.TableToJSON(LC.Laws)) -- (in parts: past 511 characters one string is cut)
     end
     return LC.Laws
 end
 local function SaveLaws()
     file.CreateDir(DIR)
     file.Write(LAWS_FILE, util.TableToJSON(Laws()))
-    SetGlobal2String("lc_laws", util.TableToJSON(Laws()))
+    LC.SetGlobalLong("lc_laws", util.TableToJSON(Laws()))
 end
 hook.Add("InitPostEntity", "LivingCityLaws", function() Laws() end)
 

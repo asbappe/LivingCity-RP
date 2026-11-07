@@ -90,6 +90,22 @@ local function SendAll(to, omit)
     else net.Broadcast() end
 end
 
+-- Every other player's game gets the new tuning: at once, then at most every half second
+-- while someone drags a slider (each send is the whole tuning, to everyone).
+local shareNext, shareOmit, sharePending = 0, nil, false
+function LC.EndingTuneShare(omit)
+    local now = CurTime()
+    if now >= shareNext and not sharePending then
+        shareNext = now + 0.5
+        return SendAll(nil, omit)
+    end
+    shareOmit, sharePending = omit, true
+    timer.Create("LivingCityEndingTuneShare", math.max(0.05, shareNext - now), 1, function()
+        sharePending, shareNext = false, CurTime() + 0.5
+        SendAll(nil, IsValid(shareOmit) and shareOmit or nil)
+    end)
+end
+
 -- everything the menu shows: the endings (and which one is on), and each one's settings
 function LC.EndingTuneInfo()
     local list = {}
@@ -144,7 +160,7 @@ function LC.EndingTuneSet(ply, kind, a, b, p, y, r)
         return false
     end
     Save()
-    SendAll(nil, IsValid(ply) and ply or nil)
+    LC.EndingTuneShare(IsValid(ply) and ply or nil)
     return true
 end
 
