@@ -851,3 +851,19 @@ Notes:
   Notes:
 - [ ] **Manpower after a restart (7 November, part 2):** note the reserves, restart the map: they're the same.
   Notes:
+
+## 7 November, part 3
+- [ ] **Combine manpower on the tablet:** as the Administrator, right click the tablet; "Combine manpower" lists Civil Protection and Overwatch (in reserve, lost today, next unit or soldier), matching F2 > Combine manpower. With `lc_manpower 0` it is gone.
+- [ ] **Manpower on the records terminal:** as a unit, open the records terminal (`!records`); the Manpower tab shows the same lines as F2 > Unit tools.
+- [ ] **Headcrab hunt:** as a rebel, empty your camp's supply crate (or wait for it to run out): a notice says a Headcrab hunt is on the Operations board (F4). Take it, kill four headcrabs in the infested ground, pick up the raw meat with E, stand by the crate: one meal each, the job completes, extra pay if the crate was empty. Zombies and city headcrabs don't count.
+- [ ] **Evidence burn:** confiscate a few things (search, arrest, raid), check F2 > Unit tools > Evidence lists them; as an admin press "Burn it now": metrocops carry boxes to the loudspeaker or square, the pile forms, the PA calls it, citizens gather, fire and smoke burn out and clean up. None during a curfew, lockdown, ending or dream.
+- [ ] **Snatching evidence:** as a citizen or rebel, press E on something in the pile before it catches: you get it back, and are wanted if a unit is watching. Once burning: "Too late".
+- [ ] **Food scarcity:** the dispenser's next ration is about 25 minutes away (a unit's still 10); a Commissary ration is 15 credits; the second tin from the Resistance crate says come back in 15 minutes; fishing casts take 25 to 45 seconds and mostly come up empty; a killed bird is replaced only after about 90 seconds.
+- [ ] **Network safety:** with about 100 NPCs and territory fights going, reconnect as superadmin with the editor overlay on: no "reliable data too big" kick, and the overlay and territory map fill in once loaded (big panels may take a few seconds).
+- [ ] **Long laws:** as Administrator, add two long laws (C > The city > The city's laws): every law board shows all of them, and a long broadcast shows whole on the city screens.
+- [ ] **Bug fixes to check:** pickpocketing works right after a map start; prisoners have fists and hands in a cell; dreamers hold their hands; the master interface can be hacked again; the quest trail goes away while your memory is clouded.
+- [ ] **Arrest struggle, officer gone:** have the officer walk 220+ units away (or die) mid-struggle: "The officer is gone: the struggle is over.", not wanted, no "You broke free".
+- [ ] **Lab wrecking pay:** as a citizen, wrecking a lab pays nothing; as a unit, 15 XP, 20 credits and the [Civil Protection] line.
+- [ ] **AR2 rebel kill:** as a unit holding the AR2, kill a rebel: "30 AR2 rounds", no SMG box.
+- [ ] **NPC cap:** a fresh server shows `lc_npc_budget` 100.
+  Notes:
