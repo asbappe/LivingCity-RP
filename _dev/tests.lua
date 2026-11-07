@@ -3628,6 +3628,16 @@ LC.IsSeen = function() return false end
 LC.RebelTrimCrowds(CurTime())
 LC.IsSeen = seenWas
 ok(LC.RebelsIn(rz) == roomFor, "is thinned to what it has room for (lc_rebel_room), unseen", LC.RebelsIn(rz))
+for _ = 1, 3 do
+    local _, rst = LC.SpawnRebel(rz.pos + Vector(math.random(-50, 50), math.random(-50, 50), 4), rz)
+    if rst then rst.unmanaged = true end
+end
+local clearing = LC.QuietRebels(rz.pos, rz.r or 300, 60)
+LC.IsSeen = function() return false end
+LC.RebelTrimCrowds(CurTime())
+LC.IsSeen = seenWas
+ok(LC.RebelsIn(rz) == roomFor + 3, "but not while a team is retaking it: the fighters holding it stay to be cleared", LC.RebelsIn(rz))
+clearing.untilT = 0
 for n, st in pairs(LC.NPCs) do if IsValid(n) and st.role == "rebel" then n:Remove() end end
 
 ----------------------------------------------------------------------
@@ -8223,6 +8233,10 @@ for _, p in ipairs(player.GetAll()) do p:SetPos(FAR) end
 section("Disguises: plain clothes, Resistance gear, and where to get them")
 local fighter = newPlayer("PlainFighter", "resistance", nil, 500)
 fighter:SetNW2String("lc_model", "models/player/group03/male_04.mdl")
+-- (joining the Resistance respawns them, and 2.5 seconds later they come back in plain clothes:
+-- let that happen now, and take them off, so it can't put them back on during the gun check below)
+_run(3)
+LC.TakeOff(fighter, true)
 fighter:SetPos(Vector(-47000, 47000, 0))
 ok(LC.PlayerIsHunted(fighter) and LC.PlayerIsWanted(fighter), "(a Fighter is hunted on sight)")
 ok(LC.Wear(fighter, "plain") and LC.PassesAsCitizen(fighter), "the Resistance have plain clothes of their own, no item needed")
@@ -11916,6 +11930,9 @@ local dour = newPlayer("Dour", "citizen") dour:SetPos(P0 + Vector(400, -250, 0))
 fan:SetPData("lce_standing", 200)
 fan:SetNW2Float("lcn_hunger", 40)
 _setcvar("lc_exercise_muster", 15)
+-- (units left about by earlier tests, the drill's among them, would be drafted into the column from
+-- thousands of units away, or break off it to arrest someone: the column is formed fresh here)
+for n, s in pairs(LC.NPCs) do if IsValid(n) and LC.IsSecurity(s) then n:Remove() end end
 ok(LC.StartEvent("parade"), "the morning parade starts")
 local X = LC.ExerciseSession()
 ok(X and #X.column >= 2, "a column forms up at the start", X and #X.column)
@@ -16798,6 +16815,7 @@ section("Sealed directives: how the endings start, and the G-Man's hand")
         local q = newPlayer("NoVote" .. f, "citizen")
         q:SetNW2String("lcf_faction", f)
         if LC.AdminVoter(q) then noVote = false end
+        q:SetNW2String("lcf_faction", "citizen") -- (back as they were: a player left a stalker is put in the next Combine zone a later test makes)
         q:SetPos(Vector(-30000, 30000, 0))
     end
     ok(noVote, "nor do rebels, vortigaunts, stalkers or the infected")
@@ -16959,7 +16977,9 @@ if IsValid(c) then c:Remove() end
 -- the stalker: litter and a body in there
 local body = ents.Create("prop_ragdoll") body:SetPos(C + Vector(-60, 40, 0)) body:Spawn()
 body.lcBody = {}
-table.insert(LC.Bodies, { ent = body, born = CurTime() - 100 })
+-- (older than the longest wait for a player mortician: 200 seconds. A citizen given Union work as a
+-- mortician by an earlier test stretches the wait from 60 to that)
+table.insert(LC.Bodies, { ent = body, born = CurTime() - 250 })
 local chores = LC.CombineChores(CurTime())
 local seen = {}
 for _, j in ipairs(chores) do if j.ent then seen[j.ent] = j.kind end end
@@ -18864,6 +18884,9 @@ function RebelEventTests()
     local function Clear(sk)
         if not sk then return end
         if not sk.done then LC.EndSkirmish(sk, "test") end
+        -- (an operation that got what it came for is done but still the city's skirmish, and
+        -- EndSkirmish passes over a done one: let it go here, or no raid or sweep starts after)
+        if LC.Skirmish == sk then LC.Skirmish = nil end
         for _, r in ipairs(sk.rebels) do if IsValid(r) then r:Remove() end end
         for _, u in ipairs(sk.units) do if IsValid(u) and LC.NPCs[u] and LC.NPCs[u].unmanaged then u:Remove() end end
         _run(1)
@@ -19140,6 +19163,7 @@ function ManpowerTests()
     for _, z in ipairs(LC.ZonesOfKind("rebel")) do LC.RemoveZone(z) end
     local O = Vector(72000, 72000, 0)
     local rz = LC.AddZone(O, 500, "rebel", 0)
+    if LC.Skirmish then LC.EndSkirmish(LC.Skirmish, "test") end -- (nothing else on: the reserve is what stops it)
     P("rebel").reserve = 1
     local okR, why = LC.StartRebelRaid(rz, O + Vector(3000, 0, 0))
     ok(not okR and LC.Skirmish == nil and string.find(tostring(why), "reserve", 1, true) ~= nil, "a raid with only 1 fighter in reserve doesn't go", tostring(why))
