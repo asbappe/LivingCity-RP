@@ -12,6 +12,10 @@
   - **The future endings setup:** the G-Man is set aside (`lc_directives` 0). Ideas to start from, in `docs/features/endings.md` ("Ideas for the future endings setup"): a refused directive makes dreams keep (waking with the dream's weapons and stats) or leak into reality (a one-time mingebag swarm on Civil Protection as the dreams end).
   - **The Workshop dance animations** (3830765710, 2538387266): only as a required Workshop download, with the owner's say.
   - **Unconfirmed in game:** everything in PLAYTEST.md's "7 November, part 2" section, above all the dreams (the per-NPC hold, out-of-map ground) and the arrest struggle.
+  - **To build later (the owner, 7 November):**
+    - **Burning confiscated contraband.** What units confiscate in a contraband sweep, block raid or search goes into an evidence stock instead of vanishing; after a sweep (or once enough has built up), metrocops carry it to a spot (the plaza, or a new editor point), pile it up and burn it: fire, smoke, the PA announces it, citizens gather to watch, the items lie in the pile as props while it burns. Maybe a small Resistance job to snatch things out of the pile before it catches.
+    - **Rebel quests for headcrab meat.** Resistance jobs to go into infestation territory and bring back raw headcrabs for food (dangerous, worth it while the supply crate is empty).
+    - **A scarcity update.** The city has hardly any scarcity: the owner ends up with too much food without trying. Look at every source of food (rations and cards, Commissary prices, bins, the supply crate, fishing, birds, headcrabs, kitchen and factory shifts, gifts) against how fast hunger goes down, and tighten it so food takes some effort, for citizens as much as rebels (the rebel crate's scaling and the city's ration stores are the place to start).
 
 **Pending from the 1 November playtest (late)**:
 - **Marrow with 100+ NPCs:** the crowding is fixed (rings spill outward, spawns avoid people, fallen NPCs come back). Unconfirmed: whether the `SendData reliable data too big (744335)` that dropped the owner in a loop came from the pile-up. If it happens again: the console log and the debug report.
