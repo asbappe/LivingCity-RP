@@ -13557,6 +13557,9 @@ s1.lcInv.bread = 3
 s1:RemovePData("lc_burned")
 local credits0, hp0 = LC.Credits(s1), s1:Health()
 local before = LC.DreamSnapshot(s1)
+-- (the awake citizen's Union work, and its tools, now rather than from the spawn timer mid-dream:
+-- the job is random, and one with tools used to change their weapons during the comparison)
+if LC.GiveUnionWork then LC.GiveUnionWork(aw) end
 local awPos, awWeps = aw:GetPos(), #aw.weps
 local cityNPC
 for npc in pairs(LC.NPCs or {}) do if IsValid(npc) then cityNPC = npc break end end
