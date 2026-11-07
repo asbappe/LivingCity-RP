@@ -100,10 +100,11 @@ function LC.IsJunkModel(model)
 end
 
 -- Combine consoles and terminals (the stalkers who look after the Combine's buildings work them:
--- sv_livingcity_zonestalkers.lua). They go in LC.StaticTerminals.
+-- sv_livingcity_zonestalkers.lua). They go in LC.StaticTerminals. (Its own name: LC.IsTerminalModel is the
+-- heist's, sv_livingcity_heist.lua, which also knows the master interface; this one, loaded later, replaced it.)
 LC.TERMINAL_MODELS = { "props_combine/combine_interface", "props_combine/combine_intmonitor", "props_combine/combine_smallmonitor",
     "props_combine/combine_monitorbay", "props_combine/combine_intwallunit", "props_combine/breenconsole", "props_combine/combine_console" }
-function LC.IsTerminalModel(model)
+function LC.IsStalkerConsoleModel(model)
     model = string.lower(model or "")
     if model == "" then return false end
     for _, pat in ipairs(LC.TERMINAL_MODELS) do if string.find(model, pat, 1, true) then return true end end
@@ -154,7 +155,7 @@ function LC.ReadStaticFixtures(path)
         local name = f:Read(128) or ""
         name = string.match(name, "^[^%z]*") or ""
         local kind = LC.FixtureKindForModel(name) or (LC.IsBinModel(name) and "bin") or (LC.IsSurfaceModel(name) and "surface")
-            or (LC.RestKindForModel(name) and "rest") or (LC.IsJunkModel(name) and "junk") or (LC.IsTerminalModel(name) and "terminal")
+            or (LC.RestKindForModel(name) and "rest") or (LC.IsJunkModel(name) and "junk") or (LC.IsStalkerConsoleModel(name) and "terminal")
         kinds[i] = kind and { kind, string.lower(name) } or false
     end
     local leafN = f:ReadLong()

@@ -16491,8 +16491,10 @@ con:Remove()
 LC.StalkerConsolePropsReset()
 -- one built into the map (prop_static, read from the map file like the sinks and stoves)
 local stWas = LC.StaticTerminals
-ok(LC.IsTerminalModel("models/props_combine/combine_interface002.mdl") and not LC.IsTerminalModel("models/props_c17/furnituresink001a.mdl"),
+ok(LC.IsStalkerConsoleModel("models/props_combine/combine_interface002.mdl") and not LC.IsStalkerConsoleModel("models/props_c17/furnituresink001a.mdl"),
     "the map file's Combine consoles are known by their model (and a sink isn't one)")
+ok(LC.IsTerminalModel("models/props_combine/masterinterface.mdl") and LC.IsMasterTerminalModel("models/props_combine/masterinterface.mdl"),
+    "(the heist's own check still knows the master interface: the stalkers' list doesn't replace it)")
 LC.StaticTerminals = { { kind = "terminal", pos = Z + Vector(120, 120, 0), ang = Angle(0, 90, 0), model = "models/props_combine/combine_interface002.mdl" } }
 local sterms = LC.StalkerTerminals(hq, CurTime())
 local syaw = sterms[1] and ((sterms[1].yaw % 360) + 360) % 360 or -1

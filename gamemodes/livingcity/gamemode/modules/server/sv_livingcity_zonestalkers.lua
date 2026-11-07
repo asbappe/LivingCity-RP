@@ -133,7 +133,7 @@ end
 -- sinks and stoves: LC.StaticTerminals, sv_livingcity_staticprops.lua), and any that are props.
 local PROP_CLASSES = { "prop_physics", "prop_physics_multiplayer", "prop_dynamic", "prop_dynamic_override" }
 
-local function ConsoleModel(m) return LC.IsTerminalModel and LC.IsTerminalModel(m) or false end
+local function ConsoleModel(m) return LC.IsStalkerConsoleModel and LC.IsStalkerConsoleModel(m) or false end
 
 local propCache, propAt = {}, -1000
 local function ConsoleProps(now)
