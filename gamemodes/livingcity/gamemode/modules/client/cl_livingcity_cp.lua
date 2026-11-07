@@ -254,6 +254,16 @@ local function BuildRecords()
         Text(rc, "\"" .. (q.text or "") .. "\"")
     end
     sheet:AddSheet("Requests (" .. #(rec.requests or {}) .. ")", reqs)
+
+    -- manpower (sv_livingcity_manpower.lua): the same lines as the unit tools and F2 > Combine manpower (the owner, 7 November)
+    local mp = rec.manpower or LC_CL.Manpower or {}
+    if #mp > 0 then
+        local man = vgui.Create("DScrollPanel", sheet)
+        local mc = man:GetCanvas()
+        Text(mc, "The reserve, and what's been lost", CYAN, "DermaDefaultBold")
+        for _, l in ipairs(mp) do Text(mc, l) end
+        sheet:AddSheet("Manpower", man)
+    end
 end
 
 net.Receive("lc_records", function()

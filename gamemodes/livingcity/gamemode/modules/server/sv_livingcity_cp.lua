@@ -371,6 +371,8 @@ function LC.SendRecords(unit, search)
     for _, b in ipairs(Bolos()) do data.bolos[#data.bolos + 1] = b end
     for _, q in ipairs(LC.Requests or {}) do data.requests[#data.requests + 1] = q end
     data.search = search
+    -- the Combine's manpower (sv_livingcity_manpower.lua), the same lines the unit tools show (the owner, 7 November)
+    data.manpower = LC.ManpowerReadout and LC.ManpowerReadout("combine") or nil
     LC.SendCompressed("lc_records", data, unit)
     return true
 end

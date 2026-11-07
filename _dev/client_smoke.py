@@ -237,7 +237,8 @@ util.JSONToTable = function() return {
       { key = "#99-000", name = "Old Record", cid = "#99-000", seen = 1700000000, violations = 0, v = {}, n = {} } },
     bolos = { { id = "1-1", key = "#12-345", name = "Ada Grey", cid = "#12-345", text = "red jacket", by = "CP 04", at = 1700000000, untilT = 1900000000 } },
     requests = { { name = "Ada Grey", cid = "#12-345", text = "help", where = "by the ration line", t = 1700000000 } },
-    officer = true, socioctl = true, socio = "yellow" } end -- (socioctl: the Administrator's buttons)
+    officer = true, socioctl = true, socio = "yellow", -- (socioctl: the Administrator's buttons)
+    manpower = { "Civil Protection: 13 in reserve (of 20), 2 lost today", "Next unit in about 4 minutes", "Overwatch: 12 in reserve (of 12), 0 lost today", "The reserve is full" } } end
 made = 0
 okP, errP = pcall(net["recv_lc_records"])
 if not okP then problems[#problems + 1] = "records terminal: " .. tostring(errP) end
@@ -1530,7 +1531,7 @@ local ok, e = pcall(function()
     LC_CL.DreamsMenu()
     LC_CL.DreamAct("optout")
     -- the Administrator's tablet: tonight's dream, by mood
-    local office = { jobs = {}, people = {}, dream = { ready = true, at = 30,
+    local office = { jobs = {}, people = {}, manpower = { "Civil Protection: 13 in reserve (of 20), 2 lost today", "Next unit in about 4 minutes" }, dream = { ready = true, at = 30,
         groups = { { mood = "happy", name = "Happy", endings = { { id = "bus", name = "The Bus" } } }, { mood = "neutral", name = "Neutral", endings = {} },
             { mood = "nightmare", name = "Nightmare", endings = { { id = "water", name = "The Flood" } } } },
         waiting = { id = "bus", name = "The Bus", mood = "Happy", yours = true } } }

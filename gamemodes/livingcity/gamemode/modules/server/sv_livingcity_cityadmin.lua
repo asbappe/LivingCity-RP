@@ -385,7 +385,9 @@ function LC.OpenAdminOffice(ply)
     for _, o in ipairs(LCJ and LCJ.Occupations or {}) do if not LCJ.Closed(o) then jobs[#jobs + 1] = { id = o.id, name = o.name } end end
     local people = {}
     for _, p in ipairs(player.GetAll()) do if p ~= ply then people[#people + 1] = { idx = p:EntIndex(), name = Name(p), wanted = LC.PlayerIsWanted and LC.PlayerIsWanted(p) or false } end end
-    LC.SendCompressed("lc_admin_office", { jobs = jobs, people = people, dream = LC.DreamOffice and LC.DreamOffice() or nil }, { ply })
+    -- the Combine's manpower (sv_livingcity_manpower.lua), as F2 > Combine manpower shows it (the owner, 7 November)
+    local manpower = LC.ManpowerReadout and LC.ManpowerReadout("combine") or nil
+    LC.SendCompressed("lc_admin_office", { jobs = jobs, people = people, dream = LC.DreamOffice and LC.DreamOffice() or nil, manpower = manpower }, { ply })
 end
 
 ------------------------------------------------------------------------

@@ -132,6 +132,16 @@ net.Receive("lc_admin_office", function()
     o4:SetIcon("icon16/coins.png")
     for _, j in ipairs(t.jobs or {}) do jb:AddOption(j.name, function() Act("bonus", j.id) end) end
     menu:AddOption("The Commissary and the market", function() net.Start("lc_market_open") net.SendToServer() end):SetIcon("icon16/cart.png") -- (cl_livingcity_market.lua)
+    -- the Combine's manpower (sv_livingcity_manpower.lua): Civil Protection's and Overwatch's reserves, as F2 > Combine manpower shows them
+    local mp = t.manpower or LC_CL.Manpower or {}
+    if #mp > 0 then
+        local mm, om = menu:AddSubMenu("Combine manpower")
+        om:SetIcon("icon16/group.png")
+        for _, l in ipairs(mp) do
+            local o = mm:AddOption(l)
+            if o.SetTextColor then o:SetTextColor(Color(120, 120, 130)) end
+        end
+    end
     menu:AddSpacer()
     for _, p in ipairs(t.people or {}) do
         p.ent = Entity(p.idx or 0)

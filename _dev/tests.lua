@@ -18075,6 +18075,39 @@ function ManpowerTests()
     ok(LC.ManpowerReadoutFor(unit)[2] == "The reserve is full", "a full reserve says so")
     ok(#LC.ManpowerReadoutFor(cit) == 0, "a citizen sees neither")
 
+    -- The owner, 7 November: the reserves on the Administrator's tablet and on the records terminal too.
+    section("Manpower: the Administrator's tablet and the records terminal show the Combine's reserves")
+    do
+        local boss = newPlayer("MPAdmin", "admin")
+        boss:SetPos(FAR + Vector(0, 200, 0))
+        P("cp").reserve, P("cp").lost = 13, 2
+        local want = table.concat(LC.ManpowerReadout("combine"), " | ")
+        local sentT = {}
+        local realSend = LC.SendCompressed
+        LC.SendCompressed = function(msg, tbl, to) sentT[msg] = tbl return realSend(msg, tbl, to) end
+        local function Open()
+            sentT = {}
+            LC.OpenAdminOffice(boss)
+            LC.SendRecords(unit)
+            return sentT.lc_admin_office, sentT.lc_records
+        end
+        local office, recs = Open()
+        local om = office and office.manpower or {}
+        ok(om[1] == "Civil Protection: 13 in reserve (of 20), 2 lost today" and om[2] ~= nil and om[3] and string.find(om[3], "^Overwatch: ") ~= nil and om[4] ~= nil,
+            "the tablet's office: Civil Protection and Overwatch, in reserve, lost today, and the next recruit", table.concat(om, " | "))
+        ok(table.concat(om, " | ") == want, "the same lines as F2 > Combine manpower and the unit tools", want)
+        ok(recs and recs.manpower and table.concat(recs.manpower, " | ") == want, "the records terminal has them too",
+            recs and table.concat(recs.manpower or {}, " | ") or "no records sent")
+        _setcvar("lc_manpower", 0)
+        office, recs = Open()
+        ok(office and #(office.manpower or {}) == 0 and recs and #(recs.manpower or {}) == 0, "with manpower off (lc_manpower 0), neither shows it")
+        _setcvar("lc_manpower", 1)
+        LC.SendCompressed = realSend
+        P("cp").reserve, P("cp").lost = 20, 0
+        LC.SetFaction(boss, "citizen", nil, true) -- (steps down, so later tests find the office empty)
+        boss:SetPos(Vector(-120000, -120000, 0))
+    end
+
     section("Manpower: kept per map across restarts")
     P("rebel").reserve, P("rebel").lost, P("cp").reserve, P("ota").reserve = 4, 9, 17, 2
     local out = LC.SpawnRebel(at, nil)
