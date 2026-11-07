@@ -561,17 +561,20 @@ SHIFTS.cleanup = {
             local d = b:GetPos():DistToSqr(edge)
             if IsValid(b) and (not bd2 or d < bd2) then barrel, bd2 = b, d end
         end
-        local dump = Count("nest_dumped", 3, barrel and "Empty your hoover into the infestation control barrel (marked): E on it"
+        -- each shift a character does is longer (the owner, 7 November): 3 growths, then 5, 7, up to 11
+        local done = LC.Counter and LC.Counter(ply, "cleanup_shifts") or 0
+        local need = math.min(3 + 2 * done, 11)
+        local dump = Count("nest_dumped", need, barrel and "Empty your hoover into the infestation control barrel (marked): E on it"
             or "Seal the hoover's load in a bag: right click with the hoover (there's no infestation control barrel near)", nil, false)
         if barrel then dump.pos, dump.r = barrel:GetPos(), 120 end
         return {
-            title = "Clearing the infestation", reward = 30, limit = 900,
-            desc = "The infestation is spreading. Go in with your respirator, weedkiller and hoover: kill its growths, vacuum them up, and get rid of them. Civil Protection will guard you: stay close to them.",
+            title = "Clearing the infestation", reward = 30, limit = 900 + 60 * (need - 3),
+            desc = "The infestation is spreading. Go in with your respirator, weedkiller and hoover: kill its growths, vacuum them up, and get rid of them. Two Overwatch soldiers will guard you: stay close to them.",
             stages = {
-                Goto(edge, "Go to the infestation (marked): Civil Protection meets you there", 600),
+                Goto(edge, "Go to the infestation (marked): the Overwatch meets you there", 600),
                 -- (one step, not two: spraying one, vacuuming it, then the next, only counted the last; the owner, 1 November)
                 (function()
-                    local c = Count("nest_vacuumed", 3, "Clear 3 growths: spray each dead (sprayer, hold left click; or E), then vacuum it up (hoover, hold left click)")
+                    local c = Count("nest_vacuumed", need, string.format("Clear %d growths: spray each dead (sprayer, hold left click; or E), then vacuum it up (hoover, hold left click)", need))
                     c.pos, c.r = edge, 500 -- (marked: the owner, 1 November, lost the way once inside)
                     return c
                 end)(),
@@ -1452,7 +1455,10 @@ hook.Add("LivingCityQuestComplete", "LivingCityShiftRationCard", function(p, q)
     if job and job.id == "clerk" and LC.Bump then LC.Bump(p, "clerk_shifts") end
     -- so is Infestation Cleanup, faster (each shift counts as lc_cleanup_shift_counts, 2)
     if job and job.id == "porter" and LC.Bump then LC.Bump(p, "cp_shifts") end
-    if job and job.id == "cleanup" and LC.Bump then LC.Bump(p, "cp_shifts", LC.CleanupShiftCounts and LC.CleanupShiftCounts() or 2) end
+    if job and job.id == "cleanup" and LC.Bump then
+        LC.Bump(p, "cp_shifts", LC.CleanupShiftCounts and LC.CleanupShiftCounts() or 2)
+        LC.Bump(p, "cleanup_shifts") -- (the next one is longer)
+    end
     if LC.CarriesPapers and not LC.CarriesPapers(p) then return end
     local n = math.max(0, cvShiftCards:GetInt())
     if n < 1 then return end

@@ -16,10 +16,13 @@
     Infestation Cleanup (a Union job, the 15th)
       Into the infestation in a respirator (it keeps out gas, chlorine and weedkiller alike), with
       weedkiller, to spray the growths. While they're near an infestation on a shift, lc_cleanup_guards
-      (2) Civil Protection units or Overwatch soldiers come and guard them, and shoot the infested
-      that come for them. The city's own cleanup crews do it too, with a guard of their own. A cleanup
-      shift counts as lc_cleanup_shift_counts (2) Intake Processor shifts towards joining Civil
-      Protection. With the owner's Infestation Control pack (3185145650) on the server, players on
+      (2) Overwatch soldiers guard them (one with a shotgun, one with a pulse rifle; never metrocops:
+      the owner, 7 November), and shoot the infested that come for them, only what they can see. The
+      city's own cleanup crews do it too, with a guard of their own. Each shift a character does is
+      longer: 3 growths the first time, then 5, 7, up to 11 (sv_livingcity_work.lua); while a crew is
+      at work the infestation pushes out more growths where nobody's looking, so there's always
+      something to clear. A cleanup shift counts as lc_cleanup_shift_counts (2) Intake Processor
+      shifts towards joining Civil Protection. With the owner's Infestation Control pack (3185145650) on the server, players on
       the job and the city's own crews wear its hazmat suit ("worker"), a man the male one and a woman
       the female one, each their own skin (lc_cleanup_suit; lc_cleanup_model: another model instead);
       and Morticians, Sanitation Workers and the Reclamation Crew wear its "engineer" overalls.
@@ -195,6 +198,13 @@ local function NestsIn(z)
 end
 LC.NestsIn = NestsIn
 
+-- the growths in a patch still alive (not sprayed dead and waiting for the hoover)
+function LC.LiveNestsIn(z)
+    local n = 0
+    for _, e in ipairs(Nests()) do if e.lcZone == z and not e:GetNW2Bool("lc_dead", false) then n = n + 1 end end
+    return n
+end
+
 function LC.SpawnNest(z, pos)
     pos = pos or (LC.SpotInZone and LC.SpotInZone(z))
     if not pos then return nil end
@@ -270,50 +280,99 @@ function LC.HazardBarrel(pos, ang)
     return e
 end
 
-local function PostAt(z, at, centre)
-    local dir = at - centre
-    dir.z = 0
-    if dir:LengthSqr() < 1 then dir = Vector(1, 0, 0) end
-    dir:Normalize()
-    local face = dir:Angle() -- (the sign faces out, at whoever's walking in)
-    local right, back = face:Right(), -dir
-    local made = {}
-    for _, p in ipairs(POST) do
-        local e = Prop(Valid(p[1]) and p[1] or p[4], at + right * p[2] + back * p[3], face)
-        if e then e.lcHazardZone = z made[#made + 1] = e end
+-- Room for a prop (mins/maxs its rough size): nothing solid where it would stand, the map's static
+-- props and other props included (a brush-only trace misses static props: the lamp and barrel ended up
+-- in walls, the owner, 7 November), and a floor under it.
+local SIZE = { sign = { Vector(-14, -14, 2), Vector(14, 14, 70) }, lamp = { Vector(-12, -12, 2), Vector(12, 12, 90) }, barrel = { Vector(-18, -18, 2), Vector(18, 18, 50) } }
+local function NotPeople(e) return not (IsValid(e) and (e:IsPlayer() or e:IsNPC())) end
+local function Fits(at, size)
+    if not util.TraceHull then return true end
+    local h = util.TraceHull({ start = at + Vector(0, 0, 4), endpos = at + Vector(0, 0, 5), mins = size[1], maxs = size[2], mask = MASK_SOLID, filter = NotPeople })
+    if h and (h.Hit or h.StartSolid) then return false end
+    if util.TraceLine then
+        local down = util.TraceLine({ start = at + Vector(0, 0, 20), endpos = at - Vector(0, 0, 100), mask = MASK_SOLID_BRUSHONLY })
+        if not down or not down.Hit or math.abs(down.HitPos.z - at.z) > 24 then return false end
     end
-    local b = LC.HazardBarrel(at - right * 45 + back * 25, face)
-    if b then b.lcHazardZone = z made[#made + 1] = b end
-    return made
+    return true
+end
+LC.HazardPropFits = Fits
+
+-- How far it is from a spot to the nearest wall that way (up to max).
+local function Clearance(at, dir, max)
+    if not util.TraceLine then return max end
+    local tr = util.TraceLine({ start = at + Vector(0, 0, 36), endpos = at + Vector(0, 0, 36) + dir * max, mask = MASK_SOLID, filter = NotPeople })
+    if tr and tr.StartSolid then return 0 end
+    return (tr and tr.Hit) and max * tr.Fraction or max
+end
+
+-- The post beside the way in, never on it (the owner, 7 November: the signs stood right on the marked
+-- path): the sign against whichever wall has room (or 100 units off the way, on open ground), the lamp
+-- a step before it and the barrel a step past it, each only where it fits. `out` points out of the
+-- infestation, the way the sign faces (at whoever's walking in).
+local function PlacePost(z, at, out)
+    local face = out:Angle()
+    local right = face:Right()
+    local sides = {}
+    for _, s in ipairs({ right, -right }) do sides[#sides + 1] = { dir = s, room = Clearance(at, s, 260) } end
+    table.sort(sides, function(x, y) return x.room > y.room end)
+    for _, s in ipairs(sides) do
+        if s.room < 64 then break end
+        local off = s.room >= 240 and 100 or math.max(56, s.room - 30)
+        local spot = at + s.dir * off
+        spot = (LC.GroundAt and LC.GroundAt(spot + Vector(0, 0, 20))) or spot
+        if Fits(spot, SIZE.sign) then
+            local made = {}
+            local sign = Prop(Valid(POST[1][1]) and POST[1][1] or POST[1][4], spot, face)
+            if sign then sign.lcHazardZone = z made[#made + 1] = sign end
+            for _, extra in ipairs({ { "lamp", SIZE.lamp, { 50, -50, 90 } }, { "barrel", SIZE.barrel, { -50, 50, -90 } } }) do
+                for _, along in ipairs(extra[3]) do
+                    local p = spot + out * along
+                    p = (LC.GroundAt and LC.GroundAt(p + Vector(0, 0, 20))) or p
+                    if Fits(p, extra[2]) then
+                        local e
+                        if extra[1] == "barrel" then e = LC.HazardBarrel(p, face)
+                        else e = Prop(Valid(POST[2][1]) and POST[2][1] or POST[2][4], p, face) end
+                        if e then e.lcHazardZone = z made[#made + 1] = e end
+                        break
+                    end
+                end
+            end
+            return made
+        end
+    end
+    return nil
 end
 
 function LC.HazardPost(z)
     local centre = z.box and (z.box.mins + z.box.maxs) / 2 or z.pos
-    -- (the owner, 1 November: none to be seen, likely in walls) where people walk: the nearest path node just
-    -- outside the infestation, on open ground
-    local best, bd
+    local function Out(at)
+        local d = at - centre
+        d.z = 0
+        if d:LengthSqr() < 1 then d = Vector(1, 0, 0) end
+        d:Normalize()
+        return d
+    end
+    -- where people walk in: the path nodes just outside the infestation, on open ground, nearest first
+    local nodes = {}
     for _, nd in ipairs(LC.NavNodesNear and LC.NavNodesNear(centre, Reach(z) + 600) or {}) do
         local p = nd.pos
-        local d = p:DistToSqr(centre)
-        if math.abs(p.z - centre.z) < 120 and not (LC.InInfest and LC.InInfest(p)) and (not bd or d < bd)
-            and (not LC.ItemSpotOK or LC.ItemSpotOK(p, 72)) then best, bd = p, d end
+        if math.abs(p.z - centre.z) < 120 and not (LC.InInfest and LC.InInfest(p)) and (not LC.ItemSpotOK or LC.ItemSpotOK(p, 72)) then
+            nodes[#nodes + 1] = { pos = p, d = p:DistToSqr(centre) }
+        end
     end
-    if best then return PostAt(z, (LC.GroundAt and LC.GroundAt(best + Vector(0, 0, 20))) or best, centre) end
+    table.sort(nodes, function(x, y) return x.d < y.d end)
+    for i = 1, math.min(4, #nodes) do
+        local at = (LC.GroundAt and LC.GroundAt(nodes[i].pos + Vector(0, 0, 20))) or nodes[i].pos
+        local made = PlacePost(z, at, Out(at))
+        if made then return made end
+    end
     for try = 1, 16 do
         local yaw = math.random(0, 359)
         local dir = Angle(0, yaw, 0):Forward()
-        local at = (LC.GroundAt or function(p) return p end)(centre + dir * (Reach(z) + 60) + Vector(0, 0, 30))
-        if not (LC.InInfest and LC.InInfest(at)) and (try > 12 or OpenSpot(centre, at)) then
-            local face = Angle(0, yaw, 0) -- (the sign faces out, at whoever's walking in)
-            local right, back = face:Right(), -dir
-            local made = {}
-            for _, p in ipairs(POST) do
-                local e = Prop(Valid(p[1]) and p[1] or p[4], at + right * p[2] + back * p[3], face)
-                if e then e.lcHazardZone = z made[#made + 1] = e end
-            end
-            local b = LC.HazardBarrel(at - right * 45 + back * 25, face)
-            if b then b.lcHazardZone = z made[#made + 1] = b end
-            return made
+        local at = (LC.GroundAt or function(q) return q end)(centre + dir * (Reach(z) + 60) + Vector(0, 0, 30))
+        if at and not (LC.InInfest and LC.InInfest(at)) and (try > 12 or OpenSpot(centre, at)) then
+            local made = PlacePost(z, at, dir)
+            if made then return made end
         end
     end
     return nil
@@ -331,10 +390,16 @@ local function PostTick(zones, alive)
     end
 end
 
--- a sprayed growth, bagged by the cleanup crew, left for collection
+-- a sprayed growth, bagged by the cleanup crew, left for collection. Nobody trips over it: people
+-- and NPCs walk through a bag (the owner, 7 November: they'd block the walkways).
+local function Passable(e)
+    if IsValid(e) and e.SetCollisionGroup then e:SetCollisionGroup(COLLISION_GROUP_DEBRIS or 1) end
+    return e
+end
+LC.PassableProp = Passable
 local function Bag(pos)
     local e = Prop(Valid(HZ .. "trashbag.mdl") and (HZ .. "trashbag.mdl") or "models/props_junk/garbage_bag001a.mdl", pos + Vector(0, 0, 4), Angle(0, math.random(0, 359), 0))
-    if e then timer.Simple(90, function() if IsValid(e) then e:Remove() end end) end
+    if e then Passable(e) timer.Simple(90, function() if IsValid(e) then e:Remove() end end) end
     return e
 end
 LC.HazardBag = Bag
@@ -420,6 +485,15 @@ local function NestTick(now)
     local rot = math.max(1, cvRot:GetFloat()) * 60
     for _, e in ipairs(Nests()) do if LC.NestDead(e) and now - (e.lcDeadAt or now) > rot then LC.ClearNest(e, nil, "rot") end end
     local per = math.max(0, cvPer:GetInt())
+    -- a crew at work (the owner, 7 November: longer shifts): the infestation pushes out another growth
+    -- every tick where nobody's looking, while the worker still has growths to clear
+    for _, z in ipairs(zones) do
+        local need = LC.CleanupNeedNear and LC.CleanupNeedNear(z) or 0
+        if need > 0 and LC.LiveNestsIn(z) < math.min(per, need) and not (LC.InfestQuietAt and LC.InfestQuietAt(z.pos)) then
+            local p = LC.SpotInZone and LC.SpotInZone(z)
+            if p and not (LC.IsSeen and LC.IsSeen(p + Vector(0, 0, 30))) then LC.SpawnNest(z, p) end
+        end
+    end
     for _, z in ipairs(zones) do
         local n = NestsIn(z)
         if n < per and not (LC.InfestQuietAt and LC.InfestQuietAt(z.pos)) then
@@ -446,12 +520,30 @@ end)
 
 LC.CleanupGuards = LC.CleanupGuards or {} -- [worker] = { units = {}, nextLook }
 
+-- The guards are Overwatch soldiers, never metrocops (the owner, 7 November: "2 soldiers, one with a
+-- shotgun and one with a pulse rifle", no stunsticks in the infestation). A free soldier close by is
+-- taken; the rest are sent in, spawned out of the worker's sight with the gun the pair still lacks, and
+-- walk off again when the shift's done.
 local Behind
 local FREE = { idle = true, moving = true, working = true }
 local function FreeUnit(npc, st, now)
-    return IsValid(npc) and LC.IsSecurity(st) and st.role ~= "scanner" and npc:Health() > 0 and FREE[st.state]
+    return IsValid(npc) and st.role == "soldier" and not st.elite and not st.prisonGuard and npc:Health() > 0 and FREE[st.state]
         and not st.workEscort and not st.raid and not st.questLock and not st.escortee and not st.subject
         and not st.skirmish and not st.cleanGuard and not st.holdPos and not st.guardZone and (st.stunnedUntil or 0) < now
+end
+
+-- A guard the Overwatch sent walks back where it came from, and is gone once nobody can see it.
+local function WalkOff(npc, tries)
+    if not IsValid(npc) then return end
+    local st = LC.NPCs and LC.NPCs[npc]
+    if not st or st.cleanGuard then return end -- (taken on again)
+    if npc.lcGuardHome and npc.SetLastPosition and npc.SetSchedule and npc:GetPos():DistToSqr(npc.lcGuardHome) > 100 * 100 then
+        npc:SetLastPosition(npc.lcGuardHome)
+        npc:SetSchedule(SCHED_FORCED_GO)
+    end
+    local seen = LC.IsSeen and LC.IsSeen(npc:GetPos() + Vector(0, 0, 40))
+    if not seen or (tries or 0) >= 18 then npc:Remove() return end
+    timer.Simple(10, function() WalkOff(npc, (tries or 0) + 1) end)
 end
 
 local function Release(npc)
@@ -464,19 +556,48 @@ local function Release(npc)
         LC.SetState(npc, st, "idle")
         st.untilT = CurTime() + 2
     end
+    if st.lcGuardSpawned then timer.Simple(8, function() WalkOff(npc, 0) end) end
 end
 
--- A spot on the ground behind the worker, dist away, out of their sight if it can be.
-Behind = function(worker, dist)
+local function Crowded(spot, avoid)
+    for _, q in ipairs(avoid or {}) do if q:DistToSqr(spot) < 60 * 60 then return true end end
+    return false
+end
+
+-- A spot on the ground behind the worker, dist away, with a clear line to it (so it's somewhere a
+-- soldier can stand), and not on top of anyone in `avoid` (the owner, 7 November: both guards landed on
+-- the same spot and stuck in each other).
+Behind = function(worker, dist, avoid)
     local fwd = worker.GetForward and worker:GetForward() or Vector(1, 0, 0)
     fwd.z = 0
-    for _, side in ipairs({ 0, 60, -60, 120, -120 }) do
+    if fwd:LengthSqr() < 0.01 then fwd = Vector(1, 0, 0) end
+    local wpos = worker:GetPos()
+    for _, side in ipairs({ 0, 60, -60, 120, -120, 180 }) do
         local dir = Angle(0, fwd:Angle().y + 180 + side, 0):Forward()
-        local p = worker:GetPos() + dir * dist + Vector(0, 0, 40)
-        local tr = util.TraceLine and util.TraceLine({ start = worker:GetPos() + Vector(0, 0, 40), endpos = p, mask = MASK_NPCSOLID_BRUSHONLY })
-        if not tr or not tr.Hit then return LC.GroundAt and LC.GroundAt(p) or p end
+        local q = wpos + dir * dist + Vector(0, 0, 40)
+        local tr = util.TraceLine and util.TraceLine({ start = wpos + Vector(0, 0, 40), endpos = q, mask = MASK_NPCSOLID_BRUSHONLY })
+        if not tr or not tr.Hit then
+            local spot = LC.GroundAt and LC.GroundAt(q) or q
+            if spot and not Crowded(spot, avoid) then return spot end
+        end
     end
-    return worker:GetPos() - fwd * 60
+    local n = avoid and #avoid or 0
+    local right = fwd:Angle():Right()
+    return wpos - fwd * 60 + right * ((n % 2 == 0) and 1 or -1) * 50 * math.ceil((n + 1) / 2)
+end
+
+local function Positions(list, field)
+    local out = {}
+    for _, u in ipairs(list) do
+        local npc = field and u[field] or u
+        if IsValid(npc) then out[#out + 1] = npc:GetPos() end
+    end
+    return out
+end
+
+local function HasShotgun(npc)
+    local w = IsValid(npc) and npc.GetActiveWeapon and npc:GetActiveWeapon()
+    return IsValid(w) and w.GetClass and w:GetClass() == "weapon_shotgun"
 end
 
 local function Assign(worker, g, now)
@@ -492,28 +613,39 @@ local function Assign(worker, g, now)
     end
     g.units = live
     if #live >= want or now < (g.nextLook or 0) then return end
-    g.nextLook = now + 5
+    g.nextLook = now + 3
     local wpos = worker:GetPos()
+    -- free soldiers already close by
     local cands = {}
     for npc, st in pairs(LC.NPCs or {}) do
         if FreeUnit(npc, st, now) then
             local d = npc:GetPos():DistToSqr(wpos)
-            if d < 6000 * 6000 then cands[#cands + 1] = { npc = npc, st = st, d = d } end
+            if d < 1500 * 1500 then cands[#cands + 1] = { npc = npc, st = st, d = d } end
         end
     end
-    -- soldiers first (it's the infested: the owner wants the Overwatch's guns, not stunsticks), then the nearest
-    table.sort(cands, function(a, b)
-        local sa, sb = a.st.role == "soldier", b.st.role == "soldier"
-        if sa ~= sb then return sa end
-        return a.d < b.d
-    end)
-    -- nobody free: dispatch sends one (a unit walks in from out of sight)
-    if #cands == 0 and LC.SpawnCop and now >= (g.nextSpawn or 0) then
-        g.nextSpawn = now + 20
-        local spot = Behind(worker, 500)
-        if spot then
-            local npc, st = (LC.SpawnSoldier or LC.SpawnCop)(spot + Vector(0, 0, 4))
-            if IsValid(npc) and st then cands[1] = { npc = npc, st = st, d = 0 } end
+    table.sort(cands, function(x, y) return x.d < y.d end)
+    -- not enough: the Overwatch sends the rest, out of sight behind the worker, apart from each other,
+    -- the shotgun first if the pair hasn't one
+    local missing = want - #live - #cands
+    if missing > 0 and LC.SpawnSoldier and now >= (g.nextSpawn or 0) then
+        g.nextSpawn = now + 10
+        local placed = Positions(live)
+        for _, c in ipairs(Positions(cands, "npc")) do placed[#placed + 1] = c end
+        local shot = false
+        for _, u in ipairs(live) do if HasShotgun(u) then shot = true end end
+        for _, c in ipairs(cands) do if HasShotgun(c.npc) then shot = true end end
+        for _ = 1, missing do
+            local spot = Behind(worker, 450, placed)
+            if not spot then break end
+            local kind = shot and "ar2" or "shotgun"
+            local npc, st = LC.SpawnSoldier(spot + Vector(0, 0, 4), kind)
+            if IsValid(npc) and st then
+                shot = shot or kind == "shotgun"
+                st.lcGuardSpawned = true
+                npc.lcGuardHome = npc:GetPos()
+                placed[#placed + 1] = npc:GetPos()
+                cands[#cands + 1] = { npc = npc, st = st, d = 0 }
+            end
         end
     end
     for i = 1, math.min(#cands, want - #live) do
@@ -525,11 +657,12 @@ local function Assign(worker, g, now)
         if not c.st.questLock then c.st.questLock, c.st.lcGuardLock = true, true end
         c.st.route, c.st.routeTo, c.st.goingTo = nil, nil, nil
         LC.SetState(c.npc, c.st, "cleanguard")
+        if c.npc.SetCurrentWeaponProficiency then c.npc:SetCurrentWeaponProficiency(WEAPON_PROFICIENCY_VERY_GOOD or 3) end
         if c.npc.SetNW2String then c.npc:SetNW2String("lc_doing", "guarding the cleanup crew") end
         g.units[#g.units + 1] = c.npc
         if worker:IsPlayer() and not g.told then
             g.told = true
-            worker:ChatPrint("[Union] Civil Protection is sending you a guard. Stay close to them in there.")
+            worker:ChatPrint("[Union] The Overwatch is sending you two soldiers. Stay close to them in there.")
         end
     end
 end
@@ -546,33 +679,100 @@ local function Threat(worker)
     return best
 end
 
+-- Can this guard see that? (its own eyes; nothing is shot through a wall)
+local function Sees(u, z)
+    if u.Visible then return u:Visible(z) end
+    if not util.TraceLine then return true end
+    local tr = util.TraceLine({ start = u:EyePos(), endpos = z:WorldSpaceCenter(), mask = MASK_BLOCKLOS_AND_SOLID or MASK_SOLID, filter = { u, z } })
+    return not tr or not tr.Hit or tr.Entity == z
+end
+
+local FOLLOWING = { SCHED_FORCED_GO, SCHED_FORCED_GO_RUN, SCHED_IDLE_STAND }
+local function IsFollowing(u)
+    if not u.IsCurrentSchedule then return true end
+    for _, sched in ipairs(FOLLOWING) do if sched and u:IsCurrentSchedule(sched) then return true end end
+    return false
+end
+
+-- A step out of the worker's way: to the open side of where they're heading, else behind them.
+local function Aside(u, worker, others)
+    local vel = worker.GetVelocity and worker:GetVelocity() or Vector(0, 0, 0)
+    local heading = Vector(vel.x, vel.y, 0)
+    if heading:LengthSqr() < 1 then heading = worker.GetForward and worker:GetForward() or Vector(1, 0, 0) heading.z = 0 end
+    heading:Normalize()
+    local right = heading:Angle():Right()
+    local from = u:GetPos()
+    for _, off in ipairs({ right * 70, -right * 70, heading * 90 }) do
+        local to = from + off
+        local tr = util.TraceLine and util.TraceLine({ start = from + Vector(0, 0, 36), endpos = to + Vector(0, 0, 36), mask = MASK_NPCSOLID_BRUSHONLY })
+        if (not tr or not tr.Hit) and not Crowded(to, others) then return (LC.GroundAt and LC.GroundAt(to + Vector(0, 0, 20))) or to end
+    end
+    return Behind(worker, 100, others)
+end
+
 local function Drive(worker, g, now)
     local z = Threat(worker)
+    local wpos = worker:GetPos()
     for i, u in ipairs(g.units) do
         if IsValid(u) then
+            local others = {}
+            for j, o in ipairs(g.units) do if j ~= i and IsValid(o) then others[#others + 1] = o:GetPos() end end
             if IsValid(z) then
-                -- shoot it
-                if u.SetEnemy then u:SetEnemy(z) end
+                -- told where the infested is; it shoots only what it can see, and goes round a wall rather
+                -- than through it. The fight itself is the soldier's own AI (the owner, 7 November: forced
+                -- attack schedules every half second had them shooting walls, two shots at a time)
                 if u.UpdateEnemyMemory then u:UpdateEnemyMemory(z, z:GetPos()) end
-                if u.IsCurrentSchedule and u.SetSchedule and not u:IsCurrentSchedule(SCHED_RANGE_ATTACK1) then
-                    u:SetSchedule(u:GetPos():DistToSqr(z:GetPos()) > 700 * 700 and SCHED_CHASE_ENEMY or SCHED_RANGE_ATTACK1)
+                if Sees(u, z) then
+                    if u.SetEnemy and (not u.GetEnemy or u:GetEnemy() ~= z) then u:SetEnemy(z) end
+                    if u.lcEngaged ~= z then
+                        u.lcEngaged = z
+                        if u.SetSchedule and IsFollowing(u) then u:SetSchedule(SCHED_RANGE_ATTACK1) end
+                    end
+                elseif now >= (u.lcChaseNext or 0) and (IsFollowing(u) or not (u.IsMoving and u:IsMoving())) then
+                    u.lcChaseNext = now + 3
+                    u.lcEngaged = z
+                    if u.SetEnemy then u:SetEnemy(z) end
+                    if u.SetSchedule then u:SetSchedule(SCHED_CHASE_ENEMY) end
                 end
+            else
+                u.lcEngaged = nil
             end
             -- left behind (stuck, or lost on the way): back beside the worker
-            local far = u:GetPos():DistToSqr(worker:GetPos()) > 700 * 700
+            local far = u:GetPos():DistToSqr(wpos) > 700 * 700
             if far then u.lcFarSince = u.lcFarSince or CurTime() else u.lcFarSince = nil end
             if far and CurTime() - u.lcFarSince > 4 then
                 u.lcFarSince = nil
-                local spot = Behind(worker, 90)
+                local spot = Behind(worker, 90, others)
                 if spot then u:SetPos(spot + Vector(0, 0, 4)) if u.SetSchedule then u:SetSchedule(SCHED_IDLE_STAND) end end
             end
-            if not IsValid(z) then
+            -- in the way (a doorway): a guard the worker walks into steps aside (the owner, 7 November: "I am
+            -- stuck"); still in each other after a couple of seconds, it's put behind them
+            local flat = u:GetPos() - wpos
+            flat.z = 0
+            if flat:LengthSqr() < 48 * 48 then
+                u.lcBumpSince = u.lcBumpSince or now
+                local vel = worker.GetVelocity and worker:GetVelocity() or Vector(0, 0, 0)
+                local pushing = Vector(vel.x, vel.y, 0):LengthSqr() > 15 * 15 and (vel.x * flat.x + vel.y * flat.y) > 0
+                if pushing and now >= (u.lcStepUntil or 0) then
+                    u.lcStepUntil = now + 1.5
+                    local to = Aside(u, worker, others)
+                    if to and u.SetLastPosition and u.SetSchedule then u:SetLastPosition(to) u:SetSchedule(SCHED_FORCED_GO_RUN) end
+                end
+                if now - u.lcBumpSince > 2.5 then
+                    u.lcBumpSince = nil
+                    local spot = Behind(worker, 90, others)
+                    if spot then u:SetPos(spot + Vector(0, 0, 4)) end
+                end
+            else
+                u.lcBumpSince = nil
+            end
+            if not IsValid(z) and now >= (u.lcStepUntil or 0) then
                 -- keep close, one on each side
-                local d = u:GetPos():DistToSqr(worker:GetPos())
+                local d = u:GetPos():DistToSqr(wpos)
                 if d > 170 * 170 and u.SetLastPosition and u.SetSchedule then
                     local side = (worker.GetRight and worker:GetRight() or Vector(1, 0, 0)) * (i % 2 == 0 and 70 or -70)
                     local back = (worker.GetForward and worker:GetForward() or Vector(0, 1, 0)) * -60
-                    u:SetLastPosition(worker:GetPos() + side + back)
+                    u:SetLastPosition(wpos + side + back)
                     if not (u.IsCurrentSchedule and (u:IsCurrentSchedule(SCHED_FORCED_GO) or u:IsCurrentSchedule(SCHED_FORCED_GO_RUN))) or d > 600 * 600 then
                         u:SetSchedule(d > 500 * 500 and SCHED_FORCED_GO_RUN or SCHED_FORCED_GO)
                     end
@@ -580,6 +780,25 @@ local function Drive(worker, g, now)
             end
         end
     end
+end
+
+-- How many growths a player on a cleanup shift still has to clear (0 when they're not on one).
+function LC.CleanupNeed(ply)
+    if not IsValid(ply) or not ply:IsPlayer() or not OnCleanup(ply) then return 0 end
+    local q = LC.QuestOf and LC.QuestOf[ply]
+    if not q or q.done or q.chain ~= "shift" then return 0 end
+    local st = q.stages and q.stages[q.stage]
+    if not st or st.kind ~= "count" or st.event ~= "nest_vacuumed" then return 0 end
+    return math.max(0, (st.need or 0) - (st.got or 0))
+end
+
+-- The most any cleanup worker near this infestation still needs (so it keeps growing for them).
+function LC.CleanupNeedNear(z)
+    local most = 0
+    for _, p in ipairs(player.GetAll()) do
+        if p:Alive() and p:GetPos():DistToSqr(z.pos) < ((z.r or 400) + 900) ^ 2 then most = math.max(most, LC.CleanupNeed(p)) end
+    end
+    return most
 end
 
 -- Who needs guarding: a player on a cleanup shift near an infestation, or an NPC worker who asked.
@@ -702,6 +921,7 @@ function LC.BagHoover(ply)
         local e = ents.Create("prop_physics")
         if IsValid(e) then
             e:SetModel("models/props_junk/garbage_bag001a.mdl") e:SetPos(at + Vector(0, 0, 8)) e:Spawn()
+            Passable(e)
             timer.Simple(90, function() if IsValid(e) then e:Remove() end end)
         end
     end
