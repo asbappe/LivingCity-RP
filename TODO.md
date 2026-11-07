@@ -9,6 +9,7 @@
   - **Streetlights and loudspeakers inside Combine zones** stay broken now that no citizen goes in: let the stalker mend them too?
   - **The economy audit** (`docs/dev/economy-audit.md`): what to change is the owner's call.
   - **Stimulants** (cigarettes, beer, drugs): brainstorm only so far. **G-Man events pushing the Administrator** now the endings are dreams: brainstorm later, as the owner said.
+  - **The future endings setup:** the G-Man is set aside (`lc_directives` 0). Ideas to start from, in `docs/features/endings.md` ("Ideas for the future endings setup"): a refused directive makes dreams keep (waking with the dream's weapons and stats) or leak into reality (a one-time mingebag swarm on Civil Protection as the dreams end).
   - **The Workshop dance animations** (3830765710, 2538387266): only as a required Workshop download, with the owner's say.
   - **Unconfirmed in game:** everything in PLAYTEST.md's "7 November, part 2" section, above all the dreams (the per-NPC hold, out-of-map ground) and the arrest struggle.
 
