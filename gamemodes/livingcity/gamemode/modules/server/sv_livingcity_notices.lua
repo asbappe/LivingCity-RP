@@ -34,7 +34,7 @@ local TAGS = {
     ["Rebel"] = "speech", ["Quartermaster"] = "speech", ["Interrogation"] = "speech", ["Scientist"] = "speech",
     ["Civil Protection"] = "warn", ["Overwatch"] = "warn", ["Conduct"] = "warn", ["Custody"] = "warn",
     ["Dispatch"] = "warn", ["Disguise"] = "warn", ["Search"] = "warn",
-    ["Civil Intake"] = "info", ["Housing Allocation"] = "info", ["Papers"] = "info", ["Rations"] = "info",
+    ["Civil Intake"] = "info", ["Housing Allocation"] = "info", ["Labor Assignment"] = "info", ["Papers"] = "info", ["Rations"] = "info",
     ["City"] = "info", ["Union"] = "info", ["CP Commissary"] = "info", ["Lab"] = "info",
 }
 LC.NoticeTags = TAGS
@@ -151,6 +151,11 @@ local PLACES = {
         local e = LC.NearestIntake and LC.NearestIntake(ply:GetPos(), "housing")
         if IsValid(e) then return e:GetPos(), "Housing Allocation" end
         return nil, "This city has no Housing Allocation desk."
+    end,
+    labor = function(ply)
+        local e = LC.NearestIntake and LC.NearestIntake(ply:GetPos(), "labor")
+        if IsValid(e) then return e:GetPos(), "Labor Assignment" end
+        return nil, "This city has no Labor Assignment terminal: ask for work on your board (F3)."
     end,
     home = function(ply)
         local n = LC.PlayerBlock and LC.PlayerBlock(ply)

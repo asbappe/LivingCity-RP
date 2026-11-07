@@ -285,6 +285,7 @@ function LC_CL.OpenActions()
     Add(home, "My housing block", function() Send("block") end)
     Add(home, "Show me the way home (mark it)", function() Send("waypoint", "home") end, "icon16/map.png")
     if me:GetNW2Bool("lc_unreg", false) then Add(home, "Show me the way to Civil Intake", function() Send("waypoint", "intake") end, "icon16/map.png") end
+    if me:GetNW2Bool("lc_unassigned", false) then Add(home, "Show me the way to Labor Assignment", function() Send("waypoint", "labor") end, "icon16/map.png") end
     if me:GetNW2Bool("lc_unhoused", false) then Add(home, "Show me the way to Housing Allocation", function() Send("waypoint", "housing") end, "icon16/map.png") end
     Add(home, "About my apartment", function() Send("apartment") end)
     Add(home, "Lock my apartment (looking at its door)", function() Send("lock") end, "icon16/lock.png")

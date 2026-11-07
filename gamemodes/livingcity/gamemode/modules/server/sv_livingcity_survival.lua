@@ -964,6 +964,7 @@ local FIXTURE_CLASS = {
     barricade_low = "lc_barricade", barricade = "lc_barricade", barricade_tall = "lc_barricade",
     citybin = "lc_citybin", streetlight = "lc_streetlight", loudspeaker = "lc_loudspeaker", screen_big = "lc_screen", tv = "lc_screen",
     intake = "lc_intake", housingterm = "lc_intake", -- Civil Intake and Housing Allocation (sv_livingcity_intake.lua)
+    laborterm = "lc_intake", -- Labor Assignment: Union work is given out here (sv_livingcity_labor.lua)
     cpsupply = "lc_cpsupply", -- units are issued supplies here (sv_livingcity_cpsupply.lua)
     conveyor = "lc_conveyor", -- the factory line (sv_livingcity_jobgames.lua)
     bed = "lc_bed", toilet = "lc_toilet", bath = "lc_bath", -- (sv_livingcity_rest.lua, sv_livingcity_hygiene.lua)

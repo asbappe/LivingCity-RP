@@ -24,6 +24,9 @@
          you live and how you got it, marks the way home, and takes requests
          to transfer to another block (standing 25, once every 30 minutes).
          A map without this desk gives you a room with your papers.
+      Labor Assignment ("Fixture: Labor Assignment"), when the map has one,
+         comes between the two: it gives you your Union work, and Housing
+         Allocation only houses citizens with work (sv_livingcity_labor.lua).
 
     Your papers: a unit who stops you asks for them, and carrying none costs
     a little standing. Show them to someone from F2 (Use) or the quick menu.
@@ -79,11 +82,13 @@ local function BlockKey() return "lc_block_" .. game.GetMap() end
 -- Who's been through it
 ------------------------------------------------------------------------
 
--- Which desk a terminal is: "register" or "housing".
+-- Which desk a terminal is: "register", "housing" or "labor" (Labor Assignment: sv_livingcity_labor.lua).
+local DESK_OF = { housingterm = "housing", laborterm = "labor" }
+local POINT_OF = { housing = "housingterm", labor = "laborterm" }
 local function Kind(ent)
     local k = IsValid(ent) and ent:GetNW2String("lc_ikind", "") or ""
     if k ~= "" then return k end
-    return (IsValid(ent) and ent.lcFixtureKind == "housingterm") and "housing" or "register"
+    return IsValid(ent) and DESK_OF[ent.lcFixtureKind or ""] or "register"
 end
 LC.IntakeKind = Kind
 
@@ -91,7 +96,7 @@ function LC.IntakeOn() return cvOn:GetBool() end
 
 -- This city has the desk (it's in the layout; the terminal itself may still be spawning).
 local function HasDesk(kind)
-    local pk = kind == "housing" and "housingterm" or "intake"
+    local pk = POINT_OF[kind] or "intake"
     if LC.CountPointsOfKind then return LC.CountPointsOfKind(pk) > 0 end
     return #(LC.PointsOfKind and LC.PointsOfKind(pk) or {}) > 0
 end
@@ -160,6 +165,7 @@ local function Flags(ply)
     local pending = LC.IntakePending(ply)
     ply:SetNW2Bool("lc_unreg", pending)
     ply:SetNW2Bool("lc_unhoused", not pending and LC.AwaitingHousing(ply))
+    ply:SetNW2Bool("lc_unassigned", (not pending and LC.AwaitingLabor and LC.AwaitingLabor(ply)) and true or false)
 end
 LC.IntakeFlags = Flags
 
@@ -181,6 +187,7 @@ function LC.IntakeNew(ply)
     ply.lcIntakeState = nil
     ply.lcIntakeSince = CurTime()
     ply.lcArrive = true -- (the next spawn is an arrival)
+    if LC.LaborNew then LC.LaborNew(ply) end -- (a new person has never had a work assignment)
     Flags(ply)
 end
 
@@ -224,10 +231,20 @@ function LC.RegisterPerson(ply, how)
         ply:ChatPrint(string.format("[Civil Intake] Registration complete. %s, citizen %s. Your identity papers are in your pockets (F2): keep them on you. Ration cards come from work: each Union shift you finish earns one.", name, cid))
     end
     local n = LC.PlayerBlock and LC.PlayerBlock(ply)
+    -- a Labor Assignment terminal in this city: work first, then a room (sv_livingcity_labor.lua)
+    local labor = LC.AwaitingLabor and LC.AwaitingLabor(ply)
+    if labor then
+        ply:ChatPrint("[Civil Intake] Next, go to Labor Assignment to be given your Union work. It's marked on your screen.")
+        if LC.WaypointTo then LC.WaypointTo(ply, "labor") end
+    end
     if LC.AwaitingHousing(ply) and HasDesk("housing") then
-        ply:ChatPrint("[Civil Intake] Next, go to Housing Allocation to get a room. It's marked on your screen.")
-        if LC.WaypointTo then LC.WaypointTo(ply, "housing") end
-        if LC.Hint then LC.Hint(ply, "intake_housing") end
+        if labor then
+            ply:ChatPrint("[Civil Intake] Then Housing Allocation gives you a room: it only houses citizens with a work assignment.")
+        else
+            ply:ChatPrint("[Civil Intake] Next, go to Housing Allocation to get a room. It's marked on your screen.")
+            if LC.WaypointTo then LC.WaypointTo(ply, "housing") end
+            if LC.Hint then LC.Hint(ply, "intake_housing") end
+        end
     elseif n then
         ply:ChatPrint("[Civil Intake] You already have a room: " .. LC.BlockName(n) .. ". Ask at Housing Allocation if you want to know more.")
     elseif LC.AssignBlock then
@@ -352,6 +369,7 @@ local DOING = {
     housing = { "Searching the housing register", "[Housing Allocation] Stand still next to the terminal while it finds you a room." },
     transfer = { "Processing your transfer request", "[Housing Allocation] Stand still next to the terminal while it processes your move." },
     papers = { "Printing your identity papers", "[Civil Intake] Stand still next to the terminal while it prints your new papers." },
+    labor = { "Processing your work assignment", "[Labor Assignment] Stand still next to the terminal while it processes your assignment." },
 }
 
 local function Process(ply, ent, what, data)
@@ -372,6 +390,7 @@ local function Finish(ply, j)
     if j.what == "register" then LC.RegisterPerson(ply, "terminal")
     elseif j.what == "housing" then LC.HousePerson(ply, j.data.pref)
     elseif j.what == "transfer" then LC.TransferPerson(ply, j.data.pref)
+    elseif j.what == "labor" then if LC.LaborFinish then LC.LaborFinish(ply, j.data) end
     elseif j.what == "papers" then
         local id, fee = "id_papers", cvPapersFee:GetInt()
         if LC.HasItem(ply, id) then return end
@@ -404,7 +423,14 @@ function LC.UseIntake(ply, ent)
     if (ply.lcIntakeNextUse or 0) > now then return end
     ply.lcIntakeNextUse = now + 0.8
     local kind = Kind(ent)
-    local title = kind == "housing" and "[Housing Allocation] " or "[Civil Intake] "
+    local title = kind == "housing" and "[Housing Allocation] " or kind == "labor" and "[Labor Assignment] " or "[Civil Intake] "
+    if kind == "labor" then
+        -- Labor Assignment works whatever lc_intake is (it's the Union's desk: sv_livingcity_labor.lua)
+        if Jobs[ply] then return end
+        if LC.PlayerIsCP and LC.PlayerIsCP(ply) then return ply:ChatPrint(title .. "This terminal assigns Union work to citizens.") end
+        if not Papered(ply) then return ply:ChatPrint(title .. "This terminal is only for citizens.") end
+        return LC.SendDesk(ply, ent)
+    end
     if not cvOn:GetBool() then
         return ply:ChatPrint(title .. "The screen says CLOSED. In this city, new arrivals are registered automatically.")
     end
@@ -449,7 +475,9 @@ function LC.SendDesk(ply, ent)
         credits = LC.Credits and LC.Credits(ply) or 0, standing = LC.Standing and LC.Standing(ply) or 0,
         papersFee = cvPapersFee:GetInt(), good = GOOD_STANDING, transferStanding = TRANSFER_STANDING,
         transfer = okT and true or false, transferWhy = whyT, housingDesk = HasDesk("housing"), blocks = {},
+        needWork = (LC.AwaitingLabor and LC.AwaitingLabor(ply)) and true or false, laborDesk = HasDesk("labor"),
     }
+    if kind == "labor" and LC.LaborDeskInfo then t.labor = LC.LaborDeskInfo(ply) end
     if kind == "housing" then
         local counts = Residents()
         for _, b in ipairs(LC.BlockNumbers and LC.BlockNumbers() or {}) do
@@ -466,7 +494,7 @@ end
 function LC.DeskAction(ply, ent, action, arg)
     if not IsValid(ply) or not IsValid(ent) or not ply:Alive() or Jobs[ply] then return false end
     local kind = Kind(ent)
-    local title = kind == "housing" and "[Housing Allocation] " or "[Civil Intake] "
+    local title = kind == "housing" and "[Housing Allocation] " or kind == "labor" and "[Labor Assignment] " or "[Civil Intake] "
     local who = BusyWith(ent)
     if who and who ~= ply then
         ent:EmitSound("buttons/combine_button_locked.wav", 60)
@@ -481,12 +509,27 @@ function LC.DeskAction(ply, ent, action, arg)
         end
         if action == "apply" then
             if not LC.AwaitingHousing(ply) then ply:ChatPrint(title .. "You already have a room. Ask for a transfer instead.") return false end
+            if LC.AwaitingLabor and LC.AwaitingLabor(ply) then
+                ply:ChatPrint(title .. "You have no work assignment, and the city only houses its workers. Go to Labor Assignment first: it's marked on your screen.")
+                if LC.WaypointTo then LC.WaypointTo(ply, "labor") end
+                return false
+            end
             Process(ply, ent, "housing", { pref = tonumber(arg) or 0 })
             return true
         end
         local ok, why = LC.CanTransfer(ply)
         if not ok then ply:ChatPrint(title .. why) return false end
         Process(ply, ent, "transfer", { pref = tonumber(arg) or 0 })
+        return true
+    end
+    if kind == "labor" and (action == "assign" or action == "choose") then
+        if not LC.LaborCanAct then return false end
+        local ok, why, jobId = LC.LaborCanAct(ply, action, arg)
+        if not ok then
+            if why then ply:ChatPrint(title .. why) end
+            return false
+        end
+        Process(ply, ent, "labor", { job = jobId })
         return true
     end
     if kind == "register" and action == "card" then
@@ -507,7 +550,7 @@ function LC.DeskAction(ply, ent, action, arg)
     return false
 end
 
-local WAYS = { "intake", "housing", "home" }
+local WAYS = { "intake", "housing", "home", "labor" }
 net.Receive("lc_intake_act", function(_, ply)
     if not IsValid(ply) or (ply.lcDeskNext or 0) > CurTime() then return end
     ply.lcDeskNext = CurTime() + 0.5
@@ -561,7 +604,7 @@ timer.Create("LivingCityIntake", 0.25, 0, function()
             EndJob(ply, j)
         elseif ply:GetPos():DistToSqr(j.ent:GetPos()) > NEAR * NEAR then
             j.ent:EmitSound("buttons/combine_button_locked.wav", 65)
-            ply:ChatPrint("[Civil Intake] You walked away from the terminal, so it stopped. Go back to it to carry on.")
+            ply:ChatPrint((j.what == "labor" and "[Labor Assignment]" or "[Civil Intake]") .. " You walked away from the terminal, so it stopped. Go back to it to carry on.")
             EndJob(ply, j)
         elseif now >= j.untilT then
             EndJob(ply, j)
@@ -687,7 +730,7 @@ end)
 function LC.IntakeShelter(ply)
     if not LC.AwaitingHousing(ply) then return false end
     local pos = ply:GetPos()
-    for _, kind in ipairs({ "intake", "housingterm", "arrival", "platform" }) do
+    for _, kind in ipairs({ "intake", "housingterm", "laborterm", "arrival", "platform" }) do
         for _, p in ipairs(LC.PointsOfKind and LC.PointsOfKind(kind) or {}) do
             if p.pos:DistToSqr(pos) < SHELTER * SHELTER then return true end
         end

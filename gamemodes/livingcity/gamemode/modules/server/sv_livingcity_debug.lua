@@ -67,6 +67,7 @@ local function Settings()
         "lc_quests", "lc_quest_violent_ratio", "lc_quest_squad", "lc_quest_cooldown", "lc_conduct", "lc_rdm_strikes_jail", "lc_rdm_strikes_kick", "lc_spawn_protect", "lc_debug",
         "lc_fov", "lc_eye_height", "lc_view_bob", "lc_view_bob_amount", "lc_quiet_hud", "lc_respawn_secs", "lc_word_gets_around",
         "lc_intake", "lc_intake_secs", "lc_intake_grace",
+        "lc_job_cooldown", "lc_labor_min_minutes", "lc_labor_min_shifts", "lc_labor_cleanup_standing", "lc_labor_porter_standing",
     }) do names[#names + 1] = name end
     for _, name in ipairs(names) do
         local cv = GetConVar(name)

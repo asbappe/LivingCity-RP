@@ -37,6 +37,7 @@ LC.POINT_KINDS = {
     powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, -- checkpoints (sv_livingcity_checkpoints.lua)
     platform = true, -- where the trains stop (sv_livingcity_trains.lua)
     intake = true, housingterm = true, arrival = true, -- Civil Intake, Housing Allocation, where new people arrive (sv_livingcity_intake.lua)
+    laborterm = true, -- Labor Assignment: Union work is given out and changed here (sv_livingcity_labor.lua)
     cpsupply = true, -- the Civil Protection Commissary (sv_livingcity_cpsupply.lua)
     studio = true, -- where Dr. Breen speaks when no player is Director of Propaganda (sv_livingcity_propaganda.lua)
     incinerator = true, -- where the dead go (sv_livingcity_mortuary.lua)

@@ -13,6 +13,11 @@
     A finished shift also earns a ration card (lc_shift_ration_cards, 1).
     It's the only way to get one: each ration at a dispenser takes a card,
     so no work, no rations (the owner: "workers need to WORK!").
+
+    A map with a Labor Assignment terminal (sv_livingcity_labor.lua): work is
+    given out and changed only there, in person; the board's job list sends
+    you to it instead (the owner: "I don't like the fact that they can
+    psychically/magically change jobs").
 ]]
 
 if CLIENT then return end
@@ -58,11 +63,14 @@ end
 
 LC.GiveJobTools = GiveTools
 
-function LC.SetJob(ply, id, force)
+-- (with a Labor Assignment terminal in the city, a job is changed only there: viaDesk is that terminal asking)
+LC.LABOR_GO = "Go to a Labor Assignment terminal to change your assignment."
+function LC.SetJob(ply, id, force, viaDesk)
     local job = LCJ.ById[id]
     if id ~= "" and not job then return false, "That job doesn't exist." end
     if job and LCJ.Closed(job) and not force then return false, "That job is closed right now. Pick a different one." end
     if not force then
+        if not viaDesk and LC.LaborDesk and LC.LaborDesk() then return false, LC.LABOR_GO end
         if not LC.CanWork(ply) then return false, "Only citizens can take Union jobs." end
         if job and job.minStanding and LC.Standing and LC.Standing(ply) < job.minStanding then
             return false, string.format("%s is only for citizens with Civil Standing %d or more. Yours is %d.", job.name, job.minStanding, LC.Standing(ply))
@@ -114,6 +122,7 @@ function LC.GiveUnionWork(ply)
     if not cvAssign:GetBool() or not IsValid(ply) or not ply:Alive() then return false end
     if ply:GetNW2String("lcf_faction", "") ~= "citizen" or LC.Job(ply) then return false end
     if (LC.IntakePending and LC.IntakePending(ply)) or not LC.CanWork(ply) then return false end
+    if LC.LaborDesk and LC.LaborDesk() then return false end -- (work is given out in person, at Labor Assignment: sv_livingcity_labor.lua)
     local counts = {}
     for _, p in ipairs(player.GetAll()) do
         local j = p:GetNW2String("lcj_job", "")
@@ -143,6 +152,7 @@ net.Receive("lcj_set", function(_, ply)
     if not ok and why then
         ply:ChatPrint("[Union] " .. why)
         if LC.Notice then LC.Notice(ply, "warn", "Union", why, 8) end
+        if why == LC.LABOR_GO and LC.WaypointTo then LC.WaypointTo(ply, "labor") end -- (and the nearest one marked)
     end
     if LC.SendBoard then LC.SendBoard(ply) end
 end)
@@ -219,7 +229,8 @@ timer.Create("LivingCityClosedJobs", 10, 0, function()
             local s = LC.Story and LC.Story(ply)
             if s and s.chains then s.chains.shift = nil if LC.SaveStory then LC.SaveStory(ply) end end
             if ply.lcStoryPostings then ply.lcStoryPostings.shift = nil end
-            ply:ChatPrint("[Union] Your job (" .. job.name .. ") has been closed, so you don't have one now. Pick a new job on your board (F3).")
+            ply:ChatPrint("[Union] Your job (" .. job.name .. ") has been closed, so you don't have one now. "
+                .. ((LC.LaborDesk and LC.LaborDesk()) and "Go to a Labor Assignment terminal for a new one." or "Pick a new job on your board (F3)."))
             if LC.SendBoard then LC.SendBoard(ply) end
         end
     end
