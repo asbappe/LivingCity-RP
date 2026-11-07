@@ -1718,7 +1718,8 @@ local c2 = LC.Credits(buyer2)
 ok(LC.DealerSell(buyer2, "keepsake") and LC.Credits(buyer2) == c2 + 20, "the dealer buys what you find")
 LC.GiveItem(buyer2, "ration")
 c2 = LC.Credits(buyer2)
-ok(LC.DealerSell(buyer2, "ration") and LC.Credits(buyer2) == c2 + 2, "and ordinary things too, at a fraction of the shop price")
+-- (40% of the cheapest shop price, contraband.md: the Commissary's ration is 15 from 7 November, so 6)
+ok(LC.DealerSell(buyer2, "ration") and LC.Credits(buyer2) == c2 + 6, "and ordinary things too, at a fraction of the shop price", tostring(LC.Credits(buyer2) - c2))
 for _ = 1, 3 do LC.GiveItem(buyer2, "bottle_empty") end
 c2 = LC.Credits(buyer2)
 ok(LC.DealerSell(buyer2, "bottle_empty", true) and not LC.HasItem(buyer2, "bottle_empty") and LC.Credits(buyer2) == c2 + 3, "a whole stack at once")
@@ -4316,14 +4317,18 @@ ok(hu:GetNW2Bool("lc_handsup", false) == false or hu:GetActiveWeapon():GetClass(
 
 ----------------------------------------------------------------------
 section("CP toolset: sociostability")
-local adminS = newPlayer("SocioAdmin", "citizen")
-adminS.admin = true
+-- (only the Administrator sets it, from 7 November: CORE_CHANGELOG, civil-protection-tools.md)
+local adminS = newPlayer("SocioAdmin", "admin")
 adminS:SetPos(FAR)
 local okS, msg = LC.SetSocio(cit, "red")
-ok(not okS and string.find(msg, "Officers only", 1, true), "citizens can't set it")
+ok(not okS and string.find(msg, "Only the Administrator", 1, true), "citizens can't set it", msg)
+local staffS = newPlayer("SocioStaff", "citizen")
+staffS.admin = true
+ok(not LC.SetSocio(staffS, "red"), "(nor a server admin who isn't the Administrator)")
+staffS.valid = false
 cit.chat = {}
 LC.SetSocio(adminS, "red", 5)
-ok(LC.Socio == "red" and _globals.lc_socio == "red" and LC.SocioStopMul() == 2, "an officer or admin can declare a judgment waiver")
+ok(LC.Socio == "red" and _globals.lc_socio == "red" and LC.SocioStopMul() == 2, "the Administrator can declare a judgment waiver")
 ok(has(cit.chat, "JUDGMENT WAIVER") and has(cit.chat, "Get indoors"), "everyone hears it, and what it means")
 local savedEvent = LC.Event
 LC.Event = "lockdown"
@@ -4333,6 +4338,7 @@ ok(LC.SocioAuto() ~= "green", "a sweep is at least yellow")
 LC.Event = savedEvent
 LC.SetSocio(adminS, "auto")
 ok(LC.SocioOverride == nil, "!socio auto gives it back to the city")
+adminS.valid = false -- (nobody plays the Administrator after this: AdminVoiceTests)
 
 ----------------------------------------------------------------------
 section("CP toolset: /request")
@@ -13313,7 +13319,10 @@ function AdminVoiceTests()
     _files["sound/livingcity/administrator/lockdown1.wav"] = "RIFF" .. string.rep("\0", 3000)
     _files["sound/livingcity/overwatch/lockdown1.wav"] = "RIFF" .. string.rep("\0", 3000)
     LC.AnnounceRescan()
-    ok(LC.HumanAdministrator() == nil and LC.AnnounceVoiceFor("lockdown") == "administrator", "nobody plays the Administrator: her recorded voice says it")
+    -- (the suite's own Administrators, QAdmin and the like, step out for this: nobody plays her)
+    local asideA = {}
+    for _, p in ipairs(player.GetAll()) do if LC.IsAdministrator(p) then asideA[#asideA + 1] = p p.valid = false end end
+    ok(LC.HumanAdministrator() == nil and LC.AnnounceVoiceFor("lockdown") == "administrator", "nobody plays the Administrator: her recorded voice says it", tostring(LC.HumanAdministrator() and LC.HumanAdministrator():Nick()) .. " " .. tostring(LC.AnnounceVoiceFor("lockdown")))
     local adm = newPlayer("Mayor", "admin")
     ok(LC.HumanAdministrator() == adm and LC.AnnounceVoiceFor("lockdown") == "overwatch", "a player is the Administrator: Overwatch's voice (the owner's recordings) says it")
     ok(LC.AnnounceVoiceFor("curfew_firm_only_hers") == nil or LC.AnnounceVoiceFor("curfew_firm_only_hers") == "overwatch", "(and never her recordings while she's played)")
@@ -13339,6 +13348,7 @@ function AdminVoiceTests()
     _files["sound/livingcity/overwatch/lockdown1.wav"] = nil
     LC.AnnounceRescan()
     SetGlobal2Float("lc_live_next", 0)
+    for _, p in ipairs(asideA) do p.valid = true end
     LC.AnnounceForceVoice = was
 end
 AdminVoiceTests()
