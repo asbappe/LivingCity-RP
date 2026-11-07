@@ -8746,6 +8746,9 @@ LC.RefreshCityState()
 
 ----------------------------------------------------------------------
 section("The quartermaster, and fighters who follow you")
+-- (one may already have spawned here during the earlier sections and, standing at a random spot, been
+-- among the rebels killed retaking the block: his respawn wait is over for this section)
+LC.QMDead[wseed] = nil
 LC.EnsureQuartermasters()
 local qm, qst
 for n, st in pairs(LC.NPCs) do if IsValid(n) and st.quartermaster then qm, qst = n, st end end
@@ -17775,6 +17778,12 @@ function MissingZombineTests()
     _setcvar("lc_quest_allies", 0)
     local Z = Vector(-194000, -186000, 0)
     local iz = { pos = Z, r = 300, kind = "infest", group = 0 }
+    -- (the story picks one infestation at random: the others, such as the prelude's, are set aside for
+    -- this unit so it always picks this one, and put back where they were at the end)
+    local aside = {}
+    for zi = #LC.Zones, 1, -1 do
+        if LC.Zones[zi].kind == "infest" then table.insert(aside, 1, { zi, table.remove(LC.Zones, zi) }) end
+    end
     table.insert(LC.Zones, iz)
     local function Start(p)
         local spec = LC.Chains.missing.parts.retaliation.build(p, { cause = "infestation" })
@@ -17805,8 +17814,10 @@ function MissingZombineTests()
         local told = _lastnet("lc_notice")
         ok(told ~= nil and told.to == cop, "a notice on screen says who it must be, and what to do")
         ok(string.find(st.text, "Kill him", 1, true) and string.find(st.text, "leave the infestation", 1, true), "kill him, or leave the infestation", st.text)
-        zb:SetHealth(0)
-        hook.Run("OnNPCKilled", zb, cop)
+        if IsValid(zb) then
+            zb:SetHealth(0)
+            hook.Run("OnNPCKilled", zb, cop)
+        end
         _run(0.5)
         ok(q.done and q.chainEnd == "mercy", "killed: his suffering is over (the old 'put him down' ending)", tostring(q.chainEnd))
     end
@@ -17825,6 +17836,7 @@ function MissingZombineTests()
     end
     cop2:SetPos(Vector(-150000, 150000, 0))
     for zi = #LC.Zones, 1, -1 do if LC.Zones[zi] == iz then table.remove(LC.Zones, zi) end end
+    for _, a in ipairs(aside) do table.insert(LC.Zones, math.min(a[1], #LC.Zones + 1), a[2]) end
 end
 MissingZombineTests()
 
