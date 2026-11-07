@@ -15583,6 +15583,212 @@ section("Sealed directives: how the endings start, and the G-Man's hand")
     _setcvar("lc_directives", 0)
 end)()
 
+----------------------------------------------------------------------
+-- The Combine's own ground (sv_livingcity_combineground.lua): soldiers stay in, citizens stay out,
+-- a stalker clears up in there, rebel warnings, dead headcrabs (the owner, 7 November)
+----------------------------------------------------------------------
+function CombineSoldiersHomeTests()
+section("Overwatch soldiers stay inside the Combine zones unless deployed")
+local socioWas, skirmWas, evWas = LC.Socio, LC.Skirmish, LC.Event
+LC.Socio, LC.Skirmish, LC.Event = "green", nil, nil
+-- no Combine zone at all: today's behaviour
+local stash = {}
+for i = #LC.Zones, 1, -1 do if LC.Zones[i].kind == "combine" then table.insert(stash, LC.Zones[i]) table.remove(LC.Zones, i) end end
+local s, sst = LC.Spawners.soldier(Vector(-190000, 186000, 0))
+ok(IsValid(s) and sst ~= nil, "a soldier to watch")
+if not IsValid(s) then for _, z in ipairs(stash) do table.insert(LC.Zones, z) end return end
+sst.routeGroup = nil
+ok(not LC.SoldierHomeRule() and not LC.SoldierGoHome(s, sst, CurTime(), false), "no Combine zone placed: soldiers patrol as they always did")
+ok(LC.SoldierHomeSpawnPos() == nil, "(and spawn where they always did)")
+local hq = LC.AddZone(Vector(-190000, 190000, 0), 400, "combine", 0)
+ok(LC.SoldierHomeRule(), "a Combine zone placed, nothing serious going on: soldiers stay home")
+ok(LC.SoldierGoHome(s, sst, CurTime(), false) and sst.dest ~= nil and LC.InCombineZone(sst.dest) == hq,
+    "a soldier out in the street with nothing to do walks back into the Combine zone", sst.dest)
+-- the city's own way of choosing (sv_livingcity.lua): idle, it heads home
+LC.SetState(s, sst, "idle") sst.dest, sst.untilT = nil, 0
+_run(0.3)
+ok(sst.dest ~= nil and LC.InCombineZone(sst.dest) == hq, "left to the city, an idle soldier heads into the Combine zone, not a checkpoint or the streets", sst.dest)
+-- inside, they walk about it or stand post, and never leave it
+s:SetPos(Vector(-190000, 190000, 0))
+for _ = 1, 6 do
+    LC.SetState(s, sst, "idle") sst.dest = nil
+    LC.SoldierGoHome(s, sst, CurTime(), false)
+    if sst.dest and not LC.InCombineZone(sst.dest) then ok(false, "a soldier inside walked out of it", sst.dest) break end
+end
+ok(true, "inside, they walk from spot to spot in the zone or stand post")
+local sp = LC.SoldierHomeSpawnPos()
+ok(sp ~= nil and LC.InCombineZone(sp) == hq, "the city's own soldiers spawn inside the Combine zone, out of sight", sp)
+-- deployed: out they go
+local caller = newPlayer("BackupCaller", "cp")
+caller:SetPos(Vector(-30000, 30000, 0))
+for _, f in ipairs({ { "backupFor", caller }, { "questLock", true }, { "workEscort", caller }, { "raid", {} }, { "skirmish", {} }, { "responder", caller }, { "cleanGuard", caller } }) do
+    sst[f[1]] = f[2]
+    ok(not LC.SoldierGoHome(s, sst, CurTime(), false), "deployed (" .. f[1] .. "): the soldier goes where they're sent")
+    sst[f[1]] = nil
+end
+LC.Socio = LCCP.SocioOrder[#LCCP.SocioOrder]
+ok(LC.SoldiersDeployed() ~= nil and not LC.SoldierGoHome(s, sst, CurTime(), false), "sociostability at its worst: soldiers out on the streets", LC.SoldiersDeployed())
+LC.Socio = "green"
+LC.Skirmish = { units = {} }
+ok(LC.SoldiersDeployed() ~= nil and not LC.SoldierHomeRule(), "a firefight with the Resistance: soldiers out")
+LC.Skirmish = nil
+LC.Event = "lockdown"
+ok(LC.SoldiersDeployed() ~= nil and not LC.SoldierHomeRule(), "a lockdown: soldiers out")
+LC.Event = nil
+ok(LC.SoldierHomeRule(), "over: back to the rule")
+-- metrocops still walk the streets
+local cop, cpst = LC.Spawners.cop(Vector(-190000, 186000, 0))
+ok(IsValid(cop) and not LC.SoldierGoHome(cop, cpst, CurTime(), false), "metrocops aren't kept in: they walk the streets as before")
+if IsValid(cop) then cop:Remove() end
+s:Remove()
+caller:SetPos(Vector(-30000, 30000, 0))
+LC.RemoveZone(hq)
+for _, z in ipairs(stash) do table.insert(LC.Zones, z) end
+LC.Socio, LC.Skirmish, LC.Event = socioWas, skirmWas, evWas
+end
+CombineSoldiersHomeTests()
+
+function CombineCitizensOutTests()
+section("Citizens stay out of the Combine zones; a stalker clears up in there")
+local evWas = LC.Event
+LC.Event = nil
+local C = Vector(-190000, -190000, 0)
+local hq = LC.AddZone(C, 400, "combine", 0)
+local c, cst = LC.Spawners.citizen(C + Vector(1500, 0, 0))
+ok(IsValid(c) and cst ~= nil, "a citizen to watch")
+if not IsValid(c) then LC.RemoveZone(hq) LC.Event = evWas return end
+cst.profile = cst.profile or {}
+ok(LC.CitizenBarredAt(c, cst, C) and LC.GoTo(c, cst, C, false, nil) == false, "a citizen's walk can't end inside a Combine zone")
+ok(LC.GoTo(c, cst, C + Vector(1200, 0, 0), false, nil), "(outside it, it can)")
+cst.jailUntil = CurTime() + 100
+ok(not LC.CitizenBarredAt(c, cst, C), "a prisoner may be taken in")
+cst.jailUntil = nil
+cst.questLock = true
+ok(not LC.CitizenBarredAt(c, cst, C), "someone a job or story is about may be there")
+cst.questLock = nil
+LC.SetState(c, cst, "escorted")
+ok(not LC.CitizenBarredAt(c, cst, C), "an arrestee being walked to a cell may be there")
+LC.SetState(c, cst, "idle")
+-- work in there isn't theirs
+local function Find(job, id)
+    for _, t in ipairs(LC.NPCWorkTasks[job] or {}) do if t.id == id then return t end end
+end
+local litter = Find("sanitation", "litter")
+local can = LC.SpawnWorldItem("can_empty", C + Vector(50, 0, 0))
+can.lcDroppedAt = CurTime() - 400
+local plan = litter and litter.find(c, cst, CurTime())
+ok(litter ~= nil and plan == nil, "litter inside a Combine zone: the sanitation worker leaves it", plan and plan.key)
+local can2 = LC.SpawnWorldItem("can_empty", C + Vector(1300, 200, 0))
+can2.lcDroppedAt = CurTime() - 400
+plan = litter and litter.find(c, cst, CurTime())
+ok(plan ~= nil and plan.key == "item" .. can2:EntIndex(), "litter outside it: picked up as usual", plan and plan.key)
+can2:Remove()
+-- one found inside is walked out, or put out of sight
+c:SetPos(C)
+LC.SetState(c, cst, "idle") cst.dest = nil
+LC.CombineGroundTick(CurTime())
+ok(cst.dest ~= nil and not LC.InCombineZone(cst.dest), "a citizen found inside a Combine zone is walked straight out", cst.dest)
+LC.CombineGroundTick(CurTime() + 25)
+ok(not IsValid(c) or not LC.InCombineZone(c:GetPos()), "one who can't find the way is put outside, out of sight", IsValid(c) and c:GetPos())
+if IsValid(c) then c:Remove() end
+-- the stalker: litter and a body in there
+local body = ents.Create("prop_ragdoll") body:SetPos(C + Vector(-60, 40, 0)) body:Spawn()
+body.lcBody = {}
+table.insert(LC.Bodies, { ent = body, born = CurTime() - 100 })
+local chores = LC.CombineChores(CurTime())
+local seen = {}
+for _, j in ipairs(chores) do if j.ent then seen[j.ent] = j.kind end end
+ok(seen[can] == "item" and seen[body] == "body", "what needs clearing inside a Combine zone: the litter and the body", #chores)
+local started = LC.StalkerCleanStart(CurTime())
+ok(started ~= nil and IsValid(started.npc) and started.npc:GetClass() == "npc_stalker", "a stalker comes for it", started and IsValid(started.npc) and started.npc:GetClass())
+ok(started ~= nil and not LC.IsSeen(started.npc:GetPos() + Vector(0, 0, 40)) and LC.InCombineZone(started.npc:GetPos()) == hq, "out of sight, inside the zone")
+ok(LC.StalkerCleanStart(CurTime()) == nil, "(one at a time)")
+local stalkers = {}
+for _ = 1, 160 do
+    for _, cl in ipairs(LC.StalkerCleaners) do stalkers[cl.npc] = true end
+    _run(0.5)
+    LC.StalkerCleanTick(CurTime())
+    if #LC.StalkerCleaners == 0 then
+        if not IsValid(can) and not IsValid(body) then break end
+        LC.StalkerCleanStart(CurTime())
+    end
+end
+ok(not IsValid(can) and not IsValid(body), "the stalker picks each up, walks off out of sight, and it's gone", tostring(IsValid(can)) .. " " .. tostring(IsValid(body)))
+local left = 0
+for n in pairs(stalkers) do if IsValid(n) then left = left + 1 end end
+ok(left == 0 and #LC.StalkerCleaners == 0, "and so is the stalker", left)
+for i = #LC.Bodies, 1, -1 do if LC.Bodies[i].ent == body then table.remove(LC.Bodies, i) end end
+LC.RemoveZone(hq)
+LC.Event = evWas
+end
+CombineCitizensOutTests()
+
+function CombineRebelWarningTests()
+section("No rebel territory warning inside a Combine zone")
+local X = Vector(-185000, 185000, 0)
+-- the owner's map: rebel ground right over the nexus (a circle reaches as far up and down as out)
+local rz = LC.AddZone(X + Vector(0, 0, 300), 400, "rebel", 0)
+local cz = LC.AddZone(nil, nil, "combine", 0, { mins = X + Vector(-300, -300, -16), maxs = X + Vector(300, 300, 200) })
+local p = newPlayer("NexusClerk", "citizen")
+p:SetPos(X)
+ok(LC.InRebelZone(X), "(the rebel zone reaches down into the nexus)")
+ok(LC.RebelEdgeLevel(p) == 0, "standing in the Combine zone: no rebel territory warning")
+_run(0.6)
+ok(p:GetNW2Int("lc_rebelzone", 0) == 0, "(nothing on screen)")
+p:SetPos(X + Vector(0, 0, 350))
+ok(LC.RebelEdgeLevel(p) == 2, "upstairs, out of the Combine zone and in the rebel one: the warning", LC.RebelEdgeLevel(p))
+p:SetPos(X + Vector(350, 0, 350))
+ok(LC.RebelEdgeLevel(p) == 1 or LC.RebelEdgeLevel(p) == 2, "(and the one a step before it)")
+p:SetPos(X + Vector(0, 0, 400 + 300 + 200))
+ok(LC.RebelEdgeLevel(p) == 0, "(nowhere near: nothing)")
+p:SetPos(Vector(-30000, 30000, 0))
+LC.RemoveZone(cz)
+ok(LC.RebelEdgeLevel(p) == 0, "(far away)")
+p:SetPos(X)
+ok(LC.RebelEdgeLevel(p) == 2, "with no Combine zone there, the rebel warning shows as before")
+p:SetPos(Vector(-30000, 30000, 0))
+LC.RemoveZone(rz)
+end
+CombineRebelWarningTests()
+
+function CrabCarcassCleanupTests()
+section("Dead headcrabs get cleared away")
+local Y = Vector(-185000, -185000, 0)
+local function Find(job, id)
+    for _, t in ipairs(LC.NPCWorkTasks[job] or {}) do if t.id == id then return t end end
+end
+local npc = ents.Create("npc_citizen") npc:SetPos(Y + Vector(300, 0, 0)) npc:Spawn()
+local st = { role = "citizen", state = "idle", profile = { job = "sanitation" } }
+local litter = Find("sanitation", "litter")
+local crab = LC.SpawnWorldItem("raw_headcrab", Y)
+crab.lcBorn = CurTime() - 30
+ok(litter ~= nil and litter.find(npc, st, CurTime()) == nil, "a headcrab just killed: left a while for a player to take")
+crab.lcBorn = CurTime() - 100
+local plan = litter and litter.find(npc, st, CurTime())
+ok(plan ~= nil and plan.key == "item" .. crab:EntIndex(), "a dead headcrab left lying: the street cleaners pick it up too, not only the morgue", plan and plan.key)
+local bag = Find("mortuary", "crabs")
+local mplan = bag and bag.find(npc, st, CurTime())
+ok(mplan ~= nil, "(the morgue still bags them)")
+-- nobody about to see it: gone, the way bodies go
+crab.lcBorn = CurTime() - 1000
+local fresh = LC.SpawnWorldItem("raw_fastcrab", Y + Vector(100, 0, 0))
+ok(LC.CarcassDecayTick(CurTime()) >= 1 and not IsValid(crab), "a dead headcrab nobody cleared or took, with nobody near: it's gone after a while (lc_body_time)")
+ok(IsValid(fresh), "(a fresh one stays)")
+fresh.lcBorn = CurTime() - 1000
+local watcher = newPlayer("CrabWatcher", "citizen")
+watcher:SetPos(Y + Vector(200, 0, 0))
+LC.CarcassDecayTick(CurTime())
+ok(IsValid(fresh), "not while someone's standing right there")
+watcher:SetPos(Vector(-30000, 30000, 0))
+local can = LC.SpawnWorldItem("can_empty", Y + Vector(-100, 0, 0))
+can.lcBorn = CurTime() - 1000
+LC.CarcassDecayTick(CurTime())
+ok(IsValid(can) and not IsValid(fresh), "only dead headcrabs go: other things on the ground stay")
+can:Remove()
+npc:Remove()
+end
+CrabCarcassCleanupTests()
+
 section("NPCs that fall out of the map")
 ;(function()
     local npc = LC.Spawners.citizen(Vector(-160000, -160000, 0))

@@ -1,0 +1,469 @@
+--[[
+    Living City: the Combine's own ground
+
+    The Combine-only zones placed with the editor (the nexus, the offices, the
+    armory: "Zone: Combine only") belong to the Combine (the owner, 7 November).
+
+    Overwatch soldiers stay in them. A soldier with nothing to do walks from
+    one spot to another inside the nearest Combine zone, or stands post there,
+    instead of patrolling the streets. They come out only when deployed:
+      for a job or a quest (an escort, a cleanup crew's guards, a story),
+      as backup a unit called for, a response squad, a raid,
+      a skirmish with the Resistance (a firefight in the streets),
+      a lockdown (it answers violence), or
+      sociostability at its worst level (red).
+    The city's own soldiers (lc_soldiers) also spawn there, out of sight.
+    With no Combine zone placed, soldiers patrol as they always did.
+
+    Citizens never go in, except prisoners (and those being taken to a cell or
+    out of one) and anyone a job or story is about. No walk of theirs may end
+    inside one, and a citizen found inside is walked straight back out (put
+    outside out of sight, if they can't find the way).
+
+    Work that needs doing in there (litter, a dead headcrab, a mess, graffiti,
+    a body) isn't left to the city's sanitation workers or morticians: a
+    stalker comes for it. It appears out of sight, shuffles over, picks it up
+    (drags a body), shuffles back out of sight, and both are gone.
+
+    Rebel territory's warning on screen ("REBEL TERRITORY AHEAD", "REBEL
+    TERRITORY") is not shown to anyone standing inside a Combine zone: on maps
+    where the two are stacked one above the other, the nexus isn't rebel
+    ground (sv_livingcity_rebels.lua).
+
+    Dead headcrabs left lying about go the way bodies do: one nobody has
+    picked up or bagged after lc_body_time seconds is gone, once nobody is
+    near enough to see it.
+]]
+
+if CLIENT then return end
+
+LC = LC or {}
+
+local UP = Vector(0, 0, 40)
+
+local function Zones() return LC.ZonesOfKindShared and LC.ZonesOfKindShared("combine") or {} end
+
+-- Inside a Combine-only zone (right to its edge: no mercy either way).
+function LC.InCombineZone(pos)
+    if not pos or not LCZ then return nil end
+    for _, z in ipairs(Zones()) do if LCZ.Contains(z, pos, 0) then return z end end
+    return nil
+end
+local InCombine = LC.InCombineZone
+
+local function NearestZone(pos)
+    local best, bd
+    for _, z in ipairs(Zones()) do
+        local d = z.pos:DistToSqr(pos)
+        if not bd or d < bd then best, bd = z, d end
+    end
+    return best
+end
+
+------------------------------------------------------------------------
+-- Overwatch soldiers stay home
+------------------------------------------------------------------------
+
+local function Worst() return LCCP and LCCP.SocioOrder and LCCP.SocioOrder[#LCCP.SocioOrder] or "red" end
+
+-- Is the whole Overwatch garrison out on the streets? Why, if so.
+function LC.SoldiersDeployed()
+    if LC.Socio and LC.Socio == Worst() then return "sociostability " .. tostring(LC.Socio) end
+    if LC.Skirmish then return "a firefight with the Resistance" end
+    if LC.Event == "lockdown" then return "a lockdown" end
+    return nil
+end
+
+-- Has this soldier been sent somewhere (a job, a quest, backup, a squad)?
+function LC.SoldierOnDuty(npc, st)
+    if not st then return true end
+    return st.questLock or st.raid or st.skirmish or st.responder or st.withdrawing or st.workEscort or st.backupFor
+        or st.adminGuard or st.cleanGuard or st.holdPos or st.guardZone or st.exUnit or st.leaving
+        or (LC.ResponseSquads and LC.ResponseSquads[npc]) or false
+end
+
+-- Does the rule hold right now (a Combine zone placed, nothing serious going on)?
+function LC.SoldierHomeRule()
+    return #Zones() > 0 and LC.SoldiersDeployed() == nil
+end
+
+function LC.SoldierHomeBound(npc, st)
+    return st ~= nil and st.role == "soldier" and LC.SoldierHomeRule() and not LC.SoldierOnDuty(npc, st)
+end
+
+-- A spot inside a Combine zone (not the prison's part of it: the guards have that).
+local function SpotIn(z)
+    for _ = 1, 4 do
+        local p = LC.SpotInZone and LC.SpotInZone(z)
+        if p and not (LC.PrisonZoneAt and LC.PrisonZoneAt(p)) then return p end
+    end
+    return nil
+end
+
+-- Called when an idle soldier picks what to do next (sv_livingcity.lua). True: handled.
+function LC.SoldierGoHome(npc, st, now, run)
+    if not LC.SoldierHomeBound(npc, st) then return false end
+    local pos = npc:GetPos()
+    local here = InCombine(pos)
+    local z = here or NearestZone(pos)
+    if not z then return false end
+    -- inside: a while standing post, now and then
+    if here and math.random() < 0.4 then
+        if npc.SetSchedule then npc:SetSchedule(SCHED_IDLE_STAND) end
+        st.untilT = now + math.Rand(8, 25)
+        return true
+    end
+    local p = SpotIn(z)
+    if p and LC.GoTo(npc, st, p, run, nil) then return true end
+    st.untilT = now + 5
+    return true
+end
+
+-- Where the city's own soldiers spawn while the rule holds: in a Combine zone, out of sight.
+function LC.SoldierHomeSpawnPos()
+    if not LC.SoldierHomeRule() then return nil end
+    local zs = Zones()
+    for _ = 1, 8 do
+        local p = SpotIn(zs[math.random(#zs)])
+        if p and not LC.IsSeen(p + UP) and (not LC.FarFromPlayers or LC.FarFromPlayers(p, 250)) then return p + Vector(0, 0, 4) end
+    end
+    return nil
+end
+
+------------------------------------------------------------------------
+-- Citizens stay out
+------------------------------------------------------------------------
+
+-- Who may be in there all the same: prisoners, anyone on their way to a cell or out of one, and
+-- anyone a job or story is about (it may have put them there on purpose).
+function LC.CitizenMayEnterCombine(npc, st)
+    if not st or st.role ~= "citizen" then return true end
+    if st.test or st.questLock or st.jailUntil then return true end
+    local s = st.state
+    if s == "jailed" or s == "detained" or s == "escorted" then return true end
+    if LC.Prisoners and LC.Prisoners[npc] then return true end
+    if LC.InSomeonesJob and LC.InSomeonesJob(npc, st) then return true end
+    return false
+end
+
+-- May this citizen not go to pos (sv_livingcity.lua's LC.GoTo, the city's work)?
+function LC.CitizenBarredAt(npc, st, pos)
+    if not st or st.role ~= "citizen" or not pos then return false end
+    if not InCombine(pos) then return false end
+    return not LC.CitizenMayEnterCombine(npc, st)
+end
+
+LC.CombineGroundStats = LC.CombineGroundStats or { walkedOut = 0, putOut = 0, barred = 0 }
+local Stats = LC.CombineGroundStats
+
+-- Anyone inside who shouldn't be: walked out, or put outside out of sight.
+function LC.CombineGroundTick(now)
+    if #Zones() == 0 then return end
+    for npc, st in pairs(LC.NPCs or {}) do
+        if st.role == "citizen" and IsValid(npc) and npc:Health() > 0 then
+            local pos = npc:GetPos()
+            if InCombine(pos) and not LC.CitizenMayEnterCombine(npc, st) then
+                st.combineSince = st.combineSince or now
+                local leaving = st.state == "moving" and st.dest and not InCombine(st.dest)
+                if now - st.combineSince > 20 and not LC.IsSeen(pos + UP) then
+                    -- can't find the way: outside, somewhere a citizen may stand
+                    local spot = LC.SafeCitizenSpot and LC.SafeCitizenSpot()
+                    if LC.NPCWorkReset then LC.NPCWorkReset(npc, st) end
+                    if LC.Release then LC.Release(npc, st) end
+                    if spot then
+                        npc:SetPos(spot)
+                        if npc.SetSchedule then npc:SetSchedule(SCHED_IDLE_STAND) end
+                        if LC.SetState then LC.SetState(npc, st, "idle") end
+                        st.untilT = now + 1
+                    else
+                        npc:Remove()
+                    end
+                    st.combineSince = nil
+                    Stats.putOut = Stats.putOut + 1
+                elseif not leaving then
+                    if LC.NPCWorkReset then LC.NPCWorkReset(npc, st) end
+                    if LC.Release then LC.Release(npc, st) end
+                    local out = LC.RandomWanderPos and LC.RandomWanderPos("citizen", pos)
+                    if out and InCombine(out) then out = nil end
+                    out = out or (LC.SafeCitizenSpot and LC.SafeCitizenSpot())
+                    if out and LC.GoTo(npc, st, out, false, nil) then Stats.walkedOut = Stats.walkedOut + 1 end
+                end
+            else
+                st.combineSince = nil
+            end
+        end
+    end
+end
+
+timer.Create("LivingCityCombineGround", 2, 0, function()
+    if not LC.Running then return end
+    local ok, err = pcall(LC.CombineGroundTick, CurTime())
+    if not ok and LC.Error then LC.Error("combine ground", err) end
+end)
+
+------------------------------------------------------------------------
+-- A stalker does the work in there
+------------------------------------------------------------------------
+
+local cleaners = {} -- { npc, kind, target, tag, phase, home, startT, nextLook, lastPos, lastMoved }
+LC.StalkerCleaners = cleaners
+local STALKER_MODEL = "models/stalker.mdl"
+
+local function Age(e, now)
+    local born = e.lcDroppedAt or e.lcBorn or (e.GetCreationTime and e:GetCreationTime()) or now
+    return now - born
+end
+
+local function Taken(e)
+    return e.lcStalkerTaken or e.lcBagging or (e.GetParent and IsValid(e:GetParent()))
+end
+
+-- What's lying in a Combine zone that the city's cleaners would see to elsewhere.
+function LC.CombineChores(now)
+    local out = {}
+    if #Zones() == 0 then return out end
+    local junk = LC.NPCJunkItems or {}
+    for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_item") or {}) do
+        if IsValid(e) and not Taken(e) then
+            local crab = LC.CrabCarcass and LC.CrabCarcass(e)
+            local age = Age(e, now)
+            if ((crab and age > 90) or (junk[e:GetNW2String("lc_item", "")] and age > 300)) and InCombine(e:GetPos()) then
+                out[#out + 1] = { kind = "item", ent = e, pos = e:GetPos() }
+            end
+        end
+    end
+    local grace = LC.NPCWorkGrace and LC.NPCWorkGrace("sanitation") or 60
+    for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_stain") or {}) do
+        if IsValid(e) and not e.lcStalkerTaken and now - (e.lcBorn or 0) >= grace and InCombine(e:GetPos()) then
+            out[#out + 1] = { kind = "stain", ent = e, pos = e:GetPos() }
+        end
+    end
+    local bodyGrace = math.min(LC.NPCWorkGrace and LC.NPCWorkGrace("mortuary") or 60, 200)
+    for _, b in ipairs(LC.Bodies or {}) do
+        local e = b.ent
+        if IsValid(e) and e.lcBody and not e.lcBody.claimed and not e.lcStalkerTaken and not (LC.HauledBy and LC.HauledBy(e))
+            and now - (b.born or now) >= bodyGrace and InCombine(e:GetPos()) then
+            out[#out + 1] = { kind = "body", ent = e, pos = e:GetPos() }
+        end
+    end
+    for _, t in ipairs(LC.Tags or {}) do
+        if not t.lcStalkerTaken and now - (t.at or 0) >= grace and InCombine(t.pos) then
+            out[#out + 1] = { kind = "tag", tag = t, pos = t.pos }
+        end
+    end
+    return out
+end
+
+-- Somewhere in the zone nobody can see, not right on top of the job.
+local function HiddenSpot(z, near)
+    for _ = 1, 10 do
+        local p = LC.SpotInZone and LC.SpotInZone(z)
+        if p and not LC.IsSeen(p + UP) and (not LC.FarFromPlayers or LC.FarFromPlayers(p, 300))
+            and (not near or p:DistToSqr(near) > 150 * 150) then return p end
+    end
+    return nil
+end
+
+local function Call(e, m, ...) if IsValid(e) and e[m] then return e[m](e, ...) end end
+
+local function Walk(npc, pos)
+    npc:SetLastPosition(pos)
+    npc:SetSchedule(SCHED_FORCED_GO)
+end
+
+local function SpawnStalker(pos)
+    local npc = ents.Create("npc_stalker")
+    if not IsValid(npc) then return nil end
+    npc:SetPos(pos + Vector(0, 0, 4))
+    npc:SetAngles(Angle(0, math.random(0, 359), 0))
+    if not util.IsValidModel or util.IsValidModel(STALKER_MODEL) then npc:SetModel(STALKER_MODEL) end
+    npc:Spawn()
+    npc:Activate()
+    -- harmless: no beam, no fights; it's here to clear up
+    for _, r in ipairs({ "player D_NU 99", "npc_citizen D_NU 99", "npc_metropolice D_NU 99", "npc_combine_s D_NU 99", "npc_vortigaunt D_NU 99" }) do
+        Call(npc, "AddRelationship", r)
+    end
+    Call(npc, "SetKeyValue", "BeamPower", "0")
+    npc.lcStalkerCleaner = true
+    npc:SetNW2String("lc_pname", "Stalker")
+    npc:SetNW2String("lc_doing", "clearing up")
+    return npc
+end
+
+local function Free(c)
+    if c.kind == "body" and IsValid(c.ent) and c.ent.lcBody then c.ent.lcBody.claimed = nil end
+    if IsValid(c.ent) then c.ent.lcStalkerTaken = nil end
+    if c.tag then c.tag.lcStalkerTaken = nil end
+end
+
+-- The thing itself, gone (an item, a mess, a body; graffiti off the wall).
+local function Dispose(ent, tag)
+    if IsValid(ent) then ent:Remove() end
+    if tag and LC.Tags then
+        for k, t in ipairs(LC.Tags) do
+            if t == tag then table.remove(LC.Tags, k) if LC.SendTags then LC.SendTags() end break end
+        end
+    end
+end
+
+local function Finish(i, c, done)
+    table.remove(cleaners, i)
+    if done then
+        Dispose(c.ent, c.tag)
+    else
+        if IsValid(c.ent) and c.ent.GetParent and c.ent:GetParent() == c.npc then Call(c.ent, "SetParent", NULL) end
+        Free(c)
+    end
+    if IsValid(c.npc) then c.npc:Remove() end
+end
+
+-- Start one, if there's work and nobody's already on it.
+function LC.StalkerCleanStart(now)
+    if #cleaners > 0 then return nil end
+    local jobs = LC.CombineChores(now)
+    if #jobs == 0 then return nil end
+    local job = jobs[math.random(#jobs)]
+    local z = InCombine(job.pos)
+    if not z then return nil end
+    local home = HiddenSpot(z, job.pos)
+    if not home then return nil end
+    local npc = SpawnStalker(home)
+    if not npc then return nil end
+    local c = { npc = npc, kind = job.kind, ent = job.ent, tag = job.tag, phase = "to", home = home, startT = now,
+        lastPos = npc:GetPos(), lastMoved = now, nextLook = now }
+    if IsValid(c.ent) then c.ent.lcStalkerTaken = true end
+    if c.tag then c.tag.lcStalkerTaken = true end
+    if c.kind == "body" and c.ent.lcBody then c.ent.lcBody.claimed = true end
+    cleaners[#cleaners + 1] = c
+    Walk(npc, job.pos)
+    return c
+end
+
+local function TargetPos(c)
+    if c.tag then return c.tag.pos end
+    return IsValid(c.ent) and c.ent:GetPos() or nil
+end
+
+-- Pick it up: in its arms (an item), dragged behind (a body), scrubbed off (a mess, graffiti).
+local function PickUp(c)
+    local e = c.ent
+    if c.kind == "item" and IsValid(e) then
+        local phys = e.GetPhysicsObject and e:GetPhysicsObject()
+        if IsValid(phys) then phys:EnableMotion(false) end
+        Call(e, "SetMoveType", MOVETYPE_NONE)
+        Call(e, "SetNotSolid", true)
+        Call(e, "SetParent", c.npc)
+        Call(e, "SetLocalPos", Vector(20, 0, 40))
+    elseif c.kind == "stain" or c.kind == "tag" then
+        Dispose(e, c.tag) -- (gone at once: nothing to carry)
+        c.ent, c.tag = nil, nil
+    end
+end
+
+-- A body comes along behind, by the shoulders, the way a mortician drags one.
+local function Drag(c)
+    local body = c.ent
+    if c.kind ~= "body" or c.phase ~= "away" or not IsValid(body) or not IsValid(c.npc) then return end
+    local phys = body.GetPhysicsObjectNum and body:GetPhysicsObjectNum(0)
+    if not IsValid(phys) then return end
+    local target = c.npc:GetPos() - Angle(0, c.npc:GetAngles().y, 0):Forward() * 46 + Vector(0, 0, 14)
+    local v = (target - phys:GetPos()) * 7
+    if v:Length() > 300 then v = v:GetNormalized() * 300 end
+    phys:Wake()
+    phys:SetVelocity(v)
+end
+
+function LC.StalkerCleanTick(now)
+    for i = #cleaners, 1, -1 do
+        local c = cleaners[i]
+        local npc = c.npc
+        if not IsValid(npc) or npc:Health() <= 0 then
+            Free(c)
+            table.remove(cleaners, i)
+        else
+            local pos = npc:GetPos()
+            if pos:DistToSqr(c.lastPos) > 16 * 16 then c.lastPos, c.lastMoved = pos, now end
+            local stuck = now - c.lastMoved > 25
+            if c.phase == "to" then
+                local tp = TargetPos(c)
+                if not tp or (c.kind == "body" and LC.HauledBy and LC.HauledBy(c.ent)) then
+                    c.phase = "away" Walk(npc, c.home) -- (someone else got to it)
+                elseif pos:DistToSqr(tp) < 70 * 70 then
+                    c.phase, c.untilT = "take", now + (c.kind == "tag" and 6 or 2.5)
+                    npc:SetSchedule(SCHED_IDLE_STAND)
+                elseif now - c.nextLook > 3 then
+                    c.nextLook = now
+                    Walk(npc, tp)
+                end
+                if stuck and c.phase == "to" and not LC.IsSeen(pos + UP) then Finish(i, c, false) end
+            elseif c.phase == "take" then
+                if now >= c.untilT then
+                    PickUp(c)
+                    c.phase = "away"
+                    c.lastMoved = now
+                    Walk(npc, c.home)
+                end
+            elseif c.phase == "away" then
+                local home = pos:DistToSqr(c.home) < 60 * 60
+                if (home or stuck or now - c.startT > 150) and not LC.IsSeen(pos + UP)
+                    and not (IsValid(c.ent) and LC.IsSeen(c.ent:GetPos() + Vector(0, 0, 10))) then
+                    Finish(i, c, true)
+                elseif home and LC.IsSeen(pos + UP) and now - (c.nextLook or 0) > 4 then
+                    -- someone's watching where it came in: another way out of sight
+                    c.nextLook = now
+                    local z = InCombine(pos) or NearestZone(pos)
+                    local other = z and HiddenSpot(z, pos)
+                    if other then c.home = other Walk(npc, other) end
+                end
+            end
+        end
+    end
+end
+
+hook.Add("Think", "LivingCityStalkerDrag", function()
+    if #cleaners == 0 then return end
+    for _, c in ipairs(cleaners) do Drag(c) end
+end)
+
+timer.Create("LivingCityStalkerCleaners", 1, 0, function()
+    if not LC.Running then return end
+    local ok, err = pcall(function()
+        local now = CurTime()
+        LC.StalkerCleanTick(now)
+        if now >= (LC.StalkerNextStart or 0) then
+            LC.StalkerNextStart = now + 15
+            LC.StalkerCleanStart(now)
+        end
+    end)
+    if not ok and LC.Error then LC.Error("stalker cleaners", err) end
+end)
+
+hook.Add("LivingCityStopped", "LivingCityStalkerCleaners", function()
+    for i = #cleaners, 1, -1 do Finish(i, cleaners[i], false) end
+end)
+
+------------------------------------------------------------------------
+-- Dead headcrabs don't lie about for ever
+------------------------------------------------------------------------
+
+function LC.CarcassDecayTick(now)
+    local cv = GetConVar("lc_body_time")
+    local secs = cv and cv:GetFloat() or 300
+    local n = 0
+    for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_item") or {}) do
+        if IsValid(e) and LC.CrabCarcass and LC.CrabCarcass(e) and not Taken(e) and now - (e.lcBorn or now) > secs then
+            local p = e:GetPos()
+            if (not LC.FarFromPlayers or LC.FarFromPlayers(p, 600)) and not LC.IsSeen(p + Vector(0, 0, 10)) then
+                e:Remove()
+                n = n + 1
+            end
+        end
+    end
+    return n
+end
+
+timer.Create("LivingCityCarcassDecay", 15, 0, function()
+    if not LC.Running then return end
+    local ok, err = pcall(LC.CarcassDecayTick, CurTime())
+    if not ok and LC.Error then LC.Error("carcass decay", err) end
+end)

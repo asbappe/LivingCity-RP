@@ -110,10 +110,11 @@ local function PublicSnapshot()
             blocks[#blocks + 1] = { n = z.group, x = z.pos.x, y = z.pos.y, z = z.pos.z, r = z.r, box = LCZ.PackBox(z.box) }
         end
     end
-    -- rebel ground and the infestation, so everyone's HUD can say when they cross into it
+    -- rebel ground and the infestation, so everyone's HUD can say when they cross into it (and the
+    -- Combine-only zones: inside one, rebel ground stacked above or below it isn't announced)
     local territory = {}
     for _, z in ipairs(LC.Zones or {}) do
-        if z.kind == "rebel" or z.kind == "infest" then
+        if z.kind == "rebel" or z.kind == "infest" or z.kind == "combine" then
             territory[#territory + 1] = { k = z.kind, x = z.pos.x, y = z.pos.y, z = z.pos.z, r = z.r, h = z.h, box = LCZ.PackBox(z.box) }
         end
     end

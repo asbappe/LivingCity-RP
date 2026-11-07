@@ -24,17 +24,25 @@ local ENTER = {
     infest = { "QUARANTINE ZONE", "Infested ground. Nobody comes back the same.", INFEST_COL },
 }
 
+-- (inside a Combine-only zone, rebel ground stacked over or under it doesn't count: the owner, 7 November)
 local function KindAt(pos)
-    local found
+    local found, combine
     for _, z in ipairs(LC_CL.territory or {}) do
         if LCZ.Contains(z, pos, 0) then
             if z.kind == "infest" then return "infest" end
-            found = "rebel"
+            if z.kind == "combine" then combine = true elseif z.kind == "rebel" then found = "rebel" end
         end
     end
+    if combine then return nil end
     return found
 end
 LC_CL.TerritoryAt = KindAt
+function LC_CL.InCombineZone(pos)
+    for _, z in ipairs(LC_CL.territory or {}) do
+        if z.kind == "combine" and LCZ.Contains(z, pos, 0) then return true end
+    end
+    return false
+end
 
 local current, nextCheck = nil, 0
 local shown -- { title, sub, col, untilT, startT }
@@ -363,6 +371,7 @@ hook.Add("HUDPaint", "LivingCityRebelEdge", function()
     if not IsValid(ply) then return end
     local v = ply:GetNW2Int("lc_rebelzone", 0)
     if v == 0 then return end
+    if LC_CL.InCombineZone(ply:GetPos()) then return end -- (inside a Combine zone: the server says so too)
     local unit = ply:GetNW2Bool("lc_unit", false)
     local x, y = ScrW() / 2, ScrH() * 0.16
     if v == 1 then

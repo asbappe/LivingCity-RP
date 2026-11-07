@@ -2039,14 +2039,19 @@ timer.Create("LivingCityQuartermasters", 10, 0, function()
 end)
 
 -- The edge of rebel ground: a warning on your screen within lc_zone_mercy of it
--- (1), and inside it (2). Units inside get shot at.
+-- (1), and inside it (2). Units inside get shot at. Not while you stand in a
+-- Combine-only zone (the owner, 7 November: with the two stacked one above the
+-- other, the nexus showed the rebel warning).
+function LC.RebelEdgeLevel(ply)
+    if not IsValid(ply) or not ply:Alive() then return 0 end
+    local p = ply:GetPos()
+    if LC.InCombineZone and LC.InCombineZone(p) then return 0 end
+    if LC.InRebelZone(p) then return 2 elseif LC.NearRebelZone and LC.NearRebelZone(p) then return 1 end
+    return 0
+end
 timer.Create("LivingCityRebelEdge", 0.5, 0, function()
     for _, ply in ipairs(player.GetAll()) do
-        local v = 0
-        if ply:Alive() then
-            local p = ply:GetPos()
-            if LC.InRebelZone(p) then v = 2 elseif LC.NearRebelZone and LC.NearRebelZone(p) then v = 1 end
-        end
+        local v = LC.RebelEdgeLevel(ply)
         if ply:GetNW2Int("lc_rebelzone", 0) ~= v then ply:SetNW2Int("lc_rebelzone", v) end
     end
 end)
