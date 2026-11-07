@@ -1258,10 +1258,9 @@ function LC.UseDispenser(ply, ent)
         ply.lcRationWithheld = nil
         ply.lcnRationAt = CurTime() + cvRation:GetFloat() * (LC.Event == "rations" and 0.5 or 1)
         refused = "[Rations] Allocation withheld: " .. why .. ". Your next allocation is as normal."
-    elseif ply.lcRationDocked and not (LC.FirstRationDue and LC.FirstRationDue(ply)) then
+    elseif ply.lcRationDocked then
         -- the PA said it: tolerating noncompliance costs this allocation (sv_livingcity_rations.lua).
-        -- (A new life's first ration is never the one withheld: the deduction waits for the next.
-        -- The owner, 7 November: two shifts, two cards, and no ration at all.)
+        -- (A new life's first ration is docked like any other: the owner, 7 November, said no to skipping it.)
         local d = ply.lcRationDocked
         ply.lcRationDocked = nil
         ply:SetNW2String("lc_ration_docked", "")
@@ -1308,7 +1307,6 @@ function LC.UseDispenser(ply, ent)
     -- no credits come with it (the owner: workers need to work)
     if LC.CarriesPapers and LC.CarriesPapers(ply) and LC.TakeItem then LC.TakeItem(ply, "ration_card", 1) end
     Dispense(ent, ply)
-    if ply.lcRationDocked then ply:ChatPrint("[Rations] A new life's first ration is never withheld. The deduction you were told of comes off your next allocation.") end
     if LC.AddStanding then LC.AddStanding(ply, 1) end
     hook.Run("LivingCityRationCollected", ply)
     return true

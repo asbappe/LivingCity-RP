@@ -2058,9 +2058,7 @@ do -- (the owner, 7 November: nobody came to the line, and refused at the counte
     newbie.lcnRationAt = 0
     newbie.lcRationDocked = { why = "a Resistance attack", where = "" }
     newbie.chat = {}
-    ok(LC.UseDispenser(newbie, nil) and newbie.lcRationDocked ~= nil, "a new life's first ration is never the one withheld")
-    newbie.lcnRationAt = 0
-    ok(not LC.UseDispenser(newbie, nil) and has(newbie.chat, "five ration units deducted"), "the deduction comes off the next one")
+    ok(not LC.UseDispenser(newbie, nil) and has(newbie.chat, "five ration units deducted") and newbie.lcRationDocked == nil, "a new life's first ration is docked like any other (the owner said no to skipping it)")
     newbie:SetPos(FAR)
 end
 
