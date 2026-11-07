@@ -335,7 +335,8 @@ function LC.RebelTrimCrowds(now)
             end
         end
         local over = #home - LC.RebelRoomIn(z)
-        if over > 0 then
+        -- (not on ground a team is retaking: the fighters holding it are the ones they've come to clear)
+        if over > 0 and not (LC.RebelQuietZone and LC.RebelQuietZone(z)) then
             -- the extras first (reinforcements, raiders back home), then anyone out of sight
             table.sort(home, function(a, b)
                 local ua, ub = a[2].unmanaged and 1 or 0, b[2].unmanaged and 1 or 0
