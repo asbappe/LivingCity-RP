@@ -192,6 +192,8 @@ run("HUDPaint")
 if not LC_CL.hintCur or LC_CL.hintCur.key ~= "wanted" or LC_CL.hintQueue[1].key ~= "bin" then problems[#problems + 1] = "urgent tip goes first, the other comes back" end
 _advance(9)
 run("HUDPaint")
+_advance(1.6) -- (a short gap between tips, then the next: the owner, 7 November, one thing at a time)
+run("HUDPaint")
 if not LC_CL.hintCur or LC_CL.hintCur.key ~= "bin" then problems[#problems + 1] = "next tip after the first ends" end
 _advance(0.1)
 run("HUDPaint")
