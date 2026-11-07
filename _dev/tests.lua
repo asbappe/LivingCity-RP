@@ -8045,6 +8045,17 @@ do -- (the owner, 7 November: "pockets full" after dropping three or four small 
     ok(LC.CarryWhy(mule, "ration", 1) == nil, "(nothing to say when it fits)")
     mule:SetPos(FAR)
 end
+do -- (the owner, 7 November: out of the CP uniform, it dropped as a suitcase and wouldn't go back in)
+    local dresser = newPlayer("Dresser", "resistance", nil, 500)
+    dresser:SetPos(Vector(-47200, 51000, 0))
+    LC.GiveItem(dresser, "uniform_cp")
+    local worn = LC.Wear(dresser, "uniform_cp")
+    ok(worn and LC.DisguisedAsCP(dresser) and not LC.HasItem(dresser, "uniform_cp"), "(the uniform goes on, out of the pockets)")
+    ok(not LC.CanCarry(dresser, "gun_shotgun", 1), "a uniform you have on still takes its large-thing room: nothing else fills it while it's worn")
+    LC.TakeOff(dresser, true)
+    ok(LC.HasItem(dresser, "uniform_cp"), "so taking it off puts it back in your pockets, not on the ground")
+    dresser:SetPos(FAR)
+end
 do -- (the owner, 7 November: the Civil Protection disguise in the same metrocop model the units wear)
     ok(LC.MetrocopKindOf("hla_metrocop models/player/hla/metrocop.mdl") == "metrocop" and LC.MetrocopKindOf("Alyx Police models/player/mcop/police_pm.mdl") == "metrocop"
         and not LC.MetrocopKindOf("police models/player/police.mdl") and not LC.MetrocopKindOf("alyx models/player/alyx.mdl"),

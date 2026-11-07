@@ -1612,7 +1612,11 @@ hook.Add("PlayerDeath", "LivingCityUnderground", function(ply)
 end)
 
 hook.Add("PlayerDisconnected", "LivingCityUnderground", function(ply)
-    if ply.lcdItem then LC.GiveItem(ply, ply.lcdItem) end -- you keep your uniform overnight
+    if ply.lcdItem then -- you keep your uniform overnight (its room is freed first: a worn one counts, sv_livingcity_survival.lua)
+        local id = ply.lcdItem
+        ply.lcdItem = nil
+        LC.GiveItem(ply, id)
+    end
     Stops[ply], Picking[ply] = nil, nil
 end)
 

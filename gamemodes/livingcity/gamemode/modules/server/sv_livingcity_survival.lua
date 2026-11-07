@@ -201,15 +201,29 @@ end
 
 -- Weight and size -------------------------------------------------------
 
+-- A disguise you have on (a bought uniform, sv_livingcity_underground.lua) still takes its room:
+-- it goes back in your pockets when you take it off, so nothing else may fill its place while
+-- it's worn (the owner, 7 November: out of the CP uniform, it dropped as a suitcase and wouldn't
+-- go back in, however many small things were dropped).
+local function Worn(ply, inv)
+    if inv and inv ~= Inv(ply) then return nil end
+    local id = IsValid(ply) and ply.lcdItem
+    return id and LCS.Items[id] and id or nil
+end
+
 function LC.InvWeight(ply, inv)
     local kg = 0
     for id, c in pairs(inv or Inv(ply)) do kg = kg + LCS.Weight(id) * c end
+    local worn = Worn(ply, inv)
+    if worn then kg = kg + LCS.Weight(worn) end
     return math.floor(kg * 100 + 0.5) / 100
 end
 
 function LC.InvBulky(ply, inv)
     local n = 0
     for id, c in pairs(inv or Inv(ply)) do if LCS.IsBulky(id) then n = n + c end end
+    local worn = Worn(ply, inv)
+    if worn and LCS.IsBulky(worn) then n = n + 1 end
     return n
 end
 
@@ -261,6 +275,7 @@ function LC.CarryWhy(ply, id, n)
     if LCS.IsBulky(id) and big + n > maxBulky then
         return string.format("No room for something that size: you're carrying %d large thing%s, and can manage %d. Drop or stash something large first (a satchel adds one).",
             big, big == 1 and "" or "s", maxBulky)
+            .. (Worn(ply) and LCS.IsBulky(Worn(ply)) and " (The clothes you have on count: they go back in your pockets when you change.)" or "")
     end
     return string.format("Too heavy: you're carrying %.1f of %.1f kg, and it weighs %.1f.", LC.InvWeight(ply, inv), maxKg, LCS.Weight(id) * n)
 end
