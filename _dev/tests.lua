@@ -17106,7 +17106,6 @@ function MarketTests() -- (the owner, 7 November: the Administrator's say over t
     section("The market: the Administrator's Commissary controls, demand, and the black market following shortages")
     _setcvar("lc_market", 1)
     _setcvar("lc_market_demand", 1)
-    _setcvar("lc_market_unrest", 4)
     _setcvar("lc_market_scarce_stock", 2)
     local MS = LC.MarketState
     MS.rules, MS.stock, MS.restockAt, MS.demand = {}, {}, {}, {}
@@ -17222,15 +17221,16 @@ function MarketTests() -- (the owner, 7 November: the Administrator's say over t
         "the quartermaster's buy-back follows demand, and stays under every price to buy one", qmBase .. " -> " .. qmNow)
     MS.demand = {}
     -- consequences
-    _setcvar("lc_market_unrest", 2)
     LC.MarketSet(boss, "bread", "restrict", "1")
-    ok(LC.MarketHeavy(), "two restrictions at a threshold of two: the shelves are bare")
-    local lvl = LC.SocioAuto()
-    ok(lvl ~= "green", "sociostability doesn't sit at green", tostring(lvl))
+    local nR = LC.MarketRestrictedCount()
+    local base = LC.RebelTarget and (function() local b = LC.MarketRebelBonus LC.MarketRebelBonus = function() return 0 end local v = LC.RebelTarget() LC.MarketRebelBonus = b return v end)()
+    ok(nR >= 2 and LC.MarketRebelBonus() == math.min(6, nR), "each restriction drives another citizen to the Resistance: one more fighter each (at most lc_market_rebels_max)", nR .. " " .. LC.MarketRebelBonus())
+    ok(math.abs(LC.MarketOpsMul() - math.max(0.5, 1 - nR * 0.1)) < 0.001, "and the Resistance's operations come sooner (10% a restriction, at most half the wait)", LC.MarketOpsMul())
+    ok(not LC.RebelTarget or LC.RebelTarget() >= base, "rebel territory's own target counts them (as room allows)")
+    local lvl = LC.SocioAuto and LC.SocioAuto()
     local s0 = LC.Trait(cit, "sympathy")
     LC.Buy(cit, "bread")
-    LC.Buy(cit, "tablets")
-    ok(LC.Trait(cit, "sympathy") == s0 + 1, "a citizen turned away warms to the Resistance, once in a while")
+    ok(LC.Trait(cit, "sympathy") == s0, "sympathy and sociostability aren't touched by restrictions (the owner, 7 November: it changes too much as it is)")
     -- announced
     cit.chat = {}
     LC.MarketFlushAnnounce()
@@ -17256,7 +17256,6 @@ function MarketTests() -- (the owner, 7 November: the Administrator's say over t
     LC.MarketSave()
     LC.MarketFlushAnnounce()
     _setcvar("lc_market_demand", 0)
-    _setcvar("lc_market_unrest", 4)
     _setcvar("lc_market_scarce_stock", 5)
     for _, p in ipairs({ boss, cit, cop }) do p:SetPos(Vector(-150000, 150000, 0)) end
 end

@@ -30,10 +30,13 @@
                      tablets, work clothes, a satchel, a curfew permit, weedkiller) he can make
                      one from materials. The quartermaster pays more for what's in demand, never
                      as much as anyone could buy it for.
-      Consequences   lc_market_unrest (4) or more things restricted at once: the city sours.
-                     Sociostability doesn't sit at green ("shortages at the Commissary"), and a
-                     citizen turned away by a restriction warms to the Resistance (sympathy, at
-                     most once in half an hour).
+      Consequences   every restriction is a straw on a citizen's back (the owner, 7 November):
+                     while restrictions stand, one more Resistance fighter per restriction is
+                     kept in rebel territory (lc_market_rebels_per, 1, at most
+                     lc_market_rebels_max, 6, and never more than the zones have room for),
+                     and the Resistance's operations come sooner (lc_market_ops_speedup, 10%
+                     sooner per restriction, at most half the wait). Sociostability and
+                     players' sympathy aren't touched.
     Bounded: the Commissary's multiplier is 0.5x to 5x; the black market's 0.5x to 4x, never
     below what the dealer pays back. With nothing touched and nothing bought, every price is
     as it always was. lc_market 0 turns all of it off.
@@ -53,7 +56,9 @@ local cvMarkup   = CreateConVar("lc_market_bm_markup", "1.5", FLAGS, "What the b
 local cvPremium  = CreateConVar("lc_market_bm_premium", "1", FLAGS, "How far a shortage at the Commissary puts black market prices up (1: up to double at a full shortage)")
 local cvScarce   = CreateConVar("lc_market_scarce_stock", "5", FLAGS, "How many of a scarce Commissary good there are at a time")
 local cvRestock  = CreateConVar("lc_market_restock_minutes", "20", FLAGS, "Minutes for one more of a scarce Commissary good")
-local cvUnrest   = CreateConVar("lc_market_unrest", "4", FLAGS, "Restricted Commissary goods at once before the city sours (sociostability, Resistance sympathy); 0: never")
+local cvRebelsPer = CreateConVar("lc_market_rebels_per", "1", FLAGS, "Resistance fighters added in rebel territory for each Commissary good the Administrator restricts (0: none)")
+local cvRebelsMax = CreateConVar("lc_market_rebels_max", "6", FLAGS, "Most Resistance fighters the Administrator's restrictions can add")
+local cvOpsSpeed  = CreateConVar("lc_market_ops_speedup", "10", FLAGS, "Percent sooner the Resistance's operations come for each restricted Commissary good (at most half the wait)")
 
 util.AddNetworkString("lc_market_open")  -- the Administrator asks for her market panel
 util.AddNetworkString("lc_market_admin") -- the panel's contents
@@ -64,7 +69,6 @@ local APPEAR = 0.25        -- shortage at which the dealer picks a Commissary go
 local PRICE_MIN, PRICE_MAX = 0.5, 5
 local BM_MIN, BM_MAX = 0.5, 4
 local PA_GAP = 600         -- the PA says a restriction at most once in ten minutes
-local SYMPATHY_GAP = 1800
 
 -- never on the black market, however short (nothing a dealer could sell)
 local NO_BLACK = { request_device = true, business_license = true, vendor_stall = true }
@@ -410,7 +414,7 @@ hook.Add("LivingCityLabMade", "LivingCityMarket", function(_, out, how)
 end)
 
 ------------------------------------------------------------------------
--- Consequences: heavy restriction sours the city
+-- Consequences: each restriction drives another citizen to the Resistance
 ------------------------------------------------------------------------
 
 function LC.MarketRestrictedCount()
@@ -419,29 +423,19 @@ function LC.MarketRestrictedCount()
     for _, g in ipairs(LCS.Goods) do if LC.MarketRestricted(g) then n = n + 1 end end
     return n
 end
-function LC.MarketHeavy()
-    local need = cvUnrest:GetInt()
-    return need > 0 and LC.MarketRestrictedCount() >= need
+-- One more fighter for each restriction (rebel territory's own target: sv_livingcity_rebels.lua).
+function LC.MarketRebelBonus()
+    local n = LC.MarketRestrictedCount()
+    if n <= 0 then return 0 end
+    return math.min(math.max(0, cvRebelsMax:GetInt()), n * math.max(0, cvRebelsPer:GetInt()))
 end
-
--- Sociostability doesn't sit at green while the shelves are bare (never more than yellow).
-if LC.SocioAuto and not LC.MarketBaseSocio then
-    LC.MarketBaseSocio = LC.SocioAuto
-    LC.SocioAuto = function(...)
-        local lvl, why = LC.MarketBaseSocio(...)
-        if lvl == "green" and LC.MarketHeavy() then return "yellow", "shortages at the Commissary" end
-        return lvl, why
-    end
+-- The Resistance's operations come sooner (sv_livingcity_resistanceops.lua): a multiplier on the wait.
+function LC.MarketOpsMul()
+    local n = LC.MarketRestrictedCount()
+    if n <= 0 then return 1 end
+    return math.max(0.5, 1 - n * math.max(0, cvOpsSpeed:GetFloat()) / 100)
 end
-
--- A citizen turned away by a restriction while the shelves are bare warms to the Resistance.
-function LC.MarketRefused(ply, g)
-    if not IsValid(ply) or not LC.MarketRestricted(g) or not LC.MarketHeavy() then return end
-    if LC.PlayerIsCP and LC.PlayerIsCP(ply) then return end
-    if (ply.lcMarketSympathy or 0) > CurTime() then return end
-    ply.lcMarketSympathy = CurTime() + SYMPATHY_GAP
-    if LC.AddTrait then LC.AddTrait(ply, "sympathy", 1) end
-end
+function LC.MarketRefused() end -- (a citizen turned away: no sympathy change any more; the owner, 7 November)
 
 ------------------------------------------------------------------------
 -- The Administrator changes something
@@ -563,7 +557,7 @@ function LC.MarketAdminData()
     end
     local restricted = {}
     for _, g in ipairs(LCS.Goods) do if LC.MarketRestricted(g) then restricted[#restricted + 1] = g.name end end
-    return { on = On(), goods = goods, black = black, restricted = restricted, unrest = cvUnrest:GetInt(), heavy = LC.MarketHeavy(),
+    return { on = On(), goods = goods, black = black, restricted = restricted, rebels = LC.MarketRebelBonus(), opsMul = LC.MarketOpsMul(),
         tiers = LCS.Tiers and (function() local t = {} for _, x in ipairs(LCS.Tiers) do if x.min > -1e8 then t[#t + 1] = { name = x.name, min = x.min } end end return t end)() or {} }
 end
 

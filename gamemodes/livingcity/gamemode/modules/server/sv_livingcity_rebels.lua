@@ -214,6 +214,7 @@ function LC.RebelTarget()
     if #RebelZones() == 0 then return 0 end
     -- more ground, more fighters (sv_livingcity_territory.lua), but never more than the zones have room for
     local want = math.max(0, cvRebels:GetInt()) + (LC.GrownCount and LC.GrownCount("rebel") or 0)
+        + (LC.MarketRebelBonus and LC.MarketRebelBonus() or 0) -- (each Commissary restriction, another joins them: sv_livingcity_market.lua)
     local room = 0
     for _, z in ipairs(RebelZones()) do room = room + LC.RebelRoomIn(z) end
     return math.min(want, room)

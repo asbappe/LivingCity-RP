@@ -89,9 +89,9 @@ local function MarketPage(parent, t)
     local r = t.restricted or {}
     Line("RESTRICTED AT THE COMMISSARY", WARN, true)
     Line(#r > 0 and table.concat(r, ", ") or "Nothing.", INK)
-    if (t.unrest or 0) > 0 then
-        Line(t.heavy and string.format("%d restricted: the shelves are bare and the city knows it. Sociostability won't sit at green, and citizens turned away warm to the Resistance.", #r)
-            or string.format("%d of %d restricted before the city sours (sociostability, Resistance sympathy).", #r, t.unrest), t.heavy and WARN or DIM)
+    if #r > 0 then
+        Line(string.format("Each restriction drives another citizen to the Resistance: %d more fighter%s in rebel territory, and their operations come %d%% sooner.",
+            t.rebels or 0, (t.rebels or 0) == 1 and "" or "s", math.floor((1 - (t.opsMul or 1)) * 100 + 0.5)), WARN)
     end
     Line(" ", DIM)
     Line("THE BLACK MARKET", WARN, true)
