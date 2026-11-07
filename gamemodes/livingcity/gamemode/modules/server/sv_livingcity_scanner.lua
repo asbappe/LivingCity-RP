@@ -632,14 +632,16 @@ end)
 
 -- Being hurt pulls you out of it.
 ------------------------------------------------------------------------
--- The Scanner Operator: a Civil Protection role (two at a time) that flies a
--- scanner from a Combine console, a data terminal, or anywhere in the Nexus
--- (a map with none of those: from anywhere). F1 > Unit tools.
+-- Flying a scanner from a terminal: any Civil Protection unit, from a Combine
+-- console, a data terminal, or anywhere in the Nexus (a map with none of
+-- those: from anywhere). F1 > Unit tools. (It was a role, the Scanner
+-- Operator, until 7 November: the owner, "it's just something you can do from
+-- the scanner terminal".)
 ------------------------------------------------------------------------
 
 local DESKS = { "lc_console", "lc_dataterminal", "lc_masterterminal" }
 function LC.IsScannerOperator(ply)
-    return IsValid(ply) and ply:IsPlayer() and ply:GetNW2String("lcf_faction", "") == "cp" and ply:GetNW2String("lcf_special", "") == "scanner_op"
+    return IsValid(ply) and ply:IsPlayer() and LC.PlayerIsCP(ply) and not (LC.PlayerIsStalker and LC.PlayerIsStalker(ply))
 end
 
 -- Where an operator can fly from here: a desk (the console entity), "here"
@@ -661,7 +663,7 @@ function LC.OperatorDesk(ply)
 end
 
 function LC.OperatorLink(ply)
-    if not LC.IsScannerOperator(ply) then return false, "Scanner Operators only (F4: Civil Protection, Scanner Operator)." end
+    if not LC.IsScannerOperator(ply) then return false, "Civil Protection units only." end
     local desk = LC.OperatorDesk(ply)
     if not desk then return false, "Get to a terminal: a Combine console, a data terminal, or anywhere in the Nexus." end
     return LC.StartScannerLink(ply, desk ~= "here" and desk or nil)

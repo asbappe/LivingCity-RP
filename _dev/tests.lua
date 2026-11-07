@@ -3134,7 +3134,18 @@ bolter:SetPos(here + Vector(300, 0, 0))
 bolter.vel, bolter.keys = Vector(190, 0, 0), { [IN_SPEED] = true }
 _run(4)
 ok(LC.PlayerIsWanted(bolter) and has(bolter.chat, "I said stop running"), "keep running after the shout and he chases you")
+-- caught: the first time this hour it's cuffs, the stick and "you can go", not the cells (the owner, 7 November)
 bolter.vel = nil
+local st0 = LC.Standing(bolter)
+ok(LC.RunningOffences(bolter) == 1, "the chase counts as a running offence", LC.RunningOffences(bolter))
+ok(LC.NPCTakesIn(rcop, bolter) and LC.RoughingUp[bolter] and LC.IsTied(bolter) and not LC.PlayerIsWanted(bolter) and not LC.InCustody(bolter),
+    "a unit who catches him cuffs him on the spot: no cell, no street detention")
+_run(8)
+ok(not LC.RoughingUp[bolter] and not LC.IsTied(bolter) and has(bolter.chat, "you can go") and LC.Standing(bolter) == st0,
+    "a few of the stick, the cuffs off, \"you can go\": no standing lost", table.concat(bolter.chat or {}, " | "))
+LC.RunOffences[bolter] = { CurTime(), CurTime(), CurTime() }
+ok(not LC.RunningBeating(rcop, bolter, "Fleeing Civil Protection"), "the third time in an hour, it's the cells")
+LC.RunOffences[bolter] = nil
 LC.ClearWanted(bolter)
 LC.CalmCops(bolter)
 bolter:SetPos(Vector(-30000, 30000, 0))
@@ -5506,6 +5517,9 @@ local civ = newPlayer("TurretCitizen", "citizen")
 civ:SetPos(K0 + Vector(900, 150, 0))
 civ.GetEyeTrace = tu.GetEyeTrace
 ok(not LC.DeployTurret(civ), "only units put turrets up")
+local okRct, whyRct = LC.DeployTurret(tu)
+ok(not okRct and whyRct and string.find(whyRct, "Overwatch", 1, true), "and not a Recruit: turrets are the Overwatch's (the owner, 7 November)", whyRct)
+tu:SetNW2Int("lcf_rank", 4) -- a Combine Prison Guard: Overwatch
 local okT = LC.DeployTurret(tu)
 local tur
 for t, o in pairs(LC.DeployedTurrets) do if o == tu and IsValid(t) then tur = t end end
@@ -5608,12 +5622,21 @@ ok(not LC.PowerBankLive(bank), "and it's dead for a while")
 bank:SetNW2Float("lc_short_until", 0)
 -- officers put banks up
 tu.GetEyeTrace = function() return { Hit = true, HitPos = K0 + Vector(940, 0, 40), HitNormal = Vector(1, 0, 0) } end
-ok(not LC.DeployPowerBank(tu), "only officers put up power banks")
 tu:SetNW2Int("lcf_rank", 3)
+ok(not LC.DeployPowerBank(tu), "a Division Leader doesn't put up power banks: the Overwatch does")
+tu:SetNW2Int("lcf_rank", 4)
 local okB = LC.DeployPowerBank(tu)
 local nb = tu.lcBank
 ok(okB and IsValid(nb) and LC.DeployedBanks[nb] == tu, "an officer puts one up on a wall")
 ok(LC.PackPowerBank(tu, nb) and not IsValid(nb), "and takes it down again")
+-- vests recharge at a live bank (the owner, 7 November); for anyone else it's tampering
+tu:SetArmor(10) tu:SetNW2Int("lc_vest_cap", 100)
+local okV, msgV = LC.UsePowerBank(tu, bank)
+ok(okV and tu:Armor() == 25 and string.find(msgV, "Vest charging", 1, true) ~= nil, "E on a live power bank charges a unit's vest", msgV .. " armor " .. tu:Armor())
+civ:SetArmor(0) civ:SetNW2Bool("lc_vest", true)
+local okC, msgC = LC.UsePowerBank(civ, bank)
+ok(okC and civ:Armor() > 0 and string.find(msgC, "Tampering", 1, true) ~= nil, "a citizen with a vest pulls charge off it too, and is told it's tampering", msgC)
+civ:SetNW2Bool("lc_vest", false)
 -- packing up
 ok(LC.PackTurret(tu, tur) and not IsValid(tur), "a unit packs a turret up")
 -- tidy up
@@ -8414,6 +8437,10 @@ _run(8)
 local arrived = 0
 for _, h in ipairs(helpers) do if h.st.backupFor == caller and h.n:GetPos():Distance(B) < 400 then arrived = arrived + 1 end end
 ok(arrived >= 2, "and they come running", arrived)
+_run(2)
+local joined = 0
+for _, h in ipairs(helpers) do if h.st.backupJoined then joined = joined + 1 end end
+ok(joined >= 1 and has(caller.chat, "in your squad"), "and join the caller's squad when they reach him (the owner, 7 November)", joined)
 local perp = newPlayer("BackupPerp", "citizen")
 perp:SetPos(B + Vector(300, 0, 0))
 perp.lcViolentUntil = CurTime() + 1e6 -- (taken for violent: the units close in to fight, not to cuff)
@@ -10883,6 +10910,20 @@ LC.SetFaction(cmd, "cp", "ow_commander", true)
 _run(0.3)
 ok(LCF.IsOverwatch(cmd) and cmd:GetModel() == "models/player/combine_super_soldier.mdl", "the Overwatch Commander is one of the Elite")
 ok(not LC.CommanderDrop(dl), "only the Commander calls in a squad")
+local rct = newPlayer("OWRecruit", "cp")
+rct.IsSuperAdmin = function() return true end
+rct.IsAdmin = function() return true end -- (past the standing and shifts checks: only the role's own rule is tested)
+_run(0.3)
+cmd:SetNW2String("lcf_special", "") -- (the role free, so only the rank stands in the way)
+local okC, whyC = LC.CanJoinFaction(rct, "cp", "ow_commander")
+cmd:SetNW2String("lcf_special", "ow_commander")
+ok(not okC and whyC ~= nil and string.find(whyC, "Elite", 1, true) ~= nil, "a Recruit can't take Overwatch Commander, superadmin or not (the owner, 7 November)", whyC)
+rct.IsSuperAdmin, rct.IsAdmin = nil, nil
+-- a rebel put down by a unit pays (the owner, 7 November): standing, credits, rounds
+local s0, c0 = LC.Standing(dl), LC.Credits(dl)
+LC.RebelKillReward(dl)
+ok(LC.Standing(dl) == s0 + 5 and LC.Credits(dl) == c0 + 2, "a rebel put down: +5 standing and +2 credits for the unit", LC.Standing(dl) - s0 .. " " .. LC.Credits(dl) - c0)
+ok((LC.Inventory(dl).ammo_pistol or 0) >= 1, "and an ammunition allocation, a box of rounds")
 LC.CommanderDropAt = 0
 if LC.OverwatchDrop then LC.EndOverwatchDrop() end
 cmd:SetPos(M0)
@@ -10930,13 +10971,14 @@ end
 MergeKickTests()
 
 function OperatorDoorTests()
-section("The Scanner Operator, and the Overwatch's boots")
+section("Any unit flies a scanner from a terminal, and the Overwatch's boots")
 local O0 = Vector(-170000, -60000, 0)
-local op = newPlayer("ScanOperator", "cp", "scanner_op")
-local plain = newPlayer("ScanPlainUnit", "cp")
+local op = newPlayer("ScanOperator", "cp")
+local plain = newPlayer("ScanPlainCitizen", "citizen")
 _run(0.3)
-ok(LC.IsScannerOperator(op) and not LC.IsScannerOperator(plain), "Scanner Operator is a Civil Protection role")
-ok(not LC.OperatorLink(plain), "only an operator flies from a terminal")
+ok(LC.IsScannerOperator(op) and not LC.IsScannerOperator(plain), "any Civil Protection unit flies a scanner from a terminal, a citizen doesn't (the Scanner Operator role is gone, the owner, 7 November)")
+ok(LCF.Get("cp").specialsById.scanner_op == nil, "there's no Scanner Operator role to take any more")
+ok(not LC.OperatorLink(plain), "only a unit flies from a terminal")
 local con = ents.Create("lc_console") con:SetPos(O0)
 op:SetPos(O0 + Vector(3000, 0, 0))
 local okFar = LC.OperatorLink(op)

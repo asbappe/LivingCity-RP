@@ -318,6 +318,8 @@ function LC.Surrender(ply, unit)
     local barred = LC.InsiderBarred and LC.InsiderBarred(ply, "surrender") -- (a caught mole: sv_livingcity_insider.lua)
     if barred then return false, barred end
     local reason = ply:GetNW2String("lc_wanted_reason", "")
+    -- giving yourself up for running: the same beating and "you can go" (sv_livingcity_running.lua)
+    if LC.RunningBeating and LC.RunningBeating(unit, ply, reason) then return true end
     reason = "Surrendered" .. (reason ~= "" and (": " .. reason) or "")
     ply.lcSurrendered = true
     if IsValid(unit) then unit:EmitSound(LC.Pick(LC.Sounds.COP_ARREST), 78) end
@@ -449,6 +451,9 @@ function LC.NPCTakesIn(unit, victim)
     if LC.Prisoners[victim] or LC.Detained[victim] or (LC.Marching and LC.Marching[victim]) then return false end
     local reason = victim:GetNW2String("lc_wanted_reason", "")
     if reason == "" then reason = "Resisting Civil Protection" end
+    -- caught running, the first or second time this hour: a beating and "you can go", not the cells
+    -- (the owner, 7 November; sv_livingcity_running.lua)
+    if LC.RunningBeating and LC.RunningBeating(unit, victim, reason) then return true end
     local done
     if LC.PrisonAvailable() then
         -- walked there by the unit who took you down, and another (sv_livingcity_march.lua)

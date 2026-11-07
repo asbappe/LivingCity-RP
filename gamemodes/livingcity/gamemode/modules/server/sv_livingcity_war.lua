@@ -551,6 +551,42 @@ function LC.Mark1020(ply, quiet)
     return true
 end
 
+-- How long backup stays in the caller's squad (the owner, 7 November: "if I call for backup, the backup should join my squad").
+local BACKUP_SECS = 300
+
+-- The units in this player's squad right now (backup that answered their call).
+function LC.BackupSquad(ply)
+    local out = {}
+    for npc, st in pairs(LC.NPCs or {}) do
+        if IsValid(npc) and st.backupFor == ply and npc:Health() > 0 then out[#out + 1] = npc end
+    end
+    return out
+end
+
+-- The squad fights what its caller fights: a unit's target, or whoever hurts the unit.
+local function SquadOnto(ply, target, now)
+    if not IsValid(target) or target == ply then return end
+    if target:IsPlayer() and (LC.PlayerIsCP(target) or not (LC.PlayerIsWanted and LC.PlayerIsWanted(target)) and not (LC.Violent and LC.Violent(target))) then return end
+    if not target:IsPlayer() then
+        local tst = LC.NPCs and LC.NPCs[target]
+        if tst and (tst.role == "cop" or tst.role == "soldier" or tst.role == "citizen") then return end
+    end
+    for _, npc in ipairs(LC.BackupSquad(ply)) do
+        local st = LC.NPCs[npc]
+        if st.state ~= "hostile" and LC.MakeOneHostile then
+            LC.MakeOneHostile(npc, st, target)
+            st.provokedBy, st.provokedUntil = target, now + 60
+        end
+    end
+end
+hook.Add("EntityTakeDamage", "LivingCityBackupSquad", function(victim, dmg)
+    local a = dmg:GetAttacker()
+    if not IsValid(a) or not IsValid(victim) or dmg:GetDamage() <= 0 then return end
+    local now = CurTime()
+    if a:IsPlayer() and IsUnitPlayer(a) and (victim:IsPlayer() or victim:IsNPC()) then SquadOnto(a, victim, now) end
+    if victim:IsPlayer() and IsUnitPlayer(victim) and a ~= victim and (a:IsPlayer() or a:IsNPC()) then SquadOnto(victim, a, now) end
+end)
+
 function LC.CallBackup(ply)
     if not IsUnitPlayer(ply) then return false, "Only Civil Protection units can call for backup." end
     if LC.Jammed and LC.Jammed(ply:GetPos()) then return false, "Static. Your radio can't get through: there's a jammer nearby." end
@@ -573,7 +609,10 @@ function LC.CallBackup(ply)
         local u = near[i]
         if LC.AbandonTask then LC.AbandonTask(u.npc, u.st, now) end
         if LC.ArmUnit then LC.ArmUnit(u.npc, u.st) end
-        u.st.backupFor, u.st.backupUntil = ply, now + 120
+        -- (the owner, 7 November: backup joins your squad) with you for five minutes, one engine squad
+        -- between them so Half-Life 2's own squad tactics work
+        u.st.backupFor, u.st.backupUntil, u.st.backupJoined = ply, now + BACKUP_SECS, nil
+        if u.npc.SetSquad then u.npc:SetSquad("lcbk" .. ply:EntIndex()) end
         if LC.GoTo(u.npc, u.st, ply:GetPos(), true, nil) then sent = sent + 1 end
     end
     LC.Mark1020(ply, true)
@@ -581,7 +620,7 @@ function LC.CallBackup(ply)
     for _, p in ipairs(player.GetAll()) do
         if IsUnitPlayer(p) and p ~= ply then p:ChatPrint("[CP net] " .. Callsign(ply) .. " requests backup " .. where .. ". Respond for XP.") end
     end
-    ply:ChatPrint(sent > 0 and string.format("[Dispatch] %d unit%s en route to you.", sent, sent == 1 and "" or "s")
+    ply:ChatPrint(sent > 0 and string.format("[Dispatch] %d unit%s en route to you. They join your squad when they reach you: with you, and on whatever you fight, for %d minutes.", sent, sent == 1 and "" or "s", math.floor(BACKUP_SECS / 60))
         or "[Dispatch] No Civil Protection units free nearby. Your 10-20 is out to every unit.")
     if sent > 0 then ply:EmitSound("npc/metropolice/vo/copy.wav", 60) end
     return true, sent
@@ -615,6 +654,16 @@ local function BackupTick(now)
                 elseif npc:GetPos():DistToSqr(caller:GetPos()) > 350 * 350 and now > (st.backupMove or 0) then
                     st.backupMove = now + 3
                     LC.GoTo(npc, st, caller:GetPos() + Vector(math.random(-90, 90), math.random(-90, 90), 0), true, nil)
+                elseif not st.backupJoined and npc:GetPos():DistToSqr(caller:GetPos()) < 350 * 350 then
+                    -- there: in the squad, and the caller hears so
+                    st.backupJoined = true
+                    local who = npc:GetNW2String("lc_pname", "")
+                    caller:ChatPrint("[CP net] " .. (who ~= "" and ("Unit " .. who) or "A unit") .. " is with you: in your squad. They follow you and fight what you fight.")
+                    npc:EmitSound(st.role == "soldier" and "npc/combine_soldier/vo/affirmative.wav" or "npc/metropolice/vo/affirmative.wav", 70)
+                    if LC.Notice and (caller.lcBackupNoticeAt or 0) < now - 20 then
+                        caller.lcBackupNoticeAt = now
+                        LC.Notice(caller, "info", "Backup with you", "The units who answered are in your squad for a few minutes: they keep with you and turn on whatever you fight, or whoever hurts you.", 7)
+                    end
                 end
             end
         end

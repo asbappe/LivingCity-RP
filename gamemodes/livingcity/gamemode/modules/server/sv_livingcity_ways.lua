@@ -36,7 +36,7 @@ function LC.WaysToGetBy(ply)
         Add("Take directives", "Patrols, stops and arrests for XP and rank: your board (F3).", nil, nil, "f3")
         Add("Get your issue", "Grenades, ammunition, armour and your ration at the Civil Protection Commissary.", nil, "cpsupply")
         Add("Kick a door in", "G (or F1 > Kick). Locked doors give on the second kick.")
-        Add("Fly a scanner", "Take the Scanner Operator role (F4), then F1 > Unit tools.", (ply:GetNW2String("lcf_special", "") ~= "scanner_op") and "Needs the Scanner Operator role (F4)" or nil, nil, "f4")
+        Add("Fly a scanner", "F1 > Unit tools, at a Combine console, a data terminal, or anywhere in the Nexus. Photographs earn XP; rebels go out as BOLOs.", nil, nil, "f1")
         if not LCF.IsOverwatch(ply) then
             local rank = ply:GetNW2Int("lcf_rank", 1)
             Add("Join the Overwatch", "A Division Leader is offered the conditioning: the Overwatch Candidate story on your board (F3).",

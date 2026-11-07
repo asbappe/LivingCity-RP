@@ -69,10 +69,34 @@ local function InPrison(p)
     for _, pz in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("prison") or {}) do if LCZ.Contains(pz, p, 0) then return true end end
     return false
 end
+-- Not in a cell, nor by its door (the owner, 7 November: a guard and a soldier stood inside a
+-- prisoner's cell, and the door, held open by them, stayed open). Cells and the release spot are
+-- kept clear by CELL_CLEAR units, prison doors by DOOR_CLEAR.
+local CELL_CLEAR, DOOR_CLEAR = 260, 140
+local function NearCell(p)
+    for _, kind in ipairs({ "cell", "release" }) do
+        for _, c in ipairs(LC.PointsOfKind and LC.PointsOfKind(kind) or {}) do
+            if c.pos and c.pos:DistToSqr(p) < CELL_CLEAR * CELL_CLEAR then return true end
+        end
+    end
+    for door in pairs(LC.PrisonDoors or {}) do
+        if IsValid(door) and door:WorldSpaceCenter():DistToSqr(p) < DOOR_CLEAR * DOOR_CLEAR then return true end
+    end
+    return false
+end
+-- A spot for a prison guard to stand or walk to: in the zone, not in a cell or a cell doorway.
+function LC.GuardPostSpot(z)
+    for _ = 1, 8 do
+        local p = LC.SpotInZone(z)
+        if p and not NearCell(p) and not NearDoor(p) then return p end
+    end
+    return nil
+end
 local function SpawnSpot(z, prison)
     for _ = 1, 8 do
         local p = LC.SpotInZone(z)
         if p and (prison or not LC.CombineZoneAt or LC.CombineZoneAt(p) == z) and (prison or not InPrison(p)) and not NearDoor(p)
+            and not (prison and NearCell(p))
             and not (LC.IsSeen and LC.IsSeen(p + Vector(0, 0, 40)))
             and (not LC.FarFromPlayers or LC.FarFromPlayers(p, 300)) then
             return p

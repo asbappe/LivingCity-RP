@@ -399,8 +399,13 @@ function LC.CanJoinFaction(ply, fid, sid)
         if not s then return false, "No such role." end
         local mine = ply:GetNW2String("lcf_faction", "") == fid and ply:GetNW2String("lcf_special", "") == sid
         if not mine and SpecialHolders(fid, sid) >= (s.max or 1) then return false, "Someone already holds that role." end
-        if RankFor(ply, f) < (s.minRank or 1) and not ply:IsSuperAdmin() then
+        -- (the owner, 7 November: a recruit became Overwatch Commander; the rank is needed, superadmin or not,
+        -- and an Overwatch role needs the conditioning like any Overwatch rank)
+        if RankFor(ply, f) < (s.minRank or 1) then
             return false, "Requires " .. f.ranks[s.minRank].name .. " in " .. f.name .. "."
+        end
+        if s.overwatch and not Conditioned(ply) then
+            return false, "Overwatch roles need the transhuman conditioning first (the Overwatch Candidate story)."
         end
     end
     return true
@@ -626,6 +631,39 @@ end)
 hook.Add("PlayerDeath", "LivingCityFactionsXP", function(victim, inflictor, attacker)
     if not IsValid(attacker) or not attacker:IsPlayer() or attacker == victim then return end
     if LC.PlayerIsZombie(attacker) and not LC.PlayerIsZombie(victim) then LC.AddXP(attacker, LCF.XP.infect, "infection") end
+end)
+
+-- A rebel put down by a Civil Protection or Overwatch player (the owner, 7 November): standing, two
+-- credits, and an ammunition allocation (a box of rounds for the gun in hand), so sweeping in on them
+-- is worth the danger. (The XP for it: sv_livingcity_rebels.lua.)
+local AMMO_BOX = { weapon_pistol = "ammo_pistol", weapon_smg1 = "ammo_smg", weapon_shotgun = "ammo_buckshot", weapon_357 = "ammo_357", weapon_ar2 = "ammo_smg" }
+LCF.XP.rebel_kill_standing, LCF.XP.rebel_kill_credits = 5, 2
+local function RebelKillReward(unit)
+    if not IsValid(unit) or not unit:IsPlayer() or not LC.PlayerIsCP(unit) then return end
+    if LC.AddStanding then LC.AddStanding(unit, LCF.XP.rebel_kill_standing, "anticitizen neutralized") end
+    if LC.AddCredits then LC.AddCredits(unit, LCF.XP.rebel_kill_credits, "anticitizen neutralized") end
+    local w = unit.GetActiveWeapon and unit:GetActiveWeapon()
+    local box = (IsValid(w) and AMMO_BOX[w:GetClass()]) or "ammo_pistol"
+    local got
+    if LCS and LCS.Items and LCS.Items[box] and LC.GiveItem and LC.GiveItem(unit, box, 1) then
+        got = string.lower(LCS.Items[box].name)
+    elseif IsValid(w) and w.GetPrimaryAmmoType and (w:GetPrimaryAmmoType() or -1) >= 0 then
+        unit:GiveAmmo(12, w:GetPrimaryAmmoType(), true) -- (pockets full: the rounds go straight in)
+        got = "twelve rounds"
+    end
+    if LC.Notice then
+        LC.Notice(unit, "info", "Anticitizen neutralized", string.format("+%d standing, +%d credits%s.", LCF.XP.rebel_kill_standing, LCF.XP.rebel_kill_credits,
+            got and (", and an ammunition allocation: " .. got) or ""), 6)
+    end
+end
+LC.RebelKillReward = RebelKillReward
+hook.Add("OnNPCKilled", "LivingCityRebelKillReward", function(npc, attacker)
+    local st = LC.NPCs and LC.NPCs[npc]
+    if st and st.role == "rebel" and not st.test then RebelKillReward(attacker) end
+end)
+hook.Add("PlayerDeath", "LivingCityRebelKillReward", function(victim, inflictor, attacker)
+    if not IsValid(attacker) or not attacker:IsPlayer() or attacker == victim or not IsValid(victim) then return end
+    if victim:GetNW2String("lcf_faction", "") == "resistance" then RebelKillReward(attacker) end
 end)
 
 hook.Add("OnNPCKilled", "LivingCityInfection", function(npc, attacker)
