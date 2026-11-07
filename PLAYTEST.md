@@ -843,3 +843,11 @@ Notes:
   Notes:
 - [ ] **Territory on its own (7 November, part 2):** with rebels in the zone, it grows within about 40 minutes; lc_territory says why if not.
   Notes:
+- [ ] **Manpower (7 November, part 2):** kill a raid party: F2 > Resistance shows them lost, the radio says "We lost N fighters", and they aren't back for minutes.
+  Notes:
+- [ ] **Manpower, empty (7 November, part 2):** set lc_manpower_cp_max 2 and kill the units: no new patrols until "Next unit" comes; sweeps postponed with a line saying why.
+  Notes:
+- [ ] **Manpower and restrictions (7 November, part 2):** restrict goods at the Commissary: F2 > Resistance says "Recruiting faster (Commissary restrictions)".
+  Notes:
+- [ ] **Manpower after a restart (7 November, part 2):** note the reserves, restart the map: they're the same.
+  Notes:

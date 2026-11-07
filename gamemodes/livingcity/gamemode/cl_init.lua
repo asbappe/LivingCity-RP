@@ -264,6 +264,8 @@ local GUIDE = {
         "The Administrator's microphone (left click) puts her voice on every loudspeaker whenever she likes; hold push-to-talk or type in chat. While a player is the Administrator, the PA's recorded announcements are Overwatch's.",
         "Each Combine building has its own stalkers: they work its terminals, clean up and fix its lights and loudspeakers. Citizens never go in.",
         "Rebel raids are real: Resistance players see Our fighters on screen; units see 10-20: ANTICITIZEN ATTACK when a raid hits.",
+        "Each side has only so many fighters and units. The dead aren't replaced at once: new recruits trickle in. The Resistance see their fighters on F2 > Resistance; units see the Combine's on the unit tools. A side with too few left postpones its raids or sweeps.",
+        "Admin testing tools > The city: superadmins can grow rebel ground or the infestation now, and see why a territory hasn't grown.",
     } },
     { "Tips", {
         "The first time you come across something, a card on the right explains what it is and what you can do. Each card only shows once.",
