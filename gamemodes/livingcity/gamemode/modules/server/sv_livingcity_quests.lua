@@ -1512,6 +1512,9 @@ T{
             desc = "Keep order at ration line " .. g .. " while rations are handed out.",
             stages = {
                 Goto(front, "Go to ration line " .. g .. " (marked)", 220),
+                -- the line forms first (the owner, 7 November: "the line is restless" with nobody there)
+                { kind = "count", event = "served", need = 1, pos = front, r = 320, distinct = false,
+                  text = "Stand at the front of the line while it forms and the first citizen collects" },
                 Choice("The line is restless. A woman at the front is shaking, and the man behind her keeps looking at your hands.", {
                     { text = "Keep order, by the book.", pick = function(q, p) LC.AddTrait(p, "loyalty", 1) end },
                     { text = "Calm the line with a few quiet words.", check = { "empathy", 11 },
@@ -1524,8 +1527,8 @@ T{
                     { text = "Pocket a few ration units while nobody's counting.",
                       pick = function(q, p) LC.AddTrait(p, "corruption", 1) LC.Bump(p, "bribes") end },
                 }),
-                { kind = "count", event = "served", need = 3, pos = front, r = 320, distinct = false,
-                  text = "Stay near the front of the line while 3 citizens collect their rations" },
+                { kind = "count", event = "served", need = 2, pos = front, r = 320, distinct = false,
+                  text = "Stay near the front of the line while 2 more citizens collect their rations" },
             },
         }
     end,

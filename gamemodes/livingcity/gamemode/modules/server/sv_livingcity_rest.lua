@@ -101,8 +101,10 @@ function LC.BedFree(key, who)
         if e:IsPlayer() then
             if e.lcSleep and e.lcBedKey == key then return false end
         else
+            -- taken only while they're in it, or on their way to it (the owner, 7 November: "already
+            -- asleep in this bed" on empty beds: a citizen sent off to do something else kept the key)
             local st = LC.NPCs and LC.NPCs[e]
-            if st and st.bedKey == key then return false end
+            if st and st.bedKey == key and (st.state == "abed" or (st.state == "moving" and st.poi and st.poi.kind == "homebed")) then return false end
         end
     end
     LC.BedSleepers[key] = nil
@@ -354,7 +356,9 @@ end
 function LC.NPCBedDown(npc, st, now)
     local b = st.bedSpot
     if not b or not LC.NPCLieOnBed then LC.NPCBedUp(npc, st) return false end
-    local L = { standAt = npc:GetPos() }
+    -- where they get up again: the spot beside the bed, on its floor (not wherever they came to a stop)
+    local standAt = b.stand or (LC.GroundAt and LC.GroundAt(npc:GetPos())) or npc:GetPos()
+    local L = { standAt = standAt }
     if not LC.NPCLieOnBed(npc, L, b) then LC.NPCBedUp(npc, st) return false end
     st.bedL = L
     st.ss = L.ss -- (so it goes with them if they're removed: sv_livingcity.lua)
