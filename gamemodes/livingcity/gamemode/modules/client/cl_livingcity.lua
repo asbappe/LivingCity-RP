@@ -176,7 +176,9 @@ net.Receive("lc_data", function()
     for id, n in pairs(LC_CL.nodes) do n.orphan = (degree[id] or 0) == 0 end
     LC_CL.zones = {}
     for i, z in ipairs(t.zones or {}) do
-        LC_CL.zones[i] = { pos = Vector(z.x, z.y, z.z), r = z.r, h = z.h, kind = z.kind, group = z.group or 0, box = LCZ and LCZ.UnpackBox(z.box) or nil }
+        LC_CL.zones[i] = { pos = Vector(z.x, z.y, z.z), r = z.r, h = z.h, kind = z.kind, group = z.group or 0, box = LCZ and LCZ.UnpackBox(z.box) or nil,
+            grown = z.grown }
+        if z.ground and LCZ and LCZ.UnpackGround then LCZ.UnpackGround(z.ground, LC_CL.zones[i]) end
     end
     LC_CL.doors = t.doors or {}
     LC_CL.props = {}
@@ -206,7 +208,9 @@ net.Receive("lc_public", function()
     end
     LC_CL.territory = {}
     for _, z in ipairs(t.territory or {}) do
-        LC_CL.territory[#LC_CL.territory + 1] = { kind = z.k, pos = Vector(z.x, z.y, z.z), r = z.r, h = z.h, box = LCZ and LCZ.UnpackBox(z.box) or nil }
+        local tz = { kind = z.k, pos = Vector(z.x, z.y, z.z), r = z.r, h = z.h, box = LCZ and LCZ.UnpackBox(z.box) or nil }
+        if z.ground and LCZ and LCZ.UnpackGround then LCZ.UnpackGround(z.ground, tz) end
+        LC_CL.territory[#LC_CL.territory + 1] = tz
     end
 end)
 
@@ -530,6 +534,18 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
         if z.pos:DistToSqr(eye) < (3000 + z.r) ^ 2 and Shown(focus, z.kind, "zone") then
             local col = ZONE_COLORS[z.kind] or color_white
             local ok = pcall(function()
+                if z.rects then
+                    -- territory that grew along the path nodes: the rectangles its cells merge into, eight feet tall
+                    render.SetColorMaterial()
+                    local a = z == aimZone and 60 or (fill and (aimZone and 6 or 16) or 0)
+                    local C = LCZ.CELL
+                    for _, r in ipairs(z.rects) do
+                        local mins, maxs = Vector(r.x0 * C, r.y0 * C, r.lo), Vector((r.x1 + 1) * C, (r.y1 + 1) * C, r.hi)
+                        if a > 0 then render.DrawBox(vector_origin, angle_zero, mins, maxs, Color(col.r, col.g, col.b, a), true) end
+                        render.DrawWireframeBox(vector_origin, angle_zero, mins, maxs, Color(col.r, col.g, col.b, z == aimZone and 255 or (aimZone and 70 or 230)), Z())
+                    end
+                    return
+                end
                 if z.box then
                     -- a box zone: the box itself, shaded, with its edges drawn
                     render.SetColorMaterial()

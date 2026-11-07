@@ -160,6 +160,20 @@ local function Build()
     Btn(br, "Black out the city", function() Do("blackout", "on") end, 140)
     Btn(br, "Lights on", function() Do("blackout", "off") end, 90)
     Btn(br, "Follow the grid", function() Do("blackout", "auto") end, 120)
+    -- territory: grow it now, for testing (superadmins; it grows along the path nodes)
+    if state.superadmin then
+        local tr = Row(cs)
+        Label(tr, "Territory:", 70)
+        Btn(tr, "Grow rebel ground now", function() Do("territory", "rebel") end, 160)
+        Btn(tr, "Grow the infestation now", function() Do("territory", "infest") end, 170)
+        for _, line in ipairs(state.territory or {}) do
+            local lr = Row(cs, 34)
+            local l = Label(lr, line, 600)
+            l:Dock(FILL)
+            l:SetWrap(true)
+        end
+        if #(state.territory or {}) == 0 then Label(Row(cs), "No rebel or infestation zones are placed.", 400) end
+    end
 
     local sr2 = Section(scroll, "Start over")
     local rr2 = Row(sr2)

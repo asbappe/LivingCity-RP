@@ -134,7 +134,7 @@ local function DressSpots(z, n)
     local spots, wet = {}, {}
     local function Take(p)
         local g = p and FloorUnder(p)
-        if g and math.abs(g.z - z.pos.z) < 120 and g:DistToSqr(z.pos) < (z.r * 0.95) ^ 2 and Footing(g, 30) then
+        if g and math.abs(g.z - z.pos.z) < 120 and g:DistToSqr(z.pos) < (z.r * 0.95) ^ 2 and (not z.cells or LCZ.Contains(z, g, 0)) and Footing(g, 30) then
             -- (down in a channel or a ditch below the zone's floor: only if there's nowhere dry)
             if LC.InWater(g) or g.z < z.pos.z - 14 then wet[#wet + 1] = g else spots[#spots + 1] = g end
         end

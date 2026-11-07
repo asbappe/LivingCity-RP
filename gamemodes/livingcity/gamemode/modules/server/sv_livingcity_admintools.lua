@@ -124,6 +124,16 @@ local ACTIONS = {
         local on = LC.ForceBlackout(v)
         return true, "City-wide blackout: " .. (on and "ON" or "off") .. (v == "auto" and " (following the grid again)" or " (until you set it back to the grid)") .. "."
     end,
+    -- territory: grow rebel ground or the infestation now, for testing (superadmins; sv_livingcity_territory.lua)
+    territory = function(_, v, admin)
+        if IsValid(admin) and not admin:IsSuperAdmin() then return false, "Superadmins only." end
+        if v ~= "rebel" and v ~= "infest" then return false, "Grow which: rebel or infest?" end
+        if not LC.TerritoryGrowNow then return false, "Territory doesn't spread on this server." end
+        local z, why = LC.TerritoryGrowNow(v)
+        local what = v == "rebel" and "Rebel ground" or "The infestation"
+        if not z then return false, what .. " couldn't grow: " .. tostring(why) .. "." end
+        return true, what .. " grew " .. (z.where or "") .. (z.cells and string.format(", along the path nodes (%d cells, saved as %d rectangles)", z.n or 0, #(z.rects or {})) or ", as a round patch (no path nodes near it)") .. "."
+    end,
     item = function(t, v)
         local it = LCS and LCS.Items and LCS.Items[v or ""]
         if not it or not LC.GiveItem then return false, "No such item." end
@@ -139,7 +149,7 @@ function LC.AdminTool(admin, target, action, value)
     if not IsValid(target) or not target:IsPlayer() then return false, "Nobody to do that to." end
     local fn = ACTIONS[action or ""]
     if not fn then return false, "Unknown action." end
-    local ok, a, b = pcall(fn, target, value)
+    local ok, a, b = pcall(fn, target, value, admin)
     if not ok then return false, "That failed: " .. tostring(a) end
     if a and action ~= "refresh" and IsValid(admin) and LC.Log then
         LC.Log("info", string.format("admin tools: %s used %s %s on %s", admin:Nick(), action, tostring(value or ""), target:Nick()))
@@ -154,6 +164,11 @@ local function Snapshot(admin, target)
         credits = LC.Credits and LC.Credits(t) or nil, standing = LC.Standing and LC.Standing(t) or nil, players = {} }
     for _, f in ipairs(LCF and LCF.Factions or {}) do data.xp[f.id] = XP(t, f.id) end
     for _, p in ipairs(player.GetAll()) do data.players[#data.players + 1] = { id = p:SteamID() .. "|" .. p:Nick(), name = p:Nick() } end
+    -- how the city's territory is doing (superadmins can grow it from the panel)
+    if admin:IsSuperAdmin() and LC.TerritoryStatus then
+        data.superadmin = true
+        data.territory = LC.TerritoryStatus()
+    end
     return data
 end
 
