@@ -28,8 +28,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 2026-11-07 (part 2): the owner's answers, the rest of their first 7 November list and their whole second list are built and merged to `main`. What was built and where: `docs/dev/handoff-2026-11-07-part2.md` (the first batch: `docs/dev/handoff-2026-11-07.md`).
-- Nothing is checked in game. Every item has a line in `PLAYTEST.md` under "7 November, part 2".
-- The core changed a lot (new settings, an item, commands, retuned defaults): all listed in `CORE_CHANGELOG.md` (2026-11-07 part 2) as not yet OK'd. `_dev/core_snapshot.txt` is not updated, so the snapshot test fails until the owner says yes.
-- Questions waiting on the owner (a Black sociostability level, which voice says what, lights in Combine zones, the audit, stimulants, G-Man events, Workshop dances) are in `TODO.md`.
-- Tests: `_dev/tests.lua` sets `lc_quest_allies` 0 at the top (allies on violent jobs are tested in their own unit).
+- 2026-11-07 (part 2): both of the owner's 7 November lists and everything they added in the chat are merged to `main` (details: `docs/dev/handoff-2026-11-07-part2.md`, plus later: Administrator voice and microphone, dream moods on the tablet, the G-Man set aside, the market, zone stalkers, the F1-F4 layout, real rebel raids with `docs/dev/rebel-activity-audit.md`).
+- Nothing is checked in game. PLAYTEST.md has every item under "7 November, part 2".
+- Core changes are listed in `CORE_CHANGELOG.md` (2026-11-07 part 2) as not yet OK'd; the snapshot is not updated.
+- The full suite was started but stopped (usage); each piece's own units and the smoke test passed. Run the full suite next.
+- Stopped unfinished for usage, in `TODO.md` "To build later": manpower pools, territory growth along path nodes (and why it never grows), a fair share of the NPC budget.

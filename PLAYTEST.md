@@ -791,3 +791,45 @@ Notes:
   Notes:
 - [ ] **Combat music for units (7 November, part 2):** as Civil Protection in a sweep, a violent job or a firefight, action music plays.
   Notes:
+- [ ] **Administrator's voice (7 November, part 2):** with nobody as the Administrator, her recordings speak the announcements; become the Administrator and only the Overwatch voice is on the PA, and her recorded addresses stop.
+  Notes:
+- [ ] **Administrator's microphone (7 November, part 2):** as the Administrator, left click with the microphone goes on air without waiting for the transmitter; hold push-to-talk or type in chat.
+  Notes:
+- [ ] **G-Man set aside (7 November, part 2):** no G-Man in your sleep, no sealed directives; the Administrator's chosen dream plays with no G-Man vote.
+  Notes:
+- [ ] **Flood in a dream (7 November, part 2):** dream The Flood with a dream zone placed: the water fills only the dream zone.
+  Notes:
+- [ ] **Restrictions and the Resistance (7 November, part 2):** restrict 3 goods: 3 more fighters in rebel territory, a refused citizen leans to the Resistance, sociostability isn't moved; the Administrator's market page describes the mood in plain words.
+  Notes:
+- [ ] **Zone stalkers (7 November, part 2):** place "Point: stalker terminal" in front of a terminal in a Combine zone, standing where the stalker should stand and facing the terminal; the stalker goes there and works it. The debug report's "terminal animation" line says which animation it chose: does it look right?
+  Notes:
+- [ ] **Stalker repairs (7 November, part 2):** break a streetlight or loudspeaker inside a Combine zone; after about a minute the stalker leaves the terminal, repairs it and goes back.
+  Notes:
+- [ ] **Stalker replaced (7 November, part 2):** kill a zone's stalker; another appears out of sight about two minutes later.
+  Notes:
+- [ ] **F1 (7 November, part 2):** the same general menu for a citizen, a unit and a rebel; 2 is Hands up; 5 opens pockets.
+  Notes:
+- [ ] **F2 as a unit (7 November, part 2):** 1 Voice lines, 2 Unit tools, 3 Kick, 4 Backup, 5 BOLO, 6 10-20; look at someone and 7-8 are Search and Cuff.
+  Notes:
+- [ ] **F2 for others (7 November, part 2):** as a rebel (clothes, market, squad orders with a squad), as the Administrator, and as a jobless citizen (it says there's nothing).
+  Notes:
+- [ ] **F3 (7 November, part 2):** opens your pockets.
+  Notes:
+- [ ] **F4 (7 November, part 2):** opens on Jobs; switch to Career and Factions, close it, and F4 reopens on the last tab; the reassessment button works; !jobs and !faction open their tabs.
+  Notes:
+- [ ] **Kick reminder (7 November, part 2):** at a locked door it reads "press G (or F2 > 3)".
+  Notes:
+- [ ] **Commissary controls (7 November, part 2):** as Administrator, tablet > The Commissary and the market: restrict bread, set coffee to 3x, a medical kit to scarce, and check the Commissary window shows each.
+  Notes:
+- [ ] **Black market follows (7 November, part 2):** restricted bread appears at the dealer and the quartermaster at a premium, and goes once it's unrestricted.
+  Notes:
+- [ ] **Demand (7 November, part 2):** buy several lockpicks: the price rises, and falls back over time.
+  Notes:
+- [ ] **Shortages and the mood (7 November, part 2):** restrict 4 goods: sociostability won't sit at green.
+  Notes:
+- [ ] **Raids are real (7 November, part 2):** on the usual NPC budget, start a raid (C > Help, or lc_skirmish raid). As Resistance, follow the "Our fighters" marker: the fighters reach the target and 2 or 3 units come to fight them. The NPC count doesn't go up.
+  Notes:
+- [ ] **Raid timing (7 November, part 2):** as Civil Protection, the "10-20: ANTICITIZEN ATTACK" marker appears when the fight starts; rations are docked only then.
+  Notes:
+- [ ] **Raids and restrictions (7 November, part 2):** restrict 3, then 5 goods: raid parties grow (5, then 6 or more).
+  Notes:
