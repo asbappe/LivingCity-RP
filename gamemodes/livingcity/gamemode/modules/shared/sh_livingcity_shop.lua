@@ -31,13 +31,17 @@ LCS.Items = {
     coffee          = { name = "Real coffee", model = "models/props_junk/garbage_coffeemug001a.mdl", hunger = 5, thirst = 25, uplift = true },
     tablets         = { name = "Antiparasitic tablets", model = "models/props_lab/jar01b.mdl", cures = "parasites" },
 
-    raw_bird        = { name = "Raw bird", model = "models/pigeon.mdl", hunger = 10, parasite = 0.7, cooksTo = "cooked_bird" },
-    cooked_bird     = { name = "Roast bird", model = "models/pigeon.mdl", hunger = 30 },
-    raw_headcrab    = { name = "Raw headcrab", model = "models/headcrabclassic.mdl", hunger = 15, parasite = 0.85, cooksTo = "cooked_headcrab" },
-    raw_fastcrab    = { name = "Raw fast headcrab", model = "models/headcrab.mdl", hunger = 12, parasite = 0.85, cooksTo = "cooked_headcrab" },
-    raw_poisoncrab  = { name = "Raw poison headcrab", model = "models/headcrabblack.mdl", hunger = 15, parasite = 0.9, poison = 45, cooksTo = "cooked_headcrab",
+    -- Meat and fish, raw or cooked, go off after one city day (spoils = true; sv_livingcity_survival.lua,
+    -- the owner, 7 November). A dead bird leaves its own kind: pigeon, crow or gull, all roast the same.
+    raw_bird        = { name = "Raw pigeon", model = "models/pigeon.mdl", hunger = 10, parasite = 0.7, cooksTo = "cooked_bird", spoils = true },
+    raw_crow        = { name = "Raw crow", model = "models/crow.mdl", hunger = 10, parasite = 0.7, cooksTo = "cooked_bird", spoils = true },
+    raw_gull        = { name = "Raw gull", model = "models/seagull.mdl", hunger = 12, parasite = 0.7, cooksTo = "cooked_bird", spoils = true },
+    cooked_bird     = { name = "Roast bird", model = "models/pigeon.mdl", hunger = 30, spoils = true },
+    raw_headcrab    = { name = "Raw headcrab", model = "models/headcrabclassic.mdl", hunger = 15, parasite = 0.85, cooksTo = "cooked_headcrab", spoils = true },
+    raw_fastcrab    = { name = "Raw fast headcrab", model = "models/headcrab.mdl", hunger = 12, parasite = 0.85, cooksTo = "cooked_headcrab", spoils = true },
+    raw_poisoncrab  = { name = "Raw poison headcrab", model = "models/headcrabblack.mdl", hunger = 15, parasite = 0.9, poison = 45, cooksTo = "cooked_headcrab", spoils = true,
                         desc = "The venom's still in it. Cooking burns it out. Eating it raw will put you on the floor" },
-    cooked_headcrab = { name = "Roast headcrab", model = "models/headcrabclassic.mdl", hunger = 40 },
+    cooked_headcrab = { name = "Roast headcrab", model = "models/headcrabclassic.mdl", hunger = 40, spoils = true },
 
     can_empty       = { name = "Empty can", model = CAN, fillTo = "can_dirty" },
     can_dirty       = { name = "Can of untreated water", model = CAN, thirst = 30, parasite = 0.4, cooksTo = "can_clean", leaves = "can_empty" },
@@ -144,13 +148,15 @@ LCS.Items = {
                         desc = "Pre-war. The label's gone. Probably beans" },
     vegetables      = { name = "Rooftop vegetables", model = "models/props_junk/garbage_takeoutcarton001a.mdl", hunger = 25, thirst = 10,
                         desc = "Grown in a pot on a roof somewhere. Real food" },
-    raw_fish        = { name = "Raw fish", model = "models/props_junk/garbage_newspaper001a.mdl", hunger = 15, parasite = 0.5, cooksTo = "cooked_fish",
+    -- (Half-Life 2 has no fish model: the raw one is the bugbait pod, tinted grey in lc_item.lua, a fish
+    -- of a kind; the fried one comes wrapped in a takeout carton. Change the paths here for a real fish model.)
+    raw_fish        = { name = "Raw fish", model = "models/weapons/w_bugbait.mdl", hunger = 15, parasite = 0.5, cooksTo = "cooked_fish", spoils = true,
                         desc = "From the canal. Cook it. Really, cook it" },
-    cooked_fish     = { name = "Fried fish", model = "models/props_junk/garbage_newspaper001a.mdl", hunger = 35 },
+    cooked_fish     = { name = "Fried fish", model = "models/props_junk/garbage_takeoutcarton001a.mdl", hunger = 35, spoils = true },
     seeds           = { name = "Seed packet", model = "models/props_lab/box01a.mdl", use = "plant", useLabel = "Plant",
                         desc = "Plant them in a pot in rebel territory (look at it and press E, or Plant here)" },
     fishing_line    = { name = "Fishing line", model = "models/props_lab/box01a.mdl", use = "fish", useLabel = "Fish",
-                        desc = "Stand in the canal, or look at the water, and wait. Keeps" },
+                        desc = "Stand in the canal, or look at the water, and wait. Good for four to eight casts, then it snaps" },
     spraypaint      = { name = "Spray can", model = "models/props_junk/popcan01a.mdl", use = "spray", useLabel = "Spray",
                         contraband = true, conceal = 0.5, sell = 4,
                         desc = "Look at a wall and spray the lambda. Don't let a Civil Protection unit see you do it" },
@@ -282,7 +288,7 @@ end
 
 LCS.Weights = {
     ration = 0.3, water = 0.4, bread = 0.5, milk = 0.6, melon = 3.0, coffee = 0.3, tablets = 0.05,
-    raw_bird = 0.6, cooked_bird = 0.5, raw_headcrab = 1.2, raw_fastcrab = 1.0, raw_poisoncrab = 1.4, cooked_headcrab = 1.0,
+    raw_bird = 0.6, raw_crow = 0.6, raw_gull = 0.7, cooked_bird = 0.5, raw_headcrab = 1.2, raw_fastcrab = 1.0, raw_poisoncrab = 1.4, cooked_headcrab = 1.0,
     can_empty = 0.05, can_dirty = 0.4, can_clean = 0.4, bottle_empty = 0.3, bottle_dirty = 0.8, bottle_clean = 0.8,
     radio = 1.0, radio_tuned = 1.0, radio_transmitter = 0.6, permit = 0.02, papers_blank = 0.02, papers_forged = 0.02, papers_dead = 0.02, ration_forged = 0.02,
     uniform_cp = 3.0, cwu_overalls = 1.2, rebel_gear = 3.0, civvies = 1.0,

@@ -26,7 +26,8 @@ function ENT:Initialize()
     self:SetMoveType(MOVETYPE_VPHYSICS)
     self:SetSolid(SOLID_VPHYSICS)
     self:SetUseType(SIMPLE_USE)
-    if id == "raw_bird" or id == "raw_headcrab" then self:SetColor(Color(150, 115, 105)) end
+    if id == "raw_bird" or id == "raw_crow" or id == "raw_gull" or id == "raw_headcrab" then self:SetColor(Color(150, 115, 105)) end
+    if id == "raw_fish" then self:SetColor(Color(135, 160, 170)) end -- (the bugbait pod, made fish-grey)
     local phys = self:GetPhysicsObject()
     if IsValid(phys) then phys:Wake() end
 end
@@ -37,7 +38,7 @@ if SERVER then
         if self.lcTaken then return end -- (two people pressing E at the same moment: only one gets it)
         local id = self:GetNW2String("lc_item", "")
         self.lcTaken = true
-        if LC.GiveItem(activator, id, 1) then
+        if LC.GiveItem(activator, id, 1, self.lcBornAt) then -- (meat keeps its age: sv_livingcity_survival.lua)
             activator:ChatPrint("Picked up: " .. (LCS.Items[id] and LCS.Items[id].name or id))
             self:EmitSound("items/ammo_pickup.wav", 60)
             self:Remove()

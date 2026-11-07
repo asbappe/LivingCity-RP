@@ -441,7 +441,7 @@ LC.HINTS = {
 local ITEM_HINTS = {
     seeds = "item_seeds", fishing_line = "item_fishing", spraypaint = "item_spray", lockpick = "item_lockpick",
     bypass = "item_bypass", cp_keycard = "item_keycard",
-    raw_bird = "item_raw", raw_headcrab = "item_raw", raw_fastcrab = "item_raw", raw_poisoncrab = "item_raw", raw_fish = "item_raw",
+    raw_bird = "item_raw", raw_crow = "item_raw", raw_gull = "item_raw", raw_headcrab = "item_raw", raw_fastcrab = "item_raw", raw_poisoncrab = "item_raw", raw_fish = "item_raw",
     can_empty = "item_empty", bottle_empty = "item_empty", can_dirty = "item_dirty", bottle_dirty = "item_dirty",
     civvies = "item_clothes", cwu_overalls = "item_clothes", uniform_cp = "item_uniform", rebel_gear = "item_gear",
     papers_forged = "item_papers", papers_dead = "item_papers", papers_blank = "item_blank", ration_forged = "item_rationcard",

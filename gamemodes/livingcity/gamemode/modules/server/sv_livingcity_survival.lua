@@ -70,6 +70,103 @@ end
 local function SaveInv(ply) ply:SetPData("lci_inv", util.TableToJSON(Inv(ply))) end
 LC.Inventory = Inv
 
+------------------------------------------------------------------------
+-- Spoilage: meat and fish, raw or cooked, go off after one city day
+-- (the owner, 7 November: so nobody hoards them). Each unit remembers when
+-- it was got (a real-time stamp, so it rots while you're away too), and the
+-- pockets screen shows the city hours it has left. Items with spoils = true
+-- in LCS.Items.
+------------------------------------------------------------------------
+
+LC.SpoilClock = os.time -- (tests set their own)
+
+local function Stamps(ply)
+    if ply.lcSpoil then return ply.lcSpoil end
+    local raw = ply:GetPData("lci_spoil", "")
+    local t = raw ~= "" and util.JSONToTable(raw) or nil
+    ply.lcSpoil = istable(t) and t or {}
+    return ply.lcSpoil
+end
+local function SaveStamps(ply) ply:SetPData("lci_spoil", util.TableToJSON(Stamps(ply))) end
+
+function LC.Spoils(id) local it = LCS.Items[id] return it ~= nil and it.spoils == true end
+
+-- One city day in real seconds (lc_day_minutes): how long meat keeps.
+function LC.SpoilSecs()
+    local cv = GetConVar("lc_day_minutes")
+    return math.max(5, cv and cv:GetFloat() or 60) * 60
+end
+
+-- City hours left before a unit got at `born` goes off.
+function LC.SpoilHoursLeft(born)
+    local perHour = LC.SpoilSecs() / 24
+    return math.max(0, 24 - (LC.SpoilClock() - (born or LC.SpoilClock())) / perHour)
+end
+
+-- The stamps of one kind in their pockets, oldest first, kept in step with the count.
+local function StampsOf(ply, id)
+    local all = Stamps(ply)
+    local s = all[id] or {}
+    all[id] = s
+    local n = Inv(ply)[id] or 0
+    while #s > n do table.remove(s) end              -- (more stamps than units: the newest go)
+    while #s < n do s[#s + 1] = LC.SpoilClock() end  -- (a unit with no stamp: from now)
+    table.sort(s)
+    if n == 0 then all[id] = nil end
+    return s
+end
+
+-- When the oldest unit of a kind in their pockets was got (nil: it doesn't spoil, or they have none).
+function LC.SpoilOldest(ply, id)
+    if not LC.Spoils(id) or not Inv(ply)[id] then return nil end
+    return StampsOf(ply, id)[1]
+end
+
+-- For the pockets screen: id -> city hours the oldest unit has left.
+function LC.SpoilView(ply)
+    local out, any = {}, false
+    for id in pairs(Inv(ply)) do
+        local born = LC.SpoilOldest(ply, id)
+        if born then out[id] = math.floor(LC.SpoilHoursLeft(born) * 10 + 0.5) / 10 any = true end
+    end
+    return any and out or nil
+end
+
+-- Throw out what has gone off. Returns how many units went.
+function LC.SpoilCheck(ply, quiet)
+    local inv, gone = Inv(ply), 0
+    for id, n in pairs(inv) do
+        if LC.Spoils(id) then
+            local s, k = StampsOf(ply, id), 0
+            while s[1] and LC.SpoilHoursLeft(s[1]) <= 0 do table.remove(s, 1) k = k + 1 end
+            if k > 0 then
+                inv[id] = n - k
+                if inv[id] <= 0 then inv[id] = nil Stamps(ply)[id] = nil end
+                gone = gone + k
+                if not quiet then
+                    local name = string.lower(LCS.Items[id].name)
+                    local msg = k == 1 and ("Your " .. name .. " has gone off. You throw it out.")
+                        or (k .. " x " .. name .. " have gone off. You throw them out.")
+                    ply:ChatPrint("[Pockets] " .. msg)
+                    if LC.Notice then LC.Notice(ply, "info", "Gone off", msg) end
+                end
+            end
+        end
+    end
+    if gone > 0 then
+        SaveInv(ply) SaveStamps(ply)
+        LC.SendInv(ply)
+        hook.Run("LivingCityInventoryChanged", ply)
+    end
+    return gone
+end
+
+timer.Create("LivingCitySpoil", 20, 0, function()
+    for _, p in ipairs(player.GetAll()) do
+        if p.lcInv then LC.SpoilCheck(p) end
+    end
+end)
+
 function LC.SendInv(ply, open)
     local t = { items = Inv(ply), size = cvSize:GetInt(), open = open == true }
     if cvWeighed:GetBool() then
@@ -78,6 +175,7 @@ function LC.SendInv(ply, open)
     end
     ply:SetNW2Bool("lc_overweight", cvWeighed:GetBool() and t.kg ~= nil and (t.kg > t.maxKg + 0.001 or t.bulky > t.maxBulky))
     if LC.InvExtras then LC.InvExtras(ply, t) end -- stash, disguise, papers (sv_livingcity_underground.lua)
+    t.spoil = LC.SpoilView(ply) -- meat and fish: city hours left
     LC.SendCompressed("lci_inv", t, { ply })
 end
 
@@ -160,11 +258,19 @@ function LC.InvSpace(ply, id)
     return math.max(0, n)
 end
 
-function LC.GiveItem(ply, id, n)
+-- born: when meat or fish was got (a real-time stamp; now when nil), for spoilage.
+function LC.GiveItem(ply, id, n, born)
     n = n or 1
     if not LCS.Items[id] or not LC.CanCarry(ply, id, n) then return false end
     local inv = Inv(ply)
+    if LC.Spoils(id) then
+        local s = StampsOf(ply, id) -- (in step with the count before it grows)
+        for _ = 1, n do s[#s + 1] = born or LC.SpoilClock() end
+        table.sort(s)
+        Stamps(ply)[id] = s
+    end
     inv[id] = (inv[id] or 0) + n
+    if LC.Spoils(id) then SaveStamps(ply) end
     SaveInv(ply)
     LC.SendInv(ply)
     hook.Run("LivingCityInventoryChanged", ply)
@@ -175,15 +281,20 @@ function LC.TakeItem(ply, id, n)
     n = n or 1
     local inv = Inv(ply)
     if (inv[id] or 0) < n then return false end
+    if LC.Spoils(id) then
+        local s = StampsOf(ply, id)
+        for _ = 1, n do table.remove(s, 1) end -- (the oldest go first: you eat, cook or hand over the oldest)
+    end
     inv[id] = inv[id] - n
-    if inv[id] <= 0 then inv[id] = nil end
+    if inv[id] <= 0 then inv[id] = nil Stamps(ply)[id] = nil end
+    if LC.Spoils(id) then SaveStamps(ply) end
     SaveInv(ply)
     LC.SendInv(ply)
     hook.Run("LivingCityInventoryChanged", ply)
     return true
 end
 
-function LC.SpawnWorldItem(id, pos, ang, vel)
+function LC.SpawnWorldItem(id, pos, ang, vel, born)
     local e = ents.Create("lc_item")
     if not IsValid(e) then return nil end
     e:SetNW2String("lc_item", id)
@@ -192,6 +303,7 @@ function LC.SpawnWorldItem(id, pos, ang, vel)
     e:Spawn()
     e:Activate()
     e.lcBorn = CurTime()
+    if born and LC.Spoils(id) then e.lcBornAt = born end -- (meat keeps its age on the ground)
     if vel then
         local phys = e:GetPhysicsObject()
         if IsValid(phys) then phys:Wake() phys:SetVelocity(vel) end
@@ -539,8 +651,9 @@ function LC.InvAction(ply, action, id)
     elseif action == "drop" then
         if it.doc then return ply:ChatPrint("[Papers] You keep your papers on you. (Stash them at home if you must.)") end
         if LC.IssuedLocked and LC.IssuedLocked(ply, id) then return ply:ChatPrint("That's Combine issue: it stays with you (or another unit).") end
+        local born = LC.SpoilOldest(ply, id)
         LC.TakeItem(ply, id)
-        local dropped = LC.SpawnWorldItem(id, Front(ply))
+        local dropped = LC.SpawnWorldItem(id, Front(ply), nil, nil, born)
         if dropped and LC.ClaimEntity then LC.ClaimEntity(ply, dropped) end -- a raid traces it back to you
         -- no endless piles: past lc_drops_kept of your own on the ground, the oldest is cleared away
         if IsValid(dropped) then
@@ -602,11 +715,20 @@ end)
 LC.Wildlife = LC.Wildlife or {}
 local BIRDS = { "npc_pigeon", "npc_crow", "npc_seagull" }
 local BIRD_CLASS = { npc_pigeon = true, npc_crow = true, npc_seagull = true }
+-- each bird leaves its own carcass (its own model; the owner, 7 November: a crow left a pigeon)
+local BIRD_ITEM = { npc_pigeon = "raw_bird", npc_crow = "raw_crow", npc_seagull = "raw_gull" }
 -- each kind of headcrab leaves its own carcass (its own model, and the poison one its venom)
 local CRAB_CLASS = { npc_headcrab = "raw_headcrab", npc_headcrab_fast = "raw_fastcrab", npc_headcrab_black = "raw_poisoncrab", npc_headcrab_poison = "raw_poisoncrab" }
 
 local function Unseen(pos)
     return LC.FarFromPlayers(pos, 600) and not LC.IsSeen(pos + Vector(0, 0, 30))
+end
+
+-- Open sky overhead (nothing but the skybox straight up): where birds belong
+-- (the owner, 7 November: none indoors or underground).
+function LC.UnderOpenSky(pos)
+    local tr = util.TraceLine({ start = pos + Vector(0, 0, 8), endpos = pos + Vector(0, 0, 8192), mask = MASK_SOLID_BRUSHONLY })
+    return not tr or tr.HitSky == true or not tr.Hit
 end
 
 timer.Create("LivingCityWildlife", 4, 0, function()
@@ -622,8 +744,12 @@ timer.Create("LivingCityWildlife", 4, 0, function()
         end
     end
     local function Spawn(class, kind)
-        local pos = LC.RandomWanderPos("citizen")
-        if not pos or not Unseen(pos) or LC.NearDoor(pos, 160) then return end
+        local pos
+        for _ = 1, kind == "bird" and 8 or 1 do -- (a bird needs open sky: a few tries)
+            local p = LC.RandomWanderPos("citizen")
+            if p and Unseen(p) and not LC.NearDoor(p, 160) and (kind ~= "bird" or LC.UnderOpenSky(p)) then pos = p break end
+        end
+        if not pos then return end
         local e = ents.Create(class)
         if not IsValid(e) then return end
         e:SetPos(pos + Vector(0, 0, 8))
@@ -683,7 +809,7 @@ local function Shoo(bird, door)
     end
     if not LC.IsSeen(pos + Vector(0, 0, 20)) then
         local spot = LC.RandomWanderPos("citizen")
-        if spot and not LC.NearDoor(spot, 160) then bird:SetPos(spot + Vector(0, 0, 8)) return end
+        if spot and not LC.NearDoor(spot, 160) and LC.UnderOpenSky(spot) then bird:SetPos(spot + Vector(0, 0, 8)) return end
     end
     bird:Remove() -- nowhere to put it; another bird turns up somewhere sensible
 end
@@ -717,7 +843,7 @@ end)
 -- Every dead bird or headcrab leaves something you can pick up and cook.
 hook.Add("OnNPCKilled", "LivingCityCarcass", function(npc)
     local cls = npc:GetClass()
-    local id = BIRD_CLASS[cls] and "raw_bird" or CRAB_CLASS[cls] or nil
+    local id = BIRD_ITEM[cls] or CRAB_CLASS[cls] or nil
     if not id then return end
     local pos = npc:GetPos() + Vector(0, 0, 6)
     timer.Simple(0.2, function() LC.SpawnWorldItem(id, pos) end)

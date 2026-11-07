@@ -1173,6 +1173,41 @@ ok(IsValid(carcass), "a dead bird leaves a carcass you can pick up")
 LC.GiveItem(surv, "raw_bird")
 LC.InvAction(surv, "cook", "raw_bird")
 ok(LC.HasItem(surv, "cooked_bird"), "and you can roast it")
+-- meat and fish go off after a city day (the owner, 7 November), with the hours left shown
+do
+    local now = os.time()
+    LC.SpoilClock = function() return now end
+    LC.GiveItem(surv, "raw_fish")
+    local v = LC.SpoilView(surv)
+    ok(v and v.raw_fish and v.raw_fish > 23 and v.cooked_bird and v.cooked_bird > 23, "raw fish and roast bird show the city hours they have left", v and v.raw_fish)
+    now = now + LC.SpoilSecs() / 2
+    v = LC.SpoilView(surv)
+    ok(v and math.floor(v.raw_fish) == 12, "half a day on, half a day left", v and v.raw_fish)
+    LC.GiveItem(surv, "raw_fish") -- a fresh one beside the old
+    ok(LC.SpoilView(surv).raw_fish < 13, "the pockets screen counts from the oldest of a kind")
+    surv.chat = {}
+    now = now + LC.SpoilSecs() / 2 + 5
+    local gone = LC.SpoilCheck(surv)
+    ok(gone == 2 and LC.HasItem(surv, "raw_fish", 1) and not LC.HasItem(surv, "raw_fish", 2) and not LC.HasItem(surv, "cooked_bird") and has(surv.chat, "gone off"),
+        "a day on, the old fish and the roast bird have gone off and are thrown out; the fresh fish keeps", gone)
+    local born = now - LC.SpoilSecs() * 0.75
+    LC.GiveItem(surv, "raw_headcrab", 1, born)
+    LC.InvAction(surv, "drop", "raw_headcrab")
+    local dropped
+    for _, e in ipairs(ents.FindByClass("lc_item")) do if e:GetNW2String("lc_item", "") == "raw_headcrab" then dropped = e end end
+    ok(IsValid(dropped) and dropped.lcBornAt == born, "a dropped carcass keeps its age on the ground")
+    LC.TakeItem(surv, "raw_fish")
+    LC.SpoilClock = os.time
+end
+local crowNpc = ents.Create("npc_crow")
+crowNpc:SetPos(surv:GetPos() + Vector(40, 0, 0))
+hook.Run("OnNPCKilled", crowNpc, surv)
+_run(1)
+local crowCarcass
+for _, e in ipairs(ents.FindByClass("lc_item")) do if e:GetNW2String("lc_item", "") == "raw_crow" then crowCarcass = e end end
+ok(IsValid(crowCarcass) and LCS.Items.raw_crow.model == "models/crow.mdl" and LCS.Items.raw_crow.cooksTo == "cooked_bird",
+    "a dead crow leaves a crow, not a pigeon, and it roasts the same")
+ok(LC.UnderOpenSky(surv:GetPos()) == true, "birds only spawn under an open sky (nothing but sky straight up)")
 for i = 1, 60 do LC.GiveItem(surv, "bottle_empty") end
 ok(LC.InvWeight(surv) <= 12.001 and not LC.GiveItem(surv, "bottle_empty"), "pockets have a limit: what you can carry", LC.InvWeight(surv))
 
@@ -8029,6 +8064,13 @@ LC.ItemUse(fisher, "fishing_line")
 fisher:SetPos(fisher:GetPos() + Vector(200, 0, 0))
 _run(1)
 ok(not LC.Busy(fisher), "walk off and you stop fishing")
+fisher.water = 1
+fisher.lcLineUses = 1 -- (the last cast in it)
+fixRandom(0.1)
+ok(LC.ItemUse(fisher, "fishing_line"), "cast the last of the line")
+_run(24)
+math.random = realRandom
+ok(not LC.HasItem(fisher, "fishing_line") and fisher.lcLineUses == nil, "a line is good for four to eight casts, then it snaps")
 fisher.water = 0
 
 ----------------------------------------------------------------------
