@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version f93a74f. Admin-only console messages and log lines are left out.
+Made from version e8709aa. Admin-only console messages and log lines are left out.
 
 6981 lines, from 214 files.
 
@@ -5648,12 +5648,12 @@ Made from version f93a74f. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): the console command lc_ending_reset_cooldown
 
 - "Secret ending cooldown cleared."  (text, line 4064)
-- "harpies=2,shalom=2"  (text, line 4097)
-- "harpies=4,shalom=2"  (text, line 4097)
-- "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4098)
-- "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4098)
-- "2.2=CAPTAIN: What happen ?\|3.5=MECHANIC: Somebody set up us the bomb.\|6.5=OPERATOR: We get signal.\|9.5=CAPTAIN: What !\|12.5=OPERATOR: Main screen turn on.\|14.7=CAPTAIN: It's you !!\|16.4=CATS: How are you gentlemen !!\|18.4=CATS: All your base are belong to us.\|20.4=CATS: You are on the way to destruction.\|21.6=CAPTAIN: What you say !!\|23.0=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4099)
-- "2.15=CAPTAIN: What happen ?\|3.55=MECHANIC: Somebody set up us the bomb.\|4.65=OPERATOR: We get signal.\|6.5=CAPTAIN: What !\|9.5=OPERATOR: Main screen turn on.\|11.7=CAPTAIN: It's you !!\|12.55=CATS: How are you gentlemen !!\|14.7=CATS: All your base are belong to us.\|18.45=CATS: You are on the way to destruction.\|20.6=CAPTAIN: What you say !!\|21.65=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4099)
+- "harpies=2,shalom=2"  (text, line 4098)
+- "harpies=4,shalom=2"  (text, line 4098)
+- "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4099)
+- "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4099)
+- "2.2=CAPTAIN: What happen ?\|3.5=MECHANIC: Somebody set up us the bomb.\|6.5=OPERATOR: We get signal.\|9.5=CAPTAIN: What !\|12.5=OPERATOR: Main screen turn on.\|14.7=CAPTAIN: It's you !!\|16.4=CATS: How are you gentlemen !!\|18.4=CATS: All your base are belong to us.\|20.4=CATS: You are on the way to destruction.\|21.6=CAPTAIN: What you say !!\|23.0=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4100)
+- "2.15=CAPTAIN: What happen ?\|3.55=MECHANIC: Somebody set up us the bomb.\|4.65=OPERATOR: We get signal.\|6.5=CAPTAIN: What !\|9.5=OPERATOR: Main screen turn on.\|11.7=CAPTAIN: It's you !!\|12.55=CATS: How are you gentlemen !!\|14.7=CATS: All your base are belong to us.\|18.45=CATS: You are on the way to destruction.\|20.6=CAPTAIN: What you say !!\|21.65=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4100)
 
 ## escorts through Combine doors (sv_livingcity_escort.lua)
 

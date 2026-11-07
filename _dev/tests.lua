@@ -17970,7 +17970,7 @@ function ManpowerTests()
     local at = FAR + Vector(600, 0, 0)
 
     section("Manpower: a death draws the reserve down, and the replacement waits for a recruit")
-    ok(P("rebel").reserve == 20 and P("cp").reserve == 30 and P("ota").reserve == 12, "a fresh city starts with full reserves (20 fighters, 30 units, 12 soldiers)",
+    ok(P("rebel").reserve == 20 and P("cp").reserve == 20 and P("ota").reserve == 12, "a fresh city starts with full reserves (20 fighters, 20 units, 12 soldiers)",
         P("rebel").reserve .. "/" .. P("cp").reserve .. "/" .. P("ota").reserve)
     P("cp").reserve = 1
     local cop = LC.SpawnCop(at)
@@ -18032,7 +18032,7 @@ function ManpowerTests()
     ok(not okS and string.find(tostring(whyS), "reserve", 1, true) ~= nil, "a sweep with 2 units in reserve waits too", tostring(whyS))
     ok(Said("cp", "sweeps postponed"), "and Civil Protection hear why")
     P("rebel").reserve = 20
-    P("cp").reserve = 30
+    P("cp").reserve = 20
 
     section("Manpower: the Commissary's restrictions speed the Resistance's recruiting")
     local realCount = LC.MarketRestrictedCount
@@ -18069,9 +18069,9 @@ function ManpowerTests()
     ok(lines[1] == "Fighters: 7 in reserve (of 20), 3 lost today", "the Resistance: their fighters", lines[1])
     ok(lines[2] and string.find(lines[2], "^Next recruit in about %d+ minutes") ~= nil, "and when the next recruit comes", lines[2])
     lines = LC.ManpowerReadoutFor(unit)
-    ok(lines[1] and string.find(lines[1], "^Civil Protection: %d+ in reserve %(of 30%)") and lines[3] and string.find(lines[3], "^Overwatch: ") ~= nil,
+    ok(lines[1] and string.find(lines[1], "^Civil Protection: %d+ in reserve %(of 20%)") and lines[3] and string.find(lines[3], "^Overwatch: ") ~= nil,
         "Civil Protection: their units and Overwatch's soldiers", table.concat(lines, " | "))
-    P("cp").reserve = 30
+    P("cp").reserve = 20
     ok(LC.ManpowerReadoutFor(unit)[2] == "The reserve is full", "a full reserve says so")
     ok(#LC.ManpowerReadoutFor(cit) == 0, "a citizen sees neither")
 
