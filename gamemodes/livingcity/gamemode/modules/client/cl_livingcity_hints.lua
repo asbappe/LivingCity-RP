@@ -125,6 +125,7 @@ hook.Add("HUDPaint", "LivingCityHints", function()
     local accent = h.urgent and URGENT or ACCENT
     local function A(c, mul) return Color(c.r, c.g, c.b, (c.a or 255) * alpha * (mul or 1)) end
 
+    LC_CL.HintTop, LC_CL.HintAt = y, now -- (the panel of what you can do sits above the card: cl_livingcity_context.lua)
     draw.RoundedBox(6, x, y, W, H, A(BG))
     draw.RoundedBoxEx(6, x, y, 4, H, A(accent), true, false, true, false)
     draw.SimpleText(h.urgent and "HEADS UP" or "TIP", "LCHintTag", x + 16, y + 10, A(accent))

@@ -317,6 +317,9 @@ net.Receive("lcq_state", function()
     if not state.active and IsValid(dialog) then dialog:Remove() end
 end)
 
+-- The quest as the tracker has it (the panel of what you can do reads the step: cl_livingcity_context.lua)
+function LC_CL.QuestState() return state end
+
 hook.Add("InitPostEntity", "LivingCityQuestsSync", function()
     timer.Simple(5, function()
         net.Start("lcq_request")
@@ -417,6 +420,7 @@ hook.Add("HUDPaint", "LivingCityQuestsTracker", function()
     local lines = Wrap(state.objective or "", "DermaDefault", bw - 24)
     local narr = state.narration and Wrap(state.narration, "DermaDefault", bw - 24) or {}
     local h = 54 + #lines * 16 + (state.progress and 16 or 0) + (#narr > 0 and (#narr * 15 + 8) or 0) + (state.choice and 18 or 0) + (compassTarget and 34 or 0) + (state.suspicion and 22 or 0)
+    LC_CL.QuestTrackerBottom, LC_CL.QuestTrackerAt = y + h, CurTime() -- (the panel of what you can do goes under it: cl_livingcity_context.lua)
     draw.RoundedBox(4, x, y, bw, h, Color(16, 15, 13, 210))
     draw.RoundedBox(0, x, y, 3, h, ACCENT)
     draw.SimpleText(string.upper(state.board or "") .. string.format("   step %d/%d", state.step or 1, state.steps or 1), "DermaDefault", x + 12, y + 8, DIM)

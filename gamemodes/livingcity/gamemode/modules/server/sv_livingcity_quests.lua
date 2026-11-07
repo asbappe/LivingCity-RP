@@ -829,11 +829,13 @@ function SendState(ply)
         end
         if pos then t.pos = { math.floor(pos.x), math.floor(pos.y), math.floor(pos.z) } end
         t.choice = st.kind == "choice" and not st.resolved
+        -- what kind of step, for the panel of what you can do (cl_livingcity_context.lua)
+        t.kind, t.crouch, t.walk = st.kind, st.crouch and true or nil, st.walkOnly and true or nil
         if st.kind == "tail" then t.suspicion, t.seen = math.floor(st.suspicion or 0), st.seen == true end
     end
     if forgetting then
         t.objective = "You can't remember what you were doing: Breen's water has clouded your memory. It comes back in about a minute."
-        t.progress, t.pos, t.ent, t.forget = nil, nil, nil, true
+        t.progress, t.pos, t.ent, t.forget, t.kind = nil, nil, nil, true, nil
     end
     -- the client counts the time down itself: if nothing else changed, don't send it
     -- again (but now and then anyway, in case one went astray)
@@ -851,6 +853,18 @@ function SendStateAll(q)
     for _, p in ipairs(Members(q)) do SendState(p) end
 end
 LC.SendQuestState = function(ply) SendState(ply) end
+
+-- Where the quest wants you right now, for the trail on the ground (sv_livingcity_guidance.lua).
+-- nil when there's nowhere to point: no quest, or Breen's water has clouded your memory.
+function LC.QuestObjectivePos(ply)
+    local q = LC.QuestOf[ply]
+    if not q or q.done or (ply.lcForgetUntil or 0) > CurTime() then return nil end
+    local st = Stage(q)
+    if not st then return nil end
+    local ent, pos = MarkerFor(q, st, ply)
+    if IsValid(ent) then return ent:GetPos() end
+    return pos
+end
 
 ------------------------------------------------------------------------
 -- Ticking quests

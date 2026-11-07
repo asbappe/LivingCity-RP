@@ -12854,6 +12854,125 @@ for _, p in ipairs({ before, boss, n, t2 }) do LC.SetJob(p, "", true) p:SetPos(F
 GAMEMODE = savedGM
 end
 LaborTests()
+function GuidanceTests()
+section("Guidance: the quest trail's way, refreshed when you stray, and where you are")
+local G0 = Vector(170000, -170000, 0)
+local function payload()
+    local m = _lastnet("lc_trail")
+    return m and util.JSONToTable(m.data[2]) or nil
+end
+local function sends() local n = 0 for _, m in ipairs(net.sent) do if m.name == "lc_trail" then n = n + 1 end end return n end
+-- the map's nodegraph: an L, round a corner
+local graphWas, statsWas, badWas = LC.NavGraph, LC.NavStats, LC.BadLinks
+local function N(x, y) return { pos = G0 + Vector(x, y, 0), adj = {}, comp = 1 } end
+local A, B, C, D = N(0, 0), N(600, 0), N(1200, 0), N(1200, 600)
+local island = { pos = G0 + Vector(-900, 900, 0), adj = {}, comp = 2 }
+local function Link(a, b) local d = a.pos:Distance(b.pos) a.adj[#a.adj + 1] = { b, d } b.adj[#b.adj + 1] = { a, d } end
+Link(A, B) Link(B, C) Link(C, D)
+LC.NavGraph = { nodes = { A, B, C, D, island }, main = 1, links = 3 }
+LC.NavGraphReady()
+local from, to = G0 + Vector(-40, 10, 0), G0 + Vector(1210, 640, 0)
+local pts = LC.NavPathPoints(from, to, "citizen")
+ok(type(pts) == "table" and #pts == 5 and pts[3] == C.pos and pts[#pts] == to, "the way follows the nodegraph round the corner, node by node, ending at the objective", pts and #pts)
+local again = LC.NavPathPoints(from, to, "citizen")
+local same = #again == #pts
+for i = 1, #pts do if again[i] ~= pts[i] then same = false end end
+ok(same, "the same way every time it's asked (no side steps: the trail doesn't jump about)")
+ok(LC.NavPathPoints(from, island.pos, "citizen") == false, "(somewhere it can't be walked to: false)")
+local route = LC.TrailRoute(from, to, "citizen")
+ok(#route == 5 and route[#route] == to, "the trail's way uses it", #route)
+ok(#LC.TrailRoute(from, island.pos, "citizen") == 1, "no way there: straight to it, so there's still something to follow")
+-- points closer than a step are one, and a very long way is cut short
+local many = {}
+for i = 1, 300 do many[#many + 1] = G0 + Vector(i * 50, 0, 0) end
+many[#many + 1] = many[#many] + Vector(10, 0, 0)
+local nodesWas = LC.NavPathPoints
+LC.NavPathPoints = function() return many end
+local long = LC.TrailRoute(G0, many[#many], "citizen")
+ok(#long == LC.TrailConfig.MAX_POINTS, "a long way is sent a stretch at a time", #long)
+LC.NavPathPoints = function() return { G0 + Vector(20, 0, 0), G0 + Vector(30, 0, 0), G0 + Vector(400, 0, 0) } end
+ok(#LC.TrailRoute(G0, G0 + Vector(400, 0, 0), "citizen") == 1, "points right on top of each other (and of you) are one")
+LC.NavPathPoints = nodesWas
+-- a player on a quest: sent when it starts, and only again when it needs to be
+local objWas = LC.QuestObjectivePos
+local goal = to
+LC.QuestObjectivePos = function(p) return p.lcTestGoal end
+local walker = newPlayer("TrailWalker", "citizen")
+walker:SetPos(from)
+walker.lcTestGoal = goal
+local now = 5000
+local n0 = sends()
+LC.TrailTick(now)
+local got = payload()
+ok(sends() == n0 + 1 and got and got.p and #got.p == 15 and got.g[1] == math.floor(goal.x), "on a quest, the way is sent: every point, and the objective", got and got.p and #got.p)
+ok(walker.lcTrail and walker.lcTrail.from == from, "(and kept, to tell when you've wandered off it)")
+LC.TrailTick(now + 1)
+ok(sends() == n0 + 1, "standing still, it isn't sent again")
+walker:SetPos(G0 + Vector(600, 0, 0))
+LC.TrailTick(now + 2)
+ok(sends() == n0 + 1, "walking along it, it isn't sent again either")
+walker:SetPos(G0 + Vector(600, -500, 0))
+LC.TrailTick(now + 3)
+ok(sends() == n0 + 2 and walker.lcTrail.from == walker:GetPos(), "wandering off it, it's worked out again from where you are")
+walker.lcTestGoal = goal + Vector(0, 400, 0)
+LC.TrailTick(now + 4)
+ok(sends() == n0 + 3, "the objective moves (someone you're following walks off): worked out again")
+walker:SetPos(walker:GetPos() + Vector(0, 200, 0))
+LC.TrailTick(now + 5)
+ok(sends() == n0 + 3, "a little further on, not yet")
+LC.TrailTick(now + 20)
+ok(sends() == n0 + 4, "but every few seconds while you're on the move, it is")
+walker:SetPos(walker.lcTestGoal + Vector(30, 0, 0))
+LC.TrailTick(now + 21)
+got = payload()
+ok(sends() == n0 + 5 and got and got.p == nil and walker.lcTrail == nil, "at the objective, the trail is taken away")
+LC.TrailTick(now + 22)
+ok(sends() == n0 + 5, "(once)")
+-- hidden in C > Settings: none worked out, and the one showing goes
+walker:SetPos(from)
+LC.TrailTick(now + 23)
+ok(walker.lcTrail ~= nil, "(away again: a trail)")
+walker.GetInfoNum = function(_, name, d) if name == "lc_trail_show" then return 0 end return d end
+LC.TrailTick(now + 24)
+ok(walker.lcTrail == nil and payload() and payload().p == nil, "a player who's hidden the trail gets none")
+walker.GetInfoNum = nil
+_setcvar("lc_trail", "0")
+LC.TrailTick(now + 25)
+ok(walker.lcTrail == nil, "lc_trail 0: nobody does")
+_setcvar("lc_trail", "1")
+walker.lcTestGoal = nil
+LC.TrailTick(now + 26)
+ok(walker.lcTrail == nil, "no quest, no trail")
+-- a full server: only a few worked out each second, the rest wait their turn
+local crowd = {}
+for i = 1, LC.TrailConfig.BUDGET + 3 do
+    local p = newPlayer("TrailCrowd" .. i, "citizen")
+    p:SetPos(from + Vector(0, i * 5, 0))
+    p.lcTestGoal = goal
+    crowd[#crowd + 1] = p
+end
+local n1 = sends()
+LC.TrailTick(now + 30)
+ok(sends() - n1 == LC.TrailConfig.BUDGET, "a crowd: no more than a few ways a second", sends() - n1)
+LC.TrailTick(now + 31)
+ok(sends() - n1 == LC.TrailConfig.BUDGET + 3, "the rest get theirs the next second")
+LC.QuestObjectivePos = objWas
+ok(LC.QuestObjectivePos(walker) == nil, "(the real thing: no quest, nowhere to point)")
+for _, p in ipairs(crowd) do p.lcTestGoal = nil p.lcTrail = nil p:SetPos(Vector(-150000, 150000, 0)) end
+LC.NavGraph = graphWas
+LC.NavGraphReady()
+if statsWas then LC.NavStats = statsWas end
+if badWas then LC.BadLinks = badWas end
+-- where you are, for the panel of what you can do
+local rz = LC.AddZone(G0 + Vector(5000, 0, 0), 300, "rebel", 0)
+walker:SetPos(G0 + Vector(5000, 50, 0))
+ok(LC.WhereKind(walker) == "rebel", "standing on rebel ground: the panel knows", LC.WhereKind(walker))
+walker:SetPos(G0 + Vector(9000, 0, 0))
+ok(LC.WhereKind(walker) == "", "nowhere in particular: nothing")
+LC.RemoveZone(rz)
+walker:SetPos(Vector(-150000, 150000, 0))
+end
+GuidanceTests()
 
 ----------------------------------------------------------------------
 

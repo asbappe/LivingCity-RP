@@ -380,6 +380,12 @@ function LC_CL.OpenActions()
     local wm = wn and wn:GetInt() or 1
     Add(set, wm == 2 and "Next step on screen: always (change)" or (wm == 1 and "Next step on screen: new life and urgent (change)" or "Next step on screen: never (change)"),
         function() RunConsoleCommand("lc_whatnow_show", tostring((wm + 1) % 3)) end)
+    local ctxs = GetConVar("lc_context_show")
+    Add(set, (ctxs and ctxs:GetBool() and "What you can do here (on the right): on (turn off)") or "What you can do here (on the right): off (turn on)",
+        function() RunConsoleCommand("lc_context_show", (ctxs and ctxs:GetBool()) and "0" or "1") end)
+    local trl = GetConVar("lc_trail_show")
+    Add(set, (trl and trl:GetBool() and "Quest trail on the ground: on (turn off)") or "Quest trail on the ground: off (turn on)",
+        function() RunConsoleCommand("lc_trail_show", (trl and trl:GetBool()) and "0" or "1") end)
     local scr = GetConVar("lc_screen_ui")
     Add(set, (scr and scr:GetBool()) and "Terminals' menus: on their own screen (use a window)" or "Terminals' menus: in a window (use their own screen)",
         function() RunConsoleCommand("lc_screen_ui", (scr and scr:GetBool()) and "0" or "1") end)

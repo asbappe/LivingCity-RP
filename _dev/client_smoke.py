@@ -2090,6 +2090,97 @@ return (not ok) and tostring(e) or nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+# what you can do here (cl_livingcity_context.lua): with the Arrest Baton out, the panel on the right
+# says what it does, with the player's own keys; and the quest trail (cl_livingcity_trail.lua) is
+# drawn from fake points, dropping the ones walked past
+err = L.execute(r"""
+local ok, e = pcall(function()
+    local baton = { IsValid = function() return true end, GetClass = function() return "weapon_lc_baton" end }
+    local gaw = _me.GetActiveWeapon
+    _me.GetActiveWeapon = function() return baton end
+    _me.nw.lcf_faction = "cp"
+    _me.nw.lc_here = "rebel"
+    local groups = LC_CL.ContextGroups(_me)
+    local all = {}
+    for _, g in ipairs(groups) do for _, l in ipairs(g.lines) do all[#all + 1] = l end end
+    local text = table.concat(all, "\n")
+    if not groups[1] or groups[1].title ~= "Arrest Baton" then error("context panel: the baton isn't first") end
+    -- (the smoke test binds +use to f: the key is looked up live, not assumed to be E)
+    if not string.find(text, "[F] on a citizen", 1, true) then error("context panel: no stop-a-citizen line with the live key: " .. text) end
+    if not string.find(text, "[Right click] on someone: arrest", 1, true) then error("context panel: no arrest line") end
+    if not string.find(text, "[G]: kick", 1, true) then error("context panel: no kick line with the kick key") end
+    local zoned = false
+    for _, g in ipairs(groups) do if g.title == "Rebel territory" then zoned = true end end
+    if not zoned then error("context panel: nothing for rebel ground") end
+    LC_CL.QuestTrackerBottom, LC_CL.QuestTrackerAt = 300, CurTime()
+    LC_CL.HintTop, LC_CL.HintAt = 900, CurTime()
+    local before = _calls["draw.SimpleText"] or 0
+    hook.t.HUDPaint.LivingCityContext()
+    if (_calls["draw.SimpleText"] or 0) <= before then error("context panel: nothing drawn for the baton") end
+    if not LC_CL.ContextDrawn or #LC_CL.ContextDrawn == 0 then error("context panel: no part fitted") end
+    local top, bottom = LC_CL.ContextRoom()
+    if top < 310 or bottom > 890 then error("context panel: it would overlap the quest tracker or the tip card") end
+    -- no room at all: nothing drawn, rather than on top of the tip card
+    _advance(0.3)
+    LC_CL.QuestTrackerAt = CurTime()
+    LC_CL.HintTop, LC_CL.HintAt = 320, CurTime()
+    hook.t.HUDPaint.LivingCityContext()
+    if #LC_CL.ContextDrawn ~= 0 then error("context panel: drawn over the tip card when there's no room") end
+    LC_CL.HintAt, LC_CL.QuestTrackerAt = nil, nil
+    GetConVar("lc_context_show").v = "0"
+    LC_CL.ContextDrawn = nil
+    _advance(0.3)
+    hook.t.HUDPaint.LivingCityContext()
+    if LC_CL.ContextDrawn then error("context panel: still drawn when turned off") end
+    GetConVar("lc_context_show").v = "1"
+    _me.GetActiveWeapon = gaw
+    _me.nw.lcf_faction, _me.nw.lc_here = nil, nil
+
+    -- the trail: three points ahead, the objective at the end (on a quest: with none, there's no trail)
+    local qsWas = LC_CL.QuestState
+    LC_CL.QuestState = function() return { active = true, kind = "goto" } end
+    _me:SetPos(Vector(0, 0, 0))
+    LC_CL.SetTrail({ g = { 1000, 0, 0 }, p = { 200, 0, 0, 600, 0, 0, 1000, 0, 0 } })
+    local t = LC_CL.Trail()
+    if not t or #t.pts ~= 3 then error("trail: the points weren't read") end
+    local beamsBefore = _calls["render.DrawBeam"] or 0
+    hook.t.PostDrawTranslucentRenderables.LivingCityTrail(false, false)
+    if (_calls["render.DrawBeam"] or 0) - beamsBefore < 10 then error("trail: hardly any chevrons drawn") end
+    local c1 = LC_CL.TrailChevrons(t, _me:GetPos(), 10)
+    local c2 = LC_CL.TrailChevrons(t, _me:GetPos(), 10.2)
+    if not c1[1] or not c2[1] or c2[1].pos.x <= c1[1].pos.x then error("trail: the chevrons don't flow toward the objective") end
+    if c1[#c1].pos.x > 1450 then error("trail: drawn further ahead than it should be") end
+    for _, c in ipairs(c1) do if c.pos.x < 40 then error("trail: a chevron under your feet") end end
+    -- walked past the first point, on the way to the second
+    _me:SetPos(Vector(420, 10, 0))
+    hook.t.Think.LivingCityTrail()
+    _advance(0.2)
+    hook.t.Think.LivingCityTrail()
+    if #t.pts ~= 2 or t.pts[1].x ~= 600 then error("trail: the point walked past wasn't dropped (" .. #t.pts .. " left)") end
+    for _, c in ipairs(LC_CL.TrailChevrons(t, _me:GetPos(), 10)) do if c.pos.x < 420 then error("trail: still drawn behind you") end end
+    if not LC_CL.TrailActive() then error("trail: not active") end
+    -- at the objective: gone
+    _me:SetPos(Vector(980, 0, 0))
+    _advance(0.2)
+    hook.t.Think.LivingCityTrail()
+    _advance(0.2)
+    hook.t.Think.LivingCityTrail()
+    if LC_CL.Trail() then error("trail: still there at the objective") end
+    LC_CL.SetTrail({})
+    if LC_CL.Trail() then error("trail: an empty message doesn't clear it") end
+    -- the quest's over: the trail goes with it
+    LC_CL.SetTrail({ g = { 1000, 0, 0 }, p = { 200, 0, 0, 1000, 0, 0 } })
+    LC_CL.QuestState = function() return { active = false } end
+    _me:SetPos(Vector(0, 0, 0))
+    _advance(0.2)
+    hook.t.Think.LivingCityTrail()
+    if LC_CL.Trail() then error("trail: still there with no quest") end
+    LC_CL.QuestState = qsWas
+end)
+return (not ok) and tostring(e) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "context panel / quest trail: " + str(err)
 # the official folder for recordings and songs is the server's garrysmod/sound/livingcity/ (CORE.md):
 # what players read in the guide and the sound check must send them there, never to the old sound addon
 _guide = open(os.path.join(GMDIR, "gamemode", "cl_init.lua")).read()

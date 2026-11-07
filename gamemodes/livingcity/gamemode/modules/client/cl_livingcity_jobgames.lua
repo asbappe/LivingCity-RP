@@ -43,6 +43,7 @@ hook.Add("HUDPaint", "LivingCityJobGames", function()
     local w = 300
     local h = 30 + #lines * 17
     local x, y = ScrW() - w - 16, math.floor(ScrH() * 0.32)
+    LC_CL.JobGameBottom, LC_CL.JobGameAt = y + h, CurTime() -- (the panel of what you can do keeps clear: cl_livingcity_context.lua)
     draw.RoundedBox(4, x, y, w, h, BG)
     draw.RoundedBox(0, x, y, 3, h, ACC)
     draw.SimpleText(string.upper(game.title or "Work"), "LCJobTitle", x + 10, y + 6, ACC)
