@@ -2,7 +2,7 @@
     Living City: letters
 
     A note in your pockets (paper, written on: sv_livingcity_writing.lua) can
-    be sent as a letter to anyone the city knows: read it (F2) and Send as a
+    be sent as a letter to anyone the city knows: read it (F3) and Send as a
     letter. You hand it in at the post office (the Courier's workplace; on a
     map without one, anywhere). Signed or not, the post office knows who
     posted it.
@@ -142,7 +142,7 @@ function LC.DeliverLetter(letter, by)
         list[#list + 1] = { text = letter.text, sig = letter.sig, letter = true }
         if LC.SaveCarriedNotes then LC.SaveCarriedNotes(p) end
         if LC.SendInv then LC.SendInv(p) end
-        p:ChatPrint("[Mail] A letter has come for you" .. (letter.sig and (", from " .. letter.sig) or "") .. ". It's in your pockets (F2).")
+        p:ChatPrint("[Mail] A letter has come for you" .. (letter.sig and (", from " .. letter.sig) or "") .. ". It's in your pockets (F3).")
         letter.state = "gone"
     else
         letter.state = "delivered" -- waiting for them

@@ -2,7 +2,7 @@
     Living City: escorts through Combine doors
 
     A Union worker on a job (a shift or an assignment from their board) whose
-    work is behind Combine doors asks for an escort: the actions menu (F1 or
+    work is behind Combine doors asks for an escort: the quick menu (F2 or
     C: Getting by > Ask for a Civil Protection escort), or !escort. The
     nearest free unit comes for them; or a player unit takes it, from their
     own actions menu (Civil Protection > Escort requests), whenever they like.
@@ -98,8 +98,8 @@ function LC.MayHaveEscort(ply)
     if LC.PlayerIsCP(ply) then return false, "You're a Civil Protection unit. You open those doors yourself." end
     if LC.PlayerIsZombie(ply) then return false end
     if LC.InCustody and LC.InCustody(ply) then return false, "Not from in here." end
-    if not (LC.Job and LC.Job(ply)) then return false, "Only Union workers get an escort: take a Union job from your board (F3)." end
-    if not (LC.QuestOf and LC.QuestOf[ply]) then return false, "You need to be on a job: accept a shift from your board (F3) first." end
+    if not (LC.Job and LC.Job(ply)) then return false, "Only Union workers get an escort: take a Union job from your board (F4)." end
+    if not (LC.QuestOf and LC.QuestOf[ply]) then return false, "You need to be on a job: accept a shift from your board (F4) first." end
     if LC.PlayerIsWanted(ply) then return false, "Civil Protection doesn't escort wanted people." end
     if (ply.lcEscortBanUntil or 0) > CurTime() then
         return false, "Dispatch won't send anyone with you. (" .. math.ceil((ply.lcEscortBanUntil - CurTime()) / 60) .. " min)"

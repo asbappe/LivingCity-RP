@@ -682,7 +682,7 @@ function LC.AssignWork(foreman, target)
     if not LC.AcceptPosting(target, spec.id) then return false, target:Nick() .. " can't take it right now." end
     local q = LC.QuestOf[target]
     if q then q.foreman = foreman end
-    target:ChatPrint("[Union] Foreman " .. foreman:Nick() .. " has given you a work order: " .. spec.title .. ". It's on your board (F3).")
+    target:ChatPrint("[Union] Foreman " .. foreman:Nick() .. " has given you a work order: " .. spec.title .. ". It's on your board (F4).")
     return true, "[Union] Work order handed to " .. target:Nick() .. "."
 end
 

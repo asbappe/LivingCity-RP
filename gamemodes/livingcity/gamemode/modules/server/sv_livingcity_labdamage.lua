@@ -7,7 +7,7 @@
     sparking and smoking, and nothing is made, decoded or done there (the scientist is still
     there, but has nothing to work with) until the Resistance fixes it.
 
-    Fixing it is a job on the Resistance's board (F3), "Get the lab running": find spare parts,
+    Fixing it is a job on the Resistance's board (F4), "Get the lab running": find spare parts,
     bring them to the lab, and put the bench back together with the scientist. Only a player
     can do it. Done, and the smoke and sparks stop.
 
@@ -96,7 +96,7 @@ function LC.WreckLab(bench, by)
         if LC.AddCredits then LC.AddCredits(by, 20, "a Resistance lab wrecked") end
     end
     if LC.RadioNotice then
-        LC.RadioNotice("resistance", "The Combine wrecked our lab " .. Where(bench:GetPos()) .. ". Nothing comes out of it until it's fixed: the job's on your board (F3).")
+        LC.RadioNotice("resistance", "The Combine wrecked our lab " .. Where(bench:GetPos()) .. ". Nothing comes out of it until it's fixed: the job's on your board (F4).")
     end
     if LC.PostDirective then LC.PostDirective("res_fixlab", bench) end
     LC.Log("info", "Lab wrecked at " .. tostring(bench:GetPos()))

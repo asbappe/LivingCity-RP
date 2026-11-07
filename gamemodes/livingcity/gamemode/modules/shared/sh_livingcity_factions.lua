@@ -73,7 +73,7 @@ LCF.Factions = {
             {
                 id = "smuggler", name = "Smuggler", max = 2, minRank = 2,
                 desc = "Moving the cell's cargo is your trade: guns, ammunition and worse, out past the units to drops all over the city. " ..
-                       "Your board (F3) has smuggling runs on it, better paid than anything a courier carries. A search that finds the cargo finds you.",
+                       "Your board (F4) has smuggling runs on it, better paid than anything a courier carries. A search that finds the cargo finds you.",
                 loadout = { "weapon_crowbar", "weapon_pistol" },
             },
             {
@@ -116,11 +116,11 @@ LCF.Factions = {
               loadout = { "weapon_lc_baton", "weapon_ar2", "weapon_frag" }, health = 125, armor = 150 },
         },
         -- (the Scanner Operator role is gone, the owner, 7 November: flying a scanner is something any unit does
-        -- from a scanner terminal, F1 > Unit tools, not a role)
+        -- from a scanner terminal, F2 > Unit tools, not a role)
         specials = {
             {
                 id = "ow_commander", name = "Overwatch Commander", max = 1, minRank = 6, overwatch = true, hla = "elite",
-                desc = "One at a time, from the Elite. Calls in an Overwatch squad by dropship (F1 > Unit tools), " ..
+                desc = "One at a time, from the Elite. Calls in an Overwatch squad by dropship (F2 > Unit tools), " ..
                        "every fifteen minutes, and commands every Civil Protection unit in the city.",
                 models = { "models/player/combine_super_soldier.mdl" },
                 loadout = { "weapon_lc_baton", "weapon_ar2", "weapon_frag" },

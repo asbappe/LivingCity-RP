@@ -1,4 +1,4 @@
-# What now, the quick menu (F1) and the full menu (C)
+# What now, the quick menus (F1, F2), F4 and the full menu (C)
 
 ### What now? Never lost
 
@@ -12,21 +12,50 @@
 
 **Places:** F1 > What now? > Places (and C > Places in the city) lists everywhere worth knowing, each with a waypoint: the ration dispenser, water, bins, your block, your workplace, the Commissary, Civil Intake and Housing Allocation (units: their Commissary; the Resistance: the lab). `lc_whatnow 0` turns all of it off.
 
-### The quick menu (F1)
+### The keys (the owner, 7 November)
 
-**F1 opens the quick menu**, like a voice menu in a team shooter: a short list at the left of the screen, picked with the number keys (1 to 9; 0 goes back or closes), and you keep moving while it's up. Nine things, for who you are:
+| Key | What it opens |
+|---|---|
+| F1 | The quick menu: what everyone has |
+| F2 | The second quick menu: what your side, rank and job have |
+| F3 | Your pockets (and your stash at home) |
+| F4 | One window with three tabs: Jobs, Career, Factions |
 
-| You are | 1 to 5 | 6 to 8 (nothing in front of you) |
-|---|---|---|
-| Civil Protection (the Overwatch too) | **Voice lines >** (the mask's most used lines; the Overwatch ranks' own), Unit tools, Kick, Call for backup, Issue a BOLO, Send my 10-20 (the owner, 7 November) | My directives (F3), Sociostability > (the Administrator only) or My pockets |
-| Citizen | **What now? >** (your next step, Places), Hands up, My papers, **Talk >** (and Tell everyone nearby my name), My pockets | **Pose >**, **Gesture >**, My board (F3) |
-| Resistance | **What now? >**, Hands up, Gear up or Plain clothes, **Talk >**, Black market | **Resistance >** (find the lab, donate food, decode a chip), **Pose >**, My board (F3) |
+The engine's own keys are unchanged (F1 to F4 are still `gm_showhelp`, `gm_showteam`, `gm_showspare1`, `gm_showspare2`): only what each opens changed, so a player who rebinds them keeps their keys. Before 7 November, F1 mixed both quick menus, F2 was the pockets, F3 the job board and F4 the faction screen.
 
-**6 to 8 change with what's in front of you and your own trouble**, shown in green: a person (units: search, cuff or uncuff and drag, escort, take a microphone; everyone else: tell them your name, show them your papers, inform, a work order), someone who's down, a body, a door, a forcefield, a transformer, a power bank; and you being downed, tied, wanted, interrogated or hauling. **9 is everything else**: the full menu. A ">" opens a page of its own. Bind a key to `lc_quick` to open it from something else.
+### The quick menus (F1 and F2)
+
+**F1 and F2 open quick menus**, like a voice menu in a team shooter: a short list at the left of the screen, picked with the number keys (1 to 9; 0 goes back or closes), and you keep moving while it's up. Both look the same and work the same; 9 on either is everything else, the full menu.
+
+**F1, what everyone has** (the same for every side): 1 **What now? >** (your next step, Places), 2 Hands up, 3 My papers, 4 **Talk >** (and Tell everyone nearby my name), 5 My pockets (F3); then 6 to 8 are what's in front of you and your own trouble, shown in green (a person: tell them your name, show them your papers, uncuff and drag, inform; someone who's down; a body; a door; a forcefield, a transformer, a power bank with a multitool; and you being downed, tied, wanted, interrogated or hauling). With nothing there, 6 to 8 are **Pose >**, **Gesture >** and Jobs, career, factions (F4).
+
+**F2, what your side, rank and job have** (the owner: "the same BUT contextual and specific commands for their class/rank/faction"):
+
+| You are | F2 |
+|---|---|
+| Civil Protection (the Overwatch too) | 1 **Voice lines >** (the mask's most used lines; the Overwatch ranks' own), 2 Unit tools, 3 Kick, 4 Call for backup, 5 Issue a BOLO, 6 Send my 10-20 (the owner, 7 November); then 7 and 8: search, cuff, escort, take a microphone, walk a prisoner to the cells, read a power bank or pack up a turret (whoever or whatever is in front of you), or My directives (F4) and the records terminal |
+| Resistance | Gear up or Plain clothes, Black market, **Resistance >** (find the lab, donate food, decode a chip, write down what you see, hack a door with a multitool), **Squad orders >** (act casual, guns out, meet me at the marker: with a squad following you); cut a vortigaunt's shackles when you're looking at one |
+| City Administrator | **Sociostability >** (only the Administrator sets it), Broadcast to the whole city |
+| Vortigaunt (shackled) | Reach out through the vortessence (call the Resistance to free you) |
+| Stalker | My work: the Stalker's Lot (F4) |
+| Anyone on a job | Ask for a Civil Protection escort (or send it away), a ration break while rations are out (or back to work), the body cart (Morticians); a citizen with Civil Standing 150: become (or stop being) a Union foreman, and give whoever you're looking at a work order |
+| Staff (admins) | **Staff >** (the staff panel, the admin testing tools, build mode, path mapping) |
+
+With nothing of the kind (a citizen with no job, say), F2 says so: "Nothing here for your side or job right now. F1 has what everyone can do." A ">" opens a page of its own. Bind a key to `lc_quick` (F1's) or `lc_quick2` (F2's) to open them from something else. With F2's menu up, F1 swaps to F1's. Hints that name where something is (the kick reminder at a locked door: "press G (or F2 > 3)") look it up live, with the player's own keys.
+
+### F4: jobs, career and factions, one window
+
+The owner, 7 November: "consolidate F3 and F4 ... a career/factions tab at the top". **F4 opens one window with three tabs along the top:**
+
+- **Jobs** (the first, and where a new session opens): the job board as it was on F3, with the Union employment card (or the way to Labor Assignment), the jobs, the squads and your stories.
+- **Career:** your rank, the XP to the next one, every rank of your side and what it takes, the way up in plain words, and the button to ask Overwatch for a reassessment.
+- **Factions:** who holds the city, every faction you can join with its requirements and special roles, and for admins the testing tools.
+
+**The last tab you looked at is remembered** for the rest of your session: F4 opens on it. Anything that opens one part on its own opens the window on that tab: `!jobs` (or the board again after you take a job) on Jobs, `!faction` on Factions, C > My career on Career. The separate "My career" buttons that were at the top of the board and the faction screen are gone (the Career tab is where your career is).
 
 ### Everything is in the full menu (C)
 
-**You never need a chat command.** C (outside build mode), or 9 on the quick menu, opens a menu of everything you can do right now, for who you are and what you're looking at. At the top: the guide, your pockets (F2), your board (F3), factions (F4), **Tips I've seen**, and for units **Unit tools**. Then whoever or whatever is in front of you (a person by the name you know them by, or what they look like: recognize, inform, cuff, search, escort, give them a key; someone who's down; a body; a door; a machine), and:
+**You never need a chat command.** C (outside build mode), or 9 on either quick menu, opens a menu of everything you can do right now, for who you are and what you're looking at. At the top: the guide, your pockets (F3), your board (F4 > Jobs), factions (F4 > Factions), your career (F4 > Career), **Tips I've seen**, and for units **Unit tools**. Then whoever or whatever is in front of you (a person by the name you know them by, or what they look like: recognize, inform, cuff, search, escort, give them a key; someone who's down; a body; a door; a machine), and:
 
 - **Me:** hands up, holster, work at the cuffs, give yourself up, give up (when you're down), poses and gestures, your papers, your credits and standing, your characters, your name and face, how strangers see you, I'm stuck.
 - **Talk:** tell everyone nearby your name, yell, whisper, describe what you do or the scene, roll the dice, out of character (nearby or everyone), your radio and the Union band. (These are the chat prefixes, typed for you.)
@@ -37,7 +66,7 @@
 - **Settings:** camera sway, the next step on screen, what you can do here (the panel on the right), the quest trail on the ground, third person while posing, warnings and notices on screen, tips off or on or from the start.
 - **Help:** ask staff for help (a ticket); for staff, the staff panel, the admin testing tools, build mode and path mapping.
 
-Every chat command a player can type has a place in it (the client smoke test checks each one, and that every quick menu has nine working items), and the tips and the guide point to the menus, not to the command. The commands still work, as shortcuts.
+Every chat command a player can type has a place in it (the client smoke test checks each one, that F1 has nine working items for every side, and that a unit's F2 is in the owner's order), and the tips and the guide point to the menus, not to the command. The commands still work, as shortcuts.
 
 ### On the screen, not just in chat
 

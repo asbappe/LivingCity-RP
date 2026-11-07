@@ -1,6 +1,6 @@
 --[[
     Living City survival and economy (client): hunger and thirst HUD, Credits
-    and Civil Standing, Breen's water side effects, the inventory (F2) with
+    and Civil Standing, Breen's water side effects, the inventory (F3) with
     your stash, the Union Commissary and the black market, and the little
     status lines for radios, disguises, papers, stops and lockpicking.
 ]]
@@ -43,7 +43,7 @@ end
 
 -- The quiet HUD (lc_quiet_hud, sh_livingcity_feel.lua): no running score.
 -- Rank and XP are on F4, credits and standing at the top of your pockets
--- (F2), and hunger and thirst show once they're getting low, or for a few
+-- (F3), and hunger and thirst show once they're getting low, or for a few
 -- seconds after you eat or drink.
 function LC_CL.QuietHUD()
     local cv = GetConVar("lc_quiet_hud")
@@ -231,7 +231,7 @@ LC_CL.ViewMods.dizzy = { order = 40, fn = function(ply, view)
 end }
 
 ------------------------------------------------------------------------
--- Inventory (F2 / !inv)
+-- Inventory (F3 / !inv)
 ------------------------------------------------------------------------
 
 local invFrame

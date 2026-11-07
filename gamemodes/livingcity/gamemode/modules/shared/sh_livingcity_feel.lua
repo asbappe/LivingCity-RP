@@ -14,7 +14,7 @@
                       lc_view_bob_amount (100, percent) sets how strong.
       lc_quiet_hud    no running score on screen: no XP bar or "+15 XP", no
                       credits or standing (they're at the top of your pockets,
-                      F2), and hunger and thirst only show once they're low.
+                      F3), and hunger and thirst only show once they're low.
 
     The camera is cl_livingcity_view.lua, the eyes sv_livingcity_life.lua, the
     HUD cl_livingcity_needs.lua.

@@ -10,7 +10,7 @@
     at one and press E (a bigger one takes longer). The city's own
     groundskeepers do it too. Anyone with weedkiller can spray one.
 
-    Weedkiller is poison as well. From your pockets (F2 > Weedkiller >
+    Weedkiller is poison as well. From your pockets (F3 > Weedkiller >
     Poison food or drink), one canister taints the first food or drink you
     carry: it looks exactly the same, to you and to anyone you give it to,
     and whoever eats or drinks it is poisoned (a unit who sees you do it calls

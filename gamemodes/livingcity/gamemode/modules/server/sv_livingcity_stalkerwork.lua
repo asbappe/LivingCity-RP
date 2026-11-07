@@ -3,7 +3,7 @@
 
     What the Combine make of the worst anticitizens (sv_livingcity_custody.lua)
     is put to work, below, where only units go: the Combine areas (else the
-    prison, else the checkpoints). A story on the board (F3), only for a
+    prison, else the checkpoints). A story on the board (F4), only for a
     stalker, in five parts:
 
       1 Processing   report to the Nexus, where an Overwatch technician is

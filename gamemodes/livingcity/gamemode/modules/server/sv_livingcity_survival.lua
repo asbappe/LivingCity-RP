@@ -4,7 +4,7 @@
       Hunger and thirst  drain while the city runs. At zero you starve or
                          dehydrate. Prisoners are fed; Overwatch and the
                          Infested don't eat.
-      Inventory          F2 or !inv. Eat, drink, cook, fill, drop.
+      Inventory          F4 or !inv. Eat, drink, cook, fill, drop.
       Water              wade into any water and press E to drink. Untreated
                          water may give you parasites (hungrier, thirstier,
                          coughing fits) until you take antiparasitic tablets.
@@ -707,7 +707,8 @@ net.Receive("lci_act", function(_, ply)
     LC.SendInv(ply, true)
 end)
 
-hook.Add("ShowTeam", "LivingCityInventory", function(ply) LC.SendInv(ply, true) end)
+-- F3 (the owner, 7 November: pockets moved from F2 to F3)
+hook.Add("ShowSpare1", "LivingCityInventory", function(ply) LC.SendInv(ply, true) end)
 concommand.Add("lci_inv", function(ply) if IsValid(ply) then LC.SendInv(ply, true) end end)
 hook.Add("PlayerSay", "LivingCityInventoryChat", function(ply, text)
     local t = string.lower(string.Trim(text))
@@ -1135,11 +1136,11 @@ local function UseFixture(ply, kind, ent, fx)
         local home = LC.PlayerInOwnBlock and LC.PlayerInOwnBlock(ply) and not LC.PlayerIsCP(ply)
         local at = (IsValid(ent) and ent:GetPos()) or (fx and fx.pos) or ply:GetPos()
         if home and LC.OpenStashAt then LC.OpenStashAt(ply, at) elseif LC.SendInv then LC.SendInv(ply, true) end
-        ply:ChatPrint(home and "[Stove] Cook from your pockets (F2). Your stash is open there too, while you stand by the stove." or "[Stove] Cook from your pockets (F2).")
+        ply:ChatPrint(home and "[Stove] Cook from your pockets (F3). Your stash is open there too, while you stand by the stove." or "[Stove] Cook from your pockets (F3).")
     elseif kind == "sink" then
         if (ply.lcSinkUse or 0) < CurTime() then
             ply.lcSinkUse = CurTime() + 1
-            ply:ChatPrint("[Sink] Fill bottles and cans from your pockets (F2). Boil them before you drink.")
+            ply:ChatPrint("[Sink] Fill bottles and cans from your pockets (F3). Boil them before you drink.")
         end
         LC.DrinkFromSink(ply)
     elseif kind == "toilet" and LC.UseToilet then
@@ -1284,7 +1285,7 @@ function LC.UseDispenser(ply, ent)
     if LC.IntakePending and LC.IntakePending(ply) then
         refused = "[Rations] You aren't registered, so you can't have a ration card. Register at Civil Intake, then work a Union shift to earn one." -- (sv_livingcity_intake.lua)
     elseif LC.LacksRationCard and LC.LacksRationCard(ply) then
-        refused = "[Rations] No ration card. You earn one for each Union shift you finish (your board, F3), and each ration takes one card."
+        refused = "[Rations] No ration card. You earn one for each Union shift you finish (your board, F4), and each ration takes one card."
     elseif econ and econ:GetBool() and LC.Standing(ply) < -50 then
         refused = "[Rations] Your ration privileges have been suspended."
     elseif CurTime() < (ply.lcnRationAt or 0) then

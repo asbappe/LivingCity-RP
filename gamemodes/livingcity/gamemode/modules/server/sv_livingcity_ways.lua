@@ -19,7 +19,7 @@ end
 
 local function Has(ply, id) return LC.HasItem ~= nil and LC.HasItem(ply, id) end
 
--- The list for this person: { text, how, need (nil: ready), way (a place to mark), open (f2/f3/f4/characters) }
+-- The list for this person: { text, how, need (nil: ready), way (a place to mark), open (pockets/jobs/factions/characters) }
 function LC.WaysToGetBy(ply)
     local out = {}
     local function Add(text, how, need, way, open) out[#out + 1] = { text = text, how = how, need = need, way = way, open = open } end
@@ -28,19 +28,19 @@ function LC.WaysToGetBy(ply)
     local job = LC.Job and LC.Job(ply)
 
     if f == "stalker" then
-        Add("Do the work you're given", "Your board (F3): The Stalker's Lot.", nil, nil, "f3")
+        Add("Do the work you're given", "Your board (F4): The Stalker's Lot.", nil, nil, "jobs")
         return out
     end
 
     if f == "cp" then
-        Add("Take directives", "Patrols, stops and arrests for XP and rank: your board (F3).", nil, nil, "f3")
+        Add("Take directives", "Patrols, stops and arrests for XP and rank: your board (F4).", nil, nil, "jobs")
         Add("Get your issue", "Grenades, ammunition, armour and your ration at the Civil Protection Commissary.", nil, "cpsupply")
-        Add("Kick a door in", "G (or F1 > Kick). Locked doors give on the second kick.")
-        Add("Fly a scanner", "F1 > Unit tools, at a Combine console, a data terminal, or anywhere in the Nexus. Photographs earn XP; rebels go out as BOLOs.", nil, nil, "f1")
+        Add("Kick a door in", "G (or F2 > Kick). Locked doors give on the second kick.")
+        Add("Fly a scanner", "F2 > Unit tools, at a Combine console, a data terminal, or anywhere in the Nexus. Photographs earn XP; rebels go out as BOLOs.", nil, nil, "f1")
         if not LCF.IsOverwatch(ply) then
             local rank = ply:GetNW2Int("lcf_rank", 1)
-            Add("Join the Overwatch", "A Division Leader is offered the conditioning: the Overwatch Candidate story on your board (F3).",
-                rank < 3 and "Needs Division Leader (more XP)" or nil, nil, "f3")
+            Add("Join the Overwatch", "A Division Leader is offered the conditioning: the Overwatch Candidate story on your board (F4).",
+                rank < 3 and "Needs Division Leader (more XP)" or nil, nil, "jobs")
         end
         return out
     end
@@ -49,13 +49,13 @@ function LC.WaysToGetBy(ply)
     Add("Eat and drink", "Your ration at a dispenser, every ten minutes; water from a sink or a machine.", nil, "dispenser")
     Add("Search bins and dumpsters", "E on any bin: scrap, food, things to sell or make with.", nil, "bin")
     if job then
-        Add("Work a shift as " .. (job.name or "a Union worker"), "Shifts pay credits: your board (F3).", nil, "work", "f3")
+        Add("Work a shift as " .. (job.name or "a Union worker"), "Shifts pay credits: your board (F4).", nil, "work", "jobs")
     else
-        Add("Get a Union job", "Twelve to choose from on your board (F3). Shifts pay credits.", nil, nil, "f3")
+        Add("Get a Union job", "Twelve to choose from on your board (F4). Shifts pay credits.", nil, nil, "jobs")
     end
     local license, stall = Has(ply, "business_license"), Has(ply, "vendor_stall")
     if license and stall then
-        Add("Sell from a market stall", "Set your stall down from your pockets (F2), then look at it with your pockets open to put things on it.", nil, nil, "f2")
+        Add("Sell from a market stall", "Set your stall down from your pockets (F3), then look at it with your pockets open to put things on it.", nil, nil, "pockets")
     elseif license then
         Add("Sell from a market stall", string.format("Buy a market stall at the Commissary (%d credits) and set it down; or look at the one you have, with your pockets open.", Price("vendor_stall") or 60), nil, "shop")
     else
@@ -66,14 +66,14 @@ function LC.WaysToGetBy(ply)
     Add("Salvage junk", "Hold a crowbar and press E on wrecks, engines, pipes and radiators.", not Has(ply, "crowbar") and not ply:HasWeapon("weapon_crowbar") and "Needs a crowbar (bins, or the black market)" or nil)
     Add("Fish the canal", string.format("A fishing line (Commissary, %d credits): Fish from your pockets, at the water.", Price("fishing_line") or 15),
         not Has(ply, "fishing_line") and "Needs a fishing line" or nil, "shop")
-    Add("Write notes and posters", "Paper (Commissary, or bins): Write, from your pockets (F2).", not Has(ply, "paper") and "Needs paper" or nil, "shop")
+    Add("Write notes and posters", "Paper (Commissary, or bins): Write, from your pockets (F3).", not Has(ply, "paper") and "Needs paper" or nil, "shop")
     if f == "resistance" then
-        Add("Run operations", "Raids, breakouts and supply runs: your board (F3).", nil, nil, "f3")
+        Add("Run operations", "Raids, breakouts and supply runs: your board (F4).", nil, nil, "jobs")
         Add("Get what the cell makes", "The scientist at the lab: vests, jammers, medicine, and decoding chips.", nil, "lab")
     elseif f == "citizen" or f == "" then
         local need = 100
-        Add("Join Civil Protection", "Put on the uniform: F4.", standing < need and string.format("Needs Civil Standing %d (you have %d)", need, standing) or nil, nil, "f4")
-        Add("Join the Resistance", "F4. The low ranks still pass for citizens; the higher you rise, the more you're hunted.", nil, nil, "f4")
+        Add("Join Civil Protection", "Put on the uniform: F4 > Factions.", standing < need and string.format("Needs Civil Standing %d (you have %d)", need, standing) or nil, nil, "factions")
+        Add("Join the Resistance", "F4 > Factions. The low ranks still pass for citizens; the higher you rise, the more you're hunted.", nil, nil, "factions")
     end
     if GetConVar("lc_char_slots") and GetConVar("lc_char_slots"):GetInt() >= 2 then
         Add("Be someone else", "Your other characters, close calls left, and your lives so far: !characters.", nil, nil, "characters")

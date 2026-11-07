@@ -169,7 +169,8 @@ LC_MODULES = {
         "cl_livingcity_screens", -- (terminals' menus on their own screens)
         "cl_livingcity_notices",
         "cl_livingcity_actions",
-        "cl_livingcity_quick", -- (F1: the quick menu, nine things on the number keys)
+        "cl_livingcity_quick", -- (F1: the quick menu, nine things on the number keys; F2: the same for your side and job)
+        "cl_livingcity_hub", -- (F4: jobs, career and factions, one window with tabs)
         "cl_livingcity_acts",
         "cl_livingcity_admintools",
         "cl_livingcity_lagwatch", -- (staff: the lag monitor)
@@ -198,7 +199,7 @@ LC_MODULES = {
         "cl_livingcity_outfits",
         "cl_livingcity_lab",
         "cl_livingcity_labdamage", -- (a shot-up lab's smoke and sparks)
-        "cl_livingcity_career", -- (C > My career)
+        "cl_livingcity_career", -- (F4 > Career, and C > My career)
         "cl_livingcity_layoutbrowser",
         "cl_livingcity_life",
         "cl_livingcity_livecam",

@@ -1,7 +1,7 @@
 --[[
     Living City: the Civil Protection Commissary (units' supplies)
 
-    Units don't make things (F2 has no crafting for them). They're issued
+    Units don't make things (F3 has no crafting for them). They're issued
     what they need at a Civil Protection Commissary ("Fixture: Civil
     Protection Commissary", entities/lc_cpsupply.lua). E there, as a unit:
 
@@ -25,7 +25,7 @@
     them (unless the city has no Civil Protection Commissary).
 
     A city with no Civil Protection Commissary placed: the Union Commissary
-    terminal issues units their supplies instead. F2 points units to the
+    terminal issues units their supplies instead. F3 points units to the
     nearest one, and marks it on their screen (sv_livingcity_notices.lua).
 ]]
 

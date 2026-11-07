@@ -13,9 +13,9 @@
       Escorts           workers waiting for one; handing yours back
       Post office       reading the mail
       Sociostability    the Administrator sets it
-      Your work         your directives (F3)
+      Your work         your directives (F4)
 
-    C > Unit tools (the full menu), F1 > 2, or
+    C > Unit tools (the full menu), F2 > 2, or
     bind a key to lc_unittools. Every button runs the same action as the
     menus (cl_livingcity_actions.lua, cl_livingcity_quick.lua).
 ]]
@@ -211,7 +211,7 @@ function LC_CL.OpenUnitTools()
     end
 
     s = Section("Your work")
-    Button(s, "My directives (F3)", "What Overwatch wants done: patrols, stops, arrests, for XP and rank.", function() Close() RunConsoleCommand("gm_showspare1") end)
+    Button(s, "My directives (F4)", "What Overwatch wants done: patrols, stops, arrests, for XP and rank.", function() Close() if LC_CL.OpenHub then LC_CL.OpenHub("jobs") else RunConsoleCommand("gm_showspare2") end end)
 end
 
 concommand.Add("lc_unittools", function() LC_CL.OpenUnitTools() end)

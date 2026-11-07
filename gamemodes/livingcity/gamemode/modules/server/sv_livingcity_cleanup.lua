@@ -147,7 +147,7 @@ hook.Add("LivingCityJobChanged", "LivingCityCleanup", function(ply, id)
         if not LC.HasItem(ply, "weedkiller") then
             if LC.GiveOrDrop then LC.GiveOrDrop(ply, "weedkiller", 1) else LC.GiveItem(ply, "weedkiller", 1) end
         end
-        ply:ChatPrint("[Union] You're issued a respirator, weedkiller (the sprayer) and a hoover. Accept a shift (F3): it takes you into the infestation. Civil Protection will guard you.")
+        ply:ChatPrint("[Union] You're issued a respirator, weedkiller (the sprayer) and a hoover. Accept a shift (F4): it takes you into the infestation. Civil Protection will guard you.")
     end
     local ok, err = pcall(EnsureOutfit)
     if not ok and LC.Error then LC.Error("cleanup outfit", err) end

@@ -1,5 +1,5 @@
 --[[
-    City Factions (client): faction menu, faction HUD, and name tags.
+    City Factions (client): the faction list (F4 > Factions), faction HUD, and name tags.
 
     Name tags show what others are meant to see: low-rank Resistance members
     appear as ordinary citizens to everyone except fellow Resistance.
@@ -15,8 +15,6 @@ end
 ------------------------------------------------------------------------
 -- Menu
 ------------------------------------------------------------------------
-
-local menu
 
 local function JoinButton(parent, text, enabled, onClick)
     local b = vgui.Create("DButton", parent)
@@ -34,20 +32,11 @@ local function Join(fid, sid)
     net.WriteString(fid)
     net.WriteString(sid or "")
     net.SendToServer()
-    if IsValid(menu) then menu:Close() end
+    if LC_CL and LC_CL.CloseHub then LC_CL.CloseHub() end
 end
 
-net.Receive("lcf_menu", function()
-    local data = ReadCompressed()
-    if not data or not LCF then return end
-    if IsValid(menu) then menu:Remove() end
-
-    menu = vgui.Create("DFrame")
-    menu:SetTitle("Factions")
-    menu:SetSize(math.min(ScrW() - 60, 720), math.min(ScrH() - 60, 640))
-    menu:Center()
-    menu:MakePopup()
-
+-- The faction list, built into F4's Factions tab (cl_livingcity_hub.lua)
+local function BuildFactions(menu, data)
     -- who holds the city, across the top
     if LC_CL and LC_CL.DrawControlBar then
         local bar = vgui.Create("DPanel", menu)
@@ -64,10 +53,8 @@ net.Receive("lcf_menu", function()
         tools:SetTall(28)
         tools:DockMargin(4, 4, 4, 2)
         tools:SetText("Admin: testing tools (XP, ranks, credits, standing)")
-        tools.DoClick = function() RunConsoleCommand("lc_admintools") menu:Remove() end
+        tools.DoClick = function() RunConsoleCommand("lc_admintools") if LC_CL and LC_CL.CloseHub then LC_CL.CloseHub() end end
     end
-
-    if LC_CL.CareerButton then LC_CL.CareerButton(menu, menu) end -- (your career, at the top: the owner, 7 November)
 
     local scroll = vgui.Create("DScrollPanel", menu)
     scroll:Dock(FILL)
@@ -198,6 +185,13 @@ net.Receive("lcf_menu", function()
             end
         end
     end
+end
+
+net.Receive("lcf_menu", function()
+    local data = ReadCompressed()
+    if not data or not LCF then return end
+    data.factions = data.factions or {}
+    if LC_CL and LC_CL.HubFill then LC_CL.HubFill("factions", function(p) BuildFactions(p, data) end) end
 end)
 
 ------------------------------------------------------------------------

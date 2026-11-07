@@ -1,6 +1,6 @@
 --[[
     A carryable item lying in the world: food, water, a carcass, a bottle.
-    Press E to put it in your pockets (F2 to see what you're carrying).
+    Press E to put it in your pockets (F3 to see what you're carrying).
 ]]
 
 AddCSLuaFile()

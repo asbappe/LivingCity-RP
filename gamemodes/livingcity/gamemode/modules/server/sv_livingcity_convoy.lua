@@ -230,7 +230,7 @@ function LC.StartSupplyDrop(pos)
     local where = LC.DescribePlace and LC.DescribePlace(pos) or ""
     for _, p in ipairs(player.GetAll()) do
         if Unit(p) then
-            p:ChatPrint("[CP net] A supply " .. (s.byAir and "dropship is coming down " or "convoy is unloading ") .. where .. ". Guard the drop until it moves on. Directive on your board (F3).")
+            p:ChatPrint("[CP net] A supply " .. (s.byAir and "dropship is coming down " or "convoy is unloading ") .. where .. ". Guard the drop until it moves on. Directive on your board (F4).")
         end
     end
     if LC.RadioNotice then

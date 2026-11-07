@@ -795,7 +795,7 @@ do
     Run("citizen", false, function() local b = ents.Create("prop_ragdoll") b.nw.lc_body = true Look(b) end)
     Run("citizen", false, function() local b = ents.Create("prop_ragdoll") b.nw.lc_downed_body = true Look(b) end)
     Run("resistance", false, function() Look(ents.Create("lc_screen")) end)
-    -- the quick menu (F1): nine for everyone, and every item and page runs
+    -- the quick menus: F1 (what everyone has: nine for everyone) and F2 (your side, rank and job), and every item and page runs
     local function Quick(faction, setup)
         _me.nw = { lcf_faction = faction, lce_standing = 200, lcf_rank = 9 }
         _me.alive = true
@@ -805,9 +805,31 @@ do
         local okQ, root = pcall(LC_CL.QuickRoot)
         if not okQ then problems[#problems + 1] = "quick menu for " .. faction .. ": " .. tostring(root) return end
         for i = 1, 9 do if not root.items[i] then problems[#problems + 1] = "quick menu for " .. faction .. ": slot " .. i .. " is empty" end end
-        if faction == "cp" and not (root.items[2] and root.items[2].id == "unittools" and root.items[3] and root.items[3].id == "kick") then
-            problems[#problems + 1] = "a unit's F1: Unit tools should be 2 and Kick 3"
+        for i = 1, 9 do
+            local it = root.items[i]
+            if it and (it.id == "unittools" or it.id == "kick" or it.role or it.label == "Black market" or it.label == "Call for backup") then
+                problems[#problems + 1] = "F1 for " .. faction .. " has '" .. tostring(it.label) .. "': that's F2's (only what everyone has goes on F1)"
+            end
         end
+        if root.items[2] and root.items[2].label ~= "Put my hands up" and root.items[2].label ~= "Lower my hands" then
+            problems[#problems + 1] = "F1 for " .. faction .. ": 2 should be hands up (the hints say so), is " .. tostring(root.items[2].label)
+        end
+        local okQ2, root2 = pcall(LC_CL.QuickRoleRoot)
+        if not okQ2 then problems[#problems + 1] = "F2 for " .. faction .. ": " .. tostring(root2) return end
+        if not root2.items[9] then problems[#problems + 1] = "F2 for " .. faction .. " has no 9 (the full menu)" end
+        if faction == "cp" then
+            -- (the owner, 7 November: 1 Voice lines, 2 Unit tools, 3 Kick, 4 Call for backup, 5 BOLO, 6 Send my 10-20)
+            local it = root2.items
+            if not (it[1] and it[1].label == "Voice lines" and it[2] and it[2].id == "unittools" and it[3] and it[3].id == "kick"
+                and it[4] and it[4].label == "Call for backup" and it[5] and string.find(it[5].label, "BOLO", 1, true) and it[6] and it[6].label == "Send my 10-20") then
+                problems[#problems + 1] = "a unit's F2 (" .. faction .. "): should be 1 Voice lines, 2 Unit tools, 3 Kick, 4 Call for backup, 5 BOLO, 6 Send my 10-20"
+            end
+            if LC_CL.QuickSlot("kick") ~= 3 or select(2, LC_CL.QuickSlot("kick")) ~= "F2" then problems[#problems + 1] = "the kick reminder can't find Kick at F2 > 3" end
+        end
+        if faction == "resistance" and not (root2.items[1] and string.find(root2.items[1].label, "clothes", 1, true) and root2.items[2] and root2.items[2].label == "Black market") then
+            problems[#problems + 1] = "the Resistance's F2: clothes and the black market first"
+        end
+        if faction == "admin" and not (root2.items[1] and root2.items[1].label == "Sociostability") then problems[#problems + 1] = "the Administrator's F2: sociostability first" end
         local function WalkQ(page, depth)
             for i = 1, 9 do
                 local it = page.items[i]
@@ -822,6 +844,15 @@ do
             end
         end
         WalkQ(root, 0)
+        WalkQ(root2, 0)
+        -- F2, as the server answers gm_showteam: opens, draws, and F1 swaps to its own; F2 again closes it
+        local okF2, errF2 = pcall(net["recv_lcg_quick2"])
+        if not okF2 then problems[#problems + 1] = "F2 (" .. faction .. "): " .. tostring(errF2)
+        elseif not LC_CL.QuickOpen("role") then problems[#problems + 1] = "F2 didn't open its quick menu (" .. faction .. ")" end
+        local okH2, errH2 = pcall(function() for id, fn in pairs(hook.t.HUDPaint or {}) do if id == "LivingCityQuick" then fn() end end end)
+        if not okH2 then problems[#problems + 1] = "F2's quick menu drawing (" .. faction .. "): " .. tostring(errH2) end
+        pcall(net["recv_lcg_quick2"])
+        if LC_CL.QuickOpen() then problems[#problems + 1] = "F2 again didn't close its quick menu (" .. faction .. ")" end
         -- and by the keys: open it, into a page, back, and closed
         LC_CL.OpenQuick()
         local okH, errH = pcall(function() for id, fn in pairs(hook.t.HUDPaint or {}) do if id == "LivingCityQuick" then fn() end end end)
@@ -844,6 +875,26 @@ do
     Quick("citizen", function() local b = ents.Create("prop_ragdoll") b.nw.lc_downed_body = true Look(b) end)
     Quick("resistance", function() Look(ents.Create("prop_door_rotating")) end)
     Quick("cp", function() Look(ents.Create("lc_powerbank")) end)
+    Quick("vort") Quick("stalker") Quick("zombie")
+    Quick("citizen", function() _me.nw.lcj_job, _me.nw.lc_ration_break = "mortuary", true end)
+    Quick("resistance", function() _me.nw.lc_squad_n = 2 other.nw.lcf_faction = "vort" Look(other) end)
+    -- a plain citizen (no job, not a foreman): F2 says there's nothing for them, briefly
+    do
+        _me.nw = { lcf_faction = "citizen", lce_standing = 10 }
+        _me.IsAdmin = function() return false end
+        Look(nil)
+        local okE, e2 = pcall(LC_CL.QuickRoleRoot)
+        if not okE then problems[#problems + 1] = "a plain citizen's F2: " .. tostring(e2)
+        elseif e2.items[1] or not e2.empty then problems[#problems + 1] = "a plain citizen's F2 should say there's nothing for them, not list " .. tostring(e2.items[1] and e2.items[1].label)
+        else
+            LC_CL.OpenQuick2()
+            local okH3, errH3 = pcall(function() for id, fn in pairs(hook.t.HUDPaint or {}) do if id == "LivingCityQuick" then fn() end end end)
+            if not okH3 then problems[#problems + 1] = "an empty F2 drawing: " .. tostring(errH3) end
+            LC_CL.OpenQuick()
+            if not LC_CL.QuickOpen("general") then problems[#problems + 1] = "F1 with F2 open didn't swap to F1" end
+            LC_CL.CloseQuick()
+        end
+    end
     -- the terminals' screens, the lab, the papers card, notices and a waypoint
     local okD, errD = pcall(function()
         local base = { name = "Erika Hollis", cid = "#63-501", credits = 30, standing = 10, papersFee = 10, good = 50,
@@ -889,6 +940,58 @@ do
         _me:SetPos(Vector(0, 0, 0))
     end)
     if not okD then problems[#problems + 1] = "screens, lab, papers, notices: " .. tostring(errD) end
+    -- F4: one window with tabs, Jobs (first), Career and Factions; the last tab looked at is remembered (cl_livingcity_hub.lua)
+    do
+        local rcc, ask, j2t = RunConsoleCommand, LC_CL.AskCareer, util.JSONToTable
+        local asked = {}
+        RunConsoleCommand = function(c) asked[c] = true end
+        LC_CL.AskCareer = function() asked.career = true end
+        local okHub, errHub = pcall(function()
+            LC_CL.CloseHub()
+            net["recv_lc_hub"]()
+            if not LC_CL.HubOpen() then error("F4 didn't open the window") end
+            if LC_CL.HubTab() ~= "jobs" then error("a new session's F4 should open on Jobs, not " .. tostring(LC_CL.HubTab())) end
+            if next(asked) then error("F4 asked the server again for what it's already sending") end
+            util.JSONToTable = function() return { board = "Jobs", faction = "citizen", active = false, traits = { loyalty = 2 }, wait = 0,
+                postings = { { id = 7, title = "Sweep the plaza", desc = "Push the cart.", reward = 20, limit = 300, taken = 0, max = 1 },
+                    { id = 8, title = "A story", desc = "Yours.", reward = 50, story = true, taken = 0, max = 1 } },
+                jobs = { current = "courier", list = { { id = "courier", name = "Courier", path = "" } } } } end
+            net._q = { 1 }
+            net["recv_lcq_board"]()
+            util.JSONToTable = function() return { current = "citizen", special = "", admin = true, factions = { { id = "citizen", xp = 0, rank = 1, ok = true, specials = {} },
+                { id = "cp", xp = 0, rank = 1, ok = false, why = "Not yet", specials = {}, reqs = { { label = "Civil Standing", have = 40, need = 100 } } } } } end
+            net._q = { 1 }
+            net["recv_lcf_menu"]()
+            LC_CL.OpenCareer({ faction = "Civil Protection", xp = 312, rank = 2, conditioned = false, canReassess = true,
+                ranks = { { name = "Recruit", xp = 0 }, { name = "Metrocop", xp = 150 }, { name = "Combine Soldier", xp = 2000, overwatch = true } }, steps = { "Earn more XP." } })
+            if LC_CL.HubTab() ~= "jobs" then error("the tabs' content moved F4 off the tab it opened on") end
+            -- every tab shows, and the last one looked at is where F4 opens next time
+            for _, t in ipairs({ "career", "factions" }) do
+                LC_CL.OpenHub(t, true)
+                if LC_CL.HubTab() ~= t then error("F4's " .. t .. " tab didn't show") end
+            end
+            LC_CL.CloseHub()
+            if LC_CL.HubOpen() then error("the window didn't close") end
+            net["recv_lc_hub"]()
+            if LC_CL.HubTab() ~= "factions" then error("F4 forgot the last tab (opened on " .. tostring(LC_CL.HubTab()) .. ")") end
+            LC_CL.CloseHub()
+            -- !jobs, or the board again after taking a job: the window opens on Jobs and asks for the other two
+            asked = {}
+            util.JSONToTable = function() return { board = "Directives", postings = {}, active = true, traits = {}, wait = 0 } end
+            net._q = { 1 }
+            net["recv_lcq_board"]()
+            if LC_CL.HubTab() ~= "jobs" or not asked.lcf_menu or not asked.career or asked.lcq_board then error("the board on its own didn't open Jobs and ask for the rest") end
+            LC_CL.CloseHub()
+            -- C > My career: the window on the Career tab, everything asked for
+            asked = {}
+            LC_CL.OpenHub("career")
+            if LC_CL.HubTab() ~= "career" or not (asked.lcq_board and asked.lcf_menu and asked.career) then error("C > My career didn't open F4 on Career") end
+            LC_CL.OpenCareer({ none = true })
+            LC_CL.CloseHub()
+        end)
+        if not okHub then problems[#problems + 1] = "F4 (jobs, career, factions): " .. tostring(errHub) end
+        RunConsoleCommand, LC_CL.AskCareer, util.JSONToTable = rcc, ask, j2t
+    end
     -- a terminal's menu on its own screen: the crosshair is the cursor, E presses
     local okS, errS = pcall(function()
         local term = ents.Create("lc_intake") term:SetPos(_me:GetPos() + Vector(60, 0, 0))
@@ -929,8 +1032,8 @@ do
         ["!time"] = "time", ["!city"] = "city", ["!laws"] = "laws", ["!broadcast"] = "broadcast", ["!bob"] = "console:lc_bob_toggle",
         ["!hints"] = "hints", ["@ (a ticket)"] = "ticket", ["!report"] = "ticket", ["!build"] = "build", ["!admintools"] = "admintools",
         ["!givexp and the other admin chat tools"] = "admintools", ["!staff"] = "staff", ["!warn, !charban"] = "staff", ["!pathmap"] = "pathmap",
-        ["!escort"] = "escort", ["!inv, !craft, !give"] = "console:gm_showteam", ["!jobs, !abandon"] = "console:gm_showspare1",
-        ["!faction"] = "console:gm_showspare2", ["!help"] = "console:lc_help", ["!hints (read them again)"] = "net:lc_hints_list",
+        ["!escort"] = "escort", ["!inv, !craft, !give"] = "console:gm_showspare1", ["!jobs, !abandon"] = "console:lcq_board",
+        ["!faction"] = "console:lcf_menu", ["!help"] = "console:lc_help", ["!hints (read them again)"] = "net:lc_hints_list",
         ["/y"] = "say:/y", ["/w"] = "say:/w", ["/me"] = "say:/me", ["/it"] = "say:/it", ["/roll"] = "say:/roll", ["/looc"] = "say:/looc",
         ["//"] = "say://", ["mail (units)"] = "readmail", ["turrets and power banks"] = "checkpoint", ["bodies"] = "searchbody",
         ["hauling"] = "haul", ["mask voice"] = "vo", ["third person while posing"] = "console:lc_act_thirdperson",

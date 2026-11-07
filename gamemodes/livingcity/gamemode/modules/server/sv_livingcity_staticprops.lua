@@ -7,7 +7,7 @@
     and position, so this reads the list straight out of maps/<map>.bsp (the
     game lump "sprp") and remembers the ones that matter:
 
-      stove     cook from your pockets (F2) while you stand by it
+      stove     cook from your pockets (F3) while you stand by it
       sink      press E to drink, and fill bottles and cans (boil them after)
       vending   press E to buy a can
 

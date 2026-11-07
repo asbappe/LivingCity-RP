@@ -1,23 +1,30 @@
 --[[
-    Living City (client): the quick menu
+    Living City (client): the quick menus
 
-    F1. Like a voice menu in a team shooter: a short list at the left of the
-    screen, picked with the number keys (1 to 9; 0 goes back or closes), and
-    you keep moving while it's up. Nine things, for who you are:
+    Like a voice menu in a team shooter: a short list at the left of the screen, picked
+    with the number keys (1 to 9; 0 goes back or closes), and you keep moving while it's
+    up. Two of them (the owner, 7 November: "F1 can be generic/general commands and
+    hotkeys via the quick number menu, and F2 can be the same BUT contextual and specific
+    commands for their class/rank/faction"):
 
-      Civil Protection   backup, 10-20, BOLO, mask voice lines, records
-      Overwatch          the same, in a soldier's voice
-      Citizens           what now?, hands up, your papers, talking, pockets
-      The Resistance     hands up, gear up or plain clothes, talking, the
-                         black market, pockets
+      F1   what everyone has: what now?, hands up, your papers, talking, your pockets
+           (F3); 6 to 8 change with what's in front of you (a person: tell them your
+           name, show your papers; a body; a door) and with your own trouble (downed,
+           tied, wanted); with nothing there they're poses, gestures and F4.
+      F2   what your side, rank and job have: Civil Protection's 1 Voice lines, 2 Unit
+           tools, 3 Kick, 4 Call for backup, 5 BOLO, 6 Send my 10-20 (the owner,
+           7 November); the Resistance's clothes, black market, errands and squad
+           orders; the Administrator's sociostability and broadcast; a vortigaunt's
+           call; a stalker's work; a worker's job tools (an escort, a ration break, the
+           body cart, foreman); staff tools. Then what only your side does to what's in
+           front of you (a unit: search, cuff, escort). Nothing of the kind: it says so.
 
-    6 to 8 change with what's in front of you (a person: search, tie, show
-    your papers; a body; a door) and with your own trouble (downed, tied,
-    wanted); with nothing there they're your usual three. 9 is everything
-    else: the full menu (cl_livingcity_actions.lua), also on C. A ">" opens a
-    page of its own (voice lines, talking, poses).
+    9 on either is everything else: the full menu (cl_livingcity_actions.lua), also on C.
+    A ">" opens a page of its own (voice lines, talking, poses).
 
-    bind a key to lc_quick to open it from something other than F1.
+    F1 is the key itself (cl_livingcity_actions.lua); F2 is the server's answer to
+    gm_showteam (lcg_quick2, init.lua). Bind a key to lc_quick or lc_quick2 to open
+    them from something else.
 ]]
 
 LC_CL = LC_CL or {}
@@ -118,9 +125,18 @@ local function ResistancePage()
         Item("Find the lab (mark it)", function() Send("waypoint", "lab") end),
         Item("Donate food to the supply crate", function() Send("donate") end),
         Item("Decode a data chip (at the lab)", function() Send("decode") end),
+        Item("Write down what you see (needs paper)", function() Send("scout") end),
     }
     if me:HasWeapon("weapon_lc_multitool") then items[#items + 1] = Item("Hack the Combine door I'm looking at", function() Send("hack") end) end
     return { title = "RESISTANCE", items = items }
+end
+
+local function SquadPage()
+    return { title = "SQUAD ORDERS", items = {
+        Item("Act casual (guns away, plain clothes)", function() Send("casual") end),
+        Item("Guns out", function() Send("gunsout") end),
+        Item("Go on ahead: meet me at the job's marker", function() Send("meet") end),
+    } }
 end
 
 local function StaffPage()
@@ -134,12 +150,13 @@ local function StaffPage()
 end
 
 ------------------------------------------------------------------------
--- What's in front of you, and your own trouble: slots 6 to 8 first
+-- What's in front of you, and your own trouble: slots 6 to 8 first.
+-- role = true: only your side does it (a unit's search and cuffs): that one's on F2.
 ------------------------------------------------------------------------
 
 local function Context(me, unit, rebel)
     local out = {}
-    local function Add(label, run) out[#out + 1] = { label = label, run = run, ctx = true } end
+    local function Add(label, run, role) out[#out + 1] = { label = label, run = run, ctx = true, role = role or nil } end
     local now = CurTime()
     if me:GetNW2Float("lc_downed_until", 0) > now then Add("Give up (let go)", function() Send("giveup") end) end
     if me:GetNW2Bool("lc_tied", false) then Add("Work at the cuffs", function() Send("struggle") end) end
@@ -160,15 +177,15 @@ local function Context(me, unit, rebel)
         local n = Name(e)
         local tied = e:GetNW2Bool("lc_tied", false)
         if unit then
-            Add("Search " .. n, function() Send("search") end)
+            Add("Search " .. n, function() Send("search") end, true)
             if tied then
                 Add("Drag " .. n .. " along / let go", function() Send("drag") end)
                 Add("Uncuff " .. n, function() Send("untie") end)
             else
-                Add("Cuff " .. n, function() Send("tie") end)
+                Add("Cuff " .. n, function() Send("tie") end, true)
             end
-            if e:GetNW2String("lcj_job", "") ~= "" and e:GetNW2Entity("lc_escorting") ~= me then Add("Escort " .. n, function() Send("escort", "", e) end) end
-            if tied or e:GetNW2Bool("lc_handsup", false) then Add("Take " .. n .. "'s microphone", function() Send("takemic", "", e) end) end
+            if e:GetNW2String("lcj_job", "") ~= "" and e:GetNW2Entity("lc_escorting") ~= me then Add("Escort " .. n, function() Send("escort", "", e) end, true) end
+            if tied or e:GetNW2Bool("lc_handsup", false) then Add("Take " .. n .. "'s microphone", function() Send("takemic", "", e) end, true) end
         else
             Add("Tell " .. n .. " my name", function() Send("recognize") end)
             Add("Show " .. n .. " my papers", function() Send("showpapers") end)
@@ -176,12 +193,13 @@ local function Context(me, unit, rebel)
                 Add("Uncuff " .. n, function() Send("untie") end)
                 Add("Drag " .. n .. " along / let go", function() Send("drag") end)
             end
-            if me:GetNW2Bool("lc_foreman", false) then Add("Give " .. n .. " a work order", function() Send("assign", "", e) end) end
+            if me:GetNW2Bool("lc_foreman", false) then Add("Give " .. n .. " a work order", function() Send("assign", "", e) end, true) end
+            if rebel and e:GetNW2String("lcf_faction", "") == "vort" then Add("Cut the vortigaunt's shackles", function() Send("unshackle") end, true) end
             if not rebel then Add("Inform on " .. n, function() Send("inform", "", e) end) end
         end
     elseif unit and e:GetNW2Bool("lc_cuffed", false) then
         -- a citizen or rebel cuffed with the baton (sv_livingcity_arrest.lua)
-        Add("Walk them to the cells / let go", function() Send("drag") end)
+        Add("Walk them to the cells / let go", function() Send("drag") end, true)
     elseif e:GetNW2Bool("lc_downed_body", false) then
         Add("Drag them along / let go", function() Send("drag") end)
         Add(unit and "Cuff them, or help them up: hold E" or "Help them up: hold E", function() end)
@@ -199,96 +217,139 @@ local function Context(me, unit, rebel)
         if e:GetNW2Bool("lc_down", false) then Add("Repair the transformer", function() Send("transformer", "", e) end)
         elseif me:HasWeapon("weapon_lc_multitool") then Add("Sabotage the transformer", function() Send("sabotage", "", e) end) end
     elseif cls == "lc_powerbank" then
-        if unit then Add("Read the power bank", function() Send("checkpoint", "status", e) end)
+        if unit then Add("Read the power bank", function() Send("checkpoint", "status", e) end, true)
         elseif me:HasWeapon("weapon_lc_multitool") then Add("Short out the power bank", function() Send("checkpoint", "short", e) end) end
     elseif cls == "npc_turret_floor" and unit then
-        Add("Pack up this turret", function() Send("checkpoint", "pack", e) end)
+        Add("Pack up this turret", function() Send("checkpoint", "pack", e) end, true)
     elseif cls == "lc_screen" and me:HasWeapon("weapon_lc_multitool") then
         Add("Hijack this screen (multitool)", function() Send("hijack") end)
     end
     return out
 end
 
+local function Who(me)
+    local f = me:GetNW2String("lcf_faction", "")
+    return f, me:GetNW2Bool("lc_unit", false) or f == "cp", f == "resistance"
+end
+local function Hub(tab) if LC_CL.OpenHub then LC_CL.OpenHub(tab) else RunConsoleCommand("gm_showspare2") end end
+local function Full() return Item("Everything else (full menu)", function() if LC_CL.OpenActions then LC_CL.OpenActions() end end) end
+
 ------------------------------------------------------------------------
--- The first page: who you are
+-- F1: what everyone has
 ------------------------------------------------------------------------
 
 function LC_CL.QuickRoot()
     local me = LocalPlayer()
-    local f = me:GetNW2String("lcf_faction", "")
-    local unit = me:GetNW2Bool("lc_unit", false) or f == "cp"
-    local rebel = f == "resistance"
-    local rank = me:GetNW2Int("lcf_rank", 1)
+    local f, unit, rebel = Who(me)
     local hands = Item(me:GetNW2Bool("lc_handsup", false) and "Lower my hands" or "Put my hands up", function() Send("handsup") end)
-    local pockets = Item("My pockets (F2)", function() RunConsoleCommand("gm_showteam") end)
-    local board = Item("My board: jobs (F3)", function() RunConsoleCommand("gm_showspare1") end)
-    -- slot 1 for anyone living in the city: the next step, and the way to everywhere (cl_livingcity_nextstep.lua)
+    -- slot 1: the next step, and the way to everywhere (cl_livingcity_nextstep.lua)
     local whatNow = Page("What now?", function() return LC_CL.WhatNowPage and LC_CL.WhatNowPage() or { title = "WHAT NOW?", items = {} } end)
-    local items, usual, title, accent
+    local items = {
+        whatNow,
+        hands,
+        Item("My papers", function() Send("papers") end),
+        Page("Talk", TalkPage),
+        Item("My pockets (F3)", function() RunConsoleCommand("gm_showspare1") end),
+    }
+    local usual = { Page("Pose", PosePage), Page("Gesture", GesturePage), Item("Jobs, career, factions (F4)", function() Hub("jobs") end) }
+    -- after the fixed slots, up to 8: what's in front of you first, then your usual ones
+    local ctx = {}
+    for _, it in ipairs(Context(me, unit, rebel)) do if not it.role then ctx[#ctx + 1] = it end end
+    local n = #items
+    for i = 1, 8 - n do items[n + i] = ctx[i] or table.remove(usual, 1) end
+    items[9] = Full()
+    local accent = unit and ACCENT.cp or (rebel and ACCENT.resistance or ACCENT.default)
+    return { title = "QUICK MENU", items = items, accent = accent, kind = "general" }
+end
+
+------------------------------------------------------------------------
+-- F2: what your side, rank and job have
+------------------------------------------------------------------------
+
+local EMPTY = { "Nothing here for your side or job right now.", "F1 has what everyone can do." }
+
+function LC_CL.QuickRoleRoot()
+    local me = LocalPlayer()
+    local f, unit, rebel = Who(me)
+    local fac = LCF and LCF.Get and LCF.Get(f)
+    local title, accent = fac and fac.name or "", ACCENT.default
+    local items, usual = {}, {}
+    local function Add(it) if it and #items < 8 then items[#items + 1] = it end end
     if unit then
         title = me:GetNW2String("lcf_title", "") ~= "" and me:GetNW2String("lcf_title", "") or ((LCF and LCF.IsOverwatch and LCF.IsOverwatch(me)) and "OVERWATCH" or "CIVIL PROTECTION")
         accent = ACCENT.cp
         -- (the owner, 7 November: 1 Voice lines, 2 Unit tools, 3 Kick, 4 Call for backup, 5 BOLO, 6 Send my 10-20)
         local tools = Item("Unit tools (everything a unit has)", function() if LC_CL.OpenUnitTools then LC_CL.OpenUnitTools() end end)
         tools.id = "unittools"
-        items = {
-            Page("Voice lines", VoicePage),
-            tools,
-            (function() local k = Item("Kick (" .. (LC_CL.KickKeyName and LC_CL.KickKeyName() or "G") .. ")", function() Send("kick") end) k.id = "kick" return k end)(),
-            Item("Call for backup", function() Send("backup") end),
-            Item("Issue a BOLO...", function() Ask("BOLO", "What should Civil Protection units look out for?", "bolo") end),
-            Item("Send my 10-20", function() Send("10-20") end),
-        }
-        usual = {
-            Item("My directives (F3)", function() RunConsoleCommand("gm_showspare1") end),
-            pockets,
-        }
+        local kick = Item("Kick (" .. (LC_CL.KickKeyName and LC_CL.KickKeyName() or "G") .. ")", function() Send("kick") end)
+        kick.id = "kick"
+        Add(Page("Voice lines", VoicePage))
+        Add(tools)
+        Add(kick)
+        Add(Item("Call for backup", function() Send("backup") end))
+        Add(Item("Issue a BOLO...", function() Ask("BOLO", "What should Civil Protection units look out for?", "bolo") end))
+        Add(Item("Send my 10-20", function() Send("10-20") end))
+        usual = { Item("My directives (F4)", function() Hub("jobs") end), Item("Records terminal", function() Send("records") end) }
     elseif rebel then
         title, accent = "RESISTANCE", ACCENT.resistance
         local plain = me:GetNW2String("lcd_disguise", "") ~= ""
-        items = {
-            whatNow,
-            hands,
-            Item(plain and "Gear up (Resistance clothes)" or "Change into plain clothes", function() Send(plain and "gearup" or "plain") end),
-            Page("Talk", TalkPage),
-            Item("Black market", function() Send("market") end),
-        }
-        usual = { Page("Resistance", ResistancePage), Page("Pose", PosePage), board }
-    else
-        title, accent = f == "admin" and "STAFF" or "CITIZEN", ACCENT.default
-        items = {
-            whatNow,
-            hands,
-            Item("My papers", function() Send("papers") end),
-            Page("Talk", TalkPage),
-            pockets,
-        }
-        usual = { Page("Pose", PosePage), Page("Gesture", GesturePage), (f == "admin" and me:IsAdmin()) and Page("Staff", StaffPage) or board }
-        -- only the Administrator sets sociostability (the owner, 7 November): first of their usual pages
-        if f == "admin" then table.insert(usual, 1, Page("Sociostability", SocioPage)) end
+        Add(Item(plain and "Gear up (Resistance clothes)" or "Change into plain clothes", function() Send(plain and "gearup" or "plain") end))
+        Add(Item("Black market", function() Send("market") end))
+        Add(Page("Resistance", ResistancePage))
+        if me:GetNW2Int("lc_squad_n", 0) > 0 then Add(Page("Squad orders", SquadPage)) end
+    elseif f == "admin" then
+        -- only the Administrator sets sociostability (the owner, 7 November)
+        Add(Page("Sociostability", SocioPage))
+        Add(Item("Broadcast to the whole city...", function() Ask("Broadcast", "What does the city hear?", "broadcast") end))
+    elseif f == "vort" then
+        Add(Item("Reach out through the vortessence", function() Send("vortcall") end))
+    elseif f == "stalker" then
+        Add(Item("My work: the Stalker's Lot (F4)", function() Hub("jobs") end))
     end
-    -- after the fixed slots, up to 8: what's in front of you first, then your usual ones
-    local ctx = Context(me, unit, rebel)
-    local n = #items
-    for i = 1, 8 - n do items[n + i] = ctx[i] or table.remove(usual, 1) end
-    items[9] = Item("Everything else (full menu)", function() if LC_CL.OpenActions then LC_CL.OpenActions() end end)
-    return { title = string.upper(title), items = items, accent = accent }
+    -- a worker's job tools
+    local job = me:GetNW2String("lcj_job", "")
+    if not unit and job ~= "" then
+        local esc = me:GetNW2String("lc_escort_phase", "") ~= "" or me:GetNW2Bool("lc_escort_wait", false)
+        Add(Item(esc and "Send my escort away" or "Ask for a Civil Protection escort", function() Send("escort") end))
+    end
+    if me:GetNW2Bool("lc_ration_break", false) then Add(Item("Back to work (end the ration break)", function() Send("back") end))
+    elseif job ~= "" and GetGlobal2String("lc_event", "") == "rations" then Add(Item("Take a ration break", function() Send("rationbreak") end)) end
+    if job == "mortuary" then Add(Item("Take a body cart, or leave it", function() Send("bodycart") end)) end
+    if (f == "citizen" or f == "") and me:GetNW2Int("lce_standing", 0) >= 150 then
+        Add(Item(me:GetNW2Bool("lc_foreman", false) and "Stop being a Union foreman" or "Become a Union foreman", function() Send("foreman") end))
+    end
+    -- staff
+    if me:IsAdmin() then usual[#usual + 1] = Page("Staff", StaffPage) end
+    -- then what only your side does to what's in front of you, then your usual ones
+    for _, it in ipairs(Context(me, unit, rebel)) do if it.role then Add(it) end end
+    for _, it in ipairs(usual) do Add(it) end
+    local empty = #items == 0
+    items[9] = Full()
+    if title == "" then title = "YOUR SIDE" end
+    return { title = string.upper(title), items = items, accent = accent, kind = "role", empty = empty and EMPTY or nil }
 end
 
 ------------------------------------------------------------------------
 -- Open, pick, close
 ------------------------------------------------------------------------
 
-local open -- { page, stack, last }
+local open -- { page, stack, last, kind }
 
-function LC_CL.QuickOpen() return open ~= nil end
+-- open at all, or (kind "general" for F1, "role" for F2) that one
+function LC_CL.QuickOpen(kind) return open ~= nil and (kind == nil or open.kind == kind) end
 function LC_CL.CloseQuick() open = nil end
 
 function LC_CL.OpenQuick()
     local me = LocalPlayer()
     if not IsValid(me) or not me:Alive() then return end
-    open = { page = LC_CL.QuickRoot(), stack = {}, last = CurTime() }
+    open = { page = LC_CL.QuickRoot(), stack = {}, last = CurTime(), kind = "general" }
     LC_CL.ActionsOpenedAt = CurTime() -- (the server's own F1 answer doesn't also open the guide)
+end
+
+function LC_CL.OpenQuick2()
+    local me = LocalPlayer()
+    if not IsValid(me) or not me:Alive() then return end
+    open = { page = LC_CL.QuickRoleRoot(), stack = {}, last = CurTime(), kind = "role" }
 end
 
 -- 1 to 9 picks; 0 goes back a page, or closes.
@@ -312,7 +373,11 @@ function LC_CL.QuickPick(n)
     if it.run then it.run() end
 end
 
-concommand.Add("lc_quick", function() if open then open = nil else LC_CL.OpenQuick() end end)
+concommand.Add("lc_quick", function() if LC_CL.QuickOpen("general") then open = nil else LC_CL.OpenQuick() end end)
+local function Toggle2() if LC_CL.QuickOpen("role") then open = nil else LC_CL.OpenQuick2() end end
+concommand.Add("lc_quick2", Toggle2)
+-- F2 (gm_showteam), as the server answers it (init.lua)
+net.Receive("lcg_quick2", Toggle2)
 
 local was = {}
 hook.Add("Think", "LivingCityQuickKeys", function()
@@ -367,6 +432,8 @@ hook.Add("HUDPaint", "LivingCityQuick", function()
             draw.SimpleText(tostring(i), "LCQuickNum", x + 16, ry + 12, accent, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
             it.fit = it.fit or Fit(it.label .. (it.page and "  >" or ""), "LCQuickItem", W - 46)
             draw.SimpleText(it.fit, "LCQuickItem", x + 34, ry + 12, col, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        elseif page.empty and page.empty[i] then
+            draw.SimpleText(page.empty[i], "DermaDefault", x + 16, ry + 12, DIM, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         else
             draw.SimpleText(tostring(i), "LCQuickNum", x + 16, ry + 12, DIM, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         end
@@ -376,15 +443,23 @@ hook.Add("HUDPaint", "LivingCityQuick", function()
     draw.SimpleText((key and string.upper(key) or "C") .. ": the full menu", "DermaDefault", x + W - 12, y + H - 13, DIM, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 end)
 
--- Where something is on the first page of F1, for hints that name the keys (LC_CL.QuickSlot("kick") -> 5),
--- and the key that opens it (whatever F1's bound to). Looked up live, so a hint stays right if things move.
-function LC_CL.QuickSlot(id)
-    local ok, root = pcall(LC_CL.QuickRoot)
-    if not ok or not root then return nil end
-    for n = 1, 9 do local it = root.items[n] if it and it.id == id then return n end end
-    return nil
-end
+-- The keys that open F1 and F2 (whatever they're bound to), and where something is on the first
+-- page of F2 (or else F1), for hints that name the keys: LC_CL.QuickSlot("kick") -> 3, "F2".
+-- Looked up live, so a hint stays right if things move.
 function LC_CL.QuickKeyName()
     local k = input and input.LookupBinding and input.LookupBinding("gm_showhelp")
     return string.upper(k or "F1")
+end
+function LC_CL.QuickRoleKeyName()
+    local k = input and input.LookupBinding and input.LookupBinding("gm_showteam")
+    return string.upper(k or "F2")
+end
+function LC_CL.QuickSlot(id)
+    for _, r in ipairs({ { LC_CL.QuickRoleRoot, LC_CL.QuickRoleKeyName }, { LC_CL.QuickRoot, LC_CL.QuickKeyName } }) do
+        local ok, root = pcall(r[1])
+        if ok and root then
+            for n = 1, 9 do local it = root.items[n] if it and it.id == id then return n, r[2]() end end
+        end
+    end
+    return nil
 end

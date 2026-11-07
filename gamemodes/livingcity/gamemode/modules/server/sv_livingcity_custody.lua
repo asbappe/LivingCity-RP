@@ -266,7 +266,7 @@ function LC.MakeStalker(ply)
     ply:Give("weapon_lc_hands")
     ply:Freeze(false)
     ply:ChatPrint("[Custody] You come to, standing. Your body moves when they tell it to, not when you do. You are a stalker now: Combine property. You can't run, fight or speak, and you'll work. There is no way out of it but death.")
-    if LC.Notice then LC.Notice(ply, "bad", "Combine property", "You are a stalker now. There is no way out of it but death. Your work is on your board (F3).", 10) end
+    if LC.Notice then LC.Notice(ply, "bad", "Combine property", "You are a stalker now. There is no way out of it but death. Your work is on your board (F4).", 10) end
     ply:ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 3, 1)
     ply:EmitSound("npc/stalker/breathing3.wav", 70)
     -- (that breath and the machine's whirring can loop: both stopped after a few seconds)

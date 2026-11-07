@@ -229,7 +229,7 @@ end)
 
 ------------------------------------------------------------------------
 -- The body cart (Morticians, if they want one): take one at the incinerator
--- or the morgue (F1 > Take a body cart, or !bodycart), let go of a body
+-- or the morgue (F2 > Take a body cart, or !bodycart), let go of a body
 -- beside it and it goes on, push it (E on it; E again lets go), and E on the
 -- incinerator burns everything on it, paid for each. Four at a time.
 ------------------------------------------------------------------------

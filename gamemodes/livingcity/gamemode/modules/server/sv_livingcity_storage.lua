@@ -2,7 +2,7 @@
     Living City: places to keep things
 
       Bins and dumpsters   anyone can hide something in one (look at it and open
-                           your pockets, F2) and anyone can take it out. Things
+                           your pockets, F3) and anyone can take it out. Things
                            left there are thrown out after lc_bin_minutes (40).
                            Dead drops.
       Lockers              placed with the editor ("Fixture: locker"). The first

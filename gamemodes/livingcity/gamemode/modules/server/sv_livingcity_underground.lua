@@ -25,7 +25,7 @@
                    Retuned radios use Freq 7 and pick up CP dispatch, garbled.
                    Chat: !r <message>, and !ru <message> for the Union band.
       Lockpicks    open locked doors. Bypass charges open Combine doors too.
-      Stash        8 extra slots in your own housing block (!stash, or F2
+      Stash        8 extra slots in your own housing block (!stash, or F3
                    while you're home, or E on a stove or a fridge there).
                    A street search doesn't reach it; a raid on your block can.
       Black market a dealer placed with the editor or, on maps without one,
@@ -384,7 +384,7 @@ function LC.Wear(ply, id)
     elseif it.wear == "rebel" then
         ply:ChatPrint("[Disguise] Resistance colours. The fighters in rebel territory will take you for one of them, for a while. Out on the streets, Civil Protection units will take you for one of them too.")
     elseif it.own then
-        ply:ChatPrint("[Disguise] Plain clothes. You're just another citizen. Keep your gun out of sight: a Civil Protection unit who sees it will know. (F1 > Gear up to change back.)")
+        ply:ChatPrint("[Disguise] Plain clothes. You're just another citizen. Keep your gun out of sight: a Civil Protection unit who sees it will know. (F2 > Gear up to change back.)")
     else
         ply:ChatPrint("[Disguise] Union blue, like everyone else. Nobody looks twice at a citizen. Until they check your face.")
     end
@@ -1160,7 +1160,7 @@ local function StashCount(ply)
 end
 
 -- Your stash is kept in the furniture at home: press E on a stove, fridge, dresser, wardrobe or
--- cupboard in your own block and it opens (F2 shows it while you stand by it). Not anywhere else.
+-- cupboard in your own block and it opens (F3 shows it while you stand by it). Not anywhere else.
 local STASH_FURNITURE = { "fridge", "refrigerator", "stove", "oven", "dresser", "wardrobe", "drawer", "cupboard", "cabinet", "closet", "shelf", "bookcase" }
 function LC.IsStashFurniture(ent)
     if not IsValid(ent) or not ent.GetModel then return false end
@@ -1499,7 +1499,7 @@ function LC.QuickPick(ply)
     for _, id in ipairs(order) do
         if LC.HasItem(ply, id) then return LC.StartPick(ply, id) end
     end
-    return false, cp and "That's a Combine lock. You need a keycard, a door code or a bypass charge." or "You don't have a lockpick. Make one from four pieces of scrap (F2), or find the dealer."
+    return false, cp and "That's a Combine lock. You need a keycard, a door code or a bypass charge." or "You don't have a lockpick. Make one from four pieces of scrap (F3), or find the dealer."
 end
 
 concommand.Add("lc_pick", function(ply)
@@ -1668,7 +1668,7 @@ hook.Add("PlayerSpawn", "LivingCityPlainClothes", function(ply)
         if not IsValid(ply) or not ply:Alive() or ply:GetNW2String("lcf_faction", "") ~= "resistance" then return end
         if ply:GetNW2String("lcf_special", "") ~= "" or LC.Disguise(ply) then return end
         if LC.Wear(ply, "plain") then
-            ply:ChatPrint("[Resistance] You're in plain clothes. F1 > Gear up when it's time to fight.")
+            ply:ChatPrint("[Resistance] You're in plain clothes. F2 > Gear up when it's time to fight.")
         end
     end)
 end)

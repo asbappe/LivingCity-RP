@@ -2,7 +2,7 @@
     Living City: story chains
 
     Personal, multi-part stories that unlock from what you've actually done.
-    They appear at the top of your board (F3) marked as Story, only for you.
+    They appear at the top of your board (F4) marked as Story, only for you.
     Choices in each part decide which part comes next, and how it ends.
 
       Internal Affairs        cops who take bribes get noticed
@@ -1037,7 +1037,7 @@ LC.Chain{
                             Trait(p, "sympathy", 1)
                             LC.StoryFlag(p, "insider", true)
                             q.chainEnd = "insider"
-                            Narrate(q, "He finally lets go of the rifle. 'Then you never met us. Watch your job board (F3): we'll send you work there.'")
+                            Narrate(q, "He finally lets go of the rifle. 'Then you never met us. Watch your job board (F4): we'll send you work there.'")
                         end },
                         { text = "Walk away from all of it.", pick = function(q) q.chainEnd = "walked" end },
                     }),

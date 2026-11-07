@@ -1246,7 +1246,7 @@ local function PlanRaid(now)
     Radio("resistance", "In about " .. math.floor(lead / 10 + 0.5) * 10 .. " seconds our people hit the Combine " .. where .. ". Anyone who can, back them up.")
     for _, p in ipairs(player.GetAll()) do
         if IsResistance(p) and LC.Notice then
-            LC.Notice(p, "event", "A raid is coming", "Our fighters hit the Combine " .. where .. " in about " .. math.floor(lead / 10 + 0.5) * 10 .. " seconds. Back them up: the job's on your board (F3).", 10)
+            LC.Notice(p, "event", "A raid is coming", "Our fighters hit the Combine " .. where .. " in about " .. math.floor(lead / 10 + 0.5) * 10 .. " seconds. Back them up: the job's on your board (F4).", 10)
         end
     end
     if LC.PostDirective then LC.PostDirective("res_backupraid") end
@@ -1441,7 +1441,7 @@ local function PlanSweep(now, z)
     Radio("cp", "Dispatch: sweep team moves into anticitizen territory " .. where .. " in about " .. secs .. " seconds. All available Civil Protection units, assist.")
     for _, p in ipairs(player.GetAll()) do
         if IsCombinePlayer(p) and LC.Notice then
-            LC.Notice(p, "event", "A sweep is coming", "A sweep team moves into anticitizen territory " .. where .. " in about " .. secs .. " seconds. Join it: the job's on your board (F3).", 10)
+            LC.Notice(p, "event", "A sweep is coming", "A sweep team moves into anticitizen territory " .. where .. " in about " .. secs .. " seconds. Join it: the job's on your board (F4).", 10)
         end
     end
     if LC.PostDirective then LC.PostDirective("cp_joinsweep") end
@@ -1815,7 +1815,7 @@ hook.Add("PlayerUse", "LivingCityRebelsUse", function(ply, ent)
     end
     if st.quartermaster then
         ent:EmitSound(Vo(st, Pick({ "hi01", "hi02" })), 70)
-        ply:ChatPrint("[Quartermaster] 'What do you need?' (Work: F3. Fighters: E on any of ours here, to bring them along.)")
+        ply:ChatPrint("[Quartermaster] 'What do you need?' (Work: F4. Fighters: E on any of ours here, to bring them along.)")
         if LC.HasItem and (LC.HasItem(ply, "data_chip") or LC.HasItem(ply, "master_chip")) then
             ply:ChatPrint("[Quartermaster] 'Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it.'")
         end
@@ -1826,7 +1826,7 @@ hook.Add("PlayerUse", "LivingCityRebelsUse", function(ply, ent)
     return false
 end)
 
--- Orders for the squad (F1 / the C menu, Resistance; or the chat shortcuts !casual, !gunsout, !meet).
+-- Orders for the squad (F2 > Squad orders / the C menu, Resistance; or the chat shortcuts !casual, !gunsout, !meet).
 LC.SlashCommands = LC.SlashCommands or {}
 LC.SlashCommands.casual = function(ply)
     local n = LC.SquadCasualAll(ply, true)

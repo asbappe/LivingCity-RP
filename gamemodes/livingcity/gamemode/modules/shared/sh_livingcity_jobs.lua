@@ -1,7 +1,7 @@
 --[[
     Occupations (shared config)
 
-    Union jobs for citizens. Pick one from your board (F3). Each job hands you
+    Union jobs for citizens. Pick one from your board (F4). Each job hands you
     a steady stream of shifts in the real world. Mark workplaces with the editor
     ("Point: workplace", number = the job's number below) and shifts happen
     there; without them, shifts use the streets around you. NPC citizens go to

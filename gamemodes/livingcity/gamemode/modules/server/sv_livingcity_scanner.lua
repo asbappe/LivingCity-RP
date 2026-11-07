@@ -634,7 +634,7 @@ end)
 ------------------------------------------------------------------------
 -- Flying a scanner from a terminal: any Civil Protection unit, from a Combine
 -- console, a data terminal, or anywhere in the Nexus (a map with none of
--- those: from anywhere). F1 > Unit tools. (It was a role, the Scanner
+-- those: from anywhere). F2 > Unit tools. (It was a role, the Scanner
 -- Operator, until 7 November: the owner, "it's just something you can do from
 -- the scanner terminal".)
 ------------------------------------------------------------------------

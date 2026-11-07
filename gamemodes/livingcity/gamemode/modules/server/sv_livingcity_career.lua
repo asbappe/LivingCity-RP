@@ -4,7 +4,7 @@
 
     The full menu (C) > "My career": your rank, the XP to the next one, every rank of your
     faction and what it takes, and for Civil Protection the way to the Overwatch: Division
-    Leader first, then the Overwatch Candidate story on your board (F3), then the transhuman
+    Leader first, then the Overwatch Candidate story on your board (F4), then the transhuman
     conditioning. Where that story stands for you is spelled out (waiting on a few more jobs,
     a failed part coming back, on your board now), and the Man Inside too, if it's yours: a
     failed part of a story always comes back to try again, and nothing you fail locks you out.
@@ -60,9 +60,9 @@ function LC.CareerReassess(ply)
     cs.reassessed = (cs.reassessed or 0) + 1
     LC.SaveStory(ply)
     if ply.lcStoryPostings then ply.lcStoryPostings.candidate = nil end
-    ply:ChatPrint("[Story] Overwatch will look at you again. The Overwatch Candidate story is back on your board (F3), from the evaluation.")
+    ply:ChatPrint("[Story] Overwatch will look at you again. The Overwatch Candidate story is back on your board (F4), from the evaluation.")
     if LC.Notice then
-        LC.Notice(ply, "info", "Reassessment granted", "The Overwatch Candidate story is back on your board (F3), from its first part. Pass it, and the conditioning is offered again.", 8)
+        LC.Notice(ply, "info", "Reassessment granted", "The Overwatch Candidate story is back on your board (F4), from its first part. Pass it, and the conditioning is offered again.", 8)
     end
     LC.Log("info", "Career: " .. ply:Nick() .. " asked for an Overwatch reassessment")
     return true
@@ -75,7 +75,7 @@ local function CandidateLine(ply, idx, f)
     local chain = LC.Chains and LC.Chains.candidate
     local dvl = f.ranks[3] and f.ranks[3].name or "Division Leader"
     if idx < 3 then
-        return string.format("At %s, the Overwatch Candidate story comes to your board (F3): an evaluation, then the transhuman conditioning.", dvl)
+        return string.format("At %s, the Overwatch Candidate story comes to your board (F4): an evaluation, then the transhuman conditioning.", dvl)
     end
     if cs and cs.done == "human" then
         local ok, wait = LC.CanReassess(ply)
@@ -87,16 +87,16 @@ local function CandidateLine(ply, idx, f)
         local num = def and def.num or 1
         local left = (cs.readyAt or 0) - os.time()
         if left > 0 then
-            return string.format("The Overwatch Candidate, part %d, comes back to your board (F3) in about %d minutes. (A part that failed always comes back to try again.)", num, math.ceil(left / 60))
+            return string.format("The Overwatch Candidate, part %d, comes back to your board (F4) in about %d minutes. (A part that failed always comes back to try again.)", num, math.ceil(left / 60))
         end
-        return string.format("The Overwatch Candidate, part %d, is on your board (F3) now. Pass it and the conditioning is offered.", num)
+        return string.format("The Overwatch Candidate, part %d, is on your board (F4) now. Pass it and the conditioning is offered.", num)
     end
     local open, need = true, 0
     if LC.StoryGateOpen then open, need = LC.StoryGateOpen(ply) end
     if not open then
-        return string.format("Do %d more job%s from your board (F3), and the Overwatch Candidate story appears there.", need, need == 1 and "" or "s")
+        return string.format("Do %d more job%s from your board (F4), and the Overwatch Candidate story appears there.", need, need == 1 and "" or "s")
     end
-    return "The Overwatch Candidate story is on your board (F3) now: an evaluation, then the conditioning."
+    return "The Overwatch Candidate story is on your board (F4) now: an evaluation, then the conditioning."
 end
 
 -- Everything the page shows.
@@ -114,7 +114,7 @@ function LC.CareerInfo(ply)
     local function Step(s) t.steps[#t.steps + 1] = s end
     if f.id == "cp" then
         if nextR and not (nextR.overwatch and not conditioned) then
-            Step(string.format("Earn %s more XP to make %s. Jobs from your board (F3), answering 10-20s and calls for backup, arrests, and shutting down Resistance labs all count.",
+            Step(string.format("Earn %s more XP to make %s. Jobs from your board (F4), answering 10-20s and calls for backup, arrests, and shutting down Resistance labs all count.",
                 Fmt(math.max(0, (nextR.xp or 0) - xp)), nextR.name))
         elseif not nextR then
             Step("You hold the top rank. The Overwatch Commander (one at a time, from the Elite) is taken from Factions (F4).")
@@ -127,13 +127,13 @@ function LC.CareerInfo(ply)
         if inside and inside.done == "insider" then
             Step("You're also the Resistance's man inside. That doesn't stand in the way of promotion.")
         elseif inside and inside.part then
-            Step("The Man Inside is still under way on your board (F3). However it goes, it doesn't stop you being promoted.")
+            Step("The Man Inside is still under way on your board (F4). However it goes, it doesn't stop you being promoted.")
         end
         Step("Nothing you fail locks you out: a story part that failed comes back to your board to try again.")
         t.canReassess, t.reassessIn = LC.CanReassess(ply)
     else
         if nextR then
-            Step(string.format("Earn %s more XP to make %s: the jobs and stories on your board (F3) are the way.", Fmt(math.max(0, (nextR.xp or 0) - xp)), nextR.name))
+            Step(string.format("Earn %s more XP to make %s: the jobs and stories on your board (F4) are the way.", Fmt(math.max(0, (nextR.xp or 0) - xp)), nextR.name))
         else
             Step("You hold the top rank.")
         end
