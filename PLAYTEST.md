@@ -833,3 +833,13 @@ Notes:
   Notes:
 - [ ] **Raids and restrictions (7 November, part 2):** restrict 3, then 5 goods: raid parties grow (5, then 6 or more).
   Notes:
+- [ ] **Territory along path nodes (7 November, part 2):** C > Help > Admin testing tools > The city > Grow rebel ground now, several times: it follows your path nodes out of the zone, 8 feet tall, never onto the floor above (the editor view shows the rectangles).
+  Notes:
+- [ ] **Territory in open areas (7 November, part 2):** grow a territory beside a plaza with linked nodes: it spreads wide and fills in the middle.
+  Notes:
+- [ ] **Territory after a restart (7 November, part 2):** grown ground comes back after a map restart.
+  Notes:
+- [ ] **Territory push-back (7 November, part 2):** kill 3 rebels in it: the ground furthest out goes first.
+  Notes:
+- [ ] **Territory on its own (7 November, part 2):** with rebels in the zone, it grows within about 40 minutes; lc_territory says why if not.
+  Notes:

@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 517053c. Admin-only console messages and log lines are left out.
+Made from version 3023bf9. Admin-only console messages and log lines are left out.
 
-6917 lines, from 212 files.
+6951 lines, from 213 files.
 
 ## Contents
 
@@ -56,7 +56,7 @@ Made from version 517053c. Admin-only console messages and log lines are left ou
 - [init.lua](#initlua-initlua) (5)
 - [cl_livingcity.lua](#cllivingcitylua-cllivingcitylua) (21)
 - [cl_livingcity_actions.lua](#cllivingcityactionslua-cllivingcityactionslua) (53)
-- [cl_livingcity_admintools.lua](#cllivingcityadmintoolslua-cllivingcityadmintoolslua) (22)
+- [cl_livingcity_admintools.lua](#cllivingcityadmintoolslua-cllivingcityadmintoolslua) (25)
 - [cl_livingcity_arrest.lua](#cllivingcityarrestlua-cllivingcityarrestlua) (4)
 - [cl_livingcity_atmos.lua](#cllivingcityatmoslua-cllivingcityatmoslua) (5)
 - [cl_livingcity_career.lua](#cllivingcitycareerlua-cllivingcitycareerlua) (6)
@@ -107,7 +107,7 @@ Made from version 517053c. Admin-only console messages and log lines are left ou
 - [sv_livingcity.lua](#svlivingcitylua-svlivingcitylua) (47)
 - [the actions menu (server side)](#the-actions-menu-server-side-svlivingcityactionslua) (8)
 - [acts (server). See sh_livingcity_acts.lua for the list](#acts-server-see-shlivingcityactslua-for-the-list-svlivingcityactslua) (7)
-- [testing tools for admins](#testing-tools-for-admins-svlivingcityadmintoolslua) (36)
+- [testing tools for admins](#testing-tools-for-admins-svlivingcityadmintoolslua) (43)
 - [custom announcements, for Overwatch and for the Administrator](#custom-announcements-for-overwatch-and-for-the-administrator-svlivingcityannouncerlua) (34)
 - [arrests in the open (the owner's playtest, 7 November)](#arrests-in-the-open-the-owners-playtest-7-november-svlivingcityarrestlua) (49)
 - [the time of day, the weather, and the city's music](#the-time-of-day-the-weather-and-the-citys-music-svlivingcityatmoslua) (1)
@@ -203,7 +203,8 @@ Made from version 517053c. Admin-only console messages and log lines are left ou
 - [sv_livingcity_streetlife.lua](#svlivingcitystreetlifelua-svlivingcitystreetlifelua) (12)
 - [survival](#survival-svlivingcitysurvivallua) (68)
 - [talking to people](#talking-to-people-svlivingcitytalklua) (28)
-- [territory that spreads, and is pushed back](#territory-that-spreads-and-is-pushed-back-svlivingcityterritorylua) (28)
+- [territory that spreads, and is pushed back](#territory-that-spreads-and-is-pushed-back-svlivingcityterritorylua) (38)
+- [territory grows along the path nodes](#territory-grows-along-the-path-nodes-svlivingcityterritorypathslua) (14)
 - [the trains](#the-trains-svlivingcitytrainslua) (9)
 - [the underground](#the-underground-svlivingcityundergroundlua) (186)
 - [powered vests ("suit power")](#powered-vests-suit-power-svlivingcityvestlua) (4)
@@ -961,50 +962,50 @@ Made from version 517053c. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: draw aim info
 
-- "%s   \|   radius %d Civil Protection units (about %.1f m across)   \|   right click removes"  (message, line 622)
-- "\|   right click removes"  (text, line 628)
-- "PATH NODE %d   \|   %d links   \|   right click removes"  (message, line 631)
+- "%s   \|   radius %d Civil Protection units (about %.1f m across)   \|   right click removes"  (message, line 638)
+- "\|   right click removes"  (text, line 644)
+- "PATH NODE %d   \|   %d links   \|   right click removes"  (message, line 647)
 
 > Note for you (not shown in game): persistent props (sv_livingcity_props.lua)
 
-- ": {GetNW2String}"  (text, line 682)
+- ": {GetNW2String}"  (text, line 698)
 
 > Note for you (not shown in game): part of: play next voice
 
-- "(the loudspeaker here is broken)"  (text, line 742)
+- "(the loudspeaker here is broken)"  (text, line 758)
 
 > Note for you (not shown in game): on screen
 
-- "Cuffed and kneeling. Wait it out."  (drawn on screen, line 850)
-- "ESCORT CALLED AWAY: stay put, another Civil Protection unit is coming (%ds)"  (message, line 886)
-- "Spawn protection %ds"  (message, line 895)
-- "Ration distribution"  (text, line 903)
-- "Civil status inspections"  (text, line 903)
-- "Housing block inspection"  (text, line 903)
-- "Supply convoy unloading"  (text, line 903)
+- "Cuffed and kneeling. Wait it out."  (drawn on screen, line 866)
+- "ESCORT CALLED AWAY: stay put, another Civil Protection unit is coming (%ds)"  (message, line 902)
+- "Spawn protection %ds"  (message, line 911)
+- "Ration distribution"  (text, line 919)
+- "Civil status inspections"  (text, line 919)
+- "Housing block inspection"  (text, line 919)
+- "Supply convoy unloading"  (text, line 919)
 
 > Note for you (not shown in game): units and Overwatch don't go home for curfew: they enforce it
 
-- "Grace period: %ds to get home."  (message, line 913)
+- "Grace period: %ds to get home."  (message, line 929)
 
 > Note for you (not shown in game): (a stalker has no home: the curfew's "report to your block" and HOME marker aren't for it)
 
-- "You are home. Stay inside."  (text, line 918)
-- "Report to {block}."  (text, line 918)
+- "You are home. Stay inside."  (text, line 934)
+- "Report to {block}."  (text, line 934)
 
 > Note for you (not shown in game): Debug report viewer
 
-- "[Living City]"  (chat message, line 940)
-- "Debug report copied to your clipboard. Paste it to Claude. Also saved to {file}"  (chat message, line 940)
-- "Living City debug report"  (window title, line 943)
+- "[Living City]"  (chat message, line 956)
+- "Debug report copied to your clipboard. Paste it to Claude. Also saved to {file}"  (chat message, line 956)
+- "Living City debug report"  (window title, line 959)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_report)
 
-- "Copy to clipboard again"  (label or button, line 956)
+- "Copy to clipboard again"  (label or button, line 972)
 
 > Note for you (not shown in game): Path mapping (sv_livingcity_pathmap.lua): say so on screen while it's on
 
-- "PATH MAPPING: walk to lay nodes"  (text, line 988)
+- "PATH MAPPING: walk to lay nodes"  (text, line 1004)
 
 ## cl_livingcity_actions.lua (cl_livingcity_actions.lua)
 
@@ -1184,11 +1185,17 @@ Made from version 517053c. Admin-only console messages and log lines are left ou
 - "Black out the city"  (text, line 160)
 - "Lights on"  (text, line 161)
 - "Follow the grid"  (text, line 162)
-- "Start over"  (text, line 164)
+
+> Note for you (not shown in game): territory: grow it now, for testing (superadmins; it grows along the path nodes)
+
+- "Grow rebel ground now"  (text, line 167)
+- "Grow the infestation now"  (text, line 168)
 
 > Note for you (not shown in game): part of: build
 
-- "Reset XP, credits and standing to 0"  (text, line 166)
+- "No rebel or infestation zones are placed."  (text, line 175)
+- "Start over"  (text, line 178)
+- "Reset XP, credits and standing to 0"  (text, line 180)
 
 ## cl_livingcity_arrest.lua (cl_livingcity_arrest.lua)
 
@@ -1928,15 +1935,15 @@ Made from version 517053c. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The air itself: a yellow cast over everything, and motes of it drifting past you.
 
-- "$pp_colour_addr"  (text, line 108)
-- "$pp_colour_addg"  (text, line 108)
-- "$pp_colour_addb"  (text, line 108)
-- "$pp_colour_brightness"  (text, line 109)
-- "$pp_colour_contrast"  (text, line 109)
-- "$pp_colour_colour"  (text, line 110)
-- "$pp_colour_mulr"  (text, line 111)
-- "$pp_colour_mulg"  (text, line 111)
-- "$pp_colour_mulb"  (text, line 111)
+- "$pp_colour_addr"  (text, line 120)
+- "$pp_colour_addg"  (text, line 120)
+- "$pp_colour_addb"  (text, line 120)
+- "$pp_colour_brightness"  (text, line 121)
+- "$pp_colour_contrast"  (text, line 121)
+- "$pp_colour_colour"  (text, line 122)
+- "$pp_colour_mulr"  (text, line 123)
+- "$pp_colour_mulg"  (text, line 123)
+- "$pp_colour_mulb"  (text, line 123)
 
 ## cl_livingcity_intake.lua (cl_livingcity_intake.lua)
 
@@ -3565,35 +3572,45 @@ Made from version 517053c. Admin-only console messages and log lines are left ou
 
 - "No power grid here."  (text, line 123)
 - "City-wide blackout: {or}{or}."  (text, line 125)
-- "No such item."  (text, line 129)
+
+> Note for you (not shown in game): territory: grow rebel ground or the infestation now, for testing (superadmins; sv_livingcity_territory.lua)
+
+- "Superadmins only."  (text, line 129)
+- "Grow which: rebel or infest?"  (text, line 130)
+- "Territory doesn't spread on this server."  (text, line 131)
+- "Rebel ground"  (text, line 133)
+- "The infestation"  (text, line 133)
+- "couldn't grow: {why}."  (text, line 134)
+- "grew {or}{or}."  (text, line 135)
 
 > Note for you (not shown in game): part of: item
 
-- "'s pockets are full."  (text, line 130)
+- "No such item."  (text, line 139)
+- "'s pockets are full."  (text, line 140)
 
 > Note for you (not shown in game): part of: admin tool
 
-- "Admins only."  (text, line 137)
-- "Nobody to do that to."  (text, line 139)
-- "Unknown action."  (text, line 141)
-- "That failed: {a}"  (text, line 143)
-- "admin tools: %s used %s %s on %s"  (message, line 145)
+- "Admins only."  (text, line 147)
+- "Nobody to do that to."  (text, line 149)
+- "Unknown action."  (text, line 151)
+- "That failed: {a}"  (text, line 153)
+- "admin tools: %s used %s %s on %s"  (message, line 155)
 
 > Note for you (not shown in game): the console command lc_admintools
 
-- "Admins only."  (chat message, line 177)
+- "Admins only."  (chat message, line 192)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_admintools_do)
 
-- "[Admin tools] {msg}"  (chat message, line 185)
+- "[Admin tools] {msg}"  (chat message, line 200)
 
 > Note for you (not shown in game): typing in chat
 
-- "Admins only."  (chat message, line 204)
-- "Admins only."  (chat message, line 209)
-- "Usage: !{cmd} <number> [player]"  (chat message, line 214)
-- "Player not found: {name}"  (chat message, line 221)
-- "[Admin tools] {msg}"  (chat message, line 224)
+- "Admins only."  (chat message, line 219)
+- "Admins only."  (chat message, line 224)
+- "Usage: !{cmd} <number> [player]"  (chat message, line 229)
+- "Player not found: {name}"  (chat message, line 236)
+- "[Admin tools] {msg}"  (chat message, line 239)
 
 ## custom announcements, for Overwatch and for the Administrator (sv_livingcity_announcer.lua)
 
@@ -6853,13 +6870,13 @@ Made from version 517053c. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): typing in chat
 
-- "[Living City] You live in {n}."  (text, line 148)
-- "[Living City] You have no room yet. Ask Housing Allocation for one."  (text, line 149)
-- "[Living City] This map has no housing blocks yet."  (chat message, line 150)
+- "[Living City] You live in {n}."  (text, line 149)
+- "[Living City] You have no room yet. Ask Housing Allocation for one."  (text, line 150)
+- "[Living City] This map has no housing blocks yet."  (chat message, line 151)
 
 > Note for you (not shown in game): the console command lc_setblock
 
-- "[Living City] You have been reassigned to {n}."  (chat message, line 167)
+- "[Living City] You have been reassigned to {n}."  (chat message, line 168)
 
 ## toilets, baths and what happens without them (sv_livingcity_hygiene.lua)
 
@@ -12766,67 +12783,120 @@ Made from version 517053c. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): a timer (regularly)
 
-- ", and elsewhere"  (text, line 364)
-- "We've taken more ground {list}. Hold it."  (text, line 366)
-- "Dispatch: anticitizen activity spreading {list}. Civil Protection units are advised to push it back."  (text, line 367)
-- "Dispatch: infestation spreading {list}. Containment teams required."  (text, line 369)
+- ", and elsewhere"  (text, line 386)
+- "We've taken more ground {list}. Hold it."  (text, line 388)
+- "Dispatch: anticitizen activity spreading {list}. Civil Protection units are advised to push it back."  (text, line 389)
+- "Dispatch: infestation spreading {list}. Containment teams required."  (text, line 391)
 
 > Note for you (not shown in game): part of: grow territory
 
-- "it's as big as it gets (lc_territory_max)"  (text, line 408)
-- "nowhere to grow"  (text, line 411)
+- "it's as big as it gets (lc_territory_max, lc_infest_max, lc_territory_city_max)"  (text, line 431)
+
+> Note for you (not shown in game): no path nodes in it or near it: a round patch out past its edge, the way it always grew
+
+- "nowhere to grow: no path nodes lead out of it, and no open floor round its edge is big enough for a round patch (lay path nodes out of it in the editor)"  (text, line 447)
 
 > Note for you (not shown in game): someone moves in
 
-- "Territory: %s grew at %s (r %d), %d patches now"  (message, line 424)
-
-> Note for you (not shown in game): by: the player whose work it was, if any. The whole city hears who did it.
-
-- "somewhere in the city"  (text, line 458)
+- "Territory: %s grew at %s (%s), %d patches now"  (message, line 463)
+- "along %d path node link%s: %d cells in %d rectangles"  (message, line 464)
 
 > Note for you (not shown in game): part of: recede territory
 
-- "Dispatch: {who} has retaken anticitizen ground{place}."  (text, line 462)
-- "Dispatch: anticitizen ground{place} is retaken."  (text, line 462)
-- "We've lost the ground{place}."  (text, line 463)
-- "Dispatch: {who} has contained the infestation{place}."  (text, line 465)
-- "Dispatch: infestation{place} is contained."  (text, line 465)
-- "has retaken ground from the Resistance{place}."  (text, line 468)
-- "has contained the infestation{place}."  (text, line 469)
-- "[City] {line}"  (chat message, line 470)
+- "somewhere in the city"  (text, line 509)
+- "Dispatch: {who} has retaken anticitizen ground{place}."  (text, line 513)
+- "Dispatch: anticitizen ground{place} is retaken."  (text, line 513)
+- "We've lost the ground{place}."  (text, line 514)
+- "Dispatch: {who} has contained the infestation{place}."  (text, line 516)
+- "Dispatch: infestation{place} is contained."  (text, line 516)
+- "has retaken ground from the Resistance{place}."  (text, line 519)
+- "has contained the infestation{place}."  (text, line 520)
+- "[City] {line}"  (chat message, line 521)
 
 > Note for you (not shown in game): a patch with nobody left in it falls straight away
 
-- "cleared out"  (text, line 526)
+- "cleared out"  (text, line 577)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "pushed back"  (text, line 530)
+- "pushed back"  (text, line 581)
 
 > Note for you (not shown in game): part of: pay containment
 
-- "+{credits} credits"  (text, line 559)
-- "{ammo} rounds"  (text, line 565)
-- "[Civil Protection] Containment pay: %d infested put down. %s."  (message, line 570)
+- "+{credits} credits"  (text, line 610)
+- "{ammo} rounds"  (text, line 616)
+- "[Civil Protection] Containment pay: %d infested put down. %s."  (message, line 621)
+
+> Note for you (not shown in game): only while unchallenged, and only from where someone actually holds it
+
+- "it was fought over in the last {GetInt} minutes (lc_territory_calm)"  (text, line 672)
+- "no Resistance fighters are in it to hold it"  (text, line 674)
+- "nothing infested is in it to spread it"  (text, line 674)
+- "it's as big as it gets (lc_territory_max, lc_infest_max, lc_territory_city_max)"  (text, line 676)
+
+> Note for you (not shown in game): Grow one territory of this kind now, whatever the clock says (the admin tools and lc_territory_grow). Returns the patch, or nil and why not.
+
+- "no {or} zones are placed"  (text, line 712)
+
+> Note for you (not shown in game): part of: territory status
+
+- "%s %s: %d patch%s grown (most %d), next growth %s, %d hit%s since the last push-back%s"  (message, line 736)
+- "Rebel ground"  (message, line 737)
+- "in {due}"  (text, line 738)
+- "due now"  (message, line 738)
+- ". Last try didn't grow: {lastWhy}"  (text, line 739)
 
 > Note for you (not shown in game): Commands
 
-- "[Living City] No rebel or infestation zones placed."  (chat message, line 642)
-
-> Note for you (not shown in game): the console command lc_territory
-
-- "[Living City] %s at %s: %d patch%s grown, next growth in %ds, %d hit%s since the last push-back"  (message, line 645)
+- "[Living City] No rebel or infestation zones placed."  (chat message, line 755)
+- "[Living City] {l}"  (chat message, line 756)
 
 > Note for you (not shown in game): the console command lc_territory_grow
 
-- "[Living City] Usage: lc_territory_grow rebel\|infest"  (chat message, line 654)
-- "[Living City] No {kind} zones placed."  (chat message, line 657)
-- "[Living City] Grew {kind} territory {or}"  (text, line 659)
-- "[Living City] Couldn't grow: {why}"  (text, line 659)
+- "[Living City] Usage: lc_territory_grow rebel\|infest"  (chat message, line 762)
+- "[Living City] Grew {kind} territory {or}{or}"  (text, line 764)
+- "[Living City] Couldn't grow: {why}"  (text, line 766)
 
 > Note for you (not shown in game): the console command lc_territory_reset
 
-- "[Living City] Took back {n} grown patch{or}. Only the zones you placed are left."  (chat message, line 670)
+- "[Living City] Took back {n} grown patch{or}. Only the zones you placed are left."  (chat message, line 777)
+
+## territory grows along the path nodes (sv_livingcity_territorypaths.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_territorypaths.lua`
+
+
+> Note for you (not shown in game): what territory mustn't grow into (the same as the round patches keep clear of)
+
+- "a housing block"  (text, line 62)
+- "the prison"  (text, line 62)
+- "a Combine area"  (text, line 62)
+- "a no-go zone"  (text, line 62)
+
+> Note for you (not shown in game): Nothing at p (within half of it) that territory has to keep away from.
+
+- "it would run into {kind}"  (text, line 91)
+- "the other side holds the ground there"  (text, line 93)
+
+> Note for you (not shown in game): part of: clear at
+
+- "it would run into a {kind} point"  (text, line 99)
+
+> Note for you (not shown in game): part of: clear
+
+- "a containment team cleared the ground there"  (text, line 114)
+- "a powered checkpoint holds the way"  (text, line 115)
+
+> Note for you (not shown in game): Grow one step along the path nodes. Returns the ground and where it grew to; nil and why when it can't; why is "nonodes" when there are no path nodes in it or near it (it grows the old way then).
+
+- "it's as big as it gets (lc_territory_cells)"  (text, line 344)
+
+> Note for you (not shown in game): part of: territory grow along nodes
+
+- "the only path node links out of it climb more than a stair or a ramp would"  (text, line 360)
+- "no path node links lead out of it (link the nodes in it to the ones outside, in the editor)"  (text, line 361)
+- "nowhere to grow"  (text, line 374)
+- "the ground along the links out of it is already taken"  (text, line 379)
 
 ## the trains (sv_livingcity_trains.lua)
 
