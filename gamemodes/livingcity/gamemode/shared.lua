@@ -118,6 +118,7 @@ LC_MODULES = {
         "sv_livingcity_rebels",
         "sv_livingcity_rebellife",
         "sv_livingcity_resistanceops",
+        "sv_livingcity_rebelevents", -- (raids and operations with real fighters: their own room above the NPC cap, findable, honest)
         "sv_livingcity_response",
         "sv_livingcity_rp",
         "sv_livingcity_rhythm",

@@ -519,7 +519,9 @@ hook.Add("LivingCityOutbreak", "LivingCityAnnouncer", function() Trigger("outbre
 hook.Add("LivingCityBlackout", "LivingCityAnnouncer", function(on)
     if on then Trigger("blackout", { delay = 1, breenAfter = 10 }) else Trigger("power_restored") end
 end)
-hook.Add("LivingCitySkirmish", "LivingCityAnnouncer", function(kind) Trigger("skirmish_" .. tostring(kind)) end)
+-- (a raid is announced when its fighters reach the target and the fight starts, not when they set out: sv_livingcity_rebelevents.lua)
+hook.Add("LivingCitySkirmish", "LivingCityAnnouncer", function(kind) if kind ~= "raid" then Trigger("skirmish_" .. tostring(kind)) end end)
+hook.Add("LivingCityRaidArrived", "LivingCityAnnouncer", function() Trigger("skirmish_raid") end)
 hook.Add("LivingCityBreakout", "LivingCityAnnouncer", function() Trigger("breakout") end)
 hook.Add("LivingCityOverwatchDrop", "LivingCityAnnouncer", function() Trigger("overwatch_drop") end)
 hook.Add("LivingCityBlockRaided", "LivingCityAnnouncer", function() Trigger("block_raided") end)

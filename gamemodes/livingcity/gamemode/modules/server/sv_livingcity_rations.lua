@@ -50,9 +50,11 @@ function LC.DockRations(pos, why)
     return docked
 end
 
-hook.Add("LivingCitySkirmish", "LivingCityRationDock", function(kind, sk)
-    if kind == "raid" and sk and sk.target then
-        timer.Simple(20, function() LC.DockRations(sk.target, "a Resistance attack") end)
+-- (once the fighters are really there and the shooting starts, not when they set out from home:
+-- sv_livingcity_rebelevents.lua)
+hook.Add("LivingCityRaidArrived", "LivingCityRationDock", function(sk)
+    if sk and sk.target then
+        timer.Simple(15, function() LC.DockRations(sk.target, "a Resistance attack") end)
     end
 end)
 -- Graffiti costs the block its rations only once the Combine knows about it:

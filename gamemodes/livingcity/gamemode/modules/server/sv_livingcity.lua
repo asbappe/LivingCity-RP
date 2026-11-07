@@ -1667,16 +1667,19 @@ end
 
 local function MaintainPopulation()
     local counts = {}
+    local onEvent = 0
     for npc, st in pairs(LC.NPCs) do
         if not IsValid(npc) or npc:Health() <= 0 then
             CleanupNPC(npc, st)
             LC.NPCs[npc] = nil
         elseif not st.test and not st.unmanaged and st.state ~= "abed" then -- (asleep at home: not out in the city)
             counts[st.role] = (counts[st.role] or 0) + 1
+        elseif st.unmanaged and st.eventNPC and not st.test then
+            onEvent = onEvent + 1 -- (out on a raid or sweep: still the city's, under the cap: sv_livingcity_rebelevents.lua)
         end
     end
     LC.RoleCounts = counts
-    local total = 0
+    local total = onEvent
     for _, c in pairs(counts) do total = total + c end
     if total >= cvBudget:GetInt() then
         -- (the cap's lower than what the city's asking for: say so, now and then, or it just

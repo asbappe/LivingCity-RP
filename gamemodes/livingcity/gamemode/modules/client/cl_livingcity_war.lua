@@ -50,8 +50,10 @@ local shown -- { title, sub, col, untilT, startT }
 net.Receive("lc_cpmark", function()
     local t = ReadCompressed()
     if not t then return end
-    LC_CL.marks[t.name or "?"] = { pos = Vector(t.x, t.y, t.z), untilT = CurTime() + (t.secs or 90) }
-    surface.PlaySound("npc/overwatch/radiovoice/on1.wav")
+    -- (label: said instead of "10-20: name"; rebel: in the Resistance's colour; quiet: a refresh of one
+    -- already on screen, no radio click: sv_livingcity_rebelevents.lua)
+    LC_CL.marks[t.name or "?"] = { pos = Vector(t.x, t.y, t.z), untilT = CurTime() + (t.secs or 90), label = t.label, rebel = t.rebel }
+    if not t.quiet then surface.PlaySound("npc/overwatch/radiovoice/on1.wav") end
 end)
 
 hook.Add("HUDPaint", "LivingCityWarHUD", function()
@@ -92,7 +94,7 @@ hook.Add("HUDPaint", "LivingCityWarHUD", function()
             local sp = (m.pos + Vector(0, 0, 60)):ToScreen()
             local dist = math.floor(ply:GetPos():Distance(m.pos) * 0.019)
             if sp.visible then
-                draw.SimpleTextOutlined("10-20: " .. name, "DermaDefaultBold", sp.x, sp.y, COMBINE_COL, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+                draw.SimpleTextOutlined(m.label or ("10-20: " .. name), "DermaDefaultBold", sp.x, sp.y, m.rebel and REBEL_COL or COMBINE_COL, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
                 draw.SimpleTextOutlined(dist .. " m  (" .. math.ceil(m.untilT - now) .. "s)", "DermaDefault", sp.x, sp.y + 14, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
             end
         end

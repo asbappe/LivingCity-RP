@@ -179,9 +179,9 @@ LC.HINTS = {
         text = { default = "Get inside your housing block now. Extra Civil Protection units are on the streets. Once the grace period ends, anyone outside gets three warnings, then they're wanted.",
                  cp = "Extra Civil Protection units are on the streets. Clear the streets: three warnings, then anyone still outside is wanted." } },
     skirmish_raid = { title = "A rebel raid",
-        text = { default = "Resistance fighters are attacking a checkpoint, and the Civil Protection units nearby are fighting back. Keep your head down, or stay well away.",
-                 resistance = "Resistance fighters are attacking a checkpoint. Join the fight, or stay hidden. Either way, it's being reported on the radio.",
-                 cp = "Resistance fighters are attacking a checkpoint. In {+menu_context} > Unit tools, Call for backup sends units to you, and Send my 10-20 shows them where you are." } },
+        text = { default = "Resistance fighters are attacking the Combine, and Civil Protection units are fighting back. Keep your head down, or stay well away.",
+                 resistance = "Our fighters are attacking the Combine: OUR FIGHTERS on your screen shows where they are. Join the fight, or stay hidden. Either way, it's being reported on the radio.",
+                 cp = "Resistance fighters are attacking: 10-20: ANTICITIZEN ATTACK on your screen shows where. In {+menu_context} > Unit tools, Call for backup sends units to you, and Send my 10-20 shows them where you are." } },
     skirmish_sweep = { title = "Civil Protection sweep into rebel territory",
         text = { default = "An armed Civil Protection team is going into rebel territory. Stay away from there.",
                  resistance = "An armed Civil Protection team is going into rebel territory, and the fighters are fighting back. Help the fighters, or get away from there.",
@@ -842,8 +842,9 @@ end)
 hook.Add("LivingCityEventStarted", "LivingCityHints", function(name)
     if LC.HINTS["event_" .. tostring(name)] then Everyone("event_" .. name) end
 end)
+hook.Add("LivingCityRaidArrived", "LivingCityHints", function() Everyone("skirmish_raid") end) -- (once the fight is real)
 hook.Add("LivingCitySkirmish", "LivingCityHints", function(kind)
-    if LC.HINTS["skirmish_" .. tostring(kind)] then Everyone("skirmish_" .. kind) end
+    if kind ~= "raid" and LC.HINTS["skirmish_" .. tostring(kind)] then Everyone("skirmish_" .. kind) end
 end)
 hook.Add("LivingCityOutbreak", "LivingCityHints", function() Everyone("outbreak") end)
 hook.Add("LivingCityStateChanged", "LivingCityHints", function(name)

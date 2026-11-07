@@ -17516,6 +17516,244 @@ function KeyLayoutTests()
 end
 KeyLayoutTests()
 
+-- The owner, 7 November: "are NPC rebel raids, attacks, ops, etc even active? ... I have never actually
+-- seen rebel NPCs doing anything." Raids and operations with real fighters, on a city whose NPC cap is
+-- full (theirs is lc_npc_budget 10): the city's own NPCs moved or swapped, never more of them; findable,
+-- honest, and bigger with the Commissary's restrictions (sv_livingcity_rebelevents.lua;
+-- docs/dev/rebel-activity-audit.md).
+function RebelEventTests()
+    local FAR = Vector(-30000, 30000, 0)
+    local savedWalls = _walls
+    _walls = {}
+    _setcvar("lc_auto_events", 0)
+    _setcvar("lc_skirmishes", 0)
+    for _, p in ipairs(player.GetAll()) do p:SetPos(FAR) end
+    for n in pairs(LC.NPCs) do if IsValid(n) then n:Remove() end end
+    _run(1)
+    for _, z in ipairs(LC.ZonesOfKind("rebel")) do LC.RemoveZone(z) end
+    local O = Vector(70000, 70000, 0)
+    local rz = LC.AddZone(O, 500, "rebel", 0)
+    local T = O + Vector(3000, 0, 0)
+    local res = newPlayer("RaidRes", "resistance", nil, 200)
+    local unit = newPlayer("RaidCP", "cp", nil, 200)
+    res:SetPos(FAR + Vector(0, 300, 0))
+    unit:SetPos(FAR + Vector(0, -300, 0))
+    local marks = {}
+    local realSend = LC.SendCompressed
+    LC.SendCompressed = function(msg, tbl, to)
+        if msg == "lc_cpmark" then for _, p in ipairs(to or {}) do marks[#marks + 1] = { p = p, t = tbl, at = CurTime() } end end
+        return realSend(msg, tbl, to)
+    end
+    local radio = {}
+    local realRadio = LC.RadioNotice
+    LC.RadioNotice = function(band, text, ...) radio[#radio + 1] = band .. ": " .. tostring(text) if realRadio then return realRadio(band, text, ...) end end
+    local function MarkFor(p, name, after)
+        for _, m in ipairs(marks) do if m.p == p and m.t.name == name and m.at >= (after or 0) then return m end end
+    end
+    local function Said(band, needle)
+        for _, l in ipairs(radio) do if string.sub(l, 1, #band) == band and string.find(l, needle, 1, true) then return true end end
+        return false
+    end
+    local function Clear(sk)
+        if not sk then return end
+        if not sk.done then LC.EndSkirmish(sk, "test") end
+        for _, r in ipairs(sk.rebels) do if IsValid(r) then r:Remove() end end
+        for _, u in ipairs(sk.units) do if IsValid(u) and LC.NPCs[u] and LC.NPCs[u].unmanaged then u:Remove() end end
+        _run(1)
+    end
+
+    section("Rebel raids: real fighters on a city whose NPC cap is full, without adding to it")
+    _setcvar("lc_npc_budget", 10)
+    _setcvar("lc_rebels", 4)
+    _run(60)
+    local before = LC.CityNPCCount()
+    ok(before >= 10 and LC.RebelsIn(rz) <= 1 and count("cop") == 0,
+        "(the owner's setup) lc_npc_budget 10 is full of citizens: hardly a fighter at home and no unit on the street", before .. " NPCs, " .. LC.RebelsIn(rz) .. " at home, " .. count("cop") .. " units")
+    local okR, why = LC.StartRebelRaid(rz, T)
+    local sk = LC.Skirmish
+    ok(okR and sk and #sk.rebels >= 4, "a raid still sets out with its fighters", tostring(why) .. " " .. (sk and #sk.rebels or 0))
+    ok(sk and sk.swapped >= 3 and sk.spawned == 0 and LC.CityNPCCount() <= before,
+        "citizens nobody could see made way for them: the city's NPC count didn't go up", sk and (sk.swapped .. " swapped, " .. LC.CityNPCCount() .. " NPCs"))
+    _run(2)
+    ok(MarkFor(res, "OUR FIGHTERS") ~= nil, "the Resistance see where their fighters are from the moment they set out")
+    ok(MarkFor(unit, "ANTICITIZEN ATTACK") == nil, "Civil Protection don't, yet: nothing has happened")
+    local dockAt, dockNear
+    hook.Add("LivingCityRationsDocked", "RebelEventTests", function(pos)
+        if dockAt then return end
+        dockAt = CurTime()
+        for _, r in ipairs(sk.rebels) do if IsValid(r) and r:GetPos():Distance(pos) < 1900 then dockNear = true end end
+    end)
+    local t0 = CurTime()
+    for _ = 1, 60 do _run(1) if sk.arrivedAt then break end end
+    ok(sk.arrivedAt ~= nil and not sk.done, "they get to the target", math.floor(CurTime() - t0) .. " s")
+    ok(sk.ends >= (sk.arrivedAt or 0) + 140, "and the raid's clock starts there (a long walk doesn't use it up)")
+    local hostile = 0
+    for _, u in ipairs(sk.units) do
+        local st = IsValid(u) and LC.NPCs[u]
+        if st and st.state == "hostile" and st.armed then hostile = hostile + 1 end
+    end
+    ok(#sk.units >= 2 and hostile >= 2 and LC.CityNPCCount() <= before, "with no unit near, units are swapped in out of sight, guns drawn, still within the cap",
+        #sk.units .. " sent, " .. hostile .. " hostile, " .. LC.CityNPCCount() .. " NPCs")
+    _run(2)
+    ok(MarkFor(unit, "ANTICITIZEN ATTACK", sk.arrivedAt) ~= nil, "now Civil Protection see the attack on their screens")
+    local fighting = false
+    for _ = 1, 20 do
+        for _, r in ipairs(sk.rebels) do local st = LC.NPCs[r] if st and st.foe then fighting = true end end
+        if fighting then break end
+        _run(0.5)
+    end
+    ok(fighting, "and the raiders fight them")
+    _run(20)
+    ok(dockAt and dockAt >= sk.arrivedAt and dockNear, "rations are docked \"near a Resistance attack\" only once the fighters are really there", tostring(dockAt) .. " " .. tostring(sk.arrivedAt))
+    hook.Remove("LivingCityRationsDocked", "RebelEventTests")
+    local sent = {}
+    for _, u in ipairs(sk.units) do if IsValid(u) and LC.NPCs[u] and LC.NPCs[u].unmanaged then sent[#sent + 1] = u end end
+    sk.ends = CurTime()
+    _run(3)
+    ok(LC.Skirmish == nil and LC.EventRoom(sk) == 0 and LC.EventNPCCount() == 0, "when it ends, it's over: nothing more may come for it", tostring(LC.Skirmish) .. " " .. LC.EventNPCCount())
+    _run(8)
+    local left = 0
+    for _, u in ipairs(sent) do if IsValid(u) and LC.NPCs[u] then left = left + 1 end end
+    ok(left == 0, "the units withdraw out of sight", left)
+    _run(30)
+    ok(LC.CityNPCCount() <= 10, "and the city stays within its cap while the fighters go home", LC.CityNPCCount())
+    Clear(sk)
+
+    section("Rebel raids: the fighters at home go first; idle units are sent before any swap")
+    _setcvar("lc_npc_budget", 500)
+    for n in pairs(LC.NPCs) do if IsValid(n) then n:Remove() end end
+    _setcvar("lc_citizens", 0)
+    _setcvar("lc_cops", 0)
+    _run(30)
+    local home = {}
+    for n, st in pairs(LC.NPCs) do if IsValid(n) and st.role == "rebel" and st.zone == rz and not st.unmanaged then home[n] = true end end
+    local nHome = table.Count(home)
+    local idle, ist = LC.Spawners.cop(T + Vector(4000, 0, 4))
+    ist.untilT, ist.nextInspect = CurTime() + 1000, CurTime() + 1000
+    LC.StartRebelRaid(rz, T)
+    local hk = LC.Skirmish
+    local fromHome = 0
+    for _, r in ipairs(hk.rebels) do if home[r] then fromHome = fromHome + 1 end end
+    ok(nHome >= 4 and fromHome == 4 and #hk.rebels == 4 and hk.swapped == 0, "all four come from the fighters at home: nobody new", nHome .. " home, " .. fromHome .. " of " .. #hk.rebels)
+    for _ = 1, 60 do _run(1) if hk.arrivedAt then break end end
+    local sentIdle = false
+    for _, u in ipairs(hk.units) do if u == idle then sentIdle = true end end
+    ok(hk.arrivedAt and sentIdle and hk.swapped == 0, "an idle unit a street away is sent as he is", tostring(sentIdle) .. " " .. hk.swapped)
+    Clear(hk)
+    if IsValid(idle) then idle:Remove() end
+    _setcvar("lc_citizens", 14)
+    _setcvar("lc_cops", 4)
+
+    section("Rebel raids: the allowance is only a last resort, and goes when the raid ends")
+    _setcvar("lc_rebels", 0)
+    for n in pairs(LC.NPCs) do if IsValid(n) then n:Remove() end end
+    _setcvar("lc_npc_budget", 0)
+    _run(1)
+    radio = {}
+    local none, whyNone = LC.StartRebelRaid(rz, T)
+    ok(not none and LC.Skirmish == nil and not Said("resistance", "hitting the Combine"), "nobody to move or swap and no allowance (lc_event_npc_allowance 0): no raid, and nothing announced", tostring(whyNone))
+    _setcvar("lc_event_npc_allowance", 2)
+    LC.StartRebelRaid(rz, T)
+    local ak = LC.Skirmish
+    ok(ak and #ak.rebels == 2 and ak.spawned == 2 and LC.EventRoom(ak) == 0, "with lc_event_npc_allowance 2: two fighters above the cap, and no more", ak and (#ak.rebels .. " " .. ak.spawned))
+    if ak then LC.EndSkirmish(ak, "test") end
+    ok(ak and LC.EventRoom(ak) == 0 and LC.EventNPCCount() == 0, "ended: the allowance is gone")
+    Clear(ak)
+    _setcvar("lc_event_npc_allowance", 0)
+
+    section("Rebel raids: a wall in the way doesn't stop them; a raid that never gets there says so")
+    _setcvar("lc_npc_budget", 500)
+    _walls = { { a = Vector(O.x + 900, O.y - 4000, 0), b = Vector(O.x + 900, O.y + 4000, 0) } }
+    LC.StartRebelRaid(rz, T)
+    local sw = LC.Skirmish
+    for _ = 1, 90 do _run(1) if sw.arrivedAt then break end end
+    local skips, near = 0, false
+    for _, r in ipairs(sw.rebels) do
+        local st = IsValid(r) and LC.NPCs[r]
+        if st and st.raid and (st.raid.skips or 0) > 0 then skips = skips + 1 end
+        if IsValid(r) and r:GetPos():Distance(T) < 1800 then near = true end
+    end
+    ok(sw.arrivedAt ~= nil and near and skips > 0, "fighters stuck behind a wall get past it where nobody sees, and reach the target", tostring(sw.arrivedAt) .. " skips " .. skips)
+    _walls = {}
+    Clear(sw)
+    radio = {}
+    LC.StartRebelRaid(rz, T)
+    local nv = LC.Skirmish
+    for _, r in ipairs(nv.rebels) do r.sim = false end -- (they don't move at all)
+    nv.started = CurTime() - (LC.RaidWalkSecs + 1)
+    _run(3)
+    ok(nv.done and not nv.alerted and not Said("cp", "incursion") and Said("resistance", "couldn't get through"),
+        "a raid that never reaches its target is called off: no fight claimed", table.concat(radio, " | "))
+    Clear(nv)
+
+    section("Rebel raids: the Commissary's restrictions make the parties bigger")
+    local realCount = LC.MarketRestrictedCount
+    local n = 0
+    LC.MarketRestrictedCount = function() return n end
+    _setcvar("lc_market_rebels_max", 0) -- (first just the raid scale: no fighters for the zones)
+    local want = { [0] = 0, 0, 0, 1, 1, 2, 3, 4 }
+    local got = {}
+    local allOk = true
+    for k = 0, 7 do
+        n = k
+        got[#got + 1] = LC.MarketRaidExtra()
+        if LC.MarketRaidExtra() ~= want[k] or LC.RaidPartySize() ~= 4 + want[k] then allOk = false end
+    end
+    ok(allOk, "0 to 7 restrictions: no extra raiders, then one from 3, two from 5, and one more each past that", table.concat(got, ","))
+    n = 15
+    ok(LC.MarketRaidExtra() == 6, "never more than lc_market_raid_max (6)", LC.MarketRaidExtra())
+    _setcvar("lc_market_rebels_max", 6)
+    n = 3
+    for r, st in pairs(LC.NPCs) do if IsValid(r) and st.role == "rebel" then r:Remove() end end
+    local over = LC.MarketRebelOverflow()
+    ok(over == 3 and LC.MarketRaidExtra() == 4, "fighters rebel territory can't take in (nobody home: no room, or the cap) go into the raids instead", over .. " " .. LC.MarketRaidExtra())
+    _setcvar("lc_market_rebels_max", 0)
+    n = 5
+    LC.StartRebelRaid(rz, T)
+    local big = LC.Skirmish
+    ok(big and #big.rebels == 6, "five restrictions: a raid of six", big and #big.rebels)
+    Clear(big)
+    LC.MarketRestrictedCount = realCount
+    _setcvar("lc_market_rebels_max", 6)
+
+    section("Rebel operations: an announced attack on a supply drop has fighters at it")
+    radio = {}
+    _setcvar("lc_rebel_ops", 1)
+    _setcvar("lc_rebel_react", 1)
+    local S = O + Vector(2500, 900, 0)
+    LC.Supply = { pos = S, startT = CurTime() - 60 }
+    ok(LC.RebelReact(CurTime()), "the Resistance go for a supply drop")
+    local op = LC.Skirmish
+    ok(op and op.purpose == "supply" and #op.rebels >= 4, "with real fighters", op and #op.rebels)
+    local atDrop
+    hook.Add("LivingCityRebelOpDone", "RebelEventTests", function(_, s)
+        for _, r in ipairs(s.rebels) do if IsValid(r) and r:GetPos():Distance(S) < 400 then atDrop = true end end
+    end)
+    for _ = 1, 60 do _run(1) if not op or op.arrivedAt then break end end
+    ok(op and op.arrivedAt and #op.units >= 2, "units were sent to stop them", op and #op.units)
+    for _, u in ipairs(op and op.units or {}) do if IsValid(u) then u:SetHealth(0) end end -- (a Resistance player saw to them)
+    for _ = 1, 120 do _run(1) if not op or op.done then break end end
+    ok(op and op.done and atDrop and Said("resistance", "supply drop"), "and \"they got into the supply drop\" only with fighters standing at it",
+        tostring(op and op.done) .. " " .. tostring(atDrop) .. " " .. tostring(op and op.progress) .. " " .. table.concat(radio, " | "))
+    hook.Remove("LivingCityRebelOpDone", "RebelEventTests")
+    Clear(LC.Skirmish)
+    LC.Supply = nil
+    _setcvar("lc_rebel_ops", 0)
+    _setcvar("lc_rebel_react", 0.5)
+
+    LC.SendCompressed = realSend
+    LC.RadioNotice = realRadio
+    _walls = savedWalls
+    for n2 in pairs(LC.NPCs) do if IsValid(n2) then n2:Remove() end end
+    LC.RemoveZone(rz)
+    res:SetPos(FAR) unit:SetPos(FAR)
+    _setcvar("lc_npc_budget", 500)
+    _setcvar("lc_rebels", 0)
+    _run(1)
+end
+RebelEventTests()
+
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

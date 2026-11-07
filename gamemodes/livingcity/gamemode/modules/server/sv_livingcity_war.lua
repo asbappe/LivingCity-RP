@@ -806,10 +806,14 @@ hook.Add("LivingCityTerritoryReceded", "LivingCityRumors", function(seed, z, why
     end
 end)
 
+-- (a raid is talked about once the shooting has started, not when the fighters set out)
+hook.Add("LivingCityRaidArrived", "LivingCityRumors", function(sk)
+    LC.AddRumor({ "Did you hear the shooting? Rebels hit the Combine " .. (sk.where or "across town") .. ".",
+        "The Resistance went after the Combine " .. (sk.where or "") .. ". Brave, or stupid." }, sk.target)
+end)
 hook.Add("LivingCitySkirmish", "LivingCityRumors", function(kind, sk)
     if kind == "raid" then
-        LC.AddRumor({ "Did you hear the shooting? Rebels hit the Combine " .. (sk.where or "across town") .. ".",
-            "The Resistance went after a checkpoint " .. (sk.where or "") .. ". Brave, or stupid." }, sk.target)
+        return
     else
         LC.AddRumor({ "The Combine sent a team into rebel ground " .. Where(sk.zone.pos) .. ". Armed.",
             "Civil Protection went into the rebel streets " .. Where(sk.zone.pos) .. " with guns drawn." }, sk.zone.pos)
