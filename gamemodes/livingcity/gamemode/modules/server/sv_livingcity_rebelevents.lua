@@ -322,6 +322,7 @@ function LC.RaidResponders(sk, now)
     for i = moved + 1, want do
         if not (LC.Spawners and LC.Spawners.cop) then break end
         local spot = ResponderSpot(sk.target)
+        if LC.ManpowerCan and not LC.ManpowerCan("cp") then break end -- (none left in reserve: sv_livingcity_manpower.lua)
         if not spot or not LC.EventSlot(sk, { "cop", "soldier", "citizen" }) then break end
         local npc, st = LC.Spawners.cop(spot + Vector(math.random(-40, 40), math.random(-40, 40), 4))
         if IsValid(npc) and st then

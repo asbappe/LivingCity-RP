@@ -119,6 +119,23 @@ local function SocioPage()
     return { title = "SOCIOSTABILITY", items = items }
 end
 
+-- Your side's manpower, as the server last sent it (sv_livingcity_manpower.lua): lines of text.
+LC_CL.Manpower = LC_CL.Manpower or {}
+net.Receive("lc_manpower", function()
+    local s = net.ReadString() or ""
+    local out = {}
+    for l in string.gmatch(s, "[^\n]+") do out[#out + 1] = l end
+    LC_CL.Manpower = out
+end)
+-- The manpower lines in a page's empty rows, from row `from` down.
+local function ManpowerRows(from)
+    local rows = {}
+    for i, l in ipairs(LC_CL.Manpower or {}) do
+        if from + i - 1 <= 9 then rows[from + i - 1] = l end
+    end
+    return rows
+end
+
 local function ResistancePage()
     local me = LocalPlayer()
     local items = {
@@ -128,7 +145,15 @@ local function ResistancePage()
         Item("Write down what you see (needs paper)", function() Send("scout") end),
     }
     if me:HasWeapon("weapon_lc_multitool") then items[#items + 1] = Item("Hack the Combine door I'm looking at", function() Send("hack") end) end
-    return { title = "RESISTANCE", items = items }
+    -- (the owner, 7 November: losses you can see; the fighters we have left, under the rest)
+    return { title = "RESISTANCE", items = items, empty = ManpowerRows(7) }
+end
+
+-- The Combine's manpower, for the Administrator (units see it on the unit tools).
+local function ManpowerPage()
+    local rows = ManpowerRows(1)
+    if not rows[1] then rows[1] = "No manpower report yet." end
+    return { title = "COMBINE MANPOWER", items = {}, empty = rows }
 end
 
 local function SquadPage()
@@ -301,6 +326,7 @@ function LC_CL.QuickRoleRoot()
         -- only the Administrator sets sociostability (the owner, 7 November)
         Add(Page("Sociostability", SocioPage))
         Add(Item("Broadcast to the whole city...", function() Ask("Broadcast", "What does the city hear?", "broadcast") end))
+        if #(LC_CL.Manpower or {}) > 0 then Add(Page("Combine manpower", ManpowerPage)) end
     elseif f == "vort" then
         Add(Item("Reach out through the vortessence", function() Send("vortcall") end))
     elseif f == "stalker" then

@@ -19,6 +19,7 @@ _setcvar("lc_quest_allies", 0) -- (friendly NPCs on violent jobs: tested on thei
 _setcvar("lc_directives", 1) -- (the G-Man's directives are off by default now, set aside by the owner; still tested as they are)
 _setcvar("lc_market_demand", 0) -- (demand moving black market prices: tested on its own, in MarketTests)
 _setcvar("lc_afk_kick_minutes", 0) -- (the test's people never touch a key: no kicking them for it)
+_setcvar("lc_manpower", 0) -- (each side's reserve of fighters and units: tested on its own, in ManpowerTests)
 _setcvar("lc_directives", 0) -- (no sealed directive breaking open in the middle of other tests; its own section turns it on)
 _setcvar("lc_units_spot_monsters", 0) -- (units going for zombies they see: tested on their own)
 _setcvar("lc_units_spot_rebels", 0) -- (units opening fire on armed rebels they see in the street: tested on their own)
@@ -17940,6 +17941,162 @@ function RebelEventTests()
     _run(1)
 end
 RebelEventTests()
+
+
+-- The owner, 7 November: "there needs to be a real hit to the resistance that is actually visible and
+-- tangible ... there need to be actual manpower counters/trackers and a longer/realistic timer for
+-- respawning either rebels or CP units" (sv_livingcity_manpower.lua).
+function ManpowerTests()
+    local FAR = Vector(-31000, 31000, 0)
+    _setcvar("lc_auto_events", 0)
+    _setcvar("lc_skirmishes", 0)
+    _setcvar("lc_manpower", 1)
+    for n in pairs(LC.NPCs) do if IsValid(n) then n:Remove() end end
+    _run(1)
+    LC.Manpower = {}
+    LC.ManpowerOut = {}
+    local res = newPlayer("MPRes", "resistance", nil, 200)
+    local unit = newPlayer("MPUnit", "cp", nil, 200)
+    local cit = newPlayer("MPCit", "citizen")
+    for _, p in ipairs({ res, unit, cit }) do p:SetPos(FAR) end
+    local radio = {}
+    local realRadio = LC.RadioNotice
+    LC.RadioNotice = function(band, text, ...) radio[#radio + 1] = band .. ": " .. tostring(text) if realRadio then return realRadio(band, text, ...) end end
+    local function Said(band, needle)
+        for _, l in ipairs(radio) do if string.sub(l, 1, #band) == band and string.find(l, needle, 1, true) then return true end end
+        return false
+    end
+    local P = function(side) return LC.ManpowerPool(side) end
+    local at = FAR + Vector(600, 0, 0)
+
+    section("Manpower: a death draws the reserve down, and the replacement waits for a recruit")
+    ok(P("rebel").reserve == 20 and P("cp").reserve == 30 and P("ota").reserve == 12, "a fresh city starts with full reserves (20 fighters, 30 units, 12 soldiers)",
+        P("rebel").reserve .. "/" .. P("cp").reserve .. "/" .. P("ota").reserve)
+    P("cp").reserve = 1
+    local cop = LC.SpawnCop(at)
+    ok(IsValid(cop) and P("cp").reserve == 0 and LC.ManpowerOut[cop] == "cp", "a unit coming out takes one from Civil Protection's reserve")
+    cop:SetHealth(0)
+    cop:Remove()
+    ok(P("cp").reserve == 0 and P("cp").lost == 1, "killed: a loss for the day, and nothing comes back", P("cp").lost)
+    ok(LC.SpawnCop(at) == nil, "with the reserve empty, no unit comes")
+    LC.ManpowerTick(60)
+    ok(P("cp").reserve == 0, "not a minute later either")
+    LC.ManpowerTick(5 * 60)
+    ok(P("cp").reserve == 1, "a new unit after lc_manpower_cp_minutes (5)", P("cp").reserve)
+    local cop2 = LC.SpawnCop(at)
+    ok(IsValid(cop2), "and only then does the replacement come")
+    P("rebel").reserve = 0
+    ok(LC.SpawnRebel(at, nil) == nil, "the Resistance the same: no fighter from an empty reserve")
+    P("ota").reserve = 0
+    ok(LC.SpawnSoldier(at) == nil, "and Overwatch")
+
+    section("Manpower: one who goes home alive goes back in the reserve")
+    P("cp").reserve = 10
+    local walker = LC.SpawnCop(at)
+    ok(P("cp").reserve == 9, "out: one fewer in reserve")
+    walker:Remove()
+    ok(P("cp").reserve == 10 and P("cp").lost == 1, "gone home unhurt: back in the reserve, and not a loss", P("cp").reserve .. " " .. P("cp").lost)
+    if IsValid(cop2) then cop2:Remove() end
+    ok(P("cp").reserve == 11, "the same for the replacement", P("cp").reserve)
+
+    section("Manpower: the quartermaster, quest people and the like never touch a reserve")
+    P("cp").reserve = 0
+    local free = LC.ManpowerFree(LC.SpawnCop, at)
+    ok(IsValid(free) and P("cp").reserve == 0 and LC.ManpowerOut[free] == nil, "spawned outside the reserve, even when it's empty")
+    if IsValid(free) then free:Remove() end
+    ok(P("cp").reserve == 0, "and not added to it when they go")
+
+    section("Manpower: an empty reserve stops the top-ups")
+    _setcvar("lc_cops", 3)
+    P("cp").reserve = 0
+    _run(20)
+    ok(count("cop") == 0, "lc_cops 3 but no units in reserve: no patrols come", count("cop"))
+    P("cp").reserve = 3
+    _run(20)
+    ok(count("cop") >= 1 and P("cp").reserve < 3, "units back in reserve: they come out again, from it", count("cop") .. " out, " .. P("cp").reserve .. " left")
+    _setcvar("lc_cops", 0)
+    for n, st in pairs(LC.NPCs) do if IsValid(n) and st.role == "cop" then n:Remove() end end
+    _run(1)
+
+    section("Manpower: raids and sweeps wait while a side is depleted, and its own hear why")
+    for _, z in ipairs(LC.ZonesOfKind("rebel")) do LC.RemoveZone(z) end
+    local O = Vector(72000, 72000, 0)
+    local rz = LC.AddZone(O, 500, "rebel", 0)
+    P("rebel").reserve = 1
+    local okR, why = LC.StartRebelRaid(rz, O + Vector(3000, 0, 0))
+    ok(not okR and LC.Skirmish == nil and string.find(tostring(why), "reserve", 1, true) ~= nil, "a raid with only 1 fighter in reserve doesn't go", tostring(why))
+    ok(Said("resistance", "No raids for now"), "and the Resistance hear why on the radio", table.concat(radio, " | "))
+    ok(not LC.PlanRebelRaid(), "a planned raid isn't planned either")
+    P("cp").reserve = 2
+    local okS, whyS = LC.StartCombineSweep(rz)
+    ok(not okS and string.find(tostring(whyS), "reserve", 1, true) ~= nil, "a sweep with 2 units in reserve waits too", tostring(whyS))
+    ok(Said("cp", "sweeps postponed"), "and Civil Protection hear why")
+    P("rebel").reserve = 20
+    P("cp").reserve = 30
+
+    section("Manpower: the Commissary's restrictions speed the Resistance's recruiting")
+    local realCount = LC.MarketRestrictedCount
+    LC.MarketRestrictedCount = function() return 0 end
+    local base = LC.ManpowerInterval("rebel")
+    LC.MarketRestrictedCount = function() return 4 end
+    local quick = LC.ManpowerInterval("rebel")
+    ok(quick < base * 0.7, "four restrictions: a recruit comes 60% faster (lc_manpower_restrict_pct 15 each)", math.floor(base) .. " s, then " .. math.floor(quick) .. " s")
+    P("rebel").reserve = 5
+    local lines = LC.ManpowerReadoutFor(res)
+    ok(lines[3] and string.find(lines[3], "faster (Commissary restrictions", 1, true) ~= nil, "and the Resistance's page says why", table.concat(lines, " | "))
+    LC.MarketRestrictedCount = realCount
+    ok(LC.ManpowerInterval("cp") == 300, "Civil Protection's trickle is steady, whatever the Commissary does")
+    local before = P("ota").reserve
+    hook.Run("LivingCityOverwatchDrop", { expected = 4 })
+    ok(P("ota").reserve == before + 4, "an Overwatch drop brings its soldiers as a batch", before .. " then " .. P("ota").reserve)
+
+    section("Manpower: after a big loss, both sides hear it")
+    radio = {}
+    P("rebel").reserve = 6
+    local fallen = {}
+    for i = 1, 4 do
+        local r = LC.SpawnRebel(at + Vector(i * 40, 0, 0), nil)
+        fallen[#fallen + 1] = r
+    end
+    for _, r in ipairs(fallen) do if IsValid(r) then r:SetHealth(0) r:Remove() end end
+    LC.ManpowerFightsOver(CurTime() + 30)
+    ok(Said("resistance", "We lost four fighters") and Said("resistance", "stretched thin"), "the Resistance's radio: \"We lost four fighters ... We're stretched thin\"", table.concat(radio, " | "))
+    ok(Said("cp", "four anticitizens neutralized"), "and Civil Protection hear it as good news")
+
+    section("Manpower: what each side sees")
+    P("rebel").reserve, P("rebel").lost, P("rebel").progress = 7, 3, 0
+    lines = LC.ManpowerReadoutFor(res)
+    ok(lines[1] == "Fighters: 7 in reserve (of 20), 3 lost today", "the Resistance: their fighters", lines[1])
+    ok(lines[2] and string.find(lines[2], "^Next recruit in about %d+ minutes") ~= nil, "and when the next recruit comes", lines[2])
+    lines = LC.ManpowerReadoutFor(unit)
+    ok(lines[1] and string.find(lines[1], "^Civil Protection: %d+ in reserve %(of 30%)") and lines[3] and string.find(lines[3], "^Overwatch: ") ~= nil,
+        "Civil Protection: their units and Overwatch's soldiers", table.concat(lines, " | "))
+    P("cp").reserve = 30
+    ok(LC.ManpowerReadoutFor(unit)[2] == "The reserve is full", "a full reserve says so")
+    ok(#LC.ManpowerReadoutFor(cit) == 0, "a citizen sees neither")
+
+    section("Manpower: kept per map across restarts")
+    P("rebel").reserve, P("rebel").lost, P("cp").reserve, P("ota").reserve = 4, 9, 17, 2
+    local out = LC.SpawnRebel(at, nil)
+    ok(P("rebel").reserve == 3, "one fighter out")
+    LC.ManpowerSave()
+    local saved = _files[LC.ManpowerFile()] or ""
+    ok(string.find(saved, "reserve", 1, true) ~= nil, "saved to data/" .. LC.ManpowerFile())
+    if IsValid(out) then out:Remove() end
+    LC.ManpowerLoad()
+    ok(P("rebel").reserve == 4 and P("rebel").lost == 9 and P("cp").reserve == 17 and P("ota").reserve == 2,
+        "after a restart: the same reserves (the fighter who was out came home), and today's losses",
+        P("rebel").reserve .. " " .. P("rebel").lost .. " " .. P("cp").reserve .. " " .. P("ota").reserve)
+
+    LC.RadioNotice = realRadio
+    LC.RemoveZone(rz)
+    for n2 in pairs(LC.NPCs) do if IsValid(n2) then n2:Remove() end end
+    _setcvar("lc_manpower", 0)
+    LC.Manpower = {}
+    LC.ManpowerOut = {}
+    _run(1)
+end
+ManpowerTests()
 
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")

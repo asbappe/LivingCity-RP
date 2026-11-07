@@ -266,6 +266,8 @@ function LC.RebelSpawnPos()
 end
 
 local function SpawnRebel(pos, zone, weapon)
+    -- (from the Resistance's reserve: none left, nobody comes: sv_livingcity_manpower.lua)
+    if LC.ManpowerCan and not LC.ManpowerCan("rebel") then return end
     local npc = ents.Create("npc_citizen")
     if not IsValid(npc) then return end
     npc:SetPos(pos)
@@ -279,6 +281,7 @@ local function SpawnRebel(pos, zone, weapon)
     -- peace with the Combine by default: fights are picked deliberately, below
     for _, cls in ipairs(SECURITY_CLASSES) do npc:AddRelationship(cls .. " D_NU 99") end
     local st = LC.RegisterNPC(npc, "rebel")
+    if LC.ManpowerTake then LC.ManpowerTake(npc, st, "rebel") end
     st.zone = zone or ZoneAt(pos, 200)
     st.gender = string.find(string.lower(npc:GetModel() or ""), "female", 1, true) and "female" or "male"
     st.leaveAt = nil
@@ -1194,6 +1197,9 @@ local function StartRaid(z, target, purpose, data)
     if not z then return false, "no rebel territory on this map" end
     target = target or RaidTarget(z)
     if not target then return false, "nothing of the Combine's to hit" end
+    -- too few fighters left in reserve: the raid waits for recruits (sv_livingcity_manpower.lua)
+    local held = LC.ManpowerHold and LC.ManpowerHold("rebel")
+    if held then return false, held end
     -- (the raid's own clock starts when the fighters get there: until then, time to walk it,
     -- sv_livingcity_rebelevents.lua)
     local sk = { kind = "raid", zone = z, target = target, started = CurTime(), ends = CurTime() + (LC.RaidWalkSecs or 360) + 10, rebels = {}, units = {},
@@ -1218,6 +1224,7 @@ local function StartRaid(z, target, purpose, data)
     -- still short: room under the NPC cap, or a spare NPC nobody can see swapped for a fighter at
     -- the raid's hidden spot (the city's count doesn't go up); the last-resort allowance after that
     for _ = 1, party - #sk.rebels do
+        if LC.ManpowerCan and not LC.ManpowerCan("rebel") then break end -- (nobody left in reserve: the party goes short)
         if LC.EventSlot and not LC.EventSlot(sk, { "rebel", "citizen" }, z) then break end
         local p = HiddenSpot(z, true)
         if p then
@@ -1258,6 +1265,7 @@ end
 local function PlanRaid(now)
     local z = Pick(RebelZones())
     if not z then return false end
+    if LC.ManpowerHold and LC.ManpowerHold("rebel") then return false end -- (postponed, and the Resistance told why)
     local target = RaidTarget(z)
     if not target then return false end
     local lead = cvRaidLead:GetFloat()
@@ -1408,6 +1416,8 @@ local function StartSweep(z)
     if not LC.Spawners or not LC.Spawners.cop then return false, "no Civil Protection units" end
     local stage = StagingSpot(z)
     if not stage then return false, "nowhere out of sight to gather a team" end
+    local held = LC.ManpowerHold and LC.ManpowerHold("cp") -- (too few units in reserve: sv_livingcity_manpower.lua)
+    if held then return false, held end
     -- make sure there's someone home to fight
     LC.ReinforceRebels(z, 2)
     local sk = { kind = "sweep", zone = z, stage = stage, started = CurTime(), ends = CurTime() + 150, rebels = {}, units = {} }
@@ -1416,8 +1426,9 @@ local function StartSweep(z)
     for i = 1, 4 do
         -- room under the NPC cap, or an idle unit or citizen nobody can see swapped for one of the
         -- team (the city's count doesn't go up: sv_livingcity_rebelevents.lua)
+        local useSoldier = i == 4 and soldiers and soldiers:GetInt() > 0 and LC.Spawners.soldier and (not LC.ManpowerCan or LC.ManpowerCan("ota"))
+        if LC.ManpowerCan and not LC.ManpowerCan(useSoldier and "ota" or "cp") then break end -- (nobody left in reserve: the team goes short)
         if LC.EventSlot and not LC.EventSlot(sk, { "cop", "soldier", "citizen" }) then break end
-        local useSoldier = i == 4 and soldiers and soldiers:GetInt() > 0 and LC.Spawners.soldier
         local spawn = useSoldier and LC.Spawners.soldier or LC.Spawners.cop
         local npc, st = spawn(stage + Vector(math.random(-80, 80), math.random(-80, 80), 4))
         if IsValid(npc) then
@@ -1459,6 +1470,7 @@ end
 local function PlanSweep(now, z)
     z = z or Pick(RebelZones())
     if not z then return false end
+    if LC.ManpowerHold and LC.ManpowerHold("cp") then return false end -- (postponed, and the Combine told why)
     local lead = cvSweepLead:GetFloat()
     if lead <= 0 then return StartSweep(z) end
     LC.PlannedSweep = { zone = z, at = now + lead }
@@ -2050,7 +2062,7 @@ local function EnsureQuartermasters()
         if not z.grown and LC.RebelIsLeader(z) and not have[z] and CurTime() > (LC.QMDead[z] or 0) then
             local p = HiddenSpot(z)
             if p then
-                local npc, st = SpawnRebel(p + Vector(0, 0, 4), z)
+                local npc, st = LC.ManpowerFree(SpawnRebel, p + Vector(0, 0, 4), z) -- (the quartermaster has rules of their own: never from the reserve)
                 if IsValid(npc) then
                     st.quartermaster, st.unmanaged = true, true
                     st.qmHome = p + Vector(0, 0, 4)

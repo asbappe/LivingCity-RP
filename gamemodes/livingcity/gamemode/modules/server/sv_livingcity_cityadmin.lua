@@ -398,7 +398,7 @@ local function SpawnGuard(admin)
     local p = admin:GetPos() - admin:GetForward() * 120
     p = LC.GroundAt and LC.GroundAt(p + Vector(0, 0, 40)) or p
     if not LC.SpawnSoldier then return nil end
-    local npc, st = LC.SpawnSoldier(p + Vector(0, 0, 4))
+    local npc, st = LC.ManpowerFree(LC.SpawnSoldier, p + Vector(0, 0, 4)) -- (the Administrator's guard: never from Overwatch's reserve)
     if not IsValid(npc) or not st then return nil end
     if not util.IsValidModel or util.IsValidModel("models/combine_super_soldier.mdl") then npc:SetModel("models/combine_super_soldier.mdl") end
     if npc.Give then npc:Give("weapon_ar2") end

@@ -120,6 +120,11 @@ function LC_CL.OpenUnitTools()
         Grow(sec, 22)
     end
 
+    -- what the Combine has left to send (sv_livingcity_manpower.lua): the owner, 7 November, losses you can see
+    if #(LC_CL.Manpower or {}) > 0 then
+        local m = Section("Manpower", "the reserve, and what's been lost")
+        for _, l in ipairs(LC_CL.Manpower) do Note(m, l) end
+    end
     local s = Section("Dispatch")
     Button(s, "Call for backup", "The nearest Civil Protection units come to you, and see where you are.", Do("backup"))
     Button(s, "Send my 10-20", "Marks where you are on every Civil Protection unit's screen.", Do("10-20"))

@@ -102,7 +102,7 @@ function LC.StartInterrogation(ply)
     local spawner = LC.Spawners and LC.Spawners.cop
     if spawner then
         local spot = (LC.ReleaseSpot and LC.ReleaseSpot(cellPos + ply:GetForward() * 50, ply)) or (cellPos + Vector(50, 0, 4))
-        local ok, npc, st = pcall(spawner, spot)
+        local ok, npc, st = pcall(LC.ManpowerFree, spawner, spot) -- (the interrogator: never from the reserve)
         if ok and IsValid(npc) and st then
             st.unmanaged = true
             st.interrogator = true

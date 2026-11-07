@@ -362,6 +362,9 @@ function LC_CL.OpenActions()
     if rebel then
         local rs, rso = menu:AddSubMenu("Resistance")
         rso:SetIcon("icon16/flag_red.png")
+        -- the fighters we have left (sv_livingcity_manpower.lua)
+        for _, l in ipairs(LC_CL.Manpower or {}) do Add(rs, l, function() end, "icon16/group.png") end
+        if #(LC_CL.Manpower or {}) > 0 then rs:AddSpacer() end
         Add(rs, "Change into plain clothes", function() Send("plain") end)
         Add(rs, "Gear up (Resistance clothes)", function() Send("gearup") end)
         Add(rs, "Black market (here, in rebel territory)", function() Send("market") end, "icon16/money.png")

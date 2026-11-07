@@ -1411,6 +1411,8 @@ for _, c in ipairs({ { "lc_cp_scale", cvCopScale, "cop" }, { "lc_soldier_scale",
 end
 
 local function SpawnCop(pos)
+    -- (from Civil Protection's reserve: none left, nobody comes: sv_livingcity_manpower.lua)
+    if LC.ManpowerCan and not LC.ManpowerCan("cp") then return end
     local npc = ents.Create("npc_metropolice")
     if not IsValid(npc) then return end
     npc:SetPos(pos)
@@ -1421,6 +1423,7 @@ local function SpawnCop(pos)
     npc:Activate()
     Loom(npc, cvCopScale)
     local st = Register(npc, "cop")
+    if LC.ManpowerTake then LC.ManpowerTake(npc, st, "cp") end
     SetupSecurity(npc, st)
     st.nextChatter = CurTime() + math.Rand(20, 60)
     local person = LC.ClaimProfile and LC.ClaimProfile("cop")
@@ -1447,6 +1450,7 @@ end
 -- kind: nil (as the place says), "elite" (an Overwatch Elite), "guard" (Nova Prospekt), or "shotgun" / "ar2"
 -- (an ordinary soldier with that gun: the cleanup crew's pair, sv_livingcity_cleanup.lua)
 local function SpawnSoldier(pos, kind)
+    if LC.ManpowerCan and not LC.ManpowerCan("ota") then return end -- (Overwatch's reserve: sv_livingcity_manpower.lua)
     local npc = ents.Create("npc_combine_s")
     if not IsValid(npc) then return end
     if not kind and LC.NearPrisonCombine(pos) then kind = "guard" end
@@ -1472,6 +1476,7 @@ local function SpawnSoldier(pos, kind)
     if kind == "elite" then npc:SetMaxHealth(120) npc:SetHealth(120) end
     Loom(npc, cvSoldierScale)
     local st = Register(npc, "soldier")
+    if LC.ManpowerTake then LC.ManpowerTake(npc, st, "ota") end
     st.elite = kind == "elite" or nil
     st.prisonGuard = kind == "guard" or nil
     SetupSecurity(npc, st)

@@ -500,7 +500,7 @@ local TechGone
 -- hiss of a welder), then go.
 function LC.StalkerTechnician(ply, pos)
     if not IsValid(ply) or not (LC.Spawners and LC.Spawners.cop) then return nil end
-    local ok, npc, st = pcall(LC.Spawners.cop, pos)
+    local ok, npc, st = pcall(LC.ManpowerFree, LC.Spawners.cop, pos) -- (a technician, not a street unit: never from the reserve)
     if not (ok and IsValid(npc) and st) then return nil end
     st.unmanaged, st.questLock = true, true
     if LC.SetState then LC.SetState(npc, st, "event") end

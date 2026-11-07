@@ -2806,7 +2806,7 @@ end
 local function SpawnActor(q, role, pos, holdSecs, keep, want)
     local spawner = LC.Spawners and LC.Spawners[role]
     if not spawner or not pos then return nil end
-    local npc, st = spawner(pos + Vector(math.random(-40, 40), math.random(-40, 40), 4), role == "citizen" and want or nil)
+    local npc, st = LC.ManpowerFree(spawner, pos + Vector(math.random(-40, 40), math.random(-40, 40), 4), role == "citizen" and want or nil) -- (a quest's own people: never from a side's reserve)
     if not IsValid(npc) then return nil end
     st.unmanaged = true
     st.leaveAt = nil
