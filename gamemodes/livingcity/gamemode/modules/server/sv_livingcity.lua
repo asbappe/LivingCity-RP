@@ -214,7 +214,7 @@ local function Viewers()
     local tick = engine.TickCount and not LC.TestMode and engine.TickCount() or nil
     if tick and tick == viewersTick then return viewers end
     local list, positions = {}, {}
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         local remote, ve = LC.ViewFrom(ply)
         positions[#positions + 1] = ply:GetPos()
         if remote then positions[#positions + 1] = remote end
@@ -2194,7 +2194,7 @@ local function ThinkSecurity(npc, st, now)
         -- tell people crowding them to move along, and escalate if they don't
         if now > st.nextWarn and LC.Event ~= "curfew" and LC.Event ~= "lockdown" then
             local npos = npc:GetPos()
-            for _, ply in ipairs(player.GetAll()) do
+            for _, ply in LC.Players() do
                 -- right up against him first (cheap), then who they are
                 if ply:GetPos():DistToSqr(npos) < 90 * 90 and ply:Alive() and not LC.PlayerIsCP(ply)
                     and not (LC.DisguisedAsCP and LC.DisguisedAsCP(ply))
@@ -2285,7 +2285,7 @@ LC.LooksCombine = LooksCombine
 local SCANNER_UNIT_RANGE = 1600
 local function ScannerSparesUnits(npc, st)
     local pos, near = npc:GetPos(), false
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         if ply:Alive() and ply:GetPos():DistToSqr(pos) < SCANNER_UNIT_RANGE * SCANNER_UNIT_RANGE and LooksCombine(ply) then
             near = true
             break
@@ -2400,7 +2400,7 @@ end
 ------------------------------------------------------------------------
 
 local function BarkPass(now)
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         if ply:Alive() and ply:GetVelocity():LengthSqr() > 100 * 100 then
             -- only who's right there (the engine finds them; not every NPC in the city)
             for _, npc in ipairs(ents.FindInSphere(ply:GetPos(), 60)) do
@@ -2999,7 +2999,7 @@ local BUSY = { hostile = true, inspect_approach = true, inspect_talk = true, esc
     abed = true, event = true, jailed = true, escorted = true, inline = true }
 local function MakeWay(now)
     if not cvMakeWay:GetBool() then return end
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         local vel = ply:GetVelocity()
         vel.z = 0
         if ply:Alive() and vel:LengthSqr() > 40 * 40 then

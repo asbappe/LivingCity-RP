@@ -645,7 +645,7 @@ local climbs = {} -- [ply] = { ground = last spot on the ground, mount = where t
 function LC.LadderLearnTick(now)
     if not cvLearn:GetBool() then return end
     local LADDER = MOVETYPE_LADDER or 9
-    for _, p in ipairs(player.GetAll()) do
+    for _, p in LC.Players() do
         local c = climbs[p]
         if not c then c = {} climbs[p] = c end
         local mt = p:GetMoveType()

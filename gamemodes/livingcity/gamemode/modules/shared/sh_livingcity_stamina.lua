@@ -141,7 +141,7 @@ end
 
 function LCS.Tick(now, dt)
     if not cvOn:GetBool() then return end
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         local s = ply:GetNW2Float("lc_stamina", 100)
         local was = s
         if Free(ply) then

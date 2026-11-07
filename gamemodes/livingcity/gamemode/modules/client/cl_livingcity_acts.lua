@@ -54,7 +54,7 @@ end
 LC_CL.PoseShift = PoseShift
 
 hook.Add("Think", "LivingCityActsShift", function()
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         local shift
         if ply:Alive() and ply:GetNW2Bool("lc_handsup", false) and ply:GetNW2String("lc_act", "") == ""
             and ply:GetVelocity():Length2DSqr() <= 100 then

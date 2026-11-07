@@ -128,7 +128,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityStink", function(depth, sk
     if not IsValid(me) then return end
     local drew = false
     local t = CurTime()
-    for _, p in ipairs(player.GetAll()) do
+    for _, p in LC.Players() do
         if p:Alive() and p:GetNW2Bool("lc_stink", false) and p:GetPos():DistToSqr(me:GetPos()) < 900 * 900 and (p ~= me or me:ShouldDrawLocalPlayer()) then
             if not drew then render.SetColorMaterial() drew = true end
             local c = p:GetPos() + Vector(0, 0, 36)
@@ -224,7 +224,7 @@ hook.Add("PostPlayerDraw", "LivingCityBed", function(ply)
     end
 end)
 hook.Add("Think", "LivingCityBedForget", function()
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         if ply.lcBedOff and not ply:GetNW2Bool("lc_sleeping", false) then ply.lcBedOff = nil end
     end
 end)

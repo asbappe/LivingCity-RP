@@ -91,7 +91,7 @@ hook.Add("LivingCityTied", "LivingCityActs", function(ply) LC.StopAct(ply) end)
 hook.Add("LivingCityDowned", "LivingCityActs", function(ply) LC.StopAct(ply) end)
 -- nobody stays sitting once they're pushed or carried off
 timer.Create("LivingCityActs", 0.5, 0, function()
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         if ply:GetNW2String("lc_act", "") ~= "" and (not ply:IsOnGround() or ply:GetVelocity():Length2DSqr() > 80 * 80) then
             LC.StopAct(ply)
         end

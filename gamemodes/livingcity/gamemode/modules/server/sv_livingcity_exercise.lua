@@ -1260,7 +1260,7 @@ local lastTick = 0
 timer.Create("LivingCityExercise", 0.1, 0, function()
     local now = CurTime()
     -- boosts wear off
-    for _, p in ipairs(player.GetAll()) do
+    for _, p in LC.Players() do
         if p.lcxBoost and now > p.lcxBoost.untilT then EndBoost(p) end
     end
     if not X then return end
