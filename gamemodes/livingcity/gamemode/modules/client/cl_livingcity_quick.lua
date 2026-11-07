@@ -179,6 +179,9 @@ local function Context(me, unit, rebel)
             if me:GetNW2Bool("lc_foreman", false) then Add("Give " .. n .. " a work order", function() Send("assign", "", e) end) end
             if not rebel then Add("Inform on " .. n, function() Send("inform", "", e) end) end
         end
+    elseif unit and e:GetNW2Bool("lc_cuffed", false) then
+        -- a citizen or rebel cuffed with the baton (sv_livingcity_arrest.lua)
+        Add("Walk them to the cells / let go", function() Send("drag") end)
     elseif e:GetNW2Bool("lc_downed_body", false) then
         Add("Drag them along / let go", function() Send("drag") end)
         Add(unit and "Cuff them, or help them up: hold E" or "Help them up: hold E", function() end)

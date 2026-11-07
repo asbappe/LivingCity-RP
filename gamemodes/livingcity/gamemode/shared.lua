@@ -108,6 +108,7 @@ LC_MODULES = {
         "sv_livingcity_prison",
         "sv_livingcity_progress",
         "sv_livingcity_march", -- (after prison: arrested by a unit NPC, you're walked to the cells)
+        "sv_livingcity_arrest", -- (after march: the baton's arrests, struggles, and walking prisoners in)
         "sv_livingcity_propaganda",
         "sv_livingcity_announcer", -- (after propaganda: it borrows the Administrator's speakers)
         "sv_livingcity_quests",
@@ -183,6 +184,7 @@ LC_MODULES = {
         "cl_livingcity_intake",
         "cl_livingcity_labor", -- (Labor Assignment's screen)
         "cl_livingcity_kick",
+        "cl_livingcity_arrest", -- (the struggle bar when someone resists arrest)
         "cl_livingcity_ways",
         "cl_livingcity_outfits",
         "cl_livingcity_lab",

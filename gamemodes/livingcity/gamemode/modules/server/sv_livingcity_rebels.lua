@@ -823,6 +823,9 @@ LC.RebelStandUp = StandUp
 
 local function ThinkRebel(npc, st, now)
     if (st.stunnedUntil or 0) > now then return end -- flashbanged
+    -- cuffed, or in a cell (arrested with the baton: sv_livingcity_arrest.lua)
+    if (st.state == "detained" or st.state == "jailed") and LC.PrisonerThink and LC.PrisonerThink(npc, st, now) then return end
+    if st.fleeingUntil and LC.FleeThink and LC.FleeThink(npc, st, now) then return end -- (broke free, and running)
     StandUp(npc, st, now)
     if st.state == "event" then
         if now > (st.eventUntil or 0) then LC.SetState(npc, st, "idle"); st.untilT = now + 1 end

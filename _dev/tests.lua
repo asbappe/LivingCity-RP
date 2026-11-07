@@ -3108,10 +3108,15 @@ local okAgain, whyAgain = LC.StartSearch(officer, suspect)
 ok(not okAgain and whyAgain:find("moment ago", 1, true), "not twice in a row")
 ok(LC.ArrestNPC(suspect, officer), "right click detains them")
 ok(sst.state == "detained", "cuffed for a moment first")
+-- (7 November: walked to the cells, not sent there: sv_livingcity_arrest.lua, ArrestOverhaulTests)
+ok(LC.NPCCustody[suspect] ~= nil, "cuffed where they stand, to be walked to the cells")
+LC.NPCCustodyLead(suspect, officer)
+officer:SetPos(cellPt.pos + Vector(150, 0, 0))
+suspect:SetPos(cellPt.pos + Vector(100, 0, 0))
 _run(2)
 local inCell = false
 for _, cp in ipairs(LC.PointsOfKind("cell")) do if suspect:GetPos():DistToSqr(cp.pos) < 20 * 20 then inCell = true end end
-ok(sst.state == "jailed" and inCell, "then they're in a cell, without having to walk past locked doors", sst.state)
+ok(sst.state == "jailed" and inCell, "walked up to the cells, they're locked in one", sst.state)
 LC.ReleaseNPCPrisoner(suspect, sst, CurTime())
 local atRelease = false
 for _, rp2 in ipairs(LC.PointsOfKind("release")) do if suspect:GetPos():DistToSqr(rp2.pos) < 110 * 110 then atRelease = true end end
@@ -12435,6 +12440,157 @@ Freq7Tests()
 ----------------------------------------------------------------------
 section("Speed: saved data from memory, who is looking worked out once a tick")
 function PerfCacheTests()
+
+----------------------------------------------------------------------
+-- The owner's playtest, 7 November: the baton's arrests (sv_livingcity_arrest.lua)
+function ArrestOverhaulTests()
+section("Arrests in the open: struggles, cuffs, walked to the cells, rebels, a shove and a run")
+local A0 = Vector(-230000, 60000, 0)
+local cellA = LC.AddPoint(A0 + Vector(1200, 0, 0), 0, "cell", 0)
+LC.AddPoint(A0 + Vector(1200, 400, 0), 0, "release", 0)
+local off = newPlayer("ArrestOfficer", "cp")
+_run(0.3)
+off:SetPos(A0)
+_setcvar("lc_arrest_struggle_chance", 0)
+-- the baton on a citizen: cuffed where they stand, and a unit walks them in
+local cit, cst = LC.Spawners.citizen(A0 + Vector(50, 0, 0))
+local unit, ust = LC.Spawners.cop(A0 + Vector(-500, 0, 0))
+ust.untilT = 1e9
+local okA, msgA = LC.BatonArrest(off, cit)
+ok(okA and cst.state == "detained" and LC.NPCCustody[cit] ~= nil and cit:GetNW2Bool("lc_cuffed", false), "the baton cuffs a citizen where they stand", msgA)
+_run(2)
+ok(cst.state == "detained" and cit:GetPos():DistToSqr(cellA.pos) > 600 * 600, "not sent to a cell: still out on the street, waiting to be walked in", tostring(cit:GetPos()))
+ok(LC.NPCCustody[cit] and LC.NPCCustody[cit].leader == unit and ust.questLock, "the nearest free unit comes over to take them")
+local jailed, nearUnit = false, true
+for _ = 1, 60 do
+    _run(1)
+    if cst.state == "jailed" then jailed = true break end
+    if LC.NPCCustody[cit] and LC.NPCCustody[cit].walking and cit:GetPos():DistToSqr(unit:GetPos()) > 460 * 460 then nearUnit = false end
+end
+ok(jailed and cit:GetPos():DistToSqr(cellA.pos) < 30 * 30, "walked all the way there beside the unit, and locked in a cell", cst.state)
+ok(nearUnit, "(and they kept at his side on the way)")
+ok(not ust.questLock and not ust.marching and not ust.arrestDuty, "the unit goes back to his day")
+LC.ReleaseNPCPrisoner(cit, cst, CurTime(), true)
+-- with no unit free, the officer walks them in himself
+unit:SetPos(Vector(-400000, 0, 0))
+local cit2, cst2 = LC.Spawners.citizen(A0 + Vector(40, 0, 0))
+off:SetPos(A0)
+LC.BatonArrest(off, cit2)
+_run(1)
+ok(LC.NPCCustody[cit2] and LC.NPCCustody[cit2].leader == off, "nobody free: the prisoner follows the officer")
+off.lookingAt = nil
+ok(LC.ToggleDrag(off) and LC.NPCCustody[cit2].leader == nil, "F1 > Walk them to the cells / let go: let go of them")
+off.lookingAt = cit2
+cit2:SetPos(off:GetPos() + Vector(50, 0, 0))
+ok(LC.ToggleDrag(off) and LC.NPCCustody[cit2].leader == off, "and take them by the arm again")
+for i = 1, 12 do off:SetPos(A0 + Vector(100 * i, 0, 0)) _run(0.5) end
+_run(1)
+ok(cst2.state == "jailed", "walked up to the cell, they're locked in it", cst2.state)
+LC.ReleaseNPCPrisoner(cit2, cst2, CurTime(), true)
+unit:SetPos(A0 + Vector(-500, 0, 0))
+-- a struggle the officer wins
+_setcvar("lc_arrest_struggle_chance", 100)
+local cit3, cst3 = LC.Spawners.citizen(A0 + Vector(50, 60, 0))
+cit3.sim = false
+off:SetPos(A0 + Vector(0, 60, 0))
+LC.BatonArrest(off, cit3)
+ok(LC.Struggles[cit3] ~= nil and cst3.state == "event", "a citizen can struggle: held there while it's decided")
+local sm = _lastnet("lc_struggle")
+ok(sm and sm.to == off and sm.data[1] == true and sm.data[2] == "restrain", "the officer sees the struggle bar")
+for _ = 1, 45 do _netcall("lc_struggle_press", off) _run(0.08) end
+_run(1)
+ok(LC.Struggles[cit3] == nil and cst3.state == "detained" and LC.NPCCustody[cit3] ~= nil, "pressing hard enough holds them: cuffed", cst3.state)
+LC.JailNPCPrisoner(cit3, LC.NPCCustody[cit3]) LC.ReleaseNPCPrisoner(cit3, cst3, CurTime(), true)
+-- a rebel: always struggles, and an officer doing nothing loses: shoved back, and they run
+_setcvar("lc_arrest_struggle_chance", 0)
+local reb, rst = LC.Spawners.rebel(A0 + Vector(50, -60, 0))
+reb.sim = false
+off:SetPos(A0 + Vector(0, -60, 0))
+off.pushed = nil
+local okR, msgR = LC.BatonArrest(off, reb)
+ok(okR and LC.Struggles[reb] ~= nil, "rebels can be arrested, and always struggle", msgR)
+_run(5)
+ok(LC.Struggles[reb] == nil and off.pushed ~= nil and off:GetNW2Float("lc_dazed_until", 0) > 0, "won free: the rebel shoves the officer back")
+ok(rst.state == "moving" and rst.run and LC.Fleeing[reb] ~= nil, "and runs, flat out", rst.state)
+local away = reb:GetPos() - off:GetPos()
+ok(rst.dest and (rst.dest - reb:GetPos()):Dot(away) > 0, "away from the officer, not back past him")
+ok(select(2, LC.BatonArrest(off, reb)):find("broke free", 1, true), "(not grabbed again the same instant)")
+reb.lcBrokeFree = 0
+LC.Struggles[reb] = nil
+-- a rebel held: cuffed, disarmed
+reb:SetPos(A0 + Vector(50, -60, 0))
+reb:Give("weapon_smg1")
+LC.BatonArrest(off, reb)
+for _ = 1, 50 do _netcall("lc_struggle_press", off) _run(0.08) end
+_run(1)
+ok(rst.state == "detained" and LC.NPCCustody[reb] ~= nil and rst.cuffWeapon == "weapon_smg1", "a rebel held down is cuffed and disarmed", rst.state)
+LC.JailNPCPrisoner(reb, LC.NPCCustody[reb])
+ok(rst.state == "jailed", "and goes to a cell like anyone")
+rst.untilT = 0
+_run(2)
+ok(rst.state ~= "jailed" and rst.cuffWeapon == nil, "let out at the end, with their gun back", rst.state)
+-- players: a struggle, won and lost
+local res = newPlayer("ArrestResister", "citizen")
+_run(0.3)
+res:SetPos(A0 + Vector(50, 200, 0))
+res.lcGraceUntil = 0
+off:SetPos(A0 + Vector(0, 200, 0))
+off.pushed = nil
+LC.BatonArrest(off, res)
+ok(LC.Struggles[res] ~= nil and res:GetNW2Float("lc_struggle_until", 0) > CurTime(), "a player arrested with the baton gets the chance to resist, held where they stand")
+local rm
+for i = #net.sent, 1, -1 do if net.sent[i].name == "lc_struggle" and net.sent[i].to == res then rm = net.sent[i] break end end
+ok(rm and rm.data[1] == true and rm.data[2] == "resist", "and sees the struggle bar")
+for i = 1, 40 do
+    _netcall("lc_struggle_press", res)
+    if i % 4 == 0 then _netcall("lc_struggle_press", off) end
+    _run(0.08)
+end
+_run(1)
+ok(not LC.IsTied(res) and off.pushed ~= nil and LC.PlayerIsWanted(res), "clearly more presses than the officer: free, the officer shoved back, and wanted for resisting arrest")
+LC.ClearWanted(res)
+res.lcBrokeFree = 0
+off.pushed = nil
+LC.BatonArrest(off, res)
+for i = 1, 40 do
+    _netcall("lc_struggle_press", off)
+    if i % 2 == 0 then _netcall("lc_struggle_press", res) end
+    _run(0.08)
+end
+_run(0.5)
+ok(LC.IsTied(res) and LC.ArrestHolds[res] ~= nil and off.pushed == nil and LC.InCustody(res), "not enough: cuffed where they stand")
+local marched = false
+for _ = 1, 20 do _run(0.5) if LC.Marching[res] then marched = true break end end
+ok(marched and LC.Marching[res].arrester == off, "a unit walks over and walks them to the cells (and it's still the officer's arrest)")
+if LC.Marching[res] then LC.Marching[res] = nil end
+if LC.IsTied(res) then LC.Untie(res, nil, true) end
+-- hands up: going quietly
+res:SetNW2Bool("lc_handsup", true)
+LC.BatonArrest(off, res)
+ok(LC.Struggles[res] == nil and LC.IsTied(res), "hands up: no struggle, just cuffed")
+LC.ArrestHolds[res] = nil
+LC.Untie(res, nil, true)
+-- the Apprehend job: a failed Authority check, a shove, and a real run
+local q = inject(off, "cp_apprehend")
+local t = q and q.data.target
+if t then
+    reach(off, t)
+    off.pushed = nil
+    withRoll(1, function() LC.ResolveChoice(off, q.id, 2) end)
+    local tst = LC.NPCs[t]
+    ok(off.pushed ~= nil, "a failed check: the suspect shoves the officer back")
+    ok(tst.state == "moving" and tst.run and LC.Fleeing[t] and LC.Fleeing[t].noChase, "and takes off at a run, left for the officer to catch", tst.state)
+    local aw = t:GetPos() - off:GetPos()
+    ok(tst.dest and (tst.dest - t:GetPos()):Dot(aw) > 0, "away from the officer")
+    LC.AbandonQuest(off)
+else
+    ok(false, "(an Apprehend job to test)")
+end
+_setcvar("lc_arrest_struggle_chance", 25)
+for _, n in ipairs({ unit, cit, cit2, cit3, reb }) do if IsValid(n) then n:Remove() end end
+for _, p in ipairs({ off, res }) do p:SetPos(Vector(-150000, 150000, 0)) end
+end
+ArrestOverhaulTests()
 -- saved player data (sv_livingcity_perf.lua): the first read of each key is kept, writes update it
 do
     local store, reads, refuse = {}, 0, false

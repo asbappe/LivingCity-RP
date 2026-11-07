@@ -1321,10 +1321,16 @@ end
 -- Running away: somewhere down the street on the same level, not the far
 -- side of the city (and never popped there by the stuck-walker fix; see
 -- Recover in sv_livingcity.lua, which leaves quest targets where they are).
-local function Flee(q)
+-- shover: the player they shove back first (the owner, 7 November). They run flat out, the
+-- whole way, from whoever is after them (sv_livingcity_arrest.lua), and no unit takes the
+-- arrest off the player.
+local function Flee(q, shover)
     local npc = q.data.target
     local st = IsValid(npc) and LC.NPCs[npc]
     if not st then return end
+    if IsValid(shover) and LC.ShoveOff and shover:GetPos():DistToSqr(npc:GetPos()) < 250 * 250 then LC.ShoveOff(npc, shover) end
+    local from = IsValid(shover) and shover or q.owner
+    if LC.NPCFlee and LC.NPCFlee(npc, from, 60, true) then return end
     st.eventUntil = 0
     local from = npc:GetPos()
     local dest
@@ -1424,9 +1430,9 @@ T{
                           InsertStages(q, { { kind = "collect", spots = { spot }, model = stash[2], need = 1,
                               text = "Find " .. stash[1] .. " (marked) and press E on it to seize it" } })
                       end,
-                      fail = function(q)
-                          Narrate(q, "They shove past you and run! Catch them.")
-                          Flee(q)
+                      fail = function(q, p)
+                          Narrate(q, "They shove you back and run! Catch them.")
+                          Flee(q, p)
                       end },
                     { text = "Take their ration units as a bribe and let them go (ends the job, less XP).",
                       pick = function(q, p)

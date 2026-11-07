@@ -1881,17 +1881,20 @@ local function TryStartInspection(cop, cst, now)
     end
 end
 
--- Take a detained citizen in. Cells are behind locked doors, so like an
--- arrested player they're put straight in one (see LC.ArrestNPC).
+-- Take a detained citizen in: the unit walks them to the cells (sv_livingcity_arrest.lua), or
+-- where he can't, they're put straight in one (see LC.ArrestNPC).
 local function TryArrestCitizen(cop, cst, cit, ist, now)
     if math.random(100) > cvArrestChance:GetInt() then return false end
     if not LC.ArrestNPC then return false end
     cop:EmitSound(Pick(COP_ARREST), 75)
     cit:EmitSound(Vo(ist.gender, Pick(CIT_PROTEST)), 70)
-    if not LC.ArrestNPC(cit, nil) then return false end
     cst.subject = nil
     SetState(cop, cst, "idle")
     cst.untilT = now + math.Rand(2, 5)
+    if not LC.ArrestNPC(cit, cop) then
+        cst.subject = cit -- (let go, below)
+        return false
+    end
     return true
 end
 
