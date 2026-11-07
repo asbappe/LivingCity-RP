@@ -132,15 +132,25 @@ end
 
 local function DressSpots(z, n)
     local spots, wet = {}, {}
+    -- (grown ground: on its cells, each at its own floor, not the circle round where it last grew to)
     local function Take(p)
         local g = p and FloorUnder(p)
-        if g and math.abs(g.z - z.pos.z) < 120 and g:DistToSqr(z.pos) < (z.r * 0.95) ^ 2 and (not z.cells or LCZ.Contains(z, g, 0)) and Footing(g, 30) then
+        if not g then return end
+        local fz = LCZ.FloorAt(z, g)
+        if math.abs(g.z - fz) < 120 and LCZ.Within(z, g, 0.95) and Footing(g, 30) then
             -- (down in a channel or a ditch below the zone's floor: only if there's nowhere dry)
-            if LC.InWater(g) or g.z < z.pos.z - 14 then wet[#wet + 1] = g else spots[#spots + 1] = g end
+            if LC.InWater(g) or g.z < fz - 14 then wet[#wet + 1] = g else spots[#spots + 1] = g end
         end
     end
     if LC.QB and LC.QB.HideSpots then
-        for _, p in ipairs(LC.QB.HideSpots(z.pos, n * 3, z.r * 0.85, true)) do Take(p) end
+        if z.cells then
+            -- cover spots round a few of its cells
+            for _ = 1, 2 do
+                for _, p in ipairs(LC.QB.HideSpots(LCZ.RandomInside(z, 0.5), n, LCZ.CELL * 1.5, true)) do Take(p) end
+            end
+        else
+            for _, p in ipairs(LC.QB.HideSpots(z.pos, n * 3, z.r * 0.85, true)) do Take(p) end
+        end
     end
     -- not enough of those: anywhere on the zone's floor
     for _ = 1, 30 do
@@ -284,9 +294,11 @@ local function DressingTick()
                 if not d then
                     -- a zone mostly inside a bigger one of its kind (maps drawn with many
                     -- overlapping circles) adds a piece or two, not a whole set
+                    -- (grown ground is never one of those circles, and is never inside one: it only takes ground nobody holds)
                     local inside = false
                     for _, o in ipairs(LC.Zones) do
-                        if o ~= z and o.kind == z.kind and o.r >= z.r and z.pos:DistToSqr(o.pos) < (o.r * 0.9) ^ 2 then inside = true break end
+                        if z.cells then break end
+                        if o ~= z and not o.cells and o.kind == z.kind and o.r >= z.r and z.pos:DistToSqr(o.pos) < (o.r * 0.9) ^ 2 then inside = true break end
                     end
                     -- (and the other zones of one rebel territory are more of the same camp: a few
                     -- more beds, not a second camp: LC.RebelTerritories, sv_livingcity_paths.lua)

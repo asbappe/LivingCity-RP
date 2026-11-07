@@ -137,7 +137,14 @@ local function ZoneThings(z)
         list[#list + 1] = t
     end
     local function inside(p) return LCZ.Contains(z, p, 0) end
-    for _, e in ipairs(ents.FindInSphere(z.pos, (z.r or 300) + 64)) do
+    -- (grown ground: everything over its cells, however far along the corridors it reaches)
+    local near
+    if z.cells and z.mins then
+        near = ents.FindInSphere((z.mins + z.maxs) * 0.5, (z.maxs - z.mins):Length() * 0.5 + 64)
+    else
+        near = ents.FindInSphere(z.pos, (z.r or 300) + 64)
+    end
+    for _, e in ipairs(near) do
         if IsValid(e) and not e:IsPlayer() and not e:IsNPC() and not e.lcCarried and inside(e:GetPos()) then
             local cls = e:GetClass()
             local kind
@@ -621,9 +628,10 @@ function A.patrol(npc, st, z, now)
         local spot, cramped
         for _ = 1, 6 do
             local a = base + (i - 1) * (math.pi * 2 / n) + math.Rand(-0.3, 0.3)
-            local p = z.pos + Vector(math.cos(a), math.sin(a), 0) * z.r * math.Rand(0.55, 0.78)
+            -- (grown ground: a stop on any of its cells, at that cell's floor)
+            local p = z.cells and LCZ.RandomInside(z, 0.7) or z.pos + Vector(math.cos(a), math.sin(a), 0) * z.r * math.Rand(0.55, 0.78)
             local g = Floor(p + Vector(0, 0, 40))
-            if g and LCZ.Contains(z, g, -30) and math.abs(g.z - z.pos.z) < (z.h or 160) and Standable(g) then
+            if g and LCZ.Contains(z, g, -30) and math.abs(g.z - LCZ.FloorAt(z, g)) < (z.h or 160) and Standable(g) then
                 -- (a stop with room round it first: not in a doorway, the owner, 7 November)
                 if not LC.RoomAround or LC.RoomAround(g) then spot = g break end
                 cramped = cramped or g
@@ -1061,7 +1069,7 @@ function LC.RebelErrandThink(npc, st, now)
     -- home, with whatever they found
     SetDoing(npc, (E.found or 0) > 0 and "bringing back what they found" or "heading home")
     LC.SetState(npc, st, "moving")
-    if pos:DistToSqr(z.pos) < (z.r * 0.7) ^ 2 or (E.homeSpot and pos:DistToSqr(E.homeSpot) < 90 * 90 and LCZ.Contains(z, pos, 0)) then
+    if LCZ.Within(z, pos, 0.7) or (E.homeSpot and pos:DistToSqr(E.homeSpot) < 90 * 90 and LCZ.Contains(z, pos, 0)) then
         Deliver(npc, st, E, now)
         st.errand = nil
         st.expires = now + 60 -- (an extra came while they were out: one of them slips away later, unseen)

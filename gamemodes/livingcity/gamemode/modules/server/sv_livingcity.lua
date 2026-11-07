@@ -1537,7 +1537,7 @@ function LC.SpotInZone(z)
         local tr = util.TraceLine({ start = top, endpos = top - Vector(0, 0, z.h and (z.h + 64) or 400), mask = MASK_NPCSOLID_BRUSHONLY })
         if tr.Hit and tr.HitNormal.z > 0.7 and (not z.h or LCZ.Contains(z, tr.HitPos)) and ClearSpot(tr.HitPos) then
             -- dry ground first: down in the water, or a channel below the zone's floor, only if there's nothing else
-            if (LC.InWater and LC.InWater(tr.HitPos)) or tr.HitPos.z < z.pos.z - 14 then wet = wet or tr.HitPos else return tr.HitPos end
+            if (LC.InWater and LC.InWater(tr.HitPos)) or tr.HitPos.z < LCZ.FloorAt(z, tr.HitPos) - 14 then wet = wet or tr.HitPos else return tr.HitPos end
         end
     end
     return wet
@@ -2380,17 +2380,17 @@ local function ThinkZombie(npc, st, now)
     if st.surgeExpires and now > st.surgeExpires and not LC.IsSeen(npc:GetPos() + UP) then npc:Remove() return end
     if not z then return end
     local pos = npc:GetPos()
-    local limit = z.r * 1.3
-    if pos:DistToSqr(z.pos) < limit * limit then return end
+    -- (grown ground by its cells, not the circle round where it last grew to: LCZ.Within)
+    if LCZ.Within(z, pos, 1.3) then return end
     local enemy = npc:GetEnemy()
-    if IsValid(enemy) and enemy:GetPos():DistToSqr(z.pos) < (z.r * 1.6) ^ 2 then return end
+    if IsValid(enemy) and LCZ.Within(z, enemy:GetPos(), 1.6) then return end
     -- wandered out: snap back if unseen, otherwise call it home
     if not LC.IsSeen(pos + UP) then
         local spot = LC.SpotInZone(z)
         if spot then npc:SetPos(spot + Vector(0, 0, 4)) end
     elseif not npc:IsCurrentSchedule(SCHED_FORCED_GO) then
         npc:SetEnemy(NULL)
-        npc:SetLastPosition(z.pos)
+        npc:SetLastPosition(LCZ.Heart(z))
         npc:SetSchedule(SCHED_FORCED_GO)
     end
 end

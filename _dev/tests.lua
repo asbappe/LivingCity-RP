@@ -18213,6 +18213,104 @@ local function TerritoryPathTests()
     _walls, _groundFn = wallsWas, groundWas
 end
 TerritoryPathTests()
+
+-- Grown ground (cells along the path nodes) used to be asked as the circle round where it last grew
+-- to (pos and r, a circle as big as it): the camp's dressing, the rebels' things, patrols, the dry
+-- ground check when picking a spot, a fighter straying from home, and ground being cleared all
+-- missed a corridor it took and counted the floor beside its front. Each now asks the cells.
+local function GrownGroundTests()
+    section("Grown ground is its cells everywhere, not a circle round where it last grew to")
+    for _, z in ipairs(LC.ZonesOfKind("rebel")) do LC.RemoveZone(z) end
+    for _, z in ipairs(LC.ZonesOfKind("infest")) do LC.RemoveZone(z) end
+    for n, st in pairs(LC.NPCs) do if IsValid(n) and (st.role == "zombie" or st.role == "rebel") then n:Remove() end end
+    local wallsWas, groundWas = _walls, _groundFn
+    _walls = {}
+    local C = LCZ.CELL
+    -- a room (placed), a corridor east out of it (floor 0, 20 cells by 2), and up at its far end a
+    -- leg north on a floor 200 units higher (12 cells by 2): an L, nothing like a circle
+    local B = Vector(547 * C, -547 * C, 0)
+    local function Corr(x, y) return x >= 550 * C and x < 570 * C and y >= -548 * C and y < -546 * C end
+    local function Leg(x, y) return x >= 568 * C and x < 570 * C and y >= -546 * C and y < -534 * C end
+    _groundFn = function(x, y)
+        if math.abs(x - B.x) <= 300 and math.abs(y - B.y) <= 300 then return 0 end
+        if Leg(x, y) then return 200 end
+        if Corr(x, y) then return 0 end
+        return nil
+    end
+    local seed = LC.AddZone(nil, nil, "rebel", 0, { mins = B + Vector(-300, -300, -16), maxs = B + Vector(300, 300, 192) })
+    local front = Vector(569 * C, -535 * C, 200) -- (where it last grew to: the far end of the leg)
+    local G = LCZ.UnpackGround({ 550, -548, 569, -547, 0, -16, 96, 568, -546, 569, -535, 2, 184, 296 },
+        { kind = "rebel", grown = true, seed = seed, group = 0, h = 96, steps = 3, pos = front, born = CurTime() })
+    G.r = math.max(200, math.sqrt(G.n * C * C / math.pi))
+    LC.Zones[#LC.Zones + 1] = G
+    local start = Vector(551 * C, -547 * C, 8)          -- the corridor's near end, far from the front
+    local beside = Vector(570 * C + 236, -535 * C, 208)  -- off the leg's end, beside the front
+    ok(G.n == 64 and LC.InRebelZone(start) and not LC.InRebelZone(beside), "the test ground: an L of 64 cells, its corridor rebel ground, beside its front not", G.n)
+    ok(start:Distance(front) > G.r * 3 and beside:Distance(front) < G.r * 0.9,
+        "and the circle round its front would have it the other way round", math.floor(G.r))
+    ok(LCZ.Within(G, start, 0.9) and not LCZ.Within(G, beside, 0.9) and not LCZ.Within(G, beside, 1),
+        "close to it (a fighter home, a crate's spot): the corridor is, the floor beside the front isn't")
+    ok(LCZ.Near(G, beside, 400) and not LCZ.Near(G, beside, 100) and math.abs(LCZ.EdgeDist(G, beside) - 236) < 1 and LCZ.EdgeDist(G, start) == 0,
+        "near it, and how far out: measured from its nearest cell", LCZ.EdgeDist(G, beside))
+    ok(LCZ.FloorAt(G, start) == 0 and LCZ.FloorAt(G, Vector(569 * C - 60, -540 * C, 210)) == 200 and LCZ.Contains(G, LCZ.Heart(G), 0),
+        "its floor is each cell's own, and the middle to head for is on it")
+    -- a zone you placed answers exactly as before
+    local circ = LC.AddZone(B + Vector(-5000, 0, 0), 400, "nogo", 0)
+    local same = true
+    for i = 1, 200 do
+        local p = circ.pos + Vector(math.cos(i) * (i * 4), math.sin(i) * (i * 4), (i % 7) * 20)
+        if LCZ.Within(circ, p, 0.9) ~= (p:DistToSqr(circ.pos) < 360 * 360) or LCZ.Within(circ, p, 1.3) ~= (p:DistToSqr(circ.pos) < 520 * 520)
+            or LCZ.Near(circ, p, 250) ~= (p:DistToSqr(circ.pos) < 650 * 650) then same = false end
+    end
+    ok(same and LCZ.Heart(circ) == circ.pos and LCZ.FloorAt(circ, circ.pos + Vector(100, 0, 50)) == circ.pos.z,
+        "a zone you placed: the circle round its middle, exactly as before")
+    LC.RemoveZone(circ)
+
+    section("Picking a spot on grown ground: each cell's own floor is dry ground")
+    local onCorr, onLeg, outside = 0, 0, 0
+    for _ = 1, 40 do
+        local p = LC.SpotInZone(G)
+        if p then
+            if not LCZ.Contains(G, p, 0) then outside = outside + 1 end
+            if math.abs(p.z) < 1 then onCorr = onCorr + 1 elseif math.abs(p.z - 200) < 1 then onLeg = onLeg + 1 end
+        end
+    end
+    ok(onCorr >= 8 and onLeg >= 4 and outside == 0,
+        "spots on the lower corridor too (they were all taken for a ditch below the front's floor), never off the ground", onCorr .. " corridor, " .. onLeg .. " leg")
+
+    section("Grown ground is dressed, lived in and cleared by its cells")
+    local spots = LC.ZoneFloorSpots(G, 6)
+    local far, offGround = 0, 0
+    for _, s in ipairs(spots) do
+        if not LCZ.Contains(G, s, 0) then offGround = offGround + 1 end
+        if s:Distance(front) > G.r then far = far + 1 end
+    end
+    ok(#spots >= 6 and far >= 1 and offGround == 0, "spots to dress it reach along the corridor, and all on it", #spots .. " spots, " .. far .. " far")
+    local big = LC.AddZone(front, G.r * 2, "rebel", 0)
+    local dressWas = GetConVar("lc_dressing"):GetBool()
+    _setcvar("lc_dressing", 1)
+    LC.Dressed[G] = nil
+    LC.DressingTick()
+    ok(LC.Dressed[G] and LC.Dressed[G].want >= 3, "grown ground gets a whole camp's dressing, not a piece for being near a bigger zone's middle",
+        LC.Dressed[G] and LC.Dressed[G].want)
+    _setcvar("lc_dressing", dressWas and 1 or 0)
+    LC.RemoveZone(big)
+    local bench = ents.Create("lc_workbench") bench:SetPos(start + Vector(0, 0, -8)) bench:Spawn()
+    local found = false
+    for _, t in ipairs(LC.RebelZoneThings(G)) do if t.ent == bench then found = true end end
+    ok(found, "a workbench down the corridor is one of its things, for the fighters to use")
+    bench:Remove()
+    local q = LC.QuietRebels(start, 150, 600)
+    ok(LC.RebelQuietZone(G) and not LC.RebelQuietAt(G.pos, G.r), "a team clearing the corridor keeps new fighters off it (the circle round its front missed it)")
+    q.untilT = 0
+    ok(not LC.RebelQuietZone(G), "and once they're done, it doesn't")
+
+    for i = #LC.Zones, 1, -1 do if LC.Zones[i] == G then table.remove(LC.Zones, i) end end
+    LC.Dressed[G] = nil
+    LC.RemoveZone(seed)
+    _walls, _groundFn = wallsWas, groundWas
+end
+GrownGroundTests()
     section("The keys: F1 quick menu, F2 your side's quick menu, F3 pockets, F4 jobs, career and factions in one window")
     -- (the owner, 7 November: "make F4 the hotkey for this, and then move inventory to F3 ... F2 can be the same BUT contextual")
     local kp = newPlayer("KeyLayout", "cp", nil, 200)
