@@ -159,7 +159,7 @@ function LC.ScientistNear(pos, dist)
     dist = dist or NEAR
     local best, bd
     for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_scientist") or {}) do
-        if IsValid(e) and not LC.LabShut(e) then
+        if IsValid(e) and not LC.LabShut(e) and not (LC.LabBroken and LC.LabBroken(e)) then -- (wrecked: sv_livingcity_labdamage.lua)
             local d = e:GetPos():DistToSqr(pos)
             if d < dist * dist and (not bd or d < bd) then best, bd = e, d end
         end
@@ -241,6 +241,13 @@ function LC.UseScientist(ply, sci)
     if not Rebel(ply) then
         SciSay(sci, "ohdear", 70)
         Say(ply, "He steps between you and the bench. \"I'm terribly sorry, I don't believe we've met. This is a private... laboratory. Please, go.\"")
+        return
+    end
+    -- wrecked by the Combine: nothing to work with until it's fixed (sv_livingcity_labdamage.lua)
+    if LC.LabBroken and LC.LabBroken(sci) then
+        SciSay(sci, "ohdear", 70)
+        Say(ply, "He waves at the smoking bench. \"Look at it! I can't make so much as a fuse until this is repaired. Spare parts, and a pair of hands: the job's on your board (F3), 'Get the lab running'.\"")
+        if LC.Notice then LC.Notice(ply, "warn", "The lab is wrecked", "Nothing can be made, decoded or done here until it's repaired. Take the job 'Get the lab running' from your board (F3).", 7) end
         return
     end
     if (ply.lcLabGreet or 0) < CurTime() then

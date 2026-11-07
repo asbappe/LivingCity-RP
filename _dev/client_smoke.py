@@ -867,6 +867,12 @@ do
         LC_CL.OpenLab({ credits = 50, items = { { id = "gun_pistol", name = "Homemade pistol", desc = "A pistol", secs = 12, price = 72, canPay = false, canMats = true,
             mats = { { name = "Gun parts", have = 2, need = 2 } } } } })
         LC_CL.OpenLab({ credits = 0, busy = 5, items = {} })
+        -- C > My career (cl_livingcity_career.lua)
+        LC_CL.OpenCareer({ faction = "Civil Protection", xp = 312, rank = 2, conditioned = false,
+            ranks = { { name = "Recruit", xp = 0 }, { name = "Metrocop", xp = 150 }, { name = "Division Leader", xp = 600 }, { name = "Combine Soldier", xp = 2000, overwatch = true } },
+            steps = { "Earn 288 more XP to make Division Leader.", "Nothing you fail locks you out." }, canReassess = false, reassessIn = 1200 })
+        LC_CL.OpenCareer({ none = true })
+        for id, fn in pairs(hook.t.Think or {}) do if id == "LivingCityLabSmoke" then fn() end end
         LC_CL.ShowPapersCard({ name = "Erika Hollis", cid = "#63-501", block = "Habitation Block 02", desc = "tall, grey coat", cards = 3, from = true, stalker = true })
         LC_CL.AddNotice("warn", "Civil Protection", "Papers. None? Carry them at all times.", 0)
         LC_CL.AddNotice("warn", "Civil Protection", "Papers. None? Carry them at all times.", 0)

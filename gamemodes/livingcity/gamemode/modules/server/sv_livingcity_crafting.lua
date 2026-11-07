@@ -254,13 +254,21 @@ function LC.Detonate(kind, pos, owner)
                 timer.Simple(2 + 3 * strength, function() if IsValid(ply) and ply.SetDSP then ply:SetDSP(0, false) end end)
             end
         end
+        -- (the owner, 7 November: a flashbang in a raid, and the rebels didn't even blink) everyone in sight of it,
+        -- or right beside it, is blinded for 4 to 9 seconds each: hands to their eyes, stumbling, not shooting
+        -- (LC.FlashStun, sv_livingcity_fieldops.lua)
         for npc, st in pairs(LC.NPCs or {}) do
-            if IsValid(npc) and st.role ~= "zombie" and st.role ~= "scanner" and npc:GetPos():DistToSqr(pos) < (FLASH_R * 0.8) ^ 2
-                and LOS(npc:EyePos(), pos + Vector(0, 0, 10), npc) then
-                st.stunnedUntil = now + 4
-                npc:SetEnemy(NULL)
-                npc:SetSchedule(SCHED_IDLE_STAND)
-                if st.role == "citizen" and LC.PlayGesture and LC.FRISKED_ANIMS then LC.PlayGesture(npc, LC.FRISKED_ANIMS, 4) end
+            if IsValid(npc) and st.role ~= "zombie" and st.role ~= "scanner" then
+                local d2 = npc:GetPos():DistToSqr(pos)
+                if d2 < (FLASH_R * 0.8) ^ 2 and (d2 < 150 * 150 or LOS(npc:EyePos(), pos + Vector(0, 0, 10), npc)) then
+                    if LC.FlashStun then
+                        LC.FlashStun(npc, st, math.Rand(4, 9))
+                    else
+                        st.stunnedUntil = now + 4
+                        npc:SetEnemy(NULL)
+                        npc:SetSchedule(SCHED_IDLE_STAND)
+                    end
+                end
             end
         end
     elseif kind == "gas" then
