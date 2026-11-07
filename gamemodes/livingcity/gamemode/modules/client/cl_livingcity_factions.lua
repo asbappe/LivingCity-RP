@@ -67,6 +67,8 @@ net.Receive("lcf_menu", function()
         tools.DoClick = function() RunConsoleCommand("lc_admintools") menu:Remove() end
     end
 
+    if LC_CL.CareerButton then LC_CL.CareerButton(menu, menu) end -- (your career, at the top: the owner, 7 November)
+
     local scroll = vgui.Create("DScrollPanel", menu)
     scroll:Dock(FILL)
 

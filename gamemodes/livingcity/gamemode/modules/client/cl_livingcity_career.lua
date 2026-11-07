@@ -24,6 +24,24 @@ end
 
 local frame
 
+-- A "My career" button for the top of the job board (F3) and the faction menu (F4): the owner, 7 November,
+-- "this needs to be visible in F3 or F4". close: the menu it sits in, shut when the page opens.
+function LC_CL.CareerButton(parent, close)
+    local f = IsValid(LocalPlayer()) and LocalPlayer():GetNW2String("lcf_faction", "") or ""
+    local unit = f == "cp" or f == "ota"
+    local b = vgui.Create("DButton", parent)
+    b:Dock(TOP)
+    b:SetTall(28)
+    b:DockMargin(4, 2, 4, 6)
+    b:SetText(unit and "My career: rank, XP to the next, and the way to the Overwatch" or "My career: rank, XP to the next, and the way up")
+    b:SetTooltip("Your rank, what the next one takes, and where your stories stand. (Also C > My career.)")
+    b.DoClick = function()
+        LC_CL.AskCareer("")
+        if IsValid(close) then close:Remove() end
+    end
+    return b
+end
+
 function LC_CL.AskCareer(what)
     net.Start("lc_career_ask")
     net.WriteString(what or "")

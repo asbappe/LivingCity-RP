@@ -55,6 +55,8 @@ net.Receive("lcq_board", function()
     scroll:Dock(FILL)
     scroll:DockMargin(6, 26, 6, 6)
 
+    if LC_CL.CareerButton then LC_CL.CareerButton(scroll, board) end -- (your career, at the top of the board: the owner, 7 November)
+
     if data.jobs then
         local card = vgui.Create("DPanel", scroll)
         card:Dock(TOP)
