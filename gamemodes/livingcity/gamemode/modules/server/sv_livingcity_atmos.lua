@@ -119,11 +119,7 @@ function LC.SetWeather(w, quiet)
     local old = LC.Weather()
     SetGlobal2String("lc_weather", w)
     LC.NextWeather = CurTime() + math.random(8, 20) * 60
-    if old ~= w and not quiet then
-        local line = ({ rain = "It starts to rain.", storm = "A storm rolls in over the city.", fog = "Fog comes down over the streets.",
-            overcast = "The sky clouds over.", clear = "The sky clears." })[w]
-        for _, p in ipairs(player.GetAll()) do p:ChatPrint("** " .. line) end
-    end
+    -- (A change of weather used to be said in chat. Gone, the owner asked, 7 November: it was only noise.)
     hook.Run("LivingCityWeather", w, old)
     return true
 end

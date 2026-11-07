@@ -707,15 +707,37 @@ local function Warmest(now)
     if not best or bh <= 0 then best = LC.DirectiveOrder[math.random(#LC.DirectiveOrder)] end
     return best
 end
+-- His voice in a dream: any recording in garrysmod/sound/livingcity/gman/ whose name starts with
+-- "dream" (dream1.wav, dream_listen.mp3, ...), one at random; with none there, lc_gman_line_dream.
+local cvDreamLine = CreateConVar("lc_gman_line_dream", "vo/episode_1/npc/gman/gman_inhale.wav", FLAGS, "The G-Man's sound as he comes into a dream, when no sound/livingcity/gman/dream* recording is on the server (empty: silent)")
+local dreamLines
+function LC.GmanDreamLines()
+    if dreamLines then return dreamLines end
+    dreamLines = {}
+    for _, ext in ipairs({ "wav", "mp3", "ogg" }) do
+        for _, f in ipairs((file.Find("sound/livingcity/gman/dream*." .. ext, "GAME")) or {}) do
+            dreamLines[#dreamLines + 1] = "livingcity/gman/" .. f
+            if resource and resource.AddFile then resource.AddFile("sound/livingcity/gman/" .. f) end
+        end
+    end
+    table.sort(dreamLines)
+    return dreamLines
+end
+timer.Simple(0, function() pcall(LC.GmanDreamLines) end)
+local function DreamLine()
+    local list = LC.GmanDreamLines()
+    if #list > 0 then return list[math.random(#list)] end
+    return cvDreamLine:GetString()
+end
 function LC.GmanDream(p, now)
     now = now or Now()
     if S.esc and S.esc.rumour and Rumoured(p) then
-        LC.Vision(p, "dream", "", RUMOURS[math.random(#RUMOURS)])
+        LC.Vision(p, "dream", DreamLine(), RUMOURS[math.random(#RUMOURS)])
         return "rumour"
     end
     if math.random(100) <= cvDream:GetFloat() then
         local id = Warmest(now)
-        LC.Vision(p, "dream", "", D[id].riddle)
+        LC.Vision(p, "dream", DreamLine(), D[id].riddle)
         return "riddle"
     end
 end

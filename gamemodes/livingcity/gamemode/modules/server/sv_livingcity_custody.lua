@@ -269,6 +269,12 @@ function LC.MakeStalker(ply)
     if LC.Notice then LC.Notice(ply, "bad", "Combine property", "You are a stalker now. There is no way out of it but death. Your work is on your board (F3).", 10) end
     ply:ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 3, 1)
     ply:EmitSound("npc/stalker/breathing3.wav", 70)
+    -- (that breath and the machine's whirring can loop: both stopped after a few seconds)
+    timer.Simple(5, function()
+        if not IsValid(ply) then return end
+        ply:StopSound("npc/stalker/breathing3.wav")
+        ply:StopSound("ambient/levels/labs/machine_moving_loop3.wav")
+    end)
     for _, p in ipairs(player.GetAll()) do
         if p ~= ply then p:ChatPrint("[City] An anticitizen has been repurposed. Citizens are reminded that cooperation is mandatory.") end
     end
@@ -288,7 +294,7 @@ local SCENE = {
     { 7.5, nil, "ambient/levels/labs/machine_moving_loop3.wav" },
     { 9, nil, "ambient/machines/thumper_hit.wav" },
     { 10.5, nil, "npc/stalker/stalker_scream1.wav", 0.5 }, -- (at half volume: it was deafening)
-    { 12.5, nil, "ambient/machines/spindown.wav" },
+    { 12.5, "stoploop", "ambient/machines/spindown.wav" }, -- (the whirring is a loop: stopped here, it played once)
     { 14, "done" },
 }
 function LC.StalkerScene(ply)
@@ -299,8 +305,9 @@ function LC.StalkerScene(ply)
     for _, step in ipairs(SCENE) do
         timer.Simple(step[1], function()
             if not IsValid(ply) then return end
-            if not (LC.Prisoners and LC.Prisoners[ply]) and step[2] ~= "done" then return end
+            if not (LC.Prisoners and LC.Prisoners[ply]) and step[2] ~= "done" and step[2] ~= "stoploop" then return end
             if step[3] then ply:EmitSound(step[3], 75, 100, step[4] or 1) end
+            if step[2] == "stoploop" or step[2] == "done" then ply:StopSound("ambient/levels/labs/machine_moving_loop3.wav") end
             if step[2] == "hit" then
                 ply:ViewPunch(Angle(math.random(8, 14), math.random(-8, 8), 0))
                 ply:ScreenFade(SCREENFADE.IN, Color(255, 255, 255, 120), 0.3, 0)
@@ -349,7 +356,7 @@ hook.Add("PlayerSay", "LivingCityStalkerVoice", function(ply, text)
     if LC.ICChatActive and LC.ICChatActive() then return end -- in-character chat turns it into the noise itself (sv_livingcity_rp.lua)
     local t = string.Trim(text)
     if string.sub(t, 1, 1) == "!" or string.sub(t, 1, 1) == "/" or string.sub(t, 1, 2) == "//" then return end -- commands and OOC still work
-    ply:EmitSound("npc/stalker/go_alert2a.wav", 70, 100, 0.5)
+    ply:EmitSound("npc/stalker/go_alert2a.wav", 65, 100, 0.3)
     return "*a strained, wordless scream*"
 end)
 -- nor talk to anyone (E on a person does nothing: a stalker's work is the only thing it does)
@@ -359,7 +366,7 @@ function LC.StalkerCantSpeak(ply, ent)
     if not (ent:IsNPC() or ent:IsPlayer() or ent:GetClass() == "lc_scientist") then return false end
     if (ply.lcStalkerUseNext or 0) < CurTime() then
         ply.lcStalkerUseNext = CurTime() + 4
-        ply:EmitSound("npc/stalker/go_alert2a.wav", 65, 100, 0.5)
+        ply:EmitSound("npc/stalker/go_alert2a.wav", 60, 100, 0.3) -- (0.3: still 40% too loud at 0.5, the owner said)
         ply:ChatPrint("[Stalker] You try to speak. Only a scream comes out: they left you a voice, not words.")
     end
     return true

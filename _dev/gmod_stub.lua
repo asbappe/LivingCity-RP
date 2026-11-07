@@ -367,6 +367,7 @@ function EMT:SetHealth(h) self.hp = h end
 function EMT:GetMaxHealth() return self.maxhp end
 _sounds = {}
 function EMT:EmitSound(s) table.insert(_sounds, s) end
+function EMT:StopSound(s) end
 function EMT:EntIndex() return self.idx end
 function EMT:SetIdealYawAndUpdate(y) self.yaw = y end
 function EMT:SetEnemy(e) self.enemy = e end

@@ -228,6 +228,8 @@ local TRACKS = {
     calm = { "music/hl2_song19.mp3", "music/hl2_song10.mp3", "music/hl2_song2.mp3", "music/hl2_song26.mp3", "music/hl2_song27_trainstation2.mp3" },
     tense = { "music/hl2_song13.mp3", "music/hl2_song26_trainstation1.mp3", "music/hl2_song30.mp3", "music/hl2_song33.mp3" },
     urgent = { "music/hl2_song3.mp3", "music/hl2_song4.mp3", "music/hl2_song29.mp3", "music/hl2_song16.mp3" },
+    -- the moment someone becomes a stalker (the owner, 7 November: "the most depressing HL2 music there is")
+    stalker = { "music/hl2_song26.mp3" },
 }
 local playing, playingMood, nextTrack = nil, nil, 100
 
@@ -308,6 +310,19 @@ timer.Create("LivingCityMusic", 1, 0, function()
             nextTrack = CurTime() + 60
             return
         end
+    end
+    -- just made a stalker: the saddest piece, straight away
+    do
+        local lp = LocalPlayer()
+        local stalker = IsValid(lp) and lp:GetNW2String("lcf_faction", "") == "stalker"
+        if stalker and LC_CL.WasStalker == false then
+            LC_CL.WasStalker = true
+            if Live(playing) then Stop(true) end
+            timer.Simple(2, function() if cvMusic:GetBool() then PlayMood("stalker") end end)
+            nextTrack = CurTime() + 300
+            return
+        end
+        if IsValid(lp) then LC_CL.WasStalker = stalker end
     end
     local mood = Mood()
     if Live(playing) then

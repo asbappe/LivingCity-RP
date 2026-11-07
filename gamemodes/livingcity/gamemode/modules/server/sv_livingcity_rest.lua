@@ -120,12 +120,20 @@ end
 function LC.SleepIn(ply, ent)
     if not cvOn:GetBool() or not IsValid(ply) or not ply:Alive() then return false end
     if ply.lcSleep then return false end
+    if ply:GetNW2String("lcf_faction", "") == "stalker" then return false, "A stalker doesn't sleep. It doesn't get tired either: it only works." end
     local where, bed = BedAt(ply, ent)
     if not where then return false, "There's no bed here." end
     local key = LC.BedKey(bed)
     if not LC.BedFree(key, ply) then return false, "Someone's already asleep in this bed." end
     if not LC.IsNight() and not LC.IsTired(ply) then return false, "You're not tired, and it's broad daylight. Beds are for the night (or when you're exhausted)." end
-    if LC.IsRested(ply) and not LC.IsTired(ply) then return false, "You slept already. You couldn't sleep again if you tried." end
+    -- rested for a day after a night's sleep, but you can sleep again 18 in-game hours after (the owner, 7 November)
+    if LC.IsRested(ply) and not LC.IsTired(ply) then
+        local left = ply:GetNW2Float("lc_rested_until", 0) - CurTime() - DayLen() * 0.25
+        if left > 0 then
+            local hrs = math.max(1, math.ceil(left / DayLen() * 24))
+            return false, string.format("You slept not long ago. You could sleep again in about %d in-game hour%s.", hrs, hrs == 1 and "" or "s")
+        end
+    end
     local now = CurTime()
     ply.lcSleep = { t0 = now, done = now + math.max(1, cvSecs:GetFloat()), last = now }
     ply:SetNW2Bool("lc_sleeping", true)

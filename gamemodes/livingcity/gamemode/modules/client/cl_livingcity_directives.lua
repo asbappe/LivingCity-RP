@@ -105,9 +105,15 @@ end
 function LC_CL.GmanVision(mode, snd, text)
     if V and IsValid(V.model) then V.model:Remove() end
     V = { mode = mode, text = text or "", t0 = CurTime() }
-    if snd and snd ~= "" then surface.PlaySound(snd) end
+    -- a dream comes on slowly (the owner, 7 November): dark first, then he fades in over a few
+    -- seconds, and he stays long enough to read the riddle; his voice comes as he appears
+    V.delay = mode == "dream" and 3 or 0
+    if snd and snd ~= "" then
+        if V.delay > 0 then timer.Simple(V.delay + 1, function() if V and V.mode == mode then surface.PlaySound(snd) end end)
+        else surface.PlaySound(snd) end
+    end
     if mode == "voice" then V.dur = 4 return end
-    V.dur = mode == "dream" and 9 or (mode == "summon" and 8 or 7)
+    V.dur = mode == "dream" and 26 or (mode == "summon" and 14 or 12)
     if not ClientsideModel then return end
     local m = ClientsideModel("models/gman_high.mdl", RENDERGROUP_OPAQUE)
     if not IsValid(m) then return end
@@ -151,16 +157,21 @@ hook.Add("HUDPaint", "LivingCityGmanVision", function()
         if leaving then m:SetPos(VOID + Vector(math.min(3, t - (V.dur - 3)) * 45, 0, 0)) end
         if m.FrameAdvance then m:FrameAdvance(FrameTime()) end
         local fade = leaving and math.max(0, 1 - (t - (V.dur - 3)) / 3) or 1
-        cam.Start3D(VOID + Vector(-95, 0, 62), Angle(4, 0, 0), 55, 0, 0, w, h)
-            render.SuppressEngineLighting(true)
-            render.SetLightingOrigin(VOID)
-            render.ResetModelLighting(0.25, 0.25, 0.3)
-            render.SetModelLighting(BOX_FRONT or 0, 0.9, 0.85, 0.8)
-            render.SetBlend(a * fade * (V.mode == "dream" and 0.75 or 1))
-            m:DrawModel()
-            render.SetBlend(1)
-            render.SuppressEngineLighting(false)
-        cam.End3D()
+        local seen = a * fade * math.Clamp((t - (V.delay or 0)) / 3, 0, 1) * (V.mode == "dream" and 0.8 or 1)
+        if seen > 0.03 then
+            -- drawn solid and faded by darkening his light, out of the black: a see-through model showed
+            -- the inside of his mouth through his lips (the black square the owner saw)
+            cam.Start3D(VOID + Vector(-95, 0, 62), Angle(4, 0, 0), 55, 0, 0, w, h)
+                render.SuppressEngineLighting(true)
+                render.SetLightingOrigin(VOID)
+                render.ResetModelLighting(0.25 * seen, 0.25 * seen, 0.3 * seen)
+                render.SetModelLighting(BOX_FRONT or 0, 0.9 * seen, 0.85 * seen, 0.8 * seen)
+                render.SetColorModulation(seen, seen, seen)
+                m:DrawModel()
+                render.SetColorModulation(1, 1, 1)
+                render.SuppressEngineLighting(false)
+            cam.End3D()
+        end
     end
     -- a summons: the envelope beside him, so it's plain what he's calling them back to
     if V.mode == "summon" then
@@ -172,7 +183,8 @@ hook.Add("HUDPaint", "LivingCityGmanVision", function()
         draw.SimpleTextOutlined("Your sealed directive is waiting", "DermaDefaultBold", ex, ey + 54, Color(235, 225, 200, 255 * a), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 200 * a))
     end
     -- his words, under him
-    if V.text ~= "" then
+    if V.text ~= "" and t > (V.delay or 0) + 2 then
+        a = math.min(a, (t - (V.delay or 0) - 2) / 1.5)
         local lines = {}
         for part in string.gmatch(V.text, "[^/]+") do lines[#lines + 1] = string.Trim(part) end
         for i, line in ipairs(lines) do

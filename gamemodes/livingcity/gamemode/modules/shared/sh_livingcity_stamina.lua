@@ -85,9 +85,16 @@ function LCS.Tick(now, dt)
         local winded = ply:GetNW2Bool("lc_winded", false)
         if not winded and s <= 0 then
             ply:SetNW2Bool("lc_winded", true)
+            -- breathe1.wav loops by itself: remember it plays, so it is stopped again
             ply:EmitSound("player/breathe1.wav", 60, 100, 0.6)
+            ply.lcBreathAt = now
         elseif winded and s >= cvWinded:GetFloat() then
             ply:SetNW2Bool("lc_winded", false)
+        end
+        -- the panting stops once the breath is back (or after 8 seconds at most), never loops on
+        if ply.lcBreathAt and (s >= cvWinded:GetFloat() or now - ply.lcBreathAt > 8) then
+            ply:StopSound("player/breathe1.wav")
+            ply.lcBreathAt = nil
         end
     end
 end
@@ -105,6 +112,7 @@ hook.Add("KeyPress", "LivingCityStamina", function(ply, key)
     ply.lcRanAt = CurTime()
 end)
 hook.Add("PlayerSpawn", "LivingCityStamina", function(ply)
+    if ply.lcBreathAt then ply:StopSound("player/breathe1.wav") ply.lcBreathAt = nil end
     ply:SetNW2Float("lc_stamina", 100)
     ply:SetNW2Bool("lc_winded", false)
 end)

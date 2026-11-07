@@ -909,6 +909,8 @@ hook.Add("HUDPaint", "LivingCityHUD", function()
         if strict and not unit and grace > 0 and not (block > 0 and InMyBlock(block)) then
             sub = string.format("Grace period: %ds to get home. ", math.ceil(grace)) .. sub
         end
+        -- (a stalker has no home: the curfew's "report to your block" and HOME marker aren't for it)
+        if LocalPlayer():GetNW2String("lcf_faction", "") == "stalker" then block = 0 end
         if strict and block > 0 then
             sub = (InMyBlock(block) and "You are home. Stay inside. " or ("Report to " .. BlockName(block) .. ". ")) .. sub
         end

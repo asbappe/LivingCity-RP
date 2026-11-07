@@ -37,7 +37,8 @@ local CLOTHES = { civvies = true, cwu_overalls = true, uniform_clean = true } --
 
 local function Pick(t) return t[math.random(#t)] end
 local function Notice(ply, kind, title, text, secs) if LC.Notice then LC.Notice(ply, kind, title, text, secs) else ply:ChatPrint(title .. ": " .. text) end end
-local function Exempt(ply) return not ply:Alive() or (LC.PlayerIsZombie and LC.PlayerIsZombie(ply)) or ply:GetNW2String("lcf_faction", "") == "admin" end
+local function Exempt(ply) return not ply:Alive() or (LC.PlayerIsZombie and LC.PlayerIsZombie(ply)) or ply:GetNW2String("lcf_faction", "") == "admin"
+    or ply:GetNW2String("lcf_faction", "") == "stalker" end -- (a stalker has no use for a toilet or a bath)
 
 ------------------------------------------------------------------------
 -- Toilets, baths and beds: the editor's, and the map's own
@@ -211,6 +212,10 @@ end
 
 function LC.UseToilet(ply)
     if not IsValid(ply) or not ply:Alive() then return false end
+    if ply:GetNW2String("lcf_faction", "") == "stalker" then
+        Notice(ply, "info", "Not for you", "A stalker has no need of a toilet any more. They saw to that.", 5)
+        return false
+    end
     if not LC.StartTask then return false end
     local had = LC.HasParasites and LC.HasParasites(ply)
     ply:SetNW2Bool("lc_on_toilet", true)
@@ -250,6 +255,7 @@ end
 
 function LC.UseBath(ply)
     if not IsValid(ply) or not ply:Alive() or not LC.StartTask then return false end
+    if ply:GetNW2String("lcf_faction", "") == "stalker" then return false end
     ply:EmitSound("ambient/water/water_flow_loop1.wav", 55, 100, 0.4)
     return LC.StartTask(ply, 10, "Washing...", {
         maxMove = 50, cancelText = "You step out half washed.",
