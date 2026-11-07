@@ -134,6 +134,12 @@ local ACTIONS = {
         if not z then return false, what .. " couldn't grow: " .. tostring(why) .. "." end
         return true, what .. " grew " .. (z.where or "") .. (z.cells and string.format(", along the path nodes (%d cells, saved as %d rectangles)", z.n or 0, #(z.rects or {})) or ", as a round patch (no path nodes near it)") .. "."
     end,
+    -- the city, not the player: burn the confiscated contraband now (sv_livingcity_evidence.lua)
+    evidence = function(_, _, admin)
+        if not LC.EvidenceBurnNow then return false, "No evidence stock here." end
+        local ok, msg = LC.EvidenceBurnNow(admin)
+        return ok, msg
+    end,
     item = function(t, v)
         local it = LCS and LCS.Items and LCS.Items[v or ""]
         if not it or not LC.GiveItem then return false, "No such item." end
@@ -164,6 +170,7 @@ local function Snapshot(admin, target)
         credits = LC.Credits and LC.Credits(t) or nil, standing = LC.Standing and LC.Standing(t) or nil, players = {} }
     for _, f in ipairs(LCF and LCF.Factions or {}) do data.xp[f.id] = XP(t, f.id) end
     for _, p in ipairs(player.GetAll()) do data.players[#data.players + 1] = { id = p:SteamID() .. "|" .. p:Nick(), name = p:Nick() } end
+    data.evidence = LC.EvidenceStatus and LC.EvidenceStatus() or nil -- (the confiscated contraband: sv_livingcity_evidence.lua)
     -- how the city's territory is doing (superadmins can grow it from the panel)
     if admin:IsSuperAdmin() and LC.TerritoryStatus then
         data.superadmin = true

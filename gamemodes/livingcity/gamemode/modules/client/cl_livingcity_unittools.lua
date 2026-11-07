@@ -13,6 +13,7 @@
       Escorts           workers waiting for one; handing yours back
       Post office       reading the mail
       Sociostability    the Administrator sets it
+      Evidence          what's been confiscated, waiting to be burned (admins: burn it now)
       Your work         your directives (F4)
 
     C > Unit tools (the full menu), F2 > 2, or
@@ -193,6 +194,19 @@ function LC_CL.OpenUnitTools()
         Button(s, "Escort " .. (LC_CL.ICName and LC_CL.ICName(r.ply) or r.ply:Nick()), "A Union worker on a job (" .. r.why .. ").", Do("escort", "", r.ply))
     end
     if #reqs == 0 and not IsValid(escorting) then Note(s, "Nobody's waiting for an escort.") end
+
+    -- what's been confiscated, waiting for the fire (sv_livingcity_evidence.lua)
+    local evN, evBurn = GetGlobal2Int("lc_evidence_n", 0), GetGlobal2String("lc_evidence_burn", "")
+    s = Section("Evidence", evBurn ~= "" and ("being burned: " .. evBurn) or (evN > 0 and (evN .. " confiscated") or nil))
+    if evN > 0 then
+        Note(s, "In the evidence room: " .. GetGlobal2String("lc_evidence_list", "") .. ".")
+    else
+        Note(s, "The evidence room is empty. What you confiscate goes there.")
+    end
+    Note(s, "It's burned in public after a sweep or a raid, or once 8 or more have built up.")
+    if me:IsAdmin() then
+        Button(s, "Burn it now", "Units carry it to the square and burn it; the PA calls the citizens to watch.", function() Close() RunConsoleCommand("lc_burn_evidence") end)
+    end
 
     s = Section("Post office")
     Button(s, "Read the mail", "At the post office: open citizens' letters, looking for contraband and conspiracy.", Do("readmail"))
