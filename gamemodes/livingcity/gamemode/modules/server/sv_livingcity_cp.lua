@@ -710,16 +710,19 @@ function LC.SocioStopMul()
     return (LC.Socio == "red" and 2) or (LC.Socio == "yellow" and 1.5) or 1
 end
 
-local function AnnounceSocio(level, by)
+local function AnnounceSocio(level, by, force)
     local info = LCCP.Socio[level]
     local custom, subtitle = nil, nil
     local trig = "socio_" .. tostring(level)
+    -- green or yellow straight after something else on the PA (the event that caused it, usually): in
+    -- chat only, not said over it too (the owner, 7 November: too many announcements)
+    local voiced = force or not (LC.AnnounceTooSoon and LC.AnnounceTooSoon(trig))
     -- one voice for it: Overwatch, or (some of the time) the Administrator in his place (sv_livingcity_announcer.lua)
-    local herTurn = LC.AnnounceVoiceFor and LC.AnnounceVoiceFor(trig, true) == "administrator" and LC.CustomAnnounce and LC.CustomAnnounce("administrator", trig, nil, true)
-    LC.LastPA = CurTime()
-    if not herTurn then
+    local herTurn = voiced and LC.AnnounceVoiceFor and LC.AnnounceVoiceFor(trig, true) == "administrator" and LC.CustomAnnounce and LC.CustomAnnounce("administrator", trig, nil, true)
+    if voiced and not herTurn then
         if LC.PickAnnounceClip then custom, subtitle = LC.PickAnnounceClip("overwatch", trig, true) end -- (sv_livingcity_announcer.lua)
         if LC.OverwatchSpeaks then LC.OverwatchSpeaks(custom or SOCIO_VOICE[level]) end
+        if LC.PAMark then LC.PAMark(LC.AnnounceClipSecs and LC.AnnounceClipSecs(custom or SOCIO_VOICE[level]) or 8) else LC.LastPA = CurTime() end
         net.Start("lc_announce")
         net.WriteString(custom or SOCIO_VOICE[level])
         net.WriteString(info.long)
@@ -734,6 +737,29 @@ local function AnnounceSocio(level, by)
     end
 end
 
+-- Sociostability said at most once in SOCIO_GAP seconds (red, or the Administrator setting it, at
+-- once): a change in between is said when the time's up, if it still stands then and isn't what
+-- was said last (a flicker from green to yellow and back is never said at all).
+local SOCIO_GAP = 120
+local socioSaid = { level = nil, at = -1e9 }
+LC.SocioSaid = socioSaid
+local function AnnounceSocioPaced(level, by, force)
+    local now = CurTime()
+    if force or level == "red" or now - socioSaid.at >= SOCIO_GAP then
+        timer.Remove("LivingCitySocioPaced")
+        socioSaid.level, socioSaid.at = level, now
+        return AnnounceSocio(level, by, force)
+    end
+    timer.Create("LivingCitySocioPaced", math.max(1, SOCIO_GAP - (now - socioSaid.at)), 1, function()
+        local lvl = LC.Socio or "green"
+        if lvl == socioSaid.level then return end
+        socioSaid.level, socioSaid.at = lvl, CurTime()
+        local o = LC.SocioOverride
+        local _, why = LC.SocioAuto()
+        AnnounceSocio(lvl, (o and o.by) or why)
+    end)
+end
+
 function LC.RefreshSocio(quiet, force)
     local o = LC.SocioOverride
     if o and o.untilT <= CurTime() then LC.SocioOverride, o = nil, nil end
@@ -743,7 +769,7 @@ function LC.RefreshSocio(quiet, force)
     if level ~= LC.Socio or force then
         local old = LC.Socio or "green"
         LC.Socio = level
-        if not quiet then AnnounceSocio(level, (o and o.by) or why) end
+        if not quiet then AnnounceSocioPaced(level, (o and o.by) or why, force) end
         LC.Log("info", "Sociostability: " .. old .. " -> " .. level)
         hook.Run("LivingCitySocioChanged", level, old)
     end

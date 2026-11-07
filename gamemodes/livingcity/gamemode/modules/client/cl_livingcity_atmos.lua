@@ -151,6 +151,11 @@ local rainSound, thunderAt, flashUntil = nil, 0, 0
 local function Exists(path) return file and file.Exists and file.Exists("sound/" .. path, "GAME") end
 local function First(list) for _, p in ipairs(list) do if Exists(p) then return p end end return nil end
 local RAIN_LOOPS = { "ambient/weather/rumble_rain.wav", "ambient/water/water_flow_loop1.wav", "ambient/levels/canals/drip_loop.wav" }
+-- the rain's sound, 30% quieter than it was (the owner, 7 November: "way too loud")
+local RAIN_SCALE = 0.7
+function LC_CL.RainVolume(w, out)
+    return (out and (w == "storm" and 0.6 or 0.4) or 0.12) * RAIN_SCALE
+end
 local THUNDER = { "ambient/atmosphere/thunder1.wav", "ambient/atmosphere/thunder2.wav", "ambient/atmosphere/thunder3.wav", "ambient/atmosphere/thunder4.wav" }
 
 hook.Add("Think", "LivingCityRain", function()
@@ -168,9 +173,9 @@ hook.Add("Think", "LivingCityRain", function()
     if raining then
         if not rainSound then
             local p = First(RAIN_LOOPS)
-            if p then rainSound = CreateSound(ply, p) if rainSound then rainSound:PlayEx(0.1, 100) end end
+            if p then rainSound = CreateSound(ply, p) if rainSound then rainSound:PlayEx(0.1 * RAIN_SCALE, 100) end end
         end
-        if rainSound then rainSound:ChangeVolume(outdoors and (w == "storm" and 0.6 or 0.4) or 0.12, 1) end
+        if rainSound then rainSound:ChangeVolume(LC_CL.RainVolume(w, outdoors), 1) end
     elseif rainSound then
         rainSound:FadeOut(2)
         rainSound = nil
@@ -237,13 +242,27 @@ local TRACKS = {
     urgent = { "music/hl2_song3.mp3", "music/hl2_song4.mp3", "music/hl2_song29.mp3", "music/hl2_song16.mp3" },
     -- the moment someone becomes a stalker (the owner, 7 November: "the most depressing HL2 music there is")
     stalker = { "music/hl2_song26.mp3" },
+    -- Civil Protection and the Overwatch in action: a raid, a sweep, a violent job, a firefight
+    -- (the owner, 7 November: the rebels' action music, mirrored for the Combine). Half-Life 2's own
+    -- combat pieces; whichever this install has.
+    combat = { "music/hl2_song3.mp3", "music/hl2_song4.mp3", "music/hl2_song16.mp3", "music/hl2_song29.mp3",
+        "music/hl2_song20_submix0.mp3", "music/hl2_song20_submix4.mp3", "music/hl2_song31.mp3", "music/hl2_song14.mp3" },
 }
+-- the action moods: they cut in (a few seconds after things turn) and out again
+local function Hot(m) return m == "urgent" or m == "combat" end
+LC_CL.MusicHot = Hot
+-- A Civil Protection unit (the Overwatch's soldiers too) the server says is in action now (sv_livingcity_pacing.lua)
+function LC_CL.InAction(ply)
+    return IsValid(ply) and ply:GetNW2String("lcf_faction", "") == "cp" and ply:GetNW2Float("lc_action_until", 0) > CurTime()
+end
 local playing, playingMood, nextTrack = nil, nil, 100
 
 local function Mood()
     local socio = GetGlobal2String("lc_socio", "green")
     local event = GetGlobal2String("lc_event", "")
     local ply = LocalPlayer()
+    -- (a unit in action: the Combine's own action music, as a wanted rebel has theirs)
+    if LC_CL.InAction(ply) then return "combat" end
     if socio == "red" or (IsValid(ply) and ply:GetNW2Float("lc_wanted_until", 0) > CurTime()) then return "urgent" end
     if event == "lockdown" then return "urgent" end
     if socio == "yellow" or event == "curfew" or Phase(LC_CL.Hour()) == "night" then return "tense" end
@@ -336,7 +355,7 @@ timer.Create("LivingCityMusic", 1, 0, function()
         if CurTime() > fadingUntil then playing:SetVolume(MusicVolume()) end
         -- the mood changed a lot: let this one go
         -- (the urgent music comes in about five seconds after things turn: an alarm, a chase)
-        if playingMood ~= mood and (mood == "urgent" or playingMood == "urgent") then Stop(true) nextTrack = CurTime() + 5 end
+        if playingMood ~= mood and (Hot(mood) or Hot(playingMood)) and not (Hot(mood) and Hot(playingMood)) then Stop(true) nextTrack = CurTime() + 5 end
         if Live(playing) and playing:GetState() == GMOD_CHANNEL_STOPPED then
             playing, playingMood = nil, nil
             nextTrack = CurTime() + math.random(306, 714) -- quiet for a while between pieces (5 to 12 minutes)
@@ -344,7 +363,7 @@ timer.Create("LivingCityMusic", 1, 0, function()
         return
     end
     -- nothing playing and things just turned urgent: give it about five seconds
-    if mood == "urgent" and lastMood ~= "urgent" then nextTrack = math.min(nextTrack, CurTime() + 5) end
+    if Hot(mood) and not Hot(lastMood) then nextTrack = math.min(nextTrack, CurTime() + 5) end
     lastMood = mood
     if CurTime() >= nextTrack then
         nextTrack = CurTime() + 30

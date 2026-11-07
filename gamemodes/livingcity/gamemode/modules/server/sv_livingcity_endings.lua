@@ -4026,6 +4026,16 @@ local RETUNED = {
     { "lc_ending_gman_lines", { "vo/citadel/gman_exit01.wav,vo/citadel/gman_exit02.wav" }, "vo/citadel/gman_exit02.wav" }, -- (2 November: exit01 calls everyone "Doctor Freeman")
     { "lc_afk_kick_minutes", { "15" }, "20" },
     { "lc_job_cooldown", { "120" }, "900" }, -- (7 November: one Union job change every 15 minutes, the owner asked; sv_livingcity_work.lua)
+    -- (7 November, the owner: "slow down the pacing so events are more sparse": the city's own happenings about twice as far apart,
+    -- and the PA quiet a minute and a half before a routine announcement: docs/dev/pacing-audit.md)
+    { "lc_announce_quiet", { "60" }, "90" },
+    { "lc_event_interval", { "12" }, "24" },
+    { "lc_skirmish_interval", { "25" }, "50" },
+    { "lc_train_minutes", { "12" }, "24" },
+    { "lc_rebel_spread_minutes", { "20" }, "40" },
+    { "lc_drop_cooldown", { "30" }, "60" },
+    { "lc_rebel_ops_minutes", { "30" }, "60" },
+    { "lc_loyalty_praise_minutes", { "20" }, "40" },
     { "lc_ending_marrow_max", { "40", "60" }, "80" },
     { "lc_ending_base_bombs", { "30" }, "60" },
     { "lc_ending_hard_moment_beats", { "16" }, "5" },
@@ -4053,5 +4063,6 @@ end
 LC.EndingRetune()
 
 hook.Add("InitPostEntity", "LivingCityEndings", function()
+    LC.EndingRetune() -- (again, now every module's settings exist: most are made after this file)
     for _, id in ipairs(LC.EndingOrder) do LC.EndingSongs(id) end -- (so the songs are sent to joining players)
 end)

@@ -67,28 +67,7 @@ hook.Add("HUDPaint", "LivingCityRest", function()
         end
         return
     end
-    -- tired: the eyelids
-    if me:GetNW2Bool("lc_tired", false) then
-        local f = LC_CL.EyelidClose(CurTime())
-        if f > 0.01 then
-            local lid = (h / 2 + FEATHER * 0.5) * f -- (at 1 the two meet: no gap left between them)
-            -- the world blurs as they close
-            blurMat = blurMat or (Material and Material("pp/blurscreen"))
-            if blurMat and render and render.UpdateScreenEffectTexture and surface.SetMaterial then
-                surface.SetMaterial(blurMat)
-                surface.SetDrawColor(255, 255, 255, 255)
-                for i = 1, 3 do
-                    blurMat:SetFloat("$blur", f * 2 * i)
-                    if blurMat.Recompute then blurMat:Recompute() end
-                    render.UpdateScreenEffectTexture()
-                    surface.DrawTexturedRect(0, 0, w, h)
-                end
-                if draw.NoTexture then draw.NoTexture() end
-            end
-            Lid(w, h, lid, true)
-            Lid(w, h, lid, false)
-        end
-    end
+    -- (tired: the eyelids are drawn under the rest of the screen: LivingCityRestLids, below)
     -- after a close call: still recovering (sv_livingcity_progress.lua)
     local rec = me:GetNW2Float("lc_recovering_until", 0) - CurTime()
     local ly = (LC_CL.LeftColumnBottom and LC_CL.LeftColumnBottom() or 160) + 6 -- (in the left column, under the rest)
@@ -105,6 +84,34 @@ hook.Add("HUDPaint", "LivingCityRest", function()
             "DermaDefaultBold", 20, y, urge >= 80 and Color(255, 120, 90) or Color(230, 190, 120))
     end
 end)
+
+-- Tired: the eyelids. Drawn before the rest of the screen (HUDPaintBackground), so the job's
+-- objective, its marker and the notices stay on top of them (the owner, 7 November: "The quest
+-- objective disappears when the sleepiness effect eye shutting thing kicks in").
+function LC_CL.DrawEyelids(me, t)
+    if not IsValid(me) or not me:Alive() or not me:GetNW2Bool("lc_tired", false) or me:GetNW2Bool("lc_sleeping", false) then return false end
+    local f = LC_CL.EyelidClose(t or CurTime())
+    if f <= 0.01 then return false end
+    local w, h = ScrW(), ScrH()
+    local lid = (h / 2 + FEATHER * 0.5) * f -- (at 1 the two meet: no gap left between them)
+    -- the world blurs as they close
+    blurMat = blurMat or (Material and Material("pp/blurscreen"))
+    if blurMat and render and render.UpdateScreenEffectTexture and surface.SetMaterial then
+        surface.SetMaterial(blurMat)
+        surface.SetDrawColor(255, 255, 255, 255)
+        for i = 1, 3 do
+            blurMat:SetFloat("$blur", f * 2 * i)
+            if blurMat.Recompute then blurMat:Recompute() end
+            render.UpdateScreenEffectTexture()
+            surface.DrawTexturedRect(0, 0, w, h)
+        end
+        if draw.NoTexture then draw.NoTexture() end
+    end
+    Lid(w, h, lid, true)
+    Lid(w, h, lid, false)
+    return true
+end
+hook.Add("HUDPaintBackground", "LivingCityRestLids", function() LC_CL.DrawEyelids(LocalPlayer()) end)
 
 -- tired: the world swims a little
 hook.Add("RenderScreenspaceEffects", "LivingCityRest", function()

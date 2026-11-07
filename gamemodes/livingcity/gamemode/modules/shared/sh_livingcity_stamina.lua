@@ -11,6 +11,14 @@
     above lc_stamina_fed_hunger, each bring it back a little faster
     (lc_stamina_rested_bonus, lc_stamina_fed_bonus). A bar at
     the bottom of the screen shows it while it isn't full. lc_stamina 0 turns it off.
+
+    Out of breath, you pant (the owner, 7 November, twice: "breathing ... repeats
+    endlessly even after stamina refills"). The server never plays it: each game
+    plays it for the people near it, through one sound handle per person
+    (CreateSound), started once when they run out and stopped (Stop, then dropped)
+    as soon as they have their breath back, at most 8 seconds on, when they die,
+    respawn or change faction, and by a watchdog every second.
+    player/breathe1.wav loops by itself, so it is never played without a handle.
 ]]
 
 LC = LC or {}
@@ -48,7 +56,73 @@ hook.Add("SetupMove", "LivingCityStamina", function(ply, mv)
     end
 end)
 
-if CLIENT then return end
+if CLIENT then
+    -- Panting: one CSoundPatch per player who's out of breath, owned here and nowhere else.
+    local BREATH = "player/breathe1.wav" -- (a looping sample: only ever played through a handle that is stopped)
+    local MAX_SECS = 8                  -- (never longer than this, however long they stay winded)
+    local NEAR = 700                    -- (others are heard panting this close; you always hear yourself)
+    local pants = {}                    -- [ply] = { snd = CSoundPatch, t0 = when, faction = at the start }
+    local spent = {}                    -- [ply] = true: panted already for this time out of breath
+    LCS.Pants = pants
+    local function StopPant(ply)
+        local p = pants[ply]
+        pants[ply] = nil
+        if p and p.snd then p.snd:Stop() p.snd = nil end
+        -- (and anything an older version of the server started on them without a handle)
+        if IsValid(ply) and ply.StopSound then ply:StopSound(BREATH) end
+    end
+    LCS.StopPant = StopPant
+    local function ShouldPant(ply, now, p)
+        if not IsValid(ply) or not cvOn:GetBool() or not ply:Alive() then return false end
+        if not ply:GetNW2Bool("lc_winded", false) then return false end
+        if ply:GetNW2Float("lc_stamina", 100) >= cvWinded:GetFloat() then return false end
+        if p and (now - p.t0 > MAX_SECS or p.faction ~= ply:GetNW2String("lcf_faction", "")) then return false end
+        return true
+    end
+    LCS.ShouldPant = ShouldPant
+    -- Stops whatever shouldn't be playing; starts it for anyone who just ran out. True if it plays for ply.
+    function LCS.BreathTick(now)
+        now = now or CurTime()
+        for ply, p in pairs(pants) do
+            if not ShouldPant(ply, now, p) then StopPant(ply) end
+        end
+        for ply in pairs(spent) do
+            if not IsValid(ply) or not ply:GetNW2Bool("lc_winded", false) or not ply:Alive() then spent[ply] = nil end
+        end
+        local me = LocalPlayer and LocalPlayer()
+        for _, ply in ipairs(player.GetAll()) do
+            if not pants[ply] and not spent[ply] and ShouldPant(ply, now)
+                and (ply == me or (IsValid(me) and ply:GetPos():DistToSqr(me:GetPos()) < NEAR * NEAR)) then
+                spent[ply] = true
+                local snd = CreateSound and CreateSound(ply, BREATH) or nil
+                if snd then
+                    if snd.SetSoundLevel then snd:SetSoundLevel(ply == me and 0 or 60) end
+                    snd:PlayEx(0.6, 100)
+                    pants[ply] = { snd = snd, t0 = now, faction = ply:GetNW2String("lcf_faction", "") }
+                end
+            end
+        end
+    end
+    -- The watchdog: every second, nothing pants that shouldn't, whatever else went wrong.
+    function LCS.BreathWatchdog(now)
+        now = now or CurTime()
+        for ply, p in pairs(pants) do
+            if not ShouldPant(ply, now, p) then StopPant(ply) end
+        end
+        local me = LocalPlayer and LocalPlayer()
+        if IsValid(me) and not pants[me] and me.StopSound then me:StopSound(BREATH) end
+    end
+    timer.Create("LivingCityBreath", 0.25, 0, function()
+        local ok, err = pcall(LCS.BreathTick, CurTime())
+        if not ok then print("[Living City] panting: " .. tostring(err)) end
+    end)
+    timer.Create("LivingCityBreathWatchdog", 1, 0, function()
+        local ok, err = pcall(LCS.BreathWatchdog, CurTime())
+        if not ok then print("[Living City] panting watchdog: " .. tostring(err)) end
+    end)
+    hook.Add("ShutDown", "LivingCityBreath", function() for ply in pairs(pants) do StopPant(ply) end end)
+    return
+end
 
 -- slept well, and fed: a little faster each
 function LCS.RegenMul(ply)
@@ -84,17 +158,9 @@ function LCS.Tick(now, dt)
         if math.abs(s - was) >= 0.5 or (s == 100 and was ~= 100) or (s == 0 and was ~= 0) then ply:SetNW2Float("lc_stamina", s) end
         local winded = ply:GetNW2Bool("lc_winded", false)
         if not winded and s <= 0 then
-            ply:SetNW2Bool("lc_winded", true)
-            -- breathe1.wav loops by itself: remember it plays, so it is stopped again
-            ply:EmitSound("player/breathe1.wav", 60, 100, 0.6)
-            ply.lcBreathAt = now
+            ply:SetNW2Bool("lc_winded", true) -- (the panting is each player's own game's: above)
         elseif winded and s >= cvWinded:GetFloat() then
             ply:SetNW2Bool("lc_winded", false)
-        end
-        -- the panting stops once the breath is back (or after 8 seconds at most), never loops on
-        if ply.lcBreathAt and (s >= cvWinded:GetFloat() or now - ply.lcBreathAt > 8) then
-            ply:StopSound("player/breathe1.wav")
-            ply.lcBreathAt = nil
         end
     end
 end
@@ -112,7 +178,6 @@ hook.Add("KeyPress", "LivingCityStamina", function(ply, key)
     ply.lcRanAt = CurTime()
 end)
 hook.Add("PlayerSpawn", "LivingCityStamina", function(ply)
-    if ply.lcBreathAt then ply:StopSound("player/breathe1.wav") ply.lcBreathAt = nil end
     ply:SetNW2Float("lc_stamina", 100)
     ply:SetNW2Bool("lc_winded", false)
 end)

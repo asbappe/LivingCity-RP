@@ -3,7 +3,7 @@
 
     With a train platform on the map (an editor point, "Point: train platform";
     or failing that, the Intake Processor's workplace), a train comes in every
-    lc_train_minutes (12, give or take). A horn at the platform, a notice
+    lc_train_minutes (24, give or take). A horn at the platform, a notice
     for everyone, and a few new arrivals step off, suitcase in hand, and walk
     to their housing blocks. For a minute and a half after, anyone leaving the
     city (their day is done) walks to the platform with a suitcase and
@@ -20,7 +20,7 @@ LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn      = CreateConVar("lc_trains", "1", FLAGS, "Trains come into the station now and then, with new arrivals; people leaving the city board them")
-local cvMinutes = CreateConVar("lc_train_minutes", "12", FLAGS, "Minutes between trains (give or take a quarter)")
+local cvMinutes = CreateConVar("lc_train_minutes", "24", FLAGS, "Minutes between trains (give or take a quarter)")
 local BOARDING = 90
 
 local ORIGINS = { "City 14", "the coast", "the industrial district", "City 9", "the outlands transfer", "Nova Prospekt processing" }

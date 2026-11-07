@@ -27,6 +27,18 @@
     lc_bed_head_flip 1 turns everyone on an editor bed round, if heads end up
     at the foot (sv_livingcity_rebellife.lua).
 
+    Warned first (the owner, 7 November: "two warnings, one ~6 minutes before
+    and another ~2 minutes before, and have sleep possible at that time"): a
+    notice about six real minutes before you're exhausted, and another about
+    two minutes before. From the first one on, a bed lets you sleep. A citizen
+    keeps the city's hours: tired at the soonest three quarters of the way to
+    lc_tired_days, and then only in the evening or at night (21:00 to 5:00),
+    unless they went a quarter more than lc_tired_days without sleep (a night
+    skipped). Civil Protection, the Resistance and the rest just count the
+    time awake. Exhaustion never starts mid-fight (sv_livingcity_pacing.lua):
+    it waits till the fighting's over (five minutes at most). On a job, the
+    job stays your next step on screen; the bed is still in F1 > What now?.
+
       lc_sleep 0/1, lc_sleep_seconds (60), lc_tired_days (1),
       lc_citizens_sleep 0/1 (1)
 ]]
@@ -56,6 +68,33 @@ function LC.IsNight()
 end
 
 function LC.IsTired(ply) return ply:GetNW2Bool("lc_tired", false) end
+
+-- The warnings, in real seconds before you're exhausted (the owner, 7 November)
+local WARN1, WARN2 = 360, 120
+local FIGHT_HOLD = 300 -- (exhaustion waits for a fight to end, five minutes at most)
+LC.TiredWarnSecs = { WARN1, WARN2 }
+
+-- When they'll be exhausted (CurTime). Everyone: lc_tired_days of the city's days awake. A
+-- citizen keeps the city's hours: at the soonest three quarters of that, then only once it's
+-- evening or night (21:00 to 5:00), or at the latest a quarter more than it (a night skipped).
+function LC.TiredDue(ply)
+    local since = ply.lcAwakeSince or CurTime()
+    local len = DayLen()
+    local limit = len * math.max(0.01, cvDays:GetFloat())
+    if ply:GetNW2String("lcf_faction", "") ~= "citizen" then return since + limit end
+    local zero = GetGlobal2Float("lc_day_zero", 0)
+    local early, latest = since + limit * 0.75, since + limit * 1.25
+    local h = ((early - zero) / len * 24) % 24
+    local due = early
+    if h >= 5 and h < 21 then due = early + (21 - h) / 24 * len end
+    return math.min(due, latest)
+end
+
+-- Tired enough to sleep: from the first warning on (or exhausted already).
+function LC.IsDrowsy(ply)
+    if not cvOn:GetBool() or not IsValid(ply) or Exempt(ply) then return false end
+    return LC.IsTired(ply) or CurTime() >= LC.TiredDue(ply) - WARN1
+end
 function LC.IsRested(ply) return ply:GetNW2Float("lc_rested_until", 0) > CurTime() end
 function LC.AwakeFor(ply) return CurTime() - (ply.lcAwakeSince or CurTime()) end
 
@@ -127,9 +166,10 @@ function LC.SleepIn(ply, ent)
     if not where then return false, "There's no bed here." end
     local key = LC.BedKey(bed)
     if not LC.BedFree(key, ply) then return false, "Someone's already asleep in this bed." end
-    if not LC.IsNight() and not LC.IsTired(ply) then return false, "You're not tired, and it's broad daylight. Beds are for the night (or when you're exhausted)." end
+    local drowsy = LC.IsDrowsy(ply) -- (from the first warning on: the owner, 7 November)
+    if not LC.IsNight() and not drowsy then return false, "You're not tired, and it's broad daylight. Beds are for the night (or once you're getting tired)." end
     -- rested for a day after a night's sleep, but you can sleep again 18 in-game hours after (the owner, 7 November)
-    if LC.IsRested(ply) and not LC.IsTired(ply) then
+    if LC.IsRested(ply) and not drowsy then
         local left = ply:GetNW2Float("lc_rested_until", 0) - CurTime() - DayLen() * 0.25
         if left > 0 then
             local hrs = math.max(1, math.ceil(left / DayLen() * 24))
@@ -261,7 +301,6 @@ end)
 -- Every five seconds: who's tired, and the rested heal.
 function LC.RestTick(now)
     if not cvOn:GetBool() then return end
-    local limit = DayLen() * cvDays:GetFloat()
     for _, ply in ipairs(player.GetAll()) do
         ply.lcAwakeSince = ply.lcAwakeSince or now
         -- an admin with the editor tool in hand is building the city, not living in it (the owner, 7 November:
@@ -271,11 +310,31 @@ function LC.RestTick(now)
         ply.lcRestTickAt = now
         if Exempt(ply) or editing then
             if ply:GetNW2Bool("lc_tired", false) then ply:SetNW2Bool("lc_tired", false) TiredHealth(ply, false) end
+            if ply:GetNW2Bool("lc_drowsy", false) then ply:SetNW2Bool("lc_drowsy", false) end
         else
-            local tired = now - ply.lcAwakeSince > limit
-            if tired ~= ply:GetNW2Bool("lc_tired", false) then
+            local due = LC.TiredDue(ply)
+            local was = ply:GetNW2Bool("lc_tired", false)
+            local tired = now >= due
+            -- not in the middle of a fight: the eyes start closing once it's over (five minutes at most)
+            if tired and not was and LC.InFight and LC.InFight(ply) and now - due < FIGHT_HOLD then tired = false end
+            -- the two warnings, once each time awake
+            local w = ply.lcTiredWarn
+            if not w or w.since ~= ply.lcAwakeSince then w = { since = ply.lcAwakeSince, n = 0 } ply.lcTiredWarn = w end
+            local left = due - now
+            if not tired and not was then
+                if w.n < 1 and left <= WARN1 and left > WARN2 then
+                    w.n = 1
+                    Notice(ply, "warn", "Getting tired", "You'll be exhausted in about six minutes: your eyes will keep closing and you'll be weaker. You can sleep in a bed now (F1 > What now? > Places).", 10)
+                elseif w.n < 2 and left <= WARN2 then
+                    w.n = 2
+                    Notice(ply, "warn", "Very tired", "About two minutes before your eyes start closing. Find a bed and sleep (F1 > What now? > Places).", 10)
+                end
+            end
+            local drowsy = tired or left <= WARN1
+            if ply:GetNW2Bool("lc_drowsy", false) ~= drowsy then ply:SetNW2Bool("lc_drowsy", drowsy) end
+            if tired ~= was then
                 ply:SetNW2Bool("lc_tired", tired)
-                if tired then Notice(ply, "warn", "Exhausted", "You haven't slept in a day. Your eyes keep closing, you can't run, and you're weaker. Find a bed at night (F1 > What now? > Places).", 9) end
+                if tired then Notice(ply, "warn", "Exhausted", "You need sleep. Your eyes keep closing, you can't run, and you're weaker. Find a bed (F1 > What now? > Places).", 9) end
             end
             TiredHealth(ply, tired)
         end
@@ -314,7 +373,9 @@ hook.Add("LivingCityNewCharacter", "LivingCityRest", function(ply) ply.lcAwakeSi
 function LC.RestStep(ply)
     if not cvOn:GetBool() then return nil end
     if LC.IsTired(ply) then
-        return { key = "sleep", text = "Get some sleep", why = "You're exhausted: no running, and weaker until you've slept. Find a bed and press E on it.", way = "bed", urgent = true }
+        -- (on a job, the job stays on screen: the owner, 7 November, "NOW I CANT FIND THE QUEST OBJECTIVE")
+        local onJob = LC.QuestOf and LC.QuestOf[ply] ~= nil
+        return { key = "sleep", text = "Get some sleep", why = "You're exhausted: no running, and weaker until you've slept. Find a bed and press E on it.", way = "bed", urgent = not onJob }
     end
     return nil
 end

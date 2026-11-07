@@ -13,7 +13,7 @@
     placed is never taken away: it's where it all starts again.
 
       lc_territory_spread 0/1          spreading on or off (1)
-      lc_rebel_spread_minutes <m>      average minutes between rebel growth (20)
+      lc_rebel_spread_minutes <m>      average minutes between rebel growth (40)
       lc_infest_spread_minutes <m>     average minutes between infestation growth (10)
       lc_infest_max <n>                most patches an infestation can grow (30)
       lc_territory_city_max <n>        most patches of each kind across the whole city (45)
@@ -36,7 +36,7 @@ LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn      = CreateConVar("lc_territory_spread", "1", FLAGS, "Rebel and infestation zones slowly spread when left alone, and recede when fought")
-local cvRebelM  = CreateConVar("lc_rebel_spread_minutes", "20", FLAGS, "Average minutes between rebel territory growing")
+local cvRebelM  = CreateConVar("lc_rebel_spread_minutes", "40", FLAGS, "Average minutes between rebel territory growing")
 local cvInfestM = CreateConVar("lc_infest_spread_minutes", "10", FLAGS, "Average minutes between each infestation growing")
 local cvMax     = CreateConVar("lc_territory_max", "6", FLAGS, "Most patches each territory can grow (placed zones that touch count as one)")
 local cvHits    = CreateConVar("lc_territory_hits", "3", FLAGS, "Rebels or zombies killed to push back one patch of territory")

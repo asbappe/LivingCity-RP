@@ -68,6 +68,17 @@
       sent to players who join (resource.AddFile); for a big pack, put the
       sounds in a Workshop addon or FastDL instead and the folders still work.
 
+      Pacing (the owner, 7 November: "constant announcements ... I feel stressed
+      just playing"). Every voice, Overwatch's (his own recordings or Half-Life 2's)
+      and the Administrator's, takes its turn on one shared PA (LC.PAMark): the next
+      one waits till the last has finished (each player's game plays them one after
+      another). The routine ones (the time of day, a train, a skirmish, sociostability
+      going green or yellow, the PA's remarks on a wanted person...) are only made
+      after lc_announce_quiet (90) seconds of quiet; in between they're left out.
+      The things that matter (an event, its warning, a lockdown, red, a breakout)
+      are always said. Half-Life 2's own lines are only used for something the
+      server has no recording of its own for.
+
       lc_announce_custom 0/1, lc_announce_custom_pct (100), lc_announce_gap
       (25 s between any two custom announcements of one voice),
       lc_announce_cat_gap (90 s before one trigger can speak again),
@@ -86,7 +97,7 @@ local cvPct  = CreateConVar("lc_announce_custom_pct", "100", FLAGS, "Chance (per
 local cvGap  = CreateConVar("lc_announce_gap", "25", FLAGS, "Seconds between two custom announcements by the same voice")
 local cvCat  = CreateConVar("lc_announce_cat_gap", "90", FLAGS, "Seconds before the same trigger can be announced again")
 local cvShare = CreateConVar("lc_announce_admin_share", "50", FLAGS, "Only one voice announces each thing: how often (percent) it's the Administrator rather than Overwatch, when both have something to say for it")
-local cvQuiet = CreateConVar("lc_announce_quiet", "60", FLAGS, "Seconds after any announcement before a minor one (the time of day, a train, a skirmish...) is made; minor ones in that time are left out")
+local cvQuiet = CreateConVar("lc_announce_quiet", "90", FLAGS, "Seconds of quiet on the PA (after the last announcement has finished) before a routine one (the time of day, a train, a skirmish, sociostability going green or yellow...) is made; routine ones in that time are left out")
 
 local ROOT = "livingcity/announce/"
 -- (and straight under sound/livingcity/ too: sound/livingcity/overwatch/, .../administrator/,
@@ -350,6 +361,21 @@ function LC.OverwatchSpeaks(path)
 end
 local trigNext = {}  -- [voice/trigger] = earliest time for this trigger again
 
+-- The one PA everyone shares (the owner, 7 November: "3 different announcers just make it feel
+-- hectic"): whoever speaks, the next waits till they've finished. Marked by every voice that
+-- speaks to the city (this file's, LC.Announce's, the sociostability's).
+LC.PAEndsAt = LC.PAEndsAt or 0
+function LC.PAMark(secs)
+    local now = CurTime()
+    LC.PAEndsAt = math.max(LC.PAEndsAt or 0, now) + math.max(0, tonumber(secs) or 8)
+    LC.LastPA = now
+    return LC.PAEndsAt
+end
+-- Seconds of quiet on the PA so far (below zero while someone's still speaking).
+function LC.PAQuiet()
+    return CurTime() - math.max(LC.PAEndsAt or 0, LC.LastPA or -1e9)
+end
+
 local function Say(voice, trig, only, force, tier)
     if not cvOn:GetBool() then return false end
     if LC.EndingSession and LC.EndingSession() then return false end -- (quiet through a secret ending)
@@ -361,12 +387,12 @@ local function Say(voice, trig, only, force, tier)
     local path, text, used = LC.PickAnnounceClip(voice, trig, false, tier)
     if not path then return false end
     -- one just for somebody (their welcome) doesn't hold up the city's own
+    local secs = LC.AnnounceKnownSecs and LC.AnnounceKnownSecs(path) or 0
     if not only then
         voiceNext[voice] = now + cvGap:GetFloat()
         trigNext[voice .. "/" .. trig] = now + cvCat:GetFloat()
-        LC.LastPA = now
+        LC.PAMark(secs > 0.2 and secs or 8)
     end
-    local secs = LC.AnnounceKnownSecs and LC.AnnounceKnownSecs(path) or 0
     -- (and while someone's welcome plays, the city's go to everyone else)
     local to = only and { only } or nil
     if not to then
@@ -432,12 +458,16 @@ function LC.AnnounceVoiceFor(trig, builtin)
     return admin and "administrator" or (ow and "overwatch" or nil)
 end
 
--- The minor ones: left out if anything was said in the last lc_announce_quiet seconds
+-- The routine ones: left out unless the PA has been quiet lc_announce_quiet seconds (after the
+-- last one finished). (dawn, night, and sociostability going green or yellow joined them on 7
+-- November: they came on top of the events that caused them.)
 local MINOR = { day = true, dusk = true, train_arrival = true, territory_grew = true, block_raided = true, skirmish_raid = true,
-    skirmish_sweep = true, overwatch_drop = true, power_restored = true, ambient = true }
+    skirmish_sweep = true, overwatch_drop = true, power_restored = true, ambient = true,
+    dawn = true, night = true, socio_green = true, socio_yellow = true }
 LC.AnnounceMinor = MINOR
 function LC.AnnounceTooSoon(trig)
-    return MINOR[trig] and CurTime() - (LC.LastPA or -1e9) < cvQuiet:GetFloat() or false
+    local q = cvQuiet:GetFloat()
+    return MINOR[trig] and q > 0 and LC.PAQuiet() < q or false
 end
 
 -- One voice for one thing happening: Overwatch or the Administrator, picked

@@ -30,7 +30,7 @@ LC.ExtraCops = LC.ExtraCops or 0
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvAnnounce  = CreateConVar("lc_announce_interval", "0", FLAGS, "Minutes between random ambient announcements (0 = off: the PA only speaks when something happens)")
 local cvAuto      = CreateConVar("lc_auto_events", "1", FLAGS, "Run city events automatically")
-local cvInterval  = CreateConVar("lc_event_interval", "12", FLAGS, "Minutes between automatic events")
+local cvInterval  = CreateConVar("lc_event_interval", "24", FLAGS, "Minutes between automatic events")
 CreateConVar("lc_curfew_citizens", "0", FLAGS, "Citizens left on the streets during curfew")
 local cvGrace     = CreateConVar("lc_curfew_grace", "60", FLAGS, "Seconds after a curfew or lockdown starts before anyone outside is warned (60 minimum)")
 local cvEnforce   = CreateConVar("lc_curfew_enforce", "1", FLAGS, "Cops warn, then pursue, players out during curfew")
@@ -202,19 +202,30 @@ local HARSH = {
     CV .. "f_innactionisconspiracy_spkr.wav", CV .. "f_evasionbehavior_2_spkr.wav",
 }
 
+local RESPONSE_GAP = 180 -- (a response squad is announced once in three minutes, however many go in)
+local lastResponse = -1e9
 function LC.Announce(kind, path, detail)
+    if kind == "response" then
+        if CurTime() - lastResponse < RESPONSE_GAP then return end
+        lastResponse = CurTime()
+    end
     if not path and kind == "ambient" and LC.CityState and LC.CityState() == "unrest" then path = LC.Pick(HARSH) end
     local subtitle
     -- one voice for it: Overwatch, or (some of the time) the Administrator in his place (sv_livingcity_announcer.lua)
     local herTurn = kind ~= "ambient" and LC.AnnounceVoiceFor and LC.AnnounceVoiceFor(kind, true) == "administrator"
         and LC.CustomAnnounce and LC.CustomAnnounce("administrator", kind, nil, true)
-    if not path and LC.PickAnnounceClip then path, subtitle = LC.PickAnnounceClip("overwatch", kind, true) end -- a custom recording (sv_livingcity_announcer.lua)
+    -- a recording of the server's own (sv_livingcity_announcer.lua) for it, if there is one: Half-Life 2's
+    -- lines only for what it has none of (the owner, 7 November: three voices was too many)
+    if (not path or string.find(path, "^npc/")) and LC.PickAnnounceClip then
+        local own, sub = LC.PickAnnounceClip("overwatch", kind, true)
+        if own then path, subtitle = own, sub end
+    end
     path = path or LC.Pick(VOICE[kind] or VOICE.ambient)
-    LC.LastPA = CurTime()
     if herTurn then
         subtitle, path = nil, ""
     else
         if LC.OverwatchSpeaks then LC.OverwatchSpeaks(path) end
+        if LC.PAMark then LC.PAMark(LC.AnnounceClipSecs and LC.AnnounceClipSecs(path) or 8) else LC.LastPA = CurTime() end
         net.Start("lc_announce")
         net.WriteString(path)
         net.WriteString(TITLES[kind] or TITLES.ambient)
@@ -670,7 +681,7 @@ timer.Create("LivingCityEvents", 0.5, 0, function()
         local every = cvAnnounce:GetFloat()
         if every > 0 and not LC.Event then
             if nextAnnounce == 0 then nextAnnounce = now + every * 60 end
-            if now > nextAnnounce then
+            if now > nextAnnounce and not (LC.AnnounceTooSoon and LC.AnnounceTooSoon("ambient")) then
                 LC.Announce("ambient")
                 nextAnnounce = now + every * 60 * math.Rand(0.8, 1.2)
             end
@@ -711,11 +722,12 @@ end)
 -- The PA speaks when something happens, and says what it's about
 ------------------------------------------------------------------------
 
-local lastSaid = 0
+local lastSaid = -1e9
+local REMARK_GAP = 180 -- (not a running commentary: one remark in three minutes at most; was 45 seconds)
 local function Say(file, detail)
     local now = CurTime()
-    if now - lastSaid < 45 then return false end -- not a running commentary
-    if now - (LC.LastPA or -1e9) < 30 then return false end -- (nor straight after something else)
+    if now - lastSaid < REMARK_GAP then return false end
+    if LC.AnnounceTooSoon and LC.AnnounceTooSoon("ambient") then return false end -- (nor till the PA's been quiet a while: lc_announce_quiet)
     lastSaid = now
     LC.Announce("ambient", CV .. file, detail)
     return true

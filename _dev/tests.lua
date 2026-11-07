@@ -15995,6 +15995,214 @@ section("NPCs that fall out of the map")
     ok(#spots == 120 and close == 0, "an ending's ring with 120 people in it: nobody stands inside anybody", close)
 end)()
 
+function BreathTests() -- (the owner, 7 November: the panting that never stopped)
+section("Out of breath: the server never plays the panting (each game holds it on a handle)")
+local runner = newPlayer("Panter", "citizen")
+_run(0.2)
+local n0 = #_sounds
+runner:SetNW2Float("lc_stamina", 0)
+runner:SetNW2Bool("lc_winded", false)
+runner.lcRanAt = CurTime() -- (just stopped running: no breath back yet)
+LCS.Tick(CurTime(), 0.2)
+ok(runner:GetNW2Bool("lc_winded", false), "run out: winded")
+local panted = false
+for i = n0 + 1, #_sounds do if string.find(tostring(_sounds[i]), "breathe", 1, true) then panted = true end end
+ok(not panted and runner.lcBreathAt == nil, "and the server plays no breathing (a looping sample it could never stop)")
+ok(LCS.BreathTick == nil, "(the panting is only the players' own games': no server copy of it)")
+runner.lcRanAt = nil
+for _ = 1, 30 do LCS.Tick(CurTime(), 0.2) _advance(0.2) end
+ok(not runner:GetNW2Bool("lc_winded", false), "breath back: no longer winded")
+hook.Run("PlayerSpawn", runner)
+ok(runner:GetNW2Float("lc_stamina", 0) == 100 and not runner:GetNW2Bool("lc_winded", true), "a new life starts with full breath")
+runner:SetPos(Vector(-30000, 30000, 0))
+end
+BreathTests()
+
+function SleepWarnTests() -- (the owner, 7 November: warnings, sleep from the first one, a citizen's hours, not mid-fight)
+section("Sleep: two warnings, a bed from the first, citizens keep the city's hours, never mid-fight")
+local notes = {}
+local noticeWas, nightWas = LC.Notice, LC.IsNight
+LC.Notice = function(p, kind, title, text) notes[#notes + 1] = { p = p, title = title, text = text } end
+local function Noted(p, title) for _, n in ipairs(notes) do if n.p == p and n.title == title then return true end end return false end
+local function Count(p, title) local c = 0 for _, n in ipairs(notes) do if n.p == p and n.title == title then c = c + 1 end end return c end
+local hourWas = LC.Hour()
+LC.SetHour(13)
+LC.IsNight = function() return false end
+local unit = newPlayer("TiredUnit", "cp")
+_run(0.2)
+unit:SetPos(Vector(-26000, 26000, 0))
+unit:SetNW2Float("lc_rested_until", 0)
+unit.lcAwakeSince = CurTime()
+local limit = LC.TiredDue(unit) - unit.lcAwakeSince
+ok(limit > 600, "a Civil Protection unit: tired after a day awake (no hours to keep)", limit)
+local bed = ents.Create("lc_bed") bed:SetPos(unit:GetPos() + Vector(40, 0, 0)) bed:Spawn()
+-- well before: no sleeping in the day
+unit.lcAwakeSince = CurTime() - (limit - 1000)
+LC.RestTick(CurTime())
+local okS, why = LC.SleepIn(unit, bed)
+ok(not okS and why and string.find(why, "daylight", 1, true), "not tired yet, in the day: no sleeping", why)
+-- six minutes before: the first warning, and a bed will do
+unit.lcAwakeSince = CurTime() - (limit - 300)
+LC.RestTick(CurTime())
+ok(Noted(unit, "Getting tired") and not LC.IsTired(unit), "about six minutes before: the first warning (not exhausted yet)")
+ok(unit:GetNW2Bool("lc_drowsy", false) and LC.IsDrowsy(unit), "drowsy from then on")
+ok(LC.SleepIn(unit, bed), "and a bed lets you sleep, in broad daylight")
+LC.WakeUp(unit, "quiet")
+-- two minutes before: the second, once
+unit.lcAwakeSince = CurTime() - (limit - 100)
+LC.RestTick(CurTime())
+LC.RestTick(CurTime())
+ok(Count(unit, "Very tired") == 1 and Count(unit, "Getting tired") == 1, "about two minutes before: the second warning, once each")
+-- the time comes mid-fight: the eyes wait
+unit.lcAwakeSince = CurTime() - limit - 10
+LC.NoteFight(unit)
+LC.RestTick(CurTime())
+ok(not LC.IsTired(unit), "exhausted in the middle of a fight: the eyes don't start closing yet")
+unit.lcFightAt = nil
+LC.RestTick(CurTime())
+ok(LC.IsTired(unit) and Noted(unit, "Exhausted"), "the fight over: exhausted")
+-- on a job: the job stays the next step
+LC.QuestOf[unit] = { title = "Test job" }
+local step = LC.RestStep(unit)
+ok(step and not step.urgent, "on a job, sleep doesn't push the job off the screen (not urgent)")
+LC.QuestOf[unit] = nil
+ok(LC.RestStep(unit).urgent, "off the job, it's urgent again")
+-- a citizen keeps the city's hours
+local cit = newPlayer("DayCitizen", "citizen")
+_run(0.2)
+cit:SetPos(Vector(-26000, 26200, 0))
+local len = GetGlobal2Float("lc_day_len", 1440)
+LC.SetHour(13)
+cit.lcAwakeSince = CurTime() - limit -- (awake a whole day, since one o'clock yesterday)
+unit.lcAwakeSince = CurTime() - limit
+ok(LC.TiredDue(unit) <= CurTime() + 1, "a unit awake a day: exhausted now, midday or not")
+ok(LC.TiredDue(cit) > CurTime() + 60 and not LC.IsDrowsy(cit), "a citizen awake as long at midday: not yet, it waits for the evening", (LC.TiredDue(cit) - CurTime()) / len * 24)
+LC.RestTick(CurTime())
+ok(not LC.IsTired(cit), "(no eyes closing in the middle of the day)")
+cit.lcAwakeSince = CurTime() - limit * 31 / 24 -- (up since six yesterday morning: the night skipped)
+ok(LC.TiredDue(cit) <= CurTime(), "a night skipped: exhausted, whatever the hour")
+LC.SetHour(23)
+cit.lcAwakeSince = CurTime() - limit * 16 / 24 -- (up since seven this morning)
+ok(LC.IsDrowsy(cit) and LC.TiredDue(cit) > CurTime(), "up since the morning, late in the evening: drowsy, a bed will do", (LC.TiredDue(cit) - CurTime()))
+LC.SetHour(13)
+cit.lcAwakeSince = CurTime() - limit * 6 / 24 -- (up since seven, now one o'clock)
+ok(not LC.IsDrowsy(cit), "up since the morning, at midday: not tired")
+LC.Notice, LC.IsNight = noticeWas, nightWas
+LC.SetHour(hourWas)
+bed:Remove()
+for _, p in ipairs({ unit, cit }) do p.lcAwakeSince = CurTime() p:SetNW2Bool("lc_tired", false) p:SetPos(Vector(-30000, 30000, 0)) end
+end
+SleepWarnTests()
+
+function PacingTests() -- (the owner, 7 November: "constant announcements ... I feel stressed just playing")
+section("Pacing: one PA, a quiet gap before routine announcements, the server's own recordings first, events further apart")
+local ann = function(from) local out = {} for i = from + 1, #net.sent do if net.sent[i].name == "lc_announce" then out[#out + 1] = net.sent[i].data[1] end end return out end
+_setcvar("lc_announce_quiet", 90)
+_setcvar("lc_announce_admin_share", 0)
+LC.PAEndsAt, LC.LastPA = CurTime() - 500, CurTime() - 500
+LC.PAMark(10)
+ok(LC.PAQuiet() < 0, "someone speaking: the PA isn't quiet")
+ok(LC.AnnounceTooSoon("dusk") and LC.AnnounceTooSoon("socio_yellow") and LC.AnnounceTooSoon("ambient"), "routine ones (the time of day, sociostability going yellow, the PA's remarks) wait for quiet")
+ok(not LC.AnnounceTooSoon("curfew") and not LC.AnnounceTooSoon("socio_red") and not LC.AnnounceTooSoon("rations_soon"), "the things that matter are always said")
+LC.PAEndsAt, LC.LastPA = CurTime() - 85, CurTime() - 95
+ok(LC.AnnounceTooSoon("dusk"), "85 seconds of quiet after the last one finished: not yet")
+LC.PAEndsAt = CurTime() - 91
+ok(not LC.AnnounceTooSoon("dusk"), "a minute and a half: a routine one can be made")
+LC.PAMark(6)
+local e1 = LC.PAMark(6)
+ok(e1 >= CurTime() + 12 - 0.01, "a second voice waits for the first to finish (one PA, shared)", e1 - CurTime())
+-- Half-Life 2's line only where the server has none of its own
+_files["sound/livingcity/overwatch/response1.wav"] = ""
+LC.AnnounceRescan()
+_advance(181)
+LC.PAEndsAt, LC.LastPA = CurTime() - 500, CurTime() - 500
+local n0 = #net.sent
+LC.Announce("response", "npc/overwatch/cityvoice/f_protectionresponse_1_spkr.wav")
+local got = ann(n0)
+ok(#got == 1 and string.find(got[1], "livingcity/overwatch/response1", 1, true), "a response: the server's own recording, not Half-Life 2's", got[1])
+n0 = #net.sent
+LC.Announce("response", "npc/overwatch/cityvoice/f_protectionresponse_1_spkr.wav")
+ok(#ann(n0) == 0, "a second response squad straight after: not announced again")
+n0 = #net.sent
+LC.Announce("rations")
+got = ann(n0)
+ok(#got == 1 and string.find(got[1], "npc/overwatch/", 1, true), "nothing of its own for rations: Half-Life 2's line", got[1])
+_files["sound/livingcity/overwatch/response1.wav"] = nil
+LC.AnnounceRescan()
+-- the PA's remarks (a wanted person, a sentence...): one in three minutes, and only after quiet
+_advance(181)
+LC.PAEndsAt, LC.LastPA = CurTime() - 500, CurTime() - 500
+ok(LC.AnnounceLine("f_evasionbehavior_2_spkr.wav", "Someone is wanted."), "a remark on the PA when it's been quiet")
+LC.PAEndsAt, LC.LastPA = CurTime() - 500, CurTime() - 500
+ok(not LC.AnnounceLine("f_capitalmalcompliance_spkr.wav", "Someone else is wanted."), "not another for three minutes")
+-- sociostability: said once in two minutes; a flicker in between waits, and red is said at once
+local listener = newPlayer("SocioListener", "citizen")
+_run(0.2)
+local ovWas, socWas = LC.SocioOverride, LC.Socio
+local function SaidSocio() for _, l in ipairs(listener.chat) do if string.find(l, "Sociostability:", 1, true) then return l end end return nil end
+LC.SocioOverride = { level = "green", untilT = CurTime() + 1e6 }
+LC.Socio = "green"
+LC.SocioSaid.level, LC.SocioSaid.at = "green", CurTime()
+listener.chat = {}
+LC.SocioOverride = { level = "yellow", untilT = CurTime() + 1e6 }
+LC.RefreshSocio()
+ok(LC.Socio == "yellow" and not SaidSocio(), "yellow straight after the last one: not said yet")
+_advance(121)
+_runtimers()
+ok(SaidSocio() and string.find(SaidSocio(), "MARGINAL", 1, true), "said once two minutes have passed (it still stands)", SaidSocio())
+listener.chat = {}
+LC.SocioOverride = { level = "red", untilT = CurTime() + 1e6 }
+LC.RefreshSocio()
+ok(SaidSocio() and string.find(SaidSocio(), "JUDGMENT", 1, true), "red: said at once")
+LC.SocioOverride, LC.Socio = ovWas, socWas
+LC.RefreshSocio(true)
+listener:SetPos(Vector(-30000, 30000, 0))
+-- the city's happenings about twice as far apart (old defaults moved on, chosen values kept)
+local doubled = { lc_event_interval = "24", lc_skirmish_interval = "50", lc_train_minutes = "24", lc_rebel_spread_minutes = "40",
+    lc_drop_cooldown = "60", lc_rebel_ops_minutes = "60", lc_loyalty_praise_minutes = "40", lc_announce_quiet = "90" }
+local okD, bad = true, nil
+for k, v in pairs(doubled) do if (_cvarDefaults or {})[k] ~= v then okD, bad = false, k .. "=" .. tostring((_cvarDefaults or {})[k]) end end
+ok(okD, "events, skirmishes, trains, rebel growth, drops, the rebels' operations and the praise about twice as far apart; the PA quiet 90 seconds", bad)
+_setcvar("lc_event_interval", 12)
+_setcvar("lc_train_minutes", 15)
+LC.EndingRetune()
+ok(GetConVar("lc_event_interval"):GetString() == "24" and GetConVar("lc_train_minutes"):GetString() == "15", "a server still on the old default moves to the new one; a value someone chose stays")
+_setcvar("lc_train_minutes", 24)
+_setcvar("lc_announce_quiet", 0)
+end
+PacingTests()
+
+function CombineMusicTests() -- (the owner, 7 November: "as the combine nothing plays at all")
+section("Civil Protection in action: a fight, a violent job, a raid or a sweep (their action music)")
+local evWas, skWas = LC.Event, LC.Skirmish
+LC.Event, LC.Skirmish = nil, nil
+local unit = newPlayer("ActionUnit", "cp")
+local rebel = newPlayer("ActionRebel", "resistance")
+local cit = newPlayer("ActionCitizen", "citizen")
+_run(0.2)
+for _, p in ipairs({ unit, rebel, cit }) do p.lcFightAt = nil p:SetNW2Float("lc_action_until", 0) end
+LC.ActionTick(CurTime())
+ok(unit:GetNW2Float("lc_action_until", 0) <= CurTime() and LC.InAction(unit) == nil, "on an ordinary patrol: no action music")
+hook.t.EntityTakeDamage.LivingCityPacingFight(unit, _dmg(rebel, 5)) -- (this listener alone: others may stop the rest)
+ok(LC.InFight(unit) and LC.InFight(rebel), "shot at: both of them are in a fight")
+LC.ActionTick(CurTime())
+ok(unit:GetNW2Float("lc_action_until", 0) > CurTime() and LC.InAction(unit) == "fight", "a unit in a firefight: in action (their game plays the combat music)")
+ok(LC.InAction(rebel) == nil and LC.InAction(cit) == nil, "(a rebel's music is their own: wanted, as before)")
+_advance(35)
+unit.lcFightAt = nil
+ok(LC.InAction(unit) == nil, "the fight over: out of action")
+LC.QuestOf[unit] = { violent = true }
+ok(LC.InAction(unit) == "job", "on a violent job: in action")
+LC.QuestOf[unit] = nil
+LC.Event = "sweep"
+ok(LC.InAction(unit) == "sweep", "in a sweep: in action")
+LC.Event = "raid"
+ok(LC.InAction(unit) == "raid", "in a raid: in action")
+LC.Event, LC.Skirmish = evWas, skWas
+for _, p in ipairs({ unit, rebel, cit }) do p:SetPos(Vector(-30000, 30000, 0)) end
+end
+CombineMusicTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
