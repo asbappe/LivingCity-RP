@@ -754,14 +754,167 @@ end
 -- Shackled vortigaunts sweeping the streets (the owner: "at least 1 being a street sweep slave"):
 -- Combine property, collared, harming nobody and harmed by nobody, moving to a new stretch of
 -- street now and then. They come in out of sight.
+-- (The owner, 7 November:) they really sweep now: a push broom in the claws, swung as they pace a
+-- short stretch back and forth; they step aside for whoever walks into them (the city's people
+-- too: they stood in doorways and nobody got through); and shackled, they never zap anything:
+-- a headcrab or a zombie near them, they run.
 local cvSlaves = CreateConVar("lc_vort_slaves", "2", FLAGS, "Shackled vortigaunts the Combine keep sweeping the streets (Combine property: they harm nobody, and nobody harms them)")
 LC.VortSlaves = LC.VortSlaves or {}
 local nextSlave = 0
+local BROOM_MODEL = "models/props_c17/pushbroom.mdl"
+-- where the broom sits (in the right claw when the model has the attachment, on the body otherwise),
+-- and how far it swings: tune here if it looks wrong in game
+local BROOM = { claw = { pos = Vector(0, 0, 0), ang = Angle(50, 0, 0) }, body = { pos = Vector(16, 8, 34), ang = Angle(50, 0, 0) },
+    swing = 12, tilt = 7, rate = 2.4 }
+local SLAVE_MONSTERS = { "npc_headcrab", "npc_headcrab_fast", "npc_headcrab_black", "npc_headcrab_poison",
+    "npc_zombie", "npc_zombie_torso", "npc_fastzombie", "npc_fastzombie_torso", "npc_poisonzombie", "npc_zombine" }
+
+-- The collar: no vortessence. The engine's vortigaunt zaps whatever it hates (it killed a headcrab, the
+-- owner saw): its attacks are taken away, and the infested are something to run from, not fight.
+local function Harmless(v)
+    if v.CapabilitiesRemove then
+        v:CapabilitiesRemove(bit.bor(CAP_INNATE_RANGE_ATTACK1 or 8192, CAP_INNATE_RANGE_ATTACK2 or 16384,
+            CAP_INNATE_MELEE_ATTACK1 or 2048, CAP_INNATE_MELEE_ATTACK2 or 4096))
+    end
+    for _, cls in ipairs(SLAVE_MONSTERS) do v:AddRelationship(cls .. " D_FR 99") end
+end
+
+local function Broom(v, s)
+    if IsValid(s.broom) then return s.broom end
+    local e = ents.Create("prop_dynamic")
+    if not IsValid(e) then return nil end
+    e:SetModel(BROOM_MODEL)
+    e:SetPos(v:GetPos() + Vector(0, 0, 40))
+    e:Spawn()
+    if e.SetSolid then e:SetSolid(SOLID_NONE) end
+    local att = v.LookupAttachment and v:LookupAttachment("rightclaw") or 0
+    local fit = (att and att > 0) and BROOM.claw or BROOM.body
+    if att and att > 0 then e:SetParent(v, att) else e:SetParent(v) end
+    if e.SetLocalPos then e:SetLocalPos(fit.pos) end
+    if e.SetLocalAngles then e:SetLocalAngles(fit.ang) end
+    s.broom, s.fit = e, fit
+    v.lcBroom = e
+    if v.DeleteOnRemove then v:DeleteOnRemove(e) end
+    return e
+end
+
+-- The swing: the broom pushed out and back along the ground, the vortigaunt's arms being the
+-- engine's (no sweeping animation of its own that can be counted on).
+local function Swing(v, s, now)
+    local e = s.broom
+    if not IsValid(e) or not e.SetLocalPos then return end
+    local fit = s.fit or BROOM.body
+    local k = math.sin(now * BROOM.rate)
+    e:SetLocalPos(fit.pos + Vector(k * BROOM.swing, 0, 0))
+    e:SetLocalAngles(Angle(fit.ang.p + k * BROOM.tilt, fit.ang.y, fit.ang.r))
+end
+
+-- Walked into (a player, or one of the city's people wedged against it): a shuffle to whichever
+-- side is open, then a few steps clear, as the city's people do (sv_livingcity.lua, "Out of the way").
+local function StepAside(v, s, other, now)
+    local vp = v:GetPos()
+    local dir = vp - other:GetPos()
+    dir.z = 0
+    if dir:LengthSqr() < 1 then dir = v:GetForward() end
+    dir:Normalize()
+    local side = Vector(-dir.y, dir.x, 0)
+    local to
+    for _, sd in ipairs({ side, -side }) do
+        local p = vp + sd * 60 + dir * 20
+        local tr = util.TraceHull({ start = vp + Vector(0, 0, 8), endpos = p + Vector(0, 0, 8),
+            mins = Vector(-14, -14, 0), maxs = Vector(14, 14, 60), filter = { v, other }, mask = MASK_NPCSOLID })
+        if tr and not tr.Hit then to = p break end
+    end
+    s.asideAt = now + 2
+    if not to then return false end
+    v:SetPos(vp + (to - vp):GetNormalized() * 16) -- (a shuffle at once)
+    if v.SetLastPosition and v.SetSchedule then
+        v:SetLastPosition(to)
+        v:SetSchedule(SCHED_FORCED_GO)
+    end
+    s.paceAt = now + 5 -- (not straight back into them)
+    return true
+end
+
+local function SlaveMakeWay(now)
+    for v, s in pairs(LC.VortSlaves) do
+        if IsValid(v) and v:Health() > 0 and (s.asideAt or 0) < now then
+            local vp = v:GetPos()
+            local wedged
+            for _, e in ipairs(ents.FindInSphere(vp, 48)) do
+                if e ~= v and IsValid(e) and ((e:IsPlayer() and e:Alive()) or (e:IsNPC() and e:Health() > 0 and not e.lcVortSlave)) then
+                    local toward = vp - e:GetPos()
+                    toward.z = 0
+                    local vel = e:GetVelocity()
+                    vel.z = 0
+                    if vel:LengthSqr() > 30 * 30 and toward:LengthSqr() > 1 and vel:GetNormalized():Dot(toward:GetNormalized()) > 0.3 then
+                        StepAside(v, s, e, now)
+                        s.wedged = nil
+                        break
+                    elseif e:IsNPC() and toward:LengthSqr() < 40 * 40 then
+                        wedged = e
+                    end
+                end
+            end
+            if wedged then
+                -- one of the city's people standing against it a moment (stuck behind it in a doorway): make way
+                s.wedged = (s.wedged or 0) + 1
+                if s.wedged >= 4 then s.wedged = nil StepAside(v, s, wedged, now) end
+            else
+                s.wedged = nil
+            end
+        end
+    end
+end
+LC.VortSlaveMakeWay = SlaveMakeWay -- (for tests)
+
+local swingTick = 0
+timer.Create("LivingCityVortSweep", 0.1, 0, function()
+    if next(LC.VortSlaves) == nil then return end
+    local now = CurTime()
+    local ok, err = pcall(function()
+        for v, s in pairs(LC.VortSlaves) do if IsValid(v) and (s.fleeUntil or 0) < now then Swing(v, s, now) end end
+        swingTick = swingTick + 1
+        if swingTick % 3 == 0 then SlaveMakeWay(now) end
+    end)
+    if not ok and LC.Error then LC.Error("vortigaunt sweeping", err) end
+end)
+
+-- The infested near: run (not walk), away from them, as the citizens do.
+local function Flee(v, s, now)
+    local vp = v:GetPos()
+    local threat
+    for _, e in ipairs(ents.FindInSphere(vp, 400)) do
+        if e ~= v and IsValid(e) and LC.IsMonster and LC.IsMonster(e) and (not e.Health or e:Health() > 0) then threat = e break end
+    end
+    if not threat then return false end
+    local away = vp - threat:GetPos()
+    away.z = 0
+    if away:LengthSqr() < 1 then away = Vector(1, 0, 0) end
+    away:Normalize()
+    local dest
+    for _ = 1, 8 do
+        local p = LC.RandomWanderPos and LC.RandomWanderPos("citizen", vp + away * 700)
+        if p and (p - vp):GetNormalized():Dot(away) > 0.2 then dest = p break end
+    end
+    dest = dest or (vp + away * 400)
+    if v.SetLastPosition then
+        v:SetLastPosition(dest)
+        v:SetSchedule(SCHED_FORCED_GO_RUN)
+    end
+    s.fleeUntil = now + 6
+    s.next = math.max(s.next or 0, now + 12)
+    s.paceAt = now + 8
+    return true
+end
+LC.VortSlaveFlee = Flee -- (for tests)
+
 local function SlaveTick(now)
     if not LC.Running then return end
     local have = 0
     for v, s in pairs(LC.VortSlaves) do
         if not IsValid(v) or v:Health() <= 0 then
+            if s and IsValid(s.broom) then s.broom:Remove() end
             LC.VortSlaves[v] = nil
         else
             have = have + 1
@@ -776,18 +929,45 @@ local function SlaveTick(now)
                 end
             end
             for _, p in ipairs(player.GetAll()) do v:AddEntityRelationship(p, D_NU, 99) end
-            -- standing still: sweeping, as in Half-Life 2's first streets
+            if not s.harmless then s.harmless = true Harmless(v) end
+            Broom(v, s)
+            local fleeing = (s.fleeUntil or 0) > now or Flee(v, s, now)
             local walking = v.IsCurrentSchedule and (v:IsCurrentSchedule(SCHED_FORCED_GO) or v:IsCurrentSchedule(SCHED_FORCED_GO_RUN))
-            if not walking and now > (s.sweepAt or 0) and LC.PlayGesture then
-                s.sweepAt = now + 8
-                LC.PlayGesture(v, { "sweep", "Sweep", "sweep_idle", "Sweep_idle", "broom", "sweeping" }, 8)
-            end
-            if now > (s.next or 0) then
-                s.next = now + math.Rand(25, 50)
-                local p = LC.RandomWanderPos and LC.RandomWanderPos("citizen", v:GetPos())
-                if p and not (LC.InInfest and LC.InInfest(p)) and v.SetLastPosition then
-                    v:SetLastPosition(p)
-                    v:SetSchedule(SCHED_FORCED_GO)
+            if not fleeing then
+                -- standing still: sweeping, as in Half-Life 2's first streets (the model's own animation, when it has one)
+                if not walking and now > (s.sweepAt or 0) and LC.PlayGesture then
+                    s.sweepAt = now + 8
+                    LC.PlayGesture(v, { "sweep", "Sweep", "sweep_idle", "Sweep_idle", "broom", "sweeping" }, 8)
+                end
+                -- pacing the stretch: a few steps forward with the broom, then back, while the broom swings
+                if now > (s.paceAt or 0) then
+                    s.paceAt = now + math.Rand(5, 8)
+                    s.paceDir = -(s.paceDir or -1)
+                    local vp = v:GetPos()
+                    local to = vp + v:GetForward() * (70 * s.paceDir)
+                    local tr = util.TraceHull({ start = vp + Vector(0, 0, 8), endpos = to + Vector(0, 0, 8),
+                        mins = Vector(-14, -14, 0), maxs = Vector(14, 14, 60), filter = v, mask = MASK_NPCSOLID })
+                    if tr and not tr.Hit and v.SetLastPosition then
+                        v:SetLastPosition(to)
+                        v:SetSchedule(SCHED_FORCED_GO)
+                    end
+                end
+                if now > (s.next or 0) then
+                    s.next = now + math.Rand(25, 50)
+                    -- a new stretch of street: open ground, not a doorway (the owner, 7 November)
+                    local p
+                    for _ = 1, 4 do
+                        local q = LC.RandomWanderPos and LC.RandomWanderPos("citizen", v:GetPos())
+                        if q and not (LC.InInfest and LC.InInfest(q)) then
+                            p = q
+                            if not LC.RoomAround or LC.RoomAround(q) then break end
+                        end
+                    end
+                    if p and v.SetLastPosition then
+                        v:SetLastPosition(p)
+                        v:SetSchedule(SCHED_FORCED_GO)
+                        s.paceAt = now + 10
+                    end
                 end
             end
         end
@@ -807,12 +987,14 @@ local function SlaveTick(now)
     -- without their shackles, the owner saw; only the body had them)
     if not util.IsValidModel or util.IsValidModel("models/vortigaunt_slave.mdl") then v:SetModel("models/vortigaunt_slave.mdl") end
     if LC.QuestVortPeaceful then LC.QuestVortPeaceful(v, true) end
+    Harmless(v)
     v:SetNW2Bool("lc_shackled", true)
     v:SetNW2Bool("lc_noragdoll", true) -- (dead: a body the morticians collect, sv_livingcity_bodies.lua)
     v:SetNW2String("lc_pname", "Shackled vortigaunt")
     v:SetNW2String("lc_doing", "sweeping the street, collared")
     v.lcVortSlave = true
-    LC.VortSlaves[v] = { next = 0 }
+    LC.VortSlaves[v] = { next = 0, harmless = true }
+    Broom(v, LC.VortSlaves[v])
 end
 LC.VortSlaveTick = function(now) nextSlave = 0 SlaveTick(now or CurTime()) end -- (for tests)
 
@@ -820,6 +1002,9 @@ LC.VortSlaveTick = function(now) nextSlave = 0 SlaveTick(now or CurTime()) end -
 -- lives there free (charging vests on request). The Combine want it back: hunted on the way.
 function LC.FreeStreetVort(v, by)
     if not IsValid(v) or not v.lcVortSlave then return false end
+    local s = LC.VortSlaves[v]
+    if s and IsValid(s.broom) then s.broom:Remove() end -- (the broom stays in the Combine's gutter)
+    v.lcBroom = nil
     LC.VortSlaves[v] = nil
     v.lcVortSlave = nil
     if not util.IsValidModel or util.IsValidModel("models/vortigaunt.mdl") then v:SetModel("models/vortigaunt.mdl") end

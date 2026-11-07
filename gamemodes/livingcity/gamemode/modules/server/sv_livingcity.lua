@@ -1030,6 +1030,7 @@ end
 ------------------------------------------------------------------------
 
 local function CancelBusy(npc, st) EndBusy(npc, st, false) end
+LC.CancelBusy = CancelBusy -- (gunfire: sv_livingcity_streetlife.lua)
 
 local function AbandonTask(npc, st, now)
     if IsValid(npc) then npc:SetSchedule(SCHED_IDLE_STAND) end

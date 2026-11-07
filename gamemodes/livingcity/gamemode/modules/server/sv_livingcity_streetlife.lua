@@ -11,6 +11,8 @@
                   for each minute wanted, at most lc_street_detention_max (sv_livingcity_prison.lua).
     Finding by number   admin commands that take a player also take their citizen number
                   (LC.FindPlayer, sv_livingcity_prison.lua).
+    Gunfire       a shot within lc_gunfire_fear (700) units: the citizens who hear it run from
+                  the shooter, and some drop and cover their heads first (the owner, 7 November).
 ]]
 
 LC = LC or {}
@@ -215,4 +217,93 @@ end
 hook.Add("PlayerDeath", "LivingCityObituary", function(victim, inflictor, attacker)
     local ok, err = pcall(LC.Obituary, victim, attacker, inflictor)
     if not ok and LC.Error then LC.Error("obituary", err) end
+end)
+
+------------------------------------------------------------------------
+-- Gunfire (the owner, 7 November: "when firearms are being shot and bullets flying, we need nearby
+-- citizens to run in terror, some to squat and cover their heads"). Any gun fired, a player's or an
+-- NPC's: the citizens within lc_gunfire_fear who aren't spoken for (held, in a cell, under escort, in
+-- an event, asleep) run from the shooter, and about a third drop and cover their heads for a few
+-- seconds first. A citizen reacts once every ten seconds or so, a gun is heard once every second and
+-- a half, so a firefight doesn't send them off again every shot.
+------------------------------------------------------------------------
+
+local cvFear = CreateConVar("lc_gunfire_fear", "700", FLAGS, "How far citizens hear a gun and run from it, some covering their heads first (0: they don't react)")
+local FEAR_BUSY = { detained = true, jailed = true, escorted = true, event = true, abed = true, hostile = true, working = true }
+local COWER = { "ACT_COWER", "Fear_Reaction", "photo_react_startle" }
+local CRIES = { "help01", "runforyourlife01", "runforyourlife02", "runforyourlife03", "gethellout", "watchout", "uhoh", "no01", "no02" }
+local function Cry(npc, st)
+    npc:EmitSound("vo/npc/" .. (st.gender == "female" and "female01" or "male01") .. "/" .. CRIES[math.random(#CRIES)] .. ".wav", 80, math.random(96, 108))
+end
+
+-- Off, away from where the shots came from (not just anywhere).
+local function RunFrom(npc, st, from, now)
+    local npos = npc:GetPos()
+    local away = npos - from
+    away.z = 0
+    if away:LengthSqr() < 1 then away = VectorRand() away.z = 0 end
+    away:Normalize()
+    local dest
+    for _ = 1, 8 do
+        local p = LC.RandomWanderPos("citizen", npos + away * 700)
+        if p and (p - npos):GetNormalized():Dot(away) > 0.2 then dest = p break end
+    end
+    dest = dest or LC.RandomWanderPos("citizen", npos)
+    if not dest then return false end
+    if LC.CancelBusy then LC.CancelBusy(npc, st) end
+    LC.LeaveLine(npc, st)
+    LC.Release(npc, st)
+    if not LC.GoTo(npc, st, dest, true, nil) then return false end
+    st.untilT = now + 6
+    return true
+end
+
+-- Down, head covered, then off.
+local function Cower(npc, st, from, now)
+    if LC.CancelBusy then LC.CancelBusy(npc, st) end
+    LC.LeaveLine(npc, st)
+    LC.Release(npc, st)
+    if npc.SetSchedule then npc:SetSchedule(SCHED_IDLE_STAND) end
+    st.dest, st.route = nil, nil
+    LC.SetState(npc, st, "idle")
+    st.untilT = now + 4 -- (nothing new till they've got up)
+    st.nextChat = math.max(st.nextChat or 0, now + 12)
+    npc:SetNW2String("lc_doing", "head down")
+    if LC.PlayGesture then LC.PlayGesture(npc, COWER, 4) end
+    timer.Simple(math.Rand(3, 4), function()
+        if not IsValid(npc) or LC.NPCs[npc] ~= st or npc:Health() <= 0 then return end
+        npc:SetNW2String("lc_doing", "")
+        if not FEAR_BUSY[st.state] then RunFrom(npc, st, from, CurTime()) end
+    end)
+    return true
+end
+
+function LC.GunfireFear(shooter, src, now)
+    local r = cvFear:GetFloat()
+    if r <= 0 then return 0 end
+    now = now or CurTime()
+    local n = 0
+    for npc, st in pairs(LC.NPCs) do
+        if IsValid(npc) and st.role == "citizen" and not st.test and not st.questLock and not st.subject and not FEAR_BUSY[st.state]
+            and npc:Health() > 0 and npc ~= shooter and (st.nextFear or 0) < now and npc:GetPos():DistToSqr(src) < r * r then
+            st.nextFear = now + math.Rand(9, 13)
+            local done
+            if math.random() < 0.35 then done = Cower(npc, st, src, now) else done = RunFrom(npc, st, src, now) end
+            if done then
+                n = n + 1
+                if math.random() < 0.5 then Cry(npc, st) end
+            end
+        end
+    end
+    return n
+end
+
+hook.Add("EntityFireBullets", "LivingCityGunfireFear", function(ent, data)
+    if not IsValid(ent) or cvFear:GetFloat() <= 0 then return end
+    local now = CurTime()
+    if (ent.lcShotHeardAt or 0) > now then return end
+    ent.lcShotHeardAt = now + 1.5
+    local src = data and data.Src or ent:GetPos()
+    local ok, err = pcall(LC.GunfireFear, ent, src, now)
+    if not ok and LC.Error then LC.Error("gunfire fear", err) end
 end)

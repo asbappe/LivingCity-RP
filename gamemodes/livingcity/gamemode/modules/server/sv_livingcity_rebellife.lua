@@ -576,14 +576,18 @@ function A.patrol(npc, st, z, now)
     local n = math.random(3, 5)
     local base = math.random() * math.pi * 2
     for i = 1, n do
-        local spot
-        for _ = 1, 4 do
+        local spot, cramped
+        for _ = 1, 6 do
             local a = base + (i - 1) * (math.pi * 2 / n) + math.Rand(-0.3, 0.3)
             local p = z.pos + Vector(math.cos(a), math.sin(a), 0) * z.r * math.Rand(0.55, 0.78)
             local g = Floor(p + Vector(0, 0, 40))
-            if g and LCZ.Contains(z, g, -30) and math.abs(g.z - z.pos.z) < (z.h or 160) and Standable(g) then spot = g break end
+            if g and LCZ.Contains(z, g, -30) and math.abs(g.z - z.pos.z) < (z.h or 160) and Standable(g) then
+                -- (a stop with room round it first: not in a doorway, the owner, 7 November)
+                if not LC.RoomAround or LC.RoomAround(g) then spot = g break end
+                cramped = cramped or g
+            end
         end
-        spot = spot or LC.SpotInZone(z)
+        spot = spot or cramped or (LC.RoomySpot and LC.RoomySpot(z)) or LC.SpotInZone(z)
         if spot then
             local out = spot - z.pos
             out.z = 0

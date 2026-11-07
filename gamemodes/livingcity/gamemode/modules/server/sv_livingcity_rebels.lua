@@ -151,6 +151,55 @@ end
 -- How many fighters a zone has room for: one for every lc_rebel_room square (its floor area,
 -- a box's or a circle's), at least one. A small camp isn't packed wall to wall.
 local cvRoom = CreateConVar("lc_rebel_room", "350", FLAGS, "Room each Resistance fighter needs in rebel territory (units: one for every this-by-this square of a zone); a small zone gets fewer")
+
+-- Open floor, not a doorway or a narrow hallway (the owner, 7 November: fighters crammed into doorways,
+-- hallways and walkways): a hull the size of a person goes r units clear in at least three of the four
+-- directions. A corridor or a doorway lets it through two, opposite each other, and fails.
+local ROOM_MINS, ROOM_MAXS = Vector(-13, -13, 0), Vector(13, 13, 56)
+local ROOM_DIRS = { Vector(1, 0, 0), Vector(-1, 0, 0), Vector(0, 1, 0), Vector(0, -1, 0) }
+function LC.RoomAround(pos, r)
+    r = r or 44
+    local base = pos + Vector(0, 0, 10)
+    local free = 0
+    for _, d in ipairs(ROOM_DIRS) do
+        local tr = util.TraceHull({ start = base, endpos = base + d * r, mins = ROOM_MINS, maxs = ROOM_MAXS, mask = MASK_NPCSOLID_BRUSHONLY })
+        if tr and not tr.Hit and not tr.StartSolid then free = free + 1 end
+    end
+    return free >= 3
+end
+
+-- A spot in a zone with room round it, if a few tries find one (the last spot tried otherwise).
+function LC.RoomySpot(z, tries)
+    local last
+    for _ = 1, tries or 5 do
+        local p = LC.SpotInZone(z)
+        if p then
+            if LC.RoomAround(p) then return p, true end
+            last = p
+        end
+    end
+    return last, false
+end
+
+-- How much of a zone's floor is open (sampled, kept five minutes): a camp that is mostly walls and
+-- hallways has room for fewer than its area says. Never below a quarter.
+local function OpenFraction(z)
+    local now = CurTime()
+    local c = z.lcOpen
+    if c and now < c.till then return c.f end
+    local found, roomy = 0, 0
+    for _ = 1, 16 do
+        local p = LC.SpotInZone(z)
+        if p then
+            found = found + 1
+            if LC.RoomAround(p) then roomy = roomy + 1 end
+        end
+    end
+    local f = found >= 6 and math.max(0.25, roomy / found) or 1
+    z.lcOpen = { f = f, till = now + 300 }
+    return f
+end
+
 function LC.RebelRoomIn(z)
     local area
     if z.box then
@@ -158,7 +207,7 @@ function LC.RebelRoomIn(z)
     else
         area = math.pi * (z.r or 300) ^ 2
     end
-    return math.max(1, math.floor(area / math.max(50, cvRoom:GetFloat()) ^ 2))
+    return math.max(1, math.floor(area * OpenFraction(z) / math.max(50, cvRoom:GetFloat()) ^ 2))
 end
 
 function LC.RebelTarget()
@@ -185,11 +234,16 @@ LC.RebelsIn = CountIn
 
 -- A spot inside a zone nobody can see right now (or, if anyone, then any spot).
 local function HiddenSpot(z, allowSeen)
-    for _ = 1, 8 do
+    local cramped
+    for _ = 1, 10 do
         local p = LC.SpotInZone(z)
-        if p and LC.FarFromPlayers(p, 300) and not LC.IsSeen(p + UP) then return p end
+        if p and LC.FarFromPlayers(p, 300) and not LC.IsSeen(p + UP) then
+            if LC.RoomAround(p) then return p end -- (open floor first: not a doorway)
+            cramped = cramped or p
+        end
     end
-    if allowSeen then return LC.SpotInZone(z) end
+    if cramped then return cramped end
+    if allowSeen then return (LC.RoomySpot(z)) end
     return nil
 end
 
@@ -256,6 +310,51 @@ function LC.ReinforceRebels(z, n)
     end
     return made
 end
+
+-- Too many for the space (the owner, 7 November: about twenty in a small camp, "crammed like
+-- sardines"): a zone with more fighters at home than it has room for (lc_rebel_room) loses the
+-- extras, unseen, the ones who came for something first. Fighters out with a player, on a raid,
+-- at a post, the quartermaster and anyone in a fight are left alone.
+function LC.RebelTrimCrowds(now)
+    now = now or CurTime()
+    local removed = 0
+    for _, z in ipairs(RebelZones()) do
+        local home = {}
+        for npc, st in pairs(LC.NPCs) do
+            if IsValid(npc) and st.role == "rebel" and st.zone == z and npc:Health() > 0 and not st.test and not st.questLock
+                and not st.raid and not st.skirmish and not st.follow and not st.post and not st.quartermaster
+                and not st.errand and not st.foe and not st.returning then
+                home[#home + 1] = { npc, st }
+            end
+        end
+        local over = #home - LC.RebelRoomIn(z)
+        if over > 0 then
+            -- the extras first (reinforcements, raiders back home), then anyone out of sight
+            table.sort(home, function(a, b)
+                local ua, ub = a[2].unmanaged and 1 or 0, b[2].unmanaged and 1 or 0
+                if ua ~= ub then return ua > ub end
+                return (a[2].expires or 0) < (b[2].expires or 0)
+            end)
+            for _, h in ipairs(home) do
+                if over <= 0 then break end
+                local npc, st = h[1], h[2]
+                if not LC.IsSeen(npc:GetPos() + UP) then
+                    if st.life and LC.RebelLifeEnd then LC.RebelLifeEnd(npc, st) end
+                    LC.NPCs[npc] = nil
+                    npc:Remove()
+                    over = over - 1
+                    removed = removed + 1
+                end
+            end
+        end
+    end
+    return removed
+end
+timer.Create("LivingCityRebelCrowd", 30, 0, function()
+    if not LC.Running then return end
+    local ok, err = pcall(LC.RebelTrimCrowds, CurTime())
+    if not ok and LC.Error then LC.Error("rebel crowds", err) end
+end)
 
 ------------------------------------------------------------------------
 -- Relationships
@@ -450,7 +549,7 @@ end)
 local function Wander(npc, st, now)
     local z = st.zone
     if not z then return end
-    local spot = LC.SpotInZone(z)
+    local spot = LC.RoomySpot(z) -- (somewhere with room: not a doorway or a hallway)
     if not spot then st.untilT = now + 5 return end
     st.dest = spot
     npc:SetLastPosition(spot)

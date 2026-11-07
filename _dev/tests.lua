@@ -3268,6 +3268,29 @@ ok(LC.QuestOf[mu] and LC.RebelsIn(rz) >= 3, "there are rebels waiting in rebel t
 LC.AbandonQuest(mu)
 
 ----------------------------------------------------------------------
+section("Rebels keep out of doorways, and a camp isn't packed past its room (the owner, 7 November)")
+local openSpot = Vector(1500, 3500, 0)
+ok(LC.RoomAround(openSpot), "open floor has room round it")
+_walls = { { a = Vector(1400, 3470, 0), b = Vector(1600, 3470, 0) }, { a = Vector(1400, 3530, 0), b = Vector(1600, 3530, 0) } }
+ok(not LC.RoomAround(openSpot), "a hallway 60 wide hasn't (a person gets through two ways, not three)")
+_walls = {}
+local roomy, isRoomy = LC.RoomySpot(rz)
+ok(roomy ~= nil and isRoomy, "a spot with room round it is found in the camp")
+for n, st in pairs(LC.NPCs) do if IsValid(n) and st.role == "rebel" then n:Remove() end end
+local roomFor = LC.RebelRoomIn(rz)
+for _ = 1, roomFor + 5 do
+    local _, rst = LC.SpawnRebel(rz.pos + Vector(math.random(-50, 50), math.random(-50, 50), 4), rz)
+    if rst then rst.unmanaged = true end
+end
+ok(LC.RebelsIn(rz) == roomFor + 5, "a camp packed past its room", LC.RebelsIn(rz))
+local seenWas = LC.IsSeen
+LC.IsSeen = function() return false end
+LC.RebelTrimCrowds(CurTime())
+LC.IsSeen = seenWas
+ok(LC.RebelsIn(rz) == roomFor, "is thinned to what it has room for (lc_rebel_room), unseen", LC.RebelsIn(rz))
+for n, st in pairs(LC.NPCs) do if IsValid(n) and st.role == "rebel" then n:Remove() end end
+
+----------------------------------------------------------------------
 section("Birds don't block doors")
 local dr = ents.Create("prop_door_rotating")
 dr:SetPos(Vector(-24000, -24000, 0))
@@ -13690,6 +13713,50 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     local slaves = 0
     for v in pairs(LC.VortSlaves) do if IsValid(v) and v:GetNW2Bool("lc_shackled", false) then slaves = slaves + 1 end end
     ok(slaves >= 1 and slaves <= GetConVar("lc_vort_slaves"):GetInt(), "shackled vortigaunts sweep the streets (Combine property)", slaves)
+    -- (the owner, 7 November) a broom in the claws; walked into, it steps aside; the collar: no zap, it runs from a headcrab
+    local sl = next(LC.VortSlaves)
+    ok(sl and IsValid(sl.lcBroom) and sl.lcBroom.parent == sl, "a street sweeper holds a push broom")
+    local wallsWere = _walls
+    _walls = {}
+    local slPos = sl:GetPos()
+    local walker = ents.Create("npc_citizen")
+    walker:SetPos(slPos + Vector(-30, 0, 0))
+    walker:Spawn()
+    walker.vel = Vector(80, 0, 0)
+    LC.VortSlaveMakeWay(CurTime())
+    ok(sl:GetPos():Distance(slPos) > 10 and sl.sched == SCHED_FORCED_GO, "walked into, it steps aside", sl:GetPos():Distance(slPos))
+    walker:Remove()
+    local crab = ents.Create("npc_headcrab")
+    crab:SetPos(sl:GetPos() + Vector(120, 0, 0))
+    crab:Spawn()
+    LC.VortSlaveTick(CurTime())
+    ok(sl.sched == SCHED_FORCED_GO_RUN and (LC.VortSlaves[sl].fleeUntil or 0) > CurTime(), "a headcrab near: it runs, no vortessence (the collar)")
+    crab:Remove()
+    _walls = wallsWere
+    -- gunfire: citizens who hear it run from it, or drop and cover their heads first
+    local G = Vector(-161000, -161000, 0)
+    local cit, cst = LC.Spawners.citizen(G)
+    local gunman = newPlayer("Gunman", "resistance")
+    gunman:SetPos(G + Vector(200, 0, 0))
+    local rwWas, brWas = LC.RandomWanderPos, LC.BuildRoute
+    LC.RandomWanderPos = function() return G + Vector(-600, 0, 0) end
+    LC.BuildRoute = function() return nil end
+    cst.untilT = CurTime() + 100
+    hook.Run("EntityFireBullets", gunman, { Src = gunman:GetPos() })
+    ok(cst.nextFear ~= nil and (cst.state == "moving" or cst.untilT <= CurTime() + 4.1), "a citizen who hears a gun runs from it, or drops and covers their head", cst.state)
+    local fearAt = cst.nextFear
+    hook.Run("EntityFireBullets", gunman, { Src = gunman:GetPos() })
+    ok(cst.nextFear == fearAt, "and a burst doesn't start them over every shot")
+    _setcvar("lc_gunfire_fear", 0)
+    local far, fst = LC.Spawners.citizen(G + Vector(0, 300, 0))
+    gunman.lcShotHeardAt = 0
+    hook.Run("EntityFireBullets", gunman, { Src = gunman:GetPos() })
+    ok(fst.nextFear == nil, "lc_gunfire_fear 0: nobody reacts")
+    _setcvar("lc_gunfire_fear", 700)
+    LC.RandomWanderPos, LC.BuildRoute = rwWas, brWas
+    if IsValid(cit) then cit:Remove() end
+    if IsValid(far) then far:Remove() end
+    gunman:SetPos(Vector(-150000, 150000, 0))
     local slave = next(LC.VortSlaves)
     local freer = newPlayer("VortFreer", "resistance", nil, 900)
     _run(0.3)
