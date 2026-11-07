@@ -255,7 +255,8 @@ function LC.RebelSpawnPos()
     local now = CurTime()
     for _, z in ipairs(zones) do
         -- (no goto here: "continue" is a keyword in Garry's Mod's Lua)
-        if (z.contestedUntil or 0) <= now and CountIn(z) < LC.RebelRoomIn(z) then
+        -- (nor on ground a team is clearing: LC.QuietRebels, sv_livingcity_fieldops.lua)
+        if (z.contestedUntil or 0) <= now and CountIn(z) < LC.RebelRoomIn(z) and not (LC.RebelQuietAt and LC.RebelQuietAt(z.pos, z.r)) then
             local p = HiddenSpot(z)
             if p then return p + Vector(0, 0, 4), z end
         end
@@ -1867,7 +1868,7 @@ function LC.EnsureLookoutPosts()
         if IsValid(npc) and npc:Health() > 0 and LC.NPCs[npc] then
             local st = LC.NPCs[npc]
             st.post.yaw = p.yaw or 0 -- (turned in the editor)
-        elseif LC.Running and now >= (slot.nextAt or 0) then
+        elseif LC.Running and now >= (slot.nextAt or 0) and not (LC.RebelQuietAt and LC.RebelQuietAt(p.pos, 0)) then
             if slot.npc ~= nil and not slot.diedAt then slot.diedAt = now end
             if not (LC.IsSeen and LC.IsSeen(p.pos + UP)) then
                 local made, st = SpawnRebel(p.pos + Vector(0, 0, 4), ZoneAt(p.pos, 800), Pick(POST_GUNS))

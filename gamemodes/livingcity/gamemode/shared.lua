@@ -151,6 +151,9 @@ LC_MODULES = {
         "sv_livingcity_work",
         "sv_livingcity_stalkerwork",
         "sv_livingcity_writing",
+        "sv_livingcity_fieldops", -- (after the quests and the war: backup's guns, squads for violent jobs, flashbangs, rebel ground)
+        "sv_livingcity_labdamage", -- (a lab shot up and wrecked, and the job to fix it)
+        "sv_livingcity_career", -- (C > My career: rank, XP, the way to the Overwatch)
     },
     client = {
         "cl_livingcity",
@@ -183,6 +186,8 @@ LC_MODULES = {
         "cl_livingcity_ways",
         "cl_livingcity_outfits",
         "cl_livingcity_lab",
+        "cl_livingcity_labdamage", -- (a shot-up lab's smoke and sparks)
+        "cl_livingcity_career", -- (C > My career)
         "cl_livingcity_layoutbrowser",
         "cl_livingcity_life",
         "cl_livingcity_livecam",

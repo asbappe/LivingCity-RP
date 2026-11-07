@@ -109,6 +109,10 @@ function LC_CL.OpenActions()
     Add(menu, "My pockets (F2)", function() RunConsoleCommand("gm_showteam") end, "icon16/briefcase.png")
     Add(menu, "My board: jobs and stories (F3)", function() RunConsoleCommand("gm_showspare1") end, "icon16/page_white_text.png")
     Add(menu, "Factions (F4)", function() RunConsoleCommand("gm_showspare2") end, "icon16/group.png")
+    -- (the owner, 7 November: "as a metrocop, I have no idea what I'm working towards") cl_livingcity_career.lua
+    if f ~= "" and LC_CL.AskCareer then
+        Add(menu, unit and "My career: rank, XP and the way to the Overwatch" or "My career: rank, XP and the way up", function() LC_CL.AskCareer("") end, "icon16/chart_bar.png")
+    end
     Add(menu, "Tips I've seen (read them again)", function() net.Start("lc_hints_list") net.SendToServer() end, "icon16/lightbulb.png")
     menu:AddSpacer()
 

@@ -597,7 +597,7 @@ function LC.CallBackup(ply)
     ply.lcBackupNext = now + 45
     local near = {}
     for npc, st in pairs(LC.NPCs or {}) do
-        if IsValid(npc) and LC.IsSecurity(st) and not st.questLock and not st.raid and not st.skirmish
+        if IsValid(npc) and LC.IsSecurity(st) and not st.questLock and not st.raid and not st.skirmish and not st.questSquad
             and st.state ~= "hostile" and st.state ~= "escort" and st.state ~= "event" and not st.workEscort then
             local d = npc:GetPos():DistToSqr(ply:GetPos())
             if d < 5000 * 5000 then near[#near + 1] = { npc = npc, st = st, d = d } end
@@ -605,10 +605,13 @@ function LC.CallBackup(ply)
     end
     table.sort(near, function(a, b) return a.d < b.d end)
     local sent = 0
+    -- (the owner, 7 November: backup came WITH STUNSTICKS to a gunfight) gun out, shot at in the last
+    -- 30 seconds, or on a violent job: they come with pistols and SMGs, and keep them out (sv_livingcity_fieldops.lua)
+    local violent = LC.BackupViolent ~= nil and LC.BackupViolent(ply)
     for i = 1, math.min(3, #near) do
         local u = near[i]
         if LC.AbandonTask then LC.AbandonTask(u.npc, u.st, now) end
-        if LC.ArmUnit then LC.ArmUnit(u.npc, u.st) end
+        if LC.ArmBackupUnit then LC.ArmBackupUnit(u.npc, u.st, violent, i) elseif LC.ArmUnit then LC.ArmUnit(u.npc, u.st) end
         -- (the owner, 7 November: backup joins your squad) with you for five minutes, one engine squad
         -- between them so Half-Life 2's own squad tactics work
         u.st.backupFor, u.st.backupUntil, u.st.backupJoined = ply, now + BACKUP_SECS, nil
@@ -620,7 +623,8 @@ function LC.CallBackup(ply)
     for _, p in ipairs(player.GetAll()) do
         if IsUnitPlayer(p) and p ~= ply then p:ChatPrint("[CP net] " .. Callsign(ply) .. " requests backup " .. where .. ". Respond for XP.") end
     end
-    ply:ChatPrint(sent > 0 and string.format("[Dispatch] %d unit%s en route to you. They join your squad when they reach you: with you, and on whatever you fight, for %d minutes.", sent, sent == 1 and "" or "s", math.floor(BACKUP_SECS / 60))
+    ply:ChatPrint(sent > 0 and string.format("[Dispatch] %d unit%s en route to you. They join your squad when they reach you: with you, and on whatever you fight, for %d minutes.%s", sent, sent == 1 and "" or "s", math.floor(BACKUP_SECS / 60),
+            violent and " Weapons free: they're coming with pistols and SMGs." or "")
         or "[Dispatch] No Civil Protection units free nearby. Your 10-20 is out to every unit.")
     if sent > 0 then ply:EmitSound("npc/metropolice/vo/copy.wav", 60) end
     return true, sent

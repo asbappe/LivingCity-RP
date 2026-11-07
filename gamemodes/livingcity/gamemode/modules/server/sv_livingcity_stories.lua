@@ -556,7 +556,7 @@ LC.Chain{
         silenced = "The radio is dead. For a while, the Resistance goes quiet too.",
         counterintel = "For a week, the Resistance follows your false orders. Overwatch notices your work.",
         mercy = "You put 6-12 down yourself and file his tags with the others. Nobody asks how he died.",
-        left = "Overwatch cleans the area. They don't find him. You don't tell them where to look.",
+        left = "A cleanup crew clears the area. They log him as one more zombine. You don't tell them his number.",
         brought_in = "He's processed by morning. You never learn what happened to his daughter.",
         let_go = "You let him go and report him killed in action. You'll never be sure that was a kindness.",
         defected = "6-12 made it to the Resistance. Somewhere in the canals, he's teaching rebels how Civil Protection units think.",
@@ -593,16 +593,59 @@ LC.Chain{
         retaliation = { num = 2, build = function(ply, data)
             if data.cause == "infestation" then
                 local z = Pick(LC.ZonesOfKind("infest"))
+                if not z then return nil end
+                -- (the owner, 7 November: a choice popping up mid-fight took over the cursor in a zombie-infested
+                -- zone) no choice window here: a zombine in his uniform comes at you, the screen says who it must be,
+                -- and what you do decides it. Kill him (mercy), or walk out of the infestation (left).
+                local fight = Count("killed", 3, "Fight your way through: kill 3 zombies or headcrabs", function(_, _, npc) return Q.IsZombieNPC(npc) end)
+                local out = z.r + 400 -- (this far from its heart, and you've left the infestation)
+                local him = {
+                    kind = "count", event = "killed", need = 1, untallied = true,
+                    text = "That zombine is 6-12. Kill him to end his suffering, or leave the infestation and let a cleanup crew deal with him",
+                    filter = function(q, _, npc) return npc == q.data.zombine end,
+                    onEnter = function(q, st)
+                        local npc = LC.SpawnMissingZombine and LC.SpawnMissingZombine(q, z)
+                        if not IsValid(npc) then return false end
+                        st.npc = npc
+                        for _, p in ipairs(Q.Members(q)) do
+                            if p:GetPos():DistToSqr(z.pos) < out * out then q.data.wentIn = true end
+                            if LC.Notice then
+                                LC.Notice(p, "warn", "This must be 6-12", "A zombine in a Civil Protection uniform, his mask still on. Kill him to end his suffering, " ..
+                                    "or leave the infestation and let a cleanup crew deal with him.", 10)
+                            end
+                        end
+                    end,
+                    poll = function(q, st)
+                        local npc = q.data.zombine
+                        if not IsValid(npc) or npc:Health() <= 0 then
+                            q.chainEnd = "mercy"
+                            return Q.Advance(q)
+                        end
+                        local inside = false
+                        for _, p in ipairs(Q.Members(q)) do
+                            if p:Alive() and p:GetPos():DistToSqr(z.pos) < out * out then inside = true end
+                        end
+                        if inside then q.data.wentIn = true st.away = 0 return end
+                        if not q.data.wentIn then return end
+                        st.away = (st.away or 0) + 0.5
+                        if st.away >= 2 then
+                            q.chainEnd = "left"
+                            Narrate(q, "You leave him to the infestation. A cleanup crew will find what's left of him.")
+                            Q.Advance(q)
+                        end
+                    end,
+                    onDone = function(q)
+                        if q.chainEnd == nil then q.chainEnd = "mercy" end
+                        if q.chainEnd == "mercy" then Narrate(q, "6-12 goes down for the last time. His suffering is over.") end
+                    end,
+                }
                 return {
                     title = "What's left of him", reward = 40, limit = 600,
                     desc = "The trail leads into the infestation. Go in and find 6-12.",
                     stages = {
                         Goto(z.pos, "Go into the infestation (marked)", math.max(200, z.r)),
-                        Count("killed", 3, "Fight your way through: kill 3 zombies or headcrabs", function(_, _, npc) return Q.IsZombieNPC(npc) end),
-                        Choice("Among the zombies, a familiar uniform: it's 6-12, turned into one of them. His mask is still on.", {
-                            { text = "Put him down yourself.", pick = function(q) q.chainEnd = "mercy" end },
-                            { text = "Leave him for Overwatch to deal with.", pick = function(q) q.chainEnd = "left" end },
-                        }),
+                        fight,
+                        him,
                     },
                 }
             end

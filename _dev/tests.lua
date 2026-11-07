@@ -8444,14 +8444,13 @@ if rq and patch then
     unitR:SetPos(rq.stages[1].pos)
     _run(1)
     ok(LC.RebelsIn(patch) >= 3, "and the rebels there are waiting", LC.RebelsIn(patch))
-    for _ = 1, 5 do
-        if rq.stages[rq.stage].kind ~= "count" then break end
-        local victim = LC.SpawnRebel(patch.pos + Vector(math.random(-50, 50), math.random(-50, 50), 4), patch)
+    -- (the owner, 7 November: every rebel on the ground, not three of them)
+    for _, victim in ipairs(LC.RebelsOnGround(patch.pos, math.max(350, patch.r + 150))) do
         victim:SetHealth(0)
         hook.Run("OnNPCKilled", victim, unitR)
     end
     _run(1)
-    ok(rq.stages[rq.stage].kind == "hold", "clear them out, then hold it")
+    ok(rq.stages[rq.stage].kind == "hold", "clear them all out, then hold it")
     unitR:SetPos(rq.stages[rq.stage].pos)
     _run(40)
     ok(rq.done and not table.HasValue(LC.Zones, patch), "and the ground is retaken")
@@ -14912,6 +14911,558 @@ section("NPCs that fall out of the map")
     for i = 1, #spots do for j = i + 1, #spots do if spots[i].pos:Distance(spots[j].pos) < 40 then close = close + 1 end end end
     ok(#spots == 120 and close == 0, "an ending's ring with 120 people in it: nobody stands inside anybody", close)
 end)()
+
+-- The owner's 7 November playtest, part 2 (sv_livingcity_fieldops.lua and friends): a unit each.
+function RetakeFieldTests()
+    local function FieldPost(p, spec, tid, violent)
+        spec.id = 81000 + math.random(1, 999999)
+        spec.tmpl = spec.tmpl or { id = tid or "fieldtest" }
+        spec.violent = violent
+        spec.faction = LC.QuestFaction(p)
+        spec.expiresPost = CurTime() + 999
+        spec.data = spec.data or {}
+        LC.Postings[spec.faction] = LC.Postings[spec.faction] or {}
+        table.insert(LC.Postings[spec.faction], spec)
+        p.lcqNext = 0
+        LC.AcceptPosting(p, spec.id)
+        return LC.QuestOf[p]
+    end
+    local function FieldTemplate(id)
+        for _, t in ipairs(LC.QuestTemplates) do if t.id == id then return t end end
+    end
+    local function NetCount(name)
+        local n = 0
+        for _, m in ipairs(net.sent) do if m.name == name then n = n + 1 end end
+        return n
+    end
+    section("Retake the block: armed backup, every rebel on the ground, no respawns, the counterattack, flashbangs that blind")
+    _setcvar("lc_quest_squad", 0) -- (the squads have their own unit)
+    local P = Vector(-186000, -186000, 0)
+    -- backup comes armed to a gunfight
+    local caller = newPlayer("BackupCaller", "cp", nil, 300)
+    caller:SetPos(P)
+    caller.lcShotAt = nil
+    caller.active = nil
+    ok(not LC.BackupViolent(caller), "hands empty, nobody shooting, no violent job: not a gunfight")
+    caller:Give("weapon_pistol")
+    caller:SelectWeapon("weapon_pistol")
+    ok(LC.BackupViolent(caller), "a gun in hand: a gunfight")
+    caller.active = nil
+    local shooter = LC.SpawnRebel(P + Vector(900, 0, 4), nil)
+    hook.Run("EntityTakeDamage", caller, _dmg(shooter, 5))
+    ok(LC.BackupViolent(caller), "shot at in the last 30 seconds: a gunfight")
+    caller.lcShotAt = CurTime() - 31
+    ok(not LC.BackupViolent(caller), "31 seconds ago: not any more")
+    if IsValid(shooter) then shooter:Remove() end
+    caller:Give("weapon_pistol")
+    caller:SelectWeapon("weapon_pistol")
+    local units = {}
+    for i = 1, 3 do
+        local c, cst = LC.SpawnCop(P + Vector(200 + i * 40, 0, 4))
+        if IsValid(c) then cst.state = "idle" units[#units + 1] = c end
+    end
+    caller.lcBackupNext = 0
+    LC.CallBackup(caller)
+    local guns, smg, sticks = 0, 0, 0
+    for _, c in ipairs(units) do
+        local st = LC.NPCs[c]
+        local w = c:GetActiveWeapon()
+        local cls = w and w:GetClass() or ""
+        if st and st.backupFor == caller and (cls == "weapon_pistol" or cls == "weapon_smg1") then guns = guns + 1 end
+        if cls == "weapon_smg1" then smg = smg + 1 end
+        if cls == "weapon_stunstick" then sticks = sticks + 1 end
+    end
+    ok(#units == 3 and guns == 3 and sticks == 0, "backup called with a gun out comes with guns, not stunsticks", guns .. " guns, " .. sticks .. " sticks")
+    ok(smg >= 1 and smg < 3, "pistols and SMGs, both", smg)
+    local u1 = units[1]
+    if IsValid(u1) then
+        LC.CalmOne(u1, LC.NPCs[u1], CurTime())
+        ok(u1:GetActiveWeapon():GetClass() == "weapon_stunstick", "(calming down after a fight puts the stick back in hand)")
+        LC.KeepBackupGunsOut()
+        local cls = u1:GetActiveWeapon():GetClass()
+        ok(cls == "weapon_pistol" or cls == "weapon_smg1", "while they're with you, the gun comes straight back out", cls)
+    end
+    for _, c in ipairs(units) do if IsValid(c) then LC.NPCs[c] = nil c:Remove() end end
+    caller:SetPos(Vector(-150000, 150000, 0))
+
+    -- retaking ground: every rebel on it, nobody new turns up, and they come back for it
+    local G = Vector(-188000, -186000, 0)
+    local camp = { pos = G + Vector(1800, 0, 0), r = 300, h = 200, kind = "rebel", group = 0 }
+    local z = { pos = G, r = 300, h = 200, kind = "rebel", group = 0, grown = true, seed = camp }
+    table.insert(LC.Zones, camp)
+    table.insert(LC.Zones, z)
+    local unit = newPlayer("RetakeAll", "cp", nil, 300)
+    unit:SetPos(G + Vector(0, -3000, 0))
+    local t = FieldTemplate("cp_retake")
+    local spec = t and t.build(unit, z)
+    ok(spec ~= nil and #spec.stages == 3, "the retake job builds: get there, clear it, hold it")
+    local q = spec and FieldPost(unit, spec, "cp_retake", true)
+    if q then
+        q.tmpl = t
+        unit:SetPos(G)
+        _run(1)
+        local st = q.stages[q.stage]
+        ok(st.kind == "count" and st.untallied, "on the ground: the job is to clear it")
+        ok(LC.RebelQuietAt(G, z.r) and LC.RebelQuietAt(camp.pos, camp.r), "and no new rebels turn up on it (or next door) while the team clears it")
+        local fromThere = 0
+        for _ = 1, 10 do
+            local _, zz = LC.RebelSpawnPos()
+            if zz == z or zz == camp then fromThere = fromThere + 1 end
+        end
+        ok(fromThere == 0, "the city's own spawning skips it", fromThere)
+        local onIt = LC.RebelsOnGround(G, math.max(350, z.r + 150))
+        ok(#onIt >= 3, "the rebels holding it are waiting", #onIt)
+        -- three down isn't enough any more (the owner: 25 dead, and it only counted 3)
+        for i = 1, math.min(3, #onIt - 1) do
+            onIt[i]:SetHealth(0)
+            hook.Run("OnNPCKilled", onIt[i], unit)
+        end
+        _run(1)
+        ok(q.stages[q.stage] == st and string.find(st.text, "left)", 1, true) ~= nil, "three down and one still standing: not done yet", st.text)
+        for _, npc in ipairs(LC.RebelsOnGround(G, math.max(350, z.r + 150))) do
+            npc:SetHealth(0)
+            hook.Run("OnNPCKilled", npc, unit)
+        end
+        _run(1)
+        ok(q.stages[q.stage].kind == "hold", "every rebel on the ground down: now hold it")
+        -- the counterattack
+        local seen = LC.IsSeen
+        LC.IsSeen = function() return false end
+        q.data.waveAt = CurTime()
+        _run(1)
+        LC.IsSeen = seen
+        local wave = 0
+        for npc, wst in pairs(LC.NPCs) do
+            if wst.wave and IsValid(npc) and wst.raid and wst.raid.target:Distance(G) < 300 then wave = wave + 1 end
+        end
+        ok(wave >= 3, "holding it, a wave of fighters comes to take it back", wave)
+        _run(36)
+        ok(q.done, "held for 30 seconds: the ground is retaken")
+        ok(not LC.RebelQuietAt(G, 0) or (LC.RebelQuiet[#LC.RebelQuiet] or {}).untilT < CurTime() + 200, "and the quiet lifts a couple of minutes after")
+    end
+    for npc, wst in pairs(LC.NPCs) do if wst.wave and IsValid(npc) then LC.NPCs[npc] = nil npc:Remove() end end
+    for zi = #LC.Zones, 1, -1 do if LC.Zones[zi] == z then table.remove(LC.Zones, zi) end end
+    for zi = #LC.Zones, 1, -1 do if LC.Zones[zi] == camp then table.remove(LC.Zones, zi) end end
+    LC.RebelQuiet = {}
+    unit:SetPos(Vector(-150000, 150000, 0))
+
+    -- flashbangs blind, each for their own while
+    local F = Vector(-190000, -186000, 0)
+    local blinded = {}
+    for i = 1, 6 do
+        local r, rst = LC.SpawnRebel(F + Vector(i * 30, 0, 4), nil)
+        if IsValid(r) then r:SetEnemy(unit) blinded[#blinded + 1] = { r, rst } end
+    end
+    LC.Detonate("flash", F + Vector(100, 0, 0), unit)
+    local okAll, secs, cleared = true, {}, true
+    for _, b in ipairs(blinded) do
+        local left = (b[2].stunnedUntil or 0) - CurTime()
+        if not b[2].flashBlind or left < 3.9 or left > 9.1 then okAll = false end
+        secs[math.floor(left * 10)] = true
+        if b[1]:GetEnemy() ~= NULL and b[1]:GetEnemy() ~= nil then cleared = false end
+    end
+    ok(#blinded == 6 and okAll, "a flashbang blinds the rebels in the blast for 4 to 9 seconds")
+    ok(table.Count(secs) >= 2, "a different time for each of them", table.Count(secs))
+    ok(cleared, "and they lose who they were shooting at")
+    ok(blinded[1][1]:IsCurrentSchedule(SCHED_FORCED_GO) or blinded[1][1].lcGesture ~= nil, "they stumble about with their hands at their eyes, not stand idle")
+    LC.FlashTick(CurTime() + 10)
+    local over = true
+    for _, b in ipairs(blinded) do if b[2].flashBlind then over = false end end
+    ok(over, "and it wears off")
+    for _, b in ipairs(blinded) do if IsValid(b[1]) then LC.NPCs[b[1]] = nil b[1]:Remove() end end
+end
+RetakeFieldTests()
+
+function QuestSquadTests()
+    local function FieldPost(p, spec, tid, violent)
+        spec.id = 81000 + math.random(1, 999999)
+        spec.tmpl = spec.tmpl or { id = tid or "fieldtest" }
+        spec.violent = violent
+        spec.faction = LC.QuestFaction(p)
+        spec.expiresPost = CurTime() + 999
+        spec.data = spec.data or {}
+        LC.Postings[spec.faction] = LC.Postings[spec.faction] or {}
+        table.insert(LC.Postings[spec.faction], spec)
+        p.lcqNext = 0
+        LC.AcceptPosting(p, spec.id)
+        return LC.QuestOf[p]
+    end
+    local function FieldTemplate(id)
+        for _, t in ipairs(LC.QuestTemplates) do if t.id == id then return t end end
+    end
+    local function NetCount(name)
+        local n = 0
+        for _, m in ipairs(net.sent) do if m.name == name then n = n + 1 end end
+        return n
+    end
+    section("A squad of your own side on every violent job")
+    _setcvar("lc_quest_squad", 2)
+    local S = Vector(-192000, -186000, 0)
+    local spot = LC.AlarmSquadSpot
+    LC.AlarmSquadSpot = function(pos) return pos + Vector(600, 0, 0) end
+    -- Civil Protection: a free unit nearby, and one brought in
+    local cop = newPlayer("SquadCop", "cp", nil, 300)
+    cop:SetPos(S)
+    local near, nst = LC.SpawnCop(S + Vector(300, 0, 4))
+    if nst then nst.state = "idle" end
+    local q = FieldPost(cop, { title = "Squad test", reward = 1, limit = 300, desc = "",
+        stages = { { kind = "hold", pos = S + Vector(0, 5000, 0), secs = 999, r = 50, text = "wait" } } }, "squadtest", true)
+    local squad = q and LC.QuestSquadOf(q) or {}
+    local armed, withMe = 0, 0
+    for _, n in ipairs(squad) do
+        local st = LC.NPCs[n]
+        if st.backupFor == cop then withMe = withMe + 1 end
+        local cls = n:GetActiveWeapon() and n:GetActiveWeapon():GetClass() or ""
+        if cls == "weapon_pistol" or cls == "weapon_smg1" then armed = armed + 1 end
+    end
+    ok(#squad == 2 and withMe == 2, "a unit on a violent job gets two units with them", #squad)
+    ok(armed == 2, "with guns, not sticks", armed)
+    ok(IsValid(near) and LC.NPCs[near].questSquad == q, "a free unit nearby first")
+    local spawned
+    for _, n in ipairs(squad) do if LC.NPCs[n].qsSpawned then spawned = n end end
+    ok(spawned ~= nil, "and the rest brought in out of sight")
+    -- one down, another comes
+    if IsValid(near) then near:SetHealth(0) end
+    LC.QuestSquads[q].nextTop = 0
+    LC.QuestSquadTick(CurTime())
+    ok(#LC.QuestSquadOf(q) == 2, "one falls: another comes", #LC.QuestSquadOf(q))
+    LC.FinishQuest(q, true)
+    LC.QuestSquadTick(CurTime())
+    local released = true
+    for _, n in ipairs(squad) do
+        local st = IsValid(n) and LC.NPCs[n]
+        if st and (st.questSquad or st.backupFor == cop) then released = false end
+    end
+    ok(released and LC.QuestSquads[q] == nil, "the job's over: they go back to their own business")
+    -- not violent: nobody
+    local q2 = FieldPost(cop, { title = "Quiet test", reward = 1, limit = 300, desc = "",
+        stages = { { kind = "hold", pos = S + Vector(0, 5000, 0), secs = 999, r = 50, text = "wait" } } }, "quiettest", false)
+    ok(q2 and #LC.QuestSquadOf(q2) == 0, "an ordinary job: no squad")
+    if q2 then LC.FinishQuest(q2, false) end
+    -- the sweep brings its own team
+    local q3 = FieldPost(cop, { title = "Sweep test", reward = 1, limit = 300, desc = "",
+        stages = { { kind = "hold", pos = S + Vector(0, 5000, 0), secs = 999, r = 50, text = "wait" } } }, "cp_joinsweep", true)
+    ok(q3 and #LC.QuestSquadOf(q3) == 0, "joining a sweep: the sweep team is the squad")
+    if q3 then LC.FinishQuest(q3, false) end
+    cop:SetPos(Vector(-150000, 150000, 0))
+    -- the Overwatch: soldiers
+    local ota = newPlayer("SquadOTA", "cp", nil, 2500)
+    LC.Condition(ota)
+    ota:SetPos(S + Vector(0, 3000, 0))
+    local q4 = FieldPost(ota, { title = "OTA squad", reward = 1, limit = 300, desc = "",
+        stages = { { kind = "hold", pos = S + Vector(0, 9000, 0), secs = 999, r = 50, text = "wait" } } }, "otatest", true)
+    local soldiers = 0
+    for _, n in ipairs(q4 and LC.QuestSquadOf(q4) or {}) do if LC.NPCs[n].role == "soldier" then soldiers = soldiers + 1 end end
+    ok(LC.QuestFaction(ota) == "ota" and soldiers == 2, "the Overwatch get soldiers", soldiers)
+    if q4 then LC.FinishQuest(q4, false) LC.QuestSquadTick(CurTime()) end
+    ota:SetPos(Vector(-150000, 150000, 0))
+    -- the Resistance: fighters who follow you
+    local reb = newPlayer("SquadRebel", "resistance", nil, 900)
+    reb:SetPos(S + Vector(0, -3000, 0))
+    local q5 = FieldPost(reb, { title = "Rebel squad", reward = 1, limit = 300, desc = "",
+        stages = { { kind = "hold", pos = S + Vector(0, -9000, 0), secs = 999, r = 50, text = "wait" } } }, "rebtest", true)
+    local following = 0
+    for _, n in ipairs(q5 and LC.QuestSquadOf(q5) or {}) do if LC.NPCs[n].follow == reb then following = following + 1 end end
+    ok(following == 2, "the Resistance get two fighters who follow them", following)
+    if q5 then
+        local mates = LC.QuestSquadOf(q5)
+        LC.FinishQuest(q5, true)
+        LC.QuestSquadTick(CurTime())
+        local home = true
+        for _, n in ipairs(mates) do if IsValid(n) and LC.NPCs[n] and LC.NPCs[n].follow then home = false end end
+        ok(home, "and they head home when it's done")
+    end
+    reb:SetPos(Vector(-150000, 150000, 0))
+    -- switched off
+    _setcvar("lc_quest_squad", 0)
+    local q6 = FieldPost(cop, { title = "Off test", reward = 1, limit = 300, desc = "",
+        stages = { { kind = "hold", pos = S + Vector(0, 5000, 0), secs = 999, r = 50, text = "wait" } } }, "offtest", true)
+    ok(q6 and #LC.QuestSquadOf(q6) == 0, "lc_quest_squad 0: nobody")
+    if q6 then LC.FinishQuest(q6, false) end
+    _setcvar("lc_quest_squad", 2)
+    LC.AlarmSquadSpot = spot
+    for npc, st in pairs(LC.NPCs) do if st.qsSpawned and IsValid(npc) then LC.NPCs[npc] = nil npc:Remove() end end
+end
+QuestSquadTests()
+
+function MissingZombineTests()
+    local function FieldPost(p, spec, tid, violent)
+        spec.id = 81000 + math.random(1, 999999)
+        spec.tmpl = spec.tmpl or { id = tid or "fieldtest" }
+        spec.violent = violent
+        spec.faction = LC.QuestFaction(p)
+        spec.expiresPost = CurTime() + 999
+        spec.data = spec.data or {}
+        LC.Postings[spec.faction] = LC.Postings[spec.faction] or {}
+        table.insert(LC.Postings[spec.faction], spec)
+        p.lcqNext = 0
+        LC.AcceptPosting(p, spec.id)
+        return LC.QuestOf[p]
+    end
+    local function FieldTemplate(id)
+        for _, t in ipairs(LC.QuestTemplates) do if t.id == id then return t end end
+    end
+    local function NetCount(name)
+        local n = 0
+        for _, m in ipairs(net.sent) do if m.name == name then n = n + 1 end end
+        return n
+    end
+    section("The Missing Unit, part 2: a zombine, no choice window")
+    _setcvar("lc_quest_squad", 0)
+    local Z = Vector(-194000, -186000, 0)
+    local iz = { pos = Z, r = 300, kind = "infest", group = 0 }
+    table.insert(LC.Zones, iz)
+    local function Start(p)
+        local spec = LC.Chains.missing.parts.retaliation.build(p, { cause = "infestation" })
+        if not spec then return nil end
+        return FieldPost(p, spec, "missing/retaliation", false)
+    end
+    local function Fight(q, p)
+        p:SetPos(Z)
+        _run(1)
+        for _ = 1, 3 do
+            local zb = LC.SpawnZombie(Z + Vector(math.random(-80, 80), math.random(-80, 80), 4), iz)
+            zb:SetHealth(0)
+            hook.Run("OnNPCKilled", zb, p)
+        end
+        _run(0.5)
+    end
+    local cop = newPlayer("MissingCop", "cp", nil, 700)
+    local choices = NetCount("lcq_choice_open")
+    local q = Start(cop)
+    ok(q ~= nil, "the infestation part starts")
+    if q then
+        Fight(q, cop)
+        local st = q.stages[q.stage]
+        local zb = q.data.zombine
+        ok(st.kind ~= "choice" and IsValid(zb) and zb:GetClass() == "npc_zombine", "three down: a zombine appears, and no choice window", IsValid(zb) and zb:GetClass() or "none")
+        ok(NetCount("lcq_choice_open") == choices, "nothing takes over the cursor in the middle of a fight")
+        LC.FlushNotices()
+        local told = _lastnet("lc_notice")
+        ok(told ~= nil and told.to == cop, "a notice on screen says who it must be, and what to do")
+        ok(string.find(st.text, "Kill him", 1, true) and string.find(st.text, "leave the infestation", 1, true), "kill him, or leave the infestation", st.text)
+        zb:SetHealth(0)
+        hook.Run("OnNPCKilled", zb, cop)
+        _run(0.5)
+        ok(q.done and q.chainEnd == "mercy", "killed: his suffering is over (the old 'put him down' ending)", tostring(q.chainEnd))
+    end
+    cop:SetPos(Vector(-150000, 150000, 0))
+    local cop2 = newPlayer("MissingCop2", "cp", nil, 700)
+    local q2 = Start(cop2)
+    if q2 then
+        Fight(q2, cop2)
+        local zb = q2.data.zombine
+        cop2:SetPos(Z + Vector(3000, 0, 0))
+        _run(3)
+        ok(q2.done and q2.chainEnd == "left", "walk out of the infestation instead: a cleanup crew deals with him (the old 'leave him' ending)", tostring(q2.chainEnd))
+        ok(not IsValid(zb), "and he's gone when the job's over")
+    else
+        ok(false, "(the second run didn't start)")
+    end
+    cop2:SetPos(Vector(-150000, 150000, 0))
+    for zi = #LC.Zones, 1, -1 do if LC.Zones[zi] == iz then table.remove(LC.Zones, zi) end end
+end
+MissingZombineTests()
+
+function CareerTests()
+    local function FieldPost(p, spec, tid, violent)
+        spec.id = 81000 + math.random(1, 999999)
+        spec.tmpl = spec.tmpl or { id = tid or "fieldtest" }
+        spec.violent = violent
+        spec.faction = LC.QuestFaction(p)
+        spec.expiresPost = CurTime() + 999
+        spec.data = spec.data or {}
+        LC.Postings[spec.faction] = LC.Postings[spec.faction] or {}
+        table.insert(LC.Postings[spec.faction], spec)
+        p.lcqNext = 0
+        LC.AcceptPosting(p, spec.id)
+        return LC.QuestOf[p]
+    end
+    local function FieldTemplate(id)
+        for _, t in ipairs(LC.QuestTemplates) do if t.id == id then return t end end
+    end
+    local function NetCount(name)
+        local n = 0
+        for _, m in ipairs(net.sent) do if m.name == name then n = n + 1 end end
+        return n
+    end
+    section("My career: rank, XP and the way to the Overwatch; who hid the contraband")
+    local mc = newPlayer("CareerMetro", "cp", nil, 200)
+    local info = LC.CareerInfo(mc)
+    ok(info.rank == 2 and info.ranks[3].name == "Division Leader" and info.ranks[4].overwatch, "a metrocop sees every rank, and which need the conditioning")
+    ok(string.find(info.steps[1], "400 more XP", 1, true) and string.find(info.steps[1], "Division Leader", 1, true), "and how much more XP to the next one", info.steps[1])
+    local joined = table.concat(info.steps, " ")
+    ok(string.find(joined, "Overwatch Candidate", 1, true) and string.find(joined, "fail", 1, true), "the way to the Overwatch, and that failing doesn't lock you out")
+    LC.SendCareer(mc)
+    ok(_lastnet("lc_career") ~= nil, "it's sent to their screen (C > My career)")
+    -- a Division Leader: where the story stands
+    local dl = newPlayer("CareerDvL", "cp", nil, 700)
+    local s = LC.Story(dl)
+    s.flags.story_gate = { need = 3, base = tonumber(dl:GetPData("lcq_done", 0)) or 0 }
+    joined = table.concat(LC.CareerInfo(dl).steps, " ")
+    ok(string.find(joined, "Do 3 more jobs", 1, true), "waiting on a few more jobs: it says how many", joined)
+    s.flags.story_gate = { need = 0, base = 0 }
+    local cs = LC.ChainState(dl, "candidate")
+    cs.part, cs.readyAt = "evaluation", os.time() + 600
+    joined = table.concat(LC.CareerInfo(dl).steps, " ")
+    ok(string.find(joined, "comes back to your board", 1, true), "a failed part: when it comes back", joined)
+    -- turned it down: a reassessment, an hour later
+    cs.part, cs.readyAt, cs.done = nil, nil, "human"
+    hook.Run("LivingCityStoryEnded", dl, "candidate", "human")
+    local can, wait = LC.CanReassess(dl)
+    ok(not can and wait and wait > 3000, "turned the conditioning down: a reassessment in an hour")
+    ok(not LC.CareerReassess(dl) and cs.done == "human", "not before")
+    cs.endedAt = os.time() - 3700
+    local i2 = LC.CareerInfo(dl)
+    ok(i2.canReassess == true, "an hour on, the page offers it")
+    _netcall("lc_career_ask", dl, "reassess")
+    ok(cs.done == nil and cs.part == "evaluation", "asked: the Overwatch Candidate story is back from its first part")
+    local back = false
+    for _, p in ipairs(LC.StoryPostings(dl)) do if p.chain == "candidate" then back = true end end
+    ok(back, "and on their board (F3)")
+    -- conditioned: the next Overwatch rank
+    local ow = newPlayer("CareerOW", "cp", nil, 1500)
+    LC.Condition(ow)
+    local i3 = LC.CareerInfo(ow)
+    ok(i3.conditioned and string.find(i3.steps[1], "Combine Soldier", 1, true), "conditioned: the XP to the next Overwatch rank", i3.steps[1])
+    for _, p in ipairs({ mc, dl, ow }) do p:SetPos(Vector(-150000, 150000, 0)) end
+
+    -- the contraband sweep: track down who hid it
+    _setcvar("lc_quest_squad", 0)
+    if not LC.PrisonAvailable() then LC.AddPoint(Vector(-196000, -190000, 0), 0, "cell", 0) end
+    local C = Vector(-196000, -186000, 0)
+    local sweeper = newPlayer("Sweeper", "cp", nil, 300)
+    sweeper:SetPos(C)
+    local suspect = LC.SpawnCitizen and LC.SpawnCitizen(C + Vector(600, 0, 4))
+    local witness = LC.SpawnCitizen and LC.SpawnCitizen(C + Vector(-300, 0, 4))
+    for _, n in ipairs({ suspect, witness }) do if IsValid(n) then LC.NPCs[n].state = "idle" end end
+    local t = FieldTemplate("cp_contraband")
+    local spec = t.build(sweeper)
+    local q = spec and FieldPost(sweeper, spec, "cp_contraband", false)
+    if q then
+        local st = q.stages[1]
+        for e in pairs(st.items or {}) do LC.QuestEvent("used_item", sweeper, e) end
+        ok(not q.done and #q.stages > 1, "three stashes found: the job goes on, to whoever hid them", #q.stages)
+        local ask = q.stages[q.stage]
+        ok(ask.event == "used_npc" and string.find(ask.text, "Ask around", 1, true), "first, ask around", ask.text)
+        local who = q.data.suspect
+        local other
+        for npc, nst in pairs(LC.NPCs) do if nst.role == "citizen" and IsValid(npc) and npc ~= who then other = npc break end end
+        if other then LC.QuestEvent("used_npc", sweeper, other, LC.NPCs[other]) end
+        ok(q.data.target == who and q.stages[q.stage].kind == "target", "a witness points them out: find them (marked)")
+        if IsValid(who) then
+            sweeper:SetPos(who:GetPos())
+            _run(1)
+            ok(q.stages[q.stage].kind == "choice", "found: what to do with them")
+            LC.ResolveChoice(sweeper, q.id, 1)
+            _run(0.5)
+            ok(q.stages[q.stage].kind == "target" and q.stages[q.stage].action == "arrest", "detain them: an arrest, the usual way")
+            hook.Run("LivingCityIncarcerated", who, 60, "contraband", sweeper)
+            _run(0.5)
+            ok(q.done, "brought in: the sweep is done")
+        end
+    else
+        ok(false, "(the sweep didn't start)")
+    end
+    sweeper:SetPos(Vector(-150000, 150000, 0))
+end
+CareerTests()
+
+function LabDamageTests()
+    local function FieldPost(p, spec, tid, violent)
+        spec.id = 81000 + math.random(1, 999999)
+        spec.tmpl = spec.tmpl or { id = tid or "fieldtest" }
+        spec.violent = violent
+        spec.faction = LC.QuestFaction(p)
+        spec.expiresPost = CurTime() + 999
+        spec.data = spec.data or {}
+        LC.Postings[spec.faction] = LC.Postings[spec.faction] or {}
+        table.insert(LC.Postings[spec.faction], spec)
+        p.lcqNext = 0
+        LC.AcceptPosting(p, spec.id)
+        return LC.QuestOf[p]
+    end
+    local function FieldTemplate(id)
+        for _, t in ipairs(LC.QuestTemplates) do if t.id == id then return t end end
+    end
+    local function NetCount(name)
+        local n = 0
+        for _, m in ipairs(net.sent) do if m.name == name then n = n + 1 end end
+        return n
+    end
+    section("A Resistance lab shot up, wrecked, and repaired")
+    _setcvar("lc_quest_squad", 0)
+    _setcvar("lc_lab_health", 250)
+    local savedGM = GAMEMODE
+    GAMEMODE = { IsLivingCity = true }
+    local LB = Vector(-198000, -186000, 0)
+    local bench = ents.Create("lc_workbench") bench:SetPos(LB)
+    bench:SetAngles(Angle(0, 0, 0))
+    local sci = LC.SetupLab(bench)
+    local cop = newPlayer("LabShooter", "cp", nil, 300)
+    local reb = newPlayer("LabFixer", "resistance", nil, 900)
+    _run(3) -- (settled at their spawn first: a rebel starts in rebel territory)
+    hook.Run("EntityTakeDamage", bench, _dmg(reb, 200))
+    ok(bench:GetNW2Int("lc_lab_dmg", 0) == 0, "the Resistance's own bullets don't count")
+    hook.Run("EntityTakeDamage", bench, _dmg(cop, 70))
+    ok(bench:GetNW2Int("lc_lab_dmg", 0) == 1 and not LC.LabBroken(bench), "shot: a part blows and it smokes, but it still works")
+    ok(LC.ScientistNear(sci:GetPos()) == sci, "(the scientist still works at it)")
+    hook.Run("EntityTakeDamage", bench, _dmg(cop, 200))
+    ok(LC.LabBroken(bench) and LC.LabBroken(sci) and bench:GetNW2Int("lc_lab_dmg", 0) == 3, "shot to pieces: wrecked")
+    ok(LC.ScientistNear(sci:GetPos()) == nil, "nothing can be made, decoded or done there")
+    reb:SetPos(sci:GetPos() + Vector(40, 0, 0))
+    local ok1 = LC.LabMake(reb, "ammo_smg", "pay")
+    ok(not ok1, "not even for credits")
+    local labs = NetCount("lc_lab")
+    reb.lcLabUse = 0
+    LC.UseScientist(reb, sci)
+    ok(NetCount("lc_lab") == labs, "the scientist's shop doesn't open: he says why instead")
+    local job
+    for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and p.tmpl.id == "res_fixlab" and not p.dead then job = p end end
+    ok(job ~= nil, "the Resistance get a job to fix it (F3)")
+    -- the scientist taken: a separate thing, and needs no repair
+    cop.lcLabUse = 0
+    cop:SetPos(sci:GetPos() + Vector(40, 0, 0))
+    LC.UseScientist(cop, sci)
+    ok(LC.LabShut(sci) and LC.LabBroken(bench), "a unit can still take the scientist away")
+    sci:SetNW2Float("lc_away_until", 0)
+    cop:SetPos(Vector(-150000, 150000, 0))
+    -- the job
+    if job then
+        reb.lcqNext = 0
+        LC.AcceptPosting(reb, job.id)
+        local q = LC.QuestOf[reb]
+        ok(q ~= nil and q.tmpl.id == "res_fixlab", "a rebel takes it")
+        if q then
+            local st = q.stages[q.stage]
+            if st.kind == "collect" then
+                for e in pairs(st.items or {}) do LC.QuestEvent("used_item", reb, e) end
+            end
+            reb:SetPos(LB)
+            _run(1)
+            ok(q.stages[q.stage].kind == "hold", "parts found and brought: now put it back together")
+            ok(LC.LabBroken(bench), "(still wrecked until it's done)")
+            _run(40) -- (the test clock runs quest timers a little slow)
+            ok(q.done and not LC.LabBroken(bench) and bench:GetNW2Int("lc_lab_dmg", 0) == 0, "repaired: the smoke and sparks stop")
+            ok(LC.ScientistNear(sci:GetPos()) == sci, "and the lab works again")
+        end
+    end
+    reb:SetPos(Vector(-150000, 150000, 0))
+    -- knocked about but not wrecked: he patches it up himself, given time
+    hook.Run("EntityTakeDamage", bench, _dmg(cop, 70))
+    ok(bench:GetNW2Int("lc_lab_dmg", 0) == 1, "(shot again)")
+    bench.lcLabHitAt = CurTime() - 700
+    _run(11)
+    ok(bench:GetNW2Int("lc_lab_dmg", 0) == 0, "left alone a while, the scientist patches up a bench that's only damaged")
+    _setcvar("lc_lab_health", 0)
+    hook.Run("EntityTakeDamage", bench, _dmg(cop, 999))
+    ok(bench:GetNW2Int("lc_lab_dmg", 0) == 0, "lc_lab_health 0: it can't be damaged")
+    _setcvar("lc_lab_health", 250)
+    bench:Remove()
+    if IsValid(sci) then sci:Remove() end
+    GAMEMODE = savedGM
+end
+LabDamageTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

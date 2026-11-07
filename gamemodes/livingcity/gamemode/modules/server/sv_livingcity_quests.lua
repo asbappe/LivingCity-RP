@@ -819,7 +819,7 @@ function SendState(ply)
         narration = q.narration, step = q.stage, steps = #q.stages, owner = q.owner == ply,
     }
     if st then
-        if st.need then t.progress = string.format("%d/%d", st.got or 0, st.need) end
+        if st.need and not st.untallied then t.progress = string.format("%d/%d", st.got or 0, st.need) end
         if st.secs then t.progress = string.format("%ds / %ds", math.floor(st.progress or 0), st.secs) end
         local ent, pos = MarkerFor(q, st, ply)
         -- always send where it is too: far-away entities don't exist on the client
@@ -1457,11 +1457,15 @@ T{
         local center = Spot(ply, 500, 2500)
         if not center then return nil end
         local kind = Pick(CONTRABAND)
+        local sweep = { kind = "collect", spots = HideSpots(center, 3, 700), model = kind[2], need = 3,
+            text = "Confiscate " .. kind[1] .. ": find each one (marked) and press E on it" }
+        -- (the owner, 7 November: three boxes, and then it just ends; "can we track down who did this?")
+        -- the last stash has something on it that points to whoever hid it: ask around, find them, bring them in
+        sweep.onDone = function(q) if LC.ContrabandTrail then LC.ContrabandTrail(q, center, kind) end end
         return {
-            title = "Contraband sweep " .. Place(center, ply:GetPos()), reward = 30, limit = 420,
-            desc = "An informant reports " .. kind[1] .. " hidden around this area, in three places. Find and confiscate all three.",
-            stages = { { kind = "collect", spots = HideSpots(center, 3, 700), model = kind[2], need = 3,
-                text = "Confiscate " .. kind[1] .. ": find each one (marked) and press E on it" } },
+            title = "Contraband sweep " .. Place(center, ply:GetPos()), reward = 30, limit = 900,
+            desc = "An informant reports " .. kind[1] .. " hidden around this area, in three places. Find and confiscate all three, then track down whoever hid them.",
+            stages = { sweep },
         }
     end,
 }
@@ -1636,21 +1640,55 @@ T{
         local z = grown[1]
         for _, g in ipairs(grown) do if g == focus then z = focus end end
         local where = Place(z.pos, ply:GetPos())
+        -- (the owner, 7 November: 25 rebels dead and the job only counted 3, and more kept appearing
+        -- behind him) the job is to clear the ground: every rebel on it, and nobody new turns up there
+        -- while the team is at it; then, holding it, a wave of fighters comes to take it back
+        local area = math.max(350, z.r + 150)
         local move = Goto(z.pos, "Go to the rebel-held ground " .. where .. " (marked)", math.max(200, z.r * 0.8))
-        move.onEnter = function() if LC.ReinforceRebels then LC.ReinforceRebels(z, 3) end end
-        local hold = Hold(z.pos, 30, "Stay on the ground for 30 seconds to secure it", math.max(260, z.r * 0.9))
+        move.onEnter = function(q)
+            if LC.QuietRebels then
+                q.data.quiet = { LC.QuietRebels(z.pos, area + 900, 3600) }
+                -- (and the camp it grew from, next door: fighters appearing there walked straight over)
+                if z.seed and z.seed.pos then q.data.quiet[2] = LC.QuietRebels(z.seed.pos, (z.seed.r or 300) + 200, 3600) end
+            end
+            if LC.ReinforceRebels then LC.ReinforceRebels(z, 3) end
+        end
+        local clear = Count("killed", 9999, "Eliminate every rebel on the ground", function(_, _, npc) return IsRebelNPC(npc) end)
+        clear.untallied = true -- (the count is of who's left, in the objective)
+        clear.pos = z.pos
+        clear.poll = function(q, st)
+            local left = LC.RebelsOnGround and LC.RebelsOnGround(z.pos, area) or {}
+            local near, nd
+            for _, npc in ipairs(left) do
+                local d = IsValid(q.owner) and npc:GetPos():DistToSqr(q.owner:GetPos()) or 0
+                if not nd or d < nd then near, nd = npc, d end
+            end
+            st.npc = near -- (the marker: the nearest one still standing)
+            local text = #left > 0 and string.format("Eliminate every rebel on the ground (%d left)", #left) or "The ground is clear: every rebel on it is down"
+            if st.text ~= text then st.text = text SendStateAll(q) end
+            if #left == 0 then Advance(q) end
+        end
+        local hold = Hold(z.pos, 30, "Hold the ground for 30 seconds. Expect a counterattack", math.max(260, z.r * 0.9))
+        hold.onEnter = function(q) q.data.waveAt = CurTime() + math.Rand(4, 8) end
         hold.onDone = function(q)
             if LC.RecedeTerritory then LC.RecedeTerritory(z, "retaken", q.owner) end
             Narrate(q, "The ground is retaken: it's no longer rebel territory. Whatever they built here comes down by morning.")
         end
         return {
-            title = "Retake the block " .. where, reward = 55, limit = 600,
-            desc = "Anticitizens have taken over ground " .. where .. ". Go there, kill 3 of the rebels holding it, then stay on the ground for 30 seconds. Expect them to fight back.",
-            stages = {
-                move,
-                Count("killed", 3, "Kill 3 of the rebels holding the ground", function(_, _, npc) return IsRebelNPC(npc) end),
-                hold,
-            },
+            title = "Retake the block " .. where, reward = 55, limit = 720,
+            desc = "Anticitizens have taken over ground " .. where .. ". Go there and eliminate every rebel holding it (no more will come in while you clear it), then hold the ground for 30 seconds. Expect a counterattack.",
+            stages = { move, clear, hold },
+            tick = function(q, now)
+                -- the counterattack: fighters from outside come to take it back while you hold it
+                if q.data.waveAt and now >= q.data.waveAt and Stage(q) == hold then
+                    q.data.waveAt = nil
+                    local n = LC.RebelWave and LC.RebelWave(z.pos, Members(q), math.min(6, 2 + #Members(q))) or 0
+                    if n > 0 then Narrate(q, "Rebel fighters are coming to take the ground back! Hold it.") end
+                end
+            end,
+            onFinish = function(q)
+                for _, h in ipairs(q.data.quiet or {}) do h.untilT = CurTime() + 120 end -- (two quiet minutes after, then life goes on)
+            end,
         }
     end,
 }
@@ -2832,7 +2870,7 @@ LC.QB = {
     Freeze = Freeze, Lock = Lock, SpawnActor = SpawnActor, SpawnItem = SpawnItem,
     CitizenID = CitizenID, Pick = Pick, Narrate = Narrate, InsertStages = InsertStages,
     IsCitizenNPC = IsCitizenNPC, IsCopNPC = IsCopNPC, RandomCitizen = RandomCitizen, CountRole = CountRole,
-    Members = Members, Stage = Stage, Advance = Advance, Finish = Finish,
+    Members = Members, Stage = Stage, Advance = Advance, Finish = Finish, SendStateAll = function(q) SendStateAll(q) end,
     RankIndex = RankIndex, Special = Special, IsZombieNPC = IsZombieNPC,
     CONTRABAND = CONTRABAND, CRIMES = CRIMES, TRASH = TRASH,
 }

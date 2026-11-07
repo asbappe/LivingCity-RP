@@ -28,3 +28,7 @@
 - **Killing a rebel** gives a unit +5 standing, +2 credits and a box of rounds for the gun in hand, with a notice (as well as the XP).
 - **Vests at a power bank:** hold E on a live bank to add 15 charge a press. Anyone who isn't a unit commits "Tampering" if a unit sees it; up close, the bank says which applies to you.
 - **Prison guards** keep out of cells, the release spot and the prison doors, so a door is never held open by a guard standing in it.
+
+**Changes from the 7 November playtest (part 2).**
+- **Backup comes armed to a gunfight:** call for backup with a gun in your hand, shot at in the last 30 seconds, or on a violent job, and the units come with pistols and SMGs (half and half), and keep them in hand while they're with you (calming down after a fight, or Half-Life 2's own weapon choice, used to put the stunstick back in their hand). Dispatch says so: "Weapons free: they're coming with pistols and SMGs." Units already with a player for a job aren't pulled away by someone else's call.
+- **My career** (C > "My career: rank, XP and the way to the Overwatch"): your rank and the XP to the next one, every rank and what it takes (which need the conditioning), and the way up in plain words: where the Overwatch Candidate story stands for you (waiting on a few more jobs, on your board now, a failed part coming back and when), the Man Inside if it's yours, and that nothing you fail locks you out. Every faction with ranks has the page; the way to the Overwatch is Civil Protection's.
