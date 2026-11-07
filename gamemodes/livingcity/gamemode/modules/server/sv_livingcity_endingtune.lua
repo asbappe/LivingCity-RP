@@ -107,7 +107,7 @@ function LC.EndingTuneInfo()
         end
     end
     for _, l in pairs(settings) do table.sort(l, function(a, b) return a.name < b.name end) end
-    local E = LC.EndingSession and LC.EndingSession()
+    local E = (LC.EndingAny and LC.EndingAny()) or (LC.EndingSession and LC.EndingSession()) -- (a dream's too)
     return { endings = list, now = E and E.id or nil, phase = E and E.phase or nil, settings = settings, tuning = tuning }
 end
 

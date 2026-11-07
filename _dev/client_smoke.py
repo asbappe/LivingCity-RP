@@ -1328,6 +1328,27 @@ return nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "weapon_lc_radio (client) " + str(err)
+# shared dreams (cl_livingcity_dreams.lua): the dreamer's line on screen, the admins' window
+err = L.execute(r"""
+local ok, e = pcall(function()
+    _me:SetNW2Bool("lc_dreaming", true)
+    hook.t.HUDPaint.LivingCityDreams()
+    _me:SetNW2Bool("lc_dreaming", false)
+    local st = { on = true, point = true, zone = false, queued = "hard", queuedName = "Hard", at = 40, every = false, delay = 60,
+        active = { ending = "hard", name = "Hard", n = 2 }, asleep = 3, saved = { { sid = "1", nick = "Someone", online = true, applied = true } },
+        endings = { { id = "hard", name = "Hard" } } }
+    net._q = { st }
+    net["recv_lc_dream"]()
+    st.active, st.point, st.queued = nil, false, nil
+    net._q = { st }
+    net["recv_lc_dream"]()
+    LC_CL.DreamsMenu()
+    LC_CL.DreamAct("optout")
+end)
+return (not ok) and tostring(e) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "dreams (client) " + str(err)
 # the cleanup crew's hoover: drawn in your view and in your hand, and its HUD
 L.globals()._SRC = open(os.path.join(GMDIR, "entities", "weapons", "weapon_lc_hoover.lua")).read()
 err = L.execute(r"""

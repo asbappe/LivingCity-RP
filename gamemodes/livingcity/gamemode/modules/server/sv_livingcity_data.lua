@@ -47,8 +47,10 @@ LC.POINT_KINDS = {
     rlookout = true, -- an armed rebel stands guard here (sv_livingcity_rebels.lua)
     bunk = true, -- a rebel sleeps here now and then (sv_livingcity_rebellife.lua)
     jogroute = true, yard = true, parade = true, -- morning exercise: the jogging route, the drill yard, the parade route (sv_livingcity_exercise.lua)
+    dream = true, -- where the shared dreams happen, out of the map (sv_livingcity_dreams.lua)
 }
-LC.ZONE_KINDS = { nogo = true, infest = true, prison = true, block = true, rebel = true, combine = true }
+LC.ZONE_KINDS = { nogo = true, infest = true, prison = true, block = true, rebel = true, combine = true,
+    dream = true } -- (the shared dreams' edge: sv_livingcity_dreams.lua)
 LC.DOOR_TAGS = { cp = true, prison = true, locked = true, open = true, ignore = true, force = true, rent = true, office = true }
 
 local DOOR_CLASSES = { prop_door_rotating = true, func_door = true, func_door_rotating = true, func_movelinear = true } -- (movelinear: the Combine's sliding doors, on some maps)

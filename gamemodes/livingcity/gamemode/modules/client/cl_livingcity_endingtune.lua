@@ -646,6 +646,7 @@ local function Open(newInfo)
         frame.lcPick = pick
         Button(top, "Play it now", function() RunConsoleCommand("lc_ending", state.ending, "now") end, RIGHT):SetWide(90)
         Button(top, "Stop it", function() RunConsoleCommand("lc_ending_cancel") end, RIGHT):SetWide(64)
+        Button(top, "Dreams", function() if LC_CL.DreamsMenu then LC_CL.DreamsMenu() end end, RIGHT):SetWide(64) -- (cl_livingcity_dreams.lua)
         local baseThink = frame.Think -- (the window's own: dragging and resizing it)
         frame.Think = function(self)
             if baseThink then baseThink(self) end

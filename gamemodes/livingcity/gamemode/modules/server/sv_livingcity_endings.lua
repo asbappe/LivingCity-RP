@@ -141,10 +141,23 @@ for _, id in ipairs({ "bus", "bloom", "marrow", "base", "hard", "water", "plane"
 LC.EndingOrder = { "harpies", "bus", "plane", "standup", "water", "bloom", "marrow", "base", "hard", "shalom", "fire" }
 
 local E -- the ending in progress: { id, phase, by, ... }
-function LC.EndingSession() return E end
+-- (a dream, sv_livingcity_dreams.lua: only the dreamers are in it, so to the rest of the city
+-- there is no ending; LC.EndingAny is the one in progress either way)
+function LC.EndingSession() if E and E.dream then return nil end return E end
+function LC.EndingAny() return E end
 function LC.EndingBusy() return E ~= nil end
+-- Everyone an ending is for: the whole city, or in a dream only the dreamers.
+function LC.EndingPlayers()
+    if E and E.dream and LC.DreamersOf then return LC.DreamersOf(E.dream) end
+    return player.GetAll()
+end
+-- The NPCs an ending dances, hangs or sets alight: the city's, or in a dream only its own.
+function LC.EndingNPCs()
+    if E and E.dream then return E.dream.npcs or {} end
+    return LC.NPCs or {}
+end
 
-local function All(msg) for _, p in ipairs(player.GetAll()) do p:ChatPrint(msg) end end
+local function All(msg) for _, p in ipairs(LC.EndingPlayers()) do p:ChatPrint(msg) end end
 
 ------------------------------------------------------------------------
 -- Songs, and the cooldown (kept in a file: it outlasts the reload)
@@ -225,7 +238,7 @@ local function Send(to)
             voteEnds = E.voteEnds, yes = yes, skip = skip, song = E.song, songVolume = LC.EndingSongVolume(E.id), lines = E.lines, grigori = E.grigori,
             floodZ = E.floodZ, client = E.client, flashing = LC.Endings[E.id].flashing or nil })
     end
-    if to then net.Send(to) else net.Broadcast() end
+    if to then net.Send(to) elseif E and E.dream then net.Send(LC.EndingPlayers()) else net.Broadcast() end
 end
 
 ------------------------------------------------------------------------
@@ -233,10 +246,12 @@ end
 ------------------------------------------------------------------------
 
 local function Freeze(on)
-    LC.TimeStopped = on or nil
-    SetGlobal2Bool("lc_timestop", on and true or false)
-    if RunConsoleCommand then RunConsoleCommand("ai_disabled", on and "1" or "0") end
-    for _, p in ipairs(player.GetAll()) do
+    if not (E and E.dream) then
+        LC.TimeStopped = on or nil
+        SetGlobal2Bool("lc_timestop", on and true or false)
+        if RunConsoleCommand then RunConsoleCommand("ai_disabled", on and "1" or "0") end
+    end
+    for _, p in ipairs(LC.EndingPlayers()) do
         if on then
             p.lcEndFrozen = true
             p:Freeze(true)
@@ -268,13 +283,13 @@ LC.EndingTake = Take
 
 local function Living()
     local out = {}
-    for _, p in ipairs(player.GetAll()) do if p:Alive() and not p.lcEndTaken then out[#out + 1] = p end end
+    for _, p in ipairs(LC.EndingPlayers()) do if p:Alive() and not p.lcEndTaken then out[#out + 1] = p end end
     return out
 end
 
 local function Centre()
     local sum, n = Vector(0, 0, 0), 0
-    for _, p in ipairs(player.GetAll()) do sum = sum + p:GetPos() n = n + 1 end
+    for _, p in ipairs(LC.EndingPlayers()) do sum = sum + p:GetPos() n = n + 1 end
     return n > 0 and sum * (1 / n) or Vector(0, 0, 0)
 end
 
@@ -331,7 +346,8 @@ function LC.EndingSky(centre)
     local best, bestR, bestZ = centre, 0, z
     local want = cvRadius:GetFloat() * 0.7
     local tries = { Vector(0, 0, 0) }
-    for gx = -3, 3 do for gy = -3, 3 do if gx ~= 0 or gy ~= 0 then tries[#tries + 1] = Vector(gx * 1200, gy * 1200, 0) end end end
+    local dream = E and E.dream
+    if not dream then for gx = -3, 3 do for gy = -3, 3 do if gx ~= 0 or gy ~= 0 then tries[#tries + 1] = Vector(gx * 1200, gy * 1200, 0) end end end end
     table.sort(tries, function(a, b) return a:LengthSqr() < b:LengthSqr() end)
     for _, zz in ipairs({ z, z - 200, z - 450 }) do
         for _, off in ipairs(tries) do
@@ -343,7 +359,13 @@ function LC.EndingSky(centre)
         if bestR >= want then break end
     end
     if bestR == 0 then bestR = 300 end
-    return { z = bestZ, top = top, r = bestR, centre = Vector(best.x, best.y, bestZ), roam = math.max(3000, cvRadius:GetFloat() * 2), from = Vector(centre.x, centre.y, z) }
+    local roam = math.max(3000, cvRadius:GetFloat() * 2)
+    if dream and LC.DreamRadius then -- (a dream: the flying stays inside it)
+        local dr = LC.DreamRadius(dream)
+        bestR, roam = math.min(bestR, dr * 0.8), math.min(roam, dr)
+        if LC.DreamTop then bestZ = math.min(bestZ, LC.DreamTop(dream) - 120) end
+    end
+    return { z = bestZ, top = top, r = bestR, centre = Vector(best.x, best.y, bestZ), roam = roam, from = Vector(centre.x, centre.y, z) }
 end
 
 -- Room for another entity? The engine has 8192 in all and the server falls over
@@ -387,7 +409,7 @@ local function Board(vehicle, riders, offsets)
 end
 
 local function Ride(now)
-    for _, p in ipairs(player.GetAll()) do
+    for _, p in ipairs(LC.EndingPlayers()) do
         local r = p.lcEndRide
         if r and IsValid(r.v) then p:SetPos(r.v:GetPos() + r.off) end
     end
@@ -432,6 +454,7 @@ end
 
 -- The Combine's own units in the city (they're in this too).
 local function CombineNPCs()
+    if E and E.dream then return E.dream.combine or {} end -- (a dream: the units it brought, never the city's)
     local out = {}
     for npc, st in pairs(LC.NPCs or {}) do
         if IsValid(npc) and LC.IsSecurity and LC.IsSecurity(st) then out[#out + 1] = npc end
@@ -466,6 +489,7 @@ function LC.EndingRingSpots(centre, r0, n, taken, turn)
         while k < slots and #out < n do
             local a = (turn or 0) + ring * 0.37 + math.floor(k) / slots * math.pi * 2
             local g = Ground(centre + Vector(math.cos(a) * r, math.sin(a) * r, 0))
+            if g and E and E.dream and LC.DreamHolds and not LC.DreamHolds(E.dream, g) then g = nil end -- (a dream: never out in the city)
             if g and RingFree(g, taken) then out[#out + 1] = { pos = g, a = a } taken[#taken + 1] = g end
             k = k + step
         end
@@ -502,10 +526,11 @@ local function RingSpot(centre, dist, hide, angle)
         local a = angle and (angle + math.Rand(-0.5, 0.5)) or math.Rand(0, math.pi * 2)
         local d = dist + math.Rand(-150, 150)
         local g = Ground(centre + Vector(math.cos(a) * d, math.sin(a) * d, 0))
+        if g and E and E.dream and LC.DreamHolds and not LC.DreamHolds(E.dream, g) then g = nil end -- (a dream: never out in the city)
         if g and (not hide or i > 7 or not Seen(g)) then return g, a end
     end
     -- nowhere found: somewhere people can walk, about that far out (the map's own navigation)
-    if LC.NavNodesNear then
+    if LC.NavNodesNear and not (E and E.dream) then
         local near = {}
         for _, nd in ipairs(LC.NavNodesNear(centre, dist + 500)) do
             local d2 = (nd.pos - centre):Length2D()
@@ -744,6 +769,7 @@ local FOLK = {
 }
 local NOT_IN_RING = { rebel = true, resistance = true, vortigaunt = true, vort = true, zombie = true, scanner = true }
 local function CityFolk()
+    if E and E.dream then return {} end -- (a dream: never the city's people; the endings bring their own)
     local out, known = {}, LC.NPCs or {}
     for npc, st in pairs(known) do
         if IsValid(npc) and not NOT_IN_RING[st.role or ""] and not (LC.IsSecurity and LC.IsSecurity(st)) then out[#out + 1] = npc end
@@ -910,12 +936,12 @@ LC.EndingChatter = function(kind) if E then return Chatter(Speaker(), kind) end 
 
 SETUP.harpies = function()
     E.minges, E.bodies = {}, {}
-    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    local lz = E.dream and { { pos = E.dream.pos } } or (LC.PointsOfKind and LC.PointsOfKind("lz")) or {} -- (a dream: round the dream point)
     E.lz = (#lz > 0 and lz[1].pos) or (LC.SupplyDropSpot and LC.SupplyDropSpot()) or (IsValid(E.by) and E.by:GetPos()) or Centre()
     E.holdUntil = CurTime() + cvMingeEnd:GetFloat()
-    if LC.OpenEveryDoor then LC.OpenEveryDoor() E.doorsOpen = true end -- (every door locked open: nothing stuck behind one, them or us)
+    if LC.OpenEveryDoor and not E.dream then LC.OpenEveryDoor() E.doorsOpen = true end -- (every door locked open: nothing stuck behind one, them or us)
     -- everyone to the landing zone, facing out into the dark
-    local ps = player.GetAll()
+    local ps = LC.EndingPlayers()
     local taken = {}
     local pspots = RingSpots(E.lz, 60, #ps, taken)
     for i, p in ipairs(ps) do
@@ -926,8 +952,8 @@ SETUP.harpies = function()
         if p:Health() < 100 then p:SetHealth(100) end
     end
     -- the city stops, and the Combine's units are out there with everyone, in a ring round them
-    LC.TimeStopped = true
-    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    LC.TimeStopped = (not E.dream) or nil
+    if RunConsoleCommand and not E.dream then RunConsoleCommand("ai_disabled", "1") end -- (a dream: its own NPCs are held instead)
     -- the city's people stand with them (never the Resistance), between everyone and the Combine
     E.folk = {}
     local folk = CityFolk()
@@ -949,10 +975,10 @@ SETUP.harpies = function()
         end
     end
     -- and every light in the city goes out
-    E.dark = true
-    LC.EndingDark = true
-    if LC.ForceBlackout then LC.ForceBlackout("on") end
-    if LC.ApplyLightStyle then LC.ApplyLightStyle() end
+    E.dark = not E.dream
+    if not E.dream then LC.EndingDark = true end
+    if LC.ForceBlackout and not E.dream then LC.ForceBlackout("on") end
+    if LC.ApplyLightStyle and not E.dream then LC.ApplyLightStyle() end
 end
 
 TICK.harpies = function(now)
@@ -972,6 +998,7 @@ TICK.harpies = function(now)
     local noclip = t >= fin - 10
     local k = math.Clamp(t / swell, 0, 1)
     local far = 2400 - 1800 * k -- (how far off they keep: closer as the song goes on)
+    if E.dream and LC.DreamRadius then far = math.min(far, LC.DreamRadius(E.dream) * 0.85) end -- (a dream: inside it)
     E.vulnerable = t >= swell - 10
     local was = E.mode
     E.mode = mode
@@ -986,7 +1013,7 @@ TICK.harpies = function(now)
         local a, b = Speaker(), Speaker()
         Chatter(a, "fire")
         if b ~= a then timer.Simple(0.9, function() if E then Chatter(b, "fire") end end) end
-        for _, p in ipairs(player.GetAll()) do p:ChatPrint("[Civil Protection] \"All Civil Protection units, open fire! Take them down!\"") end
+        for _, p in ipairs(LC.EndingPlayers()) do p:ChatPrint("[Civil Protection] \"All Civil Protection units, open fire! Take them down!\"") end
         E.nextChatter = now + math.Rand(2.5, 3.5)
         for _, c in ipairs(E.folk or {}) do if math.random() < 0.5 then timer.Simple(math.Rand(0, 1.5), function() Scream(c) end) end end
     elseif mode == "rush" and was ~= "rush" then
@@ -1014,7 +1041,7 @@ TICK.harpies = function(now)
         E.nextSpawn = now + (mode == "lurk" and 0.4 or 0.1)
         local g, a = RingSpot(centre, mode == "lurk" and far or 900, mode == "lurk" and k < 0.6)
         -- (only somewhere it can get to everyone from on foot: never shut away behind a wall)
-        if g and (not LC.NavReachable or LC.NavReachable(g, centre)) then SpawnMinge(g, a) end
+        if g and (E.dream or not LC.NavReachable or LC.NavReachable(g, centre)) then SpawnMinge(g, a) end -- (a dream: out of the map, no paths there)
     end
 
     for i, m in ipairs(E.minges) do
@@ -1085,7 +1112,7 @@ TICK.harpies = function(now)
         for _, c in ipairs(E.folk or {}) do if IsValid(c) then Body(c:GetModel(), c:GetPos(), c:GetAngles().y, 260) c:Remove() end end
     end
     -- the dead keep watching someone
-    for _, p in ipairs(player.GetAll()) do
+    for _, p in ipairs(LC.EndingPlayers()) do
         if p.lcEndSpectating and not p.lcEndRoam and (not IsValid(p.lcEndWatching) or p.lcEndWatching.lcEndTaken) then Watch(p, 1) end
     end
     -- (anything that doesn't move itself every tick, moves here)
@@ -1116,7 +1143,7 @@ function LC.EndingPollKeys()
     if not E then return end
     local KEYS = {}
     for _, k in pairs({ IN_ATTACK or false, IN_ATTACK2 or false, IN_JUMP or false }) do if k then KEYS[#KEYS + 1] = k end end
-    for _, p in ipairs(player.GetAll()) do
+    for _, p in ipairs(LC.EndingPlayers()) do
         if p.lcEndSpectating and p.KeyDown then
             p.lcEndKeyWas = p.lcEndKeyWas or {}
             for _, k in ipairs(KEYS) do
@@ -1143,21 +1170,21 @@ local cvBloomWindow  = CreateConVar("lc_ending_bloom_launch_secs", "16", FLAGS, 
 
 local function Dancers()
     local out = {}
-    for npc in pairs(LC.NPCs or {}) do if IsValid(npc) then out[#out + 1] = npc end end
+    for npc in pairs(LC.EndingNPCs()) do if IsValid(npc) then out[#out + 1] = npc end end
     return out
 end
 
 SETUP.bloom = function()
-    E.dark = true
-    LC.EndingDark = "e" -- (dim, so the coloured light shows)
-    if LC.ApplyLightStyle then LC.ApplyLightStyle() end
+    E.dark = not E.dream
+    if not E.dream then LC.EndingDark = "e" end -- (dim, so the coloured light shows)
+    if LC.ApplyLightStyle and not E.dream then LC.ApplyLightStyle() end
     -- the city stops what it's doing...
-    LC.TimeStopped = true
-    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    LC.TimeStopped = (not E.dream) or nil
+    if RunConsoleCommand and not E.dream then RunConsoleCommand("ai_disabled", "1") end -- (a dream: its own NPCs are held instead)
     -- ...gathers at the landing zone (the Combine's units round everyone)...
-    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    local lz = E.dream and { { pos = E.dream.pos } } or (LC.PointsOfKind and LC.PointsOfKind("lz")) or {} -- (a dream: round the dream point)
     E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
-    local ps = player.GetAll()
+    local ps = LC.EndingPlayers()
     local taken = {}
     local pspots = RingSpots(E.lz, 70, #ps, taken)
     for i, p in ipairs(ps) do
@@ -1166,7 +1193,7 @@ SETUP.bloom = function()
     end
     GatherCombine(E.lz, 150 + 14 * #ps, taken)
     -- ...and dances
-    for _, p in ipairs(player.GetAll()) do
+    for _, p in ipairs(LC.EndingPlayers()) do
         if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
         p.lcEndFrozen = true -- (so a cancel lets them go again)
         p:Freeze(true)
@@ -1175,7 +1202,7 @@ SETUP.bloom = function()
     for _, n in ipairs(Dancers()) do n:SetNW2Bool("lc_dancing", true) end
     -- the props near anyone hop along
     local props, seen = {}, {}
-    for _, p in ipairs(player.GetAll()) do
+    for _, p in ipairs(LC.EndingPlayers()) do
         for _, e in ipairs(ents.FindInSphere(p:GetPos(), 900)) do
             local c = IsValid(e) and e:GetClass() or ""
             if not seen[e] and #props < 48 and (c == "prop_physics" or c == "prop_dynamic" or c == "prop_physics_multiplayer") then
@@ -1189,8 +1216,8 @@ SETUP.bloom = function()
         rateAt = now + cvBloomSpeedup:GetFloat(), rateDur = math.max(1, cvBloomRamp:GetFloat()), peak = math.max(1, cvBloomPeak:GetFloat()),
         props = props }
     E.climax = E.client.rateAt + E.client.rateDur
-    E.launchGap = math.Clamp(cvBloomWindow:GetFloat() / math.max(1, #player.GetAll()), 0.6, 3)
-    E.holdUntil = E.climax + math.max(cvBloomWindow:GetFloat(), E.launchGap * #player.GetAll()) + 5 -- (the last one up, and a moment)
+    E.launchGap = math.Clamp(cvBloomWindow:GetFloat() / math.max(1, #LC.EndingPlayers()), 0.6, 3)
+    E.holdUntil = E.climax + math.max(cvBloomWindow:GetFloat(), E.launchGap * #LC.EndingPlayers()) + 5 -- (the last one up, and a moment)
     E.launching = {}
 end
 
@@ -1411,7 +1438,7 @@ local function ApplySection(kind, now)
     E.client.loud = kind == "attack" -- (the song up over the gunfire in a fight)
     E.client.section = kind
     E.client.spots = dancing -- (the spotlights round the circle, while everyone dances)
-    for _, p in ipairs(player.GetAll()) do
+    for _, p in ipairs(LC.EndingPlayers()) do
         if p.lcEndTaken then
             p:SetNW2Bool("lc_dancing", true)
         elseif dancing then
@@ -1450,15 +1477,15 @@ SETUP.marrow = function()
     E.songEnds = true -- (it is over when the song is)
     E.skels = {}
     E.sections = LC.MarrowSections()
-    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    local lz = E.dream and { { pos = E.dream.pos } } or (LC.PointsOfKind and LC.PointsOfKind("lz")) or {} -- (a dream: round the dream point)
     E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
     for _, sct in ipairs(E.sections) do if sct.kind == "end" then E.holdUntil = now + sct.t end end
     E.holdUntil = E.holdUntil or (now + 232)
-    if LC.OpenEveryDoor then LC.OpenEveryDoor() E.doorsOpen = true end -- (every door locked open: nothing stuck behind one, them or us)
+    if LC.OpenEveryDoor and not E.dream then LC.OpenEveryDoor() E.doorsOpen = true end -- (every door locked open: nothing stuck behind one, them or us)
     -- the city stops; everyone (the Combine's units too) to the landing zone; the lights dim
-    LC.TimeStopped = true
-    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
-    local ps = player.GetAll()
+    LC.TimeStopped = (not E.dream) or nil
+    if RunConsoleCommand and not E.dream then RunConsoleCommand("ai_disabled", "1") end -- (a dream: its own NPCs are held instead)
+    local ps = LC.EndingPlayers()
     local taken = {}
     local pspots = RingSpots(E.lz, 60, #ps, taken)
     for i, p in ipairs(ps) do
@@ -1493,10 +1520,10 @@ SETUP.marrow = function()
         end
     end
     -- the map goes dark (every lamp out), and the coloured light pulses everywhere
-    E.dark = true
-    LC.EndingDark = true
-    if LC.ForceBlackout then LC.ForceBlackout("on") end
-    if LC.ApplyLightStyle then LC.ApplyLightStyle() end
+    E.dark = not E.dream
+    if not E.dream then LC.EndingDark = true end
+    if LC.ForceBlackout and not E.dream then LC.ForceBlackout("on") end
+    if LC.ApplyLightStyle and not E.dream then LC.ApplyLightStyle() end
     E.client = { party = true, lights = true, ambient = true, dance = "club", palette = SPOOKY, bpm = cvMarrowBPM:GetFloat(), offset = 0, start = now,
         lz = E.lz, spotR = 260 + 12 * #ps }
     E.section = "intro"
@@ -1652,9 +1679,14 @@ local function BusBoard(e)
 end
 
 local function GroundSpot(near)
-    local a = math.Rand(0, math.pi * 2)
-    local d = math.Rand(400, 1100)
-    return Ground(near + Vector(math.cos(a) * d, math.sin(a) * d, 0)) or near
+    for _ = 1, 8 do
+        local a = math.Rand(0, math.pi * 2)
+        local d = math.Rand(400, 1100)
+        local g = Ground(near + Vector(math.cos(a) * d, math.sin(a) * d, 0))
+        if not (E and E.dream) then return g or near end
+        if g and (not LC.DreamHolds or LC.DreamHolds(E.dream, g)) then return g end -- (a dream: never out in the city)
+    end
+    return near
 end
 
 -- How high the sky is over a spot: up through any roof or floor in the way, to the
@@ -1694,7 +1726,7 @@ local function SkySpot()
         -- (well under the sky there, which may come lower than over the landing zone)
         local top = SkyZ(p - Vector(0, 0, 600))
         if top - 260 < p.z then p.z = top - 260 end
-        if Open(p) then
+        if Open(p) and not (E.dream and LC.DreamHolds and not LC.DreamHolds(E.dream, p, true)) then
             if d >= 1200 then return p end
             if not bestD or d > bestD then best, bestD = p, d end
         end
@@ -1725,11 +1757,11 @@ SETUP.bus = function()
     E.sections = LC.MarrowSections(cvBusSections:GetString())
     for _, sct in ipairs(E.sections) do if sct.kind == "end" then E.holdUntil = now + sct.t end end
     E.holdUntil = E.holdUntil or (now + 220)
-    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    local lz = E.dream and { { pos = E.dream.pos } } or (LC.PointsOfKind and LC.PointsOfKind("lz")) or {} -- (a dream: round the dream point)
     E.centre = (#lz > 0 and lz[1].pos) or Centre()
     E.rings = {}
-    LC.TimeStopped = true -- (the city stops and watches)
-    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    LC.TimeStopped = (not E.dream) or nil -- (the city stops and watches)
+    if RunConsoleCommand and not E.dream then RunConsoleCommand("ai_disabled", "1") end -- (a dream: its own NPCs are held instead)
     -- the bus, somewhere near people, on the road
     local near = (Living()[1] and Living()[1]:GetPos()) or E.centre
     local bus = Prop(FirstModel(BUS), GroundSpot(near))
@@ -1759,7 +1791,7 @@ SETUP.bus = function()
 end
 
 local function BoardBus()
-    for _, p in ipairs(player.GetAll()) do BusBoard(p) end
+    for _, p in ipairs(LC.EndingPlayers()) do BusBoard(p) end
     local n = 0
     for _, npc in ipairs(CombineNPCs()) do
         if n >= cvBusCombine:GetInt() then break end
@@ -1785,7 +1817,7 @@ TICK.bus = function(now)
         E.client.strobe = kind == "fast"
         Send()
     end
-    if E.boarded then for _, p in ipairs(player.GetAll()) do BusBoard(p) end end -- (someone just joining, or back from the dead)
+    if E.boarded then for _, p in ipairs(LC.EndingPlayers()) do BusBoard(p) end end -- (someone just joining, or back from the dead)
     -- the speed, surging on the beat
     local beat = t * cvBusBPM:GetFloat() / 60
     local surge = 1 + 0.35 * math.abs(math.sin(beat * math.pi))
@@ -1878,14 +1910,14 @@ function LC.FloodSwim(p, mv, z)
     return true
 end
 hook.Add("SetupMove", "LivingCityFlood", function(p, mv)
-    if not E or E.id ~= "water" or E.phase ~= "apocalypse" or p.lcEndTaken or IsValid(E.realWater) then return end
+    if not E or E.id ~= "water" or E.phase ~= "apocalypse" or p.lcEndTaken or IsValid(E.realWater) or (E.dream and not p.lcDreaming) then return end
     LC.FloodSwim(p, mv, E.floodZ)
 end)
 
 -- Nobody gets off the bus: no suicide, and the dead are put straight back on.
-hook.Add("CanPlayerSuicide", "LivingCityEndings", function() if E and E.phase == "apocalypse" then return false end end)
+hook.Add("CanPlayerSuicide", "LivingCityEndings", function(p) if E and E.phase == "apocalypse" and (not E.dream or (IsValid(p) and p.lcDreaming)) then return false end end)
 hook.Add("PlayerDeath", "LivingCityEndingBus", function(p)
-    if E and E.id == "bus" and E.boarded then
+    if E and E.id == "bus" and E.boarded and (not E.dream or p.lcDreaming) then
         p.lcEndRide = nil
         timer.Simple(0.5, function() if IsValid(p) and not p:Alive() then p:Spawn() end end)
     end
@@ -1940,8 +1972,9 @@ local function Blow(pos, big)
         fx:SetOrigin(pos)
         util.Effect("Explosion", fx)
     end
-    if util.ScreenShake then util.ScreenShake(pos, big and 12 or 5, 5, big and 2 or 1, big and 3000 or 1500) end
-    if sound and sound.Play then sound.Play("ambient/explosions/explode_" .. math.random(1, 9) .. ".wav", pos, big and 140 or 110, 100, 1) end
+    local near = E and E.dream -- (a dream: felt and heard in it, not across the whole map)
+    if util.ScreenShake then util.ScreenShake(pos, big and 12 or 5, 5, big and 2 or 1, near and 1200 or (big and 3000 or 1500)) end
+    if sound and sound.Play then sound.Play("ambient/explosions/explode_" .. math.random(1, 9) .. ".wav", pos, near and 95 or (big and 140 or 110), 100, 1) end
 end
 
 local function SetBomb(pos)
@@ -1997,15 +2030,15 @@ SETUP.base = function()
     E.sections = LC.MarrowSections(cvBaseSections:GetString())
     for _, sct in ipairs(E.sections) do if sct.kind == "end" then E.holdUntil = now + sct.t end end
     E.holdUntil = E.holdUntil or (now + 224)
-    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    local lz = E.dream and { { pos = E.dream.pos } } or (LC.PointsOfKind and LC.PointsOfKind("lz")) or {} -- (a dream: round the dream point)
     E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
     E.bombs, E.zigs = {}, {}
     E.sky = E.lz + Vector(0, 0, 2600)
-    LC.TimeStopped = true -- (the city stops and stares)
-    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
-    E.dark = true
-    LC.EndingDark = "f"
-    if LC.ApplyLightStyle then LC.ApplyLightStyle() end
+    LC.TimeStopped = (not E.dream) or nil -- (the city stops and stares)
+    if RunConsoleCommand and not E.dream then RunConsoleCommand("ai_disabled", "1") end -- (a dream: its own NPCs are held instead)
+    E.dark = not E.dream
+    if not E.dream then LC.EndingDark = "f" end
+    if LC.ApplyLightStyle and not E.dream then LC.ApplyLightStyle() end
     E.client = { party = true, lights = false, dance = "bus", bpm = cvBaseBPM:GetFloat(), offset = 0, start = now,
         lines = LC.BaseLines(), palette = { { 255, 60, 40 }, { 255, 200, 60 } }, sky = E.sky, bombs = {} }
     E.section = "intro"
@@ -2029,7 +2062,7 @@ TICK.base = function(now)
             E.client.cats = true -- (main screen turn on: CATS in the sky)
         elseif kind == "zig" then
             -- take off every ZIG: the fleet at the landing zone, everyone aboard
-            local n = math.max(3, math.ceil(#player.GetAll() / 6) + 1)
+            local n = math.max(3, math.ceil(#LC.EndingPlayers() / 6) + 1)
             for i = 1, n do
                 local side = (i % 2 == 0) and 1 or -1
                 local rank = math.floor(i / 2)
@@ -2040,7 +2073,7 @@ TICK.base = function(now)
                     E.zigs[#E.zigs + 1] = z
                 end
             end
-            for _, p in ipairs(player.GetAll()) do ZigBoard(p) end
+            for _, p in ipairs(LC.EndingPlayers()) do ZigBoard(p) end
             local c = 0
             for _, npc in ipairs(CombineNPCs()) do if c < 6 then c = c + 1 ZigBoard(npc) end end
             E.client.lights = true
@@ -2059,7 +2092,7 @@ TICK.base = function(now)
         E.client.bombs = BombIndices()
         Send()
     end
-    if E.boarded ~= false and #E.zigs > 0 then for _, p in ipairs(player.GetAll()) do ZigBoard(p) end end
+    if E.boarded ~= false and #E.zigs > 0 then for _, p in ipairs(LC.EndingPlayers()) do ZigBoard(p) end end
     -- the fleet: round the city in formation, faster with the beat; at the end, at CATS
     if #E.zigs > 0 then
         local surge = 1 + 0.3 * math.abs(math.sin(beat * math.pi))
@@ -2102,7 +2135,7 @@ TICK.base = function(now)
             if g then at = g + Vector(0, 0, 20) end
         end
         Blow(at, math.random() < 0.3)
-        for _, p in ipairs(player.GetAll()) do
+        for _, p in ipairs(LC.EndingPlayers()) do
             if math.random() < 0.6 then p:EmitSound("ambient/explosions/explode_" .. math.random(1, 9) .. ".wav", 85, math.random(85, 110), 0.7) end
         end
     end
@@ -2135,7 +2168,7 @@ end
 
 -- Everyone's chat, in Engrish, while the base is belong to them.
 hook.Add("PlayerSay", "LivingCityEngrish", function(p, text, team)
-    if not E or E.id ~= "base" or E.phase ~= "apocalypse" then return end
+    if not E or E.id ~= "base" or E.phase ~= "apocalypse" or (E.dream and not p.lcDreaming) then return end
     if string.sub(text or "", 1, 1) == "!" or string.sub(text or "", 1, 1) == "/" then return end
     return LC.Engrish(text)
 end)
@@ -2264,11 +2297,11 @@ SETUP.hard = function()
     end
     E.holdUntil = E.holdUntil or (now + 188)
     E.passAt, E.fadeAt = E.passAt or (now + 150), E.fadeAt or (now + 177)
-    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    local lz = E.dream and { { pos = E.dream.pos } } or (LC.PointsOfKind and LC.PointsOfKind("lz")) or {} -- (a dream: round the dream point)
     E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
-    LC.TimeStopped = true
-    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
-    local ps = player.GetAll()
+    LC.TimeStopped = (not E.dream) or nil
+    if RunConsoleCommand and not E.dream then RunConsoleCommand("ai_disabled", "1") end -- (a dream: its own NPCs are held instead)
+    local ps = LC.EndingPlayers()
     local taken = {}
     local pspots = RingSpots(E.lz, 60, #ps, taken)
     for i, p in ipairs(ps) do
@@ -2279,10 +2312,10 @@ SETUP.hard = function()
         p:SetNW2Bool("lc_dancing", true)
     end
     GatherCombine(E.lz, 120 + 14 * #ps, taken)
-    for npc in pairs(LC.NPCs or {}) do if IsValid(npc) then npc:SetNW2Bool("lc_dancing", true) end end
-    E.dark = true
-    LC.EndingDark = "e"
-    if LC.ApplyLightStyle then LC.ApplyLightStyle() end
+    for npc in pairs(LC.EndingNPCs()) do if IsValid(npc) then npc:SetNW2Bool("lc_dancing", true) end end
+    E.dark = not E.dream
+    if not E.dream then LC.EndingDark = "e" end
+    if LC.ApplyLightStyle and not E.dream then LC.ApplyLightStyle() end
     E.client = { party = true, lights = true, strobe = true, dance = "hard", partyText = true, palette = RAINBOW2,
         bpm = cvHardBPM:GetFloat(), offset = 0, start = now, section = "intro",
         spots = true, lz = E.lz, spotR = 200 + 14 * #ps, spotN = 10, spotCols = RAINBOW2, spotCycle = true } -- (spotlights round the ring, every colour)
@@ -2316,7 +2349,7 @@ TICK.hard = function(now)
     end
     if (kind == "passout") and now >= (E.nextNPCPass or 0) then
         E.nextNPCPass = now + 0.4
-        for npc in pairs(LC.NPCs or {}) do if IsValid(npc) then PassOut(npc) break end end
+        for npc in pairs(LC.EndingNPCs()) do if IsValid(npc) then PassOut(npc) break end end
     end
     -- the music cuts: everyone left goes down
     if (kind == "fade" or kind == "end") and not E.allOut then
@@ -2545,18 +2578,18 @@ SETUP.shalom = function()
     E.songEnds = true -- (everyone dances to the last note; then it's over)
     E.sections = LC.MarrowSections(cvShalomSections:GetString())
     E.holdUntil = now + SecondOf("end", 288.5)
-    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    local lz = E.dream and { { pos = E.dream.pos } } or (LC.PointsOfKind and LC.PointsOfKind("lz")) or {} -- (a dream: round the dream point)
     E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
     E.floorZ = (Ground(E.lz) or E.lz).z
-    LC.TimeStopped = true
-    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    LC.TimeStopped = (not E.dream) or nil
+    if RunConsoleCommand and not E.dream then RunConsoleCommand("ai_disabled", "1") end -- (a dream: its own NPCs are held instead)
     E.rings = {
         inner = { members = {}, dir = 1, spin = 0, minR = 150 },
         outer = { members = {}, dir = -1, spin = 0 },
         watch = { members = {}, dir = 0, spin = 0 },
     }
     -- the players: the inner ring
-    local ps = player.GetAll()
+    local ps = LC.EndingPlayers()
     for i, p in ipairs(ps) do
         if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
         p.lcEndFrozen = true
@@ -2598,7 +2631,7 @@ SETUP.shalom = function()
     end
     for _, m in ipairs(E.rings.watch.members) do m.r = watchR end
     -- every other NPC in the city dances the hora where they stand
-    for npc in pairs(LC.NPCs or {}) do
+    for npc in pairs(LC.EndingNPCs()) do
         if IsValid(npc) and not npc.lcHora then npc:SetNW2Bool("lc_dancing", true) end
     end
     LC.ShalomStep(now)
@@ -2717,17 +2750,17 @@ SETUP.fire = function()
     E.songEnds = true -- (it's over when the song is)
     E.sections = LC.MarrowSections(cvFireSections:GetString())
     E.holdUntil = now + FireAt("end", 153)
-    E.dark = true
-    LC.EndingDark = "f" -- (dimmer, so the flames light everyone up)
-    if LC.ApplyLightStyle then LC.ApplyLightStyle() end
-    LC.TimeStopped = true
-    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
-    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    E.dark = not E.dream
+    if not E.dream then LC.EndingDark = "f" end -- (dimmer, so the flames light everyone up)
+    if LC.ApplyLightStyle and not E.dream then LC.ApplyLightStyle() end
+    LC.TimeStopped = (not E.dream) or nil
+    if RunConsoleCommand and not E.dream then RunConsoleCommand("ai_disabled", "1") end -- (a dream: its own NPCs are held instead)
+    local lz = E.dream and { { pos = E.dream.pos } } or (LC.PointsOfKind and LC.PointsOfKind("lz")) or {} -- (a dream: round the dream point)
     E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
     E.floorZ = (Ground(E.lz) or E.lz).z
     E.fliers = {}
     -- the players in the middle, facing out (their behinds to the middle: the flames go in)
-    local ps = player.GetAll()
+    local ps = LC.EndingPlayers()
     local r1 = 70 + 16 * #ps
     for i, p in ipairs(ps) do
         local a = (i - 1) / math.max(1, #ps) * math.pi * 2
@@ -2754,7 +2787,7 @@ SETUP.fire = function()
         Hold(e, spot, math.deg(a))
     end
     -- every other NPC in the city burns (and dances) where they stand
-    for npc in pairs(LC.NPCs or {}) do if IsValid(npc) then npc:SetNW2Bool("lc_dancing", true) end end
+    for npc in pairs(LC.EndingNPCs()) do if IsValid(npc) then npc:SetNW2Bool("lc_dancing", true) end end
     -- the sky to fly in
     E.flight = LC.EndingSky(E.lz)
     E.client = { party = true, lights = true, dance = "fire", fire = true, palette = FIRE_PAL, bpm = cvFireBPM:GetFloat(), offset = cvFireOffset:GetFloat(),
@@ -2763,7 +2796,7 @@ end
 
 local function Heat(kind)
     local h = FIRE_HEAT[kind] or 0
-    for npc in pairs(LC.NPCs or {}) do if IsValid(npc) then npc:SetNW2Float("lc_fire", h) end end
+    for npc in pairs(LC.EndingNPCs()) do if IsValid(npc) then npc:SetNW2Float("lc_fire", h) end end
     for _, f in ipairs(E.fliers) do if IsValid(f.e) then f.e:SetNW2Float("lc_fire", h) end end
 end
 
@@ -2995,10 +3028,10 @@ SETUP.plane = function()
     E.sections = LC.MarrowSections(cvPlaneSections:GetString())
     for _, sct in ipairs(E.sections) do if sct.kind == "end" then E.holdUntil = now + sct.t end end
     E.holdUntil = E.holdUntil or (now + 215)
-    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    local lz = E.dream and { { pos = E.dream.pos } } or (LC.PointsOfKind and LC.PointsOfKind("lz")) or {} -- (a dream: round the dream point)
     E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
-    LC.TimeStopped = true
-    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    LC.TimeStopped = (not E.dream) or nil
+    if RunConsoleCommand and not E.dream then RunConsoleCommand("ai_disabled", "1") end -- (a dream: its own NPCs are held instead)
     -- the plane: a body and two wings, low over the city
     E.flight = LC.EndingSky(E.lz)
     local body = Prop(FirstModel(PLANE_BODY), Vector(E.flight.centre.x + E.flight.r, E.flight.centre.y, E.flight.z), 3)
@@ -3032,7 +3065,7 @@ TICK.plane = function(now)
         E.client.section = kind
         E.client.lights = kind ~= "break"
         if kind == "board" then
-            for _, p in ipairs(player.GetAll()) do PlaneBoard(p) end
+            for _, p in ipairs(LC.EndingPlayers()) do PlaneBoard(p) end
             local c = 0
             for _, npc in ipairs(CombineNPCs()) do if c < cvPlaneCombine:GetInt() then c = c + 1 PlaneBoard(npc) end end
         elseif kind == "climb" then
@@ -3040,7 +3073,7 @@ TICK.plane = function(now)
         end
         Send()
     end
-    if E.planeSeat then for _, p in ipairs(player.GetAll()) do PlaneBoard(p) end end -- (anyone joining, or back)
+    if E.planeSeat then for _, p in ipairs(LC.EndingPlayers()) do PlaneBoard(p) end end -- (anyone joining, or back)
     if (kind == "chorus" or kind == "final") and math.floor(beat) % 16 == 0 and math.floor(beat) ~= E.rollBeat then
         E.rollBeat = math.floor(beat)
         E.rollFrom = now
@@ -3173,12 +3206,12 @@ SETUP.standup = function()
     E.hanged, E.crowd = {}, {}
     E.beatLen = 60 / math.max(1, cvStandupBPM:GetFloat())
     -- the players, spread through the song; everyone else on the beats between
-    local ps = player.GetAll()
+    local ps = LC.EndingPlayers()
     E.playerGap = math.max(E.beatLen * 2, (lastAt - hangAt) / math.max(1, #ps))
     E.nextPlayer = hangAt
     E.nextAny = hangAt
-    LC.TimeStopped = true
-    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    LC.TimeStopped = (not E.dream) or nil
+    if RunConsoleCommand and not E.dream then RunConsoleCommand("ai_disabled", "1") end -- (a dream: its own NPCs are held instead)
     E.client = { party = true, lights = false, dance = "cheer", bpm = cvStandupBPM:GetFloat(), offset = 0, start = now, hangs = {} }
 end
 
@@ -3188,7 +3221,7 @@ TICK.standup = function(now)
     -- the crowd gathers round, and cheers every one
     if (kind == "hang" or kind == "last") and not E.crowded then
         E.crowded = true
-        local near = Living()[1] or player.GetAll()[1]
+        local near = Living()[1] or LC.EndingPlayers()[1]
         local centre = near and near:GetPos() or Centre()
         for i = 1, cvStandupCrowd:GetInt() do
             local spot = RingSpot(centre, math.Rand(220, 520), false)
@@ -3223,14 +3256,14 @@ TICK.standup = function(now)
             -- the Combine's units first, every one of them (brought to where you can see it)
             for _, n in ipairs(CombineNPCs()) do if not n.lcHang then victim = n break end end
             if IsValid(victim) then
-                local near = Living()[1] or player.GetAll()[1]
+                local near = Living()[1] or LC.EndingPlayers()[1]
                 local spot = near and RingSpot(near:GetPos(), math.Rand(250, 650), false)
                 if spot then victim:SetPos(spot) end
             end
-            for npc in pairs(LC.NPCs or {}) do if not victim and IsValid(npc) and not npc.lcHang and not npc.lcCrowd then victim = npc break end end
+            for npc in pairs(LC.EndingNPCs()) do if not victim and IsValid(npc) and not npc.lcHang and not npc.lcCrowd then victim = npc break end end
             if not victim then
                 -- nobody left: someone turns up near one of you to be next
-                local near = Living()[1] or player.GetAll()[1]
+                local near = Living()[1] or LC.EndingPlayers()[1]
                 local spot = near and RingSpot(near:GetPos(), math.Rand(250, 600), false)
                 if spot then
                     victim = ents.Create("npc_citizen")
@@ -3400,22 +3433,22 @@ SETUP.water = function()
     E.holdUntil = E.holdUntil or (now + 285)
     E.riseBy = now + 264
     for _, sct in ipairs(E.sections) do if sct.kind == "outro" then E.riseBy = now + sct.t end end
-    local lz = LC.PointsOfKind and LC.PointsOfKind("lz") or {}
+    local lz = E.dream and { { pos = E.dream.pos } } or (LC.PointsOfKind and LC.PointsOfKind("lz")) or {} -- (a dream: round the dream point)
     E.lz = (#lz > 0 and lz[1].pos) or (IsValid(E.by) and E.by:GetPos()) or Centre()
     E.floodBase = E.lz.z - 30
     E.floodZ = E.floodBase
     -- real water, if the map has it: a func_water_analog named lc_flood (the
     -- mapper's own rising water, the way Half-Life 2 does it). Then the engine
     -- does the swimming; otherwise the water is drawn and the swimming is ours.
-    local real = ents.FindByName and ents.FindByName("lc_flood")[1]
+    local real = not E.dream and ents.FindByName and ents.FindByName("lc_flood")[1] -- (a dream: never the city's own water)
     if IsValid(real) then
         E.realWater = real
         SetGlobal2Bool("lc_flood_real", true)
         real:Fire("Open") -- (func_water_analog rises to its open position; SetPosition below follows the song)
     end
     E.icthys = {}
-    LC.TimeStopped = true
-    if RunConsoleCommand then RunConsoleCommand("ai_disabled", "1") end
+    LC.TimeStopped = (not E.dream) or nil
+    if RunConsoleCommand and not E.dream then RunConsoleCommand("ai_disabled", "1") end -- (a dream: its own NPCs are held instead)
     -- the stage, at the landing zone
     local st = Prop(STAGE_MODEL, E.lz + Vector(0, 0, 4))
     if st then
@@ -3429,10 +3462,10 @@ SETUP.water = function()
     -- Father Grigori in the middle, everyone round him: the player who ate it,
     -- or (an admin started it) the city's own Father Grigori, or one for the occasion
     local by = E.by
-    if IsValid(by) and by:IsPlayer() and by:GetNW2String("lcf_special", "") == "chaplain" then
+    if IsValid(by) and by:IsPlayer() and by:GetNW2String("lcf_special", "") == "chaplain" and (not E.dream or by.lcDreaming) then
         E.grigori = by
     else
-        local g = IsValid(LC.Grigori) and LC.Grigori or nil
+        local g = (not E.dream and IsValid(LC.Grigori)) and LC.Grigori or nil -- (a dream: one of its own, not the city's)
         if not IsValid(g) then
             g = ents.Create("npc_monk")
             if IsValid(g) then
@@ -3468,17 +3501,17 @@ SETUP.water = function()
             E.crowd[#E.crowd + 1] = c
         end
     end
-    for _, p in ipairs(player.GetAll()) do
+    for _, p in ipairs(LC.EndingPlayers()) do
         if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
         if IsValid(st) then p:SetPos(p == E.grigori and (st:GetPos() + Vector(0, 0, E.stageTop + 1)) or StageSpot(STAGE_R - 40)) end
         if p:Health() < 100 then p:SetHealth(100) end
     end
     -- the worst storm the city has seen
-    if LC.SetWeather then LC.SetWeather("storm", true) end
-    SetGlobal2Bool("lc_storm_max", true)
-    E.dark = true
-    LC.EndingDark = "e"
-    if LC.ApplyLightStyle then LC.ApplyLightStyle() end
+    if LC.SetWeather and not E.dream then LC.SetWeather("storm", true) end -- (a dream: no storm over the city)
+    if not E.dream then SetGlobal2Bool("lc_storm_max", true) end
+    E.dark = not E.dream
+    if not E.dream then LC.EndingDark = "e" end
+    if LC.ApplyLightStyle and not E.dream then LC.ApplyLightStyle() end
     -- rowboats round the stage, bobbing: somewhere to climb into out of the water
     E.boats = {}
     local nb = cvFloodBoats:GetInt()
@@ -3527,7 +3560,7 @@ TICK.water = function(now)
     st:SetPos(Vector(sp.x, sp.y, math.max(E.lz.z + 4, E.floodZ + 6 - deckOff)))
     local top = st:GetPos().z + deckOff
     local riders = {}
-    for _, p in ipairs(player.GetAll()) do if not p.lcEndSpectating then riders[#riders + 1] = p end end
+    for _, p in ipairs(LC.EndingPlayers()) do if not p.lcEndSpectating then riders[#riders + 1] = p end end
     if IsValid(E.grigori) and not E.grigori:IsPlayer() then riders[#riders + 1] = E.grigori end
     for _, c in ipairs(E.crowd or {}) do if IsValid(c) and not c.lcSwept then riders[#riders + 1] = c end end
     for _, p in ipairs(riders) do
@@ -3710,7 +3743,7 @@ TICK.water = function(now)
         if IsValid(g) and g:IsPlayer() then Spectator(g, "Father Grigori holds the last note, bows, and the flood takes its encore.", Color(255, 255, 255, 200))
         elseif IsValid(g) then
             g.lcEndTaken = true
-            for _, p in ipairs(player.GetAll()) do p:ChatPrint("Father Grigori holds the last note, bows, and the flood takes its encore.") end
+            for _, p in ipairs(LC.EndingPlayers()) do p:ChatPrint("Father Grigori holds the last note, bows, and the flood takes its encore.") end
         end
     end
 end
@@ -3724,7 +3757,7 @@ local function Clear()
     -- (the city's own people who were in it: back to themselves)
     for _, c in ipairs(E and E.crowd or {}) do if IsValid(c) then c:SetNW2Bool("lc_rocking", false) c:SetNW2Bool("lc_crowd", false) end end
     if E and IsValid(E.grigori) then E.grigori:SetNW2Bool("lc_rocking", false) end
-    for _, p in ipairs(player.GetAll()) do
+    for _, p in ipairs(LC.EndingPlayers()) do
         if p.lcEndTaken or p.lcEndRide or p.lcEndHang then
             p:Freeze(false)
             p:SetMoveType(MOVETYPE_WALK)
@@ -3765,8 +3798,8 @@ local function Clear()
     SetGlobal2Float("lc_flood_slosh", 0)
     SetGlobal2Bool("lc_storm_max", false)
     SetGlobal2Bool("lc_flood_real", false)
-    for _, p in ipairs(player.GetAll()) do if p.SetGravity then p:SetGravity(1) end p.lcEndUnder = nil end
-    for npc in pairs(LC.NPCs or {}) do
+    for _, p in ipairs(LC.EndingPlayers()) do if p.SetGravity then p:SetGravity(1) end p.lcEndUnder = nil end
+    for npc in pairs(LC.EndingNPCs()) do
         if IsValid(npc) then
             npc:SetNW2Bool("lc_dancing", false) npc:SetNW2Bool("lc_seated", false) npc.lcBloomUp = nil npc.lcEndRide = nil
             npc:SetNW2Bool("lc_chair", false) npc.lcHora = nil
@@ -3807,7 +3840,7 @@ local function GoTo(phase)
         local songs = LC.EndingSongs(E.id)
         E.song = #songs > 0 and songs[math.random(#songs)] or nil
         if not E.song and LC.Notice then
-            for _, p in ipairs(player.GetAll()) do
+            for _, p in ipairs(LC.EndingPlayers()) do
                 if p:IsSuperAdmin() then
                     LC.Notice(p, "warn", "No song", "No song found for " .. E.id .. ": put " .. E.id .. ".mp3 in garrysmod/sound/livingcity/endings/ on the server " ..
                         "(and sync FastDL). lc_endings shows what it finds.", 12)
@@ -3815,11 +3848,12 @@ local function GoTo(phase)
             end
         end
         All("[???] So be it. " .. LC.Endings[E.id].say)
+        if E.dream and LC.DreamCast then LC.DreamCast(E) end -- (a dream brings its own Combine units: never the city's)
         local ok, err = pcall(SETUP[E.id])
         if not ok then LC.Error("ending setup " .. E.id, err) end
         hook.Run("LivingCityEndingStarted", E.id)
     elseif phase == "reset" then
-        for _, p in ipairs(player.GetAll()) do
+        for _, p in ipairs(LC.EndingPlayers()) do
             if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.OUT or 2, Color(255, 255, 255, 255), 4, 60) end
         end
         All("[???] The city resets. Everyone you were is still you.")
@@ -3833,8 +3867,14 @@ function LC.TriggerEnding(id, by, now)
     if E then return false, "One's already under way." end
     if not cvOn:GetBool() then return false, "Secret endings are off." end
     if LC.EndingCooldownLeft() > 0 then return false, "Not yet (" .. math.ceil(LC.EndingCooldownLeft() / 60) .. " minutes)." end
-    E = { id = id, by = by, phase = "pending", phaseT = CurTime(), ents = {}, votes = {} }
-    if LC.Event and LC.EndEvent then LC.EndEvent(true) end
+    -- (with a dream point placed, the ending waits for tonight's dream: sv_livingcity_dreams.lua)
+    if not LC.DreamPending and not LC.EndingClassic and LC.DreamDivert then
+        local took, okd, why = LC.DreamDivert(id, by, now)
+        if took then return okd, why end
+    end
+    E = { id = id, by = by, phase = "pending", phaseT = CurTime(), ents = {}, votes = {}, dream = LC.DreamPending }
+    LC.DreamPending = nil
+    if LC.Event and LC.EndEvent and not E.dream then LC.EndEvent(true) end
     LC.Log("info", "Secret ending triggered: " .. id .. (IsValid(by) and (" by " .. by:Nick()) or ""))
     hook.Run("LivingCityEndingTriggered", id, by)
     if now then
@@ -3847,10 +3887,12 @@ end
 -- Ends it where it stands (admin, or the reset), without a reload.
 function LC.CancelEnding()
     if not E then return false end
+    local dream = E.dream
     Freeze(false)
     Clear()
     E = nil
     Send()
+    if dream and LC.DreamWake then LC.DreamWake(dream) end -- (a dream: everyone wakes in their bed, with everything they had)
     return true
 end
 
@@ -3884,13 +3926,13 @@ timer.Create("LivingCityEndings", 0.1, 0, function()
         if E.phase == "pending" then
             if now - E.phaseT >= cvPause:GetFloat() then GoTo("gman") end
         elseif E.phase == "gman" then
-            for _, p in ipairs(player.GetAll()) do if not p.lcEndFrozen then p.lcEndFrozen = true p:Freeze(true) end end -- (someone just joining)
+            for _, p in ipairs(LC.EndingPlayers()) do if not p.lcEndFrozen then p.lcEndFrozen = true p:Freeze(true) end end -- (someone just joining)
             if now >= E.voteEnds then
                 local yes, skip = Tally()
                 if skip > yes then
                     All(string.format("[???] %d to %d. Very well. He straightens his tie, and time starts again.", skip, yes))
                     -- "Not this time." (the owner, 2 November; Episode One's G-Man, where the game has it)
-                    if LC.Vision and LC.GmanLine then LC.Vision(nil, "voice", LC.GmanLine("notthistime"), "Not this time.") end
+                    if LC.Vision and LC.GmanLine then LC.Vision(E.dream and LC.EndingPlayers() or nil, "voice", LC.GmanLine("notthistime"), "Not this time.") end
                     LC.CancelEnding()
                 else
                     All(yes + skip == 0 and "[???] Silence. He takes that as a yes." or string.format("[???] %d to %d.", yes, skip))
@@ -3907,11 +3949,15 @@ timer.Create("LivingCityEndings", 0.1, 0, function()
                 or now - E.phaseT > math.max(cvMax:GetFloat(), (E.holdUntil or 0) - E.phaseT + 1) then GoTo("reset") end
         elseif E.phase == "reset" then
             if now - E.phaseT >= 5 then
-                local id = E.id
-                E.reloading = not LC.TestMode
+                local id, dream = E.id, E.dream
+                E.reloading = not LC.TestMode and not dream
                 LC.CancelEnding()
-                LC.Log("info", "Secret ending " .. id .. ": the map reloads")
-                LC.EndingReload()
+                if dream then
+                    LC.Log("info", "Secret ending " .. id .. " (a dream): the dreamers wake, no reload")
+                else
+                    LC.Log("info", "Secret ending " .. id .. ": the map reloads")
+                    LC.EndingReload()
+                end
             end
         end
     end)
@@ -3920,12 +3966,12 @@ end)
 
 -- Nobody gets hurt while time's stopped or the world ends.
 hook.Add("EntityTakeDamage", "LivingCityEndings", function(ent, dmg)
-    if E and E.phase ~= "pending" and IsValid(ent) and ent:IsPlayer() then return true end
+    if E and E.phase ~= "pending" and IsValid(ent) and ent:IsPlayer() and (not E.dream or ent.lcDreaming) then return true end
     -- (the Combine's stray rounds don't hurt anyone in the ring with them)
     if E and IsValid(ent) and ent.lcRing and dmg and dmg.GetAttacker and IsValid(dmg:GetAttacker()) and dmg:GetAttacker().lcRing then return true end
 end)
 hook.Add("PlayerInitialSpawn", "LivingCityEndings", function(ply)
-    timer.Simple(3, function() if IsValid(ply) and E then Send(ply) end end)
+    timer.Simple(3, function() if IsValid(ply) and E and not E.dream then Send(ply) end end) -- (a dream: someone joining isn't in it)
 end)
 hook.Add("PlayerDisconnected", "LivingCityEndings", function(ply) if E then E.votes[ply] = nil end end)
 
@@ -3939,6 +3985,7 @@ function LC.EatChip(ply)
     if not (LC.HasItem and LC.HasItem(ply, "master_chip")) then return false, "You've nothing like that to eat." end
     if E then return false, "Not now." end
     if LC.EndingCooldownLeft() > 0 or not cvOn:GetBool() then return false, "It doesn't go down. Not yet." end
+    if LC.DreamQueued and LC.DreamQueued() then return false, "It doesn't go down. Something else is coming tonight." end -- (one dream a night: sv_livingcity_dreams.lua)
     LC.TakeItem(ply, "master_chip", 1)
     ply:EmitSound("physics/metal/metal_box_break1.wav", 70)
     for _, p in ipairs(player.GetAll()) do
@@ -3995,7 +4042,9 @@ concommand.Add("lc_ending", function(ply, _, args)
     if IsValid(ply) and not ply:IsSuperAdmin() then return end
     local id = string.lower(tostring(args[1] or ""))
     if not LC.Endings[id] then Reply(ply, "lc_ending <" .. table.concat(LC.EndingOrder, "|") .. "> [now]") return end
+    LC.EndingClassic = true -- (an admin's: the whole city, as it always was, dream point or not)
     local ok, why = LC.TriggerEnding(id, IsValid(ply) and ply or nil, string.lower(tostring(args[2] or "")) == "now")
+    LC.EndingClassic = nil
     Reply(ply, ok and ("Ending triggered: " .. id) or tostring(why))
 end)
 
