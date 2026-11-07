@@ -1645,7 +1645,7 @@ hook.Add("CalcView", "LivingCityStandup", function(me, origin, angles, fov)
 end)
 
 -- the white cone hats: pulled down over every hanged head, drawn on the head bone itself
-local coneModel
+local coneModel, coneWhite
 hook.Add("PostDrawOpaqueRenderables", "LivingCityStandupCones", function(_, sky)
     local c = Standup()
     if sky or not c or not ClientsideModel then return end
@@ -1655,7 +1655,8 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityStandupCones", function(_, sky)
         coneModel:SetNoDraw(true)
         if coneModel.SetModelScale then coneModel:SetModelScale(0.85, 0) end
     end
-    local white = render.MaterialOverride and Material and Material("models/debug/debugwhite")
+    coneWhite = coneWhite or (render.MaterialOverride and Material and Material("models/debug/debugwhite")) -- (looked up once, not every frame)
+    local white = coneWhite
     for _, h in ipairs(c.hangs or {}) do
         local e = Entity(h.e)
         if IsValid(e) and not (e.GetNoDraw and e:GetNoDraw()) then

@@ -761,7 +761,7 @@ local SLICES, slice = 4, 0
 timer.Create("LivingCityHints", SCAN_EVERY / SLICES, 0, function()
     if not cvHints:GetBool() then return end
     slice = (slice + 1) % SLICES
-    for i, ply in ipairs(player.GetAll()) do
+    for i, ply in LC.Players() do
         if i % SLICES == slice then
             local ok, err = pcall(LC.HintScan, ply)
             if not ok and LC.Error then LC.Error("hints", err) end

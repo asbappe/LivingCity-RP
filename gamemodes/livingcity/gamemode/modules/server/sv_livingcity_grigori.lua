@@ -295,7 +295,7 @@ end)
 
 local ANNABELLE = 2
 hook.Add("Tick", "LivingCityAnnabelle", function()
-    for _, p in ipairs(player.GetAll()) do
+    for _, p in LC.Players() do
         if p:GetNW2String("lcf_special", "") == "chaplain" then
             local w = p:GetActiveWeapon()
             if IsValid(w) and w:GetClass() == "weapon_shotgun" and w:Clip1() > ANNABELLE then

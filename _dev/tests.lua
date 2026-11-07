@@ -7161,6 +7161,20 @@ local bn = ents.Create("lc_citybin")
 ok(#LC.EntsOf("lc_citybin") == before + 1, "a new entity is found without searching the map")
 bn:Remove()
 ok(#LC.EntsOf("lc_citybin") == before, "and a removed one is gone")
+-- every player for a loop: the game's own player.Iterator where there is one, the same players either way
+local plain = {}
+for _, p in LC.Players() do plain[#plain + 1] = p end
+ok(#plain == #player.GetAll() and plain[1] == player.GetAll()[1], "LC.Players: every player, as player.GetAll() has them", #plain)
+local iterUsed = 0
+player.Iterator = function() iterUsed = iterUsed + 1 return ipairs(player.GetAll()) end
+local viaIter = {}
+for i, p in LC.Players() do viaIter[i] = p end
+ok(iterUsed == 1 and #viaIter == #plain and viaIter[#plain] == plain[#plain], "and through player.Iterator where the game has it", iterUsed)
+player.Iterator = nil
+local bar = ents.Create("npc_barnacle")
+ok(table.HasValue(LC.EntsOf("npc_barnacle"), bar), "the barnacles are kept as they come (no search of the map twice a second)")
+bar:Remove()
+ok(not table.HasValue(LC.EntsOf("npc_barnacle"), bar), "and go as they go")
 local zc = #LC.ZonesOfKindShared("infest")
 local zz = LC.AddZone(Vector(-40000, 5000, 0), 200, "infest", 0)
 ok(#LC.ZonesOfKindShared("infest") == zc + 1 and #LC.ZonesOfKind("infest") == zc + 1, "the zone index sees a new zone straight away")

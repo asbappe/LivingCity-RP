@@ -345,7 +345,7 @@ end)
 timer.Create("LivingCityMemory", 2, 0, function()
     if not LC.Running or not cvTalk:GetBool() then return end
     local now = CurTime()
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         if ply:Alive() then
             for _, npc in ipairs(ents.FindInSphere(ply:GetPos(), 220)) do
                 local st = LC.NPCs[npc]

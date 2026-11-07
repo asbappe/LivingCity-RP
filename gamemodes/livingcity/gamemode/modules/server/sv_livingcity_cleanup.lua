@@ -950,7 +950,8 @@ hook.Add("LivingCityJobChanged", "LivingCityHooverEmpty", function(ply) if IsVal
 local function Toxic(id) return id == "weedkiller" or string.sub(id, 1, 8) == "tainted_" end
 
 local function BarnacleTick()
-    for _, b in ipairs(ents.FindByClass("npc_barnacle")) do
+    -- (the barnacles kept as they come and go, not every entity in the map searched twice a second)
+    for _, b in ipairs(LC.EntsOf and LC.EntsOf("npc_barnacle") or ents.FindByClass("npc_barnacle")) do
         if IsValid(b) and b:Health() > 0 and not b.lcPoisoned then
             for _, e in ipairs(ents.FindInSphere(b:GetPos(), 80)) do
                 if IsValid(e) and e:GetClass() == "lc_item" and Toxic(e:GetNW2String("lc_item", "")) then

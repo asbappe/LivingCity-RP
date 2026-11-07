@@ -2100,7 +2100,7 @@ function LC.RebelEdgeLevel(ply)
     return 0
 end
 timer.Create("LivingCityRebelEdge", 0.5, 0, function()
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         local v = LC.RebelEdgeLevel(ply)
         if ply:GetNW2Int("lc_rebelzone", 0) ~= v then ply:SetNW2Int("lc_rebelzone", v) end
     end

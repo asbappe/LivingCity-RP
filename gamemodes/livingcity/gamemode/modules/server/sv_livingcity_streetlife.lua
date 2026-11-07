@@ -121,7 +121,7 @@ end
 
 function LC.BrandishTick(now)
     local grace = math.max(1, cvGrace:GetFloat())
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         local ground, inside
         if cvBrandish:GetBool() and not Off(ply) then ground, inside = LC.LoweredGround(ply) end
         local was = ply:GetNW2String("lc_lowered_ground", "")

@@ -122,13 +122,13 @@ timer.Create("LivingCityLagWatch", 1, 0, function()
             if npc.lcAsleep then asleep = asleep + 1 end
         end
     end
-    local allNPCs = 0
-    for _, e in ipairs(ents.GetAll()) do if e:IsNPC() then allNPCs = allNPCs + 1 end end
+    local allNPCs, all = 0, ents.GetAll() -- (one list of every entity a second, not two)
+    for _, e in ipairs(all) do if e:IsNPC() then allNPCs = allNPCs + 1 end end
     local data = {
         ticks = sec.ticks, rate = math.floor(1 / engine.TickInterval() + 0.5), worstGap = math.floor(sec.worstGap * 10) / 10,
         luaMax = math.floor(sec.luaMax * 100) / 100, tele = sec.tele, teleBy = Top(sec.teleBy, nil, 3),
         netBytes = sec.netBytes, netBy = Top(sec.netBy, "bytes", 4),
-        ents = #ents.GetAll(), edicts = ents.GetEdictCount and ents.GetEdictCount() or 0,
+        ents = #all, edicts = ents.GetEdictCount and ents.GetEdictCount() or 0,
         npcs = npcs, allNPCs = allNPCs, asleep = asleep, netcfg = LC.NetSettings and LC.NetSettings() or nil,
     }
     -- sent outside the counting (the monitor doesn't count itself)
