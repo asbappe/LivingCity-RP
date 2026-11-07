@@ -422,7 +422,7 @@ LC.HINTS = {
     item_zipties = { title = "Cuffs",
         text = "To cuff someone, get up close, look at them and choose {+menu_context} > their name > Cuff them. It only works if their hands are up, they're down, they've been stopped by a Civil Protection unit, or you're behind them. Drag walks them along with you; Uncuff them lets them go." },
     item_request = { title = "A Civil Protection call box",
-        text = "It calls Civil Protection to where you are: F1 > Request Civil Protection (or type /request <what's wrong>). Civil Protection units see the request on their screens. You can send one once a minute, and false requests go on your record." },
+        text = "It calls Civil Protection to where you are: open your pockets ({gm_showteam}) and press Call for help beside it, or {+menu_context} > Getting by > Request Civil Protection. Civil Protection units see the request on their screens. You can send one once a minute, and false requests go on your record." },
     item_satchel = { title = "A satchel",
         text = "While you carry it, you can hold more: eight more kilos, and one more large item. Your pockets ({gm_showteam}) show how much you're carrying." },
     item_storage = { title = "A storage crate",

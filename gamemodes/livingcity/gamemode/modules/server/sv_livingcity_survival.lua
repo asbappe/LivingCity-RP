@@ -150,6 +150,23 @@ function LC.CanCarry(ply, id, n)
     return true
 end
 
+-- Why it won't fit, in full: which limit, and the numbers (the owner, 7 November: "pockets full"
+-- after dropping three or four small things, when it was the large-things limit all along).
+function LC.CarryWhy(ply, id, n)
+    n = n or 1
+    local ok, why = LC.CanCarry(ply, id, n)
+    if ok then return nil end
+    if not cvWeighed:GetBool() then return why end
+    local inv = Inv(ply)
+    local maxKg, maxBulky = LC.CarryLimit(ply)
+    local big = LC.InvBulky(ply, inv)
+    if LCS.IsBulky(id) and big + n > maxBulky then
+        return string.format("No room for something that size: you're carrying %d large thing%s, and can manage %d. Drop or stash something large first (a satchel adds one).",
+            big, big == 1 and "" or "s", maxBulky)
+    end
+    return string.format("Too heavy: you're carrying %.1f of %.1f kg, and it weighs %.1f.", LC.InvWeight(ply, inv), maxKg, LCS.Weight(id) * n)
+end
+
 -- How many of something (a half-kilo something, if not said) they can still take.
 function LC.InvSpace(ply, id)
     if not cvWeighed:GetBool() then return cvSize:GetInt() - LC.InvCount(ply) end
@@ -207,7 +224,7 @@ function LC.GiveOrDrop(ply, id, n)
     for _ = 1, n or 1 do
         if not LC.GiveItem(ply, id, 1) then
             LC.SpawnWorldItem(id, Front(ply, 30))
-            ply:ChatPrint("Your pockets are full. " .. (LCS.Items[id] and LCS.Items[id].name or id) .. " is on the ground.")
+            ply:ChatPrint((LC.CarryWhy(ply, id, 1) or "Your pockets are full.") .. " " .. (LCS.Items[id] and LCS.Items[id].name or id) .. " is on the ground.")
         end
     end
 end
@@ -590,7 +607,7 @@ hook.Add("PlayerUse", "LivingCityPocket", function(ply, ent)
         ent:Remove()
         ply:ChatPrint("Picked up: " .. LCS.Items[id].name)
     else
-        ply:ChatPrint("Your pockets are full.")
+        ply:ChatPrint(LC.CarryWhy(ply, id) or "Your pockets are full.")
     end
     return false
 end)
