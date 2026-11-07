@@ -13475,6 +13475,8 @@ ok(LC.EndingSession() == nil and not LC.TimeStopped and not GetGlobal2Bool("lc_t
 ok(s1:GetPos():Distance(DREAM) < 1600 and s3:GetPos():Distance(DREAM) < 1600, "the dreamers are at the dream point")
 ok(_files[LC.DreamFileOf(s1:SteamID64())] ~= nil and _files[LC.DreamFileOf(s3:SteamID64())] ~= nil, "a snapshot of each dreamer is saved to disk first")
 ok(#s1.weps == 1 and s1.weps[1] == "weapon_lc_hands" and next(s1.ammoT) == nil, "in the dream they carry only their hands")
+ok(hook.Run("PlayerCanPickupWeapon", s1, ents.Create("weapon_lc_hands")) ~= false and hook.Run("PlayerCanPickupWeapon", s1, ents.Create("weapon_pistol")) == false,
+    "(the game asks before it hands them anything: their hands are let through, a gun isn't)")
 ok(LC.BedSleepers[bed1] == s1 and not LC.BedFree(bed1, s2), "their bed stays theirs")
 _run(5)
 E = LC.EndingAny()

@@ -1091,7 +1091,10 @@ local function Blocked(p, what)
     p.lcDreamToldAt = CurTime() + 5
     Notice(p, "info", "Dreaming", (what or "That") .. " will have to wait until you wake up. (C > Settings > Shared dreams: wake up.)", 5)
 end
-hook.Add("PlayerCanPickupWeapon", "LivingCityDreams", function(p) if p.lcDreaming then return false end end)
+-- (their hands excepted: Give goes through this hook too, and a dreamer is given just their hands)
+hook.Add("PlayerCanPickupWeapon", "LivingCityDreams", function(p, wep)
+    if p.lcDreaming and not (IsValid(wep) and wep:GetClass() == "weapon_lc_hands") then return false end
+end)
 hook.Add("PlayerCanPickupItem", "LivingCityDreams", function(p) if p.lcDreaming then return false end end)
 hook.Add("LivingCityCrime", "LivingCityDreams", function(p) if IsValid(p) and p.lcDreaming then return false end end)
 hook.Add("CanPlayerSuicide", "LivingCityDreams", function(p) if p.lcDreaming then return false end end)
