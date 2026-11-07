@@ -206,11 +206,23 @@ function LC.TrailWanted(ply)
     return true
 end
 
+-- A place someone asked to be guided to (F2: sv_livingcity_quickmore.lua), when no quest wants them anywhere:
+-- until they're there, or ten minutes have gone by.
+function LC.GuideGoal(ply)
+    local g = IsValid(ply) and ply.lcGuide
+    if not g then return nil end
+    if CurTime() > (g.untilT or 0) or ply:GetPos():DistToSqr(g.pos) < 200 * 200 then
+        ply.lcGuide = nil
+        return nil
+    end
+    return g.pos
+end
+
 function LC.TrailTick(now)
     now = now or CurTime()
     local budget = BUDGET
     for _, ply in ipairs(player.GetAll()) do
-        local goal = LC.TrailWanted(ply) and LC.QuestObjectivePos and LC.QuestObjectivePos(ply) or nil
+        local goal = LC.TrailWanted(ply) and ((LC.QuestObjectivePos and LC.QuestObjectivePos(ply)) or LC.GuideGoal(ply)) or nil
         local trail = ply.lcTrail
         if not goal or ply:GetPos():DistToSqr(goal) < ARRIVE * ARRIVE then
             if trail then

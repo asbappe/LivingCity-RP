@@ -461,12 +461,21 @@ local function GuardTick(now)
                     if npc.UpdateEnemyMemory then npc:UpdateEnemyMemory(t, t:GetPos()) end
                 else
                     if st then st.adminTarget = nil end
-                    local d = npc:GetPos():DistToSqr(admin:GetPos())
+                    -- (F2 > Command the guards > Hold here: they keep to that spot instead, and walk back to it)
+                    local hold = admin.lcGuardHold
+                    if hold then
+                        local hp = hold.pos - hold.fwd * 40 + hold.right * (i % 2 == 0 and 50 or -50)
+                        if npc:GetPos():DistToSqr(hp) > 80 * 80 and npc.SetLastPosition and npc.SetSchedule then
+                            npc:SetLastPosition(hp)
+                            npc:SetSchedule(npc:GetPos():DistToSqr(hp) > 450 * 450 and SCHED_FORCED_GO_RUN or SCHED_FORCED_GO)
+                        end
+                    end
+                    local d = hold and 0 or npc:GetPos():DistToSqr(admin:GetPos())
                     -- stuck (a door, a corner: the owner, 2 November): not moving for 4 seconds while
                     -- more than 250 units behind, and they're brought to the Administrator's side
                     local moved = not npc.lcGuardLast or npc:GetPos():DistToSqr(npc.lcGuardLast) > 20 * 20
                     if moved or d < 250 * 250 then npc.lcGuardLast, npc.lcGuardStill = npc:GetPos(), now end
-                    local stuck = d > 250 * 250 and now - (npc.lcGuardStill or now) > 4
+                    local stuck = not hold and d > 250 * 250 and now - (npc.lcGuardStill or now) > 4
                     if stuck then npc.lcGuardStill = now end
                     if d > 900 * 900 or stuck then
                         npc:SetPos(admin:GetPos() - admin:GetForward() * 90 + admin:GetRight() * (i % 2 == 0 and 50 or -50) + Vector(0, 0, 4))

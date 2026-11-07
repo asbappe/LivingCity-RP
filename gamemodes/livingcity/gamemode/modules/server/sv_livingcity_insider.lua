@@ -9,7 +9,7 @@
     up with them.
 
     What an Insider can do besides, from the full menu (C > Civil Protection >
-    Inside), each only where nobody can see or hear them (no other player in
+    Inside, and F2 > Inside: sv_livingcity_quickmore.lua), each only where nobody can see or hear them (no other player in
     sight within lc_insider_privacy, 700, or within earshot, 300; no unit
     watching): they have to slip away to do it.
       Tip off Freq 7         a message on the Resistance's band, unsigned,
@@ -121,6 +121,11 @@ local function Ready(ply, key, gap)
     return true
 end
 local function Used(ply, key, gap) ply.lcInsiderNext[key] = CurTime() + gap end
+-- Seconds before one of their actions (tip, skim, copy, foul, spike, slip) is open again: 0, now (F2 > Inside).
+function LC.InsiderWait(ply, key)
+    local at = IsValid(ply) and ply.lcInsiderNext and ply.lcInsiderNext[key] or 0
+    return math.max(0, math.ceil(at - CurTime()))
+end
 
 -- The checks every Insider action makes first: true, or false and why.
 local function CanAct(ply, ignore)

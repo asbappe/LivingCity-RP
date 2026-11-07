@@ -886,14 +886,14 @@ do
     Quick("vort") Quick("stalker") Quick("zombie")
     Quick("citizen", function() _me.nw.lcj_job, _me.nw.lc_ration_break = "mortuary", true end)
     Quick("resistance", function() _me.nw.lc_squad_n = 2 other.nw.lcf_faction = "vort" Look(other) end)
-    -- a plain citizen (no job, not a foreman): F2 says there's nothing for them, briefly
+    -- nothing at all for their side or job (the infested; a plain citizen has Me > now): F2 says so, briefly
     do
-        _me.nw = { lcf_faction = "citizen", lce_standing = 10 }
+        _me.nw = { lcf_faction = "zombie", lce_standing = 10 }
         _me.IsAdmin = function() return false end
         Look(nil)
         local okE, e2 = pcall(LC_CL.QuickRoleRoot)
-        if not okE then problems[#problems + 1] = "a plain citizen's F2: " .. tostring(e2)
-        elseif e2.items[1] or not e2.empty then problems[#problems + 1] = "a plain citizen's F2 should say there's nothing for them, not list " .. tostring(e2.items[1] and e2.items[1].label)
+        if not okE then problems[#problems + 1] = "an empty F2: " .. tostring(e2)
+        elseif e2.items[1] or not e2.empty then problems[#problems + 1] = "an empty F2 should say there's nothing for them, not list " .. tostring(e2.items[1] and e2.items[1].label)
         else
             LC_CL.OpenQuick2()
             local okH3, errH3 = pcall(function() for id, fn in pairs(hook.t.HUDPaint or {}) do if id == "LivingCityQuick" then fn() end end end)
@@ -2546,6 +2546,161 @@ return (not ok) and tostring(e) or nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "Insider's Let them slip (F2, panel): " + str(err)
+
+# More on F2 (the owner, later on 7 November): the Insider's Inside >, the Resistance's Freq 7 >, a
+# citizen's Me >, a prisoner's sentence, the Administrator's orders, a senior unit's Call a sweep >;
+# what greys out comes from the server (lc_quick_info), and the open page follows it
+err = L.execute(r"""
+local ok, e = pcall(function()
+    local jt = util.JSONToTable
+    local function Info(t)
+        util.JSONToTable = function() return t end
+        net._q = { "{}" }
+        net["recv_lc_quick_info"](0)
+        util.JSONToTable = jt
+    end
+    local function Find(page, id)
+        for n = 1, 9 do local it = page.items[n] if it and it.id == id then return it, n end end
+        return nil
+    end
+    local function Labels(page) local out = {} for n = 1, 9 do out[n] = page.items[n] and page.items[n].label or "-" end return table.concat(out, " | ") end
+    local sentQM, sentAct
+    local function Watch()
+        sentQM, sentAct = nil, nil
+        local ws, st = net.WriteString, net.Start
+        local name
+        net.Start = function(n) name = n return st and st(n) end
+        net.WriteString = function(s) if name == "lc_quickmore" and not sentQM then sentQM = s end return ws and ws(s) end
+        local sa = LC_CL.SendAction
+        LC_CL.SendAction = function(cmd) sentAct = cmd end
+        return function() net.WriteString, net.Start, LC_CL.SendAction = ws, st, sa end
+    end
+    _me:SetPos(Vector(0, 0, 0))
+    _me.alive = true
+    _me.IsAdmin = function() return false end
+    _me.GetEyeTrace = function() return { Hit = false, HitPos = Vector(0, 0, 0) } end
+    LC_CL.InsiderSlipNet = nil
+
+    -- the Insider: the owner's six, then Inside > at 7; each greyed with why
+    _me.nw = { lcf_faction = "cp", lcf_rank = 2 }
+    LC_CL.Insider = true
+    Info({ ins = { watched = "Someone can see you.", wait = { tip = 0, skim = 0, copy = 0, foul = 0, spike = 0 }, wanted = 2, commissary = true, weedkiller = true } })
+    local root = LC_CL.QuickRoleRoot()
+    if not (root.items[1].label == "Voice lines" and root.items[2].id == "unittools" and root.items[3].id == "kick" and root.items[6].label == "Send my 10-20") then error("Insider: the owner's six moved: " .. Labels(root)) end
+    local ins, n = Find(root, "inside")
+    if n ~= 7 then error("Insider: Inside > should be 7, is " .. tostring(n) .. ": " .. Labels(root)) end
+    local p = ins.page()
+    for i = 1, 6 do if not p.items[i].disabled then error("Inside, watched: '" .. p.items[i].label .. "' isn't greyed") end end
+    if not string.find(p.items[1].label, "watched", 1, true) or not (p.empty and p.empty[9] and string.find(p.empty[9], "Someone can see you", 1, true)) then error("Inside: doesn't say why: " .. Labels(p)) end
+    Info({ ins = { wait = { tip = 0, skim = 0, copy = 300, foul = 0, spike = 0 }, wanted = 0, commissary = false, weedkiller = false } })
+    p = ins.page()
+    if p.items[1].disabled then error("Inside: Tip off greyed with nobody watching") end
+    if not (p.items[2].disabled and string.find(p.items[2].label, "nobody's wanted", 1, true)) then error("Inside: Lose a record: " .. p.items[2].label) end
+    if not (p.items[3].disabled and string.find(p.items[3].label, "Commissary only", 1, true)) then error("Inside: supplies: " .. p.items[3].label) end
+    if not (p.items[4].disabled and string.find(p.items[4].label, "in 5m", 1, true)) then error("Inside: copy: " .. p.items[4].label) end
+    if not string.find(p.items[#p.items].label, "Reveal myself", 1, true) then error("Inside: no Reveal myself last") end
+    -- a greyed one does nothing; an open one sends the Insider's own action
+    local undo = Watch()
+    LC_CL.OpenQuick2() LC_CL.QuickPick(7) LC_CL.QuickPick(4)
+    if sentAct then error("Inside: a greyed entry still sent " .. tostring(sentAct)) end
+    Info({ ins = { wait = { tip = 0, skim = 0, copy = 0, foul = 0, spike = 0 }, wanted = 1, commissary = true, weedkiller = true } })
+    if not LC_CL.QuickOpen("role") then error("Inside: the server's word closed F2") end
+    LC_CL.QuickPick(4)
+    undo()
+    if sentAct ~= "copyrecords" then error("Inside: the page didn't follow the server's word (sent " .. tostring(sentAct) .. ")") end
+    LC_CL.CloseQuick()
+    -- an ordinary unit: no Inside
+    LC_CL.Insider = false
+    if Find(LC_CL.QuickRoleRoot(), "inside") then error("an ordinary unit has Inside >") end
+
+    -- a Division Leader: Call a sweep >, greyed with why
+    _me.nw = { lcf_faction = "cp", lcf_rank = 3 }
+    Info({ sweep = { sweep = "Not while the city has something on." } })
+    root = LC_CL.QuickRoleRoot()
+    local sw, sn = Find(root, "sweep")
+    if not sw or sn ~= 7 then error("a Division Leader: Call a sweep > should be 7: " .. Labels(root)) end
+    p = sw.page()
+    if not (p.items[1].disabled and not p.items[2].disabled) then error("Call a sweep: " .. Labels(p)) end
+    if not (p.empty and p.empty[4] and string.find(p.empty[4], "something on", 1, true)) then error("Call a sweep doesn't say why") end
+    _me.nw = { lcf_faction = "cp", lcf_rank = 2 }
+    if Find(LC_CL.QuickRoleRoot(), "sweep") then error("a Metrocop can call a sweep") end
+
+    -- the Resistance: Freq 7 >, after what was there
+    _me.nw = { lcf_faction = "resistance", lcf_rank = 2 }
+    Info({ reb = { tx = false, backup = 50, pos = 0 } })
+    root = LC_CL.QuickRoleRoot()
+    if not (string.find(root.items[1].label, "clothes", 1, true) and root.items[2].label == "Black market" and root.items[3].label == "Resistance") then error("the Resistance's F2 moved: " .. Labels(root)) end
+    local band, bn = Find(root, "freq7")
+    if bn ~= 4 then error("the Resistance: Freq 7 > should be 4: " .. Labels(root)) end
+    p = band.page()
+    if not (p.items[1].disabled and p.items[2].disabled and string.find(p.items[2].label, "in 50s", 1, true) and not p.items[3].disabled) then error("Freq 7: " .. Labels(p)) end
+    if not (string.find(p.items[4].label, "rebel ground", 1, true) and string.find(p.items[5].label, "lab", 1, true)) then error("Freq 7: no guidance: " .. Labels(p)) end
+    undo = Watch()
+    p.items[4].run()
+    undo()
+    if sentQM ~= "guide" then error("Freq 7: guide me sent " .. tostring(sentQM)) end
+
+    -- a plain citizen: Me >, with what the server says
+    _me.nw = { lcf_faction = "citizen", lce_standing = 120, lc_unreg = true }
+    Info({ me = { work = "intake", ration = 240, cards = 2, home = "none", standing = 120, next = 150, nextWhat = "Union foreman (F2)" } })
+    root = LC_CL.QuickRoleRoot()
+    local mine, mn = Find(root, "me")
+    if mn ~= 1 or root.empty then error("a plain citizen: Me > should be 1, and no 'nothing here': " .. Labels(root)) end
+    p = mine.page()
+    if not (string.find(p.items[1].label, "Civil Intake first", 1, true) and string.find(p.items[2].label, "next in 4 min, 2 cards", 1, true)
+        and string.find(p.items[3].label, "Housing", 1, true) and string.find(p.items[4].label, "120", 1, true)) then error("Me: " .. Labels(p)) end
+    if not (p.empty and p.empty[6] and string.find(p.empty[6], "foreman", 1, true)) then error("Me: no next milestone") end
+    undo = Watch()
+    for i = 1, 4 do p.items[i].run() end
+    undo()
+    -- in a cell: My sentence
+    _me.nw.lc_jail_until = CurTime() + 125
+    local s = Find(LC_CL.QuickRoleRoot(), "sentence")
+    if not s or not string.find(s.label, "2:0", 1, true) then error("a prisoner: no 'My sentence: 2:0x left'") end
+    _me.nw.lc_jail_until = nil
+    -- nothing at all applies (the infested): it still says so
+    _me.nw = { lcf_faction = "zombie" }
+    root = LC_CL.QuickRoleRoot()
+    if root.items[1] or not root.empty then error("the infested's F2 should say there's nothing: " .. Labels(root)) end
+
+    -- the Administrator: what was there, then the tablet, the laws, the dream, the guards, an arrest
+    _me.nw = { lcf_faction = "admin" }
+    Info({ adm = { arrest = 0, guards = 2, hold = false, dream = { ready = true, groups = { { mood = "happy", name = "Happy", endings = { { id = "bus", name = "The Bus" } } } } } } })
+    local cit = _makeplayer("ArrestMe", Vector(60, 0, 0))
+    cit.nw.lcf_faction = "citizen"
+    _me.GetEyeTrace = function() return { Hit = true, HitPos = Vector(60, 0, 60), Entity = cit } end
+    root = LC_CL.QuickRoleRoot()
+    if root.items[1].label ~= "Sociostability" or not string.find(root.items[2].label, "Broadcast", 1, true) then error("the Administrator's F2 moved: " .. Labels(root)) end
+    local want = { "Open my tablet", "The city's laws", "Tonight's dream", "Command the guards" }
+    local all = Labels(root)
+    for _, w in ipairs(want) do if not string.find(all, w, 1, true) then error("the Administrator's F2 has no '" .. w .. "': " .. all) end end
+    local ar = Find(root, "arrest")
+    if not ar or ar.disabled then error("the Administrator can't order this citizen's arrest: " .. all) end
+    undo = Watch()
+    ar.run()
+    undo()
+    if sentQM ~= "arrest" then error("order of arrest sent " .. tostring(sentQM)) end
+    for n = 1, 8 do
+        local it = root.items[n]
+        if it and it.page then
+            local sub = it.page()
+            if it.label == "Tonight's dream" and not (sub.items[1] and sub.items[1].page and sub.items[2] and sub.items[2].label == "No dream tonight") then error("Tonight's dream: " .. Labels(sub)) end
+            if it.label == "Command the guards" and not (sub.items[1] and string.find(sub.items[1].label, "Follow me", 1, true) and string.find(sub.items[2].label, "Hold here", 1, true)) then error("guards: " .. Labels(sub)) end
+        end
+    end
+    Info({ adm = { arrest = 200, guards = 2 } })
+    ar = Find(LC_CL.QuickRoleRoot(), "arrest")
+    if not (ar and ar.disabled and string.find(ar.label, "in 4m", 1, true)) then error("order of arrest isn't greyed while it cools down") end
+    cit.nw.lcf_faction = "cp"
+    if Find(LC_CL.QuickRoleRoot(), "arrest") then error("the Administrator can order a unit's arrest") end
+    _me.GetEyeTrace = function() return { Hit = false, HitPos = Vector(0, 0, 0) } end
+    LC_CL.QuickInfo, LC_CL.Insider = {}, nil
+    _me.nw = {}
+end)
+return (not ok) and tostring(e) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "More on F2 (Inside, Freq 7, Me, the Administrator, a sweep): " + str(err)
 
 # the owner's 7 November playtest: the panting on one handle, stopped; the rain 30% quieter; the
 # eyelids under the job's objective; Civil Protection's action music

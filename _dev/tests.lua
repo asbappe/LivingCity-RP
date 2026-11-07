@@ -16359,6 +16359,223 @@ for _, n in ipairs({ lead, lead2, cop3 }) do if IsValid(n) then n:Remove() end e
 for _, p in ipairs({ ins, con, nosy }) do p:SetPos(far) end
 end
 InsiderSlipTests()
+----------------------------------------------------------------------
+function QuickMoreTests()
+section("More on F2: Inside, Freq 7, Me, a sentence, the Administrator's orders, a senior unit's sweep")
+local far = Vector(-150000, 150000, 0)
+local S0 = Vector(-90000, 90000, 0) -- (out of everyone's way)
+for _, other in ipairs(player.GetAll()) do
+    if other:GetPos():DistToSqr(S0) < 5000 * 5000 then other:SetPos(far) end
+end
+for n in pairs(LC.NPCs) do
+    if IsValid(n) and n:GetPos():DistToSqr(S0) < 6000 * 6000 then n:SetPos(Vector(-400000, 400000, 0)) end
+end
+local notes = {}
+local nw = LC.Notice
+LC.Notice = function(p, kind, title, text, secs)
+    notes[#notes + 1] = { p = p, t = tostring(title) .. ": " .. tostring(text) }
+    return nw(p, kind, title, text, secs)
+end
+local function Told(p, needle)
+    for i = #notes, 1, -1 do if notes[i].p == p and string.find(notes[i].t, needle, 1, true) then return true end end
+    return false
+end
+local function Last(p) for i = #notes, 1, -1 do if notes[i].p == p then return notes[i].t end end return "" end
+local function SentTo(name, p, from)
+    for i = from + 1, #net.sent do
+        local m = net.sent[i]
+        if m.name == name then
+            if m.to == p then return m end
+            if istable(m.to) then for _, q in ipairs(m.to) do if q == p then return m end end end
+        end
+    end
+    return nil
+end
+
+-- the Insider: what F2 > Inside greys out, and why
+local ins = newPlayer("QMInsider", "cp")
+ins:SetPos(S0)
+ok(LC.QuickInfo(ins).ins == nil, "an ordinary unit's F2 has no Inside")
+LC.StoryFlag(ins, "insider", true)
+local nosy = newPlayer("QMNosy", "citizen")
+nosy:SetPos(S0 + Vector(0, 200, 0))
+local t = LC.QuickInfo(ins)
+ok(t.ins and t.ins.watched and string.find(t.ins.watched, "hear", 1, true), "Inside: someone close enough to hear: greyed, and F2 says why", t.ins and t.ins.watched)
+nosy:SetPos(far)
+t = LC.QuickInfo(ins)
+ok(t.ins and not t.ins.watched and t.ins.wait.tip == 0, "nobody watching: open now")
+ok(t.ins.commissary == false, "away from the Commissary: supplies, the filters and the food greyed (Commissary only)")
+local okT = LC.InsiderTip(ins, "they're coming tonight")
+t = LC.QuickInfo(ins)
+ok(okT and t.ins.wait.tip > 100 and t.ins.wait.tip <= 120, "after a tip-off, F2 says when the next one is open", t.ins.wait.tip)
+LC.StoryFlag(ins, "insider", false)
+ins:SetPos(far)
+
+-- the Resistance: call for backup on Freq 7
+local reb = newPlayer("QMRebel", "resistance", nil, 150) -- (a Member: fighters follow them)
+local mate = newPlayer("QMMate", "resistance", nil, 150)
+local cit = newPlayer("QMCitizen", "citizen")
+reb:SetPos(S0) mate:SetPos(S0 + Vector(2500, 0, 0)) cit:SetPos(S0 + Vector(0, 2500, 0))
+mate.chat, cit.chat = {}, {}
+local f1, fs1 = LC.Spawners.rebel(S0 + Vector(300, 0, 0))
+local f2, fs2 = LC.Spawners.rebel(S0 + Vector(-300, 0, 0))
+local f3, fs3 = LC.Spawners.rebel(S0 + Vector(0, 300, 0))
+local f4, fs4 = LC.Spawners.rebel(S0 + Vector(0, -350, 0))
+fs3.post = true -- (a lookout on his post never leaves it)
+local before = #net.sent
+local okB, sent = LC.RebelCallBackup(reb)
+ok(okB and sent == 2, "Call for backup: two idle fighters nearby come", tostring(sent) .. " " .. Last(reb))
+ok(fs3.follow == nil and ((fs1.follow == reb and 1 or 0) + (fs2.follow == reb and 1 or 0) + (fs4.follow == reb and 1 or 0)) == 2,
+    "they stay with the caller, as if asked (a lookout keeps his post)")
+ok(has(mate.chat, "needs backup"), "every Resistance player hears it on Freq 7", mate.chat[#mate.chat])
+ok(not has(cit.chat, "needs backup"), "(a citizen without a Freq 7 radio hears nothing)")
+ok(SentTo("lc_cpmark", mate, before) ~= nil and SentTo("lc_cpmark", cit, before) == nil, "the Resistance sees where they are, nobody else does")
+local okB2, whyB2 = LC.RebelCallBackup(reb)
+ok(not okB2 and string.find(whyB2 or "", "Again in", 1, true), "once every two minutes", whyB2)
+ok((LC.QuickInfo(reb).reb or {}).backup > 0, "(and F2 greys it with how long)")
+for _, n in ipairs({ f1, f2, f4 }) do local st = LC.NPCs[n] if st and st.follow then LC.DismissFollower(n, st, true) end end
+-- a Sympathizer: heard, but fighters only follow Members and up
+local sym = newPlayer("QMSym", "resistance")
+sym:SetPos(S0 + Vector(0, -200, 0))
+local okS, sentS = LC.RebelCallBackup(sym)
+ok(okS and sentS == 0 and Told(sym, "Members and up"), "a Sympathizer's call is heard, but no fighters come", Last(sym))
+-- the Resistance's reserve too low (sv_livingcity_manpower.lua): nobody can be spared
+_setcvar("lc_manpower", 1)
+local pool = LC.ManpowerPool("rebel")
+local had = pool.reserve
+pool.reserve = 0
+mate:SetPos(S0 + Vector(100, 100, 0))
+local okR, sentR = LC.RebelCallBackup(mate)
+ok(okR and sentR == 0 and Told(mate, "can't spare"), "with the reserve run down, the call goes out but no fighters come", Last(mate))
+pool.reserve = had
+_setcvar("lc_manpower", 0)
+local okC = LC.RebelCallBackup(cit)
+ok(not okC, "only the Resistance calls for backup on Freq 7")
+-- send my position
+mate:SetPos(S0 + Vector(2500, 0, 0))
+mate.chat = {}
+before = #net.sent
+ok(LC.RebelSendPosition(reb) and #mate.chat == 1 and SentTo("lc_cpmark", mate, before) ~= nil, "Send my position: on Freq 7, and marked for the Resistance")
+local okP2, whyP2 = LC.RebelSendPosition(reb)
+ok(not okP2 and string.find(whyP2 or "", "Again in", 1, true), "(not twice in a row)", whyP2)
+-- guide me to rebel ground, and to the lab: a marker, and the trail follows it
+local rg = LC.NearestRebelGround(reb:GetPos())
+local okG, whyG = LC.QuickMore(reb, "guide", "rebel")
+if rg then
+    ok(okG and reb.lcWaypoint and LC.GuideGoal(reb) == rg, "Guide me to rebel ground: marked, and the trail leads there", whyG)
+    reb:SetPos(rg)
+    ok(LC.GuideGoal(reb) == nil, "(there: the guidance ends)")
+else
+    ok(not okG and string.find(whyG or "", "no rebel ground", 1, true), "no rebel ground on the map: it says so", whyG)
+end
+ok(not LC.QuickMore(cit, "guide", "rebel"), "(only the Resistance is guided to rebel ground)")
+reb:SetPos(S0)
+
+-- a citizen: Me >
+cit:SetPos(S0 + Vector(0, 400, 0))
+cit:SetPData("lce_standing", 120)
+local m = LC.QuickInfo(cit).me
+ok(m and m.work and m.home and m.standing == 120 and m.next == 150 and string.find(m.nextWhat or "", "foreman", 1, true),
+    "a citizen's F2 knows their work, rations, home and standing, and the next milestone (foreman at 150)", m and tostring(m.next))
+ok(LC.QuickInfo(reb).me == nil and LC.QuickInfo(cit).reb == nil, "(each side hears only its own)")
+LC.QuickMore(cit, "rations")
+ok(Told(cit, "My rations") and Told(cit, "ration card"), "My rations: when the next is, and the cards held", Last(cit))
+LC.QuickMore(cit, "work")
+ok(Told(cit, "Find work"), "Find work", Last(cit))
+LC.QuickMore(cit, "home")
+ok(Told(cit, "My home"), "My home and rent", Last(cit))
+LC.QuickMore(cit, "standing")
+ok(Told(cit, "Civil Standing 120") and Told(cit, "Not wanted"), "My standing", Last(cit))
+cit.lcGraceUntil = 0
+LC.ReportCrime(cit, "Theft", 60)
+LC.QuickMore(cit, "standing")
+ok(Told(cit, "WANTED: Theft"), "wanted: it says so, and for what", Last(cit))
+LC.ClearWanted(cit)
+-- a prisoner: My sentence
+local okN, whyN = LC.QuickMore(cit, "sentence")
+ok(not okN and string.find(whyN or "", "not serving", 1, true), "no sentence out of a cell", whyN)
+LC.Prisoners[cit] = { untilT = CurTime() + 125, reason = "Theft" }
+LC.QuickMore(cit, "sentence")
+ok(Told(cit, "You're in for: Theft") and Told(cit, "2:0"), "My sentence: what you're in for, and how long is left", Last(cit))
+LC.Prisoners[cit] = nil
+-- through the menu's own message, answered with what F2 greys
+before = #net.sent
+cit.lcQuickMoreNext = 0
+net._q = { "standing", "", NULL }
+net["recv_lc_quickmore"](0, cit)
+ok(Told(cit, "Civil Standing") and SentTo("lc_quick_info", cit, before) ~= nil, "(from F2: done, and F2 hears what's greyed now)")
+
+-- the City Administrator
+local adm = newPlayer("QMAdmin", "admin")
+local unit = newPlayer("QMUnit", "cp")
+local staffer = newPlayer("QMStaff", "citizen")
+staffer.IsAdmin = function() return true end
+adm:SetPos(S0 + Vector(500, 500, 0)) unit:SetPos(S0 + Vector(600, 0, 0)) staffer:SetPos(S0 + Vector(0, 600, 0))
+local okA, whyA = LC.AdminOrderArrest(adm, cit)
+ok(okA and LC.PlayerIsWanted(cit) and cit:GetNW2String("lc_wanted_reason", "") == "By order of the Administrator", "Order the arrest: wanted, by order of the Administrator", whyA)
+ok(cit:GetNW2Bool("lc_bolo", false) and Told(cit, "ordered your arrest"), "every unit has a BOLO, and they're told")
+LC.ClearWanted(cit)
+local okA2, whyA2 = LC.AdminOrderArrest(adm, cit)
+ok(not okA2 and string.find(whyA2 or "", "Not yet", 1, true), "once every five minutes", whyA2)
+ok((LC.QuickInfo(adm).adm or {}).arrest > 0, "(and F2 greys it with how long)")
+adm.lcArrestNext = 0
+ok(select(2, LC.AdminOrderArrest(adm, unit)) == "Not one of the city's own.", "never a unit")
+ok(select(2, LC.AdminOrderArrest(adm, staffer)) == "Not a member of staff.", "never staff")
+ok(not LC.AdminOrderArrest(unit, cit) and not LC.PlayerIsWanted(cit), "only the Administrator orders arrests")
+for i = #(LC.BOLOs or {}), 1, -1 do if string.find(LC.BOLOs[i].text or "", "By order of the Administrator", 1, true) then table.remove(LC.BOLOs, i) end end
+if LC.SyncBolos then LC.SyncBolos() end
+-- open my tablet
+before = #net.sent
+ok(LC.QuickMore(adm, "office") and SentTo("lc_admin_office", adm, before) ~= nil, "Open my tablet: the office opens")
+ok(not LC.QuickMore(cit, "office"), "(not for anyone else)")
+-- the guards: hold here, and back to following
+local okG0 = LC.AdminGuardOrder(adm, "hold")
+local g = LC.Spawners.cop(adm:GetPos() + Vector(80, 0, 0))
+LC.AdminGuards[g] = adm
+ok(not okG0 and LC.AdminGuardOrder(adm, "hold") and adm.lcGuardHold, "Command the guards: hold here (not with no guards)")
+local holdAt = adm:GetPos()
+adm:SetPos(S0 + Vector(3500, 3500, 0))
+LC.AdminGuardTick(CurTime())
+ok(g:GetPos():DistToSqr(holdAt) < 300 * 300, "holding: they stay where she left them, however far she goes", tostring(g:GetPos()))
+ok((LC.QuickInfo(adm).adm or {}).hold == true, "(F2 shows they're holding)")
+ok(LC.AdminGuardOrder(adm, "follow") and adm.lcGuardHold == nil, "Follow me")
+LC.AdminGuardTick(CurTime())
+ok(g:GetPos():DistToSqr(adm:GetPos()) < 300 * 300, "following again: back at her side", tostring(g:GetPos()))
+ok(not LC.AdminGuardOrder(cit, "hold"), "(only the Administrator commands them)")
+for n, who in pairs(LC.AdminGuards) do if who == adm then if IsValid(n) then n:Remove() end LC.AdminGuards[n] = nil end end
+
+-- a senior unit: call a sweep or a raid
+local dl = newPlayer("QMLeader", "cp", nil, 600) -- (Division Leader)
+local mc = newPlayer("QMMetro", "cp", nil, 150)
+dl:SetPos(S0 + Vector(-500, 0, 0)) mc:SetPos(S0 + Vector(-600, 0, 0))
+LC.EndEvent(true)
+LC.OfficerSweepReset()
+local pend = LC.PendingEvent
+LC.PendingEvent = nil
+ok(string.find(LC.OfficerSweepWhyNot(mc, "sweep") or "", "Division Leaders", 1, true), "a Metrocop can't call one")
+ok(LC.QuickInfo(dl).sweep ~= nil and LC.QuickInfo(mc).sweep == nil, "(F2's Call a sweep > is for Division Leaders and up)")
+local eb = LC.EndingBusy
+LC.EndingBusy = function() return true end
+ok(string.find(LC.OfficerSweepWhyNot(dl, "sweep") or "", "dreams", 1, true), "not while the city dreams or ends")
+LC.EndingBusy = eb
+ok(LC.OfficerSweepWhyNot(dl, "sweep") == nil, "a Division Leader can, with the city quiet", LC.OfficerSweepWhyNot(dl, "sweep"))
+unit.chat = {}
+ok(LC.OfficerCallSweep(dl, "sweep") and LC.Event == "sweep" and has(unit.chat, "orders a contraband sweep"), "the sweep starts (the city's own event), and units hear who ordered it", unit.chat[#unit.chat])
+ok(string.find(LC.OfficerSweepWhyNot(dl, "raid") or "", "something on", 1, true), "not while the city has something on (a curfew, say)")
+LC.EndEvent(true)
+ok(string.find(LC.OfficerSweepWhyNot(dl, "raid") or "", "Dispatch allows another", 1, true), "one every fifteen minutes, city-wide")
+LC.OfficerSweepNext = 0
+ok(string.find(LC.OfficerSweepWhyNot(dl, "raid") or "", "Too soon after the last one", 1, true), "and the city's own pace: half the usual gap after any event")
+LC.OfficerSweepReset()
+LC.PendingEvent = "rations"
+ok(string.find(LC.OfficerSweepWhyNot(dl, "raid") or "", "planned", 1, true), "not with the city's own next event about to begin")
+LC.PendingEvent = pend
+
+LC.Notice = nw
+for _, n in ipairs({ f1, f2, f3, f4 }) do if IsValid(n) then n:Remove() end LC.NPCs[n] = nil end
+for _, p in ipairs({ ins, nosy, reb, mate, cit, sym, adm, unit, staffer, dl, mc }) do LC.ClearWanted(p) p:SetPos(far) end
+end
+QuickMoreTests()
 
 section("The v2.7 pieces: stamina, brandishing, obituaries, detentions, citizen numbers, the Administration path")
 ;(function()

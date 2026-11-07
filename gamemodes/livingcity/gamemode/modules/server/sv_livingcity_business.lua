@@ -264,6 +264,15 @@ function LC.ApartmentInfo(ply)
         #holders > 0 and table.concat(holders, ", ") or "just you")
 end
 
+-- Their apartment, for F2 > Me > My home (sv_livingcity_quickmore.lua): { pos, left (seconds), where }, or nil.
+function LC.ApartmentSummary(ply)
+    local mine = IsValid(ply) and MyRentals(ply) or {}
+    if #mine == 0 then return nil end
+    local d = DoorById(mine[1].main)
+    if not IsValid(d) then return nil end
+    return { pos = d:GetPos(), left = Left(mine[1].r), where = LC.DescribePlace and LC.DescribePlace(d:GetPos()) or "" }
+end
+
 -- Pressing E on a rented, locked door.
 local breaching = {}
 function LC.RentDoorUse(ply, door)

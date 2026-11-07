@@ -1815,6 +1815,7 @@ local function Recruit(ply, npc, st)
     npc:EmitSound(Vo(st, Pick({ "okimready01", "okimready02", "letsgo01", "letsgo02", "leadtheway01" })), 75)
     ply:ChatPrint("[Resistance] " .. LC.NPCStr(npc, "lc_pname", "A fighter") .. " is with you, and stays with you. They hold their fire until you open up or the Combine do. E on them again to send them home.")
 end
+LC.RebelRecruit = Recruit -- (F2 > Freq 7 > Call for backup brings idle fighters this way: sv_livingcity_quickmore.lua)
 
 -- A squad belongs to the connection that formed it. Anyone still marked as
 -- following a player who has left, or who joined again since, goes home; and

@@ -141,6 +141,7 @@ LC_MODULES = {
         "sv_livingcity_storage",
         "sv_livingcity_stories",
         "sv_livingcity_insider", -- (the Resistance's man inside Civil Protection)
+        "sv_livingcity_quickmore", -- (more on F2: Inside, Freq 7, Me, the Administrator's orders, a senior unit's sweep)
         "sv_livingcity_loyalty", -- (what high Civil Standing earns a citizen)
         "sv_livingcity_survival",
         "sv_livingcity_talk",
