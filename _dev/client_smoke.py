@@ -518,6 +518,22 @@ if not kh then problems[#problems + 1] = "no kick reminder" else
     if not okK then problems[#problems + 1] = "the kick reminder errors: " .. tostring(errK) end
 end
 _me.nw.lc_kick_hint = nil
+-- the kick shows only the legs: every bone but the hips and the kicking leg is shrunk (a fake skeleton,
+-- with an extra mask bone off the head like the HL:Alyx metrocop's)
+if LC_CL.KickHideUpper then
+    local names = { [0] = "ValveBiped.Bip01_Pelvis", "ValveBiped.Bip01_Spine", "ValveBiped.Bip01_Head1", "mask",
+        "ValveBiped.Bip01_R_Thigh", "ValveBiped.Bip01_R_Calf", "ValveBiped.Bip01_L_Thigh" }
+    local parent = { [0] = -1, 0, 1, 2, 0, 4, 0 }
+    local shrunk = {}
+    local fake = { LookupBone = function(_, nm) for i = 0, 6 do if names[i] == nm then return i end end end,
+        GetBoneCount = function() return 7 end, GetBoneParent = function(_, b) return parent[b] end,
+        ManipulateBoneScale = function(_, b) shrunk[b] = true end }
+    local okL, nL = pcall(LC_CL.KickHideUpper, fake)
+    if not okL then problems[#problems + 1] = "the kick's legs-only errors: " .. tostring(nL)
+    elseif not (shrunk[1] and shrunk[2] and shrunk[3] and shrunk[6] and not shrunk[0] and not shrunk[4] and not shrunk[5]) then
+        problems[#problems + 1] = "the kick shows more than the legs (the mask or the head) or hides the kicking leg"
+    end
+else problems[#problems + 1] = "no LC_CL.KickHideUpper" end
 if LC_CL.GmanVision then
     LC_CL.GmanVision("summon", "", "Come back. / Come back here, now.")
     local gv = hook.t.HUDPaint and hook.t.HUDPaint.LivingCityGmanVision

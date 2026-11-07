@@ -77,11 +77,38 @@ local function Leg(me)
     leg.GetPlayerColor = function() return IsValid(me) and me.GetPlayerColor and me:GetPlayerColor() or Vector(1, 1, 1) end
     local seq = leg:LookupSequence("idle_all_01")
     if seq and seq >= 0 then leg:ResetSequence(seq) end
-    for _, name in ipairs(HIDE) do
-        local b = leg:LookupBone(name)
-        if b then leg:ManipulateBoneScale(b, Vector(0, 0, 0)) end
-    end
+    LC_CL.KickHideUpper(leg)
     return leg
+end
+
+-- Only the legs show (the owner, 7 November: the CP mask was in view during the kick). Every bone
+-- but the hips and the kicking leg (the right thigh and all below it) is shrunk to nothing, one by
+-- one, so the mask, the head, the arms and any extra bones a model has (the HL:Alyx metrocop's)
+-- are gone too. A model without the usual skeleton keeps the old way: the spine and the other leg.
+function LC_CL.KickHideUpper(ent)
+    local pelvis, thigh = ent:LookupBone("ValveBiped.Bip01_Pelvis"), ent:LookupBone("ValveBiped.Bip01_R_Thigh")
+    local n = ent.GetBoneCount and ent:GetBoneCount() or 0
+    if not (pelvis and thigh and n > 0) then
+        for _, name in ipairs(HIDE) do
+            local b = ent:LookupBone(name)
+            if b then ent:ManipulateBoneScale(b, Vector(0, 0, 0)) end
+        end
+        return 0
+    end
+    local hidden = 0
+    for b = 0, n - 1 do
+        local keep = b == pelvis
+        local p = b
+        while not keep and p and p >= 0 do -- (the kicking thigh, or something hanging off it)
+            if p == thigh then keep = true end
+            p = ent:GetBoneParent(p)
+        end
+        if not keep then
+            ent:ManipulateBoneScale(b, Vector(0, 0, 0))
+            hidden = hidden + 1
+        end
+    end
+    return hidden
 end
 
 hook.Add("PostDrawOpaqueRenderables", "LivingCityKickLeg", function(depth, sky)
