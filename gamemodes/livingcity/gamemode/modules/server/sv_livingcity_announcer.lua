@@ -96,7 +96,7 @@ local cvOn   = CreateConVar("lc_announce_custom", "1", FLAGS, "Custom Overwatch 
 local cvPct  = CreateConVar("lc_announce_custom_pct", "100", FLAGS, "Chance (percent) a custom Overwatch line replaces the built-in one for an event")
 local cvGap  = CreateConVar("lc_announce_gap", "25", FLAGS, "Seconds between two custom announcements by the same voice")
 local cvCat  = CreateConVar("lc_announce_cat_gap", "90", FLAGS, "Seconds before the same trigger can be announced again")
-local cvShare = CreateConVar("lc_announce_admin_share", "50", FLAGS, "Only one voice announces each thing: how often (percent) it's the Administrator rather than Overwatch, when both have something to say for it")
+local cvShare = CreateConVar("lc_announce_admin_share", "50", FLAGS, "No longer used (7 November): the Administrator's recorded voice speaks when nobody plays the Administrator, Overwatch's when a player does")
 local cvQuiet = CreateConVar("lc_announce_quiet", "90", FLAGS, "Seconds of quiet on the PA (after the last announcement has finished) before a routine one (the time of day, a train, a skirmish, sociostability going green or yellow...) is made; routine ones in that time are left out")
 
 local ROOT = "livingcity/announce/"
@@ -447,14 +447,18 @@ local function ClipSecs(path)
 end
 LC.AnnounceClipSecs = ClipSecs
 
--- Who says it: only one voice for each thing that happens, never both. The
--- Administrator (lc_announce_admin_share percent of the time) or Overwatch,
--- whichever has something for it; nil: neither. builtin: Overwatch has his
--- own Half-Life 2 lines for it.
+-- Who says it: only one voice for each thing that happens, never both (the owner, 7 November):
+-- with nobody playing the Administrator, her recorded voice, when she has a recording for it (else
+-- Overwatch); with a player as the Administrator, she speaks for herself (her microphone), so the
+-- PA is Overwatch's: the owner's own recordings, or Half-Life 2's where they have none. nil: nobody.
+-- builtin: Overwatch has his own Half-Life 2 lines for it.
+-- (LC.AnnounceForceVoice, for the tests: "overwatch" or "administrator" goes first, the other if it has nothing.)
 function LC.AnnounceVoiceFor(trig, builtin)
-    local admin = cvOn:GetBool() and ResolveTier(trig, LC.AnnounceTier(trig)) ~= nil
     local ow = builtin or (cvOn:GetBool() and #Scan("overwatch", trig) > 0)
-    if admin and ow then return math.random(100) <= cvShare:GetInt() and "administrator" or "overwatch" end
+    local admin = cvOn:GetBool() and ResolveTier(trig, LC.AnnounceTier(trig)) ~= nil
+    local force = LC.AnnounceForceVoice
+    if force == "overwatch" then return ow and "overwatch" or (admin and "administrator" or nil) end
+    if force ~= "administrator" and LC.HumanAdministrator and LC.HumanAdministrator() then return ow and "overwatch" or nil end
     return admin and "administrator" or (ow and "overwatch" or nil)
 end
 

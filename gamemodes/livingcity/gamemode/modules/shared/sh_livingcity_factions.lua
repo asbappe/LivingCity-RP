@@ -143,7 +143,7 @@ LCF.Factions = {
         desc = "The face of the city's government. Whitelisted by staff.",
         ranks = {
             -- (byGender: a woman becomes Judith Mossman, a man Dr Breen; the owner, 7 November)
-            { name = "Administrator", short = "ADM", xp = 0, models = { "models/player/breen.mdl", "models/player/mossman.mdl", byGender = true }, loadout = { "weapon_fists", "weapon_lc_admin" } },
+            { name = "Administrator", short = "ADM", xp = 0, models = { "models/player/breen.mdl", "models/player/mossman.mdl", byGender = true }, loadout = { "weapon_fists", "weapon_lc_admin", "weapon_lc_microphone" } }, -- (the microphone: her own addresses, 7 November)
         },
         specials = {
             {

@@ -8886,7 +8886,7 @@ section("Custom announcements: Overwatch and the Administrator")
 function AnnouncerTests()
 local A = "sound/livingcity/announce/"
 LC.AnnounceCalm() LC.SocioOverride = { level = "green", untilT = CurTime() + 1e6 } LC.Socio = "green" SetGlobal2String("lc_socio", "green") -- (earlier sections left violence and moods behind)
-_setcvar("lc_announce_admin_share", 0) _setcvar("lc_announce_quiet", 0) -- (Overwatch's turn every time, and no minor ones held back, till the tests below say otherwise)
+LC.AnnounceForceVoice = "overwatch" _setcvar("lc_announce_quiet", 0) -- (Overwatch's turn every time, and no minor ones held back, till the tests below say otherwise)
 local function netPaths(name, from)
     local out = {}
     for i = (from or 0) + 1, #net.sent do if net.sent[i].name == name then out[#out + 1] = net.sent[i].data[1] end end
@@ -8935,8 +8935,8 @@ n0 = #net.sent
 hook.Run("LivingCityEventStarted", "curfew", 4)
 _run(20)
 ok(#netPaths("lc_breencast", n0) == 0 and #netPaths("lc_announce", n0) == 0, "one voice for each thing: the event's own announcement (LC.Announce) was it, nobody adds to it")
--- whose turn it is: the Administrator lc_announce_admin_share percent of the time, in his place
-_setcvar("lc_announce_admin_share", 100)
+-- whose turn it is: the Administrator, in his place (with nobody playing her: the owner, 7 November)
+LC.AnnounceForceVoice = nil
 _run(30)
 n0 = #net.sent
 LC.Announce("curfew")
@@ -8952,7 +8952,7 @@ LC.TriggerAnnouncements("socio_red")
 _run(10)
 got = netPaths("lc_breencast", n0)
 ok(#got == 1 and string.find(got[1], "breen/socio_red/s.wav", 1, true) and #netPaths("lc_announce", n0) == 0, "only she has a line for it: she says it (her only recording is warm, so she uses it)", got[1])
-_setcvar("lc_announce_admin_share", 0)
+LC.AnnounceForceVoice = "overwatch"
 _run(30)
 n0 = #net.sent
 LC.Announce("curfew")
@@ -13013,6 +13013,49 @@ for _, p in ipairs({ before, boss, n, t2 }) do LC.SetJob(p, "", true) p:SetPos(F
 GAMEMODE = savedGM
 end
 LaborTests()
+
+----------------------------------------------------------------------
+section("The Administrator's voice and microphone (7 November)")
+function AdminVoiceTests()
+    local was = LC.AnnounceForceVoice
+    LC.AnnounceForceVoice = nil
+    _files["sound/livingcity/administrator/lockdown1.wav"] = "RIFF" .. string.rep("\0", 3000)
+    _files["sound/livingcity/overwatch/lockdown1.wav"] = "RIFF" .. string.rep("\0", 3000)
+    LC.AnnounceRescan()
+    ok(LC.HumanAdministrator() == nil and LC.AnnounceVoiceFor("lockdown") == "administrator", "nobody plays the Administrator: her recorded voice says it")
+    local adm = newPlayer("Mayor", "admin")
+    ok(LC.HumanAdministrator() == adm and LC.AnnounceVoiceFor("lockdown") == "overwatch", "a player is the Administrator: Overwatch's voice (the owner's recordings) says it")
+    ok(LC.AnnounceVoiceFor("curfew_firm_only_hers") == nil or LC.AnnounceVoiceFor("curfew_firm_only_hers") == "overwatch", "(and never her recordings while she's played)")
+    local loadout = false
+    for _, f in ipairs(LCF.Factions or {}) do
+        if f.id == "admin" then for _, w in ipairs(f.ranks[1].loadout or {}) do if w == "weapon_lc_microphone" then loadout = true end end end
+    end
+    ok(loadout, "the Administrator carries the microphone")
+    -- on air with an echo, whatever the transmitter's cooldown
+    local ear = newPlayer("Listener", "citizen")
+    local dsp = {}
+    for _, p in ipairs({ adm, ear }) do p.SetDSP = function(self, n) dsp[self] = n end end
+    SetGlobal2Float("lc_live_next", CurTime() + 600)
+    if LC.LiveSpeaker then LC.StopBroadcast("test") end
+    if LC.LiveNPC and LC.StopNPCBroadcast then LC.StopNPCBroadcast("test") end
+    SetGlobal2Float("lc_live_next", CurTime() + 600)
+    local okB = LC.StartBroadcast(adm)
+    ok(okB and LC.LiveSpeaker == adm, "the Administrator goes on air without waiting for the transmitter")
+    ok(dsp[ear] == GetConVar("lc_broadcast_echo"):GetInt() and dsp[adm] == nil, "everyone hearing it gets the echo; the speaker doesn't")
+    LC.StopBroadcast("test")
+    ok(dsp[ear] == 0, "off air: the echo goes")
+    local cit = newPlayer("Shouter", "citizen")
+    cit.SetDSP = function() end
+    SetGlobal2Float("lc_live_next", CurTime() + 600)
+    ok(not LC.StartBroadcast(cit), "anyone else still waits for the transmitter")
+    adm.valid, ear.valid, cit.valid = false, false, false
+    _files["sound/livingcity/administrator/lockdown1.wav"] = nil
+    _files["sound/livingcity/overwatch/lockdown1.wav"] = nil
+    LC.AnnounceRescan()
+    SetGlobal2Float("lc_live_next", 0)
+    LC.AnnounceForceVoice = was
+end
+AdminVoiceTests()
 function GuidanceTests()
 section("Guidance: the quest trail's way, refreshed when you stray, and where you are")
 local G0 = Vector(170000, -170000, 0)
@@ -13643,17 +13686,26 @@ section("Playtest fixes, 17 October")
     _files["sound/livingcity/administrator/curfew_soon_firm1.wav"] = "RIFF" .. string.rep("\0", 3000)
     _files["sound/livingcity/overwatch/curfew_soon1.wav"] = "RIFF" .. string.rep("\0", 3000)
     LC.AnnounceRescan()
-    _setcvar("lc_announce_admin_share", 50)
-    local both, admins = 0, 0
-    for _ = 1, 20 do
-        said = {}
-        LC.TriggerAnnouncements("curfew_soon", { force = true, delay = 0.1 })
-        _run(1)
-        if (said.administrator or 0) > 0 and (said.overwatch or 0) > 0 then both = both + 1 end
-        if (said.administrator or 0) > 0 then admins = admins + 1 end
+    LC.AnnounceForceVoice = nil
+    local haWas = LC.HumanAdministrator
+    local function Round(human)
+        LC.HumanAdministrator = function() return human end
+        local both, admins = 0, 0
+        for _ = 1, 6 do
+            said = {}
+            LC.TriggerAnnouncements("curfew_soon", { force = true, delay = 0.1 })
+            _run(1)
+            if (said.administrator or 0) > 0 and (said.overwatch or 0) > 0 then both = both + 1 end
+            if (said.administrator or 0) > 0 then admins = admins + 1 end
+        end
+        return both, admins
     end
-    ok(both == 0 and admins > 0 and admins < 20, "each warning is said by one voice, the Administrator or Overwatch at random, never both", admins .. " of 20 hers, " .. both .. " both")
-    _setcvar("lc_announce_admin_share", 0)
+    local b1, a1 = Round(nil)
+    ok(b1 == 0 and a1 == 6, "nobody plays the Administrator: each warning is hers, her recorded voice, never both (the owner, 7 November)", a1 .. " of 6 hers, " .. b1 .. " both")
+    local b2, a2 = Round(true)
+    ok(b2 == 0 and a2 == 0, "a player is the Administrator: the PA is Overwatch's (she speaks for herself), never both", a2 .. " of 6 hers, " .. b2 .. " both")
+    LC.HumanAdministrator = haWas
+    LC.AnnounceForceVoice = "overwatch"
     hook.Remove("LivingCityCustomAnnouncement", "TestOneVoice")
     _files["sound/livingcity/administrator/curfew_soon_firm1.wav"] = nil
     _files["sound/livingcity/overwatch/curfew_soon1.wav"] = nil
@@ -16336,7 +16388,7 @@ function PacingTests() -- (the owner, 7 November: "constant announcements ... I 
 section("Pacing: one PA, a quiet gap before routine announcements, the server's own recordings first, events further apart")
 local ann = function(from) local out = {} for i = from + 1, #net.sent do if net.sent[i].name == "lc_announce" then out[#out + 1] = net.sent[i].data[1] end end return out end
 _setcvar("lc_announce_quiet", 90)
-_setcvar("lc_announce_admin_share", 0)
+LC.AnnounceForceVoice = "overwatch"
 LC.PAEndsAt, LC.LastPA = CurTime() - 500, CurTime() - 500
 LC.PAMark(10)
 ok(LC.PAQuiet() < 0, "someone speaking: the PA isn't quiet")

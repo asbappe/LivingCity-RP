@@ -95,6 +95,14 @@ function LC.IsAdministrator(ply)
     return IsValid(ply) and ply:IsPlayer() and Faction(ply) == "admin"
 end
 
+-- The player who is the city's Administrator right now, or nil (nobody plays her).
+function LC.HumanAdministrator()
+    for _, p in ipairs(player.GetAll()) do
+        if LC.IsAdministrator(p) then return p end
+    end
+    return nil
+end
+
 ------------------------------------------------------------------------
 -- Records
 ------------------------------------------------------------------------
