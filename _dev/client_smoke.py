@@ -2040,6 +2040,77 @@ return (not ok) and tostring(e) or nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+# the owner's 7 November playtest: the panting on one handle, stopped; the rain 30% quieter; the
+# eyelids under the job's objective; Civil Protection's action music
+err = L.execute(r"""
+local bad = {}
+local made, stopped = 0, 0
+local csWas, pw = CreateSound, player.GetAll
+CreateSound = function(ent, path)
+    made = made + 1
+    local s = { path = path }
+    function s:PlayEx() end
+    function s:Stop() stopped = stopped + 1 end
+    function s:SetSoundLevel() end
+    return s
+end
+player.GetAll = function() return { _me } end
+local ok, e = pcall(function()
+    _me.alive = true
+    _me.nw.lcf_faction = "citizen"
+    _me.nw.lc_winded, _me.nw.lc_stamina = true, 0
+    LCS.BreathTick(100)
+    if made ~= 1 or not LCS.Pants[_me] then bad[#bad + 1] = "out of breath: the panting didn't start on a handle" end
+    LCS.BreathTick(100.5)
+    if made ~= 1 then bad[#bad + 1] = "the panting started twice" end
+    _me.nw.lc_stamina = 40
+    LCS.BreathTick(101)
+    if stopped ~= 1 or LCS.Pants[_me] then bad[#bad + 1] = "breath back: the panting didn't stop" end
+    _me.nw.lc_winded = false LCS.BreathTick(102)
+    _me.nw.lc_winded, _me.nw.lc_stamina = true, 0 LCS.BreathTick(103)
+    _me.alive = false LCS.BreathWatchdog(103.5)
+    if made ~= 2 or stopped ~= 2 then bad[#bad + 1] = "dead: the watchdog didn't stop the panting" end
+    _me.alive = true _me.nw.lc_winded = false LCS.BreathTick(104)
+    _me.nw.lc_winded = true LCS.BreathTick(105)
+    _me.nw.lcf_faction = "cp" LCS.BreathTick(105.5)
+    if made ~= 3 or stopped ~= 3 then bad[#bad + 1] = "a faction change didn't stop the panting" end
+    _me.nw.lcf_faction = "citizen" _me.nw.lc_winded = false LCS.BreathTick(106)
+    _me.nw.lc_winded = true LCS.BreathTick(107) LCS.BreathTick(115.5)
+    if made ~= 4 or stopped ~= 4 then bad[#bad + 1] = "still winded after 8 seconds: the panting didn't stop" end
+    LCS.BreathTick(116)
+    if made ~= 4 then bad[#bad + 1] = "the panting came back on its own" end
+    _me.nw.lc_winded, _me.nw.lc_stamina = false, 100
+    LCS.BreathTick(117)
+    -- the rain
+    local v1, v2, v3 = LC_CL.RainVolume("storm", true), LC_CL.RainVolume("rain", true), LC_CL.RainVolume("rain", false)
+    if math.abs(v1 - 0.42) > 0.001 or math.abs(v2 - 0.28) > 0.001 or math.abs(v3 - 0.084) > 0.001 then bad[#bad + 1] = "the rain isn't 30% quieter" end
+    -- the eyelids: under everything else on the screen
+    if not (hook.t.HUDPaintBackground and hook.t.HUDPaintBackground.LivingCityRestLids) then bad[#bad + 1] = "the eyelids aren't drawn under the rest of the screen" end
+    _me.nw.lc_tired = true
+    if not LC_CL.DrawEyelids(_me, 7 * 0.9) then bad[#bad + 1] = "tired: no eyelids" end
+    for _, h in pairs(hook.t.HUDPaintBackground or {}) do h() end
+    _me.nw.lc_tired = false
+    if LC_CL.DrawEyelids(_me, 7 * 0.9) then bad[#bad + 1] = "not tired, and the eyelids close" end
+    -- Civil Protection in action: their own music
+    _me.nw.lcf_faction = "cp"
+    _me.nw.lc_action_until = CurTime() + 10
+    if LC_CL.MusicMood() ~= "combat" then bad[#bad + 1] = "a unit in action gets no action music: " .. tostring(LC_CL.MusicMood()) end
+    _me.nw.lc_action_until = 0
+    if LC_CL.MusicMood() == "combat" then bad[#bad + 1] = "out of action, still the action music" end
+    _me.nw.lcf_faction = "citizen"
+    _me.nw.lc_action_until = CurTime() + 10
+    if LC_CL.MusicMood() == "combat" then bad[#bad + 1] = "a citizen gets Civil Protection's action music" end
+    _me.nw.lc_action_until = 0
+    for _ = 1, 3 do _advance(1) _runtimers() end
+end)
+CreateSound, player.GetAll = csWas, pw
+if not ok then return "7 November fixes: " .. tostring(e) end
+if #bad > 0 then return "7 November fixes: " .. table.concat(bad, "; ") end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
 # the official folder for recordings and songs is the server's garrysmod/sound/livingcity/ (CORE.md):
 # what players read in the guide and the sound check must send them there, never to the old sound addon
 _guide = open(os.path.join(GMDIR, "gamemode", "cl_init.lua")).read()

@@ -49,7 +49,7 @@
                       territory and heals the Resistance's wounded.
 
       lc_rebel_ops 0/1, lc_rebel_react (0.5), lc_overwatch_drops 0/1, lc_drop_soldiers (4),
-      lc_drop_cooldown (30), lc_informants 0/1, lc_rebel_ops_minutes (30: operations are sporadic)
+      lc_drop_cooldown (60), lc_informants 0/1, lc_rebel_ops_minutes (60: operations are sporadic)
 ]]
 
 if CLIENT then return end
@@ -60,9 +60,9 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOps      = CreateConVar("lc_rebel_ops", "1", FLAGS, "Rebel NPCs run operations: data heists, prison breaks, screen hijacks, ambushes")
 local cvDrops    = CreateConVar("lc_overwatch_drops", "1", FLAGS, "Overwatch sends soldiers down when the city stays in unrest")
 local cvDropN    = CreateConVar("lc_drop_soldiers", "4", FLAGS, "Soldiers in an Overwatch drop")
-local cvDropCool = CreateConVar("lc_drop_cooldown", "30", FLAGS, "Minutes between Overwatch drops")
+local cvDropCool = CreateConVar("lc_drop_cooldown", "60", FLAGS, "Minutes between Overwatch drops")
 local cvInform   = CreateConVar("lc_informants", "1", FLAGS, "Citizens can inform on people")
-local cvOpsGap   = CreateConVar("lc_rebel_ops_minutes", "30", FLAGS, "Least minutes between the Resistance fighters' own operations (sporadic, not a war)")
+local cvOpsGap   = CreateConVar("lc_rebel_ops_minutes", "60", FLAGS, "Least minutes between the Resistance fighters' own operations (sporadic, not a war)")
 local cvReact    = CreateConVar("lc_rebel_react", "0.5", FLAGS, "Chance the Resistance's fighters go for an Overwatch landing or a supply drop (0 to 1)")
 
 local function Pick(t) return t[math.random(#t)] end
@@ -620,7 +620,7 @@ local nextOpAllowed = 0
 local MaybeLaunchOne
 local function MaybeLaunch(now)
     if not cvOps:GetBool() or not LC.Running or LC.Skirmish then return end
-    -- sporadic: one operation in a while (lc_rebel_ops_minutes, 30, give or take), never a running battle
+    -- sporadic: one operation in a while (lc_rebel_ops_minutes, 60, give or take), never a running battle
     if nextOpAllowed == 0 then nextOpAllowed = now + cvOpsGap:GetFloat() * 60 * math.Rand(0.4, 0.8) end
     if now < nextOpAllowed then return end
     local launched = MaybeLaunchOne(now)

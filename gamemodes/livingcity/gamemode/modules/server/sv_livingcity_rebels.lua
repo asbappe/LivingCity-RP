@@ -35,7 +35,7 @@
 
       lc_rebels <n>              fighters kept across the rebel zones (4)
       lc_skirmishes 0/1          raids and sweeps (1)
-      lc_skirmish_interval <m>   average minutes between skirmishes (25: one every 20 to 30)
+      lc_skirmish_interval <m>   average minutes between skirmishes (50: one every 40 to 60)
       lc_rebel_damage <x>        damage multiplier for rebel NPCs shooting players (0.5)
       lc_rebel_warning <s>       seconds of shouting before they open fire on a unit (2)
       lc_skirmish raid|sweep     start one now (admin)
@@ -61,9 +61,9 @@ local cvRebels   = CreateConVar("lc_rebels", "4", FLAGS, "Resistance fighters ke
 local cvSkirm    = CreateConVar("lc_skirmishes", "1", FLAGS, "Rebels sometimes raid the Combine, and the Combine sometimes sweeps rebel territory")
 local cvSweepLead = CreateConVar("lc_sweep_warning", "90", FLAGS, "Seconds Civil Protection and Overwatch players hear (and get a job to join it) before a sweep team moves into rebel territory (0: no warning)")
 local cvRaidLead = CreateConVar("lc_raid_warning", "90", FLAGS, "Seconds the Resistance's own hear (and get a job to back it up) before their fighters hit the Combine (0: no warning)")
-local cvSkirmInt = CreateConVar("lc_skirmish_interval", "25", FLAGS, "Average minutes between skirmishes (each one comes 20% either side of it)")
+local cvSkirmInt = CreateConVar("lc_skirmish_interval", "50", FLAGS, "Average minutes between skirmishes (each one comes 20% either side of it)")
 -- the old default (9) was far too busy: a server still on it moves to the new one
-timer.Simple(5, function() if cvSkirmInt:GetFloat() == 9 then RunConsoleCommand("lc_skirmish_interval", "25") end end)
+timer.Simple(5, function() if cvSkirmInt:GetFloat() == 9 then RunConsoleCommand("lc_skirmish_interval", "50") end end)
 local cvDamage   = CreateConVar("lc_rebel_damage", "0.5", FLAGS, "Damage multiplier for Resistance NPCs shooting players")
 local cvHomeHurt = CreateConVar("lc_rebel_home_hurt", "2", FLAGS, "Damage multiplier for rebels who aren't following a player (2: half as tough; a player's squad isn't affected)")
 local cvWarn     = CreateConVar("lc_rebel_warning", "2", FLAGS, "Seconds the Resistance shouts before opening fire on a Civil Protection unit in their territory")

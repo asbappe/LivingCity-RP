@@ -18,7 +18,7 @@
                          neighbours, and report what isn't right (paid when it holds up)
     (Free rent from 200 is in sv_livingcity_business.lua.)
 
-      lc_loyalty_rewards 0/1 (1), lc_loyalty_praise_minutes (20)
+      lc_loyalty_rewards 0/1 (1), lc_loyalty_praise_minutes (40)
 ]]
 
 if CLIENT then return end
@@ -27,7 +27,7 @@ LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn     = CreateConVar("lc_loyalty_rewards", "1", FLAGS, "Trusted and Exemplary citizens get fewer stops, better pay, a discount, more food, curfew leniency, a slip forgiven and praise")
-local cvPraise = CreateConVar("lc_loyalty_praise_minutes", "20", FLAGS, "Minutes between the Administrator commending an Exemplary citizen by name (0: never)")
+local cvPraise = CreateConVar("lc_loyalty_praise_minutes", "40", FLAGS, "Minutes between the Administrator commending an Exemplary citizen by name (0: never)")
 
 local TRUSTED, EXEMPLARY = 150, 400
 
