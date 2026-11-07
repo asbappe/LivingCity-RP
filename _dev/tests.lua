@@ -13987,11 +13987,15 @@ LC.EndingTake(cit2, "Gone too.")
 ok(cit2.lcEndSpectating and cit2.lcEndWatching ~= adm, "(never the awake)")
 local origin = DREAM + Vector(9000, 0, 6000)
 local mv = { GetOrigin = function(self) return self.o end, SetOrigin = function(self, v) self.o = v end, SetVelocity = function() end, o = origin }
+do local gmWas = GAMEMODE GAMEMODE = nil -- (the file's stand-in gamemode has no movement settings: the full run's, not this unit's)
 hook.Run("SetupMove", cit, mv)
+GAMEMODE = gmWas end
 ok(LC.DreamHolds(dream, mv.o, true) and mv.o.z <= DREAM.z + 2000, "flying free while watching, they can't leave the dream's edge (or fly above it)")
 ok(LC.DreamClamp(dream, DREAM + Vector(100, 0, 50)) == nil, "(inside it, they fly where they like)")
 local mvAwake = { GetOrigin = function(self) return self.o end, SetOrigin = function(self, v) self.o = v end, SetVelocity = function() end, o = origin }
+do local gmWas = GAMEMODE GAMEMODE = nil
 hook.Run("SetupMove", adm, mvAwake)
+GAMEMODE = gmWas end
 ok(mvAwake.o == origin, "(the awake fly as ever)")
 LC.CancelEnding()
 _run(4)
