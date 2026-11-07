@@ -298,6 +298,9 @@ local function DisguiseModel(ply, wear)
         return "models/player/" .. group .. "/" .. base .. ".mdl"
     end
     if wear == "cp" then
+        -- the same Half-Life: Alyx-style metrocop the units wear, when the server has one (sv_livingcity_combinemodels.lua)
+        local hla = LC.MetrocopModel and LC.MetrocopModel()
+        if hla then return hla end
         local female = base and string.find(base, "female", 1, true)
         return female and DISGUISE_MODELS.cp[2] or DISGUISE_MODELS.cp[1]
     end
@@ -1014,13 +1017,35 @@ local function StopPicking(ply, msg)
 end
 
 -- Open for 30 seconds, then shut (and locked again, if it was locked before).
+-- hold: a bypass charge's door is confirmed open and held open for its first HOLD_SECS
+-- (the owner, 7 November: some Combine doors glitch shut again, or a unit works the door from
+-- the other side): every half second it doesn't read as open, it's told to open again.
+local HOLD_SECS = 10
 local OpenPicked
-function LC.OpenPickedDoor(door, relock) return OpenPicked(door, relock) end
-OpenPicked = function(door, relock)
+function LC.OpenPickedDoor(door, relock, hold) return OpenPicked(door, relock, hold) end
+local function HoldOpen(door)
+    door.lcHoldOpenUntil = CurTime() + HOLD_SECS
+    local name = "LivingCityHoldOpen" .. tostring(door:EntIndex())
+    timer.Create(name, 0.5, 0, function()
+        if not IsValid(door) or (door.lcHoldOpenUntil or 0) <= CurTime() then
+            if IsValid(door) then door.lcHoldOpenUntil = nil end
+            timer.Remove(name)
+            return
+        end
+        if (LC.DoorIsOpen and LC.DoorIsOpen(door)) ~= true then
+            door:Fire("Unlock")
+            door:Fire("Open")
+        end
+    end)
+end
+LC.HoldDoorOpen = HoldOpen
+function LC.DoorHeldOpen(door) return IsValid(door) and (door.lcHoldOpenUntil or 0) > CurTime() end
+OpenPicked = function(door, relock, hold)
     door.lcPickedUntil = CurTime() + 30
     door:Fire("Unlock")
     door:Fire("Open", "", 0.1)
     if LC.OpenedDoors then LC.OpenedDoors[door] = nil end
+    if hold then HoldOpen(door) end
     timer.Simple(30, function()
         if not IsValid(door) then return end
         door.lcPickedUntil = nil
@@ -1064,7 +1089,7 @@ local function FinishPick(ply, p)
         end
     end
     p.door:EmitSound("doors/door_latch3.wav", 65)
-    OpenPicked(p.door, p.locked)
+    OpenPicked(p.door, p.locked, it.tool == "bypass")
     ply:ChatPrint(p.id == "door_code" and "You punch in the code. The reader blinks green: they'll have changed it by tomorrow." or (it.tool == "keycard" and "The reader blinks green. The card won't work twice." or "The lock gives."))
     if Watched(ply, 900) then
         LC.ReportCrime(ply, it.tool == "keycard" and "Unauthorized use of a Civil Protection keycard" or "Breaking and entering", 180)
@@ -1318,9 +1343,10 @@ function LC.OpenMarket(ply)
     for _, g in ipairs(LCS.Black) do
         local can, reason = true, nil
         local price = LC.MarketPrice(ply, g)
-        if credits < price then can, reason = false, "Not enough credits" end
+        local short -- (how many credits short: shown beside the name; the owner, 7 November)
+        if credits < price then can, reason, short = false, "Not enough credits", price - credits end
         if can and g.item and not LC.CanCarry(ply, g.item, g.count or 1) then can, reason = false, "Too much to carry" end
-        goods[#goods + 1] = { id = g.id, name = g.name, price = price, desc = g.desc, ok = can, why = reason }
+        goods[#goods + 1] = { id = g.id, name = g.name, price = price, desc = g.desc, ok = can, why = reason, short = short }
     end
     local inv = LC.Inventory(ply)
     local ids = table.GetKeys(inv)
@@ -1513,6 +1539,9 @@ function LC.UndergroundAction(ply, action, id)
             why = "You bend and file the scrap into a lockpick set."
         end
         ok = false
+    elseif action == "callhelp" then -- the call box's Call for help button in your pockets (sv_livingcity_cp.lua)
+        if LC.CPRequest then ok, why = LC.CPRequest(ply, id) else ok, why = false, "Requests are off on this server." end
+        if not ok and why then why = "[Request] " .. why end
     elseif action == "store" then
         ok, why = LC.StashStore(ply, id)
     elseif action == "wstore" then

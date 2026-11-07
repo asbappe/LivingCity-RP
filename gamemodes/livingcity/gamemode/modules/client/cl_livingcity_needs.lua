@@ -533,6 +533,19 @@ local function OpenInventory()
             end
             if giveTo then Btn("Give", "give", "Hand one to the person in front of you") end
             if it.tool then Btn("Use", "use", "Look at a locked door first. Or type !pick, or bind a key to lc_pick.") end
+            if id == "request_device" then -- (the owner, 7 November: a Call for help button here, where the call box is)
+                local b = vgui.Create("DButton", row)
+                b:Dock(RIGHT)
+                b:DockMargin(4, 4, 4, 4)
+                b:SetWide(96)
+                b:SetText("Call for help")
+                b:SetTooltip("Calls Civil Protection to where you are. You'll be asked what's wrong.")
+                b.DoClick = function()
+                    Derma_StringRequest("Call for help", "What's wrong?", "",
+                        function(v) if v and #string.Trim(v) > 0 then Act("callhelp", string.sub(v, 1, 120)) end end)
+                end
+                btnW = btnW + 104
+            end
 
             if it.papers then Btn("Use", "use", "Become someone else. Clears your wanted status if no Civil Protection unit is watching.") end
             if it.forge then Btn("Forge", "use", "Out of sight of any Civil Protection unit.") end
@@ -700,9 +713,33 @@ end)
 
 local shopFrame
 
+-- Buying or selling re-sends the list: the reader stays where they were, not back at the top (the owner, 7 November).
+local function ScrollOf(panel)
+    if not IsValid(panel) or not panel.GetVBar then return nil end
+    local vb = panel:GetVBar()
+    local n = vb and vb.GetScroll and vb:GetScroll() or 0
+    return n > 0 and n or nil
+end
+local function ScrollTo(panel, n)
+    if not n or not IsValid(panel) or not panel.GetVBar then return end
+    timer.Simple(0, function()
+        if not IsValid(panel) then return end
+        panel:InvalidateLayout(true)
+        local vb = panel:GetVBar()
+        if vb and vb.SetScroll then vb:SetScroll(n) end
+    end)
+end
+-- what's wrong with buying it, beside the name (the price always shows on the button)
+local SHORT = Color(230, 110, 90)
+local function ShortNote(g)
+    if g.ok then return nil end
+    return (g.why or "Unavailable") .. (g.short and string.format(", %d short", g.short) or "")
+end
+
 net.Receive("lce_shop", function()
     local t = ReadCompressed()
     if not t or not LCS then return end
+    local keep = IsValid(shopFrame) and ScrollOf(shopFrame.lcScroll) or nil
     if IsValid(shopFrame) then shopFrame:Remove() end
     -- the Civil Protection Commissary's counter, on its own screen (cl_livingcity_screens.lua), if this player has them on
     local scr = t.cp and LC_CL.ScreenFor and LC_CL.ScreenFor({ "lc_cpsupply" })
@@ -712,7 +749,7 @@ net.Receive("lce_shop", function()
         for _, g in ipairs(t.goods or {}) do
             local id = g.id
             rows[#rows + 1] = { kind = "button", enabled = g.ok == true,
-                text = g.name .. (g.ok and ("   " .. g.price .. " credits") or ("   (" .. (g.why or "unavailable") .. ")")),
+                text = g.name .. "   " .. g.price .. " credits" .. (g.ok and "" or ("   (" .. ShortNote(g) .. ")")),
                 fn = function() net.Start("lce_buy") net.WriteString(id) net.SendToServer() end }
         end
         LC_CL.ScreenOpen(scr, "CIVIL PROTECTION COMMISSARY", "the unit counter", rows)
@@ -732,21 +769,28 @@ net.Receive("lce_shop", function()
     local scroll = vgui.Create("DScrollPanel", shopFrame)
     scroll:Dock(FILL)
     scroll:DockMargin(6, 26, 6, 6)
+    shopFrame.lcScroll = scroll
     for _, g in ipairs(t.goods or {}) do
         local row = vgui.Create("DPanel", scroll)
         row:Dock(TOP)
         row:DockMargin(0, 0, 0, 6)
         row:SetTall(54)
+        local note = ShortNote(g)
         row.Paint = function(self, w, h)
             draw.RoundedBox(3, 0, 0, w, h, Color(30, 28, 24, 240))
             draw.SimpleText(g.name, "DermaDefaultBold", 10, 14, g.ok and INK or DIM)
+            if note then
+                surface.SetFont("DermaDefaultBold")
+                local tw = surface.GetTextSize(g.name)
+                draw.SimpleText(note, "DermaDefault", 18 + tw, 14, SHORT)
+            end
             draw.SimpleText(g.desc or "", "DermaDefault", 10, 32, DIM)
         end
         local b = vgui.Create("DButton", row)
         b:Dock(RIGHT)
         b:DockMargin(6, 10, 10, 10)
         b:SetWide(150)
-        b:SetText(g.ok and (g.price .. " credits") or (g.why or "Unavailable"))
+        b:SetText(g.price .. " credits")
         b:SetEnabled(g.ok == true)
         b.DoClick = function()
             net.Start("lce_buy")
@@ -754,6 +798,7 @@ net.Receive("lce_shop", function()
             net.SendToServer()
         end
     end
+    ScrollTo(scroll, keep)
 end)
 
 ------------------------------------------------------------------------
@@ -765,6 +810,7 @@ local marketFrame
 net.Receive("lcu_market", function()
     local t = ReadCompressed()
     if not t then return end
+    local keep = IsValid(marketFrame) and ScrollOf(marketFrame.lcScroll) or nil
     if IsValid(marketFrame) then marketFrame:Remove() end
     marketFrame = vgui.Create("DFrame")
     marketFrame:SetTitle("")
@@ -779,8 +825,10 @@ net.Receive("lcu_market", function()
     local scroll = vgui.Create("DScrollPanel", marketFrame)
     scroll:Dock(FILL)
     scroll:DockMargin(6, 26, 6, 6)
+    marketFrame.lcScroll = scroll
 
-    local function Row(name, desc, buttonText, enabled, onClick, nameCol)
+    -- note: what's wrong with buying it ("Not enough credits, 25 short"), beside the name
+    local function Row(name, desc, buttonText, enabled, onClick, nameCol, note)
         local row = vgui.Create("DPanel", scroll)
         row:Dock(TOP)
         row:DockMargin(0, 0, 0, 6)
@@ -788,6 +836,11 @@ net.Receive("lcu_market", function()
         row.Paint = function(self, w, h)
             draw.RoundedBox(3, 0, 0, w, h, Color(30, 24, 22, 240))
             draw.SimpleText(name, "DermaDefaultBold", 10, desc and 14 or h / 2, nameCol or INK, TEXT_ALIGN_LEFT, desc and TEXT_ALIGN_TOP or TEXT_ALIGN_CENTER)
+            if note then
+                surface.SetFont("DermaDefaultBold")
+                local tw = surface.GetTextSize(name)
+                draw.SimpleText(note, "DermaDefault", 18 + tw, desc and 14 or h / 2, SHORT, TEXT_ALIGN_LEFT, desc and TEXT_ALIGN_TOP or TEXT_ALIGN_CENTER)
+            end
             if desc then draw.SimpleText(desc, "DermaDefault", 10, 32, DIM) end
         end
         local b = vgui.Create("DButton", row)
@@ -818,11 +871,12 @@ net.Receive("lcu_market", function()
     end
 
     for _, g in ipairs(t.goods or {}) do
-        Row(g.name, g.desc, g.ok and (g.price .. " credits") or (g.why or "Unavailable"), g.ok == true, function()
+        -- the price always shows; what's wrong sits beside the name (the owner, 7 November: "idk what the price is")
+        Row(g.name, g.desc, g.price .. " credits", g.ok == true, function()
             net.Start("lcu_buy")
             net.WriteString(g.id)
             net.SendToServer()
-        end, g.ok and INK or DIM)
+        end, g.ok and INK or DIM, ShortNote(g))
     end
 
     if #(t.sell or {}) > 0 then
@@ -850,6 +904,7 @@ net.Receive("lcu_market", function()
             end
         end
     end
+    ScrollTo(scroll, keep)
 end)
 
 ------------------------------------------------------------------------

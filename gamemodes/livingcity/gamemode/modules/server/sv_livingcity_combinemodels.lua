@@ -59,6 +59,7 @@ function LC.CombineKindOf(text)
 end
 
 local found -- { pm = { kind = path }, npc = { kind = path } }
+local metroFound -- a Half-Life: Alyx-style metrocop playermodel's path, false for none, nil for not looked yet
 
 local function Scan()
     found = { pm = {}, npc = {} }
@@ -87,7 +88,7 @@ local function Scan()
     end
     return found
 end
-function LC.RescanCombineModels() found = nil return Scan() end
+function LC.RescanCombineModels() found, metroFound = nil, nil return Scan() end
 
 -- The model for this kind of Combine (nil: Half-Life 2's own).
 function LC.CombineModel(kind, forPlayer)
@@ -98,8 +99,51 @@ function LC.CombineModel(kind, forPlayer)
     return (forPlayer and f.pm or f.npc)[kind]
 end
 
--- A player in an Overwatch rank (the rank says which kind: sh_livingcity_factions.lua)
+-- A Half-Life: Alyx-style metrocop playermodel, when the server has one: Civil Protection's street
+-- ranks wear it, and so does a rebel's Civil Protection disguise (the owner, 7 November: a disguise in
+-- Half-Life 2's old model is a tell). Found by its name or path ("metro", "police" or "mcop" together
+-- with "alyx" or "hla"); lc_pm_metrocop names one instead. Nothing found: Half-Life 2's own, as before.
+local cvMetro = CreateConVar("lc_pm_metrocop", "", FLAGS, "Playermodel for Civil Protection's metrocops and a rebel's Civil Protection disguise (blank: a Half-Life: Alyx-style one found by itself, else Half-Life 2's)")
+function LC.MetrocopKindOf(text)
+    local t = string.lower(text or "")
+    if not (string.find(t, "metro", 1, true) or string.find(t, "police", 1, true) or string.find(t, "mcop", 1, true)) then return nil end
+    if not (string.find(t, "alyx", 1, true) or string.find(t, "hla", 1, true)) then return nil end
+    return "metrocop"
+end
+local function ScanMetrocop()
+    metroFound = false
+    local pms = {}
+    for name, path in pairs(player_manager and player_manager.AllValidModels and player_manager.AllValidModels() or {}) do pms[#pms + 1] = { name, path } end
+    table.sort(pms, function(a, b) return a[2] < b[2] end)
+    for _, e in ipairs(pms) do
+        if LC.MetrocopKindOf(e[1] .. " " .. e[2]) then metroFound = e[2] break end
+    end
+    return metroFound
+end
+-- The metrocop playermodel to use (nil: Half-Life 2's own).
+function LC.MetrocopModel()
+    if not cvOn:GetBool() then return nil end
+    if cvMetro:GetString() ~= "" then return cvMetro:GetString() end
+    if metroFound == nil then ScanMetrocop() end
+    return metroFound or nil
+end
+
 LC.ModelOverrides = LC.ModelOverrides or {}
+-- A Civil Protection player in a street rank (not the Overwatch; a rank with another look of its own keeps it)
+LC.ModelOverrides.metrocop = function(ply)
+    if ply:GetNW2String("lcf_faction", "") ~= "cp" then return nil end
+    if LCF and LCF.IsOverwatch and LCF.IsOverwatch(ply) then return nil end
+    local r = LCF and LCF.RankOf and LCF.RankOf(ply)
+    local models = r and r.models
+    if istable(models) and #models > 0 then
+        local police = false
+        for _, m in ipairs(models) do if string.find(string.lower(m), "police", 1, true) then police = true end end
+        if not police then return nil end
+    end
+    return LC.MetrocopModel()
+end
+
+-- A player in an Overwatch rank (the rank says which kind: sh_livingcity_factions.lua)
 LC.ModelOverrides.combine = function(ply)
     if not (LCF and LCF.IsOverwatch and LCF.IsOverwatch(ply)) then return nil end
     local r = LCF.RankOf(ply)
@@ -120,7 +164,7 @@ local function SendPacks()
     end
 end
 SendPacks()
-hook.Add("InitPostEntity", "LivingCityCombineModels", function() found = nil SendPacks() end)
+hook.Add("InitPostEntity", "LivingCityCombineModels", function() found, metroFound = nil, nil SendPacks() end)
 
 concommand.Add("lc_combine_models_list", function(ply)
     if IsValid(ply) and not ply:IsAdmin() then return end
@@ -129,4 +173,5 @@ concommand.Add("lc_combine_models_list", function(ply)
     for _, k in ipairs(KINDS) do
         out(string.format("%-14s player: %-50s npc: %s", k, LC.CombineModel(k, true) or "(Half-Life 2's)", LC.CombineModel(k, false) or "(Half-Life 2's)"))
     end
+    out(string.format("%-14s player: %s (metrocops and the Civil Protection disguise)", "metrocop", LC.MetrocopModel() or "(Half-Life 2's)"))
 end)

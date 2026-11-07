@@ -121,7 +121,7 @@ LCS.Items = {
                         desc = "Look at a locked door and use it. Not Combine locks" },
     bypass          = { name = "Combine bypass charge", model = "models/props_lab/reciever01b.mdl", tool = "bypass",
                         contraband = true, conceal = 0.35, sell = 25,
-                        desc = "Opens any door once, Combine doors included. Sometimes trips an alarm" },
+                        desc = "One use. Look at a Combine door (or any locked door) up close and use it from your pockets: four seconds, and the lock gives. The door opens for half a minute, and for the first ten seconds it's held open whatever else works it. Now and then it trips an alarm, and a unit who sees you reports you" },
     gas_bomb        = { name = "Poison gas bomb", model = "models/props_junk/popcan01a.mdl", use = "throw", useLabel = "Throw", grenade = "poison",
                         contraband = true, conceal = 0.45, sell = 25,
                         desc = "Combine issue: weedkiller gas in a can, a green cloud that chokes and poisons, worse than chlorine. A unit's mask keeps it out (while its filter's good)" },
@@ -201,9 +201,9 @@ LCS.Items = {
     -- Order (sv_livingcity_cp.lua)
     ------------------------------------------------------------------------
     zipties         = { name = "Cuffs", model = "models/props_lab/box01a.mdl", sell = 1, -- (1, not 4: a unit's own never run out)
-                        desc = "Cuff someone: !cuff, looking at them (hands up, down, stopped, or from behind). Civil Protection units carry their own" },
+                        desc = "Tie someone's hands: up close, looking at them, C > their name > Cuff them. Only someone with their hands up, knocked down, stopped by a unit, or taken from behind. Cuffed, they can't use anything; Drag walks them along, Uncuff lets them go. Units carry their own" },
     request_device  = { name = "Civil Protection call box", model = "models/props_lab/reciever01b.mdl", sell = 6,
-                        desc = "A little handset that calls Civil Protection to where you are, and tells them what's wrong (F1 > Request Civil Protection, or /request <what's wrong>)" },
+                        desc = "A little handset that calls Civil Protection to where you are and tells them what's wrong: Call for help, beside it in your pockets (F2), or C > Getting by > Request Civil Protection" },
     ------------------------------------------------------------------------
     -- Carrying and keeping things (sv_livingcity_storage.lua)
     --   bag      extra kilograms and large things you can carry while you have it
@@ -398,7 +398,7 @@ LCS.Black = {
     { id = "papers_blank", item = "papers_blank", price = 30, desc = "For people with a steady hand." },
     { id = "ration_forged", item = "ration_forged", price = 10, desc = "One more meal than the Union thinks you deserve." },
     { id = "lockpick", item = "lockpick", price = 35, desc = "Picks, tension wrench, patience not included." },
-    { id = "bypass", item = "bypass", price = 70, desc = "One use. Don't ask where it came from." },
+    { id = "bypass", item = "bypass", price = 70, desc = "One use: opens a Combine door (or any locked door), holds it open ten seconds, open for thirty. Can trip an alarm. Don't ask where it came from." },
     { id = "civvies", item = "civvies", price = 15, desc = "Clean, plain, forgettable." },
     { id = "uniform_cp", item = "uniform_cp", price = 160, desc = "Off a Civil Protection unit who won't be needing it." },
     { id = "tablets", item = "tablets", price = 20, desc = "No questions about why you need them." },
@@ -408,7 +408,7 @@ LCS.Black = {
     { id = "chemicals", item = "chemicals", price = 6, desc = "Bought by the bottle. Nobody cleans that much." },
     { id = "seeds", item = "seeds", price = 12, desc = "Tomatoes, beans, maybe. Plant them in rebel territory." },
     { id = "canned_food", item = "canned_food", price = 14, desc = "Pre-war tins. Nobody asks where they come from." },
-    { id = "zipties", item = "zipties", count = 2, name = "Cuffs (2)", price = 20, desc = "For a Civil Protection unit who needs to stay put." },
+    { id = "zipties", item = "zipties", count = 2, name = "Cuffs (2)", price = 20, desc = "Two pairs. Tie anyone's hands, a Civil Protection unit's included: up close, looking at them, C > their name > Cuff them. They must have their hands up, be down, be stopped by a unit, or you come from behind. Cuffed, they can't use anything, and Drag walks them along." },
     { id = "satchel", item = "satchel", price = 30, desc = "No questions about what goes in it." },
     { id = "spraypaint", item = "spraypaint", count = 3, name = "Spray cans (3)", price = 25, desc = "Let the city know we're still here." },
     -- what the Resistance's lab makes (sv_livingcity_lab.lua); everyone else pays the dealer for it
@@ -490,7 +490,7 @@ LCS.Lab = {
     { id = "forged_batch", out = "ration_forged", count = 5, needs = { paper = 3, chemicals = 1 }, secs = 12,
       desc = "Five forged ration cards: the dealer buys them, the dispensers take them. The more turn up, the hotter the search for the forger" },
     { id = "smokebomb", out = "smokebomb", needs = { chemicals = 2, can_empty = 1 }, secs = 5, desc = "Thick white smoke" },
-    { id = "bypass", out = "bypass", needs = { gun_parts = 1, chemicals = 2, scrap = 2 }, secs = 10, desc = "Opens any door once" },
+    { id = "bypass", out = "bypass", needs = { gun_parts = 1, chemicals = 2, scrap = 2 }, secs = 10, desc = "Opens any door once, Combine doors too, and holds it open ten seconds" },
     { id = "firebomb", out = "firebomb", needs = { weedkiller = 2, bottle_empty = 1, cloth = 1 }, secs = 8, desc = "Weedkiller, cooked down, in a bottle with a rag: fire, which armour doesn't keep out" },
     { id = "chemicals_weedkiller", out = "chemicals", needs = { weedkiller = 2 }, secs = 6, desc = "Two canisters of weedkiller, cooked down into chemicals" },
     { id = "radio_transmitter", out = "radio_transmitter", needs = { radio_tuned = 1, scrap = 2 }, secs = 12, desc = "A Freq 7 radio rebuilt to send as well as listen" },

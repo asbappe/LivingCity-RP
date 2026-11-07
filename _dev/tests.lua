@@ -1619,6 +1619,13 @@ LC.GiveItem(burglar, "bypass")
 LC.InvAction(burglar, "use", "bypass")
 forceRandom(0.99, function() _run(5) end)
 ok(LC.DoorPicked(cdoor) and not LC.HasItem(burglar, "bypass"), "a bypass charge opens it, once")
+cdoor.isOpen = false -- (a glitchy Combine door, or a unit on the other side, shuts it again)
+_run(1)
+ok(cdoor.isOpen == true and LC.DoorHeldOpen(cdoor), "held open: shut again in its first ten seconds, it's told to open again (the owner, 7 November)")
+_run(10)
+cdoor.isOpen = false
+_run(1)
+ok(cdoor.isOpen == false and not LC.DoorHeldOpen(cdoor) and LC.DoorPicked(cdoor), "after ten seconds the hold ends (the door is yours for thirty, as before)")
 local udoor = ents.Create("func_door")
 udoor.mapid = 603
 udoor:SetPos(FAR + Vector(60, 0, 0))
@@ -1663,6 +1670,21 @@ buyer2:SetPos(FAR)
 ok(not LC.MarketAccess(buyer2), "no dealer and no rebel territory nearby, no black market")
 buyer2:SetPos(Vector(-6000, -6000, 0))
 ok(LC.MarketAccess(buyer2) and LC.OpenMarket(buyer2) and _lastnet("lcu_market") ~= nil, "on maps without a dealer, rebel territory has one")
+do -- (the owner, 7 November: "it just says I don't have enough credits", with no price)
+    local sentMarket
+    local realSendM = LC.SendCompressed
+    LC.SendCompressed = function(msg, tbl, rec) if msg == "lcu_market" then sentMarket = tbl end return realSendM(msg, tbl, rec) end
+    local poor = newPlayer("PoorBuyer", "citizen")
+    poor:SetPos(Vector(-6000, -6000, 0))
+    LC.AddCredits(poor, 10 - LC.Credits(poor))
+    LC.OpenMarket(poor)
+    LC.SendCompressed = realSendM
+    local g
+    for _, x in ipairs(sentMarket and sentMarket.goods or {}) do if x.id == "lockpick" then g = x end end
+    ok(g and g.ok == false and g.price == 35 and g.short == 25 and g.why == "Not enough credits",
+        "a good you can't afford still carries its price, and how many credits short you are", g and (tostring(g.price) .. " " .. tostring(g.short)))
+    poor:SetPos(FAR)
+end
 local c1 = LC.Credits(buyer2)
 ok(LC.BlackBuy(buyer2, "lockpick") and LC.HasItem(buyer2, "lockpick") and LC.Credits(buyer2) == c1 - 35, "buying a lockpick")
 ok(LC.BlackBuy(buyer2, "crowbar") and buyer2:HasWeapon("weapon_crowbar"), "and a crowbar")
@@ -7930,6 +7952,34 @@ ok(found.civvies and found.cwu_overalls, "clothes turn up in bins")
 local rfound = {}
 for _ = 1, 3000 do local id = LC.RollScavenge(true) if id then rfound[id] = true end end
 ok(rfound.rebel_gear, "and Resistance gear in rebel territory's")
+do -- (the owner, 7 November: "pockets full" after dropping three or four small things: it was the large-things limit)
+    local mule = newPlayer("FullPockets", "resistance", nil, 500)
+    mule:SetPos(Vector(-47000, 51000, 0))
+    LC.GiveItem(mule, "gun_shotgun")
+    local okB = LC.CanCarry(mule, "uniform_cp", 1)
+    local full = LC.CarryWhy(mule, "uniform_cp", 1)
+    ok(not okB and full ~= nil and string.find(full, "1 large thing,", 1, true) ~= nil and string.find(full, "can manage 1", 1, true) ~= nil,
+        "the reason says which limit it is (large things), how many you carry, and what to do", tostring(full))
+    ok(LC.CarryWhy(mule, "ration", 1) == nil, "(nothing to say when it fits)")
+    mule:SetPos(FAR)
+end
+do -- (the owner, 7 November: the Civil Protection disguise in the same metrocop model the units wear)
+    ok(LC.MetrocopKindOf("hla_metrocop models/player/hla/metrocop.mdl") == "metrocop" and LC.MetrocopKindOf("Alyx Police models/player/mcop/police_pm.mdl") == "metrocop"
+        and not LC.MetrocopKindOf("police models/player/police.mdl") and not LC.MetrocopKindOf("alyx models/player/alyx.mdl"),
+        "a Half-Life: Alyx-style metrocop playermodel is known by its name or path; Half-Life 2's police and Alyx herself are not")
+    RunConsoleCommand("lc_pm_metrocop", "models/player/hla/metrocop.mdl")
+    local spy = newPlayer("SpyFighter", "resistance", nil, 500)
+    spy:SetNW2String("lc_model", "models/player/group03/female_01.mdl")
+    spy:SetPos(Vector(-47000, 53000, 0))
+    LC.GiveItem(spy, "uniform_cp")
+    ok(LC.Wear(spy, "uniform_cp") and spy:GetModel() == "models/player/hla/metrocop.mdl", "a rebel in a Civil Protection uniform wears it too", spy:GetModel())
+    local cop = newPlayer("StreetCop", "cp")
+    ok(LC.ModelOverrides.metrocop(cop) == "models/player/hla/metrocop.mdl", "and so does a unit in a street rank")
+    RunConsoleCommand("lc_pm_metrocop", "")
+    LC.TakeOff(spy, true)
+    spy:SetPos(FAR)
+    cop:SetPos(FAR)
+end
 for _, p in ipairs({ fighter, respawned, mole, cit }) do LC.TakeOff(p, true) p:SetPos(FAR) end
 end
 DisguiseTests()

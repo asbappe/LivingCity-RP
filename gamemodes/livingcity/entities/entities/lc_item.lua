@@ -44,7 +44,7 @@ if SERVER then
             self:Remove()
         else
             self.lcTaken = nil
-            activator:ChatPrint("Your pockets are full.")
+            activator:ChatPrint(LC.CarryWhy and LC.CarryWhy(activator, id, 1) or "Your pockets are full.")
         end
     end
 end
