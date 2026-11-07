@@ -499,7 +499,9 @@ local function DutyTick(now)
                 want, st.lcOffSince = true, nil
             else
                 st.lcOffSince = st.lcOffSince or now
-                local home = st.state == "abed" or st.leaving or LC.Event == "curfew" or LC.Event == "lockdown" or (LC.Bedtime and LC.Bedtime())
+                -- (only off the shift for good: in bed or leaving. Curfew and bedtime used to undress a worker
+                -- between two bins, so the sanitation worker flipped models after every one: the owner, 7 November)
+                local home = st.state == "abed" or st.leaving
                 want = st.lcDuty == true and not home and now - st.lcOffSince < OFF_GRACE
             end
             if want ~= (st.lcDuty == true) then

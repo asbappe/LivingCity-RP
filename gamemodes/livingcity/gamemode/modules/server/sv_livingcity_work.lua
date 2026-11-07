@@ -24,7 +24,8 @@ local Q = LC.QB
 if not Q or not LCJ then return end
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvCooldown = CreateConVar("lc_job_cooldown", "120", FLAGS, "Seconds between changing jobs")
+-- (the owner, 7 November: "a person can't switch union jobs more than once every 15 minutes"; was 120)
+local cvCooldown = CreateConVar("lc_job_cooldown", "900", FLAGS, "Seconds between changing jobs")
 local cvShiftCards = CreateConVar("lc_shift_ration_cards", "1", FLAGS, "Ration cards a citizen earns for each Union shift they finish (the only way to get one; each ration takes one)")
 
 local Goto, Deliver, Hold, Count, Choice = Q.Goto, Q.Deliver, Q.Hold, Q.Count, Q.Choice
@@ -70,7 +71,9 @@ function LC.SetJob(ply, id, force)
             return false, "Only registered citizens can take Union jobs. Register at Civil Intake first, then pick a job."
         end
         if (ply.lcjNext or 0) > CurTime() then
-            return false, "You changed jobs recently. You can change again in " .. math.ceil(ply.lcjNext - CurTime()) .. " seconds."
+            local left = math.ceil(ply.lcjNext - CurTime())
+            local when = left >= 120 and (math.ceil(left / 60) .. " minutes") or (left .. " seconds")
+            return false, "You changed jobs recently. The Union lets you change again in " .. when .. "."
         end
     end
     -- the old job's tools go back too (a medic who left the clinic kept the medkit), unless the new job uses them
@@ -137,20 +140,78 @@ hook.Add("PlayerSpawn", "LivingCityAssignWork", function(ply) timer.Simple(5, fu
 
 net.Receive("lcj_set", function(_, ply)
     local ok, why = LC.SetJob(ply, net.ReadString())
-    if not ok and why then ply:ChatPrint("[Union] " .. why) end
+    if not ok and why then
+        ply:ChatPrint("[Union] " .. why)
+        if LC.Notice then LC.Notice(ply, "warn", "Union", why, 8) end
+    end
     if LC.SendBoard then LC.SendBoard(ply) end
 end)
 
+-- The Union takes its job back, tools and all (the owner, 7 November): a Civil Protection
+-- recruit ("that needs to be taken away when I become a CP recruit") and an anticitizen, who
+-- keeps the weedkiller ("I want to keep my weedkiller for this specific situation"). keep:
+-- weapon classes and item ids that stay.
+function LC.RevokeUnionJob(ply, why, keep)
+    local job = LC.Job(ply)
+    if not job then return false end
+    keep = keep or {}
+    local name = job.name
+    LC.SetJob(ply, "", true) -- (the job's weapons go with it, the shift and its board posting too)
+    for _, cls in ipairs(job.tools or {}) do
+        if keep[cls] and not ply:HasWeapon(cls) then ply:Give(cls) end
+    end
+    if table.HasValue(job.tools or {}, "weapon_lc_sprayer") and not keep.weedkiller and LC.HasItem(ply, "weedkiller") then
+        local have = LC.ItemsWhere(ply, function(it) return it == LCS.Items.weedkiller end)
+        LC.TakeItem(ply, "weedkiller", have.weedkiller or 1)
+    end
+    ply.lcjNext = 0 -- (not a change of their choosing)
+    if why then
+        ply:ChatPrint("[Union] " .. why)
+        if LC.Notice then LC.Notice(ply, "warn", "Union job revoked: " .. name, why, 10) end
+    end
+    hook.Run("LivingCityJobRevoked", ply, job.id)
+    return true
+end
+
+-- Still the Union's to employ? A unit isn't (the recruit's hoover and weedkiller go back); someone who
+-- has just become an anticitizen isn't (their job goes, the weedkiller stays).
+local function CheckUnionJob(ply)
+    if not IsValid(ply) then return end
+    local hunted = LC.PlayerIsHunted and LC.PlayerIsHunted(ply) or false
+    local job = LC.Job(ply)
+    if job then
+        local f = ply:GetNW2String("lcf_faction", "")
+        if f == "cp" then
+            LC.RevokeUnionJob(ply, "You're a Civil Protection unit now. The Union has taken your job (" .. job.name .. ") and its kit back.")
+        elseif hunted and ply.lcWasHunted == false then
+            LC.RevokeUnionJob(ply, "An anticitizen holds no Union post: your job (" .. job.name .. ") is gone. You kept your weedkiller.",
+                { weedkiller = true, weapon_lc_sprayer = true })
+        end
+    end
+    ply.lcWasHunted = hunted
+end
+LC.CheckUnionJob = CheckUnionJob
+
 hook.Add("PlayerInitialSpawn", "LivingCityJobs", function(ply)
     timer.Simple(1, function()
-        if IsValid(ply) then ply:SetNW2String("lcj_job", ply:GetPData("lcj_job", "")) end
+        if not IsValid(ply) then return end
+        ply:SetNW2String("lcj_job", ply:GetPData("lcj_job", ""))
+        -- (the kit, back after a rejoin or a reboot: the spawn's own issue ran before the job was known)
+        CheckUnionJob(ply)
+        GiveTools(ply)
     end)
+end)
+
+-- Out of prison with the job still theirs: the Union's tools again (the release strips every weapon).
+hook.Add("LivingCityReleased", "LivingCityJobs", function(ply)
+    timer.Simple(0.2, function() if IsValid(ply) and ply:Alive() then GiveTools(ply) end end)
 end)
 
 -- A post the Union no longer gives players (sh_livingcity_jobs.lua: npcOnly, or gameOnly with lc_jobgames 0):
 -- whoever held it is told, and picks another.
 timer.Create("LivingCityClosedJobs", 10, 0, function()
     for _, ply in ipairs(player.GetAll()) do
+        CheckUnionJob(ply)
         local job = LC.Job(ply)
         if job and LCJ.Closed(job) then
             ply:SetNW2String("lcj_job", "")
@@ -165,7 +226,7 @@ timer.Create("LivingCityClosedJobs", 10, 0, function()
 end)
 
 hook.Add("PlayerSpawn", "LivingCityJobs", function(ply)
-    timer.Simple(0.5, function() if IsValid(ply) then GiveTools(ply) end end)
+    timer.Simple(0.5, function() if IsValid(ply) then CheckUnionJob(ply) GiveTools(ply) end end)
 end)
 
 ------------------------------------------------------------------------
