@@ -99,6 +99,7 @@ local GUIDE = {
         "Top left: your credits and Civil Standing, and under them your loyalty, sympathy and corruption (what your choices in jobs and stories have made of you; they open up choices later).",
         "Combine-only areas (the Nexus, offices, armory, prison) are off limits. The doors near the cells are locked.",
         "Raids: Civil Protection units search a housing block, and any contraband they find (guns, TVs, radios...) is traced back to whoever owned it.",
+        "Confiscated contraband is burned in public: after a sweep or a raid, or once enough has built up, units carry it to the square, pile it up and set it alight while the citizens watch (units see what's waiting in Unit tools, F2). Before it catches, anyone who isn't a unit can press E on something in the pile to take it back, but a unit who sees you makes you wanted.",
         "When you're wanted, every Civil Protection unit nearby comes after you. If they catch you, you're arrested.",
         "Kill Civil Protection units and the response escalates: armed units, then Overwatch squads. Stay out of sight to let it calm down.",
         "One accidental kill gets a light response; a second one soon after gets the full response. Resistance members lose a rank for every civilian they kill.",

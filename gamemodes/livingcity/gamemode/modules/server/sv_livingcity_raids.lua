@@ -40,6 +40,7 @@ local LEGAL_WEAPONS = { weapon_fists = true, weapon_lc_hands = true, weapon_phys
 -- A short name if the thing is contraband, else nil.
 function LC.ContrabandOf(ent)
     if not IsValid(ent) then return nil end
+    if ent.lcEvidence then return nil end -- (the evidence pile, waiting for the fire: sv_livingcity_evidence.lua)
     local cls = ent:GetClass()
     if cls == "lc_item" then
         local it = LCS and LCS.Items[ent:GetNW2String("lc_item", "")]
@@ -208,6 +209,7 @@ end
 
 local function Confiscate(ent)
     if not IsValid(ent) then return end
+    if LC.EvidenceFromEntity then LC.EvidenceFromEntity(ent, "raid") end -- (into the evidence stock, to be burned: sv_livingcity_evidence.lua)
     if sound and sound.Play then sound.Play("physics/cardboard/cardboard_box_break1.wav", ent:GetPos(), 60) end
     ent:Remove()
 end
@@ -261,6 +263,7 @@ local function Finish(raid)
                     if LCS.Items[id] and LCS.Items[id].contraband then
                         raid.found[ply:SteamID64()] = (raid.found[ply:SteamID64()] or 0) + n
                         raid.names[#raid.names + 1] = LCS.Items[id].name .. (n > 1 and (" x" .. n) or "") .. " (stash)"
+                        if LC.EvidenceAdd then LC.EvidenceAdd(id, n, "raid") end
                         st[id] = nil
                     end
                 end

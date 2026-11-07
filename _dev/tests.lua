@@ -47,6 +47,7 @@ _setcvar("lc_city_effects", 0) -- and the city's mood changing prices and events
 _setcvar("lc_dressing", 0)
 _realHintScan = LC.HintScan -- tips: looked at on their own, later (the look-around is slow against the fake entity list)
 LC.HintScan = function() end
+LC.EvidenceAuto = false -- (confiscated contraband burned by itself: tested on its own, in EvidenceTests)
 
 ----------------------------------------------------------------------
 section("Load")
@@ -18097,6 +18098,206 @@ function ManpowerTests()
     _run(1)
 end
 ManpowerTests()
+
+
+
+-- The owner, 7 November: what units confiscate is burned in public, in the square, the citizens made to
+-- watch, the Resistance with a chance to snatch some back before it catches (sv_livingcity_evidence.lua).
+function EvidenceTests()
+    local FAR = Vector(29000, -29000, 0)
+    local wasRunning, wasAuto, wasBudget = LC.Running, LC.EvidenceAuto, GetConVar("lc_npc_budget"):GetInt()
+    LC.Running, LC.EvidenceAuto = true, false
+    _setcvar("lc_npc_budget", 500)
+    if LC.EvidenceBurn then LC.EvidenceFinish(LC.EvidenceBurn, true) end
+    LC.EvidenceStock, LC.EvidenceAfterAt, LC.EvidenceNextAuto = {}, nil, 0
+    local realEntsOf, realRadio, realSeen, realSquad = LC.EntsOf, LC.RadioNotice, LC.SeenBySecurity, LC.AlarmSquadSpot
+    local speakers = {}
+    LC.EntsOf = function(cls)
+        if cls == "lc_loudspeaker" then return speakers end
+        if cls == "lc_screen" or cls == "lc_dispenser" then return {} end
+        return realEntsOf(cls)
+    end
+    local radio = {}
+    LC.RadioNotice = function(band, text, ...) radio[#radio + 1] = band .. ": " .. tostring(text) if realRadio then return realRadio(band, text, ...) end end
+    local function Find(id)
+        for _, e in ipairs(LC.EvidenceStock) do if e.id == id or e.name == id then return e end end
+    end
+    local function Work(npc)
+        local st = IsValid(npc) and LC.NPCs[npc]
+        return st and st.npcWork and st.npcWork.id or nil
+    end
+
+    section("Evidence: what units confiscate goes into the evidence stock")
+    local cit = newPlayer("EvCit", "citizen")
+    cit:SetPos(FAR + Vector(0, 2000, 0))
+    LC.GiveItem(cit, "radio", 2)
+    hook.Run("LivingCityIncarcerated", cit)
+    local r = Find("radio")
+    ok(r and r.n == 2 and r.model == LCS.Items.radio.model, "arrest: both radios taken in processing are in the stock, as themselves", r and r.n)
+    hook.Run("LivingCitySearched", nil, cit, { { id = "radio", n = 1 } }, { "weapon_pistol" })
+    ok(Find("radio").n == 3 and Find("w:weapon_pistol") and Find("w:weapon_pistol").model == "models/weapons/w_pistol.mdl",
+        "a search: the same kind adds up, and a gun goes in with its own model")
+    LC.EvidenceAdd(nil, 1, "search", "a handful of pistol rounds")
+    LC.EvidenceAdd(nil, 1, "search", "a lambda armband")
+    ok(Find("ammo_pistol") and Find("a lambda armband") and Find("a lambda armband").id == nil,
+        "what an NPC citizen had: the item it is where there's one, else just what it was")
+    local item = ents.Create("lc_item")
+    item:SetNW2String("lc_item", "radio_transmitter")
+    LC.EvidenceFromEntity(item, "raid")
+    hook.Run("LivingCityStashRaided", cit, { { id = "papers_forged", n = 1 } })
+    ok(Find("radio_transmitter") and Find("papers_forged"), "a raid: what it finds lying about, and a stash it turns out")
+    item:Remove()
+    ok(LC.EvidenceTotal() == 8 and GetGlobal2Int("lc_evidence_n", 0) == 8 and string.find(GetGlobal2String("lc_evidence_list", ""), "Old radio x3", 1, true),
+        "the units' menu sees how many and what (Unit tools, F2)", LC.EvidenceTotal())
+    ok(string.find(LC.EvidenceStatus(), "In the evidence room: 8 items", 1, true), "and the admin tools say it in a line", LC.EvidenceStatus())
+
+    section("Evidence: where it's burned, the square, or nowhere")
+    local realPoints = LC.Points
+    LC.Points = {}
+    local okNo, whyNo = LC.EvidenceBurnNow(nil)
+    ok(not okNo and string.find(whyNo or "", "Nowhere to burn it", 1, true) and LC.EvidenceTotal() == 8,
+        "nothing placed anywhere: nothing burned, the stock kept, and it says what to place", whyNo)
+    LC.Points = { { kind = "idle", pos = FAR + Vector(-400, 0, 0), yaw = 0 } }
+    local p0 = LC.EvidenceSpot()
+    ok(p0 and p0:Distance(FAR + Vector(-400, 0, 0)) < 1, "no loudspeaker: a place people stand about will do")
+    LC.Points = realPoints
+    local spk = ents.Create("lc_loudspeaker")
+    spk:SetPos(FAR)
+    spk:SetAngles(Angle(0, 0, 0))
+    speakers[1] = spk
+    local pile = LC.EvidenceSpot()
+    ok(pile and pile:Distance(FAR + Vector(160, 0, 0)) < 1, "a loudspeaker (the PA): the pile goes in front of it", tostring(pile))
+
+    section("Evidence: units carry it to the square, the PA calls, the citizens gather, it burns, it's gone")
+    local cop = LC.SpawnCop(pile + Vector(300, 0, 0))
+    local cits = {}
+    for i = 1, 3 do cits[i] = LC.SpawnCitizen(pile + Vector(-200 - 60 * i, 200, 0)) end
+    local res = newPlayer("EvThief", "citizen") -- (anyone but a unit; a hunted rebel standing there would only draw the units)
+    local unit = newPlayer("EvUnit", "cp")
+    local adm = newPlayer("EvAdmin", "citizen")
+    adm.admin = true
+    res:SetPos(FAR + Vector(0, 4000, 0))
+    unit:SetPos(pile + Vector(120, 300, 0))
+    adm:SetPos(FAR + Vector(0, -3000, 0))
+    local okGo, msg = LC.EvidenceBurnNow(adm)
+    local b = LC.EvidenceBurn
+    ok(okGo and b and b.phase == "carry" and LC.EvidenceTotal() == 0, "burn it now (an admin): the stock goes to the fire", msg)
+    ok(Work(cop) == "evidence_carry" and IsValid(LC.NPCs[cop].carry), "a unit nearby carries it there, a box in his hands", Work(cop))
+    ok(not LC.EvidenceBurnNow(adm), "and only one burn at a time")
+    _run(8)
+    ok(b.carriers[1] and b.carriers[1].delivered and #b.props > 0 and b.phase == "pile", "he gets there and it's piled up, each thing as itself", b.phase .. " " .. #b.props)
+    ok(Work(cop) == "evidence_carry" and not IsValid(LC.NPCs[cop].carry), "his hands empty, he stays to guard it")
+    local pa = _lastnet("lc_announce")
+    ok(pa and pa.data[1] == "npc/overwatch/cityvoice/f_trainstation_assemble_spkr.wav", "the PA calls the citizens to assemble", pa and pa.data[1])
+    ok(has(cit.chat, "being burned"), "and says what's being burned, and where")
+    ok(has(radio, "resistance: They've piled up"), "Freq 7 hears where it is")
+    local watching = 0
+    for _, c in ipairs(cits) do if Work(c) == "evidence_watch" then watching = watching + 1 end end
+    ok(watching == 3, "the citizens nearby come to watch", watching)
+    local conf = 0
+    for _, e in ipairs(b.props) do if LC.ContrabandOf(e) then conf = conf + 1 end end
+    ok(conf == 0, "a block raid passing never takes the pile for contraband lying about")
+
+    section("Evidence: before it catches, anyone but a unit can snatch something back; a unit seeing it makes them wanted")
+    local function PropOf(id) for _, e in ipairs(b.props) do if IsValid(e) and e.lcEvidence.entry.id == id then return e end end end
+    local rp = PropOf("radio")
+    ok(IsValid(rp) and rp:GetModel() == LCS.Items.radio.model, "the radios lie in the pile, as radios")
+    if not IsValid(rp) then return end
+    res:SetPos(pile + Vector(80, 0, 0))
+    local okU = LC.EvidenceSnatch(unit, rp)
+    ok(not okU and IsValid(rp), "a unit can't take it out of the pile")
+    local ret = hook.Run("PlayerUse", res, rp)
+    ok(ret == false and LC.HasItem(res, "radio") and not IsValid(rp), "E on the radios: back in the citizen's pockets, gone from the pile")
+    ok(LC.PlayerIsWanted(res), "a unit was watching: wanted")
+    LC.SeenBySecurity = function() return false end
+    unit:SetPos(pile + Vector(5000, 0, 0))
+    res.lcEvidenceUseAt = 0
+    local okS, msgS = LC.EvidenceSnatch(res, PropOf("w:weapon_pistol"))
+    ok(okS and string.find(msgS or "", "Nobody saw", 1, true), "nobody looking: away with the pistol", msgS)
+    local okL = LC.EvidenceSnatch(res, PropOf(nil))
+    ok(not okL, "an armband isn't worth saving")
+    LC.SeenBySecurity = realSeen
+
+    section("Evidence: it catches, burns, and everything is cleaned up")
+    local fires = #ents.FindByClass("env_fire")
+    _run(21)
+    ok(b.phase == "burning" and #ents.FindByClass("env_fire") == fires + 1, "it catches: fire (and smoke)", b.phase)
+    local okLate, why = LC.EvidenceSnatch(res, PropOf("ammo_pistol"))
+    ok(not okLate and string.find(why or "", "Too late", 1, true), "too late to snatch anything now", why)
+    ok(GetGlobal2String("lc_evidence_burn", "") ~= "", "the units' menu shows it burning")
+    local props = {}
+    for _, e in ipairs(b.props) do props[#props + 1] = e end
+    _run(51)
+    local still = 0
+    for _, e in ipairs(props) do if IsValid(e) then still = still + 1 end end
+    ok(LC.EvidenceBurn == nil and still == 0 and #ents.FindByClass("env_fire") == fires, "burned out: the pile and the fire are gone", still)
+    ok(Work(cop) == nil and Work(cits[1]) == nil, "and everyone goes back to what they were doing")
+    ok(LC.EvidenceTotal() == 0 and GetGlobal2String("lc_evidence_burn", "x") == "", "nothing left in the evidence room")
+
+    section("Evidence: never during an ending or a dream; called off, it all goes back in the stock")
+    LC.EvidenceAdd("radio", 4, "search")
+    local realBusy = LC.EndingBusy
+    LC.EndingBusy = function() return true end
+    ok(not LC.EvidenceBurnNow(adm), "an ending running: not even an admin starts one")
+    LC.EndingBusy = realBusy
+    ok(LC.EvidenceBurnNow(adm), "afterwards it starts")
+    LC.EndingBusy = function() return true end
+    _run(2)
+    LC.EndingBusy = realBusy
+    ok(LC.EvidenceBurn == nil and LC.EvidenceTotal() == 4, "an ending starting mid-burn calls it off, and the stock is back", LC.EvidenceTotal())
+    local wasEvent = LC.Event
+    LC.Event = "curfew"
+    ok(not LC.EvidenceBurnNow(adm), "nor in a curfew (the citizens are indoors)")
+    LC.Event = wasEvent
+
+    section("Evidence: by itself, after a sweep, or once enough has built up")
+    LC.EvidenceAuto = true
+    LC.EvidenceTick(CurTime())
+    ok(LC.EvidenceBurn == nil, "four in stock and no sweep: it waits")
+    hook.Run("LivingCityEventEnded", "sweep")
+    _run(10)
+    ok(LC.EvidenceBurn == nil, "a sweep just ended: not straight away")
+    _run(20)
+    ok(LC.EvidenceBurn ~= nil, "a little after the sweep, it's burned")
+    if LC.EvidenceBurn then LC.EvidenceFinish(LC.EvidenceBurn, false) end
+    LC.EvidenceAdd("radio", 9, "search")
+    LC.EvidenceTick(CurTime())
+    ok(LC.EvidenceBurn == nil, "nine more right after: not two burns in ten minutes")
+    LC.EvidenceNextAuto = 0
+    LC.EvidenceTick(CurTime())
+    ok(LC.EvidenceBurn ~= nil, "eight or more, and it's been a while: burned")
+    if LC.EvidenceBurn then LC.EvidenceFinish(LC.EvidenceBurn, true) end
+    LC.EvidenceAuto = false
+
+    section("Evidence: with no unit free nearby, two come from out of sight, only under lc_npc_budget")
+    for _, c in ipairs(cits) do if IsValid(c) then c:Remove() end end
+    if IsValid(cop) then cop:Remove() end
+    LC.AlarmSquadSpot = function(p) return p + Vector(900, 0, 0) end
+    _setcvar("lc_npc_budget", LC.CityNPCCount and LC.CityNPCCount() or table.Count(LC.NPCs))
+    LC.EvidenceBurnNow(adm)
+    ok(LC.EvidenceBurn and #LC.EvidenceBurn.carriers == 0, "the cap is full: nobody spawned, it's piled up anyway")
+    if LC.EvidenceBurn then LC.EvidenceFinish(LC.EvidenceBurn, true) end
+    _setcvar("lc_npc_budget", 500)
+    LC.EvidenceBurnNow(adm)
+    local sp = LC.EvidenceBurn
+    local counted = 0
+    for npc in pairs(sp and sp.spawned or {}) do if LC.NPCs[npc] and LC.NPCs[npc].eventNPC then counted = counted + 1 end end
+    ok(sp and #sp.carriers == 2 and counted == 2, "room under the cap: two units, counted against it", sp and #sp.carriers)
+    if sp then LC.EvidenceFinish(sp, false) end
+    _run(121)
+    local gone = true
+    for npc in pairs(sp and sp.spawned or {}) do if IsValid(npc) then gone = false end end
+    ok(gone, "and they go again afterwards")
+
+    -- put everything back
+    for _, e in ipairs({ spk, res, unit, adm, cit }) do if IsValid(e) then e:Remove() end end
+    LC.EntsOf, LC.RadioNotice, LC.SeenBySecurity, LC.AlarmSquadSpot = realEntsOf, realRadio, realSeen, realSquad
+    LC.EvidenceStock, LC.EvidenceAfterAt, LC.EvidenceNextAuto = {}, nil, 0
+    LC.Running, LC.EvidenceAuto = wasRunning, wasAuto
+    _setcvar("lc_npc_budget", wasBudget)
+    _run(1)
+end
+EvidenceTests()
 
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")

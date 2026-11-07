@@ -725,6 +725,7 @@ function LC.SearchNPC(cop, npc)
         if not IsValid(cop) or not cop:Alive() then return end
         if math.random() < (st.rebel and 0.5 or 0.1) then
             st.contraband = Pick(NPC_CONTRABAND)
+            if LC.EvidenceAdd then LC.EvidenceAdd(nil, 1, "search", st.contraband) end -- (sv_livingcity_evidence.lua)
             npc:EmitSound(LC.Sounds and LC.Sounds.Vo(st.gender or "male", "no02") or "", 70)
             cop:ChatPrint("[Search] Found " .. st.contraband .. ". Confiscated. Right click with the baton to detain them.")
             if LC.AddXP then LC.AddXP(cop, 3, "search") end
@@ -787,6 +788,7 @@ hook.Add("LivingCityIncarcerated", "LivingCityConfiscate", function(target)
     ClearIdentity(target)
     local found = LC.SearchPockets(target, 1)
     if #found > 0 then target:ChatPrint("[Processing] Confiscated: " .. Describe(found) .. ".") end
+    if LC.EvidenceAddList then LC.EvidenceAddList(found, nil, "arrest") end -- (into the evidence stock, to be burned: sv_livingcity_evidence.lua)
 end)
 
 ------------------------------------------------------------------------
@@ -1478,6 +1480,7 @@ function LC.BustDealer(cop, dealer)
     dealer:EmitSound("npc/metropolice/vo/holdit.wav", 80)
     if IsValid(cop) then
         cop:ChatPrint("[Civil Protection] The dealer bolts. You confiscate what's left of the stock.")
+        if LC.EvidenceAdd then LC.EvidenceAdd(nil, 1, "dealer", "a black market dealer's stock") end -- (sv_livingcity_evidence.lua)
         if LC.AddCredits then LC.AddCredits(cop, 20, "black market busted") end
         if LC.AddXP then LC.AddXP(cop, 10, "Busted a dealer") end
         if LC.AddStanding then LC.AddStanding(cop, 10) end

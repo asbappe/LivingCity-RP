@@ -209,7 +209,7 @@ vgui = { Create = function() made = made + 1 return panel end }
 net.ReadData = function() return _admindata end
 util.Decompress = function(s) return s end
 util.JSONToTable = function() return { target = "STEAM_0:1|Me", faction = "cp", xp = { cp = 300 }, credits = 50, standing = 100,
-    players = { { id = "STEAM_0:1|Me", name = "Me" } } } end
+    players = { { id = "STEAM_0:1|Me", name = "Me" } }, evidence = "In the evidence room: 3 items (Old radio x3)." } end
 _admindata = "x"
 net._q = { 1 }
 local okP, errP = pcall(net["recv_lc_admintools"])
@@ -220,6 +220,13 @@ if not okP then problems[#problems + 1] = "admin panel rebuild: " .. tostring(er
 -- the CP toolset: the mask's view, the records terminal and the voice menu
 _me.nw.lcf_faction, _me.nw.lcf_title = "cp", "CP 04-12"
 _me.alive = true
+-- Unit tools (F2): with the evidence room's stock, and a burn going on (sv_livingcity_evidence.lua)
+_globals.lc_evidence_n, _globals.lc_evidence_list, _globals.lc_evidence_burn = 3, "Old radio x3", "burning near Block 1"
+made = 0
+okP, errP = pcall(function() LC_CL.OpenUnitTools() end)
+if not okP then problems[#problems + 1] = "unit tools: " .. tostring(errP) end
+if okP and made < 20 then problems[#problems + 1] = "unit tools built only " .. made .. " controls" end
+_globals.lc_evidence_n, _globals.lc_evidence_list, _globals.lc_evidence_burn = 0, "", ""
 _globals.lc_socio, _globals.lc_bolos = "yellow", 2
 run("HUDPaintBackground")
 run("HUDPaint")

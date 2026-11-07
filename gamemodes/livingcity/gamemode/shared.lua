@@ -166,6 +166,7 @@ LC_MODULES = {
         "sv_livingcity_fieldops", -- (after the quests and the war: backup's guns, squads for violent jobs, flashbangs, rebel ground)
         "sv_livingcity_labdamage", -- (a lab shot up and wrecked, and the job to fix it)
         "sv_livingcity_career", -- (C > My career: rank, XP, the way to the Overwatch)
+        "sv_livingcity_evidence", -- (what units confiscate is kept, and burned in public now and then)
     },
     client = {
         "cl_livingcity",
