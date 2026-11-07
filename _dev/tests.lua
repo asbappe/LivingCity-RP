@@ -13155,6 +13155,12 @@ _setcvar("lc_trail", "0")
 LC.TrailTick(now + 25)
 ok(walker.lcTrail == nil, "lc_trail 0: nobody does")
 _setcvar("lc_trail", "1")
+LC.TrailTick(now + 25.5)
+ok(walker.lcTrail ~= nil, "(on again: a trail)")
+walker.lcForgetUntil = CurTime() + 60
+LC.TrailTick(now + 25.6)
+ok(walker.lcTrail == nil and payload() and payload().p == nil, "Breen's water clouds their memory: the trail goes too, as the quest tracker does")
+walker.lcForgetUntil = nil
 walker.lcTestGoal = nil
 LC.TrailTick(now + 26)
 ok(walker.lcTrail == nil, "no quest, no trail")
@@ -13484,6 +13490,8 @@ ok(LC.EndingSession() == nil and not LC.TimeStopped and not GetGlobal2Bool("lc_t
 ok(s1:GetPos():Distance(DREAM) < 1600 and s3:GetPos():Distance(DREAM) < 1600, "the dreamers are at the dream point")
 ok(_files[LC.DreamFileOf(s1:SteamID64())] ~= nil and _files[LC.DreamFileOf(s3:SteamID64())] ~= nil, "a snapshot of each dreamer is saved to disk first")
 ok(#s1.weps == 1 and s1.weps[1] == "weapon_lc_hands" and next(s1.ammoT) == nil, "in the dream they carry only their hands")
+ok(hook.Run("PlayerCanPickupWeapon", s1, ents.Create("weapon_lc_hands")) ~= false and hook.Run("PlayerCanPickupWeapon", s1, ents.Create("weapon_pistol")) == false,
+    "(the game asks before it hands them anything: their hands are let through, a gun isn't)")
 ok(LC.BedSleepers[bed1] == s1 and not LC.BedFree(bed1, s2), "their bed stays theirs")
 _run(5)
 E = LC.EndingAny()
@@ -16500,8 +16508,10 @@ con:Remove()
 LC.StalkerConsolePropsReset()
 -- one built into the map (prop_static, read from the map file like the sinks and stoves)
 local stWas = LC.StaticTerminals
-ok(LC.IsTerminalModel("models/props_combine/combine_interface002.mdl") and not LC.IsTerminalModel("models/props_c17/furnituresink001a.mdl"),
+ok(LC.IsStalkerConsoleModel("models/props_combine/combine_interface002.mdl") and not LC.IsStalkerConsoleModel("models/props_c17/furnituresink001a.mdl"),
     "the map file's Combine consoles are known by their model (and a sink isn't one)")
+ok(LC.IsTerminalModel("models/props_combine/masterinterface.mdl") and LC.IsMasterTerminalModel("models/props_combine/masterinterface.mdl"),
+    "(the heist's own check still knows the master interface: the stalkers' list doesn't replace it)")
 LC.StaticTerminals = { { kind = "terminal", pos = Z + Vector(120, 120, 0), ang = Angle(0, 90, 0), model = "models/props_combine/combine_interface002.mdl" } }
 local sterms = LC.StalkerTerminals(hq, CurTime())
 local syaw = sterms[1] and ((sterms[1].yaw % 360) + 360) % 360 or -1

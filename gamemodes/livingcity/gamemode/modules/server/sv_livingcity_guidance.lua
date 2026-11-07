@@ -201,6 +201,8 @@ end
 function LC.TrailWanted(ply)
     if not cvOn:GetBool() or not IsValid(ply) or not ply:Alive() then return false end
     if ply.GetInfoNum and ply:GetInfoNum("lc_trail_show", 1) == 0 then return false end
+    -- (Breen's water has clouded their memory: no trail either, as the quest tracker shows nothing)
+    if (ply.lcForgetUntil or 0) > CurTime() then return false end
     return true
 end
 
