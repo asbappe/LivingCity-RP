@@ -19,6 +19,12 @@ local function Act(action, arg)
 end
 
 local function Plural(n, one, many) return n == 1 and ("1 " .. one) or (tostring(n) .. " " .. many) end
+-- How long a new job holds you; a 0 turns that part off, both 0: no hold (nil).
+local function Hold(mins, shifts)
+    if mins > 0 and shifts > 0 then return Plural(mins, "minute", "minutes") .. " or " .. Plural(shifts, "shift", "shifts") .. ", whichever comes first" end
+    if mins > 0 then return Plural(mins, "minute", "minutes") end
+    if shifts > 0 then return Plural(shifts, "shift", "shifts") end
+end
 
 -- t: the desk's payload (t.labor is sv_livingcity_labor.lua's LC.LaborDeskInfo).
 function LC_CL.LaborRows(t, Line, Head, Button, Way, Close)
@@ -38,9 +44,9 @@ function LC_CL.LaborRows(t, Line, Head, Button, Way, Close)
 
     if l.first then
         Head("YOUR WORK ASSIGNMENT")
-        Line("Every citizen works. The Union gives you the post with the most openings. You stay on it for "
-            .. Plural(l.minMinutes or 30, "minute", "minutes") .. " or " .. Plural(l.minShifts or 4, "shift", "shifts")
-            .. ", whichever comes first; then you can come back here and ask for a different job.", DIM)
+        local hold = Hold(l.minMinutes or 30, l.minShifts or 4)
+        Line("Every citizen works. The Union gives you the post with the most openings."
+            .. (hold and (" You stay on it for " .. hold .. "; then you can come back here and ask for a different job.") or ""), DIM)
         Button("Ask for my work assignment", l.papers, function() Act("assign") Close() end)
         return
     end
@@ -48,17 +54,21 @@ function LC_CL.LaborRows(t, Line, Head, Button, Way, Close)
     Head(l.jobName and ("ASSIGNED: " .. string.upper(l.jobName)) or "NO WORK ASSIGNMENT")
     if l.jobName and l.place then Line("Work at the " .. string.lower(l.place) .. ". Your shifts are on your board (F4).", DIM) end
     if l.locked then
-        Line(string.format("You're tied to this assignment for %s more, or %s more, whichever comes first (so far: %s and %s).",
-            Plural(l.minsLeft or 0, "minute", "minutes"), Plural(l.shiftsLeft or 0, "shift", "shifts"),
-            Plural(l.mins or 0, "minute", "minutes"), Plural(l.shifts or 0, "shift", "shifts")), BAD)
+        local mOn, sOn = (l.minMinutes or 30) > 0, (l.minShifts or 4) > 0
+        local left = (mOn and sOn) and string.format("%s more, or %s more, whichever comes first",
+            Plural(l.minsLeft or 0, "minute", "minutes"), Plural(l.shiftsLeft or 0, "shift", "shifts"))
+            or (mOn and (Plural(l.minsLeft or 0, "minute", "minutes") .. " more") or (Plural(l.shiftsLeft or 0, "shift", "shifts") .. " more"))
+        local sofar = (mOn and sOn) and (Plural(l.mins or 0, "minute", "minutes") .. " and " .. Plural(l.shifts or 0, "shift", "shifts"))
+            or (mOn and Plural(l.mins or 0, "minute", "minutes") or Plural(l.shifts or 0, "shift", "shifts"))
+        Line("You're tied to this assignment for " .. left .. " (so far: " .. sofar .. ").", BAD)
         Line("Come back then if you want a different job.", DIM)
     else
         if not l.jobName then
             Button("Let the Union choose (the post with the most openings)", l.papers, function() Act("assign") Close() end)
         end
         Head(l.jobName and "ASK FOR A DIFFERENT JOB" or "OR ASK FOR A JOB")
-        Line(string.format("A new job holds you for %s or %s, whichever comes first. Your Civil Standing is %d.",
-            Plural(l.minMinutes or 30, "minute", "minutes"), Plural(l.minShifts or 4, "shift", "shifts"), l.standing or 0), DIM)
+        local hold = Hold(l.minMinutes or 30, l.minShifts or 4)
+        Line((hold and ("A new job holds you for " .. hold .. ". ") or "") .. string.format("Your Civil Standing is %d.", l.standing or 0), DIM)
         if (l.wait or 0) > 0 then
             Line(string.format("You changed jobs recently: the Union lets you change again in %s.",
                 (l.wait >= 120) and Plural(math.ceil(l.wait / 60), "minute", "minutes") or Plural(l.wait, "second", "seconds")), BAD)

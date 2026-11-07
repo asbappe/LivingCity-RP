@@ -14,6 +14,8 @@
     A bench that's only been knocked about (not wrecked) still works; the scientist patches it
     up himself after lc_lab_shutdown seconds without being hit again.
 
+    The unit who wrecks it is paid (15 XP, 20 credits); a citizen who wrecks it isn't.
+
     This is beside the scientist being taken away by a unit (LC.ShutLab): that shuts the lab
     until he's back, and needs no repair. A wrecked lab stays wrecked whether he's there or not.
     The smoke is drawn on each player's screen (cl_livingcity_labdamage.lua).
@@ -77,6 +79,14 @@ local function BlowPart(bench, i)
     if IsValid(kit) then kit:Remove() end
 end
 
+-- Who is paid for wrecking one: a unit (Civil Protection, the Overwatch, the Administrator).
+-- A citizen who wrecks it gets nothing extra (the owner, 7 November).
+function LC.LabWreckPays(ply)
+    if not (IsValid(ply) and ply:IsPlayer()) then return false end
+    local f = ply:GetNW2String("lcf_faction", "")
+    return f == "cp" or f == "ota" or f == "admin" or (LC.PlayerIsCP and LC.PlayerIsCP(ply)) == true
+end
+
 -- Wrecked: nothing works there until it's fixed.
 function LC.WreckLab(bench, by)
     if not IsValid(bench) or bench:GetNW2Bool("lc_lab_broken", false) then return false end
@@ -90,7 +100,7 @@ function LC.WreckLab(bench, by)
         sci.lcLabJob = nil
         if job and IsValid(job.ply) and LC.CancelTask then LC.CancelTask(job.ply) end
     end
-    if IsValid(by) and by:IsPlayer() then
+    if IsValid(by) and by:IsPlayer() and LC.LabWreckPays(by) then
         by:ChatPrint("[Civil Protection] The Resistance lab is wrecked. Nothing will be made there until they fix it.")
         if LC.AddXP then LC.AddXP(by, 15, "Wrecked a Resistance lab") end
         if LC.AddCredits then LC.AddCredits(by, 20, "a Resistance lab wrecked") end
