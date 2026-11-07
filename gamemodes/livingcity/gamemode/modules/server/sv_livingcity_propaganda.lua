@@ -145,43 +145,6 @@ function LC.SendBroadcastCamera(ply)
     return cam
 end
 
--- The echo on a voice over the loudspeakers (the owner, 7 November: "is it possible to apply an echo
--- effect to whatever the player says into the microphone"). Garry's Mod can't process one player's
--- voice by itself, so everyone who hears the broadcast gets an echoing room (a DSP preset) for as long
--- as it lasts, and it's put back after. lc_broadcast_echo: the preset (0: none).
-local cvEcho = CreateConVar("lc_broadcast_echo", "19", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED),
-    "The echo on a live broadcast's voice: a sound effect (DSP preset) everyone hearing it gets while it lasts (0: none; 19 a big concrete hall, 10 a large chamber, 23 to 25 caverns)")
-LC.EchoedBy = LC.EchoedBy or {}
-function LC.BroadcastEcho(on)
-    local preset = cvEcho:GetInt()
-    if on then
-        if preset <= 0 then return 0 end
-        local n = 0
-        for _, p in ipairs(player.GetAll()) do
-            if p ~= LC.LiveSpeaker and p.SetDSP and not (LC.SpeakerBrokenNear and LC.SpeakerBrokenNear(p:GetPos())) then
-                p:SetDSP(preset, false)
-                LC.EchoedBy[p] = true
-                n = n + 1
-            end
-        end
-        return n
-    end
-    for p in pairs(LC.EchoedBy) do
-        if IsValid(p) and p.SetDSP then p:SetDSP(0, false) end
-    end
-    LC.EchoedBy = {}
-    return 0
-end
-hook.Add("PlayerInitialSpawn", "LivingCityBroadcastEcho", function(p)
-    -- (joined in the middle of a broadcast: the echo too)
-    timer.Simple(5, function()
-        if IsValid(p) and LC.LiveSpeaker and p ~= LC.LiveSpeaker and cvEcho:GetInt() > 0 and p.SetDSP then
-            p:SetDSP(cvEcho:GetInt(), false)
-            LC.EchoedBy[p] = true
-        end
-    end)
-end)
-
 function LC.StartBroadcast(ply)
     if LC.LiveSpeaker then return false, "Someone is already on air." end
     -- The Administrator's recorded address (below): the Director of Propaganda can cut in; anyone else waits
@@ -210,7 +173,6 @@ function LC.StartBroadcast(ply)
         end
     end
     LC.SendBroadcastCamera(ply)
-    LC.BroadcastEcho(true)
     hook.Run("LivingCityBroadcastStart", ply, pirate)
     return true
 end
@@ -221,7 +183,6 @@ function LC.StopBroadcast(why)
     local now = CurTime()
     local lasted = now - (LC.LiveStart or now)
     local pirate = GetGlobal2Bool("lc_live_pirate", false)
-    LC.BroadcastEcho(false)
     LC.LiveSpeaker = nil
     SetGlobal2Entity("lc_live", NULL)
     SetGlobal2Float("lc_live_until", 0)

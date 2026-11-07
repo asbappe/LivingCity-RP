@@ -13031,21 +13031,16 @@ function AdminVoiceTests()
         if f.id == "admin" then for _, w in ipairs(f.ranks[1].loadout or {}) do if w == "weapon_lc_microphone" then loadout = true end end end
     end
     ok(loadout, "the Administrator carries the microphone")
-    -- on air with an echo, whatever the transmitter's cooldown
+    -- on air, whatever the transmitter's cooldown
     local ear = newPlayer("Listener", "citizen")
-    local dsp = {}
-    for _, p in ipairs({ adm, ear }) do p.SetDSP = function(self, n) dsp[self] = n end end
     SetGlobal2Float("lc_live_next", CurTime() + 600)
     if LC.LiveSpeaker then LC.StopBroadcast("test") end
     if LC.LiveNPC and LC.StopNPCBroadcast then LC.StopNPCBroadcast("test") end
     SetGlobal2Float("lc_live_next", CurTime() + 600)
     local okB = LC.StartBroadcast(adm)
     ok(okB and LC.LiveSpeaker == adm, "the Administrator goes on air without waiting for the transmitter")
-    ok(dsp[ear] == GetConVar("lc_broadcast_echo"):GetInt() and dsp[adm] == nil, "everyone hearing it gets the echo; the speaker doesn't")
     LC.StopBroadcast("test")
-    ok(dsp[ear] == 0, "off air: the echo goes")
     local cit = newPlayer("Shouter", "citizen")
-    cit.SetDSP = function() end
     SetGlobal2Float("lc_live_next", CurTime() + 600)
     ok(not LC.StartBroadcast(cit), "anyone else still waits for the transmitter")
     adm.valid, ear.valid, cit.valid = false, false, false
