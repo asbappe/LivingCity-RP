@@ -14023,6 +14023,66 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     ok(not okB2 and LC.HooverLoad(cln) == 2, "with an infestation control barrel near, no bagging: the barrel")
     ok(barrel and LC.DumpHoover(cln, barrel) and LC.HooverLoad(cln) == 0, "emptied into the barrel")
     for _, e in ipairs(dpost or {}) do e:Remove() end
+    -- the 7 November playtest: a bag anyone walks through, a post that stands on a floor, and the
+    -- crew's guards (two Overwatch soldiers, a shotgun and a pulse rifle, apart, never a metrocop)
+    do
+        local bag = LC.HazardBag(dz.pos + Vector(200, 0, 0))
+        ok(IsValid(bag) and bag:GetCollisionGroup() == (COLLISION_GROUP_DEBRIS or 1), "a bagged growth is passable: nobody trips over it in a walkway")
+        if IsValid(bag) then bag:Remove() end
+        local wasGround = _groundFn
+        _groundFn = function(x, y) if x > -171000 then return nil end return 0 end
+        local sign = { Vector(-14, -14, 2), Vector(14, 14, 70) }
+        ok(LC.HazardPropFits(Vector(-172000, -172500, 0), sign), "a warning sign fits on open floor")
+        ok(not LC.HazardPropFits(Vector(-170000, -172500, 0), sign), "and not where there's no floor under it (nothing stands in a wall or in the air)")
+        _groundFn = wasGround
+        local gz = { kind = "infest", pos = Vector(-176000, -176000, 0), r = 300, group = 0, lcNestFirst = true, lcNestNext = 1e9, lcPostTried = true }
+        table.insert(LC.Zones, gz)
+        local cop, cst = LC.SpawnCop(gz.pos + Vector(250, 0, 4))
+        local crew, crewSt = LC.SpawnCitizen(gz.pos + Vector(0, 200, 4))
+        local seenWas = LC.IsSeen
+        LC.IsSeen = function() return false end
+        LC.CleanupGuard(crew, 60)
+        LC.CleanupGuardTick(CurTime())
+        local g = LC.CleanupGuards[crew]
+        local guards = g and g.units or {}
+        local soldiers, guns, apart = 0, {}, true
+        for i, u in ipairs(guards) do
+            local st = LC.NPCs[u]
+            if st and st.role == "soldier" then soldiers = soldiers + 1 end
+            local w = u:GetActiveWeapon()
+            if w then guns[w:GetClass()] = true end
+            for j, o in ipairs(guards) do if j ~= i and o:GetPos():DistToSqr(u:GetPos()) < 60 * 60 then apart = false end end
+        end
+        ok(#guards == 2 and soldiers == 2 and cst.cleanGuard == nil, "a cleanup crew's guards are two Overwatch soldiers, never a metrocop", #guards, soldiers)
+        ok(guns["weapon_shotgun"] and guns["weapon_ar2"], "one with a shotgun, one with a pulse rifle")
+        ok(apart, "sent in apart from each other, not on one spot")
+        -- the infested behind a wall: the guard goes round (its own chase), it doesn't shoot the wall
+        local zed = LC.SpawnZombie(crew:GetPos() + Vector(400, 0, 0), gz)
+        _walls[#_walls + 1] = { a = crew:GetPos() + Vector(200, -300, 0), b = crew:GetPos() + Vector(200, 300, 0) }
+        for _, u in ipairs(guards) do u:SetPos(crew:GetPos() + Vector(-60, 0, 0)) u.sched = SCHED_IDLE_STAND end
+        LC.CleanupGuardTick(CurTime())
+        local chasing, shooting = 0, 0
+        for _, u in ipairs(guards) do if u:IsCurrentSchedule(SCHED_CHASE_ENEMY) then chasing = chasing + 1 elseif u:IsCurrentSchedule(SCHED_RANGE_ATTACK1) then shooting = shooting + 1 end end
+        ok(chasing == #guards and shooting == 0, "an infested behind a wall: the guards go round, nobody shoots the wall", chasing, shooting)
+        table.remove(_walls)
+        for _, u in ipairs(guards) do u.lcEngaged, u.lcChaseNext = nil, nil u.sched = SCHED_IDLE_STAND end
+        LC.CleanupGuardTick(CurTime())
+        shooting = 0
+        for _, u in ipairs(guards) do if u:IsCurrentSchedule(SCHED_RANGE_ATTACK1) then shooting = shooting + 1 end end
+        ok(shooting == #guards, "in plain sight, they open fire")
+        if IsValid(zed) then zed:Remove() end
+        -- the shift over: the soldiers the Overwatch sent walk off and are gone once out of sight
+        crew.lcGuardUntil = 0
+        LC.CleanupGuardTick(CurTime())
+        _run(12)
+        local left = 0
+        for _, u in ipairs(guards) do if IsValid(u) then left = left + 1 end end
+        ok(not LC.CleanupGuards[crew] and left == 0, "the shift over, the guards the Overwatch sent are gone", left)
+        LC.IsSeen = seenWas
+        if IsValid(cop) then cop:Remove() end
+        if IsValid(crew) then crew:Remove() end
+        for i, z in ipairs(LC.Zones) do if z == gz then table.remove(LC.Zones, i) break end end
+    end
     local rotten = LC.SpawnNest(seed, seed.pos + Vector(60, 0, 0))
     LC.KillNest(rotten, nil)
     rotten.lcDeadAt = CurTime() - 100000

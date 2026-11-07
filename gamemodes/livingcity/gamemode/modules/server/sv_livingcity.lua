@@ -1386,13 +1386,19 @@ function LC.NearPrisonCombine(pos)
     return false
 end
 
--- kind: nil (as the place says), "elite" (an Overwatch Elite) or "guard" (Nova Prospekt)
+-- kind: nil (as the place says), "elite" (an Overwatch Elite), "guard" (Nova Prospekt), or "shotgun" / "ar2"
+-- (an ordinary soldier with that gun: the cleanup crew's pair, sv_livingcity_cleanup.lua)
 local function SpawnSoldier(pos, kind)
     local npc = ents.Create("npc_combine_s")
     if not IsValid(npc) then return end
     if not kind and LC.NearPrisonCombine(pos) then kind = "guard" end
-    local gun = kind == "elite" and "weapon_ar2" or (kind == "guard" and math.random() < 0.4 and "weapon_shotgun")
-        or (not kind and math.random() < 0.2 and "weapon_shotgun") or "weapon_ar2" -- (the owner: pulse rifles or shotguns, never SMGs)
+    local gun
+    if kind == "shotgun" or kind == "ar2" then
+        gun = kind == "shotgun" and "weapon_shotgun" or "weapon_ar2"
+    else
+        gun = kind == "elite" and "weapon_ar2" or (kind == "guard" and math.random() < 0.4 and "weapon_shotgun")
+            or (not kind and math.random() < 0.2 and "weapon_shotgun") or "weapon_ar2" -- (the owner: pulse rifles or shotguns, never SMGs)
+    end
     -- an installed Combine pack's model if there is one (sv_livingcity_combinemodels.lua), else Half-Life 2's
     local shot = gun == "weapon_shotgun"
     local hla = LC.CombineModel and LC.CombineModel(kind == "elite" and "elite" or (kind == "guard" and (shot and "guard_shotgun" or "guard")) or (shot and "shotgunner" or "soldier"), false)

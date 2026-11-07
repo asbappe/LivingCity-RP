@@ -413,6 +413,8 @@ function EMT:Activate() end
 function EMT:SetNW2Bool(k, v) self.nw[k] = v end
 function EMT:GetNW2Bool(k, d) local v = self.nw[k] if v == nil then return d end return v end
 function EMT:SetNotSolid(b) self.notsolid = b end
+function EMT:SetCollisionGroup(g) self.colgroup = g end
+function EMT:GetCollisionGroup() return self.colgroup or 0 end
 function EMT:UpdateEnemyMemory(e, pos) self.enemyMemory = pos end
 function EMT:Give(c) self.weps = self.weps or {} table.insert(self.weps, c) end
 -- an NPC's gun: what it was given or selected last, else what it spawned with
