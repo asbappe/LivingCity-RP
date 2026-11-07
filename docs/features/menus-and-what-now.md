@@ -18,7 +18,7 @@
 
 | You are | 1 to 5 | 6 to 8 (nothing in front of you) |
 |---|---|---|
-| Civil Protection (the Overwatch too) | Call for backup, Send my 10-20, Issue a BOLO, **Voice lines >** (the mask's most used lines; the Overwatch ranks' own), Kick | Unit tools, My directives (F3), Sociostability > (officers) or My pockets |
+| Civil Protection (the Overwatch too) | **Voice lines >** (the mask's most used lines; the Overwatch ranks' own), Unit tools, Kick, Call for backup, Issue a BOLO, Send my 10-20 (the owner, 7 November) | My directives (F3), Sociostability > (the Administrator only) or My pockets |
 | Citizen | **What now? >** (your next step, Places), Hands up, My papers, **Talk >** (and Tell everyone nearby my name), My pockets | **Pose >**, **Gesture >**, My board (F3) |
 | Resistance | **What now? >**, Hands up, Gear up or Plain clothes, **Talk >**, Black market | **Resistance >** (find the lab, donate food, decode a chip), **Pose >**, My board (F3) |
 
