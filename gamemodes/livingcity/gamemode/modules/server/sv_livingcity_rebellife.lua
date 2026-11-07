@@ -23,7 +23,7 @@
     dressing (mattresses, couches, crates, the table and chairs, the fire),
     and beds, couches, chairs, workbenches and crates built into the map.
 
-    Scavenging runs: now and then (lc_rebel_errand_minutes, 4, on average,
+    Scavenging runs: now and then (lc_rebel_errand_minutes, 12, on average,
     for each rebel zone with three or more fighters at home and someone on
     the server) one or two slip out to scavenge at a bin, a junk pile or a
     salvage point within reach, or just somewhere in the streets. They walk,
@@ -36,7 +36,7 @@
 
       lc_rebel_life 0/1             home activities (1)
       lc_rebel_errands 0/1          scavenging runs (1)
-      lc_rebel_errand_minutes <m>   average minutes between runs, per zone (4)
+      lc_rebel_errand_minutes <m>   average minutes between runs, per zone (12)
 ]]
 
 if CLIENT then return end
@@ -46,7 +46,7 @@ LC = LC or {}
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvLife    = CreateConVar("lc_rebel_life", "1", FLAGS, "Rebels at home keep busy: patrols, the workbench, crates, the garden, the fire, sitting, sleeping")
 local cvErrands = CreateConVar("lc_rebel_errands", "1", FLAGS, "Rebels slip out in ones and twos to scavenge, keeping out of sight, and bring it home")
-local cvErrandM = CreateConVar("lc_rebel_errand_minutes", "4", FLAGS, "Average minutes between scavenging runs, for each rebel zone")
+local cvErrandM = CreateConVar("lc_rebel_errand_minutes", "12", FLAGS, "Average minutes between scavenging runs, for each rebel zone")
 local cvHeadFlip = CreateConVar("lc_bed_head_flip", "0", FLAGS, "1 turns everyone lying on an editor-placed bed (Fixture: bed) round the other way, if their heads are at the foot end")
 local cvBedLift = CreateConVar("lc_rebel_bed_height", "8", FLAGS, "How far above a mattress or bed a sleeping fighter's hips lie (they're settled onto it by this; more if they sink into it, less if they float)")
 
