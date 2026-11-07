@@ -50,13 +50,15 @@ if SERVER then
 end
 
 if CLIENT then
+    -- (made once here, not every frame)
+    local V_0_0_18 = Vector(0, 0, 18)
     function ENT:Draw()
         self:DrawModel()
         local ply = LocalPlayer()
         if not IsValid(ply) or ply:GetPos():DistToSqr(self:GetPos()) > 160 * 160 then return end
         local it = LCS and LCS.Items[self:GetNW2String("lc_item", "")]
         if not it then return end
-        local pos = self:GetPos() + Vector(0, 0, 18)
+        local pos = self:GetPos() + V_0_0_18
         local ang = Angle(0, ply:EyeAngles().y - 90, 90)
         cam.Start3D2D(pos, ang, 0.08)
             draw.SimpleTextOutlined(it.name, "DermaLarge", 0, 0, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_black)

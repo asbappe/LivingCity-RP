@@ -59,6 +59,10 @@ if CLIENT then
         end
         render.EndBeam()
     end
+    -- (made once here, not every frame)
+    local C_170_220_255_230 = Color(170, 220, 255, 230)
+    local C_255_255_255_255 = Color(255, 255, 255, 255)
+    local V_0_0_36 = Vector(0, 0, 36)
     function ENT:DrawTranslucent()
         local built = self:GetNW2Int("lc_built", 0)
         if built <= 0 then return end
@@ -73,27 +77,29 @@ if CLIENT then
             local rb = math.max(10, (partner:OBBMaxs().y - partner:OBBMins().y) * 0.5)
             render.SetMaterial(ARC)
             for _, h in ipairs({ -22, 0, 22 }) do
-                Arc(a + dir * ra + Vector(0, 0, h), b - dir * rb + Vector(0, 0, h), 6 + 4 * math.random() + flash * 30, Color(170, 220, 255, 230))
+                Arc(a + dir * ra + Vector(0, 0, h), b - dir * rb + Vector(0, 0, h), 6 + 4 * math.random() + flash * 30, C_170_220_255_230)
             end
             render.SetMaterial(GLOW)
             render.DrawSprite((a + b) * 0.5, 90 + flash * 400, 90 + flash * 400, Color(150, 210, 255, 90 + 120 * flash))
             return
         end
-        local pos = self:WorldSpaceCenter() + Vector(0, 0, 36)
+        local pos = self:WorldSpaceCenter() + V_0_0_36
         local size = built >= 3 and (34 + 6 * math.sin(t * 2.2)) or (8 * built)
         render.SetMaterial(GLOW)
         render.DrawSprite(pos, size * 2.4 + flash * 400, size * 2.4 + flash * 400, Color(170, 220, 255, 140 + 110 * flash))
         if built >= 3 then
             render.SetMaterial(BALL)
-            render.DrawSprite(pos, size, size, Color(255, 255, 255, 255))
+            render.DrawSprite(pos, size, size, C_255_255_255_255)
         end
     end
+    -- (made once here, not every frame)
+    local V_0_0_36 = Vector(0, 0, 36)
     function ENT:Think()
         if self:GetNW2Int("lc_built", 0) < 3 or not DynamicLight then return end
         local d = DynamicLight(self:EntIndex())
         local partner = self:GetNW2Entity("lc_partner")
         if d then
-            d.pos = IsValid(partner) and (self:WorldSpaceCenter() + partner:WorldSpaceCenter()) * 0.5 or (self:WorldSpaceCenter() + Vector(0, 0, 36))
+            d.pos = IsValid(partner) and (self:WorldSpaceCenter() + partner:WorldSpaceCenter()) * 0.5 or (self:WorldSpaceCenter() + V_0_0_36)
             d.r, d.g, d.b = 150, 210, 255
             d.brightness = 2
             d.decay = 600

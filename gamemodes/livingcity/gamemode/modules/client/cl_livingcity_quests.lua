@@ -412,6 +412,14 @@ local function DrawArrow(cx, cy, rel, col)
     surface.DrawPoly({ P(13, 0), P(10, math.rad(140)), P(4, math.rad(180)), P(10, math.rad(-140)) })
 end
 
+-- (made once here, not every frame)
+local C_120_200_255 = Color(120, 200, 255)
+local C_140_190_140 = Color(140, 190, 140)
+local C_16_15_13_210 = Color(16, 15, 13, 210)
+local C_20_18_16_200 = Color(20, 18, 16, 200)
+local C_255_120_100 = Color(255, 120, 100)
+local C_255_170_110 = Color(255, 170, 110)
+local C_30_28_24_220 = Color(30, 28, 24, 220)
 hook.Add("HUDPaint", "LivingCityQuestsTracker", function()
     if not state.active then return end
     local w = ScrW()
@@ -423,7 +431,7 @@ hook.Add("HUDPaint", "LivingCityQuestsTracker", function()
     local narr = state.narration and Wrap(state.narration, "DermaDefault", bw - 24) or {}
     local h = 54 + #lines * 16 + (state.progress and 16 or 0) + (#narr > 0 and (#narr * 15 + 8) or 0) + (state.choice and 18 or 0) + (compassTarget and 34 or 0) + (state.suspicion and 22 or 0)
     LC_CL.QuestTrackerBottom, LC_CL.QuestTrackerAt = y + h, CurTime() -- (the panel of what you can do goes under it: cl_livingcity_context.lua)
-    draw.RoundedBox(4, x, y, bw, h, Color(16, 15, 13, 210))
+    draw.RoundedBox(4, x, y, bw, h, C_16_15_13_210)
     draw.RoundedBox(0, x, y, 3, h, ACCENT)
     draw.SimpleText(string.upper(state.board or "") .. string.format("   step %d/%d", state.step or 1, state.steps or 1), "DermaDefault", x + 12, y + 8, DIM)
     draw.SimpleText(state.title or "", "DermaDefaultBold", x + 12, y + 24, INK)
@@ -441,8 +449,8 @@ hook.Add("HUDPaint", "LivingCityQuestsTracker", function()
     if state.suspicion then
         -- how suspicious the person you're tailing is: fills while they can see you
         local frac = math.Clamp(state.suspicion / 100, 0, 1)
-        local col = frac > 0.66 and RED or (frac > 0.33 and ACCENT or Color(140, 190, 140))
-        draw.RoundedBox(3, x + 12, ly + 2, bw - 24, 14, Color(30, 28, 24, 220))
+        local col = frac > 0.66 and RED or (frac > 0.33 and ACCENT or C_140_190_140)
+        draw.RoundedBox(3, x + 12, ly + 2, bw - 24, 14, C_30_28_24_220)
         if frac > 0 then draw.RoundedBox(3, x + 12, ly + 2, (bw - 24) * frac, 14, col) end
         draw.SimpleText(state.seen and "SUSPICION: THEY CAN SEE YOU" or "Suspicion", "DermaDefaultBold", x + bw / 2, ly + 9,
             state.seen and color_white or INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
@@ -464,10 +472,10 @@ hook.Add("HUDPaint", "LivingCityQuestsTracker", function()
     if compassTarget then
         local rel, heading, meters, level, dz = Compass(compassTarget)
         ly = ly + 8
-        draw.RoundedBox(3, x + 8, ly - 4, bw - 16, 30, Color(30, 28, 24, 220))
+        draw.RoundedBox(3, x + 8, ly - 4, bw - 16, 30, C_30_28_24_220)
         DrawArrow(x + 28, ly + 11, rel, ACCENT)
         draw.SimpleText(string.format("%d m, %s", meters, heading), "DermaDefaultBold", x + 50, ly + 1, INK)
-        draw.SimpleText(level, "DermaDefaultBold", x + 50, ly + 14, dz > 48 and Color(120, 200, 255) or (dz < -48 and Color(255, 170, 110) or DIM))
+        draw.SimpleText(level, "DermaDefaultBold", x + 50, ly + 14, dz > 48 and C_120_200_255 or (dz < -48 and C_255_170_110 or DIM))
     end
 
     -- being seen while tailing someone: right where you're looking, so you notice in time to duck back
@@ -476,10 +484,10 @@ hook.Add("HUDPaint", "LivingCityQuestsTracker", function()
         local frac = math.Clamp(state.suspicion / 100, 0, 1)
         local col = frac > 0.66 and RED or ACCENT
         local a = state.seen and 255 or 140
-        draw.RoundedBox(3, cx - mw / 2, cy, mw, 10, Color(20, 18, 16, 200))
+        draw.RoundedBox(3, cx - mw / 2, cy, mw, 10, C_20_18_16_200)
         if frac > 0 then draw.RoundedBox(3, cx - mw / 2, cy, mw * frac, 10, Color(col.r, col.g, col.b, a)) end
         draw.SimpleTextOutlined(state.seen and "THEY SEE YOU" or "out of sight", "DermaDefaultBold", cx, cy - 4,
-            state.seen and Color(255, 120, 100) or DIM, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM, 1, color_black)
+            state.seen and C_255_120_100 or DIM, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM, 1, color_black)
     end
 
     -- objective marker

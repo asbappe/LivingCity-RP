@@ -38,14 +38,17 @@ if SERVER then
 end
 
 if CLIENT then
+    -- (made once here, not every frame)
+    local C_150_210_240 = Color(150, 210, 240)
+    local C_220_220_220 = Color(220, 220, 220)
     function ENT:Draw()
         self:DrawModel()
         local pos = self:GetPos() + Vector(0, 0, self:OBBMaxs().z + 10)
         local ang = Angle(0, LocalPlayer():EyeAngles().y - 90, 90)
         if LocalPlayer():GetPos():DistToSqr(self:GetPos()) > 400 * 400 then return end
         cam.Start3D2D(pos, ang, 0.1)
-            draw.SimpleTextOutlined("UNION RECLAMATION", "DermaLarge", 0, 0, Color(150, 210, 240), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_black)
-            draw.SimpleTextOutlined("Scrap  Cans  Bottles", "DermaDefaultBold", 0, 30, Color(220, 220, 220), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+            draw.SimpleTextOutlined("UNION RECLAMATION", "DermaLarge", 0, 0, C_150_210_240, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_black)
+            draw.SimpleTextOutlined("Scrap  Cans  Bottles", "DermaDefaultBold", 0, 30, C_220_220_220, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
         cam.End3D2D()
     end
 end

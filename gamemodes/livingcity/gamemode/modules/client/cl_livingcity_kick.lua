@@ -201,11 +201,14 @@ end }
 -- Facing a locked door a kick would open (the server says which: sv_livingcity_kick.lua), a reminder of how,
 -- with this player's own kick key and wherever Kick is in F2 right now.
 local kickF1, kickKey, kickF1At = nil, nil, 0
+-- (made once here, not every frame)
+local C_0_0_0_220 = Color(0, 0, 0, 220)
+local C_240_230_200 = Color(240, 230, 200)
 hook.Add("HUDPaint", "LivingCityKickHint", function()
     local me = LocalPlayer()
     if not IsValid(me) or not IsValid(me:GetNW2Entity("lc_kick_hint")) then return end
     if CurTime() > kickF1At then kickF1At = CurTime() + 1 kickF1, kickKey = nil, nil if LC_CL.QuickSlot then kickF1, kickKey = LC_CL.QuickSlot("kick") end end
     local how = "press " .. LC_CL.KickKeyName()
     if kickF1 then how = how .. " (or " .. (kickKey or "F2") .. " > " .. kickF1 .. ")" end
-    draw.SimpleTextOutlined("Locked. To kick it in: " .. how, "DermaDefaultBold", ScrW() / 2, ScrH() * 0.62, Color(240, 230, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 220))
+    draw.SimpleTextOutlined("Locked. To kick it in: " .. how, "DermaDefaultBold", ScrW() / 2, ScrH() * 0.62, C_240_230_200, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, C_0_0_0_220)
 end)

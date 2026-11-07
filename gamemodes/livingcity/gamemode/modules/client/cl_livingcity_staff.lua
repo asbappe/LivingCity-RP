@@ -249,12 +249,14 @@ net.Receive("lc_staff", function()
 end)
 
 -- Open tickets, for staff, under the clock
+-- (made once here, not every frame)
+local C_60_30_20_200 = Color(60, 30, 20, 200)
 hook.Add("HUDPaint", "LivingCityStaffTickets", function()
     local ply = LocalPlayer()
     if not IsValid(ply) or not ply:IsAdmin() then return end
     local n = math.floor(GetGlobal2Float("lc_tickets_open", 0))
     if n <= 0 then return end
-    draw.RoundedBox(4, ScrW() - 150, 40, 136, 22, Color(60, 30, 20, 200))
+    draw.RoundedBox(4, ScrW() - 150, 40, 136, 22, C_60_30_20_200)
     draw.SimpleText(n .. (n == 1 and " open ticket" or " open tickets") .. " (!staff)", "DermaDefault", ScrW() - 82, 51, AMBER, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 end)
 

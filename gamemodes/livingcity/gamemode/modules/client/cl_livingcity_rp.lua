@@ -50,6 +50,9 @@ function LC_CL.Description(ply)
 end
 
 -- Down and bleeding out
+-- (made once here, not every frame)
+local C_220_220_220 = Color(220, 220, 220)
+local C_255_120_110 = Color(255, 120, 110)
 hook.Add("HUDPaint", "LivingCityDownedHUD", function()
     local ply = LocalPlayer()
     if not IsValid(ply) then return end
@@ -59,14 +62,16 @@ hook.Add("HUDPaint", "LivingCityDownedHUD", function()
     local w, h = ScrW(), ScrH()
     surface.SetDrawColor(90, 0, 0, math.Clamp(180 - left, 60, 170))
     surface.DrawRect(0, 0, w, h)
-    draw.SimpleTextOutlined("YOU'RE DOWN", "DermaLarge", w / 2, h * 0.38, Color(255, 120, 110), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_black)
+    draw.SimpleTextOutlined("YOU'RE DOWN", "DermaLarge", w / 2, h * 0.38, C_255_120_110, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_black)
     draw.SimpleTextOutlined(string.format("Bleeding out: %d:%02d", math.floor(left / 60), math.floor(left % 60)), "DermaDefaultBold", w / 2, h * 0.38 + 34,
         color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     draw.SimpleTextOutlined("Someone can help you up (E on you). You can still whisper. !giveup to let go.", "DermaDefault", w / 2, h * 0.38 + 56,
-        Color(220, 220, 220), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+        C_220_220_220, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
 end)
 
 -- A body on the ground that's still breathing
+-- (made once here, not every frame)
+local C_255_140_120 = Color(255, 140, 120)
 hook.Add("HUDPaint", "LivingCityDownedLabel", function()
     local ply = LocalPlayer()
     if not IsValid(ply) then return end
@@ -77,7 +82,7 @@ hook.Add("HUDPaint", "LivingCityDownedLabel", function()
     local name = IsValid(who) and (LC_CL.Knows(who) and who:GetNW2String("lc_char", who:Nick()) or LC_CL.Description(who)) or "Someone"
     local left = IsValid(who) and math.max(0, who:GetNW2Float("lc_downed_until", 0) - CurTime()) or 0
     local x, y = ScrW() / 2, ScrH() / 2 + 40
-    draw.SimpleTextOutlined(name, "DermaDefaultBold", x, y, Color(255, 140, 120), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+    draw.SimpleTextOutlined(name, "DermaDefaultBold", x, y, C_255_140_120, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     draw.SimpleTextOutlined(string.format("Down, bleeding out (%ds). E to help them up. !drag to drag them.", math.floor(left)), "DermaDefault", x, y + 15,
         color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
 end)

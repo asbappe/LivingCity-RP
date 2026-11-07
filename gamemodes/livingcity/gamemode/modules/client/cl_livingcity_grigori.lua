@@ -61,6 +61,12 @@ hook.Add("HUDShouldDraw", "LivingCityVest", function(name)
     if name == "CHudBattery" then return false end
 end)
 
+-- (made once here, not every frame)
+local C_10_12_16_190 = Color(10, 12, 16, 190)
+local C_110_170_255 = Color(110, 170, 255)
+local C_150_200_255 = Color(150, 200, 255)
+local C_230_140_90 = Color(230, 140, 90)
+local C_30_34_40 = Color(30, 34, 40)
 hook.Add("HUDPaint", "LivingCityVest", function()
     local me = LocalPlayer()
     if not IsValid(me) or not me:Alive() then return end
@@ -69,14 +75,14 @@ hook.Add("HUDPaint", "LivingCityVest", function()
     local now = CurTime()
     local lines = {}
     if me:GetNW2Float("lc_blessed_until", 0) > now then lines[#lines + 1] = { string.format("Blessed (%d s)", math.ceil(me:GetNW2Float("lc_blessed_until", 0) - now)), GOLD } end
-    if me:GetNW2Float("lc_emboldened_until", 0) > now then lines[#lines + 1] = { string.format("Emboldened (%d s)", math.ceil(me:GetNW2Float("lc_emboldened_until", 0) - now)), Color(230, 140, 90) } end
+    if me:GetNW2Float("lc_emboldened_until", 0) > now then lines[#lines + 1] = { string.format("Emboldened (%d s)", math.ceil(me:GetNW2Float("lc_emboldened_until", 0) - now)), C_230_140_90 } end
     local armor = me:Armor()
     local cap = math.max(me:GetNW2Int("lc_vest_cap", 0), me:GetNW2Bool("lc_vest", false) and 75 or 0, armor)
     if cap > 0 then
-        draw.RoundedBox(4, x, y, 200, 30, Color(10, 12, 16, 190))
-        draw.SimpleText("VEST", "DermaDefaultBold", x + 8, y + 15, Color(150, 200, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-        draw.RoundedBox(2, x + 52, y + 9, 138, 12, Color(30, 34, 40))
-        draw.RoundedBox(2, x + 52, y + 9, 138 * math.Clamp(armor / cap, 0, 1), 12, Color(110, 170, 255))
+        draw.RoundedBox(4, x, y, 200, 30, C_10_12_16_190)
+        draw.SimpleText("VEST", "DermaDefaultBold", x + 8, y + 15, C_150_200_255, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        draw.RoundedBox(2, x + 52, y + 9, 138, 12, C_30_34_40)
+        draw.RoundedBox(2, x + 52, y + 9, 138 * math.Clamp(armor / cap, 0, 1), 12, C_110_170_255)
         y = y - 20
     end
     for _, l in ipairs(lines) do

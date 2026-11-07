@@ -51,11 +51,14 @@ end
 
 if CLIENT then
     local GLOW = Material("sprites/light_glow02_add")
+    -- (made once here, not every frame)
+    local C_255_170_40 = Color(255, 170, 40)
+    local V_0_0_10 = Vector(0, 0, 10)
     function ENT:Draw()
         self:DrawModel()
         if math.floor(CurTime() * 2) % 2 == 0 then
             render.SetMaterial(GLOW)
-            render.DrawSprite(self:GetPos() + Vector(0, 0, 10), 12, 12, Color(255, 170, 40))
+            render.DrawSprite(self:GetPos() + V_0_0_10, 12, 12, C_255_170_40)
         end
     end
 end

@@ -158,9 +158,11 @@ hook.Add("Think", "LivingCityEndingGman", function()
     end
 end)
 
+-- (made once here, not every frame)
+local V_0_0_62 = Vector(0, 0, 62)
 hook.Add("CalcView", "LivingCityEndingGman", function(me, origin, angles, fov)
     if not S or S.phase ~= "gman" or not gmanAt or not gmanFrom then return end
-    local want = ((gmanAt + Vector(0, 0, 62)) - origin):Angle()
+    local want = ((gmanAt + V_0_0_62) - origin):Angle()
     local k = math.Clamp((CurTime() - gmanFrom.t) / 0.8, 0, 1)
     k = k * k * (3 - 2 * k)
     return { origin = origin, angles = LerpAngle(k, gmanFrom.ang, want), fov = fov, drawviewer = false }
@@ -243,6 +245,8 @@ local function Text(s, font, x, y, col)
     draw.SimpleTextOutlined(s, font, x, y, col or WHITE, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, SHADOW)
 end
 
+-- (made once here, not every frame)
+local C_255_120_100 = Color(255, 120, 100)
 hook.Add("HUDPaint", "LivingCityEndings", function()
     if not S then return end
     local cx, cy = ScrW() / 2, ScrH() * 0.25
@@ -255,7 +259,7 @@ hook.Add("HUDPaint", "LivingCityEndings", function()
         Text(string.format("%d seconds.   Let it happen: %d   Skip it: %d   (no votes at all: it happens)", left, S.yes or 0, S.skip or 0), "LCEndText", cx, cy + 135)
         if myVote ~= nil then Text(myVote and "You chose: let it happen." or "You chose: skip it.", "LCEndText", cx, cy + 162, AMBER) end
         if S.flashing then
-            Text("PHOTOSENSITIVITY WARNING: this one has flashing lights and strobes.", "LCEndText", cx, cy + 200, Color(255, 120, 100))
+            Text("PHOTOSENSITIVITY WARNING: this one has flashing lights and strobes.", "LCEndText", cx, cy + 200, C_255_120_100)
             Text(Calm() and "You've turned the flashing off (lc_ending_calm 0 turns it back on)." or "Type lc_ending_calm 1 in the console to leave the flashing out, just for you.", "LCEndText", cx, cy + 224, WHITE)
         end
     elseif S.phase == "apocalypse" then
@@ -278,6 +282,15 @@ end)
 -- own water-ish materials (lc_flood_material).
 local cvFloodMat = CreateClientConVar("lc_flood_material", "models/shadertest/shader3", true, false, "The surface the flood is drawn with (a refracting material)")
 local floodMat, floodMatName
+-- (made once here, not every frame)
+local A_0_0_0 = Angle(0, 0, 0)
+local C_255_255_255_200 = Color(255, 255, 255, 200)
+local C_255_255_255_255 = Color(255, 255, 255, 255)
+local C_25_60_85_170 = Color(25, 60, 85, 170)
+local V_0_0_0 = Vector(0, 0, 0)
+local V_0_0_1 = Vector(0, 0, 1)
+local V_20000_20000_0 = Vector(20000, 20000, 0)
+local V_m20000_m20000_m4000 = Vector(-20000, -20000, -4000)
 hook.Add("PostDrawTranslucentRenderables", "LivingCityEndings", function(_, sky)
     if sky or not S or S.id ~= "water" or S.phase ~= "apocalypse" or GetGlobal2Bool("lc_flood_real", false) then return end
     local z = GetGlobal2Float("lc_flood_z", 0)
@@ -285,26 +298,26 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityEndings", function(_, sky)
     local eye = EyePos()
     render.SetColorMaterial()
     -- in a dream, only the dream zone fills (lc_flood_min / lc_flood_max: sv_livingcity_dreams.lua)
-    local bmin, bmax = GetGlobal2Vector("lc_flood_min", Vector(0, 0, 0)), GetGlobal2Vector("lc_flood_max", Vector(0, 0, 0))
+    local bmin, bmax = GetGlobal2Vector("lc_flood_min", V_0_0_0), GetGlobal2Vector("lc_flood_max", V_0_0_0)
     if bmax.x > bmin.x and bmax.y > bmin.y then
-        render.DrawBox(Vector(0, 0, z), Angle(0, 0, 0), Vector(bmin.x, bmin.y, -4000), Vector(bmax.x, bmax.y, 0), Color(25, 60, 85, 170), true)
+        render.DrawBox(Vector(0, 0, z), A_0_0_0, Vector(bmin.x, bmin.y, -4000), Vector(bmax.x, bmax.y, 0), C_25_60_85_170, true)
         if Material and render.DrawQuadEasy then
             if floodMatName ~= cvFloodMat:GetString() then floodMatName = cvFloodMat:GetString() floodMat = Material(floodMatName) end
             if floodMat and not (floodMat.IsError and floodMat:IsError()) then
                 render.SetMaterial(floodMat)
-                render.DrawQuadEasy(Vector((bmin.x + bmax.x) / 2, (bmin.y + bmax.y) / 2, z + 1), Vector(0, 0, 1), bmax.x - bmin.x, bmax.y - bmin.y, Color(255, 255, 255, 200), 0)
+                render.DrawQuadEasy(Vector((bmin.x + bmax.x) / 2, (bmin.y + bmax.y) / 2, z + 1), V_0_0_1, bmax.x - bmin.x, bmax.y - bmin.y, C_255_255_255_200, 0)
             end
         end
         return
     end
-    render.DrawBox(Vector(eye.x, eye.y, z), Angle(0, 0, 0), Vector(-20000, -20000, -4000), Vector(20000, 20000, 0), Color(25, 60, 85, 170), true)
+    render.DrawBox(Vector(eye.x, eye.y, z), A_0_0_0, V_m20000_m20000_m4000, V_20000_20000_0, C_25_60_85_170, true)
     if Material and render.DrawQuadEasy then
         if floodMatName ~= cvFloodMat:GetString() then floodMatName = cvFloodMat:GetString() floodMat = Material(floodMatName) end
         if floodMat and not (floodMat.IsError and floodMat:IsError()) then
             render.SetMaterial(floodMat)
             for gx = -2, 2 do
                 for gy = -2, 2 do
-                    render.DrawQuadEasy(Vector(math.floor(eye.x / 2000) * 2000 + gx * 2000, math.floor(eye.y / 2000) * 2000 + gy * 2000, z + 1), Vector(0, 0, 1), 2000, 2000, Color(255, 255, 255, 255), 0)
+                    render.DrawQuadEasy(Vector(math.floor(eye.x / 2000) * 2000 + gx * 2000, math.floor(eye.y / 2000) * 2000 + gy * 2000, z + 1), V_0_0_1, 2000, 2000, C_255_255_255_255, 0)
                 end
             end
         end
@@ -621,6 +634,9 @@ end
 local dancers, dancersAt = {}, 0
 local props = {}
 
+-- (made once here, not every frame)
+local V_0_0_60 = Vector(0, 0, 60)
+local V_0_0_70 = Vector(0, 0, 70)
 hook.Add("Think", "LivingCityBloom", function()
     local now = CurTime()
     local on = Bloom()
@@ -660,7 +676,7 @@ hook.Add("Think", "LivingCityBloom", function()
             local col = Color(c0.r or c0[1] or 255, c0.g or c0[2] or 255, c0.b or c0[3] or 255)
             local dl = DynamicLight(52000 + i)
             if dl then
-                dl.pos = near[i].e:GetPos() + Vector(0, 0, 70)
+                dl.pos = near[i].e:GetPos() + V_0_0_70
                 dl.r, dl.g, dl.b = col.r, col.g, col.b
                 dl.brightness = strobe and ((frac < 0.25) and 5 or 0.3) or (1 + 3 * (1 - frac))
                 dl.size = 320
@@ -676,7 +692,7 @@ hook.Add("Think", "LivingCityBloom", function()
         local c0 = pal[math.floor(beat) % #pal + 1]
         local dl = DynamicLight(52200)
         if dl then
-            dl.pos = bus:GetPos() + Vector(0, 0, 60)
+            dl.pos = bus:GetPos() + V_0_0_60
             dl.r, dl.g, dl.b = c0.r or c0[1] or 255, c0.g or c0[2] or 255, c0.b or c0[3] or 255
             dl.brightness = strobe and ((frac < 0.25) and 6 or 1) or (2 + 4 * (1 - frac))
             dl.size = 600
@@ -736,22 +752,27 @@ local function SafeCam(from, to)
 end
 LC_CL.EndingSafeCam = SafeCam
 
+-- (made once here, not every frame)
+local V_0_0_140 = Vector(0, 0, 140)
+local V_0_0_40 = Vector(0, 0, 40)
+local V_0_0_45 = Vector(0, 0, 45)
+local V_0_0_50 = Vector(0, 0, 50)
 hook.Add("CalcView", "LivingCityBloom", function(me, origin, angles, fov)
     -- on the party bus: behind it, looking wherever you look
     local on = Party()
     local bus = on and on.bus and Entity(on.bus)
     if IsValid(me) and me:GetNW2Bool("lc_seated", false) and IsValid(bus) then
-        local from = bus:GetPos() + Vector(0, 0, 140)
+        local from = bus:GetPos() + V_0_0_140
         return { origin = SafeCam(from, from - angles:Forward() * 520), angles = angles, fov = fov, drawviewer = true }
     end
     -- Fire, flying: behind you and a little above, looking wherever you look
     if IsValid(me) and on and on.fire and me:GetNW2Bool("lc_flying", false) and not me:GetNW2Bool("lc_end_spectating", false) then
-        local from = me:GetPos() + Vector(0, 0, 50)
-        return { origin = SafeCam(from, from - angles:Forward() * 240 + Vector(0, 0, 40)), angles = angles, fov = fov, drawviewer = true }
+        local from = me:GetPos() + V_0_0_50
+        return { origin = SafeCam(from, from - angles:Forward() * 240 + V_0_0_40), angles = angles, fov = fov, drawviewer = true }
     end
     if not Dancing(me) then return end
     local a = math.rad(CurTime() * 18)
-    local centre = me:GetPos() + Vector(0, 0, 45)
+    local centre = me:GetPos() + V_0_0_45
     local eye = SafeCam(centre, centre + Vector(math.cos(a) * 120, math.sin(a) * 120, 30))
     return { origin = eye, angles = (centre - eye):Angle(), fov = fov, drawviewer = true }
 end)
@@ -871,6 +892,9 @@ hook.Add("Think", "LivingCityFloodSky", function()
     end
 end)
 
+-- (made once here, not every frame)
+local C_0_0_0_220 = Color(0, 0, 0, 220)
+local C_200_225_255 = Color(200, 225, 255)
 hook.Add("HUDPaint", "LivingCityFloodSky", function()
     if not Flood() then return end
     local now = CurTime()
@@ -880,7 +904,7 @@ hook.Add("HUDPaint", "LivingCityFloodSky", function()
     end
     local me = LocalPlayer()
     if IsValid(me) and not me:GetNW2Bool("lc_end_taken", false) and me:EyePos().z < GetGlobal2Float("lc_flood_z", 0) then
-        draw.SimpleTextOutlined("Under the water: hold Jump to swim up", "LCEndText", ScrW() / 2, ScrH() * 0.8, Color(200, 225, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 220))
+        draw.SimpleTextOutlined("Under the water: hold Jump to swim up", "LCEndText", ScrW() / 2, ScrH() * 0.8, C_200_225_255, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, C_0_0_0_220)
     end
 end)
 
@@ -988,7 +1012,7 @@ hook.Add("Think", "LivingCityHeadbang", function()
             if IsValid(ply) and ply.ManipulateBoneAngles then
                 for _, name in ipairs({ "Head", "Neck1", "Spine", "Spine1", "Spine2", "Pelvis", "R_UpperArm", "R_Forearm", "L_UpperArm", "L_Forearm", "R_Calf", "L_Calf" }) do
                     local id = Bone(ply, name)
-                    if id then ply:ManipulateBoneAngles(id, Angle(0, 0, 0)) end
+                    if id then ply:ManipulateBoneAngles(id, A_0_0_0) end
                 end
             end
         end
@@ -1020,9 +1044,15 @@ local function DrawMic(ply)
 end
 hook.Add("PostPlayerDraw", "LivingCityHeadbang", DrawMic)
 -- (the city's own Father Grigori, an NPC, gets his mic here)
+-- (the monks are looked up twice a second, not every frame; each is still checked every frame)
+local monks, monksAt = {}, -1
 hook.Add("PostDrawOpaqueRenderables", "LivingCityHeadbangNPC", function(_, sky)
     if sky or not S or S.id ~= "water" or S.phase ~= "apocalypse" then return end
-    for _, n in ipairs(ents.FindByClass and ents.FindByClass("npc_monk") or {}) do
+    local now = CurTime()
+    if now >= monksAt or now < monksAt - 0.5 then
+        monks, monksAt = ents.FindByClass and ents.FindByClass("npc_monk") or {}, now + 0.5
+    end
+    for _, n in ipairs(monks) do
         if IsValid(n) and n:GetNW2Bool("lc_rocking", false) then DrawMic(n) end
     end
 end)
@@ -1045,6 +1075,8 @@ local function SongTime(now)
 end
 
 local catsModel, catsSeen
+-- (made once here, not every frame)
+local V_0_0_2400 = Vector(0, 0, 2400)
 hook.Add("PostDrawOpaqueRenderables", "LivingCityBase", function(_, sky)
     local c = Base()
     if sky or not c or not c.cats or not c.sky or not ClientsideModel then return end
@@ -1058,7 +1090,7 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityBase", function(_, sky)
     catsSeen = catsSeen or now
     if now - catsSeen < 1.2 and math.random() < 0.5 then return end -- (main screen turn on: it flickers in)
     local eye = EyePos()
-    local at = Vector(c.sky.x, c.sky.y, c.sky.z) - Vector(0, 0, 2400)
+    local at = Vector(c.sky.x, c.sky.y, c.sky.z) - V_0_0_2400
     catsModel:SetPos(at)
     catsModel:SetAngles(Angle(0, (eye - at):Angle().y, 0))
     if render.SetColorModulation then render.SetColorModulation(1, 0.25, 0.2) end
@@ -1068,6 +1100,8 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityBase", function(_, sky)
 end)
 
 local lastBeep = -1
+-- (made once here, not every frame)
+local V_0_0_30 = Vector(0, 0, 30)
 hook.Add("Think", "LivingCityBase", function()
     local c = Base()
     if not c then
@@ -1092,7 +1126,7 @@ hook.Add("Think", "LivingCityBase", function()
                 n = n + 1
                 local dl = DynamicLight(52300 + n)
                 if dl then
-                    dl.pos = b:GetPos() + Vector(0, 0, 30)
+                    dl.pos = b:GetPos() + V_0_0_30
                     dl.r, dl.g, dl.b = 255, 30, 20
                     dl.brightness = Calm() and 1.2 or (frac < 0.3 and 3 or 0)
                     dl.size = 160
@@ -1109,14 +1143,19 @@ hook.Add("Think", "LivingCityBase", function()
 end)
 
 -- on your ZIG: the view from behind it
+-- (made once here, not every frame)
+local V_0_0_100 = Vector(0, 0, 100)
+local V_0_0_120 = Vector(0, 0, 120)
 hook.Add("CalcView", "LivingCityBase", function(me, origin, angles, fov)
     if not (S and S.phase == "apocalypse") or not IsValid(me) or me:GetNW2Bool("lc_end_spectating", false) then return end
     local z = me:GetNW2Entity("lc_riding")
     if not IsValid(z) then return end
-    local from = z:GetPos() + Vector(0, 0, 120)
-    return { origin = SafeCam(from, from + Vector(0, 0, 100) - angles:Forward() * 700), angles = angles, fov = fov, drawviewer = true }
+    local from = z:GetPos() + V_0_0_120
+    return { origin = SafeCam(from, from + V_0_0_100 - angles:Forward() * 700), angles = angles, fov = fov, drawviewer = true }
 end)
 
+-- (made once here, not every frame)
+local C_235_235_235 = Color(235, 235, 235)
 hook.Add("HUDPaint", "LivingCityBase", function()
     local c = Base()
     if not c then return end
@@ -1132,7 +1171,7 @@ hook.Add("HUDPaint", "LivingCityBase", function()
     if line then
         surface.SetDrawColor(0, 0, 0, 230)
         surface.DrawRect(w * 0.1, h * 0.78, w * 0.8, 60)
-        draw.SimpleText(line, "LCArcade", w / 2, h * 0.78 + 30, Color(235, 235, 235), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        draw.SimpleText(line, "LCArcade", w / 2, h * 0.78 + 30, C_235_235_235, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     end
     -- main screen turn on: static, a moment
     if catsSeen and now - catsSeen < 1.2 and not Calm() then
@@ -1165,7 +1204,7 @@ hook.Add("Think", "LivingCityBaseArcade", function()
     for idx, pos in pairs(bombsSeen) do
         if not live[idx] and not IsValid(Entity(idx)) then
             baseScore = baseScore + 1000
-            popups[#popups + 1] = { pos = pos + Vector(0, 0, 60), t0 = now }
+            popups[#popups + 1] = { pos = pos + V_0_0_60, t0 = now }
             bombsSeen[idx] = nil
         end
     end
@@ -1179,7 +1218,7 @@ hook.Add("Think", "LivingCityBaseArcade", function()
             trails[idx] = tr
             if now >= tr.at then
                 tr.at = now + 0.06
-                table.insert(tr, 1, z:GetPos() - z:GetForward() * 260 + Vector(0, 0, 40))
+                table.insert(tr, 1, z:GetPos() - z:GetForward() * 260 + V_0_0_40)
                 while #tr > 24 do table.remove(tr) end
             end
         end
@@ -1197,18 +1236,22 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityBaseArcade", function(_, s
         for i, p in ipairs(tr) do
             local col = TRAIL_COLS[(i + math.floor(now * 8)) % #TRAIL_COLS + 1]
             local s = 34 - i
-            if s > 4 then render.DrawBox(p, Angle(0, 0, 0), Vector(-s, -s, -s), Vector(s, s, s), Color(col.r, col.g, col.b, 200)) end
+            if s > 4 then render.DrawBox(p, A_0_0_0, Vector(-s, -s, -s), Vector(s, s, s), Color(col.r, col.g, col.b, 200)) end
         end
     end
 end)
+-- (made once here, not every frame)
+local C_255_200_60 = Color(255, 200, 60)
+local C_255_255_255 = Color(255, 255, 255)
+local C_255_60_40 = Color(255, 60, 40)
 hook.Add("HUDPaint", "LivingCityBaseArcade", function()
     local c = Base()
     if not c then return end
     local now = CurTime()
     local w = ScrW()
-    draw.SimpleText(string.format("1UP  %07d", baseScore), "LCArcade", 40, 30, Color(255, 60, 40), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-    draw.SimpleText(string.format("HI-SCORE  %07d", math.max(baseScore, 1000000)), "LCArcade", w / 2, 30, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-    if math.floor(now * 2) % 2 == 0 then draw.SimpleText("INSERT COIN", "LCArcade", w - 40, 30, Color(255, 200, 60), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER) end
+    draw.SimpleText(string.format("1UP  %07d", baseScore), "LCArcade", 40, 30, C_255_60_40, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+    draw.SimpleText(string.format("HI-SCORE  %07d", math.max(baseScore, 1000000)), "LCArcade", w / 2, 30, C_255_255_255, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    if math.floor(now * 2) % 2 == 0 then draw.SimpleText("INSERT COIN", "LCArcade", w - 40, 30, C_255_200_60, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER) end
     for _, pp in ipairs(popups) do
         local sp = (pp.pos + Vector(0, 0, (now - pp.t0) * 60)):ToScreen()
         if sp.visible then draw.SimpleText("1000", "LCArcade", sp.x, sp.y, Color(255, 255, 255, 255 * (1 - (now - pp.t0) / 1.5)), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER) end
@@ -1253,6 +1296,8 @@ end
 local partySpots, partyBeat = {}, -1
 local function Hard() return S and S.id == "hard" and S.phase == "apocalypse" and S.client end
 
+-- (made once here, not every frame)
+local C_0_0_0_230 = Color(0, 0, 0, 230)
 hook.Add("HUDPaint", "LivingCityHard", function()
     local c = Hard()
     if not c then return end
@@ -1279,11 +1324,13 @@ hook.Add("HUDPaint", "LivingCityHard", function()
     end
     for _, sp in ipairs(partySpots) do
         draw.SimpleTextOutlined("PARTY HARD", sp.big and "LCPartyHard" or "LCPartyHardSmall", sp.x, sp.y,
-            Color(sp.c[1] or sp.c.r or 255, sp.c[2] or sp.c.g or 255, sp.c[3] or sp.c.b or 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 3, Color(0, 0, 0, 230))
+            Color(sp.c[1] or sp.c.r or 255, sp.c[2] or sp.c.g or 255, sp.c[3] or sp.c.b or 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 3, C_0_0_0_230)
     end
 end)
 
 -- and over every dancer's head
+-- (made once here, not every frame)
+local V_0_0_92 = Vector(0, 0, 92)
 hook.Add("PostDrawTranslucentRenderables", "LivingCityHard", function(_, sky)
     local c = Hard()
     if sky or not c or not c.partyText or not cam or not cam.Start3D2D then return end
@@ -1296,10 +1343,10 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityHard", function(_, sky)
         if IsValid(e) and n < 20 and e:GetPos():DistToSqr(me:GetPos()) < 1500 * 1500 and not (e.GetNoDraw and e:GetNoDraw()) then
             n = n + 1
             local c0 = pal[(math.floor(beat * 2) + n) % #pal + 1]
-            local pos = e:GetPos() + Vector(0, 0, 92)
+            local pos = e:GetPos() + V_0_0_92
             local ang = Angle(0, (me:EyePos() - pos):Angle().y + 90, 90)
             cam.Start3D2D(pos, ang, 0.25)
-            draw.SimpleTextOutlined("PARTY HARD", "LCPartyHardSmall", 0, 0, Color(c0[1] or 255, c0[2] or 255, c0[3] or 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, Color(0, 0, 0, 230))
+            draw.SimpleTextOutlined("PARTY HARD", "LCPartyHardSmall", 0, 0, Color(c0[1] or 255, c0[2] or 255, c0[3] or 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, C_0_0_0_230)
             cam.End3D2D()
         end
     end
@@ -1354,6 +1401,11 @@ if surface and surface.CreateFont then surface.CreateFont("LCNuma", { font = "Im
 local function Plane() return S and S.id == "plane" and S.phase == "apocalypse" and S.client end
 local camRT, camMat
 
+-- (made once here, not every frame)
+local C_255_235_120 = Color(255, 235, 120)
+local C_255_80_80 = Color(255, 80, 80)
+local V_0_0_3 = Vector(0, 0, 3)
+local V_0_0_64 = Vector(0, 0, 64)
 hook.Add("HUDPaint", "LivingCityPlane", function()
     local c = Plane()
     if not c then return end
@@ -1368,7 +1420,7 @@ hook.Add("HUDPaint", "LivingCityPlane", function()
         if beat % 16 < 3 then cap = "NUMA NUMA IEI!" end
     end
     if cap then
-        draw.SimpleTextOutlined(cap, "LCNuma", w / 2, h * 0.2, Color(255, 235, 120), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 3, Color(0, 0, 0, 230))
+        draw.SimpleTextOutlined(cap, "LCNuma", w / 2, h * 0.2, C_255_235_120, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 3, C_0_0_0_230)
     end
     -- your webcam: a grainy little box in the corner, your own face, mouthing along
     local me = LocalPlayer()
@@ -1379,9 +1431,9 @@ hook.Add("HUDPaint", "LivingCityPlane", function()
         end
         local eyes = me.LookupAttachment and me:LookupAttachment("eyes")
         local att = eyes and eyes > 0 and me:GetAttachment(eyes)
-        local face = att and att.Pos or (me:GetPos() + Vector(0, 0, 64))
+        local face = att and att.Pos or (me:GetPos() + V_0_0_64)
         local fwd = (att and att.Ang or me:GetAngles()):Forward()
-        local camPos = face + fwd * 28 + Vector(0, 0, 3)
+        local camPos = face + fwd * 28 + V_0_0_3
         render.PushRenderTarget(camRT)
         render.RenderView({ origin = camPos, angles = (face - camPos):Angle(), x = 0, y = 0, w = 128, h = 96, fov = 60, drawviewer = true, drawhud = false })
         render.PopRenderTarget()
@@ -1396,7 +1448,7 @@ hook.Add("HUDPaint", "LivingCityPlane", function()
         surface.DrawTexturedRect(x, y, bw, bh)
         render.PopFilterMin()
         render.PopFilterMag()
-        draw.SimpleText((math.floor(now * 2) % 2 == 0 and "o " or "  ") .. "REC   webcam", "DermaDefaultBold", x + 6, y + bh + 12, Color(255, 80, 80), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        draw.SimpleText((math.floor(now * 2) % 2 == 0 and "o " or "  ") .. "REC   webcam", "DermaDefaultBold", x + 6, y + bh + 12, C_255_80_80, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     end
     -- the climb: up into the clouds, and white
     if c.whiteAt then
@@ -1523,10 +1575,12 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityBusRig", function(_, sky)
             render.SetMaterial(busGlow)
             render.DrawSprite(base, 50, 50, Color(col.r, col.g, col.b, 255))
             -- the strobes: a white flash at every lamp on the beat
-            if not calm and frac < 0.12 then render.DrawSprite(base, 140, 140, Color(255, 255, 255, 255)) end
+            if not calm and frac < 0.12 then render.DrawSprite(base, 140, 140, C_255_255_255_255) end
         end
     end
 end)
+-- (made once here, not every frame)
+local V_0_0_10 = Vector(0, 0, 10)
 hook.Add("Think", "LivingCityBusRig", function()
     local c = Party()
     local bus = c and c.bus and Entity(c.bus)
@@ -1537,7 +1591,7 @@ hook.Add("Think", "LivingCityBusRig", function()
     -- the underglow, the colours going round
     local d = DynamicLight(52300)
     if d then
-        d.pos = bus:GetPos() + Vector(0, 0, 10)
+        d.pos = bus:GetPos() + V_0_0_10
         d.r, d.g, d.b = col.r, col.g, col.b
         d.brightness = Calm() and 3 or (2 + 4 * (1 - beat % 1))
         d.size = 700
@@ -1570,7 +1624,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityStandup", function(_, sky)
         local e = Entity(h.e)
         if IsValid(e) and h.a then
             local neck = NeckOf(e)
-            render.DrawBeam(Vector(h.a.x, h.a.y, h.a.z), neck, 2, 0, neck:Distance(Vector(h.a.x, h.a.y, h.a.z)) / 32, Color(255, 255, 255))
+            render.DrawBeam(Vector(h.a.x, h.a.y, h.a.z), neck, 2, 0, neck:Distance(Vector(h.a.x, h.a.y, h.a.z)) / 32, C_255_255_255)
         end
     end
 end)
@@ -1602,7 +1656,7 @@ hook.Add("Think", "LivingCityStandup", function()
             if IsValid(e) and e.ManipulateBoneAngles then
                 for _, name in ipairs({ "R_UpperArm", "L_UpperArm", "R_Forearm", "L_Forearm", "Head", "R_Calf", "L_Calf", "R_Thigh", "L_Thigh" }) do
                     local id = e:LookupBone("ValveBiped.Bip01_" .. name)
-                    if id then e:ManipulateBoneAngles(id, Angle(0, 0, 0)) end
+                    if id then e:ManipulateBoneAngles(id, A_0_0_0) end
                 end
             end
         end
@@ -1641,7 +1695,7 @@ end)
 -- strung up: you see yourself from a little way off, and can look about
 hook.Add("CalcView", "LivingCityStandup", function(me, origin, angles, fov)
     if not Standup() or not IsValid(me) or me:GetNW2Float("lc_hanged", 0) <= 0 then return end
-    return { origin = me:GetPos() + Vector(0, 0, 50) - angles:Forward() * 160, angles = angles, fov = fov, drawviewer = true }
+    return { origin = me:GetPos() + V_0_0_50 - angles:Forward() * 160, angles = angles, fov = fov, drawviewer = true }
 end)
 
 -- the white cone hats: pulled down over every hanged head, drawn on the head bone itself
@@ -1662,7 +1716,7 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityStandupCones", function(_, sky)
         if IsValid(e) and not (e.GetNoDraw and e:GetNoDraw()) then
             local id = e.LookupBone and e:LookupBone("ValveBiped.Bip01_Head1")
             local m = id and e.GetBoneMatrix and e:GetBoneMatrix(id)
-            local pos, up = e:GetPos() + Vector(0, 0, 62), Vector(0, 0, 1)
+            local pos, up = e:GetPos() + V_0_0_62, V_0_0_1
             if m then pos, up = m:GetTranslation(), m:GetAngles():Forward() end -- (the head bone points up out of the top of the head)
             local ang = up:Angle()
             ang.p = ang.p + 90
@@ -1754,6 +1808,9 @@ end)
 -- (Where it sits: lc_shalom_kippah, forward right up from the head bone, forward being
 -- up out of the top of the head.)
 local cvKippah = CreateClientConVar("lc_shalom_kippah", "6.5 0 -1", true, false, "Shalom: where the kippah sits on a head (forward right up from the head bone; forward is up out of the top of the head)")
+-- (made once here, not every frame)
+local V_0p14_1p08_1p08 = Vector(0.14, 1.08, 1.08)
+local V_0p4_1_1 = Vector(0.4, 1, 1)
 hook.Add("PostDrawOpaqueRenderables", "LivingCityShalomKippah", function(_, sky)
     local c = Shalom()
     if sky or not c or not render or not render.DrawSphere or not Matrix or not cam or not cam.PushModelMatrix then return end
@@ -1782,9 +1839,9 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityShalomKippah", function(_, sky)
                     local mat = Matrix()
                     mat:Translate(part == 1 and pos or (pos - ang:Forward() * 0.5))
                     mat:Rotate(ang)
-                    mat:Scale(part == 1 and Vector(0.4, 1, 1) or Vector(0.14, 1.08, 1.08))
+                    mat:Scale(part == 1 and V_0p4_1_1 or V_0p14_1p08_1p08)
                     cam.PushModelMatrix(mat)
-                    render.DrawSphere(Vector(0, 0, 0), 3.6, 14, 8, ((part == 1) == blue) and BLUE or SNOW)
+                    render.DrawSphere(V_0_0_0, 3.6, 14, 8, ((part == 1) == blue) and BLUE or SNOW)
                     cam.PopModelMatrix()
                 end
             end
@@ -1828,6 +1885,8 @@ end
 -- (lc_shalom_chair: how far under the hips the chair's foot is, and a turn if it faces the wrong way)
 local cvChair = CreateClientConVar("lc_shalom_chair", "21 0", true, false, "Shalom: the chair under whoever's lifted up: how far below their hips its foot is, and a turn (degrees) if it faces the wrong way")
 local chairModel
+-- (made once here, not every frame)
+local V_0_0_38 = Vector(0, 0, 38)
 hook.Add("PostDrawOpaqueRenderables", "LivingCityShalomChair", function(_, sky)
     if sky or not (S and S.id == "shalom" and S.phase == "apocalypse") or not ClientsideModel then return end
     for _, e in ipairs(dancers) do
@@ -1839,7 +1898,7 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityShalomChair", function(_, sky)
             end
             local id = e.LookupBone and e:LookupBone("ValveBiped.Bip01_Pelvis")
             local m = id and e.GetBoneMatrix and e:GetBoneMatrix(id)
-            local hips = m and m:GetTranslation() or (e:GetPos() + Vector(0, 0, 38))
+            local hips = m and m:GetTranslation() or (e:GetPos() + V_0_0_38)
             local drop, turn = string.match(Tuned(cvChair) or "", "(%-?[%d%.]+)%s+(%-?[%d%.]+)")
             chairModel:SetPos(hips - Vector(0, 0, tonumber(drop) or 21))
             chairModel:SetAngles(Angle(0, e:GetAngles().y + (tonumber(turn) or 0), 0))
@@ -1898,6 +1957,10 @@ LC_CL.ShalomFlag = Flag
 local flames, litWas = {}, 0
 local WIND = Vector(math.cos(0.6), math.sin(0.6), 0)
 
+-- (made once here, not every frame)
+local C_170_170_178 = Color(170, 170, 178)
+local C_235_240_255 = Color(235, 240, 255)
+local V_0_0_m1 = Vector(0, 0, -1)
 hook.Add("PostDrawOpaqueRenderables", "LivingCityShalom", function(_, sky)
     local c = Shalom()
     flames = {}
@@ -1915,7 +1978,7 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityShalom", function(_, sky)
         local toEye = Vector(eye.x - base.x, eye.y - base.y, 0)
         if toEye:LengthSqr() < 1 then toEye = Vector(1, 0, 0) end
         toEye:Normalize()
-        local right, up = Vector(-toEye.y, toEye.x, 0), Vector(0, 0, 1)
+        local right, up = Vector(-toEye.y, toEye.x, 0), V_0_0_1
         local flat = Angle(0, toEye:Angle().y, 0)
         local function P(x, z) return base + right * x + up * z end
         local th = w * 0.02 + 1.5
@@ -1936,7 +1999,7 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityShalom", function(_, sky)
         for k = 0, 8 do
             local x = k == 0 and 0 or (k <= 4 and (5 - k) * sp or -(k - 4) * sp)
             local cb = k == 0 and P(0, h * 0.86 + th * 1.6) or P(x, top + th * 1.6)
-            Box(cb + up * (ch * 0.5), flat, Vector(th * 2, th * 2, ch), Color(235, 240, 255), chalk)
+            Box(cb + up * (ch * 0.5), flat, Vector(th * 2, th * 2, ch), C_235_240_255, chalk)
             if k <= lit then flames[#flames + 1] = cb + up * (ch + 3) end
         end
         if lit > litWas and sound and sound.Play then sound.Play("ambient/fire/ignite.wav", P(0, top), 80, 100, 1) end
@@ -1947,12 +2010,12 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityShalom", function(_, sky)
         local foot = Vector(pole.x, pole.y, pole.z)
         if foot:DistToSqr(eye) < 3500 * 3500 then
             local PH = 200
-            Box(foot + Vector(0, 0, PH * 0.5), Angle(0, 0, 0), Vector(3, 3, PH), Color(170, 170, 178), shiny)
+            Box(foot + Vector(0, 0, PH * 0.5), A_0_0_0, Vector(3, 3, PH), C_170_170_178, shiny)
             render.SetColorMaterial()
             local hoist = math.Clamp((t - 0.4 - (i - 1) * 0.8) / 1.0, 0, 1)
             hoist = hoist * hoist * (3 - 2 * hoist)
             local topZ = foot.z + 50 + (PH - 52) * hoist
-            Flag(Vector(foot.x, foot.y, topZ) + WIND * 1.5, WIND, Vector(0, 0, -1), Vector(WIND.y, -WIND.x, 0), 66, 48, now + i, 5, 10)
+            Flag(Vector(foot.x, foot.y, topZ) + WIND * 1.5, WIND, V_0_0_m1, Vector(WIND.y, -WIND.x, 0), 66, 48, now + i, 5, 10)
         end
     end
     -- at the key change, a giant one unfurls across the sky, facing you
@@ -1966,7 +2029,7 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityShalom", function(_, sky)
         local across = Vector(-toEye.y, toEye.x, 0)
         local W, H = 660, 480
         render.SetColorMaterial()
-        Flag(sk - across * (W / 2) + Vector(0, 0, H / 2), across, Vector(0, 0, -1), toEye, W * u, H, now, 22, 16)
+        Flag(sk - across * (W / 2) + Vector(0, 0, H / 2), across, V_0_0_m1, toEye, W * u, H, now, 22, 16)
     end
 end)
 
@@ -1995,7 +2058,7 @@ hook.Add("Think", "LivingCityShalom", function()
         if #flames > 0 then
             local dl = DynamicLight(52300)
             if dl then
-                dl.pos = flames[1] + Vector(0, 0, 10)
+                dl.pos = flames[1] + V_0_0_10
                 dl.r, dl.g, dl.b = 255, 170, 80
                 dl.brightness = 2 + 0.4 * math.sin(now * 13)
                 dl.size = 260 + 40 * #flames
@@ -2022,6 +2085,9 @@ hook.Add("Think", "LivingCityShalom", function()
 end)
 
 local glow
+-- (made once here, not every frame)
+local C_255_140_40_120 = Color(255, 140, 40, 120)
+local C_255_190_90 = Color(255, 190, 90)
 hook.Add("PostDrawTranslucentRenderables", "LivingCityShalom", function(_, sky)
     local c = Shalom()
     if sky or not c or not render or not render.DrawSprite then return end
@@ -2031,8 +2097,8 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityShalom", function(_, sky)
     -- the candle flames, flickering
     for i, f in ipairs(flames) do
         local fl = math.sin(now * 17 + i * 2.1) * 1.5
-        render.DrawSprite(f + Vector(0, 0, fl * 0.5), 7, 13 + fl, Color(255, 190, 90))
-        render.DrawSprite(f, 26, 26, Color(255, 140, 40, 120))
+        render.DrawSprite(f + Vector(0, 0, fl * 0.5), 7, 13 + fl, C_255_190_90)
+        render.DrawSprite(f, 26, 26, C_255_140_40_120)
     end
     -- the fireworks: the star's outline spreading out from the burst, then drifting down and fading
     local eye = EyePos()
@@ -2044,7 +2110,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityShalom", function(_, sky)
         toEye.z = 0
         if toEye:LengthSqr() < 1 then toEye = Vector(1, 0, 0) end
         toEye:Normalize()
-        local right, up = Vector(-toEye.y, toEye.x, 0), Vector(0, 0, 1)
+        local right, up = Vector(-toEye.y, toEye.x, 0), V_0_0_1
         local droop = up * (-30 * age * age)
         local col = Color(b.col.r, b.col.g, b.col.b, alpha)
         for tri = 0, 1 do
@@ -2274,6 +2340,8 @@ hook.Add("Think", "LivingCityFire", function()
 end)
 
 -- the glow over the flames (everyone burning, however far)
+-- (made once here, not every frame)
+local C_255_150_50_220 = Color(255, 150, 50, 220)
 hook.Add("PostDrawTranslucentRenderables", "LivingCityFire", function(_, sky)
     if sky or not FireOn() or not render.DrawSprite then return end
     glowMat = glowMat or (Material and Material("sprites/light_glow02_add"))
@@ -2285,7 +2353,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityFire", function(_, sky)
             if h > 0 then
                 local pos, dir = Behind(e)
                 local s = (26 + 14 * h) * math.Rand(0.85, 1.15)
-                render.DrawSprite(pos + dir * 10, s, s, Color(255, 150, 50, 220))
+                render.DrawSprite(pos + dir * 10, s, s, C_255_150_50_220)
             end
         end
     end
