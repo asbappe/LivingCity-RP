@@ -264,7 +264,12 @@ function LC.RestTick(now)
     local limit = DayLen() * cvDays:GetFloat()
     for _, ply in ipairs(player.GetAll()) do
         ply.lcAwakeSince = ply.lcAwakeSince or now
-        if Exempt(ply) then
+        -- an admin with the editor tool in hand is building the city, not living in it (the owner, 7 November:
+        -- "I have my livingcity editor tool out and got sleepy/exhausted"): the clock stops while it's out
+        local editing = LC.EditorHeld and LC.EditorHeld(ply)
+        if editing and ply.lcRestTickAt and now > ply.lcRestTickAt then ply.lcAwakeSince = ply.lcAwakeSince + (now - ply.lcRestTickAt) end
+        ply.lcRestTickAt = now
+        if Exempt(ply) or editing then
             if ply:GetNW2Bool("lc_tired", false) then ply:SetNW2Bool("lc_tired", false) TiredHealth(ply, false) end
         else
             local tired = now - ply.lcAwakeSince > limit

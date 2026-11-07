@@ -963,10 +963,13 @@ concommand.Add("lc_handsup", function(ply) if IsValid(ply) then LC.SetHandsUp(pl
 
 ------------------------------------------------------------------------
 -- Duty allocation: units don't queue with the citizens. Every allocation
--- period (lc_ration_interval) a unit on duty is issued a ration packet and
--- their ration coupons as credits (lc_cp_coupons, plus one per rank). It
--- shares the dispenser's allocation, so a unit can still take theirs from a
--- dispenser instead, just not both. Overwatch don't eat: coupons only.
+-- period (lc_ration_interval) a unit on duty is issued a ration voucher and
+-- their ration coupons as credits (lc_cp_coupons, plus one per rank). The
+-- voucher is a ration packet at a Civil Protection Commissary or a ration
+-- dispenser (the owner, 7 November: no packets out of thin air, "I should
+-- have to visit a CP commissary to get my ration packets, or a dispenser").
+-- It shares the dispenser's allocation: a unit with no voucher waits for the
+-- next. Overwatch don't eat: coupons only.
 ------------------------------------------------------------------------
 
 local cvCoupons = CreateConVar("lc_cp_coupons", "8", FLAGS, "Credits in ration coupons a Civil Protection unit is issued each allocation (plus one per rank)")
@@ -982,10 +985,17 @@ function LC.IssueDutyAllocation(ply)
     local eats = not LCF.IsOverwatch(ply) -- (the Overwatch are fed through the suit)
     local got = {}
     if eats and LC.GiveItem then
-        if LC.GiveItem(ply, "ration", 1) then got[#got + 1] = "a ration packet" else got[#got + 1] = "a ration packet (your pockets are full: collect it from a dispenser)" ply.lcnRationAt = now end
+        if LC.GiveItem(ply, "ration_voucher", 1) then got[#got + 1] = "a ration voucher" end
     end
     if credits > 0 and LC.AddCredits then LC.AddCredits(ply, credits) got[#got + 1] = credits .. " credits in ration coupons" end
-    if #got > 0 then ply:ChatPrint("[Civil Protection] Duty allocation issued: " .. table.concat(got, " and ") .. ".") end
+    if #got > 0 then
+        ply:ChatPrint("[Civil Protection] Duty allocation issued: " .. table.concat(got, " and ") .. "."
+            .. (eats and " Take the voucher to a Civil Protection Commissary or a ration dispenser for your ration packet." or ""))
+        if eats and not ply.lcVoucherTold and LC.Notice then
+            ply.lcVoucherTold = true
+            LC.Notice(ply, "info", "Ration voucher", "Your duty allocation comes as a ration voucher, not a packet: take it to a Civil Protection Commissary or a ration dispenser (E) for your ration.", 9)
+        end
+    end
     return true
 end
 

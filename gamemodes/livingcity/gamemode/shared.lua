@@ -151,6 +151,7 @@ LC_MODULES = {
         "sv_livingcity_funding",
         "sv_livingcity_work",
         "sv_livingcity_labor", -- (after work: Labor Assignment, where Union work is given out and changed)
+        "sv_livingcity_reconcile", -- (a new faction or rank: the old job, its clothes and kit go)
         "sv_livingcity_stalkerwork",
         "sv_livingcity_combineground", -- (soldiers stay in Combine zones, citizens stay out, a stalker clears up in there)
         "sv_livingcity_writing",

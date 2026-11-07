@@ -48,5 +48,6 @@ function SWEP:Reload()
     if (self.nextReload or 0) > CurTime() then return end
     self.nextReload = CurTime() + 0.5
     local owner = self:GetOwner()
+    if IsValid(owner) and LC and LC.ReloadHeld and LC.ReloadHeld(owner) then return end -- (the R that put something away, still held)
     if IsValid(owner) and LC and LC.ToggleHolster then LC.ToggleHolster(owner) end
 end

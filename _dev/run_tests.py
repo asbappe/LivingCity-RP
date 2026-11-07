@@ -139,6 +139,8 @@ for rel in sorted(os.path.relpath(p, ENTS) for p in glob.glob(ENTS + "/weapons/*
     L.execute("SWEP = {}")
     L.globals()._SRC = open(os.path.join(ENTS, rel)).read()
     L.execute("assert(loadstring(_SRC, %r))()" % rel)
+    # (kept, so a test can load a weapon again and press its keys: _WEAPONSRC["weapons/weapon_lc_radio.lua"])
+    L.execute("_WEAPONSRC = _WEAPONSRC or {} _WEAPONSRC[%r] = _SRC" % rel)
 L.execute("TOOL = { GetClientInfo = function() return 'idle' end }")
 L.execute(open(os.path.join(TOOLS, "livingcity_editor.lua")).read())
 

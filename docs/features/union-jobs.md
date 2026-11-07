@@ -61,7 +61,7 @@ The unit watches the doors it opens. If **someone slips through behind you** (a 
 
 **Changes from the 7 November playtest.**
 - **One job change every 15 minutes** (the owner: "can we make it so a person can't switch union jobs more than once every 15 minutes?"): `lc_job_cooldown` is 900 (was 120); a server still on 120 is moved to 900. The refusal says how many minutes are left.
-- **Tools come back** after a rejoin or prison for anyone still in the job; becoming a unit or an anticitizen revokes the job (see Infestation Cleanup for what is kept).
+- **Tools come back** after a rejoin or prison for anyone still in the job; becoming a unit or an anticitizen revokes the job (see Infestation Cleanup for what is kept). **Who you are now, checked (7 November):** on connecting, spawning, a new faction or rank, and a job change, anyone outside the citizens and the Resistance (a unit, the Overwatch, the City Administrator, a vortigaunt, the infested) loses any Union job, the saved one too (so a rejoin or a restart doesn't bring it back), the Union's tools (sprayer, hoover, medkit, unless the rank carries one), and the job's suit: the rank's own model, skin 0 and plain bodygroups, and first-person hands set up again from that body. A unit's rank card no longer shows a Union job (sv_livingcity_reconcile.lua).
 - **Work clothes stay on for the whole shift:** a sanitation worker (and the mortuary and scrap crews) only changes back at bedtime or on leaving, not after every bin.
 - **The hoover** is drawn about 2 feet further from your face, and the airboat's fan motor runs under its own sounds while vacuuming.
 - **Weeds** sit on the floor under their spot (some floated 2 to 3 feet up).

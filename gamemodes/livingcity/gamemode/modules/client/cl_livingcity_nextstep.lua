@@ -62,7 +62,8 @@ function LC_CL.RankCard(me, x, y, w)
     local title = string.upper(f.name or fid) .. (r and r.name and (": " .. string.upper(r.name)) or "")
     local lines = { string.format("Credits %d     Civil Standing %d", me:GetNW2Int("lce_credits", 0), me:GetNW2Int("lce_standing", 0)) }
     local job = me:GetNW2String("lcj_job", "")
-    if job ~= "" and LCJ and LCJ.ById and LCJ.ById[job] then lines[#lines + 1] = "Union job: " .. LCJ.ById[job].name end
+    -- (only the Resistance hold Union jobs among the factions with a card: a unit's is never shown, even for the moment before it's taken)
+    if job ~= "" and fid == "resistance" and LCJ and LCJ.ById and LCJ.ById[job] then lines[#lines + 1] = "Union job: " .. LCJ.ById[job].name end
     lines[#lines + 1] = "Jobs, orders and your story: F3"
     local wanted = me:GetNW2Float("lc_wanted_until", 0) > CurTime()
     local h = 26 + #lines * 15

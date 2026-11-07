@@ -4329,9 +4329,12 @@ dutyU:SetPos(FAR)
 dutyU.lcnRationAt = 0
 local cb = LC.Credits(dutyU)
 dutyU.chat = {}
-ok(LC.IssueDutyAllocation(dutyU) and LC.HasItem(dutyU, "ration") and LC.Credits(dutyU) > cb, "a unit on duty is issued a ration and coupons")
+ok(LC.IssueDutyAllocation(dutyU) and LC.HasItem(dutyU, "ration_voucher") and not LC.HasItem(dutyU, "ration") and LC.Credits(dutyU) > cb,
+    "a unit on duty is issued a ration voucher (no packet out of thin air: the owner, 7 November) and coupons")
 ok(has(dutyU.chat, "Duty allocation issued"), "and told")
 ok(not LC.IssueDutyAllocation(dutyU), "once an allocation")
+dutyU.chat = {}
+ok(LC.UseDispenser(dutyU, nil) and not LC.HasItem(dutyU, "ration_voucher") and has(dutyU.chat, "Voucher accepted"), "the voucher is a ration at a dispenser")
 dutyU.chat = {}
 LC.UseDispenser(dutyU, nil)
 ok(has(dutyU.chat, "Next allocation"), "it's the same allocation the dispenser gives, so not both")
@@ -13129,6 +13132,184 @@ LC.RemoveZone(rz)
 walker:SetPos(Vector(-150000, 150000, 0))
 end
 GuidanceTests()
+
+----------------------------------------------------------------------
+section("Playtest fixes (7 November, CP): the old job's looks and kit go, ration vouchers, the CP Commissary's daily kit and vest charging, the radio's R, the editor and sleep, rebels' bodies")
+local function UnitLifeTests()
+-- 1. a new faction: the Union job, its tools and its suit go, the saved job too
+do
+    local p = newPlayer("RecCleaner", "citizen")
+    p:SetPos(Vector(-161000, 161000, 0))
+    local fired = {}
+    hook.Add("LivingCityFactionChanged", "RecTest", function(pl, fid) if pl == p then fired[#fired + 1] = fid end end)
+    LC.SetFaction(p, "cp", nil, true)
+    hook.Remove("LivingCityFactionChanged", "RecTest")
+    ok(fired[1] == "cp", "changing faction says so (LivingCityFactionChanged), for the pass that tidies up after it")
+    -- (as a rejoin after a restart left them: the job read back from the save, its kit, the suit's skin)
+    p:SetNW2String("lcj_job", "cleanup")
+    p:SetPData("lcj_job", "cleanup")
+    p:Give("weapon_lc_hoover") p:Give("weapon_lc_sprayer")
+    p:SetSkin(3) p:SetBodygroup(0, 2)
+    p.chat = {}
+    LC.ReconcileAppearance(p)
+    ok(LC.Job(p) == nil and p:GetNW2String("lcj_job", "") == "" and p:GetPData("lcj_job", "") == "", "a unit holds no Union job: taken, and the saved one too, so a restart doesn't bring it back")
+    ok(not p:HasWeapon("weapon_lc_hoover") and not p:HasWeapon("weapon_lc_sprayer"), "and the job's tools go")
+    ok(p:GetSkin() == 0 and p:GetBodygroup(0) == 0, "and the suit's skin and bodygroups: the uniform's own look")
+    ok(has(p.chat, "taken your job"), "and they're told")
+    p:SetPData("lcj_job", "groundskeeper")
+    LC.ReconcileAppearance(p)
+    ok(p:GetPData("lcj_job", "") == "", "a job only in the save is cleared as well")
+    -- connecting again with a job saved: gone a few seconds in
+    p:SetPData("lcj_job", "cleanup")
+    p.admin = true -- (still allowed in Civil Protection when they come back: no standing in this test)
+    hook.Run("PlayerInitialSpawn", p)
+    _run(4)
+    p.admin = nil
+    ok(p:GetNW2String("lcf_faction", "") == "cp" and p:GetNW2String("lcj_job", "") == "" and p:GetPData("lcj_job", "") == "",
+        "connecting as a unit with a job saved: it's taken", p:GetNW2String("lcf_faction", "") .. " " .. p:GetNW2String("lcj_job", ""))
+    -- a rank change says so too
+    local ranked = false
+    hook.Add("LivingCityRankChanged", "RecTest", function(pl) if pl == p then ranked = true end end)
+    p:SetPData("lcf_xp_cp", 5000) LC.AddXP(p, 0)
+    hook.Remove("LivingCityRankChanged", "RecTest")
+    ok(ranked, "a new rank says so (LivingCityRankChanged)")
+    -- any faction that can't work, not only units
+    local a = newPlayer("RecAdmin", "admin")
+    a:SetNW2String("lcj_job", "porter")
+    a.chat = {}
+    LC.ReconcileAppearance(a)
+    ok(a:GetNW2String("lcj_job", "") == "" and has(a.chat, "City Administrator now"), "the City Administrator holds no Union job either")
+    -- citizens and the Resistance keep theirs, looks and all
+    local c = newPlayer("RecCitizen", "citizen")
+    c:SetNW2String("lcj_job", "groundskeeper") c:SetPData("lcj_job", "groundskeeper")
+    c:SetSkin(4)
+    LC.ReconcileAppearance(c)
+    ok(c:GetNW2String("lcj_job", "") == "groundskeeper" and c:GetSkin() == 4, "a citizen keeps their job and their own look")
+    for _, q in ipairs({ p, a, c }) do q:SetPos(Vector(-120000, -120000, 0)) end
+end
+-- 2 and 3. ration vouchers; the CP Commissary's daily kit, and its charge for the vest
+do
+    local S0 = Vector(-163000, 163000, 0)
+    local u = newPlayer("RecVoucher", "cp")
+    u:SetPos(S0)
+    u.lcnRationAt = 0
+    for id in pairs(LC.Inventory(u)) do if id == "ration" or id == "ration_voucher" or id == "bandage" then LC.TakeItem(u, id, 99) end end
+    ok(LC.IssueDutyAllocation(u) and LC.HasItem(u, "ration_voucher") and not LC.HasItem(u, "ration"), "a unit's duty allocation is a ration voucher, not a packet")
+    local ota = newPlayer("RecOTA", "ota")
+    ota:SetPos(S0 + Vector(0, 3000, 0))
+    ota.lcnRationAt = 0
+    LC.IssueDutyAllocation(ota)
+    ok(not LC.HasItem(ota, "ration_voucher"), "the Overwatch don't eat: no voucher")
+    local sup = ents.Create("lc_cpsupply") sup:SetPos(S0 + Vector(50, 0, 0))
+    u:RemovePData("lc_cp_daily_at")
+    local vials = #ents.FindByClass("item_healthvial")
+    u.chat = {}
+    LC.UseCPSupply(u, sup)
+    ok(LC.HasItem(u, "ration") and not LC.HasItem(u, "ration_voucher") and has(u.chat, "for your voucher"), "the CP Commissary takes the voucher and hands over a ration packet")
+    ok(#ents.FindByClass("item_healthvial") == vials + 1 and LC.HasItem(u, "bandage", 3), "and once a city day, a health vial and a bandage (on top of the bandages it tops up)")
+    ok(not LC.CPDailyKitDue(u), "not again the same day")
+    u.lcSupplyNext = 0
+    LC.UseCPSupply(u, sup)
+    ok(#ents.FindByClass("item_healthvial") == vials + 1, "(no second vial)")
+    u:SetPData("lc_cp_daily_at", tostring(os.time() - 999999))
+    ok(LC.CPDailyKitDue(u), "the next city day it's due again")
+    -- a voucher at a dispenser
+    LC.GiveItem(u, "ration_voucher", 1)
+    u.chat = {}
+    ok(LC.UseDispenser(u, nil) and not LC.HasItem(u, "ration_voucher") and has(u.chat, "Voucher accepted"), "a ration dispenser takes a voucher too")
+    -- standing at the Commissary charges the vest
+    u:SetArmor(0)
+    u.chat = {}
+    LC.CPSupplyRechargeTick()
+    ok(u:Armor() == 5 and has(u.chat, "vest is charging"), "standing at the CP Commissary charges a unit's vest, 5 a second", u:Armor())
+    for _ = 1, 20 do LC.CPSupplyRechargeTick() end
+    ok(u:Armor() == 50 and has(u.chat, "Vest charged"), "up to their issue (50 for a street rank), and no further", u:Armor())
+    u:SetArmor(0)
+    u:SetPos(S0 + Vector(800, 0, 0))
+    LC.CPSupplyRechargeTick()
+    ok(u:Armor() == 0, "not from across the room")
+    u:SetPos(S0)
+    sup:SetNW2Bool("lc_nopower", true)
+    LC.CPSupplyRechargeTick()
+    ok(u:Armor() == 0, "not with the power out")
+    sup:SetNW2Bool("lc_nopower", false)
+    local cit = newPlayer("RecVestCitizen", "citizen")
+    cit:SetPos(S0)
+    cit:SetArmor(0)
+    LC.CPSupplyRechargeTick()
+    ok(cit:Armor() == 0, "nor a citizen's")
+    sup:Remove()
+    for _, q in ipairs({ u, ota, cit }) do q:SetPos(Vector(-120000, -120000, 0)) end
+end
+-- 4. R with the radio up puts it away, and the same R held down doesn't bring it straight back
+do
+    local r = newPlayer("RecRadio", "cp")
+    local function Load(path)
+        local was = SWEP
+        SWEP = {}
+        assert(loadstring(_WEAPONSRC[path], path))()
+        local t = SWEP
+        SWEP = was
+        return setmetatable({ GetOwner = function() return r end }, { __index = t })
+    end
+    local radio, hands = Load("weapons/weapon_lc_radio.lua"), Load("weapons/weapon_lc_hands.lua")
+    if not r:HasWeapon("weapon_lc_hands") then r:Give("weapon_lc_hands") end
+    if not r:HasWeapon("weapon_lc_radio") then r:Give("weapon_lc_radio") end
+    r:SelectWeapon("weapon_lc_radio")
+    r.lcLastWeapon = "weapon_lc_radio"
+    r.keys = { [IN_RELOAD] = true }
+    radio:Reload()
+    ok(r:GetActiveWeapon():GetClass() == "weapon_lc_hands", "R with the radio up: your hands")
+    hands:Reload()
+    hands.nextReload = 0
+    hands:Reload()
+    ok(r:GetActiveWeapon():GetClass() == "weapon_lc_hands", "and with R still held, the hands don't draw the radio straight back out (it flashed and came back)")
+    r.keys = {}
+    hook.Run("KeyRelease", r, IN_RELOAD)
+    ok(not LC.ReloadHeld(r), "let go of R")
+    hands.nextReload = 0
+    r.keys = { [IN_RELOAD] = true }
+    hands:Reload()
+    ok(r:GetActiveWeapon():GetClass() == "weapon_lc_radio", "and a fresh R draws it again, as before")
+    LC.HoldReload(r)
+    r.keys = {}
+    ok(not LC.ReloadHeld(r), "(a missed let-go doesn't stick: R up is R up)")
+    r:SetPos(Vector(-120000, -120000, 0))
+end
+-- 5. the editor in hand: no sleepiness
+do
+    local e = newPlayer("RecEditor", "citizen")
+    e.admin = true
+    local tool = { GetClass = function() return "gmod_tool" end, GetMode = function() return "livingcity_editor" end, IsValid = function() return true end }
+    e.GetActiveWeapon = function() return tool end
+    local t0 = CurTime()
+    e.lcAwakeSince = t0 - 10 * 24 * 3600
+    e:SetNW2Bool("lc_tired", true)
+    LC.RestTick(t0)
+    ok(not e:GetNW2Bool("lc_tired", false), "with the Living City editor in hand you're never exhausted")
+    local awake = t0 - e.lcAwakeSince
+    LC.RestTick(t0 + 500)
+    ok(math.abs((t0 + 500 - e.lcAwakeSince) - awake) < 0.01, "and the hours with it out don't count as time awake")
+    e.GetActiveWeapon = nil
+    LC.RestTick(t0 + 505)
+    ok(e:GetNW2Bool("lc_tired", false), "put it away and you're as tired as you were")
+    e.lcAwakeSince = CurTime() e:SetNW2Bool("lc_tired", false) LC.RestTick(CurTime())
+    e:SetPos(Vector(-120000, -120000, 0))
+end
+-- 6. a dead rebel lies in the rebel's own clothes
+do
+    local npc = ents.Create("npc_citizen")
+    npc:SetModel("models/humans/group03/male_07.mdl")
+    npc:SetPos(Vector(-165000, 165000, 0))
+    npc:SetSkin(2) npc:SetBodygroup(0, 3) npc:SetMaterial("models/rebel_test")
+    local rag = LC.MakeBody(npc, "rebel")
+    ok(IsValid(rag) and rag:GetModel() == npc:GetModel() and rag:GetSkin() == 2 and rag:GetBodygroup(0) == 3 and rag:GetMaterial() == "models/rebel_test",
+        "a rebel's body has their model, skin, bodygroups (their gear) and material", rag and rag:GetModel())
+    if IsValid(rag) then rag:Remove() end
+    npc:Remove()
+end
+end
+UnitLifeTests()
 
 ----------------------------------------------------------------------
 

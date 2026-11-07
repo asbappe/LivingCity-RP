@@ -941,6 +941,18 @@ function LC.ToggleHolster(ply)
     end
 end
 
+-- The R that put something away into your hands (the radio's) mustn't draw it straight back out while it's
+-- still held down: the hands' own R waits until it's let go.
+function LC.HoldReload(ply) if IsValid(ply) then ply.lcReloadHeld = true end end
+function LC.ReloadHeld(ply)
+    if not IsValid(ply) or ply.lcReloadHeld ~= true then return false end
+    if ply.KeyDown and not ply:KeyDown(IN_RELOAD or 8192) then ply.lcReloadHeld = nil return false end -- (let go, whatever was missed)
+    return true
+end
+hook.Add("KeyRelease", "LivingCityHolsterReload", function(ply, key)
+    if key == (IN_RELOAD or 8192) and IsValid(ply) then ply.lcReloadHeld = nil end
+end)
+
 concommand.Add("lc_holster", function(ply) LC.ToggleHolster(ply) end)
 hook.Add("PlayerSay", "LivingCityHolster", function(ply, text)
     local t = string.lower(string.Trim(text))
@@ -1258,6 +1270,15 @@ end
 -- ent may be nil: a line with no dispenser placed at its front.
 function LC.UseDispenser(ply, ent)
     if IsValid(ent) and ent:GetNW2Bool("lc_nopower", false) then return false end -- (no power: sv_livingcity_power.lua)
+    -- a unit's ration voucher (their duty allocation, sv_livingcity_cp.lua): a packet, no card and no wait
+    if LC.PlayerIsCP and LC.PlayerIsCP(ply) and LC.HasItem(ply, "ration_voucher") and not (LC.StockLevel and LC.StockLevel() == "empty") then
+        LC.TakeItem(ply, "ration_voucher", 1)
+        if LC.StockTake then LC.StockTake(1) end
+        ply:ChatPrint("[Rations] Voucher accepted.")
+        Dispense(ent, ply)
+        hook.Run("LivingCityRationCollected", ply)
+        return true
+    end
     local econ = GetConVar("lc_economy")
     local refused
     if LC.IntakePending and LC.IntakePending(ply) then

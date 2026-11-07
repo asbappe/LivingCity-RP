@@ -103,6 +103,26 @@ local function Trim()
     end
 end
 
+-- Everything about how someone looks that the model alone doesn't say: the skin, every bodygroup, the
+-- material and submaterials, and the colour. (A dead rebel lay in a citizen's clothes: the owner,
+-- 7 November. Only the skin used to come across, so a rebel whose gear is a bodygroup of the model, as
+-- in the Resistance packs, was a plain citizen once dead.)
+function LC.CopyLook(from, to)
+    if not IsValid(from) or not IsValid(to) then return end
+    if from.GetSkin and to.SetSkin then to:SetSkin(from:GetSkin() or 0) end
+    if from.GetBodygroup and to.SetBodygroup then
+        for i = 0, (from.GetNumBodyGroups and from:GetNumBodyGroups() or 1) - 1 do to:SetBodygroup(i, from:GetBodygroup(i) or 0) end
+    end
+    if from.GetMaterial and to.SetMaterial and (from:GetMaterial() or "") ~= "" then to:SetMaterial(from:GetMaterial()) end
+    if from.GetSubMaterial and to.SetSubMaterial then
+        for i = 0, 31 do
+            local m = from:GetSubMaterial(i)
+            if m and m ~= "" then to:SetSubMaterial(i, m) end
+        end
+    end
+    if from.GetColor and to.SetColor then to:SetColor(from:GetColor()) end
+end
+
 -- A body that lies the way the person fell, not in a T-pose.
 function LC.MakeBody(npc, role)
     local rag = ents.Create("prop_ragdoll")
@@ -110,9 +130,10 @@ function LC.MakeBody(npc, role)
     rag:SetModel(npc:GetModel())
     rag:SetPos(npc:GetPos())
     rag:SetAngles(npc:GetAngles())
-    if npc.GetSkin then rag:SetSkin(npc:GetSkin()) end
+    LC.CopyLook(npc, rag)
     rag:Spawn()
     rag:Activate()
+    LC.CopyLook(npc, rag) -- (again, in case spawning set any of it back)
     local count = rag.GetPhysicsObjectCount and rag:GetPhysicsObjectCount() or 0
     local vel = npc:GetVelocity()
     for i = 0, count - 1 do
