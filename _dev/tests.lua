@@ -12477,6 +12477,114 @@ end
 end
 PerfCacheTests()
 
+function RebelFoodTests()
+-- the Resistance's supply crates, restocked for how many are online (sv_livingcity_scavenge.lua; the owner,
+-- 7 November: solo it was an endless feast, with 32 or 64 on the server it would be a famine)
+section("Rebel food: supplies sized to the Resistance online")
+do
+    local realR = math.random
+    math.randomseed(1107)
+    local need = LC.FoodNeedPerHead(20)
+    ok(need > 0.8 and need < 1.1, "a fighter eats about a tin every twenty minutes (lc_hunger_minutes 60)", need)
+    ok(LC.FoodRestockSize(0, 20) == 0, "nobody in the Resistance online: nothing comes in")
+    local function avg(heads)
+        local t = 0
+        for _ = 1, 4000 do t = t + LC.FoodRestockSize(heads, 20) end
+        return t / 4000
+    end
+    local a2, a40 = avg(2), avg(40)
+    ok(a40 > a2 * 15 and a40 < a2 * 25, "forty fighters get about twenty times what two get", string.format("%.2f / %.2f", a2, a40))
+    ok(math.abs(a2 / (need * 2) - 0.5) < 0.1 and math.abs(a40 / (need * 40) - 0.5) < 0.06,
+        "either way about half of what they eat (lc_food_availability 0.5)", string.format("%.2f %.2f", a2 / (need * 2), a40 / (need * 40)))
+    ok(LC.FoodRestockCap(1) >= 2 and LC.FoodRestockCap(40) > LC.FoodRestockCap(1) * 10, "a busy camp's crate is restocked to more",
+        LC.FoodRestockCap(1) .. " / " .. LC.FoodRestockCap(40))
+    -- a camp that eats what it needs from the crate, period after period: how often is there food?
+    local function sim(heads)
+        local stock, avail, short, some, cap = 0, 0, 0, 0, LC.FoodRestockCap(heads)
+        for _ = 1, 400 do
+            stock = math.min(stock + LC.FoodRestockSize(heads, 20), math.max(stock, cap))
+            local want = math.max(1, math.floor(need * heads + math.random()))
+            local eat = math.min(stock, want)
+            stock = stock - eat
+            avail = avail + eat / want -- (eaten steadily: the share of the period there was food)
+            if eat < want then short = short + 1 end
+            if eat > 0 then some = some + 1 end
+        end
+        return avail / 400, short / 400, some / 400
+    end
+    for _, heads in ipairs({ 1, 2, 40, 64 }) do
+        local avail, short, some = sim(heads)
+        ok(avail > 0.35 and avail < 0.65 and short > 0.25 and some > 0.25,
+            string.format("%d fighter%s: food about half the time, and the crate runs out regularly", heads, heads == 1 and "" or "s"),
+            string.format("food %.2f of the time, ran short %.2f, had some %.2f", avail, short, some))
+    end
+    math.random = realR
+
+    -- a crate of our own, in a camp of our own
+    local c = ents.Create("prop_physics")
+    c:SetModel("models/items/item_item_crate.mdl")
+    c:SetPos(Vector(-91000, 91000, 0))
+    c:Spawn()
+    c.lcRebelProp = "cache"
+    c:SetNW2String("lc_label_kind", "cache")
+    local key = {}
+    LC.RebelProps[key] = { cache = c, pots = {} }
+    LC.SweepCache(c)
+    ok((c.lcStock or 0) == 0, "(an empty crate)")
+    math.random = function(a, b) if a == nil then return 0.99 end if b == nil then return realR(a) end return realR(a, b) end
+    local got4 = LC.FoodRestock(4, { c }, 1)
+    ok(got4 == 3 and c.lcStock == 3, "a delivery for four fighters: three tins at most", got4)
+    local got40 = LC.FoodRestock(40, { c }, 1)
+    ok(got40 > 20 and c.lcFoodCap == LC.FoodRestockCap(40) and c:GetNW2Int("lc_cache_cap", 0) == c.lcFoodCap,
+        "for forty fighters, far more", got40)
+    ok(c:GetNW2Float("lc_cache_next", 0) > CurTime(), "the crate knows when the next supplies are due (shown on it to the Resistance)")
+    local had = c.lcStock
+    ok(LC.FoodRestock(1, { c }, 1) == 0 and c.lcStock == had, "a delivery doesn't pile food up past what's needed (nor take any away)", c.lcStock)
+    LC.AddToCache(c, 2)
+    ok(c.lcStock == had, "a crate over its cap from busier times keeps what it has", c.lcStock)
+    LC.FoodRestock(8, { c }, 2)
+    ok(c.lcFoodCap == LC.FoodRestockCap(4), "two camps share the fighters online", c.lcFoodCap)
+    math.random = realR
+
+    -- what players bring in goes past what a delivery fills it to
+    LC.SweepCache(c)
+    LC.FoodRestock(1, { c }, 1)
+    LC.AddToCache(c, c.lcFoodCap - (c.lcStock or 0))
+    local full = c.lcStock
+    ok(full == c.lcFoodCap, "(restocked as far as deliveries go)", full)
+    local cit = newPlayer("FoodGiver", "citizen")
+    cit:SetPos(c:GetPos() + Vector(-40, 0, 0))
+    LC.GiveItem(cit, "cooked_fish")
+    LC.GiveItem(cit, "cooked_headcrab")
+    LC.GiveItem(cit, "cooked_bird")
+    ok(LC.Donate(cit) and c.lcStock == full + 3, "a citizen's fish, headcrab and bird go into the stores, past the delivery cap", c.lcStock)
+    ok(LC.AddToCache(c, 2) == 2, "and so does a rebel's scavenging haul or a supply run")
+    cit:SetPos(Vector(-120000, -120000, 0))
+
+    -- empty: say so, and where else to find food
+    local n0 = LC.ResistanceHeadcount()
+    local reb = newPlayer("HungryRebel", "resistance", nil, 200)
+    ok(LC.ResistanceHeadcount() == n0 + 1, "the headcount is the Resistance players online")
+    reb:SetPos(c:GetPos() + Vector(-40, 0, 0))
+    LC.SweepCache(c)
+    local notices, realNotice = {}, LC.Notice
+    LC.Notice = function(p, kind, title, text, secs) if p == reb then notices[#notices + 1] = text end return realNotice(p, kind, title, text, secs) end
+    reb.chat, reb.lcCacheNext, reb.lcPropUseNext = {}, 0, 0
+    hook.Run("PlayerUse", reb, c)
+    LC.Notice = realNotice
+    ok(has(reb.chat, "crate's empty") and has(reb.chat, "Fish the canal") and has(reb.chat, "headcrabs or birds")
+        and has(reb.chat, "citizens") and has(reb.chat, "quartermaster"), "an empty crate says so, and points to fishing, hunting, citizens and the quartermaster", reb.chat[#reb.chat])
+    ok(has(reb.chat, "More supplies due in about"), "and when the next supplies are due")
+    ok(has(notices, "crate's empty"), "on the screen too (LC.Notice)")
+    ok(not LC.HasItem(reb, "canned_food"), "and nothing comes out of it")
+    reb:SetPos(Vector(-120000, -120000, 0))
+
+    LC.RebelProps[key] = nil
+    c:Remove()
+end
+end
+RebelFoodTests()
+
 ----------------------------------------------------------------------
 
 ----------------------------------------------------------------------

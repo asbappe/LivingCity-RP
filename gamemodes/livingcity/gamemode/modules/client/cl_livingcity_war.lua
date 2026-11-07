@@ -274,7 +274,14 @@ hook.Add("HUDPaint", "LivingCityRebelPropLabels", function()
         title, sub = PotLabel(e)
     elseif kind == "cache" then
         title = "Resistance supplies"
-        sub = string.format("%d meal%s stored", e:GetNW2Int("lc_cache_stock", 0), e:GetNW2Int("lc_cache_stock", 0) == 1 and "" or "s")
+        local n = e:GetNW2Int("lc_cache_stock", 0)
+        sub = n > 0 and string.format("%d meal%s stored", n, n == 1 and "" or "s") or "Empty"
+        -- the Resistance see when the next supplies are due (sv_livingcity_scavenge.lua, LC.FoodRestock)
+        local due = e:GetNW2Float("lc_cache_next", 0) - CurTime()
+        if due > 0 and ply:GetNW2String("lcf_faction", "") == "resistance" then
+            local m = math.max(1, math.ceil(due / 60))
+            sub = sub .. string.format(". More supplies in about %d minute%s", m, m == 1 and "" or "s")
+        end
     else
         return
     end
