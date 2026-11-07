@@ -12,7 +12,14 @@
       Bandages     up to two
       A ration     your allocation, once every lc_cpsupply_ration (600) seconds
 
-    Once every lc_cpsupply_cooldown (120) seconds. Then the Commissary's unit
+    Once every lc_cpsupply_cooldown (120) seconds. And at any time (the owner, 7 November):
+
+      Ration vouchers   each one (the duty allocation, sv_livingcity_cp.lua) is a ration packet
+      The daily kit     once every city day (lc_day_minutes): a health vial and a bandage
+      The vest          standing at it charges a unit's vest, lc_cpsupply_recharge (5) a second, up to
+                        their issue (50, officers 75, Overwatch 100)
+
+    Then the Commissary's unit Then the Commissary's unit
     counter opens (flashbangs, gas, ammunition and batteries for credits):
     the only place units buy those; the Union Commissary terminals never sell
     them (unless the city has no Civil Protection Commissary).
@@ -29,6 +36,7 @@ LC = LC or {}
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvCool   = CreateConVar("lc_cpsupply_cooldown", "120", FLAGS, "Seconds between a Civil Protection unit's issues at the Civil Protection Commissary")
 local cvRation = CreateConVar("lc_cpsupply_ration", "600", FLAGS, "Seconds between the ration a Civil Protection unit is issued at the Civil Protection Commissary")
+local cvRecharge = CreateConVar("lc_cpsupply_recharge", "5", FLAGS, "Charge a Civil Protection unit's vest gains each second they stand at a Civil Protection Commissary (0: none)")
 
 -- A full load, by ammunition type, for the weapons that use it.
 local LOAD = {
@@ -98,6 +106,39 @@ function LC.IssueSupplies(ply)
     return got
 end
 
+-- Ration vouchers in for packets, one each (sv_livingcity_cp.lua). How many were exchanged.
+function LC.RedeemRationVouchers(ply)
+    local n = 0
+    if not IsValid(ply) or not LC.Inventory or not LC.GiveItem then return n end
+    for _ = 1, LC.Inventory(ply).ration_voucher or 0 do
+        if not LC.GiveItem(ply, "ration", 1) then break end -- (pockets full: the rest wait)
+        LC.TakeItem(ply, "ration_voucher", 1)
+        n = n + 1
+    end
+    return n
+end
+
+-- The daily kit: a health vial and a bandage, once every city day (kept over a restart).
+local function DaySecs() return LC.SpoilSecs and LC.SpoilSecs() or 3600 end
+function LC.CPDailyKitDue(ply)
+    local last = tonumber(ply:GetPData("lc_cp_daily_at", "")) or 0
+    return os.time() >= last + DaySecs(), math.max(0, last + DaySecs() - os.time())
+end
+function LC.IssueCPDailyKit(ply, ent)
+    local got = {}
+    if not IsValid(ply) or not Unit(ply) or not LC.CPDailyKitDue(ply) then return got end
+    ply:SetPData("lc_cp_daily_at", tostring(os.time()))
+    local vial = ents.Create("item_healthvial")
+    if IsValid(vial) then
+        local from = IsValid(ent) and ent or ply
+        vial:SetPos(from:GetPos() + from:GetForward() * 40 + Vector(0, 0, 20))
+        vial:Spawn()
+        got[#got + 1] = IsValid(ent) and "a health vial (on the floor in front of the Commissary)" or "a health vial (on the floor in front of you)"
+    end
+    if LC.GiveItem and LCS.Items.bandage and LC.GiveItem(ply, "bandage", 1) then got[#got + 1] = "a bandage" end
+    return got
+end
+
 function LC.UseCPSupply(ply, ent)
     if not IsValid(ply) or not ply:Alive() then return end
     if (ply.lcSupplyUse or 0) > CurTime() then return end
@@ -110,6 +151,12 @@ function LC.UseCPSupply(ply, ent)
     if IsValid(ent) and ent:GetNW2Bool("lc_nopower", false) then
         ply:ChatPrint("[CP Commissary] The screen's dark. No power.")
         return
+    end
+    -- vouchers, whatever the wait for the next issue
+    local v = LC.RedeemRationVouchers(ply)
+    if v > 0 then
+        if IsValid(ent) then ent:EmitSound("items/ammo_pickup.wav", 65) end
+        ply:ChatPrint("[CP Commissary] Issued: " .. (v == 1 and "a ration packet for your voucher" or (v .. " ration packets for your vouchers")) .. ".")
     end
     local wait = (ply.lcSupplyNext or 0) - CurTime()
     if wait > 0 then
@@ -125,8 +172,47 @@ function LC.UseCPSupply(ply, ent)
         end
         hook.Run("LivingCitySupplied", ply, got)
     end
+    -- the daily kit, on top of the issue (and whatever the wait for the next one)
+    local kit = LC.IssueCPDailyKit(ply, ent)
+    if #kit > 0 then ply:ChatPrint("[CP Commissary] Today's kit: " .. table.concat(kit, " and ") .. ".") end
     if LC.OpenShop then LC.OpenShop(ply, true) end
 end
+
+-- Standing at one charges a unit's vest, up to their issue (the owner, 7 November: "automatic recharging of
+-- the vest at a CP Commissary would be wonderful too"). Not with the power out.
+function LC.CPSupplyRechargeTick()
+    local rate = cvRecharge:GetFloat()
+    if rate <= 0 then return end
+    local sups = LC.EntsOf and LC.EntsOf("lc_cpsupply") or {}
+    if #sups == 0 then return end
+    for _, ply in ipairs(player.GetAll()) do
+        local at = false
+        if ply:Alive() and Unit(ply) then
+            for _, e in ipairs(sups) do
+                if IsValid(e) and not e:GetNW2Bool("lc_nopower", false) and e:GetPos():DistToSqr(ply:GetPos()) < 120 * 120 then at = true break end
+            end
+        end
+        local want = at and ArmourFor(ply) or 0
+        if at and ply:Armor() < want then
+            ply:SetArmor(math.min(want, ply:Armor() + math.ceil(rate)))
+            if not ply.lcSupplyCharging then
+                ply.lcSupplyCharging = true
+                ply:EmitSound("items/suitcharge1.wav", 55)
+                ply:ChatPrint("[CP Commissary] Your vest is charging. Stay here until it's full.")
+            end
+            if ply:Armor() >= want then
+                ply:EmitSound("items/suitchargeok1.wav", 55)
+                ply:ChatPrint("[CP Commissary] Vest charged (" .. want .. ").")
+            end
+        elseif not at then
+            ply.lcSupplyCharging = nil
+        end
+    end
+end
+timer.Create("LivingCityCPSupplyCharge", 1, 0, function()
+    local ok, err = pcall(LC.CPSupplyRechargeTick)
+    if not ok and LC.Error then LC.Error("cp supply charge", err) end
+end)
 
 -- Is there one in this city? (Without one, the Union Commissary issues units their supplies.)
 function LC.HasCPSupply() return #(LC.EntsOf and LC.EntsOf("lc_cpsupply") or {}) > 0 end

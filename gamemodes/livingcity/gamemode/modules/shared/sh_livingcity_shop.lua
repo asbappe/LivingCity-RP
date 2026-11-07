@@ -64,6 +64,10 @@ LCS.Items = {
                         desc = "Your name, your citizen number, your block. Show: to whoever you're looking at (Civil Protection units ask), or read them yourself" },
     ration_card     = { name = "Ration card", model = "models/props_c17/paper01.mdl", doc = true, kg = 0, sell = 0,
                         desc = "Earned by work: one for each Union shift you finish. A ration dispenser takes one card for each ration" },
+    -- (the owner, 7 November: units no longer get ration packets out of thin air; their duty allocation is a voucher,
+    -- for a packet at a Civil Protection Commissary or a ration dispenser: sv_livingcity_cp.lua, sv_livingcity_cpsupply.lua)
+    ration_voucher  = { name = "Ration voucher", model = "models/props_c17/paper01.mdl", doc = true, kg = 0, sell = 0,
+                        desc = "A Civil Protection unit's duty allocation. Take it to a Civil Protection Commissary or a ration dispenser for a ration packet" },
     ------------------------------------------------------------------------
     -- Things that change what you can do (see sv_livingcity_underground.lua)
     --   contraband   illegal to carry: searches look for it

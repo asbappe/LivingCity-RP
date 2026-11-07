@@ -93,7 +93,11 @@ function SWEP:Reload()
     if (self.nextReload or 0) > CurTime() then return end
     self.nextReload = CurTime() + 0.5
     local owner = self:GetOwner()
-    if IsValid(owner) and owner:HasWeapon("weapon_lc_hands") then owner:SelectWeapon("weapon_lc_hands") end
+    if not IsValid(owner) then return end
+    -- (the same R, still held, reached the hands' own R a moment later and drew the radio straight back out:
+    -- the owner, 7 November, "it just flashes and reappears". The hands ignore it until R is let go.)
+    if LC and LC.HoldReload then LC.HoldReload(owner) end
+    if owner:HasWeapon("weapon_lc_hands") then owner:SelectWeapon("weapon_lc_hands") end
 end
 
 if CLIENT then

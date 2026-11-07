@@ -149,6 +149,7 @@ LC_MODULES = {
         "sv_livingcity_campmove",
         "sv_livingcity_funding",
         "sv_livingcity_work",
+        "sv_livingcity_reconcile", -- (a new faction or rank: the old job, its clothes and kit go)
         "sv_livingcity_stalkerwork",
         "sv_livingcity_writing",
     },

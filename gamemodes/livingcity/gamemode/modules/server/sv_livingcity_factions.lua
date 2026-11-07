@@ -462,6 +462,7 @@ function LC.SetFaction(ply, fid, sid, quiet, stay)
         end
     end
     if LC.RefreshRelations then LC.RefreshRelations() end
+    hook.Run("LivingCityFactionChanged", ply, fid, sid) -- (sv_livingcity_reconcile.lua: the old faction's job, looks and kit go)
 end
 
 net.Receive("lcf_join", function(_, ply)
@@ -619,6 +620,7 @@ function LC.AddXP(ply, amount, why)
             ApplyBody(ply)
             GiveLoadout(ply, true)
         end
+        hook.Run("LivingCityRankChanged", ply, f.id, ply:GetNW2Int("lcf_rank", 1)) -- (sv_livingcity_reconcile.lua: what the new rank may wear and hold)
     end
 end
 
