@@ -19,7 +19,7 @@
       The vest          standing at it charges a unit's vest, lc_cpsupply_recharge (5) a second, up to
                         their issue (50, officers 75, Overwatch 100)
 
-    Then the Commissary's unit Then the Commissary's unit
+    Then the Commissary's unit
     counter opens (flashbangs, gas, ammunition and batteries for credits):
     the only place units buy those; the Union Commissary terminals never sell
     them (unless the city has no Civil Protection Commissary).

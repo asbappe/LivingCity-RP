@@ -37,7 +37,7 @@
       lc_manpower 0/1               on (1)
       lc_manpower_rebel_max <n>     most fighters the Resistance hold in reserve (20)
       lc_manpower_rebel_minutes <m> minutes per recruit at the ordinary rate (8)
-      lc_manpower_cp_max <n>        most Civil Protection units in reserve (30)
+      lc_manpower_cp_max <n>        most Civil Protection units in reserve (20)
       lc_manpower_cp_minutes <m>    minutes per new unit (5)
       lc_manpower_ota_max <n>       most Overwatch soldiers in reserve (12)
       lc_manpower_ota_minutes <m>   minutes per soldier, drops aside (20)
