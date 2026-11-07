@@ -29,7 +29,10 @@
                              every unit's mask lets gas through (once every 20 minutes).
       Spike the food         at the Commissary, with weedkiller: the units who eat at the
                              station fall sick over the next few minutes (once every 20).
-      Let them slip          beside a prisoner being marched to the cells: you
+      Let them slip          (also F2, and a line in "what you can do here" on
+                             the right while one is within reach: bright when
+                             nobody's watching, faint when someone is)
+                             beside a prisoner being marched to the cells: you
                              take them off the escort's hands, and once it's
                              gone, the cuffs come off. A head start of 20
                              seconds; whoever still sees them then has them
@@ -296,16 +299,32 @@ local function SlipOver(target, where)
     if LC.RadioNotice then LC.RadioNotice("resistance", "One of ours got away on the march to the cells.") end
 end
 
+-- The prisoner and their escort: they don't count as watching.
+local function SlipIgnore(target)
+    local m = LC.Marching[target] or {}
+    local ignore = { [target] = true }
+    if IsValid(m.lead) then ignore[m.lead] = true end
+    if IsValid(m.rear) then ignore[m.rear] = true end
+    return ignore
+end
+
+-- What the Insider's own screen shows (the hint on the right, and F2): the marched prisoner
+-- within reach (or nil), and "" (they can do it now), "watched" or "soon" (not again yet).
+function LC.InsiderSlipState(ply)
+    if not LC.IsInsider(ply) or not ply:Alive() or (LC.InCustody and LC.InCustody(ply)) then return nil end
+    local target = LC.InsiderMarchNear(ply)
+    if not IsValid(target) then return nil end
+    if LC.InsiderWatched(ply, SlipIgnore(target)) then return target, "watched" end
+    if not Ready(ply, "slip", SLIP_GAP) then return target, "soon" end
+    return target, ""
+end
+
 function LC.InsiderLetSlip(ply, target)
     if not LC.IsInsider(ply) then return false, "Nothing like that is open to you." end
     if not (IsValid(target) and LC.Marching and LC.Marching[target]) then target = LC.InsiderMarchNear(ply) end
     if not IsValid(target) then return false, "Nobody's being marched to the cells near you." end
     if target:GetPos():DistToSqr(ply:GetPos()) > SLIP_NEAR * SLIP_NEAR then return false, "Get closer to the prisoner first." end
-    local m = LC.Marching[target]
-    local ignore = { [target] = true }
-    if IsValid(m.lead) then ignore[m.lead] = true end
-    if IsValid(m.rear) then ignore[m.rear] = true end
-    local ok, why = CanAct(ply, ignore)
+    local ok, why = CanAct(ply, SlipIgnore(target))
     if not ok then return false, why end
     ok, why = Ready(ply, "slip", SLIP_GAP)
     if not ok then return false, why end
@@ -421,6 +440,29 @@ timer.Create("LivingCityInsider", 5, 0, function()
         end
     end
 end)
+
+-- Let them slip, on the Insider's own screen: while a marched prisoner is within reach, twice a
+-- second, whether they can do it now (sent to them alone, and only when it changes).
+util.AddNetworkString("lc_insider_slip")
+function LC.InsiderSlipTick()
+    local any = next(LC.Marching or {}) ~= nil
+    for _, p in ipairs(player.GetAll()) do
+        local target, why
+        if any then target, why = LC.InsiderSlipState(p) end
+        local key = IsValid(target) and (target:EntIndex() .. ":" .. why) or ""
+        if (p.lcSlipSent or "") ~= key then
+            p.lcSlipSent = key
+            net.Start("lc_insider_slip")
+            net.WriteBool(IsValid(target))
+            if IsValid(target) then
+                net.WriteEntity(target)
+                net.WriteString(why or "")
+            end
+            net.Send(p)
+        end
+    end
+end
+timer.Create("LivingCityInsiderSlip", 0.5, 0, function() LC.InsiderSlipTick() end)
 
 -- A leader coming on hears who's inside, once.
 hook.Add("PlayerSpawn", "LivingCityInsiderLeaders", function(ply)

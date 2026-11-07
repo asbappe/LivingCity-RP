@@ -49,6 +49,31 @@ end
 -- Am I the Resistance's man inside? Told to me alone (sv_livingcity_insider.lua).
 net.Receive("lc_insider", function() LC_CL.Insider = net.ReadBool() end)
 
+-- Let them slip: the marched prisoner within reach, and whether I can do it now (the server
+-- says, to me alone, when it changes: sv_livingcity_insider.lua). For F2 and the hint on the right.
+net.Receive("lc_insider_slip", function()
+    if net.ReadBool() then
+        LC_CL.InsiderSlipNet = { target = net.ReadEntity(), why = net.ReadString() }
+    else
+        LC_CL.InsiderSlipNet = nil
+    end
+end)
+-- The prisoner, and "" (now), "watched" or "soon"; or nil when there's no one (or I'm not the Insider).
+function LC_CL.InsiderSlipNow(me)
+    me = me or LocalPlayer()
+    local s = LC_CL.InsiderSlipNet
+    if not (s and LC_CL.Insider and IsValid(me) and me:Alive()) then return nil end
+    local t = s.target
+    if not (IsValid(t) and t:GetNW2Bool("lc_marching", false)) or t:GetPos():DistToSqr(me:GetPos()) > 300 * 300 then return nil end
+    return t, s.why or ""
+end
+-- Why not now, in a few words.
+function LC_CL.InsiderSlipWhyNot(why)
+    if why == "watched" then return "not now, you're being watched" end
+    if why == "soon" then return "not yet, too soon after the last one" end
+    return nil
+end
+
 local function Title(s) return string.upper(string.sub(s, 1, 1)) .. string.sub(s, 2) end
 
 -- Who someone is, to you: a unit's designation, a name you know, or what they look like.

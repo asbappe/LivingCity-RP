@@ -19,10 +19,17 @@
               "zone": rebel, infest, home, combine, prison (where you are, lc_here)
               "faction": citizen, resistance, cp, vort, zombie, admin... (lcf_faction)
               "quest": the step's kind (hold, tail, escort, pickup, collect...), or "_any"
+              "nearby": anything (its own name): what's around you right now, shown first
         text  keys in braces: {+use}, {+reload}, {+attack2}, {+duck}, {+walk},
               {gm_showspare1}, {+menu_context}, {kick} (a unit's kick), {quick} (F1), {quick2} (F2)
+              (or a function(me, ctx) -> the text, or nil for no line: for names)
         when  optional function(me, ctx) -> true when the line applies
+        style optional function(me, ctx) -> "bright" (stays bright while it applies) or
+              "faint" (always faint); nil: as the rest of the panel
       LC_CL.SetContextTitle(kind, key, title)
+
+    The Resistance Insider, beside a prisoner being marched to the cells: "Let <name> slip
+    away: F2 > 7" (bright; faint "not now, you're being watched" while someone can see).
 
     C > Settings: "What you can do here (on the right)" (lc_context_show, 1).
 ]]
@@ -77,6 +84,7 @@ end
 ------------------------------------------------------------------------
 
 LC_CL.ContextHints = LC_CL.ContextHints or { weapon = {}, zone = {}, faction = {}, quest = {} }
+LC_CL.ContextHints.nearby = LC_CL.ContextHints.nearby or {}
 
 local function Entry(kind, key)
     local list = LC_CL.ContextHints[kind]
@@ -90,10 +98,10 @@ function LC_CL.SetContextTitle(kind, key, title)
     if e then e.title = title end
 end
 
-function LC_CL.AddContextHint(kind, key, text, when)
+function LC_CL.AddContextHint(kind, key, text, when, style)
     local e = Entry(kind, key)
     if not e or not text then return end
-    e.lines[#e.lines + 1] = { t = text, when = when }
+    e.lines[#e.lines + 1] = { t = text, when = when, style = style }
 end
 
 local function Unit(me) return me:GetNW2Bool("lc_unit", false) or me:GetNW2String("lcf_faction", "") == "cp" end
@@ -202,6 +210,24 @@ for kind, list in pairs(DATA) do
     end
 end
 
+-- The Resistance Insider, beside a prisoner being marched to the cells (cl_livingcity_actions.lua,
+-- sv_livingcity_insider.lua): there as long as the prisoner is within reach.
+LC_CL.SetContextTitle("nearby", "insider_slip", "Inside")
+LC_CL.AddContextHint("nearby", "insider_slip", function(me)
+    if not LC_CL.InsiderSlipNow then return nil end
+    local t, why = LC_CL.InsiderSlipNow(me)
+    if not t then return nil end
+    local name = LC_CL.ICName and LC_CL.ICName(t) or "them"
+    local whyNot = LC_CL.InsiderSlipWhyNot and LC_CL.InsiderSlipWhyNot(why)
+    if whyNot then return "Let " .. name .. " slip away: " .. whyNot end
+    local n = LC_CL.QuickSlot and LC_CL.QuickSlot("letslip")
+    return "Let " .. name .. " slip away: {quick2}" .. (n and (" > " .. n) or "")
+end, nil, function(me)
+    if not LC_CL.InsiderSlipNow then return "faint" end
+    local t, why = LC_CL.InsiderSlipNow(me)
+    return (t and why == "") and "bright" or "faint"
+end)
+
 ------------------------------------------------------------------------
 -- What applies now
 ------------------------------------------------------------------------
@@ -214,6 +240,11 @@ local function Collect(me, ctx, kind, key, out, budget)
         if budget.left <= 0 then break end
         local ok, yes = true, true
         if l.when then ok, yes = pcall(l.when, me, ctx) end
+        local text = l.t
+        if ok and yes and type(text) == "function" then
+            ok, text = pcall(text, me, ctx)
+            yes = ok and type(text) == "string" and text ~= ""
+        end
         if ok and yes then
             if not group then
                 -- (one group per title: the quest's "_any" lines join its step's)
@@ -224,7 +255,14 @@ local function Collect(me, ctx, kind, key, out, budget)
                 end
             end
             if #group.lines < MAX_PER_GROUP then
-                group.lines[#group.lines + 1] = LC_CL.ContextText(l.t)
+                group.lines[#group.lines + 1] = LC_CL.ContextText(text)
+                if l.style then
+                    local okS, st = pcall(l.style, me, ctx)
+                    if okS and (st == "bright" or st == "faint") then
+                        group.style = group.style or {}
+                        group.style[#group.lines] = st
+                    end
+                end
                 budget.left = budget.left - 1
             end
         end
@@ -248,6 +286,11 @@ function LC_CL.ContextGroups(me)
     local q = LC_CL.QuestState and LC_CL.QuestState()
     if q and q.active then ctx.quest = q end
     local out, budget = {}, { left = MAX_LINES }
+    -- what's around you right now first: it won't be there for long
+    local near = {}
+    for key in pairs(LC_CL.ContextHints.nearby) do near[#near + 1] = key end
+    table.sort(near)
+    for _, key in ipairs(near) do Collect(me, ctx, "nearby", key, out, budget) end
     Collect(me, ctx, "weapon", ctx.weapon, out, budget)
     if ctx.quest then
         Collect(me, ctx, "quest", ctx.quest.kind, out, budget)
@@ -334,16 +377,19 @@ hook.Add("HUDPaint", "LivingCityContext", function()
         local parts = {}
         for _, g in ipairs(groups) do
             parts[#parts + 1] = g.title
-            for _, l in ipairs(g.lines) do parts[#parts + 1] = l end
+            for i, l in ipairs(g.lines) do parts[#parts + 1] = (g.style and g.style[i] or "") .. l end
         end
         local sig = table.concat(parts, "\n")
         if sig ~= cache.sig then
             cache.sig, cache.changed = sig, now
             -- wrapped once, when it changes
             for _, g in ipairs(groups) do
-                g.rows = {}
-                for _, l in ipairs(g.lines) do
-                    for _, r in ipairs(Wrap(l, W - 18)) do g.rows[#g.rows + 1] = r end
+                g.rows, g.rowStyle = {}, {}
+                for i, l in ipairs(g.lines) do
+                    for _, r in ipairs(Wrap(l, W - 18)) do
+                        g.rows[#g.rows + 1] = r
+                        g.rowStyle[#g.rows] = g.style and g.style[i] or nil
+                    end
                 end
             end
             cache.groups = groups
@@ -372,15 +418,18 @@ hook.Add("HUDPaint", "LivingCityContext", function()
     for _, g in ipairs(shown) do
         draw.SimpleText(Upper(g.title), "LCCtxHead", x + 9, ly, A(HEAD))
         ly = ly + ROW
-        for _, r in ipairs(g.rows or {}) do
+        for i, r in ipairs(g.rows or {}) do
+            -- a line can ask to stay bright (while it applies), or to be faint
+            local st = g.rowStyle and g.rowStyle[i]
+            local function B(c) if st == "bright" then return c elseif st == "faint" then return Faded(c) end return A(c) end
             -- the keys stand out: a row that starts with one has it in amber
             local k, rest = string.match(r, "^(%b[])(.*)$")
             if k then
-                draw.SimpleText(k, "LCCtxLine", x + 9, ly, A(KEY))
+                draw.SimpleText(k, "LCCtxLine", x + 9, ly, B(KEY))
                 local kw = KeyWidth(k)
-                draw.SimpleText(rest, "LCCtxLine", x + 9 + kw, ly, A(INK))
+                draw.SimpleText(rest, "LCCtxLine", x + 9 + kw, ly, B(INK))
             else
-                draw.SimpleText(r, "LCCtxLine", x + 9, ly, A(INK))
+                draw.SimpleText(r, "LCCtxLine", x + 9, ly, B(INK))
             end
             ly = ly + ROW
         end

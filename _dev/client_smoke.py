@@ -2413,6 +2413,86 @@ return (not ok) and tostring(e) or nil
 if err:
     problems = (problems + "\n" if problems else "") + "context panel / quest trail: " + str(err)
 
+# the Resistance Insider beside a prisoner being marched to the cells (sv_livingcity_insider.lua): F2 > 7
+# lets them slip and the panel on the right says so, bright; greyed and faint while someone can see;
+# nothing for anyone else, or once the prisoner is out of reach
+err = L.execute(r"""
+local ok, e = pcall(function()
+    local pris = _makeplayer("SlipPrisoner", Vector(120, 0, 0))
+    pris.nw.lc_marching = true
+    _me:SetPos(Vector(0, 0, 0))
+    _me.nw.lcf_faction = "cp"
+    _me.IsAdmin = function() return false end
+    _me.GetEyeTrace = function() return { Hit = false, HitPos = Vector(0, 0, 0) } end
+    local function Lines()
+        local out = {}
+        for _, g in ipairs(LC_CL.ContextGroups(_me)) do
+            for i, l in ipairs(g.lines) do if string.find(l, "slip away", 1, true) then out[#out + 1] = { t = l, st = g.style and g.style[i], g = g } end end
+        end
+        return out
+    end
+    local function F2Slip()
+        local root = LC_CL.QuickRoleRoot()
+        for n = 1, 8 do local it = root.items[n] if it and it.id == "letslip" then return it, n, root end end
+        return nil, nil, root
+    end
+    local function Told(t, why)
+        if t then net._q = { true, t, why } else net._q = { false } end
+        net["recv_lc_insider_slip"](0)
+    end
+    -- an ordinary unit: nothing, even with the server's word (it never sends it, but still)
+    LC_CL.Insider = false
+    Told(pris, "")
+    if #Lines() > 0 or F2Slip() then error("an ordinary unit sees Let them slip") end
+    -- the Insider, unseen: F2 > 7, and the line, bright, naming the key
+    LC_CL.Insider = true
+    local it, n, root = F2Slip()
+    if not it or n ~= 7 or it.disabled then error("F2: no live Let them slip at 7 (got " .. tostring(n) .. ")") end
+    if not (root.items[1].label == "Voice lines" and root.items[6].label == "Send my 10-20") then error("F2: the owner's six moved") end
+    local sent
+    local sa = LC_CL.SendAction
+    LC_CL.SendAction = function(cmd) sent = cmd end
+    LC_CL.OpenQuick2() LC_CL.QuickPick(7)
+    LC_CL.SendAction = sa
+    if sent ~= "letslip" then error("F2 > 7 didn't send letslip: " .. tostring(sent)) end
+    local L1 = Lines()
+    if #L1 ~= 1 or not string.find(L1[1].t, "[F2] > 7", 1, true) or L1[1].st ~= "bright" then
+        error("panel: no bright 'Let them slip: F2 > 7' line: " .. tostring(L1[1] and L1[1].t) .. " " .. tostring(L1[1] and L1[1].st))
+    end
+    if LC_CL.ContextGroups(_me)[1].title ~= "Inside" then error("panel: the Insider's line isn't first") end
+    _advance(0.3)
+    hook.t.HUDPaint.LivingCityContext()
+    -- someone can see: greyed in F2 (picking it does nothing), faint on the right
+    Told(pris, "watched")
+    it = F2Slip()
+    if not it or not it.disabled or not string.find(it.label, "someone can see you", 1, true) then error("F2: not greyed while watched: " .. tostring(it and it.label)) end
+    sent = nil
+    LC_CL.SendAction = function(cmd) sent = cmd end
+    LC_CL.OpenQuick2() LC_CL.QuickPick(7)
+    LC_CL.SendAction = sa
+    if sent then error("F2: a greyed Let them slip still sent " .. tostring(sent)) end
+    LC_CL.CloseQuick()
+    local L2 = Lines()
+    if #L2 ~= 1 or not string.find(L2[1].t, "being watched", 1, true) or L2[1].st ~= "faint" then error("panel: no faint 'being watched' line: " .. tostring(L2[1] and L2[1].t)) end
+    _advance(0.3)
+    hook.t.HUDPaint.LivingCityContext()
+    -- out of reach, or no longer marched, or the server says there's no one: gone
+    pris:SetPos(Vector(400, 0, 0))
+    if #Lines() > 0 or F2Slip() then error("still offered with the prisoner out of reach") end
+    pris:SetPos(Vector(120, 0, 0))
+    pris.nw.lc_marching = false
+    if #Lines() > 0 or F2Slip() then error("still offered once the march is over") end
+    pris.nw.lc_marching = true
+    Told(nil)
+    if #Lines() > 0 or F2Slip() then error("still offered after the server said there's no one") end
+    LC_CL.Insider, LC_CL.InsiderSlipNet = nil, nil
+    _me.nw.lcf_faction = nil
+end)
+return (not ok) and tostring(e) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "Insider's Let them slip (F2, panel): " + str(err)
+
 # the owner's 7 November playtest: the panting on one handle, stopped; the rain 30% quieter; the
 # eyelids under the job's objective; Civil Protection's action music
 err = L.execute(r"""
