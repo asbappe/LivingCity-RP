@@ -1161,6 +1161,31 @@ local okWN, errWN = pcall(function()
     _me:SetNW2String("lc_next", "")
 end)
 if not okWN then problems[#problems + 1] = "what now: " .. tostring(errWN) end
+-- resisting arrest (cl_livingcity_arrest.lua): the struggle bar, E counted as a press, then gone
+local okAR, errAR = pcall(function()
+    local rB, rS, rF, rU = net.ReadBool, net.ReadString, net.ReadFloat, net.ReadUInt
+    local q = { true, "resist", "Unit 12", CurTime() + 4, 3, 5, 1.25, 2 }
+    local function nx() return table.remove(q, 1) end
+    net.ReadBool, net.ReadString, net.ReadFloat, net.ReadUInt = nx, nx, nx, nx
+    net["recv_lc_struggle"]()
+    net.ReadBool, net.ReadString, net.ReadFloat, net.ReadUInt = rB, rS, rF, rU
+    local s = LC_CL.Struggle
+    if not s or s.role ~= "resist" or s.mine ~= 3 then error("struggle not read") end
+    run("HUDPaint")
+    local blocked
+    for _, fn in pairs(hook.t.PlayerBindPress or {}) do
+        local r = fn(_me, "+use", true)
+        if r then blocked = true end
+    end
+    if not blocked or LC_CL.Struggle.mine ~= 4 then error("E not taken as a press") end
+    local share = LC_CL.StruggleShare(LC_CL.Struggle)
+    if share <= 0 or share >= 0.5 then error("share wrong: " .. tostring(share)) end
+    net.ReadBool = function() return false end
+    net["recv_lc_struggle"]()
+    net.ReadBool = rB
+    if LC_CL.Struggle then error("not cleared") end
+end)
+if not okAR then problems[#problems + 1] = "resisting arrest: " .. tostring(errAR) end
 -- the lag monitor (cl_livingcity_lagwatch.lua): on, a few seconds of it, the panel, the printout, off
 local okLW, errLW = pcall(function()
     LC_CL.SetLagWatch(true)

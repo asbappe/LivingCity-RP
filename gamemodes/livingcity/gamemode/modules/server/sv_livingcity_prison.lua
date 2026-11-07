@@ -8,7 +8,9 @@
         would take you under 20 health, sends you to a free cell. On a map
         with no cells, you're detained on the street instead: cuffed and made
         to kneel for a while, searched, fined, and let go with a warning.
-      - CP players arrest with the Arrest Baton (right click a player or citizen).
+      - CP players arrest with the Arrest Baton (right click a player, citizen
+        or rebel): they may struggle, and are cuffed and walked to the cells
+        (sv_livingcity_arrest.lua).
       - Prisoners lose their weapons, can't spawn things or noclip, and get them
         back on release at the release point.
       - Leaving the prison zone (or straying far from your cell if there is no
@@ -51,6 +53,7 @@ end
 function LC.InCustody(ply)
     return (LC.Prisoners and LC.Prisoners[ply] ~= nil) or (LC.Detained and LC.Detained[ply] ~= nil)
         or (LC.Marching and LC.Marching[ply] ~= nil) -- (being walked to the cells: sv_livingcity_march.lua)
+        or (LC.ArrestHolds and LC.ArrestHolds[ply] ~= nil) -- (cuffed, waiting to be walked there: sv_livingcity_arrest.lua)
 end
 
 function LC.PrisonAvailable()
@@ -557,11 +560,14 @@ function LC.ReleaseNPCPrisoner(npc, st, now, force)
     st.leaveWhy = "let out of prison, and gone home"
 end
 
--- Used by the Arrest Baton on NPC citizens (and by quests): cuffed, then a
--- moment later they're in a cell, the same way an arrested player is.
+-- Used by the Arrest Baton on citizens and rebels, by units, and by quests. Arrested by someone
+-- there in person (a player, a unit): cuffed, and walked to the cells (sv_livingcity_arrest.lua).
+-- An arrest a job or a story makes off screen (arrester nil), or with no way to walk there:
+-- cuffed, and a moment later they're in a cell, the same way it always was.
 function LC.ArrestNPC(npc, arrester)
     local st = LC.NPCs[npc]
-    if not st or st.role ~= "citizen" then return false, "only citizens can be arrested" end
+    if not st or (st.role ~= "citizen" and st.role ~= "rebel") then return false, "only citizens and rebels can be arrested" end
+    if LC.NPCCustody and LC.NPCCustody[npc] then return false, "already in custody" end
     local cell = FreeCell(npc)
     if not cell then return false, "no free cell" end
     if LC.LeaveLine then LC.LeaveLine(npc, st) end
@@ -575,6 +581,12 @@ function LC.ArrestNPC(npc, arrester)
     LC.SetState(npc, st, "detained") -- cuffed, standing still
     st.untilT = CurTime() + 10
     st.poi = cell
+    if st.role == "rebel" and LC.DisarmPrisoner then LC.DisarmPrisoner(npc, st) end
+    if LC.Fleeing and LC.Fleeing[npc] then LC.Fleeing[npc].untilT = 0 end
+    if LC.WalkNPCToPrison and LC.WalkNPCToPrison(npc, st, arrester, cell) then
+        hook.Run("LivingCityIncarcerated", npc, st.jailUntil - CurTime(), "NPC arrest", arrester)
+        return true
+    end
     timer.Simple(1.5, function()
         if not IsValid(npc) or LC.NPCs[npc] ~= st or st.state ~= "detained" then return end
         npc:SetPos(cell.pos + Vector(0, 0, 4))

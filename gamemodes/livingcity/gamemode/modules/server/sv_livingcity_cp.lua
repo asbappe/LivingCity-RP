@@ -581,6 +581,11 @@ end
 
 -- !drag on someone tied: walk them along. Returns nil when it's not about a tied person.
 function LC.TryEscort(ply)
+    -- a cuffed NPC: walked to the cells (sv_livingcity_arrest.lua)
+    if LC.NPCCustodyDrag then
+        local handled, why = LC.NPCCustodyDrag(ply)
+        if handled ~= nil then return handled, why end
+    end
     for target, t in pairs(LC.Tied) do
         if t.escort == ply then
             t.escort = nil

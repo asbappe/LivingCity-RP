@@ -1,7 +1,8 @@
 --[[
     Arrest Baton (Living City)
     Primary:   strike
-    Secondary: arrest the player or citizen in front of you (sends them to a free cell)
+    Secondary: arrest the player, citizen or rebel in front of you (they may struggle; then
+               cuffed, and walked to the cells: sv_livingcity_arrest.lua)
     Reload:    release the prisoner in front of you, or search the person in front of you
 ]]
 
@@ -84,6 +85,11 @@ function SWEP:SecondaryAttack()
     local ent = MeleeTrace(owner).Entity
     if not IsValid(ent) then return end
 
+    if LC.BatonArrest then
+        local _, msg = LC.BatonArrest(owner, ent)
+        if msg then Tell(owner, msg) end
+        return
+    end
     if ent:IsPlayer() then
         if LC.PlayerIsCP(ent) and not owner:IsAdmin() then return Tell(owner, "You can't arrest another Civil Protection unit.") end
         local done, err = LC.Incarcerate(ent, GetConVar("lc_prison_time"):GetInt(), "Arrested by " .. owner:Nick(), owner)

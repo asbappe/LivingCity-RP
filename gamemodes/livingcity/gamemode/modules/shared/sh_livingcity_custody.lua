@@ -39,3 +39,10 @@ hook.Add("SetupMove", "LivingCityDazed", function(ply, mv)
     if mv:GetMaxSpeed() > slow then mv:SetMaxSpeed(slow) end
     if mv:KeyDown(IN_SPEED) then mv:SetButtons(bit.band(mv:GetButtons(), bit.bnot(IN_SPEED))) end
 end)
+
+-- Struggling against an arrest (sv_livingcity_arrest.lua): held where you stand till it's decided.
+hook.Add("SetupMove", "LivingCityStruggle", function(ply, mv)
+    if ply:GetNW2Float("lc_struggle_until", 0) <= CurTime() then return end
+    mv:SetMaxClientSpeed(1)
+    mv:SetMaxSpeed(1)
+end)
