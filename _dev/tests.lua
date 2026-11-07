@@ -13312,6 +13312,244 @@ end
 UnitLifeTests()
 
 ----------------------------------------------------------------------
+-- Shared dreams (sv_livingcity_dreams.lua): the secret endings, dreamt by everyone asleep
+function DreamTests()
+section("Shared dreams: the endings as dreams for everyone asleep")
+local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
+local errs0 = #_errors
+_walls = {}
+LC.EndEvent(true)
+_setcvar("lc_needs", 0) -- (hunger and thirst held still: the before and after must match exactly)
+_setcvar("lc_dream_delay", 10)
+_setcvar("lc_dream_combine", 3)
+local reloaded = 0
+LC.EndingReload = function() reloaded = reloaded + 1 end
+_files["livingcity/endings.json"] = nil
+local CITY, DREAM = Vector(160000, 160000, 0), Vector(190000, 190000, 0)
+-- a player's game, closer to the real thing: rounds in each gun, the ammunition carried
+local AMMO_ID = { AR2 = 1, Pistol = 3, SMG1 = 4, ["357"] = 5, Buckshot = 7 }
+local function Rich(p)
+    p.clips, p.ammoT = { weapon_pistol = 12, weapon_crowbar = -1 }, { [3] = 40, [4] = 90 }
+    p.GetWeapons = function(self)
+        local o = {}
+        for _, c in ipairs(self.weps) do
+            local cls = c
+            o[#o + 1] = { GetClass = function() return cls end, IsValid = function() return true end,
+                Clip1 = function() return self.clips[cls] or -1 end, SetClip1 = function(_, n) self.clips[cls] = n end }
+        end
+        return o
+    end
+    p.GetWeapon = function(self, c) for _, w in ipairs(self:GetWeapons()) do if w:GetClass() == c then return w end end end
+    p.GetAmmo = function(self) local o = {} for k, v in pairs(self.ammoT) do o[k] = v end return o end
+    p.RemoveAllAmmo = function(self) self.ammoT = {} end
+    p.SetAmmo = function(self, n, t) self.ammoT[AMMO_ID[t] or t] = n end
+    return p
+end
+local function Asleep(p, at)
+    p:SetPos(at)
+    local key = string.format("s%d_%d_%d", math.floor(at.x), math.floor(at.y), math.floor(at.z))
+    p.lcSleep = { t0 = CurTime() - 70, done = CurTime() - 10, last = CurTime(), slept = true }
+    p:SetNW2Bool("lc_sleeping", true)
+    p:SetNW2Float("lc_sleep_done", p.lcSleep.done)
+    p:SetNW2Vector("lc_bed_top", at)
+    p.lcBedKey = key
+    p.lcBedFrom = at + Vector(40, 0, 0)
+    LC.BedSleepers[key] = p
+    return key
+end
+local s1 = Rich(newPlayer("DreamA", "citizen"))
+local s2 = Rich(newPlayer("DreamB", "citizen"))
+local s3 = Rich(newPlayer("DreamC", "citizen"))
+local aw = Rich(newPlayer("DreamAwake", "citizen"))
+_run(3) -- (their factions' loadouts and the like, given a moment after joining)
+local bed1 = Asleep(s1, CITY)
+Asleep(s2, CITY + Vector(0, 200, 0))
+Asleep(s3, CITY + Vector(0, 400, 0))
+aw:SetPos(CITY + Vector(600, 0, 0))
+player.GetAll = function() return { s1, s2, s3, aw } end -- (just these, as in the endings' own tests)
+
+-- with no dream point: the endings are as they always were
+ok(not LC.DreamReady() and LC.DreamPoint() == nil, "no dream point on the map: no dreams")
+ok(LC.TriggerEnding("hard", s1) and LC.EndingSession() ~= nil and LC.DreamQueued() == nil,
+    "and a secret ending is the whole city's, as always (nothing waits for a dream)")
+LC.CancelEnding()
+local okNo, whyNo = LC.DreamStart("hard", nil, false)
+ok(not okNo and string.find(tostring(whyNo), "dream point", 1, true), "a dream can't start without a dream point", whyNo)
+
+-- the dream point (the editor's "Point: dream"), out of the map
+local dp = LC.AddPoint(DREAM, 0, "dream")
+ok(dp and LC.DreamReady() and LC.DreamPoint() == dp, "the editor's dream point: dreams are on")
+ok(LC.ZONE_KINDS.dream and LC.POINT_KINDS.dream, "(a dream point and a dream zone are things the editor places)")
+
+-- a secret ending now waits for tonight's dream
+local okQ = LC.TriggerEnding("hard", s1)
+ok(okQ and LC.EndingAny() == nil and LC.DreamQueued() and LC.DreamQueued().id == "hard",
+    "a secret ending, with a dream point placed, waits for tonight's dream (the city carries on)")
+ok(not LC.TriggerEnding("bus", s1), "one at a time: another can't wait as well")
+
+-- opting out (C > Settings, or /dream off)
+LC.SlashCommands.dream(s2, "off")
+ok(LC.DreamOptedOut(s2) and s2:GetNW2Bool("lc_dream_optout", false), "a player can opt out (saved with them)")
+
+-- everything about s1, before
+LC.Inventory(s1).bread = 3
+s1:SetPData("lci_inv", util.TableToJSON(LC.Inventory(s1)))
+LC.AddCredits(s1, 37)
+s1:SetPData("lce_standing", "55") s1:SetNW2Int("lce_standing", 55)
+s1:SetPData("lcf_xp_citizen", "120")
+s1:SetPData("lcj_job", "factory") s1:SetNW2String("lcj_job", "factory")
+s1:SetNW2Int("lcf_rank", 2)
+s1:SetNW2Float("lcn_hunger", 63.5) s1:SetNW2Float("lcn_thirst", 41)
+s1:SetNW2String("lcd_disguise", "")
+s1:SetNW2Int("lc_vest_cap", 50) s1:SetHealth(77) s1:SetMaxHealth(100) s1:SetArmor(25) -- (an issued vest: armour it may keep)
+s1:SetModel("models/humans/group01/male_07.mdl") s1:SetSkin(2) s1:SetBodygroup(0, 1)
+s1.lcDocs = { permit = 7, notes = { "a", "b" } }
+s1.lcInv.bread = 3
+s1:RemovePData("lc_burned")
+local credits0, hp0 = LC.Credits(s1), s1:Health()
+local before = LC.DreamSnapshot(s1)
+local awPos, awWeps = aw:GetPos(), #aw.weps
+local cityNPC
+for npc in pairs(LC.NPCs or {}) do if IsValid(npc) then cityNPC = npc break end end
+local cityNPCPos = cityNPC and cityNPC:GetPos()
+
+-- the time: a minute after the Administrator says good night
+hook.Run("LivingCityDayPhase", "night", "dusk")
+hook.Run("LivingCityCustomAnnouncement", "administrator", "night", "livingcity/administrator/night1.wav", false)
+_run(3)
+ok(LC.EndingAny() == nil, "not straight away after the good night")
+_run(9)
+local E = LC.EndingAny()
+ok(E and E.dream and E.id == "hard", "about lc_dream_delay after the Administrator's good night, the dream begins", E and E.id)
+local dream = E and E.dream
+ok(s1.lcDreaming and s3.lcDreaming and not s2.lcDreaming and not aw.lcDreaming, "everyone asleep dreams it; whoever opted out, and the awake, don't")
+ok(LC.EndingSession() == nil and not LC.TimeStopped and not GetGlobal2Bool("lc_timestop", false), "to the rest of the city there's no ending: no time stop")
+ok(s1:GetPos():Distance(DREAM) < 1600 and s3:GetPos():Distance(DREAM) < 1600, "the dreamers are at the dream point")
+ok(_files[LC.DreamFileOf(s1:SteamID64())] ~= nil and _files[LC.DreamFileOf(s3:SteamID64())] ~= nil, "a snapshot of each dreamer is saved to disk first")
+ok(#s1.weps == 1 and s1.weps[1] == "weapon_lc_hands" and next(s1.ammoT) == nil, "in the dream they carry only their hands")
+ok(LC.BedSleepers[bed1] == s1 and not LC.BedFree(bed1, s2), "their bed stays theirs")
+_run(5)
+E = LC.EndingAny()
+ok(E and E.phase == "gman" and s1.frozen and s3.frozen, "the G-Man's vote, for the dreamers")
+ok(not aw.frozen and aw:GetPos():Distance(awPos) < 1 and #aw.weps == awWeps and not s2.frozen, "the awake (and whoever opted out) aren't touched: not frozen, not moved",
+    tostring(aw.frozen) .. " " .. tostring(aw:GetPos():Distance(awPos)) .. " " .. #aw.weps .. "/" .. awWeps .. " " .. tostring(s2.frozen))
+ok(not LC.TimeStopped and LC.StartEvent ~= nil, "and the city's time goes on")
+_run(31)
+E = LC.EndingAny()
+ok(E and E.phase == "apocalypse", "nobody votes: the dream plays out", E and E.phase)
+ok(#(dream.combine or {}) == 3, "it brings its own Combine units (lc_dream_combine)", #(dream.combine or {}))
+local inside = true
+for _, e in ipairs(E.ents or {}) do if IsValid(e) and not LC.DreamHolds(dream, e:GetPos(), true) then inside = false end end
+ok(inside and #E.ents > 0, "everything it puts out is inside the dream", #E.ents)
+ok(not cityNPC or (not dream.npcs[cityNPC] and not LC.DreamHolds(dream, cityNPC:GetPos(), true) and not cityNPC:GetNW2Bool("lc_dancing", false)),
+    "the city's own NPCs aren't in it (not brought there, not dancing)", cityNPC and (tostring(cityNPC:GetPos()) .. " " .. tostring(cityNPC:GetNW2Bool("lc_dancing", false))))
+-- nothing counts in a dream
+LC.AddCredits(s1, 500)
+ok(LC.Credits(s1) == credits0, "no credits gained in a dream")
+ok(LC.GiveItem(s1, "bread", 1) == false, "nothing picked up")
+ok(hook.Run("EntityTakeDamage", s1, _dmg(aw, 50)) == true, "nobody really hurt")
+ok(LC.ReportCrime(s1, "assault", 60) == false, "no crimes")
+ok(LC.NetAllowed(s1, "lc_action") == false and LC.NetAllowed(s1, "lc_ending_vote") ~= false and LC.NetAllowed(aw, "lc_action") ~= false,
+    "the menus wait till they wake (only the vote and waking up go through); the awake are as ever")
+-- whatever leaked through anyway (the last layer): put back on waking
+s1:SetNW2Float("lcn_hunger", 5) s1:SetPData("lce_credits", "9999") s1:SetPData("lc_burned", "1")
+s1.lcInv = {} s1:SetHealth(3) s1:SetModel("models/player/skeleton.mdl") s1:SetSkin(0) s1.lcDocs = nil s1:SetArmor(0)
+s1:SetNW2String("lcj_job", "") s1:SetNW2Int("lcf_rank", 0)
+-- the end of the song: no reload, everyone wakes
+local made = {}
+for _, e in ipairs(E.ents) do made[#made + 1] = e end
+E.holdUntil, E.songEnds = CurTime(), true -- (the song's over)
+_run(7)
+ok(LC.EndingAny() == nil and reloaded == 0, "it ends without reloading the map", reloaded)
+local gone = true
+for _, e in ipairs(made) do if IsValid(e) then gone = false end end
+for _, e in ipairs(dream.combine) do if IsValid(e) then gone = false end end
+ok(gone, "everything the dream made is gone")
+_run(4)
+ok(not s1.lcDreaming and not s1:GetNW2Bool("lc_dreaming", false), "they wake")
+local after = LC.DreamSnapshot(s1)
+local function SameField(f) return LC.DreamSame(before[f], after[f]) end
+ok(SameField("pdata"), "saved data (credits, standing, XP, faction, job, pockets...) as it was")
+ok(LC.Credits(s1) == credits0 and s1:GetPData("lc_burned", nil) == nil, "(the credits it had; a key saved in the dream is gone again)")
+ok(SameField("nw2"), "everything on show about them as it was (hunger, thirst, rank, job, disguise...)")
+ok(s1:GetNW2Float("lcn_hunger", 0) == 63.5 and s1:GetNW2Int("lcf_rank", 0) == 2, "(hunger, rank)")
+local memDiff = {}
+for k, v in pairs(before.mem) do if not LC.DreamSame(v, after.mem[k]) and not string.find(k, "^lcHint") then memDiff[#memDiff + 1] = k end end
+ok(#memDiff == 0, "what the server keeps about them in memory as it was (the tips since waking aside)", table.concat(memDiff, " "))
+ok(LC.Inventory(s1).bread == 3 and s1.lcDocs and s1.lcDocs.permit == 7, "(their pockets and their papers)")
+ok(s1:Health() == hp0 and s1:Armor() == 25 and s1:GetMaxHealth() == 100, "health and armour as they were", s1:Health() .. " " .. s1:Armor() .. " " .. s1:GetMaxHealth())
+ok(SameField("looks") and s1:GetModel() == "models/humans/group01/male_07.mdl", "clothes and looks as they were (model, skin, bodygroups)", tostring(s1:GetModel()) .. " " .. tostring(before.looks.model) .. " " .. util.TableToJSON(after.looks) .. " " .. util.TableToJSON(before.looks))
+ok(SameField("weapons") and s1.clips.weapon_pistol == 12, "every weapon back, with its rounds", util.TableToJSON(after.weapons) .. " / " .. util.TableToJSON(before.weapons))
+ok(SameField("ammo") and s1.ammoT[3] == 40 and s1.ammoT[4] == 90, "and the ammunition they carried")
+ok(s1.lcSleep and s1:GetNW2Bool("lc_sleeping", false) and LC.BedSleepers[bed1] == s1 and s1:GetPos():Distance(CITY) < 1,
+    "back in their bed, still asleep")
+ok(_files[LC.DreamFileOf(s1:SteamID64())] == nil and LC.DreamSnaps[s1:SteamID64()] == nil, "the snapshot goes once it all matches")
+ok(not aw.frozen and aw:GetPos():Distance(awPos) < 1, "the awake never knew")
+ok(LC.DreamQueued() == nil, "one dream a night: nothing waits now")
+
+-- a disconnect in the middle of one: everything back the next time they join
+concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
+s3.lcSleep = s3.lcSleep or { t0 = CurTime(), done = CurTime(), last = CurTime(), slept = true }
+local okD = LC.DreamStart("shalom", nil, false)
+ok(okD and s1.lcDreaming, "a dream an admin starts (dream it now)")
+local sid = s1:SteamID64()
+local db = s1.pdata
+s1.valid = false
+LC.DreamSnaps[sid] = nil -- (a crash: nothing in memory, only the disk)
+local s1b = Rich(_makeplayer("DreamA", CITY + Vector(3000, 0, 0)))
+s1b.sid, s1b.pdata = s1.sid, db -- (the same person, the same saved data)
+s1b.weps, s1b.ammoT = { "weapon_lc_hands" }, {}
+s1b:SetNW2Float("lcn_hunger", 9)
+s1b:SetHealth(20)
+player.GetAll = function() return { s1b, s2, s3, aw } end
+hook.Run("PlayerInitialSpawn", s1b)
+_run(9)
+ok(s1b:GetNW2Float("lcn_hunger", 0) == 63.5 and s1b:Health() == hp0, "they left mid-dream: the next time they join, survival and health come back from the disk", tostring(s1b:GetNW2Float("lcn_hunger", 0)) .. " " .. s1b:Health())
+ok(s1b:HasWeapon("weapon_pistol") and s1b.clips.weapon_pistol == 12 and s1b.ammoT[3] == 40, "and their weapons and ammunition")
+ok(LC.Inventory(s1b).bread == 3 and LC.Credits(s1b) == credits0, "and their pockets and credits")
+ok(s1b:GetPos():Distance(CITY) < 1, "and they're back in their bed")
+ok(_files[LC.DreamFileOf(sid)] == nil, "(then the snapshot goes)")
+-- opting out in the middle of one: awake at once, everything back
+local h3 = s3:Health()
+s3:SetHealth(1)
+LC.SlashCommands.dream(s3, "off")
+_run(3)
+ok(not s3.lcDreaming and s3:Health() == h3, "opting out in a dream wakes them at once, with everything back")
+ok(LC.EndingAny() == nil, "the last dreamer gone, the dream's over")
+-- an old snapshot, already put back once, isn't put back by itself again; an admin can
+local snap = LC.DreamSnapshot(s3)
+snap.applied = os.time()
+LC.DreamSave(snap)
+s3:SetHealth(2)
+hook.Run("PlayerInitialSpawn", s3)
+_run(7)
+ok(s3:Health() == 2, "an old snapshot already put back once isn't put back again by itself (newer things aren't undone)")
+ok(LC.DreamForceRestore(s3) and true, "an admin can put it back anyway (lc_dream_restore, C > Help > Dreams)")
+_run(4)
+ok(s3:Health() == snap.hp and _files[LC.DreamFileOf(s3:SteamID64())] == nil, "and it's put back")
+-- and with the dream point gone, as always again
+LC.SlashCommands.dream(s2, "on")
+LC.RemovePoint(dp)
+concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
+ok(LC.TriggerEnding("hard", s1b) and LC.EndingSession() ~= nil, "the dream point taken away: the endings are the whole city's again")
+LC.CancelEnding()
+concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
+for _, p in ipairs({ s1b, s2, s3, aw }) do
+    if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
+    p:SetPos(Vector(-120000, -120000, 0))
+end
+player.GetAll = realGetAll
+LC.EndingReload = realReload
+_setcvar("lc_needs", 1)
+_setcvar("lc_dream_delay", 60)
+_setcvar("lc_dream_combine", 6)
+_files["livingcity/endings.json"] = nil
+_walls = savedWalls
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+DreamTests()
+
+----------------------------------------------------------------------
 
 ----------------------------------------------------------------------
 section("Playtest fixes: switching faction where you stand, boxes in both hands, the NPC cap")
@@ -16221,6 +16459,7 @@ section("Core contract: nothing load-bearing changes without the owner knowing (
     for _, id in ipairs(LC.EndingOrder or {}) do Add("ending " .. id .. " (" .. LC.Endings[id].name .. ")") end
     Add("ending songs folder sound/" .. tostring(LC.EndingRoot))
     Add("ending cooldown file data/" .. tostring(LC.EndingCooldownFile))
+    Add("dream snapshots data/" .. tostring(LC.DreamDir) .. "<steamid64>.json")
     Add("ending tuning file data/" .. tostring(LC.EndingTuneFile))
     Add("rebel camp layout data/" .. tostring(LC.CampFile))
     local lp, map = LC.LayoutPath(), game.GetMap()

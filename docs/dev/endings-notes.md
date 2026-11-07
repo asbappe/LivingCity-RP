@@ -23,3 +23,4 @@ Things worth knowing:
   - Civil Protection inspections (underground stops)
   - `LC.ReportCrime`
   - negative `LC.AddStanding`
+- **Dreams** (`sv_livingcity_dreams.lua`): with a dream point placed, an ending runs as a dream: `E.dream` is set, and then only the dreamers are in it. In ending code, never use `player.GetAll()` or `LC.NPCs` directly: use `LC.EndingPlayers()` and `LC.EndingNPCs()` (the dreamers and the dream's own NPCs in a dream), and put anything city-wide (`LC.TimeStopped`, `ai_disabled`, lights, weather, doors, Global2 vars awake players see, spots out in the city) behind `not E.dream`. Spots must pass `LC.DreamHolds(E.dream, pos)`. `LC.EndingSession()` is nil to the rest of the city during a dream; `LC.EndingAny()` is the ending either way. The admin's `lc_ending` stays the whole city's (`LC.EndingClassic`).

@@ -16,7 +16,7 @@
       Home        your block and apartment: lock, keys, giving it up
       The city    time and weather, who holds the city, the laws, broadcasts
       Civil Protection / Resistance, for those in them
-      Settings    camera sway, third person while posing, tips
+      Settings    camera sway, third person while posing, tips, shared dreams
       Help        ask staff; the staff panel and admin tools for staff
 
     Also here: the interrogation choice, on screen.
@@ -398,6 +398,15 @@ function LC_CL.OpenActions()
     Add(set, "Tips: turn off", function() Send("hints", "off") end)
     Add(set, "Tips: turn on", function() Send("hints", "on") end)
     Add(set, "Tips: show me them all again, from the start", function() Send("hints", "reset") end)
+    -- shared dreams (cl_livingcity_dreams.lua)
+    if me:GetNW2Bool("lc_dreaming", false) then
+        Add(set, "Shared dreams: wake up now (you wake in your bed, with everything you had)", function() if LC_CL.DreamAct then LC_CL.DreamAct("wake") end end, "icon16/weather_sun.png")
+    end
+    if me:GetNW2Bool("lc_dream_optout", false) then
+        Add(set, "Shared dreams: off for you (opt back in)", function() if LC_CL.DreamAct then LC_CL.DreamAct("optin") end end, "icon16/weather_clouds.png")
+    else
+        Add(set, "Shared dreams: on (opt out: sleep without them)", function() if LC_CL.DreamAct then LC_CL.DreamAct("optout") end end, "icon16/weather_clouds.png")
+    end
 
     -- help, and staff
     local help, helpo = menu:AddSubMenu("Help")
@@ -413,6 +422,7 @@ function LC_CL.OpenActions()
         if me:IsSuperAdmin() then
             Add(help, "Endings menu (tune the secret endings live)", function() if LC_CL.EndingsMenu then LC_CL.EndingsMenu() end end, "icon16/music.png")
         end
+        Add(help, "Dreams (tonight's dream, wake everyone, put back someone's things)", function() if LC_CL.DreamsMenu then LC_CL.DreamsMenu() end end, "icon16/weather_clouds.png")
     end
 
     -- a cursor to click with, for as long as the menu is up

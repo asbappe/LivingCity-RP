@@ -78,6 +78,7 @@ LC_MODULES = {
         "sv_livingcity_economy",
         "sv_livingcity_endings",
         "sv_livingcity_endingtune", -- (the Endings menu: every ending's settings, and the dances tuned live)
+        "sv_livingcity_dreams", -- (the secret endings as shared dreams for everyone asleep, with a dream point placed)
         "sv_livingcity_events",
         "sv_livingcity_exercise", -- (after events: the morning jog, drill and parade are events)
         "sv_livingcity_freq7",
@@ -178,6 +179,7 @@ LC_MODULES = {
         "cl_livingcity_checkpoints",
         "cl_livingcity_endings",
         "cl_livingcity_endingtune", -- (the Endings menu)
+        "cl_livingcity_dreams", -- (shared dreams: opting out, waking up, the admins' window)
         "cl_livingcity_exercise",
         "cl_livingcity_cp",
         "cl_livingcity_factions",
