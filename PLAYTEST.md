@@ -588,3 +588,17 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 Notes:
 - [ ] **Performance pass (2026-11-07):** in the rain, look ahead, up and down: the streaks look as before. Crouch near a unit: the sight cones show. As a unit, a scanner photo outlines the suspect. Earn or spend credits, reconnect: the amount is right.
   Notes:
+- [ ] **Out of breath (7 November):** run until winded; the panting stops once stamina is back (8 seconds at most), and after a respawn.
+  Notes:
+- [ ] **Sleep again (7 November):** after a night in a bed, try the bed again later: refused with about how many in-game hours are left; allowed 18 in-game hours after.
+  Notes:
+- [ ] **Weather (7 November):** no chat line when the weather changes.
+  Notes:
+- [ ] **Stalker (7 November):** made a stalker: the whirring plays once and stops, the breathing stops, the music cuts to hl2_song26 (is it the sad one you meant?), the scream on E is quieter (0.3). No bed, toilet or bath; no HOME on the curfew bar.
+  Notes:
+- [ ] **G-Man dream (7 November):** sleep: dark, he fades in over 3 seconds (no black square over his mouth), the riddle follows, 26 seconds in all; his inhale plays (or a sound/livingcity/gman/dream*.wav if you add one; FastDL sync and a map change first).
+  Notes:
+- [ ] **Unit F1 (7 November):** 1 Voice lines, 2 Unit tools, 3 Kick, 4 Call for backup, 5 BOLO, 6 Send my 10-20.
+  Notes:
+- [ ] **Sociostability (7 November):** as a recruit (even as a server admin) no Sociostability in F1, Unit tools, C or the records terminal; as the Administrator it is there (F1, C > The city).
+  Notes:

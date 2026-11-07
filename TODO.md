@@ -2,6 +2,14 @@
 
 **Waiting on the owner:**
 
+- **From the 7 November playtest, saved for the owner's decision** (not built; each changes how something works today):
+  - **A Labor Assignment terminal.** Every new player registered at intake is assigned a Union job (the one with most openings, or at random) and is tied to it for 30 minutes or 4 shifts; housing can't be assigned before it; jobs change only by walking back to the terminal, where Infestation Cleanup (standing 25+) and the intake processor's desk (standing 50+) open up after the first stint. This replaces changing Union jobs from the board.
+  - **Shared dreams in place of the endings** at a set time of night (a minute after the Administrator's good night), from a "dream" spawn point in an out-of-map area the owner places. Needs layers of safeguards so everything comes back on waking: pockets, weapons, SWEPs, tools, ammo, stats, hunger and thirst, credits, rank, job, clothes.
+  - **Rebel food that scales with the player count** (about half the time something to eat, else fish, hunt headcrabs or birds, or trade with citizens and the quartermaster), so a few rebels aren't feasting while 32 would starve.
+  - **The credits and standing audit** is written: `docs/dev/economy-audit.md`. Infestation Cleanup pays the flat shift wage (15 credits, +5 standing), the same as a litter sweep; what to change (a hazard rate per job, or credits from a quest's reward) is the owner's call.
+  - **Stimulants** (cigarettes, beer, drugs) to skip a night's sleep or for stamina: brainstorm only so far.
+  - **The Workshop dance animations** (3830765710, and the original 2538387266): taking another creator's animations into the gamemode isn't something to do without their permission. Listing the addon as a required Workshop download and playing its animations from there would work, if the owner wants that.
+
 **Pending from the 1 November playtest (late)**:
 - **Marrow with 100+ NPCs:** the crowding is fixed (rings spill outward, spawns avoid people, fallen NPCs come back). Unconfirmed: whether the `SendData reliable data too big (744335)` that dropped the owner in a loop came from the pile-up. If it happens again: the console log and the debug report.
 - **Metrocop first-person hands:** done as the unit's own body with all but the arms shrunk (`lc_cp_hands own`); unconfirmed in game.
