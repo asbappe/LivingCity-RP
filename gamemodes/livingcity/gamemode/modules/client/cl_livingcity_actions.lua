@@ -354,6 +354,17 @@ function LC_CL.OpenActions()
             Add(ins, "Copy the city's records (the best intel)", function() Send("copyrecords") end)
             Add(ins, "Foul the spare mask filters (at the Commissary; weedkiller)", function() Send("foulfilters") end)
             Add(ins, "Spike the station's food (at the Commissary; weedkiller)", function() Send("spikefood") end)
+            -- a prisoner being marched to the cells, close by: let them slip (sv_livingcity_insider.lua)
+            local marched, md
+            for _, p in ipairs(player.GetAll()) do
+                if p ~= me and p:GetNW2Bool("lc_marching", false) then
+                    local d = p:GetPos():DistToSqr(me:GetPos())
+                    if d < 300 * 300 and (not md or d < md) then marched, md = p, d end
+                end
+            end
+            if IsValid(marched) then
+                Add(ins, "Let " .. LC_CL.ICName(marched) .. " slip away on the march (where nobody else sees; -20 standing)", function() Send("letslip") end)
+            end
             Add(ins, "Reveal myself to whoever I'm looking at (the codeword)", function() Send("reveal") end)
         end
     end

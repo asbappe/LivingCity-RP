@@ -16063,6 +16063,87 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     fv:SetPos(Vector(-150000, 150000, 0)) vp:SetPos(Vector(-150000, 150000, 0)) freer:SetPos(Vector(-150000, 150000, 0))
 end)()
 
+----------------------------------------------------------------------
+function InsiderSlipTests()
+section("The Insider lets a prisoner slip on the march")
+local S0 = Vector(-2600, 2600, 0) -- (where MarchTests walks its prisoners: the cells are in reach)
+local far = Vector(-150000, 150000, 0)
+for _, other in ipairs(player.GetAll()) do
+    if other:GetPos():DistToSqr(S0) < 3000 * 3000 then other:SetPos(far) end
+end
+for n, st in pairs(LC.NPCs) do
+    if IsValid(n) and n:GetPos():DistToSqr(S0) < 3000 * 3000 then n:SetPos(Vector(-400000, 400000, 0)) end
+end
+local ins = newPlayer("SlipInsider", "cp")
+local con = newPlayer("SlipMarched", "citizen")
+local nosy = newPlayer("SlipNosy", "citizen")
+_run(0.3)
+nosy:SetPos(far)
+local function March()
+    con:SetPos(S0)
+    con.lcGraceUntil = 0
+    LC.ReportCrime(con, "Theft", 300)
+    local lead, lst = LC.Spawners.cop(S0 + Vector(60, 0, 0))
+    lst.untilT = 1e9
+    local okM = LC.MarchToPrison(con, lead, 60, "Theft")
+    ins:SetPos(S0 + Vector(0, 120, 0))
+    return okM, lead, lst
+end
+local okM, lead, lst = March()
+ok(okM and LC.Marching[con] and LC.IsTied(con), "(a prisoner being marched to the cells)")
+ok(LC.InsiderLetSlip(ins) == false, "an ordinary unit can't let anyone go")
+LC.StoryFlag(ins, "insider", true)
+ok(LC.InsiderMarchNear(ins) == con, "an Insider beside the march: the prisoner is within reach (the Inside menu offers it)")
+nosy:SetPos(S0 + Vector(0, 250, 0))
+local okN, whyN = LC.InsiderLetSlip(ins)
+ok(not okN and LC.Marching[con] and string.find(whyN or "", "nobody", 1, true), "not with someone else close enough to hear", whyN)
+nosy:SetPos(far)
+local cop2, cst2 = LC.Spawners.cop(S0 + Vector(0, 450, 0))
+cst2.untilT = 1e9
+local okW, whyW = LC.InsiderLetSlip(ins)
+ok(not okW and LC.Marching[con] and string.find(whyW or "", "unit can see", 1, true), "nor with another unit watching", whyW)
+cop2:Remove() LC.NPCs[cop2] = nil
+local st0 = LC.Standing(ins)
+local radio, notes = {}, {}
+local rn, nw = LC.RadioNotice, LC.Notice
+LC.RadioNotice = function(band, text) radio[#radio + 1] = band .. ": " .. text end
+LC.Notice = function(p, kind, title, text, secs)
+    if p == con then notes[#notes + 1] = tostring(title) .. ": " .. tostring(text) end
+    return nw(p, kind, title, text, secs)
+end
+ok(LC.InsiderLetSlip(ins), "the escort and the prisoner don't count as watching: let them slip")
+ok(not LC.Marching[con] and not LC.IsTied(con) and not LC.PlayerIsWanted(con) and not LC.Prisoners[con] and not lst.marching,
+    "the march is over: uncuffed, not wanted, not in a cell, and the escort goes back to its day")
+ok(LC.Standing(ins) == st0 - 20, "it got away from the Insider: -20 Civil Standing", LC.Standing(ins) - st0)
+ok(has(notes, "Go. Now"), "the prisoner is told on screen to run", notes[#notes])
+local okA, whyA = LC.InsiderLetSlip(ins)
+ok(not okA and (string.find(whyA or "", "Nobody", 1, true) or string.find(whyA or "", "Not yet", 1, true)), "(and nobody else to let go)", whyA)
+-- out of sight by the end of the head start: clean away
+con:SetPos(Vector(-180000, -180000, 0))
+_run(LC.InsiderSlipHeadStart + 1)
+ok(not LC.PlayerIsWanted(con) and has(notes, "Clean away"), "out of sight in time: a clean getaway, not wanted", notes[#notes])
+ok(#radio > 0 and string.find(table.concat(radio, " | "), "missing", 1, true), "Civil Protection hears a prisoner is missing", table.concat(radio, " | "))
+-- once every 20 minutes
+LC.Untie(con, nil, true)
+local okM2, lead2 = March()
+local okC, whyC = LC.InsiderLetSlip(ins)
+ok(okM2 and not okC and string.find(whyC or "", "Not yet", 1, true) and LC.Marching[con], "once every 20 minutes", whyC)
+-- still in sight when the head start runs out: wanted for escaping
+ins.lcInsiderNext.slip = 0
+ok(LC.InsiderLetSlip(ins), "(let go again)")
+_run(LC.InsiderSlipHeadStart - 2)
+local cop3, cst3 = LC.Spawners.cop(con:GetPos() + Vector(150, 0, 0)) -- (a unit comes round the corner)
+cst3.untilT = 1e9
+_run(3)
+ok(LC.PlayerIsWanted(con) and has(notes, "Spotted"), "still in a unit's sight when the head start runs out: wanted for escaping custody",
+    tostring(IsValid(lead2) and lead2:GetPos()) .. " " .. tostring(con:GetPos()) .. " " .. tostring(LC.SeenBySecurity(con, 1500)) .. " " .. tostring(notes[#notes]))
+LC.RadioNotice, LC.Notice = rn, nw
+LC.ClearWanted(con)
+for _, n in ipairs({ lead, lead2, cop3 }) do if IsValid(n) then n:Remove() end end
+for _, p in ipairs({ ins, con, nosy }) do p:SetPos(far) end
+end
+InsiderSlipTests()
+
 section("The v2.7 pieces: stamina, brandishing, obituaries, detentions, citizen numbers, the Administration path")
 ;(function()
     -- stamina
