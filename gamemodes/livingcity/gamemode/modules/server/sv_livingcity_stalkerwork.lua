@@ -6,10 +6,10 @@
     prison, else the checkpoints). A story on the board (F3), only for a
     stalker, in five parts:
 
-      1 Processing   report to the Nexus and stand still while an Overwatch
-                     technician fits the harness
+      1 Processing   report to the Nexus, where an Overwatch technician is
+                     waiting with the harness, and stand still while it's fitted
       2 Floors       sweep the holding floor with a push broom (E on each
-                     patch of grime)
+                     patch of grime; lc_broom_hold tunes where the broom sits)
       3 Cable        splice the cable into two power banks (a rewiring board
                      at each)
       4 The frame    a second power transformer, built right beside one of
@@ -232,25 +232,62 @@ local function GameGo(pos, text, kind, opts)
 end
 local function GameStage(text) return Count("game_done", 1, text) end
 
-local function Ground(p) return (LC.GroundAt and LC.GroundAt(p + Vector(0, 0, 30))) or p end
-local function Around(center, n, rmin, rmax)
-    local out = {}
-    for i = 1, n * 4 do
-        if #out >= n then break end
+-- Spots of floor around a center that can be walked to from it (the owner, 7 November: a patch
+-- of grime spawned in a wall or under the floor, and the job couldn't be finished). Each is on
+-- the ground (a trace down that lands, not one started inside something), level enough, at about
+-- the center's height, with nothing solid between it and the center, and clear of the others.
+-- Returns the spot and the floor's normal there, or nothing.
+local function FloorSpot(center, rmin, rmax, taken)
+    for _ = 1, 30 do
         local a = math.random() * math.pi * 2
         local r = math.Rand(rmin, rmax)
-        local p = Ground(center + Vector(math.cos(a) * r, math.sin(a) * r, 0))
-        if math.abs(p.z - center.z) < 60 then
+        local p = center + Vector(math.cos(a) * r, math.sin(a) * r, 0)
+        local tr = util.TraceLine({ start = p + Vector(0, 0, 48), endpos = p - Vector(0, 0, 160), mask = MASK_NPCSOLID_BRUSHONLY })
+        local n = (tr and tr.HitNormal) or Vector(0, 0, 1)
+        if tr and tr.Hit and not tr.StartSolid and n.z > 0.7 and math.abs(tr.HitPos.z - center.z) < 60
+            and (not LC.Walkable or LC.Walkable(center, tr.HitPos)) then
             local clear = true
-            for _, o in ipairs(out) do if o:DistToSqr(p) < 60 * 60 then clear = false end end
-            if clear then out[#out + 1] = p end
+            for _, o in ipairs(taken) do if o:DistToSqr(tr.HitPos) < 60 * 60 then clear = false break end end
+            if clear then return tr.HitPos, n end
         end
     end
-    while #out < n do out[#out + 1] = center + Vector(math.random(-120, 120), math.random(-120, 120), 0) end
-    return out
+end
+-- Up to n such spots (fewer in a cramped place: never one that can't be reached). Also the
+-- floor's normal under each, by the same index.
+local function Around(center, n, rmin, rmax)
+    local out, normals = {}, {}
+    for _ = 1, n do
+        local p, nm = FloorSpot(center, rmin, rmax, out)
+        if not p then p, nm = FloorSpot(center, rmin * 0.5, rmax * 0.6, out) end -- (a small room: closer in)
+        if p then out[#out + 1] = p normals[#out] = nm end
+    end
+    return out, normals
 end
 
--- Something held in the stalker's hand (a push broom), on its arm wherever it goes.
+-- Laid flat along the floor whatever its slope (the owner, 7 November: grime on a ramp hung
+-- level, floating off it): the angle whose up is the floor's normal, turned to the yaw given.
+local function SlopeAngle(normal, yaw)
+    local flat = Angle(0, yaw or 0, 0)
+    if not normal or normal.z > 0.999 or not normal.AngleEx then return flat end
+    local f = flat:Forward()
+    f = f - normal * f:Dot(normal)
+    if f:LengthSqr() < 0.001 then return flat end
+    f:Normalize()
+    return f:AngleEx(normal)
+end
+
+-- Where the push broom sits (the owner, 7 November: hung from the hand it was upside down and off
+-- to the side, hardly in view): held out in front, the head on the floor ahead and the handle up
+-- toward the hands, from the stalker's feet. lc_broom_hold tunes it in game.
+local cvBroom = CreateConVar("lc_broom_hold", "34 -6 2 -35 0 0", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED),
+    "Where a stalker holds the push broom, from its feet: forward left up pitch yaw roll (roll 180 turns it over)")
+local function BroomHold()
+    local v = {}
+    for w in string.gmatch(cvBroom:GetString(), "%S+") do v[#v + 1] = tonumber(w) or 0 end
+    return Vector(v[1] or 34, v[2] or -6, v[3] or 2), Angle(v[4] or -35, v[5] or 0, v[6] or 0)
+end
+
+-- Something held in the stalker's hands (the push broom), out in front wherever it goes.
 local function InHand(ply, model)
     local e = ents.Create("prop_dynamic")
     if not IsValid(e) then return nil end
@@ -258,47 +295,82 @@ local function InHand(ply, model)
     e:SetPos(ply:GetPos() + Vector(0, 0, 40))
     e:Spawn()
     if e.SetSolid then e:SetSolid(SOLID_NONE) end
-    local att = ply.LookupAttachment and ply:LookupAttachment("anim_attachment_RH") or 0
-    if att and att > 0 then
-        e:SetParent(ply, att)
-        if e.SetLocalPos then e:SetLocalPos(Vector(2, -2, -20)) end
-        if e.SetLocalAngles then e:SetLocalAngles(Angle(0, 0, 0)) end
-    else
-        e:SetParent(ply)
-        if e.SetLocalPos then e:SetLocalPos(Vector(20, 8, 10)) end
+    e:SetParent(ply)
+    local pos, ang = BroomHold()
+    if e.SetLocalPos then e:SetLocalPos(pos) end
+    if e.SetLocalAngles then e:SetLocalAngles(ang) end
+    return e
+end
+
+-- The broom swings as the stalker walks, and harder while it sweeps (E held on the grime); still
+-- when it stands still.
+local function SwayBroom(g)
+    local e, ply = g.broom, g.ply
+    if not IsValid(e) or not IsValid(ply) then return end
+    local vel = ply.GetVelocity and ply:GetVelocity()
+    local moving = vel ~= nil and vel:Length2DSqr() > 20 * 20
+    local sweeping = (ply.lcSweepingUntil or 0) > CurTime()
+    local pos, ang = BroomHold()
+    if moving or sweeping then
+        local s = math.sin(CurTime() * (sweeping and 7 or 5))
+        pos = pos + Vector(s * (sweeping and 14 or 8), 0, 0)
+        ang = Angle(ang.p + s * 6, ang.y + s * (sweeping and 10 or 4), ang.r)
     end
+    if e.SetLocalPos then e:SetLocalPos(pos) end
+    if e.SetLocalAngles then e:SetLocalAngles(ang) end
+end
+
+-- A patch of grime, laid along the floor.
+local function Stain(g, p, normal)
+    local e = ents.Create("lc_stain")
+    if not IsValid(e) then return nil end
+    e:SetPos(p + (normal or Vector(0, 0, 1)))
+    e:SetAngles(SlopeAngle(normal, math.random(0, 359)))
+    e:Spawn()
+    e.lcScrubFor = g.ply
+    g.stains[#g.stains + 1] = e
+    g.props[#g.props + 1] = e
     return e
 end
 
 -- The holding floor: grime here and there; a push broom (no kneeling: a stalker hasn't the legs
 -- for it). E on each patch sweeps it up (a couple of seconds).
 local SCRUB_N = 6
+local SCRUB_WAIT = 75 -- seconds without a sweep before a patch nobody can find comes to the stalker
 LC.JobGameDefine("scrub", {
     start = function(g)
         g.title = "The holding floor"
-        g.stains, g.swept = {}, 0
-        for _, p in ipairs(Around(g.opts.pos or g.ply:GetPos(), SCRUB_N, 80, 320)) do
-            local e = ents.Create("lc_stain")
-            if IsValid(e) then
-                e:SetPos(p + Vector(0, 0, 1))
-                e:SetAngles(Angle(0, math.random(0, 359), 0))
-                e:Spawn()
-                e.lcScrubFor = g.ply
-                g.stains[#g.stains + 1] = e
-                g.props[#g.props + 1] = e
-            end
-        end
+        g.stains, g.swept, g.lastSweep = {}, 0, CurTime()
+        local spots, normals = Around(g.opts.pos or g.ply:GetPos(), SCRUB_N, 80, 320)
+        for i, p in ipairs(spots) do Stain(g, p, normals[i]) end
         g.broom = InHand(g.ply, "models/props_c17/pushbroom.mdl")
         if IsValid(g.broom) then g.props[#g.props + 1] = g.broom end
-        g.ply:ChatPrint("[Stalker] A push broom, and the floor. Walk to each patch of grime and sweep it up (E).")
+        g.ply:ChatPrint("[Stalker] A push broom, and the floor. Walk to each patch of grime and sweep it up (hold E on it).")
         g.hud = function(gg) return { string.format("Swept: %d of %d", gg.swept, #gg.stains), "E on the grime sweeps it up" } end
     end,
     tick = function(g)
+        SwayBroom(g)
         -- (gone however it went: swept, or a city cleaner got there first)
-        local left = 0
-        for _, e in ipairs(g.stains) do if IsValid(e) then left = left + 1 end end
-        g.swept = #g.stains - left
-        if #g.stains > 0 and left == 0 then LC.JobGameEnd(g.ply, "done") end
+        local left = {}
+        for _, e in ipairs(g.stains) do if IsValid(e) then left[#left + 1] = e end end
+        local swept = #g.stains - #left
+        if swept ~= g.swept then g.swept, g.lastSweep = swept, CurTime() end
+        if #left == 0 then LC.JobGameEnd(g.ply, "done") return end
+        -- the last patch or two that nobody can find (the owner, 7 November: five of six, and the
+        -- sixth nowhere): after a while without a sweep they're moved to the floor near the stalker
+        if #left <= 2 and CurTime() - g.lastSweep > SCRUB_WAIT and IsValid(g.ply) then
+            g.lastSweep = CurTime()
+            local near, normals = Around(g.ply:GetPos(), #left, 90, 200)
+            local moved = false
+            for i, e in ipairs(left) do
+                if near[i] and not e.lcSweeping then
+                    e:SetPos(near[i] + (normals[i] or Vector(0, 0, 1)))
+                    e:SetAngles(SlopeAngle(normals[i], math.random(0, 359)))
+                    moved = true
+                end
+            end
+            if moved then g.ply:ChatPrint("[Stalker] The grime you couldn't find: there's a patch of it just here.") end
+        end
     end,
 })
 hook.Add("PlayerUse", "LivingCityStalkerScrub", function(ply, ent)
@@ -306,13 +378,18 @@ hook.Add("PlayerUse", "LivingCityStalkerScrub", function(ply, ent)
     local g = LC.JobGames and LC.JobGames[ply]
     if not g or g.kind ~= "scrub" or (LC.Busy and LC.Busy(ply)) or ent.lcSweeping then return false end
     ent.lcSweeping = true
+    ply.lcSweepingUntil = CurTime() + 2.5 -- (the broom swings while it sweeps: SwayBroom)
     ply:EmitSound("physics/cardboard/cardboard_box_scrape_rough_loop1.wav", 55)
     LC.StartTask(ply, 2.5, "Sweeping it up...", { maxMove = 70,
         cancel = function()
             if IsValid(ent) then ent.lcSweeping = nil end
-            if IsValid(ply) and ply.StopSound then ply:StopSound("physics/cardboard/cardboard_box_scrape_rough_loop1.wav") end -- (a loop: stopped either way)
+            if IsValid(ply) then
+                ply.lcSweepingUntil = nil
+                if ply.StopSound then ply:StopSound("physics/cardboard/cardboard_box_scrape_rough_loop1.wav") end -- (a loop: stopped either way)
+            end
         end,
         done = function(p)
+            p.lcSweepingUntil = nil
             if p.StopSound then p:StopSound("physics/cardboard/cardboard_box_scrape_rough_loop1.wav") end
             if IsValid(ent) then ent:Remove() end
         end })
@@ -407,21 +484,45 @@ hook.Add("PlayerUse", "LivingCityStalkerWeld", function(ply, ent)
     return false
 end)
 
--- A technician who comes to fit the harness: walks up behind the stalker and works on its spine
--- while it stands still (sparks, the hiss of a welder), then goes.
+-- The harness the technician brings: the owner's pick when the server has the model, else a
+-- technician's wrench.
+local HARNESS, HARNESS_PLAIN = "models/galmastu/prop_tom/male_vest.mdl", "models/props_c17/tools_wrench01a.mdl"
+local function HarnessModel()
+    if file.Exists and file.Exists(HARNESS, "GAME") then return HARNESS end
+    return HARNESS_PLAIN
+end
+local TECH_SECS = 660 -- (the part's time limit, and a minute over)
+local TechGone
+
+-- A technician waiting at the spot, harness in hand, watching the stalker come (the owner,
+-- 7 November: nobody was there when you arrived, you stood in an empty space). When the stalker
+-- gets there they step round behind it and work on its spine while it stands still (sparks, the
+-- hiss of a welder), then go.
 function LC.StalkerTechnician(ply, pos)
     if not IsValid(ply) or not (LC.Spawners and LC.Spawners.cop) then return nil end
-    local from = (LC.AlarmSquadSpot and LC.AlarmSquadSpot(pos)) or (pos + Vector(math.random(-300, 300), math.random(-300, 300), 0))
-    local ok, npc, st = pcall(LC.Spawners.cop, from)
+    local ok, npc, st = pcall(LC.Spawners.cop, pos)
     if not (ok and IsValid(npc) and st) then return nil end
     st.unmanaged, st.questLock = true, true
     if LC.SetState then LC.SetState(npc, st, "event") end
-    st.eventUntil = CurTime() + 120
+    st.eventUntil = CurTime() + TECH_SECS
     npc:SetNW2String("lc_pname", "Overwatch technician")
     npc.lcTechFor = ply
+    if LC.NPCCarry then pcall(LC.NPCCarry, npc, st, HarnessModel()) end
+    if LC.Face then LC.Face(npc, ply:GetPos()) end
     local name = "LivingCityTech" .. npc:EntIndex()
-    timer.Create(name, 1, 120, function()
-        if not IsValid(npc) or not IsValid(ply) then timer.Remove(name) return end
+    local working, ticks = false, 0
+    timer.Create(name, 1, TECH_SECS, function()
+        ticks = ticks + 1
+        if not IsValid(npc) or not IsValid(ply) or ticks >= TECH_SECS then TechGone(npc) return end
+        if not working then
+            -- waiting: eyes on the stalker as it comes
+            if ply:GetPos():DistToSqr(pos) > 200 * 200 then
+                if LC.Face then LC.Face(npc, ply:GetPos()) end
+                return
+            end
+            working = true
+            if LC.NPCDropCarry then pcall(LC.NPCDropCarry, npc, st) end -- (the harness goes on the stalker now)
+        end
         local behind = ply:GetPos() - ply:GetForward() * 38
         if npc:GetPos():DistToSqr(behind) > 60 * 60 then
             npc:SetLastPosition(behind)
@@ -437,11 +538,14 @@ function LC.StalkerTechnician(ply, pos)
     end)
     return npc
 end
-local function TechGone(npc)
+TechGone = function(npc)
     if not IsValid(npc) then return end
     timer.Remove("LivingCityTech" .. npc:EntIndex())
     local st = LC.NPCs and LC.NPCs[npc]
-    if st then st.unmanaged, st.questLock, st.eventUntil = nil, nil, 0 end
+    if st then
+        if LC.NPCDropCarry then pcall(LC.NPCDropCarry, npc, st) end
+        st.unmanaged, st.questLock, st.eventUntil = nil, nil, 0
+    end
     if LC.StartLeaving and st then LC.StartLeaving(npc, st, false, "an Overwatch technician going back") else npc:Remove() end
 end
 
@@ -463,13 +567,16 @@ LC.Chain{
         processing = { num = 1, next = "floors", build = function(ply)
             local pos = LC.StalkerSpot(ply)
             if not pos then return nil end
+            -- the technician is there before you are, harness in hand (the owner, 7 November)
+            local go = Goto(pos, "Report to the technician waiting where they keep you", 200)
+            go.onEnter = function(q) if IsValid(q.owner) then q.data.tech = LC.StalkerTechnician(q.owner, pos) end end
             return {
                 title = "Processing", reward = 0, limit = 600,
-                desc = "They brought you up from below with a number where your name was, and a voice that can only scream. Report where you're kept. Stand still while they finish you.",
+                desc = "They brought you up from below with a number where your name was, and a voice that can only scream. Report where you're kept: a technician is waiting there with the harness. Stand still while they finish you.",
                 stages = {
-                    Then(Goto(pos, "Report to the Nexus, where they keep you", 200), function(q)
-                        if IsValid(q.owner) then q.data.tech = LC.StalkerTechnician(q.owner, pos) end
-                        Narrate(q, "An Overwatch technician comes for you, tools in hand.")
+                    Then(go, function(q)
+                        if IsValid(q.owner) and not IsValid(q.data.tech) then q.data.tech = LC.StalkerTechnician(q.owner, pos) end
+                        Narrate(q, "The Overwatch technician has been waiting for you, the harness in their hands. They step round behind you.")
                     end),
                     Then(Hold(pos, 20, "Stand still while the technician fits the harness", 160), function(q)
                         TechGone(q.data.tech)

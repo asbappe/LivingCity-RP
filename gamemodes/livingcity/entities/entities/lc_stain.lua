@@ -40,10 +40,13 @@ if CLIENT then
     local STAIN = Color(70, 45, 20, 235)
     function ENT:Draw() end
     function ENT:DrawTranslucent()
-        local pos = self:GetPos() + Vector(0, 0, 0.5)
+        -- laid along the floor it's on, whatever its slope (its up is the floor's normal; level
+        -- for the messes sv_livingcity_hygiene.lua leaves)
+        local up = self:GetUp()
+        local pos = self:GetPos() + up * 0.5
         render.SetMaterial(BLOT)
-        render.DrawQuadEasy(pos, Vector(0, 0, 1), 40, 34, STAIN, self:GetAngles().y)
-        render.DrawQuadEasy(pos + Vector(6, -4, 0.1), Vector(0, 0, 1), 22, 18, STAIN, self:GetAngles().y + 70)
+        render.DrawQuadEasy(pos, up, 40, 34, STAIN, self:GetAngles().y)
+        render.DrawQuadEasy(pos + self:GetForward() * 6 - self:GetRight() * 4 + up * 0.1, up, 22, 18, STAIN, self:GetAngles().y + 70)
         -- flies
         render.SetColorMaterial()
         local t = CurTime()
