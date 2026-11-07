@@ -160,7 +160,7 @@ local function Options(ply, npc, st)
     return {
         chat = true,
         food = FoodToGive(ply) ~= nil,
-        pick = not unit and (npc.lcPickedAt or 0) < CurTime() - 600,
+        pick = not unit and not (npc.lcPickedAt and npc.lcPickedAt > CurTime() - 600), -- (never picked counts as ready, even in a server's first ten minutes)
         inform = not unit and not rebel,
         recruit = rebel and st.rebel == true and LC.CanRecruitLookout ~= nil and (LC.CanRecruitLookout(ply, npc)),
     }
@@ -247,7 +247,7 @@ local function Pocket()
 end
 
 local function PickPocket(ply, npc, st)
-    if (npc.lcPickedAt or 0) > CurTime() - 600 then return "Their pockets are already empty." end
+    if npc.lcPickedAt and npc.lcPickedAt > CurTime() - 600 then return "Their pockets are already empty." end
     npc.lcPickedAt = CurTime()
     local roll = math.random(20) + (LC.SkillMod and LC.SkillMod(ply, "guile") or 0)
     LC.Bump(ply, "thefts")
