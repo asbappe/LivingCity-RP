@@ -28,8 +28,7 @@ LC.EndingTuneShared = SHARED
 local tuning = { bones = {}, shared = {} } -- bones[move][bone] = { p, y, r }; shared[name] = "value"
 
 local function Load()
-    local raw = file.Read(FILE, "DATA")
-    local t = raw and util.JSONToTable(raw)
+    local t = LC.SafeReadJSON(FILE)
     if istable(t) then
         tuning.bones = istable(t.bones) and t.bones or {}
         tuning.shared = istable(t.shared) and t.shared or {}
@@ -61,8 +60,7 @@ Load()
 
 local function Save()
     timer.Create("LivingCityEndingTuneSave", 1, 1, function()
-        file.CreateDir("livingcity")
-        file.Write(FILE, util.TableToJSON(tuning, true))
+        LC.SafeWrite(FILE, util.TableToJSON(tuning, true))
     end)
 end
 

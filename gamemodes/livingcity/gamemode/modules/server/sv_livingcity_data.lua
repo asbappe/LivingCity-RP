@@ -182,7 +182,7 @@ function LC.RestoreBackup(which)
     local raw = file.Read(BackupDir() .. "/" .. name, "DATA")
     if not raw or not util.JSONToTable(raw) then return false, "That backup can't be read." end
     LC.BackupLayout("before_restore")
-    file.Write(Path(), raw)
+    LC.SafeWrite(Path(), raw, { force = true }) -- (an admin's own choice)
     LC.LayoutBroken = nil
     LC.LoadData(false)
     if LC.ApplyAllDoors then LC.ApplyAllDoors() end
@@ -197,6 +197,7 @@ function LC.SaveData(settingsOnly)
         local raw = file.Read(Path(), "DATA")
         if raw then file.Write("livingcity/" .. game.GetMap() .. "_unreadable_" .. os.date("%Y%m%d_%H%M%S") .. ".txt", raw) end
         LC.LayoutBroken = nil
+        LC.SafeFileAllow(Path()) -- (kept just above: the layout may be saved again)
     end
     if not LC.LastBackupAt or SysTime() - LC.LastBackupAt > BACKUP_EVERY then LC.BackupLayout() end
     local out = {
@@ -223,7 +224,7 @@ function LC.SaveData(settingsOnly)
         out.doors[#out.doors + 1] = { id = id, tag = tag }
     end
     out.props = LC.PropsToSave and LC.PropsToSave() or nil -- persistent props (sv_livingcity_props.lua)
-    file.Write(Path(), util.TableToJSON(out, true))
+    LC.SafeWrite(Path(), util.TableToJSON(out, true))
     if settingsOnly then return end
     Changed()
     LC.SendData(nil)
@@ -234,9 +235,8 @@ function LC.LoadData(applySettings)
     LC.NextNodeId = 1
     local migrated = false
 
-    local raw = file.Read(Path(), "DATA")
-    local t = raw and util.JSONToTable(raw) or nil
-    if raw and raw ~= "" and not t then
+    local t, how = LC.SafeReadJSON(Path()) -- (an unreadable file falls back to its .bak.txt: sv_livingcity_safefile.lua)
+    if how == "failed" then
         LC.LayoutBroken = true
         LC.Log("error", "Layout file " .. Path() .. " couldn't be read. A copy is kept before anything overwrites it; lc_backups lists earlier versions.")
     end

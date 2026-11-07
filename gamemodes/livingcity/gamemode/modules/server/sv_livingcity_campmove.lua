@@ -25,14 +25,12 @@ LC.CampFile = "livingcity/<map>_camp.json"
 local saved
 local function Load()
     if saved then return saved end
-    local raw = file.Read(LC.CampFileOf(), "DATA")
-    local t = raw and util.JSONToTable(raw)
+    local t = LC.SafeReadJSON(LC.CampFileOf())
     saved = istable(t) and t or {}
     return saved
 end
 local function Save()
-    file.CreateDir("livingcity")
-    file.Write(LC.CampFileOf(), util.TableToJSON(saved or {}, true))
+    LC.SafeWrite(LC.CampFileOf(), util.TableToJSON(saved or {}, true))
 end
 
 function LC.CampKey(z)

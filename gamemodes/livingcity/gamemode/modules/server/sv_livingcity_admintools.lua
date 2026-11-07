@@ -140,6 +140,14 @@ local ACTIONS = {
         local ok, msg = LC.EvidenceBurnNow(admin)
         return ok, msg
     end,
+    -- save files that couldn't be read are kept as they are; a superadmin lets the city save over them (sv_livingcity_safefile.lua)
+    savefiles = function(_, _, admin)
+        if IsValid(admin) and not admin:IsSuperAdmin() then return false, "Superadmins only." end
+        if not LC.SafeFileAllow then return false, "Nothing to do." end
+        local n = LC.SafeFileAllow()
+        if n == 0 then return true, "Every save file reads fine." end
+        return true, n .. " save file(s) may be saved over again (each unreadable one is kept as <name>.unreadable.txt when it is)."
+    end,
     item = function(t, v)
         local it = LCS and LCS.Items and LCS.Items[v or ""]
         if not it or not LC.GiveItem then return false, "No such item." end
@@ -175,6 +183,12 @@ local function Snapshot(admin, target)
     if admin:IsSuperAdmin() and LC.TerritoryStatus then
         data.superadmin = true
         data.territory = LC.TerritoryStatus()
+    end
+    if admin:IsSuperAdmin() and LC.SafeFileBlocked then
+        local names = {}
+        for p in pairs(LC.SafeFileBlocked()) do names[#names + 1] = "data/" .. p end
+        table.sort(names)
+        if #names > 0 then data.savefiles = names end
     end
     return data
 end

@@ -112,8 +112,7 @@ local dirty = false
 
 local function LoadRecords()
     if LC.Records then return LC.Records end
-    local raw = file.Read(RECORDS_FILE, "DATA")
-    LC.Records = raw and util.JSONToTable(raw) or {}
+    LC.Records = LC.SafeReadJSON(RECORDS_FILE) or {}
     return LC.Records
 end
 
@@ -122,9 +121,9 @@ local function SaveSoon() dirty = true end
 timer.Create("LivingCityRecordsSave", 10, 0, function()
     if not dirty or not LC.Records then return end
     dirty = false
-    file.CreateDir(DIR)
-    file.Write(RECORDS_FILE, util.TableToJSON(LC.Records))
-    file.Write(BOLO_FILE, util.TableToJSON(LC.BOLOs or {}))
+    LC.SafeWrite(RECORDS_FILE, util.TableToJSON(LC.Records))
+    -- (BOLOs not read yet this run: left as they are, never an empty list over them)
+    if LC.BOLOs then LC.SafeWrite(BOLO_FILE, util.TableToJSON(LC.BOLOs)) end
 end)
 
 -- Who the city thinks this is: forged papers win, then the CID, then the account.
@@ -241,8 +240,7 @@ end
 LC.BOLOs = LC.BOLOs or nil
 local function Bolos()
     if not LC.BOLOs then
-        local raw = file.Read(BOLO_FILE, "DATA")
-        LC.BOLOs = raw and util.JSONToTable(raw) or {}
+        LC.BOLOs = LC.SafeReadJSON(BOLO_FILE) or {}
     end
     return LC.BOLOs
 end

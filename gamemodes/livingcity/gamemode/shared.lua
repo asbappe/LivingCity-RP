@@ -46,6 +46,7 @@ LC_MODULES = {
     },
     server = {
         "sv_livingcity_perf", -- (first of the server modules: every timer after it is timed and staggered)
+        "sv_livingcity_safefile", -- (early: every save file is written and read through it)
         "sv_livingcity_guard", -- (before anything that listens to players: the flood guard wraps every handler)
         "sv_livingcity",
         "sv_livingcity_notices", -- (early: warnings and notices on screen, waypoints)

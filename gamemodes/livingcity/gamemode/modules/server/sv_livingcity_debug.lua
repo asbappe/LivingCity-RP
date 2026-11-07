@@ -177,6 +177,12 @@ function LC.BuildReport()
         local url = GetConVar("sv_downloadurl")
         out[#out + 1] = "downloads: sv_downloadurl \"" .. (url and url:GetString() or "") .. "\" (players get new sounds after a FastDL sync and a map change)"
     end
+    if LC.SafeFileBlocked and next(LC.SafeFileBlocked()) ~= nil then -- (sv_livingcity_safefile.lua)
+        local names = {}
+        for p in pairs(LC.SafeFileBlocked()) do names[#names + 1] = "data/" .. p end
+        table.sort(names)
+        warn[#warn + 1] = "save files that couldn't be read, kept and not saved over: " .. table.concat(names, ", ")
+    end
     out[#out + 1] = "setup notes: " .. (#warn > 0 and "" or "none")
     for _, w in ipairs(warn) do out[#out + 1] = "  - " .. w end
     do -- why people are leaving the city (a developer's question, not a player's)

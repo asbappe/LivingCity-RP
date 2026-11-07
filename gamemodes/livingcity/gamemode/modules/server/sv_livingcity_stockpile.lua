@@ -43,10 +43,8 @@ end
 
 local function Load()
     stock = math.floor(Max() / 2)
-    if file and file.Exists and file.Exists(Path(), "DATA") then
-        local t = util.JSONToTable(file.Read(Path(), "DATA") or "")
-        if istable(t) and tonumber(t.stock) then stock = math.Clamp(tonumber(t.stock), 0, Max()) end
-    end
+    local t = LC.SafeReadJSON(Path())
+    if istable(t) and tonumber(t.stock) then stock = math.Clamp(tonumber(t.stock), 0, Max()) end
     Publish()
 end
 
@@ -54,7 +52,7 @@ function LC.StockSave()
     dirty = false
     if not file or not file.Write or stock == nil then return end
     if file.CreateDir then file.CreateDir("livingcity") end
-    file.Write(Path(), util.TableToJSON({ stock = stock }))
+    LC.SafeWrite(Path(), util.TableToJSON({ stock = stock }))
 end
 
 function LC.Stock()
