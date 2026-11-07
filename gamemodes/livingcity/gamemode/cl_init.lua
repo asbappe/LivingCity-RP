@@ -149,6 +149,7 @@ local GUIDE = {
         "Fishing line (from the Commissary): stand in the canal or look at it, choose Fish in F3 (or C > Getting by), and keep still. Cook what you catch.",
         "Rebel territory has plant pots (plant seeds, harvest vegetables) and a supply crate the Resistance eat from. C > Resistance > Donate food adds to it.",
         "The supply crate is restocked for how many Resistance are online, about half of what you eat, so it often runs empty: fish, hunt headcrabs or birds, grow vegetables, ask citizens for food, or buy from the quartermaster. Look at the crate to see what's in it and when more is due.",
+        "Crate running low? Take a Headcrab hunt from the Operations board (F4): kill four headcrabs in the infested ground, pick up their raw meat (E) and stand by the crate. Each headcrab is a meal for the camp, and it pays more while the crate is empty.",
         "F3 > Make: craft bandages and lockpicks by hand, anywhere. Everything else is made by the Resistance lab or sold on the black market.",
         "Hold a crowbar, look straight at a piece of junk (a wrecked car, a radiator, pipes, a crate) and press E to pry out scrap, rags and chemicals. It's loud: the nearest Civil Protection unit comes to check.",
         "A crowbar counts as a weapon: if a Civil Protection unit sees one in your hand, you become wanted. Keep it put away on the street.",

@@ -129,6 +129,7 @@ LC_MODULES = {
         "sv_livingcity_scavenge",
         "sv_livingcity_security",
         "sv_livingcity_sidejobs",
+        "sv_livingcity_crabhunt", -- (headcrab hunts: raw headcrabs from the infestation for the Resistance's supply crate)
         "sv_livingcity_slots",
         "sv_livingcity_staff",
         "sv_livingcity_staticprops",
