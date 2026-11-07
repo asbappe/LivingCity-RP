@@ -366,7 +366,7 @@ local function EnsureRebelProps()
                 local spots = LC.ZoneFloorSpots and LC.ZoneFloorSpots(z, need * 2)
                     or (LC.QB and LC.QB.HideSpots and LC.QB.HideSpots(z.pos, need * 2, z.r * 0.7, true)) or {}
                 for _, p in ipairs(spots) do
-                    if p:DistToSqr(z.pos) < (z.r * 0.8) ^ 2 and not LC.IsSeen(p + Vector(0, 0, 30))
+                    if LCZ.Within(z, p, 0.8) and not LC.IsSeen(p + Vector(0, 0, 30))
                         and (not LC.DressingClear or LC.DressingClear(p, 35)) then -- not inside the dressing, or each other
                         if not IsValid(r.cache) then
                             r.cache = Prop("models/items/item_item_crate.mdl", p, "cache")
@@ -697,9 +697,9 @@ local function Spray(ply)
             elseif IsResistance(p) and LC.AddXP then
                 LC.AddXP(p, 3, "graffiti")
             end
-            -- near rebel ground it rallies people: it spreads sooner
+            -- near rebel ground it rallies people: it spreads sooner (grown ground: near any of its cells)
             for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}) do
-                if pos:DistToSqr(z.pos) < (z.r + 1500) ^ 2 then
+                if LCZ.Near(z, pos, 1500) then
                     local seed = z.grown and z.seed or z
                     local s = LC.TerritoryState and LC.TerritoryState[seed]
                     if s then s.nextGrow = math.max(CurTime() + 30, s.nextGrow - 120) end

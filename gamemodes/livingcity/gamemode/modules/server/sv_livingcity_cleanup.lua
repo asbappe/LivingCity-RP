@@ -796,7 +796,7 @@ end
 function LC.CleanupNeedNear(z)
     local most = 0
     for _, p in ipairs(player.GetAll()) do
-        if p:Alive() and p:GetPos():DistToSqr(z.pos) < ((z.r or 400) + 900) ^ 2 then most = math.max(most, LC.CleanupNeed(p)) end
+        if p:Alive() and LCZ.Near(z, p:GetPos(), 900) then most = math.max(most, LC.CleanupNeed(p)) end -- (grown ground: near any of its cells)
     end
     return most
 end
@@ -809,7 +809,7 @@ local function NeedsGuard(w, now)
         local q = LC.QuestOf and LC.QuestOf[w]
         if not q or q.chain ~= "shift" then return false end
         for _, z in ipairs(InfestZones()) do
-            if w:GetPos():DistToSqr(z.pos) < ((z.r or 400) + 1500) ^ 2 then return true end
+            if LCZ.Near(z, w:GetPos(), 1500) then return true end
         end
         return false
     end

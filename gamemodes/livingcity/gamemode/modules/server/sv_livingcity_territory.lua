@@ -257,9 +257,9 @@ end
 local function ClearOfOthers(pos, r, kind)
     for _, z in ipairs(LC.Zones) do
         local gap = KEEP_CLEAR[z.kind]
-        if gap and pos:DistToSqr(z.pos) < (z.r + r * 0.5 + gap) ^ 2 then return false end
-        -- rebels and the infestation don't grow into each other
-        if KINDS[z.kind] and z.kind ~= kind and pos:DistToSqr(z.pos) < (z.r + r + 100) ^ 2 then return false end
+        if gap and LCZ.Near(z, pos, r * 0.5 + gap) then return false end
+        -- rebels and the infestation don't grow into each other (grown ground: its cells, LCZ.Near)
+        if KINDS[z.kind] and z.kind ~= kind and LCZ.Near(z, pos, r + 100) then return false end
     end
     for _, p in ipairs(LC.Points) do
         local gap = POINT_CLEAR[p.kind]
@@ -353,7 +353,9 @@ local function GrowthSpot(seed)
             local edgeOk = flat < from.r + newR and (flat > from.r * 0.75 or dz > (from.h or 100))
             local inside = false
             for _, z in ipairs(family) do
-                if SameLevel(z, p) and Vector(p.x - z.pos.x, p.y - z.pos.y, 0):LengthSqr() < (z.r * 0.8) ^ 2 then inside = true break end
+                if z.cells then
+                    if LCZ.Contains(z, p, 0) then inside = true break end
+                elseif SameLevel(z, p) and Vector(p.x - z.pos.x, p.y - z.pos.y, 0):LengthSqr() < (z.r * 0.8) ^ 2 then inside = true break end
             end
             if edgeOk and not inside and dz < 700 and ClearOfOthers(p, fitR, seed.kind)
                 and not (seed.kind == "infest" and LC.InfestQuietAt(p))

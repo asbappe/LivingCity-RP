@@ -204,6 +204,8 @@ function LC.RebelRoomIn(z)
     local area
     if z.box then
         area = math.abs(z.box.maxs.x - z.box.mins.x) * math.abs(z.box.maxs.y - z.box.mins.y)
+    elseif z.cells then
+        area = (z.n or 0) * LCZ.CELL * LCZ.CELL -- (grown ground: its cells)
     else
         area = math.pi * (z.r or 300) ^ 2
     end
@@ -257,7 +259,7 @@ function LC.RebelSpawnPos()
     for _, z in ipairs(zones) do
         -- (no goto here: "continue" is a keyword in Garry's Mod's Lua)
         -- (nor on ground a team is clearing: LC.QuietRebels, sv_livingcity_fieldops.lua)
-        if (z.contestedUntil or 0) <= now and CountIn(z) < LC.RebelRoomIn(z) and not (LC.RebelQuietAt and LC.RebelQuietAt(z.pos, z.r)) then
+        if (z.contestedUntil or 0) <= now and CountIn(z) < LC.RebelRoomIn(z) and not (LC.RebelQuietZone and LC.RebelQuietZone(z)) then
             local p = HiddenSpot(z)
             if p then return p + Vector(0, 0, 4), z end
         end
@@ -885,8 +887,8 @@ local function ThinkRebel(npc, st, now)
             -- a lookout fights from his post; defenders don't chase anyone far out of their territory
             if st.post and pos:DistToSqr(st.post.pos) > 350 * 350 then
                 HeadFor(npc, st, st.post.pos, true)
-            elseif not st.post and not st.raid and st.zone and pos:DistToSqr(st.zone.pos) > (st.zone.r * 1.4) ^ 2 then
-                HeadFor(npc, st, st.zone.pos, true) -- (out on an errand: home, fighting as they go)
+            elseif not st.post and not st.raid and st.zone and not LCZ.Within(st.zone, pos, 1.4) then
+                HeadFor(npc, st, LCZ.Heart(st.zone), true) -- (out on an errand: home, fighting as they go)
             elseif not CanSee(npc, e, 2500) and now - (st.lastChase or 0) > 3 then
                 st.lastChase = now
                 npc:SetLastPosition(e:GetPos())
@@ -975,12 +977,12 @@ local function ThinkRebel(npc, st, now)
         end
     end
     if st.returning then
-        if st.zone and pos:DistToSqr(st.zone.pos) < (st.zone.r * 0.9) ^ 2 then
+        if st.zone and LCZ.Within(st.zone, pos, 0.9) then
             st.returning = nil
             LC.SetState(npc, st, "idle")
             st.untilT = now + 3
         else
-            if st.zone then HeadFor(npc, st, st.zone.pos, true) end
+            if st.zone then HeadFor(npc, st, LCZ.Heart(st.zone), true) end
             return
         end
     end
@@ -990,12 +992,12 @@ local function ThinkRebel(npc, st, now)
 
     -- home: wander about inside the zone, and stay in it
     local z = st.zone
-    if z and pos:DistToSqr(z.pos) > (z.r * 1.3) ^ 2 then
+    if z and not LCZ.Within(z, pos, 1.3) then -- (grown ground: by its cells)
         if not LC.IsSeen(pos + UP) then
             local spot = LC.SpotInZone(z)
             if spot then npc:SetPos(spot + Vector(0, 0, 4)) end
         else
-            HeadFor(npc, st, z.pos, false)
+            HeadFor(npc, st, LCZ.Heart(z), false)
         end
         return
     end
@@ -1166,7 +1168,7 @@ local function RaidTarget(z)
     for _, kind in ipairs({ "checkpoint", "patrol", "queue" }) do
         for _, p in ipairs(LC.PointsOfKind(kind)) do
             local d = p.pos:Distance(z.pos)
-            if d > z.r + 400 and not LC.InRebelZone(p.pos) then cands[#cands + 1] = { pos = p.pos, d = d } end
+            if not LCZ.Near(z, p.pos, 400) and not LC.InRebelZone(p.pos) then cands[#cands + 1] = { pos = p.pos, d = d } end
         end
         if #cands > 0 then break end
     end
@@ -1292,14 +1294,13 @@ local function StagingSpot(z)
     for _ = 1, 40 do
         local p = LC.RandomWanderPos("cop")
         if p then
-            local d = p:Distance(z.pos)
-            if d > z.r + 400 and d < z.r + 2500 and not LC.IsSeen(p + UP) and LC.ClearSpot(p)
-                and (not LC.NavReachable or LC.NavReachable(p, z.pos)) then return p end -- (and a way in from there)
+            if not LCZ.Near(z, p, 400) and LCZ.Near(z, p, 2500) and not LC.IsSeen(p + UP) and LC.ClearSpot(p)
+                and (not LC.NavReachable or LC.NavReachable(p, LCZ.Heart(z))) then return p end -- (and a way in from there)
         end
     end
     for _ = 1, 20 do
         local p = LC.RandomWanderPos("cop")
-        if p and p:Distance(z.pos) > z.r + 300 and not LC.IsSeen(p + UP) then return p end
+        if p and not LCZ.Near(z, p, 300) and not LC.IsSeen(p + UP) then return p end
     end
     return nil
 end
@@ -1392,7 +1393,7 @@ function LC.SweepRallyPoint(sk, u, now)
     if not st or st.sweepRallied then return nil end
     local best, bd
     for _, p in ipairs(sk.rally) do
-        if IsValid(p) and p:Alive() and p:GetPos():DistToSqr(sk.zone.pos) < ((sk.zone.r or 300) + 2500) ^ 2 then
+        if IsValid(p) and p:Alive() and LCZ.Near(sk.zone, p:GetPos(), 2500) then
             local d = p:GetPos():DistToSqr(u:GetPos())
             if not bd or d < bd then best, bd = p, d end
         end
@@ -1655,7 +1656,7 @@ local function RunSkirmish(sk, now)
         for _, u in ipairs(sk.units) do
             local ust = IsValid(u) and LC.NPCs[u]
             -- there: at the edge of their ground, or already fighting them
-            if IsValid(u) and Alive(u) and (u:GetPos():DistToSqr(sk.zone.pos) < (sk.zone.r + 200) ^ 2 or (ust and ust.state == "hostile")) then
+            if IsValid(u) and Alive(u) and (LCZ.Near(sk.zone, u:GetPos(), 200) or (ust and ust.state == "hostile")) then
                 sk.arrived = true
                 sk.ends = math.max(sk.ends, now + 120) -- (a long walk in doesn't eat the sweep)
                 hook.Run("LivingCitySweepArrived", sk, u) -- (a gas bomb lobbed in first: sv_livingcity_cleanup.lua)
