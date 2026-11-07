@@ -151,6 +151,7 @@ LC_MODULES = {
         "sv_livingcity_work",
         "sv_livingcity_stalkerwork",
         "sv_livingcity_writing",
+        "sv_livingcity_guidance", -- (the quest trail's way, and where you are for the panel of what you can do)
     },
     client = {
         "cl_livingcity",
@@ -198,6 +199,8 @@ LC_MODULES = {
         "cl_livingcity_talk",
         "cl_livingcity_war",
         "cl_livingcity_writing",
+        "cl_livingcity_context", -- (what you can do here: the panel on the right)
+        "cl_livingcity_trail", -- (the quest trail on the ground)
     },
 }
 

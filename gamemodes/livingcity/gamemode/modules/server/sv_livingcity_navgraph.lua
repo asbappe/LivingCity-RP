@@ -298,6 +298,26 @@ function LC.NavRoute(from, to, role)
     return out
 end
 
+-- The plain way from `from` to `to`, node by node: every node, no side steps,
+-- the same each time it's asked (the quest trail on the ground,
+-- sv_livingcity_guidance.lua). nil: no graph, or no node near one end.
+-- false: it can't be walked.
+function LC.NavPathPoints(from, to, role)
+    if not LC.NavGraph then return nil end
+    local s, e = Snap(from), Snap(to)
+    if not s or not e then return nil end
+    if s.comp ~= e.comp then return false end
+    local secure = role == "cop" or role == "soldier"
+    local avoidInfest = role ~= "zombie" and LC.InInfest and not LC.InInfest(from) and not LC.InInfest(to)
+    local path = Path(s, e, nil, secure, avoidInfest)
+    if not path and avoidInfest then path = Path(s, e, nil, secure, false) end -- (the only way is through it: shown anyway)
+    if not path then return false end
+    local out = {}
+    for _, nd in ipairs(path) do out[#out + 1] = nd.pos end
+    out[#out + 1] = to
+    return out
+end
+
 -- How far it is to walk from `from` to `to` over the nodegraph: stairs,
 -- ramps and ladders included. nil when we can't tell (no graph, or no node
 -- near one end), false when it can't be walked at all.

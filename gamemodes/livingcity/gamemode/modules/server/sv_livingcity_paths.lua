@@ -424,6 +424,9 @@ function EditorRoute(from, to, role)
     return out
 end
 
+-- (the quest trail on the ground asks for the drawn paths' way too: sv_livingcity_guidance.lua)
+LC.EditorRoute = EditorRoute
+
 -- Links every pair of nodes within radius that a person could walk between.
 function LC.AutoLink(radius)
     radius = radius or 450

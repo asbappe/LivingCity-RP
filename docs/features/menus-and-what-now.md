@@ -34,7 +34,7 @@
 - **Home:** your housing block, the way home (marked on your screen), the way to Civil Intake or Housing Allocation (while you need them), your apartment, locking it (looking at its door), taking a key back, giving it up.
 - **The city:** the time and weather, who holds the city, the laws, and for the Administrator a broadcast.
 - **Civil Protection** (units) or **Resistance** (rebels): their tools.
-- **Settings:** camera sway, third person while posing, warnings and notices on screen, tips off or on or from the start.
+- **Settings:** camera sway, the next step on screen, what you can do here (the panel on the right), the quest trail on the ground, third person while posing, warnings and notices on screen, tips off or on or from the start.
 - **Help:** ask staff for help (a ticket); for staff, the staff panel, the admin testing tools, build mode and path mapping.
 
 Every chat command a player can type has a place in it (the client smoke test checks each one, and that every quick menu has nine working items), and the tips and the guide point to the menus, not to the command. The commands still work, as shortcuts.
