@@ -65,10 +65,16 @@
     someone getting burned by a burn barrel waking everyone up) ... Also if
     someone in the rebel zone is arrested or hit by a cp arrest/stun baton or
     attacked at all by a cp or overwatch unit"): anyone there, player or NPC,
-    shot by anyone; or attacked in any way by Civil Protection or Overwatch
-    (a player or the city's own units); or hit with an arrest or stun baton;
-    or arrested: everyone asleep there wakes, players (out of a dream too)
-    and the camp's own people. Woken early like that, you're groggy ("since
+    attacked by an enemy of the camp (Civil Protection or Overwatch, players
+    or the city's own units; the infested; a monster), shot or batoned or
+    otherwise; or arrested: everyone asleep there wakes, players (out of a
+    dream too) and the camp's own people. NOT by the Resistance's own, nor by
+    any other player (the owner, 8 November: "is there a way to eliminate
+    resistance members purposely shooting or harming their fellow rebels or
+    an NPC in order to loophole a way to skip dreaming?"): a rebel on a
+    stimulant (or in a foil hat, or with no chip) can't wake the camp with a
+    shot at a friend. The same goes for a dreamer's sleeping body: only an
+    enemy's hit pulls them out of the dream; anyone else's does nothing. Woken early like that, you're groggy ("since
     they are woken up early, then the standard effects would apply such as
     the grogginess visual effect and very low stamina"): for lc_groggy_seconds
     (60) your eyelids droop and the world blurs (lighter as you come round),
@@ -438,7 +444,7 @@ end
 hook.Add("EntityTakeDamage", "LivingCityDreamBody", function(ent, dmg)
     local p = IsValid(ent) and ent.lcDreamBodyOf
     if not IsValid(p) then return end
-    if p.lcDreaming and dmg:GetDamage() > 0 then
+    if p.lcDreaming and dmg:GetDamage() > 0 and LC.CampEnemy(dmg:GetAttacker()) then -- (a friend's hit does nothing: no waking a dreamer to skip it)
         p.lcDreamHurt = { amount = dmg:GetDamage(), attacker = dmg:GetAttacker() }
         LC.WakeSleeper(p, "hurt", "Something hit you in your sleep. You wake in your bed, hurt.")
     end
@@ -496,25 +502,29 @@ local function Combine(e)
     return st ~= nil and LC.IsSecurity ~= nil and LC.IsSecurity(st) == true
 end
 LC.RaidWakeBy = Combine
-local BULLET = bit.bor(DMG_BULLET or 2, DMG_BUCKSHOT or 536870912, DMG_AIRBOAT or 33554432, DMG_SNIPER or 0)
-local BATONS = { weapon_stunstick = true, weapon_lc_baton = true }
 -- Rebel ground, where something happened to someone (pos): wake it.
 function LC.RaidWakeAt(pos)
     local z = pos and LC.RebelZoneAt and LC.RebelZoneAt(pos, 0)
     if z then return LC.WakeRebelZone(z, pos) end
     return 0
 end
--- Does this hit wake the camp? Shot by anyone; or anything at all from the Combine; or a baton.
+-- An enemy of a rebel camp: Civil Protection or Overwatch (players, or the city's units), the infested
+-- (players or not), or a monster the map or the engine brought (not a citizen, a rebel, a vortigaunt or the like).
+-- Never the Resistance, and never any other player: nobody wakes a camp (or a dreamer) by shooting a friend.
+function LC.CampEnemy(att)
+    if not IsValid(att) then return false end
+    if att:IsPlayer() then return Combine(att) or (LC.PlayerIsZombie and LC.PlayerIsZombie(att)) or false end
+    if not (att.IsNPC and att:IsNPC()) then return false end
+    local st = LC.NPCs and LC.NPCs[att]
+    if st then return Combine(att) or st.role == "zombie" end -- (the city's own: only its units and the infested)
+    local cls = att.GetClass and att:GetClass() or ""
+    return not (cls == "npc_citizen" or cls == "npc_vortigaunt" or cls == "npc_alyx" or cls == "npc_barney" or cls == "npc_eli" or cls == "npc_kleiner"
+        or cls == "npc_magnusson" or cls == "npc_mossman" or cls == "npc_monk" or cls == "npc_dog")
+end
+-- Does this hit wake the camp? Anyone there (player or NPC) attacked by an enemy of the camp.
 function LC.RaidWakeHit(ent, dmg)
     if not IsValid(ent) or not (ent:IsPlayer() or (ent.IsNPC and ent:IsNPC())) then return false end
-    local att, inf = dmg:GetAttacker(), dmg.GetInflictor and dmg:GetInflictor()
-    if dmg.IsBulletDamage and dmg:IsBulletDamage() then return true end
-    if dmg.GetDamageType and bit.band(dmg:GetDamageType(), BULLET) ~= 0 then return true end
-    if Combine(att) then return true end
-    local w = IsValid(att) and att.GetActiveWeapon and att:GetActiveWeapon()
-    if IsValid(inf) and BATONS[inf:GetClass()] then return true end
-    if IsValid(w) and BATONS[w:GetClass()] and (not IsValid(inf) or inf == att or inf == w) then return true end
-    return false
+    return LC.CampEnemy(dmg:GetAttacker())
 end
 hook.Add("EntityTakeDamage", "LivingCityRaidWake", function(ent, dmg)
     if LC.RaidWakeHit(ent, dmg) then LC.RaidWakeAt(ent:GetPos()) end
