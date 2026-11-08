@@ -86,6 +86,7 @@ chat command /kneel
 chat command /laugh
 chat command /laws
 chat command /lean
+chat command /letslip
 chat command /lie
 chat command /lock
 chat command /loserecord
@@ -146,6 +147,7 @@ console command lc_blackout
 console command lc_breencast
 console command lc_broadcast
 console command lc_buildmode
+console command lc_burn_evidence
 console command lc_calm
 console command lc_characters
 console command lc_city
@@ -441,7 +443,7 @@ setting lc_bed_npc_lift = 9
 setting lc_bedtime = 1
 setting lc_bin_kg = 10
 setting lc_bin_minutes = 40
-setting lc_birds = 6
+setting lc_birds = 4
 setting lc_blackout_light = b
 setting lc_blackout_minutes = 8
 setting lc_blackout_share = 0.5
@@ -657,7 +659,7 @@ setting lc_freq7_hold = 18
 setting lc_freq7_jammed = 8
 setting lc_freq7_quiet = 120
 setting lc_freq7_songs = 0
-setting lc_fridge_refill = 240
+setting lc_fridge_refill = 900
 setting lc_fullstomach = 1
 setting lc_garden_minutes = 8
 setting lc_garrison = 6
@@ -805,7 +807,7 @@ setting lc_nightshift_chance = 0.85
 setting lc_notes_kept = 8
 setting lc_npc_arrest_chance = 8
 setting lc_npc_arrests = 1
-setting lc_npc_budget = 60
+setting lc_npc_budget = 100
 setting lc_npc_doors = 1
 setting lc_npc_make_way = 1
 setting lc_npc_sleep = 1
@@ -865,12 +867,12 @@ setting lc_ration_dock = 1
 setting lc_ration_dock_height = 150
 setting lc_ration_dock_radius = 1500
 setting lc_ration_full_standing = 150
-setting lc_ration_interval = 600
+setting lc_ration_interval = 1500
 setting lc_rdm_strikes_jail = 2
 setting lc_rdm_strikes_kick = 4
 setting lc_rebel_bed_height = 8
 setting lc_rebel_damage = 0.5
-setting lc_rebel_errand_minutes = 4
+setting lc_rebel_errand_minutes = 12
 setting lc_rebel_errands = 1
 setting lc_rebel_guard = 1
 setting lc_rebel_home_hurt = 2
@@ -916,7 +918,7 @@ setting lc_scanner_snitch_cap = 100
 setting lc_scanner_spot_cooldown = 300
 setting lc_scanner_spotted = 60
 setting lc_scanners = 1
-setting lc_scavenge_refill = 600
+setting lc_scavenge_refill = 1800
 setting lc_search_cooldown = 120
 setting lc_search_fight_choice = 1
 setting lc_search_weapons = 1
@@ -954,7 +956,7 @@ setting lc_starve_damage = 3
 setting lc_stash_size = 8
 setting lc_stealth = 1
 setting lc_stink_spread = 0.03
-setting lc_stock_eat = 40
+setting lc_stock_eat = 20
 setting lc_stock_max = 400
 setting lc_stockpile = 1
 setting lc_stop_chance = 15
