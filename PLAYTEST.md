@@ -914,3 +914,16 @@ Notes:
   Notes:
 - [ ] **Sizes:** her height, the pedestal, the mirrors (they are guesses at angles) and the admirers' kneeling pose look right; tell me what looks off.
   Notes:
+- [ ] **Let them slip, on F2:** as the Insider beside a prisoner being marched: the right-hand panel shows "Let <name> slip away: F2 > 7" (bright); F2 > 7 lets them go (20 s head start, wanted if a unit still sees them, -20 standing, once per 20 min); watched: the line goes faint and the entry is greyed.
+- [ ] **Pat-down search:** as a unit, search a citizen (baton R or F2): click Jacket, Waist, Legs, Boots one at a time; only checked spots give things up. As the searched player, press R once to slip something into a checked spot (about 6 in 10); walk off and you are wanted for evading.
+- [ ] **F2 for everyone:** Insider (F2 > Inside), Resistance (F2 > Freq 7: message, backup, my position, guide to rebel ground or a lab), plain citizen (F2 > Me: work, rations, home, standing), prisoner (My sentence), Administrator (tablet, laws, tonight's dream, guards, order an arrest), Division Leader and up (Call a sweep).
+- [ ] **Administrator's guards:** F2 > Command the guards > Follow distance (Close, Medium, Far) and When there's trouble (As always, Stay with me, Stand between us, Hold fire unless fired on); the menu marks the one in force.
+- [ ] **Stepping aside, own side only:** walk into a Metrocop or an Overwatch soldier as a unit or as the Administrator (it moves) and as a citizen or rebel (it doesn't); your Elites sidestep and return to their place; never mid-fight.
+- [ ] **Raids and sweeps keep coming:** after a Resistance operation succeeds (heist, breakout, screen, ambush, supply), raids and sweeps start again on their usual timers (they used to stop until a restart).
+- [ ] **Grown territory:** grow rebel ground down a corridor (admin tools > The city > Grow rebel ground now, a few times): barrels and crates along the whole corridor, fighters patrolling and appearing all along it, lower stretches too.
+- [ ] **Save files:** with the server stopped, cut data/livingcity/mail.json short and start it: the mail is all there (from mail.json.bak.txt, a warning in lc_debugreport). Blank the .bak.txt too and restart: a superadmin is told, the file isn't overwritten, and admin tools > The city > "Let the city save over them" allows it.
+- [ ] **NPC name tags on demand:** join with many NPCs: nearby names, jobs and what they're doing show as before; someone far across the square shows within about a second.
+- [ ] **Frame rate:** with job games on (sweeping, carts, triage), the frame rate should be steadier than before; nothing should look different.
+- [ ] **Daytime curfew announcement:** it now says a unit warns you three times, then you're wanted.
+- [ ] **Pose Recorder 2:** make a 3-keyframe wave, "Play what I'm making on me" (loop, once, hold, speed 2): another player sees it, a late joiner too; C > right click an NPC > Play animation; Mirror them on a right-arm pose: the left arm does the same on its own side.
+  Notes:

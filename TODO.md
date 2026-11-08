@@ -65,3 +65,6 @@
 - **`LC.IsNight` is defined twice** (atmos: night only; rest: night or dusk; the rest one wins). Check which is meant.
 - **DreamTests "the awake aren't touched"** is flaky (the awake test citizen may get a random Union job's tools).
 - **NPC sight cache: measured, not merged** (branch `worktree-agent-a27078de119d0e273`): at 1 second it never hits (far NPCs only think every 2 s), and the sleep check makes only about 6 sight traces a second at 83 NPCs, so the "thousands a second" estimate was wrong. Nothing to do.
+- **Core snapshot copy (owner OK'd, 8 November):** the approved changes (NPC cap 100, six food settings, `lc_burn_evidence`, `/letslip`) still need copying into the core snapshot; this session's permission rules wouldn't let the copy run. The owner (or a session allowed to) copies the `.new` snapshot over the old one after one `python3 _dev/run_parallel.py`.
+- **Random tests:** "a headcrab near: it runs, no vortessence (the collar)" (1 November playtest unit) and the collared vortigaunt sweeper move: each fails now and then, before this session too.
+- **Pose Recorder 2, second update:** the timeline strip (jump, reorder, duplicate, delete, scrub) and putting a saved pose back onto a ragdoll.
