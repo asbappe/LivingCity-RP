@@ -14538,6 +14538,15 @@ do -- forgiving answers: endings, small typos, more synonyms (the owner, 8 Novem
     ok(not Has("the admin", "administrator") and not Has("love", "loyal") and not Has("tall", "tell") and not Has("you", "her"), "but not a different word, nor a typo in a short one")
     local function Bad(text) local w = {} for x in string.gmatch(string.lower(text), "%a+") do w[#w + 1] = x end return LC.QuizForbidden(w) end
     ok(Bad("Freemann lives") == "freemann" and Bad("the rebelion") == "rebelion" and Bad("tyrants!") == "tyrants" and Bad("Lambdas") == "lambdas", "thoughtcrime is caught with the same leniency")
+    ok(Bad("oh fuck") == "fuck" and Bad("FUCKING hell") == "fucking" and Bad("you stupid hag") == "stupid" and Bad("what a load of shite") == "shite" and Bad("bullshit!") == "bullshit",
+        "swears, curses and insults are thoughtcrime too (with their endings)")
+    ok(Bad("I passed") == nil and Bad("a banker") == nil and Bad("hello") == nil and Bad("classy") == nil and Bad("they are scum and liars") == nil,
+        "but never by a typo's distance (passed, banker), inside another word (hello, classy), nor the right answers about the Resistance")
+    for i, x in ipairs(LC.QuizQuestions) do
+        local clash = {}
+        for _, ans in ipairs(x.a) do if Bad(ans) then clash[#clash + 1] = ans end end
+        ok(#clash == 0, "no right answer to question " .. i .. " is thoughtcrime", table.concat(clash, ", "))
+    end
     ok(Bad("let's dance") == nil and Bad("a garden") == nil and Bad("pigeon") == nil and Bad("the administrator is beautiful") == nil, "and a harmless word near a short one (dance, not Vance) is never thoughtcrime")
     local q = {}
     for _, x in ipairs(LC.QuizQuestions) do q[#q + 1] = "|" .. table.concat(x.a, "|") .. "|" end
@@ -14980,6 +14989,147 @@ _walls = savedWalls
 ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 PropagandaMoreTests()
+
+-- The performance debugger (sh_livingcity_perfdebug.lua, sv_livingcity_perfdebug.lua)
+local function PerfDebugTests()
+section("The performance debugger: hooks, timers, net in and out, networked values, hitches, put back when off")
+local errs0 = #_errors
+local P = LC.PerfDebug
+local staff = newPlayer("PDStaff", "citizen")
+staff.admin = true
+local cit = newPlayer("PDCitizen", "citizen")
+_run(1)
+ok(P and not P.on and not P.Installed(), "off until staff turn it on: nothing of it is in the way")
+-- the stub's gaps, for this test only
+local EMT = getmetatable(ents.Create("prop_physics"))
+local realFMT, realGT, realBW = FindMetaTable, hook.GetTable, net.BytesWritten
+local realInc, realRH, realNIS, realRecv = net.Incoming, net.ReadHeader, util.NetworkIDToString, net.Receivers
+FindMetaTable = function(n) if n == "Entity" then return EMT end return realFMT(n) end
+hook.GetTable = function() return hook.t end
+net.BytesWritten = function() return 100 end
+local handled
+net.Receivers = { pdtest = function(len, ply) handled = { len, ply } end }
+net.ReadHeader = function() return net._pdHeader end
+util.NetworkIDToString = function(i) return ({ [7] = "PDTest", [8] = "PDNobody" })[i] end
+net.Incoming = function() end
+local addWas, startWas, setNWWas, incWas = hook.Add, net.Start, EMT.SetNW2Int, net.Incoming
+local function Busy() local x = 0 for i = 1, 20000 do x = x + i end return x end
+local hookFn = function(a) Busy() return a == "ask" and "answer" or nil end
+hook.Add("PDTestEvent", "PDTestHook", hookFn)
+ok(P.Command(cit, "on") == false and not P.on, "a player who isn't staff can't turn it on")
+ok(P.Command(staff, "on") and P.on and P.Installed(), "staff turn it on (C > Help > Performance debugger)")
+ok(hook.t.PDTestEvent.PDTestHook ~= hookFn and hook.Add ~= addWas and net.Start ~= startWas and EMT.SetNW2Int ~= setNWWas, "every hook, the net functions and the networked setters are wrapped")
+ok(hook.t.Think[P.SELF] ~= nil and P.WrappedHookCount() > 5, "its own frame hook isn't timed; the rest are", P.WrappedHookCount())
+-- hooks
+local a1 = hook.Run("PDTestEvent", "ask")
+hook.Run("PDTestEvent", "x")
+hook.Run("PDTestEvent", "x")
+local h = P.stats.hooks["PDTestEvent / PDTestHook"]
+ok(a1 == "answer" and h and h.n == 3 and h.total > 0, "a hook is timed by event and name, and still returns what it did", h and h.n)
+local lateFn = function() Busy() end
+hook.Add("PDTestEvent", "PDLateHook", lateFn)
+hook.Run("PDTestEvent", "x")
+ok(hook.t.PDTestEvent.PDLateHook ~= lateFn and P.stats.hooks["PDTestEvent / PDLateHook"] and P.stats.hooks["PDTestEvent / PDLateHook"].n == 1, "a hook added while it's on is timed too")
+local goneFn = function() end
+hook.Add("PDTestEvent", "PDGoneHook", goneFn)
+hook.Remove("PDTestEvent", "PDGoneHook")
+-- net out
+net.Start("pd_out")
+net.Send(cit)
+net.Start("pd_out")
+net.Send({ cit, staff })
+local so = P.stats.sent.pd_out
+ok(so and so.n == 2 and so.to == 3 and so.bytes == 300 and P.stats.toPlayer[cit:SteamID()] == 200, "each message sent: how many, to how many players, how many bytes, and what each player was sent", so and (so.n .. "/" .. so.to .. "/" .. so.bytes))
+-- net in
+net._pdHeader = 7
+net.Incoming(816, cit)
+local ri = P.stats.recv.PDTest
+ok(handled and handled[1] == 800 and handled[2] == cit and ri and ri.n == 1 and ri.bytes == 102, "each message received: its handler still gets it, and it's counted with its bytes and time", ri and ri.bytes)
+net._pdHeader = 8
+net.Incoming(64, cit)
+ok(P.stats.recv.PDNobody and P.stats.recv.PDNobody.unhandled == 1, "a message nothing handles is counted as such")
+ok(P.stats.senders[cit:SteamID()] and P.stats.senders[cit:SteamID()].n == 2, "and who sent them")
+-- networked values
+local e = ents.Create("prop_physics")
+e:SetNW2Int("pd_value", 1)
+e:SetNW2Int("pd_value", 1)
+e:SetNW2Int("pd_value", 2)
+local nv = P.stats.nw["NW2 pd_value"]
+ok(nv and nv.calls == 3 and nv.changes == 2 and e:GetNW2Int("pd_value") == 2, "networked values: how often each is set, and how often it really changed", nv and (nv.calls .. "/" .. nv.changes))
+-- frames and hitches
+local t = 5000
+P.Frame(t)
+P.Frame(t + 0.015)
+hook.Run("PDTestEvent", "x")
+P.Frame(t + 0.215)
+local sp = P.stats.spikes[#P.stats.spikes]
+local inIt = false
+for _, it in ipairs(sp and sp.top or {}) do if it.k == "hook: PDTestEvent / PDTestHook" then inIt = true end end
+ok(sp and sp.ms >= 199 and sp.ms <= 201 and inIt and sp.lua ~= nil, "a slow frame is kept as a hitch, with what ran in it", sp and (sp.ms .. " lua " .. sp.lua .. " top " .. tostring(sp.top[1] and sp.top[1].k)))
+ok(P.stats.frames.n == 2 and P.stats.frames.buckets[1] == 1 and P.stats.frames.buckets[4] == 1, "frames sorted on time to hitch")
+-- a flood: lots from one player in one second
+for _ = 1, P.FLOOD_MSGS do net._pdHeader = 7 net.Incoming(80, cit) end
+P.Frame(t + 1.3)
+local fl = P.stats.floods[#P.stats.floods]
+ok(fl and fl.sid == cit:SteamID() and fl.n >= P.FLOOD_MSGS and P.stats.senders[cit:SteamID()].peakN >= P.FLOOD_MSGS, "a player sending a flood of messages in one second is noted, with their busiest second")
+-- timers started while it's on
+local ranT = false
+timer.Simple(0, function() ranT = true Busy() end)
+_runtimers()
+local anyT = false
+for k in pairs(P.stats.timers) do if string.find(k, "tests.lua", 1, true) or string.find(k, "string", 1, true) then anyT = true end end
+ok(ranT and anyT, "a timer started while it's on still runs, and is timed by where it was started")
+LC.PerfDebugNote("LivingCityPDCity", 0.002)
+ok(P.stats.timers.LivingCityPDCity and P.stats.timers.LivingCityPDCity.n == 1, "the city's repeating timers (timed all the time) are passed on to it")
+-- entities that keep growing
+P.Census()
+for _ = 1, 60 do ents.Create("pd_leaky") end
+P.Census()
+local g = P.Growth(P.stats)
+ok(g[1] and g[1].k == "pd_leaky" and g[1].diff == 60, "the census finds a class of entity that keeps growing", g[1] and g[1].k)
+-- what the window gets, and the report
+local snap = P.ServerSnapshot()
+local hasPlayer = false
+for _, p in ipairs(snap.players or {}) do if p.k == "PDCitizen" then hasPlayer = true end end
+ok(snap.on and snap.side == "server" and #snap.hooks > 0 and #snap.recv > 0 and hasPlayer and snap.spikeCount >= 1, "the window's figures: hooks, messages, players, hitches")
+local findings = table.concat(P.Findings(snap), " ")
+ok(string.find(findings, "pd_leaky", 1, true) and string.find(findings, "PDNobody", 1, true) and string.find(findings, "PDCitizen", 1, true), "what stands out says it in plain words (the leak, the unhandled message, the flood)", findings)
+local text = P.ReportText(snap)
+ok(string.find(text, "What stands out", 1, true) and string.find(text, "PDTestEvent / PDTestHook", 1, true) and string.find(text, "Hitches", 1, true), "the text report has it all")
+ok(P.Command(staff, "watch") and P.watchers[staff], "the window open: its figures are sent every two seconds")
+P.Command(staff, "unwatch")
+ok(P.Command(staff, "spike", 100) and P.spikeMs == 100 and GetConVar("lc_perfdebug_spike_ms"):GetInt() == 100, "the hitch threshold is set from the window")
+P.Command(staff, "spike", 60)
+-- off: everything as it was
+ok(P.Command(staff, "off") and not P.on, "staff turn it off")
+ok(hook.t.PDTestEvent.PDTestHook == hookFn and hook.t.PDTestEvent.PDLateHook == lateFn and hook.t.PDTestEvent.PDGoneHook == nil, "every hook is put back as it was (and a hook removed meanwhile stays removed)")
+ok(hook.Add == addWas and net.Start == startWas and EMT.SetNW2Int == setNWWas and net.Incoming == incWas and not P.Installed(), "the net functions, the net handler and the setters are put back too")
+local saved
+for path in pairs(_files) do if string.match(path, "^livingcity/perf/perf_.*%.txt$") then saved = path end end
+ok(saved and string.find(_files[saved], "PDTestEvent", 1, true), "turning it off saves the report to data/livingcity/perf/", saved)
+local n0 = P.stats.hooks["PDTestEvent / PDTestHook"].n
+hook.Run("PDTestEvent", "x")
+ok(P.stats.hooks["PDTestEvent / PDTestHook"].n == n0, "off, nothing is timed (what was measured stays to look at)")
+-- it turns itself off
+_setcvar("lc_perfdebug_minutes", 1)
+P.Command(staff, "on")
+P.startedAt = SysTime() - 61
+P.OnSecond(SysTime())
+ok(not P.on and hook.t.PDTestEvent.PDTestHook == hookFn, "it turns itself off after lc_perfdebug_minutes, and puts everything back")
+_setcvar("lc_perfdebug_minutes", 30)
+ok(P.Command(staff, "on") and P.stats.hooks["PDTestEvent / PDTestHook"] == nil, "each start measures afresh")
+P.Command(staff, "off")
+hook.Remove("PDTestEvent", "PDTestHook")
+hook.Remove("PDTestEvent", "PDLateHook")
+FindMetaTable, hook.GetTable, net.BytesWritten = realFMT, realGT, realBW
+net.Incoming, net.ReadHeader, util.NetworkIDToString, net.Receivers = realInc, realRH, realNIS, realRecv
+for _, x in ipairs(ents.FindByClass("pd_leaky")) do x:Remove() end
+e:Remove()
+staff:Remove()
+cit:Remove()
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+PerfDebugTests()
 
 -- Cigarettes, alcohol and stimulants (sv_livingcity_vices.lua), and who a nightmare takes
 function ViceTests()

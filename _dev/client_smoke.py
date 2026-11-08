@@ -1419,6 +1419,55 @@ local okLW, errLW = pcall(function()
     LC_CL.SetLagWatch(false)
 end)
 if not okLW then problems[#problems + 1] = "lag monitor: " .. tostring(errLW) end
+-- the performance debugger's window (cl_livingcity_perfdebug.lua): open, the server's figures, your own game measured alongside, copy, print, close
+local pdWas = { net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable, net.SendToServer, net.Start, net.WriteString, hook.GetTable, vgui }
+local pdFrames = {}
+local function PDPanel()
+    return setmetatable({}, { __index = function(t, k)
+        if k == "IsValid" then return function() return not rawget(t, "_removed") end end
+        if k == "Remove" then return function() rawset(t, "_removed", true) if rawget(t, "OnRemove") then t:OnRemove() end end end
+        return function() return t end
+    end })
+end
+local okPD, errPD = pcall(function()
+    local P = LC.PerfDebug
+    if not (P and LC_CL.PerfDebugMenu) then error("not loaded") end
+    local sentPD, cur = {}, nil
+    net.Start = function(n) cur = { name = n, data = {} } end
+    net.WriteString = function(v) if cur then table.insert(cur.data, v) end end
+    net.SendToServer = function() sentPD[#sentPD + 1] = cur end
+    hook.GetTable = function() return hook.t end
+    vgui = { Create = function(c) local p = PDPanel() if c == "DFrame" then pdFrames[#pdFrames + 1] = p end return p end, GetKeyboardFocus = function() return nil end }
+    LC_CL.PerfDebugMenu()
+    if not (sentPD[1] and sentPD[1].name == "lc_perfdebug_cmd" and sentPD[1].data[1] == "watch") then error("didn't ask the server for its figures") end
+    local doc = { side = "server", on = true, secs = 12, spikeMs = 60, frames = { n = 700, avg = 15.2, max = 240, buckets = { 690, 5, 3, 2 }, base = 15 }, luaPct = 22,
+        hooks = { { k = "Think / LivingCityNPCs", n = 700, ms = 900, avg = 1.2, max = 30, pct = 7.5 } }, timers = {},
+        recv = { { k = "lc_x", n = 3, ms = 1, avg = 0.3, max = 0.5, pct = 0, bytes = 90, unhandled = 1, kbs = 0 } },
+        sent = { { k = "lc_data", n = 4, bytes = 40000, to = 8, kbs = 20 } }, nw = { { k = "NW2 lc_char", calls = 5000, changes = 20, cps = 2 } }, senders = {},
+        spikes = { { at = "20:00:00", ms = 240, lua = 200, top = { { k = "hook: Think / LivingCityNPCs", ms = 190 } }, players = 5 } }, spikeCount = 1, floods = {},
+        history = { { t = 10, ents = 900, npcs = 60, mem = 200000, edicts = 1500, players = 5 } }, growth = { { k = "prop_physics", from = 10, to = 200, diff = 190 } },
+        mem = 200000, memPeak = 210000, allocKBs = 900, hooksWrapped = 300, players = { { k = "Someone", ping = 80, loss = 0, kbs = 3, queue = 0, loading = "no" } },
+        map = "rp_c18_ug", playerCount = 5, tickRate = 66, cityNPCs = 60, startedBy = "Admin", left = 1700,
+        cityTimers = { { k = "LivingCityThink", n = 10, ms = 50, avg = 5, max = 9 } } }
+    net.ReadUInt = function() return 1 end
+    net.ReadData = function() return "x" end
+    util.Decompress = function(s) return s end
+    util.JSONToTable = function() return doc end
+    net["recv_lc_perfdebug"]()
+    if not P.on then error("your own game didn't start measuring with the server") end
+    for _ = 1, 3 do run("Think") _advance(1.2) end
+    if P.stats.frames.n < 1 then error("your game's frames weren't measured") end
+    LC_CL.PerfDebugRefresh()
+    local text = LC_CL.PerfDebugReports()
+    if not string.find(text, "LivingCityNPCs", 1, true) or not string.find(text, "performance report (client)", 1, true) then error("reports missing: " .. string.sub(text, 1, 200)) end
+    concommand.list.lc_perfdebug_print(nil)
+    pdFrames[1]:Remove()
+    if P.on then error("still measuring your game after the window closed") end
+    if sentPD[#sentPD].data[1] ~= "unwatch" then error("didn't tell the server the window closed") end
+end)
+net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable, net.SendToServer, net.Start, net.WriteString, hook.GetTable, vgui = unpack(pdWas)
+if LC.PerfDebug and LC.PerfDebug.on then LC.PerfDebug.Stop() end
+if not okPD then problems[#problems + 1] = "performance debugger: " .. tostring(errPD) end
 -- the infestation, up close (cl_livingcity_infest.lua): haze, the geiger counter, stains on the ground
 local decals = 0
 util.DecalEx = function() decals = decals + 1 end

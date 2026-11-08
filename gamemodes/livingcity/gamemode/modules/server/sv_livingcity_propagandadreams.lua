@@ -1005,6 +1005,16 @@ do
     local FORBID = {}
     for _, w in ipairs(LC.QuizThoughtcrime) do FORBID[#FORBID + 1] = w end
     for _, w in ipairs(LC.CombineInsults) do FORBID[#FORBID + 1] = w end
+    -- Swears, curses and rude words are thoughtcrime in her studio too (the owner, 8 November: "make
+    -- sure to add swears, insults, curses, rude words, etc to the thoughtcrime list"). Spelled as here
+    -- or with an ending (fucking, shits), no typos: one letter off, they're everyday words (pissed,
+    -- passed). Not the insults that answer a question (scum, liars, vermin: the Resistance).
+    LC.QuizSwears = { "fuck", "fucker", "fuckers", "motherfucker", "fck", "fuk", "wtf", "stfu", "shit", "shitty", "bullshit", "crap", "damn", "dammit", "goddamn", "goddammit",
+        "hell", "ass", "arse", "asshole", "arsehole", "bastard", "bitch", "bitchy", "bollocks", "bugger", "cunt", "dick", "dickhead", "cock", "piss", "pissed", "prick", "twat",
+        "wanker", "tosser", "bloody", "sod", "git", "slag", "douche", "douchebag", "jackass", "dumbass", "moron", "idiot", "stupid", "dumb", "loser", "scumbag",
+        "screw", "sucks", "whore", "slut", "skank", "turd", "jerk", "ugly", "hag", "witch", "pathetic", "worthless", "clown", "boring", "useless" }
+    local SWEAR = {}
+    for _, w in ipairs(LC.QuizSwears) do SWEAR[#SWEAR + 1] = w end
     -- Forgiving answers (the owner, 8 November: "What if someone uses a synonym or makes a slight
     -- typo?"): a word's common endings count (terrorist, terrorists; report, reported, reporting),
     -- and in longer words one letter wrong, missing, extra or swapped with the next still counts.
@@ -1067,6 +1077,7 @@ do
     function LC.QuizForbidden(words)
         for _, w in ipairs(words) do
             for _, f in ipairs(FORBID) do if LC.QuizWordMatch(w, f, 6) then return w end end
+            for _, f in ipairs(SWEAR) do if LC.QuizWordMatch(w, f, 99) then return w end end
         end
         return nil
     end

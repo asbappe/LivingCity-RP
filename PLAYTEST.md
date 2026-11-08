@@ -986,6 +986,25 @@ Notes:
 - [ ] **Ravenholm, freed NPC vortigaunt (changed):** with no Free Vortigaunt player online, cut a street-crew vortigaunt loose (or finish a work-site rescue), then play Ravenholm: the truth version should happen. Kill that vortigaunt and play again: her version.
   Notes:
 - [ ] **lc_voice_missing (8 November, part 7):** type `lc_voice_missing` in the server's web console: one line per folder (Dream lines, overwatch, administrator, radio, G-Man) naming what has no recording yet. Add a file, change the map, run it again: that line should be gone.
+
+## 8 November, part 8: the performance debugger (staff)
+- [ ] **Opening it:** C > Help > Performance debugger opens a window with tabs (Summary, Hitches, Hooks, Timers, Net in, Net out, Networked values, Entities, Players, Who sends).
+  Notes:
+- [ ] **Start and Stop:** Start: every staff member online is told on screen; the figures refresh every two seconds. Stop: told again, with where the report was saved (`garrysmod/data/livingcity/perf/`).
+  Notes:
+- [ ] **No harm while on:** with it on for a few minutes on a busy server, nothing breaks (doors, menus, chat, NPCs, ULX or other admin mods still work), and after Stop everything behaves as before.
+  Notes:
+- [ ] **What it finds:** the Summary's "What stands out" lines make sense; Hooks lists the gamemode's and other addons' hooks; Net in and Net out list messages; Players shows ping and loss.
+  Notes:
+- [ ] **Your game:** the "Server / Your game" button shows your own game's figures (your hooks, your frames).
+  Notes:
+- [ ] **Settings:** the two drop-downs set the hitch threshold (30, 60, 100, 250 ms) and when it turns itself off (15 to 120 minutes, or never).
+  Notes:
+- [ ] **Copy report:** pastes both reports (server and your game) as text; `lc_perfdebug report` in the server console prints the server's.
+  Notes:
+- [ ] **From the editor tool:** the last button in the Living City editor tool's panel (under Debugging), "Performance debugger", opens the same window.
   Notes:
 - [ ] **The Loyalty Quiz forgives (8 November, part 7):** in the quiz, answer with a typo ("adminstrator"), another ending ("I reported him", "terrorist") and a new synonym ("Breen", "surrender", "rat"): each should count. "Freemann" should still be thoughtcrime; "let's dance" should not.
+  Notes:
+- [ ] **Swears are thoughtcrime in the quiz:** swear in the Loyalty Quiz ("oh shit"): a life gone, like "Freeman". "They are scum" on the Resistance question should still be a right answer.
   Notes:

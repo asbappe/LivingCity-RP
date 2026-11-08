@@ -782,4 +782,5 @@ function TOOL.BuildCPanel(panel)
     panel:CheckBox("Show layout without the tool", "lc_show")
     panel:CheckBox("Show what the NPC I'm looking at is doing", "lc_show_npcs")
     panel:CheckBox("Show every nearby NPC (cluttered)", "lc_show_all_npcs")
+    panel:Button("Performance debugger (what's slow: hooks, timers, net messages, hitches)", "lc_perfdebug_menu")
 end
