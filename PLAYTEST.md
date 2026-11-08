@@ -1012,3 +1012,5 @@ Notes:
   Notes:
 - [ ] **The dreams speak with her voice:** in The Stakhanov Shift, Careless Talk, The Newsreel, Two Minutes of Hate and The Mass Games, the lines on screen are labelled "The Administrator" (Duck and Cover keeps Sunny the Scanner).
   Notes:
+- [ ] **No foreman in The Stakhanov Shift:** she stands on a gold pedestal at the far end of the factory (check she fits beside the board and the portrait); stand idle 12 seconds: "I see you standing there. Back to work, citizen!"
+  Notes:

@@ -13,7 +13,7 @@
           Five crates: a medal from her own hand.
         The Stakhanov Shift (shift), Soviet labour heroes: stand at a work station and hammer
           (crouch, again and again) to beat the norm by 1400%. Double norm now and then. Idle for
-          12 seconds and the foreman notices. The first to 1400% gets a giant portrait.
+          12 seconds and she notices (no foreman: the owner, 8 November, "I prefer just using the administrator"). The first to 1400% gets a giant portrait.
         Careless Talk (spy), "loose lips sink ships": a canteen of citizens with one rebel spy
           among them. A party game (the owner: "everyone has 30 seconds to pick the spy ... on
           their own and then it's revealed to everyone at the end"): four rounds of 30 seconds,
@@ -85,6 +85,7 @@ local CUES = {
     shift_hello = { "The Administrator", "My workers! Today's norm is one hundred percent. Tomorrow's is fourteen hundred. Why wait?" },
     shift_double = { "The Administrator", "Double norm! Every blow counts twice!" },
     shift_hero = { "The Administrator", "A new Hero of Labour! Hang their portrait beside mine!" },
+    shift_idle = { "The Administrator", "I see you standing there. Back to work, citizen!" },
     spy_hello = { "The Administrator", "Careless talk costs lives, my children. There is a traitor among you. Listen carefully." },
     spy_caught = { "The Administrator", "Time is up. The traitor is revealed. I thank my vigilant citizens." },
     newsreel_hello = { "The Administrator", "Welcome to my City Seventeen, where every citizen smiles, and every smile is sincere!" },
@@ -311,11 +312,11 @@ end
 
 do
     local def = { id = "shift", name = "The Stakhanov Shift", mood = "happy", secs = 150, lives = 3, need = 1400, music = { "shift", "propaganda" },
-        goal = "Stand at a glowing work station and hammer (crouch, again and again) to beat the norm by 1400%. Don't stand idle: the foreman is watching.",
+        goal = "Stand at a glowing work station and hammer (crouch, again and again) to beat the norm by 1400%. Don't stand idle: she is watching.",
         timeUp = { "The whistle blows", "The shift is over before you've beaten the norm. You wake." }, spawn = Spawn,
         woke = Woke({
             won = { "Hero of Labour", "You wake with aching arms and a strange pride. Somewhere, a giant portrait of you is drying." },
-            out = { "Idler", "You wake with the foreman's whistle still in your ears. You should work harder. At what, you're not sure." },
+            out = { "Idler", "You wake with her whistle still in your ears. You should work harder. At what, you're not sure." },
             time = { "The whistle blows", "You wake counting hammer blows, and can't stop." },
         }) }
     G.shift = def
@@ -330,7 +331,7 @@ do
         g.stations = {}
         local step = (x1 - x0 - 400) / 5
         for i = 0, 5 do for _, dy in ipairs({ -150, 150 }) do g.stations[#g.stations + 1] = Vector(x0 + 250 + i * step, c.y + dy, top) end end
-        g.foreman = Actor(g, "models/police.mdl", Vector(x1 - 90, c.y, top), 180, 1.8, ACT_IDLE or 1)
+        Her(g, x1 - 110, c.y, top, 180) -- (she watches the floor herself)
         g.boardAt = Vector(x1 - 30, c.y - PLATE8_S + 150, top + 170)
         g.portraitAt = Vector(x1 - 60, c.y + PLATE8_S - 150, top)
         g.doubleAt, g.doubleTil = CurTime() + math.Rand(20, 30), 0
@@ -372,8 +373,9 @@ do
                 end
             elseif now - s.lastStroke > LC.ShiftIdle and not Grace(s) then
                 s.lastStroke = now
-                if Offend(g, p, "Idler!", "The foreman saw you standing about. The norm does not beat itself.") and IsValid(g.foreman) then
-                    Snd(g.foreman, "npc/metropolice/vo/getbacktowork.wav", 85)
+                if Offend(g, p, "Idler!", "She saw you standing about. The norm does not beat itself.") and now >= (g.idleSaidAt or 0) then
+                    g.idleSaidAt = now + 10 -- (once in ten seconds, however many idle)
+                    SayAs(g, "shift_idle")
                 end
             end
         end

@@ -14724,7 +14724,7 @@ ok(LC.Standing(a) == st0 - 3, "waking, the wrecking costs 3 loyalty points", LC.
 -- The Stakhanov Shift
 g, d = Start("shift")
 s = g.pl[a]
-ok(g and #g.stations == 12 and IsValid(g.foreman), "The Stakhanov Shift is built: twelve work stations, the foreman")
+ok(g and #g.stations == 12 and g.herBase ~= nil and g.foreman == nil, "The Stakhanov Shift is built: twelve work stations, and she watches the floor (no foreman)")
 a:SetPos(g.stations[1])
 Duck(a)
 ok(s.pct == LC.ShiftStroke, "at a station, every crouch is a hammer blow", s.pct)
@@ -14734,7 +14734,8 @@ Duck(a)
 ok(s.pct == LC.ShiftStroke, "away from a station, nothing")
 g.pl[b].lastStroke = CurTime() - LC.ShiftIdle - 1
 _run(0.1)
-ok(g.pl[b].lives == 2, "idle too long: the foreman notices", g.pl[b].lives)
+ok(g.pl[b].lives == 2, "idle too long: she notices", g.pl[b].lives)
+ok(Said(g, "shift_idle"), "and says so, in her voice if recorded")
 a.crouch = nil
 a:SetPos(g.stations[2])
 s.pct, s.lastStroke = g.def.need - 5, CurTime()
