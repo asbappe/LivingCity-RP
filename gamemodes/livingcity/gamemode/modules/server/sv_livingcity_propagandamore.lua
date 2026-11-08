@@ -1383,3 +1383,308 @@ do
             meter = math.floor(math.min(1, (s.score or 0) / def.need) * 100), meterName = string.format("Rockets survived: %d of %d", s.score or 0, def.need) }
     end
 end
+
+------------------------------------------------------------------------
+-- Ravenholm (the owner, 8 November: "reminiscing of the ending to ravenholm: a graveyard with
+-- the church but father gregori is glowing red and his voice lines pitch shifted to sound evil,
+-- and zombies are rising from the graves ... if a vortigaunt is free it will appear and send out
+-- an effect that is a green version of the portal storm effect from ep2 that washes over
+-- gregori and shows that he is actually the good guy ... the administrator appears as actually
+-- evil and father gregori starts killing the zombies ... and the administrator flies away defeated")
+--
+-- The Saviour turned inside out. The dead rise from the graves and come for the dreamers, who
+-- have nothing to fight with (it hurts, in the dream); a giant, red Father Grigori rants from the
+-- church. When someone is down to 25 health (or after 55 seconds) the dream turns:
+--   No Free Vortigaunt on the server: propaganda wins. She descends, her soldiers kill the dead,
+--     and Grigori flees into the sky. ("Saved.")
+--   A Free Vortigaunt (a Resistance player in that role, awake or asleep): a vortigaunt appears
+--     (the player themselves, if they're in the dream) and a green storm washes over everything.
+--     Grigori's red is gone and his voice is his own; he blasts the dead with his shotgun before
+--     they can hurt anyone, while a giant red figure of her shrieks and flies away defeated.
+------------------------------------------------------------------------
+
+do
+    local def = { id = "ravenholm", name = "Ravenholm", mood = "happy", secs = 150, lives = 1, music = { "ravenholm", "propaganda" },
+        goal = "The dead are rising from the graves, and you have nothing to fight with. Run. Dodge. Hold on.",
+        timeUp = { "Dawn over the graves", "The sun comes up over the graveyard, and you wake." }, spawn = Spawn }
+    G.ravenholm = def
+    MORE[#MORE + 1] = "ravenholm"
+    LC.PropagandaDreams.ravenholm = true
+    LC.DreamGameOrder[#LC.DreamGameOrder + 1] = "ravenholm"
+    LC.PropagandaSongWords[#LC.PropagandaSongWords + 1] = "ravenholm"
+    LC.PropagandaSongWords[#LC.PropagandaSongWords + 1] = "ravenholm_truth"
+    local LINES = {
+        ravenholm_rise = { "Father Grigori", "RISE, my children! Rise from your graves and FEAST!" },
+        ravenholm_stop = { "The Administrator", "Begone, false priest! These citizens are under MY protection." },
+        ravenholm_safe = { "The Administrator", "You see? Only I can keep you safe. Never forget it." },
+        ravenholm_vort = { "A Vortigaunt", "The Vortessence sees through the false light. Behold what is true." },
+        ravenholm_good = { "Father Grigori", "Hah! Back to your rest, poor souls! Not one of these children shall be harmed!" },
+        ravenholm_defeat = { "The Administrator", "No... NO! This is MY dream!" },
+    }
+    for k, v in pairs(LINES) do LC.PropagandaCues[k], LC.PropagandaCueWho[k] = v[2], v[1] end
+    LC.RavenholmTimes = { horde = 4, low = 25, latest = 55, land = 5, soldiers = 3, storm = 3, flee = 4 }
+    local T = LC.RavenholmTimes
+    LC.RavenholmRants = { "vo/ravenholm/monk_rant01.wav", "vo/ravenholm/monk_rant02.wav", "vo/ravenholm/monk_rant03.wav", "vo/ravenholm/monk_kill01.wav",
+        "vo/ravenholm/monk_kill03.wav", "vo/ravenholm/monk_kill05.wav" }
+    LC.RavenholmEvil = { "Come, sinners, and be judged!", "The graves are hungry tonight!", "None shall leave my parish!", "Hahahaha! Run, little lambs!" }
+    local DEAD = {
+        { m = "models/zombie/classic.mdl", speed = 70, act = ACT_WALK, die = "npc/zombie/zombie_die1.wav", dmg = 10 },
+        { m = "models/zombie/fast.mdl", speed = 160, act = ACT_RUN, die = "npc/fast_zombie/fz_alert_close1.wav", dmg = 6 },
+        { m = "models/zombie/poison.mdl", speed = 55, act = ACT_WALK, die = "npc/zombie_poison/pz_die1.wav", dmg = 12 },
+    }
+    local STONES = { "models/props_c17/gravestone001a.mdl", "models/props_c17/gravestone002a.mdl", "models/props_c17/gravestone003a.mdl", "models/props_c17/gravestone_cross001a.mdl" }
+    local CLAWS = { "npc/zombie/claw_strike1.wav", "npc/zombie/claw_strike2.wav" }
+    local TRUTH = {} -- [steamid64] = true: they saw the truth (how they wake)
+    local function Key(p) return tostring(p:SteamID64()) end
+
+    -- A Free Vortigaunt on the server (awake or asleep), or nil.
+    function LC.DreamFreeVort()
+        for _, p in ipairs(player.GetAll()) do
+            if IsValid(p) and p:GetNW2String("lcf_faction", "") == "resistance" and p:GetNW2String("lcf_special", "") == "vortigaunt" then return p end
+        end
+        return nil
+    end
+
+    local function Toward(e, to, speed, dt, z)
+        local pos = e:GetPos()
+        local d = Vector(to.x - pos.x, to.y - pos.y, 0)
+        local len = d:Length()
+        if len > 1 then
+            local step, n = math.min(len, speed * dt), d:GetNormalized()
+            e:SetPos(Vector(pos.x + n.x * step, pos.y + n.y * step, z or pos.z))
+            e:SetAngles(Angle(0, math.deg(math.atan2(n.y, n.x)), 0))
+        end
+        return len
+    end
+    local function Alive(g) local n = 0 for _, m in ipairs(g.dead) do if m.alive and IsValid(m.e) then n = n + 1 end end return n end
+    LC.RavenholmAlive = Alive
+    local function Kill(g, m, by, shot)
+        m.alive = false
+        if IsValid(by) then Snd(by, shot, 90) end
+        if IsValid(m.e) then
+            local pos = m.e:GetPos()
+            if EffectData then
+                local ed = EffectData()
+                if IsValid(by) and ed.SetStart then ed:SetStart(by:GetPos() + Vector(0, 0, 45 * (by.GetModelScale and by:GetModelScale() or 1))) end
+                ed:SetOrigin(pos + Vector(0, 0, 30))
+                util.Effect(IsValid(by) and "AR2Tracer" or "BloodImpact", ed, true, true)
+            end
+            Snd(m.e, m.die, 75)
+            m.e:Remove()
+        end
+    end
+    local function Rant(g, evil)
+        if IsValid(g.monk) then Snd(g.monk, LC.RavenholmRants[math.random(#LC.RavenholmRants)], 140, evil and 55 or 100) end
+    end
+
+    function def.build(g, dream)
+        local x0, x1, top = Hall(g, dream, 3, Color(55, 60, 50))
+        local c = dream.pos
+        g.x0, g.x1, g.y0, g.y1 = x0 + 30, x1 - 30, c.y - PLATE8_S + 30, c.y + PLATE8_S - 30
+        g.mid = Vector(c.x, c.y, top)
+        local z = dream.zone
+        local ceiling = (z and z.box and z.box.maxs.z) or (top + (LC.DreamGameHeadroom and LC.DreamGameHeadroom(dream) or 2000))
+        g.skyZ = math.max(top + 250, math.min(ceiling - 120, top + 1500))
+        -- the church: a dark front across the far end, a giant cross above it
+        for row = 0, 2 do for i = -2, 1 do
+            if not K.WallAt(g, Vector(x1 - 20, c.y + (i + 0.5) * 190, top), false, top + row * 95, Color(45, 40, 45)) then break end
+        end end
+        Actor(g, "models/props_c17/gravestone_cross001b.mdl", Vector(x1 - 30, c.y, top + 285), 180, 5)
+        -- the graves, and where the dead come up
+        g.graves = {}
+        for i = 0, 3 do for j = -1, 1 do
+            local at = Vector(x0 + 330 + i * (x1 - x0 - 560) / 3, c.y + j * 220, top)
+            g.graves[#g.graves + 1] = at
+            local m = STONES[(i + j + 2) % #STONES + 1]
+            if K.ValidModel(m) then Block(g, m, at + Vector(30, 0, 0), Angle(0, 180, 0), Color(120, 120, 115)) end
+        end end
+        -- Father Grigori on the church steps: giant, glowing red
+        g.monkAt = Vector(x1 - 110, c.y, top)
+        g.monk = Villain(g, { "models/monk.mdl", LC.PropagandaRebels[1] }, g.monkAt, 180, 4)
+        g.dead, g.soldiers, g.phase = {}, {}, "calm"
+        Starts(g, x0 + 90, c.y, top)
+        return true
+    end
+    def.hello = Hello("graveyard", nil)
+
+    local function NewDead(g)
+        local d = DEAD[math.random(#DEAD)]
+        local at = g.graves[math.random(#g.graves)]
+        local e = Actor(g, d.m, at - Vector(0, 0, 70), math.random(0, 359), 1, d.act)
+        if not e then return end
+        g.dead[#g.dead + 1] = { e = e, speed = d.speed, die = d.die, dmg = d.dmg, alive = true, rise = CurTime() + 1.5, from = at }
+        if EffectData then local ed = EffectData() ed:SetOrigin(at) util.Effect("ThumperDust", ed, true, true) end
+    end
+
+    -- The dream turns: the truth, if a Free Vortigaunt is about; otherwise her version.
+    local function Turn(g, players, now)
+        g.turnAt, g.dirty = now, true
+        for _, m in ipairs(g.dead) do if IsValid(m.e) and K.Animate then K.Animate(m.e, ACT_IDLE or 1) end end
+        local vort = LC.DreamFreeVort()
+        if vort then
+            g.phase, g.truth = "storm", true
+            local at = (vort.lcDreaming == g.dream.id and g.pl[vort]) and vort:GetPos() or nil
+            if not at then
+                at = Vector(g.x0 + 160, g.mid.y + 160, g.top)
+                g.vort = Actor(g, "models/vortigaunt.mdl", at, 0, 1.5, ACT_IDLE or 1)
+            end
+            g.stormAt = { at.x, at.y, at.z, t = now }
+            SayAs(g, "ravenholm_vort")
+            if IsValid(vort) then Snd(IsValid(g.vort) and g.vort or vort, "npc/vort/attack_charge.wav", 100) end
+            for _, p in ipairs(Everyone(g)) do
+                if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(60, 255, 90, 160), 2.5, 0.2) end
+                Notice(p, "info", "A green storm", "A vortigaunt's light washes over the graveyard, and everything looks different.", 6)
+                TRUTH[Key(p)] = true
+            end
+        else
+            g.phase = "descend"
+            g.land = Vector(g.mid.x, g.mid.y, g.top)
+            g.sky = Vector(g.land.x, g.land.y, g.skyZ)
+            g.her = Actor(g, LC.AdmireModel(), g.sky, 0, 1.6, ACT_IDLE or 1)
+            Pose(g.her, { "pose_standing_02", "idle_subtle" }, ACT_IDLE)
+            for _, p in ipairs(Everyone(g)) do Notice(p, "info", "Everything stops", "The dead freeze where they stand. A light breaks through the clouds.", 5) end
+        end
+    end
+    LC.RavenholmTurn = Turn
+
+    function def.tick(g, dt, players)
+        local now = CurTime()
+        local t = now - g.t0
+        if g.phase == "calm" and t >= T.horde then g.phase, g.dirty, g.rantAt = "horde", true, now + 1 SayAs(g, "ravenholm_rise") Rant(g, true) end
+        -- the dead: up out of the graves, then after the nearest dreamer (slower once the truth is out)
+        if g.phase == "horde" or g.phase == "fight" then
+            if g.phase == "horde" and now >= (g.spawnAt or 0) and Alive(g) < 14 then NewDead(g) g.spawnAt = now + 1.4 end
+            if g.phase == "horde" and now >= g.rantAt then
+                g.rantAt = now + math.Rand(7, 10)
+                Rant(g, true)
+                Narrate(g, "Father Grigori", LC.RavenholmEvil[math.random(#LC.RavenholmEvil)])
+            end
+            for _, m in ipairs(g.dead) do
+                if m.alive and IsValid(m.e) then
+                    if now < m.rise then
+                        local f = 1 - (m.rise - now) / 1.5
+                        local v = m.e:GetPos()
+                        m.e:SetPos(Vector(v.x, v.y, g.top - 70 * (1 - f)))
+                    else
+                        local best, bd
+                        for _, p in ipairs(players) do local d = p:GetPos():Distance(m.e:GetPos()) if not bd or d < bd then best, bd = p, d end end
+                        if best then
+                            local left = Toward(m.e, best:GetPos(), m.speed * (g.phase == "fight" and 0.5 or 1), dt, g.top)
+                            if left < 45 and now >= (m.next or 0) and now >= (g.pl[best].safe or 0) then
+                                m.next = now + 1.2
+                                best:SetHealth(math.max(1, best:Health() - m.dmg)) -- (in the dream; it's all put back on waking)
+                                Snd(best, CLAWS[math.random(#CLAWS)], 75)
+                                if best.ScreenFade then best:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(160, 0, 0, 160), 0.4, 0.05) end
+                                g.dirty = true
+                            end
+                        end
+                    end
+                end
+            end
+            if g.phase == "horde" then
+                local low = false
+                for _, p in ipairs(players) do if p:Health() <= T.low then low = true end end
+                if low or t >= T.latest then Turn(g, players, now) end
+            end
+        end
+        -- her version: she comes down, "Begone!", her soldiers, and Grigori flees
+        if g.phase == "descend" then
+            local f = math.Clamp((now - g.turnAt) / T.land, 0, 1)
+            if IsValid(g.her) then g.her:SetPos(Vector(g.land.x, g.land.y, g.sky.z + (g.land.z - g.sky.z) * (1 - (1 - f) * (1 - f)))) end
+            if f >= 1 then
+                g.phase, g.dirty, g.stopAt = "soldiers", true, now
+                SayAs(g, "ravenholm_stop")
+                g.fleeFrom = IsValid(g.monk) and g.monk:GetPos() or g.monkAt
+                for i = 1, 8 do
+                    local at = Vector(g.land.x - 200, g.land.y + (i - 4.5) * 50, g.top)
+                    local e = Actor(g, "models/combine_soldier.mdl", at, 0, 1, ACT_RUN or 1)
+                    if e then g.soldiers[#g.soldiers + 1] = { e = e, next = now + T.soldiers + i * 0.1 } end
+                end
+            end
+        end
+        if g.stopAt and not g.truth and IsValid(g.monk) and not g.monk.lcFled then -- (fleeing up into the sky, spinning, shrinking)
+            local f = math.Clamp((now - g.stopAt) / T.flee, 0, 1)
+            g.monk:SetPos(g.fleeFrom + Vector(0, 0, f * 900))
+            g.monk:SetAngles(Angle(0, now * 360 % 360, 0))
+            if g.monk.SetModelScale then g.monk:SetModelScale(4 * (1 - f) + 0.1) end
+            if f >= 1 then g.monk.lcFled = true if g.monk.SetNoDraw then g.monk:SetNoDraw(true) end end
+        end
+        if g.phase == "soldiers" then
+            for _, s in ipairs(g.soldiers) do
+                if IsValid(s.e) and now >= s.next then
+                    local best, bd
+                    for _, m in ipairs(g.dead) do if m.alive and IsValid(m.e) then local d = s.e:GetPos():Distance(m.e:GetPos()) if not bd or d < bd then best, bd = m, d end end end
+                    if best then Kill(g, best, s.e, "weapons/ar2/fire1.wav") s.next, g.dirty = now + math.Rand(0.4, 0.8), true end
+                end
+            end
+            if now >= g.stopAt + math.max(T.soldiers, T.flee) and Alive(g) == 0 then
+                g.phase, g.safeAt, g.dirty = "safe", now + 3, true
+                SayAs(g, "ravenholm_safe")
+            end
+        end
+        -- the truth: the storm washes over him; he's himself again, and he blasts the dead; she's the monster
+        if g.phase == "storm" and now >= g.turnAt + T.storm then
+            g.phase, g.dirty = "fight", true
+            if IsValid(g.monk) then
+                g.monk:SetColor(Color(255, 255, 255))
+                if g.monk.SetMaterial then g.monk:SetMaterial("") end
+                if K.Animate then K.Animate(g.monk, ACT_WALK) end
+            end
+            g.villains = {}
+            g.her = Villain(g, { LC.AdmireModel() }, Vector(g.mid.x + 150, g.mid.y, g.top + 260), 180, 4)
+            SayAs(g, "ravenholm_good")
+            Rant(g, false)
+        end
+        if g.phase == "fight" then
+            if IsValid(g.her) then g.her:SetPos(Vector(g.mid.x + 150, g.mid.y + math.sin(now * 2) * 60, g.top + 260 + math.sin(now * 3) * 20)) end
+            if IsValid(g.monk) then
+                local best, bd
+                for _, m in ipairs(g.dead) do if m.alive and IsValid(m.e) then local d = g.monk:GetPos():Distance(m.e:GetPos()) if not bd or d < bd then best, bd = m, d end end end
+                if best then
+                    if bd > 500 then Toward(g.monk, best.e:GetPos(), 260, dt, g.top)
+                    elseif now >= (g.blastAt or 0) then Kill(g, best, g.monk, "weapons/shotgun/shotgun_dbl_fire.wav") g.blastAt, g.dirty = now + 0.45, true end
+                end
+            end
+            if Alive(g) == 0 then
+                g.phase, g.fleeAt, g.dirty = "defeat", now, true
+                g.fleeFrom = IsValid(g.her) and g.her:GetPos() or g.mid
+                SayAs(g, "ravenholm_defeat")
+                if IsValid(g.monk) and K.Animate then K.Animate(g.monk, ACT_IDLE or 1) end
+            end
+        end
+        if g.phase == "defeat" then
+            local f = math.Clamp((now - g.fleeAt) / T.flee, 0, 1)
+            if IsValid(g.her) then
+                g.her:SetPos(g.fleeFrom + Vector(-f * 400, 0, f * 1000))
+                g.her:SetAngles(Angle(f * 40, now * 540 % 360, 0))
+                if g.her.SetModelScale then g.her:SetModelScale(4 * (1 - f) + 0.1) end
+            end
+            if f >= 1 then
+                g.phase, g.safeAt = "safe", now + 2
+                if IsValid(g.her) and g.her.SetNoDraw then g.her:SetNoDraw(true) end
+            end
+        end
+        if g.phase == "safe" and g.safeAt and now >= g.safeAt then
+            g.safeAt = nil
+            for _, p in ipairs(players) do
+                if g.truth then Done(g, p, "won", "The truth", "Father Grigori lowers his shotgun and laughs. The last of the dead lie still, and the false light is gone from the sky.")
+                else Done(g, p, "won", "Saved", "Her soldiers stand over the last of the dead. She looks down at you, and you have never felt so safe.") end
+            end
+        end
+    end
+
+    function def.woke(p, how)
+        local truth = TRUTH[Key(p)]
+        TRUTH[Key(p)] = nil
+        if how == "won" and truth then Notice(p, "info", "The truth", "You wake with green light behind your eyes and a priest's laughter in your ears. Something in the city's broadcasts sounds hollow this morning.", 9)
+        elseif how == "won" then Notice(p, "info", "Saved", "You wake safe in your bed, and for a moment you'd swear you can still feel her light. The Combine protect you. They always have.", 9)
+        else Notice(p, "info", "Dawn over the graves", "You wake with the smell of earth, and the sound of a priest laughing somewhere far away.", 9) end
+    end
+
+    local BIG = { calm = "A graveyard, under a red sky. Something stirs.", horde = "The dead are rising! Run!", descend = "Everything stops. A light from above...",
+        soldiers = "Her soldiers are here!", storm = "A green storm...", fight = "Father Grigori fights for you!", defeat = "She flees!", safe = "It's over." }
+    function def.state(g, p)
+        return { big = BIG[g.phase], tone = (g.phase == "horde" or g.phase == "calm") and "warn" or "love", villains = Villains(g), storm = g.stormAt,
+            truth = g.truth or nil, meterName = g.phase ~= "calm" and string.format("The dead: %d", Alive(g)) or nil }
+    end
+end

@@ -33,8 +33,9 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - Client (`cl_livingcity_dreamgames.lua`): generic `glows`, floating `board` (3D2D), the Mass Games `mosaic`, `notes`, `carryName`, `marchers` (NOW for flowers), themes `harvest`, `hate`, `civil`, `newsreel` (black and white).
 - Owner's follow-up (same day): mini games must be party games (everyone picks on their own in 30 s, revealed to all): Careless Talk (4 rounds) and The Newsreel (8 takes, everyone at once) reworked; the others were already simultaneous. Duck and Cover framed as the Resistance's rocket (`LC.DuckRockets`: EP2 path is a guess, falls back to PHX).
 - The owner's rule for every dream: dreams are goofy and absurd; the Resistance can be giant, glowing red, flying (`LC.PropagandaVillain`: Magnusson on the rocket, the unmasked spy, a rebel over the Hate screen).
+- Ravenholm (`ravenholm`, end of the same file): zombies from graves, red Grigori; turns at 25 health or 55 s: her version (she descends, soldiers, Grigori flees) unless `LC.DreamFreeVort()` finds a Free Vortigaunt player, then the green storm, Grigori good with his shotgun, a red giant her flies off. Client `storm`, theme `graveyard`.
 - Inputs: crouch edge (`Ducked`), jump edge (`Jumped`: IN_JUMP or off the ground), chat (`def.say`), position. Offences go through the same `Offend` (loyalty on waking).
-- Tests: `PropagandaMoreTests` (62) pass; `PropagandaDreamTests`, `DreamGameTests` and the client smoke test pass. Full suite not run (the owner asked to test less).
+- Tests: `PropagandaMoreTests` (70) pass; `PropagandaDreamTests`, `DreamGameTests` and the client smoke test pass. Full suite not run (the owner asked to test less).
 - Nothing checked in game: PLAYTEST.md, "Ten more propaganda dreams" (sizes of the floating boards, the mosaic's height, the factory machines and other models are guesses).
 - Earlier (still open): the core snapshot copy blocked by permissions (TODO.md); PLAYTEST.md "7 November, part 3" onwards; the first five propaganda dreams unchecked in game.
 - Next, each in a fresh chat: The Battle Line and vortigaunt dream warfare (designs at the end of `TODO.md`).

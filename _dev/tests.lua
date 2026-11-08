@@ -14622,7 +14622,7 @@ local found = {}
 for _, e in ipairs(LC.DreamOffice().groups[1].endings) do if e.game and e.propaganda then found[e.id] = e.name end end
 local all = true
 for _, id in ipairs(LC.PropagandaMore) do if not (found[id] and string.find(found[id], "^Propaganda: ")) then all = false end end
-ok(all and #LC.PropagandaMore == 10 and found.duck == "Propaganda: Duck and Cover" and found.hate == "Propaganda: Two Minutes of Hate", "all ten are on her tablet, under Happy, as Propaganda")
+ok(all and #LC.PropagandaMore == 11 and found.ravenholm == "Propaganda: Ravenholm" and found.duck == "Propaganda: Duck and Cover" and found.hate == "Propaganda: Two Minutes of Hate", "all ten are on her tablet, under Happy, as Propaganda")
 local MEDIA = { "sound/livingcity/dreams/harvest1.mp3", "sound/livingcity/dreams/propaganda1.ogg" }
 for _, f in ipairs(MEDIA) do _files[f] = "x" end
 ok(LC.PropagandaSong({ "harvest", "propaganda" }) == "livingcity/dreams/harvest1.mp3" and LC.PropagandaSong({ "duck", "propaganda" }) == "livingcity/dreams/propaganda1.ogg",
@@ -14885,6 +14885,39 @@ local cov = LC.DuckCovered(g, { a, b, adm })
 ok(cov[a] and cov[b] and not cov[adm], "two to a table")
 adm.crouch = nil
 Stop(d)
+
+-- Ravenholm: her version (no Free Vortigaunt about)
+local function Until(g, test) for _ = 1, 60 do if test() then return true end _run(0.5) end return test() end
+g, d = Start("ravenholm")
+local T = LC.RavenholmTimes
+ok(g and IsValid(g.monk) and g.monk:GetMaterial() == "models/debug/debugwhite" and g.monk:GetModelScale() == 4 and #g.graves == 12,
+    "Ravenholm: the graves, the church, and a giant red Father Grigori on its steps")
+_run(T.horde + 2)
+ok(g.phase == "horde" and LC.RavenholmAlive(g) >= 1 and Said(g, "ravenholm_rise"), "the dead rise from the graves")
+a:SetHealth(20)
+_run(0.1)
+ok(g.phase == "descend" and not g.truth and IsValid(g.her), "someone's close to the end and no vortigaunt is free: she descends (her version)")
+ok(Until(g, function() return g.pl[a].how == "won" end) and Said(g, "ravenholm_stop") and Said(g, "ravenholm_safe") and g.monk.nodraw,
+    "her soldiers kill the dead, Grigori flees into the sky, and they're saved", tostring(g.phase) .. " " .. tostring(g.pl[a].how) .. " " .. tostring(Said(g, "ravenholm_stop")) .. tostring(Said(g, "ravenholm_safe")) .. tostring(g.monk.nodraw) .. " alive " .. LC.RavenholmAlive(g))
+Stop(d)
+-- Ravenholm: the truth (a Free Vortigaunt on the server)
+local v = newPlayer("PMVort", "resistance")
+v:SetNW2String("lcf_special", "vortigaunt")
+player.GetAll = function() return { adm, a, b, v } end
+ok(LC.DreamFreeVort() == v, "(a Free Vortigaunt: a Resistance player in that role)")
+g, d = Start("ravenholm")
+_run(T.horde + 1)
+a:SetHealth(20)
+_run(0.1)
+ok(g.phase == "storm" and g.truth and IsValid(g.vort) and g.stormAt and Said(g, "ravenholm_vort") and Sent(a, "state", function(t) return t.storm end),
+    "with one, a vortigaunt appears and a green storm rolls out")
+_run(T.storm + 0.1)
+ok((g.phase == "fight" or g.phase == "defeat") and g.monk:GetMaterial() == "" and IsValid(g.her) and g.her:GetMaterial() == "models/debug/debugwhite" and Said(g, "ravenholm_good"),
+    "it washes over Grigori: himself again, and she's the red giant now", tostring(g.phase) .. " [" .. tostring(g.monk:GetMaterial()) .. "] " .. tostring(IsValid(g.her)) .. " " .. tostring(IsValid(g.her) and g.her:GetMaterial()) .. tostring(Said(g, "ravenholm_good")))
+ok(Until(g, function() return g.pl[a].how == "won" end) and Said(g, "ravenholm_defeat") and g.her.nodraw, "Grigori blasts the dead and she flies away defeated")
+Stop(d)
+player.GetAll = function() return { adm, a, b } end
+v:SetPos(Vector(-121000, -121000, 0))
 
 for _, f in ipairs(MEDIA) do _files[f] = nil end
 LC.DreamForget()

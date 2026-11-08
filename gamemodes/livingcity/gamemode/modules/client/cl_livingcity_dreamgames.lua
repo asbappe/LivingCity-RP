@@ -120,7 +120,7 @@ local PINK, ROSE = Color(255, 120, 190), Color(255, 40, 90)
 local HALO, PROP = Color(255, 240, 200), Color(255, 70, 60)
 -- the glows' colours: a crate, a spoiled crate, scrap, a flower, somewhere to stand, white
 local GLOWS = { Color(255, 205, 70), Color(140, 220, 60), Color(150, 190, 230), Color(255, 120, 190), Color(90, 255, 140), Color(255, 255, 255), Color(255, 40, 40) }
-local THEMES = { harvest = Color(255, 205, 70), newsreel = Color(235, 235, 235), hate = Color(255, 60, 50), civil = Color(140, 210, 255) }
+local THEMES = { harvest = Color(255, 205, 70), newsreel = Color(235, 235, 235), hate = Color(255, 60, 50), civil = Color(140, 210, 255), graveyard = Color(200, 60, 60) }
 -- Where she is: her figure or the star (as an entity, when you can see it), else where she was.
 local function HerPos()
     local e = st.herEnt and Entity and Entity(st.herEnt)
@@ -188,6 +188,23 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityDreamGames", function(_, s
             local sc = e.GetModelScale and e:GetModelScale() or 1
             local hp = 0.85 + 0.15 * math.sin(CurTime() * 5)
             render.DrawSprite(e:GetPos() + Vector(0, 0, 40 * sc), 120 * sc * hp, 120 * sc * hp, Color(255, 30, 30, 160))
+        end
+    end
+    if st.storm then -- (Ravenholm: the vortigaunt's green storm, rolling out over everything)
+        local s = st.storm
+        local age = CurTime() - (s.t or CurTime())
+        local r = math.min(3000, age * 700)
+        local c = Vector(s[1], s[2], s[3] + 40)
+        if age < 6 then
+            for i = 1, 36 do
+                local a = i / 36 * math.pi * 2 + age
+                render.DrawSprite(c + Vector(math.cos(a) * r, math.sin(a) * r, 20 + math.sin(age * 8 + i) * 30), 200, 200, Color(80, 255, 110, math.floor(200 * (1 - age / 6))))
+            end
+        end
+        render.DrawSprite(c + Vector(0, 0, 40 + math.sin(CurTime() * 3) * 10), 160, 160, Color(80, 255, 110, 180))
+        if DynamicLight then
+            local d = DynamicLight(4243)
+            if d then d.pos, d.r, d.g, d.b, d.brightness, d.decay, d.size, d.dietime = c, 60, 255, 90, 3, 1000, math.max(600, r), CurTime() + 0.2 end
         end
     end
     if st.board then LC_CL.DreamBoard(st.board) end
@@ -279,6 +296,9 @@ hook.Add("HUDPaint", "LivingCityDreamGames", function()
         surface.DrawRect(0, 0, ScrW(), ScrH())
     elseif st.theme == "hate" then
         surface.SetDrawColor(220, 0, 0, 20 + math.floor(14 * math.abs(math.sin(now * 3))))
+        surface.DrawRect(0, 0, ScrW(), ScrH())
+    elseif st.theme == "graveyard" then -- (a red sky; green once the truth is out)
+        if st.truth then surface.SetDrawColor(60, 255, 90, 22) else surface.SetDrawColor(150, 0, 0, 26) end
         surface.DrawRect(0, 0, ScrW(), ScrH())
     elseif st.theme == "civil" then
         surface.SetDrawColor(120, 200, 255, 14)

@@ -979,3 +979,7 @@ Notes:
   Notes:
 - [ ] **The Resistance, goofy:** Duck and Cover: a giant red Magnusson (or Kleiner, or a rebel, if your server lacks Episode Two) cackles by the rocket and rides it up. Careless Talk: at the reveal the spy turns red, grows huge and floats up spinning. Two Minutes of Hate: a giant red rebel bobs over the screen. Say if any are too big for your dream zone.
   Notes:
+- [ ] **Ravenholm, her version:** with no Free Vortigaunt online: graves, a dark church front and giant cross, a giant red Grigori ranting in a deep, slowed voice; zombies climb out of the graves and hurt you. At 25 health she comes down, her soldiers shoot them, Grigori spins away into the sky.
+  Notes:
+- [ ] **Ravenholm, the truth:** with a Free Vortigaunt player online (asleep in it or not): at the turn a vortigaunt appears, a green ring of light rolls out and the screen flashes green; Grigori loses his red, speaks normally and blasts the zombies with his shotgun; a giant red Administrator hovers, then shrieks and spins away. Check the church front and cross look right, and that Grigori's voice lines play (if not, they have other names on your server: tell me).
+  Notes:

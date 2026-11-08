@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 33dbef8. Admin-only console messages and log lines are left out.
+Made from version 202de54. Admin-only console messages and log lines are left out.
 
-7944 lines, from 226 files.
+7984 lines, from 226 files.
 
 ## Contents
 
@@ -184,7 +184,7 @@ Made from version 33dbef8. Admin-only console messages and log lines are left ou
 - [close calls, careers for life, and what passes on](#close-calls-careers-for-life-and-what-passes-on-svlivingcityprogresslua) (20)
 - [street furniture, and the city's voice](#street-furniture-and-the-citys-voice-svlivingcitypropagandalua) (43)
 - [propaganda dreams (dreams you play)](#propaganda-dreams-dreams-you-play-svlivingcitypropagandadreamslua) (152)
-- [more propaganda dreams (dreams you play), drawn from real propaganda](#more-propaganda-dreams-dreams-you-play-drawn-from-real-propaganda-svlivingcitypropagandamorelua) (309)
+- [more propaganda dreams (dreams you play), drawn from real propaganda](#more-propaganda-dreams-dreams-you-play-drawn-from-real-propaganda-svlivingcitypropagandamorelua) (349)
 - [persistent props](#persistent-props-svlivingcitypropslua) (6)
 - [quests](#quests-svlivingcityquestslua) (368)
 - [more on F2 (the owner, later on 7 November)](#more-on-f2-the-owner-later-on-7-november-svlivingcityquickmorelua) (109)
@@ -720,7 +720,7 @@ Made from version 33dbef8. Admin-only console messages and log lines are left ou
 - "Cigarettes, alcohol and stimulants (F3, the item's button). A cigarette steadies your nerves and dulls hunger; too many and you cough. Drink and you get drunk: it dulls pain, then the world sways, then you throw up (and one moonshine in five is a bad batch). A stimulant keeps you awake for fifteen minutes (no dream can take you), then you crash."  (text, line 86)
 - "Nightmare dreams you play: The Patrol Maze (pick up every token while giant officers hunt you), The Barrel Tower (climb to the top, and don't touch the barrels: they explode), The Crumbling Floor (keep moving or the floor gives way) and Freeze, Citizen (move only while the giant officer's back is turned). Out of lives, or won: wake up now, or watch the rest until it's over. Win and you wake Unbroken (a day the Combine can't get into your head) with a second wind, and maybe a Vortigaunt's help; lose every life and you're 30 health down until your next full night's sleep."  (text, line 87)
 - "Propaganda dreams (no opting out, and no waking yourself until you're out of it): Kneel Before Her (kneel, crouching, and gaze up at her to fill your Devotion; never let her catch you standing in her gaze), Roses for Her (carry glowing roses to her feet, on your knees in her half of the hall), Mirror, Mirror (kneel and compliment her in chat; new words count double, insults cost a life), The Saviour (the dead come for you, unarmed, and they hurt: when someone is close to the end, she descends and her soldiers save you), The Loyalty Quiz (answer her questions in chat; beware thoughtcrime). Every life you lose, every insult to her or the Combine, costs loyalty points (Civil Standing) when you wake."  (text, line 88)
-- "More propaganda dreams: Record Harvest (carry glowing crates to the depot; crouch to throw away a green, spoiled one), The Stakhanov Shift (crouch again and again at a work station to beat the norm by 1400%), Careless Talk (four rounds of 30 seconds: listen for clues and crouch beside the one you think is the spy; everyone's pick is revealed together), The Newsreel (as the camera rolls, say the wave, salute or cheer it asks of you; everyone's take is shown at the cut), Two Minutes of Hate (jeer in chat; silence is noticed), The Mass Games (gold card: crouch, red: stand, at FLIP!), On-the-Spot Guidance (jump or say clap when she points), The Scrap Drive (fill the bins; never sell to the shady trader), Flowers for the Liberators (jump as a soldier passes you; stay off the road), Duck and Cover (when the siren wails and the Resistance's rocket goes up, crouch beside a table, two to a table)."  (text, line 89)
+- "More propaganda dreams: Record Harvest (carry glowing crates to the depot; crouch to throw away a green, spoiled one), The Stakhanov Shift (crouch again and again at a work station to beat the norm by 1400%), Careless Talk (four rounds of 30 seconds: listen for clues and crouch beside the one you think is the spy; everyone's pick is revealed together), The Newsreel (as the camera rolls, say the wave, salute or cheer it asks of you; everyone's take is shown at the cut), Two Minutes of Hate (jeer in chat; silence is noticed), The Mass Games (gold card: crouch, red: stand, at FLIP!), On-the-Spot Guidance (jump or say clap when she points), The Scrap Drive (fill the bins; never sell to the shady trader), Flowers for the Liberators (jump as a soldier passes you; stay off the road), Duck and Cover (when the siren wails and the Resistance's rocket goes up, crouch beside a table, two to a table), Ravenholm (the dead rise from the graves and a red Father Grigori rants; hold on until help comes, and if a Free Vortigaunt is about, you may see the truth)."  (text, line 89)
 - "City Administrator: your tablet's office has Tonight's dream: reward an obedient city with a Happy dream, or punish it with a Nightmare. Its Combine manpower shows what Civil Protection and Overwatch have left in reserve. Out of it in a dream? Watch the rest: click to follow another dreamer, Jump to fly about inside the dream."  (text, line 90)
 - "You can kill birds with your fists. Cook them before you eat them."  (text, line 91)
 - "Staying out of trouble"  (text, line 93)
@@ -927,7 +927,7 @@ Made from version 33dbef8. Admin-only console messages and log lines are left ou
 - "Labor Assignment: place "Fixture: Labor Assignment". Settings: lc_labor_min_minutes (30), lc_labor_min_shifts (4), lc_labor_cleanup_standing (25), lc_labor_porter_standing (50). Without one, the Union assigns work and the board (F4) changes it, as before."  (text, line 313)
 - "Shared dreams: place "Point: dream" in an out-of-map area (and "Zone: dream" round it, tall and open for the flying endings). Endings set off in play then come at night as a dream for sleepers only, with no reload. C > Help > Dreams: status, dream it now, wake everyone, put back a player's things. Settings: lc_dreams (1), lc_dream_delay (60), lc_dream_radius (1500), lc_dream_every_night (0), lc_dream_combine (6). Without a dream point, the endings are as before."  (text, line 314)
 - "Nightmare dreams you play (the Administrator's tablet, under Nightmare; or C > Help > Dreams: dream it now): The Patrol Maze, The Barrel Tower, The Crumbling Floor, Freeze, Citizen. Each builds its own arena at the dream point and removes it afterwards; it fits inside the dream zone (or lc_dream_radius), so give it about 1500 units each way and some headroom for the tower."  (text, line 315)
-- "Propaganda dreams (her tablet, under Happy, as Propaganda; or C > Help > Dreams): Kneel Before Her, Roses for Her, Mirror, Mirror, The Saviour, The Loyalty Quiz, and ten more (Record Harvest, The Stakhanov Shift, Careless Talk, The Newsreel, Two Minutes of Hate, The Mass Games, On-the-Spot Guidance, The Scrap Drive, Flowers for the Liberators, Duck and Cover). Asleep for one with someone else, the Administrator stars herself (tablet > Tonight's dream > Star in propaganda dreams yourself: on or off); otherwise a giant figure of her does. Music goes flat in garrysmod/sound/livingcity/dreams/, named admire, saviour_horde, saviour or quiz (admire1.mp3), or for the ten more their codeword (harvest, shift, spy, newsreel, hate, massgames, guidance, scrap, flowers, duck) or propaganda; her voice lines in dreams/voice/ (saviour_stop1.wav, a .txt beside it for the subtitle). Upload, FastDL sync, map change."  (text, line 316)
+- "Propaganda dreams (her tablet, under Happy, as Propaganda; or C > Help > Dreams): Kneel Before Her, Roses for Her, Mirror, Mirror, The Saviour, The Loyalty Quiz, and ten more (Record Harvest, The Stakhanov Shift, Careless Talk, The Newsreel, Two Minutes of Hate, The Mass Games, On-the-Spot Guidance, The Scrap Drive, Flowers for the Liberators, Duck and Cover, Ravenholm). Asleep for one with someone else, the Administrator stars herself (tablet > Tonight's dream > Star in propaganda dreams yourself: on or off); otherwise a giant figure of her does. Music goes flat in garrysmod/sound/livingcity/dreams/, named admire, saviour_horde, saviour or quiz (admire1.mp3), or for the ten more their codeword (harvest, shift, spy, newsreel, hate, massgames, guidance, scrap, flowers, duck, ravenholm) or propaganda; her voice lines in dreams/voice/ (saviour_stop1.wav, a .txt beside it for the subtitle). Upload, FastDL sync, map change."  (text, line 316)
 - "Civil Protection Commissary (editor fixture): Civil Protection units get grenades, ammunition, armour, bandages and a ration there. lc_cpsupply_cooldown (120), lc_cpsupply_ration (600). If none is placed, the Union Commissary terminal issues them instead."  (text, line 317)
 - "Resistance lab (editor fixture, formerly the workbench): a lab bench and a scientist who makes the Resistance's guns. Place one in every rebel base. lc_lab_price (0.6 of the dealer's price), lc_lab_shutdown (600 seconds closed after a Civil Protection unit finds it)."  (text, line 318)
 - "How it feels (editor panel, How it feels): lc_fov (75, the widest view anyone gets; 0 leaves it to each player), lc_eye_height (61; GMod's default is 64), lc_view_bob (with lc_view_bob_amount, 100%, for how strong), lc_quiet_hud, lc_respawn_secs (12, how long the death card shows), lc_word_gets_around."  (text, line 319)
@@ -1632,31 +1632,31 @@ Made from version 33dbef8. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The Newsreel: black and white, like an old film.
 
-- "$pp_colour_addr"  (text, line 255)
-- "$pp_colour_addg"  (text, line 255)
-- "$pp_colour_addb"  (text, line 255)
-- "$pp_colour_brightness"  (text, line 255)
-- "$pp_colour_contrast"  (text, line 256)
-- "$pp_colour_colour"  (text, line 256)
-- "$pp_colour_mulr"  (text, line 256)
-- "$pp_colour_mulg"  (text, line 256)
-- "$pp_colour_mulb"  (text, line 256)
+- "$pp_colour_addr"  (text, line 272)
+- "$pp_colour_addg"  (text, line 272)
+- "$pp_colour_addb"  (text, line 272)
+- "$pp_colour_brightness"  (text, line 272)
+- "$pp_colour_contrast"  (text, line 273)
+- "$pp_colour_colour"  (text, line 273)
+- "$pp_colour_mulr"  (text, line 273)
+- "$pp_colour_mulg"  (text, line 273)
+- "$pp_colour_mulb"  (text, line 273)
 
 > Note for you (not shown in game): her lines, at the bottom
 
-- "You're the star of this dream. What you say in chat, the dreamers see."  (text, line 306)
+- "You're the star of this dream. What you say in chat, the dreamers see."  (text, line 326)
 
 > Note for you (not shown in game): on screen
 
-- "Time left: %d:%02d"  (message, line 310)
-- "Lives: %d of %d"  (message, line 311)
-- "Tokens left: %d"  (message, line 312)
-- "Still standing: %d"  (message, line 313)
-- "You won. Watching until it's over (wake up: C > Settings > Shared dreams)."  (text, line 331)
-- "You're out. Watching until it's over (wake up: C > Settings > Shared dreams)."  (text, line 332)
-- "NOW! Throw your flowers (jump)"  (text, line 348)
-- "Move! His back is turned."  (text, line 354)
-- "They're afraid of you: catch them! (%d)"  (message, line 356)
+- "Time left: %d:%02d"  (message, line 330)
+- "Lives: %d of %d"  (message, line 331)
+- "Tokens left: %d"  (message, line 332)
+- "Still standing: %d"  (message, line 333)
+- "You won. Watching until it's over (wake up: C > Settings > Shared dreams)."  (text, line 351)
+- "You're out. Watching until it's over (wake up: C > Settings > Shared dreams)."  (text, line 352)
+- "NOW! Throw your flowers (jump)"  (text, line 368)
+- "Move! His back is turned."  (text, line 374)
+- "They're afraid of you: catch them! (%d)"  (message, line 376)
 
 ## shared dreams, your side (sv_livingcity_dreams.lua) (cl_livingcity_dreams.lua)
 
@@ -10629,6 +10629,64 @@ Made from version 33dbef8. Admin-only console messages and log lines are left ou
 - "ROCKET LAUNCH! Duck and cover: crouch beside a table!"  (text, line 1379)
 - "Listen to Sunny."  (text, line 1380)
 - "Rockets survived: %d of %d"  (message, line 1383)
+
+> Note for you (not shown in game): Ravenholm (the owner, 8 November: "reminiscing of the ending to ravenholm: a graveyard with the church but father gregori is glowing red and his voice lines pitch shifted to sound evil, and zombies are rising from the graves ... if a vortigaunt is free it will appear and send out an effect that is a green version of the portal storm effect from ep2 that washes over gregori and shows that he is actually the good guy ... the administrator appears as actually evil and father gregori starts killing the zombies ... and the administrator flies away defeated") The Saviour turned inside out. The dead rise from the graves and come for the dreamers, who have nothing to fight with (it hurts, in the dream); a giant, red Father Grigori rants from the church. When someone is down to 25 health (or after 55 seconds) the dream turns: No Free Vortigaunt on the server: propaganda wins. She descends, her soldiers kill the dead, and Grigori flees into the sky. ("Saved.") A Free Vortigaunt (a Resistance player in that role, awake or asleep): a vortigaunt appears (the player themselves, if they're in the dream) and a green storm washes over everything. Grigori's red is gone and his voice is his own; he blasts the dead with his shotgun before they can hurt anyone, while a giant red figure of her shrieks and flies away defeated.
+
+- "The dead are rising from the graves, and you have nothing to fight with. Run. Dodge. Hold on."  (text, line 1408)
+- "Dawn over the graves"  (text, line 1409)
+- "The sun comes up over the graveyard, and you wake."  (text, line 1409)
+- "Father Grigori"  (text, line 1417)
+- "RISE, my children! Rise from your graves and FEAST!"  (text, line 1417)
+- "The Administrator"  (text, line 1418)
+- "Begone, false priest! These citizens are under MY protection."  (text, line 1418)
+- "The Administrator"  (text, line 1419)
+- "You see? Only I can keep you safe. Never forget it."  (text, line 1419)
+- "The Vortessence sees through the false light. Behold what is true."  (text, line 1420)
+- "Father Grigori"  (text, line 1421)
+- "Hah! Back to your rest, poor souls! Not one of these children shall be harmed!"  (text, line 1421)
+- "The Administrator"  (text, line 1422)
+- "No... NO! This is MY dream!"  (text, line 1422)
+- "Come, sinners, and be judged!"  (text, line 1429)
+- "The graves are hungry tonight!"  (text, line 1429)
+- "None shall leave my parish!"  (text, line 1429)
+- "Hahahaha! Run, little lambs!"  (text, line 1429)
+
+> Note for you (not shown in game): part of: turn
+
+- "A green storm"  (on-screen notice, line 1536)
+- "A vortigaunt's light washes over the graveyard, and everything looks different."  (on-screen notice, line 1536)
+- "Everything stops"  (on-screen notice, line 1545)
+- "The dead freeze where they stand. A light breaks through the clouds."  (on-screen notice, line 1545)
+
+> Note for you (not shown in game): the dead: up out of the graves, then after the nearest dreamer (slower once the truth is out)
+
+- "Father Grigori"  (quest narration, line 1560)
+
+> Note for you (not shown in game): part of: tick
+
+- "The truth"  (text, line 1670)
+- "Father Grigori lowers his shotgun and laughs. The last of the dead lie still, and the false light is gone from the sky."  (text, line 1670)
+- "Her soldiers stand over the last of the dead. She looks down at you, and you have never felt so safe."  (text, line 1671)
+
+> Note for you (not shown in game): part of: woke
+
+- "The truth"  (on-screen notice, line 1679)
+- "You wake with green light behind your eyes and a priest's laughter in your ears. Something in the city's broadcasts sounds hollow this morning."  (on-screen notice, line 1679)
+- "You wake safe in your bed, and for a moment you'd swear you can still feel her light. The Combine protect you. They always have."  (on-screen notice, line 1680)
+- "Dawn over the graves"  (on-screen notice, line 1681)
+- "You wake with the smell of earth, and the sound of a priest laughing somewhere far away."  (on-screen notice, line 1681)
+- "A graveyard, under a red sky. Something stirs."  (text, line 1684)
+- "The dead are rising! Run!"  (text, line 1684)
+- "Everything stops. A light from above..."  (text, line 1684)
+- "Her soldiers are here!"  (text, line 1685)
+- "A green storm..."  (text, line 1685)
+- "Father Grigori fights for you!"  (text, line 1685)
+- "She flees!"  (text, line 1685)
+- "It's over."  (text, line 1685)
+
+> Note for you (not shown in game): part of: state
+
+- "The dead: %d"  (message, line 1688)
 
 ## persistent props (sv_livingcity_props.lua)
 
