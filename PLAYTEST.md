@@ -977,3 +977,5 @@ Notes:
   Notes:
 - [ ] **Duck and Cover, the rebels' rocket (changed):** a rocket stands in the far corner and climbs on a flame during the siren. If it is a small grey PHX rocket or an RPG missile instead of Magnusson's, your server lacks Episode Two or my guess at its path is wrong: in game, Q menu > Browse > Games > Half-Life 2: Episode Two > models, find the rocket and tell me its path. Tell me if it is too big or small.
   Notes:
+- [ ] **The Resistance, goofy:** Duck and Cover: a giant red Magnusson (or Kleiner, or a rebel, if your server lacks Episode Two) cackles by the rocket and rides it up. Careless Talk: at the reveal the spy turns red, grows huge and floats up spinning. Two Minutes of Hate: a giant red rebel bobs over the screen. Say if any are too big for your dream zone.
+  Notes:

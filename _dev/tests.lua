@@ -14636,8 +14636,9 @@ local g, d = Start("harvest")
 ok(g and #g.crates == 8 and IsValid(g.her) and g.depotX, "Record Harvest is built: the field, the crates, the depot, her on her pedestal")
 local s = g.pl[a]
 local function Take(i, rotten)
+    for j, o in ipairs(g.crates) do if j ~= i then o.gone, o.pos = CurTime() + 1000, Vector(0, 0, -50000) end end -- (only this one anywhere near)
     local cr = g.crates[i]
-    cr.rotten, cr.gone = rotten, nil
+    cr.rotten, cr.gone, cr.pos = rotten, nil, Vector(g.fieldX0 + 60, g.midY, g.top + 18)
     a:SetPos(cr.pos - Vector(0, 0, 18))
     _run(0.1)
 end
@@ -14711,9 +14712,12 @@ g.at = CurTime()
 _run(0.1)
 ok(g.phase == "reveal" and s.score == 1 and s.lives == 3 and g.pl[b].lives == 2 and #g.results == 2 and Said(g, "spy_caught"),
     "time's up: the spy and everyone's pick revealed to all; right scores, a loyal citizen reported costs a life")
+local z1 = spy.e:GetPos().z
+_run(1)
+ok(spy.e:GetModelScale() >= 5 and spy.e:GetPos().z > z1 + 50 and Sent(a, "state", function(t) return t.villains end), "unmasked, the spy swells to a red giant and floats off into the sky")
 g.at = CurTime()
 _run(0.1)
-ok(g.phase == "pick" and g.round == 2 and not s.pick and #g.clues == 0, "the next round: a fresh canteen and a new spy")
+ok(g.phase == "pick" and g.round == 2 and not s.pick and #g.clues == 0 and spy.e:GetModelScale() == 1, "the next round: a fresh canteen (everyone their own size again) and a new spy")
 g.pl[b].safe = 0
 g.at = CurTime()
 _run(0.1)
@@ -14749,6 +14753,7 @@ g, d = Start("hate")
 s = g.pl[a]
 LC.PropagandaSay(a, "Traitor! Scum!")
 LC.PropagandaSay(b, "traitor")
+ok(IsValid(g.rebel) and g.rebel:GetModelScale() == 5, "a giant red rebel floats over the screen")
 ok(s.score == 4 and g.pl[b].score == 1, "Two Minutes of Hate: jeers in chat, double for a word nobody has used yet", s.score)
 LC.PropagandaSay(a, "but freeman is a hero")
 ok(s.lives == 2, "a kind word for him is thoughtcrime")
@@ -14785,6 +14790,7 @@ _run(0.2)
 _run(2.6)
 ok(g.phase == "clap", "she points: time to applaud")
 Jump(a)
+_run(0.2)
 LC.PropagandaSay(b, "Bravo!")
 ok(g.pl[a].clapAt and g.pl[b].clapAt, "applause: a jump, or clap in chat")
 _run(LC.GuidanceClap)
@@ -14865,6 +14871,7 @@ g.at = 0
 _run(0.1)
 _run(g.sirenLen * 0.6)
 ok(g.phase == "siren" and Said(g, "duck_siren") and g.rocket:GetPos().z > z0 + 50, "the siren wails and the rebels' rocket climbs")
+ok(IsValid(g.mag) and g.mag:GetPos().z > z0 + 50 and g.mag:GetModelScale() == 5, "a giant red Magnusson rides it up")
 _run(0.1)
 a:SetPos(g.tables[1] + Vector(40, 0, 0))
 a.crouch = true

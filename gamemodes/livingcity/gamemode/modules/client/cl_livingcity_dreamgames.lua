@@ -182,6 +182,14 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityDreamGames", function(_, s
             for i = 1, 6 do render.DrawSprite(base - Vector(0, 0, 60 + i * 70), 120 + i * 30, 120 + i * 30, Color(200, 200, 200, 120 - i * 15)) end
         end
     end
+    for _, i in ipairs(st.villains or {}) do -- (the Resistance, as dreams see it: a red halo round the giant)
+        local e = Entity and Entity(i)
+        if IsValid(e) then
+            local sc = e.GetModelScale and e:GetModelScale() or 1
+            local hp = 0.85 + 0.15 * math.sin(CurTime() * 5)
+            render.DrawSprite(e:GetPos() + Vector(0, 0, 40 * sc), 120 * sc * hp, 120 * sc * hp, Color(255, 30, 30, 160))
+        end
+    end
     if st.board then LC_CL.DreamBoard(st.board) end
     if st.mosaic then LC_CL.DreamMosaic(st.mosaic) end
     if not st.tokens then return end
