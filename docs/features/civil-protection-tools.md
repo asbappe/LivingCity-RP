@@ -27,7 +27,10 @@
 - **No Scanner Operator role:** any unit flies a scanner from a terminal (F2 > Unit tools).
 - **"Freeze"** plays "Don't move!" (the clip it pointed at isn't in the metrocop voice set).
 - **Backup joins your squad** for 5 minutes (was 2): chat says as each unit arrives, and they attack whoever you hit or whoever hurts you.
-- **Killing a rebel** gives a unit +5 standing, +2 credits and a box of rounds for the gun in hand (with the AR2, which has no ammo box, 30 AR2 rounds straight in: the owner, 7 November), with a notice (as well as the XP).
+- **Killing a rebel** gives a unit +5 standing, +2 credits and a box of rounds for the gun in hand (with the AR2, which has no ammo box, 30 AR2 rounds straight in: the owner, 7 November), with a notice, and 5 XP (`LCF.XP.rebel_kill`; the owner, 8 November: "5 xp per kill"), a player rebel the same as an NPC one (before, a player rebel gave no XP).
+- **The night shift** (the owner, 8 November; `sv_livingcity_bedtime.lua`). Units are due in bed at the good night like citizens (lights out, see sleep in `survival-and-credit.md`), unless they take the **Night shift** directive, on the board (F4) first, from dusk on most nights (`lc_nightshift_chance`, 0.85): walk the patrol stops through the night (reward 30 credits plus 5 a stop). On it, or once it's done that night, there's no lights out for them, and a CP Commissary issues one free stimulant shot (once a night). The city's own units patrol either way.
+- **Enforcers in the dreams**: a unit or Administration member asleep for a Nightmare or a propaganda dream is an Enforcer in it: untouchable, free to wake, and with a baton for the dreamers who misbehave (1 XP each, paid on waking). See `endings.md`, Enforcers.
+- **No implant signal**: a rebel who had the chip pulled at the lab is noticed by a unit checking papers or searching them 15% of the time (`lc_chip_notice`): a crime, and the papers fail (`endings.md`, The foil hat and the chip).
 - **Vests at a power bank:** hold E on a live bank to add 15 charge a press. Anyone who isn't a unit commits "Tampering" if a unit sees it; up close, the bank says which applies to you.
 - **Prison guards** keep out of cells, the release spot and the prison doors, so a door is never held open by a guard standing in it.
 

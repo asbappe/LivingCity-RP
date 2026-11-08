@@ -184,6 +184,7 @@ LCF.XP = {
     duty_per_minute = 1,  -- active (not AFK) time in any faction with ranks
     arrest_player   = 25, -- CP/Overwatch incarcerating a player
     arrest_npc      = 5,  -- CP/Overwatch detaining an NPC citizen
+    rebel_kill      = 5,  -- CP/Overwatch killing a rebel, player or NPC (the owner, 8 November: "5 xp per kill")
     heal_per_25hp   = 1,  -- Father Grigori's Blessing
     infect          = 10, -- a zombie killing a human player
     infect_npc      = 2,  -- a zombie killing an NPC citizen

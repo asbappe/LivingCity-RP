@@ -14293,6 +14293,214 @@ _walls = savedWalls
 ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 DreamGameTests()
+function DreamCrowdTests()
+section("Shared dreams: stand-ins, Enforcers, bedtime, the night shift, missed dreams, the foil hat and the chip")
+local errs0 = #_errors
+local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
+_walls = {}
+LC.EndEvent(true)
+_setcvar("lc_needs", 0)
+LC.EndingReload = function() end
+local CITY, DREAM = Vector(152000, -152000, 0), Vector(212000, -212000, 0)
+local a = newPlayer("DCA", "citizen")
+local b = newPlayer("DCB", "citizen")
+local cop = newPlayer("DCCop", "cp")
+local reb = newPlayer("DCReb", "resistance", nil, 900)
+_run(3)
+local function Asleep(p, at)
+    p:SetPos(at)
+    local key = string.format("c%d_%d_%d", math.floor(at.x), math.floor(at.y), math.floor(at.z))
+    p.lcSleep = { t0 = CurTime() - 70, done = CurTime() - 10, last = CurTime(), slept = true }
+    p:SetNW2Bool("lc_sleeping", true)
+    p.lcBedKey, p.lcBedFrom = key, at + Vector(40, 0, 0)
+    LC.BedSleepers[key] = p
+end
+local function Up(p) if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end end
+player.GetAll = function() return { a, b, cop, reb } end
+local dp = LC.AddPoint(DREAM, 0, "dream")
+local BS = LC.BedtimeState
+
+-- who's an Enforcer, and where
+ok(LC.DreamEnforcerRole(cop, "maze") and LC.DreamEnforcerRole(cop, "adore") and not LC.DreamEnforcerRole(cop, "bus")
+    and not LC.DreamEnforcerRole(a, "maze"), "Civil Protection are Enforcers in nightmares and propaganda dreams, and dream Happy and Neutral ones like anyone")
+
+-- stand-ins fill a dream you play up to six, and an Enforcer watches over it
+Asleep(a, CITY)
+Asleep(b, CITY + Vector(0, 200, 0))
+Asleep(cop, CITY + Vector(0, 400, 0))
+for _, p in ipairs({ a, b }) do p.chat = {} end
+local okM, dream = LC.DreamStart("maze", nil, false, nil, true)
+local g = okM and dream.game
+ok(okM and g and g.pl[a] and g.pl[b] and not g.pl[cop] and g.enf[cop] and cop.lcDreamEnforcer == dream.id and cop:GetNW2Bool("lc_enforcer", false),
+    "a unit asleep for a nightmare is in it as an Enforcer, not one of its players", okM and "" or tostring(dream))
+ok(g and #g.standins == 4 and LC.DreamMin() == 6, "two dreamers: four of the city's people stand in, up to lc_dream_min (6); the Enforcer doesn't count", g and #(g.standins or {}))
+local said = false
+for _, l in ipairs(a.chat or {}) do if string.find(l, "Also dreaming:", 1, true) then said = true end end
+ok(said, "their names go up in chat as it begins")
+ok(LC.DreamCanWake(cop) == true and LC.DreamCanWake(a) == false, "an Enforcer can wake whenever they like; a dreamer can't wake from a nightmare")
+ok(cop.HasWeapon and cop:HasWeapon("weapon_stunstick"), "an Enforcer carries a baton in the dream")
+-- a stand-in loses a life now and then, and most drop out
+local s1 = g.standins[1]
+s1.hits = { CurTime() + 0.1 }
+s1.outAt = CurTime() + 0.5
+_run(0.3)
+ok(s1.lives == math.max(1, (g.def.lives or 1) - 1) or s1.lives == 1, "a stand-in loses a life (a red flash, back to the start)")
+_run(0.5)
+ok(s1.out and not IsValid(s1.ent), "and drops out of it (a puff, gone)")
+-- bad dreamers: marked, and the baton
+_run(4) -- (past the start's safety)
+ok(not LC.DreamBad(a), "(nobody glows to start with)")
+g.idle = { [a] = { pos = a:GetPos(), t = CurTime() - 25 } }
+LC.DreamEnforcersTick(CurTime())
+ok(LC.DreamBad(a), "standing about doing nothing for 20 seconds in the maze: they glow red for the Enforcers")
+cop:SetPos(b:GetPos() + Vector(10, 0, 0))
+ok(LC.DreamEnforcerStrike(cop) == false and g.pl[b].lives == g.def.lives, "the baton on someone who's done nothing: nothing happens")
+local livesA = g.pl[a].lives
+cop:SetPos(a:GetPos() + Vector(10, 0, 0))
+_run(1.1)
+ok(LC.DreamEnforcerStrike(cop) == true and g.pl[a].lives == livesA - 1 and not LC.DreamBad(a) and cop.lcDreamEnforceXP == 1,
+    "the baton on a glowing dreamer: a life gone, the glow cleared, 1 XP for the Enforcer (paid on waking)", g.pl[a].lives .. " " .. tostring(cop.lcDreamEnforceXP))
+local xp0 = tonumber(cop:GetPData("lcf_xp_cp", 0)) or 0
+local end0 = LC.DreamsEndured(a)
+LC.DreamGameStop(dream, "admin")
+_run(2.5)
+ok(not cop.lcDreaming and (tonumber(cop:GetPData("lcf_xp_cp", 0)) or 0) == xp0 + 1, "awake, the Enforcer's XP is paid", (tonumber(cop:GetPData("lcf_xp_cp", 0)) or 0) - xp0)
+ok(LC.DreamsEndured(a) == end0 + 1 and LC.DreamsEndured(cop) == 0, "a dreamer has lived through one more dream; an Enforcer hasn't")
+ok(g.standins and not IsValid(g.standins[2] and g.standins[2].ent), "everything of the stand-ins is gone when it ends")
+-- only Enforcers asleep: no dream
+Up(a) Up(b)
+Asleep(cop, CITY)
+local okE, whyE = LC.DreamStart("maze", nil, false, nil, true)
+ok(okE == false and string.find(tostring(whyE), "Enforcers", 1, true), "a nightmare with only Enforcers asleep doesn't happen", tostring(whyE))
+Up(cop)
+-- no stand-ins with lc_dream_min 0
+_setcvar("lc_dream_min", 0)
+Asleep(a, CITY)
+local ok0, d0 = LC.DreamStart("maze", nil, false, nil, true)
+ok(ok0 and #(d0.game.standins or {}) == 0, "lc_dream_min 0: no stand-ins")
+if ok0 then LC.DreamGameStop(d0, "admin") end
+_run(2.5)
+_setcvar("lc_dream_min", 6)
+Up(a)
+
+-- a dream you missed waits for your next sleep
+Asleep(b, CITY)
+a:SetNW2Float("lc_wired_until", 0)
+local okW, dw = LC.DreamStart("maze", nil, false, nil, true)
+ok(okW and LC.DreamMissed(a) and LC.DreamMissed(a).id == "maze" and not LC.DreamMissed(b) and not LC.DreamMissed(cop),
+    "awake for tonight's dream (with the chip): it waits for you; not for the dreamers, nor for Civil Protection")
+if okW then LC.DreamGameStop(dw, "admin") end
+_run(2.5)
+Up(b)
+Asleep(a, CITY)
+_run(2.5)
+local solo = LC.DreamActive
+ok(solo and solo.game and #solo.list == 1 and solo.list[1] == a and #solo.game.standins == 5 and not LC.DreamMissed(a),
+    "the next time they sleep they dream it alone, with stand-ins", solo and #solo.list or "no dream")
+if solo then LC.DreamGameStop(solo, "admin") end
+_run(2.5)
+Up(a)
+-- kept awake on stimulants all night: it fades at dawn; a break in the chain and it keeps waiting
+local sa, sb = a:SteamID64(), b:SteamID64()
+BS.missed[sa] = { id = "maze", wired = true, t = CurTime() }
+BS.missed[sb] = { id = "maze", wired = false, t = CurTime() }
+a:SetNW2Float("lc_wired_until", CurTime() + 900)
+hook.Run("LivingCityDayPhase", "dawn")
+ok(BS.missed[sa] == nil and BS.missed[sb] ~= nil, "awake on stimulants till dawn: it fades; otherwise it keeps waiting")
+BS.missed = {}
+a:SetNW2Float("lc_wired_until", 0)
+
+-- the foil hat
+LC.GiveItem(reb, "foil_hat", 1)
+ok(LC.FoilHatUse(reb, "foil_hat") and LC.FoilOn(reb) and LC.DreamProof(reb) and not LC.HasItem(reb, "foil_hat"), "a foil hat on: no dream can reach you")
+Asleep(reb, CITY)
+Asleep(b, CITY + Vector(0, 200, 0))
+local inIt = false
+for _, p in ipairs(LC.DreamSleepers("nightmare", "maze")) do if p == reb then inIt = true end end
+ok(not inIt, "(asleep in it, a nightmare passes them by)")
+local okF, df = LC.DreamStart("maze", nil, false, nil, true)
+ok(okF and not reb.lcDreaming and not LC.FoilOn(reb), "the hat keeps one dream out, and is spent")
+if okF then LC.DreamGameStop(df, "admin") end
+_run(2.5)
+Up(reb) Up(b)
+
+-- the chip
+reb:SetPData("lc_dreams_endured", "1")
+ok(LC.ChipSurgeryReady(reb) == false and select(2, LC.DreamOptOutEarned(reb)) ~= nil, "the lab won't pull the chip (or make a foil hat) until you've lived through three dreams")
+local okLab = LC.LabMake(reb, "foil_hat", "pay")
+ok(okLab == false, "(the foil hat waits too)")
+reb:SetPData("lc_dreams_endured", "3")
+LC.AddCredits(reb, 600)
+ok(LC.ChipSurgeryReady(reb) == true and LC.ChipPrice() == 500, "three dreams and 500 credits: the chip can be pulled")
+reb:SetPData("lc_chipless", "1")
+Asleep(reb, CITY)
+inIt = false
+for _, p in ipairs(LC.DreamSleepers("happy", "adore")) do if p == reb then inIt = true end end
+ok(LC.Chipless(reb) and not inIt and not LC.Chipped(reb), "no chip: no dreams at all")
+ok(LC.SleepSecsFor(reb, 300) == 90 and LC.SleepSecsFor(a, 300) == 300, "no chip: a night's sleep takes at most 90 seconds")
+hook.Run("LivingCitySlept", reb)
+_run(0.2)
+ok(not reb.lcSleep, "and they get up on their own")
+_setcvar("lc_chip_notice", 1)
+reb.lcImplantRolled = nil
+ok(LC.ImplantNoticed(reb) == true and LC.ImplantNoticed(reb) == false and LC.ImplantNoticed(a) == false, "a unit may notice there's no implant signal (once a stop; never with the chip in)")
+reb.lcImplantRolled = nil
+reb:SetPData("lc_new_face", "1") -- (no wanted notice to match first)
+local okP, whyP = LC.CheckPapers(reb)
+reb:SetPData("lc_new_face", "0")
+ok(okP == false and whyP == LC.NoImplantText, "(at a papers check too)", tostring(whyP))
+_setcvar("lc_chip_notice", 0.15)
+reb:SetPData("lc_chipless", "0")
+reb:SetPData("lc_dreams_endured", "0")
+
+-- bedtime
+LC.SetHour(12)
+a.lcAwakeSince = CurTime()
+local len = GetGlobal2Float("lc_day_len", 3600)
+local due = LC.BedtimeDue(a)
+ok(due and math.abs(due - (CurTime() + 9 / 24 * len)) < 2 and LC.TiredDue(a) <= due + 0.01, "a citizen is due in bed at the good night (21:00), whatever they slept", due and (due - CurTime()))
+ok(LC.BedtimeDue(reb) == nil, "the Resistance keep their own hours")
+cop.lcAwakeSince = CurTime()
+ok(LC.BedtimeDue(cop) ~= nil, "Civil Protection are due in bed too")
+LC.SetHour(22)
+a.lcAwakeSince = CurTime() - 10
+local due2 = LC.BedtimeDue(a)
+ok(due2 and due2 - CurTime() > len * 0.9, "slept since dusk: not pulled again tonight", due2 and (due2 - CurTime()))
+-- the night shift
+BS.roll[BS.eve or 0] = true
+local tmpl
+for _, t in ipairs(LC.QuestTemplates) do if t.id == "cp_nightshift" then tmpl = t end end
+ok(tmpl and tmpl.first and tmpl.available(cop), "most nights the night shift is on Civil Protection's board (first)")
+LC.QuestOf[cop] = { tmpl = tmpl }
+cop.lcNightShift = BS.eve
+ok(LC.OnNightShift(cop) and LC.BedtimeDue(cop) == nil, "on the night shift: no lights out")
+ok(LC.NightShiftIssue(cop) and LC.HasItem(cop, "stimulant") and not LC.NightShiftIssue(cop), "a CP Commissary issues one stimulant shot, once a night")
+LC.QuestOf[cop] = nil
+cop.lcNightShift = nil
+LC.SetHour(12)
+ok(not tmpl.available(cop), "(not by day)")
+
+-- a rebel player killed by a unit: 5 XP
+reb:SetNW2String("lcf_faction", "resistance")
+local realAdd, gotXP = LC.AddXP, 0
+LC.AddXP = function(p, n, why) if p == cop and why == "anticitizen neutralized" then gotXP = gotXP + n end end -- (only the kill's own XP: a conduct strike is another matter)
+hook.Run("DoPlayerDeath", reb, cop)
+hook.Run("PlayerDeath", reb, nil, cop)
+LC.AddXP = realAdd
+ok(gotXP == 5 and LCF.XP.rebel_kill == 5, "a unit who kills a rebel player gets 5 XP (as for an NPC rebel), even if permanent death makes them a citizen first", gotXP)
+
+LC.DreamForget()
+LC.RemovePoint(dp)
+for _, p in ipairs({ a, b, cop, reb }) do
+    Up(p)
+    p:SetPos(Vector(-122000, -122000, 0))
+end
+player.GetAll, LC.EndingReload = realGetAll, realReload
+_setcvar("lc_needs", 1)
+_walls = savedWalls
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+DreamCrowdTests()
 local function PropagandaDreamTests()
 section("Shared dreams: propaganda dreams you play (kneel, roses, mirror, the saviour, the quiz; the Administrator starring)")
 local errs0 = #_errors
@@ -14588,9 +14796,9 @@ do
         end
     end
     ok(#bad == 0, "every answer a stand-in can give is right, and never thoughtcrime", table.concat(bad, " | "))
-    local full = { pl = { x = {}, y = {}, z = {}, w = {} } }
+    local full = { pl = { x = {}, y = {}, z = {}, w = {}, u = {}, v = {} } }
     LC.QuizSeat(full)
-    ok(#full.bots == 0 and full.rebel == nil, "four dreamers: no stand-ins (and no rebel)")
+    ok(#full.bots == 0 and full.rebel == nil, "six dreamers (lc_dream_min): no stand-ins (and no rebel)")
 end
 Both()
 a.chat, b.chat = {}, {}
@@ -14599,7 +14807,7 @@ local gs = okS and dS.game
 _run(6.5)
 local nDream = 0
 for _ in pairs(gs and gs.pl or {}) do nDream = nDream + 1 end
-ok(gs and nDream < 4 and #gs.bots == 4 - nDream and gs.rebel ~= nil and IsValid(gs.rebel.ent), "fewer than four dreamers: the city's people stand in up to four, and a rebel among them", gs and (nDream .. " " .. #gs.bots))
+ok(gs and nDream < 6 and #gs.bots == LC.DreamMin() - nDream and gs.rebel ~= nil and IsValid(gs.rebel.ent), "fewer than six dreamers (lc_dream_min): the city's people stand in up to six, and a rebel among them", gs and (nDream .. " " .. #gs.bots))
 local named = 0
 for _, pp in ipairs(LC.People.list) do for _, bt in ipairs(gs.bots) do if bt.name == pp.name then named = named + 1 end end end
 ok(named == #gs.bots or #LC.People.list == 0, "the stand-ins are the city's named people", named)
@@ -15248,7 +15456,7 @@ _run(1.1)
 ok(LC.Crashing(p), "when it wears off you crash (no running for a while)")
 -- who a nightmare takes: the opted out too, never the wired
 p:SetNW2Float("lc_crash_until", 0)
-p.lcSleep, q.lcSleep = { t0 = CurTime() }, { t0 = CurTime() }
+p.lcSleep, q.lcSleep = { t0 = CurTime(), done = CurTime() + 600 }, { t0 = CurTime(), done = CurTime() + 600 }
 p:SetPData("lc_dream_optout", "1")
 local function Has(list, x) for _, v in ipairs(list) do if v == x then return true end end return false end
 ok(not Has(LC.DreamSleepers("happy"), p) and Has(LC.DreamSleepers("happy"), q), "opted out: no happy or neutral dreams")
@@ -15279,7 +15487,7 @@ ok(has > had or LC.HasItem(p, "stimulant"), "the Resistance wake with something 
 dealer:Remove()
 p:SetNW2String("lcf_faction", "citizen")
 -- Unbroken: Breen's water can't touch them, and no nightmare can take them
-p.lcSleep = { t0 = CurTime() }
+p.lcSleep = { t0 = CurTime(), done = CurTime() + 600 }
 ok(not Has(LC.DreamSleepers("nightmare"), p) and Has(LC.DreamSleepers("happy"), p), "Unbroken: no nightmare can take them (other dreams still can)")
 p.lcSleep = nil
 p:SetNW2Float("lc_unbroken_until", 0)
@@ -15288,7 +15496,7 @@ p:SetNW2Float("lc_secondwind_until", 0)
 local realCZ = LC.CombineZoneAt
 LC.CombineZoneAt = function(pos) return pos.x > 99000 end
 q:SetPos(Vector(100000, 0, 0))
-q.lcSleep = { t0 = CurTime() }
+q.lcSleep = { t0 = CurTime(), done = CurTime() + 600 }
 ok(not Has(LC.DreamSleepers("nightmare"), q) and Has(LC.DreamSleepers("neutral"), q), "asleep inside a Combine-only zone: spared any nightmare")
 q.lcSleep = nil
 LC.CombineZoneAt = realCZ
@@ -15297,13 +15505,13 @@ ok(p:GetNW2Int("lce_credits", 0) == cr and not LC.DreamScarred(p) and not LC.Unb
 -- lost: 30 off the health limit until a night's sleep begun after it
 p:SetMaxHealth(100)
 p:SetHealth(100)
-p.lcSleep = { t0 = CurTime() - 5 }
+p.lcSleep = { t0 = CurTime() - 5, done = CurTime() + 600 }
 LC.DreamOutcome(p, "out", "The Patrol Maze")
 ok(LC.DreamScarred(p) and p:GetMaxHealth() == 70 and p:Health() == 70, "lost every life: 30 off your health")
 hook.Run("LivingCitySlept", p)
 ok(LC.DreamScarred(p) and p:GetMaxHealth() == 70, "(finishing the same night's sleep doesn't clear it)")
 _run(0.2)
-p.lcSleep = { t0 = CurTime() }
+p.lcSleep = { t0 = CurTime(), done = CurTime() + 600 }
 hook.Run("LivingCitySlept", p)
 ok(not LC.DreamScarred(p) and p:GetMaxHealth() == 100, "the next full night's sleep does")
 p.lcSleep = nil
@@ -18505,6 +18713,7 @@ BreathTests()
 
 function SleepWarnTests() -- (the owner, 7 November: warnings, sleep from the first one, a citizen's hours, not mid-fight)
 section("Sleep: two warnings, a bed from the first, citizens keep the city's hours, never mid-fight")
+_setcvar("lc_bedtime", 0) -- (the usual clock only: lights out has its own tests, DreamCrowdTests)
 local notes = {}
 local noticeWas, nightWas = LC.Notice, LC.IsNight
 LC.Notice = function(p, kind, title, text) notes[#notes + 1] = { p = p, title = title, text = text } end
@@ -18576,6 +18785,7 @@ LC.Notice, LC.IsNight = noticeWas, nightWas
 LC.SetHour(hourWas)
 bed:Remove()
 for _, p in ipairs({ unit, cit }) do p.lcAwakeSince = CurTime() p:SetNW2Bool("lc_tired", false) p:SetPos(Vector(-30000, 30000, 0)) end
+_setcvar("lc_bedtime", 1)
 end
 SleepWarnTests()
 

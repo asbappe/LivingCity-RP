@@ -1016,3 +1016,19 @@ Notes:
   Notes:
 - [ ] **Quiz stand-ins:** dream the Loyalty Quiz with fewer than four players: a row of the city's people stands before her and answers each question in chat (5 to 12 seconds in). One question between the 3rd and 8th, the rebel (in rebel clothes) shouts thoughtcrime; she orders him removed; two officers with stun batons beat him (check the batons sit in their hands, the swing and cower poses) and drag him to the back; she says "Where were we? Ah, yes." With four players: no stand-ins.
   Notes:
+
+## 8 November, part 11: dream safeguards
+- [ ] **Stand-ins:** pick a dream you play with one or two asleep: "Also dreaming: ..." in chat, figures running near the start, some flash red and drop out with a puff; the quiz seats up to six.
+  Notes:
+- [ ] **Enforcers:** a unit asleep for a nightmare (try the maze): told "You will be in it as an Enforcer", a baton, the blue line on screen, can wake from C > Settings. A dreamer standing still 20 s glows red; hit them: a life gone, +1 XP on waking. A Happy dream: the unit dreams it normally.
+  Notes:
+- [ ] **Lights out:** as a citizen (or a unit), sleep at midday, then watch for "Lights out soon" before 21:00 and the eyes closing after it until you sleep.
+  Notes:
+- [ ] **Night shift:** as a unit at dusk, the Night shift is first on F4; take it: no lights out; use a CP Commissary: one stimulant shot, only once that night.
+  Notes:
+- [ ] **A missed dream:** stay awake as a citizen while a dream runs ("a pull behind your eyes"), then sleep: you dream it alone with stand-ins. Two stimulant shots through the night instead: it fades at dawn.
+  Notes:
+- [ ] **Foil hat and the chip:** a rebel with fewer than 3 dreams lived through: the lab says not yet. With 3: make a foil hat, put it on (F3), sleep through a nightmare untouched (hat spent). Pull the chip (500): no dreams, sleep ends by itself after 90 s; get searched a few times: now and then "no implant signal".
+  Notes:
+- [ ] **Rebel kill XP:** as a unit, kill a wanted rebel player: +5 XP (as for an NPC rebel).
+  Notes:

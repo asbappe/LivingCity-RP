@@ -192,6 +192,13 @@ function LC.DreamersOf(dream)
     return out
 end
 
+-- How many in it are dreaming it, not watching over it as Enforcers (sv_livingcity_dreamenforcers.lua).
+function LC.DreamRealCount(dream)
+    local n = 0
+    for _, p in ipairs(LC.DreamersOf(dream)) do if not p.lcDreamEnforcer then n = n + 1 end end
+    return n
+end
+
 -- Asleep in a bed right now, alive, and willing (mood: tonight's; a nightmare takes the
 -- unwilling too: only a stimulant keeps you out of one, by keeping you awake). The owner,
 -- 8 November: a nightmare is broadcast to everyone asleep outside a Combine-only zone (anyone
@@ -202,6 +209,8 @@ function LC.DreamForced(id, mood)
     mood = mood or (id and LC.DreamMood(id)) or "neutral"
     return mood == "nightmare" or (id ~= nil and LC.PropagandaDreams ~= nil and LC.PropagandaDreams[id] == true)
 end
+-- (the owner, 8 November: no chip, no dreams at all; a foil hat from the lab keeps one night's out:
+-- LC.DreamProof, sv_livingcity_bedtime.lua)
 function LC.DreamSleepers(mood, id)
     local out = {}
     local forced = LC.DreamForced(id, mood)
@@ -209,6 +218,7 @@ function LC.DreamSleepers(mood, id)
     for _, p in ipairs(player.GetAll()) do
         local spared = (mood == "nightmare" and ((LC.Unbroken and LC.Unbroken(p)) or (LC.CombineZoneAt and LC.CombineZoneAt(p:GetPos()))))
             or (prop and LC.Unbroken and LC.Unbroken(p)) -- (Unbroken: the Combine can't get into your head, propaganda included)
+            or (LC.DreamProof and LC.DreamProof(p))
         if p.lcSleep and p:Alive() and not p.lcDreaming and not spared and (forced or not LC.DreamOptedOut(p)) and not (LC.Wired and LC.Wired(p))
             and not (p.InVehicle and p:InVehicle()) then out[#out + 1] = p end
     end
@@ -218,6 +228,7 @@ end
 function LC.DreamCanWake(p)
     local dream = LC.DreamActive
     if not IsValid(p) or not dream or dream.id ~= p.lcDreaming or not (dream.forced or dream.mood == "nightmare") then return true end
+    if p.lcDreamEnforcer then return true end -- (an Enforcer is only watching over it: sv_livingcity_dreamenforcers.lua)
     local g = dream.game
     if g and g.pl and g.pl[p] and g.pl[p].done then return true end
     if g and g.star == p then return true end -- (the Administrator starring in a propaganda dream isn't one of its players)
@@ -814,12 +825,14 @@ function LC.DreamWakeOne(p, why)
     end
     p.lcDreaming = nil
     p.lcDreamBed = nil
+    p.lcDreamWokeEnforcer, p.lcDreamEnforcer = p.lcDreamEnforcer, nil -- (how they wake: sv_livingcity_dreamenforcers.lua)
+    p:SetNW2Bool("lc_enforcer", false)
     p:SetNW2Bool("lc_dreaming", false)
     p:SetNW2Bool("lc_nightmare", false)
     p:SetNW2Bool("lc_dream_forced", false)
     if dream and dream.list then
-        -- (everyone gone: the ending has nobody left to be for)
-        if #LC.DreamersOf(dream) == 0 then timer.Simple(0, function()
+        -- (everyone gone, or only Enforcers left: the ending has nobody left to be for)
+        if LC.DreamRealCount(dream) == 0 then timer.Simple(0, function()
             local E = LC.EndingAny and LC.EndingAny()
             if E and E.dream == dream then LC.CancelEnding() end
             if dream.game and LC.DreamGameStop then LC.DreamGameStop(dream, "empty") end
@@ -907,7 +920,8 @@ end
 
 -- Dream an ending now, with everyone asleep (also: an admin testing it, awake). vote: the G-Man's
 -- vote first (among the dreamers). True, or false and why not.
-function LC.DreamStart(id, by, vote, also, force)
+-- only: these dreamers and nobody else (a dream someone missed, dreamt alone: sv_livingcity_bedtime.lua).
+function LC.DreamStart(id, by, vote, also, force, only)
     if not cvOn:GetBool() then return false, "Dreams are off (lc_dreams 0)." end
     local pt = LC.DreamPoint()
     if not pt then return false, "There's no dream point on this map: place one with the Living City Editor (Point: dream)." end
@@ -916,9 +930,15 @@ function LC.DreamStart(id, by, vote, also, force)
     if LC.EndingBusy and LC.EndingBusy() then return false, "An ending is already under way." end
     if LC.DreamActive then return false, "A dream is already under way." end
     if not force and not game and LC.EndingCooldownLeft and LC.EndingCooldownLeft() > 0 then return false, "Not yet (" .. math.ceil(LC.EndingCooldownLeft() / 60) .. " minutes of the endings' cooldown left)." end
-    local who = LC.DreamSleepers(LC.DreamMood(id), id)
+    local who = only or LC.DreamSleepers(LC.DreamMood(id), id)
     if IsValid(also) and not also.lcDreaming and also:Alive() and not table.HasValue(who, also) then who[#who + 1] = also end
     if #who == 0 then return false, "Nobody is asleep to dream it." end
+    -- Enforcers watch over a dream; they don't dream it on their own (the owner, 8 November)
+    if LC.DreamForced(id) and LC.DreamEnforcerRole then
+        local dreamers = 0
+        for _, p in ipairs(who) do if not LC.DreamEnforcerRole(p, id) then dreamers = dreamers + 1 end end
+        if dreamers == 0 then return false, "Nobody is asleep to dream it (only Enforcers)." end
+    end
     S.nextId = (S.nextId or 0) + 1
     local dream = { id = S.nextId, ending = id, pos = pt.pos, yaw = pt.yaw or 0, zone = LC.DreamZone(), list = {}, snaps = {}, npcs = {}, combine = {},
         made = setmetatable({}, { __mode = "k" }), started = CurTime(), force = force or nil, mood = LC.DreamMood(id), forced = LC.DreamForced(id) }
@@ -938,6 +958,7 @@ function LC.DreamStart(id, by, vote, also, force)
         LC.DreamWake(dream)
         return false, why
     end
+    if not game and LC.DreamEndingEnforcers then LC.DreamEndingEnforcers(dream) end -- (an ending: they watch it)
     Log("info", string.format("Dream: %s, with %d asleep", id, #dream.list))
     hook.Run("LivingCityDreamStarted", dream)
     return true, dream
@@ -1078,10 +1099,15 @@ timer.Create("LivingCityDreams", 1, 0, function()
                 local mood = q and LC.DreamMood(q.id) or "neutral"
                 local forced = q and LC.DreamForced(q.id, mood)
                 for _, p in ipairs(LC.DreamSleepers(mood, q and q.id)) do
-                    Notice(p, mood == "nightmare" and "warn" or "info", "A dream is coming", MOOD_LINES[mood] .. " It's shared with everyone asleep, and you'll wake in your bed with everything you had. "
-                        .. (mood == "nightmare" and "There's no opting out of a nightmare: only a stimulant before bed would have kept you awake."
-                            or forced and "There's no opting out of this one: only a stimulant before bed would have kept you awake."
-                            or "Not tonight? C > Settings > Shared dreams: opt out."), 12)
+                    if forced and LC.DreamEnforcerRole and LC.DreamEnforcerRole(p, q and q.id) then
+                        Notice(p, "info", "A dream is coming", MOOD_LINES[mood] .. " You'll be in it as an Enforcer: nothing in it can touch you, and you can wake whenever you like. "
+                            .. "Punish the dreamers who misbehave (they glow red) with your baton.", 12)
+                    else
+                        Notice(p, mood == "nightmare" and "warn" or "info", "A dream is coming", MOOD_LINES[mood] .. " It's shared with everyone asleep, and you'll wake in your bed with everything you had. "
+                            .. (mood == "nightmare" and "There's no opting out of a nightmare: only a stimulant before bed (or the lab's foil hat) would have kept you out of it."
+                                or forced and "There's no opting out of this one: only a stimulant before bed (or the lab's foil hat) would have kept you out of it."
+                                or "Not tonight? C > Settings > Shared dreams: opt out."), 12)
+                    end
                 end
             end
             if now >= S.at and not (LC.EndingBusy and LC.EndingBusy()) and not LC.DreamActive then LC.DreamTonight() end
@@ -1107,8 +1133,8 @@ timer.Create("LivingCityDreams", 1, 0, function()
                     p:SetPos(dream.pos + Vector(0, 0, 8)) -- (wandered off the edge of it: back in the middle)
                 end
             end
-            -- (everyone in it gone, left the server: nobody for it to be for)
-            if #LC.DreamersOf(dream) == 0 then LC.CancelEnding() end
+            -- (everyone in it gone, left the server, or only Enforcers left: nobody for it to be for)
+            if LC.DreamRealCount(dream) == 0 then LC.CancelEnding() end
         elseif dream and not E then
             LC.DreamWake(dream) -- (the ending went without waking anyone: wake them)
         end

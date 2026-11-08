@@ -41,6 +41,7 @@ local function CharKeys()
         "lc_docs", "lc_housed_how", "lc_transfer_at",
         "lc_labor_job", "lc_labor_secs", "lc_labor_shifts", "lc_labor_done", -- (the work assignment and its stint: sv_livingcity_labor.lua)
         "lcf_transhuman", "lc_stalker", "lc_close_used", "lc_close_at", "lc_skin", "lc_bgs", -- (the conditioning, a stalker, close calls: the person's, not the player's)
+        "lc_chipless", "lc_dreams_endured", -- (the chip pulled, and the dreams lived through: sv_livingcity_bedtime.lua)
     }
     for _, f in ipairs(LCF and LCF.Factions or {}) do keys[#keys + 1] = "lcf_xp_" .. f.id end
     return keys

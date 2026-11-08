@@ -101,6 +101,36 @@ function LC_CL.OpenLab(t)
             if IsValid(frame) then frame:Remove() end
         end
     end
+    -- pulling the chip (sv_livingcity_lab.lua, LC.LabChip; the owner, 8 November)
+    if t.chip then
+        local cp = t.chip
+        local row = vgui.Create("DPanel", scroll)
+        row:Dock(TOP)
+        row:DockMargin(0, 0, 0, 6)
+        row:SetTall(78)
+        local why = vgui.Create("DLabel", row)
+        why:SetPos(10, 40)
+        why:SetWrap(true)
+        why:SetTextColor(cp.ok and HAVE or DIM)
+        why:SetText(cp.ok and "Special one-time tools, and the codes to shut it down without frying your head. No more dreams, ever; but a unit's scanner may notice there's no implant signal."
+            or (cp.why or ""))
+        row.PerformLayout = function(self, w, h) why:SetSize(math.max(100, w - 140), 34) end
+        row.Paint = function(self, w, h)
+            draw.RoundedBox(3, 0, 0, w, h, Color(40, 40, 58, 240))
+            draw.SimpleText(string.format("Pull the chip (%d credits)", cp.price or 0), "LCLabItem", 10, 13, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            draw.SimpleText("Thirty seconds under. The Combine's implant comes out, and with it the city's dreams.", "DermaDefault", 10, 31, HAVE, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        end
+        local b = vgui.Create("DButton", row)
+        b:Dock(RIGHT)
+        b:DockMargin(4, 22, 6, 22)
+        b:SetWide(110)
+        b:SetText("Pull it")
+        b:SetEnabled(cp.ok == true and not t.busy)
+        b.DoClick = function()
+            net.Start("lc_lab_chip") net.SendToServer()
+            if IsValid(frame) then frame:Remove() end
+        end
+    end
     -- (the owner, 1 November: long descriptions ran under the buttons: wrapped now, clear of them)
     local function Wrap(text, font, maxw)
         surface.SetFont(font)

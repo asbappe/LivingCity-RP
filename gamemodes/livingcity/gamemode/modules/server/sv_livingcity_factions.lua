@@ -692,9 +692,19 @@ hook.Add("OnNPCKilled", "LivingCityRebelKillReward", function(npc, attacker)
     local st = LC.NPCs and LC.NPCs[npc]
     if st and st.role == "rebel" and not st.test then RebelKillReward(attacker) end
 end)
+-- (the side they died on, noted first: permanent death may make them a new citizen before this runs)
+hook.Add("DoPlayerDeath", "LivingCityRebelKillReward", function(victim)
+    if IsValid(victim) and victim.GetNW2String then victim.lcDiedAs = victim:GetNW2String("lcf_faction", "") end
+end)
 hook.Add("PlayerDeath", "LivingCityRebelKillReward", function(victim, inflictor, attacker)
+    local diedAs = IsValid(victim) and (victim.lcDiedAs or victim:GetNW2String("lcf_faction", "")) or ""
+    if IsValid(victim) then victim.lcDiedAs = nil end
     if not IsValid(attacker) or not attacker:IsPlayer() or attacker == victim or not IsValid(victim) then return end
-    if victim:GetNW2String("lcf_faction", "") == "resistance" then RebelKillReward(attacker) end
+    if diedAs == "resistance" then
+        RebelKillReward(attacker)
+        -- (the XP, as for an NPC rebel in sv_livingcity_rebels.lua: the owner, 8 November, "5 xp per kill")
+        if LC.PlayerIsCP(attacker) and not victim.lcDreaming then LC.AddXP(attacker, LCF.XP.rebel_kill or 5, "anticitizen neutralized") end
+    end
 end)
 
 hook.Add("OnNPCKilled", "LivingCityInfection", function(npc, attacker)

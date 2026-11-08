@@ -516,6 +516,8 @@ function LC.CheckPapers(ply)
     if LC.PlayerIsHunted and LC.PlayerIsHunted(ply) and LC.PassesAsCitizen(ply) and not id and ply:GetPData("lc_new_face", "0") ~= "1" then
         return false, "Your face matches a wanted notice."
     end
+    -- no chip (the lab pulled it): a unit's scanner notices now and then (sv_livingcity_bedtime.lua)
+    if LC.ImplantNoticed and LC.ImplantNoticed(ply) then return false, LC.NoImplantText end
     if id then
         local p = math.max(0.03, (DETECT[id.kind] or 0.3) - Skill(ply, "guile") * 0.02)
         if math.random() < p then return false, "Your papers don't hold up to a close look." end

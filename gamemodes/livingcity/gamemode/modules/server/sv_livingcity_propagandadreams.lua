@@ -181,6 +181,7 @@ local function Everyone(g)
     local out = {}
     for p, s in pairs(g.pl) do if IsValid(p) and (not s.done or s.watching) then out[#out + 1] = p end end
     if IsValid(g.star) then out[#out + 1] = g.star end
+    for p in pairs(g.enf or {}) do if IsValid(p) then out[#out + 1] = p end end -- (Enforcers: sv_livingcity_dreamenforcers.lua)
     return out
 end
 -- Something said in the dream, on everyone's screen (her lines, with their recording).
@@ -440,6 +441,7 @@ local function Offend(g, p, title, text)
     local o = OFF[Key(p)] or { n = 0 }
     OFF[Key(p)] = o
     o.n = o.n + 1
+    hook.Run("LivingCityDreamOffence", g, p, title) -- (an Enforcer can see it: sv_livingcity_dreamenforcers.lua)
     local hit = Hit(g, p, title, text .. string.format(" (-%d loyalty points)", LC.PropagandaOffencePoints))
     if hit and s.done and s.how == "out" then o.out = true end
     return hit
@@ -1195,7 +1197,7 @@ do
     -- to four contestants; they answer late in each question and never take the first-answer bonus.
     -- The rebel has a name of his own, never one of the city's people (some of them really are
     -- sympathizers, and the dream mustn't give them away).
-    LC.QuizContestants = 4
+    LC.QuizContestants = 4 -- (the dreams' minimum, lc_dream_min, when that's set: LC.DreamMin, sv_livingcity_dreamstandins.lua)
     LC.QuizNPCAnswers = {
         { "The Administrator!", "Civil Protection, of course.", "Overwatch keeps watch while we sleep.", "The Combine. Always the Combine.", "She does. The Administrator.", "The brave officers of Civil Protection!" },
         { "We obey!", "We comply, at once.", "Listen, and obey.", "We salute, and do as we're told.", "We show respect, and comply.", "We kneel, if we're asked to." },
@@ -1253,9 +1255,10 @@ do
     -- The stand-ins and the rebel, in a row before her, once the dreamers are known.
     local function Seat(g)
         g.bots, g.seated = {}, true
-        local want = math.max(0, LC.QuizContestants - Dreamers(g))
+        local want = math.max(0, (LC.DreamMin and LC.DreamMin() or LC.QuizContestants) - Dreamers(g))
         if want == 0 then return end
-        local spots = { -180, -60, 60, 180 }
+        local spots = {}
+        for i = 1, want + 1 do spots[i] = (i - (want + 2) / 2) * 120 end -- (a row, 120 apart, centred)
         local who = People(want)
         local rebelAt = math.random(want + 1)
         local k = 0
@@ -1457,6 +1460,10 @@ function LC.PropagandaSay(p, text)
     if p == g.star then
         Line(g, text, nil, "The Administrator")
         for _, q in ipairs(Everyone(g)) do if q.ChatPrint then q:ChatPrint("(in the dream) The Administrator: " .. text) end end
+        return true
+    end
+    if g.enf and g.enf[p] then -- (an Enforcer: heard in the dream, never scored)
+        for _, q in ipairs(Everyone(g)) do if q.ChatPrint then q:ChatPrint("(in the dream) Enforcer " .. p:Nick() .. ": " .. text) end end
         return true
     end
     if g.def.say and g.pl[p] then return g.def.say(g, p, text) end

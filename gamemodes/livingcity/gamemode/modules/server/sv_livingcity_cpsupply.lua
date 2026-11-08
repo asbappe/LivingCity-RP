@@ -175,6 +175,7 @@ function LC.UseCPSupply(ply, ent)
     -- the daily kit, on top of the issue (and whatever the wait for the next one)
     local kit = LC.IssueCPDailyKit(ply, ent)
     if #kit > 0 then ply:ChatPrint("[CP Commissary] Today's kit: " .. table.concat(kit, " and ") .. ".") end
+    if LC.NightShiftIssue then LC.NightShiftIssue(ply) end -- (on the night shift: a stimulant, once a night; sv_livingcity_bedtime.lua)
     if LC.OpenShop then LC.OpenShop(ply, true) end
 end
 

@@ -759,6 +759,7 @@ function LC.ItemUse(ply, id)
     if not it or not it.use then return false end
     if it.use == "fish" then return Fish(ply) end
     if it.use == "vice" and LC.ViceUse then return LC.ViceUse(ply, id) end -- cigarettes, alcohol, stimulants (sv_livingcity_vices.lua)
+    if it.use == "foilhat" and LC.FoilHatUse then return LC.FoilHatUse(ply, id) end -- sv_livingcity_bedtime.lua
     if it.use == "spray" then return Spray(ply) end
     if it.use == "write" and LC.OpenWriter then return LC.OpenWriter(ply) end -- sv_livingcity_writing.lua
     if it.use == "papers" and LC.ShowPapers then return LC.ShowPapers(ply) end -- sv_livingcity_intake.lua

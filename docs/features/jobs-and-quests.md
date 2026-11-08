@@ -8,6 +8,8 @@ Built for crowded servers: no job ever targets a player, boards are finite and s
 
 **Directives for what's happening now.** The city's events bring their own jobs, posted two minutes before an event starts (units are briefed early even for a surprise sweep or raid) and as it begins, shown only while it's on, and withdrawn when it ends (whoever was already working one is paid; whoever hadn't started isn't held to it). Units get **Ration line supervision** (rations), **Civil status inspections** (sweeps: pat-downs), **Housing block inspection** (block raids: breach the door, get everyone down, search the place), **Curfew enforcement** and **Lockdown: hold the perimeter**; the Resistance get **Warn the block** (raids) and **Run supplies under curfew** (curfew and lockdown). When the infestation spreads or the Resistance take ground, **Containment** or **Retake the block** goes up at once for that patch, and every unit is told. These, and the chases (Apprehend, Disturbance), are squad jobs: up to 4 to 8 people work one together (the rest of the board takes `lc_quest_squad`, 3). Take it from the board and the others join you from theirs.
 
+**The night shift** (Civil Protection and Overwatch, the owner, 8 November): most nights (`lc_nightshift_chance`, 0.85) the board has a **Night shift** directive from dusk, always offered first while it's up: walk six patrol stops through the night. Taking it excuses the unit from lights out that night, and a CP Commissary issues them one stimulant shot (`civil-protection-tools.md`).
+
 ## Story chains
 
 Personal stories that unlock from what you've done, appear at the top of your board marked **Your Story**, and branch on your choices:

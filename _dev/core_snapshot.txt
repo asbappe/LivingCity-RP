@@ -326,6 +326,7 @@ item data_shard
 item door_code
 item firebomb
 item fishing_line
+item foil_hat
 item freq7_sheet
 item gas_bomb
 item gren_flash
@@ -437,6 +438,7 @@ setting lc_autostart = 0
 setting lc_bank_loads = 2
 setting lc_bed_head_flip = 0
 setting lc_bed_npc_lift = 9
+setting lc_bedtime = 1
 setting lc_bin_kg = 10
 setting lc_bin_minutes = 40
 setting lc_birds = 6
@@ -468,6 +470,10 @@ setting lc_chat_flood = 6
 setting lc_chat_range = 350
 setting lc_chatter = 1
 setting lc_checkpoint_range = 700
+setting lc_chip_dreams = 3
+setting lc_chip_notice = 0.15
+setting lc_chip_price = 500
+setting lc_chipless_sleep = 90
 setting lc_citizen_lifetime = 600
 setting lc_citizen_tint = 1
 setting lc_citizens = 14
@@ -524,9 +530,12 @@ setting lc_directives = 0
 setting lc_disguise_risk = 5
 setting lc_downed = 1
 setting lc_downed_secs = 90
+setting lc_dream_catchup = 1
 setting lc_dream_combine = 6
 setting lc_dream_delay = 60
+setting lc_dream_enforcer_xp = 1
 setting lc_dream_every_night = 0
+setting lc_dream_min = 6
 setting lc_dream_moods = bus=happy,plane=happy,hard=happy,shalom=happy,bloom=neutral,fire=neutral,base=neutral,harpies=nightmare,marrow=nightmare,water=nightmare,standup=nightmare
 setting lc_dream_radius = 1500
 setting lc_dreams = 1
@@ -792,6 +801,7 @@ setting lc_net_kick = 400
 setting lc_net_rate = 10
 setting lc_net_tune = 1
 setting lc_night_population = 40
+setting lc_nightshift_chance = 0.85
 setting lc_notes_kept = 8
 setting lc_npc_arrest_chance = 8
 setting lc_npc_arrests = 1

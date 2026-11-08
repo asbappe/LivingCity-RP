@@ -79,7 +79,16 @@ LC.TiredWarnSecs = { WARN1, WARN2 }
 -- When they'll be exhausted (CurTime). Everyone: lc_tired_days of the city's days awake. A
 -- citizen keeps the city's hours: at the soonest three quarters of that, then only once it's
 -- evening or night (21:00 to 5:00), or at the latest a quarter more than it (a night skipped).
+-- (Bedtime, the owner, 8 November: citizens and Civil Protection are due in bed at the good night
+-- whatever they slept in the day, unless a unit is on the night shift: LC.BedtimeDue, sv_livingcity_bedtime.lua.
+-- The sooner of the two.)
 function LC.TiredDue(ply)
+    local due = LC.TiredDueOwn(ply)
+    local bed = LC.BedtimeDue and LC.BedtimeDue(ply)
+    if bed and bed < due then return bed end
+    return due
+end
+function LC.TiredDueOwn(ply)
     local since = ply.lcAwakeSince or CurTime()
     local len = DayLen()
     local limit = len * math.max(0.01, cvDays:GetFloat())
@@ -180,7 +189,9 @@ function LC.SleepIn(ply, ent)
         end
     end
     local now = CurTime()
-    ply.lcSleep = { t0 = now, done = now + math.max(1, cvSecs:GetFloat()), last = now }
+    local secs = math.max(1, cvSecs:GetFloat())
+    if LC.SleepSecsFor then secs = LC.SleepSecsFor(ply, secs) end -- (no chip: a short sleep, sv_livingcity_bedtime.lua)
+    ply.lcSleep = { t0 = now, done = now + secs, last = now }
     ply:SetNW2Bool("lc_sleeping", true)
     ply:SetNW2Float("lc_sleep_done", ply.lcSleep.done)
     ply:SetVelocity(-ply:GetVelocity())
@@ -324,13 +335,24 @@ function LC.RestTick(now)
             local w = ply.lcTiredWarn
             if not w or w.since ~= ply.lcAwakeSince then w = { since = ply.lcAwakeSince, n = 0 } ply.lcTiredWarn = w end
             local left = due - now
+            local bedtime = LC.IsBedtimeDue and LC.IsBedtimeDue(ply, due) -- (the chip's lights out: sv_livingcity_bedtime.lua)
+            local unit = ply:GetNW2String("lcf_faction", "") == "cp"
             if not tired and not was then
                 if w.n < 1 and left <= WARN1 and left > WARN2 then
                     w.n = 1
-                    Notice(ply, "warn", "Getting tired", "You'll be exhausted in about six minutes: your eyes will keep closing and you'll be weaker. You can sleep in a bed now (F1 > What now? > Places).", 10)
+                    if bedtime then
+                        Notice(ply, "warn", "Lights out soon", "The good night is in about six minutes: the city goes to bed then, and so do you. Head home to bed (F1 > What now? > Places)."
+                            .. (unit and " On duty tonight? Take the night shift from your board (F4)." or ""), 10)
+                    else
+                        Notice(ply, "warn", "Getting tired", "You'll be exhausted in about six minutes: your eyes will keep closing and you'll be weaker. You can sleep in a bed now (F1 > What now? > Places).", 10)
+                    end
                 elseif w.n < 2 and left <= WARN2 then
                     w.n = 2
-                    Notice(ply, "warn", "Very tired", "About two minutes before your eyes start closing. Find a bed and sleep (F1 > What now? > Places).", 10)
+                    if bedtime then
+                        Notice(ply, "warn", "Lights out", "About two minutes to the good night. Get into bed (F1 > What now? > Places): after it, your eyes keep closing until you sleep.", 10)
+                    else
+                        Notice(ply, "warn", "Very tired", "About two minutes before your eyes start closing. Find a bed and sleep (F1 > What now? > Places).", 10)
+                    end
                 end
             end
             local drowsy = tired or left <= WARN1

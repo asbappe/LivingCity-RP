@@ -927,6 +927,9 @@ do
         LC_CL.OpenLab({ credits = 50, items = { { id = "gun_pistol", name = "Homemade pistol", desc = "A pistol", secs = 12, price = 72, canPay = false, canMats = true,
             mats = { { name = "Gun parts", have = 2, need = 2 } } } } })
         LC_CL.OpenLab({ credits = 0, busy = 5, items = {} })
+        -- pulling the chip (the owner, 8 November), ready and not yet
+        LC_CL.OpenLab({ credits = 600, items = {}, chip = { price = 500, ok = true } })
+        LC_CL.OpenLab({ credits = 0, items = {}, chip = { price = 500, ok = false, why = "Not yet. You've only lived through 1 of the city's dreams." } })
         -- C > My career (cl_livingcity_career.lua)
         LC_CL.OpenCareer({ faction = "Civil Protection", xp = 312, rank = 2, conditioned = false,
             ranks = { { name = "Recruit", xp = 0 }, { name = "Metrocop", xp = 150 }, { name = "Division Leader", xp = 600 }, { name = "Combine Soldier", xp = 2000, overwatch = true } },
@@ -1677,6 +1680,16 @@ local ok, e = pcall(function()
     hook.t.HUDPaint.LivingCityDreamGames()
     Msg({ k = "state", lives = 3, phase = "green" })
     hook.t.HUDPaint.LivingCityDreamGames()
+    -- an Enforcer (sv_livingcity_dreamenforcers.lua): their own line, no lives; the bad dreamers glow red
+    Msg({ k = "start", id = "maze", name = "The Patrol Maze", goal = "You're an Enforcer.", ends = CurTime() + 300, lives = 1, maxLives = 1, enforcer = true })
+    hook.t.HUDPaint.LivingCityDreamGames()
+    _me:SetNW2Bool("lc_enforcer", true)
+    _me:SetNW2Float("lc_dream_bad_until", CurTime() + 20)
+    hook.t.PreDrawHalos.LivingCityDreamEnforce()
+    hook.t.HUDPaint.LivingCityDreamEnforce()
+    _me:SetNW2Bool("lc_enforcer", false)
+    hook.t.HUDPaint.LivingCityDreamEnforce()
+    _me:SetNW2Float("lc_dream_bad_until", 0)
     Msg({ k = "start", id = "crumble", name = "The Crumbling Floor", goal = "Keep moving.", ends = CurTime() + 100, lives = 1, maxLives = 1 })
     Msg({ k = "state", lives = 1, alive = 2 })
     hook.t.HUDPaint.LivingCityDreamGames()

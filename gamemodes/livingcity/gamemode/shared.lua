@@ -88,6 +88,8 @@ LC_MODULES = {
         "sv_livingcity_propagandadreams", -- (propaganda dreams you play: kneel, roses, mirror, the saviour, the quiz; after dreamgames)
         "sv_livingcity_propagandamore", -- (ten more propaganda dreams, drawn from real propaganda; after propagandadreams)
         "sv_livingcity_vices", -- (cigarettes, alcohol and stimulants; and how a dream you played leaves you)
+        "sv_livingcity_dreamstandins", -- (stand-ins: every dream has at least lc_dream_min dreamers)
+        "sv_livingcity_dreamenforcers", -- (Civil Protection and the Administration as Enforcers in nightmares and propaganda dreams)
         "sv_livingcity_events",
         "sv_livingcity_exercise", -- (after events: the morning jog, drill and parade are events)
         "sv_livingcity_freq7",
@@ -122,6 +124,7 @@ LC_MODULES = {
         "sv_livingcity_propaganda",
         "sv_livingcity_announcer", -- (after propaganda: it borrows the Administrator's speakers)
         "sv_livingcity_quests",
+        "sv_livingcity_bedtime", -- (after quests: the chip's bedtime, the night shift, missed dreams, the foil hat and pulling the chip)
         "sv_livingcity_raids",
         "sv_livingcity_rations",
         "sv_livingcity_rebels",
@@ -205,6 +208,7 @@ LC_MODULES = {
         "cl_livingcity_endingtune", -- (the Endings menu)
         "cl_livingcity_dreams", -- (shared dreams: opting out, waking up, the admins' window)
         "cl_livingcity_dreamgames", -- (the dreams you play: tokens, lives, time, on screen)
+        "cl_livingcity_dreamenforce", -- (Enforcers: the bad dreamers glow red; a dreamer marked is told)
         "cl_livingcity_vices", -- (smoke, drunk, wired, crashing and the shakes, on screen)
         "cl_livingcity_exercise",
         "cl_livingcity_cp",

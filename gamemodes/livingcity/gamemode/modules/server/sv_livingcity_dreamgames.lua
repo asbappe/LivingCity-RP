@@ -179,6 +179,7 @@ local function Send(g, t, who)
     if who then net.Send(who) else
         local list = {}
         for p in pairs(g.pl) do if IsValid(p) then list[#list + 1] = p end end
+        for p in pairs(g.enf or {}) do if IsValid(p) then list[#list + 1] = p end end -- (Enforcers hear it all too)
         if #list > 0 then net.Send(list) end
     end
 end
@@ -912,6 +913,13 @@ local function Tick()
                 t.k = "state"
                 Send(g, t, g.star)
             end
+            for p in pairs(g.enf or {}) do -- (Enforcers see how it goes too: sv_livingcity_dreamenforcers.lua)
+                if IsValid(p) and p.lcDreaming == g.dream.id then
+                    local t = g.def.state(g, p) or {}
+                    t.k, t.enforcer = "state", true
+                    Send(g, t, p)
+                end
+            end
         end
     end)
     if not ok then
@@ -925,7 +933,7 @@ function LC.DreamGameStart(dream)
     local def = dream and G[dream.ending]
     if not def then return false, "No such dream." end
     if ents.GetEdictCount and ents.GetEdictCount() > 7600 then return false, "The server has too many things in it right now to build that dream." end
-    local g = { def = def, id = def.id, dream = dream, ents = {}, pl = {}, won = {}, t0 = CurTime(), last = CurTime(), watchAt = dream.pos + Vector(0, 0, 350) }
+    local g = { def = def, id = def.id, dream = dream, ents = {}, pl = {}, won = {}, enf = {}, t0 = CurTime(), last = CurTime(), watchAt = dream.pos + Vector(0, 0, 350) }
     g.ends = g.t0 + def.secs
     dream.game = g
     local players = LC.DreamersOf and LC.DreamersOf(dream) or dream.list
@@ -941,8 +949,11 @@ function LC.DreamGameStart(dream)
     g.started = #players
     local hello = def.hello and def.hello(g) or {}
     local n = 0
+    local enforcers = {}
     for _, p in ipairs(players) do
-        if p == g.star then
+        if p ~= g.star and LC.DreamEnforcerRole and LC.DreamEnforcerRole(p, def.id) then
+            enforcers[#enforcers + 1] = p -- (Civil Protection and the Administration: they watch over it, after the dreamers are placed)
+        elseif p == g.star then
             p.lcDreamGame, p.lcDreamStar = def.id, true
             def.starring(g, p)
             local t = { k = "start", id = def.id, name = def.name, goal = def.starGoal or def.goal, ends = g.ends, lives = 1, maxLives = 1, star = true }
@@ -962,6 +973,9 @@ function LC.DreamGameStart(dream)
             Notice(p, "warn", def.name, def.goal, 10)
         end
     end
+    for _, p in ipairs(enforcers) do
+        if LC.DreamEnforcerJoin then LC.DreamEnforcerJoin(g, p, hello) end
+    end
     timer.Create("LivingCityDreamGames", 0, 0, Tick)
     Log("info", string.format("Dream game: %s, %d dreamers, %d props", def.id, #players, #g.ents))
     return true
@@ -979,6 +993,11 @@ function LC.DreamGameLeave(p, dream)
         p.lcDreamStar = nil
         if g and g.star == p then Send(g, { k = "stop", how = "woke" }, p) end
         if LC.DreamStarDone then LC.DreamStarDone(p) end
+    end
+    if g and g.enf and g.enf[p] then
+        g.enf[p] = nil
+        Send(g, { k = "stop", how = "woke" }, p)
+        if LC.DreamEnforcerLeave then LC.DreamEnforcerLeave(p) end
     end
     p.lcDreamGame = nil
     if p.lcEndFrozen or (p.IsFrozen and p:IsFrozen()) then p:Freeze(false) end
@@ -1025,6 +1044,7 @@ function LC.DreamGameStop(dream, why)
         if IsValid(p) and not s.done then Send(g, { k = "stop", how = why or "over" }, p) end
     end
     if IsValid(g.star) then Send(g, { k = "stop", how = why or "over" }, g.star) end
+    for p in pairs(g.enf or {}) do if IsValid(p) then Send(g, { k = "stop", how = why or "over" }, p) end end
     for _, e in ipairs(g.ents) do if IsValid(e) then e:Remove() end end
     g.ents = {}
     Log("info", string.format("Dream game over: %s (%s), %d won", g.id, tostring(why or "over"), #g.won))

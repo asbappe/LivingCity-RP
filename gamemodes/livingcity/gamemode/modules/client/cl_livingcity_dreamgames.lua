@@ -326,9 +326,13 @@ hook.Add("HUDPaint", "LivingCityDreamGames", function()
         Line("You're the star of this dream. What you say in chat, the dreamers see.", y, GOLD)
         y = y + 18
     end
+    if st.enforcer then -- (sv_livingcity_dreamenforcers.lua)
+        Line("You're an Enforcer: nothing here touches you. Wake whenever you like (C > Settings > Shared dreams).", y, BLUE)
+        y = y + 18
+    end
     local left = math.max(0, math.floor((st.ends or now) - now))
     local bits = { string.format("Time left: %d:%02d", math.floor(left / 60), left % 60) }
-    if (st.maxLives or 1) > 1 then bits[#bits + 1] = string.format("Lives: %d of %d", st.lives or 0, st.maxLives) end
+    if (st.maxLives or 1) > 1 and not st.enforcer then bits[#bits + 1] = string.format("Lives: %d of %d", st.lives or 0, st.maxLives) end
     if st.left then bits[#bits + 1] = string.format("Tokens left: %d", st.left) end
     if st.alive then bits[#bits + 1] = string.format("Still standing: %d", st.alive) end
     if st.meterName then bits[#bits + 1] = st.meterName end

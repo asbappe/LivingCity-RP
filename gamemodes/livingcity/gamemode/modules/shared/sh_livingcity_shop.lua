@@ -45,6 +45,9 @@ LCS.Items = {
                         contraband = true, conceal = 0.4, desc = "Very strong, very cheap, and one jar in five is a bad batch" },
     stimulant       = { name = "Stimulant shot", model = "models/props_lab/jar01a.mdl", use = "vice", useLabel = "Take", vice = "stim", kg = 0.05,
                         contraband = true, conceal = 0.7, desc = "Combine-issue, for units on double shifts. Fifteen minutes you couldn't sleep through if you tried: no dream can take you. Then the crash" },
+    -- The lab's foil hat (the owner, 8 November; sv_livingcity_bedtime.lua): put it on and sleep in it, and no dream reaches you once.
+    foil_hat        = { name = "Foil hat", model = "models/props_junk/PopCan01a.mdl", use = "foilhat", useLabel = "Put it on", kg = 0.05,
+                        contraband = true, conceal = 0.5, desc = "A cap of foil, lined with copper wire. Sleep in it and no dream can reach you, tonight's or one waiting for you. Spent once it has kept one out" },
 
     -- Meat and fish, raw or cooked, go off after one city day (spoils = true; sv_livingcity_survival.lua,
     -- the owner, 7 November). A dead bird leaves its own kind: pigeon, crow or gull, all roast the same.
@@ -523,6 +526,9 @@ LCS.Lab = {
     { id = "radio_transmitter", out = "radio_transmitter", needs = { radio_tuned = 1, scrap = 2 }, secs = 12, desc = "A Freq 7 radio rebuilt to send as well as listen" },
     { id = "jammer", out = "jammer", needs = { radio_tuned = 1, scrap = 2, chemicals = 1 }, secs = 15, desc = "A radio that only screams" },
     { id = "crowbar", out = "crowbar", needs = { scrap = 6 }, secs = 10, desc = "Bar stock, heated and bent" },
+    -- (only once you've lived through lc_chip_dreams of the city's dreams: sv_livingcity_bedtime.lua)
+    { id = "foil_hat", out = "foil_hat", needs = { scrap = 1, cloth = 1 }, secs = 5, dreamGate = true,
+      desc = "A foil hat: sleep in it and no dream reaches you, once. Contraband" },
 }
 LCS.LabById = {}
 for _, r in ipairs(LCS.Lab) do LCS.LabById[r.id] = r end

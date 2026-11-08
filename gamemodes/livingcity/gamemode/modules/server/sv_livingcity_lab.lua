@@ -32,6 +32,7 @@ util.AddNetworkString("lc_lab")
 util.AddNetworkString("lc_lab_make")
 util.AddNetworkString("lc_lab_decode")
 util.AddNetworkString("lc_lab_surgery")
+util.AddNetworkString("lc_lab_chip")
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvShut  = CreateConVar("lc_lab_shutdown", "600", FLAGS, "Seconds a Resistance lab stays shut after a Civil Protection unit finds it")
@@ -204,8 +205,13 @@ function LC.SendLab(ply, sci)
             end
             table.sort(mats, function(a, b) return a.name < b.name end)
             local price = LC.LabPrice(r)
-            items[#items + 1] = { id = r.id, name = it.name .. ((r.count or 1) > 1 and string.format(" (%d)", r.count) or ""), desc = r.desc or it.desc, mats = mats, canMats = can,
-                price = price, canPay = credits >= price, secs = r.secs }
+            local desc, gated = r.desc or it.desc, false
+            if r.dreamGate and LC.DreamOptOutEarned then -- (the foil hat: dreams endured first, sv_livingcity_bedtime.lua)
+                local ok, why = LC.DreamOptOutEarned(ply)
+                if not ok then gated, desc = true, why end
+            end
+            items[#items + 1] = { id = r.id, name = it.name .. ((r.count or 1) > 1 and string.format(" (%d)", r.count) or ""), desc = desc, mats = mats, canMats = can and not gated,
+                price = price, canPay = credits >= price and not gated, secs = r.secs }
         end
     end
     local job = IsValid(sci) and sci.lcLabJob
@@ -225,7 +231,13 @@ function LC.SendLab(ply, sci)
         local ok, why = LC.SurgeryReady(ply)
         surgery = { price = cvSurgery:GetInt(), ok = ok, why = why }
     end
-    LC.SendCompressed("lc_lab", { items = items, credits = credits, busy = busy, decode = decode, surgery = surgery }, { ply })
+    -- pulling the chip (LC.LabChip)
+    local chip
+    if LC.ChipPrice and LC.ChipPrice() > 0 and not (LC.Chipless and LC.Chipless(ply)) then
+        local ok, why = LC.ChipSurgeryReady(ply)
+        chip = { price = LC.ChipPrice(), ok = ok, why = why }
+    end
+    LC.SendCompressed("lc_lab", { items = items, credits = credits, busy = busy, decode = decode, surgery = surgery, chip = chip }, { ply })
 end
 
 local GREET = {
@@ -269,6 +281,10 @@ function LC.LabMake(ply, id, how)
     local r = (LC.MarketLabById and LC.MarketLabById(id)) or (LCS.LabById and LCS.LabById[id])
     if not r or not IsValid(ply) then return false end
     if not Rebel(ply) then return false, "He only works for the Resistance." end
+    if r.dreamGate and LC.DreamOptOutEarned then
+        local earned, why = LC.DreamOptOutEarned(ply)
+        if not earned then return false, why end
+    end
     local sci = LC.ScientistNear(ply:GetPos())
     if not IsValid(sci) then return false, "Find the scientist in the lab." end
     if LC.Busy and LC.Busy(ply) then return false, "You're busy." end
@@ -421,6 +437,70 @@ function LC.LabSurgery(ply)
     end
     return true
 end
+
+------------------------------------------------------------------------
+-- Pulling the chip (the owner, 8 November: "make it 500 for the chip surgery, make an in game
+-- explanation that it requires special one-time tools and codes to remove the chip"). Only once
+-- they've lived through lc_chip_dreams of the city's dreams. Thirty seconds under (stay on the
+-- table); then no dreams ever, a short night's sleep, and now and then a unit notices there's no
+-- implant signal (sv_livingcity_bedtime.lua).
+------------------------------------------------------------------------
+
+function LC.LabChip(ply)
+    local ok, why = LC.ChipSurgeryReady(ply)
+    if not ok then return false, why end
+    local sci = LC.ScientistNear(ply:GetPos())
+    if not IsValid(sci) then return false, "Find the scientist in the lab." end
+    local job = sci.lcLabJob
+    if job and IsValid(job.ply) and job.untilT > CurTime() then return false, "He's in the middle of someone else's work." end
+    local price = LC.ChipPrice()
+    LC.AddCredits(ply, -price, "the chip pulled (tools and codes)")
+    job = { ply = ply, untilT = CurTime() + 30 }
+    sci.lcLabJob = job
+    local function Clear() if IsValid(sci) and sci.lcLabJob == job then sci.lcLabJob = nil end end
+    Say(ply, "\"The tools are one use only, and the codes cost more than I'd like to say. The chip sits right against the... well. Don't move. Not even a little.\"")
+    ply:ScreenFade(bit.bor(SCREENFADE.OUT or 2, SCREENFADE.STAYOUT or 8), Color(0, 0, 0, 255), 2, 0)
+    ply:EmitSound("items/medshot4.wav", 60)
+    local okT, whyT = LC.StartTask(ply, 30, "The chip coming out... stay on the table", {
+        maxMove = 120,
+        done = function(p)
+            Clear()
+            p:ScreenFade(SCREENFADE.PURGE or 16, Color(0, 0, 0, 0), 0, 0)
+            p:ScreenFade(SCREENFADE.IN, Color(255, 255, 255, 255), 5, 1)
+            p:SetPData("lc_chipless", "1")
+            p:SetNW2Bool("lc_chipless", true)
+            p.lcFoilUntil = nil
+            p:SetNW2Float("lc_crippled_until", CurTime() + 180) -- (a hole in your head: slow on your feet a while)
+            p:SetNW2Float("lc_bandaged_until", CurTime() + 300)
+            SciSay(sci, "excellent", 65)
+            Say(p, "He holds up something small and bloody in the tweezers. \"There. That's the last time she gets inside your head. Keep the bandage on, and keep your head down: a unit's scanner may notice there's nothing there.\"")
+            if LC.Notice then LC.Notice(p, "info", "The chip is out", "No more dreams, ever, and a night's sleep is short. But a unit checking your papers or searching you may notice there's no implant signal: that marks you as an anticitizen.", 12) end
+            hook.Run("LivingCityChipPulled", p)
+        end,
+        cancel = function(p)
+            Clear()
+            if IsValid(p) then
+                p:ScreenFade(SCREENFADE.PURGE or 16, Color(0, 0, 0, 0), 0, 0)
+                LC.AddCredits(p, price, "the lab, handed back")
+            end
+        end,
+        cancelText = "[Scientist] You sit up too soon. \"No! Lie still! ... We'll have to try another time.\" He hands your credits back: the tools are still sealed.",
+    })
+    if not okT then
+        Clear()
+        ply:ScreenFade(SCREENFADE.PURGE or 16, Color(0, 0, 0, 0), 0, 0)
+        LC.AddCredits(ply, price, "the lab, handed back")
+        return false, whyT
+    end
+    return true
+end
+
+net.Receive("lc_lab_chip", function(_, ply)
+    if not IsValid(ply) or (ply.lcLabNext or 0) > CurTime() then return end
+    ply.lcLabNext = CurTime() + 0.5
+    local ok, why = LC.LabChip(ply)
+    if not ok and why then ply:ChatPrint("[Lab] " .. why) end
+end)
 
 net.Receive("lc_lab_surgery", function(_, ply)
     if not IsValid(ply) or (ply.lcLabNext or 0) > CurTime() then return end

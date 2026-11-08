@@ -3105,7 +3105,12 @@ function LC.RefreshBoard(ply)
             if ok and avail then cands[#cands + 1] = t end
         end
     end
-    for _, t in ipairs(Shuffle(cands)) do
+    Shuffle(cands)
+    -- (marked first: always offered when it's available, e.g. the night shift, sv_livingcity_bedtime.lua)
+    local firsts = {}
+    for i = #cands, 1, -1 do if cands[i].first then table.insert(firsts, 1, table.remove(cands, i)) end end
+    for i = #firsts, 1, -1 do table.insert(cands, 1, firsts[i]) end
+    for _, t in ipairs(cands) do
         if open >= want then break end
         if not t.violent or ViolentInUse() < LC.ViolentCap() then
             local ok, spec = pcall(t.build, ply)

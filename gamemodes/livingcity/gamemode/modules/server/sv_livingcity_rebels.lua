@@ -1090,7 +1090,7 @@ hook.Add("OnNPCKilled", "LivingCityRebels", function(npc, attacker)
     if not st or st.role ~= "rebel" then return end
     alarms[npc] = nil
     if IsValid(attacker) and attacker:IsPlayer() and LC.PlayerIsCP(attacker) and LC.AddXP then
-        LC.AddXP(attacker, 5, "anticitizen neutralized")
+        LC.AddXP(attacker, (LCF and LCF.XP and LCF.XP.rebel_kill) or 5, "anticitizen neutralized")
     end
 end)
 
