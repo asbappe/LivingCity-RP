@@ -129,6 +129,8 @@ function LCS.RegenMul(ply)
     local mul = 1
     if LC.IsRested and LC.IsRested(ply) then mul = mul + math.max(0, cvRested:GetFloat()) / 100 end
     if LC.Hunger and LC.Hunger(ply) > cvFedAt:GetFloat() then mul = mul + math.max(0, cvFed:GetFloat()) / 100 end
+    -- woken early, groggy: a quarter of the rate (the owner, 8 November; sv_livingcity_bedtime.lua)
+    if ply:GetNW2Float("lc_groggy_until", 0) > CurTime() then mul = mul * 0.25 end
     return mul
 end
 

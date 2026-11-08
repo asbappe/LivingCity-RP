@@ -1042,3 +1042,5 @@ Notes:
   Notes:
 - [ ] **Stimulant supply:** the dealer sells them at 40, shows how many are left, and after 5 are bought says sold out until one more comes in (20 minutes).
   Notes:
+- [ ] **What wakes a camp:** someone in a rebel camp shot (by anyone), hit by a unit or a baton, or arrested: the sleepers there wake, groggy (drooping eyelids, blur, no stamina for a bit). A burn barrel or a thrown prop: nobody wakes.
+  Notes:

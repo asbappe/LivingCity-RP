@@ -14582,21 +14582,43 @@ ok(not b.lcDreaming and not b.lcSleep and b:Health() == 90 and (b.lcStartledUnti
 if IsValid(body) then body:Remove() end
 _run(2.5)
 
--- the Combine on rebel ground: everyone asleep there wakes, a dreamer too
+-- rebel ground: anyone shot there, attacked by the Combine, hit with a baton or arrested wakes everyone asleep there
 local RZ = CITY + Vector(6000, 0, 0)
 local rzone = LC.AddZone(RZ, 400, "rebel", 0)
+local function Hit(kind, att, inf) return { GetDamage = function() return 5 end, GetAttacker = function() return att end, GetInflictor = function() return inf or att end,
+    GetDamageType = function() return kind end, IsBulletDamage = function() return kind == DMG_BULLET end } end
+local victim = newPlayer("DCVictim", "resistance", nil, 900)
+victim:SetPos(RZ + Vector(50, 0, 0))
 Asleep(reb, RZ)
-local cop0 = cop:GetPos()
-cop:SetPos(RZ + Vector(600, 0, 0))
-hook.t.EntityFireBullets.LivingCityRaidWake(cop, {})
-ok(not reb.lcSleep and (reb.lcStartledUntil or 0) > CurTime() and LC.BedtimeDue(reb) >= reb.lcStartledUntil - 1, "a unit's shots within earshot of rebel ground: the rebels asleep there wake (and lights out waits)")
+ok(not LC.RaidWakeHit(victim, Hit(DMG_BURN or 8, a)) and not LC.RaidWakeHit(victim, Hit(DMG_CRUSH or 1, a)), "burnt by a barrel or knocked by a prop: nobody wakes")
+hook.t.EntityTakeDamage.LivingCityRaidWake(victim, Hit(DMG_BURN or 8, a))
+ok(reb.lcSleep ~= nil, "(still asleep)")
+hook.t.EntityTakeDamage.LivingCityRaidWake(victim, Hit(DMG_BULLET, a))
+ok(not reb.lcSleep and LC.RaidWakeHit(victim, Hit(DMG_BULLET, a)), "someone shot on rebel ground (by anyone): the rebels asleep there wake")
+ok(reb:GetNW2Float("lc_groggy_until", 0) > CurTime() and reb:GetNW2Float("lc_stamina", 100) < 1 and reb:GetNW2Bool("lc_winded", false)
+    and (reb.lcStartledUntil or 0) > CurTime(), "woken early: groggy, no stamina (and lights out waits a while)")
+ok(LCS.RegenMul(reb) < 0.5, "and stamina comes back slowly while groggy", LCS.RegenMul(reb))
+ok(LC.RaidWakeHit(victim, Hit(DMG_CLUB or 128, cop)), "anything at all from a Civil Protection unit counts")
+local baton = ents.Create("weapon_stunstick")
+ok(LC.RaidWakeHit(victim, Hit(DMG_CLUB or 128, a, baton)), "and a stun baton, whoever's holding it")
+if IsValid(baton) then baton:Remove() end
+_run(6)
+Asleep(reb, RZ)
+reb:SetNW2Float("lc_groggy_until", 0)
+local copAt = cop:GetPos()
+victim:SetPos(RZ + Vector(50, 0, 0))
+cop:SetPos(victim:GetPos() + Vector(40, 0, 0))
+LC.BatonArrest(cop, victim)
+cop:SetPos(copAt)
+ok(not reb.lcSleep, "someone arrested there with the baton: the camp wakes")
+if LC.Struggles then LC.Struggles[victim] = nil end
+victim:SetPos(Vector(-122000, -122000, 0))
 Asleep(reb, RZ)
 local okR2, dr2 = LC.DreamStart("maze", nil, false, nil, true)
 ok(okR2 and reb.lcDreaming, "(a rebel in that camp dreaming)")
 local nWoke = LC.WakeRebelZone(rzone, RZ, true)
 _run(3.5)
 ok(nWoke >= 1 and not reb.lcDreaming and not reb.lcSleep, "a raid on their camp pulls a dreamer out, and they're up")
-cop:SetPos(cop0)
 LC.RemoveZone(rzone)
 _run(2.5)
 

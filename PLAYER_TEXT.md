@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version f1889f2. Admin-only console messages and log lines are left out.
+Made from version 402f26e. Admin-only console messages and log lines are left out.
 
-8319 lines, from 234 files.
+8321 lines, from 234 files.
 
 ## Contents
 
@@ -116,7 +116,7 @@ Made from version f1889f2. Admin-only console messages and log lines are left ou
 - [custom announcements, for Overwatch and for the Administrator](#custom-announcements-for-overwatch-and-for-the-administrator-svlivingcityannouncerlua) (38)
 - [arrests in the open (the owner's playtest, 7 November)](#arrests-in-the-open-the-owners-playtest-7-november-svlivingcityarrestlua) (51)
 - [the time of day, the weather, and the city's music](#the-time-of-day-the-weather-and-the-citys-music-svlivingcityatmoslua) (1)
-- [lights out, the night shift, stimulants, the foil hat, and the chip](#lights-out-the-night-shift-stimulants-the-foil-hat-and-the-chip-svlivingcitybedtimelua) (30)
+- [lights out, the night shift, stimulants, the foil hat, and the chip](#lights-out-the-night-shift-stimulants-the-foil-hat-and-the-chip-svlivingcitybedtimelua) (32)
 - [the dead](#the-dead-svlivingcitybodieslua) (9)
 - [apartments and trade](#apartments-and-trade-svlivingcitybusinesslua) (41)
 - [rearranging a rebel camp](#rearranging-a-rebel-camp-svlivingcitycampmovelua) (3)
@@ -727,7 +727,7 @@ Made from version f1889f2. Admin-only console messages and log lines are left ou
 - "Shared dreams: if the server has a dream point, the secret endings come at night as a dream for everyone asleep in a bed, about a minute after the Administrator says good night. You wake in your bed with everything you had, exactly as it was. Nobody can opt out, and nobody wakes themselves until they're out of the dream (then C > Settings > Shared dreams: wake up). A nightmare takes everyone asleep outside a Combine-only zone. Only a stimulant shot before bed, or the lab's foil hat, keeps you out of one."  (text, line 85)
 - "Lights out: everyone (citizens, the Resistance, Civil Protection, the Administration) is due in bed at the good night (21:00), whatever they slept in the day. You're warned six and two minutes before; after it, out of bed, your eyes keep closing until you sleep. Stay in bed until the night's dream has gone by."  (text, line 86)
 - "Every dream has at least six dreamers: when fewer players are asleep, the city's own people dream it with you. A stimulant shot keeps you up past lights out and you miss the dream, but only one: no second shot until you've slept and dreamt properly. No dream lasts more than five minutes."  (text, line 87)
-- "Asleep, hunger and thirst wait for you. Hurt in your sleep, you wake (dreaming, your body stays in your bed: hit it and you're pulled out). The Combine shooting near a rebel camp wakes everyone asleep there."  (text, line 88)
+- "Asleep, hunger and thirst wait for you. Hurt in your sleep, you wake (dreaming, your body stays in your bed: hit it and you're pulled out). Anyone shot, attacked by a unit, hit with a baton or arrested in a rebel camp wakes everyone asleep there. Woken early, you're groggy for a minute: blurry, and no stamina."  (text, line 88)
 - "Civil Protection and the Administration are Enforcers in nightmares and propaganda dreams: nothing touches them, they can wake when they like, and their baton punishes dreamers who misbehave (they glow red; a life gone, 1 XP for the Enforcer). In Happy and Neutral dreams they dream like anyone."  (text, line 89)
 - "Civil Protection: most nights your board (F4) has a Night shift from dusk. Take it and there's no lights out for you that night, and a CP Commissary issues you a stimulant shot (once a night)."  (text, line 90)
 - "Cigarettes, alcohol and stimulants (F3, the item's button). A cigarette steadies your nerves and dulls hunger; too many and you cough. Drink and you get drunk: it dulls pain, then the world sways, then you throw up (and one moonshine in five is a bad batch). A stimulant keeps you awake for fifteen minutes (no dream can take you), then you crash."  (text, line 91)
@@ -4256,25 +4256,25 @@ Made from version f1889f2. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The Arrest Baton's right click ok, and what to tell the officer.
 
-- "You've got your hands full."  (text, line 722)
-- "just broke free of you. Catch them first."  (text, line 724)
-- "You can't arrest another Civil Protection unit."  (text, line 726)
+- "You've got your hands full."  (text, line 723)
+- "just broke free of you. Catch them first."  (text, line 725)
+- "You can't arrest another Civil Protection unit."  (text, line 727)
 
 > Note for you (not shown in game): part of: baton arrest
 
-- "is already in custody."  (text, line 728)
-- "Couldn't arrest: no free cell (place more with the editor)"  (text, line 730)
-- "struggles! Press E as fast as you can to hold them."  (text, line 733)
-- "Couldn't arrest: {err}"  (text, line 736)
-- "is cuffed. Drag them to the cells yourself (F1 > Drag them along), or leave them: a unit is called to walk them in."  (text, line 737)
-- "Couldn't arrest: only citizens and rebels can be arrested"  (text, line 741)
-- "They're already in custody."  (text, line 742)
-- "Couldn't arrest: no free cell"  (text, line 743)
-- "The rebel fights"  (text, line 746)
-- "They struggle"  (text, line 746)
-- "! Press E as fast as you can to hold them."  (text, line 746)
-- "Couldn't arrest: {err}"  (text, line 749)
-- "Cuffed. A unit is called to walk them to the cells, or walk them in yourself (F2 > Walk them to the cells)."  (text, line 750)
+- "is already in custody."  (text, line 729)
+- "Couldn't arrest: no free cell (place more with the editor)"  (text, line 731)
+- "struggles! Press E as fast as you can to hold them."  (text, line 734)
+- "Couldn't arrest: {err}"  (text, line 737)
+- "is cuffed. Drag them to the cells yourself (F1 > Drag them along), or leave them: a unit is called to walk them in."  (text, line 738)
+- "Couldn't arrest: only citizens and rebels can be arrested"  (text, line 742)
+- "They're already in custody."  (text, line 743)
+- "Couldn't arrest: no free cell"  (text, line 744)
+- "The rebel fights"  (text, line 747)
+- "They struggle"  (text, line 747)
+- "! Press E as fast as you can to hold them."  (text, line 747)
+- "Couldn't arrest: {err}"  (text, line 750)
+- "Cuffed. A unit is called to walk them to the cells, or walk them in yourself (F2 > Walk them to the cells)."  (text, line 751)
 
 ## the time of day, the weather, and the city's music (sv_livingcity_atmos.lua)
 
@@ -4292,81 +4292,83 @@ Made from version f1889f2. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Lived through enough dreams for the lab to help them out of the rest. True, or false and why not.
 
-- ""Not yet. You've only lived through %d of the city's dreams. Endure %d more, and come back. I need to see how it takes you first.""  (message, line 115)
+- ""Not yet. You've only lived through %d of the city's dreams. Endure %d more, and come back. I need to see how it takes you first.""  (message, line 124)
 
 > Note for you (not shown in game): No implant signal: a unit notices, now and then (once a stop: the papers and the search don't both roll).
 
-- "The unit's scanner finds no implant signal: your chip has been pulled. Only anticitizens do that."  (text, line 142)
+- "The unit's scanner finds no implant signal: your chip has been pulled. Only anticitizens do that."  (text, line 151)
 
 > Note for you (not shown in game): the game's living city searched moment
 
-- "[Civil Protection] {NoImplantText}"  (chat message, line 145)
-- "[Search] No implant signal: {Nick}'s chip has been pulled. That's an anticitizen."  (chat message, line 147)
-- "No implant signal (chip removed)"  (text, line 149)
+- "[Civil Protection] {NoImplantText}"  (chat message, line 154)
+- "[Search] No implant signal: {Nick}'s chip has been pulled. That's an anticitizen."  (chat message, line 156)
+- "No implant signal (chip removed)"  (text, line 158)
 
 > Note for you (not shown in game): The foil hat
 
-- "There's no chip in your head left for it to block."  (text, line 159)
-- "You've one on already."  (text, line 160)
-- "Foil hat on"  (on-screen notice, line 164)
-- "It crinkles as you pull it down. Sleep in it and no dream can reach you; it's spent once it has kept one out. It's contraband: don't let a unit see you in it."  (on-screen notice, line 164)
+- "There's no chip in your head left for it to block."  (text, line 168)
+- "You've one on already."  (text, line 169)
+- "Foil hat on"  (on-screen notice, line 173)
+- "It crinkles as you pull it down. Sleep in it and no dream can reach you; it's spent once it has kept one out. It's contraband: don't let a unit see you in it."  (on-screen notice, line 173)
 
 > Note for you (not shown in game): Kept out of every dream: no chip, or a foil hat on (sv_livingcity_dreams.lua asks).
 
-- "The foil hat"  (on-screen notice, line 172)
-- "Something presses at the edge of your sleep, and the foil hat crackles. It slips past you. The hat's spent."  (on-screen notice, line 172)
+- "The foil hat"  (on-screen notice, line 181)
+- "Something presses at the edge of your sleep, and the foil hat crackles. It slips past you. The hat's spent."  (on-screen notice, line 181)
 
 > Note for you (not shown in game): Stimulants: one, then not again until you've slept and dreamt properly
 
-- "Your body won't take another one. You haven't slept and dreamt properly since the last (sleep through a night, and its dream if there is one)."  (text, line 233)
+- "Your body won't take another one. You haven't slept and dreamt properly since the last (sleep through a night, and its dream if there is one)."  (text, line 242)
 
 > Note for you (not shown in game): One free stimulant shot at a CP Commissary, once a night on the night shift (sv_livingcity_cpsupply.lua).
 
-- "[CP Commissary] Night shift: one stimulant shot, issued. It keeps you sharp for fifteen minutes. Then the crash."  (chat message, line 269)
+- "[CP Commissary] Night shift: one stimulant shot, issued. It keeps you sharp for fifteen minutes. Then the crash."  (chat message, line 278)
 
 > Note for you (not shown in game): part of: build
 
-- "Night shift: walk to patrol stop %d of %d, %s"  (message, line 302)
-- "Night shift"  (title, line 306)
-- "Keep order while the city sleeps: walk the patrol stops through the night. On a night shift there's no lights out for you, and a CP Commissary issues you one stimulant shot to stay sharp. The city's own units patrol too."  (description, line 307)
-- "Dispatch needs eyes on the streets tonight. Long hours, quiet streets. Stay awake."  (text, line 309)
+- "Night shift: walk to patrol stop %d of %d, %s"  (message, line 311)
+- "Night shift"  (title, line 315)
+- "Keep order while the city sleeps: walk the patrol stops through the night. On a night shift there's no lights out for you, and a CP Commissary issues you one stimulant shot to stay sharp. The city's own units patrol too."  (description, line 316)
+- "Dispatch needs eyes on the streets tonight. Long hours, quiet streets. Stay awake."  (text, line 318)
 
 > Note for you (not shown in game): the game's living city quest accepted moment
 
-- "Night shift"  (on-screen notice, line 319)
-- "You're on the night shift: no lights out for you tonight. A CP Commissary will issue you a stimulant shot (once a night)."  (on-screen notice, line 319)
+- "Night shift"  (on-screen notice, line 328)
+- "You're on the night shift: no lights out for you tonight. A CP Commissary will issue you a stimulant shot (once a night)."  (on-screen notice, line 328)
 
 > Note for you (not shown in game): part of: wake sleeper
 
-- "You wake with a start"  (on-screen notice, line 359)
-- "Something woke you."  (on-screen notice, line 359)
+- "You wake with a start"  (on-screen notice, line 368)
+- "Something woke you."  (text, line 368)
+- "You're groggy: slow on your feet for a minute."  (on-screen notice, line 368)
 
 > Note for you (not shown in game): the sleeping body hit: out of the dream, and they take the hit once they're up
 
-- "Something hit you in your sleep. You wake in your bed, hurt."  (text, line 423)
+- "Something hit you in your sleep. You wake in your bed, hurt."  (text, line 443)
 
 > Note for you (not shown in game): the game's living city dream woke moment
 
-- "You wake with a start"  (on-screen notice, line 437)
-- "Something woke you."  (on-screen notice, line 437)
+- "You wake with a start"  (on-screen notice, line 457)
+- "Something woke you."  (text, line 457)
+- "You're groggy: slow on your feet for a minute."  (on-screen notice, line 457)
 
 > Note for you (not shown in game): Rebel ground under attack: everyone asleep on it wakes (players, out of a dream too, and the camp's own).
 
-- "Gunfire! The Combine are here. You're wide awake."  (text, line 458)
+- "Trouble in the camp! Gunfire, shouting: someone's under attack."  (text, line 478)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "No chip, no dreams: you wake on your own, rested."  (chat message, line 506)
+- "No chip, no dreams: you wake on your own, rested."  (chat message, line 538)
 
 > Note for you (not shown in game): Pulling the chip (the lab's window: sv_livingcity_lab.lua)
 
-- "He only works for the Resistance."  (text, line 517)
-- ""Pull the chip? Not here. Not without the proper tools.""  (text, line 519)
-- ""It's out already. There's nothing left in there to take.""  (text, line 520)
+- "He only works for the Resistance."  (text, line 549)
+- ""Pull the chip? Not here. Not without the proper tools.""  (text, line 551)
+- ""It's out already. There's nothing left in there to take.""  (text, line 552)
 
 > Note for you (not shown in game): part of: chip surgery ready
 
-- "%d credits for the tools and the codes, and you don't have them."  (message, line 523)
+- "%d credits for the tools and the codes, and you don't have them."  (message, line 555)
 
 ## the dead (sv_livingcity_bodies.lua)
 

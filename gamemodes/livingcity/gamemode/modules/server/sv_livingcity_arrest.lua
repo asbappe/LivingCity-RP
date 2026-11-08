@@ -719,6 +719,7 @@ end
 -- ok, and what to tell the officer.
 function LC.BatonArrest(officer, ent)
     if not IsValid(officer) or not IsValid(ent) then return false end
+    if LC.RaidWakeAt then LC.RaidWakeAt(ent:GetPos()) end -- (an arrest on rebel ground wakes the camp: sv_livingcity_bedtime.lua)
     if LC.StruggleOf(officer) then return false, "You've got your hands full." end
     if LC.Struggles[ent] then return false end
     if (ent.lcBrokeFree or 0) > CurTime() then return false, Name(ent) .. " just broke free of you. Catch them first." end

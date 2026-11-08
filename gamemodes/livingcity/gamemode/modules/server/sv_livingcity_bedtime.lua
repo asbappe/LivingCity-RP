@@ -60,17 +60,26 @@
     wake you up"). Hurt while asleep: you wake (as before). Dreaming: your
     sleeping body stays in the bed (a still copy, eyes shut), and if it's hit
     you're pulled out of the dream, wake in your bed, and take the hit. And
-    Civil Protection or Overwatch (a player or the city's own units) firing
-    within earshot of rebel ground (lc_raid_wake_range, 700), or hurting
-    anyone on it, wakes everyone asleep there, players (out of a dream too)
-    and the camp's own people. Someone woken like that has
-    lc_startled_minutes (10) before lights out can make them tired.
+    on rebel ground (the owner, 8 November: "if anyone, NPC or player, in a
+    rebel zone is shot (not just hurt, as we don't want prop damage or
+    someone getting burned by a burn barrel waking everyone up) ... Also if
+    someone in the rebel zone is arrested or hit by a cp arrest/stun baton or
+    attacked at all by a cp or overwatch unit"): anyone there, player or NPC,
+    shot by anyone; or attacked in any way by Civil Protection or Overwatch
+    (a player or the city's own units); or hit with an arrest or stun baton;
+    or arrested: everyone asleep there wakes, players (out of a dream too)
+    and the camp's own people. Woken early like that, you're groggy ("since
+    they are woken up early, then the standard effects would apply such as
+    the grogginess visual effect and very low stamina"): for lc_groggy_seconds
+    (60) your eyelids droop and the world blurs (lighter as you come round),
+    your stamina is gone and comes back at a quarter of the rate; and you
+    have lc_startled_minutes (10) before lights out can make you tired.
     Hunger and thirst wait while you sleep or dream: they never hurt or wake
     you (sv_livingcity_survival.lua).
 
       lc_bedtime 0/1, lc_nightshift_chance (0.85), lc_chip_price (500),
       lc_chip_dreams (3), lc_chipless_sleep (90), lc_chip_notice (0.15),
-      lc_raid_wake_range (700), lc_startled_minutes (10)
+      lc_groggy_seconds (60), lc_startled_minutes (10)
 ]]
 
 if CLIENT then return end
@@ -84,7 +93,7 @@ local cvPrice   = CreateConVar("lc_chip_price", "500", FLAGS, "Credits to have t
 local cvNeed    = CreateConVar("lc_chip_dreams", "3", FLAGS, "Dreams someone must have lived through before the lab will pull their chip or make them a foil hat")
 local cvSleep   = CreateConVar("lc_chipless_sleep", "90", FLAGS, "Most seconds a night's sleep takes with no chip (no dream to wait for: they get up on their own)")
 local cvNotice  = CreateConVar("lc_chip_notice", "0.15", FLAGS, "Chance a unit checking papers or searching someone notices there's no implant signal")
-local cvRange   = CreateConVar("lc_raid_wake_range", "700", FLAGS, "Civil Protection or Overwatch firing this close to rebel ground wakes everyone asleep there")
+local cvGroggy  = CreateConVar("lc_groggy_seconds", "60", FLAGS, "Seconds someone woken early (hurt, or their camp raided) is groggy: drooping eyelids, a blur, no stamina and slow to get it back")
 local cvStartle = CreateConVar("lc_startled_minutes", "10", FLAGS, "Minutes someone woken by an attack or a raid has before lights out can make them tired")
 
 local S = LC.BedtimeState or { eve = 0, roll = {} }
@@ -355,11 +364,22 @@ function LC.WakeSleeper(p, why, text)
         return true
     elseif p.lcSleep then
         if LC.WakeUp then LC.WakeUp(p, "quiet") end
-        p.lcStartledUntil = CurTime() + math.max(0, cvStartle:GetFloat()) * 60
-        Notice(p, "warn", "You wake with a start", text or "Something woke you.", 7)
+        LC.MakeGroggy(p)
+        Notice(p, "warn", "You wake with a start", (text or "Something woke you.") .. " You're groggy: slow on your feet for a minute.", 7)
         return true
     end
     return false
+end
+
+-- Woken early: groggy (eyelids drooping, a blur: cl_livingcity_rest.lua), no stamina and slow to get it
+-- back (sh_livingcity_stamina.lua), and a while before lights out can make them tired.
+function LC.MakeGroggy(p)
+    if not IsValid(p) then return end
+    local now = CurTime()
+    p:SetNW2Float("lc_groggy_until", now + math.max(0, cvGroggy:GetFloat()))
+    p:SetNW2Float("lc_stamina", 0)
+    p:SetNW2Bool("lc_winded", true)
+    p.lcStartledUntil = now + math.max(0, cvStartle:GetFloat()) * 60
 end
 
 -- The sleeping body a dreamer leaves in the bed: a still copy, eyes shut. Hit it and they wake.
@@ -433,8 +453,8 @@ hook.Add("LivingCityDreamWoke", "LivingCityDreamBody", function(p, ok, why)
     p.lcDreamWokenBy = nil
     if not by then return end
     if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
-    p.lcStartledUntil = CurTime() + math.max(0, cvStartle:GetFloat()) * 60
-    Notice(p, "warn", "You wake with a start", by.text or "Something woke you.", 7)
+    LC.MakeGroggy(p)
+    Notice(p, "warn", "You wake with a start", (by.text or "Something woke you.") .. " You're groggy: slow on your feet for a minute.", 7)
     local hurt = p.lcDreamHurt
     p.lcDreamHurt = nil
     if hurt and p:Alive() then
@@ -452,10 +472,10 @@ local zoneWoke = setmetatable({}, { __mode = "k" })
 function LC.WakeRebelZone(z, pos, force)
     if not z then return 0 end
     local now = CurTime()
-    if not force and (zoneWoke[z] or -100) > now - 15 then return 0 end
+    if not force and (zoneWoke[z] or -100) > now - 5 then return 0 end -- (a burst of shots wakes them once)
     zoneWoke[z] = now
     local n = 0
-    local text = "Gunfire! The Combine are here. You're wide awake."
+    local text = "Trouble in the camp! Gunfire, shouting: someone's under attack."
     for _, p in ipairs(player.GetAll()) do
         local at = p.lcDreaming and p.lcDreamBedPos or (p.lcSleep and p:GetPos())
         if at and LCZ and LCZ.Contains(z, at, 0) and LC.WakeSleeper(p, "raid", text) then n = n + 1 end
@@ -476,18 +496,30 @@ local function Combine(e)
     return st ~= nil and LC.IsSecurity ~= nil and LC.IsSecurity(st) == true
 end
 LC.RaidWakeBy = Combine
--- shots by the Combine heard on rebel ground
-hook.Add("EntityFireBullets", "LivingCityRaidWake", function(ent)
-    if not Combine(ent) then return end
-    local z = LC.RebelZoneAt and LC.RebelZoneAt(ent:GetPos(), math.max(0, cvRange:GetFloat()))
-    if z then LC.WakeRebelZone(z, ent:GetPos()) end
-end)
--- anyone hurt by the Combine on rebel ground (batons, grenades and the rest)
+local BULLET = bit.bor(DMG_BULLET or 2, DMG_BUCKSHOT or 536870912, DMG_AIRBOAT or 33554432, DMG_SNIPER or 0)
+local BATONS = { weapon_stunstick = true, weapon_lc_baton = true }
+-- Rebel ground, where something happened to someone (pos): wake it.
+function LC.RaidWakeAt(pos)
+    local z = pos and LC.RebelZoneAt and LC.RebelZoneAt(pos, 0)
+    if z then return LC.WakeRebelZone(z, pos) end
+    return 0
+end
+-- Does this hit wake the camp? Shot by anyone; or anything at all from the Combine; or a baton.
+function LC.RaidWakeHit(ent, dmg)
+    if not IsValid(ent) or not (ent:IsPlayer() or (ent.IsNPC and ent:IsNPC())) then return false end
+    local att, inf = dmg:GetAttacker(), dmg.GetInflictor and dmg:GetInflictor()
+    if dmg.IsBulletDamage and dmg:IsBulletDamage() then return true end
+    if dmg.GetDamageType and bit.band(dmg:GetDamageType(), BULLET) ~= 0 then return true end
+    if Combine(att) then return true end
+    local w = IsValid(att) and att.GetActiveWeapon and att:GetActiveWeapon()
+    if IsValid(inf) and BATONS[inf:GetClass()] then return true end
+    if IsValid(w) and BATONS[w:GetClass()] and (not IsValid(inf) or inf == att or inf == w) then return true end
+    return false
+end
 hook.Add("EntityTakeDamage", "LivingCityRaidWake", function(ent, dmg)
-    if not IsValid(ent) or not Combine(dmg:GetAttacker()) then return end
-    local z = LC.RebelZoneAt and LC.RebelZoneAt(ent:GetPos(), 0)
-    if z then LC.WakeRebelZone(z, ent:GetPos()) end
+    if LC.RaidWakeHit(ent, dmg) then LC.RaidWakeAt(ent:GetPos()) end
 end)
+-- (arrested there: the arrest baton's arrest calls LC.RaidWakeAt where it happens, sv_livingcity_arrest.lua)
 
 ------------------------------------------------------------------------
 -- No chip: a short sleep, and up on your own

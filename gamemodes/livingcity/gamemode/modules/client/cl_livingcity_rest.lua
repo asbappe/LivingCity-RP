@@ -92,9 +92,18 @@ end)
 -- Tired: the eyelids. Drawn before the rest of the screen (HUDPaintBackground), so the job's
 -- objective, its marker and the notices stay on top of them (the owner, 7 November: "The quest
 -- objective disappears when the sleepiness effect eye shutting thing kicks in").
+-- Groggy (woken early: sv_livingcity_bedtime.lua): how strong it still is, 0 to 1, fading as they come round.
+function LC_CL.Groggy(me)
+    local left = IsValid(me) and (me:GetNW2Float("lc_groggy_until", 0) - CurTime()) or 0
+    if left <= 0 then return 0 end
+    return math.Clamp(left / 40, 0.3, 1)
+end
 function LC_CL.DrawEyelids(me, t)
-    if not IsValid(me) or not me:Alive() or not me:GetNW2Bool("lc_tired", false) or me:GetNW2Bool("lc_sleeping", false) then return false end
-    local f = LC_CL.EyelidClose(t or CurTime())
+    if not IsValid(me) or not me:Alive() or me:GetNW2Bool("lc_sleeping", false) then return false end
+    local tired, groggy = me:GetNW2Bool("lc_tired", false), LC_CL.Groggy(me)
+    if not tired and groggy <= 0 then return false end
+    local f = LC_CL.EyelidClose((t or CurTime()) * (tired and 1 or 1.4))
+    if not tired then f = f * groggy end -- (groggy: the same droop, lighter as they come round)
     if f <= 0.01 then return false end
     local w, h = ScrW(), ScrH()
     local lid = (h / 2 + FEATHER * 0.5) * f -- (at 1 the two meet: no gap left between them)
@@ -120,8 +129,10 @@ hook.Add("HUDPaintBackground", "LivingCityRestLids", function() LC_CL.DrawEyelid
 -- tired: the world swims a little
 hook.Add("RenderScreenspaceEffects", "LivingCityRest", function()
     local me = LocalPlayer()
-    if not IsValid(me) or not me:GetNW2Bool("lc_tired", false) then return end
-    if DrawMotionBlur then DrawMotionBlur(0.25, 0.35 + 0.15 * math.sin(CurTime() * 0.8), 0.01) end
+    if not IsValid(me) then return end
+    local groggy = LC_CL.Groggy(me)
+    if not me:GetNW2Bool("lc_tired", false) and groggy <= 0 then return end
+    if DrawMotionBlur then DrawMotionBlur(0.25, math.max(0.35 * groggy, 0.35 + 0.15 * math.sin(CurTime() * 0.8)), 0.01) end
 end)
 
 -- flies round anyone filthy
