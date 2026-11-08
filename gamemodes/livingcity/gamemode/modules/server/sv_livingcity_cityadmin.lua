@@ -17,7 +17,8 @@
       Permits               a curfew permit, 3 a day
     The bodyguard: two Overwatch Elites always with the Administrator, twice the health and twice the
     damage. Left click with the tablet at someone: "kill them", at once. Anyone who hurts the
-    Administrator is theirs too.
+    Administrator is theirs too. F2 > Command the guards: follow or hold here, how close they follow,
+    and what they do when there's trouble (the owner, 8 November; "Her orders" below).
 
     Idle: no input for lc_afk_minutes (20) and you're AFK (shown to everyone; no pay or XP for the time),
     and at lc_afk_kick_minutes (20) you're kicked (staff never). (The owner, 2 November: 20 for both, so a
@@ -437,6 +438,170 @@ function LC.AdminOrderKill(admin, target)
     return n > 0
 end
 
+-- Her orders (the owner, 8 November: F2 > Command the guards): how close they follow, and what they
+-- do when there's trouble. Kept per Administrator (by SteamID) until the server restarts; nothing is
+-- set until she picks, and until then they behave exactly as before.
+--   Follow distance  Close, Medium (as before: the default) or Far; more than two guards stand in rows.
+--   When there's trouble
+--     always    as they always have (the default): they go after whoever hurts her, and fight as soldiers do
+--     stay      "Stay with me": they shoot from their place beside her and never chase
+--     between   "Stand between us": each one stands between her and a threat, a different one each if there are several
+--     holdfire  "Hold fire unless fired on": they start nothing, and answer only whoever hurts her or one of them
+LC.AdminGuardPrefs = LC.AdminGuardPrefs or {} -- [steamid64] = { dist = "close"|"medium"|"far", mode = ... }
+local GUARD_DIST = {
+    close  = { back = 40,  side = 35,  go = 90 },
+    medium = { back = 70,  side = 50,  go = 160 }, -- (as they always followed)
+    far    = { back = 240, side = 120, go = 340 },
+}
+LC.AdminGuardDist = GUARD_DIST
+LC.AdminGuardModes = { always = true, stay = true, between = true, holdfire = true }
+local THREAT_RADIUS = 1000 -- (around her)
+local AIM_RANGE = 800      -- (a gun pointed at her from this close counts)
+local KEEP_PLACE = 60      -- ("stay with me": this far from their place and they're called back)
+local COVER = 110          -- ("stand between us": this far out from her toward the threat, at most)
+local FOE_SECS = 60        -- (whoever hurt her or one of them is remembered this long)
+
+local function PrefKey(admin) return (IsValid(admin) and admin.SteamID64) and admin:SteamID64() or tostring(admin) end
+function LC.AdminGuardPref(admin)
+    local k = PrefKey(admin)
+    local p = LC.AdminGuardPrefs[k]
+    if not p then p = {} LC.AdminGuardPrefs[k] = p end
+    return p
+end
+
+-- Where guard i of n stands while following: behind her, one each side, a row further back for each pair.
+function LC.AdminGuardSpot(admin, i, n)
+    local pref = LC.AdminGuardPref(admin)
+    local d = GUARD_DIST[pref.dist] or GUARD_DIST.medium
+    local row = (pref.dist and (n or 0) > 2) and (math.ceil(i / 2) - 1) or 0 -- (until she picks: as before)
+    local back = d.back + row * math.max(50, d.back * 0.7)
+    local side = d.side * (1 + row * 0.4)
+    return admin:GetPos() - admin:GetForward() * back + admin:GetRight() * (i % 2 == 0 and side or -side)
+end
+
+local function Alive(e)
+    return IsValid(e) and ((e:IsPlayer() and e:Alive()) or (e:IsNPC() and e:Health() > 0))
+end
+
+local function Foes(admin)
+    local f = admin.lcGuardFoes
+    if not f then f = {} admin.lcGuardFoes = f end
+    local now = CurTime()
+    for e, untilT in pairs(f) do if not IsValid(e) or untilT < now then f[e] = nil end end
+    return f
+end
+LC.AdminGuardFoes = Foes
+
+-- Someone the guards should deal with: whoever hurt her or one of them; the wanted and violent; a
+-- Resistance fighter with a gun out; the infected; a rebel or monster NPC, or anything they already
+-- hate (the engine's own relationships); and, for "stand between us" only, a gun pointed at her.
+-- Returns whether it's a threat, and whether it's hostile (to be shot at) or only aiming.
+local SECURITY_ROLE = { cop = true, soldier = true, scanner = true }
+function LC.AdminGuardThreat(admin, e, guard)
+    if not Alive(e) or e == admin or LC.AdminGuards[e] then return false end
+    if Foes(admin)[e] then return true, true end
+    if LC.IsMonster and LC.IsMonster(e) then return true, true end
+    if e:IsPlayer() then
+        local f = e:GetNW2String("lcf_faction", "")
+        if f == "cp" or f == "admin" then return false end
+        if LC.Violent and LC.Violent(e) and LC.PlayerIsWanted and LC.PlayerIsWanted(e) then return true, true end
+        local w = e.GetActiveWeapon and e:GetActiveWeapon()
+        local gun = IsValid(w) and w.GetClass and LC.ViolentGuns and LC.ViolentGuns[w:GetClass()]
+        if gun and f == "resistance" then return true, true end
+        if gun and e.GetAimVector and e:GetAimVector() and e:GetPos():DistToSqr(admin:GetPos()) < AIM_RANGE * AIM_RANGE then
+            local to = (admin:GetPos() + Vector(0, 0, 40)) - e:EyePos()
+            if to:GetNormalized():Dot(e:GetAimVector()) > 0.97 then return true, false end
+        end
+        return false
+    end
+    if not e:IsNPC() then return false end
+    local st = LC.NPCs[e]
+    if st then
+        if st.role == "rebel" then return true, true end
+        if SECURITY_ROLE[st.role] or st.role == "citizen" then return false end
+    end
+    if IsValid(guard) and guard.Disposition and guard:Disposition(e) == D_HT then return true, true end
+    return false
+end
+
+-- Every threat within reach of her, nearest first (whoever she ordered killed counts too).
+function LC.AdminGuardThreats(admin, mine)
+    local out, seen = {}, {}
+    local function Add(e, hostile)
+        if seen[e] then return end
+        seen[e] = true
+        out[#out + 1] = { e = e, hostile = hostile, d = e:GetPos():DistToSqr(admin:GetPos()) }
+    end
+    for _, npc in ipairs(mine) do
+        local st = LC.NPCs[npc]
+        if st and Alive(st.adminTarget) then Add(st.adminTarget, true) end
+    end
+    local guard = mine[1]
+    for _, e in ipairs(ents.FindInSphere(admin:GetPos(), THREAT_RADIUS)) do
+        if not seen[e] and IsValid(e) and (e:IsPlayer() or e:IsNPC()) then
+            local yes, hostile = LC.AdminGuardThreat(admin, e, guard)
+            if yes then Add(e, hostile) end
+        end
+    end
+    table.sort(out, function(a, b) return a.d < b.d end)
+    return out
+end
+
+-- Where a guard stands to cover her from a threat: out from her toward it, spread sideways when
+-- more than one guard covers the same threat (k: which of them this is).
+function LC.AdminGuardCover(admin, threat, k)
+    local from = admin:GetPos()
+    local dir = threat:GetPos() - from
+    dir.z = 0
+    local len = dir:Length()
+    if len < 1 then dir, len = admin:GetForward(), 1 else dir = dir / len end
+    local out = math.min(len * 0.5, COVER)
+    local perp = Vector(-dir.y, dir.x, 0)
+    k = k or 1
+    local spread = k <= 1 and 0 or (math.floor(k / 2) * 40 * (k % 2 == 0 and 1 or -1))
+    return from + dir * out + perp * spread
+end
+
+local function GoTo(npc, p, far)
+    if npc.SetLastPosition and npc.SetSchedule then
+        npc:SetLastPosition(p)
+        npc:SetSchedule(far and SCHED_FORCED_GO_RUN or SCHED_FORCED_GO)
+    end
+end
+
+local function Engage(npc, t)
+    if npc.SetEnemy then npc:SetEnemy(t) end
+    if npc.UpdateEnemyMemory then npc:UpdateEnemyMemory(t, t:GetPos()) end
+end
+
+-- "Hold fire unless fired on": whoever they've turned on that isn't a foe, they leave alone
+-- (remembering how they felt, to put it back when she changes her mind).
+local function HoldFire(admin, npc, st)
+    local e = npc.GetEnemy and npc:GetEnemy()
+    if not IsValid(e) or e == st.adminTarget or Foes(admin)[e] then return end
+    st.heldFire = st.heldFire or {}
+    if st.heldFire[e] == nil then
+        st.heldFire[e] = (npc.Disposition and npc:Disposition(e)) or (st.rel and st.rel[e]) or D_HT
+    end
+    if e:IsPlayer() and LC.SetRel then LC.SetRel(npc, st, e, D_NU) else npc:AddEntityRelationship(e, D_NU, 99) end
+    if npc.ClearEnemyMemory then npc:ClearEnemyMemory(e) end
+    if npc.SetEnemy then npc:SetEnemy(NULL) end
+end
+-- and back again: for one of them (a foe now), or all (she's changed her orders)
+local function UnholdFire(npc, st, only)
+    if not IsValid(npc) or not st or not st.heldFire then return end
+    for e, d in pairs(st.heldFire) do
+        if only == nil or e == only then
+            if IsValid(e) then
+                if e:IsPlayer() and LC.SetRel then LC.SetRel(npc, st, e, d) else npc:AddEntityRelationship(e, d, 99) end
+            end
+            st.heldFire[e] = nil
+        end
+    end
+    if only == nil then st.heldFire = nil end
+end
+LC.AdminGuardUnholdFire = UnholdFire
+
 local function GuardTick(now)
     -- the dead and the dismissed
     for npc, admin in pairs(LC.AdminGuards) do
@@ -453,36 +618,56 @@ local function GuardTick(now)
                 admin.lcGuardNext = now + 30
                 SpawnGuard(admin)
             end
+            local pref = LC.AdminGuardPref(admin)
+            local mode = LC.AdminGuardModes[pref.mode or ""] and pref.mode or "always"
+            local hold = admin.lcGuardHold
+            local threats = (mode == "stay" or mode == "between") and #mine > 0 and LC.AdminGuardThreats(admin, mine) or nil
+            local trouble = threats ~= nil and #threats > 0
+            local covering = {}
+            local d = GUARD_DIST[pref.dist] or GUARD_DIST.medium
             for i, npc in ipairs(mine) do
                 local st = LC.NPCs[npc]
                 local t = st and st.adminTarget
-                if IsValid(t) and ((t:IsPlayer() and t:Alive()) or (t:IsNPC() and t:Health() > 0)) then
-                    if npc.SetEnemy then npc:SetEnemy(t) end
-                    if npc.UpdateEnemyMemory then npc:UpdateEnemyMemory(t, t:GetPos()) end
+                local targeted = Alive(t)
+                if not targeted and st then st.adminTarget = nil end
+                if st and mode == "holdfire" then HoldFire(admin, npc, st) end
+                local enemy = npc.GetEnemy and npc:GetEnemy()
+                if mode == "between" and trouble and not hold then
+                    -- each guard on a different threat, nearest first; doubled up when there are more guards
+                    local th = threats[((i - 1) % #threats) + 1]
+                    covering[th.e] = (covering[th.e] or 0) + 1
+                    local cover = LC.AdminGuardCover(admin, th.e, covering[th.e])
+                    if th.hostile then Engage(npc, th.e) end
+                    if npc:GetPos():DistToSqr(cover) > 50 * 50 then GoTo(npc, cover, true) end
+                elseif mode == "stay" and (targeted or IsValid(enemy) or trouble) then
+                    -- shoot from their place: called back the moment they step off it
+                    local place = hold and (hold.pos - hold.fwd * 40 + hold.right * (i % 2 == 0 and 50 or -50)) or LC.AdminGuardSpot(admin, i, #mine)
+                    if targeted then Engage(npc, t)
+                    elseif not IsValid(enemy) and trouble and threats[1].hostile then Engage(npc, threats[1].e) end
+                    local off = npc:GetPos():DistToSqr(place)
+                    if off > KEEP_PLACE * KEEP_PLACE then GoTo(npc, place, off > 300 * 300) end
+                elseif targeted then
+                    Engage(npc, t)
                 else
-                    if st then st.adminTarget = nil end
                     -- (F2 > Command the guards > Hold here: they keep to that spot instead, and walk back to it)
-                    local hold = admin.lcGuardHold
                     if hold then
                         local hp = hold.pos - hold.fwd * 40 + hold.right * (i % 2 == 0 and 50 or -50)
-                        if npc:GetPos():DistToSqr(hp) > 80 * 80 and npc.SetLastPosition and npc.SetSchedule then
-                            npc:SetLastPosition(hp)
-                            npc:SetSchedule(npc:GetPos():DistToSqr(hp) > 450 * 450 and SCHED_FORCED_GO_RUN or SCHED_FORCED_GO)
-                        end
+                        if npc:GetPos():DistToSqr(hp) > 80 * 80 then GoTo(npc, hp, npc:GetPos():DistToSqr(hp) > 450 * 450) end
                     end
-                    local d = hold and 0 or npc:GetPos():DistToSqr(admin:GetPos())
+                    local dd = hold and 0 or npc:GetPos():DistToSqr(admin:GetPos())
                     -- stuck (a door, a corner: the owner, 2 November): not moving for 4 seconds while
-                    -- more than 250 units behind, and they're brought to the Administrator's side
+                    -- more than 250 units behind (more at Far), and they're brought to the Administrator's side
+                    local stuckAt = math.max(250, d.go + 90)
                     local moved = not npc.lcGuardLast or npc:GetPos():DistToSqr(npc.lcGuardLast) > 20 * 20
-                    if moved or d < 250 * 250 then npc.lcGuardLast, npc.lcGuardStill = npc:GetPos(), now end
-                    local stuck = not hold and d > 250 * 250 and now - (npc.lcGuardStill or now) > 4
+                    if moved or dd < stuckAt * stuckAt then npc.lcGuardLast, npc.lcGuardStill = npc:GetPos(), now end
+                    local stuck = not hold and dd > stuckAt * stuckAt and now - (npc.lcGuardStill or now) > 4
                     if stuck then npc.lcGuardStill = now end
-                    if d > 900 * 900 or stuck then
+                    if dd > 900 * 900 or stuck then
                         npc:SetPos(admin:GetPos() - admin:GetForward() * 90 + admin:GetRight() * (i % 2 == 0 and 50 or -50) + Vector(0, 0, 4))
-                    elseif d > 160 * 160 and npc.SetLastPosition and npc.SetSchedule then
-                        npc:SetLastPosition(admin:GetPos() - admin:GetForward() * 70 + admin:GetRight() * (i % 2 == 0 and 50 or -50))
-                        npc:SetSchedule(d > 450 * 450 and SCHED_FORCED_GO_RUN or SCHED_FORCED_GO)
+                    elseif dd > d.go * d.go or (st and st.makeWayBack and now >= st.makeWayBack and not hold) then
+                        GoTo(npc, LC.AdminGuardSpot(admin, i, #mine), dd > 450 * 450)
                     end
+                    if st and st.makeWayBack and now >= st.makeWayBack then st.makeWayBack = nil end -- (stepped aside: back to their place)
                 end
             end
         end
@@ -499,7 +684,26 @@ end)
 hook.Add("EntityTakeDamage", "LivingCityAdminGuards", function(victim, dmg)
     local att = dmg:GetAttacker()
     if IsValid(att) and LC.AdminGuards[att] then dmg:ScaleDamage(2) end
-    if IsAdministrator(victim) and IsValid(att) and att ~= victim and (att:IsPlayer() or att:IsNPC()) and not LC.AdminGuards[att] then
-        LC.AdminOrderKill(victim, att)
+    if not IsValid(att) or att == victim or not (att:IsPlayer() or att:IsNPC()) or LC.AdminGuards[att] then return end
+    -- whoever hurts her or one of them is a foe for a minute ("hold fire unless fired on" answers them)
+    local admin = IsAdministrator(victim) and victim or LC.AdminGuards[victim]
+    if IsAdministrator(admin) and att ~= admin then
+        Foes(admin)[att] = CurTime() + FOE_SECS
+        for npc, who in pairs(LC.AdminGuards) do
+            if who == admin and IsValid(npc) then UnholdFire(npc, LC.NPCs[npc], att) end
+        end
+        if victim == admin then
+            LC.AdminOrderKill(admin, att)
+        elseif LC.AdminGuardPref(admin).mode == "holdfire" then
+            -- (fired on: they answer, all of them)
+            for npc, who in pairs(LC.AdminGuards) do
+                local st = who == admin and IsValid(npc) and LC.NPCs[npc]
+                if st then
+                    st.adminTarget = att
+                    if att:IsPlayer() and LC.SetRel then LC.SetRel(npc, st, att, D_HT) else npc:AddEntityRelationship(att, D_HT, 99) end
+                    Engage(npc, att)
+                end
+            end
+        end
     end
 end)

@@ -379,13 +379,36 @@ local function MePage()
     }, empty = rows }
 end
 
--- The Administrator's two Elites.
+-- The Administrator's two Elites. How close they follow, and what they do when there's trouble,
+-- are her standing orders (the owner, 8 November): given any time, the one in force marked (now).
+local GUARD_DISTS = { { "close", "Close" }, { "medium", "Medium" }, { "far", "Far" } }
+local GUARD_MODES = {
+    { "always", "As they always have", "As always" },
+    { "stay", "Stay with me (shoot, but keep beside me)", "Stay with me" },
+    { "between", "Stand between us (cover me from threats)", "Stand between us" },
+    { "holdfire", "Hold fire unless fired on", "Hold fire" },
+}
+local function GuardChoicePage(title, list, key, default)
+    return function()
+        local cur = Info("adm")[key] or default
+        local items = {}
+        for _, c in ipairs(list) do
+            items[#items + 1] = Item(c[2] .. (cur == c[1] and "  (now)" or ""), function() QM("guards", c[1]) end)
+        end
+        return { title = title, items = items }
+    end
+end
 local function GuardsPage()
     local a = Info("adm")
     local none = a.guards == 0 and "no guards now" or nil
+    local dist, mode = "Medium", "As always"
+    for _, c in ipairs(GUARD_DISTS) do if c[1] == (a.dist or "medium") then dist = c[2] end end
+    for _, c in ipairs(GUARD_MODES) do if c[1] == (a.mode or "always") then mode = c[3] end end
     return { title = "YOUR GUARDS", items = {
         Can("Follow me" .. ((a.hold == false and (a.guards or 0) > 0) and "  (now)" or ""), function() QM("guards", "follow") end, none),
         Can("Hold here" .. (a.hold and "  (holding)" or ""), function() QM("guards", "hold") end, none),
+        Page("Follow distance: " .. dist, GuardChoicePage("FOLLOW DISTANCE", GUARD_DISTS, "dist", "medium")),
+        Page("When there's trouble: " .. mode, GuardChoicePage("WHEN THERE'S TROUBLE", GUARD_MODES, "mode", "always")),
     } }
 end
 

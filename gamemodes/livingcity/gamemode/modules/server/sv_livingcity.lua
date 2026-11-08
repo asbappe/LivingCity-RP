@@ -2992,11 +2992,34 @@ end)
 -- Out of the way (the owner, 1 November: units stood in doorways and wouldn't move). Walk into one of the
 -- city's people, a unit or a citizen, and they step aside: a shuffle sideways at once, then a few steps clear.
 -- Not someone busy with you or someone else (a stop, a chase, an escort, a guard, asleep, in a cell).
+-- The Combine's own (the owner, 8 November: "only for each other ... not for rebels, citizens, etc"):
+-- Civil Protection's units step aside only for Civil Protection players (the Overwatch ranks too),
+-- Overwatch soldiers for them and for the City Administrator, and her Elites for her and for them;
+-- never in the middle of a fight. Citizens and everyone else's people still make way for anyone.
 ------------------------------------------------------------------------
 
 local cvMakeWay = CreateConVar("lc_npc_make_way", "1", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "The city's people (units too) step aside when a player walks into them")
 local BUSY = { hostile = true, inspect_approach = true, inspect_talk = true, escort = true, workescort = true, cleanguard = true,
     abed = true, event = true, jailed = true, escorted = true, inline = true }
+local COMBINE_ROLE = { cop = true, soldier = true }
+-- Would this one of the city's people step aside for this player?
+function LC.MakesWayFor(npc, st, ply)
+    if not st or npc:Health() <= 0 then return false end
+    local enemy = npc.GetEnemy and npc:GetEnemy()
+    local f = IsValid(ply) and ply:GetNW2String("lcf_faction", "") or ""
+    if st.adminGuard then
+        -- her Elites (sv_livingcity_cityadmin.lua): for her and Civil Protection, unless they're after someone
+        if IsValid(enemy) or IsValid(st.adminTarget) then return false end
+        return f == "admin" or f == "cp"
+    end
+    if BUSY[st.state] or st.subject or st.questLock then return false end -- (a march, a story, a job)
+    if not COMBINE_ROLE[st.role] then return true end
+    -- the Combine's own: never mid-fight, and only for their own side
+    if st.enemy or IsValid(enemy) or st.state == "fighting" then return false end
+    if st.role == "cop" then return f == "cp" end
+    return f == "cp" or f == "admin"
+end
+
 local function MakeWay(now)
     if not cvMakeWay:GetBool() then return end
     for _, ply in LC.Players() do
@@ -3006,9 +3029,10 @@ local function MakeWay(now)
             local dir = vel:GetNormalized()
             for _, npc in ipairs(ents.FindInSphere(ply:GetPos() + dir * 30, 40)) do
                 local st = IsValid(npc) and npc:IsNPC() and LC.NPCs[npc]
-                if st and not BUSY[st.state] and not st.questLock and not st.subject and npc:Health() > 0
-                    and (st.makeWayAt or 0) < now and (npc:GetPos() - ply:GetPos()):GetNormalized():Dot(dir) > 0.4 then
+                if st and (st.makeWayAt or 0) < now and LC.MakesWayFor(npc, st, ply)
+                    and (npc:GetPos() - ply:GetPos()):GetNormalized():Dot(dir) > 0.4 then
                     st.makeWayAt = now + 2
+                    if st.adminGuard then st.makeWayBack = now + 1.5 end -- (then back to their place beside her)
                     -- to whichever side is open, away from the line you're walking
                     local side = Vector(-dir.y, dir.x, 0)
                     if (npc:GetPos() - ply:GetPos()):Dot(side) < 0 then side = -side end
@@ -3026,6 +3050,7 @@ local function MakeWay(now)
                             npc:SetSchedule(SCHED_FORCED_GO)
                         end
                         if st.role == "cop" and math.random() < 0.3 then npc:EmitSound("npc/metropolice/vo/affirmative.wav", 60) end
+                        if st.role == "soldier" and math.random() < 0.3 then npc:EmitSound("npc/combine_soldier/vo/affirmative.wav", 60) end
                     end
                 end
             end

@@ -2751,7 +2751,32 @@ local ok, e = pcall(function()
             local sub = it.page()
             if it.label == "Tonight's dream" and not (sub.items[1] and sub.items[1].page and sub.items[2] and sub.items[2].label == "No dream tonight") then error("Tonight's dream: " .. Labels(sub)) end
             if it.label == "Command the guards" and not (sub.items[1] and string.find(sub.items[1].label, "Follow me", 1, true) and string.find(sub.items[2].label, "Hold here", 1, true)) then error("guards: " .. Labels(sub)) end
+            -- (the owner, 8 November) how close they follow, and what they do when there's trouble
+            if it.label == "Command the guards" then
+                local d3, m4 = sub.items[3], sub.items[4]
+                if not (d3 and d3.page and d3.label == "Follow distance: Medium" and m4 and m4.page and m4.label == "When there's trouble: As always") then error("guards' orders: " .. Labels(sub)) end
+                local dp = d3.page()
+                if not (dp.items[1] and dp.items[1].label == "Close" and dp.items[2].label == "Medium  (now)" and dp.items[3].label == "Far") then error("follow distance: " .. Labels(dp)) end
+                local mp = m4.page()
+                if not (mp.items[1] and string.find(mp.items[1].label, "(now)", 1, true) and #mp.items == 4 and string.find(mp.items[4].label, "Hold fire", 1, true)) then error("when there's trouble: " .. Labels(mp)) end
+                local strs, ws0 = {}, net.WriteString
+                net.WriteString = function(s) strs[#strs + 1] = s return ws0 and ws0(s) end
+                mp.items[3].run()
+                dp.items[3].run()
+                net.WriteString = ws0
+                if strs[1] ~= "guards" or strs[2] ~= "between" or strs[3] ~= "guards" or strs[4] ~= "far" then error("the guards' orders sent " .. table.concat(strs, ",")) end
+            end
         end
+    end
+    -- the order in force is the one marked, whatever it is (and her orders can be given with no guards about)
+    Info({ adm = { arrest = 0, guards = 0, hold = false, dist = "far", mode = "holdfire" } })
+    do
+        local gn
+        for n = 1, 9 do local it = LC_CL.QuickRoleRoot().items[n] if it and it.label == "Command the guards" then gn = it end end
+        local gp = gn and gn.page()
+        if not (gp and gp.items[1].disabled and gp.items[3].label == "Follow distance: Far" and gp.items[4].label == "When there's trouble: Hold fire" and not gp.items[3].disabled) then error("guards' orders in force: " .. (gp and Labels(gp) or "no page")) end
+        local dp, mp = gp.items[3].page(), gp.items[4].page()
+        if dp.items[3].label ~= "Far  (now)" or dp.items[2].label ~= "Medium" or not string.find(mp.items[4].label, "(now)", 1, true) or string.find(mp.items[1].label, "(now)", 1, true) then error("the order in force isn't marked: " .. Labels(dp) .. " / " .. Labels(mp)) end
     end
     Info({ adm = { arrest = 200, guards = 2 } })
     ar = Find(LC_CL.QuickRoleRoot(), "arrest")

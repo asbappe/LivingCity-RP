@@ -14066,7 +14066,7 @@ end
 DreamMoodTests()
 
 -- Nightmare dreams you play (sv_livingcity_dreamgames.lua): the maze, the barrel tower, the crumbling floor, freeze
-local function DreamGameTests()
+function DreamGameTests()
 section("Shared dreams: the nightmare dreams you play (maze, barrel tower, crumbling floor, freeze)")
 local errs0 = #_errors
 local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
@@ -14259,7 +14259,7 @@ end
 DreamGameTests()
 
 -- Cigarettes, alcohol and stimulants (sv_livingcity_vices.lua), and who a nightmare takes
-local function ViceTests()
+function ViceTests()
 section("Cigarettes, alcohol and stimulants; nobody opts out of a nightmare")
 local errs0 = #_errors
 local p = newPlayer("ViceA", "citizen")
@@ -19096,6 +19096,238 @@ local function GrownGroundTests()
     _walls, _groundFn = wallsWas, groundWas
 end
 GrownGroundTests()
+function GuardOrdersTests()
+    section("The Administrator's guards: how close they follow, what they do when there's trouble, and stepping aside for their own side")
+    -- (the owner, 8 November)
+    local S = Vector(130000, -130000, 0) -- (out of everyone's way)
+    for _, other in ipairs(player.GetAll()) do
+        if other:GetPos():DistToSqr(S) < 5000 * 5000 then other:SetPos(Vector(-150000, 150000, 0)) end
+    end
+    for n in pairs(LC.NPCs) do
+        if IsValid(n) and n:GetPos():DistToSqr(S) < 6000 * 6000 then n:SetPos(Vector(-400000, 400000, 0)) end
+    end
+    local notes = {}
+    local nw = LC.Notice
+    LC.Notice = function(p, kind, title, text, secs)
+        notes[#notes + 1] = { p = p, t = tostring(title) .. ": " .. tostring(text) }
+        return nw(p, kind, title, text, secs)
+    end
+    local function Told(p, needle)
+        for i = #notes, 1, -1 do if notes[i].p == p and string.find(notes[i].t, needle, 1, true) then return true end end
+        return false
+    end
+    local adm = newPlayer("GOAdmin", "admin")
+    local cit = newPlayer("GOCitizen", "citizen")
+    local unit = newPlayer("GOUnit", "cp", nil, 200)
+    adm:SetPos(S)
+    adm.lcGuardNext = CurTime() + 99999 -- (no new guards of her own: these are ours)
+    local away = Vector(-160000, 160000, 0)
+    local function Guard(pos)
+        local npc, st = LC.ManpowerFree(LC.SpawnSoldier, pos)
+        st.unmanaged, st.questLock, st.adminGuard = true, true, adm
+        st.state = "adminguard"
+        LC.AdminGuards[npc] = adm
+        return npc, st
+    end
+    local g1, s1 = Guard(S + Vector(-70, 50, 4))
+    local g2, s2 = Guard(S + Vector(-70, -50, 4))
+    local function Reset()
+        for _, g in ipairs({ g1, g2 }) do g.goal, g.enemy, g.sched = nil, nil, SCHED_IDLE_STAND end
+        -- each at his own place, in the order the guards' tick takes them
+        local i = 0
+        for npc, who in pairs(LC.AdminGuards) do
+            if who == adm and IsValid(npc) then i = i + 1 npc:SetPos(LC.AdminGuardSpot(adm, i, 2) + Vector(0, 0, 4)) end
+        end
+        s1.adminTarget, s2.adminTarget = nil, nil
+    end
+    local function Tick() LC.AdminGuardTick(CurTime()) end
+    local function Flat(v) return Vector(v.x, v.y, 0) end
+
+    -- only she gives them orders
+    ok(not LC.AdminGuardOrder(cit, "far") and not LC.AdminGuardOrder(unit, "between"), "only the Administrator gives her guards orders")
+    ok(not LC.QuickMore(cit, "guards", "holdfire") and (LC.AdminGuardPref(cit).mode == nil), "(not from anyone's F2 either)")
+    ok(not LC.AdminGuardOrder(adm, "dance"), "(and only the orders there are)")
+    local qi = LC.QuickInfo(adm).adm or {}
+    ok(qi.dist == "medium" and qi.mode == "always", "until she picks: Medium, and as they always have (F2 marks them)", tostring(qi.dist) .. " " .. tostring(qi.mode))
+    local spot = LC.AdminGuardSpot(adm, 1, 2)
+    ok(spot:DistToSqr(S - adm:GetForward() * 70 - adm:GetRight() * 50) < 1, "and they follow exactly where they always have", tostring(spot))
+
+    -- follow distance
+    ok(LC.QuickMore(adm, "guards", "far") and LC.AdminGuardPref(adm).dist == "far" and Told(adm, "Far"), "Follow distance: Far (from F2, and she's told)")
+    ok((LC.QuickInfo(adm).adm or {}).dist == "far", "(F2 shows Far now)")
+    Reset()
+    g1:SetPos(S + Vector(-200, 60, 4))
+    Tick()
+    ok(g1.goal == nil, "Far: a guard 200 units back is where he should be, and stays", tostring(g1.goal))
+    g1:SetPos(S + Vector(500, 0, 4))
+    Tick()
+    local dFar = g1.goal and Flat(g1.goal):Distance(S) or 0
+    ok(dFar > 240 and dFar < 300, "Far: one too far off goes to his place, well back from her", tostring(dFar))
+    ok(LC.AdminGuardOrder(adm, "close"), "Follow distance: Close")
+    Reset()
+    g1:SetPos(S + Vector(200, 0, 4))
+    Tick()
+    local dClose = g1.goal and Flat(g1.goal):Distance(S) or 999
+    ok(dClose < 60, "Close: right at her shoulder", tostring(dClose))
+    local spots, apart = {}, true
+    for i = 1, 4 do spots[i] = LC.AdminGuardSpot(adm, i, 4) end
+    for i = 1, 4 do for j = i + 1, 4 do if spots[i]:Distance(spots[j]) < 40 then apart = false end end end
+    ok(apart, "four guards stand in two rows, never on one spot")
+    ok(LC.AdminGuardOrder(adm, "medium") and LC.AdminGuardSpot(adm, 1, 2):DistToSqr(spot) < 1, "Medium: as they always have")
+
+    -- when there's trouble: stand between us
+    local reb = newPlayer("GORebel", "resistance", nil, 900)
+    reb:Give("weapon_smg1") reb:SelectWeapon("weapon_smg1")
+    reb:SetPos(S + Vector(0, 600, 0))
+    local reb2 = newPlayer("GORebel2", "resistance", nil, 900)
+    reb2:Give("weapon_smg1") reb2:SelectWeapon("weapon_smg1")
+    reb2:SetPos(away)
+    ok(select(1, LC.AdminGuardThreat(adm, reb, g1)) and not LC.AdminGuardThreat(adm, unit, g1) and not LC.AdminGuardThreat(adm, cit, g1),
+        "a threat: a Resistance fighter with a gun out (never a unit, nor a citizen going about their business)")
+    ok(LC.AdminGuardOrder(adm, "between") and Told(adm, "Stand between us"), "When there's trouble: Stand between us")
+    Reset()
+    Tick()
+    local function Between(g, th)
+        if not g.goal then return false end
+        local to, gv = Flat(th:GetPos()) - S, Flat(g.goal) - S
+        return gv:Dot(to) > 0 and gv:Length() < to:Length() and gv:Length() <= 160
+    end
+    ok(Between(g1, reb) and Between(g2, reb), "both step out between her and the threat", tostring(g1.goal) .. " " .. tostring(g2.goal))
+    ok(g1.goal and g2.goal and g1.goal:Distance(g2.goal) >= 30, "side by side, not on one spot")
+    ok(g1.enemy == reb and g2.enemy == reb, "and they're on him")
+    reb2:SetPos(S + Vector(600, 0, 0))
+    Reset()
+    Tick()
+    ok(g1.enemy ~= g2.enemy and (g1.enemy == reb or g1.enemy == reb2) and (g2.enemy == reb or g2.enemy == reb2), "two threats: each guard covers a different one")
+    ok(Between(g1, g1.enemy) and Between(g2, g2.enemy), "each between her and his own", tostring(g1.goal) .. " " .. tostring(g2.goal))
+    -- someone pointing a gun at her: covered, but not shot at for it
+    reb:SetPos(away) reb2:SetPos(away)
+    local aimer = newPlayer("GOAimer", "citizen")
+    aimer:Give("weapon_pistol") aimer:SelectWeapon("weapon_pistol")
+    aimer:SetPos(S + Vector(0, -500, 0))
+    aimer.aim = Vector(0, 0, 1)
+    Reset()
+    Tick()
+    ok(not Between(g1, aimer) and not Between(g2, aimer), "a citizen with a pistol pointed at the sky isn't a threat")
+    aimer.aim = ((S + Vector(0, 0, 40)) - aimer:EyePos()):GetNormalized()
+    Reset()
+    Tick()
+    ok(Between(g1, aimer) and Between(g2, aimer), "one aiming at her is: they step in front of her")
+    ok(g1.enemy == nil and g2.enemy == nil, "(but they don't open fire on someone only aiming)")
+    aimer:SetPos(away)
+
+    -- stay with me
+    ok(LC.AdminGuardOrder(adm, "stay") and Told(adm, "Stay with me"), "When there's trouble: Stay with me")
+    reb:SetPos(S + Vector(0, 600, 0))
+    Reset()
+    g1:SetPos(S + Vector(-70, 190, 4)) -- (a few steps after him)
+    Tick()
+    ok(g1.goal and Flat(g1.goal):Distance(S) < 100 and g1.enemy == reb, "one who steps off after a threat is called back to her side, still shooting", tostring(g1.goal))
+    ok(g2.goal == nil and g2.enemy == reb, "one in his place stays there and shoots")
+    s1.adminTarget, s2.adminTarget = reb, reb
+    g1:SetPos(S + Vector(0, 350, 4))
+    g1.goal = nil
+    Tick()
+    ok(g1.goal and Flat(g1.goal):Distance(S) < 100 and g1.enemy == reb, "even after someone who hurt her: they don't chase")
+    -- as they always have, the same guard would go after them
+    ok(LC.AdminGuardOrder(adm, "always"), "When there's trouble: as they always have")
+    Reset()
+    s1.adminTarget = reb
+    g1:SetPos(S + Vector(0, 350, 4))
+    Tick()
+    ok(g1.goal == nil and g1.enemy == reb, "(as always: whoever hurt her, they go after)")
+    Reset()
+    g1:SetPos(S + Vector(-70, 120, 4))
+    Tick()
+    ok(g1.goal == nil, "(and a guard a few steps off is left be, as before)")
+    reb:SetPos(away)
+
+    -- hold fire unless fired on
+    ok(LC.AdminGuardOrder(adm, "holdfire") and Told(adm, "Hold fire"), "When there's trouble: Hold fire unless fired on")
+    reb:SetPos(S + Vector(0, 400, 0))
+    local crab = ents.Create("npc_citizen")
+    crab:SetPos(S + Vector(300, 300, 0))
+    crab.hp = 50
+    Reset()
+    g1.enemy, g2.enemy = reb, crab
+    Tick()
+    ok(not IsValid(g1.enemy) and g1.rel[reb] == D_NU and not IsValid(g2.enemy) and g2.rel[crab] == D_NU, "they start nothing: whoever they turned on, they leave be")
+    hook.Run("EntityTakeDamage", g2, _dmg(reb, 5))
+    ok(s1.adminTarget == reb and s2.adminTarget == reb and g1.rel[reb] == D_HT, "fired on (one of them): they answer, all of them")
+    Tick()
+    ok(g1.enemy == reb and g2.enemy == reb, "and keep on him", tostring(g1.enemy))
+    ok(LC.AdminGuardOrder(adm, "always") and g2.rel[crab] == D_HT, "a new order puts back how they felt about the rest")
+    ok(LC.AdminGuardOrder(adm, "holdfire"), "(hold fire again)")
+    adm.lcGuardHold = { pos = S, fwd = adm:GetForward(), right = adm:GetRight() }
+    hook.t.PlayerDeath.LivingCityQuickMoreGuards(adm)
+    ok(LC.AdminGuardPref(adm).mode == "holdfire" and adm.lcGuardHold == nil and LC.AdminGuardPrefs[adm:SteamID64()] ~= nil, "her orders are kept (by SteamID) through a death, for the session (Hold here isn't)")
+    ok(LC.AdminGuardOrder(adm, "always"), "(back to as always)")
+    crab:Remove()
+    reb:SetPos(away)
+    Reset()
+
+    -- stepping aside: the Combine's own, only for their own side
+    local W = S + Vector(2000, 0, 0)
+    local function Walks(ply, npc, st)
+        ply:SetPos(W)
+        npc:SetPos(W + Vector(40, 0, 4))
+        st.makeWayAt, st.makeWayBack = nil, nil
+        ply.vel = Vector(150, 0, 0)
+        local before = npc:GetPos()
+        LC.MakeWayTick(CurTime() + 100)
+        ply.vel = nil
+        ply:SetPos(away)
+        return npc:GetPos() ~= before
+    end
+    local cop, cst = LC.ManpowerFree(LC.SpawnCop, W + Vector(40, 0, 4))
+    cst.state = "idle"
+    local sol, sst = LC.ManpowerFree(LC.SpawnSoldier, W + Vector(40, 0, 4))
+    sst.state = "idle"
+    sol:SetPos(away)
+    local civ = newPlayer("GOCiv", "citizen")
+    local vort = newPlayer("GOVort", "vort")
+    ok(Walks(unit, cop, cst), "a unit walks into a Metrocop: it steps aside")
+    ok(not Walks(civ, cop, cst) and not Walks(reb, cop, cst) and not Walks(vort, cop, cst), "a citizen, a rebel, a vortigaunt: it doesn't")
+    ok(not LC.MakesWayFor(cop, cst, adm), "(a Metrocop steps aside for Civil Protection only)")
+    cop:SetPos(away)
+    ok(Walks(unit, sol, sst) and Walks(adm, sol, sst), "an Overwatch soldier steps aside for a unit, and for the Administrator")
+    ok(not Walks(civ, sol, sst) and not Walks(reb, sol, sst), "not for a citizen or a rebel")
+    sst.enemy = reb
+    ok(not Walks(unit, sol, sst), "never in the middle of a fight")
+    sst.enemy = nil
+    sol.enemy = reb
+    ok(not LC.MakesWayFor(sol, sst, unit), "(nor with an enemy in its sights)")
+    sol.enemy = nil
+    sol:SetPos(away)
+    ok(Walks(adm, g1, s1) and s1.makeWayBack ~= nil, "her Elite steps aside when she walks into him")
+    ok(not Walks(civ, g1, s1), "(but not for a citizen)")
+    s1.adminTarget = reb
+    ok(not LC.MakesWayFor(g1, s1, adm), "not while he's after someone")
+    s1.adminTarget = nil
+    s1.makeWayBack = CurTime() - 1
+    g1:SetPos(S + Vector(-30, 90, 4))
+    g1.goal = nil
+    adm:SetPos(S)
+    Tick()
+    ok(g1.goal and Flat(g1.goal):Distance(S) < 100 and s1.makeWayBack == nil, "then back to his place beside her", tostring(g1.goal))
+    local person = LC.Spawners.citizen and LC.Spawners.citizen(W + Vector(40, 0, 4))
+    local pst = IsValid(person) and LC.NPCs[person]
+    if pst then
+        pst.state = "idle"
+        ok(Walks(reb, person, pst), "the city's citizens still make way for anyone (as before)")
+        person:Remove()
+    end
+    local busy = { state = "escort" }
+    ok(not LC.MakesWayFor(cop, busy, unit), "(nor while escorting a prisoner)")
+
+    cop:Remove() sol:Remove()
+    for n, who in pairs(LC.AdminGuards) do if who == adm then if IsValid(n) then n:Remove() end LC.AdminGuards[n] = nil end end
+    LC.AdminGuardPrefs[adm:SteamID64()] = nil
+    for _, p in ipairs({ adm, cit, unit, reb, reb2, aimer, civ, vort }) do p:SetPos(away) end
+    LC.SetFaction(adm, "citizen", nil, true)
+    LC.Notice = nw
+end
+GuardOrdersTests()
     section("The keys: F1 quick menu, F2 your side's quick menu, F3 pockets, F4 jobs, career and factions in one window")
     -- (the owner, 7 November: "make F4 the hotkey for this, and then move inventory to F3 ... F2 can be the same BUT contextual")
     local kp = newPlayer("KeyLayout", "cp", nil, 200)

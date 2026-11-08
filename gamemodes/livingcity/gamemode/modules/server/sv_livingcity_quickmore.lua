@@ -10,7 +10,7 @@
       a citizen         Me >: find work, my rations, my home and rent, my standing
       a prisoner        My sentence: what you're in for and how long is left
       the Administrator open my tablet, the laws, tonight's dream, command the guards (follow,
-                        hold here), order the arrest of whoever you're looking at
+                        hold here, how close, what they do when there's trouble), order the arrest of whoever you're looking at
       senior units      Call a sweep >: a contraband sweep or a block raid, Division Leader and up,
                         when the city's pacing allows it
 
@@ -352,9 +352,41 @@ function LC.AdminOrderArrest(admin, target)
     return true
 end
 
--- The bodyguard (sv_livingcity_cityadmin.lua): "follow" (as always), or "hold" here.
+-- The bodyguard (sv_livingcity_cityadmin.lua): "follow" (as always), or "hold" here; how close they
+-- follow ("close", "medium" as always, "far"); and what they do when there's trouble ("always" as
+-- they always have, "stay" with me, stand "between" us, "holdfire" unless fired on). The last two
+-- kinds are her standing orders: she can give them with no guards about, for whoever comes next.
+local GUARD_DIST_SAY = {
+    close = "Close: right at your shoulder.",
+    medium = "Medium: a few steps behind you, as they always have.",
+    far = "Far: well back, giving you room.",
+}
+local GUARD_MODE_SAY = {
+    always = "As they always have: whoever hurts you is theirs, and they fight as soldiers do.",
+    stay = "Stay with me: they shoot from their place beside you and never chase.",
+    between = "Stand between us: each one puts himself between you and a threat.",
+    holdfire = "Hold fire unless fired on: they start nothing, and answer only whoever hurts you or one of them.",
+}
+LC.AdminGuardOrderSay = { dist = GUARD_DIST_SAY, mode = GUARD_MODE_SAY }
 function LC.AdminGuardOrder(admin, order)
     if not IsAdministrator(admin) then return false, "Only the City Administrator." end
+    order = tostring(order or "")
+    if GUARD_DIST_SAY[order] and LC.AdminGuardPref then
+        LC.AdminGuardPref(admin).dist = order
+        Tell(admin, "info", "Your guards", GUARD_DIST_SAY[order])
+        return true
+    end
+    if GUARD_MODE_SAY[order] and LC.AdminGuardPref then
+        local pref = LC.AdminGuardPref(admin)
+        if pref.mode == "holdfire" and order ~= "holdfire" and LC.AdminGuardUnholdFire then
+            for npc, who in pairs(LC.AdminGuards or {}) do
+                if who == admin and IsValid(npc) then LC.AdminGuardUnholdFire(npc, LC.NPCs[npc]) end
+            end
+        end
+        pref.mode = order
+        Tell(admin, "info", "Your guards", GUARD_MODE_SAY[order])
+        return true
+    end
     local mine = 0
     for npc, who in pairs(LC.AdminGuards or {}) do if who == admin and IsValid(npc) then mine = mine + 1 end end
     if mine == 0 then return false, "You have no guards with you right now." end
@@ -443,7 +475,9 @@ function LC.QuickInfo(ply)
     if f == "admin" then
         local guards = 0
         for npc, who in pairs(LC.AdminGuards or {}) do if who == ply and IsValid(npc) then guards = guards + 1 end end
-        t.adm = { arrest = Wait(ply.lcArrestNext), guards = guards, hold = ply.lcGuardHold ~= nil, dream = LC.DreamOffice and LC.DreamOffice() or nil }
+        local pref = LC.AdminGuardPref and LC.AdminGuardPref(ply) or {}
+        t.adm = { arrest = Wait(ply.lcArrestNext), guards = guards, hold = ply.lcGuardHold ~= nil, dream = LC.DreamOffice and LC.DreamOffice() or nil,
+            dist = pref.dist or "medium", mode = pref.mode or "always" }
     end
     if IsSenior(ply) then t.sweep = { sweep = LC.OfficerSweepWhyNot(ply, "sweep"), raid = LC.OfficerSweepWhyNot(ply, "raid") } end
     return t
