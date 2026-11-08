@@ -9349,6 +9349,25 @@ ok(clipsOk and string.find(table.concat(clipsOut, "\n"), "lc_sound_check", 1, tr
 local unusedO, unusedA = table.concat(LC.AnnounceUnused("overwatch"), "|"), table.concat(LC.AnnounceUnused("administrator"), "|")
 ok(string.find(unusedO, "lockdown_soon1.wav: lockdown_soon is no longer said", 1, true) and string.find(unusedO, "welcome_warm.wav: plays as Overwatch", 1, true), "lc_announce_clips points out retired files, and a tone word in Overwatch's folder")
 ok(string.find(unusedA, "skirming_sweep_stern1.wav: doesn't start with a trigger", 1, true) and not string.find(unusedA, "dawn_warm1", 1, true), "and a typo in a trigger")
+local vmRows, vmWrong = {}, {}
+for _, r in ipairs(LC.VoiceMissing()) do
+    vmRows[r.name] = "|" .. table.concat(r.missing, "|") .. "|"
+    if r.name == "overwatch" or r.name == "administrator" or r.name == "radio" then
+        for _, t in ipairs(r.missing) do
+            local n = 0
+            for k = 1, 4 do n = n + #LC.AnnounceClips(r.name, t, k) end
+            if n > 0 then vmWrong[#vmWrong + 1] = r.name .. "/" .. t end
+        end
+    end
+end
+ok(vmRows.overwatch and not string.find(vmRows.overwatch, "|lockdown|", 1, true) and not string.find(vmRows.overwatch, "|blackout|", 1, true) and #vmWrong == 0, "lc_voice_missing lists only the triggers with no recording", table.concat(vmWrong, ", "))
+ok(vmRows.administrator and not string.find(vmRows.administrator, "|dawn|", 1, true), "and hers (a recording in any tone counts)", vmRows.administrator)
+ok(vmRows.radio and vmRows["G-Man"] and vmRows["Dream lines"], "and the radio's, the G-Man's and the dreams' lines")
+local vmOut = {}
+print = function(m) vmOut[#vmOut + 1] = tostring(m) end
+local vmOk = pcall(concommand.list["lc_voice_missing"], nil)
+print = oldPrint
+ok(vmOk and string.find(table.concat(vmOut, "\n"), "voice lines with no recording yet", 1, true) ~= nil, "lc_voice_missing runs from the server console", table.concat(vmOut, "\n"))
 
 _setcvar("lc_announce_custom", 0)
 ok(LC.PickAnnounceClip("overwatch", "curfew") == nil, "lc_announce_custom 0 turns the lot off")

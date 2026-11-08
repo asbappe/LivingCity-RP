@@ -985,8 +985,9 @@ Notes:
   Notes:
 - [ ] **Ravenholm, freed NPC vortigaunt (changed):** with no Free Vortigaunt player online, cut a street-crew vortigaunt loose (or finish a work-site rescue), then play Ravenholm: the truth version should happen. Kill that vortigaunt and play again: her version.
   Notes:
+- [ ] **lc_voice_missing (8 November, part 7):** type `lc_voice_missing` in the server's web console: one line per folder (Dream lines, overwatch, administrator, radio, G-Man) naming what has no recording yet. Add a file, change the map, run it again: that line should be gone.
 
-## 8 November, part 7: the performance debugger (staff)
+## 8 November, part 8: the performance debugger (staff)
 - [ ] **Opening it:** C > Help > Performance debugger opens a window with tabs (Summary, Hitches, Hooks, Timers, Net in, Net out, Networked values, Entities, Players, Who sends).
   Notes:
 - [ ] **Start and Stop:** Start: every staff member online is told on screen; the figures refresh every two seconds. Stop: told again, with where the report was saved (`garrysmod/data/livingcity/perf/`).

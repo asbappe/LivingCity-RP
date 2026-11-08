@@ -222,6 +222,7 @@ console command lc_unlockdoors
 console command lc_unregister
 console command lc_unstalker
 console command lc_vo
+console command lc_voice_missing
 console command lc_weather
 console command lce_shop
 console command lcf_demote

@@ -29,11 +29,11 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 2026-11-08 (part 7): **the performance debugger** (staff): `sh_livingcity_perfdebug.lua` (the measuring, both sides), `sv_livingcity_perfdebug.lua` (on/off, players and send queue, saving to `data/livingcity/perf/`, auto-off), `cl_livingcity_perfdebug.lua` (the window, C > Help > Performance debugger). Spec: `docs/features/admin.md`, the paragraph after the lag monitor.
-- While on it wraps every hook (via `hook.GetTable`, ULib priorities kept), `hook.Add`, `timer.Simple`/`timer.Create`, `net.Incoming` (its own copy), `net.Start`/`Send`/`Broadcast`/..., and `SetNW*`/`SetNW2*`; off puts back each one that is still its own. Hitches come from the gap between its `Think` hooks (`P.Frame`).
-- One line in `sv_livingcity_perf.lua` passes city timer times on (`LC.PerfDebugNote`).
+- 2026-11-08 (part 8): **the performance debugger** (staff): `sh_livingcity_perfdebug.lua` (the measuring, both sides), `sv_livingcity_perfdebug.lua` (on/off, players and send queue, saving to `data/livingcity/perf/`, auto-off), `cl_livingcity_perfdebug.lua` (the window, C > Help > Performance debugger). Spec: `docs/features/admin.md`, after the lag monitor.
+- While on it wraps every hook (via `hook.GetTable`, ULib priorities kept), `hook.Add`, `timer.Simple`/`timer.Create`, `net.Incoming` (its own copy), `net.Start`/`Send`/`Broadcast`/..., and `SetNW*`/`SetNW2*`; off puts back each one still its own. Hitches: the gap between its `Think` hooks (`P.Frame`). One line in `sv_livingcity_perf.lua` passes city timer times on (`LC.PerfDebugNote`).
 - **Waiting on the owner:** OK to add three snapshot lines (`setting lc_perfdebug_minutes = 30`, `setting lc_perfdebug_spike_ms = 60`, `console command lc_perfdebug`) to `_dev/core_snapshot.txt`. Until then the core check fails on just those three.
-- Tests: `PerfDebugTests` (31) pass, client smoke passes. Full suite not run (the owner asked to test less).
-- Nothing checked in game: PLAYTEST.md, "8 November, part 7".
-- Earlier (still open): PLAYTEST.md "7 November, part 3" onwards; both batches of propaganda dreams unchecked in game.
+- Tests: `PerfDebugTests` (31) pass, client smoke passes. Unchecked in game: PLAYTEST.md "8 November, part 8".
+- Part 7: **`lc_voice_missing`** (superadmins or the server console; `LC.VoiceMissing` in sv_livingcity_announcer.lua) lists every voice line with no recording yet; spec: the last paragraph of `docs/features/custom-announcements.md`. Core snapshot has it.
+- Parts 5 and 6 (fifteen propaganda dreams, Ravenholm): unchecked in game, PLAYTEST.md "Ten more propaganda dreams" onwards.
+- Earlier (still open): PLAYTEST.md "7 November, part 3" onwards.
 - Next, each in a fresh chat: The Battle Line and vortigaunt dream warfare (designs at the end of `TODO.md`).
