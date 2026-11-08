@@ -28,10 +28,11 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 2026-11-08 (part 2): the Administrator's dreams, new file `sv_livingcity_admiredreams.lua`: three Happy dreams you play on her tablet, Kneel Before Her (`adore`: crouch and look at her to fill Devotion, standing in her gaze costs a life), Roses for Her (`roses`: carry roses to her feet, crouch past the gold line), Mirror, Mirror (`mirror`: crouch and compliment her in chat; chat stays in the dream via `LC.AdmireSay`, called first by the IC chat hook in `sv_livingcity_rp.lua`). Flattery and comedy, nothing explicit (the owner asked for no 18+).
-- Her music: any song in `sound/livingcity/dreams/administrator/` (random, looping, client side in `cl_livingcity_dreamgames.lua`). The owner will import songs.
-- `sv_livingcity_dreamgames.lua` now exports `LC.DreamGameKit`, passes the player to `def.state(g, p)`, and lets a dream have its own `timeUp` text and `woke` (her dreams: a line on waking, no rewards or penalties). The nightmares behave as before.
-- Earlier today: nightmare rewards (Unbroken, Second wind, Vortigaunt whisper/gift; losing: `LC.SetDreamScar`), all in `sv_livingcity_vices.lua`.
-- The six vice items are now in `_dev/core_snapshot.txt` (the owner approved, on `main`). Her dreams add no snapshot lines.
-- Tests: `AdmireDreamTests` (27), `DreamGameTests` (38) pass; client smoke passes. Nothing checked in game: PLAYTEST.md, last section (sizes and the mirrors' angles are guesses).
+- 2026-11-08 (part 3): **Propaganda dreams** (renamed from "the Administrator's dreams" at the owner's word), `sv_livingcity_propagandadreams.lua`: Kneel Before Her (`adore`), Roses for Her (`roses`), Mirror, Mirror (`mirror`), The Saviour (`saviour`: monsters, she descends glowing, "Stop!", Combine soldiers kill them all; times in `LC.SaviourTimes`), The Loyalty Quiz (`quiz`: `LC.QuizQuestions`, thoughtcrime words). All Happy; listed on the tablet as "Propaganda: ...".
+- Starring: the Administrator asleep with someone else plays herself (`LC.DreamStarOf`, PData `lc_dream_star`, tablet toggle via `LC.AdminDo(ply, "dreamstar", "on"/"off")`). Generic support in `sv_livingcity_dreamgames.lua` (`g.star`, `def.starring`, `def.starGone`, state sent to her too); `LC.DreamStarDone` undoes her size on waking.
+- Music: `sound/livingcity/dreams/<codeword>N.ext` (admire, saviour_horde, saviour, quiz; old `dreams/administrator/` = admire). Voice: `sound/livingcity/dreams/voice/<cue>N.wav` + `.txt` subtitle (`LC.PropagandaCues`). The owner will record lines and import songs.
+- Chat in the mirror and quiz (and the star's) stays in the dream: `LC.PropagandaSay`, called first by the IC chat hook in `sv_livingcity_rp.lua`.
+- Earlier today: nightmare rewards (`sv_livingcity_vices.lua`); the six vice items are in the core snapshot (owner approved).
+- Tests: `PropagandaDreamTests` (58), `DreamGameTests` (38), `DreamTests` (60), `DreamMoodTests` (26) pass; client smoke passes. Nothing checked in game: PLAYTEST.md, last section (sizes, angles and the glow are guesses).
+- More propaganda dream ideas offered to the owner (not built): see the end of this chat or ask.
 - `TODO.md`: Combine sleep in the head-clamp prop (later). Full suite last run 2026-11-02.

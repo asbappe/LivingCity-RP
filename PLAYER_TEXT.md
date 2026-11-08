@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 1244e38. Admin-only console messages and log lines are left out.
+Made from version 6a4d81e. Admin-only console messages and log lines are left out.
 
-7158 lines, from 219 files.
+7252 lines, from 219 files.
 
 ## Contents
 
@@ -61,11 +61,11 @@ Made from version 1244e38. Admin-only console messages and log lines are left ou
 - [cl_livingcity_atmos.lua](#cllivingcityatmoslua-cllivingcityatmoslua) (5)
 - [cl_livingcity_career.lua](#cllivingcitycareerlua-cllivingcitycareerlua) (6)
 - [cl_livingcity_character.lua](#cllivingcitycharacterlua-cllivingcitycharacterlua) (14)
-- [cl_livingcity_cityadmin.lua](#cllivingcitycityadminlua-cllivingcitycityadminlua) (38)
+- [cl_livingcity_cityadmin.lua](#cllivingcitycityadminlua-cllivingcitycityadminlua) (40)
 - [cl_livingcity_context.lua](#cllivingcitycontextlua-cllivingcitycontextlua) (73)
 - [cl_livingcity_cp.lua](#cllivingcitycplua-cllivingcitycplua) (26)
 - [cl_livingcity_directives.lua](#cllivingcitydirectiveslua-cllivingcitydirectiveslua) (19)
-- [the nightmare dreams you play, your side (sv_livingcity_dreamgames.lua)](#the-nightmare-dreams-you-play-your-side-svlivingcitydreamgameslua-cllivingcitydreamgameslua) (12)
+- [the nightmare dreams you play, your side (sv_livingcity_dreamgames.lua)](#the-nightmare-dreams-you-play-your-side-svlivingcitydreamgameslua-cllivingcitydreamgameslua) (13)
 - [shared dreams, your side (sv_livingcity_dreams.lua)](#shared-dreams-your-side-svlivingcitydreamslua-cllivingcitydreamslua) (16)
 - [secret endings, on your screen (sv_livingcity_endings.lua)](#secret-endings-on-your-screen-svlivingcityendingslua-cllivingcityendingslua) (65)
 - [the Endings menu (superadmins): tune the secret endings live](#the-endings-menu-superadmins-tune-the-secret-endings-live-cllivingcityendingtunelua) (69)
@@ -110,7 +110,6 @@ Made from version 1244e38. Admin-only console messages and log lines are left ou
 - [the actions menu (server side)](#the-actions-menu-server-side-svlivingcityactionslua) (8)
 - [acts (server). See sh_livingcity_acts.lua for the list](#acts-server-see-shlivingcityactslua-for-the-list-svlivingcityactslua) (7)
 - [testing tools for admins](#testing-tools-for-admins-svlivingcityadmintoolslua) (43)
-- [the Administrator's dreams (dreams you play)](#the-administrators-dreams-dreams-you-play-svlivingcityadmiredreamslua) (60)
 - [custom announcements, for Overwatch and for the Administrator](#custom-announcements-for-overwatch-and-for-the-administrator-svlivingcityannouncerlua) (34)
 - [arrests in the open (the owner's playtest, 7 November)](#arrests-in-the-open-the-owners-playtest-7-november-svlivingcityarrestlua) (49)
 - [the time of day, the weather, and the city's music](#the-time-of-day-the-weather-and-the-citys-music-svlivingcityatmoslua) (1)
@@ -134,7 +133,7 @@ Made from version 1244e38. Admin-only console messages and log lines are left ou
 - [debugging](#debugging-svlivingcitydebuglua) (60)
 - [sv_livingcity_directives.lua](#svlivingcitydirectiveslua-svlivingcitydirectiveslua) (56)
 - [doors](#doors-svlivingcitydoorslua) (9)
-- [nightmare dreams you play (the dream games)](#nightmare-dreams-you-play-the-dream-games-svlivingcitydreamgameslua) (34)
+- [nightmare dreams you play (the dream games)](#nightmare-dreams-you-play-the-dream-games-svlivingcitydreamgameslua) (35)
 - [shared dreams](#shared-dreams-svlivingcitydreamslua) (55)
 - [the Combine's dropship](#the-combines-dropship-svlivingcitydropshiplua) (7)
 - [economy and social credit](#economy-and-social-credit-svlivingcityeconomylua) (32)
@@ -180,6 +179,7 @@ Made from version 1244e38. Admin-only console messages and log lines are left ou
 - [prison](#prison-svlivingcityprisonlua) (40)
 - [close calls, careers for life, and what passes on](#close-calls-careers-for-life-and-what-passes-on-svlivingcityprogresslua) (20)
 - [street furniture, and the city's voice](#street-furniture-and-the-citys-voice-svlivingcitypropagandalua) (43)
+- [propaganda dreams (dreams you play)](#propaganda-dreams-dreams-you-play-svlivingcitypropagandadreamslua) (150)
 - [persistent props](#persistent-props-svlivingcitypropslua) (6)
 - [quests](#quests-svlivingcityquestslua) (368)
 - [habitation block raids](#habitation-block-raids-svlivingcityraidslua) (15)
@@ -708,7 +708,7 @@ Made from version 1244e38. Admin-only console messages and log lines are left ou
 - "Shared dreams: if the server has a dream point, the secret endings come at night as a dream for everyone asleep in a bed, about a minute after the Administrator says good night. You wake in your bed with everything you had, exactly as it was. Not tonight? C > Settings > Shared dreams (opt out), or /dream off; in a dream, C > Settings > Shared dreams: wake up. Not from a nightmare, though: a nightmare takes everyone asleep outside a Combine-only zone, and you can't wake yourself until you're out of it. Only a stimulant shot before bed keeps you awake."  (text, line 84)
 - "Cigarettes, alcohol and stimulants (F3, the item's button). A cigarette steadies your nerves and dulls hunger; too many and you cough. Drink and you get drunk: it dulls pain, then the world sways, then you throw up (and one moonshine in five is a bad batch). A stimulant keeps you awake for fifteen minutes (no dream can take you), then you crash."  (text, line 85)
 - "Nightmare dreams you play: The Patrol Maze (pick up every token while giant officers hunt you), The Barrel Tower (climb to the top, and don't touch the barrels: they explode), The Crumbling Floor (keep moving or the floor gives way) and Freeze, Citizen (move only while the giant officer's back is turned). Out of lives, or won: wake up now, or watch the rest until it's over. Win and you wake Unbroken (a day the Combine can't get into your head) with a second wind, and maybe a Vortigaunt's help; lose every life and you're 30 health down until your next full night's sleep."  (text, line 86)
-- "The Administrator's dreams (Happy dreams, so you can opt out): Kneel Before Her (kneel, crouching, and gaze up at her to fill your Devotion; never let her catch you standing in her gaze), Roses for Her (carry glowing roses to her feet, on your knees in her half of the hall), Mirror, Mirror (kneel and compliment her in chat; new words count double, insults cost a life). It's only a dream: you wake starstruck or embarrassed, nothing more."  (text, line 87)
+- "Propaganda dreams (Happy dreams, so you can opt out): Kneel Before Her (kneel, crouching, and gaze up at her to fill your Devotion; never let her catch you standing in her gaze), Roses for Her (carry glowing roses to her feet, on your knees in her half of the hall), Mirror, Mirror (kneel and compliment her in chat; new words count double, insults cost a life), The Saviour (the dead come for you, unarmed: hold on until she descends and her soldiers save you), The Loyalty Quiz (answer her questions in chat; beware thoughtcrime). It's only a dream: you wake with a feeling, nothing more."  (text, line 87)
 - "City Administrator: your tablet's office has Tonight's dream: reward an obedient city with a Happy dream, or punish it with a Nightmare. Out of it in a dream? Watch the rest: click to follow another dreamer, Jump to fly about inside the dream."  (text, line 88)
 - "You can kill birds with your fists. Cook them before you eat them."  (text, line 89)
 - "Staying out of trouble"  (text, line 91)
@@ -906,7 +906,7 @@ Made from version 1244e38. Admin-only console messages and log lines are left ou
 - "Labor Assignment: place "Fixture: Labor Assignment". Settings: lc_labor_min_minutes (30), lc_labor_min_shifts (4), lc_labor_cleanup_standing (25), lc_labor_porter_standing (50). Without one, the Union assigns work and the board (F4) changes it, as before."  (text, line 302)
 - "Shared dreams: place "Point: dream" in an out-of-map area (and "Zone: dream" round it, tall and open for the flying endings). Endings set off in play then come at night as a dream for sleepers only, with no reload. C > Help > Dreams: status, dream it now, wake everyone, put back a player's things. Settings: lc_dreams (1), lc_dream_delay (60), lc_dream_radius (1500), lc_dream_every_night (0), lc_dream_combine (6). Without a dream point, the endings are as before."  (text, line 303)
 - "Nightmare dreams you play (the Administrator's tablet, under Nightmare; or C > Help > Dreams: dream it now): The Patrol Maze, The Barrel Tower, The Crumbling Floor, Freeze, Citizen. Each builds its own arena at the dream point and removes it afterwards; it fits inside the dream zone (or lc_dream_radius), so give it about 1500 units each way and some headroom for the tower."  (text, line 304)
-- "The Administrator's dreams (her tablet, under Happy; or C > Help > Dreams): Kneel Before Her, Roses for Her, Mirror, Mirror. Each builds a pink hall with a giant Administrator at the dream point. Her music: put any songs in garrysmod/sound/livingcity/dreams/administrator/ (one plays at random, looping; upload, FastDL sync, map change). They leave nothing behind: no rewards, no scars."  (text, line 305)
+- "Propaganda dreams (her tablet, under Happy, as Propaganda; or C > Help > Dreams): Kneel Before Her, Roses for Her, Mirror, Mirror, The Saviour, The Loyalty Quiz. Asleep for one with someone else, the Administrator stars herself (tablet > Tonight's dream > Star in propaganda dreams yourself: on or off); otherwise a giant figure of her does. Music goes flat in garrysmod/sound/livingcity/dreams/, named admire, saviour_horde, saviour or quiz (admire1.mp3); her voice lines in dreams/voice/ (saviour_stop1.wav, a .txt beside it for the subtitle). Upload, FastDL sync, map change."  (text, line 305)
 - "Civil Protection Commissary (editor fixture): Civil Protection units get grenades, ammunition, armour, bandages and a ration there. lc_cpsupply_cooldown (120), lc_cpsupply_ration (600). If none is placed, the Union Commissary terminal issues them instead."  (text, line 306)
 - "Resistance lab (editor fixture, formerly the workbench): a lab bench and a scientist who makes the Resistance's guns. Place one in every rebel base. lc_lab_price (0.6 of the dealer's price), lc_lab_shutdown (600 seconds closed after a Civil Protection unit finds it)."  (text, line 307)
 - "How it feels (editor panel, How it feels): lc_fov (75, the widest view anyone gets; 0 leaves it to each player), lc_eye_height (61; GMod's default is 64), lc_view_bob (with lc_view_bob_amount, 100%, for how strong), lc_quiet_hud, lc_respawn_secs (12, how long the death card shows), lc_word_gets_around."  (text, line 308)
@@ -1352,21 +1352,29 @@ Made from version 1244e38. Admin-only console messages and log lines are left ou
 - "Happy (a reward: they've been obedient)"  (text, line 105)
 - "Nightmare (a punishment)"  (text, line 105)
 - "No dream tonight"  (menu option, line 113)
-- "Call a city event"  (text, line 117)
-- "A ration day"  (menu option, line 120)
-- "An inspection sweep"  (menu option, line 121)
-- "A Combine parade"  (menu option, line 122)
-- "Rations for the hour"  (text, line 123)
-- "Generous (full packets for all)"  (menu option, line 125)
-- "Austere (short packets for all)"  (menu option, line 126)
-- "As usual"  (menu option, line 127)
-- "Commissary prices for the hour"  (text, line 128)
-- "A Union job bonus for the hour"  (text, line 131)
-- "The Commissary and the market"  (menu option, line 134)
-- "Commend (+15 standing)"  (menu option, line 140)
-- "Censure (-15 standing)"  (menu option, line 141)
-- "A week's free housing"  (menu option, line 143)
-- "A curfew permit"  (menu option, line 144)
+
+> Note for you (not shown in game): propaganda dreams: star in them herself (when she's asleep for one with someone else), or a giant figure of her
+
+- "Star in propaganda dreams yourself: on (click to use a giant figure of you)"  (menu option, line 117)
+- "Star in propaganda dreams yourself: off (click to star in them)"  (menu option, line 118)
+
+> Note for you (not shown in game): the game answering something done in a window (lc_admin_office)
+
+- "Call a city event"  (text, line 123)
+- "A ration day"  (menu option, line 126)
+- "An inspection sweep"  (menu option, line 127)
+- "A Combine parade"  (menu option, line 128)
+- "Rations for the hour"  (text, line 129)
+- "Generous (full packets for all)"  (menu option, line 131)
+- "Austere (short packets for all)"  (menu option, line 132)
+- "As usual"  (menu option, line 133)
+- "Commissary prices for the hour"  (text, line 134)
+- "A Union job bonus for the hour"  (text, line 137)
+- "The Commissary and the market"  (menu option, line 140)
+- "Commend (+15 standing)"  (menu option, line 146)
+- "Censure (-15 standing)"  (menu option, line 147)
+- "A week's free housing"  (menu option, line 149)
+- "A curfew permit"  (menu option, line 150)
 
 ## cl_livingcity_context.lua (cl_livingcity_context.lua)
 
@@ -1565,27 +1573,31 @@ Made from version 1244e38. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Out of it (or won): wake now, or watch the rest.
 
-- "Out of it"  (window title, line 42)
+- "Out of it"  (window title, line 59)
 
 > Note for you (not shown in game): part of: dream game choice
 
-- "/  / Wake up now, or watch the rest until it's over? (You wake in your bed with everything you had either way.)"  (label or button, line 49)
-- "Wake up now"  (label or button, line 57)
-- "Watch until it's over"  (label or button, line 62)
+- "/  / Wake up now, or watch the rest until it's over? (You wake in your bed with everything you had either way.)"  (label or button, line 66)
+- "Wake up now"  (label or button, line 74)
+- "Watch until it's over"  (label or button, line 79)
+
+> Note for you (not shown in game): her lines, at the bottom
+
+- "You're the star of this dream. What you say in chat, the dreamers see."  (text, line 208)
 
 > Note for you (not shown in game): on screen
 
-- "Time left: %d:%02d"  (message, line 149)
-- "Lives: %d of %d"  (message, line 150)
-- "Tokens left: %d"  (message, line 151)
-- "Still standing: %d"  (message, line 152)
-- "You won. Watching until it's over (wake up: C > Settings > Shared dreams)."  (text, line 165)
-- "You're out. Watching until it's over (wake up: C > Settings > Shared dreams)."  (text, line 166)
+- "Time left: %d:%02d"  (message, line 212)
+- "Lives: %d of %d"  (message, line 213)
+- "Tokens left: %d"  (message, line 214)
+- "Still standing: %d"  (message, line 215)
+- "You won. Watching until it's over (wake up: C > Settings > Shared dreams)."  (text, line 228)
+- "You're out. Watching until it's over (wake up: C > Settings > Shared dreams)."  (text, line 229)
 
 > Note for you (not shown in game): the big word, in the middle
 
-- "Move! His back is turned."  (text, line 175)
-- "They're afraid of you: catch them! (%d)"  (message, line 177)
+- "Move! His back is turned."  (text, line 238)
+- "They're afraid of you: catch them! (%d)"  (message, line 240)
 
 ## shared dreams, your side (sv_livingcity_dreams.lua) (cl_livingcity_dreams.lua)
 
@@ -3678,110 +3690,6 @@ Made from version 1244e38. Admin-only console messages and log lines are left ou
 - "Player not found: {name}"  (chat message, line 236)
 - "[Admin tools] {msg}"  (chat message, line 239)
 
-## the Administrator's dreams (dreams you play) (sv_livingcity_admiredreams.lua)
-
-`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_admiredreams.lua`
-
-
-> Note for you (not shown in game): The stage: her, her pedestal, her admirers, the crowd's sighs
-
-- "A sigh runs through the crowd. Someone at the back fans themselves with a ration card."  (text, line 95)
-- "She tilts her head a single degree. Three admirers forget their own names."  (text, line 96)
-- "The music swells. Your heart does something it is not authorised to do."  (text, line 97)
-- "An officer at the edge lifts his mask to see her better, then remembers himself and puts it back."  (text, line 98)
-- "Somebody whispers "radiant". Somebody else whispers "more radiant than that"."  (text, line 99)
-- "Her hair moves in a breeze that blows only for her."  (text, line 100)
-- "You notice you're blushing. So is everyone else. Nobody mentions it."  (text, line 101)
-- "A man near the front faints with a small, happy sound."  (text, line 102)
-- "The spotlight finds her cheekbones and stays there, as if it can't look away either."  (text, line 103)
-- "A citizen tries to applaud, realises it might seem forward, and kneels lower instead."  (text, line 104)
-- "She almost smiles. The whole hall holds its breath."  (text, line 105)
-- "Rose petals drift down from nowhere. Nobody asks where they came from."  (text, line 106)
-
-> Note for you (not shown in game): The crowd sighs now and then (everyone in the dream sees it).
-
-- "In the dream"  (on-screen notice, line 167)
-
-> Note for you (not shown in game): How her dreams leave you (instead of the nightmares' LC.DreamOutcome).
-
-- "You wake with her face still in your mind, warm and a little embarrassed, humming a tune you've never heard. Nobody needs to know about this dream."  (on-screen notice, line 179)
-- "In the dream she turned away from you, and you wake with your cheeks burning. It was only a dream. Probably."  (on-screen notice, line 181)
-- "The music fades"  (on-screen notice, line 183)
-- "The spotlight dims, the music fades, and you wake in your bed, strangely devoted to the city's paperwork."  (on-screen notice, line 183)
-- "The music fades"  (text, line 187)
-- "The spotlight dims before the end, and she's gone. You wake."  (text, line 187)
-
-> Note for you (not shown in game): Kneel Before Her
-
-- "Kneel Before Her"  (name, line 244)
-- "Kneel (crouch) and gaze up at her to fill your Devotion. Never let her catch you standing in her gaze."  (text, line 245)
-
-> Note for you (not shown in game): part of: tick
-
-- "You stood in her presence"  (text, line 277)
-- "She looked straight at you, and you were standing."  (text, line 277)
-- "She noticed you"  (text, line 284)
-- "For one moment her eyes rest on you, and the whole hall sighs with envy. You are adored."  (text, line 284)
-
-> Note for you (not shown in game): part of: state
-
-- "She's looking at you! Stay on your knees."  (text, line 293)
-- "Kneel, and gaze up at her."  (text, line 294)
-
-> Note for you (not shown in game): Roses for Her
-
-- "Roses for Her"  (name, line 304)
-- "Pick up a glowing rose at the back of the hall and lay it at her feet. In the front half of the hall, stay on your knees (crouch)."  (text, line 305)
-
-> Note for you (not shown in game): part of: tick
-
-- "Nobody stands before her"  (text, line 358)
-- "Her honour guard lifts you by the collar and carries you to the back of the hall."  (text, line 358)
-- "She accepts your roses"  (text, line 374)
-- "She lets the roses rest at her feet, and for a heartbeat she almost smiles at you. You are adored."  (text, line 374)
-- "A rose at her feet"  (on-screen notice, line 376)
-- "She doesn't look down, but you're sure she noticed. %d to go."  (message, line 376)
-
-> Note for you (not shown in game): part of: state
-
-- "Her half of the hall: stay on your knees."  (text, line 389)
-- "Carry the rose to her feet. Kneel past the gold line."  (text, line 390)
-- "Pick up a glowing rose."  (text, line 391)
-- "Roses given: %d of %d"  (message, line 393)
-
-> Note for you (not shown in game): Mirror, Mirror
-
-- "Mirror, Mirror"  (name, line 403)
-- "Kneel (crouch) and compliment her in chat. A word nobody has used yet counts double. Don't you dare insult her."  (text, line 404)
-- "She inclines her head, very slightly."  (text, line 417)
-- "Somewhere a violin agrees with you."  (text, line 417)
-- "Her reflection in every mirror smiles at once."  (text, line 417)
-- "She pretends not to have heard. She heard."  (text, line 418)
-- "The spotlight warms by a degree."  (text, line 418)
-
-> Note for you (not shown in game): everyone in the dream hears it (only them)
-
-- "(in the dream) {Nick}: {text}"  (chat message, line 448)
-
-> Note for you (not shown in game): part of: admire said
-
-- "She heard that"  (text, line 457)
-- ""{insulted}"? Every mirror in the hall cracks at once, and you're thrown to the back."  (text, line 457)
-- "She's heard that"  (on-screen notice, line 461)
-- "You've told her that already. She'd like something new."  (on-screen notice, line 461)
-- "She didn't hear you"  (on-screen notice, line 465)
-- "She doesn't hear people who are standing. Kneel (crouch) first."  (on-screen notice, line 465)
-- "The fairest of them all"  (text, line 477)
-- ""Yes," says every mirror in the hall, in her voice. "You may adore me." You are adored."  (text, line 477)
-- "An original!"  (on-screen notice, line 479)
-- "She liked that"  (on-screen notice, line 479)
-
-> Note for you (not shown in game): part of: state
-
-- "Compliment her in chat."  (text, line 488)
-- "Kneel (crouch) first: she doesn't hear people who stand."  (text, line 489)
-- "Adoration: %d of %d"  (message, line 491)
-
 ## custom announcements, for Overwatch and for the Administrator (sv_livingcity_announcer.lua)
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_announcer.lua`
@@ -4396,43 +4304,43 @@ Made from version 1244e38. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: admin do
 
-- "That can't happen right now (or the map has nowhere for it)."  (text, line 305)
-- "By order of the City Administrator: {arg}."  (text, line 306)
-- "Rations are increased for the hour. The Union provides."  (text, line 313)
-- "Rations are reduced for the hour. Sacrifice strengthens us."  (text, line 313)
-- "Rations are as usual."  (text, line 313)
-- "Commissary prices are %s for the hour (%d%%)."  (message, line 320)
-- "as usual"  (text, line 320)
-- "For the hour, {name} shifts pay half again. The city needs hands there."  (text, line 328)
+- "That can't happen right now (or the map has nowhere for it)."  (text, line 309)
+- "By order of the City Administrator: {arg}."  (text, line 310)
+- "Rations are increased for the hour. The Union provides."  (text, line 317)
+- "Rations are reduced for the hour. Sacrifice strengthens us."  (text, line 317)
+- "Rations are as usual."  (text, line 317)
+- "Commissary prices are %s for the hour (%d%%)."  (message, line 324)
+- "as usual"  (text, line 324)
+- "For the hour, {name} shifts pay half again. The city needs hands there."  (text, line 332)
 
 > Note for you (not shown in game): the rest are about a person
 
-- "Look at someone, or pick them."  (text, line 332)
-- "Commended by the Administrator"  (text, line 337)
-- "Censured by the Administrator"  (text, line 337)
-- "is commended for their service to the city."  (text, line 338)
-- "is censured. Let them remember it."  (text, line 338)
+- "Look at someone, or pick them."  (text, line 336)
+- "Commended by the Administrator"  (text, line 341)
+- "Censured by the Administrator"  (text, line 341)
+- "is commended for their service to the city."  (text, line 342)
+- "is censured. Let them remember it."  (text, line 342)
 
 > Note for you (not shown in game): part of: admin do
 
-- "They aren't wanted."  (text, line 341)
-- "Not for that. Not even the Administrator."  (text, line 344)
-- "is pardoned. The city is merciful."  (text, line 349)
-- "[City] The Administrator grants you a week's rent-free housing."  (chat message, line 355)
-- "[City] The Administrator issues you a curfew permit."  (chat message, line 361)
+- "They aren't wanted."  (text, line 345)
+- "Not for that. Not even the Administrator."  (text, line 348)
+- "is pardoned. The city is merciful."  (text, line 353)
+- "[City] The Administrator grants you a week's rent-free housing."  (chat message, line 359)
+- "[City] The Administrator issues you a curfew permit."  (chat message, line 365)
 
 > Note for you (not shown in game): a week's free housing (the office): read by the rent
 
-- "rent-free, by the Administrator's grant"  (text, line 371)
+- "rent-free, by the Administrator's grant"  (text, line 375)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_admin_do)
 
-- "[Office] Done."  (chat message, line 379)
-- "[Office] {or}"  (text, line 379)
+- "[Office] Done."  (chat message, line 383)
+- "[Office] {or}"  (text, line 383)
 
 > Note for you (not shown in game): part of: admin order kill
 
-- "Threat to the City Administrator"  (text, line 433)
+- "Threat to the City Administrator"  (text, line 438)
 
 ## weedkiller against the infestation, and against the Combine (the owner, 2026-11-01) (sv_livingcity_cleanup.lua)
 
@@ -5474,22 +5382,26 @@ Made from version 1244e38. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the time's up, or nobody's left in it
 
-- "The nightmare fades"  (text, line 891)
-- "It loosens its grip before the end, and you wake."  (text, line 891)
+- "The nightmare fades"  (text, line 897)
+- "It loosens its grip before the end, and you wake."  (text, line 897)
 
 > Note for you (not shown in game): Build tonight's game at the dream point and put its dreamers in it. True, or false and why not.
 
-- "No such dream."  (text, line 915)
-- "The server has too many things in it right now to build that dream."  (text, line 916)
+- "No such dream."  (text, line 926)
+- "The server has too many things in it right now to build that dream."  (text, line 927)
+
+> Note for you (not shown in game): the Administrator, asleep with the others, may star in it herself (sv_livingcity_propagandadreams.lua)
+
+- "The dream couldn't be built here."  (text, line 939)
 
 > Note for you (not shown in game): part of: dream game start
 
-- "The dream couldn't be built here."  (text, line 925)
-- "Dream game: %s, %d dreamers, %d props"  (message, line 941)
+- ": you're the star"  (on-screen notice, line 951)
+- "Dream game: %s, %d dreamers, %d props"  (message, line 966)
 
 > Note for you (not shown in game): part of: dream game stop
 
-- "Dream game over: %s (%s), %d won"  (message, line 999)
+- "Dream game over: %s (%s), %d won"  (message, line 1030)
 
 ## shared dreams (sv_livingcity_dreams.lua)
 
@@ -5549,82 +5461,82 @@ Made from version 1244e38. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The Administrator picks tonight's dream (id), or none ("none"). True, or false and why not. The pick ignores the endings' cooldown, and there's still one dream a night; it can be changed until the dream begins. (The G-Man has no part in dreams: the owner, 7 November.)
 
-- "Only the City Administrator chooses the city's dreams."  (text, line 978)
-- "Dreams are switched off on this server."  (text, line 979)
-- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 980)
+- "Only the City Administrator chooses the city's dreams."  (text, line 981)
+- "Dreams are switched off on this server."  (text, line 982)
+- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 983)
 
 > Note for you (not shown in game): part of: dream admin pick
 
-- "Tonight's dream"  (on-screen notice, line 985)
-- "No dream tonight. The city sleeps without one."  (on-screen notice, line 985)
-- "No such dream."  (text, line 988)
-- "Tonight's dream"  (on-screen notice, line 996)
-- "Everyone asleep will dream it tonight, a minute after you say good night."  (message, line 997)
-- "Tonight's dream has been dreamt already: it waits for tomorrow night."  (message, line 997)
+- "Tonight's dream"  (on-screen notice, line 988)
+- "No dream tonight. The city sleeps without one."  (on-screen notice, line 988)
+- "No such dream."  (text, line 991)
+- "Tonight's dream"  (on-screen notice, line 999)
+- "Everyone asleep will dream it tonight, a minute after you say good night."  (message, line 1000)
+- "Tonight's dream has been dreamt already: it waits for tomorrow night."  (message, line 1000)
 
 > Note for you (not shown in game): part of: dream tonight
 
-- "no dream point"  (text, line 1019)
-- "nothing to dream"  (text, line 1021)
+- "no dream point"  (text, line 1022)
+- "nothing to dream"  (text, line 1024)
 
 > Note for you (not shown in game): (the morning after a dream: a line for the whole city, by its mood)
 
-- "[City] {line}"  (chat message, line 1046)
+- "[City] {line}"  (chat message, line 1049)
 
 > Note for you (not shown in game): the sleepers, warned (and the way out)
 
-- "A dream is coming"  (on-screen notice, line 1066)
-- "It's shared with everyone asleep, and you'll wake in your bed with everything you had. {or}"  (on-screen notice, line 1066)
+- "A dream is coming"  (on-screen notice, line 1069)
+- "It's shared with everyone asleep, and you'll wake in your bed with everything you had. {or}"  (on-screen notice, line 1069)
 
 > Note for you (not shown in game): In a dream, nothing counts
 
-- "will have to wait until you wake up. (C > Settings > Shared dreams: wake up.)"  (on-screen notice, line 1150)
+- "will have to wait until you wake up. (C > Settings > Shared dreams: wake up.)"  (on-screen notice, line 1153)
 
 > Note for you (not shown in game): part of: inv action
 
-- "Your pockets"  (text, line 1171)
+- "Your pockets"  (text, line 1174)
 
 > Note for you (not shown in game): part of: sleep in
 
-- "You're already dreaming."  (text, line 1172)
+- "You're already dreaming."  (text, line 1175)
 
 > Note for you (not shown in game): Players: opting out, and waking up
 
-- "Shared dreams"  (on-screen notice, line 1215)
-- "You've opted out: you sleep without the city's dreams. (C > Settings > Shared dreams to opt back in.)"  (on-screen notice, line 1215)
-- "You'll dream with everyone else asleep. You always wake in your bed, with everything you had."  (on-screen notice, line 1216)
+- "Shared dreams"  (on-screen notice, line 1218)
+- "You've opted out: you sleep without the city's dreams. (C > Settings > Shared dreams to opt back in.)"  (on-screen notice, line 1218)
+- "You'll dream with everyone else asleep. You always wake in your bed, with everything you had."  (on-screen notice, line 1219)
 
 > Note for you (not shown in game): part of: dream command
 
-- "[Dreams] You're not dreaming."  (chat message, line 1224)
-- "[Dreams] Shared dreams are {or}. /dream off, /dream on, /dream wake (or C > Settings)."  (chat message, line 1226)
+- "[Dreams] You're not dreaming."  (chat message, line 1227)
+- "[Dreams] Shared dreams are {or}. /dream off, /dream on, /dream wake (or C > Settings)."  (chat message, line 1229)
 
 > Note for you (not shown in game): dream restore
 
-- "You wake up"  (on-screen notice, line 1246)
-- "You'd left in the middle of a dream. Everything you had is just as it was."  (on-screen notice, line 1246)
+- "You wake up"  (on-screen notice, line 1249)
+- "You'd left in the middle of a dream. Everything you had is just as it was."  (on-screen notice, line 1249)
 
 > Note for you (not shown in game): Put someone's things back from their snapshot (also an old one already put back once).
 
-- "No such player."  (text, line 1264)
-- "is woken, and everything put back."  (text, line 1265)
-- "has no dream snapshot."  (text, line 1268)
+- "No such player."  (text, line 1267)
+- "is woken, and everything put back."  (text, line 1268)
+- "has no dream snapshot."  (text, line 1271)
 
 > Note for you (not shown in game): part of: dream force restore
 
-- "'s things are being put back from their snapshot."  (text, line 1273)
+- "'s things are being put back from their snapshot."  (text, line 1276)
 
 > Note for you (not shown in game): part of: dream status
 
-- "(a dream you play)"  (name, line 1289)
+- "(a dream you play)"  (name, line 1292)
 
 > Note for you (not shown in game): part of: reply
 
-- "[Living City] {m}"  (chat message, line 1332)
+- "[Living City] {m}"  (chat message, line 1335)
 
 > Note for you (not shown in game): the console command lc_dream_now
 
-- "The dream begins: {id}"  (text, line 1342)
+- "The dream begins: {id}"  (text, line 1345)
 
 ## the Combine's dropship (sv_livingcity_dropship.lua)
 
@@ -9511,6 +9423,233 @@ Made from version 1244e38. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): the console command lc_breencast
 
 - "[Living City] {why}"  (text, line 676)
+
+## propaganda dreams (dreams you play) (sv_livingcity_propagandadreams.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_propagandadreams.lua`
+
+
+> Note for you (not shown in game): Every line she says, and its words on screen (a recording's .txt replaces them).
+
+- "You may look upon me. On your knees, of course."  (text, line 92)
+- "Flowers? For me? How predictable. How lovely."  (text, line 93)
+- "Tell me what you see."  (text, line 94)
+- "Come, my soldiers. Protect them."  (text, line 96)
+- "You are safe now, my children. You are always safe with me."  (text, line 97)
+- "Good evening, citizens. Let us see how well you know your city."  (text, line 98)
+- "Well answered. The city is proud of you."  (text, line 99)
+
+> Note for you (not shown in game): Something said in the dream, on everyone's screen (her lines, with their recording).
+
+- "The Administrator"  (text, line 177)
+
+> Note for you (not shown in game): Starring: the Administrator playing herself
+
+- "Propaganda dreams"  (on-screen notice, line 196)
+- "You'll star in propaganda dreams yourself, when you're asleep for one with someone else."  (on-screen notice, line 196)
+- "A giant figure of you stars in propaganda dreams instead of you."  (on-screen notice, line 197)
+- "A sigh runs through the crowd. Someone at the back fans themselves with a ration card."  (text, line 240)
+- "She tilts her head a single degree. Three admirers forget their own names."  (text, line 241)
+- "The music swells. Your heart does something it is not authorised to do."  (text, line 242)
+- "An officer at the edge lifts his mask to see her better, then remembers himself and puts it back."  (text, line 243)
+- "Somebody whispers "radiant". Somebody else whispers "more radiant than that"."  (text, line 244)
+- "Her hair moves in a breeze that blows only for her."  (text, line 245)
+- "You notice you're blushing. So is everyone else. Nobody mentions it."  (text, line 246)
+- "A man near the front faints with a small, happy sound."  (text, line 247)
+- "The spotlight finds her cheekbones and stays there, as if it can't look away either."  (text, line 248)
+- "A citizen tries to applaud, realises it might seem forward, and kneels lower instead."  (text, line 249)
+- "She almost smiles. The whole hall holds its breath."  (text, line 250)
+- "Rose petals drift down from nowhere. Nobody asks where they came from."  (text, line 251)
+- "A banner unfurls behind her: COMPLIANCE IS HAPPINESS."  (text, line 254)
+- "The audience applauds on cue. Then again, slightly louder, in case she didn't hear."  (text, line 255)
+- "A scanner drifts over the audience, taking notes."  (text, line 256)
+- "Somewhere offstage, an officer holds up a sign that says CHEER."  (text, line 257)
+- "Confetti in the city's colours falls from the ceiling. Every piece is accounted for."  (text, line 258)
+- "A citizen in the front row mouths the answers along with everyone else, a fraction early."  (text, line 259)
+
+> Note for you (not shown in game): The crowd, now and then (everyone in the dream sees it).
+
+- "In the dream"  (on-screen notice, line 341)
+
+> Note for you (not shown in game): How a dream leaves you: a line, nothing more.
+
+- "You wake with her face still in your mind, warm and a little embarrassed, humming a tune you've never heard. Nobody needs to know about this dream."  (text, line 359)
+- "In the dream she turned away from you, and you wake with your cheeks burning. It was only a dream. Probably."  (text, line 360)
+- "The music fades"  (text, line 361)
+- "The spotlight dims, the music fades, and you wake in your bed, strangely devoted to the city's paperwork."  (text, line 361)
+- "The music fades"  (text, line 363)
+- "The spotlight dims before the end, and she's gone. You wake."  (text, line 363)
+
+> Note for you (not shown in game): Kneel Before Her
+
+- "Kneel Before Her"  (name, line 424)
+- "Kneel (crouch) and gaze up at her to fill your Devotion. Never let her catch you standing in her gaze."  (text, line 425)
+- "You're the star, on your pedestal. Wherever you look is your gaze: anyone you catch standing loses a life. Say anything in chat and the dream hears you."  (text, line 426)
+
+> Note for you (not shown in game): part of: tick
+
+- "You stood in her presence"  (text, line 458)
+- "She looked straight at you, and you were standing."  (text, line 458)
+- "She noticed you"  (text, line 465)
+- "For one moment her eyes rest on you, and the whole hall sighs with envy. You are adored."  (text, line 465)
+
+> Note for you (not shown in game): part of: state
+
+- "They kneel before you. Look upon them."  (text, line 472)
+- "She's looking at you! Stay on your knees."  (text, line 475)
+- "Kneel, and gaze up at her."  (text, line 476)
+
+> Note for you (not shown in game): Roses for Her
+
+- "Roses for Her"  (name, line 486)
+- "Pick up a glowing rose at the back of the hall and lay it at her feet. In the front half of the hall, stay on your knees (crouch)."  (text, line 487)
+- "You're the star, on your pedestal. They bring you roses on their knees. Say anything in chat and the dream hears you."  (text, line 488)
+
+> Note for you (not shown in game): part of: tick
+
+- "Nobody stands before her"  (text, line 538)
+- "Her honour guard lifts you by the collar and carries you to the back of the hall."  (text, line 538)
+- "She accepts your roses"  (text, line 554)
+- "She lets the roses rest at her feet, and for a heartbeat she almost smiles at you. You are adored."  (text, line 554)
+- "A rose at her feet"  (on-screen notice, line 556)
+- "She doesn't look down, but you're sure she noticed. %d to go."  (message, line 556)
+
+> Note for you (not shown in game): part of: state
+
+- "They bring you roses, on their knees."  (text, line 566)
+- "Her half of the hall: stay on your knees."  (text, line 570)
+- "Carry the rose to her feet. Kneel past the gold line."  (text, line 571)
+- "Pick up a glowing rose."  (text, line 572)
+- "Roses given: %d of %d"  (message, line 574)
+
+> Note for you (not shown in game): Mirror, Mirror
+
+- "Mirror, Mirror"  (name, line 584)
+- "Kneel (crouch) and compliment her in chat. A word nobody has used yet counts double. Don't you dare insult her."  (text, line 585)
+- "You're the star, before your mirrors. Listen to their compliments. Anything you say in chat, the dream hears."  (text, line 586)
+- "She inclines her head, very slightly."  (text, line 600)
+- "Somewhere a violin agrees with you."  (text, line 600)
+- "Her reflection in every mirror smiles at once."  (text, line 600)
+- "She pretends not to have heard. She heard."  (text, line 601)
+- "The spotlight warms by a degree."  (text, line 601)
+
+> Note for you (not shown in game): A line said in the dream: scored, and kept inside the dream. True if it was theirs to say here.
+
+- "(in the dream) {Nick}: {text}"  (chat message, line 627)
+
+> Note for you (not shown in game): part of: admire said
+
+- "She heard that"  (text, line 635)
+- ""{insulted}"? Every mirror in the hall cracks at once, and you're thrown to the back."  (text, line 635)
+- "She's heard that"  (on-screen notice, line 639)
+- "You've told her that already. She'd like something new."  (on-screen notice, line 639)
+- "She didn't hear you"  (on-screen notice, line 643)
+- "She doesn't hear people who are standing. Kneel (crouch) first."  (on-screen notice, line 643)
+- "The fairest of them all"  (text, line 655)
+- ""Yes," says every mirror in the hall, in her voice. "You may adore me." You are adored."  (text, line 655)
+- "An original!"  (on-screen notice, line 657)
+- "She liked that"  (on-screen notice, line 657)
+
+> Note for you (not shown in game): part of: state
+
+- "They compliment you, on their knees."  (text, line 664)
+- "Compliment her in chat."  (text, line 668)
+- "Kneel (crouch) first: she doesn't hear people who stand."  (text, line 669)
+- "Adoration: %d of %d"  (message, line 671)
+
+> Note for you (not shown in game): The Saviour
+
+- "The Saviour"  (name, line 681)
+- "The dead are coming, and you have nothing to fight with. Run. Dodge. Hold on. Help will come."  (text, line 682)
+- "You're the star. Watch them suffer from on high. When the light comes, you descend and save them; walk among them when you land. Anything you say in chat, the dream hears."  (text, line 683)
+- "The light fades"  (text, line 684)
+- "The dream dissolves into gold, and you wake."  (text, line 684)
+- "You wake safe in your bed, and for a moment you'd swear you can still feel her light. The Combine protect you. They always have."  (text, line 686)
+- "In the dream the dead dragged you down before she came. You wake gasping, grateful the Combine are out there."  (text, line 687)
+- "The light fades"  (text, line 688)
+- "You wake in your bed, safe, warm, and protected. As always."  (text, line 688)
+
+> Note for you (not shown in game): part of: tick
+
+- "They drag you down. You scramble back to the others."  (text, line 857)
+- "Her soldiers stand over the last of the dead. She looks down at you, and you have never felt so safe."  (text, line 894)
+- "The city is quiet. Too quiet."  (text, line 898)
+- "Run! You have nothing to fight with."  (text, line 898)
+- "A light breaks through the clouds..."  (text, line 898)
+- "She is coming."  (text, line 899)
+- "She has come."  (text, line 899)
+- "Her soldiers are here!"  (text, line 899)
+- "Watch over them."  (text, line 900)
+- "They suffer without you. Soon."  (text, line 900)
+- "Your light breaks through the clouds."  (text, line 900)
+- "They are yours to save."  (text, line 901)
+- "Your soldiers obey."  (text, line 901)
+- "They are safe, because of you."  (text, line 901)
+
+> Note for you (not shown in game): part of: state
+
+- "The dead: %d"  (message, line 906)
+
+> Note for you (not shown in game): The Loyalty Quiz
+
+- "Who keeps you safe at night?"  (text, line 916)
+- "civil protection"  (text, line 916)
+- "What do we do when an officer speaks to us?"  (text, line 917)
+- "Where does your ration come from?"  (text, line 918)
+- "What are the people who call themselves the Resistance?"  (text, line 919)
+- "anti citizens"  (text, line 919)
+- "Complete the phrase: Compliance is..."  (text, line 920)
+- "How would you describe the Administrator?"  (text, line 921)
+- "What should you do if you see a rebel?"  (text, line 922)
+- "Who is your best friend?"  (text, line 923)
+- "civil protection"  (text, line 923)
+- "the city"  (text, line 923)
+- "What happens to those who disobey?"  (text, line 924)
+- "re educated"  (text, line 924)
+- "What is the most important thing a citizen can be?"  (text, line 925)
+- "The Loyalty Quiz"  (name, line 932)
+- "Answer her questions in chat. A right answer earns Loyalty, the first to answer earns double. Careful: some answers are thoughtcrime."  (text, line 933)
+- "You're the star: the quizmaster on the podium. The questions ask themselves; anything you say in chat, the dream hears."  (text, line 934)
+- "The broadcast ends"  (text, line 935)
+- "The studio lights go out, and you wake."  (text, line 935)
+- "Model citizen"  (text, line 937)
+- "You wake reciting the answers, and feel proud of yourself. You're not sure why."  (text, line 937)
+- "You wake with a start, sure you said something wrong in your sleep. Hopefully nobody heard."  (text, line 938)
+- "The broadcast ends"  (text, line 939)
+- "You wake humming the quiz's theme tune. It's very catchy."  (text, line 939)
+
+> Note for you (not shown in game): part of: tick
+
+- "Model citizen"  (text, line 970)
+- "Full marks for loyalty. The audience rises to its feet."  (text, line 970)
+- "The broadcast ends"  (text, line 971)
+- "The studio lights go out before you've proven yourself. You wake."  (text, line 971)
+
+> Note for you (not shown in game): An answer, in chat. True: it stayed in the dream.
+
+- "(in the dream) {Nick}: {text}"  (chat message, line 985)
+
+> Note for you (not shown in game): part of: quiz said
+
+- ""{w}"? The audience gasps. Two officers escort you to the back of the studio."  (text, line 989)
+- "Not quite"  (on-screen notice, line 1001)
+- "Think about it, citizen. The answer is always obvious."  (on-screen notice, line 1001)
+- "Model citizen"  (text, line 1010)
+- "Full marks for loyalty. She nods once, and the audience rises to its feet for you."  (text, line 1010)
+- "First, and correct!"  (on-screen notice, line 1012)
+- "Loyalty: %d of %d."  (message, line 1012)
+
+> Note for you (not shown in game): part of: state
+
+- "The quiz is about to begin..."  (text, line 1019)
+- "The quiz is over."  (text, line 1020)
+- "Correct. Wait for the next question."  (text, line 1023)
+- "Loyalty: %d of %d     Question %d of %d"  (message, line 1025)
+
+> Note for you (not shown in game): part of: propaganda say
+
+- "The Administrator"  (text, line 1044)
+- "(in the dream) The Administrator: {text}"  (chat message, line 1045)
 
 ## persistent props (sv_livingcity_props.lua)
 

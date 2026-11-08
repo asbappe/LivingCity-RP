@@ -80,7 +80,7 @@ LC_MODULES = {
         "sv_livingcity_endingtune", -- (the Endings menu: every ending's settings, and the dances tuned live)
         "sv_livingcity_dreams", -- (the secret endings as shared dreams for everyone asleep, with a dream point placed)
         "sv_livingcity_dreamgames", -- (nightmare dreams you play: the maze, the barrel tower, the crumbling floor, freeze)
-        "sv_livingcity_admiredreams", -- (the Administrator's dreams you play: kneel, roses, mirror; after dreamgames)
+        "sv_livingcity_propagandadreams", -- (propaganda dreams you play: kneel, roses, mirror, the saviour, the quiz; after dreamgames)
         "sv_livingcity_vices", -- (cigarettes, alcohol and stimulants; and how a dream you played leaves you)
         "sv_livingcity_events",
         "sv_livingcity_exercise", -- (after events: the morning jog, drill and parade are events)

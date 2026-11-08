@@ -957,7 +957,10 @@ function LC.DreamOffice()
             if moods[id] == m then g.endings[#g.endings + 1] = { id = id, name = LC.Endings[id] and LC.Endings[id].name or id } end
         end
         for _, id in ipairs(LC.DreamGameOrder or {}) do
-            if moods[id] == m and IsGame(id) then g.endings[#g.endings + 1] = { id = id, name = LC.DreamTitle(id), game = true } end
+            if moods[id] == m and IsGame(id) then
+                local prop = LC.PropagandaDreams and LC.PropagandaDreams[id] -- (sv_livingcity_propagandadreams.lua)
+                g.endings[#g.endings + 1] = { id = id, name = (prop and "Propaganda: " or "") .. LC.DreamTitle(id), game = true, propaganda = prop or nil }
+            end
         end
         out.groups[#out.groups + 1] = g
     end
