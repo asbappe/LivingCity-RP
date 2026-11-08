@@ -650,6 +650,55 @@ concommand.Add("lc_announce_clips", function(ply)
     Reply(ply, "[Living City] " .. total .. " custom announcements found. Folders: sound/livingcity/overwatch/, administrator/, radio/ (or the same under sound/" .. ROOT .. "), flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files.")
 end)
 
+-- Every voice line the gamemode looks for that has no recording yet (the owner, 8 November: "an
+-- audit and listing of all the voice files we know to still be missing"): the dreams' lines, the PA's
+-- triggers for each voice (the Administrator's in any tone), the radio's, and the G-Man's.
+function LC.VoiceMissing()
+    local out = {}
+    local function Row(name, folder, list)
+        table.sort(list)
+        out[#out + 1] = { name = name, folder = folder, missing = list }
+    end
+    local dream = {}
+    for cue in pairs(LC.PropagandaCues or {}) do
+        if LC.PropagandaVoice and not LC.PropagandaVoice(cue) then dream[#dream + 1] = cue end
+    end
+    Row("Dream lines", "dreams/voice/", dream)
+    for _, v in ipairs(LC.AnnounceVoices) do
+        local m = {}
+        for _, t in ipairs(LC.AnnounceTriggers) do
+            local n = 0
+            for k = 1, (v == "administrator" and #TIERS or 1) do n = n + #Scan(v, t, k) end
+            if n == 0 then m[#m + 1] = t end
+        end
+        Row(v, v .. "/", m)
+    end
+    for v, trigs in pairs(LC.AnnounceExtra) do
+        local m = {}
+        for _, t in ipairs(trigs) do if #Scan(v, t) == 0 then m[#m + 1] = t end end
+        Row(v, v .. "/", m)
+    end
+    local g = {}
+    local rival = GetConVar("lc_gman_line_rival")
+    rival = rival and rival:GetString() or ""
+    if rival ~= "" and not file.Exists("sound/" .. rival, "GAME") then g[#g + 1] = rival end
+    if #(file.Find("sound/livingcity/gman/dream*", "GAME") or {}) == 0 then g[#g + 1] = "dream1 (optional)" end
+    Row("G-Man", "gman/", g)
+    return out
+end
+
+concommand.Add("lc_voice_missing", function(ply)
+    if IsValid(ply) and not ply:IsSuperAdmin() then return end
+    local total = 0
+    for _, r in ipairs(LC.VoiceMissing()) do
+        total = total + #r.missing
+        Reply(ply, "[Living City] " .. r.name .. " (sound/livingcity/" .. r.folder .. "), " ..
+            (#r.missing == 0 and "nothing missing" or (#r.missing .. " missing: " .. table.concat(r.missing, ", "))))
+    end
+    Reply(ply, "[Living City] " .. total .. " voice lines with no recording yet. Without one, a dream line still shows its words on screen, " ..
+        "and the PA uses Half-Life 2's lines where it has them. Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle.")
+end)
+
 concommand.Add("lc_announce_rescan", function(ply)
     if IsValid(ply) and not ply:IsSuperAdmin() then return end
     Reply(ply, "[Living City] " .. LC.AnnounceRescan() .. " custom announcements found.")
