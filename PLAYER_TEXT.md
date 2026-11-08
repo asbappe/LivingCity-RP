@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 095f061. Admin-only console messages and log lines are left out.
+Made from version 3b348f8. Admin-only console messages and log lines are left out.
 
-7984 lines, from 226 files.
+8119 lines, from 229 files.
 
 ## Contents
 
@@ -90,6 +90,7 @@ Made from version 095f061. Admin-only console messages and log lines are left ou
 - [cl_livingcity_notices.lua](#cllivingcitynoticeslua-cllivingcitynoticeslua) (16)
 - [cl_livingcity_outfits.lua](#cllivingcityoutfitslua-cllivingcityoutfitslua) (14)
 - [cl_livingcity_patsearch.lua](#cllivingcitypatsearchlua-cllivingcitypatsearchlua) (10)
+- [cl_livingcity_perfdebug.lua](#cllivingcityperfdebuglua-cllivingcityperfdebuglua) (63)
 - [cl_livingcity_quests.lua](#cllivingcityquestslua-cllivingcityquestslua) (20)
 - [cl_livingcity_quick.lua](#cllivingcityquicklua-cllivingcityquicklua) (154)
 - [apartment doors (client)](#apartment-doors-client-cllivingcityrentlua) (12)
@@ -179,6 +180,7 @@ Made from version 095f061. Admin-only console messages and log lines are left ou
 - [a unit's search as a short pat-down (the owner, 7 November)](#a-units-search-as-a-short-pat-down-the-owner-7-november-svlivingcitypatsearchlua) (14)
 - [people](#people-svlivingcitypeoplelua) (5)
 - [server timing](#server-timing-svlivingcityperflua) (4)
+- [the performance debugger (server side)](#the-performance-debugger-server-side-svlivingcityperfdebuglua) (15)
 - [the power grid](#the-power-grid-svlivingcitypowerlua) (28)
 - [prison](#prison-svlivingcityprisonlua) (40)
 - [close calls, careers for life, and what passes on](#close-calls-careers-for-life-and-what-passes-on-svlivingcityprogresslua) (20)
@@ -234,6 +236,7 @@ Made from version 095f061. Admin-only console messages and log lines are left ou
 - [sh_livingcity_factions.lua](#shlivingcityfactionslua-shlivingcityfactionslua) (28)
 - [sh_livingcity_jobs.lua](#shlivingcityjobslua-shlivingcityjobslua) (43)
 - [guns carried lowered (the owner, 1 November: one of the lost v2.7 pieces)](#guns-carried-lowered-the-owner-1-november-one-of-the-lost-v27-pieces-shlivingcityloweredlua) (2)
+- [the performance debugger (server and client)](#the-performance-debugger-server-and-client-shlivingcityperfdebuglua) (57)
 - [sh_livingcity_shop.lua](#shlivingcityshoplua-shlivingcityshoplua) (256)
 - [shared.lua](#sharedlua-sharedlua) (1)
 
@@ -1168,13 +1171,13 @@ Made from version 095f061. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Workers who want a unit with them: waiting, left alone, or with an NPC unit a player can take over from.
 
-- "with an NPC Civil Protection unit"  (text, line 492)
+- "with an NPC Civil Protection unit"  (text, line 494)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_interrogate)
 
-- "A Civil Protection unit stands over you with a stun baton. "You will answer my questions." /  / Talk, and the beating stops: you give up a Resistance hideout. Say nothing, and take it."  (label or button, line 545)
-- "Talk (give them a hideout)"  (label or button, line 550)
-- "Say nothing"  (label or button, line 559)
+- "A Civil Protection unit stands over you with a stun baton. "You will answer my questions." /  / Talk, and the beating stops: you give up a Resistance hideout. Say nothing, and take it."  (label or button, line 547)
+- "Talk (give them a hideout)"  (label or button, line 552)
+- "Say nothing"  (label or button, line 561)
 
 ## cl_livingcity_admintools.lua (cl_livingcity_admintools.lua)
 
@@ -2844,6 +2847,95 @@ Made from version 095f061. Admin-only console messages and log lines are left ou
 - "You've tried your one move."  (spoken line, line 144)
 - ": slip something into a checked spot (once)"  (text, line 145)
 - ": once a spot is checked, slip something into it"  (text, line 146)
+
+## cl_livingcity_perfdebug.lua (cl_livingcity_perfdebug.lua)
+
+`gamemodes/livingcity/gamemode/modules/client/cl_livingcity_perfdebug.lua`
+
+
+> Note for you (not shown in game): your own game is measured while the server's is on and the window is open
+
+- "Hook (event / name)"  (text, line 51)
+- "% of time"  (text, line 51)
+- "Total ms"  (text, line 51)
+- "Average ms"  (text, line 51)
+- "Worst ms"  (text, line 51)
+- "Timer (and where it was started)"  (text, line 52)
+- "% of time"  (text, line 52)
+- "Total ms"  (text, line 52)
+- "Average ms"  (text, line 52)
+- "Worst ms"  (text, line 52)
+- "Net in"  (text, line 53)
+- "Handler ms"  (text, line 53)
+- "Worst ms"  (text, line 53)
+- "Nothing handled it"  (text, line 53)
+- "Net out"  (text, line 54)
+- "To players"  (text, line 54)
+- "Networked values"  (text, line 55)
+- "Changes a second"  (text, line 55)
+- "At the start"  (text, line 56)
+- "Grew by"  (text, line 56)
+- "Packet loss %"  (text, line 57)
+- "Gamemode KB/s to them"  (text, line 57)
+- "Bytes waiting to go"  (text, line 57)
+- "Loading in"  (text, line 57)
+- "Who sends"  (text, line 58)
+- "Busiest second"  (text, line 58)
+- "Bytes in it"  (text, line 58)
+
+> Note for you (not shown in game): part of: summary text
+
+- "No figures yet."  (text, line 67)
+- "Server: %s. Map %s, %d players, tick rate %s, city NPCs %d."  (message, line 70)
+- "Started by %s, %d s ago%s."  (message, line 73)
+- "; it turns itself off in %d min"  (message, line 74)
+- "Last report saved: {lastFile}"  (text, line 76)
+- "Your game: %s, for %d s."  (message, line 78)
+- "What stands out:"  (text, line 81)
+- "Frames: %d, average %.2f ms (should be %.2f), worst %.1f ms."  (message, line 86)
+- "on time %d, late %d, slow %d, hitches %d (a hitch is %d ms or more: %d in all)."  (message, line 87)
+- "Lua it can see: %.1f%% of the time. %d hooks timed."  (message, line 88)
+- "Lua memory: %.1f MB now, %.1f MB at most, about %.0f KB taken a second."  (message, line 89)
+- "City NPC loop: %.2f ms average, %.2f ms worst."  (message, line 90)
+- "Entities %d, NPCs %d%s."  (message, line 92)
+- ", edicts {edicts} of 8176"  (text, line 92)
+- "Server net settings: split rate %s, max rate %s, min rate %s."  (message, line 95)
+- "The city's repeating timers since the server started (costliest):"  (text, line 99)
+- "%s: %.0f ms in all, %.2f ms average, %.1f ms worst"  (message, line 102)
+
+> Note for you (not shown in game): part of: hitch text
+
+- "No hitches yet (a frame of {or} ms or more)."  (text, line 109)
+- "The newest last. "Lua seen" is how much of the frame was code it timed; the rest is the engine (physics, entities) or code outside hooks."  (text, line 110)
+- "%s  %.0f ms  (Lua seen %.1f ms, %d players)"  (message, line 112)
+
+> Note for you (not shown in game): part of: refresh
+
+- "Measuring on the server"  (text, line 123)
+- "Off on the server"  (text, line 123)
+- "\|   showing: {or}"  (label or button, line 123)
+- "Stop (and save)"  (label or button, line 125)
+
+> Note for you (not shown in game): part of: perf debug menu
+
+- "Performance debugger (staff)"  (window title, line 166)
+- "Save report"  (text, line 192)
+- "Copy report"  (text, line 193)
+
+> Note for you (not shown in game): btn
+
+- "[Performance debugger]"  (chat message, line 195)
+- "Both reports copied to the clipboard."  (chat message, line 195)
+
+> Note for you (not shown in game): part of: perf debug menu
+
+- "Server / Your game"  (text, line 197)
+- "Hitch at {or} ms"  (text, line 205)
+- "Hitch at {ms} ms"  (text, line 206)
+- "Turns off after {or} min"  (text, line 215)
+- "Turns off after {m} min"  (text, line 216)
+- "Never turns itself off"  (text, line 217)
+- "Asking the server..."  (label or button, line 224)
 
 ## cl_livingcity_quests.lua (cl_livingcity_quests.lua)
 
@@ -9631,10 +9723,51 @@ Made from version 095f061. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_profile
 
-- "[Living City] Timer timings cleared."  (chat message, line 70)
-- "[Living City] Costliest timers (total ms, per call average, worst, calls):"  (chat message, line 75)
-- "%-34s %8.1f total  %6.2f avg  %6.2f worst  %d calls"  (message, line 78)
-- "NPC loop: %.2f ms average, %.2f worst, over %d runs"  (message, line 83)
+- "[Living City] Timer timings cleared."  (chat message, line 71)
+- "[Living City] Costliest timers (total ms, per call average, worst, calls):"  (chat message, line 76)
+- "%-34s %8.1f total  %6.2f avg  %6.2f worst  %d calls"  (message, line 79)
+- "NPC loop: %.2f ms average, %.2f worst, over %d runs"  (message, line 84)
+
+## the performance debugger (server side) (sv_livingcity_perfdebug.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_perfdebug.lua`
+
+
+> Note for you (not shown in game): part of: tell
+
+- "Performance debugger"  (on-screen notice, line 48)
+
+> Note for you (not shown in game): Saved to data/livingcity/perf/perf_<date>_<time>.txt; the oldest go past 30.
+
+- "The city's repeating timers since the server started:"  (text, line 102)
+- "%s  \|  total ms %s, runs %s, avg ms %s, worst ms %s"  (message, line 104)
+
+> Note for you (not shown in game): part of: turn on
+
+- "the console"  (text, line 121)
+- "turned it on: the server times every hook, timer and net message{or}"  (chat message, line 123)
+
+> Note for you (not shown in game): part of: turn off
+
+- "The console"  (text, line 130)
+- "turned it off."  (text, line 130)
+- "Report saved: {path}"  (text, line 130)
+
+> Note for you (not shown in game): part of: on second
+
+- "It turned itself off after {m} minutes."  (text, line 151)
+
+> Note for you (not shown in game): part of: command
+
+- "Performance debugger"  (on-screen notice, line 175)
+- "Report saved: {path}"  (on-screen notice, line 175)
+
+> Note for you (not shown in game): the console command lc_perfdebug
+
+- "[Living City] Performance report printed to your console."  (chat message, line 214)
+- "[Living City] Report saved: {lastFile}"  (chat message, line 222)
+- "[Living City] The performance debugger is already {a}."  (chat message, line 223)
+- "[Living City] Performance debugger: {or}. lc_perfdebug on \| off \| reset \| save \| report (or C > Help > Performance debugger)."  (chat message, line 226)
 
 ## the power grid (sv_livingcity_power.lua)
 
@@ -16451,6 +16584,80 @@ Made from version 095f061. Admin-only console messages and log lines are left ou
 
 - "Rebel ground: keep your gun lowered, or the fighters open fire."  (text, line 72)
 - "Overwatch ground: recruits and metrocops carry lowered, or the soldiers open fire."  (text, line 73)
+
+## the performance debugger (server and client) (sh_livingcity_perfdebug.lua)
+
+`gamemodes/livingcity/gamemode/modules/shared/sh_livingcity_perfdebug.lua`
+
+
+> Note for you (not shown in game): part of: incoming
+
+- "net: {depth}"  (text, line 297)
+
+> Note for you (not shown in game): What stands out, in plain words, worst first.
+
+- "%.1f%% of frames took over three times as long as they should (%.0f ms); the worst %.0f ms."  (message, line 647)
+
+> Note for you (not shown in game): part of: findings
+
+- "%d of the last %d hitches were mostly %s."  (message, line 660)
+- "%d of the last %d hitches were mostly outside the Lua it can see: the engine (physics, many entities moving or colliding), map I/O or another addon's code outside a hook."  (message, line 663)
+- "The costliest hook, %s, takes %.1f%% of all time (%.2f ms average, %.1f ms at worst)."  (message, line 667)
+- "The costliest timer, %s, takes %.1f%% of all time (worst %.1f ms)."  (message, line 669)
+- "%d %s messages came in with nothing to handle them (an addon removed, or someone sending junk)."  (message, line 671)
+- "Handling the message %s took %.0f ms at worst."  (message, line 674)
+- "The biggest send, %s, is %.1f KB a second (%d sends to %d players in all)."  (message, line 676)
+- "%s sent %d messages (%.1f KB) in one second at %s."  (message, line 678)
+- "%s was set %d times and changed only %d: calls that could be skipped."  (message, line 683)
+- "%s changes %.0f times a second, each sent to players."  (message, line 688)
+- "%s keeps growing: %d at the start, %d now (a leak?)."  (message, line 691)
+- "Lua memory went from %.0f MB to %.0f MB."  (message, line 695)
+- "%d edicts in use of the engine's 8176: near the limit (the server crashes past it)."  (message, line 696)
+- "Lua takes %.0f MB of memory a second (garbage to collect: small hitches)."  (message, line 698)
+- "%.0f KB waiting to be sent to %s (more than they can be sent)."  (message, line 701)
+- "Nothing stands out."  (text, line 704)
+
+> Note for you (not shown in game): part of: report text
+
+- "Living City performance report (%s), %s"  (message, line 724)
+- "Measured for %d s%s. %d hooks timed. Hitch = a frame of %d ms or more."  (message, line 725)
+- "(still on)"  (message, line 725)
+- "Map {map}, {or} players, tick rate {or}"  (text, line 726)
+- "What stands out:"  (text, line 728)
+- "Frames: %d, average %.2f ms (should be %.2f), worst %.1f ms. On time %d, late %d, slow %d, hitch %d. Lua it can see: %.1f%% of the time."  (message, line 733)
+- "Lua memory: %.1f MB now, %.1f MB at most; about %.0f KB taken a second."  (message, line 735)
+- "City NPC loop: %.2f ms average, %.2f ms worst."  (message, line 736)
+- "Server net settings: net_splitpacket_maxrate %s, sv_maxrate %s, sv_minrate %s"  (message, line 739)
+- "Hooks (costliest first):"  (text, line 741)
+- "total ms"  (text, line 741)
+- "% of time"  (text, line 741)
+- "avg ms"  (text, line 741)
+- "worst ms"  (text, line 741)
+- "total ms"  (text, line 742)
+- "% of time"  (text, line 742)
+- "avg ms"  (text, line 742)
+- "worst ms"  (text, line 742)
+- "Net in:"  (text, line 743)
+- "handler ms"  (text, line 743)
+- "worst ms"  (text, line 743)
+- "Net out:"  (text, line 744)
+- "to players"  (text, line 744)
+- "Networked values:"  (text, line 745)
+- "Who sent the server messages:"  (text, line 747)
+- "busiest second"  (text, line 747)
+- "bytes in it"  (text, line 747)
+- "gamemode KB/s to them"  (text, line 750)
+- "bytes waiting"  (text, line 750)
+- "Entities that grew since it started:"  (text, line 752)
+- "Hitches: %d in all; the last %d:"  (message, line 754)
+- "{ms} ms"  (text, line 757)
+- "%s  %.0f ms (Lua seen %.1f ms, %d players): %s"  (message, line 758)
+- "nothing timed"  (message, line 758)
+- "Floods (a player sending a lot in one second):"  (text, line 762)
+- "%s  %s (%s): %d messages, %d bytes"  (message, line 763)
+- "Census (every 10 s, the last 60):"  (text, line 766)
+- "+%ds  entities %d, NPCs %d, %smemory %.1f MB, players %d"  (message, line 768)
+- "edicts {edicts},"  (text, line 768)
 
 ## sh_livingcity_shop.lua (sh_livingcity_shop.lua)
 

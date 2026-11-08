@@ -31,6 +31,7 @@ local function Record(id, dt)
     if not p then p = { calls = 0, total = 0, max = 0, last = 0 } LC.TimerPerf[id] = p end
     p.calls, p.total, p.last = p.calls + 1, p.total + dt, dt
     if dt > p.max then p.max = dt end
+    if LC.PerfDebugNote then LC.PerfDebugNote(id, dt) end -- (the performance debugger, when on: sh_livingcity_perfdebug.lua)
 end
 
 -- The same id always gets the same slot.

@@ -33,6 +33,7 @@ This is the master technical document. It lists what the owner's server, files, 
 | Who knew whom (for "word gets around"), and news of a death still to pass on | `data/livingcity/known.json`, `data/livingcity/word.json` | sv_livingcity_life.lua |
 | Lockers, storage crates and market stalls, with what's in them | `data/livingcity/<map>_storage.json` | sv_livingcity_storage.lua |
 | Debug reports (each one saved as it's copied) | `data/livingcity/reports/` | sv_livingcity_debug.lua |
+| Performance debugger reports (saved when it stops, or on Save report; the newest 30 kept) | `data/livingcity/perf/` | sv_livingcity_perfdebug.lua |
 | When the last secret ending was | `data/livingcity/endings.json` | `LC.EndingCooldownFile` |
 | The endings' dances as tuned in the Endings menu, and its shared settings | `data/livingcity/ending_tuning.json` | `LC.EndingTuneFile`, sv_livingcity_endingtune.lua |
 | How the players arranged each rebel camp (the city's mattresses, crates, chairs and the like, moved with a held E) | `data/livingcity/<map>_camp.json` | sv_livingcity_campmove.lua |

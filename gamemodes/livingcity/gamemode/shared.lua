@@ -30,6 +30,7 @@ LC_MODULES = {
     shared = {
         "sh_livingcity_cache", -- (first: quick lookups the rest use)
         "sh_livingcity_net", -- (big and frequent sends to players, made safe: before anything sends)
+        "sh_livingcity_perfdebug", -- (staff: the performance debugger, off until turned on)
         "sh_livingcity_npcstr", -- (the people's names, jobs and doings: sent only to players near them)
         "sh_livingcity_acts",
         "sh_livingcity_lowered", -- (guns carried lowered until raised: hold R)
@@ -68,6 +69,7 @@ LC_MODULES = {
         "sv_livingcity_data",
         "sv_livingcity_debug",
         "sv_livingcity_lagwatch", -- (staff: the lag monitor)
+        "sv_livingcity_perfdebug", -- (staff: the performance debugger)
         "sv_livingcity_nextstep", -- (what now? everyone always has a next step)
         "sv_livingcity_jobgames", -- (work you actually do: the street sweep, the factory line, papers check)
         "sv_livingcity_vest", -- (powered vests: what suit power is in the city)
@@ -189,6 +191,7 @@ LC_MODULES = {
         "cl_livingcity_acts",
         "cl_livingcity_admintools",
         "cl_livingcity_lagwatch", -- (staff: the lag monitor)
+        "cl_livingcity_perfdebug", -- (staff: the performance debugger)
         "cl_livingcity_nextstep", -- (what now? the next step on screen, F1 slot 1)
         "cl_livingcity_jobgames", -- (the job games' panel, the papers window)
         "cl_livingcity_grigori", -- (his window; the vest's charge on screen)

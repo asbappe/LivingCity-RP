@@ -29,14 +29,11 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 2026-11-08 (part 5): **ten more propaganda dreams**, `sv_livingcity_propagandamore.lua` (uses `LC.PropagandaKit`, exported at the end of `sv_livingcity_propagandadreams.lua`): Record Harvest (`harvest`), The Stakhanov Shift (`shift`), Careless Talk (`spy`), The Newsreel (`newsreel`), Two Minutes of Hate (`hate`), The Mass Games (`massgames`), On-the-Spot Guidance (`guidance`, she can star), The Scrap Drive (`scrap`), Flowers for the Liberators (`flowers`), Duck and Cover (`duck`). Spec: `docs/features/endings.md`, the paragraph after "Propaganda dreams".
-- Client (`cl_livingcity_dreamgames.lua`): generic `glows`, floating `board` (3D2D), the Mass Games `mosaic`, `notes`, `carryName`, `marchers` (NOW for flowers), themes `harvest`, `hate`, `civil`, `newsreel` (black and white).
-- Owner's follow-up (same day): mini games must be party games (everyone picks on their own in 30 s, revealed to all): Careless Talk (4 rounds) and The Newsreel (8 takes, everyone at once) reworked; the others were already simultaneous. Duck and Cover framed as the Resistance's rocket (`LC.DuckRockets`: EP2 path is a guess, falls back to PHX).
-- The owner's rule for every dream: dreams are goofy and absurd; the Resistance can be giant, glowing red, flying (`LC.PropagandaVillain`: Magnusson on the rocket, the unmasked spy, a rebel over the Hate screen).
-- Ravenholm (`ravenholm`, end of the same file): zombies from graves, red Grigori; turns at 25 health or 55 s: her version (she descends, soldiers, Grigori flees) unless `LC.DreamFreeVort()` finds a freed vortigaunt alive (a Free Vortigaunt player, or an NPC with `lcVortFreed`, set where street-crew and work-site vortigaunts are freed), then the green storm, Grigori good with his shotgun, a red giant her flies off. Client `storm`, theme `graveyard`.
-- Inputs: crouch edge (`Ducked`), jump edge (`Jumped`: IN_JUMP or off the ground), chat (`def.say`), position. Offences go through the same `Offend` (loyalty on waking).
-- Tests: `PropagandaMoreTests` (70) pass; `PropagandaDreamTests`, `DreamGameTests` and the client smoke test pass. Full suite not run (the owner asked to test less).
-- Nothing checked in game: PLAYTEST.md, "Ten more propaganda dreams" (sizes of the floating boards, the mosaic's height, the factory machines and other models are guesses).
-- Core snapshot: sorted and in step (the six drinks and smokes approved); `.claude/settings.json` no longer blocks it, so a command can update it with the owner's OK.
-- Earlier (still open): PLAYTEST.md "7 November, part 3" onwards; the first five propaganda dreams unchecked in game.
+- 2026-11-08 (part 7): **the performance debugger** (staff): `sh_livingcity_perfdebug.lua` (the measuring, both sides), `sv_livingcity_perfdebug.lua` (on/off, players and send queue, saving to `data/livingcity/perf/`, auto-off), `cl_livingcity_perfdebug.lua` (the window, C > Help > Performance debugger). Spec: `docs/features/admin.md`, the paragraph after the lag monitor.
+- While on it wraps every hook (via `hook.GetTable`, ULib priorities kept), `hook.Add`, `timer.Simple`/`timer.Create`, `net.Incoming` (its own copy), `net.Start`/`Send`/`Broadcast`/..., and `SetNW*`/`SetNW2*`; off puts back each one that is still its own. Hitches come from the gap between its `Think` hooks (`P.Frame`).
+- One line in `sv_livingcity_perf.lua` passes city timer times on (`LC.PerfDebugNote`).
+- **Waiting on the owner:** OK to add three snapshot lines (`setting lc_perfdebug_minutes = 30`, `setting lc_perfdebug_spike_ms = 60`, `console command lc_perfdebug`) to `_dev/core_snapshot.txt`. Until then the core check fails on just those three.
+- Tests: `PerfDebugTests` (31) pass, client smoke passes. Full suite not run (the owner asked to test less).
+- Nothing checked in game: PLAYTEST.md, "8 November, part 7".
+- Earlier (still open): PLAYTEST.md "7 November, part 3" onwards; both batches of propaganda dreams unchecked in game.
 - Next, each in a fresh chat: The Battle Line and vortigaunt dream warfare (designs at the end of `TODO.md`).
