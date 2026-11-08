@@ -192,7 +192,7 @@ local function FoilSpent(p)
 end
 local function FoilFailed(p)
     p.lcDreamFoilUntil, p.lcDreamFoilWorks = nil, nil
-    Notice(p, "warn", "The foil hat", "The foil hat crinkles under your head, and the dream doesn't so much as notice it. In it walks. (It's a tin foil hat.) It's spent.", 8)
+    Notice(p, "warn", "The foil hat", "Despite your tin foil hat, you feel a distant power, an electric vibration, enter your mind and overpower your senses. The tin foil hat didn't work this time.", 8)
 end
 
 ------------------------------------------------------------------------
