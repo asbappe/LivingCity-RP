@@ -1044,5 +1044,5 @@ Notes:
   Notes:
 - [ ] **What wakes a camp:** someone in a rebel camp shot or batoned by a unit (or a zombie), or arrested: the sleepers there wake, groggy (drooping eyelids, blur, no stamina for a bit). A rebel shooting a friend or an NPC there, a burn barrel or a thrown prop: nobody wakes. Hit a dreamer's sleeping body as a rebel: nothing; as a unit: they wake.
   Notes:
-- [ ] **Foil hat odds:** wear one to bed a few nights: roughly one night in three the dream passes you by ("the foil hat crackles"), the rest it "does nothing at all" and you dream; spent either way. Its description says it only works sometimes.
+- [ ] **Foil hat odds:** wear one to bed a few nights: roughly one night in three the dream passes you by ("a static, a distant power... can't quite break in"), the rest "the dream doesn't so much as notice it" and you dream; spent either way. Its description says it only works sometimes.
   Notes:

@@ -188,11 +188,11 @@ end
 function LC.DreamProof(p) return LC.Chipless(p) or (LC.FoilOn(p) and p.lcDreamFoilWorks == true) end
 local function FoilSpent(p)
     p.lcDreamFoilUntil, p.lcDreamFoilWorks = nil, nil
-    Notice(p, "info", "The foil hat", "Something presses at the edge of your sleep, and the foil hat crackles. It slips past you. The hat's spent.", 8)
+    Notice(p, "info", "The foil hat", "You feel a static, a distant power pressing at your mind that can't quite break in. The foil hat holds, this time. (It's spent.)", 8)
 end
 local function FoilFailed(p)
     p.lcDreamFoilUntil, p.lcDreamFoilWorks = nil, nil
-    Notice(p, "warn", "The foil hat", "The foil hat crackles, smokes, and does nothing at all. The dream walks straight in. (It's a tin foil hat.) It's spent.", 8)
+    Notice(p, "warn", "The foil hat", "The foil hat crinkles under your head, and the dream doesn't so much as notice it. In it walks. (It's a tin foil hat.) It's spent.", 8)
 end
 
 ------------------------------------------------------------------------

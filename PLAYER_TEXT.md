@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 0e6b0ef. Admin-only console messages and log lines are left out.
+Made from version a3d8002. Admin-only console messages and log lines are left out.
 
 8323 lines, from 234 files.
 
@@ -4317,9 +4317,9 @@ Made from version 0e6b0ef. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): Kept out of every dream: no chip, or a foil hat on (sv_livingcity_dreams.lua asks).
 
 - "The foil hat"  (on-screen notice, line 191)
-- "Something presses at the edge of your sleep, and the foil hat crackles. It slips past you. The hat's spent."  (on-screen notice, line 191)
+- "You feel a static, a distant power pressing at your mind that can't quite break in. The foil hat holds, this time. (It's spent.)"  (on-screen notice, line 191)
 - "The foil hat"  (on-screen notice, line 195)
-- "The foil hat crackles, smokes, and does nothing at all. The dream walks straight in. (It's a tin foil hat.) It's spent."  (on-screen notice, line 195)
+- "The foil hat crinkles under your head, and the dream doesn't so much as notice it. In it walks. (It's a tin foil hat.) It's spent."  (on-screen notice, line 195)
 
 > Note for you (not shown in game): Stimulants: one, then not again until you've slept and dreamt properly
 
