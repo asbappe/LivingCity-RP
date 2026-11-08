@@ -182,6 +182,7 @@ console command lc_pardon
 console command lc_pathmap
 console command lc_pathmap_undo
 console command lc_people
+console command lc_perfdebug
 console command lc_pick
 console command lc_prisoners
 console command lc_profile
@@ -818,6 +819,8 @@ setting lc_parade_min = 35
 setting lc_parade_units = 6
 setting lc_pathmap_spacing = 130
 setting lc_people_heights = 1
+setting lc_perfdebug_minutes = 30
+setting lc_perfdebug_spike_ms = 60
 setting lc_permadeath = 1
 setting lc_pickpocket_dc = 12
 setting lc_player_doors = 1
