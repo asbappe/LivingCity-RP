@@ -13922,6 +13922,149 @@ _walls = savedWalls
 ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 DreamGameTests()
+local function AdmireDreamTests()
+section("Shared dreams: the Administrator's dreams you play (kneel, roses, mirror)")
+local errs0 = #_errors
+local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
+_walls = {}
+LC.EndEvent(true)
+_setcvar("lc_needs", 0)
+LC.EndingReload = function() end
+local CITY, DREAM = Vector(152000, -152000, 0), Vector(212000, -212000, 0)
+local adm = newPlayer("ADAdmin", "admin")
+local a = newPlayer("ADA", "citizen")
+local b = newPlayer("ADB", "citizen")
+_run(3)
+local function Asleep(p, at)
+    p:SetPos(at)
+    local key = string.format("s%d_%d_%d", math.floor(at.x), math.floor(at.y), math.floor(at.z))
+    p.lcSleep = { t0 = CurTime() - 70, done = CurTime() - 10, last = CurTime(), slept = true }
+    p:SetNW2Bool("lc_sleeping", true)
+    p.lcBedKey, p.lcBedFrom = key, at + Vector(40, 0, 0)
+    LC.BedSleepers[key] = p
+end
+local function Both() Asleep(a, CITY) Asleep(b, CITY + Vector(0, 200, 0)) a.crouch, b.crouch = nil, nil end
+local function Look(p, g) p.aim = (g.herHead - p:EyePos()):GetNormalized() end
+player.GetAll = function() return { adm, a, b } end
+local dp = LC.AddPoint(DREAM, 0, "dream")
+
+-- on the tablet, under Happy (of course)
+local off = LC.DreamOffice()
+local found = {}
+for _, e in ipairs(off.groups[1].endings) do if e.game then found[e.id] = e.name end end
+ok(found.adore == "Kneel Before Her" and found.roses == "Roses for Her" and found.mirror == "Mirror, Mirror",
+    "the Administrator's three dreams are on her tablet, under Happy")
+ok(LC.DreamMoods("adore=nightmare").adore == "nightmare", "(lc_dream_moods can label them otherwise)")
+ok(LC.AdmireModel() == adm:GetModel() or adm:GetModel() == nil, "she appears with the Administrator's own model when she's on")
+-- her music: any song in sound/livingcity/dreams/administrator/
+_files["sound/livingcity/dreams/administrator/smooth_sax.mp3"] = "x"
+_files["sound/livingcity/dreams/administrator/readme.txt"] = "x"
+local songs = LC.AdmireSongs()
+ok(#songs == 1 and songs[1] == "livingcity/dreams/administrator/smooth_sax.mp3", "her music is whatever song is in sound/livingcity/dreams/administrator/ (any name)")
+
+-- Kneel Before Her
+Both()
+local okA, d1 = LC.DreamStart("adore", adm, false, nil, true)
+local g = okA and d1.game
+ok(okA and g and g.id == "adore" and IsValid(g.her) and #g.ents > 8, "Kneel Before Her is built: the hall, her on a pedestal, kneeling admirers")
+local hello
+for _, m in ipairs(net.sent) do if m.name == "lc_dreamgame" and m.to == a and type(m.data[1]) == "table" and m.data[1].k == "start" and m.data[1].id == "adore" then hello = m.data[1] end end
+ok(hello and hello.theme == "admire" and hello.song == songs[1], "the dreamer's screen goes pink, and her music plays")
+ok(LC.DreamCanWake(b), "a Happy dream: anyone may wake from it (or opt out beforehand)")
+_run(3.5) -- (the start's safety has passed)
+local s = g.pl[a]
+-- she looks straight at them; standing: a life gone
+g.gazeAt, g.gazeWant = CurTime() + 60, nil
+g.herYaw = math.deg(math.atan2(a:GetPos().y - g.herBase.y, a:GetPos().x - g.herBase.x))
+g.gazeWant = g.herYaw
+_run(0.2)
+ok(s.lives == 2 and a:GetPos():Distance(s.start) < 1, "she catches you standing in her gaze: a life gone, back to the back", s.lives)
+-- kneeling and gazing up at her: Devotion fills, and full is a win
+a.crouch = true
+Look(a, g)
+g.herYaw = math.deg(math.atan2(a:GetPos().y - g.herBase.y, a:GetPos().x - g.herBase.x))
+g.gazeWant = g.herYaw
+s.safe = 0
+_run(1)
+ok((s.devotion or 0) > 5 and s.lives == 2, "kneeling and gazing up at her fills your Devotion (and she doesn't mind)", s.devotion)
+s.devotion = 99.9
+_run(0.2)
+ok(s.how == "won" and a.lcGameWatching, "full Devotion: she notices you (and you may watch the rest)")
+LC.DreamGameStop(d1, "test")
+_run(2.5)
+ok(not a.lcDreaming and LC.DreamActive == nil, "when it's over everyone wakes")
+ok(not LC.Unbroken(a) and not LC.DreamScarred(a), "her dreams leave nothing behind (no nightmare rewards or scars)")
+
+-- Roses for Her
+Both()
+local okR, d2 = LC.DreamStart("roses", adm, false, nil, true)
+local gr = okR and d2.game
+ok(okR and gr and #gr.rose == 6 and #gr.guards == 2 and gr.feetX > gr.lineX, "Roses for Her is built: the carpet, the gold line, her honour guard, glowing roses")
+_run(3.5)
+local sr = gr.pl[a]
+local r1 = gr.rose[1]
+a:SetPos(r1.pos - Vector(0, 0, 20))
+_run(0.2)
+ok(sr.carrying and r1.gone, "walking over a rose picks it up")
+a:SetPos(Vector(gr.lineX + 100, gr.midY, gr.top))
+_run(0.2)
+ok(sr.lives == 2 and not sr.carrying, "standing in her half of the hall: her guard carries you back (the rose is lost)", sr.lives)
+sr.safe = 0
+a.crouch = true
+for i = 1, 3 do
+    sr.carrying = true
+    a:SetPos(Vector(gr.feetX + 10, gr.midY, gr.top))
+    _run(0.2)
+end
+ok(sr.given == 3 and sr.how == "won", "three roses laid at her feet, on your knees: adored", sr.given)
+LC.DreamGameStop(d2, "test")
+_run(2.5)
+
+-- Mirror, Mirror
+Both()
+local okM, d3 = LC.DreamStart("mirror", adm, false, nil, true)
+local gm = okM and d3.game
+ok(okM and gm and IsValid(gm.her), "Mirror, Mirror is built: her, the mirrors, the admirers")
+_run(3.5)
+local sm = gm.pl[a]
+local out = hook.Run("PlayerSay", a, "you are radiant")
+ok(out == "" and (sm.score or 0) == 0, "standing, she doesn't hear you (and the city doesn't hear the dream)")
+a.crouch = true
+hook.Run("PlayerSay", a, "you are radiant and flawless")
+ok(sm.score == 4, "kneeling: words nobody has used yet count double", sm.score)
+b.crouch = true
+hook.Run("PlayerSay", b, "so radiant")
+ok(gm.pl[b].score == 1, "a word someone else used first counts once", gm.pl[b].score)
+hook.Run("PlayerSay", a, "radiant radiant")
+ok(sm.score == 4, "saying your own again counts for nothing")
+local said = false
+for _, m in ipairs(b.chat or {}) do if string.find(m, "flawless", 1, true) then said = true end end
+ok(said, "(the others in the dream hear it)")
+hook.Run("PlayerSay", b, "a bit old though")
+ok(gm.pl[b].lives == 2, "an insult costs a life", gm.pl[b].lives)
+hook.Run("PlayerSay", a, "/gorgeous")
+ok(sm.score == 4 and a.lcDreaming, "(a command isn't a compliment: commands still go where they always did)")
+hook.Run("PlayerSay", a, "gorgeous divine goddess perfect")
+ok(sm.how == "won", "enough adoration: the fairest of them all", sm.score)
+LC.DreamGameStop(d3, "test")
+_run(2.5)
+ok(LC.DreamActive == nil and not a.lcDreaming and not b.lcDreaming, "(and it's over)")
+
+_files["sound/livingcity/dreams/administrator/smooth_sax.mp3"] = nil
+_files["sound/livingcity/dreams/administrator/readme.txt"] = nil
+LC.DreamForget()
+LC.RemovePoint(dp)
+for _, p in ipairs({ adm, a, b }) do
+    p.crouch, p.aim = nil, nil
+    if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
+    p:SetPos(Vector(-121000, -121000, 0))
+end
+player.GetAll, LC.EndingReload = realGetAll, realReload
+_setcvar("lc_needs", 1)
+_walls = savedWalls
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+AdmireDreamTests()
 
 -- Cigarettes, alcohol and stimulants (sv_livingcity_vices.lua), and who a nightmare takes
 local function ViceTests()

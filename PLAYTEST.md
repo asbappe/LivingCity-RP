@@ -887,3 +887,16 @@ Notes:
   Notes:
 - [ ] **Commissary:** Union cigarettes from standing 75, vodka from 150?
   Notes:
+
+## The Administrator's dreams (8 November)
+
+- [ ] **Her music:** put a song or two in `garrysmod/sound/livingcity/dreams/administrator/`, upload, FastDL sync, change map. During one of her dreams it should play, looping, and stop when you wake.
+  Notes:
+- [ ] **Kneel Before Her:** as the Administrator, Tablet > Tonight's dream > Happy > Kneel Before Her (or C > Help > Dreams to dream it now). Check: the pink hall, her giant figure on the gold pedestal (your own model if you are on), kneeling admirers, hearts. Standing when she looks at you costs a life; crouching and looking at her fills Devotion.
+  Notes:
+- [ ] **Roses for Her:** walk over a glowing rose, cross the gold line crouching, reach her feet. Standing past the line sends you back. Three roses wins.
+  Notes:
+- [ ] **Mirror, Mirror:** crouch and type "you are radiant" in chat: it scores, only dreamers see it, the city does not. Try standing (no score), repeating a word (no score), "old" (a life gone). Check /commands still work in the dream.
+  Notes:
+- [ ] **Sizes:** her height, the pedestal, the mirrors (they are guesses at angles) and the admirers' kneeling pose look right; tell me what looks off.
+  Notes:
