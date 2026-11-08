@@ -233,6 +233,7 @@ function LC.DreamCanWake(p)
     -- (any dream now, not only a nightmare: the owner, 8 November, "make it so no one can opt out of dreams")
     if not IsValid(p) or not dream or dream.id ~= p.lcDreaming then return true end
     if p.lcDreamEnforcer then return true end -- (an Enforcer is only watching over it: sv_livingcity_dreamenforcers.lua)
+    if dream.test then return true end -- (a test from the editor: stop whenever you like)
     local g = dream.game
     if g and g.pl and g.pl[p] and g.pl[p].done then return true end
     if g and g.star == p then return true end -- (the Administrator starring in a propaganda dream isn't one of its players)
@@ -838,6 +839,10 @@ function LC.DreamWakeOne(p, why)
     end
     p.lcDreaming = nil
     p.lcDreamBed = nil
+    local test = p.lcDreamTesting -- (a test from the editor: woken as "test", so nothing comes of it)
+    p.lcDreamTesting = nil
+    p:SetNW2Bool("lc_dream_test", false)
+    if test then why = "test" end
     p.lcDreamWokeEnforcer, p.lcDreamEnforcer = p.lcDreamEnforcer, nil -- (how they wake: sv_livingcity_dreamenforcers.lua)
     p:SetNW2Bool("lc_enforcer", false)
     p:SetNW2Bool("lc_dreaming", false)
@@ -861,7 +866,8 @@ function LC.DreamWakeOne(p, why)
             if not IsValid(p) then return end
             hook.Run("LivingCityDreamWoke", p, ok, why)
             if ok then
-                Notice(p, "info", why == "optout" and "Awake" or "You wake up", why == "optout" and "You wake from the dream, in your bed, with everything as it was."
+                Notice(p, "info", (why == "optout" or why == "test") and "Awake" or "You wake up", why == "test" and "The test is over: you're back where you were, with everything as it was."
+                    or why == "optout" and "You wake from the dream, in your bed, with everything as it was."
                     or "You wake in your bed, with everything just as it was. Press Jump to get up.", 9)
             end
         end)
@@ -942,7 +948,8 @@ function LC.DreamStart(id, by, vote, also, force)
     if LC.EndingBusy and LC.EndingBusy() then return false, "An ending is already under way." end
     if LC.DreamActive then return false, "A dream is already under way." end
     if not force and not game and LC.EndingCooldownLeft and LC.EndingCooldownLeft() > 0 then return false, "Not yet (" .. math.ceil(LC.EndingCooldownLeft() / 60) .. " minutes of the endings' cooldown left)." end
-    local who = LC.DreamSleepers(LC.DreamMood(id), id)
+    local test = IsValid(also) and LC.DreamTestOnly == also -- (tested from the editor: only the tester, sv_livingcity_dreamtest.lua)
+    local who = test and {} or LC.DreamSleepers(LC.DreamMood(id), id)
     if IsValid(also) and not also.lcDreaming and also:Alive() and not table.HasValue(who, also) then who[#who + 1] = also end
     if #who == 0 then return false, "Nobody is asleep to dream it." end
     -- Enforcers watch over a dream; they don't dream it on their own (the owner, 8 November)
@@ -953,7 +960,7 @@ function LC.DreamStart(id, by, vote, also, force)
     end
     S.nextId = (S.nextId or 0) + 1
     local dream = { id = S.nextId, ending = id, pos = pt.pos, yaw = pt.yaw or 0, zone = LC.DreamZone(), list = {}, snaps = {}, npcs = {}, combine = {},
-        made = setmetatable({}, { __mode = "k" }), started = CurTime(), force = force or nil, mood = LC.DreamMood(id), forced = LC.DreamForced(id) }
+        made = setmetatable({}, { __mode = "k" }), started = CurTime(), force = force or nil, mood = LC.DreamMood(id), forced = LC.DreamForced(id), test = test or nil }
     local spots = LC.EndingRingSpots and LC.EndingRingSpots(pt.pos, 60, #who) or {}
     for i, p in ipairs(who) do
         local ok, err = pcall(Enter, p, dream, spots[i] and spots[i].pos or pt.pos)

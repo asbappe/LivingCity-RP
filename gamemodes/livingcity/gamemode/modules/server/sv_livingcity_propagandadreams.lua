@@ -453,11 +453,11 @@ function LC.PropagandaLoss(p)
     return math.min(LC.PropagandaMaxPoints, n * LC.PropagandaOffencePoints + (out and LC.PropagandaOutPoints or 0))
 end
 -- As they wake: the loss taken from Civil Standing (loyalty points are Civil Standing).
-hook.Add("LivingCityDreamWoke", "LivingCityPropagandaLoyalty", function(p)
+hook.Add("LivingCityDreamWoke", "LivingCityPropagandaLoyalty", function(p, _, why)
     if not IsValid(p) then return end
     local n = LC.PropagandaLoss(p)
     OFF[Key(p)] = nil
-    if n <= 0 then return end
+    if n <= 0 or why == "test" then return end -- (a test from the editor costs nothing)
     if LC.AddStanding then LC.AddStanding(p, -n, "disloyalty in a propaganda dream") end
     Notice(p, "warn", "Disloyal, even in your sleep", string.format("The city noticed how you behaved in the dream: -%d loyalty points (Civil Standing).", n), 8)
 end)

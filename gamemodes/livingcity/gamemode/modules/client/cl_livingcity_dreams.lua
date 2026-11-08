@@ -24,7 +24,8 @@ local C_215_195_255_220 = Color(215, 195, 255, 220)
 hook.Add("HUDPaint", "LivingCityDreams", function()
     local me = LocalPlayer()
     if not IsValid(me) or not me:GetNW2Bool("lc_dreaming", false) then return end
-    draw.SimpleTextOutlined(me:GetNW2Bool("lc_nightmare", false) and "A nightmare. You'll wake in your bed with everything you had, but you can't wake yourself until you're out of it."
+    draw.SimpleTextOutlined(me:GetNW2Bool("lc_dream_test", false) and "Testing a dream. Stop whenever you like: the editor's Stop the test, or C > Settings > Shared dreams. Nothing here counts."
+        or me:GetNW2Bool("lc_nightmare", false) and "A nightmare. You'll wake in your bed with everything you had, but you can't wake yourself until you're out of it."
         or me:GetNW2Bool("lc_dream_forced", false) and "You're dreaming. You'll wake in your bed with everything you had, but you can't wake yourself until you're out of it."
         or "You're dreaming. You'll wake in your bed with everything you had. (Wake up now: C > Settings > Shared dreams)",
         "DermaDefaultBold", ScrW() / 2, 14, C_215_195_255_220, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, C_0_0_0_200)
@@ -114,6 +115,24 @@ local function Open(st)
 end
 
 net.Receive("lc_dream", function() Open(net.ReadTable() or {}) end)
+
+------------------------------------------------------------------------
+-- Testing a dream from the Living City Editor (sv_livingcity_dreamtest.lua)
+------------------------------------------------------------------------
+
+function LC_CL.DreamTestAct(what, arg)
+    net.Start("lc_dream_test")
+    net.WriteString(tostring(what or ""))
+    net.WriteString(tostring(arg or ""))
+    net.SendToServer()
+end
+LC_CL.DreamTestWatchers = LC_CL.DreamTestWatchers or {}
+net.Receive("lc_dream_test", function()
+    local t = net.ReadTable() or {}
+    if t.k ~= "list" then return end
+    LC_CL.DreamTestList = t
+    for _, fn in pairs(LC_CL.DreamTestWatchers) do pcall(fn, t) end
+end)
 
 function LC_CL.DreamsMenu()
     local me = LocalPlayer()

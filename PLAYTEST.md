@@ -1050,3 +1050,19 @@ Notes:
   Notes:
 - [ ] **Adrenaline:** woken by a unit's hit or a raid: "Adrenaline has you wide awake", full stamina, no tiredness; ten minutes later "The adrenaline has worn off. You need rest." and the groggy minute. Back in bed before that: no crash.
   Notes:
+
+## 8 November, part 12: strange dreams and testing a dream from the editor
+- [ ] **Testing a dream:** with a Point: dream placed, open the Living City Editor panel, Dreams: test one. The list fills with every dream (Happy, Neutral, Nightmare). Pick one, Test it now (just me): you go straight in, awake, with stand-ins. Stop the test (wake up) puts you back where you were with everything you had.
+  Notes:
+- [ ] **A test counts for nothing:** win a test dream, stop it: no Unbroken notice, no loyalty lost after a propaganda test, no health lost. Nobody asleep was pulled in. As a Civil Protection unit, a nightmare test lets you play it (not an Enforcer).
+  Notes:
+- [ ] **The Cheese Dream:** the screen is black and you are held still; the man's then the woman's "Sometimes I dream about cheese" echo, then both at once, with the words on screen. Then the dream swims up: cheese floor, rainbow colours, rippling picture, giant colourful heads humming the line, wobbly music. Low gravity: can you reach the floating slabs? Gather 10 (golden counts 3 and inverts the colours). Do the wheels roll across and cost a life? Too trippy, or not trippy enough?
+  Notes:
+- [ ] **Musical Chairs:** chairs drift round while the music plays; it stops, a free chair glows: crouch beside it. No chair, out. One chair fewer each round; the last one sitting wins (alone: three rounds). Do the chairs show (HL2 chair model)? Is 4 seconds to sit fair?
+  Notes:
+- [ ] **Wings:** jump, then jump in the air to flap. Can you get up to the golden rings comfortably? Do the rings show as gold circles facing you, with clouds and pigeons? 8 rings wins.
+  Notes:
+- [ ] **It's Raining Melons:** melons fall with a glow where they land: green catches, red (grey lead melon) costs a life. 12 wins. Too easy or too hard?
+  Notes:
+- [ ] **Music:** without songs, Half-Life 2's own music plays (the cheese dream's only after the voices). Your own: put cheese1.mp3, chairs1.mp3, flying1.mp3 or melons1.mp3 in garrysmod/sound/livingcity/dreams/ (then FastDL sync and a map change).
+  Notes:

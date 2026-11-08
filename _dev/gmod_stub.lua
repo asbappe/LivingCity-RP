@@ -543,6 +543,8 @@ function PMT:GetEyeTrace() return { Entity = self.lookingAt, HitPos = self.pos +
 function PMT:SetNW2Bool(k, v) self.nw[k] = v end
 function PMT:SetVelocity(v) self.pushed = v end
 function PMT:Freeze(b) self.frozen = b end
+function PMT:SetGravity(g) self.grav = g end
+function PMT:GetGravity() return self.grav or 1 end
 function PMT:GetMoveType() return self.movetype or MOVETYPE_WALK end
 function PMT:ScreenFade() end
 function PMT:ViewPunch() end

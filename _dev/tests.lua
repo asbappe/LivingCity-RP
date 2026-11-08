@@ -15476,6 +15476,216 @@ ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 PropagandaMoreTests()
 
+-- The strange dreams (sv_livingcity_strangedreams.lua) and testing a dream from the editor (sv_livingcity_dreamtest.lua)
+function StrangeDreamTests()
+section("Shared dreams: strange dreams (the cheese dream, musical chairs, wings, raining melons) and testing a dream from the editor")
+_setcvar("lc_dream_rules", 0) _setcvar("lc_dream_auto", 0)
+local errs0 = #_errors
+local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
+_walls = {}
+LC.EndEvent(true)
+_setcvar("lc_needs", 0)
+LC.EndingReload = function() end
+local CITY, DREAM = Vector(163000, -163000, 0), Vector(223000, -223000, 0)
+local adm = newPlayer("SDAdmin", "admin")
+local a = newPlayer("SDA", "citizen")
+local b = newPlayer("SDB", "citizen")
+local su = newPlayer("SDSuper", "cp")
+su.superadmin = true
+_run(3)
+local function Asleep(p, at)
+    p:SetPos(at)
+    local key = string.format("s%d_%d_%d", math.floor(at.x), math.floor(at.y), math.floor(at.z))
+    p.lcSleep = { t0 = CurTime() - 70, done = CurTime() - 10, last = CurTime(), slept = true }
+    p:SetNW2Bool("lc_sleeping", true)
+    p.lcBedKey, p.lcBedFrom = key, at + Vector(40, 0, 0)
+    LC.BedSleepers[key] = p
+end
+local function Both() Asleep(a, CITY) Asleep(b, CITY + Vector(0, 200, 0)) a.crouch, b.crouch, a.keys, b.keys = nil, nil, nil, nil end
+local function Start(id)
+    Both()
+    local okS, d = LC.DreamStart(id, adm, false, nil, true)
+    local g = okS and d.game
+    _run(0.1)
+    if g then g.pl[a].safe, g.pl[b].safe = 0, 0 end
+    return g, d
+end
+local function Stop(d) LC.DreamGameStop(d, "test") _run(2.5) end
+local function Sent(p, k, test)
+    for _, m in ipairs(net.sent) do
+        local t = m.data[1]
+        if m.name == "lc_dreamgame" and (m.to == p or (type(m.to) == "table" and table.HasValue(m.to, p))) and type(t) == "table" and t.k == k and (not test or test(t)) then return t end
+    end
+    return nil
+end
+player.GetAll = function() return { adm, a, b, su } end
+local dp = LC.AddPoint(DREAM, 0, "dream")
+
+-- on her tablet, by mood
+local where = {}
+for _, grp in ipairs(LC.DreamOffice().groups) do for _, e in ipairs(grp.endings) do where[e.id] = grp.mood end end
+ok(where.cheese == "neutral" and where.chairs == "neutral" and where.flying == "happy" and where.melons == "happy", "on her tablet: the cheese dream and musical chairs under Neutral, wings and raining melons under Happy",
+    tostring(where.cheese) .. tostring(where.flying))
+ok(LC.DreamKind("flying") == "happy" and LC.DreamKind("cheese") == "neutral" and not LC.DreamForced("melons"), "(plain Happy and Neutral dreams, not propaganda)")
+_files["sound/livingcity/dreams/cheese1.mp3"] = "x"
+ok(LC.StrangeSong("cheese") == "livingcity/dreams/cheese1.mp3" and LC.StrangeSong("chairs") == LC.StrangeFallbackSongs.chairs, "music: the owner's, named for the codeword, else Half-Life 2's own")
+_files["sound/livingcity/dreams/cheese1.mp3"] = nil
+
+-- The Cheese Dream
+net.sent = {}
+local g, d = Start("cheese")
+ok(g and g.introUntil and #g.crumbs == 12 and #g.heads == 4 and #g.slabs > 0, "The Cheese Dream is built: a plain of cheese, floating slabs, giant heads, glowing cheese")
+local hi = Sent(a, "start")
+ok(hi and hi.theme == "cheese" and hi.lines and hi.lines[1] == "vo/npc/male01/question06.wav" and hi.lines[2] == "vo/npc/female01/question06.wav" and hi.song == nil,
+    "it starts in the dark: the man's and the woman's cheese lines, and no music yet")
+ok(a.frozen == true and a.lcEndFrozen and a.grav == LC.CheeseGravity, "while the voices echo, everyone is held still (and light as a crumb)")
+net.sent = {}
+_run(LC.CheeseIntro + 0.2)
+ok(g.begun and not a.frozen and Sent(a, "music", function(t) return t.song ~= nil end), "then the dream begins, with its music")
+local s = g.pl[a]
+a:SetPos(Vector(g.dream.pos.x, g.dream.pos.y, g.top + 4)) -- (in the middle: nobody else near enough to take it first)
+local function Crumb(i, gold)
+    for j, o in ipairs(g.crumbs) do if j ~= i then o.gone, o.pos = CurTime() + 1000, Vector(0, 0, -50000) end end
+    local cr = g.crumbs[i]
+    cr.gold, cr.gone, cr.pos = gold, nil, a:GetPos() + Vector(0, 0, 26)
+    _run(0.1)
+end
+Crumb(1, false)
+ok(s.got == 1, "walking into the glowing cheese gathers it")
+Crumb(2, true)
+ok(s.got == 4 and (s.flip or 0) > CurTime(), "golden cheese counts three, and turns the world inside out")
+s.safe = 0
+g.nextWheel = CurTime() + 1000
+LC.CheeseNewWheel(g)
+local w = g.wheels[#g.wheels]
+w.pos = a:GetPos() + Vector(0, 0, w.r)
+w.went = 0
+_run(0.1)
+ok(s.lives == 2, "a rolling wheel of cheese over you: a life", s.lives)
+s.got = g.def.need - 1
+s.safe = 0
+for _, ww in ipairs(g.wheels) do if IsValid(ww.ent) then ww.ent:Remove() end end
+g.wheels = {}
+Crumb(3, false)
+ok(s.how == "won", "ten pieces: you win")
+Stop(d)
+ok(a.grav == 1, "waking, the weight comes back", a.grav)
+
+-- Musical Chairs
+g, d = Start("chairs")
+net.sent = {}
+_run(5.2)
+ok(g.phase == "music" and #g.chairs == 1 and g.round == 1 and Sent(a, "music", function(t) return t.song ~= nil end), "Musical Chairs: the music plays, one chair for two")
+g.at = CurTime()
+net.sent = {}
+_run(0.1)
+ok(g.phase == "sit" and Sent(a, "music", function(t) return t.song == nil end), "the music stops")
+a:SetPos(g.chairs[1].pos + Vector(10, 0, 0))
+b:SetPos(g.chairs[1].pos + Vector(400, 0, 0))
+a.crouch = true
+_run(0.1)
+ok(g.pl[a].chair == 1 and g.chairs[1].by == a, "crouch beside a free chair: it's yours")
+b:SetPos(g.chairs[1].pos + Vector(10, 0, 0))
+b.crouch = true
+_run(0.1)
+ok(not g.pl[b].chair, "a taken chair can't be had")
+_run(LC.ChairsSit)
+ok(g.pl[b].how == "out" and not g.pl[a].done, "no chair when the time's up: out")
+_run(2.6)
+ok(g.pl[a].how == "won", "the last one sitting wins")
+a.crouch, b.crouch = nil, nil
+Stop(d)
+
+-- Wings
+g, d = Start("flying")
+s = g.pl[a]
+ok(g and #g.rings == 5 and g.ceiling > g.top and a.grav == LC.WingsGravity, "Wings: golden rings in the sky, and you're light")
+a.ground = false
+a.keys = nil
+_run(0.1)
+a.pushed = nil
+a.keys = { [IN_JUMP] = true }
+_run(0.1)
+ok(a.pushed and a.pushed.z > 0, "jump in the air: a flap, up")
+a.keys, a.ground = nil, nil
+a:SetPos(Vector(g.dream.pos.x, g.dream.pos.y, g.top + 4)) -- (in the middle: nobody else near enough to take it first)
+g.rings[1] = a:GetPos() + Vector(0, 0, 36)
+_run(0.1)
+ok(s.rings == 1, "through a ring", s.rings)
+s.rings = g.def.need - 1
+g.rings[2] = a:GetPos() + Vector(0, 0, 36)
+_run(0.1)
+ok(s.how == "won", "eight rings: you flew")
+Stop(d)
+
+-- It's Raining Melons
+g, d = Start("melons")
+s = g.pl[a]
+_run(3.5)
+ok(#g.drops >= 1, "melons fall, each with its glow where it lands")
+b:SetPos(a:GetPos() + Vector(1000, 0, 0))
+LC.MelonLand(g, { land = a:GetPos(), lead = false }, { a, b })
+ok(s.got == 1, "standing where it lands: caught")
+s.safe = 0
+LC.MelonLand(g, { land = a:GetPos(), lead = true }, { a, b })
+ok(s.lives == 2, "a lead melon on your head: a life")
+s.got = g.def.need - 1
+LC.MelonLand(g, { land = a:GetPos(), lead = false }, { a, b })
+ok(s.how == "won", "twelve melons: a feast")
+Stop(d)
+
+-- winning one wakes you as from any dream you play; losing costs nothing
+local function WakeAs(id, how)
+    g, d = Start(id)
+    s = g.pl[a]
+    a:SetNW2Float("lc_unbroken_until", 0)
+    a:SetHealth(100)
+    if how == "won" then LC.DreamGameKit.Done(g, a, "won", "x", "y") else s.lives = 1 s.safe = 0 LC.DreamGameKit.Hit(g, a, "x", "y") end
+    Stop(d)
+    _run(1)
+end
+WakeAs("melons", "won")
+ok(a:GetNW2Float("lc_unbroken_until", 0) > CurTime(), "won: you wake Unbroken")
+WakeAs("melons", "out")
+ok(a:GetNW2Float("lc_unbroken_until", 0) == 0 and not LC.DreamScarred(a), "lost: only a line, no health lost")
+
+-- testing a dream from the editor
+local list = LC.DreamTestList()
+local seen, firstMood = {}, list[1] and list[1].mood
+for _, e in ipairs(list) do seen[e.id] = e end
+ok(seen.cheese and seen.cheese.mood == "Neutral" and seen.flying and seen.maze and seen.maze.mood == "Nightmare" and firstMood == "Happy", "the editor lists every dream, by mood")
+ok(not LC.DreamTest(a, "cheese"), "only those who may edit the city can test")
+Both()
+su:SetPos(CITY + Vector(500, 0, 0))
+su.lcSleep = nil
+local endured = LC.DreamsEndured and LC.DreamsEndured(su) or 0
+local okT, dt = LC.DreamTest(su, "melons")
+ok(okT and dt and dt.test and su.lcDreaming and not a.lcDreaming and not b.lcDreaming, "a test: the tester goes in, awake; nobody asleep is pulled in")
+ok(LC.DreamCanWake(su) and su:GetNW2Bool("lc_dream_test", false), "and can stop whenever they like")
+local gT = dt.game
+ok(gT and gT.pl[su] and not su.lcDreamEnforcer, "a unit testing it plays it, never an Enforcer")
+su:SetNW2Float("lc_unbroken_until", 0)
+LC.DreamGameKit.Done(gT, su, "won", "x", "y")
+ok(LC.DreamTestStop(su), "Stop the test")
+_run(1.5)
+ok(not su.lcDreaming and not LC.DreamActive and su:GetNW2Float("lc_unbroken_until", 0) == 0 and not su:GetNW2Bool("lc_dream_test", false), "woken, nothing won or lost")
+ok((LC.DreamsEndured and LC.DreamsEndured(su) or 0) == endured, "and it isn't counted as a dream lived through")
+ok(LC.DreamTest(su, "nosuch") == false, "(no such dream)")
+
+LC.DreamForget()
+LC.RemovePoint(dp)
+for _, p in ipairs({ adm, a, b, su }) do
+    p.crouch, p.keys, p.ground = nil, nil, nil
+    if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
+    p:SetPos(Vector(-121000, -121000, 0))
+end
+player.GetAll, LC.EndingReload = realGetAll, realReload
+_setcvar("lc_needs", 1)
+_walls = savedWalls
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+StrangeDreamTests()
+
 -- The performance debugger (sh_livingcity_perfdebug.lua, sv_livingcity_perfdebug.lua)
 local function PerfDebugTests()
 section("The performance debugger: hooks, timers, net in and out, networked values, hitches, put back when off")

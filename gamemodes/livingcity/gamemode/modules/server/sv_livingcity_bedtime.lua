@@ -142,8 +142,8 @@ function LC.DreamOptOutEarned(p)
     return false, string.format("\"Not yet. You've only lived through %d of the city's dreams. Endure %d more, and come back. I need to see how it takes you first.\"", have, need - have)
 end
 -- One more dream lived through (not as an Enforcer: they're not dreaming it).
-hook.Add("LivingCityDreamWoke", "LivingCityBedtime", function(p)
-    if not IsValid(p) or p.lcDreamWokeEnforcer then return end
+hook.Add("LivingCityDreamWoke", "LivingCityBedtime", function(p, _, why)
+    if not IsValid(p) or p.lcDreamWokeEnforcer or why == "test" then return end
     local f = Faction(p)
     if f ~= "citizen" and f ~= "resistance" then return end
     p:SetPData("lc_dreams_endured", tostring(LC.DreamsEndured(p) + 1))
@@ -356,6 +356,7 @@ end)
 ------------------------------------------------------------------------
 
 hook.Add("LivingCityDreamStarted", "LivingCityBedtime", function(dream)
+    if dream.test then return end -- (a test from the editor isn't tonight's dream)
     local ph = Phase()
     if ph == "dusk" or ph == "night" then S.dreamEve = S.eve end
     local forced = dream.forced or dream.mood == "nightmare"
@@ -370,7 +371,7 @@ end)
 
 -- Woken from tonight's dream: done for the night; and dreamt through (not woken early), another stimulant allowed.
 hook.Add("LivingCityDreamWoke", "LivingCityBedtimeNight", function(p, ok, why)
-    if not IsValid(p) then return end
+    if not IsValid(p) or why == "test" then return end
     local ph = Phase()
     if ph == "dusk" or ph == "night" then p.lcDreamtEve = S.eve end
     if why == "end" or why == "game" or (why == "optout" and p.lcDreamWokeFull) then Unlock(p) end

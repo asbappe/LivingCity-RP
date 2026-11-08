@@ -659,6 +659,43 @@ function TOOL.BuildCPanel(panel)
     panel:Button("Endings menu: tune them live (superadmin)", "lc_endings_menu")
     panel:Help("Pick an ending, play it, and tune its dances bone by bone and all its settings while it plays.")
 
+    Header("Dreams: test one")
+    panel:Help("Try any dream yourself, right now: you go into it awake, at the dream point, alone (the city's people stand in). Nobody asleep is pulled in, and it isn't tonight's dream. Stop whenever you like; nothing you win or lose counts. Needs a Point: dream (Mode list).")
+    local dreamPick = panel:ComboBox("Dream")
+    local function FillDreams(t)
+        if not IsValid(dreamPick) then return end
+        dreamPick:Clear()
+        for _, d in ipairs(t.list or {}) do dreamPick:AddChoice(d.mood .. ": " .. d.name .. (d.kind == "ending" and " (an ending)" or ""), d.id) end
+        if not t.point then dreamPick:SetValue("No dream point on this map yet: place one first")
+        elseif t.on == false then dreamPick:SetValue("Dreams are off (lc_dreams 0)")
+        else dreamPick:SetValue("Pick a dream to test") end
+    end
+    if LC_CL then
+        LC_CL.DreamTestWatchers = LC_CL.DreamTestWatchers or {}
+        LC_CL.DreamTestWatchers.editor = FillDreams
+        if LC_CL.DreamTestList then FillDreams(LC_CL.DreamTestList) end
+    end
+    timer.Simple(0.2, function()
+        local me = LocalPlayer()
+        if IsValid(me) and me:IsSuperAdmin() and LC_CL and LC_CL.DreamTestAct then LC_CL.DreamTestAct("list") end
+    end)
+    local testBtn = panel:Button("Test it now (just me)")
+    if IsValid(testBtn) then testBtn.DoClick = function()
+        local _, id = dreamPick:GetSelected()
+        if not id then
+            notification.AddLegacy("Pick a dream first.", NOTIFY_HINT or 3, 3)
+            if LC_CL and LC_CL.DreamTestAct then LC_CL.DreamTestAct("list") end
+            return
+        end
+        if LC_CL and LC_CL.DreamTestAct then LC_CL.DreamTestAct("test", id) end
+    end end
+    local stopBtn = panel:Button("Stop the test (wake up)")
+    if IsValid(stopBtn) then stopBtn.DoClick = function() if LC_CL and LC_CL.DreamTestAct then LC_CL.DreamTestAct("stop") end end end
+    local listBtn = panel:Button("Refresh the list")
+    if IsValid(listBtn) then listBtn.DoClick = function() if LC_CL and LC_CL.DreamTestAct then LC_CL.DreamTestAct("list") end end end
+    local winBtn = panel:Button("Dreams window (tonight's dream, wake everyone, snapshots)")
+    if IsValid(winBtn) then winBtn.DoClick = function() if LC_CL and LC_CL.DreamsMenu then LC_CL.DreamsMenu() end end end
+
     Header("City")
     panel:Button("Job outfits (who wears what)", "lc_outfits_edit")
     panel:Button("Start the city", "lc_start")

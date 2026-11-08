@@ -1,0 +1,683 @@
+--[[
+    Living City: strange dreams (Happy and Neutral dreams you play)
+
+      The owner, 8 November: "Since we've made dreams more or less mandatory, we need a few more for
+      variety. First up: as the citizens say 'sometimes I dream of cheese': we need a CHEESE DREAM!
+      ... if it's psychedelic all the better, the dream has to start with the male and female voice
+      lines echoing their cheese lines before the dream starts. Go ahead and draft a few others
+      please and just make them, I will playtest them."
+
+      Four dreams you play, built at the dream point out of plain props like the others
+      (sv_livingcity_dreamgames.lua), on her tablet under their mood. Everything about dreaming is
+      as it always was: everything put back on waking, nothing you do counts, and nobody wakes
+      themselves until they're out of it.
+
+        The Cheese Dream (cheese, Neutral): the screen goes dark and a man's voice, then a woman's,
+          echo "Sometimes I dream about cheese" (Half-Life 2's own citizens) until the dream
+          swims up out of the dark: a plain of cheese under a sky that won't keep one colour,
+          giant citizens' heads floating overhead and humming the line, the music wobbling. Gather
+          the glowing cheese (golden cheese counts three and turns the world inside out for a few
+          seconds) while great wheels of cheese roll across the plain. You're light as a crumb
+          here: jump onto the floating slabs. Ten pieces wins; a wheel rolling over you costs a life.
+        Musical Chairs (chairs, Neutral): a ring of chairs that drift round you while the music
+          plays, one too few. When it stops, crouch beside a free chair. No chair: you're out. One
+          chair fewer each round; the last one sitting wins (alone: three rounds).
+        Wings (flying, Happy): the dream where you can fly. Jump in the air to flap (you're light
+          here) and fly through the golden rings among the pigeons. Eight rings wins. Nothing can
+          hurt you.
+        It's Raining Melons (melons, Happy): watermelons fall out of a clear sky. Stand where a
+          green glow marks one's landing to catch it; a red glow is a lead melon, keep out from
+          under it (a life). Twelve melons wins.
+
+      Waking: whoever won wakes Unbroken with a second wind, as from any dream you play
+      (LC.DreamOutcome); losing one of these costs nothing, it's only a strange dream (like the
+      propaganda dreams, no health lost). Music, if the owner puts any in sound/livingcity/dreams/:
+      named for the codeword (cheese, chairs, flying, melons); otherwise Half-Life 2's own.
+]]
+
+if CLIENT then return end
+
+LC = LC or {}
+
+local K, G = LC.DreamGameKit, LC.DreamGames
+if not K or not G then return end
+local Block, Actor, Floor, Snd, Puff, Send, Done, Hit, ToStart = K.Block, K.Actor, K.Floor, K.Snd, K.Puff, K.Send, K.Done, K.Hit, K.ToStart
+local PLATE8, PLATE8_S, PLATE4, PLATE4_S = K.PLATE8, K.PLATE8_S, K.PLATE4, K.PLATE4_S
+
+local function Notice(p, kind, title, text, secs)
+    if not IsValid(p) then return end
+    if LC.Notice then LC.Notice(p, kind, title, text, secs) elseif p.ChatPrint then p:ChatPrint(title .. ": " .. text) end
+end
+
+LC.StrangeDreams = { "cheese", "chairs", "flying", "melons" }
+for _, id in ipairs(LC.StrangeDreams) do
+    local have = false
+    for _, o in ipairs(LC.DreamGameOrder) do if o == id then have = true end end
+    if not have then LC.DreamGameOrder[#LC.DreamGameOrder + 1] = id end
+    -- (their music: flat in sound/livingcity/dreams/, named for the codeword, found the same way as the propaganda dreams')
+    if LC.PropagandaSongWords then LC.PropagandaSongWords[#LC.PropagandaSongWords + 1] = id end
+end
+
+-- The owner's song for a dream (its codeword), or Half-Life 2's own.
+LC.StrangeFallbackSongs = {
+    cheese = "music/hl2_song10.mp3",
+    chairs = "music/hl2_song26_trainstation1.mp3",
+    flying = "music/hl2_song2.mp3",
+    melons = "music/hl2_song27_trainstation2.mp3",
+}
+function LC.StrangeSong(id)
+    local own = LC.PropagandaSong and LC.PropagandaSong({ id })
+    return own or LC.StrangeFallbackSongs[id]
+end
+
+-- A colour round the rainbow (h from 0 to 1).
+function LC.StrangeRainbow(h, a)
+    h = (h or 0) % 1
+    local i = math.floor(h * 6)
+    local f = h * 6 - i
+    local q = 1 - f
+    local rgb = ({ { 1, f, 0 }, { q, 1, 0 }, { 0, 1, f }, { 0, q, 1 }, { f, 0, 1 }, { 1, 0, q } })[i + 1]
+    return Color(math.floor(rgb[1] * 255), math.floor(rgb[2] * 255), math.floor(rgb[3] * 255), a or 255)
+end
+local Rainbow = LC.StrangeRainbow
+
+-- How these dreams leave you: a winner as from any dream you play; otherwise a line, nothing more.
+local function Woke(lines)
+    return function(p, how)
+        if how == "won" and LC.DreamOutcome then
+            local l = lines.won
+            if l then Notice(p, "info", l[1], l[2], 9) end
+            LC.DreamOutcome(p, "won", lines.name)
+            return
+        end
+        local l = lines[how]
+        if l then Notice(p, "info", l[1], l[2], 9) end
+    end
+end
+
+-- A square floor of n by n plates round the dream point, its top at top; plates coloured by col(i, j).
+local function Plain(g, dream, maxN, col)
+    local half = LC.DreamGameHalf(dream)
+    local n = math.Clamp(math.floor(half * 2 / PLATE8_S), 2, maxN or 2)
+    local c = dream.pos
+    local top = c.z + 2
+    local x0, y0 = c.x - n * PLATE8_S / 2, c.y - n * PLATE8_S / 2
+    for i = 1, n do for j = 1, n do
+        Floor(g, PLATE8, x0 + (i - 0.5) * PLATE8_S, y0 + (j - 0.5) * PLATE8_S, top, col(i, j), "models/debug/debugwhite")
+    end end
+    g.top, g.n = top, n
+    g.half = n * PLATE8_S / 2
+    g.bounds = { mins = Vector(x0 - 60, y0 - 60, top - 160), maxs = Vector(x0 + n * PLATE8_S + 60, y0 + n * PLATE8_S + 60, top + 900) }
+    return top
+end
+-- Somewhere on the floor, at least edge in from its sides.
+local function AnyWhere(g, edge)
+    local c, h = g.dream.pos, g.half - (edge or 60)
+    return Vector(c.x + math.Rand(-h, h), c.y + math.Rand(-h, h), g.top)
+end
+-- Starting spots: a ring round the middle.
+local function Ring(g, r)
+    g.starts = {}
+    local c = g.dream.pos
+    for i = 1, 12 do
+        local a = math.rad(i * 30)
+        g.starts[i] = Vector(c.x + math.cos(a) * r, c.y + math.sin(a) * r, g.top + 4)
+    end
+end
+local function SpawnAt(g, p, i)
+    local at = g.starts[((i - 1) % #g.starts) + 1]
+    local c = g.dream.pos
+    return at, math.deg(math.atan2(c.y - at.y, c.x - at.x))
+end
+local function Flat(v, kind) return { math.floor(v.x), math.floor(v.y), math.floor(v.z), kind } end
+local function Dist2(a, b) return math.sqrt((a.x - b.x) ^ 2 + (a.y - b.y) ^ 2) end
+local function OnGround(p) return p.IsOnGround == nil or p:IsOnGround() == true end
+-- Jump just pressed (call every tick for everyone in play).
+local function JumpPressed(s, p)
+    local down = p.KeyDown ~= nil and IN_JUMP ~= nil and p:KeyDown(IN_JUMP) == true
+    local was = s.jumpWas
+    s.jumpWas = down
+    return down and not was
+end
+local function Light(p, grav) if IsValid(p) and p.SetGravity then p:SetGravity(grav or 1) end end
+local function Leave(g, p) Light(p, 1) end
+local CITIZENS = { "models/humans/group01/male_07.mdl", "models/humans/group01/female_02.mdl", "models/humans/group01/male_02.mdl", "models/humans/group01/female_04.mdl" }
+local function FirstModel(list)
+    for _, m in ipairs(list) do if K.ValidModel(m) then return m end end
+    return list[#list]
+end
+
+------------------------------------------------------------------------
+-- The Cheese Dream
+------------------------------------------------------------------------
+
+do
+    LC.CheeseIntro = 9 -- (seconds of the voices echoing in the dark before the dream begins)
+    LC.CheeseLines = { male = "vo/npc/male01/question06.wav", female = "vo/npc/female01/question06.wav" } -- ("Sometimes, I dream about cheese.")
+    LC.CheeseGravity = 0.35
+    local def = { id = "cheese", name = "The Cheese Dream", mood = "neutral", secs = 9 + 180, lives = 3, need = 10, leave = Leave,
+        goal = "Gather the glowing cheese (golden counts three). You're light as a crumb: jump onto the floating slabs. Keep out of the way of the rolling wheels.",
+        timeUp = { "The cheese melts away", "The plain of cheese drips into the dark, and you wake, hungry." },
+        woke = Woke({ name = "The Cheese Dream",
+            won = { "The Big Cheese", "You wake with the taste of a cheese that doesn't exist anymore. Somewhere, a man and a woman are still talking about it." },
+            out = { "Flattened", "You wake feeling rolled thin. It was only cheese. Only cheese." },
+            time = { "Sometimes...", "You wake up. Sometimes you dream about cheese. Now you know why." },
+        }) }
+    G.cheese = def
+    local CHEESE, RIND = Color(255, 205, 60), Color(235, 160, 40)
+    local WHEEL = "models/hunter/tubes/circle4x4.mdl"
+    local WEDGES = { "models/hunter/triangles/2x2x2.mdl", "models/hunter/triangles/1x1x1.mdl", "models/hunter/blocks/cube2x2x2.mdl" }
+
+    local function NewCrumb(g, i)
+        local cr = g.crumbs[i]
+        local slab = (#g.slabs > 0 and math.random() < 0.4) and g.slabs[math.random(#g.slabs)] or nil
+        if slab then
+            cr.pos = slab + Vector(math.Rand(-60, 60), math.Rand(-60, 60), 26)
+        else
+            cr.pos = AnyWhere(g, 80) + Vector(0, 0, 26)
+        end
+        cr.gold = math.random() < 0.12
+        cr.gone = nil
+    end
+
+    function def.build(g, dream)
+        local top = Plain(g, dream, 3, function(i, j) return (i + j) % 2 == 0 and CHEESE or RIND end)
+        local c = dream.pos
+        g.introUntil = g.t0 + LC.CheeseIntro
+        -- floating slabs of cheese, to jump onto
+        g.slabs = {}
+        for i = 1, 6 do
+            local at = AnyWhere(g, 160) + Vector(0, 0, math.Rand(90, 150))
+            local e = Block(g, PLATE4, at, Angle(0, math.Rand(0, 90), 0), CHEESE, "models/debug/debugwhite")
+            if e then g.slabs[#g.slabs + 1] = at + Vector(0, 0, 1.5) end
+        end
+        -- giant heads floating overhead (the citizens who dream of it), and wedges turning in the sky
+        g.heads = {}
+        for i = 1, 4 do
+            local a = math.rad(i * 90 + 45)
+            local at = Vector(c.x + math.cos(a) * g.half * 0.8, c.y + math.sin(a) * g.half * 0.8, top + 380)
+            local e = Actor(g, CITIZENS[i], at, math.deg(a) + 180, 5, ACT_IDLE or 1)
+            if e then g.heads[#g.heads + 1] = { ent = e, at = at, phase = i * 1.7, female = (i % 2 == 0) } end
+        end
+        g.wedges = {}
+        local wedge = FirstModel(WEDGES)
+        for i = 1, 3 do
+            local at = Vector(c.x + math.Rand(-g.half, g.half) * 0.6, c.y + math.Rand(-g.half, g.half) * 0.6, top + math.Rand(500, 650))
+            local e = Actor(g, wedge, at, 0, 2, nil)
+            if e then e:SetColor(CHEESE) if e.SetMaterial then e:SetMaterial("models/debug/debugwhite") end g.wedges[#g.wedges + 1] = { ent = e, at = at, spin = math.Rand(20, 60) } end
+        end
+        g.crumbs = {}
+        for i = 1, 12 do g.crumbs[i] = {} NewCrumb(g, i) end
+        g.wheels, g.nextWheel = {}, g.introUntil + 4
+        g.hum = g.introUntil + math.Rand(6, 12)
+        g.song = LC.StrangeSong("cheese")
+        Ring(g, 140)
+        return true
+    end
+    function def.spawn(g, p, i) Light(p, LC.CheeseGravity) return SpawnAt(g, p, i) end
+    def.hello = function(g) return { theme = "cheese", intro = g.introUntil, lines = { LC.CheeseLines.male, LC.CheeseLines.female } } end
+
+    local function NewWheel(g)
+        local c = g.dream.pos
+        local a = math.Rand(0, math.pi * 2)
+        local dir = Vector(math.cos(a), math.sin(a), 0)
+        local side = Vector(-dir.y, dir.x, 0)
+        local scale = 1.6
+        local r = 95 * scale
+        local from = c - dir * (g.half + r) + side * math.Rand(-g.half * 0.6, g.half * 0.6)
+        from.z = g.top + r
+        local e = Actor(g, FirstModel({ WHEEL, PLATE4 }), from, math.deg(a), scale, nil)
+        if not e then return end
+        e:SetColor(CHEESE)
+        if e.SetMaterial then e:SetMaterial("models/debug/debugwhite") end
+        e:SetAngles(Angle(0, math.deg(a), 90)) -- (stood on its edge, rolling along dir)
+        g.wheels[#g.wheels + 1] = { ent = e, pos = from, dir = dir, side = side, r = r, speed = math.Rand(260, 380), went = 0, len = (g.half + r) * 2, spin = 0, yaw = math.deg(a) }
+        Snd(e, "physics/wood/wood_box_impact_hard3.wav", 80, 60)
+    end
+    LC.CheeseNewWheel = NewWheel
+
+    -- Is someone under a wheel? (within its width, along its length, and not above it)
+    function LC.CheeseUnder(w, pos, top)
+        local rel = pos - w.pos
+        local along, side = rel.x * w.dir.x + rel.y * w.dir.y, rel.x * w.side.x + rel.y * w.side.y
+        return math.abs(along) < w.r * 0.85 and math.abs(side) < 40 and pos.z < top + w.r * 1.6
+    end
+
+    function def.tick(g, dt, players)
+        local now = CurTime()
+        -- the voices in the dark first: everyone held still until the dream swims up
+        if now < g.introUntil then
+            for _, p in ipairs(players) do
+                if not p.lcEndFrozen then p.lcEndFrozen = true if p.Freeze then p:Freeze(true) end end
+            end
+            return
+        end
+        if not g.begun then
+            g.begun, g.dirty = true, true
+            for _, p in ipairs(players) do
+                if p.lcEndFrozen then p.lcEndFrozen = nil if p.Freeze then p:Freeze(false) end end
+                local s = g.pl[p]
+                if s then s.safe = now + 2 end
+            end
+            Send(g, { k = "music", song = g.song })
+        end
+        local t = now - g.t0
+        -- the heads hum the line now and then, every colour of the rainbow
+        for i, h in ipairs(g.heads) do
+            if IsValid(h.ent) then
+                h.ent:SetPos(h.at + Vector(0, 0, math.sin(t * 0.8 + h.phase) * 60))
+                h.ent:SetAngles(Angle(math.sin(t + h.phase) * 15, (t * 25 + i * 90) % 360, math.cos(t * 0.7 + h.phase) * 20))
+                if math.floor(t * 4) ~= h.tint then h.tint = math.floor(t * 4) h.ent:SetColor(Rainbow(t * 0.15 + i * 0.25)) end
+            end
+        end
+        if now >= g.hum and #g.heads > 0 then
+            local h = g.heads[math.random(#g.heads)]
+            if IsValid(h.ent) then Snd(h.ent, h.female and LC.CheeseLines.female or LC.CheeseLines.male, 100, math.random(55, 140)) end
+            g.hum = now + math.Rand(7, 14)
+        end
+        for _, w in ipairs(g.wedges) do
+            if IsValid(w.ent) then w.ent:SetAngles(Angle(t * w.spin * 0.5, t * w.spin, t * w.spin * 0.3)) end
+        end
+        -- the wheels: more of them as it goes on
+        local most = math.min(3, 1 + math.floor((now - g.introUntil) / 50))
+        local alive = 0
+        for i = #g.wheels, 1, -1 do
+            local w = g.wheels[i]
+            local step = w.speed * dt
+            w.went = w.went + step
+            w.pos = w.pos + w.dir * step
+            w.spin = (w.spin + step / w.r * 57.3) % 360
+            if not IsValid(w.ent) or w.went > w.len then
+                if IsValid(w.ent) then w.ent:Remove() end
+                table.remove(g.wheels, i)
+            else
+                w.ent:SetPos(w.pos)
+                w.ent:SetAngles(Angle(w.spin, w.yaw, 90))
+                alive = alive + 1
+            end
+        end
+        if now >= g.nextWheel and alive < most then
+            NewWheel(g)
+            g.nextWheel = now + math.Rand(3.5, 7)
+        end
+        for i, cr in ipairs(g.crumbs) do if cr.gone and now >= cr.gone then NewCrumb(g, i) g.dirty = true end end
+        for _, p in ipairs(players) do
+            local s = g.pl[p]
+            s.got = s.got or 0
+            local pos = p:GetPos()
+            for _, w in ipairs(g.wheels) do
+                if LC.CheeseUnder(w, pos, g.top) and Hit(g, p, "Flattened", "A great wheel of cheese rolls right over you.") then
+                    Snd(p, "physics/flesh/flesh_squishy_impact_hard1.wav", 75, 80)
+                    break
+                end
+            end
+            if not s.done then
+                for _, cr in ipairs(g.crumbs) do
+                    if not cr.gone and cr.pos:Distance(pos + Vector(0, 0, 26)) < 52 then
+                        cr.gone, g.dirty = now + 3, true
+                        s.got = s.got + (cr.gold and 3 or 1)
+                        Snd(p, "garrysmod/save_load1.wav", 60, cr.gold and 70 or math.random(130, 160))
+                        if cr.gold then
+                            s.flip = now + 6
+                            Notice(p, "info", "Golden cheese", "Three at once. The world turns inside out for a moment.", 3)
+                        end
+                        if s.got >= def.need then
+                            Done(g, p, "won", "The Big Cheese", "Your arms are full of cheese. The heads in the sky sing your name. Well: they sing \"cheese\".")
+                        end
+                        break
+                    end
+                end
+            end
+        end
+    end
+
+    function def.state(g, p)
+        local glows = {}
+        for _, cr in ipairs(g.crumbs) do if not cr.gone then glows[#glows + 1] = Flat(cr.pos, cr.gold and 6 or 1) end end
+        local s = p and g.pl[p] or {}
+        local now = CurTime()
+        local big
+        if now < g.introUntil then big = nil
+        elseif now < g.introUntil + 5 then big = "Gather the glowing cheese!" end
+        return { glows = glows, big = big, intro = g.introUntil, flip = s.flip, wheels = #g.wheels,
+            meter = math.floor(math.min(1, (s.got or 0) / def.need) * 100), meterName = string.format("Cheese: %d of %d", math.min(s.got or 0, def.need), def.need) }
+    end
+end
+
+------------------------------------------------------------------------
+-- Musical Chairs
+------------------------------------------------------------------------
+
+do
+    LC.ChairsMusic = { 7, 14 } -- (seconds the music plays, at random between)
+    LC.ChairsSit = 4 -- (seconds to find a chair once it stops)
+    LC.ChairsSoloRounds = 3 -- (alone in it: rounds to sit through to win)
+    LC.ChairsReach = 60
+    local def = { id = "chairs", name = "Musical Chairs", mood = "neutral", secs = 240, lives = 1,
+        goal = "Walk round the chairs while the music plays. When it stops, crouch beside a free chair. No chair, you're out.",
+        timeUp = { "The music never stops", "The chairs keep drifting round and round, and you drift awake." },
+        woke = Woke({ name = "Musical Chairs",
+            won = { "The last one sitting", "You wake up sitting bolt upright in bed, and nobody can take it from you." },
+            out = { "No chair for you", "You wake with a tune stuck in your head and the feeling that a chair laughed at you." },
+            time = { "Round and round", "You wake dizzy, humming. Were there always that many chairs?" },
+        }) }
+    G.chairs = def
+    local CHAIR = { "models/props_c17/chair02a.mdl", "models/props_interiors/furniture_chair01a.mdl", "models/props_c17/furniturechair001a.mdl" }
+    local PASTEL = { Color(255, 170, 210), Color(150, 230, 220), Color(200, 180, 255), Color(255, 230, 150) }
+
+    -- (who's really in it: players; stand-ins wander, they don't take chairs)
+    local function Seats(g, n)
+        for _, ch in ipairs(g.chairs) do if IsValid(ch.ent) then ch.ent:Remove() end end
+        g.chairs = {}
+        local model = FirstModel(CHAIR)
+        for i = 1, math.max(1, n) do
+            local e = Actor(g, model, g.dream.pos, 0, 1.4, nil)
+            if e then
+                e:SetColor(PASTEL[(i - 1) % #PASTEL + 1])
+                g.chairs[#g.chairs + 1] = { ent = e, pos = g.dream.pos }
+            end
+        end
+        g.dirty = true
+    end
+    local function PlaceChairs(g, t)
+        local n = #g.chairs
+        for i, ch in ipairs(g.chairs) do
+            local a = g.turn + (i - 1) / math.max(1, n) * math.pi * 2
+            local pos = Vector(g.dream.pos.x + math.cos(a) * g.radius, g.dream.pos.y + math.sin(a) * g.radius, g.top)
+            ch.pos = pos
+            if IsValid(ch.ent) then
+                ch.ent:SetPos(pos + Vector(0, 0, g.phase == "music" and 8 + math.sin(t * 3 + i) * 8 or 0))
+                ch.ent:SetAngles(Angle(0, math.deg(a), g.phase == "music" and math.sin(t * 2 + i) * 10 or 0))
+            end
+        end
+    end
+
+    function def.build(g, dream)
+        Plain(g, dream, 2, function(i, j) return PASTEL[((i + j) % #PASTEL) + 1] end)
+        g.radius = 170
+        g.chairs, g.turn, g.round = {}, 0, 0
+        g.phase, g.at = "ready", CurTime() + 5
+        g.song = LC.StrangeSong("chairs")
+        Ring(g, 320)
+        return true
+    end
+    def.spawn = SpawnAt
+    def.hello = function(g) return { theme = "chairs" } end
+
+    local function NextRound(g, players)
+        g.round = g.round + 1
+        local n = #players
+        g.solo = g.solo or (n <= 1)
+        Seats(g, math.max(1, n - 1))
+        for _, p in ipairs(players) do g.pl[p].chair = nil end
+        g.phase, g.at = "music", CurTime() + math.Rand(LC.ChairsMusic[1], LC.ChairsMusic[2])
+        Send(g, { k = "music", song = g.song })
+        g.dirty = true
+    end
+    LC.ChairsNextRound = NextRound
+
+    function def.tick(g, dt, players)
+        local now = CurTime()
+        local t = now - g.t0
+        if g.phase == "music" then g.turn = g.turn + dt * 0.6 end
+        PlaceChairs(g, t)
+        if g.phase == "ready" then
+            if now >= g.at then NextRound(g, players) end
+        elseif g.phase == "music" then
+            if now >= g.at then
+                g.phase, g.at, g.dirty = "sit", now + LC.ChairsSit, true
+                Send(g, { k = "music" }) -- (the music stops)
+                for _, ch in ipairs(g.chairs) do if IsValid(ch.ent) then Snd(ch.ent, "buttons/button10.wav", 70, 60) break end end
+            end
+        elseif g.phase == "sit" then
+            for _, p in ipairs(players) do
+                local s = g.pl[p]
+                if not s.chair and p.Crouching ~= nil and p:Crouching() == true then
+                    local pp = p:GetPos()
+                    for i, ch in ipairs(g.chairs) do
+                        if not ch.by and Dist2(pp, ch.pos) < LC.ChairsReach then
+                            ch.by, s.chair, g.dirty = p, i, true
+                            Snd(p, "garrysmod/save_load1.wav", 60, 130)
+                            break
+                        end
+                    end
+                end
+            end
+            if now >= g.at then
+                g.phase, g.at, g.dirty = "result", now + 2.5, true
+                local left = 0
+                for _, p in ipairs(players) do
+                    if not g.pl[p].chair then
+                        Done(g, p, "out", "No chair for you", "The music stopped and every chair was taken. The chairs laugh at you (chairs can do that, here).")
+                    else left = left + 1 end
+                end
+                g.left = left
+            end
+        elseif g.phase == "result" then
+            if now >= g.at then
+                if #players == 1 and (not g.solo or g.round >= LC.ChairsSoloRounds) then
+                    Done(g, players[1], "won", "The last one sitting", "The music stops for good. Yours is the only chair left, and it's very comfortable.")
+                elseif #players > 0 then
+                    NextRound(g, players)
+                end
+            end
+        end
+    end
+
+    function def.state(g, p)
+        local s = p and g.pl[p] or {}
+        local glows = {}
+        if g.phase == "sit" then
+            for _, ch in ipairs(g.chairs) do if not ch.by then glows[#glows + 1] = Flat(ch.pos + Vector(0, 0, 30), 6) end end
+        end
+        local big, tone
+        if g.phase == "ready" then big = "Get ready: the music's about to start."
+        elseif g.phase == "music" then big = "Keep walking round the chairs..."
+        elseif g.phase == "sit" then
+            if s.chair then big = "You've got a chair." else big, tone = "SIT! Crouch beside a free chair!", "warn" end
+        elseif g.phase == "result" and not s.done then big = "Safe! One chair fewer..." end
+        return { glows = glows, big = big, tone = tone, phase2 = g.phase,
+            meterName = string.format("Round %d     Chairs: %d", g.round, #g.chairs) }
+    end
+end
+
+------------------------------------------------------------------------
+-- Wings
+------------------------------------------------------------------------
+
+do
+    LC.WingsGravity = 0.5
+    LC.WingsFlap = 300
+    LC.WingsReach = 85
+    local def = { id = "flying", name = "Wings", mood = "happy", secs = 150, lives = 1, need = 8, leave = Leave,
+        goal = "You can fly! Jump, then jump again in the air to flap. Fly through the golden rings.",
+        timeUp = { "Gently down", "You float down, softly, softly, into your own bed." },
+        woke = Woke({ name = "Wings",
+            won = { "You flew", "You wake up light as air. For a moment you're sure you could step off the roof and keep going. Don't." },
+            time = { "Gently down", "You wake from a flying dream, arms spread, smiling." },
+        }) }
+    G.flying = def
+
+    local function NewRing(g, i)
+        local at = AnyWhere(g, 120)
+        at.z = g.top + math.Rand(140, g.ceiling - g.top - 60)
+        g.rings[i] = at
+    end
+
+    function def.build(g, dream)
+        Plain(g, dream, 3, function(i, j) return (i + j) % 2 == 0 and Color(140, 210, 255) or Color(230, 245, 255) end)
+        local room = LC.DreamGameHeadroom and LC.DreamGameHeadroom(dream) or 2000
+        local roof = LC.DreamTop and LC.DreamTop(dream) or (g.top + 100000)
+        g.ceiling = math.min(g.top + math.max(300, math.min(1400, room - 80)), roof - 40)
+        if g.ceiling < g.top + 260 then g.ceiling = g.top + 260 end
+        g.bounds.maxs.z = g.ceiling + 400
+        g.rings = {}
+        for i = 1, 5 do NewRing(g, i) end
+        g.birds = {}
+        local bird = FirstModel({ "models/pigeon.mdl", "models/crow.mdl", "models/seagull.mdl" })
+        for i = 1, 5 do
+            local e = Actor(g, bird, g.dream.pos, 0, 3, ACT_FLY or ACT_IDLE or 1)
+            if e then g.birds[#g.birds + 1] = { ent = e, r = math.Rand(150, g.half), h = math.Rand(150, g.ceiling - g.top - 40), speed = math.Rand(0.3, 0.7) * (i % 2 == 0 and 1 or -1), phase = i } end
+        end
+        g.song = LC.StrangeSong("flying")
+        Ring(g, 160)
+        return true
+    end
+    function def.spawn(g, p, i) Light(p, LC.WingsGravity) return SpawnAt(g, p, i) end
+    def.hello = function(g) return { theme = "flying", song = g.song, center = Flat(g.dream.pos), ceiling = g.ceiling } end
+
+    -- One flap: up, and a little the way you're looking.
+    function LC.WingsFlapPush(p, ceiling)
+        local v = p.GetVelocity and p:GetVelocity() or Vector(0, 0, 0)
+        if p:GetPos().z > ceiling then return Vector(0, 0, 0) end
+        local up = v.z < 150 and LC.WingsFlap - math.max(-200, v.z) * 0.5 or 90
+        local fwd = Vector(0, 0, 0)
+        if p.GetAimVector then local a = p:GetAimVector() fwd = Vector(a.x, a.y, 0) * 70 end
+        return Vector(fwd.x, fwd.y, up)
+    end
+
+    function def.tick(g, dt, players)
+        local now = CurTime()
+        local t = now - g.t0
+        for _, b in ipairs(g.birds) do
+            if IsValid(b.ent) then
+                local a = t * b.speed + b.phase
+                b.ent:SetPos(g.dream.pos + Vector(math.cos(a) * b.r, math.sin(a) * b.r, b.h + math.sin(t * 2 + b.phase) * 30))
+                b.ent:SetAngles(Angle(0, math.deg(a) + (b.speed > 0 and 90 or -90), 0))
+            end
+        end
+        for _, p in ipairs(players) do
+            local s = g.pl[p]
+            s.rings = s.rings or 0
+            local pos = p:GetPos()
+            if JumpPressed(s, p) and not OnGround(p) and p.SetVelocity then
+                p:SetVelocity(LC.WingsFlapPush(p, g.ceiling))
+            end
+            if pos.z > g.ceiling and p.GetVelocity and p.SetVelocity then
+                local v = p:GetVelocity()
+                if v.z > 0 then p:SetVelocity(Vector(0, 0, -v.z)) end -- (the sky's as high as it goes)
+            end
+            local mid = pos + Vector(0, 0, 36)
+            for i, r in ipairs(g.rings) do
+                if r:Distance(mid) < LC.WingsReach then
+                    s.rings, g.dirty = s.rings + 1, true
+                    Snd(p, "buttons/bell1.wav", 60, 90 + s.rings * 8)
+                    NewRing(g, i)
+                    if s.rings >= def.need then
+                        Done(g, p, "won", "You flew", "Through every ring, round the pigeons, over the dream. You actually flew.")
+                    end
+                    break
+                end
+            end
+        end
+    end
+
+    function def.state(g, p)
+        local s = p and g.pl[p] or {}
+        local rings = {}
+        for _, r in ipairs(g.rings) do rings[#rings + 1] = Flat(r) end
+        local now = CurTime()
+        return { rings = rings, big = (now < g.t0 + 6) and "Jump, then jump again in the air to flap!" or nil,
+            meter = math.floor(math.min(1, (s.rings or 0) / def.need) * 100), meterName = string.format("Rings: %d of %d", math.min(s.rings or 0, def.need), def.need) }
+    end
+end
+
+------------------------------------------------------------------------
+-- It's Raining Melons
+------------------------------------------------------------------------
+
+do
+    LC.MelonFall = 2.6 -- (seconds from the sky to the ground)
+    LC.MelonLead = 0.18 -- (the share that are lead)
+    LC.MelonReach = 55
+    local def = { id = "melons", name = "It's Raining Melons", mood = "happy", secs = 150, lives = 3, need = 12,
+        goal = "Watermelons are falling! Stand on a green glow to catch one. A red glow is a lead melon: keep out from under it.",
+        timeUp = { "The rain stops", "The last melon lands, the sun comes out, and you wake." },
+        woke = Woke({ name = "It's Raining Melons",
+            won = { "A feast", "You wake up full, and sticky, and happy. There's no melon anywhere. There never is." },
+            out = { "Bonk", "You wake with a bump on your head that isn't there. Lead melons. Who grows those?" },
+            time = { "The rain stops", "You wake to the sound of rain and, for a moment, hope." },
+        }) }
+    G.melons = def
+    local MELON = "models/props_junk/watermelon01.mdl"
+
+    local function Drop(g)
+        local land = AnyWhere(g, 70)
+        local lead = math.random() < LC.MelonLead
+        local e = Actor(g, MELON, land + Vector(0, 0, 900), math.Rand(0, 360), lead and 1.8 or 1.5, nil)
+        if e and lead then
+            e:SetColor(Color(70, 70, 80))
+            if e.SetMaterial then e:SetMaterial("models/debug/debugwhite") end
+        end
+        g.drops[#g.drops + 1] = { ent = e, land = land, lead = lead, t0 = CurTime(), t1 = CurTime() + LC.MelonFall }
+        g.dirty = true
+    end
+    LC.MelonDrop = Drop
+
+    function def.build(g, dream)
+        Plain(g, dream, 2, function(i, j) return (i + j) % 2 == 0 and Color(120, 200, 90) or Color(160, 225, 110) end)
+        g.drops, g.nextDrop = {}, CurTime() + 3
+        g.song = LC.StrangeSong("melons")
+        Ring(g, 150)
+        return true
+    end
+    def.spawn = SpawnAt
+    def.hello = function(g) return { theme = "melons", song = g.song } end
+
+    -- A melon lands: the nearest under it catches it (or is bonked by it).
+    function LC.MelonLand(g, d, players)
+        if IsValid(d.ent) then
+            Puff(d.land + Vector(0, 0, 10))
+            Snd(d.ent, d.lead and "physics/metal/metal_barrel_impact_hard1.wav" or ("physics/flesh/flesh_squishy_impact_hard" .. math.random(4) .. ".wav"), 75, 100)
+            d.ent:Remove()
+        end
+        local best, bd
+        for _, p in ipairs(players) do
+            local s = g.pl[p]
+            local pp = p:GetPos()
+            local dd = Dist2(pp, d.land)
+            if s and not s.done and dd < LC.MelonReach and pp.z < g.top + 90 and (not bd or dd < bd) then best, bd = p, dd end
+        end
+        if not best then return nil end
+        local s = g.pl[best]
+        if d.lead then
+            Hit(g, best, "Bonk", "A lead melon. It's exactly as heavy as it sounds.")
+        else
+            s.got = (s.got or 0) + 1
+            if s.got >= def.need then
+                Done(g, best, "won", "A feast", "Your arms are full of melons and the sky is still raining them. A perfect dream.")
+            end
+        end
+        g.dirty = true
+        return best
+    end
+
+    function def.tick(g, dt, players)
+        local now = CurTime()
+        local t = now - g.t0
+        for i = #g.drops, 1, -1 do
+            local d = g.drops[i]
+            if now >= d.t1 then
+                table.remove(g.drops, i)
+                LC.MelonLand(g, d, players)
+            elseif IsValid(d.ent) then
+                local f = (now - d.t0) / (d.t1 - d.t0)
+                d.ent:SetPos(d.land + Vector(0, 0, 8 + 892 * (1 - f * f)))
+                d.ent:SetAngles(Angle(t * 200, t * 90, 0))
+            end
+        end
+        if now >= g.nextDrop and #g.drops < 12 then
+            Drop(g)
+            local n = math.max(1, #players)
+            g.nextDrop = now + math.Rand(0.8, 1.4) / math.min(3, 0.6 + n * 0.4)
+        end
+    end
+
+    function def.state(g, p)
+        local s = p and g.pl[p] or {}
+        local glows = {}
+        for _, d in ipairs(g.drops) do glows[#glows + 1] = Flat(d.land + Vector(0, 0, 6), d.lead and 7 or 5) end
+        return { glows = glows, big = (CurTime() < g.t0 + 6) and "Catch the melons! Stand on the green glows." or nil,
+            meter = math.floor(math.min(1, (s.got or 0) / def.need) * 100), meterName = string.format("Melons: %d of %d", math.min(s.got or 0, def.need), def.need) }
+    end
+end

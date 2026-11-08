@@ -60,6 +60,7 @@ local function Notice(p, kind, title, text, secs) if LC.Notice then LC.Notice(p,
 -- Administration, in a dream nobody can opt out of.
 function LC.DreamEnforcerRole(p, id)
     if not IsValid(p) or not p.GetNW2String then return false end
+    if p.lcDreamTesting then return false end -- (testing a dream from the editor: they play it, sv_livingcity_dreamtest.lua)
     id = id or (LC.DreamActive and LC.DreamActive.ending)
     if not id or not (LC.DreamForced and LC.DreamForced(id)) then return false end
     local f = p:GetNW2String("lcf_faction", "")

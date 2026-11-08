@@ -985,6 +985,7 @@ end
 function LC.DreamGameLeave(p, dream)
     if not IsValid(p) then return end
     local g = dream and dream.game
+    if g and g.def and g.def.leave then pcall(g.def.leave, g, p) end -- (a dream's own way out: gravity back, sv_livingcity_strangedreams.lua)
     if g and g.pl[p] and not g.pl[p].done then
         g.pl[p].done, g.pl[p].how = true, g.pl[p].how or "woke"
         Send(g, { k = "stop", how = "woke" }, p)
@@ -1025,10 +1026,11 @@ hook.Add("SetupMove", "LivingCityDreamGameWatch", function(p, mv)
 end)
 
 -- Back in bed with everything put back: now how the dream leaves them (sv_livingcity_vices.lua).
-hook.Add("LivingCityDreamWoke", "LivingCityDreamGames", function(p)
+hook.Add("LivingCityDreamWoke", "LivingCityDreamGames", function(p, _, why)
     local r = IsValid(p) and p.lcDreamGameResult
     if not r then return end
     p.lcDreamGameResult = nil
+    if why == "test" then return end -- (a dream tested from the editor leaves nothing behind: sv_livingcity_dreamtest.lua)
     local def = r.id and G[r.id]
     if def and def.woke then def.woke(p, r.how) -- (a dream with its own way of leaving you: the Administrator's)
     elseif LC.DreamOutcome then LC.DreamOutcome(p, r.how, r.name) end

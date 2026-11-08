@@ -1751,6 +1751,85 @@ return (not ok) and tostring(e) or nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "dream games (client) " + str(err)
+# the strange dreams (cl_livingcity_strangedreams.lua): the cheese dream's voices in the dark and its colours, wings' rings;
+# and testing a dream from the Living City Editor's panel (cl_livingcity_dreams.lua, the editor tool)
+L.globals()["_editor_tool"] = open(os.path.join(os.path.dirname(GMDIR), "..", "lua", "weapons", "gmod_tool", "stools", "livingcity_editor.lua")).read()
+err = L.execute(r"""
+local ok, e = pcall(function()
+    _me:SetNW2Bool("lc_dreaming", true)
+    local function Msg(t) net._q = { t } net["recv_lc_dreamgame"]() end
+    Msg({ k = "start", id = "cheese", name = "The Cheese Dream", goal = "Gather.", ends = CurTime() + 100, lives = 3, maxLives = 3, theme = "cheese",
+        intro = CurTime() + 8, lines = { "vo/npc/male01/question06.wav", "vo/npc/female01/question06.wav" } })
+    hook.t.Think.LivingCityStrangeDreams()
+    hook.t.RenderScreenspaceEffects.LivingCityStrangeDreams()
+    hook.t.HUDPaint.LivingCityStrangeDreams()
+    hook.t.HUDPaint.LivingCityDreamGames()
+    Msg({ k = "state", lives = 3, intro = CurTime() - 1, flip = CurTime() + 3, glows = { { 0, 0, 30, 1 }, { 1, 1, 30, 6 } }, meter = 40, meterName = "Cheese: 4 of 10" })
+    hook.t.Think.LivingCityStrangeDreams()
+    hook.t.RenderScreenspaceEffects.LivingCityStrangeDreams()
+    hook.t.PostDrawTranslucentRenderables.LivingCityStrangeDreams(false, false)
+    hook.t.PostDrawTranslucentRenderables.LivingCityDreamGames(false, false)
+    hook.t.HUDPaint.LivingCityDreamGames()
+    Msg({ k = "start", id = "flying", name = "Wings", goal = "Fly.", ends = CurTime() + 100, lives = 1, maxLives = 1, theme = "flying", center = { 0, 0, 0 }, ceiling = 900 })
+    Msg({ k = "state", lives = 1, rings = { { 0, 0, 300 }, { 100, 0, 400 } }, meterName = "Rings: 1 of 8" })
+    hook.t.PostDrawTranslucentRenderables.LivingCityStrangeDreams(false, false)
+    hook.t.RenderScreenspaceEffects.LivingCityStrangeDreams()
+    hook.t.HUDPaint.LivingCityDreamGames()
+    Msg({ k = "start", id = "melons", name = "It's Raining Melons", goal = "Catch.", ends = CurTime() + 100, lives = 3, maxLives = 3, theme = "melons" })
+    Msg({ k = "state", lives = 3, glows = { { 0, 0, 6, 5 }, { 50, 0, 6, 7 } } })
+    hook.t.RenderScreenspaceEffects.LivingCityStrangeDreams()
+    hook.t.HUDPaint.LivingCityDreamGames()
+    Msg({ k = "start", id = "chairs", name = "Musical Chairs", goal = "Sit.", ends = CurTime() + 100, lives = 1, maxLives = 1, theme = "chairs" })
+    Msg({ k = "music" })
+    Msg({ k = "state", lives = 1, phase2 = "sit", big = "SIT! Crouch beside a free chair!", tone = "warn", glows = { { 0, 0, 30, 6 } } })
+    hook.t.HUDPaint.LivingCityDreamGames()
+    Msg({ k = "stop", how = "won" })
+    -- a test: the line at the top says so
+    _me:SetNW2Bool("lc_dream_test", true)
+    hook.t.HUDPaint.LivingCityDreams()
+    _me:SetNW2Bool("lc_dream_test", false)
+    _me:SetNW2Bool("lc_dreaming", false)
+    -- the editor's panel: Dreams: test one
+    local buttons, combos = {}, {}
+    local function Thing() return setmetatable({ IsValid = function() return true end }, { __index = function() return function() end end }) end
+    local function Combo()
+        local c = Thing()
+        c.choices = {}
+        c.Clear = function(self) self.choices = {} end
+        c.AddChoice = function(self, text, data) self.choices[#self.choices + 1] = { text, data } end
+        c.GetSelected = function(self) local f = self.choices[1] if f then return f[1], f[2] end end
+        return c
+    end
+    local cp = setmetatable({}, { __index = function(_, k)
+        if k == "Button" then return function(_, text) local b = Thing() buttons[text] = b return b end end
+        if k == "ComboBox" then return function(_, text) local c = Combo() combos[text] = c return c end end
+        return function() return Thing() end
+    end })
+    TOOL = {}
+    language = language or {}
+    language.Add = function() end
+    assert(loadstring(_editor_tool, "livingcity_editor.lua"))()
+    TOOL.BuildCPanel(cp)
+    local pick = combos["Dream"]
+    if not pick then error("editor: no dream to pick") end
+    net._q = { { k = "list", point = true, on = true, list = { { id = "cheese", name = "The Cheese Dream", mood = "Neutral", kind = "game" }, { id = "bus", name = "The Bus", mood = "Neutral", kind = "ending" } } } }
+    net["recv_lc_dream_test"]()
+    if #pick.choices ~= 2 or pick.choices[1][2] ~= "cheese" then error("editor: the dreams aren't in the list") end
+    local test = buttons["Test it now (just me)"]
+    if not test or not test.DoClick then error("editor: no Test it now button") end
+    local sent = {}
+    local ss, ws = net.SendToServer, net.WriteString
+    net.WriteString = function(v) sent[#sent + 1] = v end
+    net.SendToServer = function() end
+    test.DoClick()
+    buttons["Stop the test (wake up)"].DoClick()
+    net.SendToServer, net.WriteString = ss, ws
+    if sent[1] ~= "test" or sent[2] ~= "cheese" or sent[3] ~= "stop" then error("editor: test and stop didn't reach the server: " .. table.concat(sent, ",")) end
+end)
+return (not ok) and tostring(e) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "strange dreams and the editor's dream test (client) " + str(err)
 # cigarettes, alcohol, stimulants and the shakes (cl_livingcity_vices.lua); the dream games' wake-or-watch window
 err = L.execute(r"""
 local ok, e = pcall(function()

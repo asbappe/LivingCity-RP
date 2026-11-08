@@ -91,6 +91,8 @@ LC_MODULES = {
         "sv_livingcity_dreamstandins", -- (stand-ins: every dream has at least lc_dream_min dreamers)
         "sv_livingcity_dreamenforcers", -- (Civil Protection and the Administration as Enforcers in nightmares and propaganda dreams)
         "sv_livingcity_dreamrules", -- (which dream tonight: Nightmares after bad days, Happy after clean ones; the city's own pick)
+        "sv_livingcity_strangedreams", -- (strange dreams you play: the cheese dream, musical chairs, wings, raining melons; after propagandamore)
+        "sv_livingcity_dreamtest", -- (testing any dream from the Living City Editor, alone and awake)
         "sv_livingcity_events",
         "sv_livingcity_exercise", -- (after events: the morning jog, drill and parade are events)
         "sv_livingcity_freq7",
@@ -209,6 +211,7 @@ LC_MODULES = {
         "cl_livingcity_endingtune", -- (the Endings menu)
         "cl_livingcity_dreams", -- (shared dreams: opting out, waking up, the admins' window)
         "cl_livingcity_dreamgames", -- (the dreams you play: tokens, lives, time, on screen)
+        "cl_livingcity_strangedreams", -- (the strange dreams: the cheese dream's voices and colours, wings' rings; after dreamgames)
         "cl_livingcity_dreamenforce", -- (Enforcers: the bad dreamers glow red; a dreamer marked is told)
         "cl_livingcity_vices", -- (smoke, drunk, wired, crashing and the shakes, on screen)
         "cl_livingcity_exercise",
