@@ -15,7 +15,9 @@
       (crates, scrap, work stations, tables), boards hanging in the air (the quota board, the
       production norm, the enemy of the people on his screen), her portrait in cards growing
       picture by picture in the Mass Games, clues overheard in Careless Talk, the screen black and
-      white in the Newsreel, and "NOW!" as a soldier passes you in Flowers for the Liberators.
+      white in the Newsreel, "NOW!" as a soldier passes you in Flowers for the Liberators, and the
+      rebels' rocket climbing on its flame in Duck and Cover. Careless Talk and the Newsreel show
+      everyone's pick or take at the reveal.
 ]]
 
 LC_CL = LC_CL or {}
@@ -117,7 +119,7 @@ local BLUE, GOLD = Color(120, 210, 255), Color(255, 205, 70)
 local PINK, ROSE = Color(255, 120, 190), Color(255, 40, 90)
 local HALO, PROP = Color(255, 240, 200), Color(255, 70, 60)
 -- the glows' colours: a crate, a spoiled crate, scrap, a flower, somewhere to stand, white
-local GLOWS = { Color(255, 205, 70), Color(140, 220, 60), Color(150, 190, 230), Color(255, 120, 190), Color(90, 255, 140), Color(255, 255, 255) }
+local GLOWS = { Color(255, 205, 70), Color(140, 220, 60), Color(150, 190, 230), Color(255, 120, 190), Color(90, 255, 140), Color(255, 255, 255), Color(255, 40, 40) }
 local THEMES = { harvest = Color(255, 205, 70), newsreel = Color(235, 235, 235), hate = Color(255, 60, 50), civil = Color(140, 210, 255) }
 -- Where she is: her figure or the star (as an entity, when you can see it), else where she was.
 local function HerPos()
@@ -169,6 +171,16 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityDreamGames", function(_, s
         local c = GLOWS[gl[4] or 1] or GOLD
         local pz = 0.85 + 0.15 * math.sin(CurTime() * 4 + gl[1] * 0.01)
         render.DrawSprite(Vector(gl[1], gl[2], gl[3]), 34 * pz, 34 * pz, c)
+    end
+    if st.rocket and Entity then -- (Duck and Cover: the rebels' rocket, flame and smoke under it as it climbs)
+        local e = Entity(st.rocket)
+        if IsValid(e) then
+            local base = e:GetPos()
+            local fl = 0.8 + 0.2 * math.sin(CurTime() * 30)
+            render.DrawSprite(base, 140 * fl, 140 * fl, Color(255, 170, 60))
+            render.DrawSprite(base - Vector(0, 0, 40), 90 * fl, 90 * fl, Color(255, 240, 200))
+            for i = 1, 6 do render.DrawSprite(base - Vector(0, 0, 60 + i * 70), 120 + i * 30, 120 + i * 30, Color(200, 200, 200, 120 - i * 15)) end
+        end
     end
     if st.board then LC_CL.DreamBoard(st.board) end
     if st.mosaic then LC_CL.DreamMosaic(st.mosaic) end

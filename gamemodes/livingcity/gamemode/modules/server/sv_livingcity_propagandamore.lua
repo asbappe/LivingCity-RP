@@ -15,11 +15,16 @@
           (crouch, again and again) to beat the norm by 1400%. Double norm now and then. Idle for
           12 seconds and the foreman notices. The first to 1400% gets a giant portrait.
         Careless Talk (spy), "loose lips sink ships": a canteen of citizens with one rebel spy
-          among them. Overheard clues come one at a time (which table, a man or a woman, what
-          colour). Crouch beside someone to report them; report a loyal citizen and it costs you.
-        The Newsreel (newsreel), wartime newsreels: the dream is black and white, a narrator
-          booms, and when the camera swings to you, wave, salute or cheer (say it in chat) before
-          it swings away. Five good takes.
+          among them. A party game (the owner: "everyone has 30 seconds to pick the spy ... on
+          their own and then it's revealed to everyone at the end"): four rounds of 30 seconds,
+          three overheard clues each (which table, a man or a woman, what colour); crouch beside
+          the one you suspect (change your mind as often as you like). Then the spy and
+          everyone's pick are shown to all: a loyal citizen reported, or nobody, costs a life.
+          Three spies found out of four wins.
+        The Newsreel (newsreel), wartime newsreels: the dream is black and white and a narrator
+          booms. A party game too: eight takes; as the camera rolls each dreamer is told to wave,
+          salute or cheer (say it in chat) before the cut, and then everyone's take is shown to
+          all. Wrong, or nothing, costs a life. Five good takes wins.
         Two Minutes of Hate (hate), Orwell's 1984: the enemy of the people on a giant screen, and
           everyone jeers in chat. Silence for 15 seconds is noticed; a kind word for him is
           thoughtcrime. Fill your Hatred to win.
@@ -35,9 +40,12 @@
         Flowers for the Liberators (flowers), troops welcomed with flowers: her soldiers march
           down the village street. Throw your flowers (jump) as one passes level with you. Never
           step into the road, and don't let a whole squad pass without a flower.
-        Duck and Cover (duck), Cold War civil-defence films: Sunny the Scanner, a cheerful
-          mascot, gives instructions; when the siren wails, crouch beside a table before the
-          flash (two to a table). Six flashes survived wins.
+        Duck and Cover (duck), Cold War civil-defence films: the Resistance is firing rockets at
+          the city (the owner: "framed as the resistance threat is launching a rocket"). Sunny the
+          Scanner, a cheerful mascot, gives instructions; when the siren wails the rebels' rocket
+          climbs from its pad (White Forest's, with Episode Two on the server, else Garry's Mod's
+          own), and you crouch beside a table before the flash (two to a table). Six survived
+          wins.
 
       Music, flat in garrysmod/sound/livingcity/dreams/ like the others: each dream's codeword
       (harvest, shift, spy, newsreel, hate, massgames, guidance, scrap, flowers, duck) or
@@ -74,7 +82,7 @@ local CUES = {
     shift_double = { "The Foreman", "Double norm! Every blow counts twice!" },
     shift_hero = { "The Foreman", "A new Hero of Labour! Hang the portrait!" },
     spy_hello = { "The Loudspeaker", "Careless talk costs lives. There is a traitor among you. Listen carefully." },
-    spy_caught = { "The Loudspeaker", "The traitor has been found. The city thanks its vigilant citizens." },
+    spy_caught = { "The Loudspeaker", "Time is up. The traitor is revealed. The city thanks its vigilant citizens." },
     newsreel_hello = { "The Narrator", "City Seventeen! Where every citizen smiles, and every smile is sincere!" },
     newsreel_end = { "The Narrator", "And so another happy day draws to a close. Goodnight, City Seventeen!" },
     hate_hello = { "The Screen", "Citizens! Behold the enemy of the people. Let him hear you!" },
@@ -85,9 +93,9 @@ local CUES = {
     guidance_end = { "The Administrator", "Excellent. I have improved everything here simply by looking at it." },
     scrap_hello = { "The Administrator", "Every pot, every pan, every bucket. The city needs your scrap!" },
     flowers_hello = { "The Administrator", "My soldiers are marching home. Show them how much you love them." },
-    duck_hello = { "Sunny the Scanner", "Hi, citizens! I'm Sunny! When the siren sounds, what do we do? We duck, and cover!" },
-    duck_siren = { "Sunny the Scanner", "Siren! Duck and cover! Crouch beside a table, quick as you can!" },
-    duck_clear = { "Sunny the Scanner", "All clear! Wasn't that fun?" },
+    duck_hello = { "Sunny the Scanner", "Hi, citizens! I'm Sunny! The nasty terrorists have built a rocket. If they launch it, what do we do? We duck, and cover!" },
+    duck_siren = { "Sunny the Scanner", "Rocket launch! Duck and cover! Crouch beside a table, quick as you can!" },
+    duck_clear = { "Sunny the Scanner", "All clear! The Combine protects us. Wasn't that fun?" },
 }
 LC.PropagandaCueWho = {}
 for k, v in pairs(CUES) do LC.PropagandaCues[k], LC.PropagandaCueWho[k] = v[2], v[1] end
@@ -361,13 +369,16 @@ do
 end
 
 ------------------------------------------------------------------------
--- Careless Talk
+-- Careless Talk (a party game: everyone picks on their own, then the reveal)
 ------------------------------------------------------------------------
 
 do
-    local def = { id = "spy", name = "Careless Talk", mood = "happy", secs = 180, lives = 3, music = { "spy", "propaganda" },
-        goal = "One citizen in the canteen is a rebel spy. Listen for the overheard clues, then crouch beside the right one to report them. Never report a loyal citizen.",
-        timeUp = { "The canteen empties", "The lights go off in the canteen, the traitor still among you. You wake." }, spawn = Spawn,
+    LC.SpyRounds, LC.SpyRoundSecs, LC.SpyReveal = 4, 30, 6
+    LC.SpyClueAt = { 3, 11, 19 } -- (seconds into a round)
+    local def = { id = "spy", name = "Careless Talk", mood = "happy", secs = 8 + LC.SpyRounds * (LC.SpyRoundSecs + LC.SpyReveal) + 4, lives = 3, need = 3,
+        music = { "spy", "propaganda" },
+        goal = "One citizen in the canteen is a rebel spy. Listen to the clues, then crouch beside the one you suspect (you can change your mind). After 30 seconds, everyone's pick is revealed.",
+        timeUp = { "The canteen empties", "The lights go off in the canteen, and you wake." }, spawn = Spawn,
         woke = Woke({
             won = { "Vigilant citizen", "You wake looking sideways at everyone, quietly proud. Loose lips sink ships. Not on your watch." },
             out = { "Informer", "You wake feeling you accused the wrong people in your sleep. Hopefully nobody remembers." },
@@ -379,34 +390,39 @@ do
     local MEN = { "models/humans/group01/male_02.mdl", "models/humans/group02/male_04.mdl", "models/humans/group01/male_07.mdl" }
     local WOMEN = { "models/humans/group01/female_01.mdl", "models/humans/group02/female_02.mdl", "models/humans/group01/female_04.mdl" }
     local IDLE = { "LineIdle01", "lineidle01", "idle_subtle" }
-    LC.SpyClueEvery = 14
 
     local function Combo(n) return n.tbl .. "/" .. n.man .. "/" .. n.tint end
     local function Describe(n) return string.format("the %s in %s %s", n.man == 1 and "man" or "woman", LC.SpyTints[n.tint][1], LC.SpyTables[n.tbl]) end
     LC.SpyDescribe = Describe
-    -- Someone new is the spy: their table, sex and colour together belong to nobody else.
-    local function NewSpy(g)
-        local pool = {}
-        for _, n in ipairs(g.npcs) do if not n.gone and not n.cleared then pool[#pool + 1] = n end end
-        if #pool == 0 then g.spyN = nil return end
-        local n = pool[math.random(#pool)]
+    local function Look(n)
+        if not IsValid(n.e) then return end
+        n.e:SetModel((n.man == 1 and MEN or WOMEN)[n.seat])
+        n.e:SetColor(LC.SpyTints[n.tint][2])
+        if n.e.SetNoDraw then n.e:SetNoDraw(false) end
+        Pose(n.e, IDLE, ACT_IDLE)
+    end
+    -- A fresh canteen: everyone's sex and colour shuffled, and a new spy whose table, sex and
+    -- colour together belong to nobody else.
+    local function NewRound(g)
+        for _, n in ipairs(g.npcs) do n.man, n.tint = math.random(2), math.random(#LC.SpyTints) Look(n) end
+        local n = g.npcs[math.random(#g.npcs)]
         local taken = {}
-        for _, o in ipairs(g.npcs) do if o ~= n and not o.gone then taken[Combo(o)] = true end end
-        if taken[Combo(n)] then -- (make them stand out: a sex and colour nobody else has at their table)
+        for _, o in ipairs(g.npcs) do if o ~= n then taken[Combo(o)] = true end end
+        if taken[Combo(n)] then
             for man = 1, 2 do for tint = 1, #LC.SpyTints do
                 if not taken[n.tbl .. "/" .. man .. "/" .. tint] then n.man, n.tint = man, tint end
             end end
-            if IsValid(n.e) then
-                n.e:SetModel((n.man == 1 and MEN or WOMEN)[math.random(3)])
-                n.e:SetColor(LC.SpyTints[n.tint][2])
-            end
+            Look(n)
         end
         g.spyN = n
         local order = { "tbl", "man", "tint" }
         for i = #order, 2, -1 do local j = math.random(i) order[i], order[j] = order[j], order[i] end
-        g.clueOrder, g.clues, g.clueAt = order, {}, CurTime() + 8
+        g.round, g.phase, g.roundT0, g.clueOrder, g.clues = g.round + 1, "pick", CurTime(), order, {}
+        g.at, g.dirty = CurTime() + LC.SpyRoundSecs, true
+        for _, s in pairs(g.pl) do s.pick = nil end
+        for _, q in ipairs(Everyone(g)) do Notice(q, "info", string.format("Round %d of %d", g.round, LC.SpyRounds), "Someone in the canteen is a spy. Listen...", 4) end
     end
-    LC.SpyNew = NewSpy
+    LC.SpyNewRound = NewRound
     local function Clue(g)
         local n = g.spyN
         local what = n and g.clueOrder[#g.clues + 1]
@@ -418,6 +434,34 @@ do
         g.clues[#g.clues + 1] = text
         g.dirty = true
         for _, q in ipairs(Everyone(g)) do Notice(q, "info", "Overheard", text, 7) end
+    end
+    -- Time's up: the spy and everyone's pick, shown to everyone.
+    local function Reveal(g, players)
+        local spy = g.spyN
+        g.phase, g.at, g.dirty = "reveal", CurTime() + LC.SpyReveal, true
+        local lines = {}
+        for _, p in ipairs(players) do
+            local s = g.pl[p]
+            local n = s.pick and g.npcs[s.pick]
+            if n == spy then
+                s.score = (s.score or 0) + 1
+                lines[#lines + 1] = p:Nick() .. ": right!"
+            elseif n then
+                lines[#lines + 1] = p:Nick() .. ": reported " .. Describe(n) .. " (loyal)"
+            else
+                lines[#lines + 1] = p:Nick() .. ": reported nobody"
+            end
+        end
+        g.results = lines
+        SayAs(g, "spy_caught")
+        for _, q in ipairs(Everyone(g)) do Notice(q, "info", "The spy was " .. Describe(spy), table.concat(lines, ". ") .. ".", 8) end
+        for _, p in ipairs(players) do
+            local s = g.pl[p]
+            local n = s.pick and g.npcs[s.pick]
+            if n and n ~= spy then Offend(g, p, "A loyal citizen", "You reported " .. Describe(n) .. ", who is entirely loyal. The officer writes down your name instead.")
+            elseif not n then Offend(g, p, "Reported nobody", "A good citizen always has someone to report.") end
+        end
+        timer.Simple(2, function() if g and not g.stopped and IsValid(spy.e) and spy.e.SetNoDraw then spy.e:SetNoDraw(true) end end) -- (dragged away)
     end
 
     function def.build(g, dream)
@@ -431,16 +475,13 @@ do
                 Block(g, "models/props_c17/furnituretable001a.mdl", Vector(xy[1], xy[2], top + 18), Angle(0, 0, 0))
             end
             for k, off in ipairs({ { -55, -50 }, { 55, -50 }, { 0, 62 } }) do
-                local man, tint = math.random(2), math.random(#LC.SpyTints)
                 local at = Vector(xy[1] + off[1], xy[2] + off[2], top)
-                local e = Actor(g, (man == 1 and MEN or WOMEN)[k], at, math.deg(math.atan2(xy[2] - at.y, xy[1] - at.x)), 1, ACT_IDLE or 1)
-                if IsValid(e) then e:SetColor(LC.SpyTints[tint][2]) end
-                Pose(e, IDLE, ACT_IDLE)
-                g.npcs[#g.npcs + 1] = { e = e, pos = at, tbl = t, man = man, tint = tint }
+                local e = Actor(g, MEN[k], at, math.deg(math.atan2(xy[2] - at.y, xy[1] - at.x)), 1, ACT_IDLE or 1)
+                g.npcs[#g.npcs + 1] = { e = e, pos = at, tbl = t, seat = k, man = 1, tint = 1 }
             end
         end
-        g.caught = 0
-        NewSpy(g)
+        g.round, g.phase, g.at = 0, "wait", CurTime() + 8
+        for _, n in ipairs(g.npcs) do n.man, n.tint = math.random(2), math.random(#LC.SpyTints) Look(n) end
         Starts(g, x0 + 90, c.y, top)
         return true
     end
@@ -448,49 +489,61 @@ do
 
     function def.tick(g, dt, players)
         local now = CurTime()
-        if g.spyN and now >= g.clueAt then g.clueAt = now + LC.SpyClueEvery Clue(g) end
-        for _, p in ipairs(players) do
-            local s = g.pl[p]
-            if Ducked(s, p) and now >= (s.reportAt or 0) then
-                local pos, best, bd = p:GetPos(), nil, 80
-                for _, n in ipairs(g.npcs) do
-                    if not n.gone and not n.cleared then local d = Dist2(pos, n.pos) if d < bd then best, bd = n, d end end
-                end
-                if best then
-                    s.reportAt = now + 2
-                    if best == g.spyN then
-                        best.gone, g.caught, g.dirty = true, g.caught + 1, true
-                        if IsValid(best.e) then best.e:Remove() end
-                        SayAs(g, "spy_caught")
-                        Done(g, p, "won", "Vigilant citizen", "You reported " .. Describe(best) .. ". Two officers drag the traitor away, and the canteen applauds you.")
-                        for _, q in ipairs(Everyone(g)) do if q ~= p then Notice(q, "info", "A traitor taken", p:Nick() .. " found the spy. But there's another among you...", 6) end end
-                        NewSpy(g)
-                    else
-                        best.cleared, g.dirty = true, true
-                        Offend(g, p, "A loyal citizen", "You reported " .. Describe(best) .. ", who is entirely loyal. The officer writes down your name instead.")
+        if g.phase == "pick" then
+            local at = LC.SpyClueAt[#g.clues + 1]
+            if at and now >= g.roundT0 + at then Clue(g) end
+            for _, p in ipairs(players) do
+                local s = g.pl[p]
+                if Ducked(s, p) then
+                    local pos, best, bd = p:GetPos(), nil, 80
+                    for i, n in ipairs(g.npcs) do local d = Dist2(pos, n.pos) if d < bd then best, bd = i, d end end
+                    if best and best ~= s.pick then
+                        s.pick, g.dirty = best, true
+                        Notice(p, "info", "Your pick", "You'll report " .. Describe(g.npcs[best]) .. ". Nobody else knows. Crouch beside someone else to change your mind.", 4)
                     end
                 end
             end
         end
+        if now < g.at then return end
+        if g.phase == "pick" then Reveal(g, players) return end
+        if g.round >= LC.SpyRounds then
+            g.phase, g.at = "over", math.huge
+            for _, p in ipairs(players) do
+                local n = g.pl[p].score or 0
+                if n >= def.need then Done(g, p, "won", "Vigilant citizen", string.format("You found the spy %d times out of %d. The canteen applauds you.", n, LC.SpyRounds))
+                else Done(g, p, "time", "The canteen empties", string.format("You found the spy %d times out of %d. The lights go off, and you wake.", n, LC.SpyRounds)) end
+            end
+            return
+        end
+        NewRound(g)
     end
 
     function def.state(g, p)
         local glows = {}
-        for _, n in ipairs(g.npcs) do if n.cleared and not n.gone then glows[#glows + 1] = { math.floor(n.pos.x), math.floor(n.pos.y), math.floor(n.pos.z) + 80, 5 } end end
+        if g.phase == "reveal" and g.spyN then local v = g.spyN.pos glows[1] = { math.floor(v.x), math.floor(v.y), math.floor(v.z) + 85, 7 } end
         local s = p and g.pl[p] or {}
-        local big = nil
-        if not s.done then big = #g.clues == 0 and "Listen. The first clue is coming." or "Crouch beside the spy to report them." end
-        return { glows = glows, notes = g.clues, big = big, tone = "love", meterName = string.format("Clues: %d of 3", #(g.clues or {})) }
+        if s.pick and g.phase == "pick" and g.npcs[s.pick] then local v = g.npcs[s.pick].pos glows[#glows + 1] = { math.floor(v.x), math.floor(v.y), math.floor(v.z) + 85, 6 } end
+        local big, notes = nil, g.clues
+        local left = math.max(0, math.ceil((g.at or 0) - CurTime()))
+        if g.phase == "pick" then
+            big = s.pick and string.format("Your pick: %s (%d s to change your mind)", Describe(g.npcs[s.pick]), left) or string.format("Crouch beside the one you suspect. %d s.", left)
+        elseif g.phase == "reveal" and g.spyN then
+            big, notes = "The spy was " .. Describe(g.spyN) .. "!", g.results
+        elseif g.phase == "wait" then big = "Listen. The first round is about to begin." end
+        return { glows = glows, notes = notes, big = big, tone = g.phase == "reveal" and "warn" or "love",
+            meterName = string.format("Round %d of %d     Spies found: %d of %d needed", math.max(1, g.round), LC.SpyRounds, s.score or 0, def.need) }
     end
 end
 
 ------------------------------------------------------------------------
--- The Newsreel
+-- The Newsreel (a party game: everyone at once, each their own cue, then the reveal)
 ------------------------------------------------------------------------
 
 do
-    local def = { id = "newsreel", name = "The Newsreel", mood = "happy", secs = 150, lives = 3, need = 5, music = { "newsreel", "propaganda" },
-        goal = "Smile for the newsreel. When the camera swings to you, do what it asks before it swings away: say wave, salute or cheer in chat.",
+    LC.NewsreelTakes, LC.NewsreelWindow, LC.NewsreelCut = 8, 5, 3
+    local def = { id = "newsreel", name = "The Newsreel", mood = "happy", secs = 8 + LC.NewsreelTakes * (LC.NewsreelWindow + LC.NewsreelCut + 1) + 8, lives = 3, need = 5,
+        music = { "newsreel", "propaganda" },
+        goal = "Smile for the newsreel. When the camera rolls, each of you is told what to do: say wave, salute or cheer in chat before it cuts. The takes are shown at the end.",
         timeUp = { "The reel runs out", "The film flaps off the end of the reel, and you wake." }, spawn = Spawn,
         woke = Woke({
             won = { "Star of the screen", "You wake still smiling for a camera that isn't there. Your cheeks ache." },
@@ -503,55 +556,74 @@ do
     local WORD = {}
     for act, list in pairs(LC.NewsreelActs) do for _, w in ipairs(list) do WORD[w] = act end end
     local ACTS = { "wave", "salute", "cheer" }
+    local PAST = { wave = "waved", salute = "saluted", cheer = "cheered" }
     LC.NewsreelLines = {
-        "Here's a happy citizen on the way to work! Look at that loyalty!",
+        "Here are happy citizens on their way to work! Look at that loyalty!",
         "Rations are up again this week. Nobody can remember them ever being down!",
         "The city's children are healthy, cheerful and remarkably quiet!",
         "A smile costs nothing, and in City Seventeen it is mandatory!",
         "Our brave Civil Protection: always watching, always caring!",
         "Look at that enthusiasm! You can't fake that!",
     }
-    LC.NewsreelWindow = 5
 
     function def.build(g, dream)
         local x0, x1, top = Hall(g, dream, 2, Color(130, 130, 130))
         local c = dream.pos
         g.cam = Actor(g, "models/dav0r/camera.mdl", Vector(x1 - 120, c.y, top + 60), 180, 4)
-        g.camAt, g.lineAt = CurTime() + 6, CurTime() + 12
+        g.take, g.phase, g.at = 0, "wait", CurTime() + 8
         Cheering(g, { Vector(x1 - 260, c.y - PLATE8_S + 60, top), Vector(x1 - 260, c.y + PLATE8_S - 60, top) }, Vector(x0, c.y, top))
         Starts(g, x0 + 90, c.y, top)
         return true
     end
     def.hello = Hello("newsreel", "newsreel_hello")
 
+    -- Cut: every take shown to everyone.
+    local function Cut(g, players)
+        g.phase, g.at, g.dirty = "cut", CurTime() + LC.NewsreelCut, true
+        local lines = {}
+        for _, p in ipairs(players) do
+            local s = g.pl[p]
+            if s.did == s.cue then
+                s.score = (s.score or 0) + 1
+                lines[#lines + 1] = p:Nick() .. " " .. PAST[s.cue] .. " beautifully"
+            elseif s.did then
+                lines[#lines + 1] = p:Nick() .. " " .. PAST[s.did] .. " instead of " .. (s.cue == "salute" and "saluting" or s.cue .. "ing")
+            else
+                lines[#lines + 1] = p:Nick() .. " just stood there"
+            end
+        end
+        g.results = lines
+        Narrate(g, "The Narrator", LC.NewsreelLines[(g.take - 1) % #LC.NewsreelLines + 1])
+        for _, q in ipairs(Everyone(g)) do Notice(q, "info", string.format("Cut! Take %d", g.take), table.concat(lines, ". ") .. ".", 6) end
+        for _, p in ipairs(players) do
+            local s = g.pl[p]
+            if s.did and s.did ~= s.cue then Offend(g, p, "Wrong on camera", "The camera wanted you to " .. s.cue .. ", and you " .. PAST[s.did] .. ". Take two will not be needed.")
+            elseif not s.did then Offend(g, p, "Caught looking glum", "The camera rolled and you just stood there. The narrator coughs.") end
+        end
+    end
+
     function def.tick(g, dt, players)
         local now = CurTime()
-        if now >= g.lineAt then g.lineAt = now + math.Rand(14, 20) Narrate(g, "The Narrator", LC.NewsreelLines[math.random(#LC.NewsreelLines)]) end
-        local t = g.target
-        if t and (not IsValid(t) or not g.pl[t] or g.pl[t].done) then g.target, t = nil, nil end
-        if t then
-            local s = g.pl[t]
-            if IsValid(g.cam) then
-                local to = t:GetPos() - g.cam:GetPos()
-                g.cam:SetAngles(Angle(0, math.deg(math.atan2(to.y, to.x)), 0))
-            end
-            if now >= g.cueTil then
-                g.target, g.dirty = nil, true
-                s.cue = nil
-                Offend(g, t, "Caught looking glum", "The camera swung to you and you just stood there. The narrator coughs.")
-            end
-        elseif now >= g.camAt and #players > 0 then
-            local best, bn = {}, math.huge
+        if IsValid(g.cam) then g.cam:SetAngles(Angle(0, 180 + math.sin(now * 0.8) * 35, 0)) end
+        if now < g.at then return end
+        if g.phase == "roll" then Cut(g, players) return end
+        if g.take >= LC.NewsreelTakes then
+            g.phase, g.at = "over", math.huge
+            SayAs(g, "newsreel_end")
             for _, p in ipairs(players) do
-                local n = g.pl[p].takes or 0
-                if n < bn then best, bn = { p }, n elseif n == bn then best[#best + 1] = p end
+                local n = g.pl[p].score or 0
+                if n >= def.need then Done(g, p, "won", "Star of the screen", string.format("%d good takes out of %d. The narrator calls you the happiest citizen in the city.", n, LC.NewsreelTakes))
+                else Done(g, p, "time", "The reel runs out", string.format("%d good takes out of %d. The film runs out, and you wake.", n, LC.NewsreelTakes)) end
             end
-            t = best[math.random(#best)]
-            local s = g.pl[t]
-            s.takes, s.cue = (s.takes or 0) + 1, ACTS[math.random(#ACTS)]
-            g.target, g.cueTil, g.dirty = t, now + math.max(3, LC.NewsreelWindow - (now - g.t0) / 60), true
-            Snd(t, "buttons/lightswitch2.wav", 70, 80)
-            Notice(t, "warn", "The camera's on you!", "Quick: " .. string.upper(s.cue) .. "! (say " .. s.cue .. " in chat)", 4)
+            return
+        end
+        g.take, g.phase, g.dirty = g.take + 1, "roll", true
+        g.at = now + math.max(3.5, LC.NewsreelWindow - (g.take - 1) * 0.2)
+        if IsValid(g.cam) then Snd(g.cam, "buttons/lightswitch2.wav", 75, 80) end
+        for _, p in ipairs(players) do
+            local s = g.pl[p]
+            s.cue, s.did = ACTS[math.random(#ACTS)], nil
+            Notice(p, "warn", string.format("Rolling! Take %d", g.take), "The camera wants you to " .. string.upper(s.cue) .. "! (say " .. s.cue .. " in chat)", 4)
         end
     end
 
@@ -559,22 +631,13 @@ do
         local s = g.pl[p]
         if not s or s.done then return false end
         Echo(g, p, text)
-        if g.target ~= p or not s.cue then return true end
-        local did
-        for w in string.gmatch(string.lower(text), "%a+") do if WORD[w] then did = WORD[w] break end end
-        if not did then return true end
-        local want = s.cue
-        s.cue, g.target, g.camAt, g.dirty = nil, nil, CurTime() + math.Rand(3, 6), true
-        if did ~= want then
-            Offend(g, p, "Wrong on camera", "The camera wanted you to " .. want .. ", and you tried to " .. did .. ". Take two will not be needed.")
-            return true
-        end
-        s.score = (s.score or 0) + 1
-        Narrate(g, "The Narrator", ({ "What a smile!", "Look at that loyalty!", "A model citizen, ladies and gentlemen!", "That's the spirit!" })[math.random(4)])
-        if s.score >= def.need then
-            Done(g, p, "won", "Star of the screen", "The narrator calls you the happiest citizen in the city, and the camera lingers on you for a whole minute.")
-        else
-            Notice(p, "info", "A good take", string.format("Takes: %d of %d.", s.score, def.need), 3)
+        if g.phase ~= "roll" or s.did then return true end
+        for w in string.gmatch(string.lower(text), "%a+") do
+            if WORD[w] then
+                s.did, g.dirty = WORD[w], true
+                Notice(p, "info", "In the can", "You " .. PAST[s.did] .. " for the camera. Hold that smile until the cut.", 3)
+                break
+            end
         end
         return true
     end
@@ -582,12 +645,14 @@ do
 
     function def.state(g, p)
         local s = p and g.pl[p] or {}
-        local big, tone = nil, "love"
-        if not s.done then
-            if g.target == p and s.cue then big, tone = "The camera's on you: " .. string.upper(s.cue) .. "! (say " .. s.cue .. ")", "warn"
-            else big = "Smile, and wait for the camera to swing to you." end
-        end
-        return { big = big, tone = tone, meter = math.floor(math.min(1, (s.score or 0) / def.need) * 100), meterName = string.format("Good takes: %d of %d", s.score or 0, def.need) }
+        local big, tone, notes = nil, "love", nil
+        if g.phase == "roll" and s.cue then
+            if s.did then big = "You " .. PAST[s.did] .. ". Hold that smile."
+            else big, tone = "Rolling! The camera wants you to " .. string.upper(s.cue) .. " (say " .. s.cue .. ")", "warn" end
+        elseif g.phase == "cut" then big, notes = "Cut!", g.results
+        else big = "Smile, citizens. The camera is about to roll." end
+        return { big = big, tone = tone, notes = notes,
+            meterName = string.format("Take %d of %d     Good takes: %d of %d needed", math.max(1, g.take), LC.NewsreelTakes, s.score or 0, def.need) }
     end
 end
 
@@ -1126,27 +1191,32 @@ do
 end
 
 ------------------------------------------------------------------------
--- Duck and Cover
+-- Duck and Cover (the Resistance's rocket)
 ------------------------------------------------------------------------
 
 do
     local def = { id = "duck", name = "Duck and Cover", mood = "happy", secs = 150, lives = 3, need = 6, music = { "duck", "propaganda" },
-        goal = "Listen to Sunny the Scanner. When the siren wails, crouch beside a table before the flash. Two to a table!",
+        goal = "The Resistance is firing rockets at the city. Listen to Sunny the Scanner: when the siren wails and the rocket goes up, crouch beside a table before the flash. Two to a table!",
         timeUp = { "Class dismissed", "Sunny waves goodbye with a little searchlight, and you wake." }, spawn = Spawn,
         woke = Woke({
-            won = { "Prepared citizen", "You wake already crouching, and feel very safe. Sunny would be proud." },
-            out = { "Unprepared", "You wake blinking at a flash that wasn't there. You find yourself checking where the tables are." },
+            won = { "Prepared citizen", "You wake already crouching, and feel very safe. The terrorists can't touch you. Sunny would be proud." },
+            out = { "Unprepared", "You wake blinking at a flash that wasn't there, and find yourself checking where the tables are." },
             time = { "Class dismissed", "You wake humming Sunny's little song. It won't leave." },
         }) }
     G.duck = def
     LC.DuckTips = {
-        "Remember, citizens: a table is your best friend! After the Administrator, of course.",
-        "Sirens are nothing to be afraid of. They're just the city saying it loves you, loudly!",
+        "The terrorists want to spoil our happy city with their nasty rocket. Don't let them spoil your posture!",
+        "A table is your best friend! After the Administrator, of course.",
+        "If you see a rocket, report it! Then duck and cover!",
         "When you see the flash, don't look at it! Look at the floor. The floor is very interesting.",
-        "Good citizens are always ready. Ready for what? Don't worry about that!",
+        "Only rebels build rockets. Good citizens build tables, and hide beside them!",
         "Keep calm and keep low! That's the Sunny way!",
     }
     LC.DuckReach, LC.DuckPerTable = 75, 2
+    -- The rocket: the one from White Forest if the server has Episode Two, else Garry's Mod's own (and the size each needs).
+    LC.DuckRockets = { { "models/props_silo/rocket.mdl", 0.3 }, { "models/props_silo/rocket_low.mdl", 0.3 }, { "models/props_phx/rocket1.mdl", 2 },
+        { "models/weapons/w_missile_launch.mdl", 10 } }
+    LC.DuckRise = 900
 
     function def.build(g, dream)
         local x0, x1, top = Hall(g, dream, 3, Color(150, 160, 120))
@@ -1159,6 +1229,15 @@ do
         end end
         g.sunny = Actor(g, "models/combine_scanner.mdl", Vector(x1 - 120, c.y, top + 180), 180, 4)
         g.sunnyZ = top + 180
+        -- the rebels' launch pad, in the far corner
+        g.padAt = Vector(x1 - 90, c.y - PLATE8_S + 110, top)
+        for _, r in ipairs(LC.DuckRockets) do
+            if K.ValidModel(r[1]) then
+                g.rocketModel = r[1]
+                g.rocket = Actor(g, r[1], g.padAt, 0, r[2])
+                break
+            end
+        end
         g.phase, g.at, g.tipAt, g.rounds = "calm", CurTime() + 10, CurTime() + 6, 0
         Starts(g, x0 + 90, c.y, top)
         return true
@@ -1187,21 +1266,33 @@ do
     function def.tick(g, dt, players)
         local now = CurTime()
         if IsValid(g.sunny) then local v = g.sunny:GetPos() g.sunny:SetPos(Vector(v.x, v.y, g.sunnyZ + math.sin(now * 2) * 12)) end
+        if IsValid(g.rocket) then -- (on the pad while it's calm; climbing faster and faster once launched)
+            local up = 0
+            if g.phase == "siren" then local f = math.Clamp(1 - (g.at - now) / g.sirenLen, 0, 1) up = LC.DuckRise * f * f end
+            g.rocket:SetPos(g.padAt + Vector(0, 0, up))
+        end
         if g.phase == "calm" and now >= g.tipAt then
             g.tipAt = now + math.Rand(9, 13)
             Narrate(g, "Sunny the Scanner", LC.DuckTips[math.random(#LC.DuckTips)])
         end
         if now < g.at then return end
         if g.phase == "calm" then
-            g.phase, g.at, g.dirty = "siren", now + math.max(3, 6 - g.rounds * 0.4), true
+            g.sirenLen = math.max(3, 6 - g.rounds * 0.4)
+            g.phase, g.at, g.dirty = "siren", now + g.sirenLen, true
             SayAs(g, "duck_siren")
             for _, p in ipairs(Everyone(g)) do Snd(p, "ambient/alarms/alarm1.wav", 75) end
+            if IsValid(g.rocket) then
+                if g.rocket.SetNoDraw then g.rocket:SetNoDraw(false) end
+                Snd(g.rocket, "weapons/rpg/rocketfire1.wav", 100, 60)
+            end
         elseif g.phase == "siren" then
             g.rounds, g.phase, g.at, g.dirty = g.rounds + 1, "calm", now + math.Rand(7, 10), true
             local covered = LC.DuckCovered(g, players)
             for _, p in ipairs(Everyone(g)) do
                 if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(255, 255, 255, 255), 1.5, 0.3) end
             end
+            if IsValid(g.rocket) and g.rocket.SetNoDraw then g.rocket:SetNoDraw(true) end -- (gone in the flash; they've another on the pad soon)
+            timer.Simple(4, function() if g and not g.stopped and IsValid(g.rocket) and g.rocket.SetNoDraw then g.rocket:SetNoDraw(false) end end)
             for _, p in ipairs(players) do
                 local s = g.pl[p]
                 if covered[p] then
@@ -1209,7 +1300,7 @@ do
                     if s.score >= def.need then Done(g, p, "won", "Prepared citizen", "Sunny gives you a gold star sticker. It glows slightly. That's normal!")
                     else Notice(p, "info", "Safe and sound!", string.format("You ducked and covered. %d of %d.", s.score, def.need), 3) end
                 else
-                    Offend(g, p, "Caught in the flash", "You weren't covered when the flash came. Sunny looks very disappointed in you.")
+                    Offend(g, p, "Caught in the flash", "You weren't covered when the rebels' rocket came down. Sunny looks very disappointed in you.")
                 end
             end
             timer.Simple(1.5, function() if g and not g.stopped then SayAs(g, "duck_clear") end end)
@@ -1222,10 +1313,10 @@ do
         if g.phase == "siren" then for _, t in ipairs(g.tables) do glows[#glows + 1] = { math.floor(t.x), math.floor(t.y), math.floor(t.z) + 60, 5 } end end
         local big, tone = nil, "love"
         if not s.done then
-            if g.phase == "siren" then big, tone = "SIREN! Duck and cover: crouch beside a table!", "warn"
+            if g.phase == "siren" then big, tone = "ROCKET LAUNCH! Duck and cover: crouch beside a table!", "warn"
             else big = "Listen to Sunny." end
         end
-        return { glows = glows, big = big, tone = tone, meter = math.floor(math.min(1, (s.score or 0) / def.need) * 100),
-            meterName = string.format("Flashes survived: %d of %d", s.score or 0, def.need) }
+        return { glows = glows, big = big, tone = tone, rocket = g.phase == "siren" and IsValid(g.rocket) and g.rocket:EntIndex() or nil,
+            meter = math.floor(math.min(1, (s.score or 0) / def.need) * 100), meterName = string.format("Rockets survived: %d of %d", s.score or 0, def.need) }
     end
 end

@@ -971,3 +971,9 @@ Notes:
   Notes:
 - [ ] **Music and voices:** optional: `harvest1.mp3` (or `propaganda1.mp3` for all ten) in `garrysmod/sound/livingcity/dreams/`; lines like `duck_siren1.wav` in `dreams/voice/`. Upload, FastDL sync, map change.
   Notes:
+- [ ] **Careless Talk, as a party game (changed):** with two or three players: four rounds of 30 seconds; crouch beside your suspect (a white glow over them, only for you); change your mind; at 30 s the spy glows red and the notice lists everyone's pick. Reporting nobody costs a life.
+  Notes:
+- [ ] **The Newsreel, as a party game (changed):** each player gets their own cue at once ("Rolling! Take 1"); type it; at the cut everyone's take is listed on screen.
+  Notes:
+- [ ] **Duck and Cover, the rebels' rocket (changed):** a rocket stands in the far corner and climbs on a flame during the siren. If it is a small grey PHX rocket or an RPG missile instead of Magnusson's, your server lacks Episode Two or my guess at its path is wrong: in game, Q menu > Browse > Games > Half-Life 2: Episode Two > models, find the rocket and tell me its path. Tell me if it is too big or small.
+  Notes:

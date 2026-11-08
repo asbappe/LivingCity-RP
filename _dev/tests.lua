@@ -14607,6 +14607,13 @@ end
 local function Stop(d) LC.DreamGameStop(d, "test") _run(2.5) end
 local function Duck(p) p.crouch = nil _run(0.1) p.crouch = true _run(0.3) end
 local function Jump(p) p.keys = nil _run(0.1) p.keys = { [IN_JUMP] = true } _run(0.1) p.keys = nil end
+local function Sent(p, k, test)
+    for _, m in ipairs(net.sent) do
+        local t = m.data[1]
+        if m.name == "lc_dreamgame" and (m.to == p or (type(m.to) == "table" and table.HasValue(m.to, p))) and type(t) == "table" and t.k == k and (not test or test(t)) then return t end
+    end
+    return nil
+end
 player.GetAll = function() return { adm, a, b } end
 local dp = LC.AddPoint(DREAM, 0, "dream")
 
@@ -14678,48 +14685,63 @@ Duck(a)
 ok(s.how == "won" and g.hero == a:Nick() and #g.ents == n0 + 1 and Said(g, "shift_hero"), "1400%: a Hero of Labour, and a giant portrait of the first")
 Stop(d)
 
--- Careless Talk
+-- Careless Talk: a party game, everyone picks on their own, then the reveal
 g, d = Start("spy")
 s = g.pl[a]
+_run(8.2)
 local spy = g.spyN
 local same = 0
 for _, n in ipairs(g.npcs) do if n.tbl == spy.tbl and n.man == spy.man and n.tint == spy.tint then same = same + 1 end end
-ok(#g.npcs == 12 and spy and same == 1, "Careless Talk: twelve citizens at four tables, one spy nobody else looks like")
-_run(8.2)
+ok(#g.npcs == 12 and g.phase == "pick" and g.round == 1 and spy and same == 1, "Careless Talk: round 1, twelve citizens, one spy nobody else looks like")
+_run(LC.SpyClueAt[1] + 0.2)
 ok(#g.clues == 1, "a clue is overheard")
-local wrong
-for _, n in ipairs(g.npcs) do if n ~= spy then wrong = n break end end
+local wrong, wi, si
+for i, n in ipairs(g.npcs) do if n == spy then si = i elseif not wrong then wrong, wi = n, i end end
 a:SetPos(wrong.pos + Vector(10, 0, 0))
 Duck(a)
-ok(wrong.cleared and s.lives == 2 and LC.PropagandaOffences(a) == 1, "reporting a loyal citizen costs you (and clears them)")
-s.safe, s.reportAt = 0, 0
+ok(s.pick == wi and g.phase == "pick" and s.lives == 3, "crouching beside someone is your pick: nothing happens yet")
 a.crouch = nil
 _run(0.1)
 a:SetPos(spy.pos + Vector(10, 0, 0))
 Duck(a)
-ok(s.how == "won" and spy.gone and g.spyN ~= spy and #g.clues == 0 and Said(g, "spy_caught"), "reporting the spy: taken away, you win, and a new spy hides among the rest")
+ok(s.pick == si, "you can change your mind")
+g.pl[b].pick = wi
+ok(not Sent(b, "state", function(t) return t.big and string.find(t.big, "Your pick: " .. LC.SpyDescribe(spy), 1, true) end), "(nobody else sees your pick)")
+g.at = CurTime()
+_run(0.1)
+ok(g.phase == "reveal" and s.score == 1 and s.lives == 3 and g.pl[b].lives == 2 and #g.results == 2 and Said(g, "spy_caught"),
+    "time's up: the spy and everyone's pick revealed to all; right scores, a loyal citizen reported costs a life")
+g.at = CurTime()
+_run(0.1)
+ok(g.phase == "pick" and g.round == 2 and not s.pick and #g.clues == 0, "the next round: a fresh canteen and a new spy")
+g.pl[b].safe = 0
+g.at = CurTime()
+_run(0.1)
+ok(g.pl[b].lives == 1, "reporting nobody costs a life too")
+s.score, g.round, g.phase, g.at = g.def.need, LC.SpyRounds, "reveal", CurTime()
+_run(0.1)
+ok(s.how == "won", "found the spy in enough rounds by the last: a vigilant citizen")
 Stop(d)
 
--- The Newsreel
+-- The Newsreel: everyone at once, each their own cue, then the reveal
 g, d = Start("newsreel")
-_run(6.5)
-local t = g.target
-ok(t and g.pl[t].cue, "The Newsreel: the camera swings to someone and asks for a wave, a salute or a cheer")
-ok(hook.Run("PlayerSay", t, "*" .. g.pl[t].cue .. "s*") == "" and g.pl[t].score == 1, "doing it in chat is a good take (and it stays in the dream)")
-g.camAt = 0
+_run(8.2)
+ok(g.phase == "roll" and g.take == 1 and g.pl[a].cue and g.pl[b].cue, "The Newsreel: the camera rolls and every dreamer is told what to do")
+ok(hook.Run("PlayerSay", a, "*" .. g.pl[a].cue .. "s*") == "" and g.pl[a].did == g.pl[a].cue and not g.pl[a].score, "doing it in chat is kept for the cut (and stays in the dream)")
+local other = ({ wave = "salute", salute = "cheer", cheer = "wave" })[g.pl[b].cue]
+LC.PropagandaSay(b, other)
+g.at = CurTime()
 _run(0.1)
-t = g.target
-g.pl[t].safe = 0
-local other = ({ wave = "salute", salute = "cheer", cheer = "wave" })[g.pl[t].cue]
-LC.PropagandaSay(t, other)
-ok(g.pl[t].lives == 2, "the wrong one costs a life")
-g.camAt = 0
+ok(g.phase == "cut" and g.pl[a].score == 1 and g.pl[b].lives == 2 and #g.results == 2, "cut: everyone's take shown; the right one scores, the wrong one costs a life")
+g.pl[b].safe = 0
+g.at = CurTime()
 _run(0.1)
-t = g.target
-g.pl[t].safe, g.cueTil = 0, CurTime() - 1
-local lv = g.pl[t].lives
+g.at = CurTime()
 _run(0.1)
-ok(g.pl[t].lives == lv - 1, "doing nothing while the camera's on you costs one too")
+ok(g.pl[b].lives == 1, "doing nothing costs one too")
+g.pl[a].score, g.take, g.phase, g.at = g.def.need, LC.NewsreelTakes, "cut", CurTime()
+_run(0.1)
+ok(g.pl[a].how == "won" and Said(g, "newsreel_end"), "enough good takes by the last: star of the screen")
 Stop(d)
 
 -- Two Minutes of Hate
@@ -14837,10 +14859,13 @@ Stop(d)
 -- Duck and Cover
 g, d = Start("duck")
 s = g.pl[a]
-ok(g and #g.tables == 6 and IsValid(g.sunny), "Duck and Cover: Sunny the Scanner and six tables")
+ok(g and #g.tables == 6 and IsValid(g.sunny) and IsValid(g.rocket) and g.rocketModel == LC.DuckRockets[1][1], "Duck and Cover: Sunny the Scanner, six tables, and the Resistance's rocket on its pad")
+local z0 = g.rocket:GetPos().z
 g.at = 0
 _run(0.1)
-ok(g.phase == "siren" and Said(g, "duck_siren"), "the siren wails")
+_run(g.sirenLen * 0.6)
+ok(g.phase == "siren" and Said(g, "duck_siren") and g.rocket:GetPos().z > z0 + 50, "the siren wails and the rebels' rocket climbs")
+_run(0.1)
 a:SetPos(g.tables[1] + Vector(40, 0, 0))
 a.crouch = true
 g.at = 0
