@@ -14571,6 +14571,58 @@ _run(0.3)
 ok(Said(gq, "quiz_end") and gq.pl[b].how == "time", "after the last question, the rest wake as the broadcast ends")
 _run(2.5)
 ok(LC.DreamActive == nil, "(and it's over)")
+-- Stand-ins: the city's people fill the studio up to four, and a rebel who's dealt with (the owner, 8 November)
+do
+    local bad = {}
+    for i = 1, #LC.QuizQuestions do
+        for _, line in ipairs(LC.QuizNPCAnswers[i]) do
+            local tries = string.find(line, "%s", 1, true) and LC.AdmireWords or { "" }
+            for _, w in ipairs(tries) do
+                local text = string.find(line, "%s", 1, true) and string.format(line, w, w) or line
+                local words = {}
+                for x in string.gmatch(string.lower(text), "%a+") do words[#words + 1] = x end
+                local right = false
+                for _, ans in ipairs(#LC.QuizQuestions[i].a == 0 and LC.AdmireWords or LC.QuizQuestions[i].a) do if LC.QuizHas(words, ans) then right = true end end
+                if not right or LC.QuizForbidden(text, LC.QuizQuestions[i]) then bad[#bad + 1] = i .. ": " .. text end
+            end
+        end
+    end
+    ok(#bad == 0, "every answer a stand-in can give is right, and never thoughtcrime", table.concat(bad, " | "))
+    local full = { pl = { x = {}, y = {}, z = {}, w = {} } }
+    LC.QuizSeat(full)
+    ok(#full.bots == 0 and full.rebel == nil, "four dreamers: no stand-ins (and no rebel)")
+end
+Both()
+a.chat, b.chat = {}, {}
+local okS, dS = LC.DreamStart("quiz", adm, false, nil, true)
+local gs = okS and dS.game
+_run(6.5)
+local nDream = 0
+for _ in pairs(gs and gs.pl or {}) do nDream = nDream + 1 end
+ok(gs and nDream < 4 and #gs.bots == 4 - nDream and gs.rebel ~= nil and IsValid(gs.rebel.ent), "fewer than four dreamers: the city's people stand in up to four, and a rebel among them", gs and (nDream .. " " .. #gs.bots))
+local named = 0
+for _, pp in ipairs(LC.People.list) do for _, bt in ipairs(gs.bots) do if bt.name == pp.name then named = named + 1 end end end
+ok(named == #gs.bots or #LC.People.list == 0, "the stand-ins are the city's named people", named)
+local rebelNamed = false
+for _, pp in ipairs(LC.People.list) do if pp.name == gs.rebel.name then rebelNamed = true end end
+ok(not rebelNamed, "but never the rebel (the dream mustn't give away the city's real sympathizers)")
+_run(13)
+local heard = table.concat(a.chat, "\n")
+local allSaid = true
+for _, bt in ipairs(gs.bots) do if not string.find(heard, "(in the dream) " .. bt.name .. ":", 1, true) then allSaid = false end end
+ok(allSaid, "each stand-in answers in the dream's chat", heard)
+ok(gs.qFirst == nil and (gs.pl[a].score or 0) == 0, "and never takes the first answer's bonus from the dreamers")
+gs.rebel.at = CurTime()
+_run(2)
+ok(string.find(table.concat(a.chat, "\n"), "(in the dream) " .. gs.rebel.name .. ":", 1, true) and Said(gs, "quiz_rebel") and gs.rebel.cops and #gs.rebel.cops == 2,
+    "the rebel shouts thoughtcrime; she has him removed; two officers come for him")
+_run(LC.QuizBeatSecs + 1)
+ok(gs.rebel.state == "drag" and gs.rebel.hits >= 6, "they beat him", gs.rebel.state)
+_run(LC.QuizDragSecs + 0.5)
+ok(gs.rebel.state == "gone" and Said(gs, "quiz_resume") and gs.pl[a].lives == 3 and gs.pl[b].lives == 3, "and drag him off, and the quiz goes on (the dreamers untouched)", gs.rebel.state)
+gs.qi, gs.qNext = #LC.QuizQuestions, CurTime()
+_run(3)
+ok(LC.DreamActive == nil, "(and that quiz is over too)")
 
 -- Starring: the Administrator asleep with the others plays her part herself
 Both()

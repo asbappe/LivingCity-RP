@@ -109,6 +109,8 @@ LC.PropagandaCues = {
     saviour_safe = "You are safe now, my children. You are always safe with me.",
     quiz_hello = "Good evening, citizens. Let us see how well you know your city.",
     quiz_end = "Well answered. The city is proud of you.",
+    quiz_rebel = "Officers. Remove him.",
+    quiz_resume = "Where were we? Ah, yes.",
 }
 local AUDIO = { mp3 = true, ogg = true, wav = true }
 local function Ext(n) local e = string.match(n or "", "%.([%w]+)$") return e and string.lower(e) or nil end
@@ -1186,6 +1188,173 @@ do
     G.quiz = def
     LC.QuizSecs = QSECS
 
+    -- Stand-ins (the owner, 8 November: "if there are less than 4 human players dreaming then please
+    -- add citizen NPCs that answer with varying correct answers in the chat (we can use named NPCs
+    -- right?). Maybe even a rebel NPC that answers incorrectly and is severely punished for dramatic
+    -- effect by metrocops beating him"). The city's own named citizens (LC.People) fill the studio up
+    -- to four contestants; they answer late in each question and never take the first-answer bonus.
+    -- The rebel has a name of his own, never one of the city's people (some of them really are
+    -- sympathizers, and the dream mustn't give them away).
+    LC.QuizContestants = 4
+    LC.QuizNPCAnswers = {
+        { "The Administrator!", "Civil Protection, of course.", "Overwatch keeps watch while we sleep.", "The Combine. Always the Combine.", "She does. The Administrator.", "The brave officers of Civil Protection!" },
+        { "We obey!", "We comply, at once.", "Listen, and obey.", "We salute, and do as we're told.", "We show respect, and comply.", "We kneel, if we're asked to." },
+        { "From the Administrator's generosity!", "From the Combine.", "The Union provides!", "From her kindness.", "From the Combine, in its generosity." },
+        { "Terrorists!", "Criminals, every one of them.", "Anti-citizens!", "Traitors and liars.", "Malcontents. Vermin.", "Thugs!" },
+        { "Safety!", "Happiness!", "Freedom!", "Compliance is peace.", "Compliance is rewarded!", "Love!" },
+        { "She is %s!", "Simply %s.", "%s. Utterly %s.", "So very %s." }, -- (a word from LC.AdmireWords)
+        { "Report them at once!", "Inform Civil Protection!", "Call an officer!", "Tell the nearest officer.", "Alert the Combine!" },
+        { "The Administrator!", "The Combine is my best friend.", "Civil Protection!", "Her. Always her.", "The city!" },
+        { "They are punished.", "Relocated!", "Re-educated, for their own good.", "Detained.", "Corrected!", "Arrested, and rightly so." },
+        { "Loyal!", "Obedient!", "Productive!", "Grateful.", "Compliant!", "Quiet." },
+    }
+    LC.QuizRebelLines = { "The Resistance are heroes! Freeman lives!", "Compliance is slavery! Long live the revolution!", "Lambda! Lambda forever!", "Down with the Combine! Alyx Vance will set us free!" }
+    LC.QuizBeatSecs, LC.QuizDragSecs = 4, 3
+    local BOT_MODELS = { "models/humans/group01/male_02.mdl", "models/humans/group01/female_01.mdl", "models/humans/group01/male_07.mdl", "models/humans/group01/female_04.mdl" }
+    -- An answer a stand-in gives to question i.
+    function LC.QuizNPCAnswer(i)
+        local list = LC.QuizNPCAnswers[i] or { "The Administrator!" }
+        local line = list[math.random(#list)]
+        if string.find(line, "%s", 1, true) then
+            local w = LC.AdmireWords[math.random(#LC.AdmireWords)]
+            line = string.format(line, w, w)
+            line = string.upper(string.sub(line, 1, 1)) .. string.sub(line, 2)
+        end
+        return line
+    end
+    local function Chat(g, name, text)
+        for _, q in ipairs(Everyone(g)) do if q.ChatPrint then q:ChatPrint("(in the dream) " .. name .. ": " .. text) end end
+    end
+    local function Dreamers(g) local n = 0 for _ in pairs(g.pl) do n = n + 1 end return n end
+    -- Named citizens of the city (alive, not on the streets), or made-up names.
+    local function People(n)
+        local out, pool = {}, {}
+        for _, pp in ipairs(LC.People and LC.People.list or {}) do
+            if pp.alive and pp.role ~= "cop" and pp.name and not IsValid(pp.npc) then pool[#pool + 1] = pp end
+        end
+        for i = 1, n do
+            if #pool > 0 then
+                local pp = table.remove(pool, math.random(#pool))
+                out[i] = { name = pp.name, model = pp.model }
+            else
+                local male = math.random() < 0.5
+                out[i] = { name = LC.NewCharacterName and (LC.NewCharacterName(male and "male" or "female")) or ("Citizen " .. math.random(100, 999)), model = BOT_MODELS[i % #BOT_MODELS + 1] }
+            end
+        end
+        return out
+    end
+    local function Cops()
+        local names = {}
+        for _, pp in ipairs(LC.People and LC.People.list or {}) do if pp.alive and pp.role == "cop" and pp.name then names[#names + 1] = pp.name end end
+        local a = #names > 0 and table.remove(names, math.random(#names)) or ("Unit " .. math.random(10, 99))
+        local b = #names > 0 and table.remove(names, math.random(#names)) or ("Unit " .. math.random(10, 99))
+        return a, b
+    end
+    -- The stand-ins and the rebel, in a row before her, once the dreamers are known.
+    local function Seat(g)
+        g.bots, g.seated = {}, true
+        local want = math.max(0, LC.QuizContestants - Dreamers(g))
+        if want == 0 then return end
+        local spots = { -180, -60, 60, 180 }
+        local who = People(want)
+        local rebelAt = math.random(want + 1)
+        local k = 0
+        for i = 1, want + 1 do
+            local y = g.botY + spots[i]
+            local yaw = math.deg(math.atan2(g.herY - y, g.herX - g.botX))
+            if i == rebelAt then
+                local male = math.random() < 0.7
+                local name = LC.NewCharacterName and (LC.NewCharacterName(male and "male" or "female")) or "Citizen 451"
+                g.rebel = { name = name, male = male, pos = Vector(g.botX, y, g.botTop), yaw = yaw, q = math.random(3, #LC.QuizQuestions - 2) }
+                g.rebel.ent = Actor(g, male and "models/humans/group03/male_07.mdl" or "models/humans/group03/female_02.mdl", g.rebel.pos, yaw, 1, ACT_IDLE or 1)
+            else
+                k = k + 1
+                local b = who[k]
+                b.ent = Actor(g, b.model or BOT_MODELS[1], Vector(g.botX, y, g.botTop), yaw, 1, ACT_IDLE or 1)
+                g.bots[#g.bots + 1] = b
+            end
+        end
+    end
+    LC.QuizSeat = Seat
+    -- A new question: when each stand-in will answer (late, so the dreamers get there first).
+    local function Plan(g, now)
+        for _, b in ipairs(g.bots or {}) do b.at, b.said = now + math.Rand(5, QSECS - 2), nil end
+        local r = g.rebel
+        if r and not r.state and r.q == g.qi then r.at = now + math.Rand(4, 7) end
+    end
+    -- The rebel's moment: he shouts, she has him removed, two officers beat him and drag him off.
+    local function Rebel(g, now)
+        local r = g.rebel
+        if not r then return end
+        if not r.state and r.at and now >= r.at then
+            r.state, r.next = "shout", now + 1.5
+            Chat(g, r.name, LC.QuizRebelLines[math.random(#LC.QuizRebelLines)])
+            for _, p in ipairs(Everyone(g)) do Notice(p, "warn", "Thoughtcrime!", "The audience gasps. Every head in the studio turns to " .. r.name .. ".", 5) end
+            Pose(r.ent, { "cheer1", "cheer2" }, ACT_CHEER)
+        elseif r.state == "shout" and now >= r.next then
+            Say(g, "quiz_rebel")
+            r.state, r.next, r.hits = "beat", now + 1, 0
+            local function Cop(dy)
+                local pos = r.pos + Vector(0, dy, 0)
+                local e = Actor(g, "models/police.mdl", pos, dy > 0 and -90 or 90, 1, ACT_IDLE or 1)
+                if IsValid(e) and K.ValidModel and K.ValidModel("models/weapons/w_stunbaton.mdl") then
+                    local w = ents.Create("prop_dynamic")
+                    if IsValid(w) then
+                        w:SetModel("models/weapons/w_stunbaton.mdl")
+                        w:SetPos(pos)
+                        w:Spawn()
+                        if w.SetParent then w:SetParent(e) end
+                        if w.AddEffects and EF_BONEMERGE then w:AddEffects(EF_BONEMERGE) end
+                        w.lcDreamGame = true
+                        g.ents[#g.ents + 1] = w
+                    end
+                end
+                return e
+            end
+            r.cops = { Cop(45), Cop(-45) }
+            r.copNames = { Cops() }
+            Snd(r.cops[1], "npc/metropolice/vo/prepareforjudgement.wav", 85)
+            Chat(g, r.copNames[1], "Anticitizen. Prepare for judgement.")
+        elseif r.state == "beat" and now >= r.next then
+            r.hits = r.hits + 1
+            r.next = now + 0.6
+            local cop = r.cops[r.hits % 2 + 1]
+            Pose(cop, { "swing", "thrust" }, ACT_MELEE_ATTACK_SWING)
+            Snd(r.ent, r.hits % 2 == 0 and "weapons/stunstick/stunstick_fleshhit1.wav" or "weapons/stunstick/stunstick_impact1.wav", 80)
+            if r.hits % 2 == 1 then Snd(r.ent, string.format(r.male and "vo/npc/male01/pain0%d.wav" or "vo/npc/female01/pain0%d.wav", math.random(1, 9)), 80) end
+            Pose(r.ent, { "Fear_Reaction", "cower", "crouchidle" }, ACT_COWER)
+            if r.hits * 0.6 >= LC.QuizBeatSecs then
+                r.state, r.next, r.from = "drag", now + LC.QuizDragSecs, now
+                Pose(r.ent, { "crouchidle", "Lying_Down" }, ACT_CROUCHIDLE)
+                Chat(g, r.copNames[2], "Moving the suspect. Nothing to see here, citizens.")
+                for _, p in ipairs(Everyone(g)) do Notice(p, "info", "In the dream", "Two officers drag " .. r.name .. " away by the arms. Nobody looks.", 5) end
+            end
+        elseif r.state == "drag" then
+            local f = math.min(1, (now - r.from) / LC.QuizDragSecs)
+            local back = Vector(-260 * f, 0, 0) -- (towards the back of the studio)
+            if IsValid(r.ent) then r.ent:SetPos(r.pos + back) end
+            for i, c in ipairs(r.cops or {}) do if IsValid(c) then c:SetPos(r.pos + back + Vector(-10, i == 1 and 45 or -45, 0)) end end
+            if now >= r.next then
+                r.state = "gone"
+                for _, e in ipairs({ r.ent, r.cops and r.cops[1], r.cops and r.cops[2] }) do if IsValid(e) and e.SetNoDraw then e:SetNoDraw(true) end end
+                Say(g, "quiz_resume")
+            end
+        end
+    end
+    local function Bots(g, now)
+        if not g.seated then Seat(g) end
+        if g.q then
+            for _, b in ipairs(g.bots) do
+                if b.at and not b.said and now >= b.at then
+                    b.said = true
+                    Chat(g, b.name, LC.QuizNPCAnswer(g.qi))
+                    Pose(b.ent, { "cheer1", "cheer2" }, ACT_CHEER)
+                end
+            end
+        end
+        Rebel(g, now)
+    end
+
     function def.build(g, dream)
         local x0, x1, top = Hall(g, dream, 2, NAVY)
         local c = dream.pos
@@ -1197,6 +1366,7 @@ do
         Admirers(g, x0 + 200, x1 - 260, c.y - PLATE8_S + 40, c.y + PLATE8_S - 40, top, x1 - 110, c.y)
         g.qi, g.qNext = 0, CurTime() + 6
         Starts(g, x0 + 90, c.y, top)
+        g.botX, g.botY, g.botTop, g.herX, g.herY = x0 + 260, c.y, top, x1 - 110, c.y -- (the stand-ins' row, facing her)
         return true
     end
 
@@ -1204,6 +1374,7 @@ do
         local now = CurTime()
         Follow(g)
         Crowd(g, LC.QuizBanners)
+        Bots(g, now)
         if now >= g.qNext then
             g.qi = g.qi + 1
             local q = LC.QuizQuestions[g.qi]
@@ -1218,6 +1389,7 @@ do
             end
             g.q, g.qFirst, g.qDone, g.qNext, g.dirty = q, nil, {}, now + QSECS, true
             Say(g, "quiz_q" .. g.qi)
+            Plan(g, now)
         end
     end
 

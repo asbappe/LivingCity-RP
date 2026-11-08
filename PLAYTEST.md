@@ -1014,3 +1014,5 @@ Notes:
   Notes:
 - [ ] **No foreman in The Stakhanov Shift:** she stands on a gold pedestal at the far end of the factory (check she fits beside the board and the portrait); stand idle 12 seconds: "I see you standing there. Back to work, citizen!"
   Notes:
+- [ ] **Quiz stand-ins:** dream the Loyalty Quiz with fewer than four players: a row of the city's people stands before her and answers each question in chat (5 to 12 seconds in). One question between the 3rd and 8th, the rebel (in rebel clothes) shouts thoughtcrime; she orders him removed; two officers with stun batons beat him (check the batons sit in their hands, the swing and cower poses) and drag him to the back; she says "Where were we? Ah, yes." With four players: no stand-ins.
+  Notes:

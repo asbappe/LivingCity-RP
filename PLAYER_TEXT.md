@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 58cd8d8. Admin-only console messages and log lines are left out.
+Made from version 11c4634. Admin-only console messages and log lines are left out.
 
-8128 lines, from 229 files.
+8182 lines, from 229 files.
 
 ## Contents
 
@@ -185,7 +185,7 @@ Made from version 58cd8d8. Admin-only console messages and log lines are left ou
 - [prison](#prison-svlivingcityprisonlua) (40)
 - [close calls, careers for life, and what passes on](#close-calls-careers-for-life-and-what-passes-on-svlivingcityprogresslua) (20)
 - [street furniture, and the city's voice](#street-furniture-and-the-citys-voice-svlivingcitypropagandalua) (43)
-- [propaganda dreams (dreams you play)](#propaganda-dreams-dreams-you-play-svlivingcitypropagandadreamslua) (155)
+- [propaganda dreams (dreams you play)](#propaganda-dreams-dreams-you-play-svlivingcitypropagandadreamslua) (209)
 - [more propaganda dreams (dreams you play), drawn from real propaganda](#more-propaganda-dreams-dreams-you-play-drawn-from-real-propaganda-svlivingcitypropagandamorelua) (351)
 - [persistent props](#persistent-props-svlivingcitypropslua) (6)
 - [quests](#quests-svlivingcityquestslua) (368)
@@ -722,7 +722,7 @@ Made from version 58cd8d8. Admin-only console messages and log lines are left ou
 - "Shared dreams: if the server has a dream point, the secret endings come at night as a dream for everyone asleep in a bed, about a minute after the Administrator says good night. You wake in your bed with everything you had, exactly as it was. Not tonight? C > Settings > Shared dreams (opt out), or /dream off; in a dream, C > Settings > Shared dreams: wake up. Not from a nightmare, though: a nightmare takes everyone asleep outside a Combine-only zone, and you can't wake yourself until you're out of it. Only a stimulant shot before bed keeps you awake."  (text, line 85)
 - "Cigarettes, alcohol and stimulants (F3, the item's button). A cigarette steadies your nerves and dulls hunger; too many and you cough. Drink and you get drunk: it dulls pain, then the world sways, then you throw up (and one moonshine in five is a bad batch). A stimulant keeps you awake for fifteen minutes (no dream can take you), then you crash."  (text, line 86)
 - "Nightmare dreams you play: The Patrol Maze (pick up every token while giant officers hunt you), The Barrel Tower (climb to the top, and don't touch the barrels: they explode), The Crumbling Floor (keep moving or the floor gives way) and Freeze, Citizen (move only while the giant officer's back is turned). Out of lives, or won: wake up now, or watch the rest until it's over. Win and you wake Unbroken (a day the Combine can't get into your head) with a second wind, and maybe a Vortigaunt's help; lose every life and you're 30 health down until your next full night's sleep."  (text, line 87)
-- "Propaganda dreams (no opting out, and no waking yourself until you're out of it): Kneel Before Her (kneel, crouching, and gaze up at her to fill your Devotion; never let her catch you standing in her gaze), Roses for Her (carry glowing roses to her feet, on your knees in her half of the hall), Mirror, Mirror (kneel and compliment her in chat; new words count double, insults cost a life), The Saviour (the dead come for you, unarmed, and they hurt: when someone is close to the end, she descends and her soldiers save you), The Loyalty Quiz (answer her questions in chat, in your own words: a small typo is forgiven; beware thoughtcrime, and mind your language). Every life you lose, every insult to her or the Combine, costs loyalty points (Civil Standing) when you wake."  (text, line 88)
+- "Propaganda dreams (no opting out, and no waking yourself until you're out of it): Kneel Before Her (kneel, crouching, and gaze up at her to fill your Devotion; never let her catch you standing in her gaze), Roses for Her (carry glowing roses to her feet, on your knees in her half of the hall), Mirror, Mirror (kneel and compliment her in chat; new words count double, insults cost a life), The Saviour (the dead come for you, unarmed, and they hurt: when someone is close to the end, she descends and her soldiers save you), The Loyalty Quiz (answer her questions in chat, in your own words: a small typo is forgiven; beware thoughtcrime, and mind your language; with fewer than four of you, some of the city's people stand in, and one of them may not be as loyal as he looks). Every life you lose, every insult to her or the Combine, costs loyalty points (Civil Standing) when you wake."  (text, line 88)
 - "More propaganda dreams: Record Harvest (carry glowing crates to the depot; crouch to throw away a green, spoiled one), The Stakhanov Shift (crouch again and again at a work station to beat the norm by 1400%), Careless Talk (four rounds of 30 seconds: listen for clues and crouch beside the one you think is the spy; everyone's pick is revealed together), The Newsreel (as the camera rolls, say the wave, salute or cheer it asks of you; everyone's take is shown at the cut), Two Minutes of Hate (jeer in chat; silence is noticed), The Mass Games (gold card: crouch, red: stand, at FLIP!), On-the-Spot Guidance (jump or say clap when she points), The Scrap Drive (fill the bins; never sell to the shady trader), Flowers for the Liberators (jump as a soldier passes you; stay off the road), Duck and Cover (when the siren wails and the Resistance's rocket goes up, crouch beside a table, two to a table), Ravenholm (the dead rise from the graves and a red Father Grigori rants; hold on until help comes, and if any vortigaunt freed from its shackles is alive in the city, you may see the truth)."  (text, line 89)
 - "City Administrator: your tablet's office has Tonight's dream: reward an obedient city with a Happy dream, or punish it with a Nightmare. Its Combine manpower shows what Civil Protection and Overwatch have left in reserve. Out of it in a dream? Watch the rest: click to follow another dreamer, Jump to fly about inside the dream."  (text, line 90)
 - "You can kill birds with your fists. Cook them before you eat them."  (text, line 91)
@@ -10112,238 +10112,313 @@ Made from version 58cd8d8. Admin-only console messages and log lines are left ou
 - "You are safe now, my children. You are always safe with me."  (text, line 109)
 - "Good evening, citizens. Let us see how well you know your city."  (text, line 110)
 - "Well answered. The city is proud of you."  (text, line 111)
+- "Officers. Remove him."  (text, line 112)
+- "Where were we? Ah, yes."  (text, line 113)
 
 > Note for you (not shown in game): Something said in the dream, on everyone's screen (her lines, with their recording).
 
-- "The Administrator"  (text, line 189)
+- "The Administrator"  (text, line 191)
 
 > Note for you (not shown in game): Starring: the Administrator playing herself
 
-- "Propaganda dreams"  (on-screen notice, line 208)
-- "You'll star in propaganda dreams yourself, when you're asleep for one with someone else."  (on-screen notice, line 208)
-- "A giant figure of you stars in propaganda dreams instead of you."  (on-screen notice, line 209)
-- "A sigh runs through the crowd. Someone at the back fans themselves with a ration card."  (text, line 252)
-- "She tilts her head a single degree. Three admirers forget their own names."  (text, line 253)
-- "The music swells. Your heart does something it is not authorised to do."  (text, line 254)
-- "An officer at the edge lifts his mask to see her better, then remembers himself and puts it back."  (text, line 255)
-- "Somebody whispers "radiant". Somebody else whispers "more radiant than that"."  (text, line 256)
-- "Her hair moves in a breeze that blows only for her."  (text, line 257)
-- "You notice you're blushing. So is everyone else. Nobody mentions it."  (text, line 258)
-- "A man near the front faints with a small, happy sound."  (text, line 259)
-- "The spotlight finds her cheekbones and stays there, as if it can't look away either."  (text, line 260)
-- "A citizen tries to applaud, realises it might seem forward, and kneels lower instead."  (text, line 261)
-- "She almost smiles. The whole hall holds its breath."  (text, line 262)
-- "Rose petals drift down from nowhere. Nobody asks where they came from."  (text, line 263)
-- "A banner unfurls behind her: COMPLIANCE IS HAPPINESS."  (text, line 266)
-- "The audience applauds on cue. Then again, slightly louder, in case she didn't hear."  (text, line 267)
-- "A scanner drifts over the audience, taking notes."  (text, line 268)
-- "Somewhere offstage, an officer holds up a sign that says CHEER."  (text, line 269)
-- "Confetti in the city's colours falls from the ceiling. Every piece is accounted for."  (text, line 270)
-- "A citizen in the front row mouths the answers along with everyone else, a fraction early."  (text, line 271)
+- "Propaganda dreams"  (on-screen notice, line 210)
+- "You'll star in propaganda dreams yourself, when you're asleep for one with someone else."  (on-screen notice, line 210)
+- "A giant figure of you stars in propaganda dreams instead of you."  (on-screen notice, line 211)
+- "A sigh runs through the crowd. Someone at the back fans themselves with a ration card."  (text, line 254)
+- "She tilts her head a single degree. Three admirers forget their own names."  (text, line 255)
+- "The music swells. Your heart does something it is not authorised to do."  (text, line 256)
+- "An officer at the edge lifts his mask to see her better, then remembers himself and puts it back."  (text, line 257)
+- "Somebody whispers "radiant". Somebody else whispers "more radiant than that"."  (text, line 258)
+- "Her hair moves in a breeze that blows only for her."  (text, line 259)
+- "You notice you're blushing. So is everyone else. Nobody mentions it."  (text, line 260)
+- "A man near the front faints with a small, happy sound."  (text, line 261)
+- "The spotlight finds her cheekbones and stays there, as if it can't look away either."  (text, line 262)
+- "A citizen tries to applaud, realises it might seem forward, and kneels lower instead."  (text, line 263)
+- "She almost smiles. The whole hall holds its breath."  (text, line 264)
+- "Rose petals drift down from nowhere. Nobody asks where they came from."  (text, line 265)
+- "A banner unfurls behind her: COMPLIANCE IS HAPPINESS."  (text, line 268)
+- "The audience applauds on cue. Then again, slightly louder, in case she didn't hear."  (text, line 269)
+- "A scanner drifts over the audience, taking notes."  (text, line 270)
+- "Somewhere offstage, an officer holds up a sign that says CHEER."  (text, line 271)
+- "Confetti in the city's colours falls from the ceiling. Every piece is accounted for."  (text, line 272)
+- "A citizen in the front row mouths the answers along with everyone else, a fraction early."  (text, line 273)
 
 > Note for you (not shown in game): The crowd, now and then (everyone in the dream sees it).
 
-- "In the dream"  (on-screen notice, line 353)
+- "In the dream"  (on-screen notice, line 355)
 
 > Note for you (not shown in game): How a dream leaves you: a line, nothing more.
 
-- "You wake with her face still in your mind, warm and a little embarrassed, humming a tune you've never heard. Nobody needs to know about this dream."  (text, line 371)
-- "In the dream she turned away from you, and you wake with your cheeks burning. It was only a dream. Probably."  (text, line 372)
-- "The music fades"  (text, line 373)
-- "The spotlight dims, the music fades, and you wake in your bed, strangely devoted to the city's paperwork."  (text, line 373)
+- "You wake with her face still in your mind, warm and a little embarrassed, humming a tune you've never heard. Nobody needs to know about this dream."  (text, line 373)
+- "In the dream she turned away from you, and you wake with your cheeks burning. It was only a dream. Probably."  (text, line 374)
 - "The music fades"  (text, line 375)
-- "The spotlight dims before the end, and she's gone. You wake."  (text, line 375)
+- "The spotlight dims, the music fades, and you wake in your bed, strangely devoted to the city's paperwork."  (text, line 375)
+- "The music fades"  (text, line 377)
+- "The spotlight dims before the end, and she's gone. You wake."  (text, line 377)
 
 > Note for you (not shown in game): part of: offend
 
-- "(-%d loyalty points)"  (message, line 441)
+- "(-%d loyalty points)"  (message, line 443)
 
 > Note for you (not shown in game): As they wake: the loss taken from Civil Standing (loyalty points are Civil Standing).
 
-- "disloyalty in a propaganda dream"  (text, line 457)
-- "Disloyal, even in your sleep"  (on-screen notice, line 458)
-- "The city noticed how you behaved in the dream: -%d loyalty points (Civil Standing)."  (message, line 458)
+- "disloyalty in a propaganda dream"  (text, line 459)
+- "Disloyal, even in your sleep"  (on-screen notice, line 460)
+- "The city noticed how you behaved in the dream: -%d loyalty points (Civil Standing)."  (message, line 460)
 
 > Note for you (not shown in game): Kneel Before Her
 
-- "Kneel Before Her"  (name, line 469)
-- "Kneel (crouch) and gaze up at her to fill your Devotion. Never let her catch you standing in her gaze."  (text, line 470)
-- "You're the star, on your pedestal. Wherever you look is your gaze: anyone you catch standing loses a life. Say anything in chat and the dream hears you."  (text, line 471)
+- "Kneel Before Her"  (name, line 471)
+- "Kneel (crouch) and gaze up at her to fill your Devotion. Never let her catch you standing in her gaze."  (text, line 472)
+- "You're the star, on your pedestal. Wherever you look is your gaze: anyone you catch standing loses a life. Say anything in chat and the dream hears you."  (text, line 473)
 
 > Note for you (not shown in game): part of: tick
 
-- "You stood in her presence"  (text, line 503)
-- "She looked straight at you, and you were standing."  (text, line 503)
-- "She noticed you"  (text, line 510)
-- "For one moment her eyes rest on you, and the whole hall sighs with envy. You are adored."  (text, line 510)
+- "You stood in her presence"  (text, line 505)
+- "She looked straight at you, and you were standing."  (text, line 505)
+- "She noticed you"  (text, line 512)
+- "For one moment her eyes rest on you, and the whole hall sighs with envy. You are adored."  (text, line 512)
 
 > Note for you (not shown in game): part of: state
 
-- "They kneel before you. Look upon them."  (text, line 517)
-- "She's looking at you! Stay on your knees."  (text, line 520)
-- "Kneel, and gaze up at her."  (text, line 521)
+- "They kneel before you. Look upon them."  (text, line 519)
+- "She's looking at you! Stay on your knees."  (text, line 522)
+- "Kneel, and gaze up at her."  (text, line 523)
 
 > Note for you (not shown in game): Roses for Her
 
-- "Roses for Her"  (name, line 531)
-- "Pick up a glowing rose at the back of the hall and lay it at her feet. In the front half of the hall, stay on your knees (crouch)."  (text, line 532)
-- "You're the star, on your pedestal. They bring you roses on their knees. Say anything in chat and the dream hears you."  (text, line 533)
+- "Roses for Her"  (name, line 533)
+- "Pick up a glowing rose at the back of the hall and lay it at her feet. In the front half of the hall, stay on your knees (crouch)."  (text, line 534)
+- "You're the star, on your pedestal. They bring you roses on their knees. Say anything in chat and the dream hears you."  (text, line 535)
 
 > Note for you (not shown in game): part of: tick
 
-- "Nobody stands before her"  (text, line 583)
-- "Her honour guard lifts you by the collar and carries you to the back of the hall."  (text, line 583)
-- "She accepts your roses"  (text, line 599)
-- "She lets the roses rest at her feet, and for a heartbeat she almost smiles at you. You are adored."  (text, line 599)
-- "A rose at her feet"  (on-screen notice, line 601)
-- "She doesn't look down, but you're sure she noticed. %d to go."  (message, line 601)
+- "Nobody stands before her"  (text, line 585)
+- "Her honour guard lifts you by the collar and carries you to the back of the hall."  (text, line 585)
+- "She accepts your roses"  (text, line 601)
+- "She lets the roses rest at her feet, and for a heartbeat she almost smiles at you. You are adored."  (text, line 601)
+- "A rose at her feet"  (on-screen notice, line 603)
+- "She doesn't look down, but you're sure she noticed. %d to go."  (message, line 603)
 
 > Note for you (not shown in game): part of: state
 
-- "They bring you roses, on their knees."  (text, line 611)
-- "Her half of the hall: stay on your knees."  (text, line 615)
-- "Carry the rose to her feet. Kneel past the gold line."  (text, line 616)
-- "Pick up a glowing rose."  (text, line 617)
-- "Roses given: %d of %d"  (message, line 619)
+- "They bring you roses, on their knees."  (text, line 613)
+- "Her half of the hall: stay on your knees."  (text, line 617)
+- "Carry the rose to her feet. Kneel past the gold line."  (text, line 618)
+- "Pick up a glowing rose."  (text, line 619)
+- "Roses given: %d of %d"  (message, line 621)
 
 > Note for you (not shown in game): Mirror, Mirror
 
-- "Mirror, Mirror"  (name, line 629)
-- "Kneel (crouch) and compliment her in chat. A word nobody has used yet counts double. Don't you dare insult her."  (text, line 630)
-- "You're the star, before your mirrors. Listen to their compliments. Anything you say in chat, the dream hears."  (text, line 631)
+- "Mirror, Mirror"  (name, line 631)
+- "Kneel (crouch) and compliment her in chat. A word nobody has used yet counts double. Don't you dare insult her."  (text, line 632)
+- "You're the star, before your mirrors. Listen to their compliments. Anything you say in chat, the dream hears."  (text, line 633)
 
 > Note for you (not shown in game): (and the Combine: an insult to them is an insult to her)
 
-- "She inclines her head, very slightly."  (text, line 648)
-- "Somewhere a violin agrees with you."  (text, line 648)
-- "Her reflection in every mirror smiles at once."  (text, line 648)
-- "She pretends not to have heard. She heard."  (text, line 649)
-- "The spotlight warms by a degree."  (text, line 649)
+- "She inclines her head, very slightly."  (text, line 650)
+- "Somewhere a violin agrees with you."  (text, line 650)
+- "Her reflection in every mirror smiles at once."  (text, line 650)
+- "She pretends not to have heard. She heard."  (text, line 651)
+- "The spotlight warms by a degree."  (text, line 651)
 
 > Note for you (not shown in game): A line said in the dream: scored, and kept inside the dream. True if it was theirs to say here.
 
-- "(in the dream) {Nick}: {text}"  (chat message, line 675)
+- "(in the dream) {Nick}: {text}"  (chat message, line 677)
 
 > Note for you (not shown in game): part of: admire said
 
-- "She heard that"  (text, line 683)
-- ""{insulted}"? Every mirror in the hall cracks at once, and you're thrown to the back."  (text, line 683)
-- "She's heard that"  (on-screen notice, line 687)
-- "You've told her that already. She'd like something new."  (on-screen notice, line 687)
-- "She didn't hear you"  (on-screen notice, line 691)
-- "She doesn't hear people who are standing. Kneel (crouch) first."  (on-screen notice, line 691)
-- "The fairest of them all"  (text, line 703)
-- ""Yes," says every mirror in the hall, in her voice. "You may adore me." You are adored."  (text, line 703)
-- "An original!"  (on-screen notice, line 705)
-- "She liked that"  (on-screen notice, line 705)
+- "She heard that"  (text, line 685)
+- ""{insulted}"? Every mirror in the hall cracks at once, and you're thrown to the back."  (text, line 685)
+- "She's heard that"  (on-screen notice, line 689)
+- "You've told her that already. She'd like something new."  (on-screen notice, line 689)
+- "She didn't hear you"  (on-screen notice, line 693)
+- "She doesn't hear people who are standing. Kneel (crouch) first."  (on-screen notice, line 693)
+- "The fairest of them all"  (text, line 705)
+- ""Yes," says every mirror in the hall, in her voice. "You may adore me." You are adored."  (text, line 705)
+- "An original!"  (on-screen notice, line 707)
+- "She liked that"  (on-screen notice, line 707)
 
 > Note for you (not shown in game): part of: state
 
-- "They compliment you, on their knees."  (text, line 712)
-- "Compliment her in chat."  (text, line 716)
-- "Kneel (crouch) first: she doesn't hear people who stand."  (text, line 717)
-- "Adoration: %d of %d"  (message, line 719)
+- "They compliment you, on their knees."  (text, line 714)
+- "Compliment her in chat."  (text, line 718)
+- "Kneel (crouch) first: she doesn't hear people who stand."  (text, line 719)
+- "Adoration: %d of %d"  (message, line 721)
 
 > Note for you (not shown in game): The Saviour
 
-- "The Saviour"  (name, line 729)
-- "The dead are coming, and you have nothing to fight with. Run. Dodge. Hold on. Help will come."  (text, line 730)
-- "You're the star. Watch them suffer from on high. When one of them is close to the end, you descend and save them; walk among them when you land. Anything you say in chat, the dream hears."  (text, line 731)
-- "The light fades"  (text, line 732)
-- "The dream dissolves into gold, and you wake."  (text, line 732)
-- "You wake safe in your bed, and for a moment you'd swear you can still feel her light. The Combine protect you. They always have."  (text, line 734)
-- "The light fades"  (text, line 735)
-- "You wake in your bed, safe, warm, and protected. As always."  (text, line 735)
+- "The Saviour"  (name, line 731)
+- "The dead are coming, and you have nothing to fight with. Run. Dodge. Hold on. Help will come."  (text, line 732)
+- "You're the star. Watch them suffer from on high. When one of them is close to the end, you descend and save them; walk among them when you land. Anything you say in chat, the dream hears."  (text, line 733)
+- "The light fades"  (text, line 734)
+- "The dream dissolves into gold, and you wake."  (text, line 734)
+- "You wake safe in your bed, and for a moment you'd swear you can still feel her light. The Combine protect you. They always have."  (text, line 736)
+- "The light fades"  (text, line 737)
+- "You wake in your bed, safe, warm, and protected. As always."  (text, line 737)
 
 > Note for you (not shown in game): part of: rescue
 
-- "Everything stops"  (on-screen notice, line 872)
-- "The dead freeze where they stand. A light breaks through the clouds."  (on-screen notice, line 872)
+- "Everything stops"  (on-screen notice, line 874)
+- "The dead freeze where they stand. A light breaks through the clouds."  (on-screen notice, line 874)
 
 > Note for you (not shown in game): part of: tick
 
-- "Her soldiers stand over the last of the dead. She looks down at you, and you have never felt so safe."  (text, line 970)
-- "The city is quiet. Too quiet."  (text, line 974)
-- "Run! You have nothing to fight with."  (text, line 974)
-- "Everything stops. A light from above..."  (text, line 974)
-- "She has come."  (text, line 975)
-- "Her soldiers are here!"  (text, line 975)
-- "Watch over them."  (text, line 976)
-- "They suffer without you. When one is close to the end, you'll go to them."  (text, line 976)
-- "They are yours to save."  (text, line 977)
-- "Your soldiers obey."  (text, line 977)
-- "They are safe, because of you."  (text, line 977)
+- "Her soldiers stand over the last of the dead. She looks down at you, and you have never felt so safe."  (text, line 972)
+- "The city is quiet. Too quiet."  (text, line 976)
+- "Run! You have nothing to fight with."  (text, line 976)
+- "Everything stops. A light from above..."  (text, line 976)
+- "She has come."  (text, line 977)
+- "Her soldiers are here!"  (text, line 977)
+- "Watch over them."  (text, line 978)
+- "They suffer without you. When one is close to the end, you'll go to them."  (text, line 978)
+- "They are yours to save."  (text, line 979)
+- "Your soldiers obey."  (text, line 979)
+- "They are safe, because of you."  (text, line 979)
 
 > Note for you (not shown in game): part of: state
 
-- "The dead: %d"  (message, line 982)
+- "The dead: %d"  (message, line 984)
 
 > Note for you (not shown in game): The Loyalty Quiz
 
-- "Who keeps you safe at night?"  (text, line 992)
-- "civil protection"  (text, line 992)
-- "What do we do when an officer speaks to us?"  (text, line 993)
-- "Where does your ration come from?"  (text, line 994)
-- "What are the people who call themselves the Resistance?"  (text, line 995)
-- "anti citizens"  (text, line 995)
-- "Complete the phrase: Compliance is..."  (text, line 996)
-- "How would you describe the Administrator?"  (text, line 997)
-- "What should you do if you see a rebel?"  (text, line 998)
-- "Who is your best friend?"  (text, line 999)
-- "civil protection"  (text, line 999)
-- "the city"  (text, line 999)
-- "What happens to those who disobey?"  (text, line 1000)
-- "re educated"  (text, line 1000)
-- "What is the most important thing a citizen can be?"  (text, line 1001)
+- "Who keeps you safe at night?"  (text, line 994)
+- "civil protection"  (text, line 994)
+- "What do we do when an officer speaks to us?"  (text, line 995)
+- "Where does your ration come from?"  (text, line 996)
+- "What are the people who call themselves the Resistance?"  (text, line 997)
+- "anti citizens"  (text, line 997)
+- "Complete the phrase: Compliance is..."  (text, line 998)
+- "How would you describe the Administrator?"  (text, line 999)
+- "What should you do if you see a rebel?"  (text, line 1000)
+- "Who is your best friend?"  (text, line 1001)
+- "civil protection"  (text, line 1001)
+- "the city"  (text, line 1001)
+- "What happens to those who disobey?"  (text, line 1002)
+- "re educated"  (text, line 1002)
+- "What is the most important thing a citizen can be?"  (text, line 1003)
 
 > Note for you (not shown in game): The two that people spell every way (fook, fukc, fuq; shiet, sheit, shyt), with their endings, and inside other words (motherfucker, bullshit). Never sheet, shot, shut, focus or fake.
 
-- "^f[uovy]*[ckq]+$"  (text, line 1107)
-- "^ph[uoa]*[ckq]+$"  (text, line 1107)
-- "^sh[iey]*[iy][iey]*t+$"  (text, line 1107)
-- "The Loyalty Quiz"  (name, line 1176)
-- "Answer her questions in chat. A right answer earns Loyalty, the first to answer earns double. Careful: some answers are thoughtcrime."  (text, line 1177)
-- "You're the star: the quizmaster on the podium. The questions ask themselves; anything you say in chat, the dream hears."  (text, line 1178)
-- "The broadcast ends"  (text, line 1179)
-- "The studio lights go out, and you wake."  (text, line 1179)
-- "Model citizen"  (text, line 1181)
-- "You wake reciting the answers, and feel proud of yourself. You're not sure why."  (text, line 1181)
-- "You wake with a start, sure you said something wrong in your sleep. Hopefully nobody heard."  (text, line 1182)
-- "The broadcast ends"  (text, line 1183)
-- "You wake humming the quiz's theme tune. It's very catchy."  (text, line 1183)
+- "^f[uovy]*[ckq]+$"  (text, line 1109)
+- "^ph[uoa]*[ckq]+$"  (text, line 1109)
+- "^sh[iey]*[iy][iey]*t+$"  (text, line 1109)
+- "The Loyalty Quiz"  (name, line 1178)
+- "Answer her questions in chat. A right answer earns Loyalty, the first to answer earns double. Careful: some answers are thoughtcrime."  (text, line 1179)
+- "You're the star: the quizmaster on the podium. The questions ask themselves; anything you say in chat, the dream hears."  (text, line 1180)
+- "The broadcast ends"  (text, line 1181)
+- "The studio lights go out, and you wake."  (text, line 1181)
+- "Model citizen"  (text, line 1183)
+- "You wake reciting the answers, and feel proud of yourself. You're not sure why."  (text, line 1183)
+- "You wake with a start, sure you said something wrong in your sleep. Hopefully nobody heard."  (text, line 1184)
+- "The broadcast ends"  (text, line 1185)
+- "You wake humming the quiz's theme tune. It's very catchy."  (text, line 1185)
+
+> Note for you (not shown in game): Stand-ins (the owner, 8 November: "if there are less than 4 human players dreaming then please add citizen NPCs that answer with varying correct answers in the chat (we can use named NPCs right?). Maybe even a rebel NPC that answers incorrectly and is severely punished for dramatic effect by metrocops beating him"). The city's own named citizens (LC.People) fill the studio up to four contestants; they answer late in each question and never take the first-answer bonus. The rebel has a name of his own, never one of the city's people (some of them really are sympathizers, and the dream mustn't give them away).
+
+- "The Administrator!"  (text, line 1200)
+- "Civil Protection, of course."  (text, line 1200)
+- "Overwatch keeps watch while we sleep."  (text, line 1200)
+- "The Combine. Always the Combine."  (text, line 1200)
+- "She does. The Administrator."  (text, line 1200)
+- "The brave officers of Civil Protection!"  (text, line 1200)
+- "We obey!"  (text, line 1201)
+- "We comply, at once."  (text, line 1201)
+- "Listen, and obey."  (text, line 1201)
+- "We salute, and do as we're told."  (text, line 1201)
+- "We show respect, and comply."  (text, line 1201)
+- "We kneel, if we're asked to."  (text, line 1201)
+- "From the Administrator's generosity!"  (text, line 1202)
+- "From the Combine."  (text, line 1202)
+- "The Union provides!"  (text, line 1202)
+- "From her kindness."  (text, line 1202)
+- "From the Combine, in its generosity."  (text, line 1202)
+- "Criminals, every one of them."  (text, line 1203)
+- "Anti-citizens!"  (text, line 1203)
+- "Traitors and liars."  (text, line 1203)
+- "Malcontents. Vermin."  (text, line 1203)
+- "Compliance is peace."  (text, line 1204)
+- "Compliance is rewarded!"  (text, line 1204)
+- "She is %s!"  (text, line 1205)
+- "So very %s."  (text, line 1205)
+- "Report them at once!"  (text, line 1206)
+- "Inform Civil Protection!"  (text, line 1206)
+- "Call an officer!"  (text, line 1206)
+- "Tell the nearest officer."  (text, line 1206)
+- "Alert the Combine!"  (text, line 1206)
+- "The Administrator!"  (text, line 1207)
+- "The Combine is my best friend."  (text, line 1207)
+- "Civil Protection!"  (text, line 1207)
+- "Her. Always her."  (text, line 1207)
+- "The city!"  (text, line 1207)
+- "They are punished."  (text, line 1208)
+- "Re-educated, for their own good."  (text, line 1208)
+- "Arrested, and rightly so."  (text, line 1208)
+- "The Resistance are heroes! Freeman lives!"  (text, line 1211)
+- "Compliance is slavery! Long live the revolution!"  (text, line 1211)
+- "Lambda! Lambda forever!"  (text, line 1211)
+- "Down with the Combine! Alyx Vance will set us free!"  (text, line 1211)
+
+> Note for you (not shown in game): An answer a stand-in gives to question i.
+
+- "The Administrator!"  (text, line 1216)
+
+> Note for you (not shown in game): part of: chat
+
+- "(in the dream) {name}: {text}"  (chat message, line 1226)
+
+> Note for you (not shown in game): part of: people
+
+- "Citizen {random}"  (text, line 1241)
+
+> Note for you (not shown in game): part of: cops
+
+- "Unit {random}"  (text, line 1249)
+- "Unit {random}"  (text, line 1250)
+
+> Note for you (not shown in game): The rebel's moment: he shouts, she has him removed, two officers beat him and drag him off.
+
+- "The audience gasps. Every head in the studio turns to {name}."  (on-screen notice, line 1292)
+
+> Note for you (not shown in game): part of: rebel
+
+- "Anticitizen. Prepare for judgement."  (text, line 1317)
+- "Moving the suspect. Nothing to see here, citizens."  (text, line 1329)
+- "In the dream"  (on-screen notice, line 1330)
+- "Two officers drag {name} away by the arms. Nobody looks."  (on-screen notice, line 1330)
 
 > Note for you (not shown in game): part of: tick
 
-- "Model citizen"  (text, line 1214)
-- "Full marks for loyalty. The audience rises to its feet."  (text, line 1214)
-- "The broadcast ends"  (text, line 1215)
-- "The studio lights go out before you've proven yourself. You wake."  (text, line 1215)
+- "Model citizen"  (text, line 1385)
+- "Full marks for loyalty. The audience rises to its feet."  (text, line 1385)
+- "The broadcast ends"  (text, line 1386)
+- "The studio lights go out before you've proven yourself. You wake."  (text, line 1386)
 
 > Note for you (not shown in game): An answer, in chat. True: it stayed in the dream.
 
-- "(in the dream) {Nick}: {text}"  (chat message, line 1229)
+- "(in the dream) {Nick}: {text}"  (chat message, line 1401)
 
 > Note for you (not shown in game): part of: quiz said
 
-- ""{bad}"? The audience gasps. Two officers escort you to the back of the studio."  (text, line 1234)
-- "Not quite"  (on-screen notice, line 1243)
-- "Think about it, citizen. The answer is always obvious."  (on-screen notice, line 1243)
-- "Model citizen"  (text, line 1252)
-- "Full marks for loyalty. She nods once, and the audience rises to its feet for you."  (text, line 1252)
-- "First, and correct!"  (on-screen notice, line 1254)
-- "Loyalty: %d of %d."  (message, line 1254)
+- ""{bad}"? The audience gasps. Two officers escort you to the back of the studio."  (text, line 1406)
+- "Not quite"  (on-screen notice, line 1415)
+- "Think about it, citizen. The answer is always obvious."  (on-screen notice, line 1415)
+- "Model citizen"  (text, line 1424)
+- "Full marks for loyalty. She nods once, and the audience rises to its feet for you."  (text, line 1424)
+- "First, and correct!"  (on-screen notice, line 1426)
+- "Loyalty: %d of %d."  (message, line 1426)
 
 > Note for you (not shown in game): part of: state
 
-- "The quiz is about to begin..."  (text, line 1261)
-- "The quiz is over."  (text, line 1262)
-- "Correct. Wait for the next question."  (text, line 1265)
-- "Loyalty: %d of %d     Question %d of %d"  (message, line 1267)
+- "The quiz is about to begin..."  (text, line 1433)
+- "The quiz is over."  (text, line 1434)
+- "Correct. Wait for the next question."  (text, line 1437)
+- "Loyalty: %d of %d     Question %d of %d"  (message, line 1439)
 
 > Note for you (not shown in game): part of: propaganda say
 
-- "The Administrator"  (text, line 1286)
-- "(in the dream) The Administrator: {text}"  (chat message, line 1287)
+- "The Administrator"  (text, line 1458)
+- "(in the dream) The Administrator: {text}"  (chat message, line 1459)
 
 ## more propaganda dreams (dreams you play), drawn from real propaganda (sv_livingcity_propagandamore.lua)
 
