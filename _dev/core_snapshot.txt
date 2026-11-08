@@ -1017,3 +1017,9 @@ setting lc_zone_mercy = 96
 setting lc_zone_stalkers = 1
 setting lcf_admin_tools = 1
 setting lcf_switch_cooldown = 60
+item beer
+item cig_rolled
+item cig_union
+item moonshine
+item stimulant
+item vodka
