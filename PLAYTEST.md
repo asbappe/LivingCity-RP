@@ -1046,5 +1046,5 @@ Notes:
   Notes:
 - [ ] **Foil hat odds:** wear one to bed a few nights: roughly one night in three the dream passes you by ("a static, a distant power... can't quite break in"), the rest "Despite your tin foil hat, you feel a distant power..." and you dream; spent either way. Its description says it only works sometimes.
   Notes:
-- [ ] **Friends can't wake you:** punch a sleeping fellow rebel (or a sleeping citizen as a citizen): nothing, no damage. A unit punching them: they wake, groggy.
+- [ ] **Friends can't wake you:** punch a sleeping fellow rebel (or a sleeping citizen as a citizen): nothing, no damage. A unit punching them: they wake, groggy. Same for a sleeping NPC: a rebel shooting a rebel asleep in camp does nothing.
   Notes:

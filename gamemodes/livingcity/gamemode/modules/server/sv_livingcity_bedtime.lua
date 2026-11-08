@@ -76,9 +76,11 @@
     an NPC in order to loophole a way to skip dreaming?"): a rebel on a
     stimulant (or in a foil hat, or with no chip) can't wake the camp with a
     shot at a friend. The same goes for anyone asleep, dreaming or not
-    ("stop friends' hits from waking sleepers too"): a hit from their own side
-    does nothing at all (no wake, no harm); a rebel wakes only to an enemy of
-    the camp. An enemy's hit, or the world's (a fire, a fall), wakes them,
+    ("stop friends' hits from waking sleepers too"; "players and NPCs can't be
+    hurt by friendlies and members of their faction when sleeping"): a hit
+    from their own side does nothing at all (no wake, no harm), players and
+    the city's sleeping NPCs alike; a rebel wakes only to an enemy of the
+    camp. An enemy's hit, or the world's (a fire, a fall), wakes them,
     groggy. Woken early like that, you're groggy ("since
     they are woken up early, then the standard effects would apply such as
     the grogginess visual effect and very low stamina"): for lc_groggy_seconds
@@ -563,6 +565,13 @@ function LC.SleeperEnemy(victim, att)
     local theirs = LC.SideOf(att)
     if theirs == nil then return not att:IsPlayer() and LC.CampEnemy(att) end -- (a monster: as for a camp)
     return theirs ~= side
+end
+
+-- A hit on someone asleep (player or NPC) from their own side: a player or an NPC who isn't an enemy.
+-- Blocked outright: no harm, no waking (sv_livingcity_rest.lua, sv_livingcity_rebellife.lua ask).
+function LC.FriendHitsSleeper(victim, att)
+    if not IsValid(att) or not (att:IsPlayer() or (att.IsNPC and att:IsNPC())) then return false end
+    return not LC.SleeperEnemy(victim, att)
 end
 
 -- Does this hit wake the camp? Anyone there (player or NPC) attacked by an enemy of the camp.

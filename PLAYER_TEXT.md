@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version df909f4. Admin-only console messages and log lines are left out.
+Made from version 0a7d60b. Admin-only console messages and log lines are left out.
 
 8323 lines, from 234 files.
 
@@ -4292,88 +4292,88 @@ Made from version df909f4. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Lived through enough dreams for the lab to help them out of the rest. True, or false and why not.
 
-- ""Not yet. You've only lived through %d of the city's dreams. Endure %d more, and come back. I need to see how it takes you first.""  (message, line 136)
+- ""Not yet. You've only lived through %d of the city's dreams. Endure %d more, and come back. I need to see how it takes you first.""  (message, line 138)
 
 > Note for you (not shown in game): No implant signal: a unit notices, now and then (once a stop: the papers and the search don't both roll).
 
-- "The unit's scanner finds no implant signal: your chip has been pulled. Only anticitizens do that."  (text, line 163)
+- "The unit's scanner finds no implant signal: your chip has been pulled. Only anticitizens do that."  (text, line 165)
 
 > Note for you (not shown in game): the game's living city searched moment
 
-- "[Civil Protection] {NoImplantText}"  (chat message, line 166)
-- "[Search] No implant signal: {Nick}'s chip has been pulled. That's an anticitizen."  (chat message, line 168)
-- "No implant signal (chip removed)"  (text, line 170)
+- "[Civil Protection] {NoImplantText}"  (chat message, line 168)
+- "[Search] No implant signal: {Nick}'s chip has been pulled. That's an anticitizen."  (chat message, line 170)
+- "No implant signal (chip removed)"  (text, line 172)
 
 > Note for you (not shown in game): The foil hat
 
-- "There's no chip in your head left for it to block."  (text, line 180)
-- "You've one on already."  (text, line 181)
+- "There's no chip in your head left for it to block."  (text, line 182)
+- "You've one on already."  (text, line 183)
 
 > Note for you (not shown in game): part of: foil hat use
 
-- "Foil hat on"  (on-screen notice, line 186)
-- "It crinkles as you pull it down. Will it keep the dream out? Sometimes: about one night in three. The scientist says something about field harmonics; it's a tin foil hat. It's spent come the dream either way, and it's contraband: don't let a unit see you in it."  (on-screen notice, line 186)
+- "Foil hat on"  (on-screen notice, line 188)
+- "It crinkles as you pull it down. Will it keep the dream out? Sometimes: about one night in three. The scientist says something about field harmonics; it's a tin foil hat. It's spent come the dream either way, and it's contraband: don't let a unit see you in it."  (on-screen notice, line 188)
 
 > Note for you (not shown in game): Kept out of every dream: no chip, or a foil hat on (sv_livingcity_dreams.lua asks).
 
-- "The foil hat"  (on-screen notice, line 194)
-- "You feel a static, a distant power pressing at your mind that can't quite break in. The foil hat holds, this time. (It's spent.)"  (on-screen notice, line 194)
-- "The foil hat"  (on-screen notice, line 198)
-- "Despite your tin foil hat, you feel a distant power, an electric vibration, enter your mind and overpower your senses. The tin foil hat didn't work this time."  (on-screen notice, line 198)
+- "The foil hat"  (on-screen notice, line 196)
+- "You feel a static, a distant power pressing at your mind that can't quite break in. The foil hat holds, this time. (It's spent.)"  (on-screen notice, line 196)
+- "The foil hat"  (on-screen notice, line 200)
+- "Despite your tin foil hat, you feel a distant power, an electric vibration, enter your mind and overpower your senses. The tin foil hat didn't work this time."  (on-screen notice, line 200)
 
 > Note for you (not shown in game): Stimulants: one, then not again until you've slept and dreamt properly
 
-- "Your body won't take another one. You haven't slept and dreamt properly since the last (sleep through a night, and its dream if there is one)."  (text, line 259)
+- "Your body won't take another one. You haven't slept and dreamt properly since the last (sleep through a night, and its dream if there is one)."  (text, line 261)
 
 > Note for you (not shown in game): One free stimulant shot at a CP Commissary, once a night on the night shift (sv_livingcity_cpsupply.lua).
 
-- "[CP Commissary] Night shift: one stimulant shot, issued. It keeps you sharp for fifteen minutes. Then the crash."  (chat message, line 295)
+- "[CP Commissary] Night shift: one stimulant shot, issued. It keeps you sharp for fifteen minutes. Then the crash."  (chat message, line 297)
 
 > Note for you (not shown in game): part of: build
 
-- "Night shift: walk to patrol stop %d of %d, %s"  (message, line 328)
-- "Night shift"  (title, line 332)
-- "Keep order while the city sleeps: walk the patrol stops through the night. On a night shift there's no lights out for you, and a CP Commissary issues you one stimulant shot to stay sharp. The city's own units patrol too."  (description, line 333)
-- "Dispatch needs eyes on the streets tonight. Long hours, quiet streets. Stay awake."  (text, line 335)
+- "Night shift: walk to patrol stop %d of %d, %s"  (message, line 330)
+- "Night shift"  (title, line 334)
+- "Keep order while the city sleeps: walk the patrol stops through the night. On a night shift there's no lights out for you, and a CP Commissary issues you one stimulant shot to stay sharp. The city's own units patrol too."  (description, line 335)
+- "Dispatch needs eyes on the streets tonight. Long hours, quiet streets. Stay awake."  (text, line 337)
 
 > Note for you (not shown in game): the game's living city quest accepted moment
 
-- "Night shift"  (on-screen notice, line 345)
-- "You're on the night shift: no lights out for you tonight. A CP Commissary will issue you a stimulant shot (once a night)."  (on-screen notice, line 345)
+- "Night shift"  (on-screen notice, line 347)
+- "You're on the night shift: no lights out for you tonight. A CP Commissary will issue you a stimulant shot (once a night)."  (on-screen notice, line 347)
 
 > Note for you (not shown in game): part of: wake sleeper
 
-- "You wake with a start"  (on-screen notice, line 388)
-- "Something woke you."  (text, line 388)
-- "You're groggy: slow on your feet for a minute."  (on-screen notice, line 388)
+- "You wake with a start"  (on-screen notice, line 390)
+- "Something woke you."  (text, line 390)
+- "You're groggy: slow on your feet for a minute."  (on-screen notice, line 390)
 
 > Note for you (not shown in game): the sleeping body hit: out of the dream, and they take the hit once they're up
 
-- "Something hit you in your sleep. You wake in your bed, hurt."  (text, line 463)
+- "Something hit you in your sleep. You wake in your bed, hurt."  (text, line 465)
 
 > Note for you (not shown in game): the game's living city dream woke moment
 
-- "You wake with a start"  (on-screen notice, line 477)
-- "Something woke you."  (text, line 477)
-- "You're groggy: slow on your feet for a minute."  (on-screen notice, line 477)
+- "You wake with a start"  (on-screen notice, line 479)
+- "Something woke you."  (text, line 479)
+- "You're groggy: slow on your feet for a minute."  (on-screen notice, line 479)
 
 > Note for you (not shown in game): Rebel ground under attack: everyone asleep on it wakes (players, out of a dream too, and the camp's own).
 
-- "Trouble in the camp! Gunfire, shouting: someone's under attack."  (text, line 498)
+- "Trouble in the camp! Gunfire, shouting: someone's under attack."  (text, line 500)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "No chip, no dreams: you wake on your own, rested."  (chat message, line 592)
+- "No chip, no dreams: you wake on your own, rested."  (chat message, line 601)
 
 > Note for you (not shown in game): Pulling the chip (the lab's window: sv_livingcity_lab.lua)
 
-- "He only works for the Resistance."  (text, line 603)
-- ""Pull the chip? Not here. Not without the proper tools.""  (text, line 605)
-- ""It's out already. There's nothing left in there to take.""  (text, line 606)
+- "He only works for the Resistance."  (text, line 612)
+- ""Pull the chip? Not here. Not without the proper tools.""  (text, line 614)
+- ""It's out already. There's nothing left in there to take.""  (text, line 615)
 
 > Note for you (not shown in game): part of: chip surgery ready
 
-- "%d credits for the tools and the codes, and you don't have them."  (message, line 609)
+- "%d credits for the tools and the codes, and you don't have them."  (message, line 618)
 
 ## the dead (sv_livingcity_bodies.lua)
 
@@ -12290,83 +12290,83 @@ Made from version df909f4. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: patrol
 
-- "on patrol"  (what someone is doing, line 646)
-- "on patrol"  (what someone is doing, line 650)
+- "on patrol"  (what someone is doing, line 651)
+- "on patrol"  (what someone is doing, line 655)
 
 > Note for you (not shown in game): At a workbench or the camp table.
 
-- "cleaning a gun"  (text, line 657)
-- "going over a map"  (text, line 657)
-- "fixing something"  (text, line 657)
-- "working at the bench"  (text, line 657)
-- "fixing a gun"  (text, line 657)
-- "making something"  (text, line 657)
+- "cleaning a gun"  (text, line 662)
+- "going over a map"  (text, line 662)
+- "fixing something"  (text, line 662)
+- "working at the bench"  (text, line 662)
+- "fixing a gun"  (text, line 662)
+- "making something"  (text, line 662)
 
 > Note for you (not shown in game): Going through a crate.
 
-- "going through the crates"  (text, line 665)
-- "checking the supplies"  (text, line 665)
-- "counting rounds"  (text, line 665)
+- "going through the crates"  (text, line 670)
+- "checking the supplies"  (text, line 670)
+- "counting rounds"  (text, line 670)
 
 > Note for you (not shown in game): Tending a pot.
 
-- "tending the garden"  (what someone is doing, line 673)
+- "tending the garden"  (what someone is doing, line 678)
 
 > Note for you (not shown in game): part of: carry
 
-- "fetching supplies"  (what someone is doing, line 687)
-- "carrying supplies"  (text, line 692)
-- "putting it down"  (what someone is doing, line 692)
+- "fetching supplies"  (what someone is doing, line 692)
+- "carrying supplies"  (text, line 697)
+- "putting it down"  (what someone is doing, line 697)
 
 > Note for you (not shown in game): part of: fire
 
-- "warming up by the fire"  (what someone is doing, line 711)
+- "warming up by the fire"  (what someone is doing, line 716)
 
 > Note for you (not shown in game): On a chair, a couch, a bench.
 
-- "taking a break"  (text, line 727)
-- "sitting down"  (text, line 727)
+- "taking a break"  (text, line 732)
+- "sitting down"  (text, line 732)
 
 > Note for you (not shown in game): The editor's sit, bench and lean points inside the zone.
 
-- "leaning on the wall"  (what someone is doing, line 741)
+- "leaning on the wall"  (what someone is doing, line 746)
 
 > Note for you (not shown in game): Sleeping on a mattress, a bed, a bunk.
 
-- "turning in"  (text, line 756)
+- "turning in"  (text, line 761)
 
 > Note for you (not shown in game): the zone's on alert: on their feet, facing the trouble
 
-- "on alert"  (text, line 839)
+- "on alert"  (text, line 844)
 
 > Note for you (not shown in game): part of: start errand
 
-- "fewer than three fighters at home"  (text, line 941)
-- "nowhere to scavenge"  (text, line 943)
-- "out scavenging"  (text, line 955)
-- "Rebel scavenging run: %d out of %s toward %s"  (message, line 957)
+- "fewer than three fighters at home"  (text, line 946)
+- "nowhere to scavenge"  (text, line 948)
+- "out scavenging"  (text, line 960)
+- "Rebel scavenging run: %d out of %s toward %s"  (message, line 962)
 
 > Note for you (not shown in game): part of: deliver
 
-- "%s is back from a scavenging run: %d meal%s for the stores."  (message, line 990)
-- "One of ours"  (text, line 990)
+- "%s is back from a scavenging run: %d meal%s for the stores."  (message, line 995)
+- "One of ours"  (text, line 995)
 
 > Note for you (not shown in game): part of: rebel errand think
 
-- "keeping out of sight"  (text, line 1019)
-- "out scavenging"  (text, line 1034)
+- "keeping out of sight"  (text, line 1024)
+- "out scavenging"  (text, line 1039)
 
 > Note for you (not shown in game): home, with whatever they found
 
-- "bringing back what they found"  (text, line 1070)
-- "heading home"  (text, line 1070)
+- "bringing back what they found"  (text, line 1075)
+- "heading home"  (text, line 1075)
 
 > Note for you (not shown in game): the console command lc_rebel_errand
 
-- "[Living City] Start the city first."  (chat message, line 1116)
-- "[Living City] No rebel territory on this map."  (chat message, line 1123)
-- "[Living City] A scavenging run is heading out of the nearest rebel zone."  (chat message, line 1125)
-- "[Living City] Couldn't send one: {why}"  (text, line 1125)
+- "[Living City] Start the city first."  (chat message, line 1121)
+- "[Living City] No rebel territory on this map."  (chat message, line 1128)
+- "[Living City] A scavenging run is heading out of the nearest rebel zone."  (chat message, line 1130)
+- "[Living City] Couldn't send one: {why}"  (text, line 1130)
 
 ## the Resistance on the street (sv_livingcity_rebels.lua)
 

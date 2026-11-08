@@ -14674,6 +14674,15 @@ ok(hook.t.EntityTakeDamage.LivingCitySleepWake(a, Punch(cit2)) == true and a.lcS
 hook.t.EntityTakeDamage.LivingCitySleepWake(a, Punch(game.GetWorld()))
 ok(not a.lcSleep, "the world's harm (a fire, a fall) still wakes them")
 ok(LC.SleeperEnemy(a, reb2) and LC.SleeperEnemy(cop, reb2) and not LC.SleeperEnemy(cop, adm or cop), "(a rebel's hit wakes a citizen or a unit; a unit's own side doesn't)")
+-- the city's sleeping NPCs too: their own side can't hurt them
+local sleepCit, sleepReb = ents.Create("npc_citizen"), ents.Create("npc_citizen")
+LC.NPCs[sleepCit] = { role = "citizen", state = "abed" }
+LC.NPCs[sleepReb] = { role = "rebel", state = "idle", life = { asleep = true } }
+ok(sleepCit.IsNPC and sleepCit:IsNPC() and hook.t.EntityTakeDamage.LivingCityBedWake(sleepCit, Punch(cit2)) == true, "a citizen asleep in a bed can't be hurt by a citizen")
+ok(LC.FriendHitsSleeper(sleepReb, reb2) and not LC.FriendHitsSleeper(sleepReb, cop) and not LC.FriendHitsSleeper(sleepCit, cop),
+    "nor a rebel asleep in camp by a rebel; a unit's hit gets through to either")
+LC.NPCs[sleepCit], LC.NPCs[sleepReb] = nil, nil
+sleepCit:Remove() sleepReb:Remove()
 for _, q in ipairs({ reb2, reb3, cit2 }) do q:SetPos(Vector(-122000, -122000, 0)) end
 
 LC.DreamForget()

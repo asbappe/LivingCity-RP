@@ -481,7 +481,12 @@ end
 -- Hurt in their sleep (the copy shot): the real one feels it, and wakes.
 hook.Add("EntityTakeDamage", "LivingCityBedDouble", function(ent, dmg)
     local npc = IsValid(ent) and ent.lcSleeper
-    if IsValid(npc) and npc:Health() > 0 then npc:TakeDamageInfo(dmg) return true end
+    if IsValid(npc) and npc:Health() > 0 then
+        -- (their own side can't hurt them asleep: the owner, 8 November; sv_livingcity_bedtime.lua)
+        if LC.FriendHitsSleeper and LC.FriendHitsSleeper(npc, dmg:GetAttacker()) then return true end
+        npc:TakeDamageInfo(dmg)
+        return true
+    end
 end)
 
 function LC.NPCLieOnBed(npc, L, b)

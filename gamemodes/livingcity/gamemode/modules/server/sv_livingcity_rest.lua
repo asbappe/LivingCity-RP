@@ -513,6 +513,8 @@ end
 hook.Add("EntityTakeDamage", "LivingCityBedWake", function(ent, dmg)
     if not IsValid(ent) or not ent:IsNPC() or dmg:GetDamage() <= 0 then return end
     local st = LC.NPCs and LC.NPCs[ent]
+    -- asleep (in a bed, or a rebel in camp): their own side can't hurt them (the owner, 8 November)
+    if st and (st.state == "abed" or (LC.RebelAsleep and LC.RebelAsleep(st))) and LC.FriendHitsSleeper and LC.FriendHitsSleeper(ent, dmg:GetAttacker()) then return true end
     if st and st.state == "abed" then
         LC.NPCBedUp(ent, st)
         st.leaving = nil
