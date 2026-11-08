@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version dcab22d. Admin-only console messages and log lines are left out.
+Made from version cb25c42. Admin-only console messages and log lines are left out.
 
-8289 lines, from 233 files.
+8290 lines, from 233 files.
 
 ## Contents
 
@@ -116,7 +116,7 @@ Made from version dcab22d. Admin-only console messages and log lines are left ou
 - [custom announcements, for Overwatch and for the Administrator](#custom-announcements-for-overwatch-and-for-the-administrator-svlivingcityannouncerlua) (38)
 - [arrests in the open (the owner's playtest, 7 November)](#arrests-in-the-open-the-owners-playtest-7-november-svlivingcityarrestlua) (51)
 - [the time of day, the weather, and the city's music](#the-time-of-day-the-weather-and-the-citys-music-svlivingcityatmoslua) (1)
-- [bedtime, the night shift, missed dreams, and the chip](#bedtime-the-night-shift-missed-dreams-and-the-chip-svlivingcitybedtimelua) (27)
+- [lights out, the night shift, stimulants, the foil hat, and the chip](#lights-out-the-night-shift-stimulants-the-foil-hat-and-the-chip-svlivingcitybedtimelua) (24)
 - [the dead](#the-dead-svlivingcitybodieslua) (9)
 - [apartments and trade](#apartments-and-trade-svlivingcitybusinesslua) (41)
 - [rearranging a rebel camp](#rearranging-a-rebel-camp-svlivingcitycampmovelua) (3)
@@ -140,7 +140,7 @@ Made from version dcab22d. Admin-only console messages and log lines are left ou
 - [doors](#doors-svlivingcitydoorslua) (9)
 - [Enforcers in the dreams](#enforcers-in-the-dreams-svlivingcitydreamenforcerslua) (19)
 - [nightmare dreams you play (the dream games)](#nightmare-dreams-you-play-the-dream-games-svlivingcitydreamgameslua) (35)
-- [shared dreams](#shared-dreams-svlivingcitydreamslua) (59)
+- [shared dreams](#shared-dreams-svlivingcitydreamslua) (63)
 - [stand-ins, so no dream is ever thin](#stand-ins-so-no-dream-is-ever-thin-svlivingcitydreamstandinslua) (25)
 - [the Combine's dropship](#the-combines-dropship-svlivingcitydropshiplua) (7)
 - [economy and social credit](#economy-and-social-credit-svlivingcityeconomylua) (32)
@@ -724,8 +724,8 @@ Made from version dcab22d. Admin-only console messages and log lines are left ou
 - "Sleep once a day: press E on a bed at night. Without sleep you get drowsy, can't run and are weaker. A good night's sleep leaves you well rested."  (text, line 83)
 - "You're warned about six and two minutes before you're exhausted; from the first warning a bed lets you sleep. Citizens get tired in the evening and at night."  (text, line 84)
 - "Shared dreams: if the server has a dream point, the secret endings come at night as a dream for everyone asleep in a bed, about a minute after the Administrator says good night. You wake in your bed with everything you had, exactly as it was. Not tonight? C > Settings > Shared dreams (opt out), or /dream off; in a dream, C > Settings > Shared dreams: wake up. Not from a nightmare, though: a nightmare takes everyone asleep outside a Combine-only zone, and you can't wake yourself until you're out of it. Only a stimulant shot before bed keeps you awake."  (text, line 85)
-- "Lights out: citizens and Civil Protection are due in bed at the good night (21:00), whatever they slept in the day. You're warned six and two minutes before; after it, out of bed, your eyes keep closing until you sleep. The Resistance keep their own hours."  (text, line 86)
-- "Every dream has at least six dreamers: when fewer players are asleep, the city's own people dream it with you. Awake for a dream, with the chip? It waits, and you dream it alone the next time you sleep (unless stimulants keep you awake till dawn)."  (text, line 87)
+- "Lights out: everyone (citizens, the Resistance, Civil Protection, the Administration) is due in bed at the good night (21:00), whatever they slept in the day. You're warned six and two minutes before; after it, out of bed, your eyes keep closing until you sleep. Stay in bed until the night's dream has gone by."  (text, line 86)
+- "Every dream has at least six dreamers: when fewer players are asleep, the city's own people dream it with you. A stimulant shot keeps you up past lights out and you miss the dream, but only one: no second shot until you've slept and dreamt properly. No dream lasts more than five minutes."  (text, line 87)
 - "Civil Protection and the Administration are Enforcers in nightmares and propaganda dreams: nothing touches them, they can wake when they like, and their baton punishes dreamers who misbehave (they glow red; a life gone, 1 XP for the Enforcer). In Happy and Neutral dreams they dream like anyone."  (text, line 88)
 - "Civil Protection: most nights your board (F4) has a Night shift from dusk. Take it and there's no lights out for you that night, and a CP Commissary issues you a stimulant shot (once a night)."  (text, line 89)
 - "Cigarettes, alcohol and stimulants (F3, the item's button). A cigarette steadies your nerves and dulls hunger; too many and you cough. Drink and you get drunk: it dulls pain, then the world sways, then you throw up (and one moonshine in five is a bad batch). A stimulant keeps you awake for fifteen minutes (no dream can take you), then you crash."  (text, line 90)
@@ -4270,79 +4270,70 @@ Made from version dcab22d. Admin-only console messages and log lines are left ou
 
 - "It's %s, %s. The weather: %s."  (message, line 224)
 
-## bedtime, the night shift, missed dreams, and the chip (sv_livingcity_bedtime.lua)
+## lights out, the night shift, stimulants, the foil hat, and the chip (sv_livingcity_bedtime.lua)
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_bedtime.lua`
 
 
 > Note for you (not shown in game): Lived through enough dreams for the lab to help them out of the rest. True, or false and why not.
 
-- ""Not yet. You've only lived through %d of the city's dreams. Endure %d more, and come back. I need to see how it takes you first.""  (message, line 97)
+- ""Not yet. You've only lived through %d of the city's dreams. Endure %d more, and come back. I need to see how it takes you first.""  (message, line 98)
 
 > Note for you (not shown in game): No implant signal: a unit notices, now and then (once a stop: the papers and the search don't both roll).
 
-- "The unit's scanner finds no implant signal: your chip has been pulled. Only anticitizens do that."  (text, line 123)
+- "The unit's scanner finds no implant signal: your chip has been pulled. Only anticitizens do that."  (text, line 125)
 
 > Note for you (not shown in game): the game's living city searched moment
 
-- "[Civil Protection] {NoImplantText}"  (chat message, line 126)
-- "[Search] No implant signal: {Nick}'s chip has been pulled. That's an anticitizen."  (chat message, line 128)
-- "No implant signal (chip removed)"  (text, line 130)
+- "[Civil Protection] {NoImplantText}"  (chat message, line 128)
+- "[Search] No implant signal: {Nick}'s chip has been pulled. That's an anticitizen."  (chat message, line 130)
+- "No implant signal (chip removed)"  (text, line 132)
 
 > Note for you (not shown in game): The foil hat
 
-- "There's no chip in your head left for it to block."  (text, line 140)
-- "You've one on already."  (text, line 141)
-- "Foil hat on"  (on-screen notice, line 145)
-- "It crinkles as you pull it down. Sleep in it and no dream can reach you (tonight's, or one waiting for you); it's spent once it has kept one out. It's contraband: don't let a unit see you in it."  (on-screen notice, line 145)
+- "There's no chip in your head left for it to block."  (text, line 142)
+- "You've one on already."  (text, line 143)
+- "Foil hat on"  (on-screen notice, line 147)
+- "It crinkles as you pull it down. Sleep in it and no dream can reach you; it's spent once it has kept one out. It's contraband: don't let a unit see you in it."  (on-screen notice, line 147)
 
 > Note for you (not shown in game): Kept out of every dream: no chip, or a foil hat on (sv_livingcity_dreams.lua asks).
 
-- "The foil hat"  (on-screen notice, line 153)
-- "Something presses at the edge of your sleep, and the foil hat crackles. It slips past you. The hat's spent."  (on-screen notice, line 153)
+- "The foil hat"  (on-screen notice, line 155)
+- "Something presses at the edge of your sleep, and the foil hat crackles. It slips past you. The hat's spent."  (on-screen notice, line 155)
 
-> Note for you (not shown in game): kept awake on stimulants all night: what they missed fades
+> Note for you (not shown in game): Stimulants: one, then not again until you've slept and dreamt properly
 
-- "You kept yourself awake all night. Whatever the city dreamt has slipped past you."  (on-screen notice, line 207)
+- "Your body won't take another one. You haven't slept and dreamt properly since the last (sleep through a night, and its dream if there is one)."  (text, line 215)
 
 > Note for you (not shown in game): One free stimulant shot at a CP Commissary, once a night on the night shift (sv_livingcity_cpsupply.lua).
 
-- "[CP Commissary] Night shift: one stimulant shot, issued. It keeps you sharp for fifteen minutes. Then the crash."  (chat message, line 223)
+- "[CP Commissary] Night shift: one stimulant shot, issued. It keeps you sharp for fifteen minutes. Then the crash."  (chat message, line 251)
 
 > Note for you (not shown in game): part of: build
 
-- "Night shift: walk to patrol stop %d of %d, %s"  (message, line 256)
-- "Night shift"  (title, line 260)
-- "Keep order while the city sleeps: walk the patrol stops through the night. On a night shift there's no lights out for you, and a CP Commissary issues you one stimulant shot to stay sharp. The city's own units patrol too."  (description, line 261)
-- "Dispatch needs eyes on the streets tonight. Long hours, quiet streets. Stay awake."  (text, line 263)
+- "Night shift: walk to patrol stop %d of %d, %s"  (message, line 284)
+- "Night shift"  (title, line 288)
+- "Keep order while the city sleeps: walk the patrol stops through the night. On a night shift there's no lights out for you, and a CP Commissary issues you one stimulant shot to stay sharp. The city's own units patrol too."  (description, line 289)
+- "Dispatch needs eyes on the streets tonight. Long hours, quiet streets. Stay awake."  (text, line 291)
 
 > Note for you (not shown in game): the game's living city quest accepted moment
 
-- "Night shift"  (on-screen notice, line 273)
-- "You're on the night shift: no lights out for you tonight. A CP Commissary will issue you a stimulant shot (once a night)."  (on-screen notice, line 273)
-
-> Note for you (not shown in game): the game's living city dream started moment
-
-- "You feel a pull behind your eyes, as if something is waiting for you to fall asleep."  (chat message, line 296)
-
-> Note for you (not shown in game): part of: dream catchup tick
-
-- "The dream you missed"  (on-screen notice, line 319)
-- "It was waiting for you. Tonight's dream takes you as you fall asleep: you dream it now, on your own. You'll wake in your bed with everything you had."  (on-screen notice, line 319)
+- "Night shift"  (on-screen notice, line 301)
+- "You're on the night shift: no lights out for you tonight. A CP Commissary will issue you a stimulant shot (once a night)."  (on-screen notice, line 301)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "No chip, no dreams: you wake on your own, rested."  (chat message, line 346)
+- "No chip, no dreams: you wake on your own, rested."  (chat message, line 341)
 
 > Note for you (not shown in game): Pulling the chip (the lab's window: sv_livingcity_lab.lua)
 
-- "He only works for the Resistance."  (text, line 357)
-- ""Pull the chip? Not here. Not without the proper tools.""  (text, line 359)
-- ""It's out already. There's nothing left in there to take.""  (text, line 360)
+- "He only works for the Resistance."  (text, line 352)
+- ""Pull the chip? Not here. Not without the proper tools.""  (text, line 354)
+- ""It's out already. There's nothing left in there to take.""  (text, line 355)
 
 > Note for you (not shown in game): part of: chip surgery ready
 
-- "%d credits for the tools and the codes, and you don't have them."  (message, line 363)
+- "%d credits for the tools and the codes, and you don't have them."  (message, line 358)
 
 ## the dead (sv_livingcity_bodies.lua)
 
@@ -6006,146 +5997,153 @@ Made from version dcab22d. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): What the sleepers feel just before it, and the city's line the morning after (by mood).
 
-- "You drift off. Tonight's dream feels warm and light, like a song you used to know."  (text, line 125)
-- "You drift off. Tonight's dream feels strange: neither good nor bad, just strange."  (text, line 126)
-- "You drift off, and something is wrong. Tonight's dream feels cold, and close, and hungry."  (text, line 127)
-- "The city slept well last night. People wake up smiling, and can't say why."  (text, line 131)
-- "The city slept strangely last night. Nobody quite remembers the dream."  (text, line 132)
-- "The city slept badly last night. People wake shaking, and nobody wants to talk about the dream."  (text, line 133)
+- "You drift off. Tonight's dream feels warm and light, like a song you used to know."  (text, line 126)
+- "You drift off. Tonight's dream feels strange: neither good nor bad, just strange."  (text, line 127)
+- "You drift off, and something is wrong. Tonight's dream feels cold, and close, and hungry."  (text, line 128)
+- "The city slept well last night. People wake up smiling, and can't say why."  (text, line 132)
+- "The city slept strangely last night. Nobody quite remembers the dream."  (text, line 133)
+- "The city slept badly last night. People wake shaking, and nobody wants to talk about the dream."  (text, line 134)
 
 > Note for you (not shown in game): part of: dream can wake
 
-- "You can't wake yourself from this dream. You have to see it through (or be out of it)."  (text, line 236)
-- "You can't wake yourself from a nightmare. You have to see it through (or be out of it)."  (text, line 237)
+- "You can't wake yourself from this dream. You have to see it through (or be out of it)."  (text, line 237)
+- "You can't wake yourself from a nightmare. You have to see it through (or be out of it)."  (text, line 238)
 
 > Note for you (not shown in game): part of: pdata all
 
-- "SELECT infoid, value FROM playerpdata WHERE infoid LIKE {pre}"  (text, line 286)
+- "SELECT infoid, value FROM playerpdata WHERE infoid LIKE {pre}"  (text, line 291)
 
 > Note for you (not shown in game): admins
 
-- "'s things don't all match after the dream ({bad}). The snapshot is kept: C > Help > Dreams, Put back."  (on-screen notice, line 745)
+- "'s things don't all match after the dream ({bad}). The snapshot is kept: C > Help > Dreams, Put back."  (on-screen notice, line 750)
 
 > Note for you (not shown in game): just their hands: nothing to drop, spend or lose
 
-- "You drift into a dream, with everyone else asleep. Whatever happens here, you wake in your bed with everything you had. To wake up now: C > Settings > Shared dreams: wake up."  (on-screen notice, line 789)
+- "You drift into a dream, with everyone else asleep. Whatever happens here, you wake in your bed with everything you had. To wake up now: C > Settings > Shared dreams: wake up."  (on-screen notice, line 794)
 
 > Note for you (not shown in game): dream restore
 
-- "You wake up"  (on-screen notice, line 851)
-- "You wake from the dream, in your bed, with everything as it was."  (on-screen notice, line 851)
-- "You wake in your bed, with everything just as it was. Press Jump to get up."  (on-screen notice, line 852)
+- "You wake up"  (on-screen notice, line 856)
+- "You wake from the dream, in your bed, with everything as it was."  (on-screen notice, line 856)
+- "You wake in your bed, with everything just as it was. Press Jump to get up."  (on-screen notice, line 857)
 
-> Note for you (not shown in game): Starting one Dream an ending now, with everyone asleep (also: an admin testing it, awake). vote: the G-Man's vote first (among the dreamers). True, or false and why not. only: these dreamers and nobody else (a dream someone missed, dreamt alone: sv_livingcity_bedtime.lua).
+> Note for you (not shown in game): Starting one Dream an ending now, with everyone asleep (also: an admin testing it, awake). vote: the G-Man's vote first (among the dreamers). True, or false and why not.
 
-- "Dreams are off (lc_dreams 0)."  (text, line 925)
-- "There's no dream point on this map: place one with the Living City Editor (Point: dream)."  (text, line 927)
-- "No such ending."  (text, line 929)
-- "An ending is already under way."  (text, line 930)
-- "A dream is already under way."  (text, line 931)
+- "Dreams are off (lc_dreams 0)."  (text, line 929)
+- "There's no dream point on this map: place one with the Living City Editor (Point: dream)."  (text, line 931)
+- "No such ending."  (text, line 933)
+- "An ending is already under way."  (text, line 934)
+- "A dream is already under way."  (text, line 935)
 
 > Note for you (not shown in game): part of: dream start
 
-- "Not yet ({EndingCooldownLeft} minutes of the endings' cooldown left)."  (text, line 932)
-- "Nobody is asleep to dream it."  (text, line 935)
+- "Not yet ({EndingCooldownLeft} minutes of the endings' cooldown left)."  (text, line 936)
+- "Nobody is asleep to dream it."  (text, line 939)
 
 > Note for you (not shown in game): Enforcers watch over a dream; they don't dream it on their own (the owner, 8 November)
 
-- "Nobody is asleep to dream it (only Enforcers)."  (text, line 940)
+- "Nobody is asleep to dream it (only Enforcers)."  (text, line 944)
 
 > Note for you (not shown in game): part of: dream start
 
-- "Nobody could be got ready to dream (their snapshots couldn't be saved)."  (text, line 950)
-- "Dream: %s, with %d asleep"  (message, line 962)
+- "Nobody could be got ready to dream (their snapshots couldn't be saved)."  (text, line 954)
+- "Dream: %s, with %d asleep"  (message, line 966)
 
 > Note for you (not shown in game): The Administrator's tablet (sv_livingcity_cityadmin.lua): tonight's dream, by mood.
 
-- "Dreams are switched off on this server."  (text, line 983)
-- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 984)
+- "Dreams are switched off on this server."  (text, line 994)
+- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 995)
 
 > Note for you (not shown in game): The Administrator picks tonight's dream (id), or none ("none"). True, or false and why not. The pick ignores the endings' cooldown, and there's still one dream a night; it can be changed until the dream begins. (The G-Man has no part in dreams: the owner, 7 November.)
 
-- "Only the City Administrator chooses the city's dreams."  (text, line 1013)
-- "Dreams are switched off on this server."  (text, line 1014)
-- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 1015)
+- "Only the City Administrator chooses the city's dreams."  (text, line 1024)
+- "Dreams are switched off on this server."  (text, line 1025)
+- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 1026)
 
 > Note for you (not shown in game): part of: dream admin pick
 
-- "Tonight's dream"  (on-screen notice, line 1020)
-- "No dream tonight. The city sleeps without one."  (on-screen notice, line 1020)
-- "No such dream."  (text, line 1023)
 - "Tonight's dream"  (on-screen notice, line 1031)
-- "Everyone asleep will dream it tonight, a minute after you say good night."  (message, line 1032)
-- "Tonight's dream has been dreamt already: it waits for tomorrow night."  (message, line 1032)
+- "No dream tonight. The city sleeps without one."  (on-screen notice, line 1031)
+- "No such dream."  (text, line 1034)
+- "Tonight's dream"  (on-screen notice, line 1042)
+- "Everyone asleep will dream it tonight, a minute after you say good night."  (message, line 1043)
+- "Tonight's dream has been dreamt already: it waits for tomorrow night."  (message, line 1043)
 
 > Note for you (not shown in game): part of: dream tonight
 
-- "no dream point"  (text, line 1054)
-- "nothing to dream"  (text, line 1056)
+- "no dream point"  (text, line 1065)
+- "nothing to dream"  (text, line 1067)
 
 > Note for you (not shown in game): (the morning after a dream: a line for the whole city, by its mood)
 
-- "[City] {line}"  (chat message, line 1081)
+- "[City] {line}"  (chat message, line 1092)
 
 > Note for you (not shown in game): the sleepers, warned (and the way out)
 
-- "A dream is coming"  (on-screen notice, line 1103)
-- "You'll be in it as an Enforcer: nothing in it can touch you, and you can wake whenever you like. Punish the dreamers who misbehave (they glow red) with your baton."  (on-screen notice, line 1103)
+- "A dream is coming"  (on-screen notice, line 1114)
+- "You'll be in it as an Enforcer: nothing in it can touch you, and you can wake whenever you like. Punish the dreamers who misbehave (they glow red) with your baton."  (on-screen notice, line 1114)
 
 > Note for you (not shown in game): pcall
 
-- "A dream is coming"  (on-screen notice, line 1106)
-- "It's shared with everyone asleep, and you'll wake in your bed with everything you had. {or}"  (on-screen notice, line 1106)
+- "A dream is coming"  (on-screen notice, line 1117)
+- "It's shared with everyone asleep, and you'll wake in your bed with everything you had. {or}"  (on-screen notice, line 1117)
+
+> Note for you (not shown in game): the safeguard (the owner, 8 November: "ALL dreams will end for all players after 5 minutes ... in case they get bugged/glitched"): ended, everything it made removed, everyone woken with everything put back
+
+- "Dream: %s still going after %d minutes: ended by the safeguard"  (message, line 1132)
+- "The dream fades"  (on-screen notice, line 1133)
+- "It loosens its grip, and you wake."  (on-screen notice, line 1133)
+- "time limit"  (text, line 1135)
 
 > Note for you (not shown in game): In a dream, nothing counts
 
-- "will have to wait until you wake up. (C > Settings > Shared dreams: wake up.)"  (on-screen notice, line 1192)
+- "will have to wait until you wake up. (C > Settings > Shared dreams: wake up.)"  (on-screen notice, line 1217)
 
 > Note for you (not shown in game): part of: inv action
 
-- "Your pockets"  (text, line 1216)
+- "Your pockets"  (text, line 1241)
 
 > Note for you (not shown in game): part of: sleep in
 
-- "You're already dreaming."  (text, line 1217)
+- "You're already dreaming."  (text, line 1242)
 
 > Note for you (not shown in game): Players: opting out, and waking up
 
-- "Shared dreams"  (on-screen notice, line 1260)
-- "You've opted out: you sleep without the city's dreams. (C > Settings > Shared dreams to opt back in.)"  (on-screen notice, line 1260)
-- "You'll dream with everyone else asleep. You always wake in your bed, with everything you had."  (on-screen notice, line 1261)
+- "Shared dreams"  (on-screen notice, line 1285)
+- "You've opted out: you sleep without the city's dreams. (C > Settings > Shared dreams to opt back in.)"  (on-screen notice, line 1285)
+- "You'll dream with everyone else asleep. You always wake in your bed, with everything you had."  (on-screen notice, line 1286)
 
 > Note for you (not shown in game): part of: dream command
 
-- "[Dreams] You're not dreaming."  (chat message, line 1269)
-- "[Dreams] Shared dreams are {or}. /dream off, /dream on, /dream wake (or C > Settings)."  (chat message, line 1271)
+- "[Dreams] You're not dreaming."  (chat message, line 1294)
+- "[Dreams] Shared dreams are {or}. /dream off, /dream on, /dream wake (or C > Settings)."  (chat message, line 1296)
 
 > Note for you (not shown in game): dream restore
 
-- "You wake up"  (on-screen notice, line 1291)
-- "You'd left in the middle of a dream. Everything you had is just as it was."  (on-screen notice, line 1291)
+- "You wake up"  (on-screen notice, line 1316)
+- "You'd left in the middle of a dream. Everything you had is just as it was."  (on-screen notice, line 1316)
 
 > Note for you (not shown in game): Put someone's things back from their snapshot (also an old one already put back once).
 
-- "No such player."  (text, line 1309)
-- "is woken, and everything put back."  (text, line 1310)
-- "has no dream snapshot."  (text, line 1313)
+- "No such player."  (text, line 1334)
+- "is woken, and everything put back."  (text, line 1335)
+- "has no dream snapshot."  (text, line 1338)
 
 > Note for you (not shown in game): part of: dream force restore
 
-- "'s things are being put back from their snapshot."  (text, line 1318)
+- "'s things are being put back from their snapshot."  (text, line 1343)
 
 > Note for you (not shown in game): part of: dream status
 
-- "(a dream you play)"  (name, line 1334)
+- "(a dream you play)"  (name, line 1359)
 
 > Note for you (not shown in game): part of: reply
 
-- "[Living City] {m}"  (chat message, line 1377)
+- "[Living City] {m}"  (chat message, line 1402)
 
 > Note for you (not shown in game): the console command lc_dream_now
 
-- "The dream begins: {id}"  (text, line 1387)
+- "The dream begins: {id}"  (text, line 1412)
 
 ## stand-ins, so no dream is ever thin (sv_livingcity_dreamstandins.lua)
 
@@ -12787,45 +12785,45 @@ Made from version dcab22d. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Sleep in a bed. True, or false and why not. You lie still (you can't move) till you press Jump.
 
-- "A stalker doesn't sleep. It doesn't get tired either: it only works."  (text, line 175)
-- "You're far too wired to sleep: the stimulant has your heart racing. (It wears off in a while.)"  (text, line 176)
-- "There's no bed here."  (text, line 178)
+- "A stalker doesn't sleep. It doesn't get tired either: it only works."  (text, line 180)
+- "You're far too wired to sleep: the stimulant has your heart racing. (It wears off in a while.)"  (text, line 181)
+- "There's no bed here."  (text, line 183)
 
 > Note for you (not shown in game): part of: sleep in
 
-- "Someone's already asleep in this bed."  (text, line 180)
-- "You're not tired, and it's broad daylight. Beds are for the night (or once you're getting tired)."  (text, line 182)
+- "Someone's already asleep in this bed."  (text, line 185)
+- "You're not tired, and it's broad daylight. Beds are for the night (or once you're getting tired)."  (text, line 187)
 
 > Note for you (not shown in game): rested for a day after a night's sleep, but you can sleep again 18 in-game hours after (the owner, 7 November)
 
-- "You slept not long ago. You could sleep again in about %d in-game hour%s."  (message, line 188)
+- "You slept not long ago. You could sleep again in about %d in-game hour%s."  (message, line 193)
 
 > Note for you (not shown in game): off the bed: back where they stood to get in, if nobody's standing there now
 
-- "You wake with a start. You've not slept."  (chat message, line 234)
-- "You get up before you've really slept."  (chat message, line 234)
+- "You wake with a start. You've not slept."  (chat message, line 239)
+- "You get up before you've really slept."  (chat message, line 239)
 
 > Note for you (not shown in game): part of: sleep step
 
-- "Well rested"  (on-screen notice, line 262)
-- "A night's sleep, and you're healed. For the next day: hunger and thirst come on more slowly, and you heal a little. Press Jump to get up."  (on-screen notice, line 262)
+- "Well rested"  (on-screen notice, line 267)
+- "A night's sleep, and you're healed. For the next day: hunger and thirst come on more slowly, and you heal a little. Press Jump to get up."  (on-screen notice, line 267)
 
 > Note for you (not shown in game): part of: rest tick
 
-- "Lights out soon"  (on-screen notice, line 344)
-- "The good night is in about six minutes: the city goes to bed then, and so do you. Head home to bed (F1 > What now? > Places).{or}"  (on-screen notice, line 344)
-- "Getting tired"  (on-screen notice, line 347)
-- "You'll be exhausted in about six minutes: your eyes will keep closing and you'll be weaker. You can sleep in a bed now (F1 > What now? > Places)."  (on-screen notice, line 347)
-- "Lights out"  (on-screen notice, line 352)
-- "About two minutes to the good night. Get into bed (F1 > What now? > Places): after it, your eyes keep closing until you sleep."  (on-screen notice, line 352)
-- "Very tired"  (on-screen notice, line 354)
-- "About two minutes before your eyes start closing. Find a bed and sleep (F1 > What now? > Places)."  (on-screen notice, line 354)
-- "You need sleep. Your eyes keep closing, you can't run, and you're weaker. Find a bed (F1 > What now? > Places)."  (on-screen notice, line 362)
+- "Lights out soon"  (on-screen notice, line 349)
+- "The good night is in about six minutes: the city goes to bed then, and so do you. Head home to bed (F1 > What now? > Places).{or}"  (on-screen notice, line 349)
+- "Getting tired"  (on-screen notice, line 352)
+- "You'll be exhausted in about six minutes: your eyes will keep closing and you'll be weaker. You can sleep in a bed now (F1 > What now? > Places)."  (on-screen notice, line 352)
+- "Lights out"  (on-screen notice, line 357)
+- "About two minutes to the good night. Get into bed (F1 > What now? > Places): after it, your eyes keep closing until you sleep."  (on-screen notice, line 357)
+- "Very tired"  (on-screen notice, line 359)
+- "About two minutes before your eyes start closing. Find a bed and sleep (F1 > What now? > Places)."  (on-screen notice, line 359)
+- "You need sleep. Your eyes keep closing, you can't run, and you're weaker. Find a bed (F1 > What now? > Places)."  (on-screen notice, line 367)
 
 > Note for you (not shown in game): (on a job, the job stays on screen: the owner, 7 November, "NOW I CANT FIND THE QUEST OBJECTIVE")
 
-- "Get some sleep"  (text, line 403)
-- "You're exhausted: no running, and weaker until you've slept. Find a bed and press E on it."  (text, line 403)
+- "Get some sleep"  (text, line 408)
+- "You're exhausted: no running, and weaker until you've slept. Find a bed and press E on it."  (text, line 408)
 
 ## talking, knowing each other, and going down (sv_livingcity_rp.lua)
 
@@ -15618,7 +15616,7 @@ Made from version dcab22d. Admin-only console messages and log lines are left ou
 - "Your heart pounds"  (on-screen notice, line 136)
 - "Another one, on top of the last. Your chest hammers and your vision swims."  (on-screen notice, line 136)
 - "Wide awake"  (on-screen notice, line 145)
-- "Your eyes snap open and your heart quickens. For the next fifteen minutes you couldn't sleep if you tried, and no dream can take you."  (on-screen notice, line 145)
+- "Your eyes snap open and your heart quickens. For the next fifteen minutes you couldn't sleep if you tried: lights out waits, and no dream can take you. No second shot until you've slept and dreamt properly."  (on-screen notice, line 145)
 
 > Note for you (not shown in game): From your pockets (sv_livingcity_scavenge.lua's LC.ItemUse sends it here). True, or false and why not.
 
@@ -15626,32 +15624,32 @@ Made from version dcab22d. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game's living city slept moment
 
-- "The nightmare's gone"  (on-screen notice, line 202)
-- "A real night's sleep, and the nightmare finally lets go. Your strength is back."  (on-screen notice, line 202)
+- "The nightmare's gone"  (on-screen notice, line 204)
+- "A real night's sleep, and the nightmare finally lets go. Your strength is back."  (on-screen notice, line 204)
 
 > Note for you (not shown in game): A Vortigaunt's whisper (citizens): where a black market dealer or a rebel cache is.
 
-- "A black market dealer"  (text, line 216)
-- "A Resistance cache"  (text, line 217)
+- "A black market dealer"  (text, line 218)
+- "A Resistance cache"  (text, line 219)
 
 > Note for you (not shown in game): how: "won" (beat it), "time" (still in it when it ended), "out" (lost every life).
 
-- "the nightmare"  (name, line 242)
+- "the nightmare"  (name, line 244)
 
 > Note for you (not shown in game): part of: dream outcome
 
-- "A Vortigaunt's voice found you in the dark, and whispered where to look: {what} (marked for you, for ten minutes)."  (text, line 254)
-- "As you woke, a Vortigaunt's hand pressed something into yours: {or}{id}."  (text, line 258)
-- "You beat {name}. For a day the Combine can't get into your head (Breen's water won't fog you, and no nightmare can take you), and you've a second wind (you tire slower, hunger and thirst come slower).{extra}"  (on-screen notice, line 260)
-- "You held on"  (on-screen notice, line 263)
-- "You held on until {name} let go. You wake tired, but whole."  (on-screen notice, line 263)
-- "The nightmare stays with you"  (on-screen notice, line 267)
-- "You wake soaked in sweat, your hands shaking, weaker than you were: 30 off your health until your next full night's sleep."  (on-screen notice, line 267)
+- "A Vortigaunt's voice found you in the dark, and whispered where to look: {what} (marked for you, for ten minutes)."  (text, line 256)
+- "As you woke, a Vortigaunt's hand pressed something into yours: {or}{id}."  (text, line 260)
+- "You beat {name}. For a day the Combine can't get into your head (Breen's water won't fog you, and no nightmare can take you), and you've a second wind (you tire slower, hunger and thirst come slower).{extra}"  (on-screen notice, line 262)
+- "You held on"  (on-screen notice, line 265)
+- "You held on until {name} let go. You wake tired, but whole."  (on-screen notice, line 265)
+- "The nightmare stays with you"  (on-screen notice, line 269)
+- "You wake soaked in sweat, your hands shaking, weaker than you were: 30 off your health until your next full night's sleep."  (on-screen notice, line 269)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "The crash"  (on-screen notice, line 294)
-- "The stimulant wears off all at once. Your legs feel like lead: no running for a few minutes."  (on-screen notice, line 294)
+- "The crash"  (on-screen notice, line 296)
+- "The stimulant wears off all at once. Your legs feel like lead: no running for a few minutes."  (on-screen notice, line 296)
 
 ## vortigaunts (sv_livingcity_vort.lua)
 
@@ -17030,13 +17028,13 @@ Made from version dcab22d. Admin-only console messages and log lines are left ou
 - "A Commissary privilege for exemplary citizens. Strong"  (description, line 43)
 - "Very strong, very cheap, and one jar in five is a bad batch"  (description, line 45)
 - "Stimulant shot"  (name, line 46)
-- "Combine-issue, for units on double shifts. Fifteen minutes you couldn't sleep through if you tried: no dream can take you. Then the crash"  (description, line 47)
+- "Combine-issue, for units on double shifts. Fifteen minutes you couldn't sleep through if you tried: lights out waits, and tonight's dream goes by without you. Then the crash. One at a time: no second shot until you've slept and dreamt properly"  (description, line 47)
 
 > Note for you (not shown in game): The lab's foil hat (the owner, 8 November; sv_livingcity_bedtime.lua): put it on and sleep in it, and no dream reaches you once.
 
 - "Foil hat"  (name, line 49)
 - "Put it on"  (pocket button, line 49)
-- "A cap of foil, lined with copper wire. Sleep in it and no dream can reach you, tonight's or one waiting for you. Spent once it has kept one out"  (description, line 50)
+- "A cap of foil, lined with copper wire. Sleep in it and no dream can reach you. Spent once it has kept one out"  (description, line 50)
 
 > Note for you (not shown in game): Meat and fish, raw or cooked, go off after one city day (spoils = true; sv_livingcity_survival.lua, the owner, 7 November). A dead bird leaves its own kind: pigeon, crow or gull, all roast the same.
 

@@ -1,58 +1,61 @@
 --[[
-    Living City: bedtime, the night shift, missed dreams, and the chip
+    Living City: lights out, the night shift, stimulants, the foil hat, and the chip
 
     The owner, 8 November: "citizens get sleepy around the same time every
     night before the dreams start so that they all go to bed and dream at the
     same time", "human player metrocops should definitely need to sleep like
-    citizens, UNLESS they take a 'night shift' quest that is available for
-    them most nights ... and give a free stimulant shot if they visit a CP
-    commissary", "we don't want all rebels to purposely sleep only during the
-    day to avoid the dreams altogether", "the lab can make some sort of tin
-    foil hat or maybe they can surgically remove the chip", "if rebels get the
-    chip pulled, and if they can't dream, then they shouldn't have to sleep
-    with a black screen ... they can just sleep for 90 seconds instead".
+    citizens, UNLESS they take a 'night shift' quest", "the administrator
+    needs to go to bed just like citizens every night. Even in nightmares.
+    Same for administration staff", "make it so that all human players get
+    sleepy/exhausted at the same time and all need to sleep; the only way to
+    avoid this is a stimulant, which cannot be used two days/dreams/nights in
+    a row", "if they buy a stimulant to stay awake, then they miss the dream
+    until the next night ... they can't take another until they have slept
+    and dreamed fully", "the lab can make some sort of tin foil hat or maybe
+    they can surgically remove the chip", and for no chip "they can just
+    sleep for 90 seconds instead".
 
-    Bedtime (lc_bedtime 1). The chip pulls citizens and Civil Protection to
-    bed: whatever they slept in the day, they're due for bed at the good
-    night (21:00, the Administrator's "night" announcement), warned at the
-    usual six and two real minutes before ("Lights out soon"). Past it, out
-    of bed, they're tired (eyes closing, no running, weaker) until they
-    sleep. Anyone who has slept since dusk (19:00) is not pulled again that
-    night. The Resistance keep their own hours. The Administration doesn't
-    get tired at all, as before (and can still go to bed at night).
+    Lights out (lc_bedtime 1). Every player (citizens, the Resistance, Civil
+    Protection, the Administration and its staff, vortigaunts; not a stalker
+    or the infested, who never sleep) is due in bed at the good night (21:00,
+    the Administrator's "night" announcement), whatever they slept in the day,
+    warned about six and two real minutes before ("Lights out soon"). Past it,
+    out of bed, they're tired (eyes closing, no running, weaker) until they
+    sleep. They're done for the night once they've slept after the good
+    night, or woken from tonight's dream, or (with no dream coming tonight)
+    slept since dusk (19:00). So the only ways to be up when the dream comes:
+      - a stimulant shot: wide awake while it lasts, and lights out waits
+        until it wears off; then they're tired, and by the time they've slept
+        the dream has gone by: they miss it until the next night. ONE shot,
+        then no more until they've slept and dreamt a dream through (to its
+        end, or until they were out of it; on a night with no dream, a night's
+        sleep will do). A second one is refused ("your body won't take it").
+      - a Civil Protection unit on the night shift (below).
 
     The night shift (Civil Protection, Overwatch). Most nights
     (lc_nightshift_chance, 0.85) a "Night shift" directive goes up on their
     board (F4) from dusk: walk the patrol stops through the night. While on
     it (or once it's done) that night, no lights out for them, and a CP
-    Commissary issues them one free stimulant shot (once a night). The
-    city's own units patrol whether or not anyone takes it.
-
-    A dream you missed waits (lc_dream_catchup 1). Anyone with the chip
-    (citizens and the Resistance; not Civil Protection or the Administration)
-    who was awake when tonight's dream ran has it waiting behind their eyes:
-    the next time they sleep, they dream it alone (with stand-ins), before the
-    next dream night. Sleeping in the day doesn't get out of it. The ways out:
-    stay awake on stimulant shots without a break from the dream until dawn
-    (about two shots: then it fades at dawn), wear a foil hat to bed, or have
-    the chip pulled. Opting out of Happy and Neutral dreams still works.
+    Commissary issues them one free stimulant shot (once a night; the one-shot
+    rule still applies to taking it). The city's own units patrol whether or
+    not anyone takes it.
 
     The foil hat (the lab; contraband). Put it on (F3) and sleep in it: no
-    dream reaches you (tonight's or one waiting), and the hat's spent once
-    it has kept one out. It lasts one in-game day if it isn't needed.
+    dream reaches you, and the hat's spent once it has kept one out. It lasts
+    one in-game day if it isn't needed.
 
     The chip (the lab: "Pull the chip"). Pulling it takes special one-time
     tools and the codes to shut it down safely: lc_chip_price (500) credits,
     thirty seconds under. Only once you've lived through lc_chip_dreams (3)
     of the city's dreams (they have to be endured at first): the foil hat
-    needs the same. With no chip: no dreams at all, ever; sleep takes at most
-    lc_chipless_sleep (90) seconds and you get up on your own; but a unit who
-    checks your papers or searches you notices there's no implant signal one
-    time in lc_chip_notice (0.15): a crime, and you're marked.
+    needs the same. With no chip: no dreams at all, ever; still to bed at
+    lights out, but sleep takes at most lc_chipless_sleep (90) seconds and
+    you get up on your own; and a unit who checks your papers or searches you
+    notices there's no implant signal one time in lc_chip_notice (0.15): a
+    crime, and the papers fail.
 
-      lc_bedtime 0/1, lc_nightshift_chance (0.85), lc_dream_catchup 0/1,
-      lc_chip_price (500), lc_chip_dreams (3), lc_chipless_sleep (90),
-      lc_chip_notice (0.15)
+      lc_bedtime 0/1, lc_nightshift_chance (0.85), lc_chip_price (500),
+      lc_chip_dreams (3), lc_chipless_sleep (90), lc_chip_notice (0.15)
 ]]
 
 if CLIENT then return end
@@ -60,15 +63,14 @@ if CLIENT then return end
 LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvBed     = CreateConVar("lc_bedtime", "1", FLAGS, "Citizens and Civil Protection are due in bed at the good night (21:00), whatever they slept in the day (a night shift excuses a unit)")
+local cvBed     = CreateConVar("lc_bedtime", "1", FLAGS, "Every player is due in bed at the good night (21:00), whatever they slept in the day (a stimulant, once, or a unit's night shift excuses them)")
 local cvShift   = CreateConVar("lc_nightshift_chance", "0.85", FLAGS, "Chance each night that Civil Protection's board has a night shift (no lights out, a free stimulant at a CP Commissary)")
-local cvCatch   = CreateConVar("lc_dream_catchup", "1", FLAGS, "Someone with the chip who was awake for tonight's dream dreams it alone the next time they sleep (unless kept awake on stimulants till dawn)")
 local cvPrice   = CreateConVar("lc_chip_price", "500", FLAGS, "Credits to have the chip pulled at the Resistance lab (the one-time tools and codes; 0: not offered)")
 local cvNeed    = CreateConVar("lc_chip_dreams", "3", FLAGS, "Dreams someone must have lived through before the lab will pull their chip or make them a foil hat")
 local cvSleep   = CreateConVar("lc_chipless_sleep", "90", FLAGS, "Most seconds a night's sleep takes with no chip (no dream to wait for: they get up on their own)")
 local cvNotice  = CreateConVar("lc_chip_notice", "0.15", FLAGS, "Chance a unit checking papers or searching someone notices there's no implant signal")
 
-local S = LC.BedtimeState or { eve = 0, roll = {}, missed = {} }
+local S = LC.BedtimeState or { eve = 0, roll = {} }
 LC.BedtimeState = S
 
 local function Notice(p, kind, title, text, secs) if LC.Notice then LC.Notice(p, kind, title, text, secs) elseif p.ChatPrint then p:ChatPrint(title .. ": " .. text) end end
@@ -76,7 +78,6 @@ local function DayLen() return math.max(60, GetGlobal2Float("lc_day_len", 1440))
 local function Faction(p) return p:GetNW2String("lcf_faction", "") end
 local function Sid(p) return p.SteamID64 and p:SteamID64() or tostring(p) end
 local function Phase() return LC.DayPhase and LC.DayPhase() or "day" end
-local function BySid(sid) for _, p in ipairs(player.GetAll()) do if Sid(p) == sid then return p end end return nil end
 
 ------------------------------------------------------------------------
 -- The chip
@@ -107,6 +108,7 @@ end)
 hook.Add("LivingCityNewCharacter", "LivingCityBedtime", function(p)
     p:SetPData("lc_chipless", "0")
     p:SetPData("lc_dreams_endured", "0")
+    p:SetPData("lc_stim_locked", "0")
     p.lcFoilUntil = nil
     p:SetNW2Bool("lc_chipless", false)
 end)
@@ -142,7 +144,7 @@ function LC.FoilHatUse(p, id)
     if not LC.TakeItem(p, id or "foil_hat") then return false end
     p.lcFoilUntil = CurTime() + DayLen()
     p:EmitSound("physics/metal/metal_box_scrape_rough_loop1.wav", 50, 160)
-    Notice(p, "info", "Foil hat on", "It crinkles as you pull it down. Sleep in it and no dream can reach you (tonight's, or one waiting for you); it's spent once it has kept one out. "
+    Notice(p, "info", "Foil hat on", "It crinkles as you pull it down. Sleep in it and no dream can reach you; it's spent once it has kept one out. "
         .. "It's contraband: don't let a unit see you in it.", 9)
     return true
 end
@@ -167,24 +169,38 @@ function LC.OnNightShift(p)
     return p.lcNightShiftDone == S.eve
 end
 
--- Does the chip's bedtime pull them?
+-- Does lights out pull them? Everyone who sleeps (a stalker and the infested never do), except a
+-- unit on the night shift (the owner, 8 November: "all human players get sleepy/exhausted at the same time").
 function LC.BedtimeFor(p)
     if not cvBed:GetBool() or not IsValid(p) then return false end
     local f = Faction(p)
-    if f == "citizen" then return true end
-    if f == "cp" then return not LC.OnNightShift(p) end
-    return false
+    if f == "stalker" or f == "zombie" then return false end
+    if f == "cp" and LC.OnNightShift(p) then return false end
+    return true
 end
 
--- When they're due in bed (CurTime), or nil: the good night (21:00), unless they've slept since dusk.
--- (sv_livingcity_rest.lua takes the sooner of this and their usual time.)
+-- Tonight's good night (CurTime of 21:00; after midnight, last night's), and the hour now.
+local function GoodNight(now, len)
+    local h = ((now - GetGlobal2Float("lc_day_zero", 0)) / len * 24) % 24
+    local bed = now - h / 24 * len + 21 / 24 * len
+    if h < 5 then bed = bed - len end
+    return bed, h
+end
+
+-- When they're due in bed (CurTime), or nil. The good night (21:00), unless they're done for the
+-- night: slept after it, woken from tonight's dream, or (no dream tonight) slept since dusk. A
+-- stimulant holds it off while it lasts. (sv_livingcity_rest.lua takes the sooner of this and their usual time.)
 function LC.BedtimeDue(p)
     if not LC.BedtimeFor(p) then return nil end
     local len, now = DayLen(), CurTime()
-    local h = ((now - GetGlobal2Float("lc_day_zero", 0)) / len * 24) % 24
-    local bed = now - h / 24 * len + 21 / 24 * len -- (today's 21:00)
-    if h < 5 then bed = bed - len end -- (after midnight: last night's)
-    if (p.lcAwakeSince or now) >= bed - 2 / 24 * len then bed = bed + len end -- (slept since dusk: tomorrow night's)
+    local bed, h = GoodNight(now, len)
+    local tonight = h >= 19 or h < 5
+    local since = p.lcAwakeSince or now
+    local noDream = S.dreamEve ~= S.eve and not (LC.DreamTonightPending and LC.DreamTonightPending())
+    if since >= bed or (tonight and p.lcDreamtEve == S.eve) or (tonight and noDream and since >= bed - 2 / 24 * len) then
+        bed = bed + len -- (done for tonight: tomorrow night's)
+    end
+    if LC.Wired and LC.Wired(p) then bed = math.max(bed, p:GetNW2Float("lc_wired_until", 0)) end
     return bed
 end
 function LC.IsBedtimeDue(p, due)
@@ -193,19 +209,31 @@ function LC.IsBedtimeDue(p, due)
 end
 
 ------------------------------------------------------------------------
+-- Stimulants: one, then not again until you've slept and dreamt properly
+------------------------------------------------------------------------
+
+LC.StimLockedText = "Your body won't take another one. You haven't slept and dreamt properly since the last (sleep through a night, and its dream if there is one)."
+function LC.StimLocked(p) return IsValid(p) and p.GetPData and p:GetPData("lc_stim_locked", "0") == "1" end
+local function Unlock(p) if LC.StimLocked(p) then p:SetPData("lc_stim_locked", "0") end end
+hook.Add("LivingCityConsumed", "LivingCityBedtime", function(p, id)
+    local it = LCS and LCS.Items and LCS.Items[id]
+    if not (it and it.vice == "stim") then return end
+    p:SetPData("lc_stim_locked", "1")
+    local h = LC.Hour and LC.Hour() or 12
+    p.lcStimEve = (h >= 19 or h < 5) and S.eve or (S.eve + 1) -- (the night it keeps them up through)
+end)
+
+------------------------------------------------------------------------
 -- The night shift
 ------------------------------------------------------------------------
 
 hook.Add("LivingCityDayPhase", "LivingCityBedtime", function(phase)
     if phase == "dusk" then S.eve = (S.eve or 0) + 1 end
     if phase == "dawn" then
-        -- kept awake on stimulants all night: what they missed fades
-        for sid, m in pairs(S.missed) do
-            local p = BySid(sid)
-            if m.wired and IsValid(p) and LC.Wired and LC.Wired(p) then
-                S.missed[sid] = nil
-                Notice(p, "info", "Morning", "You kept yourself awake all night. Whatever the city dreamt has slipped past you.", 8)
-            end
+        -- a night's sleep (and not a night kept up on a stimulant): another shot allowed
+        local dusk = CurTime() - 10 / 24 * DayLen()
+        for _, p in ipairs(player.GetAll()) do
+            if LC.StimLocked(p) and p.lcStimEve ~= S.eve and (p.lcAwakeSince or 0) >= dusk then Unlock(p) end
         end
     end
 end)
@@ -274,59 +302,26 @@ hook.Add("LivingCityQuestAccepted", "LivingCityBedtime", function(p, q)
 end)
 
 ------------------------------------------------------------------------
--- A dream you missed waits for your next sleep
+-- Tonight's dream: who's been in it, and the foil hat
 ------------------------------------------------------------------------
 
-function LC.DreamMissed(p) return IsValid(p) and S.missed[Sid(p)] or nil end
-
 hook.Add("LivingCityDreamStarted", "LivingCityBedtime", function(dream)
-    if S.solo then return end -- (a missed dream, dreamt alone: nobody else's business)
+    local ph = Phase()
+    if ph == "dusk" or ph == "night" then S.dreamEve = S.eve end
     local forced = dream.forced or dream.mood == "nightmare"
     -- the hat kept someone asleep out of it (who'd have dreamt it otherwise): spent
     for _, p in ipairs(player.GetAll()) do
         if p.lcSleep and not p.lcDreaming and LC.FoilOn(p) and not LC.Chipless(p) and (forced or not (LC.DreamOptedOut and LC.DreamOptedOut(p))) then FoilSpent(p) end
     end
-    if not cvCatch:GetBool() then return end
-    S.missed = {} -- (a new dream: whatever was waiting from the last one is gone)
-    for _, p in ipairs(player.GetAll()) do
-        if p:Alive() and not p.lcDreaming and not p.lcSleep and LC.Chipped(p)
-            and (forced or not (LC.DreamOptedOut and LC.DreamOptedOut(p)))
-            and not (LC.Unbroken and LC.Unbroken(p)) then
-            S.missed[Sid(p)] = { id = dream.ending, wired = (LC.Wired and LC.Wired(p)) or false, t = CurTime() }
-            p:ChatPrint("You feel a pull behind your eyes, as if something is waiting for you to fall asleep.")
-        end
-    end
 end)
 
-function LC.DreamCatchupTick(now)
-    if not cvCatch:GetBool() then return end
-    for sid, m in pairs(S.missed) do
-        local p = BySid(sid)
-        if m.t and now - m.t > DayLen() * 2 then S.missed[sid] = nil -- (two days on: gone)
-        elseif IsValid(p) then
-            -- the stimulant chain: one break in it during the night and the dream keeps waiting
-            local ph = Phase()
-            if m.wired and (ph == "night" or ph == "dusk") and not (LC.Wired and LC.Wired(p)) then m.wired = false end
-            if not LC.Chipped(p) then S.missed[sid] = nil
-            elseif p.lcSleep and p.lcSleep.done and not p.lcDreaming and now >= (p.lcSleep.t0 or now) + 8 and not LC.DreamActive and not (LC.EndingBusy and LC.EndingBusy()) then
-                S.missed[sid] = nil
-                if LC.FoilOn(p) then FoilSpent(p)
-                elseif LC.DreamStart then
-                    S.solo = true
-                    local ok, why = LC.DreamStart(m.id, nil, false, nil, true, { p })
-                    S.solo = nil
-                    if ok then
-                        Notice(p, "warn", "The dream you missed", "It was waiting for you. Tonight's dream takes you as you fall asleep: you dream it now, on your own. "
-                            .. "You'll wake in your bed with everything you had.", 10)
-                    elseif LC.Log then LC.Log("info", "Missed dream for " .. p:Nick() .. " didn't happen: " .. tostring(why)) end
-                end
-            end
-        end
-    end
-end
-timer.Create("LivingCityDreamCatchup", 2, 0, function()
-    local ok, err = pcall(LC.DreamCatchupTick, CurTime())
-    if not ok and LC.Error then LC.Error("bedtime", err) end
+-- Woken from tonight's dream: done for the night; and dreamt through (not woken early), another stimulant allowed.
+hook.Add("LivingCityDreamWoke", "LivingCityBedtimeNight", function(p, ok, why)
+    if not IsValid(p) then return end
+    local ph = Phase()
+    if ph == "dusk" or ph == "night" then p.lcDreamtEve = S.eve end
+    if why ~= "optout" or p.lcDreamWokeFull then Unlock(p) end
+    p.lcDreamWokeFull = nil
 end)
 
 ------------------------------------------------------------------------

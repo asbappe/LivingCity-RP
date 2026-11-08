@@ -1022,11 +1022,13 @@ Notes:
   Notes:
 - [ ] **Enforcers:** a unit asleep for a nightmare (try the maze): told "You will be in it as an Enforcer", a baton, the blue line on screen, can wake from C > Settings. A dreamer standing still 20 s glows red; hit them: a life gone, +1 XP on waking. A Happy dream: the unit dreams it normally.
   Notes:
-- [ ] **Lights out:** as a citizen (or a unit), sleep at midday, then watch for "Lights out soon" before 21:00 and the eyes closing after it until you sleep.
+- [ ] **Lights out:** as a rebel and as the Administrator (each), sleep at midday, then watch for "Lights out soon" before 21:00 and the eyes closing after it until you sleep. Get up again before the dream comes: tired again.
   Notes:
 - [ ] **Night shift:** as a unit at dusk, the Night shift is first on F4; take it: no lights out; use a CP Commissary: one stimulant shot, only once that night.
   Notes:
-- [ ] **A missed dream:** stay awake as a citizen while a dream runs ("a pull behind your eyes"), then sleep: you dream it alone with stand-ins. Two stimulant shots through the night instead: it fades at dawn.
+- [ ] **One stimulant:** take a shot before 21:00: no lights out until it wears off, and the dream goes by without you. Try a second: refused. Sleep (and dream) the next night: a shot works again.
+  Notes:
+- [ ] **Five-minute safeguard:** an ending with a long song as a dream: everyone wakes at five minutes, with everything back.
   Notes:
 - [ ] **Foil hat and the chip:** a rebel with fewer than 3 dreams lived through: the lab says not yet. With 3: make a foil hat, put it on (F3), sleep through a nightmare untouched (hat spent). Pull the chip (500): no dreams, sleep ends by itself after 90 s; get searched a few times: now and then "no implant signal".
   Notes:

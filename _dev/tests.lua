@@ -14383,32 +14383,37 @@ _run(2.5)
 _setcvar("lc_dream_min", 6)
 Up(a)
 
--- a dream you missed waits for your next sleep
-Asleep(b, CITY)
+-- stimulants: one, then not again until you've slept and dreamt properly
+a:SetPData("lc_stim_locked", "0")
 a:SetNW2Float("lc_wired_until", 0)
-local okW, dw = LC.DreamStart("maze", nil, false, nil, true)
-ok(okW and LC.DreamMissed(a) and LC.DreamMissed(a).id == "maze" and not LC.DreamMissed(b) and not LC.DreamMissed(cop),
-    "awake for tonight's dream (with the chip): it waits for you; not for the dreamers, nor for Civil Protection")
-if okW then LC.DreamGameStop(dw, "admin") end
-_run(2.5)
-Up(b)
-Asleep(a, CITY)
-_run(2.5)
-local solo = LC.DreamActive
-ok(solo and solo.game and #solo.list == 1 and solo.list[1] == a and #solo.game.standins == 5 and not LC.DreamMissed(a),
-    "the next time they sleep they dream it alone, with stand-ins", solo and #solo.list or "no dream")
-if solo then LC.DreamGameStop(solo, "admin") end
-_run(2.5)
-Up(a)
--- kept awake on stimulants all night: it fades at dawn; a break in the chain and it keeps waiting
-local sa, sb = a:SteamID64(), b:SteamID64()
-BS.missed[sa] = { id = "maze", wired = true, t = CurTime() }
-BS.missed[sb] = { id = "maze", wired = false, t = CurTime() }
-a:SetNW2Float("lc_wired_until", CurTime() + 900)
+LC.GiveItem(a, "stimulant", 2)
+ok(LC.ViceUse(a, "stimulant") == true and LC.StimLocked(a) and LC.Wired(a), "a stimulant: wide awake")
+local okS2, whyS2 = LC.ViceUse(a, "stimulant")
+ok(okS2 == false and whyS2 == LC.StimLockedText and LC.HasItem(a, "stimulant"), "a second one is refused (and stays in your pockets)", tostring(whyS2))
+a:SetNW2Float("lc_wired_until", 0)
+a.lcStimEve = BS.eve
+a.lcAwakeSince = CurTime()
 hook.Run("LivingCityDayPhase", "dawn")
-ok(BS.missed[sa] == nil and BS.missed[sb] ~= nil, "awake on stimulants till dawn: it fades; otherwise it keeps waiting")
-BS.missed = {}
-a:SetNW2Float("lc_wired_until", 0)
+ok(LC.StimLocked(a), "the night it kept you up through doesn't count, even after a nap")
+a.lcStimEve = (BS.eve or 0) - 1
+hook.Run("LivingCityDayPhase", "dawn")
+ok(not LC.StimLocked(a), "a night's sleep after it: another one allowed")
+a:SetPData("lc_stim_locked", "1")
+a.lcDreamWokeFull = nil
+hook.Run("LivingCityDreamWoke", a, true, "optout")
+ok(LC.StimLocked(a), "(woken early from a dream: not yet)")
+hook.Run("LivingCityDreamWoke", a, true, "end")
+ok(not LC.StimLocked(a), "a dream dreamt through: another one allowed")
+LC.TakeItem(a, "stimulant", 5)
+
+-- the safeguard: no dream lasts more than lc_dream_max_minutes (5)
+Asleep(b, CITY)
+local okT, dt = LC.DreamStart("maze", nil, false, nil, true)
+ok(okT and b.lcDreaming, "(a dream begins)")
+if okT then dt.started = CurTime() - 301 end
+_run(3)
+ok(LC.DreamActive == nil and not b.lcDreaming and dt.timedOut, "still going after five minutes: ended, and everyone woken")
+Up(b)
 
 -- the foil hat
 LC.GiveItem(reb, "foil_hat", 1)
@@ -14453,19 +14458,41 @@ _setcvar("lc_chip_notice", 0.15)
 reb:SetPData("lc_chipless", "0")
 reb:SetPData("lc_dreams_endured", "0")
 
--- bedtime
+-- lights out: everyone (the owner, 8 November: "all human players get sleepy/exhausted at the same time")
 LC.SetHour(12)
 a.lcAwakeSince = CurTime()
 local len = GetGlobal2Float("lc_day_len", 3600)
 local due = LC.BedtimeDue(a)
 ok(due and math.abs(due - (CurTime() + 9 / 24 * len)) < 2 and LC.TiredDue(a) <= due + 0.01, "a citizen is due in bed at the good night (21:00), whatever they slept", due and (due - CurTime()))
-ok(LC.BedtimeDue(reb) == nil, "the Resistance keep their own hours")
-cop.lcAwakeSince = CurTime()
-ok(LC.BedtimeDue(cop) ~= nil, "Civil Protection are due in bed too")
+reb.lcAwakeSince, cop.lcAwakeSince = CurTime(), CurTime()
+local adm = newPlayer("DCAdm", "admin")
+adm.lcAwakeSince = CurTime()
+ok(LC.BedtimeDue(reb) and LC.BedtimeDue(cop) and LC.BedtimeDue(adm) and math.abs(LC.BedtimeDue(adm) - due) < 2, "the Resistance, Civil Protection and the Administration too")
+local listWas = player.GetAll
+player.GetAll = function() return { adm } end
+adm.lcAwakeSince = CurTime() - len * 2
 LC.SetHour(22)
+LC.RestTick(CurTime())
+player.GetAll = listWas
+ok(LC.IsTired(adm), "the Administrator gets tired like anyone")
+adm:SetPos(Vector(-122000, -122000, 0))
+a:SetNW2Float("lc_wired_until", CurTime() + 600)
+ok(LC.BedtimeDue(a) >= CurTime() + 599, "a stimulant holds lights out off while it lasts")
+a:SetNW2Float("lc_wired_until", 0)
+local realPending = LC.DreamTonightPending
 a.lcAwakeSince = CurTime() - 10
-local due2 = LC.BedtimeDue(a)
-ok(due2 and due2 - CurTime() > len * 0.9, "slept since dusk: not pulled again tonight", due2 and (due2 - CurTime()))
+LC.DreamTonightPending = function() return true end
+ok(LC.BedtimeDue(a) - CurTime() > len * 0.9, "slept after the good night: done for tonight")
+a.lcAwakeSince = CurTime() - 2 / 24 * len
+ok(LC.BedtimeDue(a) <= CurTime(), "slept at dusk with a dream still to come: back to bed")
+a.lcDreamtEve = BS.eve
+ok(LC.BedtimeDue(a) - CurTime() > len * 0.5, "woken from tonight's dream: done for tonight")
+a.lcDreamtEve = nil
+LC.DreamTonightPending = function() return false end
+local dEve = BS.dreamEve
+BS.dreamEve = nil
+ok(LC.BedtimeDue(a) - CurTime() > len * 0.5, "slept at dusk, and no dream tonight: done for tonight")
+BS.dreamEve, LC.DreamTonightPending = dEve, realPending
 -- the night shift
 BS.roll[BS.eve or 0] = true
 local tmpl
@@ -15449,8 +15476,10 @@ LC.ItemUse(p, "stimulant")
 local okS, whyS = LC.SleepIn(p, nil)
 ok(LC.Wired(p) and not okS and string.find(tostring(whyS), "wired", 1, true), "a stimulant: you can't fall asleep", whyS)
 local hp = p:Health()
-LC.ItemUse(p, "stimulant")
-ok(p:Health() == math.max(1, hp - 10), "a second on top of the first: your heart pounds (health lost)")
+local okS2 = LC.ItemUse(p, "stimulant")
+ok(not okS2 and p:Health() == hp and LC.HasItem(p, "stimulant"), "a second is refused until you've slept and dreamt properly (the owner, 8 November)")
+p:SetPData("lc_stim_locked", "0")
+LC.TakeItem(p, "stimulant", 1)
 p:SetNW2Float("lc_wired_until", CurTime() - 1)
 _run(1.1)
 ok(LC.Crashing(p), "when it wears off you crash (no running for a while)")

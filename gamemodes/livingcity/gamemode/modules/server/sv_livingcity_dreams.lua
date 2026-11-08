@@ -60,6 +60,7 @@ local cvOn      = CreateConVar("lc_dreams", "1", FLAGS, "With a dream point plac
 local cvDelay   = CreateConVar("lc_dream_delay", "60", FLAGS, "Seconds after the Administrator says good night (the night announcement) before tonight's dream starts")
 local cvRadius  = CreateConVar("lc_dream_radius", "1500", FLAGS, "How far from the dream point an ending's people, props and flying may go, with no dream zone placed")
 local cvNightly = CreateConVar("lc_dream_every_night", "0", FLAGS, "On a night with no ending waiting, dream a random one anyway (when the cooldown allows)")
+local cvMax     = CreateConVar("lc_dream_max_minutes", "5", FLAGS, "A safeguard: any dream still going this many minutes after it began is ended, and everyone in it woken (0: no limit)")
 local cvCombine = CreateConVar("lc_dream_combine", "6", FLAGS, "Civil Protection units a dream brings along for the endings that have the Combine in them (never the city's own)")
 local cvMoods   = CreateConVar("lc_dream_moods", "bus=happy,plane=happy,hard=happy,shalom=happy,bloom=neutral,fire=neutral,base=neutral,harpies=nightmare,marrow=nightmare,water=nightmare,standup=nightmare",
     FLAGS, "Each ending's mood as a dream, for the Administrator's tablet: id=happy, id=neutral or id=nightmare, comma-separated (an ending not listed is neutral)")
@@ -241,6 +242,10 @@ function LC.DreamWakeAsked(p)
     if not IsValid(p) or not p.lcDreaming then return false end
     local ok, why = LC.DreamCanWake(p)
     if not ok then Notice(p, "warn", "A nightmare", why, 6) return false end
+    -- (through with it already: out of it, or won; else woken early. Stimulants: sv_livingcity_bedtime.lua)
+    local dream, g = LC.DreamActive, LC.DreamActive and LC.DreamActive.game
+    p.lcDreamWokeFull = (dream and (dream.forced or dream.mood == "nightmare") and not p.lcDreamEnforcer)
+        or (g and g.pl[p] and g.pl[p].done) or p.lcEndSpectating or nil
     LC.DreamWakeOne(p, "optout")
     return true
 end
@@ -920,8 +925,7 @@ end
 
 -- Dream an ending now, with everyone asleep (also: an admin testing it, awake). vote: the G-Man's
 -- vote first (among the dreamers). True, or false and why not.
--- only: these dreamers and nobody else (a dream someone missed, dreamt alone: sv_livingcity_bedtime.lua).
-function LC.DreamStart(id, by, vote, also, force, only)
+function LC.DreamStart(id, by, vote, also, force)
     if not cvOn:GetBool() then return false, "Dreams are off (lc_dreams 0)." end
     local pt = LC.DreamPoint()
     if not pt then return false, "There's no dream point on this map: place one with the Living City Editor (Point: dream)." end
@@ -930,7 +934,7 @@ function LC.DreamStart(id, by, vote, also, force, only)
     if LC.EndingBusy and LC.EndingBusy() then return false, "An ending is already under way." end
     if LC.DreamActive then return false, "A dream is already under way." end
     if not force and not game and LC.EndingCooldownLeft and LC.EndingCooldownLeft() > 0 then return false, "Not yet (" .. math.ceil(LC.EndingCooldownLeft() / 60) .. " minutes of the endings' cooldown left)." end
-    local who = only or LC.DreamSleepers(LC.DreamMood(id), id)
+    local who = LC.DreamSleepers(LC.DreamMood(id), id)
     if IsValid(also) and not also.lcDreaming and also:Alive() and not table.HasValue(who, also) then who[#who + 1] = also end
     if #who == 0 then return false, "Nobody is asleep to dream it." end
     -- Enforcers watch over a dream; they don't dream it on their own (the owner, 8 November)
@@ -976,6 +980,13 @@ function LC.DreamQueueEnding(id, by, source)
     return true
 end
 function LC.DreamQueued() return S.queued end
+-- A dream still to come tonight (or under way): lights out keeps everyone in bed for it (sv_livingcity_bedtime.lua).
+function LC.DreamTonightPending()
+    if LC.DreamActive then return true end
+    if not LC.DreamReady() then return false end
+    if LC.DayPhase and LC.DayPhase() == "night" and S.dreamedNight == S.night then return false end
+    return S.queued ~= nil or cvNightly:GetBool()
+end
 
 -- The Administrator's tablet (sv_livingcity_cityadmin.lua): tonight's dream, by mood.
 function LC.DreamOffice()
@@ -1114,6 +1125,20 @@ timer.Create("LivingCityDreams", 1, 0, function()
         end
         -- in a dream: its NPCs held still, its people kept inside it
         local dream = LC.DreamActive
+        -- the safeguard (the owner, 8 November: "ALL dreams will end for all players after 5 minutes ... in case
+        -- they get bugged/glitched"): ended, everything it made removed, everyone woken with everything put back
+        local maxSecs = cvMax:GetFloat() * 60
+        if dream and maxSecs > 0 and now - (dream.started or now) >= maxSecs then
+            Log("warn", string.format("Dream: %s still going after %d minutes: ended by the safeguard", tostring(dream.ending), math.floor(maxSecs / 60)))
+            for _, p in ipairs(LC.DreamersOf(dream)) do Notice(p, "info", "The dream fades", "It loosens its grip, and you wake.", 6) end
+            dream.timedOut = true
+            if dream.game and not dream.game.stopped and LC.DreamGameStop then pcall(LC.DreamGameStop, dream, "time limit") end
+            local E0 = LC.EndingAny and LC.EndingAny()
+            if E0 and E0.dream == dream and LC.CancelEnding then pcall(LC.CancelEnding) end
+            if LC.DreamActive == dream then LC.DreamWake(dream) end
+            if LC.DreamActive == dream then LC.DreamActive = nil end -- (whatever happened, the next one isn't held up)
+            return
+        end
         local E = LC.EndingAny and LC.EndingAny()
         if dream and dream.game then
             -- (a dream you play keeps its own dreamers in its arena: sv_livingcity_dreamgames.lua)

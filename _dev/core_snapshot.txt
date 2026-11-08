@@ -532,11 +532,11 @@ setting lc_directives = 0
 setting lc_disguise_risk = 5
 setting lc_downed = 1
 setting lc_downed_secs = 90
-setting lc_dream_catchup = 1
 setting lc_dream_combine = 6
 setting lc_dream_delay = 60
 setting lc_dream_enforcer_xp = 1
 setting lc_dream_every_night = 0
+setting lc_dream_max_minutes = 5
 setting lc_dream_min = 6
 setting lc_dream_moods = bus=happy,plane=happy,hard=happy,shalom=happy,bloom=neutral,fire=neutral,base=neutral,harpies=nightmare,marrow=nightmare,water=nightmare,standup=nightmare
 setting lc_dream_radius = 1500

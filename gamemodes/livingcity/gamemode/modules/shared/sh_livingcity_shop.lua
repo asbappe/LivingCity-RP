@@ -44,10 +44,10 @@ LCS.Items = {
     moonshine       = { name = "Moonshine", model = "models/props_junk/glassjug01.mdl", use = "vice", useLabel = "Drink", vice = "drink", strength = 3, quench = -10, badChance = 0.2,
                         contraband = true, conceal = 0.4, desc = "Very strong, very cheap, and one jar in five is a bad batch" },
     stimulant       = { name = "Stimulant shot", model = "models/props_lab/jar01a.mdl", use = "vice", useLabel = "Take", vice = "stim", kg = 0.05,
-                        contraband = true, conceal = 0.7, desc = "Combine-issue, for units on double shifts. Fifteen minutes you couldn't sleep through if you tried: no dream can take you. Then the crash" },
+                        contraband = true, conceal = 0.7, desc = "Combine-issue, for units on double shifts. Fifteen minutes you couldn't sleep through if you tried: lights out waits, and tonight's dream goes by without you. Then the crash. One at a time: no second shot until you've slept and dreamt properly" },
     -- The lab's foil hat (the owner, 8 November; sv_livingcity_bedtime.lua): put it on and sleep in it, and no dream reaches you once.
     foil_hat        = { name = "Foil hat", model = "models/props_junk/PopCan01a.mdl", use = "foilhat", useLabel = "Put it on", kg = 0.05,
-                        contraband = true, conceal = 0.5, desc = "A cap of foil, lined with copper wire. Sleep in it and no dream can reach you, tonight's or one waiting for you. Spent once it has kept one out" },
+                        contraband = true, conceal = 0.5, desc = "A cap of foil, lined with copper wire. Sleep in it and no dream can reach you. Spent once it has kept one out" },
 
     -- Meat and fish, raw or cooked, go off after one city day (spoils = true; sv_livingcity_survival.lua,
     -- the owner, 7 November). A dead bird leaves its own kind: pigeon, crow or gull, all roast the same.

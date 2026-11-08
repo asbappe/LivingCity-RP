@@ -39,6 +39,9 @@
     it waits till the fighting's over (five minutes at most). On a job, the
     job stays your next step on screen; the bed is still in F1 > What now?.
 
+    On top of all that, lights out (sv_livingcity_bedtime.lua): everyone is due
+    in bed at the good night, whatever they slept in the day.
+
       lc_sleep 0/1, lc_sleep_seconds (60), lc_tired_days (1),
       lc_citizens_sleep 0/1 (1)
 ]]
@@ -57,8 +60,10 @@ local TIRED_HP = 25
 
 local function DayLen() return math.max(60, GetGlobal2Float("lc_day_len", 1440)) end
 local function Notice(ply, kind, title, text, secs) if LC.Notice then LC.Notice(ply, kind, title, text, secs) else ply:ChatPrint(title .. ": " .. text) end end
+-- (the Administration sleeps like everyone else: the owner, 8 November, "the administrator needs to go to
+-- bed just like citizens every night. Even in nightmares. Same for administration staff")
 local function Exempt(ply)
-    return not ply:Alive() or (LC.PlayerIsZombie and LC.PlayerIsZombie(ply)) or ply:GetNW2String("lcf_faction", "") == "admin"
+    return not ply:Alive() or (LC.PlayerIsZombie and LC.PlayerIsZombie(ply))
         or ply:GetNW2String("lcf_faction", "") == "stalker" -- (a stalker doesn't sleep: it works)
 end
 
@@ -79,8 +84,8 @@ LC.TiredWarnSecs = { WARN1, WARN2 }
 -- When they'll be exhausted (CurTime). Everyone: lc_tired_days of the city's days awake. A
 -- citizen keeps the city's hours: at the soonest three quarters of that, then only once it's
 -- evening or night (21:00 to 5:00), or at the latest a quarter more than it (a night skipped).
--- (Bedtime, the owner, 8 November: citizens and Civil Protection are due in bed at the good night
--- whatever they slept in the day, unless a unit is on the night shift: LC.BedtimeDue, sv_livingcity_bedtime.lua.
+-- (Lights out, the owner, 8 November: everyone is due in bed at the good night whatever they slept in
+-- the day; a stimulant, once, or a unit's night shift holds it off: LC.BedtimeDue, sv_livingcity_bedtime.lua.
 -- The sooner of the two.)
 function LC.TiredDue(ply)
     local due = LC.TiredDueOwn(ply)

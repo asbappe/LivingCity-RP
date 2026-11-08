@@ -142,7 +142,7 @@ local function Stim(p, it)
     if LC.Feed then LC.Feed(p, 0, -8) end
     Calm(p)
     p:EmitSound("items/medshot4.wav", 55)
-    Notice(p, "info", "Wide awake", "Your eyes snap open and your heart quickens. For the next fifteen minutes you couldn't sleep if you tried, and no dream can take you.", 8)
+    Notice(p, "info", "Wide awake", "Your eyes snap open and your heart quickens. For the next fifteen minutes you couldn't sleep if you tried: lights out waits, and no dream can take you. No second shot until you've slept and dreamt properly.", 8)
     return true
 end
 
@@ -154,6 +154,8 @@ function LC.ViceUse(p, id)
     local fn = it and USES[it.vice]
     if not fn then return false end
     if p.lcSleep then return false, "Not while you're asleep." end
+    -- one stimulant, then not again until you've slept and dreamt properly (sv_livingcity_bedtime.lua)
+    if it.vice == "stim" and LC.StimLocked and LC.StimLocked(p) then return false, LC.StimLockedText end
     if not LC.HasItem(p, id) then return false end
     LC.TakeItem(p, id, 1)
     fn(p, it)
