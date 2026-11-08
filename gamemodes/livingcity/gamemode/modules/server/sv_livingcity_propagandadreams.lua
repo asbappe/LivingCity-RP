@@ -992,29 +992,32 @@ do
         { q = "Who keeps you safe at night?", a = { "administrator", "combine", "overwatch", "civil protection", "metrocops", "police", "her", "you", "she", "breen", "union", "cp", "officers", "soldiers" } },
         { q = "What do we do when an officer speaks to us?", a = { "obey", "comply", "listen", "kneel", "salute", "respect", "surrender", "submit", "bow", "attention" } },
         { q = "Where does your ration come from?", a = { "administrator", "combine", "union", "her", "you", "generosity", "kindness", "breen", "city", "benevolence", "grace" } },
-        { q = "What are the people who call themselves the Resistance?", a = { "criminals", "terrorists", "anticitizens", "anti citizens", "traitors", "malcontents", "vermin", "thugs", "liars", "scum", "parasites", "enemies", "cowards", "savages" } },
+        { q = "What are the people who call themselves the Resistance?", swearOk = true, a = { "criminals", "terrorists", "anticitizens", "anti citizens", "traitors", "malcontents", "vermin", "thugs", "liars", "scum", "parasites", "enemies", "cowards", "savages" } },
         { q = "Complete the phrase: Compliance is...", a = { "safety", "happiness", "freedom", "love", "life", "peace", "rewarded", "good", "safe", "happy", "duty", "strength", "virtue" } },
         { q = "How would you describe the Administrator?", a = {} }, -- (any word she likes: LC.AdmireWords)
-        { q = "What should you do if you see a rebel?", a = { "report", "inform", "tell", "call", "alert", "rat", "snitch", "warn", "notify", "denounce" } },
+        { q = "What should you do if you see a rebel?", swearOk = true, a = { "report", "inform", "tell", "call", "alert", "rat", "snitch", "warn", "notify", "denounce" } },
         { q = "Who is your best friend?", a = { "administrator", "combine", "overwatch", "civil protection", "her", "you", "the city", "breen", "union", "cp" } },
         { q = "What happens to those who disobey?", a = { "punished", "relocated", "reeducated", "re educated", "processed", "corrected", "amputated", "detained", "arrested", "executed", "removed", "disappear", "jailed", "imprisoned" } },
         { q = "What is the most important thing a citizen can be?", a = { "loyal", "obedient", "compliant", "productive", "grateful", "useful", "quiet", "happy", "faithful", "devoted", "silent", "good" } },
     }
     for i, q in ipairs(LC.QuizQuestions) do LC.PropagandaCues["quiz_q" .. i] = q.q end
     LC.QuizThoughtcrime = { "freeman", "gordon", "lambda", "revolution", "uprising", "overthrow", "alyx", "vance", "kleiner", "rebellion" }
-    local FORBID = {}
-    for _, w in ipairs(LC.QuizThoughtcrime) do FORBID[#FORBID + 1] = w end
-    for _, w in ipairs(LC.CombineInsults) do FORBID[#FORBID + 1] = w end
     -- Swears, curses and rude words are thoughtcrime in her studio too (the owner, 8 November: "make
-    -- sure to add swears, insults, curses, rude words, etc to the thoughtcrime list"). Spelled as here
-    -- or with an ending (fucking, shits), no typos: one letter off, they're everyday words (pissed,
-    -- passed). Not the insults that answer a question (scum, liars, vermin: the Resistance).
-    LC.QuizSwears = { "fuck", "fucker", "fuckers", "motherfucker", "fck", "fuk", "wtf", "stfu", "shit", "shitty", "bullshit", "crap", "damn", "dammit", "goddamn", "goddammit",
-        "hell", "ass", "arse", "asshole", "arsehole", "bastard", "bitch", "bitchy", "bollocks", "bugger", "cunt", "dick", "dickhead", "cock", "piss", "pissed", "prick", "twat",
-        "wanker", "tosser", "bloody", "sod", "git", "slag", "douche", "douchebag", "jackass", "dumbass", "moron", "idiot", "stupid", "dumb", "loser", "scumbag",
+    -- sure to add swears, insults, curses, rude words, etc to the thoughtcrime list"), in leet and
+    -- misspelt ("don't forget leet spelling of swears, and typos of swears"), but allowed when aimed at
+    -- the Resistance ("what if a player says FUCKING TRAITORS! or FUCK FREEMAN!": allowed). See
+    -- LC.QuizForbidden.
+    LC.QuizSwears = { "fuck", "fucker", "fuckers", "motherfucker", "fck", "fuk", "fuq", "fcuk", "phuck", "fook", "feck", "wtf", "stfu", "gtfo", "omfg", "fml", "mofo",
+        "shit", "shiet", "sheit", "shyt", "sht", "shat", "shitty", "bullshit", "crap", "damn", "dammit", "goddamn", "goddammit",
+        "hell", "ass", "arse", "azz", "asshole", "arsehole", "azzhole", "bastard", "bitch", "bitchy", "biatch", "biotch", "bich", "btch", "beyotch",
+        "bollocks", "bugger", "cunt", "kunt", "cvnt", "dick", "dik", "dickhead", "cock", "cok", "piss", "pissed", "prick", "twat", "twt",
+        "wanker", "wnker", "tosser", "bloody", "sod", "git", "slag", "douche", "douchebag", "jackass", "dumbass", "moron", "idiot", "stupid", "dumb", "loser", "scumbag",
         "screw", "sucks", "whore", "slut", "skank", "turd", "jerk", "ugly", "hag", "witch", "pathetic", "worthless", "clown", "boring", "useless" }
-    local SWEAR = {}
-    for _, w in ipairs(LC.QuizSwears) do SWEAR[#SWEAR + 1] = w end
+    -- Who's on her side: swearing at any of these is never aimed at the Resistance.
+    LC.QuizFriendWords = { "administrator", "combine", "breen", "overwatch", "cp", "metrocop", "metrocops", "police", "civil", "protection", "union", "officer", "officers" }
+    -- The Resistance, by name or by insult (and the right answers about them, added below).
+    LC.QuizEnemyWords = { "rebel", "rebels", "resistance", "freeman", "alyx", "vance", "kleiner", "lambda", "vortigaunt", "vorts" }
+    for _, w in ipairs(LC.QuizQuestions[4].a) do LC.QuizEnemyWords[#LC.QuizEnemyWords + 1] = w end
     -- Forgiving answers (the owner, 8 November: "What if someone uses a synonym or makes a slight
     -- typo?"): a word's common endings count (terrorist, terrorists; report, reported, reporting),
     -- and in longer words one letter wrong, missing, extra or swapped with the next still counts.
@@ -1073,12 +1076,100 @@ do
         end
         return false
     end
-    -- A thoughtcrime word in what was said, or nil (typos forgiven only from 6 letters, so "dance" isn't "vance").
-    function LC.QuizForbidden(words)
-        for _, w in ipairs(words) do
-            for _, f in ipairs(FORBID) do if LC.QuizWordMatch(w, f, 6) then return w end end
-            for _, f in ipairs(SWEAR) do if LC.QuizWordMatch(w, f, 99) then return w end end
+    -- Leet (sh1t, a$$, b!tch) and stretched letters (fuuuck), for the swears.
+    local LEET = { ["0"] = "o", ["1"] = "i", ["3"] = "e", ["4"] = "a", ["5"] = "s", ["7"] = "t", ["8"] = "b", ["@"] = "a", ["$"] = "s", ["!"] = "i", ["|"] = "i", ["+"] = "t" }
+    local function Tokens(text)
+        local out, alt = {}, {}
+        for raw in string.gmatch(string.lower(text or ""), "[%w@%$!%*|%+]+") do
+            raw = string.gsub(string.gsub(raw, "^[!%*]+", ""), "[!%*]+$", "")
+            local t = string.gsub(raw, "[0134578@%$!|%+]", LEET)
+            if string.find(t, "%a") then
+                out[#out + 1] = t
+                alt[#out] = string.find(raw, "1", 1, true) and string.gsub(string.gsub(raw, "1", "l"), "[034578@%$!|%+]", LEET) or false
+            end
         end
+        return out, alt
+    end
+    LC.QuizTokens = Tokens
+    -- Runs of a letter cut down to n (1 or 2): fuuuck, fuck; assss, ass.
+    local function Squeeze(w, n)
+        local out, last, run = {}, nil, 0
+        for i = 1, #w do
+            local c = string.sub(w, i, i)
+            if c == last then run = run + 1 else last, run = c, 1 end
+            if run <= n then out[#out + 1] = c end
+        end
+        return table.concat(out)
+    end
+    -- The two that people spell every way (fook, fukc, fuq; shiet, sheit, shyt), with their endings,
+    -- and inside other words (motherfucker, bullshit). Never sheet, shot, shut, focus or fake.
+    local SUFFIX = { "", "s", "es", "ed", "er", "ers", "in", "ing", "y", "ty", "e", "head", "hole", "face", "wit", "off", "tard" }
+    local BASES = { "^f[uovy]*[ckq]+$", "^ph[uoa]*[ckq]+$", "^sh[iey]*[iy][iey]*t+$" }
+    local INSIDE = { "fuck", "fukc", "fcuk", "phuck", "fvck", "motherf", "shit" }
+    local NOT_SWEARS = {} -- (words that look like a swear but aren't; "shiite" counts as one, the owner says)
+    local function Family(w)
+        if NOT_SWEARS[w] then return false end
+        for _, suf in ipairs(SUFFIX) do
+            if #w > #suf and string.sub(w, -#suf) == suf or suf == "" then
+                local base = suf == "" and w or string.sub(w, 1, -#suf - 1)
+                for _, p in ipairs(BASES) do if string.match(base, p) then return true end end
+            end
+        end
+        for _, f in ipairs(INSIDE) do if string.find(w, f, 1, true) then return true end end
+        return string.match(w, "sh[iey]*[iy][iey]*t+e?s?$") ~= nil
+    end
+    local function SwearOne(t)
+        if not t or t == "" or NOT_SWEARS[t] then return false end
+        if string.find(t, "*", 1, true) then -- f*ck, sh*t: a star for any letter
+            if #string.gsub(t, "%*", "") < 2 then return false end
+            local pat = "^" .. string.gsub(t, "%*", "%%a") .. "$"
+            for _, w in ipairs(LC.QuizSwears) do if #w == #t and string.match(w, pat) then return true end end
+            return false
+        end
+        local s1, s2 = Squeeze(t, 1), Squeeze(t, 2)
+        for _, w in ipairs(LC.QuizSwears) do
+            if LC.QuizWordMatch(t, w, 99) or LC.QuizWordMatch(s2, w, 99) then return true end
+            local q = Squeeze(w, 1)
+            if #q >= 4 and (s1 == q or Stem(s1) == q) then return true end
+        end
+        if Family(t) or Family(s1) then return true end
+        for _, w in ipairs(LC.CombineInsults) do if LC.QuizWordMatch(t, w, 6) then return true end end
+        return false
+    end
+    local function In(t, list, typo)
+        if not t then return false end
+        local s1 = Squeeze(t, 1)
+        for _, w in ipairs(list) do if LC.QuizWordMatch(t, w, typo) or LC.QuizWordMatch(s1, Squeeze(w, 1), typo) then return true end end
+        return false
+    end
+    LC.QuizIsSwear = SwearOne
+    local CURSE_BEFORE = { "hate", "death", "down", "kill", "curse", "burn" } -- (and any swear: fuck Freeman, death to Alyx)
+    local CURSE_AFTER = { "sucks", "die", "dies", "dead" } -- (and any insult of theirs: Freeman is a traitor)
+    -- A Resistance name cursed where it's said: a swear or a curse in the two words before it, or
+    -- one of their insults or a curse in the four after ("Freeman is a fucking hero" isn't).
+    local function Cursed(toks, i)
+        for k = math.max(1, i - 2), i - 1 do if SwearOne(toks[k]) or In(toks[k], CURSE_BEFORE, 99) then return true end end
+        for k = i + 1, math.min(#toks, i + 4) do if In(toks[k], CURSE_AFTER, 99) or In(toks[k], LC.QuizQuestions[4].a) then return true end end
+        return false
+    end
+    -- A thoughtcrime word in what was said (the text), or nil. q: the question being asked.
+    -- A Resistance name is thoughtcrime unless it's cursed (typos forgiven only from 6 letters, so
+    -- "dance" isn't "vance"). A swear, curse or insult is thoughtcrime unless it's aimed at the
+    -- Resistance: the message names them (cursed) or insults them (traitors, scum), or the question
+    -- is about them and the message doesn't name her side.
+    function LC.QuizForbidden(text, q)
+        local toks, alt = Tokens(text)
+        local enemy, friend = false, false
+        for i, t in ipairs(toks) do
+            if In(t, LC.QuizThoughtcrime, 6) then
+                if not Cursed(toks, i) then return t end
+                enemy = true
+            end
+            if In(t, LC.QuizEnemyWords, 6) then enemy = true end
+            if In(t, LC.QuizFriendWords, 99) then friend = true end
+        end
+        if enemy or (q and q.swearOk and not friend) then return nil end
+        for i, t in ipairs(toks) do if SwearOne(t) or SwearOne(alt[i]) then return t end end
         return nil
     end
     local QSECS = 14
@@ -1138,7 +1229,7 @@ do
         for _, q in ipairs(Everyone(g)) do if q.ChatPrint then q:ChatPrint("(in the dream) " .. p:Nick() .. ": " .. text) end end
         local words = {}
         for w in string.gmatch(string.lower(text), "%a+") do words[#words + 1] = w end
-        local bad = LC.QuizForbidden(words)
+        local bad = LC.QuizForbidden(text, g.q)
         if bad then
             Offend(g, p, "Thoughtcrime", "\"" .. bad .. "\"? The audience gasps. Two officers escort you to the back of the studio.")
             return true

@@ -14536,12 +14536,25 @@ do -- forgiving answers: endings, small typos, more synonyms (the owner, 8 Novem
     ok(Has("the adminstrator", "administrator") and Has("comlpy", "comply") and Has("Overwach", "overwatch") and Has("Civil Protecion", "civil protection") and Has("anti-citizen", "anti citizens"),
         "and one letter wrong, missing or swapped in a longer word")
     ok(not Has("the admin", "administrator") and not Has("love", "loyal") and not Has("tall", "tell") and not Has("you", "her"), "but not a different word, nor a typo in a short one")
-    local function Bad(text) local w = {} for x in string.gmatch(string.lower(text), "%a+") do w[#w + 1] = x end return LC.QuizForbidden(w) end
+    local function Bad(text, q) return LC.QuizForbidden(text, q) end
     ok(Bad("Freemann lives") == "freemann" and Bad("the rebelion") == "rebelion" and Bad("tyrants!") == "tyrants" and Bad("Lambdas") == "lambdas", "thoughtcrime is caught with the same leniency")
     ok(Bad("oh fuck") == "fuck" and Bad("FUCKING hell") == "fucking" and Bad("you stupid hag") == "stupid" and Bad("what a load of shite") == "shite" and Bad("bullshit!") == "bullshit",
         "swears, curses and insults are thoughtcrime too (with their endings)")
     ok(Bad("I passed") == nil and Bad("a banker") == nil and Bad("hello") == nil and Bad("classy") == nil and Bad("they are scum and liars") == nil,
         "but never by a typo's distance (passed, banker), inside another word (hello, classy), nor the right answers about the Resistance")
+    ok(Bad("sh1t") == "shit" and Bad("a$$hole") == "asshole" and Bad("b!tch") == "bitch" and Bad("f*ck") ~= nil and Bad("sh*t") ~= nil and Bad("he11") ~= nil and Bad("FUUUUCK") ~= nil and Bad("shiiiit") ~= nil,
+        "swears in leet (sh1t, a$$hole, b!tch, f*ck, he11) and stretched (fuuuck) are caught")
+    ok(Bad("shiet") and Bad("Sheit") and Bad("fook") and Bad("fuk") and Bad("fukc") and Bad("shyt") and Bad("fuckin") and Bad("motherfuker") and Bad("bullshiet") and Bad("feck") and Bad("phuck") and Bad("shiite"),
+        "and misspelt (shiet, sheit, fook, fuk, fukc, shyt, motherfuker, bullshiet, feck)")
+    ok(not Bad("a sheet of paper") and not Bad("I shot it") and not Bad("shut up") and not Bad("focus") and not Bad("a fake") and not Bad("the fork") and not Bad("a snitch") and not Bad("100 percent") and not Bad("I'm shy"),
+        "but not the everyday words that look like them (sheet, shot, shut, focus, fake, fork, snitch)")
+    local q4, q2 = LC.QuizQuestions[4], LC.QuizQuestions[2]
+    ok(Bad("FUCKING TRAITORS!") == nil and Bad("FUCK FREEMAN!") == nil and Bad("death to alyx") == nil and Bad("Freeman must die") == nil and Bad("Freeman is a traitor") == nil and Bad("the rebels are fucking scum") == nil,
+        "swearing at the Resistance is allowed (FUCKING TRAITORS!, FUCK FREEMAN!, death to Alyx, Freeman is a traitor)")
+    ok(Bad("Freeman is a fucking hero") == "freeman" and Bad("fuck the administrator") == "fuck" and Bad("the combine are pigs") == "pigs" and Bad("fucking dance") == "fucking",
+        "but not praising them with a swear, nor swearing at her side (or by a word that looks like a name: dance)")
+    ok(Bad("bloody hell", q4) == nil and Bad("bloody hell", q2) ~= nil and Bad("bloody hell, the administrator", q4) ~= nil,
+        "on the questions about the Resistance any swearing counts as at them, unless it names her side")
     for i, x in ipairs(LC.QuizQuestions) do
         local clash = {}
         for _, ans in ipairs(x.a) do if Bad(ans) then clash[#clash + 1] = ans end end
@@ -14670,7 +14683,8 @@ local MEDIA = { "sound/livingcity/dreams/harvest1.mp3", "sound/livingcity/dreams
 for _, f in ipairs(MEDIA) do _files[f] = "x" end
 ok(LC.PropagandaSong({ "harvest", "propaganda" }) == "livingcity/dreams/harvest1.mp3" and LC.PropagandaSong({ "duck", "propaganda" }) == "livingcity/dreams/propaganda1.ogg",
     "music: the dream's codeword, or propaganda for any of them")
-ok(LC.PropagandaCueWho.duck_siren == "Sunny the Scanner" and LC.PropagandaCues.newsreel_hello ~= nil, "each line has its speaker (Sunny, the Narrator, the Foreman...)")
+ok(LC.PropagandaCueWho.duck_siren == "Sunny the Scanner" and LC.PropagandaCues.newsreel_hello ~= nil, "each line has its speaker (Sunny the Scanner, and the Administrator for the rest)")
+ok(LC.PropagandaCueWho.shift_hello == "The Administrator" and LC.PropagandaCueWho.spy_hello == "The Administrator" and LC.PropagandaCueWho.newsreel_hello == "The Administrator" and LC.PropagandaCueWho.hate_hello == "The Administrator" and LC.PropagandaCueWho.massgames_flip == "The Administrator", "the Foreman, the Loudspeaker, the Narrator, the Screen and the Conductor are all her now (the owner, 8 November)")
 ok(LC.PropagandaCommas(1234567) == "1,234,567" and LC.HarvestPercent(0) == 100 and LC.HarvestPercent(3) > 600, "(the quota board's absurd numbers)")
 
 -- Record Harvest

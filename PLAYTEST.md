@@ -1008,3 +1008,7 @@ Notes:
   Notes:
 - [ ] **Swears are thoughtcrime in the quiz:** swear in the Loyalty Quiz ("oh shit"): a life gone, like "Freeman". "They are scum" on the Resistance question should still be a right answer.
   Notes:
+- [ ] **Swearing at the Resistance is fine in the quiz:** "FUCKING TRAITORS!" and "FUCK FREEMAN!" are allowed (the first is also a right answer to #4); "fuck the Combine" and "Freeman is a fucking hero" are thoughtcrime; leet and misspellings (sh1t, fuuuck, shiet, fukc) are caught.
+  Notes:
+- [ ] **The dreams speak with her voice:** in The Stakhanov Shift, Careless Talk, The Newsreel, Two Minutes of Hate and The Mass Games, the lines on screen are labelled "The Administrator" (Duck and Cover keeps Sunny the Scanner).
+  Notes:

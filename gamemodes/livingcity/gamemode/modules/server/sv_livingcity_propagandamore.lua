@@ -21,7 +21,7 @@
           the one you suspect (change your mind as often as you like). Then the spy and
           everyone's pick are shown to all: a loyal citizen reported, or nobody, costs a life.
           Three spies found out of four wins.
-        The Newsreel (newsreel), wartime newsreels: the dream is black and white and a narrator
+        The Newsreel (newsreel), wartime newsreels: the dream is black and white and she
           booms. A party game too: eight takes; as the camera rolls each dreamer is told to wave,
           salute or cheer (say it in chat) before the cut, and then everyone's take is shown to
           all. Wrong, or nothing, costs a life. Five good takes wins.
@@ -30,7 +30,7 @@
           thoughtcrime. Fill your Hatred to win.
         The Mass Games (massgames), North Korean card stunts: each dreamer has a seat in the
           stands and a card, gold (crouch) or red (stand). Show the colour you're told when the
-          conductor calls "Flip!" and, picture by picture, the stands become her portrait.
+          Administrator calls "Flip!" and, picture by picture, the stands become her portrait.
         On-the-Spot Guidance (guidance), leaders' factory visits: she tours a factory and points
           at things. Applaud (jump, or say "clap") each time: whoever doesn't, or is last, loses a
           life. Through the whole tour: she's pleased with you. (She can star in it herself.)
@@ -82,17 +82,17 @@ LC.PropagandaSongWords[#LC.PropagandaSongWords + 1] = "propaganda"
 local CUES = {
     harvest_hello = { "The Administrator", "Citizens! The harvest is ripe and the quota is waiting. Bring it in!" },
     harvest_medal = { "The Administrator", "For glorious labour beyond the plan: the Order of the Golden Sheaf." },
-    shift_hello = { "The Foreman", "Comrades! Today's norm is one hundred percent. Tomorrow's is fourteen hundred. Why wait?" },
-    shift_double = { "The Foreman", "Double norm! Every blow counts twice!" },
-    shift_hero = { "The Foreman", "A new Hero of Labour! Hang the portrait!" },
-    spy_hello = { "The Loudspeaker", "Careless talk costs lives. There is a traitor among you. Listen carefully." },
-    spy_caught = { "The Loudspeaker", "Time is up. The traitor is revealed. The city thanks its vigilant citizens." },
-    newsreel_hello = { "The Narrator", "City Seventeen! Where every citizen smiles, and every smile is sincere!" },
-    newsreel_end = { "The Narrator", "And so another happy day draws to a close. Goodnight, City Seventeen!" },
-    hate_hello = { "The Screen", "Citizens! Behold the enemy of the people. Let him hear you!" },
-    hate_end = { "The Screen", "The enemy fades. Love returns. Love the Administrator." },
-    massgames_hello = { "The Conductor", "Cards ready! Together, we are her portrait." },
-    massgames_flip = { "The Conductor", "FLIP!" },
+    shift_hello = { "The Administrator", "My workers! Today's norm is one hundred percent. Tomorrow's is fourteen hundred. Why wait?" },
+    shift_double = { "The Administrator", "Double norm! Every blow counts twice!" },
+    shift_hero = { "The Administrator", "A new Hero of Labour! Hang their portrait beside mine!" },
+    spy_hello = { "The Administrator", "Careless talk costs lives, my children. There is a traitor among you. Listen carefully." },
+    spy_caught = { "The Administrator", "Time is up. The traitor is revealed. I thank my vigilant citizens." },
+    newsreel_hello = { "The Administrator", "Welcome to my City Seventeen, where every citizen smiles, and every smile is sincere!" },
+    newsreel_end = { "The Administrator", "And so another happy day draws to a close. Goodnight, my City Seventeen!" },
+    hate_hello = { "The Administrator", "Citizens! Behold the enemy of the people. Let him hear you!" },
+    hate_end = { "The Administrator", "The enemy fades. Love returns. Love me." },
+    massgames_hello = { "The Administrator", "Cards ready! Together, you are my portrait." },
+    massgames_flip = { "The Administrator", "FLIP!" },
     guidance_hello = { "The Administrator", "Show me your work. I have so much guidance to give." },
     guidance_end = { "The Administrator", "Excellent. I have improved everything here simply by looking at it." },
     scrap_hello = { "The Administrator", "Every pot, every pan, every bucket. The city needs your scrap!" },
@@ -602,11 +602,11 @@ do
     local ACTS = { "wave", "salute", "cheer" }
     local PAST = { wave = "waved", salute = "saluted", cheer = "cheered" }
     LC.NewsreelLines = {
-        "Here are happy citizens on their way to work! Look at that loyalty!",
+        "Here are my happy citizens on their way to work! Look at that loyalty!",
         "Rations are up again this week. Nobody can remember them ever being down!",
-        "The city's children are healthy, cheerful and remarkably quiet!",
-        "A smile costs nothing, and in City Seventeen it is mandatory!",
-        "Our brave Civil Protection: always watching, always caring!",
+        "My city's children are healthy, cheerful and remarkably quiet!",
+        "A smile costs nothing, and in my city it is mandatory!",
+        "My brave Civil Protection: always watching, always caring!",
         "Look at that enthusiasm! You can't fake that!",
     }
 
@@ -637,12 +637,12 @@ do
             end
         end
         g.results = lines
-        Narrate(g, "The Narrator", LC.NewsreelLines[(g.take - 1) % #LC.NewsreelLines + 1])
+        Narrate(g, "The Administrator", LC.NewsreelLines[(g.take - 1) % #LC.NewsreelLines + 1])
         for _, q in ipairs(Everyone(g)) do Notice(q, "info", string.format("Cut! Take %d", g.take), table.concat(lines, ". ") .. ".", 6) end
         for _, p in ipairs(players) do
             local s = g.pl[p]
             if s.did and s.did ~= s.cue then Offend(g, p, "Wrong on camera", "The camera wanted you to " .. s.cue .. ", and you " .. PAST[s.did] .. ". Take two will not be needed.")
-            elseif not s.did then Offend(g, p, "Caught looking glum", "The camera rolled and you just stood there. The narrator coughs.") end
+            elseif not s.did then Offend(g, p, "Caught looking glum", "The camera rolled and you just stood there. She coughs.") end
         end
     end
 
@@ -656,7 +656,7 @@ do
             SayAs(g, "newsreel_end")
             for _, p in ipairs(players) do
                 local n = g.pl[p].score or 0
-                if n >= def.need then Done(g, p, "won", "Star of the screen", string.format("%d good takes out of %d. The narrator calls you the happiest citizen in the city.", n, LC.NewsreelTakes))
+                if n >= def.need then Done(g, p, "won", "Star of the screen", string.format("%d good takes out of %d. The Administrator calls you the happiest citizen in the city.", n, LC.NewsreelTakes))
                 else Done(g, p, "time", "The reel runs out", string.format("%d good takes out of %d. The film runs out, and you wake.", n, LC.NewsreelTakes)) end
             end
             return
@@ -805,7 +805,7 @@ do
     LC.MassRounds, LC.MassReady, LC.MassShow = 10, 6, 3
     local def = { id = "massgames", name = "The Mass Games", mood = "happy", secs = 8 + LC.MassRounds * (LC.MassReady + LC.MassShow) + 6, lives = 3, need = 6,
         music = { "massgames", "propaganda" },
-        goal = "Stay on your seat in the stands. For each picture you're told your card's colour: gold, crouch; red, stand. Show it when the conductor calls FLIP!",
+        goal = "Stay on your seat in the stands. For each picture you're told your card's colour: gold, crouch; red, stand. Show it when she calls FLIP!",
         timeUp = { "The stadium empties", "The floodlights go off and you wake." },
         woke = Woke({
             won = { "One of a hundred thousand", "You wake with your arms still raised, holding a card that isn't there. Together, you were her face." },

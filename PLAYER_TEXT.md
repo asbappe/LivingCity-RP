@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 3ae71fa. Admin-only console messages and log lines are left out.
+Made from version 9e580bb. Admin-only console messages and log lines are left out.
 
-8123 lines, from 229 files.
+8126 lines, from 229 files.
 
 ## Contents
 
@@ -185,7 +185,7 @@ Made from version 3ae71fa. Admin-only console messages and log lines are left ou
 - [prison](#prison-svlivingcityprisonlua) (40)
 - [close calls, careers for life, and what passes on](#close-calls-careers-for-life-and-what-passes-on-svlivingcityprogresslua) (20)
 - [street furniture, and the city's voice](#street-furniture-and-the-citys-voice-svlivingcitypropagandalua) (43)
-- [propaganda dreams (dreams you play)](#propaganda-dreams-dreams-you-play-svlivingcitypropagandadreamslua) (152)
+- [propaganda dreams (dreams you play)](#propaganda-dreams-dreams-you-play-svlivingcitypropagandadreamslua) (155)
 - [more propaganda dreams (dreams you play), drawn from real propaganda](#more-propaganda-dreams-dreams-you-play-drawn-from-real-propaganda-svlivingcitypropagandamorelua) (349)
 - [persistent props](#persistent-props-svlivingcitypropslua) (6)
 - [quests](#quests-svlivingcityquestslua) (368)
@@ -10295,49 +10295,55 @@ Made from version 3ae71fa. Admin-only console messages and log lines are left ou
 - "What happens to those who disobey?"  (text, line 1000)
 - "re educated"  (text, line 1000)
 - "What is the most important thing a citizen can be?"  (text, line 1001)
-- "The Loyalty Quiz"  (name, line 1085)
-- "Answer her questions in chat. A right answer earns Loyalty, the first to answer earns double. Careful: some answers are thoughtcrime."  (text, line 1086)
-- "You're the star: the quizmaster on the podium. The questions ask themselves; anything you say in chat, the dream hears."  (text, line 1087)
-- "The broadcast ends"  (text, line 1088)
-- "The studio lights go out, and you wake."  (text, line 1088)
-- "Model citizen"  (text, line 1090)
-- "You wake reciting the answers, and feel proud of yourself. You're not sure why."  (text, line 1090)
-- "You wake with a start, sure you said something wrong in your sleep. Hopefully nobody heard."  (text, line 1091)
-- "The broadcast ends"  (text, line 1092)
-- "You wake humming the quiz's theme tune. It's very catchy."  (text, line 1092)
+
+> Note for you (not shown in game): The two that people spell every way (fook, fukc, fuq; shiet, sheit, shyt), with their endings, and inside other words (motherfucker, bullshit). Never sheet, shot, shut, focus or fake.
+
+- "^f[uovy]*[ckq]+$"  (text, line 1107)
+- "^ph[uoa]*[ckq]+$"  (text, line 1107)
+- "^sh[iey]*[iy][iey]*t+$"  (text, line 1107)
+- "The Loyalty Quiz"  (name, line 1176)
+- "Answer her questions in chat. A right answer earns Loyalty, the first to answer earns double. Careful: some answers are thoughtcrime."  (text, line 1177)
+- "You're the star: the quizmaster on the podium. The questions ask themselves; anything you say in chat, the dream hears."  (text, line 1178)
+- "The broadcast ends"  (text, line 1179)
+- "The studio lights go out, and you wake."  (text, line 1179)
+- "Model citizen"  (text, line 1181)
+- "You wake reciting the answers, and feel proud of yourself. You're not sure why."  (text, line 1181)
+- "You wake with a start, sure you said something wrong in your sleep. Hopefully nobody heard."  (text, line 1182)
+- "The broadcast ends"  (text, line 1183)
+- "You wake humming the quiz's theme tune. It's very catchy."  (text, line 1183)
 
 > Note for you (not shown in game): part of: tick
 
-- "Model citizen"  (text, line 1123)
-- "Full marks for loyalty. The audience rises to its feet."  (text, line 1123)
-- "The broadcast ends"  (text, line 1124)
-- "The studio lights go out before you've proven yourself. You wake."  (text, line 1124)
+- "Model citizen"  (text, line 1214)
+- "Full marks for loyalty. The audience rises to its feet."  (text, line 1214)
+- "The broadcast ends"  (text, line 1215)
+- "The studio lights go out before you've proven yourself. You wake."  (text, line 1215)
 
 > Note for you (not shown in game): An answer, in chat. True: it stayed in the dream.
 
-- "(in the dream) {Nick}: {text}"  (chat message, line 1138)
+- "(in the dream) {Nick}: {text}"  (chat message, line 1229)
 
 > Note for you (not shown in game): part of: quiz said
 
-- ""{bad}"? The audience gasps. Two officers escort you to the back of the studio."  (text, line 1143)
-- "Not quite"  (on-screen notice, line 1152)
-- "Think about it, citizen. The answer is always obvious."  (on-screen notice, line 1152)
-- "Model citizen"  (text, line 1161)
-- "Full marks for loyalty. She nods once, and the audience rises to its feet for you."  (text, line 1161)
-- "First, and correct!"  (on-screen notice, line 1163)
-- "Loyalty: %d of %d."  (message, line 1163)
+- ""{bad}"? The audience gasps. Two officers escort you to the back of the studio."  (text, line 1234)
+- "Not quite"  (on-screen notice, line 1243)
+- "Think about it, citizen. The answer is always obvious."  (on-screen notice, line 1243)
+- "Model citizen"  (text, line 1252)
+- "Full marks for loyalty. She nods once, and the audience rises to its feet for you."  (text, line 1252)
+- "First, and correct!"  (on-screen notice, line 1254)
+- "Loyalty: %d of %d."  (message, line 1254)
 
 > Note for you (not shown in game): part of: state
 
-- "The quiz is about to begin..."  (text, line 1170)
-- "The quiz is over."  (text, line 1171)
-- "Correct. Wait for the next question."  (text, line 1174)
-- "Loyalty: %d of %d     Question %d of %d"  (message, line 1176)
+- "The quiz is about to begin..."  (text, line 1261)
+- "The quiz is over."  (text, line 1262)
+- "Correct. Wait for the next question."  (text, line 1265)
+- "Loyalty: %d of %d     Question %d of %d"  (message, line 1267)
 
 > Note for you (not shown in game): part of: propaganda say
 
-- "The Administrator"  (text, line 1195)
-- "(in the dream) The Administrator: {text}"  (chat message, line 1196)
+- "The Administrator"  (text, line 1286)
+- "(in the dream) The Administrator: {text}"  (chat message, line 1287)
 
 ## more propaganda dreams (dreams you play), drawn from real propaganda (sv_livingcity_propagandamore.lua)
 
@@ -10350,27 +10356,27 @@ Made from version 3ae71fa. Admin-only console messages and log lines are left ou
 - "Citizens! The harvest is ripe and the quota is waiting. Bring it in!"  (text, line 83)
 - "The Administrator"  (text, line 84)
 - "For glorious labour beyond the plan: the Order of the Golden Sheaf."  (text, line 84)
-- "The Foreman"  (text, line 85)
-- "Comrades! Today's norm is one hundred percent. Tomorrow's is fourteen hundred. Why wait?"  (text, line 85)
-- "The Foreman"  (text, line 86)
+- "The Administrator"  (text, line 85)
+- "My workers! Today's norm is one hundred percent. Tomorrow's is fourteen hundred. Why wait?"  (text, line 85)
+- "The Administrator"  (text, line 86)
 - "Double norm! Every blow counts twice!"  (text, line 86)
-- "The Foreman"  (text, line 87)
-- "A new Hero of Labour! Hang the portrait!"  (text, line 87)
-- "The Loudspeaker"  (text, line 88)
-- "Careless talk costs lives. There is a traitor among you. Listen carefully."  (text, line 88)
-- "The Loudspeaker"  (text, line 89)
-- "Time is up. The traitor is revealed. The city thanks its vigilant citizens."  (text, line 89)
-- "The Narrator"  (text, line 90)
-- "City Seventeen! Where every citizen smiles, and every smile is sincere!"  (text, line 90)
-- "The Narrator"  (text, line 91)
-- "And so another happy day draws to a close. Goodnight, City Seventeen!"  (text, line 91)
-- "The Screen"  (text, line 92)
+- "The Administrator"  (text, line 87)
+- "A new Hero of Labour! Hang their portrait beside mine!"  (text, line 87)
+- "The Administrator"  (text, line 88)
+- "Careless talk costs lives, my children. There is a traitor among you. Listen carefully."  (text, line 88)
+- "The Administrator"  (text, line 89)
+- "Time is up. The traitor is revealed. I thank my vigilant citizens."  (text, line 89)
+- "The Administrator"  (text, line 90)
+- "Welcome to my City Seventeen, where every citizen smiles, and every smile is sincere!"  (text, line 90)
+- "The Administrator"  (text, line 91)
+- "And so another happy day draws to a close. Goodnight, my City Seventeen!"  (text, line 91)
+- "The Administrator"  (text, line 92)
 - "Citizens! Behold the enemy of the people. Let him hear you!"  (text, line 92)
-- "The Screen"  (text, line 93)
-- "The enemy fades. Love returns. Love the Administrator."  (text, line 93)
-- "The Conductor"  (text, line 94)
-- "Cards ready! Together, we are her portrait."  (text, line 94)
-- "The Conductor"  (text, line 95)
+- "The Administrator"  (text, line 93)
+- "The enemy fades. Love returns. Love me."  (text, line 93)
+- "The Administrator"  (text, line 94)
+- "Cards ready! Together, you are my portrait."  (text, line 94)
+- "The Administrator"  (text, line 95)
 - "The Administrator"  (text, line 96)
 - "Show me your work. I have so much guidance to give."  (text, line 96)
 - "The Administrator"  (text, line 97)
@@ -10523,11 +10529,11 @@ Made from version 3ae71fa. Admin-only console messages and log lines are left ou
 - "You wake feeling you ruined every take. In the morning you practise your salute in the mirror."  (text, line 594)
 - "The reel runs out"  (text, line 595)
 - "You wake, and for a moment the world is still black and white."  (text, line 595)
-- "Here are happy citizens on their way to work! Look at that loyalty!"  (text, line 605)
+- "Here are my happy citizens on their way to work! Look at that loyalty!"  (text, line 605)
 - "Rations are up again this week. Nobody can remember them ever being down!"  (text, line 606)
-- "The city's children are healthy, cheerful and remarkably quiet!"  (text, line 607)
-- "A smile costs nothing, and in City Seventeen it is mandatory!"  (text, line 608)
-- "Our brave Civil Protection: always watching, always caring!"  (text, line 609)
+- "My city's children are healthy, cheerful and remarkably quiet!"  (text, line 607)
+- "A smile costs nothing, and in my city it is mandatory!"  (text, line 608)
+- "My brave Civil Protection: always watching, always caring!"  (text, line 609)
 - "Look at that enthusiasm! You can't fake that!"  (text, line 610)
 
 > Note for you (not shown in game): Cut: every take shown to everyone.
@@ -10538,17 +10544,17 @@ Made from version 3ae71fa. Admin-only console messages and log lines are left ou
 
 - "{did} instead of {cue}"  (text, line 634)
 - "just stood there"  (text, line 636)
-- "The Narrator"  (quest narration, line 640)
+- "The Administrator"  (quest narration, line 640)
 - "Cut! Take %d"  (message, line 641)
 - "Wrong on camera"  (text, line 644)
 - "The camera wanted you to {cue}, and you {did}. Take two will not be needed."  (text, line 644)
 - "Caught looking glum"  (text, line 645)
-- "The camera rolled and you just stood there. The narrator coughs."  (text, line 645)
+- "The camera rolled and you just stood there. She coughs."  (text, line 645)
 
 > Note for you (not shown in game): part of: tick
 
 - "Star of the screen"  (text, line 659)
-- "%d good takes out of %d. The narrator calls you the happiest citizen in the city."  (message, line 659)
+- "%d good takes out of %d. The Administrator calls you the happiest citizen in the city."  (message, line 659)
 - "The reel runs out"  (text, line 660)
 - "%d good takes out of %d. The film runs out, and you wake."  (message, line 660)
 - "Rolling! Take %d"  (message, line 670)
@@ -10601,7 +10607,7 @@ Made from version 3ae71fa. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): The Mass Games
 
 - "The Mass Games"  (name, line 806)
-- "Stay on your seat in the stands. For each picture you're told your card's colour: gold, crouch; red, stand. Show it when the conductor calls FLIP!"  (text, line 808)
+- "Stay on your seat in the stands. For each picture you're told your card's colour: gold, crouch; red, stand. Show it when she calls FLIP!"  (text, line 808)
 - "The stadium empties"  (text, line 809)
 - "The floodlights go off and you wake."  (text, line 809)
 - "One of a hundred thousand"  (text, line 811)
