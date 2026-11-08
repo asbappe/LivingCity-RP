@@ -14918,6 +14918,19 @@ ok(Until(g, function() return g.pl[a].how == "won" end) and Said(g, "ravenholm_d
 Stop(d)
 player.GetAll = function() return { adm, a, b } end
 v:SetPos(Vector(-121000, -121000, 0))
+-- (an NPC counts too, if it was freed from its shackles; one still shackled, or never shackled, doesn't)
+local nv = ents.Create("npc_vortigaunt")
+nv:Spawn()
+ok(LC.DreamFreeVort() == nil, "(a vortigaunt that was never freed from shackles doesn't count)")
+nv.lcVortFreed = true
+ok(LC.DreamFreeVort() == nv, "an NPC vortigaunt freed from its shackles counts")
+g, d = Start("ravenholm")
+_run(T.horde + 1)
+a:SetHealth(20)
+_run(0.1)
+ok(g.phase == "storm" and g.truth and IsValid(g.vort), "and turns the dream into the truth")
+Stop(d)
+nv:Remove()
 
 for _, f in ipairs(MEDIA) do _files[f] = nil end
 LC.DreamForget()
@@ -16722,7 +16735,7 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     local slave = next(LC.VortSlaves)
     local freer = newPlayer("VortFreer", "resistance", nil, 900)
     _run(0.3)
-    ok(slave and LC.FreeStreetVort(slave, freer) and not slave.lcVortSlave and not slave:GetNW2Bool("lc_shackled", true), "a street vortigaunt can be cut loose by the Resistance")
+    ok(slave and LC.FreeStreetVort(slave, freer) and not slave.lcVortSlave and slave.lcVortFreed and not slave:GetNW2Bool("lc_shackled", true), "a street vortigaunt can be cut loose by the Resistance")
     LC.IsSeen = function() return false end
     _run(125)
     LC.IsSeen = seen

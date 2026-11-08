@@ -1007,6 +1007,7 @@ function LC.FreeStreetVort(v, by)
     v.lcBroom = nil
     LC.VortSlaves[v] = nil
     v.lcVortSlave = nil
+    v.lcVortFreed = true -- (freed from its shackles: it counts in dreams, sv_livingcity_propagandamore.lua)
     if not util.IsValidModel or util.IsValidModel("models/vortigaunt.mdl") then v:SetModel("models/vortigaunt.mdl") end
     v:SetNW2Bool("lc_shackled", false)
     LC.SetNPCStr(v, "lc_pname", "Freed vortigaunt")

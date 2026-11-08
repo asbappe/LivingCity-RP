@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 202de54. Admin-only console messages and log lines are left out.
+Made from version 095f061. Admin-only console messages and log lines are left out.
 
 7984 lines, from 226 files.
 
@@ -720,7 +720,7 @@ Made from version 202de54. Admin-only console messages and log lines are left ou
 - "Cigarettes, alcohol and stimulants (F3, the item's button). A cigarette steadies your nerves and dulls hunger; too many and you cough. Drink and you get drunk: it dulls pain, then the world sways, then you throw up (and one moonshine in five is a bad batch). A stimulant keeps you awake for fifteen minutes (no dream can take you), then you crash."  (text, line 86)
 - "Nightmare dreams you play: The Patrol Maze (pick up every token while giant officers hunt you), The Barrel Tower (climb to the top, and don't touch the barrels: they explode), The Crumbling Floor (keep moving or the floor gives way) and Freeze, Citizen (move only while the giant officer's back is turned). Out of lives, or won: wake up now, or watch the rest until it's over. Win and you wake Unbroken (a day the Combine can't get into your head) with a second wind, and maybe a Vortigaunt's help; lose every life and you're 30 health down until your next full night's sleep."  (text, line 87)
 - "Propaganda dreams (no opting out, and no waking yourself until you're out of it): Kneel Before Her (kneel, crouching, and gaze up at her to fill your Devotion; never let her catch you standing in her gaze), Roses for Her (carry glowing roses to her feet, on your knees in her half of the hall), Mirror, Mirror (kneel and compliment her in chat; new words count double, insults cost a life), The Saviour (the dead come for you, unarmed, and they hurt: when someone is close to the end, she descends and her soldiers save you), The Loyalty Quiz (answer her questions in chat; beware thoughtcrime). Every life you lose, every insult to her or the Combine, costs loyalty points (Civil Standing) when you wake."  (text, line 88)
-- "More propaganda dreams: Record Harvest (carry glowing crates to the depot; crouch to throw away a green, spoiled one), The Stakhanov Shift (crouch again and again at a work station to beat the norm by 1400%), Careless Talk (four rounds of 30 seconds: listen for clues and crouch beside the one you think is the spy; everyone's pick is revealed together), The Newsreel (as the camera rolls, say the wave, salute or cheer it asks of you; everyone's take is shown at the cut), Two Minutes of Hate (jeer in chat; silence is noticed), The Mass Games (gold card: crouch, red: stand, at FLIP!), On-the-Spot Guidance (jump or say clap when she points), The Scrap Drive (fill the bins; never sell to the shady trader), Flowers for the Liberators (jump as a soldier passes you; stay off the road), Duck and Cover (when the siren wails and the Resistance's rocket goes up, crouch beside a table, two to a table), Ravenholm (the dead rise from the graves and a red Father Grigori rants; hold on until help comes, and if a Free Vortigaunt is about, you may see the truth)."  (text, line 89)
+- "More propaganda dreams: Record Harvest (carry glowing crates to the depot; crouch to throw away a green, spoiled one), The Stakhanov Shift (crouch again and again at a work station to beat the norm by 1400%), Careless Talk (four rounds of 30 seconds: listen for clues and crouch beside the one you think is the spy; everyone's pick is revealed together), The Newsreel (as the camera rolls, say the wave, salute or cheer it asks of you; everyone's take is shown at the cut), Two Minutes of Hate (jeer in chat; silence is noticed), The Mass Games (gold card: crouch, red: stand, at FLIP!), On-the-Spot Guidance (jump or say clap when she points), The Scrap Drive (fill the bins; never sell to the shady trader), Flowers for the Liberators (jump as a soldier passes you; stay off the road), Duck and Cover (when the siren wails and the Resistance's rocket goes up, crouch beside a table, two to a table), Ravenholm (the dead rise from the graves and a red Father Grigori rants; hold on until help comes, and if any vortigaunt freed from its shackles is alive in the city, you may see the truth)."  (text, line 89)
 - "City Administrator: your tablet's office has Tonight's dream: reward an obedient city with a Happy dream, or punish it with a Nightmare. Its Combine manpower shows what Civil Protection and Overwatch have left in reserve. Out of it in a dream? Watch the rest: click to follow another dreamer, Jump to fly about inside the dream."  (text, line 90)
 - "You can kill birds with your fists. Cook them before you eat them."  (text, line 91)
 - "Staying out of trouble"  (text, line 93)
@@ -10630,63 +10630,63 @@ Made from version 202de54. Admin-only console messages and log lines are left ou
 - "Listen to Sunny."  (text, line 1380)
 - "Rockets survived: %d of %d"  (message, line 1383)
 
-> Note for you (not shown in game): Ravenholm (the owner, 8 November: "reminiscing of the ending to ravenholm: a graveyard with the church but father gregori is glowing red and his voice lines pitch shifted to sound evil, and zombies are rising from the graves ... if a vortigaunt is free it will appear and send out an effect that is a green version of the portal storm effect from ep2 that washes over gregori and shows that he is actually the good guy ... the administrator appears as actually evil and father gregori starts killing the zombies ... and the administrator flies away defeated") The Saviour turned inside out. The dead rise from the graves and come for the dreamers, who have nothing to fight with (it hurts, in the dream); a giant, red Father Grigori rants from the church. When someone is down to 25 health (or after 55 seconds) the dream turns: No Free Vortigaunt on the server: propaganda wins. She descends, her soldiers kill the dead, and Grigori flees into the sky. ("Saved.") A Free Vortigaunt (a Resistance player in that role, awake or asleep): a vortigaunt appears (the player themselves, if they're in the dream) and a green storm washes over everything. Grigori's red is gone and his voice is his own; he blasts the dead with his shotgun before they can hurt anyone, while a giant red figure of her shrieks and flies away defeated.
+> Note for you (not shown in game): Ravenholm (the owner, 8 November: "reminiscing of the ending to ravenholm: a graveyard with the church but father gregori is glowing red and his voice lines pitch shifted to sound evil, and zombies are rising from the graves ... if a vortigaunt is free it will appear and send out an effect that is a green version of the portal storm effect from ep2 that washes over gregori and shows that he is actually the good guy ... the administrator appears as actually evil and father gregori starts killing the zombies ... and the administrator flies away defeated") The Saviour turned inside out. The dead rise from the graves and come for the dreamers, who have nothing to fight with (it hurts, in the dream); a giant, red Father Grigori rants from the church. When someone is down to 25 health (or after 55 seconds) the dream turns: No freed vortigaunt alive: propaganda wins. She descends, her soldiers kill the dead, and Grigori flees into the sky. ("Saved.") A freed vortigaunt still alive (a Free Vortigaunt player, awake or asleep, or an NPC cut loose from its shackles): a vortigaunt appears (the player themselves, if they're in the dream) and a green storm washes over everything. Grigori's red is gone and his voice is his own; he blasts the dead with his shotgun before they can hurt anyone, while a giant red figure of her shrieks and flies away defeated.
 
-- "The dead are rising from the graves, and you have nothing to fight with. Run. Dodge. Hold on."  (text, line 1408)
-- "Dawn over the graves"  (text, line 1409)
-- "The sun comes up over the graveyard, and you wake."  (text, line 1409)
-- "Father Grigori"  (text, line 1417)
-- "RISE, my children! Rise from your graves and FEAST!"  (text, line 1417)
-- "The Administrator"  (text, line 1418)
-- "Begone, false priest! These citizens are under MY protection."  (text, line 1418)
+- "The dead are rising from the graves, and you have nothing to fight with. Run. Dodge. Hold on."  (text, line 1409)
+- "Dawn over the graves"  (text, line 1410)
+- "The sun comes up over the graveyard, and you wake."  (text, line 1410)
+- "Father Grigori"  (text, line 1418)
+- "RISE, my children! Rise from your graves and FEAST!"  (text, line 1418)
 - "The Administrator"  (text, line 1419)
-- "You see? Only I can keep you safe. Never forget it."  (text, line 1419)
-- "The Vortessence sees through the false light. Behold what is true."  (text, line 1420)
-- "Father Grigori"  (text, line 1421)
-- "Hah! Back to your rest, poor souls! Not one of these children shall be harmed!"  (text, line 1421)
-- "The Administrator"  (text, line 1422)
-- "No... NO! This is MY dream!"  (text, line 1422)
-- "Come, sinners, and be judged!"  (text, line 1429)
-- "The graves are hungry tonight!"  (text, line 1429)
-- "None shall leave my parish!"  (text, line 1429)
-- "Hahahaha! Run, little lambs!"  (text, line 1429)
+- "Begone, false priest! These citizens are under MY protection."  (text, line 1419)
+- "The Administrator"  (text, line 1420)
+- "You see? Only I can keep you safe. Never forget it."  (text, line 1420)
+- "The Vortessence sees through the false light. Behold what is true."  (text, line 1421)
+- "Father Grigori"  (text, line 1422)
+- "Hah! Back to your rest, poor souls! Not one of these children shall be harmed!"  (text, line 1422)
+- "The Administrator"  (text, line 1423)
+- "No... NO! This is MY dream!"  (text, line 1423)
+- "Come, sinners, and be judged!"  (text, line 1430)
+- "The graves are hungry tonight!"  (text, line 1430)
+- "None shall leave my parish!"  (text, line 1430)
+- "Hahahaha! Run, little lambs!"  (text, line 1430)
 
 > Note for you (not shown in game): part of: turn
 
-- "A green storm"  (on-screen notice, line 1536)
-- "A vortigaunt's light washes over the graveyard, and everything looks different."  (on-screen notice, line 1536)
-- "Everything stops"  (on-screen notice, line 1545)
-- "The dead freeze where they stand. A light breaks through the clouds."  (on-screen notice, line 1545)
+- "A green storm"  (on-screen notice, line 1542)
+- "A vortigaunt's light washes over the graveyard, and everything looks different."  (on-screen notice, line 1542)
+- "Everything stops"  (on-screen notice, line 1551)
+- "The dead freeze where they stand. A light breaks through the clouds."  (on-screen notice, line 1551)
 
 > Note for you (not shown in game): the dead: up out of the graves, then after the nearest dreamer (slower once the truth is out)
 
-- "Father Grigori"  (quest narration, line 1560)
+- "Father Grigori"  (quest narration, line 1566)
 
 > Note for you (not shown in game): part of: tick
 
-- "The truth"  (text, line 1670)
-- "Father Grigori lowers his shotgun and laughs. The last of the dead lie still, and the false light is gone from the sky."  (text, line 1670)
-- "Her soldiers stand over the last of the dead. She looks down at you, and you have never felt so safe."  (text, line 1671)
+- "The truth"  (text, line 1676)
+- "Father Grigori lowers his shotgun and laughs. The last of the dead lie still, and the false light is gone from the sky."  (text, line 1676)
+- "Her soldiers stand over the last of the dead. She looks down at you, and you have never felt so safe."  (text, line 1677)
 
 > Note for you (not shown in game): part of: woke
 
-- "The truth"  (on-screen notice, line 1679)
-- "You wake with green light behind your eyes and a priest's laughter in your ears. Something in the city's broadcasts sounds hollow this morning."  (on-screen notice, line 1679)
-- "You wake safe in your bed, and for a moment you'd swear you can still feel her light. The Combine protect you. They always have."  (on-screen notice, line 1680)
-- "Dawn over the graves"  (on-screen notice, line 1681)
-- "You wake with the smell of earth, and the sound of a priest laughing somewhere far away."  (on-screen notice, line 1681)
-- "A graveyard, under a red sky. Something stirs."  (text, line 1684)
-- "The dead are rising! Run!"  (text, line 1684)
-- "Everything stops. A light from above..."  (text, line 1684)
-- "Her soldiers are here!"  (text, line 1685)
-- "A green storm..."  (text, line 1685)
-- "Father Grigori fights for you!"  (text, line 1685)
-- "She flees!"  (text, line 1685)
-- "It's over."  (text, line 1685)
+- "The truth"  (on-screen notice, line 1685)
+- "You wake with green light behind your eyes and a priest's laughter in your ears. Something in the city's broadcasts sounds hollow this morning."  (on-screen notice, line 1685)
+- "You wake safe in your bed, and for a moment you'd swear you can still feel her light. The Combine protect you. They always have."  (on-screen notice, line 1686)
+- "Dawn over the graves"  (on-screen notice, line 1687)
+- "You wake with the smell of earth, and the sound of a priest laughing somewhere far away."  (on-screen notice, line 1687)
+- "A graveyard, under a red sky. Something stirs."  (text, line 1690)
+- "The dead are rising! Run!"  (text, line 1690)
+- "Everything stops. A light from above..."  (text, line 1690)
+- "Her soldiers are here!"  (text, line 1691)
+- "A green storm..."  (text, line 1691)
+- "Father Grigori fights for you!"  (text, line 1691)
+- "She flees!"  (text, line 1691)
+- "It's over."  (text, line 1691)
 
 > Note for you (not shown in game): part of: state
 
-- "The dead: %d"  (message, line 1688)
+- "The dead: %d"  (message, line 1694)
 
 ## persistent props (sv_livingcity_props.lua)
 
@@ -12225,26 +12225,26 @@ Made from version 202de54. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: free street vort
 
-- "Freed vortigaunt"  (text, line 1012)
-- "heading for rebel ground"  (text, line 1013)
-- "[Living City] The collar falls. The vortigaunt looks at you a long moment, then heads for rebel ground."  (chat message, line 1017)
-- "freeing a vortigaunt"  (text, line 1018)
-- "A vortigaunt has been freed from the street crews. It's on its way to us. Welcome it."  (text, line 1020)
+- "Freed vortigaunt"  (text, line 1013)
+- "heading for rebel ground"  (text, line 1014)
+- "[Living City] The collar falls. The vortigaunt looks at you a long moment, then heads for rebel ground."  (chat message, line 1018)
+- "freeing a vortigaunt"  (text, line 1019)
+- "A vortigaunt has been freed from the street crews. It's on its way to us. Welcome it."  (text, line 1021)
 
 > Note for you (not shown in game): A freed vortigaunt charges your vest when you ask it (E), not by itself (not while you sleep beside it): once every lc_vort_charge_minutes.
 
-- "The vortigaunt looks at you, and through you."  (text, line 1048)
-- ""You wear no vessel for the vortessence, friend." (You've no powered vest on.)"  (text, line 1049)
-- ""Your vessel is full." (Your vest is fully charged.)"  (text, line 1050)
+- "The vortigaunt looks at you, and through you."  (text, line 1049)
+- ""You wear no vessel for the vortessence, friend." (You've no powered vest on.)"  (text, line 1050)
+- ""Your vessel is full." (Your vest is fully charged.)"  (text, line 1051)
 
 > Note for you (not shown in game): part of: vort charge
 
-- ""The vortessence needs time to gather." (%d min)"  (message, line 1053)
-- "The vortigaunt's hands glow green, and your vest hums with charge."  (text, line 1058)
+- ""The vortessence needs time to gather." (%d min)"  (message, line 1054)
+- "The vortigaunt's hands glow green, and your vest hums with charge."  (text, line 1059)
 
 > Note for you (not shown in game): pressing E on something
 
-- "[Vortigaunt] {msg}"  (chat message, line 1066)
+- "[Vortigaunt] {msg}"  (chat message, line 1067)
 
 ## escalation (sv_livingcity_response.lua)
 
@@ -13040,34 +13040,34 @@ Made from version 202de54. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: build
 
-- "Cut the shackles (stay beside it)"  (quest step, line 478)
+- "Cut the shackles (stay beside it)"  (quest step, line 479)
 
 > Note for you (not shown in game): part of: on done
 
-- "Theft of Combine property"  (text, line 481)
-- "The shackles fall. It looks at you, and waits. Lead it home."  (quest narration, line 483)
+- "Theft of Combine property"  (text, line 482)
+- "The shackles fall. It looks at you, and waits. Lead it home."  (quest narration, line 484)
 
 > Note for you (not shown in game): part of: build
 
-- "The vortigaunt waits, its collar humming. Cut it loose here, or walk it out as if it were still the Combine's?"  (quest choice, line 485)
-- "Cut the shackles here (twelve seconds beside it; its keepers may see), then lead it home."  (text, line 486)
+- "The vortigaunt waits, its collar humming. Cut it loose here, or walk it out as if it were still the Combine's?"  (quest choice, line 486)
+- "Cut the shackles here (twelve seconds beside it; its keepers may see), then lead it home."  (text, line 487)
 
 > Note for you (not shown in game): part of: pick
 
-- "Lead it home to rebel territory (any of it)"  (text, line 487)
+- "Lead it home to rebel territory (any of it)"  (text, line 488)
 
 > Note for you (not shown in game): part of: build
 
-- "Lead it off still shackled, like Combine property on the move; cut them in rebel territory (a unit may stop you and ask)."  (text, line 488)
+- "Lead it off still shackled, like Combine property on the move; cut them in rebel territory (a unit may stop you and ask)."  (text, line 489)
 
 > Note for you (not shown in game): part of: pick
 
-- "Walk it to rebel territory (any of it), still shackled"  (text, line 489)
+- "Walk it to rebel territory (any of it), still shackled"  (text, line 490)
 
 > Note for you (not shown in game): part of: build
 
-- "Free a vortigaunt {GetPos}"  (title, line 492)
-- "The Combine are working a shackled vortigaunt {GetPos}. Free it and bring it to rebel territory: it will heal our wounded."  (description, line 493)
+- "Free a vortigaunt {GetPos}"  (title, line 493)
+- "The Combine are working a shackled vortigaunt {GetPos}. Free it and bring it to rebel territory: it will heal our wounded."  (description, line 494)
 
 ## character slots (sv_livingcity_slots.lua)
 

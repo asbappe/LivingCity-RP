@@ -470,6 +470,7 @@ T{
                     for i, ent in ipairs(q.ents) do if ent == v then table.remove(q.ents, i) break end end
                     if q.data.shackled then Narrate(q, "In rebel territory, the shackles come off. It breathes in, slowly, and looks round at its new home.") end
                     v:SetNW2Bool("lc_shackled", false)
+                    v.lcVortFreed = true -- (freed from its shackles: it counts in dreams, sv_livingcity_propagandamore.lua)
                     if LC.SettleVort then LC.SettleVort(v) end
                 end
             end

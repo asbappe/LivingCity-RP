@@ -983,3 +983,5 @@ Notes:
   Notes:
 - [ ] **Ravenholm, the truth:** with a Free Vortigaunt player online (asleep in it or not): at the turn a vortigaunt appears, a green ring of light rolls out and the screen flashes green; Grigori loses his red, speaks normally and blasts the zombies with his shotgun; a giant red Administrator hovers, then shrieks and spins away. Check the church front and cross look right, and that Grigori's voice lines play (if not, they have other names on your server: tell me).
   Notes:
+- [ ] **Ravenholm, freed NPC vortigaunt (changed):** with no Free Vortigaunt player online, cut a street-crew vortigaunt loose (or finish a work-site rescue), then play Ravenholm: the truth version should happen. Kill that vortigaunt and play again: her version.
+  Notes:

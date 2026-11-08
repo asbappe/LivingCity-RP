@@ -1395,9 +1395,10 @@ end
 -- The Saviour turned inside out. The dead rise from the graves and come for the dreamers, who
 -- have nothing to fight with (it hurts, in the dream); a giant, red Father Grigori rants from the
 -- church. When someone is down to 25 health (or after 55 seconds) the dream turns:
---   No Free Vortigaunt on the server: propaganda wins. She descends, her soldiers kill the dead,
+--   No freed vortigaunt alive: propaganda wins. She descends, her soldiers kill the dead,
 --     and Grigori flees into the sky. ("Saved.")
---   A Free Vortigaunt (a Resistance player in that role, awake or asleep): a vortigaunt appears
+--   A freed vortigaunt still alive (a Free Vortigaunt player, awake or asleep, or an NPC cut loose
+--     from its shackles): a vortigaunt appears
 --     (the player themselves, if they're in the dream) and a green storm washes over everything.
 --     Grigori's red is gone and his voice is his own; he blasts the dead with his shotgun before
 --     they can hurt anyone, while a giant red figure of her shrieks and flies away defeated.
@@ -1437,10 +1438,15 @@ do
     local TRUTH = {} -- [steamid64] = true: they saw the truth (how they wake)
     local function Key(p) return tostring(p:SteamID64()) end
 
-    -- A Free Vortigaunt on the server (awake or asleep), or nil.
+    -- A vortigaunt freed from its shackles, still alive (the owner: "any vortigaunt that had been
+    -- freed from shackles even if an NPC"): a Free Vortigaunt player (awake or asleep), or one of the
+    -- city's vortigaunts cut loose from a street crew or rescued from a work site. Nil: none.
     function LC.DreamFreeVort()
         for _, p in ipairs(player.GetAll()) do
             if IsValid(p) and p:GetNW2String("lcf_faction", "") == "resistance" and p:GetNW2String("lcf_special", "") == "vortigaunt" then return p end
+        end
+        for _, e in ipairs(ents.FindByClass and ents.FindByClass("npc_vortigaunt") or {}) do
+            if IsValid(e) and e.lcVortFreed and (not e.Health or e:Health() > 0) then return e end
         end
         return nil
     end

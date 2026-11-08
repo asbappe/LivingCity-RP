@@ -71,4 +71,4 @@
 - **Random tests:** "a headcrab near: it runs, no vortessence (the collar)" (1 November playtest unit) and the collared vortigaunt sweeper move: each fails now and then, before this session too.
 - **Pose Recorder 2, second update:** the timeline strip (jump, reorder, duplicate, delete, scrub) and putting a saved pose back onto a ragdoll.
 - **Random test:** "shifts appear on the board" (Occupations) can crash when no spot is found in 6 tries (seen once in a full run).
-- [ ] **Questions for the owner (vortigaunt dream warfare):** (Ravenholm, 8 November, already counts a Free Vortigaunt player online, `LC.DreamFreeVort`, as "free"; freed NPC vortigaunts don't count yet.) (1) How does a vortigaunt count as "freed" today? (2) What should siding with them in a dream cost or earn?
+- [ ] **Questions for the owner (vortigaunt dream warfare):** (The owner, 8 November: "any vortigaunt that had been freed from shackles even if an NPC". Ravenholm counts a Free Vortigaunt player or an NPC marked `lcVortFreed`, `LC.DreamFreeVort`; use the same for dream warfare.) (1) How does a vortigaunt count as "freed" today? (2) What should siding with them in a dream cost or earn?
