@@ -68,3 +68,4 @@
 - **Core snapshot copy (owner OK'd, 8 November):** the approved changes (NPC cap 100, six food settings, `lc_burn_evidence`, `/letslip`) still need copying into the core snapshot; this session's permission rules wouldn't let the copy run. The owner (or a session allowed to) copies the `.new` snapshot over the old one after one `python3 _dev/run_parallel.py`.
 - **Random tests:** "a headcrab near: it runs, no vortessence (the collar)" (1 November playtest unit) and the collared vortigaunt sweeper move: each fails now and then, before this session too.
 - **Pose Recorder 2, second update:** the timeline strip (jump, reorder, duplicate, delete, scrub) and putting a saved pose back onto a ragdoll.
+- **Random test:** "shifts appear on the board" (Occupations) can crash when no spot is found in 6 tries (seen once in a full run).
