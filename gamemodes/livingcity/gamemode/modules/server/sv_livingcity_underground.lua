@@ -1378,8 +1378,13 @@ function LC.OpenMarket(ply)
         local short -- (how many credits short: shown beside the name; the owner, 7 November)
         if credits < price then can, reason, short = false, "Not enough credits", price - credits end
         if can and g.item and not LC.CanCarry(ply, g.item, g.count or 1) then can, reason = false, "Too much to carry" end
-        goods[#goods + 1] = { id = g.id, name = g.name, price = price, desc = g.desc, ok = can, why = reason, short = short,
-            market = LC.MarketBlackNote and LC.MarketBlackNote(g) or nil }
+        local left, nextIn = LC.BlackStockLeft(g)
+        local note = LC.MarketBlackNote and LC.MarketBlackNote(g) or nil
+        if left then
+            if left <= 0 then can, reason = false, string.format("Sold out: more in about %d minutes", math.max(1, math.ceil((nextIn or 60) / 60))) end
+            note = (note and (note .. ". ") or "") .. string.format("%d left", left)
+        end
+        goods[#goods + 1] = { id = g.id, name = g.name, price = price, desc = g.desc, ok = can, why = reason, short = short, market = note }
     end
     local inv = LC.Inventory(ply)
     local ids = table.GetKeys(inv)
@@ -1438,11 +1443,33 @@ function LC.MarketPrice(ply, g)
     return LC.BlackPrice(g)
 end
 
+-- A limited supply (the owner, 8 November: stimulants "not infinite supplied"): the dealers between them
+-- hold lc_stim_stock (5) shots at a time, one more every lc_stim_restock_minutes (20). Goods marked stock = "stim".
+local cvStimStock = CreateConVar("lc_stim_stock", "5", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Stimulant shots the black market holds at a time (one supply for every dealer)")
+local cvStimRestock = CreateConVar("lc_stim_restock_minutes", "20", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Minutes for the black market to get one more stimulant shot")
+LC.BlackStock = LC.BlackStock or {}
+-- How many are left (nil: as many as anyone wants), and the seconds until the next one comes in.
+function LC.BlackStockLeft(g)
+    if not g or g.stock ~= "stim" then return nil end
+    local max, every = math.max(0, cvStimStock:GetInt()), math.max(1, cvStimRestock:GetFloat() * 60)
+    local s = LC.BlackStock.stim
+    local now = CurTime()
+    if not s then s = { n = max, at = now } LC.BlackStock.stim = s end
+    if s.n >= max then s.at = now
+    else
+        local got = math.floor((now - s.at) / every)
+        if got > 0 then s.n, s.at = math.min(max, s.n + got), s.at + got * every end
+    end
+    return s.n, s.n < max and math.max(0, math.ceil(s.at + every - now)) or nil
+end
+
 function LC.BlackBuy(ply, id)
     local g = LC.MarketBlackById and LC.MarketBlackById(id) or LCS.BlackById[id]
     if not g then return false end
     local ok, why = LC.MarketAccess(ply)
     if not ok then return false, why end
+    local left, next = LC.BlackStockLeft(g)
+    if left and left <= 0 then return false, string.format("He's out of those. More in about %d minutes.", math.max(1, math.ceil((next or 60) / 60))) end
     local price = LC.MarketPrice(ply, g)
     if LC.Credits(ply) < price then return false, "Not enough credits." end
     if g.item then local okC, whyC = LC.CanCarry(ply, g.item, g.count or 1) if not okC then return false, whyC end end
@@ -1452,6 +1479,7 @@ function LC.BlackBuy(ply, id)
         local e = ents.Create(g.entity)
         if IsValid(e) then e:SetPos(ply:GetPos() + ply:GetForward() * 40 + Vector(0, 0, 20)) e:Spawn() end
     end
+    if left then LC.BlackStock.stim.n = left - 1 end
     if LC.MarketBought then LC.MarketBought(g, "black") end
     ply:ChatPrint(string.format("[Black market] %s, for %d credits. You didn't get it here.", g.name, price))
     return true

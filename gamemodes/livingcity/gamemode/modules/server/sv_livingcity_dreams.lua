@@ -43,7 +43,8 @@
       play, or taken out of an ending). A stimulant shot (sv_livingcity_vices.lua) keeps you from
       sleeping at all, so a nightmare can't have you.
 
-      Players: C > Settings > Shared dreams (on, or opt out; and "Wake up" in a dream), or
+      (8 November: nobody can opt out of any dream, or wake themselves until out of it; Enforcers excepted.)
+      Players: C > Settings > Shared dreams ("Wake up" in a dream, once out of it), or
       /dream off, /dream on, /dream wake. Admins: C > Help > Dreams (what's waiting, dream it
       now, wake everyone, put back anyone's things), lc_dream_restore <name>, lc_dream_now.
 ]]
@@ -181,7 +182,8 @@ end
 -- Who: asleep, and not opted out
 ------------------------------------------------------------------------
 
-function LC.DreamOptedOut(p) return IsValid(p) and p:GetPData("lc_dream_optout", "0") == "1" end
+-- (the owner, 8 November: "make it so no one can opt out of dreams": an old opt-out no longer counts)
+function LC.DreamOptedOut(p) return false end
 
 function LC.Dreaming(p) return IsValid(p) and p.lcDreaming ~= nil end
 
@@ -228,7 +230,8 @@ end
 -- Can they wake themselves now? Not from a nightmare, until they're out of it. True, or false and why not.
 function LC.DreamCanWake(p)
     local dream = LC.DreamActive
-    if not IsValid(p) or not dream or dream.id ~= p.lcDreaming or not (dream.forced or dream.mood == "nightmare") then return true end
+    -- (any dream now, not only a nightmare: the owner, 8 November, "make it so no one can opt out of dreams")
+    if not IsValid(p) or not dream or dream.id ~= p.lcDreaming then return true end
     if p.lcDreamEnforcer then return true end -- (an Enforcer is only watching over it: sv_livingcity_dreamenforcers.lua)
     local g = dream.game
     if g and g.pl and g.pl[p] and g.pl[p].done then return true end
@@ -244,8 +247,7 @@ function LC.DreamWakeAsked(p)
     if not ok then Notice(p, "warn", "A nightmare", why, 6) return false end
     -- (through with it already: out of it, or won; else woken early. Stimulants: sv_livingcity_bedtime.lua)
     local dream, g = LC.DreamActive, LC.DreamActive and LC.DreamActive.game
-    p.lcDreamWokeFull = (dream and (dream.forced or dream.mood == "nightmare") and not p.lcDreamEnforcer)
-        or (g and g.pl[p] and g.pl[p].done) or p.lcEndSpectating or nil
+    p.lcDreamWokeFull = not p.lcDreamEnforcer or nil -- (a dreamer can only wake once out of it: dreamt through)
     LC.DreamWakeOne(p, "optout")
     return true
 end
@@ -798,7 +800,7 @@ local function Enter(p, dream, spot)
     p:SetPos(spot)
     if p.SetEyeAngles then p:SetEyeAngles(Angle(0, (dream.pos - spot):Angle().y, 0)) end
     Notice(p, "info", "A dream", "You drift into a dream, with everyone else asleep. Whatever happens here, you wake in your bed with everything you had. "
-        .. "To wake up now: C > Settings > Shared dreams: wake up.", 12)
+        .. "You can't wake yourself until you're out of it (then: C > Settings > Shared dreams: wake up).", 12)
     return true
 end
 
@@ -1151,7 +1153,7 @@ timer.Create("LivingCityDreams", 1, 0, function()
                         Notice(p, mood == "nightmare" and "warn" or "info", "A dream is coming", MOOD_LINES[mood] .. " It's shared with everyone asleep, and you'll wake in your bed with everything you had. "
                             .. (mood == "nightmare" and "There's no opting out of a nightmare: only a stimulant before bed (or the lab's foil hat) would have kept you out of it."
                                 or forced and "There's no opting out of this one: only a stimulant before bed (or the lab's foil hat) would have kept you out of it."
-                                or "Not tonight? C > Settings > Shared dreams: opt out."), 12)
+                                or "There's no opting out: only a stimulant before bed (or the lab's foil hat) would have kept you out of it."), 12)
                     end
                 end
             end
@@ -1311,13 +1313,12 @@ hook.Add("InitPostEntity", "LivingCityDreams", Wrap)
 -- Players: opting out, and waking up
 ------------------------------------------------------------------------
 
+-- (no opting out any more: the owner, 8 November. Asking just says so.)
 function LC.SetDreamOptOut(p, out)
     if not IsValid(p) then return end
-    p:SetPData("lc_dream_optout", out and "1" or "0")
-    p:SetNW2Bool("lc_dream_optout", out and true or false)
-    if out and p.lcDreaming and LC.DreamCanWake(p) then LC.DreamWakeOne(p, "optout") end
-    Notice(p, "info", "Shared dreams", out and "You've opted out: you sleep without the city's dreams. (C > Settings > Shared dreams to opt back in.)"
-        or "You'll dream with everyone else asleep. You always wake in your bed, with everything you had.", 8)
+    if p:GetPData("lc_dream_optout", "0") == "1" then p:SetPData("lc_dream_optout", "0") end
+    p:SetNW2Bool("lc_dream_optout", false)
+    Notice(p, "info", "Shared dreams", "Nobody can opt out of the city's dreams. Everyone asleep dreams them; only a stimulant before bed (or the lab's foil hat) keeps one out.", 8)
 end
 
 local function DreamCommand(p, rest)
@@ -1327,14 +1328,14 @@ local function DreamCommand(p, rest)
     elseif a == "wake" then
         if p.lcDreaming then LC.DreamWakeAsked(p) else p:ChatPrint("[Dreams] You're not dreaming.") end
     else
-        p:ChatPrint("[Dreams] Shared dreams are " .. (LC.DreamOptedOut(p) and "off for you" or "on for you") .. ". /dream off, /dream on, /dream wake (or C > Settings).")
+        p:ChatPrint("[Dreams] Everyone asleep dreams the city's dreams: nobody can opt out. /dream wake, once you're out of one (or C > Settings).")
     end
 end
 LC.SlashCommands = LC.SlashCommands or {}
 LC.SlashCommands.dream = DreamCommand
 
 hook.Add("PlayerInitialSpawn", "LivingCityDreams", function(p)
-    p:SetNW2Bool("lc_dream_optout", LC.DreamOptedOut(p))
+    p:SetNW2Bool("lc_dream_optout", false)
     -- a snapshot left from a dream they didn't wake from here (a crash, a disconnect, a map change): put back
     timer.Simple(6, function()
         if not IsValid(p) or p.lcDreaming then return end

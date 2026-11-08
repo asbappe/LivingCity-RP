@@ -431,7 +431,7 @@ LCS.Black = {
     { id = "beer", item = "beer", price = 8, desc = "Bathtub beer. It's wet, and it works." },
     { id = "moonshine", item = "moonshine", price = 10, desc = "Strong enough to strip paint. Mostly safe." },
     { id = "vodka_black", item = "vodka", price = 70, desc = "Pre-war vodka, for people the Union isn't proud of." },
-    { id = "stimulant", item = "stimulant", price = 35, desc = "Stolen from a Civil Protection depot. Keeps you awake all night, nightmares and all." },
+    { id = "stimulant", item = "stimulant", price = 40, stock = "stim", desc = "Stolen from a Civil Protection depot, a few at a time. Keeps you up past lights out, and the night's dream goes by without you." }, -- (40 and a limited supply: the owner, 8 November)
     { id = "crowbar", name = "Crowbar", weapon = "weapon_crowbar", price = 50, desc = "Every revolution starts somewhere." },
     { id = "multitool", name = "Multitool", weapon = "weapon_lc_multitool", price = 250, desc = "Opens Combine locks, screens and terminals. Very illegal. Don't get searched." },
     { id = "gun_parts", item = "gun_parts", price = 18, desc = "Springs, barrels, pins. Make something with them." },

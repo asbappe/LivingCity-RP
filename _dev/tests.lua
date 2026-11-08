@@ -13790,9 +13790,10 @@ local okQ = LC.DreamQueueEnding("hard", s1, "admin")
 ok(okQ and LC.EndingAny() == nil and LC.DreamQueued() and LC.DreamQueued().id == "hard",
     "a dream chosen for tonight waits for the night (the city carries on)")
 
--- opting out (C > Settings, or /dream off)
+-- no opting out (the owner, 8 November: "make it so no one can opt out of dreams"); a stimulant keeps you out
 LC.SlashCommands.dream(s2, "off")
-ok(LC.DreamOptedOut(s2) and s2:GetNW2Bool("lc_dream_optout", false), "a player can opt out (saved with them)")
+ok(not LC.DreamOptedOut(s2) and not s2:GetNW2Bool("lc_dream_optout", false), "nobody can opt out (/dream off just says so)")
+s2:SetNW2Float("lc_wired_until", CurTime() + 900)
 
 -- everything about s1, before
 LC.Inventory(s1).bread = 3
@@ -13829,7 +13830,7 @@ _run(9)
 local E = LC.EndingAny()
 ok(E and E.dream and E.id == "hard", "about lc_dream_delay after the Administrator's good night, the dream begins", E and E.id)
 local dream = E and E.dream
-ok(s1.lcDreaming and s3.lcDreaming and not s2.lcDreaming and not aw.lcDreaming, "everyone asleep dreams it; whoever opted out, and the awake, don't")
+ok(s1.lcDreaming and s3.lcDreaming and not s2.lcDreaming and not aw.lcDreaming, "everyone asleep dreams it; whoever's on a stimulant, and the awake, don't")
 ok(LC.EndingSession() == nil and not LC.TimeStopped and not GetGlobal2Bool("lc_timestop", false), "to the rest of the city there's no ending: no time stop")
 ok(s1:GetPos():Distance(DREAM) < 1600 and s3:GetPos():Distance(DREAM) < 1600, "the dreamers are at the dream point")
 ok(_files[LC.DreamFileOf(s1:SteamID64())] ~= nil and _files[LC.DreamFileOf(s3:SteamID64())] ~= nil, "a snapshot of each dreamer is saved to disk first")
@@ -13840,7 +13841,7 @@ ok(LC.BedSleepers[bed1] == s1 and not LC.BedFree(bed1, s2), "their bed stays the
 _run(5)
 E = LC.EndingAny()
 ok(E and E.phase ~= "gman", "no G-Man's vote in a dream (the owner, 7 November: the G-Man is kept for the endings)", E and E.phase)
-ok(not aw.frozen and aw:GetPos():Distance(awPos) < 1 and #aw.weps == awWeps and not s2.frozen, "the awake (and whoever opted out) aren't touched: not frozen, not moved",
+ok(not aw.frozen and aw:GetPos():Distance(awPos) < 1 and #aw.weps == awWeps and not s2.frozen, "the awake (and whoever's on a stimulant) aren't touched: not frozen, not moved",
     tostring(aw.frozen) .. " " .. tostring(aw:GetPos():Distance(awPos)) .. " " .. #aw.weps .. "/" .. awWeps .. " " .. tostring(s2.frozen) .. " " .. table.concat(aw.weps, ","))
 ok(not LC.TimeStopped and LC.StartEvent ~= nil, "and the city's time goes on")
 _run(31)
@@ -13918,12 +13919,14 @@ ok(s1b:HasWeapon("weapon_pistol") and s1b.clips.weapon_pistol == 12 and s1b.ammo
 ok(LC.Inventory(s1b).bread == 3 and LC.Credits(s1b) == credits0, "and their pockets and credits")
 ok(s1b:GetPos():Distance(CITY) < 1, "and they're back in their bed")
 ok(_files[LC.DreamFileOf(sid)] == nil, "(then the snapshot goes)")
--- opting out in the middle of one: awake at once, everything back
+-- nobody wakes themselves from a dream until they're out of it, not even a Happy one; an admin can still wake them
 local h3 = s3:Health()
 s3:SetHealth(1)
 LC.SlashCommands.dream(s3, "off")
+ok(LC.DreamWakeAsked(s3) == false and s3.lcDreaming, "nobody wakes themselves from a dream until they're out of it (a Happy one too)")
+LC.DreamWakeOne(s3, "admin")
 _run(3)
-ok(not s3.lcDreaming and s3:Health() == h3, "opting out in a dream wakes them at once, with everything back")
+ok(not s3.lcDreaming and s3:Health() == h3, "an admin can still wake them, with everything back")
 ok(LC.EndingAny() == nil, "the last dreamer gone, the dream's over")
 -- an old snapshot, already put back once, isn't put back by itself again; an admin can
 local snap = LC.DreamSnapshot(s3)
@@ -13937,7 +13940,7 @@ ok(LC.DreamForceRestore(s3) and true, "an admin can put it back anyway (lc_dream
 _run(4)
 ok(s3:Health() == snap.hp and _files[LC.DreamFileOf(s3:SteamID64())] == nil, "and it's put back")
 -- and with the dream point gone, as always again
-LC.SlashCommands.dream(s2, "on")
+s2:SetNW2Float("lc_wired_until", 0)
 LC.RemovePoint(dp)
 concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
 ok(LC.TriggerEnding("hard", s1b) and LC.EndingSession() ~= nil, "the dream point taken away: the endings are the whole city's again")
@@ -14597,6 +14600,19 @@ cop:SetPos(cop0)
 LC.RemoveZone(rzone)
 _run(2.5)
 
+
+-- stimulants: 40 credits, and a limited supply at the black market (the owner, 8 November)
+local stimG = LCS.BlackById.stimulant
+LC.BlackStock.stim = nil
+local left0 = LC.BlackStockLeft(stimG)
+ok(stimG.price == 40 and left0 == 5 and LC.BlackStockLeft(LCS.BlackById.beer) == nil, "a stimulant is 40 credits, and the dealers hold 5 at a time (beer: as much as anyone wants)")
+LC.BlackStock.stim.n = 0
+local leftS, nextS = LC.BlackStockLeft(stimG)
+ok(leftS == 0 and nextS and nextS > 0, "sold out: more on the way")
+LC.BlackStock.stim.at = CurTime() - 20 * 60 - 1
+ok(LC.BlackStockLeft(stimG) == 1, "one more every 20 minutes")
+LC.BlackStock.stim = nil
+
 LC.DreamForget()
 LC.RemovePoint(dp)
 for _, p in ipairs({ a, b, cop, reb }) do
@@ -14675,7 +14691,7 @@ b:SetPData("lc_dream_optout", "1")
 a:SetNW2Float("lc_unbroken_until", CurTime() + 600)
 local who = LC.DreamSleepers(LC.DreamMood("adore"), "adore")
 ok(table.HasValue(who, b) and not table.HasValue(who, a), "no opting out of a propaganda dream (only Unbroken keeps you out: the Combine can't get into your head)")
-ok(not table.HasValue(LC.DreamSleepers("happy", "bus"), b), "(a Happy ending as a dream can still be opted out of)")
+ok(table.HasValue(LC.DreamSleepers("happy", "bus"), b), "(and no opting out of a Happy ending as a dream either: the owner, 8 November)")
 b:SetPData("lc_dream_optout", "0")
 a:SetNW2Float("lc_unbroken_until", 0)
 
@@ -15571,8 +15587,8 @@ p:SetNW2Float("lc_crash_until", 0)
 p.lcSleep, q.lcSleep = { t0 = CurTime(), done = CurTime() + 600 }, { t0 = CurTime(), done = CurTime() + 600 }
 p:SetPData("lc_dream_optout", "1")
 local function Has(list, x) for _, v in ipairs(list) do if v == x then return true end end return false end
-ok(not Has(LC.DreamSleepers("happy"), p) and Has(LC.DreamSleepers("happy"), q), "opted out: no happy or neutral dreams")
-ok(Has(LC.DreamSleepers("nightmare"), p), "but a nightmare takes everyone asleep, opted out or not")
+ok(Has(LC.DreamSleepers("happy"), p) and Has(LC.DreamSleepers("happy"), q), "an old opt-out doesn't count: nobody opts out of any dream (the owner, 8 November)")
+ok(Has(LC.DreamSleepers("nightmare"), p), "and a nightmare takes everyone asleep")
 q:SetNW2Float("lc_wired_until", CurTime() + 60)
 ok(not Has(LC.DreamSleepers("nightmare"), q), "(only a stimulant keeps you out of one)")
 p.lcSleep, q.lcSleep = nil, nil

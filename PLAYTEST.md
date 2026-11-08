@@ -1038,3 +1038,7 @@ Notes:
   Notes:
 - [ ] **Woken in your sleep:** while someone dreams, their body lies in their bed; hit it: they wake in bed, hurt. Shoot as a unit near a rebel camp at night: rebels asleep there (players and NPCs) wake. Sleep hungry: no starving damage while asleep.
   Notes:
+- [ ] **No opting out:** C > Settings shows no opt-out; in a Happy dream, "Wake up" says you can't until you're out of it; `/dream off` says there's no opting out.
+  Notes:
+- [ ] **Stimulant supply:** the dealer sells them at 40, shows how many are left, and after 5 are bought says sold out until one more comes in (20 minutes).
+  Notes:

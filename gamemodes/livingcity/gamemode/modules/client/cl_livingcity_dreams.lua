@@ -1,7 +1,7 @@
 --[[
     Living City: shared dreams, your side (sv_livingcity_dreams.lua)
 
-      C > Settings > Shared dreams: on, or opt out (and, in a dream, wake up now).
+      C > Settings > Shared dreams: in a dream, wake up (once you're out of it; nobody opts out).
       While you dream, a line at the top of the screen says how to wake.
       Admins: C > Help > Dreams (or the Dreams button in the Endings menu): whether
       dreams can happen (a dream point placed), what's waiting for tonight and when,
@@ -84,7 +84,7 @@ local function Open(st)
     else
         Line(body, "Nothing is waiting for tonight's dream" .. (st.every and " (lc_dream_every_night: a random one, at night)." or "."), DIM)
     end
-    Line(body, string.format("Asleep right now (and not opted out): %d", st.asleep or 0), DIM)
+    Line(body, string.format("Asleep right now: %d", st.asleep or 0), DIM)
     if st.point and st.on and not st.active then
         local row = vgui.Create("DPanel", body)
         row:Dock(TOP)
