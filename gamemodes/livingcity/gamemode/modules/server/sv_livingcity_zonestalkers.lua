@@ -133,7 +133,7 @@ end
 -- sinks and stoves: LC.StaticTerminals, sv_livingcity_staticprops.lua), and any that are props.
 local PROP_CLASSES = { "prop_physics", "prop_physics_multiplayer", "prop_dynamic", "prop_dynamic_override" }
 
-local function ConsoleModel(m) return LC.IsTerminalModel and LC.IsTerminalModel(m) or false end
+local function ConsoleModel(m) return LC.IsStalkerConsoleModel and LC.IsStalkerConsoleModel(m) or false end
 
 local propCache, propAt = {}, -1000
 local function ConsoleProps(now)
@@ -273,7 +273,7 @@ local function Walk(npc, pos)
     npc:SetSchedule(SCHED_FORCED_GO)
 end
 
-local function SetDoing(r, text) if IsValid(r.npc) then r.npc:SetNW2String("lc_doing", text or "") end end
+local function SetDoing(r, text) if IsValid(r.npc) then LC.SetNPCStr(r.npc, "lc_doing", text or "") end end
 
 -- Somewhere in the zone nobody can see.
 local function HiddenSpot(z, near)
@@ -300,7 +300,7 @@ local function SpawnStalker(pos)
     Call(npc, "SetKeyValue", "BeamPower", "0")
     npc:SetName("lc_zonestalker_" .. npc:EntIndex()) -- (a scripted_sequence finds it by name)
     npc.lcStalkerCleaner = true
-    npc:SetNW2String("lc_pname", "Stalker")
+    LC.SetNPCStr(npc, "lc_pname", "Stalker")
     return npc
 end
 

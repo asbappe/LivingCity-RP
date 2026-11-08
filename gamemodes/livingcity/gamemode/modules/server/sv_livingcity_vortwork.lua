@@ -306,7 +306,7 @@ local function TendKin(v, now)
     if LC.Face then LC.Face(v, best:GetPos()) end
     if LC.VortHeal(v, best) then
         v.lcHealNext = now + 15
-        v:SetNW2String("lc_doing", "mending its kin")
+        LC.SetNPCStr(v, "lc_doing", "mending its kin")
     end
     return true
 end
@@ -336,7 +336,7 @@ local function VortLife(now)
             if spot and v.SetLastPosition then
                 v:SetLastPosition(spot)
                 v:SetSchedule(SCHED_FORCED_GO)
-                v:SetNW2String("lc_doing", math.random() < 0.5 and "tending the camp" or "humming to itself")
+                LC.SetNPCStr(v, "lc_doing", math.random() < 0.5 and "tending the camp" or "humming to itself")
             end
             if math.random() < 0.3 then v:EmitSound(HUMS[math.random(#HUMS)], 55, math.random(80, 95)) end
         end
@@ -364,7 +364,7 @@ function LC.VortConverse(a, b)
     if LC.Face then LC.Face(a, b:GetPos()) LC.Face(b, a:GetPos()) end
     for _, v in ipairs({ a, b }) do
         if v.SetSchedule then v:SetSchedule(SCHED_IDLE_STAND) end
-        v:SetNW2String("lc_doing", "speaking with its kin")
+        LC.SetNPCStr(v, "lc_doing", "speaking with its kin")
         v.lcVortNext = CurTime() + 25 -- (it stays put for the conversation)
     end
     local lines = math.random(4, 6)
@@ -375,7 +375,7 @@ function LC.VortConverse(a, b)
         end)
     end
     timer.Simple(lines * 2.6 + 1, function()
-        for _, v in ipairs({ a, b }) do if IsValid(v) then v:SetNW2String("lc_doing", "") end end
+        for _, v in ipairs({ a, b }) do if IsValid(v) then LC.SetNPCStr(v, "lc_doing", "") end end
     end)
     return true
 end

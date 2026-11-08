@@ -149,11 +149,11 @@ function LC.CitizenNPCAction(ply, cmd, npc)
     npc.lcTalkNext = CurTime() + 1
     if LC.Face then LC.Face(npc, ply:GetPos()) end
     if cmd == "askname" then
-        local name = npc:GetNW2String("lc_pname", "")
+        local name = LC.NPCStr(npc, "lc_pname", "")
         if name == "" then
             local fem = st.gender == "female" or string.find(string.lower(npc:GetModel() or ""), "female", 1, true)
             name = (fem and FIRST_F or FIRST_M)[math.random(#(fem and FIRST_F or FIRST_M))]
-            npc:SetNW2String("lc_pname", name)
+            LC.SetNPCStr(npc, "lc_pname", name)
             if st.profile then st.profile.name = st.profile.name or name end
         end
         npc:SetNW2Bool("lc_introduced", true)

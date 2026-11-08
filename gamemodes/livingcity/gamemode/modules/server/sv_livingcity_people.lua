@@ -67,14 +67,14 @@ function LC.SavePeople()
             memory = p.memory, -- how each player's character has treated them (sv_livingcity_talk.lua)
         }
     end
-    file.Write(File(), util.TableToJSON(out))
+    LC.SafeWrite(File(), util.TableToJSON(out))
 end
 
 function LC.LoadPeople()
     P.loaded = true
     P.list, P.next = {}, 1
-    if file and file.Exists and file.Exists(File(), "DATA") then
-        local t = util.JSONToTable(file.Read(File(), "DATA") or "")
+    do
+        local t = LC.SafeReadJSON(File())
         if istable(t) and istable(t.list) then
             P.next = tonumber(t.next) or 1
             for _, p in ipairs(t.list) do
@@ -181,7 +181,7 @@ function LC.StaffRoster()
         p.job = need.id
         count[need.id] = (count[need.id] or 0) + 1
         moved = moved + 1
-        if IsValid(p.npc) then p.npc:SetNW2String("lc_pjob", need.name or "") end
+        if IsValid(p.npc) then LC.SetNPCStr(p.npc, "lc_pjob", need.name or "") end
     end
     if moved > 0 then MarkDirty() end
     return moved
@@ -272,14 +272,14 @@ function LC.AttachProfile(npc, st, p)
     npc.lcProfile = p
     p.npc = npc
     st.profile = p
-    npc:SetNW2String("lc_pname", p.name)
+    LC.SetNPCStr(npc, "lc_pname", p.name)
     npc:SetNW2Int("lc_pid", p.id)
     if p.role == "citizen" then
         if p.model then npc:SetModel(p.model) end
         if LC.DressPerson then LC.DressPerson(npc, p) end -- (their job's clothes: sv_livingcity_outfits.lua)
         st.gender = p.gender or st.gender
         local job = p.job and LCJ and LCJ.ById[p.job]
-        npc:SetNW2String("lc_pjob", job and job.name or "")
+        LC.SetNPCStr(npc, "lc_pjob", job and job.name or "")
         npc:SetNW2Bool("lc_prebel", p.rebel == true)
         st.rebel = p.rebel == true
     end

@@ -518,7 +518,7 @@ local NEED = { heist = 30, breakout = 15, screen = 15, ambush = 20, supply = 15 
 local triedBreakout = setmetatable({}, { __mode = "k" })
 
 local function Achieve(sk)
-    sk.done = true
+    sk.achieved = true -- (not sk.done: that is EndSkirmish's own flag, and setting it here meant the skirmish never ended, so no raid or sweep came again)
     local purpose, data = sk.purpose, sk.data or {}
     if purpose == "heist" then
         if data.key and LC.TerminalReadyAt then LC.TerminalReadyAt[data.key] = CurTime() + 20 * 60 end
@@ -552,7 +552,7 @@ local function OpTick(now)
     local sk = LC.Skirmish
     if not sk then return end
     NPCDoors(sk, now)
-    if not sk.purpose or sk.done then return end
+    if not sk.purpose or sk.done or sk.achieved then return end
     local near = 0
     for _, npc in ipairs(sk.rebels or {}) do
         if IsValid(npc) and npc:Health() > 0 and npc:GetPos():DistToSqr(sk.target) < 280 * 280 then near = near + 1 end
@@ -709,7 +709,7 @@ function LC.SettleVort(npc, quiet)
         if LC.SetState then LC.SetState(npc, st, "event") end
         st.eventUntil = CurTime() + 1e6
     end
-    npc:SetNW2String("lc_pname", "Freed vortigaunt")
+    LC.SetNPCStr(npc, "lc_pname", "Freed vortigaunt")
     if not quiet then Radio("resistance", "The vortigaunt is home. Ask it (E) and it will charge your vest.") end
 end
 
@@ -990,8 +990,8 @@ local function SlaveTick(now)
     Harmless(v)
     v:SetNW2Bool("lc_shackled", true)
     v:SetNW2Bool("lc_noragdoll", true) -- (dead: a body the morticians collect, sv_livingcity_bodies.lua)
-    v:SetNW2String("lc_pname", "Shackled vortigaunt")
-    v:SetNW2String("lc_doing", "sweeping the street, collared")
+    LC.SetNPCStr(v, "lc_pname", "Shackled vortigaunt")
+    LC.SetNPCStr(v, "lc_doing", "sweeping the street, collared")
     v.lcVortSlave = true
     LC.VortSlaves[v] = { next = 0, harmless = true }
     Broom(v, LC.VortSlaves[v])
@@ -1009,8 +1009,8 @@ function LC.FreeStreetVort(v, by)
     v.lcVortSlave = nil
     if not util.IsValidModel or util.IsValidModel("models/vortigaunt.mdl") then v:SetModel("models/vortigaunt.mdl") end
     v:SetNW2Bool("lc_shackled", false)
-    v:SetNW2String("lc_pname", "Freed vortigaunt")
-    v:SetNW2String("lc_doing", "heading for rebel ground")
+    LC.SetNPCStr(v, "lc_pname", "Freed vortigaunt")
+    LC.SetNPCStr(v, "lc_doing", "heading for rebel ground")
     if LC.QuestVortPeaceful then LC.QuestVortPeaceful(v, false) end
     v:EmitSound("npc/vort/vort_foot" .. math.random(1, 4) .. ".wav", 70)
     if IsValid(by) then
@@ -1027,7 +1027,7 @@ function LC.FreeStreetVort(v, by)
         if v:GetPos():DistToSqr(spot) < 200 * 200 or CurTime() - started > 120 then
             -- home (or near enough, and out of sight: it finds its own way the rest)
             if v:GetPos():DistToSqr(spot) >= 200 * 200 and not (LC.IsSeen and LC.IsSeen(v:GetPos() + Vector(0, 0, 50))) then v:SetPos(spot + Vector(0, 0, 4)) end
-            v:SetNW2String("lc_doing", "")
+            LC.SetNPCStr(v, "lc_doing", "")
             LC.SettleVort(v, true)
             return
         end

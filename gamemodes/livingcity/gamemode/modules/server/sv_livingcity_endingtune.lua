@@ -28,8 +28,7 @@ LC.EndingTuneShared = SHARED
 local tuning = { bones = {}, shared = {} } -- bones[move][bone] = { p, y, r }; shared[name] = "value"
 
 local function Load()
-    local raw = file.Read(FILE, "DATA")
-    local t = raw and util.JSONToTable(raw)
+    local t = LC.SafeReadJSON(FILE)
     if istable(t) then
         tuning.bones = istable(t.bones) and t.bones or {}
         tuning.shared = istable(t.shared) and t.shared or {}
@@ -61,8 +60,7 @@ Load()
 
 local function Save()
     timer.Create("LivingCityEndingTuneSave", 1, 1, function()
-        file.CreateDir("livingcity")
-        file.Write(FILE, util.TableToJSON(tuning, true))
+        LC.SafeWrite(FILE, util.TableToJSON(tuning, true))
     end)
 end
 
@@ -88,6 +86,22 @@ local function SendAll(to, omit)
     if to then net.Send(to)
     elseif omit and net.SendOmit then net.SendOmit(omit)
     else net.Broadcast() end
+end
+
+-- Every other player's game gets the new tuning: at once, then at most every half second
+-- while someone drags a slider (each send is the whole tuning, to everyone).
+local shareNext, shareOmit, sharePending = 0, nil, false
+function LC.EndingTuneShare(omit)
+    local now = CurTime()
+    if now >= shareNext and not sharePending then
+        shareNext = now + 0.5
+        return SendAll(nil, omit)
+    end
+    shareOmit, sharePending = omit, true
+    timer.Create("LivingCityEndingTuneShare", math.max(0.05, shareNext - now), 1, function()
+        sharePending, shareNext = false, CurTime() + 0.5
+        SendAll(nil, IsValid(shareOmit) and shareOmit or nil)
+    end)
 end
 
 -- everything the menu shows: the endings (and which one is on), and each one's settings
@@ -144,7 +158,7 @@ function LC.EndingTuneSet(ply, kind, a, b, p, y, r)
         return false
     end
     Save()
-    SendAll(nil, IsValid(ply) and ply or nil)
+    LC.EndingTuneShare(IsValid(ply) and ply or nil)
     return true
 end
 

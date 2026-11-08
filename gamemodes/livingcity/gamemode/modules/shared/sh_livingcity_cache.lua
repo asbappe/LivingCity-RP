@@ -7,6 +7,13 @@
                      city's own classes (lc_*) are tracked from the start; any
                      other class is tracked from the first time it's asked
                      for. The list is shared: read it, don't change it.
+    LC.Players()     every player, for a loop: for _, ply in LC.Players() do.
+                     The same players, in the same order, as
+                     ipairs(player.GetAll()), but through the game's own
+                     player.Iterator where it has one, which keeps one list
+                     instead of making a new table on every call (the loops
+                     that run every tick, or for every NPC on its turn, made
+                     hundreds a second). Don't change the list while looping.
 ]]
 
 LC = LC or {}
@@ -62,3 +69,11 @@ end
 
 -- How many of a class there are (no list built twice).
 function LC.CountOf(cls) return #LC.EntsOf(cls) end
+
+-- Every player, for a loop (see the top of this file). Looked up on each call, so a game
+-- without player.Iterator (or a test) gets ipairs(player.GetAll()), exactly as before.
+function LC.Players()
+    local it = player and player.Iterator
+    if it then return it() end
+    return ipairs(player.GetAll())
+end

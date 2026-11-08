@@ -46,7 +46,7 @@ function LC.WaysToGetBy(ply)
     end
 
     -- the citizen's city (the Resistance live in it too)
-    Add("Eat and drink", "Your ration at a dispenser, every ten minutes; water from a sink or a machine.", nil, "dispenser")
+    Add("Eat and drink", "Your ration at a dispenser, every 25 minutes; water from a sink or a machine.", nil, "dispenser")
     Add("Search bins and dumpsters", "E on any bin: scrap, food, things to sell or make with.", nil, "bin")
     if job then
         Add("Work a shift as " .. (job.name or "a Union worker"), "Shifts pay credits: your board (F4).", nil, "work", "jobs")

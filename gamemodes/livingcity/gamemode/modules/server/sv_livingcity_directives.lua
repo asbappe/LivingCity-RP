@@ -91,6 +91,11 @@ end)
 hook.Add("OnNPCKilled", "LivingCityDirectives", function()
     S.deaths[#S.deaths + 1] = Now() Trim(S.deaths, 200)
 end)
+-- The master data core decoded at the Resistance's lab: All your base's own way in (below).
+local CORE_WINDOW = 1800
+hook.Add("LivingCityDataDecoded", "LivingCityDirectives", function(ply, chip)
+    if chip == "master_chip" then S.coreDecodedAt = Now() end
+end)
 
 -- The Administrator's office: the orders below, and every act noted
 local ORDERS = {}
@@ -324,7 +329,9 @@ local D = {
             local held = (LC.GrownCount and LC.GrownCount("rebel") or 0) > 0 or LC.Skirmish ~= nil
             return { Logged("amnesty", 1800, now) > 0, held }
         end,
-        city = function(now) return 0 end, -- (the master data core to a lab scientist: not yet in the game)
+        -- the city's own way: the master data core carried to a Resistance lab and decoded by its
+        -- scientist (sv_livingcity_heist.lua, LC.DecodeChip), in the last half hour
+        city = function(now) return (S.coreDecodedAt and now - S.coreDecodedAt < CORE_WINDOW) and 1 or 0 end,
     },
     marrow = {
         riddle = "Send the morticians home, let ten bodies lie: / the dead get up dancing beneath the night sky.",

@@ -10,7 +10,7 @@
             train's freight (+15); a supply convoy, for every load that wasn't
             stolen (+15 a load)
       Out   every ration handed out (one), and the city eating (a little every
-            minute for every lc_stock_eat (40) citizens out)
+            minute for every lc_stock_eat (20) citizens out)
 
     Running low (under a quarter): allocations come slower, the dispensers
     are sometimes empty, the PA says so, and hungry people listen to the
@@ -26,7 +26,7 @@ LC = LC or {}
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn  = CreateConVar("lc_stockpile", "1", FLAGS, "Rations come from the city's stores, which work fills and people empty")
 local cvMax = CreateConVar("lc_stock_max", "400", FLAGS, "Rations the city's stores hold")
-local cvEat = CreateConVar("lc_stock_eat", "40", FLAGS, "The city eats a ration a minute for every this many citizens out (lower empties the stores faster)")
+local cvEat = CreateConVar("lc_stock_eat", "20", FLAGS, "The city eats a ration a minute for every this many citizens out (lower empties the stores faster)")
 
 local stock = nil
 local dirty = false
@@ -43,10 +43,8 @@ end
 
 local function Load()
     stock = math.floor(Max() / 2)
-    if file and file.Exists and file.Exists(Path(), "DATA") then
-        local t = util.JSONToTable(file.Read(Path(), "DATA") or "")
-        if istable(t) and tonumber(t.stock) then stock = math.Clamp(tonumber(t.stock), 0, Max()) end
-    end
+    local t = LC.SafeReadJSON(Path())
+    if istable(t) and tonumber(t.stock) then stock = math.Clamp(tonumber(t.stock), 0, Max()) end
     Publish()
 end
 
@@ -54,7 +52,7 @@ function LC.StockSave()
     dirty = false
     if not file or not file.Write or stock == nil then return end
     if file.CreateDir then file.CreateDir("livingcity") end
-    file.Write(Path(), util.TableToJSON({ stock = stock }))
+    LC.SafeWrite(Path(), util.TableToJSON({ stock = stock }))
 end
 
 function LC.Stock()
@@ -146,7 +144,7 @@ hook.Add("LivingCityServed", "LivingCityStock", function() LC.StockAdd(-1, "rati
 timer.Create("LivingCityStock", 60, 0, function()
     if not cvOn:GetBool() then return end
     if LC.Running then
-        -- the city eats: a ration a minute for every lc_stock_eat (40) people out
+        -- the city eats: a ration a minute for every lc_stock_eat (20) people out
         -- (it was every fifteen: a full city of 80 ate 6 a minute, more than its
         -- kitchen, factory and trains could ever bring in)
         local out = LC.RoleCounts and LC.RoleCounts.citizen or 0

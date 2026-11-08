@@ -54,33 +54,54 @@ end)
 -- The street sweep: rubbish outlined, the cart's count
 ------------------------------------------------------------------------
 
-local LITTER_COL, CART_COL = Color(150, 230, 120), Color(120, 180, 255)
+local LITTER_COL, CART_COL, CART_INK = Color(150, 230, 120), Color(120, 180, 255), Color(220, 235, 255)
+
+-- What's nearby, searched for a fifth of a second at a time, not every frame (the outlines and labels
+-- still redraw every frame; a search of every entity within 900 to 1200 units was the costly part).
+-- Kept per use: { at = when to search again, list = the entities that passed the test }.
+local NEAR_EVERY = 0.2
+local nearby = {}
+local function Nearby(key, radius, test)
+    local now = CurTime()
+    local c = nearby[key]
+    if c and now < c.at and now >= c.at - NEAR_EVERY then
+        local ok = true
+        for _, e in ipairs(c.list) do if not IsValid(e) then ok = false break end end
+        if ok then return c.list end -- (one gone: look again now, as before)
+    end
+    local list = {}
+    local me = LocalPlayer()
+    if IsValid(me) then
+        for _, e in ipairs(ents.FindInSphere(me:GetPos(), radius)) do
+            if IsValid(e) and test(e) then list[#list + 1] = e end
+        end
+    end
+    nearby[key] = { at = now + NEAR_EVERY, list = list }
+    return list
+end
+
+local function IsLitter(e) return e:GetNW2Bool("lc_litter", false) end
+local function IsCartOnly(e) return not e:GetNW2Bool("lc_litter", false) and e:GetNW2Bool("lc_cart", false) end
+local function IsCart(e) return e:GetNW2Bool("lc_cart", false) end
+local function IsPatient(e) return e:GetNW2Bool("lc_patient", false) end
 
 hook.Add("PreDrawHalos", "LivingCityJobGames", function()
     if not game or game.kind ~= "sweep" or not halo then return end
-    local me = LocalPlayer()
-    local litter, carts = {}, {}
-    for _, e in ipairs(ents.FindInSphere(me:GetPos(), 900)) do
-        if IsValid(e) then
-            if e:GetNW2Bool("lc_litter", false) then litter[#litter + 1] = e
-            elseif e:GetNW2Bool("lc_cart", false) then carts[#carts + 1] = e end
-        end
-    end
+    local litter, carts = Nearby("litter", 900, IsLitter), Nearby("carts", 900, IsCartOnly)
     if #litter > 0 then halo.Add(litter, LITTER_COL, 1, 1, 1, true, false) end
     if #carts > 0 then halo.Add(carts, CART_COL, 2, 2, 1, true, true) end
 end)
 
 hook.Add("PostDrawTranslucentRenderables", "LivingCityJobCart", function(depth, sky)
     if sky or not game or game.kind ~= "sweep" then return end
-    local me = LocalPlayer()
-    for _, e in ipairs(ents.FindInSphere(me:GetPos(), 1200)) do
-        if IsValid(e) and e:GetNW2Bool("lc_cart", false) then
+    for _, e in ipairs(Nearby("cartlabels", 1200, IsCart)) do
+        if IsValid(e) then
             local top = e:LocalToWorld(Vector(0, 0, e:OBBMaxs().z + 18))
             local ang = (top - EyePos()):Angle()
             ang = Angle(0, ang.y - 90, 90)
             cam.Start3D2D(top, ang, 0.12)
                 draw.SimpleTextOutlined(string.format("%d / %d", e:GetNW2Int("lc_fill", 0), e:GetNW2Int("lc_need", 0)), "DermaLarge", 0, 0,
-                    Color(220, 235, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_black)
+                    CART_INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_black)
             cam.End3D2D()
         end
     end
@@ -295,20 +316,22 @@ LC_CL.WireState = function() return wire end
 -- Triage: what's wrong with each patient, and how long they've got
 ------------------------------------------------------------------------
 
+local PATIENT_UP = Vector(0, 0, 84)
+local INJURY_INK, BAR_BG = Color(255, 220, 200), Color(20, 20, 20, 220)
+local BAR_LOW, BAR_MID, BAR_OK = Color(220, 60, 50), Color(230, 170, 50), Color(90, 200, 90)
 hook.Add("PostDrawTranslucentRenderables", "LivingCityJobPatients", function(depth, sky)
     if sky or not game or game.kind ~= "triage" then return end
-    local me = LocalPlayer()
-    for _, e in ipairs(ents.FindInSphere(me:GetPos(), 900)) do
-        if IsValid(e) and e:GetNW2Bool("lc_patient", false) then
-            local top = e:GetPos() + Vector(0, 0, 84)
+    for _, e in ipairs(Nearby("patients", 900, IsPatient)) do
+        if IsValid(e) then
+            local top = e:GetPos() + PATIENT_UP
             local ang = (top - EyePos()):Angle()
             ang = Angle(0, ang.y - 90, 90)
             local hp, max = e:GetNW2Int("lc_hp", 0), math.max(1, e:GetNW2Int("lc_hpmax", 40))
             local f = math.Clamp(hp / max, 0, 1)
             cam.Start3D2D(top, ang, 0.1)
-                draw.SimpleTextOutlined(e:GetNW2String("lc_injury", ""), "DermaLarge", 0, -30, Color(255, 220, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_black)
-                draw.RoundedBox(4, -100, 0, 200, 22, Color(20, 20, 20, 220))
-                draw.RoundedBox(4, -98, 2, 196 * f, 18, f < 0.3 and Color(220, 60, 50) or (f < 0.6 and Color(230, 170, 50) or Color(90, 200, 90)))
+                draw.SimpleTextOutlined(e:GetNW2String("lc_injury", ""), "DermaLarge", 0, -30, INJURY_INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_black)
+                draw.RoundedBox(4, -100, 0, 200, 22, BAR_BG)
+                draw.RoundedBox(4, -98, 2, 196 * f, 18, f < 0.3 and BAR_LOW or (f < 0.6 and BAR_MID or BAR_OK))
             cam.End3D2D()
         end
     end

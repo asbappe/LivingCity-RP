@@ -59,6 +59,10 @@ end
 
 local function Meters(units) return math.max(1, math.floor(units / 40 + 0.5)) end
 
+-- (made once here, not every frame)
+local C_10_14_20_225 = Color(10, 14, 20, 225)
+local C_40_44_50_230 = Color(40, 44, 50, 230)
+local V_0_0_96 = Vector(0, 0, 96)
 hook.Add("HUDPaint", "LivingCityIntake", function()
     local ply = LocalPlayer()
     if not IsValid(ply) or not ply:Alive() then return end
@@ -72,9 +76,9 @@ hook.Add("HUDPaint", "LivingCityIntake", function()
         local secs = math.max(1, ply:GetNW2Float("lc_intake_secs", 8))
         local frac = math.Clamp(1 - (untilT - now) / secs, 0, 1)
         local cx, cy = W / 2, H * 0.64
-        draw.RoundedBox(4, cx - 190, cy - 28, 380, 58, Color(10, 14, 20, 225))
+        draw.RoundedBox(4, cx - 190, cy - 28, 380, 58, C_10_14_20_225)
         draw.SimpleText(ply:GetNW2String("lc_intake_doing", "Processing") .. "...", "DermaDefaultBold", cx, cy - 13, BLUE, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-        draw.RoundedBox(2, cx - 170, cy + 2, 340, 10, Color(40, 44, 50, 230))
+        draw.RoundedBox(2, cx - 170, cy + 2, 340, 10, C_40_44_50_230)
         draw.RoundedBox(2, cx - 170, cy + 2, 340 * frac, 10, BLUE)
         draw.SimpleText("Stay next to the terminal", "DefaultSmall", cx, cy + 20, DIM, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     end
@@ -92,7 +96,7 @@ hook.Add("HUDPaint", "LivingCityIntake", function()
     local way = LC_CL.Waypoint and LC_CL.Waypoint()
     local marked = way and IsValid(desk) and way.pos:DistToSqr(desk:GetPos()) < 100 * 100
     if IsValid(desk) and not working and not marked then
-        local sp = (desk:GetPos() + Vector(0, 0, 96)):ToScreen()
+        local sp = (desk:GetPos() + V_0_0_96):ToScreen()
         if sp and sp.visible then
             local label = step == "register" and "CIVIL INTAKE" or step == "labor" and "LABOR ASSIGNMENT" or "HOUSING ALLOCATION"
             draw.SimpleTextOutlined(label, "DefaultSmall", sp.x, sp.y - 14, BLUE, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, OUTLINE)
@@ -104,8 +108,10 @@ end)
 -- A terminal's sign: a title and a line under it, the Civil Intake style. The Commissaries (Union and
 -- Civil Protection: lc_terminal.lua, lc_cpsupply.lua) wear the same one (the owner, 7 November: they
 -- "just look like static map props").
+-- (made once here, not every frame)
+local C_8_16_26_230 = Color(8, 16, 26, 230)
 function LC_CL.DrawTerminalSign(title, line)
-    draw.RoundedBox(6, -300, -70, 600, 140, Color(8, 16, 26, 230))
+    draw.RoundedBox(6, -300, -70, 600, 140, C_8_16_26_230)
     surface.SetDrawColor(BLUE.r, BLUE.g, BLUE.b, 180)
     surface.DrawOutlinedRect(-300, -70, 600, 140, 3)
     draw.SimpleText(title, "LCIntakeSign", 0, -24, BLUE, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)

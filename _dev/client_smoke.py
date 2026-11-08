@@ -209,7 +209,7 @@ vgui = { Create = function() made = made + 1 return panel end }
 net.ReadData = function() return _admindata end
 util.Decompress = function(s) return s end
 util.JSONToTable = function() return { target = "STEAM_0:1|Me", faction = "cp", xp = { cp = 300 }, credits = 50, standing = 100,
-    players = { { id = "STEAM_0:1|Me", name = "Me" } } } end
+    players = { { id = "STEAM_0:1|Me", name = "Me" } }, evidence = "In the evidence room: 3 items (Old radio x3)." } end
 _admindata = "x"
 net._q = { 1 }
 local okP, errP = pcall(net["recv_lc_admintools"])
@@ -220,6 +220,13 @@ if not okP then problems[#problems + 1] = "admin panel rebuild: " .. tostring(er
 -- the CP toolset: the mask's view, the records terminal and the voice menu
 _me.nw.lcf_faction, _me.nw.lcf_title = "cp", "CP 04-12"
 _me.alive = true
+-- Unit tools (F2): with the evidence room's stock, and a burn going on (sv_livingcity_evidence.lua)
+_globals.lc_evidence_n, _globals.lc_evidence_list, _globals.lc_evidence_burn = 3, "Old radio x3", "burning near Block 1"
+made = 0
+okP, errP = pcall(function() LC_CL.OpenUnitTools() end)
+if not okP then problems[#problems + 1] = "unit tools: " .. tostring(errP) end
+if okP and made < 20 then problems[#problems + 1] = "unit tools built only " .. made .. " controls" end
+_globals.lc_evidence_n, _globals.lc_evidence_list, _globals.lc_evidence_burn = 0, "", ""
 _globals.lc_socio, _globals.lc_bolos = "yellow", 2
 run("HUDPaintBackground")
 run("HUDPaint")
@@ -237,7 +244,8 @@ util.JSONToTable = function() return {
       { key = "#99-000", name = "Old Record", cid = "#99-000", seen = 1700000000, violations = 0, v = {}, n = {} } },
     bolos = { { id = "1-1", key = "#12-345", name = "Ada Grey", cid = "#12-345", text = "red jacket", by = "CP 04", at = 1700000000, untilT = 1900000000 } },
     requests = { { name = "Ada Grey", cid = "#12-345", text = "help", where = "by the ration line", t = 1700000000 } },
-    officer = true, socioctl = true, socio = "yellow" } end -- (socioctl: the Administrator's buttons)
+    officer = true, socioctl = true, socio = "yellow", -- (socioctl: the Administrator's buttons)
+    manpower = { "Civil Protection: 13 in reserve (of 20), 2 lost today", "Next unit in about 4 minutes", "Overwatch: 12 in reserve (of 12), 0 lost today", "The reserve is full" } } end
 made = 0
 okP, errP = pcall(net["recv_lc_records"])
 if not okP then problems[#problems + 1] = "records terminal: " .. tostring(errP) end
@@ -878,14 +886,14 @@ do
     Quick("vort") Quick("stalker") Quick("zombie")
     Quick("citizen", function() _me.nw.lcj_job, _me.nw.lc_ration_break = "mortuary", true end)
     Quick("resistance", function() _me.nw.lc_squad_n = 2 other.nw.lcf_faction = "vort" Look(other) end)
-    -- a plain citizen (no job, not a foreman): F2 says there's nothing for them, briefly
+    -- nothing at all for their side or job (the infested; a plain citizen has Me > now): F2 says so, briefly
     do
-        _me.nw = { lcf_faction = "citizen", lce_standing = 10 }
+        _me.nw = { lcf_faction = "zombie", lce_standing = 10 }
         _me.IsAdmin = function() return false end
         Look(nil)
         local okE, e2 = pcall(LC_CL.QuickRoleRoot)
-        if not okE then problems[#problems + 1] = "a plain citizen's F2: " .. tostring(e2)
-        elseif e2.items[1] or not e2.empty then problems[#problems + 1] = "a plain citizen's F2 should say there's nothing for them, not list " .. tostring(e2.items[1] and e2.items[1].label)
+        if not okE then problems[#problems + 1] = "an empty F2: " .. tostring(e2)
+        elseif e2.items[1] or not e2.empty then problems[#problems + 1] = "an empty F2 should say there's nothing for them, not list " .. tostring(e2.items[1] and e2.items[1].label)
         else
             LC_CL.OpenQuick2()
             local okH3, errH3 = pcall(function() for id, fn in pairs(hook.t.HUDPaint or {}) do if id == "LivingCityQuick" then fn() end end end)
@@ -1301,6 +1309,60 @@ local okMG, errMG = pcall(function()
     run("PreDrawHalos")
 end)
 if not okMG then problems[#problems + 1] = "more job games: " .. tostring(errMG) end
+-- a unit's search as a pat-down (cl_livingcity_patsearch.lua): the unit's window builds, updates, paints; the panel
+-- for the person searched; both close; a window that can't be built hands back to the old search
+local psSaved = { net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteUInt }
+local okPS, errPS = pcall(function()
+    local doc, sent, made = nil, {}, {}
+    local curName
+    net.ReadString = function() return "x" end
+    util.JSONToTable = function() return doc end
+    net.Start = function(n) curName = n end
+    net.WriteUInt = function() end
+    net.SendToServer = function() sent[#sent + 1] = curName end
+    local function P()
+        local t = {}
+        made[#made + 1] = t
+        return setmetatable(t, { __index = function(_, k)
+            if string.sub(k, 1, 2) == "lc" or string.sub(k, 1, 1) == "_" or k == "silent" or k == "spots" or k == "wasDown" then return nil end
+            if k == "IsValid" then return function() return not t._removed end end
+            if k == "Remove" then return function() t._removed = true if t.OnRemove then t.OnRemove(t) end end end
+            if k == "GetWide" or k == "GetTall" then return function() return 380 end end
+            if k == "IsHovered" or k == "GetDisabled" then return function() return false end end
+            return function() return P() end
+        end })
+    end
+    vgui = { Create = function() return P() end, GetKeyboardFocus = function() return nil end }
+    local four = function(a, b, c, d) return { { name = "Jacket", state = a }, { name = "Waist", state = b }, { name = "Legs", state = c }, { name = "Boots", state = d } } end
+    doc = { role = "unit", who = "Citizen", live = false, secs = 1, spots = four(0, 0, 0, 0) }
+    net.recv_lc_pat_open()
+    if not IsValid(LC_CL.PatSearchWindow()) then error("the unit's pat-down window didn't build") end
+    if sent[#sent] ~= "lc_pat_check" then error("the window didn't tell the server it's open") end
+    doc = { role = "unit", who = "Citizen", live = true, checking = 2, secs = 1, flash = "They tried to move something: Lockpick", flashId = 1, spots = four(2, 1, 2, 0) }
+    doc.spots[1].text, doc.spots[3].text = "Lockpick", "Nothing."
+    net.recv_lc_pat_open()
+    doc = { role = "target", who = "Unit", key = "R", slip = "ready", checking = 2, spots = four(2, 1, 0, 0) }
+    for _, s in ipairs(doc.spots) do s.mine = "" end
+    doc.spots[2].mine = "Old radio"
+    net.recv_lc_pat_open()
+    if not IsValid(LC_CL.PatSearchPanel()) then error("no panel for the person searched") end
+    for _, pnl in ipairs(made) do
+        for _, k in ipairs({ "Paint", "Think", "PerformLayout", "DoClick" }) do
+            local f = rawget(pnl, k)
+            if f then local okp, e = pcall(f, pnl, 380, 240) if not okp then error("a panel's " .. k .. " fails: " .. tostring(e)) end end
+        end
+    end
+    local n0 = #sent
+    net.recv_lc_pat_close()
+    if IsValid(LC_CL.PatSearchWindow()) or IsValid(LC_CL.PatSearchPanel()) then error("the pat-down didn't close") end
+    if #sent ~= n0 then error("closing on the server's word sent a close back") end
+    vgui = { Create = function() error("no vgui") end, GetKeyboardFocus = function() return nil end }
+    doc = { role = "unit", who = "Citizen", live = false, secs = 1, spots = four(0, 0, 0, 0) }
+    net.recv_lc_pat_open()
+    if sent[#sent] ~= "lc_pat_close" or IsValid(LC_CL.PatSearchWindow()) then error("a window that fails to build doesn't hand back") end
+end)
+net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteUInt = psSaved[1], psSaved[2], psSaved[3], psSaved[4], psSaved[5], psSaved[6]
+if not okPS then problems[#problems + 1] = "pat-down search: " .. tostring(errPS) end
 -- what now? (cl_livingcity_nextstep.lua): the line on screen, and its F1 page
 local okWN, errWN = pcall(function()
     _me:SetNW2String("lc_next", "Find water")
@@ -1530,7 +1592,7 @@ local ok, e = pcall(function()
     LC_CL.DreamsMenu()
     LC_CL.DreamAct("optout")
     -- the Administrator's tablet: tonight's dream, by mood
-    local office = { jobs = {}, people = {}, dream = { ready = true, at = 30,
+    local office = { jobs = {}, people = {}, manpower = { "Civil Protection: 13 in reserve (of 20), 2 lost today", "Next unit in about 4 minutes" }, dream = { ready = true, at = 30,
         groups = { { mood = "happy", name = "Happy", endings = { { id = "bus", name = "The Bus" } } }, { mood = "neutral", name = "Neutral", endings = {} },
             { mood = "nightmare", name = "Nightmare", endings = { { id = "water", name = "The Flood" } } } },
         waiting = { id = "bus", name = "The Bus", mood = "Happy", yours = true } } }
@@ -2246,9 +2308,17 @@ PR_DIR = os.path.join(HERE, "..", "pose_recorder", "lua")
 L.globals()["_pr_core"] = open(os.path.join(PR_DIR, "pose_recorder", "core.lua")).read()
 L.globals()["_pr_auto"] = open(os.path.join(PR_DIR, "autorun", "pose_recorder.lua")).read()
 L.globals()["_pr_tool"] = open(os.path.join(PR_DIR, "weapons", "gmod_tool", "stools", "pose_recorder.lua")).read()
+L.globals()["_pr_play"] = open(os.path.join(PR_DIR, "pose_recorder", "play.lua")).read()
 err = L.execute(r"""
 local ok, e = pcall(function()
-    include = function(p) if p == "pose_recorder/core.lua" then assert(loadstring(_pr_core, "core.lua"))() end end
+    include = function(p)
+        if p == "pose_recorder/core.lua" then assert(loadstring(_pr_core, "core.lua"))() end
+        if p == "pose_recorder/play.lua" then assert(loadstring(_pr_play, "play.lua"))() end
+    end
+    net.WriteDouble = net.WriteDouble or net.WriteFloat
+    net.ReadDouble = net.ReadDouble or net.ReadFloat
+    local props = {}
+    properties = { Add = function(n, t) props[n] = t end }
     AddCSLuaFile = function() end
     surface.PlaySound = function() end
     chat = chat or {}
@@ -2320,6 +2390,50 @@ local ok, e = pcall(function()
     language = language or {}
     language.Add = function() end
     assert(loadstring(_pr_tool, "stool.lua"))()
+    TOOL.BuildCPanel(cp)
+
+    -- Pose Recorder 2: easing and length per keyframe, mirror, and playing it on someone
+    concommand.list.pose_recorder_clear()
+    PR.sel = { ent = rag, phys = { ["ValveBiped.Bip01_Pelvis"] = true, ["ValveBiped.Bip01_Spine2"] = true, ["ValveBiped.Bip01_R_UpperArm"] = true } }
+    rag.GetBoneMatrix = function(_, i) local a = raised[i + 1] return M(a[1], a[2], a[3]) end
+    raised = { { 0, 0, 90 }, { -80, 0, 90 }, { -20, 10, 0 } }
+    concommand.list.pose_recorder_snap()
+    concommand.list.pose_recorder_snap()
+    if PR.frames[1].ease ~= "smooth" then error("pose recorder: a new keyframe has no easing") end
+    concommand.list.pose_recorder_key_ease(nil, nil, { "bouncy", "2" })
+    concommand.list.pose_recorder_key_beats(nil, nil, { "3", "all" })
+    if PR.frames[2].ease ~= "bouncy" or PR.frames[1].ease ~= "smooth" or PR.frames[1].beats ~= 3 then error("pose recorder: easing or length not set on the keyframes asked") end
+    concommand.list.pose_recorder_mirror(nil, nil, { "1" })
+    if not PR.frames[1].bones["ValveBiped.Bip01_L_UpperArm"] or PR.frames[1].bones["ValveBiped.Bip01_R_UpperArm"] then error("pose recorder: mirror didn't move the right arm to the left") end
+    concommand.list.pose_recorder_mirror_add()
+    if #PR.frames ~= 4 then error("pose recorder: no mirrored copy added") end
+    local d = PR.Data()
+    if d.format ~= 2 or d.wrap ~= true then error("pose recorder: the file has no format or wrap") end
+    net.sent = {}
+    local sent
+    local sts = net.SendToServer
+    net.SendToServer = function() sent = true end
+    concommand.list.pose_recorder_play_mine()
+    net.SendToServer = sts
+    if not sent then error("pose recorder: playing it on me sent nothing to the server") end
+    -- the server says an NPC plays it: this client turns the bones itself
+    local npc = Fake(standing)
+    npc.IsNPC = function() return true end
+    local clean = PR.Sanitize(d)
+    PR.Library["~1/mydance"] = { data = clean, crc = "42" }
+    net._q = { npc, "~1/mydance", "42", CurTime(), "loop", 1 }
+    net.recv_pose_recorder_play()
+    _advance(0.3)
+    for _, h in pairs(hook.t["Think"] or {}) do h() end
+    if not next(npc.manip) then error("pose recorder: the NPC's bones weren't turned") end
+    if not props.pose_recorder_play or not props.pose_recorder_play.Filter(props.pose_recorder_play, npc) then error("pose recorder: no Play animation in the context menu for an NPC") end
+    local sub = setmetatable({}, { __index = function() return function() end end })
+    props.pose_recorder_play.MenuOpen(props.pose_recorder_play, { AddSubMenu = function() return sub end }, npc)
+    net._q = { npc }
+    net.recv_pose_recorder_stop()
+    if PR.Active[npc] then error("pose recorder: stop didn't stop it") end
+    for _, v in pairs(npc.manip) do if v.p ~= 0 or v.y ~= 0 or v.r ~= 0 then error("pose recorder: the bones weren't put back after stopping") end end
+    concommand.list.pose_play(nil, nil, {})
     TOOL.BuildCPanel(cp)
 end)
 return (not ok) and tostring(e) or nil
@@ -2417,6 +2531,241 @@ return (not ok) and tostring(e) or nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "context panel / quest trail: " + str(err)
+
+# the Resistance Insider beside a prisoner being marched to the cells (sv_livingcity_insider.lua): F2 > 7
+# lets them slip and the panel on the right says so, bright; greyed and faint while someone can see;
+# nothing for anyone else, or once the prisoner is out of reach
+err = L.execute(r"""
+local ok, e = pcall(function()
+    local pris = _makeplayer("SlipPrisoner", Vector(120, 0, 0))
+    pris.nw.lc_marching = true
+    _me:SetPos(Vector(0, 0, 0))
+    _me.nw.lcf_faction = "cp"
+    _me.IsAdmin = function() return false end
+    _me.GetEyeTrace = function() return { Hit = false, HitPos = Vector(0, 0, 0) } end
+    local function Lines()
+        local out = {}
+        for _, g in ipairs(LC_CL.ContextGroups(_me)) do
+            for i, l in ipairs(g.lines) do if string.find(l, "slip away", 1, true) then out[#out + 1] = { t = l, st = g.style and g.style[i], g = g } end end
+        end
+        return out
+    end
+    local function F2Slip()
+        local root = LC_CL.QuickRoleRoot()
+        for n = 1, 8 do local it = root.items[n] if it and it.id == "letslip" then return it, n, root end end
+        return nil, nil, root
+    end
+    local function Told(t, why)
+        if t then net._q = { true, t, why } else net._q = { false } end
+        net["recv_lc_insider_slip"](0)
+    end
+    -- an ordinary unit: nothing, even with the server's word (it never sends it, but still)
+    LC_CL.Insider = false
+    Told(pris, "")
+    if #Lines() > 0 or F2Slip() then error("an ordinary unit sees Let them slip") end
+    -- the Insider, unseen: F2 > 7, and the line, bright, naming the key
+    LC_CL.Insider = true
+    local it, n, root = F2Slip()
+    if not it or n ~= 7 or it.disabled then error("F2: no live Let them slip at 7 (got " .. tostring(n) .. ")") end
+    if not (root.items[1].label == "Voice lines" and root.items[6].label == "Send my 10-20") then error("F2: the owner's six moved") end
+    local sent
+    local sa = LC_CL.SendAction
+    LC_CL.SendAction = function(cmd) sent = cmd end
+    LC_CL.OpenQuick2() LC_CL.QuickPick(7)
+    LC_CL.SendAction = sa
+    if sent ~= "letslip" then error("F2 > 7 didn't send letslip: " .. tostring(sent)) end
+    local L1 = Lines()
+    if #L1 ~= 1 or not string.find(L1[1].t, "[F2] > 7", 1, true) or L1[1].st ~= "bright" then
+        error("panel: no bright 'Let them slip: F2 > 7' line: " .. tostring(L1[1] and L1[1].t) .. " " .. tostring(L1[1] and L1[1].st))
+    end
+    if LC_CL.ContextGroups(_me)[1].title ~= "Inside" then error("panel: the Insider's line isn't first") end
+    _advance(0.3)
+    hook.t.HUDPaint.LivingCityContext()
+    -- someone can see: greyed in F2 (picking it does nothing), faint on the right
+    Told(pris, "watched")
+    it = F2Slip()
+    if not it or not it.disabled or not string.find(it.label, "someone can see you", 1, true) then error("F2: not greyed while watched: " .. tostring(it and it.label)) end
+    sent = nil
+    LC_CL.SendAction = function(cmd) sent = cmd end
+    LC_CL.OpenQuick2() LC_CL.QuickPick(7)
+    LC_CL.SendAction = sa
+    if sent then error("F2: a greyed Let them slip still sent " .. tostring(sent)) end
+    LC_CL.CloseQuick()
+    local L2 = Lines()
+    if #L2 ~= 1 or not string.find(L2[1].t, "being watched", 1, true) or L2[1].st ~= "faint" then error("panel: no faint 'being watched' line: " .. tostring(L2[1] and L2[1].t)) end
+    _advance(0.3)
+    hook.t.HUDPaint.LivingCityContext()
+    -- out of reach, or no longer marched, or the server says there's no one: gone
+    pris:SetPos(Vector(400, 0, 0))
+    if #Lines() > 0 or F2Slip() then error("still offered with the prisoner out of reach") end
+    pris:SetPos(Vector(120, 0, 0))
+    pris.nw.lc_marching = false
+    if #Lines() > 0 or F2Slip() then error("still offered once the march is over") end
+    pris.nw.lc_marching = true
+    Told(nil)
+    if #Lines() > 0 or F2Slip() then error("still offered after the server said there's no one") end
+    LC_CL.Insider, LC_CL.InsiderSlipNet = nil, nil
+    _me.nw.lcf_faction = nil
+end)
+return (not ok) and tostring(e) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "Insider's Let them slip (F2, panel): " + str(err)
+
+# More on F2 (the owner, later on 7 November): the Insider's Inside >, the Resistance's Freq 7 >, a
+# citizen's Me >, a prisoner's sentence, the Administrator's orders, a senior unit's Call a sweep >;
+# what greys out comes from the server (lc_quick_info), and the open page follows it
+err = L.execute(r"""
+local ok, e = pcall(function()
+    local jt = util.JSONToTable
+    local function Info(t)
+        util.JSONToTable = function() return t end
+        net._q = { "{}" }
+        net["recv_lc_quick_info"](0)
+        util.JSONToTable = jt
+    end
+    local function Find(page, id)
+        for n = 1, 9 do local it = page.items[n] if it and it.id == id then return it, n end end
+        return nil
+    end
+    local function Labels(page) local out = {} for n = 1, 9 do out[n] = page.items[n] and page.items[n].label or "-" end return table.concat(out, " | ") end
+    local sentQM, sentAct
+    local function Watch()
+        sentQM, sentAct = nil, nil
+        local ws, st = net.WriteString, net.Start
+        local name
+        net.Start = function(n) name = n return st and st(n) end
+        net.WriteString = function(s) if name == "lc_quickmore" and not sentQM then sentQM = s end return ws and ws(s) end
+        local sa = LC_CL.SendAction
+        LC_CL.SendAction = function(cmd) sentAct = cmd end
+        return function() net.WriteString, net.Start, LC_CL.SendAction = ws, st, sa end
+    end
+    _me:SetPos(Vector(0, 0, 0))
+    _me.alive = true
+    _me.IsAdmin = function() return false end
+    _me.GetEyeTrace = function() return { Hit = false, HitPos = Vector(0, 0, 0) } end
+    LC_CL.InsiderSlipNet = nil
+
+    -- the Insider: the owner's six, then Inside > at 7; each greyed with why
+    _me.nw = { lcf_faction = "cp", lcf_rank = 2 }
+    LC_CL.Insider = true
+    Info({ ins = { watched = "Someone can see you.", wait = { tip = 0, skim = 0, copy = 0, foul = 0, spike = 0 }, wanted = 2, commissary = true, weedkiller = true } })
+    local root = LC_CL.QuickRoleRoot()
+    if not (root.items[1].label == "Voice lines" and root.items[2].id == "unittools" and root.items[3].id == "kick" and root.items[6].label == "Send my 10-20") then error("Insider: the owner's six moved: " .. Labels(root)) end
+    local ins, n = Find(root, "inside")
+    if n ~= 7 then error("Insider: Inside > should be 7, is " .. tostring(n) .. ": " .. Labels(root)) end
+    local p = ins.page()
+    for i = 1, 6 do if not p.items[i].disabled then error("Inside, watched: '" .. p.items[i].label .. "' isn't greyed") end end
+    if not string.find(p.items[1].label, "watched", 1, true) or not (p.empty and p.empty[9] and string.find(p.empty[9], "Someone can see you", 1, true)) then error("Inside: doesn't say why: " .. Labels(p)) end
+    Info({ ins = { wait = { tip = 0, skim = 0, copy = 300, foul = 0, spike = 0 }, wanted = 0, commissary = false, weedkiller = false } })
+    p = ins.page()
+    if p.items[1].disabled then error("Inside: Tip off greyed with nobody watching") end
+    if not (p.items[2].disabled and string.find(p.items[2].label, "nobody's wanted", 1, true)) then error("Inside: Lose a record: " .. p.items[2].label) end
+    if not (p.items[3].disabled and string.find(p.items[3].label, "Commissary only", 1, true)) then error("Inside: supplies: " .. p.items[3].label) end
+    if not (p.items[4].disabled and string.find(p.items[4].label, "in 5m", 1, true)) then error("Inside: copy: " .. p.items[4].label) end
+    if not string.find(p.items[#p.items].label, "Reveal myself", 1, true) then error("Inside: no Reveal myself last") end
+    -- a greyed one does nothing; an open one sends the Insider's own action
+    local undo = Watch()
+    LC_CL.OpenQuick2() LC_CL.QuickPick(7) LC_CL.QuickPick(4)
+    if sentAct then error("Inside: a greyed entry still sent " .. tostring(sentAct)) end
+    Info({ ins = { wait = { tip = 0, skim = 0, copy = 0, foul = 0, spike = 0 }, wanted = 1, commissary = true, weedkiller = true } })
+    if not LC_CL.QuickOpen("role") then error("Inside: the server's word closed F2") end
+    LC_CL.QuickPick(4)
+    undo()
+    if sentAct ~= "copyrecords" then error("Inside: the page didn't follow the server's word (sent " .. tostring(sentAct) .. ")") end
+    LC_CL.CloseQuick()
+    -- an ordinary unit: no Inside
+    LC_CL.Insider = false
+    if Find(LC_CL.QuickRoleRoot(), "inside") then error("an ordinary unit has Inside >") end
+
+    -- a Division Leader: Call a sweep >, greyed with why
+    _me.nw = { lcf_faction = "cp", lcf_rank = 3 }
+    Info({ sweep = { sweep = "Not while the city has something on." } })
+    root = LC_CL.QuickRoleRoot()
+    local sw, sn = Find(root, "sweep")
+    if not sw or sn ~= 7 then error("a Division Leader: Call a sweep > should be 7: " .. Labels(root)) end
+    p = sw.page()
+    if not (p.items[1].disabled and not p.items[2].disabled) then error("Call a sweep: " .. Labels(p)) end
+    if not (p.empty and p.empty[4] and string.find(p.empty[4], "something on", 1, true)) then error("Call a sweep doesn't say why") end
+    _me.nw = { lcf_faction = "cp", lcf_rank = 2 }
+    if Find(LC_CL.QuickRoleRoot(), "sweep") then error("a Metrocop can call a sweep") end
+
+    -- the Resistance: Freq 7 >, after what was there
+    _me.nw = { lcf_faction = "resistance", lcf_rank = 2 }
+    Info({ reb = { tx = false, backup = 50, pos = 0 } })
+    root = LC_CL.QuickRoleRoot()
+    if not (string.find(root.items[1].label, "clothes", 1, true) and root.items[2].label == "Black market" and root.items[3].label == "Resistance") then error("the Resistance's F2 moved: " .. Labels(root)) end
+    local band, bn = Find(root, "freq7")
+    if bn ~= 4 then error("the Resistance: Freq 7 > should be 4: " .. Labels(root)) end
+    p = band.page()
+    if not (p.items[1].disabled and p.items[2].disabled and string.find(p.items[2].label, "in 50s", 1, true) and not p.items[3].disabled) then error("Freq 7: " .. Labels(p)) end
+    if not (string.find(p.items[4].label, "rebel ground", 1, true) and string.find(p.items[5].label, "lab", 1, true)) then error("Freq 7: no guidance: " .. Labels(p)) end
+    undo = Watch()
+    p.items[4].run()
+    undo()
+    if sentQM ~= "guide" then error("Freq 7: guide me sent " .. tostring(sentQM)) end
+
+    -- a plain citizen: Me >, with what the server says
+    _me.nw = { lcf_faction = "citizen", lce_standing = 120, lc_unreg = true }
+    Info({ me = { work = "intake", ration = 240, cards = 2, home = "none", standing = 120, next = 150, nextWhat = "Union foreman (F2)" } })
+    root = LC_CL.QuickRoleRoot()
+    local mine, mn = Find(root, "me")
+    if mn ~= 1 or root.empty then error("a plain citizen: Me > should be 1, and no 'nothing here': " .. Labels(root)) end
+    p = mine.page()
+    if not (string.find(p.items[1].label, "Civil Intake first", 1, true) and string.find(p.items[2].label, "next in 4 min, 2 cards", 1, true)
+        and string.find(p.items[3].label, "Housing", 1, true) and string.find(p.items[4].label, "120", 1, true)) then error("Me: " .. Labels(p)) end
+    if not (p.empty and p.empty[6] and string.find(p.empty[6], "foreman", 1, true)) then error("Me: no next milestone") end
+    undo = Watch()
+    for i = 1, 4 do p.items[i].run() end
+    undo()
+    -- in a cell: My sentence
+    _me.nw.lc_jail_until = CurTime() + 125
+    local s = Find(LC_CL.QuickRoleRoot(), "sentence")
+    if not s or not string.find(s.label, "2:0", 1, true) then error("a prisoner: no 'My sentence: 2:0x left'") end
+    _me.nw.lc_jail_until = nil
+    -- nothing at all applies (the infested): it still says so
+    _me.nw = { lcf_faction = "zombie" }
+    root = LC_CL.QuickRoleRoot()
+    if root.items[1] or not root.empty then error("the infested's F2 should say there's nothing: " .. Labels(root)) end
+
+    -- the Administrator: what was there, then the tablet, the laws, the dream, the guards, an arrest
+    _me.nw = { lcf_faction = "admin" }
+    Info({ adm = { arrest = 0, guards = 2, hold = false, dream = { ready = true, groups = { { mood = "happy", name = "Happy", endings = { { id = "bus", name = "The Bus" } } } } } } })
+    local cit = _makeplayer("ArrestMe", Vector(60, 0, 0))
+    cit.nw.lcf_faction = "citizen"
+    _me.GetEyeTrace = function() return { Hit = true, HitPos = Vector(60, 0, 60), Entity = cit } end
+    root = LC_CL.QuickRoleRoot()
+    if root.items[1].label ~= "Sociostability" or not string.find(root.items[2].label, "Broadcast", 1, true) then error("the Administrator's F2 moved: " .. Labels(root)) end
+    local want = { "Open my tablet", "The city's laws", "Tonight's dream", "Command the guards" }
+    local all = Labels(root)
+    for _, w in ipairs(want) do if not string.find(all, w, 1, true) then error("the Administrator's F2 has no '" .. w .. "': " .. all) end end
+    local ar = Find(root, "arrest")
+    if not ar or ar.disabled then error("the Administrator can't order this citizen's arrest: " .. all) end
+    undo = Watch()
+    ar.run()
+    undo()
+    if sentQM ~= "arrest" then error("order of arrest sent " .. tostring(sentQM)) end
+    for n = 1, 8 do
+        local it = root.items[n]
+        if it and it.page then
+            local sub = it.page()
+            if it.label == "Tonight's dream" and not (sub.items[1] and sub.items[1].page and sub.items[2] and sub.items[2].label == "No dream tonight") then error("Tonight's dream: " .. Labels(sub)) end
+            if it.label == "Command the guards" and not (sub.items[1] and string.find(sub.items[1].label, "Follow me", 1, true) and string.find(sub.items[2].label, "Hold here", 1, true)) then error("guards: " .. Labels(sub)) end
+        end
+    end
+    Info({ adm = { arrest = 200, guards = 2 } })
+    ar = Find(LC_CL.QuickRoleRoot(), "arrest")
+    if not (ar and ar.disabled and string.find(ar.label, "in 4m", 1, true)) then error("order of arrest isn't greyed while it cools down") end
+    cit.nw.lcf_faction = "cp"
+    if Find(LC_CL.QuickRoleRoot(), "arrest") then error("the Administrator can order a unit's arrest") end
+    _me.GetEyeTrace = function() return { Hit = false, HitPos = Vector(0, 0, 0) } end
+    LC_CL.QuickInfo, LC_CL.Insider = {}, nil
+    _me.nw = {}
+end)
+return (not ok) and tostring(e) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "More on F2 (Inside, Freq 7, Me, the Administrator, a sweep): " + str(err)
 
 # the owner's 7 November playtest: the panting on one handle, stopped; the rain 30% quieter; the
 # eyelids under the job's objective; Civil Protection's action music
@@ -2555,6 +2904,86 @@ end)
 vgui, net.SendToServer, net.Start, net.WriteString = vgWas, stsWas, startWas, wsWas
 net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable = rU, rD, rDc, rJ
 if not okM then return "market panel: " .. tostring(errM) end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
+# big sends in pieces (sh_livingcity_net.lua): put back together and handed to the message's own
+# receiver, which reads its length and data as if it came in one message; long global strings in parts
+err = L.execute(r"""
+local N = LC.Net
+if not (N and N.Deliver and N.Assemble and net["recv_lc_big"] and hook.t.InitPostEntity and hook.t.InitPostEntity.LivingCityNetReady) then
+    return "net: the pieces receiver or the ready handshake is missing"
+end
+local rU, rD, rS, rcv = net.ReadUInt, net.ReadData, net.ReadString, net.Receivers
+local whole = string.rep("abcdefghij", 7000)
+local got
+net.Receivers = { lc_nettest = function()
+    local len = net.ReadUInt(32)
+    got = net.ReadData(len)
+    if #got ~= len then got = "bad length" end
+end }
+local pieces = N.Split(whole, N.PIECE)
+local okR, errR = pcall(function()
+    for i, piece in ipairs(pieces) do
+        local q = { 7, i, #pieces, #piece }
+        net.ReadString = function() return "lc_nettest" end
+        net.ReadUInt = function() return table.remove(q, 1) end
+        net.ReadData = function() return piece end
+        net["recv_lc_big"]()
+    end
+end)
+net.ReadUInt, net.ReadData, net.ReadString, net.Receivers = rU, rD, rS, rcv
+if not okR then return "net pieces: " .. tostring(errR) end
+if got ~= whole then return "net: a send in pieces didn't reach its receiver whole" end
+if net.ReadUInt ~= rU or net.ReadData ~= rD then return "net: the readers weren't put back" end
+local okH, errH = pcall(hook.t.InitPostEntity.LivingCityNetReady)
+if not okH then return "net ready: " .. tostring(errH) end
+_globals.lc_nettest_g, _globals.lc_nettest_g_2, _globals.lc_nettest_g_parts = "abc", "def", 2
+if LC.GetGlobalLong("lc_nettest_g", "") ~= "abcdef" then return "net: a long global string isn't read back whole" end
+_globals.lc_nettest_g, _globals.lc_nettest_g_2, _globals.lc_nettest_g_parts = nil, nil, nil
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
+# the people's name tags (sh_livingcity_npcstr.lua): the server's answer fills the game's copy, readers
+# read it through LC.NPCStr, a removed one is forgotten, and the game asks after a far one it reads
+err = L.execute(r"""
+local S = LC.NPCStrNet
+if not (S and S.Take and S.Ask and net["recv_lc_npcstr"] and timer.list.LivingCityNPCStr) then
+    return "npc tags: the receiver, the asking or its timer is missing"
+end
+local npc = ents.Create("npc_citizen")
+npc:SetPos(Vector(90000, 0, 0))
+local idx = npc:EntIndex()
+if LC.NPCStr(npc, "lc_pname", "none") ~= "none" then return "npc tags: an NPC with no answer yet should read as the default" end
+local rU, rS = net.ReadUInt, net.ReadString
+local q, qs = { 0, 1, idx, 2, 1, 3 }, { "Mira Holt", "fixing a streetlight" } -- (none gone; one NPC: name and doing)
+net.ReadUInt = function() return table.remove(q, 1) end
+net.ReadString = function() return table.remove(qs, 1) end
+local okT, errT = pcall(net["recv_lc_npcstr"])
+net.ReadUInt, net.ReadString = rU, rS
+if not okT then return "npc tags receive: " .. tostring(errT) end
+if LC.NPCStr(npc, "lc_pname", "") ~= "Mira Holt" or LC.NPCStr(npc, "lc_doing", "") ~= "fixing a streetlight" then return "npc tags: the name sent didn't reach LC.NPCStr" end
+local sentAsk, wrote = false, {}
+local wS, wU, sts = net.WriteUInt, net.Start, net.SendToServer
+net.Start = function(n) if n == "lc_npcstr_ask" then sentAsk = true end end
+net.WriteUInt = function(v) wrote[#wrote + 1] = v end
+net.SendToServer = function() end
+local okA, errA = pcall(S.Ask)
+net.WriteUInt, net.Start, net.SendToServer = wS, wU, sts
+if not okA then return "npc tags ask: " .. tostring(errA) end
+if not sentAsk or wrote[1] ~= 1 or wrote[2] ~= idx then return "npc tags: a far NPC read on screen isn't asked after" end
+q = { 1, idx, 0 }
+net.ReadUInt = function() return table.remove(q, 1) end
+pcall(net["recv_lc_npcstr"])
+net.ReadUInt = rU
+if LC.NPCStr(npc, "lc_pname", "gone") ~= "gone" then return "npc tags: a removed NPC's tags weren't forgotten" end
+local okF, errF = pcall(timer.list.LivingCityNPCStr.fn)
+if not okF then return "npc tags timer: " .. tostring(errF) end
+npc:Remove()
 return nil
 """)
 if err:

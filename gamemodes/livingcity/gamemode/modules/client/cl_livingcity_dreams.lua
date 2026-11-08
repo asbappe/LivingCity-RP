@@ -18,12 +18,15 @@ function LC_CL.DreamAct(what, arg)
 end
 
 -- While you dream: how to wake.
+-- (made once here, not every frame)
+local C_0_0_0_200 = Color(0, 0, 0, 200)
+local C_215_195_255_220 = Color(215, 195, 255, 220)
 hook.Add("HUDPaint", "LivingCityDreams", function()
     local me = LocalPlayer()
     if not IsValid(me) or not me:GetNW2Bool("lc_dreaming", false) then return end
     draw.SimpleTextOutlined(me:GetNW2Bool("lc_nightmare", false) and "A nightmare. You'll wake in your bed with everything you had, but you can't wake yourself until you're out of it."
         or "You're dreaming. You'll wake in your bed with everything you had. (Wake up now: C > Settings > Shared dreams)",
-        "DermaDefaultBold", ScrW() / 2, 14, Color(215, 195, 255, 220), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, Color(0, 0, 0, 200))
+        "DermaDefaultBold", ScrW() / 2, 14, C_215_195_255_220, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, C_0_0_0_200)
 end)
 
 ------------------------------------------------------------------------

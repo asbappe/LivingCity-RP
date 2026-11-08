@@ -17,6 +17,8 @@ local function PartPos(b, i)
     return b:LocalToWorld(Vector((mins.x + maxs.x) / 2, mins.y + (maxs.y - mins.y) * (SPOTS[i] or 0.5), maxs.z))
 end
 
+-- (made once here, not every frame)
+local V_0_0_12 = Vector(0, 0, 12)
 hook.Add("Think", "LivingCityLabSmoke", function()
     local now = CurTime()
     if now >= nextScan then
@@ -49,7 +51,7 @@ hook.Add("Think", "LivingCityLabSmoke", function()
                         p:SetRoll(math.Rand(0, 360))
                         p:SetRollDelta(math.Rand(-0.5, 0.5))
                         p:SetAirResistance(30)
-                        p:SetGravity(Vector(0, 0, 12))
+                        p:SetGravity(V_0_0_12)
                     end
                 end
             end

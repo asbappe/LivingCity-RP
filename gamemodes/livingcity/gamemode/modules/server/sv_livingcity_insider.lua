@@ -9,7 +9,7 @@
     up with them.
 
     What an Insider can do besides, from the full menu (C > Civil Protection >
-    Inside), each only where nobody can see or hear them (no other player in
+    Inside, and F2 > Inside: sv_livingcity_quickmore.lua), each only where nobody can see or hear them (no other player in
     sight within lc_insider_privacy, 700, or within earshot, 300; no unit
     watching): they have to slip away to do it.
       Tip off Freq 7         a message on the Resistance's band, unsigned,
@@ -29,6 +29,17 @@
                              every unit's mask lets gas through (once every 20 minutes).
       Spike the food         at the Commissary, with weedkiller: the units who eat at the
                              station fall sick over the next few minutes (once every 20).
+      Let them slip          (also F2, and a line in "what you can do here" on
+                             the right while one is within reach: bright when
+                             nobody's watching, faint when someone is)
+                             beside a prisoner being marched to the cells: you
+                             take them off the escort's hands, and once it's
+                             gone, the cuffs come off. A head start of 20
+                             seconds; whoever still sees them then has them
+                             wanted for escaping custody. Costs 20 Civil
+                             Standing (it got away from you); once every 20
+                             minutes. (The escort and the prisoner don't count
+                             as watching: other people and units do.)
       Reveal myself          to the one person you're looking at: they learn
                              you're the Resistance's friend inside (the
                              codeword).
@@ -72,18 +83,33 @@ function LC.InsiderBurned(ply)
     return cid ~= "" and ply:GetPData("lc_burned", "") == cid
 end
 
--- Who could see or hear them right now (nobody: they can act).
-function LC.InsiderWatched(ply)
+-- A unit (NPC) who can see them, leaving out the ones in ignore.
+local function SecuritySees(ply, far, ignore)
+    if not ignore then return LC.SeenBySecurity and LC.SeenBySecurity(ply, far) end
+    if not (LC.IsSecurity and LC.UnitSees) then return false end
+    local eye = ply:EyePos()
+    for npc, st in pairs(LC.NPCs or {}) do
+        if IsValid(npc) and not ignore[npc] and LC.IsSecurity(st) and LC.UnitSees(npc, ply, far) then
+            local tr = util.TraceLine({ start = npc:EyePos(), endpos = eye, mask = MASK_OPAQUE, filter = npc })
+            if tr.Fraction > 0.97 and not (LC.SmokeBlocks and LC.SmokeBlocks(npc:EyePos(), eye)) then return true end
+        end
+    end
+    return false
+end
+
+-- Who could see or hear them right now (nobody: they can act). ignore: people and units
+-- who don't count (a marched prisoner and their escort, for Let them slip).
+function LC.InsiderWatched(ply, ignore)
     local far = cvPrivacy:GetFloat()
     local eye = ply:EyePos()
     for _, p in ipairs(player.GetAll()) do
-        if p ~= ply and p:Alive() then
+        if p ~= ply and p:Alive() and not (ignore and ignore[p]) then
             local d = p:GetPos():DistToSqr(ply:GetPos())
             if d < 300 * 300 then return true, "Someone's close enough to hear you." end
             if d < far * far and (not LC.LineOfSight or LC.LineOfSight(p:EyePos(), eye, p, ply)) then return true, "Someone can see you." end
         end
     end
-    if LC.SeenBySecurity and LC.SeenBySecurity(ply, far) then return true, "A Civil Protection unit can see you." end
+    if SecuritySees(ply, far, ignore) then return true, "A Civil Protection unit can see you." end
     return false
 end
 
@@ -95,12 +121,17 @@ local function Ready(ply, key, gap)
     return true
 end
 local function Used(ply, key, gap) ply.lcInsiderNext[key] = CurTime() + gap end
+-- Seconds before one of their actions (tip, skim, copy, foul, spike, slip) is open again: 0, now (F2 > Inside).
+function LC.InsiderWait(ply, key)
+    local at = IsValid(ply) and ply.lcInsiderNext and ply.lcInsiderNext[key] or 0
+    return math.max(0, math.ceil(at - CurTime()))
+end
 
 -- The checks every Insider action makes first: true, or false and why.
-local function CanAct(ply)
+local function CanAct(ply, ignore)
     if not LC.IsInsider(ply) then return false, "Nothing like that is open to you." end
     if not ply:Alive() or (LC.InCustody and LC.InCustody(ply)) then return false, "Not now." end
-    local watched, why = LC.InsiderWatched(ply)
+    local watched, why = LC.InsiderWatched(ply, ignore)
     if watched then return false, why .. " Slip away somewhere nobody's watching first." end
     return true
 end
@@ -226,6 +257,98 @@ function LC.InsiderSpike(ply)
     return true
 end
 
+-- Let them slip: a prisoner being marched to the cells (sv_livingcity_march.lua), let go on the
+-- way. The Insider takes them off the escort's hands; once it's gone, the cuffs come off and they
+-- have a head start. Whoever still sees them at the end of it has them wanted for escaping custody;
+-- out of sight by then, they got clean away. It got away from the Insider: they look careless.
+local SLIP_GAP, SLIP_COST, SLIP_NEAR, SLIP_HEAD = 1200, 20, 300, 20
+LC.InsiderSlipHeadStart = SLIP_HEAD
+
+-- The prisoner being marched nearest them, within reach (or nil).
+function LC.InsiderMarchNear(ply)
+    local best, bd
+    for p in pairs(LC.Marching or {}) do
+        if IsValid(p) and p ~= ply then
+            local d = p:GetPos():DistToSqr(ply:GetPos())
+            if d < SLIP_NEAR * SLIP_NEAR and (not bd or d < bd) then best, bd = p, d end
+        end
+    end
+    return best
+end
+
+-- Out of sight, or not: at the end of the head start.
+function LC.InsiderSlipSeen(target)
+    if LC.SeenBySecurity and LC.SeenBySecurity(target, 1500) then return true end
+    local eye = target:EyePos()
+    for _, p in ipairs(player.GetAll()) do
+        if p ~= target and p:Alive() and LC.PlayerIsCP and LC.PlayerIsCP(p) and not LC.IsInsider(p)
+            and p:GetPos():DistToSqr(target:GetPos()) < 1500 * 1500
+            and (not LC.LineOfSight or LC.LineOfSight(p:EyePos(), eye, p, target)) then return true end
+    end
+    return false
+end
+
+local function SlipOver(target, where)
+    if not IsValid(target) or not target:IsPlayer() or not target.lcSlipped then return end
+    target.lcSlipped = nil
+    if not target:Alive() or (LC.InCustody and LC.InCustody(target)) or (LC.Marching and LC.Marching[target]) then return end
+    if LC.InsiderSlipSeen(target) then
+        local esc = GetConVar("lc_escape_wanted")
+        if LC.ReportCrime then LC.ReportCrime(target, "Escaping custody", esc and esc:GetFloat() or 300) end
+        if LC.Notice then LC.Notice(target, "warn", "Spotted", "They've seen you: you're wanted for escaping custody. Run.", 8) end
+        if LC.RadioNotice then LC.RadioNotice("cp", "Dispatch: prisoner in transit has escaped custody" .. (where ~= "" and (", " .. where) or "") .. ". Locate and detain.") end
+    else
+        if LC.Notice then LC.Notice(target, "info", "Clean away", "Nobody saw which way you went. As far as the city knows, you got away from your escort. Lie low for a while.", 8) end
+        if LC.RadioNotice then LC.RadioNotice("cp", "Dispatch: a prisoner in transit is missing" .. (where ~= "" and (", " .. where) or "") .. ". No sighting.") end
+    end
+    if LC.RadioNotice then LC.RadioNotice("resistance", "One of ours got away on the march to the cells.") end
+end
+
+-- The prisoner and their escort: they don't count as watching.
+local function SlipIgnore(target)
+    local m = LC.Marching[target] or {}
+    local ignore = { [target] = true }
+    if IsValid(m.lead) then ignore[m.lead] = true end
+    if IsValid(m.rear) then ignore[m.rear] = true end
+    return ignore
+end
+
+-- What the Insider's own screen shows (the hint on the right, and F2): the marched prisoner
+-- within reach (or nil), and "" (they can do it now), "watched" or "soon" (not again yet).
+function LC.InsiderSlipState(ply)
+    if not LC.IsInsider(ply) or not ply:Alive() or (LC.InCustody and LC.InCustody(ply)) then return nil end
+    local target = LC.InsiderMarchNear(ply)
+    if not IsValid(target) then return nil end
+    if LC.InsiderWatched(ply, SlipIgnore(target)) then return target, "watched" end
+    if not Ready(ply, "slip", SLIP_GAP) then return target, "soon" end
+    return target, ""
+end
+
+function LC.InsiderLetSlip(ply, target)
+    if not LC.IsInsider(ply) then return false, "Nothing like that is open to you." end
+    if not (IsValid(target) and LC.Marching and LC.Marching[target]) then target = LC.InsiderMarchNear(ply) end
+    if not IsValid(target) then return false, "Nobody's being marched to the cells near you." end
+    if target:GetPos():DistToSqr(ply:GetPos()) > SLIP_NEAR * SLIP_NEAR then return false, "Get closer to the prisoner first." end
+    local ok, why = CanAct(ply, SlipIgnore(target))
+    if not ok then return false, why end
+    ok, why = Ready(ply, "slip", SLIP_GAP)
+    if not ok then return false, why end
+    if not (LC.MarchRelease and LC.MarchRelease(target)) then return false, "Not now." end
+    if LC.Untie and LC.IsTied and LC.IsTied(target) then LC.Untie(target, ply, true) end
+    if LC.ClearWanted then LC.ClearWanted(target) end
+    Used(ply, "slip", SLIP_GAP)
+    if LC.AddStanding then LC.AddStanding(ply, -SLIP_COST, "A prisoner lost on the march") end
+    Say(ply, string.format("[Inside] You tell the escort you'll take this one in yourself. Once they've gone, the cuffs come off and you look the other way. It will look like they got away from you (-%d Civil Standing).", SLIP_COST))
+    if LC.Notice then
+        LC.Notice(target, "info", "Let go", string.format("Your cuffs come off and someone says, low: \"Go. Now.\" Nobody's after you yet: get out of sight within %d seconds, or they'll want you for escaping.", SLIP_HEAD), 10)
+    end
+    target.lcSlipped = true
+    local where = Where(target:GetPos())
+    timer.Simple(SLIP_HEAD, function() SlipOver(target, where) end)
+    hook.Run("LivingCityInsiderAct", ply, "slip")
+    return true
+end
+
 function LC.InsiderReveal(ply, target)
     if not LC.IsInsider(ply) then return false, "Nothing like that is open to you." end
     if not IsValid(target) or not target:IsPlayer() or target == ply then return false, "Look at the one person you want to tell." end
@@ -323,6 +446,29 @@ timer.Create("LivingCityInsider", 5, 0, function()
     end
 end)
 
+-- Let them slip, on the Insider's own screen: while a marched prisoner is within reach, twice a
+-- second, whether they can do it now (sent to them alone, and only when it changes).
+util.AddNetworkString("lc_insider_slip")
+function LC.InsiderSlipTick()
+    local any = next(LC.Marching or {}) ~= nil
+    for _, p in ipairs(player.GetAll()) do
+        local target, why
+        if any then target, why = LC.InsiderSlipState(p) end
+        local key = IsValid(target) and (target:EntIndex() .. ":" .. why) or ""
+        if (p.lcSlipSent or "") ~= key then
+            p.lcSlipSent = key
+            net.Start("lc_insider_slip")
+            net.WriteBool(IsValid(target))
+            if IsValid(target) then
+                net.WriteEntity(target)
+                net.WriteString(why or "")
+            end
+            net.Send(p)
+        end
+    end
+end
+timer.Create("LivingCityInsiderSlip", 0.5, 0, function() LC.InsiderSlipTick() end)
+
 -- A leader coming on hears who's inside, once.
 hook.Add("PlayerSpawn", "LivingCityInsiderLeaders", function(ply)
     timer.Simple(3, function()
@@ -360,8 +506,9 @@ LC.SlashCommands.loserecord = function(ply, rest) Reply(ply, LC.InsiderLoseRecor
 LC.SlashCommands.skim = function(ply) Reply(ply, LC.InsiderSkim(ply)) end
 LC.SlashCommands.copyrecords = function(ply) Reply(ply, LC.InsiderCopy(ply)) end
 LC.SlashCommands.reveal = function(ply) Reply(ply, LC.InsiderReveal(ply, Looked(ply))) end
+LC.SlashCommands.letslip = function(ply, rest) Reply(ply, LC.InsiderLetSlip(ply, FindPlayer(rest) or Looked(ply))) end
 LC.SlashCommands.foulfilters = function(ply) Reply(ply, LC.InsiderFoul(ply)) end
 LC.SlashCommands.spikefood = function(ply) Reply(ply, LC.InsiderSpike(ply)) end
 if LC.MenuActions then
-    for _, c in ipairs({ "tipoff", "loserecord", "skim", "copyrecords", "reveal", "foulfilters", "spikefood" }) do LC.MenuActions[c] = true end
+    for _, c in ipairs({ "tipoff", "loserecord", "skim", "copyrecords", "reveal", "foulfilters", "spikefood", "letslip" }) do LC.MenuActions[c] = true end
 end

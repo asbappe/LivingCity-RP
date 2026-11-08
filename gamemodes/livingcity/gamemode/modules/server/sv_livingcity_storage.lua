@@ -44,8 +44,7 @@ local dirty = false
 
 local function Load()
     if LC.Storage then return LC.Storage end
-    local raw = file.Read(FilePath(), "DATA")
-    local t = raw and util.JSONToTable(raw) or {}
+    local t = LC.SafeReadJSON(FilePath()) or {}
     LC.Storage = istable(t) and t or {}
     for _, c in pairs(LC.Storage) do c.items = istable(c.items) and c.items or {} end
     return LC.Storage
@@ -59,8 +58,7 @@ local function Save()
                 prices = c.prices, till = c.till, closed = c.closed, spoil = c.spoil }
         end
     end
-    file.CreateDir(DIR)
-    file.Write(FilePath(), util.TableToJSON(out))
+    LC.SafeWrite(FilePath(), util.TableToJSON(out))
 end
 
 timer.Create("LivingCityStorageSave", 15, 0, function()

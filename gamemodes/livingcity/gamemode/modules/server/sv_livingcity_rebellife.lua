@@ -23,7 +23,7 @@
     dressing (mattresses, couches, crates, the table and chairs, the fire),
     and beds, couches, chairs, workbenches and crates built into the map.
 
-    Scavenging runs: now and then (lc_rebel_errand_minutes, 4, on average,
+    Scavenging runs: now and then (lc_rebel_errand_minutes, 12, on average,
     for each rebel zone with three or more fighters at home and someone on
     the server) one or two slip out to scavenge at a bin, a junk pile or a
     salvage point within reach, or just somewhere in the streets. They walk,
@@ -36,7 +36,7 @@
 
       lc_rebel_life 0/1             home activities (1)
       lc_rebel_errands 0/1          scavenging runs (1)
-      lc_rebel_errand_minutes <m>   average minutes between runs, per zone (4)
+      lc_rebel_errand_minutes <m>   average minutes between runs, per zone (12)
 ]]
 
 if CLIENT then return end
@@ -46,7 +46,7 @@ LC = LC or {}
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvLife    = CreateConVar("lc_rebel_life", "1", FLAGS, "Rebels at home keep busy: patrols, the workbench, crates, the garden, the fire, sitting, sleeping")
 local cvErrands = CreateConVar("lc_rebel_errands", "1", FLAGS, "Rebels slip out in ones and twos to scavenge, keeping out of sight, and bring it home")
-local cvErrandM = CreateConVar("lc_rebel_errand_minutes", "4", FLAGS, "Average minutes between scavenging runs, for each rebel zone")
+local cvErrandM = CreateConVar("lc_rebel_errand_minutes", "12", FLAGS, "Average minutes between scavenging runs, for each rebel zone")
 local cvHeadFlip = CreateConVar("lc_bed_head_flip", "0", FLAGS, "1 turns everyone lying on an editor-placed bed (Fixture: bed) round the other way, if their heads are at the foot end")
 local cvBedLift = CreateConVar("lc_rebel_bed_height", "8", FLAGS, "How far above a mattress or bed a sleeping fighter's hips lie (they're settled onto it by this; more if they sink into it, less if they float)")
 
@@ -137,7 +137,14 @@ local function ZoneThings(z)
         list[#list + 1] = t
     end
     local function inside(p) return LCZ.Contains(z, p, 0) end
-    for _, e in ipairs(ents.FindInSphere(z.pos, (z.r or 300) + 64)) do
+    -- (grown ground: everything over its cells, however far along the corridors it reaches)
+    local near
+    if z.cells and z.mins then
+        near = ents.FindInSphere((z.mins + z.maxs) * 0.5, (z.maxs - z.mins):Length() * 0.5 + 64)
+    else
+        near = ents.FindInSphere(z.pos, (z.r or 300) + 64)
+    end
+    for _, e in ipairs(near) do
         if IsValid(e) and not e:IsPlayer() and not e:IsNPC() and not e.lcCarried and inside(e:GetPos()) then
             local cls = e:GetClass()
             local kind
@@ -343,7 +350,7 @@ LC.RebelBedSpot = BedSpot
 -- Doing things
 ------------------------------------------------------------------------
 
-local function SetDoing(npc, text) if IsValid(npc) then npc:SetNW2String("lc_doing", text or "") end end
+local function SetDoing(npc, text) if IsValid(npc) then LC.SetNPCStr(npc, "lc_doing", text or "") end end
 
 local function HideGun(npc, L, hide)
     local w = npc.GetActiveWeapon and npc:GetActiveWeapon()
@@ -446,9 +453,9 @@ local function LieDouble(npc, L, b)
     if not ok then rag:Remove() return false end
     rag:SetNW2Bool("lc_eyes_shut", true)
     rag:SetNW2Bool("lc_sleeper", true) -- (looked at: their name and "asleep", as the real one would show)
-    rag:SetNW2String("lc_pname", npc:GetNW2String("lc_pname", ""))
-    rag:SetNW2String("lc_pjob", npc:GetNW2String("lc_pjob", ""))
-    rag:SetNW2String("lc_doing", "asleep")
+    LC.SetNPCStr(rag, "lc_pname", LC.NPCStr(npc, "lc_pname", ""))
+    LC.SetNPCStr(rag, "lc_pjob", LC.NPCStr(npc, "lc_pjob", ""))
+    LC.SetNPCStr(rag, "lc_doing", "asleep")
     rag.lcSleeper = npc
     L.double = rag
     npc:SetNoDraw(true)
@@ -621,9 +628,10 @@ function A.patrol(npc, st, z, now)
         local spot, cramped
         for _ = 1, 6 do
             local a = base + (i - 1) * (math.pi * 2 / n) + math.Rand(-0.3, 0.3)
-            local p = z.pos + Vector(math.cos(a), math.sin(a), 0) * z.r * math.Rand(0.55, 0.78)
+            -- (grown ground: a stop on any of its cells, at that cell's floor)
+            local p = z.cells and LCZ.RandomInside(z, 0.7) or z.pos + Vector(math.cos(a), math.sin(a), 0) * z.r * math.Rand(0.55, 0.78)
             local g = Floor(p + Vector(0, 0, 40))
-            if g and LCZ.Contains(z, g, -30) and math.abs(g.z - z.pos.z) < (z.h or 160) and Standable(g) then
+            if g and LCZ.Contains(z, g, -30) and math.abs(g.z - LCZ.FloorAt(z, g)) < (z.h or 160) and Standable(g) then
                 -- (a stop with room round it first: not in a doorway, the owner, 7 November)
                 if not LC.RoomAround or LC.RoomAround(g) then spot = g break end
                 cramped = cramped or g
@@ -979,7 +987,7 @@ local function Deliver(npc, st, E, now)
     local added = IsValid(cache) and LC.AddToCache and LC.AddToCache(cache, found) or 0
     if added > 0 and now > lastHaulRadio + 300 and LC.RadioNotice then
         lastHaulRadio = now
-        LC.RadioNotice("resistance", string.format("%s is back from a scavenging run: %d meal%s for the stores.", npc:GetNW2String("lc_pname", "One of ours"), added, added == 1 and "" or "s"))
+        LC.RadioNotice("resistance", string.format("%s is back from a scavenging run: %d meal%s for the stores.", LC.NPCStr(npc, "lc_pname", "One of ours"), added, added == 1 and "" or "s"))
     end
     hook.Run("LivingCityRebelHaul", npc, found)
 end
@@ -1061,7 +1069,7 @@ function LC.RebelErrandThink(npc, st, now)
     -- home, with whatever they found
     SetDoing(npc, (E.found or 0) > 0 and "bringing back what they found" or "heading home")
     LC.SetState(npc, st, "moving")
-    if pos:DistToSqr(z.pos) < (z.r * 0.7) ^ 2 or (E.homeSpot and pos:DistToSqr(E.homeSpot) < 90 * 90 and LCZ.Contains(z, pos, 0)) then
+    if LCZ.Within(z, pos, 0.7) or (E.homeSpot and pos:DistToSqr(E.homeSpot) < 90 * 90 and LCZ.Contains(z, pos, 0)) then
         Deliver(npc, st, E, now)
         st.errand = nil
         st.expires = now + 60 -- (an extra came while they were out: one of them slips away later, unseen)

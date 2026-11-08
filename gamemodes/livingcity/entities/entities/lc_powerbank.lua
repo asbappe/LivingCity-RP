@@ -61,6 +61,12 @@ if CLIENT then
     -- touching it is a crime (the owner, 7 November).
     local LABEL_RANGE = 110
     local function Unit(me) return me:GetNW2Bool("lc_unit", false) or me:GetNW2String("lcf_faction", "") == "cp" or me:GetNW2String("lcf_faction", "") == "admin" end
+    -- (made once here, not every frame)
+    local C_0_0_0_200 = Color(0, 0, 0, 200)
+    local C_150_215_255 = Color(150, 215, 255)
+    local C_200_200_200 = Color(200, 200, 200)
+    local C_235_235_235 = Color(235, 235, 235)
+    local C_255_170_120 = Color(255, 170, 120)
     function ENT:DrawLabel()
         local me = LocalPlayer()
         if not IsValid(me) or not me:Alive() then return end
@@ -76,8 +82,8 @@ if CLIENT then
         if Unit(me) then line = live and "E: read it, and recharge your vest" or "No power: nothing charges here"
         else line = live and "Tampering with it is a crime" or "Dead. Leave it be" end
         cam.Start3D2D(top, Angle(0, ang.y, 90), 0.07)
-            draw.SimpleTextOutlined(title, "DermaLarge", 0, -22, live and Color(150, 215, 255) or Color(200, 200, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 200))
-            draw.SimpleTextOutlined(line, "DermaLarge", 0, 10, Unit(me) and Color(235, 235, 235) or Color(255, 170, 120), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 200))
+            draw.SimpleTextOutlined(title, "DermaLarge", 0, -22, live and C_150_215_255 or C_200_200_200, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, C_0_0_0_200)
+            draw.SimpleTextOutlined(line, "DermaLarge", 0, 10, Unit(me) and C_235_235_235 or C_255_170_120, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, C_0_0_0_200)
         cam.End3D2D()
     end
 

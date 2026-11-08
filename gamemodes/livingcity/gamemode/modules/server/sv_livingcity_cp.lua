@@ -112,8 +112,7 @@ local dirty = false
 
 local function LoadRecords()
     if LC.Records then return LC.Records end
-    local raw = file.Read(RECORDS_FILE, "DATA")
-    LC.Records = raw and util.JSONToTable(raw) or {}
+    LC.Records = LC.SafeReadJSON(RECORDS_FILE) or {}
     return LC.Records
 end
 
@@ -122,9 +121,9 @@ local function SaveSoon() dirty = true end
 timer.Create("LivingCityRecordsSave", 10, 0, function()
     if not dirty or not LC.Records then return end
     dirty = false
-    file.CreateDir(DIR)
-    file.Write(RECORDS_FILE, util.TableToJSON(LC.Records))
-    file.Write(BOLO_FILE, util.TableToJSON(LC.BOLOs or {}))
+    LC.SafeWrite(RECORDS_FILE, util.TableToJSON(LC.Records))
+    -- (BOLOs not read yet this run: left as they are, never an empty list over them)
+    if LC.BOLOs then LC.SafeWrite(BOLO_FILE, util.TableToJSON(LC.BOLOs)) end
 end)
 
 -- Who the city thinks this is: forged papers win, then the CID, then the account.
@@ -241,8 +240,7 @@ end
 LC.BOLOs = LC.BOLOs or nil
 local function Bolos()
     if not LC.BOLOs then
-        local raw = file.Read(BOLO_FILE, "DATA")
-        LC.BOLOs = raw and util.JSONToTable(raw) or {}
+        LC.BOLOs = LC.SafeReadJSON(BOLO_FILE) or {}
     end
     return LC.BOLOs
 end
@@ -371,6 +369,8 @@ function LC.SendRecords(unit, search)
     for _, b in ipairs(Bolos()) do data.bolos[#data.bolos + 1] = b end
     for _, q in ipairs(LC.Requests or {}) do data.requests[#data.requests + 1] = q end
     data.search = search
+    -- the Combine's manpower (sv_livingcity_manpower.lua), the same lines the unit tools show (the owner, 7 November)
+    data.manpower = LC.ManpowerReadout and LC.ManpowerReadout("combine") or nil
     LC.SendCompressed("lc_records", data, unit)
     return true
 end
@@ -1008,13 +1008,15 @@ concommand.Add("lc_handsup", function(ply) if IsValid(ply) then LC.SetHandsUp(pl
 
 local cvCoupons = CreateConVar("lc_cp_coupons", "8", FLAGS, "Credits in ration coupons a Civil Protection unit is issued each allocation (plus one per rank)")
 
+LC.DUTY_ALLOCATION_SECONDS = 600
+
 function LC.IssueDutyAllocation(ply)
     if not On() or not RealUnit(ply) or not ply:Alive() then return false end
     if LC.InCustody and LC.InCustody(ply) then return false end
     local now = CurTime()
     if now < (ply.lcnRationAt or 0) then return false end
-    local rv = GetConVar("lc_ration_interval")
-    ply.lcnRationAt = now + (rv and rv:GetFloat() or 600)
+    -- every 10 minutes, as before the dispenser was slowed (the owner, 7 November: only citizens feel the scarcity)
+    ply.lcnRationAt = now + LC.DUTY_ALLOCATION_SECONDS
     local credits = math.max(0, cvCoupons:GetInt()) + math.max(0, Rank(ply) - 1)
     local eats = not LCF.IsOverwatch(ply) -- (the Overwatch are fed through the suit)
     local got = {}

@@ -369,8 +369,8 @@ local function SpawnBreen(pt)
     npc:SetKeyValue("spawnflags", tostring((SF_NPC_GAG or 4) + (SF_NPC_FADE_CORPSE or 512)))
     npc:Spawn()
     npc:Activate()
-    npc:SetNW2String("lc_pname", LC.AdministratorName())
-    npc:SetNW2String("lc_pjob", "Administrator")
+    LC.SetNPCStr(npc, "lc_pname", LC.AdministratorName())
+    LC.SetNPCStr(npc, "lc_pjob", "Administrator")
     npc.lcBreen = true
     return npc
 end

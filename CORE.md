@@ -49,7 +49,7 @@ Every recording and song is sent to players with `resource.AddFile` when the map
 
 - Every setting (`lc_*`) and its default is in the core snapshot. **Settings are saved on the server (archived): changing a default never reaches a server that already has the old value.** When a default has to change (with the owner's OK), add the old and new value to the `RETUNED` table in sv_livingcity_endings.lua (`LC.EndingRetune`), which moves a server still on exactly the old default to the new one.
 - **Settings changed in game are also saved per map**, in the layout file (`data/livingcity/<map>.json`, under `"settings"`) and put back on every start (`LC.RememberSetting`). A setting the owner once changed stays that way on that map, whatever its default (that's how `lc_npc_budget` stayed at 10).
-- `lc_npc_budget` caps the city's NPCs (default 60). Lower than what the settings add up to, nothing more spawns (Civil Protection included); superadmins are told, and the debug report says so.
+- `lc_npc_budget` caps the city's NPCs (default 100). Lower than what the settings add up to, nothing more spawns (Civil Protection included); superadmins are told, and the debug report says so.
 
 ## How it all behaves
 

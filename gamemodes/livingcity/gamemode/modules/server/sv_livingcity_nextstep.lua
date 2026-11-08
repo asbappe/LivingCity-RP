@@ -149,6 +149,7 @@ local function RationReady(ply)
     if LC.StockLevel and LC.StockLevel() == "empty" then return false end
     return CurTime() >= (ply.lcnRationAt or 0)
 end
+LC.RationReady = RationReady -- (F2 > Me > My rations: sv_livingcity_quickmore.lua)
 
 local function Cheapest(ply, what)
     local credits = LC.Credits and LC.Credits(ply) or 0

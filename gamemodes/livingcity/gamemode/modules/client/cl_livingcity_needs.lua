@@ -63,6 +63,11 @@ function LC_CL.NeedsVisible(ply)
     return h < NEEDS_LOW or t < NEEDS_LOW or ply:GetNW2Float("lcn_parasites", 0) > now or now < lastNeeds.untilT
 end
 
+-- (made once here, not every frame)
+local C_10_12_16_170 = Color(10, 12, 16, 170)
+local C_140_230_120 = Color(140, 230, 120)
+local C_235_100_90 = Color(235, 100, 90)
+local C_40_38_34_220 = Color(40, 38, 34, 220)
 hook.Add("HUDPaint", "LivingCityNeedsHUD", function()
     local ply = LocalPlayer()
     if not IsValid(ply) or not ply:Alive() then return end
@@ -80,7 +85,7 @@ hook.Add("HUDPaint", "LivingCityNeedsHUD", function()
 
     local x, y, w = LC_CL.HudX, LC_CL.HudY, LC_CL.HudW
     local rows = (needs and 2 or 0) * 14 + (econ and 14 or 0) + (ident and 14 or 0) + (xpFrac and 14 or 0) + (traits and 14 or 0)
-    draw.RoundedBox(4, x, y, w, 8 + rows, Color(10, 12, 16, 170))
+    draw.RoundedBox(4, x, y, w, 8 + rows, C_10_12_16_170)
     local ry = y + 4
     if ident then
         draw.SimpleText(ident, "DefaultSmall", x + 6, ry + 6, identCol or INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
@@ -89,12 +94,12 @@ hook.Add("HUDPaint", "LivingCityNeedsHUD", function()
     if xpFrac then
         -- rank and XP toward the next one, always in view
         local c = xpCol or ACCENT
-        draw.RoundedBox(2, x + 4, ry, w - 8, 11, Color(40, 38, 34, 220))
+        draw.RoundedBox(2, x + 4, ry, w - 8, 11, C_40_38_34_220)
         draw.RoundedBox(2, x + 4, ry, math.max(0, (w - 8) * xpFrac), 11, Color(c.r, c.g, c.b, 150))
         draw.SimpleText(xpLabel, "DefaultSmall", x + 8, ry + 5.5, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         if xpGain then
             local up = string.sub(xpGain, 1, 1) == "+"
-            draw.SimpleTextOutlined(xpGain, "DermaDefaultBold", x + w + 6, ry + 5.5, up and Color(140, 230, 120) or Color(235, 100, 90),
+            draw.SimpleTextOutlined(xpGain, "DermaDefaultBold", x + w + 6, ry + 5.5, up and C_140_230_120 or C_235_100_90,
                 TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, 1, color_black)
         end
         ry = ry + 14
@@ -125,6 +130,12 @@ end)
 local BANDS = { union = "Union band", resistance = "Freq 7", cp = "CP net" }
 local DISGUISES = { cp = "Civil Protection uniform", citizen = "citizen clothes", rebel = "Resistance gear" }
 
+-- (made once here, not every frame)
+local C_140_190_255 = Color(140, 190, 255)
+local C_20_30_45_220 = Color(20, 30, 45, 220)
+local C_240_200_120 = Color(240, 200, 120)
+local C_30_28_24_220 = Color(30, 28, 24, 220)
+local C_60_10_10_220 = Color(60, 10, 10, 220)
 hook.Add("HUDPaint", "LivingCityUndergroundHUD", function()
     local ply = LocalPlayer()
     if not IsValid(ply) or not ply:Alive() then return end
@@ -141,15 +152,15 @@ hook.Add("HUDPaint", "LivingCityUndergroundHUD", function()
     LC_CL.UnderLineShown = #bits > 0
     if #bits > 0 then
         draw.SimpleTextOutlined(table.concat(bits, "  |  "), "DefaultSmall", LC_CL.HudX + 2, (LC_CL.HudBottom or 60) + 2,
-            d ~= "" and Color(240, 200, 120) or INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, color_black)
+            d ~= "" and C_240_200_120 or INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, color_black)
     end
 
     -- being stopped or searched
     local stopUntil = ply:GetNW2Float("lcu_stop_until", 0)
     if stopUntil > now then
         local cx, cy = ScrW() / 2, ScrH() * 0.28
-        draw.RoundedBox(4, cx - 210, cy - 22, 420, 44, Color(20, 30, 45, 220))
-        draw.SimpleText("STAND STILL FOR INSPECTION", "DermaLarge", cx, cy, Color(140, 190, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        draw.RoundedBox(4, cx - 210, cy - 22, 420, 44, C_20_30_45_220)
+        draw.SimpleText("STAND STILL FOR INSPECTION", "DermaLarge", cx, cy, C_140_190_255, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     end
 
     -- a unit shouting at you
@@ -157,7 +168,7 @@ hook.Add("HUDPaint", "LivingCityUndergroundHUD", function()
     if shoutUntil > now then
         local cx, cy = ScrW() / 2, ScrH() * 0.36
         local pulse = 0.6 + 0.4 * math.abs(math.sin(now * 8))
-        draw.RoundedBox(4, cx - 260, cy - 28, 520, 56, Color(60, 10, 10, 220))
+        draw.RoundedBox(4, cx - 260, cy - 28, 520, 56, C_60_10_10_220)
         draw.SimpleTextOutlined(ply:GetNW2String("lc_shout", "STOP RUNNING!"), "DermaLarge", cx, cy,
             Color(255, 70 + 120 * pulse, 70 + 120 * pulse), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_black)
     end
@@ -168,7 +179,7 @@ hook.Add("HUDPaint", "LivingCityUndergroundHUD", function()
         local start = ply:GetNW2Float("lcu_pick_start", now)
         local frac = math.Clamp((now - start) / math.max(0.1, pickUntil - start), 0, 1)
         local cx, cy, bw = ScrW() / 2, ScrH() * 0.62, 260
-        draw.RoundedBox(3, cx - bw / 2, cy, bw, 14, Color(30, 28, 24, 220))
+        draw.RoundedBox(3, cx - bw / 2, cy, bw, 14, C_30_28_24_220)
         draw.RoundedBox(3, cx - bw / 2, cy, bw * frac, 14, ACCENT)
         draw.SimpleTextOutlined(ply:GetNW2String("lcu_progress", "Working the lock... keep looking at it"), "DermaDefault", cx, cy - 4, INK,
             TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM, 1, color_black)

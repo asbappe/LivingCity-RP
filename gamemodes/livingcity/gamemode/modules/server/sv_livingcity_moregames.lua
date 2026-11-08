@@ -1191,6 +1191,7 @@ local function Verdict(g, v)
         g.right = g.right + 1
         g.pay = g.pay + 3
         Say(g, "CP", "Confiscated: " .. s.what[1] .. ". Logged as evidence.")
+        if LC.EvidenceAdd then LC.EvidenceAdd(s.what[2], 1, "search", s.what[1]) end -- (sv_livingcity_evidence.lua)
         Unhold(g, s, true)
     elseif v == "detain" then
         if s.found then

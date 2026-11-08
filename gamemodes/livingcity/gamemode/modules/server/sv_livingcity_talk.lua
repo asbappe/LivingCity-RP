@@ -146,7 +146,7 @@ local function Usable(ply, npc)
 end
 
 local function Doing(npc)
-    local d = npc:GetNW2String("lc_doing", "")
+    local d = LC.NPCStr(npc, "lc_doing", "")
     if d ~= "" then return d end
     local st = LC.NPCs[npc]
     if st and st.state == "inline" then return "waiting in the ration line" end
@@ -160,7 +160,7 @@ local function Options(ply, npc, st)
     return {
         chat = true,
         food = FoodToGive(ply) ~= nil,
-        pick = not unit and (npc.lcPickedAt or 0) < CurTime() - 600,
+        pick = not unit and not (npc.lcPickedAt and npc.lcPickedAt > CurTime() - 600), -- (never picked counts as ready, even in a server's first ten minutes)
         inform = not unit and not rebel,
         recruit = rebel and st.rebel == true and LC.CanRecruitLookout ~= nil and (LC.CanRecruitLookout(ply, npc)),
     }
@@ -189,8 +189,8 @@ function LC.OpenTalk(ply, npc, said)
     if kind == "afraid" and not said then said = Pick(AFRAID_LINES) end
     net.Start("lc_talk")
     net.WriteEntity(npc)
-    net.WriteString(npc:GetNW2String("lc_pname", "A citizen"))
-    net.WriteString(npc:GetNW2String("lc_pjob", ""))
+    net.WriteString(LC.NPCStr(npc, "lc_pname", "A citizen"))
+    net.WriteString(LC.NPCStr(npc, "lc_pjob", ""))
     net.WriteString(Doing(npc))
     net.WriteString(mood)
     net.WriteString(kind)
@@ -247,7 +247,7 @@ local function Pocket()
 end
 
 local function PickPocket(ply, npc, st)
-    if (npc.lcPickedAt or 0) > CurTime() - 600 then return "Their pockets are already empty." end
+    if npc.lcPickedAt and npc.lcPickedAt > CurTime() - 600 then return "Their pockets are already empty." end
     npc.lcPickedAt = CurTime()
     local roll = math.random(20) + (LC.SkillMod and LC.SkillMod(ply, "guile") or 0)
     LC.Bump(ply, "thefts")
@@ -345,7 +345,7 @@ end)
 timer.Create("LivingCityMemory", 2, 0, function()
     if not LC.Running or not cvTalk:GetBool() then return end
     local now = CurTime()
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         if ply:Alive() then
             for _, npc in ipairs(ents.FindInSphere(ply:GetPos(), 220)) do
                 local st = LC.NPCs[npc]

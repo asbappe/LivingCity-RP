@@ -209,7 +209,7 @@ function LC_CL.DrawCityScreen(ent)
     draw.RoundedBox(4, -320, -180, 640, 360, SCREEN_BG)
     draw.RoundedBox(0, -320, -180, 640, 4, SCREEN_HEAD)
     draw.SimpleText("THE CITY ADMINISTRATOR", "DermaLarge", 0, -150, SCREEN_HEAD, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-    local text = GetGlobal2String("lc_broadcast", "")
+    local text = LC.GetGlobalLong("lc_broadcast", "")
     if text == "" then text = "Compliance is its own reward. Your cooperation is noted." end
     if screenCache.text ~= text then screenCache = { text = text, lines = LC_CL.WrapText(text, "DermaLarge", 580) } end
     for i = 1, math.min(#screenCache.lines, 8) do
@@ -227,26 +227,32 @@ end
 
 local lawCache = {}
 local function CurrentLaws()
-    local raw = GetGlobal2String("lc_laws", "")
+    local raw = LC.GetGlobalLong("lc_laws", "")
     if lawCache.raw ~= raw then lawCache = { raw = raw, list = util.JSONToTable(raw) or {} } end
     return lawCache.list
 end
 
+-- (made once here, not every frame)
+local C_150_145_130 = Color(150, 145, 130)
+local C_200_190_160 = Color(200, 190, 160)
+local C_220_215_200 = Color(220, 215, 200)
+local C_225_215_185 = Color(225, 215, 185)
+local C_26_24_22_255 = Color(26, 24, 22, 255)
 function LC_CL.DrawLawBoard(ent)
-    draw.RoundedBox(4, -320, -180, 640, 360, Color(26, 24, 22, 255))
-    draw.RoundedBox(0, -320, -180, 640, 4, Color(200, 190, 160))
-    draw.SimpleText("CITY LAWS", "DermaLarge", 0, -150, Color(225, 215, 185), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    draw.RoundedBox(4, -320, -180, 640, 360, C_26_24_22_255)
+    draw.RoundedBox(0, -320, -180, 640, 4, C_200_190_160)
+    draw.SimpleText("CITY LAWS", "DermaLarge", 0, -150, C_225_215_185, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     local y = -118
     for i, law in ipairs(CurrentLaws()) do
         if y > 150 then break end
         local lines = LC_CL.WrapText(i .. ". " .. law, "DermaDefaultBold", 580)
         for _, l in ipairs(lines) do
-            draw.SimpleText(l, "DermaDefaultBold", -290, y, Color(220, 215, 200))
+            draw.SimpleText(l, "DermaDefaultBold", -290, y, C_220_215_200)
             y = y + 18
         end
         y = y + 4
     end
-    draw.SimpleText("Press E to read", "DermaDefault", 0, 165, Color(150, 145, 130), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    draw.SimpleText("Press E to read", "DermaDefault", 0, 165, C_150_145_130, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 end
 
 local function LawsDo(action, n, text)

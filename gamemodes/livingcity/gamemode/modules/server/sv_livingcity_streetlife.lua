@@ -121,7 +121,7 @@ end
 
 function LC.BrandishTick(now)
     local grace = math.max(1, cvGrace:GetFloat())
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         local ground, inside
         if cvBrandish:GetBool() and not Off(ply) then ground, inside = LC.LoweredGround(ply) end
         local was = ply:GetNW2String("lc_lowered_ground", "")
@@ -268,11 +268,11 @@ local function Cower(npc, st, from, now)
     LC.SetState(npc, st, "idle")
     st.untilT = now + 4 -- (nothing new till they've got up)
     st.nextChat = math.max(st.nextChat or 0, now + 12)
-    npc:SetNW2String("lc_doing", "head down")
+    LC.SetNPCStr(npc, "lc_doing", "head down")
     if LC.PlayGesture then LC.PlayGesture(npc, COWER, 4) end
     timer.Simple(math.Rand(3, 4), function()
         if not IsValid(npc) or LC.NPCs[npc] ~= st or npc:Health() <= 0 then return end
-        npc:SetNW2String("lc_doing", "")
+        LC.SetNPCStr(npc, "lc_doing", "")
         if not FEAR_BUSY[st.state] then RunFrom(npc, st, from, CurTime()) end
     end)
     return true

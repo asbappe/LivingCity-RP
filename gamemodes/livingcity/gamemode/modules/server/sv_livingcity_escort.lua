@@ -186,7 +186,7 @@ local function Unassign(e)
     if st and st.workEscort == e then
         st.workEscort = nil
         st.route, st.routeTo, st.goingTo = nil, nil, nil
-        u:SetNW2String("lc_doing", "")
+        LC.SetNPCStr(u, "lc_doing", "")
         if st.state == "workescort" then
             LC.SetState(u, st, "idle")
             st.untilT = CurTime() + 2
@@ -208,7 +208,7 @@ local function Assign(e, u)
         st.workEscort = e
         st.route, st.routeTo, st.goingTo = nil, nil, nil
         LC.SetState(u, st, "workescort")
-        u:SetNW2String("lc_doing", "escorting " .. NameOf(e.worker))
+        LC.SetNPCStr(u, "lc_doing", "escorting " .. NameOf(e.worker))
         Voice(u, math.random() < 0.5 and "copy" or "rodgerthat")
     end
     e.phase = (e.phase == "unattended" or e.phase == "waiting") and "coming" or e.phase

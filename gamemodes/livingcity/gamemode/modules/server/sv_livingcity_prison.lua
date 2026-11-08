@@ -476,10 +476,15 @@ local function Blocked(ply) if LC.Prisoners[ply] then return false end end
 for _, h in ipairs({
     "PlayerNoClip", "PlayerSpawnProp", "PlayerSpawnSENT", "PlayerSpawnSWEP", "PlayerGiveSWEP",
     "PlayerSpawnNPC", "PlayerSpawnVehicle", "PlayerSpawnRagdoll", "PlayerSpawnEffect", "PlayerSpawnObject",
-    "CanTool", "PlayerCanPickupWeapon",
+    "CanTool",
 }) do
     hook.Add(h, "LivingCityPrisonBlock", Blocked)
 end
+-- (giving a weapon goes through this too: their fists and hands still come through)
+local OWN = { weapon_fists = true, weapon_lc_hands = true }
+hook.Add("PlayerCanPickupWeapon", "LivingCityPrisonBlock", function(ply, wep)
+    if LC.Prisoners[ply] and not (IsValid(wep) and OWN[wep:GetClass()]) then return false end
+end)
 
 -- Dying doesn't end a sentence.
 hook.Add("PlayerSpawn", "LivingCityPrisonRespawn", function(ply)

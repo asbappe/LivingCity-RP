@@ -152,7 +152,10 @@ local MEANS = {
         if LC.EventCulprits and LC.EventCulprits[ply] then pre = pre .. "It's about you: any Civil Protection unit who sees you knows you, and won't stop at a warning. " end
         if pre ~= "" and not IsUnit(ply) then
             local home = LC.PlayerBlock and LC.PlayerBlock(ply)
-            return pre .. "Curfew for " .. Minutes() .. ". Get inside " .. (home and LC.BlockName(home) or "your housing block") .. " within " .. grace .. " seconds."
+            -- (and what happens if you don't, as every curfew says: city-events.md; the culprits were told above)
+            local after = (LC.EventCulprits and LC.EventCulprits[ply]) and ""
+                or " After that, a Civil Protection unit who sees you outside warns you three times, then you're wanted."
+            return pre .. "Curfew for " .. Minutes() .. ". Get inside " .. (home and LC.BlockName(home) or "your housing block") .. " within " .. grace .. " seconds." .. after
         end
         if IsUnit(ply) then return "Curfew for " .. Minutes() .. ". After " .. grace .. " seconds, citizens still outside get three warnings from a Civil Protection unit, then they're wanted." end
         local home = LC.PlayerBlock and LC.PlayerBlock(ply)

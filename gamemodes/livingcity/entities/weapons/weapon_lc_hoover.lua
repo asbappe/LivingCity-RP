@@ -178,6 +178,9 @@ if CLIENT then
 
     function SWEP:OnRemove() if IsValid(self.lcProp) then self.lcProp:Remove() end end
 
+    -- (made once here, not every frame)
+    local C_0_0_0_200 = Color(0, 0, 0, 200)
+    local C_220_230_200 = Color(220, 230, 200)
     function SWEP:DrawHUD()
         local me = LocalPlayer()
         local load = me:GetNW2Int("lc_hoover_load", 0)
@@ -185,11 +188,11 @@ if CLIENT then
         local text = string.format("Hoover: %d of %d", load, cap and cap:GetInt() or 3)
         local frac = me:GetNW2Float("lc_vac_frac", 0)
         local x, y = ScrW() / 2, ScrH() * 0.62
-        draw.SimpleTextOutlined(text, "DermaDefaultBold", x, y, Color(220, 230, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 200))
+        draw.SimpleTextOutlined(text, "DermaDefaultBold", x, y, C_220_230_200, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, C_0_0_0_200)
         if frac > 0 then
             surface.SetDrawColor(0, 0, 0, 160) surface.DrawRect(x - 80, y + 12, 160, 8)
             surface.SetDrawColor(150, 220, 90, 220) surface.DrawRect(x - 79, y + 13, 158 * frac, 6)
-            draw.SimpleTextOutlined("Vacuuming...", "DermaDefault", x, y + 30, Color(220, 230, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 200))
+            draw.SimpleTextOutlined("Vacuuming...", "DermaDefault", x, y + 30, C_220_230_200, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, C_0_0_0_200)
         end
     end
 end

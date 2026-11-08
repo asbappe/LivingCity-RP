@@ -33,7 +33,7 @@ LC.Mail = LC.Mail or nil -- { letters = { ... }, dir = { [cid] = { name, block }
 
 local function Data()
     if LC.Mail then return LC.Mail end
-    local t = file.Exists(FILE, "DATA") and util.JSONToTable(file.Read(FILE, "DATA") or "") or nil
+    local t = LC.SafeReadJSON(FILE)
     LC.Mail = istable(t) and t or {}
     LC.Mail.letters = LC.Mail.letters or {}
     LC.Mail.dir = LC.Mail.dir or {}
@@ -45,8 +45,7 @@ end
 local dirty = false
 local function Save()
     dirty = false
-    if file.CreateDir then file.CreateDir("livingcity") end
-    file.Write(FILE, util.TableToJSON(Data()))
+    LC.SafeWrite(FILE, util.TableToJSON(Data()))
 end
 local function Changed() dirty = true end
 

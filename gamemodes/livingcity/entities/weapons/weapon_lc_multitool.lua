@@ -95,13 +95,16 @@ function SWEP:PrimaryAttack()
 end
 
 if CLIENT then
+    -- (made once here, not every frame)
+    local C_200_190_180 = Color(200, 190, 180)
+    local C_230_150_60 = Color(230, 150, 60)
     function SWEP:DrawHUD()
         local _, label = Job(LocalPlayer())
         local x, y = ScrW() / 2, ScrH() * 0.72 -- (low, clear of the names floating over people and things)
         if label then
-            draw.SimpleTextOutlined("LEFT CLICK: " .. string.upper(label), "DermaDefaultBold", x, y, Color(230, 150, 60), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+            draw.SimpleTextOutlined("LEFT CLICK: " .. string.upper(label), "DermaDefaultBold", x, y, C_230_150_60, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
         else
-            draw.SimpleTextOutlined("MULTITOOL: point at electronics to hack them", "DermaDefault", x, y, Color(200, 190, 180), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+            draw.SimpleTextOutlined("MULTITOOL: point at electronics to hack them", "DermaDefault", x, y, C_200_190_180, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
         end
     end
 end

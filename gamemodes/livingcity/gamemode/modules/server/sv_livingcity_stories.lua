@@ -598,7 +598,7 @@ LC.Chain{
                 -- zone) no choice window here: a zombine in his uniform comes at you, the screen says who it must be,
                 -- and what you do decides it. Kill him (mercy), or walk out of the infestation (left).
                 local fight = Count("killed", 3, "Fight your way through: kill 3 zombies or headcrabs", function(_, _, npc) return Q.IsZombieNPC(npc) end)
-                local out = z.r + 400 -- (this far from its heart, and you've left the infestation)
+                -- (400 past its edge, and you've left the infestation: grown ground by its cells, LCZ.Near)
                 local him = {
                     kind = "count", event = "killed", need = 1, untallied = true,
                     text = "That zombine is 6-12. Kill him to end his suffering, or leave the infestation and let a cleanup crew deal with him",
@@ -608,7 +608,7 @@ LC.Chain{
                         if not IsValid(npc) then return false end
                         st.npc = npc
                         for _, p in ipairs(Q.Members(q)) do
-                            if p:GetPos():DistToSqr(z.pos) < out * out then q.data.wentIn = true end
+                            if LCZ.Near(z, p:GetPos(), 400) then q.data.wentIn = true end
                             if LC.Notice then
                                 LC.Notice(p, "warn", "This must be 6-12", "A zombine in a Civil Protection uniform, a headcrab where his face used to be. Kill him to end his suffering, " ..
                                     "or leave the infestation and let a cleanup crew deal with him.", 10)
@@ -623,7 +623,7 @@ LC.Chain{
                         end
                         local inside = false
                         for _, p in ipairs(Q.Members(q)) do
-                            if p:Alive() and p:GetPos():DistToSqr(z.pos) < out * out then inside = true end
+                            if p:Alive() and LCZ.Near(z, p:GetPos(), 400) then inside = true end
                         end
                         if inside then q.data.wentIn = true st.away = 0 return end
                         if not q.data.wentIn then return end
@@ -1328,7 +1328,7 @@ local function LTSetup(q)
         pnpc:SetHealth(100)
         if pnpc.SetSchedule then pnpc:SetSchedule(SCHED_IDLE_STAND) end
         LC.Face(pnpc, spot)
-        pnpc:SetNW2String("lc_doing", "a Resistance prisoner")
+        LC.SetNPCStr(pnpc, "lc_doing", "a Resistance prisoner")
         pnpc.lcLoyaltyPrisoner = ply
         sc.prisoner = pnpc
         q.data.target = pnpc

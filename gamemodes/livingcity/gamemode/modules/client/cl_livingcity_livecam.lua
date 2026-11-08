@@ -39,6 +39,8 @@ function LC_CL.LiveCamPicture()
     return mat, 1, H / 512
 end
 
+-- (made once here, not every frame)
+local V_16_0_0 = Vector(16, 0, 0)
 hook.Add("RenderScene", "LivingCityLiveCam", function()
     if rendering then return end
     local cam = GetGlobal2Entity("lc_live_cam")
@@ -55,7 +57,7 @@ hook.Add("RenderScene", "LivingCityLiveCam", function()
         pushed = true
         render.Clear(0, 0, 0, 255, true, true)
         render.RenderView({
-            origin = cam:LocalToWorld(Vector(16, 0, 0)), angles = cam:GetAngles(),
+            origin = cam:LocalToWorld(V_16_0_0), angles = cam:GetAngles(),
             x = 0, y = 0, w = W, h = H, fov = 46, aspectratio = W / H,
             drawviewmodel = false, drawhud = false, dopostprocess = false, drawmonitors = false,
         })

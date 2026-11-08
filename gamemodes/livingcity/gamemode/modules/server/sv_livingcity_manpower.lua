@@ -37,7 +37,7 @@
       lc_manpower 0/1               on (1)
       lc_manpower_rebel_max <n>     most fighters the Resistance hold in reserve (20)
       lc_manpower_rebel_minutes <m> minutes per recruit at the ordinary rate (8)
-      lc_manpower_cp_max <n>        most Civil Protection units in reserve (30)
+      lc_manpower_cp_max <n>        most Civil Protection units in reserve (20)
       lc_manpower_cp_minutes <m>    minutes per new unit (5)
       lc_manpower_ota_max <n>       most Overwatch soldiers in reserve (12)
       lc_manpower_ota_minutes <m>   minutes per soldier, drops aside (20)
@@ -381,14 +381,14 @@ function LC.ManpowerSave()
         out[side] = { reserve = math.min(math.max(p.reserve, Max(side)), p.reserve + (outNow[side] or 0)),
             progress = math.floor(p.progress), lost = p.lost, day = p.day }
     end
-    file.Write(File(), util.TableToJSON(out))
+    LC.SafeWrite(File(), util.TableToJSON(out))
     dirty = false
 end
 
 function LC.ManpowerLoad()
     LC.Manpower = {}
     LC.ManpowerOut = {}
-    local t = file and file.Read and util.JSONToTable(file.Read(File(), "DATA") or "") or nil
+    local t = LC.SafeReadJSON(File())
     for _, side in ipairs(SIDES) do
         local p = LC.ManpowerPool(side)
         local s = type(t) == "table" and t[side]

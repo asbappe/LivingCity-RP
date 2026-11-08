@@ -200,13 +200,15 @@ end
 
 local BG, INK, DIM = Color(10, 12, 16, 215), Color(225, 225, 225), Color(150, 155, 165)
 
+-- (made once here, not every frame)
+local C_150_200_255 = Color(150, 200, 255)
 hook.Add("HUDPaint", "LivingCityLagWatch", function()
     if not on then return end
     local r = LC_CL.LagWatchRow
     local w, x, y = 420, ScrW() - 436, 90
     local lines = {}
     local function L(text, col) lines[#lines + 1] = { text, col or INK } end
-    L("LAG MONITOR (C > Help to turn off)", Color(150, 200, 255))
+    L("LAG MONITOR (C > Help to turn off)", C_150_200_255)
     if not r then
         L("measuring...", DIM)
     else

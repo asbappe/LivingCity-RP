@@ -20,6 +20,9 @@
     If there's no way to walk there (no route at all, or it takes longer
     than lc_march_max seconds), it's the old way: straight to a cell.
 
+    The Resistance's man inside can let a prisoner slip on the way
+    (LC.InsiderLetSlip, sv_livingcity_insider.lua; LC.MarchRelease here).
+
       lc_march 0/1, lc_march_max (240)
 ]]
 
@@ -139,6 +142,15 @@ local function TakeIn(ply, m, how)
     if ok and how then ply:ChatPrint("[Civil Protection] " .. how) end
     if ok and how == KNOCKED_OUT and ply.ScreenFade then ply:ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 3, 2) end
     if not ok and LC.DetainOnTheSpot then LC.DetainOnTheSpot(ply, m.arrester, m.reason) end
+end
+
+-- Let go mid-march, quietly (the Resistance Insider's "Let them slip", sv_livingcity_insider.lua):
+-- the escort stands down and goes back to its day, and nobody is told. The march, or nil.
+function LC.MarchRelease(ply)
+    local m = LC.Marching[ply]
+    if not m then return nil end
+    Finish(ply, m)
+    return m
 end
 
 -- Got away: still tied, and wanted for it.

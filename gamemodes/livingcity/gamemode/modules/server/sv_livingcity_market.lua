@@ -97,8 +97,7 @@ function LC.MarketOn() return On() end
 
 local function Load()
     loaded = true
-    if not (file and file.Exists and file.Exists(Path(), "DATA")) then return end
-    local t = util.JSONToTable(file.Read(Path(), "DATA") or "")
+    local t = LC.SafeReadJSON(Path())
     if not istable(t) then return end
     M.rules, M.stock, M.restockAt, M.demand = {}, {}, {}, {}
     for id, r in pairs(istable(t.rules) and t.rules or {}) do
@@ -116,7 +115,7 @@ function LC.MarketSave()
     dirty = false
     if not (file and file.Write) then return end
     if file.CreateDir then file.CreateDir("livingcity") end
-    file.Write(Path(), util.TableToJSON({ rules = M.rules, stock = M.stock, demand = M.demand }))
+    LC.SafeWrite(Path(), util.TableToJSON({ rules = M.rules, stock = M.stock, demand = M.demand }))
 end
 -- forget what's in memory and read the file again (the tests' restart)
 function LC.MarketReload()
