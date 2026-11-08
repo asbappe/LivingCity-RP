@@ -1002,3 +1002,5 @@ Notes:
   Notes:
 - [ ] **Copy report:** pastes both reports (server and your game) as text; `lc_perfdebug report` in the server console prints the server's.
   Notes:
+- [ ] **From the editor tool:** the last button in the Living City editor tool's panel (under Debugging), "Performance debugger", opens the same window.
+  Notes:
