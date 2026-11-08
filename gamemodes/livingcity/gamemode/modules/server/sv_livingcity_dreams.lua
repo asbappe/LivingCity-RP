@@ -193,11 +193,14 @@ function LC.DreamersOf(dream)
 end
 
 -- Asleep in a bed right now, alive, and willing (mood: tonight's; a nightmare takes the
--- unwilling too: only a stimulant keeps you out of one, by keeping you awake).
+-- unwilling too: only a stimulant keeps you out of one, by keeping you awake). The owner,
+-- 8 November: a nightmare is broadcast to everyone asleep outside a Combine-only zone (anyone
+-- asleep inside one is spared), and whoever beat the last one is Unbroken for a day.
 function LC.DreamSleepers(mood)
     local out = {}
     for _, p in ipairs(player.GetAll()) do
-        if p.lcSleep and p:Alive() and not p.lcDreaming and (mood == "nightmare" or not LC.DreamOptedOut(p)) and not (LC.Wired and LC.Wired(p))
+        local spared = mood == "nightmare" and ((LC.Unbroken and LC.Unbroken(p)) or (LC.CombineZoneAt and LC.CombineZoneAt(p:GetPos())))
+        if p.lcSleep and p:Alive() and not p.lcDreaming and not spared and (mood == "nightmare" or not LC.DreamOptedOut(p)) and not (LC.Wired and LC.Wired(p))
             and not (p.InVehicle and p:InVehicle()) then out[#out + 1] = p end
     end
     return out

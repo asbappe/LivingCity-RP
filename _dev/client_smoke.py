@@ -1583,6 +1583,10 @@ err = L.execute(r"""
 local ok, e = pcall(function()
     net._q = { "smoke", _me, 2 }
     net["recv_lc_vice"]()
+    net._q = { "whisper", _me, 0, Vector(100, 0, 0), "A black market dealer" }
+    net["recv_lc_vice"]()
+    hook.t.HUDPaint.LivingCityViceWhisper()
+    if not LC_CL.ViceWhisper() then error("the whisper's mark") end
     _me:SetNW2Int("lc_drunk", 4)
     _me:SetNW2Float("lc_wired_until", CurTime() + 60)
     _me:SetNW2Float("lc_shaken_until", CurTime() + 60)

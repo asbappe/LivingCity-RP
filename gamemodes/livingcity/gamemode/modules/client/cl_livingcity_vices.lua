@@ -9,8 +9,7 @@
 LC_CL = LC_CL or {}
 
 -- Someone smoking: a few puffs from their head.
-net.Receive("lc_vice", function()
-    local kind, who, strength = net.ReadString(), net.ReadEntity(), net.ReadUInt(4)
+function LC_CL.ViceSmoke(kind, who, strength)
     if kind ~= "smoke" or not IsValid(who) or not ParticleEmitter then return end
     local at = (who.EyePos and who:EyePos() or who:GetPos() + Vector(0, 0, 64)) + who:GetForward() * 6
     local em = ParticleEmitter(at)
@@ -29,7 +28,7 @@ net.Receive("lc_vice", function()
         end
     end
     em:Finish()
-end)
+end
 
 local function Amounts(me)
     local now = CurTime()
@@ -67,3 +66,24 @@ LC_CL.ViewMods.vices = { order = 41, fn = function(ply, view)
     view.angles = view.angles + Angle(math.sin(t * 0.8) * 3 * drunk + math.sin(t * 23) * 0.4 * shaken,
         math.sin(t * 0.5) * 2 * drunk + math.sin(t * 19) * 0.3 * shaken, math.sin(t * 1.1) * 5 * drunk)
 end }
+
+-- A Vortigaunt's whisper (beat a nightmare, as a citizen): a place marked for ten minutes.
+local whisper
+net.Receive("lc_vice", function()
+    local kind, who, strength = net.ReadString(), net.ReadEntity(), net.ReadUInt(4)
+    if kind == "whisper" then
+        whisper = { pos = net.ReadVector(), what = net.ReadString(), untilT = CurTime() + 600 }
+        return
+    end
+    if LC_CL.ViceSmoke then LC_CL.ViceSmoke(kind, who, strength) end
+end)
+function LC_CL.ViceWhisper() return whisper end
+hook.Add("HUDPaint", "LivingCityViceWhisper", function()
+    if not whisper or CurTime() > whisper.untilT then whisper = nil return end
+    local me = LocalPlayer()
+    if not IsValid(me) then return end
+    local sp = whisper.pos:ToScreen()
+    if not sp.visible then return end
+    local d = math.floor(me:GetPos():Distance(whisper.pos) / 52)
+    draw.SimpleTextOutlined(whisper.what .. " (" .. d .. " m)", "DermaDefaultBold", sp.x, sp.y, Color(150, 255, 170, 230), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 220))
+end)

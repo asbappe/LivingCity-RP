@@ -149,6 +149,7 @@ function LCS.Tick(now, dt)
             ply.lcRanAt = nil
         elseif Running(ply) then
             local mul = (LCF and LCF.IsOverwatch and LCF.IsOverwatch(ply)) and 0.5 or 1
+            if ply:GetNW2Float("lc_secondwind_until", 0) > CurTime() then mul = mul * 0.6 end -- (beat a nightmare: a second wind, sv_livingcity_vices.lua)
             s = s - cvRun:GetFloat() * mul * dt
             ply.lcRanAt = now
         elseif now - (ply.lcRanAt or 0) > 1 then

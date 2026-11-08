@@ -877,3 +877,13 @@ Notes:
   Notes:
 - [ ] **Alcohol:** beer, vodka, moonshine: does the screen sway more as you drink, no running when drunk, throwing up past 7, the empty beer bottle left over?
   Notes:
+
+## Nightmare rewards and penalty (8 November)
+- [ ] **Win a dream you play:** no credits or XP? Breen's water does nothing for a day? You run longer before tiring? As a citizen, is a dealer or cache marked on screen for 10 minutes? As Resistance, did something appear in your pockets?
+  Notes:
+- [ ] **Lose every life:** health limit 70 after waking, still 70 after you finish that same night's sleep, back to 100 after the next full night's sleep?
+  Notes:
+- [ ] **Combine-only zone:** asleep inside one when a nightmare starts, are you left alone?
+  Notes:
+- [ ] **Commissary:** Union cigarettes from standing 75, vodka from 150?
+  Notes:

@@ -28,8 +28,9 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 2026-11-07 (part 3b): nightmare rules and vices. Opting out covers Happy and Neutral dreams only; a Nightmare takes everyone asleep and nobody wakes themselves while still in it (`LC.DreamSleepers(mood)`, `LC.DreamCanWake`, `LC.DreamWakeAsked` in `sv_livingcity_dreams.lua`). In a dream you play, out of lives or won: wake now or watch (spectate inside the arena); outcome on waking via the `LivingCityDreamWoke` hook and `LC.DreamOutcome`.
-- New `sv_livingcity_vices.lua` / `cl_livingcity_vices.lua`: cigarettes, beer, vodka, moonshine, stimulant shot (items in `sh_livingcity_shop.lua`, `use = "vice"`); a stimulant blocks sleep (`sv_livingcity_rest.lua`). Spec: `docs/features/survival-and-credit.md`, `docs/features/endings.md`; core line in `CORE.md`, entry in `CORE_CHANGELOG.md`.
-- **Waiting on the owner:** `_dev/core_snapshot.txt` needs six new lines (`item beer`, `item cig_rolled`, `item cig_union`, `item moonshine`, `item stimulant`, `item vodka`); the edit was blocked in this session, so the full suite's core check will fail on exactly those until they're added with the owner's OK.
-- Tests: `DreamGameTests` (37), `ViceTests` (17), `DreamMoodTests` pass; `DreamTests` has one flaky check (an awake player's random job loadout), it passed on rerun. Client smoke passes. Nothing checked in game: PLAYTEST.md, the last two sections.
-- The full suite hasn't been rerun since 2026-11-02 (run it when the owner asks).
+- 2026-11-08: nightmare rewards rethought (the owner: nothing the Combine would give). Winning a dream you play: a day Unbroken (`lc_unbroken_until`: no Breen's-water effect, no nightmare) and Second wind (`lc_secondwind_until`: stamina 60%, hunger/thirst 75%), a Vortigaunt's whisper for citizens (dealer or cache marked 10 min), a Vortigaunt's gift for the Resistance. Losing: `LC.SetDreamScar`, 30 off max health until a full sleep begun after it (persists via PData). All in `sv_livingcity_vices.lua` (`LC.DreamOutcome`).
+- Nightmares skip anyone asleep in a Combine-only zone (`LC.CombineZoneAt`) and the Unbroken (`LC.DreamSleepers`). Union cigarettes standing 75, vodka 150.
+- Earlier (7 Nov part 3): no opting out of nightmares, wake-or-watch, vices items. Spec: `docs/features/survival-and-credit.md`, `docs/features/endings.md`.
+- **Waiting on the owner:** `_dev/core_snapshot.txt` still needs six lines (`item beer`, `item cig_rolled`, `item cig_union`, `item moonshine`, `item stimulant`, `item vodka`); editing it was blocked in that session.
+- Tests: `ViceTests` (24), `DreamGameTests` (38), `DreamMoodTests`, survival section pass; `DreamTests` has one known flaky check (a random job loadout). Client smoke passes. Nothing checked in game: PLAYTEST.md, last three sections.
+- `TODO.md`: Combine sleep in the head-clamp prop (an idea for later). The full suite hasn't been rerun since 2026-11-02.

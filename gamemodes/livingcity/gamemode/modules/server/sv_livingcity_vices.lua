@@ -23,10 +23,14 @@
         asleep (so tonight's nightmare can't have you), and it clears the shakes too. A second
         while the first is still in you: your heart pounds (health lost). When it wears off you
         crash: three minutes too heavy to run.
-      After a dream you play (sv_livingcity_dreamgames.lua): win it and you wake well rested
-        (credits, a little experience, fully healed); see it through to the end and you get a
-        little; lose every life and you wake shaken (hurt, thirsty, and three minutes of the
-        shakes).
+      After a dream you play (sv_livingcity_dreamgames.lua; the owner, 8 November: nothing the
+        Combine would give): win it and you wake Unbroken (a day when Breen's water can't fog you
+        and no nightmare can take you) with a second wind (a day of tiring slower, hunger and thirst
+        coming slower); a citizen also wakes with a Vortigaunt's whisper (a black market dealer or
+        a rebel cache marked for ten minutes), the Resistance with something a Vortigaunt pressed
+        into their hand (hand-rolled cigarettes, moonshine or a stimulant shot). Still in it at the
+        end: nothing either way. Lose every life: 30 off your health until your next full night's
+        sleep, and three minutes of the shakes.
 ]]
 
 if CLIENT then return end
@@ -162,25 +166,105 @@ end
 -- Waking from a dream you played: well rested, or shaken
 ------------------------------------------------------------------------
 
+-- The owner, 8 November: nightmares are the Administrator's punishment, so beating one earns
+-- nothing the Combine would hand out (no credits, no standing, no experience); losing one costs
+-- 30 health until your next full night's sleep.
+local SCAR_HP = 30
+LC.DreamScarHP = SCAR_HP
+local function DayLen() return math.max(60, GetGlobal2Float("lc_day_len", 1440)) end
+function LC.Unbroken(p) return IsValid(p) and p:GetNW2Float("lc_unbroken_until", 0) > CurTime() end
+function LC.SecondWind(p) return IsValid(p) and p:GetNW2Float("lc_secondwind_until", 0) > CurTime() end
+function LC.DreamScarred(p) return IsValid(p) and p:GetNW2Bool("lc_dream_scar", false) end
+
+-- Lost a nightmare: 30 off the health limit, until a night's sleep begun after it.
+local function ScarHealth(p, on)
+    if on and not p.lcScarHP then
+        p.lcScarHP = true
+        p:SetMaxHealth(math.max(1, p:GetMaxHealth() - SCAR_HP))
+        if p:Health() > p:GetMaxHealth() then p:SetHealth(p:GetMaxHealth()) end
+    elseif not on and p.lcScarHP then
+        p.lcScarHP = nil
+        p:SetMaxHealth(p:GetMaxHealth() + SCAR_HP)
+    end
+end
+function LC.SetDreamScar(p, on)
+    if not IsValid(p) then return end
+    p:SetNW2Bool("lc_dream_scar", on and true or false)
+    p.lcScarAt = on and CurTime() or nil
+    if p.SetPData then p:SetPData("lc_dream_scar", on and "1" or "0") end
+    ScarHealth(p, on)
+end
+hook.Add("LivingCitySlept", "LivingCityDreamScar", function(p)
+    if not LC.DreamScarred(p) then return end
+    local s = p.lcSleep
+    if s and s.t0 and s.t0 > (p.lcScarAt or 0) then -- (the night it happened doesn't count)
+        LC.SetDreamScar(p, false)
+        Notice(p, "info", "The nightmare's gone", "A real night's sleep, and the nightmare finally lets go. Your strength is back.", 7)
+    end
+end)
+hook.Add("PlayerSpawn", "LivingCityDreamScar", function(p) p.lcScarHP = nil end) -- (spawning sets the limit afresh; the tick takes it down again)
+hook.Add("PlayerInitialSpawn", "LivingCityDreamScar", function(p)
+    if p.GetPData and p:GetPData("lc_dream_scar", "0") == "1" then
+        p:SetNW2Bool("lc_dream_scar", true)
+        p.lcScarAt = CurTime()
+    end
+end)
+
+-- A Vortigaunt's whisper (citizens): where a black market dealer or a rebel cache is.
+local function Whisper(p)
+    local spots = {}
+    for _, e in ipairs(ents.FindByClass("lc_dealer")) do if IsValid(e) then spots[#spots + 1] = { pos = e:GetPos(), what = "A black market dealer" } end end
+    for _, r in pairs(LC.RebelProps or {}) do if IsValid(r.cache) then spots[#spots + 1] = { pos = r.cache:GetPos(), what = "A Resistance cache" } end end
+    if #spots == 0 then return nil end
+    local s = spots[math.random(#spots)]
+    net.Start("lc_vice")
+    net.WriteString("whisper")
+    net.WriteEntity(p)
+    net.WriteUInt(0, 4)
+    net.WriteVector(s.pos)
+    net.WriteString(s.what)
+    net.Send(p)
+    return s
+end
+LC.DreamWhisper = Whisper
+
+-- Something brought back (the Resistance): a Vortigaunt pressed it into your hand as you woke.
+local GIFTS = { { "cig_rolled", 3 }, { "moonshine", 1 }, { "stimulant", 1 } }
+local function Gift(p)
+    local g = GIFTS[math.random(#GIFTS)]
+    if not LC.GiveItem(p, g[1], g[2]) and LC.SpawnWorldItem then LC.SpawnWorldItem(g[1], p:GetPos() + Vector(0, 0, 40)) end
+    return g[1], g[2]
+end
+
 -- how: "won" (beat it), "time" (still in it when it ended), "out" (lost every life).
 function LC.DreamOutcome(p, how, name)
     if not IsValid(p) then return end
     name = name or "the nightmare"
+    local now = CurTime()
     if how == "won" then
-        if LC.AddCredits then LC.AddCredits(p, 25, "beat " .. name) end
-        if LC.AddXP then LC.AddXP(p, 10, "Beat " .. name) end
+        -- for everyone: Unbroken and Second wind, for a day
+        p:SetNW2Float("lc_unbroken_until", now + DayLen())
+        p:SetNW2Float("lc_secondwind_until", now + DayLen())
         p:SetHealth(math.max(p:Health(), p:GetMaxHealth()))
         Calm(p)
-        Notice(p, "info", "Well rested", "You beat " .. name .. ". You wake clear-headed and strong: 25 credits, a little experience, and fully healed.", 9)
+        local extra = ""
+        local fac = p:GetNW2String("lcf_faction", "")
+        if fac == "citizen" then
+            local s = Whisper(p)
+            extra = s and (" A Vortigaunt's voice found you in the dark, and whispered where to look: " .. string.lower(s.what) .. " (marked for you, for ten minutes).") or ""
+        elseif fac == "resistance" then
+            local id, n = Gift(p)
+            local it = LCS.Items[id]
+            extra = " As you woke, a Vortigaunt's hand pressed something into yours: " .. (n > 1 and (n .. " x ") or "") .. (it and it.name or id) .. "."
+        end
+        Notice(p, "info", "Unbroken", "You beat " .. name .. ". For a day the Combine can't get into your head (Breen's water won't fog you, and no nightmare can take you), "
+            .. "and you've a second wind (you tire slower, hunger and thirst come slower)." .. extra, 12)
     elseif how == "time" then
-        if LC.AddCredits then LC.AddCredits(p, 10, "lasted out " .. name) end
-        if LC.AddXP then LC.AddXP(p, 3, "Lasted out " .. name) end
-        Notice(p, "info", "You lasted it out", "You held on until " .. name .. " let go: 10 credits, and a little experience.", 8)
+        Notice(p, "info", "You held on", "You held on until " .. name .. " let go. You wake tired, but whole.", 7)
     elseif how == "out" then
-        Hurt(p, 15)
-        if LC.Feed then LC.Feed(p, 0, -20) end
-        p:SetNW2Float("lc_shaken_until", CurTime() + SHAKEN_SECS)
-        Notice(p, "warn", "Shaken", "You wake soaked in sweat, hurting and parched, and your hands won't stop shaking (three minutes; a cigarette or a stimulant steadies them).", 9)
+        LC.SetDreamScar(p, true)
+        p:SetNW2Float("lc_shaken_until", now + SHAKEN_SECS)
+        Notice(p, "warn", "The nightmare stays with you", "You wake soaked in sweat, your hands shaking, weaker than you were: 30 off your health until your next full night's sleep.", 10)
     end
 end
 
@@ -203,6 +287,7 @@ timer.Create("LivingCityVices", 1, 0, function()
     local now = CurTime()
     for _, p in ipairs(player.GetAll()) do
         if p.lcSoberAt and now >= p.lcSoberAt then SetDrunk(p, LC.Drunk(p) - 1) end
+        if LC.DreamScarred(p) and not p.lcScarHP and p:Alive() then ScarHealth(p, true) end -- (after a respawn)
         if p.lcCrashPending and p:GetNW2Float("lc_wired_until", 0) <= now then
             p.lcCrashPending = nil
             p:SetNW2Float("lc_crash_until", now + CRASH_SECS)

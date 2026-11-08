@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 33585ac. Admin-only console messages and log lines are left out.
+Made from version b8d4d11. Admin-only console messages and log lines are left out.
 
-7093 lines, from 218 files.
+7096 lines, from 218 files.
 
 ## Contents
 
@@ -205,14 +205,14 @@ Made from version 33585ac. Admin-only console messages and log lines are left ou
 - [places to keep things](#places-to-keep-things-svlivingcitystoragelua) (44)
 - [story chains](#story-chains-svlivingcitystorieslua) (354)
 - [sv_livingcity_streetlife.lua](#svlivingcitystreetlifelua-svlivingcitystreetlifelua) (12)
-- [survival](#survival-svlivingcitysurvivallua) (68)
+- [survival](#survival-svlivingcitysurvivallua) (69)
 - [talking to people](#talking-to-people-svlivingcitytalklua) (28)
 - [territory that spreads, and is pushed back](#territory-that-spreads-and-is-pushed-back-svlivingcityterritorylua) (38)
 - [territory grows along the path nodes](#territory-grows-along-the-path-nodes-svlivingcityterritorypathslua) (14)
 - [the trains](#the-trains-svlivingcitytrainslua) (9)
 - [the underground](#the-underground-svlivingcityundergroundlua) (186)
 - [powered vests ("suit power")](#powered-vests-suit-power-svlivingcityvestlua) (4)
-- [cigarettes, alcohol and stimulants (and how a night's dream leaves you)](#cigarettes-alcohol-and-stimulants-and-how-a-nights-dream-leaves-you-svlivingcityviceslua) (29)
+- [cigarettes, alcohol and stimulants (and how a night's dream leaves you)](#cigarettes-alcohol-and-stimulants-and-how-a-nights-dream-leaves-you-svlivingcityviceslua) (31)
 - [vortigaunts](#vortigaunts-svlivingcityvortlua) (12)
 - [things to do as a vortigaunt (and for the city's own)](#things-to-do-as-a-vortigaunt-and-for-the-citys-own-svlivingcityvortworklua) (47)
 - [the state of the city](#the-state-of-the-city-svlivingcitywarlua) (62)
@@ -704,9 +704,9 @@ Made from version 33585ac. Admin-only console messages and log lines are left ou
 - "Parasites also mean you'll need the toilet (press E on one). Ignore it and you soil yourself: then you need a toilet, a wash (bathtub or shower) and clean clothes, or people back away from the smell."  (text, line 81)
 - "Sleep once a day: press E on a bed at night. Without sleep you get drowsy, can't run and are weaker. A good night's sleep leaves you well rested."  (text, line 82)
 - "You're warned about six and two minutes before you're exhausted; from the first warning a bed lets you sleep. Citizens get tired in the evening and at night."  (text, line 83)
-- "Shared dreams: if the server has a dream point, the secret endings come at night as a dream for everyone asleep in a bed, about a minute after the Administrator says good night. You wake in your bed with everything you had, exactly as it was. Not tonight? C > Settings > Shared dreams (opt out), or /dream off; in a dream, C > Settings > Shared dreams: wake up. Not from a nightmare, though: a nightmare takes everyone asleep, and you can't wake yourself until you're out of it. Only a stimulant shot before bed keeps you awake."  (text, line 84)
+- "Shared dreams: if the server has a dream point, the secret endings come at night as a dream for everyone asleep in a bed, about a minute after the Administrator says good night. You wake in your bed with everything you had, exactly as it was. Not tonight? C > Settings > Shared dreams (opt out), or /dream off; in a dream, C > Settings > Shared dreams: wake up. Not from a nightmare, though: a nightmare takes everyone asleep outside a Combine-only zone, and you can't wake yourself until you're out of it. Only a stimulant shot before bed keeps you awake."  (text, line 84)
 - "Cigarettes, alcohol and stimulants (F3, the item's button). A cigarette steadies your nerves and dulls hunger; too many and you cough. Drink and you get drunk: it dulls pain, then the world sways, then you throw up (and one moonshine in five is a bad batch). A stimulant keeps you awake for fifteen minutes (no dream can take you), then you crash."  (text, line 85)
-- "Nightmare dreams you play: The Patrol Maze (pick up every token while giant officers hunt you), The Barrel Tower (climb to the top, and don't touch the barrels: they explode), The Crumbling Floor (keep moving or the floor gives way) and Freeze, Citizen (move only while the giant officer's back is turned). Out of lives, or won: wake up now, or watch the rest until it's over. Win and you wake well rested (credits, experience, fully healed); lose every life and you wake shaken."  (text, line 86)
+- "Nightmare dreams you play: The Patrol Maze (pick up every token while giant officers hunt you), The Barrel Tower (climb to the top, and don't touch the barrels: they explode), The Crumbling Floor (keep moving or the floor gives way) and Freeze, Citizen (move only while the giant officer's back is turned). Out of lives, or won: wake up now, or watch the rest until it's over. Win and you wake Unbroken (a day the Combine can't get into your head) with a second wind, and maybe a Vortigaunt's help; lose every life and you're 30 health down until your next full night's sleep."  (text, line 86)
 - "City Administrator: your tablet's office has Tonight's dream: reward an obedient city with a Happy dream, or punish it with a Nightmare. Out of it in a dream? Watch the rest: click to follow another dreamer, Jump to fly about inside the dream."  (text, line 87)
 - "You can kill birds with your fists. Cook them before you eat them."  (text, line 88)
 - "Staying out of trouble"  (text, line 90)
@@ -3258,15 +3258,15 @@ Made from version 33585ac. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game's render screenspace effects moment
 
-- "$pp_colour_addr"  (text, line 53)
-- "$pp_colour_addg"  (text, line 53)
-- "$pp_colour_addb"  (text, line 53)
-- "$pp_colour_brightness"  (text, line 54)
-- "$pp_colour_contrast"  (text, line 54)
-- "$pp_colour_colour"  (text, line 54)
-- "$pp_colour_mulr"  (text, line 55)
-- "$pp_colour_mulg"  (text, line 55)
-- "$pp_colour_mulb"  (text, line 55)
+- "$pp_colour_addr"  (text, line 52)
+- "$pp_colour_addg"  (text, line 52)
+- "$pp_colour_addb"  (text, line 52)
+- "$pp_colour_brightness"  (text, line 53)
+- "$pp_colour_contrast"  (text, line 53)
+- "$pp_colour_colour"  (text, line 53)
+- "$pp_colour_mulr"  (text, line 54)
+- "$pp_colour_mulg"  (text, line 54)
+- "$pp_colour_mulb"  (text, line 54)
 
 ## cl_livingcity_view.lua (cl_livingcity_view.lua)
 
@@ -5400,124 +5400,124 @@ Made from version 33585ac. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Can they wake themselves now? Not from a nightmare, until they're out of it. True, or false and why not.
 
-- "You can't wake yourself from a nightmare. You have to see it through (or be out of it)."  (text, line 212)
+- "You can't wake yourself from a nightmare. You have to see it through (or be out of it)."  (text, line 215)
 
 > Note for you (not shown in game): part of: pdata all
 
-- "SELECT infoid, value FROM playerpdata WHERE infoid LIKE {pre}"  (text, line 261)
+- "SELECT infoid, value FROM playerpdata WHERE infoid LIKE {pre}"  (text, line 264)
 
 > Note for you (not shown in game): admins
 
-- "'s things don't all match after the dream ({bad}). The snapshot is kept: C > Help > Dreams, Put back."  (on-screen notice, line 722)
+- "'s things don't all match after the dream ({bad}). The snapshot is kept: C > Help > Dreams, Put back."  (on-screen notice, line 725)
 
 > Note for you (not shown in game): just their hands: nothing to drop, spend or lose
 
-- "You drift into a dream, with everyone else asleep. Whatever happens here, you wake in your bed with everything you had. To wake up now: C > Settings > Shared dreams: wake up."  (on-screen notice, line 765)
+- "You drift into a dream, with everyone else asleep. Whatever happens here, you wake in your bed with everything you had. To wake up now: C > Settings > Shared dreams: wake up."  (on-screen notice, line 768)
 
 > Note for you (not shown in game): dream restore
 
-- "You wake up"  (on-screen notice, line 824)
-- "You wake from the dream, in your bed, with everything as it was."  (on-screen notice, line 824)
-- "You wake in your bed, with everything just as it was. Press Jump to get up."  (on-screen notice, line 825)
+- "You wake up"  (on-screen notice, line 827)
+- "You wake from the dream, in your bed, with everything as it was."  (on-screen notice, line 827)
+- "You wake in your bed, with everything just as it was. Press Jump to get up."  (on-screen notice, line 828)
 
 > Note for you (not shown in game): Starting one Dream an ending now, with everyone asleep (also: an admin testing it, awake). vote: the G-Man's vote first (among the dreamers). True, or false and why not.
 
-- "Dreams are off (lc_dreams 0)."  (text, line 897)
-- "There's no dream point on this map: place one with the Living City Editor (Point: dream)."  (text, line 899)
-- "No such ending."  (text, line 901)
-- "An ending is already under way."  (text, line 902)
-- "A dream is already under way."  (text, line 903)
+- "Dreams are off (lc_dreams 0)."  (text, line 900)
+- "There's no dream point on this map: place one with the Living City Editor (Point: dream)."  (text, line 902)
+- "No such ending."  (text, line 904)
+- "An ending is already under way."  (text, line 905)
+- "A dream is already under way."  (text, line 906)
 
 > Note for you (not shown in game): part of: dream start
 
-- "Not yet ({EndingCooldownLeft} minutes of the endings' cooldown left)."  (text, line 904)
-- "Nobody is asleep to dream it."  (text, line 907)
-- "Nobody could be got ready to dream (their snapshots couldn't be saved)."  (text, line 916)
-- "Dream: %s, with %d asleep"  (message, line 927)
+- "Not yet ({EndingCooldownLeft} minutes of the endings' cooldown left)."  (text, line 907)
+- "Nobody is asleep to dream it."  (text, line 910)
+- "Nobody could be got ready to dream (their snapshots couldn't be saved)."  (text, line 919)
+- "Dream: %s, with %d asleep"  (message, line 930)
 
 > Note for you (not shown in game): The Administrator's tablet (sv_livingcity_cityadmin.lua): tonight's dream, by mood.
 
-- "Dreams are switched off on this server."  (text, line 948)
-- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 949)
+- "Dreams are switched off on this server."  (text, line 951)
+- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 952)
 
 > Note for you (not shown in game): The Administrator picks tonight's dream (id), or none ("none"). True, or false and why not. The pick ignores the endings' cooldown, and there's still one dream a night; it can be changed until the dream begins. (The G-Man has no part in dreams: the owner, 7 November.)
 
-- "Only the City Administrator chooses the city's dreams."  (text, line 975)
-- "Dreams are switched off on this server."  (text, line 976)
-- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 977)
+- "Only the City Administrator chooses the city's dreams."  (text, line 978)
+- "Dreams are switched off on this server."  (text, line 979)
+- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 980)
 
 > Note for you (not shown in game): part of: dream admin pick
 
-- "Tonight's dream"  (on-screen notice, line 982)
-- "No dream tonight. The city sleeps without one."  (on-screen notice, line 982)
-- "No such dream."  (text, line 985)
-- "Tonight's dream"  (on-screen notice, line 993)
-- "Everyone asleep will dream it tonight, a minute after you say good night."  (message, line 994)
-- "Tonight's dream has been dreamt already: it waits for tomorrow night."  (message, line 994)
+- "Tonight's dream"  (on-screen notice, line 985)
+- "No dream tonight. The city sleeps without one."  (on-screen notice, line 985)
+- "No such dream."  (text, line 988)
+- "Tonight's dream"  (on-screen notice, line 996)
+- "Everyone asleep will dream it tonight, a minute after you say good night."  (message, line 997)
+- "Tonight's dream has been dreamt already: it waits for tomorrow night."  (message, line 997)
 
 > Note for you (not shown in game): part of: dream tonight
 
-- "no dream point"  (text, line 1016)
-- "nothing to dream"  (text, line 1018)
+- "no dream point"  (text, line 1019)
+- "nothing to dream"  (text, line 1021)
 
 > Note for you (not shown in game): (the morning after a dream: a line for the whole city, by its mood)
 
-- "[City] {line}"  (chat message, line 1043)
+- "[City] {line}"  (chat message, line 1046)
 
 > Note for you (not shown in game): the sleepers, warned (and the way out)
 
-- "A dream is coming"  (on-screen notice, line 1063)
-- "It's shared with everyone asleep, and you'll wake in your bed with everything you had. {or}"  (on-screen notice, line 1063)
+- "A dream is coming"  (on-screen notice, line 1066)
+- "It's shared with everyone asleep, and you'll wake in your bed with everything you had. {or}"  (on-screen notice, line 1066)
 
 > Note for you (not shown in game): In a dream, nothing counts
 
-- "will have to wait until you wake up. (C > Settings > Shared dreams: wake up.)"  (on-screen notice, line 1147)
+- "will have to wait until you wake up. (C > Settings > Shared dreams: wake up.)"  (on-screen notice, line 1150)
 
 > Note for you (not shown in game): part of: inv action
 
-- "Your pockets"  (text, line 1168)
+- "Your pockets"  (text, line 1171)
 
 > Note for you (not shown in game): part of: sleep in
 
-- "You're already dreaming."  (text, line 1169)
+- "You're already dreaming."  (text, line 1172)
 
 > Note for you (not shown in game): Players: opting out, and waking up
 
-- "Shared dreams"  (on-screen notice, line 1212)
-- "You've opted out: you sleep without the city's dreams. (C > Settings > Shared dreams to opt back in.)"  (on-screen notice, line 1212)
-- "You'll dream with everyone else asleep. You always wake in your bed, with everything you had."  (on-screen notice, line 1213)
+- "Shared dreams"  (on-screen notice, line 1215)
+- "You've opted out: you sleep without the city's dreams. (C > Settings > Shared dreams to opt back in.)"  (on-screen notice, line 1215)
+- "You'll dream with everyone else asleep. You always wake in your bed, with everything you had."  (on-screen notice, line 1216)
 
 > Note for you (not shown in game): part of: dream command
 
-- "[Dreams] You're not dreaming."  (chat message, line 1221)
-- "[Dreams] Shared dreams are {or}. /dream off, /dream on, /dream wake (or C > Settings)."  (chat message, line 1223)
+- "[Dreams] You're not dreaming."  (chat message, line 1224)
+- "[Dreams] Shared dreams are {or}. /dream off, /dream on, /dream wake (or C > Settings)."  (chat message, line 1226)
 
 > Note for you (not shown in game): dream restore
 
-- "You wake up"  (on-screen notice, line 1243)
-- "You'd left in the middle of a dream. Everything you had is just as it was."  (on-screen notice, line 1243)
+- "You wake up"  (on-screen notice, line 1246)
+- "You'd left in the middle of a dream. Everything you had is just as it was."  (on-screen notice, line 1246)
 
 > Note for you (not shown in game): Put someone's things back from their snapshot (also an old one already put back once).
 
-- "No such player."  (text, line 1261)
-- "is woken, and everything put back."  (text, line 1262)
-- "has no dream snapshot."  (text, line 1265)
+- "No such player."  (text, line 1264)
+- "is woken, and everything put back."  (text, line 1265)
+- "has no dream snapshot."  (text, line 1268)
 
 > Note for you (not shown in game): part of: dream force restore
 
-- "'s things are being put back from their snapshot."  (text, line 1270)
+- "'s things are being put back from their snapshot."  (text, line 1273)
 
 > Note for you (not shown in game): part of: dream status
 
-- "(a dream you play)"  (name, line 1286)
+- "(a dream you play)"  (name, line 1289)
 
 > Note for you (not shown in game): part of: reply
 
-- "[Living City] {m}"  (chat message, line 1329)
+- "[Living City] {m}"  (chat message, line 1332)
 
 > Note for you (not shown in game): the console command lc_dream_now
 
-- "The dream begins: {id}"  (text, line 1339)
+- "The dream begins: {id}"  (text, line 1342)
 
 ## the Combine's dropship (sv_livingcity_dropship.lua)
 
@@ -12817,130 +12817,131 @@ Made from version 33585ac. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "You're getting hungry."  (text, line 417)
-- "You're starving."  (text, line 417)
-- "Your mouth is dry."  (text, line 418)
-- "You're badly dehydrated."  (text, line 418)
-- "You are starving and dehydrated."  (chat message, line 430)
-- "You are starving."  (text, line 430)
-- "You are dehydrated."  (text, line 430)
+- "You're getting hungry."  (text, line 418)
+- "You're starving."  (text, line 418)
+- "Your mouth is dry."  (text, line 419)
+- "You're badly dehydrated."  (text, line 419)
+- "You are starving and dehydrated."  (chat message, line 431)
+- "You are starving."  (text, line 431)
+- "You are dehydrated."  (text, line 431)
 
 > Note for you (not shown in game): part of: breen water
 
-- "Where were you going again?"  (chat message, line 478)
+- "It tastes of nothing. Today it can't touch your head."  (chat message, line 475)
+- "Where were you going again?"  (chat message, line 480)
 
 > Note for you (not shown in game): food mends you a little as you eat it (a quarter of what it fills you); drinks don't. Healing comes from eating, sleeping and medicine, nothing else (no slow mending while awake)
 
-- "The cramps ease."  (chat message, line 497)
+- "The cramps ease."  (chat message, line 499)
 
 > Note for you (not shown in game): part of: consume
 
-- "It burns all the way down. Your legs go out from under you."  (chat message, line 503)
+- "It burns all the way down. Your legs go out from under you."  (chat message, line 505)
 
 > Note for you (not shown in game): part of: inv action
 
-- "Your hands are cuffed."  (chat message, line 629)
-- "You need to be standing in water."  (chat message, line 655)
-- "You can't eat that."  (chat message, line 661)
-- "Cooking won't help that."  (chat message, line 665)
-- "You need a stove or a fire."  (chat message, line 666)
+- "Your hands are cuffed."  (chat message, line 631)
+- "You need to be standing in water."  (chat message, line 657)
+- "You can't eat that."  (chat message, line 663)
+- "Cooking won't help that."  (chat message, line 667)
+- "You need a stove or a fire."  (chat message, line 668)
 
 > Note for you (not shown in game): a crackle and sizzle (the ignite sound was a small bang). Half-Life 2's fire sounds loop forever, so it's stopped after a moment (it used to keep crackling wherever you went)
 
-- "becomes {name}."  (chat message, line 674)
-- "Stand in water, or by a sink, to fill it."  (chat message, line 677)
+- "becomes {name}."  (chat message, line 676)
+- "Stand in water, or by a sink, to fill it."  (chat message, line 679)
 
 > Note for you (not shown in game): the tap running into it (a splash was too loud for a sink); dipped in water, a soft slosh
 
-- "[Papers] You keep your papers on you. (Stash them at home if you must.)"  (chat message, line 684)
-- "That's Combine issue: it stays with you (or another unit)."  (chat message, line 685)
+- "[Papers] You keep your papers on you. (Stash them at home if you must.)"  (chat message, line 686)
+- "That's Combine issue: it stays with you (or another unit)."  (chat message, line 687)
 
 > Note for you (not shown in game): pressing E on something
 
-- "Picked up: {name}"  (chat message, line 737)
-- "Your pockets are full."  (chat message, line 739)
+- "Picked up: {name}"  (chat message, line 739)
+- "Your pockets are full."  (chat message, line 741)
 
 > Note for you (not shown in game): the game's physgun drop moment
 
-- "[Living City] Moved: the {kind} is saved where you put it."  (chat message, line 1055)
+- "[Living City] Moved: the {kind} is saved where you put it."  (chat message, line 1057)
 
 > Note for you (not shown in game): part of: use vending
 
-- "[Vending] Insert {price} credits."  (chat message, line 1071)
+- "[Vending] Insert {price} credits."  (chat message, line 1073)
 
 > Note for you (not shown in game): part of: use static vending
 
-- "[Vending] Insert {price} credits."  (chat message, line 1118)
+- "[Vending] Insert {price} credits."  (chat message, line 1120)
 
 > Note for you (not shown in game): part of: use fixture
 
-- "[Stove] Cook from your pockets (F3). Your stash is open there too, while you stand by the stove."  (chat message, line 1139)
-- "[Stove] Cook from your pockets (F3)."  (chat message, line 1139)
-- "[Sink] Fill bottles and cans from your pockets (F3). Boil them before you drink."  (chat message, line 1143)
+- "[Stove] Cook from your pockets (F3). Your stash is open there too, while you stand by the stove."  (chat message, line 1141)
+- "[Stove] Cook from your pockets (F3)."  (chat message, line 1141)
+- "[Sink] Fill bottles and cans from your pockets (F3). Boil them before you drink."  (chat message, line 1145)
 
 > Note for you (not shown in game): part of: dispense
 
-- "[Rations] The clerk at the counter hands you a ration packet."  (chat message, line 1212)
-- "[Rations] The clerk hands you a short ration: a third less than the full one. Good standing (Trusted) earns the full packet."  (chat message, line 1213)
+- "[Rations] The clerk at the counter hands you a ration packet."  (chat message, line 1214)
+- "[Rations] The clerk hands you a short ration: a third less than the full one. Good standing (Trusted) earns the full packet."  (chat message, line 1215)
 
 > Note for you (not shown in game): Hacking them (the multitool): a vending machine spits out its water, a ration dispenser its packets (5 to 8 of them), no credits and no coupon. Ten seconds, keep still; a unit who sees you at it makes you wanted. Then it's empty for lc_machine_hack_cooldown minutes (10).
 
-- "the vending machine"  (text, line 1224)
-- "the ration dispenser"  (text, line 1224)
-- "Aim at a vending machine or a ration dispenser."  (text, line 1227)
-- "You need a multitool to get into it."  (text, line 1228)
-- "You're busy."  (text, line 1229)
-- "It's dead: no power. Nothing to get out of it."  (text, line 1230)
+- "the vending machine"  (text, line 1226)
+- "the ration dispenser"  (text, line 1226)
+- "Aim at a vending machine or a ration dispenser."  (text, line 1229)
+- "You need a multitool to get into it."  (text, line 1230)
+- "You're busy."  (text, line 1231)
+- "It's dead: no power. Nothing to get out of it."  (text, line 1232)
 
 > Note for you (not shown in game): part of: hack machine
 
-- "Someone's already emptied it. It'll be restocked in about %d minutes."  (message, line 1233)
-- "Hacking {name}... keep still"  (progress bar, line 1237)
-- "You leave it."  (text, line 1238)
+- "Someone's already emptied it. It'll be restocked in about %d minutes."  (message, line 1235)
+- "Hacking {name}... keep still"  (progress bar, line 1239)
+- "You leave it."  (text, line 1240)
 
 > Note for you (not shown in game): part of: done
 
-- "[Resistance] The dispenser chokes, and spits out %d ration packets. No coupon, no record."  (message, line 1259)
-- "[Resistance] The machine shudders and drops %d cans. Free water, for once."  (message, line 1260)
-- "Tampering with Union property"  (text, line 1262)
-- "[Civil Protection] A Civil Protection unit saw you at it."  (chat message, line 1263)
+- "[Resistance] The dispenser chokes, and spits out %d ration packets. No coupon, no record."  (message, line 1261)
+- "[Resistance] The machine shudders and drops %d cans. Free water, for once."  (message, line 1262)
+- "Tampering with Union property"  (text, line 1264)
+- "[Civil Protection] A Civil Protection unit saw you at it."  (chat message, line 1265)
 
 > Note for you (not shown in game): a unit's ration voucher (their duty allocation, sv_livingcity_cp.lua): a packet, no card and no wait
 
-- "[Rations] Voucher accepted."  (chat message, line 1278)
+- "[Rations] Voucher accepted."  (chat message, line 1280)
 
 > Note for you (not shown in game): part of: use dispenser
 
-- "[Rations] You aren't registered, so you can't have a ration card. Register at Civil Intake, then work a Union shift to earn one."  (text, line 1286)
-- "[Rations] No ration card. You earn one for each Union shift you finish (your board, F4), and each ration takes one card."  (text, line 1288)
-- "[Rations] Your ration privileges have been suspended."  (text, line 1290)
-- "[Rations] Next allocation in %d seconds."  (message, line 1292)
+- "[Rations] You aren't registered, so you can't have a ration card. Register at Civil Intake, then work a Union shift to earn one."  (text, line 1288)
+- "[Rations] No ration card. You earn one for each Union shift you finish (your board, F4), and each ration takes one card."  (text, line 1290)
+- "[Rations] Your ration privileges have been suspended."  (text, line 1292)
+- "[Rations] Next allocation in %d seconds."  (message, line 1294)
 
 > Note for you (not shown in game): a reprimand (skipping morning exercise: sv_livingcity_exercise.lua): this one allocation
 
-- "[Rations] Allocation withheld: {why}. Your next allocation is as normal."  (text, line 1298)
+- "[Rations] Allocation withheld: {why}. Your next allocation is as normal."  (text, line 1300)
 
 > Note for you (not shown in game): the PA said it: tolerating noncompliance costs this allocation (sv_livingcity_rations.lua). (A new life's first ration is docked like any other: the owner, 7 November, said no to skipping it.)
 
-- "[Rations] Allocation withheld: five ration units deducted for tolerating noncompliance{why}. Your next allocation is as normal."  (text, line 1306)
+- "[Rations] Allocation withheld: five ration units deducted for tolerating noncompliance{why}. Your next allocation is as normal."  (text, line 1308)
 
 > Note for you (not shown in game): the city's stores (sv_livingcity_stockpile.lua): empty, nothing; low, sometimes nothing
 
-- "[Rations] Distribution suspended: the city's stores are empty."  (text, line 1313)
-- "[Rations] Supply shortfall. The dispenser whirs and gives nothing. Try again in a minute (the stores are low: kitchen and factory shifts, trains and supply drops fill them)."  (text, line 1316)
+- "[Rations] Distribution suspended: the city's stores are empty."  (text, line 1315)
+- "[Rations] Supply shortfall. The dispenser whirs and gives nothing. Try again in a minute (the stores are low: kitchen and factory shifts, trains and supply drops fill them)."  (text, line 1318)
 
 > Note for you (not shown in game): a forged card: no questions, usually
 
-- "[Rations] Card invalid. This incident has been logged."  (chat message, line 1325)
-- "Ration fraud"  (text, line 1326)
+- "[Rations] Card invalid. This incident has been logged."  (chat message, line 1327)
+- "Ration fraud"  (text, line 1328)
 
 > Note for you (not shown in game): part of: use dispenser
 
-- "[Rations] Card accepted."  (chat message, line 1329)
+- "[Rations] Card accepted."  (chat message, line 1331)
 
 > Note for you (not shown in game): part of: serve players at line
 
-- "[Rations] Wait at the counter."  (chat message, line 1368)
+- "[Rations] Wait at the counter."  (chat message, line 1370)
 
 ## talking to people (sv_livingcity_talk.lua)
 
@@ -13576,53 +13577,61 @@ Made from version 33585ac. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: smoke
 
-- "Coughing fit"  (on-screen notice, line 92)
-- "Too many, too close together. Your chest burns."  (on-screen notice, line 92)
-- "You draw on it, slow. Your hands stop shaking."  (chat message, line 96)
-- "Harsh. It catches in your throat, but it does the job."  (text, line 96)
-- "Thin, Union-approved smoke. It takes the edge off."  (text, line 96)
+- "Coughing fit"  (on-screen notice, line 96)
+- "Too many, too close together. Your chest burns."  (on-screen notice, line 96)
+- "You draw on it, slow. Your hands stop shaking."  (chat message, line 100)
+- "Harsh. It catches in your throat, but it does the job."  (text, line 100)
+- "Thin, Union-approved smoke. It takes the edge off."  (text, line 100)
 
 > Note for you (not shown in game): part of: drink
 
-- "A bad batch"  (on-screen notice, line 109)
-- "Something in it was very wrong. Your eyes go dark and your stomach turns."  (on-screen notice, line 109)
-- "You throw up"  (on-screen notice, line 117)
-- "Too much. It all comes back up, and you're hungry and thirsty all over again."  (on-screen notice, line 117)
-- "The world's swaying. You can't run like this. (It wears off, slowly.)"  (on-screen notice, line 121)
-- "A warm glow. The knocks don't hurt quite as much."  (chat message, line 122)
-- "It goes down warm."  (chat message, line 123)
+- "A bad batch"  (on-screen notice, line 113)
+- "Something in it was very wrong. Your eyes go dark and your stomach turns."  (on-screen notice, line 113)
+- "You throw up"  (on-screen notice, line 121)
+- "Too much. It all comes back up, and you're hungry and thirsty all over again."  (on-screen notice, line 121)
+- "The world's swaying. You can't run like this. (It wears off, slowly.)"  (on-screen notice, line 125)
+- "A warm glow. The knocks don't hurt quite as much."  (chat message, line 126)
+- "It goes down warm."  (chat message, line 127)
 
 > Note for you (not shown in game): part of: stim
 
-- "Your heart pounds"  (on-screen notice, line 132)
-- "Another one, on top of the last. Your chest hammers and your vision swims."  (on-screen notice, line 132)
-- "Wide awake"  (on-screen notice, line 141)
-- "Your eyes snap open and your heart quickens. For the next fifteen minutes you couldn't sleep if you tried, and no dream can take you."  (on-screen notice, line 141)
+- "Your heart pounds"  (on-screen notice, line 136)
+- "Another one, on top of the last. Your chest hammers and your vision swims."  (on-screen notice, line 136)
+- "Wide awake"  (on-screen notice, line 145)
+- "Your eyes snap open and your heart quickens. For the next fifteen minutes you couldn't sleep if you tried, and no dream can take you."  (on-screen notice, line 145)
 
 > Note for you (not shown in game): From your pockets (sv_livingcity_scavenge.lua's LC.ItemUse sends it here). True, or false and why not.
 
-- "Not while you're asleep."  (text, line 152)
+- "Not while you're asleep."  (text, line 156)
 
-> Note for you (not shown in game): Waking from a dream you played: well rested, or shaken how: "won" (beat it), "time" (still in it when it ended), "out" (lost every life).
+> Note for you (not shown in game): the game's living city slept moment
 
-- "the nightmare"  (name, line 168)
-- "beat {name}"  (text, line 170)
-- "Beat {name}"  (text, line 171)
+- "The nightmare's gone"  (on-screen notice, line 202)
+- "A real night's sleep, and the nightmare finally lets go. Your strength is back."  (on-screen notice, line 202)
+
+> Note for you (not shown in game): A Vortigaunt's whisper (citizens): where a black market dealer or a rebel cache is.
+
+- "A black market dealer"  (text, line 216)
+- "A Resistance cache"  (text, line 217)
+
+> Note for you (not shown in game): how: "won" (beat it), "time" (still in it when it ended), "out" (lost every life).
+
+- "the nightmare"  (name, line 242)
 
 > Note for you (not shown in game): part of: dream outcome
 
-- "Well rested"  (on-screen notice, line 174)
-- "You beat {name}. You wake clear-headed and strong: 25 credits, a little experience, and fully healed."  (on-screen notice, line 174)
-- "lasted out {name}"  (text, line 176)
-- "Lasted out {name}"  (text, line 177)
-- "You lasted it out"  (on-screen notice, line 178)
-- "You held on until {name} let go: 10 credits, and a little experience."  (on-screen notice, line 178)
-- "You wake soaked in sweat, hurting and parched, and your hands won't stop shaking (three minutes; a cigarette or a stimulant steadies them)."  (on-screen notice, line 183)
+- "A Vortigaunt's voice found you in the dark, and whispered where to look: {what} (marked for you, for ten minutes)."  (text, line 254)
+- "As you woke, a Vortigaunt's hand pressed something into yours: {or}{id}."  (text, line 258)
+- "You beat {name}. For a day the Combine can't get into your head (Breen's water won't fog you, and no nightmare can take you), and you've a second wind (you tire slower, hunger and thirst come slower).{extra}"  (on-screen notice, line 260)
+- "You held on"  (on-screen notice, line 263)
+- "You held on until {name} let go. You wake tired, but whole."  (on-screen notice, line 263)
+- "The nightmare stays with you"  (on-screen notice, line 267)
+- "You wake soaked in sweat, your hands shaking, weaker than you were: 30 off your health until your next full night's sleep."  (on-screen notice, line 267)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "The crash"  (on-screen notice, line 209)
-- "The stimulant wears off all at once. Your legs feel like lead: no running for a few minutes."  (on-screen notice, line 209)
+- "The crash"  (on-screen notice, line 294)
+- "The stimulant wears off all at once. Your legs feel like lead: no running for a few minutes."  (on-screen notice, line 294)
 
 ## vortigaunts (sv_livingcity_vort.lua)
 

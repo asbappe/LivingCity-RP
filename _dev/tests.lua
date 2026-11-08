@@ -13825,9 +13825,11 @@ ok(sentOut, "(their screen asks: wake up now, or watch until it's over)")
 ok(LC.DreamWakeAsked(a), "they choose to wake")
 _run(2.5)
 ok(not a.lcDreaming and not a.lcGameWatching and a.lcSleep and a:GetPos():Distance(CITY) < 1, "awake in their bed, everything as it was")
-ok(LC.Shaken(a) and a:Health() == math.max(1, hpA - 15), "and lost: they wake shaken (hurt, thirsty, the shakes)", a:Health())
+ok(LC.DreamScarred(a) and a:GetMaxHealth() == 70 and a:Health() <= 70 and LC.Shaken(a), "and lost: 30 off their health until their next full night's sleep", a:GetMaxHealth())
+LC.SetDreamScar(a, false)
 -- every token gone: the rest win, and the arena goes
 local crB = b:GetNW2Int("lce_credits", 0)
+local xpB = b:GetNW2Int("lcf_xp", 0)
 local ents0 = g.ents
 for _, t in ipairs(g.tokens) do t.got = true end
 g.left = 0
@@ -13835,7 +13837,9 @@ _run(2.5)
 local gone = true
 for _, e in ipairs(ents0) do if IsValid(e) then gone = false end end
 ok(g.pl[b].how == "won" and not b.lcDreaming and LC.DreamActive == nil and gone and #g.won == 1, "every token picked up: those left win; nobody's left in it, so it's over, everyone wakes, and the maze is gone")
-ok(b:GetNW2Int("lce_credits", 0) == crB + 25, "a winner wakes well rested (25 credits, and more)", b:GetNW2Int("lce_credits", 0) - crB)
+ok(LC.Unbroken(b) and LC.SecondWind(b) and b:GetNW2Int("lce_credits", 0) == crB and b:GetNW2Int("lcf_xp", 0) == xpB, "a winner wakes Unbroken with a second wind, and nothing the Combine would give (no credits, no experience)")
+b:SetNW2Float("lc_unbroken_until", 0)
+b:SetNW2Float("lc_secondwind_until", 0)
 
 -- The Barrel Tower
 Asleep(a, CITY)
@@ -13858,6 +13862,8 @@ ok(b.lcGameWatching, "(a winner may watch the rest too)")
 LC.DreamGameStop(d2, "test")
 _run(2.5)
 ok(not a.lcDreaming and not b.lcDreaming and LC.DreamActive == nil, "(and when it's over, everyone wakes)")
+ok(LC.Unbroken(b), "(the winner is Unbroken: the next nightmare can't take them)")
+b:SetNW2Float("lc_unbroken_until", 0)
 
 -- The Crumbling Floor
 Asleep(a, CITY)
@@ -13877,6 +13883,9 @@ _run(0.2)
 ok(gc.pl[a].how == "out" and gc.pl[b].how == "won", "fall and you're out; the last one standing wins")
 _run(2.5)
 ok(LC.DreamActive == nil and not b.lcDreaming, "(then it's over)")
+b:SetNW2Float("lc_unbroken_until", 0)
+a:SetNW2Float("lc_shaken_until", 0)
+LC.SetDreamScar(a, false)
 
 -- Freeze, Citizen
 Asleep(a, CITY)
@@ -13926,6 +13935,7 @@ for _, id in ipairs({ "cig_union", "cig_rolled", "beer", "vodka", "moonshine", "
 ok(okItems and LCS.GoodsById.cig_union and LCS.GoodsById.vodka and LCS.BlackById.cig_rolled and LCS.BlackById.beer and LCS.BlackById.moonshine and LCS.BlackById.stimulant,
     "cigarettes, alcohol and stimulants exist: Union cigarettes and vodka at the Commissary, the rest on the black market")
 ok(LCS.Items.stimulant.contraband and LCS.Items.moonshine.contraband and not LCS.Items.cig_union.contraband, "(the black market's are contraband; the Union's aren't)")
+ok(LCS.GoodsById.cig_union.minStanding == 75 and LCS.GoodsById.vodka.minStanding == 150, "Union cigarettes from standing 75, vodka from 150")
 -- a cigarette steadies the shakes
 p:SetNW2Float("lc_shaken_until", CurTime() + 100)
 LC.GiveItem(p, "cig_union", 1)
@@ -13973,16 +13983,55 @@ ok(not Has(LC.DreamSleepers("nightmare"), q), "(only a stimulant keeps you out o
 p.lcSleep, q.lcSleep = nil, nil
 p:SetPData("lc_dream_optout", "0")
 q:SetNW2Float("lc_wired_until", 0)
--- how a dream you played leaves you
-local cr = p:GetNW2Int("lce_credits", 0)
+-- how a dream you played leaves you (the owner, 8 November: nothing the Combine would give)
+local cr, xp0 = p:GetNW2Int("lce_credits", 0), p:GetNW2Int("lcf_xp", 0)
 p:SetHealth(50)
+p:SetNW2String("lcf_faction", "citizen")
+local dealer = ents.Create("lc_dealer")
+dealer:SetPos(Vector(500, 600, 0))
+local n0 = #net.sent
 LC.DreamOutcome(p, "won", "The Patrol Maze")
-ok(p:GetNW2Int("lce_credits", 0) == cr + 25 and p:Health() == p:GetMaxHealth(), "won: well rested (credits, fully healed)")
+local whispered = false
+for k = n0 + 1, #net.sent do local m = net.sent[k] if m.name == "lc_vice" and m.data[1] == "whisper" and m.to == p then whispered = true end end
+ok(LC.Unbroken(p) and LC.SecondWind(p) and p:Health() == p:GetMaxHealth() and p:GetNW2Int("lce_credits", 0) == cr and p:GetNW2Int("lcf_xp", 0) == xp0,
+    "won: Unbroken and a second wind for a day, healthy; no credits, no experience")
+ok(whispered, "a citizen also hears a Vortigaunt's whisper: where a dealer or a rebel cache is")
+p:SetNW2String("lcf_faction", "resistance")
+local had = (LC.HasItem(p, "cig_rolled") and 1 or 0) + (LC.HasItem(p, "moonshine") and 1 or 0) + (LC.HasItem(p, "stimulant") and 1 or 0)
+LC.DreamOutcome(p, "won", "The Patrol Maze")
+local has = (LC.HasItem(p, "cig_rolled") and 1 or 0) + (LC.HasItem(p, "moonshine") and 1 or 0) + (LC.HasItem(p, "stimulant") and 1 or 0)
+ok(has > had or LC.HasItem(p, "stimulant"), "the Resistance wake with something a Vortigaunt pressed into their hand")
+dealer:Remove()
+p:SetNW2String("lcf_faction", "citizen")
+-- Unbroken: Breen's water can't touch them, and no nightmare can take them
+p.lcSleep = { t0 = CurTime() }
+ok(not Has(LC.DreamSleepers("nightmare"), p) and Has(LC.DreamSleepers("happy"), p), "Unbroken: no nightmare can take them (other dreams still can)")
+p.lcSleep = nil
+p:SetNW2Float("lc_unbroken_until", 0)
+p:SetNW2Float("lc_secondwind_until", 0)
+-- asleep in a Combine-only zone: spared
+local realCZ = LC.CombineZoneAt
+LC.CombineZoneAt = function(pos) return pos.x > 99000 end
+q:SetPos(Vector(100000, 0, 0))
+q.lcSleep = { t0 = CurTime() }
+ok(not Has(LC.DreamSleepers("nightmare"), q) and Has(LC.DreamSleepers("neutral"), q), "asleep inside a Combine-only zone: spared any nightmare")
+q.lcSleep = nil
+LC.CombineZoneAt = realCZ
 LC.DreamOutcome(p, "time", "The Patrol Maze")
-ok(p:GetNW2Int("lce_credits", 0) == cr + 35, "lasted it out: a little")
+ok(p:GetNW2Int("lce_credits", 0) == cr and not LC.DreamScarred(p) and not LC.Unbroken(p), "still in it at the end: nothing either way")
+-- lost: 30 off the health limit until a night's sleep begun after it
+p:SetMaxHealth(100)
 p:SetHealth(100)
+p.lcSleep = { t0 = CurTime() - 5 }
 LC.DreamOutcome(p, "out", "The Patrol Maze")
-ok(p:Health() == 85 and LC.Shaken(p), "lost every life: shaken")
+ok(LC.DreamScarred(p) and p:GetMaxHealth() == 70 and p:Health() == 70, "lost every life: 30 off your health")
+hook.Run("LivingCitySlept", p)
+ok(LC.DreamScarred(p) and p:GetMaxHealth() == 70, "(finishing the same night's sleep doesn't clear it)")
+_run(0.2)
+p.lcSleep = { t0 = CurTime() }
+hook.Run("LivingCitySlept", p)
+ok(not LC.DreamScarred(p) and p:GetMaxHealth() == 100, "the next full night's sleep does")
+p.lcSleep = nil
 p:SetNW2Float("lc_shaken_until", 0)
 for _, x in ipairs({ p, q }) do x:SetPos(Vector(-122000, -122000, 0)) end
 ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])

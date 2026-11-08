@@ -411,6 +411,7 @@ timer.Create("LivingCityNeeds", 5, 0, function()
     for _, ply in ipairs(player.GetAll()) do
         if not Exempt(ply) then
             local mult = (HasParasites(ply) and 2 or 1) * ((LC.IsRested and LC.IsRested(ply)) and 0.75 or 1) -- (a good night's sleep: sv_livingcity_rest.lua)
+                * ((LC.SecondWind and LC.SecondWind(ply)) and 0.75 or 1) -- (beat a nightmare: sv_livingcity_vices.lua)
             LC.Feed(ply, -hDrain * mult, -tDrain * mult)
             local h, t = LC.Hunger(ply), LC.Thirst(ply)
 
@@ -471,6 +472,7 @@ local function Effect(ply, kind, forget)
 end
 
 local function BreenWater(ply)
+    if LC.Unbroken and LC.Unbroken(ply) then ply:ChatPrint("It tastes of nothing. Today it can't touch your head.") return end -- (beat a nightmare)
     local forget = math.random() < 0.35
     Effect(ply, "breen", forget)
     if forget then

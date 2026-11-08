@@ -380,8 +380,8 @@ LCS.Goods = {
     { id = "healthvial", name = "Health vial", entity = "item_healthvial", price = 25, minStanding = 150, desc = "For the trusted." },
     { id = "melon", item = "melon", price = 25, minStanding = 400, desc = "A whole watermelon. Exemplary citizens only." },
     { id = "coffee", item = "coffee", price = 30, minStanding = 400, desc = "Real coffee. You'd forgotten the smell." },
-    { id = "cig_union", item = "cig_union", count = 5, name = "Union cigarettes (5)", price = 12, minStanding = 150, civOnly = true, desc = "A pack of five. Union-approved. Mildly." },
-    { id = "vodka", item = "vodka", price = 45, minStanding = 600, civOnly = true, desc = "Pre-war vodka. For citizens the Union is proud of." },
+    { id = "cig_union", item = "cig_union", count = 5, name = "Union cigarettes (5)", price = 12, minStanding = 75, civOnly = true, desc = "A pack of five. Union-approved. Mildly." },
+    { id = "vodka", item = "vodka", price = 45, minStanding = 150, civOnly = true, desc = "Pre-war vodka. For citizens the Union is proud of." },
     { id = "healthkit", name = "Medical kit", entity = "item_healthkit", price = 50, minStanding = 400, desc = "A full medical kit." },
     { id = "request_device", item = "request_device", price = 10, minStanding = 0, desc = "Something wrong? It calls Civil Protection to where you are." },
     -- (no spare cuffs for sale: a unit's own never run out, and it read as though they had to buy them; the owner, 1 November)
