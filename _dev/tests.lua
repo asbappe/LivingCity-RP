@@ -14572,6 +14572,303 @@ ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 PropagandaDreamTests()
 
+-- Ten more propaganda dreams (sv_livingcity_propagandamore.lua)
+local function PropagandaMoreTests()
+section("Shared dreams: ten more propaganda dreams (harvest, shift, spy, newsreel, hate, mass games, guidance, scrap, flowers, duck and cover)")
+local errs0 = #_errors
+local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
+_walls = {}
+LC.EndEvent(true)
+_setcvar("lc_needs", 0)
+LC.EndingReload = function() end
+local CITY, DREAM = Vector(162000, -162000, 0), Vector(222000, -222000, 0)
+local adm = newPlayer("PMAdmin", "admin")
+local a = newPlayer("PMA", "citizen")
+local b = newPlayer("PMB", "citizen")
+_run(3)
+local function Asleep(p, at)
+    p:SetPos(at)
+    local key = string.format("s%d_%d_%d", math.floor(at.x), math.floor(at.y), math.floor(at.z))
+    p.lcSleep = { t0 = CurTime() - 70, done = CurTime() - 10, last = CurTime(), slept = true }
+    p:SetNW2Bool("lc_sleeping", true)
+    p.lcBedKey, p.lcBedFrom = key, at + Vector(40, 0, 0)
+    LC.BedSleepers[key] = p
+end
+local function Both() Asleep(a, CITY) Asleep(b, CITY + Vector(0, 200, 0)) a.crouch, b.crouch, a.keys, b.keys = nil, nil, nil, nil end
+local function Said(g, cue) for _, c in ipairs(g.said or {}) do if c == cue then return true end end return false end
+local function Start(id)
+    Both()
+    local okS, d = LC.DreamStart(id, adm, false, nil, true)
+    local g = okS and d.game
+    _run(0.1)
+    if g then g.pl[a].safe, g.pl[b].safe = 0, 0 end
+    return g, d
+end
+local function Stop(d) LC.DreamGameStop(d, "test") _run(2.5) end
+local function Duck(p) p.crouch = nil _run(0.1) p.crouch = true _run(0.3) end
+local function Jump(p) p.keys = nil _run(0.1) p.keys = { [IN_JUMP] = true } _run(0.1) p.keys = nil end
+player.GetAll = function() return { adm, a, b } end
+local dp = LC.AddPoint(DREAM, 0, "dream")
+
+-- on her tablet under Happy, as propaganda; music and voices
+local found = {}
+for _, e in ipairs(LC.DreamOffice().groups[1].endings) do if e.game and e.propaganda then found[e.id] = e.name end end
+local all = true
+for _, id in ipairs(LC.PropagandaMore) do if not (found[id] and string.find(found[id], "^Propaganda: ")) then all = false end end
+ok(all and #LC.PropagandaMore == 10 and found.duck == "Propaganda: Duck and Cover" and found.hate == "Propaganda: Two Minutes of Hate", "all ten are on her tablet, under Happy, as Propaganda")
+local MEDIA = { "sound/livingcity/dreams/harvest1.mp3", "sound/livingcity/dreams/propaganda1.ogg" }
+for _, f in ipairs(MEDIA) do _files[f] = "x" end
+ok(LC.PropagandaSong({ "harvest", "propaganda" }) == "livingcity/dreams/harvest1.mp3" and LC.PropagandaSong({ "duck", "propaganda" }) == "livingcity/dreams/propaganda1.ogg",
+    "music: the dream's codeword, or propaganda for any of them")
+ok(LC.PropagandaCueWho.duck_siren == "Sunny the Scanner" and LC.PropagandaCues.newsreel_hello ~= nil, "each line has its speaker (Sunny, the Narrator, the Foreman...)")
+ok(LC.PropagandaCommas(1234567) == "1,234,567" and LC.HarvestPercent(0) == 100 and LC.HarvestPercent(3) > 600, "(the quota board's absurd numbers)")
+
+-- Record Harvest
+local st0 = LC.Standing(a)
+local g, d = Start("harvest")
+ok(g and #g.crates == 8 and IsValid(g.her) and g.depotX, "Record Harvest is built: the field, the crates, the depot, her on her pedestal")
+local s = g.pl[a]
+local function Take(i, rotten)
+    local cr = g.crates[i]
+    cr.rotten, cr.gone = rotten, nil
+    a:SetPos(cr.pos - Vector(0, 0, 18))
+    _run(0.1)
+end
+Take(1, false)
+ok(s.carrying and not s.carrying.rotten, "walking over a crate picks it up")
+a:SetPos(Vector(g.depotX + 10, g.midY, g.top))
+_run(0.1)
+ok(s.given == 1 and g.tally == 1 and not s.carrying, "into the depot: the quota board climbs")
+Take(2, true)
+Duck(a)
+ok(not s.carrying and LC.PropagandaOffences(a) == 0, "a spoiled crate: crouch to throw it away, no harm done")
+a.crouch = nil
+Take(3, true)
+s.safe = 0
+a:SetPos(Vector(g.depotX + 10, g.midY, g.top))
+_run(0.1)
+ok(s.lives == 2 and LC.PropagandaOffences(a) == 1 and g.tally == 1, "delivering spoiled grain is wrecking: a life, and an offence")
+s.safe, s.given = 0, 4
+Take(4, false)
+a:SetPos(Vector(g.depotX + 10, g.midY, g.top))
+_run(0.1)
+ok(s.how == "won" and Said(g, "harvest_medal"), "five crates: she pins on the medal herself")
+Stop(d)
+ok(LC.Standing(a) == st0 - 3, "waking, the wrecking costs 3 loyalty points", LC.Standing(a) - st0)
+
+-- The Stakhanov Shift
+g, d = Start("shift")
+s = g.pl[a]
+ok(g and #g.stations == 12 and IsValid(g.foreman), "The Stakhanov Shift is built: twelve work stations, the foreman")
+a:SetPos(g.stations[1])
+Duck(a)
+ok(s.pct == LC.ShiftStroke, "at a station, every crouch is a hammer blow", s.pct)
+a:SetPos(g.stations[1] + Vector(0, 0, 0) + Vector(300, 0, 0))
+if LC.ShiftAtStation(g, a) then a:SetPos(g.stations[1] + Vector(0, 400, 0)) end
+Duck(a)
+ok(s.pct == LC.ShiftStroke, "away from a station, nothing")
+g.pl[b].lastStroke = CurTime() - LC.ShiftIdle - 1
+_run(0.1)
+ok(g.pl[b].lives == 2, "idle too long: the foreman notices", g.pl[b].lives)
+a.crouch = nil
+a:SetPos(g.stations[2])
+s.pct, s.lastStroke = g.def.need - 5, CurTime()
+local n0 = #g.ents
+Duck(a)
+ok(s.how == "won" and g.hero == a:Nick() and #g.ents == n0 + 1 and Said(g, "shift_hero"), "1400%: a Hero of Labour, and a giant portrait of the first")
+Stop(d)
+
+-- Careless Talk
+g, d = Start("spy")
+s = g.pl[a]
+local spy = g.spyN
+local same = 0
+for _, n in ipairs(g.npcs) do if n.tbl == spy.tbl and n.man == spy.man and n.tint == spy.tint then same = same + 1 end end
+ok(#g.npcs == 12 and spy and same == 1, "Careless Talk: twelve citizens at four tables, one spy nobody else looks like")
+_run(8.2)
+ok(#g.clues == 1, "a clue is overheard")
+local wrong
+for _, n in ipairs(g.npcs) do if n ~= spy then wrong = n break end end
+a:SetPos(wrong.pos + Vector(10, 0, 0))
+Duck(a)
+ok(wrong.cleared and s.lives == 2 and LC.PropagandaOffences(a) == 1, "reporting a loyal citizen costs you (and clears them)")
+s.safe, s.reportAt = 0, 0
+a.crouch = nil
+_run(0.1)
+a:SetPos(spy.pos + Vector(10, 0, 0))
+Duck(a)
+ok(s.how == "won" and spy.gone and g.spyN ~= spy and #g.clues == 0 and Said(g, "spy_caught"), "reporting the spy: taken away, you win, and a new spy hides among the rest")
+Stop(d)
+
+-- The Newsreel
+g, d = Start("newsreel")
+_run(6.5)
+local t = g.target
+ok(t and g.pl[t].cue, "The Newsreel: the camera swings to someone and asks for a wave, a salute or a cheer")
+ok(hook.Run("PlayerSay", t, "*" .. g.pl[t].cue .. "s*") == "" and g.pl[t].score == 1, "doing it in chat is a good take (and it stays in the dream)")
+g.camAt = 0
+_run(0.1)
+t = g.target
+g.pl[t].safe = 0
+local other = ({ wave = "salute", salute = "cheer", cheer = "wave" })[g.pl[t].cue]
+LC.PropagandaSay(t, other)
+ok(g.pl[t].lives == 2, "the wrong one costs a life")
+g.camAt = 0
+_run(0.1)
+t = g.target
+g.pl[t].safe, g.cueTil = 0, CurTime() - 1
+local lv = g.pl[t].lives
+_run(0.1)
+ok(g.pl[t].lives == lv - 1, "doing nothing while the camera's on you costs one too")
+Stop(d)
+
+-- Two Minutes of Hate
+g, d = Start("hate")
+s = g.pl[a]
+LC.PropagandaSay(a, "Traitor! Scum!")
+LC.PropagandaSay(b, "traitor")
+ok(s.score == 4 and g.pl[b].score == 1, "Two Minutes of Hate: jeers in chat, double for a word nobody has used yet", s.score)
+LC.PropagandaSay(a, "but freeman is a hero")
+ok(s.lives == 2, "a kind word for him is thoughtcrime")
+g.pl[b].lastJeer = CurTime() - LC.HateSilence - 1
+_run(0.1)
+ok(g.pl[b].lives == 2, "silence is noticed")
+s.score = g.def.need - 1
+LC.PropagandaSay(a, "coward")
+ok(s.how == "won", "full Hatred wins")
+Stop(d)
+
+-- The Mass Games
+g, d = Start("massgames")
+s = g.pl[a]
+_run(8.2)
+ok(g.phase == "ready" and g.round == 1 and s.want and g.pl[b].want, "The Mass Games: each dreamer is told their card's colour")
+a:SetPos(s.start)
+b:SetPos(g.pl[b].start)
+a.crouch = s.want == "gold" or nil
+b.crouch = g.pl[b].want ~= "gold" or nil
+_run(LC.MassReady + 0.1)
+ok(s.score == 1 and g.pl[b].lives == 2 and g.shown == 1 and Said(g, "massgames_flip"), "FLIP! the right colour scores, the wrong one costs a life, and her portrait grows")
+s.score, g.round, g.phase, g.at = g.def.need, LC.MassRounds, "show", 0
+_run(0.1)
+ok(s.how == "won", "enough pictures right by the last: one of a hundred thousand")
+Stop(d)
+
+-- On-the-Spot Guidance
+g, d = Start("guidance")
+ok(g and IsValid(g.her) and #g.stops == 4, "On-the-Spot Guidance: her, touring a factory")
+_run(5.1)
+g.her:SetPos(g.stops[1])
+_run(0.2)
+_run(2.6)
+ok(g.phase == "clap", "she points: time to applaud")
+Jump(a)
+LC.PropagandaSay(b, "Bravo!")
+ok(g.pl[a].clapAt and g.pl[b].clapAt, "applause: a jump, or clap in chat")
+_run(LC.GuidanceClap)
+ok(g.pl[a].lives == 3 and g.pl[b].lives == 2, "the last to applaud loses a life", g.pl[b].lives)
+g.pl[b].safe = 0
+g.phase, g.at = "talk", 0
+_run(0.1)
+g.at = 0
+_run(0.1)
+ok(g.pl[a].lives == 2 and g.pl[b].lives == 1, "nobody applauds: everyone loses one")
+g.n, g.phase, g.at = LC.GuidanceStops, "next", 0
+_run(0.1)
+ok(g.pl[a].how == "won" and Said(g, "guidance_end"), "through the whole tour: she's pleased with you")
+Stop(d)
+Both()
+Asleep(adm, CITY + Vector(0, -200, 0))
+local okG, dg = LC.DreamStart("guidance", adm, false, nil, true)
+ok(okG and dg.game.star == adm and adm.movetype == MOVETYPE_WALK and not IsValid(dg.game.her), "she can star in the tour herself, walking it")
+Stop(dg)
+
+-- The Scrap Drive
+g, d = Start("scrap")
+s = g.pl[a]
+ok(g and #g.junk == 12 and #g.bins == 3, "The Scrap Drive: scrap metal everywhere, three collection bins")
+a:SetPos(g.junk[1].pos)
+_run(0.1)
+a:SetPos(g.junk[2].pos)
+_run(0.1)
+ok(s.carry == 2, "walking over scrap picks it up")
+a:SetPos(g.spivAt)
+_run(0.1)
+ok(s.carry == 0 and s.lives == 2, "selling it to the shady trader is the black market")
+s.safe = 0
+a:SetPos(g.junk[3].pos)
+_run(0.1)
+a:SetPos(g.bins[1])
+_run(0.1)
+ok(s.given == 1 and g.total == 1, "into a bin, for the war effort")
+s.given = g.def.need - 1
+a:SetPos(g.junk[4].pos)
+_run(0.1)
+a:SetPos(g.bins[2])
+_run(0.1)
+ok(s.how == "won" and g.first == a:Nick(), "nine pieces: Hero of the Home Front")
+Stop(d)
+
+-- Flowers for the Liberators
+g, d = Start("flowers")
+s = g.pl[a]
+ok(g and #g.marchers == LC.FlowersSquad and math.abs(a:GetPos().y - g.midY) > g.road, "Flowers for the Liberators: a squad of her soldiers, the dreamers either side of the road")
+g.squadT0 = CurTime()
+for i, m in ipairs(g.marchers) do m.x = g.x0 - 2000 - i * 200 end
+g.marchers[1].x = a:GetPos().x - 5
+Jump(a)
+ok(s.score == 1 and s.squad == g.squadN, "jump as a soldier passes level with you: flowers at his boots")
+for i, m in ipairs(g.marchers) do m.x = g.x0 - 2000 - i * 200 end
+g.marchers[1].x = a:GetPos().x - 600
+Jump(a)
+ok(s.score == 1, "too soon: the flowers land in the mud")
+local ay = a:GetPos()
+g.marchers[1].x = ay.x + 300
+a:SetPos(Vector(ay.x, g.midY, ay.z))
+_run(0.1)
+ok(s.lives == 2, "stepping into the road in front of them costs a life")
+g.pl[b].safe = 0
+local sq = g.squadN
+for _, m in ipairs(g.marchers) do m.x = g.x1 end
+_run(0.1)
+ok(g.pl[b].lives == 2 and g.squadN == sq + 1, "a whole squad passed without a flower from you: a cold welcome (and the next squad comes)")
+Stop(d)
+
+-- Duck and Cover
+g, d = Start("duck")
+s = g.pl[a]
+ok(g and #g.tables == 6 and IsValid(g.sunny), "Duck and Cover: Sunny the Scanner and six tables")
+g.at = 0
+_run(0.1)
+ok(g.phase == "siren" and Said(g, "duck_siren"), "the siren wails")
+a:SetPos(g.tables[1] + Vector(40, 0, 0))
+a.crouch = true
+g.at = 0
+_run(0.1)
+ok(s.score == 1 and g.pl[b].lives == 2, "the flash: crouched beside a table, safe; standing about, a life", g.pl[b].lives)
+local tb = g.tables[1]
+a:SetPos(tb + Vector(10, 0, 0)) b:SetPos(tb + Vector(20, 0, 0)) adm:SetPos(tb + Vector(30, 0, 0))
+a.crouch, b.crouch, adm.crouch = true, true, true
+local cov = LC.DuckCovered(g, { a, b, adm })
+ok(cov[a] and cov[b] and not cov[adm], "two to a table")
+adm.crouch = nil
+Stop(d)
+
+for _, f in ipairs(MEDIA) do _files[f] = nil end
+LC.DreamForget()
+LC.RemovePoint(dp)
+for _, p in ipairs({ adm, a, b }) do
+    p.crouch, p.keys = nil, nil
+    if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
+    p:SetPos(Vector(-121000, -121000, 0))
+end
+player.GetAll, LC.EndingReload = realGetAll, realReload
+_setcvar("lc_needs", 1)
+_walls = savedWalls
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+PropagandaMoreTests()
+
 -- Cigarettes, alcohol and stimulants (sv_livingcity_vices.lua), and who a nightmare takes
 function ViceTests()
 section("Cigarettes, alcohol and stimulants; nobody opts out of a nightmare")

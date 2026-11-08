@@ -1129,3 +1129,9 @@ LC.AdmireSay = LC.PropagandaSay
 hook.Add("PlayerSay", "LivingCityPropagandaDreams", function(p, text)
     if LC.PropagandaSay(p, text) then return "" end
 end)
+
+-- The stage's pieces, for the propaganda dreams written in another file (sv_livingcity_propagandamore.lua).
+LC.PropagandaKit = { Everyone = Everyone, Line = Line, Say = Say, Her = Her, Figure = Figure, HerEnt = HerEnt, PedestalStar = PedestalStar,
+    PedestalGone = PedestalGone, Follow = Follow, Admirers = Admirers, Crowd = Crowd, Hello = Hello, Woke = Woke, Hall = Hall, Starts = Starts,
+    Spawn = Spawn, Offend = Offend, StarState = StarState, StarAt = StarAt, Pose = Pose, Notice = Notice, ADMIRERS = ADMIRERS,
+    GOLD = GOLD, ROSE = ROSE, PLUM = PLUM, NAVY = NAVY }

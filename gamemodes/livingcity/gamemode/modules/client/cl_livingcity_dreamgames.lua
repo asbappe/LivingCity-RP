@@ -11,6 +11,11 @@
       red and gold. Her lines come up at the bottom of the screen, with her recording if there is
       one; the music plays if the owner put any in sound/livingcity/dreams/. The Administrator,
       starring, is told so.
+      The ten more (sv_livingcity_propagandamore.lua): glowing things to pick up or stand at
+      (crates, scrap, work stations, tables), boards hanging in the air (the quota board, the
+      production norm, the enemy of the people on his screen), her portrait in cards growing
+      picture by picture in the Mass Games, clues overheard in Careless Talk, the screen black and
+      white in the Newsreel, and "NOW!" as a soldier passes you in Flowers for the Liberators.
 ]]
 
 LC_CL = LC_CL or {}
@@ -111,6 +116,9 @@ local glow = Material("sprites/light_glow02_add")
 local BLUE, GOLD = Color(120, 210, 255), Color(255, 205, 70)
 local PINK, ROSE = Color(255, 120, 190), Color(255, 40, 90)
 local HALO, PROP = Color(255, 240, 200), Color(255, 70, 60)
+-- the glows' colours: a crate, a spoiled crate, scrap, a flower, somewhere to stand, white
+local GLOWS = { Color(255, 205, 70), Color(140, 220, 60), Color(150, 190, 230), Color(255, 120, 190), Color(90, 255, 140), Color(255, 255, 255) }
+local THEMES = { harvest = Color(255, 205, 70), newsreel = Color(235, 235, 235), hate = Color(255, 60, 50), civil = Color(140, 210, 255) }
 -- Where she is: her figure or the star (as an entity, when you can see it), else where she was.
 local function HerPos()
     local e = st.herEnt and Entity and Entity(st.herEnt)
@@ -156,6 +164,14 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityDreamGames", function(_, s
             render.DrawSprite(Vector(r[1], r[2], r[3]), 30 * pulse, 30 * pulse, ROSE)
         end
     end
+    -- the ten more: glows, boards hanging in the air, her portrait in cards
+    for _, gl in ipairs(st.glows or {}) do
+        local c = GLOWS[gl[4] or 1] or GOLD
+        local pz = 0.85 + 0.15 * math.sin(CurTime() * 4 + gl[1] * 0.01)
+        render.DrawSprite(Vector(gl[1], gl[2], gl[3]), 34 * pz, 34 * pz, c)
+    end
+    if st.board then LC_CL.DreamBoard(st.board) end
+    if st.mosaic then LC_CL.DreamMosaic(st.mosaic) end
     if not st.tokens then return end
     local pulse = 0.75 + 0.25 * math.sin(CurTime() * 6)
     for i, t in ipairs(st.tokens) do
@@ -165,6 +181,59 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityDreamGames", function(_, s
             render.DrawSprite(Vector(t[1], t[2], t[3]), s, s, big and GOLD or BLUE)
         end
     end
+end)
+
+-- A board hanging in the air, facing its yaw: a title and lines (the enemy of the people: his face).
+function LC_CL.DreamBoard(b)
+    if not (cam and cam.Start3D2D) then return end
+    local w, lh = 520, 40
+    local h = 70 + #(b.lines or {}) * lh + (b.face and 230 or 0)
+    cam.Start3D2D(Vector(b[1], b[2], b[3]), Angle(0, (b[4] or 0) + 90, 90), 0.5)
+        surface.SetDrawColor(b.face and 235 or 25, b.face and 230 or 20, b.face and 220 or 20, 235)
+        surface.DrawRect(-w / 2, -h / 2, w, h)
+        surface.SetDrawColor(200, 20, 30, 255)
+        surface.DrawRect(-w / 2, -h / 2, w, 56)
+        draw.SimpleText(b.title or "", "DermaLarge", 0, -h / 2 + 28, Color(255, 230, 120), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        local y = -h / 2 + 80
+        if b.face then -- (no photograph of him survives: a lambda, crossed out, and his name)
+            draw.SimpleText("FREEMAN", "DermaLarge", 0, y + 10, Color(20, 20, 20), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+            draw.SimpleText("\206\187", "DermaLarge", 0, y + 110, Color(200, 120, 20), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            surface.SetDrawColor(200, 20, 30, 255)
+            surface.DrawRect(-90, y + 104, 180, 12)
+            y = y + 230
+        end
+        for _, l in ipairs(b.lines or {}) do
+            draw.SimpleText(l, "DermaLarge", 0, y, b.face and Color(30, 30, 30) or Color(235, 235, 235), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+            y = y + lh
+        end
+    cam.End3D2D()
+end
+-- Her portrait in cards (the Mass Games): row by row, as the pictures are got right.
+LC_CL.MosaicArt = {
+    "rrrrhhhhrrrr", "rrrhhhhhhrrr", "rrhhsssshhrr", "rrhsssssshrr", "rrhsesseshrr", "rrhsssssshrr",
+    "rrhssllsshrr", "rrrhsssshrrr", "rrrrhsshrrrr", "rrgggssgggrr", "rggggggggggr", "gggggggggggg" }
+local CARD = { r = Color(180, 20, 30), h = Color(45, 28, 22), s = Color(235, 200, 170), e = Color(30, 30, 60), l = Color(200, 40, 70), g = Color(230, 185, 80) }
+function LC_CL.DreamMosaic(m)
+    if not (cam and cam.Start3D2D) then return end
+    local art, cell = LC_CL.MosaicArt, 24
+    local rows = math.floor(math.Clamp(m.shown or 0, 0, 1) * #art + 0.001)
+    local half = #art * cell / 2
+    cam.Start3D2D(Vector(m[1], m[2], m[3] + #art * cell), Angle(0, (m[4] or 0) + 90, 90), 1)
+        for r, line in ipairs(art) do
+            for col = 1, #line do
+                local c = r <= rows and CARD[string.sub(line, col, col)] or Color(90, 90, 100)
+                surface.SetDrawColor(c.r, c.g, c.b, 255)
+                surface.DrawRect(-half + (col - 1) * cell + 1, (r - 1) * cell + 1, cell - 2, cell - 2)
+            end
+        end
+    cam.End3D2D()
+end
+
+-- The Newsreel: black and white, like an old film.
+hook.Add("RenderScreenspaceEffects", "LivingCityDreamGames", function()
+    if not st or st.theme ~= "newsreel" or not DrawColorModify then return end
+    DrawColorModify({ ["$pp_colour_addr"] = 0, ["$pp_colour_addg"] = 0, ["$pp_colour_addb"] = 0, ["$pp_colour_brightness"] = 0,
+        ["$pp_colour_contrast"] = 1.2, ["$pp_colour_colour"] = 0, ["$pp_colour_mulr"] = 0, ["$pp_colour_mulg"] = 0, ["$pp_colour_mulb"] = 0 })
 end)
 
 local function Line(text, y, col, font)
@@ -178,16 +247,25 @@ hook.Add("HUDPaint", "LivingCityDreamGames", function()
     local now = CurTime()
     -- the screen's mood
     local admire = st.theme == "admire"
-    local head = admire and PINK or (st.theme == "glory" and GOLD) or (st.theme == "propaganda" and PROP) or nil
+    local head = admire and PINK or (st.theme == "glory" and GOLD) or (st.theme == "propaganda" and PROP) or THEMES[st.theme or ""] or nil
     if admire then
         surface.SetDrawColor(255, 90, 170, 22 + math.floor(8 * math.sin(now * 1.5)))
         surface.DrawRect(0, 0, ScrW(), ScrH())
     elseif st.theme == "glory" and st.light then
         surface.SetDrawColor(255, 235, 190, 26)
         surface.DrawRect(0, 0, ScrW(), ScrH())
-    elseif st.theme == "propaganda" then
-        surface.SetDrawColor(200, 20, 20, 14)
+    elseif st.theme == "propaganda" or st.theme == "harvest" then
+        surface.SetDrawColor(200, st.theme == "harvest" and 150 or 20, 20, 14)
         surface.DrawRect(0, 0, ScrW(), ScrH())
+    elseif st.theme == "hate" then
+        surface.SetDrawColor(220, 0, 0, 20 + math.floor(14 * math.abs(math.sin(now * 3))))
+        surface.DrawRect(0, 0, ScrW(), ScrH())
+    elseif st.theme == "civil" then
+        surface.SetDrawColor(120, 200, 255, 14)
+        surface.DrawRect(0, 0, ScrW(), ScrH())
+    elseif st.theme == "newsreel" then -- (scratches on the film)
+        surface.SetDrawColor(255, 255, 255, 30)
+        for i = 1, 3 do surface.DrawRect(math.floor((math.sin(now * (7 + i) + i * 40) * 0.5 + 0.5) * ScrW()), 0, 1, ScrH()) end
     elseif st.afraid and st.afraid > now then
         surface.SetDrawColor(40, 80, 255, 35)
         surface.DrawRect(0, 0, ScrW(), ScrH())
@@ -215,6 +293,7 @@ hook.Add("HUDPaint", "LivingCityDreamGames", function()
     if st.alive then bits[#bits + 1] = string.format("Still standing: %d", st.alive) end
     if st.meterName then bits[#bits + 1] = st.meterName end
     if st.carrying then bits[#bits + 1] = "You're carrying a rose" end
+    if st.carryName then bits[#bits + 1] = "You're carrying " .. st.carryName end
     Line(table.concat(bits, "     "), y, Color(255, 215, 120))
     if st.meter then -- (a bar: Devotion, Roses, Adoration)
         local w, bx = 300, ScrW() / 2 - 150
@@ -224,13 +303,30 @@ hook.Add("HUDPaint", "LivingCityDreamGames", function()
         surface.DrawRect(bx, y + 20, math.floor(w * math.Clamp(st.meter / 100, 0, 1)), 10)
         y = y + 14
     end
+    for _, n in ipairs(st.notes or {}) do -- (Careless Talk: what you've overheard)
+        y = y + 18
+        Line("Overheard: " .. n, y + 4, Color(200, 220, 255))
+    end
     if st.out then
         Line(st.out == "won" and "You won. Watching until it's over (wake up: C > Settings > Shared dreams)."
             or "You're out. Watching until it's over (wake up: C > Settings > Shared dreams).", y + 20, Color(200, 200, 255))
         return
     end
-    -- the big word, in the middle
-    if st.big then
+    -- the big word, in the middle (Flowers for the Liberators: NOW, as a soldier passes you)
+    local now2 = false
+    if st.marchers and Entity then
+        local mp = me:GetPos()
+        for _, i in ipairs(st.marchers) do
+            local e = Entity(i)
+            if IsValid(e) and not (e.GetNoDraw and e:GetNoDraw()) then
+                local ep = e:GetPos()
+                if math.abs(ep.x - mp.x) < (st.nowR or 70) and math.abs(ep.y - mp.y) < 400 then now2 = true break end
+            end
+        end
+    end
+    if now2 then
+        Line("NOW! Throw your flowers (jump)", ScrH() * 0.3, Color(255, 120, 190), "DermaLarge")
+    elseif st.big then
         Line(st.big, ScrH() * 0.3, st.tone == "warn" and Color(255, 200, 80) or head or PINK, "DermaLarge")
     elseif st.phase == "red" then
         Line("FREEZE!", ScrH() * 0.3, Color(255, 60, 60), "DermaLarge")

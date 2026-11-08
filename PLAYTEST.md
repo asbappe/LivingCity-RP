@@ -942,3 +942,32 @@ Notes:
   Notes:
 - [ ] **The Saviour (reworked):** the monsters hurt you (watch your health). When anyone is at 25 or less, they all freeze, she comes down from high in the zone and lands between them and you, "Stop!", then the soldiers. A Resistance player in the dream is never shot. If nobody gets that low, she comes at 80 seconds.
   Notes:
+
+## Ten more propaganda dreams (8 November)
+
+- [ ] **On the tablet:** Tablet > Tonight's dream > Happy: all ten listed as "Propaganda: ..." after the first five. Try each with two players asleep.
+  Notes:
+- [ ] **Record Harvest:** walk over a gold crate, carry it past the gold line: the quota board (floating by her) climbs. Pick up a green one: crouch throws it away; delivering it costs a life. Five crates: medal line.
+  Notes:
+- [ ] **The Stakhanov Shift:** stand on a green glow, crouch repeatedly: your norm goes up 20% a blow (40% on "Double norm!"). Stand idle 12 s: a life. 1400%: a giant figure of you appears and your name tops the board.
+  Notes:
+- [ ] **Careless Talk:** the tinted citizens look clearly red, green, blue or yellow; clues appear on screen every 14 s; crouch beside one to report. Wrong: a life and they glow green. Right: they vanish, you win.
+  Notes:
+- [ ] **The Newsreel:** the screen is black and white with flicker lines; the camera prop turns to you; type the word it asks within 5 s.
+  Notes:
+- [ ] **Two Minutes of Hate:** the "ENEMY OF THE PEOPLE" board is readable (FREEMAN and a crossed-out lambda); type "traitor! scum!"; stay quiet 15 s (a life); type "hero" (a life).
+  Notes:
+- [ ] **The Mass Games:** you start on a seat; "Picture 1: your card is GOLD (crouch)"; at FLIP! the right pose scores; the card portrait above the stands fills in row by row. Tell me if the portrait sits too high or faces the wrong way.
+  Notes:
+- [ ] **On-the-Spot Guidance:** she walks between four machines and says a line at each; then "APPLAUD!": jump or type clap. Last to applaud loses a life. As the Administrator asleep with someone: you walk the tour yourself.
+  Notes:
+- [ ] **The Scrap Drive:** pots and buckets glow blue; walk over them (three at most), into the bins (gold glow); go near the shady man at the side while carrying: a life, scrap gone.
+  Notes:
+- [ ] **Flowers for the Liberators:** soldiers march down the grey road; "NOW!" shows as one passes you; jump to throw. Step into the road: a life. Let a squad pass without throwing: a life.
+  Notes:
+- [ ] **Duck and Cover:** a big scanner (Sunny) bobs and gives tips; on the siren the tables glow; crouch beside one before the white flash. Three at one table: the farthest is caught.
+  Notes:
+- [ ] **Sizes and models:** the floating boards (quota, norm, scrap, enemy), the camera, the tables, the factory machines and the trash bins are guesses at sizes and angles: tell me what looks off or missing (an error model means a model your server lacks).
+  Notes:
+- [ ] **Music and voices:** optional: `harvest1.mp3` (or `propaganda1.mp3` for all ten) in `garrysmod/sound/livingcity/dreams/`; lines like `duck_siren1.wav` in `dreams/voice/`. Upload, FastDL sync, map change.
+  Notes:
