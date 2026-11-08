@@ -8645,6 +8645,8 @@ local wseed = LC.AddZone(W, 500, "rebel", 0)
 ----------------------------------------------------------------------
 section("Taken ground looks taken")
 local pub = nil
+-- (an earlier test's lc_public may still be held back by the "same message, not too often" pacing: start this one fresh)
+for _, p in ipairs(player.GetAll()) do LC.Net.players[p], LC.Net.busy[p] = nil, nil end
 LC.BroadcastPublic(nil)
 for i = #net.sent, 1, -1 do if net.sent[i].name == "lc_public" then pub = net.sent[i] break end end
 ok(pub and string.find(tostring(pub.data[2]), "rebel", 1, true) ~= nil, "every player is told where rebel ground and the infestation are")
@@ -9280,6 +9282,10 @@ _files[A .. "administrator/welcome1.wav"] = ""
 _files[A .. "overwatch/welcome1.wav"] = ""
 _files[A .. "overwatch/train_arrival1.wav"] = ""
 LC.AnnounceRescan()
+-- (the city's clock held at noon through the welcome: a dusk or dawn falling in the middle of it puts
+-- Overwatch on the PA, and the train below then waits out his gap; put back as it was afterwards)
+local dayZeroWas, dayPhaseWas = GetGlobal2Float("lc_day_zero", 0), LC.AtmosPhase
+LC.SetHour(12) LC.AtmosPhase = "day"
 _run(30)
 local function sentTo(name, from, bit)
     for i = (from or 0) + 1, #net.sent do
@@ -9320,6 +9326,7 @@ _run(4)
 ok(sentTo("lc_breencast", n0, "administrator/welcome1"), "the welcome follows as soon as they're off air")
 _run(15)
 LC.IntakePending = pendingWas
+SetGlobal2Float("lc_day_zero", dayZeroWas) LC.AtmosPhase = dayPhaseWas
 
 -- names as people actually make them
 _files[A .. "overwatch/lockdown_soon1.wav"] = ""
@@ -13420,6 +13427,9 @@ LC.QuestObjectivePos = function(p) return p.lcTestGoal end
 local walker = newPlayer("TrailWalker", "citizen")
 walker:SetPos(from)
 walker.lcTestGoal = goal
+-- (players earlier tests left on a quest have a trail; with the stub above they have no objective and would be
+-- sent "no trail" in the middle of these counts)
+for _, p in ipairs(player.GetAll()) do if p ~= walker then p.lcTrail = nil end end
 local now = 5000
 local n0 = sends()
 LC.TrailTick(now)
@@ -13687,6 +13697,11 @@ local errs0 = #_errors
 _walls = {}
 LC.EndEvent(true)
 _setcvar("lc_needs", 0) -- (hunger and thirst held still: the before and after must match exactly)
+-- (and the city's other clocks on them: a minute of duty, which earns XP, or the rest tick, which notes when it
+-- last looked at them, falling between the before and the after shows as a change; put back at the end)
+local dutyXPWas, restTickWas = LCF.XP.duty_per_minute, LC.RestTick
+LCF.XP.duty_per_minute = 0
+LC.RestTick = function() end
 _setcvar("lc_dream_delay", 10)
 _setcvar("lc_dream_combine", 3)
 local reloaded = 0
@@ -13765,6 +13780,7 @@ s1:SetPData("lci_inv", util.TableToJSON(LC.Inventory(s1)))
 LC.AddCredits(s1, 37)
 s1:SetPData("lce_standing", "55") s1:SetNW2Int("lce_standing", 55)
 s1:SetPData("lcf_xp_citizen", "120")
+LC.AddXP(s1, 0) -- (the rank and titles on show caught up with it, as any XP earned does: else a minute of duty catching them up later shows as a change)
 s1:SetPData("lcj_job", "factory") s1:SetNW2String("lcj_job", "factory")
 s1:SetNW2Int("lcf_rank", 2)
 s1:SetNW2Float("lcn_hunger", 63.5) s1:SetNW2Float("lcn_thirst", 41)
@@ -13914,6 +13930,7 @@ end
 player.GetAll = realGetAll
 LC.EndingReload = realReload
 _setcvar("lc_needs", 1)
+LCF.XP.duty_per_minute, LC.RestTick = dutyXPWas, restTickWas
 _setcvar("lc_dream_delay", 60)
 _setcvar("lc_dream_combine", 6)
 _files["livingcity/endings.json"] = nil
@@ -15455,13 +15472,20 @@ end)()
     local us, walls = LC.UnitSees, _walls
     LC.UnitSees = function() return true end
     _walls = {} -- (nothing left over from other tests between the guard and them)
+    -- (made wanted, noted as it happens: a metrocop at the crates can have them cuffed and marched off to the
+    -- cells within the same second, which clears it again before the loop below looks)
+    local madeWanted = false
+    hook.Add("LivingCityWanted", "TestSupplyLoiter", function(p, reason)
+        if p == nosy and reason == "Loitering at a Union supply drop" then madeWanted = true end
+    end)
     for _ = 1, 25 do
         _run(1)
         nosy:SetPos(s.crate:GetPos() + Vector(60, 0, 0)) -- (they stay put by the crates)
-        if LC.PlayerIsWanted(nosy) then break end
+        if madeWanted then break end
     end
+    hook.Remove("LivingCityWanted", "TestSupplyLoiter")
     local gd = s.guards and s.guards[1]
-    ok(LC.PlayerIsWanted(nosy) and has(nosy.chat, "Step away from the crates"), "hanging about the crates: warned twice, then wanted",
+    ok(madeWanted and has(nosy.chat, "Step away from the crates") and has(nosy.chat, "Final warning"), "hanging about the crates: warned twice, then wanted",
         string.format("guard %s hp %s warned %s alive %s hp %s drop %s cp %s", tostring(IsValid(gd)), tostring(IsValid(gd) and gd:Health()),
             tostring(nosy.lcSupplyWarn and nosy.lcSupplyWarn.n), tostring(nosy:Alive()), tostring(nosy:Health()), tostring(LC.Supply == s),
             tostring(LC.PlayerIsCP(nosy))))
@@ -16140,6 +16164,7 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     local wallsWere = _walls
     _walls = {}
     local slPos = sl:GetPos()
+    LC.VortSlaves[sl].asideAt = nil -- (it may have just stepped aside for someone else, and waits two seconds before the next)
     local walker = ents.Create("npc_citizen")
     walker:SetPos(slPos + Vector(-30, 0, 0))
     walker:Spawn()
