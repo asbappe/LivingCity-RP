@@ -40,9 +40,11 @@
     rule still applies to taking it). The city's own units patrol whether or
     not anyone takes it.
 
-    The foil hat (the lab; contraband). Put it on (F3) and sleep in it: no
-    dream reaches you, and the hat's spent once it has kept one out. It lasts
-    one in-game day if it isn't needed.
+    The foil hat (the lab; contraband). Put it on (F3) and sleep in it: it
+    keeps the night's dream out only lc_foil_chance (a third) of the time (the
+    owner, 8 November: "only stop dreaming 1/3 the time ... it's a hecking
+    tin foil hat"), decided when it goes on and not told; it's spent come the
+    dream either way. It lasts one in-game day if no dream comes.
 
     The chip (the lab: "Pull the chip"). Pulling it takes special one-time
     tools and the codes to shut it down safely: lc_chip_price (500) credits,
@@ -85,7 +87,7 @@
 
       lc_bedtime 0/1, lc_nightshift_chance (0.85), lc_chip_price (500),
       lc_chip_dreams (3), lc_chipless_sleep (90), lc_chip_notice (0.15),
-      lc_groggy_seconds (60), lc_startled_minutes (10)
+      lc_groggy_seconds (60), lc_startled_minutes (10), lc_foil_chance (0.33)
 ]]
 
 if CLIENT then return end
@@ -96,6 +98,7 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvBed     = CreateConVar("lc_bedtime", "1", FLAGS, "Every player is due in bed at the good night (21:00), whatever they slept in the day (a stimulant, once, or a unit's night shift excuses them)")
 local cvShift   = CreateConVar("lc_nightshift_chance", "0.85", FLAGS, "Chance each night that Civil Protection's board has a night shift (no lights out, a free stimulant at a CP Commissary)")
 local cvPrice   = CreateConVar("lc_chip_price", "500", FLAGS, "Credits to have the chip pulled at the Resistance lab (the one-time tools and codes; 0: not offered)")
+local cvFoil    = CreateConVar("lc_foil_chance", "0.33", FLAGS, "Chance a foil hat keeps a night's dream out (it's spent either way)")
 local cvNeed    = CreateConVar("lc_chip_dreams", "3", FLAGS, "Dreams someone must have lived through before the lab will pull their chip or make them a foil hat")
 local cvSleep   = CreateConVar("lc_chipless_sleep", "90", FLAGS, "Most seconds a night's sleep takes with no chip (no dream to wait for: they get up on their own)")
 local cvNotice  = CreateConVar("lc_chip_notice", "0.15", FLAGS, "Chance a unit checking papers or searching someone notices there's no implant signal")
@@ -141,7 +144,7 @@ hook.Add("LivingCityNewCharacter", "LivingCityBedtime", function(p)
     p:SetPData("lc_chipless", "0")
     p:SetPData("lc_dreams_endured", "0")
     p:SetPData("lc_stim_locked", "0")
-    p.lcFoilUntil = nil
+    p.lcDreamFoilUntil = nil
     p:SetNW2Bool("lc_chipless", false)
 end)
 hook.Add("PlayerSpawn", "LivingCityBedtime", function(p) p:SetNW2Bool("lc_chipless", LC.Chipless(p)) end)
@@ -169,22 +172,27 @@ end)
 -- The foil hat
 ------------------------------------------------------------------------
 
-function LC.FoilOn(p) return IsValid(p) and (p.lcFoilUntil or 0) > CurTime() end
+function LC.FoilOn(p) return IsValid(p) and (p.lcDreamFoilUntil or 0) > CurTime() end
 function LC.FoilHatUse(p, id)
     if LC.Chipless(p) then return false, "There's no chip in your head left for it to block." end
     if LC.FoilOn(p) then return false, "You've one on already." end
     if not LC.TakeItem(p, id or "foil_hat") then return false end
-    p.lcFoilUntil = CurTime() + DayLen()
+    p.lcDreamFoilUntil = CurTime() + DayLen()
+    p.lcDreamFoilWorks = math.random() < math.Clamp(cvFoil:GetFloat(), 0, 1) -- (decided now, kept quiet: about one night in three)
     p:EmitSound("physics/metal/metal_box_scrape_rough_loop1.wav", 50, 160)
-    Notice(p, "info", "Foil hat on", "It crinkles as you pull it down. Sleep in it and no dream can reach you; it's spent once it has kept one out. "
-        .. "It's contraband: don't let a unit see you in it.", 9)
+    Notice(p, "info", "Foil hat on", "It crinkles as you pull it down. Will it keep the dream out? Sometimes: about one night in three. "
+        .. "The scientist says something about field harmonics; it's a tin foil hat. It's spent come the dream either way, and it's contraband: don't let a unit see you in it.", 10)
     return true
 end
 -- Kept out of every dream: no chip, or a foil hat on (sv_livingcity_dreams.lua asks).
-function LC.DreamProof(p) return LC.Chipless(p) or LC.FoilOn(p) end
+function LC.DreamProof(p) return LC.Chipless(p) or (LC.FoilOn(p) and p.lcDreamFoilWorks == true) end
 local function FoilSpent(p)
-    p.lcFoilUntil = nil
+    p.lcDreamFoilUntil, p.lcDreamFoilWorks = nil, nil
     Notice(p, "info", "The foil hat", "Something presses at the edge of your sleep, and the foil hat crackles. It slips past you. The hat's spent.", 8)
+end
+local function FoilFailed(p)
+    p.lcDreamFoilUntil, p.lcDreamFoilWorks = nil, nil
+    Notice(p, "warn", "The foil hat", "The foil hat crackles, smokes, and does nothing at all. The dream walks straight in. (It's a tin foil hat.) It's spent.", 8)
 end
 
 ------------------------------------------------------------------------
@@ -344,7 +352,10 @@ hook.Add("LivingCityDreamStarted", "LivingCityBedtime", function(dream)
     local forced = dream.forced or dream.mood == "nightmare"
     -- the hat kept someone asleep out of it (who'd have dreamt it otherwise): spent
     for _, p in ipairs(player.GetAll()) do
-        if p.lcSleep and not p.lcDreaming and LC.FoilOn(p) and not LC.Chipless(p) and (forced or not (LC.DreamOptedOut and LC.DreamOptedOut(p))) then FoilSpent(p) end
+        if LC.FoilOn(p) and not LC.Chipless(p) then
+            if p.lcDreaming == dream.id then FoilFailed(p) -- (two nights in three: in the dream anyway)
+            elseif p.lcSleep and not p.lcDreaming then FoilSpent(p) end
+        end
     end
 end)
 

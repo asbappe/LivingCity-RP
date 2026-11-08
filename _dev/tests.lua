@@ -14424,7 +14424,19 @@ _run(3)
 ok(LC.DreamActive == nil and not b.lcDreaming and dt.timedOut, "still going after five minutes: ended, and everyone woken")
 Up(b)
 
--- the foil hat
+-- the foil hat: it works a third of the time (the owner, 8 November); first a night it doesn't
+_setcvar("lc_foil_chance", 0)
+LC.GiveItem(reb, "foil_hat", 1)
+ok(LC.FoilHatUse(reb, "foil_hat") and LC.FoilOn(reb) and not LC.DreamProof(reb), "a foil hat on, and tonight it won't work (decided as it goes on)")
+Asleep(reb, CITY)
+Asleep(b, CITY + Vector(0, 200, 0))
+local okF0, df0 = LC.DreamStart("maze", nil, false, nil, true)
+ok(okF0 and reb.lcDreaming and not LC.FoilOn(reb), "the dream walks straight in, and the hat is spent anyway")
+if okF0 then LC.DreamGameStop(df0, "admin") end
+_run(3.5)
+ok(not LC.FoilOn(reb), "(and waking doesn't put it back on)")
+Up(reb) Up(b)
+_setcvar("lc_foil_chance", 1)
 LC.GiveItem(reb, "foil_hat", 1)
 ok(LC.FoilHatUse(reb, "foil_hat") and LC.FoilOn(reb) and LC.DreamProof(reb) and not LC.HasItem(reb, "foil_hat"), "a foil hat on: no dream can reach you")
 Asleep(reb, CITY)
@@ -14434,6 +14446,7 @@ for _, p in ipairs(LC.DreamSleepers("nightmare", "maze")) do if p == reb then in
 ok(not inIt, "(asleep in it, a nightmare passes them by)")
 local okF, df = LC.DreamStart("maze", nil, false, nil, true)
 ok(okF and not reb.lcDreaming and not LC.FoilOn(reb), "the hat keeps one dream out, and is spent")
+_setcvar("lc_foil_chance", 0.33)
 if okF then LC.DreamGameStop(df, "admin") end
 _run(2.5)
 Up(reb) Up(b)

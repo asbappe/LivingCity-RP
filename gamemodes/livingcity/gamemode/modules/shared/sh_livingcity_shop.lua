@@ -47,7 +47,7 @@ LCS.Items = {
                         contraband = true, conceal = 0.7, desc = "Combine-issue, for units on double shifts. Fifteen minutes you couldn't sleep through if you tried: lights out waits, and tonight's dream goes by without you. Then the crash. One at a time: no second shot until you've slept and dreamt properly" },
     -- The lab's foil hat (the owner, 8 November; sv_livingcity_bedtime.lua): put it on and sleep in it, and no dream reaches you once.
     foil_hat        = { name = "Foil hat", model = "models/props_junk/PopCan01a.mdl", use = "foilhat", useLabel = "Put it on", kg = 0.05,
-                        contraband = true, conceal = 0.5, desc = "A cap of foil, lined with copper wire. Sleep in it and no dream can reach you. Spent once it has kept one out" },
+                        contraband = true, conceal = 0.5, desc = "A cap of foil, lined with copper wire. Sleep in it and it keeps the city's dream out, sometimes: about one night in three. The scientist mutters about field harmonics and thermodynamics; it is a tin foil hat. Spent come the dream either way" },
 
     -- Meat and fish, raw or cooked, go off after one city day (spoils = true; sv_livingcity_survival.lua,
     -- the owner, 7 November). A dead bird leaves its own kind: pigeon, crow or gull, all roast the same.
@@ -528,7 +528,7 @@ LCS.Lab = {
     { id = "crowbar", out = "crowbar", needs = { scrap = 6 }, secs = 10, desc = "Bar stock, heated and bent" },
     -- (only once you've lived through lc_chip_dreams of the city's dreams: sv_livingcity_bedtime.lua)
     { id = "foil_hat", out = "foil_hat", needs = { scrap = 1, cloth = 1 }, secs = 5, dreamGate = true,
-      desc = "A foil hat: sleep in it and no dream reaches you, once. Contraband" },
+      desc = "A foil hat: sleep in it and it keeps the dream out about one night in three. \"The physics is... complicated.\" Contraband" },
 }
 LCS.LabById = {}
 for _, r in ipairs(LCS.Lab) do LCS.LabById[r.id] = r end

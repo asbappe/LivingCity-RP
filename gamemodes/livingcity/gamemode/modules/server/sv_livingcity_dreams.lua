@@ -212,7 +212,7 @@ function LC.DreamForced(id, mood)
     mood = mood or (id and LC.DreamMood(id)) or "neutral"
     return mood == "nightmare" or (id ~= nil and LC.PropagandaDreams ~= nil and LC.PropagandaDreams[id] == true)
 end
--- (the owner, 8 November: no chip, no dreams at all; a foil hat from the lab keeps one night's out:
+-- (the owner, 8 November: no chip, no dreams at all; a foil hat from the lab keeps one night's out, a third of the time:
 -- LC.DreamProof, sv_livingcity_bedtime.lua)
 function LC.DreamSleepers(mood, id)
     local out = {}
@@ -1151,9 +1151,9 @@ timer.Create("LivingCityDreams", 1, 0, function()
                             .. "Punish the dreamers who misbehave (they glow red) with your baton.", 12)
                     else
                         Notice(p, mood == "nightmare" and "warn" or "info", "A dream is coming", MOOD_LINES[mood] .. " It's shared with everyone asleep, and you'll wake in your bed with everything you had. "
-                            .. (mood == "nightmare" and "There's no opting out of a nightmare: only a stimulant before bed (or the lab's foil hat) would have kept you out of it."
-                                or forced and "There's no opting out of this one: only a stimulant before bed (or the lab's foil hat) would have kept you out of it."
-                                or "There's no opting out: only a stimulant before bed (or the lab's foil hat) would have kept you out of it."), 12)
+                            .. (mood == "nightmare" and "There's no opting out of a nightmare: only a stimulant before bed (or, with luck, the lab's foil hat) would have kept you out of it."
+                                or forced and "There's no opting out of this one: only a stimulant before bed (or, with luck, the lab's foil hat) would have kept you out of it."
+                                or "There's no opting out: only a stimulant before bed (or, with luck, the lab's foil hat) would have kept you out of it."), 12)
                     end
                 end
             end
@@ -1318,7 +1318,7 @@ function LC.SetDreamOptOut(p, out)
     if not IsValid(p) then return end
     if p:GetPData("lc_dream_optout", "0") == "1" then p:SetPData("lc_dream_optout", "0") end
     p:SetNW2Bool("lc_dream_optout", false)
-    Notice(p, "info", "Shared dreams", "Nobody can opt out of the city's dreams. Everyone asleep dreams them; only a stimulant before bed (or the lab's foil hat) keeps one out.", 8)
+    Notice(p, "info", "Shared dreams", "Nobody can opt out of the city's dreams. Everyone asleep dreams them; only a stimulant before bed (or, with luck, the lab's foil hat) keeps one out.", 8)
 end
 
 local function DreamCommand(p, rest)

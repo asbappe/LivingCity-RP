@@ -469,7 +469,7 @@ function LC.LabChip(ply)
             p:ScreenFade(SCREENFADE.IN, Color(255, 255, 255, 255), 5, 1)
             p:SetPData("lc_chipless", "1")
             p:SetNW2Bool("lc_chipless", true)
-            p.lcFoilUntil = nil
+            p.lcDreamFoilUntil = nil
             p:SetNW2Float("lc_crippled_until", CurTime() + 180) -- (a hole in your head: slow on your feet a while)
             p:SetNW2Float("lc_bandaged_until", CurTime() + 300)
             SciSay(sci, "excellent", 65)

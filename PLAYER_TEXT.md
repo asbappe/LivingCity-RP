@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 779d149. Admin-only console messages and log lines are left out.
+Made from version 0e6b0ef. Admin-only console messages and log lines are left out.
 
-8321 lines, from 234 files.
+8323 lines, from 234 files.
 
 ## Contents
 
@@ -116,7 +116,7 @@ Made from version 779d149. Admin-only console messages and log lines are left ou
 - [custom announcements, for Overwatch and for the Administrator](#custom-announcements-for-overwatch-and-for-the-administrator-svlivingcityannouncerlua) (38)
 - [arrests in the open (the owner's playtest, 7 November)](#arrests-in-the-open-the-owners-playtest-7-november-svlivingcityarrestlua) (51)
 - [the time of day, the weather, and the city's music](#the-time-of-day-the-weather-and-the-citys-music-svlivingcityatmoslua) (1)
-- [lights out, the night shift, stimulants, the foil hat, and the chip](#lights-out-the-night-shift-stimulants-the-foil-hat-and-the-chip-svlivingcitybedtimelua) (32)
+- [lights out, the night shift, stimulants, the foil hat, and the chip](#lights-out-the-night-shift-stimulants-the-foil-hat-and-the-chip-svlivingcitybedtimelua) (34)
 - [the dead](#the-dead-svlivingcitybodieslua) (9)
 - [apartments and trade](#apartments-and-trade-svlivingcitybusinesslua) (41)
 - [rearranging a rebel camp](#rearranging-a-rebel-camp-svlivingcitycampmovelua) (3)
@@ -724,7 +724,7 @@ Made from version 779d149. Admin-only console messages and log lines are left ou
 - "Parasites also mean you'll need the toilet (press E on one). Ignore it and you soil yourself: then you need a toilet, a wash (bathtub or shower) and clean clothes, or people back away from the smell."  (text, line 82)
 - "Sleep once a day: press E on a bed at night. Without sleep you get drowsy, can't run and are weaker. A good night's sleep leaves you well rested."  (text, line 83)
 - "You're warned about six and two minutes before you're exhausted; from the first warning a bed lets you sleep. Citizens get tired in the evening and at night."  (text, line 84)
-- "Shared dreams: if the server has a dream point, the secret endings come at night as a dream for everyone asleep in a bed, about a minute after the Administrator says good night. You wake in your bed with everything you had, exactly as it was. Nobody can opt out, and nobody wakes themselves until they're out of the dream (then C > Settings > Shared dreams: wake up). A nightmare takes everyone asleep outside a Combine-only zone. Only a stimulant shot before bed, or the lab's foil hat, keeps you out of one."  (text, line 85)
+- "Shared dreams: if the server has a dream point, the secret endings come at night as a dream for everyone asleep in a bed, about a minute after the Administrator says good night. You wake in your bed with everything you had, exactly as it was. Nobody can opt out, and nobody wakes themselves until they're out of the dream (then C > Settings > Shared dreams: wake up). A nightmare takes everyone asleep outside a Combine-only zone. Only a stimulant shot before bed (or, about one night in three, the lab's foil hat) keeps you out of one."  (text, line 85)
 - "Lights out: everyone (citizens, the Resistance, Civil Protection, the Administration) is due in bed at the good night (21:00), whatever they slept in the day. You're warned six and two minutes before; after it, out of bed, your eyes keep closing until you sleep. Stay in bed until the night's dream has gone by."  (text, line 86)
 - "Every dream has at least six dreamers: when fewer players are asleep, the city's own people dream it with you. A stimulant shot keeps you up past lights out and you miss the dream, but only one: no second shot until you've slept and dreamt properly. No dream lasts more than five minutes."  (text, line 87)
 - "Asleep, hunger and thirst wait for you. Hurt in your sleep, you wake (dreaming, your body stays in your bed: an enemy's hit pulls you out). Anyone in a rebel camp attacked by a unit (or arrested) wakes everyone asleep there; a friend's shot never does. Woken early, you're groggy for a minute: blurry, and no stamina."  (text, line 88)
@@ -810,7 +810,7 @@ Made from version 779d149. Admin-only console messages and log lines are left ou
 - "Supply drops: a Combine convoy unloads a crate on the street. A soldier guards it (he warns you off twice), and two metrocops carry boxes away down the street and back: sneak in while they're away. Press E on the crate to take a load (gun parts, ammo, medicine) quietly, as long as no unit sees you doing it."  (text, line 172)
 - "Your vest (VEST on your HUD) is only charged by charge cells (made by the lab; dropped by dead units and downed scanners), batteries and chargers, or a freed vortigaunt (ask it with E). Sleeping doesn't charge it."  (text, line 173)
 - "The lab's scientist can give you a new face (300 credits): nobody is looking for it, your wanted status and BOLOs are gone, and your old Civil Standing doesn't carry over."  (text, line 174)
-- "Once you've lived through three of the city's dreams, the lab can help you out of the rest: a foil hat (sleep in it and no dream reaches you, once; contraband), or pulling the chip (500 credits: no dreams ever and a short night's sleep, but a unit may notice there's no implant signal)."  (text, line 175)
+- "Once you've lived through three of the city's dreams, the lab can help you out of the rest: a foil hat (sleep in it and it keeps the dream out about one night in three: it's a tin foil hat; contraband), or pulling the chip (500 credits: no dreams ever and a short night's sleep, but a unit may notice there's no implant signal)."  (text, line 175)
 - "Wanted, and out of every unit's sight for half a minute? They've lost you: only a unit that actually sees you will come after you."  (text, line 176)
 - "A radio jammer (from the lab or the black market) blocks Civil Protection radios, request devices and scanner reports nearby for four minutes. Units destroy them with E."  (text, line 177)
 - "Citizens' Assignments include Union work orders (streetlights, rubble, pipes) that pay in scrap, rags and chemicals."  (text, line 178)
@@ -4292,83 +4292,88 @@ Made from version 779d149. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Lived through enough dreams for the lab to help them out of the rest. True, or false and why not.
 
-- ""Not yet. You've only lived through %d of the city's dreams. Endure %d more, and come back. I need to see how it takes you first.""  (message, line 130)
+- ""Not yet. You've only lived through %d of the city's dreams. Endure %d more, and come back. I need to see how it takes you first.""  (message, line 133)
 
 > Note for you (not shown in game): No implant signal: a unit notices, now and then (once a stop: the papers and the search don't both roll).
 
-- "The unit's scanner finds no implant signal: your chip has been pulled. Only anticitizens do that."  (text, line 157)
+- "The unit's scanner finds no implant signal: your chip has been pulled. Only anticitizens do that."  (text, line 160)
 
 > Note for you (not shown in game): the game's living city searched moment
 
-- "[Civil Protection] {NoImplantText}"  (chat message, line 160)
-- "[Search] No implant signal: {Nick}'s chip has been pulled. That's an anticitizen."  (chat message, line 162)
-- "No implant signal (chip removed)"  (text, line 164)
+- "[Civil Protection] {NoImplantText}"  (chat message, line 163)
+- "[Search] No implant signal: {Nick}'s chip has been pulled. That's an anticitizen."  (chat message, line 165)
+- "No implant signal (chip removed)"  (text, line 167)
 
 > Note for you (not shown in game): The foil hat
 
-- "There's no chip in your head left for it to block."  (text, line 174)
-- "You've one on already."  (text, line 175)
-- "Foil hat on"  (on-screen notice, line 179)
-- "It crinkles as you pull it down. Sleep in it and no dream can reach you; it's spent once it has kept one out. It's contraband: don't let a unit see you in it."  (on-screen notice, line 179)
+- "There's no chip in your head left for it to block."  (text, line 177)
+- "You've one on already."  (text, line 178)
+
+> Note for you (not shown in game): part of: foil hat use
+
+- "Foil hat on"  (on-screen notice, line 183)
+- "It crinkles as you pull it down. Will it keep the dream out? Sometimes: about one night in three. The scientist says something about field harmonics; it's a tin foil hat. It's spent come the dream either way, and it's contraband: don't let a unit see you in it."  (on-screen notice, line 183)
 
 > Note for you (not shown in game): Kept out of every dream: no chip, or a foil hat on (sv_livingcity_dreams.lua asks).
 
-- "The foil hat"  (on-screen notice, line 187)
-- "Something presses at the edge of your sleep, and the foil hat crackles. It slips past you. The hat's spent."  (on-screen notice, line 187)
+- "The foil hat"  (on-screen notice, line 191)
+- "Something presses at the edge of your sleep, and the foil hat crackles. It slips past you. The hat's spent."  (on-screen notice, line 191)
+- "The foil hat"  (on-screen notice, line 195)
+- "The foil hat crackles, smokes, and does nothing at all. The dream walks straight in. (It's a tin foil hat.) It's spent."  (on-screen notice, line 195)
 
 > Note for you (not shown in game): Stimulants: one, then not again until you've slept and dreamt properly
 
-- "Your body won't take another one. You haven't slept and dreamt properly since the last (sleep through a night, and its dream if there is one)."  (text, line 248)
+- "Your body won't take another one. You haven't slept and dreamt properly since the last (sleep through a night, and its dream if there is one)."  (text, line 256)
 
 > Note for you (not shown in game): One free stimulant shot at a CP Commissary, once a night on the night shift (sv_livingcity_cpsupply.lua).
 
-- "[CP Commissary] Night shift: one stimulant shot, issued. It keeps you sharp for fifteen minutes. Then the crash."  (chat message, line 284)
+- "[CP Commissary] Night shift: one stimulant shot, issued. It keeps you sharp for fifteen minutes. Then the crash."  (chat message, line 292)
 
 > Note for you (not shown in game): part of: build
 
-- "Night shift: walk to patrol stop %d of %d, %s"  (message, line 317)
-- "Night shift"  (title, line 321)
-- "Keep order while the city sleeps: walk the patrol stops through the night. On a night shift there's no lights out for you, and a CP Commissary issues you one stimulant shot to stay sharp. The city's own units patrol too."  (description, line 322)
-- "Dispatch needs eyes on the streets tonight. Long hours, quiet streets. Stay awake."  (text, line 324)
+- "Night shift: walk to patrol stop %d of %d, %s"  (message, line 325)
+- "Night shift"  (title, line 329)
+- "Keep order while the city sleeps: walk the patrol stops through the night. On a night shift there's no lights out for you, and a CP Commissary issues you one stimulant shot to stay sharp. The city's own units patrol too."  (description, line 330)
+- "Dispatch needs eyes on the streets tonight. Long hours, quiet streets. Stay awake."  (text, line 332)
 
 > Note for you (not shown in game): the game's living city quest accepted moment
 
-- "Night shift"  (on-screen notice, line 334)
-- "You're on the night shift: no lights out for you tonight. A CP Commissary will issue you a stimulant shot (once a night)."  (on-screen notice, line 334)
+- "Night shift"  (on-screen notice, line 342)
+- "You're on the night shift: no lights out for you tonight. A CP Commissary will issue you a stimulant shot (once a night)."  (on-screen notice, line 342)
 
 > Note for you (not shown in game): part of: wake sleeper
 
-- "You wake with a start"  (on-screen notice, line 374)
-- "Something woke you."  (text, line 374)
-- "You're groggy: slow on your feet for a minute."  (on-screen notice, line 374)
+- "You wake with a start"  (on-screen notice, line 385)
+- "Something woke you."  (text, line 385)
+- "You're groggy: slow on your feet for a minute."  (on-screen notice, line 385)
 
 > Note for you (not shown in game): the sleeping body hit: out of the dream, and they take the hit once they're up
 
-- "Something hit you in your sleep. You wake in your bed, hurt."  (text, line 449)
+- "Something hit you in your sleep. You wake in your bed, hurt."  (text, line 460)
 
 > Note for you (not shown in game): the game's living city dream woke moment
 
-- "You wake with a start"  (on-screen notice, line 463)
-- "Something woke you."  (text, line 463)
-- "You're groggy: slow on your feet for a minute."  (on-screen notice, line 463)
+- "You wake with a start"  (on-screen notice, line 474)
+- "Something woke you."  (text, line 474)
+- "You're groggy: slow on your feet for a minute."  (on-screen notice, line 474)
 
 > Note for you (not shown in game): Rebel ground under attack: everyone asleep on it wakes (players, out of a dream too, and the camp's own).
 
-- "Trouble in the camp! Gunfire, shouting: someone's under attack."  (text, line 484)
+- "Trouble in the camp! Gunfire, shouting: someone's under attack."  (text, line 495)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "No chip, no dreams: you wake on your own, rested."  (chat message, line 548)
+- "No chip, no dreams: you wake on your own, rested."  (chat message, line 559)
 
 > Note for you (not shown in game): Pulling the chip (the lab's window: sv_livingcity_lab.lua)
 
-- "He only works for the Resistance."  (text, line 559)
-- ""Pull the chip? Not here. Not without the proper tools.""  (text, line 561)
-- ""It's out already. There's nothing left in there to take.""  (text, line 562)
+- "He only works for the Resistance."  (text, line 570)
+- ""Pull the chip? Not here. Not without the proper tools.""  (text, line 572)
+- ""It's out already. There's nothing left in there to take.""  (text, line 573)
 
 > Note for you (not shown in game): part of: chip surgery ready
 
-- "%d credits for the tools and the codes, and you don't have them."  (message, line 565)
+- "%d credits for the tools and the codes, and you don't have them."  (message, line 576)
 
 ## the dead (sv_livingcity_bodies.lua)
 
@@ -6191,7 +6196,7 @@ Made from version 779d149. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): Players: opting out, and waking up (no opting out any more: the owner, 8 November. Asking just says so.)
 
 - "Shared dreams"  (on-screen notice, line 1321)
-- "Nobody can opt out of the city's dreams. Everyone asleep dreams them; only a stimulant before bed (or the lab's foil hat) keeps one out."  (on-screen notice, line 1321)
+- "Nobody can opt out of the city's dreams. Everyone asleep dreams them; only a stimulant before bed (or, with luck, the lab's foil hat) keeps one out."  (on-screen notice, line 1321)
 
 > Note for you (not shown in game): part of: dream command
 
@@ -17122,7 +17127,7 @@ Made from version 779d149. Admin-only console messages and log lines are left ou
 
 - "Foil hat"  (name, line 49)
 - "Put it on"  (pocket button, line 49)
-- "A cap of foil, lined with copper wire. Sleep in it and no dream can reach you. Spent once it has kept one out"  (description, line 50)
+- "A cap of foil, lined with copper wire. Sleep in it and it keeps the city's dream out, sometimes: about one night in three. The scientist mutters about field harmonics and thermodynamics; it is a tin foil hat. Spent come the dream either way"  (description, line 50)
 
 > Note for you (not shown in game): Meat and fish, raw or cooked, go off after one city day (spoils = true; sv_livingcity_survival.lua, the owner, 7 November). A dead bird leaves its own kind: pigeon, crow or gull, all roast the same.
 
@@ -17420,7 +17425,7 @@ Made from version 779d149. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): (only once you've lived through lc_chip_dreams of the city's dreams: sv_livingcity_bedtime.lua)
 
-- "A foil hat: sleep in it and no dream reaches you, once. Contraband"  (description, line 531)
+- "A foil hat: sleep in it and it keeps the dream out about one night in three. "The physics is... complicated." Contraband"  (description, line 531)
 
 ## shared.lua (shared.lua)
 
