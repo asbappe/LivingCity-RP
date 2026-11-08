@@ -902,7 +902,7 @@ Notes:
 - [ ] **NPC cap:** a fresh server shows `lc_npc_budget` 100.
   Notes:
 
-## The Administrator's dreams (8 November)
+## Propaganda dreams (8 November)
 
 - [ ] **Her music:** put a song or two in `garrysmod/sound/livingcity/dreams/administrator/`, upload, FastDL sync, change map. During one of her dreams it should play, looping, and stop when you wake.
   Notes:
@@ -926,4 +926,13 @@ Notes:
 - [ ] **Frame rate:** with job games on (sweeping, carts, triage), the frame rate should be steadier than before; nothing should look different.
 - [ ] **Daytime curfew announcement:** it now says a unit warns you three times, then you're wanted.
 - [ ] **Pose Recorder 2:** make a 3-keyframe wave, "Play what I'm making on me" (loop, once, hold, speed 2): another player sees it, a late joiner too; C > right click an NPC > Play animation; Mirror them on a right-arm pose: the left arm does the same on its own side.
+- [ ] **Song names (changed):** songs now go flat in `garrysmod/sound/livingcity/dreams/`, named for their codeword: `admire1.mp3` (the three admiring dreams), `saviour_horde1.mp3` (The Saviour before she comes), `saviour1.mp3` (after her soldiers arrive), `quiz1.mp3`. Anything in `dreams/administrator/` still plays as admire.
+  Notes:
+- [ ] **Her voice lines:** record `saviour_stop1.wav` ("Stop!"), `saviour_soldiers1.wav` ("Come, my soldiers. Protect them."), `saviour_safe1.wav`, and optionally `adore_hello`, `roses_hello`, `mirror_hello`, `quiz_hello`, `quiz_q1` to `quiz_q10`, `quiz_end`, into `garrysmod/sound/livingcity/dreams/voice/`. A `.txt` with the same name sets the subtitle. Check each plays with its words on screen.
+  Notes:
+- [ ] **The Saviour:** the dead come in from the edges about 4 seconds in; you have only your hands. About 30 seconds in, a light, and she comes down glowing; "Stop!" freezes them; "Come, my soldiers" brings 8 Combine soldiers who shoot every one; then everyone still standing is saved. Check the glow, the column of light and the music switch.
+  Notes:
+- [ ] **The Loyalty Quiz:** ten questions on screen (and in her voice, if recorded). Type answers in chat: "the Combine", "obey", "the Union". First right answer counts double; "Freeman" costs a life. Six Loyalty wins.
+  Notes:
+- [ ] **Starring:** as the Administrator, go to bed with at least one other player asleep, then pick a propaganda dream. You should be the giant on the pedestal (your look is your gaze in Kneel Before Her), or wait unseen in the sky and come down yourself in The Saviour. Type in chat: the dreamers see it on screen; the city does not. Wake up: a giant figure of you takes over. Check the tablet switch (Tonight's dream > Star in propaganda dreams yourself) turns it off and on.
   Notes:

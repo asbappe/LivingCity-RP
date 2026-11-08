@@ -278,7 +278,7 @@ hook.Add("PlayerSay", "LivingCityICChat", function(ply, text, team)
     local raw = string.Trim(text or "")
     if raw == "" then return end
     if LC.RadioRaisedSay and LC.RadioRaisedSay(ply, raw) then return "" end -- (the radio's up: it went over the band)
-    if LC.AdmireSay and LC.AdmireSay(ply, raw) then return "" end -- (a compliment in the Administrator's dream: it stays in the dream)
+    if LC.PropagandaSay and LC.PropagandaSay(ply, raw) then return "" end -- (said in a propaganda dream: it stays in the dream)
     local lower = string.lower(raw)
 
     -- always available, whatever the chat mode

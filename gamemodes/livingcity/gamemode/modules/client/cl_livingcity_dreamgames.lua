@@ -5,9 +5,12 @@
       screen. The Patrol Maze's tokens glow in the corridors (golden ones pulse), and the screen
       goes cold blue while the officers are afraid. Freeze, Citizen says when to stop, in red.
       Out of lives, or won: wake up now, or watch the rest until it's over.
-      The Administrator's dreams (sv_livingcity_admiredreams.lua) go pink: a soft spotlight
-      glow, hearts drifting up from her, glowing roses, a meter (Devotion, Roses, Adoration), and
-      her music, if the owner put any in sound/livingcity/dreams/administrator/.
+      Propaganda dreams (sv_livingcity_propagandadreams.lua): the admiring ones go pink (hearts
+      drifting up from her, glowing roses, a meter: Devotion, Roses, Adoration); The Saviour goes
+      gold, with a heavenly glow round her and a column of light as she comes down; the quiz goes
+      red and gold. Her lines come up at the bottom of the screen, with her recording if there is
+      one; the music plays if the owner put any in sound/livingcity/dreams/. The Administrator,
+      starring, is told so.
 ]]
 
 LC_CL = LC_CL or {}
@@ -16,7 +19,7 @@ local st -- the game you're in, as the server last said
 local choice -- the "wake up, or watch?" window
 
 local function CloseChoice() if IsValid(choice) then choice:Remove() end choice = nil end
--- Her music (the Administrator's dreams), looping until the dream's over for you.
+-- The music (propaganda dreams), looping until the dream's over for you.
 local song
 local function StopSong() if IsValid(song) then song:Stop() end song = nil end
 local function PlaySong(path, want)
@@ -32,6 +35,20 @@ local function PlaySong(path, want)
     end)
 end
 LC_CL.DreamGameSongStop = StopSong
+-- Her lines: the words at the bottom of the screen, and her recording.
+local sub, voice
+local function StopVoice() if IsValid(voice) then voice:Stop() end voice = nil end
+local function SayLine(t)
+    sub = { who = t.who, text = t.text or "", til = CurTime() + math.Clamp(3 + #(t.text or "") / 18, 4, 9) }
+    if not t.snd or t.snd == "" or not (sound and sound.PlayFile) then return end
+    StopVoice()
+    sound.PlayFile("sound/" .. t.snd, "noblock", function(ch)
+        if not IsValid(ch) then return end
+        if not st then ch:Stop() return end
+        voice = ch
+        ch:Play()
+    end)
+end
 -- Out of it (or won): wake now, or watch the rest.
 function LC_CL.DreamGameChoice(t)
     CloseChoice()
@@ -70,6 +87,10 @@ net.Receive("lc_dreamgame", function()
         st.got = {}
         StopSong()
         if t.song then PlaySong(t.song, st) end
+    elseif t.k == "line" then
+        if st then SayLine(t) end
+    elseif t.k == "music" then
+        if st then PlaySong(t.song, st) end
     elseif t.k == "got" then
         if st and st.got then st.got[t.i] = true st.left = math.max(0, (st.left or 1) - 1) end
     elseif t.k == "state" then
@@ -78,8 +99,9 @@ net.Receive("lc_dreamgame", function()
         if st then st.out = t.how or "out" end
         LC_CL.DreamGameChoice(t)
     elseif t.k == "stop" then
-        st = nil
+        st, sub = nil, nil
         StopSong()
+        StopVoice()
         CloseChoice()
     end
 end)
@@ -88,17 +110,43 @@ function LC_CL.DreamGame() return st end
 local glow = Material("sprites/light_glow02_add")
 local BLUE, GOLD = Color(120, 210, 255), Color(255, 205, 70)
 local PINK, ROSE = Color(255, 120, 190), Color(255, 40, 90)
+local HALO, PROP = Color(255, 240, 200), Color(255, 70, 60)
+-- Where she is: her figure or the star (as an entity, when you can see it), else where she was.
+local function HerPos()
+    local e = st.herEnt and Entity and Entity(st.herEnt)
+    if IsValid(e) then return e:GetPos(), (e.GetModelScale and e:GetModelScale() or 1) end
+    if st.her then return Vector(st.her[1], st.her[2], st.her[3] - 66), 1 end
+    return nil
+end
 
 hook.Add("PostDrawTranslucentRenderables", "LivingCityDreamGames", function(_, sky)
     if sky or not st then return end
     render.SetMaterial(glow)
-    -- her dreams: hearts drifting up from her, and the roses
-    if st.theme == "admire" then
-        if st.her then
+    -- The Saviour: a heavenly glow round her, and a column of light from above
+    if st.theme == "glory" and st.light then
+        local at, sc = HerPos()
+        if at then
             local now = CurTime()
+            local mid = at + Vector(0, 0, 40 * sc)
+            local s = 260 + 40 * math.sin(now * 3)
+            render.DrawSprite(mid, s, s, HALO)
+            render.DrawSprite(mid, s * 0.5, s * 0.5, Color(255, 255, 255))
+            for i = 1, 10 do render.DrawSprite(at + Vector(0, 0, i * 90), 140, 140, Color(255, 235, 180, 120)) end
+            if DynamicLight then
+                local d = DynamicLight(4242)
+                if d then d.pos, d.r, d.g, d.b, d.brightness, d.decay, d.size, d.dietime = mid, 255, 235, 190, 4, 1000, 900, now + 0.2 end
+            end
+        end
+    end
+    -- the admiring dreams: hearts drifting up from her, and the roses
+    if st.theme == "admire" then
+        local at, sc = HerPos()
+        if at then
+            local now = CurTime()
+            local head = at + Vector(0, 0, 66 * sc)
             for i = 1, 10 do
                 local f = (now * 0.25 + i / 10) % 1
-                local p = Vector(st.her[1] + math.sin(i * 2.3 + now) * 60, st.her[2] + math.cos(i * 1.7 + now) * 60, st.her[3] - 80 + f * 260)
+                local p = Vector(head.x + math.sin(i * 2.3 + now) * 60, head.y + math.cos(i * 1.7 + now) * 60, head.z - 80 + f * 260)
                 local sz = 22 * (1 - f) + 6
                 render.DrawSprite(p, sz, sz, Color(PINK.r, PINK.g, PINK.b, math.floor(255 * (1 - f))))
             end
@@ -126,12 +174,19 @@ end
 hook.Add("HUDPaint", "LivingCityDreamGames", function()
     if not st then return end
     local me = LocalPlayer()
-    if not IsValid(me) or not me:GetNW2Bool("lc_dreaming", false) then st = nil StopSong() CloseChoice() return end
+    if not IsValid(me) or not me:GetNW2Bool("lc_dreaming", false) then st, sub = nil, nil StopSong() StopVoice() CloseChoice() return end
     local now = CurTime()
     -- the screen's mood
     local admire = st.theme == "admire"
+    local head = admire and PINK or (st.theme == "glory" and GOLD) or (st.theme == "propaganda" and PROP) or nil
     if admire then
         surface.SetDrawColor(255, 90, 170, 22 + math.floor(8 * math.sin(now * 1.5)))
+        surface.DrawRect(0, 0, ScrW(), ScrH())
+    elseif st.theme == "glory" and st.light then
+        surface.SetDrawColor(255, 235, 190, 26)
+        surface.DrawRect(0, 0, ScrW(), ScrH())
+    elseif st.theme == "propaganda" then
+        surface.SetDrawColor(200, 20, 20, 14)
         surface.DrawRect(0, 0, ScrW(), ScrH())
     elseif st.afraid and st.afraid > now then
         surface.SetDrawColor(40, 80, 255, 35)
@@ -141,10 +196,18 @@ hook.Add("HUDPaint", "LivingCityDreamGames", function()
         surface.DrawRect(0, 0, ScrW(), ScrH())
     end
     local y = 34
-    Line(st.name or "A nightmare", y, admire and PINK or Color(255, 120, 120), "DermaLarge")
+    Line(st.name or "A nightmare", y, head or Color(255, 120, 120), "DermaLarge")
+    -- her lines, at the bottom
+    if sub and now < sub.til then
+        Line((sub.who and sub.who ~= "" and (sub.who .. ": ") or "") .. sub.text, ScrH() * 0.78, HALO, "DermaLarge")
+    end
     y = y + 34
     Line(st.goal or "", y, Color(225, 225, 225))
     y = y + 18
+    if st.star then
+        Line("You're the star of this dream. What you say in chat, the dreamers see.", y, GOLD)
+        y = y + 18
+    end
     local left = math.max(0, math.floor((st.ends or now) - now))
     local bits = { string.format("Time left: %d:%02d", math.floor(left / 60), left % 60) }
     if (st.maxLives or 1) > 1 then bits[#bits + 1] = string.format("Lives: %d of %d", st.lives or 0, st.maxLives) end
@@ -168,7 +231,7 @@ hook.Add("HUDPaint", "LivingCityDreamGames", function()
     end
     -- the big word, in the middle
     if st.big then
-        Line(st.big, ScrH() * 0.3, st.tone == "warn" and Color(255, 200, 80) or PINK, "DermaLarge")
+        Line(st.big, ScrH() * 0.3, st.tone == "warn" and Color(255, 200, 80) or head or PINK, "DermaLarge")
     elseif st.phase == "red" then
         Line("FREEZE!", ScrH() * 0.3, Color(255, 60, 60), "DermaLarge")
     elseif st.phase == "green" then

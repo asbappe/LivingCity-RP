@@ -885,6 +885,12 @@ local function Tick()
         for _, p in ipairs(players) do
             if Strayed(g, p) then ToStart(g, p, 1) end
         end
+        -- the star (the Administrator playing herself) woke up: the dream carries on without her
+        if g.star and not (IsValid(g.star) and g.star.lcDreaming == g.dream.id) then
+            local was = g.star
+            g.star = nil
+            if g.def.starGone then g.def.starGone(g, was) end
+        end
         g.def.tick(g, dt, InPlay(g))
         -- the time's up, or nobody's left in it
         if now >= g.ends then
@@ -900,6 +906,11 @@ local function Tick()
                     t.k, t.lives = "state", s.lives
                     Send(g, t, p)
                 end
+            end
+            if IsValid(g.star) then
+                local t = g.def.state(g, g.star) or {}
+                t.k = "state"
+                Send(g, t, g.star)
             end
         end
     end)
@@ -917,6 +928,9 @@ function LC.DreamGameStart(dream)
     local g = { def = def, id = def.id, dream = dream, ents = {}, pl = {}, won = {}, t0 = CurTime(), last = CurTime(), watchAt = dream.pos + Vector(0, 0, 350) }
     g.ends = g.t0 + def.secs
     dream.game = g
+    local players = LC.DreamersOf and LC.DreamersOf(dream) or dream.list
+    -- the Administrator, asleep with the others, may star in it herself (sv_livingcity_propagandadreams.lua)
+    if def.starring and LC.DreamStarOf then g.star = LC.DreamStarOf(players) end
     local ok, err = pcall(def.build, g, dream)
     if not ok or err == false then
         for _, e in ipairs(g.ents) do if IsValid(e) then e:Remove() end end
@@ -924,18 +938,29 @@ function LC.DreamGameStart(dream)
         if not ok and LC.Error then LC.Error("dream game build", err) end
         return false, "The dream couldn't be built here."
     end
-    local players = LC.DreamersOf and LC.DreamersOf(dream) or dream.list
     g.started = #players
     local hello = def.hello and def.hello(g) or {}
-    for i, p in ipairs(players) do
-        local at, yaw = def.spawn(g, p, i)
-        g.pl[p] = { lives = def.lives, start = at, yaw = yaw }
-        p.lcDreamGame = def.id
-        ToStart(g, p, 3)
-        local t = { k = "start", id = def.id, name = def.name, goal = def.goal, ends = g.ends, lives = def.lives, maxLives = def.lives }
-        for k, v in pairs(hello) do t[k] = v end
-        Send(g, t, p)
-        Notice(p, "warn", def.name, def.goal, 10)
+    local n = 0
+    for _, p in ipairs(players) do
+        if p == g.star then
+            p.lcDreamGame, p.lcDreamStar = def.id, true
+            def.starring(g, p)
+            local t = { k = "start", id = def.id, name = def.name, goal = def.starGoal or def.goal, ends = g.ends, lives = 1, maxLives = 1, star = true }
+            for k, v in pairs(hello) do t[k] = v end
+            Send(g, t, p)
+            Notice(p, "info", def.name .. ": you're the star", def.starGoal or def.goal, 10)
+        else
+            n = n + 1
+            local i = n
+            local at, yaw = def.spawn(g, p, i)
+            g.pl[p] = { lives = def.lives, start = at, yaw = yaw }
+            p.lcDreamGame = def.id
+            ToStart(g, p, 3)
+            local t = { k = "start", id = def.id, name = def.name, goal = def.goal, ends = g.ends, lives = def.lives, maxLives = def.lives }
+            for k, v in pairs(hello) do t[k] = v end
+            Send(g, t, p)
+            Notice(p, "warn", def.name, def.goal, 10)
+        end
     end
     timer.Create("LivingCityDreamGames", 0, 0, Tick)
     Log("info", string.format("Dream game: %s, %d dreamers, %d props", def.id, #players, #g.ents))
@@ -949,6 +974,11 @@ function LC.DreamGameLeave(p, dream)
     if g and g.pl[p] and not g.pl[p].done then
         g.pl[p].done, g.pl[p].how = true, g.pl[p].how or "woke"
         Send(g, { k = "stop", how = "woke" }, p)
+    end
+    if p.lcDreamStar then
+        p.lcDreamStar = nil
+        if g and g.star == p then Send(g, { k = "stop", how = "woke" }, p) end
+        if LC.DreamStarDone then LC.DreamStarDone(p) end
     end
     p.lcDreamGame = nil
     if p.lcEndFrozen or (p.IsFrozen and p:IsFrozen()) then p:Freeze(false) end
@@ -994,6 +1024,7 @@ function LC.DreamGameStop(dream, why)
     for p, s in pairs(g.pl) do
         if IsValid(p) and not s.done then Send(g, { k = "stop", how = why or "over" }, p) end
     end
+    if IsValid(g.star) then Send(g, { k = "stop", how = why or "over" }, g.star) end
     for _, e in ipairs(g.ents) do if IsValid(e) then e:Remove() end end
     g.ents = {}
     Log("info", string.format("Dream game over: %s (%s), %d won", g.id, tostring(why or "over"), #g.won))
@@ -1001,7 +1032,7 @@ function LC.DreamGameStop(dream, why)
 end
 
 -- A game dream counts as busy too (only one dream at a time).
--- The building blocks, for dreams written in other files (sv_livingcity_admiredreams.lua).
+-- The building blocks, for dreams written in other files (sv_livingcity_propagandadreams.lua).
 LC.DreamGameKit = { Block = Block, Actor = Actor, Animate = Animate, Floor = Floor, WallAt = WallAt, Snd = Snd, Puff = Puff,
     Send = Send, InPlay = InPlay, ToStart = ToStart, Done = Done, Hit = Hit, ValidModel = ValidModel,
     PLATE8 = PLATE8, PLATE8_S = PLATE8_S, PLATE4 = PLATE4, PLATE4_S = PLATE4_S }

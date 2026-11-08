@@ -299,6 +299,10 @@ function LC.AdminDo(ply, what, arg, target)
         if not LC.DreamAdminPick then return false end
         return LC.DreamAdminPick(ply, arg)
     end
+    if what == "dreamstar" then -- (star in propaganda dreams herself: sv_livingcity_propagandadreams.lua)
+        if not LC.DreamStarSet then return false end
+        return LC.DreamStarSet(ply, arg == "on")
+    end
     if what == "event" then
         if not EVENTS[arg] then return false end
         local ok, why = Cool(ply, "event", 600)
@@ -388,7 +392,8 @@ function LC.OpenAdminOffice(ply)
     for _, p in ipairs(player.GetAll()) do if p ~= ply then people[#people + 1] = { idx = p:EntIndex(), name = Name(p), wanted = LC.PlayerIsWanted and LC.PlayerIsWanted(p) or false } end end
     -- the Combine's manpower (sv_livingcity_manpower.lua), as F2 > Combine manpower shows it (the owner, 7 November)
     local manpower = LC.ManpowerReadout and LC.ManpowerReadout("combine") or nil
-    LC.SendCompressed("lc_admin_office", { jobs = jobs, people = people, dream = LC.DreamOffice and LC.DreamOffice() or nil, manpower = manpower }, { ply })
+    LC.SendCompressed("lc_admin_office", { jobs = jobs, people = people, dream = LC.DreamOffice and LC.DreamOffice() or nil, manpower = manpower,
+        dreamStar = LC.DreamStarWants and (LC.DreamStarWants(ply) and "on" or "off") or nil }, { ply })
 end
 
 ------------------------------------------------------------------------

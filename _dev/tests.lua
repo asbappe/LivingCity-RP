@@ -14274,8 +14274,8 @@ _walls = savedWalls
 ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 DreamGameTests()
-local function AdmireDreamTests()
-section("Shared dreams: the Administrator's dreams you play (kneel, roses, mirror)")
+local function PropagandaDreamTests()
+section("Shared dreams: propaganda dreams you play (kneel, roses, mirror, the saviour, the quiz; the Administrator starring)")
 local errs0 = #_errors
 local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
 _walls = {}
@@ -14297,55 +14297,70 @@ local function Asleep(p, at)
 end
 local function Both() Asleep(a, CITY) Asleep(b, CITY + Vector(0, 200, 0)) a.crouch, b.crouch = nil, nil end
 local function Look(p, g) p.aim = (g.herHead - p:EyePos()):GetNormalized() end
+local function Sent(p, k, test)
+    for _, m in ipairs(net.sent) do
+        local t = m.data[1]
+        if m.name == "lc_dreamgame" and (m.to == p or (type(m.to) == "table" and table.HasValue(m.to, p))) and type(t) == "table" and t.k == k and (not test or test(t)) then return t end
+    end
+    return nil
+end
+local function Said(g, cue) for _, c in ipairs(g.said or {}) do if c == cue then return true end end return false end
 player.GetAll = function() return { adm, a, b } end
 local dp = LC.AddPoint(DREAM, 0, "dream")
 
--- on the tablet, under Happy (of course)
+-- on the tablet, under Happy (of course), as propaganda
 local off = LC.DreamOffice()
 local found = {}
-for _, e in ipairs(off.groups[1].endings) do if e.game then found[e.id] = e.name end end
-ok(found.adore == "Kneel Before Her" and found.roses == "Roses for Her" and found.mirror == "Mirror, Mirror",
-    "the Administrator's three dreams are on her tablet, under Happy")
-ok(LC.DreamMoods("adore=nightmare").adore == "nightmare", "(lc_dream_moods can label them otherwise)")
-ok(LC.AdmireModel() == adm:GetModel() or adm:GetModel() == nil, "she appears with the Administrator's own model when she's on")
--- her music: any song in sound/livingcity/dreams/administrator/
-_files["sound/livingcity/dreams/administrator/smooth_sax.mp3"] = "x"
-_files["sound/livingcity/dreams/administrator/readme.txt"] = "x"
-local songs = LC.AdmireSongs()
-ok(#songs == 1 and songs[1] == "livingcity/dreams/administrator/smooth_sax.mp3", "her music is whatever song is in sound/livingcity/dreams/administrator/ (any name)")
+for _, e in ipairs(off.groups[1].endings) do if e.game and e.propaganda then found[e.id] = e.name end end
+ok(found.adore == "Propaganda: Kneel Before Her" and found.roses == "Propaganda: Roses for Her" and found.mirror == "Propaganda: Mirror, Mirror"
+    and found.saviour == "Propaganda: The Saviour" and found.quiz == "Propaganda: The Loyalty Quiz", "the five propaganda dreams are on her tablet, under Happy, as Propaganda")
+ok(LC.DreamMoods("saviour=nightmare").saviour == "nightmare", "(lc_dream_moods can label them otherwise)")
+ok(LC.AdminDo(adm, "dream", "saviour") and LC.DreamQueued().id == "saviour", "she can choose one for tonight")
+LC.DreamForget()
+-- the music, named for its codeword in sound/livingcity/dreams/ (and the first folder still counts)
+local MEDIA = { "sound/livingcity/dreams/admire1.mp3", "sound/livingcity/dreams/saviour2.ogg", "sound/livingcity/dreams/saviour_horde1.mp3",
+    "sound/livingcity/dreams/readme.txt", "sound/livingcity/dreams/administrator/smooth_sax.mp3",
+    "sound/livingcity/dreams/voice/saviour_stop1.wav", "sound/livingcity/dreams/voice/saviour_stop1.txt" }
+for _, f in ipairs(MEDIA) do _files[f] = "x" end
+_files["sound/livingcity/dreams/voice/saviour_stop1.txt"] = "Halt, foul things!"
+local adm1 = LC.PropagandaSongs("admire")
+ok(#adm1 == 2 and adm1[1] == "livingcity/dreams/admire1.mp3" and adm1[2] == "livingcity/dreams/administrator/smooth_sax.mp3", "admire songs: named admire, or anything in the first folder")
+ok(LC.PropagandaSongs("saviour")[1] == "livingcity/dreams/saviour2.ogg" and #LC.PropagandaSongs("saviour") == 1 and LC.PropagandaSongs("saviour_horde")[1] == "livingcity/dreams/saviour_horde1.mp3",
+    "The Saviour's two songs: saviour_horde before she comes, saviour after (the longest name that fits)")
+local vsnd, vtext = LC.PropagandaVoice("saviour_stop")
+local nsnd, ntext = LC.PropagandaVoice("saviour_soldiers")
+ok(vsnd == "livingcity/dreams/voice/saviour_stop1.wav" and vtext == "Halt, foul things!" and nsnd == nil and ntext == "Come, my soldiers. Protect them.",
+    "her voice: a recording named for its line (its .txt the subtitle); no recording, the words alone")
 
 -- Kneel Before Her
 Both()
 local okA, d1 = LC.DreamStart("adore", adm, false, nil, true)
 local g = okA and d1.game
-ok(okA and g and g.id == "adore" and IsValid(g.her) and #g.ents > 8, "Kneel Before Her is built: the hall, her on a pedestal, kneeling admirers")
-local hello
-for _, m in ipairs(net.sent) do if m.name == "lc_dreamgame" and m.to == a and type(m.data[1]) == "table" and m.data[1].k == "start" and m.data[1].id == "adore" then hello = m.data[1] end end
-ok(hello and hello.theme == "admire" and hello.song == songs[1], "the dreamer's screen goes pink, and her music plays")
+ok(okA and g and g.id == "adore" and IsValid(g.her) and not g.star and #g.ents > 8, "Kneel Before Her is built: the hall, a giant figure of her on a pedestal (she's awake), kneeling admirers")
+local hello = Sent(a, "start", function(t) return t.id == "adore" end)
+ok(hello and hello.theme == "admire" and table.HasValue(adm1, hello.song), "the dreamer's screen goes pink, and an admire song plays")
 ok(LC.DreamCanWake(b), "a Happy dream: anyone may wake from it (or opt out beforehand)")
-_run(3.5) -- (the start's safety has passed)
+_run(3.5)
+ok(Said(g, "adore_hello"), "(she greets them)")
 local s = g.pl[a]
--- she looks straight at them; standing: a life gone
-g.gazeAt, g.gazeWant = CurTime() + 60, nil
+g.gazeAt = CurTime() + 60
 g.herYaw = math.deg(math.atan2(a:GetPos().y - g.herBase.y, a:GetPos().x - g.herBase.x))
 g.gazeWant = g.herYaw
 _run(0.2)
 ok(s.lives == 2 and a:GetPos():Distance(s.start) < 1, "she catches you standing in her gaze: a life gone, back to the back", s.lives)
--- kneeling and gazing up at her: Devotion fills, and full is a win
 a.crouch = true
 Look(a, g)
 g.herYaw = math.deg(math.atan2(a:GetPos().y - g.herBase.y, a:GetPos().x - g.herBase.x))
 g.gazeWant = g.herYaw
 s.safe = 0
 _run(1)
-ok((s.devotion or 0) > 5 and s.lives == 2, "kneeling and gazing up at her fills your Devotion (and she doesn't mind)", s.devotion)
+ok((s.devotion or 0) > 5 and s.lives == 2, "kneeling and gazing up at her fills your Devotion", s.devotion)
 s.devotion = 99.9
 _run(0.2)
 ok(s.how == "won" and a.lcGameWatching, "full Devotion: she notices you (and you may watch the rest)")
 LC.DreamGameStop(d1, "test")
 _run(2.5)
-ok(not a.lcDreaming and LC.DreamActive == nil, "when it's over everyone wakes")
-ok(not LC.Unbroken(a) and not LC.DreamScarred(a), "her dreams leave nothing behind (no nightmare rewards or scars)")
+ok(not a.lcDreaming and LC.DreamActive == nil and not LC.Unbroken(a) and not LC.DreamScarred(a), "over: everyone wakes, and her dreams leave nothing behind")
 
 -- Roses for Her
 Both()
@@ -14389,9 +14404,9 @@ hook.Run("PlayerSay", b, "so radiant")
 ok(gm.pl[b].score == 1, "a word someone else used first counts once", gm.pl[b].score)
 hook.Run("PlayerSay", a, "radiant radiant")
 ok(sm.score == 4, "saying your own again counts for nothing")
-local said = false
-for _, m in ipairs(b.chat or {}) do if string.find(m, "flawless", 1, true) then said = true end end
-ok(said, "(the others in the dream hear it)")
+local heard = false
+for _, m in ipairs(b.chat or {}) do if string.find(m, "flawless", 1, true) then heard = true end end
+ok(heard, "(the others in the dream hear it)")
 hook.Run("PlayerSay", b, "a bit old though")
 ok(gm.pl[b].lives == 2, "an insult costs a life", gm.pl[b].lives)
 hook.Run("PlayerSay", a, "/gorgeous")
@@ -14400,14 +14415,115 @@ hook.Run("PlayerSay", a, "gorgeous divine goddess perfect")
 ok(sm.how == "won", "enough adoration: the fairest of them all", sm.score)
 LC.DreamGameStop(d3, "test")
 _run(2.5)
-ok(LC.DreamActive == nil and not a.lcDreaming and not b.lcDreaming, "(and it's over)")
 
-_files["sound/livingcity/dreams/administrator/smooth_sax.mp3"] = nil
-_files["sound/livingcity/dreams/administrator/readme.txt"] = nil
+-- The Saviour
+Both()
+local okS, d4 = LC.DreamStart("saviour", adm, false, nil, true)
+local gs = okS and d4.game
+local T = LC.SaviourTimes
+ok(okS and gs and gs.phase == "calm" and not IsValid(gs.her), "The Saviour is built: a ruined street, quiet, and no sign of her yet")
+local hs = Sent(a, "start", function(t) return t.id == "saviour" end)
+ok(hs and hs.theme == "glory" and hs.song == "livingcity/dreams/saviour_horde1.mp3", "(the dread music first)")
+gs.pl[a].safe, gs.pl[b].safe = CurTime() + 1000, CurTime() + 1000
+_run(7)
+ok(gs.phase == "horde" and LC.SaviourAlive(gs) >= 2, "the dead come in from the edges", LC.SaviourAlive(gs))
+local m1
+for _, m in ipairs(gs.mons) do if m.alive then m1 = m break end end
+gs.pl[a].safe = 0
+m1.e:SetPos(a:GetPos())
+_run(0.1)
+ok(gs.pl[a].lives == 2, "caught by one: a life gone, back to the others (you have nothing to fight with)", gs.pl[a].lives)
+gs.pl[a].safe = CurTime() + 1000
+gs.t0 = CurTime() - T.descend
+_run(0.2)
+ok(gs.phase == "descend" and IsValid(gs.her), "the light breaks through, and she comes down from the sky")
+gs.t0 = CurTime() - T.land
+_run(0.2)
+ok(gs.phase == "stop" and Said(gs, "saviour_stop") and gs.her:GetPos():Distance(gs.land) < 1, "she lands: \"Stop!\"")
+local frozen = m1.alive and m1.e:GetPos() or nil
+for _, m in ipairs(gs.mons) do if m.alive then frozen = { m, m.e:GetPos() } break end end
+_run(1)
+ok(frozen and frozen[1].e:GetPos():Distance(frozen[2]) < 1, "and the dead stop where they are")
+gs.t0 = CurTime() - T.soldiers
+_run(0.2)
+ok(gs.phase == "soldiers" and #gs.soldiers == 8 and Said(gs, "saviour_soldiers"), "\"Come, my soldiers. Protect them.\" Eight Combine soldiers rush in")
+ok(Sent(a, "music", function(t) return t.song == "livingcity/dreams/saviour2.ogg" end), "(and the heroic music)")
+_run(25)
+ok(LC.SaviourAlive(gs) == 0 and gs.pl[a].how == "won" and gs.pl[b].how == "won", "her soldiers kill every one; everyone still standing is saved")
+ok(LC.DreamActive == nil and not a.lcDreaming and not LC.Unbroken(a), "(then it's over: they wake, with nothing but the memory)")
+
+-- The Loyalty Quiz
+Both()
+local okQ, d5 = LC.DreamStart("quiz", adm, false, nil, true)
+local gq = okQ and d5.game
+ok(okQ and gq and IsValid(gq.her), "The Loyalty Quiz is built: her podium, the banners, the audience")
+_run(6.5)
+ok(gq.qi == 1 and Said(gq, "quiz_q1"), "she asks the first question (on screen, in her voice if recorded)")
+hook.Run("PlayerSay", a, "The Combine, of course!")
+hook.Run("PlayerSay", b, "the administrator")
+hook.Run("PlayerSay", a, "the combine")
+ok(gq.pl[a].score == 2 and gq.pl[b].score == 1, "right answers earn Loyalty, the first double (and once a question)", gq.pl[a].score .. " " .. gq.pl[b].score)
+hook.Run("PlayerSay", b, "Freeman will save us")
+ok(gq.pl[b].lives == 2, "thoughtcrime costs a life", gq.pl[b].lives)
+gq.qNext = CurTime()
+_run(0.2)
+hook.Run("PlayerSay", a, "we obey")
+gq.qNext = CurTime()
+_run(0.2)
+hook.Run("PlayerSay", a, "from the union")
+ok(gq.pl[a].how == "won", "six Loyalty: a model citizen", gq.pl[a].score)
+gq.qi, gq.qNext = #LC.QuizQuestions, CurTime()
+_run(0.3)
+ok(Said(gq, "quiz_end") and gq.pl[b].how == "time", "after the last question, the rest wake as the broadcast ends")
+_run(2.5)
+ok(LC.DreamActive == nil, "(and it's over)")
+
+-- Starring: the Administrator asleep with the others plays her part herself
+Both()
+Asleep(adm, CITY + Vector(0, -200, 0))
+local okT, d6 = LC.DreamStart("adore", adm, false, nil, true)
+local gt = okT and d6.game
+ok(okT and gt.star == adm and not gt.pl[adm] and not IsValid(gt.her) and adm:GetModelScale() > 1.5 and adm.movetype == MOVETYPE_NONE,
+    "asleep with the others, she stars herself: giant, on her pedestal, not one of the players")
+ok(Sent(adm, "start", function(t) return t.star end), "(her screen tells her she's the star)")
+_run(3.5)
+local yawToA = math.deg(math.atan2(a:GetPos().y - gt.herBase.y, a:GetPos().x - gt.herBase.x))
+adm.eyeang = Angle(0, yawToA, 0)
+gt.pl[a].safe = 0
+_run(0.2)
+ok(math.abs(gt.herYaw - yawToA) < 1 and gt.pl[a].lives == 2, "where she looks is her gaze: she catches someone standing", gt.pl[a].lives)
+ok(hook.Run("PlayerSay", adm, "Kneel, all of you.") == "" and Sent(b, "line", function(t) return t.text == "Kneel, all of you." and t.who == "The Administrator" end),
+    "what she says goes to the dreamers' screens (and not the city)")
+ok(LC.DreamWakeAsked(adm), "she wakes")
+_run(2.5)
+ok(not gt.star and IsValid(gt.her) and adm:GetModelScale() == 1 and not adm.lcDreaming and b.lcDreaming, "a giant figure of her takes her place; she's her own size again")
+LC.DreamGameStop(d6, "test")
+_run(2.5)
+-- (the star waits above in The Saviour, unseen, and comes down herself)
+Both()
+Asleep(adm, CITY + Vector(0, -200, 0))
+local okU, d7 = LC.DreamStart("saviour", adm, false, nil, true)
+local gu = okU and d7.game
+ok(okU and gu.star == adm and adm.nodraw and adm:GetPos().z > gu.top + 150, "in The Saviour she waits in the sky, unseen")
+gu.pl[a].safe, gu.pl[b].safe = CurTime() + 1000, CurTime() + 1000
+gu.t0 = CurTime() - T.descend
+_run(0.2)
+ok(not adm.nodraw and not IsValid(gu.her), "the light comes, and she comes down herself (no figure)")
+gu.t0 = CurTime() - T.land
+_run(0.2)
+ok(adm:GetPos():Distance(gu.land) < 1 and adm.movetype == MOVETYPE_WALK, "she lands among them, free to walk")
+LC.DreamGameStop(d7, "test")
+_run(2.5)
+ok(not adm.lcDreaming and adm:GetModelScale() == 1 and not adm.nodraw, "(waking, all of that is undone)")
+-- (her tablet's switch)
+ok(LC.AdminDo(adm, "dreamstar", "off") and LC.DreamStarOf({ adm, a, b }) == nil, "her tablet can turn starring off: a giant figure stars instead")
+ok(LC.AdminDo(adm, "dreamstar", "on") and LC.DreamStarOf({ adm, a, b }) == adm and LC.DreamStarOf({ adm }) == nil, "and on again (alone, she dreams it like anyone)")
+
+for _, f in ipairs(MEDIA) do _files[f] = nil end
 LC.DreamForget()
 LC.RemovePoint(dp)
 for _, p in ipairs({ adm, a, b }) do
-    p.crouch, p.aim = nil, nil
+    p.crouch, p.aim, p.eyeang = nil, nil, nil
     if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
     p:SetPos(Vector(-121000, -121000, 0))
 end
@@ -14416,7 +14532,7 @@ _setcvar("lc_needs", 1)
 _walls = savedWalls
 ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
-AdmireDreamTests()
+PropagandaDreamTests()
 
 -- Cigarettes, alcohol and stimulants (sv_livingcity_vices.lua), and who a nightmare takes
 function ViceTests()

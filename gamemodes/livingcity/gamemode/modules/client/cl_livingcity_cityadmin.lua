@@ -111,6 +111,12 @@ net.Receive("lc_admin_office", function()
                     end
                 end
                 dm:AddOption("No dream tonight", function() Act("dream", "none") end):SetIcon("icon16/cancel.png")
+                -- propaganda dreams: star in them herself (when she's asleep for one with someone else), or a giant figure of her
+                dm:AddSpacer()
+                local on = t.dreamStar ~= "off"
+                dm:AddOption(on and "Star in propaganda dreams yourself: on (click to use a giant figure of you)"
+                    or "Star in propaganda dreams yourself: off (click to star in them)", function() Act("dreamstar", on and "off" or "on") end)
+                    :SetIcon(on and "icon16/star.png" or "icon16/user.png")
             end
         end
     end
