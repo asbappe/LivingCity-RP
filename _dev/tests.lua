@@ -5463,7 +5463,9 @@ cst.leaveAt = nil
 cst.profile = { job = "maintenance" }
 _setcvar("lc_npc_work", 1)
 _setcvar("lc_npc_work_pct", 100)
+do local rhythm = LC.RhythmWorkMul LC.RhythmWorkMul = nil -- (the hour of day the run has reached can make a worker skip a turn: not what this checks)
 ok(LC.NPCWorkChoose(crew, cst, CurTime()) and cst.npcWork and cst.npcWork.id == "power", "the city's own maintenance crew goes to it")
+LC.RhythmWorkMul = rhythm end
 for _ = 1, 60 do if not t:GetNW2Bool("lc_down", true) then break end _run(0.5) end
 ok(not t:GetNW2Bool("lc_down", true), "and brings the power back")
 crew:Remove()
@@ -19062,10 +19064,14 @@ function RebelEventTests()
     for _ = 1, 60 do _run(1) if not op or op.arrivedAt then break end end
     ok(op and op.arrivedAt and #op.units >= 2, "units were sent to stop them", op and #op.units)
     for _, u in ipairs(op and op.units or {}) do if IsValid(u) then u:SetHealth(0) end end -- (a Resistance player saw to them)
-    for _ = 1, 120 do _run(1) if not op or op.done then break end end
-    ok(op and op.done and atDrop and Said("resistance", "supply drop"), "and \"they got into the supply drop\" only with fighters standing at it",
-        tostring(op and op.done) .. " " .. tostring(atDrop) .. " " .. tostring(op and op.progress) .. " " .. table.concat(radio, " | "))
+    for _ = 1, 120 do _run(1) if not op or op.achieved then break end end
+    ok(op and op.achieved and atDrop and Said("resistance", "supply drop"), "and \"they got into the supply drop\" only with fighters standing at it",
+        tostring(op and op.achieved) .. " " .. tostring(atDrop) .. " " .. tostring(op and op.progress) .. " " .. table.concat(radio, " | "))
     hook.Remove("LivingCityRebelOpDone", "RebelEventTests")
+    -- (it used to be marked done without ending, so LC.Skirmish stayed set and no raid or sweep ever came again)
+    if op then op.ends = math.min(op.ends or math.huge, CurTime() + 5) end
+    for _ = 1, 30 do _run(1) if not op or op.done then break end end
+    ok(op and op.done and LC.Skirmish ~= op, "and then it ends like any other, so raids and sweeps can come again", tostring(op and op.done))
     Clear(LC.Skirmish)
     LC.Supply = nil
     _setcvar("lc_rebel_ops", 0)
@@ -19288,6 +19294,7 @@ function CrabHuntTests() -- (the owner, 7 November: Resistance jobs to bring raw
         if IsValid(r.cache) and r.cache ~= cache then saved[r.cache] = r.cache.lcStock r.cache.lcStock = 99 end
     end
     local hunter = newPlayer("CrabHunter", "resistance", nil, 900)
+    _runtimers() -- (the spawn's own placing runs a moment later: let it, or it moves the hunter mid-test)
     hunter:SetPos(R0 + Vector(0, 300, 0))
 
     section("Headcrab hunt: offered more while the crate is low, always when it's empty")

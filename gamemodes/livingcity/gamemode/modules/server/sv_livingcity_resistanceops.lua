@@ -518,7 +518,7 @@ local NEED = { heist = 30, breakout = 15, screen = 15, ambush = 20, supply = 15 
 local triedBreakout = setmetatable({}, { __mode = "k" })
 
 local function Achieve(sk)
-    sk.done = true
+    sk.achieved = true -- (not sk.done: that is EndSkirmish's own flag, and setting it here meant the skirmish never ended, so no raid or sweep came again)
     local purpose, data = sk.purpose, sk.data or {}
     if purpose == "heist" then
         if data.key and LC.TerminalReadyAt then LC.TerminalReadyAt[data.key] = CurTime() + 20 * 60 end
@@ -552,7 +552,7 @@ local function OpTick(now)
     local sk = LC.Skirmish
     if not sk then return end
     NPCDoors(sk, now)
-    if not sk.purpose or sk.done then return end
+    if not sk.purpose or sk.done or sk.achieved then return end
     local near = 0
     for _, npc in ipairs(sk.rebels or {}) do
         if IsValid(npc) and npc:Health() > 0 and npc:GetPos():DistToSqr(sk.target) < 280 * 280 then near = near + 1 end
