@@ -13934,6 +13934,7 @@ local CITY, DREAM = Vector(152000, -152000, 0), Vector(212000, -212000, 0)
 local adm = newPlayer("ADAdmin", "admin")
 local a = newPlayer("ADA", "citizen")
 local b = newPlayer("ADB", "citizen")
+local c = newPlayer("ADC", "resistance")
 _run(3)
 local function Asleep(p, at)
     p:SetPos(at)
@@ -13953,7 +13954,7 @@ local function Sent(p, k, test)
     return nil
 end
 local function Said(g, cue) for _, c in ipairs(g.said or {}) do if c == cue then return true end end return false end
-player.GetAll = function() return { adm, a, b } end
+player.GetAll = function() return { adm, a, b, c } end
 local dp = LC.AddPoint(DREAM, 0, "dream")
 
 -- on the tablet, under Happy (of course), as propaganda
@@ -13980,6 +13981,16 @@ local nsnd, ntext = LC.PropagandaVoice("saviour_soldiers")
 ok(vsnd == "livingcity/dreams/voice/saviour_stop1.wav" and vtext == "Halt, foul things!" and nsnd == nil and ntext == "Come, my soldiers. Protect them.",
     "her voice: a recording named for its line (its .txt the subtitle); no recording, the words alone")
 
+-- not skippable: opting out doesn't keep you out; being Unbroken does
+Both()
+b:SetPData("lc_dream_optout", "1")
+a:SetNW2Float("lc_unbroken_until", CurTime() + 600)
+local who = LC.DreamSleepers(LC.DreamMood("adore"), "adore")
+ok(table.HasValue(who, b) and not table.HasValue(who, a), "no opting out of a propaganda dream (only Unbroken keeps you out: the Combine can't get into your head)")
+ok(not table.HasValue(LC.DreamSleepers("happy", "bus"), b), "(a Happy ending as a dream can still be opted out of)")
+b:SetPData("lc_dream_optout", "0")
+a:SetNW2Float("lc_unbroken_until", 0)
+
 -- Kneel Before Her
 Both()
 local okA, d1 = LC.DreamStart("adore", adm, false, nil, true)
@@ -13987,7 +13998,7 @@ local g = okA and d1.game
 ok(okA and g and g.id == "adore" and IsValid(g.her) and not g.star and #g.ents > 8, "Kneel Before Her is built: the hall, a giant figure of her on a pedestal (she's awake), kneeling admirers")
 local hello = Sent(a, "start", function(t) return t.id == "adore" end)
 ok(hello and hello.theme == "admire" and table.HasValue(adm1, hello.song), "the dreamer's screen goes pink, and an admire song plays")
-ok(LC.DreamCanWake(b), "a Happy dream: anyone may wake from it (or opt out beforehand)")
+ok(not LC.DreamCanWake(b) and not LC.DreamWakeAsked(b) and b.lcDreaming and b:GetNW2Bool("lc_dream_forced", false), "not skippable: nobody wakes themselves from a propaganda dream while they're still in it")
 _run(3.5)
 ok(Said(g, "adore_hello"), "(she greets them)")
 local s = g.pl[a]
@@ -13995,7 +14006,7 @@ g.gazeAt = CurTime() + 60
 g.herYaw = math.deg(math.atan2(a:GetPos().y - g.herBase.y, a:GetPos().x - g.herBase.x))
 g.gazeWant = g.herYaw
 _run(0.2)
-ok(s.lives == 2 and a:GetPos():Distance(s.start) < 1, "she catches you standing in her gaze: a life gone, back to the back", s.lives)
+ok(s.lives == 2 and a:GetPos():Distance(s.start) < 1 and LC.PropagandaOffences(a) == 1, "she catches you standing in her gaze: a life gone, back to the back, and an offence", s.lives)
 a.crouch = true
 Look(a, g)
 g.herYaw = math.deg(math.atan2(a:GetPos().y - g.herBase.y, a:GetPos().x - g.herBase.x))
@@ -14005,10 +14016,12 @@ _run(1)
 ok((s.devotion or 0) > 5 and s.lives == 2, "kneeling and gazing up at her fills your Devotion", s.devotion)
 s.devotion = 99.9
 _run(0.2)
-ok(s.how == "won" and a.lcGameWatching, "full Devotion: she notices you (and you may watch the rest)")
+ok(s.how == "won" and a.lcGameWatching and LC.DreamCanWake(a), "full Devotion: she notices you (and, out of it, you may wake or watch the rest)")
+local stA, hpA0 = LC.Standing(a), a:Health()
 LC.DreamGameStop(d1, "test")
 _run(2.5)
-ok(not a.lcDreaming and LC.DreamActive == nil and not LC.Unbroken(a) and not LC.DreamScarred(a), "over: everyone wakes, and her dreams leave nothing behind")
+ok(not a.lcDreaming and LC.DreamActive == nil and not LC.Unbroken(a) and not LC.DreamScarred(a) and a:GetMaxHealth() == 100, "over: everyone wakes; no health lost, no scar")
+ok(LC.Standing(a) == stA - 3, "the offence costs 3 loyalty points (Civil Standing) as they wake", LC.Standing(a) - stA)
 
 -- Roses for Her
 Both()
@@ -14057,48 +14070,73 @@ for _, m in ipairs(b.chat or {}) do if string.find(m, "flawless", 1, true) then 
 ok(heard, "(the others in the dream hear it)")
 hook.Run("PlayerSay", b, "a bit old though")
 ok(gm.pl[b].lives == 2, "an insult costs a life", gm.pl[b].lives)
+gm.pl[b].safe = 0
+hook.Run("PlayerSay", b, "the combine are fascists")
+gm.pl[b].safe = 0
+hook.Run("PlayerSay", b, "pigs")
+ok(gm.pl[b].how == "out" and select(1, LC.PropagandaOffences(b)) == 3 and select(2, LC.PropagandaOffences(b)), "so does an insult to the Combine; every life gone, out of it", gm.pl[b].lives)
+local stB = LC.Standing(b)
 hook.Run("PlayerSay", a, "/gorgeous")
 ok(sm.score == 4 and a.lcDreaming, "(a command isn't a compliment: commands still go where they always did)")
 hook.Run("PlayerSay", a, "gorgeous divine goddess perfect")
 ok(sm.how == "won", "enough adoration: the fairest of them all", sm.score)
 LC.DreamGameStop(d3, "test")
 _run(2.5)
+ok(LC.Standing(b) == stB - 14, "waking: 3 loyalty points an offence, 5 more for being thrown out (here 14)", LC.Standing(b) - stB)
 
 -- The Saviour
 Both()
+Asleep(c, CITY + Vector(0, -200, 0))
+local stS = LC.Standing(a)
+a:SetHealth(100) b:SetHealth(100) c:SetHealth(100)
 local okS, d4 = LC.DreamStart("saviour", adm, false, nil, true)
 local gs = okS and d4.game
 local T = LC.SaviourTimes
 ok(okS and gs and gs.phase == "calm" and not IsValid(gs.her), "The Saviour is built: a ruined street, quiet, and no sign of her yet")
 local hs = Sent(a, "start", function(t) return t.id == "saviour" end)
 ok(hs and hs.theme == "glory" and hs.song == "livingcity/dreams/saviour_horde1.mp3", "(the dread music first)")
-gs.pl[a].safe, gs.pl[b].safe = CurTime() + 1000, CurTime() + 1000
+gs.pl[a].safe, gs.pl[b].safe, gs.pl[c].safe = CurTime() + 1000, CurTime() + 1000, CurTime() + 1000
 _run(7)
 ok(gs.phase == "horde" and LC.SaviourAlive(gs) >= 2, "the dead come in from the edges", LC.SaviourAlive(gs))
 local m1
 for _, m in ipairs(gs.mons) do if m.alive then m1 = m break end end
 gs.pl[a].safe = 0
+a:SetHealth(60)
 m1.e:SetPos(a:GetPos())
+m1.next = 0
 _run(0.1)
-ok(gs.pl[a].lives == 2, "caught by one: a life gone, back to the others (you have nothing to fight with)", gs.pl[a].lives)
-gs.pl[a].safe = CurTime() + 1000
-gs.t0 = CurTime() - T.descend
+ok(a:Health() < 60 and a:Health() > 25 and gs.phase == "horde" and not IsValid(gs.her), "a claw: it hurts (in the dream), and nobody comes yet", a:Health())
+a:SetHealth(30)
+m1.next = 0
+m1.e:SetPos(a:GetPos())
 _run(0.2)
-ok(gs.phase == "descend" and IsValid(gs.her), "the light breaks through, and she comes down from the sky")
-gs.t0 = CurTime() - T.land
-_run(0.2)
-ok(gs.phase == "stop" and Said(gs, "saviour_stop") and gs.her:GetPos():Distance(gs.land) < 1, "she lands: \"Stop!\"")
-local frozen = m1.alive and m1.e:GetPos() or nil
+ok(a:Health() <= 25 and gs.phase == "descend" and IsValid(gs.her) and gs.her:GetPos().z > gs.top + 200, "down to 25: everything freezes, and she comes down from near the top of the zone", a:Health())
+local frozen
 for _, m in ipairs(gs.mons) do if m.alive then frozen = { m, m.e:GetPos() } break end end
+local hpFrozen = a:Health()
+m1.next = 0
 _run(1)
-ok(frozen and frozen[1].e:GetPos():Distance(frozen[2]) < 1, "and the dead stop where they are")
-gs.t0 = CurTime() - T.soldiers
-_run(0.2)
-ok(gs.phase == "soldiers" and #gs.soldiers == 8 and Said(gs, "saviour_soldiers"), "\"Come, my soldiers. Protect them.\" Eight Combine soldiers rush in")
+ok(frozen and frozen[1].e:GetPos():Distance(frozen[2]) < 1 and a:Health() == hpFrozen, "the dead stop where they are (and hurt nobody now)")
+_run(T.land)
+ok(gs.phase == "stop" and Said(gs, "saviour_stop") and gs.her:GetPos():Distance(gs.land) < 1, "she lands between them and the citizens: \"Stop!\"")
+_run(T.soldiers - T.land + 0.3)
+ok(gs.phase == "soldiers" and #gs.soldiers == 8 and Said(gs, "saviour_soldiers"), "\"Come, my soldiers. Protect them.\" Eight Combine soldiers swarm in", tostring(gs.phase) .. " " .. #gs.soldiers .. " " .. tostring(Said(gs, "saviour_soldiers")) .. " alive=" .. LC.SaviourAlive(gs))
 ok(Sent(a, "music", function(t) return t.song == "livingcity/dreams/saviour2.ogg" end), "(and the heroic music)")
+local hpC = c:Health()
 _run(25)
-ok(LC.SaviourAlive(gs) == 0 and gs.pl[a].how == "won" and gs.pl[b].how == "won", "her soldiers kill every one; everyone still standing is saved")
-ok(LC.DreamActive == nil and not a.lcDreaming and not LC.Unbroken(a), "(then it's over: they wake, with nothing but the memory)")
+ok(LC.SaviourAlive(gs) == 0 and gs.pl[a].how == "won" and gs.pl[b].how == "won" and gs.pl[c].how == "won", "her soldiers kill every one; everyone still standing is saved")
+ok(c:Health() == hpC, "they only ever shoot the monsters: the rebel among the dreamers is never touched")
+ok(LC.DreamActive == nil and not a.lcDreaming and a:Health() == 100 and LC.Standing(a) == stS, "(then it's over: they wake with their health as it was before the dream, and no loyalty lost for being hurt)", a:Health())
+-- (nobody low enough? she comes anyway, in time)
+Both()
+local okS2, d4b = LC.DreamStart("saviour", adm, false, nil, true)
+local gs2 = d4b.game
+gs2.pl[a].safe, gs2.pl[b].safe = CurTime() + 1000, CurTime() + 1000
+gs2.t0 = CurTime() - T.latest
+_run(0.2)
+ok(okS2 and gs2.phase == "descend", "nobody down to 25 by 80 seconds: she comes anyway")
+LC.DreamGameStop(d4b, "test")
+_run(2.5)
 
 -- The Loyalty Quiz
 Both()
@@ -14112,7 +14150,7 @@ hook.Run("PlayerSay", b, "the administrator")
 hook.Run("PlayerSay", a, "the combine")
 ok(gq.pl[a].score == 2 and gq.pl[b].score == 1, "right answers earn Loyalty, the first double (and once a question)", gq.pl[a].score .. " " .. gq.pl[b].score)
 hook.Run("PlayerSay", b, "Freeman will save us")
-ok(gq.pl[b].lives == 2, "thoughtcrime costs a life", gq.pl[b].lives)
+ok(gq.pl[b].lives == 2 and LC.PropagandaOffences(b) == 1, "thoughtcrime costs a life (and loyalty)", gq.pl[b].lives)
 gq.qNext = CurTime()
 _run(0.2)
 hook.Run("PlayerSay", a, "we obey")
@@ -14154,11 +14192,11 @@ local okU, d7 = LC.DreamStart("saviour", adm, false, nil, true)
 local gu = okU and d7.game
 ok(okU and gu.star == adm and adm.nodraw and adm:GetPos().z > gu.top + 150, "in The Saviour she waits in the sky, unseen")
 gu.pl[a].safe, gu.pl[b].safe = CurTime() + 1000, CurTime() + 1000
-gu.t0 = CurTime() - T.descend
+_run(T.horde + 0.5)
+a:SetHealth(20)
 _run(0.2)
-ok(not adm.nodraw and not IsValid(gu.her), "the light comes, and she comes down herself (no figure)")
-gu.t0 = CurTime() - T.land
-_run(0.2)
+ok(gu.phase == "descend" and not adm.nodraw and not IsValid(gu.her), "someone's close to the end: she comes down herself (no figure)")
+_run(T.land + 0.3)
 ok(adm:GetPos():Distance(gu.land) < 1 and adm.movetype == MOVETYPE_WALK, "she lands among them, free to walk")
 LC.DreamGameStop(d7, "test")
 _run(2.5)
@@ -14170,7 +14208,7 @@ ok(LC.AdminDo(adm, "dreamstar", "on") and LC.DreamStarOf({ adm, a, b }) == adm a
 for _, f in ipairs(MEDIA) do _files[f] = nil end
 LC.DreamForget()
 LC.RemovePoint(dp)
-for _, p in ipairs({ adm, a, b }) do
+for _, p in ipairs({ adm, a, b, c }) do
     p.crouch, p.aim, p.eyeang = nil, nil, nil
     if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
     p:SetPos(Vector(-121000, -121000, 0))

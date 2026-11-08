@@ -28,11 +28,11 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 2026-11-08 (part 3): **Propaganda dreams** (renamed from "the Administrator's dreams" at the owner's word), `sv_livingcity_propagandadreams.lua`: Kneel Before Her (`adore`), Roses for Her (`roses`), Mirror, Mirror (`mirror`), The Saviour (`saviour`: monsters, she descends glowing, "Stop!", Combine soldiers kill them all; times in `LC.SaviourTimes`), The Loyalty Quiz (`quiz`: `LC.QuizQuestions`, thoughtcrime words). All Happy; listed on the tablet as "Propaganda: ...".
-- Starring: the Administrator asleep with someone else plays herself (`LC.DreamStarOf`, PData `lc_dream_star`, tablet toggle via `LC.AdminDo(ply, "dreamstar", "on"/"off")`). Generic support in `sv_livingcity_dreamgames.lua` (`g.star`, `def.starring`, `def.starGone`, state sent to her too); `LC.DreamStarDone` undoes her size on waking.
-- Music: `sound/livingcity/dreams/<codeword>N.ext` (admire, saviour_horde, saviour, quiz; old `dreams/administrator/` = admire). Voice: `sound/livingcity/dreams/voice/<cue>N.wav` + `.txt` subtitle (`LC.PropagandaCues`). The owner will record lines and import songs.
-- Chat in the mirror and quiz (and the star's) stays in the dream: `LC.PropagandaSay`, called first by the IC chat hook in `sv_livingcity_rp.lua`.
-- Earlier today: nightmare rewards (`sv_livingcity_vices.lua`); the six vice items are in the core snapshot (owner approved).
-- Tests: `PropagandaDreamTests` (58), `DreamGameTests` (38), `DreamTests` (60), `DreamMoodTests` (26) pass; client smoke passes. Nothing checked in game: PLAYTEST.md, last section (sizes, angles and the glow are guesses).
-- More propaganda dream ideas offered to the owner (not built): see the end of this chat or ask.
-- `TODO.md`: Combine sleep in the head-clamp prop (later). Full suite last run 2026-11-02.
+- 2026-11-08 (parts 3 and 4): **Propaganda dreams**, `sv_livingcity_propagandadreams.lua`: Kneel Before Her (`adore`), Roses for Her (`roses`), Mirror, Mirror (`mirror`), The Saviour (`saviour`), The Loyalty Quiz (`quiz`). Listed under Happy as "Propaganda: ...".
+- Not skippable: `LC.DreamForced(id, mood)` in `sv_livingcity_dreams.lua` (no opt-out, no waking until out; Unbroken spared; the star may wake). NW2 `lc_dream_forced` for the screen texts.
+- Disloyalty: `Offend` (each life lost) counts in a table by SteamID64 (not on the player: the snapshot restore wipes player fields); on `LivingCityDreamWoke` 3 points each, +5 if out, max 20, via `LC.AddStanding`. No health loss.
+- The Saviour: monsters do real (dream-only) damage; rescue at 25 health or 80 s (`LC.SaviourTimes`); she lands between monsters and dreamers; soldiers only target monster props.
+- Starring: Administrator asleep with someone else plays herself (tablet toggle, PData `lc_dream_star`); generic `g.star` support in `sv_livingcity_dreamgames.lua`.
+- Music `sound/livingcity/dreams/<codeword>N.ext`; voice `sound/livingcity/dreams/voice/<cue>N.wav` + `.txt`.
+- Tests: `PropagandaDreamTests` (65; one flaky failure seen once in 15 runs on "Eight Combine soldiers swarm in", the check now prints details), `DreamGameTests`, `DreamTests`, `DreamMoodTests`, `ViceTests` pass; client smoke passes. Nothing checked in game (PLAYTEST.md, last sections).
+- Next, each in a fresh chat: The Battle Line and vortigaunt dream warfare (designs at the end of `TODO.md`), or the other propaganda ideas offered in chat.

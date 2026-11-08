@@ -15,8 +15,10 @@
       course she'd call them that; listed as "Propaganda: ..."), each built at the dream point out
       of plain props like the nightmares (sv_livingcity_dreamgames.lua). Vanity, flattery and
       heroics, nothing explicit. Everything else about a dream is as it always was: only those
-      asleep dream it, nothing they do counts, and they wake in their bed with everything they had.
-      A Happy dream can be opted out of, and woken from.
+      asleep dream it, and they wake in their bed with everything they had. But they can't be
+      skipped (the owner: "I don't want these to be skippable"): no opting out, no waking yourself
+      until you're out of it, like a nightmare (LC.DreamForced, sv_livingcity_dreams.lua); only a
+      stimulant before bed, or being Unbroken, keeps you out of one.
 
         Kneel Before Her (adore): her gaze sweeps the hall. Kneel (crouch) and look up at her to
           fill your Devotion, faster while she's looking your way. Anyone she catches standing in
@@ -26,9 +28,12 @@
         Mirror, Mirror (mirror): kneel and compliment her in chat. A word nobody else has used yet
           is worth double; your own again is worth nothing; an insult costs a life.
         The Saviour (saviour): zombies, headcrabs and antlions come for the dreamers, who have
-          nothing to fight with. After half a minute a light breaks through, she descends glowing,
-          "Stop!" (they freeze), "Come, my soldiers. Protect them." Combine soldiers rush in to the
-          heroic music and kill every one of them. Still standing when it's over: saved.
+          nothing to fight with, and they hurt (in the dream). The moment any dreamer is down to 25
+          health (or after 80 seconds), every one of them freezes where it is, and she descends
+          glowing from near the top of the dream zone to land between them and the citizens:
+          "Stop!", then "Come, my soldiers. Protect them." Combine soldiers swarm in to the heroic
+          music and kill every one. They only ever shoot the monsters, never a dreamer (rebels
+          included). Still standing when it's over: saved.
         The Loyalty Quiz (quiz): she asks ten questions ("Who keeps you safe at night?"); answer in
           chat. Right answers earn Loyalty, the first to answer earns double; thoughtcrime
           ("Freeman", "Lambda", "revolution") costs a life. Six Loyalty wins.
@@ -53,8 +58,11 @@
       saviour_stop, saviour_soldiers, saviour_safe, quiz_hello, quiz_q1 to quiz_q10, quiz_end. No
       recording: the subtitle alone (LC.PropagandaCues has every line's words).
 
-      Waking: a line on screen and nothing else (no credits, no standing, no rewards or penalties:
-      it's only a dream).
+      Waking: a line on screen. Disloyalty costs (the owner: "loss of loyalty and a bit of civil
+      standing", not health): each offence in the dream (caught standing in her gaze or before her,
+      an insult to her or the Combine, thoughtcrime) is 3 loyalty points, and being thrown out of
+      it (every life gone) 5 more, at most 20 a dream, taken from Civil Standing (loyalty points are
+      Civil Standing) as they wake. Nothing for winning, and no health lost.
 ]]
 
 if CLIENT then return end
@@ -71,6 +79,10 @@ local function Notice(p, kind, title, text, secs)
     if not IsValid(p) then return end
     if LC.Notice then LC.Notice(p, kind, title, text, secs) else p:ChatPrint(title .. ": " .. text) end
 end
+
+-- Offences in tonight's dream, kept off the player (waking puts back everything that was on them).
+local OFF = {} -- [steamid64] = { n = offences, out = true }
+local function Key(p) return tostring(p:SteamID64()) end
 
 LC.PropagandaDreams = { adore = true, roses = true, mirror = true, saviour = true, quiz = true }
 for _, id in ipairs({ "adore", "roses", "mirror", "saviour", "quiz" }) do
@@ -381,7 +393,10 @@ local function Starts(g, x, y, top)
     g.starts = {}
     for i = 0, 11 do g.starts[#g.starts + 1] = Vector(x + (i % 2) * 40, y - 330 + i * 60, top + 4) end
 end
-local function Spawn(g, p, i) return g.starts[((i - 1) % #g.starts) + 1], 0 end
+local function Spawn(g, p, i)
+    OFF[Key(p)] = nil -- (a fresh start for tonight's loyalty)
+    return g.starts[((i - 1) % #g.starts) + 1], 0
+end
 
 -- Kneeling, and looking up at her (within about 25 degrees of her face).
 function LC.AdmireKneeling(p) return p.Crouching ~= nil and p:Crouching() == true end
@@ -412,6 +427,36 @@ local function Turn(g, dt)
     g.herYaw = y
     g.her:SetAngles(Angle(0, y, 0))
 end
+
+-- Disloyalty in the dream: a life gone (Hit), and an offence counted against them for waking.
+-- (kept off the player: waking puts back everything that was on them before the dream)
+LC.PropagandaOffencePoints, LC.PropagandaOutPoints, LC.PropagandaMaxPoints = 3, 5, 20
+function LC.PropagandaOffences(p) local o = IsValid(p) and OFF[Key(p)] return o and o.n or 0, o and o.out or false end
+local function Offend(g, p, title, text)
+    local s = g.pl[p]
+    if not s or s.done or CurTime() < (s.safe or 0) then return false end
+    local o = OFF[Key(p)] or { n = 0 }
+    OFF[Key(p)] = o
+    o.n = o.n + 1
+    local hit = Hit(g, p, title, text .. string.format(" (-%d loyalty points)", LC.PropagandaOffencePoints))
+    if hit and s.done and s.how == "out" then o.out = true end
+    return hit
+end
+LC.PropagandaOffend = Offend
+-- How many loyalty points the dream cost them.
+function LC.PropagandaLoss(p)
+    local n, out = LC.PropagandaOffences(p)
+    return math.min(LC.PropagandaMaxPoints, n * LC.PropagandaOffencePoints + (out and LC.PropagandaOutPoints or 0))
+end
+-- As they wake: the loss taken from Civil Standing (loyalty points are Civil Standing).
+hook.Add("LivingCityDreamWoke", "LivingCityPropagandaLoyalty", function(p)
+    if not IsValid(p) then return end
+    local n = LC.PropagandaLoss(p)
+    OFF[Key(p)] = nil
+    if n <= 0 then return end
+    if LC.AddStanding then LC.AddStanding(p, -n, "disloyalty in a propaganda dream") end
+    Notice(p, "warn", "Disloyal, even in your sleep", string.format("The city noticed how you behaved in the dream: -%d loyalty points (Civil Standing).", n), 8)
+end)
 
 -- What the star sees in the middle of her screen.
 local function StarState(g, text) return { big = text, tone = "love", herEnt = HerEnt(g) } end
@@ -455,7 +500,7 @@ do
             local kneel = LC.AdmireKneeling(p)
             if s.gaze ~= gaze then s.gaze = gaze g.dirty = true end
             if gaze and not kneel and now >= (s.safe or 0) then
-                if Hit(g, p, "You stood in her presence", "She looked straight at you, and you were standing.") then
+                if Offend(g, p, "You stood in her presence", "She looked straight at you, and you were standing.") then
                     Snd(p, SIGHS[math.random(#SIGHS)], 70)
                     s.devotion = math.max(0, s.devotion - 20)
                 end
@@ -535,7 +580,7 @@ do
             s.given = s.given or 0
             local pos = p:GetPos()
             if pos.x > g.lineX and not LC.AdmireKneeling(p) and now >= (s.safe or 0) then
-                if Hit(g, p, "Nobody stands before her", "Her honour guard lifts you by the collar and carries you to the back of the hall.") then
+                if Offend(g, p, "Nobody stands before her", "Her honour guard lifts you by the collar and carries you to the back of the hall.") then
                     s.carrying = nil
                     if IsValid(g.guards[1]) then Snd(g.guards[1], "npc/combine_soldier/vo/contained.wav", 80, 90) end
                 end
@@ -594,6 +639,9 @@ do
         "statuesque", "timeless", "iconic", "heavenly", "sparkling", "pretty", "cute", "fabulous", "marvellous", "marvelous",
         "splendid", "superb", "wonderful", "amazing", "incredible", "charming", "classy", "dignified", "immaculate", "resplendent" }
     LC.AdmireInsults = { "ugly", "old", "fat", "boring", "plain", "hideous", "gross", "wrinkly", "breen", "overrated", "mediocre", "average" }
+    -- (and the Combine: an insult to them is an insult to her)
+    LC.CombineInsults = { "fascist", "fascists", "tyrant", "tyrants", "tyranny", "oppressor", "oppressors", "oppression", "dictator", "dictatorship", "pig", "pigs", "occupiers" }
+    for _, w in ipairs(LC.CombineInsults) do LC.AdmireInsults[#LC.AdmireInsults + 1] = w end
     local LIKE, HATE = {}, {}
     for _, w in ipairs(LC.AdmireWords) do LIKE[w] = true end
     for _, w in ipairs(LC.AdmireInsults) do HATE[w] = true end
@@ -632,7 +680,7 @@ do
             elseif LIKE[w] and not seen[w] then seen[w] = true words[#words + 1] = w end
         end
         if insulted then
-            Hit(g, p, "She heard that", "\"" .. insulted .. "\"? Every mirror in the hall cracks at once, and you're thrown to the back.")
+            Offend(g, p, "She heard that", "\"" .. insulted .. "\"? Every mirror in the hall cracks at once, and you're thrown to the back.")
             return true
         end
         if #words == 0 then
@@ -678,29 +726,29 @@ end
 ------------------------------------------------------------------------
 
 do
-    local def = { id = "saviour", name = "The Saviour", mood = "happy", secs = 120, lives = 3, music = { "saviour_horde" },
+    local def = { id = "saviour", name = "The Saviour", mood = "happy", secs = 150, lives = 1, music = { "saviour_horde" },
         goal = "The dead are coming, and you have nothing to fight with. Run. Dodge. Hold on. Help will come.",
-        starGoal = "You're the star. Watch them suffer from on high. When the light comes, you descend and save them; walk among them when you land. Anything you say in chat, the dream hears.",
+        starGoal = "You're the star. Watch them suffer from on high. When one of them is close to the end, you descend and save them; walk among them when you land. Anything you say in chat, the dream hears.",
         timeUp = { "The light fades", "The dream dissolves into gold, and you wake." }, spawn = Spawn,
         woke = Woke({
             won = { "Saved", "You wake safe in your bed, and for a moment you'd swear you can still feel her light. The Combine protect you. They always have." },
-            out = { "Overrun", "In the dream the dead dragged you down before she came. You wake gasping, grateful the Combine are out there." },
             time = { "The light fades", "You wake in your bed, safe, warm, and protected. As always." },
         }) }
     def.hello = Hello("glory", nil)
     G.saviour = def
-    -- When it happens (seconds from the start).
-    LC.SaviourTimes = { horde = 4, light = 28, descend = 32, land = 38, soldiers = 41 }
+    -- When she comes: anyone down to this much health (or this long without), and how her rescue goes (seconds after it starts).
+    LC.SaviourTimes = { horde = 4, low = 25, latest = 80, land = 5, soldiers = 8 }
     local T = LC.SaviourTimes
     local MONSTERS = {
-        { m = "models/zombie/classic.mdl", speed = 70, act = ACT_WALK, die = "npc/zombie/zombie_die1.wav" },
-        { m = "models/zombie/fast.mdl", speed = 165, act = ACT_RUN, die = "npc/fast_zombie/fz_alert_close1.wav" },
-        { m = "models/headcrabclassic.mdl", speed = 120, act = ACT_RUN, die = "npc/headcrab/die1.wav" },
-        { m = "models/antlion.mdl", speed = 150, act = ACT_RUN, die = "npc/antlion/pain1.wav" },
-        { m = "models/zombie/poison.mdl", speed = 55, act = ACT_WALK, die = "npc/zombie_poison/pz_die1.wav" },
+        { m = "models/zombie/classic.mdl", speed = 70, act = ACT_WALK, die = "npc/zombie/zombie_die1.wav", dmg = 10 },
+        { m = "models/zombie/fast.mdl", speed = 165, act = ACT_RUN, die = "npc/fast_zombie/fz_alert_close1.wav", dmg = 6 },
+        { m = "models/headcrabclassic.mdl", speed = 120, act = ACT_RUN, die = "npc/headcrab/die1.wav", dmg = 5 },
+        { m = "models/antlion.mdl", speed = 150, act = ACT_RUN, die = "npc/antlion/pain1.wav", dmg = 8 },
+        { m = "models/zombie/poison.mdl", speed = 55, act = ACT_WALK, die = "npc/zombie_poison/pz_die1.wav", dmg = 12 },
     }
     local SOLDIER = "models/combine_soldier.mdl"
     local SHOTS = { "weapons/ar2/fire1.wav", "weapons/smg1/smg1_fire1.wav" }
+    local CLAWS = { "npc/zombie/claw_strike1.wav", "npc/zombie/claw_strike2.wav", "npc/headcrab/headbite.wav" }
 
     local function Edge(g)
         local side = math.random(4)
@@ -714,7 +762,7 @@ do
         local yaw = math.deg(math.atan2(g.mid.y - pos.y, g.mid.x - pos.x))
         local e = Actor(g, m.m, pos, yaw, 1, m.act)
         if not e then return end
-        g.mons[#g.mons + 1] = { e = e, speed = m.speed, die = m.die, alive = true }
+        g.mons[#g.mons + 1] = { e = e, speed = m.speed, die = m.die, dmg = m.dmg, alive = true }
     end
     local function Alive(g)
         local n = 0
@@ -755,9 +803,17 @@ do
         end
         return len
     end
-    -- Her, coming down: the star, or a giant figure of her.
-    local function SetHer(g, pos)
-        if IsValid(g.star) then g.star:SetPos(pos) elseif IsValid(g.her) then g.her:SetPos(pos) end
+    local function SetHer(g, pos, yaw)
+        local e = IsValid(g.star) and g.star or g.her
+        if not IsValid(e) then return end
+        e:SetPos(pos)
+        if yaw then if e == g.star then if e.SetEyeAngles then e:SetEyeAngles(Angle(0, yaw, 0)) end else e:SetAngles(Angle(0, yaw, 0)) end end
+    end
+    local function Centre(list, posOf)
+        local x, y, n = 0, 0, 0
+        for _, v in ipairs(list) do local p = posOf(v) if p then x, y, n = x + p.x, y + p.y, n + 1 end end
+        if n == 0 then return nil end
+        return Vector(x / n, y / n, 0)
     end
 
     function def.build(g, dream)
@@ -765,9 +821,10 @@ do
         local c = dream.pos
         g.x0, g.x1, g.y0, g.y1 = x0 + 30, x1 - 30, c.y - PLATE8_S + 30, c.y + PLATE8_S - 30
         g.mid = Vector(c.x, c.y, top)
-        g.land = Vector(x1 - 220, c.y, top)
-        local room = LC.DreamGameHeadroom and LC.DreamGameHeadroom(dream) or 2000
-        g.sky = Vector(g.land.x, g.land.y, top + math.Clamp(room - 150, 200, 900))
+        -- how high she comes down from: near the top of the dream zone (or of the room above the point)
+        local z = dream.zone
+        local ceiling = (z and z.box and z.box.maxs.z) or (top + (LC.DreamGameHeadroom and LC.DreamGameHeadroom(dream) or 2000))
+        g.skyZ = math.max(top + 250, math.min(ceiling - 120, top + 1500))
         -- a little cover in the ruins (it won't stop them for long)
         local DRUM = "models/props_c17/oildrum001.mdl"
         if K.ValidModel(DRUM) then
@@ -782,68 +839,50 @@ do
         return true
     end
 
-    -- The star waits above, unseen, watching, until the light comes.
+    -- The star waits above, unseen, watching, until someone is close to the end.
     function def.starring(g, p)
-        StarAt(p, g.sky, 180, 1, true)
+        StarAt(p, Vector(g.mid.x, g.mid.y, g.skyZ), 0, 1, true)
         if p.SetNoDraw then p:SetNoDraw(true) end
     end
     function def.starGone(g, p)
-        if g.phase == "calm" or g.phase == "horde" or g.phase == "light" then return end -- (a figure of her comes down instead)
-        Figure(g, Vector(g.land.x, g.land.y, g.top), 180, 1.6)
+        if g.phase == "calm" or g.phase == "horde" then return end -- (a figure of her comes when she's needed)
+        Figure(g, g.land or g.mid, g.landYaw or 0, 1.6)
     end
 
-    local PHASE_ORDER = { calm = 1, horde = 2, light = 3, descend = 4, stop = 5, soldiers = 6, safe = 7 }
+    local PHASE_ORDER = { calm = 1, horde = 2, descend = 3, stop = 4, soldiers = 5, safe = 6 }
     LC.SaviourPhaseOrder = PHASE_ORDER
+
+    -- Someone is close to the end: everything freezes, and she comes.
+    local function Rescue(g, players, now)
+        g.phase, g.rescueAt, g.dirty = "descend", now, true
+        for _, m in ipairs(g.mons) do if IsValid(m.e) and K.Animate then K.Animate(m.e, ACT_IDLE or 1) end end
+        -- between the dead and the citizens, facing the dead
+        local mc = Centre(g.mons, function(m) return m.alive and IsValid(m.e) and m.e:GetPos() or nil end)
+        local pc = Centre(players, function(p) return p:GetPos() end) or g.mid
+        local at = mc and (pc + (mc - pc) * 0.5) or pc
+        g.land = Vector(math.Clamp(at.x, g.x0 + 40, g.x1 - 40), math.Clamp(at.y, g.y0 + 40, g.y1 - 40), g.top)
+        g.landYaw = mc and math.deg(math.atan2(mc.y - g.land.y, mc.x - g.land.x)) or 0
+        g.sky = Vector(g.land.x, g.land.y, g.skyZ)
+        if IsValid(g.star) then
+            if g.star.SetNoDraw then g.star:SetNoDraw(false) end
+            StarAt(g.star, g.sky, g.landYaw, 1.5, true)
+        else
+            Figure(g, g.sky, g.landYaw, 1.6)
+        end
+        for _, p in ipairs(players) do Notice(p, "info", "Everything stops", "The dead freeze where they stand. A light breaks through the clouds.", 5) end
+    end
+    LC.SaviourRescue = Rescue
 
     function def.tick(g, dt, players)
         local now = CurTime()
         local t = now - g.t0
-        local function To(ph) if g.phase ~= ph then g.phase, g.dirty = ph, true return true end return false end
-        if g.phase == "calm" and t >= T.horde then To("horde") end
-        if g.phase == "horde" and t >= T.light then To("light") end
-        if g.phase == "light" and t >= T.descend then
-            To("descend")
-            if IsValid(g.star) then
-                if g.star.SetNoDraw then g.star:SetNoDraw(false) end
-                StarAt(g.star, g.sky, 180, 1.5, true)
-            else
-                Figure(g, g.sky, 180, 1.6)
-            end
-        end
-        if g.phase == "descend" then
-            local f = math.Clamp((t - T.descend) / (T.land - T.descend), 0, 1)
-            local z = g.sky.z + (g.land.z - g.sky.z) * (1 - (1 - f) * (1 - f)) -- (slowing as she comes down)
-            SetHer(g, Vector(g.land.x, g.land.y, z))
-            if f >= 1 then
-                To("stop")
-                SetHer(g, g.land)
-                if IsValid(g.star) and g.star.SetMoveType then g.star:SetMoveType(MOVETYPE_WALK) end
-                Say(g, "saviour_stop")
-                for _, m in ipairs(g.mons) do if IsValid(m.e) and K.Animate then K.Animate(m.e, ACT_IDLE or 1) end end
-            end
-        end
-        if g.phase == "stop" and t >= T.soldiers then
-            To("soldiers")
-            Say(g, "saviour_soldiers")
-            local song = LC.PropagandaSong({ "saviour" })
-            if song then
-                local list = Everyone(g)
-                if #list > 0 then net.Start("lc_dreamgame") net.WriteTable({ k = "music", song = song }) net.Send(list) end
-            end
-            for i = 1, 8 do
-                local pos = Vector(g.x1 - 40, g.y0 + (g.y1 - g.y0) * (i - 0.5) / 8, g.top)
-                local e = Actor(g, SOLDIER, pos, 180, 1, ACT_RUN or 1)
-                if e then g.soldiers[#g.soldiers + 1] = { e = e, next = now + 0.5 + i * 0.1 } end
-            end
-            if IsValid(g.star) then Snd(g.star, "npc/combine_soldier/vo/affirmative.wav", 90) end
-        end
-        -- the dead: coming in from the edges, after the nearest dreamer, until she says stop
-        if g.phase == "horde" or g.phase == "light" or g.phase == "descend" then
-            if g.phase == "horde" and now >= (g.spawnAt or 0) and Alive(g) < 16 then
+        if g.phase == "calm" and t >= T.horde then g.phase, g.dirty = "horde", true end
+        -- the dead: in from the edges after the nearest dreamer, and they hurt
+        if g.phase == "horde" then
+            if now >= (g.spawnAt or 0) and Alive(g) < 16 then
                 NewMonster(g)
                 g.spawnAt = now + 1.6
             end
-            local slow = g.phase == "descend" and 0.5 or 1
             for _, m in ipairs(g.mons) do
                 if m.alive and IsValid(m.e) then
                     local best, bd
@@ -852,15 +891,53 @@ do
                         if not bd or d < bd then best, bd = p, d end
                     end
                     if best then
-                        local left = Toward(m.e, best:GetPos(), m.speed * slow, dt, g.top)
-                        if left < 40 and math.abs(best:GetPos().z - g.top) < 90 and now >= (g.pl[best].safe or 0) then
-                            Hit(g, best, "Overrun", "They drag you down. You scramble back to the others.")
+                        local left = Toward(m.e, best:GetPos(), m.speed, dt, g.top)
+                        if left < 45 and math.abs(best:GetPos().z - g.top) < 90 and now >= (m.next or 0) and now >= (g.pl[best].safe or 0) then
+                            m.next = now + 1.2
+                            best:SetHealth(math.max(1, best:Health() - m.dmg)) -- (in the dream; it's all put back on waking)
+                            Snd(best, CLAWS[math.random(#CLAWS)], 75)
+                            if best.ScreenFade then best:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(160, 0, 0, 160), 0.4, 0.05) end
+                            g.dirty = true
                         end
                     end
                 end
             end
+            local low = false
+            for _, p in ipairs(players) do if p:Health() <= T.low then low = true end end
+            if low or t >= T.latest then Rescue(g, players, now) end
         end
-        -- her soldiers: to the nearest of the dead, and shoot
+        if g.phase == "descend" then
+            local f = math.Clamp((now - g.rescueAt) / T.land, 0, 1)
+            local z = g.sky.z + (g.land.z - g.sky.z) * (1 - (1 - f) * (1 - f)) -- (slowing as she comes down)
+            SetHer(g, Vector(g.land.x, g.land.y, z))
+            if f >= 1 then
+                g.phase, g.dirty = "stop", true
+                SetHer(g, g.land, g.landYaw)
+                if IsValid(g.star) and g.star.SetMoveType then g.star:SetMoveType(MOVETYPE_WALK) end
+                Say(g, "saviour_stop")
+            end
+        end
+        if g.phase == "stop" and now >= g.rescueAt + T.soldiers then
+            g.phase, g.dirty = "soldiers", true
+            Say(g, "saviour_soldiers")
+            local song = LC.PropagandaSong({ "saviour" })
+            if song then
+                local list = Everyone(g)
+                if #list > 0 then net.Start("lc_dreamgame") net.WriteTable({ k = "music", song = song }) net.Send(list) end
+            end
+            -- they swarm in from behind her
+            local back = math.rad(g.landYaw + 180)
+            for i = 1, 8 do
+                local side = (i - 4.5) * 50
+                local pos = Vector(g.land.x + math.cos(back) * 260 - math.sin(back) * side, g.land.y + math.sin(back) * 260 + math.cos(back) * side, g.top)
+                pos.x, pos.y = math.Clamp(pos.x, g.x0, g.x1), math.Clamp(pos.y, g.y0, g.y1)
+                local e = Actor(g, SOLDIER, pos, g.landYaw, 1, ACT_RUN or 1)
+                if e then g.soldiers[#g.soldiers + 1] = { e = e, next = now + 0.5 + i * 0.1 } end
+            end
+            if IsValid(g.star) then Snd(g.star, "npc/combine_soldier/vo/affirmative.wav", 90) end
+        end
+        -- her soldiers: to the nearest of the dead, and shoot. Only ever the dead: never a dreamer,
+        -- rebel or not (the owner: "any resistance or anti citizens in the dream should NOT be attacked")
         if g.phase == "soldiers" then
             for _, s in ipairs(g.soldiers) do
                 if IsValid(s.e) then
@@ -883,8 +960,7 @@ do
                 end
             end
             if Alive(g) == 0 then
-                To("safe")
-                g.safeAt = now + 3
+                g.phase, g.dirty, g.safeAt = "safe", true, now + 3
                 for _, s in ipairs(g.soldiers) do if IsValid(s.e) and K.Animate then K.Animate(s.e, ACT_IDLE or 1) end end
                 Say(g, "saviour_safe")
             end
@@ -895,13 +971,13 @@ do
         end
     end
 
-    local BIG = { calm = "The city is quiet. Too quiet.", horde = "Run! You have nothing to fight with.", light = "A light breaks through the clouds...",
-        descend = "She is coming.", stop = "She has come.", soldiers = "Her soldiers are here!", safe = "Saved." }
-    local STAR_BIG = { calm = "Watch over them.", horde = "They suffer without you. Soon.", light = "Your light breaks through the clouds.",
+    local BIG = { calm = "The city is quiet. Too quiet.", horde = "Run! You have nothing to fight with.", descend = "Everything stops. A light from above...",
+        stop = "She has come.", soldiers = "Her soldiers are here!", safe = "Saved." }
+    local STAR_BIG = { calm = "Watch over them.", horde = "They suffer without you. When one is close to the end, you'll go to them.",
         descend = "Descend.", stop = "They are yours to save.", soldiers = "Your soldiers obey.", safe = "They are safe, because of you." }
     function def.state(g, p)
-        local glow = (PHASE_ORDER[g.phase] or 0) >= PHASE_ORDER.light or nil
-        if p == g.star then local t = StarState(g, STAR_BIG[g.phase]) t.light, t.phase2 = glow, g.phase return t end
+        local glow = (PHASE_ORDER[g.phase] or 0) >= PHASE_ORDER.descend or nil
+        if p == g.star then local t = StarState(g, STAR_BIG[g.phase]) t.light = glow return t end
         return { big = BIG[g.phase], tone = (g.phase == "horde" or g.phase == "calm") and "warn" or "love", light = glow, herEnt = HerEnt(g),
             meterName = g.phase ~= "calm" and string.format("The dead: %d", Alive(g)) or nil }
     end
@@ -928,6 +1004,7 @@ do
     LC.QuizThoughtcrime = { "freeman", "gordon", "lambda", "revolution", "uprising", "overthrow", "alyx", "vance", "kleiner", "rebellion" }
     local FORBID = {}
     for _, w in ipairs(LC.QuizThoughtcrime) do FORBID[w] = true end
+    for _, w in ipairs(LC.CombineInsults) do FORBID[w] = true end
     local QSECS = 14
     local def = { id = "quiz", name = "The Loyalty Quiz", mood = "happy", secs = 6 + #LC.QuizQuestions * QSECS + 6, lives = 3, need = 6, music = { "quiz" },
         goal = "Answer her questions in chat. A right answer earns Loyalty, the first to answer earns double. Careful: some answers are thoughtcrime.",
@@ -986,7 +1063,7 @@ do
         local low = " " .. string.lower(string.gsub(text, "[^%w ]", " ")) .. " "
         for w in string.gmatch(low, "%a+") do
             if FORBID[w] then
-                Hit(g, p, "Thoughtcrime", "\"" .. w .. "\"? The audience gasps. Two officers escort you to the back of the studio.")
+                Offend(g, p, "Thoughtcrime", "\"" .. w .. "\"? The audience gasps. Two officers escort you to the back of the studio.")
                 return true
             end
         end

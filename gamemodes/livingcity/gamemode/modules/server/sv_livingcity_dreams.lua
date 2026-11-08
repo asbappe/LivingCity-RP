@@ -196,11 +196,20 @@ end
 -- unwilling too: only a stimulant keeps you out of one, by keeping you awake). The owner,
 -- 8 November: a nightmare is broadcast to everyone asleep outside a Combine-only zone (anyone
 -- asleep inside one is spared), and whoever beat the last one is Unbroken for a day.
-function LC.DreamSleepers(mood)
+-- Can't be opted out of or woken from (until out of it): a nightmare, or a propaganda dream (the
+-- owner, 8 November: "I don't want these to be skippable"; sv_livingcity_propagandadreams.lua).
+function LC.DreamForced(id, mood)
+    mood = mood or (id and LC.DreamMood(id)) or "neutral"
+    return mood == "nightmare" or (id ~= nil and LC.PropagandaDreams ~= nil and LC.PropagandaDreams[id] == true)
+end
+function LC.DreamSleepers(mood, id)
     local out = {}
+    local forced = LC.DreamForced(id, mood)
+    local prop = id ~= nil and LC.PropagandaDreams ~= nil and LC.PropagandaDreams[id] == true
     for _, p in ipairs(player.GetAll()) do
-        local spared = mood == "nightmare" and ((LC.Unbroken and LC.Unbroken(p)) or (LC.CombineZoneAt and LC.CombineZoneAt(p:GetPos())))
-        if p.lcSleep and p:Alive() and not p.lcDreaming and not spared and (mood == "nightmare" or not LC.DreamOptedOut(p)) and not (LC.Wired and LC.Wired(p))
+        local spared = (mood == "nightmare" and ((LC.Unbroken and LC.Unbroken(p)) or (LC.CombineZoneAt and LC.CombineZoneAt(p:GetPos()))))
+            or (prop and LC.Unbroken and LC.Unbroken(p)) -- (Unbroken: the Combine can't get into your head, propaganda included)
+        if p.lcSleep and p:Alive() and not p.lcDreaming and not spared and (forced or not LC.DreamOptedOut(p)) and not (LC.Wired and LC.Wired(p))
             and not (p.InVehicle and p:InVehicle()) then out[#out + 1] = p end
     end
     return out
@@ -208,10 +217,12 @@ end
 -- Can they wake themselves now? Not from a nightmare, until they're out of it. True, or false and why not.
 function LC.DreamCanWake(p)
     local dream = LC.DreamActive
-    if not IsValid(p) or not dream or dream.id ~= p.lcDreaming or dream.mood ~= "nightmare" then return true end
+    if not IsValid(p) or not dream or dream.id ~= p.lcDreaming or not (dream.forced or dream.mood == "nightmare") then return true end
     local g = dream.game
     if g and g.pl and g.pl[p] and g.pl[p].done then return true end
+    if g and g.star == p then return true end -- (the Administrator starring in a propaganda dream isn't one of its players)
     if p.lcEndSpectating then return true end
+    if dream.mood ~= "nightmare" then return false, "You can't wake yourself from this dream. You have to see it through (or be out of it)." end
     return false, "You can't wake yourself from a nightmare. You have to see it through (or be out of it)."
 end
 -- Wake up, if they may (C > Settings, /dream wake, the dream games' button).
@@ -758,6 +769,7 @@ local function Enter(p, dream, spot)
     p.lcNoPermadeath = true -- (whatever happens in a dream, nobody's character dies)
     p:SetNW2Bool("lc_dreaming", true)
     p:SetNW2Bool("lc_nightmare", dream.mood == "nightmare") -- (their screen: no waking yourself from this one)
+    p:SetNW2Bool("lc_dream_forced", dream.forced == true and dream.mood ~= "nightmare") -- (a propaganda dream: the same, in its own words)
     -- just their hands: nothing to drop, spend or lose
     if p.StripWeapons then p:StripWeapons() end
     if p.RemoveAllAmmo then p:RemoveAllAmmo() end
@@ -806,6 +818,7 @@ function LC.DreamWakeOne(p, why)
     p.lcDreamBed = nil
     p:SetNW2Bool("lc_dreaming", false)
     p:SetNW2Bool("lc_nightmare", false)
+    p:SetNW2Bool("lc_dream_forced", false)
     if dream and dream.list then
         -- (everyone gone: the ending has nobody left to be for)
         if #LC.DreamersOf(dream) == 0 then timer.Simple(0, function()
@@ -905,12 +918,12 @@ function LC.DreamStart(id, by, vote, also, force)
     if LC.EndingBusy and LC.EndingBusy() then return false, "An ending is already under way." end
     if LC.DreamActive then return false, "A dream is already under way." end
     if not force and not game and LC.EndingCooldownLeft and LC.EndingCooldownLeft() > 0 then return false, "Not yet (" .. math.ceil(LC.EndingCooldownLeft() / 60) .. " minutes of the endings' cooldown left)." end
-    local who = LC.DreamSleepers(LC.DreamMood(id))
+    local who = LC.DreamSleepers(LC.DreamMood(id), id)
     if IsValid(also) and not also.lcDreaming and also:Alive() and not table.HasValue(who, also) then who[#who + 1] = also end
     if #who == 0 then return false, "Nobody is asleep to dream it." end
     S.nextId = (S.nextId or 0) + 1
     local dream = { id = S.nextId, ending = id, pos = pt.pos, yaw = pt.yaw or 0, zone = LC.DreamZone(), list = {}, snaps = {}, npcs = {}, combine = {},
-        made = setmetatable({}, { __mode = "k" }), started = CurTime(), force = force or nil, mood = LC.DreamMood(id) }
+        made = setmetatable({}, { __mode = "k" }), started = CurTime(), force = force or nil, mood = LC.DreamMood(id), forced = LC.DreamForced(id) }
     local spots = LC.EndingRingSpots and LC.EndingRingSpots(pt.pos, 60, #who) or {}
     for i, p in ipairs(who) do
         local ok, err = pcall(Enter, p, dream, spots[i] and spots[i].pos or pt.pos)
@@ -1065,9 +1078,11 @@ timer.Create("LivingCityDreams", 1, 0, function()
                 S.warned = true
                 local q = Nightly()
                 local mood = q and LC.DreamMood(q.id) or "neutral"
-                for _, p in ipairs(LC.DreamSleepers(mood)) do
+                local forced = q and LC.DreamForced(q.id, mood)
+                for _, p in ipairs(LC.DreamSleepers(mood, q and q.id)) do
                     Notice(p, mood == "nightmare" and "warn" or "info", "A dream is coming", MOOD_LINES[mood] .. " It's shared with everyone asleep, and you'll wake in your bed with everything you had. "
                         .. (mood == "nightmare" and "There's no opting out of a nightmare: only a stimulant before bed would have kept you awake."
+                            or forced and "There's no opting out of this one: only a stimulant before bed would have kept you awake."
                             or "Not tonight? C > Settings > Shared dreams: opt out."), 12)
                 end
             end

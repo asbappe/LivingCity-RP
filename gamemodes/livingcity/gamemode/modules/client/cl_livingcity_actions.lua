@@ -410,6 +410,7 @@ function LC_CL.OpenActions()
     -- shared dreams (cl_livingcity_dreams.lua)
     if me:GetNW2Bool("lc_dreaming", false) then
         Add(set, me:GetNW2Bool("lc_nightmare", false) and "Shared dreams: wake up now (not from a nightmare, until you're out of it)"
+            or me:GetNW2Bool("lc_dream_forced", false) and "Shared dreams: wake up now (not from this one, until you're out of it)"
             or "Shared dreams: wake up now (you wake in your bed, with everything you had)", function() if LC_CL.DreamAct then LC_CL.DreamAct("wake") end end, "icon16/weather_sun.png")
     end
     if me:GetNW2Bool("lc_dream_optout", false) then

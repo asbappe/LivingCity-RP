@@ -910,3 +910,9 @@ Notes:
   Notes:
 - [ ] **Starring:** as the Administrator, go to bed with at least one other player asleep, then pick a propaganda dream. You should be the giant on the pedestal (your look is your gaze in Kneel Before Her), or wait unseen in the sky and come down yourself in The Saviour. Type in chat: the dreamers see it on screen; the city does not. Wake up: a giant figure of you takes over. Check the tablet switch (Tonight's dream > Star in propaganda dreams yourself) turns it off and on.
   Notes:
+- [ ] **Not skippable:** opt out (C > Settings > Shared dreams), go to bed, and have a propaganda dream chosen: you still dream it, the warning says there is no opting out, and "wake up" is refused until you win or lose every life. A player Unbroken (from beating a nightmare) is left out.
+  Notes:
+- [ ] **Loyalty:** lose a life in one (stand in her gaze, insult her, type "pigs" or "Freeman" in the quiz). On waking you lose 3 loyalty points (Civil Standing) per offence, 5 more if you were thrown out, at most 20, with a notice. No health lost.
+  Notes:
+- [ ] **The Saviour (reworked):** the monsters hurt you (watch your health). When anyone is at 25 or less, they all freeze, she comes down from high in the zone and lands between them and you, "Stop!", then the soldiers. A Resistance player in the dream is never shot. If nobody gets that low, she comes at 80 seconds.
+  Notes:
