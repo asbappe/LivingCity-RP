@@ -216,7 +216,7 @@ local function Done(g, p, how, title, text)
     local s = g.pl[p]
     if not s or s.done then return end
     s.done, s.how = true, how
-    p.lcDreamGameResult = { how = how, name = g.def.name } -- (how they wake: LC.DreamOutcome)
+    p.lcDreamGameResult = { how = how, name = g.def.name, id = g.def.id } -- (how they wake: LC.DreamOutcome, or the dream's own woke)
     if how == "won" then g.won[#g.won + 1] = p end
     if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, how == "won" and Color(255, 245, 210, 255) or Color(0, 0, 0, 255), 1.2, 0.2) end
     Notice(p, how == "won" and "info" or "warn", title, text, 8)
@@ -888,14 +888,15 @@ local function Tick()
         g.def.tick(g, dt, InPlay(g))
         -- the time's up, or nobody's left in it
         if now >= g.ends then
-            for _, p in ipairs(InPlay(g)) do Done(g, p, "time", "The nightmare fades", "It loosens its grip before the end, and you wake.") end
+            local up = g.def.timeUp or { "The nightmare fades", "It loosens its grip before the end, and you wake." }
+            for _, p in ipairs(InPlay(g)) do Done(g, p, "time", up[1], up[2]) end
         end
         if #InPlay(g) == 0 then LC.DreamGameStop(dream, "over") return end
         if g.dirty or now >= (g.sentAt or 0) + 1 then
             g.dirty, g.sentAt = nil, now
             for p, s in pairs(g.pl) do
                 if IsValid(p) and (not s.done or s.watching) then -- (watchers see how it goes on too)
-                    local t = g.def.state(g) or {}
+                    local t = g.def.state(g, p) or {} -- (with who it's for: a dream may show each their own)
                     t.k, t.lives = "state", s.lives
                     Send(g, t, p)
                 end
@@ -979,7 +980,9 @@ hook.Add("LivingCityDreamWoke", "LivingCityDreamGames", function(p)
     local r = IsValid(p) and p.lcDreamGameResult
     if not r then return end
     p.lcDreamGameResult = nil
-    if LC.DreamOutcome then LC.DreamOutcome(p, r.how, r.name) end
+    local def = r.id and G[r.id]
+    if def and def.woke then def.woke(p, r.how) -- (a dream with its own way of leaving you: the Administrator's)
+    elseif LC.DreamOutcome then LC.DreamOutcome(p, r.how, r.name) end
 end)
 
 -- The game's over: its props gone, and everyone still in it woken.
@@ -998,4 +1001,8 @@ function LC.DreamGameStop(dream, why)
 end
 
 -- A game dream counts as busy too (only one dream at a time).
+-- The building blocks, for dreams written in other files (sv_livingcity_admiredreams.lua).
+LC.DreamGameKit = { Block = Block, Actor = Actor, Animate = Animate, Floor = Floor, WallAt = WallAt, Snd = Snd, Puff = Puff,
+    Send = Send, InPlay = InPlay, ToStart = ToStart, Done = Done, Hit = Hit, ValidModel = ValidModel,
+    PLATE8 = PLATE8, PLATE8_S = PLATE8_S, PLATE4 = PLATE4, PLATE4_S = PLATE4_S }
 function LC.DreamGameBusy() return LC.DreamActive ~= nil and LC.DreamActive.game ~= nil and not LC.DreamActive.game.stopped end

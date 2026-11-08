@@ -1631,6 +1631,14 @@ local ok, e = pcall(function()
     Msg({ k = "start", id = "crumble", name = "The Crumbling Floor", goal = "Keep moving.", ends = CurTime() + 100, lives = 1, maxLives = 1 })
     Msg({ k = "state", lives = 1, alive = 2 })
     hook.t.HUDPaint.LivingCityDreamGames()
+    -- the Administrator's dreams: pink, hearts, roses, a meter, her music
+    Msg({ k = "start", id = "roses", name = "Roses for Her", goal = "Lay roses at her feet.", ends = CurTime() + 100, lives = 3, maxLives = 3,
+        theme = "admire", her = { 0, 0, 200 }, song = "livingcity/dreams/administrator/x.mp3" })
+    Msg({ k = "state", lives = 3, roses = { { 10, 10, 20 } }, meter = 33, meterName = "Roses given: 1 of 3", carrying = true, big = "Kneel.", tone = "warn" })
+    hook.t.PostDrawTranslucentRenderables.LivingCityDreamGames(false, false)
+    hook.t.HUDPaint.LivingCityDreamGames()
+    Msg({ k = "state", lives = 3, meter = 50, meterName = "Devotion", big = "Kneel, and gaze up at her.", tone = "love" })
+    hook.t.HUDPaint.LivingCityDreamGames()
     Msg({ k = "stop", how = "won" })
     hook.t.HUDPaint.LivingCityDreamGames()
     if LC_CL.DreamGame() then error("still on screen after it stopped") end
