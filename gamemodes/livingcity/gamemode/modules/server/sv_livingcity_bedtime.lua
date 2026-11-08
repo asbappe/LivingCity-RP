@@ -75,8 +75,11 @@
     resistance members purposely shooting or harming their fellow rebels or
     an NPC in order to loophole a way to skip dreaming?"): a rebel on a
     stimulant (or in a foil hat, or with no chip) can't wake the camp with a
-    shot at a friend. The same goes for a dreamer's sleeping body: only an
-    enemy's hit pulls them out of the dream; anyone else's does nothing. Woken early like that, you're groggy ("since
+    shot at a friend. The same goes for anyone asleep, dreaming or not
+    ("stop friends' hits from waking sleepers too"): a hit from their own side
+    does nothing at all (no wake, no harm); a rebel wakes only to an enemy of
+    the camp. An enemy's hit, or the world's (a fire, a fall), wakes them,
+    groggy. Woken early like that, you're groggy ("since
     they are woken up early, then the standard effects would apply such as
     the grogginess visual effect and very low stamina"): for lc_groggy_seconds
     (60) your eyelids droop and the world blurs (lighter as you come round),
@@ -455,7 +458,7 @@ end
 hook.Add("EntityTakeDamage", "LivingCityDreamBody", function(ent, dmg)
     local p = IsValid(ent) and ent.lcDreamBodyOf
     if not IsValid(p) then return end
-    if p.lcDreaming and dmg:GetDamage() > 0 and LC.CampEnemy(dmg:GetAttacker()) then -- (a friend's hit does nothing: no waking a dreamer to skip it)
+    if p.lcDreaming and dmg:GetDamage() > 0 and LC.SleeperEnemy(p, dmg:GetAttacker()) then -- (a friend's hit does nothing: no waking a dreamer to skip it)
         p.lcDreamHurt = { amount = dmg:GetDamage(), attacker = dmg:GetAttacker() }
         LC.WakeSleeper(p, "hurt", "Something hit you in your sleep. You wake in your bed, hurt.")
     end
@@ -532,6 +535,36 @@ function LC.CampEnemy(att)
     return not (cls == "npc_citizen" or cls == "npc_vortigaunt" or cls == "npc_alyx" or cls == "npc_barney" or cls == "npc_eli" or cls == "npc_kleiner"
         or cls == "npc_magnusson" or cls == "npc_mossman" or cls == "npc_monk" or cls == "npc_dog")
 end
+-- Which side someone's on: "resistance", "combine", "citizen", "zombie", or nil (a monster, or nobody).
+function LC.SideOf(e)
+    if not IsValid(e) then return nil end
+    if e:IsPlayer() then
+        local f = e:GetNW2String("lcf_faction", "")
+        if f == "resistance" or f == "vort" then return "resistance" end
+        if f == "cp" or f == "admin" or f == "stalker" then return "combine" end
+        if f == "zombie" then return "zombie" end
+        return "citizen"
+    end
+    local st = LC.NPCs and LC.NPCs[e]
+    if not st then return nil end
+    if Combine(e) then return "combine" end
+    if st.role == "rebel" or st.role == "vort" or st.role == "vortigaunt" then return "resistance" end
+    if st.role == "zombie" then return "zombie" end
+    if st.role == "citizen" then return "citizen" end
+    return nil
+end
+-- Would this attacker's hit wake this sleeper? Only an enemy's (the owner, 8 November: "stop friends'
+-- hits from waking sleepers too"). A rebel: only an enemy of the camp (never another player). Anyone
+-- else: anyone not on their own side. Never their own hit.
+function LC.SleeperEnemy(victim, att)
+    if not IsValid(att) or att == victim then return false end
+    local side = LC.SideOf(victim)
+    if side == "resistance" then return LC.CampEnemy(att) end
+    local theirs = LC.SideOf(att)
+    if theirs == nil then return not att:IsPlayer() and LC.CampEnemy(att) end -- (a monster: as for a camp)
+    return theirs ~= side
+end
+
 -- Does this hit wake the camp? Anyone there (player or NPC) attacked by an enemy of the camp.
 function LC.RaidWakeHit(ent, dmg)
     if not IsValid(ent) or not (ent:IsPlayer() or (ent.IsNPC and ent:IsNPC())) then return false end

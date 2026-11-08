@@ -14656,6 +14656,26 @@ LC.BlackStock.stim.at = CurTime() - 20 * 60 - 1
 ok(LC.BlackStockLeft(stimG) == 1, "one more every 20 minutes")
 LC.BlackStock.stim = nil
 
+
+-- asleep, a friend's hit does nothing (no wake, no harm); an enemy's, or the world's, wakes them groggy
+local function Punch(att) return { GetDamage = function() return 5 end, GetAttacker = function() return att end } end
+local reb2 = newPlayer("DCReb2", "resistance", nil, 900)
+local reb3 = newPlayer("DCReb3", "resistance", nil, 900)
+Asleep(reb3, CITY)
+reb3:SetHealth(100)
+reb3:SetNW2Float("lc_groggy_until", 0)
+ok(hook.t.EntityTakeDamage.LivingCitySleepWake(reb3, Punch(reb2)) == true and reb3.lcSleep and reb3:Health() == 100, "a fellow rebel's hit on a sleeper: nothing (still asleep, unhurt)")
+ok(hook.t.EntityTakeDamage.LivingCitySleepWake(reb3, Punch(a)) == true and reb3.lcSleep, "nor a citizen player's (a rebel wakes only to an enemy of the camp)")
+hook.t.EntityTakeDamage.LivingCitySleepWake(reb3, Punch(cop))
+ok(not reb3.lcSleep and reb3:GetNW2Float("lc_groggy_until", 0) > CurTime(), "a unit's hit wakes them, groggy")
+Asleep(a, CITY + Vector(0, 300, 0))
+local cit2 = newPlayer("DCCit2", "citizen")
+ok(hook.t.EntityTakeDamage.LivingCitySleepWake(a, Punch(cit2)) == true and a.lcSleep, "a citizen hit by another citizen sleeps on")
+hook.t.EntityTakeDamage.LivingCitySleepWake(a, Punch(game.GetWorld()))
+ok(not a.lcSleep, "the world's harm (a fire, a fall) still wakes them")
+ok(LC.SleeperEnemy(a, reb2) and LC.SleeperEnemy(cop, reb2) and not LC.SleeperEnemy(cop, adm or cop), "(a rebel's hit wakes a citizen or a unit; a unit's own side doesn't)")
+for _, q in ipairs({ reb2, reb3, cit2 }) do q:SetPos(Vector(-122000, -122000, 0)) end
+
 LC.DreamForget()
 LC.RemovePoint(dp)
 for _, p in ipairs({ a, b, cop, reb }) do

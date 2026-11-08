@@ -281,8 +281,14 @@ end)
 hook.Add("KeyPress", "LivingCitySleepWake", function(ply, key)
     if key == IN_JUMP and ply.lcSleep then LC.WakeUp(ply, "jump") end
 end)
+-- (a friend's hit does nothing at all: no waking someone to skip the night's dream; the owner, 8 November.
+-- An enemy's hit, or the world's (a fire, a fall), wakes them, groggy: sv_livingcity_bedtime.lua)
 hook.Add("EntityTakeDamage", "LivingCitySleepWake", function(ent, dmg)
-    if IsValid(ent) and ent:IsPlayer() and ent.lcSleep and dmg:GetDamage() > 0 then LC.WakeUp(ent, "hurt") end
+    if not (IsValid(ent) and ent:IsPlayer() and ent.lcSleep and dmg:GetDamage() > 0) then return end
+    local att = dmg:GetAttacker()
+    if IsValid(att) and (att:IsPlayer() or (att.IsNPC and att:IsNPC())) and LC.SleeperEnemy and not LC.SleeperEnemy(ent, att) then return true end
+    LC.WakeUp(ent, "hurt")
+    if LC.MakeGroggy then LC.MakeGroggy(ent) end
 end)
 -- lying still: no walking about in your sleep (Jump still gets through, to wake you)
 hook.Add("StartCommand", "LivingCitySleeping", function(ply, cmd)
