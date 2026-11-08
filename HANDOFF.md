@@ -18,6 +18,7 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - Client smoke test, repo root: `python3 _dev/client_smoke.py` (must end `CLIENT SMOKE PASS`).
 - **The owner asked (2026-10-31) to test less:** compile-check changed files and run only the test section you touched; run the full suite only when they ask. Compile check: `from lupa import luajit21 as lupa`, then `loadstring` on the file.
 - Full suite, from `_dev`, in the background: `timeout 6900 python3 run_tests.py tests.lua` (about 40 minutes; includes the core snapshot check). Last full run (2026-11-02): 2994 passed, 6 failed (flaky, see `TODO.md`). Stop a run with ``kill $(pgrep -f "^python3 -u run_tests.py tests.lua")``.
+- Full suite on every core: `python3 _dev/run_parallel.py` (a few minutes; same last line as `run_tests.py`; see `CLAUDE.md`, Testing).
 - One section only: `python3 _dev/run_section.py "part of the section name"` or `--unit NameTests` (see `CLAUDE.md`, Testing; the code map is `docs/dev/modules.md`). Gaps in the stub: there's no IN_ATTACK, so build key lists with pairs, not ipairs; no HSVToColor; `Entity()` returns nil in the smoke test and OBBMaxs defaults to (2,24,96).
 
 ## Tools
@@ -28,6 +29,10 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
+- 2026-11-08: one long chat (session festive-gauss) built and merged to `main`: Combine manpower on the tablet and records terminal; burning confiscated contraband (`sv_livingcity_evidence.lua`); Resistance headcrab hunts (`sv_livingcity_crabhunt.lua`); the owner's chosen food scarcity changes (`docs/dev/scarcity-audit.md`); NPC cap default 100; a pat-down search game (`sv_livingcity_patsearch.lua`); F2 additions for every role (`sv_livingcity_quickmore.lua`); the Insider's "let them slip" on F2; the Administrator's guard orders and same-side stepping aside; Pose Recorder 2 (first update).
+- Under the hood: network safety (`docs/dev/network-audit.md`, `sh_livingcity_net.lua`), NPC name strings on demand (`sh_livingcity_npcstr.lua`), server and client performance passes (`docs/dev/performance-audit.md`), safe save files with backups (`docs/dev/save-files.md`, `sv_livingcity_safefile.lua`), territory checks by cells, and a bug hunt (pickpocketing, prison fists, dreams' hands, the master interface, quest trail, a successful Resistance operation that stopped all raids and sweeps).
+- Tests: `python3 _dev/run_parallel.py` runs the whole suite in about 70 seconds. Last run: 4197 passed, 2 failed (a random headcrab check, and the core check).
+- **Still to do:** the core check shows only the owner's approved changes, but the snapshot copy was blocked by this session's permission rules (TODO.md, first item of "From 7 November, part 3" additions). Nothing is checked in game: PLAYTEST.md "7 November, part 3" and the lines after it.
 - 2026-11-08 (parts 3 and 4): **Propaganda dreams**, `sv_livingcity_propagandadreams.lua`: Kneel Before Her (`adore`), Roses for Her (`roses`), Mirror, Mirror (`mirror`), The Saviour (`saviour`), The Loyalty Quiz (`quiz`). Listed under Happy as "Propaganda: ...".
 - Not skippable: `LC.DreamForced(id, mood)` in `sv_livingcity_dreams.lua` (no opt-out, no waking until out; Unbroken spared; the star may wake). NW2 `lc_dream_forced` for the screen texts.
 - Disloyalty: `Offend` (each life lost) counts in a table by SteamID64 (not on the player: the snapshot restore wipes player fields); on `LivingCityDreamWoke` 3 points each, +5 if out, max 20, via `LC.AddStanding`. No health loss.

@@ -308,7 +308,7 @@ LC.HINTS = {
         text = { default = "Press {+use} to trade: papers, uniforms, lockpicks, spray cans, seeds, gun parts. He buys almost anything. Don't let a Civil Protection unit see you trading with him.",
                  cp = "A black market dealer. Walk up to him to bust him: he disappears for 15 minutes, and you get paid." } },
     cache = { title = "A supply crate",
-        text = { resistance = "The Resistance's food store: press {+use} to take a tin, once every four minutes. Supplies come in for about half of what the Resistance online eat, so it runs empty often: then fish, hunt headcrabs or birds, ask citizens for food or trade with the quartermaster. To add food from your pockets, use {+menu_context} > Resistance > Donate food.",
+        text = { resistance = "The Resistance's food store: press {+use} to take a tin, once every 15 minutes. Supplies come in for about half of what the Resistance online eat, so it runs empty often: then fish, hunt headcrabs or birds, ask citizens for food or trade with the quartermaster. To add food from your pockets, use {+menu_context} > Resistance > Donate food.",
                  citizen = "A Resistance supply crate. You can add food from your pockets: {+menu_context} > Resistance > Donate food.",
                  cp = "A hidden stash of Resistance supplies. Press {+use} to confiscate all of it." } },
     pot = { title = "A pot",
@@ -761,7 +761,7 @@ local SLICES, slice = 4, 0
 timer.Create("LivingCityHints", SCAN_EVERY / SLICES, 0, function()
     if not cvHints:GetBool() then return end
     slice = (slice + 1) % SLICES
-    for i, ply in ipairs(player.GetAll()) do
+    for i, ply in LC.Players() do
         if i % SLICES == slice then
             local ok, err = pcall(LC.HintScan, ply)
             if not ok and LC.Error then LC.Error("hints", err) end

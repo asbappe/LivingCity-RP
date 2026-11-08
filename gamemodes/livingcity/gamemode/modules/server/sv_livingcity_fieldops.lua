@@ -209,6 +209,17 @@ function LC.RebelQuietAt(pos, margin)
     return false
 end
 
+-- Does rebel zone z reach into ground being cleared? A zone you placed: the circle round it, as
+-- always; grown ground: any of its cells.
+function LC.RebelQuietZone(z)
+    if not z.cells then return LC.RebelQuietAt(z.pos, z.r) end
+    local now = CurTime()
+    for _, q in ipairs(LC.RebelQuiet) do
+        if now <= q.untilT and LCZ.Contains(z, q.pos, q.r) then return true end
+    end
+    return false
+end
+
 -- Every rebel fighter still standing within r of center.
 function LC.RebelsOnGround(center, r)
     local out = {}
@@ -230,7 +241,8 @@ function LC.RebelWave(center, targets, n)
     local spots = {}
     for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}) do
         local d = z.pos:Distance(center)
-        if d > 500 and d < 3500 then
+        -- (grown ground: any of its cells within reach; each spot is still kept 500 away below)
+        if z.cells and LCZ.Near(z, center, 3500) or not z.cells and d > 500 and d < 3500 then
             for _ = 1, 3 do
                 local p = LC.SpotInZone(z)
                 if p and p:Distance(center) > 500 and not LC.IsSeen(p + UP) then spots[#spots + 1] = { p, z } end
@@ -493,7 +505,7 @@ function LC.SpawnMissingZombine(q, z)
     if not IsValid(npc) or not st then return nil end
     st.unmanaged = true
     if LC.QB and LC.QB.Lock then LC.QB.Lock(q, npc) end
-    npc:SetNW2String("lc_pname", "6-12")
+    LC.SetNPCStr(npc, "lc_pname", "6-12")
     q.data.zombine = npc
     q.ents[#q.ents + 1] = npc -- (left to the infestation: the cleanup crew deals with him when the job's over)
     if IsValid(owner) then

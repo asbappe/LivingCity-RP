@@ -203,14 +203,11 @@ end
 local COOL_FILE = "livingcity/endings.json"
 LC.EndingRoot, LC.EndingCooldownFile = ROOT, COOL_FILE -- (core: CORE.md)
 local function LastEnding()
-    local raw = file.Read(COOL_FILE, "DATA")
-    if not raw or raw == "" then return 0 end
-    local t = util.JSONToTable(raw) or {}
-    return tonumber(t.last) or 0
+    local t = LC.SafeReadJSON(COOL_FILE)
+    return istable(t) and tonumber(t.last) or 0
 end
 local function MarkEnding()
-    if file.CreateDir then file.CreateDir("livingcity") end
-    file.Write(COOL_FILE, util.TableToJSON({ last = os.time() }))
+    LC.SafeWrite(COOL_FILE, util.TableToJSON({ last = os.time() }), { force = true }) -- (one time, nothing to lose)
 end
 function LC.EndingCooldownLeft()
     return math.max(0, LastEnding() + cvCool:GetFloat() * 60 - os.time())
@@ -3475,7 +3472,7 @@ SETUP.water = function()
             g = ents.Create("npc_monk")
             if IsValid(g) then
                 g:Spawn()
-                g:SetNW2String("lc_pname", "Father Grigori")
+                LC.SetNPCStr(g, "lc_pname", "Father Grigori")
                 E.ents[#E.ents + 1] = g
             end
         end
@@ -4059,8 +4056,7 @@ end)
 
 concommand.Add("lc_ending_reset_cooldown", function(ply)
     if IsValid(ply) and not ply:IsSuperAdmin() then return end
-    if file.CreateDir then file.CreateDir("livingcity") end
-    file.Write(COOL_FILE, util.TableToJSON({ last = 0 }))
+    LC.SafeWrite(COOL_FILE, util.TableToJSON({ last = 0 }), { force = true })
     Reply(ply, "Secret ending cooldown cleared.")
 end)
 
@@ -4080,6 +4076,7 @@ local RETUNED = {
     { "lc_afk_kick_minutes", { "15" }, "20" },
     { "lc_job_cooldown", { "120" }, "900" },
     { "lc_manpower_cp_max", { "30" }, "20" }, -- (7 November: Civil Protection mustn't outnumber the Resistance, the owner)
+    { "lc_npc_budget", { "60" }, "100" }, -- (7 November, the owner: "please set to 100 by default")
     { "lc_directives", { "1" }, "0" }, -- (7 November, the owner: the G-Man's sealed directives, his sleep visits and talks with the Administrator set aside for a future endings setup) -- (7 November: one Union job change every 15 minutes, the owner asked; sv_livingcity_work.lua)
     -- (7 November, the owner: "slow down the pacing so events are more sparse": the city's own happenings about twice as far apart,
     -- and the PA quiet a minute and a half before a routine announcement: docs/dev/pacing-audit.md)
@@ -4091,6 +4088,13 @@ local RETUNED = {
     { "lc_drop_cooldown", { "30" }, "60" },
     { "lc_rebel_ops_minutes", { "30" }, "60" },
     { "lc_loyalty_praise_minutes", { "20" }, "40" },
+    -- (7 November, the owner: food scarcity, docs/dev/scarcity-audit.md)
+    { "lc_ration_interval", { "600" }, "1500" },
+    { "lc_stock_eat", { "40" }, "20" },
+    { "lc_rebel_errand_minutes", { "4" }, "12" },
+    { "lc_birds", { "6" }, "4" },
+    { "lc_scavenge_refill", { "600" }, "1800" },
+    { "lc_fridge_refill", { "240" }, "900" },
     { "lc_ending_marrow_max", { "40", "60" }, "80" },
     { "lc_ending_base_bombs", { "30" }, "60" },
     { "lc_ending_hard_moment_beats", { "16" }, "5" },

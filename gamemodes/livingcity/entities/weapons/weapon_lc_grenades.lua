@@ -75,6 +75,10 @@ function SWEP:Reload()
     end
 end
 
+-- (made once here, not every frame)
+local C_10_12_16_190 = Color(10, 12, 16, 190)
+local C_170_165_150 = Color(170, 165, 150)
+local C_240_200_120 = Color(240, 200, 120)
 function SWEP:DrawHUD()
     local owner = self:GetOwner()
     if not IsValid(owner) then return end
@@ -83,11 +87,11 @@ function SWEP:DrawHUD()
     local shown = {}
     for _, k in ipairs(KINDS) do if owner:GetNW2Int("lcg_" .. k, 0) > 0 or k == sel then shown[#shown + 1] = k end end
     local x, y = ScrW() - 220, ScrH() - 50 - #shown * 18
-    draw.RoundedBox(4, x, y, 200, 8 + #shown * 18, Color(10, 12, 16, 190))
+    draw.RoundedBox(4, x, y, 200, 8 + #shown * 18, C_10_12_16_190)
     local row = 0
     for _, k in ipairs(shown) do
         local n = owner:GetNW2Int("lcg_" .. k, 0)
-        local col = (k == sel) and Color(240, 200, 120) or Color(170, 165, 150)
+        local col = (k == sel) and C_240_200_120 or C_170_165_150
         draw.SimpleText((k == sel and "> " or "  ") .. NAMES[k], "DermaDefaultBold", x + 10, y + 12 + row * 18, col, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         draw.SimpleText(tostring(n), "DermaDefaultBold", x + 190, y + 12 + row * 18, col, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
         row = row + 1

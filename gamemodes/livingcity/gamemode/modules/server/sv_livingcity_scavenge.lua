@@ -12,7 +12,7 @@
                     in a few minutes, harvest real vegetables. Anyone can
                     harvest a ripe pot (so watch yours). Units uproot them.
       Supplies      every rebel zone keeps a supply crate the Resistance eat
-                    from: one tin each every few minutes. Supplies come in
+                    from: one tin each every 15 minutes. Supplies come in
                     every lc_food_restock_minutes or so, sized to how many
                     Resistance are online, enough for about half of what they
                     eat (lc_food_availability): it runs out regularly whether
@@ -24,7 +24,7 @@
                     rebel ground help it spread. Units and loyal citizens scrub
                     them off (E on the tag) for XP or standing.
 
-      lc_scavenge_refill <s>   seconds before a bin is worth searching again (600)
+      lc_scavenge_refill <s>   seconds before a bin is worth searching again (1800)
       lc_garden_minutes <m>    minutes for a pot to ripen (8)
       lc_cache_max <n>         most meals a supply crate holds (12; more when many Resistance are online)
       lc_cache_trickle <m>     minutes per meal the crate gains by itself (5; only with lc_food_scaling 0)
@@ -41,8 +41,8 @@ util.AddNetworkString("lc_tags")
 LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvRefill  = CreateConVar("lc_scavenge_refill", "600", FLAGS, "Seconds before a searched bin is worth searching again")
-local cvFridge  = CreateConVar("lc_fridge_refill", "240", FLAGS, "Seconds before a searched fridge has anything in it again")
+local cvRefill  = CreateConVar("lc_scavenge_refill", "1800", FLAGS, "Seconds before a searched bin is worth searching again")
+local cvFridge  = CreateConVar("lc_fridge_refill", "900", FLAGS, "Seconds before a searched fridge has anything in it again")
 local cvGarden  = CreateConVar("lc_garden_minutes", "8", FLAGS, "Minutes for a planted pot to ripen")
 local cvCacheMax = CreateConVar("lc_cache_max", "12", FLAGS, "Most meals a Resistance supply crate holds")
 local cvTrickle = CreateConVar("lc_cache_trickle", "5", FLAGS, "Minutes per meal a supply crate gains on its own (only with lc_food_scaling 0)")
@@ -233,7 +233,8 @@ local function WaterAhead(ply)
 end
 LC.WaterAhead = WaterAhead
 
-local CATCH = { { "raw_fish", 58 }, { nil, 30 }, { "can_empty", 6 }, { "scrap", 4 }, { "keepsake", 2 } }
+-- (7 November, the owner: food scarcity, docs/dev/scarcity-audit.md: a fish 30%, was 58%.)
+local CATCH = { { "raw_fish", 30 }, { nil, 58 }, { "can_empty", 6 }, { "scrap", 4 }, { "keepsake", 2 } }
 
 -- A fishing line is good for four to eight casts, fish or no fish, then snaps
 -- (the owner, 7 November: two casts for 15 credits was bonkers). The count
@@ -261,7 +262,7 @@ end)
 local function Fish(ply)
     if not WaterAhead(ply) then return false, "You need water: stand in the canal, or look at it." end
     if LC.InvSpace(ply) < 1 then return false, "Your pockets are full." end
-    local secs = math.Rand(10, 22)
+    local secs = math.Rand(25, 45) -- (7 November, scarcity audit: was 10 to 22)
     ply:EmitSound("ambient/water/water_splash" .. math.random(1, 3) .. ".wav", 55)
     return LC.StartTask(ply, secs, "Fishing... keep still", {
         maxMove = 40, cancelText = "You reel in. The fish can wait.",
@@ -365,7 +366,7 @@ local function EnsureRebelProps()
                 local spots = LC.ZoneFloorSpots and LC.ZoneFloorSpots(z, need * 2)
                     or (LC.QB and LC.QB.HideSpots and LC.QB.HideSpots(z.pos, need * 2, z.r * 0.7, true)) or {}
                 for _, p in ipairs(spots) do
-                    if p:DistToSqr(z.pos) < (z.r * 0.8) ^ 2 and not LC.IsSeen(p + Vector(0, 0, 30))
+                    if LCZ.Within(z, p, 0.8) and not LC.IsSeen(p + Vector(0, 0, 30))
                         and (not LC.DressingClear or LC.DressingClear(p, 35)) then -- not inside the dressing, or each other
                         if not IsValid(r.cache) then
                             r.cache = Prop("models/items/item_item_crate.mdl", p, "cache")
@@ -529,7 +530,7 @@ local function UseCache(ply, cache)
     end
     if not LC.GiveItem(ply, "canned_food") then ply:ChatPrint("Your pockets are full.") return end
     SetStock(cache, cache.lcStock - 1)
-    ply.lcCacheNext = now + 240
+    ply.lcCacheNext = now + 900 -- (7 November, the owner: food scarcity, one tin per 15 minutes; was 240 s)
     ply:ChatPrint(string.format("[Resistance] A tin from the stores. %d left.", cache.lcStock))
 end
 
@@ -696,9 +697,9 @@ local function Spray(ply)
             elseif IsResistance(p) and LC.AddXP then
                 LC.AddXP(p, 3, "graffiti")
             end
-            -- near rebel ground it rallies people: it spreads sooner
+            -- near rebel ground it rallies people: it spreads sooner (grown ground: near any of its cells)
             for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}) do
-                if pos:DistToSqr(z.pos) < (z.r + 1500) ^ 2 then
+                if LCZ.Near(z, pos, 1500) then
                     local seed = z.grown and z.seed or z
                     local s = LC.TerritoryState and LC.TerritoryState[seed]
                     if s then s.nextGrow = math.max(CurTime() + 30, s.nextGrow - 120) end

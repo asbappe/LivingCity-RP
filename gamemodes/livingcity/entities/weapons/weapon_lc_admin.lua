@@ -56,12 +56,15 @@ function SWEP:SecondaryAttack()
 end
 
 if CLIENT then
+    -- (made once here, not every frame)
+    local C_220_220_210 = Color(220, 220, 210)
+    local C_240_90_80 = Color(240, 90, 80)
     function SWEP:DrawHUD()
         local x, y = ScrW() / 2, ScrH() * 0.72
         local e = LocalPlayer():GetEyeTrace().Entity
         local aimed = IsValid(e) and (e:IsPlayer() or e:IsNPC())
         draw.SimpleTextOutlined(aimed and "LEFT CLICK: ORDER YOUR BODYGUARD TO KILL THEM" or "Right click: the office. Left click at someone: your bodyguard kills them.",
-            "DermaDefaultBold", x, y, aimed and Color(240, 90, 80) or Color(220, 220, 210), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+            "DermaDefaultBold", x, y, aimed and C_240_90_80 or C_220_220_210, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     end
     function SWEP:DrawWorldModel() if self:GetOwner() == NULL then self:DrawModel() end end
 end

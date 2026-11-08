@@ -366,12 +366,13 @@ local function DrawFill(d, col, alpha)
     return ok
 end
 
+local EDGE_UP = Vector(0, 0, 1) -- (made once, not for every segment of every frame)
 local function DrawEdge(d, col, thick)
     local ring = d.rings[#d.rings]
     if thick then
         render.SetMaterial(FILL_MAT)
         for j = 1, d.segs do
-            render.DrawBeam(ring[j] + Vector(0, 0, 1), ring[j % d.segs + 1] + Vector(0, 0, 1), 5, 0, 1, col)
+            render.DrawBeam(ring[j] + EDGE_UP, ring[j % d.segs + 1] + EDGE_UP, 5, 0, 1, col)
         end
     else
         for j = 1, d.segs do render.DrawLine(ring[j], ring[j % d.segs + 1], col, true) end
@@ -461,6 +462,21 @@ end
 
 local preview -- the shaded disc for a zone about to be placed: { key, drape }
 
+-- (made once here, not every frame)
+local C_255_0_0_120 = Color(255, 0, 0, 120)
+local C_255_255_255 = Color(255, 255, 255)
+local C_255_255_255_120 = Color(255, 255, 255, 120)
+local C_255_255_255_200 = Color(255, 255, 255, 200)
+local C_255_255_255_220 = Color(255, 255, 255, 220)
+local C_255_255_255_90 = Color(255, 255, 255, 90)
+local V_0_0_2 = Vector(0, 0, 2)
+local V_0_0_36 = Vector(0, 0, 36)
+local V_10_10_22 = Vector(10, 10, 22)
+local V_6_6_14 = Vector(6, 6, 14)
+local V_8_8_16 = Vector(8, 8, 16)
+local V_m10_m10_0 = Vector(-10, -10, 0)
+local V_m6_m6_0 = Vector(-6, -6, 0)
+local V_m8_m8_0 = Vector(-8, -8, 0)
 hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skybox)
     if skybox or LC_CL.LiveCamRendering then return end -- (not in the broadcast picture on the city's screens)
     local eye = EyePos()
@@ -469,9 +485,9 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
     local route = LC_CL.route
     if route and CurTime() < route.untilT then
         render.SetColorMaterial()
-        for i = 2, #route.pts do render.DrawLine(route.pts[i - 1] + UP8, route.pts[i] + UP8, Color(255, 255, 255), false) end
-        for _, p in ipairs(route.pts) do render.DrawSphere(p + UP8, 5, 8, 8, Color(255, 255, 255, 200)) end
-        if route.stuck then render.DrawSphere(route.stuck + Vector(0, 0, 36), 18, 12, 12, Color(255, 0, 0, 120)) end
+        for i = 2, #route.pts do render.DrawLine(route.pts[i - 1] + UP8, route.pts[i] + UP8, C_255_255_255, false) end
+        for _, p in ipairs(route.pts) do render.DrawSphere(p + UP8, 5, 8, 8, C_255_255_255_200) end
+        if route.stuck then render.DrawSphere(route.stuck + V_0_0_36, 18, 12, 12, C_255_0_0_120) end
     end
 
     if not Visible() then return end
@@ -486,11 +502,11 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
     for _, p in ipairs(LC_CL.points) do
         if p.pos:DistToSqr(eye) < MAX_DIST2 and Shown(focus, p.kind, "point") then
             local col = POINT_COLORS[p.kind] or color_white
-            local base = p.pos + Vector(0, 0, 2)
+            local base = p.pos + V_0_0_2
             if p == aimPoint then
                 local pulse = 10 + math.sin(CurTime() * 6) * 2
                 render.DrawSphere(base + UP8, pulse, 16, 16, Color(col.r, col.g, col.b, 240))
-                render.DrawWireframeSphere(base + UP8, 64, 16, 8, Color(255, 255, 255, 90), true)
+                render.DrawWireframeSphere(base + UP8, 64, 16, 8, C_255_255_255_90, true)
                 render.SetColorMaterial()
             else
                 render.DrawSphere(base + UP8, 7, 12, 12, Color(col.r, col.g, col.b, 180))
@@ -517,9 +533,9 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
         if n.pos:DistToSqr(eye) < MAX_DIST2 and Shown(focus, nil, "node") then
             local col = (LC_CL.selected == id) and SELECT_COLOR or (n.orphan and ORPHAN_COLOR or NODE_COLOR)
             if n == aimNode then
-                render.DrawWireframeBox(n.pos, angle_zero, Vector(-10, -10, 0), Vector(10, 10, 22), color_white, Z())
+                render.DrawWireframeBox(n.pos, angle_zero, V_m10_m10_0, V_10_10_22, color_white, Z())
             end
-            render.DrawWireframeBox(n.pos, angle_zero, Vector(-6, -6, 0), Vector(6, 6, 14), col, Z())
+            render.DrawWireframeBox(n.pos, angle_zero, V_m6_m6_0, V_6_6_14, col, Z())
             for _, other in ipairs(n.links) do
                 local o = LC_CL.nodes[other]
                 if o then render.DrawLine(n.pos + UP8, o.pos + UP8, LINK_COLOR, Z()) end
@@ -578,12 +594,12 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
         local tr = LocalPlayer():GetEyeTrace()
         local col = ZONE_COLORS[zoneKind] or color_white
         render.SetColorMaterial()
-        if tr.Hit then render.DrawWireframeBox(tr.HitPos, angle_zero, Vector(-8, -8, 0), Vector(8, 8, 16), Color(255, 255, 255, 220), Z()) end
+        if tr.Hit then render.DrawWireframeBox(tr.HitPos, angle_zero, V_m8_m8_0, V_8_8_16, C_255_255_255_220, Z()) end
         if LC_CL.boxCorner and tr.Hit then
             local hcv = GetConVar("livingcity_editor_height")
             local b = LCZ.BoxFromCorners(LC_CL.boxCorner, tr.HitPos, hcv and hcv:GetFloat() or 192)
             render.DrawBox(vector_origin, angle_zero, b.mins, b.maxs, Color(col.r, col.g, col.b, 40), true)
-            render.DrawWireframeBox(vector_origin, angle_zero, b.mins, b.maxs, Color(255, 255, 255, 220), Z())
+            render.DrawWireframeBox(vector_origin, angle_zero, b.mins, b.maxs, C_255_255_255_220, Z())
         end
         zoneKind = nil
     end
@@ -598,7 +614,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
             local col = ZONE_COLORS[zoneKind] or color_white
             pcall(function()
                 DrawFill(preview.drape, col, 45)
-                DrawEdge(preview.drape, Color(255, 255, 255, 200), true)
+                DrawEdge(preview.drape, C_255_255_255_200, true)
             end)
             render.SetColorMaterial()
         end
@@ -614,7 +630,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
     for _, e in ipairs(ShownNpcs(eye)) do
         if e:GetNW2String("lc_state", "") == "moving" then
             local dest = e:GetNW2Vector("lc_dest", vector_origin)
-            if dest ~= vector_origin then render.DrawLine(e:GetPos() + UP8, dest + UP8, Color(255, 255, 255, 120), Z()) end
+            if dest ~= vector_origin then render.DrawLine(e:GetPos() + UP8, dest + UP8, C_255_255_255_120, Z()) end
         end
     end
 end)
@@ -694,7 +710,7 @@ local function DrawEditorLabels()
         if p.pos:DistToSqr(eye) < near then Label(p.pos + Vector(0, 0, 16), "PERSISTENT PROP", Color(150, 230, 150)) end
     end
     for _, e in ipairs(ShownNpcs(eye)) do
-        local who = e:GetNW2String("lc_pname", "")
+        local who = LC.NPCStr(e, "lc_pname", "")
         Label(e:GetPos() + Vector(0, 0, 84), string.upper(e:GetNW2String("lc_role", "")) .. (who ~= "" and (" " .. who) or "") .. ": " .. e:GetNW2String("lc_state", ""),
             Color(255, 255, 255, 220), "DermaDefault")
     end
@@ -792,8 +808,9 @@ net.Receive("lc_announce", function()
     LC_CL.QueueVoice(path, title, false, dur)
 end)
 
+local BOX_BG = Color(10, 12, 16, 200) -- (made once, not every frame)
 local function Box(x, y, w, h, col)
-    draw.RoundedBox(6, x, y, w, h, Color(10, 12, 16, 200))
+    draw.RoundedBox(6, x, y, w, h, BOX_BG)
     if col then draw.RoundedBox(0, x, y, 4, h, col) end
 end
 
@@ -817,8 +834,10 @@ local function InMyBlock(n)
     return false
 end
 
+-- (made once here, not every frame)
+local V_0_0_80 = Vector(0, 0, 80)
 local function DrawHomeMarker(target)
-    local s = (target + Vector(0, 0, 80)):ToScreen()
+    local s = (target + V_0_0_80):ToScreen()
     local w, h = ScrW(), ScrH()
     local dist = math.floor(LocalPlayer():GetPos():Distance(target) * 0.019) -- about meters
     local col = Color(180, 120, 255)
@@ -835,6 +854,18 @@ local function DrawHomeMarker(target)
     end
 end
 
+-- (made once here, not every frame)
+local C_140_220_255 = Color(140, 220, 255)
+local C_170_200_255 = Color(170, 200, 255)
+local C_220_220_220 = Color(220, 220, 220)
+local C_220_60_60 = Color(220, 60, 60)
+local C_240_200_60 = Color(240, 200, 60)
+local C_255_120_120 = Color(255, 120, 120)
+local C_255_140_40 = Color(255, 140, 40)
+local C_255_200_200 = Color(255, 200, 200)
+local C_255_40_40 = Color(255, 40, 40)
+local C_255_60_60 = Color(255, 60, 60)
+local C_70_140_255 = Color(70, 140, 255)
 hook.Add("HUDPaint", "LivingCityHUD", function()
     local ply = LocalPlayer()
     if not IsValid(ply) then return end
@@ -845,25 +876,25 @@ hook.Add("HUDPaint", "LivingCityHUD", function()
     if Visible() then DrawEditorLabels() end
 
     if banner and now < banner.untilT then
-        Box(w / 2 - 210, y, 420, 52, Color(220, 60, 60))
-        draw.SimpleText(banner.text, "DermaDefaultBold", w / 2, y + 16, Color(220, 220, 220), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        Box(w / 2 - 210, y, 420, 52, C_220_60_60)
+        draw.SimpleText(banner.text, "DermaDefaultBold", w / 2, y + 16, C_220_220_220, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         draw.SimpleText(banner.sub, "DermaLarge", w / 2, y + 36, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         y = y + 60
     end
 
     local jail = ply:GetNW2Float("lc_jail_until", 0)
     if jail > now then
-        Box(w / 2 - 210, y, 420, 52, Color(255, 140, 40))
+        Box(w / 2 - 210, y, 420, 52, C_255_140_40)
         draw.SimpleText("IN CUSTODY  " .. string.FormattedTime(jail - now, "%02i:%02i"), "DermaLarge", w / 2, y + 18, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-        draw.SimpleText(ply:GetNW2String("lc_jail_reason", ""), "DermaDefault", w / 2, y + 40, Color(220, 220, 220), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        draw.SimpleText(ply:GetNW2String("lc_jail_reason", ""), "DermaDefault", w / 2, y + 40, C_220_220_220, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         y = y + 60
     end
 
     local held = ply:GetNW2Float("lc_detained_until", 0)
     if held > now then
-        Box(w / 2 - 210, y, 420, 52, Color(255, 140, 40))
+        Box(w / 2 - 210, y, 420, 52, C_255_140_40)
         draw.SimpleText(string.format("DETAINED  %ds", math.ceil(held - now)), "DermaLarge", w / 2, y + 18, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-        draw.SimpleText("Cuffed and kneeling. Wait it out.", "DermaDefault", w / 2, y + 40, Color(220, 220, 220), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        draw.SimpleText("Cuffed and kneeling. Wait it out.", "DermaDefault", w / 2, y + 40, C_220_220_220, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         y = y + 60
     end
 
@@ -871,20 +902,20 @@ hook.Add("HUDPaint", "LivingCityHUD", function()
     local alert = ply:GetNW2Int("lc_alert", 0)
     if wanted > now or alert > 0 then
         local tall = alert >= 2
-        Box(w / 2 - 210, y, 420, tall and 58 or 40, Color(255, 40, 40))
+        Box(w / 2 - 210, y, 420, tall and 58 or 40, C_255_40_40)
         local reason = ply:GetNW2String("lc_wanted_reason", "")
-        draw.SimpleText("WANTED" .. (reason ~= "" and (": " .. reason) or ""), "DermaLarge", w / 2, y + 20, Color(255, 120, 120), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        draw.SimpleText("WANTED" .. (reason ~= "" and (": " .. reason) or ""), "DermaLarge", w / 2, y + 20, C_255_120_120, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         if tall then
             local names = { "", "SECTOR-WIDE SEARCH: UNITS ARMED", "OVERWATCH DISPATCHED: LETHAL FORCE", "LOCKDOWN: SECOND SQUAD" }
             draw.SimpleText(string.format("ALERT %d   %s", alert, names[alert] or ""), "DermaDefaultBold", w / 2, y + 44,
-                Color(255, 200, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+                C_255_200_200, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         end
         y = y + (tall and 66 or 48)
     end
 
     local trespass = ply:GetNW2Float("lc_trespass_until", 0)
     if trespass > now then
-        Box(w / 2 - 210, y, 420, 40, Color(70, 140, 255))
+        Box(w / 2 - 210, y, 420, 40, C_70_140_255)
         draw.SimpleText(string.format("RESTRICTED AREA: LEAVE NOW (%ds)", math.ceil(trespass - now)), "DermaLarge", w / 2, y + 20,
             color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         y = y + 48
@@ -894,7 +925,7 @@ hook.Add("HUDPaint", "LivingCityHUD", function()
     local ephase = ply:GetNW2String("lc_escort_phase", "")
     if ephase ~= "" or ply:GetNW2Bool("lc_escort_wait", false) then
         local who = ply:GetNW2String("lc_escort_name", "")
-        local text, col = "Waiting for an escort...", Color(170, 200, 255)
+        local text, col = "Waiting for an escort...", C_170_200_255
         if ephase == "coming" then text = "Escort on the way: " .. who
         elseif ephase == "with" then text = "Escorted by " .. who .. ": Combine doors open for you (E)"
         elseif ephase == "out" then text = "Escorted by " .. who .. ": they're walking you out"
@@ -909,7 +940,7 @@ hook.Add("HUDPaint", "LivingCityHUD", function()
     local protect = ply:GetNW2Float("lc_protect_until", 0)
     if protect > now then
         draw.SimpleTextOutlined(string.format("Spawn protection %ds", math.ceil(protect - now)), "DermaDefaultBold",
-            w / 2, y + 8, Color(140, 220, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+            w / 2, y + 8, C_140_220_255, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
         y = y + 22
     end
 
@@ -933,9 +964,9 @@ hook.Add("HUDPaint", "LivingCityHUD", function()
         if strict and block > 0 then
             sub = (InMyBlock(block) and "You are home. Stay inside. " or ("Report to " .. BlockName(block) .. ". ")) .. sub
         end
-        Box(w / 2 - 230, y, 460, 46, strict and Color(255, 60, 60) or Color(240, 200, 60))
+        Box(w / 2 - 230, y, 460, 46, strict and C_255_60_60 or C_240_200_60)
         draw.SimpleText(names[ev] or ev, "DermaLarge", w / 2, y + 15, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-        draw.SimpleText(sub, "DermaDefault", w / 2, y + 35, Color(220, 220, 220), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        draw.SimpleText(sub, "DermaDefault", w / 2, y + 35, C_220_220_220, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         if strict and block > 0 and not InMyBlock(block) then
             local b = MyBlockCenter(block)
             if b then DrawHomeMarker(b.pos) end
@@ -997,12 +1028,16 @@ net.Receive("lc_boxcorner", function()
 end)
 
 -- Path mapping (sv_livingcity_pathmap.lua): say so on screen while it's on
+-- (made once here, not every frame)
+local C_0_0_0_220 = Color(0, 0, 0, 220)
+local C_230_180_60 = Color(230, 180, 60)
+local C_90_220_140 = Color(90, 220, 140)
 hook.Add("HUDPaint", "LC_PathMapHUD", function()
     local ply = LocalPlayer()
     if not IsValid(ply) or not ply:GetNW2Bool("lc_pathmap", false) then return end
     local paused = ply:GetMoveType() == MOVETYPE_NOCLIP
     draw.SimpleTextOutlined(paused and "PATH MAPPING PAUSED (noclip)" or "PATH MAPPING: walk to lay nodes",
-        "DermaDefaultBold", ScrW() / 2, ScrH() * 0.12, paused and Color(230, 180, 60) or Color(90, 220, 140), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 220))
+        "DermaDefaultBold", ScrW() / 2, ScrH() * 0.12, paused and C_230_180_60 or C_90_220_140, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, C_0_0_0_220)
 end)
 
 ------------------------------------------------------------------------

@@ -503,7 +503,7 @@ function LC.KickWouldOpen(door)
 end
 timer.Create("LivingCityKickHint", 0.3, 0, function()
     if not cvOn:GetBool() then return end
-    for _, p in ipairs(player.GetAll()) do
+    for _, p in LC.Players() do
         local door = NULL
         if LC.CanKick(p) then
             local tr = p:GetEyeTrace()

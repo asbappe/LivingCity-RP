@@ -93,8 +93,8 @@ function LC.SpawnGrigori()
     npc:SetKeyValue("spawnflags", "2") -- (gagged: none of the engine's own idle chatter; he talks when we say)
     npc:Spawn()
     npc:Activate()
-    npc:SetNW2String("lc_pname", "Father Grigori")
-    npc:SetNW2String("lc_doing", "keeping watch over the flock")
+    LC.SetNPCStr(npc, "lc_pname", "Father Grigori")
+    LC.SetNPCStr(npc, "lc_doing", "keeping watch over the flock")
     npc.lcGrigori = true
     npc.lcHome = z
     -- an ordinary man's health (the owner, 1 November: he couldn't be killed)
@@ -295,7 +295,7 @@ end)
 
 local ANNABELLE = 2
 hook.Add("Tick", "LivingCityAnnabelle", function()
-    for _, p in ipairs(player.GetAll()) do
+    for _, p in LC.Players() do
         if p:GetNW2String("lcf_special", "") == "chaplain" then
             local w = p:GetActiveWeapon()
             if IsValid(w) and w:GetClass() == "weapon_shotgun" and w:Clip1() > ANNABELLE then

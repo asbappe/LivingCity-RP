@@ -40,9 +40,9 @@ local cvSize     = CreateConVar("lc_inventory_size", "12", FLAGS, "How many item
 local cvWeighed  = CreateConVar("lc_inventory_weight", "1", FLAGS, "Pockets are limited by weight and size (1), or by number of items (0, lc_inventory_size)")
 local cvKg       = CreateConVar("lc_carry_kg", "12", FLAGS, "Kilograms a person can carry (a satchel adds more)")
 local cvBulky    = CreateConVar("lc_carry_bulky", "1", FLAGS, "Large things (a shotgun, a uniform, a crate) a person can carry at once (a satchel adds one)")
-local cvBirds    = CreateConVar("lc_birds", "6", FLAGS, "Birds around the city")
+local cvBirds    = CreateConVar("lc_birds", "4", FLAGS, "Birds around the city")
 local cvVermin   = CreateConVar("lc_vermin", "2", FLAGS, "Headcrabs roaming the city outside infestation zones")
-local cvRation   = CreateConVar("lc_ration_interval", "600", FLAGS, "Seconds between ration dispenser allocations (halved during rations)")
+local cvRation   = CreateConVar("lc_ration_interval", "1500", FLAGS, "Seconds between ration dispenser allocations (halved during rations)")
 local cvVend     = CreateConVar("lc_vending_price", "2", FLAGS, "Credits per can from a vending machine")
 local cvHackOut  = CreateConVar("lc_machine_hack_out", "5", FLAGS, "The fewest a hacked vending machine or ration dispenser spits out (cans or ration packets)")
 local cvHackMax  = CreateConVar("lc_machine_hack_max", "8", FLAGS, "The most a hacked vending machine or ration dispenser spits out (a random number from lc_machine_hack_out to this)")
@@ -766,8 +766,22 @@ function LC.UnderOpenSky(pos)
     return not tr or tr.HitSky == true or not tr.Hit
 end
 
+-- A killed bird or roaming headcrab is replaced only after a gap, at most one
+-- of a kind per WILDLIFE_GAP seconds (the owner, 7 November: food scarcity,
+-- docs/dev/scarcity-audit.md; it was every 4 s, endless). Filling the city
+-- up (a start, or birds shooed away) is as quick as before.
+local WILDLIFE_GAP = 90
+LC.WildlifeOwed = LC.WildlifeOwed or {}   -- kind = kills not yet replaced
+LC.WildlifeNextAt = LC.WildlifeNextAt or {} -- kind = the soonest a replacement may come
+hook.Add("OnNPCKilled", "LivingCityWildlifeGap", function(npc)
+    local kind = IsValid(npc) and LC.Wildlife[npc]
+    if not kind then return end
+    LC.WildlifeOwed[kind] = (LC.WildlifeOwed[kind] or 0) + 1
+    LC.WildlifeNextAt[kind] = math.max(LC.WildlifeNextAt[kind] or 0, CurTime() + WILDLIFE_GAP)
+end)
+
 timer.Create("LivingCityWildlife", 4, 0, function()
-    if not LC.Running then return end
+    if not LC.Running then LC.WildlifeOwed = {} return end
     local birds, vermin = 0, 0
     for e, kind in pairs(LC.Wildlife) do
         if not IsValid(e) or e:Health() <= 0 then
@@ -784,17 +798,36 @@ timer.Create("LivingCityWildlife", 4, 0, function()
             local p = LC.RandomWanderPos("citizen")
             if p and Unseen(p) and not LC.NearDoor(p, 160) and (kind ~= "bird" or LC.UnderOpenSky(p)) then pos = p break end
         end
-        if not pos then return end
+        if not pos then return false end
         local e = ents.Create(class)
-        if not IsValid(e) then return end
+        if not IsValid(e) then return false end
         e:SetPos(pos + Vector(0, 0, 8))
         e:SetAngles(Angle(0, math.random(0, 359), 0))
         e:Spawn()
         e:Activate()
         LC.Wildlife[e] = kind
+        return true
     end
-    if birds < cvBirds:GetInt() then Spawn(Pick(BIRDS), "bird")
-    elseif vermin < cvVermin:GetInt() then Spawn("npc_headcrab", "vermin") end
+    -- (one spawn a tick; a kind owed a replacement for a kill waits for its gap)
+    local now = CurTime()
+    -- Ready: nil (full), "fill" (short for some other reason) or "replace" (a kill's gap is over)
+    local function Ready(kind, have, cap)
+        if have >= cap then LC.WildlifeOwed[kind] = nil return nil end
+        local owed = math.min(LC.WildlifeOwed[kind] or 0, cap - have)
+        LC.WildlifeOwed[kind] = owed > 0 and owed or nil
+        if have + owed < cap then return "fill" end
+        return now >= (LC.WildlifeNextAt[kind] or 0) and "replace" or nil
+    end
+    local function Go(class, kind, how)
+        if not Spawn(class, kind) or how ~= "replace" then return end
+        local owed = (LC.WildlifeOwed[kind] or 1) - 1
+        LC.WildlifeOwed[kind] = owed > 0 and owed or nil
+        LC.WildlifeNextAt[kind] = now + WILDLIFE_GAP
+    end
+    local hb = Ready("bird", birds, cvBirds:GetInt())
+    local hv = not hb and Ready("vermin", vermin, cvVermin:GetInt())
+    if hb then Go(Pick(BIRDS), "bird", hb)
+    elseif hv then Go("npc_headcrab", "vermin", hv) end
 end)
 
 -- Birds in doorways. A pigeon standing in a door's swing blocks it (the door
@@ -1339,7 +1372,10 @@ function LC.UseDispenser(ply, ent)
         ply:ChatPrint(refused)
         return false
     end
-    local interval = cvRation:GetFloat() * (LC.Event == "rations" and 0.5 or 1) * (LC.RationIntervalMul and LC.RationIntervalMul() or 1) -- cuts during unrest
+    local base = cvRation:GetFloat()
+    -- a unit's allocation stays every 10 minutes (the owner, 7 November: only citizens feel the slower dispenser)
+    if LC.PlayerIsCP and LC.PlayerIsCP(ply) and LC.DUTY_ALLOCATION_SECONDS then base = math.min(base, LC.DUTY_ALLOCATION_SECONDS) end
+    local interval = base * (LC.Event == "rations" and 0.5 or 1) * (LC.RationIntervalMul and LC.RationIntervalMul() or 1) -- cuts during unrest
         * (LC.StockIntervalMul and LC.StockIntervalMul() or 1) -- and while the stores are low
     ply.lcnRationAt = CurTime() + interval
     if LC.StockTake then LC.StockTake(1) end

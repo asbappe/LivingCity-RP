@@ -10,14 +10,21 @@
       The tool: Tools, Poser, Pose Recorder (left click: pick a ragdoll; right click: snap
       a keyframe; reload: play the loop or stop). Everything is in its panel; the console
       commands (pose_recorder_*) do the same.
+
+      Smoothing: each keyframe has its own length (beats) and easing into the next (smooth,
+      snappy, bouncy, linear); the loop wraps round to the first keyframe or stops on the
+      last; mirror swaps left and right. Playing it on yourself or an NPC, seen by everyone,
+      and packs of animations in other addons: lua/pose_recorder/play.lua.
 ]]
 
 AddCSLuaFile()
 AddCSLuaFile("pose_recorder/core.lua")
+AddCSLuaFile("pose_recorder/play.lua")
 include("pose_recorder/core.lua")
 
 local PR = PoseRecorder
-PR.Version = "1.0"
+PR.Version = "2.0"
+include("pose_recorder/play.lua")
 
 if SERVER then
     util.AddNetworkString("pose_recorder_select")
@@ -79,6 +86,8 @@ local cvBPM   = CreateClientConVar("pose_recorder_bpm", "120", true, false, "Pos
 local cvBeats = CreateClientConVar("pose_recorder_beats", "1", true, false, "Pose Recorder: how many beats each new keyframe lasts")
 local cvRef   = CreateClientConVar("pose_recorder_ref", "idle_all_01", true, false, "Pose Recorder: the pose the angles are relative to (a sequence name, or reference)")
 local cvRate  = CreateClientConVar("pose_recorder_rate", "10", true, false, "Pose Recorder: samples a second while recording")
+local cvEase  = CreateClientConVar("pose_recorder_ease", "smooth", true, false, "Pose Recorder: how each new keyframe eases into the next: smooth, snappy, bouncy or linear")
+local cvWrap  = CreateClientConVar("pose_recorder_wrap", "1", true, false, "Pose Recorder: 1 the last keyframe eases back into the first, 0 the loop stops on the last")
 
 PR.sel = PR.sel or nil      -- { ent, phys = { [name] = true } }
 PR.frames = PR.frames or {} -- the keyframes, or the recording's samples
@@ -89,6 +98,11 @@ local function Say(msg)
     chat.AddText(Color(120, 200, 255), "[Pose Recorder] ", Color(235, 235, 235), msg)
     surface.PlaySound("buttons/button15.wav")
 end
+PR.Say = Say
+
+-- (the tool's panel redraws its keyframe list when they change)
+local function Changed() hook.Run("PoseRecorderChanged") end
+local function Ease() return PR.Ease[cvEase:GetString()] and cvEase:GetString() or "smooth" end
 
 net.Receive("pose_recorder_select", function()
     local ent = net.ReadEntity()
@@ -161,14 +175,16 @@ function PR.Snap()
     local bones, err = PR.Snapshot()
     if not bones then Say(err) return end
     PR.mode = "keys"
-    PR.frames[#PR.frames + 1] = { beats = math.max(0.25, cvBeats:GetFloat()), bones = bones }
-    Say("Keyframe " .. #PR.frames .. " (" .. cvBeats:GetFloat() .. " beat" .. (cvBeats:GetFloat() == 1 and "" or "s") .. ").")
+    PR.frames[#PR.frames + 1] = { beats = math.max(0.25, cvBeats:GetFloat()), ease = Ease(), bones = bones }
+    Say("Keyframe " .. #PR.frames .. " (" .. cvBeats:GetFloat() .. " beat" .. (cvBeats:GetFloat() == 1 and "" or "s") .. ", " .. Ease() .. ").")
+    Changed()
 end
 
 function PR.ToggleRecord()
     if PR.recording then
         PR.recording = nil
         Say("Stopped: " .. #PR.frames .. " samples over " .. string.format("%.1f", PR.frames[#PR.frames] and PR.frames[#PR.frames].t or 0) .. " seconds.")
+        Changed()
         return
     end
     if not (PR.sel and IsValid(PR.sel.ent)) then Say("Pick a ragdoll first (left click on one), or spawn a mannequin.") return end
@@ -181,11 +197,13 @@ function PR.Data()
     local ent = PR.sel and PR.sel.ent
     return {
         tool = "Pose Recorder " .. PR.Version,
+        format = PR.FORMAT,
         name = cvName:GetString(),
         model = IsValid(ent) and ent:GetModel() or PR.model,
         ref = cvRef:GetString(),
         bpm = cvBPM:GetFloat(),
         mode = PR.mode,
+        wrap = cvWrap:GetBool(),
         note = "Angles are Entity:ManipulateBoneAngles values (pitch, yaw, roll), relative to the model standing in its ref pose.",
         frames = PR.frames,
     }
@@ -215,14 +233,7 @@ function PR.TogglePreview()
     Say("Playing the loop (beside the ragdoll, in blue). Preview again to stop.")
 end
 
-local boneIds = {}
-local function BoneId(e, name)
-    local mdl = e:GetModel() or ""
-    boneIds[mdl] = boneIds[mdl] or {}
-    local id = boneIds[mdl][name]
-    if id == nil then id = e:LookupBone(name) or false boneIds[mdl][name] = id end
-    return id or nil
-end
+local BoneId = PR.BoneId
 
 hook.Add("Think", "PoseRecorder", function()
     local now = CurTime()
@@ -246,7 +257,7 @@ hook.Add("Think", "PoseRecorder", function()
         ghost:SetAngles(Angle(0, face, 0))
         ghost:SetCycle(0) -- (held in the reference pose itself, so what you see is exactly what was measured)
         local pose = PR.mode == "rec" and PR.SampleRecording(PR.frames, now - PR.previewing.t0)
-            or PR.Sample(PR.frames, (now - PR.previewing.t0) * cvBPM:GetFloat() / 60)
+            or PR.Sample(PR.frames, (now - PR.previewing.t0) * cvBPM:GetFloat() / 60, cvWrap:GetBool())
         for name, a in pairs(pose) do
             local id = BoneId(ghost, name)
             if id then ghost:ManipulateBoneAngles(id, Angle(a[1], a[2], a[3])) end
@@ -269,13 +280,87 @@ function PR.Save()
     file.Write(FileName(), util.TableToJSON(PR.Data(), true))
     Say("Saved to garrysmod/data/" .. FileName())
 end
+-- (any version: a file from the first Pose Recorder loads with smooth easing, wrapping round)
 function PR.Load()
     local raw = file.Read(FileName(), "DATA")
-    local t = raw and util.JSONToTable(raw)
-    if not t or not t.frames then Say("No " .. FileName() .. " in your data folder.") return end
-    PR.frames, PR.mode, PR.model = t.frames, t.mode or "keys", t.model
-    if t.bpm then RunConsoleCommand("pose_recorder_bpm", tostring(t.bpm)) end
+    if not raw then Say("No " .. FileName() .. " in your data folder.") return end
+    local t, err = PR.Decode(raw)
+    if not t then Say("Couldn't load " .. FileName() .. ": " .. tostring(err) .. ".") return end
+    PR.frames, PR.mode, PR.model = t.frames, t.mode, t.model
+    RunConsoleCommand("pose_recorder_bpm", tostring(t.bpm))
+    RunConsoleCommand("pose_recorder_wrap", t.wrap and "1" or "0")
     Say("Loaded " .. #PR.frames .. " " .. (PR.mode == "rec" and "samples" or "keyframes") .. " from " .. FileName())
+    Changed()
+end
+
+-- Which keyframes a change is for: "all", a keyframe's number, or (with neither) the ones
+-- picked in the panel's list, or every one when none are picked.
+PR.picked = PR.picked or {}
+local function Targets(which)
+    local out = {}
+    if which == "all" then
+        for i = 1, #PR.frames do out[#out + 1] = i end
+    elseif tonumber(which) then
+        local i = math.floor(tonumber(which))
+        if PR.frames[i] then out[1] = i end
+    else
+        for i in pairs(PR.picked) do if PR.frames[i] then out[#out + 1] = i end end
+        if #out == 0 then for i = 1, #PR.frames do out[#out + 1] = i end end
+    end
+    table.sort(out)
+    return out
+end
+local function Which(list) return #list == #PR.frames and "every keyframe" or ("keyframe" .. (#list == 1 and " " or "s ") .. table.concat(list, ", ")) end
+
+function PR.SetBeats(beats, which)
+    beats = tonumber(beats)
+    if PR.mode == "rec" then Say("A recording has real times, not beats: make keyframes to set their lengths.") return end
+    if not beats then Say("How many beats?") return end
+    beats = math.Clamp(beats, 0.25, 16)
+    local list = Targets(which)
+    if #list == 0 then Say("No keyframes yet.") return end
+    for _, i in ipairs(list) do PR.frames[i].beats = beats end
+    Say(Which(list) .. ": " .. beats .. " beat" .. (beats == 1 and "" or "s") .. " each.")
+    Changed()
+end
+
+function PR.SetEase(ease, which)
+    if PR.mode == "rec" then Say("A recording plays straight from sample to sample: make keyframes to ease them.") return end
+    if not PR.Ease[ease or ""] then Say("Easing is smooth, snappy, bouncy or linear.") return end
+    local list = Targets(which)
+    if #list == 0 then Say("No keyframes yet.") return end
+    for _, i in ipairs(list) do PR.frames[i].ease = ease end
+    Say(Which(list) .. ": " .. ease .. ".")
+    Changed()
+end
+
+-- Mirror: left and right swapped on the picked keyframes (or all of them); or a mirrored
+-- copy of the whole loop added on the end (a wave with the right hand, then the left).
+function PR.Mirror(which)
+    local list = Targets(which)
+    if #list == 0 then Say("Nothing to mirror yet.") return end
+    for _, i in ipairs(list) do PR.frames[i].bones = PR.MirrorPose(PR.frames[i].bones) end
+    Say("Mirrored " .. Which(list) .. ": left and right swapped.")
+    Changed()
+end
+
+function PR.MirrorAdd()
+    local n = #PR.frames
+    if n == 0 then Say("Nothing to mirror yet.") return end
+    local copy = PR.MirrorFrames(PR.frames)
+    local shift = PR.mode == "rec" and (PR.frames[n].t or 0) + 1 / math.Clamp(cvRate:GetFloat(), 1, 30) or 0
+    for _, f in ipairs(copy) do
+        if f.t then f.t = f.t + shift end
+        PR.frames[#PR.frames + 1] = f
+    end
+    Say("Added a mirrored copy: " .. #PR.frames .. " " .. (PR.mode == "rec" and "samples" or "keyframes") .. " now.")
+    Changed()
+end
+
+-- What you're making, on you, seen by everyone (sent to the server; it needn't be saved).
+function PR.PlayMine()
+    if #PR.frames == 0 then Say("Nothing to play yet: snap a keyframe or two first.") return end
+    PR.RequestPlay(LocalPlayer(), cvName:GetString(), nil, nil, PR.Data())
 end
 
 concommand.Add("pose_recorder_snap", PR.Snap)
@@ -284,14 +369,22 @@ concommand.Add("pose_recorder_preview", PR.TogglePreview)
 concommand.Add("pose_recorder_copy", PR.Copy)
 concommand.Add("pose_recorder_save", PR.Save)
 concommand.Add("pose_recorder_load", PR.Load)
+concommand.Add("pose_recorder_mirror", function(_, _, args) PR.Mirror(args[1]) end)
+concommand.Add("pose_recorder_mirror_add", PR.MirrorAdd)
+concommand.Add("pose_recorder_key_beats", function(_, _, args) PR.SetBeats(args[1], args[2]) end)
+concommand.Add("pose_recorder_key_ease", function(_, _, args) PR.SetEase(args[1], args[2]) end)
+concommand.Add("pose_recorder_play_mine", PR.PlayMine)
 concommand.Add("pose_recorder_undo", function()
     if #PR.frames == 0 then return end
     table.remove(PR.frames)
+    PR.picked = {}
     Say(#PR.frames .. " left.")
+    Changed()
 end)
 concommand.Add("pose_recorder_clear", function()
-    PR.frames, PR.mode, PR.recording = {}, "keys", nil
+    PR.frames, PR.mode, PR.recording, PR.picked = {}, "keys", nil, {}
     Say("Cleared.")
+    Changed()
 end)
 
 -- What it's doing, while the tool's in your hand.

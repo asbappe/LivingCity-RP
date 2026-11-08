@@ -130,6 +130,10 @@ net.Receive("lc_gman_vision", function()
     LC_CL.GmanVision(mode, snd, text)
 end)
 
+-- (made once here, not every frame)
+local A_0_20_0 = Angle(0, 20, 0)
+local A_4_0_0 = Angle(4, 0, 0)
+local V_m95_0_62 = Vector(-95, 0, 62)
 hook.Add("HUDPaint", "LivingCityGmanVision", function()
     if not V then return end
     local t = CurTime() - V.t0
@@ -151,7 +155,7 @@ hook.Add("HUDPaint", "LivingCityGmanVision", function()
         local leaving = V.mode == "visit" and t > V.dur - 3
         if leaving and not V.turned then
             V.turned = true
-            m:SetAngles(Angle(0, 20, 0))
+            m:SetAngles(A_0_20_0)
             if V.walk then m:ResetSequence(V.walk) end
         end
         if leaving then m:SetPos(VOID + Vector(math.min(3, t - (V.dur - 3)) * 45, 0, 0)) end
@@ -161,7 +165,7 @@ hook.Add("HUDPaint", "LivingCityGmanVision", function()
         if seen > 0.03 then
             -- drawn solid and faded by darkening his light, out of the black: a see-through model showed
             -- the inside of his mouth through his lips (the black square the owner saw)
-            cam.Start3D(VOID + Vector(-95, 0, 62), Angle(4, 0, 0), 55, 0, 0, w, h)
+            cam.Start3D(VOID + V_m95_0_62, A_4_0_0, 55, 0, 0, w, h)
                 render.SuppressEngineLighting(true)
                 render.SetLightingOrigin(VOID)
                 render.ResetModelLighting(0.25 * seen, 0.25 * seen, 0.3 * seen)
@@ -195,6 +199,10 @@ end)
 
 -- The reminder: while a directive waits on the Administrator, a bar at the top of the screen says so,
 -- how long is left, and how to open it; red and pulsing once the G-Man has called them back to it.
+-- (made once here, not every frame)
+local C_235_225_205 = Color(235, 225, 205)
+local C_245_225_190 = Color(245, 225, 190)
+local C_40_32_20_200 = Color(40, 32, 20, 200)
 hook.Add("HUDPaint", "LivingCityDirectiveReminder", function()
     local me = LocalPlayer()
     if not IsValid(me) then return end
@@ -203,13 +211,13 @@ hook.Add("HUDPaint", "LivingCityDirectiveReminder", function()
     local urgent = me:GetNW2Bool("lc_directive_urgent", false)
     local w = ScrW()
     local pulse = urgent and (0.55 + 0.45 * math.abs(math.sin(CurTime() * 3))) or 1
-    local bg = urgent and Color(120, 20, 20, 220 * pulse) or Color(40, 32, 20, 200)
+    local bg = urgent and Color(120, 20, 20, 220 * pulse) or C_40_32_20_200
     local bw = math.min(w - 40, 640)
     draw.RoundedBox(4, w / 2 - bw / 2, 8, bw, 46, bg)
     draw.SimpleText((urgent and "THE G-MAN IS WAITING: " or "A SEALED DIRECTIVE IS WAITING: ") .. string.format("%d:%02d left", math.floor(left / 60), math.floor(left % 60)),
-        "DermaDefaultBold", w / 2, 20, Color(245, 225, 190), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        "DermaDefaultBold", w / 2, 20, C_245_225_190, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     draw.SimpleText("Right click with your Administrator's device: the office, Sealed directives. Sign it or refuse it.",
-        "DermaDefault", w / 2, 40, Color(235, 225, 205), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        "DermaDefault", w / 2, 40, C_235_225_205, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 end)
 
 -- A glimpse of him (sv_livingcity_directives.lua): standing a way off, somewhere in plain sight, facing
@@ -241,12 +249,14 @@ net.Receive("lc_gman_glimpse", function()
         end
     end
 end)
+-- (made once here, not every frame)
+local V_0_0_60 = Vector(0, 0, 60)
 hook.Add("Think", "LivingCityGmanGlimpse", function()
     if not G then return end
     local me = LocalPlayer()
     local m = G.model
     if not IsValid(m) or not IsValid(me) then G = nil return end
-    local to = m:GetPos() + Vector(0, 0, 60) - me:EyePos()
+    local to = m:GetPos() + V_0_0_60 - me:EyePos()
     local d = to:Length()
     local looking = me:GetAimVector():Dot(to:GetNormalized()) > 0.995 and CurTime() - G.t0 > 0.6
     if looking or d < 250 or CurTime() - G.t0 > 7 then m:Remove() G = nil end
@@ -254,6 +264,22 @@ end)
 
 -- The recall: while someone can call one (sv_livingcity_directives.lua, lc_gman_rival_until), a box at the
 -- side of their screen says so in plain words, how to do it, and how long they have.
+-- (each line's width measured once, not every frame; only the time left changes, once a second)
+local recallW, recallN = {}, 0
+local function RecallWidth(l)
+    local w = recallW[l]
+    if not w then
+        if recallN > 64 then recallW, recallN = {}, 0 end
+        surface.SetFont("DermaDefault")
+        w = (surface.GetTextSize(l))
+        recallW[l], recallN = w, recallN + 1
+    end
+    return w
+end
+-- (made once here, not every frame)
+local C_230_230_225 = Color(230, 230, 225)
+local C_255_215_130 = Color(255, 215, 130)
+local C_25_30_40_215 = Color(25, 30, 40, 215)
 hook.Add("HUDPaint", "LivingCityRecallReminder", function()
     local me = LocalPlayer()
     if not IsValid(me) then return end
@@ -267,13 +293,12 @@ hook.Add("HUDPaint", "LivingCityRecallReminder", function()
         "Civil Protection and the Administration vote.",
         string.format("Time left to call it: %d:%02d", math.floor(left / 60), math.floor(left % 60)),
     }
-    surface.SetFont("DermaDefault")
     local bw = 0
-    for _, l in ipairs(lines) do bw = math.max(bw, (surface.GetTextSize(l))) end
+    for _, l in ipairs(lines) do bw = math.max(bw, RecallWidth(l)) end
     bw = bw + 24
     local bh = 26 + #lines * 16
     local x, y = ScrW() - bw - 16, ScrH() * 0.32
-    draw.RoundedBox(6, x, y, bw, bh, Color(25, 30, 40, 215))
-    draw.SimpleText("Recall vote", "DermaDefaultBold", x + 12, y + 8, Color(255, 215, 130))
-    for i, l in ipairs(lines) do draw.SimpleText(l, "DermaDefault", x + 12, y + 10 + i * 16, Color(230, 230, 225)) end
+    draw.RoundedBox(6, x, y, bw, bh, C_25_30_40_215)
+    draw.SimpleText("Recall vote", "DermaDefaultBold", x + 12, y + 8, C_255_215_130)
+    for i, l in ipairs(lines) do draw.SimpleText(l, "DermaDefault", x + 12, y + 10 + i * 16, C_230_230_225) end
 end)

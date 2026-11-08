@@ -18,6 +18,12 @@
            call; a stalker's work; a worker's job tools (an escort, a ration break, the
            body cart, foreman); staff tools. Then what only your side does to what's in
            front of you (a unit: search, cuff, escort). Nothing of the kind: it says so.
+           The Resistance's man inside, beside a prisoner being marched to the cells: 7
+           lets them slip (greyed while someone can see).
+           Later on 7 November (the owner): the Insider's Inside >, the Resistance's Freq 7 >,
+           a citizen's Me >, My sentence in a cell, the Administrator's tablet, laws, dream,
+           guards and order of arrest, a Division Leader's Call a sweep >. What's greyed, and
+           why, comes from the server (lc_quick_info, sv_livingcity_quickmore.lua).
 
     9 on either is everything else: the full menu (cl_livingcity_actions.lua), also on C.
     A ">" opens a page of its own (voice lines, talking, poses).
@@ -260,6 +266,199 @@ local function Hub(tab) if LC_CL.OpenHub then LC_CL.OpenHub(tab) else RunConsole
 local function Full() return Item("Everything else (full menu)", function() if LC_CL.OpenActions then LC_CL.OpenActions() end end) end
 
 ------------------------------------------------------------------------
+-- More on F2 (the owner, later on 7 November). What greys out comes from the server
+-- (sv_livingcity_quickmore.lua): sent with F2, and every two seconds while it's open.
+------------------------------------------------------------------------
+
+LC_CL.QuickInfo = LC_CL.QuickInfo or {}
+local function AskInfo() if net and net.Start then net.Start("lc_quick_info") net.SendToServer() end end
+net.Receive("lc_quick_info", function()
+    local t = util.JSONToTable(net.ReadString() or "")
+    LC_CL.QuickInfo = istable(t) and t or {}
+    LC_CL.QuickInfoAt = CurTime()
+    if LC_CL.QuickRebuild then LC_CL.QuickRebuild() end
+end)
+local function Info(k) return (LC_CL.QuickInfo or {})[k] or {} end
+local COMBINE = { cp = true, admin = true }
+-- one of F2's own actions (sv_livingcity_quickmore.lua)
+local function QM(cmd, arg, target)
+    net.Start("lc_quickmore")
+    net.WriteString(cmd)
+    net.WriteString(arg or "")
+    net.WriteEntity(IsValid(target) and target or NULL)
+    net.SendToServer()
+end
+local function AdminDo(what, arg)
+    net.Start("lc_admin_do")
+    net.WriteString(what)
+    net.WriteString(arg or "")
+    net.WriteEntity(NULL)
+    net.SendToServer()
+end
+-- "in 40s", "in 3m": nil when it's open now
+local function Later(secs)
+    secs = tonumber(secs) or 0
+    if secs <= 0 then return nil end
+    return secs < 90 and ("in " .. math.ceil(secs) .. "s") or ("in " .. math.ceil(secs / 60) .. "m")
+end
+-- an entry, greyed with why when `why` is given (picking a greyed one does nothing)
+local function Can(label, run, why)
+    local it = Item(label .. (why and ("  (" .. why .. ")") or ""), run)
+    it.disabled = why ~= nil
+    return it
+end
+local function Looking(me, far)
+    local tr = me:GetEyeTrace()
+    local e = tr and tr.Entity
+    if IsValid(e) and e:IsPlayer() and e ~= me and e:GetPos():DistToSqr(me:GetPos()) < far * far then return e end
+    return nil
+end
+
+-- The Insider: the same as C > Civil Protection > Inside, each greyed with why not now.
+local function InsidePage()
+    local me = LocalPlayer()
+    local ins = Info("ins")
+    local wait = ins.wait or {}
+    local seen = ins.watched and "watched" or nil
+    local shop = ins.commissary == false and "Commissary only" or nil
+    local weed = ins.weedkiller == false and "no weedkiller" or nil
+    local items = {
+        Can("Tip off Freq 7...", function() Ask("Tip off Freq 7", "What do you tell the Resistance? (The next planned sweep, if any, goes with it.)", "tipoff") end, seen or Later(wait.tip)),
+        Can("Lose a wanted person's record...", function() Ask("Lose a record", "Whose record goes missing? (Their name.)", "loserecord") end, seen or (ins.wanted == 0 and "nobody's wanted" or nil)),
+        Can("Supplies for a dead drop", function() Send("skim") end, seen or shop or Later(wait.skim)),
+        Can("Copy the city's records", function() Send("copyrecords") end, seen or Later(wait.copy)),
+        Can("Foul the mask filters", function() Send("foulfilters") end, seen or shop or weed or Later(wait.foul)),
+        Can("Spike the station's food", function() Send("spikefood") end, seen or shop or weed or Later(wait.spike)),
+    }
+    local slipT, slipWhy = nil, nil
+    if LC_CL.InsiderSlipNow then slipT, slipWhy = LC_CL.InsiderSlipNow(me) end
+    if slipT then items[#items + 1] = Can("Let " .. Name(slipT) .. " slip away", function() Send("letslip") end, (slipWhy == "watched" and "watched") or (slipWhy == "soon" and "not yet") or nil) end
+    local who = Looking(me, 160)
+    items[#items + 1] = who and Can("Reveal myself to " .. Name(who), function() Send("reveal") end) or Can("Reveal myself", function() end, "look at someone close")
+    return { title = "INSIDE (ONLY YOU SEE THIS)", items = items, empty = { [9] = ins.watched and (ins.watched .. " Slip away first.") or nil } }
+end
+
+-- The Resistance's band: in the spirit of a unit's dispatch, but nobody gives orders.
+local function Freq7Page()
+    local r = Info("reb")
+    return { title = "FREQ 7", items = {
+        Can("Message on Freq 7...", function() Ask("Freq 7", "What do you say on Freq 7?", "r") end, r.tx == false and "no transmitter" or nil),
+        Can("Call for backup", function() QM("rbackup") end, Later(r.backup)),
+        Can("Send my position", function() QM("rpos") end, Later(r.pos)),
+        Item("Guide me to the nearest rebel ground", function() QM("guide", "rebel") end),
+        Item("Guide me to the nearest lab", function() QM("guide", "lab") end),
+    } }
+end
+
+-- A citizen's own: work, rations, home, standing (each marks the way, and says the rest).
+local function MePage()
+    local me = LocalPlayer()
+    local m = Info("me")
+    local work = "Find work"
+    if m.work == "intake" or me:GetNW2Bool("lc_unreg", false) then work = "Find work: Civil Intake first"
+    elseif m.work == "job" then work = "My work: " .. tostring(m.job or "my job")
+    elseif m.work == "labor" then work = "Find work: Labor Assignment"
+    elseif m.work == "board" then work = "Find work: the job board (F4)" end
+    local rations = "My rations"
+    if m.ready then rations = "My rations: ready now"
+    elseif (tonumber(m.ration) or 0) > 0 then rations = "My rations: next in " .. math.ceil(m.ration / 60) .. " min" end
+    if m.cards then rations = rations .. ", " .. m.cards .. " card" .. (m.cards == 1 and "" or "s") end
+    local home = "My home and rent"
+    if m.home == "apartment" then home = string.format("My home: apartment, %dh %02dm paid", math.floor((m.left or 0) / 3600), math.floor((m.left or 0) % 3600 / 60))
+    elseif m.home == "block" then home = "My home: " .. tostring(m.block or "my block")
+    elseif m.home == "none" then home = "Find a home (Housing Allocation)" end
+    local wanted = m.wanted or me:GetNW2Float("lc_wanted_until", 0) > CurTime()
+    local standing = "My standing: " .. tostring(m.standing or me:GetNW2Int("lce_standing", 0)) .. (wanted and ", WANTED" or "")
+    local rows = {}
+    if m.next then rows[6] = string.format("Next: %s at %d.", tostring(m.nextWhat or ""), m.next) end
+    return { title = "ME", items = {
+        Item(work, function() if m.work == "board" then Hub("jobs") else QM("work") end end),
+        Item(rations, function() QM("rations") end),
+        Item(home, function() QM("home") end),
+        Item(standing, function() QM("standing") end),
+    }, empty = rows }
+end
+
+-- The Administrator's two Elites. How close they follow, and what they do when there's trouble,
+-- are her standing orders (the owner, 8 November): given any time, the one in force marked (now).
+local GUARD_DISTS = { { "close", "Close" }, { "medium", "Medium" }, { "far", "Far" } }
+local GUARD_MODES = {
+    { "always", "As they always have", "As always" },
+    { "stay", "Stay with me (shoot, but keep beside me)", "Stay with me" },
+    { "between", "Stand between us (cover me from threats)", "Stand between us" },
+    { "holdfire", "Hold fire unless fired on", "Hold fire" },
+}
+local function GuardChoicePage(title, list, key, default)
+    return function()
+        local cur = Info("adm")[key] or default
+        local items = {}
+        for _, c in ipairs(list) do
+            items[#items + 1] = Item(c[2] .. (cur == c[1] and "  (now)" or ""), function() QM("guards", c[1]) end)
+        end
+        return { title = title, items = items }
+    end
+end
+local function GuardsPage()
+    local a = Info("adm")
+    local none = a.guards == 0 and "no guards now" or nil
+    local dist, mode = "Medium", "As always"
+    for _, c in ipairs(GUARD_DISTS) do if c[1] == (a.dist or "medium") then dist = c[2] end end
+    for _, c in ipairs(GUARD_MODES) do if c[1] == (a.mode or "always") then mode = c[3] end end
+    return { title = "YOUR GUARDS", items = {
+        Can("Follow me" .. ((a.hold == false and (a.guards or 0) > 0) and "  (now)" or ""), function() QM("guards", "follow") end, none),
+        Can("Hold here" .. (a.hold and "  (holding)" or ""), function() QM("guards", "hold") end, none),
+        Page("Follow distance: " .. dist, GuardChoicePage("FOLLOW DISTANCE", GUARD_DISTS, "dist", "medium")),
+        Page("When there's trouble: " .. mode, GuardChoicePage("WHEN THERE'S TROUBLE", GUARD_MODES, "mode", "always")),
+    } }
+end
+
+-- Tonight's dream, as the tablet has it (sv_livingcity_dreams.lua): Happy, Neutral or Nightmare.
+local function DreamMoodPage(g)
+    local items = {}
+    for _, e in ipairs(g.endings or {}) do
+        if #items < 9 then items[#items + 1] = Item(e.name or e.id, function() AdminDo("dream", e.id) end) end
+    end
+    return { title = string.upper(g.name or g.mood or "DREAMS"), items = items }
+end
+local function DreamPage()
+    local d = Info("adm").dream
+    if not d then return { title = "TONIGHT'S DREAM", items = {}, empty = { "No word from the office yet: try again in a moment." } } end
+    if not d.ready then return { title = "TONIGHT'S DREAM", items = {}, empty = { d.why or "The city can't dream yet." } } end
+    local items, notes = {}, {}
+    if d.busy then notes[#notes + 1] = "The city is dreaming right now." end
+    if d.waiting then
+        notes[#notes + 1] = "Waiting: " .. tostring(d.waiting.name) .. " (" .. tostring(d.waiting.mood) .. ")"
+    else
+        notes[#notes + 1] = d.dreamt and "Dreamt tonight: a pick waits for tomorrow." or "Nothing chosen: no dream tonight."
+    end
+    if not d.waiting or d.waiting.yours then
+        local blurb = { happy = "Happy (a reward)", neutral = "Neutral", nightmare = "Nightmare (a punishment)" }
+        for _, g in ipairs(d.groups or {}) do
+            if #(g.endings or {}) > 0 then items[#items + 1] = Page(blurb[g.mood] or g.name or g.mood, function() return DreamMoodPage(g) end) end
+        end
+        items[#items + 1] = Item("No dream tonight", function() AdminDo("dream", "none") end)
+    end
+    local rows = {}
+    for i, n in ipairs(notes) do if #items + 1 + i <= 9 then rows[#items + 1 + i] = n end end
+    return { title = "TONIGHT'S DREAM", items = items, empty = rows }
+end
+
+-- A senior unit's call: the city's own sweep and raid, when the pacing allows.
+local function SweepPage()
+    local s = Info("sweep")
+    local rows = {}
+    if s.sweep and s.raid == s.sweep then rows[4] = s.sweep
+    else
+        if s.sweep then rows[4] = "Sweep: " .. s.sweep end
+        if s.raid then rows[5] = "Raid: " .. s.raid end
+    end
+    return { title = "CALL A SWEEP", items = {
+        Can("Contraband sweep (inspections)", function() QM("sweep", "sweep") end, s.sweep and "not now" or nil),
+        Can("Block raid (a housing block)", function() QM("sweep", "raid") end, s.raid and "not now" or nil),
+    }, empty = rows }
+end
+
+------------------------------------------------------------------------
 -- F1: what everyone has
 ------------------------------------------------------------------------
 
@@ -298,7 +497,7 @@ function LC_CL.QuickRoleRoot()
     local f, unit, rebel = Who(me)
     local fac = LCF and LCF.Get and LCF.Get(f)
     local title, accent = fac and fac.name or "", ACCENT.default
-    local items, usual = {}, {}
+    local items, usual, late = {}, {}, {}
     local function Add(it) if it and #items < 8 then items[#items + 1] = it end end
     if unit then
         title = me:GetNW2String("lcf_title", "") ~= "" and me:GetNW2String("lcf_title", "") or ((LCF and LCF.IsOverwatch and LCF.IsOverwatch(me)) and "OVERWATCH" or "CIVIL PROTECTION")
@@ -314,6 +513,29 @@ function LC_CL.QuickRoleRoot()
         Add(Item("Call for backup", function() Send("backup") end))
         Add(Item("Issue a BOLO...", function() Ask("BOLO", "What should Civil Protection units look out for?", "bolo") end))
         Add(Item("Send my 10-20", function() Send("10-20") end))
+        -- the Resistance's man inside, beside a prisoner being marched to the cells (sv_livingcity_insider.lua):
+        -- right after the six, only while it's there; greyed while someone can see
+        local slipT, slipWhy = nil, nil
+        if LC_CL.InsiderSlipNow then slipT, slipWhy = LC_CL.InsiderSlipNow(me) end
+        if slipT then
+            local whyNot = LC_CL.InsiderSlipWhyNot and LC_CL.InsiderSlipWhyNot(slipWhy)
+            local slip = Item("Let " .. Name(slipT) .. " slip away" .. (whyNot and (" (" .. (slipWhy == "watched" and "someone can see you" or "not yet") .. ")") or ""),
+                function() Send("letslip") end)
+            slip.id, slip.disabled = "letslip", whyNot ~= nil
+            Add(slip)
+        end
+        -- the Insider's own page, right after (the owner, later on 7 November)
+        if LC_CL.Insider then
+            local inside = Page("Inside", InsidePage)
+            inside.id = "inside"
+            Add(inside)
+        end
+        -- Division Leader and up: the city's sweep or raid, on order (after what's in front of you)
+        if f == "cp" and me:GetNW2Int("lcf_rank", 1) >= 3 then
+            local sw = Page("Call a sweep", SweepPage)
+            sw.id = "sweep"
+            late[#late + 1] = sw
+        end
         usual = { Item("My directives (F4)", function() Hub("jobs") end), Item("Records terminal", function() Send("records") end) }
     elseif rebel then
         title, accent = "RESISTANCE", ACCENT.resistance
@@ -322,11 +544,26 @@ function LC_CL.QuickRoleRoot()
         Add(Item("Black market", function() Send("market") end))
         Add(Page("Resistance", ResistancePage))
         if me:GetNW2Int("lc_squad_n", 0) > 0 then Add(Page("Squad orders", SquadPage)) end
+        local band = Page("Freq 7", Freq7Page)
+        band.id = "freq7"
+        Add(band)
     elseif f == "admin" then
         -- only the Administrator sets sociostability (the owner, 7 November)
         Add(Page("Sociostability", SocioPage))
         Add(Item("Broadcast to the whole city...", function() Ask("Broadcast", "What does the city hear?", "broadcast") end))
         if #(LC_CL.Manpower or {}) > 0 then Add(Page("Combine manpower", ManpowerPage)) end
+        -- (the owner, later on 7 November) the tablet, the laws, tonight's dream, the guards, an order of arrest
+        Add(Item("Open my tablet (the office)", function() QM("office") end))
+        Add(Item("The city's laws", function() Send("laws") end))
+        Add(Page("Tonight's dream", DreamPage))
+        Add(Page("Command the guards", GuardsPage))
+        local t = Looking(me, 1500)
+        if t and not t:IsAdmin() and not t:GetNW2Bool("lc_unit", false) and not COMBINE[t:GetNW2String("lcf_faction", "")] then
+            local wanted = t:GetNW2Float("lc_wanted_until", 0) > CurTime()
+            local arrest = Can("Order " .. Name(t) .. "'s arrest", function() QM("arrest", "", t) end, (wanted and "already wanted") or Later(Info("adm").arrest))
+            arrest.id = "arrest"
+            Add(arrest)
+        end
     elseif f == "vort" then
         Add(Item("Reach out through the vortessence", function() Send("vortcall") end))
     elseif f == "stalker" then
@@ -344,10 +581,24 @@ function LC_CL.QuickRoleRoot()
     if (f == "citizen" or f == "") and me:GetNW2Int("lce_standing", 0) >= 150 then
         Add(Item(me:GetNW2Bool("lc_foreman", false) and "Stop being a Union foreman" or "Become a Union foreman", function() Send("foreman") end))
     end
+    -- a citizen's own (the owner, later on 7 November): work, rations, home, standing
+    if f == "citizen" or f == "" then
+        local mine = Page("Me: work, rations, home, standing", MePage)
+        mine.id = "me"
+        Add(mine)
+    end
+    -- in a cell: what you're in for, and how long is left
+    local jail = me:GetNW2Float("lc_jail_until", 0) - CurTime()
+    if jail > 0 then
+        local sentence = Item(string.format("My sentence: %d:%02d left", math.floor(jail / 60), math.floor(jail % 60)), function() QM("sentence") end)
+        sentence.id = "sentence"
+        Add(sentence)
+    end
     -- staff
     if me:IsAdmin() then usual[#usual + 1] = Page("Staff", StaffPage) end
     -- then what only your side does to what's in front of you, then your usual ones
     for _, it in ipairs(Context(me, unit, rebel)) do if it.role then Add(it) end end
+    for _, it in ipairs(late) do Add(it) end
     for _, it in ipairs(usual) do Add(it) end
     local empty = #items == 0
     items[9] = Full()
@@ -375,7 +626,20 @@ end
 function LC_CL.OpenQuick2()
     local me = LocalPlayer()
     if not IsValid(me) or not me:Alive() then return end
-    open = { page = LC_CL.QuickRoleRoot(), stack = {}, last = CurTime(), kind = "role" }
+    open = { page = LC_CL.QuickRoleRoot(), stack = {}, last = CurTime(), kind = "role", askAt = CurTime() + 2 }
+    open.page.rebuild = LC_CL.QuickRoleRoot
+    if CurTime() - (LC_CL.QuickInfoAt or -99) > 1 then AskInfo() end
+end
+
+-- New word from the server (what's greyed, and why): F2's page as it is now, in place.
+function LC_CL.QuickRebuild()
+    if not open or open.kind ~= "role" or not open.page.rebuild then return end
+    local ok, page = pcall(open.page.rebuild)
+    if ok and istable(page) then
+        page.rebuild = open.page.rebuild
+        page.accent = page.accent or open.page.accent
+        open.page = page
+    end
 end
 
 -- 1 to 9 picks; 0 goes back a page, or closes.
@@ -387,12 +651,13 @@ function LC_CL.QuickPick(n)
         return
     end
     local it = open.page.items[n]
-    if not it then return end
+    if not it or it.disabled then return end
     if it.page then
         local accent = open.page.accent
         table.insert(open.stack, open.page)
         open.page = it.page()
         open.page.accent = open.page.accent or accent
+        open.page.rebuild = it.page
         return
     end
     open = nil
@@ -412,6 +677,11 @@ hook.Add("Think", "LivingCityQuickKeys", function()
     if not IsValid(me) or not me:Alive() or (gui and gui.IsGameUIVisible and gui.IsGameUIVisible()) or CurTime() - open.last > 20 then
         open = nil
         return
+    end
+    -- F2 stays up to date while it's open (what's greyed, and why)
+    if open.kind == "role" and CurTime() >= (open.askAt or 0) then
+        open.askAt = CurTime() + 2
+        AskInfo()
     end
     if (me.IsTyping and me:IsTyping()) or (vgui and vgui.GetKeyboardFocus and vgui.GetKeyboardFocus()) then return end
     for n = 0, 9 do
@@ -454,7 +724,7 @@ hook.Add("HUDPaint", "LivingCityQuick", function()
         local it = page.items[i]
         local ry = y + 34 + (i - 1) * 26
         if it then
-            local col = it.ctx and CONTEXT or INK
+            local col = it.disabled and DIM or (it.ctx and CONTEXT or INK)
             draw.SimpleText(tostring(i), "LCQuickNum", x + 16, ry + 12, accent, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
             it.fit = it.fit or Fit(it.label .. (it.page and "  >" or ""), "LCQuickItem", W - 46)
             draw.SimpleText(it.fit, "LCQuickItem", x + 34, ry + 12, col, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)

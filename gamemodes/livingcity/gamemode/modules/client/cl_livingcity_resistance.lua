@@ -14,14 +14,18 @@ local LAMBDA = Color(230, 150, 60)
 
 local function MyFaction() return LocalPlayer():GetNW2String("lcf_faction", "") end
 
+-- (made once here, not every frame)
+local C_200_180_170 = Color(200, 180, 170)
+local C_230_190_160 = Color(230, 190, 160)
+local V_0_0_82 = Vector(0, 0, 82)
 hook.Add("HUDPaint", "LivingCityTraitors", function()
     local me = LocalPlayer()
     if not IsValid(me) then return end
     local now = CurTime()
     if MyFaction() == "resistance" then
-        for _, p in ipairs(player.GetAll()) do
+        for _, p in LC.Players() do
             if p ~= me and p:Alive() and p:GetNW2Float("lc_traitor_until", 0) > now and p:GetPos():DistToSqr(me:GetPos()) < 1500 * 1500 then
-                local s = (p:GetPos() + Vector(0, 0, 82)):ToScreen()
+                local s = (p:GetPos() + V_0_0_82):ToScreen()
                 if s.visible then
                     draw.SimpleTextOutlined("TRAITOR", "DermaDefaultBold", s.x, s.y, RED, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM, 1, color_black)
                 end
@@ -32,12 +36,12 @@ hook.Add("HUDPaint", "LivingCityTraitors", function()
     local crip = me:GetNW2Float("lc_crippled_until", 0) - now
     if crip > 0 then
         draw.SimpleTextOutlined(string.format("BROKEN FEET: no running for %d:%02d", math.floor(crip / 60), math.floor(crip % 60)), "DermaDefault",
-            ScrW() - 20, y, Color(230, 190, 160), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER, 1, color_black)
+            ScrW() - 20, y, C_230_190_160, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER, 1, color_black)
         y = y + 16
     end
     if MyFaction() == "stalker" then
         draw.SimpleTextOutlined("COMBINE PROPERTY: there is no way out but death", "DermaDefaultBold",
-            ScrW() / 2, ScrH() * 0.1, Color(200, 180, 170), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+            ScrW() / 2, ScrH() * 0.1, C_200_180_170, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     end
     if me:GetNW2Bool("lc_interrogated", false) then
         draw.SimpleTextOutlined("INTERROGATION   Talk (F1, or the choice on screen) to make it stop. Or say nothing, and take it.", "DermaDefaultBold",
@@ -60,7 +64,7 @@ timer.Simple(0, function()
         local live = GetGlobal2Entity("lc_live")
         if IsValid(live) and live:IsPlayer() then return live, live:Nick() end
         if IsValid(live) or GetGlobal2Bool("lc_live_npc", false) then
-            local n = IsValid(live) and live:GetNW2String("lc_pname", "") or ""
+            local n = IsValid(live) and LC.NPCStr(live, "lc_pname", "") or ""
             if n == "" then n = GetGlobal2String("lc_live_name", "") end
             return live, n ~= "" and n or "The Administrator"
         end
@@ -116,6 +120,8 @@ timer.Simple(0, function()
 end)
 
 -- Someone on air: a banner for everyone, so you know whose voice it is
+-- (made once here, not every frame)
+local C_150_210_240 = Color(150, 210, 240)
 hook.Add("HUDPaint", "LivingCityLive", function()
     local _, liveName
     if LC_CL.OnAir then _, liveName = LC_CL.OnAir() end
@@ -123,5 +129,5 @@ hook.Add("HUDPaint", "LivingCityLive", function()
     local pirate = GetGlobal2Bool("lc_live_pirate", false)
     local quiet = LC_CL.SpeakerBrokenNear and LC_CL.SpeakerBrokenNear(LocalPlayer():GetPos())
     local text = (pirate and "PIRATE BROADCAST: " or "CITY BROADCAST: ") .. liveName .. (quiet and "  (the loudspeaker here is broken)" or "")
-    draw.SimpleTextOutlined(text, "DermaDefaultBold", ScrW() / 2, 96, pirate and LAMBDA or Color(150, 210, 240), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+    draw.SimpleTextOutlined(text, "DermaDefaultBold", ScrW() / 2, 96, pirate and LAMBDA or C_150_210_240, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
 end)

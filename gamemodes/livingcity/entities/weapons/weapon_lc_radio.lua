@@ -153,6 +153,9 @@ if CLIENT then
     -- In your own view: the radio held up, low on the right, and what it does. (The owner, 1 November: it
     -- sat so low it was barely on screen; raised well up. lc_radio_view "forward right up" moves it, yours.)
     local cvView = CreateClientConVar("lc_radio_view", "20 9 -3", true, false, "Where your radio transmitter sits in your view: forward right up")
+    -- (made once here, not every frame)
+    local C_150_220_150 = Color(150, 220, 150)
+    local C_220_220_210 = Color(220, 220, 210)
     function SWEP:DrawHUD()
         local m = Prop(self)
         if IsValid(m) and cam and cam.Start3D then
@@ -171,9 +174,9 @@ if CLIENT then
         end
         local band = BANDS[self:GetNW2String("lc_band", "")] or "your radio"
         local w, h = ScrW(), ScrH()
-        draw.SimpleTextOutlined("TRANSMITTER UP: what you type and say goes out on " .. band, "DermaDefaultBold", w / 2, h - 120, Color(150, 220, 150), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+        draw.SimpleTextOutlined("TRANSMITTER UP: what you type and say goes out on " .. band, "DermaDefaultBold", w / 2, h - 120, C_150_220_150, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
         draw.SimpleTextOutlined("Only someone right beside you hears you directly. R puts it away." .. (self:GetNW2Int("lc_bands", 1) > 1 and " Right click switches frequency." or ""),
-            "DermaDefault", w / 2, h - 102, Color(220, 220, 210), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+            "DermaDefault", w / 2, h - 102, C_220_220_210, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     end
 
     function SWEP:OnRemove()

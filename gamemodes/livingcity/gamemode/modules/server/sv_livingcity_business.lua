@@ -64,16 +64,14 @@ LC.Rentals = LC.Rentals or nil -- [doorId] = { owner, ownerName, untilT (os.time
 
 local function Load()
     if LC.Rentals then return LC.Rentals end
-    local raw = file.Read(FilePath(), "DATA")
-    local t = raw and util.JSONToTable(raw) or {}
+    local t = LC.SafeReadJSON(FilePath()) or {}
     LC.Rentals = {}
     for k, v in pairs(istable(t) and t or {}) do LC.Rentals[tonumber(k) or k] = v end
     return LC.Rentals
 end
 
 local function Save()
-    file.CreateDir(DIR)
-    file.Write(FilePath(), util.TableToJSON(Load()))
+    LC.SafeWrite(FilePath(), util.TableToJSON(Load()))
 end
 
 local function OwnerKey(ply)
@@ -264,6 +262,15 @@ function LC.ApartmentInfo(ply)
     for _, n in pairs(r.keys or {}) do holders[#holders + 1] = n end
     return string.format("Your apartment, %s: %s left, %s. Keys: %s.", where, Hm(Left(r)), r.locked and "locked" or "unlocked",
         #holders > 0 and table.concat(holders, ", ") or "just you")
+end
+
+-- Their apartment, for F2 > Me > My home (sv_livingcity_quickmore.lua): { pos, left (seconds), where }, or nil.
+function LC.ApartmentSummary(ply)
+    local mine = IsValid(ply) and MyRentals(ply) or {}
+    if #mine == 0 then return nil end
+    local d = DoorById(mine[1].main)
+    if not IsValid(d) then return nil end
+    return { pos = d:GetPos(), left = Left(mine[1].r), where = LC.DescribePlace and LC.DescribePlace(d:GetPos()) or "" }
 end
 
 -- Pressing E on a rented, locked door.

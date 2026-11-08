@@ -78,10 +78,12 @@ function LC.DayPhase(h)
     return "dusk"
 end
 
-function LC.IsNight() return cvAtmos:GetBool() and LC.DayPhase() == "night" end
+-- Deep night only (21:00 to 05:00, with lc_atmos on). LC.IsNight (sv_livingcity_rest.lua)
+-- is the wider one everything else uses: night or dusk.
+function LC.IsDeepNight() return cvAtmos:GetBool() and LC.DayPhase() == "night" end
 
 function LC.AtmosEventMul(name)
-    if not LC.IsNight() then return 1 end
+    if not LC.IsDeepNight() then return 1 end
     if name == "curfew" then return 3 end
     if name == "rations" then return 0.5 end
     return 1

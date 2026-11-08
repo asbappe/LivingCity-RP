@@ -39,12 +39,14 @@ if SERVER then
 end
 
 if CLIENT then
+    -- (made once here, not every frame)
+    local C_220_190_40 = Color(220, 190, 40)
     function ENT:Draw()
         if Has(self:GetModel()) then self:DrawModel() return end
         -- (the server has the pack and this game hasn't: the stand-in, not an ERROR)
         if not IsValid(self.lcStandin) and ClientsideModel then
             self.lcStandin = ClientsideModel(STANDIN, RENDERGROUP_OPAQUE)
-            if IsValid(self.lcStandin) then self.lcStandin:SetNoDraw(true) self.lcStandin:SetColor(Color(220, 190, 40)) end
+            if IsValid(self.lcStandin) then self.lcStandin:SetNoDraw(true) self.lcStandin:SetColor(C_220_190_40) end
         end
         if IsValid(self.lcStandin) then
             self.lcStandin:SetPos(self:GetPos()) self.lcStandin:SetAngles(self:GetAngles())

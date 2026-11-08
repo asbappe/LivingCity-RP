@@ -60,6 +60,8 @@ local function Button(parent, text, col, click)
     b.DoClick = click
     return b
 end
+-- (the same look for the pat-down a unit's search opens: cl_livingcity_patsearch.lua)
+LC_CL.JobLook = { BG = BG, CARD = CARD, INK = INK, DIM = DIM, ACC = ACC, GOOD = GOOD, BAD = BAD, WARN = WARN, Button = Button }
 
 net.Receive("lc_jg_panel", function()
     local t = ReadCompressed() or {}
@@ -734,16 +736,29 @@ end
 
 local MARK_COL = { target = Color(240, 200, 90), person = Color(120, 180, 255), danger = Color(230, 80, 70), done = Color(110, 200, 110) }
 
+-- (the search of every entity within 1200 units is made a fifth of a second at a time, not every frame;
+-- the outlines are still drawn every frame. A marked thing that's gone means a fresh look at once.)
+local marksBy, marksAt = {}, -1
 hook.Add("PreDrawHalos", "LivingCityJobMarks", function()
     if not halo then return end
     local me = LocalPlayer()
     if not IsValid(me) or not (LC_CL.JobGame and LC_CL.JobGame()) then return end
-    local by = {}
-    for _, e in ipairs(ents.FindInSphere(me:GetPos(), 1200)) do
-        if IsValid(e) and e:GetNW2Entity("lc_jg_owner") == me then
-            local m = e:GetNW2String("lc_jg_mark", "")
-            if MARK_COL[m] then by[m] = by[m] or {} table.insert(by[m], e) end
+    local now = CurTime()
+    local fresh = now < marksAt and now >= marksAt - 0.2
+    if fresh then
+        for _, list in pairs(marksBy) do
+            for _, e in ipairs(list) do if not IsValid(e) then fresh = false break end end
         end
     end
-    for m, list in pairs(by) do halo.Add(list, MARK_COL[m], 2, 2, 1, true, m ~= "done") end
+    if not fresh then
+        local by = {}
+        for _, e in ipairs(ents.FindInSphere(me:GetPos(), 1200)) do
+            if IsValid(e) and e:GetNW2Entity("lc_jg_owner") == me then
+                local m = e:GetNW2String("lc_jg_mark", "")
+                if MARK_COL[m] then by[m] = by[m] or {} table.insert(by[m], e) end
+            end
+        end
+        marksBy, marksAt = by, now + 0.2
+    end
+    for m, list in pairs(marksBy) do halo.Add(list, MARK_COL[m], 2, 2, 1, true, m ~= "done") end
 end)

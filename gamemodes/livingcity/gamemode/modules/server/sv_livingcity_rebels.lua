@@ -204,6 +204,8 @@ function LC.RebelRoomIn(z)
     local area
     if z.box then
         area = math.abs(z.box.maxs.x - z.box.mins.x) * math.abs(z.box.maxs.y - z.box.mins.y)
+    elseif z.cells then
+        area = (z.n or 0) * LCZ.CELL * LCZ.CELL -- (grown ground: its cells)
     else
         area = math.pi * (z.r or 300) ^ 2
     end
@@ -257,7 +259,7 @@ function LC.RebelSpawnPos()
     for _, z in ipairs(zones) do
         -- (no goto here: "continue" is a keyword in Garry's Mod's Lua)
         -- (nor on ground a team is clearing: LC.QuietRebels, sv_livingcity_fieldops.lua)
-        if (z.contestedUntil or 0) <= now and CountIn(z) < LC.RebelRoomIn(z) and not (LC.RebelQuietAt and LC.RebelQuietAt(z.pos, z.r)) then
+        if (z.contestedUntil or 0) <= now and CountIn(z) < LC.RebelRoomIn(z) and not (LC.RebelQuietZone and LC.RebelQuietZone(z)) then
             local p = HiddenSpot(z)
             if p then return p + Vector(0, 0, 4), z end
         end
@@ -286,8 +288,8 @@ local function SpawnRebel(pos, zone, weapon)
     st.gender = string.find(string.lower(npc:GetModel() or ""), "female", 1, true) and "female" or "male"
     st.leaveAt = nil
     st.nextLook = 0
-    npc:SetNW2String("lc_pname", Pick(st.gender == "female" and NAMES_F or NAMES_M))
-    npc:SetNW2String("lc_pjob", "Resistance")
+    LC.SetNPCStr(npc, "lc_pname", Pick(st.gender == "female" and NAMES_F or NAMES_M))
+    LC.SetNPCStr(npc, "lc_pjob", "Resistance")
     npc:SetNW2Bool("lc_prebel", true)
     for _, ply in ipairs(player.GetAll()) do
         LC.SetRel(npc, st, ply, LC.RebelDisposition(npc, st, ply, LC.PlayerIsZombie and LC.PlayerIsZombie(ply)))
@@ -333,7 +335,8 @@ function LC.RebelTrimCrowds(now)
             end
         end
         local over = #home - LC.RebelRoomIn(z)
-        if over > 0 then
+        -- (not on ground a team is retaking: the fighters holding it are the ones they've come to clear)
+        if over > 0 and not (LC.RebelQuietZone and LC.RebelQuietZone(z)) then
             -- the extras first (reinforcements, raiders back home), then anyone out of sight
             table.sort(home, function(a, b)
                 local ua, ub = a[2].unmanaged and 1 or 0, b[2].unmanaged and 1 or 0
@@ -692,7 +695,7 @@ local function FollowThink(npc, st, now)
         st.nextThink = now + 0.5
         if leader:GetPos():DistToSqr(st.meetAt) < 350 * 350 and leader:GetPos():DistToSqr(pos) < 600 * 600 then
             st.meetAt = nil
-            leader:ChatPrint("[Resistance] " .. npc:GetNW2String("lc_pname", "A fighter") .. " falls in with you.")
+            leader:ChatPrint("[Resistance] " .. LC.NPCStr(npc, "lc_pname", "A fighter") .. " falls in with you.")
         elseif pos:DistToSqr(st.meetAt) > 140 * 140 then
             HeadFor(npc, st, st.meetAt, false)
             LC.SetState(npc, st, "moving")
@@ -885,8 +888,8 @@ local function ThinkRebel(npc, st, now)
             -- a lookout fights from his post; defenders don't chase anyone far out of their territory
             if st.post and pos:DistToSqr(st.post.pos) > 350 * 350 then
                 HeadFor(npc, st, st.post.pos, true)
-            elseif not st.post and not st.raid and st.zone and pos:DistToSqr(st.zone.pos) > (st.zone.r * 1.4) ^ 2 then
-                HeadFor(npc, st, st.zone.pos, true) -- (out on an errand: home, fighting as they go)
+            elseif not st.post and not st.raid and st.zone and not LCZ.Within(st.zone, pos, 1.4) then
+                HeadFor(npc, st, LCZ.Heart(st.zone), true) -- (out on an errand: home, fighting as they go)
             elseif not CanSee(npc, e, 2500) and now - (st.lastChase or 0) > 3 then
                 st.lastChase = now
                 npc:SetLastPosition(e:GetPos())
@@ -975,12 +978,12 @@ local function ThinkRebel(npc, st, now)
         end
     end
     if st.returning then
-        if st.zone and pos:DistToSqr(st.zone.pos) < (st.zone.r * 0.9) ^ 2 then
+        if st.zone and LCZ.Within(st.zone, pos, 0.9) then
             st.returning = nil
             LC.SetState(npc, st, "idle")
             st.untilT = now + 3
         else
-            if st.zone then HeadFor(npc, st, st.zone.pos, true) end
+            if st.zone then HeadFor(npc, st, LCZ.Heart(st.zone), true) end
             return
         end
     end
@@ -990,12 +993,12 @@ local function ThinkRebel(npc, st, now)
 
     -- home: wander about inside the zone, and stay in it
     local z = st.zone
-    if z and pos:DistToSqr(z.pos) > (z.r * 1.3) ^ 2 then
+    if z and not LCZ.Within(z, pos, 1.3) then -- (grown ground: by its cells)
         if not LC.IsSeen(pos + UP) then
             local spot = LC.SpotInZone(z)
             if spot then npc:SetPos(spot + Vector(0, 0, 4)) end
         else
-            HeadFor(npc, st, z.pos, false)
+            HeadFor(npc, st, LCZ.Heart(z), false)
         end
         return
     end
@@ -1166,7 +1169,7 @@ local function RaidTarget(z)
     for _, kind in ipairs({ "checkpoint", "patrol", "queue" }) do
         for _, p in ipairs(LC.PointsOfKind(kind)) do
             local d = p.pos:Distance(z.pos)
-            if d > z.r + 400 and not LC.InRebelZone(p.pos) then cands[#cands + 1] = { pos = p.pos, d = d } end
+            if not LCZ.Near(z, p.pos, 400) and not LC.InRebelZone(p.pos) then cands[#cands + 1] = { pos = p.pos, d = d } end
         end
         if #cands > 0 then break end
     end
@@ -1292,14 +1295,13 @@ local function StagingSpot(z)
     for _ = 1, 40 do
         local p = LC.RandomWanderPos("cop")
         if p then
-            local d = p:Distance(z.pos)
-            if d > z.r + 400 and d < z.r + 2500 and not LC.IsSeen(p + UP) and LC.ClearSpot(p)
-                and (not LC.NavReachable or LC.NavReachable(p, z.pos)) then return p end -- (and a way in from there)
+            if not LCZ.Near(z, p, 400) and LCZ.Near(z, p, 2500) and not LC.IsSeen(p + UP) and LC.ClearSpot(p)
+                and (not LC.NavReachable or LC.NavReachable(p, LCZ.Heart(z))) then return p end -- (and a way in from there)
         end
     end
     for _ = 1, 20 do
         local p = LC.RandomWanderPos("cop")
-        if p and p:Distance(z.pos) > z.r + 300 and not LC.IsSeen(p + UP) then return p end
+        if p and not LCZ.Near(z, p, 300) and not LC.IsSeen(p + UP) then return p end
     end
     return nil
 end
@@ -1342,7 +1344,7 @@ local function SweepChore(u, st, sk, now)
         if not best then return false end
         st.sweepChore, sk.taken[best.ent], st.choreGo = best, u, 0
         c = best
-        u:SetNW2String("lc_doing", c.kind == "scientist" and "arresting the scientist" or (c.kind == "pot" and "smashing the pots" or "confiscating supplies"))
+        LC.SetNPCStr(u, "lc_doing", c.kind == "scientist" and "arresting the scientist" or (c.kind == "pot" and "smashing the pots" or "confiscating supplies"))
     end
     local pos = c.ent:GetPos()
     if u:GetPos():DistToSqr(pos) < 90 * 90 then
@@ -1350,7 +1352,7 @@ local function SweepChore(u, st, sk, now)
         CHORE_DO[c.kind](u, c.ent)
         sk.taken[c.ent] = nil
         st.sweepChore = nil
-        u:SetNW2String("lc_doing", "")
+        LC.SetNPCStr(u, "lc_doing", "")
         return true
     end
     if now > (st.choreGo or 0) then
@@ -1392,7 +1394,7 @@ function LC.SweepRallyPoint(sk, u, now)
     if not st or st.sweepRallied then return nil end
     local best, bd
     for _, p in ipairs(sk.rally) do
-        if IsValid(p) and p:Alive() and p:GetPos():DistToSqr(sk.zone.pos) < ((sk.zone.r or 300) + 2500) ^ 2 then
+        if IsValid(p) and p:Alive() and LCZ.Near(sk.zone, p:GetPos(), 2500) then
             local d = p:GetPos():DistToSqr(u:GetPos())
             if not bd or d < bd then best, bd = p, d end
         end
@@ -1655,7 +1657,7 @@ local function RunSkirmish(sk, now)
         for _, u in ipairs(sk.units) do
             local ust = IsValid(u) and LC.NPCs[u]
             -- there: at the edge of their ground, or already fighting them
-            if IsValid(u) and Alive(u) and (u:GetPos():DistToSqr(sk.zone.pos) < (sk.zone.r + 200) ^ 2 or (ust and ust.state == "hostile")) then
+            if IsValid(u) and Alive(u) and (LCZ.Near(sk.zone, u:GetPos(), 200) or (ust and ust.state == "hostile")) then
                 sk.arrived = true
                 sk.ends = math.max(sk.ends, now + 120) -- (a long walk in doesn't eat the sweep)
                 hook.Run("LivingCitySweepArrived", sk, u) -- (a gas bomb lobbed in first: sv_livingcity_cleanup.lua)
@@ -1779,7 +1781,7 @@ function LC.DismissFollower(npc, st, quiet)
         st.returning, st.unmanaged, st.expires = true, true, CurTime() + 60
     end
     if st.foe then DropFoe(npc, st, CurTime()) end
-    if not quiet and IsValid(leader) then leader:ChatPrint("[Resistance] '" .. npc:GetNW2String("lc_pname", "Right") .. ". I'll head back.'") end
+    if not quiet and IsValid(leader) then leader:ChatPrint("[Resistance] '" .. LC.NPCStr(npc, "lc_pname", "Right") .. ". I'll head back.'") end
 end
 
 local function Recruit(ply, npc, st)
@@ -1812,8 +1814,9 @@ local function Recruit(ply, npc, st)
     st.unmanaged = true -- someone else holds the fort while they're out
     st.returning, st.expires, st.raid, st.errand = nil, nil, nil, nil
     npc:EmitSound(Vo(st, Pick({ "okimready01", "okimready02", "letsgo01", "letsgo02", "leadtheway01" })), 75)
-    ply:ChatPrint("[Resistance] " .. npc:GetNW2String("lc_pname", "A fighter") .. " is with you, and stays with you. They hold their fire until you open up or the Combine do. E on them again to send them home.")
+    ply:ChatPrint("[Resistance] " .. LC.NPCStr(npc, "lc_pname", "A fighter") .. " is with you, and stays with you. They hold their fire until you open up or the Combine do. E on them again to send them home.")
 end
+LC.RebelRecruit = Recruit -- (F2 > Freq 7 > Call for backup brings idle fighters this way: sv_livingcity_quickmore.lua)
 
 -- A squad belongs to the connection that formed it. Anyone still marked as
 -- following a player who has left, or who joined again since, goes home; and
@@ -1941,7 +1944,7 @@ local function PostWarn(npc, st, who, now)
     LC.Face(npc, who:GetPos())
     local where = LC.DescribePlace and LC.DescribePlace(st.post.pos) or "at a lookout post"
     if LC.RadioNotice then
-        LC.RadioNotice("resistance", string.format("%s on lookout %s: Combine coming%s!", npc:GetNW2String("lc_pname", "Our lookout"), where,
+        LC.RadioNotice("resistance", string.format("%s on lookout %s: Combine coming%s!", LC.NPCStr(npc, "lc_pname", "Our lookout"), where,
             who:IsPlayer() and "" or ", the city's own"))
     end
     if who:IsPlayer() then who:ChatPrint("[Resistance] Someone shouts from up ahead: 'Combine! Coming in!' You've been seen.") end
@@ -2001,7 +2004,7 @@ function LC.EnsureLookoutPosts()
                     st.unmanaged = true
                     st.post = { pos = p.pos, yaw = p.yaw or 0 }
                     made:SetAngles(Angle(0, p.yaw or 0, 0))
-                    made:SetNW2String("lc_pjob", "Resistance lookout")
+                    LC.SetNPCStr(made, "lc_pjob", "Resistance lookout")
                     made:SetNW2Bool("lc_lookout", true)
                     slot.npc, slot.diedAt = made, nil
                 end
@@ -2066,8 +2069,8 @@ local function EnsureQuartermasters()
                 if IsValid(npc) then
                     st.quartermaster, st.unmanaged = true, true
                     st.qmHome = p + Vector(0, 0, 4)
-                    npc:SetNW2String("lc_pname", "Quartermaster " .. npc:GetNW2String("lc_pname", ""))
-                    npc:SetNW2String("lc_pjob", "Resistance quartermaster: gear and work")
+                    LC.SetNPCStr(npc, "lc_pname", "Quartermaster " .. LC.NPCStr(npc, "lc_pname", ""))
+                    LC.SetNPCStr(npc, "lc_pjob", "Resistance quartermaster: gear and work")
                 end
             end
         end
@@ -2100,7 +2103,7 @@ function LC.RebelEdgeLevel(ply)
     return 0
 end
 timer.Create("LivingCityRebelEdge", 0.5, 0, function()
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         local v = LC.RebelEdgeLevel(ply)
         if ply:GetNW2Int("lc_rebelzone", 0) ~= v then ply:SetNW2Int("lc_rebelzone", v) end
     end

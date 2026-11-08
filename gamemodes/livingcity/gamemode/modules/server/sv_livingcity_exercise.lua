@@ -755,7 +755,7 @@ local function StartRun(now)
                     st.eventUntil = math.huge
                     npc:SetPos(X.yard.pos + Vector(0, 0, 4))
                     LC.FaceYaw(npc, X.yard.yaw)
-                    npc:SetNW2String("lc_pname", "Union fitness instructor")
+                    LC.SetNPCStr(npc, "lc_pname", "Union fitness instructor")
                     X.instructor = npc
                 end
             end
@@ -1260,7 +1260,7 @@ local lastTick = 0
 timer.Create("LivingCityExercise", 0.1, 0, function()
     local now = CurTime()
     -- boosts wear off
-    for _, p in ipairs(player.GetAll()) do
+    for _, p in LC.Players() do
         if p.lcxBoost and now > p.lcxBoost.untilT then EndBoost(p) end
     end
     if not X then return end

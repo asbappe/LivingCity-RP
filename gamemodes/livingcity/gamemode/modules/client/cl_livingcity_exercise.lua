@@ -181,6 +181,11 @@ local function Beam(pos, col)
     render.DrawWireframeBox(pos, Angle(0, 0, 0), Vector(-24, -24, 0), Vector(24, 24, 8), col, false)
 end
 
+-- (made once here, not every frame)
+local A_0_0_0 = Angle(0, 0, 0)
+local V_0_0_0 = Vector(0, 0, 0)
+local V_12_12_72 = Vector(12, 12, 72)
+local V_m12_m12_0 = Vector(-12, -12, 0)
 hook.Add("PostDrawTranslucentRenderables", "LivingCityExercise", function(depth, sky)
     if sky or not EX then return end
     local me = LocalPlayer()
@@ -197,11 +202,11 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityExercise", function(depth,
             local p = Along(math.Clamp((CurTime() - EX.runStart) * EX.pace - me:GetNW2Float("lcx_lag", 0), 0, EX.total or 0))
             -- the pace marker: green while you're keeping up with it, red when you've fallen behind
             local col = (inIt and not me:GetNW2Bool("lcx_behind", false)) and GREEN or RED
-            if p then render.DrawWireframeBox(p, Angle(0, 0, 0), Vector(-12, -12, 0), Vector(12, 12, 72), col, false) end
+            if p then render.DrawWireframeBox(p, A_0_0_0, V_m12_m12_0, V_12_12_72, col, false) end
         end
     elseif EX.kind == "drill" then
         local spot = me:GetNW2Vector("lcx_spot", nil)
-        if spot and spot ~= Vector(0, 0, 0) then
+        if spot and spot ~= V_0_0_0 then
             local prev
             for i = 0, 16 do
                 local a = i / 16 * math.pi * 2

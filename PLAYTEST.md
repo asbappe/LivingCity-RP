@@ -886,6 +886,20 @@ Notes:
 - [ ] **Combine-only zone:** asleep inside one when a nightmare starts, are you left alone?
   Notes:
 - [ ] **Commissary:** Union cigarettes from standing 75, vodka from 150?
+## 7 November, part 3
+- [ ] **Combine manpower on the tablet:** as the Administrator, right click the tablet; "Combine manpower" lists Civil Protection and Overwatch (in reserve, lost today, next unit or soldier), matching F2 > Combine manpower. With `lc_manpower 0` it is gone.
+- [ ] **Manpower on the records terminal:** as a unit, open the records terminal (`!records`); the Manpower tab shows the same lines as F2 > Unit tools.
+- [ ] **Headcrab hunt:** as a rebel, empty your camp's supply crate (or wait for it to run out): a notice says a Headcrab hunt is on the Operations board (F4). Take it, kill four headcrabs in the infested ground, pick up the raw meat with E, stand by the crate: one meal each, the job completes, extra pay if the crate was empty. Zombies and city headcrabs don't count.
+- [ ] **Evidence burn:** confiscate a few things (search, arrest, raid), check F2 > Unit tools > Evidence lists them; as an admin press "Burn it now": metrocops carry boxes to the loudspeaker or square, the pile forms, the PA calls it, citizens gather, fire and smoke burn out and clean up. None during a curfew, lockdown, ending or dream.
+- [ ] **Snatching evidence:** as a citizen or rebel, press E on something in the pile before it catches: you get it back, and are wanted if a unit is watching. Once burning: "Too late".
+- [ ] **Food scarcity:** the dispenser's next ration is about 25 minutes away (a unit's still 10); a Commissary ration is 15 credits; the second tin from the Resistance crate says come back in 15 minutes; fishing casts take 25 to 45 seconds and mostly come up empty; a killed bird is replaced only after about 90 seconds.
+- [ ] **Network safety:** with about 100 NPCs and territory fights going, reconnect as superadmin with the editor overlay on: no "reliable data too big" kick, and the overlay and territory map fill in once loaded (big panels may take a few seconds).
+- [ ] **Long laws:** as Administrator, add two long laws (C > The city > The city's laws): every law board shows all of them, and a long broadcast shows whole on the city screens.
+- [ ] **Bug fixes to check:** pickpocketing works right after a map start; prisoners have fists and hands in a cell; dreamers hold their hands; the master interface can be hacked again; the quest trail goes away while your memory is clouded.
+- [ ] **Arrest struggle, officer gone:** have the officer walk 220+ units away (or die) mid-struggle: "The officer is gone: the struggle is over.", not wanted, no "You broke free".
+- [ ] **Lab wrecking pay:** as a citizen, wrecking a lab pays nothing; as a unit, 15 XP, 20 credits and the [Civil Protection] line.
+- [ ] **AR2 rebel kill:** as a unit holding the AR2, kill a rebel: "30 AR2 rounds", no SMG box.
+- [ ] **NPC cap:** a fresh server shows `lc_npc_budget` 100.
   Notes:
 
 ## Propaganda dreams (8 November)
@@ -900,6 +914,18 @@ Notes:
   Notes:
 - [ ] **Sizes:** her height, the pedestal, the mirrors (they are guesses at angles) and the admirers' kneeling pose look right; tell me what looks off.
   Notes:
+- [ ] **Let them slip, on F2:** as the Insider beside a prisoner being marched: the right-hand panel shows "Let <name> slip away: F2 > 7" (bright); F2 > 7 lets them go (20 s head start, wanted if a unit still sees them, -20 standing, once per 20 min); watched: the line goes faint and the entry is greyed.
+- [ ] **Pat-down search:** as a unit, search a citizen (baton R or F2): click Jacket, Waist, Legs, Boots one at a time; only checked spots give things up. As the searched player, press R once to slip something into a checked spot (about 6 in 10); walk off and you are wanted for evading.
+- [ ] **F2 for everyone:** Insider (F2 > Inside), Resistance (F2 > Freq 7: message, backup, my position, guide to rebel ground or a lab), plain citizen (F2 > Me: work, rations, home, standing), prisoner (My sentence), Administrator (tablet, laws, tonight's dream, guards, order an arrest), Division Leader and up (Call a sweep).
+- [ ] **Administrator's guards:** F2 > Command the guards > Follow distance (Close, Medium, Far) and When there's trouble (As always, Stay with me, Stand between us, Hold fire unless fired on); the menu marks the one in force.
+- [ ] **Stepping aside, own side only:** walk into a Metrocop or an Overwatch soldier as a unit or as the Administrator (it moves) and as a citizen or rebel (it doesn't); your Elites sidestep and return to their place; never mid-fight.
+- [ ] **Raids and sweeps keep coming:** after a Resistance operation succeeds (heist, breakout, screen, ambush, supply), raids and sweeps start again on their usual timers (they used to stop until a restart).
+- [ ] **Grown territory:** grow rebel ground down a corridor (admin tools > The city > Grow rebel ground now, a few times): barrels and crates along the whole corridor, fighters patrolling and appearing all along it, lower stretches too.
+- [ ] **Save files:** with the server stopped, cut data/livingcity/mail.json short and start it: the mail is all there (from mail.json.bak.txt, a warning in lc_debugreport). Blank the .bak.txt too and restart: a superadmin is told, the file isn't overwritten, and admin tools > The city > "Let the city save over them" allows it.
+- [ ] **NPC name tags on demand:** join with many NPCs: nearby names, jobs and what they're doing show as before; someone far across the square shows within about a second.
+- [ ] **Frame rate:** with job games on (sweeping, carts, triage), the frame rate should be steadier than before; nothing should look different.
+- [ ] **Daytime curfew announcement:** it now says a unit warns you three times, then you're wanted.
+- [ ] **Pose Recorder 2:** make a 3-keyframe wave, "Play what I'm making on me" (loop, once, hold, speed 2): another player sees it, a late joiner too; C > right click an NPC > Play animation; Mirror them on a right-arm pose: the left arm does the same on its own side.
 - [ ] **Song names (changed):** songs now go flat in `garrysmod/sound/livingcity/dreams/`, named for their codeword: `admire1.mp3` (the three admiring dreams), `saviour_horde1.mp3` (The Saviour before she comes), `saviour1.mp3` (after her soldiers arrive), `quiz1.mp3`. Anything in `dreams/administrator/` still plays as admire.
   Notes:
 - [ ] **Her voice lines:** record `saviour_stop1.wav` ("Stop!"), `saviour_soldiers1.wav` ("Come, my soldiers. Protect them."), `saviour_safe1.wav`, and optionally `adore_hello`, `roses_hello`, `mirror_hello`, `quiz_hello`, `quiz_q1` to `quiz_q10`, `quiz_end`, into `garrysmod/sound/livingcity/dreams/voice/`. A `.txt` with the same name sets the subtitle. Check each plays with its words on screen.

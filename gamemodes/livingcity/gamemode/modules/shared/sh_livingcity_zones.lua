@@ -4,7 +4,9 @@
     A zone is either a circle (pos, r) or a box (box = { mins, maxs }, axis
     aligned, the shape of most rooms and streets). A box also keeps a centre
     (pos) and the radius of a circle round it (r), for the things that only need
-    a rough idea of where and how big.
+    a rough idea of where and how big. Territory that grew is cells (below):
+    ask it with LCZ.Contains, LCZ.Within, LCZ.Near, LCZ.RandomInside and
+    LCZ.FloorAt, never by its pos and r.
 
     "Inside" is checked with a margin: lc_zone_mercy (96 units, about eight
     feet) is added to every zone where being inside keeps you out of trouble
@@ -219,6 +221,77 @@ function LCZ.PackGround(z)
     end
     return out
 end
+------------------------------------------------------------------------
+-- Asking a territory zone the questions that used to assume a circle. A zone
+-- you placed answers as it always has (the circle round its middle, pos and r);
+-- grown ground answers by its cells, so a corridor it took counts all the way
+-- along, and nothing beside it counts just for being near the middle.
+------------------------------------------------------------------------
+
+-- Is pos close to zone z? f under 1 or exactly 1: placed zones, within f times its
+-- radius of its middle; grown ground, on it. Over 1: placed zones the same; grown
+-- ground, within (f - 1) times its radius (the radius of a circle as big as it) of
+-- its nearest cell.
+function LCZ.Within(z, pos, f)
+    if z.cells then
+        if f <= 1 then return LCZ.InGround(z, pos, 0) end
+        return LCZ.InGround(z, pos, (f - 1) * (z.r or 200))
+    end
+    local r = (z.r or 300) * f
+    return pos:DistToSqr(z.pos) < r * r
+end
+
+-- Is pos within m units of zone z's edge, or inside it? Placed zones: of the circle
+-- round its middle (as always); grown ground: of its nearest cell.
+function LCZ.Near(z, pos, m)
+    if z.cells then return LCZ.InGround(z, pos, m) end
+    local r = (z.r or 300) + m
+    return pos:DistToSqr(z.pos) < r * r
+end
+
+-- How far pos is outside zone z, flat (0 inside or over it). Placed zones: from the
+-- circle round its middle; grown ground: from its nearest rectangle of cells.
+function LCZ.EdgeDist(z, pos)
+    if z.cells then
+        if LCZ.InGround(z, pos, 0) then return 0 end
+        local best = math.huge
+        for _, r in ipairs(z.rects or {}) do
+            local d = ToCell(pos.x, pos.y, r.x0 * CELL, r.y0 * CELL, (r.x1 + 1) * CELL, (r.y1 + 1) * CELL)
+            if d < best then best = d end
+        end
+        return best
+    end
+    local dx, dy = pos.x - z.pos.x, pos.y - z.pos.y
+    return math.max(0, math.sqrt(dx * dx + dy * dy) - (z.r or 300))
+end
+
+-- Somewhere in the middle of it to head for: a placed zone's centre; for grown
+-- ground, the middle of its cell nearest where it last grew to (on its floor).
+function LCZ.Heart(z)
+    if not z.cells then return z.pos end
+    local list = z.list
+    if not list or #list == 0 then return z.pos end
+    if z.lcHeartOf == list then return z.lcHeart end
+    local best, bd
+    for _, c in ipairs(list) do
+        local x, y = (c.cx + 0.5) * CELL, (c.cy + 0.5) * CELL
+        local d = (x - z.pos.x) ^ 2 + (y - z.pos.y) ^ 2 + (c.lo + 16 - z.pos.z) ^ 2
+        if not bd or d < bd then best, bd = Vector(x, y, c.lo + 16), d end
+    end
+    z.lcHeartOf, z.lcHeart = list, best
+    return best
+end
+
+-- The zone's floor where pos is: a placed zone's is its centre's; grown ground's is
+-- the floor of the cell pos is in (the centre's, off it).
+function LCZ.FloorAt(z, pos)
+    if z.cells then
+        local c = CellAt(z.cells, floor(pos.x / CELL), floor(pos.y / CELL), pos.z, 0)
+        if c then return c.lo + 16 end
+    end
+    return z.pos.z
+end
+
 -- And back: the cells again (each with its rectangle's floor and top), merged.
 function LCZ.UnpackGround(t, z)
     if type(t) ~= "table" then return nil end

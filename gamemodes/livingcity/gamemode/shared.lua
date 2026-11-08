@@ -29,6 +29,8 @@ GM.TeamBased = false
 LC_MODULES = {
     shared = {
         "sh_livingcity_cache", -- (first: quick lookups the rest use)
+        "sh_livingcity_net", -- (big and frequent sends to players, made safe: before anything sends)
+        "sh_livingcity_npcstr", -- (the people's names, jobs and doings: sent only to players near them)
         "sh_livingcity_acts",
         "sh_livingcity_lowered", -- (guns carried lowered until raised: hold R)
         "sh_livingcity_stamina", -- (running and jumping tire you)
@@ -44,6 +46,7 @@ LC_MODULES = {
     },
     server = {
         "sv_livingcity_perf", -- (first of the server modules: every timer after it is timed and staggered)
+        "sv_livingcity_safefile", -- (early: every save file is written and read through it)
         "sv_livingcity_guard", -- (before anything that listens to players: the flood guard wraps every handler)
         "sv_livingcity",
         "sv_livingcity_notices", -- (early: warnings and notices on screen, waypoints)
@@ -132,6 +135,7 @@ LC_MODULES = {
         "sv_livingcity_scavenge",
         "sv_livingcity_security",
         "sv_livingcity_sidejobs",
+        "sv_livingcity_crabhunt", -- (headcrab hunts: raw headcrabs from the infestation for the Resistance's supply crate)
         "sv_livingcity_slots",
         "sv_livingcity_staff",
         "sv_livingcity_staticprops",
@@ -140,6 +144,7 @@ LC_MODULES = {
         "sv_livingcity_storage",
         "sv_livingcity_stories",
         "sv_livingcity_insider", -- (the Resistance's man inside Civil Protection)
+        "sv_livingcity_quickmore", -- (more on F2: Inside, Freq 7, Me, the Administrator's orders, a senior unit's sweep)
         "sv_livingcity_loyalty", -- (what high Civil Standing earns a citizen)
         "sv_livingcity_survival",
         "sv_livingcity_talk",
@@ -147,6 +152,7 @@ LC_MODULES = {
         "sv_livingcity_territorypaths", -- (territory grows along the path nodes)
         "sv_livingcity_trains",
         "sv_livingcity_underground",
+        "sv_livingcity_patsearch", -- (a unit's search as a short pat-down: sv_livingcity_underground.lua starts it)
         "sv_livingcity_vort",
         "sv_livingcity_vortwork", -- (things to do as a vortigaunt, and the freed ones' camp life)
         "sv_livingcity_weeds", -- (weeds on open ground, the Groundskeeper, weedkiller as poison)
@@ -169,6 +175,7 @@ LC_MODULES = {
         "sv_livingcity_fieldops", -- (after the quests and the war: backup's guns, squads for violent jobs, flashbangs, rebel ground)
         "sv_livingcity_labdamage", -- (a lab shot up and wrecked, and the job to fix it)
         "sv_livingcity_career", -- (C > My career: rank, XP, the way to the Overwatch)
+        "sv_livingcity_evidence", -- (what units confiscate is kept, and burned in public now and then)
     },
     client = {
         "cl_livingcity",
@@ -186,6 +193,7 @@ LC_MODULES = {
         "cl_livingcity_grigori", -- (his window; the vest's charge on screen)
         "cl_livingcity_rest", -- (drooping eyelids, the stink's flies, sleeping, what you still have to do)
         "cl_livingcity_moregames", -- (their panels, and the outline on what the game wants you to look at)
+        "cl_livingcity_patsearch", -- (the pat-down window a unit's search opens, and the panel for the person searched)
         "cl_livingcity_atmos",
         "cl_livingcity_character",
         "cl_livingcity_checkpoints",

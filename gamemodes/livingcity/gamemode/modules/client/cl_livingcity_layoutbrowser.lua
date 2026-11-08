@@ -315,6 +315,9 @@ local COLORS = {
 }
 
 local nextAsk = 0
+-- (made once here, not every frame)
+local C_255_230_0 = Color(255, 230, 0)
+local V_0_0_40 = Vector(0, 0, 40)
 hook.Add("HUDPaint", "LivingCityLayoutFinder", function()
     if not next(LC_CL.highlight) then return end
     -- the layout only comes to editors who ask for it
@@ -325,10 +328,10 @@ hook.Add("HUDPaint", "LivingCityLayoutFinder", function()
     end
     local me = LocalPlayer():GetPos()
     for id in pairs(LC_CL.highlight) do
-        local col = COLORS[id] or (LC_CL.PointColor and LC_CL.PointColor(id)) or Color(255, 230, 0)
+        local col = COLORS[id] or (LC_CL.PointColor and LC_CL.PointColor(id)) or C_255_230_0
         local name = string.upper(LC_CL.PointName and LC_CL.PointName(id) or id)
         for i, pos in ipairs(LC_CL.LayoutPositions(id)) do
-            local s = (pos + Vector(0, 0, 40)):ToScreen()
+            local s = (pos + V_0_0_40):ToScreen()
             if s.visible then
                 local d = math.floor(me:Distance(pos) * 0.019)
                 surface.SetDrawColor(col)

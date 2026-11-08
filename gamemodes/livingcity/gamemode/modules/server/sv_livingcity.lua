@@ -49,7 +49,7 @@ local cvAutostart = CreateConVar("lc_autostart", "0", FLAGS, "Start Living City 
 local cvSpawnDist = CreateConVar("lc_spawn_mindist", "900", FLAGS, "Random spawns happen at least this far from players")
 local cvLifetime  = CreateConVar("lc_citizen_lifetime", "600", FLAGS, "Average seconds a citizen stays before going home (0 = forever)")
 local cvArrestChance = CreateConVar("lc_npc_arrest_chance", "8", FLAGS, "Percent chance an inspection ends with the citizen being taken to a cell")
-local cvBudget    = CreateConVar("lc_npc_budget", "60", FLAGS, "Hard cap on Living City NPCs, whatever the individual targets say")
+local cvBudget    = CreateConVar("lc_npc_budget", "100", FLAGS, "Hard cap on Living City NPCs, whatever the individual targets say")
 local cvLodDist   = CreateConVar("lc_lod_distance", "3500", FLAGS, "NPCs farther than this from every player think less often")
 local cvRebelPursuit = CreateConVar("lc_rebel_pursuit", "0", FLAGS, "Security NPCs chase people into rebel zones")
 
@@ -214,7 +214,7 @@ local function Viewers()
     local tick = engine.TickCount and not LC.TestMode and engine.TickCount() or nil
     if tick and tick == viewersTick then return viewers end
     local list, positions = {}, {}
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         local remote, ve = LC.ViewFrom(ply)
         positions[#positions + 1] = ply:GetPos()
         if remote then positions[#positions + 1] = remote end
@@ -1199,7 +1199,7 @@ local function GoHome(npc, st, run)
         if at then
             st.homeBlock = bz
             if GoTo(npc, st, at, run, { kind = "homebed", pos = at, yaw = b.yaw or 0 }) then
-                npc:SetNW2String("lc_doing", "going home to bed")
+                LC.SetNPCStr(npc, "lc_doing", "going home to bed")
                 return true
             end
             LC.NPCBedUp(npc, st)
@@ -1233,7 +1233,7 @@ local function StartLeaving(npc, st, run, why)
     local board = LC.TrainBoardingPos and LC.TrainBoardingPos()
     if board and GoTo(npc, st, board, run, { kind = "spawn", pos = board, yaw = math.random(0, 359) }) then
         if LC.NPCCarry then LC.NPCCarry(npc, st, "models/props_c17/suitcase001a.mdl") end
-        npc:SetNW2String("lc_doing", "leaving the city by train")
+        LC.SetNPCStr(npc, "lc_doing", "leaving the city by train")
         return true
     end
     local spawns = PointsOfKind("spawn")
@@ -1537,7 +1537,7 @@ function LC.SpotInZone(z)
         local tr = util.TraceLine({ start = top, endpos = top - Vector(0, 0, z.h and (z.h + 64) or 400), mask = MASK_NPCSOLID_BRUSHONLY })
         if tr.Hit and tr.HitNormal.z > 0.7 and (not z.h or LCZ.Contains(z, tr.HitPos)) and ClearSpot(tr.HitPos) then
             -- dry ground first: down in the water, or a channel below the zone's floor, only if there's nothing else
-            if (LC.InWater and LC.InWater(tr.HitPos)) or tr.HitPos.z < z.pos.z - 14 then wet = wet or tr.HitPos else return tr.HitPos end
+            if (LC.InWater and LC.InWater(tr.HitPos)) or tr.HitPos.z < LCZ.FloorAt(z, tr.HitPos) - 14 then wet = wet or tr.HitPos else return tr.HitPos end
         end
     end
     return wet
@@ -1695,7 +1695,7 @@ local function MaintainPopulation()
             for _, p in ipairs(player.GetAll()) do
                 if p:IsSuperAdmin() then
                     LC.Notice(p, "warn", "NPC cap", string.format("lc_npc_budget is %d, but the city's settings want %d NPCs: no more will spawn (units and citizens included). "
-                        .. "60 is the default: lc_npc_budget 60.", cvBudget:GetInt(), want), 14)
+                        .. "100 is the default: lc_npc_budget 100.", cvBudget:GetInt(), want), 14)
                 end
             end
             LC.Log("warn", string.format("lc_npc_budget (%d) is below what the city's settings want (%d): nothing more spawns", cvBudget:GetInt(), want))
@@ -2194,7 +2194,7 @@ local function ThinkSecurity(npc, st, now)
         -- tell people crowding them to move along, and escalate if they don't
         if now > st.nextWarn and LC.Event ~= "curfew" and LC.Event ~= "lockdown" then
             local npos = npc:GetPos()
-            for _, ply in ipairs(player.GetAll()) do
+            for _, ply in LC.Players() do
                 -- right up against him first (cheap), then who they are
                 if ply:GetPos():DistToSqr(npos) < 90 * 90 and ply:Alive() and not LC.PlayerIsCP(ply)
                     and not (LC.DisguisedAsCP and LC.DisguisedAsCP(ply))
@@ -2285,7 +2285,7 @@ LC.LooksCombine = LooksCombine
 local SCANNER_UNIT_RANGE = 1600
 local function ScannerSparesUnits(npc, st)
     local pos, near = npc:GetPos(), false
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         if ply:Alive() and ply:GetPos():DistToSqr(pos) < SCANNER_UNIT_RANGE * SCANNER_UNIT_RANGE and LooksCombine(ply) then
             near = true
             break
@@ -2380,17 +2380,17 @@ local function ThinkZombie(npc, st, now)
     if st.surgeExpires and now > st.surgeExpires and not LC.IsSeen(npc:GetPos() + UP) then npc:Remove() return end
     if not z then return end
     local pos = npc:GetPos()
-    local limit = z.r * 1.3
-    if pos:DistToSqr(z.pos) < limit * limit then return end
+    -- (grown ground by its cells, not the circle round where it last grew to: LCZ.Within)
+    if LCZ.Within(z, pos, 1.3) then return end
     local enemy = npc:GetEnemy()
-    if IsValid(enemy) and enemy:GetPos():DistToSqr(z.pos) < (z.r * 1.6) ^ 2 then return end
+    if IsValid(enemy) and LCZ.Within(z, enemy:GetPos(), 1.6) then return end
     -- wandered out: snap back if unseen, otherwise call it home
     if not LC.IsSeen(pos + UP) then
         local spot = LC.SpotInZone(z)
         if spot then npc:SetPos(spot + Vector(0, 0, 4)) end
     elseif not npc:IsCurrentSchedule(SCHED_FORCED_GO) then
         npc:SetEnemy(NULL)
-        npc:SetLastPosition(z.pos)
+        npc:SetLastPosition(LCZ.Heart(z))
         npc:SetSchedule(SCHED_FORCED_GO)
     end
 end
@@ -2400,7 +2400,7 @@ end
 ------------------------------------------------------------------------
 
 local function BarkPass(now)
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         if ply:Alive() and ply:GetVelocity():LengthSqr() > 100 * 100 then
             -- only who's right there (the engine finds them; not every NPC in the city)
             for _, npc in ipairs(ents.FindInSphere(ply:GetPos(), 60)) do
@@ -2992,23 +2992,46 @@ end)
 -- Out of the way (the owner, 1 November: units stood in doorways and wouldn't move). Walk into one of the
 -- city's people, a unit or a citizen, and they step aside: a shuffle sideways at once, then a few steps clear.
 -- Not someone busy with you or someone else (a stop, a chase, an escort, a guard, asleep, in a cell).
+-- The Combine's own (the owner, 8 November: "only for each other ... not for rebels, citizens, etc"):
+-- Civil Protection's units and the Overwatch's soldiers step aside only for Civil Protection players
+-- (the Overwatch ranks too) and for the City Administrator, and her Elites for her and for them;
+-- never in the middle of a fight. Citizens and everyone else's people still make way for anyone.
 ------------------------------------------------------------------------
 
 local cvMakeWay = CreateConVar("lc_npc_make_way", "1", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "The city's people (units too) step aside when a player walks into them")
 local BUSY = { hostile = true, inspect_approach = true, inspect_talk = true, escort = true, workescort = true, cleanguard = true,
     abed = true, event = true, jailed = true, escorted = true, inline = true }
+local COMBINE_ROLE = { cop = true, soldier = true }
+-- Would this one of the city's people step aside for this player?
+function LC.MakesWayFor(npc, st, ply)
+    if not st or npc:Health() <= 0 then return false end
+    local enemy = npc.GetEnemy and npc:GetEnemy()
+    local f = IsValid(ply) and ply:GetNW2String("lcf_faction", "") or ""
+    if st.adminGuard then
+        -- her Elites (sv_livingcity_cityadmin.lua): for her and Civil Protection, unless they're after someone
+        if IsValid(enemy) or IsValid(st.adminTarget) then return false end
+        return f == "admin" or f == "cp"
+    end
+    if BUSY[st.state] or st.subject or st.questLock then return false end -- (a march, a story, a job)
+    if not COMBINE_ROLE[st.role] then return true end
+    -- the Combine's own: never mid-fight, and only for their own side
+    if st.enemy or IsValid(enemy) or st.state == "fighting" then return false end
+    return f == "cp" or f == "admin" -- (units and soldiers alike, for their own side and for the City Administrator: the owner, 8 November)
+end
+
 local function MakeWay(now)
     if not cvMakeWay:GetBool() then return end
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         local vel = ply:GetVelocity()
         vel.z = 0
         if ply:Alive() and vel:LengthSqr() > 40 * 40 then
             local dir = vel:GetNormalized()
             for _, npc in ipairs(ents.FindInSphere(ply:GetPos() + dir * 30, 40)) do
                 local st = IsValid(npc) and npc:IsNPC() and LC.NPCs[npc]
-                if st and not BUSY[st.state] and not st.questLock and not st.subject and npc:Health() > 0
-                    and (st.makeWayAt or 0) < now and (npc:GetPos() - ply:GetPos()):GetNormalized():Dot(dir) > 0.4 then
+                if st and (st.makeWayAt or 0) < now and LC.MakesWayFor(npc, st, ply)
+                    and (npc:GetPos() - ply:GetPos()):GetNormalized():Dot(dir) > 0.4 then
                     st.makeWayAt = now + 2
+                    if st.adminGuard then st.makeWayBack = now + 1.5 end -- (then back to their place beside her)
                     -- to whichever side is open, away from the line you're walking
                     local side = Vector(-dir.y, dir.x, 0)
                     if (npc:GetPos() - ply:GetPos()):Dot(side) < 0 then side = -side end
@@ -3026,6 +3049,7 @@ local function MakeWay(now)
                             npc:SetSchedule(SCHED_FORCED_GO)
                         end
                         if st.role == "cop" and math.random() < 0.3 then npc:EmitSound("npc/metropolice/vo/affirmative.wav", 60) end
+                        if st.role == "soldier" and math.random() < 0.3 then npc:EmitSound("npc/combine_soldier/vo/affirmative.wav", 60) end
                     end
                 end
             end

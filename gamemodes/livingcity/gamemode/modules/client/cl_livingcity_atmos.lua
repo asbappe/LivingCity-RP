@@ -158,6 +158,8 @@ function LC_CL.RainVolume(w, out)
 end
 local THUNDER = { "ambient/atmosphere/thunder1.wav", "ambient/atmosphere/thunder2.wav", "ambient/atmosphere/thunder3.wav", "ambient/atmosphere/thunder4.wav" }
 
+-- (made once here, not every frame)
+local V_0_0_4000 = Vector(0, 0, 4000)
 hook.Add("Think", "LivingCityRain", function()
     local ply = LocalPlayer()
     if not IsValid(ply) then return end
@@ -165,7 +167,7 @@ hook.Add("Think", "LivingCityRain", function()
     local raining = (w == "rain" or w == "storm") and cvEffects:GetBool()
     if CurTime() > nextRoof then
         nextRoof = CurTime() + 0.5
-        local tr = util.TraceLine({ start = ply:EyePos(), endpos = ply:EyePos() + Vector(0, 0, 4000), mask = MASK_SOLID_BRUSHONLY })
+        local tr = util.TraceLine({ start = ply:EyePos(), endpos = ply:EyePos() + V_0_0_4000, mask = MASK_SOLID_BRUSHONLY })
         outdoors = not tr.Hit or tr.HitSky == true
     end
     outFog = math.Approach(outFog, (outdoors and raining) and 1 or 0, FrameTime() * 0.6) -- (about two seconds in or out)

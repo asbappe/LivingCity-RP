@@ -112,6 +112,7 @@ end
 -- F2: the second quick menu, for your side, rank and job (cl_livingcity_quick.lua). (The owner,
 -- 7 November: F1 general, F2 the same but for your class, rank and faction; pockets moved to F3.)
 function GM:ShowTeam(ply)
+    if LC and LC.QuickInfoSend then LC.QuickInfoSend(ply) end -- (what F2 greys out, first: sv_livingcity_quickmore.lua)
     net.Start("lcg_quick2")
     net.Send(ply)
 end

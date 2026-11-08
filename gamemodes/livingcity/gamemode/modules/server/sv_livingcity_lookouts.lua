@@ -55,7 +55,7 @@ function LC.RecruitLookout(ply, npc)
     st.lookoutUntil = now + cvMinutes:GetFloat() * 60
     LC.Lookouts[npc] = { owner = ply, pos = npc:GetPos(), untilT = st.lookoutUntil, warnedAt = 0 }
     npc:SetNW2Bool("lc_lookout", true)
-    npc:SetNW2String("lc_doing", "keeping watch")
+    LC.SetNPCStr(npc, "lc_doing", "keeping watch")
     if LC.Remember then LC.Remember(npc, ply, 1) end
     hook.Run("LivingCityLookout", ply, npc)
     return true, string.format("They nod, and lean against the wall like they've nowhere to be. They'll watch %s for %d minutes. (Freq 7 hears what they see.)",
@@ -74,7 +74,7 @@ local function End(npc, why)
     LC.Lookouts[npc] = nil
     if IsValid(npc) then
         npc:SetNW2Bool("lc_lookout", false)
-        npc:SetNW2String("lc_doing", "")
+        LC.SetNPCStr(npc, "lc_doing", "")
         local st = LC.NPCs[npc]
         if st and st.state == "lookout" then LC.SetState(npc, st, "idle") st.untilT = CurTime() + 2 end
     end

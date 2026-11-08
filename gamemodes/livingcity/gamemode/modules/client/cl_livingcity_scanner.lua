@@ -160,6 +160,8 @@ end)
 
 -- The flash itself: a burst of light at the scanner, seen by everyone near it.
 local lastSeen = {}
+-- (made once here, not every frame)
+local C_255_255_255_60 = Color(255, 255, 255, 60)
 hook.Add("Think", "LivingCityScannerFlash", function()
     local now = CurTime()
     for _, sc in ipairs(LC.EntsOf("lc_rscanner")) do
@@ -177,7 +179,7 @@ hook.Add("Think", "LivingCityScannerFlash", function()
                     dl.dietime = now + 0.25
                 end
                 if sc:GetNW2Entity("lc_pilot") == LocalPlayer() then
-                    LocalPlayer():ScreenFade(SCREENFADE.IN, Color(255, 255, 255, 60), 0.3, 0)
+                    LocalPlayer():ScreenFade(SCREENFADE.IN, C_255_255_255_60, 0.3, 0)
                 end
             end
         end
@@ -230,11 +232,13 @@ hook.Add("PreDrawHalos", "LivingCityRebelIntel", function()
     for _, e in ipairs(intelList) do if IsValid(e) then list[#list + 1] = e end end
     if #list > 0 then halo.Add(list, INTEL_BLUE, 2, 2, 1, true, true) end
 end)
+-- (made once here, not every frame)
+local C_120_190_255 = Color(120, 190, 255)
 hook.Add("HUDPaint", "LivingCityRebelIntel", function()
     local left = GetGlobal2Float("lc_rebel_intel", 0) - CurTime()
     if left <= 0 or LocalPlayer():GetNW2String("lcf_faction", "") ~= "resistance" then return end
     draw.SimpleTextOutlined(string.format("COMBINE DATA DECODED: UNIT POSITIONS  %d:%02d", math.floor(left / 60), math.floor(left % 60)), "DermaDefaultBold",
-        ScrW() / 2, ScrH() * 0.12, Color(120, 190, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+        ScrW() / 2, ScrH() * 0.12, C_120_190_255, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
 end)
 
 hook.Add("PreDrawHalos", "LivingCityScannerReports", function()
@@ -246,25 +250,29 @@ hook.Add("PreDrawHalos", "LivingCityScannerReports", function()
     if #list > 0 then halo.Add(list, RED, 2, 2, 1, true, true) end
 end)
 
+-- (made once here, not every frame)
+local C_255_200_190 = Color(255, 200, 190)
+local C_255_220_180_200 = Color(255, 220, 180, 200)
+local V_0_0_84 = Vector(0, 0, 84)
 hook.Add("HUDPaint", "LivingCityScannerReports", function()
     local me = LocalPlayer()
     -- a jammer nearby: the radio's static (sv_livingcity_convoy.lua)
     if me:GetNW2Bool("lc_jammed", false) then
         local a = 150 + 100 * math.abs(math.sin(CurTime() * 6))
         draw.SimpleTextOutlined("RADIO JAMMED", "DermaDefaultBold", ScrW() / 2, 62, Color(255, 190, 80, a), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
-        draw.SimpleTextOutlined("A jammer is close. Find it (it beeps) and press E to smash it.", "DermaDefault", ScrW() / 2, 78, Color(255, 220, 180, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+        draw.SimpleTextOutlined("A jammer is close. Find it (it beeps) and press E to smash it.", "DermaDefault", ScrW() / 2, 78, C_255_220_180_200, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     end
     if not me:GetNW2Bool("lc_unit", false) then return end
     local now = CurTime()
     for _, ent in ipairs(SpottedCached()) do
         if IsValid(ent) and ent ~= me then
-            local s = (ent:GetPos() + Vector(0, 0, 84)):ToScreen()
+            local s = (ent:GetPos() + V_0_0_84):ToScreen()
             if s.visible then
                 local left = ent:GetNW2Float("lc_spotted_until", 0) - now
                 draw.SimpleTextOutlined("SCANNER: " .. string.upper(ent:GetNW2String("lc_spotted_why", "suspect")),
                     "DermaDefaultBold", s.x, s.y, RED, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM, 1, color_black)
                 draw.SimpleTextOutlined(string.format("%dm  %ds", math.floor(ent:GetPos():Distance(me:GetPos()) / 52.5), math.ceil(left)),
-                    "DermaDefault", s.x, s.y + 2, Color(255, 200, 190), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, color_black)
+                    "DermaDefault", s.x, s.y + 2, C_255_200_190, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, color_black)
             end
         end
     end

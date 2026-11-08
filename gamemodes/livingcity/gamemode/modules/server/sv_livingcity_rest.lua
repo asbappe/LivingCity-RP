@@ -62,6 +62,8 @@ local function Exempt(ply)
         or ply:GetNW2String("lcf_faction", "") == "stalker" -- (a stalker doesn't sleep: it works)
 end
 
+-- Night or dusk: bedtime, the city's sleepers, daytime curfews and the rest all use this.
+-- Night alone (21:00 to 05:00) is LC.IsDeepNight (sv_livingcity_atmos.lua).
 function LC.IsNight()
     local phase = LC.DayPhase and LC.DayPhase() or "day"
     return phase == "night" or phase == "dusk"
@@ -431,7 +433,7 @@ function LC.NPCBedDown(npc, st, now)
     st.ss = L.ss -- (so it goes with them if they're removed: sv_livingcity.lua)
     st.wakeAt = nil
     LC.SetState(npc, st, "abed")
-    npc:SetNW2String("lc_doing", L.asleep and "asleep" or "resting")
+    LC.SetNPCStr(npc, "lc_doing", L.asleep and "asleep" or "resting")
     return true
 end
 
@@ -452,7 +454,7 @@ function LC.NPCBedUp(npc, st)
         if L.gunHidden then local w = npc.GetActiveWeapon and npc:GetActiveWeapon() if IsValid(w) and w.SetNoDraw then w:SetNoDraw(false) end end
         if L.standAt then npc:SetPos(L.standAt + Vector(0, 0, 4)) end -- (up, and off the bed)
         if L.asleep then npc:SetNW2Bool("lc_eyes_shut", false) end
-        npc:SetNW2String("lc_doing", "")
+        LC.SetNPCStr(npc, "lc_doing", "")
         if npc.SetSchedule then npc:SetSchedule(SCHED_IDLE_STAND) end
     end
 end

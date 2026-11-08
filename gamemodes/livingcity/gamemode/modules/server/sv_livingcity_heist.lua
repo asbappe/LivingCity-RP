@@ -240,7 +240,7 @@ function LC.DecodeChip(ply, id)
     if LC.RadioNotice then
         LC.RadioNotice("resistance", string.format("The data's decoded: Civil Protection unit positions, patrol routes, posts. Every unit is marked for you for %d seconds. Move.", secs))
     end
-    hook.Run("LivingCityDataDecoded", ply)
+    hook.Run("LivingCityDataDecoded", ply, chip)
     return true
 end
 

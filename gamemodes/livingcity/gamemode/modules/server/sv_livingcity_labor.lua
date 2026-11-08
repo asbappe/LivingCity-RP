@@ -20,7 +20,8 @@
         Cleanup, Intake Processor and the Block Warden are never handed out.
       - That assignment holds for lc_labor_min_minutes (30) minutes in the city
         on it, or lc_labor_min_shifts (4) finished shifts, whichever comes
-        first. Kept over a rejoin (saved data).
+        first. Kept over a rejoin (saved data). A 0 turns that one off; both
+        0: no stint at all, and no "You've done your stint" (the owner, 7 November).
       - Then they can come back and pick another job from the list. Infestation
         Cleanup needs Civil Standing lc_labor_cleanup_standing (25), Intake
         Processor (the station's papers check) lc_labor_porter_standing (50);
@@ -102,19 +103,33 @@ function LC.LaborLocked(ply)
     if not job then return false end
     local s = Stint(ply)
     if s.job ~= job.id then return false end
+    -- a 0 means that condition doesn't apply; both 0: no stint at all (the owner, 7 November)
     local needSecs, needShifts = math.max(0, cvMinutes:GetFloat() * 60), math.max(0, cvShifts:GetInt())
-    if s.secs >= needSecs or s.shifts >= needShifts then return false end
-    return true, needSecs - s.secs, needShifts - s.shifts
+    if needSecs <= 0 and needShifts <= 0 then return false end
+    if (needSecs > 0 and s.secs >= needSecs) or (needShifts > 0 and s.shifts >= needShifts) then return false end
+    return true, needSecs > 0 and (needSecs - s.secs) or 0, needShifts > 0 and (needShifts - s.shifts) or 0
 end
 
 local function Plural(n, one, many) return n == 1 and ("1 " .. one) or (n .. " " .. many) end
+
+-- "30 minutes or 4 shifts, whichever comes first", or just the one that applies (a 0 is off); nil: no stint.
+local function HoldText(mins, shifts)
+    if mins > 0 and shifts > 0 then
+        return Plural(mins, "minute", "minutes") .. " or " .. Plural(shifts, "shift", "shifts") .. ", whichever comes first"
+    elseif mins > 0 then return Plural(mins, "minute", "minutes")
+    elseif shifts > 0 then return Plural(shifts, "shift", "shifts") end
+end
+LC.LaborHoldText = HoldText
 
 -- One line about it, for the board and the terminal.
 function LC.LaborLockLine(ply)
     local locked, secs, shifts = LC.LaborLocked(ply)
     if not locked then return LC.LABOR_GO end
-    return string.format("Tied to this job for %s more or %s more, whichever comes first; then a Labor Assignment terminal can change it.",
-        Plural(math.max(1, math.ceil(secs / 60)), "minute", "minutes"), Plural(shifts, "shift", "shifts"))
+    local mins = cvMinutes:GetFloat() > 0 and math.max(1, math.ceil(secs / 60)) or 0
+    shifts = cvShifts:GetInt() > 0 and shifts or 0
+    local more = (mins > 0 and shifts > 0) and (Plural(mins, "minute", "minutes") .. " more or " .. Plural(shifts, "shift", "shifts") .. " more, whichever comes first")
+        or (HoldText(mins, shifts) .. " more")
+    return "Tied to this job for " .. more .. "; then a Labor Assignment terminal can change it."
 end
 
 -- The stint's done: they're free to ask for another job.
@@ -123,6 +138,7 @@ local function Complete(ply, s)
     s.job, s.secs, s.shifts = "", 0, 0
     SaveStint(ply)
     ply:SetPData("lc_labor_done", "1")
+    if cvMinutes:GetFloat() <= 0 and cvShifts:GetInt() <= 0 then return end -- (no stint at all: nothing to say)
     if LC.Notice then
         LC.Notice(ply, "event", "Labor Assignment", "You've done your stint" .. (job and (" as " .. job.name) or "")
             .. ". If you want a different job, a Labor Assignment terminal can change it now. Or stay where you are.", 12)
@@ -238,7 +254,7 @@ function LC.LaborDeskInfo(ply)
     local s = Stint(ply)
     local t = {
         job = job and job.id or "", jobName = job and job.name or nil, place = job and job.place or nil,
-        locked = locked and true or false, minsLeft = locked and math.max(1, math.ceil(secs / 60)) or 0, shiftsLeft = locked and shifts or 0,
+        locked = locked and true or false, minsLeft = (locked and cvMinutes:GetFloat() > 0) and math.max(1, math.ceil(secs / 60)) or 0, shiftsLeft = locked and shifts or 0,
         minMinutes = cvMinutes:GetInt(), minShifts = cvShifts:GetInt(), mins = math.floor(s.secs / 60), shifts = s.shifts,
         veteran = Veteran(ply), registered = not (LC.IntakePending and LC.IntakePending(ply)),
         canWork = LC.CanWork and LC.CanWork(ply) or false, papers = LC.HasItem and LC.HasItem(ply, "id_papers") or false,
@@ -312,9 +328,8 @@ function LC.LaborFinish(ply, data)
         ply.lcLaborAssigning = nil
     end
     if not ok then if why then ply:ChatPrint(title .. why) end return false end
-    local mins, shifts = cvMinutes:GetInt(), cvShifts:GetInt()
-    local tied = (mins > 0 and shifts > 0) and string.format(" You're tied to it for %s or %s, whichever comes first; then come back here if you want a change.",
-        Plural(mins, "minute", "minutes"), Plural(shifts, "shift", "shifts")) or ""
+    local hold = HoldText(cvMinutes:GetInt(), cvShifts:GetInt())
+    local tied = hold and (" You're tied to it for " .. hold .. "; then come back here if you want a change.") or ""
     ply:ChatPrint(title .. "Assignment approved: " .. pick.name .. ". Go to the " .. string.lower(pick.place) .. " to work; your shifts are on your board (F4)." .. tied)
     if LC.Notice then LC.Notice(ply, "event", "Work assignment", "Labor Assignment has given you a job: " .. pick.name .. "." .. tied, 12) end
     if LC.AwaitingHousing and LC.AwaitingHousing(ply) and LC.IntakeHasDesk and LC.IntakeHasDesk("housing") then

@@ -48,6 +48,10 @@ end
 
 local sleepFade = 0
 
+-- (made once here, not every frame)
+local C_200_170_150 = Color(200, 170, 150)
+local C_230_190_120 = Color(230, 190, 120)
+local C_255_120_90 = Color(255, 120, 90)
 hook.Add("HUDPaint", "LivingCityRest", function()
     local me = LocalPlayer()
     if not IsValid(me) or not me:Alive() then sleepFade = 0 return end
@@ -73,7 +77,7 @@ hook.Add("HUDPaint", "LivingCityRest", function()
     local ly = (LC_CL.LeftColumnBottom and LC_CL.LeftColumnBottom() or 160) + 6 -- (in the left column, under the rest)
     if rec > 0 then
         draw.SimpleText(string.format("Recovering from a close call (%d:%02d): a little less to give", math.floor(rec / 60), math.floor(rec % 60)),
-            "DermaDefault", 20, ly, Color(200, 170, 150))
+            "DermaDefault", 20, ly, C_200_170_150)
         ly = ly + 16
     end
     -- the urge (parasites): a line under the needs while it's building
@@ -81,7 +85,7 @@ hook.Add("HUDPaint", "LivingCityRest", function()
     if urge >= 25 then
         local y = ly
         draw.SimpleText(urge >= 80 and "You need a toilet. NOW." or (urge >= 50 and "Your stomach cramps: find a toilet." or "Your stomach's unsettled."),
-            "DermaDefaultBold", 20, y, urge >= 80 and Color(255, 120, 90) or Color(230, 190, 120))
+            "DermaDefaultBold", 20, y, urge >= 80 and C_255_120_90 or C_230_190_120)
     end
 end)
 
@@ -122,16 +126,18 @@ end)
 
 -- flies round anyone filthy
 local FLY = Color(15, 15, 10, 230)
+-- (made once here, not every frame)
+local V_0_0_36 = Vector(0, 0, 36)
 hook.Add("PostDrawTranslucentRenderables", "LivingCityStink", function(depth, sky)
     if depth or sky then return end
     local me = LocalPlayer()
     if not IsValid(me) then return end
     local drew = false
     local t = CurTime()
-    for _, p in ipairs(player.GetAll()) do
+    for _, p in LC.Players() do
         if p:Alive() and p:GetNW2Bool("lc_stink", false) and p:GetPos():DistToSqr(me:GetPos()) < 900 * 900 and (p ~= me or me:ShouldDrawLocalPlayer()) then
             if not drew then render.SetColorMaterial() drew = true end
-            local c = p:GetPos() + Vector(0, 0, 36)
+            local c = p:GetPos() + V_0_0_36
             for i = 1, 9 do
                 local a = t * (2.2 + i * 0.31) + i * 2.1
                 local r = 14 + (i % 3) * 5
@@ -224,7 +230,7 @@ hook.Add("PostPlayerDraw", "LivingCityBed", function(ply)
     end
 end)
 hook.Add("Think", "LivingCityBedForget", function()
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in LC.Players() do
         if ply.lcBedOff and not ply:GetNW2Bool("lc_sleeping", false) then ply.lcBedOff = nil end
     end
 end)

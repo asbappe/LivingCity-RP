@@ -551,7 +551,7 @@ local function Release(npc)
     if not st then return end
     st.cleanGuard = nil
     if st.lcGuardLock then st.questLock, st.lcGuardLock = nil, nil end
-    if npc.SetNW2String then npc:SetNW2String("lc_doing", "") end
+    if npc.SetNW2String then LC.SetNPCStr(npc, "lc_doing", "") end
     if st.state == "cleanguard" then
         LC.SetState(npc, st, "idle")
         st.untilT = CurTime() + 2
@@ -658,7 +658,7 @@ local function Assign(worker, g, now)
         c.st.route, c.st.routeTo, c.st.goingTo = nil, nil, nil
         LC.SetState(c.npc, c.st, "cleanguard")
         if c.npc.SetCurrentWeaponProficiency then c.npc:SetCurrentWeaponProficiency(WEAPON_PROFICIENCY_VERY_GOOD or 3) end
-        if c.npc.SetNW2String then c.npc:SetNW2String("lc_doing", "guarding the cleanup crew") end
+        if c.npc.SetNW2String then LC.SetNPCStr(c.npc, "lc_doing", "guarding the cleanup crew") end
         g.units[#g.units + 1] = c.npc
         if worker:IsPlayer() and not g.told then
             g.told = true
@@ -796,7 +796,7 @@ end
 function LC.CleanupNeedNear(z)
     local most = 0
     for _, p in ipairs(player.GetAll()) do
-        if p:Alive() and p:GetPos():DistToSqr(z.pos) < ((z.r or 400) + 900) ^ 2 then most = math.max(most, LC.CleanupNeed(p)) end
+        if p:Alive() and LCZ.Near(z, p:GetPos(), 900) then most = math.max(most, LC.CleanupNeed(p)) end -- (grown ground: near any of its cells)
     end
     return most
 end
@@ -809,7 +809,7 @@ local function NeedsGuard(w, now)
         local q = LC.QuestOf and LC.QuestOf[w]
         if not q or q.chain ~= "shift" then return false end
         for _, z in ipairs(InfestZones()) do
-            if w:GetPos():DistToSqr(z.pos) < ((z.r or 400) + 1500) ^ 2 then return true end
+            if LCZ.Near(z, w:GetPos(), 1500) then return true end
         end
         return false
     end
@@ -950,7 +950,8 @@ hook.Add("LivingCityJobChanged", "LivingCityHooverEmpty", function(ply) if IsVal
 local function Toxic(id) return id == "weedkiller" or string.sub(id, 1, 8) == "tainted_" end
 
 local function BarnacleTick()
-    for _, b in ipairs(ents.FindByClass("npc_barnacle")) do
+    -- (the barnacles kept as they come and go, not every entity in the map searched twice a second)
+    for _, b in ipairs(LC.EntsOf and LC.EntsOf("npc_barnacle") or ents.FindByClass("npc_barnacle")) do
         if IsValid(b) and b:Health() > 0 and not b.lcPoisoned then
             for _, e in ipairs(ents.FindInSphere(b:GetPos(), 80)) do
                 if IsValid(e) and e:GetClass() == "lc_item" and Toxic(e:GetNW2String("lc_item", "")) then

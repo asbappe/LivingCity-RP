@@ -220,6 +220,12 @@ local function Watched()
 end
 
 -- the bone being tuned, lit up on everyone doing the move (and its other side, dimmer)
+-- (made once here, not every frame)
+local C_255_220_40_220 = Color(255, 220, 40, 220)
+local C_255_70_70 = Color(255, 70, 70)
+local C_70_255_70 = Color(70, 255, 70)
+local C_80_150_255 = Color(80, 150, 255)
+local C_80_220_255_140 = Color(80, 220, 255, 140)
 hook.Add("PostDrawTranslucentRenderables", "LivingCityEndingTune", function(_, sky)
     if sky or not (frame and IsValid(frame)) or not state.bone then return end
     if render.SetColorMaterial then render.SetColorMaterial() end
@@ -231,12 +237,12 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityEndingTune", function(_, s
             if m then
                 local pos, ang = m:GetTranslation(), m:GetAngles()
                 if i == 1 then
-                    render.DrawSphere(pos, 2.4, 12, 12, Color(255, 220, 40, 220))
-                    render.DrawLine(pos, pos + ang:Forward() * 14, Color(255, 70, 70), false)
-                    render.DrawLine(pos, pos + ang:Right() * 14, Color(70, 255, 70), false)
-                    render.DrawLine(pos, pos + ang:Up() * 14, Color(80, 150, 255), false)
+                    render.DrawSphere(pos, 2.4, 12, 12, C_255_220_40_220)
+                    render.DrawLine(pos, pos + ang:Forward() * 14, C_255_70_70, false)
+                    render.DrawLine(pos, pos + ang:Right() * 14, C_70_255_70, false)
+                    render.DrawLine(pos, pos + ang:Up() * 14, C_80_150_255, false)
                 else
-                    render.DrawSphere(pos, 1.6, 10, 10, Color(80, 220, 255, 140))
+                    render.DrawSphere(pos, 1.6, 10, 10, C_80_220_255_140)
                 end
             end
         end
