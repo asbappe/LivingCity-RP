@@ -83,10 +83,14 @@
     camp. An enemy's hit, or the world's (a fire, a fall), wakes them,
     groggy. Woken early like that, you're groggy ("since
     they are woken up early, then the standard effects would apply such as
-    the grogginess visual effect and very low stamina"): for lc_groggy_seconds
-    (60) your eyelids droop and the world blurs (lighter as you come round),
-    your stamina is gone and comes back at a quarter of the rate; and you
-    have lc_startled_minutes (10) before lights out can make you tired.
+    the grogginess visual effect and very low stamina"), but not at once
+    ("defer the groggy effect if woken by violence ... they would have
+    adrenaline"): first adrenaline, wide awake with full stamina, and
+    lc_startled_minutes (10) before lights out can make you tired; then "The
+    adrenaline has worn off. You need rest.", and for lc_groggy_seconds (60)
+    your eyelids droop and the world blurs (lighter as you come round), your
+    stamina is gone and comes back at a quarter of the rate. Back in bed
+    before then, no crash.
     Hunger and thirst wait while you sleep or dream: they never hurt or wake
     you (sv_livingcity_survival.lua).
 
@@ -387,22 +391,45 @@ function LC.WakeSleeper(p, why, text)
     elseif p.lcSleep then
         if LC.WakeUp then LC.WakeUp(p, "quiet") end
         LC.MakeGroggy(p)
-        Notice(p, "warn", "You wake with a start", (text or "Something woke you.") .. " You're groggy: slow on your feet for a minute.", 7)
+        Notice(p, "warn", "You wake with a start", (text or "Something woke you.") .. " " .. LC.AdrenalineText, 7)
         return true
     end
     return false
 end
 
--- Woken early: groggy (eyelids drooping, a blur: cl_livingcity_rest.lua), no stamina and slow to get it
--- back (sh_livingcity_stamina.lua), and a while before lights out can make them tired.
-function LC.MakeGroggy(p)
+-- Groggy (eyelids drooping, a blur: cl_livingcity_rest.lua), no stamina and slow to get it back
+-- (sh_livingcity_stamina.lua).
+function LC.Groggy(p)
     if not IsValid(p) then return end
-    local now = CurTime()
-    p:SetNW2Float("lc_groggy_until", now + math.max(0, cvGroggy:GetFloat()))
+    p:SetNW2Float("lc_groggy_until", CurTime() + math.max(0, cvGroggy:GetFloat()))
     p:SetNW2Float("lc_stamina", 0)
     p:SetNW2Bool("lc_winded", true)
-    p.lcStartledUntil = now + math.max(0, cvStartle:GetFloat()) * 60
 end
+-- Woken early, by violence (an enemy, a raid, a fire): adrenaline first (the owner, 8 November: "defer
+-- the groggy effect if woken by violence ... they would have adrenaline. Then after 10 minutes it can say
+-- the adrenaline had worn off; you need rest"): wide awake, full stamina, and lights out waits for
+-- lc_startled_minutes (10). Then the crash: groggy, and lights out again (not if they're back in bed).
+function LC.MakeGroggy(p)
+    if not IsValid(p) then return end
+    p.lcStartledUntil = CurTime() + math.max(0, cvStartle:GetFloat()) * 60
+    p.lcGroggyPending = true
+    p:SetNW2Float("lc_groggy_until", 0)
+    p:SetNW2Float("lc_stamina", 100)
+    p:SetNW2Bool("lc_winded", false)
+end
+LC.AdrenalineText = "Adrenaline has you wide awake, for now."
+timer.Create("LivingCityAdrenaline", 2, 0, function()
+    local now = CurTime()
+    for _, p in ipairs(player.GetAll()) do
+        if p.lcGroggyPending and now >= (p.lcStartledUntil or 0) then
+            p.lcGroggyPending = nil
+            if p:Alive() and not p.lcSleep and not p.lcDreaming then
+                LC.Groggy(p)
+                Notice(p, "warn", "The adrenaline wears off", "The adrenaline has worn off. You need rest.", 8)
+            end
+        end
+    end
+end)
 
 -- The sleeping body a dreamer leaves in the bed: a still copy, eyes shut. Hit it and they wake.
 function LC.DreamBodyMake(p, snap)
@@ -476,7 +503,7 @@ hook.Add("LivingCityDreamWoke", "LivingCityDreamBody", function(p, ok, why)
     if not by then return end
     if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
     LC.MakeGroggy(p)
-    Notice(p, "warn", "You wake with a start", (by.text or "Something woke you.") .. " You're groggy: slow on your feet for a minute.", 7)
+    Notice(p, "warn", "You wake with a start", (by.text or "Something woke you.") .. " " .. LC.AdrenalineText, 7)
     local hurt = p.lcDreamHurt
     p.lcDreamHurt = nil
     if hurt and p:Alive() then

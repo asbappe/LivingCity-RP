@@ -1048,3 +1048,5 @@ Notes:
   Notes:
 - [ ] **Friends can't wake you:** punch a sleeping fellow rebel (or a sleeping citizen as a citizen): nothing, no damage. A unit punching them: they wake, groggy. Same for a sleeping NPC: a rebel shooting a rebel asleep in camp does nothing.
   Notes:
+- [ ] **Adrenaline:** woken by a unit's hit or a raid: "Adrenaline has you wide awake", full stamina, no tiredness; ten minutes later "The adrenaline has worn off. You need rest." and the groggy minute. Back in bed before that: no crash.
+  Notes:
