@@ -44,8 +44,12 @@
           the city (the owner: "framed as the resistance threat is launching a rocket"). Sunny the
           Scanner, a cheerful mascot, gives instructions; when the siren wails the rebels' rocket
           climbs from its pad (White Forest's, with Episode Two on the server, else Garry's Mod's
-          own), and you crouch beside a table before the flash (two to a table). Six survived
-          wins.
+          own), with Doctor Magnusson, fifty feet tall and glowing red, cackling beside it and riding
+          it up; you crouch beside a table before the flash (two to a table). Six survived wins.
+        The Resistance in these dreams is goofy (the owner: "dreams are nonsensical and goofy ...
+        glowing red and 50 feet tall flying through the air or w/e, that applies for all of
+        these"): the unmasked spy in Careless Talk swells to a red giant and floats away; a giant
+        red rebel floats over the Two Minutes of Hate screen.
 
       Music, flat in garrysmod/sound/livingcity/dreams/ like the others: each dream's codeword
       (harvest, shift, spy, newsreel, hate, massgames, guidance, scrap, flowers, duck) or
@@ -167,6 +171,33 @@ local function Cheering(g, spots, face)
     end
 end
 local function Grace(s) return CurTime() < (s.safe or 0) end
+-- The Resistance, as dreams see it (the owner: "dreams are nonsensical and goofy, so if you need to
+-- spawn magnusson or some rebel to represent the resistance, they can be glowing red and 50 feet
+-- tall flying through the air"): a giant, glowing red figure. The first model the server has.
+LC.PropagandaRebels = { "models/humans/group03/male_09.mdl", "models/humans/group03/male_01.mdl", "models/humans/group03/female_03.mdl" }
+local RED = Color(255, 40, 40)
+local function Redden(e, scale)
+    if not IsValid(e) then return end
+    e:SetColor(RED)
+    if e.SetMaterial then e:SetMaterial("models/debug/debugwhite") end
+    if scale and e.SetModelScale then e:SetModelScale(scale) end
+end
+local function Villain(g, models, pos, yaw, scale)
+    local m = models[#models]
+    for _, c in ipairs(models) do if K.ValidModel(c) then m = c break end end
+    local e = Actor(g, m, pos, yaw, scale, ACT_IDLE or 1)
+    Redden(e, scale)
+    g.villains = g.villains or {}
+    g.villains[#g.villains + 1] = e
+    return e
+end
+LC.PropagandaVillain = Villain
+-- (their entities, for the red halo on everyone's screen)
+local function Villains(g)
+    local out = {}
+    for _, e in ipairs(g.villains or {}) do if IsValid(e) and not (e.GetNoDraw and e:GetNoDraw()) then out[#out + 1] = e:EntIndex() end end
+    return #out > 0 and out or nil
+end
 
 ------------------------------------------------------------------------
 -- Record Harvest
@@ -398,6 +429,9 @@ do
         if not IsValid(n.e) then return end
         n.e:SetModel((n.man == 1 and MEN or WOMEN)[n.seat])
         n.e:SetColor(LC.SpyTints[n.tint][2])
+        if n.e.SetMaterial then n.e:SetMaterial("") end
+        if n.e.SetModelScale then n.e:SetModelScale(1) end
+        n.e:SetPos(n.pos)
         if n.e.SetNoDraw then n.e:SetNoDraw(false) end
         Pose(n.e, IDLE, ACT_IDLE)
     end
@@ -461,7 +495,11 @@ do
             if n and n ~= spy then Offend(g, p, "A loyal citizen", "You reported " .. Describe(n) .. ", who is entirely loyal. The officer writes down your name instead.")
             elseif not n then Offend(g, p, "Reported nobody", "A good citizen always has someone to report.") end
         end
-        timer.Simple(2, function() if g and not g.stopped and IsValid(spy.e) and spy.e.SetNoDraw then spy.e:SetNoDraw(true) end end) -- (dragged away)
+        -- unmasked: the spy swells to a giant, glows red and floats off into the sky
+        Redden(spy.e, 6)
+        g.villains = { spy.e }
+        if IsValid(spy.e) then Snd(spy.e, "vo/npc/male01/no02.wav", 90, 60) end
+        timer.Simple(LC.SpyReveal - 0.5, function() if g and not g.stopped and IsValid(spy.e) and spy.e.SetNoDraw then spy.e:SetNoDraw(true) end end)
     end
 
     function def.build(g, dream)
@@ -489,7 +527,13 @@ do
 
     function def.tick(g, dt, players)
         local now = CurTime()
+        if g.phase == "reveal" and g.spyN and IsValid(g.spyN.e) then
+            local v = g.spyN.e:GetPos()
+            g.spyN.e:SetPos(Vector(v.x, v.y, v.z + 120 * dt))
+            g.spyN.e:SetAngles(Angle(0, now * 90 % 360, 0))
+        end
         if g.phase == "pick" then
+            g.villains = nil
             local at = LC.SpyClueAt[#g.clues + 1]
             if at and now >= g.roundT0 + at then Clue(g) end
             for _, p in ipairs(players) do
@@ -530,7 +574,7 @@ do
         elseif g.phase == "reveal" and g.spyN then
             big, notes = "The spy was " .. Describe(g.spyN) .. "!", g.results
         elseif g.phase == "wait" then big = "Listen. The first round is about to begin." end
-        return { glows = glows, notes = notes, big = big, tone = g.phase == "reveal" and "warn" or "love",
+        return { glows = glows, notes = notes, big = big, tone = g.phase == "reveal" and "warn" or "love", villains = Villains(g),
             meterName = string.format("Round %d of %d     Spies found: %d of %d needed", math.max(1, g.round), LC.SpyRounds, s.score or 0, def.need) }
     end
 end
@@ -684,6 +728,8 @@ do
         local x0, x1, top = Hall(g, dream, 2, Color(50, 50, 55))
         local c = dream.pos
         g.screenAt = Vector(x1 - 30, c.y, top + 180)
+        g.rebelAt = Vector(x1 - 90, c.y + PLATE8_S - 120, top + 60)
+        g.rebel = Villain(g, LC.PropagandaRebels, g.rebelAt, 180, 5)
         local spots = {}
         for i = 0, 3 do for _, dy in ipairs({ -PLATE8_S + 70, PLATE8_S - 70 }) do spots[#spots + 1] = Vector(x0 + 200 + i * 110, c.y + dy, top) end end
         Cheering(g, spots, g.screenAt)
@@ -695,6 +741,10 @@ do
 
     function def.tick(g, dt, players)
         local now = CurTime()
+        if IsValid(g.rebel) then -- (bobbing and turning in the air, glowing red, sneering at them all)
+            g.rebel:SetPos(g.rebelAt + Vector(0, math.sin(now * 0.7) * 80, 40 + math.sin(now * 1.3) * 30))
+            g.rebel:SetAngles(Angle(0, 180 + math.sin(now) * 40, 0))
+        end
         if not g.ended and now >= g.ends - 3 then g.ended = true SayAs(g, "hate_end") end
         for _, p in ipairs(players) do
             local s = g.pl[p]
@@ -742,7 +792,7 @@ do
             local quiet = CurTime() - (s.lastJeer or g.t0)
             big = quiet > LC.HateSilence - 6 and "You've gone quiet. JEER!" or "Jeer at the enemy in chat!"
         end
-        return { board = board, big = big, tone = tone, meter = math.floor(math.min(1, (s.score or 0) / def.need) * 100),
+        return { board = board, big = big, tone = tone, villains = Villains(g), meter = math.floor(math.min(1, (s.score or 0) / def.need) * 100),
             meterName = string.format("Hatred: %d of %d", s.score or 0, def.need) }
     end
 end
@@ -1229,6 +1279,7 @@ do
         end end
         g.sunny = Actor(g, "models/combine_scanner.mdl", Vector(x1 - 120, c.y, top + 180), 180, 4)
         g.sunnyZ = top + 180
+        LC.DuckMagnusson = LC.DuckMagnusson or { "models/magnusson.mdl", "models/kleiner.mdl", LC.PropagandaRebels[1] }
         -- the rebels' launch pad, in the far corner
         g.padAt = Vector(x1 - 90, c.y - PLATE8_S + 110, top)
         for _, r in ipairs(LC.DuckRockets) do
@@ -1238,6 +1289,7 @@ do
                 break
             end
         end
+        g.mag = Villain(g, LC.DuckMagnusson, g.padAt + Vector(-60, 120, 40), 180, 5)
         g.phase, g.at, g.tipAt, g.rounds = "calm", CurTime() + 10, CurTime() + 6, 0
         Starts(g, x0 + 90, c.y, top)
         return true
@@ -1271,6 +1323,11 @@ do
             if g.phase == "siren" then local f = math.Clamp(1 - (g.at - now) / g.sirenLen, 0, 1) up = LC.DuckRise * f * f end
             g.rocket:SetPos(g.padAt + Vector(0, 0, up))
         end
+        if IsValid(g.mag) then -- (cackling beside his rocket; riding it up when it goes)
+            local bob = math.sin(now * 2.5) * 20
+            g.mag:SetPos(g.padAt + Vector(-60, 120, (IsValid(g.rocket) and (g.rocket:GetPos().z - g.padAt.z) or 0) + 40 + bob))
+            g.mag:SetAngles(Angle(0, 180 + math.sin(now * 1.7) * 25, g.phase == "siren" and math.sin(now * 6) * 15 or 0))
+        end
         if g.phase == "calm" and now >= g.tipAt then
             g.tipAt = now + math.Rand(9, 13)
             Narrate(g, "Sunny the Scanner", LC.DuckTips[math.random(#LC.DuckTips)])
@@ -1285,14 +1342,20 @@ do
                 if g.rocket.SetNoDraw then g.rocket:SetNoDraw(false) end
                 Snd(g.rocket, "weapons/rpg/rocketfire1.wav", 100, 60)
             end
+            if IsValid(g.mag) then
+                if g.mag.SetNoDraw then g.mag:SetNoDraw(false) end
+                for _, q in ipairs(Everyone(g)) do Notice(q, "warn", "The Resistance!", "A fifty-foot rebel scientist, glowing red, rides the rocket into the sky shaking his fist and cackling.", 4) end
+            end
         elseif g.phase == "siren" then
             g.rounds, g.phase, g.at, g.dirty = g.rounds + 1, "calm", now + math.Rand(7, 10), true
             local covered = LC.DuckCovered(g, players)
             for _, p in ipairs(Everyone(g)) do
                 if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(255, 255, 255, 255), 1.5, 0.3) end
             end
-            if IsValid(g.rocket) and g.rocket.SetNoDraw then g.rocket:SetNoDraw(true) end -- (gone in the flash; they've another on the pad soon)
-            timer.Simple(4, function() if g and not g.stopped and IsValid(g.rocket) and g.rocket.SetNoDraw then g.rocket:SetNoDraw(false) end end)
+            for _, e in ipairs({ g.rocket, g.mag }) do -- (gone in the flash; back on the pad with another soon)
+                if IsValid(e) and e.SetNoDraw then e:SetNoDraw(true) end
+                timer.Simple(4, function() if g and not g.stopped and IsValid(e) and e.SetNoDraw then e:SetNoDraw(false) end end)
+            end
             for _, p in ipairs(players) do
                 local s = g.pl[p]
                 if covered[p] then
@@ -1316,7 +1379,7 @@ do
             if g.phase == "siren" then big, tone = "ROCKET LAUNCH! Duck and cover: crouch beside a table!", "warn"
             else big = "Listen to Sunny." end
         end
-        return { glows = glows, big = big, tone = tone, rocket = g.phase == "siren" and IsValid(g.rocket) and g.rocket:EntIndex() or nil,
+        return { glows = glows, big = big, tone = tone, rocket = g.phase == "siren" and IsValid(g.rocket) and g.rocket:EntIndex() or nil, villains = Villains(g),
             meter = math.floor(math.min(1, (s.score or 0) / def.need) * 100), meterName = string.format("Rockets survived: %d of %d", s.score or 0, def.need) }
     end
 end
