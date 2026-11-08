@@ -32,6 +32,6 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - Her music: any song in `sound/livingcity/dreams/administrator/` (random, looping, client side in `cl_livingcity_dreamgames.lua`). The owner will import songs.
 - `sv_livingcity_dreamgames.lua` now exports `LC.DreamGameKit`, passes the player to `def.state(g, p)`, and lets a dream have its own `timeUp` text and `woke` (her dreams: a line on waking, no rewards or penalties). The nightmares behave as before.
 - Earlier today: nightmare rewards (Unbroken, Second wind, Vortigaunt whisper/gift; losing: `LC.SetDreamScar`), all in `sv_livingcity_vices.lua`.
-- **Waiting on the owner:** `_dev/core_snapshot.txt` still needs six item lines (`item beer`, `item cig_rolled`, `item cig_union`, `item moonshine`, `item stimulant`, `item vodka`). Her dreams add no snapshot lines.
+- The six vice items are now in `_dev/core_snapshot.txt` (the owner approved, on `main`). Her dreams add no snapshot lines.
 - Tests: `AdmireDreamTests` (27), `DreamGameTests` (38) pass; client smoke passes. Nothing checked in game: PLAYTEST.md, last section (sizes and the mirrors' angles are guesses).
 - `TODO.md`: Combine sleep in the head-clamp prop (later). Full suite last run 2026-11-02.
