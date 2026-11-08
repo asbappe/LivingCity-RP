@@ -409,7 +409,9 @@ timer.Create("LivingCityNeeds", 5, 0, function()
     local hDrain = 100 / math.max(1, cvHunger:GetFloat() * 60) * 5
     local tDrain = 100 / math.max(1, cvThirst:GetFloat() * 60) * 5
     for _, ply in ipairs(player.GetAll()) do
-        if not Exempt(ply) then
+        -- asleep or dreaming: hunger and thirst wait, and never hurt (or wake) them till they're up
+        -- (the owner, 8 November: "hunger/food/thirst do not hurt or affect players until they've woken")
+        if not Exempt(ply) and not ply.lcSleep and not ply.lcDreaming then
             local mult = (HasParasites(ply) and 2 or 1) * ((LC.IsRested and LC.IsRested(ply)) and 0.75 or 1) -- (a good night's sleep: sv_livingcity_rest.lua)
                 * ((LC.SecondWind and LC.SecondWind(ply)) and 0.75 or 1) -- (beat a nightmare: sv_livingcity_vices.lua)
             LC.Feed(ply, -hDrain * mult, -tDrain * mult)

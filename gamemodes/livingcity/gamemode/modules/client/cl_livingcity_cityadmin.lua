@@ -93,8 +93,9 @@ net.Receive("lc_admin_office", function()
             Note(d.why or "The city can't dream yet.")
         else
             if d.busy then Note("The city is dreaming right now.") end
+            if d.day then Note(d.day) end -- (what the day allows: sv_livingcity_dreamrules.lua)
             if d.waiting then
-                Note("Waiting: " .. d.waiting.name .. " (" .. d.waiting.mood .. ")" .. (d.waiting.yours and "" or ", and it isn't yours to change")
+                Note("Waiting: " .. d.waiting.name .. " (" .. d.waiting.mood .. ")" .. (d.waiting.auto and ", the city's own pick" or "") .. (d.waiting.yours and "" or ", and it isn't yours to change")
                     .. (d.at and string.format(", in about %d seconds", d.at) or ", a minute after you say good night"))
             else
                 Note(d.dreamt and "Tonight's dream has been dreamt. A pick now waits for tomorrow night." or "Nothing chosen: no dream tonight.")
@@ -107,7 +108,14 @@ net.Receive("lc_admin_office", function()
                     if #(g.endings or {}) > 0 then
                         local gm, go = dm:AddSubMenu(blurb[g.mood] or g.name)
                         go:SetIcon(icons[g.mood] or "icon16/weather_clouds.png")
-                        for _, e in ipairs(g.endings) do gm:AddOption(e.name, function() Act("dream", e.id) end) end
+                        for _, e in ipairs(g.endings) do
+                            if e.blocked then -- (not tonight, and why: greyed)
+                                local o = gm:AddOption(e.name .. " (not tonight)", function() chat.AddText(Color(220, 170, 120), "[Tonight's dream] ", Color(230, 230, 230), e.blocked) end)
+                                if o.SetTextColor then o:SetTextColor(Color(120, 120, 130)) end
+                            else
+                                gm:AddOption(e.name, function() Act("dream", e.id) end)
+                            end
+                        end
                     end
                 end
                 dm:AddOption("No dream tonight", function() Act("dream", "none") end):SetIcon("icon16/cancel.png")

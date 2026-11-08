@@ -90,6 +90,7 @@ LC_MODULES = {
         "sv_livingcity_vices", -- (cigarettes, alcohol and stimulants; and how a dream you played leaves you)
         "sv_livingcity_dreamstandins", -- (stand-ins: every dream has at least lc_dream_min dreamers)
         "sv_livingcity_dreamenforcers", -- (Civil Protection and the Administration as Enforcers in nightmares and propaganda dreams)
+        "sv_livingcity_dreamrules", -- (which dream tonight: Nightmares after bad days, Happy after clean ones; the city's own pick)
         "sv_livingcity_events",
         "sv_livingcity_exercise", -- (after events: the morning jog, drill and parade are events)
         "sv_livingcity_freq7",

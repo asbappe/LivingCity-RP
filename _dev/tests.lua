@@ -13711,6 +13711,7 @@ UnitLifeTests()
 -- Shared dreams (sv_livingcity_dreams.lua): the secret endings, dreamt by everyone asleep
 function DreamTests()
 section("Shared dreams: the endings as dreams for everyone asleep")
+_setcvar("lc_dream_rules", 0) _setcvar("lc_dream_auto", 0) -- (the older tests: the Administrator picks freely, and the city doesn't pick: DreamCrowdTests has the rules)
 local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
 local errs0 = #_errors
 _walls = {}
@@ -13971,6 +13972,7 @@ DreamTests()
 -- Shared dreams, the Administrator's choice (sv_livingcity_dreams.lua): moods, the tablet, and watching once you're out
 local function DreamMoodTests()
 section("Shared dreams: Happy, Neutral or Nightmare, chosen on the Administrator's tablet")
+_setcvar("lc_dream_rules", 0) _setcvar("lc_dream_auto", 0) -- (the older tests: the Administrator picks freely, and the city doesn't pick: DreamCrowdTests has the rules)
 local errs0 = #_errors
 local savedWalls, realGetAll, realReload, realPhase, realNotice = _walls, player.GetAll, LC.EndingReload, LC.DayPhase, LC.Notice
 _walls = {}
@@ -14104,6 +14106,7 @@ DreamMoodTests()
 -- Nightmare dreams you play (sv_livingcity_dreamgames.lua): the maze, the barrel tower, the crumbling floor, freeze
 function DreamGameTests()
 section("Shared dreams: the nightmare dreams you play (maze, barrel tower, crumbling floor, freeze)")
+_setcvar("lc_dream_rules", 0) _setcvar("lc_dream_auto", 0) -- (the older tests: the Administrator picks freely, and the city doesn't pick: DreamCrowdTests has the rules)
 local errs0 = #_errors
 local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
 _walls = {}
@@ -14295,6 +14298,7 @@ end
 DreamGameTests()
 function DreamCrowdTests()
 section("Shared dreams: stand-ins, Enforcers, bedtime, the night shift, missed dreams, the foil hat and the chip")
+_setcvar("lc_dream_rules", 1) _setcvar("lc_dream_auto", 1)
 local errs0 = #_errors
 local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
 _walls = {}
@@ -14360,11 +14364,13 @@ cop:SetPos(a:GetPos() + Vector(10, 0, 0))
 _run(1.1)
 ok(LC.DreamEnforcerStrike(cop) == true and g.pl[a].lives == livesA - 1 and not LC.DreamBad(a) and cop.lcDreamEnforceXP == 1,
     "the baton on a glowing dreamer: a life gone, the glow cleared, 1 XP for the Enforcer (paid on waking)", g.pl[a].lives .. " " .. tostring(cop.lcDreamEnforceXP))
-local xp0 = tonumber(cop:GetPData("lcf_xp_cp", 0)) or 0
 local end0 = LC.DreamsEndured(a)
+local realAddE, paidE = LC.AddXP, 0
+LC.AddXP = function(p, n, why, ...) if p == cop and why == "dream enforcement" then paidE = paidE + n end return realAddE(p, n, why, ...) end
 LC.DreamGameStop(dream, "admin")
-_run(2.5)
-ok(not cop.lcDreaming and (tonumber(cop:GetPData("lcf_xp_cp", 0)) or 0) == xp0 + 1, "awake, the Enforcer's XP is paid", (tonumber(cop:GetPData("lcf_xp_cp", 0)) or 0) - xp0)
+_run(3.5)
+LC.AddXP = realAddE
+ok(not cop.lcDreaming and paidE == 1, "awake, the Enforcer's XP is paid (after everything's put back)", paidE)
 ok(LC.DreamsEndured(a) == end0 + 1 and LC.DreamsEndured(cop) == 0, "a dreamer has lived through one more dream; an Enforcer hasn't")
 ok(g.standins and not IsValid(g.standins[2] and g.standins[2].ent), "everything of the stand-ins is gone when it ends")
 -- only Enforcers asleep: no dream
@@ -14516,6 +14522,81 @@ hook.Run("PlayerDeath", reb, nil, cop)
 LC.AddXP = realAdd
 ok(gotXP == 5 and LCF.XP.rebel_kill == 5, "a unit who kills a rebel player gets 5 XP (as for an NPC rebel), even if permanent death makes them a citizen first", gotXP)
 
+
+-- which dream tonight (the owner, 8 November: nightmares on bad days, propaganda and Neutral by turns, Happy after a clean day)
+local socioWas = LC.Socio
+LC.Socio = "green"
+LC.DreamDayReset()
+LC.DreamRules.lastKind = nil
+ok(LC.DreamAllowed("bus") and not LC.DreamAllowed("maze") and LC.DreamAllowed("adore"), "a clean day: a Happy dream (or propaganda) yes, a Nightmare no")
+hook.Run("LivingCityEventStarted", "curfew", 5)
+local okH, whyH = LC.DreamAllowed("bus")
+ok(not okH and string.find(tostring(whyH), "curfew", 1, true) and not LC.DreamAllowed("maze"), "a curfew today: no Happy dream (and still no Nightmare)", tostring(whyH))
+hook.Run("LivingCitySocioChanged", "red", "green")
+ok(LC.DreamAllowed("maze") and LC.DreamKind("maze") == "nightmare", "sociostability fell to red: a Nightmare is allowed")
+LC.DreamRules.lastKind = "propaganda"
+ok(not LC.DreamAllowed("adore") and LC.DreamKind("adore") == "propaganda", "never two propaganda dreams in a row")
+local admP = newPlayer("DCAdmin2", "admin")
+local okPick, whyPick = LC.DreamAdminPick(admP, "adore")
+ok(okPick == false and string.find(tostring(whyPick), "Not tonight", 1, true), "the Administrator can't pick one the day doesn't allow", tostring(whyPick))
+ok(LC.DreamKind(LC.DreamAutoPick() or "") == "nightmare", "the city's own pick after a bad day: a Nightmare")
+LC.DreamDayReset()
+hook.Run("LivingCityEventStarted", "sweep", 5)
+LC.DreamRules.lastKind = "neutral"
+ok(LC.DreamKind(LC.DreamAutoPick() or "") == "propaganda", "an ordinary day after a Neutral one: propaganda")
+ok(LC.DreamCityPicks() == true, "nobody playing the Administrator: the city picks every night")
+local off2 = LC.DreamOffice()
+local blockedSeen = false
+for _, g in ipairs(off2.groups) do for _, e in ipairs(g.endings) do if e.id == "maze" and e.blocked then blockedSeen = true end end end
+ok(blockedSeen and off2.day ~= nil, "her tablet greys out what isn't allowed tonight, and says what the day was")
+admP:SetPos(Vector(-122000, -122000, 0))
+LC.Socio = socioWas
+LC.DreamDayReset()
+LC.DreamRules.lastKind = nil
+
+-- asleep: hunger and thirst wait, and never hurt or wake you
+_setcvar("lc_needs", 1)
+Asleep(a, CITY)
+a:SetHealth(100)
+a:SetNW2Float("lcn_hunger", 0)
+a:SetNW2Float("lcn_thirst", 50)
+_run(11)
+ok(a.lcSleep and a:Health() == 100 and math.abs(LC.Thirst(a) - 50) < 0.01, "asleep: no thirst lost, no starving, still asleep", a:Health() .. " " .. LC.Thirst(a))
+Up(a)
+a:SetNW2Float("lcn_hunger", 80)
+_setcvar("lc_needs", 0)
+
+-- hurt in a dream: the sleeping body in the bed is hit, and they wake up in their bed and take it
+Asleep(b, CITY)
+local okD, dd = LC.DreamStart("maze", nil, false, nil, true)
+local body = ents.Create("prop_physics")
+body.lcDreamBodyOf = b
+b:SetHealth(100)
+local fakeDmg = { GetDamage = function() return 10 end, GetAttacker = function() return cop end }
+ok(okD and b.lcDreaming and hook.t.EntityTakeDamage.LivingCityDreamBody(body, fakeDmg) == true, "(the sleeping body takes no hit itself)")
+_run(2.5)
+ok(not b.lcDreaming and not b.lcSleep and b:Health() == 90 and (b.lcStartledUntil or 0) > CurTime(), "hit in their sleep: out of the dream, up, and hurt", tostring(b.lcDreaming) .. " " .. tostring(b.lcSleep ~= nil) .. " " .. b:Health())
+if IsValid(body) then body:Remove() end
+_run(2.5)
+
+-- the Combine on rebel ground: everyone asleep there wakes, a dreamer too
+local RZ = CITY + Vector(6000, 0, 0)
+local rzone = LC.AddZone(RZ, 400, "rebel", 0)
+Asleep(reb, RZ)
+local cop0 = cop:GetPos()
+cop:SetPos(RZ + Vector(600, 0, 0))
+hook.t.EntityFireBullets.LivingCityRaidWake(cop, {})
+ok(not reb.lcSleep and (reb.lcStartledUntil or 0) > CurTime() and LC.BedtimeDue(reb) >= reb.lcStartledUntil - 1, "a unit's shots within earshot of rebel ground: the rebels asleep there wake (and lights out waits)")
+Asleep(reb, RZ)
+local okR2, dr2 = LC.DreamStart("maze", nil, false, nil, true)
+ok(okR2 and reb.lcDreaming, "(a rebel in that camp dreaming)")
+local nWoke = LC.WakeRebelZone(rzone, RZ, true)
+_run(3.5)
+ok(nWoke >= 1 and not reb.lcDreaming and not reb.lcSleep, "a raid on their camp pulls a dreamer out, and they're up")
+cop:SetPos(cop0)
+LC.RemoveZone(rzone)
+_run(2.5)
+
 LC.DreamForget()
 LC.RemovePoint(dp)
 for _, p in ipairs({ a, b, cop, reb }) do
@@ -14530,6 +14611,7 @@ end
 DreamCrowdTests()
 local function PropagandaDreamTests()
 section("Shared dreams: propaganda dreams you play (kneel, roses, mirror, the saviour, the quiz; the Administrator starring)")
+_setcvar("lc_dream_rules", 0) _setcvar("lc_dream_auto", 0) -- (the older tests: the Administrator picks freely, and the city doesn't pick: DreamCrowdTests has the rules)
 local errs0 = #_errors
 local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
 _walls = {}
@@ -14918,6 +15000,7 @@ PropagandaDreamTests()
 -- Ten more propaganda dreams (sv_livingcity_propagandamore.lua)
 local function PropagandaMoreTests()
 section("Shared dreams: ten more propaganda dreams (harvest, shift, spy, newsreel, hate, mass games, guidance, scrap, flowers, duck and cover)")
+_setcvar("lc_dream_rules", 0) _setcvar("lc_dream_auto", 0) -- (the older tests: the Administrator picks freely, and the city doesn't pick: DreamCrowdTests has the rules)
 local errs0 = #_errors
 local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
 _walls = {}

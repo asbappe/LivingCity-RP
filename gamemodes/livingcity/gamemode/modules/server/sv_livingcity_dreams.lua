@@ -789,6 +789,12 @@ local function Enter(p, dream, spot)
     if p.RemoveAllAmmo then p:RemoveAllAmmo() end
     p:Give("weapon_lc_hands")
     if p.SelectWeapon then p:SelectWeapon("weapon_lc_hands") end
+    -- their sleeping body stays in the bed, to be woken if it's hurt or the camp is raided (sv_livingcity_bedtime.lua)
+    p.lcDreamBedPos = p:GetPos()
+    if LC.DreamBodyMake then
+        local okB, errB = pcall(LC.DreamBodyMake, p, snap)
+        if not okB and LC.Error then LC.Error("dream body", errB) end
+    end
     p:SetPos(spot)
     if p.SetEyeAngles then p:SetEyeAngles(Angle(0, (dream.pos - spot):Angle().y, 0)) end
     Notice(p, "info", "A dream", "You drift into a dream, with everyone else asleep. Whatever happens here, you wake in your bed with everything you had. "
@@ -997,20 +1003,27 @@ function LC.DreamOffice()
     for _, m in ipairs(LC.DreamMoodOrder) do
         local g = { mood = m, name = LC.DreamMoodNames[m], endings = {} }
         for _, id in ipairs(LC.EndingOrder or {}) do
-            if moods[id] == m then g.endings[#g.endings + 1] = { id = id, name = LC.Endings[id] and LC.Endings[id].name or id } end
+            if moods[id] == m then
+                local okR, whyR = true, nil
+                if LC.DreamAllowed then okR, whyR = LC.DreamAllowed(id) end
+                g.endings[#g.endings + 1] = { id = id, name = LC.Endings[id] and LC.Endings[id].name or id, blocked = not okR and whyR or nil }
+            end
         end
         for _, id in ipairs(LC.DreamGameOrder or {}) do
             if moods[id] == m and IsGame(id) then
                 local prop = LC.PropagandaDreams and LC.PropagandaDreams[id] -- (sv_livingcity_propagandadreams.lua)
-                g.endings[#g.endings + 1] = { id = id, name = (prop and "Propaganda: " or "") .. LC.DreamTitle(id), game = true, propaganda = prop or nil }
+                local okR, whyR = true, nil
+                if LC.DreamAllowed then okR, whyR = LC.DreamAllowed(id) end
+                g.endings[#g.endings + 1] = { id = id, name = (prop and "Propaganda: " or "") .. LC.DreamTitle(id), game = true, propaganda = prop or nil, blocked = not okR and whyR or nil }
             end
         end
         out.groups[#out.groups + 1] = g
     end
     local q = S.queued
     if q and q.source ~= "nightly" then
-        out.waiting = { id = q.id, name = LC.DreamTitle(q.id), mood = LC.DreamMoodNames[LC.DreamMood(q.id)], yours = true }
+        out.waiting = { id = q.id, name = LC.DreamTitle(q.id), mood = LC.DreamMoodNames[LC.DreamMood(q.id)], yours = true, auto = q.source == "auto" or nil }
     end
+    out.day = LC.DreamDayLine and LC.DreamDayLine() or nil -- (what the day allows: sv_livingcity_dreamrules.lua)
     out.dreamt = (S.dreamedNight == S.night) and LC.DayPhase and LC.DayPhase() == "night" or nil
     out.at = S.at and math.max(0, math.floor(S.at - CurTime())) or nil
     out.busy = LC.DreamActive ~= nil or nil
@@ -1032,6 +1045,10 @@ function LC.DreamAdminPick(ply, id)
         return true
     end
     if not LC.DreamKnown(id) then return false, "No such dream." end
+    if LC.DreamAllowed then -- (the rules: sv_livingcity_dreamrules.lua)
+        local okR, whyR = LC.DreamAllowed(id)
+        if not okR then return false, "Not tonight. " .. tostring(whyR) end
+    end
     LC.DreamQueueEnding(id, ply, "admin")
     local mood = LC.DreamMoodNames[LC.DreamMood(id)]
     local tonight = not (S.dreamedNight == S.night and LC.DayPhase and LC.DayPhase() == "night")
@@ -1048,9 +1065,18 @@ function LC.DreamForget() S.queued = nil end
 -- Tonight's dream, if there's one to dream: the one waiting (or, lc_dream_every_night, any).
 -- (lc_dream_every_night: tonight's random one, chosen once, as the warning goes out)
 local function Nightly()
-    if S.queued or not cvNightly:GetBool() then return S.queued end
+    if S.queued then return S.queued end
+    -- nobody plays the Administrator: the city picks, by her rules (sv_livingcity_dreamrules.lua)
+    if LC.DreamCityPicks and LC.DreamCityPicks() then
+        local id = LC.DreamAutoPick and LC.DreamAutoPick()
+        if id then S.queued = { id = id, vote = false, t = os.time(), source = "auto" } end
+        return S.queued
+    end
+    if not cvNightly:GetBool() then return S.queued end
     local ok = {}
-    for _, id in ipairs(LC.EndingOrder or {}) do if #(LC.EndingSongs and LC.EndingSongs(id) or { 1 }) > 0 then ok[#ok + 1] = id end end
+    for _, id in ipairs(LC.EndingOrder or {}) do
+        if #(LC.EndingSongs and LC.EndingSongs(id) or { 1 }) > 0 and (not LC.DreamAllowed or LC.DreamAllowed(id)) then ok[#ok + 1] = id end
+    end
     if #ok > 0 then S.queued = { id = ok[math.random(#ok)], vote = false, t = os.time(), source = "nightly" } end
     return S.queued
 end
@@ -1065,12 +1091,20 @@ function LC.DreamTonight()
     if not LC.DreamReady() then return false, "no dream point" end
     local id, by, vote, force = Pick()
     if not id then return false, "nothing to dream" end
+    -- picked earlier, and the day has changed since (a curfew after a Happy pick): the city's own pick instead
+    if LC.DreamAllowed and not LC.DreamAllowed(id) then
+        local was, okR, whyR = id, LC.DreamAllowed(id)
+        id = LC.DreamAutoPick and LC.DreamAutoPick()
+        if IsValid(by) then Notice(by, "warn", "Tonight's dream", string.format("%s can't be dreamt tonight after all. %s The city dreams %s instead.",
+            LC.DreamTitle(was), tostring(whyR), id and LC.DreamTitle(id) or "nothing"), 10) end
+        if not id then S.queued = nil return false, "nothing allowed to dream" end
+    end
     local ok, why = LC.DreamStart(id, by, vote, nil, force)
     if ok then
         S.queued, S.lastMood = nil, LC.DreamMood(id)
     else
         Log("info", "Tonight's dream didn't happen: " .. tostring(why))
-        if S.queued and S.queued.source == "nightly" then S.queued = nil end
+        if S.queued and (S.queued.source == "nightly" or S.queued.source == "auto") then S.queued = nil end
     end
     return ok, why
 end

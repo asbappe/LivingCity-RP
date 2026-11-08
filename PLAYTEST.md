@@ -1034,3 +1034,7 @@ Notes:
   Notes:
 - [ ] **Rebel kill XP:** as a unit, kill a wanted rebel player: +5 XP (as for an NPC rebel).
   Notes:
+- [ ] **Dream rules:** as the Administrator on a clean day, Happy dreams open and Nightmares greyed ("not tonight", and why); after a curfew, Happy greyed; after sociostability red, Nightmares open; after a propaganda night, propaganda greyed. With no Administrator online, a dream comes every night anyway.
+  Notes:
+- [ ] **Woken in your sleep:** while someone dreams, their body lies in their bed; hit it: they wake in bed, hurt. Shoot as a unit near a rebel camp at night: rebels asleep there (players and NPCs) wake. Sleep hungry: no starving damage while asleep.
+  Notes:

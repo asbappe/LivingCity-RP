@@ -414,11 +414,14 @@ end
 
 -- Tonight's dream, as the tablet has it (sv_livingcity_dreams.lua): Happy, Neutral or Nightmare.
 local function DreamMoodPage(g)
-    local items = {}
+    local items, why = {}, nil
     for _, e in ipairs(g.endings or {}) do
-        if #items < 9 then items[#items + 1] = Item(e.name or e.id, function() AdminDo("dream", e.id) end) end
+        if e.blocked then why = why or e.blocked -- (not tonight: sv_livingcity_dreamrules.lua)
+        elseif #items < 9 then items[#items + 1] = Item(e.name or e.id, function() AdminDo("dream", e.id) end) end
     end
-    return { title = string.upper(g.name or g.mood or "DREAMS"), items = items }
+    local rows
+    if why then rows = {} rows[math.min(9, #items + 1)] = "Not tonight: " .. why end
+    return { title = string.upper(g.name or g.mood or "DREAMS"), items = items, empty = rows }
 end
 local function DreamPage()
     local d = Info("adm").dream
@@ -426,6 +429,7 @@ local function DreamPage()
     if not d.ready then return { title = "TONIGHT'S DREAM", items = {}, empty = { d.why or "The city can't dream yet." } } end
     local items, notes = {}, {}
     if d.busy then notes[#notes + 1] = "The city is dreaming right now." end
+    if d.day then notes[#notes + 1] = d.day end
     if d.waiting then
         notes[#notes + 1] = "Waiting: " .. tostring(d.waiting.name) .. " (" .. tostring(d.waiting.mood) .. ")"
     else

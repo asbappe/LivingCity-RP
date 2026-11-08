@@ -54,8 +54,23 @@
     notices there's no implant signal one time in lc_chip_notice (0.15): a
     crime, and the papers fail.
 
+    Woken in your sleep (the owner, 8 November: "being woken if injured/attacked
+    ... if a resistance zone is raided by cp or overwatch, the human players and
+    NPCs need to be woke in that rebel territory ... gunshots would obviously
+    wake you up"). Hurt while asleep: you wake (as before). Dreaming: your
+    sleeping body stays in the bed (a still copy, eyes shut), and if it's hit
+    you're pulled out of the dream, wake in your bed, and take the hit. And
+    Civil Protection or Overwatch (a player or the city's own units) firing
+    within earshot of rebel ground (lc_raid_wake_range, 700), or hurting
+    anyone on it, wakes everyone asleep there, players (out of a dream too)
+    and the camp's own people. Someone woken like that has
+    lc_startled_minutes (10) before lights out can make them tired.
+    Hunger and thirst wait while you sleep or dream: they never hurt or wake
+    you (sv_livingcity_survival.lua).
+
       lc_bedtime 0/1, lc_nightshift_chance (0.85), lc_chip_price (500),
-      lc_chip_dreams (3), lc_chipless_sleep (90), lc_chip_notice (0.15)
+      lc_chip_dreams (3), lc_chipless_sleep (90), lc_chip_notice (0.15),
+      lc_raid_wake_range (700), lc_startled_minutes (10)
 ]]
 
 if CLIENT then return end
@@ -69,6 +84,8 @@ local cvPrice   = CreateConVar("lc_chip_price", "500", FLAGS, "Credits to have t
 local cvNeed    = CreateConVar("lc_chip_dreams", "3", FLAGS, "Dreams someone must have lived through before the lab will pull their chip or make them a foil hat")
 local cvSleep   = CreateConVar("lc_chipless_sleep", "90", FLAGS, "Most seconds a night's sleep takes with no chip (no dream to wait for: they get up on their own)")
 local cvNotice  = CreateConVar("lc_chip_notice", "0.15", FLAGS, "Chance a unit checking papers or searching someone notices there's no implant signal")
+local cvRange   = CreateConVar("lc_raid_wake_range", "700", FLAGS, "Civil Protection or Overwatch firing this close to rebel ground wakes everyone asleep there")
+local cvStartle = CreateConVar("lc_startled_minutes", "10", FLAGS, "Minutes someone woken by an attack or a raid has before lights out can make them tired")
 
 local S = LC.BedtimeState or { eve = 0, roll = {} }
 LC.BedtimeState = S
@@ -201,6 +218,7 @@ function LC.BedtimeDue(p)
         bed = bed + len -- (done for tonight: tomorrow night's)
     end
     if LC.Wired and LC.Wired(p) then bed = math.max(bed, p:GetNW2Float("lc_wired_until", 0)) end
+    if (p.lcStartledUntil or 0) > now then bed = math.max(bed, p.lcStartledUntil) end -- (woken by an attack: wide awake a while)
     return bed
 end
 function LC.IsBedtimeDue(p, due)
@@ -320,8 +338,155 @@ hook.Add("LivingCityDreamWoke", "LivingCityBedtimeNight", function(p, ok, why)
     if not IsValid(p) then return end
     local ph = Phase()
     if ph == "dusk" or ph == "night" then p.lcDreamtEve = S.eve end
-    if why ~= "optout" or p.lcDreamWokeFull then Unlock(p) end
+    if why == "end" or why == "game" or (why == "optout" and p.lcDreamWokeFull) then Unlock(p) end
     p.lcDreamWokeFull = nil
+end)
+
+------------------------------------------------------------------------
+-- Woken in your sleep: hurt, or the camp raided
+------------------------------------------------------------------------
+
+-- Wake someone asleep or dreaming (why: "hurt" or "raid"). True if they were.
+function LC.WakeSleeper(p, why, text)
+    if not IsValid(p) then return false end
+    if p.lcDreaming then
+        p.lcDreamWokenBy = { why = why, text = text } -- (out of the dream; once back in bed, up: the Woke hook below)
+        if LC.DreamWakeOne then LC.DreamWakeOne(p, why) end
+        return true
+    elseif p.lcSleep then
+        if LC.WakeUp then LC.WakeUp(p, "quiet") end
+        p.lcStartledUntil = CurTime() + math.max(0, cvStartle:GetFloat()) * 60
+        Notice(p, "warn", "You wake with a start", text or "Something woke you.", 7)
+        return true
+    end
+    return false
+end
+
+-- The sleeping body a dreamer leaves in the bed: a still copy, eyes shut. Hit it and they wake.
+function LC.DreamBodyMake(p, snap)
+    local s = snap and snap.sleep
+    if not s or not s.top then return nil end
+    local top = Vector(tonumber(s.top[1]) or 0, tonumber(s.top[2]) or 0, tonumber(s.top[3]) or 0)
+    if top == Vector(0, 0, 0) then return nil end
+    local yaw = tonumber(s.yaw) or 0
+    p.lcDreamBedPos = top
+    local rag = ents.Create("prop_ragdoll")
+    if not IsValid(rag) then return nil end
+    local ok = pcall(function()
+        rag:SetModel(p:GetModel())
+        rag:SetSkin(p:GetSkin() or 0)
+        for i = 0, (p.GetNumBodyGroups and p:GetNumBodyGroups() or 1) - 1 do rag:SetBodygroup(i, p:GetBodygroup(i)) end
+        rag:SetPos(top + Vector(0, 0, 4))
+        rag:SetAngles(Angle(0, yaw, 0))
+        rag:Spawn()
+        rag:Activate()
+        rag:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+        -- the model as it stands, turned onto its back along the bed, and held still
+        local head = Angle(0, yaw, 0):Forward()
+        local m = Matrix()
+        m:SetForward(Vector(0, 0, 1)) m:SetUp(head) m:SetRight(Vector(0, 0, 1):Cross(head))
+        local lieAng = m:GetAngles()
+        local base, baseAng = rag:GetPos(), Angle(0, yaw, 0)
+        local origin = top - head * 38 + Vector(0, 0, 9)
+        for i = 0, (rag.GetPhysicsObjectCount and rag:GetPhysicsObjectCount() or 0) - 1 do
+            local phys = rag:GetPhysicsObjectNum(i)
+            if IsValid(phys) then
+                local lp, la = WorldToLocal(phys:GetPos(), phys:GetAngles(), base, baseAng)
+                local wp, wa = LocalToWorld(lp, la, origin, lieAng)
+                phys:SetPos(wp)
+                phys:SetAngles(wa)
+                phys:EnableMotion(false)
+            end
+        end
+    end)
+    if not ok then rag:Remove() return nil end
+    rag:SetNW2Bool("lc_eyes_shut", true)
+    rag:SetNW2Bool("lc_sleeper", true)
+    if LC.SetNPCStr then
+        LC.SetNPCStr(rag, "lc_pname", LC.CharacterName and LC.CharacterName(p) or p:Nick())
+        LC.SetNPCStr(rag, "lc_doing", "asleep")
+    end
+    rag.lcDreamBodyOf = p
+    p.lcDreamBody = rag
+    return rag
+end
+local function BodyGone(p)
+    if IsValid(p) and IsValid(p.lcDreamBody) then p.lcDreamBody:Remove() end
+    if IsValid(p) then p.lcDreamBody = nil end
+end
+-- the sleeping body hit: out of the dream, and they take the hit once they're up
+hook.Add("EntityTakeDamage", "LivingCityDreamBody", function(ent, dmg)
+    local p = IsValid(ent) and ent.lcDreamBodyOf
+    if not IsValid(p) then return end
+    if p.lcDreaming and dmg:GetDamage() > 0 then
+        p.lcDreamHurt = { amount = dmg:GetDamage(), attacker = dmg:GetAttacker() }
+        LC.WakeSleeper(p, "hurt", "Something hit you in your sleep. You wake in your bed, hurt.")
+    end
+    return true -- (the copy itself is never hurt or knocked about)
+end)
+-- back in bed after being pulled out: up, and the hit taken; the body copy gone either way
+hook.Add("LivingCityDreamWoke", "LivingCityDreamBody", function(p, ok, why)
+    if not IsValid(p) then return end
+    BodyGone(p)
+    p.lcDreamBedPos = nil
+    local by = p.lcDreamWokenBy
+    p.lcDreamWokenBy = nil
+    if not by then return end
+    if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
+    p.lcStartledUntil = CurTime() + math.max(0, cvStartle:GetFloat()) * 60
+    Notice(p, "warn", "You wake with a start", by.text or "Something woke you.", 7)
+    local hurt = p.lcDreamHurt
+    p.lcDreamHurt = nil
+    if hurt and p:Alive() then
+        local att = IsValid(hurt.attacker) and hurt.attacker or game.GetWorld()
+        p:TakeDamage(hurt.amount, att, att)
+    end
+end)
+hook.Add("LivingCityDreamEnded", "LivingCityDreamBody", function(dream)
+    for _, p in ipairs(dream and dream.list or {}) do if IsValid(p) and not p.lcDreaming then BodyGone(p) end end
+end)
+hook.Add("PlayerDisconnected", "LivingCityDreamBody", BodyGone)
+
+-- Rebel ground under attack: everyone asleep on it wakes (players, out of a dream too, and the camp's own).
+local zoneWoke = setmetatable({}, { __mode = "k" })
+function LC.WakeRebelZone(z, pos, force)
+    if not z then return 0 end
+    local now = CurTime()
+    if not force and (zoneWoke[z] or -100) > now - 15 then return 0 end
+    zoneWoke[z] = now
+    local n = 0
+    local text = "Gunfire! The Combine are here. You're wide awake."
+    for _, p in ipairs(player.GetAll()) do
+        local at = p.lcDreaming and p.lcDreamBedPos or (p.lcSleep and p:GetPos())
+        if at and LCZ and LCZ.Contains(z, at, 0) and LC.WakeSleeper(p, "raid", text) then n = n + 1 end
+    end
+    for npc, st in pairs(LC.NPCs or {}) do
+        if IsValid(npc) and LC.RebelAsleep and LC.RebelAsleep(st) and LCZ and LCZ.Contains(z, npc:GetPos(), 120) then
+            if LC.RebelLifeEnd then LC.RebelLifeEnd(npc, st) end
+            n = n + 1
+        end
+    end
+    if LC.RebelAlert then LC.RebelAlert(z, pos or z.pos, now) end
+    return n
+end
+local function Combine(e)
+    if not IsValid(e) then return false end
+    if e:IsPlayer() then return LC.PlayerIsCP and LC.PlayerIsCP(e) or false end
+    local st = LC.NPCs and LC.NPCs[e]
+    return st ~= nil and LC.IsSecurity ~= nil and LC.IsSecurity(st) == true
+end
+LC.RaidWakeBy = Combine
+-- shots by the Combine heard on rebel ground
+hook.Add("EntityFireBullets", "LivingCityRaidWake", function(ent)
+    if not Combine(ent) then return end
+    local z = LC.RebelZoneAt and LC.RebelZoneAt(ent:GetPos(), math.max(0, cvRange:GetFloat()))
+    if z then LC.WakeRebelZone(z, ent:GetPos()) end
+end)
+-- anyone hurt by the Combine on rebel ground (batons, grenades and the rest)
+hook.Add("EntityTakeDamage", "LivingCityRaidWake", function(ent, dmg)
+    if not IsValid(ent) or not Combine(dmg:GetAttacker()) then return end
+    local z = LC.RebelZoneAt and LC.RebelZoneAt(ent:GetPos(), 0)
+    if z then LC.WakeRebelZone(z, ent:GetPos()) end
 end)
 
 ------------------------------------------------------------------------
