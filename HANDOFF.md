@@ -35,5 +35,6 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - Inputs: crouch edge (`Ducked`), jump edge (`Jumped`: IN_JUMP or off the ground), chat (`def.say`), position. Offences go through the same `Offend` (loyalty on waking).
 - Tests: `PropagandaMoreTests` (59) pass; `PropagandaDreamTests`, `DreamGameTests` and the client smoke test pass. Full suite not run (the owner asked to test less).
 - Nothing checked in game: PLAYTEST.md, "Ten more propaganda dreams" (sizes of the floating boards, the mosaic's height, the factory machines and other models are guesses).
-- Earlier (still open): the core snapshot copy blocked by permissions (TODO.md); PLAYTEST.md "7 November, part 3" onwards; the first five propaganda dreams unchecked in game.
+- Core snapshot: sorted and in step (the six drinks and smokes approved); `.claude/settings.json` no longer blocks it, so a command can update it with the owner's OK.
+- Earlier (still open): PLAYTEST.md "7 November, part 3" onwards; the first five propaganda dreams unchecked in game.
 - Next, each in a fresh chat: The Battle Line and vortigaunt dream warfare (designs at the end of `TODO.md`).
