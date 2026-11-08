@@ -987,3 +987,5 @@ Notes:
   Notes:
 - [ ] **lc_voice_missing (8 November, part 7):** type `lc_voice_missing` in the server's web console: one line per folder (Dream lines, overwatch, administrator, radio, G-Man) naming what has no recording yet. Add a file, change the map, run it again: that line should be gone.
   Notes:
+- [ ] **The Loyalty Quiz forgives (8 November, part 7):** in the quiz, answer with a typo ("adminstrator"), another ending ("I reported him", "terrorist") and a new synonym ("Breen", "surrender", "rat"): each should count. "Freemann" should still be thoughtcrime; "let's dance" should not.
+  Notes:

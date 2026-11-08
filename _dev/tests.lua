@@ -14529,6 +14529,21 @@ gq.qNext = CurTime()
 _run(0.2)
 hook.Run("PlayerSay", a, "from the union")
 ok(gq.pl[a].how == "won", "six Loyalty: a model citizen", gq.pl[a].score)
+do -- forgiving answers: endings, small typos, more synonyms (the owner, 8 November)
+    local function Has(text, ans, typo) local w = {} for x in string.gmatch(string.lower(text), "%a+") do w[#w + 1] = x end return LC.QuizHas(w, ans, typo) end
+    ok(Has("a terrorist", "terrorists") and Has("I reported him", "report") and Has("Reporting!", "report") and Has("obeying", "obey") and Has("he complies", "comply") and Has("relocating", "relocated"),
+        "the quiz takes a word's common endings (terrorist, reported, obeying, complies, relocating)")
+    ok(Has("the adminstrator", "administrator") and Has("comlpy", "comply") and Has("Overwach", "overwatch") and Has("Civil Protecion", "civil protection") and Has("anti-citizen", "anti citizens"),
+        "and one letter wrong, missing or swapped in a longer word")
+    ok(not Has("the admin", "administrator") and not Has("love", "loyal") and not Has("tall", "tell") and not Has("you", "her"), "but not a different word, nor a typo in a short one")
+    local function Bad(text) local w = {} for x in string.gmatch(string.lower(text), "%a+") do w[#w + 1] = x end return LC.QuizForbidden(w) end
+    ok(Bad("Freemann lives") == "freemann" and Bad("the rebelion") == "rebelion" and Bad("tyrants!") == "tyrants" and Bad("Lambdas") == "lambdas", "thoughtcrime is caught with the same leniency")
+    ok(Bad("let's dance") == nil and Bad("a garden") == nil and Bad("pigeon") == nil and Bad("the administrator is beautiful") == nil, "and a harmless word near a short one (dance, not Vance) is never thoughtcrime")
+    local q = {}
+    for _, x in ipairs(LC.QuizQuestions) do q[#q + 1] = "|" .. table.concat(x.a, "|") .. "|" end
+    ok(string.find(q[1], "|breen|", 1, true) and string.find(q[1], "|union|", 1, true) and string.find(q[1], "|cp|", 1, true) and string.find(q[2], "|surrender|", 1, true)
+        and string.find(q[2], "|submit|", 1, true) and string.find(q[7], "|rat|", 1, true) and string.find(q[10], "|happy|", 1, true), "and more right answers (Breen, the Union, CP; surrender, submit; rat; happy)")
+end
 gq.qi, gq.qNext = #LC.QuizQuestions, CurTime()
 _run(0.3)
 ok(Said(gq, "quiz_end") and gq.pl[b].how == "time", "after the last question, the rest wake as the broadcast ends")

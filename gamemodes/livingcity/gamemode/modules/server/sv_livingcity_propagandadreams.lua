@@ -989,22 +989,87 @@ end
 
 do
     LC.QuizQuestions = {
-        { q = "Who keeps you safe at night?", a = { "administrator", "combine", "overwatch", "civil protection", "metrocops", "police", "her", "you", "she" } },
-        { q = "What do we do when an officer speaks to us?", a = { "obey", "comply", "listen", "kneel", "salute", "respect" } },
-        { q = "Where does your ration come from?", a = { "administrator", "combine", "union", "her", "you", "generosity", "kindness" } },
-        { q = "What are the people who call themselves the Resistance?", a = { "criminals", "terrorists", "anticitizens", "anti citizens", "traitors", "malcontents", "vermin", "thugs", "liars" } },
-        { q = "Complete the phrase: Compliance is...", a = { "safety", "happiness", "freedom", "love", "life", "peace", "rewarded", "good" } },
+        { q = "Who keeps you safe at night?", a = { "administrator", "combine", "overwatch", "civil protection", "metrocops", "police", "her", "you", "she", "breen", "union", "cp", "officers", "soldiers" } },
+        { q = "What do we do when an officer speaks to us?", a = { "obey", "comply", "listen", "kneel", "salute", "respect", "surrender", "submit", "bow", "attention" } },
+        { q = "Where does your ration come from?", a = { "administrator", "combine", "union", "her", "you", "generosity", "kindness", "breen", "city", "benevolence", "grace" } },
+        { q = "What are the people who call themselves the Resistance?", a = { "criminals", "terrorists", "anticitizens", "anti citizens", "traitors", "malcontents", "vermin", "thugs", "liars", "scum", "parasites", "enemies", "cowards", "savages" } },
+        { q = "Complete the phrase: Compliance is...", a = { "safety", "happiness", "freedom", "love", "life", "peace", "rewarded", "good", "safe", "happy", "duty", "strength", "virtue" } },
         { q = "How would you describe the Administrator?", a = {} }, -- (any word she likes: LC.AdmireWords)
-        { q = "What should you do if you see a rebel?", a = { "report", "inform", "tell", "call", "alert" } },
-        { q = "Who is your best friend?", a = { "administrator", "combine", "overwatch", "civil protection", "her", "you", "the city" } },
-        { q = "What happens to those who disobey?", a = { "punished", "relocated", "reeducated", "re educated", "processed", "corrected", "amputated", "detained", "arrested" } },
-        { q = "What is the most important thing a citizen can be?", a = { "loyal", "obedient", "compliant", "productive", "grateful", "useful", "quiet" } },
+        { q = "What should you do if you see a rebel?", a = { "report", "inform", "tell", "call", "alert", "rat", "snitch", "warn", "notify", "denounce" } },
+        { q = "Who is your best friend?", a = { "administrator", "combine", "overwatch", "civil protection", "her", "you", "the city", "breen", "union", "cp" } },
+        { q = "What happens to those who disobey?", a = { "punished", "relocated", "reeducated", "re educated", "processed", "corrected", "amputated", "detained", "arrested", "executed", "removed", "disappear", "jailed", "imprisoned" } },
+        { q = "What is the most important thing a citizen can be?", a = { "loyal", "obedient", "compliant", "productive", "grateful", "useful", "quiet", "happy", "faithful", "devoted", "silent", "good" } },
     }
     for i, q in ipairs(LC.QuizQuestions) do LC.PropagandaCues["quiz_q" .. i] = q.q end
     LC.QuizThoughtcrime = { "freeman", "gordon", "lambda", "revolution", "uprising", "overthrow", "alyx", "vance", "kleiner", "rebellion" }
     local FORBID = {}
-    for _, w in ipairs(LC.QuizThoughtcrime) do FORBID[w] = true end
-    for _, w in ipairs(LC.CombineInsults) do FORBID[w] = true end
+    for _, w in ipairs(LC.QuizThoughtcrime) do FORBID[#FORBID + 1] = w end
+    for _, w in ipairs(LC.CombineInsults) do FORBID[#FORBID + 1] = w end
+    -- Forgiving answers (the owner, 8 November: "What if someone uses a synonym or makes a slight
+    -- typo?"): a word's common endings count (terrorist, terrorists; report, reported, reporting),
+    -- and in longer words one letter wrong, missing, extra or swapped with the next still counts.
+    local function Stem(w)
+        if #w < 5 then return w end
+        if string.sub(w, -3) == "ies" then return string.sub(w, 1, -4) .. "y" end
+        for _, suf in ipairs({ "ing", "ed", "es", "s" }) do
+            if string.sub(w, -#suf) == suf and #w - #suf >= 4 and not (suf == "s" and string.sub(w, -2) == "ss") then
+                w = string.sub(w, 1, -#suf - 1)
+                break
+            end
+        end
+        if #w >= 5 and string.sub(w, -1) == "e" then w = string.sub(w, 1, -2) end
+        return w
+    end
+    -- Letters to change to turn a into b (a swap of two neighbours is one), stopping above 1.
+    local function Edits(a, b)
+        if a == b then return 0 end
+        if math.abs(#a - #b) > 1 then return 2 end
+        local d, prev2, prev = {}, nil, {}
+        for j = 0, #b do prev[j] = j end
+        for i = 1, #a do
+            d = { [0] = i }
+            local best = i
+            for j = 1, #b do
+                local cost = string.byte(a, i) == string.byte(b, j) and 0 or 1
+                local v = math.min(prev[j] + 1, d[j - 1] + 1, prev[j - 1] + cost)
+                if prev2 and i > 1 and j > 1 and string.byte(a, i) == string.byte(b, j - 1) and string.byte(a, i - 1) == string.byte(b, j) then
+                    v = math.min(v, prev2[j - 2] + 1)
+                end
+                d[j] = v
+                if v < best then best = v end
+            end
+            if best > 1 then return 2 end
+            prev2, prev = prev, d
+        end
+        return prev[#b]
+    end
+    -- Does the word said (w) count as the word wanted (a)? typo: how long a word must be to forgive a typo.
+    function LC.QuizWordMatch(w, a, typo)
+        if w == a then return true end
+        local sw, sa = Stem(w), Stem(a)
+        if sw == sa then return true end
+        typo = typo or 5
+        return #a >= typo and #w >= typo - 1 and (Edits(w, a) <= 1 or Edits(sw, sa) <= 1)
+    end
+    -- Is the answer (one word or a few, like "civil protection") somewhere in what was said?
+    function LC.QuizHas(words, answer, typo)
+        local want = {}
+        for w in string.gmatch(answer, "%a+") do want[#want + 1] = w end
+        if #want == 0 then return false end
+        for i = 1, #words - #want + 1 do
+            local all = true
+            for k = 1, #want do if not LC.QuizWordMatch(words[i + k - 1], want[k], typo) then all = false break end end
+            if all then return true end
+        end
+        return false
+    end
+    -- A thoughtcrime word in what was said, or nil (typos forgiven only from 6 letters, so "dance" isn't "vance").
+    function LC.QuizForbidden(words)
+        for _, w in ipairs(words) do
+            for _, f in ipairs(FORBID) do if LC.QuizWordMatch(w, f, 6) then return w end end
+        end
+        return nil
+    end
     local QSECS = 14
     local def = { id = "quiz", name = "The Loyalty Quiz", mood = "happy", secs = 6 + #LC.QuizQuestions * QSECS + 6, lives = 3, need = 6, music = { "quiz" },
         goal = "Answer her questions in chat. A right answer earns Loyalty, the first to answer earns double. Careful: some answers are thoughtcrime.",
@@ -1060,19 +1125,17 @@ do
         if not s or s.done then return false end
         s.score = s.score or 0
         for _, q in ipairs(Everyone(g)) do if q.ChatPrint then q:ChatPrint("(in the dream) " .. p:Nick() .. ": " .. text) end end
-        local low = " " .. string.lower(string.gsub(text, "[^%w ]", " ")) .. " "
-        for w in string.gmatch(low, "%a+") do
-            if FORBID[w] then
-                Offend(g, p, "Thoughtcrime", "\"" .. w .. "\"? The audience gasps. Two officers escort you to the back of the studio.")
-                return true
-            end
+        local words = {}
+        for w in string.gmatch(string.lower(text), "%a+") do words[#words + 1] = w end
+        local bad = LC.QuizForbidden(words)
+        if bad then
+            Offend(g, p, "Thoughtcrime", "\"" .. bad .. "\"? The audience gasps. Two officers escort you to the back of the studio.")
+            return true
         end
         if not g.q or g.qDone[p] then return true end
         local right = false
-        if #g.q.a == 0 then
-            for w in string.gmatch(low, "%a+") do for _, l in ipairs(LC.AdmireWords) do if w == l then right = true end end end
-        else
-            for _, a in ipairs(g.q.a) do if string.find(low, " " .. a .. " ", 1, true) then right = true break end end
+        for _, a in ipairs(#g.q.a == 0 and LC.AdmireWords or g.q.a) do
+            if LC.QuizHas(words, a) then right = true break end
         end
         if not right then
             Notice(p, "info", "Not quite", "Think about it, citizen. The answer is always obvious.", 3)

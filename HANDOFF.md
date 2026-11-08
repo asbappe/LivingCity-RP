@@ -30,6 +30,7 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 ## Where things stand
 
 - 2026-11-08 (part 7): **`lc_voice_missing`**, a new console command (superadmins or the server console; `LC.VoiceMissing` in sv_livingcity_announcer.lua): one line per folder naming every voice line with no recording yet: the dreams' lines (`LC.PropagandaCues`, in `dreams/voice/`), the PA's triggers for Overwatch and the Administrator (any tone counts), the radio's, and the G-Man's rival and dream lines. Asked for because long `lua_run` lines just spin in the owner's Hexane web console: give them short `lc_` commands instead.
+- Same chat, the owner's OK: **The Loyalty Quiz forgives answers**: common endings, one-letter typos in words of 5+ letters, more synonyms per question (`LC.QuizHas`, `LC.QuizWordMatch`, `LC.QuizForbidden` in sv_livingcity_propagandadreams.lua; thoughtcrime typos only from 6 letters). `PropagandaDreamTests` (71) pass.
 - The owner has the full catalogue of voice lines (file names, who, default words) from this chat; they'll paste what `lc_voice_missing` prints for a to-record list. Spec: the last paragraph of `docs/features/custom-announcements.md`.
 - Core snapshot gains `console command lc_voice_missing` (asked for; CORE_CHANGELOG part 7). Tests: `AnnouncerTests` (51) and the client smoke test pass.
 - Part 6 (Ravenholm, `ravenholm` at the end of `sv_livingcity_propagandamore.lua`) and part 5 (ten more propaganda dreams): unchecked in game, PLAYTEST.md "Ten more propaganda dreams" onwards.

@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 3b348f8. Admin-only console messages and log lines are left out.
+Made from version 97173ba. Admin-only console messages and log lines are left out.
 
 7988 lines, from 226 files.
 
@@ -719,7 +719,7 @@ Made from version 3b348f8. Admin-only console messages and log lines are left ou
 - "Shared dreams: if the server has a dream point, the secret endings come at night as a dream for everyone asleep in a bed, about a minute after the Administrator says good night. You wake in your bed with everything you had, exactly as it was. Not tonight? C > Settings > Shared dreams (opt out), or /dream off; in a dream, C > Settings > Shared dreams: wake up. Not from a nightmare, though: a nightmare takes everyone asleep outside a Combine-only zone, and you can't wake yourself until you're out of it. Only a stimulant shot before bed keeps you awake."  (text, line 85)
 - "Cigarettes, alcohol and stimulants (F3, the item's button). A cigarette steadies your nerves and dulls hunger; too many and you cough. Drink and you get drunk: it dulls pain, then the world sways, then you throw up (and one moonshine in five is a bad batch). A stimulant keeps you awake for fifteen minutes (no dream can take you), then you crash."  (text, line 86)
 - "Nightmare dreams you play: The Patrol Maze (pick up every token while giant officers hunt you), The Barrel Tower (climb to the top, and don't touch the barrels: they explode), The Crumbling Floor (keep moving or the floor gives way) and Freeze, Citizen (move only while the giant officer's back is turned). Out of lives, or won: wake up now, or watch the rest until it's over. Win and you wake Unbroken (a day the Combine can't get into your head) with a second wind, and maybe a Vortigaunt's help; lose every life and you're 30 health down until your next full night's sleep."  (text, line 87)
-- "Propaganda dreams (no opting out, and no waking yourself until you're out of it): Kneel Before Her (kneel, crouching, and gaze up at her to fill your Devotion; never let her catch you standing in her gaze), Roses for Her (carry glowing roses to her feet, on your knees in her half of the hall), Mirror, Mirror (kneel and compliment her in chat; new words count double, insults cost a life), The Saviour (the dead come for you, unarmed, and they hurt: when someone is close to the end, she descends and her soldiers save you), The Loyalty Quiz (answer her questions in chat; beware thoughtcrime). Every life you lose, every insult to her or the Combine, costs loyalty points (Civil Standing) when you wake."  (text, line 88)
+- "Propaganda dreams (no opting out, and no waking yourself until you're out of it): Kneel Before Her (kneel, crouching, and gaze up at her to fill your Devotion; never let her catch you standing in her gaze), Roses for Her (carry glowing roses to her feet, on your knees in her half of the hall), Mirror, Mirror (kneel and compliment her in chat; new words count double, insults cost a life), The Saviour (the dead come for you, unarmed, and they hurt: when someone is close to the end, she descends and her soldiers save you), The Loyalty Quiz (answer her questions in chat, in your own words: a small typo is forgiven; beware thoughtcrime). Every life you lose, every insult to her or the Combine, costs loyalty points (Civil Standing) when you wake."  (text, line 88)
 - "More propaganda dreams: Record Harvest (carry glowing crates to the depot; crouch to throw away a green, spoiled one), The Stakhanov Shift (crouch again and again at a work station to beat the norm by 1400%), Careless Talk (four rounds of 30 seconds: listen for clues and crouch beside the one you think is the spy; everyone's pick is revealed together), The Newsreel (as the camera rolls, say the wave, salute or cheer it asks of you; everyone's take is shown at the cut), Two Minutes of Hate (jeer in chat; silence is noticed), The Mass Games (gold card: crouch, red: stand, at FLIP!), On-the-Spot Guidance (jump or say clap when she points), The Scrap Drive (fill the bins; never sell to the shady trader), Flowers for the Liberators (jump as a soldier passes you; stay off the road), Duck and Cover (when the siren wails and the Resistance's rocket goes up, crouch beside a table, two to a table), Ravenholm (the dead rise from the graves and a red Father Grigori rants; hold on until help comes, and if any vortigaunt freed from its shackles is alive in the city, you may see the truth)."  (text, line 89)
 - "City Administrator: your tablet's office has Tonight's dream: reward an obedient city with a Happy dream, or punish it with a Nightmare. Its Combine manpower shows what Civil Protection and Overwatch have left in reserve. Out of it in a dream? Watch the rest: click to follow another dreamer, Jump to fly about inside the dream."  (text, line 90)
 - "You can kill birds with your fists. Cook them before you eat them."  (text, line 91)
@@ -10162,49 +10162,52 @@ Made from version 3b348f8. Admin-only console messages and log lines are left ou
 - "What happens to those who disobey?"  (text, line 1000)
 - "re educated"  (text, line 1000)
 - "What is the most important thing a citizen can be?"  (text, line 1001)
-- "The Loyalty Quiz"  (name, line 1009)
-- "Answer her questions in chat. A right answer earns Loyalty, the first to answer earns double. Careful: some answers are thoughtcrime."  (text, line 1010)
-- "You're the star: the quizmaster on the podium. The questions ask themselves; anything you say in chat, the dream hears."  (text, line 1011)
-- "The broadcast ends"  (text, line 1012)
-- "The studio lights go out, and you wake."  (text, line 1012)
-- "Model citizen"  (text, line 1014)
-- "You wake reciting the answers, and feel proud of yourself. You're not sure why."  (text, line 1014)
-- "You wake with a start, sure you said something wrong in your sleep. Hopefully nobody heard."  (text, line 1015)
-- "The broadcast ends"  (text, line 1016)
-- "You wake humming the quiz's theme tune. It's very catchy."  (text, line 1016)
+
+> Note for you (not shown in game): A thoughtcrime word in what was said, or nil (typos forgiven only from 6 letters, so "dance" isn't "vance").
+
+- "The Loyalty Quiz"  (name, line 1074)
+- "Answer her questions in chat. A right answer earns Loyalty, the first to answer earns double. Careful: some answers are thoughtcrime."  (text, line 1075)
+- "You're the star: the quizmaster on the podium. The questions ask themselves; anything you say in chat, the dream hears."  (text, line 1076)
+- "The broadcast ends"  (text, line 1077)
+- "The studio lights go out, and you wake."  (text, line 1077)
+- "Model citizen"  (text, line 1079)
+- "You wake reciting the answers, and feel proud of yourself. You're not sure why."  (text, line 1079)
+- "You wake with a start, sure you said something wrong in your sleep. Hopefully nobody heard."  (text, line 1080)
+- "The broadcast ends"  (text, line 1081)
+- "You wake humming the quiz's theme tune. It's very catchy."  (text, line 1081)
 
 > Note for you (not shown in game): part of: tick
 
-- "Model citizen"  (text, line 1047)
-- "Full marks for loyalty. The audience rises to its feet."  (text, line 1047)
-- "The broadcast ends"  (text, line 1048)
-- "The studio lights go out before you've proven yourself. You wake."  (text, line 1048)
+- "Model citizen"  (text, line 1112)
+- "Full marks for loyalty. The audience rises to its feet."  (text, line 1112)
+- "The broadcast ends"  (text, line 1113)
+- "The studio lights go out before you've proven yourself. You wake."  (text, line 1113)
 
 > Note for you (not shown in game): An answer, in chat. True: it stayed in the dream.
 
-- "(in the dream) {Nick}: {text}"  (chat message, line 1062)
+- "(in the dream) {Nick}: {text}"  (chat message, line 1127)
 
 > Note for you (not shown in game): part of: quiz said
 
-- ""{w}"? The audience gasps. Two officers escort you to the back of the studio."  (text, line 1066)
-- "Not quite"  (on-screen notice, line 1078)
-- "Think about it, citizen. The answer is always obvious."  (on-screen notice, line 1078)
-- "Model citizen"  (text, line 1087)
-- "Full marks for loyalty. She nods once, and the audience rises to its feet for you."  (text, line 1087)
-- "First, and correct!"  (on-screen notice, line 1089)
-- "Loyalty: %d of %d."  (message, line 1089)
+- ""{bad}"? The audience gasps. Two officers escort you to the back of the studio."  (text, line 1132)
+- "Not quite"  (on-screen notice, line 1141)
+- "Think about it, citizen. The answer is always obvious."  (on-screen notice, line 1141)
+- "Model citizen"  (text, line 1150)
+- "Full marks for loyalty. She nods once, and the audience rises to its feet for you."  (text, line 1150)
+- "First, and correct!"  (on-screen notice, line 1152)
+- "Loyalty: %d of %d."  (message, line 1152)
 
 > Note for you (not shown in game): part of: state
 
-- "The quiz is about to begin..."  (text, line 1096)
-- "The quiz is over."  (text, line 1097)
-- "Correct. Wait for the next question."  (text, line 1100)
-- "Loyalty: %d of %d     Question %d of %d"  (message, line 1102)
+- "The quiz is about to begin..."  (text, line 1159)
+- "The quiz is over."  (text, line 1160)
+- "Correct. Wait for the next question."  (text, line 1163)
+- "Loyalty: %d of %d     Question %d of %d"  (message, line 1165)
 
 > Note for you (not shown in game): part of: propaganda say
 
-- "The Administrator"  (text, line 1121)
-- "(in the dream) The Administrator: {text}"  (chat message, line 1122)
+- "The Administrator"  (text, line 1184)
+- "(in the dream) The Administrator: {text}"  (chat message, line 1185)
 
 ## more propaganda dreams (dreams you play), drawn from real propaganda (sv_livingcity_propagandamore.lua)
 
