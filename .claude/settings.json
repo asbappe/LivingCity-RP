@@ -2,8 +2,6 @@
   "permissions": {
     "deny": [
       "Read(./PLAYER_TEXT.md)",
-      "Read(./_dev/core_snapshot.txt)",
-      "Read(./_dev/core_snapshot.new.txt)",
       "Read(./_dev/rewording/**)",
       "Read(./livingcity_sound/**)"
     ]

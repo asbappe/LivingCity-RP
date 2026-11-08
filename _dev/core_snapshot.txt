@@ -294,6 +294,7 @@ item ammo_smg
 item armor_vest
 item arms_crate
 item bandage
+item beer
 item bottle_clean
 item bottle_dirty
 item bottle_empty
@@ -307,6 +308,8 @@ item can_empty
 item can_rain
 item canned_food
 item chemicals
+item cig_rolled
+item cig_union
 item civvies
 item cloth
 item coffee
@@ -342,6 +345,7 @@ item lockpick
 item master_chip
 item melon
 item milk
+item moonshine
 item paper
 item papers_blank
 item papers_dead
@@ -370,6 +374,7 @@ item seeds
 item smokebomb
 item smuggled_supplies
 item spraypaint
+item stimulant
 item storage_crate
 item tablets
 item tainted_bottle_clean
@@ -395,6 +400,7 @@ item union_goods
 item vegetables
 item vendor_stall
 item vest_cell
+item vodka
 item water
 item weedkiller
 item zipties
@@ -1017,9 +1023,3 @@ setting lc_zone_mercy = 96
 setting lc_zone_stalkers = 1
 setting lcf_admin_tools = 1
 setting lcf_switch_cooldown = 60
-item beer
-item cig_rolled
-item cig_union
-item moonshine
-item stimulant
-item vodka
