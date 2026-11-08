@@ -2993,8 +2993,8 @@ end)
 -- city's people, a unit or a citizen, and they step aside: a shuffle sideways at once, then a few steps clear.
 -- Not someone busy with you or someone else (a stop, a chase, an escort, a guard, asleep, in a cell).
 -- The Combine's own (the owner, 8 November: "only for each other ... not for rebels, citizens, etc"):
--- Civil Protection's units step aside only for Civil Protection players (the Overwatch ranks too),
--- Overwatch soldiers for them and for the City Administrator, and her Elites for her and for them;
+-- Civil Protection's units and the Overwatch's soldiers step aside only for Civil Protection players
+-- (the Overwatch ranks too) and for the City Administrator, and her Elites for her and for them;
 -- never in the middle of a fight. Citizens and everyone else's people still make way for anyone.
 ------------------------------------------------------------------------
 
@@ -3016,8 +3016,7 @@ function LC.MakesWayFor(npc, st, ply)
     if not COMBINE_ROLE[st.role] then return true end
     -- the Combine's own: never mid-fight, and only for their own side
     if st.enemy or IsValid(enemy) or st.state == "fighting" then return false end
-    if st.role == "cop" then return f == "cp" end
-    return f == "cp" or f == "admin"
+    return f == "cp" or f == "admin" -- (units and soldiers alike, for their own side and for the City Administrator: the owner, 8 November)
 end
 
 local function MakeWay(now)
