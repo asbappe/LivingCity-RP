@@ -4,6 +4,8 @@
 
 **Joining Civil Protection needs good standing**: 100 or more Civil Standing (`lc_cp_min_standing`), so a new character has to earn their way in with jobs and compliance first. Admins can join regardless, to test, and `lcf_setfaction <name> <faction>` sets anyone's faction directly.
 
+**The sides kept even** (the owner, 9 November: "keep the sides even"; `LC.SidesEven`, `LC.SideRatio` 2, `LC.SideSlack` 4): neither the Resistance nor the Combine (Civil Protection and Overwatch together) may grow past double the other side's players online, plus 4. So with 6 Combine players the Resistance takes up to 16; with none, up to 4. Only joining waits (F4 says why); nobody already on a side is ever put off it, and someone coming back to the server is back on the side they were on, whatever the count, so if Combine players leave, the Resistance players online stay where they are, and the city's NPC Combine grows to meet them (the reserves, below in `city.md`). Citizens, the Administration and the rest are never limited; superadmins aren't either. A caught mole forced into the Resistance, and a freed vortigaunt, join whatever the count.
+
 | Faction | Ladder |
 |---|---|
 | Citizen | Citizen, Union Worker, Loyalist, Model Citizen |

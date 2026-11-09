@@ -16389,6 +16389,91 @@ ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 DreamPlanTests()
 
+-- The sides kept even, the Combine's reserves growing with the Resistance, and the Administrator asked at bedtime
+function SideBalanceTests()
+section("Sides kept even (double plus 4), the Combine's reserves growing with Resistance players, the Administrator asked as she lies down")
+local errs0 = #_errors
+local realGetAll, realPhase = player.GetAll, LC.DayPhase
+local NOOP = function() return nil end
+local function Fake(f) -- (just a faction to count; anything else asked of it: nothing)
+    return setmetatable({ f = f }, { __index = function(_, k)
+        if k == "GetNW2String" then return function(self, key, d) if key == "lcf_faction" then return self.f end return d end end
+        if k == "IsValid" then return function() return true end end
+        return NOOP
+    end })
+end
+local function Crowd(rebels, combine)
+    local list = {}
+    for _ = 1, rebels do list[#list + 1] = Fake("resistance") end
+    for _ = 1, combine do list[#list + 1] = Fake("cp") end
+    return list
+end
+local joiner = newPlayer("SBJoin", "citizen")
+local adm = newPlayer("SBAdmin", "admin") -- (made before the counted crowds stand in for everyone)
+
+-- the Combine's reserves
+player.GetAll = function() return Crowd(0, 0) end
+local cp0, ota0, i0 = LC.ManpowerMax("cp"), LC.ManpowerMax("ota"), LC.ManpowerInterval("cp")
+player.GetAll = function() return Crowd(40, 0) end
+local cp40, ota40, i40, reb40 = LC.ManpowerMax("cp"), LC.ManpowerMax("ota"), LC.ManpowerInterval("cp"), LC.ManpowerMax("rebel")
+player.GetAll = function() return Crowd(0, 0) end
+local reb0 = LC.ManpowerMax("rebel")
+ok(cp40 == cp0 + 2 * 36 and ota40 == ota0 + 36 and math.abs(i40 - i0 / (1 + 0.05 * 36)) < 0.01 and reb40 == reb0,
+    "40 Resistance players: Civil Protection's reserve holds 72 more, Overwatch's 36 more, and they refill nearly three times as fast (the Resistance's own unchanged)")
+player.GetAll = function() return Crowd(4, 0) end
+ok(LC.ManpowerMax("cp") == cp0, "4 or fewer: nothing changes")
+
+-- the sides kept even
+local crowd = Crowd(6, 1)
+player.GetAll = function() local l = { joiner } for _, p in ipairs(crowd) do l[#l + 1] = p end return l end
+local okR, whyR = LC.CanJoinFaction(joiner, "resistance")
+ok(not okR and string.find(tostring(whyR), "too big", 1, true), "6 rebels against 1 unit: the Resistance takes nobody more (double plus 4 is 6)", tostring(whyR))
+ok(LC.SidesEven(joiner, "cp"), "but Civil Protection can")
+crowd = Crowd(5, 1)
+ok(LC.SidesEven(joiner, "resistance"), "5 against 1: one more fits")
+crowd = Crowd(0, 0)
+ok(LC.SidesEven(joiner, "resistance") and LC.SideCounts(joiner).rebels == 0, "nobody on either side: the first 4 always fit")
+joiner:SetNW2String("lcf_faction", "resistance")
+crowd = Crowd(20, 0)
+ok(LC.SidesEven(joiner, "resistance"), "already in the Resistance: nobody is ever put off a side")
+joiner:SetNW2String("lcf_faction", "citizen")
+joiner:SetPData("lcf_faction", "resistance")
+ok(LC.SidesEven(joiner, "resistance"), "coming back to the server after a disconnect: back on their side, whatever the count")
+joiner:SetPData("lcf_faction", "citizen")
+
+-- the Administrator, asked as she lies down on a night she didn't choose
+player.GetAll = function() return { adm } end
+LC.DayPhase = function() return "night" end
+LC.DreamForget()
+adm.lcDreamTonightChoice = nil
+local pt = LC.AddPoint(Vector(227000, -227000, 0), 0, "dream")
+_setcvar("lc_dream_auto", 1) -- (the city dreams every night: there's always one to come)
+local dreamedWas = LC.DreamState.dreamedNight
+LC.DreamState.dreamedNight = -1 -- (and tonight's hasn't been dreamt yet)
+net.sent = {}
+local asked = LC.DreamAdminAsk(adm)
+local sent = false
+for _, m in ipairs(net.sent) do if m.name == "lc_dream_ask" and m.to == adm then sent = true end end
+ok(asked and sent, "lying down on a night she didn't choose, she's asked: dream it, or sleep through it")
+LC.DreamAdminSkipSet(adm, true)
+LC.DreamAdminTonight(adm, true, false)
+ok(not LC.DreamAdminSkips(adm) and LC.DreamAdminSkipping(adm) and not LC.DreamAdminAsk(adm), "she says dream it: tonight she's in (her setting stays, and she isn't asked again)")
+LC.DreamAdminTonight(adm, false, true)
+ok(LC.DreamAdminSkips(adm) and LC.DreamAdminSkipping(adm), "sleep through it, and remember: her setting too")
+LC.DreamAdminTonight(adm, true, true)
+ok(not LC.DreamAdminSkipping(adm), "(remembering a join turns her setting to join)")
+LC.DreamAdminSkipSet(adm, true)
+adm.lcDreamTonightChoice = nil
+LC.DayPhase = function() return "day" end
+ok(not LC.DreamAdminAsk(adm), "a nap in the daytime: not asked")
+LC.RemovePoint(pt)
+LC.DreamState.dreamedNight = dreamedWas
+
+player.GetAll, LC.DayPhase = realGetAll, realPhase
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+SideBalanceTests()
+
 -- The performance debugger (sh_livingcity_perfdebug.lua, sv_livingcity_perfdebug.lua)
 function PerfDebugTests()
 section("The performance debugger: hooks, timers, net in and out, networked values, hitches, put back when off")
@@ -21940,6 +22025,9 @@ function ManpowerTests()
     local P = function(side) return LC.ManpowerPool(side) end
     local at = FAR + Vector(600, 0, 0)
 
+    local freeWas = LC.ManpowerRebelsFree
+    LC.ManpowerRebelsFree = 100000 -- (the Combine growing with Resistance players is tested on its own, in SideBalanceTests)
+    for _, side in ipairs({ "rebel", "cp", "ota" }) do local p0 = P(side) p0.reserve = math.min(p0.reserve, LC.ManpowerMax(side)) end
     section("Manpower: a death draws the reserve down, and the replacement waits for a recruit")
     ok(P("rebel").reserve == 20 and P("cp").reserve == 20 and P("ota").reserve == 12, "a fresh city starts with full reserves (20 fighters, 20 units, 12 soldiers)",
         P("rebel").reserve .. "/" .. P("cp").reserve .. "/" .. P("ota").reserve)
@@ -22094,6 +22182,7 @@ function ManpowerTests()
         P("rebel").reserve .. " " .. P("rebel").lost .. " " .. P("cp").reserve .. " " .. P("ota").reserve)
 
     LC.RadioNotice = realRadio
+    LC.ManpowerRebelsFree = freeWas
     LC.RemoveZone(rz)
     for n2 in pairs(LC.NPCs) do if IsValid(n2) then n2:Remove() end end
     _setcvar("lc_manpower", 0)

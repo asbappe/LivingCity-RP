@@ -1864,6 +1864,18 @@ local ok, e = pcall(function()
     _advance(10)
     hook.t.DrawOverlay.LivingCityDreamMood()
     if LC_CL.DreamMoodShown() then error("the black screen stayed after the dream began") end
+    -- the Administrator, lying down on a night she didn't choose: dream it, or sleep through it
+    net._q = { { skip = true } }
+    net["recv_lc_dream_ask"]()
+    if not LC_CL.DreamAskOpen() then error("the Administrator isn't asked about tonight's dream") end
+    local said = {}
+    local ws, wb, ss = net.WriteString, net.WriteBool, net.SendToServer
+    net.WriteString = function(v) said[#said + 1] = v end
+    net.WriteBool = function(v) said[#said + 1] = v end
+    net.SendToServer = function() end
+    LC_CL.DreamAskAnswer("join", true)
+    net.WriteString, net.WriteBool, net.SendToServer = ws, wb, ss
+    if said[1] ~= "join" or said[2] ~= true or LC_CL.DreamAskOpen() then error("her answer didn't reach the server") end
     -- a test: the line at the top says so
     _me:SetNW2Bool("lc_dream_test", true)
     hook.t.HUDPaint.LivingCityDreams()

@@ -376,6 +376,32 @@ local function SpecialHolders(fid, sid)
 end
 
 -- Returns ok, reason
+LC.SideRatio, LC.SideSlack = 2, 4
+local SIDE_OF = { resistance = "rebels", cp = "combine", ota = "combine" }
+-- Players on each side now, not counting ply: rebels (the Resistance), combine (Civil Protection and Overwatch).
+function LC.SideCounts(ply)
+    local n = { rebels = 0, combine = 0 }
+    for _, p in ipairs(player.GetAll()) do
+        local side = p ~= ply and SIDE_OF[p:GetNW2String("lcf_faction", "")]
+        if side then n[side] = n[side] + 1 end
+    end
+    return n
+end
+-- May ply join this side, keeping the sides even? True, or false and why not. Already on that side: always.
+function LC.SidesEven(ply, fid)
+    local side = SIDE_OF[fid]
+    if not side or SIDE_OF[ply:GetNW2String("lcf_faction", "")] == side then return true end
+    if ply.GetPData and SIDE_OF[ply:GetPData("lcf_faction", "")] == side then return true end -- (coming back to the side they were on, after leaving the server: never kept out)
+    local n = LC.SideCounts(ply)
+    local other = side == "rebels" and "combine" or "rebels"
+    local most = n[other] * LC.SideRatio + LC.SideSlack
+    if n[side] + 1 <= most then return true end
+    if side == "rebels" then
+        return false, string.format("The Resistance is too big for the city's Combine right now (%d fighters, %d of Civil Protection and Overwatch). Wait for more units to come on, or for a place to free up.", n.rebels, n.combine)
+    end
+    return false, string.format("The Combine is too big for the Resistance right now (%d of Civil Protection and Overwatch, %d fighters). Wait for more rebels to come on, or for a place to free up.", n.combine, n.rebels)
+end
+
 function LC.CanJoinFaction(ply, fid, sid)
     local f = LCF.Get(fid)
     if not f then return false, "No such faction." end
@@ -402,6 +428,12 @@ function LC.CanJoinFaction(ply, fid, sid)
         if shifts > 0 and done < shifts and ply:GetNW2String("lcf_faction", "") ~= "cp" then
             return false, string.format("Civil Protection recruits from the train station's Intake Processors and the infestation cleanup crews: finish %d Intake Processor shifts first, or half as many in Infestation Cleanup (F4 > Jobs). You've done %d.", shifts, done)
         end
+    end
+    -- the sides kept even (the owner, 9 November: "keep the sides even"): neither the Resistance nor the Combine (Civil Protection and
+    -- Overwatch together) may grow past double the other side's players, plus 4. Only joining waits: nobody on a side is ever put off it.
+    if (fid == "resistance" or fid == "cp" or fid == "ota") and not ply:IsSuperAdmin() then
+        local okE, whyE = LC.SidesEven(ply, fid)
+        if not okE then return false, whyE end
     end
     if f.requires then
         local rf = LCF.Get(f.requires.faction)

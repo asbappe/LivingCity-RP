@@ -78,6 +78,57 @@ LC_CL.DreamMoodDraw = DrawMood
 hook.Add("DrawOverlay", "LivingCityDreamMood", DrawMood)
 
 ------------------------------------------------------------------------
+-- The Administrator, lying down on a night whose dream she didn't choose: dream it, or sleep through it
+------------------------------------------------------------------------
+
+local ask
+function LC_CL.DreamAskAnswer(what, remember)
+    net.Start("lc_dream_ask")
+    net.WriteString(what)
+    net.WriteBool(remember == true)
+    net.SendToServer()
+    if IsValid(ask) then ask:Remove() end
+    ask = nil
+end
+net.Receive("lc_dream_ask", function()
+    local t = net.ReadTable() or {}
+    if IsValid(ask) then ask:Remove() end
+    local f = vgui.Create("DFrame")
+    ask = f
+    f:SetSize(440, 190)
+    f:Center()
+    f:SetTitle("Tonight's dream")
+    f:MakePopup()
+    local l = vgui.Create("DLabel", f)
+    l:Dock(TOP)
+    l:DockMargin(8, 4, 8, 4)
+    l:SetWrap(true)
+    l:SetAutoStretchVertical(true)
+    l:SetText("The city will dream tonight, and you didn't choose this one. Dream it with them, or sleep through it?"
+        .. " (Joining, you can wake from it whenever you like.)")
+    local remember = vgui.Create("DCheckBoxLabel", f)
+    remember:Dock(BOTTOM)
+    remember:DockMargin(8, 2, 8, 6)
+    remember:SetText("Remember this for every night I don't choose (the tablet's setting)")
+    remember:SetValue(false)
+    local row = vgui.Create("DPanel", f)
+    row:Dock(BOTTOM)
+    row:SetTall(30)
+    row.Paint = function() end
+    local skip = vgui.Create("DButton", row)
+    skip:Dock(LEFT)
+    skip:SetWide(210)
+    skip:SetText("Sleep through it" .. (t.skip ~= false and " (as usual)" or ""))
+    skip.DoClick = function() LC_CL.DreamAskAnswer("skip", remember:GetChecked()) end
+    local join = vgui.Create("DButton", row)
+    join:Dock(RIGHT)
+    join:SetWide(210)
+    join:SetText("Dream it with the city" .. (t.skip == false and " (as usual)" or ""))
+    join.DoClick = function() LC_CL.DreamAskAnswer("join", remember:GetChecked()) end
+end)
+LC_CL.DreamAskOpen = function() return ask ~= nil end
+
+------------------------------------------------------------------------
 -- The admins' window
 ------------------------------------------------------------------------
 

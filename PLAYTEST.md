@@ -1118,3 +1118,11 @@ Notes:
   Notes:
 - [ ] **Duck and Cover rocket:** is it the rocket_low model now, a sensible size, and does it stay under the dream's ceiling as it climbs?
   Notes:
+
+## 9 November: fair sides, and the Administrator asked at bedtime
+- [ ] **Bedtime question:** as the Administrator, lie down in the evening on a night you did not choose: a window asks "Dream it with the city, or sleep through it?". Each answer works for that night; "Remember this" changes the tablet setting too. Not asked for a daytime nap or on your own nights.
+  Notes:
+- [ ] **Sides kept even:** with 1 Combine player online, can a 7th player still join the Resistance? (They should not: double plus 4 is 6.) Does F4 say why? If Combine players leave, do the Resistance players online stay?
+  Notes:
+- [ ] **Combine reserves grow:** with lots of Resistance players online, does the Combine manpower readout (F2) show bigger reserves that refill faster?
+  Notes:

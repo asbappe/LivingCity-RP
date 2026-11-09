@@ -215,6 +215,7 @@ function LC.SleepIn(ply, ent)
         ply:SetNW2Vector("lc_bed_top", b.top)
         ply:SetNW2Float("lc_bed_yaw", b.yaw or 0)
     end
+    hook.Run("LivingCitySleepStarted", ply) -- (the Administrator is asked about tonight's dream: sv_livingcity_dreamplan.lua)
     return true
 end
 

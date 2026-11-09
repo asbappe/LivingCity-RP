@@ -45,6 +45,7 @@ if CLIENT then return end
 LC = LC or {}
 
 util.AddNetworkString("lc_dream_mood") -- (the black screen and the day's mood, as the dream comes)
+util.AddNetworkString("lc_dream_ask") -- (the Administrator, lying down on a night she didn't choose: dream it, or sleep through it)
 
 LC.DreamPickNights = 3 -- (her choice: once every this many nights)
 LC.DreamRedShare = 0.5 -- (the share of the day at red that makes it a bad day for the city's own choice)
@@ -281,10 +282,47 @@ function LC.DreamAdminChoseTonight(ply)
     local q = LC.DreamQueued and LC.DreamQueued()
     return q ~= nil and q.source == "admin" and q.by == ply
 end
--- Does she sit this one out? (The Administrator, skipping, and it isn't hers.)
-function LC.DreamAdminSkips(ply)
-    return LC.IsAdministrator ~= nil and LC.IsAdministrator(ply) and LC.DreamAdminSkipping(ply) and not LC.DreamAdminChoseTonight(ply)
+-- Her answer for tonight, asked as she lay down (true: dream it; false: sleep through it; nil: not asked tonight).
+function LC.DreamAdminTonightChoice(ply)
+    local c = IsValid(ply) and ply.lcDreamTonightChoice
+    if c and c.night == LC.DreamPlanTonight() then return c.join end
+    return nil
 end
+-- Does she sit this one out? (The Administrator, and it isn't hers: tonight's answer if she gave one, else her tablet's setting.)
+function LC.DreamAdminSkips(ply)
+    if not (LC.IsAdministrator ~= nil and LC.IsAdministrator(ply)) or LC.DreamAdminChoseTonight(ply) then return false end
+    local tonight = LC.DreamAdminTonightChoice(ply)
+    if tonight ~= nil then return not tonight end
+    return LC.DreamAdminSkipping(ply)
+end
+-- She answers as she lies down (the owner, 9 November: "add the opt-in for when she actually goes to sleep"): dream tonight's,
+-- or sleep through it; remember: make it her tablet's setting too.
+function LC.DreamAdminTonight(ply, join, remember)
+    if not (LC.IsAdministrator and LC.IsAdministrator(ply)) then return false end
+    ply.lcDreamTonightChoice = { night = LC.DreamPlanTonight(), join = join == true } -- (lcDream...: kept through a dream's putting back)
+    if remember then ply:SetPData("lc_dream_skip", join and "0" or "1") end
+    Notice(ply, "info", "Tonight's dream", join and "You'll dream it with the city tonight (and you can wake from it whenever you like)."
+        or "You'll sleep through tonight's dream.", 6)
+    return true
+end
+-- Lying down on a night with a dream to come that isn't hers: ask her.
+function LC.DreamAdminAsk(ply)
+    if not (LC.IsAdministrator and LC.IsAdministrator(ply)) or LC.DreamAdminChoseTonight(ply) then return false end
+    if LC.DreamAdminTonightChoice(ply) ~= nil or not (LC.DreamReady and LC.DreamReady()) then return false end
+    local ph = Phase()
+    if ph ~= "dusk" and ph ~= "night" then return false end -- (a nap in the day isn't tonight)
+    if LC.DreamDreamtTonight and LC.DreamDreamtTonight() then return false end
+    if not ((LC.DreamTonightPending and LC.DreamTonightPending()) or LC.DreamCityPicks()) then return false end
+    net.Start("lc_dream_ask")
+    net.WriteTable({ skip = LC.DreamAdminSkipping(ply) })
+    net.Send(ply)
+    return true
+end
+hook.Add("LivingCitySleepStarted", "LivingCityDreamPlan", function(ply) LC.DreamAdminAsk(ply) end)
+net.Receive("lc_dream_ask", function(_, ply)
+    local what, remember = net.ReadString(), net.ReadBool()
+    if what == "join" or what == "skip" then LC.DreamAdminTonight(ply, what == "join", remember) end
+end)
 
 ------------------------------------------------------------------------
 -- When a dream begins: its turn taken, the nights remembered

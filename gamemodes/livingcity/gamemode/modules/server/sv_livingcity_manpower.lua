@@ -78,7 +78,24 @@ local freeDepth = 0
 local dirty = false
 
 local function Today() return os.date("%Y-%m-%d") end
-local function Max(side) return math.max(0, MAXCV[side]:GetInt()) end
+-- The Combine grows with the Resistance's players (the owner, 9 November: "if there were 40 rebel players, they could wipe
+-- out the CP units in a firefight or two ... we may need to ... adjust so that the CP/overwatch don't become too weak"):
+-- for every Resistance player online past LC.ManpowerRebelsFree (4), Civil Protection's reserve holds 2 more, Overwatch's 1
+-- more, and both refill 5% faster.
+LC.ManpowerRebelsFree, LC.ManpowerPerRebel, LC.ManpowerFasterPerRebel = 4, { cp = 2, ota = 1 }, 0.05
+function LC.ManpowerRebelPlayers()
+    local n = 0
+    for _, ply in ipairs(player.GetAll()) do if ply:GetNW2String("lcf_faction", "") == "resistance" then n = n + 1 end end
+    return n
+end
+function LC.ManpowerExtraRebels() return math.max(0, LC.ManpowerRebelPlayers() - LC.ManpowerRebelsFree) end
+local function Max(side)
+    local base = math.max(0, MAXCV[side]:GetInt())
+    local per = LC.ManpowerPerRebel[side]
+    if per and base > 0 then base = base + per * LC.ManpowerExtraRebels() end
+    return base
+end
+LC.ManpowerMax = Max
 
 function LC.ManpowerPool(side)
     local p = LC.Manpower[side]
@@ -204,7 +221,8 @@ end
 -- Seconds each new one takes, for this side, now.
 function LC.ManpowerInterval(side)
     local secs = math.max(0.1, MINCV[side]:GetFloat()) * 60
-    if side == "rebel" then secs = secs / LC.ManpowerRebelRate() end
+    if side == "rebel" then secs = secs / LC.ManpowerRebelRate()
+    elseif LC.ManpowerPerRebel[side] then secs = secs / (1 + LC.ManpowerFasterPerRebel * LC.ManpowerExtraRebels()) end -- (more rebel players, faster reinforcements)
     return secs
 end
 
