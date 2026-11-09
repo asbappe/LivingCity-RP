@@ -441,6 +441,7 @@ function EMT:SetColor(c) self.col = c end
 function EMT:GetMaterial() return self.mat or "" end
 function EMT:SetMaterial(m) self.mat = m end
 function EMT:SetMaxHealth(v) self.maxhp = v end
+function EMT:SetOwner(o) self.owner = o end
 if not EMT.GetMaxHealth then function EMT:GetMaxHealth() return self.maxhp or 100 end end
 function EMT:SetRenderMode(m) self.rendermode = m end
 function EMT:GetNumBodyGroups() return 1 end

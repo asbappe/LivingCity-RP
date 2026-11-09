@@ -1136,3 +1136,11 @@ Notes:
   Notes:
 - [ ] **Reaction squads, later:** with the sides uneven, attack a checkpoint (kill a unit near it, or short its power bank) or the Nexus as a rebel: does a dropship come in nearby and drop an Elite and 5 soldiers who run at you? On an ordinary kill in the street at green, 4 soldiers? Indoors with no sky, do they still come (on foot)?
   Notes:
+
+## 9 November, tougher Combine
+- [ ] **Health:** a metrocop takes noticeably more shots (70), a soldier 90, an Elite 150. Move the editor sliders (Population): the units out there change too.
+  Notes:
+- [ ] **Desperate Combine:** with 4 or more Resistance players and the Combine at a third of that or less, a notice says the Combine are desperate; over about a minute and a half, metrocops start carrying SMGs, soldiers throw frags, green gas and flashbangs at Resistance fighters (never into their own or citizens), Elites fire more energy balls. Their flashbangs do not blind units. A notice when it ends.
+  Notes:
+- [ ] **NPC cap:** on a 64-slot server the debug report shows a cap of 175 (with lc_npc_budget 100).
+  Notes:

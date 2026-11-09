@@ -1397,6 +1397,30 @@ end
 -- look: their size for doors and corridors is the same.
 local cvCopScale = CreateConVar("lc_cp_scale", "1.05", FLAGS, "How big Civil Protection NPCs are drawn (1 = HL2's own size)")
 local cvSoldierScale = CreateConVar("lc_soldier_scale", "1.10", FLAGS, "How big Overwatch soldier NPCs are drawn (1 = HL2's own size)")
+-- (the owner, 9 November: tougher units rather than more of them, the same health always, never by player count)
+local cvCopHP   = CreateConVar("lc_cp_health", "70", FLAGS, "Health of Civil Protection NPCs (Half-Life 2's own: 40)")
+local cvSoldHP  = CreateConVar("lc_soldier_health", "90", FLAGS, "Health of Overwatch soldier NPCs (Half-Life 2's own: 50; a Nova Prospekt guard has half again)")
+local cvEliteHP = CreateConVar("lc_elite_health", "150", FLAGS, "Health of Overwatch Elite NPCs")
+local function Toughen(npc, cv)
+    local hp = math.max(1, math.floor(cv:GetFloat()))
+    if npc.SetMaxHealth then npc:SetMaxHealth(hp) end
+    npc:SetHealth(hp)
+end
+LC.ToughenUnit = Toughen
+-- changed in the editor: the ones already out there change too (keeping how hurt they are)
+for _, c in ipairs({ "lc_cp_health", "lc_soldier_health", "lc_elite_health" }) do
+    cvars.AddChangeCallback(c, function()
+        for npc, st in pairs(LC.NPCs or {}) do
+            if IsValid(npc) and npc:Health() > 0 and (st.role == "cop" or st.role == "soldier") and not st.prisonGuard then
+                local cv = st.role == "cop" and cvCopHP or (st.elite and cvEliteHP or cvSoldHP)
+                local max = npc.GetMaxHealth and npc:GetMaxHealth() or 0
+                local frac = max > 0 and npc:Health() / max or 1
+                Toughen(npc, cv)
+                npc:SetHealth(math.max(1, math.floor(npc:GetMaxHealth() * frac + 0.5)))
+            end
+        end
+    end, "LivingCityToughen")
+end
 local function Loom(npc, cv)
     local k = math.Clamp(cv:GetFloat(), 0.8, 1.3)
     if npc.SetModelScale and (k ~= 1 or (npc.GetModelScale and npc:GetModelScale() ~= 1)) then npc:SetModelScale(k, 0) end
@@ -1421,6 +1445,7 @@ local function SpawnCop(pos)
     npc:SetKeyValue("spawnflags", tostring(BaseFlags()))
     npc:Spawn()
     npc:Activate()
+    Toughen(npc, cvCopHP)
     Loom(npc, cvCopScale)
     local st = Register(npc, "cop")
     if LC.ManpowerTake then LC.ManpowerTake(npc, st, "cp") end
@@ -1473,7 +1498,7 @@ local function SpawnSoldier(pos, kind)
     npc:SetKeyValue("spawnflags", tostring(BaseFlags()))
     npc:Spawn()
     npc:Activate()
-    if kind == "elite" then npc:SetMaxHealth(120) npc:SetHealth(120) end
+    Toughen(npc, kind == "elite" and cvEliteHP or cvSoldHP)
     Loom(npc, cvSoldierScale)
     local st = Register(npc, "soldier")
     if LC.ManpowerTake then LC.ManpowerTake(npc, st, "ota") end
@@ -1671,15 +1696,26 @@ function LC.CitizenTarget()
 end
 
 -- The NPC cap now (the owner, 9 November: "can we have this scale with the max player count? 100 NPCs seems to be ok on our
--- 32 man server"): lc_npc_budget is the cap for a 32-slot server, scaled by the server's max players (64 slots: twice), never
--- below the setting, never above LC.NPCBudgetMost (250: past that the engine's AI starts to drag); plus the outnumbered side's
--- extra (sv_livingcity_imbalance.lua) when there is one.
+-- 32 man server"; then, later that day: "on a 32 slot server, max NPC count should be 100, on a 64: 175 NPCs, and 120-128:
+-- 250 NPCs"): lc_npc_budget is the cap for a 32-slot server, times LC.NPCBudgetSteps for the server's max players (straight
+-- lines between them: 64 slots 1.75 times, 120 and up 2.5 times), never below the setting, never above LC.NPCBudgetMost
+-- (250: past that the engine's AI starts to drag); plus the outnumbered side's extra (sv_livingcity_imbalance.lua).
 LC.NPCBudgetSlots, LC.NPCBudgetMost = 32, 250
+LC.NPCBudgetSteps = { { 32, 1 }, { 64, 1.75 }, { 120, 2.5 } }
+function LC.NPCBudgetFactor(slots)
+    local steps = LC.NPCBudgetSteps
+    if slots <= steps[1][1] then return steps[1][2] end
+    for i = 2, #steps do
+        local a, b = steps[i - 1], steps[i]
+        if slots <= b[1] then return a[2] + (b[2] - a[2]) * (slots - a[1]) / (b[1] - a[1]) end
+    end
+    return steps[#steps][2]
+end
 function LC.NPCBudgetBase()
     local base = cvBudget:GetInt()
     local slots = (game and game.MaxPlayers and game.MaxPlayers()) or LC.NPCBudgetSlots
     if slots <= LC.NPCBudgetSlots then return base end
-    return math.max(base, math.min(LC.NPCBudgetMost, math.floor(base * slots / LC.NPCBudgetSlots + 0.5)))
+    return math.max(base, math.min(LC.NPCBudgetMost, math.floor(base * LC.NPCBudgetFactor(slots) + 0.5)))
 end
 function LC.NPCBudget() return LC.NPCBudgetBase() + (LC.ImbalanceBudget or 0) end
 

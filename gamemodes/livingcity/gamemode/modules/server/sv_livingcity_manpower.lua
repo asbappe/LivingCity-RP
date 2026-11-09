@@ -364,6 +364,8 @@ function LC.ManpowerReadout(which)
     end
     local out = { PoolLine("Civil Protection", "cp"), NextLine("cp", "unit"), PoolLine("Overwatch", "ota"), NextLine("ota", "soldier") }
     if LC.ImbalanceSide == "combine" and LC.ImbalanceLine then out[#out + 1] = LC.ImbalanceLine() end
+    local desp = LC.DesperationLine and LC.DesperationLine() -- (sv_livingcity_desperation.lua)
+    if desp then out[#out + 1] = desp end
     return out
 end
 

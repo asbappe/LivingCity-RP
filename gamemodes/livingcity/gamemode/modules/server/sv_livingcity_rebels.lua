@@ -486,6 +486,8 @@ function LC.ArmUnit(npc, st)
     if st.armed or st.role ~= "cop" then return end
     st.armed = true
     local gun = math.random() < 0.7 and "weapon_pistol" or "weapon_smg1"
+    if gun == "weapon_pistol" and LC.DesperateSidearm then gun = LC.DesperateSidearm(st) end -- (an SMG when desperate: sv_livingcity_desperation.lua)
+    st.hasPistol, st.sidearm = true, gun
     npc:Give(gun)
     if npc.SelectWeapon then npc:SelectWeapon(gun) end
 end

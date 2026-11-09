@@ -69,9 +69,11 @@ function LC.DrawPistol(npc, st)
     if not IsValid(npc) then return end
     if not st.hasPistol then
         st.hasPistol = true
-        npc:Give("weapon_pistol")
+        -- (an SMG instead when the Combine are desperate: sv_livingcity_desperation.lua)
+        st.sidearm = LC.DesperateSidearm and LC.DesperateSidearm(st) or "weapon_pistol"
+        npc:Give(st.sidearm)
     end
-    if npc.SelectWeapon then npc:SelectWeapon("weapon_pistol") end
+    if npc.SelectWeapon then npc:SelectWeapon(st.sidearm or "weapon_pistol") end
 end
 function LC.HolsterPistol(npc, st)
     if IsValid(npc) and npc.SelectWeapon then npc:SelectWeapon("weapon_stunstick") end

@@ -56,7 +56,7 @@ local function Settings()
     local out = {}
     local names = {}
     for _, name in ipairs({
-        "lc_citizens", "lc_cops", "lc_soldiers", "lc_scanners", "lc_zombies", "lc_rebels", "lc_skirmishes", "lc_skirmish_interval", "lc_rebel_damage", "lc_territory_spread", "lc_rebel_spread_minutes", "lc_infest_spread_minutes", "lc_territory_max", "lc_territory_hits", "lc_scavenge_refill", "lc_garden_minutes", "lc_cache_max", "lc_food_scaling", "lc_food_availability", "lc_food_restock_minutes", "lc_gas_damage", "lc_npc_budget", "lc_lod_distance",
+        "lc_citizens", "lc_cops", "lc_soldiers", "lc_scanners", "lc_zombies", "lc_rebels", "lc_skirmishes", "lc_skirmish_interval", "lc_rebel_damage", "lc_cp_health", "lc_soldier_health", "lc_elite_health", "lc_desperation", "lc_territory_spread", "lc_rebel_spread_minutes", "lc_infest_spread_minutes", "lc_territory_max", "lc_territory_hits", "lc_scavenge_refill", "lc_garden_minutes", "lc_cache_max", "lc_food_scaling", "lc_food_availability", "lc_food_restock_minutes", "lc_gas_damage", "lc_npc_budget", "lc_lod_distance",
         "lc_autostart", "lc_spawn_mindist", "lc_citizen_lifetime", "lc_npc_arrest_chance", "lc_rebel_pursuit",
         "lc_unlock_doors", "lc_player_doors", "lc_npc_doors", "lc_announce_interval", "lc_auto_events",
         "lc_event_interval", "lc_curfew_citizens", "lc_curfew_enforce", "lc_chatter", "lc_can_event",

@@ -16540,21 +16540,119 @@ do
     LC.Running, LC.QRFSpot = runWas, spotWas
 end
 
--- the NPC cap grows with the server's size (the owner: 100 is right for 32 slots)
+-- the NPC cap grows with the server's size (the owner: 100 at 32 slots, 175 at 64, 250 at 120 to 128)
 do
     local mpWas = game.MaxPlayers
     local budget = GetConVar("lc_npc_budget"):GetInt()
-    game.MaxPlayers = function() return 32 end
-    local at32 = LC.NPCBudgetBase()
-    game.MaxPlayers = function() return 64 end
-    local at64 = LC.NPCBudgetBase()
-    game.MaxPlayers = function() return 128 end
-    local at128 = LC.NPCBudgetBase()
-    game.MaxPlayers = function() return 16 end
-    local at16 = LC.NPCBudgetBase()
+    local function At(n) game.MaxPlayers = function() return n end return LC.NPCBudgetBase() end
+    local at32, at64, at120, at128, at16, at96 = At(32), At(64), At(120), At(128), At(16), At(96)
     game.MaxPlayers = mpWas
-    ok(at32 == budget and at64 == math.min(LC.NPCBudgetMost, math.max(budget, budget * 2)) and at128 == math.min(LC.NPCBudgetMost, math.max(budget, budget * 4)) and at16 == budget,
-        "the NPC cap: lc_npc_budget at 32 slots, twice at 64, four times at 128 (at most 250), never less on a smaller server", at32 .. " " .. at64 .. " " .. at128)
+    local function Want(k) return math.min(LC.NPCBudgetMost, math.max(budget, math.floor(budget * k + 0.5))) end
+    ok(at32 == budget and at64 == Want(1.75) and at120 == Want(2.5) and at128 == Want(2.5) and at16 == budget and at96 == Want(1.75 + 0.75 * 32 / 56),
+        "the NPC cap: lc_npc_budget at 32 slots, 1.75 times at 64, 2.5 times at 120 and 128 (at most 250), in between on the way, never less on a smaller server",
+        at32 .. " " .. at64 .. " " .. at120 .. " " .. at128 .. " " .. at96)
+    ok(budget ~= 100 or (at64 == 175 and at128 == 250), "(with the default 100: 175 at 64 slots, 250 at 128)")
+end
+
+-- tougher Combine units, always the same (the owner, 9 November), and the outnumbered Combine fighting dirtier
+do
+    local floorWas, despWas, runWas = LC.ImbalanceFloor, LC.Desperation, LC.Running
+    player.GetAll = realGetAll
+    local victim = newPlayer("SBDespVictim", "resistance")
+    local citizen = newPlayer("SBDespCitizen", "citizen")
+    local cop, cst = LC.SpawnCop(Vector(231000, -231000, 0))
+    local sold, sst = LC.SpawnSoldier(Vector(231200, -231000, 0))
+    local eli, est = LC.SpawnSoldier(Vector(231400, -231000, 0), "elite")
+    ok(IsValid(cop) and cop:Health() == 70 and cop:GetMaxHealth() == 70 and IsValid(sold) and sold:Health() == 90 and IsValid(eli) and eli:Health() == 150,
+        "Civil Protection 70 health, Overwatch soldiers 90, Elites 150", tostring(cop and cop:Health()) .. " " .. tostring(sold and sold:Health()) .. " " .. tostring(eli and eli:Health()))
+    sold:SetHealth(45)
+    _setcvar("lc_soldier_health", 120)
+    local function Changed(n) for _, fn in pairs(cvars.cb[n] or {}) do fn(n) end end
+    Changed("lc_soldier_health")
+    local live = sold:GetMaxHealth() == 120 and sold:Health() == 60
+    _setcvar("lc_soldier_health", 90)
+    Changed("lc_soldier_health")
+    ok(live, "changed in the editor: the soldiers out there change too, just as hurt as they were")
+
+    LC.ImbalanceFloor = 4
+    local T = LC.DesperationTarget
+    ok(T({ rebels = 3, combine = 0 }) == 0 and T({ rebels = 6, combine = 4 }) == 0 and math.abs(T({ rebels = 10, combine = 5 }) - 0.2) < 1e-6
+        and math.abs(T({ rebels = 15, combine = 5 }) - 0.6) < 1e-6 and T({ rebels = 40, combine = 2 }) == 1 and T({ rebels = 4, combine = 0 }) == 1,
+        "desperation: nothing at 3 rebels or 1.5 to 1; 2 to 1: 0.2; 3 to 1: 0.6; 4 to 1 and more: all of it")
+    _setcvar("lc_desperation", 0)
+    ok(T({ rebels = 40, combine = 2 }) == 0, "lc_desperation 0: never")
+    _setcvar("lc_desperation", 1)
+
+    player.GetAll = function() return Crowd(40, 2) end
+    LC.Desperation = 0
+    LC.DesperationTick()
+    local first = LC.Desperation
+    for _ = 1, 3 do LC.DesperationTick() end
+    ok(math.abs(first - 0.05) < 1e-6 and math.abs(LC.Desperation - 0.2) < 1e-6, "it creeps up a step every 5 seconds, never jumps", tostring(first) .. " " .. tostring(LC.Desperation))
+
+    LC.Desperation = 0.2
+    ok(LC.DesperateSidearm({ smgRoll = 0.1 }) == "weapon_smg1" and LC.DesperateSidearm({ smgRoll = 0.5 }) == "weapon_pistol", "at 0.2, about a fifth of metrocops are issued SMGs")
+    LC.Desperation = 0
+    ok(LC.DesperateSidearm({ smgRoll = 0 }) == "weapon_pistol" and LC.DesperateSidearm({ smgRoll = 0.001 }) == "weapon_pistol", "not desperate: pistols, as ever")
+
+    -- supplied: frags for soldiers, twice the energy balls for Elites, SMGs for metrocops
+    LC.Desperation, LC.DesperationNextSupply = 1, 0
+    cst.hasPistol, cst.sidearm, cst.smgRoll, cst.armed = true, "weapon_pistol", 0.5, true
+    LC.DesperationTick()
+    local smg = false
+    for _, w in ipairs(cop.weps or {}) do if w == "weapon_smg1" then smg = true end end
+    ok(sold.kv.NumGrenades == "3" and eli.kv.NumGrenades == "4" and smg and cst.sidearm == "weapon_smg1" and cop.activeWeapon == "weapon_smg1",
+        "fully desperate: soldiers carry 3 frags, Elites 4 energy balls (twice), the metrocop's pistol swapped for an SMG",
+        tostring(sold.kv.NumGrenades) .. " " .. tostring(eli.kv.NumGrenades) .. " " .. tostring(cst.sidearm))
+
+    player.GetAll = realGetAll
+    -- 10% more damage to players, none to anyone else
+    local function Dmg(n, by) local t = { n = n } function t:GetDamage() return self.n end function t:GetAttacker() return by end function t:ScaleDamage(f) self.n = self.n * f end return t end
+    local fn = hook.t.EntityTakeDamage.LivingCityDesperation
+    local d1, d2 = Dmg(10, sold), Dmg(10, sold)
+    fn(victim, d1)
+    fn(cop, d2)
+    ok(math.abs(d1.n - 11) < 1e-6 and d2.n == 10, "a soldier's 10 damage to a player is 11 when fully desperate; nothing changes against NPCs", tostring(d1.n))
+
+    -- grenades: never where their own or a citizen would be caught, except their own flashbangs and gas
+    local near = cop:GetPos() + Vector(50, 0, 0)
+    ok(not LC.DesperateClear(near, 320, "frag") and LC.DesperateClear(near, 200, "flash") and LC.DesperateClear(near, 320, "poison")
+        and LC.DesperateClear(Vector(239000, -239000, 0), 320, "frag"), "no frag near a metrocop; their own flashbang and gas are fine (their masks, their flashbangs)")
+    local made = {}
+    local createWas = ents.Create
+    ents.Create = function(c) local e = createWas(c) made[#made + 1] = e return e end
+    victim:SetPos(sold:GetPos() + Vector(600, 0, 0))
+    local thrown = LC.DesperateThrow(sold, victim, "poison") and LC.DesperateThrow(sold, victim, "frag")
+    local gas, frag = made[1], made[2]
+    ok(thrown and gas and gas.cls == "lc_grenade" and gas.lcKind == "poison" and gas.lcOwner == sold and frag and frag.cls == "npc_grenade_frag",
+        "a soldier lobs the Combine's poison gas (thrown by him) and a frag")
+    ents.Create = createWas
+    -- their flashbang spares their own
+    cst.stunnedUntil = nil
+    LC.Detonate("flash", cop:GetPos() + Vector(40, 0, 0), sold)
+    ok(not cst.stunnedUntil or cst.stunnedUntil <= CurTime(), "a Combine flashbang doesn't blind the metrocop beside it")
+
+    -- in the fight: a soldier with a rebel in his sights throws; one at a citizen doesn't
+    LC.Running = true
+    for _, e in ipairs(made) do if IsValid(e) then e:Remove() end end
+    for npc, st in pairs(LC.NPCs) do if st.role == "soldier" and npc ~= sold and npc ~= eli then st.nextDesperate = CurTime() + 999 end end
+    cop:SetPos(Vector(235000, -235000, 0))
+    sst.nextDesperate, est.nextDesperate = 0, CurTime() + 999
+    LC.DesperationAt = nil
+    sold.enemy = victim
+    local threw = LC.DesperationFight()
+    citizen:SetPos(sold:GetPos() + Vector(600, 0, 0))
+    sst.nextDesperate, sold.enemy = 0, citizen
+    local none = LC.DesperationFight()
+    LC.Desperation = 0
+    sst.nextDesperate, sold.enemy = 0, victim
+    local calm = LC.DesperationFight()
+    ok(threw == 1 and none == 0 and calm == 0, "desperate, a soldier throws at a Resistance fighter in sight, never at a citizen; not desperate, nobody throws", threw .. " " .. none .. " " .. calm)
+    ok(string.find(tostring((function() LC.Desperation = 0.5 return LC.DesperationLine() end)()), "desperate (50%)", 1, true) ~= nil, "the readout says how desperate")
+
+    for _, e in ipairs({ cop, sold, eli }) do if IsValid(e) then e:Remove() end end
+    LC.ImbalanceFloor, LC.Desperation, LC.Running = floorWas, despWas, runWas
+    player.GetAll = realGetAll
 end
 
 -- the Administrator, asked as she lies down on a night she didn't choose

@@ -245,12 +245,15 @@ function LC.Detonate(kind, pos, owner)
             end
         end
     elseif kind == "flash" then
+        -- (thrown by a desperate Combine unit: their own flashbang spares their own, sv_livingcity_desperation.lua)
+        local ost = IsValid(owner) and LC.NPCs and LC.NPCs[owner]
+        local byCombine = ost and LC.IsSecurity and LC.IsSecurity(ost)
         if sound and sound.Play then sound.Play("weapons/flashbang/flashbang_explode2.wav", pos, 95) end
         local fx = EffectData and EffectData()
         if fx then fx:SetOrigin(pos) util.Effect("cball_explode", fx, true, true) end
         for _, ply in ipairs(player.GetAll()) do
             local d = ply:GetPos():Distance(pos)
-            if ply:Alive() and d < FLASH_R and LOS(ply:EyePos(), pos + Vector(0, 0, 10), ply) then
+            if ply:Alive() and d < FLASH_R and not (byCombine and (LC.PlayerIsCP(ply) or ply:GetNW2String("lcf_faction", "") == "ota")) and LOS(ply:EyePos(), pos + Vector(0, 0, 10), ply) then
                 local dir = (pos - ply:EyePos()):GetNormalized()
                 local facing = dir:Dot(ply:GetAimVector())
                 local strength = math.Clamp((1 - d / FLASH_R) * (facing > 0.3 and 1 or 0.45), 0.2, 1)
@@ -263,7 +266,7 @@ function LC.Detonate(kind, pos, owner)
         -- or right beside it, is blinded for 4 to 9 seconds each: hands to their eyes, stumbling, not shooting
         -- (LC.FlashStun, sv_livingcity_fieldops.lua)
         for npc, st in pairs(LC.NPCs or {}) do
-            if IsValid(npc) and st.role ~= "zombie" and st.role ~= "scanner" then
+            if IsValid(npc) and st.role ~= "zombie" and st.role ~= "scanner" and not (byCombine and LC.IsSecurity(st)) then
                 local d2 = npc:GetPos():DistToSqr(pos)
                 if d2 < (FLASH_R * 0.8) ^ 2 and (d2 < 150 * 150 or LOS(npc:EyePos(), pos + Vector(0, 0, 10), npc)) then
                     if LC.FlashStun then
