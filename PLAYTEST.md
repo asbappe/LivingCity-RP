@@ -1086,3 +1086,5 @@ Notes:
   Notes:
 - [ ] **Editor:** Dreams: test one is now the last section of the Living City Editor panel.
   Notes:
+- [ ] **The Exam, reworked (9 November):** you are stuck at a desk with a paper on it; type A, B, C or D in chat to answer. After six questions Doctor Kleiner walks to each desk, picks up the paper, eats it (loud crunching, head back, shaking, a big gulp), and only then is that person told their score. Does the paper sit on the desk properly, and does the eating look dramatic enough?
+  Notes:

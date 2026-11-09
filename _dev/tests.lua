@@ -15815,23 +15815,44 @@ _run(4.2)
 ok(g.foeI == 2 and g.foeDef.name == "The Soda Machine", "round 2: the soda machine")
 Stop(d)
 
--- The Exam
+-- The Exam: stuck at your desk, answers in chat; he eats each paper, and only then your score
 local r = LC.ExamMarks({ [1] = 2, [2] = 2, [3] = 3 })
 local tie = LC.ExamMarks({ [1] = 1, [2] = 4 })
 ok(r[2] and not r[3] and tie[1] and tie[4], "the right answer is whatever most of the class picks (a tie: all of them)")
+local q0 = LC.ExamQuestions[1]
+ok(LC.ExamAnswerOf("b", q0) == 2 and LC.ExamAnswerOf("D) yes", q0) == 4 and LC.ExamAnswerOf("tuesday", q0) == 3 and LC.ExamAnswerOf("maybe", q0) == nil, "an answer: a letter, or the answer's words")
 g, d = Start("exam")
+local sa = g.pl[a]
+ok(sa.start == g.seats[g.seatOf[a]], "The Exam: everyone has a desk")
+a:SetPos(sa.start + Vector(200, 0, 0))
+_run(0.1)
+ok(a:GetPos():Distance(sa.start) < 1, "and is stuck at it")
 _run(6.2)
-ok(g.phase == "read" and g.q, "The Exam: a question")
+ok(g.phase == "read" and g.q and g.papers[g.seatOf[a]] and g.papers[g.seatOf[b]], "a question, and each one's paper on their desk")
+ok(not LC.StrangeDreamSay(a, "A"), "(no answering while it's read out)")
 _run(LC.ExamRead)
-a:SetPos(g.tiles[1]) b:SetPos(g.tiles[1])
-g.at = CurTime()
+ok(g.phase == "answer" and LC.StrangeDreamSay(a, "A") and LC.StrangeDreamSay(b, "a"), "typing a letter in chat answers")
+for qi = 2, LC.ExamCount do -- (the rest: a always agrees with the class, b never answers)
+    g.answers[qi] = { [a] = 1 }
+end
+g.answers[1][b] = nil
+g.qi, g.phase, g.at = LC.ExamCount, "done", CurTime()
 _run(0.1)
-ok(g.phase == "mark" and g.pl[a].lives == 3 and g.right[1], "both on A: A is right")
-_run(LC.ExamMark + LC.ExamRead + 0.1)
-a:SetPos(g.tiles[2]) b:SetPos(Mid(g) + Vector(0, 400, 0))
-g.at = CurTime()
-_run(0.1)
-ok(g.pl[b].lives == 2 and g.pl[a].lives == 3, "no answer costs a life")
+ok(g.phase == "collect" and sa.score == LC.ExamCount and (g.pl[b].score or 0) == 0, "pencils down: the scores are known...")
+local st = g.def.state(g, a)
+ok(not sa.revealed and string.find(st.meterName, "?", 1, true), "...but nobody's told until he's eaten their paper")
+_run(2.2)
+local firstK = g.desk
+local firstP = firstK and g.papers[firstK].p
+ok(g.phase == "walk" and firstP, "he walks to the first desk")
+local guard = 0
+while g.phase ~= "eat" and guard < 200 do _run(0.1) guard = guard + 1 end
+ok(g.phase == "eat" and IsValid(g.papers[firstK].ent), "picks up the paper, and eats it")
+_run(LC.ExamEat + 0.1)
+ok(g.papers[firstK].eaten and g.pl[firstP].revealed, "and only then is its score revealed")
+guard = 0
+while not (g.pl[a].done and g.pl[b].done) and guard < 400 do _run(0.1) guard = guard + 1 end
+ok(g.pl[a].how == "won" and g.pl[b].how == "out", "a pass wins, a fail is out: every paper eaten")
 Stop(d)
 
 -- The Last Train

@@ -19,10 +19,12 @@
           the ridiculous: Lamarr the debeaked headcrab, twelve feet tall; a soda machine; a giant
           baby doll. Punch (attack) next to it; when it winds up, crouch, or it knocks you down (a
           life). Knock out all three to be champion.
-        The Exam (exam, Neutral): the exam you never studied for, in a classroom that isn't there.
-          Doctor Kleiner reads questions with no answers; stand on the letter you choose. In this
-          dream the right answer is whatever most of the class picks (alone: whatever you pick).
-          Wrong, or no answer, costs a life. Six questions.
+        The Exam (exam, Neutral): the exam you never studied for. You're stuck at a desk with your
+          paper in front of you; Doctor Kleiner reads six questions with no answers, and you type
+          A, B, C or D in chat. The right answer is whatever most of the class picks (alone:
+          whatever you pick). Then he walks round, desk by desk, picks up each paper and eats it,
+          loudly and with feeling, and only then do you find out your score (the owner, 9 November).
+          Four of six passes.
         The Last Train (train, Neutral): the last train out of the city, its door at the end of the
           platform. It slides away while anyone looks at it, and creeps closer when nobody does
           (walk backwards). Reach it before it leaves.
@@ -421,17 +423,25 @@ do
         { q = "If a train leaves City 17 at noon, why?", a = { "To escape", "Lunch", "It was late", "It never left" } },
         { q = "Show your working.", a = { "I have", "I can't", "It's a secret", "Working is for the Union" } },
     }
-    LC.ExamCount, LC.ExamRead, LC.ExamAnswer, LC.ExamMark = 6, 3, 10, 3
-    local TILES = { { "A", Color(255, 205, 70), 1 }, { "B", Color(140, 220, 60), 2 }, { "C", Color(150, 190, 230), 3 }, { "D", Color(255, 120, 190), 4 } }
-    local def = { id = "exam", name = "The Exam", mood = "neutral", secs = 6 + LC.ExamCount * (LC.ExamRead + LC.ExamAnswer + LC.ExamMark) + 6, lives = 3,
-        goal = "The exam you didn't study for. Stand on the letter of your answer. The right answer is whatever most of the class picks.",
-        timeUp = { "Pencils down", "The bell rings. You wake before you can see your mark." },
+    LC.ExamCount, LC.ExamRead, LC.ExamAnswer = 6, 3, 10
+    LC.ExamPass = 4 -- (of the six, to pass)
+    LC.ExamWalk = 120 -- (how fast he walks between the desks)
+    LC.ExamGrab, LC.ExamEat, LC.ExamReveal = 1, 3, 2.5 -- (seconds: picking up the paper, eating it, and the score shown)
+    local LETTERS = { "A", "B", "C", "D" }
+    local def = { id = "exam", name = "The Exam", mood = "neutral", lives = 1,
+        secs = 6 + LC.ExamCount * (LC.ExamRead + LC.ExamAnswer) + 4 + 12 * (5 + LC.ExamGrab + LC.ExamEat + LC.ExamReveal) + 6,
+        goal = "The exam you didn't study for. You're stuck at your desk: type A, B, C or D in chat to answer. The right answer is whatever most of the class picks.",
+        timeUp = { "Pencils down", "The bell rings. You wake before he gets to your paper." },
         woke = Woke({ name = "The Exam",
-            won = { "Top of the class", "You wake certain you passed an exam you never sat. You feel brilliant. About what, you can't say." },
-            out = { "See me after class", "You wake in a cold sweat. You didn't study. For what? It doesn't matter. You didn't study." },
+            won = { "Top of the class", "You wake certain you passed an exam you never sat. Somewhere, an old man is still chewing." },
+            out = { "See me after class", "You wake in a cold sweat. You didn't study. He ate it anyway. He ate it and he didn't like it." },
             time = { "Pencils down", "You wake up with a pencil you don't own still in your hand. No: it's gone." },
         }) }
     G.exam = def
+    local DESK = { "models/props_c17/furnituretable002a.mdl", "models/props_c17/furnituretable001a.mdl", "models/props_wasteland/cafeteria_table001a.mdl" }
+    local CHAIR = { "models/props_c17/chair02a.mdl", "models/props_c17/furniturechair001a.mdl" }
+    local PAPER = { "models/props_c17/paper01.mdl", "models/props_junk/garbage_newspaper001a.mdl" }
+    local CRUNCH = { "npc/barnacle/barnacle_crunch2.wav", "npc/barnacle/barnacle_crunch3.wav" }
 
     -- Who chose what: the class's answer is the most chosen (every answer tied for most counts).
     function LC.ExamMarks(picks)
@@ -441,76 +451,229 @@ do
         if most > 0 then for a, n in pairs(count) do if n == most then right[a] = true end end end
         return right
     end
+    -- An answer said in chat: a letter (A to D, "b", "C)"), or the answer's own words. Its number, or nil.
+    function LC.ExamAnswerOf(text, q)
+        local t = string.lower(string.Trim(text or ""))
+        local l = string.match(t, "^([abcd])$") or string.match(t, "^([abcd])[%s%)%.:,!]")
+        if l then return string.byte(l) - string.byte("a") + 1 end
+        for i, a in ipairs(q and q.a or {}) do if t == string.lower(a) then return i end end
+        return nil
+    end
 
     function def.build(g, dream)
         Plain(g, dream, 2, function(i, j) return (i + j) % 2 == 0 and Color(120, 95, 70) or Color(105, 82, 60) end)
         local c = dream.pos
-        g.tiles = {}
-        for i, t in ipairs(TILES) do
-            local at = Vector(c.x + ((i - 1) % 2 == 0 and -1 or 1) * 110, c.y + (i <= 2 and -1 or 1) * 110, g.top)
-            Block(g, PLATE4, at + Vector(0, 0, 1), Angle(0, 0, 0), t[2], "models/debug/debugwhite")
-            g.tiles[i] = at
+        g.seats, g.desks, g.papers, g.seatOf, g.deskTop = {}, {}, {}, {}, {}
+        local desk, chair = Model(DESK), Model(CHAIR)
+        for i = 1, 12 do -- (three rows of four, facing the board)
+            local row, col = math.floor((i - 1) / 4), (i - 1) % 4
+            local seat = Vector(c.x - 250 + row * 125, c.y + (col - 1.5) * 105, g.top + 4)
+            g.seats[i] = seat
+            g.desks[i] = seat + Vector(42, 0, 0)
+            local de = desk and Block(g, desk, Vector(g.desks[i].x, g.desks[i].y, g.top), Angle(0, 90, 0), Color(140, 110, 80))
+            local h = IsValid(de) and de.OBBMaxs and de:OBBMaxs().z or 30
+            g.deskTop[i] = g.top + math.Clamp(h, 20, 50) + 1 -- (the paper lies on it)
+            if chair then Actor(g, chair, seat - Vector(14, 0, 4), 0, 1, nil) end
         end
-        g.boardAt = Vector(c.x + 420, c.y, g.top + 200)
-        g.teacher = Actor(g, FirstModel({ "models/kleiner.mdl", "models/humans/group01/male_09.mdl" }), Vector(c.x + 340, c.y + 140, g.top), 180, 2, ACT_IDLE or 1)
+        g.boardAt = Vector(c.x + 300, c.y, g.top + 200)
+        g.tAt = Vector(c.x + 220, c.y + 150, g.top)
+        g.teacher = Actor(g, FirstModel({ "models/kleiner.mdl", "models/humans/group01/male_09.mdl" }), g.tAt, 180, 1.3, ACT_IDLE or 1)
         local order = {}
         for i = 1, #LC.ExamQuestions do order[i] = i end
         for i = #order, 2, -1 do local j = math.random(i) order[i], order[j] = order[j], order[i] end
         g.order, g.qi, g.phase, g.at = order, 0, "wait", CurTime() + 6
-        Ring(g, 320)
+        g.answers = {} -- [question number] = { [player] = answer }
         return true
     end
-    def.spawn = SpawnAt
+    function def.spawn(g, p, i)
+        local k = ((i - 1) % #g.seats) + 1
+        g.seatOf[p] = k
+        return g.seats[k], 0
+    end
     def.hello = function(g) SayLater(g, 1, "exam_hello") return { theme = "exam" } end
 
-    function LC.ExamTileOf(g, pos)
-        for i, at in ipairs(g.tiles) do
-            if math.abs(pos.x - at.x) < PLATE4_S / 2 and math.abs(pos.y - at.y) < PLATE4_S / 2 then return i end
+    function def.say(g, p, text)
+        local s = g.pl[p]
+        if not s or s.done or g.phase ~= "answer" or not g.q then return false end
+        local a = LC.ExamAnswerOf(text, g.q)
+        if not a then return false end
+        g.answers[g.qi][p] = a
+        g.dirty = true
+        return true
+    end
+
+    -- Everyone's score once the questions are done (kept secret until he's eaten their paper).
+    function LC.ExamScore(g)
+        local n = {}
+        for qi = 1, g.qi do
+            local picks = g.answers[qi] or {}
+            local right = LC.ExamMarks(picks)
+            for p, a in pairs(picks) do if right[a] then n[p] = (n[p] or 0) + 1 end end
+        end
+        for p, s in pairs(g.pl) do s.score = n[p] or 0 end
+    end
+
+    -- The papers on the desks of everyone sitting the exam.
+    local function Papers(g)
+        local paper = Model(PAPER)
+        for p, k in pairs(g.seatOf) do
+            if not g.papers[k] and g.pl[p] then
+                local d = g.desks[k]
+                local z = g.deskTop[k] or (g.top + 31)
+                local e = paper and Actor(g, paper, Vector(d.x, d.y, z), math.Rand(-20, 20), 1, nil) or nil
+                g.papers[k] = { ent = e, p = p, rest = Vector(d.x, d.y, z) }
+            end
+        end
+    end
+    -- Who's next to have their exam eaten: the desks in order.
+    local function NextDesk(g)
+        for k = 1, #g.seats do
+            local pa = g.papers[k]
+            if pa and not pa.eaten and IsValid(pa.p) and g.pl[pa.p] and not g.pl[pa.p].done then return k end
         end
         return nil
+    end
+    local function Walk(g, to, dt)
+        local d = to - g.tAt
+        local l = math.sqrt(d.x * d.x + d.y * d.y)
+        if l <= LC.ExamWalk * dt + 1 then g.tAt = Vector(to.x, to.y, g.top) return true end
+        g.tAt = g.tAt + Vector(d.x / l, d.y / l, 0) * LC.ExamWalk * dt
+        if IsValid(g.teacher) then g.teacher:SetAngles(Angle(0, Yaw(g.tAt, to), 0)) end
+        return false
     end
 
     function def.tick(g, dt, players)
         local now = CurTime()
-        if now < g.at then return end
-        if g.phase == "wait" or g.phase == "mark" then
+        for _, p in ipairs(players) do -- (stuck at your desk)
+            local s = g.pl[p]
+            if s and s.start and Dist2(p:GetPos(), s.start) > 8 then
+                p:SetPos(s.start)
+                if p.SetVelocity and p.GetVelocity then p:SetVelocity(-p:GetVelocity()) end
+            end
+        end
+        if g.phase == "collect" or g.phase == "walk" or g.phase == "grab" or g.phase == "eat" or g.phase == "reveal" then
+            local k = g.desk
+            local pa = k and g.papers[k]
+            local mouth = g.tAt + Vector(0, 0, 66 * 1.3)
+            if g.phase == "collect" then
+                k = NextDesk(g)
+                if not k then
+                    SayAs(g, "exam_end")
+                    for _, p in ipairs(players) do Done(g, p, (g.pl[p].score or 0) >= LC.ExamPass and "won" or "out", "Pencils down", "The exam's over.") end
+                    g.phase = "over"
+                    return
+                end
+                g.desk, g.phase, g.dirty = k, "walk", true
+                if Animate then Animate(g.teacher, ACT_WALK, "walk_all") end
+            elseif g.phase == "walk" then
+                if Walk(g, g.desks[k] + Vector(48, 0, 0), dt) then
+                    g.phase, g.at, g.dirty = "grab", now + LC.ExamGrab, true
+                    if IsValid(g.teacher) then g.teacher:SetAngles(Angle(0, 180, 0)) end
+                    if Animate then Animate(g.teacher, ACT_IDLE, "idle_all_01") end
+                end
+            elseif g.phase == "grab" then -- (he picks it up, slowly, and looks at it)
+                local f = math.Clamp(1 - (g.at - now) / LC.ExamGrab, 0, 1)
+                if pa and IsValid(pa.ent) then pa.ent:SetPos(pa.rest + (mouth + Vector(-14, 0, -10) - pa.rest) * f) end
+                if now >= g.at then
+                    g.phase, g.at, g.nextCrunch, g.dirty = "eat", now + LC.ExamEat, now, true
+                    if math.random() < 0.6 then SayAs(g, "exam_eat" .. math.random(1, 4)) end
+                end
+            elseif g.phase == "eat" then -- (and eats it, the whole thing, with feeling)
+                local f = math.Clamp(1 - (g.at - now) / LC.ExamEat, 0, 1)
+                if IsValid(g.teacher) then
+                    g.teacher:SetAngles(Angle(-25 * math.sin(f * math.pi) + math.Rand(-6, 6), 180 + math.Rand(-10, 10), math.Rand(-8, 8)))
+                    if g.teacher.SetModelScale then g.teacher:SetModelScale(1.3 + 0.25 * math.abs(math.sin(now * 9))) end
+                end
+                if pa and IsValid(pa.ent) then
+                    pa.ent:SetPos(mouth + Vector(-12, 0, -6 + math.sin(now * 20) * 3))
+                    pa.ent:SetAngles(Angle(math.Rand(-40, 40), now * 400 % 360, math.Rand(-40, 40)))
+                    if pa.ent.SetModelScale then pa.ent:SetModelScale(math.max(0.1, 1 - f)) end
+                end
+                if now >= g.nextCrunch then
+                    if IsValid(g.teacher) then Snd(g.teacher, CRUNCH[math.random(#CRUNCH)], 105, math.random(80, 115)) end
+                    g.nextCrunch = now + math.Rand(0.25, 0.45)
+                end
+                if now >= g.at then
+                    if IsValid(g.teacher) then
+                        Snd(g.teacher, "npc/barnacle/barnacle_gulp" .. math.random(1, 2) .. ".wav", 110, 85)
+                        g.teacher:SetAngles(Angle(0, 180, 0))
+                        if g.teacher.SetModelScale then g.teacher:SetModelScale(1.3) end
+                    end
+                    Puff(mouth)
+                    if pa then
+                        pa.eaten = true
+                        if IsValid(pa.ent) then pa.ent:SetNoDraw(true) end
+                        local s = IsValid(pa.p) and g.pl[pa.p]
+                        if s then
+                            s.revealed = true
+                            local pass = (s.score or 0) >= LC.ExamPass
+                            Notice(pa.p, pass and "info" or "warn", "Your exam", string.format("He's eaten it. Your score: %d out of %d. %s", s.score or 0, LC.ExamCount,
+                                pass and "A pass!" or "A fail."), 6)
+                            for _, q in ipairs(players) do
+                                if q ~= pa.p and q.ChatPrint then q:ChatPrint(string.format("(in the dream) Doctor Kleiner ate %s's exam: %d out of %d.", pa.p:Nick(), s.score or 0, LC.ExamCount)) end
+                            end
+                        end
+                    end
+                    g.phase, g.at, g.dirty = "reveal", now + LC.ExamReveal, true
+                end
+            elseif g.phase == "reveal" then
+                if now >= g.at then
+                    local s = pa and IsValid(pa.p) and g.pl[pa.p]
+                    if s and not s.done then
+                        local pass = (s.score or 0) >= LC.ExamPass
+                        Done(g, pa.p, pass and "won" or "out", pass and "Top of the class" or "See me after class",
+                            string.format("%d out of %d. He chewed it thoughtfully, and %s.", s.score or 0, LC.ExamCount, pass and "nodded" or "spat out the margins"))
+                    end
+                    g.phase, g.desk = "collect", nil
+                end
+            end
+            if IsValid(g.teacher) then g.teacher:SetPos(g.tAt) end
+            return
+        end
+        if g.phase == "over" or now < g.at then return end
+        if g.phase == "wait" then Papers(g) end
+        if g.phase == "wait" or g.phase == "done" then
             if g.qi >= LC.ExamCount then
-                SayAs(g, "exam_end")
-                for _, p in ipairs(players) do Done(g, p, "won", "Top of the class", "Pencils down. You answered everything. Doctor Kleiner gives you a gold star, then eats it.") end
+                LC.ExamScore(g)
+                SayAs(g, "exam_collect")
+                g.phase, g.at, g.dirty = "collect", now + 2, true
                 return
             end
             g.qi = g.qi + 1
             g.q = LC.ExamQuestions[g.order[g.qi]]
-            g.phase, g.at, g.right, g.dirty = "read", now + LC.ExamRead, nil, true
+            g.answers[g.qi] = {}
+            g.phase, g.at, g.dirty = "read", now + LC.ExamRead, true
             if g.qi == 1 or math.random() < 0.35 then SayAs(g, "exam_q" .. math.random(1, 3)) end
         elseif g.phase == "read" then
             g.phase, g.at, g.dirty = "answer", now + LC.ExamAnswer, true
         elseif g.phase == "answer" then
-            local picks = {}
-            for _, p in ipairs(players) do picks[p] = LC.ExamTileOf(g, p:GetPos()) or false end
-            g.right = LC.ExamMarks(picks)
-            for _, p in ipairs(players) do
-                local a = picks[p]
-                if not a then Hit(g, p, "No answer", "You left it blank. Doctor Kleiner tuts.")
-                elseif not g.right[a] then Hit(g, p, "Wrong", "The class didn't agree with you. In this dream, that makes you wrong.") end
-            end
-            g.phase, g.at, g.dirty = "mark", now + LC.ExamMark, true
+            g.phase, g.at, g.dirty = "done", now + 0.5, true
         end
     end
 
     function def.state(g, p)
         local lines, title = {}, "THE EXAM"
-        if g.q then
+        if g.q and (g.phase == "read" or g.phase == "answer" or g.phase == "done") then
             title = string.format("QUESTION %d OF %d", g.qi, LC.ExamCount)
             lines[1] = g.q.q
-            for i, t in ipairs(TILES) do lines[#lines + 1] = t[1] .. ": " .. g.q.a[i] .. ((g.phase == "mark" and g.right and g.right[i]) and "   <- the class says" or "") end
-        else lines[1] = "Take your places." end
-        local glows = {}
-        for i, at in ipairs(g.tiles) do glows[#glows + 1] = Flat(at + Vector(0, 0, 8), TILES[i][3]) end
-        local big
-        if g.phase == "answer" then big = string.format("Stand on your answer: %d", math.max(0, math.ceil(g.at - CurTime())))
-        elseif g.phase == "read" then big = "Read the question..." end
-        return { board = Board(g.boardAt, 180, title, lines), glows = glows, big = big }
+            for i, l in ipairs(LETTERS) do lines[#lines + 1] = l .. ": " .. g.q.a[i] end
+        elseif g.qi >= LC.ExamCount then
+            title, lines[1] = "PENCILS DOWN", "Your papers will now be collected."
+        else lines[1] = "Take your seats." end
+        local s = p and g.pl[p] or {}
+        local big, tone
+        if g.phase == "answer" then
+            local mine = g.answers[g.qi] and g.answers[g.qi][p]
+            big = mine and string.format("Your answer: %s. (Type another letter to change it.) %d", LETTERS[mine], math.max(0, math.ceil(g.at - CurTime())))
+                or string.format("Type A, B, C or D in chat. %d", math.max(0, math.ceil(g.at - CurTime())))
+        elseif g.phase == "read" then big = "Read the question..."
+        elseif g.desk and g.papers[g.desk] then
+            local who = g.papers[g.desk].p
+            if who == p then big, tone = (g.phase == "eat" and "He's eating YOUR exam..." or g.phase == "reveal" and string.format("Your score: %d out of %d", s.score or 0, LC.ExamCount) or "He's coming for YOUR paper..."), "warn"
+            elseif IsValid(who) then big = (g.phase == "eat" and "Doctor Kleiner is eating " or "Doctor Kleiner is collecting ") .. who:Nick() .. "'s exam." end
+        end
+        return { board = Board(g.boardAt, 180, title, lines), big = big, tone = tone,
+            meterName = s.revealed and string.format("Your score: %d out of %d", s.score or 0, LC.ExamCount) or "Your score: ? (he hasn't eaten your paper yet)" }
     end
 end
 
@@ -1195,7 +1358,12 @@ LC.StrangeAddCues({
     exam_q1 = { "Doctor Kleiner", "Next question. Take your time. Actually, don't.", "the old professor, peering over his glasses" },
     exam_q2 = { "Doctor Kleiner", "This one will be on the test. This is the test.", "the old professor, puzzled by his own words" },
     exam_q3 = { "Doctor Kleiner", "Hmm. I'm not sure I know this one either.", "the old professor, mumbling" },
-    exam_end = { "Doctor Kleiner", "Pencils down! Marvellous. I shall grade these never.", "the old professor, delighted" },
+    exam_end = { "Doctor Kleiner", "Marvellous. All graded. I couldn't eat another bite.", "the old professor, very full, patting his stomach" },
+    exam_collect = { "Doctor Kleiner", "Pencils down! I shall now collect your papers. Personally.", "the old professor, licking his lips" },
+    exam_eat1 = { "Doctor Kleiner", "Mmm. A little dry.", "the old professor, chewing loudly, mouth full" },
+    exam_eat2 = { "Doctor Kleiner", "Delicious. Absolutely delicious.", "the old professor, mouth full, ecstatic" },
+    exam_eat3 = { "Doctor Kleiner", "I grade with my mouth. It's the only fair way.", "the old professor, chewing, matter-of-fact" },
+    exam_eat4 = { "Doctor Kleiner", "Oh, this one has a lot of crossing out. Crunchy.", "the old professor, crunching, delighted" },
     train_hello = { "The Conductor", "Last train! Last train out of City Seventeen! All aboard!", "a hoarse old train conductor, echoing down a station platform" },
     train_hint = { "The Conductor", "You're looking right at it. That never works in dreams.", "the conductor, conspiratorial, a stage whisper" },
     train_closing = { "The Conductor", "Doors closing! Doors closing!", "the conductor, urgent" },

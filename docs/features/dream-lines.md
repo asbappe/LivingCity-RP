@@ -68,7 +68,12 @@ Every line said in the dreams you play, made from the code by `python3 _dev/drea
 | `exam_q11.mp3` | Doctor Kleiner | Next question. Take your time. Actually, don't. | the old professor, peering over his glasses |
 | `exam_q21.mp3` | Doctor Kleiner | This one will be on the test. This is the test. | the old professor, puzzled by his own words |
 | `exam_q31.mp3` | Doctor Kleiner | Hmm. I'm not sure I know this one either. | the old professor, mumbling |
-| `exam_end1.mp3` | Doctor Kleiner | Pencils down! Marvellous. I shall grade these never. | the old professor, delighted |
+| `exam_end1.mp3` | Doctor Kleiner | Marvellous. All graded. I couldn't eat another bite. | the old professor, very full, patting his stomach |
+| `exam_collect1.mp3` | Doctor Kleiner | Pencils down! I shall now collect your papers. Personally. | the old professor, licking his lips |
+| `exam_eat11.mp3` | Doctor Kleiner | Mmm. A little dry. | the old professor, chewing loudly, mouth full |
+| `exam_eat21.mp3` | Doctor Kleiner | Delicious. Absolutely delicious. | the old professor, mouth full, ecstatic |
+| `exam_eat31.mp3` | Doctor Kleiner | I grade with my mouth. It's the only fair way. | the old professor, chewing, matter-of-fact |
+| `exam_eat41.mp3` | Doctor Kleiner | Oh, this one has a lot of crossing out. Crunchy. | the old professor, crunching, delighted |
 
 ### The Last Train (`train`)
 
