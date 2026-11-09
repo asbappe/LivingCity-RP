@@ -3217,10 +3217,19 @@ local okM, errM = pcall(function()
     doc = { credits = 50, goods = { { id = "mkt_bread", name = "Bread", price = 18, desc = "Off a lorry.", ok = true, market = "Hard to get in the city" } },
         sell = { { id = "gun_pistol", name = "Pistol", n = 2, price = 80, market = "In demand: he pays more" } } }
     net.recv_lcu_market()
+    -- a stranger at the quartermaster (the owner, 9 November): nothing to buy, arms to sell or give
+    sent = {}
+    doc = { credits = 5, goods = {}, quartermaster = true, visitor = true,
+        sell = { { id = "gun_pistol", name = "Pistol", n = 1, price = 45, donate = true }, { id = "w:weapon_smg1", name = "smg1", n = 1, price = 60, weapon = true, donate = true } } }
+    net.recv_lcu_market()
     for _, pnl in ipairs(made) do
         local fn = rawget(pnl, "Paint")
         if fn then fn(pnl, 400, 60) end
+        if rawget(pnl, "DoClick") then pnl.DoClick(pnl) end -- (every button: Sell and Donate)
     end
+    local gave = false
+    for _, m in ipairs(sent) do if m and m.name == "lcu_donate" then gave = true end end
+    if not gave then error("the quartermaster's Donate button doesn't reach the server") end
 end)
 vgui, net.SendToServer, net.Start, net.WriteString = vgWas, stsWas, startWas, wsWas
 net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable = rU, rD, rDc, rJ

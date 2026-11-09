@@ -1888,7 +1888,9 @@ hook.Add("PlayerUse", "LivingCityRebelsUse", function(ply, ent)
     ply.lcRebelUseNext = CurTime() + 0.6
     if not IsResistance(ply) then
         if st.quartermaster and not LooksCombine(ply) then
-            ply:ChatPrint("[Resistance] The quartermaster looks you over. 'I don't know you. Come back with someone who does.'")
+            -- (the owner, 9 November: a stranger can sell or give him arms, in his own window)
+            ply:ChatPrint("[Resistance] The quartermaster looks you over. 'I don't know you. But if you've brought something for the fight, I'll take it.'")
+            if LC.OpenMarket then LC.OpenMarket(ply) end
         end
         return false
     end

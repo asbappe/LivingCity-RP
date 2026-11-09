@@ -38,6 +38,7 @@ util.AddNetworkString("lcu_market")
 util.AddNetworkString("lcu_decode")
 util.AddNetworkString("lcu_buy")
 util.AddNetworkString("lcu_sell")
+util.AddNetworkString("lcu_donate") -- (giving arms to the quartermaster: sympathy, the owner, 9 November)
 
 LC = LC or {}
 
@@ -1361,8 +1362,27 @@ function LC.MarketAccess(ply)
     return false, "There's no black market here. Try rebel territory, or ask an admin to place a dealer."
 end
 
+-- Arms the quartermaster takes from anyone: hand-loaded ammunition and guns (pocket items), or a gun in hand.
+local function Arms(id)
+    local cls = string.match(id or "", "^w:(.+)$")
+    if cls then return LCS.SellWeapons and LCS.SellWeapons[cls] ~= nil end
+    local it = LCS.Items[id or ""]
+    return it ~= nil and it.arms == true
+end
+LC.QuartermasterArms = Arms
+-- Someone not of the Resistance at the quartermaster (the owner, 9 November: selling and giving him arms in the same
+-- window as buying, "none of that C menu stuff"): he sells them nothing, but takes arms, bought or given.
+function LC.QuartermasterVisitor(ply)
+    if not IsValid(ply) or Faction(ply) == "resistance" or NearDealer(ply) then return false end
+    if LC.PlayerIsCP(ply) or LC.PlayerIsZombie(ply) or BARRED[Faction(ply)] then return false end
+    if LC.RebelLooksCombine and LC.RebelLooksCombine(ply) then return false end
+    return LC.NearQuartermaster ~= nil and LC.NearQuartermaster(ply) ~= nil
+end
+
 function LC.OpenMarket(ply)
     local ok, why = LC.MarketAccess(ply)
+    local visitor = not ok and LC.QuartermasterVisitor(ply)
+    if visitor then return LC.OpenQuartermasterVisit(ply) end
     if not ok then
         ply:ChatPrint("[Black market] " .. why)
         return false
@@ -1371,6 +1391,7 @@ function LC.OpenMarket(ply)
     local goods, sell = {}, {}
     -- the quartermaster (and no dealer here): he won't buy the Combine's data; the lab decodes it
     local qm = LC.AtQuartermaster(ply) or nil
+    local giveTo = qm or LC.QuartermasterVisitor(ply) or nil -- (arms can be given to him: sympathy for a stranger)
     -- his usual stock, and whatever the Commissary is short of (sv_livingcity_market.lua)
     for _, g in ipairs(LC.MarketBlackList and LC.MarketBlackList() or LCS.Black) do
         local can, reason = true, nil
@@ -1395,7 +1416,7 @@ function LC.OpenMarket(ply)
         if it and price and not (qm and DECODED[id]) then
             -- (the quartermaster pays more for what's in demand: sv_livingcity_market.lua)
             local hot = qm and it.sell and price > it.sell and LC.MarketBuybackMul and LC.MarketBuybackMul(id) > 1 and "In demand: he pays more" or nil
-            sell[#sell + 1] = { id = id, name = it.name, n = inv[id], price = price, market = hot }
+            sell[#sell + 1] = { id = id, name = it.name, n = inv[id], price = price, market = hot, donate = (giveTo and it.arms) or nil }
         end
     end
     -- weapons you're carrying, unless your faction issued them
@@ -1403,12 +1424,65 @@ function LC.OpenMarket(ply)
         local cls = w:GetClass()
         local price = LCS.SellWeapons[cls]
         if price and not (LC.IsIssuedWeapon and LC.IsIssuedWeapon(ply, cls)) then
-            sell[#sell + 1] = { id = "w:" .. cls, name = (string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ")), n = 1, price = price, weapon = true }
+            sell[#sell + 1] = { id = "w:" .. cls, name = (string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ")), n = 1, price = price, weapon = true, donate = giveTo or nil }
         end
     end
     LC.SendCompressed("lcu_market", { credits = credits, goods = goods, sell = sell, quartermaster = qm }, { ply })
     return true
 end
+
+-- The quartermaster's window for someone not of the Resistance: nothing to buy, the arms they carry to sell or give.
+function LC.OpenQuartermasterVisit(ply)
+    local sell = {}
+    local inv = LC.Inventory(ply)
+    local ids = table.GetKeys(inv)
+    table.sort(ids)
+    for _, id in ipairs(ids) do
+        local it = LCS.Items[id]
+        local price = LC.SellPrice and LC.SellPrice(ply, id) or (it and it.sell)
+        if it and it.arms and price then sell[#sell + 1] = { id = id, name = it.name, n = inv[id], price = price, donate = true } end
+    end
+    for _, w in ipairs(ply:GetWeapons()) do
+        local cls = w:GetClass()
+        local price = LCS.SellWeapons[cls]
+        if price and not (LC.IsIssuedWeapon and LC.IsIssuedWeapon(ply, cls)) then
+            sell[#sell + 1] = { id = "w:" .. cls, name = (string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ")), n = 1, price = price, weapon = true, donate = true }
+        end
+    end
+    LC.SendCompressed("lcu_market", { credits = LC.Credits and LC.Credits(ply) or 0, goods = {}, sell = sell, quartermaster = true, visitor = true }, { ply })
+    return true
+end
+
+-- Giving one of something to the quartermaster: sympathy for someone not of the Resistance (1 a gift).
+function LC.QuartermasterDonate(ply, id)
+    local member = Faction(ply) == "resistance"
+    if not (LC.QuartermasterVisitor(ply) or (member and LC.AtQuartermaster(ply))) then return false, "Give it to the quartermaster himself." end
+    if not Arms(id) then return false, "He only wants arms: guns and ammunition." end
+    local cls = string.match(id, "^w:(.+)$")
+    local name
+    if cls then
+        if not ply:HasWeapon(cls) then return false end
+        if LC.IsIssuedWeapon and LC.IsIssuedWeapon(ply, cls) then return false, "That was issued to you. He won't touch it." end
+        ply:StripWeapon(cls)
+        name = (string.gsub(string.gsub(cls, "^weapon_", ""), "_", " "))
+    else
+        if not LC.HasItem(ply, id) then return false end
+        LC.TakeItem(ply, id, 1)
+        name = LCS.Items[id].name
+    end
+    if not member and LC.AddTrait then LC.AddTrait(ply, "sympathy", 1) end
+    ply:ChatPrint(member and ("[Quartermaster] 'Every bit helps.' (You give: " .. name .. ".)")
+        or ("[Quartermaster] He weighs it in his hand and nods. 'We won't forget this.' (You give: " .. name .. ".)"))
+    hook.Run("LivingCityQuartermasterGift", ply, id)
+    return true
+end
+net.Receive("lcu_donate", function(_, ply)
+    if (ply.lcDonateNext or 0) > CurTime() then return end
+    ply.lcDonateNext = CurTime() + 0.3
+    local ok, why = LC.QuartermasterDonate(ply, net.ReadString())
+    if not ok and why then ply:ChatPrint("[Quartermaster] " .. why) end
+    LC.OpenMarket(ply)
+end)
 
 -- At the quartermaster: a chip decoded, from his menu.
 net.Receive("lcu_decode", function(_, ply)
@@ -1488,6 +1562,10 @@ end
 -- Sell one of something (or all of it): pocket items, or a weapon as "w:<class>".
 function LC.DealerSell(ply, id, all)
     local ok, why = LC.MarketAccess(ply)
+    if not ok and LC.QuartermasterVisitor(ply) then
+        if not Arms(id) then return false, "The quartermaster only buys arms from strangers: guns and ammunition." end
+        ok = true
+    end
     if not ok then return false, why end
     local cls = string.match(id or "", "^w:(.+)$")
     if cls then
@@ -1497,6 +1575,7 @@ function LC.DealerSell(ply, id, all)
         ply:StripWeapon(cls)
         LC.AddCredits(ply, price)
         ply:ChatPrint(string.format("[Black market] Sold: %s, for %d credits.", (string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ")), price))
+        if not NearDealer(ply) and LC.NearQuartermaster and LC.NearQuartermaster(ply) and LC.AddTrait then LC.AddTrait(ply, "sympathy", 0.1) end -- (sold to the quartermaster)
         return true
     end
     local it = LCS.Items[id]
@@ -1512,7 +1591,8 @@ function LC.DealerSell(ply, id, all)
     if id == "ration_forged" then hook.Run("LivingCityForgedCard", ply, n) end -- (the search for the forger: sv_livingcity_funding.lua)
     if it.intel and LC.AddXP then LC.AddXP(ply, 5 * n, "intel") end
     ply:ChatPrint(string.format("[Black market] Sold: %s%s, for %d credits.", it.name, n > 1 and (" x" .. n) or "", price * n))
-    if it.arms and LC.NearQuartermaster and LC.NearQuartermaster(ply) and LC.AddTrait then LC.AddTrait(ply, "sympathy", 1) end
+    -- (arms sold to the quartermaster: a little sympathy, 0.1 an item; giving them is 1: the owner, 9 November)
+    if it.arms and not NearDealer(ply) and LC.NearQuartermaster and LC.NearQuartermaster(ply) and LC.AddTrait then LC.AddTrait(ply, "sympathy", 0.1 * n) end
     return true
 end
 

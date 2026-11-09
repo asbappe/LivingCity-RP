@@ -8793,6 +8793,18 @@ outsider:SetPos(qm:GetPos() + Vector(-60, 0, 0))
 outsider.chat = {}
 hook.Run("PlayerUse", outsider, qm)
 ok(has(outsider.chat, "I don't know you"), "and nothing to strangers")
+-- (the owner, 9 November) but a stranger can sell him arms, or give them, in his own window: sympathy
+ok(LC.QuartermasterVisitor(outsider), "a stranger at the quartermaster: his window opens for them (sell or give arms, nothing to buy)")
+local ammoId
+for id, it in pairs(LCS.Items) do if it.arms and not it.weapon and it.sell then ammoId = id break end end
+LC.GiveItem(outsider, ammoId, 3)
+local sym0 = LC.Trait(outsider, "sympathy")
+local okSell = LC.DealerSell(outsider, ammoId, false)
+local okBread = LC.DealerSell(outsider, "ration", false)
+ok(okSell and not okBread and math.abs(LC.Trait(outsider, "sympathy") - sym0 - 0.1) < 1e-6, "selling him ammunition: credits and a little sympathy (0.1); he won't buy anything else from a stranger", LC.Trait(outsider, "sympathy") - sym0)
+local okGive = LC.QuartermasterDonate(outsider, ammoId)
+ok(okGive and math.abs(LC.Trait(outsider, "sympathy") - sym0 - 1.1) < 1e-6 and (LC.Inventory(outsider)[ammoId] or 0) == 1, "giving it to him: 1 sympathy", LC.Trait(outsider, "sympathy") - sym0)
+ok(not LC.QuartermasterDonate(outsider, "ration"), "he only takes arms as gifts")
 outsider:SetPos(FAR)
 local fr, frst
 for n, st in pairs(LC.NPCs) do if IsValid(n) and st.role == "rebel" and not st.quartermaster and not st.foe and not st.raid then fr, frst = n, st break end end

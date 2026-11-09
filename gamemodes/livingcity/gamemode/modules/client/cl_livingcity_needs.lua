@@ -728,7 +728,7 @@ local shopFrame
 local function ScrollOf(panel)
     if not IsValid(panel) or not panel.GetVBar then return nil end
     local vb = panel:GetVBar()
-    local n = vb and vb.GetScroll and vb:GetScroll() or 0
+    local n = tonumber(vb and vb.GetScroll and vb:GetScroll()) or 0
     return n > 0 and n or nil
 end
 local function ScrollTo(panel, n)
@@ -890,6 +890,13 @@ net.Receive("lcu_market", function()
         end
     end
 
+    if t.visitor then
+        local l = vgui.Create("DLabel", scroll)
+        l:Dock(TOP) l:DockMargin(4, 4, 4, 8)
+        l:SetWrap(true) l:SetAutoStretchVertical(true)
+        l:SetTextColor(DIM)
+        l:SetText(#(t.sell or {}) > 0 and "He sells nothing to strangers. But he'll buy arms, or take them as a gift." or "He sells nothing to strangers. Bring him guns or ammunition and he'll buy them, or take them as a gift.")
+    end
     for _, g in ipairs(t.goods or {}) do
         -- the price always shows; what's wrong sits beside the name (the owner, 7 November: "idk what the price is")
         Row(g.name, g.desc, g.price .. " credits", g.ok == true, function()
@@ -905,7 +912,7 @@ net.Receive("lcu_market", function()
         head:DockMargin(4, 10, 0, 6)
         head:SetFont("DermaDefaultBold")
         head:SetTextColor(ACCENT)
-        head:SetText(t.quartermaster and "THE QUARTERMASTER WILL BUY" or "THE DEALER WILL BUY")
+        head:SetText(t.quartermaster and "THE QUARTERMASTER WILL BUY (OR TAKE AS A GIFT)" or "THE DEALER WILL BUY")
         head:SizeToContents()
         for _, sitem in ipairs(t.sell) do
             Row(string.format("%s  x%d", sitem.name, sitem.n), nil, "Sell for " .. sitem.price, true, function()
@@ -914,6 +921,14 @@ net.Receive("lcu_market", function()
                 net.WriteBool(false)
                 net.SendToServer()
             end, nil, nil, sitem.market)
+            if sitem.donate then
+                -- (giving it for the cause: no credits, and, for someone not of the Resistance, their sympathy)
+                Row("   give one to the cause", nil, "Donate", true, function()
+                    net.Start("lcu_donate")
+                    net.WriteString(sitem.id)
+                    net.SendToServer()
+                end, MARKET)
+            end
             if sitem.n > 1 then
                 Row("   all " .. sitem.n, nil, "Sell all for " .. (sitem.price * sitem.n), true, function()
                     net.Start("lcu_sell")
