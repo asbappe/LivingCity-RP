@@ -1148,3 +1148,7 @@ Notes:
   Notes:
 - [ ] **Resistance fighters:** they take a few more hits (50 health), the same at home as in your squad. About 1 in 10 carries a crossbow: check they actually shoot it (if they just stand there holding it, tell me). With more Combine NPCs out, more fighters turn up in rebel zones (about 5 for every 4 units).
   Notes:
+- [ ] **Squads:** alone on your side, recruit 5 rebels (or press E on 5 metrocops as a Metrocop): the 6th says your squad is full and why. F2 > Call for backup shows "(squad N of M)". As a Metrocop, E on a soldier says Overwatch only; E on an Elite says only the Overwatch Commander.
+  Notes:
+- [ ] **Backup by radio:** as the Resistance without a Freq 7 radio, F2 > Freq 7 > Call for backup is greyed ("no Freq 7 radio"). With one, take out the radio transmitter and left click: far from any fighters, a few turn up out of sight (from the rebel territory side) and run to you. As a unit, the radio on the CP net calls Civil Protection backup.
+  Notes:

@@ -705,7 +705,7 @@ function LC.SquadCasualAll(leader, on)
     return n
 end
 
-local FOLLOW_ANGLES = { 0, 38, -38 }
+local FOLLOW_ANGLES = { 0, 38, -38, 70, -70 } -- (up to five: sv_livingcity_squads.lua)
 local function FollowThink(npc, st, now)
     local leader = st.follow
     local pos = npc:GetPos()
@@ -1820,8 +1820,12 @@ local function Recruit(ply, npc, st)
         ply:ChatPrint("[Resistance] '" .. "Who are you? Get someone who's earned it to ask me." .. "' (Members and up can lead fighters.)")
         return
     end
-    if #FollowersOf(ply) >= MAX_FOLLOWERS then
-        ply:ChatPrint("[Resistance] You've got " .. MAX_FOLLOWERS .. " with you already. Any more and you're a parade.")
+    -- (the owner, 9 November: squads shrink as more players join the side, sv_livingcity_squads.lua)
+    local limit = LC.SquadLimit and LC.SquadLimit(ply) or MAX_FOLLOWERS
+    if #FollowersOf(ply) >= limit then
+        local text = LC.SquadFullText and LC.SquadFullText(ply) or ("You've got " .. limit .. " with you already.")
+        ply:ChatPrint("[Resistance] 'Any more and you're a parade.' " .. text)
+        if LC.Notice then LC.Notice(ply, "warn", "Squad", text, 8) end
         return
     end
     -- each one his own spot behind you

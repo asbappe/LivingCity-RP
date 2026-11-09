@@ -148,36 +148,47 @@ local function FightersWhyNot(ply)
         local p = LC.ManpowerPool("rebel")
         if p.reserve < need then return string.format("we can't spare fighters: only %d left in reserve", p.reserve) end
     end
-    if LC.FollowersOf and #LC.FollowersOf(ply) >= 3 then return "you have fighters with you already" end
+    if LC.SquadRoom and LC.SquadRoom(ply) <= 0 then return string.lower(string.sub(LC.SquadFullText(ply), 1, 1)) .. string.sub(LC.SquadFullText(ply), 2, -2) end
     return nil
 end
 
 function LC.RebelCallBackup(ply)
     if not IsValid(ply) or Faction(ply) ~= "resistance" then return false, "Only the Resistance calls on Freq 7 for backup." end
     if not ply:Alive() or (LC.Prisoners and LC.Prisoners[ply]) then return false, "Not now." end
+    -- (the owner, 9 November: calling for backup takes a Freq 7 radio)
+    if LC.RadioBand and LC.RadioBand(ply) ~= "resistance" then return false, "You need a Freq 7 radio to call for backup." end
     local wait = Wait(ply.lcRebBackupNext)
     if wait > 0 then return false, string.format("Your last call is still out. Again in %d seconds.", wait) end
     ply.lcRebBackupNext = CurTime() + REB_BACKUP_GAP
     local where = Where(ply:GetPos())
     Freq7(Name(ply) .. " needs backup " .. where .. ". Their position is marked.", ply)
     RebelMark(ply, "Backup: " .. Name(ply))
-    -- a couple of idle fighters nearby come and stay with them (as if they'd asked each one: sv_livingcity_rebels.lua)
-    local sent, whyNot = 0, FightersWhyNot(ply)
+    -- idle fighters nearby come and stay with them (as if they'd asked each one: sv_livingcity_rebels.lua), as many as
+    -- their squad has room for (sv_livingcity_squads.lua); not enough nearby, and more come out of rebel territory
+    local sent, fromHome, whyNot = 0, 0, FightersWhyNot(ply)
     if not whyNot and LC.RebelRecruit then
-        local room = 3 - (LC.FollowersOf and #LC.FollowersOf(ply) or 0)
+        local room = LC.SquadRoom and LC.SquadRoom(ply) or (REB_FIGHTERS - (LC.FollowersOf and #LC.FollowersOf(ply) or 0))
         for _, c in ipairs(LC.RebelBackupCandidates(ply)) do
-            if sent >= math.min(REB_FIGHTERS, room) then break end
+            if sent >= room then break end
             LC.RebelRecruit(ply, c.npc, c.st)
             if c.st.follow == ply then sent = sent + 1 end
+        end
+        if sent < room and LC.RebelTerritoryBackup then
+            for _, c in ipairs(LC.RebelTerritoryBackup(ply, room - sent)) do
+                LC.RebelRecruit(ply, c.npc, c.st)
+                if c.st.follow == ply then sent, fromHome = sent + 1, fromHome + 1 end
+            end
         end
     end
     local text = "Every Resistance player has heard, and sees where you are for a minute and a half."
     if sent > 0 then
-        text = text .. string.format(" %d fighter%s nearby %s on the way, and stay%s with you (E on one sends them home).", sent, sent == 1 and "" or "s", sent == 1 and "is" or "are", sent == 1 and "s" or "")
+        text = text .. string.format(" %d fighter%s %s on the way, and stay%s with you (E on one sends them home).", sent, sent == 1 and "" or "s", sent == 1 and "is" or "are", sent == 1 and "s" or "")
+        if fromHome > 0 then text = text .. string.format(" %d of them come%s out of rebel territory: give them a minute to reach you.", fromHome, fromHome == 1 and "s" or "") end
+        if LC.SquadLimit then text = text .. string.format(" Your squad: %d of %d.", LC.FollowersOf and #LC.FollowersOf(ply) or sent, (LC.SquadLimit(ply))) end
     elseif whyNot then
         text = text .. " No fighters are coming: " .. whyNot .. "."
     else
-        text = text .. " No fighters are free nearby."
+        text = text .. " No fighters are free, nearby or in rebel territory."
     end
     Tell(ply, "info", "Backup called", text, 9)
     hook.Run("LivingCityRebelBackup", ply, sent)
@@ -469,7 +480,7 @@ function LC.QuickInfo(ply)
     if f == "resistance" then
         local tx = false
         if LC.TransmitBands then for _, b in ipairs(LC.TransmitBands(ply)) do if b == "resistance" then tx = true end end end
-        t.reb = { backup = Wait(ply.lcRebBackupNext), pos = Wait(ply.lcRebPosNext), tx = tx }
+        t.reb = { backup = Wait(ply.lcRebBackupNext), pos = Wait(ply.lcRebPosNext), tx = tx, radio = (not LC.RadioBand) or LC.RadioBand(ply) == "resistance" }
     end
     if IsCitizen(ply) then t.me = MeInfo(ply) end
     if f == "admin" then

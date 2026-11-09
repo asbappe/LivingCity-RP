@@ -606,11 +606,16 @@ function LC.CallBackup(ply)
     if (ply.lcBackupNext or 0) > now then
         return false, string.format("Dispatch already has your last call. Again in %ds.", math.ceil(ply.lcBackupNext - now))
     end
+    -- (the owner, 9 November: squads shrink as more players join the side, sv_livingcity_squads.lua)
+    local room = LC.SquadRoom and LC.SquadRoom(ply) or 3
+    if room <= 0 then return false, LC.SquadFullText and LC.SquadFullText(ply) or "Your squad is full." end
+    local commander = ply:GetNW2String("lcf_special", "") == "ow_commander"
     ply.lcBackupNext = now + 45
     local near = {}
     for npc, st in pairs(LC.NPCs or {}) do
         if IsValid(npc) and LC.IsSecurity(st) and not st.questLock and not st.raid and not st.skirmish and not st.questSquad
-            and st.state ~= "hostile" and st.state ~= "escort" and st.state ~= "event" and not st.workEscort then
+            and st.state ~= "hostile" and st.state ~= "escort" and st.state ~= "event" and not st.workEscort
+            and not IsValid(st.backupFor) and (not st.elite or commander) then -- (Elites answer only to the Overwatch Commander)
             local d = npc:GetPos():DistToSqr(ply:GetPos())
             if d < 5000 * 5000 then near[#near + 1] = { npc = npc, st = st, d = d } end
         end
@@ -620,7 +625,7 @@ function LC.CallBackup(ply)
     -- (the owner, 7 November: backup came WITH STUNSTICKS to a gunfight) gun out, shot at in the last
     -- 30 seconds, or on a violent job: they come with pistols and SMGs, and keep them out (sv_livingcity_fieldops.lua)
     local violent = LC.BackupViolent ~= nil and LC.BackupViolent(ply)
-    for i = 1, math.min(3, #near) do
+    for i = 1, math.min(room, #near) do
         local u = near[i]
         if LC.AbandonTask then LC.AbandonTask(u.npc, u.st, now) end
         if LC.ArmBackupUnit then LC.ArmBackupUnit(u.npc, u.st, violent, i) elseif LC.ArmUnit then LC.ArmUnit(u.npc, u.st) end

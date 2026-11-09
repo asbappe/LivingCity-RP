@@ -175,6 +175,7 @@ LC_MODULES = {
         "sv_livingcity_streetlife", -- (brandishing a gun, obituaries, longer street detentions, players found by citizen number)
         "sv_livingcity_directives", -- (the sealed directives: how the secret endings start; the G-Man's hand)
         "sv_livingcity_war",
+        "sv_livingcity_squads", -- (squad sizes by players on a side, E on a unit to lead it, backup out of rebel territory)
         "sv_livingcity_pacing", -- (who is in a fight; the Combine's action music)
         "sv_livingcity_campmove",
         "sv_livingcity_funding",

@@ -18,7 +18,7 @@ SWEP.PrintName    = "Radio transmitter"
 SWEP.Author       = "Living City"
 SWEP.Category     = "Living City"
 SWEP.Purpose      = "Talk over your radio."
-SWEP.Instructions = "While it's up, your chat and voice go over your radio's band. Only people right beside you hear you directly. R puts it away."
+SWEP.Instructions = "While it's up, your chat and voice go over your radio's band. Only people right beside you hear you directly. Left click calls for backup. R puts it away."
 SWEP.Spawnable    = false
 SWEP.AdminOnly    = false
 
@@ -40,7 +40,21 @@ function SWEP:Initialize()
     self:SetHoldType(self.HoldType)
 end
 
-function SWEP:PrimaryAttack() end
+-- Left click: call for backup on the band it's on (the owner, 9 November): Freq 7 brings Resistance
+-- fighters (LC.RebelCallBackup), the CP net brings units (LC.CallBackup); both join your squad.
+function SWEP:PrimaryAttack()
+    if CLIENT then return end
+    if (self.nextCall or 0) > CurTime() then return end
+    self.nextCall = CurTime() + 1
+    local owner = self:GetOwner()
+    if not IsValid(owner) or not LC then return end
+    local band = self:GetNW2String("lc_band", "")
+    local ok, why
+    if band == "resistance" and LC.RebelCallBackup then ok, why = LC.RebelCallBackup(owner)
+    elseif band == "cp" and LC.CallBackup then ok, why = LC.CallBackup(owner)
+    else ok, why = false, "Nobody to call on this band." end
+    if not ok and why and LC.Notice then LC.Notice(owner, "warn", "Backup", tostring(why), 8) end
+end
 -- Right click: switch frequency, for someone who can send on more than one (a Resistance Insider:
 -- the CP net and Freq 7). Careful which one you're on.
 function SWEP:SecondaryAttack()
@@ -175,7 +189,7 @@ if CLIENT then
         local band = BANDS[self:GetNW2String("lc_band", "")] or "your radio"
         local w, h = ScrW(), ScrH()
         draw.SimpleTextOutlined("TRANSMITTER UP: what you type and say goes out on " .. band, "DermaDefaultBold", w / 2, h - 120, C_150_220_150, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
-        draw.SimpleTextOutlined("Only someone right beside you hears you directly. R puts it away." .. (self:GetNW2Int("lc_bands", 1) > 1 and " Right click switches frequency." or ""),
+        draw.SimpleTextOutlined("Only someone right beside you hears you directly. Left click calls for backup. R puts it away." .. (self:GetNW2Int("lc_bands", 1) > 1 and " Right click switches frequency." or ""),
             "DermaDefault", w / 2, h - 102, C_220_220_210, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     end
 

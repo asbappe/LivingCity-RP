@@ -279,6 +279,14 @@ net.Receive("lc_quick_info", function()
     if LC_CL.QuickRebuild then LC_CL.QuickRebuild() end
 end)
 local function Info(k) return (LC_CL.QuickInfo or {})[k] or {} end
+-- "  (squad 2 of 3)": how many you lead and may lead now (the owner, 9 November: squads shrink as more players join a side)
+local function SquadTag()
+    local me = LocalPlayer()
+    if not IsValid(me) then return "" end
+    local max = me:GetNW2Int("lc_squad_max", 0)
+    if max <= 0 then return "" end
+    return string.format("  (squad %d of %d)", me:GetNW2Int("lc_squad_n", 0), max)
+end
 local COMBINE = { cp = true, admin = true }
 -- one of F2's own actions (sv_livingcity_quickmore.lua)
 local function QM(cmd, arg, target)
@@ -343,7 +351,7 @@ local function Freq7Page()
     local r = Info("reb")
     return { title = "FREQ 7", items = {
         Can("Message on Freq 7...", function() Ask("Freq 7", "What do you say on Freq 7?", "r") end, r.tx == false and "no transmitter" or nil),
-        Can("Call for backup", function() QM("rbackup") end, Later(r.backup)),
+        Can("Call for backup" .. SquadTag(), function() QM("rbackup") end, (r.radio == false and "no Freq 7 radio") or Later(r.backup)),
         Can("Send my position", function() QM("rpos") end, Later(r.pos)),
         Item("Guide me to the nearest rebel ground", function() QM("guide", "rebel") end),
         Item("Guide me to the nearest lab", function() QM("guide", "lab") end),
@@ -505,7 +513,7 @@ function LC_CL.QuickRoleRoot()
         Add(Page("Voice lines", VoicePage))
         Add(tools)
         Add(kick)
-        Add(Item("Call for backup", function() Send("backup") end))
+        Add(Item("Call for backup" .. SquadTag(), function() Send("backup") end))
         Add(Item("Issue a BOLO...", function() Ask("BOLO", "What should Civil Protection units look out for?", "bolo") end))
         Add(Item("Send my 10-20", function() Send("10-20") end))
         -- the Resistance's man inside, beside a prisoner being marched to the cells (sv_livingcity_insider.lua):

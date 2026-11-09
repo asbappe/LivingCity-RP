@@ -815,7 +815,7 @@ do
         for i = 1, 9 do if not root.items[i] then problems[#problems + 1] = "quick menu for " .. faction .. ": slot " .. i .. " is empty" end end
         for i = 1, 9 do
             local it = root.items[i]
-            if it and (it.id == "unittools" or it.id == "kick" or it.role or it.label == "Black market" or it.label == "Call for backup") then
+            if it and (it.id == "unittools" or it.id == "kick" or it.role or it.label == "Black market" or string.find(tostring(it.label), "Call for backup", 1, true)) then
                 problems[#problems + 1] = "F1 for " .. faction .. " has '" .. tostring(it.label) .. "': that's F2's (only what everyone has goes on F1)"
             end
         end
@@ -829,7 +829,7 @@ do
             -- (the owner, 7 November: 1 Voice lines, 2 Unit tools, 3 Kick, 4 Call for backup, 5 BOLO, 6 Send my 10-20)
             local it = root2.items
             if not (it[1] and it[1].label == "Voice lines" and it[2] and it[2].id == "unittools" and it[3] and it[3].id == "kick"
-                and it[4] and it[4].label == "Call for backup" and it[5] and string.find(it[5].label, "BOLO", 1, true) and it[6] and it[6].label == "Send my 10-20") then
+                and it[4] and string.find(it[4].label, "Call for backup", 1, true) and it[5] and string.find(it[5].label, "BOLO", 1, true) and it[6] and it[6].label == "Send my 10-20") then
                 problems[#problems + 1] = "a unit's F2 (" .. faction .. "): should be 1 Voice lines, 2 Unit tools, 3 Kick, 4 Call for backup, 5 BOLO, 6 Send my 10-20"
             end
             if LC_CL.QuickSlot("kick") ~= 3 or select(2, LC_CL.QuickSlot("kick")) ~= "F2" then problems[#problems + 1] = "the kick reminder can't find Kick at F2 > 3" end

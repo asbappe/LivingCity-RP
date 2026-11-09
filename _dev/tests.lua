@@ -20,6 +20,7 @@ _setcvar("lc_directives", 1) -- (the G-Man's directives are off by default now, 
 _setcvar("lc_market_demand", 0) -- (demand moving black market prices: tested on its own, in MarketTests)
 LC.ImbalanceFloor = 100000 -- (help for the outnumbered side: tested on its own, in SideBalanceTests)
 _setcvar("lc_rebel_per_combine", 0) -- (fighters for each Combine NPC out: tested on its own, in RebelTests)
+LC.SquadSteps = { { 100000, 3 } } -- (squads shrinking with more players on a side: tested on their own, in SquadSizeTests; 3 each elsewhere, as before)
 _setcvar("lc_afk_kick_minutes", 0) -- (the test's people never touch a key: no kicking them for it)
 _setcvar("lc_manpower", 0) -- (each side's reserve of fighters and units: tested on its own, in ManpowerTests)
 _setcvar("lc_directives", 0) -- (no sealed directive breaking open in the middle of other tests; its own section turns it on)
@@ -16750,6 +16751,124 @@ ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 SideBalanceTests()
 
+function SquadSizeTests()
+section("Squad sizes by players on a side, E on a unit to lead it, backup out of rebel territory")
+local errs0 = #_errors
+local realGetAll, stepsWas = player.GetAll, LC.SquadSteps
+LC.SquadSteps = { { 2, 5 }, { 4, 3 }, { 6, 2 } }
+local S = Vector(241000, -241000, 0)
+local notes = {}
+local nw = LC.Notice
+LC.Notice = function(p, kind, title, text, secs) notes[#notes + 1] = { p = p, t = tostring(title) .. ": " .. tostring(text) } return nw(p, kind, title, text, secs) end
+local function Told(p, needle) for i = #notes, 1, -1 do if notes[i].p == p and string.find(notes[i].t, needle, 1, true) then return true end end return false end
+local NOOP = function() return nil end
+local function Fake(f) -- (a player on a side, to count)
+    return setmetatable({ f = f }, { __index = function(_, k)
+        if k == "GetNW2String" then return function(self, key, d) if key == "lcf_faction" then return self.f end return d end end
+        if k == "IsValid" or k == "IsPlayer" then return function() return true end end
+        if k == "GetNW2Int" then return function(_, _, d) return d end end
+        return NOOP
+    end })
+end
+local L = LC.SquadLimitFor
+ok(L(1) == 5 and L(2) == 5 and L(3) == 3 and L(4) == 3 and L(5) == 2 and L(6) == 2 and L(7) == 1 and L(30) == 1,
+    "squad sizes: 1-2 players on a side, 5 each; 3-4, 3; 5-6, 2; 7 and more, 1")
+
+local lead = newPlayer("SQLead", "resistance")
+local member = newPlayer("SQMember", "resistance")
+local unit = newPlayer("SQUnit", "cp")
+local ows = newPlayer("SQOws", "cp")
+local cmdr = newPlayer("SQCmdr", "cp")
+lead:SetNW2Int("lcf_rank", 5) member:SetNW2Int("lcf_rank", 2)
+unit:SetNW2Int("lcf_rank", 2) ows:SetNW2Int("lcf_rank", 5) cmdr:SetNW2Int("lcf_rank", 6) cmdr:SetNW2String("lcf_special", "ow_commander")
+local crowd = {}
+local function Real(fn, ...) local g = player.GetAll player.GetAll = realGetAll local x, y = fn(...) player.GetAll = g return x, y end
+local function Others(n, f) crowd = {} for _ = 1, n do crowd[#crowd + 1] = Fake(f) end end
+player.GetAll = function() local l = { lead, member, unit, ows, cmdr } for _, p in ipairs(crowd) do l[#l + 1] = p end return l end
+Others(8, "resistance") -- (10 in the Resistance)
+local lm, lp, lifted = LC.SquadLimit(lead)
+ok(LC.SquadLimit(member) == 1 and lm == 4 and lifted and lp == 10, "10 in the Resistance: a Member leads 1; the Commander always at least 4", tostring(LC.SquadLimit(member)) .. " " .. lm)
+Others(0, "resistance")
+ok(LC.SquadLimit(member) == 5 and LC.SquadLimit(lead) == 5, "just the two of them: 5 each")
+ok(LC.SquadLimit(unit) == 3 and LC.SquadLimit(cmdr) == 4, "3 Combine players: 3 each, the Elite at least 4")
+
+-- the Resistance: full, and told why
+Others(8, "resistance")
+member:SetPos(S)
+local r1, rs1 = Real(LC.Spawners.rebel, S + Vector(100, 0, 0))
+local r2, rs2 = Real(LC.Spawners.rebel, S + Vector(-100, 0, 0))
+LC.RebelRecruit(member, r1, rs1)
+LC.RebelRecruit(member, r2, rs2)
+ok(rs1.follow == member and rs2.follow == nil and Told(member, "Your squad is full: 1 of 1") and Told(member, "team up"),
+    "with 10 in the Resistance a Member's squad is 1: the second says no, and they're told why (team up)")
+LC.SquadTick()
+ok(member:GetNW2Int("lc_squad_n", -1) == 1 and member:GetNW2Int("lc_squad_max", -1) == 1 and member:GetNW2Int("lc_squad_players", -1) == 10, "F2 knows: squad 1 of 1, 10 players")
+-- the limit drops below what they have: they keep them, and hear so
+Others(0, "resistance")
+LC.SquadTick()
+LC.RebelRecruit(member, r2, rs2)
+ok(rs2.follow == member, "fewer players: room for more")
+Others(8, "resistance")
+LC.SquadTick()
+ok(rs1.follow == member and rs2.follow == member and Told(member, "nobody new can join"), "more players again: both stay, and they're told nobody new can join")
+for _, n in ipairs({ r1, r2 }) do local st = LC.NPCs[n] if st and st.follow then LC.DismissFollower(n, st, true) end n:Remove() end
+
+-- backup out of rebel territory, by radio
+Others(0, "resistance")
+member.lcRebBackupNext = 0
+local okNo, whyNo = LC.RebelCallBackup(member)
+ok(not okNo and string.find(whyNo or "", "Freq 7 radio", 1, true), "no Freq 7 radio: no backup", whyNo)
+LC.GiveItem(member, "radio_tuned")
+local far, fst = Real(LC.Spawners.rebel, S + Vector(20000, 0, 0))
+local inZone, seen, spotWas = LC.InRebelZone, LC.IsSeen, LC.RebelBackupSpot
+LC.InRebelZone = function(pos) return pos.x > S.x + 15000 end
+LC.IsSeen = function() return false end
+LC.RebelBackupSpot = function(p) return p:GetPos() + Vector(1200, 0, 0) end
+local candWas = LC.RebelBackupCandidates
+LC.RebelBackupCandidates = function() return {} end -- (nobody idle nearby)
+local okT, sentT = LC.RebelCallBackup(member)
+LC.InRebelZone, LC.IsSeen, LC.RebelBackupSpot, LC.RebelBackupCandidates = inZone, seen, spotWas, candWas
+ok(okT and sentT >= 1 and fst.follow == member and far:GetPos():Distance(S) < 1400 and Told(member, "out of rebel territory"),
+    "nobody near: a fighter from rebel territory, seen by nobody, comes from out of sight on the way and joins", tostring(sentT) .. " " .. tostring(far:GetPos()))
+if fst.follow then LC.DismissFollower(far, fst, true) end
+far:Remove()
+
+-- the Combine: E on a unit
+Others(0, "resistance")
+unit:SetPos(S + Vector(0, 3000, 0))
+local c1, cs1 = Real(LC.SpawnCop, S + Vector(100, 3000, 0))
+local s1, ss1 = Real(LC.SpawnSoldier, S + Vector(-100, 3000, 0))
+local e1, es1 = Real(LC.SpawnSoldier, S + Vector(0, 3100, 0), "elite")
+for _, st in ipairs({ cs1, ss1, es1 }) do st.state = "idle" end
+ok(LC.UnitRecruit(unit, c1, cs1) and cs1.backupFor == unit and cs1.backupRecruited, "a Metrocop presses E on a unit: he's in their squad")
+ok(LC.UnitRecruit(unit, s1, ss1) and ss1.backupFor == nil and Told(unit, "answer only to Overwatch"), "an Overwatch soldier won't follow a Metrocop")
+ok(LC.UnitRecruit(ows, s1, ss1) and ss1.backupFor == ows, "but follows an Overwatch soldier")
+ok(LC.UnitRecruit(ows, e1, es1) and es1.backupFor == nil and Told(ows, "Overwatch Commander"), "an Elite answers only to the Overwatch Commander")
+ok(LC.UnitRecruit(cmdr, e1, es1) and es1.backupFor == cmdr, "who leads him")
+ok(LC.UnitRecruit(unit, c1, cs1) and cs1.backupFor == nil, "E again: back to their duties")
+-- full: 7 Combine players, 1 each
+Others(4, "cp")
+LC.UnitRecruit(unit, c1, cs1)
+local c2, cs2 = Real(LC.SpawnCop, S + Vector(200, 3000, 0))
+cs2.state = "idle"
+LC.UnitRecruit(unit, c2, cs2)
+ok(cs1.backupFor == unit and cs2.backupFor == nil and Told(unit, "Your squad is full: 1 of 1"), "8 Combine players: one unit each, and told so")
+-- call for backup: no room, no call; an Elite never answers a Metrocop's call
+unit.lcBackupNext = 0
+local okF, whyF = LC.CallBackup(unit)
+ok(not okF and string.find(whyF or "", "squad is full", 1, true), "a full squad can't call for more", whyF)
+Others(0, "cp")
+cs1.backupFor = nil
+es1.backupFor = nil
+local okC, sentC = LC.CallBackup(unit)
+ok(okC and es1.backupFor == nil, "an Elite doesn't answer a Metrocop's backup call", tostring(sentC))
+for _, n in ipairs({ c1, c2, s1, e1 }) do if IsValid(n) then n:Remove() end end
+
+LC.Notice, LC.SquadSteps, player.GetAll = nw, stepsWas, realGetAll
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+SquadSizeTests()
+
 -- The performance debugger (sh_livingcity_perfdebug.lua, sv_livingcity_perfdebug.lua)
 function PerfDebugTests()
 section("The performance debugger: hooks, timers, net in and out, networked values, hitches, put back when off")
@@ -19398,6 +19517,9 @@ ins:SetPos(far)
 local reb = newPlayer("QMRebel", "resistance", nil, 150) -- (a Member: fighters follow them)
 local mate = newPlayer("QMMate", "resistance", nil, 150)
 local cit = newPlayer("QMCitizen", "citizen")
+local okNR, whyNR = LC.RebelCallBackup(reb)
+ok(not okNR and string.find(whyNR or "", "Freq 7 radio", 1, true), "no Freq 7 radio: no calling for backup (the owner, 9 November)", whyNR)
+LC.GiveItem(reb, "radio_tuned") LC.GiveItem(mate, "radio_tuned")
 reb:SetPos(S0) mate:SetPos(S0 + Vector(2500, 0, 0)) cit:SetPos(S0 + Vector(0, 2500, 0))
 mate.chat, cit.chat = {}, {}
 local f1, fs1 = LC.Spawners.rebel(S0 + Vector(300, 0, 0))
@@ -19407,8 +19529,8 @@ local f4, fs4 = LC.Spawners.rebel(S0 + Vector(0, -350, 0))
 fs3.post = true -- (a lookout on his post never leaves it)
 local before = #net.sent
 local okB, sent = LC.RebelCallBackup(reb)
-ok(okB and sent == 2, "Call for backup: two idle fighters nearby come", tostring(sent) .. " " .. Last(reb))
-ok(fs3.follow == nil and ((fs1.follow == reb and 1 or 0) + (fs2.follow == reb and 1 or 0) + (fs4.follow == reb and 1 or 0)) == 2,
+ok(okB and sent == 3, "Call for backup: idle fighters nearby come, as many as the squad has room for (3 here)", tostring(sent) .. " " .. Last(reb))
+ok(fs3.follow == nil and ((fs1.follow == reb and 1 or 0) + (fs2.follow == reb and 1 or 0) + (fs4.follow == reb and 1 or 0)) == 3,
     "they stay with the caller, as if asked (a lookout keeps his post)")
 ok(has(mate.chat, "needs backup"), "every Resistance player hears it on Freq 7", mate.chat[#mate.chat])
 ok(not has(cit.chat, "needs backup"), "(a citizen without a Freq 7 radio hears nothing)")
@@ -19419,6 +19541,7 @@ ok((LC.QuickInfo(reb).reb or {}).backup > 0, "(and F2 greys it with how long)")
 for _, n in ipairs({ f1, f2, f4 }) do local st = LC.NPCs[n] if st and st.follow then LC.DismissFollower(n, st, true) end end
 -- a Sympathizer: heard, but fighters only follow Members and up
 local sym = newPlayer("QMSym", "resistance")
+LC.GiveItem(sym, "radio_tuned")
 sym:SetPos(S0 + Vector(0, -200, 0))
 local okS, sentS = LC.RebelCallBackup(sym)
 ok(okS and sentS == 0 and Told(sym, "Members and up"), "a Sympathizer's call is heard, but no fighters come", Last(sym))

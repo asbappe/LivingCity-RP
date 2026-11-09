@@ -39,3 +39,4 @@ This file is only an index. The specification of how everything behaves (the agr
 - [Secret endings](docs/features/endings.md): Sealed directives, every ending, songs, the Endings menu
 - [Hooks, and how the code is laid out](docs/features/code-layout.md): For whoever works on the code: modules, load order, hooks
 - [Big servers, when something breaks, admin commands, honest limits](docs/features/admin.md): Server sizing, debugging, every admin command, known limits
+- [Squads: sizes, leading units, backup by radio](docs/features/squads.md): How many NPCs a player leads by players on their side, E on a unit, backup out of rebel territory, the radio's left click

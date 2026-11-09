@@ -2922,6 +2922,8 @@ hook.Add("PlayerUse", "LivingCityUse", function(ply, ent)
         LC.Surrender(ply, ent) -- walking up to a unit and pressing E: hands up
     elseif IsSecurity(st) and st.state ~= "hostile" then
         Face(ent, ply:GetPos())
+        -- (the owner, 9 November) a Civil Protection or Overwatch player: "Follow me" (sv_livingcity_squads.lua)
+        if LC.UnitRecruit and LC.UnitRecruit(ply, ent, st) then return end
         if LC.PlayerIsCP(ply) or (LC.DisguisedAsCP and LC.DisguisedAsCP(ply)) then
             ent:EmitSound(st.role == "cop" and "npc/metropolice/vo/affirmative.wav" or "npc/combine_soldier/vo/affirmative.wav", 75)
         elseif st.role == "cop" then
