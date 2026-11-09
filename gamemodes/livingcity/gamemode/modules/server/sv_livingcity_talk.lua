@@ -229,7 +229,7 @@ local function ShareFood(ply, npc, st)
     local id = FoodToGive(ply)
     if not id or not LC.TakeItem(ply, id) then return "You've nothing to give." end
     local v = LC.Remember(npc, ply, 2)
-    if LC.AddTrait then LC.AddTrait(ply, "sympathy", 1) end
+    -- (no sympathy for it any more: the owner, 9 November, sympathy is the way into the Resistance, and a kindness to a stranger isn't that)
     npc:EmitSound(Vo(st.gender, Pick({ "hi01", "hi02" })), 65)
     hook.Run("LivingCitySharedFood", ply, npc, id)
     local name = LCS and LCS.Items[id] and string.lower(LCS.Items[id].name) or "food"

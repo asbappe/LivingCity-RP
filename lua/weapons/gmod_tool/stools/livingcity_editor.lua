@@ -691,6 +691,7 @@ function TOOL.BuildCPanel(panel)
     Check("Outnumbered Combine fight dirtier (SMGs, grenades, energy balls, a little more damage)", "lc_desperation")
     Slider("Resistance fighter health (HL2's own: 40)", "lc_rebel_health", 10, 300, 0)
     Slider("Resistance fighters for each Combine NPC on the streets (at least)", "lc_rebel_per_combine", 0, 3, 2)
+    Slider("Sympathy a citizen needs to join the Resistance (0: anyone)", "lc_resistance_join_sympathy", 0, 20, 0)
     panel:Help("Every setting in this panel is saved with this map's layout as you change it, and comes back after a restart.")
 
     Header("Desperate Combine: test it")

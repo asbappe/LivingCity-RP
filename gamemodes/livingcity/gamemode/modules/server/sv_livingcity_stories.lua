@@ -82,6 +82,7 @@ local function JoinLater(ply, faction, minXP)
                 if have < need then LC.Bump(ply, "res_jobs", need - have) end
             end
         end
+        if faction == "resistance" and LC.ResistanceInvite then LC.ResistanceInvite(ply) end -- (invited in by the story: no sympathy needed)
         LC.SetFaction(ply, faction, nil)
     end)
 end

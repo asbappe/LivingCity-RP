@@ -1156,3 +1156,5 @@ Notes:
   Notes:
 - [ ] **Vortigaunt dream warfare (editor > Dreams: test one):** press "Vortigaunts break into the next propaganda dream (for sure)", then test a propaganda dream. A quarter to half way in: purple vortigaunts in rings of purple light, the screen goes purple, her figure flickers to flesh, and a HER / THE VORTIGAUNTS meter appears. Stand in a ring: the meter goes their way, and at the end her figure shatters and you wake. Stay out: she says "Begone!" and the dream carries on. Check the Administrator tablet dream menu shows the freed vortigaunts line when one is freed.
   Notes:
+- [ ] **Joining the Resistance:** a fresh citizen picks the Resistance in the faction menu: "The Resistance doesn't trust you yet." Hand a ration (F3, look at them up close, give) to a Resistance Fighter: "They'll remember that"; the same rebel again counts no more. At 5 sympathy you can join. A current member who reconnects stays in.
+  Notes:

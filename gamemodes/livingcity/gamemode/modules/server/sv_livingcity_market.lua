@@ -444,7 +444,7 @@ function LC.MarketRefused(ply, g)
     if LC.PlayerIsCP and LC.PlayerIsCP(ply) then return end
     if (ply.lcMarketSympathy or 0) > CurTime() then return end
     ply.lcMarketSympathy = CurTime() + SYMPATHY_GAP
-    if LC.AddTrait then LC.AddTrait(ply, "sympathy", 1) end
+    -- (it no longer counts as sympathy: the owner, 9 November, sympathy is the way into the Resistance and has to be earned)
 end
 
 -- What the Administrator hears about it: plain talk, not numbers (the owner, 7 November).

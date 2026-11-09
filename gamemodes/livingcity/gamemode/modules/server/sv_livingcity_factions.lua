@@ -109,6 +109,38 @@ end
 -- finished as one of them, but a Union shift.)
 local cvTrust = CreateConVar("lc_fighter_trust_jobs", "3", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Jobs a Resistance member must finish for it before they're trusted as a Fighter (with the XP)")
 function LC.ResistanceTrust(ply) return LC.Counter and LC.Counter(ply, "res_jobs") or 0, math.max(0, cvTrust:GetInt()) end
+
+-- Proving yourself before you join (the owner, 9 November: "we don't want anyone to just walk into the resistance, they
+-- need to prove themselves as citizens"): lc_resistance_join_sympathy (5) sympathy first, earned by helping them (jobs and
+-- quests that help them, food for their supply crate, arms sold to their quartermaster, a ration or arms handed to one of
+-- their fighters, siding with the vortigaunts in a dream), or invited in by a story (The Pamphleteer's "join", The Man
+-- Inside's "defect"). Anyone who has been in the Resistance has proved it already (lcf_res_proven), so no member is ever
+-- locked out by it.
+local cvJoin = CreateConVar("lc_resistance_join_sympathy", "5", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Sympathy a citizen needs before the Resistance lets them join (0: anyone)")
+function LC.ResistanceProven(ply)
+    if not IsValid(ply) then return false end
+    if ply:GetNW2String("lcf_faction", "") == "resistance" or ply:GetPData("lcf_faction", "") == "resistance" or ply:GetPData("lcf_res_proven", "") == "1" then return true end
+    return (LC.Trait and LC.Trait(ply, "sympathy") or 0) >= math.max(0, cvJoin:GetInt())
+end
+function LC.ResistanceInvite(ply) if IsValid(ply) then ply:SetPData("lcf_res_proven", "1") end end
+
+-- A gift that counts (the owner): a ration packet (no other food or water), hand-loaded ammunition, a gun or a grenade,
+-- handed to a Resistance Fighter or higher (an openly armed rebel). One sympathy for each different rebel, ever.
+function LC.ResistanceGift(id)
+    local it = LCS and LCS.Items and LCS.Items[id]
+    return id == "ration" or (it ~= nil and (it.arms == true or it.use == "throw"))
+end
+hook.Add("LivingCityGave", "LivingCityResistanceGift", function(giver, target, id)
+    if not (IsValid(giver) and IsValid(target)) or not LC.ResistanceGift(id) then return end
+    if giver:GetNW2String("lcf_faction", "") == "resistance" or target:GetNW2String("lcf_faction", "") ~= "resistance" then return end
+    if target:GetNW2Int("lcf_rank", 1) < 3 then return end -- (Fighter and up)
+    local key = tostring(target:SteamID64())
+    local list = giver:GetPData("lcf_gifted", "")
+    for k in string.gmatch(list, "[^,]+") do if k == key then return end end
+    giver:SetPData("lcf_gifted", list == "" and key or (list .. "," .. key))
+    if LC.AddTrait then LC.AddTrait(giver, "sympathy", 1) end
+    giver:ChatPrint("[Resistance] They take it with a nod. They'll remember that.")
+end)
 local function RankFor(ply, f, xp)
     local idx = LCF.RankIndexFor(f, xp or XP(ply, f.id), Conditioned(ply))
     if f.id == "resistance" then
@@ -453,6 +485,9 @@ function LC.CanJoinFaction(ply, fid, sid)
         local okE, whyE = LC.SidesEven(ply, fid)
         if not okE then return false, whyE end
     end
+    if fid == "resistance" and not ply:IsSuperAdmin() and not LC.ResistanceProven(ply) then
+        return false, "The Resistance doesn't trust you yet." -- (the owner: just that; they find out how in roleplay)
+    end
     if f.requires then
         local rf = LCF.Get(f.requires.faction)
         if rf and RankFor(ply, rf) < f.requires.rank and not ply:IsSuperAdmin() then
@@ -489,6 +524,7 @@ function LC.SetFaction(ply, fid, sid, quiet, stay)
     ply:SetNW2String("lcf_special", sid or "")
     ply:SetPData("lcf_faction", fid)
     ply:SetPData("lcf_special", sid or "")
+    if fid == "resistance" then ply:SetPData("lcf_res_proven", "1") end -- (once in, proven: free to come back after leaving)
     RecomputeRank(ply)
     if not quiet then
         local f = LCF.Get(fid)
