@@ -16650,6 +16650,27 @@ do
     ok(threw == 1 and none == 0 and calm == 0, "desperate, a soldier throws at a Resistance fighter in sight, never at a citizen; not desperate, nobody throws", threw .. " " .. none .. " " .. calm)
     ok(string.find(tostring((function() LC.Desperation = 0.5 return LC.DesperationLine() end)()), "desperate (50%)", 1, true) ~= nil, "the readout says how desperate")
 
+    -- testing alone from the editor: a pinned level, the tester the target whatever their side, a squad sent at them
+    player.GetAll = function() return { citizen } end
+    LC.Desperation = 0
+    LC.DesperationTestSet(citizen, 0.6)
+    LC.DesperationTick()
+    local pinned = LC.Desperation
+    LC.DesperationAt = nil
+    citizen:SetPos(sold:GetPos() + Vector(600, 0, 0))
+    sst.nextDesperate, sold.enemy = 0, citizen
+    local atTester = LC.DesperationFight()
+    local sent = LC.DesperationTestSquad(citizen, "elite")
+    local cops = LC.DesperationTestSquad(citizen, "cops")
+    local units = 0
+    for _ in pairs(LC.DesperationTestUnits) do units = units + 1 end
+    LC.DesperationTestSet(nil, nil)
+    local left = 0
+    for npc in pairs(LC.DesperationTestUnits) do if IsValid(npc) then left = left + 1 end end
+    ok(math.abs(pinned - 0.6) < 1e-6 and atTester == 1 and sent == 4 and cops == 3 and units == 7 and left == 0 and LC.Desperation == 0 and not LC.DesperationTest,
+        "the editor's test: 60% at once, grenades at the tester (a citizen), an Elite and 3 soldiers and 3 metrocops sent; back to normal clears it all",
+        pinned .. " " .. atTester .. " " .. tostring(sent) .. " " .. tostring(cops) .. " " .. units .. " " .. left)
+
     for _, e in ipairs({ cop, sold, eli }) do if IsValid(e) then e:Remove() end end
     LC.ImbalanceFloor, LC.Desperation, LC.Running = floorWas, despWas, runWas
     player.GetAll = realGetAll

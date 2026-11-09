@@ -1144,3 +1144,5 @@ Notes:
   Notes:
 - [ ] **NPC cap:** on a 64-slot server the debug report shows a cap of 175 (with lc_npc_budget 100).
   Notes:
+- [ ] **Desperation test (editor, "Desperate Combine: test it"):** Start the city, press 100%, then "Send 4 soldiers at me": they come from out of sight and throw frags, gas and flashbangs at you. Try "an Elite and 3 soldiers" (energy balls) and "3 armed metrocops" (SMGs at 100%, pistols at 0%). Compare 20% and 100%. "Back to normal" removes them.
+  Notes:

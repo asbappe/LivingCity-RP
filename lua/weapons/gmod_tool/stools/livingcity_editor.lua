@@ -691,6 +691,26 @@ function TOOL.BuildCPanel(panel)
     Check("Outnumbered Combine fight dirtier (SMGs, grenades, energy balls, a little more damage)", "lc_desperation")
     panel:Help("Every setting in this panel is saved with this map's layout as you change it, and comes back after a restart.")
 
+    Header("Desperate Combine: test it")
+    panel:Help("Try each level alone: it's pinned for you for 30 minutes (no creeping up), and the Combine's grenades and energy balls go after you whatever your side. Pick a level, then send a squad at you. The city must be running.")
+    local DESP = {
+        { 0, "0%: by the book", "Combine hold their own (under 1.5 Resistance players per Combine player, or under 4 Resistance). Pistols, no grenades, Elites 2 energy balls, normal damage." },
+        { 20, "20%: outnumbered 2 to 1", "e.g. 10 Resistance, 5 Combine. 1 in 5 metrocops with SMGs, a soldier throws about every 38 s, Elites 2 balls (an extra every 26 s), +2% damage." },
+        { 40, "40%: 2.5 to 1", "e.g. 10 Resistance, 4 Combine. 2 in 5 SMGs, a grenade every 32 s, Elites 3 balls (extra every 21 s), +4%." },
+        { 60, "60%: 3 to 1", "e.g. 15 Resistance, 5 Combine. 3 in 5 SMGs, a grenade every 25 s, Elites 3 balls (extra every 17 s), +6%." },
+        { 80, "80%: 3.5 to 1", "e.g. 14 Resistance, 4 Combine. 4 in 5 SMGs, a grenade every 19 s, Elites 4 balls (extra every 12 s), +8%." },
+        { 100, "100%: 4 to 1 or worse", "e.g. 20 Resistance, 5 Combine, or 4 Resistance and no Combine players. All SMGs, a grenade every 12 s, Elites 4 balls (extra every 8 s), +10%." },
+    }
+    for _, d in ipairs(DESP) do
+        panel:Button(d[2], "lc_desperation_test", tostring(d[1]))
+        panel:Help(d[3])
+    end
+    panel:Button("Send 4 soldiers at me (grenades)", "lc_desperation_squad", "soldiers")
+    panel:Button("Send an Elite and 3 soldiers at me (energy balls)", "lc_desperation_squad", "elite")
+    panel:Button("Send 3 armed metrocops at me (SMGs)", "lc_desperation_squad", "cops")
+    panel:Button("Back to normal (real player counts, test units gone)", "lc_desperation_test", "off")
+    panel:Help("Grenades are thrown at you from 250 to 1100 units away, when they can see you; Elites fire from 300 to 1600. Test units leave after 5 minutes.")
+
     Header("Events")
     panel:Button("Ration distribution", "lc_event", "rations")
     panel:Button("Inspection sweep", "lc_event", "sweep")

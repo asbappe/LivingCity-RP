@@ -155,6 +155,8 @@ console command lc_combine_models_list
 console command lc_conduct
 console command lc_creator
 console command lc_debugreport
+console command lc_desperation_squad
+console command lc_desperation_test
 console command lc_drag
 console command lc_dream_now
 console command lc_dream_restore

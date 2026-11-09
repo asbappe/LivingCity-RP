@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version a26c91e. Admin-only console messages and log lines are left out.
+Made from version c808a31. Admin-only console messages and log lines are left out.
 
-9100 lines, from 242 files.
+9109 lines, from 242 files.
 
 ## Contents
 
@@ -137,7 +137,7 @@ Made from version a26c91e. Admin-only console messages and log lines are left ou
 - [what custody costs the worst anticitizens](#what-custody-costs-the-worst-anticitizens-svlivingcitycustodylua) (29)
 - [saved layout](#saved-layout-svlivingcitydatalua) (14)
 - [debugging](#debugging-svlivingcitydebuglua) (61)
-- [the desperate Combine (sv_livingcity_desperation.lua)](#the-desperate-combine-svlivingcitydesperationlua-svlivingcitydesperationlua) (3)
+- [the desperate Combine (sv_livingcity_desperation.lua)](#the-desperate-combine-svlivingcitydesperationlua-svlivingcitydesperationlua) (12)
 - [sv_livingcity_directives.lua](#svlivingcitydirectiveslua-svlivingcitydirectiveslua) (56)
 - [doors](#doors-svlivingcitydoorslua) (9)
 - [Enforcers in the dreams](#enforcers-in-the-dreams-svlivingcitydreamenforcerslua) (19)
@@ -5751,17 +5751,38 @@ Made from version a26c91e. Admin-only console messages and log lines are left ou
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_desperation.lua`
 
 
-> Note for you (not shown in game): Every 5 seconds: the desperation moves a step toward its target, and the units are supplied for it.
-
-- "The Resistance far outnumbers the Combine. Units are breaking out SMGs, grenades and energy balls, and hit a little harder. The more outnumbered they are, the dirtier they fight."  (text, line 216)
-
 > Note for you (not shown in game): part of: desperation tick
 
-- "The Combine hold their own again: units fight by the book."  (text, line 218)
+- "The Resistance far outnumbers the Combine. Units are breaking out SMGs, grenades and energy balls, and hit a little harder. The more outnumbered they are, the dirtier they fight."  (text, line 232)
+- "The Combine hold their own again: units fight by the book."  (text, line 234)
 
 > Note for you (not shown in game): A line for the readouts.
 
-- "The Combine are desperate (%d%%): about %d%% of metrocops' sidearms are SMGs, soldiers throw grenades, Elites carry %d energy balls, %d%% more damage."  (message, line 285)
+- "The Combine are desperate (%d%%): about %d%% of metrocops' sidearms are SMGs, soldiers throw grenades, Elites carry %d energy balls, %d%% more damage."  (message, line 301)
+
+> Note for you (not shown in game): part of: tell
+
+- "Desperation test"  (on-screen notice, line 318)
+
+> Note for you (not shown in game): part of: desperation test set
+
+- "Back to normal: the desperation follows the real player counts again, and the test units are gone."  (chat message, line 335)
+- "The Combine are at %d%% desperation for %d minutes. Their grenades and energy balls go after you whatever your side. Send a squad at you from the editor to feel it."  (message, line 345)
+
+> Note for you (not shown in game): Send a few units at ply: "soldiers" (4), "elite" (an Elite and 3 soldiers) or "cops" (3 armed metrocops). The number sent.
+
+- "no one to send them at"  (text, line 353)
+- "the city isn't running (Start the city first)"  (text, line 354)
+
+> Note for you (not shown in game): part of: desperation test squad
+
+- "nobody could be sent (the reserves may be empty)"  (text, line 386)
+- "on their way"  (text, line 387)
+
+> Note for you (not shown in game): lc_desperation_squad <soldiers | elite | cops>
+
+- "%d on their way to you (they come from out of sight and go after 5 minutes)."  (message, line 414)
+- "Nobody sent: {why}."  (chat message, line 416)
 
 ## sv_livingcity_directives.lua (sv_livingcity_directives.lua)
 

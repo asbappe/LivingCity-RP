@@ -20,6 +20,11 @@
       2 to 1: 0.2; 3 to 1: 0.6; 4 to 1 and more: 1 (all in LC.DesperationFrom,
       LC.DesperationFull).
     lc_desperation 0 turns it all off (a setting in the editor's Population).
+
+    Testing alone (the editor's "Desperate Combine: test it", lc_desperation_test,
+    lc_desperation_squad): LC.DesperationTestSet pins a level (no creeping) for 30
+    minutes, and the tester is a target whatever their side; LC.DesperationTestSquad
+    sends soldiers, an Elite and soldiers, or armed metrocops at them.
 ]]
 
 LC = LC or {}
@@ -48,6 +53,8 @@ end
 -- Where the desperation is heading, from the players on each side.
 function LC.DesperationTarget(n)
     if not cvOn:GetBool() then return 0 end
+    local t = LC.DesperationTest
+    if t and CurTime() < t.untilT then return t.level end
     n = n or Counts()
     if n.rebels < (LC.ImbalanceFloor or 4) then return 0 end
     local ratio = n.rebels / math.max(1, n.combine)
@@ -63,8 +70,14 @@ function LC.DesperateSidearm(st)
     return st.smgRoll < LC.DesperationLevel() and "weapon_smg1" or "weapon_pistol"
 end
 
+local function Tester(ent)
+    local t = LC.DesperationTest
+    return t ~= nil and ent == t.ply and CurTime() < t.untilT
+end
+
 local function IsResistance(ent)
     if not IsValid(ent) then return false end
+    if Tester(ent) then return true end -- (testing alone: they're the target, whatever their side)
     if ent:IsPlayer() then return ent:GetNW2String("lcf_faction", "") == "resistance" end
     local st = LC.NPCs and LC.NPCs[ent]
     return st ~= nil and st.role == "rebel"
@@ -86,7 +99,7 @@ function LC.DesperateClear(pos, r, kind)
     end
     if kind ~= "flash" then
         for _, p in ipairs(player.GetAll()) do
-            if p:Alive() and CombinePlayer(p) and p:GetPos():DistToSqr(pos) < r2 then return false end
+            if p:Alive() and CombinePlayer(p) and not Tester(p) and p:GetPos():DistToSqr(pos) < r2 then return false end
         end
     end
     return true
@@ -210,7 +223,10 @@ function LC.DesperationTick()
     local was = LC.Desperation or 0
     local want = LC.DesperationTarget()
     local d = was
-    if want > d then d = math.min(want, d + LC.DesperationStep) elseif want < d then d = math.max(want, d - LC.DesperationStep) end
+    local t = LC.DesperationTest
+    if t and CurTime() >= t.untilT then LC.DesperationTestSet(nil, nil) return end
+    if t then d = want -- (testing: straight to it)
+    elseif want > d then d = math.min(want, d + LC.DesperationStep) elseif want < d then d = math.max(want, d - LC.DesperationStep) end
     LC.Desperation = d
     if was <= 0 and d > 0 then
         Announce("The Resistance far outnumbers the Combine. Units are breaking out SMGs, grenades and energy balls, and hit a little harder. The more outnumbered they are, the dirtier they fight.")
@@ -285,3 +301,118 @@ function LC.DesperationLine()
     return string.format("The Combine are desperate (%d%%): about %d%% of metrocops' sidearms are SMGs, soldiers throw grenades, Elites carry %d energy balls, %d%% more damage.",
         math.floor(d * 100 + 0.5), math.floor(d * 100 + 0.5), math.floor(LC.DesperationEliteBalls * (1 + d) + 0.5), math.floor(LC.DesperationDamage * d * 100 + 0.5))
 end
+
+------------------------------------------------------------------------
+-- Testing it alone (the editor's "Desperate Combine: test it")
+------------------------------------------------------------------------
+
+LC.DesperationTestMinutes = 30
+LC.DesperationTestUnits = LC.DesperationTestUnits or {} -- [npc] = time to go
+
+local function CanTest(p)
+    if not IsValid(p) then return true end -- (the server console)
+    if LC.CanEdit then return LC.CanEdit(p) == true end
+    return p:IsSuperAdmin()
+end
+local function Tell(p, kind, text)
+    if IsValid(p) and LC.Notice then LC.Notice(p, kind, "Desperation test", text, 10) elseif LC.Log then LC.Log("info", "Desperation test: " .. text) end
+end
+
+local function ClearTestUnits()
+    for npc in pairs(LC.DesperationTestUnits) do if IsValid(npc) then npc:Remove() end end
+    LC.DesperationTestUnits = {}
+end
+
+-- Pin the desperation at level (0 to 1) for ply to try, or nil to go back to the real player counts.
+function LC.DesperationTestSet(ply, level)
+    if level == nil then
+        local was = LC.DesperationTest
+        LC.DesperationTest = nil
+        ClearTestUnits()
+        LC.Desperation = LC.DesperationTarget() -- (straight back to what the players make it)
+        LC.DesperationNextSupply = 0
+        LC.DesperationTick()
+        if was then Tell(was.ply, "info", "Back to normal: the desperation follows the real player counts again, and the test units are gone.") end
+        return true
+    end
+    level = math.Clamp(tonumber(level) or 0, 0, 1)
+    LC.DesperationTest = { level = level, ply = ply, untilT = CurTime() + LC.DesperationTestMinutes * 60 }
+    LC.DesperationNextSupply = 0
+    LC.DesperationTick()
+    if not cvOn:GetBool() then
+        Tell(ply, "warn", "lc_desperation is off (the tick box in Population), so nothing changes. Turn it on to test.")
+    else
+        Tell(ply, "info", string.format("The Combine are at %d%% desperation for %d minutes. Their grenades and energy balls go after you whatever your side. Send a squad at you from the editor to feel it.",
+            math.floor(level * 100 + 0.5), LC.DesperationTestMinutes))
+    end
+    return true
+end
+
+-- Send a few units at ply: "soldiers" (4), "elite" (an Elite and 3 soldiers) or "cops" (3 armed metrocops). The number sent.
+function LC.DesperationTestSquad(ply, kind)
+    if not IsValid(ply) then return 0, "no one to send them at" end
+    if not LC.Running then return 0, "the city isn't running (Start the city first)" end
+    local pos = ply:GetPos()
+    local spot = LC.QRFSpot and LC.QRFSpot(pos)
+    if not spot then
+        local fwd = ply:GetForward()
+        fwd.z = 0
+        local tr = util.TraceLine({ start = pos + Vector(0, 0, 40), endpos = pos + Vector(0, 0, 40) + fwd:GetNormalized() * 900, filter = ply })
+        spot = (tr and tr.HitPos or pos + fwd * 900) - fwd:GetNormalized() * 40 - Vector(0, 0, 36)
+    end
+    local list = kind == "cops" and { "cop", "cop", "cop" } or (kind == "elite" and { "elite", "soldier", "soldier", "soldier" } or { "soldier", "soldier", "soldier", "soldier" })
+    local made, goAt = 0, CurTime() + 300
+    for i, k in ipairs(list) do
+        local at = spot + Vector(math.cos(i) * 60, math.sin(i) * 60, 4)
+        local npc, st
+        if k == "cop" then
+            npc, st = (LC.Spawners and LC.Spawners.cop or LC.SpawnCop)(at)
+            if IsValid(npc) and st then
+                st.unmanaged = true
+                if LC.DrawPistol then LC.DrawPistol(npc, st) end -- (a pistol, or an SMG as desperate as they are)
+                st.armed = true
+                if LC.MakeOneHostile then LC.MakeOneHostile(npc, st, ply) end
+            end
+        else
+            npc = LC.QRFDeploy and LC.QRFDeploy(at, i, pos, ply, k)
+            st = IsValid(npc) and LC.NPCs[npc]
+        end
+        if IsValid(npc) and st then
+            st.desperationTest = true
+            LC.DesperationTestUnits[npc] = goAt
+            made = made + 1
+        end
+    end
+    if made == 0 then return 0, "nobody could be sent (the reserves may be empty)" end
+    return made, "on their way"
+end
+
+-- test units go after 5 minutes
+timer.Create("LivingCityDesperationTestUnits", 10, 0, function()
+    local now = CurTime()
+    for npc, t in pairs(LC.DesperationTestUnits) do
+        if not IsValid(npc) then LC.DesperationTestUnits[npc] = nil
+        elseif now >= t then npc:Remove() LC.DesperationTestUnits[npc] = nil end
+    end
+end)
+
+-- lc_desperation_test <percent | off>
+concommand.Add("lc_desperation_test", function(ply, _, args)
+    if not CanTest(ply) then return end
+    local a = tostring(args[1] or "off")
+    if a == "off" or a == "normal" then LC.DesperationTestSet(nil, nil) return end
+    local n = tonumber(a)
+    if not n then Tell(ply, "warn", "lc_desperation_test takes a percent (0 to 100) or off.") return end
+    LC.DesperationTestSet(ply, n > 1 and n / 100 or n)
+end)
+
+-- lc_desperation_squad <soldiers | elite | cops>
+concommand.Add("lc_desperation_squad", function(ply, _, args)
+    if not CanTest(ply) then return end
+    local n, why = LC.DesperationTestSquad(ply, tostring(args[1] or "soldiers"))
+    if n > 0 then
+        Tell(ply, "info", string.format("%d on their way to you (they come from out of sight and go after 5 minutes).", n))
+    else
+        Tell(ply, "warn", "Nobody sent: " .. tostring(why) .. ".")
+    end
+end)
