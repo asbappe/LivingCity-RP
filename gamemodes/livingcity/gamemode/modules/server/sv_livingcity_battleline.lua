@@ -23,7 +23,8 @@
       - Dreamers can't hurt each other.
     When the battle should be over, every rebel comes back as a massive swarm of giants
     (LC.BattleLineDoomWave: 20 twice the size up to one seven times), in metal or raw flesh,
-    glowing red, and charges: all hope looks lost. Then her gunships and an attack
+    glowing red, and charges: all hope looks lost. Three times the size and bigger, bullets bounce
+    off them; only the gunships and the bombs bring them down (health 10 x size squared). Then her gunships and an attack
     helicopter sweep in; the gunships cut them down and the helicopter carpet-bombs the field
     (LC.BattleLineBombs). The line held: won, and the board says who shot the most.
     The whole dream is at most five minutes (def.secs; about two and a half as timed).
@@ -74,6 +75,7 @@ LC.BattleLineHacks = 10          -- (manhacks in a traitor's swarm)
 LC.BattleLineHackHurt = 6
 -- (the last charge, a massive swarm, the owner: 20 twice the size, 12 three times, 6 four, 3 five, 2 six and 1 seven times)
 LC.BattleLineDoomWave = { { 2, 20 }, { 3, 12 }, { 4, 6 }, { 5, 3 }, { 6, 2 }, { 7, 1 } }
+LC.BattleLineImmuneFrom = 3     -- (this size and up: the dreamers' bullets do nothing)
 LC.BattleLineDoom = 0
 for _, w in ipairs(LC.BattleLineDoomWave) do LC.BattleLineDoom = LC.BattleLineDoom + w[2] end
 LC.BattleLineBombs = 36          -- (the helicopter's carpet of bombs)
@@ -160,7 +162,10 @@ local function NewRebel(g, kind, y, size)
     -- (the field's as long as the dream point's room allows: a charge takes 11 to 16 seconds across it, a giant 25, the last charge 30)
     local run = math.max(200, g.x1 - 40 - g.lineX)
     local secs = (kind == "doom" and (28 + scale)) or (kind == "giant" and 25) or math.Rand(11, 16)
-    local m = { e = e, alive = true, hp = (kind == "doom" and 15 * scale) or (kind == "giant" and 10) or 1, giant = kind == "giant" or nil, doom = kind == "doom" or nil,
+    -- (the owner: health to match their size, 10 x size squared: 40 at twice the size up to 490 at seven times;
+    -- three times and bigger, only her gunships and the helicopter's bombs can bring them down)
+    local m = { e = e, alive = true, hp = (kind == "doom" and 10 * scale * scale) or (kind == "giant" and 10) or 1,
+        immune = (kind == "doom" and scale >= LC.BattleLineImmuneFrom) or nil, giant = kind == "giant" or nil, doom = kind == "doom" or nil,
         speed = run / secs, y = y }
     g.rebels[#g.rebels + 1] = m
     return m
@@ -290,7 +295,10 @@ function LC.BattleLineShot(p, src, dir)
     for q, qs in pairs(g.pl) do if q ~= p and qs.turned and IsValid(q) then Try(q, 30, 36, "traitor", q) end end
     for _, sd in ipairs(g.soldiers) do Try(sd.e, 20, 40, "combine") end
     Try(g.apc, 110, 50, "combine")
-    if kind == "rebel" then
+    if kind == "rebel" and best.immune then
+        Snd(best.e, "weapons/fx/rics/ric" .. math.random(1, 5) .. ".wav", 80) -- (it bounces off)
+        return "immune"
+    elseif kind == "rebel" then
         best.hp = best.hp - 1
         if best.hp <= 0 then
             Fall(g, best, p)

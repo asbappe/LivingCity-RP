@@ -15565,6 +15565,17 @@ do
     for _, r in ipairs(g.rebels) do if r.alive and r.doom then giants = giants + 1 sizes[r.e:GetModelScale()] = (sizes[r.e:GetModelScale()] or 0) + 1 if r.e:GetMaterial() ~= "" then skinned = skinned + 1 end end end
     ok(g.phase == "doom" and giants == 44 and sizes[2] == 20 and sizes[3] == 12 and sizes[4] == 6 and sizes[5] == 3 and sizes[6] == 2 and sizes[7] == 1 and skinned == giants and Said(g, "battleline_doom"),
         "a massive swarm of giants in metal and flesh: 20 twice the size, 12 three times, 6 four, 3 five, 2 six, 1 seven", g.phase .. " " .. giants)
+    local big, small
+    for _, r in ipairs(g.rebels) do if r.alive and r.doom then if r.e:GetModelScale() >= 3 and not big then big = r elseif r.e:GetModelScale() == 2 and not small then small = r end end end
+    local bigHp, smallHp = big.hp, small.hp
+    for _, r in ipairs(g.rebels) do if r ~= big and r.alive and IsValid(r.e) then r.e:SetPos(r.e:GetPos() + Vector(0, 9000, 0)) end end
+    local hitBig = LC.BattleLineShot(b, big.e:GetPos() + Vector(-600, 0, 40 * big.e:GetModelScale()), Vector(1, 0, 0))
+    for _, r in ipairs(g.rebels) do if r ~= small and r.alive and IsValid(r.e) then r.e:SetPos(r.e:GetPos() + Vector(0, 9000, 0)) end end
+    small.e:SetPos(Vector(small.e:GetPos().x, small.y, g.top))
+    LC.BattleLineShot(b, small.e:GetPos() + Vector(-600, 0, 80), Vector(1, 0, 0))
+    for _, r in ipairs(g.rebels) do if r.alive and IsValid(r.e) then r.e:SetPos(Vector(r.e:GetPos().x, r.y, g.top)) end end
+    ok(hitBig == "immune" and big.hp == bigHp and small.hp == smallHp - 1 and bigHp == 10 * big.e:GetModelScale() ^ 2,
+        "three times the size and up, the dreamers' bullets bounce off; twice the size, they can be shot (health by size)", tostring(hitBig) .. " " .. big.hp .. " " .. small.hp)
     ok(Until(g, function() return g.phase == "rescue" end) and #g.air == 4 and Said(g, "battleline_air"), "her gunships and an attack helicopter sweep in")
     ok(Until(g, function() return g.bombAt ~= nil end), "the helicopter's bomb drop")
     ok(Until(g, function() return g.pl[b].how == "won" end) and Said(g, "battleline_held") and LC.BattleLineAlive(g) == 0 and g.pl[a].how == "out",
