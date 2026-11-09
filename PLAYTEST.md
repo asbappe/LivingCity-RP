@@ -1158,5 +1158,5 @@ Notes:
   Notes:
 - [ ] **Joining the Resistance:** a fresh citizen picks the Resistance in the faction menu: "The Resistance doesn't trust you yet." Hand a ration (F3, look at them up close, give) to a Resistance Fighter: "They'll remember that"; the same rebel again counts no more. At 5 sympathy you can join. A current member who reconnects stays in.
   Notes:
-- [ ] **Quartermaster for strangers:** as a citizen, press E on the quartermaster: his window opens with nothing to buy, but your guns and ammo listed with "Sell for N" and "Donate". Donate a box of ammo: "We won't forget this." (+1 sympathy). As a member: the same Donate buttons beside your arms.
+- [ ] **Quartermaster for strangers:** as a citizen, press E on the quartermaster: his window opens with nothing to buy, but your guns, ammo, gun parts, scrap, rags and chemicals listed with "Sell for N" and "Donate". Donate a box of ammo: "We won't forget this." (+1 sympathy). As a member: the same Donate buttons beside your arms.
   Notes:
