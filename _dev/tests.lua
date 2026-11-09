@@ -8840,7 +8840,15 @@ local okBread = LC.DealerSell(outsider, "ration", false)
 ok(okSell and not okBread and math.abs(LC.Trait(outsider, "sympathy") - sym0 - 0.1) < 1e-6, "selling him ammunition: credits and a little sympathy (0.1); he won't buy anything else from a stranger", LC.Trait(outsider, "sympathy") - sym0)
 local okGive = LC.QuartermasterDonate(outsider, ammoId)
 ok(okGive and math.abs(LC.Trait(outsider, "sympathy") - sym0 - 1.1) < 1e-6 and (LC.Inventory(outsider)[ammoId] or 0) == 1, "giving it to him: 1 sympathy", LC.Trait(outsider, "sympathy") - sym0)
-ok(not LC.QuartermasterDonate(outsider, "ration"), "he only takes arms as gifts")
+ok(not LC.QuartermasterDonate(outsider, "ration"), "he only takes arms and materials as gifts")
+-- and the materials the fight needs (the owner, 9 November: "scrap and rags and such"): half as much sympathy; gun parts as arms
+LC.GiveItem(outsider, "scrap", 2) LC.GiveItem(outsider, "gun_parts", 1)
+local sym1 = LC.Trait(outsider, "sympathy")
+local okScrap = LC.DealerSell(outsider, "scrap", false)
+local okGiveScrap = LC.QuartermasterDonate(outsider, "scrap")
+local okParts = LC.QuartermasterDonate(outsider, "gun_parts")
+ok(okScrap and okGiveScrap and okParts and math.abs(LC.Trait(outsider, "sympathy") - sym1 - (0.025 + 0.5 + 1)) < 1e-6,
+    "scrap sold: 0.025 (a quarter of arms); scrap given: 0.5; gun parts given: 1 (as arms)", LC.Trait(outsider, "sympathy") - sym1)
 outsider:SetPos(FAR)
 local fr, frst
 for n, st in pairs(LC.NPCs) do if IsValid(n) and st.role == "rebel" and not st.quartermaster and not st.foe and not st.raid then fr, frst = n, st break end end
@@ -16419,7 +16427,7 @@ ok(LC.WatcherSeen({ a }, w.pos), "The Watchers: looked at, one is seen")
 local p0 = w.pos * 1
 _run(4)
 local seenStill = w.pos:Distance(p0) < 1
-a.aim = Vector(0, 0, 1) * -1
+a.aim, b.aim = Vector(0, 0, -1), Vector(0, 0, -1) -- (nobody looking)
 local p1 = w.pos * 1
 _run(0.5)
 ok(seenStill and w.pos:Distance(p1) > 1, "it stays still while watched, and moves when not")

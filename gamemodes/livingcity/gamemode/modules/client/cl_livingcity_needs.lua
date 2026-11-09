@@ -895,7 +895,7 @@ net.Receive("lcu_market", function()
         l:Dock(TOP) l:DockMargin(4, 4, 4, 8)
         l:SetWrap(true) l:SetAutoStretchVertical(true)
         l:SetTextColor(DIM)
-        l:SetText(#(t.sell or {}) > 0 and "He sells nothing to strangers. But he'll buy arms, or take them as a gift." or "He sells nothing to strangers. Bring him guns or ammunition and he'll buy them, or take them as a gift.")
+        l:SetText(#(t.sell or {}) > 0 and "He sells nothing to strangers. But he'll buy arms and what the fight needs, or take them as a gift." or "He sells nothing to strangers. Bring him guns, ammunition, gun parts, scrap, rags or chemicals and he'll buy them, or take them as a gift.")
     end
     for _, g in ipairs(t.goods or {}) do
         -- the price always shows; what's wrong sits beside the name (the owner, 7 November: "idk what the price is")

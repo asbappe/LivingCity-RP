@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 1b83b2f. Admin-only console messages and log lines are left out.
+Made from version 99dedac. Admin-only console messages and log lines are left out.
 
 9237 lines, from 246 files.
 
@@ -927,7 +927,7 @@ Made from version 1b83b2f. Admin-only console messages and log lines are left ou
 - "The Nexus and every Combine-only area are guarded: mostly Overwatch soldiers, plus a metrocop or two."  (text, line 281)
 - "Combine units are tougher than in Half-Life 2 (metrocops 70 health, soldiers 90, Elites 150). When the Resistance far outnumbers the Combine's players, they get desperate, and more so the bigger the gap: metrocops carry SMGs, soldiers throw frags, gas and flashbangs, Elites fire more energy balls, and they hit a little harder. Everyone is told when it starts and stops."  (text, line 282)
 - "Resistance fighters have no armour (50 health) but there are more of them: at least 5 for every 4 Combine units out on the streets. They carry SMGs, shotguns and now and then a crossbow."  (text, line 283)
-- "The Resistance doesn't take just anyone: prove yourself first. Help them on jobs and quests, feed their supply crate, sell or give the quartermaster guns and ammunition (E on him: strangers can too), hand a ration or arms to one of their fighters, side with the vortigaunts in a dream."  (text, line 284)
+- "The Resistance doesn't take just anyone: prove yourself first. Help them on jobs and quests, feed their supply crate, sell or give the quartermaster guns, ammunition, gun parts, scrap, rags or chemicals (E on him: strangers can too), hand a ration or arms to one of their fighters, side with the vortigaunts in a dream."  (text, line 284)
 - "Squads: how many NPCs you can lead depends on how many players are on your side (alone or two: 5 each; 3-4: 3; 5-6: 2; more: 1), so team up with each other. A Resistance Commander or an Overwatch Elite always leads at least 4. F2's Call for backup shows your squad (2 of 3)."  (text, line 285)
 - "Call for backup from F2 or by left clicking with the radio transmitter up. The Resistance needs a Freq 7 radio; with nobody near, fighters come out of rebel territory to you. Civil Protection and Overwatch: press E on one of the city's units to have them follow you, again to send them back (Elites follow only the Overwatch Commander)."  (text, line 286)
 - "Citizens: C > Getting by > Request Civil Protection (needs a request device) calls a Civil Protection unit to you. Use C > Me > Put my hands up when a unit tells you to."  (text, line 287)
@@ -2765,8 +2765,8 @@ Made from version 1b83b2f. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game answering something done in a window (lcu_market)
 
-- "He sells nothing to strangers. But he'll buy arms, or take them as a gift."  (label or button, line 898)
-- "He sells nothing to strangers. Bring him guns or ammunition and he'll buy them, or take them as a gift."  (label or button, line 898)
+- "He sells nothing to strangers. But he'll buy arms and what the fight needs, or take them as a gift."  (label or button, line 898)
+- "He sells nothing to strangers. Bring him guns, ammunition, gun parts, scrap, rags or chemicals and he'll buy them, or take them as a gift."  (label or button, line 898)
 - "Sell for {price}"  (text, line 918)
 
 > Note for you (not shown in game): (giving it for the cause: no credits, and, for someone not of the Resistance, their sympathy)
@@ -16929,117 +16929,117 @@ Made from version 1b83b2f. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: open market
 
-- "[Black market] {why}"  (chat message, line 1387)
+- "[Black market] {why}"  (chat message, line 1395)
 
 > Note for you (not shown in game): his usual stock, and whatever the Commissary is short of (sv_livingcity_market.lua)
 
-- "Not enough credits"  (text, line 1400)
-- "Too much to carry"  (text, line 1401)
+- "Not enough credits"  (text, line 1408)
+- "Too much to carry"  (text, line 1409)
 
 > Note for you (not shown in game): part of: open market
 
-- "Sold out: more in about %d minutes"  (message, line 1405)
+- "Sold out: more in about %d minutes"  (message, line 1413)
 
 > Note for you (not shown in game): (the quartermaster pays more for what's in demand: sv_livingcity_market.lua)
 
-- "In demand: he pays more"  (text, line 1418)
+- "In demand: he pays more"  (text, line 1426)
 
 > Note for you (not shown in game): Giving one of something to the quartermaster: sympathy for someone not of the Resistance (1 a gift).
 
-- "Give it to the quartermaster himself."  (text, line 1459)
-- "He only wants arms: guns and ammunition."  (text, line 1460)
+- "Give it to the quartermaster himself."  (text, line 1467)
+- "He only wants arms and what the fight needs: guns, ammunition, gun parts, scrap, rags, chemicals."  (text, line 1468)
 
 > Note for you (not shown in game): part of: quartermaster donate
 
-- "That was issued to you. He won't touch it."  (text, line 1465)
-- "[Quartermaster] 'Every bit helps.' (You give: {name}.)"  (text, line 1474)
-- "[Quartermaster] He weighs it in his hand and nods. 'We won't forget this.' (You give: {name}.)"  (text, line 1475)
+- "That was issued to you. He won't touch it."  (text, line 1473)
+- "[Quartermaster] 'Every bit helps.' (You give: {name}.)"  (text, line 1482)
+- "[Quartermaster] He weighs it in his hand and nods. 'We won't forget this.' (You give: {name}.)"  (text, line 1483)
 
 > Note for you (not shown in game): the game answering something done in a window (lcu_donate)
 
-- "[Quartermaster] {why}"  (chat message, line 1483)
+- "[Quartermaster] {why}"  (chat message, line 1491)
 
 > Note for you (not shown in game): At the quartermaster: a chip decoded, from his menu.
 
-- "[Quartermaster] {why}"  (chat message, line 1492)
-- "[Quartermaster] He plugs it into a battered laptop and reads. 'This is good. Get the word out.'"  (chat message, line 1493)
+- "[Quartermaster] {why}"  (chat message, line 1500)
+- "[Quartermaster] He plugs it into a battered laptop and reads. 'This is good. Get the word out.'"  (chat message, line 1501)
 
 > Note for you (not shown in game): part of: black buy
 
-- "He's out of those. More in about %d minutes."  (message, line 1546)
-- "Not enough credits."  (text, line 1548)
-- "[Black market] %s, for %d credits. You didn't get it here."  (message, line 1558)
+- "He's out of those. More in about %d minutes."  (message, line 1554)
+- "Not enough credits."  (text, line 1556)
+- "[Black market] %s, for %d credits. You didn't get it here."  (message, line 1566)
 
 > Note for you (not shown in game): Sell one of something (or all of it): pocket items, or a weapon as "w:<class>".
 
-- "The quartermaster only buys arms from strangers: guns and ammunition."  (text, line 1566)
+- "From strangers the quartermaster only buys arms and what the fight needs: guns, ammunition, gun parts, scrap, rags, chemicals."  (text, line 1574)
 
 > Note for you (not shown in game): part of: dealer sell
 
-- "That was issued to you. The dealer doesn't want it."  (text, line 1574)
-- "[Black market] Sold: %s, for %d credits."  (message, line 1577)
-- "The quartermaster doesn't buy those. Take it to the lab: the scientist decodes them."  (text, line 1585)
-- "[Black market] Sold: %s%s, for %d credits."  (message, line 1593)
+- "That was issued to you. The dealer doesn't want it."  (text, line 1582)
+- "[Black market] Sold: %s, for %d credits."  (message, line 1585)
+- "The quartermaster doesn't buy those. Take it to the lab: the scientist decodes them."  (text, line 1593)
+- "[Black market] Sold: %s%s, for %d credits."  (message, line 1601)
 
-> Note for you (not shown in game): (arms sold to the quartermaster: a little sympathy, 0.1 an item; giving them is 1: the owner, 9 November)
+> Note for you (not shown in game): (arms and materials sold to the quartermaster: a tenth of a gift's sympathy an item, 0.1 for arms and gun parts, 0.05 for scrap, rags and chemicals: the owner, 9 November)
 
-- "[Black market] {why}"  (chat message, line 1601)
+- "[Black market] {why}"  (chat message, line 1609)
 
 > Note for you (not shown in game): the game answering something done in a window (lcu_sell)
 
-- "[Black market] {why}"  (chat message, line 1608)
+- "[Black market] {why}"  (chat message, line 1616)
 
 > Note for you (not shown in game): part of: bust dealer
 
-- "[Civil Protection] The dealer bolts. You confiscate what's left of the stock."  (chat message, line 1618)
-- "a black market dealer's stock"  (text, line 1619)
-- "black market busted"  (text, line 1620)
-- "Busted a dealer"  (text, line 1621)
-- "The dealer {GetPos} got raided. Stay away for a while."  (text, line 1624)
+- "[Civil Protection] The dealer bolts. You confiscate what's left of the stock."  (chat message, line 1626)
+- "a black market dealer's stock"  (text, line 1627)
+- "black market busted"  (text, line 1628)
+- "Busted a dealer"  (text, line 1629)
+- "The dealer {GetPos} got raided. Stay away for a while."  (text, line 1632)
 
 > Note for you (not shown in game): Inventory actions and what the inventory window needs to know !pick (or bind a key to lc_pick): use the right tool you're carrying on the door you're looking at.
 
-- "Look at a locked door, up close."  (text, line 1650)
+- "Look at a locked door, up close."  (text, line 1658)
 
 > Note for you (not shown in game): part of: quick pick
 
-- "That's a Combine lock. You need a keycard, a door code or a bypass charge."  (text, line 1657)
-- "You don't have a lockpick. Make one from four pieces of scrap (F3), or find the dealer."  (text, line 1657)
+- "That's a Combine lock. You need a keycard, a door code or a bypass charge."  (text, line 1665)
+- "You don't have a lockpick. Make one from four pieces of scrap (F3), or find the dealer."  (text, line 1665)
 
 > Note for you (not shown in game): bend four bits of scrap into something that opens a lock
 
-- "You need four pieces of scrap."  (text, line 1690)
-- "You bend and file the scrap into a lockpick set."  (text, line 1695)
+- "You need four pieces of scrap."  (text, line 1698)
+- "You bend and file the scrap into a lockpick set."  (text, line 1703)
 
 > Note for you (not shown in game): part of: underground action
 
-- "Requests are off on this server."  (text, line 1699)
-- "[Request] {why}"  (text, line 1700)
-- "[Stash] {why}"  (chat message, line 1705)
-- "Keep it on you. It's shown when a Civil Protection unit stops you during curfew."  (text, line 1718)
-- "It only listens. With a radio transmitter too, you can talk on Freq 7: switch to the Radio transmitter (next to Hands), or !r <message>."  (text, line 1720)
-- "It only listens: nobody talks on the Union band, it's the city's. Press Listen to hear it."  (text, line 1721)
-- "Use any ration dispenser."  (text, line 1723)
+- "Requests are off on this server."  (text, line 1707)
+- "[Request] {why}"  (text, line 1708)
+- "[Stash] {why}"  (chat message, line 1713)
+- "Keep it on you. It's shown when a Civil Protection unit stops you during curfew."  (text, line 1726)
+- "It only listens. With a radio transmitter too, you can talk on Freq 7: switch to the Radio transmitter (next to Hands), or !r <message>."  (text, line 1728)
+- "It only listens: nobody talks on the Union band, it's the city's. Press Listen to hear it."  (text, line 1729)
+- "Use any ration dispenser."  (text, line 1731)
 
 > Note for you (not shown in game): Upkeep
 
-- "[Papers] Your borrowed name has worn thin. You're yourself again."  (chat message, line 1757)
+- "[Papers] Your borrowed name has worn thin. You're yourself again."  (chat message, line 1765)
 
 > Note for you (not shown in game): the console command lc_search
 
-- "%s searched: %d item(s) confiscated%s"  (message, line 1783)
+- "%s searched: %d item(s) confiscated%s"  (message, line 1791)
 
 > Note for you (not shown in game): The Resistance's own plain clothes
 
-- "You don't have anything else to wear. (Find some clothes.)"  (chat message, line 1809)
+- "You don't have anything else to wear. (Find some clothes.)"  (chat message, line 1817)
 
 > Note for you (not shown in game): typing in chat
 
-- "You're already in your own clothes."  (chat message, line 1815)
+- "You're already in your own clothes."  (chat message, line 1823)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "[Resistance] You're in plain clothes. F2 > Gear up when it's time to fight."  (chat message, line 1826)
+- "[Resistance] You're in plain clothes. F2 > Gear up when it's time to fight."  (chat message, line 1834)
 
 ## powered vests ("suit power") (sv_livingcity_vest.lua)
 
