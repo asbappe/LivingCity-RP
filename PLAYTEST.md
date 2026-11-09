@@ -1146,3 +1146,5 @@ Notes:
   Notes:
 - [ ] **Desperation test (editor, "Desperate Combine: test it"):** Start the city, press 100%, then "Send 4 soldiers at me": they come from out of sight and throw frags, gas and flashbangs at you. Try "an Elite and 3 soldiers" (energy balls) and "3 armed metrocops" (SMGs at 100%, pistols at 0%). Compare 20% and 100%. "Back to normal" removes them.
   Notes:
+- [ ] **Resistance fighters:** they take a few more hits (50 health), the same at home as in your squad. About 1 in 10 carries a crossbow: check they actually shoot it (if they just stand there holding it, tell me). With more Combine NPCs out, more fighters turn up in rebel zones (about 5 for every 4 units).
+  Notes:

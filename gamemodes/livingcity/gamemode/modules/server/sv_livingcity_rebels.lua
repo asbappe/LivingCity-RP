@@ -65,7 +65,10 @@ local cvSkirmInt = CreateConVar("lc_skirmish_interval", "50", FLAGS, "Average mi
 -- the old default (9) was far too busy: a server still on it moves to the new one
 timer.Simple(5, function() if cvSkirmInt:GetFloat() == 9 then RunConsoleCommand("lc_skirmish_interval", "50") end end)
 local cvDamage   = CreateConVar("lc_rebel_damage", "0.5", FLAGS, "Damage multiplier for Resistance NPCs shooting players")
-local cvHomeHurt = CreateConVar("lc_rebel_home_hurt", "2", FLAGS, "Damage multiplier for rebels who aren't following a player (2: half as tough; a player's squad isn't affected)")
+local cvHomeHurt = CreateConVar("lc_rebel_home_hurt", "1", FLAGS, "Damage multiplier for rebels who aren't following a player (1: as tough as a player's squad; 2: half as tough)")
+-- (the owner, 9 November: weaker than the Combine, no armour and no training, but not too weak; and slightly more of them)
+local cvHealth   = CreateConVar("lc_rebel_health", "50", FLAGS, "Health of Resistance fighter NPCs (Half-Life 2's own: 40)")
+local cvPerUnit  = CreateConVar("lc_rebel_per_combine", "1.25", FLAGS, "At least this many Resistance fighters for every Combine NPC on the streets (0: just lc_rebels and the rest)")
 local cvWarn     = CreateConVar("lc_rebel_warning", "2", FLAGS, "Seconds the Resistance shouts before opening fire on a Civil Protection unit in their territory")
 local cvPostWarn = CreateConVar("lc_lookout_post_warn", "1400", FLAGS, "How far a rebel lookout post sees the Combine coming (and warns Freq 7)")
 local cvPostFire = CreateConVar("lc_lookout_post_fire", "650", FLAGS, "How close the Combine can come to a rebel lookout post before he opens fire")
@@ -96,8 +99,8 @@ local SECURITY_CLASSES = { "npc_metropolice", "npc_combine_s", "npc_cscanner" }
 local function Pick(t) return t[math.random(#t)] end
 local function Vo(st, name) return "vo/npc/" .. (st.gender or "male") .. "01/" .. name .. ".wav" end
 
--- (the owner: rebels never carry pulse rifles; SMGs, and now and then a shotgun)
-local WEAPONS = { { "weapon_smg1", 80 }, { "weapon_shotgun", 20 } }
+-- (the owner: rebels never carry pulse rifles; SMGs, now and then a shotgun, and (9 November) a few crossbow marksmen)
+local WEAPONS = { { "weapon_smg1", 70 }, { "weapon_shotgun", 20 }, { "weapon_crossbow", 10 } }
 local function PickWeapon()
     local total = 0
     for _, w in ipairs(WEAPONS) do total = total + w[2] end
@@ -212,12 +215,26 @@ function LC.RebelRoomIn(z)
     return math.max(1, math.floor(area * OpenFraction(z) / math.max(50, cvRoom:GetFloat()) ^ 2))
 end
 
+-- The Combine's NPCs out on the streets (not those posted inside their own buildings, nor test units).
+function LC.CombineStreetCount()
+    local n = 0
+    for npc, st in pairs(LC.NPCs or {}) do
+        if (st.role == "cop" or st.role == "soldier") and not st.garrison and not st.test and not st.desperationTest
+            and IsValid(npc) and npc:Health() > 0 then n = n + 1 end
+    end
+    return n
+end
+
 function LC.RebelTarget()
     if #RebelZones() == 0 then return 0 end
     -- more ground, more fighters (sv_livingcity_territory.lua), but never more than the zones have room for
     local want = math.max(0, cvRebels:GetInt()) + (LC.GrownCount and LC.GrownCount("rebel") or 0)
         + (LC.MarketRebelBonus and LC.MarketRebelBonus() or 0) -- (each Commissary restriction, another joins them: sv_livingcity_market.lua)
         + (LC.ImbalanceRebels or 0) -- (the Combine's players far outnumbering the Resistance's: sv_livingcity_imbalance.lua)
+    -- (the owner, 9 November: "slightly more resistance NPCs than combine"): never fewer than lc_rebel_per_combine for each
+    -- Combine NPC on the streets (still within the zones' room, the Resistance's reserve and the NPC cap)
+    local per = math.max(0, cvPerUnit:GetFloat())
+    if per > 0 then want = math.max(want, math.ceil(per * LC.CombineStreetCount() - 1e-6)) end
     local room = 0
     for _, z in ipairs(RebelZones()) do room = room + LC.RebelRoomIn(z) end
     return math.min(want, room)
@@ -280,6 +297,9 @@ local function SpawnRebel(pos, zone, weapon)
     npc:SetKeyValue("spawnflags", tostring(SF_CITIZEN_NOT_COMMANDABLE + SF_NPC_GAG + SF_NPC_FADE_CORPSE + SF_NPC_NO_WEAPON_DROP))
     npc:Spawn()
     npc:Activate()
+    local hp = math.max(1, math.floor(cvHealth:GetFloat()))
+    if npc.SetMaxHealth then npc:SetMaxHealth(hp) end
+    npc:SetHealth(hp)
     if LC.FilterSpeech then LC.FilterSpeech(npc) end
     -- peace with the Combine by default: fights are picked deliberately, below
     for _, cls in ipairs(SECURITY_CLASSES) do npc:AddRelationship(cls .. " D_NU 99") end

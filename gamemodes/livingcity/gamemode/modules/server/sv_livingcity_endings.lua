@@ -4077,6 +4077,7 @@ local RETUNED = {
     { "lc_job_cooldown", { "120" }, "900" },
     { "lc_manpower_cp_max", { "30" }, "20" }, -- (7 November: Civil Protection mustn't outnumber the Resistance, the owner)
     { "lc_npc_budget", { "60" }, "100" }, -- (7 November, the owner: "please set to 100 by default")
+    { "lc_rebel_home_hurt", { "2" }, "1" }, -- (9 November, the owner: fighters at home as tough as a player's squad)
     { "lc_directives", { "1" }, "0" }, -- (7 November, the owner: the G-Man's sealed directives, his sleep visits and talks with the Administrator set aside for a future endings setup) -- (7 November: one Union job change every 15 minutes, the owner asked; sv_livingcity_work.lua)
     -- (7 November, the owner: "slow down the pacing so events are more sparse": the city's own happenings about twice as far apart,
     -- and the PA quiet a minute and a half before a routine announcement: docs/dev/pacing-audit.md)

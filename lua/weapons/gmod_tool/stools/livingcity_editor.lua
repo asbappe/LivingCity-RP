@@ -689,6 +689,8 @@ function TOOL.BuildCPanel(panel)
     Slider("Overwatch soldier health (HL2's own: 50)", "lc_soldier_health", 10, 300, 0)
     Slider("Overwatch Elite health", "lc_elite_health", 10, 400, 0)
     Check("Outnumbered Combine fight dirtier (SMGs, grenades, energy balls, a little more damage)", "lc_desperation")
+    Slider("Resistance fighter health (HL2's own: 40)", "lc_rebel_health", 10, 300, 0)
+    Slider("Resistance fighters for each Combine NPC on the streets (at least)", "lc_rebel_per_combine", 0, 3, 2)
     panel:Help("Every setting in this panel is saved with this map's layout as you change it, and comes back after a restart.")
 
     Header("Desperate Combine: test it")

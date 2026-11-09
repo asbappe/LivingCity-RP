@@ -19,6 +19,7 @@ _setcvar("lc_quest_allies", 0) -- (friendly NPCs on violent jobs: tested on thei
 _setcvar("lc_directives", 1) -- (the G-Man's directives are off by default now, set aside by the owner; still tested as they are)
 _setcvar("lc_market_demand", 0) -- (demand moving black market prices: tested on its own, in MarketTests)
 LC.ImbalanceFloor = 100000 -- (help for the outnumbered side: tested on its own, in SideBalanceTests)
+_setcvar("lc_rebel_per_combine", 0) -- (fighters for each Combine NPC out: tested on its own, in RebelTests)
 _setcvar("lc_afk_kick_minutes", 0) -- (the test's people never touch a key: no kicking them for it)
 _setcvar("lc_manpower", 0) -- (each side's reserve of fighters and units: tested on its own, in ManpowerTests)
 _setcvar("lc_directives", 0) -- (no sealed directive breaking open in the middle of other tests; its own section turns it on)
@@ -3481,6 +3482,13 @@ _setcvar("lc_npc_budget", 500)
 _setcvar("lc_rebels", 3)
 for _, z in ipairs(LC.ZonesOfKind("rebel")) do LC.RemoveZone(z) end -- just the one territory, for these tests
 local rz = LC.AddZone(Vector(1500, 3500, 0), 500, "rebel", 0)
+do -- (the owner, 9 November: at least 1.25 fighters for each Combine NPC on the streets, as room allows)
+    _setcvar("lc_rebel_per_combine", 1.25)
+    local units = LC.CombineStreetCount()
+    ok(LC.RebelTarget() == math.min(LC.RebelRoomIn(rz), math.max(3, math.ceil(1.25 * units - 1e-6))),
+        "at least 1.25 Resistance fighters for each Combine NPC on the streets (as the zone's room allows)", LC.RebelTarget() .. " for " .. units)
+end
+_setcvar("lc_rebel_per_combine", 0) -- (the rest of these tests count lc_rebels alone)
 ok(LC.RebelTarget() == 3, "rebels are wanted where there's rebel territory")
 _run(10)
 ok(count("rebel") >= 3, "and they turn up", count("rebel"))
@@ -16670,6 +16678,39 @@ do
     ok(math.abs(pinned - 0.6) < 1e-6 and atTester == 1 and sent == 4 and cops == 3 and units == 7 and left == 0 and LC.Desperation == 0 and not LC.DesperationTest,
         "the editor's test: 60% at once, grenades at the tester (a citizen), an Elite and 3 soldiers and 3 metrocops sent; back to normal clears it all",
         pinned .. " " .. atTester .. " " .. tostring(sent) .. " " .. tostring(cops) .. " " .. units .. " " .. left)
+
+    -- the Resistance (the owner, 9 November): 50 health, no extra hurt at home, a few crossbows, 1.25 for each Combine NPC out
+    player.GetAll = function() return {} end
+    local canWas = LC.ManpowerCan
+    LC.ManpowerCan = function() return true end
+    local guns, made, hp50 = {}, {}, true
+    for i = 1, 300 do
+        local r, rst = LC.SpawnRebel(Vector(233000 + i, -233000, 0), nil)
+        if IsValid(r) then
+            made[#made + 1] = r
+            guns[r.kv.additionalequipment] = (guns[r.kv.additionalequipment] or 0) + 1
+            if r:Health() ~= 50 or r:GetMaxHealth() ~= 50 then hp50 = false end
+        end
+    end
+    LC.ManpowerCan = canWas
+    local smg, sg, xb = guns.weapon_smg1 or 0, guns.weapon_shotgun or 0, guns.weapon_crossbow or 0
+    ok(hp50 and #made == 300 and smg > 170 and smg < 250 and sg > 30 and sg < 95 and xb > 10 and xb < 55 and (guns.weapon_ar2 or 0) == 0,
+        "Resistance fighters: 50 health; about 70% SMGs, 20% shotguns, 10% crossbows, never a pulse rifle", smg .. " " .. sg .. " " .. xb)
+    local home = made[1]
+    local hst = LC.NPCs[home]
+    local hd = Dmg(10, sold)
+    function hd:SetDamage(v) self.n = v end
+    hst.follow, hst.quartermaster = nil, nil
+    hook.t.EntityTakeDamage.LivingCityRebels(home, hd)
+    ok(GetConVar("lc_rebel_home_hurt"):GetFloat() == 1 and hd.n == 10, "a fighter at home takes no more than a player's squad does", tostring(hd.n))
+    for _, r in ipairs(made) do if IsValid(r) then r:Remove() end end
+    local before = LC.CombineStreetCount()
+    local g, gst = LC.SpawnSoldier(Vector(234000, -234000, 0))
+    gst.garrison = true
+    local after = LC.CombineStreetCount()
+    gst.garrison = nil
+    ok(after == before and LC.CombineStreetCount() == before + 1, "the Combine's NPCs on the streets count; those posted inside don't")
+    g:Remove()
 
     for _, e in ipairs({ cop, sold, eli }) do if IsValid(e) then e:Remove() end end
     LC.ImbalanceFloor, LC.Desperation, LC.Running = floorWas, despWas, runWas
