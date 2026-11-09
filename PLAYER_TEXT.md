@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 2ca73a1. Admin-only console messages and log lines are left out.
+Made from version 69c5b74. Admin-only console messages and log lines are left out.
 
-9086 lines, from 241 files.
+9096 lines, from 241 files.
 
 ## Contents
 
@@ -163,7 +163,7 @@ Made from version 2ca73a1. Admin-only console messages and log lines are left ou
 - [tips that pop up the first time something happens](#tips-that-pop-up-the-first-time-something-happens-svlivingcityhintslua) (327)
 - [housing blocks](#housing-blocks-svlivingcityhousinglua) (5)
 - [toilets, baths and what happens without them](#toilets-baths-and-what-happens-without-them-svlivingcityhygienelua) (53)
-- [help for the outnumbered side](#help-for-the-outnumbered-side-svlivingcityimbalancelua) (14)
+- [help for the outnumbered side](#help-for-the-outnumbered-side-svlivingcityimbalancelua) (24)
 - [the Resistance Insider (a Civil Protection unit secretly with the Resistance)](#the-resistance-insider-a-civil-protection-unit-secretly-with-the-resistance-svlivingcityinsiderlua) (65)
 - [Civil Intake (becoming somebody)](#civil-intake-becoming-somebody-svlivingcityintakelua) (84)
 - [work you actually do](#work-you-actually-do-svlivingcityjobgameslua) (99)
@@ -8233,34 +8233,62 @@ Made from version 2ca73a1. Admin-only console messages and log lines are left ou
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_imbalance.lua`
 
 
-> Note for you (not shown in game): Send a squad to pos (after target, a player, if there is one). The number sent, and why not (0 and a reason).
+> Note for you (not shown in game): Send a squad to pos (after target, a player, if there is one); extra: more for an attack on a checkpoint or the Nexus. The number sent (or on the way), and why not (0 and a reason).
 
-- "the sides aren't uneven"  (text, line 102)
-- "the city isn't running"  (text, line 103)
-- "a squad went out a moment ago"  (text, line 105)
-- "a squad is already on its way here"  (text, line 108)
+- "the sides aren't uneven"  (text, line 166)
+- "the city isn't running"  (text, line 167)
+- "a squad went out a moment ago"  (text, line 169)
+- "a squad is already on its way here"  (text, line 172)
 
 > Note for you (not shown in game): part of: qrfdispatch
 
-- "the whole reaction force is out"  (text, line 111)
-- "nowhere out of sight to come from"  (text, line 114)
-- "Dispatch: reaction squad of %d inbound to %s. Hold on."  (message, line 133)
-- "the disturbance"  (message, line 133)
-- "Reaction squad of %d dispatched (%s), %d of the reaction force out"  (message, line 134)
+- "the whole reaction force is out"  (text, line 175)
+- "Dispatch: %s inbound by dropship to %s. Hold on."  (message, line 198)
+- "an Elite and {want} soldiers"  (text, line 198)
+- "the disturbance"  (message, line 198)
+- "Reaction squad of %d by dropship (%s)"  (message, line 199)
+- "by dropship"  (text, line 200)
+
+> Note for you (not shown in game): else on foot, from out of sight about fifteen seconds away
+
+- "nowhere out of sight to come from"  (text, line 206)
+- "Dispatch: reaction squad of %d inbound to %s. Hold on."  (message, line 212)
+- "the disturbance"  (message, line 212)
+
+> Note for you (not shown in game): part of: qrfdispatch
+
+- "Reaction squad of %d dispatched (%s), %d of the reaction force out"  (message, line 213)
+- "on foot"  (text, line 215)
 
 > Note for you (not shown in game): When they're called: a Resistance player turning violent, or a rebel raid arriving.
 
-- "an armed rebel"  (text, line 142)
-- "a unit down"  (text, line 146)
+- "an armed rebel"  (text, line 221)
+
+> Note for you (not shown in game): A checkpoint or the Nexus (a Combine-only zone) at pos, by name, or nil.
+
+- "the Nexus"  (text, line 225)
+
+> Note for you (not shown in game): an NPC dying
+
+- "the attack on {place}"  (text, line 236)
+- "a unit down"  (text, line 238)
+
+> Note for you (not shown in game): the game's living city power bank shorted moment
+
+- "sabotage at a checkpoint"  (text, line 242)
+
+> Note for you (not shown in game): the game's living city forcefield broken moment
+
+- "a broken forcefield at {or}"  (text, line 245)
 
 > Note for you (not shown in game): the game's living city raid arrived moment
 
-- "the rebel raid"  (text, line 156)
+- "the rebel raid"  (text, line 254)
 
 > Note for you (not shown in game): A line for the readouts.
 
-- "Outnumbered by the Resistance: %d more units on the streets, and a reaction force of %d (%d out now)."  (message, line 176)
-- "Outnumbered by the Combine: %d more Resistance fighters in rebel territory."  (message, line 178)
+- "Outnumbered by the Resistance: %d more units on the streets, and a reaction force of %d (%d out now)."  (message, line 274)
+- "Outnumbered by the Combine: %d more Resistance fighters in rebel territory."  (message, line 276)
 
 ## the Resistance Insider (a Civil Protection unit secretly with the Resistance) (sv_livingcity_insider.lua)
 

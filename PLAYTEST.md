@@ -1134,3 +1134,5 @@ Notes:
   Notes:
 - [ ] **NPC cap:** on your 32-slot server nothing changes (100). The editor slider now says it is for a 32-slot server.
   Notes:
+- [ ] **Reaction squads, later:** with the sides uneven, attack a checkpoint (kill a unit near it, or short its power bank) or the Nexus as a rebel: does a dropship come in nearby and drop an Elite and 5 soldiers who run at you? On an ordinary kill in the street at green, 4 soldiers? Indoors with no sky, do they still come (on foot)?
+  Notes:

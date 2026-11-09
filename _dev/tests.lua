@@ -16469,14 +16469,24 @@ do
         "half walk the streets (the NPC cap rises for them), half wait as a reaction force")
     -- the reaction force: out of sight, about fifteen seconds' run away, and only then running in
     player.GetAll = realGetAll -- (squads are made among the real players)
-    LC.ImbalanceSide, LC.ImbalanceQRFSize = "combine", 10
+    -- the squads (the owner: "more than 2 soldiers ... if sociostability is red and there is lots of rebel fighting ... 5 soldiers and an elite leading them")
+    local sq1, sq2 = LC.QRFSquad(false, 20), LC.QRFSquad(true, 20)
+    local socioWas, heavyWas = LC.Socio, LC.QRFHeavyNow
+    LC.Socio = "red"
+    local redHeavy = LC.QRFHeavyNow()
+    LC.Socio = socioWas
+    ok(#sq1 == 4 and sq1[1] == "soldier" and #sq2 == 6 and sq2[1] == "elite" and sq2[6] == "soldier" and redHeavy,
+        "a reaction squad is 4 soldiers; at red or after heavy losses, 5 and an Elite leading them")
+    LC.QRFHeavyNow = function() return false end
+    local function Ready() LC.ImbalanceSide, LC.ImbalanceQRFSize = "combine", 10 end -- (the every-5-seconds count would undo it)
+    Ready()
     local runWas, spotWas = LC.Running, LC.QRFSpot
     LC.Running = true
     local trouble = Vector(150000, 150000, 0)
     local from
     LC.QRFSpot = function(pos) from = pos + Vector(LC.QRFRun, 0, 0) return from end
     local made = LC.QRFDispatch(trouble, nil, "a test")
-    local far = true
+    local far = made == 4
     for npc in pairs(LC.QRF) do if IsValid(npc) and npc:GetPos():Distance(trouble) < 2000 then far = false end end
     ok(made > 0 and LC.QRFOut() == made and far, "trouble: a reaction squad comes from out of sight, about fifteen seconds' run away", made)
     local again = LC.QRFDispatch(trouble + Vector(200, 0, 0), nil, "a test")
@@ -16484,6 +16494,43 @@ do
     for npc, q in pairs(LC.QRF) do q.untilT = CurTime() - 100 end
     _run(4)
     ok(LC.QRFOut() == 0, "their time up, they slip away")
+    -- by dropship, where there's open sky (the owner, 9 November)
+    local landWas, flyWas = LC.QRFLandSpot, LC.FlyDropship
+    local flown
+    LC.QRFLandSpot = function(pos) return pos + Vector(800, 0, 0) end
+    LC.FlyDropship = function(o2) flown = o2 return {} end
+    _run(LC.QRFGap + 1)
+    for npc in pairs(LC.QRF) do if IsValid(npc) then npc:Remove() end end
+    LC.QRF = {}
+    Ready()
+    local trouble2 = trouble + Vector(0, 5000, 0)
+    local n2, how2 = LC.QRFDispatch(trouble2, nil, "a test")
+    ok(n2 > 0 and how2 == "by dropship" and flown and flown.troops and LC.QRFPending == n2 and LC.QRFOut() == 0, "with open sky near: the squad comes in by dropship (nobody out until it lands)")
+    flown.onLanded(nil, flown.pos, nil, nil)
+    _run(n2 * 1.3 + 1)
+    ok(LC.QRFOut() == n2 and LC.QRFPending == 0, "it lands, and they come out and run for it")
+    LC.QRFLandSpot, LC.FlyDropship = landWas, flyWas
+    -- attacks on checkpoints and the Nexus: a bigger squad
+    local cpPt = LC.AddPoint(trouble + Vector(0, 12000, 0), 0, "checkpoint")
+    ok(LC.QRFPlace(trouble + Vector(100, 12000, 0)) == "a checkpoint" and LC.QRFPlace(trouble + Vector(0, 20000, 0)) == nil, "a checkpoint is known when it's attacked")
+    for npc, q in pairs(LC.QRF) do if IsValid(npc) then npc:Remove() end end
+    LC.QRF = {}
+    _run(LC.QRFGap + 1)
+    Ready()
+    local fromWas = LC.QRFSpot
+    LC.QRFSpot = function(pos) return pos + Vector(LC.QRFRun, 0, 0) end
+    local rebel = newPlayer("SBRebel", "resistance")
+    local bank = setmetatable({}, { __index = { IsValid = function() return true end, GetPos = function() return trouble + Vector(50, 12000, 0) end } })
+    hook.Run("LivingCityPowerBankShorted", bank, rebel)
+    local elite = false
+    for npc in pairs(LC.QRF) do local st = LC.NPCs[npc] if st and st.elite then elite = true end end
+    ok(LC.QRFOut() == 6 and elite, "a rebel shorts a checkpoint's power bank: a heavy squad answers, an Elite leading 5 soldiers", LC.QRFOut())
+    LC.QRFHeavyNow = heavyWas
+    LC.QRFSpot = fromWas
+    LC.RemovePoint(cpPt)
+    for npc in pairs(LC.QRF) do if IsValid(npc) then npc:Remove() end end
+    LC.QRF = {}
+    LC.SetFaction(rebel, "citizen", nil, true)
     player.GetAll = function() return Crowd(5, 5) end
     LC.ImbalanceRefresh()
     ok(LC.QRFDispatch(trouble, nil, "a test") == 0 and (LC.ImbalanceCops or 0) == 0, "even sides: nothing extra")
