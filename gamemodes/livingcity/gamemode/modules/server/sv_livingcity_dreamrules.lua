@@ -107,28 +107,7 @@ local function OfKind(kind)
 end
 LC.DreamsOfKind = OfKind
 
--- The city's own pick, by the rules: a Nightmare after a bad day, a Happy dream after a clean one,
--- else propaganda and Neutral by turns. nil if there's nothing to dream.
-function LC.DreamAutoPick()
-    local day = LC.DreamDay()
-    local order
-    if day.bad then order = { "nightmare", "neutral" }
-    elseif day.clean then order = { "happy", "neutral" }
-    elseif D.lastKind == "propaganda" then order = { "neutral" }
-    elseif D.lastKind == "neutral" then order = { "propaganda", "neutral" }
-    else order = math.random() < 0.5 and { "propaganda", "neutral" } or { "neutral", "propaganda" } end
-    for _, kind in ipairs(order) do
-        local list = {}
-        for _, id in ipairs(OfKind(kind)) do if LC.DreamAllowed(id) then list[#list + 1] = id end end
-        if #list > 0 then return list[math.random(#list)] end
-    end
-    return nil
-end
-
--- Does the city pick tonight (nobody plays the Administrator)?
-function LC.DreamCityPicks()
-    return cvAuto:GetBool() and not (LC.HumanAdministrator and LC.HumanAdministrator())
-end
+-- (The city's own pick, LC.DreamAutoPick and LC.DreamCityPicks, is in sv_livingcity_dreamplan.lua now: the owner, 9 November.)
 
 ------------------------------------------------------------------------
 -- Watching the day

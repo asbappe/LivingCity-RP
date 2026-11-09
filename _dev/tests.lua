@@ -14027,9 +14027,12 @@ ok(off.ready and #off.groups == 3 and happy.mood == "happy" and off.groups[3].mo
 
 -- only the Administrator
 ok(not LC.DreamAdminPick(cit, "harpies") and LC.AdminDo(cit, "dream", "harpies") == false and LC.DreamQueued() == nil, "only the Administrator can choose")
-ok(LC.AdminDo(adm, "dream", "bus") and LC.DreamQueued().id == "bus" and LC.DreamOffice().waiting.yours, "the Administrator picks one on the tablet: it waits for tonight")
-ok(LC.AdminDo(adm, "dream", "harpies") and LC.DreamQueued().id == "harpies" and LC.DreamOffice().waiting.mood == "Nightmare", "and can change it before the night")
-ok(LC.AdminDo(adm, "dream", "none") and LC.DreamQueued() == nil, "or choose no dream tonight")
+-- (the owner, 9 November: she chooses only a kind, Nightmare or propaganda; the city decides which: sv_livingcity_dreamplan.lua)
+LC.DreamPlan.adminNight, LC.DreamPlan.specialNight = -100, -100
+ok(LC.AdminDo(adm, "dream", "bus") == false and LC.AdminDo(adm, "dream", "none") == false, "the Administrator can't choose which dream, or none")
+ok(LC.AdminDo(adm, "dream", "nightmare") and LC.DreamQueued().cat == "nightmare" and LC.DreamKind(LC.DreamQueued().id) == "nightmare" and LC.DreamOffice().waiting.yours,
+    "she chooses a Nightmare on the tablet: the next one waits for tonight")
+ok(LC.AdminDo(adm, "dream", "cancel") and LC.DreamQueued() == nil, "and can take it back before the night")
 
 -- the G-Man has no part in dreams (the owner, 7 November): an ending set off in play leaves tonight's dream alone
 LC.DreamAdminPick(adm, "bus")
@@ -14489,7 +14492,10 @@ ok(due and math.abs(due - (CurTime() + 9 / 24 * len)) < 2 and LC.TiredDue(a) <= 
 reb.lcAwakeSince, cop.lcAwakeSince = CurTime(), CurTime()
 local adm = newPlayer("DCAdm", "admin")
 adm.lcAwakeSince = CurTime()
-ok(LC.BedtimeDue(reb) and LC.BedtimeDue(cop) and LC.BedtimeDue(adm) and math.abs(LC.BedtimeDue(adm) - due) < 2, "the Resistance, Civil Protection and the Administration too")
+ok(LC.BedtimeDue(reb) and LC.BedtimeDue(cop), "the Resistance and Civil Protection too")
+ok(not LC.BedtimeDue(adm), "but not the Administrator, for a dream she didn't choose (she skips them: the owner, 9 November)")
+LC.DreamAdminSkipSet(adm, false)
+ok(LC.BedtimeDue(adm) and math.abs(LC.BedtimeDue(adm) - due) < 2, "unless she chooses to join them")
 local listWas = player.GetAll
 player.GetAll = function() return { adm } end
 adm.lcAwakeSince = CurTime() - len * 2
@@ -14555,11 +14561,48 @@ ok(not LC.DreamAllowed("adore") and LC.DreamKind("adore") == "propaganda", "neve
 local admP = newPlayer("DCAdmin2", "admin")
 local okPick, whyPick = LC.DreamAdminPick(admP, "adore")
 ok(okPick == false and string.find(tostring(whyPick), "Not tonight", 1, true), "the Administrator can't pick one the day doesn't allow", tostring(whyPick))
-ok(LC.DreamKind(LC.DreamAutoPick() or "") == "nightmare", "the city's own pick after a bad day: a Nightmare")
-LC.DreamDayReset()
-hook.Run("LivingCityEventStarted", "sweep", 5)
-LC.DreamRules.lastKind = "neutral"
-ok(LC.DreamKind(LC.DreamAutoPick() or "") == "propaganda", "an ordinary day after a Neutral one: propaganda")
+-- the city's own choice now (the owner, 9 November): by sociostability, with Happy or Neutral after every Nightmare or propaganda night
+do
+    local gaWas = player.GetAll
+    player.GetAll = function() return {} end
+    LC.DreamPlan.specialNight = -100
+    LC.Socio = "green" LC.DreamDayReset() LC.DreamDayTimeReset()
+    LC.DreamUnitMurdered()
+    local k1, w1 = LC.DreamPlanDecide()
+    ok(k1 == "nightmare" and w1 == "murder", "no Administrator: a unit murdered today, a Nightmare", tostring(k1))
+    LC.Socio = "green" LC.DreamDayReset() LC.DreamDayTimeReset()
+    hook.Run("LivingCitySocioChanged", "red", "green")
+    _run(5)
+    local seen = {}
+    for _ = 1, 30 do seen[(LC.DreamPlanDecide())] = true end
+    ok(seen.nightmare and seen.propaganda and not seen.happy and not seen.neutral, "red all day: a Nightmare or propaganda, a toss-up")
+    LC.Socio = "green" LC.DreamDayReset() LC.DreamDayTimeReset()
+    hook.Run("LivingCitySocioChanged", "yellow", "green") hook.Run("LivingCitySocioChanged", "green", "yellow")
+    local k3, w3 = LC.DreamPlanDecide()
+    ok(k3 == "happy" and w3 == "calm", "green but for one dip to yellow: Happy", tostring(k3))
+    hook.Run("LivingCitySocioChanged", "yellow", "green")
+    ok((LC.DreamPlanDecide()) == "neutral", "yellow more than that: Neutral")
+    LC.Socio = "green" LC.DreamDayReset() LC.DreamDayTimeReset()
+    LC.DreamUnitMurdered()
+    LC.DreamPlan.specialNight = LC.DreamPlanTonight() - 1
+    local k5, w5 = LC.DreamPlanDecide()
+    ok((k5 == "neutral" or k5 == "happy") and w5 == "after", "but the night after a Nightmare or propaganda: Happy or Neutral first", tostring(k5))
+    LC.DreamPlan.specialNight = -100
+    player.GetAll = function() return { admP } end
+    local k6, w6 = LC.DreamPlanDecide()
+    ok(k6 == "neutral" and w6 == "spared", "a player Administrator: the nights she doesn't choose are Happy or Neutral, whatever the day", tostring(k6))
+    -- round robin: each kind in turn
+    local list = LC.DreamsOfKind("neutral")
+    local r0 = LC.DreamPlan.rot.neutral or 0
+    local first = LC.DreamPlanNext("neutral")
+    LC.DreamPlanAdvance("neutral")
+    local second = LC.DreamPlanNext("neutral")
+    ok(#list > 1 and first ~= second and first == list[(r0 % #list) + 1] and second == list[((r0 + 1) % #list) + 1], "each kind plays its dreams in turn, the next one each time")
+    LC.DreamPlan.rot.neutral = r0
+    -- the words on the black screen: inferred, never a formula
+    ok(string.find(LC.DreamMoodText("calm", "happy"), "%a") and LC.DreamMoodTexts.murder and LC.DreamMoodTexts.admin_propaganda and #LC.DreamMoodTexts.uneasy >= 3, "a line for the day's mood, for every reason")
+    player.GetAll = gaWas
+end
 ok(LC.DreamCityPicks() == true, "nobody playing the Administrator: the city picks every night")
 local off2 = LC.DreamOffice()
 local blockedSeen = false
@@ -14753,7 +14796,16 @@ for _, e in ipairs(off.groups[1].endings) do if e.game and e.propaganda then fou
 ok(found.adore == "Propaganda: Kneel Before Her" and found.roses == "Propaganda: Roses for Her" and found.mirror == "Propaganda: Mirror, Mirror"
     and found.saviour == "Propaganda: The Saviour" and found.quiz == "Propaganda: The Loyalty Quiz", "the five propaganda dreams are on her tablet, under Happy, as Propaganda")
 ok(LC.DreamMoods("saviour=nightmare").saviour == "nightmare", "(lc_dream_moods can label them otherwise)")
-ok(LC.AdminDo(adm, "dream", "saviour") and LC.DreamQueued().id == "saviour", "she can choose one for tonight")
+do -- (she chooses a kind; the city decides which, the next in turn: the owner, 9 November)
+    local list = LC.DreamsOfKind("propaganda")
+    for i, id in ipairs(list) do if id == "saviour" then LC.DreamPlan.rot.propaganda = i - 1 end end
+    LC.DreamPlan.adminNight, LC.DreamPlan.specialNight = -100, -100
+    ok(LC.AdminDo(adm, "dream", "saviour") == false, "she can't choose which dream")
+    ok(LC.AdminDo(adm, "dream", "propaganda") and LC.DreamQueued().id == "saviour" and LC.DreamQueued().cat == "propaganda" and LC.DreamOffice().plan.chosen == "propaganda",
+        "she chooses propaganda for tonight; the city decides which (the next in turn)")
+    ok(not LC.DreamAdminCanPick(adm) and LC.AdminDo(adm, "dream", "cancel") and LC.DreamQueued() == nil and LC.DreamAdminCanPick(adm), "she can take it back before it's dreamt (nothing spent)")
+    LC.DreamAdminSkipSet(adm, false) -- (the rest of these: she joins the dreams she didn't choose)
+end
 LC.DreamForget()
 -- the music, named for its codeword in sound/livingcity/dreams/ (and the first folder still counts)
 local MEDIA = { "sound/livingcity/dreams/admire1.mp3", "sound/livingcity/dreams/saviour2.ogg", "sound/livingcity/dreams/saviour_horde1.mp3",
@@ -15336,6 +15388,7 @@ ok(g.pl[a].how == "won" and Said(g, "guidance_end"), "through the whole tour: sh
 Stop(d)
 Both()
 Asleep(adm, CITY + Vector(0, -200, 0))
+LC.DreamAdminSkipSet(adm, false) -- (she joins one she didn't choose)
 local okG, dg = LC.DreamStart("guidance", adm, false, nil, true)
 ok(okG and dg.game.star == adm and adm.movetype == MOVETYPE_WALK and not IsValid(dg.game.her), "she can star in the tour herself, walking it")
 Stop(dg)
@@ -15395,6 +15448,12 @@ Stop(d)
 g, d = Start("duck")
 s = g.pl[a]
 ok(g and #g.tables == 6 and IsValid(g.sunny) and IsValid(g.rocket) and g.rocketModel == LC.DuckRockets[1][1], "Duck and Cover: Sunny the Scanner, six tables, and the Resistance's rocket on its pad")
+do -- (the owner's rocket_low is 1299 tall: sized and its climb kept under the room over the dream point)
+    local s1, r1 = LC.DuckFit(2000, 0.3, 1299)
+    local s2, r2 = LC.DuckFit(800, 0.3, 1299)
+    ok(LC.DuckRockets[1][1] == "models/props_silo/rocket_low.mdl" and s1 == 0.3 and r1 == LC.DuckRise and s2 < 0.3 and 1299 * s2 + r2 <= 800,
+        "the rocket is White Forest's rocket_low, smaller and climbing less under a low ceiling")
+end
 local z0 = g.rocket:GetPos().z
 g.at = 0
 _run(0.1)
@@ -16116,7 +16175,8 @@ ok(g.pl[a].lives == 2 and g.pl[b].lives == 2 and CurTime() < g.wake, "the baby w
 _run(4.5)
 local toy = g.toys[1]
 toy.gone = nil
-a:SetPos(Mid(g) + Vector(0, -1500, 0))
+for k = 2, #g.toys do g.toys[k].gone = CurTime() + 100 end -- (only this one about)
+g.pl[a].got = 0
 a:SetPos(toy.pos - Vector(0, 0, 24))
 _run(0.1)
 ok(g.pl[a].got == 1, "a toy gathered")
@@ -16201,6 +16261,133 @@ _walls = savedWalls
 ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 NonsenseDreamTests()
+
+-- The dream plan (sv_livingcity_dreamplan.lua): her choice of a kind now and then, the city's by sociostability, in turn
+function DreamPlanTests()
+section("Shared dreams: the plan (she chooses a kind every few nights, only her own dreams for her; the city by sociostability; round robin; the black screen's line)")
+_setcvar("lc_dream_rules", 1)
+local errs0 = #_errors
+local savedWalls, realGetAll = _walls, player.GetAll
+_walls = {}
+LC.EndEvent(true)
+_setcvar("lc_needs", 0)
+local CITY, DREAM = Vector(166000, -166000, 0), Vector(226000, -226000, 0)
+local adm = newPlayer("DPAdmin", "admin")
+local a = newPlayer("DPA", "citizen")
+local b = newPlayer("DPB", "citizen")
+_run(3)
+local function Asleep(p, at)
+    p:SetPos(at)
+    local key = string.format("s%d_%d_%d", math.floor(at.x), math.floor(at.y), math.floor(at.z))
+    p.lcSleep = { t0 = CurTime() - 70, done = CurTime() - 10, last = CurTime(), slept = true }
+    p:SetNW2Bool("lc_sleeping", true)
+    p.lcBedKey, p.lcBedFrom = key, at + Vector(40, 0, 0)
+    LC.BedSleepers[key] = p
+end
+player.GetAll = function() return { adm, a, b } end
+local dp = LC.AddPoint(DREAM, 0, "dream")
+local P = LC.DreamPlan
+P.adminNight, P.specialNight = -100, -100
+LC.DreamForget()
+LC.DreamAdminSkipSet(adm, true)
+
+-- her wait, and the night in between
+local tonight = LC.DreamPlanTonight()
+P.adminNight = tonight - 1
+local okW, whyW, wait = LC.DreamAdminCanPick(adm)
+ok(not okW and wait == LC.DreamPickNights - 1 and string.find(whyW, "2 nights", 1, true), "she chose last night: her next choice comes in a couple of nights", whyW)
+P.adminNight = tonight - LC.DreamPickNights
+ok(LC.DreamAdminCanPick(adm), "every " .. LC.DreamPickNights .. " nights, she may choose")
+P.specialNight = tonight - 1
+local okS, whyS = LC.DreamAdminCanPick(adm)
+ok(not okS and string.find(whyS, "gentler", 1, true), "never the night straight after a Nightmare or propaganda dream", whyS)
+P.specialNight = -100
+ok(not LC.DreamAdminCategory(adm, "happy") and not LC.DreamAdminCategory(a, "nightmare"), "only Nightmare or propaganda, and only her")
+
+-- only her own dreams
+Asleep(a, CITY) Asleep(b, CITY + Vector(0, 200, 0)) Asleep(adm, CITY + Vector(0, -200, 0))
+local function Has(list, p) for _, q in ipairs(list) do if q == p then return true end end return false end
+ok(not Has(LC.DreamSleepers("neutral", "bus"), adm) and Has(LC.DreamSleepers("neutral", "bus"), a), "asleep, she sits out a dream she didn't choose")
+ok(LC.DreamAdminCategory(adm, "nightmare") and LC.DreamQueued().cat == "nightmare", "she chooses a Nightmare")
+local qid = LC.DreamQueued().id
+ok(Has(LC.DreamSleepers("nightmare", qid), adm), "and is in that one herself")
+-- the black screen and its line, for everyone about to dream it
+net.sent = {}
+LC.DreamMoodSend(LC.DreamQueued(), CurTime() + 7)
+local got
+for _, m in ipairs(net.sent) do if m.name == "lc_dream_mood" then got = m end end
+local words = got and got.data[1] and got.data[1].text or ""
+local fromList = false
+for _, l in ipairs(LC.DreamMoodTexts.admin_nightmare) do if l == words then fromList = true end end
+ok(got and fromList, "as it comes: the screen goes black, with a line about why (hers: the Administrator's displeasure)", words)
+-- it's dreamt: her turn spent, the kind's turn taken
+local rot0 = P.rot.nightmare or 0
+local okT = LC.DreamTonight()
+local dream = LC.DreamActive
+ok(okT and dream and dream.adminBy == adm and (P.rot.nightmare or 0) == rot0 + 1 and P.adminNight >= LC.DreamPlanTonight() - 1, "dreamt: her choice spent, and the next Nightmare is another one")
+if dream and dream.game then LC.DreamGameStop(dream, "test") elseif dream then LC.DreamWake(dream) end
+_run(2.5)
+
+-- in one she didn't choose, joining, she can wake whenever she likes
+LC.DreamAdminSkipSet(adm, false)
+Asleep(a, CITY) Asleep(adm, CITY + Vector(0, -200, 0))
+local okD, d2 = LC.DreamStart("maze", nil, false, nil, true)
+ok(okD and adm.lcDreaming and LC.DreamCanWake(adm), "joining one she didn't choose, she can wake from it whenever she likes")
+if okD then LC.DreamGameStop(d2, "test") end
+_run(2.5)
+LC.DreamAdminSkipSet(adm, true)
+
+-- remembered across a restart
+local keep = table.Copy(P.rot)
+P.rot.happy = 41
+LC.DreamPlanSave()
+P.rot.happy = 0
+LC.DreamPlanLoad()
+ok(P.rot.happy == 41, "the turns are remembered across a restart (data/livingcity/dream_plan.json)")
+P.rot = keep
+LC.DreamPlanSave()
+-- units murdered by NPCs: half as much as a player's (the owner, 9 November), and more needed on a full server
+do
+    local evWas = LC.Event
+    LC.Event = nil
+    LC.SocioNpcKills = {}
+    LC.SocioNpcMurder() LC.SocioNpcMurder()
+    local l2 = LC.SocioAuto()
+    LC.SocioNpcMurder() LC.SocioNpcMurder()
+    local l4 = LC.SocioAuto()
+    local ga = player.GetAll
+    local crowd = {}
+    for i = 1, 48 do crowd[i] = a end
+    player.GetAll = function() return crowd end
+    local l4big = LC.SocioAuto()
+    player.GetAll = ga
+    ok(l2 == "yellow" and l4 == "red" and l4big == "yellow" and LC.SocioScale() == 1, "units murdered by NPC rebels: two make the city yellow, four red (more on a full server: 48 players, four is only yellow)", tostring(l2) .. tostring(l4) .. tostring(l4big))
+    LC.SocioNpcKills = {}
+    LC.Event = evWas
+    LC.DreamDayTimeReset()
+    LC.DreamUnitMurdered(0.5)
+    local m1 = LC.DreamDayMood().murders
+    LC.DreamUnitMurdered(0.5)
+    ok(m1 == 0 and LC.DreamDayMood().murders == 1, "for tonight's dream too: two NPC murders count as one")
+    LC.DreamDayTimeReset()
+end
+-- the tablet
+local pl = LC.DreamOffice().plan
+ok(pl and pl.feel and pl.every == LC.DreamPickNights and pl.skip == true, "her tablet: the day in a line, how often she chooses, and skipping")
+
+LC.DreamForget()
+LC.RemovePoint(dp)
+for _, p in ipairs({ adm, a, b }) do
+    if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
+    p:SetPos(Vector(-121000, -121000, 0))
+end
+P.adminNight, P.specialNight = -100, -100
+player.GetAll = realGetAll
+_setcvar("lc_needs", 1)
+_walls = savedWalls
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+DreamPlanTests()
 
 -- The performance debugger (sh_livingcity_perfdebug.lua, sv_livingcity_perfdebug.lua)
 function PerfDebugTests()

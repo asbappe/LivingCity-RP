@@ -1855,6 +1855,15 @@ local ok, e = pcall(function()
     if #LC_CL.StrangeFloaters() ~= 0 then error("the nonsense stayed after the dream") end
     ClientsideModel, ents.FindByClass = cmWas, fbcWas
     Msg({ k = "stop", how = "won" })
+    -- as the dream comes: the screen black, and the day's mood in a line (cl_livingcity_dreams.lua)
+    net._q = { { text = "Today the city was calm. You slip off into a happy dream, and it goes on long enough to need a second line on a narrow screen.", til = CurTime() + 5, kind = "happy" } }
+    net["recv_lc_dream_mood"]()
+    _advance(2)
+    hook.t.DrawOverlay.LivingCityDreamMood()
+    if not LC_CL.DreamMoodShown() then error("the dream's black screen and its line") end
+    _advance(10)
+    hook.t.DrawOverlay.LivingCityDreamMood()
+    if LC_CL.DreamMoodShown() then error("the black screen stayed after the dream began") end
     -- a test: the line at the top says so
     _me:SetNW2Bool("lc_dream_test", true)
     hook.t.HUDPaint.LivingCityDreams()
@@ -2991,7 +3000,7 @@ local ok, e = pcall(function()
 
     -- the Administrator: what was there, then the tablet, the laws, the dream, the guards, an arrest
     _me.nw = { lcf_faction = "admin" }
-    Info({ adm = { arrest = 0, guards = 2, hold = false, dream = { ready = true, groups = { { mood = "happy", name = "Happy", endings = { { id = "bus", name = "The Bus" } } } } } } })
+    Info({ adm = { arrest = 0, guards = 2, hold = false, dream = { ready = true, groups = {}, plan = { canPick = true, feel = "Today: calm.", every = 3, skip = true } } } })
     local cit = _makeplayer("ArrestMe", Vector(60, 0, 0))
     cit.nw.lcf_faction = "citizen"
     _me.GetEyeTrace = function() return { Hit = true, HitPos = Vector(60, 0, 60), Entity = cit } end
@@ -3010,7 +3019,9 @@ local ok, e = pcall(function()
         local it = root.items[n]
         if it and it.page then
             local sub = it.page()
-            if it.label == "Tonight's dream" and not (sub.items[1] and sub.items[1].page and sub.items[2] and sub.items[2].label == "No dream tonight") then error("Tonight's dream: " .. Labels(sub)) end
+            -- (the owner, 9 November: she chooses only a kind, now and then)
+            if it.label == "Tonight's dream" and not (sub.items[1] and string.find(sub.items[1].label, "Nightmare", 1, true) and sub.items[2] and string.find(sub.items[2].label, "propaganda", 1, true)
+                and sub.items[3] and string.find(sub.items[3].label, "didn't choose", 1, true)) then error("Tonight's dream: " .. Labels(sub)) end
             if it.label == "Command the guards" and not (sub.items[1] and string.find(sub.items[1].label, "Follow me", 1, true) and string.find(sub.items[2].label, "Hold here", 1, true)) then error("guards: " .. Labels(sub)) end
             -- (the owner, 8 November) how close they follow, and what they do when there's trouble
             if it.label == "Command the guards" then

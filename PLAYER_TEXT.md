@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 8fdaef2. Admin-only console messages and log lines are left out.
+Made from version 770a010. Admin-only console messages and log lines are left out.
 
-9002 lines, from 239 files.
+9061 lines, from 240 files.
 
 ## Contents
 
@@ -61,7 +61,7 @@ Made from version 8fdaef2. Admin-only console messages and log lines are left ou
 - [cl_livingcity_atmos.lua](#cllivingcityatmoslua-cllivingcityatmoslua) (5)
 - [cl_livingcity_career.lua](#cllivingcitycareerlua-cllivingcitycareerlua) (6)
 - [cl_livingcity_character.lua](#cllivingcitycharacterlua-cllivingcitycharacterlua) (14)
-- [cl_livingcity_cityadmin.lua](#cllivingcitycityadminlua-cllivingcitycityadminlua) (43)
+- [cl_livingcity_cityadmin.lua](#cllivingcitycityadminlua-cllivingcitycityadminlua) (44)
 - [cl_livingcity_context.lua](#cllivingcitycontextlua-cllivingcitycontextlua) (75)
 - [cl_livingcity_cp.lua](#cllivingcitycplua-cllivingcitycplua) (27)
 - [cl_livingcity_directives.lua](#cllivingcitydirectiveslua-cllivingcitydirectiveslua) (19)
@@ -93,7 +93,7 @@ Made from version 8fdaef2. Admin-only console messages and log lines are left ou
 - [cl_livingcity_patsearch.lua](#cllivingcitypatsearchlua-cllivingcitypatsearchlua) (10)
 - [cl_livingcity_perfdebug.lua](#cllivingcityperfdebuglua-cllivingcityperfdebuglua) (63)
 - [cl_livingcity_quests.lua](#cllivingcityquestslua-cllivingcityquestslua) (20)
-- [cl_livingcity_quick.lua](#cllivingcityquicklua-cllivingcityquicklua) (155)
+- [cl_livingcity_quick.lua](#cllivingcityquicklua-cllivingcityquicklua) (156)
 - [apartment doors (client)](#apartment-doors-client-cllivingcityrentlua) (12)
 - [cl_livingcity_resistance.lua](#cllivingcityresistancelua-cllivingcityresistancelua) (5)
 - [cl_livingcity_rest.lua](#cllivingcityrestlua-cllivingcityrestlua) (5)
@@ -130,7 +130,7 @@ Made from version 8fdaef2. Admin-only console messages and log lines are left ou
 - [Half-Life: Alyx-style Combine models](#half-life-alyx-style-combine-models-svlivingcitycombinemodelslua) (5)
 - [conduct (anti-RDM and anti-combat-logging)](#conduct-anti-rdm-and-anti-combat-logging-svlivingcityconductlua) (26)
 - [supply drops, radio jammers](#supply-drops-radio-jammers-svlivingcityconvoylua) (33)
-- [Civil Protection's toolset](#civil-protections-toolset-svlivingcitycplua) (99)
+- [Civil Protection's toolset](#civil-protections-toolset-svlivingcitycplua) (101)
 - [the Civil Protection Commissary (units' supplies)](#the-civil-protection-commissary-units-supplies-svlivingcitycpsupplylua) (26)
 - [headcrab hunts for the Resistance's supply crate](#headcrab-hunts-for-the-resistances-supply-crate-svlivingcitycrabhuntlua) (15)
 - [making things, grenades, the arms trade, and getting people out](#making-things-grenades-the-arms-trade-and-getting-people-out-svlivingcitycraftinglua) (30)
@@ -141,6 +141,7 @@ Made from version 8fdaef2. Admin-only console messages and log lines are left ou
 - [doors](#doors-svlivingcitydoorslua) (9)
 - [Enforcers in the dreams](#enforcers-in-the-dreams-svlivingcitydreamenforcerslua) (19)
 - [nightmare dreams you play (the dream games)](#nightmare-dreams-you-play-the-dream-games-svlivingcitydreamgameslua) (35)
+- [the dream plan (who chooses tonight's dream, and how)](#the-dream-plan-who-chooses-tonights-dream-and-how-svlivingcitydreamplanlua) (55)
 - [which dream tonight (the rules, and the city's own pick)](#which-dream-tonight-the-rules-and-the-citys-own-pick-svlivingcitydreamruleslua) (13)
 - [shared dreams](#shared-dreams-svlivingcitydreamslua) (67)
 - [stand-ins, so no dream is ever thin](#stand-ins-so-no-dream-is-ever-thin-svlivingcitydreamstandinslua) (25)
@@ -742,8 +743,8 @@ Made from version 8fdaef2. Admin-only console messages and log lines are left ou
 - "Strange dreams: The Cheese Dream (it starts in the dark, with two voices: gather the glowing cheese, jump onto the floating slabs, and keep out of the way of the rolling wheels; it gets colourful), Musical Chairs (walk round the chairs while the music plays; when it stops, crouch beside a free one), Wings (jump, then jump again in the air to flap, and fly through the golden rings) and It's Raining Melons (stand on a green glow to catch a melon; keep out from under a red one). Win one and you wake Unbroken; losing one costs nothing."  (text, line 95)
 - "More strange dreams: Hooves and All (Neutral: when Father Grigori's shot stops the black horse, run in and bite it with E; don't get trampled), The Main Event (box: punch with attack next to it, crouch when it winds up), The Exam (stuck at your desk: type A, B, C or D in chat; the right answer is whatever most of the class picks, and you only learn your score once Doctor Kleiner has eaten your paper), The Last Train (the door moves away while anyone looks at it: walk backwards), Where's Lamarr? (catch the hopping headcrabs; the golden one counts three), Running in Molasses (reach the glowing corners in turn, slowly, away from the zombie), Hot Potato (touch someone to pass the grenade before it goes off), Overwatch Says (do it only when he says "Overwatch says"), Dance Marathon (jump on the big beat) and Counting Headcrabs (count them, not the watermelons, and say how many in chat)."  (text, line 96)
 - "Nonsense dreams: Stop the Clocks (touch each melting clock to stop it; stop them all at once), The Tea Party (move to the seat that glows when the host shouts), The Headcrab Derby (stand on a lane's pad before the race to back its headcrab), Say Cheese (hide behind something giant before the scanner's flash), The Doors (stand at the door the music box plays behind), Splat! (paint the floor your colour), Conga! (keep in the glow at the tail of the line), Shh! (gather toys quietly: running and jumping wake the baby), Bubbles (pop them; big ones lift you) and The Watchers (they only move while nobody looks at them: gather the keys). In every strange dream, expect nonsense: things floating in the sky, odd textures, faces pulling expressions, sparkles and smoke, and sounds that won't stay at one pitch."  (text, line 97)
-- "City Administrator: your tablet's office has Tonight's dream: reward an obedient city with a Happy dream, or punish it with a Nightmare. Its Combine manpower shows what Civil Protection and Overwatch have left in reserve. Out of it in a dream? Watch the rest: click to follow another dreamer, Jump to fly about inside the dream."  (text, line 98)
-- "Tonight's dream follows the day: a Nightmare only after sociostability fell to red, a Happy dream only after a day with nothing wrong, never two propaganda dreams in a row, Neutral any night. With nobody playing the Administrator, the city picks one every night by the same rules."  (text, line 99)
+- "City Administrator: your tablet's Tonight's dream lets you choose a kind, a Nightmare or a propaganda dream, once every few nights (never the night after one); the city decides which dream. You only have to be in the dreams you chose: on other nights lights out leaves you alone, unless you choose to join them. Its Combine manpower shows what Civil Protection and Overwatch have left in reserve. Out of it in a dream? Watch the rest: click to follow another dreamer, Jump to fly about inside the dream."  (text, line 98)
+- "Tonight's dream follows the day: a unit murdered or a city in uproar can bring a Nightmare or a propaganda dream, a calm day a Happy one, an uneasy day a Neutral one; never two Nightmare or propaganda nights in a row. As the dream comes, the screen goes dark and you get a sense of what's coming."  (text, line 99)
 - "You can kill birds with your fists. Cook them before you eat them."  (text, line 100)
 - "Staying out of trouble"  (text, line 102)
 - "Don't crowd Civil Protection units. They warn you first, then hit you with the stunstick."  (text, line 103)
@@ -1406,50 +1407,45 @@ Made from version 8fdaef2. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): the game answering something done in a window (lc_admin_office)
 
 - "The city is dreaming right now."  (text, line 95)
-- "Waiting: {name} ({mood}){or}{or}{or}"  (text, line 98)
-- "Tonight's dream has been dreamt. A pick now waits for tomorrow night."  (text, line 101)
-- "Nothing chosen: no dream tonight."  (text, line 101)
-- "Happy (a reward: they've been obedient)"  (text, line 106)
-- "Nightmare (a punishment)"  (text, line 106)
-- "(not tonight)"  (menu option, line 113)
-
-> Note for you (not shown in game): add option
-
-- "[Tonight's dream]"  (chat message, line 113)
-
-> Note for you (not shown in game): the game answering something done in a window (lc_admin_office)
-
-- "No dream tonight"  (menu option, line 121)
+- "You choose only a kind (Nightmare or propaganda), and only once every %d nights; the city chooses which dream, and every other night is Happy or Neutral."  (message, line 98)
+- "Chosen for tonight: {or}{or}. You'll be in it."  (text, line 100)
+- "Take back tonight's choice (nothing spent)"  (menu option, line 101)
+- "A Nightmare tonight (a punishment)"  (menu option, line 104)
+- "A propaganda dream tonight (instruction)"  (menu option, line 105)
+- "You can't choose tonight's dream."  (text, line 107)
+- "Tonight: {mood}{or}"  (text, line 109)
+- "Dreams you didn't choose: you skip them (click to join them)"  (menu option, line 112)
+- "Dreams you didn't choose: you join them (click to skip them)"  (menu option, line 112)
 
 > Note for you (not shown in game): propaganda dreams: star in them herself (when she's asleep for one with someone else), or a giant figure of her
 
-- "Star in propaganda dreams yourself: on (click to use a giant figure of you)"  (menu option, line 125)
-- "Star in propaganda dreams yourself: off (click to star in them)"  (menu option, line 126)
+- "Star in propaganda dreams yourself: on (click to use a giant figure of you)"  (menu option, line 118)
+- "Star in propaganda dreams yourself: off (click to star in them)"  (menu option, line 119)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_admin_office)
 
-- "Call a city event"  (text, line 131)
-- "A ration day"  (menu option, line 134)
-- "An inspection sweep"  (menu option, line 135)
-- "A Combine parade"  (menu option, line 136)
-- "Rations for the hour"  (text, line 137)
-- "Generous (full packets for all)"  (menu option, line 139)
-- "Austere (short packets for all)"  (menu option, line 140)
-- "As usual"  (menu option, line 141)
-- "Commissary prices for the hour"  (text, line 142)
-- "A Union job bonus for the hour"  (text, line 145)
-- "The Commissary and the market"  (menu option, line 148)
+- "Call a city event"  (text, line 124)
+- "A ration day"  (menu option, line 127)
+- "An inspection sweep"  (menu option, line 128)
+- "A Combine parade"  (menu option, line 129)
+- "Rations for the hour"  (text, line 130)
+- "Generous (full packets for all)"  (menu option, line 132)
+- "Austere (short packets for all)"  (menu option, line 133)
+- "As usual"  (menu option, line 134)
+- "Commissary prices for the hour"  (text, line 135)
+- "A Union job bonus for the hour"  (text, line 138)
+- "The Commissary and the market"  (menu option, line 141)
 
 > Note for you (not shown in game): the Combine's manpower (sv_livingcity_manpower.lua): Civil Protection's and Overwatch's reserves, as F2 > Combine manpower shows them
 
-- "Combine manpower"  (text, line 152)
+- "Combine manpower"  (text, line 145)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_admin_office)
 
-- "Commend (+15 standing)"  (menu option, line 164)
-- "Censure (-15 standing)"  (menu option, line 165)
-- "A week's free housing"  (menu option, line 167)
-- "A curfew permit"  (menu option, line 168)
+- "Commend (+15 standing)"  (menu option, line 157)
+- "Censure (-15 standing)"  (menu option, line 158)
+- "A week's free housing"  (menu option, line 160)
+- "A curfew permit"  (menu option, line 161)
 
 ## cl_livingcity_context.lua (cl_livingcity_context.lua)
 
@@ -1717,20 +1713,20 @@ Made from version 8fdaef2. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: open
 
-- "No dream point on this map, so the secret endings are as they always were (the whole city, then the map reloads). To make them dreams: the Living City Editor, Point: dream, somewhere out of the map nobody can walk to (and Zone: dream round it, for its edge)."  (text, line 70)
-- "Dreams are switched off (lc_dreams 0): the endings are as they always were."  (text, line 73)
-- "Dreams are on: a secret ending waits for the night, and everyone asleep dreams it together about {or} seconds after the Administrator says good night.{or}"  (text, line 75)
-- "Dreaming now: %s, %d asleep in it."  (message, line 79)
-- "Wake everyone now (they wake in their beds, with everything they had)"  (text, line 80)
-- "Waiting for tonight's dream: {queued}{or}"  (text, line 83)
-- "Forget it (nothing waits for tonight)"  (text, line 84)
-- "Nothing is waiting for tonight's dream{or}"  (text, line 86)
-- "Asleep right now: %d"  (message, line 88)
-- "Dream it now (with me)"  (label or button, line 101)
-- "Snapshots kept (everything about someone, saved as they began to dream; it goes once they've woken with it all back):"  (text, line 107)
-- "(not on)"  (text, line 110)
-- ": put back once already, not all of it matched"  (text, line 110)
-- "Put back {nick}'s things"  (text, line 112)
+- "No dream point on this map, so the secret endings are as they always were (the whole city, then the map reloads). To make them dreams: the Living City Editor, Point: dream, somewhere out of the map nobody can walk to (and Zone: dream round it, for its edge)."  (text, line 116)
+- "Dreams are switched off (lc_dreams 0): the endings are as they always were."  (text, line 119)
+- "Dreams are on: a secret ending waits for the night, and everyone asleep dreams it together about {or} seconds after the Administrator says good night.{or}"  (text, line 121)
+- "Dreaming now: %s, %d asleep in it."  (message, line 125)
+- "Wake everyone now (they wake in their beds, with everything they had)"  (text, line 126)
+- "Waiting for tonight's dream: {queued}{or}"  (text, line 129)
+- "Forget it (nothing waits for tonight)"  (text, line 130)
+- "Nothing is waiting for tonight's dream{or}"  (text, line 132)
+- "Asleep right now: %d"  (message, line 134)
+- "Dream it now (with me)"  (label or button, line 147)
+- "Snapshots kept (everything about someone, saved as they began to dream; it goes once they've woken with it all back):"  (text, line 153)
+- "(not on)"  (text, line 156)
+- ": put back once already, not all of it matched"  (text, line 156)
+- "Put back {nick}'s things"  (text, line 158)
 
 ## secret endings, on your screen (sv_livingcity_endings.lua) (cl_livingcity_endings.lua)
 
@@ -3208,131 +3204,132 @@ Made from version 8fdaef2. Admin-only console messages and log lines are left ou
 - "Follow distance: {dist}"  (text, line 410)
 - "When there's trouble: {mode}"  (text, line 411)
 
-> Note for you (not shown in game): Tonight's dream, as the tablet has it (sv_livingcity_dreams.lua): Happy, Neutral or Nightmare.
+> Note for you (not shown in game): Tonight's dream, as the tablet has it: she chooses only a kind, now and then (sv_livingcity_dreamplan.lua).
 
-- "Not tonight: {why}"  (text, line 423)
+- "No word from the office yet: try again in a moment."  (text, line 418)
+- "The city can't dream yet."  (text, line 419)
+- "The city is dreaming right now."  (text, line 422)
 
 > Note for you (not shown in game): part of: dream page
 
-- "No word from the office yet: try again in a moment."  (text, line 428)
-- "The city can't dream yet."  (text, line 429)
-- "The city is dreaming right now."  (text, line 431)
-- "Waiting: {name} ({mood})"  (text, line 434)
-- "Dreamt tonight: a pick waits for tomorrow."  (text, line 436)
-- "Nothing chosen: no dream tonight."  (text, line 436)
-- "Happy (a reward)"  (text, line 439)
-- "Nightmare (a punishment)"  (text, line 439)
-- "No dream tonight"  (menu option, line 443)
+- "Chosen for tonight: {or}. You'll be in it."  (text, line 425)
+- "Take back tonight's choice"  (menu option, line 426)
+- "A Nightmare tonight (a punishment)"  (menu option, line 428)
+- "A propaganda dream tonight"  (menu option, line 429)
+- "You can't choose tonight's dream."  (text, line 431)
+- "Dreams I didn't choose: skipping (join them)"  (menu option, line 434)
+- "Dreams I didn't choose: joining (skip them)"  (menu option, line 434)
+- "You choose a kind, once every %d nights; the city picks which, and the nights between are Happy or Neutral."  (message, line 435)
 
 > Note for you (not shown in game): A senior unit's call: the city's own sweep and raid, when the pacing allows.
 
-- "Sweep: {sweep}"  (text, line 456)
-- "Raid: {raid}"  (text, line 457)
+- "Sweep: {sweep}"  (text, line 447)
+- "Raid: {raid}"  (text, line 448)
 
 > Note for you (not shown in game): part of: sweep page
 
-- "Contraband sweep (inspections)"  (text, line 460)
-- "not now"  (text, line 460)
-- "Block raid (a housing block)"  (text, line 461)
-- "not now"  (text, line 461)
+- "Contraband sweep (inspections)"  (text, line 451)
+- "not now"  (text, line 451)
+- "Block raid (a housing block)"  (text, line 452)
+- "not now"  (text, line 452)
 
 > Note for you (not shown in game): F1: what everyone has
 
-- "Lower my hands"  (menu option, line 472)
-- "Put my hands up"  (menu option, line 472)
+- "Lower my hands"  (menu option, line 463)
+- "Put my hands up"  (menu option, line 463)
 
 > Note for you (not shown in game): slot 1: the next step, and the way to everywhere (cl_livingcity_nextstep.lua)
 
-- "What now?"  (text, line 474)
-- "My papers"  (menu option, line 478)
-- "My pockets (F3)"  (menu option, line 480)
+- "What now?"  (text, line 465)
+- "My papers"  (menu option, line 469)
+- "My pockets (F3)"  (menu option, line 471)
 
 > Note for you (not shown in game): part of: quick root
 
-- "Jobs, career, factions (F4)"  (menu option, line 482)
+- "Jobs, career, factions (F4)"  (menu option, line 473)
 
 > Note for you (not shown in game): F2: what your side, rank and job have
 
-- "Nothing here for your side or job right now."  (text, line 497)
-- "F1 has what everyone can do."  (text, line 497)
+- "Nothing here for your side or job right now."  (text, line 488)
+- "F1 has what everyone can do."  (text, line 488)
 
 > Note for you (not shown in game): (the owner, 7 November: 1 Voice lines, 2 Unit tools, 3 Kick, 4 Call for backup, 5 BOLO, 6 Send my 10-20)
 
-- "Unit tools (everything a unit has)"  (menu option, line 510)
-- "Kick ({or})"  (menu option, line 512)
-- "Voice lines"  (text, line 514)
-- "Call for backup"  (menu option, line 517)
+- "Unit tools (everything a unit has)"  (menu option, line 501)
+- "Kick ({or})"  (menu option, line 503)
+- "Voice lines"  (text, line 505)
+- "Call for backup"  (menu option, line 508)
 
 > Note for you (not shown in game): item
 
-- "What should Civil Protection units look out for?"  (text, line 518)
+- "What should Civil Protection units look out for?"  (text, line 509)
 
 > Note for you (not shown in game): part of: quick role root
 
-- "Send my 10-20"  (menu option, line 519)
+- "Send my 10-20"  (menu option, line 510)
 
 > Note for you (not shown in game): the Resistance's man inside, beside a prisoner being marched to the cells (sv_livingcity_insider.lua): right after the six, only while it's there; greyed while someone can see
 
-- "Let {slipT} slip away{or}"  (menu option, line 526)
+- "Let {slipT} slip away{or}"  (menu option, line 517)
 
 > Note for you (not shown in game): Division Leader and up: the city's sweep or raid, on order (after what's in front of you)
 
-- "Call a sweep"  (text, line 539)
-- "My directives (F4)"  (menu option, line 543)
-- "Records terminal"  (menu option, line 543)
+- "Call a sweep"  (text, line 530)
+- "My directives (F4)"  (menu option, line 534)
+- "Records terminal"  (menu option, line 534)
 
 > Note for you (not shown in game): part of: quick role root
 
-- "Gear up (Resistance clothes)"  (menu option, line 547)
-- "Change into plain clothes"  (menu option, line 547)
-- "Black market"  (menu option, line 548)
-- "Squad orders"  (text, line 550)
+- "Gear up (Resistance clothes)"  (menu option, line 538)
+- "Change into plain clothes"  (menu option, line 538)
+- "Black market"  (menu option, line 539)
+- "Squad orders"  (text, line 541)
 
 > Note for you (not shown in game): only the Administrator sets sociostability (the owner, 7 November)
 
-- "Broadcast to the whole city..."  (menu option, line 557)
-- "What does the city hear?"  (text, line 557)
-- "Combine manpower"  (text, line 558)
+- "Broadcast to the whole city..."  (menu option, line 548)
+- "What does the city hear?"  (text, line 548)
+- "Combine manpower"  (text, line 549)
 
 > Note for you (not shown in game): (the owner, later on 7 November) the tablet, the laws, tonight's dream, the guards, an order of arrest
 
-- "Open my tablet (the office)"  (menu option, line 560)
-- "The city's laws"  (menu option, line 561)
-- "Tonight's dream"  (text, line 562)
-- "Command the guards"  (text, line 563)
-- "Order {t}'s arrest"  (text, line 567)
-- "already wanted"  (text, line 567)
+- "Open my tablet (the office)"  (menu option, line 551)
+- "The city's laws"  (menu option, line 552)
+- "Tonight's dream"  (text, line 553)
+- "Command the guards"  (text, line 554)
+- "Order {t}'s arrest"  (text, line 558)
+- "already wanted"  (text, line 558)
 
 > Note for you (not shown in game): part of: quick role root
 
-- "Reach out through the vortessence"  (menu option, line 572)
-- "My work: the Stalker's Lot (F4)"  (menu option, line 574)
+- "Reach out through the vortessence"  (menu option, line 563)
+- "My work: the Stalker's Lot (F4)"  (menu option, line 565)
 
 > Note for you (not shown in game): a worker's job tools
 
-- "Send my escort away"  (menu option, line 580)
-- "Ask for a Civil Protection escort"  (menu option, line 580)
-- "Back to work (end the ration break)"  (menu option, line 582)
-- "Take a ration break"  (menu option, line 583)
-- "Take a body cart, or leave it"  (menu option, line 584)
+- "Send my escort away"  (menu option, line 571)
+- "Ask for a Civil Protection escort"  (menu option, line 571)
+- "Back to work (end the ration break)"  (menu option, line 573)
+- "Take a ration break"  (menu option, line 574)
+- "Take a body cart, or leave it"  (menu option, line 575)
 
 > Note for you (not shown in game): part of: quick role root
 
-- "Stop being a Union foreman"  (menu option, line 586)
-- "Become a Union foreman"  (menu option, line 586)
+- "Stop being a Union foreman"  (menu option, line 577)
+- "Become a Union foreman"  (menu option, line 577)
 
 > Note for you (not shown in game): a citizen's own (the owner, later on 7 November): work, rations, home, standing
 
-- "Me: work, rations, home, standing"  (text, line 590)
+- "Me: work, rations, home, standing"  (text, line 581)
 
 > Note for you (not shown in game): in a cell: what you're in for, and how long is left
 
-- "My sentence: %d:%02d left"  (message, line 597)
+- "My sentence: %d:%02d left"  (message, line 588)
 
 > Note for you (not shown in game): on screen
 
-- "+menu_context"  (text, line 742)
-- ": the full menu"  (drawn on screen, line 743)
+- "+menu_context"  (text, line 733)
+- ": the full menu"  (drawn on screen, line 734)
 
 ## apartment doors (client) (cl_livingcity_rent.lua)
 
@@ -4353,61 +4350,61 @@ Made from version 8fdaef2. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Stimulants: one, then not again until you've slept and dreamt properly
 
-- "Your body won't take another one. You haven't slept and dreamt properly since the last (sleep through a night, and its dream if there is one)."  (text, line 265)
+- "Your body won't take another one. You haven't slept and dreamt properly since the last (sleep through a night, and its dream if there is one)."  (text, line 266)
 
 > Note for you (not shown in game): One free stimulant shot at a CP Commissary, once a night on the night shift (sv_livingcity_cpsupply.lua).
 
-- "[CP Commissary] Night shift: one stimulant shot, issued. It keeps you sharp for fifteen minutes. Then the crash."  (chat message, line 301)
+- "[CP Commissary] Night shift: one stimulant shot, issued. It keeps you sharp for fifteen minutes. Then the crash."  (chat message, line 302)
 
 > Note for you (not shown in game): part of: build
 
-- "Night shift: walk to patrol stop %d of %d, %s"  (message, line 334)
-- "Night shift"  (title, line 338)
-- "Keep order while the city sleeps: walk the patrol stops through the night. On a night shift there's no lights out for you, and a CP Commissary issues you one stimulant shot to stay sharp. The city's own units patrol too."  (description, line 339)
-- "Dispatch needs eyes on the streets tonight. Long hours, quiet streets. Stay awake."  (text, line 341)
+- "Night shift: walk to patrol stop %d of %d, %s"  (message, line 335)
+- "Night shift"  (title, line 339)
+- "Keep order while the city sleeps: walk the patrol stops through the night. On a night shift there's no lights out for you, and a CP Commissary issues you one stimulant shot to stay sharp. The city's own units patrol too."  (description, line 340)
+- "Dispatch needs eyes on the streets tonight. Long hours, quiet streets. Stay awake."  (text, line 342)
 
 > Note for you (not shown in game): the game's living city quest accepted moment
 
-- "Night shift"  (on-screen notice, line 351)
-- "You're on the night shift: no lights out for you tonight. A CP Commissary will issue you a stimulant shot (once a night)."  (on-screen notice, line 351)
+- "Night shift"  (on-screen notice, line 352)
+- "You're on the night shift: no lights out for you tonight. A CP Commissary will issue you a stimulant shot (once a night)."  (on-screen notice, line 352)
 
 > Note for you (not shown in game): part of: wake sleeper
 
-- "You wake with a start"  (on-screen notice, line 395)
-- "Something woke you."  (text, line 395)
-- "Adrenaline has you wide awake, for now."  (text, line 421)
+- "You wake with a start"  (on-screen notice, line 396)
+- "Something woke you."  (text, line 396)
+- "Adrenaline has you wide awake, for now."  (text, line 422)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "The adrenaline wears off"  (on-screen notice, line 429)
-- "The adrenaline has worn off. You need rest."  (on-screen notice, line 429)
+- "The adrenaline wears off"  (on-screen notice, line 430)
+- "The adrenaline has worn off. You need rest."  (on-screen notice, line 430)
 
 > Note for you (not shown in game): the sleeping body hit: out of the dream, and they take the hit once they're up
 
-- "Something hit you in your sleep. You wake in your bed, hurt."  (text, line 493)
+- "Something hit you in your sleep. You wake in your bed, hurt."  (text, line 494)
 
 > Note for you (not shown in game): the game's living city dream woke moment
 
-- "You wake with a start"  (on-screen notice, line 507)
-- "Something woke you."  (text, line 507)
+- "You wake with a start"  (on-screen notice, line 508)
+- "Something woke you."  (text, line 508)
 
 > Note for you (not shown in game): Rebel ground under attack: everyone asleep on it wakes (players, out of a dream too, and the camp's own).
 
-- "Trouble in the camp! Gunfire, shouting: someone's under attack."  (text, line 528)
+- "Trouble in the camp! Gunfire, shouting: someone's under attack."  (text, line 529)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "No chip, no dreams: you wake on your own, rested."  (chat message, line 629)
+- "No chip, no dreams: you wake on your own, rested."  (chat message, line 630)
 
 > Note for you (not shown in game): Pulling the chip (the lab's window: sv_livingcity_lab.lua)
 
-- "He only works for the Resistance."  (text, line 640)
-- ""Pull the chip? Not here. Not without the proper tools.""  (text, line 642)
-- ""It's out already. There's nothing left in there to take.""  (text, line 643)
+- "He only works for the Resistance."  (text, line 641)
+- ""Pull the chip? Not here. Not without the proper tools.""  (text, line 643)
+- ""It's out already. There's nothing left in there to take.""  (text, line 644)
 
 > Note for you (not shown in game): part of: chip surgery ready
 
-- "%d credits for the tools and the codes, and you don't have them."  (message, line 646)
+- "%d credits for the tools and the codes, and you don't have them."  (message, line 647)
 
 ## the dead (sv_livingcity_bodies.lua)
 
@@ -4849,47 +4846,47 @@ Made from version 8fdaef2. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: admin do
 
-- "That can't happen right now (or the map has nowhere for it)."  (text, line 310)
-- "By order of the City Administrator: {arg}."  (text, line 311)
-- "Rations are increased for the hour. The Union provides."  (text, line 318)
-- "Rations are reduced for the hour. Sacrifice strengthens us."  (text, line 318)
-- "Rations are as usual."  (text, line 318)
-- "Commissary prices are %s for the hour (%d%%)."  (message, line 325)
-- "as usual"  (text, line 325)
-- "For the hour, {name} shifts pay half again. The city needs hands there."  (text, line 333)
+- "That can't happen right now (or the map has nowhere for it)."  (text, line 312)
+- "By order of the City Administrator: {arg}."  (text, line 313)
+- "Rations are increased for the hour. The Union provides."  (text, line 320)
+- "Rations are reduced for the hour. Sacrifice strengthens us."  (text, line 320)
+- "Rations are as usual."  (text, line 320)
+- "Commissary prices are %s for the hour (%d%%)."  (message, line 327)
+- "as usual"  (text, line 327)
+- "For the hour, {name} shifts pay half again. The city needs hands there."  (text, line 335)
 
 > Note for you (not shown in game): the rest are about a person
 
-- "Look at someone, or pick them."  (text, line 337)
-- "Commended by the Administrator"  (text, line 342)
-- "Censured by the Administrator"  (text, line 342)
-- "is commended for their service to the city."  (text, line 343)
-- "is censured. Let them remember it."  (text, line 343)
+- "Look at someone, or pick them."  (text, line 339)
+- "Commended by the Administrator"  (text, line 344)
+- "Censured by the Administrator"  (text, line 344)
+- "is commended for their service to the city."  (text, line 345)
+- "is censured. Let them remember it."  (text, line 345)
 
 > Note for you (not shown in game): part of: admin do
 
-- "They aren't wanted."  (text, line 346)
-- "Not for that. Not even the Administrator."  (text, line 349)
-- "is pardoned. The city is merciful."  (text, line 354)
-- "[City] The Administrator grants you a week's rent-free housing."  (chat message, line 360)
-- "[City] The Administrator issues you a curfew permit."  (chat message, line 366)
+- "They aren't wanted."  (text, line 348)
+- "Not for that. Not even the Administrator."  (text, line 351)
+- "is pardoned. The city is merciful."  (text, line 356)
+- "[City] The Administrator grants you a week's rent-free housing."  (chat message, line 362)
+- "[City] The Administrator issues you a curfew permit."  (chat message, line 368)
 
 > Note for you (not shown in game): a week's free housing (the office): read by the rent
 
-- "rent-free, by the Administrator's grant"  (text, line 376)
+- "rent-free, by the Administrator's grant"  (text, line 378)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_admin_do)
 
-- "[Office] Done."  (chat message, line 384)
-- "[Office] {or}"  (text, line 384)
+- "[Office] Done."  (chat message, line 386)
+- "[Office] {or}"  (text, line 386)
 
 > Note for you (not shown in game): part of: spawn guard
 
-- "guarding the City Administrator"  (text, line 418)
+- "guarding the City Administrator"  (text, line 420)
 
 > Note for you (not shown in game): part of: admin order kill
 
-- "Threat to the City Administrator"  (text, line 441)
+- "Threat to the City Administrator"  (text, line 443)
 
 ## weedkiller against the infestation, and against the Combine (the owner, 2026-11-01) (sv_livingcity_cleanup.lua)
 
@@ -5291,71 +5288,73 @@ Made from version 8fdaef2. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): an outbreak: red only while its infected are actually loose in the city (at most 5 minutes); headcrabs and zombies in the infestation itself don't touch it
 
-- "infected loose in the city"  (text, line 703)
-- "civil unrest"  (text, line 706)
-- "fighting in the streets"  (text, line 707)
-- "an anticitizen at large"  (text, line 710)
+- "infected loose in the city"  (text, line 728)
+- "civil unrest"  (text, line 731)
+- "fighting in the streets"  (text, line 732)
+- "units murdered by rebels"  (text, line 734)
+- "units murdered by rebels"  (text, line 735)
 
 > Note for you (not shown in game): part of: socio auto
 
-- "a wanted anticitizen"  (text, line 711)
+- "an anticitizen at large"  (text, line 738)
+- "a wanted anticitizen"  (text, line 739)
 
 > Note for you (not shown in game): part of: announce socio
 
-- "[Overwatch] "{subtitle}""  (chat message, line 740)
-- "[Overwatch] Sociostability: %s.%s"  (message, line 743)
+- "[Overwatch] "{subtitle}""  (chat message, line 768)
+- "[Overwatch] Sociostability: %s.%s"  (message, line 771)
 
 > Note for you (not shown in game): part of: set socio
 
-- "Only the Administrator sets sociostability."  (text, line 788)
-- "Sociostability is back to what the city makes it."  (text, line 793)
-- "Pick green, yellow, red, or auto (the city decides)."  (text, line 795)
+- "Only the Administrator sets sociostability."  (text, line 816)
+- "Sociostability is back to what the city makes it."  (text, line 821)
+- "Pick green, yellow, red, or auto (the city decides)."  (text, line 823)
 
 > Note for you (not shown in game): (announced to the whole city each time: not more than once every half minute)
 
-- "You only just set it. Wait %d seconds."  (message, line 798)
-- "Sociostability set to %s for %d minutes."  (message, line 804)
+- "You only just set it. Wait %d seconds."  (message, line 826)
+- "Sociostability set to %s for %d minutes."  (message, line 832)
 
 > Note for you (not shown in game): Requests
 
-- "Requests are off on this server."  (text, line 818)
-- "You're a Civil Protection unit. Use the radio, or !backup."  (text, line 820)
-- "You need a Civil Protection call box (the Union Commissary sells them)."  (text, line 821)
-- "Say what's wrong: /request <what's wrong>"  (text, line 822)
+- "Requests are off on this server."  (text, line 846)
+- "You're a Civil Protection unit. Use the radio, or !backup."  (text, line 848)
+- "You need a Civil Protection call box (the Union Commissary sells them)."  (text, line 849)
+- "Say what's wrong: /request <what's wrong>"  (text, line 850)
 
 > Note for you (not shown in game): part of: cprequest
 
-- "The call box crackles. Nothing gets through: something nearby is jamming it."  (text, line 823)
-- "The device is still recharging (%ds)."  (message, line 826)
-- "[Request] Sent. Civil Protection has your location."  (chat message, line 858)
-- "[Request] Sent. A Civil Protection unit is on the way."  (text, line 859)
-- "[Request] Sent. Nobody answers."  (text, line 859)
-- "request from %s: %s"  (message, line 860)
+- "The call box crackles. Nothing gets through: something nearby is jamming it."  (text, line 851)
+- "The device is still recharging (%ds)."  (message, line 854)
+- "[Request] Sent. Civil Protection has your location."  (chat message, line 886)
+- "[Request] Sent. A Civil Protection unit is on the way."  (text, line 887)
+- "[Request] Sent. Nobody answers."  (text, line 887)
+- "request from %s: %s"  (message, line 888)
 
 > Note for you (not shown in game): Play a line and say it. word: the line's short word, its number, or its words.
 
-- "Only Civil Protection units have the mask's voice."  (text, line 896)
-- "No such line. !vo opens the list."  (text, line 899)
+- "Only Civil Protection units have the mask's voice."  (text, line 924)
+- "No such line. !vo opens the list."  (text, line 927)
 
 > Note for you (not shown in game): part of: vo
 
-- "Only Civil Protection units have the mask's voice."  (chat message, line 952)
+- "Only Civil Protection units have the mask's voice."  (chat message, line 980)
 
 > Note for you (not shown in game): part of: socio
 
-- "[Overwatch] Sociostability: %s%s"  (message, line 964)
-- "(set by %s, %d min left)"  (message, line 965)
+- "[Overwatch] Sociostability: %s%s"  (message, line 992)
+- "(set by %s, %d min left)"  (message, line 993)
 
 > Note for you (not shown in game): every 10 minutes, as before the dispenser was slowed (the owner, 7 November: only citizens feel the scarcity)
 
-- "a ration voucher"  (text, line 1024)
-- "credits in ration coupons"  (text, line 1026)
+- "a ration voucher"  (text, line 1052)
+- "credits in ration coupons"  (text, line 1054)
 
 > Note for you (not shown in game): part of: issue duty allocation
 
-- "[Civil Protection] Duty allocation issued: {got}.{or}"  (chat message, line 1028)
-- "Ration voucher"  (on-screen notice, line 1032)
-- "Your duty allocation comes as a ration voucher, not a packet: take it to a Civil Protection Commissary or a ration dispenser (E) for your ration."  (on-screen notice, line 1032)
+- "[Civil Protection] Duty allocation issued: {got}.{or}"  (chat message, line 1056)
+- "Ration voucher"  (on-screen notice, line 1060)
+- "Your duty allocation comes as a ration voucher, not a packet: take it to a Civil Protection Commissary or a ration dispenser (E) for your ration."  (on-screen notice, line 1060)
 
 ## the Civil Protection Commissary (units' supplies) (sv_livingcity_cpsupply.lua)
 
@@ -6064,6 +6063,96 @@ Made from version 8fdaef2. Admin-only console messages and log lines are left ou
 
 - "Dream game over: %s (%s), %d won"  (message, line 1055)
 
+## the dream plan (who chooses tonight's dream, and how) (sv_livingcity_dreamplan.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_dreamplan.lua`
+
+
+> Note for you (not shown in game): part of: dream unit murdered
+
+- "a Civil Protection unit murdered"  (text, line 134)
+- "a Civil Protection unit murdered"  (text, line 135)
+
+> Note for you (not shown in game): Her choice: a kind, now and then
+
+- "a propaganda dream"  (text, line 222)
+
+> Note for you (not shown in game): Can she choose tonight? True, or false, why not, and in how many nights she can.
+
+- "Only the City Administrator chooses the city's dreams."  (text, line 226)
+- "The city can't dream yet."  (text, line 227)
+- "You've already chosen tonight's: take it back first to choose again."  (text, line 229)
+
+> Note for you (not shown in game): part of: dream admin can pick
+
+- "You chose recently. Your next choice comes in %d %s."  (message, line 234)
+- "Last night's dream was a Nightmare or propaganda: tonight the city dreams something gentler. Choose tomorrow."  (text, line 237)
+
+> Note for you (not shown in game): She chooses a kind (nightmare or propaganda): the next dream of it waits for tonight. True, or false and why not.
+
+- "Choose a Nightmare or propaganda: which dream it is, the city decides."  (text, line 245)
+- "There's no dream of that kind to dream."  (text, line 249)
+- "The city can't dream yet."  (text, line 250)
+
+> Note for you (not shown in game): part of: dream admin category
+
+- "Tonight's dream"  (on-screen notice, line 255)
+- "You've chosen %s for %s. Which one, the city decides. You'll be in it yourself: lights out sends you to bed for it."  (message, line 255)
+- "tomorrow night (tonight's has been dreamt)"  (message, line 256)
+
+> Note for you (not shown in game): She takes tonight's choice back before it's dreamt (nothing spent).
+
+- "You haven't chosen tonight's dream."  (text, line 262)
+- "The city is dreaming it now."  (text, line 263)
+- "Tonight's dream"  (on-screen notice, line 265)
+- "Taken back. Tonight the city dreams its own dream, and your choice waits for another night."  (on-screen notice, line 265)
+
+> Note for you (not shown in game): Dreams she didn't choose: skip them (the default) or join them.
+
+- "Dreams you didn't choose"  (on-screen notice, line 273)
+- "You'll skip them: lights out won't send you to bed for them, and asleep you sleep through them."  (on-screen notice, line 273)
+- "You'll dream them with the city (and you can wake from one whenever you like)."  (on-screen notice, line 274)
+
+> Note for you (not shown in game): The words on the black screen
+
+- "Today the city was calm. You slip off into a happy dream."  (text, line 318)
+- "The streets were quiet today, and the city breathed easy. Something warm is waiting for you in your sleep."  (text, line 319)
+- "A good day, as days go here. Your eyes close on something gentle."  (text, line 320)
+- "Nobody shouted, nobody ran. Tonight, you think, will be a kind night."  (text, line 321)
+- "Today the city felt a bit unsettled. Your dreams may reflect that."  (text, line 324)
+- "Something was off today: too many footsteps, too few faces. Your sleep will be a strange one."  (text, line 325)
+- "The city couldn't quite sit still today, and neither can your mind. Whatever comes tonight will be odd."  (text, line 326)
+- "Not a bad day. Not a good one. Your dreams drift somewhere in between."  (text, line 327)
+- "The streets were rough today, but the Administrator has left tonight to the city's own dreams. Something strange, not cruel."  (text, line 330)
+- "It was an ugly day out there. Tonight, at least, nobody is choosing your dreams for you."  (text, line 331)
+- "Trouble today, and plenty of it. Your sleep doesn't seem to care: it drifts somewhere strange instead."  (text, line 332)
+- "There was trouble on the streets again, but last night's dream still hangs over the city. Tonight, something gentler."  (text, line 335)
+- "The city is still shaking off last night's dream. Whatever today was, tonight you dream something softer."  (text, line 336)
+- "Even the worst days end. Last night was dark enough; tonight your sleep goes somewhere stranger, and kinder."  (text, line 337)
+- "The streets were filled with murder and crime. You expect a nightmare."  (text, line 340)
+- "A unit died on the streets today, and the whole city felt it. Your sleep won't be kind."  (text, line 341)
+- "Blood on the pavement, sirens until dark. You know what's coming when you close your eyes."  (text, line 342)
+- "Someone killed one of them today. The city holds its breath, and your dreams turn cold."  (text, line 343)
+- "Sirens wailed all day and the city never settled. Something dark waits behind your eyelids."  (text, line 346)
+- "The city was on edge from dawn to dusk. Tonight, the edge comes for you."  (text, line 347)
+- "Nobody felt safe today. Nobody will feel safe tonight, either."  (text, line 348)
+- "The city has strayed all day, and the Administration means to set it straight. Even asleep, you will listen."  (text, line 351)
+- "Today the city forgot itself. Tonight, it will be reminded what it loves."  (text, line 352)
+- "Unrest, all day long. The Administration has a lesson for you, and sleep is no excuse to miss it."  (text, line 353)
+- "The Administrator feels the citizens need motivation to better themselves and the city, and is keen to instruct you even in your sleep."  (text, line 356)
+- "The Administrator has words for you tonight. You'll hear them whether you're awake or not."  (text, line 357)
+- "The Administrator believes in you. She'd like to explain why, at length, in your dreams."  (text, line 358)
+- "The Administrator has decided the city needs reminding what disobedience costs. Tonight, you will be reminded."  (text, line 361)
+- "The Administrator was not pleased with today. Your sleep will hear about it."  (text, line 362)
+- "Tonight's dream has been chosen for you, and it was not chosen kindly."  (text, line 363)
+
+> Note for you (not shown in game): The day in a line for her tablet (inferred, never a formula).
+
+- "Today: blood on the streets. A unit was murdered."  (text, line 378)
+- "Today: unrest from dawn on. The city hasn't settled."  (text, line 379)
+- "Today: calm. The city is behaving itself."  (text, line 380)
+- "Today: unsettled. Not bad, not good."  (text, line 381)
+
 ## which dream tonight (the rules, and the city's own pick) (sv_livingcity_dreamrules.lua)
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_dreamrules.lua`
@@ -6086,22 +6175,22 @@ Made from version 8fdaef2. Admin-only console messages and log lines are left ou
 - "A clean day, nothing wrong in it: a Happy dream is allowed tonight."  (text, line 93)
 - "An ordinary day ({events}): a Neutral or propaganda dream tonight."  (text, line 94)
 
-> Note for you (not shown in game): Watching the day
+> Note for you (not shown in game): (The city's own pick, LC.DreamAutoPick and LC.DreamCityPicks, is in sv_livingcity_dreamplan.lua now: the owner, 9 November.) Watching the day
 
-- "sociostability at {worst}"  (text, line 139)
+- "sociostability at {worst}"  (text, line 118)
 
 > Note for you (not shown in game): the game's living city socio changed moment
 
-- "sociostability falling to {level}"  (text, line 146)
+- "sociostability falling to {level}"  (text, line 125)
 
 > Note for you (not shown in game): the game's living city outbreak moment
 
-- "an outbreak"  (text, line 151)
+- "an outbreak"  (text, line 130)
 
 > Note for you (not shown in game): the game's living city skirmish moment
 
-- "a rebel attack"  (text, line 153)
-- "a sweep of rebel ground"  (text, line 153)
+- "a rebel attack"  (text, line 132)
+- "a sweep of rebel ground"  (text, line 132)
 
 ## shared dreams (sv_livingcity_dreams.lua)
 
@@ -6117,156 +6206,153 @@ Made from version 8fdaef2. Admin-only console messages and log lines are left ou
 - "The city slept strangely last night. Nobody quite remembers the dream."  (text, line 134)
 - "The city slept badly last night. People wake shaking, and nobody wants to talk about the dream."  (text, line 135)
 
-> Note for you (not shown in game): (any dream now, not only a nightmare: the owner, 8 November, "make it so no one can opt out of dreams")
-
-- "You can't wake yourself from this dream. You have to see it through (or be out of it)."  (text, line 241)
-
 > Note for you (not shown in game): part of: dream can wake
 
-- "You can't wake yourself from a nightmare. You have to see it through (or be out of it)."  (text, line 242)
+- "You can't wake yourself from this dream. You have to see it through (or be out of it)."  (text, line 243)
+- "You can't wake yourself from a nightmare. You have to see it through (or be out of it)."  (text, line 244)
 
 > Note for you (not shown in game): part of: pdata all
 
-- "SELECT infoid, value FROM playerpdata WHERE infoid LIKE {pre}"  (text, line 294)
+- "SELECT infoid, value FROM playerpdata WHERE infoid LIKE {pre}"  (text, line 296)
 
 > Note for you (not shown in game): admins
 
-- "'s things don't all match after the dream ({bad}). The snapshot is kept: C > Help > Dreams, Put back."  (on-screen notice, line 753)
+- "'s things don't all match after the dream ({bad}). The snapshot is kept: C > Help > Dreams, Put back."  (on-screen notice, line 755)
 
 > Note for you (not shown in game): their sleeping body stays in the bed, to be woken if it's hurt or the camp is raided (sv_livingcity_bedtime.lua)
 
-- "You drift into a dream, with everyone else asleep. Whatever happens here, you wake in your bed with everything you had. You can't wake yourself until you're out of it (then: C > Settings > Shared dreams: wake up)."  (on-screen notice, line 803)
+- "You drift into a dream, with everyone else asleep. Whatever happens here, you wake in your bed with everything you had. You can't wake yourself until you're out of it (then: C > Settings > Shared dreams: wake up)."  (on-screen notice, line 805)
 
 > Note for you (not shown in game): dream restore
 
-- "You wake up"  (on-screen notice, line 869)
-- "The test is over: you're back where you were, with everything as it was."  (on-screen notice, line 869)
-- "You wake from the dream, in your bed, with everything as it was."  (on-screen notice, line 870)
-- "You wake in your bed, with everything just as it was. Press Jump to get up."  (on-screen notice, line 871)
+- "You wake up"  (on-screen notice, line 871)
+- "The test is over: you're back where you were, with everything as it was."  (on-screen notice, line 871)
+- "You wake from the dream, in your bed, with everything as it was."  (on-screen notice, line 872)
+- "You wake in your bed, with everything just as it was. Press Jump to get up."  (on-screen notice, line 873)
 
 > Note for you (not shown in game): Starting one Dream an ending now, with everyone asleep (also: an admin testing it, awake). vote: the G-Man's vote first (among the dreamers). True, or false and why not.
 
-- "Dreams are off (lc_dreams 0)."  (text, line 943)
-- "There's no dream point on this map: place one with the Living City Editor (Point: dream)."  (text, line 945)
-- "No such ending."  (text, line 947)
-- "An ending is already under way."  (text, line 948)
-- "A dream is already under way."  (text, line 949)
+- "Dreams are off (lc_dreams 0)."  (text, line 945)
+- "There's no dream point on this map: place one with the Living City Editor (Point: dream)."  (text, line 947)
+- "No such ending."  (text, line 949)
+- "An ending is already under way."  (text, line 950)
+- "A dream is already under way."  (text, line 951)
 
 > Note for you (not shown in game): part of: dream start
 
-- "Not yet ({EndingCooldownLeft} minutes of the endings' cooldown left)."  (text, line 950)
-- "Nobody is asleep to dream it."  (text, line 954)
+- "Not yet ({EndingCooldownLeft} minutes of the endings' cooldown left)."  (text, line 952)
+- "Nobody is asleep to dream it."  (text, line 956)
 
 > Note for you (not shown in game): Enforcers watch over a dream; they don't dream it on their own (the owner, 8 November)
 
-- "Nobody is asleep to dream it (only Enforcers)."  (text, line 959)
+- "Nobody is asleep to dream it (only Enforcers)."  (text, line 961)
 
 > Note for you (not shown in game): part of: dream start
 
-- "Nobody could be got ready to dream (their snapshots couldn't be saved)."  (text, line 969)
-- "Dream: %s, with %d asleep"  (message, line 981)
+- "Nobody could be got ready to dream (their snapshots couldn't be saved)."  (text, line 971)
+- "Dream: %s, with %d asleep"  (message, line 983)
 
 > Note for you (not shown in game): The Administrator's tablet (sv_livingcity_cityadmin.lua): tonight's dream, by mood.
 
-- "Dreams are switched off on this server."  (text, line 1009)
-- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 1010)
+- "Dreams are switched off on this server."  (text, line 1011)
+- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 1012)
 
 > Note for you (not shown in game): The Administrator picks tonight's dream (id), or none ("none"). True, or false and why not. The pick ignores the endings' cooldown, and there's still one dream a night; it can be changed until the dream begins. (The G-Man has no part in dreams: the owner, 7 November.)
 
-- "Only the City Administrator chooses the city's dreams."  (text, line 1046)
-- "Dreams are switched off on this server."  (text, line 1047)
-- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 1048)
+- "Only the City Administrator chooses the city's dreams."  (text, line 1049)
+- "Dreams are switched off on this server."  (text, line 1050)
+- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 1051)
 
 > Note for you (not shown in game): part of: dream admin pick
 
-- "Tonight's dream"  (on-screen notice, line 1053)
-- "No dream tonight. The city sleeps without one."  (on-screen notice, line 1053)
-- "No such dream."  (text, line 1056)
-- "Not tonight. {whyR}"  (text, line 1059)
-- "Tonight's dream"  (on-screen notice, line 1068)
-- "Everyone asleep will dream it tonight, a minute after you say good night."  (message, line 1069)
-- "Tonight's dream has been dreamt already: it waits for tomorrow night."  (message, line 1069)
+- "Tonight's dream"  (on-screen notice, line 1056)
+- "No dream tonight. The city sleeps without one."  (on-screen notice, line 1056)
+- "No such dream."  (text, line 1059)
+- "Not tonight. {whyR}"  (text, line 1062)
+- "Tonight's dream"  (on-screen notice, line 1071)
+- "Everyone asleep will dream it tonight, a minute after you say good night."  (message, line 1072)
+- "Tonight's dream has been dreamt already: it waits for tomorrow night."  (message, line 1072)
 
 > Note for you (not shown in game): part of: dream tonight
 
-- "no dream point"  (text, line 1100)
-- "nothing to dream"  (text, line 1102)
+- "no dream point"  (text, line 1105)
+- "nothing to dream"  (text, line 1107)
 
-> Note for you (not shown in game): picked earlier, and the day has changed since (a curfew after a Happy pick): the city's own pick instead
+> Note for you (not shown in game): picked earlier, and the day has changed since (a curfew after a Happy pick): the city's own pick instead (her kind, or the city's own choice, stands: sv_livingcity_dreamplan.lua)
 
-- "Tonight's dream"  (on-screen notice, line 1107)
-- "%s can't be dreamt tonight after all. %s The city dreams %s instead."  (message, line 1107)
-- "nothing allowed to dream"  (text, line 1109)
+- "Tonight's dream"  (on-screen notice, line 1114)
+- "%s can't be dreamt tonight after all. %s The city dreams %s instead."  (message, line 1114)
+- "nothing allowed to dream"  (text, line 1116)
 
 > Note for you (not shown in game): (the morning after a dream: a line for the whole city, by its mood)
 
-- "[City] {line}"  (chat message, line 1135)
+- "[City] {line}"  (chat message, line 1142)
 
 > Note for you (not shown in game): the sleepers, warned (and the way out)
 
-- "A dream is coming"  (on-screen notice, line 1157)
-- "You'll be in it as an Enforcer: nothing in it can touch you, and you can wake whenever you like. Punish the dreamers who misbehave (they glow red) with your baton."  (on-screen notice, line 1157)
+- "A dream is coming"  (on-screen notice, line 1164)
+- "You'll be in it as an Enforcer: nothing in it can touch you, and you can wake whenever you like. Punish the dreamers who misbehave (they glow red) with your baton."  (on-screen notice, line 1164)
 
 > Note for you (not shown in game): pcall
 
-- "A dream is coming"  (on-screen notice, line 1160)
-- "It's shared with everyone asleep, and you'll wake in your bed with everything you had. {or}"  (on-screen notice, line 1160)
+- "A dream is coming"  (on-screen notice, line 1167)
+- "It's shared with everyone asleep, and you'll wake in your bed with everything you had. {or}"  (on-screen notice, line 1167)
 
 > Note for you (not shown in game): the safeguard (the owner, 8 November: "ALL dreams will end for all players after 5 minutes ... in case they get bugged/glitched"): ended, everything it made removed, everyone woken with everything put back
 
-- "Dream: %s still going after %d minutes: ended by the safeguard"  (message, line 1175)
-- "The dream fades"  (on-screen notice, line 1176)
-- "It loosens its grip, and you wake."  (on-screen notice, line 1176)
-- "time limit"  (text, line 1178)
+- "Dream: %s still going after %d minutes: ended by the safeguard"  (message, line 1187)
+- "The dream fades"  (on-screen notice, line 1188)
+- "It loosens its grip, and you wake."  (on-screen notice, line 1188)
+- "time limit"  (text, line 1190)
 
 > Note for you (not shown in game): In a dream, nothing counts
 
-- "will have to wait until you wake up. (C > Settings > Shared dreams: wake up.)"  (on-screen notice, line 1260)
+- "will have to wait until you wake up. (C > Settings > Shared dreams: wake up.)"  (on-screen notice, line 1272)
 
 > Note for you (not shown in game): part of: inv action
 
-- "Your pockets"  (text, line 1284)
+- "Your pockets"  (text, line 1296)
 
 > Note for you (not shown in game): part of: sleep in
 
-- "You're already dreaming."  (text, line 1285)
+- "You're already dreaming."  (text, line 1297)
 
 > Note for you (not shown in game): Players: opting out, and waking up (no opting out any more: the owner, 8 November. Asking just says so.)
 
-- "Shared dreams"  (on-screen notice, line 1328)
-- "Nobody can opt out of the city's dreams. Everyone asleep dreams them; only a stimulant before bed (or, with luck, the lab's foil hat) keeps one out."  (on-screen notice, line 1328)
+- "Shared dreams"  (on-screen notice, line 1340)
+- "Nobody can opt out of the city's dreams. Everyone asleep dreams them; only a stimulant before bed (or, with luck, the lab's foil hat) keeps one out."  (on-screen notice, line 1340)
 
 > Note for you (not shown in game): part of: dream command
 
-- "[Dreams] You're not dreaming."  (chat message, line 1336)
-- "[Dreams] Everyone asleep dreams the city's dreams: nobody can opt out. /dream wake, once you're out of one (or C > Settings)."  (chat message, line 1338)
+- "[Dreams] You're not dreaming."  (chat message, line 1348)
+- "[Dreams] Everyone asleep dreams the city's dreams: nobody can opt out. /dream wake, once you're out of one (or C > Settings)."  (chat message, line 1350)
 
 > Note for you (not shown in game): dream restore
 
-- "You wake up"  (on-screen notice, line 1358)
-- "You'd left in the middle of a dream. Everything you had is just as it was."  (on-screen notice, line 1358)
+- "You wake up"  (on-screen notice, line 1370)
+- "You'd left in the middle of a dream. Everything you had is just as it was."  (on-screen notice, line 1370)
 
 > Note for you (not shown in game): Put someone's things back from their snapshot (also an old one already put back once).
 
-- "No such player."  (text, line 1376)
-- "is woken, and everything put back."  (text, line 1377)
-- "has no dream snapshot."  (text, line 1380)
+- "No such player."  (text, line 1388)
+- "is woken, and everything put back."  (text, line 1389)
+- "has no dream snapshot."  (text, line 1392)
 
 > Note for you (not shown in game): part of: dream force restore
 
-- "'s things are being put back from their snapshot."  (text, line 1385)
+- "'s things are being put back from their snapshot."  (text, line 1397)
 
 > Note for you (not shown in game): part of: dream status
 
-- "(a dream you play)"  (name, line 1401)
+- "(a dream you play)"  (name, line 1413)
 
 > Note for you (not shown in game): part of: reply
 
-- "[Living City] {m}"  (chat message, line 1444)
+- "[Living City] {m}"  (chat message, line 1456)
 
 > Note for you (not shown in game): the console command lc_dream_now
 
-- "The dream begins: {id}"  (text, line 1454)
+- "The dream begins: {id}"  (text, line 1466)
 
 ## stand-ins, so no dream is ever thin (sv_livingcity_dreamstandins.lua)
 
@@ -11247,79 +11333,79 @@ Made from version 8fdaef2. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: tick
 
-- "Sunny the Scanner"  (quest narration, line 1335)
-- "The Resistance!"  (on-screen notice, line 1349)
-- "A fifty-foot rebel scientist, glowing red, rides the rocket into the sky shaking his fist and cackling."  (on-screen notice, line 1349)
-- "Prepared citizen"  (text, line 1365)
-- "Sunny gives you a gold star sticker. It glows slightly. That's normal!"  (text, line 1365)
-- "Safe and sound!"  (on-screen notice, line 1366)
-- "You ducked and covered. %d of %d."  (message, line 1366)
-- "Caught in the flash"  (text, line 1368)
-- "You weren't covered when the rebels' rocket came down. Sunny looks very disappointed in you."  (text, line 1368)
+- "Sunny the Scanner"  (quest narration, line 1344)
+- "The Resistance!"  (on-screen notice, line 1358)
+- "A fifty-foot rebel scientist, glowing red, rides the rocket into the sky shaking his fist and cackling."  (on-screen notice, line 1358)
+- "Prepared citizen"  (text, line 1374)
+- "Sunny gives you a gold star sticker. It glows slightly. That's normal!"  (text, line 1374)
+- "Safe and sound!"  (on-screen notice, line 1375)
+- "You ducked and covered. %d of %d."  (message, line 1375)
+- "Caught in the flash"  (text, line 1377)
+- "You weren't covered when the rebels' rocket came down. Sunny looks very disappointed in you."  (text, line 1377)
 
 > Note for you (not shown in game): part of: state
 
-- "ROCKET LAUNCH! Duck and cover: crouch beside a table!"  (text, line 1381)
-- "Listen to Sunny."  (text, line 1382)
-- "Rockets survived: %d of %d"  (message, line 1385)
+- "ROCKET LAUNCH! Duck and cover: crouch beside a table!"  (text, line 1390)
+- "Listen to Sunny."  (text, line 1391)
+- "Rockets survived: %d of %d"  (message, line 1394)
 
 > Note for you (not shown in game): Ravenholm (the owner, 8 November: "reminiscing of the ending to ravenholm: a graveyard with the church but father gregori is glowing red and his voice lines pitch shifted to sound evil, and zombies are rising from the graves ... if a vortigaunt is free it will appear and send out an effect that is a green version of the portal storm effect from ep2 that washes over gregori and shows that he is actually the good guy ... the administrator appears as actually evil and father gregori starts killing the zombies ... and the administrator flies away defeated") The Saviour turned inside out. The dead rise from the graves and come for the dreamers, who have nothing to fight with (it hurts, in the dream); a giant, red Father Grigori rants from the church. When someone is down to 25 health (or after 55 seconds) the dream turns: No freed vortigaunt alive: propaganda wins. She descends, her soldiers kill the dead, and Grigori flees into the sky. ("Saved.") A freed vortigaunt still alive (a Free Vortigaunt player, awake or asleep, or an NPC cut loose from its shackles): a vortigaunt appears (the player themselves, if they're in the dream) and a green storm washes over everything. Grigori's red is gone and his voice is his own; he blasts the dead with his shotgun before they can hurt anyone, while a giant red figure of her shrieks and flies away defeated.
 
-- "The dead are rising from the graves, and you have nothing to fight with. Run. Dodge. Hold on."  (text, line 1411)
-- "Dawn over the graves"  (text, line 1412)
-- "The sun comes up over the graveyard, and you wake."  (text, line 1412)
-- "Father Grigori"  (text, line 1420)
-- "RISE, my children! Rise from your graves and FEAST!"  (text, line 1420)
-- "The Administrator"  (text, line 1421)
-- "Begone, false priest! These citizens are under MY protection."  (text, line 1421)
-- "The Administrator"  (text, line 1422)
-- "You see? Only I can keep you safe. Never forget it."  (text, line 1422)
-- "The Vortessence sees through the false light. Behold what is true."  (text, line 1423)
-- "Father Grigori"  (text, line 1424)
-- "Hah! Back to your rest, poor souls! Not one of these children shall be harmed!"  (text, line 1424)
-- "The Administrator"  (text, line 1425)
-- "No... NO! This is MY dream!"  (text, line 1425)
-- "Come, sinners, and be judged!"  (text, line 1432)
-- "The graves are hungry tonight!"  (text, line 1432)
-- "None shall leave my parish!"  (text, line 1432)
-- "Hahahaha! Run, little lambs!"  (text, line 1432)
+- "The dead are rising from the graves, and you have nothing to fight with. Run. Dodge. Hold on."  (text, line 1420)
+- "Dawn over the graves"  (text, line 1421)
+- "The sun comes up over the graveyard, and you wake."  (text, line 1421)
+- "Father Grigori"  (text, line 1429)
+- "RISE, my children! Rise from your graves and FEAST!"  (text, line 1429)
+- "The Administrator"  (text, line 1430)
+- "Begone, false priest! These citizens are under MY protection."  (text, line 1430)
+- "The Administrator"  (text, line 1431)
+- "You see? Only I can keep you safe. Never forget it."  (text, line 1431)
+- "The Vortessence sees through the false light. Behold what is true."  (text, line 1432)
+- "Father Grigori"  (text, line 1433)
+- "Hah! Back to your rest, poor souls! Not one of these children shall be harmed!"  (text, line 1433)
+- "The Administrator"  (text, line 1434)
+- "No... NO! This is MY dream!"  (text, line 1434)
+- "Come, sinners, and be judged!"  (text, line 1441)
+- "The graves are hungry tonight!"  (text, line 1441)
+- "None shall leave my parish!"  (text, line 1441)
+- "Hahahaha! Run, little lambs!"  (text, line 1441)
 
 > Note for you (not shown in game): part of: turn
 
-- "A green storm"  (on-screen notice, line 1544)
-- "A vortigaunt's light washes over the graveyard, and everything looks different."  (on-screen notice, line 1544)
-- "Everything stops"  (on-screen notice, line 1553)
-- "The dead freeze where they stand. A light breaks through the clouds."  (on-screen notice, line 1553)
+- "A green storm"  (on-screen notice, line 1553)
+- "A vortigaunt's light washes over the graveyard, and everything looks different."  (on-screen notice, line 1553)
+- "Everything stops"  (on-screen notice, line 1562)
+- "The dead freeze where they stand. A light breaks through the clouds."  (on-screen notice, line 1562)
 
 > Note for you (not shown in game): the dead: up out of the graves, then after the nearest dreamer (slower once the truth is out)
 
-- "Father Grigori"  (quest narration, line 1568)
+- "Father Grigori"  (quest narration, line 1577)
 
 > Note for you (not shown in game): part of: tick
 
-- "The truth"  (text, line 1678)
-- "Father Grigori lowers his shotgun and laughs. The last of the dead lie still, and the false light is gone from the sky."  (text, line 1678)
-- "Her soldiers stand over the last of the dead. She looks down at you, and you have never felt so safe."  (text, line 1679)
+- "The truth"  (text, line 1687)
+- "Father Grigori lowers his shotgun and laughs. The last of the dead lie still, and the false light is gone from the sky."  (text, line 1687)
+- "Her soldiers stand over the last of the dead. She looks down at you, and you have never felt so safe."  (text, line 1688)
 
 > Note for you (not shown in game): part of: woke
 
-- "The truth"  (on-screen notice, line 1687)
-- "You wake with green light behind your eyes and a priest's laughter in your ears. Something in the city's broadcasts sounds hollow this morning."  (on-screen notice, line 1687)
-- "You wake safe in your bed, and for a moment you'd swear you can still feel her light. The Combine protect you. They always have."  (on-screen notice, line 1688)
-- "Dawn over the graves"  (on-screen notice, line 1689)
-- "You wake with the smell of earth, and the sound of a priest laughing somewhere far away."  (on-screen notice, line 1689)
-- "A graveyard, under a red sky. Something stirs."  (text, line 1692)
-- "The dead are rising! Run!"  (text, line 1692)
-- "Everything stops. A light from above..."  (text, line 1692)
-- "Her soldiers are here!"  (text, line 1693)
-- "A green storm..."  (text, line 1693)
-- "Father Grigori fights for you!"  (text, line 1693)
-- "She flees!"  (text, line 1693)
-- "It's over."  (text, line 1693)
+- "The truth"  (on-screen notice, line 1696)
+- "You wake with green light behind your eyes and a priest's laughter in your ears. Something in the city's broadcasts sounds hollow this morning."  (on-screen notice, line 1696)
+- "You wake safe in your bed, and for a moment you'd swear you can still feel her light. The Combine protect you. They always have."  (on-screen notice, line 1697)
+- "Dawn over the graves"  (on-screen notice, line 1698)
+- "You wake with the smell of earth, and the sound of a priest laughing somewhere far away."  (on-screen notice, line 1698)
+- "A graveyard, under a red sky. Something stirs."  (text, line 1701)
+- "The dead are rising! Run!"  (text, line 1701)
+- "Everything stops. A light from above..."  (text, line 1701)
+- "Her soldiers are here!"  (text, line 1702)
+- "A green storm..."  (text, line 1702)
+- "Father Grigori fights for you!"  (text, line 1702)
+- "She flees!"  (text, line 1702)
+- "It's over."  (text, line 1702)
 
 > Note for you (not shown in game): part of: state
 
-- "The dead: %d"  (message, line 1696)
+- "The dead: %d"  (message, line 1705)
 
 ## persistent props (sv_livingcity_props.lua)
 

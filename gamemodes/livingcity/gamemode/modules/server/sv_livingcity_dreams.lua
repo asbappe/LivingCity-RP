@@ -223,6 +223,7 @@ function LC.DreamSleepers(mood, id)
             or (prop and LC.Unbroken and LC.Unbroken(p)) -- (Unbroken: the Combine can't get into your head, propaganda included)
             or (LC.DreamProof and LC.DreamProof(p))
         if p.lcSleep and p:Alive() and not p.lcDreaming and not spared and (forced or not LC.DreamOptedOut(p)) and not (LC.Wired and LC.Wired(p))
+            and not (LC.DreamAdminSkips and LC.DreamAdminSkips(p)) -- (the Administrator, sitting out a dream she didn't choose: sv_livingcity_dreamplan.lua)
             and not (p.InVehicle and p:InVehicle()) then out[#out + 1] = p end
     end
     return out
@@ -234,6 +235,7 @@ function LC.DreamCanWake(p)
     if not IsValid(p) or not dream or dream.id ~= p.lcDreaming then return true end
     if p.lcDreamEnforcer then return true end -- (an Enforcer is only watching over it: sv_livingcity_dreamenforcers.lua)
     if dream.test then return true end -- (a test from the editor: stop whenever you like)
+    if LC.IsAdministrator and LC.IsAdministrator(p) and dream.adminBy ~= p then return true end -- (the Administrator, in a dream she didn't choose: sv_livingcity_dreamplan.lua)
     local g = dream.game
     if g and g.pl and g.pl[p] and g.pl[p].done then return true end
     if g and g.star == p then return true end -- (the Administrator starring in a propaganda dream isn't one of its players)
@@ -1036,6 +1038,7 @@ function LC.DreamOffice()
     out.dreamt = (S.dreamedNight == S.night) and LC.DayPhase and LC.DayPhase() == "night" or nil
     out.at = S.at and math.max(0, math.floor(S.at - CurTime())) or nil
     out.busy = LC.DreamActive ~= nil or nil
+    out.plan = LC.DreamPlanOffice and LC.DreamPlanOffice() or nil -- (her choice now: a kind, now and then: sv_livingcity_dreamplan.lua)
     return out
 end
 
@@ -1070,6 +1073,8 @@ function LC.DreamAdminPick(ply, id)
     return true
 end
 function LC.DreamForget() S.queued = nil end
+-- Tonight's dream already dreamt (it's night, and the city has dreamt)?
+function LC.DreamDreamtTonight() return S.dreamedNight == S.night and LC.DayPhase ~= nil and LC.DayPhase() == "night" end
 
 -- Tonight's dream, if there's one to dream: the one waiting (or, lc_dream_every_night, any).
 -- (lc_dream_every_night: tonight's random one, chosen once, as the warning goes out)
@@ -1077,8 +1082,8 @@ local function Nightly()
     if S.queued then return S.queued end
     -- nobody plays the Administrator: the city picks, by her rules (sv_livingcity_dreamrules.lua)
     if LC.DreamCityPicks and LC.DreamCityPicks() then
-        local id = LC.DreamAutoPick and LC.DreamAutoPick()
-        if id then S.queued = { id = id, vote = false, t = os.time(), source = "auto" } end
+        local id, why, kind = LC.DreamAutoPick()
+        if id then S.queued = { id = id, vote = false, t = os.time(), source = "auto", why = why, cat = kind } end -- (why: the words on the black screen)
         return S.queued
     end
     if not cvNightly:GetBool() then return S.queued end
@@ -1101,7 +1106,9 @@ function LC.DreamTonight()
     local id, by, vote, force = Pick()
     if not id then return false, "nothing to dream" end
     -- picked earlier, and the day has changed since (a curfew after a Happy pick): the city's own pick instead
-    if LC.DreamAllowed and not LC.DreamAllowed(id) then
+    -- (her kind, or the city's own choice, stands: sv_livingcity_dreamplan.lua)
+    local q0 = S.queued
+    if not (q0 and (q0.source == "admin" or q0.source == "auto")) and LC.DreamAllowed and not LC.DreamAllowed(id) then
         local was, okR, whyR = id, LC.DreamAllowed(id)
         id = LC.DreamAutoPick and LC.DreamAutoPick()
         if IsValid(by) then Notice(by, "warn", "Tonight's dream", string.format("%s can't be dreamt tonight after all. %s The city dreams %s instead.",
@@ -1163,6 +1170,11 @@ timer.Create("LivingCityDreams", 1, 0, function()
                                 or "There's no opting out: only a stimulant before bed (or, with luck, the lab's foil hat) would have kept you out of it."), 12)
                     end
                 end
+            end
+            -- the screen goes black, and the day's mood in a line (sv_livingcity_dreamplan.lua)
+            if S.moodFor ~= S.at and now >= S.at - (LC.DreamMoodLead or 7) and not LC.DreamActive then
+                S.moodFor = S.at
+                if LC.DreamMoodSend then pcall(LC.DreamMoodSend, Nightly(), S.at + 1) end
             end
             if now >= S.at and not (LC.EndingBusy and LC.EndingBusy()) and not LC.DreamActive then LC.DreamTonight() end
         end

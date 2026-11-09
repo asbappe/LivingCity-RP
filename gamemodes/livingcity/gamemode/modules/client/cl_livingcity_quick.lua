@@ -412,36 +412,27 @@ local function GuardsPage()
     } }
 end
 
--- Tonight's dream, as the tablet has it (sv_livingcity_dreams.lua): Happy, Neutral or Nightmare.
-local function DreamMoodPage(g)
-    local items, why = {}, nil
-    for _, e in ipairs(g.endings or {}) do
-        if e.blocked then why = why or e.blocked -- (not tonight: sv_livingcity_dreamrules.lua)
-        elseif #items < 9 then items[#items + 1] = Item(e.name or e.id, function() AdminDo("dream", e.id) end) end
-    end
-    local rows
-    if why then rows = {} rows[math.min(9, #items + 1)] = "Not tonight: " .. why end
-    return { title = string.upper(g.name or g.mood or "DREAMS"), items = items, empty = rows }
-end
+-- Tonight's dream, as the tablet has it: she chooses only a kind, now and then (sv_livingcity_dreamplan.lua).
 local function DreamPage()
     local d = Info("adm").dream
     if not d then return { title = "TONIGHT'S DREAM", items = {}, empty = { "No word from the office yet: try again in a moment." } } end
     if not d.ready then return { title = "TONIGHT'S DREAM", items = {}, empty = { d.why or "The city can't dream yet." } } end
+    local pl = d.plan or {}
     local items, notes = {}, {}
     if d.busy then notes[#notes + 1] = "The city is dreaming right now." end
-    if d.day then notes[#notes + 1] = d.day end
-    if d.waiting then
-        notes[#notes + 1] = "Waiting: " .. tostring(d.waiting.name) .. " (" .. tostring(d.waiting.mood) .. ")"
+    if pl.feel then notes[#notes + 1] = pl.feel end
+    if pl.chosen then
+        notes[#notes + 1] = "Chosen for tonight: " .. (pl.chosen == "nightmare" and "a Nightmare" or "a propaganda dream") .. ". You'll be in it."
+        items[#items + 1] = Item("Take back tonight's choice", function() AdminDo("dream", "cancel") end)
+    elseif pl.canPick then
+        items[#items + 1] = Item("A Nightmare tonight (a punishment)", function() AdminDo("dream", "nightmare") end)
+        items[#items + 1] = Item("A propaganda dream tonight", function() AdminDo("dream", "propaganda") end)
     else
-        notes[#notes + 1] = d.dreamt and "Dreamt tonight: a pick waits for tomorrow." or "Nothing chosen: no dream tonight."
+        notes[#notes + 1] = pl.why or "You can't choose tonight's dream."
     end
-    if not d.waiting or d.waiting.yours then
-        local blurb = { happy = "Happy (a reward)", neutral = "Neutral", nightmare = "Nightmare (a punishment)" }
-        for _, g in ipairs(d.groups or {}) do
-            if #(g.endings or {}) > 0 then items[#items + 1] = Page(blurb[g.mood] or g.name or g.mood, function() return DreamMoodPage(g) end) end
-        end
-        items[#items + 1] = Item("No dream tonight", function() AdminDo("dream", "none") end)
-    end
+    local skip = pl.skip ~= false
+    items[#items + 1] = Item(skip and "Dreams I didn't choose: skipping (join them)" or "Dreams I didn't choose: joining (skip them)", function() AdminDo("dream", skip and "join" or "skip") end)
+    notes[#notes + 1] = string.format("You choose a kind, once every %d nights; the city picks which, and the nights between are Happy or Neutral.", pl.every or 3)
     local rows = {}
     for i, n in ipairs(notes) do if #items + 1 + i <= 9 then rows[#items + 1 + i] = n end end
     return { title = "TONIGHT'S DREAM", items = items, empty = rows }

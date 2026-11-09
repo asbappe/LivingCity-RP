@@ -43,7 +43,7 @@
         Duck and Cover (duck), Cold War civil-defence films: the Resistance is firing rockets at
           the city (the owner: "framed as the resistance threat is launching a rocket"). Sunny the
           Scanner, a cheerful mascot, gives instructions; when the siren wails the rebels' rocket
-          climbs from its pad (White Forest's, with Episode Two on the server, else Garry's Mod's
+          climbs from its pad (White Forest's rocket_low, sized to the room over the dream point, else Garry's Mod's
           own), with Doctor Magnusson, fifty feet tall and glowing red, cackling beside it and riding
           it up; you crouch beside a table before the flash (two to a table). Six survived wins.
         The Resistance in these dreams is goofy (the owner: "dreams are nonsensical and goofy ...
@@ -1265,10 +1265,17 @@ do
         "Keep calm and keep low! That's the Sunny way!",
     }
     LC.DuckReach, LC.DuckPerTable = 75, 2
-    -- The rocket: the one from White Forest if the server has Episode Two, else Garry's Mod's own (and the size each needs).
-    LC.DuckRockets = { { "models/props_silo/rocket.mdl", 0.3 }, { "models/props_silo/rocket_low.mdl", 0.3 }, { "models/props_phx/rocket1.mdl", 2 },
+    -- The rocket: White Forest's (the owner, 9 November: "the model "models/props_silo/rocket_low.mdl" is the needed model, and it is 1299 units
+    -- tall ... and ~180 units wide"), else Garry's Mod's own. { model, scale, its height at scale 1 (to fit the headroom), if known }.
+    LC.DuckRockets = { { "models/props_silo/rocket_low.mdl", 0.3, 1299 }, { "models/props_silo/rocket.mdl", 0.3, 1299 }, { "models/props_phx/rocket1.mdl", 2 },
         { "models/weapons/w_missile_launch.mdl", 10 } }
     LC.DuckRise = 900
+    -- The rocket's scale and how far it climbs, to fit the room over the dream point (headroom, and the dream zone's top).
+    function LC.DuckFit(room, scale, height)
+        if not height then return scale, math.max(200, math.min(LC.DuckRise, room - 300)) end
+        local s2 = math.Clamp(room * 0.35 / height, 0.12, scale)
+        return s2, math.max(150, math.min(LC.DuckRise, room - height * s2 - 40))
+    end
 
     function def.build(g, dream)
         local x0, x1, top = Hall(g, dream, 3, Color(150, 160, 120))
@@ -1284,10 +1291,12 @@ do
         LC.DuckMagnusson = LC.DuckMagnusson or { "models/magnusson.mdl", "models/kleiner.mdl", LC.PropagandaRebels[1] }
         -- the rebels' launch pad, in the far corner
         g.padAt = Vector(x1 - 90, c.y - PLATE8_S + 110, top)
+        local room = math.min(LC.DreamGameHeadroom and LC.DreamGameHeadroom(dream) or 2000, (LC.DreamTop and LC.DreamTop(dream) or (top + 100000)) - top)
         for _, r in ipairs(LC.DuckRockets) do
             if K.ValidModel(r[1]) then
-                g.rocketModel = r[1]
-                g.rocket = Actor(g, r[1], g.padAt, 0, r[2])
+                local sc, rise = LC.DuckFit(room, r[2], r[3])
+                g.rocketModel, g.rise = r[1], rise
+                g.rocket = Actor(g, r[1], g.padAt, 0, sc)
                 break
             end
         end
@@ -1322,7 +1331,7 @@ do
         if IsValid(g.sunny) then local v = g.sunny:GetPos() g.sunny:SetPos(Vector(v.x, v.y, g.sunnyZ + math.sin(now * 2) * 12)) end
         if IsValid(g.rocket) then -- (on the pad while it's calm; climbing faster and faster once launched)
             local up = 0
-            if g.phase == "siren" then local f = math.Clamp(1 - (g.at - now) / g.sirenLen, 0, 1) up = LC.DuckRise * f * f end
+            if g.phase == "siren" then local f = math.Clamp(1 - (g.at - now) / g.sirenLen, 0, 1) up = (g.rise or LC.DuckRise) * f * f end
             g.rocket:SetPos(g.padAt + Vector(0, 0, up))
         end
         if IsValid(g.mag) then -- (cackling beside his rocket; riding it up when it goes)

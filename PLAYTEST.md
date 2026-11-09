@@ -1104,3 +1104,17 @@ Notes:
   Notes:
 - [ ] **Performance:** with all the nonsense (12 floating things, faces, effects), does a dream stay smooth? If not, say so and the shares can be turned down.
   Notes:
+
+## 9 November: who chooses tonight's dream
+- [ ] **As the Administrator:** tablet > Tonight's dream shows only "A Nightmare tonight" and "A propaganda dream tonight" (no list of dreams). Choose one: can you take it back? After it's dreamt, does the tablet say your next choice is in a couple of nights? Is the night after always Happy or Neutral?
+  Notes:
+- [ ] **Only her own dreams:** on a night she didn't choose, lights out leaves the Administrator alone, and asleep she isn't pulled in. Turn "Dreams I didn't choose" to join: then she is, and can wake whenever she likes. On her own choice she has to go to bed.
+  Notes:
+- [ ] **No Administrator playing:** a calm day gives a Happy dream, an uneasy one Neutral, a unit murdered a Nightmare, red most of the day a Nightmare or propaganda. Never two Nightmare or propaganda nights in a row. Do the dreams go round in turn (no repeats until each of a kind has had its night)?
+  Notes:
+- [ ] **The black screen:** a few seconds before the dream, does the screen fade to black with a line about the day ("Today the city was calm. You slip off into a happy dream.") and then fade into the dream?
+  Notes:
+- [ ] **NPC murders:** two units killed by NPC rebels within ten minutes turn the city yellow, four red (more with lots of players). A player killing one still only makes them wanted.
+  Notes:
+- [ ] **Duck and Cover rocket:** is it the rocket_low model now, a sensible size, and does it stay under the dream's ceiling as it climbs?
+  Notes:

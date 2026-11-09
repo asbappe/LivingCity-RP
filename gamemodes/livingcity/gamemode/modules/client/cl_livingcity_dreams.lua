@@ -32,6 +32,52 @@ hook.Add("HUDPaint", "LivingCityDreams", function()
 end)
 
 ------------------------------------------------------------------------
+-- As the dream comes: the screen goes black, and the day's mood in a line (sv_livingcity_dreamplan.lua)
+------------------------------------------------------------------------
+
+local mood -- { text, t0, til }
+net.Receive("lc_dream_mood", function()
+    local t = net.ReadTable() or {}
+    mood = { text = tostring(t.text or ""), t0 = CurTime(), til = tonumber(t.til) or (CurTime() + 7), kind = t.kind }
+end)
+LC_CL.DreamMoodShown = function() return mood end
+-- Words broken into lines that fit (font set first).
+local function Wrap(text, w)
+    local lines, cur = {}, ""
+    for word in string.gmatch(text, "%S+") do
+        local try = cur == "" and word or (cur .. " " .. word)
+        local tw = surface.GetTextSize(try)
+        if tw > w and cur ~= "" then lines[#lines + 1] = cur cur = word else cur = try end
+    end
+    if cur ~= "" then lines[#lines + 1] = cur end
+    return lines
+end
+LC_CL.DreamMoodWrap = Wrap
+-- (made once here, not every frame)
+local MOODCOL = { happy = Color(255, 230, 170), neutral = Color(215, 205, 255), nightmare = Color(230, 120, 120), propaganda = Color(255, 200, 120) }
+local function DrawMood()
+    if not mood then return end
+    local now = CurTime()
+    if now > mood.til + 2.5 then mood = nil return end
+    local black = math.Clamp((now - mood.t0) / 1.5, 0, 1) * math.Clamp(1 - (now - mood.til) / 2.5, 0, 1) -- (fades in, holds, fades into the dream)
+    surface.SetDrawColor(0, 0, 0, math.floor(255 * black))
+    surface.DrawRect(0, 0, ScrW(), ScrH())
+    local a = math.Clamp((now - mood.t0 - 1.5) / 1.5, 0, 1) * math.Clamp(1 - (now - mood.til) / 1.5, 0, 1)
+    if a <= 0 then return end
+    surface.SetFont("DermaLarge")
+    local lines = Wrap(mood.text, math.min(900, ScrW() - 120))
+    local _, lh = surface.GetTextSize("Ay")
+    local y = ScrH() / 2 - #lines * (lh + 6) / 2
+    local c = MOODCOL[mood.kind or ""] or Color(230, 230, 230)
+    for _, l in ipairs(lines) do
+        draw.SimpleText(l, "DermaLarge", ScrW() / 2, y, Color(c.r, c.g, c.b, math.floor(255 * a)), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+        y = y + lh + 6
+    end
+end
+LC_CL.DreamMoodDraw = DrawMood
+hook.Add("DrawOverlay", "LivingCityDreamMood", DrawMood)
+
+------------------------------------------------------------------------
 -- The admins' window
 ------------------------------------------------------------------------
 

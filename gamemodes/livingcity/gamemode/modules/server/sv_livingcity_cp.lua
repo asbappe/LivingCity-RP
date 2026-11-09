@@ -695,6 +695,31 @@ end
 LC.LooseInfected = LooseInfected
 
 -- The level, and why (said with it when it changes: the owner, 1 November, couldn't tell why it fell).
+-- Units murdered by NPCs (the owner, 9 November: "if NPC rebels kill units then it's a 50% effect: 2 murdered CP units by
+-- NPCs causes yellow and 4 causes red ... this may need to scale a tad bit if we have 32 or 64 (or ... 128) players"):
+-- a Civil Protection or Overwatch unit killed by an NPC citizen, rebel or vortigaunt, counted for ten minutes. A player's
+-- murder is as it always was (their wanted level, below).
+LC.SocioNpcWindow, LC.SocioNpcYellow, LC.SocioNpcRed = 600, 2, 4
+LC.SocioNpcKills = LC.SocioNpcKills or {}
+local SOCIO_UNITS = { npc_metropolice = true, npc_combine_s = true }
+local SOCIO_KILLERS = { npc_citizen = true, npc_vortigaunt = true }
+function LC.SocioNpcMurders()
+    local now, keep = CurTime(), {}
+    for _, t in ipairs(LC.SocioNpcKills) do if now - t < LC.SocioNpcWindow then keep[#keep + 1] = t end end
+    LC.SocioNpcKills = keep
+    return #keep
+end
+-- More players, more trouble: the counts needed grow a little past 16 players (32: half again; 64: two and a half times; 128: four and a half).
+function LC.SocioScale() local n = #player.GetAll() return n <= 16 and 1 or 1 + (n - 16) / 32 end
+function LC.SocioNpcMurder()
+    LC.SocioNpcKills[#LC.SocioNpcKills + 1] = CurTime()
+    hook.Run("LivingCityUnitMurderedByNPC")
+    if LC.RefreshSocio then LC.RefreshSocio() end
+end
+hook.Add("OnNPCKilled", "LivingCitySocioNpcMurders", function(npc, attacker)
+    if IsValid(npc) and npc.GetClass and SOCIO_UNITS[npc:GetClass()] and IsValid(attacker) and attacker.GetClass and SOCIO_KILLERS[attacker:GetClass()] then LC.SocioNpcMurder() end
+end)
+
 function LC.SocioAuto()
     if LC.Event == "lockdown" then return "red", "lockdown" end
     local now = CurTime()
@@ -705,6 +730,9 @@ function LC.SocioAuto()
     if LC.Event == "curfew" or LC.Event == "sweep" or LC.Event == "raid" then why = LC.Event
     elseif LC.CityState and LC.CityState() == "unrest" then why = "civil unrest"
     elseif LC.Skirmish ~= nil then why = "fighting in the streets" end
+    local npcKills, scale = LC.SocioNpcMurders(), LC.SocioScale()
+    if npcKills >= LC.SocioNpcRed * scale then return "red", "units murdered by rebels" end
+    if npcKills >= LC.SocioNpcYellow * scale then why = why or "units murdered by rebels" end
     for _, p in ipairs(player.GetAll()) do
         local lvl = LC.AlertLevel and LC.AlertLevel(p) or 0
         if lvl >= 3 then return "red", "an anticitizen at large" end

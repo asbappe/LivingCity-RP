@@ -95,6 +95,7 @@ LC_MODULES = {
         "sv_livingcity_strangedreams2", -- (ten more: the horse, boxing, the exam, the last train, Lamarr, molasses, hot potato, Overwatch says, dance, counting headcrabs)
         "sv_livingcity_strangedreams3", -- (ten more, nonsense on purpose: clocks, tea party, headcrab derby, say cheese, doors, splat, conga, shh, bubbles, the watchers)
         "sv_livingcity_dreamtest", -- (testing any dream from the Living City Editor, alone and awake)
+        "sv_livingcity_dreamplan", -- (who chooses tonight's dream: her kind now and then, the city by sociostability, in turn; the black screen's line)
         "sv_livingcity_events",
         "sv_livingcity_exercise", -- (after events: the morning jog, drill and parade are events)
         "sv_livingcity_freq7",

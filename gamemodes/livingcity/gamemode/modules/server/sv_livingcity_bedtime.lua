@@ -225,6 +225,7 @@ function LC.BedtimeFor(p)
     local f = Faction(p)
     if f == "stalker" or f == "zombie" then return false end
     if f == "cp" and LC.OnNightShift(p) then return false end
+    if LC.DreamAdminSkips and LC.DreamAdminSkips(p) then return false end -- (the Administrator: only her own dreams send her to bed: sv_livingcity_dreamplan.lua)
     return true
 end
 

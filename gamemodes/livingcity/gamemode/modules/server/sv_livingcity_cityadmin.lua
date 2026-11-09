@@ -295,9 +295,11 @@ local EVENTS = { curfew = "a curfew", rations = "a ration day", sweep = "an insp
 -- One of the office's acts. arg: the event, "generous"/"austere", a price factor, a job id, or a target player.
 function LC.AdminDo(ply, what, arg, target)
     if not IsAdministrator(ply) then return false, "Only the City Administrator." end
-    if what == "dream" then -- (tonight's dream: sv_livingcity_dreams.lua)
-        if not LC.DreamAdminPick then return false end
-        return LC.DreamAdminPick(ply, arg)
+    if what == "dream" then -- (tonight's dream: a kind, now and then; never which one: sv_livingcity_dreamplan.lua)
+        if arg == "cancel" then return LC.DreamAdminCancel(ply) end
+        if arg == "skip" or arg == "join" then return LC.DreamAdminSkipSet(ply, arg == "skip") end
+        if not LC.DreamAdminCategory then return false end
+        return LC.DreamAdminCategory(ply, arg)
     end
     if what == "dreamstar" then -- (star in propaganda dreams herself: sv_livingcity_propagandadreams.lua)
         if not LC.DreamStarSet then return false end

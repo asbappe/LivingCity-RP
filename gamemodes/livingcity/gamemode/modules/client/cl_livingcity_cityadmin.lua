@@ -93,32 +93,25 @@ net.Receive("lc_admin_office", function()
             Note(d.why or "The city can't dream yet.")
         else
             if d.busy then Note("The city is dreaming right now.") end
-            if d.day then Note(d.day) end -- (what the day allows: sv_livingcity_dreamrules.lua)
-            if d.waiting then
-                Note("Waiting: " .. d.waiting.name .. " (" .. d.waiting.mood .. ")" .. (d.waiting.auto and ", the city's own pick" or "") .. (d.waiting.yours and "" or ", and it isn't yours to change")
-                    .. (d.at and string.format(", in about %d seconds", d.at) or ", a minute after you say good night"))
-            else
-                Note(d.dreamt and "Tonight's dream has been dreamt. A pick now waits for tomorrow night." or "Nothing chosen: no dream tonight.")
-            end
-            if not d.waiting or d.waiting.yours then
+            local pl = d.plan or {}
+            if pl.feel then Note(pl.feel) end
+            Note(string.format("You choose only a kind (Nightmare or propaganda), and only once every %d nights; the city chooses which dream, and every other night is Happy or Neutral.", pl.every or 3))
+            if pl.chosen then
+                Note("Chosen for tonight: " .. (pl.chosen == "nightmare" and "a Nightmare" or "a propaganda dream") .. (d.at and string.format(", in about %d seconds", d.at) or ", after you say good night") .. ". You'll be in it.")
+                dm:AddOption("Take back tonight's choice (nothing spent)", function() Act("dream", "cancel") end):SetIcon("icon16/arrow_undo.png")
+            elseif pl.canPick then
                 dm:AddSpacer()
-                local icons = { happy = "icon16/emoticon_smile.png", neutral = "icon16/emoticon_waii.png", nightmare = "icon16/exclamation.png" }
-                local blurb = { happy = "Happy (a reward: they've been obedient)", neutral = "Neutral", nightmare = "Nightmare (a punishment)" }
-                for _, g in ipairs(d.groups or {}) do
-                    if #(g.endings or {}) > 0 then
-                        local gm, go = dm:AddSubMenu(blurb[g.mood] or g.name)
-                        go:SetIcon(icons[g.mood] or "icon16/weather_clouds.png")
-                        for _, e in ipairs(g.endings) do
-                            if e.blocked then -- (not tonight, and why: greyed)
-                                local o = gm:AddOption(e.name .. " (not tonight)", function() chat.AddText(Color(220, 170, 120), "[Tonight's dream] ", Color(230, 230, 230), e.blocked) end)
-                                if o.SetTextColor then o:SetTextColor(Color(120, 120, 130)) end
-                            else
-                                gm:AddOption(e.name, function() Act("dream", e.id) end)
-                            end
-                        end
-                    end
-                end
-                dm:AddOption("No dream tonight", function() Act("dream", "none") end):SetIcon("icon16/cancel.png")
+                dm:AddOption("A Nightmare tonight (a punishment)", function() Act("dream", "nightmare") end):SetIcon("icon16/exclamation.png")
+                dm:AddOption("A propaganda dream tonight (instruction)", function() Act("dream", "propaganda") end):SetIcon("icon16/star.png")
+            else
+                Note(pl.why or "You can't choose tonight's dream.")
+            end
+            if d.waiting and not pl.chosen then Note("Tonight: " .. tostring(d.waiting.mood) .. (d.waiting.auto and ", the city's own choice" or "")) end
+            dm:AddSpacer()
+            local skip = pl.skip ~= false
+            dm:AddOption(skip and "Dreams you didn't choose: you skip them (click to join them)" or "Dreams you didn't choose: you join them (click to skip them)",
+                function() Act("dream", skip and "join" or "skip") end):SetIcon(skip and "icon16/door_out.png" or "icon16/door_in.png")
+            do
                 -- propaganda dreams: star in them herself (when she's asleep for one with someone else), or a giant figure of her
                 dm:AddSpacer()
                 local on = t.dreamStar ~= "off"
