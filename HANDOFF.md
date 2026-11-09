@@ -1,6 +1,6 @@
 # Living City: handoff (short on purpose)
 
-Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then this. Everything else is on demand: `docs/features/` (the spec, one file per feature, indexed by `README.md`), `PLAYTEST.md` (the owner's in-game checklist), `TODO.md` (open items and what waits on the owner), `TIMELINE.md` (history, every chat), `CORE_CHANGELOG.md` (approved core changes). One task per chat: when you finish, rewrite "Where things stand" below in 15 lines or fewer.
+Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then this. Everything else is on demand: `docs/features/` (the spec, one file per feature, indexed by `README.md`), `PLAYTEST.md` (the owner's in-game checklist), `TODO.md` (open items and what waits on the owner), `TIMELINE.md` (history, every chat), `CORE_CHANGELOG.md` (approved core changes).
 
 ## The project
 
@@ -34,4 +34,4 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - Resistance (owner): `lc_rebel_health` 50 (SpawnRebel), `lc_rebel_home_hurt` 1 (RETUNED in endings.lua moves 2 to 1), WEAPONS 70/20/10 crossbow, `lc_rebel_per_combine` 1.25 x `LC.CombineStreetCount` in `LC.RebelTarget`; RebelTests sets it to 0 after its own check.
 - Tests: SideBalanceTests (stub got `EMT:SetOwner`). Unchecked in game: PLAYTEST.md "9 November, tougher Combine" (the engine bits: thrown frags, Lua-made combine balls, NumGrenades set at runtime).
 - Earlier part 12 (dreams, dream plan, sides even, imbalance, reaction squads): see `git log` and PLAYTEST.md "8 November, part 12" to "9 November, later", all still unchecked in game.
-- Next, each in a fresh chat: The Battle Line and vortigaunt dream warfare (designs at the end of `TODO.md`); 
+- Next: The Battle Line and vortigaunt dream warfare (designs at the end of `TODO.md`); 
