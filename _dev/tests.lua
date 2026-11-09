@@ -8811,8 +8811,8 @@ local sym1 = LC.Trait(outsider, "sympathy")
 local okScrap = LC.DealerSell(outsider, "scrap", false)
 local okGiveScrap = LC.QuartermasterDonate(outsider, "scrap")
 local okParts = LC.QuartermasterDonate(outsider, "gun_parts")
-ok(okScrap and okGiveScrap and okParts and math.abs(LC.Trait(outsider, "sympathy") - sym1 - (0.05 + 0.5 + 1)) < 1e-6,
-    "scrap sold: 0.05; scrap given: 0.5; gun parts given: 1 (as arms)", LC.Trait(outsider, "sympathy") - sym1)
+ok(okScrap and okGiveScrap and okParts and math.abs(LC.Trait(outsider, "sympathy") - sym1 - (0.025 + 0.5 + 1)) < 1e-6,
+    "scrap sold: 0.025 (a quarter of arms); scrap given: 0.5; gun parts given: 1 (as arms)", LC.Trait(outsider, "sympathy") - sym1)
 outsider:SetPos(FAR)
 local fr, frst
 for n, st in pairs(LC.NPCs) do if IsValid(n) and st.role == "rebel" and not st.quartermaster and not st.foe and not st.raid then fr, frst = n, st break end end

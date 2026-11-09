@@ -1364,7 +1364,7 @@ end
 
 -- What the quartermaster takes from anyone: arms (hand-loaded ammunition and guns, pocket items, or a gun in hand) and
 -- the materials the fight needs (the owner, 9 November: "scrap and rags and such"). Gun parts count as arms.
-LC.QuartermasterMaterials = { scrap = 0.5, cloth = 0.5, chemicals = 0.5, gun_parts = 1 } -- (a gift's sympathy; selling is a tenth of it an item)
+LC.QuartermasterMaterials = { scrap = 0.5, cloth = 0.5, chemicals = 0.5, gun_parts = 1 } -- (a gift's sympathy; selling: LC.QuartermasterSellSympathy)
 local function Arms(id)
     local cls = string.match(id or "", "^w:(.+)$")
     if cls then return LCS.SellWeapons and LCS.SellWeapons[cls] ~= nil end
@@ -1373,10 +1373,16 @@ local function Arms(id)
     return it ~= nil and it.arms == true
 end
 LC.QuartermasterArms = Arms
--- The sympathy a gift of it earns (arms 1, materials 0.5, gun parts 1); selling earns a tenth of that, an item.
+-- The sympathy a gift of it earns (arms 1, materials 0.5, gun parts 1).
 function LC.QuartermasterGiftSympathy(id)
     if not Arms(id) then return 0 end
     return LC.QuartermasterMaterials[id or ""] or 1
+end
+-- And selling one: arms (and gun parts) 0.1; junk a quarter of that (the owner, 9 November: "1/4 of arms sympathy to sell junk").
+LC.QuartermasterSellArms, LC.QuartermasterSellJunk = 0.1, 0.025
+function LC.QuartermasterSellSympathy(id)
+    if not Arms(id) then return 0 end
+    return (LC.QuartermasterMaterials[id or ""] or 1) >= 1 and LC.QuartermasterSellArms or LC.QuartermasterSellJunk
 end
 -- Someone not of the Resistance at the quartermaster (the owner, 9 November: selling and giving him arms in the same
 -- window as buying, "none of that C menu stuff"): he sells them nothing, but takes arms, bought or given.
@@ -1583,7 +1589,7 @@ function LC.DealerSell(ply, id, all)
         ply:StripWeapon(cls)
         LC.AddCredits(ply, price)
         ply:ChatPrint(string.format("[Black market] Sold: %s, for %d credits.", (string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ")), price))
-        if not NearDealer(ply) and LC.NearQuartermaster and LC.NearQuartermaster(ply) and LC.AddTrait then LC.AddTrait(ply, "sympathy", 0.1 * LC.QuartermasterGiftSympathy(id)) end -- (sold to the quartermaster)
+        if not NearDealer(ply) and LC.NearQuartermaster and LC.NearQuartermaster(ply) and LC.AddTrait then LC.AddTrait(ply, "sympathy", LC.QuartermasterSellSympathy(id)) end -- (sold to the quartermaster)
         return true
     end
     local it = LCS.Items[id]
@@ -1599,8 +1605,8 @@ function LC.DealerSell(ply, id, all)
     if id == "ration_forged" then hook.Run("LivingCityForgedCard", ply, n) end -- (the search for the forger: sv_livingcity_funding.lua)
     if it.intel and LC.AddXP then LC.AddXP(ply, 5 * n, "intel") end
     ply:ChatPrint(string.format("[Black market] Sold: %s%s, for %d credits.", it.name, n > 1 and (" x" .. n) or "", price * n))
-    -- (arms and materials sold to the quartermaster: a tenth of a gift's sympathy an item, 0.1 for arms and gun parts, 0.05 for scrap, rags and chemicals: the owner, 9 November)
-    if Arms(id) and not NearDealer(ply) and LC.NearQuartermaster and LC.NearQuartermaster(ply) and LC.AddTrait then LC.AddTrait(ply, "sympathy", 0.1 * LC.QuartermasterGiftSympathy(id) * n) end
+    -- (arms and materials sold to the quartermaster: 0.1 an item for arms and gun parts, 0.025 for scrap, rags and chemicals: the owner, 9 November)
+    if Arms(id) and not NearDealer(ply) and LC.NearQuartermaster and LC.NearQuartermaster(ply) and LC.AddTrait then LC.AddTrait(ply, "sympathy", LC.QuartermasterSellSympathy(id) * n) end
     return true
 end
 
