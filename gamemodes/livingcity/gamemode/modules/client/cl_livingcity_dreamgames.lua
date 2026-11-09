@@ -122,7 +122,9 @@ local HALO, PROP = Color(255, 240, 200), Color(255, 70, 60)
 -- the glows' colours: a crate, a spoiled crate, scrap, a flower, somewhere to stand, white
 local GLOWS = { Color(255, 205, 70), Color(140, 220, 60), Color(150, 190, 230), Color(255, 120, 190), Color(90, 255, 140), Color(255, 255, 255), Color(255, 40, 40) }
 local THEMES = { harvest = Color(255, 205, 70), newsreel = Color(235, 235, 235), hate = Color(255, 60, 50), civil = Color(140, 210, 255), graveyard = Color(200, 60, 60),
-    cheese = Color(255, 215, 70), chairs = Color(255, 170, 210), flying = Color(150, 215, 255), melons = Color(140, 230, 110) } -- (the strange dreams: cl_livingcity_strangedreams.lua)
+    cheese = Color(255, 215, 70), chairs = Color(255, 170, 210), flying = Color(150, 215, 255), melons = Color(140, 230, 110),
+    horse = Color(220, 40, 40), boxing = Color(255, 200, 80), exam = Color(240, 235, 200), train = Color(255, 230, 150), lamarr = Color(255, 215, 80),
+    molasses = Color(200, 140, 60), potato = Color(255, 120, 40), simon = Color(140, 200, 255), dance = Color(255, 120, 220), sheep = Color(190, 200, 255) } -- (the strange dreams: cl_livingcity_strangedreams.lua)
 -- Where she is: her figure or the star (as an entity, when you can see it), else where she was.
 local function HerPos()
     local e = st.herEnt and Entity and Entity(st.herEnt)

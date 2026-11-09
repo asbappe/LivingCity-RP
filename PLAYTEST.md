@@ -1066,3 +1066,23 @@ Notes:
   Notes:
 - [ ] **Music:** without songs, Half-Life 2's own music plays (the cheese dream's only after the voices). Your own: put cheese1.mp3, chairs1.mp3, flying1.mp3 or melons1.mp3 in garrysmod/sound/livingcity/dreams/ (then FastDL sync and a map change).
   Notes:
+
+## 9 November: ten more strange dreams, music for every dream
+- [ ] **The echo:** in The Cheese Dream and Hooves and All, do the voices in the dark sound far away and dreamy (each echo further off, quieter, lower, from the other side, in a big cavern reverb)? Too quiet, too long?
+  Notes:
+- [ ] **The horse line:** is the hungry line (Half-Life 2's vo/npc/male01/question09.wav and the female one) really "I'm so hungry I could eat a horse"? If not, tell Claude the right file, or record horse_intro_male1.mp3 and horse_intro_female1.mp3.
+  Notes:
+- [ ] **Hooves and All:** black horse statue (red eyes) charges the nearest dreamer; Father Grigori shoots it again and again; each shot stops it: run in and bite (E). Eight bites wins. Does the horse model show, the right size?
+  Notes:
+- [ ] **The Main Event:** ring, ropes, crowd; Lamarr (giant), the Soda Machine, the Baby. Punch with attack next to it; crouch when it winds up. Do the models show and are three rounds too long?
+  Notes:
+- [ ] **The Exam / The Last Train / Where's Lamarr?:** stand on an answer tile (the class majority is right); walk backwards to the train door; catch the hopping headcrabs (Lamarr golden).
+  Notes:
+- [ ] **Running in Molasses / Hot Potato / Overwatch Says:** half speed and a zombie; pass the grenade by touching someone or a stand-in; only obey "Overwatch says".
+  Notes:
+- [ ] **Dance Marathon / Counting Headcrabs:** jump on every fourth beat (the ring on screen closes in); count headcrabs over the fence and say the number in chat.
+  Notes:
+- [ ] **Music and lines:** put horse1.mp3 (or any dream's codeword, even maze1.mp3) in garrysmod/sound/livingcity/dreams/ and it plays in that dream. Recorded lines go in dreams/voice/, named as in docs/features/dream-lines.md. Dance: dance1.mp3 plus dance1.txt holding its BPM.
+  Notes:
+- [ ] **Editor:** Dreams: test one is now the last section of the Living City Editor panel.
+  Notes:

@@ -140,7 +140,78 @@ local function JumpPressed(s, p)
     return down and not was
 end
 local function Light(p, grav) if IsValid(p) and p.SetGravity then p:SetGravity(grav or 1) end end
-local function Leave(g, p) Light(p, 1) end
+local function Leave(g, p)
+    Light(p, 1)
+    if IsValid(p) and p.SetDSP then p:SetDSP(0, false) end
+    if IsValid(p) and p.SetLaggedMovementValue then p:SetLaggedMovementValue(1) end
+end
+
+-- Lines said in these dreams: on everyone's screen, in a recording if the owner made one (flat in
+-- sound/livingcity/dreams/voice/, named for the line: cheese_gold1.mp3, with a .txt of the same name
+-- for its words), else just the words. { speaker, words, how it should sound (for whoever records it) }.
+LC.StrangeCues = LC.StrangeCues or {}
+function LC.StrangeAddCues(t)
+    for k, v in pairs(t) do
+        LC.StrangeCues[k] = v
+        if LC.PropagandaCues then LC.PropagandaCues[k] = v[2] end
+        if LC.PropagandaCueWho then LC.PropagandaCueWho[k] = v[1] end
+    end
+end
+local function SayAs(g, cue)
+    if not g or g.stopped then return end
+    local snd, text
+    if LC.PropagandaVoice then snd, text = LC.PropagandaVoice(cue) end
+    local c = LC.StrangeCues[cue]
+    text = text or (c and c[2]) or ""
+    g.said = g.said or {}
+    g.said[#g.said + 1] = cue
+    local P = LC.PropagandaKit
+    if P and P.Line then P.Line(g, text, snd, c and c[1] or "") end
+end
+LC.StrangeSay = SayAs
+local function SayLater(g, secs, cue) timer.Simple(secs, function() if g and not g.stopped then SayAs(g, cue) end end) end
+
+-- The voices in the dark before a dream begins (the cheese dream, the horse): everyone held still and
+-- every sound far away, in a cavern's echo (the owner: "a dreamy distant echo effect"); then the dream,
+-- and its music. True while it lasts (the dream's tick waits).
+LC.DreamEchoDSP = 25 -- (Source's sound preset "cavern, large": long, distant echoes)
+local function IntroTick(g, players)
+    local now = CurTime()
+    if now < (g.introUntil or 0) then
+        for _, p in ipairs(players) do
+            if not p.lcEndFrozen then
+                p.lcEndFrozen = true
+                if p.Freeze then p:Freeze(true) end
+                if p.SetDSP then p:SetDSP(LC.DreamEchoDSP, false) end
+            end
+        end
+        return true
+    end
+    if not g.begun then
+        g.begun, g.dirty = true, true
+        for _, p in ipairs(players) do
+            if p.lcEndFrozen then p.lcEndFrozen = nil if p.Freeze then p:Freeze(false) end end
+            local s = g.pl[p]
+            if s then s.safe = now + 2 end
+        end
+        timer.Simple(1.5, function() for _, p in ipairs(players) do if IsValid(p) and p.SetDSP then p:SetDSP(0, false) end end end) -- (the echo dies away)
+        Send(g, { k = "music", song = g.song })
+        if g.def.begin then g.def.begin(g, players) end
+    end
+    return false
+end
+local function IntroHello(theme)
+    return function(g)
+        local d = g.def
+        return { theme = theme, intro = g.introUntil, lines = d.introLines, introText = d.introText, introSecs = d.introSecs }
+    end
+end
+-- Every dream you play can have music: the owner's file named for its codeword (its id), else the
+-- strange dreams' Half-Life 2 fallback (sv_livingcity_dreamgames.lua asks this when a dream brings none).
+function LC.DreamSongFor(id)
+    local own = LC.PropagandaSong and LC.PropagandaSong({ id })
+    return own or (LC.StrangeFallbackSongs and LC.StrangeFallbackSongs[id]) or nil
+end
 local CITIZENS = { "models/humans/group01/male_07.mdl", "models/humans/group01/female_02.mdl", "models/humans/group01/male_02.mdl", "models/humans/group01/female_04.mdl" }
 local function FirstModel(list)
     for _, m in ipairs(list) do if K.ValidModel(m) then return m end end
@@ -155,7 +226,8 @@ do
     LC.CheeseIntro = 9 -- (seconds of the voices echoing in the dark before the dream begins)
     LC.CheeseLines = { male = "vo/npc/male01/question06.wav", female = "vo/npc/female01/question06.wav" } -- ("Sometimes, I dream about cheese.")
     LC.CheeseGravity = 0.35
-    local def = { id = "cheese", name = "The Cheese Dream", mood = "neutral", secs = 9 + 180, lives = 3, need = 10, leave = Leave,
+    local def = { id = "cheese", name = "The Cheese Dream", mood = "neutral", secs = 9 + 180, lives = 3, need = 10, leave = Leave, introSecs = 9,
+        introLines = { LC.CheeseLines.male, LC.CheeseLines.female }, introText = { "Sometimes...", "Sometimes... I dream about cheese.", "Sometimes... I dream... about... cheese." },
         goal = "Gather the glowing cheese (golden counts three). You're light as a crumb: jump onto the floating slabs. Keep out of the way of the rolling wheels.",
         timeUp = { "The cheese melts away", "The plain of cheese drips into the dark, and you wake, hungry." },
         woke = Woke({ name = "The Cheese Dream",
@@ -215,7 +287,8 @@ do
         return true
     end
     function def.spawn(g, p, i) Light(p, LC.CheeseGravity) return SpawnAt(g, p, i) end
-    def.hello = function(g) return { theme = "cheese", intro = g.introUntil, lines = { LC.CheeseLines.male, LC.CheeseLines.female } } end
+    def.hello = IntroHello("cheese")
+    function def.begin(g) SayLater(g, 3, "cheese_hello") end
 
     local function NewWheel(g)
         local c = g.dream.pos
@@ -245,22 +318,7 @@ do
 
     function def.tick(g, dt, players)
         local now = CurTime()
-        -- the voices in the dark first: everyone held still until the dream swims up
-        if now < g.introUntil then
-            for _, p in ipairs(players) do
-                if not p.lcEndFrozen then p.lcEndFrozen = true if p.Freeze then p:Freeze(true) end end
-            end
-            return
-        end
-        if not g.begun then
-            g.begun, g.dirty = true, true
-            for _, p in ipairs(players) do
-                if p.lcEndFrozen then p.lcEndFrozen = nil if p.Freeze then p:Freeze(false) end end
-                local s = g.pl[p]
-                if s then s.safe = now + 2 end
-            end
-            Send(g, { k = "music", song = g.song })
-        end
+        if IntroTick(g, players) then return end -- (the voices in the dark first)
         local t = now - g.t0
         -- the heads hum the line now and then, every colour of the rainbow
         for i, h in ipairs(g.heads) do
@@ -319,6 +377,7 @@ do
                         Snd(p, "garrysmod/save_load1.wav", 60, cr.gold and 70 or math.random(130, 160))
                         if cr.gold then
                             s.flip = now + 6
+                            if (g.goldSaid or 0) < now then g.goldSaid = now + 20 SayAs(g, "cheese_gold") end
                             Notice(p, "info", "Golden cheese", "Three at once. The world turns inside out for a moment.", 3)
                         end
                         if s.got >= def.need then
@@ -353,7 +412,7 @@ do
     LC.ChairsSit = 4 -- (seconds to find a chair once it stops)
     LC.ChairsSoloRounds = 3 -- (alone in it: rounds to sit through to win)
     LC.ChairsReach = 60
-    local def = { id = "chairs", name = "Musical Chairs", mood = "neutral", secs = 240, lives = 1,
+    local def = { id = "chairs", name = "Musical Chairs", mood = "neutral", secs = 240, lives = 1, ownMusic = true,
         goal = "Walk round the chairs while the music plays. When it stops, crouch beside a free chair. No chair, you're out.",
         timeUp = { "The music never stops", "The chairs keep drifting round and round, and you drift awake." },
         woke = Woke({ name = "Musical Chairs",
@@ -402,7 +461,7 @@ do
         return true
     end
     def.spawn = SpawnAt
-    def.hello = function(g) return { theme = "chairs" } end
+    def.hello = function(g) SayLater(g, 1.5, "chairs_hello") return { theme = "chairs" } end
 
     local function NextRound(g, players)
         g.round = g.round + 1
@@ -427,6 +486,7 @@ do
             if now >= g.at then
                 g.phase, g.at, g.dirty = "sit", now + LC.ChairsSit, true
                 Send(g, { k = "music" }) -- (the music stops)
+                SayAs(g, "chairs_sit")
                 for _, ch in ipairs(g.chairs) do if IsValid(ch.ent) then Snd(ch.ent, "buttons/button10.wav", 70, 60) break end end
             end
         elseif g.phase == "sit" then
@@ -524,7 +584,7 @@ do
         return true
     end
     function def.spawn(g, p, i) Light(p, LC.WingsGravity) return SpawnAt(g, p, i) end
-    def.hello = function(g) return { theme = "flying", song = g.song, center = Flat(g.dream.pos), ceiling = g.ceiling } end
+    def.hello = function(g) SayLater(g, 2, "flying_hello") return { theme = "flying", song = g.song, center = Flat(g.dream.pos), ceiling = g.ceiling } end
 
     -- One flap: up, and a little the way you're looking.
     function LC.WingsFlapPush(p, ceiling)
@@ -622,7 +682,7 @@ do
         return true
     end
     def.spawn = SpawnAt
-    def.hello = function(g) return { theme = "melons", song = g.song } end
+    def.hello = function(g) SayLater(g, 2, "melons_hello") return { theme = "melons", song = g.song } end
 
     -- A melon lands: the nearest under it catches it (or is bonked by it).
     function LC.MelonLand(g, d, players)
@@ -681,3 +741,17 @@ do
             meter = math.floor(math.min(1, (s.got or 0) / def.need) * 100), meterName = string.format("Melons: %d of %d", math.min(s.got or 0, def.need), def.need) }
     end
 end
+
+LC.StrangeAddCues({
+    cheese_hello = { "The Heads in the Sky", "Cheeeeese. Cheeeeeeeese.", "a choir of giant floating heads, humming, slow, warm, reverb-heavy and slightly off-key" },
+    cheese_gold = { "The Heads in the Sky", "The golden cheese! The golden cheese!", "the same choir, suddenly excited, overlapping, high-pitched" },
+    chairs_hello = { "The Music Man", "Ladies and gentlemen, musical chairs! When the music stops... sit.", "a cheerful old game-show host, a little too close to the microphone" },
+    chairs_sit = { "The Music Man", "SIT!", "the game-show host, sudden and loud" },
+    flying_hello = { "A Gentle Voice", "Go on. You always knew you could. Just... flap.", "a soft, kind, dreamy narrator, almost whispering" },
+    melons_hello = { "The Weatherman", "Today's forecast: melons. Heavy melons, with a chance of lead.", "a chirpy TV weatherman, completely serious about it" },
+})
+
+-- The pieces, for the strange dreams in the next file (sv_livingcity_strangedreams2.lua).
+LC.StrangeKit = { Notice = Notice, Woke = Woke, Plain = Plain, AnyWhere = AnyWhere, Ring = Ring, SpawnAt = SpawnAt, Flat = Flat, Dist2 = Dist2,
+    OnGround = OnGround, JumpPressed = JumpPressed, Light = Light, Leave = Leave, CITIZENS = CITIZENS, FirstModel = FirstModel, Rainbow = Rainbow,
+    SayAs = SayAs, SayLater = SayLater, IntroTick = IntroTick, IntroHello = IntroHello }

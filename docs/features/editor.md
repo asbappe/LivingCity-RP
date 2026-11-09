@@ -20,4 +20,4 @@ If the layout file is ever damaged, it's copied aside as `<map>_unreadable_<time
 
 **Moving to a server:** install it on the server, and copy `garrysmod/data/livingcity/<map>.json` into the server's `garrysmod/data/livingcity/` folder.
 
-**Dreams: test one** (the owner, 8 November): in the panel, pick any dream and press *Test it now (just me)* to play it yourself, awake and alone, at the dream point; *Stop the test (wake up)* ends it. Nothing in a test counts and nobody asleep is pulled in (`docs/features/endings.md`, "Testing a dream from the editor").
+**Dreams: test one** (the owner, 8 November): at the bottom of the panel, pick any dream and press *Test it now (just me)* to play it yourself, awake and alone, at the dream point; *Stop the test (wake up)* ends it. Nothing in a test counts and nobody asleep is pulled in (`docs/features/endings.md`, "Testing a dream from the editor").

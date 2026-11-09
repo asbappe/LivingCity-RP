@@ -544,6 +544,8 @@ function PMT:SetNW2Bool(k, v) self.nw[k] = v end
 function PMT:SetVelocity(v) self.pushed = v end
 function PMT:Freeze(b) self.frozen = b end
 function PMT:SetGravity(g) self.grav = g end
+function PMT:SetLaggedMovementValue(v) self.lagged = v end
+function PMT:SetDSP(n) self.dsp = n end
 function PMT:GetGravity() return self.grav or 1 end
 function PMT:GetMoveType() return self.movetype or MOVETYPE_WALK end
 function PMT:ScreenFade() end

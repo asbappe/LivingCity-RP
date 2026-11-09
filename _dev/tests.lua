@@ -14710,7 +14710,7 @@ _walls = savedWalls
 ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 DreamCrowdTests()
-local function PropagandaDreamTests()
+function PropagandaDreamTests()
 section("Shared dreams: propaganda dreams you play (kneel, roses, mirror, the saviour, the quiz; the Administrator starring)")
 _setcvar("lc_dream_rules", 0) _setcvar("lc_dream_auto", 0) -- (the older tests: the Administrator picks freely, and the city doesn't pick: DreamCrowdTests has the rules)
 local errs0 = #_errors
@@ -15099,7 +15099,7 @@ end
 PropagandaDreamTests()
 
 -- Ten more propaganda dreams (sv_livingcity_propagandamore.lua)
-local function PropagandaMoreTests()
+function PropagandaMoreTests()
 section("Shared dreams: ten more propaganda dreams (harvest, shift, spy, newsreel, hate, mass games, guidance, scrap, flowers, duck and cover)")
 _setcvar("lc_dream_rules", 0) _setcvar("lc_dream_auto", 0) -- (the older tests: the Administrator picks freely, and the city doesn't pick: DreamCrowdTests has the rules)
 local errs0 = #_errors
@@ -15686,8 +15686,276 @@ ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 StrangeDreamTests()
 
+-- Ten more strange dreams (sv_livingcity_strangedreams2.lua), and music for every dream you play
+function MoreStrangeDreamTests()
+section("Shared dreams: ten more strange dreams (horse, boxing, exam, train, Lamarr, molasses, hot potato, Overwatch says, dance, counting headcrabs)")
+_setcvar("lc_dream_rules", 0) _setcvar("lc_dream_auto", 0)
+local errs0 = #_errors
+local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
+_walls = {}
+LC.EndEvent(true)
+_setcvar("lc_needs", 0)
+LC.EndingReload = function() end
+local CITY, DREAM = Vector(164000, -164000, 0), Vector(224000, -224000, 0)
+local adm = newPlayer("MSAdmin", "admin")
+local a = newPlayer("MSA", "citizen")
+local b = newPlayer("MSB", "citizen")
+_run(3)
+local function Asleep(p, at)
+    p:SetPos(at)
+    local key = string.format("s%d_%d_%d", math.floor(at.x), math.floor(at.y), math.floor(at.z))
+    p.lcSleep = { t0 = CurTime() - 70, done = CurTime() - 10, last = CurTime(), slept = true }
+    p:SetNW2Bool("lc_sleeping", true)
+    p.lcBedKey, p.lcBedFrom = key, at + Vector(40, 0, 0)
+    LC.BedSleepers[key] = p
+end
+local function Both()
+    Asleep(a, CITY) Asleep(b, CITY + Vector(0, 200, 0))
+    a.crouch, b.crouch, a.keys, b.keys, a.aim, b.aim = nil, nil, nil, nil, nil, nil
+    a:SetNW2Float("lc_unbroken_until", 0) b:SetNW2Float("lc_unbroken_until", 0) -- (a nightmare won earlier spares you the next: not here)
+end
+local function Start(id)
+    Both()
+    local okS, d = LC.DreamStart(id, adm, false, nil, true)
+    local g = okS and d.game
+    _run(0.1)
+    if g then g.pl[a].safe, g.pl[b].safe = 0, 0 end
+    return g, d
+end
+local function Stop(d) if d then LC.DreamGameStop(d, "test") end _run(2.5) end
+local function Press(p, key) p.keys = nil _run(0.1) p.keys = { [key] = true } _run(0.1) p.keys = nil end
+local function Sent(p, k, test)
+    for _, m in ipairs(net.sent) do
+        local t = m.data[1]
+        if m.name == "lc_dreamgame" and (m.to == p or (type(m.to) == "table" and table.HasValue(m.to, p))) and type(t) == "table" and t.k == k and (not test or test(t)) then return t end
+    end
+    return nil
+end
+local function Mid(g) return Vector(g.dream.pos.x, g.dream.pos.y, g.top + 4) end
+player.GetAll = function() return { adm, a, b } end
+local dp = LC.AddPoint(DREAM, 0, "dream")
+local USE, ATTACK = IN_USE or 32, IN_ATTACK or 1
+
+-- on the tablet, by mood; every one builds
+local where = {}
+for _, grp in ipairs(LC.DreamOffice().groups) do for _, e in ipairs(grp.endings) do where[e.id] = grp.mood end end
+ok(#LC.StrangeDreams2 == 10 and where.horse == "nightmare" and where.molasses == "nightmare" and where.boxing == "neutral" and where.exam == "neutral" and where.train == "neutral"
+    and where.potato == "neutral" and where.simon == "neutral" and where.lamarr == "happy" and where.dance == "happy" and where.sheep == "happy", "ten more on her tablet, each under its mood")
+local built = true
+for _, id in ipairs(LC.StrangeDreams2) do
+    local g, d = Start(id)
+    local okS = g and pcall(g.def.state, g, a)
+    if not okS then built = false print("did not build: " .. id) end
+    Stop(d)
+end
+ok(built, "every one of them builds, and draws its screen")
+-- music for every dream you play, the older ones too
+_files["sound/livingcity/dreams/maze1.mp3"] = "x"
+net.sent = {}
+local g, d = Start("maze")
+ok(LC.DreamSongFor("maze") == "livingcity/dreams/maze1.mp3" and Sent(a, "start", function(t) return t.song == "livingcity/dreams/maze1.mp3" end), "every dream can have music: a file named for its codeword (the Patrol Maze too)")
+Stop(d)
+_files["sound/livingcity/dreams/maze1.mp3"] = nil
+ok(LC.DreamSongFor("boxing") == LC.StrangeFallbackSongs.boxing, "without one, the strange dreams play Half-Life 2's own")
+ok(LC.PropagandaCueWho.horse_grigori1 == "Father Grigori" and LC.StrangeCues.boxing_foe3 and LC.StrangeCues.boxing_foe3[3], "every line has a speaker, words and how it should sound (for recording)")
+
+-- Hooves and All
+net.sent = {}
+g, d = Start("horse")
+local s = g.pl[a]
+local hi = Sent(a, "start")
+ok(hi and hi.intro and hi.lines and hi.lines[1] == LC.HorseLines.male and hi.lines[2] == LC.HorseLines.female and a.frozen, "Hooves and All starts in the dark: the citizens' hungry line, echoing, everyone held still")
+ok(IsValid(g.horse) and IsValid(g.monk), "the black horse, and Father Grigori")
+_run(9.2)
+ok(g.begun and not a.frozen, "then the dream")
+a:SetPos(Mid(g))
+g.nextShot = CurTime() + 1000
+LC.HorseShoot(g, CurTime())
+g.h.til = CurTime() + 10
+g.h.pos = a:GetPos() + Vector(50, 0, 0)
+ok(g.h.state == "stun", "Father Grigori's shot stops it")
+Press(a, USE)
+ok(s.bites == 1, "and you take a bite", s.bites)
+Press(a, USE)
+ok(s.bites == 1, "one bite a shot")
+g.h.state, g.h.til, g.h.dir, g.h.pos = "charge", CurTime() + 10, Vector(0, 0, 0), a:GetPos()
+s.safe = 0
+_run(0.1)
+ok(s.lives == 2, "charging, it tramples you: a life")
+g.h.pos = a:GetPos() + Vector(1000, 1000, 0)
+s.bites, s.safe = g.def.need - 1, 0
+LC.HorseShoot(g, CurTime())
+g.h.til = CurTime() + 10
+g.h.pos = a:GetPos() + Vector(50, 0, 0)
+Press(a, USE)
+ok(s.how == "won", "eight bites: hooves and all")
+Stop(d)
+
+-- The Main Event
+g, d = Start("boxing")
+_run(4.2)
+ok(g.phase == "fight" and g.foeI == 1 and g.foeMax == LC.BoxingHP(LC.BoxingFoes[1], 2), "The Main Event: round 1, Lamarr, tougher for two boxers")
+a:SetPos(g.foePos + Vector(60, 0, 0))
+local hp0 = g.foeHP
+Press(a, ATTACK)
+ok(g.foeHP == hp0 - 1, "a punch next to it lands")
+a:SetPos(g.foePos + Vector(60, 0, 0))
+b:SetPos(g.foePos + Vector(0, 60, 0))
+b.crouch = true
+g.pl[a].safe, g.pl[b].safe = 0, 0
+g.phase, g.at = "windup", CurTime()
+_run(0.1)
+ok(g.pl[a].lives == 2 and g.pl[b].lives == 3, "it swings: standing, knocked down; crouching, it misses")
+b.crouch = nil
+a:SetPos(g.foePos + Vector(60, 0, 0))
+g.foeHP, g.phase, g.nextSwing = 1, "fight", CurTime() + 100
+Press(a, ATTACK)
+ok(g.phase == "ko", "knockout")
+_run(4.2)
+ok(g.foeI == 2 and g.foeDef.name == "The Soda Machine", "round 2: the soda machine")
+Stop(d)
+
+-- The Exam
+local r = LC.ExamMarks({ [1] = 2, [2] = 2, [3] = 3 })
+local tie = LC.ExamMarks({ [1] = 1, [2] = 4 })
+ok(r[2] and not r[3] and tie[1] and tie[4], "the right answer is whatever most of the class picks (a tie: all of them)")
+g, d = Start("exam")
+_run(6.2)
+ok(g.phase == "read" and g.q, "The Exam: a question")
+_run(LC.ExamRead)
+a:SetPos(g.tiles[1]) b:SetPos(g.tiles[1])
+g.at = CurTime()
+_run(0.1)
+ok(g.phase == "mark" and g.pl[a].lives == 3 and g.right[1], "both on A: A is right")
+_run(LC.ExamMark + LC.ExamRead + 0.1)
+a:SetPos(g.tiles[2]) b:SetPos(Mid(g) + Vector(0, 400, 0))
+g.at = CurTime()
+_run(0.1)
+ok(g.pl[b].lives == 2 and g.pl[a].lives == 3, "no answer costs a life")
+Stop(d)
+
+-- The Last Train
+g, d = Start("train")
+local x0 = g.doorX
+a.aim = Vector(1, 0, 0)
+_run(1)
+ok(g.doorX > x0, "The Last Train: looking at the door, it slides away")
+a.aim = Vector(-1, 0, 0)
+local x1 = g.doorX
+_run(1)
+ok(g.doorX < x1, "looking away, it creeps closer")
+a:SetPos(Vector(g.doorX, g.doorY, g.top))
+_run(0.1)
+ok(g.pl[a].how == "won", "reach it: all aboard")
+Stop(d)
+
+-- Where's Lamarr?
+g, d = Start("lamarr")
+s = g.pl[a]
+a:SetPos(Mid(g))
+s.got = 0 -- (whatever they caught walking in doesn't count here)
+local lam = g.crabs[1]
+lam.pos, lam.from, lam.to, lam.rest, lam.t0, lam.t1 = a:GetPos(), a:GetPos(), a:GetPos(), CurTime() + 100, 0, 0
+_run(0.1)
+ok(lam.lamarr and s.got == 3 and lam.gone, "Where's Lamarr?: catching Lamarr counts three")
+Stop(d)
+
+-- Running in Molasses
+g, d = Start("molasses")
+s = g.pl[a]
+ok(a.lagged == LC.MolassesSlow or a.SetLaggedMovementValue == nil, "Running in Molasses: you're slow")
+g.zPos = Mid(g) + Vector(0, 2000, 0)
+a:SetPos(g.corners[1])
+_run(0.1)
+ok(s.next == 2, "the first corner reached")
+s.safe = 0
+g.zPos = a:GetPos()
+_run(0.1)
+ok(s.lives == 2, "the zombie catches you: a life")
+Stop(d)
+
+-- Hot Potato
+g, d = Start("potato")
+_run(4.2)
+ok(g.phase == "live" and g.holder, "Hot Potato: someone has the grenade")
+a:SetPos(Mid(g)) b:SetPos(Mid(g) + Vector(20, 0, 0))
+LC.PotatoGive(g, { p = a }, CurTime())
+g.passAt, g.prev = 0, nil -- (whoever had it first can't take it straight back: not tested here)
+_run(0.1)
+ok(g.holder and g.holder.p == b, "touch someone: it's theirs")
+g.pl[b].safe = 0
+g.fuse = CurTime()
+_run(0.1)
+ok(g.pl[b].lives == 2 and g.phase == "wait", "it goes off in their hands: a life")
+Stop(d)
+
+-- Overwatch Says
+ok(LC.SimonObeyed("jump", true, { jumped = true }) and not LC.SimonObeyed("jump", false, { jumped = true }) and LC.SimonObeyed("crouch", false, { crouchEnd = false })
+    and LC.SimonObeyed("freeze", true, { fastest = 5 }) and not LC.SimonObeyed("walk", true, { fastest = 5 }), "do it only when Overwatch says")
+g, d = Start("simon")
+_run(6.2)
+ok(g.phase == "order", "Overwatch Says: an order")
+g.act, g.says = "jump", true
+a.ground = false
+_run(0.1)
+a.ground = nil
+g.at = CurTime()
+_run(0.1)
+ok(g.pl[a].lives == 3 and g.pl[b].lives == 2, "Overwatch says jump: the one who didn't loses a life")
+Stop(d)
+
+-- Dance Marathon
+ok(LC.DanceTempo(nil) == LC.DanceBPM, "no song: the beat at LC.DanceBPM")
+_files["sound/livingcity/dreams/dance1.txt"] = "128 bpm"
+ok(LC.DanceTempo("livingcity/dreams/dance1.mp3") == 128, "the owner's song: its tempo from its .txt")
+_files["sound/livingcity/dreams/dance1.txt"] = nil
+g, d = Start("dance")
+s = g.pl[a]
+g.beat0 = CurTime() + 0.15
+Press(a, IN_JUMP)
+ok(s.hits == 1, "a jump on the big beat counts", s.hits)
+Press(a, IN_JUMP)
+ok(s.hits == 1, "once a beat")
+Stop(d)
+
+-- Counting Headcrabs
+local n, jumps = LC.SheepPlan(0, 24)
+local crabs = 0
+for _, j in ipairs(jumps) do if j.crab then crabs = crabs + 1 end end
+ok(crabs == n and n >= 8 and LC.SheepScore(12, 12) == 2 and LC.SheepScore(11, 12) == 1 and LC.SheepScore(nil, 12) == 0, "counting headcrabs: the plan's count is right; exact 2 points, one off 1")
+g, d = Start("sheep")
+_run(6.2)
+ok(g.phase == "watch", "Counting Headcrabs: they jump the fence")
+g.at = CurTime()
+_run(0.1)
+ok(g.phase == "answer", "then: how many?")
+ok(LC.StrangeDreamSay(a, "I think " .. g.n) == true, "a number said in chat is your answer (and stays in the dream)")
+g.at = CurTime()
+_run(0.1)
+ok(g.pl[a].points == 2 and (g.pl[b].points or 0) == 0, "exactly right: 2 points")
+Stop(d)
+
+-- the editor lists them
+local seen = {}
+for _, e in ipairs(LC.DreamTestList()) do seen[e.id] = e.mood end
+ok(seen.horse == "Nightmare" and seen.dance == "Happy" and seen.boxing == "Neutral", "the editor's test list has them all")
+
+LC.DreamForget()
+LC.RemovePoint(dp)
+for _, p in ipairs({ adm, a, b }) do
+    p.crouch, p.keys, p.ground, p.aim = nil, nil, nil, nil
+    if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
+    p:SetPos(Vector(-121000, -121000, 0))
+end
+player.GetAll, LC.EndingReload = realGetAll, realReload
+_setcvar("lc_needs", 1)
+_walls = savedWalls
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+MoreStrangeDreamTests()
+
 -- The performance debugger (sh_livingcity_perfdebug.lua, sv_livingcity_perfdebug.lua)
-local function PerfDebugTests()
+function PerfDebugTests()
 section("The performance debugger: hooks, timers, net in and out, networked values, hitches, put back when off")
 local errs0 = #_errors
 local P = LC.PerfDebug
@@ -20392,7 +20660,7 @@ NPCStrTests()
 
 function KeyLayoutTests()
 
-local function TerritoryPathTests()
+function TerritoryPathTests()
     section("Territory grows along the path nodes, eight feet tall (the owner, 7 November)")
     -- (the owner: "I have not seen rebel territory, nor infestation territory, expand a single time for
     -- weeks ... can we please make it so the territory expansion happens along path nodes?")
@@ -20584,7 +20852,7 @@ TerritoryPathTests()
 -- to (pos and r, a circle as big as it): the camp's dressing, the rebels' things, patrols, the dry
 -- ground check when picking a spot, a fighter straying from home, and ground being cleared all
 -- missed a corridor it took and counted the floor beside its front. Each now asks the cells.
-local function GrownGroundTests()
+function GrownGroundTests()
     section("Grown ground is its cells everywhere, not a circle round where it last grew to")
     for _, z in ipairs(LC.ZonesOfKind("rebel")) do LC.RemoveZone(z) end
     for _, z in ipairs(LC.ZonesOfKind("infest")) do LC.RemoveZone(z) end

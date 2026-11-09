@@ -1783,6 +1783,39 @@ local ok, e = pcall(function()
     Msg({ k = "music" })
     Msg({ k = "state", lives = 1, phase2 = "sit", big = "SIT! Crouch beside a free chair!", tone = "warn", glows = { { 0, 0, 30, 6 } } })
     hook.t.HUDPaint.LivingCityDreamGames()
+    -- the ten more: each theme's screen draws
+    Msg({ k = "start", id = "horse", name = "Hooves and All", goal = "Bite.", ends = CurTime() + 100, lives = 3, maxLives = 3, theme = "horse",
+        intro = CurTime() + 8, introSecs = 9, lines = { "vo/npc/male01/question09.wav", "livingcity/dreams/voice/horse_intro_female1.mp3" }, introText = { "I'm so hungry...", "...a horse." } })
+    hook.t.Think.LivingCityStrangeDreams()
+    hook.t.HUDPaint.LivingCityStrangeDreams()
+    hook.t.RenderScreenspaceEffects.LivingCityStrangeDreams()
+    Msg({ k = "state", lives = 3, intro = CurTime() - 1, horse = 1, stunned = true, big = "NOW! Take a bite (E)!" })
+    hook.t.RenderScreenspaceEffects.LivingCityStrangeDreams()
+    hook.t.PostDrawTranslucentRenderables.LivingCityStrangeDreams(false, false)
+    hook.t.HUDPaint.LivingCityDreamGames()
+    local themes = {
+        { "boxing", { ring = { 0, 0, 0, 300 }, foe = 1, windup = true, meterName = "Lamarr: 3 of 20" } },
+        { "exam", { board = { 0, 0, 100, 180, title = "QUESTION 1 OF 6", lines = { "Solve for X.", "A: X" } }, glows = { { 0, 0, 8, 1 } } } },
+        { "train", { door = 1, watched = true, big = "The last train leaves in 1:00" } },
+        { "lamarr", { glows = { { 0, 0, 30, 1 } } } },
+        { "molasses", { glows = { { 0, 0, 40, 5 } } } },
+        { "potato", { nade = 1, big = "YOU HAVE THE GRENADE!", tone = "warn" } },
+        { "simon", { big = "OVERWATCH SAYS: JUMP!", tone = "warn" } },
+        { "dance", { bpm = 100, beat0 = CurTime() - 2.4 } },
+        { "sheep", { big = "How many headcrabs?" } },
+    }
+    for _, th in ipairs(themes) do
+        Msg({ k = "start", id = th[1], name = th[1], goal = "Go.", ends = CurTime() + 100, lives = 3, maxLives = 3, theme = th[1] })
+        local t = th[2]
+        t.k, t.lives = "state", 3
+        Msg(t)
+        hook.t.RenderScreenspaceEffects.LivingCityStrangeDreams()
+        hook.t.PostDrawTranslucentRenderables.LivingCityStrangeDreams(false, false)
+        hook.t.PostDrawTranslucentRenderables.LivingCityDreamGames(false, false)
+        hook.t.HUDPaint.LivingCityStrangeDreams()
+        hook.t.HUDPaint.LivingCityDreamGames()
+    end
+    if not LC_CL.DanceBeat({ bpm = 120, beat0 = CurTime() - 2 }, CurTime()) then error("the dance's beat") end
     Msg({ k = "stop", how = "won" })
     -- a test: the line at the top says so
     _me:SetNW2Bool("lc_dream_test", true)

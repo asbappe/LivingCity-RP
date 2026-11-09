@@ -948,6 +948,8 @@ function LC.DreamGameStart(dream)
     end
     g.started = #players
     local hello = def.hello and def.hello(g) or {}
+    -- (music for any dream: the owner's file named for its codeword, sv_livingcity_strangedreams.lua; not before the voices in the dark)
+    if hello.song == nil and not hello.intro and not def.ownMusic and LC.DreamSongFor then hello.song = LC.DreamSongFor(def.id) end
     local n = 0
     local enforcers = {}
     for _, p in ipairs(players) do

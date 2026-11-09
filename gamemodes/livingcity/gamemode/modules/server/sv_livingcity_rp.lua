@@ -279,6 +279,7 @@ hook.Add("PlayerSay", "LivingCityICChat", function(ply, text, team)
     if raw == "" then return end
     if LC.RadioRaisedSay and LC.RadioRaisedSay(ply, raw) then return "" end -- (the radio's up: it went over the band)
     if LC.PropagandaSay and LC.PropagandaSay(ply, raw) then return "" end -- (said in a propaganda dream: it stays in the dream)
+    if LC.StrangeDreamSay and LC.StrangeDreamSay(ply, raw) then return "" end -- (an answer in a strange dream: sv_livingcity_strangedreams2.lua)
     local lower = string.lower(raw)
 
     -- always available, whatever the chat mode
