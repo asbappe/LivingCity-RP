@@ -9,7 +9,43 @@ local function ok(cond, name, detail)
         table.insert(results.lines, "  FAIL  " .. name .. (detail and ("  -> " .. tostring(detail)) or ""))
     end
 end
-local function section(name) table.insert(results.lines, "== " .. name) end
+-- Players a test unit makes leave the server once that unit is over. The run used to keep every
+-- one (88 by a third of the way in), and each simulated second goes over all players, so late
+-- sections crawled and the serial run went past its timeout. A player made at the top level,
+-- outside any unit, stays for the whole run, as a later section may still use it.
+do
+    local function unitsRunning()
+        local on, lvl = {}, 3
+        while true do
+            local info = debug.getinfo(lvl, "n")
+            if not info then break end
+            if info.name and info.name:match("Tests$") then on[info.name] = true end
+            lvl = lvl + 1
+        end
+        return on
+    end
+    local unitPlayers = {}
+    local makePlayer = _makeplayer
+    function _makeplayer(...)
+        local p = makePlayer(...)
+        local units = unitsRunning()
+        if next(units) then unitPlayers[p] = units end
+        return p
+    end
+    local function retireUnitPlayers()
+        local on = unitsRunning()
+        for p, units in pairs(unitPlayers) do
+            local still = false
+            for u in pairs(units) do if on[u] then still = true end end
+            if not still then
+                unitPlayers[p] = nil
+                if p:IsValid() then pcall(hook.Run, "PlayerDisconnected", p) p:Remove() end
+            end
+        end
+    end
+    results.retire = retireUnitPlayers
+end
+local function section(name) results.retire() table.insert(results.lines, "== " .. name) end
 _setcvar("lc_daily_rhythm", 0) -- (the city keeps to the clock; tested on its own, at the end)
 _setcvar("lc_stockpile", 0) -- (the city's ration stores: tested on their own, at the end)
 _setcvar("lc_garrison", 0) -- (the nexus garrison: tested on its own)
