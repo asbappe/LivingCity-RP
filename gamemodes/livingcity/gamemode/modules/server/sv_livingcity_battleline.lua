@@ -21,8 +21,9 @@
         lines squeaking, put back among the rebels at the far end and driven at the line, shot
         down there (or by the dreamers) and put back again, over and over, till the dream ends.
       - Dreamers can't hurt each other.
-    When the battle should be over, every rebel comes back three times the size, in metal or raw
-    flesh, glowing red, and charges: all hope looks lost. Then her gunships and an attack
+    When the battle should be over, every rebel comes back as a massive swarm of giants
+    (LC.BattleLineDoomWave: 20 twice the size up to one seven times), in metal or raw flesh,
+    glowing red, and charges: all hope looks lost. Then her gunships and an attack
     helicopter sweep in; the gunships cut them down and the helicopter carpet-bombs the field
     (LC.BattleLineBombs). The line held: won, and the board says who shot the most.
     The whole dream is at most five minutes (def.secs; about two and a half as timed).
@@ -42,7 +43,7 @@ local Line, Starts, Spawn, Offend, Notice, HerEnt = P.Line, P.Starts, P.Spawn, P
 local Villain = LC.PropagandaVillain
 
 local ID = "battleline"
-LC.BattleLineTimes = { calm = 5, battle = 100, doom = 7, rescue = 16, victory = 4 }
+LC.BattleLineTimes = { calm = 5, battle = 100, doom = 7, rescue = 22, victory = 4 }
 local T = LC.BattleLineTimes
 local def = { id = ID, name = "The Battle Line", mood = "happy", secs = 170, lives = 3, music = { ID, "propaganda" },
     goal = "The terrorists are coming! Shoot the red rebels before they reach the line. Never fire on her soldiers.",
@@ -71,8 +72,11 @@ LC.BattleLineHurt = 15           -- (a rebel at the line: health off the nearest
 LC.BattleLineLow = 30            -- (at or under this, a life is gone)
 LC.BattleLineHacks = 10          -- (manhacks in a traitor's swarm)
 LC.BattleLineHackHurt = 6
-LC.BattleLineDoom = 12           -- (the last charge: giants)
-LC.BattleLineBombs = 24          -- (the helicopter's carpet of bombs)
+-- (the last charge, a massive swarm, the owner: 20 twice the size, 12 three times, 6 four, 3 five, 2 six and 1 seven times)
+LC.BattleLineDoomWave = { { 2, 20 }, { 3, 12 }, { 4, 6 }, { 5, 3 }, { 6, 2 }, { 7, 1 } }
+LC.BattleLineDoom = 0
+for _, w in ipairs(LC.BattleLineDoomWave) do LC.BattleLineDoom = LC.BattleLineDoom + w[2] end
+LC.BattleLineBombs = 36          -- (the helicopter's carpet of bombs)
 LC.BattleLineTraitorPitch = 170  -- (a turned traitor's voice lines)
 LC.BattleLineGun, LC.BattleLineAmmo = "weapon_ar2", "AR2"
 local SOLDIER = "models/combine_soldier.mdl"
@@ -144,19 +148,19 @@ function def.hello(g)
     return { theme = "propaganda", song = g.song, herEnt = HerEnt and HerEnt(g) or nil }
 end
 
--- A rebel at the far end. kind: nil, "giant" (now and then) or "doom" (the last charge).
-local function NewRebel(g, kind, y)
+-- A rebel at the far end. kind: nil, "giant" (now and then) or "doom" (the last charge, size times as big).
+local function NewRebel(g, kind, y, size)
     y = y or math.Rand(g.y0 + 30, g.y1 - 30)
-    local at = Vector(g.x1 - 40, y, g.top)
-    local scale = (kind == "doom" and 3) or (kind == "giant" and 2.6) or 1
+    local at = Vector(g.x1 - 40 - (kind == "doom" and math.Rand(0, 220) or 0), y, g.top)
+    local scale = (kind == "doom" and (size or 3)) or (kind == "giant" and 2.6) or 1
     local e = Villain(g, LC.PropagandaRebels, at, 180, scale)
     if not e then return nil end
     if kind == "doom" and e.SetMaterial then e:SetMaterial(SKINS[math.random(#SKINS)]) e:SetColor(RED) end
     if K.Animate then K.Animate(e, ACT_RUN or 1) end
     -- (the field's as long as the dream point's room allows: a charge takes 11 to 16 seconds across it, a giant 25, the last charge 30)
     local run = math.max(200, g.x1 - 40 - g.lineX)
-    local secs = (kind == "doom" and 30) or (kind == "giant" and 25) or math.Rand(11, 16)
-    local m = { e = e, alive = true, hp = (kind == "doom" and 60) or (kind == "giant" and 10) or 1, giant = kind == "giant" or nil, doom = kind == "doom" or nil,
+    local secs = (kind == "doom" and (28 + scale)) or (kind == "giant" and 25) or math.Rand(11, 16)
+    local m = { e = e, alive = true, hp = (kind == "doom" and 15 * scale) or (kind == "giant" and 10) or 1, giant = kind == "giant" or nil, doom = kind == "doom" or nil,
         speed = run / secs, y = y }
     g.rebels[#g.rebels + 1] = m
     return m
@@ -359,7 +363,7 @@ local function Blast(g, pos)
     if K.Puff then K.Puff(pos) end
     if sound and sound.Play then sound.Play("ambient/explosions/explode_" .. math.random(1, 4) .. ".wav", pos, 110) end
     for _, m in ipairs(g.rebels) do
-        if m.alive and IsValid(m.e) and m.e:GetPos():Distance(pos) < 320 then Fall(g, m, nil) end
+        if m.alive and IsValid(m.e) and m.e:GetPos():Distance(pos) < 260 + 30 * Scale(m.e) then Fall(g, m, nil) end
     end
 end
 
@@ -384,7 +388,9 @@ function def.tick(g, dt, players)
         if t >= T.calm + T.battle then
             g.phase, g.dirty, g.doomAt = "doom", true, now
             for _, m in ipairs(g.rebels) do if m.alive then Fall(g, m, nil) end end
-            for i = 1, LC.BattleLineDoom do NewRebel(g, "doom", g.y0 + 40 + (i - 0.5) * (g.y1 - g.y0 - 80) / LC.BattleLineDoom) end
+            for _, w in ipairs(LC.BattleLineDoomWave) do
+                for _ = 1, w[2] do NewRebel(g, "doom", math.Rand(g.y0 + 40, g.y1 - 40), w[1]) end
+            end
             SayAs(g, "battleline_doom")
             for _, p in ipairs(players) do if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(120, 0, 0, 180), 2, 0.5) end end
         end
@@ -461,7 +467,7 @@ function def.tick(g, dt, players)
                     if target then
                         Snd(a.e, "weapons/ar2/fire1.wav", 110, 55)
                         Tracer(a.e:GetPos(), Center(target.e), "AirboatGunHeavyTracer")
-                        target.hp = target.hp - 6
+                        target.hp = target.hp - 10
                         if target.hp <= 0 then Fall(g, target, nil) end
                     end
                 elseif left < 40 and a.chopper and not g.bombAt then

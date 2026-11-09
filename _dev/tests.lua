@@ -15561,8 +15561,10 @@ do
     g.t0 = CurTime() - (BT.calm + BT.battle)
     _run(0.2)
     local giants, skinned = 0, 0
-    for _, r in ipairs(g.rebels) do if r.alive and r.doom then giants = giants + 1 if r.e:GetModelScale() == 3 and r.e:GetMaterial() ~= "" then skinned = skinned + 1 end end end
-    ok(g.phase == "doom" and giants == LC.BattleLineDoom and skinned == giants and Said(g, "battleline_doom"), "the rebels come back three times the size, in metal and flesh", g.phase .. " " .. giants)
+    local sizes = {}
+    for _, r in ipairs(g.rebels) do if r.alive and r.doom then giants = giants + 1 sizes[r.e:GetModelScale()] = (sizes[r.e:GetModelScale()] or 0) + 1 if r.e:GetMaterial() ~= "" then skinned = skinned + 1 end end end
+    ok(g.phase == "doom" and giants == 44 and sizes[2] == 20 and sizes[3] == 12 and sizes[4] == 6 and sizes[5] == 3 and sizes[6] == 2 and sizes[7] == 1 and skinned == giants and Said(g, "battleline_doom"),
+        "a massive swarm of giants in metal and flesh: 20 twice the size, 12 three times, 6 four, 3 five, 2 six, 1 seven", g.phase .. " " .. giants)
     ok(Until(g, function() return g.phase == "rescue" end) and #g.air == 4 and Said(g, "battleline_air"), "her gunships and an attack helicopter sweep in")
     ok(Until(g, function() return g.bombAt ~= nil end), "the helicopter's bomb drop")
     ok(Until(g, function() return g.pl[b].how == "won" end) and Said(g, "battleline_held") and LC.BattleLineAlive(g) == 0 and g.pl[a].how == "out",

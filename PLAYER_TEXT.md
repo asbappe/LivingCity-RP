@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 64d1a47. Admin-only console messages and log lines are left out.
+Made from version bf667f1. Admin-only console messages and log lines are left out.
 
 9187 lines, from 244 files.
 
@@ -4342,75 +4342,75 @@ Made from version 64d1a47. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_battleline.lua`
 
-- "The Battle Line"  (name, line 47)
-- "The terrorists are coming! Shoot the red rebels before they reach the line. Never fire on her soldiers."  (text, line 48)
-- "The guns fall silent"  (text, line 49)
-- "The field goes quiet, and you wake."  (text, line 49)
-- "The Administrator"  (text, line 57)
-- "My brave citizens! The terrorists are coming. Take up arms beside my soldiers and hold the line!"  (text, line 57)
+- "The Battle Line"  (name, line 48)
+- "The terrorists are coming! Shoot the red rebels before they reach the line. Never fire on her soldiers."  (text, line 49)
+- "The guns fall silent"  (text, line 50)
+- "The field goes quiet, and you wake."  (text, line 50)
 - "The Administrator"  (text, line 58)
-- "Look at the size of that one! Everyone, fire!"  (text, line 58)
+- "My brave citizens! The terrorists are coming. Take up arms beside my soldiers and hold the line!"  (text, line 58)
 - "The Administrator"  (text, line 59)
-- "You fired on MY soldiers? Manhacks! Deal with this traitor."  (text, line 59)
+- "Look at the size of that one! Everyone, fire!"  (text, line 59)
 - "The Administrator"  (text, line 60)
-- "A traitor wants to be a rebel? Then be one. Forever."  (text, line 60)
-- "Sector overrun. Hostiles beyond containment. Requesting immediate air support."  (text, line 61)
-- "The Administrator"  (text, line 62)
-- "Did you think I would abandon you? Behold my wings!"  (text, line 62)
+- "You fired on MY soldiers? Manhacks! Deal with this traitor."  (text, line 60)
+- "The Administrator"  (text, line 61)
+- "A traitor wants to be a rebel? Then be one. Forever."  (text, line 61)
+- "Sector overrun. Hostiles beyond containment. Requesting immediate air support."  (text, line 62)
 - "The Administrator"  (text, line 63)
-- "The line held! Every one of you is a hero of my city."  (text, line 63)
-- "Free City Seventeen!"  (text, line 67)
-- "Down with the Combine!"  (text, line 67)
-- "Charge! Charge!"  (text, line 67)
-- "For the Resistance!"  (text, line 67)
-- "Lambda! Lambda!"  (text, line 67)
+- "Did you think I would abandon you? Behold my wings!"  (text, line 63)
+- "The Administrator"  (text, line 64)
+- "The line held! Every one of you is a hero of my city."  (text, line 64)
+- "Free City Seventeen!"  (text, line 68)
+- "Down with the Combine!"  (text, line 68)
+- "Charge! Charge!"  (text, line 68)
+- "For the Resistance!"  (text, line 68)
+- "Lambda! Lambda!"  (text, line 68)
 
 > Note for you (not shown in game): part of: battle line turn
 
-- "One of them"  (on-screen notice, line 252)
-- "The manhacks cut you down, and you wake up small, red and unarmed among the rebels. Charge the line with them, again and again, till the dream is over."  (on-screen notice, line 252)
+- "One of them"  (on-screen notice, line 256)
+- "The manhacks cut you down, and you wake up small, red and unarmed among the rebels. Charge the line with them, again and again, till the dream is over."  (on-screen notice, line 256)
 
 > Note for you (not shown in game): part of: battle line shot
 
-- "You fired on her soldiers."  (text, line 311)
+- "You fired on her soldiers."  (text, line 315)
 
 > Note for you (not shown in game): part of: tick
 
-- "The rebels"  (text, line 381)
+- "The rebels"  (text, line 385)
 
 > Note for you (not shown in game): the rebels charge; one at the line strikes the nearest dreamer and is gone
 
-- "The line breaks"  (text, line 405)
-- "A rebel got through the barricades."  (text, line 405)
+- "The line breaks"  (text, line 411)
+- "A rebel got through the barricades."  (text, line 411)
 
 > Note for you (not shown in game): part of: tick
 
-- "One of them"  (text, line 535)
-- "The last rebels burn, and you with them. A traitor, to the very end."  (text, line 535)
-- "You shot %d."  (message, line 537)
-- "The most of anyone: she pins a medal on you herself."  (text, line 538)
-- "The line held"  (text, line 539)
-- "Her gunships turn the last of the rebels to ash. Her soldiers cheer, and so do you.{mine}{best}"  (text, line 539)
+- "One of them"  (text, line 541)
+- "The last rebels burn, and you with them. A traitor, to the very end."  (text, line 541)
+- "You shot %d."  (message, line 543)
+- "The most of anyone: she pins a medal on you herself."  (text, line 544)
+- "The line held"  (text, line 545)
+- "Her gunships turn the last of the rebels to ash. Her soldiers cheer, and so do you.{mine}{best}"  (text, line 545)
 
 > Note for you (not shown in game): part of: woke
 
-- "The line held"  (on-screen notice, line 546)
-- "You wake with your finger still curled round a trigger, and a warm pride you can't explain. The Combine and you, side by side."  (on-screen notice, line 546)
-- "Cut down"  (on-screen notice, line 547)
-- "You wake gasping, with the whine of manhacks or the roar of the charge still in your ears."  (on-screen notice, line 547)
-- "The guns fall silent"  (on-screen notice, line 548)
-- "You wake to quiet, and the smell of smoke that isn't there."  (on-screen notice, line 548)
-- "Her soldiers hold the line. Take up your rifle."  (text, line 551)
-- "The rebels are charging! Hold the line!"  (text, line 551)
-- "They're back, and they're GIANTS. All hope is lost..."  (text, line 552)
-- "Gunships! She sent her gunships!"  (text, line 552)
-- "The line held!"  (text, line 552)
+- "The line held"  (on-screen notice, line 552)
+- "You wake with your finger still curled round a trigger, and a warm pride you can't explain. The Combine and you, side by side."  (on-screen notice, line 552)
+- "Cut down"  (on-screen notice, line 553)
+- "You wake gasping, with the whine of manhacks or the roar of the charge still in your ears."  (on-screen notice, line 553)
+- "The guns fall silent"  (on-screen notice, line 554)
+- "You wake to quiet, and the smell of smoke that isn't there."  (on-screen notice, line 554)
+- "Her soldiers hold the line. Take up your rifle."  (text, line 557)
+- "The rebels are charging! Hold the line!"  (text, line 557)
+- "They're back, and they're GIANTS. All hope is lost..."  (text, line 558)
+- "Gunships! She sent her gunships!"  (text, line 558)
+- "The line held!"  (text, line 558)
 
 > Note for you (not shown in game): part of: state
 
-- "You're one of them now. Charge!"  (text, line 557)
-- "MANHACKS! You fired on her soldiers!"  (text, line 557)
-- "Rebels down: %d (you: %d)"  (message, line 562)
+- "You're one of them now. Charge!"  (text, line 563)
+- "MANHACKS! You fired on her soldiers!"  (text, line 563)
+- "Rebels down: %d (you: %d)"  (message, line 568)
 
 ## lights out, the night shift, stimulants, the foil hat, and the chip (sv_livingcity_bedtime.lua)
 
