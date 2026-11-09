@@ -843,6 +843,8 @@ function TOOL.BuildCPanel(panel)
     end end
     local stopBtn = panel:Button("Stop the test (wake up)")
     if IsValid(stopBtn) then stopBtn.DoClick = function() if LC_CL and LC_CL.DreamTestAct then LC_CL.DreamTestAct("stop") end end end
+    panel:Button("Vortigaunts break into the next propaganda dream (for sure)", "lc_vortwar_next")
+    panel:Help("Press it, then test a propaganda dream: a quarter to nearly half way through, purple vortigaunts break in. Stand in their light to pull toward them.")
     local listBtn = panel:Button("Refresh the list")
     if IsValid(listBtn) then listBtn.DoClick = function() if LC_CL and LC_CL.DreamTestAct then LC_CL.DreamTestAct("list") end end end
     local winBtn = panel:Button("Dreams window (tonight's dream, wake everyone, snapshots)")

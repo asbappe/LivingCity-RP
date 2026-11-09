@@ -1690,6 +1690,18 @@ local ok, e = pcall(function()
     _me:SetNW2Bool("lc_enforcer", false)
     hook.t.HUDPaint.LivingCityDreamEnforce()
     _me:SetNW2Float("lc_dream_bad_until", 0)
+    -- vortigaunt dream warfare (cl_livingcity_vortwar.lua): their light, the purple screen, the meter; gone again
+    Msg({ k = "start", id = "harvest", name = "Record Harvest", goal = "Bring it in.", ends = CurTime() + 100, lives = 3, maxLives = 3, theme = "harvest" })
+    Msg({ k = "state", lives = 3, vw = { meter = 0.4, light = true, spots = { { 0, 0, 0 }, { 200, 0, 0 } }, r = 120 } })
+    if not (LC_CL.VortWar and LC_CL.VortWar()) then error("the vortigaunts' state on screen") end
+    hook.t.RenderScreenspaceEffects.LivingCityVortWar()
+    hook.t.PostDrawTranslucentRenderables.LivingCityVortWar(false, false)
+    hook.t.HUDPaint.LivingCityVortWar()
+    Msg({ k = "state", lives = 3, vw = { meter = -0.6, light = false, spots = { { 0, 0, 0 } }, r = 120 } })
+    hook.t.HUDPaint.LivingCityVortWar()
+    Msg({ k = "state", lives = 3, vw = false })
+    if LC_CL.VortWar() then error("the vortigaunts gone from the screen") end
+    hook.t.HUDPaint.LivingCityVortWar()
     Msg({ k = "start", id = "crumble", name = "The Crumbling Floor", goal = "Keep moving.", ends = CurTime() + 100, lives = 1, maxLives = 1 })
     Msg({ k = "state", lives = 1, alive = 2 })
     hook.t.HUDPaint.LivingCityDreamGames()

@@ -1007,7 +1007,7 @@ end
 
 -- The Administrator's tablet (sv_livingcity_cityadmin.lua): tonight's dream, by mood.
 function LC.DreamOffice()
-    local out = { ready = LC.DreamReady(), groups = {} }
+    local out = { ready = LC.DreamReady(), groups = {}, vort = LC.VortWarLine and LC.VortWarLine() or nil } -- (freed vortigaunts' influence: sv_livingcity_vortwar.lua)
     if not cvOn:GetBool() then out.why = "Dreams are switched off on this server."
     elseif not LC.DreamPoint() then out.why = "There's nowhere for the city to dream yet (no dream point on this map)." end
     local moods = LC.DreamMoods()

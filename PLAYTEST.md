@@ -1154,3 +1154,5 @@ Notes:
   Notes:
 - [ ] **The Battle Line (dream, editor > Dreams: test one):** you get a pulse rifle; red rebels charge; shooting them drops them (check hits feel right, aim at the body). Shoot one of her soldiers: manhacks come for you; let them get you: you become a tiny red rebel with no gun, pushed at the line and shot over and over; your F2 voice lines squeak. Near the end giant metal/flesh rebels charge, then three gunships and a helicopter come in and bomb them. Check the gunship, helicopter and bomb models show and the sounds play.
   Notes:
+- [ ] **Vortigaunt dream warfare (editor > Dreams: test one):** press "Vortigaunts break into the next propaganda dream (for sure)", then test a propaganda dream. A quarter to half way in: purple vortigaunts in rings of purple light, the screen goes purple, her figure flickers to flesh, and a HER / THE VORTIGAUNTS meter appears. Stand in a ring: the meter goes their way, and at the end her figure shatters and you wake. Stay out: she says "Begone!" and the dream carries on. Check the Administrator tablet dream menu shows the freed vortigaunts line when one is freed.
+  Notes:

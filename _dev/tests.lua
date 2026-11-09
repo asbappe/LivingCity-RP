@@ -21,6 +21,7 @@ _setcvar("lc_market_demand", 0) -- (demand moving black market prices: tested on
 LC.ImbalanceFloor = 100000 -- (help for the outnumbered side: tested on its own, in SideBalanceTests)
 _setcvar("lc_rebel_per_combine", 0) -- (fighters for each Combine NPC out: tested on its own, in RebelTests)
 LC.SquadSteps = { { 100000, 3 } } -- (squads shrinking with more players on a side: tested on their own, in SquadSizeTests; 3 each elsewhere, as before)
+LC.VortWarMost = 0 -- (vortigaunts breaking into propaganda dreams at random: tested on their own, in PropagandaMoreTests)
 _setcvar("lc_afk_kick_minutes", 0) -- (the test's people never touch a key: no kicking them for it)
 _setcvar("lc_manpower", 0) -- (each side's reserve of fighters and units: tested on its own, in ManpowerTests)
 _setcvar("lc_directives", 0) -- (no sealed directive breaking open in the middle of other tests; its own section turns it on)
@@ -15583,6 +15584,74 @@ do
     ok(LC.DreamGames.battleline.secs <= 300, "five minutes at most (the owner)")
     Stop(d)
     ok(a.lcVoicePitch == nil and a:GetModelScale() == 1, "awake: their own voice and size back", tostring(a.lcVoicePitch) .. " " .. tostring(a:GetModelScale()))
+end
+
+-- Vortigaunt dream warfare (the owner, 8 and 9 November): freed vortigaunts break into propaganda dreams
+do
+    local vorts = {}
+    for _, e in ipairs(ents.FindByClass("npc_vortigaunt")) do if e.lcVortFreed then e.lcVortFreed = nil vorts[#vorts + 1] = e end end -- (none freed, to start)
+    local special = {}
+    for _, p in ipairs(player.GetAll()) do if p:GetNW2String("lcf_special", "") == "vortigaunt" then special[#special + 1] = p p:SetNW2String("lcf_special", "") end end
+    local mostWas = LC.VortWarMost
+    LC.VortWarMost = 0.60
+    ok(LC.VortWarInfluence() == 0 and LC.VortWarChance() == 0 and LC.VortWarLine() == nil, "no freed vortigaunt: no influence, no chance")
+    local freed = {}
+    for i = 1, 5 do local v = ents.Create("npc_vortigaunt") v.lcVortFreed = true freed[i] = v end
+    ok(LC.VortWarInfluence() == 5 and LC.VortWarChance(1) == 0.15 and LC.VortWarChance(2) == 0.30 and LC.VortWarChance() == 0.60
+        and string.find(LC.VortWarLine() or "", "60%", 1, true), "15% for each freed vortigaunt alive, at most 60%; her tablet says so", LC.VortWarLine())
+    -- they break in (for sure, as the editor's button makes it), and both dreamers stand in their light: her figure shatters
+    LC.VortWarForceNext = true
+    g, d = Start("harvest")
+    ok(g and g.vw and g.vw.phase == "wait" and g.vw.at > CurTime(), "a propaganda dream: they will break in, a while in")
+    g.vw.at = CurTime()
+    _run(0.3)
+    local vw = g.vw
+    ok(vw.phase == "tug" and #vw.vorts >= 2 and Said(g, "vortwar_in") and (IsValid(g.her) or IsValid(g.star)), "purple vortigaunts break in, and say so", tostring(vw.phase) .. " " .. #vw.vorts)
+    local sa = g.def.state(g, a)
+    ok(type(sa.vw) == "table" and #sa.vw.spots == #vw.vorts, "everyone's screen gets their light and the meter")
+    local stA, stB = LC.Standing(a), LC.Standing(b)
+    a:SetPos(vw.vorts[1].at + Vector(0, 0, 4)) b:SetPos(vw.vorts[1].at + Vector(30, 0, 4))
+    _run(1)
+    ok(vw.meter > 0 and vw.side[a].now, "standing in their light pulls toward them", tostring(vw.meter))
+    local pullWas = LC.VortWarPull
+    LC.VortWarPull = 1 / 4 -- (quicker, for the test)
+    local okU = Until(g, function()
+        if vw.phase == "tug" then a:SetPos(vw.vorts[1].at + Vector(0, 0, 4)) b:SetPos(vw.vorts[1].at + Vector(30, 0, 4)) end -- (they stay in it)
+        return vw.phase == "shattered"
+    end)
+    LC.VortWarPull = pullWas
+    ok(okU and Said(g, "vortwar_shatter") and g.her == nil and LC.VortWeakNext == true,
+        "everyone in their light: her figure shatters, and her spell is weakened", tostring(vw.phase) .. " " .. tostring(vw.meter))
+    _run(3)
+    ok(g.pl[a].done and LC.Standing(a) == stA - LC.VortWarCost and LC.Counter(a, "res_jobs") >= 1,
+        "the dream ends; waking, siding with them cost Civil Standing, and the Resistance remembers", (LC.Standing(a) - stA) .. " " .. (LC.Standing(b) - stB) .. " " .. LC.Counter(a, "res_jobs") .. " " .. tostring(g.pl[a].done))
+    Stop(d)
+    -- next time: her spell weakened (offences cost half); this time nobody listens, and she wins
+    LC.VortWarForceNext = true
+    g, d = Start("harvest")
+    ok(a.lcVortWeak == true, "the next propaganda dream: her spell is weakened")
+    LC.PropagandaOffend(g, a, "Test", "A test offence.")
+    ok(LC.PropagandaLoss(a) == math.floor(LC.PropagandaOffencePoints / 2), "an offence costs half", LC.PropagandaLoss(a))
+    g.vw.at = CurTime()
+    _run(0.3)
+    vw = g.vw
+    a:SetPos(g.dream.pos + Vector(0, 0, 4)) b:SetPos(g.dream.pos + Vector(10, 0, 4))
+    for _, v in ipairs(vw.vorts) do v.at = v.at + Vector(0, 5000, 0) end -- (their light far from anyone)
+    g.pl[a].safe, g.pl[b].safe = 0, 0
+    local pullWas2 = LC.VortWarPull
+    LC.VortWarPull = 1 / 4
+    local okG = Until(g, function()
+        if vw.phase == "tug" then a:SetPos(g.dream.pos + Vector(0, 0, 4)) b:SetPos(g.dream.pos + Vector(10, 0, 4)) end
+        return vw.phase == "gone"
+    end)
+    LC.VortWarPull = pullWas2
+    ok(okG and Said(g, "vortwar_loyal") and LC.VortWarSide(a) == "loyal" and not g.pl[b].done,
+        "nobody in their light: 'Begone!', they fade, the dream carries on, and the dreamers kept to her", tostring(vw.phase))
+    Stop(d)
+    for _, v in ipairs(freed) do v:Remove() end
+    for _, e in ipairs(vorts) do if IsValid(e) then e.lcVortFreed = true end end
+    for _, p in ipairs(special) do p:SetNW2String("lcf_special", "vortigaunt") end
+    LC.VortWarMost = mostWas
 end
 -- Ravenholm: the truth (a Free Vortigaunt on the server)
 local v = newPlayer("PMVort", "resistance")

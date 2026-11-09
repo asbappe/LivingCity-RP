@@ -450,7 +450,9 @@ LC.PropagandaOffend = Offend
 -- How many loyalty points the dream cost them.
 function LC.PropagandaLoss(p)
     local n, out = LC.PropagandaOffences(p)
-    return math.min(LC.PropagandaMaxPoints, n * LC.PropagandaOffencePoints + (out and LC.PropagandaOutPoints or 0))
+    local loss = math.min(LC.PropagandaMaxPoints, n * LC.PropagandaOffencePoints + (out and LC.PropagandaOutPoints or 0))
+    if p.lcVortWeak then loss = math.floor(loss / 2) end -- (the vortigaunts shattered her last one: her spell is weakened, sv_livingcity_vortwar.lua)
+    return loss
 end
 -- As they wake: the loss taken from Civil Standing (loyalty points are Civil Standing).
 hook.Add("LivingCityDreamWoke", "LivingCityPropagandaLoyalty", function(p, _, why)

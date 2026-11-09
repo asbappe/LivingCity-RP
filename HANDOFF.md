@@ -36,4 +36,5 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - Tests: SideBalanceTests (stub got `EMT:SetOwner`). Unchecked in game: PLAYTEST.md "9 November, tougher Combine" (the engine bits: thrown frags, Lua-made combine balls, NumGrenades set at runtime).
 - Earlier part 12 (dreams, dream plan, sides even, imbalance, reaction squads): see `git log` and PLAYTEST.md "8 November, part 12" to "9 November, later", all still unchecked in game.
 - The Battle Line (owner, built): `sv_livingcity_battleline.lua` (`LC.BattleLineShot` ray hits on Actors, `LC.BattleLineTurn` traitors, doom giants then gunships and bombs); tests in PropagandaMoreTests; stub GetAimVector now falls back to eyeang.
-- Next: vortigaunt dream warfare (designs at the end of `TODO.md`); 
+- Vortigaunt dream warfare (owner, built): `sv_livingcity_vortwar.lua` wraps `LC.DreamGameStart` (roll, `g.vw`, wraps `g.def.state` to send `vw`), tug meter, Shatter/Fade, rewards on `LivingCityDreamWoke`; `p.lcVortWeak` halves `LC.PropagandaLoss`; client `cl_livingcity_vortwar.lua`. Tests: PropagandaMoreTests (prelude sets `LC.VortWarMost = 0`).
+- Next: whatever the owner asks; 

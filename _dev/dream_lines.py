@@ -68,7 +68,7 @@ def propaganda():
         if m:
             out.append((m.group(1), "The Administrator", unq(m.group(2)), "her own voice: warm, regal, a little vain"))
     inside = False
-    for name in ("sv_livingcity_propagandamore.lua", "sv_livingcity_battleline.lua"):
+    for name in ("sv_livingcity_propagandamore.lua", "sv_livingcity_battleline.lua", "sv_livingcity_vortwar.lua"):
         inside = False
         for line in read(name):
             if re.match(r"^\s*local (CUES|LINES) = \{", line):

@@ -334,3 +334,15 @@ Every line said in the dreams you play, made from the code by `python3 _dev/drea
 | `battleline_doom1.mp3` | Overwatch | Sector overrun. Hostiles beyond containment. Requesting immediate air support. |  |
 | `battleline_air1.mp3` | The Administrator | Did you think I would abandon you? Behold my wings! | her own voice |
 | `battleline_held1.mp3` | The Administrator | The line held! Every one of you is a hero of my city. | her own voice |
+
+### vortwar (`vortwar`)
+
+| File | Who | Words | How it should sound |
+|---|---|---|---|
+| `vortwar_in1.mp3` | A Vortigaunt | The Vortessence sees through her false light. Come, stand with us, and see what is true. |  |
+| `vortwar_answer11.mp3` | A Vortigaunt | She says she protects you. Ask who built the walls. |  |
+| `vortwar_answer21.mp3` | A Vortigaunt | Her smile is painted on. Look closer. |  |
+| `vortwar_answer31.mp3` | A Vortigaunt | We were chained as you are chained. We are free. You can be. |  |
+| `vortwar_answer41.mp3` | A Vortigaunt | The dream is hers. The waking is yours. |  |
+| `vortwar_loyal1.mp3` | The Administrator | Begone, false spirits! These citizens are MINE. | her own voice |
+| `vortwar_shatter1.mp3` | A Vortigaunt | Her light was never yours. Wake, and see. |  |

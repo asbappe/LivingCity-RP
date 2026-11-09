@@ -93,6 +93,7 @@ net.Receive("lc_admin_office", function()
             Note(d.why or "The city can't dream yet.")
         else
             if d.busy then Note("The city is dreaming right now.") end
+            if d.vort then Note(d.vort) end -- (freed vortigaunts breaking into her propaganda dreams)
             local pl = d.plan or {}
             if pl.feel then Note(pl.feel) end
             Note(string.format("You choose only a kind (Nightmare or propaganda), and only once every %d nights; the city chooses which dream, and every other night is Happy or Neutral.", pl.every or 3))
