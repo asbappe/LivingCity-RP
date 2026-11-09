@@ -26,7 +26,11 @@ local function Masked(ply)
 end
 LC_CL.Masked = Masked
 
-local function SocioLevel() return GetGlobal2String("lc_socio", "green") end
+-- (BLACK, the collapse: red underneath for everything else, shown as black: sv_livingcity_collapse.lua)
+local function SocioLevel()
+    if GetGlobal2Bool("lc_collapse", false) then return "black" end
+    return GetGlobal2String("lc_socio", "green")
+end
 
 ------------------------------------------------------------------------
 -- The records terminal
@@ -374,11 +378,14 @@ local function DrawSocioPill(w, level)
     local s = LCCP and LCCP.Socio[level]
     if not s then return end
     local text = "SOCIOSTABILITY: " .. s.name
+    -- how close the city is to collapse (it fills at red, drains at green)
+    local chaos = GetGlobal2Float("lc_chaos", 0)
+    if level ~= "black" and chaos >= 0.05 then text = text .. string.format("   (collapse %d%%)", math.floor(chaos * 100)) end
     surface.SetFont("DermaDefaultBold")
     local tw = surface.GetTextSize(text)
     local pw = tw + 24
     local x, y = w / 2 - pw / 2, 8
-    local pulse = level == "red" and (0.6 + 0.4 * math.abs(math.sin(CurTime() * 3))) or 1
+    local pulse = (level == "red" or level == "black") and (0.6 + 0.4 * math.abs(math.sin(CurTime() * 3))) or 1
     draw.RoundedBox(4, x, y, pw, 22, C_12_14_18_210)
     draw.RoundedBox(0, x, y + 20, pw, 2, Color(s.color.r, s.color.g, s.color.b, 255 * pulse))
     draw.SimpleText(text, "DermaDefaultBold", w / 2, y + 11, Color(s.color.r, s.color.g, s.color.b, 255 * pulse), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)

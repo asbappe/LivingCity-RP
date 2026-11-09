@@ -224,15 +224,18 @@ function LC.Announce(kind, path, detail)
         if own then path, subtitle = own, sub end
     end
     path = path or LC.Pick(VOICE[kind] or VOICE.ambient)
+    -- (no Half-Life 2 voice unless lc_announce_stock: the words still go in chat and on screen)
+    local heard = LC.StockVoice and LC.StockVoice(path) or path
     if herTurn then
         subtitle, path = nil, ""
     else
-        if LC.OverwatchSpeaks then LC.OverwatchSpeaks(path) end
-        if LC.PAMark then LC.PAMark(LC.AnnounceClipSecs and LC.AnnounceClipSecs(path) or 8) else LC.LastPA = CurTime() end
+        if heard ~= "" and LC.OverwatchSpeaks then LC.OverwatchSpeaks(heard) end
+        if heard == "" then -- (nothing said: the PA stays free)
+        elseif LC.PAMark then LC.PAMark(LC.AnnounceClipSecs and LC.AnnounceClipSecs(heard) or 8) else LC.LastPA = CurTime() end
         net.Start("lc_announce")
-        net.WriteString(path)
+        net.WriteString(heard)
         net.WriteString(TITLES[kind] or TITLES.ambient)
-        net.WriteFloat(LC.AnnounceKnownSecs and LC.AnnounceKnownSecs(path) or 0)
+        net.WriteFloat(LC.AnnounceKnownSecs and LC.AnnounceKnownSecs(heard) or 0)
         net.Broadcast()
     end
     -- and in chat, what it said and what it means

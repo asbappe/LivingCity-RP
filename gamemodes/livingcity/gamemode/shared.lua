@@ -176,6 +176,7 @@ LC_MODULES = {
         "sv_livingcity_cityadmin", -- (the City Administrator: the election, the office, the bodyguard; idle players)
         "sv_livingcity_streetlife", -- (brandishing a gun, obituaries, longer street detentions, players found by citizen number)
         "sv_livingcity_directives", -- (the sealed directives: how the secret endings start; the G-Man's hand)
+        "sv_livingcity_collapse", -- (sociostability BLACK: the G-Man's offer, the Administrator's last stand, the heroes; after directives)
         "sv_livingcity_war",
         "sv_livingcity_squads", -- (squad sizes by players on a side, E on a unit to lead it, backup out of rebel territory)
         "sv_livingcity_pacing", -- (who is in a fight; the Combine's action music)
@@ -229,6 +230,7 @@ LC_MODULES = {
         "cl_livingcity_hints",
         "cl_livingcity_stealth", -- (sneaking: how seen you are, and the units' sight on the ground)
         "cl_livingcity_infest", "cl_livingcity_suit", "cl_livingcity_cityadmin", "cl_livingcity_directives",
+        "cl_livingcity_collapse", -- (the G-Man's offer, her shield, the last stand on screen)
         "cl_livingcity_intake",
         "cl_livingcity_labor", -- (Labor Assignment's screen)
         "cl_livingcity_kick",

@@ -578,6 +578,7 @@ function DMT:GetAttacker() return self.attacker end
 function DMT:GetInflictor() return self.inflictor end
 function DMT:GetDamage() return self.amount end
 function DMT:SetDamage(v) self.amount = v end
+function DMT:ScaleDamage(m) self.amount = self.amount * m end
 function DMT:IsDamageType(t) return bit.band(self.dtype, t) ~= 0 end
 function DMT:GetDamageType() return self.dtype end
 

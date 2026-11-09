@@ -37,6 +37,7 @@ This file is only an index. The specification of how everything behaves (the agr
 - [Contraband, searches, the underground, and conduct](docs/features/contraband.md): Stop and search, stash, stealth, wanted, the black market, lockpicks, conduct
 - [Pose Recorder (a separate tool)](docs/features/pose-recorder.md): The separate dance and pose tool
 - [Secret endings](docs/features/endings.md): Sealed directives, every ending, songs, the Endings menu
+- [The collapse: sociostability BLACK and the last stand](docs/features/collapse.md): Chaos after long red, the G-Man's offer to the Administrator, her last stand in her office, Barney and Freeman
 - [Hooks, and how the code is laid out](docs/features/code-layout.md): For whoever works on the code: modules, load order, hooks
 - [Big servers, when something breaks, admin commands, honest limits](docs/features/admin.md): Server sizing, debugging, every admin command, known limits
 - [Squads: sizes, leading units, backup by radio](docs/features/squads.md): How many NPCs a player leads by players on their side, E on a unit, backup out of rebel territory, the radio's left click

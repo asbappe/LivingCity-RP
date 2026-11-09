@@ -1160,3 +1160,17 @@ Notes:
   Notes:
 - [ ] **Quartermaster for strangers:** as a citizen, press E on the quartermaster: his window opens with nothing to buy, but your guns, ammo, gun parts, scrap, rags and chemicals listed with "Sell for N" and "Donate". Donate a box of ammo: "We won't forget this." (+1 sympathy). As a member: the same Donate buttons beside your arms.
   Notes:
+
+## 9 November, part 13: the owner's answers, and the collapse
+- [ ] **Team chat:** press U and type: only your side reads it, marked (Team). Check a citizen and a cop do not see each other's.
+  Notes:
+- [ ] **No Half-Life 2 Overwatch voice:** an event with no recording of yours (say rations): the banner and words show, no stock voice. Editor > Events: the "Half-Life 2's own Overwatch voice" box brings it back.
+  Notes:
+- [ ] **Infestation warning posts:** the infestation that starts in a hallway: the sign, floodlight and barrel stand out past the hallway, off to one side, nothing in a wall. (Existing posts stay where they are until the next map start.)
+  Notes:
+- [ ] **The collapse, step by step (editor > The collapse):** place the "Administrator's desk" point in her office first. "Collapse to BLACK now": the purple BLACK readout, and as the Administrator, the G-Man then his window (step down / end it / refuse). Refuse, then "next step" four times: crates, sleeping and waking with a weapon, the city going dark, her last stand.
+  Notes:
+- [ ] **The last stand:** her bubble shield (purple), the time, health and shield bars, "HER OFFICE" marker for everyone else, 4 Elites round the desk, 8 rebels coming. Get close: the shield throws you back. Sabotage the transformer feeding her office: the bubble goes orange and weak. Civil Protection can't hurt her.
+  Notes:
+- [ ] **Heroes:** "Make me Barney" then "Make me Freeman": you reappear in rebel territory, named in chat, with the weapons (Freeman has the RPG, crossbow, gravity gun), YOU ARE ... on screen; you take far less damage and deal more; Freeman comes back as Freeman when killed. The rebels in the city head for her office. Kill her: credits, back to yourself (name, model, weapons). Freeman's model is a rebel stand-in: send me a Workshop Gordon model to use instead.
+  Notes:

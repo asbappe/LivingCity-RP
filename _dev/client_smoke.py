@@ -563,6 +563,40 @@ if LC_CL.GmanVision then
     if not okV then problems[#problems + 1] = "the G-Man's summons errors: " .. tostring(errV) end
     _advance(10) pcall(gv)
 else problems[#problems + 1] = "no G-Man vision" end
+-- the collapse (sv_livingcity_collapse.lua): the G-Man's offer, her shield, the last stand, the heroes
+do
+    local rf, rs = net.ReadFloat, net.ReadString
+    net._q = { 120 }
+    net.ReadFloat = function() return table.remove(net._q, 1) end
+    local okO, errO = pcall(net["recv_lc_collapse_offer"])
+    if not okO then problems[#problems + 1] = "the G-Man's offer errors: " .. tostring(errO)
+    elseif not IsValid(LC_CL.CollapseOffer) then problems[#problems + 1] = "the G-Man's offer opens no window"
+    else
+        local okP2, errP2 = pcall(LC_CL.CollapseOffer.Paint, LC_CL.CollapseOffer, 520, 250)
+        if not okP2 then problems[#problems + 1] = "the G-Man's offer paint: " .. tostring(errP2) end
+        LC_CL.CollapseOffer:Remove()
+    end
+    net.ReadFloat, net.ReadString = rf, rs
+    local boss = ents.Create("npc_citizen")
+    boss:SetPos(Vector(300, 0, 0))
+    boss.nw.lc_shield_frac = 0.6
+    _globals.lc_collapse = true
+    _globals.lc_collapse_stage = "stand"
+    _globals.lc_collapse_boss = boss
+    _globals.lc_collapse_office = Vector(300, 0, 0)
+    _globals.lc_collapse_until = CurTime() + 300
+    _globals.lc_collapse_hero = "freeman"
+    _me.nw.lc_hero = "freeman"
+    local sp0 = _calls["render.DrawSphere"] or 0
+    local okS, errS = pcall(hook.t.PostDrawTranslucentRenderables.LivingCityCollapseShield, false, false)
+    if not okS then problems[#problems + 1] = "her shield errors: " .. tostring(errS)
+    elseif (_calls["render.DrawSphere"] or 0) <= sp0 then problems[#problems + 1] = "her shield isn't drawn" end
+    local okH, errH = pcall(hook.t.HUDPaint.LivingCityCollapseHUD)
+    if not okH then problems[#problems + 1] = "the last stand on screen errors: " .. tostring(errH) end
+    _me.nw.lc_hero = nil
+    for _, k in ipairs({ "lc_collapse", "lc_collapse_stage", "lc_collapse_boss", "lc_collapse_office", "lc_collapse_until", "lc_collapse_hero" }) do _globals[k] = nil end
+    boss:Remove()
+end
 -- flying a scanner: the view leaves the body, and units see who a report caught
 local scn = ents.Create("lc_rscanner")
 scn:SetPos(Vector(500, 0, 200))

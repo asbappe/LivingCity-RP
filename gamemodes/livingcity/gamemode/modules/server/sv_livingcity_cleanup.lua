@@ -282,8 +282,9 @@ end
 
 -- Room for a prop (mins/maxs its rough size): nothing solid where it would stand, the map's static
 -- props and other props included (a brush-only trace misses static props: the lamp and barrel ended up
--- in walls, the owner, 7 November), and a floor under it.
-local SIZE = { sign = { Vector(-14, -14, 2), Vector(14, 14, 70) }, lamp = { Vector(-12, -12, 2), Vector(12, 12, 90) }, barrel = { Vector(-18, -18, 2), Vector(18, 18, 50) } }
+-- in walls, the owner, 7 November), and a floor under it. The lamp is a floodlight whose head reaches
+-- well past its stand, so its box is wide (the owner, 9 November: the floodlights were in the walls).
+local SIZE = { sign = { Vector(-14, -14, 2), Vector(14, 14, 70) }, lamp = { Vector(-26, -26, 2), Vector(26, 26, 100) }, barrel = { Vector(-18, -18, 2), Vector(18, 18, 50) } }
 local function NotPeople(e) return not (IsValid(e) and (e:IsPlayer() or e:IsNPC())) end
 local function Fits(at, size)
     if not util.TraceHull then return true end
@@ -304,34 +305,63 @@ local function Clearance(at, dir, max)
     if tr and tr.StartSolid then return 0 end
     return (tr and tr.Hit) and max * tr.Fraction or max
 end
+-- No wall nearer than `need` all the way round (eight ways), for the lamp's head and the barrel.
+local function WallRoom(at, need)
+    for yaw = 0, 315, 45 do
+        if Clearance(at, Angle(0, yaw, 0):Forward(), need) < need then return false end
+    end
+    return true
+end
+
+-- How wide the way is across a spot (wall to wall, each side up to 400), and each side's room.
+local POST_WIDE = 240 -- (narrower than this, a hallway: the post goes further out, never in it)
+local function Width(at, right)
+    local a, b = Clearance(at, right, 400), Clearance(at, -right, 400)
+    return a + b, a, b
+end
+LC.HazardWalkWidth = function(at, out) return (Width(at, out:Angle():Right())) end
 
 -- The post beside the way in, never on it (the owner, 7 November: the signs stood right on the marked
--- path): the sign against whichever wall has room (or 100 units off the way, on open ground), the lamp
--- a step before it and the barrel a step past it, each only where it fits. `out` points out of the
+-- path; 9 November: in a hallway they barricaded it). Only where the way is wide enough (POST_WIDE):
+-- the sign back against whichever wall has more room (or 100 units off the way, on open ground), and
+-- the lamp and barrel scattered near it on that same side, a little turned, never further into the
+-- walkway than the sign, each only where it fits with room to the walls. `out` points out of the
 -- infestation, the way the sign faces (at whoever's walking in).
 local function PlacePost(z, at, out)
     local face = out:Angle()
     local right = face:Right()
-    local sides = {}
-    for _, s in ipairs({ right, -right }) do sides[#sides + 1] = { dir = s, room = Clearance(at, s, 260) } end
+    local width, rr, rl = Width(at, right)
+    if width < POST_WIDE then return nil end
+    local sides = { { dir = right, room = rr }, { dir = -right, room = rl } }
     table.sort(sides, function(x, y) return x.room > y.room end)
     for _, s in ipairs(sides) do
         if s.room < 64 then break end
-        local off = s.room >= 240 and 100 or math.max(56, s.room - 30)
+        local off = s.room >= 300 and 100 or math.max(40, s.room - 24)
         local spot = at + s.dir * off
         spot = (LC.GroundAt and LC.GroundAt(spot + Vector(0, 0, 20))) or spot
         if Fits(spot, SIZE.sign) then
             local made = {}
             local sign = Prop(Valid(POST[1][1]) and POST[1][1] or POST[1][4], spot, face)
             if sign then sign.lcHazardZone = z made[#made + 1] = sign end
-            for _, extra in ipairs({ { "lamp", SIZE.lamp, { 50, -50, 90 } }, { "barrel", SIZE.barrel, { -50, 50, -90 } } }) do
-                for _, along in ipairs(extra[3]) do
-                    local p = spot + out * along
+            for _, extra in ipairs({ { "lamp", SIZE.lamp, 34 }, { "barrel", SIZE.barrel, 24 } }) do
+                for try = 1, 14 do
+                    local along = math.random(-60, 150) -- (mostly further out: back the other way is the hallway)
+                    local side = off + math.random(-10, 30) -- (towards the wall, if anything: never into the way)
+                    if try > 10 then along, side = (try % 2 == 0 and 1 or -1) * (40 + try * 6), off end
+                    local p = at + out * along + s.dir * side
                     p = (LC.GroundAt and LC.GroundAt(p + Vector(0, 0, 20))) or p
-                    if Fits(p, extra[2]) then
+                    local clear = true
+                    for _, e in ipairs(made) do if e:GetPos():DistToSqr(p) < 50 * 50 then clear = false end end
+                    -- (in sight of the sign: never round a corner or through a wall)
+                    local to = p - spot
+                    to.z = 0
+                    local dist = to:Length()
+                    if clear and dist > 1 and Clearance(spot, to / dist, dist) < dist then clear = false end
+                    if clear and Fits(p, extra[2]) and WallRoom(p, extra[3]) then
+                        local ang = Angle(0, face.y + math.random(-30, 30), 0)
                         local e
-                        if extra[1] == "barrel" then e = LC.HazardBarrel(p, face)
-                        else e = Prop(Valid(POST[2][1]) and POST[2][1] or POST[2][4], p, face) end
+                        if extra[1] == "barrel" then e = LC.HazardBarrel(p, ang)
+                        else e = Prop(Valid(POST[2][1]) and POST[2][1] or POST[2][4], p, ang) end
                         if e then e.lcHazardZone = z made[#made + 1] = e end
                         break
                     end
@@ -352,6 +382,19 @@ function LC.HazardPost(z)
         d:Normalize()
         return d
     end
+    -- from a way in, back out along it till it's wide enough (out of a hallway), up to about 600 units
+    local function TryFrom(at, out)
+        for step = 0, 9 do
+            if step > 0 and Clearance(at, out, step * 64) < step * 64 then return nil end -- (a wall: the way turns)
+            local p = at + out * (step * 64)
+            p = (LC.GroundAt and LC.GroundAt(p + Vector(0, 0, 20))) or p
+            if p and not (LC.InInfest and LC.InInfest(p)) then
+                local made = PlacePost(z, p, out)
+                if made then return made end
+            end
+        end
+        return nil
+    end
     -- where people walk in: the path nodes just outside the infestation, on open ground, nearest first
     local nodes = {}
     for _, nd in ipairs(LC.NavNodesNear and LC.NavNodesNear(centre, Reach(z) + 600) or {}) do
@@ -363,7 +406,7 @@ function LC.HazardPost(z)
     table.sort(nodes, function(x, y) return x.d < y.d end)
     for i = 1, math.min(4, #nodes) do
         local at = (LC.GroundAt and LC.GroundAt(nodes[i].pos + Vector(0, 0, 20))) or nodes[i].pos
-        local made = PlacePost(z, at, Out(at))
+        local made = TryFrom(at, Out(at))
         if made then return made end
     end
     for try = 1, 16 do
@@ -371,7 +414,7 @@ function LC.HazardPost(z)
         local dir = Angle(0, yaw, 0):Forward()
         local at = (LC.GroundAt or function(q) return q end)(centre + dir * (Reach(z) + 60) + Vector(0, 0, 30))
         if at and not (LC.InInfest and LC.InInfest(at)) and (try > 12 or OpenSpot(centre, at)) then
-            local made = PlacePost(z, at, dir)
+            local made = TryFrom(at, dir)
             if made then return made end
         end
     end

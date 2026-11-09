@@ -40,6 +40,7 @@ LC.POINT_KINDS = {
     laborterm = true, -- Labor Assignment: Union work is given out and changed here (sv_livingcity_labor.lua)
     cpsupply = true, -- the Civil Protection Commissary (sv_livingcity_cpsupply.lua)
     studio = true, -- where Dr. Breen speaks when no player is Director of Propaganda (sv_livingcity_propaganda.lua)
+    desk = true, -- the Administrator's desk: her last stand when the city collapses (sv_livingcity_collapse.lua)
     incinerator = true, -- where the dead go (sv_livingcity_mortuary.lua)
     hazbarrel = true, -- an infestation control barrel: cleanup workers empty their hoovers here (sv_livingcity_cleanup.lua)
     dock = true, graffiti = true, rubble = true, pipe = true, -- loading docks, walls that get tagged, rubble piles (Union shifts)

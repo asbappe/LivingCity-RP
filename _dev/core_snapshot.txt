@@ -40,6 +40,7 @@ announce trigger rations_soon
 announce trigger response
 announce trigger skirmish_raid
 announce trigger skirmish_sweep
+announce trigger socio_black
 announce trigger socio_green
 announce trigger socio_red
 announce trigger socio_yellow
@@ -151,6 +152,7 @@ console command lc_burn_evidence
 console command lc_calm
 console command lc_characters
 console command lc_city
+console command lc_collapse_test
 console command lc_combine_models_list
 console command lc_conduct
 console command lc_creator
@@ -431,6 +433,7 @@ setting lc_announce_custom_pct = 100
 setting lc_announce_gap = 25
 setting lc_announce_interval = 0
 setting lc_announce_quiet = 90
+setting lc_announce_stock = 0
 setting lc_arrest_struggle = 1
 setting lc_arrest_struggle_chance = 25
 setting lc_arrest_struggle_ratio = 1.25
@@ -447,6 +450,25 @@ setting lc_bedtime = 1
 setting lc_bin_kg = 10
 setting lc_bin_minutes = 40
 setting lc_birds = 4
+setting lc_black = 1
+setting lc_black_admin_health = 600
+setting lc_black_answer_minutes = 5
+setting lc_black_barney_minutes = 5
+setting lc_black_barney_model = models/player/barney.mdl
+setting lc_black_cooldown_hours = 3
+setting lc_black_elites = 4
+setting lc_black_freeman_minutes = 5
+setting lc_black_freeman_model = models/player/group03/male_07.mdl
+setting lc_black_hero_kills = 2
+setting lc_black_heroes = 1
+setting lc_black_min_players = 4
+setting lc_black_minutes = 30
+setting lc_black_phase_minutes = 5
+setting lc_black_rebels = 8
+setting lc_black_reset_map = 0
+setting lc_black_reward = 200
+setting lc_black_shield = 1500
+setting lc_black_stand_minutes = 15
 setting lc_blackout_light = b
 setting lc_blackout_minutes = 8
 setting lc_blackout_share = 0.5

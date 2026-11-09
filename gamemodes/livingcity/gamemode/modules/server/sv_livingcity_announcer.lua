@@ -30,7 +30,7 @@
         warnings       rations_soon  curfew_soon (two minutes ahead; a sweep,
                        a raid or a supply convoy is a surprise, and a
                        lockdown answers violence, so they have none)
-        the city       socio_green  socio_yellow  socio_red
+        the city       socio_green  socio_yellow  socio_red  socio_black (the collapse)
                        dawn  day  dusk  night
                        outbreak  blackout  power_restored
                        skirmish_raid  skirmish_sweep  response (a response squad)
@@ -97,6 +97,12 @@ local cvPct  = CreateConVar("lc_announce_custom_pct", "100", FLAGS, "Chance (per
 local cvGap  = CreateConVar("lc_announce_gap", "25", FLAGS, "Seconds between two custom announcements by the same voice")
 local cvCat  = CreateConVar("lc_announce_cat_gap", "90", FLAGS, "Seconds before the same trigger can be announced again")
 local cvShare = CreateConVar("lc_announce_admin_share", "50", FLAGS, "No longer used (7 November): the Administrator's recorded voice speaks when nobody plays the Administrator, Overwatch's when a player does")
+local cvStock = CreateConVar("lc_announce_stock", "0", FLAGS, "1: Half-Life 2's own Overwatch voice speaks for what you have no recording of; 0 (the owner, 9 November: never Half-Life 2's): the banner and the words only")
+-- Half-Life 2's own Overwatch line, or nothing (an empty path: the banner and the words still show)
+function LC.StockVoice(path)
+    if path and not cvStock:GetBool() and string.find(path, "^npc/overwatch/cityvoice/") then return "" end
+    return path
+end
 local cvQuiet = CreateConVar("lc_announce_quiet", "90", FLAGS, "Seconds of quiet on the PA (after the last announcement has finished) before a routine one (the time of day, a train, a skirmish, sociostability going green or yellow...) is made; routine ones in that time are left out")
 
 local ROOT = "livingcity/announce/"
@@ -109,7 +115,7 @@ local EXT = { wav = true, mp3 = true, ogg = true }
 LC.AnnounceTriggers = {
     "rations", "sweep", "curfew", "lockdown", "raid", "supply", "ended",
     "rations_soon", "curfew_soon",
-    "socio_green", "socio_yellow", "socio_red", "dawn", "day", "dusk", "night",
+    "socio_green", "socio_yellow", "socio_red", "socio_black", "dawn", "day", "dusk", "night",
     "outbreak", "blackout", "power_restored", "skirmish_raid", "skirmish_sweep", "response",
     "breakout", "overwatch_drop", "block_raided", "territory_grew", "train_arrival", "welcome", "ambient",
     "jog", "drill", "parade", -- morning exercise (sv_livingcity_exercise.lua)
@@ -131,7 +137,7 @@ local BASE_TIER = {
     dawn = 1, day = 1, dusk = 1, night = 1, ambient = 1, welcome = 1, power_restored = 1, train_arrival = 1, socio_green = 1,
     sweep = 2, curfew = 2, curfew_soon = 2, blackout = 2, territory_grew = 2, socio_yellow = 2, outbreak = 2,
     lockdown = 3, raid = 3, skirmish_raid = 3, skirmish_sweep = 3, response = 3, block_raided = 3, overwatch_drop = 3, socio_red = 3,
-    breakout = 4,
+    breakout = 4, socio_black = 4,
     jog = 1, drill = 1, parade = 1, -- (she loves a bit of exercise)
 }
 local VIOLENT = { raid = true, skirmish_raid = true, skirmish_sweep = true, breakout = true, outbreak = true, block_raided = true, territory_grew = true, overwatch_drop = true }
@@ -166,7 +172,7 @@ local TITLES = {
     skirmish_sweep = "Overwatch response", breakout = "Prison breakout", overwatch_drop = "Overwatch deployment",
     block_raided = "Housing block inspection", territory_grew = "Resistance activity", train_arrival = "Arrivals",
     welcome = "Welcome", dawn = "City announcement", day = "City announcement", dusk = "City announcement", night = "City announcement",
-    ambient = "City announcement", response = "Overwatch response",
+    ambient = "City announcement", response = "Overwatch response", socio_black = "Civil collapse",
 }
 
 ------------------------------------------------------------------------

@@ -963,3 +963,17 @@ hook.Add("PlayerSetHandsModel", "LivingCityCPHands", function(ply, ent)
     ent:SetBodyGroups("0000000")
     return true
 end)
+
+-- Team chat (the owner, 9 November: "a U chat that is team only", as in TF2 or Counter-Strike).
+-- U (the game's own team chat key, messagemode2) reaches only your own side: Civil Protection,
+-- Overwatch and the Administrator together; the Resistance and free vortigaunts together; citizens;
+-- the infested; stalkers on their own. Ordinary chat (Y) is untouched.
+function LC.TeamChatSide(ply)
+    if not IsValid(ply) then return nil end
+    if ply:GetNW2String("lcf_faction", "") == "stalker" then return "stalker" end
+    return LC.SideOf and LC.SideOf(ply) or ply:GetNW2String("lcf_faction", "citizen")
+end
+hook.Add("PlayerCanSeePlayersChat", "LivingCityTeamChat", function(text, teamOnly, listener, speaker)
+    if not teamOnly or not IsValid(speaker) or not IsValid(listener) then return end
+    return LC.TeamChatSide(listener) == LC.TeamChatSide(speaker)
+end)

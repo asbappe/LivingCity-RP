@@ -2,14 +2,13 @@
 
 **Waiting on the owner:**
 
-- **From the 7 November lists (part 2), waiting on the owner's answer:**
-  - **A "Black" sociostability level?** Soldiers now leave their Combine zones only when deployed or at red. Not added; the owner floated it with a question mark.
-  - **Which voice says what:** `lc_announce_admin_share` is still a coin toss between the Administrator and the Overwatch voice for each announcement (`docs/dev/pacing-audit.md`).
-  - **Streetlights and loudspeakers inside Combine zones** stay broken now that no citizen goes in: let the stalker mend them too?
-  - **The economy audit** (`docs/dev/economy-audit.md`): what to change is the owner's call.
-  - **Stimulants** (cigarettes, beer, drugs): brainstorm only so far. **G-Man events pushing the Administrator** now the endings are dreams: brainstorm later, as the owner said.
-  - **The future endings setup:** the G-Man is set aside (`lc_directives` 0). Ideas to start from, in `docs/features/endings.md` ("Ideas for the future endings setup"): a refused directive makes dreams keep (waking with the dream's weapons and stats) or leak into reality (a one-time mingebag swarm on Civil Protection as the dreams end).
-  - **The Workshop dance animations** (3830765710, 2538387266): only as a required Workshop download, with the owner's say.
+- **The owner's answers (9 November, part 13):** BLACK, the G-Man and the last stand, and the heroes: built (`docs/features/collapse.md`). Voices: already as the owner remembered (the Administrator's with no player in the post, Overwatch's with one); Half-Life 2's Overwatch now silent (`lc_announce_stock` 0). Stalkers mending lights and loudspeakers in Combine zones: already built (8 November). `LC.IsNight`: only one left (night or dusk), kept. NPC name strings on demand: already done (8 November). Team chat on U: built. Vortigaunt dream warfare: the owner confirmed both guesses.
+  - **The economy audit** (`docs/dev/economy-audit.md`): the owner will review it another time.
+  - **Stimulants** (cigarettes, beer, drugs): brainstorm only so far.
+  - **Workshop dance animations** (3830765710, 2538387266) and **the Half-Life: Alyx Combine sleep rig**: the owner will send the file lists (told how on 9 November) so the paths can be mapped.
+  - **Performance caches** (`docs/dev/performance-audit.md`): explained again 9 November; waiting on the owner (only worth it if the server or players lag).
+  - **Gordon Freeman's model**: Garry's Mod has none; `lc_black_freeman_model` takes a Workshop one's path when the owner has one.
+  - **The collapse, open ideas:** more G-Man interference (the owner listed dream weapons and crates; also "keeping weapons from dreams"), what BLACK does to the city beyond red, and a real Breen-style shield model.
   - **Unconfirmed in game:** everything in PLAYTEST.md's "7 November, part 2" section, above all the dreams (the per-NPC hold, out-of-map ground) and the arrest struggle.
 
 **Pending from the 1 November playtest (late)**:
@@ -25,7 +24,7 @@
 - **Map lights twinkle** on `rp_c18_ug`: waiting on the owner's Sandbox test of the same map.
 - **Rewording:** finished (2026-11-01). Batches 1 to 5 reworded; the rest (side jobs, Resistance ops, the underground, the shop) were already plain; "primary fire" now reads "left click".
 - **The owner's corrected PLAYER_TEXT.md**: apply with `_dev/apply_player_text.py` when it comes.
-- **A local out-of-character text chat** (the owner's list of 2026-10-29): it already exists (checked 2026-11-01): `/looc` (since 2026-10-17), also C > Talk > Out of character, nearby, and F1's quick menu. Asked the owner whether they meant something more (for example its own chat box); remove this line if not.
+- **A local out-of-character text chat:** the owner meant team chat on U (9 November): built.
 
 
 - **Terminals with their UI on their own screens:** built (2026-11-01; cl_livingcity_screens.lua): Civil Intake, Housing Allocation, the CP Commissary's counter. Waiting on the owner to see where the screen stands (in front of the terminal, 54 units up; `Frame` in that file).
@@ -64,14 +63,14 @@
 - **Performance, would change timing (`docs/dev/performance-audit.md`):** cache each NPC's "is anyone looking" answer for about a second, cache "seen by security" for a fraction of a second, cache the client job-game halo lists, move HUD colours out of per-frame code. Each needs the owner's OK.
 - **Network, engine side (`docs/dev/network-audit.md`):** NPC name/job/doing strings add about 20 KB to a joining player's first update at 100 NPCs; cutting them would change what players see.
 - **Older code treats grown territory as a circle** (scavenge bins, rebel life, decorating the ground, the "wet ground" spot check): approximate for ground grown along path nodes.
-- **`LC.IsNight` is defined twice** (atmos: night only; rest: night or dusk; the rest one wins). Check which is meant.
+- **`LC.IsNight`:** only one definition left (night or dusk); kept (9 November).
 - **DreamTests "the awake aren't touched"** is flaky (the awake test citizen may get a random Union job's tools).
 - **NPC sight cache: measured, not merged** (branch `worktree-agent-a27078de119d0e273`): at 1 second it never hits (far NPCs only think every 2 s), and the sleep check makes only about 6 sight traces a second at 83 NPCs, so the "thousands a second" estimate was wrong. Nothing to do.
 - **Done (8 November): the snapshot now matches the game and is sorted.** Was: **Core snapshot copy (owner OK'd, 8 November):** the approved changes (NPC cap 100, six food settings, `lc_burn_evidence`, `/letslip`) still need copying into the core snapshot; this session's permission rules wouldn't let the copy run. The owner (or a session allowed to) copies the `.new` snapshot over the old one after one `python3 _dev/run_parallel.py`.
 - **Random tests:** "a headcrab near: it runs, no vortessence (the collar)" (1 November playtest unit) and the collared vortigaunt sweeper move: each fails now and then, before this session too.
 - **Pose Recorder 2, second update:** the timeline strip (jump, reorder, duplicate, delete, scrub) and putting a saved pose back onto a ragdoll.
 - **Random test:** "shifts appear on the board" (Occupations) can crash when no spot is found in 6 tries (seen once in a full run).
-- [ ] **Questions for the owner (vortigaunt dream warfare):** (The owner, 8 November: "any vortigaunt that had been freed from shackles even if an NPC". Ravenholm counts a Free Vortigaunt player or an NPC marked `lcVortFreed`, `LC.DreamFreeVort`; use the same for dream warfare.) (1) How does a vortigaunt count as "freed" today? (2) What should siding with them in a dream cost or earn?
+- [x] (confirmed 9 November: both as built) **Questions for the owner (vortigaunt dream warfare):** (The owner, 8 November: "any vortigaunt that had been freed from shackles even if an NPC". Ravenholm counts a Free Vortigaunt player or an NPC marked `lcVortFreed`, `LC.DreamFreeVort`; use the same for dream warfare.) (1) How does a vortigaunt count as "freed" today? (2) What should siding with them in a dream cost or earn?
 - [x] **The serial full suite ran past its 6900-second timeout** (fixed 9 November, late): players a test unit made were never removed (88 by a third of the way in, every simulated second looping over all of them). Now they leave when their unit is over (the block above `section()` in `_dev/tests.lua`), and the serial run takes about 10.5 minutes.
 - [ ] **21 failures that show only in the serial run** (`run_tests.py`, 9 November: 4711 passed, 21 failed; `run_parallel.py` and `run_section.py` pass them). The run never got this far before, so they were hidden, not new: "Joining Civil Protection" fails the same without the fix (leftover top-level players trip "The Combine is too big", 39 to 9). The rest: Staff tools (!staff), Custom announcements (3, the Administrator's turn), Secret endings (radios), and the dream sections (stand-ins, bedtime, ten more propaganda, ten more strange: boxing). Likely the same kind: state from earlier sections. Fix in the tests when there is time.
 - [x] (built 9 November: `docs/features/squads.md`) **Backup by radio and squad sizes by player count (the owner, 9 November):** (1) A Resistance player with a Freq 7 radio can call for backup, from the radio SWEP and from F2: fighters leave a rebel zone, appear out of sight at a navigable spot between the territory and the player, run to them and join their squad. (2) Squad sizes scale with the human players on that side (Resistance; Civil Protection/Overwatch): 1-2 players can recruit 5 NPCs, 3-4 about 3, and so on down to 1, so players team up with each other; when a limit is in effect the player must be told (on recruiting, and somewhere they can see it, e.g. the squad panel). Needs a design pass in a fresh chat: check how recruiting works now (sv_livingcity_rebels.lua follow, the Combine side) before proposing numbers.

@@ -551,6 +551,7 @@ end
 S.crateRound = S.crateRound or 0
 local function DropCrates(n)
     S.crateRound = S.crateRound + 1
+    local made = {}
     for _ = 1, n do
         local pos = CrateSpot()
         if pos then
@@ -559,10 +560,13 @@ local function DropCrates(n)
                 c:SetPos(pos)
                 c:Spawn()
                 S.crates[#S.crates + 1] = c
+                made[#made + 1] = c
             end
         end
     end
+    return made
 end
+LC.GmanDropCrates = DropCrates -- (the collapse uses them too: sv_livingcity_collapse.lua)
 local function Spread()
     local seeds = LC.TerritorySeeds and LC.TerritorySeeds("infest") or {}
     if #seeds > 0 and LC.GrowTerritory then pcall(LC.GrowTerritory, seeds[math.random(#seeds)], nil, nil, "something unseen") end

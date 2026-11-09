@@ -29,8 +29,9 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 2026-11-09 (part 13): **the serial test run finishes again** (TODO item). Players a test unit makes now leave when that unit is over (block above `section()` at the top of `_dev/tests.lua`; units are found by function names ending in `Tests` on the call stack; top-level players stay). Serial run: about 10.5 minutes, was past 6900 s. No game code changed.
-- Serial-only failures (21) are listed in `TODO.md`; they pass in `run_parallel.py` and alone. "Joining Civil Protection" checked: fails the same without the fix (leftover players trip the Combine size cap). Random in the parallel run: the dream sections and the collared-headcrab test.
-- Before this (part 12): tougher, desperate Combine (`docs/features/city.md`), squads (`docs/features/squads.md`), Battle Line, vortigaunt dream warfare, joining the Resistance, Quartermaster: see `git log` and PLAYTEST.md "8 November, part 12" onward, all still unchecked in game.
+- 2026-11-09 (part 13): **the collapse** (owner asked; spec `docs/features/collapse.md`; `sv_livingcity_collapse.lua`, `cl_livingcity_collapse.lua`). `LC.Chaos` fills at red (`LC.ChaosStep`), full: `LC.CollapseBegin` (BLACK = `lc_collapse` global, red underneath via `LC.SocioOverride`; `LCCP.Socio.black` is display only), G-Man offer (net `lc_collapse_offer`/`_answer`), `Refuse` then `PHASES` (crates via `LC.GmanDropCrates` in directives.lua, `LC.CollapseGift` on waking, forced blackout, `StandBegin`). Stand: desk point (new kind `desk`), shield in `EntityTakeDamage` LivingCityCollapseShield (weak when `LC.PoweredAt` false), `LC.CollapseStandTick`. Heroes: `LC.HeroBegin`/`HeroEnd`/`HeroPick`/`HeroTick`. Tests: CollapseTests; editor section "The collapse".
+- Same day: team chat on U (`PlayerCanSeePlayersChat` in factions.lua, `LC.TeamChatSide`); `lc_announce_stock` 0 (`LC.StockVoice`; words still shown); infestation posts out of hallways (`PlacePost`/`TryFrom` in cleanup.lua). Tests: TeamChatTests, the hallway check in anon@18830. Core snapshot updated (22 new lines, owner-asked).
+- Serial suite fixed earlier today: test players leave when their unit ends (~10.5 min). 21 serial-only failures listed in `TODO.md`.
+- Unchecked in game: PLAYTEST.md "9 November, part 13" (above all the shield, heroes' models and loadouts, rebels marching on the office). Freeman's model is a stand-in (`lc_black_freeman_model`).
 - Tests need `pip install lupa` in a fresh container.
-- Next: whatever the owner asks; open items in `TODO.md` mostly wait on the owner.
+- Next: the owner's file lists for the Workshop dances and the Alyx sleep rig; whatever they ask.

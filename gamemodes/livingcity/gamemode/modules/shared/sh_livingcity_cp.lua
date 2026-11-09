@@ -90,5 +90,7 @@ LCCP.Socio = {
     green = { name = "NOMINAL", long = "Sociostability nominal", color = Color(110, 200, 120) },
     yellow = { name = "MARGINAL", long = "Sociostability marginal", color = Color(235, 200, 70) },
     red = { name = "JUDGMENT WAIVER", long = "Judgment waiver in effect", color = Color(230, 70, 60) },
+    -- the collapse (the owner, 9 November): never set by hand, only reached (sv_livingcity_collapse.lua)
+    black = { name = "BLACK: CIVIL COLLAPSE", long = "Civil collapse: open rebellion", color = Color(170, 120, 230) },
 }
 LCCP.SocioOrder = { "green", "yellow", "red" }

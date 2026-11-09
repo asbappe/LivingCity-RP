@@ -757,12 +757,16 @@ local function AnnounceSocio(level, by, force)
     local herTurn = voiced and LC.AnnounceVoiceFor and LC.AnnounceVoiceFor(trig, true) == "administrator" and LC.CustomAnnounce and LC.CustomAnnounce("administrator", trig, nil, true)
     if voiced and not herTurn then
         if LC.PickAnnounceClip then custom, subtitle = LC.PickAnnounceClip("overwatch", trig, true) end -- (sv_livingcity_announcer.lua)
-        if LC.OverwatchSpeaks then LC.OverwatchSpeaks(custom or SOCIO_VOICE[level]) end
-        if LC.PAMark then LC.PAMark(LC.AnnounceClipSecs and LC.AnnounceClipSecs(custom or SOCIO_VOICE[level]) or 8) else LC.LastPA = CurTime() end
+        local said = custom or SOCIO_VOICE[level]
+        if LC.StockVoice then said = LC.StockVoice(said) end -- (no Half-Life 2 voice unless lc_announce_stock)
+        if said ~= "" then
+            if LC.OverwatchSpeaks then LC.OverwatchSpeaks(said) end
+            if LC.PAMark then LC.PAMark(LC.AnnounceClipSecs and LC.AnnounceClipSecs(said) or 8) else LC.LastPA = CurTime() end
+        end
         net.Start("lc_announce")
-        net.WriteString(custom or SOCIO_VOICE[level])
+        net.WriteString(said)
         net.WriteString(info.long)
-        net.WriteFloat(LC.AnnounceKnownSecs and LC.AnnounceKnownSecs(custom or SOCIO_VOICE[level]) or 0)
+        net.WriteFloat(LC.AnnounceKnownSecs and LC.AnnounceKnownSecs(said) or 0)
         net.Broadcast()
     end
     if subtitle then for _, p in ipairs(player.GetAll()) do p:ChatPrint("[Overwatch] \"" .. subtitle .. "\"") end end
@@ -820,7 +824,7 @@ function LC.SetSocio(ply, level, minutes)
         LC.RefreshSocio()
         return true, "Sociostability is back to what the city makes it."
     end
-    if not LCCP.Socio[level] then return false, "Pick green, yellow, red, or auto (the city decides)." end
+    if not LCCP.Socio[level] or level == "black" then return false, "Pick green, yellow, red, or auto (the city decides)." end
     -- (announced to the whole city each time: not more than once every half minute)
     if IsValid(ply) and not ply:IsAdmin() and (ply.lcSocioNext or 0) > CurTime() then
         return false, string.format("You only just set it. Wait %d seconds.", math.ceil(ply.lcSocioNext - CurTime()))

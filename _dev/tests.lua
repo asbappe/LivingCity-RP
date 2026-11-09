@@ -19267,6 +19267,33 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
         ok(LC.HazardPropFits(Vector(-172000, -172500, 0), sign), "a warning sign fits on open floor")
         ok(not LC.HazardPropFits(Vector(-170000, -172500, 0), sign), "and not where there's no floor under it (nothing stands in a wall or in the air)")
         _groundFn = wasGround
+        -- the 9 November playtest: an infestation that starts in a hallway. The post goes out past the
+        -- hallway, off the line of the way in, and the floodlight keeps clear of the walls.
+        do
+            local savedW, savedNN = _walls, LC.NavNodesNear
+            local cx, cy = -180000, -180000
+            local W = function(x1, y1, x2, y2) return { a = Vector(cx + x1, cy + y1, 0), b = Vector(cx + x2, cy + y2, 0) } end
+            _walls = { W(-200, -200, -200, 200), W(-200, 200, 200, 200), W(-200, -200, 200, -200), W(200, 200, 200, 80), W(200, -200, 200, -80),
+                W(200, 80, 600, 80), W(200, -80, 600, -80), -- (the hallway: 160 wide, 400 long)
+                W(600, 250, 1600, 250), W(600, 80, 600, 250), W(600, -80, 600, -600) } -- (past it, a street: a wall along one side, the hallway's end wall facing it)
+            LC.NavNodesNear = function() return { { pos = Vector(cx + 260, cy, 0) } } end
+            local hz = { kind = "infest", pos = Vector(cx, cy, 0), r = 150, group = 0, lcNestFirst = true, lcNestNext = 1e9, lcPostTried = true }
+            ok(LC.HazardWalkWidth(Vector(cx + 400, cy, 0), Vector(1, 0, 0)) < 200, "the hallway measures narrow (wall to wall)")
+            local bad, lampOK, n = nil, true, 0
+            for _ = 1, 5 do
+                local hp = LC.HazardPost(hz)
+                for _, e in ipairs(hp or {}) do
+                    n = n + 1
+                    local q = e:GetPos()
+                    if q.x < cx + 600 or math.abs(q.y - cy) < 40 then bad = tostring(q) end
+                    if e:GetModel() ~= nil and string.find(e:GetModel(), "lamp", 1, true) and q.y > cy + 250 - 30 then lampOK = false end
+                    e:Remove()
+                end
+            end
+            ok(n >= 10 and not bad, "starting in a hallway, the post stands past it, never on the way in", bad or n)
+            ok(lampOK, "and the floodlight is never against a wall")
+            _walls, LC.NavNodesNear = savedW, savedNN
+        end
         local gz = { kind = "infest", pos = Vector(-176000, -176000, 0), r = 300, group = 0, lcNestFirst = true, lcNestNext = 1e9, lcPostTried = true }
         table.insert(LC.Zones, gz)
         local cop, cst = LC.SpawnCop(gz.pos + Vector(250, 0, 4))
@@ -20675,7 +20702,13 @@ ok(#ann(n0) == 0, "a second response squad straight after: not announced again")
 n0 = #net.sent
 LC.Announce("rations")
 got = ann(n0)
-ok(#got == 1 and string.find(got[1], "npc/overwatch/", 1, true), "nothing of its own for rations: Half-Life 2's line", got[1])
+ok(#got == 1 and got[1] == "", "nothing of its own for rations: the banner and words, no Half-Life 2 voice (the owner, 9 November)", got[1])
+_setcvar("lc_announce_stock", 1)
+n0 = #net.sent
+LC.Announce("rations")
+got = ann(n0)
+ok(#got == 1 and string.find(got[1], "npc/overwatch/", 1, true), "with lc_announce_stock 1: Half-Life 2's line", got[1])
+_setcvar("lc_announce_stock", 0)
 _files["sound/livingcity/overwatch/response1.wav"] = nil
 LC.AnnounceRescan()
 -- the PA's remarks (a wanted person, a sentence...): one in three minutes, and only after quiet
@@ -23037,7 +23070,7 @@ function EvidenceTests()
     ok(b.carriers[1] and b.carriers[1].delivered and #b.props > 0 and b.phase == "pile", "he gets there and it's piled up, each thing as itself", b.phase .. " " .. #b.props)
     ok(Work(cop) == "evidence_carry" and not IsValid(LC.NPCs[cop].carry), "his hands empty, he stays to guard it")
     local pa = _lastnet("lc_announce")
-    ok(pa and pa.data[1] == "npc/overwatch/cityvoice/f_trainstation_assemble_spkr.wav", "the PA calls the citizens to assemble", pa and pa.data[1])
+    ok(pa and (pa.data[1] == "npc/overwatch/cityvoice/f_trainstation_assemble_spkr.wav" or (pa.data[1] == "" and not GetConVar("lc_announce_stock"):GetBool())), "the PA calls the citizens to assemble (silent without Half-Life 2's voice, lc_announce_stock 0: the words only)", pa and pa.data[1])
     ok(has(cit.chat, "being burned"), "and says what's being burned, and where")
     ok(has(radio, "resistance: They've piled up"), "Freq 7 hears where it is")
     local watching = 0
@@ -23240,6 +23273,139 @@ function SafeFileTests()
     LC.Outfits = keepOutfits
 end
 SafeFileTests()
+
+function CollapseTests()
+section("The collapse: sociostability BLACK, the G-Man's offer, the Administrator's last stand, the heroes (the owner, 9 November)")
+local CS = LC.CollapseState
+_setcvar("lc_black_min_players", 0)
+-- the others who hold the post step aside for the test (so the G-Man comes to this one)
+local benched = {}
+for _, p in ipairs(player.GetAll()) do if p:GetNW2String("lcf_faction", "") == "admin" then benched[#benched + 1] = p p:SetNW2String("lcf_faction", "citizen") end end
+-- the chaos: red fills it, green drains it
+LC.Chaos = 0
+LC.ChaosStep("red", 60 * 15)
+ok(math.abs(LC.Chaos - 0.5) < 0.01, "fifteen minutes of red: the city is halfway to collapse (lc_black_minutes 30)", LC.Chaos)
+LC.ChaosStep("yellow", 60 * 4)
+ok(LC.Chaos > 0.5 and LC.Chaos < 0.54, "yellow fills it a quarter as fast", LC.Chaos)
+LC.ChaosStep("green", 60 * 30)
+ok(LC.Chaos == 0, "and green drains it", LC.Chaos)
+ok(not LC.SetSocio(nil, "black"), "nobody can set BLACK by hand: it's only reached")
+-- step down
+local adm = newPlayer("CollapseAdmin", "admin")
+ok(LC.CollapseBegin("test") and LC.CollapseStage() == "offer" and GetGlobal2Bool("lc_collapse", false) and LC.Socio == "red", "the city collapses: BLACK, red underneath")
+ok(CS.offeredTo == adm, "the G-Man comes to the sitting Administrator")
+net.sent = {}
+_run(10)
+local offered = false
+for _, m in ipairs(net.sent) do if m.name == "lc_collapse_offer" and m.to == adm then offered = true end end
+ok(offered, "and puts his offer to them on screen")
+ok(LC.CollapseAnswer(adm, "resign") and LC.CollapseStage() == nil and adm:GetNW2String("lcf_faction", "") == "citizen", "step down: a citizen again, and the collapse is over")
+ok(not GetGlobal2Bool("lc_collapse", false) and LC.Chaos == 0, "the city calms (chaos gone)")
+ok(not LC.CollapseAllowed(), "and not again for a while (lc_black_cooldown_hours)")
+-- refuse: his steps, then the last stand
+CS.cooldownUntil = 0
+local adm2 = newPlayer("CollapseAdmin2", "admin")
+local reb = newPlayer("CollapseRebel", "resistance", nil, 900)
+local cop = newPlayer("CollapseCop", "cp")
+reb:SetPos(Vector(9000, 9000, 0)) cop:SetPos(Vector(-9000, 9000, 0))
+LC.CollapseBegin("test")
+LC.CollapseAnswer(adm2, "refuse")
+ok(LC.CollapseStage() == "refused", "refused: he means to hasten the end")
+LC.CollapseNext()
+ok(CS.phase == 1, "his first step: crates about the city")
+LC.CollapseNext()
+local w = LC.CollapseGift(reb)
+ok(w and reb:HasWeapon(w), "his second: people wake with weapons in their hands", w)
+ok(not LC.CollapseGift(reb) and not LC.CollapseGift(cop), "once each, and never Civil Protection")
+LC.CollapseNext()
+ok(CS.forcedDark == true, "his third: the grid fails")
+LC.CollapseNext()
+ok(LC.CollapseStage() == "stand" and CS.boss == adm2 and adm2:Health() == 600, "his fourth: her last stand, in her office, 600 health", adm2:Health())
+local guards = 0
+for npc, st in pairs(LC.NPCs) do if IsValid(npc) and st.collapseGuard then guards = guards + 1 end end
+ok(guards == 4, "four Overwatch Elites guard her", guards)
+ok(GetGlobal2Entity("lc_collapse_boss") == adm2, "everyone's screen knows who she is")
+-- the shield (her office powered: no transformer feeds it here, so the G-Man keeps the city dark)
+ok(CS.forcedDark == true, "nothing feeding her office: the city stays dark, or she'd be untouchable")
+local poweredWas = LC.PoweredAt
+LC.PoweredAt = function() return true end
+CS.shield = CS.shieldMax
+local ShieldHook = hook.t.EntityTakeDamage.LivingCityCollapseShield
+ShieldHook(adm2, _dmg(reb, 100))
+ok(adm2:Health() == 600 and math.abs(CS.shield - 1400) < 0.01, "her shield takes the hit (1500, 100 off)", CS.shield)
+local fdmg = _dmg(cop, 50)
+ShieldHook(adm2, fdmg)
+ok(fdmg:GetDamage() == 0 and math.abs(CS.shield - 1400) < 0.01, "Civil Protection can't hurt her or her shield")
+LC.PoweredAt = function() return false end
+ShieldHook(adm2, _dmg(reb, 10))
+ok(CS.shield <= 500, "her office's power cut: the shield is a third as strong", CS.shield)
+LC.PoweredAt = poweredWas
+-- the heroes
+local unit = LC.SpawnCop(Vector(9100, 9000, 4))
+hook.Run("OnNPCKilled", unit, reb) hook.Run("OnNPCKilled", unit, reb)
+ok(LC.HeroPick() == reb, "the hero's first pick: the rebellion's best killer of units")
+ok(LC.HeroBegin("barney") == reb and reb.lcHero == "barney", "Barney: played by them")
+_run(1.2)
+ok(reb:GetNW2String("lc_char", "") == "Barney Calhoun" and reb:HasWeapon("weapon_ar2"), "named and armed as Barney")
+local HeroDamage = hook.t.EntityTakeDamage.LivingCityCollapseHeroDamage
+local d1 = _dmg(cop, 100)
+HeroDamage(reb, d1)
+ok(d1:GetDamage() == 50, "Barney takes half the damage", d1:GetDamage())
+LC.HeroBegin("freeman", reb)
+_run(1.2)
+ok(reb.lcHero == "freeman" and reb:HasWeapon("weapon_rpg") and reb:GetNW2String("lc_char", "") == "Gordon Freeman", "then Gordon Freeman: the whole Half-Life 2 arsenal")
+local d2 = _dmg(cop, 100)
+HeroDamage(reb, d2)
+ok(d2:GetDamage() == 20, "Freeman takes a fifth", d2:GetDamage())
+local d3 = _dmg(reb, 10)
+HeroDamage(cop, d3)
+ok(d3:GetDamage() == 20, "and deals twice the damage", d3:GetDamage())
+-- she falls
+local credits = LC.Credits(reb)
+adm2.alive = false
+hook.Run("PlayerDeath", adm2, reb, reb)
+_run(0.5)
+ok(LC.CollapseStage() == nil and adm2:GetNW2String("lcf_faction", "") == "citizen", "she falls: the collapse is over, the office empty")
+ok(LC.Credits(reb) == credits + 200, "everyone of the rebellion who was there is paid (lc_black_reward)", LC.Credits(reb) - credits)
+ok(reb.lcHero == nil and reb:GetNW2String("lc_char", "") ~= "Gordon Freeman" and not reb:HasWeapon("weapon_rpg"), "and the hero is themselves again")
+adm2.alive = true
+-- the city's own Administrator: she refuses, and stands in person
+CS.cooldownUntil = 0
+local okS = LC.CollapseTest("stand")
+ok(okS and IsValid(CS.boss) and CS.boss.lcCollapseBoss, "no player as the Administrator: the city's own stands in her office")
+-- time runs out with no heroes: Overwatch crushes it
+_setcvar("lc_black_heroes", 0)
+CS.standUntil = CurTime()
+LC.CollapseStandTick(CurTime() + 1)
+ok(LC.CollapseStage() == nil and math.abs(LC.Chaos - 0.5) < 0.01, "time runs out: the uprising is crushed, chaos halved")
+_setcvar("lc_black_heroes", 1)
+LC.CollapseTest("off")
+LC.Chaos = 0
+for _, p in ipairs(benched) do p:SetNW2String("lcf_faction", "admin") end
+end
+CollapseTests()
+
+function TeamChatTests()
+section("Team chat (U) and no Half-Life 2 Overwatch voice (the owner, 9 November)")
+local tcCop, tcOta = newPlayer("TCCop", "cp"), newPlayer("TCAdmin", "admin")
+local tcReb, tcVort, tcCit = newPlayer("TCRebel", "resistance", nil, 900), newPlayer("TCVort", "vort"), newPlayer("TCCitizen", "citizen")
+local function sees(listener, speaker, team) return hook.Run("PlayerCanSeePlayersChat", "hi", team, listener, speaker) end
+ok(sees(tcOta, tcCop, true) == true, "team chat: Civil Protection and the Administrator read each other")
+ok(sees(tcReb, tcCop, true) == false and sees(tcCit, tcCop, true) == false, "and nobody else on the server does")
+ok(sees(tcVort, tcReb, true) == true, "free vortigaunts and the Resistance are one side")
+ok(sees(tcReb, tcCop, false) == nil, "ordinary chat is left as it was")
+ok(LC.StockVoice("npc/overwatch/cityvoice/f_protectionresponse_1_spkr.wav") == "", "Half-Life 2's own Overwatch line: not said (the banner and words only)")
+ok(LC.StockVoice("livingcity/overwatch/curfew1.wav") == "livingcity/overwatch/curfew1.wav", "the owner's own recordings still play")
+_setcvar("lc_announce_stock", 1)
+ok(LC.StockVoice("npc/overwatch/cityvoice/f_protectionresponse_1_spkr.wav") ~= "", "with lc_announce_stock 1, Half-Life 2's lines come back")
+_setcvar("lc_announce_stock", 0)
+net.sent = {}
+LC.Announce("response", "npc/overwatch/cityvoice/f_protectionresponse_1_spkr.wav", "Test")
+local sentPath
+for _, m in ipairs(net.sent) do if m.name == "lc_announce" then sentPath = m.data[1] end end
+ok(sentPath == "", "an announcement with no recording of the owner's goes out silent", tostring(sentPath))
+end
+TeamChatTests()
 
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")

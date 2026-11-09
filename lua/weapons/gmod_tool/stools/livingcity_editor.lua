@@ -42,6 +42,7 @@ local MODES = {
     { id = "sspawn",      label = "Point: scanner launch spot (where flown scanners go up)" },
     { id = "platform",    label = "Point: train platform (trains stop here: new arrivals, people leaving the city)" },
     { id = "arrival",     label = "Point: arrival (where new people step into the city, before Civil Intake; place it from the way they should face, Civil Intake say)" },
+    { id = "desk",        label = "Point: the Administrator's desk (her office: where she makes her last stand when the city collapses to BLACK)" },
     { id = "studio",      label = "Point: broadcast studio (the Administrator speaks here, filmed live, when no player is Director of Propaganda)" },
     { id = "jogroute",    label = "Point: jogging route stop (morning jog: place them in order round the route, the first is the start; route #)", group = true },
     { id = "yard",        label = "Point: exercise yard (morning drill: stand where the rows of citizens will be and aim at where the leader stands)" },
@@ -714,6 +715,34 @@ function TOOL.BuildCPanel(panel)
     panel:Button("Back to normal (real player counts, test units gone)", "lc_desperation_test", "off")
     panel:Help("Grenades are thrown at you from 250 to 1100 units away, when they can see you; Elites fire from 300 to 1600. Test units leave after 5 minutes.")
 
+    Header("The collapse (sociostability BLACK) and the Administrator's last stand")
+    Check("Long red can collapse the city to BLACK (the G-Man, her choice, her last stand)", "lc_black")
+    Slider("Minutes of red before the collapse", "lc_black_minutes", 5, 180, 0)
+    Slider("Players online before it can happen", "lc_black_min_players", 1, 32, 0)
+    Slider("Minutes she has to answer the G-Man", "lc_black_answer_minutes", 1, 20, 0)
+    Slider("Minutes between his steps after she refuses", "lc_black_phase_minutes", 1, 20, 0)
+    Slider("Minutes her last stand lasts", "lc_black_stand_minutes", 5, 60, 0)
+    Slider("Elites guarding her", "lc_black_elites", 0, 12, 0)
+    Slider("Resistance fighters storming her office", "lc_black_rebels", 0, 24, 0)
+    Slider("Her health", "lc_black_admin_health", 100, 3000, 0)
+    Slider("Her shield (damage it takes before breaking)", "lc_black_shield", 0, 5000, 0)
+    Slider("Credits for those there when she falls", "lc_black_reward", 0, 2000, 0)
+    Check("Heroes: Barney, then Gordon Freeman, played by players of the rebellion", "lc_black_heroes")
+    Slider("Minutes into her stand before Barney comes", "lc_black_barney_minutes", 0, 30, 0)
+    Slider("Minutes after Barney before Freeman comes", "lc_black_freeman_minutes", 0, 30, 0)
+    Slider("Unit kills that make a player the first pick for a hero", "lc_black_hero_kills", 0, 20, 0)
+    Check("A minute after she falls, start the map over (a fresh city)", "lc_black_reset_map")
+    panel:Help("Her office is the \"Administrator's desk\" point (Civil Protection and the Combine, in the layout list). Without one: beside her office door, else the broadcast studio, else a Combine zone. Cut the power to it (sabotage the transformer feeding it) and her shield is weak.")
+    panel:Button("Test: collapse to BLACK now (the G-Man comes to the Administrator)", "lc_collapse_test", "black")
+    panel:Button("Test: the G-Man's next step now (crates, waking armed, the grid failing, the stand)", "lc_collapse_test", "next")
+    panel:Button("Test: her last stand now", "lc_collapse_test", "stand")
+    panel:Button("Test: Barney now (picked from the rebellion)", "lc_collapse_test", "barney")
+    panel:Button("Test: Freeman now (picked from the rebellion)", "lc_collapse_test", "freeman")
+    panel:Button("Test: make me Barney", "lc_collapse_test", "mebarney")
+    panel:Button("Test: make me Freeman", "lc_collapse_test", "mefreeman")
+    panel:Button("Test: the city halfway to collapse (see it on screen)", "lc_collapse_test", "chaos")
+    panel:Button("Back to normal (end it, chaos cleared)", "lc_collapse_test", "off")
+
     Header("Events")
     panel:Button("Ration distribution", "lc_event", "rations")
     panel:Button("Inspection sweep", "lc_event", "sweep")
@@ -724,6 +753,7 @@ function TOOL.BuildCPanel(panel)
     panel:Button("Morning exercise: the parade", "lc_exercise", "parade")
     panel:Button("End current event", "lc_endevent")
     panel:Button("Play an announcement", "lc_announce")
+    Check("Half-Life 2's own Overwatch voice for what you have no recording of", "lc_announce_stock")
     Check("Run events automatically", "lc_auto_events")
     Check("Cops enforce curfew on players", "lc_curfew_enforce")
     Check("Morning exercise for citizens (at dawn)", "lc_morning_exercise")
