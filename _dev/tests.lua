@@ -15739,7 +15739,7 @@ local USE, ATTACK = IN_USE or 32, IN_ATTACK or 1
 -- on the tablet, by mood; every one builds
 local where = {}
 for _, grp in ipairs(LC.DreamOffice().groups) do for _, e in ipairs(grp.endings) do where[e.id] = grp.mood end end
-ok(#LC.StrangeDreams2 == 10 and where.horse == "nightmare" and where.molasses == "nightmare" and where.boxing == "neutral" and where.exam == "neutral" and where.train == "neutral"
+ok(#LC.StrangeDreams2 == 10 and where.horse == "neutral" and where.molasses == "nightmare" and where.boxing == "neutral" and where.exam == "neutral" and where.train == "neutral"
     and where.potato == "neutral" and where.simon == "neutral" and where.lamarr == "happy" and where.dance == "happy" and where.sheep == "happy", "ten more on her tablet, each under its mood")
 local built = true
 for _, id in ipairs(LC.StrangeDreams2) do
@@ -15875,6 +15875,7 @@ g, d = Start("lamarr")
 s = g.pl[a]
 a:SetPos(Mid(g))
 s.got = 0 -- (whatever they caught walking in doesn't count here)
+for i = 2, #g.crabs do local cr = g.crabs[i] local far = a:GetPos() + Vector(5000, 0, 0) cr.pos, cr.from, cr.to, cr.rest, cr.t0, cr.t1 = far, far, far, CurTime() + 100, 0, 0 end -- (only Lamarr near)
 local lam = g.crabs[1]
 lam.pos, lam.from, lam.to, lam.rest, lam.t0, lam.t1 = a:GetPos(), a:GetPos(), a:GetPos(), CurTime() + 100, 0, 0
 _run(0.1)
@@ -15959,7 +15960,7 @@ Stop(d)
 -- the editor lists them
 local seen = {}
 for _, e in ipairs(LC.DreamTestList()) do seen[e.id] = e.mood end
-ok(seen.horse == "Nightmare" and seen.dance == "Happy" and seen.boxing == "Neutral", "the editor's test list has them all")
+ok(seen.horse == "Neutral" and seen.dance == "Happy" and seen.boxing == "Neutral", "the editor's test list has them all")
 
 LC.DreamForget()
 LC.RemovePoint(dp)
@@ -15974,6 +15975,232 @@ _walls = savedWalls
 ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 MoreStrangeDreamTests()
+
+-- Ten more strange dreams, nonsense on purpose (sv_livingcity_strangedreams3.lua), and the nonsense in every strange dream
+function NonsenseDreamTests()
+section("Shared dreams: ten nonsense dreams (clocks, tea party, derby, say cheese, doors, splat, conga, shh, bubbles, watchers); retextures, faces, effects, warped sounds")
+_setcvar("lc_dream_rules", 0) _setcvar("lc_dream_auto", 0)
+local errs0 = #_errors
+local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
+_walls = {}
+LC.EndEvent(true)
+_setcvar("lc_needs", 0)
+LC.EndingReload = function() end
+local CITY, DREAM = Vector(165000, -165000, 0), Vector(225000, -225000, 0)
+local adm = newPlayer("NDAdmin", "admin")
+local a = newPlayer("NDA", "citizen")
+local b = newPlayer("NDB", "citizen")
+_run(3)
+local function Asleep(p, at)
+    p:SetPos(at)
+    local key = string.format("s%d_%d_%d", math.floor(at.x), math.floor(at.y), math.floor(at.z))
+    p.lcSleep = { t0 = CurTime() - 70, done = CurTime() - 10, last = CurTime(), slept = true }
+    p:SetNW2Bool("lc_sleeping", true)
+    p.lcBedKey, p.lcBedFrom = key, at + Vector(40, 0, 0)
+    LC.BedSleepers[key] = p
+end
+local function Both()
+    Asleep(a, CITY) Asleep(b, CITY + Vector(0, 200, 0))
+    a.crouch, b.crouch, a.keys, b.keys, a.aim, b.aim, a.vel, b.vel = nil, nil, nil, nil, nil, nil, nil, nil
+    a:SetNW2Float("lc_unbroken_until", 0) b:SetNW2Float("lc_unbroken_until", 0)
+end
+local function Start(id)
+    Both()
+    local okS, d = LC.DreamStart(id, adm, false, nil, true)
+    local g = okS and d.game
+    _run(0.1)
+    if g then g.pl[a].safe, g.pl[b].safe = 0, 0 end
+    return g, d
+end
+local function Stop(d) if d then LC.DreamGameStop(d, "test") end _run(2.5) end
+local function Mid(g) return Vector(g.dream.pos.x, g.dream.pos.y, g.top + 4) end
+player.GetAll = function() return { adm, a, b } end
+local dp = LC.AddPoint(DREAM, 0, "dream")
+
+local where = {}
+for _, grp in ipairs(LC.DreamOffice().groups) do for _, e in ipairs(grp.endings) do where[e.id] = grp.mood end end
+ok(#LC.StrangeDreams3 == 10 and where.watchers == "nightmare" and where.clocks == "neutral" and where.tea == "neutral" and where.photo == "neutral" and where.doors == "neutral"
+    and where.shh == "neutral" and where.derby == "happy" and where.paint == "happy" and where.conga == "happy" and where.bubbles == "happy", "ten more on her tablet, each under its mood")
+ok(where.horse == "neutral", "Hooves and All is Neutral now (the owner)")
+local built = true
+for _, id in ipairs(LC.StrangeDreams3) do
+    local g, d = Start(id)
+    local okS = g and pcall(g.def.state, g, a)
+    if not okS then built = false print("did not build: " .. id) end
+    Stop(d)
+end
+ok(built, "every one of them builds, and draws its screen")
+
+-- Stop the Clocks
+ok(LC.ClockHold(1) > LC.ClockHold(4), "the fewer of you, the longer a clock stays stopped")
+local g, d = Start("clocks")
+local ck = g.clocks[1]
+a:SetPos(Vector(ck.pos.x, ck.pos.y, g.top + 4))
+_run(0.1)
+ok(not g.clocks[1].running, "Stop the Clocks: touch one and it stops")
+for _, c in ipairs(g.clocks) do c.running, c.til = false, CurTime() + 100 end
+_run(0.1)
+ok(g.pl[a].how == "won", "every clock stopped at once: time is yours")
+Stop(d)
+
+-- The Tea Party
+g, d = Start("tea")
+_run(6.2)
+ok(g.phase == "move" and g.move ~= 0, "The Tea Party: change places!")
+a:SetPos(g.seats[g.seatOf[a]])
+b:SetPos(Mid(g) + Vector(0, 300, 0))
+g.at = CurTime()
+_run(0.1)
+ok(g.pl[a].lives == 3 and g.pl[b].lives == 2, "in your new seat in time, fine; not, a life")
+Stop(d)
+
+-- The Headcrab Derby
+g, d = Start("derby")
+_run(6.2)
+ok(g.phase == "bet", "The Headcrab Derby: place your bets")
+a:SetPos(g.pads[2])
+g.at = CurTime()
+_run(0.1)
+ok(g.phase == "race" and g.pl[a].bet == 2, "standing on a pad when they're off backs that lane")
+g.crabs[2].x = g.x1
+_run(0.1)
+ok(g.winner == 2 and g.pl[a].points == 1, "your headcrab wins: a point")
+Stop(d)
+
+-- Say Cheese
+local fake = { cover = { { pos = Vector(100, 0, 0), r = 40 } } }
+ok(LC.PhotoHidden(fake, Vector(0, 0, 0), Vector(200, 0, 0)) and not LC.PhotoHidden(fake, Vector(0, 0, 0), Vector(0, 200, 0)), "hidden: something giant between you and the camera")
+g, d = Start("photo")
+g.cover = {}
+g.phase, g.at = "warn", CurTime()
+_run(0.1)
+ok(g.pl[a].lives == 2 and g.shots == 1 and g.flash, "Say Cheese: out in the open at the flash, a life")
+Stop(d)
+
+-- The Doors
+g, d = Start("doors")
+_run(6.2)
+ok(g.phase == "listen" and g.right, "The Doors: a music box behind one door")
+a:SetPos(g.doors[g.right].pos)
+b:SetPos(g.doors[(g.right % 6) + 1].pos)
+g.at = CurTime()
+_run(0.1)
+ok(g.pl[a].lives == 3 and g.pl[b].lives == 2, "the right door, fine; the wrong one, a life")
+Stop(d)
+
+-- Splat!
+ok(LC.PaintNeed(1) == 18 and LC.PaintNeed(5) == 8, "your share of the floor: half alone, never under 8")
+g, d = Start("paint")
+a:SetPos(g.tiles[1].pos)
+_run(0.1)
+ok(g.tiles[1].by == a and LC.PaintCount(g, a) == 1 and g.tiles[1].ent.col ~= nil, "Splat!: a tile you step on takes your colour")
+Stop(d)
+
+-- Conga!
+g, d = Start("conga")
+_run(0.2)
+a:SetPos(g.tail)
+_run(0.5)
+ok((g.pl[a].groove or 0) > 0 and g.pl[a].inside, "Conga!: in the glow at the tail, the groove grows")
+Stop(d)
+
+-- Shh!
+g, d = Start("shh")
+a.vel = Vector(300, 0, 0)
+_run(1)
+ok(g.noise > 0, "Shh!: running makes noise")
+a.vel = nil
+g.noise = LC.ShhLoud + 5
+_run(0.1)
+ok(g.pl[a].lives == 2 and g.pl[b].lives == 2 and CurTime() < g.wake, "the baby wakes: everyone loses a life")
+_run(4.5)
+local toy = g.toys[1]
+toy.gone = nil
+a:SetPos(Mid(g) + Vector(0, -1500, 0))
+a:SetPos(toy.pos - Vector(0, 0, 24))
+_run(0.1)
+ok(g.pl[a].got == 1, "a toy gathered")
+Stop(d)
+
+-- Bubbles
+g, d = Start("bubbles")
+local s = g.pl[a]
+a:SetPos(Mid(g))
+local mid = a:GetPos() + Vector(0, 0, 36)
+g.bubbles[1] = { x = mid.x, y = mid.y, z = mid.z, t0 = CurTime() + 0.1, kind = 1 }
+_run(0.1)
+ok(s.got == 1, "Bubbles: touch one, pop")
+a.pushed = nil
+g.bubbles[2] = { x = mid.x, y = mid.y, z = mid.z, t0 = CurTime() + 0.1, kind = 3 }
+_run(0.1)
+ok(a.pushed and a.pushed.z > 400, "a big one carries you up")
+Stop(d)
+
+-- The Watchers
+g, d = Start("watchers")
+local w = g.watch[1]
+a:SetPos(Mid(g))
+a.aim = (w.pos - a:GetPos()):GetNormalized()
+ok(LC.WatcherSeen({ a }, w.pos), "The Watchers: looked at, one is seen")
+local p0 = w.pos * 1
+_run(4)
+local seenStill = w.pos:Distance(p0) < 1
+a.aim = Vector(0, 0, 1) * -1
+local p1 = w.pos * 1
+_run(0.5)
+ok(seenStill and w.pos:Distance(p1) > 1, "it stays still while watched, and moves when not")
+g.pl[a].safe = 0
+w.pos = a:GetPos()
+_run(0.1)
+ok(g.pl[a].lives == 2, "its touch costs a life")
+Stop(d)
+
+-- nonsense in every strange dream: retextures, faces, effects; warped sounds
+ok(LC.DreamFxRoll(0) == 0 and LC.DreamFxRoll(1) == 2 ^ #LC.DreamFxNames - 1 and #LC.DreamFxNames == 10, "ten effects, each on its own roll")
+local r0, f0, x0 = LC.DreamRetexture, LC.DreamFaces, LC.DreamFxChance
+LC.DreamRetexture, LC.DreamFaces, LC.DreamFxChance = 1, 1, 1
+g, d = Start("tea")
+for _, e in ipairs(g.ents) do e.lcNonsenseSeen = nil end
+LC.DreamNonsense(g)
+local mats = {}
+for _, m in ipairs(LC.DreamMaterials) do mats[m] = true end
+local retex, kept, faced, fxed = false, true, false, false
+for _, e in ipairs(g.ents) do
+    if IsValid(e) then
+        if mats[e:GetMaterial()] then retex = true end
+        if e.lcKeepLook and mats[e:GetMaterial()] then kept = false end
+        if e:GetNW2Bool("lc_dream_face", false) then faced = true end
+        if (e:GetNW2Int("lc_dream_fx", 0) or 0) > 0 then fxed = true end
+    end
+end
+ok(retex and kept, "things get a texture from the material tool (never the floor or what matters to playing)")
+ok(faced and IsValid(g.host) and g.host:GetNW2Bool("lc_dream_face", false), "people get a face that pulls expressions")
+ok(fxed, "and things carry effects")
+Stop(d)
+LC.DreamRetexture, LC.DreamFaces, LC.DreamFxChance = r0, f0, x0
+local w0 = LC.DreamWarp
+LC.DreamWarp = 0
+local same = LC.DreamWarpPitch(100) == 100
+LC.DreamWarp = 1
+local warped = true
+for _ = 1, 20 do local p = LC.DreamWarpPitch(100) if p < 60 or p > 150 then warped = false end end
+LC.DreamWarp = w0
+ok(same and warped, "sounds: some pitched and sped or slowed, within reason")
+ok(LC.StrangeIs("watchers") and LC.StrangeIs("cheese") and not LC.StrangeIs("maze"), "(only the strange dreams get the nonsense)")
+
+LC.DreamForget()
+LC.RemovePoint(dp)
+for _, p in ipairs({ adm, a, b }) do
+    p.crouch, p.keys, p.ground, p.aim, p.vel = nil, nil, nil, nil, nil
+    if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
+    p:SetPos(Vector(-121000, -121000, 0))
+end
+player.GetAll, LC.EndingReload = realGetAll, realReload
+_setcvar("lc_needs", 1)
+_walls = savedWalls
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+NonsenseDreamTests()
 
 -- The performance debugger (sh_livingcity_perfdebug.lua, sv_livingcity_perfdebug.lua)
 function PerfDebugTests()

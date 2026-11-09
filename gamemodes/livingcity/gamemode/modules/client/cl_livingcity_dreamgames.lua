@@ -54,6 +54,8 @@ local function SayLine(t)
         if not IsValid(ch) then return end
         if not st then ch:Stop() return end
         voice = ch
+        local rate = LC_CL.DreamVoiceRate and LC_CL.DreamVoiceRate(st) -- (a strange dream may slow or speed it: cl_livingcity_strangedreams.lua)
+        if rate and ch.SetPlaybackRate then ch:SetPlaybackRate(rate) end
         ch:Play()
     end)
 end
@@ -124,7 +126,9 @@ local GLOWS = { Color(255, 205, 70), Color(140, 220, 60), Color(150, 190, 230), 
 local THEMES = { harvest = Color(255, 205, 70), newsreel = Color(235, 235, 235), hate = Color(255, 60, 50), civil = Color(140, 210, 255), graveyard = Color(200, 60, 60),
     cheese = Color(255, 215, 70), chairs = Color(255, 170, 210), flying = Color(150, 215, 255), melons = Color(140, 230, 110),
     horse = Color(220, 40, 40), boxing = Color(255, 200, 80), exam = Color(240, 235, 200), train = Color(255, 230, 150), lamarr = Color(255, 215, 80),
-    molasses = Color(200, 140, 60), potato = Color(255, 120, 40), simon = Color(140, 200, 255), dance = Color(255, 120, 220), sheep = Color(190, 200, 255) } -- (the strange dreams: cl_livingcity_strangedreams.lua)
+    molasses = Color(200, 140, 60), potato = Color(255, 120, 40), simon = Color(140, 200, 255), dance = Color(255, 120, 220), sheep = Color(190, 200, 255),
+    clocks = Color(200, 160, 255), tea = Color(255, 180, 220), derby = Color(160, 230, 120), photo = Color(240, 240, 240), doors = Color(200, 140, 255),
+    paint = Color(255, 90, 190), conga = Color(255, 200, 90), shh = Color(200, 220, 255), bubbles = Color(160, 220, 255), watchers = Color(200, 30, 30) } -- (the strange dreams: cl_livingcity_strangedreams.lua)
 -- Where she is: her figure or the star (as an entity, when you can see it), else where she was.
 local function HerPos()
     local e = st.herEnt and Entity and Entity(st.herEnt)

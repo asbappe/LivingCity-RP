@@ -10,7 +10,7 @@
       be a recording (sound/livingcity/dreams/voice/, named for the line; the list to record is
       docs/features/dream-lines.md).
 
-        Hooves and All (horse, Nightmare): in the dark, Half-Life 2's citizens echo that they're so
+        Hooves and All (horse, Neutral: the owner, 9 November, "it should just be neutral"): in the dark, Half-Life 2's citizens echo that they're so
           hungry they could eat a horse. Then a cliff at night, a wrecked ship on the rocks, and the
           black horse statue come alive, charging at you. Father Grigori stands on the rocks and
           shoots it, again and again, forever: each shot stops it for a moment. Run in and take a
@@ -44,7 +44,7 @@
           4 points wins.
 
       Winning a Happy or Neutral one wakes you Unbroken (LC.DreamOutcome), losing costs nothing;
-      the two Nightmares wake you as any nightmare does.
+      Running in Molasses, the one Nightmare, wakes you as any nightmare does.
 ]]
 
 if CLIENT then return end
@@ -55,6 +55,7 @@ local K, S, G = LC.DreamGameKit, LC.StrangeKit, LC.DreamGames
 if not K or not S or not G then return end
 local Block, Actor, Animate, Floor, Snd, Puff, Send, Done, Hit, ToStart, InPlay = K.Block, K.Actor, K.Animate, K.Floor, K.Snd, K.Puff, K.Send, K.Done, K.Hit, K.ToStart, K.InPlay
 local PLATE8, PLATE8_S, PLATE4, PLATE4_S = K.PLATE8, K.PLATE8_S, K.PLATE4, K.PLATE4_S
+Snd = function(e, snd, lvl, pitch) K.Snd(e, snd, lvl, LC.DreamWarpPitch and LC.DreamWarpPitch(pitch or 100) or pitch) end -- (half of them warped: sv_livingcity_strangedreams.lua)
 local Notice, Woke, Plain, AnyWhere, Ring, SpawnAt, Flat, Dist2 = S.Notice, S.Woke, S.Plain, S.AnyWhere, S.Ring, S.SpawnAt, S.Flat, S.Dist2
 local OnGround, JumpPressed, Leave, FirstModel, Rainbow, SayAs, SayLater, IntroTick, IntroHello = S.OnGround, S.JumpPressed, S.Leave, S.FirstModel, S.Rainbow, S.SayAs, S.SayLater, S.IntroTick, S.IntroHello
 local CITIZENS = S.CITIZENS
@@ -135,10 +136,15 @@ do
     LC.HorseStun = 1.8 -- (seconds a shot stops the horse)
     LC.HorseShot = { 1.8, 2.8 } -- (seconds between Father Grigori's shots)
     LC.HorseReach = 110 -- (how close to take a bite)
-    local def = { id = "horse", name = "Hooves and All", mood = "nightmare", secs = 9 + 180, lives = 3, need = 8, leave = Leave, introSecs = 9,
+    local def = { id = "horse", name = "Hooves and All", mood = "neutral", secs = 9 + 180, lives = 3, need = 8, leave = Leave, introSecs = 9,
         introText = { "I'm so hungry...", "I'm so hungry... I could eat a horse.", "...a horse...  ...a horse..." },
         goal = "The black horse won't die. When Father Grigori's shot stops it, run in and take a bite (Use, E). Don't get trampled.",
-        timeUp = { "The horse is still standing", "Father Grigori is still shooting it as you wake. He'll be shooting it forever." } }
+        timeUp = { "The horse is still standing", "Father Grigori is still shooting it as you wake. He'll be shooting it forever." },
+        woke = Woke({ name = "Hooves and All", -- (Neutral, not a nightmare: the owner, 9 November)
+            won = { "Hooves and all", "You wake up full. Uncomfortably full. Somewhere, an old priest is still reloading." },
+            out = { "Trampled", "You wake up with hoofprints you can't see and a strange craving for hay." },
+            time = { "Still hungry", "You wake up hungry enough to eat a horse. You know exactly which one." },
+        }) }
     G.horse = def
     local HORSE = { "models/props_c17/statue_horse.mdl", "models/props_c17/statue_horse01.mdl" }
     local MONK = { "models/monk.mdl", "models/humans/group01/male_09.mdl" }
@@ -164,6 +170,7 @@ do
         local hm = Model(HORSE) or "models/props_c17/oildrum001.mdl"
         g.horse = Actor(g, hm, Vector(c.x, c.y, g.top), 0, LC.HorseScale or 0.6, nil)
         if IsValid(g.horse) then
+            g.horse.lcKeepLook = true -- (the black horse stays black)
             g.horse:SetColor(Color(14, 12, 14))
             if g.horse.SetMaterial then g.horse:SetMaterial("models/debug/debugwhite") end
         end
@@ -700,7 +707,7 @@ do
         g.doorX = x0 + (x1 - x0) * 0.62
         g.doorY = c.y
         g.door = Actor(g, FirstModel({ "models/props_c17/door01_left.mdl", "models/props_doors/door03_slotted_left.mdl" }), Vector(g.doorX, g.doorY, top), 180, 1.2, nil)
-        if IsValid(g.door) then g.door:SetColor(Color(255, 230, 150)) end
+        if IsValid(g.door) then g.door:SetColor(Color(255, 230, 150)) g.door.lcKeepLook = true end
         local car = Model({ "models/props_trainstation/train001.mdl", "models/props_combine/combine_train02a.mdl" })
         if car then Block(g, car, Vector((x0 + x1) / 2, c.y + PLATE8_S + 80, top), Angle(0, 0, 0)) end
         g.starts = {}
@@ -783,7 +790,7 @@ do
             local lam = i == 1
             local cr = { lamarr = lam }
             cr.ent = Actor(g, lam and lamarrModel or CRAB, c, math.Rand(0, 360), lam and 1.3 or 1.1, nil)
-            if lam and IsValid(cr.ent) then cr.ent:SetColor(Color(255, 215, 80)) end
+            if lam and IsValid(cr.ent) then cr.ent:SetColor(Color(255, 215, 80)) cr.ent.lcKeepLook = true end
             Place(g, cr)
             g.crabs[i] = cr
         end
@@ -1384,3 +1391,7 @@ LC.StrangeAddCues({
     sheep_ask = { "A Sleepy Voice", "How many was that? Say it... before you drift off...", "the sleepy voice, half asleep" },
     sheep_again = { "A Sleepy Voice", "Again... from the beginning...", "the sleepy voice, yawning" },
 })
+
+-- The pieces, for the strange dreams in the next file (sv_livingcity_strangedreams3.lua).
+LC.StrangeKit2 = { Pressed = Pressed, Crouched = Crouched, Boom = Boom, Speed2D = Speed2D, Facing = Facing, Yaw = Yaw, Model = Model, Board = Board,
+    Nearest = Nearest, InRing = InRing }

@@ -1803,6 +1803,16 @@ local ok, e = pcall(function()
         { "simon", { big = "OVERWATCH SAYS: JUMP!", tone = "warn" } },
         { "dance", { bpm = 100, beat0 = CurTime() - 2.4 } },
         { "sheep", { big = "How many headcrabs?" } },
+        { "clocks", { glows = { { 0, 0, 100, 7 } }, big = "It's twenty-five o'clock." } },
+        { "tea", { glows = { { 0, 0, 30, 5 } }, big = "Change places! Move down 2!", tone = "warn" } },
+        { "derby", { glows = { { 0, 0, 8, 1 } }, big = "And they're off!" } },
+        { "photo", { flash = CurTime(), scanner = 1, big = "SAY CHEESE!" } },
+        { "doors", { glows = { { 0, 0, 60, 6 } } } },
+        { "paint", { colour = { 255, 80, 180 }, meterName = "Your tiles: 3" } },
+        { "conga", { conga = { 1, 2 }, glows = { { 0, 0, 10, 4 } } } },
+        { "shh", { noise = 80, crying = false } },
+        { "bubbles", { bubbles = { { 0, 0, 30, CurTime() - 1, 1 }, { 10, 0, 30, CurTime(), 2 }, { 20, 0, 30, CurTime(), 3 } }, rise = 45 } },
+        { "watchers", { watchers = { 1 }, glows = { { 0, 0, 30, 5 } } } },
     }
     for _, th in ipairs(themes) do
         Msg({ k = "start", id = th[1], name = th[1], goal = "Go.", ends = CurTime() + 100, lives = 3, maxLives = 3, theme = th[1] })
@@ -1816,6 +1826,34 @@ local ok, e = pcall(function()
         hook.t.HUDPaint.LivingCityDreamGames()
     end
     if not LC_CL.DanceBeat({ bpm = 120, beat0 = CurTime() - 2 }, CurTime()) then error("the dance's beat") end
+    -- the nonsense: floating things, faces, effects (fakes for the client-only pieces)
+    local cmWas, fbcWas = ClientsideModel, ents.FindByClass
+    local made = 0
+    local function Proxy() made = made + 1 return setmetatable({ IsValid = function() return true end, GetFlexNum = function() return 3 end }, { __index = function() return function() end end }) end
+    ClientsideModel = function() return Proxy() end
+    local fakeE = setmetatable({ IsValid = function() return true end, GetModel = function() return "models/humans/group01/male_07.mdl" end,
+        GetNW2Bool = function(_, k) return k == "lc_dream_face" end, GetNW2Int = function(_, k) return k == "lc_dream_fx" and 1023 or 0 end,
+        EntIndex = function() return 7 end, GetPos = function() return Vector(0, 0, 0) end, GetAngles = function() return Angle(0, 0, 0) end,
+        OBBMaxs = function() return Vector(10, 10, 72) end, GetModelScale = function() return 1 end, GetColor = function() return Color(255, 255, 255) end,
+        GetMaterial = function() return "" end, GetSequence = function() return 0 end, GetCycle = function() return 0 end },
+        { __index = function() return function() end end })
+    ents.FindByClass = function(c) if c == "prop_dynamic" then return { fakeE } end return {} end
+    _me:SetNW2Bool("lc_dreaming", true)
+    Msg({ k = "start", id = "conga", name = "Conga!", goal = "Go.", ends = CurTime() + 100, lives = 1, maxLives = 1, theme = "conga" })
+    _advance(1)
+    hook.t.Think.LivingCityStrangeNonsense()
+    if #LC_CL.StrangeFloaters() ~= 12 then error("the nonsense: nothing floating in the sky") end
+    if not LC_CL.DreamFaces()[fakeE] or not fakeE.RenderOverride then error("the nonsense: no face on a marked figure") end
+    fakeE:RenderOverride()
+    if #LC_CL.DreamFxList ~= 1 or not LC_CL.DreamFxHas(1023, 10) then error("the nonsense: no effects on a marked thing") end
+    hook.t.PostDrawTranslucentRenderables.LivingCityStrangeDreams(false, false)
+    hook.t.RenderScreenspaceEffects.LivingCityStrangeDreams()
+    local r = LC_CL.DreamVoiceRate({ theme = "conga" })
+    if r and (r < 0.7 or r > 1.4) then error("a line's speed out of range") end
+    Msg({ k = "stop", how = "won" })
+    hook.t.Think.LivingCityStrangeNonsense()
+    if #LC_CL.StrangeFloaters() ~= 0 then error("the nonsense stayed after the dream") end
+    ClientsideModel, ents.FindByClass = cmWas, fbcWas
     Msg({ k = "stop", how = "won" })
     -- a test: the line at the top says so
     _me:SetNW2Bool("lc_dream_test", true)

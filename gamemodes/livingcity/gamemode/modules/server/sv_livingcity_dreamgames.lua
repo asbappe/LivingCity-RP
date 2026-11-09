@@ -135,6 +135,7 @@ local function Actor(g, model, pos, yaw, scale, act)
     e:Spawn()
     if e.SetMoveType then e:SetMoveType(MOVETYPE_NONE) end
     e:SetNotSolid(true)
+    e.lcDreamActor = true -- (a figure or a thing, not the floor or a wall: the strange dreams' nonsense may retexture it)
     if scale and scale ~= 1 then e:SetModelScale(scale) end
     if act then
         local seq = e.SelectWeightedSequence and e:SelectWeightedSequence(act) or -1

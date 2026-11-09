@@ -129,6 +129,79 @@ Every line said in the dreams you play, made from the code by `python3 _dev/drea
 | `sheep_ask1.mp3` | A Sleepy Voice | How many was that? Say it... before you drift off... | the sleepy voice, half asleep |
 | `sheep_again1.mp3` | A Sleepy Voice | Again... from the beginning... | the sleepy voice, yawning |
 
+### Stop the Clocks (`clocks`)
+
+| File | Who | Words | How it should sound |
+|---|---|---|---|
+| `clocks_hello1.mp3` | The Clock Voice | Tick. Tock. Tick. Tock. It's later than you think. It's earlier than you think. It's cheese. | a slow, deep, echoing voice, like a grandfather clock talking in its sleep |
+| `clocks_won1.mp3` | The Clock Voice | Time... stops. | the clock voice, slowing down to nothing |
+
+### The Tea Party (`tea`)
+
+| File | Who | Words | How it should sound |
+|---|---|---|---|
+| `tea_hello1.mp3` | The Host | Welcome, welcome! No room! No room! Sit anywhere. No, not there. | a manic, posh, very old-fashioned tea-party host, talking far too fast |
+| `tea_down11.mp3` | The Host | Change places! Move down one! | the posh host, shrieking with delight |
+| `tea_down21.mp3` | The Host | Change places! Move down two! | the posh host, shrieking with delight |
+| `tea_down31.mp3` | The Host | Change places! Move down three! | the posh host, shrieking with delight |
+| `tea_up1.mp3` | The Host | Clean cup! Clean cup! Move up! | the posh host, outraged |
+
+### The Headcrab Derby (`derby`)
+
+| File | Who | Words | How it should sound |
+|---|---|---|---|
+| `derby_hello1.mp3` | The Commentator | Welcome to the Headcrab Derby! Place your bets, place your bets! | a breathless horse-racing commentator |
+| `derby_off1.mp3` | The Commentator | And they're off! | the racing commentator, at full gallop |
+| `derby_win11.mp3` | The Commentator | And it's Lamarr's Cousin by a leg! It only has legs! | the racing commentator, ecstatic |
+| `derby_win21.mp3` | The Commentator | Hooves wins it! Hooves! A headcrab called Hooves! | the racing commentator, baffled and thrilled |
+| `derby_win31.mp3` | The Commentator | Mister Leg takes it! Mister Leg, everybody! | the racing commentator, screaming |
+| `derby_win41.mp3` | The Commentator | Breen's Toupee! Breen's Toupee wins the Derby! | the racing commentator, losing his mind |
+
+### Say Cheese (`photo`)
+
+| File | Who | Words | How it should sound |
+|---|---|---|---|
+| `photo_hello1.mp3` | The Scanner | Hello! Hello! Lovely day for a photograph! Everybody smile! | a chirpy robotic camera voice, slightly glitchy |
+| `photo_cheese1.mp3` | The Scanner | Say cheese! | the chirpy robot camera, sing-song |
+
+### The Doors (`doors`)
+
+| File | Who | Words | How it should sound |
+|---|---|---|---|
+| `doors_hello1.mp3` | A Little Voice | Six doors. One plays a song. Listen... listen... | a small, sweet, slightly eerie child's voice, whispering |
+| `doors_open1.mp3` | A Little Voice | That one. It was always that one. | the eerie child's voice, giggling |
+
+### Splat! (`paint`)
+
+| File | Who | Words | How it should sound |
+|---|---|---|---|
+| `paint_hello1.mp3` | The Painter | A blank canvas! Make it yours! Splat! | an over-the-top, flamboyant artist |
+
+### Conga! (`conga`)
+
+| File | Who | Words | How it should sound |
+|---|---|---|---|
+| `conga_hello1.mp3` | The Bandleader | Everybody conga! One, two, three, kick! | a jolly big-band leader, shouting over brass |
+
+### Shh! (`shh`)
+
+| File | Who | Words | How it should sound |
+|---|---|---|---|
+| `shh_hello1.mp3` | A Whisper | Shhhh. The baby's sleeping. Don't wake the baby. | a very quiet, tense whisper |
+| `shh_wake1.mp3` | A Whisper | You woke the baby. | the whisper, cold and disappointed |
+
+### Bubbles (`bubbles`)
+
+| File | Who | Words | How it should sound |
+|---|---|---|---|
+| `bubbles_hello1.mp3` | A Bubbly Voice | Pop! Pop! Pop them all! | a giggly, bubbly, high-pitched voice |
+
+### The Watchers (`watchers`)
+
+| File | Who | Words | How it should sound |
+|---|---|---|---|
+| `watchers_hello1.mp3` | A Whisper | They don't move while you watch them. You can't watch them all. | a slow, hollow whisper, very close to the ear |
+
 ## The propaganda dreams
 
 (The Loyalty Quiz's questions, `quiz_q1` onwards, are read out too: each is its question.)

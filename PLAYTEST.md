@@ -1088,3 +1088,19 @@ Notes:
   Notes:
 - [ ] **The Exam, reworked (9 November):** you are stuck at a desk with a paper on it; type A, B, C or D in chat to answer. After six questions Doctor Kleiner walks to each desk, picks up the paper, eats it (loud crunching, head back, shaking, a big gulp), and only then is that person told their score. Does the paper sit on the desk properly, and does the eating look dramatic enough?
   Notes:
+
+## 9 November, later: nonsense dreams, and nonsense in every strange dream
+- [ ] **Hooves and All is Neutral now:** no Enforcers, and losing costs no health.
+  Notes:
+- [ ] **Stop the Clocks / The Tea Party / The Headcrab Derby:** touch every melting clock (all stopped at once wins); move to your glowing seat when the host shouts; back a headcrab on its pad before the race (nonsense happens mid-race).
+  Notes:
+- [ ] **Say Cheese / The Doors / Splat!:** hide behind the giant things before the flash; stand at the door the music box plays behind; paint the floor your colour.
+  Notes:
+- [ ] **Conga! / Shh! / Bubbles / The Watchers:** stay in the glow behind the conga line; gather toys without waking the baby (running and jumping are loud); pop bubbles (big ones lift you); gather keys while the black figures only move when unwatched.
+  Notes:
+- [ ] **Nonsense everywhere:** in any strange dream, are there things floating and spinning in the sky in rainbow colours, rainbow swirls overhead, some things with odd textures (wireframe, glass, flesh...), some people pulling random faces that change every few seconds, and some things with sparkles, smoke, hearts, fire, confetti, moons, a rainbow beam or a disco light?
+  Notes:
+- [ ] **Warped sounds:** are some sounds higher or lower, some recorded lines slowed or sped up, and does the music lurch slow or fast every so often (but never in Dance Marathon)? Too much, or not enough?
+  Notes:
+- [ ] **Performance:** with all the nonsense (12 floating things, faces, effects), does a dream stay smooth? If not, say so and the shares can be turned down.
+  Notes:

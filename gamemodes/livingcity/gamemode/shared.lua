@@ -93,6 +93,7 @@ LC_MODULES = {
         "sv_livingcity_dreamrules", -- (which dream tonight: Nightmares after bad days, Happy after clean ones; the city's own pick)
         "sv_livingcity_strangedreams", -- (strange dreams you play: the cheese dream, musical chairs, wings, raining melons; after propagandamore)
         "sv_livingcity_strangedreams2", -- (ten more: the horse, boxing, the exam, the last train, Lamarr, molasses, hot potato, Overwatch says, dance, counting headcrabs)
+        "sv_livingcity_strangedreams3", -- (ten more, nonsense on purpose: clocks, tea party, headcrab derby, say cheese, doors, splat, conga, shh, bubbles, the watchers)
         "sv_livingcity_dreamtest", -- (testing any dream from the Living City Editor, alone and awake)
         "sv_livingcity_events",
         "sv_livingcity_exercise", -- (after events: the morning jog, drill and parade are events)

@@ -43,6 +43,7 @@ local K, G = LC.DreamGameKit, LC.DreamGames
 if not K or not G then return end
 local Block, Actor, Floor, Snd, Puff, Send, Done, Hit, ToStart = K.Block, K.Actor, K.Floor, K.Snd, K.Puff, K.Send, K.Done, K.Hit, K.ToStart
 local PLATE8, PLATE8_S, PLATE4, PLATE4_S = K.PLATE8, K.PLATE8_S, K.PLATE4, K.PLATE4_S
+Snd = function(e, snd, lvl, pitch) K.Snd(e, snd, lvl, LC.DreamWarpPitch and LC.DreamWarpPitch(pitch or 100) or pitch) end -- (half of them warped: sv_livingcity_strangedreams.lua)
 
 local function Notice(p, kind, title, text, secs)
     if not IsValid(p) then return end
@@ -103,7 +104,8 @@ local function Plain(g, dream, maxN, col)
     local top = c.z + 2
     local x0, y0 = c.x - n * PLATE8_S / 2, c.y - n * PLATE8_S / 2
     for i = 1, n do for j = 1, n do
-        Floor(g, PLATE8, x0 + (i - 0.5) * PLATE8_S, y0 + (j - 0.5) * PLATE8_S, top, col(i, j), "models/debug/debugwhite")
+        local f = Floor(g, PLATE8, x0 + (i - 0.5) * PLATE8_S, y0 + (j - 0.5) * PLATE8_S, top, col(i, j), "models/debug/debugwhite")
+        if IsValid(f) then f.lcKeepLook = true end -- (the floor stays readable)
     end end
     g.top, g.n = top, n
     g.half = n * PLATE8_S / 2
@@ -665,6 +667,7 @@ do
         local land = AnyWhere(g, 70)
         local lead = math.random() < LC.MelonLead
         local e = Actor(g, MELON, land + Vector(0, 0, 900), math.Rand(0, 360), lead and 1.8 or 1.5, nil)
+        if e then e.lcKeepLook = lead or nil end -- (a lead melon must look like one)
         if e and lead then
             e:SetColor(Color(70, 70, 80))
             if e.SetMaterial then e:SetMaterial("models/debug/debugwhite") end
@@ -750,6 +753,77 @@ LC.StrangeAddCues({
     flying_hello = { "A Gentle Voice", "Go on. You always knew you could. Just... flap.", "a soft, kind, dreamy narrator, almost whispering" },
     melons_hello = { "The Weatherman", "Today's forecast: melons. Heavy melons, with a chance of lead.", "a chirpy TV weatherman, completely serious about it" },
 })
+
+-- Nonsense (the owner, 9 November: "apply to a random percentage of items/NPCs and such, a random texture?
+-- Gmod has the retexture tool... also just random face pose any NPCs"). In every strange dream, now and
+-- then: some of its things and figures get a texture from Garry's Mod's own material tool, and some of
+-- its people a face (their faces pulled about at random, on everyone's screen: cl_livingcity_strangedreams.lua).
+-- Things that matter to playing it (a racer's colour, a lead melon, the floor) keep their look (lcKeepLook).
+LC.DreamRetexture, LC.DreamFaces = 0.3, 0.6 -- (the share of things retextured, and of people given a face)
+-- Effects stuck on things (the owner, 9 November: "attach emitters on like 10% of NPCs, or objects ... if you can conjure up
+-- 10 different effects, then each one has a 10% chance on any item/prop/NPCs to apply"): each of LC.DreamFxNames, on
+-- its own roll, for every thing in a strange dream; drawn on everyone's screen (cl_livingcity_strangedreams.lua).
+LC.DreamFxChance = 0.1
+LC.DreamFxNames = { "sparkles", "halo", "smoke", "bubbles", "hearts", "fire", "confetti", "moons", "beam", "disco" }
+-- The effects for one thing: a number, one bit for each effect it got.
+function LC.DreamFxRoll(chance)
+    local mask = 0
+    for k = 1, #LC.DreamFxNames do if math.random() < (chance or LC.DreamFxChance) then mask = mask + 2 ^ (k - 1) end end
+    return mask
+end
+-- Sounds in a strange dream: half of them pitched up or down, slowed or sped (the owner: "voice pitch shifting, slow down/speed ups").
+LC.DreamWarp = 0.5
+function LC.DreamWarpPitch(p)
+    p = p or 100
+    if math.random() >= LC.DreamWarp then return p end
+    return math.Clamp(math.floor(p * math.Rand(0.6, 1.5)), 30, 255)
+end
+LC.DreamMaterials = { "models/wireframe", "debug/env_cubemap_model", "models/shadertest/shader3", "models/shadertest/shader4", "models/shadertest/predator",
+    "models/shiny", "models/effects/comball_sphere", "models/effects/comball_tape", "models/effects/splodearc_sheet", "models/props_combine/stasisshield_sheet",
+    "models/props_combine/portalball001_sheet", "models/props_combine/com_shield001a", "models/props_c17/frostedglass_01a", "models/props_lab/tank_glass001",
+    "models/props_combine/tprings_globe", "models/rendertarget", "brick/brick_model", "models/flesh", "phoenix_storms/stripes", "phoenix_storms/wire/pcb_green",
+    "phoenix_storms/wire/pcb_red", "phoenix_storms/gear", "hunter/myplastic", "models/xqm/lightlinesred_tool", "models/props_c17/paper01" }
+LC.StrangeAll = {}
+local function Strange(id)
+    if next(LC.StrangeAll) == nil then
+        for _, list in ipairs({ LC.StrangeDreams, LC.StrangeDreams2, LC.StrangeDreams3 }) do for _, x in ipairs(list or {}) do LC.StrangeAll[x] = true end end
+    end
+    return LC.StrangeAll[id] == true
+end
+LC.StrangeIs = Strange
+local FACEY = { "models/humans/", "models/kleiner", "models/breen", "models/monk", "models/alyx", "models/eli", "models/mossman", "models/barney", "models/odessa", "models/gman" }
+function LC.DreamFacey(model)
+    model = string.lower(model or "")
+    for _, f in ipairs(FACEY) do if string.find(model, f, 1, true) then return true end end
+    return false
+end
+-- Everything in the dream not looked at yet: a texture, a face, or as it was.
+function LC.DreamNonsense(g)
+    if not g or g.stopped then return 0 end
+    local n = 0
+    for _, e in ipairs(g.ents or {}) do
+        if IsValid(e) and not e.lcNonsenseSeen then
+            e.lcNonsenseSeen = true
+            local facey = e.lcDreamActor and LC.DreamFacey(e.GetModel and e:GetModel())
+            if facey and math.random() < LC.DreamFaces then e:SetNW2Bool("lc_dream_face", true) n = n + 1 end
+            if not e.lcKeepLook and (e.lcDreamActor or not facey) and math.random() < LC.DreamRetexture and e.SetMaterial then
+                e:SetMaterial(LC.DreamMaterials[math.random(#LC.DreamMaterials)])
+                n = n + 1
+            end
+            local fx = (e.lcDreamActor or not e.lcKeepLook) and LC.DreamFxRoll() or 0 -- (not the floor)
+            if fx > 0 then e:SetNW2Int("lc_dream_fx", fx) n = n + 1 end
+        end
+    end
+    return n
+end
+hook.Add("LivingCityDreamStarted", "LivingCityStrangeNonsense", function(dream)
+    local g = dream and dream.game
+    if not g or not Strange(g.id) then return end
+    timer.Create("LivingCityStrangeNonsense", 1, 0, function() -- (and whatever turns up later: stand-ins, melons, wheels)
+        if g.stopped or not LC.DreamActive or LC.DreamActive.game ~= g then timer.Remove("LivingCityStrangeNonsense") return end
+        LC.DreamNonsense(g)
+    end)
+end)
 
 -- The pieces, for the strange dreams in the next file (sv_livingcity_strangedreams2.lua).
 LC.StrangeKit = { Notice = Notice, Woke = Woke, Plain = Plain, AnyWhere = AnyWhere, Ring = Ring, SpawnAt = SpawnAt, Flat = Flat, Dist2 = Dist2,
