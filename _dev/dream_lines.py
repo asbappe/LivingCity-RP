@@ -68,15 +68,17 @@ def propaganda():
         if m:
             out.append((m.group(1), "The Administrator", unq(m.group(2)), "her own voice: warm, regal, a little vain"))
     inside = False
-    for line in read("sv_livingcity_propagandamore.lua"):
-        if re.match(r"^\s*local (CUES|LINES) = \{", line):
-            inside = True
-            continue
-        if inside and re.match(r"^\s*\}", line):
-            inside = False
-        m = inside and TWO.match(line)
-        if m:
-            out.append((m.group(1), unq(m.group(2)), unq(m.group(3)), "her own voice" if m.group(2) == "The Administrator" else ""))
+    for name in ("sv_livingcity_propagandamore.lua", "sv_livingcity_battleline.lua"):
+        inside = False
+        for line in read(name):
+            if re.match(r"^\s*local (CUES|LINES) = \{", line):
+                inside = True
+                continue
+            if inside and re.match(r"^\s*\}", line):
+                inside = False
+            m = inside and TWO.match(line)
+            if m:
+                out.append((m.group(1), unq(m.group(2)), unq(m.group(3)), "her own voice" if m.group(2) == "The Administrator" else ""))
     return out
 
 

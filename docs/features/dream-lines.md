@@ -322,3 +322,15 @@ Every line said in the dreams you play, made from the code by `python3 _dev/drea
 | `ravenholm_vort1.mp3` | A Vortigaunt | The Vortessence sees through the false light. Behold what is true. |  |
 | `ravenholm_good1.mp3` | Father Grigori | Hah! Back to your rest, poor souls! Not one of these children shall be harmed! |  |
 | `ravenholm_defeat1.mp3` | The Administrator | No... NO! This is MY dream! | her own voice |
+
+### battleline (`battleline`)
+
+| File | Who | Words | How it should sound |
+|---|---|---|---|
+| `battleline_hello1.mp3` | The Administrator | My brave citizens! The terrorists are coming. Take up arms beside my soldiers and hold the line! | her own voice |
+| `battleline_giant1.mp3` | The Administrator | Look at the size of that one! Everyone, fire! | her own voice |
+| `battleline_traitor1.mp3` | The Administrator | You fired on MY soldiers? Manhacks! Deal with this traitor. | her own voice |
+| `battleline_turned1.mp3` | The Administrator | A traitor wants to be a rebel? Then be one. Forever. | her own voice |
+| `battleline_doom1.mp3` | Overwatch | Sector overrun. Hostiles beyond containment. Requesting immediate air support. |  |
+| `battleline_air1.mp3` | The Administrator | Did you think I would abandon you? Behold my wings! | her own voice |
+| `battleline_held1.mp3` | The Administrator | The line held! Every one of you is a hero of my city. | her own voice |

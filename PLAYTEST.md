@@ -1152,3 +1152,5 @@ Notes:
   Notes:
 - [ ] **Backup by radio:** as the Resistance without a Freq 7 radio, F2 > Freq 7 > Call for backup is greyed ("no Freq 7 radio"). With one, take out the radio transmitter and left click: far from any fighters, a few turn up out of sight (from the rebel territory side) and run to you. As a unit, the radio on the CP net calls Civil Protection backup.
   Notes:
+- [ ] **The Battle Line (dream, editor > Dreams: test one):** you get a pulse rifle; red rebels charge; shooting them drops them (check hits feel right, aim at the body). Shoot one of her soldiers: manhacks come for you; let them get you: you become a tiny red rebel with no gun, pushed at the line and shot over and over; your F2 voice lines squeak. Near the end giant metal/flesh rebels charge, then three gunships and a helicopter come in and bomb them. Check the gunship, helicopter and bomb models show and the sounds play.
+  Notes:

@@ -15211,7 +15211,7 @@ local found = {}
 for _, e in ipairs(LC.DreamOffice().groups[1].endings) do if e.game and e.propaganda then found[e.id] = e.name end end
 local all = true
 for _, id in ipairs(LC.PropagandaMore) do if not (found[id] and string.find(found[id], "^Propaganda: ")) then all = false end end
-ok(all and #LC.PropagandaMore == 11 and found.ravenholm == "Propaganda: Ravenholm" and found.duck == "Propaganda: Duck and Cover" and found.hate == "Propaganda: Two Minutes of Hate", "all ten are on her tablet, under Happy, as Propaganda")
+ok(all and #LC.PropagandaMore == 12 and found.battleline == "Propaganda: The Battle Line" and found.ravenholm == "Propaganda: Ravenholm" and found.duck == "Propaganda: Duck and Cover" and found.hate == "Propaganda: Two Minutes of Hate", "all ten are on her tablet, under Happy, as Propaganda")
 local MEDIA = { "sound/livingcity/dreams/harvest1.mp3", "sound/livingcity/dreams/propaganda1.ogg" }
 for _, f in ipairs(MEDIA) do _files[f] = "x" end
 ok(LC.PropagandaSong({ "harvest", "propaganda" }) == "livingcity/dreams/harvest1.mp3" and LC.PropagandaSong({ "duck", "propaganda" }) == "livingcity/dreams/propaganda1.ogg",
@@ -15498,6 +15498,79 @@ ok(g.phase == "descend" and not g.truth and IsValid(g.her), "someone's close to 
 ok(Until(g, function() return g.pl[a].how == "won" end) and Said(g, "ravenholm_stop") and Said(g, "ravenholm_safe") and g.monk.nodraw,
     "her soldiers kill the dead, Grigori flees into the sky, and they're saved", tostring(g.phase) .. " " .. tostring(g.pl[a].how) .. " " .. tostring(Said(g, "ravenholm_stop")) .. tostring(Said(g, "ravenholm_safe")) .. tostring(g.monk.nodraw) .. " alive " .. LC.RavenholmAlive(g))
 Stop(d)
+
+-- The Battle Line (the owner, 8 November): shoot the red rebels, never her soldiers
+do
+    g, d = Start("battleline")
+    local BT = LC.BattleLineTimes
+    local armed = false
+    for _, w in ipairs(a.weps or {}) do if w == LC.BattleLineGun then armed = true end end
+    ok(g and #g.soldiers == 6 and IsValid(g.apc) and armed, "The Battle Line: barricades, six of her soldiers and an APC, and each dreamer has a pulse rifle")
+    _run(BT.calm + 3)
+    ok(g.phase == "battle" and LC.BattleLineAlive(g) >= 1, "the red rebels charge", tostring(g.phase))
+    local m
+    for _, r in ipairs(g.rebels) do if r.alive then m = r break end end
+    local hit = LC.BattleLineShot(a, m.e:GetPos() + Vector(-500, 0, 40), Vector(1, 0, 0))
+    ok(hit == "rebel" and not m.alive and g.pl[a].kills == 1 and g.kills >= 1, "a shot along the line drops the rebel, and it's counted", tostring(hit))
+    local giant = LC.BattleLineNewRebel(g, "giant")
+    for _ = 1, 3 do LC.BattleLineShot(a, giant.e:GetPos() + Vector(-500, 0, 40 * giant.e:GetModelScale()), Vector(1, 0, 0)) end
+    ok(giant.alive and giant.hp == 7, "a giant takes a lot more shooting", tostring(giant.hp))
+    -- dreamers can't hurt each other
+    local dmg = { n = 30 }
+    function dmg:GetAttacker() return a end
+    function dmg:SetDamage(v) self.n = v end
+    hook.t.EntityTakeDamage.LivingCityBattleLine(b, dmg)
+    ok(dmg.n == 0, "a dreamer's bullet does nothing to another dreamer")
+    -- a rebel at the barricades hurts the nearest dreamer
+    for _, r in ipairs(g.rebels) do if r.alive then r.e:SetPos(Vector(g.x1 - 30, r.y, g.top)) end end -- (the rest well back)
+    local br = LC.BattleLineNewRebel(g, nil)
+    br.e:SetPos(Vector(g.lineX + 10, br.y, g.top))
+    a:SetPos(Vector(g.lineX - 60, br.y, g.top)) b:SetPos(Vector(g.x0 + 20, g.y0 + 20, g.top))
+    a:SetHealth(100) b:SetHealth(100)
+    g.pl[a].safe, g.pl[b].safe = 0, 0
+    _run(0.2)
+    ok(not br.alive and a:Health() == 100 - LC.BattleLineHurt and b:Health() == 100, "a rebel who reaches the line strikes the nearest dreamer", a:Health() .. " " .. b:Health())
+    -- firing on her soldiers: an offence, and manhacks after the traitor alone
+    local sd = g.soldiers[1].e
+    local livesA = g.pl[a].lives
+    local hitC = LC.BattleLineShot(a, sd:GetPos() + Vector(-300, 0, 40), Vector(1, 0, 0))
+    ok(hitC == "combine" and Said(g, "battleline_traitor") and #g.hacks == LC.BattleLineHacks and g.pl[a].lives == livesA - 1 and LC.PropagandaOffences(a) >= 1,
+        "fire on her soldiers: a traitor (a life and loyalty), and a swarm of manhacks", tostring(hitC) .. " " .. #g.hacks .. " " .. g.pl[a].lives)
+    local others = true
+    for _, h in ipairs(g.hacks) do if h.target ~= a then others = false end end
+    ok(others, "the manhacks are after the traitor and nobody else")
+    g.pl[a].safe = 0
+    ok(Until(g, function() return g.pl[a].turned end), "the manhacks cut the traitor down")
+    local s0 = g.pl[a]
+    local noGun = true
+    for _, w in ipairs(a.weps or {}) do if w == LC.BattleLineGun then noGun = false end end
+    ok(s0.turned and a:GetModelScale() == 0.5 and noGun and a.lcVoicePitch == LC.BattleLineTraitorPitch and a:GetPos().x > g.lineX + 100 and Said(g, "battleline_turned"),
+        "and they're one of them: half size, no gun, voice lines squeaking, put back among the rebels", tostring(a:GetModelScale()) .. " " .. tostring(noGun))
+    _run(0.5)
+    ok(a.pushed and a.pushed.x < 0, "driven at the line")
+    a:SetPos(Vector(g.lineX + 20, g.mid and g.mid.y or a:GetPos().y, g.top + 4))
+    s0.safe = 0
+    _run(0.2)
+    ok(a:GetPos().x > g.x1 - 100 and (s0.downs or 0) >= 1, "shot down at the line, and back to charge again", tostring(a:GetPos().x))
+    s0.safe = 0
+    local bKills = g.pl[b].kills or 0
+    for _, r in ipairs(g.rebels) do if r.alive and IsValid(r.e) then r.e:SetPos(r.e:GetPos() + Vector(0, 5000, 0)) end end -- (nobody else in the line of fire)
+    local shotT = LC.BattleLineShot(b, a:GetPos() + Vector(-400, 0, 18), Vector(1, 0, 0))
+    ok(shotT == "traitor" and (g.pl[b].kills or 0) == bKills + 1 and (s0.downs or 0) >= 2, "a dreamer can shoot them down too", tostring(shotT))
+    -- when it should be over: giants in metal and flesh, then her gunships and the helicopter's bombs
+    g.t0 = CurTime() - (BT.calm + BT.battle)
+    _run(0.2)
+    local giants, skinned = 0, 0
+    for _, r in ipairs(g.rebels) do if r.alive and r.doom then giants = giants + 1 if r.e:GetModelScale() == 3 and r.e:GetMaterial() ~= "" then skinned = skinned + 1 end end end
+    ok(g.phase == "doom" and giants == LC.BattleLineDoom and skinned == giants and Said(g, "battleline_doom"), "the rebels come back three times the size, in metal and flesh", g.phase .. " " .. giants)
+    ok(Until(g, function() return g.phase == "rescue" end) and #g.air == 4 and Said(g, "battleline_air"), "her gunships and an attack helicopter sweep in")
+    ok(Until(g, function() return g.bombAt ~= nil end), "the helicopter's bomb drop")
+    ok(Until(g, function() return g.pl[b].how == "won" end) and Said(g, "battleline_held") and LC.BattleLineAlive(g) == 0 and g.pl[a].how == "out",
+        "the line held: won (and the traitor goes down with the rebels)", tostring(g.pl[b].how) .. " " .. tostring(g.pl[a].how))
+    ok(LC.DreamGames.battleline.secs <= 300, "five minutes at most (the owner)")
+    Stop(d)
+    ok(a.lcVoicePitch == nil and a:GetModelScale() == 1, "awake: their own voice and size back", tostring(a.lcVoicePitch) .. " " .. tostring(a:GetModelScale()))
+end
 -- Ravenholm: the truth (a Free Vortigaunt on the server)
 local v = newPlayer("PMVort", "resistance")
 v:SetNW2String("lcf_special", "vortigaunt")
@@ -15930,7 +16003,7 @@ local x0 = g.doorX
 a.aim = Vector(1, 0, 0)
 _run(1)
 ok(g.doorX > x0, "The Last Train: looking at the door, it slides away")
-a.aim = Vector(-1, 0, 0)
+a.aim, b.aim = Vector(-1, 0, 0), Vector(-1, 0, 0) -- (nobody looking at it)
 local x1 = g.doorX
 _run(1)
 ok(g.doorX < x1, "looking away, it creeps closer")
@@ -16767,6 +16840,9 @@ local function Fake(f) -- (a player on a side, to count)
         if k == "GetNW2String" then return function(self, key, d) if key == "lcf_faction" then return self.f end return d end end
         if k == "IsValid" or k == "IsPlayer" then return function() return true end end
         if k == "GetNW2Int" then return function(_, _, d) return d end end
+        if k == "GetPos" or k == "EyePos" then return function() return Vector(-900000, -900000, 0) end end -- (far away, and looking nowhere in particular)
+        if k == "GetAimVector" or k == "GetForward" then return function() return Vector(1, 0, 0) end end
+        if k == "Alive" then return function() return false end end
         return NOOP
     end })
 end

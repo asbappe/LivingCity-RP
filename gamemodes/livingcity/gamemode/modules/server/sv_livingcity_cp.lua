@@ -915,7 +915,7 @@ local function FindLine(ply, word)
 end
 
 local function PlayLine(ply, line, loud)
-    ply:EmitSound(line[3], loud and 90 or 80, 100)
+    ply:EmitSound(line[3], loud and 90 or 80, ply.lcVoicePitch or 100) -- (a traitor turned tiny rebel in The Battle Line squeaks: sv_livingcity_battleline.lua)
 end
 
 -- Play a line and say it. word: the line's short word, its number, or its words.

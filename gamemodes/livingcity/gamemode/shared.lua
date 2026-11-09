@@ -87,6 +87,7 @@ LC_MODULES = {
         "sv_livingcity_dreamgames", -- (nightmare dreams you play: the maze, the barrel tower, the crumbling floor, freeze)
         "sv_livingcity_propagandadreams", -- (propaganda dreams you play: kneel, roses, mirror, the saviour, the quiz; after dreamgames)
         "sv_livingcity_propagandamore", -- (ten more propaganda dreams, drawn from real propaganda; after propagandadreams)
+        "sv_livingcity_battleline", -- (The Battle Line, a propaganda dream: shoot the red rebels, never her soldiers; after propagandamore)
         "sv_livingcity_vices", -- (cigarettes, alcohol and stimulants; and how a dream you played leaves you)
         "sv_livingcity_dreamstandins", -- (stand-ins: every dream has at least lc_dream_min dreamers)
         "sv_livingcity_dreamenforcers", -- (Civil Protection and the Administration as Enforcers in nightmares and propaganda dreams)

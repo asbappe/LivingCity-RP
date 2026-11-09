@@ -35,4 +35,5 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - Squads (owner): `sv_livingcity_squads.lua` (`LC.SquadLimit`/`SquadSteps`/`SquadLeaderMin`, `LC.SquadFullText`, `LC.SquadTick` NW2 lc_squad_n/max/players for F2 "(squad N of M)", `LC.UnitRecruit` E on a unit via st.backupFor, `LC.RebelTerritoryBackup`/`RebelBackupSpot`); RebelCallBackup needs a Freq 7 radio; radio SWEP left click calls backup. Tests: SquadSizeTests (prelude sets SquadSteps to 3 each for the rest). Spec `docs/features/squads.md`.
 - Tests: SideBalanceTests (stub got `EMT:SetOwner`). Unchecked in game: PLAYTEST.md "9 November, tougher Combine" (the engine bits: thrown frags, Lua-made combine balls, NumGrenades set at runtime).
 - Earlier part 12 (dreams, dream plan, sides even, imbalance, reaction squads): see `git log` and PLAYTEST.md "8 November, part 12" to "9 November, later", all still unchecked in game.
-- Next: The Battle Line and vortigaunt dream warfare (designs at the end of `TODO.md`); 
+- The Battle Line (owner, built): `sv_livingcity_battleline.lua` (`LC.BattleLineShot` ray hits on Actors, `LC.BattleLineTurn` traitors, doom giants then gunships and bombs); tests in PropagandaMoreTests; stub GetAimVector now falls back to eyeang.
+- Next: vortigaunt dream warfare (designs at the end of `TODO.md`); 
