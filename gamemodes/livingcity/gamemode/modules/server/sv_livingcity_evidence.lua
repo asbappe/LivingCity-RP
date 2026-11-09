@@ -317,6 +317,7 @@ local function Nearest(role, pos, r, want)
 end
 
 local function Budget()
+    if LC.NPCBudget then return LC.NPCBudget() end -- (scaled by the server's size: sv_livingcity.lua)
     local cv = GetConVar("lc_npc_budget")
     return cv and cv:GetInt() or 60
 end

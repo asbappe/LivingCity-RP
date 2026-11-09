@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version bd23582. Admin-only console messages and log lines are left out.
+Made from version 2ca73a1. Admin-only console messages and log lines are left out.
 
-9071 lines, from 240 files.
+9086 lines, from 241 files.
 
 ## Contents
 
@@ -153,7 +153,7 @@ Made from version bd23582. Admin-only console messages and log lines are left ou
 - [city events](#city-events-svlivingcityeventslua) (80)
 - [burning the confiscated contraband (the owner, 7 November)](#burning-the-confiscated-contraband-the-owner-7-november-svlivingcityevidencelua) (45)
 - [morning exercise (mandatory for citizens)](#morning-exercise-mandatory-for-citizens-svlivingcityexerciselua) (61)
-- [sv_livingcity_factions.lua](#svlivingcityfactionslua-svlivingcityfactionslua) (48)
+- [sv_livingcity_factions.lua](#svlivingcityfactionslua-svlivingcityfactionslua) (49)
 - [field operations (the owner's 7 November playtest)](#field-operations-the-owners-7-november-playtest-svlivingcityfieldopslua) (27)
 - [Freq 7, the Resistance's pirate broadcast](#freq-7-the-resistances-pirate-broadcast-svlivingcityfreq7lua) (6)
 - [the Resistance's money (besides raiding supply drops)](#the-resistances-money-besides-raiding-supply-drops-svlivingcityfundinglua) (16)
@@ -163,6 +163,7 @@ Made from version bd23582. Admin-only console messages and log lines are left ou
 - [tips that pop up the first time something happens](#tips-that-pop-up-the-first-time-something-happens-svlivingcityhintslua) (327)
 - [housing blocks](#housing-blocks-svlivingcityhousinglua) (5)
 - [toilets, baths and what happens without them](#toilets-baths-and-what-happens-without-them-svlivingcityhygienelua) (53)
+- [help for the outnumbered side](#help-for-the-outnumbered-side-svlivingcityimbalancelua) (14)
 - [the Resistance Insider (a Civil Protection unit secretly with the Resistance)](#the-resistance-insider-a-civil-protection-unit-secretly-with-the-resistance-svlivingcityinsiderlua) (65)
 - [Civil Intake (becoming somebody)](#civil-intake-becoming-somebody-svlivingcityintakelua) (84)
 - [work you actually do](#work-you-actually-do-svlivingcityjobgameslua) (99)
@@ -3891,89 +3892,89 @@ Made from version bd23582. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: choose citizen task
 
-- "curfew or lockdown: gone home"  (text, line 1756)
+- "curfew or lockdown: gone home"  (text, line 1769)
 
 > Note for you (not shown in game): more people out than the hour calls for: home (sv_livingcity_rhythm.lua)
 
-- "the time of day: fewer people out at this hour"  (text, line 1761)
+- "the time of day: fewer people out at this hour"  (text, line 1774)
 
 > Note for you (not shown in game): part of: cop provoked
 
-- "[Civil Protection] The Civil Protection unit shoves you back. Move along."  (chat message, line 2147)
-- "[Civil Protection] A crack across the ribs with the stick. Last warning."  (chat message, line 2148)
-- "[Civil Protection] You were warned. Obstructing Civil Protection."  (chat message, line 2152)
-- "Obstructing Civil Protection"  (text, line 2153)
+- "[Civil Protection] The Civil Protection unit shoves you back. Move along."  (chat message, line 2160)
+- "[Civil Protection] A crack across the ribs with the stick. Last warning."  (chat message, line 2161)
+- "[Civil Protection] You were warned. Obstructing Civil Protection."  (chat message, line 2165)
+- "Obstructing Civil Protection"  (text, line 2166)
 
 > Note for you (not shown in game): A city scanner that has a fugitive in sight (wanted, or a hunted rebel who isn't passing as a citizen) tells the units where they are: a flash, a report to every unit on duty, and the nearby units come after them.
 
-- "a wanted citizen"  (text, line 2310)
+- "a wanted citizen"  (text, line 2323)
 
 > Note for you (not shown in game): part of: scanner tip off
 
-- "A scanner's flash. You've been photographed, and Civil Protection has the picture."  (chat message, line 2315)
-- "[CP net] Scanner report: %s%s."  (message, line 2319)
+- "A scanner's flash. You've been photographed, and Civil Protection has the picture."  (chat message, line 2328)
+- "[CP net] Scanner report: %s%s."  (message, line 2332)
 
 > Note for you (not shown in game): part of: start
 
-- "This map has no AI nodes or navmesh and nothing placed yet. Lay some path nodes or points with the Living City Editor, then start again."  (chat message, line 2550)
-- "Started. Map nav: %d spots (%s). Your layout: %d points, %d path nodes."  (message, line 2557)
+- "This map has no AI nodes or navmesh and nothing placed yet. Lay some path nodes or points with the Living City Editor, then start again."  (chat message, line 2563)
+- "Started. Map nav: %d spots (%s). Your layout: %d points, %d path nodes."  (message, line 2570)
 
 > Note for you (not shown in game): part of: stop
 
-- "Stopped and removed all Living City NPCs."  (chat message, line 2574)
+- "Stopped and removed all Living City NPCs."  (chat message, line 2587)
 
 > Note for you (not shown in game): part of: spawn test walker
 
-- "your path network (%d hops)"  (message, line 2603)
-- "the map's own navigation"  (text, line 2603)
-- "Test walker heading out using {how}."  (chat message, line 2604)
+- "your path network (%d hops)"  (message, line 2616)
+- "the map's own navigation"  (text, line 2616)
+- "Test walker heading out using {how}."  (chat message, line 2617)
 
 > Note for you (not shown in game): part of: test arrived
 
-- "Test walker arrived in %.1f seconds. This route works."  (message, line 2609)
+- "Test walker arrived in %.1f seconds. This route works."  (message, line 2622)
 
 > Note for you (not shown in game): part of: test stuck
 
-- "Test walker stuck at %s on hop %d/%d"  (message, line 2616)
-- "Test walker got stuck after %.1f seconds, on hop %d of %d (marked red)."  (message, line 2617)
-- "Add a path node here and link it toward the destination, or check for a door it can't open."  (text, line 2620)
+- "Test walker stuck at %s on hop %d/%d"  (message, line 2629)
+- "Test walker got stuck after %.1f seconds, on hop %d of %d (marked red)."  (message, line 2630)
+- "Add a path node here and link it toward the destination, or check for a door it can't open."  (text, line 2633)
 
 > Note for you (not shown in game): guarding a supply drop (sv_livingcity_convoy.lua): he answers, without leaving his post
 
-- "[Civil Protection] "Supply point secure. Hold the perimeter until the load moves on.""  (chat message, line 2844)
+- "[Civil Protection] "Supply point secure. Hold the perimeter until the load moves on.""  (chat message, line 2857)
 
 > Note for you (not shown in game): pressing E on something
 
-- "[Civil Protection] "{Pick}""  (chat message, line 2848)
+- "[Civil Protection] "{Pick}""  (chat message, line 2861)
 
 > Note for you (not shown in game): a Civil Protection player stops a citizen: they freeze and apologise
 
-- "[Civil Protection] Stopped. With the Arrest Baton out: R to search them, right click to detain."  (chat message, line 2865)
+- "[Civil Protection] Stopped. With the Arrest Baton out: R to search them, right click to detain."  (chat message, line 2878)
 
 > Note for you (not shown in game): a crime, and every cop comes for you (a scanner is city property, not a person) (one report per few seconds for a scanner: every bullet of a burst isn't a new offence)
 
-- "Damaging city property"  (text, line 2915)
-- "Assaulting Civil Protection"  (text, line 2918)
-- "Assaulting a citizen"  (text, line 2918)
+- "Damaging city property"  (text, line 2928)
+- "Assaulting Civil Protection"  (text, line 2931)
+- "Assaulting a citizen"  (text, line 2931)
 
 > Note for you (not shown in game): Console commands
 
-- "Civil Protection has stood down."  (chat message, line 2954)
+- "Civil Protection has stood down."  (chat message, line 2967)
 
 > Note for you (not shown in game): the console command lc_addpoint
 
-- "Kinds: idle, sit, sitchair, lean, queue, patrol, checkpoint, spawn, cell, release"  (chat message, line 2961)
-- "Added %s point (%d total on this map)."  (message, line 2964)
+- "Kinds: idle, sit, sitchair, lean, queue, patrol, checkpoint, spawn, cell, release"  (chat message, line 2974)
+- "Added %s point (%d total on this map)."  (message, line 2977)
 
 > Note for you (not shown in game): the console command lc_removepoint
 
-- "Removed nearest {kind} point."  (text, line 2970)
-- "No point within 150 Civil Protection units."  (chat message, line 2970)
+- "Removed nearest {kind} point."  (text, line 2983)
+- "No point within 150 Civil Protection units."  (chat message, line 2983)
 
 > Note for you (not shown in game): the console command lc_status
 
-- "citizens %d/%d, cops %d/%d, soldiers %d/%d, scanners %d/%d, zombies %d/%d, rebels %d/%d"  (message, line 2981)
-- "map nav %d (%s) \| points %d \| path nodes %d, links %d, unlinked %d \| zones %d \| lines %d \| patrol beats %d"  (message, line 2985)
+- "citizens %d/%d, cops %d/%d, soldiers %d/%d, scanners %d/%d, zombies %d/%d, rebels %d/%d"  (message, line 2994)
+- "map nav %d (%s) \| points %d \| path nodes %d, links %d, unlinked %d \| zones %d \| lines %d \| patrol beats %d"  (message, line 2998)
 
 ## the actions menu (server side) (sv_livingcity_actions.lua)
 
@@ -7140,71 +7141,71 @@ Made from version bd23582. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: send carrier
 
-- "carrying confiscated contraband to the fire"  (text, line 332)
-- "putting confiscated contraband on the pile"  (what someone is doing, line 335)
-- "guarding the fire"  (what someone is doing, line 338)
+- "carrying confiscated contraband to the fire"  (text, line 333)
+- "putting confiscated contraband on the pile"  (what someone is doing, line 336)
+- "guarding the fire"  (what someone is doing, line 339)
 
 > Note for you (not shown in game): What's in stock goes to the fire. why: "auto", "admin". Returns ok, message.
 
-- "Something is already being burned."  (text, line 346)
-- "Not during an ending or a dream."  (text, line 347)
-- "The city isn't running."  (text, line 348)
-- "Not in a curfew or a lockdown: wait till it's over."  (text, line 349)
-- "The evidence room is empty: nothing to burn."  (text, line 350)
+- "Something is already being burned."  (text, line 347)
+- "Not during an ending or a dream."  (text, line 348)
+- "The city isn't running."  (text, line 349)
+- "Not in a curfew or a lockdown: wait till it's over."  (text, line 350)
+- "The evidence room is empty: nothing to burn."  (text, line 351)
 
 > Note for you (not shown in game): part of: evidence start burn
 
-- "Nowhere to burn it: place a loudspeaker, a giant screen, an exercise yard or a ration dispenser with the editor."  (text, line 359)
-- "Evidence burn (%s) %s: %d item(s), %d carrier(s)"  (message, line 390)
-- "%d item%s going to the fire %s."  (message, line 392)
+- "Nowhere to burn it: place a loudspeaker, a giant screen, an exercise yard or a ration dispenser with the editor."  (text, line 360)
+- "Evidence burn (%s) %s: %d item(s), %d carrier(s)"  (message, line 391)
+- "%d item%s going to the fire %s."  (message, line 393)
 
 > Note for you (not shown in game): The pile is made: everyone hears, the citizens come to watch.
 
-- "Confiscated contraband (%s) is being burned %s. Citizens: assemble and witness."  (message, line 408)
+- "Confiscated contraband (%s) is being burned %s. Citizens: assemble and witness."  (message, line 409)
 
 > Note for you (not shown in game): part of: build pile
 
-- "They've piled up what they confiscated to burn it {place}. Before it catches, E on something in the pile takes it back. Don't let a unit see you."  (text, line 411)
-- "Confiscated contraband is piled up here to be burned. Before it catches, press E on something in the pile to take it back (wanted, if a unit sees you)."  (chat message, line 416)
-- "watching the contraband burn"  (text, line 422)
-- "watching the contraband burn"  (what someone is doing, line 423)
+- "They've piled up what they confiscated to burn it {place}. Before it catches, E on something in the pile takes it back. Don't let a unit see you."  (text, line 412)
+- "Confiscated contraband is piled up here to be burned. Before it catches, press E on something in the pile to take it back (wanted, if a unit sees you)."  (chat message, line 417)
+- "watching the contraband burn"  (text, line 423)
+- "watching the contraband burn"  (what someone is doing, line 424)
 
 > Note for you (not shown in game): the units who came for it walk back off, and go
 
-- "going back to the station"  (text, line 498)
+- "going back to the station"  (text, line 499)
 
 > Note for you (not shown in game): part of: finish
 
-- "Evidence burn %s %s: %d item(s)"  (message, line 505)
-- "called off"  (message, line 505)
+- "Evidence burn %s %s: %d item(s)"  (message, line 506)
+- "called off"  (message, line 506)
 
 > Note for you (not shown in game): Burn it now (an admin, from the menus or the console). Returns ok, message.
 
-- "Admins only."  (text, line 542)
+- "Admins only."  (text, line 543)
 
 > Note for you (not shown in game): the console command lc_burn_evidence
 
-- "Admins only."  (chat message, line 549)
+- "Admins only."  (chat message, line 550)
 
 > Note for you (not shown in game): Snatching it back before it catches
 
-- "Confiscated contraband, waiting for the fire. It stays where it is."  (text, line 562)
-- "Too late: it's burning."  (text, line 563)
-- "Get closer."  (text, line 564)
-- "Not with your hands tied."  (text, line 565)
+- "Confiscated contraband, waiting for the fire. It stays where it is."  (text, line 563)
+- "Too late: it's burning."  (text, line 564)
+- "Get closer."  (text, line 565)
+- "Not with your hands tied."  (text, line 566)
 
 > Note for you (not shown in game): part of: evidence snatch
 
-- "Nothing in that worth saving."  (text, line 567)
-- "Your pockets are full."  (text, line 575)
-- "Stealing confiscated contraband"  (text, line 585)
-- "You snatch {what} out of the pile, and a unit saw you: you're wanted."  (text, line 588)
-- "You snatch {what} out of the pile before it catches. Nobody saw."  (text, line 589)
+- "Nothing in that worth saving."  (text, line 568)
+- "Your pockets are full."  (text, line 576)
+- "Stealing confiscated contraband"  (text, line 586)
+- "You snatch {what} out of the pile, and a unit saw you: you're wanted."  (text, line 589)
+- "You snatch {what} out of the pile before it catches. Nobody saw."  (text, line 590)
 
 > Note for you (not shown in game): What goes in
 
-- "a crate of hoarded Resistance supplies"  (text, line 607)
-- "a confiscated letter"  (text, line 608)
+- "a crate of hoarded Resistance supplies"  (text, line 608)
+- "a confiscated letter"  (text, line 609)
 
 ## morning exercise (mandatory for citizens) (sv_livingcity_exercise.lua)
 
@@ -7368,124 +7369,122 @@ Made from version bd23582. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: sides even
 
-- "The Resistance is too big for the city's Combine right now (%d fighters, %d of Civil Protection and Overwatch). Wait for more units to come on, or for a place to free up."  (message, line 399)
-- "The Combine is too big for the Resistance right now (%d of Civil Protection and Overwatch, %d fighters). Wait for more rebels to come on, or for a place to free up."  (message, line 401)
+- "The Resistance is too big for the city's Combine right now (%d fighters, %d of Civil Protection and Overwatch). Wait for more units to come on, or for a place to free up."  (message, line 418)
+- "The Combine is too big for the Resistance right now (%d of Civil Protection and Overwatch, %d fighters). Wait for more rebels to come on, or for a place to free up."  (message, line 420)
 
 > Note for you (not shown in game): part of: can join faction
 
-- "No such faction."  (text, line 406)
+- "No such faction."  (text, line 425)
 
 > Note for you (not shown in game): (a stalker is bound even as a superadmin: only death, or lc_unstalker, ends it)
 
-- "Whitelist only."  (text, line 416)
+- "Whitelist only."  (text, line 435)
 
 > Note for you (not shown in game): part of: can join faction
 
-- "Civil Protection only takes citizens in good standing (%d or more). Yours is %d."  (message, line 422)
+- "Civil Protection only takes citizens in good standing (%d or more). Yours is %d."  (message, line 441)
 
 > Note for you (not shown in game): and who've come up the Civil Protection path: Intake Processor, or Infestation Cleanup (sv_livingcity_work.lua counts the shifts)
 
-- "Civil Protection recruits from the train station's Intake Processors and the infestation cleanup crews: finish %d Intake Processor shifts first, or half as many in Infestation Cleanup (F4 > Jobs). You've done %d."  (message, line 428)
+- "Civil Protection recruits from the train station's Intake Processors and the infestation cleanup crews: finish %d Intake Processor shifts first, or half as many in Infestation Cleanup (F4 > Jobs). You've done %d."  (message, line 447)
 
 > Note for you (not shown in game): the sides kept even (the owner, 9 November: "keep the sides even"): neither the Resistance nor the Combine (Civil Protection and Overwatch together) may grow past double the other side's players, plus 4. Only joining waits: nobody on a side is ever put off it.
 
-- "Requires %s in %s."  (message, line 440)
+- "Requires %s in %s."  (message, line 459)
 
 > Note for you (not shown in game): part of: can join faction
 
-- "No such role."  (text, line 445)
-- "Someone already holds that role."  (text, line 447)
+- "No such role."  (text, line 464)
+- "Someone already holds that role."  (text, line 466)
 
 > Note for you (not shown in game): (the owner, 7 November: a recruit became Overwatch Commander; the rank is needed, superadmin or not, and an Overwatch role needs the conditioning like any Overwatch rank)
 
-- "Requires {name} in {name}."  (text, line 451)
-- "Overwatch roles need the transhuman conditioning first (the Overwatch Candidate story)."  (text, line 454)
+- "Requires {name} in {name}."  (text, line 470)
+- "Overwatch roles need the transhuman conditioning first (the Overwatch Candidate story)."  (text, line 473)
 
 > Note for you (not shown in game): part of: set faction
 
-- "You are now {name}."  (chat message, line 477)
+- "You are now {name}."  (chat message, line 496)
 
 > Note for you (not shown in game): the game answering something done in a window (lcf_join)
 
-- "Not while you're in custody."  (chat message, line 504)
-- "Not while you're wanted or in a fight."  (chat message, line 505)
-- "You can change faction again in {CurTime} seconds."  (chat message, line 507)
+- "Not while you're in custody."  (chat message, line 523)
+- "Not while you're wanted or in a fight."  (chat message, line 524)
+- "You can change faction again in {CurTime} seconds."  (chat message, line 526)
 
 > Note for you (not shown in game): what Civil Protection asks of a citizen, as progress bars on the card (the owner asked)
 
-- "Civil Standing"  (label, line 527)
-- "Intake Processor shifts finished (F4 > Jobs; Infestation Cleanup counts double)"  (label, line 528)
+- "Civil Standing"  (label, line 546)
+- "Intake Processor shifts finished (F4 > Jobs; Infestation Cleanup counts double)"  (label, line 547)
 
 > Note for you (not shown in game): part of: send menu
 
-- "Jobs done for the Resistance, to be trusted as a Fighter (their board, F4)"  (label, line 534)
-
-> Note for you (not shown in game): only ever to give back what they had (never to take more away)
-
-- "Welcome back. You're still {name}."  (chat message, line 609)
+- "Jobs done for the Resistance, to be trusted as a Fighter (their board, F4)"  (label, line 553)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "You can't be %s right now: %s You're %s for now; take it again from the faction menu (F4) when there's a place."  (message, line 614)
-- "back to your rank"  (message, line 616)
+- "You're a citizen for now; join again from the faction menu (F4) when there's room. Your rank and experience are kept."  (chat message, line 630)
+- "Welcome back. You're still {name}."  (chat message, line 633)
+- "You can't be %s right now: %s You're %s for now; take it again from the faction menu (F4) when there's a place."  (message, line 638)
+- "back to your rank"  (message, line 640)
 
 > Note for you (not shown in game): XP The transhuman conditioning: the Overwatch ranks open, and whatever XP you've earned counts at once. There's no undoing it.
 
-- "the conditioning"  (text, line 631)
+- "the conditioning"  (text, line 655)
 
 > Note for you (not shown in game): part of: add xp
 
-- "Promoted to {name}!{or}"  (chat message, line 650)
-- "[%s] %s has been promoted to %s."  (message, line 655)
-- "Demoted to {name}."  (chat message, line 659)
+- "Promoted to {name}!{or}"  (chat message, line 674)
+- "[%s] %s has been promoted to %s."  (message, line 679)
+- "Demoted to {name}."  (chat message, line 683)
 
 > Note for you (not shown in game): A rebel put down by a Civil Protection or Overwatch player (the owner, 7 November): standing, two credits, and an ammunition allocation (a box of rounds for the gun in hand), so sweeping in on them is worth the danger. (The XP for it: sv_livingcity_rebels.lua.)
 
-- "anticitizen neutralized"  (text, line 702)
-- "anticitizen neutralized"  (text, line 703)
+- "anticitizen neutralized"  (text, line 726)
+- "anticitizen neutralized"  (text, line 727)
 
 > Note for you (not shown in game): part of: rebel kill reward
 
-- "twelve rounds"  (text, line 714)
-- "Anticitizen neutralized"  (on-screen notice, line 717)
-- "+%d standing, +%d credits%s."  (message, line 717)
-- ", and an ammunition allocation: {got}"  (text, line 718)
+- "twelve rounds"  (text, line 738)
+- "Anticitizen neutralized"  (on-screen notice, line 741)
+- "+%d standing, +%d credits%s."  (message, line 741)
+- ", and an ammunition allocation: {got}"  (text, line 742)
 
 > Note for you (not shown in game): (the XP, as for an NPC rebel in sv_livingcity_rebels.lua: the owner, 8 November, "5 xp per kill")
 
-- "anticitizen neutralized"  (text, line 737)
+- "anticitizen neutralized"  (text, line 761)
 
 > Note for you (not shown in game): Admin commands
 
-- "Player not found."  (text, line 825)
+- "Player not found."  (text, line 849)
 
 > Note for you (not shown in game): admin cmd
 
-- "Factions: citizen, resistance, cp, ota, admin, zombie"  (text, line 832)
-- "No such special role."  (text, line 834)
-- "set to {name}."  (text, line 836)
-- "Usage: lcf_setxp <name> <xp>"  (text, line 842)
-- "now has {xp} XP in {name}."  (text, line 845)
+- "Factions: citizen, resistance, cp, ota, admin, zombie"  (text, line 856)
+- "No such special role."  (text, line 858)
+- "set to {name}."  (text, line 860)
+- "Usage: lcf_setxp <name> <xp>"  (text, line 866)
+- "now has {xp} XP in {name}."  (text, line 869)
 
 > Note for you (not shown in game): part of: step
 
-- "by staff"  (text, line 854)
-- "is now {name}."  (text, line 855)
+- "by staff"  (text, line 878)
+- "is now {name}."  (text, line 879)
 
 > Note for you (not shown in game): admin cmd
 
-- "Usage: lcf_whitelist <name> <faction>"  (text, line 862)
-- "whitelisted for"  (text, line 866)
-- "removed from"  (text, line 866)
+- "Usage: lcf_whitelist <name> <faction>"  (text, line 886)
+- "whitelisted for"  (text, line 890)
+- "removed from"  (text, line 890)
 
 > Note for you (not shown in game): A job done for the Resistance builds their trust; the last one needed makes a Fighter of a member with the XP.
 
-- "[Resistance] You've proved yourself. They trust you now."  (chat message, line 876)
-- "trusted by the Resistance"  (text, line 877)
+- "[Resistance] You've proved yourself. They trust you now."  (chat message, line 900)
+- "trusted by the Resistance"  (text, line 901)
 
 > Note for you (not shown in game): the game's living city quest complete moment
 
-- "[Resistance] They're starting to trust you: %d of %d jobs before they'd arm you as a Fighter."  (message, line 879)
+- "[Resistance] They're starting to trust you: %d of %d jobs before they'd arm you as a Fighter."  (message, line 903)
 
 ## field operations (the owner's 7 November playtest) (sv_livingcity_fieldops.lua)
 
@@ -8228,6 +8227,40 @@ Made from version bd23582. Admin-only console messages and log lines are left ou
 - "Your uniform is filthy. The Civil Protection Commissary has clean ones; then change into it."  (text, line 408)
 - "Get clean clothes"  (text, line 410)
 - "Your clothes are filthy. The Commissary sells spare clothes; then change into them."  (text, line 410)
+
+## help for the outnumbered side (sv_livingcity_imbalance.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_imbalance.lua`
+
+
+> Note for you (not shown in game): Send a squad to pos (after target, a player, if there is one). The number sent, and why not (0 and a reason).
+
+- "the sides aren't uneven"  (text, line 102)
+- "the city isn't running"  (text, line 103)
+- "a squad went out a moment ago"  (text, line 105)
+- "a squad is already on its way here"  (text, line 108)
+
+> Note for you (not shown in game): part of: qrfdispatch
+
+- "the whole reaction force is out"  (text, line 111)
+- "nowhere out of sight to come from"  (text, line 114)
+- "Dispatch: reaction squad of %d inbound to %s. Hold on."  (message, line 133)
+- "the disturbance"  (message, line 133)
+- "Reaction squad of %d dispatched (%s), %d of the reaction force out"  (message, line 134)
+
+> Note for you (not shown in game): When they're called: a Resistance player turning violent, or a rebel raid arriving.
+
+- "an armed rebel"  (text, line 142)
+- "a unit down"  (text, line 146)
+
+> Note for you (not shown in game): the game's living city raid arrived moment
+
+- "the rebel raid"  (text, line 156)
+
+> Note for you (not shown in game): A line for the readouts.
+
+- "Outnumbered by the Resistance: %d more units on the streets, and a reaction force of %d (%d out now)."  (message, line 176)
+- "Outnumbered by the Combine: %d more Resistance fighters in rebel territory."  (message, line 178)
 
 ## the Resistance Insider (a Civil Protection unit secretly with the Resistance) (sv_livingcity_insider.lua)
 
@@ -9272,7 +9305,7 @@ Made from version bd23582. Admin-only console messages and log lines are left ou
 - "faster ({fast})"  (text, line 359)
 - "slower ({slow})"  (text, line 360)
 - "Recruiting {parts}"  (text, line 361)
-- "Civil Protection"  (text, line 364)
+- "Civil Protection"  (text, line 365)
 
 ## marched to the cells (sv_livingcity_march.lua)
 
@@ -12456,15 +12489,15 @@ Made from version bd23582. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: raid responders
 
-- "Skirmish: %d unit(s) sent to answer the raid, %d swapped in"  (message, line 336)
+- "Skirmish: %d unit(s) sent to answer the raid, %d swapped in"  (message, line 337)
 
 > Note for you (not shown in game): part of: raid marker plan
 
-- "Our fighters"  (label, line 379)
+- "Our fighters"  (label, line 380)
 
 > Note for you (not shown in game): never got there: called off, rather than an attack announced that nobody fights
 
-- "never got there"  (text, line 409)
+- "never got there"  (text, line 410)
 
 ## rebel life (sv_livingcity_rebellife.lua)
 
@@ -12558,200 +12591,200 @@ Made from version bd23582. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): still shouting
 
-- "[Resistance] Someone shouts: 'Combine! In the yard!' You've been seen."  (chat message, line 541)
+- "[Resistance] Someone shouts: 'Combine! In the yard!' You've been seen."  (chat message, line 542)
 
 > Note for you (not shown in game): sent ahead to meet the leader at the job's destination: there, loitering, till the leader turns up
 
-- "[Resistance] {npc} falls in with you."  (chat message, line 698)
+- "[Resistance] {npc} falls in with you."  (chat message, line 699)
 
 > Note for you (not shown in game): under fire: guns out, all of them
 
-- "[Resistance] Your squad pull their guns out."  (chat message, line 722)
+- "[Resistance] Your squad pull their guns out."  (chat message, line 723)
 
 > Note for you (not shown in game): Units get something for it.
 
-- "anticitizen neutralized"  (text, line 1093)
+- "anticitizen neutralized"  (text, line 1094)
 
 > Note for you (not shown in game): part of: units spot rebels
 
-- "Dispatch: armed anticitizen {or}. Civil Protection units engaging."  (text, line 1137)
+- "Dispatch: armed anticitizen {or}. Civil Protection units engaging."  (text, line 1138)
 
 > Note for you (not shown in game): purpose: nil for a plain raid on a checkpoint; or an operation with an objective at the target ("heist", "breakout", "ambush", "screen"), worked out in sv_livingcity_resistanceops.lua
 
-- "no rebel territory on this map"  (text, line 1200)
-- "nothing of the Combine's to hit"  (text, line 1202)
+- "no rebel territory on this map"  (text, line 1201)
+- "nothing of the Combine's to hit"  (text, line 1203)
 
 > Note for you (not shown in game): part of: start raid
 
-- "no fighters"  (text, line 1242)
-- "in the city"  (text, line 1255)
-- "Our people are hitting the Combine {where}. Stay clear, or lend a hand."  (text, line 1256)
+- "no fighters"  (text, line 1243)
+- "in the city"  (text, line 1256)
+- "Our people are hitting the Combine {where}. Stay clear, or lend a hand."  (text, line 1257)
 
 > Note for you (not shown in game): dispatch hears about it once they're close
 
-- "Skirmish: rebel raid of %d from %s toward %s"  (message, line 1261)
+- "Skirmish: rebel raid of %d from %s toward %s"  (message, line 1262)
 
 > Note for you (not shown in game): part of: plan raid
 
-- "in the city"  (text, line 1277)
-- "In about {lead} seconds our people hit the Combine {where}. Anyone who can, back them up."  (text, line 1278)
-- "A raid is coming"  (on-screen notice, line 1281)
-- "Our fighters hit the Combine {where} in about {lead} seconds. Back them up: the job's on your board (F4)."  (on-screen notice, line 1281)
+- "in the city"  (text, line 1278)
+- "In about {lead} seconds our people hit the Combine {where}. Anyone who can, back them up."  (text, line 1279)
+- "A raid is coming"  (on-screen notice, line 1282)
+- "Our fighters hit the Combine {where} in about {lead} seconds. Back them up: the job's on your board (F4)."  (on-screen notice, line 1282)
 
 > Note for you (not shown in game): part of: start rebel raid
 
-- "a skirmish is already on"  (text, line 1290)
+- "a skirmish is already on"  (text, line 1291)
 
 > Note for you (not shown in game): part of: sweep chore
 
-- "arresting the scientist"  (text, line 1347)
-- "smashing the pots"  (text, line 1347)
-- "confiscating supplies"  (text, line 1347)
+- "arresting the scientist"  (text, line 1348)
+- "smashing the pots"  (text, line 1348)
+- "confiscating supplies"  (text, line 1348)
 
 > Note for you (not shown in game): A planned sweep that can't start: whoever joined it hears why, and the job ends without blame.
 
-- "Sweep called off"  (on-screen notice, line 1383)
-- "Dispatch: the sweep is called off ({or}). Stand down."  (on-screen notice, line 1383)
-- "the sweep was called off"  (text, line 1385)
+- "Sweep called off"  (on-screen notice, line 1384)
+- "Dispatch: the sweep is called off ({or}). Stand down."  (on-screen notice, line 1384)
+- "the sweep was called off"  (text, line 1386)
 
 > Note for you (not shown in game): part of: sweep rally point
 
-- "The sweep team is with you"  (on-screen notice, line 1407)
-- "The team's here. Go in with them: they fight whoever you fight."  (on-screen notice, line 1407)
+- "The sweep team is with you"  (on-screen notice, line 1408)
+- "The team's here. Go in with them: they fight whoever you fight."  (on-screen notice, line 1408)
 
 > Note for you (not shown in game): part of: start sweep
 
-- "no rebel territory on this map"  (text, line 1417)
-- "no Civil Protection units"  (text, line 1418)
-- "nowhere out of sight to gather a team"  (text, line 1420)
-- "no Civil Protection units"  (text, line 1445)
+- "no rebel territory on this map"  (text, line 1418)
+- "no Civil Protection units"  (text, line 1419)
+- "nowhere out of sight to gather a team"  (text, line 1421)
+- "no Civil Protection units"  (text, line 1446)
 
 > Note for you (not shown in game): the team meets the players who joined the sweep before going in (the owner, 7 November: "joined a sweep and no one showed up"), up to a minute, then pushes in with them
 
-- "The sweep team is coming"  (on-screen notice, line 1452)
-- "Dispatch: the sweep team is on its way to you. Hold where you are: they meet you, then go in with you."  (on-screen notice, line 1452)
-- "rebel territory"  (text, line 1455)
+- "The sweep team is coming"  (on-screen notice, line 1453)
+- "Dispatch: the sweep team is on its way to you. Hold where you are: they meet you, then go in with you."  (on-screen notice, line 1453)
+- "rebel territory"  (text, line 1456)
 
 > Note for you (not shown in game): part of: start sweep
 
-- "Dispatch: sweep team moving into anticitizen territory {where}. Civil Protection units may assist."  (text, line 1456)
-- "Combine are moving on our people {where}! Everyone who can fight, get there."  (text, line 1457)
-- "Skirmish: Combine sweep of %d into %s"  (message, line 1458)
+- "Dispatch: sweep team moving into anticitizen territory {where}. Civil Protection units may assist."  (text, line 1457)
+- "Combine are moving on our people {where}! Everyone who can fight, get there."  (text, line 1458)
+- "Skirmish: Combine sweep of %d into %s"  (message, line 1459)
 
 > Note for you (not shown in game): part of: plan sweep
 
-- "rebel territory"  (text, line 1479)
-- "Dispatch: sweep team moves into anticitizen territory {where} in about {secs} seconds. All available Civil Protection units, assist."  (text, line 1481)
-- "A sweep is coming"  (on-screen notice, line 1484)
-- "A sweep team moves into anticitizen territory {where} in about {secs} seconds. Join it: the job's on your board (F4)."  (on-screen notice, line 1484)
+- "rebel territory"  (text, line 1480)
+- "Dispatch: sweep team moves into anticitizen territory {where} in about {secs} seconds. All available Civil Protection units, assist."  (text, line 1482)
+- "A sweep is coming"  (on-screen notice, line 1485)
+- "A sweep team moves into anticitizen territory {where} in about {secs} seconds. Join it: the job's on your board (F4)."  (on-screen notice, line 1485)
 
 > Note for you (not shown in game): part of: end skirmish
 
-- "Dispatch: anticitizen incursion {where} is over. Resume your beats."  (text, line 1536)
+- "Dispatch: anticitizen incursion {where} is over. Resume your beats."  (text, line 1537)
 
 > Note for you (not shown in game): (they never got there: nobody pretends there was a fight)
 
-- "Our fighters couldn't get through {where}. They're on their way home."  (text, line 1539)
-- "Dispatch: sweep team withdrawing."  (text, line 1542)
-- "Civil Protection units down"  (text, line 1543)
-- "They're pulling back. We held."  (text, line 1543)
-- "The Combine have pulled back."  (text, line 1543)
+- "Our fighters couldn't get through {where}. They're on their way home."  (text, line 1540)
+- "Dispatch: sweep team withdrawing."  (text, line 1543)
+- "Civil Protection units down"  (text, line 1544)
+- "They're pulling back. We held."  (text, line 1544)
+- "The Combine have pulled back."  (text, line 1544)
 
 > Note for you (not shown in game): part of: run skirmish
 
-- "raiders down"  (text, line 1556)
+- "raiders down"  (text, line 1557)
 
 > Note for you (not shown in game): once they're close, dispatch notices and the nearest units respond
 
-- "Armed Resistance fighters are attacking {or}. Civil Protection units nearby are fighting them; anyone else, keep clear."  (text, line 1564)
-- "Dispatch: armed anticitizens {or}. All nearby Civil Protection units respond."  (text, line 1565)
+- "Armed Resistance fighters are attacking {or}. Civil Protection units nearby are fighting them; anyone else, keep clear."  (text, line 1565)
+- "Dispatch: armed anticitizens {or}. All nearby Civil Protection units respond."  (text, line 1566)
 
 > Note for you (not shown in game): part of: run skirmish
 
-- "Civil Protection units down"  (text, line 1607)
-- "territory cleared"  (text, line 1608)
+- "Civil Protection units down"  (text, line 1608)
+- "territory cleared"  (text, line 1609)
 
 > Note for you (not shown in game): there: at the edge of their ground, or already fighting them
 
-- "never got there"  (text, line 1667)
+- "never got there"  (text, line 1668)
 
 > Note for you (not shown in game): (announced ahead: if it can't go, the Resistance are told so, not left waiting for it)
 
-- "The raid's off: our fighters can't go just now."  (text, line 1697)
+- "The raid's off: our fighters can't go just now."  (text, line 1698)
 
 > Note for you (not shown in game): (the owner, 7 November: "joined a sweep and no one showed up") another fight still on: the sweep waits for it, up to five minutes, rather than quietly never coming; one that can't start at all is called off, and whoever joined it is told so
 
-- "another fight is still on"  (text, line 1708)
+- "another fight is still on"  (text, line 1709)
 
 > Note for you (not shown in game): the console command lc_skirmish
 
-- "[Living City] Start the city first."  (chat message, line 1737)
-- "called off"  (text, line 1738)
-- "[Living City] Skirmish called off."  (chat message, line 1743)
-- "[Living City] Usage: lc_skirmish raid\|sweep\|end"  (chat message, line 1744)
-- "[Living City] {kind} started."  (text, line 1745)
-- "[Living City] Couldn't start a {kind}: {why}"  (text, line 1745)
+- "[Living City] Start the city first."  (chat message, line 1738)
+- "called off"  (text, line 1739)
+- "[Living City] Skirmish called off."  (chat message, line 1744)
+- "[Living City] Usage: lc_skirmish raid\|sweep\|end"  (chat message, line 1745)
+- "[Living City] {kind} started."  (text, line 1746)
+- "[Living City] Couldn't start a {kind}: {why}"  (text, line 1746)
 
 > Note for you (not shown in game): part of: dismiss follower
 
-- "[Resistance] '{npc}. I'll head back.'"  (chat message, line 1784)
+- "[Resistance] '{npc}. I'll head back.'"  (chat message, line 1785)
 
 > Note for you (not shown in game): part of: recruit
 
-- "[Resistance] 'I'm on watch. Find someone else.'"  (chat message, line 1793)
-- "[Resistance] They're busy."  (chat message, line 1793)
-- "[Resistance] 'Who are you? Get someone who's earned it to ask me.' (Members and up can lead fighters.)"  (chat message, line 1797)
-- "[Resistance] You've got {MAX_FOLLOWERS} with you already. Any more and you're a parade."  (chat message, line 1801)
-- "[Resistance] {npc} is with you, and stays with you. They hold their fire until you open up or the Combine do. E on them again to send them home."  (chat message, line 1817)
+- "[Resistance] 'I'm on watch. Find someone else.'"  (chat message, line 1794)
+- "[Resistance] They're busy."  (chat message, line 1794)
+- "[Resistance] 'Who are you? Get someone who's earned it to ask me.' (Members and up can lead fighters.)"  (chat message, line 1798)
+- "[Resistance] You've got {MAX_FOLLOWERS} with you already. Any more and you're a parade."  (chat message, line 1802)
+- "[Resistance] {npc} is with you, and stays with you. They hold their fire until you open up or the Combine do. E on them again to send them home."  (chat message, line 1818)
 
 > Note for you (not shown in game): pressing E on something
 
-- "[Resistance] The quartermaster looks you over. 'I don't know you. Come back with someone who does.'"  (chat message, line 1864)
-- "[Quartermaster] 'What do you need?' (Work: F4. Fighters: E on any of ours here, to bring them along.)"  (chat message, line 1870)
-- "[Quartermaster] 'Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it.'"  (chat message, line 1872)
+- "[Resistance] The quartermaster looks you over. 'I don't know you. Come back with someone who does.'"  (chat message, line 1865)
+- "[Quartermaster] 'What do you need?' (Work: F4. Fighters: E on any of ours here, to bring them along.)"  (chat message, line 1871)
+- "[Quartermaster] 'Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it.'"  (chat message, line 1873)
 
 > Note for you (not shown in game): Orders for the squad (F2 > Squad orders / the C menu, Resistance; or the chat shortcuts !casual, !gunsout, !meet).
 
-- "[Resistance] You've nobody with you."  (chat message, line 1885)
-- "[Resistance] Guns away, plain clothes on. They walk like anyone else now. (Shot at, they'll fight.)"  (text, line 1885)
-- "[Resistance] They're acting casual already."  (text, line 1885)
-- "[Resistance] You've nobody with you."  (chat message, line 1889)
-- "[Resistance] Guns out."  (text, line 1889)
-- "[Resistance] They're armed and ready already."  (text, line 1889)
+- "[Resistance] You've nobody with you."  (chat message, line 1886)
+- "[Resistance] Guns away, plain clothes on. They walk like anyone else now. (Shot at, they'll fight.)"  (text, line 1886)
+- "[Resistance] They're acting casual already."  (text, line 1886)
+- "[Resistance] You've nobody with you."  (chat message, line 1890)
+- "[Resistance] Guns out."  (text, line 1890)
+- "[Resistance] They're armed and ready already."  (text, line 1890)
 
 > Note for you (not shown in game): the chat command /meet
 
-- "[Resistance] You've nobody with you."  (chat message, line 1893)
-- "[Resistance] Meet you where? Take a job first: they go on ahead to where it's taking you."  (chat message, line 1895)
-- "[Resistance] 'We'll meet you there.' They go on ahead, acting casual, and wait for you near the job's marker."  (chat message, line 1905)
+- "[Resistance] You've nobody with you."  (chat message, line 1894)
+- "[Resistance] Meet you where? Take a job first: they go on ahead to where it's taking you."  (chat message, line 1896)
+- "[Resistance] 'We'll meet you there.' They go on ahead, acting casual, and wait for you near the job's marker."  (chat message, line 1906)
 
 > Note for you (not shown in game): What a lookout sees coming: warn (a shout, and Freq 7) when the Combine is in sight on the way; open fire when they're close, or on our ground.
 
-- "at a lookout post"  (text, line 1945)
+- "at a lookout post"  (text, line 1946)
 
 > Note for you (not shown in game): part of: post warn
 
-- "%s on lookout %s: Combine coming%s!"  (message, line 1947)
-- "Our lookout"  (text, line 1947)
-- ", the city's own"  (message, line 1948)
-- "[Resistance] Someone shouts from up ahead: 'Combine! Coming in!' You've been seen."  (chat message, line 1950)
+- "%s on lookout %s: Combine coming%s!"  (message, line 1948)
+- "Our lookout"  (text, line 1948)
+- ", the city's own"  (message, line 1949)
+- "[Resistance] Someone shouts from up ahead: 'Combine! Coming in!' You've been seen."  (chat message, line 1951)
 
 > Note for you (not shown in game): part of: ensure lookout posts
 
-- "Resistance lookout"  (text, line 2007)
+- "Resistance lookout"  (text, line 2008)
 
 > Note for you (not shown in game): an NPC dying
 
-- "We lost the lookout {or}. Someone will take the post, give it time."  (text, line 2036)
+- "We lost the lookout {or}. Someone will take the post, give it time."  (text, line 2037)
 
 > Note for you (not shown in game): part of: ensure quartermasters
 
-- "Quartermaster {npc}"  (text, line 2072)
-- "Resistance quartermaster: gear and work"  (text, line 2073)
+- "Quartermaster {npc}"  (text, line 2073)
+- "Resistance quartermaster: gear and work"  (text, line 2074)
 
 > Note for you (not shown in game): an NPC dying
 
-- "They got the quartermaster. Someone will take his place, give it time."  (text, line 2085)
+- "They got the quartermaster. Someone will take his place, give it time."  (text, line 2086)
 
 ## who you are now, and what goes with it (the owner, 7 November: "when I become a metrocop (sv_livingcity_reconcile.lua)
 

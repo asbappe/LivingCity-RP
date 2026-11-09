@@ -78,7 +78,7 @@ function LC.TrainArrive(force)
     -- who gets off: new faces, each with a suitcase, going home
     local arrivals = {}
     local budget = GetConVar("lc_npc_budget")
-    local room = budget and (budget:GetInt() - table.Count(LC.NPCs or {})) or 4
+    local room = budget and ((LC.NPCBudget and LC.NPCBudget() or budget:GetInt()) - table.Count(LC.NPCs or {})) or 4
     for _ = 1, math.min(math.random(2, 4), math.max(0, room)) do
         local npc, st
         if LC.SpawnCitizen then npc, st = LC.SpawnCitizen(OnPlatform(p)) end

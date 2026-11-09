@@ -18,6 +18,7 @@ _setcvar("lc_wear_uses", 0) -- (tools wearing out at random: tested on its own)
 _setcvar("lc_quest_allies", 0) -- (friendly NPCs on violent jobs: tested on their own, in QuestSquadTests)
 _setcvar("lc_directives", 1) -- (the G-Man's directives are off by default now, set aside by the owner; still tested as they are)
 _setcvar("lc_market_demand", 0) -- (demand moving black market prices: tested on its own, in MarketTests)
+LC.ImbalanceFloor = 100000 -- (help for the outnumbered side: tested on its own, in SideBalanceTests)
 _setcvar("lc_afk_kick_minutes", 0) -- (the test's people never touch a key: no kicking them for it)
 _setcvar("lc_manpower", 0) -- (each side's reserve of fighters and units: tested on its own, in ManpowerTests)
 _setcvar("lc_directives", 0) -- (no sealed directive breaking open in the middle of other tests; its own section turns it on)
@@ -16437,9 +16438,77 @@ joiner:SetNW2String("lcf_faction", "resistance")
 crowd = Crowd(20, 0)
 ok(LC.SidesEven(joiner, "resistance"), "already in the Resistance: nobody is ever put off a side")
 joiner:SetNW2String("lcf_faction", "citizen")
-joiner:SetPData("lcf_faction", "resistance")
-ok(LC.SidesEven(joiner, "resistance"), "coming back to the server after a disconnect: back on their side, whatever the count")
-joiner:SetPData("lcf_faction", "citizen")
+-- the grace period: back within a few minutes of dropping out (the owner: "5-7 ish minutes"), the place is kept
+do
+    local graceWas = LC.SideGrace
+    LC.SideGrace = math.max(5, CurTime() * 0.5) -- (and well past the map's own start)
+    local sid = tostring(joiner:SteamID64())
+    LC.SideLeft[sid] = { side = "rebels", t = CurTime() - 1 }
+    ok(LC.SidesEven(joiner, "resistance"), "dropped out a moment ago: back on their side, whatever the count")
+    LC.SideLeft[sid] = { side = "rebels", t = CurTime() - LC.SideGrace - 10 }
+    ok(not LC.SidesEven(joiner, "resistance"), "gone longer than the grace: they join like anyone (and wait for room)")
+    LC.SideLeft[sid] = nil
+    LC.SideGrace = graceWas
+    ok(LC.SideGrace == 420, "(the grace: 7 minutes)")
+end
+
+-- help for the outnumbered side (sv_livingcity_imbalance.lua)
+do
+    local floorWas = LC.ImbalanceFloor
+    LC.ImbalanceFloor = 4
+    local s1, b1 = LC.ImbalanceBonus({ rebels = 15, combine = 5 })
+    local s2, b2 = LC.ImbalanceBonus({ rebels = 9, combine = 5 })
+    local s3 = LC.ImbalanceBonus({ rebels = 3, combine = 0 })
+    local s4, b4 = LC.ImbalanceBonus({ rebels = 50, combine = 1 })
+    local s5, b5 = LC.ImbalanceBonus({ rebels = 2, combine = 10 })
+    ok(s1 == "combine" and b1 == 20 and s2 == nil and s3 == nil and b4 == LC.ImbalanceMax and s5 == "rebels" and b5 == 16,
+        "15 rebels against 5 units: the Combine gets 20 more NPCs (twice the difference); 9 against 5, nothing; at most 40; and the other way round for the Resistance")
+    player.GetAll = function() return Crowd(15, 5) end
+    LC.ImbalanceRefresh()
+    ok(LC.ImbalanceCops == 10 and LC.ImbalanceQRFSize == 10 and LC.ImbalanceBudget == 10 and string.find(LC.ImbalanceLine() or "", "reaction force", 1, true),
+        "half walk the streets (the NPC cap rises for them), half wait as a reaction force")
+    -- the reaction force: out of sight, about fifteen seconds' run away, and only then running in
+    player.GetAll = realGetAll -- (squads are made among the real players)
+    LC.ImbalanceSide, LC.ImbalanceQRFSize = "combine", 10
+    local runWas, spotWas = LC.Running, LC.QRFSpot
+    LC.Running = true
+    local trouble = Vector(150000, 150000, 0)
+    local from
+    LC.QRFSpot = function(pos) from = pos + Vector(LC.QRFRun, 0, 0) return from end
+    local made = LC.QRFDispatch(trouble, nil, "a test")
+    local far = true
+    for npc in pairs(LC.QRF) do if IsValid(npc) and npc:GetPos():Distance(trouble) < 2000 then far = false end end
+    ok(made > 0 and LC.QRFOut() == made and far, "trouble: a reaction squad comes from out of sight, about fifteen seconds' run away", made)
+    local again = LC.QRFDispatch(trouble + Vector(200, 0, 0), nil, "a test")
+    ok(again == 0, "not two squads to the same place at once")
+    for npc, q in pairs(LC.QRF) do q.untilT = CurTime() - 100 end
+    _run(4)
+    ok(LC.QRFOut() == 0, "their time up, they slip away")
+    player.GetAll = function() return Crowd(5, 5) end
+    LC.ImbalanceRefresh()
+    ok(LC.QRFDispatch(trouble, nil, "a test") == 0 and (LC.ImbalanceCops or 0) == 0, "even sides: nothing extra")
+    player.GetAll = realGetAll
+    LC.ImbalanceFloor = floorWas
+    LC.ImbalanceRefresh()
+    LC.Running, LC.QRFSpot = runWas, spotWas
+end
+
+-- the NPC cap grows with the server's size (the owner: 100 is right for 32 slots)
+do
+    local mpWas = game.MaxPlayers
+    local budget = GetConVar("lc_npc_budget"):GetInt()
+    game.MaxPlayers = function() return 32 end
+    local at32 = LC.NPCBudgetBase()
+    game.MaxPlayers = function() return 64 end
+    local at64 = LC.NPCBudgetBase()
+    game.MaxPlayers = function() return 128 end
+    local at128 = LC.NPCBudgetBase()
+    game.MaxPlayers = function() return 16 end
+    local at16 = LC.NPCBudgetBase()
+    game.MaxPlayers = mpWas
+    ok(at32 == budget and at64 == math.min(LC.NPCBudgetMost, math.max(budget, budget * 2)) and at128 == math.min(LC.NPCBudgetMost, math.max(budget, budget * 4)) and at16 == budget,
+        "the NPC cap: lc_npc_budget at 32 slots, twice at 64, four times at 128 (at most 250), never less on a smaller server", at32 .. " " .. at64 .. " " .. at128)
+end
 
 -- the Administrator, asked as she lies down on a night she didn't choose
 player.GetAll = function() return { adm } end

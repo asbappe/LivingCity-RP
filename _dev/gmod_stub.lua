@@ -290,7 +290,7 @@ navmesh = { IsLoaded = function() return false end }
 game = {
     GetWorld = function() return nil end,
     GetMap = function() return "rp_test" end, SinglePlayer = function() return false end,
-    MaxPlayers = function() return 128 end, IsDedicated = function() return true end,
+    MaxPlayers = function() return 32 end, IsDedicated = function() return true end,
 }
 engine = { ActiveGamemode = function() return "livingcity" end, TickInterval = function() return 0.015 end }
 _lightstyles = {}

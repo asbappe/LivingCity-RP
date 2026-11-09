@@ -148,7 +148,7 @@ function LC.BuildReport()
     if count("checkpoint") == 0 and count("patrol") == 0 then warn[#warn + 1] = "no checkpoints or patrol beats: cops wander at random" end
     if count("work") == 0 then warn[#warn + 1] = "no workplaces: Union shifts happen out on the streets" end
     do
-        local cap = GetConVar("lc_npc_budget") and GetConVar("lc_npc_budget"):GetInt() or 100
+        local cap = LC.NPCBudget and LC.NPCBudget() or (GetConVar("lc_npc_budget") and GetConVar("lc_npc_budget"):GetInt()) or 100
         local want = LC.NPCTargetsTotal and LC.NPCTargetsTotal() or 0
         if want > cap then warn[#warn + 1] = string.format("lc_npc_budget (%d) is below what the settings want (%d NPCs): nothing more spawns past it, Civil Protection included (100 is the default)", cap, want) end
     end

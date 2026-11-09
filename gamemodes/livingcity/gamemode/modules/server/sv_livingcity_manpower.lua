@@ -359,9 +359,12 @@ function LC.ManpowerReadout(which)
         if #fast > 0 then parts[#parts + 1] = "faster (" .. table.concat(fast, ", ") .. ")" end
         if #slow > 0 then parts[#parts + 1] = "slower (" .. table.concat(slow, ", ") .. ")" end
         if #parts > 0 then out[#out + 1] = "Recruiting " .. table.concat(parts, ", ") end
+        if LC.ImbalanceSide == "rebels" and LC.ImbalanceLine then out[#out + 1] = LC.ImbalanceLine() end -- (sv_livingcity_imbalance.lua)
         return out
     end
-    return { PoolLine("Civil Protection", "cp"), NextLine("cp", "unit"), PoolLine("Overwatch", "ota"), NextLine("ota", "soldier") }
+    local out = { PoolLine("Civil Protection", "cp"), NextLine("cp", "unit"), PoolLine("Overwatch", "ota"), NextLine("ota", "soldier") }
+    if LC.ImbalanceSide == "combine" and LC.ImbalanceLine then out[#out + 1] = LC.ImbalanceLine() end
+    return out
 end
 
 function LC.ManpowerReadoutFor(ply)

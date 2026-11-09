@@ -1126,3 +1126,11 @@ Notes:
   Notes:
 - [ ] **Combine reserves grow:** with lots of Resistance players online, does the Combine manpower readout (F2) show bigger reserves that refill faster?
   Notes:
+
+## 9 November: help for the outnumbered side, the reconnect grace, a bigger NPC cap on bigger servers
+- [ ] **Outnumbered Combine:** with 15 Resistance players to 5 Combine (or a quiet test with bots), are there more Civil Protection patrols on the streets? Kill a unit as a rebel: about fifteen seconds later, does a reaction squad come running in from out of sight (not pop up next to you)? Does the Combine manpower readout mention the reaction force?
+  Notes:
+- [ ] **Reconnect grace:** as a rebel on an uneven server, disconnect and come back within 7 minutes: still a rebel? Later than that, with the Resistance full: a citizen, told why?
+  Notes:
+- [ ] **NPC cap:** on your 32-slot server nothing changes (100). The editor slider now says it is for a 32-slot server.
+  Notes:

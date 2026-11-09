@@ -1655,7 +1655,7 @@ LC.Spawners = SPAWNERS
 
 -- How many NPCs the city's settings want in all (lc_citizens, lc_cops and the rest).
 function LC.NPCTargetsTotal()
-    return (LC.CitizenTarget and LC.CitizenTarget() or 0) + cvCops:GetInt() + (LC.ExtraCops or 0) + cvSoldiers:GetInt() + cvScanners:GetInt()
+    return (LC.CitizenTarget and LC.CitizenTarget() or 0) + cvCops:GetInt() + (LC.ExtraCops or 0) + (LC.ImbalanceCops or 0) + cvSoldiers:GetInt() + cvScanners:GetInt()
         + (LC.ZombieTarget and LC.ZombieTarget() or 0) + (LC.RebelTarget and LC.RebelTarget() or 0)
 end
 
@@ -1669,6 +1669,19 @@ function LC.CitizenTarget()
     if LC.RhythmPopulation and n > 0 then n = math.max(2, math.floor(n * LC.RhythmPopulation() + 0.5)) end
     return n
 end
+
+-- The NPC cap now (the owner, 9 November: "can we have this scale with the max player count? 100 NPCs seems to be ok on our
+-- 32 man server"): lc_npc_budget is the cap for a 32-slot server, scaled by the server's max players (64 slots: twice), never
+-- below the setting, never above LC.NPCBudgetMost (250: past that the engine's AI starts to drag); plus the outnumbered side's
+-- extra (sv_livingcity_imbalance.lua) when there is one.
+LC.NPCBudgetSlots, LC.NPCBudgetMost = 32, 250
+function LC.NPCBudgetBase()
+    local base = cvBudget:GetInt()
+    local slots = (game and game.MaxPlayers and game.MaxPlayers()) or LC.NPCBudgetSlots
+    if slots <= LC.NPCBudgetSlots then return base end
+    return math.max(base, math.min(LC.NPCBudgetMost, math.floor(base * slots / LC.NPCBudgetSlots + 0.5)))
+end
+function LC.NPCBudget() return LC.NPCBudgetBase() + (LC.ImbalanceBudget or 0) end
 
 local function MaintainPopulation()
     local counts = {}
@@ -1686,26 +1699,26 @@ local function MaintainPopulation()
     LC.RoleCounts = counts
     local total = onEvent
     for _, c in pairs(counts) do total = total + c end
-    if total >= cvBudget:GetInt() then
+    if total >= LC.NPCBudget() then -- (scaled by the server's size, and more when one side's players far outnumber the other's)
         -- (the cap's lower than what the city's asking for: say so, now and then, or it just
         -- looks like Civil Protection and the citizens have stopped turning up)
         local want = LC.NPCTargetsTotal()
-        if want > cvBudget:GetInt() and CurTime() >= (LC.BudgetWarnAt or 0) and LC.Notice then
+        if want > LC.NPCBudget() and CurTime() >= (LC.BudgetWarnAt or 0) and LC.Notice then
             LC.BudgetWarnAt = CurTime() + 600
             for _, p in ipairs(player.GetAll()) do
                 if p:IsSuperAdmin() then
                     LC.Notice(p, "warn", "NPC cap", string.format("lc_npc_budget is %d, but the city's settings want %d NPCs: no more will spawn (units and citizens included). "
-                        .. "100 is the default: lc_npc_budget 100.", cvBudget:GetInt(), want), 14)
+                        .. "100 is the default: lc_npc_budget 100 (for a 32-slot server; it grows with more slots).", LC.NPCBudget(), want), 14)
                 end
             end
-            LC.Log("warn", string.format("lc_npc_budget (%d) is below what the city's settings want (%d): nothing more spawns", cvBudget:GetInt(), want))
+            LC.Log("warn", string.format("lc_npc_budget (%d here) is below what the city's settings want (%d): nothing more spawns", LC.NPCBudget(), want))
         end
         return
     end
 
     local targets = {
         citizen = LC.CitizenTarget(),
-        cop = cvCops:GetInt() + (LC.ExtraCops or 0),
+        cop = cvCops:GetInt() + (LC.ExtraCops or 0) + (LC.ImbalanceCops or 0),
         soldier = cvSoldiers:GetInt(),
         scanner = cvScanners:GetInt(),
         -- grown infestation brings more of them (sv_livingcity_territory.lua)
@@ -2979,7 +2992,7 @@ concommand.Add("lc_status", function(ply)
     local lines, beats = table.Count(LC.Lines), #PatrolGroups()
     Say(ply, string.format("%s | event %s", LC.Running and "running" or "stopped", LC.Event or "none"))
     Say(ply, string.format("citizens %d/%d, cops %d/%d, soldiers %d/%d, scanners %d/%d, zombies %d/%d, rebels %d/%d",
-        counts.citizen or 0, LC.CitizenTarget(), counts.cop or 0, cvCops:GetInt() + (LC.ExtraCops or 0),
+        counts.citizen or 0, LC.CitizenTarget(), counts.cop or 0, cvCops:GetInt() + (LC.ExtraCops or 0) + (LC.ImbalanceCops or 0),
         counts.soldier or 0, cvSoldiers:GetInt(), counts.scanner or 0, cvScanners:GetInt(),
         counts.zombie or 0, cvZombies:GetInt(), counts.rebel or 0, LC.RebelTarget and LC.RebelTarget() or 0))
     Say(ply, string.format("map nav %d (%s) | points %d | path nodes %d, links %d, unlinked %d | zones %d | lines %d | patrol beats %d",

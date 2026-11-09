@@ -377,6 +377,24 @@ end
 
 -- Returns ok, reason
 LC.SideRatio, LC.SideSlack = 2, 4
+-- A place on a side kept for someone who drops out (the owner, 9 November: "a grace period in case their computer reboots or their
+-- power flickers and they are disconnected for 5-7 ish minutes"): back within LC.SideGrace seconds, they're back on their side
+-- whatever the count; and for the first LC.SideGrace seconds after the map starts (a restart: everyone comes back at once).
+LC.SideGrace = 7 * 60
+LC.SideLeft = LC.SideLeft or {} -- [steamid64] = { side, t }
+local SIDE_OF_F = { resistance = "rebels", cp = "combine", ota = "combine" }
+hook.Add("PlayerDisconnected", "LivingCitySideGrace", function(ply)
+    local side = IsValid(ply) and SIDE_OF_F[ply:GetNW2String("lcf_faction", "")]
+    if side then LC.SideLeft[tostring(ply:SteamID64())] = { side = side, t = CurTime() } end
+end)
+-- The side someone's place is kept on, or nil.
+function LC.SideGraceFor(ply)
+    if not IsValid(ply) then return nil end
+    local left = LC.SideLeft[tostring(ply:SteamID64())]
+    if left and CurTime() - left.t <= LC.SideGrace then return left.side end
+    if CurTime() <= LC.SideGrace and ply.GetPData then return SIDE_OF_F[ply:GetPData("lcf_faction", "")] end
+    return nil
+end
 local SIDE_OF = { resistance = "rebels", cp = "combine", ota = "combine" }
 -- Players on each side now, not counting ply: rebels (the Resistance), combine (Civil Protection and Overwatch).
 function LC.SideCounts(ply)
@@ -391,7 +409,7 @@ end
 function LC.SidesEven(ply, fid)
     local side = SIDE_OF[fid]
     if not side or SIDE_OF[ply:GetNW2String("lcf_faction", "")] == side then return true end
-    if ply.GetPData and SIDE_OF[ply:GetPData("lcf_faction", "")] == side then return true end -- (coming back to the side they were on, after leaving the server: never kept out)
+    if LC.SideGraceFor(ply) == side then return true end -- (back within a few minutes of dropping out: their place kept)
     local n = LC.SideCounts(ply)
     local other = side == "rebels" and "combine" or "rebels"
     local most = n[other] * LC.SideRatio + LC.SideSlack
@@ -606,6 +624,11 @@ hook.Add("PlayerInitialSpawn", "LivingCityFactions", function(ply)
             f2, s2 = f0, s0 ~= "" and s0 or nil
         end
         local f = LCF.Get(f2)
+        local was = ply:GetPData("lcf_faction", "citizen")
+        if f2 ~= was and (was == "resistance" or was == "cp" or was == "ota") and LC.SidesEven then
+            local okS, whyS = LC.SidesEven(ply, was)
+            if not okS then Tell(ply, whyS .. " You're a citizen for now; join again from the faction menu (F4) when there's room. Your rank and experience are kept.") end
+        end
         if s2 and f and f.specialsById[s2] then
             Tell(ply, "Welcome back. You're still " .. f.specialsById[s2].name .. ".")
         elseif lost then
