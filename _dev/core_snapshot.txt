@@ -366,6 +366,7 @@ item paper
 item papers_blank
 item papers_dead
 item papers_forged
+item pasteup
 item permit
 item radio
 item radio_transmitter
@@ -923,6 +924,7 @@ setting lc_pamphlet = 1
 setting lc_papers_fee = 10
 setting lc_parade_min = 35
 setting lc_parade_units = 6
+setting lc_pasteup_max = 8
 setting lc_pathmap_spacing = 130
 setting lc_people_heights = 1
 setting lc_perfdebug_minutes = 30

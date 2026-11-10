@@ -732,6 +732,35 @@ local function Spray(ply)
     })
 end
 
+-- A Resistance paste-up from your pockets, onto a bare wall (the owner, 10 November). One of their four,
+-- not the same as the last one you put up. Anyone holding one can paste it: sympathisers too.
+local function Paste(ply)
+    local pos, normal = WallAhead(ply)
+    if not pos then return false, "Look at a wall, up close." end
+    if LC.PosterAt and LC.PosterAt(pos, 60) then return false, "There's a poster here already. A spray can would deal with it." end
+    return LC.StartTask(ply, 2.5, "Pasting it up... keep looking at the wall", {
+        maxMove = 30, cancelText = "You stop, and the paper curls off the wall.",
+        done = function(p)
+            if not LC.HangPoster or not LC.HasItem(p, "pasteup") then return end
+            local kinds = { "rebel_watch", "rebel_leash", "rebel_water", "rebel_home" }
+            local kind = kinds[math.random(#kinds)]
+            if kind == p.lcLastPaste then kind = kinds[(table.KeyFromValue(kinds, kind) % #kinds) + 1] end
+            local e, why = LC.HangPoster(p, kind, pos, normal, true)
+            if not e then p:ChatPrint(why or "It won't stick.") return end
+            p.lcLastPaste = kind
+            LC.TakeItem(p, "pasteup")
+            p:EmitSound("physics/cardboard/cardboard_box_impact_soft2.wav", 60, 110)
+            if LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then
+                LC.ReportCrime(p, "Vandalism", 90)
+                p:ChatPrint("[Civil Protection] A Civil Protection unit saw that.")
+            elseif IsResistance(p) and LC.AddXP then
+                LC.AddXP(p, 3, "graffiti")
+            end
+        end,
+    })
+end
+LC.PasteUp = Paste
+
 function LC.CleanTag(ply, tag)
     if IsResistance(ply) then return false, "Paint over our own? No." end
     return LC.StartTask(ply, 3, "Scrubbing it off...", {
@@ -782,6 +811,7 @@ function LC.ItemUse(ply, id)
     if it.use == "vice" and LC.ViceUse then return LC.ViceUse(ply, id) end -- cigarettes, alcohol, stimulants (sv_livingcity_vices.lua)
     if it.use == "foilhat" and LC.FoilHatUse then return LC.FoilHatUse(ply, id) end -- sv_livingcity_bedtime.lua
     if it.use == "spray" then return Spray(ply) end
+    if it.use == "pasteup" then return Paste(ply) end
     if it.use == "write" and LC.OpenWriter then return LC.OpenWriter(ply) end -- sv_livingcity_writing.lua
     if it.use == "papers" and LC.ShowPapers then return LC.ShowPapers(ply) end -- sv_livingcity_intake.lua
     if it.use == "pamphlet" and LC.ReadPamphlet then return LC.ReadPamphlet(ply) end -- sv_livingcity_pamphlet.lua

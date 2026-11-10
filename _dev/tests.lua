@@ -7591,6 +7591,18 @@ local paste = LC.HangPoster(hanger, "rebel_watch", LB + Vector(5000, 6400, 60), 
 ok(IsValid(paste) and not LC.DefacePoster(hanger, paste), "a Resistance member hangs one, and nobody paints over those")
 if IsValid(paste) then paste:Remove() end
 hanger:SetNW2String("lcf_faction", "")
+-- a paste-up from the black market: anyone holding one can put it up
+ok(LCS.Items.pasteup and LCS.Items.pasteup.use == "pasteup", "the paste-up is an item")
+local pasted = LC.HangPoster(hanger, "rebel_leash", LB + Vector(5000, 6800, 60), Vector(1, 0, 0), true)
+ok(IsValid(pasted) and pasted:GetNW2String("lc_notice", "") == "rebel_leash", "a paste-up from your pockets goes up, Resistance or not")
+-- only so many paste-ups in the city: one more and the oldest comes down; and not right beside another
+ok(not LC.HangPoster(hanger, "rebel_home", LB + Vector(5000, 6900, 60), Vector(1, 0, 0), true), "not right beside another paste-up")
+_setcvar("lc_pasteup_max", 2)
+local p2 = LC.HangPoster(hanger, "rebel_home", LB + Vector(5000, 7400, 60), Vector(1, 0, 0), true)
+local p3 = LC.HangPoster(hanger, "rebel_water", LB + Vector(5000, 8000, 60), Vector(1, 0, 0), true)
+ok(IsValid(p2) and IsValid(p3) and not IsValid(pasted), "over the limit, the oldest paste-up comes down")
+_setcvar("lc_pasteup_max", 8)
+for _, e in ipairs({ p2, p3 }) do if IsValid(e) then e:Remove() end end
 ok(LC.TakeDownPoster(hanger, cityPoster) and IsValid(cityPoster) and cityPoster.lcTornDown, "the roll takes the city's own posters down too: hidden until the map next starts")
 ok(not LC.TakeDownPoster(hanger, cityPoster), "one that's down can't be taken down again")
 local over = LC.HangPoster(hanger, "loyalty", cityPoster:GetPos(), Vector(1, 0, 0))

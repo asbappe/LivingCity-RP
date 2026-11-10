@@ -1339,3 +1339,9 @@ Notes:
   Notes:
 - [ ] **Paste-ups:** as a Resistance member holding a poster roll, reload: four Resistance posters are at the top of the list. Hang one. A citizen holding the roll does not see them.
   Notes:
+
+## 10 November: paste-ups
+- [ ] **Buying and pasting:** buy "Paste-ups (3)" from the black market dealer. Look at a bare wall up close and use one from your pockets: after a moment a Resistance poster is on the wall. Use another on a different street: a different poster.
+  Notes:
+- [ ] **The limits:** try to paste a second one near the first: refused ("There's one of ours close by already"). With `lc_pasteup_max 2`, paste a third somewhere else: the first one comes down.
+  Notes:
