@@ -194,6 +194,7 @@ function LC_CL.OpenDesk(t)
     else
     local W, H = math.min(ScrW() - 40, 640), math.min(ScrH() - 40, housing and 600 or 420)
     desk = vgui.Create("DFrame")
+    if LC_CL.SetTheme then LC_CL.SetTheme(desk, "combine") end -- (Civil Intake, Housing, Labor: the Combine's desks, whoever stands at them)
     desk:SetTitle("")
     desk:SetSize(W, H)
     desk:Center()

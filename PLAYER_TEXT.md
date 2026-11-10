@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version e746bd0. Admin-only console messages and log lines are left out.
+Made from version b557b7a. Admin-only console messages and log lines are left out.
 
 10136 lines, from 280 files.
 
@@ -1053,7 +1053,7 @@ Made from version e746bd0. Admin-only console messages and log lines are left ou
 - "The Director of Propaganda's poster roll: left click hangs the chosen poster on the wall in front of you, right click takes any poster down (the city's own return when the map next starts), reload chooses another (seventeen posters). Eleven of them only ever go up by hand: the city has them when its Director hangs them. They stay up until the map changes."  (text, line 270)
 - "A spray can used on one of the city's posters paints over it (the same risk as spraying a wall). Left click with a poster roll pastes a fresh sheet over the paint. In a Resistance member's hands a poster roll also has four of their own paste-ups on it."  (text, line 271)
 - "Resistance paste-ups (from the quartermaster, three for 20): use one from your pockets while looking at a bare wall, up close, and it goes up. Only a few can be up in the city at once: one more and the oldest comes down, and never two close together."  (text, line 272)
-- "Windows are drawn in your faction's style: black glass and cyan for Civil Protection and the Administration, rust and scrap plate for the Resistance, grey concrete for citizens. Being questioned looks the same whoever you are. To switch it off: lc_ui_theme 0 in the console."  (text, line 273)
+- "Windows are drawn in your faction's style: black glass and cyan for Civil Protection and the Administration, rust and scrap plate for the Resistance, grey concrete for citizens. The Combine's machines (the Commissary, Civil Intake, Housing, Labor) look like the Combine's whoever uses them, and the quartermaster's and the black market's wares come on rust and scrap whoever buys. Being questioned or searched looks the same whoever you are. Menus, the F1 and F2 lists and notices follow your side too. To switch it off: lc_ui_theme 0 in the console."  (text, line 273)
 - "Streetlights and loudspeakers break when shot or worn out: broken lights go dark, and nobody near a broken loudspeaker hears the PA. Maintenance and Radio Repair crews fix them."  (text, line 274)
 - "One data terminal gives half a chip (a fragment): hack a second, different terminal and the two fragments make a full data chip. The master terminal is the big prize: one download gives a master data core."  (text, line 275)
 - "A data chip: sell it to the black market dealer, take it to the lab and have the scientist Decode it (first on his list; marks every Civil Protection unit for five minutes), or Use it at a terminal to wipe your record."  (text, line 276)
@@ -1812,36 +1812,36 @@ Made from version e746bd0. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: build records
 
-- "Civil Protection: records terminal"  (window title, line 155)
-- "Search by name or CID (people not in the city too)"  (text, line 200)
+- "Civil Protection: records terminal"  (window title, line 156)
+- "Search by name or CID (people not in the city too)"  (text, line 201)
 
 > Note for you (not shown in game): BOLOs
 
-- "A BOLO on a description, not a record ('male, red jacket, northbound')"  (text, line 231)
-- "No BOLOs out."  (text, line 233)
+- "A BOLO on a description, not a record ('male, red jacket, northbound')"  (text, line 232)
+- "No BOLOs out."  (text, line 234)
 
 > Note for you (not shown in game): part of: build records
 
-- "%s%s / %s, %s, %d min left"  (message, line 242)
-- "BOLOs ({or})"  (text, line 250)
+- "%s%s / %s, %s, %d min left"  (message, line 243)
+- "BOLOs ({or})"  (text, line 251)
 
 > Note for you (not shown in game): requests
 
-- "No requests."  (text, line 255)
-- "Requests ({or})"  (text, line 260)
+- "No requests."  (text, line 256)
+- "Requests ({or})"  (text, line 261)
 
 > Note for you (not shown in game): manpower (sv_livingcity_manpower.lua): the same lines as the unit tools and F2 > Combine manpower (the owner, 7 November)
 
-- "The reserve, and what's been lost"  (text, line 267)
+- "The reserve, and what's been lost"  (text, line 268)
 
 > Note for you (not shown in game): part of: open voice menu
 
-- "Voice (or type the words, or /vo <word>)"  (window title, line 292)
+- "Voice (or type the words, or /vo <word>)"  (window title, line 293)
 
 > Note for you (not shown in game): on screen
 
-- "!struggle to work at the cuffs when nobody's looking"  (text, line 408)
-- "HANDS UP  (!handsup to lower them)"  (text, line 410)
+- "!struggle to work at the cuffs when nobody's looking"  (text, line 409)
+- "HANDS UP  (!handsup to lower them)"  (text, line 411)
 
 ## cl_livingcity_dialog.lua (cl_livingcity_dialog.lua)
 
@@ -2431,40 +2431,40 @@ Made from version e746bd0. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: paint
 
-- "citizen {or}"  (drawn on screen, line 206)
+- "citizen {or}"  (drawn on screen, line 207)
 
 > Note for you (not shown in game): part of: open desk
 
-- "Housing: {or}"  (text, line 243)
-- "Identity papers: {or}"  (text, line 244)
-- "Ration cards: %d (you earn one for each Union shift you finish)"  (message, line 245)
-- "Replace my identity papers (%d credits)"  (message, line 248)
-- "Civil Protection units ask to see them, and Housing Allocation needs them to give you a room"  (button, line 249)
-- "Your papers are in order."  (text, line 251)
-- "You have no Union work yet. Labor Assignment gives you some{or}"  (text, line 254)
-- "Show me the way to Labor Assignment"  (text, line 255)
-- "You have no room yet. Housing Allocation gives you one."  (text, line 258)
-- "Show me the way to Housing Allocation"  (text, line 259)
-- "Show me the way home"  (text, line 261)
-- "You're not registered yet. Register at Civil Intake first, then come back here with your papers."  (text, line 265)
-- "Show me the way to Civil Intake"  (text, line 266)
-- "The city only houses its workers. Go to Labor Assignment for your Union work first, then come back here with your papers."  (text, line 269)
-- "Show me the way to Labor Assignment"  (text, line 270)
-- "Show your papers and pick a block. "Any block" is approved at once and gives you the least crowded one. A crowded block needs Civil Standing {or} or more. Yours is {or}."  (text, line 273)
-- "Papers: {or}"  (text, line 275)
-- "Any block (approved at once)"  (button, line 276)
-- "Ask for %s   (%d live there%s%s)"  (message, line 281)
-- "This city has no housing blocks."  (text, line 284)
-- "Show me the way home"  (text, line 288)
-- "Move to another block (once every half hour). A crowded block needs Civil Standing {or}."  (text, line 291)
-- "Move to %s   (%d live there%s)"  (message, line 294)
-- "You need your papers to apply, and you have none on you."  (text, line 298)
-- "Not now."  (text, line 300)
-- "citizen {or}"  (text, line 304)
+- "Housing: {or}"  (text, line 244)
+- "Identity papers: {or}"  (text, line 245)
+- "Ration cards: %d (you earn one for each Union shift you finish)"  (message, line 246)
+- "Replace my identity papers (%d credits)"  (message, line 249)
+- "Civil Protection units ask to see them, and Housing Allocation needs them to give you a room"  (button, line 250)
+- "Your papers are in order."  (text, line 252)
+- "You have no Union work yet. Labor Assignment gives you some{or}"  (text, line 255)
+- "Show me the way to Labor Assignment"  (text, line 256)
+- "You have no room yet. Housing Allocation gives you one."  (text, line 259)
+- "Show me the way to Housing Allocation"  (text, line 260)
+- "Show me the way home"  (text, line 262)
+- "You're not registered yet. Register at Civil Intake first, then come back here with your papers."  (text, line 266)
+- "Show me the way to Civil Intake"  (text, line 267)
+- "The city only houses its workers. Go to Labor Assignment for your Union work first, then come back here with your papers."  (text, line 270)
+- "Show me the way to Labor Assignment"  (text, line 271)
+- "Show your papers and pick a block. "Any block" is approved at once and gives you the least crowded one. A crowded block needs Civil Standing {or} or more. Yours is {or}."  (text, line 274)
+- "Papers: {or}"  (text, line 276)
+- "Any block (approved at once)"  (button, line 277)
+- "Ask for %s   (%d live there%s%s)"  (message, line 282)
+- "This city has no housing blocks."  (text, line 285)
+- "Show me the way home"  (text, line 289)
+- "Move to another block (once every half hour). A crowded block needs Civil Standing {or}."  (text, line 292)
+- "Move to %s   (%d live there%s)"  (message, line 295)
+- "You need your papers to apply, and you have none on you."  (text, line 299)
+- "Not now."  (text, line 301)
+- "citizen {or}"  (text, line 305)
 
 > Note for you (not shown in game): on screen
 
-- "Shown to you by the person in front of you"  (drawn on screen, line 368)
+- "Shown to you by the person in front of you"  (drawn on screen, line 369)
 
 ## cl_livingcity_intaketutor.lua (cl_livingcity_intaketutor.lua)
 
@@ -2482,59 +2482,59 @@ Made from version e746bd0. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: paint
 
 - "No answer in {left}s: just searched."  (drawn on screen, line 87)
-- "Arrival search (lesson)"  (drawn on screen, line 114)
-- "Arrival search"  (drawn on screen, line 114)
-- "Stand still."  (drawn on screen, line 115)
-- "not yet"  (text, line 118)
-- "being checked"  (text, line 119)
-- "checked: found"  (text, line 119)
-- "(nothing of yours)"  (drawn on screen, line 126)
-- "You've tried your one move."  (spoken line, line 130)
-- ": slip something into a checked spot (once)"  (text, line 131)
-- ": once a spot is checked, slip something into it"  (text, line 132)
+- "Arrival search (lesson)"  (drawn on screen, line 115)
+- "Arrival search"  (drawn on screen, line 115)
+- "Stand still."  (drawn on screen, line 116)
+- "not yet"  (text, line 119)
+- "being checked"  (text, line 120)
+- "checked: found"  (text, line 120)
+- "(nothing of yours)"  (drawn on screen, line 127)
+- "You've tried your one move."  (spoken line, line 131)
+- ": slip something into a checked spot (once)"  (text, line 132)
+- ": once a spot is checked, slip something into it"  (text, line 133)
 
 > Note for you (not shown in game): Practice: you search a pretend citizen (all on your screen)
 
-- "Ration card"  (text, line 155)
-- "Identity papers"  (text, line 155)
-- "Cigarettes (Union)"  (text, line 155)
-- "Pirate radio part"  (text, line 156)
-- "Forged ration card"  (text, line 156)
-- "Resistance pamphlet"  (text, line 156)
-- "Pistol rounds"  (text, line 157)
+- "Ration card"  (text, line 156)
+- "Identity papers"  (text, line 156)
+- "Cigarettes (Union)"  (text, line 156)
+- "Pirate radio part"  (text, line 157)
+- "Forged ration card"  (text, line 157)
+- "Resistance pamphlet"  (text, line 157)
+- "Pistol rounds"  (text, line 158)
 
 > Note for you (not shown in game): part of: build practice
 
-- "Practice: search a pretend citizen"  (window title, line 179)
-- "You're the unit now. Click a spot to check it (a second each). Contraband is what you're after; ordinary things are left alone. They may try to slip something into a spot you've already checked."  (text, line 187)
+- "Practice: search a pretend citizen"  (window title, line 180)
+- "You're the unit now. Click a spot to check it (a second each). Contraband is what you're after; ordinary things are left alone. They may try to slip something into a spot you've already checked."  (text, line 188)
 
 > Note for you (not shown in game): part of: paint
 
-- "They tried to move something. You felt it."  (drawn on screen, line 194)
-- "You found %d of %d pieces of contraband."  (message, line 197)
-- "They slipped {hidden} into a spot you'd already checked."  (drawn on screen, line 199)
-- "Searching a pretend citizen"  (drawn on screen, line 213)
+- "They tried to move something. You felt it."  (drawn on screen, line 195)
+- "You found %d of %d pieces of contraband."  (message, line 198)
+- "They slipped {hidden} into a spot you'd already checked."  (drawn on screen, line 200)
+- "Searching a pretend citizen"  (drawn on screen, line 214)
 
 > Note for you (not shown in game): part of: finish
 
-- "+ {it} (they tried to move it)"  (text, line 246)
+- "+ {it} (they tried to move it)"  (text, line 247)
 
 > Note for you (not shown in game): The lesson's last page
 
-- "How searches work in the city:"  (text, line 293)
-- "- A unit (a player or one of the city's) checks your Jacket, Waist, Legs and Boots. What he finds that's contraband is taken, and that costs standing; guns and worse are a crime."  (text, line 294)
-- "- Once per search you may press R to slip one thing into a spot already checked. It works 6 times in 10."  (text, line 295)
-- "- Walking away from a search is Evading a search: you're wanted."  (text, line 296)
-- "- When one of the city's units finds something, you get five seconds: COMPLY (it's taken) or FIGHT (you keep it, and you're resisting)."  (text, line 297)
-- "- Keep what you can't afford to lose in your stash at home, not in your pockets."  (text, line 298)
-- "- Model citizens are often waved through without a search."  (text, line 299)
+- "How searches work in the city:"  (text, line 294)
+- "- A unit (a player or one of the city's) checks your Jacket, Waist, Legs and Boots. What he finds that's contraband is taken, and that costs standing; guns and worse are a crime."  (text, line 295)
+- "- Once per search you may press R to slip one thing into a spot already checked. It works 6 times in 10."  (text, line 296)
+- "- Walking away from a search is Evading a search: you're wanted."  (text, line 297)
+- "- When one of the city's units finds something, you get five seconds: COMPLY (it's taken) or FIGHT (you keep it, and you're resisting)."  (text, line 298)
+- "- Keep what you can't afford to lose in your stash at home, not in your pockets."  (text, line 299)
+- "- Model citizens are often waved through without a search."  (text, line 300)
 
 > Note for you (not shown in game): part of: build done
 
-- "Searches: what you've learned"  (window title, line 307)
-- "Got it"  (button, line 316)
-- "Try the other side: search someone (practice)"  (button, line 320)
-- "Taken from you just now: {found}. A warning this once."  (text, line 334)
+- "Searches: what you've learned"  (window title, line 308)
+- "Got it"  (button, line 317)
+- "Try the other side: search someone (practice)"  (button, line 321)
+- "Taken from you just now: {found}. A warning this once."  (text, line 335)
 
 ## cl_livingcity_interrogation.lua (cl_livingcity_interrogation.lua)
 
@@ -2639,31 +2639,31 @@ Made from version e746bd0. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: open lab
 
-- "He's busy with someone else's work for another %d seconds."  (message, line 57)
-- "Bring him the materials and he makes it for nothing, or pay him for it (cheaper than the dealer). Stay in the lab while he works."  (label or button, line 58)
-- "Decode it"  (label or button, line 74)
+- "He's busy with someone else's work for another %d seconds."  (message, line 58)
+- "Bring him the materials and he makes it for nothing, or pay him for it (cheaper than the dealer). Stay in the lab while he works."  (label or button, line 59)
+- "Decode it"  (label or button, line 75)
 
 > Note for you (not shown in game): part of: paint
 
-- "A new face (%d credits)"  (message, line 89)
-- "Twenty seconds under. Nobody's looking for the face you wake with: wanted, BOLOs and"  (drawn on screen, line 90)
-- "photos gone, and the records can't put your old name (or your standing) to it."  (drawn on screen, line 91)
+- "A new face (%d credits)"  (message, line 90)
+- "Twenty seconds under. Nobody's looking for the face you wake with: wanted, BOLOs and"  (drawn on screen, line 91)
+- "photos gone, and the records can't put your old name (or your standing) to it."  (drawn on screen, line 92)
 
 > Note for you (not shown in game): part of: open lab
 
-- "Change it"  (label or button, line 97)
-- "Special one-time tools, and the codes to shut it down without frying your head. No more dreams, ever; but a unit's scanner may notice there's no implant signal."  (label or button, line 115)
+- "Change it"  (label or button, line 98)
+- "Special one-time tools, and the codes to shut it down without frying your head. No more dreams, ever; but a unit's scanner may notice there's no implant signal."  (label or button, line 116)
 
 > Note for you (not shown in game): part of: paint
 
-- "Pull the chip (%d credits)"  (message, line 120)
-- "Thirty seconds under. The Combine's implant comes out, and with it the city's dreams."  (drawn on screen, line 121)
+- "Pull the chip (%d credits)"  (message, line 121)
+- "Thirty seconds under. The Combine's implant comes out, and with it the city's dreams."  (drawn on screen, line 122)
 
 > Note for you (not shown in game): part of: open lab
 
-- "Pull it"  (label or button, line 127)
-- "Pay {or} credits"  (label or button, line 168)
-- "Use my materials"  (label or button, line 175)
+- "Pull it"  (label or button, line 128)
+- "Pay {or} credits"  (label or button, line 169)
+- "Use my materials"  (label or button, line 176)
 
 ## cl_livingcity_labor.lua (cl_livingcity_labor.lua)
 
@@ -2874,12 +2874,12 @@ Made from version e746bd0. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: open market admin
 
-- "The Commissary and the market"  (window title, line 108)
-- "The market is switched off on this server (lc_market 0). Prices are as fixed."  (label or button, line 114)
-- "The Commissary"  (text, line 124)
-- "The market"  (text, line 125)
+- "The Commissary and the market"  (window title, line 109)
+- "The market is switched off on this server (lc_market 0). Prices are as fixed."  (label or button, line 115)
+- "The Commissary"  (text, line 125)
 - "The market"  (text, line 126)
-- "The market"  (text, line 126)
+- "The market"  (text, line 127)
+- "The market"  (text, line 127)
 
 ## cl_livingcity_moregames.lua (cl_livingcity_moregames.lua)
 
@@ -3145,18 +3145,18 @@ Made from version e746bd0. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game answering something done in a window (lcu_market)
 
-- "He sells nothing to strangers. But he'll buy arms and what the fight needs, or take them as a gift."  (label or button, line 898)
-- "He sells nothing to strangers. Bring him guns, ammunition, gun parts, scrap, rags or chemicals and he'll buy them, or take them as a gift."  (label or button, line 898)
-- "Sell for {price}"  (text, line 918)
+- "He sells nothing to strangers. But he'll buy arms and what the fight needs, or take them as a gift."  (label or button, line 900)
+- "He sells nothing to strangers. Bring him guns, ammunition, gun parts, scrap, rags or chemicals and he'll buy them, or take them as a gift."  (label or button, line 900)
+- "Sell for {price}"  (text, line 920)
 
 > Note for you (not shown in game): (giving it for the cause: no credits, and, for someone not of the Resistance, their sympathy)
 
-- "give one to the cause"  (text, line 926)
-- "Sell all for {n}"  (text, line 933)
+- "give one to the cause"  (text, line 928)
+- "Sell all for {n}"  (text, line 935)
 
 > Note for you (not shown in game): on screen
 
-- "Out of breath"  (drawn on screen, line 980)
+- "Out of breath"  (drawn on screen, line 982)
 
 ## cl_livingcity_nextstep.lua (cl_livingcity_nextstep.lua)
 
@@ -3253,11 +3253,11 @@ Made from version e746bd0. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: draw cards
 
-- "+{cards} more"  (drawn on screen, line 233)
+- "+{cards} more"  (drawn on screen, line 241)
 
 > Note for you (not shown in game): part of: draw waypoint
 
-- "You're here: {label}."  (on-screen notice, line 315)
+- "You're here: {label}."  (on-screen notice, line 323)
 
 ## cl_livingcity_outfits.lua (cl_livingcity_outfits.lua)
 
@@ -3299,14 +3299,14 @@ Made from version e746bd0. Admin-only console messages and log lines are left ou
 
 - "Click a spot to check it. Spots you skip keep what's in them."  (drawn on screen, line 70)
 - "Searching {or}"  (drawn on screen, line 83)
-- "Searched by {or}"  (drawn on screen, line 132)
-- "Stand still."  (drawn on screen, line 133)
-- "not yet"  (text, line 136)
-- "being checked"  (text, line 137)
-- "(nothing of yours)"  (drawn on screen, line 140)
-- "You've tried your one move."  (spoken line, line 144)
-- ": slip something into a checked spot (once)"  (text, line 145)
-- ": once a spot is checked, slip something into it"  (text, line 146)
+- "Searched by {or}"  (drawn on screen, line 133)
+- "Stand still."  (drawn on screen, line 134)
+- "not yet"  (text, line 137)
+- "being checked"  (text, line 138)
+- "(nothing of yours)"  (drawn on screen, line 141)
+- "You've tried your one move."  (spoken line, line 145)
+- ": slip something into a checked spot (once)"  (text, line 146)
+- ": once a spot is checked, slip something into it"  (text, line 147)
 
 ## cl_livingcity_perfdebug.lua (cl_livingcity_perfdebug.lua)
 
@@ -3830,8 +3830,8 @@ Made from version e746bd0. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): on screen
 
-- "+menu_context"  (text, line 899)
-- ": the full menu"  (drawn on screen, line 900)
+- "+menu_context"  (text, line 904)
+- ": the full menu"  (drawn on screen, line 905)
 
 ## apartment doors (client) (cl_livingcity_rent.lua)
 
@@ -3953,7 +3953,7 @@ Made from version e746bd0. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): drawn in the world
 
-- "Aim at a button and press E"  (drawn on screen, line 179)
+- "Aim at a button and press E"  (drawn on screen, line 206)
 
 ## cl_livingcity_slots.lua (cl_livingcity_slots.lua)
 
@@ -4118,13 +4118,13 @@ Made from version e746bd0. Admin-only console messages and log lines are left ou
 `gamemodes/livingcity/gamemode/modules/client/cl_livingcity_theme.lua`
 
 
-> Note for you (not shown in game): The Derma skin: the default one, with windows, buttons, combo boxes and scroll bars repainted
+> Note for you (not shown in game): The Derma skin: the default one, with windows, buttons, combo boxes, scroll bars and menus repainted
 
-- "Living City"  (name, line 198)
+- "Living City"  (name, line 243)
 
 > Note for you (not shown in game): part of: define skin
 
-- "Living City: windows in your faction's style"  (text, line 214)
+- "Living City: windows in your faction's style"  (text, line 276)
 
 ## cl_livingcity_unittools.lua (cl_livingcity_unittools.lua)
 

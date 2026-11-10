@@ -877,8 +877,13 @@ hook.Add("HUDPaint", "LivingCityQuick", function()
     local accent = page.accent or ACCENT.default
     local W, H = 380, 34 + 9 * 26 + 26
     local x, y = 24, math.floor(ScrH() * 0.5 - H / 2)
-    draw.RoundedBox(4, x, y, W, H, BG)
-    draw.RoundedBox(4, x, y, W, 30, HEAD)
+    -- (your side's look behind it: cl_livingcity_theme.lua; as it was with lc_ui_theme 0)
+    if LC_CL.ThemeOn and LC_CL.ThemeOn() and LC_CL.PaintThemePanel then
+        LC_CL.PaintThemePanel(x, y, W, H, 30)
+    else
+        draw.RoundedBox(4, x, y, W, H, BG)
+        draw.RoundedBox(4, x, y, W, 30, HEAD)
+    end
     draw.RoundedBox(0, x, y + 28, W, 2, accent)
     draw.SimpleText(page.title or "", "LCQuickTitle", x + 12, y + 15, accent, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     for i = 1, 9 do

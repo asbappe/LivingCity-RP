@@ -101,6 +101,7 @@ local function BuildState()
     local BG, CARD, INK, DIM, ACC, GOOD, BAD = Look()
     local p = vgui.Create("DPanel")
     statePanel = p
+    if LC_CL.ThemeWindow then LC_CL.SetTheme(p, "combine") LC_CL.ThemeWindow(p, "DPanel") end
     p:SetSize(300, 330)
     p:SetMouseInputEnabled(false) -- (it only shows; the key is R)
     p:SetPos(ScrW() - 320, math.floor(ScrH() * 0.25))
