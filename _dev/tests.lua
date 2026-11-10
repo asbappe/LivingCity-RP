@@ -10825,6 +10825,15 @@ LC.CPShift(unit).startT = CurTime() - 31 * 60
 LC.CPDutyTick()
 rv = util.JSONToTable(unit:GetPData("lc_cp_reviews", "") or "") or {}
 ok(rv[1].grade == "D" and #rv == 2, "nothing done: grade D, and the reviews are kept")
+-- report in early, and a break if wanted
+local s2 = LC.CPShift(unit)
+local okE, whyE = LC.CPReportIn(unit)
+ok(not okE and string.find(whyE or "", "Finish the checklist", 1, true), "reporting in early needs the checklist done", whyE)
+s2.searches, s2.papers, s2.inspections = 3, 1, 1
+ok(LC.CPReportIn(unit) and LC.CPShift(unit) ~= s2 and LC.CPShift(unit).searches == 0, "checklist done: report in now, reviewed at once, and the next shift starts (no waiting out the clock)")
+ok(LC.CPBreak(unit) and LC.CPShift(unit) == nil and unit:GetNW2Bool("lc_offduty", false), "a break, if they want one: no shift until they're back")
+ok(LC.CPBreak(unit) and LC.CPShift(unit) ~= nil, "back on duty: a new shift")
+
 if LC.Prisoners[cit] then LC.ReleasePrisoner(cit) end
 unit:RemovePData("lc_cp_reviews")
 LC.RemoveZone(bz)
