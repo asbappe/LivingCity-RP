@@ -190,6 +190,7 @@ LC_MODULES = {
         "sv_livingcity_opplan", -- (the Resistance plans its own operations; the Combine puts prices on heads)
         "sv_livingcity_ledger", -- (the state of the city, day to day: five numbers, districts with an owner, the bulletin, her levers)
         "sv_livingcity_ledger2", -- (what the districts and numbers do on the streets: checkpoints, ambushes, prices; and the acts)
+        "sv_livingcity_smallserver", -- (small-server mode: with few players, the city carries more of the story)
         "sv_livingcity_vort",
         "sv_livingcity_vortwork", -- (things to do as a vortigaunt, and the freed ones' camp life)
         "sv_livingcity_weeds", -- (weeds on open ground, the Groundskeeper, weedkiller as poison)
