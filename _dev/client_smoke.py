@@ -872,6 +872,13 @@ do
         if root.items[2] and root.items[2].label ~= "Put my hands up" and root.items[2].label ~= "Lower my hands" then
             problems[#problems + 1] = "F1 for " .. faction .. ": 2 should be hands up (the hints say so), is " .. tostring(root.items[2].label)
         end
+        -- (the owner, 10 November: F1 > 6 > Out of character > 1 Nearby, 2 Server-wide)
+        local oo = root.items[6]
+        local ooPage = oo and oo.page and oo.page()
+        if not (oo and oo.label == "Out of character" and ooPage and ooPage.items[1] and ooPage.items[1].label == "Nearby..."
+            and ooPage.items[2] and ooPage.items[2].label == "Server-wide...") then
+            problems[#problems + 1] = "F1 for " .. faction .. ": 6 should be Out of character (1 Nearby, 2 Server-wide), is " .. tostring(oo and oo.label)
+        end
         local okQ2, root2 = pcall(LC_CL.QuickRoleRoot)
         if not okQ2 then problems[#problems + 1] = "F2 for " .. faction .. ": " .. tostring(root2) return end
         if not root2.items[9] then problems[#problems + 1] = "F2 for " .. faction .. " has no 9 (the full menu)" end

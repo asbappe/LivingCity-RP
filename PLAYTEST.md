@@ -1184,3 +1184,7 @@ Notes:
   Notes:
 - [ ] **Out of character on F1:** F1, item 6 "Out of character...": type, Nearby or Everyone; Enter sends nearby.
   Notes:
+- [ ] **Her desk, found by itself:** with the transformer placed within 100 feet of the office desk (even a desk that is part of the map), and no desk point: "Her last stand now" puts her beside that desk. If she lands somewhere else, place the desk point on or beside the desk and try again; tell me which desk model the map uses.
+  Notes:
+- [ ] **F1 > 6:** "Out of character", then 1 Nearby or 2 Server-wide.
+  Notes:

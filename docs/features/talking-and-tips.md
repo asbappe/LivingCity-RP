@@ -44,4 +44,4 @@ So nobody has to read all this first, the game explains itself as it happens. Th
 
 **Team chat (the owner, 9 November: "a U chat that is team only", as in TF2 or Counter-Strike).** U, the game's own team chat key, reaches only your own side, wherever they are: Civil Protection, Overwatch and the Administrator together; the Resistance and free vortigaunts together; citizens; the infested; stalkers on their own. It shows as "(Team)" in chat. Ordinary chat (Y) is unchanged.
 
-**Out of character from F1 (the owner, 10 November: "on the main F1 branch, not hidden under submenus").** F1's sixth item is "Out of character...", right after My pockets: a box to type in, then Nearby (/looc) or Everyone (//). Enter sends it nearby. The two Talk entries are still there too.
+**Out of character from F1 (the owner, 10 November: "F1 > 6 > Out of character > 1. Nearby or 2. Server-wide").** F1's sixth item, right after My pockets, is the "Out of character" page: 1 Nearby (/looc), 2 Server-wide (//), each asking what to say. The two Talk entries are still there too.

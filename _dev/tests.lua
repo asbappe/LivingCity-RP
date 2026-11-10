@@ -23403,6 +23403,40 @@ ok(okS and IsValid(CS.boss) and CS.boss.lcCollapseBoss, "no player as the Admini
 ok(CS.power == placed and CS.boss:GetPos():Distance(placed:GetPos()) < 400, "the fight is where her transformer is", tostring(CS.boss:GetPos()))
 CS.boss:SetPos(Vector(-60000, -40000, 0))
 ok(not LC.CollapseShieldUp(), "out of its reach (100 feet), her shield doesn't hold")
+LC.CollapseTest("off")
+-- the map's own desk, even a static prop (the owner, 10 November): read from the map file's static props
+do
+    local ffi = require("ffi")
+    local function I32(n) n = n % 4294967296 return string.char(n % 256, math.floor(n / 256) % 256, math.floor(n / 65536) % 256, math.floor(n / 16777216) % 256) end
+    local function I16(n) n = n % 65536 return string.char(n % 256, math.floor(n / 256)) end
+    local function F32(x) local b = ffi.new("float[1]", x) return ffi.string(b, 4) end
+    local function Name(n) return n .. string.rep("\0", 128 - #n) end
+    local function Prop(x, y, z, mi) return F32(x) .. F32(y) .. F32(z) .. F32(0) .. F32(90) .. F32(0) .. I16(mi) .. string.rep("\0", 64 - 26) end
+    -- the static props: two models, three props (a chair, Breen's desk near the transformer, a desk far away)
+    local sprp = I32(2) .. Name("models/props_c17/chair02a.mdl") .. Name("models/props_combine/breenDesk.mdl") .. I32(1) .. I16(0) .. I32(3)
+        .. Prop(-60100, -60000, 0, 0) .. Prop(-60300, -60000, 0, 1) .. Prop(10000, 10000, 0, 1)
+    local headerLen = 8 + 64 * 16
+    local glumpOfs = headerLen
+    local glump = I32(1) .. I32(1936749168) .. I16(0) .. I16(10) .. I32(glumpOfs + 4 + 16) .. I32(#sprp)
+    local lumps = {}
+    for i = 0, 63 do lumps[#lumps + 1] = (i == 35) and (I32(glumpOfs) .. I32(#glump + #sprp) .. I32(0) .. I32(0)) or string.rep("\0", 16) end
+    _files["maps/rp_test.bsp"] = "VBSP" .. I32(20) .. table.concat(lumps) .. glump .. sprp
+    local props = LC.ReadStaticProps("maps/rp_test.bsp")
+    ok(#props == 3 and props[2].model == "models/props_combine/breendesk.mdl" and math.abs(props[2].pos.x + 60300) < 0.01, "the map file's static props are read: models and places", #props)
+    local desks = LC.DesksNear(Vector(-60000, -60000, 0), 1280)
+    ok(#desks == 1 and string.find(desks[1].model, "breendesk", 1, true), "a desk within 100 feet of her transformer is found (not the chair, not the far one)", #desks)
+    local power2 = ents.Create("lc_adminpower")
+    power2:SetPos(Vector(-60000, -60000, 0)) power2:Spawn()
+    LC.CollapseTest("stand")
+    local at = IsValid(CS.boss) and CS.boss:GetPos()
+    ok(at and CS.deskFrom and string.find(CS.deskFrom, "breendesk", 1, true) and at:Distance(Vector(-60300, -60000, 0)) < 110, "she makes her stand beside the map's own desk", tostring(at))
+    LC.CollapseTest("off")
+    power2:Remove()
+    _files["maps/rp_test.bsp"] = nil
+end
+CS.cooldownUntil = 0
+LC.CollapseTest("stand")
+local ownBoss = CS.boss
 -- time runs out with no heroes: Overwatch crushes it
 _setcvar("lc_black_heroes", 0)
 CS.standUntil = CurTime()

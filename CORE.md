@@ -62,7 +62,7 @@ Things players and the owner rely on that were settled in conversation:
 
 - **The keys (approved 7 November):** F1 the quick menu (what everyone can do), F2 the same for your side, rank and job, F3 your pockets, F4 Jobs, Career and Factions as tabs.
 - **Everything works through the in-game UI.** Console commands are extras for admins, never the only way. Important messages go through `LC.Notice`.
-- **Out of character from F1 (asked for 10 November):** F1's sixth item, "Out of character...", right after My pockets: type, then Nearby (/looc) or Everyone (//).
+- **Out of character from F1 (asked for 10 November):** F1 > 6 "Out of character" > 1 Nearby (/looc), 2 Server-wide (//).
 - **The keys, chat (approved 9 November):** U is team chat (the game's own team chat key): only your own side reads it (Civil Protection, Overwatch and the Administrator; the Resistance and free vortigaunts; citizens; the infested; stalkers), marked "(Team)".
 - **Overwatch's voice (approved 9 November):** only the server's own recordings; Half-Life 2's Overwatch lines are silent where there's none (`lc_announce_stock` 0; the banner and words still show).
 - **The collapse (asked for 9 November):** long red fills the city's chaos; full, sociostability goes BLACK (never set by hand), the G-Man, in person in front of the Administrator, offers her to step down or end it (walking away from him is refusing), and if she refuses he hastens her end to a last stand where her transformer is (editor: "desk" and "adminpower"; her shield deflects every bullet till it's destroyed), with Barney and then Gordon Freeman played by players of the rebellion (`docs/features/collapse.md`). His lines: `GMAN_SOUNDS.md`.

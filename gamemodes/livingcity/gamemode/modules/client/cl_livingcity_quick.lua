@@ -52,38 +52,6 @@ local function Say(title, prompt, prefix)
         if text ~= "" then RunConsoleCommand("say", prefix .. text) end
     end)
 end
--- Out of character, straight from F1 (the owner, 10 November: "on the main F1 branch, not hidden under
--- submenus"): type it, then say it to the people nearby (/looc) or to everyone (//).
-function LC_CL.OOCPrompt()
-    if IsValid(LC_CL.OOCFrame) then LC_CL.OOCFrame:Remove() end
-    local f = vgui.Create("DFrame")
-    LC_CL.OOCFrame = f
-    f:SetTitle("Out of character")
-    f:SetSize(420, 130)
-    f:Center()
-    f:MakePopup()
-    local e = vgui.Create("DTextEntry", f)
-    e:SetPos(12, 34)
-    e:SetSize(396, 26)
-    e:SetPlaceholderText("Not your character speaking: questions, rules, \"brb\"...")
-    e:RequestFocus()
-    local function Go(prefix)
-        local text = string.Trim(e:GetValue() or "")
-        if text ~= "" then RunConsoleCommand("say", prefix .. text) end
-        f:Remove()
-    end
-    local near = vgui.Create("DButton", f)
-    near:SetText("Nearby (/looc)")
-    near:SetPos(12, 72) near:SetSize(194, 44)
-    near.DoClick = function() Go("/looc ") end
-    local all = vgui.Create("DButton", f)
-    all:SetText("Everyone (//)")
-    all:SetPos(214, 72) all:SetSize(194, 44)
-    all.DoClick = function() Go("// ") end
-    e.OnEnter = function() Go("/looc ") end -- (Enter: nearby, the quieter one)
-    return f
-end
-
 local function Title(s) return string.upper(string.sub(s, 1, 1)) .. string.sub(s, 2) end
 
 local function Item(label, run) return { label = label, run = run } end
@@ -105,6 +73,15 @@ local function TalkPage()
         Item("Out of character, nearby...", function() Say("Out of character", "Said out of character, to people nearby", "/looc ") end),
         Item("Out of character, everyone...", function() Say("Out of character", "Said out of character, to the whole server", "// ") end),
         Item("Tell everyone nearby my name", function() Send("recognize", "all") end),
+    } }
+end
+
+-- Out of character, on F1's main page (the owner, 10 November: "F1 > 6 > Out of character > 1. Nearby or
+-- 2. Server-wide")
+local function OOCPage()
+    return { title = "OUT OF CHARACTER", items = {
+        Item("Nearby...", function() Say("Out of character, nearby", "Not your character speaking, to the people near you", "/looc ") end),
+        Item("Server-wide...", function() Say("Out of character, server-wide", "Not your character speaking, to the whole server", "// ") end),
     } }
 end
 
@@ -509,7 +486,7 @@ function LC_CL.QuickRoot()
         Item("My papers", function() Send("papers") end),
         Page("Talk", TalkPage),
         Item("My pockets (F3)", function() RunConsoleCommand("gm_showspare1") end),
-        Item("Out of character...", function() LC_CL.OOCPrompt() end),
+        Page("Out of character", OOCPage),
     }
     local usual = { Page("Pose", PosePage), Page("Gesture", GesturePage), Item("Jobs, career, factions (F4)", function() Hub("jobs") end) }
     -- after the fixed slots, up to 8: what's in front of you first, then your usual ones

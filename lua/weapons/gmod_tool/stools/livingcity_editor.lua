@@ -42,7 +42,7 @@ local MODES = {
     { id = "sspawn",      label = "Point: scanner launch spot (where flown scanners go up)" },
     { id = "platform",    label = "Point: train platform (trains stop here: new arrivals, people leaving the city)" },
     { id = "arrival",     label = "Point: arrival (where new people step into the city, before Civil Intake; place it from the way they should face, Civil Intake say)" },
-    { id = "desk",        label = "Her last stand: the Administrator's desk (where she stands when the city collapses to BLACK; within 100 feet of her power)" },
+    { id = "desk",        label = "Her last stand: the Administrator's desk (only if the map's own desk isn't found by itself: on the desk or beside it, within 100 feet of her power)" },
     { id = "adminpower",  label = "Her last stand: the Administrator's power (a Combine transformer: her shield deflects every bullet while it stands, out to 100 feet; the fight is here)" },
     { id = "studio",      label = "Point: broadcast studio (the Administrator speaks here, filmed live, when no player is Director of Propaganda)" },
     { id = "jogroute",    label = "Point: jogging route stop (morning jog: place them in order round the route, the first is the start; route #)", group = true },
@@ -734,7 +734,7 @@ function TOOL.BuildCPanel(panel)
     Slider("Minutes after Barney before Freeman comes", "lc_black_freeman_minutes", 0, 30, 0)
     Slider("Unit kills that make a player the first pick for a hero", "lc_black_hero_kills", 0, 20, 0)
     Check("A minute after she falls, start the map over (a fresh city)", "lc_black_reset_map")
-    panel:Help("Place \"Her last stand: the Administrator's power\" (a Combine transformer) where the fight should be, and her desk within 100 feet of it. Her shield deflects every bullet while the transformer stands; destroy it and she can be killed. No transformer placed: the G-Man brings one beside her desk. No desk: beside it, or beside her office door, the broadcast studio, a Combine zone.")
+    panel:Help("Place \"Her last stand: the Administrator's power\" (a Combine transformer) where the fight should be, then her desk within 100 feet of it is found by itself (any model with \"desk\" in its name, even the map's static props). Not found: place \"Her last stand: the Administrator's desk\" on the desk or beside it. Her shield deflects every bullet while the transformer stands; destroy it and she can be killed. No transformer placed: the G-Man brings one beside her desk point (else her office door, the broadcast studio, a Combine zone).")
     panel:Button("Test: collapse to BLACK now (the G-Man comes to the Administrator)", "lc_collapse_test", "black")
     panel:Button("Test: the G-Man's next step now (crates, waking armed, the grid failing, the stand)", "lc_collapse_test", "next")
     panel:Button("Test: her last stand now", "lc_collapse_test", "stand")

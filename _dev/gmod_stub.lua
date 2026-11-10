@@ -280,6 +280,9 @@ function file.Open(path)
     function R:ReadULong() return rd("uint32_t", 4) end
     function R:Read(n) local out = data:sub(pos + 1, pos + n) pos = pos + n return out end
     function R:Skip(n) pos = pos + n end
+    function R:Seek(n) pos = n end
+    function R:Tell() return pos end
+    function R:Size() return #data end
     function R:Close() end
     return R
 end

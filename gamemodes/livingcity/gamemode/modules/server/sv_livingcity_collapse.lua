@@ -538,6 +538,109 @@ local function Beside(at, dist)
     return Ground(at + Vector(dist, 0, 0))
 end
 
+------------------------------------------------------------------------
+-- Her desk: the map's own (the owner, 10 November: "most maps have a desk prop already ... even if a static
+-- map prop"). A map's static props aren't entities, so they're read once from the map file itself (its
+-- static prop list, the "sprp" game lump); its other props are entities. Any model with "desk" in its name.
+------------------------------------------------------------------------
+
+local staticProps, staticFor
+-- every static prop in a BSP file: { model, pos, ang } (nothing if it can't be read)
+function LC.ReadStaticProps(path)
+    local out = {}
+    if not (file and file.Open) then return out end
+    local f = file.Open(path, "rb", "GAME")
+    if not f then return out, false end
+    pcall(function()
+        if f:Read(4) ~= "VBSP" then return end
+        f:ReadLong() -- (the BSP version: 19 to 20 for Half-Life 2 and Garry's Mod maps)
+        -- lump 35, the game lump: each lump's entry is offset, length, version, and four bytes
+        f:Seek(8 + 35 * 16)
+        local gofs = f:ReadLong()
+        f:Seek(gofs)
+        local n = f:ReadLong()
+        local sofs, slen
+        for _ = 1, math.min(n, 64) do
+            local id = f:ReadLong()
+            f:ReadShort() f:ReadShort() -- (flags, version)
+            local ofs, len = f:ReadLong(), f:ReadLong()
+            if id == 1936749168 then sofs, slen = ofs, len end -- ("sprp": the static props)
+        end
+        if not sofs then return end
+        f:Seek(sofs)
+        local dict = f:ReadLong()
+        if dict < 0 or dict > 8192 then return end
+        local names = {}
+        for i = 0, dict - 1 do names[i] = string.lower(string.match(f:Read(128) or "", "^[^%z]*") or "") end
+        local leaves = f:ReadLong()
+        f:Seek(f:Tell() + leaves * 2)
+        local count = f:ReadLong()
+        if count <= 0 or count > 65536 then return end
+        local start = f:Tell()
+        -- (how long each entry is depends on the map's version: what's left, shared out)
+        local size = math.floor((sofs + slen - start) / count)
+        if size < 26 then return end
+        for i = 0, count - 1 do
+            f:Seek(start + i * size)
+            local x, y, z = f:ReadFloat(), f:ReadFloat(), f:ReadFloat()
+            local ap, ay, ar = f:ReadFloat(), f:ReadFloat(), f:ReadFloat()
+            local mi = f:ReadShort()
+            if mi < 0 then mi = mi + 65536 end
+            out[#out + 1] = { model = names[mi] or "", pos = Vector(x, y, z), ang = Angle(ap, ay, ar) }
+        end
+    end)
+    f:Close()
+    return out, true
+end
+
+-- The desks within `reach` of `at`, nearest first (Breen's own desk before any other).
+function LC.DesksNear(at, reach)
+    local map = game.GetMap()
+    if staticFor ~= map then
+        local list, read = LC.ReadStaticProps("maps/" .. map .. ".bsp")
+        staticProps = list
+        if read then staticFor = map end -- (kept once the map file's been read: it doesn't change while the map runs)
+    end
+    local found = {}
+    local function Add(model, pos)
+        model = string.lower(model or "")
+        if string.find(model, "desk", 1, true) and pos:DistToSqr(at) <= reach * reach then
+            found[#found + 1] = { pos = pos, model = model, d = pos:DistToSqr(at) - (string.find(model, "breendesk", 1, true) and 1e9 or 0) }
+        end
+    end
+    for _, sp in ipairs(staticProps or {}) do Add(sp.model, sp.pos) end
+    for _, e in ipairs(ents.FindInSphere(at, reach)) do
+        if IsValid(e) and e.GetModel and not e:IsPlayer() and not (e.IsNPC and e:IsNPC()) then Add(e:GetModel(), e:GetPos()) end
+    end
+    table.sort(found, function(a, b) return a.d < b.d end)
+    return found
+end
+
+-- A clear place to stand beside a desk (or anything): room for a person, nothing in the way from it.
+local function StandBeside(at, away)
+    for _, dist in ipairs({ 56, 72, 96 }) do
+        for k = 0, 7 do
+            local yaw = (away and (away - at):Angle().y + 180 or 0) + k * 45
+            local dir = Angle(0, yaw, 0):Forward()
+            local spot = at + dir * dist
+            local floor = util.TraceLine and util.TraceLine({ start = spot + Vector(0, 0, 48), endpos = spot - Vector(0, 0, 160), mask = MASK_SOLID_BRUSHONLY })
+            local stand = (floor and floor.Hit) and floor.HitPos or spot
+            local clear = not util.TraceHull or not util.TraceHull({ start = stand + Vector(0, 0, 4), endpos = stand + Vector(0, 0, 5), mins = Vector(-16, -16, 0), maxs = Vector(16, 16, 70), mask = MASK_SOLID }).Hit
+            local seen = not util.TraceLine or not util.TraceLine({ start = at + Vector(0, 0, 40), endpos = stand + Vector(0, 0, 40), mask = MASK_SOLID_BRUSHONLY }).Hit
+            if clear and seen then return stand end
+        end
+    end
+    return Ground(at)
+end
+LC.CollapseStandBeside = StandBeside
+
+-- A desk point the owner placed: stood on if it's on the floor, beside it if it's on the desk itself.
+local function AtDeskPoint(p)
+    local floor = util.TraceLine and util.TraceLine({ start = p + Vector(0, 0, 4), endpos = p - Vector(0, 0, 200), mask = MASK_SOLID_BRUSHONLY })
+    if floor and floor.Hit and p.z - floor.HitPos.z > 16 then return StandBeside(Vector(p.x, p.y, floor.HitPos.z)) end
+    return Ground(p)
+end
+
 -- Where she stands, and what powers her shield. The fight is where the transformer is (the owner, 10 November:
 -- "this also then determines the final fight area; it's based off where the transformer is"): her desk if it's
 -- within the shield's reach of it, else beside it. None placed: the G-Man brings one, beside her desk.
@@ -547,7 +650,14 @@ function LC.CollapseStandSpot()
     local reach = math.max(200, cvPowerR:GetFloat())
     if IsValid(power) then
         local pp = power:GetPos()
-        if desk and desk:DistToSqr(pp) <= (reach * 0.8) ^ 2 then return Ground(desk), power end
+        -- the desk point, if placed within reach; else the map's own desk nearest the transformer; else beside it
+        local pts = LC.PointsOfKind and LC.PointsOfKind("desk") or {}
+        for _, pt in ipairs(pts) do
+            if pt.pos:DistToSqr(pp) <= (reach * 0.8) ^ 2 then C.deskFrom = "point" return AtDeskPoint(pt.pos), power end
+        end
+        local found = LC.DesksNear(pp, reach * 0.8)
+        if found[1] then C.deskFrom = found[1].model return StandBeside(found[1].pos, pp), power end
+        C.deskFrom = "transformer"
         return Beside(pp, 180), power
     end
     if not desk then return nil end
