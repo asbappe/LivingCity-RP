@@ -30,7 +30,9 @@
         warnings       rations_soon  curfew_soon (two minutes ahead; a sweep,
                        a raid or a supply convoy is a surprise, and a
                        lockdown answers violence, so they have none)
-        the city       socio_green  socio_yellow  socio_red  socio_black (the collapse)
+        the city       socio_green  socio_yellow  socio_red  socio_black (the collapse, and the shelling)
+        the collapse   black_stand (her last stand)  black_fallen (she's dead; Overwatch)  black_crushed
+                       (the uprising crushed)  suppressor_down (the suppression device destroyed)
                        dawn  day  dusk  night
                        outbreak  blackout  power_restored
                        skirmish_raid  skirmish_sweep  response (a response squad)
@@ -119,6 +121,7 @@ LC.AnnounceTriggers = {
     "outbreak", "blackout", "power_restored", "skirmish_raid", "skirmish_sweep", "response",
     "breakout", "overwatch_drop", "block_raided", "territory_grew", "train_arrival", "welcome", "ambient",
     "jog", "drill", "parade", -- morning exercise (sv_livingcity_exercise.lua)
+    "black_stand", "black_fallen", "black_crushed", "suppressor_down", -- the collapse (sv_livingcity_collapse.lua)
 }
 -- No longer said (a sweep, a raid or a supply convoy is a surprise; a lockdown
 -- answers violence): files named for these are left alone, never mistaken for
@@ -137,7 +140,7 @@ local BASE_TIER = {
     dawn = 1, day = 1, dusk = 1, night = 1, ambient = 1, welcome = 1, power_restored = 1, train_arrival = 1, socio_green = 1,
     sweep = 2, curfew = 2, curfew_soon = 2, blackout = 2, territory_grew = 2, socio_yellow = 2, outbreak = 2,
     lockdown = 3, raid = 3, skirmish_raid = 3, skirmish_sweep = 3, response = 3, block_raided = 3, overwatch_drop = 3, socio_red = 3,
-    breakout = 4, socio_black = 4,
+    breakout = 4, socio_black = 4, black_stand = 4, black_fallen = 4, suppressor_down = 4, black_crushed = 3,
     jog = 1, drill = 1, parade = 1, -- (she loves a bit of exercise)
 }
 local VIOLENT = { raid = true, skirmish_raid = true, skirmish_sweep = true, breakout = true, outbreak = true, block_raided = true, territory_grew = true, overwatch_drop = true }
@@ -173,6 +176,7 @@ local TITLES = {
     block_raided = "Housing block inspection", territory_grew = "Resistance activity", train_arrival = "Arrivals",
     welcome = "Welcome", dawn = "City announcement", day = "City announcement", dusk = "City announcement", night = "City announcement",
     ambient = "City announcement", response = "Overwatch response", socio_black = "Civil collapse",
+    black_stand = "The Nexus", black_fallen = "The Administrator", black_crushed = "Order restored", suppressor_down = "The suppression device",
 }
 
 ------------------------------------------------------------------------

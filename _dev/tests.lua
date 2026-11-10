@@ -23355,9 +23355,9 @@ ok(fdmg:GetDamage() == 0, "and Civil Protection can't hurt her")
 local full = pw.lcPowerHP
 LC.CollapsePowerHit(pw, _dmg(cop, 500))
 ok(pw.lcPowerHP == full, "nor her transformer")
-LC.CollapsePowerHit(pw, _dmg(reb, 700))
-ok(pw:GetNW2Int("lc_power_smoke", 0) == 1 and math.abs(pw:GetNW2Float("lc_power_frac", 1) - 0.72) < 0.01, "shot: past three quarters, it smokes (2500, 700 off)", pw:GetNW2Float("lc_power_frac", 1))
-LC.CollapsePowerHit(pw, _dmg(reb, 600))
+LC.CollapsePowerHit(pw, _dmg(reb, 350))
+ok(pw:GetNW2Int("lc_power_smoke", 0) == 1 and math.abs(pw:GetNW2Float("lc_power_frac", 1) - 0.72) < 0.01, "shot: past three quarters, it smokes (1250, 350 off)", pw:GetNW2Float("lc_power_frac", 1))
+LC.CollapsePowerHit(pw, _dmg(reb, 300))
 ok(pw:GetNW2Int("lc_power_smoke", 0) == 2, "past half: smoke and sparks (and a small blast as it passed half)")
 ok(LC.CollapseShieldUp(), "still standing: her shield still holds")
 LC.CollapsePowerHit(pw, _dmg(reb, 5000))
@@ -23400,6 +23400,18 @@ local placed = ents.Create("lc_adminpower")
 placed:SetPos(Vector(-60000, -60000, 0)) placed:Spawn()
 local okS = LC.CollapseTest("stand")
 ok(okS and IsValid(CS.boss) and CS.boss.lcCollapseBoss, "no player as the Administrator: the city's own stands in her office")
+ok(CS.floatZ and math.abs(CS.floatZ - CS.office.z - 48) < 0.01 and CS.boss:GetPos().z > CS.office.z + 30, "she floats in her bubble (48 units up under a high ceiling)", CS.floatZ and (CS.floatZ - CS.office.z))
+do
+    local tl = util.TraceLine
+    util.TraceLine = function(q) if q.endpos.z > q.start.z then return { Hit = true, HitPos = q.start + Vector(0, 0, 80), Fraction = 0.2 } end return tl(q) end
+    ok(LC.CollapseFloatHeight(Vector(0, 0, 0)) == 8, "and lower under a low ceiling (never into it)", LC.CollapseFloatHeight(Vector(0, 0, 0)))
+    util.TraceLine = tl
+end
+local squad = LC.CollapseSquad()
+local sq = 0
+for npc, st in pairs(LC.NPCs) do if IsValid(npc) and st.collapseSquad then sq = sq + 1 end end
+ok(squad == 4 and sq >= 4, "an Overwatch squad comes in from outside the fight (4 soldiers)", squad)
+ok(CS.nextSquad and CS.nextSquad - CurTime() >= 44 and CS.nextSquad - CurTime() <= 76, "and the next in 45 to 75 seconds", CS.nextSquad and (CS.nextSquad - CurTime()))
 ok(CS.power == placed and CS.boss:GetPos():Distance(placed:GetPos()) < 400, "the fight is where her transformer is", tostring(CS.boss:GetPos()))
 CS.boss:SetPos(Vector(-60000, -40000, 0))
 ok(not LC.CollapseShieldUp(), "out of its reach (100 feet), her shield doesn't hold")
@@ -23433,6 +23445,79 @@ do
     LC.CollapseTest("off")
     power2:Remove()
     _files["maps/rp_test.bsp"] = nil
+end
+-- 2 or 3 transformers, each guarded by its number, each behind glass (the owner, 10 November)
+do
+    local t1, t2 = ents.Create("lc_adminpower"), ents.Create("lc_adminpower")
+    t1:SetPos(Vector(-70000, -70000, 0)) t1:SetAngles(Angle(0, 90, 0)) t1:Spawn() t1.lcFixturePoint = { group = 1 }
+    t2:SetPos(Vector(-70400, -70000, 0)) t2:Spawn() t2.lcFixturePoint = { group = 2 }
+    placed.lcCollapseTemp = true -- (the earlier test's transformer set aside: just these two)
+    local gp = LC.AdminGlassSpot(t1)
+    ok(gp.y > t1:GetPos().y + 20 and math.abs(gp.x - t1:GetPos().x) < 1, "its glass screen stands on the side that faced whoever placed it", tostring(gp))
+    CS.cooldownUntil = 0
+    LC.CollapseTest("stand")
+    ok(#(CS.powers or {}) == 2, "both transformers power her shield", #(CS.powers or {}))
+    local hacks, turrets = 0, 0
+    for _, e in ipairs(CS.npcs) do
+        if IsValid(e) and e.lcCollapseGuardOf == t1 and e:GetClass() == "npc_manhack" then hacks = hacks + 1 end
+        if IsValid(e) and e.lcCollapseGuardOf == t2 and e:GetClass() == "npc_turret_floor" then turrets = turrets + 1 end
+    end
+    ok(hacks == 8 and turrets == 4 and #(CS.loose or {}) == 4, "#1 a manhack swarm, #2 floor turrets, and metal panels round her office to carry", hacks .. " " .. turrets .. " " .. #(CS.loose or {}))
+    local hack
+    for _, e in ipairs(CS.npcs) do if IsValid(e) and e:GetClass() == "npc_manhack" then hack = e end end
+    LC.CollapsePowerHit(t1, _dmg(hack, 500))
+    ok(t1:GetNW2Float("lc_power_frac", 1) == 1, "her guards can't harm a transformer")
+    CS.boss:SetPos(Vector(-70100, -70000, 0))
+    LC.CollapsePowerHit(t1, _dmg(reb, 5000))
+    ok(t1:GetNW2Bool("lc_power_down", false) and LC.CollapseShieldUp(), "one destroyed: the other still holds her shield")
+    LC.CollapsePowerHit(t2, _dmg(reb, 5000))
+    ok(not LC.CollapseShieldUp(), "all destroyed: her shield is down")
+    LC.CollapseTest("off")
+    ok(not t1:GetNW2Bool("lc_power_down", false) and not t2:GetNW2Bool("lc_power_down", false), "afterwards both stand ready again")
+    t1:Remove() t2:Remove()
+    placed.lcCollapseTemp = nil
+end
+-- in BLACK: a mandatory curfew, and the Nexus's suppression device (the owner, 10 November)
+do
+    CS.cooldownUntil = 0
+    LC.CollapseTest("black")
+    ok(LC.Event == "curfew", "BLACK puts a mandatory curfew in force", tostring(LC.Event))
+    local zk, tl = LC.ZonesOfKind, util.TraceLine
+    LC.ZonesOfKind = function(k) if k == "combine" then return { { kind = "combine", pos = Vector(-80000, -80000, 0), r = 300 } } end return zk(k) end
+    local sky = true
+    util.TraceLine = function(q) if q.endpos.z > q.start.z + 1000 then return { Hit = true, HitSky = sky, HitPos = q.endpos, Fraction = 1 } end return tl(q) end
+    reb:SetPos(Vector(-79000, -80000, 0)) reb.alive = true
+    local seen = false
+    for _, e in ipairs(LC.SuppressorTargets()) do if e == reb then seen = true end end
+    ok(seen, "a rebel under open sky near a Combine zone is a target")
+    sky = false
+    seen = false
+    for _, e in ipairs(LC.SuppressorTargets()) do if e == reb then seen = true end end
+    ok(not seen, "under a roof, they're not")
+    sky = true
+    net.sent = {}
+    ok(LC.SuppressorFire(reb) and not LC.SuppressorFire(reb), "it fires one shell at a time")
+    ok(_lastnet("lc_suppressor") ~= nil, "everyone sees its ring fade in on the ground")
+    CS.shell.at = CurTime()
+    LC.SuppressorTick(CurTime() + 0.01)
+    ok(CS.shell == nil and CS.nextShell and CS.nextShell > CurTime(), "it lands, and the next waits its turn")
+    -- the device itself, on the map: blow it up and the shelling stops
+    local dev = ents.Create("lc_suppressor")
+    dev:SetPos(Vector(-80500, -80000, 0)) dev:Spawn()
+    LC.SuppressorsArm(true)
+    ok(LC.SuppressorSource() == dev, "with a suppression device placed, the shells come from it")
+    LC.SuppressorHit(dev, _dmg(cop, 5000))
+    ok(not dev:GetNW2Bool("lc_power_down", false), "Civil Protection can't harm it")
+    LC.SuppressorHit(dev, _dmg(reb, 450))
+    ok(dev:GetNW2Int("lc_power_smoke", 0) == 2, "shot up, it smokes and sparks (800, 450 off)")
+    LC.SuppressorHit(dev, _dmg(reb, 5000))
+    ok(dev:GetNW2Bool("lc_power_down", false) and LC.SuppressorSource() == false and not LC.SuppressorFire(reb), "blown up: no more shells")
+    ok(table.HasValue(LC.AnnounceTriggers, "socio_black") and table.HasValue(LC.AnnounceTriggers, "black_stand") and table.HasValue(LC.AnnounceTriggers, "suppressor_down"), "the collapse has its own announcements, in either voice")
+    LC.ZonesOfKind, util.TraceLine = zk, tl
+    LC.CollapseTest("off")
+    ok(LC.Event ~= "curfew", "and the curfew lifts with BLACK", tostring(LC.Event))
+    ok(not dev:GetNW2Bool("lc_power_down", false), "afterwards the device is whole again")
+    dev:Remove()
 end
 CS.cooldownUntil = 0
 LC.CollapseTest("stand")

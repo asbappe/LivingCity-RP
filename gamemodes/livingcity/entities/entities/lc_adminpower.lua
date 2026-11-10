@@ -4,7 +4,9 @@
      lc_black_power_range (1600 units, about 100 feet) from it; destroy it and she can be killed.
      Outside her last stand nothing can harm it. Shot in it, it shows it's working: sparks on every hit,
      smoke from three quarters, heavier smoke and sparks below half (with a small blast as it passes
-     half), and a big blast when it goes. A faint purple glow pulses on it while it powers her. ]]
+     half), and a big blast when it goes. A faint purple glow pulses on it while it powers her.
+     There are 2 or 3 of them, each with its number (1 manhacks, 2 turrets, 3 mines: their guards, only in her
+     last stand), and each has a Combine glass screen (lc_adminglass) on the side that faced whoever placed it. ]]
 
 AddCSLuaFile()
 
@@ -37,9 +39,34 @@ function ENT:Initialize()
     self:SetNW2Float("lc_power_frac", 1)
     self:SetNW2Bool("lc_power_down", false)
     self:SetNW2Int("lc_power_smoke", 0)
+    -- its glass screen, on the side that faced whoever placed it (not for one the G-Man brings)
+    timer.Simple(0, function() if IsValid(self) and not self.lcCollapseTemp then self:PlaceGlass() end end)
 end
 
 if SERVER then
+    function ENT:PlaceGlass()
+        if not (LC and LC.AdminGlassSpot) then return end
+        local pos, ang = LC.AdminGlassSpot(self)
+        if not IsValid(self.lcGlass) then
+            local g = ents.Create("lc_adminglass")
+            if not IsValid(g) then return end
+            g:SetPos(pos)
+            g:SetAngles(ang)
+            g:Spawn()
+            self.lcGlass = g
+        else
+            self.lcGlass:SetPos(pos)
+            self.lcGlass:SetAngles(ang)
+        end
+        self.lcGlassAt, self.lcGlassYaw = self:GetPos(), self:GetAngles().y
+    end
+    function ENT:OnRemove() if IsValid(self.lcGlass) then self.lcGlass:Remove() end end
+    -- (moved with the physgun: its glass goes with it)
+    function ENT:Think()
+        if IsValid(self.lcGlass) and self.lcGlassAt and (self:GetPos():DistToSqr(self.lcGlassAt) > 1 or math.abs(self:GetAngles().y - self.lcGlassYaw) > 0.5) then self:PlaceGlass() end
+        self:NextThink(CurTime() + 1)
+        return true
+    end
     function ENT:GravGunPunt() return false end
     function ENT:GravGunPickupAllowed() return false end
     function ENT:OnTakeDamage(dmg)

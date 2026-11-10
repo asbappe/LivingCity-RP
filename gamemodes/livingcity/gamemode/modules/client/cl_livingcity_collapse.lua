@@ -117,6 +117,16 @@ end)
 ------------------------------------------------------------------------
 
 local SHIELD = Color(140, 110, 255, 60)
+-- her transformers in her last stand (2 or 3), standing or not
+local function Powers()
+    local out = {}
+    for _, e in ipairs(ents.FindByClass("lc_adminpower")) do
+        if IsValid(e) and (e:GetNW2Bool("lc_power_live", false) or e:GetNW2Int("lc_power_guard", 0) > 0) then out[#out + 1] = e end
+    end
+    return out
+end
+LC_CL.CollapsePowers = Powers
+local GUARD_NAMES = { "MANHACKS", "TURRETS", "MINES" }
 local BEAM = Material("sprites/physbeam")
 local SPARK = Material("sprites/light_glow02_add")
 hook.Add("PostDrawTranslucentRenderables", "LivingCityCollapseShield", function(depth, sky)
@@ -131,16 +141,17 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityCollapseShield", function(
         render.SetColorMaterial()
         render.DrawSphere(centre, 52, 24, 24, Color(SHIELD.r, SHIELD.g, SHIELD.b, a))
     end
-    -- the power, a faint stream from her transformer to the bubble
-    local power = GetGlobal2Entity("lc_collapse_power")
-    if IsValid(power) and not power:GetNW2Bool("lc_power_down", false) then
-        local from = power:LocalToWorld(Vector(0, 0, power:OBBMaxs().z * 0.85))
-        local len = from:Distance(centre)
-        local scroll = CurTime() * 2
-        render.SetMaterial(BEAM)
-        render.DrawBeam(from, centre, 6, scroll, scroll + len / 96, Color(170, 130, 255, 70 + 30 * math.abs(math.sin(CurTime() * 6))))
-        render.SetMaterial(SPARK)
-        render.DrawSprite(from, 20, 20, Color(190, 150, 255, 120))
+    -- the power, a faint stream from each standing transformer to the bubble
+    for _, power in ipairs(Powers()) do
+        if not power:GetNW2Bool("lc_power_down", false) then
+            local from = power:LocalToWorld(Vector(0, 0, power:OBBMaxs().z * 0.85))
+            local len = from:Distance(centre)
+            local scroll = CurTime() * 2
+            render.SetMaterial(BEAM)
+            render.DrawBeam(from, centre, 6, scroll, scroll + len / 96, Color(170, 130, 255, 70 + 30 * math.abs(math.sin(CurTime() * 6))))
+            render.SetMaterial(SPARK)
+            render.DrawSprite(from, 20, 20, Color(190, 150, 255, 120))
+        end
     end
 end)
 
@@ -173,26 +184,32 @@ hook.Add("HUDPaint", "LivingCityCollapseHUD", function()
     if IsValid(boss) then
         local hp = boss:Health() / math.max(1, boss:GetMaxHealth())
         Bar(w / 2 - 110, y + 18, 220, hp, 220, 70, 60, "Health")
-        local power = GetGlobal2Entity("lc_collapse_power")
         local up = boss:GetNW2Float("lc_shield_frac", 0) > 0
-        if IsValid(power) then
-            local down = power:GetNW2Bool("lc_power_down", false)
-            Bar(w / 2 - 110, y + 33, 220, down and 0 or power:GetNW2Float("lc_power_frac", 1), 160, 120, 255,
-                down and "Her transformer: destroyed. Her shield is down" or (up and "Her transformer (her shield deflects everything)" or "Her transformer (she's out of its reach)"))
+        local all, left, sum = Powers(), 0, 0
+        for _, pw in ipairs(all) do
+            if not pw:GetNW2Bool("lc_power_down", false) then left = left + 1 sum = sum + pw:GetNW2Float("lc_power_frac", 1) end
+        end
+        if #all > 0 then
+            Bar(w / 2 - 110, y + 33, 220, sum / #all, 160, 120, 255,
+                left == 0 and "Her transformers: all destroyed. Her shield is down"
+                or string.format("Her transformers: %d of %d standing%s", left, #all, up and "" or " (she's out of their reach)"))
         end
     end
     local h = GetGlobal2String("lc_collapse_hero", "")
     if h ~= "" and HERO_NAMES[h] then
         draw.SimpleTextOutlined(HERO_NAMES[h] .. " IS IN THE CITY", "DermaDefaultBold", w / 2, y + 50, Color(255, 170, 60), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, color_black)
     end
-    -- where her transformer is: what the rebellion has to destroy, and the Combine to guard
-    local power = GetGlobal2Entity("lc_collapse_power")
-    if IsValid(power) and not power:GetNW2Bool("lc_power_down", false) and boss ~= me then
-        local sp = (power:GetPos() + Vector(0, 0, power:OBBMaxs().z + 16)):ToScreen()
-        if sp.visible then
-            local f = me:GetNW2String("lcf_faction", "")
-            local mine = f == "cp" or f == "admin"
-            draw.SimpleTextOutlined(mine and "HER TRANSFORMER: GUARD IT" or "HER TRANSFORMER: DESTROY IT", "DermaDefaultBold", sp.x, sp.y, Color(255, 170, 60), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+    -- where her transformers are: what the rebellion has to destroy, and the Combine to guard (and what guards each)
+    local f = me:GetNW2String("lcf_faction", "")
+    local mine = f == "cp" or f == "admin"
+    for _, power in ipairs(Powers()) do
+        if not power:GetNW2Bool("lc_power_down", false) and boss ~= me then
+            local sp = (power:GetPos() + Vector(0, 0, power:OBBMaxs().z + 16)):ToScreen()
+            if sp.visible then
+                local g = GUARD_NAMES[power:GetNW2Int("lc_power_guard", 0)]
+                draw.SimpleTextOutlined((mine and "HER TRANSFORMER: GUARD IT" or "HER TRANSFORMER: DESTROY IT") .. (g and (" (" .. g .. ")") or ""), "DermaDefaultBold", sp.x, sp.y,
+                    Color(255, 170, 60), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+            end
         end
     end
     -- where her office is (not for her)
@@ -203,6 +220,46 @@ hook.Add("HUDPaint", "LivingCityCollapseHUD", function()
             if sp.visible then
                 local d = math.floor(me:GetPos():Distance(office) / 52.5)
                 draw.SimpleTextOutlined("HER OFFICE  " .. d .. " m", "DermaDefaultBold", sp.x, sp.y, Color(200, 160, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+            end
+        end
+    end
+end)
+
+------------------------------------------------------------------------
+-- The suppression device's shells (sv_livingcity_collapse.lua): a ring on the ground fading in where it will land,
+-- as Half-Life 2's mortar warns (its own ground glow, if this game has it)
+------------------------------------------------------------------------
+
+local SHELLS = {}
+LC_CL.SuppressorShells = SHELLS
+net.Receive("lc_suppressor", function()
+    local pos, warn = net.ReadVector(), net.ReadFloat()
+    SHELLS[#SHELLS + 1] = { pos = pos, t0 = CurTime(), dur = math.max(0.5, warn or 2.5) }
+end)
+local RING
+local RING_TINT = Color(140, 220, 255)
+hook.Add("PostDrawTranslucentRenderables", "LivingCitySuppressorRing", function(depth, sky)
+    if sky or #SHELLS == 0 then return end
+    if RING == nil then
+        RING = Material("effects/ar2ground2")
+        if not RING or (RING.IsError and RING:IsError()) then RING = false end
+    end
+    local cv = GetConVar("lc_black_suppressor_radius")
+    local size = (cv and cv:GetFloat() or 200) * 2
+    local now = CurTime()
+    for i = #SHELLS, 1, -1 do
+        local sh = SHELLS[i]
+        local f = (now - sh.t0) / sh.dur
+        if f >= 1.05 then
+            table.remove(SHELLS, i)
+        else
+            local a = math.Clamp(f, 0, 1) * 255
+            if RING then
+                render.SetMaterial(RING)
+                render.DrawQuadEasy(sh.pos + Vector(0, 0, 2), Vector(0, 0, 1), size, size, Color(255, 255, 255, a), now * 40 % 360)
+            else
+                render.SetColorMaterial()
+                render.DrawQuadEasy(sh.pos + Vector(0, 0, 2), Vector(0, 0, 1), size * 0.9, size * 0.9, Color(RING_TINT.r, RING_TINT.g, RING_TINT.b, a * 0.35), 0)
             end
         end
     end

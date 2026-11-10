@@ -1188,3 +1188,13 @@ Notes:
   Notes:
 - [ ] **F1 > 6:** "Out of character", then 1 Nearby or 2 Server-wide.
   Notes:
+
+## 10 November, later: transformers, guards, squads, the suppression device
+- [ ] **Placing the transformers:** re-place any transformer placed before today (it now faces you when placed, and the glass goes on that side). Place 2 or 3 "Her last stand: the Administrator's power" with # 1, 2 and 3 (the editor's number box), each standing where attackers would first see it from: the glass screen appears on your side. Shoot the glass: it stops bullets.
+  Notes:
+- [ ] **Her last stand with guards:** "Her last stand now". #1: a swarm of manhacks; #2: floor turrets, and metal panels round her office (pick one up with E, hold it in front of you, walk it into a turret to knock it over); #3: hopper mines, rollermines, two gravity guns nearby. The guards ignore Combine players. She floats in her bubble, not into the ceiling. Every 45 to 75 seconds an Overwatch squad runs in from outside. Destroy all the transformers: her shield goes down.
+  Notes:
+- [ ] **BLACK: curfew and shelling:** "collapse to BLACK now": a mandatory curfew starts. As a rebel, stand outside under open sky near a Combine zone: a ring fades in on the ground under you, the incoming whistle, then the blast. One at a time. Under a roof: nothing. Place "Fixture: the suppression device" (the Nexus mortar): the shells come from it (a flash and launch sound there); shoot it to pieces and the shelling stops. Does the mortar model show (not an ERROR)?
+  Notes:
+- [ ] **Collapse announcements:** record socio_black, black_stand, black_crushed, suppressor_down (both voices) and black_fallen (Overwatch); suggested words in docs/features/custom-announcements.md. lc_voice_missing lists what is still missing.
+  Notes:

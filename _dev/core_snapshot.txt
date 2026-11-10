@@ -17,6 +17,9 @@ announce retired raid_soon
 announce retired supply_soon
 announce retired sweep_soon
 announce trigger ambient
+announce trigger black_crushed
+announce trigger black_fallen
+announce trigger black_stand
 announce trigger blackout
 announce trigger block_raided
 announce trigger breakout
@@ -45,6 +48,7 @@ announce trigger socio_green
 announce trigger socio_red
 announce trigger socio_yellow
 announce trigger supply
+announce trigger suppressor_down
 announce trigger sweep
 announce trigger territory_grew
 announce trigger train_arrival
@@ -469,17 +473,33 @@ setting lc_black_gman_press = livingcity/gman/black_gman_press.wav
 setting lc_black_gman_sleep = livingcity/gman/black_gman_sleep.wav
 setting lc_black_gman_ways = vo/citadel/gman_exit05.wav
 setting lc_black_gman_wise = livingcity/gman/black_gman_wise.wav
+setting lc_black_gravguns = 2
 setting lc_black_hero_kills = 2
 setting lc_black_heroes = 1
+setting lc_black_manhacks = 8
 setting lc_black_min_players = 4
+setting lc_black_mines = 4
 setting lc_black_minutes = 30
+setting lc_black_panels = 4
 setting lc_black_phase_minutes = 5
-setting lc_black_power_health = 2500
+setting lc_black_power_health = 1250
 setting lc_black_power_range = 1600
 setting lc_black_rebels = 8
 setting lc_black_reset_map = 0
 setting lc_black_reward = 200
+setting lc_black_rollermines = 3
+setting lc_black_squad_max = 75
+setting lc_black_squad_min = 45
+setting lc_black_squad_size = 4
 setting lc_black_stand_minutes = 15
+setting lc_black_suppressor = 1
+setting lc_black_suppressor_damage = 100
+setting lc_black_suppressor_gap = 6
+setting lc_black_suppressor_health = 800
+setting lc_black_suppressor_radius = 200
+setting lc_black_suppressor_range = 16000
+setting lc_black_suppressor_warn = 2.5
+setting lc_black_turrets = 4
 setting lc_blackout_light = b
 setting lc_blackout_minutes = 8
 setting lc_blackout_share = 0.5

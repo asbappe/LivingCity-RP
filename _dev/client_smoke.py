@@ -591,6 +591,8 @@ do
     net.ReadFloat, net.ReadString = rf, rs
     local power = ents.Create("lc_adminpower")
     power:SetPos(Vector(500, 0, 0))
+    power.nw.lc_power_live = true
+    power.nw.lc_power_guard = 2
     _globals.lc_collapse_power = power
     local boss = ents.Create("npc_citizen")
     boss:SetPos(Vector(300, 0, 0))
@@ -612,6 +614,15 @@ do
     for _, k in ipairs({ "lc_collapse", "lc_collapse_stage", "lc_collapse_boss", "lc_collapse_office", "lc_collapse_until", "lc_collapse_hero", "lc_collapse_power" }) do _globals[k] = nil end
     boss:Remove()
     power:Remove()
+    -- the suppression device's ring
+    local rv = net.ReadVector
+    net.ReadVector = function() return Vector(100, 100, 0) end
+    net.ReadFloat = function() return 2.5 end
+    local okR, errR = pcall(net["recv_lc_suppressor"])
+    if not okR then problems[#problems + 1] = "the suppressor's ring errors: " .. tostring(errR) end
+    local okD, errD = pcall(hook.t.PostDrawTranslucentRenderables.LivingCitySuppressorRing, false, false)
+    if not okD then problems[#problems + 1] = "drawing the suppressor's ring errors: " .. tostring(errD) end
+    net.ReadVector, net.ReadFloat = rv, rf
 end
 -- flying a scanner: the view leaves the body, and units see who a report caught
 local scn = ents.Create("lc_rscanner")

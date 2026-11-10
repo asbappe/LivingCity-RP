@@ -43,7 +43,8 @@ local MODES = {
     { id = "platform",    label = "Point: train platform (trains stop here: new arrivals, people leaving the city)" },
     { id = "arrival",     label = "Point: arrival (where new people step into the city, before Civil Intake; place it from the way they should face, Civil Intake say)" },
     { id = "desk",        label = "Her last stand: the Administrator's desk (only if the map's own desk isn't found by itself: on the desk or beside it, within 100 feet of her power)" },
-    { id = "adminpower",  label = "Her last stand: the Administrator's power (a Combine transformer: her shield deflects every bullet while it stands, out to 100 feet; the fight is here)" },
+    { id = "suppressor",  label = "Fixture: the suppression device (the Nexus mortar: in BLACK it shells rebels under open sky near a Combine zone; blow it up to stop it)" },
+    { id = "adminpower",  label = "Her last stand: the Administrator's power (place 2 or 3; # is its guards: 1 manhacks, 2 turrets, 3 mines; its glass screen goes on the side facing you; her shield holds till all are destroyed)", group = true },
     { id = "studio",      label = "Point: broadcast studio (the Administrator speaks here, filmed live, when no player is Director of Propaganda)" },
     { id = "jogroute",    label = "Point: jogging route stop (morning jog: place them in order round the route, the first is the start; route #)", group = true },
     { id = "yard",        label = "Point: exercise yard (morning drill: stand where the rows of citizens will be and aim at where the leader stands)" },
@@ -127,7 +128,7 @@ else
 end
 
 -- sit, bench and lean spots, and fixtures, face the person placing them
-local FACE_PLACER = { bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, screen = true, lawboard = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, hazbarrel = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, yard = true }
+local FACE_PLACER = { adminpower = true, bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, screen = true, lawboard = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, hazbarrel = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, yard = true }
 
 local function ModeIndex(id)
     for i, m in ipairs(MODES) do if m.id == id then return i end end
@@ -726,15 +727,31 @@ function TOOL.BuildCPanel(panel)
     Slider("Elites guarding her", "lc_black_elites", 0, 12, 0)
     Slider("Resistance fighters storming her office", "lc_black_rebels", 0, 24, 0)
     Slider("Her health", "lc_black_admin_health", 100, 3000, 0)
-    Slider("Her transformer's health (her shield holds till it's destroyed)", "lc_black_power_health", 200, 10000, 0)
+    Slider("Each transformer's health (her shield holds till all are destroyed)", "lc_black_power_health", 200, 10000, 0)
+    Slider("Manhacks guarding transformer #1", "lc_black_manhacks", 0, 20, 0)
+    Slider("Floor turrets guarding transformer #2", "lc_black_turrets", 0, 10, 0)
+    Slider("Metal panels round her office (shields, and rams for the turrets)", "lc_black_panels", 0, 12, 0)
+    Slider("Hopper mines guarding transformer #3", "lc_black_mines", 0, 12, 0)
+    Slider("Rollermines guarding transformer #3", "lc_black_rollermines", 0, 10, 0)
+    Slider("Gravity guns left near transformer #3", "lc_black_gravguns", 0, 6, 0)
+    Slider("Fewest seconds between Overwatch squads coming in", "lc_black_squad_min", 10, 300, 0)
+    Slider("Most seconds between Overwatch squads coming in", "lc_black_squad_max", 10, 300, 0)
+    Slider("Soldiers in each squad", "lc_black_squad_size", 0, 10, 0)
     Slider("How far her shield reaches from it (16 units a foot)", "lc_black_power_range", 400, 4000, 0)
     Slider("Credits for those there when she falls", "lc_black_reward", 0, 2000, 0)
+    Check("In BLACK, the suppression device shells rebels under open sky near a Combine zone", "lc_black_suppressor")
+    Slider("Its shell's damage", "lc_black_suppressor_damage", 0, 500, 0)
+    Slider("Its shell's blast radius", "lc_black_suppressor_radius", 50, 600, 0)
+    Slider("Seconds the ring glows before it lands", "lc_black_suppressor_warn", 1, 8, 1)
+    Slider("Seconds between shells", "lc_black_suppressor_gap", 1, 60, 0)
+    Slider("How far from a Combine zone it reaches (16 units a foot)", "lc_black_suppressor_range", 1000, 32000, 0)
+    Slider("The device's health (blown up, the shelling stops)", "lc_black_suppressor_health", 100, 5000, 0)
     Check("Heroes: Barney, then Gordon Freeman, played by players of the rebellion", "lc_black_heroes")
     Slider("Minutes into her stand before Barney comes", "lc_black_barney_minutes", 0, 30, 0)
     Slider("Minutes after Barney before Freeman comes", "lc_black_freeman_minutes", 0, 30, 0)
     Slider("Unit kills that make a player the first pick for a hero", "lc_black_hero_kills", 0, 20, 0)
     Check("A minute after she falls, start the map over (a fresh city)", "lc_black_reset_map")
-    panel:Help("Place \"Her last stand: the Administrator's power\" (a Combine transformer) where the fight should be, then her desk within 100 feet of it is found by itself (any model with \"desk\" in its name, even the map's static props). Not found: place \"Her last stand: the Administrator's desk\" on the desk or beside it. Her shield deflects every bullet while the transformer stands; destroy it and she can be killed. No transformer placed: the G-Man brings one beside her desk point (else her office door, the broadcast studio, a Combine zone).")
+    panel:Help("Place 2 or 3 \"Her last stand: the Administrator's power\" (Combine transformers) round her office, each with its number (1 manhacks, 2 turrets, 3 mines) and facing the way attackers come in: its glass screen goes on the side facing you. Her desk within 100 feet of them is found by itself (any model with \"desk\" in its name, even the map's static props). Not found: place \"Her last stand: the Administrator's desk\" on the desk or beside it. Her shield deflects every bullet while any transformer stands; destroy them all and she can be killed. Overwatch squads come in every 45 to 75 seconds. No transformer placed: the G-Man brings one beside her desk point (else her office door, the broadcast studio, a Combine zone).")
     panel:Button("Test: collapse to BLACK now (the G-Man comes to the Administrator)", "lc_collapse_test", "black")
     panel:Button("Test: the G-Man's next step now (crates, waking armed, the grid failing, the stand)", "lc_collapse_test", "next")
     panel:Button("Test: her last stand now", "lc_collapse_test", "stand")

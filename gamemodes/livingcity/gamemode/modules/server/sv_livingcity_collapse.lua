@@ -87,7 +87,16 @@ local cvStand   = CreateConVar("lc_black_stand_minutes", "15", FLAGS, "Minutes t
 local cvElites  = CreateConVar("lc_black_elites", "4", FLAGS, "Overwatch Elites guarding the Administrator in her last stand")
 local cvRebels  = CreateConVar("lc_black_rebels", "8", FLAGS, "Resistance fighters who storm the Administrator's office in her last stand")
 local cvHealth  = CreateConVar("lc_black_admin_health", "600", FLAGS, "The Administrator's health in her last stand")
-local cvPowerHP = CreateConVar("lc_black_power_health", "2500", FLAGS, "How much damage the transformer powering the Administrator's shield takes before it blows")
+local cvPowerHP = CreateConVar("lc_black_power_health", "1250", FLAGS, "How much damage each transformer powering the Administrator's shield takes before it blows")
+local cvManhacks = CreateConVar("lc_black_manhacks", "8", FLAGS, "Manhacks guarding transformer #1 in the Administrator's last stand")
+local cvTurrets  = CreateConVar("lc_black_turrets", "4", FLAGS, "Floor turrets guarding transformer #2 in the Administrator's last stand")
+local cvPanels   = CreateConVar("lc_black_panels", "4", FLAGS, "Metal panels left round her office in her last stand (carry one as a bullet shield, ram a turret over with it)")
+local cvMines    = CreateConVar("lc_black_mines", "4", FLAGS, "Hopper mines guarding transformer #3 in the Administrator's last stand")
+local cvRollers  = CreateConVar("lc_black_rollermines", "3", FLAGS, "Rollermines guarding transformer #3 in the Administrator's last stand")
+local cvSquadMin = CreateConVar("lc_black_squad_min", "45", FLAGS, "Fewest seconds between Overwatch squads coming in to her last stand")
+local cvSquadMax = CreateConVar("lc_black_squad_max", "75", FLAGS, "Most seconds between Overwatch squads coming in to her last stand")
+local cvSquadSize = CreateConVar("lc_black_squad_size", "4", FLAGS, "Soldiers in each squad coming in to her last stand")
+local cvGravguns = CreateConVar("lc_black_gravguns", "2", FLAGS, "Gravity guns left near transformer #3's mines in her last stand")
 local cvPowerR  = CreateConVar("lc_black_power_range", "1600", FLAGS, "How far (units; 16 to a foot) the Administrator's shield reaches from its transformer: her last stand is fought there")
 local cvReward  = CreateConVar("lc_black_reward", "200", FLAGS, "Credits for everyone not Combine who was there when the Administrator fell")
 
@@ -99,6 +108,14 @@ local cvFreemanMdl = CreateConVar("lc_black_freeman_model", "models/player/group
 local cvBarneyMdl = CreateConVar("lc_black_barney_model", "models/player/barney.mdl", FLAGS, "Barney's player model")
 local cvResetMap = CreateConVar("lc_black_reset_map", "0", FLAGS, "1: a minute after the Administrator falls, the server changes to the same map (a fresh city)")
 
+local cvSup      = CreateConVar("lc_black_suppressor", "1", FLAGS, "In BLACK, the Nexus's suppression device shells rebels under open sky near a Combine zone, one at a time (Half-Life 2's mortar)")
+local cvSupRange = CreateConVar("lc_black_suppressor_range", "16000", FLAGS, "How far from a Combine zone (units; 16 to a foot) the suppression device reaches")
+local cvSupDmg   = CreateConVar("lc_black_suppressor_damage", "100", FLAGS, "The suppression device's shell: damage at its centre")
+local cvSupRad   = CreateConVar("lc_black_suppressor_radius", "200", FLAGS, "The suppression device's shell: blast radius")
+local cvSupWarn  = CreateConVar("lc_black_suppressor_warn", "2.5", FLAGS, "Seconds the ring glows on the ground before the shell lands")
+local cvSupHP    = CreateConVar("lc_black_suppressor_health", "800", FLAGS, "How much damage the suppression device takes before it's destroyed (and the shelling stops)")
+local cvSupGap   = CreateConVar("lc_black_suppressor_gap", "6", FLAGS, "Seconds after a shell lands before the next")
+util.AddNetworkString("lc_suppressor")       -- a shell on its way: where, and how long till it lands
 util.AddNetworkString("lc_collapse_gman")    -- the G-Man, in person, to the Administrator: what he does and says
 util.AddNetworkString("lc_collapse_offer")   -- the G-Man's offer, to the Administrator
 util.AddNetworkString("lc_collapse_answer")  -- her answer: "resign", "end" or "refuse"
@@ -289,6 +306,8 @@ end
 ------------------------------------------------------------------------
 
 local Refuse, Resolve, StandBegin
+local Announce -- (the collapse's announcements: below, with the curfew)
+local FloatBegin, FloatEnd, NextSquad -- (her floating, and the squads coming in: below, with the last stand)
 
 function LC.CollapseBegin(why)
     if C.stage then return false end
@@ -301,7 +320,10 @@ function LC.CollapseBegin(why)
     Publish()
     NoticeAll("warn", "SOCIOSTABILITY: BLACK", "Civil collapse. Open rebellion in the streets. Overwatch has lost the city.", 12)
     Each(function(p) p:ChatPrint("[Overwatch] Sociostability: BLACK (civil collapse).") end)
-    if LC.CustomAnnounce then LC.CustomAnnounce("overwatch", "socio_black", nil, true) end
+    Announce("socio_black")
+    C.nextBlackLine = now + 300
+    LC.CollapseCurfew()
+    LC.SuppressorsArm(true)
     LC.Log("info", "The city collapsed to BLACK (" .. tostring(why or "chaos") .. ")")
     hook.Run("LivingCityCollapse", why)
     -- the G-Man, to the Administrator
@@ -520,11 +542,26 @@ local function SpawnHer(pos)
     return npc
 end
 
--- The transformer powering her shield: the editor's "Her last stand: the Administrator's power" (lc_adminpower).
-function LC.CollapsePower()
+-- The transformers powering her shield: the editor's "Her last stand: the Administrator's power" (lc_adminpower),
+-- 2 or 3 of them (the owner, 10 November), in the order of their numbers (1, 2, 3).
+function LC.CollapsePowers()
+    local out = {}
     for _, e in ipairs((LC.EntsOf and LC.EntsOf("lc_adminpower")) or ents.FindByClass("lc_adminpower")) do
-        if IsValid(e) and not e.lcCollapseTemp then return e end
+        if IsValid(e) and not e.lcCollapseTemp then out[#out + 1] = e end
     end
+    local function Num(e) local n = e.lcFixturePoint and e.lcFixturePoint.group or 0 return (n >= 1 and n <= 3) and n or 9 end
+    table.sort(out, function(a, b) if Num(a) ~= Num(b) then return Num(a) < Num(b) end return a:EntIndex() < b:EntIndex() end)
+    return out
+end
+function LC.CollapsePower() return LC.CollapsePowers()[1] end
+
+-- Where a transformer's glass screen stands: on the side that faced whoever placed it (its front), in the way of
+-- a shot from there (the owner, 10 November: "they HAVE to go deal with the manhack swarm or the turret swarm
+-- first in order to get around the shield/glass"). lc_adminglass asks this.
+function LC.AdminGlassSpot(power)
+    local ang = Angle(0, power:GetAngles().y, 0)
+    local front = (power.OBBMaxs and power:OBBMaxs().x or 24) + 34
+    return power:GetPos() + ang:Forward() * front, ang
 end
 
 -- A clear spot `dist` from `at` (nothing solid between), for her beside the transformer or it beside her.
@@ -645,20 +682,25 @@ end
 -- "this also then determines the final fight area; it's based off where the transformer is"): her desk if it's
 -- within the shield's reach of it, else beside it. None placed: the G-Man brings one, beside her desk.
 function LC.CollapseStandSpot()
-    local power = LC.CollapsePower()
+    local powers = LC.CollapsePowers()
     local desk = LC.CollapseOffice()
     local reach = math.max(200, cvPowerR:GetFloat())
-    if IsValid(power) then
-        local pp = power:GetPos()
-        -- the desk point, if placed within reach; else the map's own desk nearest the transformer; else beside it
+    if #powers > 0 then
+        -- the desk point, if placed within reach of one; else the map's own desk nearest one; else beside the first
         local pts = LC.PointsOfKind and LC.PointsOfKind("desk") or {}
         for _, pt in ipairs(pts) do
-            if pt.pos:DistToSqr(pp) <= (reach * 0.8) ^ 2 then C.deskFrom = "point" return AtDeskPoint(pt.pos), power end
+            for _, pw in ipairs(powers) do
+                if pt.pos:DistToSqr(pw:GetPos()) <= (reach * 0.8) ^ 2 then C.deskFrom = "point" return AtDeskPoint(pt.pos), powers end
+            end
         end
-        local found = LC.DesksNear(pp, reach * 0.8)
-        if found[1] then C.deskFrom = found[1].model return StandBeside(found[1].pos, pp), power end
+        local best, from
+        for _, pw in ipairs(powers) do
+            local found = LC.DesksNear(pw:GetPos(), reach * 0.8)
+            if found[1] and (not best or found[1].d < best.d) then best, from = found[1], pw end
+        end
+        if best then C.deskFrom = best.model return StandBeside(best.pos, from:GetPos()), powers end
         C.deskFrom = "transformer"
-        return Beside(pp, 180), power
+        return Beside(powers[1]:GetPos(), 180), powers
     end
     if not desk then return nil end
     desk = Ground(desk)
@@ -670,14 +712,26 @@ function LC.CollapseStandSpot()
         t:Activate()
         C.tempPower = t
     end
-    return desk, t
+    return desk, { t }
 end
 
--- Is her shield up? While its transformer stands and she's within its reach.
+-- The transformers still standing.
+function LC.CollapsePowersLeft()
+    local out = {}
+    for _, pw in ipairs(C.powers or {}) do
+        if IsValid(pw) and not pw:GetNW2Bool("lc_power_down", false) then out[#out + 1] = pw end
+    end
+    return out
+end
+-- Is her shield up? While any of her transformers stands and she's within its reach.
 function LC.CollapseShieldUp()
-    local boss, power = C.boss, C.power
-    if C.stage ~= "stand" or not IsValid(boss) or not IsValid(power) or power:GetNW2Bool("lc_power_down", false) then return false end
-    return boss:GetPos():DistToSqr(power:GetPos()) <= math.max(200, cvPowerR:GetFloat()) ^ 2
+    local boss = C.boss
+    if C.stage ~= "stand" or not IsValid(boss) then return false end
+    local r2 = math.max(200, cvPowerR:GetFloat()) ^ 2
+    for _, pw in ipairs(LC.CollapsePowersLeft()) do
+        if boss:GetPos():DistToSqr(pw:GetPos()) <= r2 then return true end
+    end
+    return false
 end
 
 local function ArmPower(power)
@@ -688,18 +742,89 @@ local function ArmPower(power)
     power:SetNW2Float("lc_power_frac", 1)
     power:SetNW2Bool("lc_power_down", false)
     power:SetNW2Int("lc_power_smoke", 0)
+    power:SetNW2Bool("lc_power_live", C.stage == "stand")
+end
+
+-- Each transformer's guards, by its number (the owner, 10 November), only for her last stand: 1 a manhack swarm;
+-- 2 floor turrets (and metal panels round her office, to carry as a shield and ram them over with); 3 hopper
+-- mines and rollermines (and gravity guns left near). On its open sides, never behind its glass. A transformer
+-- with no number takes the first kind not yet taken.
+local GUARDS = { npc_manhack = true, npc_turret_floor = true, npc_rollermine = true, combine_mine = true }
+LC.CollapseGuardClasses = GUARDS
+local PANELS = { "models/props_debris/metal_panel01a.mdl", "models/props_c17/door01_left.mdl" }
+local function Ring(power, k, n, r)
+    local yaw = power:GetAngles().y + 60 + (k - 0.5) / math.max(1, n) * 240
+    return Ground(power:GetPos() + Angle(0, yaw, 0):Forward() * r), yaw
+end
+local function Guard(cls, pos, ang, power)
+    local e = ents.Create(cls)
+    if not IsValid(e) then return nil end
+    e:SetPos(pos)
+    if ang then e:SetAngles(ang) end
+    e:Spawn()
+    if e.Activate then e:Activate() end
+    e.lcCollapseGuardOf = power
+    if IsValid(C.boss) then Friendly(e, C.boss) end
+    C.npcs[#C.npcs + 1] = e
+    return e
+end
+local function Loose(model, pos, list)
+    local e = ents.Create(model and "prop_physics" or "weapon_physcannon")
+    if not IsValid(e) then return nil end
+    if model then e:SetModel(model) end
+    e:SetPos(pos + Vector(0, 0, 12))
+    e:SetAngles(Angle(0, math.random(0, 359), 0))
+    e:Spawn()
+    e.lcCollapseLoose = true
+    list[#list + 1] = e
+    return e
+end
+function LC.CollapseGuardKind(power, taken)
+    local n = power.lcFixturePoint and power.lcFixturePoint.group or 0
+    if n >= 1 and n <= 3 then return n end
+    for k = 1, 3 do if not taken[k] then return k end end
+    return 1
+end
+function LC.CollapseGuard(power, kind)
+    C.loose = C.loose or {}
+    power:SetNW2Int("lc_power_guard", kind)
+    if kind == 1 then
+        local n = math.max(0, cvManhacks:GetInt())
+        for i = 1, n do Guard("npc_manhack", Ring(power, i, n, 140) + Vector(0, 0, 64), nil, power) end
+    elseif kind == 2 then
+        local n = math.max(0, cvTurrets:GetInt())
+        for i = 1, n do
+            local at, yaw = Ring(power, i, n, 110)
+            Guard("npc_turret_floor", at, Angle(0, yaw, 0), power)
+        end
+        local model
+        for _, m in ipairs(PANELS) do if not util.IsValidModel or util.IsValidModel(m) then model = m break end end
+        for i = 1, math.max(0, cvPanels:GetInt()) do
+            local a = (i / math.max(1, cvPanels:GetInt())) * math.pi * 2
+            Loose(model or PANELS[1], Ground((C.office or power:GetPos()) + Vector(math.cos(a) * 280, math.sin(a) * 280, 0)), C.loose)
+        end
+    else
+        local n, r = math.max(0, cvMines:GetInt()), math.max(0, cvRollers:GetInt())
+        for i = 1, n do Guard("combine_mine", Ring(power, i, n, 170), nil, power) end
+        for i = 1, r do Guard("npc_rollermine", Ring(power, i + 0.5, r + 1, 230) + Vector(0, 0, 16), nil, power) end
+        for i = 1, math.max(0, cvGravguns:GetInt()) do
+            local at = Ring(power, i, cvGravguns:GetInt(), 420)
+            Loose(nil, at, C.loose)
+        end
+    end
 end
 
 StandBegin = function()
     if C.stage == "stand" then return false end
     local now = Now()
-    local office, power = LC.CollapseStandSpot()
+    local office, powers = LC.CollapseStandSpot()
     if not office then return false end
+    local power = powers[1]
     C.stage, C.office, C.standUntil, C.nextPulse, C.standAt = "stand", office, now + math.max(1, cvStand:GetFloat()) * 60, now + PULSE_GAP, now
     C.heroStage, C.freemanAt, C.npcBarney = nil, nil, nil
     C.there = {}
-    C.power = power
-    ArmPower(power)
+    C.powers, C.power = powers, power
+    for _, pw in ipairs(powers) do ArmPower(pw) end
     -- her: the player, brought to her office, or the city's own
     local adm = SittingAdministrator()
     local boss
@@ -717,6 +842,8 @@ StandBegin = function()
     if boss.SetMaxHealth then boss:SetMaxHealth(hp) end
     boss:SetHealth(hp)
     boss:SetNW2Float("lc_shield_frac", LC.CollapseShieldUp() and 1 or 0)
+    FloatBegin(boss, office)
+    NextSquad(now)
     SetGlobal2Entity("lc_collapse_boss", boss)
     SetGlobal2Entity("lc_collapse_power", IsValid(power) and power or NULL)
     SetGlobal2Vector("lc_collapse_office", office)
@@ -761,15 +888,104 @@ StandBegin = function()
     Each(function(p)
         if not LC.Notice then return end
         if Combine(p) and p ~= boss then
-            LC.Notice(p, "warn", "Defend the Administrator", "Her last stand has begun. Guard her, and guard the transformer that powers her shield.", 12)
+            LC.Notice(p, "warn", "Defend the Administrator", "Her last stand has begun. Guard her, and guard the transformers that power her shield (" .. #powers .. ").", 12)
         elseif p ~= boss then
-            LC.Notice(p, "event", "The last stand", "Her shield deflects every bullet. Destroy the transformer powering it (marked on screen), then end her.", 12)
+            LC.Notice(p, "event", "The last stand", "Her shield deflects every bullet. Destroy every transformer powering it (" .. #powers .. ", marked on screen, each behind glass and guarded), then end her.", 12)
         end
     end)
+    -- each transformer's guards
+    local taken = {}
+    for _, pw in ipairs(powers) do
+        if IsValid(pw) then
+            local kind = LC.CollapseGuardKind(pw, taken)
+            taken[kind] = true
+            LC.CollapseGuard(pw, kind)
+        end
+    end
+    Announce("black_stand")
     hook.Run("LivingCityLastStand", boss, office, power)
     return true
 end
 LC.CollapseStand = function() return StandBegin() end
+
+-- Overwatch squads coming in through her last stand (the owner, 10 November: "squads of combine need to come in
+-- from outside the direct boss fight area ... a new squad every 45-75 seconds"): from a path node out of her
+-- shield's reach and out of sight, deeper in a Combine zone if there's one (never her side rooms, which are
+-- within reach), and they run in to her.
+function LC.CollapseSquadSpot(office)
+    local reach = math.max(200, cvPowerR:GetFloat())
+    local cands = {}
+    for _, nd in ipairs(LC.NavNodesNear and LC.NavNodesNear(office, reach * 2.6) or {}) do
+        local d = nd.pos:Distance(office)
+        if d > reach * 1.05 and not (LC.IsSeen and LC.IsSeen(nd.pos + Vector(0, 0, 40))) then
+            local inside = LC.InCombineZone and LC.InCombineZone(nd.pos)
+            cands[#cands + 1] = { pos = nd.pos, score = (inside and 0 or 2000) + math.abs(d - reach * 1.5) }
+        end
+    end
+    table.sort(cands, function(a, b) return a.score < b.score end)
+    if #cands > 0 then return cands[math.random(math.min(3, #cands))].pos end
+    return (LC.QRFSpot and LC.QRFSpot(office)) or (LC.SafeCitizenSpot and LC.SafeCitizenSpot()) or nil
+end
+function LC.CollapseSquad()
+    if C.stage ~= "stand" or not C.office then return 0 end
+    local from = LC.CollapseSquadSpot(C.office)
+    if not from then return 0 end
+    local made = 0
+    for i = 1, math.max(0, cvSquadSize:GetInt()) do
+        local at = Ground(from + Vector(math.cos(i * 1.7) * 50, math.sin(i * 1.7) * 50, 0))
+        local npc, st
+        if LC.ManpowerFree and LC.SpawnSoldier then npc, st = LC.ManpowerFree(LC.SpawnSoldier, at)
+        elseif LC.SpawnSoldier then npc, st = LC.SpawnSoldier(at) end
+        if IsValid(npc) then
+            local a = math.random() * math.pi * 2
+            local post = Ground(C.office + Vector(math.cos(a) * math.random(180, 360), math.sin(a) * math.random(180, 360), 0))
+            if st then st.unmanaged, st.questLock, st.collapseGuard, st.collapseSquad = true, true, post, true end
+            if IsValid(C.boss) then Friendly(npc, C.boss) end
+            C.npcs[#C.npcs + 1] = npc
+            made = made + 1
+        end
+    end
+    if made > 0 then
+        Each(function(p)
+            if not LC.Notice then return end
+            if Combine(p) then LC.Notice(p, "info", "Reinforcements", "An Overwatch squad is on its way to the Administrator.", 4) end
+        end)
+    end
+    return made
+end
+NextSquad = function(now)
+    local lo = math.max(5, cvSquadMin:GetFloat())
+    C.nextSquad = now + lo + math.random() * math.max(0, cvSquadMax:GetFloat() - lo)
+end
+
+-- She floats in her bubble (the owner, 10 November: "make her float up in the air, but not too high so she doesn't
+-- clip into the ceiling"): up to 48 units, less under a low ceiling, bobbing a little; she can turn and shoot.
+function LC.CollapseFloatHeight(at)
+    local up = util.TraceLine and util.TraceLine({ start = at + Vector(0, 0, 20), endpos = at + Vector(0, 0, 400), mask = MASK_SOLID_BRUSHONLY })
+    local ceil = (up and up.Hit) and up.HitPos.z or (at.z + 400)
+    return math.Clamp(ceil - at.z - 72 - 20, 0, 48)
+end
+FloatBegin = function(boss, at)
+    C.floatZ = at.z + LC.CollapseFloatHeight(at)
+    if boss.SetMoveType then boss:SetMoveType(MOVETYPE_FLY or 4) end
+    if boss.SetVelocity and boss:IsPlayer() then boss:SetVelocity(-boss:GetVelocity()) end
+    local p = boss:GetPos()
+    boss:SetPos(Vector(p.x, p.y, C.floatZ))
+end
+FloatEnd = function(boss)
+    if not IsValid(boss) then return end
+    if boss.SetMoveType then boss:SetMoveType(boss:IsPlayer() and (MOVETYPE_WALK or 2) or (MOVETYPE_STEP or 3)) end
+    local p = boss:GetPos()
+    boss:SetPos(Ground(p))
+end
+function LC.CollapseFloatTick(now)
+    local boss = C.boss
+    if C.stage ~= "stand" or not IsValid(boss) or not C.floatZ or boss:Health() <= 0 then return end
+    local p = boss:GetPos()
+    local z = C.floatZ + math.sin(now * 1.5) * 4
+    if math.abs(p.z - z) > 1 then boss:SetPos(Vector(p.x, p.y, z)) end
+end
+timer.Create("LivingCityCollapseFloat", 0.1, 0, function() if C.stage == "stand" then pcall(LC.CollapseFloatTick, CurTime()) end end)
 
 -- The transformer hit (lc_adminpower's OnTakeDamage). Shows it's working: sparks on every hit, smoke from
 -- three quarters, a small blast at half, a big one when it goes, and her shield with it.
@@ -785,9 +1001,16 @@ local function Blast(pos, big)
     if util.ScreenShake then util.ScreenShake(pos, big and 12 or 5, 5, big and 2 or 1, big and 1200 or 600) end
 end
 function LC.CollapsePowerHit(ent, dmg)
-    if C.stage ~= "stand" or ent ~= C.power or not IsValid(ent) or ent:GetNW2Bool("lc_power_down", false) then return false end
+    if C.stage ~= "stand" or not IsValid(ent) or ent:GetNW2Bool("lc_power_down", false) then return false end
+    local mine = false
+    for _, pw in ipairs(C.powers or {}) do if pw == ent then mine = true end end
+    if not mine then return false end
     local att = dmg:GetAttacker()
-    if IsValid(att) and (Combine(att) or (att.IsNPC and att:IsNPC() and LC.NPCs and LC.NPCs[att] and LC.IsSecurity and LC.IsSecurity(LC.NPCs[att]))) then return false end
+    if IsValid(att) and (Combine(att) or att == C.boss or att.lcCollapseGuardOf or GUARDS[att:GetClass()]
+        or (att.IsNPC and att:IsNPC() and LC.NPCs and LC.NPCs[att] and LC.IsSecurity and LC.IsSecurity(LC.NPCs[att]))) then return false end
+    -- (her own guards can't harm it: the owner, 10 November)
+    local inf = dmg.GetInflictor and dmg:GetInflictor()
+    if IsValid(inf) and (inf.lcCollapseGuardOf or GUARDS[inf:GetClass()]) then return false end
     if IsValid(att) and att:IsPlayer() then C.there[att] = true end
     local ha = IsValid(att) and att.lcHero and LC.CollapseHeroes and LC.CollapseHeroes[att.lcHero]
     local n = dmg:GetDamage() * (ha and ha.dealt or 1)
@@ -814,18 +1037,24 @@ function LC.CollapsePowerHit(ent, dmg)
     end
     if before / max > 0.5 and frac <= 0.5 then
         Blast(ent:GetPos() + Vector(0, 0, 50), false)
-        NoticeAll("info", "Her power is failing", "The transformer is half gone. Keep at it.", 4)
+        NoticeAll("info", "A transformer is failing", "It's half gone. Keep at it.", 4)
     end
     if ent.lcPowerHP <= 0 then
         ent:SetNW2Bool("lc_power_down", true)
         ent.lcPowerBlew = true
         Blast(ent:GetPos() + Vector(0, 0, 50), true)
         if ent.EmitSound then ent:EmitSound("ambient/explosions/explode_4.wav", 100) end
-        if IsValid(C.boss) then
-            C.boss:SetNW2Float("lc_shield_frac", 0)
-            if C.boss.EmitSound then C.boss:EmitSound("ambient/energy/powerdown2.wav", 90) end
+        ent:SetNW2Bool("lc_power_live", false)
+        local left = #LC.CollapsePowersLeft()
+        if left > 0 then
+            NoticeAll("event", "A transformer is down", left .. (left == 1 and " more stands" or " more stand") .. " between her and you.", 6)
+        else
+            if IsValid(C.boss) then
+                C.boss:SetNW2Float("lc_shield_frac", 0)
+                if C.boss.EmitSound then C.boss:EmitSound("ambient/energy/powerdown2.wav", 90) end
+            end
+            NoticeAll("event", "Her shield is down", "Her last transformer is destroyed. " .. AdminName() .. " is unprotected. Now.", 8)
         end
-        NoticeAll("event", "Her shield is down", "The transformer is destroyed. " .. AdminName() .. " is unprotected. Now.", 8)
         hook.Run("LivingCityAdminPowerDown", ent, att)
     end
     return true
@@ -882,13 +1111,17 @@ function LC.CollapseStandTick(now)
         if cvHeroes:GetBool() and C.heroStage ~= "freeman" then LC.HeroBegin("freeman") else Resolve("crushed") return end
     end
     LC.HeroTick(now)
+    if now >= (C.nextSquad or math.huge) then
+        NextSquad(now)
+        LC.CollapseSquad()
+    end
     local up = LC.CollapseShieldUp()
     boss:SetNW2Float("lc_shield_frac", up and 1 or 0)
     -- a player Administrator who strays out of her transformer's reach is told (and unprotected)
-    if boss:IsPlayer() and IsValid(C.power) and not C.power:GetNW2Bool("lc_power_down", false) then
+    if boss:IsPlayer() and #LC.CollapsePowersLeft() > 0 then
         local out = not up
         if out ~= (C.outOfReach or false) and LC.Notice then
-            LC.Notice(boss, out and "warn" or "info", out and "Out of your shield's reach" or "Shielded again", out and "Get back near your transformer: out here, bullets reach you." or "You're within your transformer's reach.", 5)
+            LC.Notice(boss, out and "warn" or "info", out and "Out of your shield's reach" or "Shielded again", out and "Get back near your transformers: out here, bullets reach you." or "You're within your transformers' reach.", 5)
         end
         C.outOfReach = out
     end
@@ -916,6 +1149,12 @@ function LC.CollapseStandTick(now)
     for _, p in ipairs(player.GetAll()) do
         if p ~= boss and p:Alive() and p:GetPos():DistToSqr(C.office) < 900 * 900 and not Combine(p) then C.there[p] = true end
         if boss.AddEntityRelationship and boss:IsNPC() then boss:AddEntityRelationship(p, Combine(p) and (D_LI or 3) or (D_HT or 1), 99) end
+    end
+    -- her guards (manhacks, turrets, rollermines): the Combine and she are friends, everyone else isn't
+    for _, g in ipairs(C.npcs) do
+        if IsValid(g) and g.lcCollapseGuardOf and g.IsNPC and g:IsNPC() and g.AddEntityRelationship then
+            for _, p in ipairs(player.GetAll()) do g:AddEntityRelationship(p, (Combine(p) or p == boss) and (D_LI or 3) or (D_HT or 1), 99) end
+        end
     end
     for npc, st in pairs(LC.NPCs or {}) do
         if IsValid(npc) and LC.IsSecurity and LC.IsSecurity(st) and not st.lcCollapseFriend then
@@ -1155,10 +1394,19 @@ local function Calm()
     local leftovers = C.npcs
     C.npcs = {}
     timer.Simple(60, function() for _, npc in ipairs(leftovers) do if IsValid(npc) and npc:Health() > 0 then npc:Remove() end end end)
-    if IsValid(C.boss) then C.boss:SetNW2Float("lc_shield_frac", 0) end
+    if IsValid(C.boss) then C.boss:SetNW2Float("lc_shield_frac", 0) FloatEnd(C.boss) end
+    C.floatZ, C.nextSquad = nil, nil
+    C.shell, C.nextShell, C.nextBlackLine = nil, nil, nil
+    LC.SuppressorsArm(false)
+    if C.curfewOurs and LC.Event == "curfew" and LC.EndEvent then LC.EndEvent(true) end
+    C.curfewOurs = nil
     if IsValid(C.tempPower) then C.tempPower:Remove() end
-    if IsValid(C.power) and not C.power.lcCollapseTemp then ArmPower(C.power) end
-    C.tempPower, C.power, C.outOfReach = nil, nil, nil
+    local wasPowers = C.powers or {}
+    C.stage = nil -- (so they're armed again as not live)
+    for _, pw in ipairs(wasPowers) do if IsValid(pw) and not pw.lcCollapseTemp then ArmPower(pw) pw:SetNW2Int("lc_power_guard", 0) end end
+    local loose = C.loose or {}
+    timer.Simple(60, function() for _, e in ipairs(loose) do if IsValid(e) and not (e.GetOwner and IsValid(e:GetOwner())) then e:Remove() end end end)
+    C.tempPower, C.power, C.powers, C.loose, C.outOfReach = nil, nil, nil, nil, nil
     if IsValid(C.gman) and not C.gman.lcLeaveAt then GmanLeave(C.gman, 3) end
     C.walkAwayUntil, C.offerOpen = nil, nil
     SetGlobal2Entity("lc_collapse_power", NULL)
@@ -1206,6 +1454,7 @@ Resolve = function(how, who, by)
             end
         end
         NoticeAll("event", "The Administrator is dead", (IsValid(who) and who:IsPlayer() and Name(who) or AdminName()) .. " has fallen in her office. The people have the Nexus tonight.", 12)
+        Announce("black_fallen", true)
         if IsValid(who) and who:IsPlayer() then local p = who timer.Simple(0, function() LeavePost(p) end) end
         LC.Chaos = 0
         if cvResetMap:GetBool() and game and game.GetMap then
@@ -1213,6 +1462,7 @@ Resolve = function(how, who, by)
             timer.Create("LivingCityCollapseReset", 60, 1, function() RunConsoleCommand("changelevel", game.GetMap()) end)
         end
     elseif how == "crushed" then
+        Announce("black_crushed")
         NoticeAll("event", "The uprising is crushed", "Overwatch has retaken the Nexus. " .. (IsValid(boss) and boss:IsPlayer() and Name(boss) or AdminName()) .. " keeps the office.", 12)
         LC.Chaos = 0.5
         if IsValid(boss) and boss:IsPlayer() and boss.SetMaxHealth then boss:SetMaxHealth(100) boss:SetHealth(math.min(boss:Health(), 100)) end
@@ -1229,6 +1479,209 @@ Resolve = function(how, who, by)
     return true
 end
 LC.CollapseResolve = function(how, who, by) return Resolve(how, who, by) end
+
+------------------------------------------------------------------------
+-- In BLACK: a mandatory curfew, and the Nexus's suppression device (the owner, 10 November: "a mandatory curfew or
+-- martial law waiver is in effect, and I want to use the suppressor entity from HL2 ... to fire upon any rebels that
+-- are outside under open sky ... within about 1000 feet of a combine only zone. It can only fire one at a time and has
+-- the same properties as the one in HL2, with the same sounds and fade in visual effect on the ground")
+------------------------------------------------------------------------
+
+-- Announcements for the collapse (the owner, 10 November: "voice lines for the announcements, both administrator and
+-- overwatch voice ... black status and mortar fire can be the same"): the server's own recordings, by file name, in
+-- either voice (the usual rule: hers with nobody in the post, Overwatch's with a player there). black_fallen is
+-- always Overwatch's (she's dead).
+Announce = function(trig, overwatchOnly)
+    if overwatchOnly then
+        if LC.CustomAnnounce then LC.CustomAnnounce("overwatch", trig, nil, true) end
+    elseif LC.TriggerAnnouncements then
+        LC.TriggerAnnouncements(trig, { force = true, delay = 2 })
+    end
+end
+LC.CollapseAnnounce = Announce
+
+-- the curfew: on for as long as the city is BLACK (put back if anything else takes its place, a lockdown aside)
+function LC.CollapseCurfew()
+    if not C.stage or not LC.StartEvent then return false end
+    if LC.Event == "curfew" or LC.Event == "lockdown" then return false end
+    if LC.StartEvent("curfew", 120) then
+        C.curfewOurs = true
+        NoticeAll("warn", "Mandatory curfew", "Martial law: everyone indoors. Anyone in the street is fair game.", 8)
+        return true
+    end
+    return false
+end
+
+-- Half-Life 2's mortar, rebuilt (its shells only work from a mapper's brush): a ring fades in on the ground where it
+-- will land (cl_livingcity_collapse.lua), its incoming whistle, then the shell. One at a time.
+local function UnderSky(pos)
+    if not util.TraceLine then return true end
+    local tr = util.TraceLine({ start = pos + Vector(0, 0, 72), endpos = pos + Vector(0, 0, 32000), mask = MASK_SOLID_BRUSHONLY })
+    return tr and tr.HitSky == true
+end
+LC.UnderSky = UnderSky
+local function NearCombine(pos, range)
+    for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("combine") or {}) do
+        local c = z.box and (z.box.mins + z.box.maxs) / 2 or z.pos
+        local r = z.box and (z.box.maxs - z.box.mins):Length2D() / 2 or (z.r or 300)
+        if c and c:Distance(pos) - r <= range then return true end
+    end
+    return false
+end
+LC.SuppressorInRange = NearCombine -- (not LC.NearCombineZone: that is sv_livingcity_paths.lua's)
+-- every rebel it could shell now: the Resistance's players and fighters, outside under open sky, near a Combine zone
+function LC.SuppressorTargets()
+    local out, range = {}, math.max(0, cvSupRange:GetFloat())
+    local function Try(e)
+        local p = e:GetPos()
+        if NearCombine(p, range) and UnderSky(p) then out[#out + 1] = e end
+    end
+    for _, p in ipairs(player.GetAll()) do
+        if p:Alive() and LC.SideOf and LC.SideOf(p) == "resistance" then Try(p) end
+    end
+    for npc, st in pairs(LC.NPCs or {}) do
+        if IsValid(npc) and npc:Health() > 0 and (st.role == "rebel" or st.role == "vort") then Try(npc) end
+    end
+    return out
+end
+-- The suppression devices placed with the editor (lc_suppressor): the shells come from one standing; all destroyed,
+-- the shelling stops. None placed: they come from somewhere out of sight, as in Half-Life 2.
+function LC.Suppressors()
+    local out = {}
+    for _, e in ipairs((LC.EntsOf and LC.EntsOf("lc_suppressor")) or ents.FindByClass("lc_suppressor")) do
+        if IsValid(e) then out[#out + 1] = e end
+    end
+    return out
+end
+function LC.SuppressorsArm(live)
+    for _, e in ipairs(LC.Suppressors()) do
+        e.lcPowerMax = math.max(1, cvSupHP:GetFloat())
+        e.lcPowerHP = e.lcPowerMax
+        e:SetNW2Float("lc_power_frac", 1)
+        e:SetNW2Bool("lc_power_down", false)
+        e:SetNW2Int("lc_power_smoke", 0)
+        e:SetNW2Bool("lc_power_live", live == true)
+    end
+end
+-- the one it fires from (nil: none placed, so from out of sight; false: all destroyed, so no shelling)
+function LC.SuppressorSource()
+    local all = LC.Suppressors()
+    if #all == 0 then return nil end
+    local up = {}
+    for _, e in ipairs(all) do if not e:GetNW2Bool("lc_power_down", false) then up[#up + 1] = e end end
+    if #up == 0 then return false end
+    return up[math.random(#up)]
+end
+function LC.SuppressorHit(ent, dmg)
+    if not C.stage or not IsValid(ent) or ent:GetNW2Bool("lc_power_down", false) then return false end
+    local att = dmg:GetAttacker()
+    if IsValid(att) and (Combine(att) or att.lcCollapseGuardOf or GUARDS[att:GetClass()]
+        or (att.IsNPC and att:IsNPC() and LC.NPCs and LC.NPCs[att] and LC.IsSecurity and LC.IsSecurity(LC.NPCs[att]))) then return false end
+    local inf = dmg.GetInflictor and dmg:GetInflictor()
+    if IsValid(inf) and inf.lcCollapseGuardOf then return false end
+    local ha = IsValid(att) and att.lcHero and HEROES and HEROES[att.lcHero]
+    local n = dmg:GetDamage() * (ha and ha.dealt or 1)
+    if n <= 0 then return false end
+    local max = ent.lcPowerMax or math.max(1, cvSupHP:GetFloat())
+    local before = ent.lcPowerHP or max
+    ent.lcPowerHP = math.max(0, before - n)
+    local frac = ent.lcPowerHP / max
+    ent:SetNW2Float("lc_power_frac", frac)
+    ent:SetNW2Int("lc_power_smoke", frac <= 0.25 and 3 or (frac <= 0.5 and 2 or (frac <= 0.75 and 1 or 0)))
+    if util.Effect and EffectData then
+        local ed = EffectData()
+        ed:SetOrigin((dmg.GetDamagePosition and dmg:GetDamagePosition()) or ent:GetPos() + Vector(0, 0, 40))
+        ed:SetMagnitude(2) ed:SetScale(1) ed:SetRadius(4)
+        util.Effect("Sparks", ed, true, true)
+    end
+    if before / max > 0.5 and frac <= 0.5 and util.Effect and EffectData then
+        local ed = EffectData()
+        ed:SetOrigin(ent:GetPos() + Vector(0, 0, 50))
+        util.Effect("Explosion", ed, true, true)
+    end
+    if ent.lcPowerHP <= 0 then
+        ent:SetNW2Bool("lc_power_down", true)
+        ent:SetNW2Bool("lc_power_live", false)
+        if util.Effect and EffectData then
+            local ed = EffectData()
+            ed:SetOrigin(ent:GetPos() + Vector(0, 0, 50))
+            ed:SetMagnitude(3) ed:SetScale(2)
+            util.Effect("HelicopterMegaBomb", ed, true, true)
+        end
+        if ent.EmitSound then ent:EmitSound("ambient/explosions/explode_4.wav", 100) end
+        if LC.SuppressorSource() == false then
+            C.shell = nil
+            NoticeAll("event", "The suppression device is destroyed", "The shelling stops.", 8)
+            Announce("suppressor_down")
+        end
+        hook.Run("LivingCitySuppressorDown", ent, att)
+    end
+    return true
+end
+
+function LC.SuppressorFire(target)
+    if C.shell or not IsValid(target) then return false end
+    local src = LC.SuppressorSource()
+    if src == false then return false end
+    -- (from the device: a flash and its launch)
+    if IsValid(src) then
+        if util.Effect and EffectData then
+            local ed = EffectData()
+            ed:SetOrigin(src:GetPos() + Vector(0, 0, src.OBBMaxs and src:OBBMaxs().z or 80))
+            ed:SetNormal(Vector(0, 0, 1))
+            util.Effect("AR2Explosion", ed, true, true)
+        end
+        if sound and sound.Play then sound.Play("Weapon_Mortar.Single", src:GetPos(), 120, 100, 1) end
+    end
+    local pos = target:GetPos()
+    local down = util.TraceLine and util.TraceLine({ start = pos + Vector(0, 0, 20), endpos = pos - Vector(0, 0, 200), mask = MASK_SOLID_BRUSHONLY })
+    if down and down.Hit then pos = down.HitPos end
+    local warn = math.max(0.5, cvSupWarn:GetFloat())
+    C.shell = { pos = pos, at = Now() + warn, target = target }
+    net.Start("lc_suppressor")
+    net.WriteVector(pos)
+    net.WriteFloat(warn)
+    net.Broadcast()
+    if sound and sound.Play then sound.Play("Weapon_Mortar.Incomming", pos, 100, 100, 1) end
+    return true
+end
+function LC.SuppressorLand()
+    local sh = C.shell
+    if not sh then return false end
+    C.shell = nil
+    C.nextShell = Now() + math.max(0, cvSupGap:GetFloat())
+    if util.Effect and EffectData then
+        local ed = EffectData()
+        ed:SetOrigin(sh.pos)
+        ed:SetScale(1)
+        ed:SetMagnitude(1)
+        util.Effect("Explosion", ed, true, true)
+    end
+    if sound and sound.Play then sound.Play("Weapon_Mortar.Impact", sh.pos, 110, 100, 1) end
+    if util.ScreenShake then util.ScreenShake(sh.pos, 10, 5, 1, 800) end
+    -- (from the device itself: her transformers take no harm from it)
+    local dev = ents.Create("info_target")
+    if IsValid(dev) then
+        dev:SetPos(sh.pos)
+        dev:Spawn()
+        dev.lcCollapseGuardOf = true
+        if util.BlastDamage then util.BlastDamage(dev, dev, sh.pos + Vector(0, 0, 8), math.max(1, cvSupRad:GetFloat()), math.max(0, cvSupDmg:GetFloat())) end
+        timer.Simple(0.1, function() if IsValid(dev) then dev:Remove() end end)
+    end
+    hook.Run("LivingCitySuppressorShell", sh.pos, sh.target)
+    return true
+end
+function LC.SuppressorTick(now)
+    if not C.stage or not cvSup:GetBool() then C.shell = nil return end
+    if C.shell then
+        if now >= C.shell.at then LC.SuppressorLand() end
+        return
+    end
+    if now < (C.nextShell or 0) then return end
+    local ts = LC.SuppressorTargets()
+    if #ts > 0 then LC.SuppressorFire(ts[math.random(#ts)]) else C.nextShell = now + 2 end
+end
+timer.Create("LivingCitySuppressor", 0.25, 0, function() if C.stage then pcall(LC.SuppressorTick, CurTime()) end end)
 
 ------------------------------------------------------------------------
 -- The clock
@@ -1256,6 +1709,8 @@ function LC.CollapseTick(now)
     end
     if C.stage == "offer" and now >= (C.answerBy or 0) then Refuse() end
     LC.CollapseGmanTick(now)
+    LC.CollapseCurfew()
+    if now >= (C.nextBlackLine or math.huge) then C.nextBlackLine = now + 300 Announce("socio_black") end
     if C.stage == "refused" and now >= (C.nextPhase or 0) then LC.CollapseNext() end
     Publish()
 end

@@ -9,6 +9,7 @@
   - **Performance caches** (`docs/dev/performance-audit.md`): explained again 9 November; waiting on the owner (only worth it if the server or players lag).
   - **Gordon Freeman's model**: Garry's Mod has none; `lc_black_freeman_model` takes a Workshop one's path when the owner has one.
   - **The collapse, open ideas:** more G-Man interference (the owner listed dream weapons and crates; also "keeping weapons from dreams"), what BLACK does to the city beyond red, and a real Breen-style shield model.
+  - **The collapse's announcements:** the owner records `socio_black`, `black_stand`, `black_crushed`, `suppressor_down` (both voices) and `black_fallen` (Overwatch); suggested words in `docs/features/custom-announcements.md`.
   - **The G-Man's collapse lines:** the owner splices clips for `lc_black_gman_*` (GMAN_SOUNDS.md rows 11 to 23; a `.txt` beside each gives its words).
   - **Unconfirmed in game:** everything in PLAYTEST.md's "7 November, part 2" section, above all the dreams (the per-NPC hold, out-of-map ground) and the arrest struggle.
 
