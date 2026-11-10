@@ -67,6 +67,7 @@ local function OpenPamphlet(text, opts)
     frame:Center()
     frame:MakePopup()
     frame:ShowCloseButton(false)
+    frame.lcNoTheme = true -- (it's a sheet of paper, whoever holds it: cl_livingcity_theme.lua)
     frame.OnClose = function() Do("") end
     frame.Paint = function(_, w, h)
         if paper and not paper:IsError() then

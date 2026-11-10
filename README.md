@@ -33,6 +33,7 @@ This file is only an index. The specification of how everything behaves (the agr
 - [The city does its own work, and the city's stores](docs/features/city-work-and-stores.md): NPC repairs and errands, how they carry things, the stores
 - [Survival, social credit and your characters](docs/features/survival-and-credit.md): Hunger, thirst, sleep, medicine, standing, credits, characters
 - [Talking, knowing people, going down, and tips](docs/features/talking-and-tips.md): Chat, recognition, acts, going down instead of dying, pop-up tips
+- [Window styles](docs/features/window-styles.md): Every window in your faction's look (Combine, Resistance, citizen, in custody)
 - [Homes, trade and the written word](docs/features/homes-and-trade.md): Apartments, business licenses, notes, letters, broadcasts, the law
 - [Vortigaunts, and day, night and weather](docs/features/vortigaunts-and-weather.md): Freed vortigaunts, the clock, light, rain
 - [Staff tools](docs/features/staff-tools.md): Admin safeguards for a public server, staff menus
