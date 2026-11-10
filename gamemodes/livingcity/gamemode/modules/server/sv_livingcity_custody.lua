@@ -87,6 +87,9 @@ local function EndInterrogation(ply, text)
     end
 end
 
+LC.EndInterrogation = EndInterrogation
+LC.InterrogationReward = COOP_REWARD
+
 function LC.CanInterrogate(ply)
     if not IsValid(ply) then return false end
     return ply:GetNW2String("lcf_faction", "") == "resistance"
@@ -113,7 +116,7 @@ function LC.StartInterrogation(ply)
             cop = npc
         end
     end
-    LC.Interrogations[ply] = { cop = cop, hits = 0, untilT = CurTime() + 45, next = CurTime() + 4 }
+    LC.Interrogations[ply] = { cop = cop, hits = 0, untilT = CurTime() + 90, next = CurTime() + 4, resolve = 3 }
     ply:SetNW2Bool("lc_interrogated", true)
     ply:ChatPrint("[Interrogation] A Civil Protection unit steps into your cell and switches on his baton. \"You will answer my questions.\" (Talk, and it stops: the choice is on your screen. Or don't.)")
     ply:ChatPrint("[Interrogation] \"If you comply, I will grant you " .. COOP_REWARD .. " social credits.\"")
@@ -143,7 +146,8 @@ function LC.InterrogationTalk(ply)
             LC.SendCompressed("lc_cpmark", { name = "HIDEOUT (INFORMANT)", x = z.pos.x, y = z.pos.y, z = z.pos.z, secs = 300 }, units)
         end
     end
-    if LC.AddStanding then LC.AddStanding(ply, COOP_REWARD, "cooperated under interrogation") end
+    if LC.AddStanding and not it.toldOnce then LC.AddStanding(ply, COOP_REWARD, "cooperated under interrogation") end -- (paid once: sv_livingcity_interrogation.lua)
+    if IsValid(it.byPlayer) then it.byPlayer:ChatPrint("[Interrogation] " .. ply:Nick() .. " breaks and tells you everything" .. (where and where ~= "" and (": a hideout " .. where) or "") .. ".") end
     if ply:GetNW2String("lcf_faction", "") == "resistance" or (LC.PlayerIsHunted and LC.PlayerIsHunted(ply)) then
         -- the cell hears about it
         ply:SetNW2Float("lc_traitor_until", CurTime() + 1800)
@@ -160,6 +164,8 @@ local function InterrogationTick(now)
         elseif now > it.untilT then
             EndInterrogation(ply, "[Interrogation] \"We'll talk again.\" The Civil Protection unit leaves. You said nothing.")
             if ply:GetNW2String("lcf_faction", "") == "resistance" and LC.AddXP then LC.AddXP(ply, 15, "said nothing under interrogation") end
+        elseif LC.InterrogationStep then
+            LC.InterrogationStep(ply, it, now) -- (question by question: sv_livingcity_interrogation.lua)
         elseif now > it.next then
             it.next = now + math.Rand(6, 9)
             ply:ChatPrint("[Interrogation] \"" .. Pick(QUESTIONS) .. "\"")

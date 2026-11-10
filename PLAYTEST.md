@@ -1221,3 +1221,14 @@ Notes:
   Notes:
 - [ ] **Leaving unsearched:** register while the desk units are busy, then leave. A unit should come and search you outside, then let you go.
   Notes:
+
+## 10 November, last: prison
+
+- [ ] **Sentences add up:** commit a petty crime and assault a unit, then get arrested. The chat should say "Your sentence: ... (3), Assaulting Civil Protection (10): 13 minutes". Give yourself up instead and it should be halved.
+  Notes:
+- [ ] **Work detail:** in a cell, F1 > Ask for a work detail. A guard should come to your cell, walk you out (to the "prison work spot" point if you placed one), and there should be 6 bits of trash. E on each: 20 seconds off. Then he walks you back. Try walking far away from him: it should count as an escape.
+  Notes:
+- [ ] **Probation:** get released after an arrest as a citizen. You should be told you are on probation. F1 > Check in for probation next to a unit. Walk into rebel territory: probation violation. Wait out 15 minutes without checking in (another time): Failure to report.
+  Notes:
+- [ ] **Interrogation:** as a Resistance member, get jailed with a bad record. Answer each of the three questions differently (truth, lie, silence, bargain). As a CP player, stand by a prisoner's cell, F2 > Interrogate, ask questions and use the baton.
+  Notes:

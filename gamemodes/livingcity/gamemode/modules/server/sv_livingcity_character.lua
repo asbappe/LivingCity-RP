@@ -186,6 +186,8 @@ function LC.NewCharacter(ply, why)
     -- story and traits
     ply.lcStory, ply.lcStoryPostings = nil, nil
     for _, key in ipairs({ "lcq_story", "lcq_loyalty", "lcq_sympathy", "lcq_corruption", "lcq_done" }) do ply:RemovePData(key) end
+    for _, key in ipairs({ "lc_rap", "lc_probation_due" }) do ply:RemovePData(key) end -- (a new person has no record: sv_livingcity_sentence.lua)
+    ply.lcRap, ply.lcProbationUntil = nil, nil
     if LC.QuestOf and LC.QuestOf[ply] and LC.AbandonQuest then LC.AbandonQuest(ply) end
 
     -- who they are to the law

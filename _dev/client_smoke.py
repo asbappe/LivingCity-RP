@@ -1497,6 +1497,61 @@ local okTS, errTS = pcall(function()
 end)
 net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteBool = tsSaved[1], tsSaved[2], tsSaved[3], tsSaved[4], tsSaved[5], tsSaved[6]
 if not okTS then problems[#problems + 1] = "arrival search: " .. tostring(errTS) end
+-- the interrogation question by question (cl_livingcity_interrogation.lua): the prisoner's question window and the
+-- unit's window build and paint, answers go to the server, and the unit's window closes when it's over
+local itSaved = { net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteString, net.WriteUInt }
+local okIT, errIT = pcall(function()
+    local doc, sent, made = nil, {}, {}
+    local curName
+    net.ReadString = function() return "x" end
+    util.JSONToTable = function() return doc end
+    net.Start = function(n) curName = n end
+    net.WriteString = function() end
+    net.WriteUInt = function() end
+    net.SendToServer = function() sent[#sent + 1] = curName end
+    local function P()
+        local t = {}
+        made[#made + 1] = t
+        return setmetatable(t, { __index = function(_, k)
+            if string.sub(k, 1, 2) == "lc" or string.sub(k, 1, 1) == "_" or k == "silent" or k == "openAt" then return nil end
+            if k == "IsValid" then return function() return not t._removed end end
+            if k == "Remove" then return function() t._removed = true if t.OnRemove then t.OnRemove(t) end end end
+            if k == "GetWide" or k == "GetTall" then return function() return 380 end end
+            if k == "GetText" then return function() return "" end end
+            if k == "IsHovered" or k == "GetDisabled" then return function() return false end end
+            return function() return P() end
+        end })
+    end
+    vgui = { Create = function() return P() end, GetKeyboardFocus = function() return nil end }
+    doc = { q = 1, text = "Where is the hideout?", resolve = 0, bargain = true, secs = 12, by = "Unit 42" }
+    net.recv_lc_intr_q()
+    local qw = LC_CL.InterrogationWindows()
+    if not IsValid(qw) then error("the prisoner's question didn't open") end
+    doc = { who = "Prisoner", resolve = 2, hits = 1, waiting = 0, asked = { true }, answers = { { q = 1, text = "\"They meet by the canal.\"" } },
+        questions = { "Where is the hideout?", "Names.", "Supplies?" } }
+    net.recv_lc_intr_cp()
+    local _, cw = LC_CL.InterrogationWindows()
+    if not IsValid(cw) then error("the unit's window didn't open") end
+    for _, pnl in ipairs(made) do
+        for _, k in ipairs({ "Paint", "Think", "PerformLayout" }) do
+            local f = rawget(pnl, k)
+            if f then local okp, e = pcall(f, pnl, 380, 240) if not okp then error("a panel's " .. k .. " fails: " .. tostring(e)) end end
+        end
+    end
+    for _, pnl in ipairs(made) do
+        local f = rawget(pnl, "DoClick")
+        if f then pcall(f, pnl) end
+    end
+    local saw = {}
+    for _, n in ipairs(sent) do saw[n] = true end
+    if not saw.lc_intr_a or not saw.lc_intr_cp_do then error("the buttons don't reach the server") end
+    doc = { done = true }
+    net.recv_lc_intr_cp()
+    local _, cw2 = LC_CL.InterrogationWindows()
+    if IsValid(cw2) then error("the unit's window didn't close when it was over") end
+end)
+net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteString, net.WriteUInt = itSaved[1], itSaved[2], itSaved[3], itSaved[4], itSaved[5], itSaved[6], itSaved[7]
+if not okIT then problems[#problems + 1] = "interrogation windows: " .. tostring(errIT) end
 -- what now? (cl_livingcity_nextstep.lua): the line on screen, and its F1 page
 local okWN, errWN = pcall(function()
     _me:SetNW2String("lc_next", "Find water")

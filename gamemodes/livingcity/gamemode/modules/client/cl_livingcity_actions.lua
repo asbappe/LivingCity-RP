@@ -564,4 +564,5 @@ net.Receive("lc_interrogate", function()
         if not LocalPlayer():GetNW2Bool("lc_interrogated", false) and (self.born or 0) + 2 < CurTime() then self:Remove() end
     end
     frame.born = CurTime()
+    LC_CL.InterrogateFrame = frame -- (the questions replace it: cl_livingcity_interrogation.lua)
 end)
