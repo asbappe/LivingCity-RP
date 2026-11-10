@@ -624,7 +624,7 @@ local function MaybeLaunch(now)
     if nextOpAllowed == 0 then nextOpAllowed = now + cvOpsGap:GetFloat() * 60 * math.Rand(0.4, 0.8) end
     if now < nextOpAllowed then return end
     local launched = MaybeLaunchOne(now)
-    if launched then nextOpAllowed = now + cvOpsGap:GetFloat() * 60 * math.Rand(0.8, 1.2) * (LC.MarketOpsMul and LC.MarketOpsMul() or 1) end -- (sooner while the Commissary's restricted: sv_livingcity_market.lua)
+    if launched then nextOpAllowed = now + cvOpsGap:GetFloat() * 60 * math.Rand(0.8, 1.2) * (LC.MarketOpsMul and LC.MarketOpsMul() or 1) * (LC.SmallOpsMul and LC.SmallOpsMul() or 1) end -- (small-server mode: sv_livingcity_smallserver.lua) -- (sooner while the Commissary's restricted: sv_livingcity_market.lua)
 end
 
 MaybeLaunchOne = function(now)

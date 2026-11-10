@@ -54,7 +54,9 @@ _setcvar("lc_wear_uses", 0) -- (tools wearing out at random: tested on its own)
 _setcvar("lc_survival_modes", 0) -- (Realistic or Relaxed, and its 20% bonus: tested on its own, SurvivalModeTests)
 _setcvar("lc_snitches", 0) -- (secret informants among the citizens, at random: tested on their own, SnitchTests)
 _setcvar("lc_ledger", 0) -- (the state of the city, day to day, and its effects on the streets: tested on its own, LedgerTests)
+_setcvar("lc_small_server", 0) -- (small-server mode turns on with few players online: tested on its own, SmallServerTests)
 _setcvar("lc_minds", 0) -- (watching the city's minds draws random numbers: tested on its own, MindsTests)
+_setcvar("lc_npc_vices", 0) -- (citizens drinking and smoking at random: tested on its own, MindsTests)
 _setcvar("lc_quest_allies", 0) -- (friendly NPCs on violent jobs: tested on their own, in QuestSquadTests)
 _setcvar("lc_directives", 1) -- (the G-Man's directives are off by default now, set aside by the owner; still tested as they are)
 _setcvar("lc_market_demand", 0) -- (demand moving black market prices: tested on its own, in MarketTests)
@@ -10861,6 +10863,91 @@ LC.MindsSave()
 LC.Minds.byId = {}
 ok(LC.MindsLoad() >= 2 and LC.Minds.byId[mv.id].psy and math.abs(LC.Minds.byId[mv.id].psy.stress - stress) < 0.01
     and LC.Minds.byId[mv.id].psy.ties[cop.lcProfile.id] ~= nil, "saved and put back over a map change, ties and all")
+mv = LC.MindOf(v.lcProfile) -- (the mind as put back)
+-- the second set of traits (10 November): eleven, independent of each other
+ok(#Psy.TRAITS == 11 and Psy.TRAITS[6] == "greed" and Psy.TRAITS[11] == "vice", "eleven traits, the new ones on the end", #Psy.TRAITS)
+do
+    local xs, ys = {}, {}
+    for i = 1, 400 do local tr = Psy.Traits({ id = 5000 + i, role = "citizen" }) xs[i], ys[i] = tr.temper, tr.hope end
+    local function mean(a) local s = 0 for _, x in ipairs(a) do s = s + x end return s / #a end
+    local mx, my, sxy, sxx, syy = mean(xs), mean(ys), 0, 0, 0
+    for i = 1, #xs do sxy = sxy + (xs[i] - mx) * (ys[i] - my) sxx = sxx + (xs[i] - mx) ^ 2 syy = syy + (ys[i] - my) ^ 2 end
+    ok(math.abs(sxy / math.sqrt(sxx * syy)) < 0.15, "traits don't move together (the first dice made them)", sxy / math.sqrt(sxx * syy))
+end
+local proud, humble
+for i = 1, 400 do
+    local q = { id = 7000 + i, role = "citizen" }
+    local tr = Psy.Traits(q)
+    if tr.pride > 0.7 and not proud then proud = q elseif tr.pride < -0.7 and not humble then humble = q end
+end
+Psy.Think(proud, "stopped", CurTime()) Psy.Think(humble, "stopped", CurTime())
+ok(Psy.State(proud).th[1].v < Psy.State(humble).th[1].v, "being searched stings the proud more than the humble", Psy.State(proud).th[1].v)
+local sober, drinker
+for i = 1, 400 do
+    local q = { id = 9000 + i, role = "citizen" }
+    local tr = Psy.Traits(q)
+    if tr.vice <= 0 and not sober then sober = q elseif tr.vice > 0.6 and not drinker then drinker = q end
+end
+Psy.Step(sober, 1000, {}) Psy.Step(sober, 2000, {}) Psy.Step(drinker, 1000, {}) Psy.Step(drinker, 2000, {})
+ok((Psy.State(sober).crave or 0) == 0 and Psy.State(drinker).crave > 0, "only those fond of a drink and a smoke come to crave one")
+ok(#Psy.TraitWords(drinker, 11) > 0 and string.find(table.concat(Psy.TraitWords(drinker, 11), ","), "drink", 1, true), "and it's said in words", table.concat(Psy.TraitWords(drinker, 11), ", "))
+local kinds = {}
+for _ = 1, 300 do kinds[Psy.ChooseBreak(drinker, {})] = true kinds[Psy.ChooseInspiration(drinker, {})] = true end
+ok(kinds.tantrum ~= nil or kinds.despair ~= nil or kinds.binge ~= nil, "breaks are chosen from the longer list")
+-- what the city tells them now
+Psy.State(mv).th = {}
+hook.Run("LivingCityEventStarted", "curfew", 5)
+ok(has(mv, "curfew"), "a curfew: everyone feels it")
+LC.Minds.lastSocio = "green" LC.Socio = "red"
+LC.MindsSocio()
+ok(has(mv, "city_red"), "sociostability red: frightened")
+LC.Socio = "green" LC.MindsSocio()
+ok(has(mv, "relief"), "and relieved when it calms")
+local thief = newPlayer("MindsThief", "citizen")
+thief:SetPos(T0)
+hook.Run("LivingCityPickpocket", thief, v, false)
+ok(has(mv, "robbed") and Psy.Tie(mv, "pl:" .. LC.MemoryKey(thief)) < 0, "a pickpocket caught at it: robbed, and held against them")
+vst.state = "detained"
+LC.Minds.order = { mv.id } LC.Minds.idx = 0
+LC.MindsStep(CurTime())
+ok(has(mv, "stopped"), "stopped and searched by a unit: they feel it")
+vst.state = stateBefore
+-- a drink, given
+Psy.State(mv).crave = 0.9
+hook.Run("LivingCitySharedFood", thief, v, "beer")
+ok(Psy.State(mv).crave == 0 and has(mv, "indulged"), "a player's beer: the craving goes")
+-- drinking and smoking in the street (sv_livingcity_npcvices.lua)
+local dp
+for _ = 1, 400 do
+    local q = LC.NewPerson("citizen")
+    if LC.Psy.Traits(LC.MindOf(q)).vice > 0.5 then dp = q break end
+end
+local dn, dst = person(Vector(0, 200, 0))
+if dn.lcProfile then dn.lcProfile.npc = nil end
+LC.AttachProfile(dn, dst, dp)
+dst.state = "idle"
+dst.untilT, dst.nextThink, dst.test = CurTime() + 9999, CurTime() + 9999, nil -- (held still: the city's loop doesn't send them off mid-test)
+ok(LC.NPCViceOf(dn) > 0.5 and LC.NPCViceOf(cop) == 0, "who drinks and smokes comes from their traits; never a unit")
+_setcvar("lc_npc_vices", 1)
+ok(LC.NPCViceStart(dn, "drink", CurTime()) and IsValid(LC.NPCVices[dn].prop), "a bottle in their hand")
+ok(LC.MindOf(dp).psy and has(LC.MindOf(dp), "indulged"), "and their mind knows they had one")
+LC.NPCViceTick(CurTime() + 2)
+ok(LC.NPCVices[dn] ~= nil, "they keep at it while they stand about")
+local prop = LC.NPCVices[dn] and LC.NPCVices[dn].prop
+dst.state = "moving"
+LC.NPCViceTick(CurTime())
+ok(LC.NPCVices[dn] == nil and not IsValid(prop), "off somewhere: the bottle goes")
+dst.state = "idle"
+net.sent = {}
+LC.NPCViceStart(dn, "smoke", CurTime())
+LC.NPCViceTick(CurTime() + 5)
+local puffed = false
+for _, msg in ipairs(net.sent) do if msg.name == "lc_vice" and msg.data[1] == "smoke" and msg.data[2] == dn then puffed = true end end
+ok(puffed, "a cigarette: puffs of smoke from them")
+_setcvar("lc_npc_vices", 0)
+LC.NPCViceTick(CurTime())
+ok(next(LC.NPCVices) == nil, "lc_npc_vices 0: nobody drinks or smokes")
+if IsValid(dn) then dn:Remove() end
 -- off
 _setcvar("lc_minds", 0)
 local n0 = #LC.Minds.buf
@@ -11244,6 +11331,26 @@ for _, x in ipairs({ buyer, res }) do x:SetPos(F0 + Vector(30000, 0, 0)) end
 _setcvar("lc_ledger", 0)
 end
 Ledger2Tests()
+function SmallServerTests()
+section("Small-server mode: with few players, the city carries more of the story")
+local function Later(secs) _advance(secs) _runtimers() end
+_setcvar("lc_small_server", #player.GetAll() + 1)
+ok(LC.SmallServer(), "with few enough players online, small-server mode is on")
+ok(math.abs(LC.SmallEventMul() - 2 / 3) < 0.001 and LC.SmallOpsMul() == 0.5, "city events half again as often, the Resistance's own operations twice as often")
+ok(LC.SmallBlackPlayers() == 2, "the collapse can come with 2 players on")
+local m = newPlayer("SmallMember", "resistance", nil, 100)
+Later(0.3)
+m:SetNW2Int("lcf_rank", 2)
+for _, p in ipairs(player.GetAll()) do if p ~= m and p:GetNW2String("lcf_faction", "") == "resistance" then p:SetNW2Int("lcf_rank", 1) end end
+_setcvar("lc_small_server", #player.GetAll() + 1)
+_setcvar("lc_rebel_plans", 1)
+ok(LC.CanPlanOp(m), "a Member may plan an operation when no Fighter or higher is on")
+_setcvar("lc_small_server", 0)
+ok(not LC.SmallServer() and LC.SmallEventMul() == 1 and LC.SmallBlackPlayers() == nil, "0: never")
+ok(not LC.CanPlanOp(m), "and the Member waits for a Fighter again")
+m:SetPos(Vector(-140000, -140000, 0))
+end
+SmallServerTests()
 
 function PapersHousingTests()
 section("Papers you carry, the housing register, transfers")

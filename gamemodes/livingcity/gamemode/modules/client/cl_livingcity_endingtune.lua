@@ -634,6 +634,7 @@ local function Open(newInfo)
     state.lastPlaying = playing
     if not (frame and IsValid(frame)) then
         frame = vgui.Create("DFrame")
+        if LC_CL.SetTheme then LC_CL.SetTheme(frame, "staff") end -- (out of character: cl_livingcity_theme.lua)
         frame:SetSize(math.min(520, ScrW() - 40), math.min(ScrH() - 60, 960))
         frame:SetPos(ScrW() - frame:GetWide() - 20, 30)
         frame:SetTitle("Endings: tune them live")

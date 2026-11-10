@@ -297,7 +297,7 @@ end
 function LC.CollapseAllowed()
     if not cvOn:GetBool() then return false, "lc_black is off" end
     if C.stage then return false, "already collapsed" end
-    if #player.GetAll() < cvMinP:GetInt() then return false, "too few players" end
+    if #player.GetAll() < ((LC.SmallBlackPlayers and LC.SmallBlackPlayers()) or cvMinP:GetInt()) then return false, "too few players" end -- (small-server mode: fewer: sv_livingcity_smallserver.lua)
     if Now() < (C.cooldownUntil or 0) then return false, "too soon after the last one" end
     if LC.EndingSession and LC.EndingSession() then return false, "a dream ending is on" end
     return true

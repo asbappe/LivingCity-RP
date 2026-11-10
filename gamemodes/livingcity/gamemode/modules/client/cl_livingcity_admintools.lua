@@ -76,6 +76,7 @@ local function Build()
     local x, y
     if IsValid(frame) then x, y = frame:GetPos() frame:Remove() end
     frame = vgui.Create("DFrame")
+    if LC_CL.SetTheme then LC_CL.SetTheme(frame, "staff") end -- (out of character: cl_livingcity_theme.lua)
     frame:SetTitle("Admin: testing tools")
     frame:SetSize(math.min(ScrW() - 60, 600), math.min(ScrH() - 60, 640))
     if x then frame:SetPos(x, y) else frame:Center() end
