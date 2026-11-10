@@ -201,7 +201,33 @@ local function WorkArea(cellPos)
 end
 LC.PrisonWorkArea = WorkArea
 
-local function SpawnTrash(D)
+local SpawnTrash
+-- At the work spot: what the work is.
+local function StartWork(D)
+    local ply = D.ply
+    if D.kind == "sweep" then
+        local okG = LC.JobGameStart and LC.JobGameStart(ply, "scrub", nil, { pos = D.area, prisoner = true })
+        if okG then
+            local g = LC.JobGames and LC.JobGames[ply]
+            D.sweepTotal = g and g.stains and #g.stains or 6
+            ply:ChatPrint("[Prison] A push broom, and the cell block floor. Sweep up each patch of grime (hold E on it): " .. cvWorkOff:GetInt() .. " seconds off your sentence for each. Stay close to the guard.")
+            if LC.Notice then LC.Notice(ply, "info", "Work detail", "Sweep the floor: hold E on each patch of grime. Wander off and it's an escape.", 8) end
+            return
+        end
+        D.kind = "trash" -- (no sweeping here: trash instead)
+    end
+    if D.kind == "toilets" then
+        ply:ChatPrint("[Prison] This toilet's blocked. Unclog it (E on it): " .. (cvWorkOff:GetInt() * 2) .. " seconds off your sentence. "
+            .. (#D.toilets - D.ti > 0 and ((#D.toilets - D.ti) .. " more after this one.") or "It's the last one."))
+        if LC.Notice then LC.Notice(ply, "info", "Work detail", "Unclog the toilet: E on it. Wander off and it's an escape.", 8) end
+        return
+    end
+    SpawnTrash(D)
+    ply:ChatPrint("[Prison] Pick up the trash: E on each piece. " .. cvWorkOff:GetInt() .. " seconds off your sentence for each. Stay close to the guard.")
+    if LC.Notice then LC.Notice(ply, "info", "Work detail", "Pick up the trash (E on each piece). Wander off and it's an escape.", 8) end
+end
+
+SpawnTrash = function(D)
     D.trash = {}
     for i = 1, PIECES do
         local a = (i / PIECES) * math.pi * 2 + math.Rand(-0.3, 0.3)
@@ -224,7 +250,32 @@ end
 local function ClearTrash(D)
     for _, e in ipairs(D.trash or {}) do if IsValid(e) then e:Remove() end end
     D.trash = {}
+    -- a sweep still going (the stalker's floor game, sv_livingcity_stalkerwork.lua): stopped, its grime and broom gone
+    local g = IsValid(D.ply) and LC.JobGames and LC.JobGames[D.ply]
+    if g and g.kind == "scrub" and g.opts and g.opts.prisoner and LC.JobGameEnd then LC.JobGameEnd(D.ply, "quit") end
 end
+
+-- Time off a sentence for work done (never under 15 seconds left, never more than the detail's cap). The seconds taken off.
+local function TimeOff(ply, pr, secs)
+    local off = math.min(secs, math.max(0, (ply.lcWorkCap or 0) - (ply.lcWorkOff or 0)), math.max(0, pr.untilT - CurTime() - 15))
+    pr.untilT = pr.untilT - off
+    ply.lcWorkOff = (ply.lcWorkOff or 0) + off
+    ply:SetNW2Float("lc_jail_until", pr.untilT)
+    return off
+end
+
+-- Toilets to unclog: in the Combine zones, nearest the cell first, at most 3 (the owner, 10 November:
+-- "there are toilets in the combine zone").
+local function PrisonToilets(from)
+    local list = {}
+    for _, a in ipairs(LC.Amenities and LC.Amenities("toilet") or {}) do
+        if (not LC.CombineZoneAt or LC.CombineZoneAt(a.pos)) and a.pos:DistToSqr(from) < 5000 * 5000 then list[#list + 1] = a end
+    end
+    table.sort(list, function(x, y) return x.pos:DistToSqr(from) < y.pos:DistToSqr(from) end)
+    while #list > 3 do table.remove(list) end
+    return list
+end
+LC.PrisonToilets = PrisonToilets
 
 local function ReleaseGuard(D)
     local st = Up(D.guard) and LC.NPCs[D.guard]
@@ -281,6 +332,13 @@ function LC.AskWorkDetail(ply)
     LC.SetState(guard, st, "event")
     st.eventUntil = CurTime() + DETAIL_MAX + 120
     local D = { ply = ply, guard = guard, stage = "fetch", startT = CurTime(), area = WorkArea(pr.cell.pos), picked = 0, tries = 0 }
+    -- what the work is, in turn (the owner, 10 November: the stalker's sweeping, and unclogging toilets)
+    local kinds = { "trash", "sweep" }
+    D.toilets = PrisonToilets(pr.cell.pos)
+    if #D.toilets > 0 then kinds[#kinds + 1] = "toilets" end
+    ply.lcWorkTurn = (ply.lcWorkTurn or 0) % #kinds + 1
+    D.kind, D.ti, D.swept = kinds[ply.lcWorkTurn], 1, 0
+    if D.kind == "toilets" then D.area = D.toilets[1].pos end
     DETAILS[ply] = D
     pr.work = true
     ply:SetNW2Bool("lc_work_detail", true)
@@ -326,15 +384,14 @@ local function DetailStep(D, now)
         end
     elseif D.stage == "out" then
         if D.guard:GetPos():DistToSqr(D.area) < 200 * 200 or (st.state ~= "moving" and D.guard:GetPos():DistToSqr(D.area) < 500 * 500) then
-            D.stage, D.workAt = "work", now
-            SpawnTrash(D)
+            D.stage, D.workAt = "work", D.workAt or now
             D.guard:SetSchedule(SCHED_IDLE_STAND)
-            ply:ChatPrint("[Prison] Pick up the trash: E on each piece. " .. cvWorkOff:GetInt() .. " seconds off your sentence for each. Stay close to the guard.")
-            if LC.Notice then LC.Notice(ply, "info", "Work detail", "Pick up the trash (E on each piece). Wander off and it's an escape.", 8) end
+            StartWork(D)
         elseif not GoOn(D, D.area) then
-            D.area = ply:GetPos() -- (couldn't walk there: the work is here)
-            D.stage, D.workAt = "work", now
-            SpawnTrash(D)
+            if D.kind ~= "toilets" then D.area = ply:GetPos() end -- (couldn't walk there: the work is here)
+            if D.kind == "toilets" then ply:SetPos(LC.FreeSpawnPos and LC.FreeSpawnPos(D.area) or D.area) end -- (the toilet's there all the same)
+            D.stage, D.workAt = "work", D.workAt or now
+            StartWork(D)
         else
             Pull(ply, D.guard)
         end
@@ -349,7 +406,26 @@ local function DetailStep(D, now)
             return
         end
         local left = 0
-        for _, e in ipairs(D.trash) do if IsValid(e) then left = left + 1 end end
+        if D.kind == "sweep" then
+            local g = LC.JobGames and LC.JobGames[ply]
+            if g and g.kind == "scrub" then
+                left = 1
+                if (g.swept or 0) > D.swept then
+                    local off = TimeOff(ply, pr, cvWorkOff:GetFloat() * ((g.swept or 0) - D.swept))
+                    D.swept = g.swept or 0
+                    ply:ChatPrint(string.format("[Prison] Swept. %d seconds off your sentence (%s left).", math.floor(off), string.NiceTime(math.max(0, pr.untilT - CurTime()))))
+                end
+            elseif D.swept < (D.sweepTotal or 0) then
+                -- ended with the last patch: that one counts too
+                local off = TimeOff(ply, pr, cvWorkOff:GetFloat() * math.max(0, (D.sweepTotal or 0) - D.swept))
+                D.swept = D.sweepTotal or 0
+                if off > 0 then ply:ChatPrint(string.format("[Prison] Swept. %d seconds off your sentence.", math.floor(off))) end
+            end
+        elseif D.kind == "toilets" then
+            left = D.toilets[D.ti] and 1 or 0
+        else
+            for _, e in ipairs(D.trash) do if IsValid(e) then left = left + 1 end end
+        end
         if left == 0 or now - D.workAt > DETAIL_MAX or (ply.lcWorkOff or 0) >= (ply.lcWorkCap or 0) then
             D.stage, D.tries = "back", 0
             ClearTrash(D)
@@ -375,12 +451,59 @@ function LC.PickUpPrisonTrash(ply, e)
     if not pr then return false end
     e:Remove()
     D.picked = D.picked + 1
-    local off = math.min(cvWorkOff:GetFloat(), math.max(0, (ply.lcWorkCap or 0) - (ply.lcWorkOff or 0)), math.max(0, pr.untilT - CurTime() - 15))
-    pr.untilT = pr.untilT - off
-    ply.lcWorkOff = (ply.lcWorkOff or 0) + off
-    ply:SetNW2Float("lc_jail_until", pr.untilT)
+    local off = TimeOff(ply, pr, cvWorkOff:GetFloat())
     ply:EmitSound("physics/cardboard/cardboard_box_impact_soft" .. math.random(1, 3) .. ".wav", 60)
     ply:ChatPrint(string.format("[Prison] Picked up. %d seconds off your sentence (%s left).", math.floor(off), string.NiceTime(math.max(0, pr.untilT - CurTime()))))
+    return true
+end
+
+-- E on a toilet (sv_livingcity_hygiene.lua asks first): on a toilet detail, unclogging it. True: dealt with here.
+local SPLASH = { "ambient/water/water_splash1.wav", "ambient/water/water_splash2.wav", "ambient/water/water_splash3.wav" }
+local function Splash(pos)
+    if EffectData and util.Effect then
+        local ed = EffectData()
+        ed:SetOrigin(pos)
+        ed:SetScale(6)
+        ed:SetMagnitude(3)
+        util.Effect("watersplash", ed, true, true)
+    end
+    if sound and sound.Play then sound.Play(SPLASH[math.random(#SPLASH)], pos, 65, math.random(90, 110)) end
+end
+LC.PrisonSplash = Splash
+function LC.PrisonToiletUse(ply)
+    local D = DETAILS[ply]
+    if not D or D.kind ~= "toilets" then return false end
+    if D.stage ~= "work" or D.unclogging then return true end
+    local t = D.toilets[D.ti]
+    if not t then return true end
+    if ply:GetPos():DistToSqr(t.pos) > 140 * 140 then
+        ply:ChatPrint("[Prison] Not that one. The blocked toilet's where the guard is waiting.")
+        return true
+    end
+    D.unclogging = true
+    local bowl = t.pos + Vector(0, 0, 18)
+    Splash(bowl)
+    ply:EmitSound("physics/flesh/flesh_squishy_impact_hard1.wav", 55)
+    local name = "LivingCityUnclog" .. ply:EntIndex()
+    timer.Create(name, 0.9, 6, function() if IsValid(ply) and D.unclogging then Splash(bowl) end end)
+    LC.StartTask(ply, 6, "Unclogging the toilet...", { maxMove = 60, cancelText = "You stop before it's clear.",
+        cancel = function() D.unclogging = nil timer.Remove(name) end,
+        done = function(p)
+            D.unclogging = nil
+            timer.Remove(name)
+            local pr = LC.Prisoners and LC.Prisoners[p]
+            if not pr or DETAILS[p] ~= D then return end
+            local off = TimeOff(p, pr, cvWorkOff:GetFloat() * 2)
+            if sound and sound.Play then sound.Play("ambient/water/wave3.wav", bowl, 62) end
+            p:ChatPrint(string.format("[Prison] It drains, with a gurgle. %d seconds off your sentence (%s left).", math.floor(off), string.NiceTime(math.max(0, pr.untilT - CurTime()))))
+            D.ti = D.ti + 1
+            local nxt = D.toilets[D.ti]
+            if nxt and Up(D.guard) then
+                -- the guard walks you to the next one
+                D.area, D.stage, D.tries = nxt.pos, "out", 0
+                LC.GoTo(D.guard, LC.NPCs[D.guard], nxt.pos, false)
+            end
+        end })
     return true
 end
 

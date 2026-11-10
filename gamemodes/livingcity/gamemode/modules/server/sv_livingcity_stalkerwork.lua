@@ -339,13 +339,13 @@ local SCRUB_N = 6
 local SCRUB_WAIT = 75 -- seconds without a sweep before a patch nobody can find comes to the stalker
 LC.JobGameDefine("scrub", {
     start = function(g)
-        g.title = "The holding floor"
+        g.title = g.opts.prisoner and "The cell block floor" or "The holding floor" -- (a prisoner's work detail sweeps it too: sv_livingcity_sentence.lua)
         g.stains, g.swept, g.lastSweep = {}, 0, CurTime()
         local spots, normals = Around(g.opts.pos or g.ply:GetPos(), SCRUB_N, 80, 320)
         for i, p in ipairs(spots) do Stain(g, p, normals[i]) end
         g.broom = InHand(g.ply, "models/props_c17/pushbroom.mdl")
         if IsValid(g.broom) then g.props[#g.props + 1] = g.broom end
-        g.ply:ChatPrint("[Stalker] A push broom, and the floor. Walk to each patch of grime and sweep it up (hold E on it).")
+        if not g.opts.prisoner then g.ply:ChatPrint("[Stalker] A push broom, and the floor. Walk to each patch of grime and sweep it up (hold E on it).") end
         g.hud = function(gg) return { string.format("Swept: %d of %d", gg.swept, #gg.stains), "E on the grime sweeps it up" } end
     end,
     tick = function(g)

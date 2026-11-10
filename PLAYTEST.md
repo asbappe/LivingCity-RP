@@ -1277,3 +1277,5 @@ Notes:
 
 - [ ] **One window for the numbers:** F2 > Me > My standing (or Where I stand) (or C > You > Where I stand). Every number should be there with a line explaining it; wanted, a record or no close calls in red.
   Notes:
+- [ ] **Work detail by turns:** ask for a work detail three times in one sentence. First trash, then sweeping (a push broom and grime; hold E on each patch), then, if there are toilets in your Combine zone, unclogging: the guard walks you to each blocked toilet, E on it, water should splash out of the bowl for six seconds.
+  Notes:

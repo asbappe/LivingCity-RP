@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 6432472. Admin-only console messages and log lines are left out.
+Made from version 6f71c55. Admin-only console messages and log lines are left out.
 
-9795 lines, from 270 files.
+9805 lines, from 270 files.
 
 ## Contents
 
@@ -239,12 +239,12 @@ Made from version 6432472. Admin-only console messages and log lines are left ou
 - [flying a scanner from a Combine console](#flying-a-scanner-from-a-combine-console-svlivingcityscannerlua) (46)
 - [getting by](#getting-by-svlivingcityscavengelua) (65)
 - [Combine-only areas](#combine-only-areas-svlivingcitysecuritylua) (10)
-- [sentences that fit the crimes, the work detail, probation](#sentences-that-fit-the-crimes-the-work-detail-probation-svlivingcitysentencelua) (49)
+- [sentences that fit the crimes, the work detail, probation](#sentences-that-fit-the-crimes-the-work-detail-probation-svlivingcitysentencelua) (58)
 - [jobs that come with supply drops, and Union work orders that](#jobs-that-come-with-supply-drops-and-union-work-orders-that-svlivingcitysidejobslua) (95)
 - [character slots](#character-slots-svlivingcityslotslua) (20)
 - [squad sizes and backup by radio (sv_livingcity_squads.lua)](#squad-sizes-and-backup-by-radio-svlivingcitysquadslua-svlivingcitysquadslua) (19)
 - [staff tools](#staff-tools-svlivingcitystafflua) (48)
-- [the stalker's lot](#the-stalkers-lot-svlivingcitystalkerworklua) (58)
+- [the stalker's lot](#the-stalkers-lot-svlivingcitystalkerworklua) (59)
 - ["Where I stand", every number in one place, each explained](#where-i-stand-every-number-in-one-place-each-explained-svlivingcitystandingpanellua) (37)
 - [static map props](#static-map-props-svlivingcitystaticpropslua) (10)
 - [the city's stores](#the-citys-stores-svlivingcitystockpilelua) (8)
@@ -871,7 +871,7 @@ Made from version 6432472. Admin-only console messages and log lines are left ou
 - "Lost among the numbers? F2 > Me > My standing (or Where I stand) (or C > You > Where I stand) shows every one of them in one window, each explained: standing, credits, rank, loyalty, sympathy, corruption, your record, wanted, probation and more."  (text, line 140)
 - "Dreams can be sat out once you've earned it: Happy or Neutral ones after living through 2 of that kind, Nightmares and propaganda with Exemplary standing (400). A small note tells you as the dream comes; choose in F2 > Me > My dreams."  (text, line 141)
 - "Survival: Realistic (every need, 20% more shift pay and experience, the title Hardened) or Relaxed (slow hunger and thirst, no parasites, toilet, washing or spoiling). Choose on the characters screen or F2 > Me; you can switch every 3 hours."  (text, line 142)
-- "Your sentence adds up the crimes on your record since your last one: 3 minutes for petty things, up to 20 for murdering a unit, 30 at most. In a cell, F1 > Ask for a work detail: a guard walks you out to pick up trash, 20 seconds off for each piece. Released, a citizen is on probation for 15 minutes: check in with a unit (F1), stay away from the Resistance, and anything new counts double."  (text, line 143)
+- "Your sentence adds up the crimes on your record since your last one: 3 minutes for petty things, up to 20 for murdering a unit, 30 at most. In a cell, F1 > Ask for a work detail: a guard walks you out to pick up trash, sweep the floor or unclog the Combine's toilets, by turns, for time off. Released, a citizen is on probation for 15 minutes: check in with a unit (F1), stay away from the Resistance, and anything new counts double."  (text, line 143)
 - "Interrogated? Each question is your choice: the truth, a lie (he may see through it), silence (the baton wears your resolve down) or a bargain for a shorter sentence. Civil Protection players can interrogate prisoners themselves: F2 > Interrogate, beside the cell."  (text, line 144)
 - "If a Civil Protection unit arrests you, you're cuffed and two units walk you to the cells. On the way, anyone can free you: take down the unit in front, then you can use {gm_showhelp} > Work at the cuffs."  (text, line 145)
 - "Rations come from the city's stores (shown under the clock). Kitchen and factory work refills them; when the stores run low, rations shrink too and people get restless."  (text, line 146)
@@ -8873,85 +8873,85 @@ Made from version 6432472. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Toilets, baths, clean clothes
 
-- "Not for you"  (on-screen notice, line 216)
-- "A stalker has no need of a toilet any more. They saw to that."  (on-screen notice, line 216)
+- "Not for you"  (on-screen notice, line 217)
+- "A stalker has no need of a toilet any more. They saw to that."  (on-screen notice, line 217)
 
 > Note for you (not shown in game): part of: use toilet
 
-- "On the toilet..."  (progress bar, line 223)
-- "You get up before you're done."  (text, line 224)
+- "On the toilet..."  (progress bar, line 224)
+- "You get up before you're done."  (text, line 225)
 
 > Note for you (not shown in game): part of: done
 
-- "That's better"  (on-screen notice, line 243)
-- "For now. It drained you, though: drink something. Only antiparasitic tablets will stop it coming back."  (on-screen notice, line 243)
-- "It drained you, though: drink something."  (on-screen notice, line 244)
-- "That's better"  (on-screen notice, line 246)
-- "Nothing much to it."  (on-screen notice, line 246)
-- "[Living City] Still to do: {left}."  (chat message, line 250)
+- "That's better"  (on-screen notice, line 244)
+- "For now. It drained you, though: drink something. Only antiparasitic tablets will stop it coming back."  (on-screen notice, line 244)
+- "It drained you, though: drink something."  (on-screen notice, line 245)
+- "That's better"  (on-screen notice, line 247)
+- "Nothing much to it."  (on-screen notice, line 247)
+- "[Living City] Still to do: {left}."  (chat message, line 251)
 
 > Note for you (not shown in game): part of: use bath
 
-- "You step out half washed."  (text, line 261)
+- "You step out half washed."  (text, line 262)
 
 > Note for you (not shown in game): part of: done
 
-- "Clean skin, filthy clothes: change into clean ones (spare clothes or overalls from your pockets)."  (on-screen notice, line 271)
-- "Scrubbed clean."  (on-screen notice, line 271)
-- "You wash. You feel almost human."  (on-screen notice, line 273)
+- "Clean skin, filthy clothes: change into clean ones (spare clothes or overalls from your pockets)."  (on-screen notice, line 272)
+- "Scrubbed clean."  (on-screen notice, line 272)
+- "You wash. You feel almost human."  (on-screen notice, line 274)
 
 > Note for you (not shown in game): Into clean clothes: spare citizen clothes or Union overalls from your pockets. id: which (else whichever you have). True, or false and why.
 
-- "Your clothes are clean enough."  (text, line 283)
-- "You need a clean uniform (the Civil Protection Commissary has them)."  (text, line 286)
-- "You need clean clothes: spare citizen clothes or Union overalls (the Commissary sells them)."  (text, line 287)
+- "Your clothes are clean enough."  (text, line 284)
+- "You need a clean uniform (the Civil Protection Commissary has them)."  (text, line 287)
+- "You need clean clothes: spare citizen clothes or Union overalls (the Commissary sells them)."  (text, line 288)
 
 > Note for you (not shown in game): part of: change clothes
 
-- "Clean clothes"  (on-screen notice, line 294)
-- "Better. You still need a wash: a bathtub or a shower."  (on-screen notice, line 294)
-- "Better. The old ones can go in the bin."  (on-screen notice, line 294)
+- "Clean clothes"  (on-screen notice, line 295)
+- "Better. You still need a wash: a bathtub or a shower."  (on-screen notice, line 295)
+- "Better. The old ones can go in the bin."  (on-screen notice, line 295)
 
 > Note for you (not shown in game): The stain on the ground
 
-- "Scrubbing it up..."  (progress bar, line 313)
-- "You leave it half done."  (text, line 314)
+- "Scrubbing it up..."  (progress bar, line 314)
+- "You leave it half done."  (text, line 315)
 
 > Note for you (not shown in game): part of: done
 
-- "Cleaned up a mess"  (text, line 320)
-- "Something got on you"  (on-screen notice, line 323)
-- "Scrubbing that up, something got on your hands. Your stomach turns."  (on-screen notice, line 323)
-- "Cleaned up"  (on-screen notice, line 325)
-- "5 credits. Wash your hands."  (on-screen notice, line 325)
+- "Cleaned up a mess"  (text, line 321)
+- "Something got on you"  (on-screen notice, line 324)
+- "Scrubbing that up, something got on your hands. Your stomach turns."  (on-screen notice, line 324)
+- "Cleaned up"  (on-screen notice, line 326)
+- "5 credits. Wash your hands."  (on-screen notice, line 326)
 
 > Note for you (not shown in game): people nearby smell it, and may catch it
 
-- "[Living City] Someone near you reeks. Flies, and worse. You'd step back if you were sensible."  (chat message, line 357)
+- "[Living City] Someone near you reeks. Flies, and worse. You'd step back if you were sensible."  (chat message, line 358)
 
 > Note for you (not shown in game): part of: hygiene tick
 
-- "Your stomach cramps"  (on-screen notice, line 375)
-- "You need a toilet. Soon. (F1 > What now? shows the nearest.)"  (on-screen notice, line 375)
-- "Find a toilet. NOW."  (on-screen notice, line 376)
-- "You can't hold it much longer."  (on-screen notice, line 376)
+- "Your stomach cramps"  (on-screen notice, line 376)
+- "You need a toilet. Soon. (F1 > What now? shows the nearest.)"  (on-screen notice, line 376)
+- "Find a toilet. NOW."  (on-screen notice, line 377)
+- "You can't hold it much longer."  (on-screen notice, line 377)
 
 > Note for you (not shown in game): What now? (sv_livingcity_nextstep.lua asks this first)
 
-- "Find a toilet"  (text, line 397)
-- "You've soiled yourself. A toilet first, then a wash and clean clothes."  (text, line 397)
-- "Your stomach's cramping (parasites): sit on a toilet before it's too late. Antiparasitic tablets stop it for good."  (text, line 398)
+- "Find a toilet"  (text, line 398)
+- "You've soiled yourself. A toilet first, then a wash and clean clothes."  (text, line 398)
+- "Your stomach's cramping (parasites): sit on a toilet before it's too late. Antiparasitic tablets stop it for good."  (text, line 399)
 
 > Note for you (not shown in game): part of: hygiene step
 
-- "Get washed"  (text, line 401)
-- "You reek. A bathtub or a shower: press E on it."  (text, line 401)
-- "Change into clean clothes"  (text, line 406)
-- "Your clothes are filthy. Choose this to change into the clean ones in your pockets."  (text, line 406)
-- "Get a clean uniform"  (text, line 408)
-- "Your uniform is filthy. The Civil Protection Commissary has clean ones; then change into it."  (text, line 408)
-- "Get clean clothes"  (text, line 410)
-- "Your clothes are filthy. The Commissary sells spare clothes; then change into them."  (text, line 410)
+- "Get washed"  (text, line 402)
+- "You reek. A bathtub or a shower: press E on it."  (text, line 402)
+- "Change into clean clothes"  (text, line 407)
+- "Your clothes are filthy. Choose this to change into the clean ones in your pockets."  (text, line 407)
+- "Get a clean uniform"  (text, line 409)
+- "Your uniform is filthy. The Civil Protection Commissary has clean ones; then change into it."  (text, line 409)
+- "Get clean clothes"  (text, line 411)
+- "Your clothes are filthy. The Commissary sells spare clothes; then change into them."  (text, line 411)
 
 ## help for the outnumbered side (sv_livingcity_imbalance.lua)
 
@@ -14872,78 +14872,102 @@ Made from version 6432472. Admin-only console messages and log lines are left ou
 - "In a cell"  (on-screen notice, line 150)
 - "Want time off? F1 > Ask for a work detail: a guard walks you out to pick up trash, {GetInt} seconds off for each piece."  (on-screen notice, line 150)
 
+> Note for you (not shown in game): At the work spot: what the work is.
+
+- "[Prison] A push broom, and the cell block floor. Sweep up each patch of grime (hold E on it): {GetInt} seconds off your sentence for each. Stay close to the guard."  (chat message, line 213)
+
+> Note for you (not shown in game): part of: start work
+
+- "Work detail"  (on-screen notice, line 214)
+- "Sweep the floor: hold E on each patch of grime. Wander off and it's an escape."  (on-screen notice, line 214)
+- "[Prison] This toilet's blocked. Unclog it (E on it): {GetInt} seconds off your sentence. {or}"  (chat message, line 220)
+- "Work detail"  (on-screen notice, line 222)
+- "Unclog the toilet: E on it. Wander off and it's an escape."  (on-screen notice, line 222)
+- "[Prison] Pick up the trash: E on each piece. {GetInt} seconds off your sentence for each. Stay close to the guard."  (chat message, line 226)
+- "Work detail"  (on-screen notice, line 227)
+- "Pick up the trash (E on each piece). Wander off and it's an escape."  (on-screen notice, line 227)
+
 > Note for you (not shown in game): part of: ask work detail
 
-- "There are no work details in this prison."  (text, line 270)
-- "Only prisoners get a work detail."  (text, line 272)
-- "You're on a work detail already."  (text, line 273)
-- "Not with less than a minute left."  (text, line 275)
-- "You've had all the time off this sentence allows."  (text, line 276)
-- "No guard is free to take you out. Ask again in a minute."  (text, line 278)
-- "[Prison] A guard is coming to take you out on a work detail. Wait by your cell."  (chat message, line 289)
+- "There are no work details in this prison."  (text, line 321)
+- "Only prisoners get a work detail."  (text, line 323)
+- "You're on a work detail already."  (text, line 324)
+- "Not with less than a minute left."  (text, line 326)
+- "You've had all the time off this sentence allows."  (text, line 327)
+- "No guard is free to take you out. Ask again in a minute."  (text, line 329)
+- "[Prison] A guard is coming to take you out on a work detail. Wait by your cell."  (chat message, line 347)
 
 > Note for you (not shown in game): the guard's down: you're where you are, and the prison's rules again
 
-- "[Prison] Your guard is down."  (chat message, line 307)
-- "[Prison] The guard has other things to deal with. Back to your cell."  (chat message, line 313)
-- "Back in your cell."  (text, line 314)
+- "[Prison] Your guard is down."  (chat message, line 365)
+- "[Prison] The guard has other things to deal with. Back to your cell."  (chat message, line 371)
+- "Back in your cell."  (text, line 372)
 
 > Note for you (not shown in game): part of: detail step
 
-- "[Prison] The guard unlocks your cell and walks you out to the work detail."  (chat message, line 321)
-- "[Prison] No guard could get to you. Ask again later."  (chat message, line 324)
-- "[Prison] Pick up the trash: E on each piece. {GetInt} seconds off your sentence for each. Stay close to the guard."  (chat message, line 332)
-- "Work detail"  (on-screen notice, line 333)
-- "Pick up the trash (E on each piece). Wander off and it's an escape."  (on-screen notice, line 333)
-- "[Prison] That'll do. The guard walks you back to your cell."  (chat message, line 356)
-- "Back in your cell. The door locks behind you."  (text, line 361)
-- "Back in your cell. The door locks behind you."  (text, line 363)
+- "[Prison] The guard unlocks your cell and walks you out to the work detail."  (chat message, line 379)
+- "[Prison] No guard could get to you. Ask again later."  (chat message, line 382)
+- "[Prison] Swept. %d seconds off your sentence (%s left)."  (message, line 416)
+
+> Note for you (not shown in game): ended with the last patch: that one counts too
+
+- "[Prison] Swept. %d seconds off your sentence."  (message, line 422)
+
+> Note for you (not shown in game): part of: detail step
+
+- "[Prison] That'll do. The guard walks you back to your cell."  (chat message, line 432)
+- "Back in your cell. The door locks behind you."  (text, line 437)
+- "Back in your cell. The door locks behind you."  (text, line 439)
 
 > Note for you (not shown in game): part of: pick up prison trash
 
-- "[Prison] Picked up. %d seconds off your sentence (%s left)."  (message, line 383)
+- "[Prison] Picked up. %d seconds off your sentence (%s left)."  (message, line 456)
+
+> Note for you (not shown in game): part of: prison toilet use
+
+- "[Prison] Not that one. The blocked toilet's where the guard is waiting."  (chat message, line 480)
 
 > Note for you (not shown in game): part of: end probation
 
-- "[Civil Protection] You never checked in. Failure to report for probation."  (chat message, line 419)
-- "Failure to report for probation"  (text, line 420)
-- "[Civil Protection] Your probation is over. Stay out of trouble."  (chat message, line 422)
+- "[Civil Protection] You never checked in. Failure to report for probation."  (chat message, line 542)
+- "Failure to report for probation"  (text, line 543)
+- "[Civil Protection] Your probation is over. Stay out of trouble."  (chat message, line 545)
 
 > Note for you (not shown in game): the game's living city released moment
 
-- "You're on probation for %d minutes. Check in with a Civil Protection unit (F1 > Check in for probation, standing close to one). Any offence counts double. Stay out of rebel territory and away from the Resistance."  (message, line 437)
-- "[Civil Protection] {msg}"  (chat message, line 439)
-- "On probation"  (on-screen notice, line 440)
+- "You're on probation for %d minutes. Check in with a Civil Protection unit (F1 > Check in for probation, standing close to one). Any offence counts double. Stay out of rebel territory and away from the Resistance."  (message, line 560)
+- "[Civil Protection] {msg}"  (chat message, line 562)
+- "On probation"  (on-screen notice, line 563)
 
 > Note for you (not shown in game): part of: probation check in
 
-- "You're not on probation."  (text, line 454)
-- "You've checked in already."  (text, line 455)
-- "Find a Civil Protection unit and stand close to them to check in."  (text, line 457)
-- "[Civil Protection] {Nick} checked in for probation."  (chat message, line 461)
-- "[Civil Protection] Checked in. Keep your nose clean until your probation is over."  (chat message, line 462)
+- "You're not on probation."  (text, line 577)
+- "You've checked in already."  (text, line 578)
+- "Find a Civil Protection unit and stand close to them to check in."  (text, line 580)
+- "[Civil Protection] {Nick} checked in for probation."  (chat message, line 584)
+- "[Civil Protection] Checked in. Keep your nose clean until your probation is over."  (chat message, line 585)
 
 > Note for you (not shown in game): A probation violation: on the record (doubled, being on probation) and wanted.
 
-- "[Civil Protection] Probation violation: {what}."  (chat message, line 471)
-- "Probation violation: {what}"  (text, line 472)
-- "Probation violation: {Nick}, {what}."  (text, line 473)
+- "[Civil Protection] Probation violation: {what}."  (chat message, line 594)
+- "Probation violation: {what}"  (text, line 595)
+- "Probation violation: {Nick}, {what}."  (text, line 596)
 
 > Note for you (not shown in game): part of: add trait
 
-- "helping the Resistance"  (text, line 487)
+- "helping the Resistance"  (text, line 610)
 
 > Note for you (not shown in game): part of: probation tick
 
-- "in rebel territory"  (text, line 501)
+- "in rebel territory"  (text, line 624)
 
 > Note for you (not shown in game): The menu's actions (F1): ask for a work detail, check in for probation.
 
-- "[Prison] {why}"  (chat message, line 556)
+- "[Prison] {why}"  (chat message, line 679)
 
 > Note for you (not shown in game): typing in chat
 
-- "[Civil Protection] {why}"  (chat message, line 560)
+- "[Civil Protection] {why}"  (chat message, line 683)
 
 ## jobs that come with supply drops, and Union work orders that (sv_livingcity_sidejobs.lua)
 
@@ -15310,6 +15334,7 @@ Made from version 6432472. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The holding floor: grime here and there; a push broom (no kneeling: a stalker hasn't the legs for it). E on each patch sweeps it up (a couple of seconds).
 
+- "The cell block floor"  (title, line 342)
 - "The holding floor"  (title, line 342)
 
 > Note for you (not shown in game): part of: start

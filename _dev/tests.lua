@@ -10230,6 +10230,62 @@ guard:SetPos(D.area) gst.state = "idle" LC.SentenceTick()
 p:SetPos(D.area + Vector(2000, 0, 0))
 LC.SentenceTick()
 ok(not LC.Prisoners[p] and LC.PlayerIsWanted(p) and LC.WorkDetails[p] == nil, "wander off from the guard and it's an escape")
+-- the work detail by turns: sweeping (the stalker's floor), and unclogging toilets in the Combine zone
+local sw = newPlayer("SentenceSweeper", "citizen")
+Later(0.3)
+local cellPt = LC.PointsOfKind("cell")[1]
+local cz = LC.AddZone(cellPt.pos + Vector(0, 900, 0), 400, "combine", 0)
+local loo = ents.Create("lc_toilet") loo:SetPos(cellPt.pos + Vector(0, 900, 0)) loo:Spawn()
+LC.AmenityPropsAt = 0
+LC.Incarcerate(sw, 900, "Test")
+local spr = LC.Prisoners[sw]
+local g2, g2st = LC.SpawnSoldier(spr.cell.pos + Vector(700, 0, 0))
+g2st.prisonGuard, g2st.untilT = true, 1e9
+sw.lcWorkTurn = 1
+LC.AskWorkDetail(sw)
+local W = LC.WorkDetails[sw]
+ok(W and W.kind == "sweep", "the work comes by turns: next, sweeping the floor", W and W.kind)
+local wg = W.guard
+wg:SetPos(spr.cell.pos + Vector(60, 0, 0)) LC.SentenceTick()
+wg:SetPos(W.area) LC.NPCs[wg].state = "idle" LC.SentenceTick()
+local sg = LC.JobGames[sw]
+ok(W.stage == "work" and sg and sg.kind == "scrub" and sg.opts.prisoner and #sg.stains > 0, "a push broom and grime to sweep, as the stalkers do")
+sw:SetPos(W.area)
+local b0 = spr.untilT
+sg.stains[1]:Remove()
+Later(0.2) LC.NPCs[wg].state = "idle" LC.SentenceTick()
+ok(math.abs((b0 - spr.untilT) - 20) < 0.5, "each patch swept: 20 seconds off", b0 - spr.untilT)
+for _, e in ipairs(sg.stains) do if IsValid(e) then e:Remove() end end
+Later(0.3) LC.NPCs[wg].state = "idle" LC.SentenceTick() LC.SentenceTick()
+ok(W.stage == "back" and math.abs((b0 - spr.untilT) - 20 * #sg.stains) < 1, "all of it swept: the time for every patch, and back to the cell", (b0 - spr.untilT) .. " " .. tostring(W.stage) .. " " .. tostring(W.swept) .. "/" .. tostring(W.sweepTotal) .. " game " .. tostring(LC.JobGames[sw] ~= nil) .. " sg.swept " .. tostring(sg.swept))
+wg:SetPos(spr.cell.pos + Vector(40, 0, 0)) LC.SentenceTick()
+ok(LC.WorkDetails[sw] == nil and LC.JobGames[sw] == nil, "back in the cell, the broom gone")
+-- toilets
+LC.NPCs[wg].state, LC.NPCs[wg].workDetail, LC.NPCs[wg].questLock = "idle", nil, nil
+LC.AskWorkDetail(sw)
+W = LC.WorkDetails[sw]
+ok(W and W.kind == "toilets" and #W.toilets >= 1, "and then the toilets in the Combine zone", W and W.kind)
+wg = W.guard
+wg:SetPos(spr.cell.pos + Vector(60, 0, 0)) LC.SentenceTick()
+wg:SetPos(W.toilets[1].pos + Vector(60, 0, 0)) LC.NPCs[wg].state = "idle" LC.SentenceTick()
+ok(W.stage == "work", "walked to the blocked toilet", W.stage)
+sw:SetPos(W.toilets[1].pos + Vector(40, 0, 0))
+LC.NPCs[wg].state = "idle"
+local b1 = spr.untilT
+net.sent = {}
+ok(LC.UseToilet(sw) and W.unclogging, "E on it: unclogging, not sitting down")
+Later(7)
+ok(math.abs((b1 - spr.untilT) - 40) < 0.5 and W.ti == 2, "unclogged: 40 seconds off", b1 - spr.untilT)
+LC.NPCs[wg].state = "idle"
+LC.SentenceTick()
+ok(W.stage == "back", "the last one done: back to the cell", W.stage)
+LC.EndWorkDetail(W)
+LC.ReleasePrisoner(sw)
+if IsValid(loo) then loo:Remove() end
+LC.RemoveZone(cz)
+if IsValid(g2) then LC.NPCs[g2] = nil g2:Remove() end
+sw:SetPos(FARS) sw:RemovePData("lc_probation_due")
+
 LC.ClearWanted(p)
 p.lcRap = {}
 p:RemovePData("lc_rap")
