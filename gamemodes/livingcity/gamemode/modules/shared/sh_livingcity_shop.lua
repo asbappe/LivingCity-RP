@@ -244,6 +244,10 @@ LCS.Items = {
     ------------------------------------------------------------------------
     satchel         = { name = "Satchel", model = "models/props_c17/BriefCase001a.mdl", bag = { kg = 8, bulky = 1 }, sell = 10,
                         desc = "A canvas bag over the shoulder. Room for more, and for something large" },
+    -- hand-made goods to sell from a stall (sv_livingcity_employment.lua): worth is what the city's people will pay
+    rag_doll        = { name = "Rag doll", model = "models/props_c17/doll01.mdl", handmade = true, worth = 18, sell = 4, desc = "Sewn from rags. Children still want toys." },
+    tin_toy         = { name = "Tin toy", model = "models/props_junk/garbage_metalcan001a.mdl", handmade = true, worth = 20, sell = 5, desc = "A little wind-up soldier, hammered from cans." },
+    patched_coat    = { name = "Patched coat", model = "models/props_c17/SuitCase_Passenger_Physics.mdl", handmade = true, worth = 32, sell = 8, desc = "Warm, ugly, and better than the Union's." },
     -- status (sv_livingcity_status.lua, the owner, 10 November): things other people can see
     fine_clothes    = { name = "Fine clothes", model = "models/props_c17/SuitCase001a.mdl", use = "finery", useLabel = "Put on / take off", sell = 40,
                         desc = "A good coat and a clean collar. People notice." },
@@ -343,6 +347,7 @@ LCS.Weights = {
     smokebomb = 0.4, gas_bomb = 0.4, firebomb = 0.6, ration_short = 0.3, gren_smoke = 0.5, gren_flash = 0.5, gren_gas = 0.6, arms_crate = 9.0, smuggled_supplies = 2.5, data_shard = 0.3, master_chip = 0.6, zipties = 0.05,
     request_device = 0.3, scrap = 0.5, keepsake = 0.01, satchel = 0.8, storage_crate = 6.0,
     business_license = 0.02, vendor_stall = 7.0, paper = 0.02,
+    rag_doll = 0.3, tin_toy = 0.3, patched_coat = 1.5,
     fine_clothes = 1.5, decor_cactus = 1.0, decor_lamp = 1.5, decor_chair = 6.0, decor_frame = 0.5, radio_set = 3.0, pet_bird = 0.3, -- (sv_livingcity_status.lua)
 }
 -- (a tainted twin weighs what the real thing does: sv_livingcity_weeds.lua)
@@ -530,6 +535,10 @@ end
 LCS.Recipes = {
     { id = "lockpick", out = "lockpick", needs = { scrap = 4 }, secs = 5, desc = "Bent and filed scrap" },
     { id = "bandage", out = "bandage", needs = { cloth = 2 }, secs = 4, desc = "Rags, torn into strips" },
+    -- (hand-made goods, to sell from a stall: sv_livingcity_employment.lua)
+    { id = "rag_doll", out = "rag_doll", needs = { cloth = 3 }, secs = 8, desc = "Sew a rag doll to sell (the city pays about 18)" },
+    { id = "tin_toy", out = "tin_toy", needs = { scrap = 3 }, secs = 8, desc = "Hammer out a tin toy to sell (about 20)" },
+    { id = "patched_coat", out = "patched_coat", needs = { cloth = 4, scrap = 1 }, secs = 12, desc = "Patch together a coat to sell (about 32)" },
 }
 LCS.RecipesById = {}
 for _, r in ipairs(LCS.Recipes) do LCS.RecipesById[r.id] = r end

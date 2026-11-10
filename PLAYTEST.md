@@ -1268,7 +1268,7 @@ Notes:
 
 ## 10 November, last: sitting out dreams
 
-- [ ] **Happy and Neutral:** live through 2 Happy dreams. As the third comes, the black screen should show a small note under the mood line. F2 > Me > My dreams should then offer "Happy: dreaming them (sit them out)". Choose it: the next Happy dream, you should sleep through it.
+- [ ] **Happy and Neutral:** live through 2 Happy dreams. As the third comes, the black screen should show a small note under the mood line. F2 > Me (More) > My dreams should then offer "Happy: dreaming them (sit them out)". Choose it: the next Happy dream, you should sleep through it.
   Notes:
 - [ ] **Nightmares and propaganda:** as a citizen with 400 standing, the same note and setting for Nightmares and Propaganda. Drop below 400 and they should come again.
   Notes:
@@ -1378,7 +1378,7 @@ Notes:
 
 - [ ] **The bulletin:** wait for a city morning (or an hour): a City Bulletin should appear on the screens and in chat with what changed.
   Notes:
-- [ ] **F2 > Me > The state of the city:** the five numbers in words and every block with who holds it.
+- [ ] **F2 > Me (More) > The state of the city:** the five numbers in words and every block with who holds it.
   Notes:
 - [ ] **Her levers:** as Administrator, place a "Point: speech stand", then F2 > Me > The city's levers: go to the stand, give a speech (citizens nearby gain standing), declare an amnesty, order a crackdown on a block (a raid should start there) and extra rations (a ration day).
   Notes:
@@ -1417,4 +1417,10 @@ Notes:
 ## 10 November, last: citizen goals
 
 - [ ] **Status symbols:** buy fine clothes (standing 150) and put them on from F3: you should look better dressed and show "Well dressed". Buy a lamp or cactus and use it in your own block: it should appear where you look and still be there after a restart. A radio set should play music with E. A pet bird should sit on your shoulder (tell me if it floats: lc_petbird_pos moves it).
+  Notes:
+- [ ] **Households:** look at another citizen, F1 > Invite into my household; they accept on F2 > Me (More) > My household. They should move to your block, open your storage crate, and get your apartment keys.
+  Notes:
+- [ ] **A business:** craft a rag doll (3 rags), put it on your stall at about 20. Within a few minutes a passing NPC should buy it. Offer another citizen a job (F1); they accept in F2 > Me > More; they should be able to stock your stall and get 10 credits from the till every 10 minutes they are there.
+  Notes:
+- [ ] **Crime between citizens:** get behind another player, F1 > Pick their pocket. Lend someone money with F1; repay it from F2 > Me > More > Household and business > My debts. Buy from the black market a few times: now and then it should go bad (a brick, or a sting).
   Notes:

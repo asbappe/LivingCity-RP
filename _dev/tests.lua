@@ -55,6 +55,7 @@ _setcvar("lc_survival_modes", 0) -- (Realistic or Relaxed, and its 20% bonus: te
 _setcvar("lc_snitches", 0) -- (secret informants among the citizens, at random: tested on their own, SnitchTests)
 _setcvar("lc_ledger", 0) -- (the state of the city, day to day, and its effects on the streets: tested on its own, LedgerTests)
 _setcvar("lc_small_server", 0) -- (small-server mode turns on with few players online: tested on its own, SmallServerTests)
+_setcvar("lc_bad_deal_chance", 0) -- (black market deals that go bad at random: tested on their own, StreetCrimeTests)
 _setcvar("lc_minds", 0) -- (watching the city's minds draws random numbers: tested on its own, MindsTests)
 _setcvar("lc_quest_allies", 0) -- (friendly NPCs on violent jobs: tested on their own, in QuestSquadTests)
 _setcvar("lc_directives", 1) -- (the G-Man's directives are off by default now, set aside by the owner; still tested as they are)
@@ -11327,6 +11328,144 @@ p.GetEyeTrace, q.GetEyeTrace = nil, nil
 for _, x in ipairs({ p, q, unit }) do x:SetPos(G0 + Vector(30000, 0, 0)) end
 end
 StatusTests()
+function HouseholdTests()
+section("Households: the same block, shared crates and lockers, keys, known to each other")
+local function Later(secs) _advance(secs) _runtimers() end
+_setcvar("lc_households", 1)
+local H0 = Vector(109000, -109000, 0)
+local a = newPlayer("HouseHead", "citizen")
+local b = newPlayer("HouseMate", "citizen")
+local c = newPlayer("HouseThird", "citizen")
+local u = newPlayer("HouseUnit", "cp")
+Later(0.5)
+for i, p in ipairs({ a, b, c, u }) do p:SetNW2String("lc_cid", "HH-" .. i) p:SetPos(H0 + Vector(i * 40, 0, 0)) end
+LC.HouseholdsReload()
+for id in pairs(LC.HouseholdsReload()) do LC.HouseholdsReload()[id] = nil end
+a:SetPData("lc_block_" .. game.GetMap(), 7) a:SetNW2Int("lc_block", 7)
+ok(not LC.HouseholdInvite(a, u), "households are for citizens")
+ok(LC.HouseholdInvite(a, b) and b:GetNW2String("lc_house_invite", "") ~= "", "F1 > Invite them into my household: they're asked")
+ok(LC.HouseholdAccept(b, true), "and accept on F2 > Me > My household")
+local id, h = LC.HouseholdOf(b)
+ok(h and h.members["HH-1"] and h.members["HH-2"] and h.head == "HH-1", "a household: its head and the one who joined")
+ok(string.find(h.name, "household", 1, true) ~= nil and b:GetNW2String("lc_household", "") ~= "", "with a name, shown to them", h.name)
+ok(tonumber(b:GetPData("lc_block_" .. game.GetMap(), 0)) == 7, "they move into the head's block")
+ok(LC.HouseholdShares(b, "HH-1") and LC.HouseholdShares(a, "HH-2") and not LC.HouseholdShares(c, "HH-1"), "and share crates and lockers (nobody else does)")
+ok(not LC.HouseholdInvite(b, c), "only the head takes people in")
+ok(LC.HouseholdRename(a, "The Kitchen Table") and select(2, LC.HouseholdOf(a)).name == "The Kitchen Table", "the head can name the household")
+LC.HouseholdInvite(a, c) LC.HouseholdAccept(c, true)
+ok(LC.HouseholdSendAway(a, LC.CharacterName and LC.CharacterName(c) or c:Nick()) and not LC.HouseholdOf(c), "the head can send someone away")
+c:SetPos(H0 + Vector(5000, 0, 0))
+ok(not LC.HouseholdInvite(a, c), "invitations are face to face")
+LC.HouseholdLeave(b)
+ok(not LC.HouseholdOf(b) and not LC.HouseholdOf(a), "a household of one is no household")
+LC.HouseholdsReload()
+for _, p in ipairs({ a, b, c, u }) do p:SetPos(H0 + Vector(30000, 0, 0)) end
+end
+HouseholdTests()
+function EmploymentTests()
+section("A business of your own: hand-made goods, the city's people buying, hiring a worker")
+local function Later(secs) _advance(secs) _runtimers() end
+local B0 = Vector(111000, -111000, 0)
+local owner = newPlayer("StallOwner", "citizen")
+local worker = newPlayer("StallWorker", "citizen")
+Later(0.5)
+owner:SetNW2String("lc_cid", "BZ-1") worker:SetNW2String("lc_cid", "BZ-2")
+owner:SetPos(B0) worker:SetPos(B0 + Vector(60, 0, 0))
+ok(LCS.RecipesById.rag_doll and LCS.RecipesById.tin_toy and LCS.RecipesById.patched_coat and LCS.Items.rag_doll.handmade, "hand-made goods anyone can make from rags and scrap")
+local cs = LC.Containers()
+local stall = { kind = "stall", items = { rag_doll = 2, tin_toy = 1 }, prices = { rag_doll = 20, tin_toy = 99 }, owner = "BZ-1", ownerName = "StallOwner", pos = B0, till = 0 }
+cs["test_stall"] = stall
+local cit, cst = LC.SpawnCitizen(B0 + Vector(300, 0, 0))
+ok(LC.StallCustomer() and stall.items.rag_doll == 1 and stall.till == 20, "a passer-by buys a hand-made thing priced fairly; the money goes in the till")
+stall.items.rag_doll = nil stall.prices.rag_doll = nil
+ok(not LC.StallCustomer(), "but not when it's dear (half again its worth)")
+-- hiring
+ok(LC.OfferJob(owner, worker) and worker.lcJobOffer, "F1 > Offer them a job at my stall")
+ok(LC.AcceptJob(worker, true) and LC.EmployerOf(worker) == "BZ-1", "accepted on F2 > Me: they work it now")
+-- wages from the till
+stall.till = 25
+worker:SetPos(B0 + Vector(50, 0, 0))
+worker.lcWorkedAt = 1
+local w0 = LC.Credits(worker)
+LC.PayStallWages()
+ok(LC.Credits(worker) - w0 == 10 and stall.till == 15, "wages: paid from the till, for time spent at the stall")
+worker.lcWorkedAt = 0
+local w1 = LC.Credits(worker)
+LC.PayStallWages()
+ok(LC.Credits(worker) == w1, "no time at the stall, no pay")
+ok(LC.LetGo(owner, LC.CharacterName and LC.CharacterName(worker) or worker:Nick()) and not LC.EmployerOf(worker), "the owner can let a worker go")
+cs["test_stall"] = nil
+if IsValid(cit) then LC.NPCs[cit] = nil cit:Remove() end
+for _, x in ipairs({ owner, worker }) do x:RemovePData("lc_employer") x:SetPos(B0 + Vector(30000, 0, 0)) end
+end
+EmploymentTests()
+function StreetCrimeTests()
+section("Crime between citizens: pickpocketing, debts, deals that go bad")
+local function Later(secs) _advance(secs) _runtimers() end
+_setcvar("lc_pickpocket", 1)
+local C0 = Vector(113000, -113000, 0)
+local thief = newPlayer("Pickpocket", "citizen")
+local mark = newPlayer("PickMark", "citizen")
+local unit = newPlayer("PickUnit", "cp")
+Later(0.5)
+for i, p in ipairs({ thief, mark, unit }) do p:SetNW2String("lc_cid", "SC-" .. i) end
+mark:SetPos(C0)
+local fw = mark:GetForward()
+thief:SetPos(C0 + fw * 60)
+ok(not LC.Pickpocket(thief, mark), "not from in front, where they can see you")
+thief:SetPos(C0 - fw * 50)
+ok(not LC.Pickpocket(unit, mark), "a unit doesn't pick pockets")
+LC.AddCredits(mark, 100 - LC.Credits(mark))
+local c0, t0 = LC.Credits(mark), LC.Credits(thief)
+local rnd = math.random
+math.random = function(a, b) if a == nil then return 0.99 elseif b == nil then return rnd(a) end return rnd(a, b) end
+ok(LC.Pickpocket(thief, mark), "from behind, close: F1 > Pick their pocket")
+Later(3.5)
+math.random = rnd
+ok(LC.Credits(mark) < c0 or (LC.Credits(thief) > t0), "unnoticed: some of their credits (or a thing from their pockets)", LC.Credits(mark) .. " " .. LC.Credits(thief))
+ok(not LC.Pickpocket(thief, mark), "not again so soon")
+-- debts
+local a, b = thief, mark
+LC.AddCredits(a, 100 - LC.Credits(a)) LC.AddCredits(b, 0 - LC.Credits(b))
+b:SetPos(C0 + Vector(40, 0, 0)) a:SetPos(C0)
+ok(LC.OfferLoan(a, b, 25) and b.lcLoanOffer, "F1 > Lend them money: they're offered it")
+ok(LC.AcceptLoan(b, true) and LC.Credits(a) == 75 and LC.Credits(b) == 25, "accepted: the money changes hands")
+local nd = util.JSONToTable(b:GetPData("lc_debts", ""))
+ok(nd and nd[1] and nd[1].owed == 30, "and they owe a fifth more back", nd and nd[1] and nd[1].owed)
+LC.AddCredits(b, 10)
+ok(LC.RepayDebt(b, 1) and LC.Credits(a) == 105 and b:GetPData("lc_debts", "") == "", "repaid: the lender gets it")
+LC.OfferLoan(a, b, 10) LC.AcceptLoan(b, true)
+local owes, lent = util.JSONToTable(b:GetPData("lc_debts", "")), util.JSONToTable(a:GetPData("lc_lent", ""))
+owes[1].due, lent[1].due = os.time() - 10, os.time() - 10
+b:SetPData("lc_debts", util.TableToJSON(owes)) a:SetPData("lc_lent", util.TableToJSON(lent))
+b.lcGraceUntil = 0
+ok(LC.ReportDebt(a, 1) and LC.PlayerIsWanted(b) and string.find(b:GetNW2String("lc_wanted_reason", ""), "Debt default", 1, true), "overdue: the lender can report it to Civil Protection")
+LC.ClearWanted(b)
+-- a deal gone bad
+local access, atqm = LC.MarketAccess, LC.AtQuartermaster
+LC.MarketAccess = function() return true end
+LC.AtQuartermaster = function() return false end
+local gid, gitem
+for _, g in ipairs(LCS.Black or {}) do if g.item and not g.qm and not g.stock then gid, gitem = g.id, g.item break end end
+_setcvar("lc_bad_deal_chance", 1)
+LC.AddCredits(a, 1000)
+local n0 = (LC.Inventory(a) or {})[gitem] or 0
+math.random = function(x, y) if x == nil then return 0.1 elseif y == nil then return rnd(x) end return rnd(x, y) end
+LC.BlackBuy(a, gid)
+math.random = rnd
+ok(((LC.Inventory(a) or {})[gitem] or 0) == n0, "a deal gone bad: the goods are a brick in a bag", gid)
+math.random = function(x, y) if x == nil then return 0.9 elseif y == nil then return rnd(x) end return rnd(x, y) end
+a.lcGraceUntil = 0
+_setcvar("lc_bad_deal_chance", 1)
+LC.BlackBuy(a, gid)
+math.random = rnd
+ok(LC.PlayerIsWanted(a), "or a sting: Civil Protection have you for it")
+LC.ClearWanted(a)
+_setcvar("lc_bad_deal_chance", 0)
+LC.MarketAccess, LC.AtQuartermaster = access, atqm
+for _, p in ipairs({ thief, mark, unit }) do p:RemovePData("lc_debts") p:RemovePData("lc_lent") p:SetPos(C0 + Vector(30000, 0, 0)) end
+end
+StreetCrimeTests()
 
 function PapersHousingTests()
 section("Papers you carry, the housing register, transfers")

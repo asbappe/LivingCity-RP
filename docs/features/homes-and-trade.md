@@ -21,3 +21,18 @@ Something to save for, and to be seen with. All from the Union Commissary, citiz
 - **A pet bird** (standing 100, 80 credits): a tame pigeon. Use it from your pockets and it rides on your right shoulder for everyone to see; again and it hops back into your coat. Sold or lost, it's gone (where it sits: `lc_petbird_pos`).
 Decor is kept in `data/livingcity/<map>_decor.json`.
 
+## Households (the owner, 10 November: roommates, family, a shared stash)
+
+A citizen (or a Resistance member: on paper, a citizen) can take others into their household: **F1, looking at them, "Invite (name) into my household"** (face to face); they accept on **F2 > Me (More) > My household** within two minutes (or decline). Members of a household:
+- **live in the head's block** (moved there when they join)
+- **share their storage crates and lockers**: each can open the others' (stalls stay their owner's)
+- **get keys to the head's apartment**, if they rent one
+- **know each other by name**
+The household is called after the head's surname ("the Vornholt household"); the head can rename it and send someone away (F2 > Me (More) > My household). Anyone can leave. A household of one is no household; when someone's life ends they leave it. Up to `lc_household_max` (6) people, each character in one at most. Shown in Where I stand. Kept in `data/livingcity/households.json`. `lc_households` 0 turns it off.
+
+## A business of your own (the owner, 10 November: hiring other players, crafting worth selling)
+
+- **Hand-made goods**, anyone can make (F3, crafting): a **rag doll** (3 rags), a **tin toy** (3 scrap), a **patched coat** (4 rags and a scrap). They're for selling.
+- **The city's own people buy them**: every `lc_stall_customers_minutes` (3) a citizen walking near an open stall buys one hand-made thing from it, if it's priced at no more than half again what it's worth (a rag doll about 18, a tin toy 20, a patched coat 32). The money goes in the till, like any sale; the owner is told.
+- **Hiring**: a stall owner can offer another citizen a job (F1, looking at them, "Offer (name) a job at my stall"); they accept on F2 > Me (More) > My household and stall business > My stall business. A worker can open their employer's stalls and stock them; the till stays the owner's. Every `lc_wage_minutes` (10) a worker who's been at one of the stalls is paid `lc_wage` (10) credits from the till, else from the owner's pocket if they're about, else not at all (and told so). The owner can let a worker go and a worker can quit, on the same page.
+

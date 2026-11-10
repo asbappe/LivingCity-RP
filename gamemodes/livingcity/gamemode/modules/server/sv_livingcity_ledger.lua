@@ -34,7 +34,7 @@
 
     The news comes the city's own way: each city morning a City Bulletin on
     the city screens and the PA's chat line (no windows), what changed and why;
-    and anyone can read the state of the city on F2 > Me > The state of the city.
+    and anyone can read the state of the city on F2 > Me (More) > The state of the city.
 
     The Administrator's tools (F2 > Me > The city's levers), each with its cost:
       - a speech: at a speech stand (editor: "Point: speech stand"; she's taken
