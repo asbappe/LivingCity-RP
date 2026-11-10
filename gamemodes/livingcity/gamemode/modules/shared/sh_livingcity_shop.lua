@@ -188,7 +188,7 @@ LCS.Items = {
                         desc = "Stand in the canal, or look at the water, and wait. Good for four to eight casts, then it snaps" },
     spraypaint      = { name = "Spray can", model = "models/props_junk/popcan01a.mdl", use = "spray", useLabel = "Spray",
                         contraband = true, conceal = 0.5, sell = 4,
-                        desc = "Look at a wall and spray the lambda. Don't let a Civil Protection unit see you do it" },
+                        desc = "Look at a wall and spray the lambda, or at one of the city's posters to paint over it. Don't let a Civil Protection unit see you do it" },
     ------------------------------------------------------------------------
     -- Making things (sv_livingcity_crafting.lua)
     --   arms     weapons and ammunition: the quartermaster pays half as much again

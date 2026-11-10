@@ -147,6 +147,7 @@ LC.CivPosterTips = {
     -- (the Director's hand-hung posters are propaganda: they teach no tip)
     work = {}, loyalty = {}, informants = {}, contraband = {}, radio = {}, illness = {}, infestation = {}, housing = {},
     vortigaunt = {}, recruit = {}, administrator = {},
+    rebel_leash = {}, rebel_water = {}, rebel_home = {}, rebel_watch = {},
 }
 
 function LC.CivPosterNotice(pos)
@@ -187,9 +188,17 @@ function LC.HangPoster(ply, kind, pos, normal)
     local stored = scripted_ents and scripted_ents.GetStored and scripted_ents.GetStored("lc_civposter")
     local notices = stored and stored.t and stored.t.Notices or LC.CivPosterTips
     if not notices[kind] then return false, "There's no such poster on the roll." end
+    if string.sub(kind, 1, 6) == "rebel_" and not (IsValid(ply) and ply:GetNW2String("lcf_faction", "") == "resistance") then
+        return false, "Only the Resistance pastes those up."
+    end
     if not pos or not normal or math.abs(normal.z) > 0.3 then return false, "Posters go on a wall." end
-    for _, e in ipairs(ents.FindByClass("lc_civposter")) do
-        if IsValid(e) and not e.lcTornDown and e:GetPos():DistToSqr(pos) < 60 * 60 then return false, "There's a poster here already." end
+    local there = LC.PosterAt(pos, 60)
+    if there then
+        -- a fresh sheet over one that's been painted on (a hand-hung one becomes the poster chosen)
+        if not there:GetNW2Bool("lc_defaced", false) then return false, "There's a poster here already." end
+        there:SetNW2Bool("lc_defaced", false)
+        if there.lcFixedKind then there.lcFixedKind = kind there:SetNW2String("lc_notice", kind) end
+        return there
     end
     if #LC.HungPosters() >= LC.PosterHangMax then return false, "The city has enough posters up (" .. LC.PosterHangMax .. "). Take one down first." end
     local e = ents.Create("lc_civposter")
@@ -201,6 +210,24 @@ function LC.HangPoster(ply, kind, pos, normal)
     e:Spawn()
     e:SetNW2String("lc_notice", kind)
     return e
+end
+
+-- The poster on the wall here, if any (not one that's been taken down).
+function LC.PosterAt(pos, r)
+    for _, e in ipairs(ents.FindByClass("lc_civposter")) do
+        if IsValid(e) and not e.lcTornDown and e:GetPos():DistToSqr(pos) < r * r then return e end
+    end
+end
+
+-- The Resistance paints over a poster (a spray can: sv_livingcity_scavenge.lua). Their own paste-ups are left alone.
+function LC.DefacePoster(ply, e)
+    if not IsValid(e) or e:GetClass() ~= "lc_civposter" or e.lcTornDown then return false, "Look at a poster." end
+    if string.sub(e:GetNW2String("lc_notice", ""), 1, 6) == "rebel_" then return false, "That one is ours." end
+    if e:GetNW2Bool("lc_defaced", false) then return false, "Someone has seen to this one already." end
+    e:SetNW2Bool("lc_defaced", true)
+    e.lcDefacedBy = ply
+    hook.Run("LivingCityPosterDefaced", ply, e)
+    return true
 end
 
 function LC.TakeDownPoster(ply, e)

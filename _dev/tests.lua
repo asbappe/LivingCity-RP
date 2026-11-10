@@ -7579,6 +7579,18 @@ ok(not LC.HangPoster(hanger, "nonsense", wallAt + Vector(0, 300, 0), Vector(1, 0
 ok(#LC.HungPosters() == 1 and LC.TakeDownPoster(hanger, hung) and #LC.HungPosters() == 0, "a hand-hung poster comes down again")
 local cityPoster = ents.Create("lc_civposter")
 cityPoster:SetPos(LB + Vector(5000, 6000, 60)) cityPoster:Spawn()
+-- the Resistance paints over it; a fresh sheet from the roll covers the paint
+cityPoster:SetNW2String("lc_notice", "curfew")
+ok(LC.PosterAt(cityPoster:GetPos(), 55) == cityPoster, "the poster on a wall is found")
+ok(LC.DefacePoster(hanger, cityPoster) and cityPoster:GetNW2Bool("lc_defaced", false), "a poster can be painted over")
+ok(not LC.DefacePoster(hanger, cityPoster), "only once")
+ok(LC.HangPoster(hanger, "loyalty", cityPoster:GetPos(), Vector(1, 0, 0)) == cityPoster and not cityPoster:GetNW2Bool("lc_defaced", false), "hanging over a painted poster pastes a fresh one")
+ok(not LC.HangPoster(hanger, "rebel_watch", LB + Vector(5000, 6400, 60), Vector(1, 0, 0)), "the Resistance's paste-ups aren't for anyone else to hang")
+hanger:SetNW2String("lcf_faction", "resistance")
+local paste = LC.HangPoster(hanger, "rebel_watch", LB + Vector(5000, 6400, 60), Vector(1, 0, 0))
+ok(IsValid(paste) and not LC.DefacePoster(hanger, paste), "a Resistance member hangs one, and nobody paints over those")
+if IsValid(paste) then paste:Remove() end
+hanger:SetNW2String("lcf_faction", "")
 ok(LC.TakeDownPoster(hanger, cityPoster) and IsValid(cityPoster) and cityPoster.lcTornDown, "the roll takes the city's own posters down too: hidden until the map next starts")
 ok(not LC.TakeDownPoster(hanger, cityPoster), "one that's down can't be taken down again")
 local over = LC.HangPoster(hanger, "loyalty", cityPoster:GetPos(), Vector(1, 0, 0))
