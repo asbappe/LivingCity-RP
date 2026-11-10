@@ -1308,6 +1308,7 @@ Notes:
 - [ ] **A wrong guess:** burn someone who never informed: every citizen should be told, and lose sympathy.
 ## 10 November: poster pictures
 - [ ] **Poster pictures:** upload `materials/livingcity/posters/` (six `.jpg`), FastDL sync, change map. Each civil notice poster shows its picture (dispenser, Commissary, intake, water, law board, curfew elsewhere), sharp enough to read from a few steps away.
+- [ ] **Fever:** `lc_illness_rate 20`, catch a cold in the rain and leave it (or wait for a fever). With a fever: you can't sprint, fists don't swing. At 12:00 on the clock (`lc_time 11` to hurry) you drop for a minute into the fever dream: melting colours, rolling view, drifting words, the eye, slow sounds. You come to with it broken. Get someone to hit you during it: you wake, still feverish.
   Notes:
 - [ ] **The carved rat:** scar a burned informant (hands up). A crude red rat should appear on their right cheek, and move with their head. If it floats off the face or sits in the wrong place, tell me what you see: lc_ratscar_pos moves it (forward, right, up, turn). They should never be able to join the Resistance after.
   Notes:

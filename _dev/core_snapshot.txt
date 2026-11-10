@@ -716,6 +716,7 @@ setting lc_exercise_npcs = 10
 setting lc_exercise_pay = 5
 setting lc_exercise_skip_ration = 1
 setting lc_eye_height = 61
+setting lc_fever_dream = 1
 setting lc_fighter_trust_jobs = 3
 setting lc_firebomb_secs = 12
 setting lc_fixture_wear = 1

@@ -32,7 +32,7 @@ This is the master technical document. It lists what the owner's server, files, 
 | The old-timer's lines | `sound/livingcity/oldtimer/`, flat, named for the line (`bins1.wav`; section 7) | `LC.OldTimerVoiceRoot`, sv_livingcity_oldtimer.lua |
 | The machines' lines (ration dispenser, vending) | `sound/livingcity/machines/`, flat, named for the line (`dispenser_nocard1.wav`; section 8) | `LC.MachineVoiceRoot`, sv_livingcity_machines.lua |
 | Civil notice poster pictures (optional) | `materials/livingcity/posters/<kind>.png` or `.jpg` (`POSTER_BRIEF.md`) | entities/lc_civposter.lua |
-| A hungry stomach (optional) | `sound/livingcity/body/stomach*` | cl_livingcity_bodysigns.lua |
+| A hungry stomach, the fever dream's sound (optional) | `sound/livingcity/body/stomach*`, `sound/livingcity/body/feverdream*` | cl_livingcity_bodysigns.lua |
 | Who the old-timer is | in the city's roster, `data/livingcity/<map>_people.json` (`oldtimer`) | sv_livingcity_oldtimer.lua |
 | How often each player has had the PA's explanations | PData `lc_pa_heard` | sv_livingcity_learning.lua |
 | Citizens' advice lines (showing you the way) | `sound/livingcity/citizens/`, flat, named for the line and the voice: `advice_bins_male1.wav`, `advice_bins_female1.wav` (list: `VOICE_LINES.md` section 5) | `LC.AdviceVoiceRoot`, `LC.AdviceClip`, sv_livingcity_advice.lua |

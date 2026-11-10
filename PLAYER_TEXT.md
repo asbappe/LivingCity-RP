@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 71c8f0f. Admin-only console messages and log lines are left out.
+Made from version 9c85627. Admin-only console messages and log lines are left out.
 
-9923 lines, from 273 files.
+9950 lines, from 274 files.
 
 ## Contents
 
@@ -80,6 +80,7 @@ Made from version 71c8f0f. Admin-only console messages and log lines are left ou
 - [the Endings menu (superadmins): tune the secret endings live](#the-endings-menu-superadmins-tune-the-secret-endings-live-cllivingcityendingtunelua) (69)
 - [morning exercise, on your screen (sv_livingcity_exercise.lua)](#morning-exercise-on-your-screen-svlivingcityexerciselua-cllivingcityexerciselua) (11)
 - [cl_livingcity_factions.lua](#cllivingcityfactionslua-cllivingcityfactionslua) (23)
+- [cl_livingcity_feverdream.lua](#cllivingcityfeverdreamlua-cllivingcityfeverdreamlua) (24)
 - [cl_livingcity_grigori.lua](#cllivingcitygrigorilua-cllivingcitygrigorilua) (10)
 - [cl_livingcity_hints.lua](#cllivingcityhintslua-cllivingcityhintslua) (11)
 - [cl_livingcity_hub.lua](#cllivingcityhublua-cllivingcityhublua) (1)
@@ -181,7 +182,7 @@ Made from version 71c8f0f. Admin-only console messages and log lines are left ou
 - [tips that pop up the first time something happens](#tips-that-pop-up-the-first-time-something-happens-svlivingcityhintslua) (327)
 - [housing blocks](#housing-blocks-svlivingcityhousinglua) (5)
 - [toilets, baths and what happens without them](#toilets-baths-and-what-happens-without-them-svlivingcityhygienelua) (53)
-- [catching something](#catching-something-svlivingcityillnesslua) (10)
+- [catching something](#catching-something-svlivingcityillnesslua) (13)
 - [help for the outnumbered side](#help-for-the-outnumbered-side-svlivingcityimbalancelua) (24)
 - [Citizen Information](#citizen-information-svlivingcityinfodesklua) (36)
 - [the Resistance Insider (a Civil Protection unit secretly with the Resistance)](#the-resistance-insider-a-civil-protection-unit-secretly-with-the-resistance-svlivingcityinsiderlua) (65)
@@ -867,7 +868,7 @@ Made from version 71c8f0f. Admin-only console messages and log lines are left ou
 - "Press E on a citizen to talk: hear the news, share food, pick their pocket (uses Guile), or inform on them. They remember how you treat them."  (text, line 133)
 - "Lost, hungry or thirsty? Chat with a citizen: they may point you the way, and one who likes you will walk you there."  (text, line 134)
 - "Questions about the rules? The Citizen Information clerk answers them (the official version), and marks the way to Civil Intake, Housing, Labor, the Commissary and the dispenser. Your orientation pamphlet (in your pockets) says the same."  (text, line 135)
-- "Realistic survival: you can catch a cold in the rain, a stomach bug from raw meat or dirty water, and a fever from a cold left alone. Each passes on its own; Union medicine from the Commissary cures a cold or a fever."  (text, line 136)
+- "Realistic survival: you can catch a cold in the rain, a stomach bug from raw meat or dirty water, and a fever from a cold left alone (no running, no fists, and at midday it knocks you down into a fever dream that breaks it). Union medicine from the Commissary cures a cold or a fever."  (text, line 136)
 - "Somewhere in the city is an old man who's seen it all. Find him, visit him, share a meal: the better he knows you, the more he'll tell you."  (text, line 137)
 - "The Resistance (Member rank and up) can ask a sympathizer to keep watch: they warn everyone on Freq 7 when Civil Protection units approach."  (text, line 138)
 - "The city runs on a daily schedule: work in the morning, ration lines at midday, quiet evenings, and nearly empty streets at night (only the night shift works)."  (text, line 139)
@@ -2201,6 +2202,41 @@ Made from version 71c8f0f. Admin-only console messages and log lines are left ou
 - "BOLO: {GetNW2String}"  (text, line 420)
 - "Hands cuffed"  (text, line 421)
 - "Hands up"  (text, line 422)
+
+## cl_livingcity_feverdream.lua (cl_livingcity_feverdream.lua)
+
+`gamemodes/livingcity/gamemode/modules/client/cl_livingcity_feverdream.lua`
+
+- "did you register?"  (text, line 23)
+- "don't run"  (text, line 23)
+- "don't run"  (text, line 23)
+- "the old man is waiting"  (text, line 23)
+- "your ration card is late"  (text, line 24)
+- "count the headcrabs"  (text, line 24)
+- "the water is singing"  (text, line 24)
+- "papers. papers. papers."  (text, line 25)
+- "who are you?"  (text, line 25)
+- "you were brought here for your own protection"  (text, line 25)
+- "the tap is dry"  (text, line 26)
+- "it's too hot"  (text, line 26)
+- "is anyone fighting back?"  (text, line 26)
+- "wake up"  (text, line 26)
+- "wake up"  (text, line 26)
+
+> Note for you (not shown in game): the world melts
+
+- "$pp_colour_addr"  (text, line 83)
+- "$pp_colour_addg"  (text, line 83)
+
+> Note for you (not shown in game): the game's render screenspace effects moment
+
+- "$pp_colour_addb"  (text, line 84)
+- "$pp_colour_brightness"  (text, line 84)
+- "$pp_colour_contrast"  (text, line 85)
+- "$pp_colour_colour"  (text, line 85)
+- "$pp_colour_mulr"  (text, line 86)
+- "$pp_colour_mulg"  (text, line 86)
+- "$pp_colour_mulb"  (text, line 86)
 
 ## cl_livingcity_grigori.lua (cl_livingcity_grigori.lua)
 
@@ -9045,31 +9081,40 @@ Made from version 71c8f0f. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): id = { name, seconds, cured by medicine, what happens now and then (every..every2 seconds), what you feel when it starts }
 
-- "Your throat's raw and your nose is running. You're coming down with something."  (text, line 58)
+- "Your throat's raw and your nose is running. You're coming down with something."  (text, line 68)
 
 > Note for you (not shown in game): left alone, it can get worse (once)
 
-- "a stomach bug"  (name, line 70)
-- "Your stomach lurches. Something you ate is fighting back."  (text, line 71)
+- "a stomach bug"  (name, line 80)
+- "Your stomach lurches. Something you ate is fighting back."  (text, line 81)
 
 > Note for you (not shown in game): part of: tick
 
-- "You double over and vomit."  (chat message, line 80)
-- "You're burning up, and shivering at the same time. A fever."  (text, line 83)
+- "You double over and vomit."  (chat message, line 90)
+- "You're burning up, and shivering at the same time. A fever."  (text, line 93)
 
 > Note for you (not shown in game): part of: recover illness
 
-- "The medicine works. {or}"  (text, line 149)
-- "You feel better. {or}"  (text, line 150)
+- "The medicine works. {or}"  (text, line 167)
+- "You feel better. {or}"  (text, line 168)
 
 > Note for you (not shown in game): Union medicine (an item that cures = "illness", sv_livingcity_survival.lua): every illness it treats.
 
-- "Bitter. If anything was wrong with you, it wasn't that."  (chat message, line 161)
+- "Bitter. If anything was wrong with you, it wasn't that."  (chat message, line 179)
 
 > Note for you (not shown in game): the tip card, held back like the others until they seem stuck (sv_livingcity_learning.lua)
 
-- "You're ill"  (title, line 235)
-- "You've caught something. It will pass on its own. Union medicine (the Commissary) cures a cold or a fever at once; clean water settles a stomach bug. Stay out of the rain, cook your meat and boil your water."  (text, line 236)
+- "You're ill"  (title, line 253)
+- "You've caught something. It will pass on its own. Union medicine (the Commissary) cures a cold or a fever at once; clean water settles a stomach bug. Stay out of the rain, cook your meat and boil your water."  (text, line 254)
+
+> Note for you (not shown in game): part of: fever dream
+
+- "The heat rises over you like water. Your legs go, and the street tilts away..."  (chat message, line 278)
+
+> Note for you (not shown in game): part of: end fever dream
+
+- "You jolt awake, shaking. The fever still has you."  (chat message, line 290)
+- "You come to on the ground, soaked through and cold. The fever's broken."  (chat message, line 292)
 
 ## help for the outnumbered side (sv_livingcity_imbalance.lua)
 
