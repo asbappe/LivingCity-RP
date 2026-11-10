@@ -787,6 +787,11 @@ local function Jolt(pos, big)
         ed:SetRadius(big and 80 or 30)
         util.Effect(big and "cball_explode" or "ElectricSpark", ed, true, true)
     end
+    -- (and heard: the owner, 10 November: "we need some sounds too")
+    if sound and sound.Play then
+        if big then sound.Play("ambient/levels/labs/electric_explosion" .. math.random(1, 5) .. ".wav", pos, 95, 100, 1)
+        else sound.Play("ambient/energy/zap" .. math.random(1, 9) .. ".wav", pos, 75, math.random(95, 110), 0.8) end
+    end
 end
 LC.CollapseJolt = Jolt
 local function Guard(cls, pos, ang, power)
@@ -913,7 +918,10 @@ StandBegin = function()
     FloatBegin(boss, office)
     -- her bubble comes up: a flash and an energy jolt (and what falls out of it)
     Jolt(boss:GetPos() + Vector(0, 0, 40), true)
-    if sound and sound.Play then sound.Play("ambient/energy/whiteflash.wav", boss:GetPos(), 100, 100, 1) end
+    if sound and sound.Play then
+        sound.Play("ambient/energy/whiteflash.wav", boss:GetPos(), 100, 100, 1)
+        sound.Play("ambient/machines/teleport1.wav", boss:GetPos(), 95, 90, 1)
+    end
     if util.ScreenShake then util.ScreenShake(boss:GetPos(), 8, 5, 1.5, 1500) end
     for _, p in ipairs(player.GetAll()) do
         if p.ScreenFade and p:GetPos():DistToSqr(boss:GetPos()) < 1500 * 1500 then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(190, 160, 255, 150), 0.7, 0) end

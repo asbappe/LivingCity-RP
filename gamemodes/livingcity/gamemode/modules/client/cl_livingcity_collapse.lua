@@ -264,3 +264,22 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCitySuppressorRing", function(
         end
     end
 end)
+
+------------------------------------------------------------------------
+-- Her bubble hums while it's up (the owner, 10 November: "we need some sounds too")
+------------------------------------------------------------------------
+
+local hum, humOn
+hook.Add("Think", "LivingCityCollapseShieldHum", function()
+    local boss = GetGlobal2Entity("lc_collapse_boss")
+    local on = IsValid(boss) and boss:GetNW2Float("lc_shield_frac", 0) > 0
+    if on and (not hum or humOn ~= boss) then
+        if hum then hum:Stop() end
+        hum = CreateSound and CreateSound(boss, "ambient/energy/force_field_loop1.wav") or nil
+        humOn = boss
+        if hum then hum:PlayEx(0.55, 85) end
+    elseif not on and hum then
+        hum:FadeOut(0.6)
+        hum, humOn = nil, nil
+    end
+end)

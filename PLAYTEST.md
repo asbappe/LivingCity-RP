@@ -1206,3 +1206,5 @@ Notes:
   Notes:
 - [ ] **VOICE_LINES.md** (in the gamemode folder): every line still to record, in one list. Run lc_voice_missing on the server and paste the output to Claude to tick off what you have.
   Notes:
+- [ ] **Last stand sounds:** the flash comes with a white flash and teleport sound; each falling panel zaps and clanks; each transformer gives an electric blast as its guards appear; her bubble hums while it is up, each transformer hums while it powers her and goes quiet when destroyed.
+  Notes:

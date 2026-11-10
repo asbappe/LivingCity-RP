@@ -610,6 +610,18 @@ do
     elseif (_calls["render.DrawSphere"] or 0) <= sp0 then problems[#problems + 1] = "her shield isn't drawn" end
     local okH, errH = pcall(hook.t.HUDPaint.LivingCityCollapseHUD)
     if not okH then problems[#problems + 1] = "the last stand on screen errors: " .. tostring(errH) end
+    -- her bubble's hum: on while it's up, off when it's down
+    do
+        local cs, played, faded = CreateSound, 0, 0
+        CreateSound = function() local o = {} function o:PlayEx() played = played + 1 end function o:FadeOut() faded = faded + 1 end function o:Stop() end return o end
+        local okU, errU = pcall(hook.t.Think.LivingCityCollapseShieldHum)
+        boss.nw.lc_shield_frac = 0
+        local okD2, errD2 = pcall(hook.t.Think.LivingCityCollapseShieldHum)
+        boss.nw.lc_shield_frac = 1
+        CreateSound = cs
+        if not (okU and okD2) then problems[#problems + 1] = "her bubble's hum errors: " .. tostring(errU or errD2)
+        elseif played ~= 1 or faded ~= 1 then problems[#problems + 1] = "her bubble's hum doesn't start and stop (" .. played .. ", " .. faded .. ")" end
+    end
     _me.nw.lc_hero = nil
     for _, k in ipairs({ "lc_collapse", "lc_collapse_stage", "lc_collapse_boss", "lc_collapse_office", "lc_collapse_until", "lc_collapse_hero", "lc_collapse_power" }) do _globals[k] = nil end
     boss:Remove()

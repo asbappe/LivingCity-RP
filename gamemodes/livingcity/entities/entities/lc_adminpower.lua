@@ -98,8 +98,22 @@ if CLIENT then
         render.DrawSprite(top, size, size, Color(LIVE.r, LIVE.g, LIVE.b, (on and 200 or 70) * pulse))
     end
 
+    -- it hums while it powers her shield, and goes quiet when it's destroyed (the owner: "we need some sounds too")
+    function ENT:Hum()
+        local live = self:GetNW2Bool("lc_power_live", false) and not self:GetNW2Bool("lc_power_down", false)
+        if live and not self.lcHum then
+            self.lcHum = CreateSound and CreateSound(self, "ambient/machines/power_transformer_loop_1.wav") or nil
+            if self.lcHum then self.lcHum:PlayEx(0.45, 100) end
+        elseif not live and self.lcHum then
+            self.lcHum:FadeOut(0.5)
+            self.lcHum = nil
+        end
+    end
+    function ENT:OnRemove() if self.lcHum then self.lcHum:Stop() end end
+
     -- smoke and sparks as it's shot up, more the worse it is
     function ENT:Think()
+        self:Hum()
         local stage = self:GetNW2Int("lc_power_smoke", 0)
         local down = self:GetNW2Bool("lc_power_down", false)
         if down then stage = 4 end
