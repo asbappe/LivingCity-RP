@@ -477,7 +477,10 @@ local function HoraPose(ent, b, beat)
         P.R_UpperArm, P.L_UpperArm, P.R_Forearm, P.L_Forearm = HORA.R_UpperArm, HORA.L_UpperArm, HORA.R_Forearm, HORA.L_Forearm
     end
     if chair then
-        P.R_Thigh, P.L_Thigh, P.R_Calf, P.L_Calf = SEATED.R_Thigh, SEATED.L_Thigh, SEATED.R_Calf, SEATED.L_Calf
+        -- (a player really sat in a seat, LC.DreamSeat, sits by the game's own animation: no bending the legs by hand)
+        if not (ent.GetNW2Bool and ent:GetNW2Bool("lc_real_seat", false)) then
+            P.R_Thigh, P.L_Thigh, P.R_Calf, P.L_Calf = SEATED.R_Thigh, SEATED.L_Thigh, SEATED.R_Calf, SEATED.L_Calf
+        end
         P.Head = Angle(0, 10 * math.sin(beat * math.pi), 0)
     elseif sec == "gather" then
         -- swaying arm in arm: a curve up the back, the feet planted

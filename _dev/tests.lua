@@ -14662,9 +14662,32 @@ local chaired
 for _, p in ipairs({ a, b }) do if p:GetNW2Bool("lc_chair", false) then chaired = p end end
 for _, m in ipairs(E.rings.outer.members) do if IsValid(m.e) and m.e:GetNW2Bool("lc_chair", false) then chaired = chaired or m.e end end
 ok(chaired and (E.lifted or {})[chaired], "someone's lifted up on a chair")
+ok(chaired and (not chaired:IsPlayer() or (IsValid(chaired.lcDreamSeat) and chaired:GetNW2Bool("lc_real_seat", false))), "(a player lifted is really sat, in a seat of the game's own)")
+do -- (the seat is carried with the chair, and they're let down out of it)
+    local mm = a.lcHora
+    local wasSeat, wasLift = mm.seat, mm.lift
+    if not mm.seat then
+        mm.lift = mm.lift or { t0 = CurTime(), dur = 4 }
+        mm.seat = LC.DreamSeat(a, a:GetPos() + Vector(0, 0, LC.ShalomSeatUp), 0)
+    end
+    local seat = mm.seat
+    LC.ShalomStep(CurTime())
+    _advance(0.1)
+    LC.ShalomStep(CurTime())
+    local sp = seat:GetPos()
+    local ring = math.sqrt((sp.x - E.lz.x) ^ 2 + (sp.y - E.lz.y) ^ 2)
+    ok(IsValid(seat) and a.lcDreamSeat == seat and sp.z >= E.floorZ + LC.ShalomSeatUp - 0.5 and ring > 20, "up on the chair, a player's seat goes round with the ring", sp.z - E.floorZ)
+    if not wasSeat then
+        LC.DreamUnseat(a)
+        mm.seat = nil
+        if not wasLift then mm.lift = nil end
+        ok(a.lcDreamSeat == nil and not IsValid(seat) and not a:GetNW2Bool("lc_real_seat", false), "let down: out of the seat, and it's gone")
+    end
+end
 local ringR = E.rings.inner.r
 runToS(5.9)
-ok(E.rush < 0.9 and (a:GetPos() - E.lz):Length2D() < ringR * 0.95, "the breakdown: everyone rushes into the middle", E.rush)
+-- (someone up on a chair goes where their seat goes: the game carries them, the test stub doesn't)
+ok(E.rush < 0.9 and ((IsValid(a.lcDreamSeat) and a.lcDreamSeat:GetPos() or a:GetPos()) - E.lz):Length2D() < ringR * 0.95, "the breakdown: everyone rushes into the middle", E.rush)
 runToS(8.5)
 ok(not a.lcEndTaken and not b.lcEndTaken, "nobody's taken: everyone dances to the end")
 runToS(9.5)
@@ -14672,6 +14695,7 @@ ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and the song's o
 _run(6)
 ok(not a.frozen and a.movetype ~= MOVETYPE_NONE and not a:GetNW2Bool("lc_dancing", false) and not a:GetNW2Bool("lc_chair", false) and not a.lcHora,
     "(and everyone can move again)")
+ok(a.lcDreamSeat == nil and b.lcDreamSeat == nil and not a:GetNW2Bool("lc_real_seat", false), "(and nobody is left sat in a seat)")
 _setcvar("lc_ending_shalom_sections", "7.4:gather,35.7:walk,62.1:hora,111.5:lift,125.7:hora,153.9:in,157.4:hora,180.4:in,183.9:build,205.1:peak,219.2:hora,224.5:in,231.5:final,273.9:outro,288.5:end")
 _setcvar("lc_ending_shalom_candles", "35.7,62.1,86.8,111.5,125.7,153.9,183.9,205.1")
 _setcvar("lc_ending_shalom_offset", 0.36)
@@ -18241,6 +18265,10 @@ b:SetPos(g.chairs[1].pos + Vector(400, 0, 0))
 a.crouch = true
 _run(0.1)
 ok(g.pl[a].chair == 1 and g.chairs[1].by == a, "crouch beside a free chair: it's yours")
+local seatA = a.lcDreamSeat
+ok(IsValid(seatA) and seatA.lcDreamSeat and a:GetNW2Bool("lc_real_seat", false) and seatA:GetPos():Distance(g.chairs[1].pos + Vector(0, 0, LC.ChairsSeatUp)) < 1,
+    "and they're really sat in it: a seat of the game's own, on the chair (the owner, 10 November)")
+ok(hook.Run("CanExitVehicle", seatA, a) == false and hook.Run("CanPlayerEnterVehicle", b, seatA) == false, "nobody climbs out of a dream's seat, or into someone else's")
 b:SetPos(g.chairs[1].pos + Vector(10, 0, 0))
 b.crouch = true
 _run(0.1)
@@ -18251,6 +18279,7 @@ _run(2.6)
 ok(g.pl[a].how == "won", "the last one sitting wins")
 a.crouch, b.crouch = nil, nil
 Stop(d)
+ok(a.lcDreamSeat == nil and not a:GetNW2Bool("lc_real_seat", false) and not IsValid(seatA), "awake: out of the seat, and the seat is gone")
 
 -- Wings
 g, d = Start("flying")

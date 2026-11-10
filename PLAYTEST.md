@@ -1550,3 +1550,10 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **The Midnight Rally, looks:** the buggy size, the cones, whether you can tell the road from the grass at a glance.
   Notes:
+
+## 10 November: real seats for the chair dreams
+
+- [ ] **Musical Chairs:** when the music stops, crouch (or press Use) at a free chair. Are you really sat in it, at the right height and facing a sensible way? Do you stand up beside it when the next round starts, and can you move normally afterwards?
+  Notes:
+- [ ] **Shalom, lifted on the chair (as a player):** are you sat on the chair as it goes up and round, without your legs looking wrong? Is the chair under you? When you come down, are you back in the ring and dancing?
+  Notes:
