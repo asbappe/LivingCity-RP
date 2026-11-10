@@ -1363,3 +1363,14 @@ Notes:
   Notes:
 - [ ] **Shifts back to back:** finish the checklist early, F2 > Me > My shift > Report in now: a review at once and a fresh shift. Try Go on a break, then Back on duty.
   Notes:
+
+## 10 November, last: the state of the city
+
+- [ ] **The bulletin:** wait for a city morning (or an hour): a City Bulletin should appear on the screens and in chat with what changed.
+  Notes:
+- [ ] **F2 > Me > The state of the city:** the five numbers in words and every block with who holds it.
+  Notes:
+- [ ] **Her levers:** as Administrator, place a "Point: speech stand", then F2 > Me > The city's levers: go to the stand, give a speech (citizens nearby gain standing), declare an amnesty, order a crackdown on a block (a raid should start there) and extra rations (a ration day).
+  Notes:
+- [ ] **It carries over:** restart the server: the numbers and districts should be as they were, with the days that passed drifted through.
+  Notes:

@@ -68,7 +68,7 @@ local function Where(pos) return (LC.DescribePlace and LC.DescribePlace(pos)) or
 function LC.IsSnitch(npc)
     local st = LC.NPCs and LC.NPCs[npc]
     if not st or st.role ~= "citizen" then return false end
-    if st.snitch == nil then st.snitch = math.random() < math.Clamp(cvChance:GetFloat(), 0, 1) end
+    if st.snitch == nil then st.snitch = math.random() < math.Clamp(cvChance:GetFloat() * (LC.LedgerSnitchMul or 1), 0, 1) end -- (the Administrator's authority: sv_livingcity_ledger.lua)
     return st.snitch == true
 end
 

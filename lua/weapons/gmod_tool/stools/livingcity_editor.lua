@@ -36,6 +36,7 @@ local MODES = {
     { id = "cell",        label = "Point: prison cell" },
     { id = "release",     label = "Point: prison release spot" },
     { id = "prisonwork",  label = "Point: prison work spot (where a prisoner's work detail picks up trash)" },
+    { id = "speech",      label = "Point: speech stand (where the City Administrator speaks to the city; face it toward the crowd)" },
     { id = "zspawn",      label = "Point: infestation spawn (zombies, infested players)" },
     { id = "rspawn",      label = "Point: resistance spawn (rebel players)" },
     { id = "rlookout",    label = "Point: rebel lookout post (an armed fighter stands guard here; place it from where the Combine would come, so he faces that way)" },

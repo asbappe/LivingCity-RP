@@ -26,3 +26,5 @@
 **Changes from the 7 November playtest.** Every jogging route stop gets a path node under it (or reuses one within 48 units), linked to the next stop and, if not yet joined, to the nearest walkable node within 450 units: when a stop is placed and once when the layout loads (saved once; the file format is unchanged).
 
 **Point: prison work spot** (new, 10 November): where a prisoner's work detail picks up trash (`docs/features/city-events.md`, "The work detail"). Optional: without one, the prison zone, else the corridor between the cells.
+
+**Point: speech stand** (new, 10 November): where the City Administrator gives her speeches (F2 > Me > The city's levers > Go to the speech stand takes her there, facing the way the point faces). Optional.

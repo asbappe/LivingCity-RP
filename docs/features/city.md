@@ -61,3 +61,27 @@ Citizens wander, sit, lean, work at workplaces, chat, queue at ration lines, and
 
 **Bounties (the Combine's answer).** The City Administrator, or a unit of Division Leader rank or higher, can put a price on a wanted person's head: **F2 > Me > Bounties on the wanted**, 50 or 100 credits (one every two minutes). Every unit hears of it, and so does the person. A unit player who brings them in collects it and 10 experience; taken in by the city's own units, or no longer wanted, the bounty lapses. `lc_bounties` 0 turns it off.
 
+## The state of the city, day to day (the owner, 10 November; phase one)
+
+**Five numbers**, 0 to 100 (50 to start), kept with the map in `data/livingcity/<map>_city.json` and rolling on from one city day (`lc_day_minutes`) to the next:
+- **Supply** (the city's stores): a supply drop that comes in +8; looting it -2; the Administrator's extra rations -15; every day eats 4. Under 20, morale sinks each day.
+- **Morale** (the people's mood): unrest wears it down a little every five minutes, calm lifts it; speeches and amnesties +6; crackdowns -6. Under 30, the Resistance grows each day.
+- **Civil Protection's strength**: arrests of Resistance members +1, raids +1, each unit killed by a player -1, rebel operations that work -2. Above 50 more units walk the streets, below fewer (up to 4 either way).
+- **The Resistance's strength**: operations that work +4, arrests of their members -1, raids that find things -2. Above 50 more fighters in the camps, below fewer (up to 4).
+- **The Administrator's authority**: speeches +3, crackdowns +5, amnesties -8, rebel operations -2. It sets how many of the city's citizens are secret informants (half as many at 0, half again at 100).
+Every day each number drifts 2 back toward 50. While the server is empty the city goes on: the days it missed (up to a week) pass quietly when it starts again. `lc_ledger_effects` 0 keeps the numbers but leaves the streets alone.
+
+**Districts with an owner.** Each housing block is a district: the Combine's, contested, or the Resistance's. A rebel operation that works pushes the district it hit toward the Resistance; a block raid pushes it back; each day a district drifts back toward contested. A **crackdown** marks a district as the Combine's for two days; a district **liberated** by the collapse is the Resistance's for three, then the Combine come back for it (a block raid, on the next morning someone is here to see it).
+
+**The collapse leaves a mark.** The Administrator killed: the district nearest rebel ground is liberated, the Resistance +15, morale +10, authority -25. The uprising crushed: a crackdown week in every district, authority +15, the Resistance -15, morale -10. She steps down or ends it: authority starts again at 50.
+
+**The news comes the city's way** (the owner: no new windows): each city morning a **City Bulletin** on the city screens and in chat, what changed and why ("Civil Protection raided Block 4: 3 things confiscated. The Resistance struck in Block 2. Supply low. Morale steady."). Anyone can read the state of the city on **F2 > Me > The state of the city** (the numbers in words, every district and who holds it, this morning's bulletin).
+
+**The Administrator's levers** (F2 > Me > The city's levers), each with its cost:
+- **Go to the speech stand** (editor: "Point: speech stand"; she's taken there, facing the way it faces), then **Give a speech**: her words on the screens and in chat; morale +6, authority +3, and every citizen within earshot +2 standing. Once a city day. With no stand placed she speaks from where she is.
+- **Declare an amnesty**: every wanted citizen forgiven. Morale +6, authority -8, the Resistance +3. Once a city day.
+- **Order a crackdown on a district**: a block raid there now and the district marked for two days. Authority +5, morale -6, the Resistance +4.
+- **Order extra rations**: a ration day now. Supply -15, morale +8; not with the stores under 20.
+
+`lc_ledger` 0 turns all of it off. Still to come (phase two): rebel stalls and danger for patrols in Resistance-held districts, more checkpoints in crackdown districts, supply in Commissary prices, and the optional two-week acts.
+
