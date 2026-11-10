@@ -725,7 +725,9 @@ function LC.VoiceMissing()
         return ids
     end
     Each("Citizen Information clerk", "clerk/", LC.InfoDeskRescan, LC.InfoDeskClip, Ids(LC.InfoDeskTopics, LC.InfoDeskLines))
-    Each("The old-timer", "oldtimer/", LC.OldTimerRescan, LC.OldTimerClip, Ids(LC.OldTimerTopics, LC.OldTimerLines))
+    local oldIds = Ids(LC.OldTimerTopics, LC.OldTimerLines)
+    for _, t in ipairs(LC.OldTimerTroubles or {}) do oldIds[#oldIds + 1] = "hint_" .. t[1] oldIds[#oldIds + 1] = "thanks_" .. t[1] end
+    Each("The old-timer", "oldtimer/", LC.OldTimerRescan, LC.OldTimerClip, oldIds)
     Each("Machines", "machines/", LC.MachineRescan, LC.MachineClip, Ids(nil, LC.MachineLines))
     return out
 end
