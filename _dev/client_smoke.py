@@ -1284,6 +1284,22 @@ _me:SetNW2Float("lc_feverdream", CurTime() + 60)
 local polys0 = _calls["surface.DrawPoly"] or 0
 for _ = 1, 3 do run("Think") run("RenderScreenspaceEffects") runArgs("CalcView", _me, Vector(0, 0, 64), Angle(0, 0, 0), 75) run("HUDPaint") end
 if (_calls["surface.DrawPoly"] or 0) <= polys0 then problems[#problems + 1] = "the fever dream drew nothing" end
+-- the Colonel, drawn only for the Resistance (cl_livingcity_colonel.lua)
+_me:SetNW2String("lcf_faction", "resistance")
+_globals.lc_colonel_here, _globals.lc_colonel_pos, _globals.lc_colonel_yaw = true, Vector(60, 0, 0), 0
+local cmWasC = ClientsideModel
+local colonelMade = 0
+ClientsideModel = function()
+    colonelMade = colonelMade + 1
+    local m = { IsValid = function() return true end, GetPos = function() return Vector(60, 0, 0) end, GetAngles = function() return Angle(0, 0, 0) end,
+        SelectWeightedSequence = function() return 1 end, SequenceDuration = function() return 2 end }
+    return setmetatable(m, { __index = function() return function() end end })
+end
+run("Think") run("HUDPaint")
+if colonelMade == 0 then problems[#problems + 1] = "the Colonel wasn't drawn for a Resistance player" end
+ClientsideModel = cmWasC
+_globals.lc_colonel_here = false run("Think")
+_me:SetNW2String("lcf_faction", "")
 _me:SetNW2Float("lc_feverdream", 0) _me:SetNW2String("lc_ill", "") _me:SetNW2Float("lcn_hunger", 100) _me:SetHealth(100)
 run("Think")
 local okB, errB = pcall(LC_CL.BuildLayoutBrowser, panel, { { id = "dealer", label = "Fixture: black market dealer" },
@@ -3519,6 +3535,36 @@ if not okH then return "net ready: " .. tostring(errH) end
 _globals.lc_nettest_g, _globals.lc_nettest_g_2, _globals.lc_nettest_g_parts = "abc", "def", 2
 if LC.GetGlobalLong("lc_nettest_g", "") ~= "abcdef" then return "net: a long global string isn't read back whole" end
 _globals.lc_nettest_g, _globals.lc_nettest_g_2, _globals.lc_nettest_g_parts = nil, nil, nil
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
+# windows in your faction's style (cl_livingcity_theme.lua): every look paints, and a window's own Paint
+# runs over the themed back with its own back and title strip left out
+err = L.execute(r"""
+if not (LC_CL.PaintThemeBack and LC_CL.SetTheme and LC_CL.ThemedPaint and LC_CL.ThemeName) then return "theme: the module is missing" end
+local f = vgui.Create("DFrame")
+for _, name in ipairs({ "combine", "rebel", "citizen", "custody" }) do
+    LC_CL.SetTheme(f, name)
+    local okT, errT = pcall(LC_CL.PaintThemeBack, f, 520, 360)
+    if not okT then return "theme " .. name .. ": " .. tostring(errT) end
+end
+if not LC_CL.Themes[LC_CL.ThemeName()] then return "theme: no look for you" end
+local boxes, rb = {}, draw.RoundedBox
+draw.RoundedBox = function(r, x, y, w, h) boxes[#boxes + 1] = w .. "x" .. h end
+local paint = LC_CL.ThemedPaint(function(self, w, h)
+    draw.RoundedBox(6, 0, 0, w, h, color_white)   -- its own back: left out
+    draw.RoundedBox(0, 0, 0, w, 24, color_white)  -- its own title strip: left out
+    draw.RoundedBox(4, 10, 40, 100, 30, color_white) -- a card: kept
+end)
+local okW, errW = pcall(paint, f, 520, 360)
+local same = draw.RoundedBox
+draw.RoundedBox = rb
+if not okW then return "theme wrap: " .. tostring(errW) end
+if LC_CL.ThemeBroken then return "theme: it switched itself off" end
+if LC_CL.ThemeOn() and (#boxes ~= 1 or boxes[1] ~= "100x30") then return "theme wrap: kept " .. table.concat(boxes, ",") end
+f:Remove()
 return nil
 """)
 if err:

@@ -334,6 +334,7 @@ item crowbar
 item cwu_overalls
 item data_chip
 item data_shard
+item dog_tags
 item door_code
 item firebomb
 item fishing_line
@@ -366,6 +367,7 @@ item paper
 item papers_blank
 item papers_dead
 item papers_forged
+item pasteup
 item permit
 item radio
 item radio_transmitter
@@ -512,6 +514,7 @@ setting lc_bms_people = 50
 setting lc_bodies = 1
 setting lc_body_time = 300
 setting lc_bolo_minutes = 30
+setting lc_bounties = 1
 setting lc_brandish = 1
 setting lc_brandish_grace = 10
 setting lc_brandish_wanted = 180
@@ -555,6 +558,8 @@ setting lc_clipboard_angle = 0 0 180
 setting lc_close_call_recover = 10
 setting lc_close_call_regen = 3
 setting lc_close_calls = 3
+setting lc_colonel = 1
+setting lc_colonel_debrief_xp = 25
 setting lc_color_grade = 1
 setting lc_combat_window = 30
 setting lc_combine_models = 1
@@ -925,6 +930,7 @@ setting lc_pamphlet = 1
 setting lc_papers_fee = 10
 setting lc_parade_min = 35
 setting lc_parade_units = 6
+setting lc_pasteup_max = 8
 setting lc_pathmap_spacing = 130
 setting lc_people_heights = 1
 setting lc_perfdebug_minutes = 30
@@ -985,6 +991,9 @@ setting lc_rebel_ops = 1
 setting lc_rebel_ops_minutes = 60
 setting lc_rebel_pct = 12
 setting lc_rebel_per_combine = 1.25
+setting lc_rebel_plan_leak = 0.15
+setting lc_rebel_plan_minutes = 15
+setting lc_rebel_plans = 1
 setting lc_rebel_pursuit = 0
 setting lc_rebel_react = 0.5
 setting lc_rebel_room = 350

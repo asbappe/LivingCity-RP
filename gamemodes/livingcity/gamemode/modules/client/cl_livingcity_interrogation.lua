@@ -40,6 +40,7 @@ local function BuildQuestion(t)
     if IsValid(qWin) then qWin:Remove() end
     local f = vgui.Create("DFrame")
     qWin = f
+    if LC_CL.SetTheme then LC_CL.SetTheme(f, "custody") end -- (being questioned looks the same whoever you are)
     f:SetTitle("Interrogation")
     f:SetSize(math.min(ScrW() - 40, 460), 330)
     f:Center()

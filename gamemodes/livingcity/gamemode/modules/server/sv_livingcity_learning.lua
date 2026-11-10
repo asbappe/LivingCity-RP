@@ -178,17 +178,25 @@ end
 -- (the owner, 10 November: "let the roll take them all down"): those are only hidden, so the saved layout
 -- is untouched and LC.SyncFixtures doesn't put them straight back; they return when the map next starts.
 LC.PosterHangMax = 24
-function LC.HungPosters()
+-- The Resistance's paste-ups are few (the owner, 10 November: "limited so there aren't 10 million posters pasted
+-- everywhere"): at most lc_pasteup_max in the city (one more and the oldest comes down), never within
+-- LC.PasteUpGap of another, and they don't count against the Director's posters.
+local cvPasteMax = CreateConVar("lc_pasteup_max", "8", FLAGS, "How many Resistance paste-ups can be up in the city at once (one more and the oldest comes down; 0: none can be pasted)")
+LC.PasteUpGap = 500
+local function IsPasteUp(e) return string.sub(e.lcFixedKind or "", 1, 6) == "rebel_" end
+function LC.HungPosters(pasteUps)
     local out = {}
-    for _, e in ipairs(ents.FindByClass("lc_civposter")) do if IsValid(e) and e.lcFixedKind then out[#out + 1] = e end end
+    for _, e in ipairs(ents.FindByClass("lc_civposter")) do
+        if IsValid(e) and e.lcFixedKind and IsPasteUp(e) == (pasteUps and true or false) then out[#out + 1] = e end
+    end
     return out
 end
 
-function LC.HangPoster(ply, kind, pos, normal)
+function LC.HangPoster(ply, kind, pos, normal, pasted) -- (pasted: a paste-up from someone's pockets, whoever they are)
     local stored = scripted_ents and scripted_ents.GetStored and scripted_ents.GetStored("lc_civposter")
     local notices = stored and stored.t and stored.t.Notices or LC.CivPosterTips
     if not notices[kind] then return false, "There's no such poster on the roll." end
-    if string.sub(kind, 1, 6) == "rebel_" and not (IsValid(ply) and ply:GetNW2String("lcf_faction", "") == "resistance") then
+    if string.sub(kind, 1, 6) == "rebel_" and not pasted and not (IsValid(ply) and ply:GetNW2String("lcf_faction", "") == "resistance") then
         return false, "Only the Resistance pastes those up."
     end
     if not pos or not normal or math.abs(normal.z) > 0.3 then return false, "Posters go on a wall." end
@@ -200,13 +208,26 @@ function LC.HangPoster(ply, kind, pos, normal)
         if there.lcFixedKind then there.lcFixedKind = kind there:SetNW2String("lc_notice", kind) end
         return there
     end
-    if #LC.HungPosters() >= LC.PosterHangMax then return false, "The city has enough posters up (" .. LC.PosterHangMax .. "). Take one down first." end
+    if string.sub(kind, 1, 6) == "rebel_" then
+        local max = cvPasteMax:GetInt()
+        if max <= 0 then return false, "Not now. The walls are being watched." end
+        local up = LC.HungPosters(true)
+        for _, o in ipairs(up) do
+            if o:GetPos():DistToSqr(pos) < LC.PasteUpGap * LC.PasteUpGap then return false, "There's one of ours close by already. Find another street." end
+        end
+        table.sort(up, function(a, b) return (a.lcHungAt or 0) < (b.lcHungAt or 0) end)
+        while #up >= max do table.remove(up, 1):Remove() end -- (the oldest has had its day)
+    elseif #LC.HungPosters() >= LC.PosterHangMax then
+        return false, "The city has enough posters up (" .. LC.PosterHangMax .. "). Take one down first."
+    end
     local e = ents.Create("lc_civposter")
     if not IsValid(e) then return false, "It won't stick." end
     e:SetPos(pos + normal * 1)
     e:SetAngles(normal:Angle())
     e.lcFixedKind = kind
     e.lcHungBy = ply
+    LC.PosterSeq = (LC.PosterSeq or 0) + 1
+    e.lcHungAt = LC.PosterSeq -- (the order they went up in)
     e:Spawn()
     e:SetNW2String("lc_notice", kind)
     return e
@@ -247,10 +268,12 @@ local function SendPosterArt()
         local ext = string.lower(string.match(n, "%.(%w+)$") or "")
         if ext == "png" or ext == "jpg" then resource.AddFile("materials/livingcity/posters/" .. n) end
     end
-    -- (and the orientation pamphlet's paper: cl_livingcity_dialog.lua)
-    for _, n in ipairs(file.Find("materials/livingcity/pamphlet/*", "GAME") or {}) do
-        local ext = string.lower(string.match(n, "%.(%w+)$") or "")
-        if ext == "png" or ext == "jpg" then resource.AddFile("materials/livingcity/pamphlet/" .. n) end
+    -- (and the orientation pamphlet's paper, cl_livingcity_dialog.lua, and the windows' backs, cl_livingcity_theme.lua)
+    for _, dir in ipairs({ "pamphlet", "ui" }) do
+        for _, n in ipairs(file.Find("materials/livingcity/" .. dir .. "/*", "GAME") or {}) do
+            local ext = string.lower(string.match(n, "%.(%w+)$") or "")
+            if ext == "png" or ext == "jpg" then resource.AddFile("materials/livingcity/" .. dir .. "/" .. n) end
+        end
     end
 end
 hook.Add("Initialize", "LivingCityPosterArt", SendPosterArt)

@@ -7592,6 +7592,19 @@ local paste = LC.HangPoster(hanger, "rebel_watch", LB + Vector(5000, 6400, 60), 
 ok(IsValid(paste) and not LC.DefacePoster(hanger, paste), "a Resistance member hangs one, and nobody paints over those")
 if IsValid(paste) then paste:Remove() end
 hanger:SetNW2String("lcf_faction", "")
+-- a paste-up from the black market: anyone holding one can put it up
+ok(LCS.Items.pasteup and LCS.Items.pasteup.use == "pasteup", "the paste-up is an item")
+ok(LCS.BlackById.pasteup and LCS.BlackById.pasteup.qm == true, "and only the quartermaster sells it, not a dealer")
+local pasted = LC.HangPoster(hanger, "rebel_leash", LB + Vector(5000, 6800, 60), Vector(1, 0, 0), true)
+ok(IsValid(pasted) and pasted:GetNW2String("lc_notice", "") == "rebel_leash", "a paste-up from your pockets goes up, Resistance or not")
+-- only so many paste-ups in the city: one more and the oldest comes down; and not right beside another
+ok(not LC.HangPoster(hanger, "rebel_home", LB + Vector(5000, 6900, 60), Vector(1, 0, 0), true), "not right beside another paste-up")
+_setcvar("lc_pasteup_max", 2)
+local p2 = LC.HangPoster(hanger, "rebel_home", LB + Vector(5000, 7400, 60), Vector(1, 0, 0), true)
+local p3 = LC.HangPoster(hanger, "rebel_water", LB + Vector(5000, 8000, 60), Vector(1, 0, 0), true)
+ok(IsValid(p2) and IsValid(p3) and not IsValid(pasted), "over the limit, the oldest paste-up comes down")
+_setcvar("lc_pasteup_max", 8)
+for _, e in ipairs({ p2, p3 }) do if IsValid(e) then e:Remove() end end
 ok(LC.TakeDownPoster(hanger, cityPoster) and IsValid(cityPoster) and cityPoster.lcTornDown, "the roll takes the city's own posters down too: hidden until the map next starts")
 ok(not LC.TakeDownPoster(hanger, cityPoster), "one that's down can't be taken down again")
 local over = LC.HangPoster(hanger, "loyalty", cityPoster:GetPos(), Vector(1, 0, 0))
@@ -7659,6 +7672,80 @@ _setcvar("lc_illness", 0)
 ok(not LC.CatchIllness(lp("Healthy"), "cold", true), "lc_illness 0: nobody falls ill")
 _setcvar("lc_illness", 1)
 for _, p in ipairs({ sick, sneezed, relaxed }) do p:SetPos(Vector(-30000, 30000, 0)) end
+
+section("The Colonel: only the Resistance can see him")
+local CB = T0 + Vector(3000, 3000, 0)
+local qm, qms = person(Vector(3000, 3000, 0))
+qms.quartermaster = true
+local fighter = newPlayer("ColonelFighter", "resistance") fighter:SetPos(CB + Vector(0, 60, 0))
+local nosy = newPlayer("ColonelNosy", "citizen") nosy:SetPos(CB + Vector(0, -150, 0))
+ok(LC.ColonelTick() and LC.ColonelPos and LC.ColonelPos:Distance(qm:GetPos()) < 120, "he stands by the quartermaster")
+fighter:SetPos(LC.ColonelPos + Vector(40, 0, 0))
+ok(not LC.ColonelCanTalk(nosy), "only the Resistance can talk to him")
+local copNear = newPlayer("ColonelCop", "cp") copNear:SetPos(LC.ColonelPos + Vector(300, 0, 0))
+ok(not LC.ColonelTick() and not GetGlobal2Bool("lc_colonel_here", true), "the Combine in the camp: he isn't there")
+copNear:SetPos(Vector(-30000, 30000, 0))
+ok(LC.ColonelTick(), "they leave: he's back")
+nosy.chat = {}
+nosy:SetPos(fighter:GetPos() + Vector(0, 100, 0))
+ok(LC.OpenColonel(fighter) and fighter.lcDialog.key == "colonel", "E on him: his window")
+ok(has(nosy.chat, "empty corner"), "anyone else sees them talking to an empty corner", table.concat(nosy.chat, " | "))
+ok(LC.ColonelJob(fighter) == "medicine", "his first job: medicine for the wounded")
+-- intel
+local sym, syms = person(Vector(3200, 3000, 0))
+syms.rebel = true
+local realSk, realSup = LC.Skirmish, LC.Supply
+LC.Skirmish, LC.Supply = nil, nil
+fighter.lcWaypoint = nil
+local intel = LC.DialogDo(fighter, "intel")
+ok(intel == "intel_sympathizer" or intel == "intel_march", "what's the word? (nothing on: a sympathizer close by)", tostring(intel))
+LC.Supply = { pos = CB + Vector(900, 0, 0) }
+if not next(LC.Marching or {}) then ok(LC.DialogDo(fighter, "intel") == "intel_supply" and fighter.lcWaypoint and fighter.lcWaypoint.pos == LC.Supply.pos, "a supply drop: marked") end
+LC.Skirmish = { kind = "sweep", zone = { pos = CB + Vector(0, 900, 0), r = 300 } }
+ok(LC.DialogDo(fighter, "intel") == "intel_sweep", "a sweep coming: that first")
+LC.Skirmish, LC.Supply = realSk, realSup
+-- his jobs
+ok(LC.DialogDo(fighter, "give") == "nothing", "nothing he needs in your pockets")
+ok(fighter.lcDialog and not LC.DialogDo(fighter, "whisper"), "no whispers before you've done him a favour")
+LC.GiveItem(fighter, "medicine", 3)
+local cxp, realXP2 = {}, LC.AddXP
+LC.AddXP = function(p, n) cxp[p] = (cxp[p] or 0) + n end
+ok(LC.DialogDo(fighter, "give") == "done_medicine" and not LC.HasItem(fighter, "medicine") and cxp[fighter] == 40, "three Union medicine: the wounded will live (40 XP)")
+local heard = {}
+for _ = 1, 10 do heard[LC.DialogDo(fighter, "whisper") or "?"] = true end
+local n = 0 for k in pairs(heard) do if string.sub(k, 1, 8) == "whisper_" then n = n + 1 end end
+ok(n == 10 and LC.DialogDo(fighter, "whisper") == "whisper_none", "ten whispers about the city's secrets, each once", tostring(n))
+ok(LC.ColonelJob(fighter) == "tags", "next: his brother's tags")
+LC.GiveItem(fighter, "dog_tags", 1)
+ok(LC.DialogDo(fighter, "give") == "done_tags" and fighter:HasWeapon("weapon_357"), "the tags: his brother's revolver")
+local tcop, tcops = person(Vector(3000, 3400, 0))
+tcops.role = "cop"
+local target = LC.ColonelUnit(fighter)
+ok(IsValid(target) and LC.ColonelMem(fighter).unit == target.lcProfile.id, "the unit who burned the first camp: one with a designation")
+ok(LC.DialogDo(fighter, "give") == "nothing", "not till he's dead")
+hook.Run("OnNPCKilled", target, fighter)
+ok(LC.DialogDo(fighter, "give") == "done_unit" and cxp[fighter] == 40 + 60 + 75, "it's done (and every job paid)")
+LC.OpenColonel(fighter)
+ok(LC.ColonelJob(fighter) == nil, "nothing left he needs")
+-- debriefs
+hook.t.LivingCityQuestAccepted.LivingCityColonel(fighter, { title = "A dead drop" })
+hook.t.LivingCityQuestComplete.LivingCityColonel(fighter, { title = "A dead drop" })
+cxp[fighter] = 0
+ok(LC.DialogDo(fighter, "debrief") == "debrief_clean" and cxp[fighter] == 25, "a clean job, debriefed: 25 XP")
+hook.t.LivingCityQuestAccepted.LivingCityColonel(fighter, { title = "Doctor the records" })
+hook.t.LivingCityWanted.LivingCityColonel(fighter, "test", 30)
+hook.t.LivingCityQuestComplete.LivingCityColonel(fighter, { title = "Doctor the records" })
+cxp[fighter] = 0
+ok(LC.DialogDo(fighter, "debrief") == "debrief_messy" and cxp[fighter] == 0, "a warrant on the way: done, but messy, and no bonus")
+hook.t.LivingCityQuestAccepted.LivingCityColonel(fighter, { title = "Lost one" })
+hook.t.LivingCityQuestFailed.LivingCityColonel(fighter, { title = "Lost one" })
+ok(LC.DialogDo(fighter, "debrief") == "debrief_failed", "a failed job: a dressing-down")
+LC.AddXP = realXP2
+_setcvar("lc_colonel", 0)
+ok(not LC.ColonelTick(), "lc_colonel 0: he's gone")
+_setcvar("lc_colonel", 1)
+for _, e in ipairs({ qm, sym, tcop }) do if IsValid(e) then e:Remove() end end
+for _, p in ipairs({ fighter, nosy, copNear }) do p:SetPos(Vector(-30000, 30000, 0)) end
 for _, e in ipairs({ clerk, old, dsp }) do if IsValid(e) then e:Remove() end end
 for _, p in ipairs({ learner, doer, quick, hearer, newbie, vet, stranger, asker2, visitor, buyer, reader }) do p:SetPos(Vector(-30000, 30000, 0)) end
 
@@ -10836,6 +10923,15 @@ LC.CPShift(unit).startT = CurTime() - 31 * 60
 LC.CPDutyTick()
 rv = util.JSONToTable(unit:GetPData("lc_cp_reviews", "") or "") or {}
 ok(rv[1].grade == "D" and #rv == 2, "nothing done: grade D, and the reviews are kept")
+-- report in early, and a break if wanted
+local s2 = LC.CPShift(unit)
+local okE, whyE = LC.CPReportIn(unit)
+ok(not okE and string.find(whyE or "", "Finish the checklist", 1, true), "reporting in early needs the checklist done", whyE)
+s2.searches, s2.papers, s2.inspections = 3, 1, 1
+ok(LC.CPReportIn(unit) and LC.CPShift(unit) ~= s2 and LC.CPShift(unit).searches == 0, "checklist done: report in now, reviewed at once, and the next shift starts (no waiting out the clock)")
+ok(LC.CPBreak(unit) and LC.CPShift(unit) == nil and unit:GetNW2Bool("lc_offduty", false), "a break, if they want one: no shift until they're back")
+ok(LC.CPBreak(unit) and LC.CPShift(unit) ~= nil, "back on duty: a new shift")
+
 if LC.Prisoners[cit] then LC.ReleasePrisoner(cit) end
 unit:RemovePData("lc_cp_reviews")
 LC.RemoveZone(bz)
@@ -10948,6 +11044,72 @@ for _, x in ipairs({ p, unit, reb, innocent, rat, bystander }) do x:SetPos(S0 + 
 _setcvar("lc_snitches", 0)
 end
 SnitchTests()
+function OpPlanTests()
+section("The Resistance plans its own operations; the Combine puts prices on heads")
+local function Later(secs) _advance(secs) _runtimers() end
+_setcvar("lc_rebel_plans", 1)
+_setcvar("lc_bounties", 1)
+local O0 = Vector(-101000, 101000, 0)
+local lt = newPlayer("PlanLieutenant", "resistance", nil, 9000)
+local mem = newPlayer("PlanMember", "resistance", nil, 100)
+local unit = newPlayer("PlanUnit", "cp")
+Later(0.5)
+lt:SetNW2Int("lcf_rank", 4) mem:SetNW2Int("lcf_rank", 2)
+ok(LC.CanPlanOp(lt) and not LC.CanPlanOp(mem), "a Lieutenant plans operations; a Member joins them")
+local targetsWas, launchWas, radioWas, skWas = LC.OpTargets, LC.LaunchRebelOp, LC.RadioNotice, LC.Skirmish
+local heard, launched = {}, nil
+LC.RadioNotice = function(band, text) heard[#heard + 1] = band .. ": " .. text end
+LC.OpTargets = function() return { { label = "Hijack the city screen in the square", kind = "screen", pos = O0, data = {} } } end
+LC.LaunchRebelOp = function(kind, pos, data) launched = kind LC.Skirmish = { purpose = kind, rebels = {}, units = {}, done = true, startT = CurTime(), untilT = CurTime() + 1e6 } return true end
+LC.Skirmish = nil
+_setcvar("lc_rebel_plan_leak", 1)
+unit.chat = {}
+lt.lcOpTargets = nil
+ok(LC.PlanOp(lt, 1, 2) and LC.OpPlan and LC.OpPlan.kind == "screen", "F2 > Resistance > Operations: a target, and when")
+local onFreq = false
+for _, h in ipairs(heard) do if string.find(h, "resistance: ", 1, true) and string.find(h, "plans an operation", 1, true) then onFreq = true end end
+ok(onFreq, "the cell hears it on Freq 7")
+ok(has(unit.chat, "Intelligence"), "and someone always talks: it can leak to Civil Protection")
+_setcvar("lc_rebel_plan_leak", 0.15)
+ok(not LC.PlanOp(lt, 1, 5), "one plan at a time")
+ok(LC.JoinOp(mem) and LC.OpPlan.joined[mem], "anyone in the Resistance can join it")
+Later(125)
+ok(launched == "screen" and LC.OpPlan == nil, "when the time comes, the fighters go")
+ok(mem.lcWaypoint ~= nil, "and everyone who joined is pointed at the target")
+mem:SetPos(O0 + Vector(100, 0, 0))
+local x0, c0 = tonumber(mem:GetPData("lcf_xp_resistance", 0)) or 0, LC.Credits(mem)
+hook.Run("LivingCityRebelOpDone", "screen", LC.Skirmish)
+ok((tonumber(mem:GetPData("lcf_xp_resistance", 0)) or 0) - x0 == 25 and LC.Credits(mem) - c0 == 15, "it worked: those who joined and were there earn for it")
+-- too hot: it waits, then it's off
+LC.Skirmish = { purpose = "other", rebels = {}, units = {}, done = true, startT = CurTime(), untilT = CurTime() + 1e6 }
+LC.OpPlan = { by = lt, label = "Test op", kind = "screen", pos = O0, data = {}, fireAt = CurTime(), joined = { [lt] = true } }
+Later(4)
+ok(LC.OpPlan and LC.OpPlan.waiting, "with another fight on, it waits")
+Later(302)
+ok(LC.OpPlan == nil, "and is called off after five minutes")
+LC.OpTargets, LC.LaunchRebelOp, LC.RadioNotice, LC.Skirmish = targetsWas, launchWas, radioWas, skWas
+
+-- bounties
+local adm = newPlayer("BountyAdministrator", "admin")
+local cop = newPlayer("BountyMetrocop", "cp")
+local crook = newPlayer("BountyCrook", "citizen")
+Later(0.5)
+cop:SetNW2Int("lcf_rank", 1)
+ok(not LC.PostBounty(adm, crook, 50), "only on someone wanted")
+LC.ReportCrime(crook, "Theft", 600)
+crook.lcGraceUntil = 0
+ok(not LC.CanPostBounty(cop), "a Metrocop can't put a price on a head")
+crook.chat = {}
+unit.chat = {}
+ok(LC.PostBounty(adm, crook, 100) and LC.Bounties[crook].amount == 100, "the Administrator can: 100 credits")
+ok(has(unit.chat, "BOUNTY") and has(crook.chat, "price on your head"), "every unit hears, and so do they")
+local cu0 = LC.Credits(unit)
+LC.Incarcerate(crook, 60, "Arrested", unit)
+ok(LC.Credits(unit) - cu0 == 100 and LC.Bounties[crook] == nil, "the unit who brings them in collects it")
+LC.ReleasePrisoner(crook)
+for _, x in ipairs({ lt, mem, unit, adm, cop, crook }) do x:SetPos(O0 + Vector(30000, 0, 0)) end
+end
+OpPlanTests()
 
 function PapersHousingTests()
 section("Papers you carry, the housing register, transfers")

@@ -33,6 +33,8 @@ This is the master technical document. It lists what the owner's server, files, 
 | The machines' lines (ration dispenser, vending) | `sound/livingcity/machines/`, flat, named for the line (`dispenser_nocard1.wav`; section 8) | `LC.MachineVoiceRoot`, sv_livingcity_machines.lua |
 | Civil notice poster pictures (optional) | `materials/livingcity/posters/<kind>.png` or `.jpg` (`POSTER_BRIEF.md`) | entities/lc_civposter.lua |
 | A hungry stomach, the fever dream's sound (optional) | `sound/livingcity/body/stomach*`, `sound/livingcity/body/feverdream*` | cl_livingcity_bodysigns.lua |
+| The Colonel's lines | `sound/livingcity/colonel/`, flat, named for the line (section 9) | `LC.ColonelVoiceRoot`, sv_livingcity_colonel.lua |
+| What the Colonel knows about each character | PData `lc_colonel_<character>` | sv_livingcity_colonel.lua |
 | Who the old-timer is | in the city's roster, `data/livingcity/<map>_people.json` (`oldtimer`) | sv_livingcity_oldtimer.lua |
 | How often each player has had the PA's explanations | PData `lc_pa_heard` | sv_livingcity_learning.lua |
 | Citizens' advice lines (showing you the way) | `sound/livingcity/citizens/`, flat, named for the line and the voice: `advice_bins_male1.wav`, `advice_bins_female1.wav` (list: `VOICE_LINES.md` section 5) | `LC.AdviceVoiceRoot`, `LC.AdviceClip`, sv_livingcity_advice.lua |
@@ -88,6 +90,7 @@ Things players and the owner rely on that were settled in conversation:
 - **Survival modes (asked for 10 November):** each character is Realistic (every need, +20% shift pay and experience, the title "Hardened"; where everyone starts) or Relaxed (hunger and thirst at a third, no parasites, toilet, washing or spoiling), chosen on the characters screen or F2 > Me, switched once every 3 hours (`docs/features/survival-and-credit.md`).
 - **A unit's shift (asked for 10 November):** Civil Protection players work 15-minute shifts with a quota (3 searches, checkpoint papers duty, a residence inspection that searches a resident's stash) and a performance review giving experience, on F2 > Me > My shift (`docs/features/civil-protection-tools.md`).
 - **Snitches and burning (asked for 10 November):** 12% of citizen NPCs are secret informants who walk to a unit to report a player's gun out or contraband used in plain view; the Resistance (Member and up) can burn a suspected informant (RAT for the cell, the quartermaster and joining refused, roughed up in rebel territory, a scar when held; a wrong guess costs sympathy citywide) (`docs/features/city-administration.md`).
+- **Planned operations and bounties (asked for 10 November):** Resistance Lieutenants (or Fighters) plan operations on F2 > Resistance > Operations (target, time, joiners rewarded, 15% leak to CP); the Administrator or Division Leaders and up post 50 or 100 credit bounties on wanted people (F2 > Me) (`docs/features/city.md`).
 - **NPCs carry boxes and crates in front in both hands,** luggage at the side, small things in the hand.
 
 ## How the code must be written (or things break)

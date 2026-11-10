@@ -173,6 +173,7 @@ LC_MODULES = {
         "sv_livingcity_learning",
         "sv_livingcity_machines",
         "sv_livingcity_illness",
+        "sv_livingcity_colonel",
         "sv_livingcity_territory",
         "sv_livingcity_territorypaths", -- (territory grows along the path nodes)
         "sv_livingcity_trains",
@@ -186,6 +187,7 @@ LC_MODULES = {
         "sv_livingcity_standingpanel", -- (where I stand: every number in one window, explained)
         "sv_livingcity_cpduty", -- (a unit's shift: the quota, papers duty, inspections, the review)
         "sv_livingcity_snitches", -- (secret informants among the citizens, and the Resistance burning one)
+        "sv_livingcity_opplan", -- (the Resistance plans its own operations; the Combine puts prices on heads)
         "sv_livingcity_vort",
         "sv_livingcity_vortwork", -- (things to do as a vortigaunt, and the freed ones' camp life)
         "sv_livingcity_weeds", -- (weeds on open ground, the Groundskeeper, weedkiller as poison)
@@ -216,6 +218,7 @@ LC_MODULES = {
     },
     client = {
         "cl_livingcity",
+        "cl_livingcity_theme", -- (early: every window made after it is drawn in your faction's style)
         "cl_livingcity_view", -- (early: the camera the other modules add their touches to)
         "cl_livingcity_screens", -- (terminals' menus on their own screens)
         "cl_livingcity_notices",
@@ -280,6 +283,7 @@ LC_MODULES = {
         "cl_livingcity_dialog",
         "cl_livingcity_bodysigns",
         "cl_livingcity_feverdream",
+        "cl_livingcity_colonel",
         "cl_livingcity_war",
         "cl_livingcity_writing",
         "cl_livingcity_context", -- (what you can do here: the panel on the right)

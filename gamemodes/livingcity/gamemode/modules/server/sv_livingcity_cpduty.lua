@@ -43,7 +43,7 @@ local INSPECT_SECS = 8
 local FIND_CHANCE = 0.8 -- (each contraband item in a stash: found this often)
 
 local function OnDuty(ply)
-    return cvOn:GetBool() and IsValid(ply) and ply:IsPlayer() and ply:GetNW2String("lcf_faction", "") == "cp"
+    return cvOn:GetBool() and IsValid(ply) and ply:IsPlayer() and ply:GetNW2String("lcf_faction", "") == "cp" and not ply.lcOffDuty
 end
 LC.CPOnDuty = OnDuty
 
@@ -236,6 +236,41 @@ function LC.CPReview(ply)
     return grade, xp
 end
 
+-- The checklist done early: reviewed now, and the next shift starts straight away (the owner, 10 November:
+-- "adjust it so CP units do not have to take breaks between shifts if they so choose").
+function LC.CPReportIn(ply)
+    local s = Shift(ply)
+    if not s then return false, "You're not on a shift." end
+    local q = Quota()
+    for k, n in pairs(q) do
+        if (s[k] or 0) < n then return false, "Finish the checklist first (F2 > Me > My shift), or wait for the end of the shift." end
+    end
+    LC.CPReview(ply)
+    Shift(ply)
+    Sync(ply)
+    ply:ChatPrint("[CP net] Reported in. Your next shift starts now.")
+    return true
+end
+
+-- A break, if they want one: off duty, no shift and no review, until they're back.
+function LC.CPBreak(ply)
+    if not cvOn:GetBool() or not IsValid(ply) or ply:GetNW2String("lcf_faction", "") ~= "cp" then return false, "Civil Protection only." end
+    if ply.lcOffDuty then
+        ply.lcOffDuty = nil
+        ply:SetNW2Bool("lc_offduty", false)
+        Shift(ply)
+        Sync(ply)
+        ply:ChatPrint("[CP net] Back on duty. A new shift starts now.")
+    else
+        ply.lcOffDuty = true
+        ply.lcShift, ply.lcInspectOrder = nil, nil
+        ply:SetNW2Bool("lc_offduty", true)
+        ply:SetNW2String("lc_shift", "")
+        ply:ChatPrint("[CP net] On a break: no shift until you're back on duty (F2 > Me > Back on duty). The shift you were on is dropped.")
+    end
+    return true
+end
+
 local function Tick()
     local now = CurTime()
     for _, ply in ipairs(player.GetAll()) do
@@ -273,13 +308,17 @@ end)
 
 -- The menu's actions (F2 > My shift).
 local function Wrap2()
-    if LC.MenuActions then LC.MenuActions.papersduty, LC.MenuActions.inspectorder, LC.MenuActions.inspect = true, true, true end
+    if LC.MenuActions then
+        LC.MenuActions.papersduty, LC.MenuActions.inspectorder, LC.MenuActions.inspect = true, true, true
+        LC.MenuActions.reportin, LC.MenuActions.shiftbreak = true, true
+    end
 end
 Wrap2()
 hook.Add("Initialize", "LivingCityCPDutyActions", Wrap2)
 hook.Add("PlayerSay", "LivingCityCPDuty", function(ply, text)
     local cmd = string.lower(string.Trim(tostring(text or "")))
     local fn = (cmd == "!papersduty" and LC.CPPapersDuty) or (cmd == "!inspectorder" and LC.CPInspectOrder) or (cmd == "!inspect" and LC.CPInspect)
+        or (cmd == "!reportin" and LC.CPReportIn) or (cmd == "!shiftbreak" and LC.CPBreak)
     if not fn then return end
     local ok, why = fn(ply)
     if not ok and why then ply:ChatPrint("[CP net] " .. why) end

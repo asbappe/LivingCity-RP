@@ -1407,7 +1407,11 @@ function LC.OpenMarket(ply)
     local qm = LC.AtQuartermaster(ply) or nil
     local giveTo = qm or LC.QuartermasterVisitor(ply) or nil -- (arms can be given to him: sympathy for a stranger)
     -- his usual stock, and whatever the Commissary is short of (sv_livingcity_market.lua)
+    local stock = {} -- (what only the quartermaster has, a dealer doesn't show: qm, sh_livingcity_shop.lua)
     for _, g in ipairs(LC.MarketBlackList and LC.MarketBlackList() or LCS.Black) do
+        if not g.qm or qm then stock[#stock + 1] = g end
+    end
+    for _, g in ipairs(stock) do
         local can, reason = true, nil
         local price = LC.MarketPrice(ply, g)
         local short -- (how many credits short: shown beside the name; the owner, 7 November)
@@ -1560,6 +1564,7 @@ function LC.BlackBuy(ply, id)
     if not g then return false end
     local ok, why = LC.MarketAccess(ply)
     if not ok then return false, why end
+    if g.qm and not LC.AtQuartermaster(ply) then return false, "Only the quartermaster has those." end
     local left, next = LC.BlackStockLeft(g)
     if left and left <= 0 then return false, string.format("He's out of those. More in about %d minutes.", math.max(1, math.ceil((next or 60) / 60))) end
     local price = LC.MarketPrice(ply, g)
