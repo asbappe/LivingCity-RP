@@ -398,6 +398,8 @@ local function MePage()
         Item(rations, function() QM("rations") end),
         Item(home, function() QM("home") end),
         Item(standing, function() QM("standing") end),
+        me:GetNW2String("lc_survival", "") ~= "" and Item(me:GetNW2String("lc_survival", "") == "relaxed" and "Survival: Relaxed (switch to Realistic: more pay)"
+            or "Survival: Realistic (switch to Relaxed)", function() Send("survival") end) or nil,
     }, empty = rows }
 end
 

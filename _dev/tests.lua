@@ -51,6 +51,7 @@ _setcvar("lc_stockpile", 0) -- (the city's ration stores: tested on their own, a
 _setcvar("lc_garrison", 0) -- (the nexus garrison: tested on its own)
 _setcvar("lc_search_fight_choice", 0) -- (fight or comply: tested on its own, in the 1 November section)
 _setcvar("lc_wear_uses", 0) -- (tools wearing out at random: tested on its own)
+_setcvar("lc_survival_modes", 0) -- (Realistic or Relaxed, and its 20% bonus: tested on its own, SurvivalModeTests)
 _setcvar("lc_quest_allies", 0) -- (friendly NPCs on violent jobs: tested on their own, in QuestSquadTests)
 _setcvar("lc_directives", 1) -- (the G-Man's directives are off by default now, set aside by the owner; still tested as they are)
 _setcvar("lc_market_demand", 0) -- (demand moving black market prices: tested on its own, in MarketTests)
@@ -10284,6 +10285,60 @@ LC.RemoveZone(zr)
 for _, pl in ipairs({ rb, mate, unit, cit }) do pl:SetPos(FARI + Vector(0, -2000, 0)) end
 end
 InterrogationTests()
+function SurvivalModeTests()
+section("Realistic or Relaxed survival, per character")
+local function Later(secs) _advance(secs) _runtimers() end
+_setcvar("lc_survival_modes", 1)
+local a = newPlayer("SurvivalRealist", "citizen")
+local b = newPlayer("SurvivalRelaxed", "citizen")
+Later(4.5)
+ok(LC.SurvivalMode(a) == "realistic" and a:GetNW2String("lc_survival", "") == "realistic", "everyone starts on Realistic (as the city has always been)")
+ok(string.find(a:GetNW2String("lc_legacy_title", ""), "Hardened", 1, true), "with the title Hardened under their name")
+b.chat = {}
+hook.Run("PlayerSay", b, "!survival relaxed")
+ok(LC.Relaxed(b) and b:GetPData("lc_survival", "") == "relaxed" and not string.find(b:GetNW2String("lc_legacy_title", ""), "Hardened", 1, true), "switching to Relaxed (F1 > Me, or the characters screen)")
+local okS, whyS = LC.SetSurvivalMode(b, "realistic")
+ok(not okS and string.find(whyS or "", "switch again", 1, true), "and not again for 3 hours", whyS)
+-- hunger and thirst
+local was = LC.Running
+LC.Running = true
+LC.Feed(a, 100, 100) LC.Feed(b, 100, 100)
+for _ = 1, 12 do Later(5) end
+LC.Running = was
+local da, db = 100 - LC.Hunger(a), 100 - LC.Hunger(b)
+ok(da > 0 and db > 0 and math.abs(db / da - 0.33) < 0.05, "Relaxed: hunger comes on at a third of the speed", string.format("%.2f vs %.2f", da, db))
+-- parasites, the toilet, spoiling
+LC.Infect(b)
+ok(not LC.HasParasites(b), "Relaxed: no parasites")
+LC.Infect(a)
+ok(LC.HasParasites(a), "Realistic: parasites as always")
+a:SetNW2Float("lcn_parasites", 0)
+ok(LC.SpoilCheck(b, true) == 0, "Relaxed: nothing goes off")
+-- the pay and the experience
+ok(math.abs(LC.SurvivalPayMul(a) - 1.2) < 0.001 and LC.SurvivalPayMul(b) == 1, "Realistic: 20% more shift pay")
+local c0, c1 = LC.Credits(a), LC.Credits(b)
+hook.Run("LivingCityQuestComplete", a, { chain = "shift" })
+hook.Run("LivingCityQuestComplete", b, { chain = "shift" })
+local pa, pb = LC.Credits(a) - c0, LC.Credits(b) - c1
+ok(pb > 0 and pa == math.floor(pb * 1.2 + 0.5), "a shift pays a Realistic citizen 20% more", pa .. " vs " .. pb)
+local unit = newPlayer("SurvivalUnit", "cp")
+Later(0.3)
+local x0 = tonumber(unit:GetPData("lcf_xp_cp", 0)) or 0
+LC.AddXP(unit, 10, "test")
+ok((tonumber(unit:GetPData("lcf_xp_cp", 0)) or 0) - x0 == 12, "and 20% more experience", (tonumber(unit:GetPData("lcf_xp_cp", 0)) or 0) - x0)
+-- switching to Relaxed clears what it leaves out
+local d = newPlayer("SurvivalDirty", "citizen")
+Later(0.3)
+LC.Infect(d)
+d:SetNW2Float("lc_urge", 80)
+LC.SetSurvivalMode(d, "relaxed")
+ok(not LC.HasParasites(d) and d:GetNW2Float("lc_urge", 0) == 0, "switching to Relaxed clears parasites and the urge")
+-- off: everyone Realistic, no bonus
+_setcvar("lc_survival_modes", 0)
+ok(LC.SurvivalMode(b) == "realistic" and LC.SurvivalPayMul(a) == 1, "lc_survival_modes 0: everyone Realistic, with no bonus, as before")
+for _, p in ipairs({ a, b, d }) do p:RemovePData("lc_survival") p:RemovePData("lc_survival_at") p.lcSurvMode = nil end
+end
+SurvivalModeTests()
 
 function PapersHousingTests()
 section("Papers you carry, the housing register, transfers")

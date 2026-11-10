@@ -61,6 +61,24 @@ local function Card(parent, i, s, active, can, why)
     btns:SetWide(130)
     btns:DockMargin(0, 10, 10, 10)
     btns.Paint = nil
+    if active and s and LocalPlayer():GetNW2String("lc_survival", "") ~= "" then
+        -- Realistic or Relaxed survival (sv_livingcity_survivalmode.lua)
+        local relaxed = LocalPlayer():GetNW2String("lc_survival", "") == "relaxed"
+        local sv = vgui.Create("DButton", btns)
+        sv:Dock(BOTTOM)
+        sv:SetTall(28)
+        sv:SetText(relaxed and "Survival: Relaxed" or "Survival: Realistic")
+        sv:SetTooltip(relaxed and "Switch to Realistic: every need, more shift pay and experience, the title Hardened."
+            or "Switch to Relaxed: slow hunger and thirst, no parasites, toilet, washing or spoiling.")
+        sv.DoClick = function()
+            Derma_Query(relaxed and "Switch to Realistic survival? Every need, as the city really is, for more shift pay and experience and the title \"Hardened\". You can switch again in 3 hours."
+                or "Switch to Relaxed survival? Hunger and thirst come on slowly, and no parasites, toilet, washing or food going off. Less pay than Realistic. You can switch again in 3 hours.",
+                "Survival", "Switch", function()
+                    if LC_CL.SendAction then LC_CL.SendAction("survival", relaxed and "realistic" or "relaxed") end
+                    if IsValid(frame) then frame:Remove() end
+                end, "Keep it", function() end)
+        end
+    end
     if active and s then
         local ret = vgui.Create("DButton", btns)
         ret:Dock(TOP)

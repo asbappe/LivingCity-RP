@@ -1238,3 +1238,12 @@ Notes:
   Notes:
 - [ ] **Settings:** `lc_citizen_lead 0` (everyone only points), `lc_citizen_advice 0` (Chat as before).
   Notes:
+
+## 10 November, last: survival modes
+
+- [ ] **Realistic by default:** your name should show "Hardened". Do a Union shift: the pay should be 20% more than before (18 instead of 15).
+  Notes:
+- [ ] **Switch to Relaxed:** C > Your characters > the Survival button (or F1 > Me). Hunger and thirst should drop much slower; eating raw meat should never give parasites; meat should never go off; no toilet urge. "Hardened" should disappear.
+  Notes:
+- [ ] **The 3 hours:** try switching back straight away: it should say when you can.
+  Notes:

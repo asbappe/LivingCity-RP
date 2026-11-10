@@ -173,6 +173,7 @@ LC_MODULES = {
         "sv_livingcity_intaketutor", -- (the arrival search at the desks, its lesson, and the walk back to Civil Intake)
         "sv_livingcity_sentence", -- (sentences that add up the record, the work detail, probation)
         "sv_livingcity_interrogation", -- (the interrogation question by question: truth, lies, silence, a bargain; a unit asking in person)
+        "sv_livingcity_survivalmode", -- (Realistic or Relaxed survival, per character)
         "sv_livingcity_vort",
         "sv_livingcity_vortwork", -- (things to do as a vortigaunt, and the freed ones' camp life)
         "sv_livingcity_weeds", -- (weeds on open ground, the Groundskeeper, weedkiller as poison)

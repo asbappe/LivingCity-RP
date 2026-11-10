@@ -699,6 +699,7 @@ end)
 
 function LC.AddXP(ply, amount, why)
     if not IsValid(ply) or not ply:IsPlayer() then return end
+    if (tonumber(amount) or 0) > 0 and LC.SurvivalXPMul then amount = math.floor(amount * LC.SurvivalXPMul(ply) + 0.5) end -- (Realistic survival: sv_livingcity_survivalmode.lua)
     local f = FactionOf(ply)
     if not f or #f.ranks < 2 then return end
     local xp = math.max(0, XP(ply, f.id) + amount)
