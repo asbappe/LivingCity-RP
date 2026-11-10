@@ -54,6 +54,7 @@ _setcvar("lc_wear_uses", 0) -- (tools wearing out at random: tested on its own)
 _setcvar("lc_survival_modes", 0) -- (Realistic or Relaxed, and its 20% bonus: tested on its own, SurvivalModeTests)
 _setcvar("lc_snitches", 0) -- (secret informants among the citizens, at random: tested on their own, SnitchTests)
 _setcvar("lc_ledger", 0) -- (the state of the city, day to day, and its effects on the streets: tested on its own, LedgerTests)
+_setcvar("lc_minds", 0) -- (watching the city's minds draws random numbers: tested on its own, MindsTests)
 _setcvar("lc_quest_allies", 0) -- (friendly NPCs on violent jobs: tested on their own, in QuestSquadTests)
 _setcvar("lc_directives", 1) -- (the G-Man's directives are off by default now, set aside by the owner; still tested as they are)
 _setcvar("lc_market_demand", 0) -- (demand moving black market prices: tested on its own, in MarketTests)
@@ -7594,6 +7595,7 @@ if IsValid(paste) then paste:Remove() end
 hanger:SetNW2String("lcf_faction", "")
 -- a paste-up from the black market: anyone holding one can put it up
 ok(LCS.Items.pasteup and LCS.Items.pasteup.use == "pasteup", "the paste-up is an item")
+ok(LCS.BlackById.pasteup and LCS.BlackById.pasteup.qm == true, "and only the quartermaster sells it, not a dealer")
 local pasted = LC.HangPoster(hanger, "rebel_leash", LB + Vector(5000, 6800, 60), Vector(1, 0, 0), true)
 ok(IsValid(pasted) and pasted:GetNW2String("lc_notice", "") == "rebel_leash", "a paste-up from your pockets goes up, Resistance or not")
 -- only so many paste-ups in the city: one more and the oldest comes down; and not right beside another
@@ -10772,6 +10774,102 @@ LC.ClearWanted(p)
 p.lcRap = {} p:RemovePData("lc_rap")
 end
 StandingPanelTests()
+function MindsTests()
+section("The city's minds: watched and written down, nothing changes")
+local function Later(secs) _advance(secs) _runtimers() end
+local Psy = LC.Psy
+-- the arithmetic
+local a, b = { id = 101, role = "citizen" }, { id = 102, role = "citizen" }
+local ta = Psy.Traits(a)
+local inRange = true
+for _, k in ipairs(Psy.TRAITS) do if ta[k] < -1 or ta[k] > 1 then inRange = false end end
+ok(inRange, "five traits, each from -1 to 1")
+local again = Psy.Traits({ id = 101, role = "citizen" })
+ok(again.brave == ta.brave and again.hope == ta.hope, "worked out from the id: the same person, the same traits, nothing saved")
+ok(Psy.Traits({ id = 7, role = "cop" }).loyal >= 0.3, "a unit is always loyal (the force picks the loyal)")
+local now0 = CurTime()
+Psy.Think(a, "beaten", now0, 55) Psy.Think(a, "beaten", now0 + 1, 55)
+ok(#Psy.State(a).th == 1, "the same thought from the same person refreshes, it doesn't stack")
+for i = 1, 12 do Psy.Think(a, "chatted", now0, 200 + i) end
+ok(#Psy.State(a).th <= Psy.cfg.thoughtCap, "at most 8 thoughts", #Psy.State(a).th)
+for i = 1, 12 do Psy.Bond(b, 300 + i, i) end
+local nt = 0 for _ in pairs(Psy.State(b).ties) do nt = nt + 1 end
+ok(nt <= Psy.cfg.tieCap and Psy.Tie(b, 312) == 10, "at most 8 ties, the weakest go first, capped at 10", nt)
+local s = Psy.State(a)
+s.stress = Psy.cfg.breakAt + 1
+local broke
+Psy.Step(a, now0 + 10, { Break = function(_, k) broke = k end })
+ok(broke ~= nil and s.stress < Psy.cfg.breakAt, "stress past the line: something gives, and it eases", broke)
+
+-- in the city
+_setcvar("lc_minds", 1)
+_setcvar("lc_minds_show", 0)
+LC.Minds.byId, LC.Minds.order, LC.Minds.idx, LC.Minds.buf, LC.Minds.counts, LC.Minds.loaded = {}, {}, 0, {}, {}, true
+local T0 = Vector(-39000, 27000, 0)
+local function person(off)
+    local n, st = LC.SpawnCitizen(T0 + off)
+    st.leaveAt = nil
+    n.sim = false
+    if not n.lcProfile then LC.AttachProfile(n, st, LC.NewPerson("citizen")) end
+    return n, st
+end
+local v, vst = person(Vector(0, 0, 0))
+local f, fst = person(Vector(120, 0, 0))
+local mv, mf = LC.MindOf(v.lcProfile), LC.MindOf(f.lcProfile)
+Psy.Bond(mf, mv.id, 5)
+local cop = ents.Create("npc_metropolice")
+cop:SetPos(T0 + Vector(40, 0, 0))
+cop.lcProfile = LC.NewPerson("cop")
+local stateBefore, rebelBefore = vst.state, v.lcProfile.rebel
+LC.MindsHurt(v, cop, 10)
+local function has(m, k) for _, t in ipairs(Psy.State(m).th) do if t.k == k then return t end end end
+ok(has(mv, "beaten") and Psy.Tie(mv, cop.lcProfile.id) < 0, "beaten by a unit: they feel it, and hold it against him")
+ok(has(mf, "friend_beaten"), "a friend who saw it feels it too")
+local heard = false
+for _, n in ipairs(Psy.State(mf).news) do if n.k == "beating" and n.about == cop.lcProfile.id then heard = true end end
+ok(heard, "and knows who did it, to pass on")
+LC.Minds.order = { mv.id } LC.Minds.idx = 0
+Psy.State(mv).stress = Psy.cfg.breakAt + 5
+Psy.State(mv).broke = -1e9
+local got = false
+for _ = 1, 4 do
+    LC.Minds.idx = 0 LC.Minds.order = { mv.id }
+    LC.MindsStep(CurTime())
+    for _, l in ipairs(LC.Minds.buf) do if string.find(l, "WOULD", 1, true) and string.find(l, mv.name, 1, true) then got = true end end
+    if got then break end
+    Later(1)
+end
+ok(got, "a break is written down as what they WOULD have done")
+ok(vst.state == stateBefore and v.lcProfile.rebel == rebelBefore, "and nothing about them changes: same state, same side")
+ok(v.lcProfile.psy == nil and v.lcProfile.tr == nil, "the roster's records are untouched (the minds are kept apart)")
+-- the talk window
+ok(LC.MindsSeem(v) == "", "lc_minds_show 0: the talk window says nothing new")
+_setcvar("lc_minds_show", 1)
+ok(string.find(LC.MindsSeem(v), "They seem", 1, true), "lc_minds_show 1: how they seem and why", LC.MindsSeem(v))
+_setcvar("lc_minds_show", 0)
+-- the log and the report
+LC.MindsFlush()
+local wrote
+for p, text in pairs(_files) do if string.find(p, "livingcity/minds/rp_test_", 1, true) and string.find(text, "WOULD", 1, true) then wrote = p end end
+ok(wrote ~= nil, "written to data/livingcity/minds/<map>_<date>.txt", wrote)
+ok(string.find(LC.BuildReport(), "The city's minds", 1, true), "the debug report has a section for it")
+local snap = LC.MindsSnapshot(2)
+ok(string.find(snap[1], "unrest=", 1, true) and string.find(snap[1], "avg_us=", 1, true), "snapshots say how the city feels and what it costs", snap[1])
+-- kept over a map change
+local stress = Psy.State(mv).stress
+LC.MindsSave()
+LC.Minds.byId = {}
+ok(LC.MindsLoad() >= 2 and LC.Minds.byId[mv.id].psy and math.abs(LC.Minds.byId[mv.id].psy.stress - stress) < 0.01
+    and LC.Minds.byId[mv.id].psy.ties[cop.lcProfile.id] ~= nil, "saved and put back over a map change, ties and all")
+-- off
+_setcvar("lc_minds", 0)
+local n0 = #LC.Minds.buf
+LC.MindsHurt(v, cop, 10)
+LC.MindsStep(CurTime())
+ok(#LC.Minds.buf == n0 and LC.MindsSeem(v) == "", "lc_minds 0: nothing is watched or written")
+for _, e in ipairs({ v, f, cop }) do if IsValid(e) then e:Remove() end end
+end
+MindsTests()
 function CPDutyTests()
 section("A unit's shift: the quota, papers duty, inspections, the review")
 local function Later(secs) _advance(secs) _runtimers() end

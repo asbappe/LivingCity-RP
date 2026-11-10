@@ -214,6 +214,8 @@ LC_MODULES = {
         "sv_livingcity_labdamage", -- (a lab shot up and wrecked, and the job to fix it)
         "sv_livingcity_career", -- (C > My career: rank, XP, the way to the Overwatch)
         "sv_livingcity_evidence", -- (what units confiscate is kept, and burned in public now and then)
+        "sv_livingcity_psyche", -- (the city's minds: traits, needs, thoughts, stress, ties, rumours; pure arithmetic)
+        "sv_livingcity_minds", -- (watching the city's minds and writing it down, data/livingcity/minds/; changes nothing)
     },
     client = {
         "cl_livingcity",
