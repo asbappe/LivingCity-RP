@@ -76,5 +76,29 @@
 - [x] **The serial full suite ran past its 6900-second timeout** (fixed 9 November, late): players a test unit made were never removed (88 by a third of the way in, every simulated second looping over all of them). Now they leave when their unit is over (the block above `section()` in `_dev/tests.lua`), and the serial run takes about 10.5 minutes.
 - [ ] **21 failures that show only in the serial run** (`run_tests.py`, 9 November: 4711 passed, 21 failed; `run_parallel.py` and `run_section.py` pass them). The run never got this far before, so they were hidden, not new: "Joining Civil Protection" fails the same without the fix (leftover top-level players trip "The Combine is too big", 39 to 9). The rest: Staff tools (!staff), Custom announcements (3, the Administrator's turn), Secret endings (radios), and the dream sections (stand-ins, bedtime, ten more propaganda, ten more strange: boxing). Likely the same kind: state from earlier sections. Fix in the tests when there is time.
 - [x] (built 9 November: `docs/features/squads.md`) **Backup by radio and squad sizes by player count (the owner, 9 November):** (1) A Resistance player with a Freq 7 radio can call for backup, from the radio SWEP and from F2: fighters leave a rebel zone, appear out of sight at a navigable spot between the territory and the player, run to them and join their squad. (2) Squad sizes scale with the human players on that side (Resistance; Civil Protection/Overwatch): 1-2 players can recruit 5 NPCs, 3-4 about 3, and so on down to 1, so players team up with each other; when a limit is in effect the player must be told (on recruiting, and somewhere they can see it, e.g. the squad panel). Needs a design pass in a fresh chat: check how recruiting works now (sv_livingcity_rebels.lua follow, the Combine side) before proposing numbers.
+
+- [ ] **The owner: pull the animations out of the Workshop dance items** (3830765710, 2538387266; the Alyx sleep rig the same way, its number added to both lists), so Claude can wire them in. Steps (10 November):
+  1. In Steam, subscribe to both; start Garry's Mod once to the main menu (so they download); quit.
+  2. Unpack them and list their files (terminal):
+     ```bash
+     mkdir -p ~/lc_workshop && cd ~/lc_workshop
+     GM=$(find ~ -type d -path '*steamapps/common/GarrysMod' 2>/dev/null | head -1)
+     chmod +x "$GM/bin/gmad_linux" 2>/dev/null
+     for ID in 3830765710 2538387266; do
+       SRC=$(find ~ -type d -path "*workshop/content/4000/$ID" 2>/dev/null | head -1)
+       mkdir -p "$ID"
+       for f in "$SRC"/*; do
+         case "$f" in
+           *.gma) cp "$f" "$ID/addon.gma" ;;
+           *.bin) xz --format=lzma -dc "$f" > "$ID/addon.gma" ;;
+         esac
+       done
+       "$GM/bin/gmad_linux" extract -file "$ID/addon.gma" -out "$ID/extracted"
+       find "$ID/extracted" -type f | sed "s|$ID/extracted/||" | sort > "$ID/files.txt"
+     done
+     zip -r ~/lc_workshop/lc_workshop_lists.zip */files.txt $(find . -path '*extracted*' -name '*.lua')
+     ```
+  3. Preview the animations: copy the viewer into the game (`cp _dev/tools/lc_animview.lua "$GM/garrysmod/lua/"`, or the copy Claude sent from `~/Downloads`), start Single Player (Sandbox, gm_construct), console: `sv_allowcslua 1` then `lua_openscript_cl lc_animview.lua`. Click a model, then an animation; "Show it on" a player model if the preview is empty; note any good ones with gibberish names. Press "Save the list (for Claude)" (writes `garrysmod/data/lc_anims.txt`; find it with `find ~ -name lc_anims.txt -path '*garrysmod/data*'`).
+  4. Send Claude `~/lc_workshop/lc_workshop_lists.zip` and `lc_anims.txt` (and the notes). Then: wire them in as a required Workshop download.
 - [ ] **Order-dependent test (found 10 November):** "a winner wakes Unbroken with a second wind" (DreamGameTests) fails when ExerciseParadeTests runs earlier in the same shard (run_parallel.py --atoms over ExerciseParadeTests..DreamGameTests); it fails the same way on the code from before 10 November, and passes alone.
 - [x] **Learning through the city (the owner, 10 November):** built 10 November: the info desk, the old-timer, posters, talking machines, body signs, the pamphlet, mentor XP, shorter PA explanations, cards only when stuck. Still open: a weary Resistance fighter at camp who explains the quartermaster, caches and operations the old-timer way (not built; ask the owner).
