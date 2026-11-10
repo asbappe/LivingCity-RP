@@ -7595,6 +7595,23 @@ LC.Illnesses.fever.tick(sick)
 ok(sick:Health() == 89, "a fever wears you down")
 sick:SetHealth(60) LC.Illnesses.fever.tick(sick)
 ok(sick:Health() == 60, "but never below 60")
+ok(LC.HasFever(sick), "(feverish)")
+ok(LC.IllnessLeft(sick, "fever") > 120, "a fever doesn't just pass: it waits for the midday sleep")
+local mvF = { max = 400 }
+local mv = { GetMaxClientSpeed = function() return mvF.max end, SetMaxClientSpeed = function(_, v) mvF.max = v end,
+    SetForwardSpeed = function() end, SetSideSpeed = function() end, SetUpSpeed = function() end }
+hook.t.SetupMove.LivingCityFever(sick, mv)
+ok(mvF.max <= (sick:GetWalkSpeed() or 110), "no running with a fever", tostring(mvF.max))
+ok(LC.FeverDream(sick) and LC.InFeverDream(sick), "midday: the fever takes them, down where they are")
+mvF.max = 400 hook.t.SetupMove.LivingCityFever(sick, mv)
+ok(mvF.max < 1, "and they can't move till it lets them go")
+_advance(61) _runtimers()
+ok(not LC.InFeverDream(sick) and not LC.IsIll(sick, "fever"), "they come to with the fever broken")
+sick.lcImmune = {}
+LC.CatchIllness(sick, "fever", true)
+LC.FeverDream(sick)
+hook.Run("EntityTakeDamage", sick, _dmg(sneezed, 5))
+ok(not LC.InFeverDream(sick) and LC.IsIll(sick, "fever"), "hurt in it: they jolt awake, still feverish")
 LC.ClearIllness(sick)
 local relaxed = lp("RelaxedOne")
 _setcvar("lc_survival_modes", 1)

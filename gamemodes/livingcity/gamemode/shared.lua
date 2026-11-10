@@ -43,6 +43,7 @@ LC_MODULES = {
         "sh_livingcity_power",
         "sh_livingcity_scanner",
         "sh_livingcity_shop",
+        "sh_livingcity_illness",
         "sh_livingcity_zones",
     },
     server = {
@@ -274,6 +275,7 @@ LC_MODULES = {
         "cl_livingcity_talk",
         "cl_livingcity_dialog",
         "cl_livingcity_bodysigns",
+        "cl_livingcity_feverdream",
         "cl_livingcity_war",
         "cl_livingcity_writing",
         "cl_livingcity_context", -- (what you can do here: the panel on the right)

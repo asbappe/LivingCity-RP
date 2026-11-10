@@ -1227,6 +1227,15 @@ run("Think")
 run("PostDrawTranslucentRenderables", false, false)
 _advance(1)
 run("PostDrawTranslucentRenderables", false, false)
+-- a fever, then the midday fever dream: the body signs and the dream draw without errors (cl_livingcity_bodysigns.lua, cl_livingcity_feverdream.lua)
+_me:SetNW2String("lc_ill", "fever,stomach") _me:SetNW2Float("lcn_hunger", 10) _me:SetHealth(20)
+run("Think") run("RenderScreenspaceEffects") run("HUDPaint")
+_me:SetNW2Float("lc_feverdream", CurTime() + 60)
+local polys0 = _calls["surface.DrawPoly"] or 0
+for _ = 1, 3 do run("Think") run("RenderScreenspaceEffects") run("CalcView", _me, Vector(0, 0, 64), Angle(0, 0, 0), 75) run("HUDPaint") end
+if (_calls["surface.DrawPoly"] or 0) <= polys0 then problems[#problems + 1] = "the fever dream drew nothing" end
+_me:SetNW2Float("lc_feverdream", 0) _me:SetNW2String("lc_ill", "") _me:SetNW2Float("lcn_hunger", 100) _me:SetHealth(100)
+run("Think")
 _globals.lc_weather = nil
 -- the clock line with the city's ration stores showing
 _globals.lc_stock_on, _globals.lc_stock, _globals.lc_stock_max = true, 40, 400

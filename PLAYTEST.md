@@ -1298,3 +1298,5 @@ Notes:
   Notes:
 - [ ] **Poster art:** put a test image at `garrysmod/materials/livingcity/posters/curfew.png`, FastDL sync, change map: a curfew poster shows it.
   Notes:
+- [ ] **Fever:** `lc_illness_rate 20`, catch a cold in the rain and leave it (or wait for a fever). With a fever: you can't sprint, fists don't swing. At 12:00 on the clock (`lc_time 11` to hurry) you drop for a minute into the fever dream: melting colours, rolling view, drifting words, the eye, slow sounds. You come to with it broken. Get someone to hit you during it: you wake, still feverish.
+  Notes:

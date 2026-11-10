@@ -21,8 +21,15 @@
                             the floor. 10 minutes; a drink of clean water
                             shortens it.
       A fever               from a cold left untreated. The world swims a
-                            little, and you can't get your health above 60
-                            until it breaks. 12 minutes; Union medicine cures it.
+                            little, your health wears down to 60, you can't
+                            run, and your fists are no use (sh_livingcity_illness.lua).
+                            It doesn't pass on its own: it breaks in your
+                            sleep. At midday the fever takes you wherever you
+                            are: down on the ground for a minute of fever dream
+                            (cl_livingcity_feverdream.lua), and you come to
+                            with it broken (the owner, 10 November: "have to
+                            sleep in the middle of the day ... a really trippy
+                            fever dream"). Union medicine cures it sooner.
 
     Adding one: a row in LC.Illnesses below (name, how long, what cures it,
     what it does now and then), and somewhere it's caught (LC.CatchIllness).
@@ -32,7 +39,8 @@
     (cl_livingcity_bodysigns.lua reads lc_ill).
 
     Settings: lc_illness (1; 0 and nobody falls ill), lc_illness_rate (1:
-    how likely catching anything is; 0.5 is half as likely).
+    how likely catching anything is; 0.5 is half as likely), lc_fever_dream
+    (1; 0 and a fever simply passes after 12 minutes, no midday collapse).
 ]]
 
 if CLIENT then return end
@@ -42,6 +50,8 @@ LC = LC or {}
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn = CreateConVar("lc_illness", "1", FLAGS, "Realistic-survival characters can catch a cold, a stomach bug or a fever (each passes by itself; Union medicine helps)")
 local cvRate = CreateConVar("lc_illness_rate", "1", FLAGS, "How likely catching an illness is (1 normal, 0.5 half as likely)")
+local cvDream = CreateConVar("lc_fever_dream", "1", FLAGS, "A fever only breaks in the midday fever dream (the sick collapse where they are for a minute); 0: it passes after 12 minutes")
+local DREAM_SECS = 60
 
 local COUGHS = { "ambient/voices/cough1.wav", "ambient/voices/cough2.wav", "ambient/voices/cough3.wav", "ambient/voices/cough4.wav" }
 local IMMUNE_SECS = 1800
@@ -79,7 +89,7 @@ LC.Illnesses = {
             end
             ply:ChatPrint("You double over and vomit.")
         end },
-    fever = { name = "a fever", secs = 720, medicine = true, every = 20, every2 = 20,
+    fever = { name = "a fever", secs = 720, medicine = true, every = 20, every2 = 20, untilDream = true,
         start = "You're burning up, and shivering at the same time. A fever.",
         tick = function(ply)
             if ply:Health() > 60 then ply:SetHealth(ply:Health() - 1) end
@@ -130,7 +140,14 @@ function LC.CatchIllness(ply, id, sure, chance)
     if (ply.lcImmune[id] or 0) > CurTime() then return false end
     if not sure and math.random() >= (chance or 1) * cvRate:GetFloat() then return false end
     local now = CurTime()
-    Ills(ply)[id] = { untilT = now + def.secs, nextT = now + math.Rand(def.every * 0.5, def.every) }
+    local secs = def.secs
+    -- a fever that breaks in the midday dream lasts until then (and a little over, in case the dream can't take them)
+    if def.untilDream and cvDream:GetBool() and LC.Hour then
+        local day = GetGlobal2Float("lc_day_len", 3600)
+        if day <= 0 then day = 3600 end
+        secs = ((12 - LC.Hour()) % 24) / 24 * day + 180
+    end
+    Ills(ply)[id] = { untilT = now + secs, nextT = now + math.Rand(def.every * 0.5, def.every) }
     Sync(ply)
     ply:ChatPrint(def.start)
     hook.Run("LivingCityFellIll", ply, id)
@@ -146,6 +163,7 @@ function LC.RecoverIllness(ply, id, how)
     ply.lcImmune[id] = CurTime() + IMMUNE_SECS
     Sync(ply)
     local def = LC.Illnesses[id]
+    if how == "dream" then hook.Run("LivingCityRecovered", ply, id, how) return true end
     ply:ChatPrint(how == "medicine" and ("The medicine works. " .. (def and ("You're over " .. def.name .. ".") or ""))
         or ("You feel better. " .. (def and ("You're over " .. def.name .. ".") or "")))
     hook.Run("LivingCityRecovered", ply, id, how)
@@ -239,3 +257,59 @@ end
 AddHint()
 hook.Add("Initialize", "LivingCityIllnessHint", AddHint)
 hook.Add("LivingCityFellIll", "LivingCityIllnessHint", function(ply) if LC.Hint then LC.Hint(ply, "ill") end end)
+
+------------------------------------------------------------------------
+-- The fever dream: at midday the fever takes you, and breaks
+------------------------------------------------------------------------
+
+local function Busy(ply)
+    if not ply:Alive() or ply.lcSleep or ply:GetNW2Bool("lc_dreaming", false) then return true end
+    if LC.IsDowned and LC.IsDowned(ply) then return true end
+    if LC.InCustody and LC.InCustody(ply) then return true end
+    return false
+end
+
+function LC.FeverDream(ply)
+    if not cvDream:GetBool() or not IsValid(ply) or not LC.IsIll(ply, "fever") or Busy(ply) or LC.InFeverDream(ply) then return false end
+    ply:SetNW2Float("lc_feverdream", CurTime() + DREAM_SECS)
+    ply.lcFeverDreamEnds = CurTime() + DREAM_SECS
+    if LC.StartAct then LC.StartAct(ply, "lie") end
+    ply:ScreenFade(SCREENFADE.OUT, Color(255, 240, 220), 2, 0.5)
+    ply:ChatPrint("The heat rises over you like water. Your legs go, and the street tilts away...")
+    hook.Run("LivingCityFeverDream", ply)
+    return true
+end
+
+function LC.EndFeverDream(ply, early)
+    if not IsValid(ply) or not ply.lcFeverDreamEnds then return false end
+    ply.lcFeverDreamEnds = nil
+    ply:SetNW2Float("lc_feverdream", 0)
+    if LC.StopAct then LC.StopAct(ply, true) end
+    ply:ScreenFade(SCREENFADE.IN, Color(255, 255, 255), 1.5, 0)
+    if early then
+        ply:ChatPrint("You jolt awake, shaking. The fever still has you.")
+    else
+        ply:ChatPrint("You come to on the ground, soaked through and cold. The fever's broken.")
+        LC.RecoverIllness(ply, "fever", "dream")
+    end
+    return true
+end
+
+local lastHour
+timer.Create("LivingCityFeverDream", 2, 0, function()
+    for _, ply in ipairs(player.GetAll()) do
+        if ply.lcFeverDreamEnds and (CurTime() >= ply.lcFeverDreamEnds or not ply:Alive()) then LC.EndFeverDream(ply, not ply:Alive()) end
+    end
+    if not LC.Hour then return end
+    local h = LC.Hour()
+    if lastHour and lastHour < 12 and h >= 12 then
+        for _, ply in ipairs(player.GetAll()) do LC.FeverDream(ply) end
+    end
+    lastHour = h
+end)
+
+-- hurt in it: you jolt awake (and it hasn't broken)
+hook.Add("EntityTakeDamage", "LivingCityFeverDream", function(ent, dmg)
+    if IsValid(ent) and ent:IsPlayer() and ent.lcFeverDreamEnds and dmg:GetDamage() >= 1 then LC.EndFeverDream(ent, true) end
+end)
+hook.Add("PlayerDeath", "LivingCityFeverDream", function(ply) if ply.lcFeverDreamEnds then ply.lcFeverDreamEnds = nil ply:SetNW2Float("lc_feverdream", 0) end end)
