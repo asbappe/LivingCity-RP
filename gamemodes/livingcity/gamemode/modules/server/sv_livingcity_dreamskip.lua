@@ -78,7 +78,9 @@ local function Sync(p)
     local pr = Prefs(p)
     local earned = {}
     for k in pairs(KINDS) do earned[k] = LC.DreamSkipEarned(p, k) == true end
-    p:SetNW2String("lc_dream_sitout", util.TableToJSON({ on = pr, earned = earned }) or "")
+    -- (lived, need: how far along they are, for F2 > Me > My dreams)
+    local lived = { happy = LC.DreamsLivedOfKind(p, "happy"), neutral = LC.DreamsLivedOfKind(p, "neutral") }
+    p:SetNW2String("lc_dream_sitout", util.TableToJSON({ on = pr, earned = earned, lived = lived, need = cvAfter:GetInt(), standing = cvStanding:GetInt() }) or "")
 end
 LC.DreamSkipSync = Sync
 
@@ -95,11 +97,13 @@ function LC.SetDreamSkip(p, kind, skip)
 end
 
 -- One more lived through, of its kind (not as an Enforcer, not a test).
-hook.Add("LivingCityDreamWoke", "LivingCityDreamSkip", function(p, _, why)
+-- (dream: the one they woke from, handed over by LC.DreamWakeOne. When a dream ends for everyone, LC.DreamActive is
+-- already gone by the time this runs, so before 10 November's audit only those who woke early were counted.)
+hook.Add("LivingCityDreamWoke", "LivingCityDreamSkip", function(p, _, why, dream)
     if not IsValid(p) or not p.SetPData or p.lcDreamWokeEnforcer or why == "test" then return end
-    local dream = LC.DreamActive
+    dream = dream or LC.DreamActive
     if not dream or not dream.id or dream.test then return end
-    local kind = Kind(dream.id, dream.mood)
+    local kind = Kind(dream.ending or dream.id, dream.mood) -- (dream.id is only its number: the ending's name says whether it's propaganda)
     if not KINDS[kind] then return end
     p:SetPData("lc_dreams_" .. kind, tostring(LC.DreamsLivedOfKind(p, kind) + 1))
     Sync(p)

@@ -229,6 +229,11 @@ local function Context(me, unit, rebel)
     local out = {}
     local function Add(label, run, role) out[#out + 1] = { label = label, run = run, ctx = true, role = role or nil } end
     local now = CurTime()
+    -- in a dream (cl_livingcity_dreams.lua): waking up, here first (the owner: never only in the C menu). Only once the
+    -- server says they may (out of it, an Enforcer, a test), so it never offers what would be refused.
+    if me:GetNW2Bool("lc_dreaming", false) and (me:GetNW2Bool("lc_dream_canwake", false) or me:GetNW2Bool("lc_dream_test", false)) then
+        Add("Wake up from the dream", function() if LC_CL.DreamAct then LC_CL.DreamAct("wake") end end)
+    end
     if me:GetNW2Float("lc_downed_until", 0) > now then Add("Give up (let go)", function() Send("giveup") end) end
     if me:GetNW2Bool("lc_tied", false) then Add("Work at the cuffs", function() Send("struggle") end) end
     if me:GetNW2Float("lc_jail_until", 0) > now and not me:GetNW2Bool("lc_work_detail", false) then Add("Ask for a work detail (time off your sentence)", function() Send("workdetail") end) end
@@ -448,9 +453,18 @@ local function MyDreamsPage()
         end
     end
     local rows = {}
+    local need, lived = tonumber(ds.need) or 2, ds.lived or {}
     if #items == 0 then
-        rows[1] = "Nothing to sit out yet. Happy or Neutral dreams: live through 2 of that kind."
-        rows[2] = "Nightmares and propaganda: a citizen with Exemplary standing (400)."
+        rows[1] = "Nothing to sit out yet. Happy or Neutral dreams: live through " .. need .. " of that kind."
+        rows[2] = "Nightmares and propaganda: a citizen with Exemplary standing (" .. (tonumber(ds.standing) or 400) .. ")."
+    end
+    -- how far along (the kinds not earned yet), under whatever is listed
+    local at = math.max(#items, 2) + 1
+    for _, k in ipairs({ { "happy", "Happy" }, { "neutral", "Neutral" } }) do
+        if ds.lived and not (ds.earned and ds.earned[k[1]]) then
+            rows[at] = string.format("%s dreams lived through: %d of %d.", k[2], math.min(tonumber(lived[k[1]]) or 0, need), need)
+            at = at + 1
+        end
     end
     return { title = "MY DREAMS", items = items, empty = rows }
 end

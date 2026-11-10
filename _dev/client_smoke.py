@@ -1940,13 +1940,31 @@ err = L.execute(r"""
 local ok, e = pcall(function()
     _me:SetNW2Bool("lc_dreaming", true)
     hook.t.HUDPaint.LivingCityDreams()
+    -- out of it: the line says they can wake, F1 offers it, and the time left shows
+    local function OnF1()
+        for _, it in pairs(LC_CL.QuickRoot().items) do if it.label == "Wake up from the dream" then return true end end
+        return false
+    end
+    assert(not OnF1(), "F1 offers waking before the dreamer may")
+    assert(LC_CL.DreamTimeLeft() == nil, "time left with no limit told")
+    _me:SetNW2Bool("lc_dream_canwake", true)
+    _me:SetNW2Float("lc_dream_ends", CurTime() + 125)
+    hook.t.HUDPaint.LivingCityDreams()
+    assert(OnF1(), "F1 has no Wake up from the dream for a dreamer who may wake")
+    assert(LC_CL.DreamTimeLeft() == 125, "the dream's time left is wrong: " .. tostring(LC_CL.DreamTimeLeft()))
+    _me:SetNW2Bool("lc_dream_canwake", false)
+    _me:SetNW2Float("lc_dream_ends", 0)
     _me:SetNW2Bool("lc_dreaming", false)
-    local st = { on = true, point = true, zone = false, queued = "hard", queuedName = "Hard", at = 40, every = false, delay = 60,
-        active = { ending = "hard", name = "Hard", n = 2 }, asleep = 3, saved = { { sid = "1", nick = "Someone", online = true, applied = true } },
+    assert(not OnF1() and LC_CL.DreamTimeLeft() == nil, "awake, the dream's lines linger")
+    local st = { on = true, point = true, zone = false, queued = "hard", queuedName = "Hard", queuedMood = "happy", at = 40, every = false, delay = 60,
+        active = { ending = "hard", name = "Hard", n = 2, mood = "happy", left = 200, who = { "Someone", "Unit (Enforcer)" } }, asleep = 3, saved = { { sid = "1", nick = "Someone", online = true, applied = true } },
         endings = { { id = "hard", name = "Hard" } } }
     net._q = { st }
     net["recv_lc_dream"]()
     st.active, st.point, st.queued = nil, false, nil
+    net._q = { st }
+    net["recv_lc_dream"]()
+    st.point, st.dreamt = true, true
     net._q = { st }
     net["recv_lc_dream"]()
     LC_CL.DreamsMenu()

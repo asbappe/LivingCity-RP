@@ -248,7 +248,7 @@ end
 function LC.DreamWakeAsked(p)
     if not IsValid(p) or not p.lcDreaming then return false end
     local ok, why = LC.DreamCanWake(p)
-    if not ok then Notice(p, "warn", "A nightmare", why, 6) return false end
+    if not ok then Notice(p, "warn", (LC.DreamActive and LC.DreamActive.mood == "nightmare") and "A nightmare" or "A dream", why, 6) return false end
     -- (through with it already: out of it, or won; else woken early. Stimulants: sv_livingcity_bedtime.lua)
     local dream, g = LC.DreamActive, LC.DreamActive and LC.DreamActive.game
     p.lcDreamWokeFull = not p.lcDreamEnforcer or nil -- (a dreamer can only wake once out of it: dreamt through)
@@ -790,6 +790,9 @@ local function Enter(p, dream, spot)
     p:SetNW2Bool("lc_dreaming", true)
     p:SetNW2Bool("lc_nightmare", dream.mood == "nightmare") -- (their screen: no waking yourself from this one)
     p:SetNW2Bool("lc_dream_forced", dream.forced == true and dream.mood ~= "nightmare") -- (a propaganda dream: the same, in its own words)
+    -- (their screen: when it ends at the latest, and whether they may wake themselves yet; kept right by the timer below)
+    p:SetNW2Float("lc_dream_ends", cvMax:GetFloat() > 0 and ((dream.started or CurTime()) + cvMax:GetFloat() * 60) or 0)
+    p:SetNW2Bool("lc_dream_canwake", false)
     -- just their hands: nothing to drop, spend or lose
     if p.StripWeapons then p:StripWeapons() end
     if p.RemoveAllAmmo then p:RemoveAllAmmo() end
@@ -804,7 +807,7 @@ local function Enter(p, dream, spot)
     p:SetPos(spot)
     if p.SetEyeAngles then p:SetEyeAngles(Angle(0, (dream.pos - spot):Angle().y, 0)) end
     Notice(p, "info", "A dream", "You drift into a dream, with everyone else asleep. Whatever happens here, you wake in your bed with everything you had. "
-        .. "You can't wake yourself until you're out of it (then: C > Settings > Shared dreams: wake up).", 12)
+        .. "You can't wake yourself until you're out of it (then: F1 > Wake up from the dream, or /dream wake).", 12)
     return true
 end
 
@@ -835,6 +838,7 @@ function LC.DreamWakeOne(p, why)
     local sid = Sid(p)
     local snap = LC.DreamSnaps[sid] or LC.DreamLoad(sid)
     local dream = LC.DreamActive
+    local mine = dream and p.lcDreaming == dream.id and dream or nil -- (the dream they're waking from: by the time the hook below runs, LC.DreamActive may be gone)
     if p.lcDreaming then
         local E = LC.EndingAny and LC.EndingAny()
         if E and E.dream and E.dream.id == p.lcDreaming then Leave(p) end
@@ -851,6 +855,8 @@ function LC.DreamWakeOne(p, why)
     p:SetNW2Bool("lc_dreaming", false)
     p:SetNW2Bool("lc_nightmare", false)
     p:SetNW2Bool("lc_dream_forced", false)
+    p:SetNW2Bool("lc_dream_canwake", false)
+    p:SetNW2Float("lc_dream_ends", 0)
     if dream and dream.list then
         -- (everyone gone, or only Enforcers left: the ending has nobody left to be for)
         if LC.DreamRealCount(dream) == 0 then timer.Simple(0, function()
@@ -867,7 +873,7 @@ function LC.DreamWakeOne(p, why)
         if not IsValid(p) then return end
         LC.DreamRestore(p, snap, function(ok)
             if not IsValid(p) then return end
-            hook.Run("LivingCityDreamWoke", p, ok, why)
+            hook.Run("LivingCityDreamWoke", p, ok, why, mine)
             if ok then
                 Notice(p, "info", (why == "optout" or why == "test") and "Awake" or "You wake up", why == "test" and "The test is over: you're back where you were, with everything as it was."
                     or why == "optout" and "You wake from the dream, in your bed, with everything as it was."
@@ -1196,6 +1202,14 @@ timer.Create("LivingCityDreams", 1, 0, function()
             if LC.DreamActive == dream then LC.DreamActive = nil end -- (whatever happened, the next one isn't held up)
             return
         end
+        -- (each dreamer's screen: may they wake themselves yet, and when it ends at the latest)
+        if dream then
+            local ends = maxSecs > 0 and ((dream.started or now) + maxSecs) or 0
+            for _, p in ipairs(LC.DreamersOf(dream)) do
+                p:SetNW2Bool("lc_dream_canwake", LC.DreamCanWake(p) == true)
+                p:SetNW2Float("lc_dream_ends", ends)
+            end
+        end
         local E = LC.EndingAny and LC.EndingAny()
         if dream and dream.game then
             -- (a dream you play keeps its own dreamers in its arena: sv_livingcity_dreamgames.lua)
@@ -1358,7 +1372,7 @@ local function DreamCommand(p, rest)
     elseif a == "wake" then
         if p.lcDreaming then LC.DreamWakeAsked(p) else p:ChatPrint("[Dreams] You're not dreaming.") end
     else
-        p:ChatPrint("[Dreams] Everyone asleep dreams the city's dreams: nobody can opt out. /dream wake, once you're out of one (or C > Settings).")
+        p:ChatPrint("[Dreams] Everyone asleep dreams the city's dreams: nobody can opt out. /dream wake, once you're out of one (or F1 > Wake up from the dream).")
     end
 end
 LC.SlashCommands = LC.SlashCommands or {}
@@ -1426,8 +1440,16 @@ function LC.DreamStatus()
     return {
         on = cvOn:GetBool(), point = LC.DreamPoint() ~= nil, zone = LC.DreamZone() ~= nil, queued = S.queued and S.queued.id or nil,
         queuedName = S.queued and LC.DreamTitle(S.queued.id) or nil,
+        queuedMood = S.queued and LC.DreamMood(S.queued.id) or nil,
+        dreamt = LC.DreamDreamtTonight(),
         at = S.at and math.max(0, math.floor(S.at - CurTime())) or nil, every = cvNightly:GetBool(), delay = cvDelay:GetFloat(),
-        active = d and { ending = d.ending, name = LC.DreamTitle(d.ending), n = #LC.DreamersOf(d) } or nil,
+        active = d and { ending = d.ending, name = LC.DreamTitle(d.ending), n = #LC.DreamersOf(d), mood = d.mood, test = d.test or nil,
+            left = cvMax:GetFloat() > 0 and math.max(0, math.floor((d.started or CurTime()) + cvMax:GetFloat() * 60 - CurTime())) or nil,
+            who = (function()
+                local names = {}
+                for _, q in ipairs(LC.DreamersOf(d)) do names[#names + 1] = q:Nick() .. (q.lcDreamEnforcer and " (Enforcer)" or "") end
+                return names
+            end)() } or nil,
         asleep = #LC.DreamSleepers(), saved = saved, endings = list,
     }
 end

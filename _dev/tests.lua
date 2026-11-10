@@ -10728,8 +10728,13 @@ hook.Run("LivingCityDreamWoke", p, true, "end")
 hook.Run("LivingCityDreamWoke", p, true, "end")
 LC.DreamActive = { id = "test_happy", mood = "happy", test = true }
 hook.Run("LivingCityDreamWoke", p, true, "test")
+LC.DreamActive = nil
+hook.Run("LivingCityDreamWoke", p, true, "end", { id = 7, ending = "test_neutral", mood = "neutral" })
 LC.DreamActive = was
 ok(LC.DreamsLivedOfKind(p, "happy") == 2, "each dream lived through is counted by its kind (a test doesn't count)", LC.DreamsLivedOfKind(p, "happy"))
+ok(LC.DreamsLivedOfKind(p, "neutral") == 1, "a dream that ended for everyone counts too: the dream is handed over with the hook", LC.DreamsLivedOfKind(p, "neutral"))
+local syn = util.JSONToTable(p:GetNW2String("lc_dream_sitout", "")) or {}
+ok(syn.lived and syn.lived.happy == 2 and syn.lived.neutral == 1 and syn.need == 2, "F2 > Me > My dreams is told how far along they are")
 ok(LC.DreamSkipEarned(p, "happy") and not LC.DreamSkipEarned(p, "neutral"), "two Happy dreams: Happy ones may be sat out, Neutral not yet")
 local hint = LC.DreamSkipHint(p, nil, "happy")
 ok(hint and string.find(hint, "sit out happy dreams", 1, true), "earned but not chosen: a small note as the dream comes", hint)
@@ -16075,6 +16080,8 @@ local g = okM and dream.game
 ok(okM and g and g.id == "maze" and #g.ents > 30 and #g.cops >= 2 and g.left > 40, "the maze is built at the dream point: floor, walls, tokens, giant officers", okM and #(g and g.ents or {}) or dream)
 ok(a.lcDreaming and b.lcDreaming and a:GetPos():Distance(DREAM) < 1200 and LC.EndingAny() == nil, "everyone asleep is in it (no ending, nothing else stops)")
 ok(LC.DreamStart("crumble", adm, false, nil, true) == false, "(one dream at a time)")
+ok(a:GetNW2Float("lc_dream_ends", 0) > CurTime() and not a:GetNW2Bool("lc_dream_canwake", false), "their screen knows when it ends at the latest, and that they can't wake yet")
+local livedA, livedB = LC.DreamsLivedOfKind(a, "nightmare"), LC.DreamsLivedOfKind(b, "nightmare")
 _run(0.2) -- (whatever's under them at the start, picked up)
 local t1 = g.tokens[1]
 for _, t in ipairs(g.tokens) do if not t.big and not t.got and t.pos:Distance(a:GetPos()) > 150 and t.pos:Distance(b:GetPos()) > 150 then t1 = t break end end
@@ -16112,9 +16119,12 @@ ok(g.pl[a].how == "out" and a.lcGameWatching and a.lcDreaming and LC.DreamCanWak
 local sentOut = false
 for _, m in ipairs(net.sent) do if m.name == "lc_dreamgame" and m.to == a and type(m.data[1]) == "table" and m.data[1].k == "out" then sentOut = true end end
 ok(sentOut, "(their screen asks: wake up now, or watch until it's over)")
+_run(1.2)
+ok(a:GetNW2Bool("lc_dream_canwake", false) and not b:GetNW2Bool("lc_dream_canwake", false), "out of it: their screen says they can wake now (F1 offers it); not the one still in it")
 ok(LC.DreamWakeAsked(a), "they choose to wake")
 _run(2.5)
 ok(not a.lcDreaming and not a.lcGameWatching and a.lcSleep and a:GetPos():Distance(CITY) < 1, "awake in their bed, everything as it was")
+ok(not a:GetNW2Bool("lc_dream_canwake", false) and a:GetNW2Float("lc_dream_ends", 0) == 0, "(and their screen's dream lines are gone)")
 ok(LC.DreamScarred(a) and a:GetMaxHealth() == 70 and a:Health() <= 70 and LC.Shaken(a), "and lost: 30 off their health until their next full night's sleep", a:GetMaxHealth())
 LC.SetDreamScar(a, false)
 -- every token gone: the rest win, and the arena goes
@@ -16128,6 +16138,9 @@ local gone = true
 for _, e in ipairs(ents0) do if IsValid(e) then gone = false end end
 ok(g.pl[b].how == "won" and not b.lcDreaming and LC.DreamActive == nil and gone and #g.won == 1, "every token picked up: those left win; nobody's left in it, so it's over, everyone wakes, and the maze is gone")
 ok(LC.Unbroken(b) and LC.SecondWind(b) and b:GetNW2Int("lce_credits", 0) == crB and b:GetNW2Int("lcf_xp", 0) == xpB, "a winner wakes Unbroken with a second wind, and nothing the Combine would give (no credits, no experience)")
+ok(LC.DreamsLivedOfKind(a, "nightmare") == livedA + 1 and LC.DreamsLivedOfKind(b, "nightmare") == livedB + 1,
+    "both lived through a nightmare, counted for sitting out: the one who woke early, and the one in it to the end (the dream itself already gone)",
+    LC.DreamsLivedOfKind(a, "nightmare") - livedA .. ", " .. LC.DreamsLivedOfKind(b, "nightmare") - livedB)
 b:SetNW2Float("lc_unbroken_until", 0)
 b:SetNW2Float("lc_secondwind_until", 0)
 

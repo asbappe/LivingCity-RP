@@ -1478,3 +1478,14 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **The old-timer's face:** find him: a citizen's clothes with the Lost Coast fisherman's head. Check the head sits right on the neck while he walks, talks and turns. If you see his ordinary face, your game lacks the model: in the spawn menu search "fisherman".
   Notes:
+
+## 10 November: dreams, easier to live with (the audit)
+
+- [ ] **Counting dreams:** dream a Happy dream to its end twice (not waking early). F2 > Me (More) > My dreams should say "Happy dreams lived through: 1 of 2." after the first, and offer sitting Happy dreams out after the second.
+  Notes:
+- [ ] **Waking from F1:** in a dream you play, lose your lives (or win). The top line should change to "You can wake up now: F1 > Wake up from the dream", and F1 should list it. Before that, F1 should not have it.
+  Notes:
+- [ ] **Time left:** while dreaming, a small line under the top one says "It ends in M:SS at the latest." and counts down.
+  Notes:
+- [ ] **Admins, C > Help > Dreams:** with a dream going on, it shows the mood, who is in it, and a countdown that moves without pressing Refresh.
+  Notes:

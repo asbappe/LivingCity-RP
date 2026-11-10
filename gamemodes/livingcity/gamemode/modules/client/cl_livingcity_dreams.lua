@@ -1,8 +1,10 @@
 --[[
     Living City: shared dreams, your side (sv_livingcity_dreams.lua)
 
-      C > Settings > Shared dreams: in a dream, wake up (once you're out of it; nobody opts out).
-      While you dream, a line at the top of the screen says how to wake.
+      F1 > Wake up from the dream (also C > Settings > Shared dreams, /dream wake): once you're
+      out of it; nobody opts out.
+      While you dream, a line at the top of the screen says whether you can wake yet and how,
+      and a smaller one how long the dream can still last at the most.
       Admins: C > Help > Dreams (or the Dreams button in the Endings menu): whether
       dreams can happen (a dream point placed), what's waiting for tonight and when,
       dream it now, wake everyone, and put back anyone's things from their snapshot.
@@ -17,6 +19,15 @@ function LC_CL.DreamAct(what, arg)
     net.SendToServer()
 end
 
+-- Seconds this dream can still last at the most (nil: not dreaming, or no limit set).
+function LC_CL.DreamTimeLeft()
+    local me = LocalPlayer()
+    if not IsValid(me) or not me:GetNW2Bool("lc_dreaming", false) then return nil end
+    local ends = me:GetNW2Float("lc_dream_ends", 0)
+    if ends <= 0 then return nil end
+    return math.max(0, math.ceil(ends - CurTime()))
+end
+
 -- While you dream: how to wake.
 -- (made once here, not every frame)
 local C_0_0_0_200 = Color(0, 0, 0, 200)
@@ -24,11 +35,19 @@ local C_215_195_255_220 = Color(215, 195, 255, 220)
 hook.Add("HUDPaint", "LivingCityDreams", function()
     local me = LocalPlayer()
     if not IsValid(me) or not me:GetNW2Bool("lc_dreaming", false) then return end
-    draw.SimpleTextOutlined(me:GetNW2Bool("lc_dream_test", false) and "Testing a dream. Stop whenever you like: the editor's Stop the test, or C > Settings > Shared dreams. Nothing here counts."
+    local key = LC_CL.QuickKeyName and LC_CL.QuickKeyName() or "F1"
+    draw.SimpleTextOutlined(me:GetNW2Bool("lc_dream_test", false) and "Testing a dream. Stop whenever you like: the editor's Stop the test, or " .. key .. " > Wake up from the dream. Nothing here counts."
+        -- (out of it, an Enforcer, or the Administrator in a dream she didn't choose: the server says when, LC.DreamCanWake)
+        or me:GetNW2Bool("lc_dream_canwake", false) and "You can wake up now: " .. key .. " > Wake up from the dream (or /dream wake). Or stay and watch: you wake in your bed with everything you had either way."
         or me:GetNW2Bool("lc_nightmare", false) and "A nightmare. You'll wake in your bed with everything you had, but you can't wake yourself until you're out of it."
-        or me:GetNW2Bool("lc_dream_forced", false) and "You're dreaming. You'll wake in your bed with everything you had, but you can't wake yourself until you're out of it."
-        or "You're dreaming. You'll wake in your bed with everything you had. (Wake up now: C > Settings > Shared dreams)",
+        or "You're dreaming. You'll wake in your bed with everything you had, but you can't wake yourself until you're out of it.",
         "DermaDefaultBold", ScrW() / 2, 14, C_215_195_255_220, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, C_0_0_0_200)
+    -- (no dream lasts past lc_dream_max_minutes: how long this one can still go on, at the most)
+    local left = LC_CL.DreamTimeLeft()
+    if left then
+        draw.SimpleTextOutlined(string.format("It ends in %d:%02d at the latest.", math.floor(left / 60), left % 60),
+            "DermaDefault", ScrW() / 2, 32, C_215_195_255_220, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, C_0_0_0_200)
+    end
 end)
 
 ------------------------------------------------------------------------
@@ -147,6 +166,17 @@ local function Line(parent, text, col)
     l:SetAutoStretchVertical(true)
     return l
 end
+-- A line whose words change as time passes (fn gives them); the label's own Think (its auto-stretch) still runs.
+local function Live(parent, fn, col)
+    local l = Line(parent, fn(), col)
+    local was = l.Think
+    l.Think = function(s)
+        local txt = fn()
+        if s.lcTxt ~= txt then s.lcTxt = txt s:SetText(txt) end
+        if was then was(s) end
+    end
+    return l
+end
 local function Btn(parent, text, fn)
     local b = vgui.Create("DButton", parent)
     b:Dock(TOP)
@@ -175,15 +205,27 @@ local function Open(st)
         Line(body, "Dreams are on: a secret ending waits for the night, and everyone asleep dreams it together about "
             .. math.floor(st.delay or 60) .. " seconds after the Administrator says good night." .. (st.zone and "" or " (No dream zone: it keeps within lc_dream_radius of the point.)"), DIM)
     end
+    local MOODS = { happy = "Happy", neutral = "Neutral", nightmare = "a Nightmare" }
+    local got = CurTime() -- (the countdowns below run on from what the server said)
+    local function Clock(secs) secs = math.max(0, math.floor(secs)) return string.format("%d:%02d", math.floor(secs / 60), secs % 60) end
     if st.active then
-        Line(body, string.format("Dreaming now: %s, %d asleep in it.", st.active.name or st.active.ending, st.active.n or 0), GOLD)
+        Line(body, string.format("Dreaming now: %s%s, %d asleep in it.", st.active.name or st.active.ending,
+            st.active.test and " (a test from the editor)" or (MOODS[st.active.mood or ""] and (" (" .. MOODS[st.active.mood] .. ")") or ""), st.active.n or 0), GOLD)
+        if st.active.left then
+            Live(body, function() return "The safeguard ends it in " .. Clock(st.active.left - (CurTime() - got)) .. " at the latest (lc_dream_max_minutes)." end, DIM)
+        end
+        if #(st.active.who or {}) > 0 then Line(body, "In it: " .. table.concat(st.active.who, ", ") .. ".", DIM) end
         Btn(body, "Wake everyone now (they wake in their beds, with everything they had)", function() LC_CL.DreamAct("wakeall") end)
     end
     if st.queued then
-        Line(body, "Waiting for tonight's dream: " .. (st.queuedName or st.queued) .. (st.at and string.format(" (in about %d seconds)", st.at) or " (after the Administrator says good night)"), GOLD)
+        local name = (st.queuedName or st.queued) .. (MOODS[st.queuedMood or ""] and (", " .. MOODS[st.queuedMood]) or "")
+        Live(body, function()
+            return "Waiting for tonight's dream: " .. name .. (st.at and (" (in about " .. Clock(st.at - (CurTime() - got)) .. ")") or " (after the Administrator says good night)")
+        end, GOLD)
         Btn(body, "Forget it (nothing waits for tonight)", function() LC_CL.DreamAct("forget") end)
     else
-        Line(body, "Nothing is waiting for tonight's dream" .. (st.every and " (lc_dream_every_night: a random one, at night)." or "."), DIM)
+        Line(body, st.dreamt and "Tonight's dream has been dreamt: the next one is tomorrow night's."
+            or ("Nothing is waiting for tonight's dream" .. (st.every and " (lc_dream_every_night: a random one, at night)." or ".")), DIM)
     end
     Line(body, string.format("Asleep right now: %d", st.asleep or 0), DIM)
     if st.point and st.on and not st.active then
@@ -198,7 +240,9 @@ local function Open(st)
         local go = vgui.Create("DButton", row)
         go:Dock(RIGHT)
         go:SetWide(150)
-        go:SetText("Dream it now (with me)")
+        -- (only a superadmin is taken along awake: an admin's goes to whoever is asleep)
+        local me = LocalPlayer()
+        go:SetText((IsValid(me) and me.IsSuperAdmin and me:IsSuperAdmin()) and "Dream it now (with me)" or "Dream it now (the sleepers)")
         go.DoClick = function()
             local _, id = pick:GetSelected()
             LC_CL.DreamAct("now", id or st.queued or "")
