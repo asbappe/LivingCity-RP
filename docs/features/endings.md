@@ -160,3 +160,30 @@ No new settings or commands. The poses use the bone directions the endings' danc
 
 No new settings or commands.
 
+## Staging the dreams you play (10 November; the owner: "all 3 please")
+
+`sv_livingcity_dreamstage.lua`, with the screens' side in `cl_livingcity_dreamacting.lua`. It applies to every dream you play (not the endings, which have their own choreography) and changes no dream's rules.
+
+- **The opening.** As a dream begins, each dreamer's screen has its name between two black bars for 3.5 seconds, with its kind under it ("A nightmare", "A happy dream", "A strange dream", "A dream of her"). The stand-ins stand together facing the middle (or her) the way the dream calls for, then scatter.
+- **The dream's own figures act**, with the same custom animation as the stand-ins:
+  - **Her figure** (propaganda dreams, when the Administrator isn't starring herself): stands regally, chin up, a hand lifted now and then; points at a dreamer who has just lost a life; holds a hand out over one who wins.
+  - **The hunters** (the giant officers, the dead): the one nearest a dreamer who has just lost a life shakes a raised fist; when a dreamer wins they all hang their heads.
+  - **Her admirers:** on their knees with their arms held out to her, each in their own time; they cheer a dreamer who wins.
+- **The dreamers' own bodies.** A dreamer who loses a life flinches for a second, one who is out of it cowers, one who wins cheers. The others see it (you don't see your own body). It ends by itself, and waking always puts the body back.
+- **The finish.** When a dreamer wins: a chime, a ring of light over them, the stand-ins cheer, the figures react, and each screen has "Ada made it through" (or "You made it through") between the bars, "First through The Patrol Maze" for the first.
+- Hook `LivingCityDreamStage(g, what, player)` for "open", "hit", "out", "won". `LC.DreamActSet(entity, act, seconds)` gives anything in a dream an act.
+
+## The Midnight Rally (10 November; the owner: "a Mario kart esque buggy race dream")
+
+`rally`, a Happy dream you play, up to 200 seconds (`sv_livingcity_dreamrally.lua`, driving in `sh_livingcity_kart.lua`, the view in `cl_livingcity_dreamrally.lua`). An original race in that spirit: nothing of that game's names, characters, tracks or items.
+
+- **The road:** a winding loop round the dream point on a dark floor, cones down both sides, two posts at the line, sized to the dream zone. The number of laps is worked out so the race is about the same length in a small dream as in a big one (`LC.RallyDistance`, 3 laps at least).
+- **Driving:** there is no real vehicle. Each dreamer is hidden and a small buggy rides under them; forward accelerates, back brakes and then reverses, and the buggy comes round to where you look only so fast (less sharply at speed), so a corner taken flat out runs wide. No strafing, jumping or crouching. Off the road (inside or outside the cones) the top speed drops to under half. The view is from behind and above the buggy.
+- **The start:** held on the grid for four seconds ("3, 2, 1, GO!").
+- **Laps:** the road is twelve stretches; a lap counts only when they are driven in order, on the road or just beside it (no cutting across the middle, no circling it). Fall off the floor and you're put back on the road where you were.
+- **Pickups:** six glowing crates on the road (back five seconds after being taken), one pickup carried at a time, **Jump (or attack) uses it:** Boost (half as fast again for 2.5 seconds, and the grass doesn't slow you), Melon (dropped behind; the next buggy over it spins out for 1.3 seconds), Horn blast (everyone within 900 units is slowed for 2.5 seconds).
+- **Rival drivers:** this dream brings its own stand-ins. When fewer than `lc_dream_min` are asleep the city's named people drive the other buggies (seven at most): they follow the road, change lanes, slow for the tight parts, sometimes use a pickup, spin out on melons, and ease off when far ahead of every player. They can finish ahead of players.
+- **The finish:** the first three buggies over the line win (a player who wins wakes as from any dream they've won); later finishers are told their place and wake smiling; when time is up the race is called. Nobody loses anything.
+- **On screen:** "Lap 2 of 4   3rd of 6   Carrying: BOOST (Jump to use)", and "off the road", "Spinning out!", "Slowed!".
+- **Music:** the owner's `rally` file in `sound/livingcity/dreams/` if there is one, else Half-Life 2's own. Late sleepers can join it like any dream.
+

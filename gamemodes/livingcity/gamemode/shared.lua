@@ -35,6 +35,7 @@ LC_MODULES = {
         "sh_livingcity_acts",
         "sh_livingcity_lowered", -- (guns carried lowered until raised: hold R)
         "sh_livingcity_stamina", -- (running and jumping tire you)
+        "sh_livingcity_kart", -- (driving a dream buggy: The Midnight Rally)
         "sh_livingcity_cp",
         "sh_livingcity_custody",
         "sh_livingcity_feel",
@@ -92,11 +93,13 @@ LC_MODULES = {
         "sv_livingcity_vortwar", -- (freed vortigaunts break into propaganda dreams: stand in their light; after battleline)
         "sv_livingcity_vices", -- (cigarettes, alcohol and stimulants; and how a dream you played leaves you)
         "sv_livingcity_dreamstandins", -- (stand-ins: every dream has at least lc_dream_min dreamers)
+        "sv_livingcity_dreamstage", -- (staging: the opening, the figures' acting, the dreamers' own bodies, the finish)
         "sv_livingcity_dreamenforcers", -- (Civil Protection and the Administration as Enforcers in nightmares and propaganda dreams)
         "sv_livingcity_dreamrules", -- (which dream tonight: Nightmares after bad days, Happy after clean ones; the city's own pick)
         "sv_livingcity_strangedreams", -- (strange dreams you play: the cheese dream, musical chairs, wings, raining melons; after propagandamore)
         "sv_livingcity_strangedreams2", -- (ten more: the horse, boxing, the exam, the last train, Lamarr, molasses, hot potato, Overwatch says, dance, counting headcrabs)
         "sv_livingcity_strangedreams3", -- (ten more, nonsense on purpose: clocks, tea party, headcrab derby, say cheese, doors, splat, conga, shh, bubbles, the watchers)
+        "sv_livingcity_dreamrally", -- (The Midnight Rally: a buggy race, a Happy dream you play)
         "sv_livingcity_dreamtest", -- (testing any dream from the Living City Editor, alone and awake)
         "sv_livingcity_dreamplan", -- (who chooses tonight's dream: her kind now and then, the city by sociostability, in turn; the black screen's line)
         "sv_livingcity_desperation", -- (the outnumbered Combine fight dirtier: SMGs, grenades, energy balls, a little more damage)
@@ -259,6 +262,7 @@ LC_MODULES = {
         "cl_livingcity_dreamgames", -- (the dreams you play: tokens, lives, time, on screen)
         "cl_livingcity_vortwar", -- (the vortigaunts' purple light, the tug-of-war meter)
         "cl_livingcity_strangedreams", -- (the strange dreams: the cheese dream's voices and colours, wings' rings; after dreamgames)
+        "cl_livingcity_dreamrally", -- (The Midnight Rally: the view from behind your buggy)
         "cl_livingcity_dreamacting", -- (the dreams' stand-ins: arms, heads and backs moved on top of their sequences)
         "cl_livingcity_dreamenforce", -- (Enforcers: the bad dreamers glow red; a dreamer marked is told)
         "cl_livingcity_vices", -- (smoke, drunk, wired, crashing and the shakes, on screen)

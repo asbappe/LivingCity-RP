@@ -1964,7 +1964,7 @@ local ok, e = pcall(function()
     _me:SetNW2Bool("lc_dreaming", false)
     assert(not OnF1() and LC_CL.DreamTimeLeft() == nil, "awake, the dream's lines linger")
     -- the stand-ins' acting (cl_livingcity_dreamacting.lua): every act gives a pose, and a figure's bones ease towards it
-    for _, act in ipairs({ "cower", "flinch", "cheer", "wave", "look", "kneel", "plead", "sway", "panic", "idle", "run", "" }) do
+    for _, act in ipairs({ "cower", "flinch", "cheer", "wave", "look", "kneel", "plead", "sway", "panic", "regal", "scorn", "bless", "gloat", "slump", "idle", "run", "" }) do
         for _, own in ipairs({ true, false }) do
             for name, ang in pairs(LC_CL.DreamActPose(act, 0.4, own)) do assert(ang.p and ang.y and ang.r, act .. ": " .. name .. " isn't an angle") end
         end
@@ -1972,12 +1972,41 @@ local ok, e = pcall(function()
     assert(next(LC_CL.DreamActPose("idle", 1, false)) == nil and LC_CL.DreamActPose("cower", 1, false).R_UpperArm, "the acts' poses are wrong")
     local set = {}
     local fig = { ManipulateBoneAngles = function(_, id, a) set[id] = a end, LookupBone = function(_, n) return n == "ValveBiped.Bip01_R_UpperArm" and 7 or nil end,
-        GetNW2String = function() return "cheer" end, GetNW2Float = function() return CurTime() - 1 end, GetNW2Bool = function() return false end }
+        GetNW2String = function() return "cheer" end, GetNW2Float = function(_, k) return k == "lc_dream_act_end" and 0 or (CurTime() - 1) end, GetNW2Bool = function() return false end }
     LC_CL.DreamActApply(fig, CurTime(), 0.05)
     local first = set[7] and set[7].y
     for i = 1, 60 do LC_CL.DreamActApply(fig, CurTime(), 0.05) end
     assert(first and first < 0 and set[7].y < first and set[7].y < -90, "a cheering figure's arm doesn't ease up: " .. tostring(first) .. " " .. tostring(set[7] and set[7].y))
     hook.t.Think.LivingCityDreamActing()
+    -- a timed act that's over is at rest; resting puts the bones back
+    local over = { ManipulateBoneAngles = fig.ManipulateBoneAngles, LookupBone = fig.LookupBone, GetNW2String = fig.GetNW2String, GetNW2Bool = fig.GetNW2Bool,
+        GetNW2Float = function(_, k) return CurTime() - 1 end }
+    set = {}
+    for i = 1, 60 do LC_CL.DreamActApply(over, CurTime(), 0.05) end
+    assert(set[7] and math.abs(set[7].y) < 0.01, "a timed act that's over still moves the arm: " .. tostring(set[7] and set[7].y))
+    for i = 1, 5 do LC_CL.DreamActApply(fig, CurTime(), 0.05) end
+    LC_CL.DreamActRest(fig)
+    assert(set[7].y == 0, "resting a figure doesn't put its bones back")
+    -- the opening and the finish, between two black bars
+    _me:SetNW2Bool("lc_dreaming", true)
+    net._q = { { k = "open", name = "The Patrol Maze", mood = "nightmare", secs = 3.5 } }
+    net["recv_lc_dream_stage"]()
+    assert(LC_CL.DreamStageCard().title == "The Patrol Maze" and LC_CL.DreamStageCard().sub == "A nightmare", "the opening card is wrong")
+    hook.t.HUDPaint.LivingCityDreamStage()
+    net._q = { { k = "finish", who = "Ada", first = true, name = "The Patrol Maze", secs = 3.5 } }
+    net["recv_lc_dream_stage"]()
+    assert(LC_CL.DreamStageCard().title == "Ada made it through" and string.find(LC_CL.DreamStageCard().sub, "First through", 1, true), "the finish card is wrong")
+    hook.t.HUDPaint.LivingCityDreamStage()
+    _me:SetNW2Bool("lc_dreaming", false)
+    hook.t.HUDPaint.LivingCityDreamStage()
+    assert(LC_CL.DreamStageCard() == nil, "awake, the card lingers")
+    -- The Midnight Rally: the view from behind your buggy
+    assert(hook.t.CalcView.LivingCityDreamRally(_me, Vector(0, 0, 0), Angle(0, 0, 0), 90) == nil, "a chase view for someone not driving")
+    _me:SetNW2Bool("lc_kart", true)
+    local view = hook.t.CalcView.LivingCityDreamRally(_me, Vector(0, 0, 0), Angle(0, 90, 0), 90)
+    assert(view and view.drawviewer == false and view.origin.z > 50 and view.angles.y == 90, "the chase view is wrong")
+    assert(hook.t.PreDrawViewModel.LivingCityDreamRally(nil, _me) == true, "hands drawn in front of the buggy")
+    _me:SetNW2Bool("lc_kart", false)
     -- when the next dream is (the Administrator's tablet and F2 page)
     local W = LC_CL.DreamWhenLine
     assert(W(nil) == nil and W({ ready = false }) == nil, "a when line with no dreams possible")
