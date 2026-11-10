@@ -1499,3 +1499,14 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **Ask the Colonel "What's happening to you?":** not offered while he looks solid. After the first job it is there once and he brushes it off; it comes back once after each further quarter (a job, or ten visits five minutes apart after all three jobs). Fully ghostly, he tells the truth, and from then on his greeting says it too.
   Notes:
+
+## 10 November: the dreams stand-ins act
+
+- [ ] **In the maze (few players asleep, so stand-ins appear):** do they keep near you, and bolt when a giant officer comes close? Lose a life near one: does it flinch, and does one say your name in chat?
+  Notes:
+- [ ] **How the poses look:** cowering (hands over head), cheering, waving, glancing over a shoulder. Say which look wrong (an arm bent the wrong way, a head turned oddly) and for which model (man or woman).
+  Notes:
+- [ ] **A propaganda dream:** do the stand-ins kneel facing her with arms held out or hands together?
+  Notes:
+- [ ] **An ending as a dream (for example the bus):** the stand-ins turn to you and wave or cheer instead of standing like statues.
+  Notes:

@@ -131,3 +131,19 @@ Nothing about which dream comes, who dreams it or what it costs changed. What di
 - **The line at the top of the screen tells the truth.** It says "You can wake up now: F1 > Wake up from the dream (or /dream wake). Or stay and watch..." once they may, and until then that they can't wake themselves until they're out of it (before, a Happy or Neutral dream still showed the old "Wake up now: C > Settings" line from before 8 November, which was refused). Under it, smaller: "It ends in 3:20 at the latest." (the `lc_dream_max_minutes` safeguard; nothing shown with no limit).
 - **Refused, by name:** trying to wake too soon from a dream that isn't a nightmare is titled "A dream", not "A nightmare".
 - **The admins' Dreams window** (C > Help > Dreams) also shows the mood of the dream going on and of the one waiting, who is in it (Enforcers marked), how long before the safeguard ends it, a countdown that runs on without pressing Refresh, "Tonight's dream has been dreamt" once it has, and "Dream it now (the sleepers)" for an admin who isn't a superadmin (only a superadmin is taken along awake, as before).
+
+## The stand-ins act (10 November; the owner: "enhancements, making custom animations, improving the ai or scripting of the scene")
+
+The city's people who fill a dream up to `lc_dream_min` (`sv_livingcity_dreamstandins.lua`) used to jog at random near the start and flash red. Who they are, how many, when they lose a life and when they drop out are all as before, and they still never touch the game (no tokens, no blocking, no wins). What changed is how they behave and move, in every dream:
+
+- **They keep to the players.** Each has their own pace, nerve and liking for company: most of the time one heads for a spot a few steps from one of the players still in it (on the same level, never far), otherwise about near the start.
+- **They run from what hunts you.** When one of the dream's hunters (the giant officers, the dead) comes close, they bolt away from it at a panicked run, with a look back over the shoulder; the brave let it come nearer. Never more than a short way from where they began.
+- **Between runs they stand the way the dream calls for:** kneeling to the Administrator (or her figure) in a propaganda dream, arms held out or hands together, now and then cheering her; cowering or glancing over a shoulder in a nightmare; waving at a nearby player, cheering or swaying in a happy one; looking about in a neutral one.
+- **They see what happens to you.** A player near them loses a life: they flinch towards it and one says so by name ("They got Ada!"). A player is out: they cower. A player wins: all of them cheer ("Ada did it!").
+- **Their own bad moments:** losing a life they cower a moment before daring to get up; just before dropping out they stagger and may get a last word in.
+- **In an ending** (where they used to stand as statues) they turn slowly to whoever is nearest and, by the mood, wave, cheer, sway, glance about or cower. They stay on their spot: the ending has its own crowd and dance.
+- **What they say** is half the time about the dream they're in (the maze, the tower, the crumbling floor, Freeze Citizen, the cheese), and they turn smoothly instead of snapping round.
+- **Custom animation** (`cl_livingcity_dreamacting.lua`): what each is doing is sent to the dreamers' screens (NW2 `lc_dream_act` on the figure), where arms, head and back are moved every frame on top of the model's sequence: hands over the head and trembling, arms thrown up in a flinch, fists pumping, a waving forearm, a glance over each shoulder, arms held out to her, hands together and rocking. Where the model has its own sequence for the act only the small things are added. Every move eases into the next.
+
+No new settings or commands. The poses use the bone directions the endings' dances found in play, but nobody has looked at these in game yet: say which look wrong and they get tuned.
+

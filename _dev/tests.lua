@@ -16280,6 +16280,49 @@ _run(0.3)
 ok(s1.lives == math.max(1, (g.def.lives or 1) - 1) or s1.lives == 1, "a stand-in loses a life (a red flash, back to the start)")
 _run(0.5)
 ok(s1.out and not IsValid(s1.ent), "and drops out of it (a puff, gone)")
+-- how they act (the owner, 10 November): they bolt from what hunts the dreamers, and see what happens to the players
+do
+    local s2, s3 = g.standins[2], g.standins[3]
+    for _, sb in ipairs(g.standins) do sb.hits, sb.outAt = {}, nil end -- (nothing else happens to them meanwhile)
+    LC.DreamStandinDo(s2, "kneel", CurTime())
+    ok(s2.act == "kneel" and s2.ent:GetNW2String("lc_dream_act", "") == "kneel" and s2.ent:GetNW2Bool("lc_dream_standin", false),
+        "what a stand-in is doing is told to the dreamers' screens (for the arms, head and back)")
+    local threat = g.cops[1].e
+    ok(#LC.DreamStandinThreats(g) >= 2, "the giant officers are what the stand-ins fear", #LC.DreamStandinThreats(g))
+    s2.pause, s2.busy, s2.flee, s2.target, s2.brave = nil, nil, nil, nil, 0.5
+    s2.pos = Vector(s2.home.x, s2.home.y, s2.home.z)
+    local was = threat:GetPos()
+    threat:SetPos(s2.pos + Vector(120, 0, 0))
+    local d0 = 120
+    LC.DreamStandinsTick(CurTime())
+    _advance(0.2)
+    LC.DreamStandinsTick(CurTime())
+    local d1 = math.sqrt((s2.pos.x - threat:GetPos().x) ^ 2 + (s2.pos.y - threat:GetPos().y) ^ 2)
+    ok(s2.act == "panic" and s2.flee and d1 > d0, "an officer close by: they bolt, away from him", tostring(s2.act) .. " " .. d1)
+    threat:SetPos(was)
+    -- a player near them loses a life: they flinch, facing it, and one says so by name
+    s3.pause, s3.busy, s3.flee, s3.target = nil, nil, nil, nil
+    s3.pos = a:GetPos() + Vector(100, 0, 0)
+    LC.DreamStandinsTick(CurTime())
+    g.standinSaidAt = nil
+    local chat0 = #(a.chat or {})
+    g.pl[a].lives = g.pl[a].lives - 1
+    LC.DreamStandinsTick(CurTime())
+    local named = false
+    for i = chat0 + 1, #(a.chat or {}) do if string.find(a.chat[i], a:Nick(), 1, true) and string.find(a.chat[i], "(in the dream)", 1, true) then named = true end end
+    ok(s3.act == "flinch" and s3.faceAt ~= nil and named, "a player near them loses a life: they flinch towards it, and one of them says so by name", tostring(s3.act))
+    g.pl[a].lives = g.pl[a].lives + 1
+    LC.DreamStandinsTick(CurTime())
+    -- a player wins: all of them cheer
+    local how0 = g.pl[b].how
+    g.pl[b].how = "won"
+    LC.DreamStandinsTick(CurTime())
+    local cheering = 0
+    for _, sb in ipairs(g.standins) do if not sb.out and sb.act == "cheer" then cheering = cheering + 1 end end
+    ok(cheering == 3, "a player wins: every stand-in still in it cheers", cheering)
+    g.pl[b].how = how0
+    LC.DreamStandinsTick(CurTime())
+end
 -- bad dreamers: marked, and the baton
 _run(4) -- (past the start's safety)
 ok(not LC.DreamBad(a), "(nobody glows to start with)")

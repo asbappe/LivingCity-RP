@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 4605024. Admin-only console messages and log lines are left out.
+Made from version 4ab8eab. Admin-only console messages and log lines are left out.
 
-10566 lines, from 292 files.
+10608 lines, from 292 files.
 
 ## Contents
 
@@ -170,7 +170,7 @@ Made from version 4605024. Admin-only console messages and log lines are left ou
 - [which dream tonight (the rules, and the city's own pick)](#which-dream-tonight-the-rules-and-the-citys-own-pick-svlivingcitydreamruleslua) (13)
 - [shared dreams](#shared-dreams-svlivingcitydreamslua) (70)
 - [sitting out a kind of dream, earned (the owner, 10 November)](#sitting-out-a-kind-of-dream-earned-the-owner-10-november-svlivingcitydreamskiplua) (6)
-- [stand-ins, so no dream is ever thin](#stand-ins-so-no-dream-is-ever-thin-svlivingcitydreamstandinslua) (25)
+- [stand-ins, so no dream is ever thin](#stand-ins-so-no-dream-is-ever-thin-svlivingcitydreamstandinslua) (67)
 - [testing a dream from the editor](#testing-a-dream-from-the-editor-svlivingcitydreamtestlua) (17)
 - [the Combine's dropship](#the-combines-dropship-svlivingcitydropshiplua) (7)
 - [economy and social credit](#economy-and-social-credit-svlivingcityeconomylua) (32)
@@ -898,7 +898,7 @@ Made from version 4605024. Admin-only console messages and log lines are left ou
 - "You're warned about six and two minutes before you're exhausted; from the first warning a bed lets you sleep. Citizens get tired in the evening and at night."  (text, line 85)
 - "Shared dreams: if the server has a dream point, the secret endings come at night as a dream for everyone asleep in a bed, about a minute after the Administrator says good night. You wake in your bed with everything you had, exactly as it was. Nobody can opt out, and nobody wakes themselves until they're out of the dream (then F1 > Wake up from the dream, or /dream wake; the line at the top of the screen says when you can, and how long the dream can still last). A nightmare takes everyone asleep outside a Combine-only zone. Only a stimulant shot before bed (or, about one night in three, the lab's foil hat) keeps you out of one."  (text, line 86)
 - "Lights out: everyone (citizens, the Resistance, Civil Protection, the Administration) is due in bed at the good night (21:00), whatever they slept in the day. You're warned six and two minutes before; after it, out of bed, your eyes keep closing until you sleep. Stay in bed until the night's dream has gone by."  (text, line 87)
-- "Every dream has at least six dreamers: when fewer players are asleep, the city's own people dream it with you. A stimulant shot keeps you up past lights out and you miss the dream, but only one: no second shot until you've slept and dreamt properly. No dream lasts more than five minutes."  (text, line 88)
+- "Every dream has at least six dreamers: when fewer players are asleep, the city's own people dream it with you: they keep close to you, run from whatever hunts you, flinch when you lose a life, cheer when you win, and kneel to her in a propaganda dream. A stimulant shot keeps you up past lights out and you miss the dream, but only one: no second shot until you've slept and dreamt properly. No dream lasts more than five minutes."  (text, line 88)
 - "Asleep, hunger and thirst wait for you. An enemy's hit wakes you (dreaming, your body stays in your bed: an enemy's hit pulls you out); a friend's does nothing at all. Anyone in a rebel camp attacked by a unit (or arrested) wakes everyone asleep there. Woken by an attack, adrenaline keeps you going for ten minutes; then you're groggy for a minute (blurry, no stamina) and need rest."  (text, line 89)
 - "Civil Protection and the Administration are Enforcers in nightmares and propaganda dreams: nothing touches them, they can wake when they like, and their baton punishes dreamers who misbehave (they glow red; a life gone, 1 XP for the Enforcer). In Happy and Neutral dreams they dream like anyone."  (text, line 90)
 - "Civil Protection: most nights your board (F4) has a Night shift from dusk. Take it and there's no lights out for you that night, and a CP Commissary issues you a stimulant shot (once a night)."  (text, line 91)
@@ -7718,46 +7718,97 @@ Made from version 4605024. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): What they say now and then, by the dream's mood.
 
-- "Keep moving! Don't let it catch you!"  (text, line 49)
-- "This isn't real. This isn't real."  (text, line 49)
-- "I can't feel my legs..."  (text, line 49)
-- "Which way? Which way?!"  (text, line 49)
-- "I want to wake up!"  (text, line 50)
-- "Stay together!"  (text, line 50)
-- "Don't look back."  (text, line 50)
-- "Why is it always us?"  (text, line 50)
-- "Isn't she wonderful?"  (text, line 51)
-- "I've never been so happy."  (text, line 51)
-- "Glory to the Administrator!"  (text, line 51)
-- "What a lovely dream."  (text, line 51)
-- "I could stay here forever."  (text, line 51)
-- "Thank you! Thank you!"  (text, line 52)
-- "Look at her!"  (text, line 52)
-- "Where are we?"  (text, line 53)
-- "This is strange."  (text, line 53)
-- "Is anyone else seeing this?"  (text, line 53)
-- "I don't remember falling asleep."  (text, line 53)
-- "Stay close."  (text, line 53)
+- "Keep moving! Don't let it catch you!"  (text, line 59)
+- "This isn't real. This isn't real."  (text, line 59)
+- "I can't feel my legs..."  (text, line 59)
+- "Which way? Which way?!"  (text, line 59)
+- "I want to wake up!"  (text, line 60)
+- "Stay together!"  (text, line 60)
+- "Don't look back."  (text, line 60)
+- "Why is it always us?"  (text, line 60)
+- "Isn't she wonderful?"  (text, line 61)
+- "I've never been so happy."  (text, line 61)
+- "Glory to the Administrator!"  (text, line 61)
+- "What a lovely dream."  (text, line 61)
+- "I could stay here forever."  (text, line 61)
+- "Thank you! Thank you!"  (text, line 62)
+- "Look at her!"  (text, line 62)
+- "Where are we?"  (text, line 63)
+- "This is strange."  (text, line 63)
+- "Is anyone else seeing this?"  (text, line 63)
+- "I don't remember falling asleep."  (text, line 63)
+- "Stay close."  (text, line 63)
 
 > Note for you (not shown in game): part of: people
 
-- "Citizen {random}"  (text, line 68)
+- "Citizen {random}"  (text, line 78)
 
-> Note for you (not shown in game): part of: dream standins game
+> Note for you (not shown in game): What they say when something happens (%s: the player's name).
 
-- "(in the dream) Also dreaming: {standins}."  (text, line 156)
+- "%s! Get up, get up!"  (text, line 180)
+- "No! Not %s!"  (text, line 180)
+- "They got %s!"  (text, line 180)
+- "%s, behind you!"  (text, line 180)
+- "%s is gone. They're gone."  (text, line 181)
+- "We've lost %s."  (text, line 181)
+- "Don't end up like %s."  (text, line 181)
+- "%s did it! %s did it!"  (text, line 182)
+- "Look at %s go!"  (text, line 182)
+- "Well done, %s!"  (text, line 182)
+- "I knew %s would make it."  (text, line 182)
+- "It's coming this way!"  (text, line 183)
+- "Not me, not me, not me!"  (text, line 183)
+- "Get away from it!"  (text, line 183)
+- "On your knees, quickly."  (text, line 184)
+- "She's looking this way. Kneel!"  (text, line 184)
+- "Isn't she magnificent?"  (text, line 184)
+- "Lower. Lower your eyes."  (text, line 184)
+- "I can't... I can't keep going..."  (text, line 185)
+- "Tell them I tried."  (text, line 185)
+- "It's got me."  (text, line 185)
+- "I'm waking up, I can feel it."  (text, line 185)
 
-> Note for you (not shown in game): out of it
+> Note for you (not shown in game): A few words for the dream they're in (said among the mood's own lines).
 
-- "(in the dream) {name} is out of it."  (text, line 181)
+- "Which turn was it? They all look the same!"  (text, line 189)
+- "I can hear his boots on the other side of the wall."  (text, line 189)
+- "Take the tokens, I'll draw him off!"  (text, line 189)
+- "He's so big. Why is he so big?"  (text, line 189)
+- "Don't touch the barrels!"  (text, line 190)
+- "Keep climbing, don't look down."  (text, line 190)
+- "He's throwing another one!"  (text, line 190)
+- "How high does this thing go?"  (text, line 190)
+- "The floor! Keep moving!"  (text, line 191)
+- "Don't stand still, it's going!"  (text, line 191)
+- "There's nothing under us. Nothing!"  (text, line 191)
+- "This way, it still holds here!"  (text, line 191)
+- "Don't move. Don't even breathe."  (text, line 192)
+- "He's turning round. Stop!"  (text, line 192)
+- "Now! Go, go, go!"  (text, line 192)
+- "He saw someone. He always sees someone."  (text, line 192)
+- "Sometimes I dream about cheese."  (text, line 193)
+- "It's all so... yellow."  (text, line 193)
+- "Mind the wheel!"  (text, line 193)
+
+> Note for you (not shown in game): part of: say
+
+- "(in the dream) {name}: {end}"  (text, line 202)
+
+> Note for you (not shown in game): (each their own: how fast, how brave, how much they keep to the players)
+
+- "(in the dream) Also dreaming: {standins}."  (text, line 247)
+
+> Note for you (not shown in game): part of: step
+
+- "(in the dream) {name} is out of it."  (text, line 349)
 
 > Note for you (not shown in game): part of: talk
 
-- "(in the dream) {name}: {lines}"  (text, line 215)
+- "(in the dream) {name}: {lines}"  (text, line 449)
 
 > Note for you (not shown in game): part of: dream standins ending
 
-- "(in the dream) Also dreaming: {standins}."  (text, line 236)
+- "(in the dream) Also dreaming: {standins}."  (text, line 474)
 
 ## testing a dream from the editor (sv_livingcity_dreamtest.lua)
 
