@@ -29,11 +29,12 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 2026-11-10 (latest): **citizens show the way** (owner asked; spec `docs/features/city-people.md`, Chat bullet). `sv_livingcity_advice.lua`: `LC.CitizenAdvice` (called from Chat in sv_livingcity_talk.lua) maps `LC.NextStep` keys (`LC.AdviceForStep`) to a line (`LC.AdviceLines`, no place names) and the step's `way` (`LC.WaypointPlaces`). A stranger points (`LC.GuideTo`: marker + trail); a warm citizen leads (`LC.GoTo`, `LC.AdviceLeads`, `LC.AdviceLeadTick`: waits past 450, gives up past 1600 or 150 s, falls back to the trail). Once a minute per player.
-- Settings `lc_citizen_advice`, `lc_citizen_lead`, `lc_citizen_lead_range` (snapshot updated, owner-asked). Recordings `sound/livingcity/citizens/<id>_male|female<n>` (`LC.AdviceClip`), in `lc_voice_missing` and `VOICE_LINES.md` section 5.
-- Tests: TalkTests "Citizens who show you the way", AnnouncerTests (citizens row). Not run: full suite.
-- The audit's other ideas (info desk, old-timer, posters, talking machines, body signs, pamphlet, veteran XP, shorter PA lines, cards only when stuck): the owner likes them all; listed in `TODO.md`, each to be described to the owner before building.
-- **`VOICE_LINES.md`**: made by `_dev/voice_lines.py`; rerun after adding any line.
-- Unchecked in game: PLAYTEST.md "10 November" sections, including "citizens show the way".
+- 2026-11-10 (latest): **learning the city by living in it** (owner asked for all the audit's ideas; specs: `talking-and-tips.md` "Learning the city before the cards", `city-people.md` (clerk, old-timer), `civil-intake.md` (pamphlet), `city-events.md` (PA), `editor-placing.md`).
+- `sv_livingcity_learning.lua`: `LC.HintDeferSecs` (hints Due/Hint hold place/item/needs tips `lc_hints_wait`), `LC.HintLearned`/`LC.Learn`, `LC.PAExplainDue` (events.lua), `LC.MentorCredit`, `LC.CivPosterNotice/Read` (entity `lc_civposter`). `sv_livingcity_dialog.lua` + `cl_livingcity_dialog.lua`: generic Q&A window (`LC.OpenDialog`, `LC.DialogHandlers`, `LC.DialogDo`).
+- `sv_livingcity_infodesk.lua` (entity `lc_infoclerk`, fixture `infodesk`), `sv_livingcity_oldtimer.lua` (roster flag `oldtimer`, `LC.OldTimerTick`, dealer waypoint), `sv_livingcity_pamphlet.lua` (item `pamphlet`), `sv_livingcity_machines.lua` (`LC.MachineSpeak` from the dispenser and vending), `cl_livingcity_bodysigns.lua` (client `lc_body_signs`).
+- Earlier today: citizens show the way (`sv_livingcity_advice.lua`).
+- Tests turn `lc_hints_wait`, `lc_pa_explain`, `lc_machine_voice` off in the prelude for older tests; the new ones are TalkTests "Learning the city by living in it". Full parallel run: 4913 passed, 2 failed, both fixed and rechecked. Core snapshot updated (owner-asked).
+- `VOICE_LINES.md` sections 5 to 8 (citizens, clerk, old-timer, machines); `lc_voice_missing` lists them.
+- Still open (TODO.md): a weary Resistance fighter at camp in the old-timer's style.
+- Unchecked in game: PLAYTEST.md "10 November" sections.
 - Tests need `pip install lupa` in a fresh container.
-- Next: the owner's recordings; the next idea from the audit.

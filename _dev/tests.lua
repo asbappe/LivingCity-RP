@@ -2250,6 +2250,8 @@ include, DeriveGamemode = function() end, function() end
 assert(loadstring(_GMSRC_SHARED, "gamemode/shared.lua"))()
 assert(loadstring(_GMSRC_INIT, "gamemode/init.lua"))()
 include, DeriveGamemode = oldInclude, oldDerive
+-- (the older tests expect tip cards straight away, the PA explaining every time and the dispenser's chat lines: "Learning the city by living in it" turns these on)
+_setcvar("lc_hints_wait", 0) _setcvar("lc_pa_explain", 0) _setcvar("lc_machine_voice", 0)
 GAMEMODE = GMt
 local resident = newPlayer("Resident", "citizen")
 local boss = newPlayer("Boss", "citizen")
@@ -7440,6 +7442,118 @@ LC.NextStep, LC.WaypointPlaces.lc_test_way = realNext, nil
 for _, e in ipairs({ a1, a2 }) do if IsValid(e) then e:Remove() end end
 asker:SetPos(Vector(-30000, 30000, 0))
 
+section("Learning the city by living in it")
+local LB = T0 + Vector(0, 900, 0)
+local function lp(name) local p = newPlayer(name, "citizen") p:SetPos(LB) return p end
+-- tip cards wait until you seem stuck
+_setcvar("lc_hints_wait", 240)
+local learner = lp("Learner")
+ok(LC.HintDeferSecs(learner, "bin", {}) == 240 and LC.HintDeferSecs(learner, "item_lockpick", {}) == 240 and LC.HintDeferSecs(learner, "curfew_warning", {}) == nil,
+    "places, pockets and how you're doing can wait; what happens to you never does")
+ok(not LC.Hint(learner, "bin"), "the first bin: no card, the clock starts")
+_advance(30)
+ok(not LC.Hint(learner, "bin"), "half a minute later, still working it out: no card")
+_advance(220)
+ok(LC.Hint(learner, "bin"), "four minutes on and still not learned: now the card comes")
+local doer = lp("Doer")
+LC.Hint(doer, "bin")
+hook.Run("LivingCityScavenged", doer, "scrap")
+_advance(300)
+ok(not LC.Hint(doer, "bin"), "searching a bin is learning it: no card at all")
+_setcvar("lc_hints_wait", 0)
+local quick = lp("Quick")
+ok(LC.Hint(quick, "bin"), "lc_hints_wait 0: cards straight away, as before")
+-- the PA explains itself the first few times
+_setcvar("lc_pa_explain", 3)
+local hearer = lp("Hearer")
+ok(LC.PAExplainDue(hearer, "curfew") and LC.PAExplainDue(hearer, "curfew") and LC.PAExplainDue(hearer, "curfew") and not LC.PAExplainDue(hearer, "curfew"),
+    "the plain-words explanation three times, then just what it said")
+ok(LC.PAExplainDue(hearer, "rations"), "counted for each kind of announcement")
+_setcvar("lc_pa_explain", 0)
+ok(LC.PAExplainDue(hearer, "curfew"), "lc_pa_explain 0: always")
+-- old hands who help newcomers
+local newbie, vet, stranger = lp("Newbie"), lp("Vet"), lp("Stranger")
+vet:SetPos(LB + Vector(100, 0, 0)) stranger:SetPos(LB + Vector(0, 100, 0))
+hook.Run("LivingCityRegistered", newbie, "test")
+LC.Introduce(vet, newbie)
+local xpTo, realXP = {}, LC.AddXP
+LC.AddXP = function(p, n, why) xpTo[p] = (xpTo[p] or 0) + n end
+hook.Run("LivingCityRationCollected", newbie)
+hook.Run("LivingCityRationCollected", newbie)
+LC.AddXP = realXP
+ok(xpTo[vet] == 25 and not xpTo[stranger], "a newcomer's first ration with someone they know by name nearby: XP for them, once", tostring(xpTo[vet]))
+ok(LC.HasItem(newbie, "pamphlet"), "a new arrival is handed the orientation pamphlet")
+-- the pamphlet
+ok(LC.ItemUse(newbie, "pamphlet") and newbie.lcDialog and newbie.lcDialog.key == "pamphlet", "read it from your pockets")
+ok(LC.DialogDo(newbie, "curfew") == "curfew" and not LC.HintDue(newbie, "curfew_warning"), "a page read is learned: no card for it")
+-- Citizen Information
+local clerk = ents.Create("lc_infoclerk")
+clerk:SetPos(LB + Vector(60, 60, 0)) clerk:Spawn()
+local asker2 = lp("InfoAsker")
+ok(LC.OpenInfoDesk(asker2, clerk) and asker2.lcDialog.key == "infodesk", "E on the clerk: the topics")
+ok(LC.DialogDo(asker2, "rations") == "rations" and not LC.HintDue(asker2, "dispenser"), "an answer, and the tip for it is learned")
+local realShop, shopPos = LC.WaypointPlaces.shop, LB + Vector(800, 0, 0)
+LC.WaypointPlaces.shop = function() return shopPos, "Commissary" end
+asker2.lcGuide = nil
+ok(LC.DialogDo(asker2, "where") == "where" and LC.DialogDo(asker2, "go_shop") == "route" and asker2.lcWaypoint and asker2.lcWaypoint.pos == shopPos, "where is the Commissary? the route is marked")
+LC.WaypointPlaces.shop = function() return nil end
+LC.DialogDo(asker2, "where")
+ok(LC.DialogDo(asker2, "go_shop") == "noplace", "not on this map: they say so")
+LC.WaypointPlaces.shop = realShop
+LC.SetWanted(asker2, 60, "test")
+LC.OpenInfoDesk(asker2, clerk)
+ok(LC.DialogDo(asker2, "rations") == nil, "wanted: no answers")
+LC.ClearWanted(asker2)
+asker2:SetPos(LB + Vector(3000, 0, 0))
+ok(LC.DialogDo(asker2, "rations") == nil, "walk away and the window's no use")
+-- the old-timer
+local old, olds = person(Vector(0, 960, 0))
+olds.gender = "male"
+ok(LC.MakeOldTimer(old) and olds.oldtimer and old.lcProfile.oldtimer, "one of the citizens is the old-timer, kept with the roster")
+ok(LC.OldTimer() == old, "(and found again)")
+local visitor = lp("Visitor")
+net.sent = {}
+hook.Run("LivingCityPlayerUsedNPC", visitor, old, olds)
+_run(0.2)
+ok(_lastnet("lc_dialog") ~= nil and _lastnet("lc_talk") == nil and visitor.lcDialog.key == "oldtimer", "E on him: his own window, not the usual one")
+ok(LC.Feeling(old, visitor) == 1, "a visit warms him to you a little")
+ok(LC.DialogDo(visitor, "headdown") == "headdown", "a stranger gets the simple advice")
+ok(LC.DialogDo(visitor, "bins") == "notyet", "the bins: not until he knows you")
+LC.GiveItem(visitor, "ration", 1)
+ok(LC.DialogDo(visitor, "food") == "food" and LC.Feeling(old, visitor) == 3, "share food and he warms to you")
+local realBin, binPos = LC.WaypointPlaces.bin, LB + Vector(0, 700, 0)
+LC.WaypointPlaces.bin = function() return binPos, "Bin" end
+visitor.lcGuide = nil
+ok(LC.DialogDo(visitor, "bins") == "bins" and visitor.lcWaypoint and visitor.lcWaypoint.pos == binPos and not LC.HintDue(visitor, "bin"),
+    "friendly: the bins, the way marked, and learned")
+LC.WaypointPlaces.bin = realBin
+ok(LC.DialogDo(visitor, "dealer") == "notyet", "the dealer only once he's glad to see you")
+_setcvar("lc_oldtimer", 0)
+net.sent = {}
+hook.Run("LivingCityPlayerUsedNPC", visitor, old, olds)
+_run(0.2)
+ok(_lastnet("lc_talk") ~= nil, "lc_oldtimer 0: he's just another citizen")
+_setcvar("lc_oldtimer", 1)
+-- machines answer in their own voice
+_setcvar("lc_machine_voice", 1)
+local buyer = lp("Buyer")
+buyer.chat = {}
+local spoke, mid = LC.MachineSpeak(nil, buyer, "[Rations] No ration card. You earn one for each Union shift you finish.")
+ok(spoke and mid == "dispenser_nocard" and string.find(table.concat(buyer.chat, "|"), "(Ration dispenser) No ration card", 1, true), "the dispenser says it, and the full reason stays in chat", table.concat(buyer.chat, "|"))
+ok(not LC.MachineSpeak(nil, buyer, "[Rations] Something else entirely."), "anything not one of its lines goes the old way")
+_setcvar("lc_machine_voice", 0)
+ok(not LC.MachineSpeak(nil, buyer, "[Rations] No ration card."), "lc_machine_voice 0: as before")
+-- civil notice posters
+local dsp = ents.Create("lc_dispenser")
+dsp:SetPos(LB + Vector(-400, 0, 0)) dsp:Spawn()
+ok(LC.CivPosterNotice(LB + Vector(-300, 0, 0)) == "dispenser", "a poster by the ration dispenser says that labor earns rations")
+local reader = lp("Reader")
+LC.CivPosterRead(reader, "dispenser")
+ok(not LC.HintDue(reader, "dispenser"), "reading it closely is learning it")
+ok(LC.CivPosterNotice(LB + Vector(5000, 5000, 0)) == "curfew", "with nothing official nearby: curfew")
+for _, e in ipairs({ clerk, old, dsp }) do if IsValid(e) then e:Remove() end end
+for _, p in ipairs({ learner, doer, quick, hearer, newbie, vet, stranger, asker2, visitor, buyer, reader }) do p:SetPos(Vector(-30000, 30000, 0)) end
+
 section("Resistance lookouts")
 local boss = newPlayer("LookoutBoss", "resistance", nil, 150)
 boss:SetPos(T0 + Vector(0, -400, 0))
@@ -9489,6 +9603,8 @@ ok(vmRows.overwatch and not string.find(vmRows.overwatch, "|lockdown|", 1, true)
 ok(vmRows.administrator and not string.find(vmRows.administrator, "|dawn|", 1, true), "and hers (a recording in any tone counts)", vmRows.administrator)
 ok(vmRows.radio and vmRows["G-Man"] and vmRows["Dream lines"], "and the radio's, the G-Man's and the dreams' lines")
 ok(vmRows.Citizens and string.find(vmRows.Citizens, "|advice_bins_male|", 1, true) and string.find(vmRows.Citizens, "|lead_start_female|", 1, true), "and the citizens' lines, a man's take and a woman's", vmRows.Citizens)
+ok(vmRows["Citizen Information clerk"] and string.find(vmRows["Citizen Information clerk"], "|rations|", 1, true) and vmRows["The old-timer"] and string.find(vmRows["Machines"] or "", "|dispenser_nocard|", 1, true),
+    "and the clerk's, the old-timer's and the machines'", tostring(vmRows.Machines))
 local vmOut = {}
 print = function(m) vmOut[#vmOut + 1] = tostring(m) end
 local vmOk = pcall(concommand.list["lc_voice_missing"], nil)

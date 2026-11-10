@@ -1007,7 +1007,7 @@ LC.Fixtures = LC.Fixtures or {}
 -- ration dispenser is wall-mounted at about chest height; everything else
 -- stands on the floor. (Models have their origin in different places, so the
 -- model's own bounds are used to put its bottom exactly here.)
-local FIXTURE_LIFT = { conveyor = 34, dispenser = 34, screen = 60, lawboard = 30, screen_big = 140, loudspeaker = 180, powerbank = 40 }
+local FIXTURE_LIFT = { conveyor = 34, dispenser = 34, screen = 60, lawboard = 30, civposter = 50, screen_big = 140, loudspeaker = 180, powerbank = 40 }
 
 function LC.SeatFixture(e, ground, kind)
     local mins = e:OBBMins()
@@ -1021,7 +1021,7 @@ local function FrontSlot(ent, up, out)
 end
 local FIXTURE_CLASS = {
     vending = "lc_vending", dispenser = "lc_dispenser", terminal = "lc_terminal", stove = "lc_stove", fire = "lc_fire",
-    dealer = "lc_dealer", locker = "lc_locker", screen = "lc_screen", lawboard = "lc_lawboard", console = "lc_console",
+    dealer = "lc_dealer", locker = "lc_locker", screen = "lc_screen", lawboard = "lc_lawboard", infodesk = "lc_infoclerk", civposter = "lc_civposter", console = "lc_console",
     workbench = "lc_workbench", recycler = "lc_recycler", dataterm = "lc_dataterminal", masterterm = "lc_masterterminal", incinerator = "lc_incinerator",
     hazbarrel = "lc_hazbarrel", -- (sv_livingcity_cleanup.lua)
     transformer = "lc_transformer", forcefield = "lc_forcefield",
@@ -1107,7 +1107,7 @@ function LC.UseVending(ply, ent)
     if econ and econ:GetBool() and price > 0 then
         if LC.Credits(ply) < price then
             ent:EmitSound("buttons/button10.wav", 65)
-            ply:ChatPrint("[Vending] Insert " .. price .. " credits.")
+            if not (LC.MachineSpeak and LC.MachineSpeak(ent, ply, "[Vending] Insert " .. price .. " credits.", false)) then ply:ChatPrint("[Vending] Insert " .. price .. " credits.") end
             return false
         end
         LC.AddCredits(ply, -price)
@@ -1154,7 +1154,7 @@ function LC.UseStaticVending(ply, fx)
     if econ and econ:GetBool() and price > 0 then
         if LC.Credits(ply) < price then
             ply:EmitSound("buttons/button10.wav", 65)
-            ply:ChatPrint("[Vending] Insert " .. price .. " credits.")
+            if not (LC.MachineSpeak and LC.MachineSpeak(nil, ply, "[Vending] Insert " .. price .. " credits.", false)) then ply:ChatPrint("[Vending] Insert " .. price .. " credits.") end
             return false
         end
         LC.AddCredits(ply, -price)
@@ -1372,8 +1372,11 @@ function LC.UseDispenser(ply, ent)
         return true
     end
     if refused then
-        beeper:EmitSound("buttons/combine_button_locked.wav", 65)
-        ply:ChatPrint(refused)
+        -- the dispenser says it (sv_livingcity_machines.lua), or the old way
+        if not (LC.MachineSpeak and LC.MachineSpeak(beeper, ply, refused)) then
+            beeper:EmitSound("buttons/combine_button_locked.wav", 65)
+            ply:ChatPrint(refused)
+        end
         return false
     end
     local base = cvRation:GetFloat()
