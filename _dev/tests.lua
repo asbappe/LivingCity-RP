@@ -11039,6 +11039,13 @@ LC.AttachProfile(l, ls, loyalP)
 ls.state, ls.rebel = "idle", nil
 said = LC.GiveToCitizen(giver, l, "test_leaflet")
 ok(LC.HasItem(giver, "test_leaflet") and LC.Feeling(l, giver) == -3, "to someone loyal: pushed back, and they hold it against you", said)
+-- the Resistance pamphlet (another chat's sv_livingcity_rebelpamphlet.lua): handed over its own way
+ok(LC.GiveKind("rebel_pamphlet") == "papers", "the Resistance pamphlet is in the Give menu, under Papers")
+LC.GiveItem(giver, "rebel_pamphlet", 1)
+cs.rebel = true
+c.lcPamphletAt = nil
+LC.GiveToCitizen(giver, c, "rebel_pamphlet")
+ok(not LC.HasItem(giver, "rebel_pamphlet"), "a sympathizer takes it (as LC.GiveRebelPamphlet decides)")
 said = LC.GiveToCitizen(giver, l, "pamphlet")
 ok(not LC.HasItem(giver, "pamphlet"), "the Civil Orientation pamphlet: anyone takes it", said)
 -- the window: the list goes with it, and a pick from it gives

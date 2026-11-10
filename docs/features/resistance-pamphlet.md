@@ -4,9 +4,10 @@ Asked for by the owner on 10 November: a pamphlet "resistance members can either
 
 ## The sheet
 
-One cheap sheet folded once, run off on a hand duplicator: purple ink that didn't take evenly, a typed masthead ("READ THIS. THEN PASS IT ON."), the lambda sprayed over it in orange, two hands passing a sheet cut into the foot of the cover, thumbprints, a cup ring. The cover half lists what's inside; the other half is the page, typed.
+One cheap sheet folded once, run off on a hand duplicator: purple ink that didn't take evenly, a typed masthead ("READ THIS. THEN PASS IT ON."), the lambda sprayed over it in orange, two hands passing a sheet cut into the foot of the cover, thumbprints, a cup ring. The cover half lists what's inside; the other half is the page, written by hand.
 
 - Paper: `materials/livingcity/pamphlet/rebel_paper.jpg`, made by `node _dev/posters/rebelpamphlet.js OUTDIR` (1024 x 690). Without the file the sheet is drawn plainly.
+- Handwriting (the owner, 10 November: "more like humble/simple/sloppy handwriting"): the pages and the list are written in `resource/fonts/lcrebelhand.ttf`. It is Kimberly Geswein's "Covered By Your Grace" (SIL Open Font License, the text is beside it), renamed inside to one word that matches its file name so Windows, Linux and Mac all find it. Players download it like the paper; a player who gets it for the first time may need to restart the game once before it shows (until then the game uses its plain font). The masthead on the paper itself stays typed.
 - Window: `OpenRebelPamphlet` in `cl_livingcity_dialog.lua` (dialog style `rebelpamphlet`).
 - Words: `LC.RebelPamphletPages` in `sv_livingcity_rebelpamphlet.lua`. Six pages: The water, The ration, Who is listening, If they stop you, If you want to help, Pass it on. "If you want to help" says how a citizen really earns the Resistance's trust (food for the supply crates, selling to the quartermaster, jobs).
 

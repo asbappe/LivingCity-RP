@@ -1461,5 +1461,18 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **Risk:** do either in front of a Civil Protection unit: you are wanted for it. Leave one on a patrol route: the unit takes it and the Civil Protection radio says where.
   Notes:
+- [ ] **The handwriting:** the pamphlet's pages and list are in a sloppy hand, not typed. If you see a plain font instead, restart the game once (the font was only just downloaded) and look again. Easy enough to read?
+  Notes:
+
+### Getting the Cremator information to send back
+
+  1. Add Workshop items 2090972521 and 3329322225 to the server's Workshop collection. Upload the gamemode, press "FastDL sync" in the host panel, change the map, and rejoin.
+  2. In game, as an admin, open the console (the key under Esc), look at open ground a few steps away, and type: `lc_cremator_spawn`
+  3. The chat shows one line: either "A Cremator, model ...; animations: idle '...', walk '...', fire '...'" or "No Cremator model was found on the server". Copy that line.
+  4. The console also shows lines starting `[cremator]`: every model found and every animation the model has. Copy those too (select them in the console, Ctrl+C).
+  5. Watch it for a minute and note: does it stand upright, do its legs move when it walks, does it face the way it walks, can you see a second figure inside it or a red beam, does a green flame come out when it burns a body?
+  6. Type `lc_debugreport` and copy the line starting "Cremators:" from the People section.
+  7. If it said no model was found: in your own Garry's Mod, with the two addons subscribed, hold Q, open the Addons list on the left of the spawn menu, click the Cremator addon, right-click the Cremator model and choose "Copy to clipboard". That is the model's path (it starts with `models/`). Send it, or set it yourself in the server console: `lc_cremator_model models/the/path.mdl` and then run step 2 again.
+  8. Paste all of it into the chat.
 - [ ] **Give menu as Civil Protection:** with a gun in your pockets, E on a citizen > Give something: no guns listed.
   Notes:

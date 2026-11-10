@@ -256,11 +256,12 @@ end
 ------------------------------------------------------------------------
 
 -- What kind of thing an item is, to a citizen being handed it (nil: not something you'd hand over).
--- A Resistance leaflet is any item with leaflet = "resistance" (made in another chat: TODO.md).
+-- The Resistance pamphlet (rebel_pamphlet, sv_livingcity_rebelpamphlet.lua) is papers, handed over its own way;
+-- so is any other item with leaflet = "resistance".
 function LC.GiveKind(id)
     local it = LCS and LCS.Items and LCS.Items[id]
     if not it or it.doc then return nil end
-    if it.leaflet or it.use == "pamphlet" then return "papers" end
+    if it.leaflet or it.use == "pamphlet" or it.use == "rebelpamphlet" then return "papers" end
     if it.vice == "smoke" or it.vice == "drink" then return "vice" end
     if it.use == "arm" or it.use == "throw" then return "arms" end
     if it.cures then return "medicine" end
@@ -305,6 +306,13 @@ local function Give(ply, npc, st, id)
     if LC.IssuedLocked and LC.IssuedLocked(ply, id, nil) then return "That's Combine issue: it stays with you (or another unit)." end
     if kind == "food" then return ShareFood(ply, npc, st, id) end
     local it = LCS.Items[id]
+    -- the Resistance pamphlet: handed over as its own module says (who takes it, who is won over, who informs)
+    if it.use == "rebelpamphlet" and LC.GiveRebelPamphlet then
+        local had = LC.Inventory(ply)[id] or 0
+        local ok, why = LC.GiveRebelPamphlet(ply, npc)
+        if ok and (LC.Inventory(ply)[id] or 0) < had then hook.Run("LivingCityGaveCitizen", ply, npc, id, kind) end
+        return why
+    end
     local name = string.lower(it.name or id)
     local function Taken(d, line)
         if not LC.TakeItem(ply, id) then return "You've nothing like that to give." end

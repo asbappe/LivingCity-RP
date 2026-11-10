@@ -698,4 +698,14 @@ concommand.Add("lc_cremator_spawn", function(ply)
     if not IsValid(ply) then Say("Cremator model: " .. model) return end
     local r = LC.SpawnCremator(ply:GetEyeTrace().HitPos, model)
     Say(r and ("A Cremator, model " .. model .. "; animations: " .. tostring(LC.CrematorSequencesUsed)) or "The Cremator couldn't be made.")
+    -- for sending back when it looks wrong: every model found, and every animation this one has (console only)
+    ply:PrintMessage(HUD_PRINTCONSOLE, "[cremator] models found: " .. table.concat(LC.CrematorModelsFound(), ", ") .. "\n")
+    if r and IsValid(r.vis) and r.vis.GetSequenceList then
+        local names = {}
+        for _, n in pairs(r.vis:GetSequenceList() or {}) do names[#names + 1] = tostring(n) end
+        table.sort(names)
+        for i = 1, #names, 12 do
+            ply:PrintMessage(HUD_PRINTCONSOLE, "[cremator] animations: " .. table.concat(names, ", ", i, math.min(i + 11, #names)) .. "\n")
+        end
+    end
 end)

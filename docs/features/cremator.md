@@ -32,7 +32,7 @@ The flame is green, as the Immolator's was, drawn on the client from the model's
 ## Settings and commands
 
 - `lc_cremators` (1), `lc_cremator_grace` (90), `lc_cremator_model` (empty: found by itself).
-- `lc_cremator_spawn` (admins, console): one where you are looking, and a line saying which model and animations were found. An extra for checking; the Cremators need no command.
+- `lc_cremator_spawn` (admins, console): one where you are looking, and a line saying which model and animations were found. An extra for checking; the Cremators need no command. In the console it also lists every Cremator model found and every animation the model has (lines starting `[cremator]`), for sending back when it looks wrong.
 
 ## Code
 
