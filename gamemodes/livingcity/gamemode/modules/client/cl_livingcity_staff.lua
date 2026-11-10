@@ -229,6 +229,7 @@ net.Receive("lc_staff", function()
         frame:Remove()
     end
     frame = vgui.Create("DFrame")
+    if LC_CL.SetTheme then LC_CL.SetTheme(frame, "staff") end -- (out of character: cl_livingcity_theme.lua)
     frame:SetTitle("Staff")
     frame:SetSize(math.min(ScrW() - 40, 980), math.min(ScrH() - 40, 640))
     if x then frame:SetPos(x, y) else frame:Center() end

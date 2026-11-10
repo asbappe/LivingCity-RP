@@ -1754,7 +1754,7 @@ local function MaintainPopulation()
 
     local targets = {
         citizen = LC.CitizenTarget(),
-        cop = cvCops:GetInt() + (LC.ExtraCops or 0) + (LC.ImbalanceCops or 0),
+        cop = math.max(0, cvCops:GetInt() + (LC.ExtraCops or 0) + (LC.ImbalanceCops or 0) + (LC.LedgerCops or 0)), -- (the Combine's strength: sv_livingcity_ledger.lua)
         soldier = cvSoldiers:GetInt(),
         scanner = cvScanners:GetInt(),
         -- grown infestation brings more of them (sv_livingcity_territory.lua)

@@ -989,6 +989,7 @@ net.Receive("lc_report", function()
     chat.AddText(Color(120, 200, 255), "[Living City] ", color_white, "Debug report copied to your clipboard. Paste it to Claude. Also saved to " .. tostring(t.file))
 
     local f = vgui.Create("DFrame")
+    if LC_CL.SetTheme then LC_CL.SetTheme(f, "staff") end
     f:SetTitle("Living City debug report")
     f:SetSize(math.min(ScrW() - 80, 900), math.min(ScrH() - 80, 640))
     f:Center()

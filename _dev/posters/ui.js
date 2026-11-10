@@ -33,10 +33,41 @@ const TEX = {
       `<path d="M120,172 L118,300 M360,344 L364,470" stroke="#000" stroke-width="7" opacity=".14"/>` +
       `<rect width="${S}" height="${S}" filter="url(#pit)" opacity=".8"/><rect width="${S}" height="${S}" filter="url(#n)" opacity=".5"/>`);
   },
+  // vortigaunts: green dark, veins of light
+  vort: () => {
+    let v = '';
+    const veins = ['M-10,420 C90,380 150,300 260,290 S430,200 530,120', 'M40,530 C120,470 220,470 300,400 S420,330 530,330', 'M-10,150 C80,170 140,110 230,120 S360,40 420,-10', 'M260,290 C270,360 330,400 340,530'];
+    for (const d of veins) v += `<path d="${d}" stroke="#78e88c" stroke-width="9" fill="none" opacity=".10" filter="url(#soft)"/><path d="${d}" stroke="#a8f5a0" stroke-width="1.6" fill="none" opacity=".28"/>`;
+    return wrap(noise('blot', '0.012 0.02', 4, 14, '0 0 0 0 0.16  0 0 0 0 0.5  0 0 0 0 0.26  0 0 0 3 -1.5') + noise('n', 0.9, 2, 7, '0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.0') + '<filter id="soft"><feGaussianBlur stdDeviation="7"/></filter>' +
+      `<radialGradient id="glow" cx="50%" cy="110%" r="80%"><stop offset="0" stop-color="#2f7a48" stop-opacity=".8"/><stop offset="100%" stop-color="#0a1610" stop-opacity="0"/></radialGradient>`,
+      `<rect width="${S}" height="${S}" fill="#0a1610"/><rect width="${S}" height="${S}" fill="url(#glow)"/><rect width="${S}" height="${S}" filter="url(#blot)" opacity=".35"/>${v}<rect width="${S}" height="${S}" filter="url(#n)" opacity=".45"/>`);
+  },
+};
+// the Resistance's lambda, sprayed by hand in yellow, on nothing (it goes over the rust in game)
+const LAMBDA = () => {
+  const d = 'M150,70 Q70,150 104,330 Q210,446 380,372 Q470,250 408,104 Q280,20 150,70 M196,128 L246,128 L352,392 M262,236 L186,392';
+  const st = 'fill="none" stroke="#e8c22c" stroke-linecap="round" stroke-linejoin="round"';
+  let drips = '';
+  for (const [x, y, l, w] of [[352, 392, 70, 9], [186, 392, 46, 8], [118, 340, 90, 7], [300, 404, 52, 6], [404, 330, 60, 6]]) drips += `<path d="M${x},${y} L${x},${y + l}" ${st} stroke-width="${w}"/>`;
+  let flecks = '';
+  for (let i = 0; i < 40; i++) flecks += `<circle cx="${60 + (i * 97) % 400}" cy="${40 + (i * 61) % 430}" r="${1.5 + (i % 4)}" fill="#e8c22c" opacity="${0.25 + (i % 5) * 0.1}"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${S}" height="${S}" viewBox="0 0 ${S} ${S}"><defs>
+<filter id="over" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="14"/></filter>
+<filter id="spray" x="-10%" y="-10%" width="120%" height="130%"><feTurbulence type="fractalNoise" baseFrequency="0.07" numOctaves="2" seed="5"/><feDisplacementMap in="SourceGraphic" scale="7" result="d"/><feGaussianBlur in="d" stdDeviation="1.1"/></filter>
+<filter id="worn" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="1" seed="3"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 12 -7.4"/><feComposite in="SourceGraphic" operator="out"/></filter></defs>
+<g filter="url(#worn)"><path d="${d}" ${st} stroke-width="70" opacity=".22" filter="url(#over)"/><g filter="url(#spray)"><path d="${d}" ${st} stroke-width="34"/>${drips}</g>${flecks}</g></svg>`;
 };
 
 // the preview: the same numbers the game paints with (cl_livingcity_theme.lua)
 const LOOKS = [
+  { n: 'rebel', lam: true, who: 'The Resistance (their own windows: a sprayed lambda)', tex: 'rust', head: '#4a2e1a', plate: '#3e291a', hot: '#58381e', line: '#e28a2c', dim: '#764824', text: '#f2e4ce', accent: '#e8912a', label: 'NO MASTERS  NO BENEFACTORS', title: 'The quartermaster', body: 'Paste-ups, three for twenty. He buys what you took from them.', btn: ['Paste-ups (3)', 'Sell intel', 'Leave'] },
+  { n: 'rebel', who: 'The black market dealer (plain rust, nobody\'s mark)', tex: 'rust', head: '#3c2c1e', plate: '#382a1e', hot: '#4e3824', line: '#bc8446', dim: '#68482a', text: '#eee2d0', accent: '#cc8c3c', label: 'NO QUESTIONS', title: 'Black market', body: 'Spray cans, a tuned radio, papers that pass at a glance. Credits only.', btn: ['Spray cans (3)', 'Forged papers', 'Leave'], dull: true },
+  { n: 'vort', who: 'Free vortigaunts', tex: 'vort', head: '#10281c', plate: '#142e20', hot: '#1e462e', line: '#78e88c', dim: '#2c6e42', text: '#def4e2', accent: '#96f078', label: 'THE VORTESSENCE', title: 'Vortessence', body: 'We are a tapestry woven of Vortessence. It is the same for you.', btn: ['Charge a vest', 'Mend another', 'Leave'] },
+  { n: 'vort', who: 'Shackled vortigaunts (the Combine\'s line: bound)', tex: 'vort', head: '#0d1822', plate: '#142e20', hot: '#1e462e', line: '#48c8de', dim: '#2c6e42', text: '#def4e2', accent: '#96f078', label: 'COLLARED.  PROPERTY OF THE COMBINE.', title: 'Street detail', body: 'Sweep the plaza. Do not speak. Do not look up.', btn: ['Begin', 'Rest', 'Leave'], dull: true },
+  { n: 'combine', who: 'The Administration (her office)', tex: 'combine', head: '#16202c', plate: '#1a2634', hot: '#28384a', line: '#e2dcc8', dim: '#6e706c', text: '#ece8dc', accent: '#c23b2a', label: 'OFFICE OF THE CITY ADMINISTRATOR', title: 'Sociostability', body: 'The city is calm. Tonight\'s dream may be chosen once the day is done.', btn: ['Broadcast', 'The Commissary and the market', 'Laws'], warm: true },
+  { n: 'plain', who: 'Staff tools (out of character)', tex: '', head: '#28282c', plate: '#2e2e32', hot: '#424248', line: '#ecba46', dim: '#54545a', text: '#eeeeec', accent: '#ecba46', label: 'STAFF  //  OUT OF CHARACTER', title: 'Staff', body: 'Reports, spectating, bringing and returning players. None of this is in character.', btn: ['Reports', 'Spectate', 'Close'] },
+];
+const LOOKS_OLD = [
   { n: 'combine', who: 'Civil Protection, the Administration', tex: 'combine', head: '#0d1822', plate: '#142230', hot: '#1c3446', line: '#48c8de', dim: '#266878', text: '#d6ecf2', accent: '#48c8de', label: 'OVERWATCH LINK  //  SECTOR ACTIVE', title: 'Unit tools', body: 'Citizen 4471 is wanted for Vandalism. Last seen near the ration line.', btn: ['Detain', 'Search', 'Request backup'] },
   { n: 'rebel', who: 'The Resistance', tex: 'rust', head: '#4a2e1a', plate: '#3e291a', hot: '#58381e', line: '#e28a2c', dim: '#764824', text: '#f2e4ce', accent: '#e8912a', label: 'NO MASTERS  NO BENEFACTORS', title: 'Black market', body: 'Spray cans, paste-ups, a pistol if you have the credits. Keep your voice down.', btn: ['Spray cans (3)', 'Paste-ups (3)', 'Leave'] },
   { n: 'citizen', who: 'Citizens', tex: 'concrete', head: '#545759', plate: '#484b4d', hot: '#5c6063', line: '#7e8284', dim: '#222324', text: '#e4e4de', accent: '#708caa', label: 'UNION RESIDENT SERVICES', title: 'Citizen Information', body: 'All residents are assigned labor. Report to Labor Assignment for your shift.', btn: ['Where do I get rations?', 'Where do I sleep?', 'Leave'] },
@@ -54,6 +85,11 @@ function win(l, dir) {
     o += `<div style="position:absolute;inset:0;border:3px solid rgba(0,0,0,.47)"></div>` + R(l.line, 0, 22, W, 2) + R('rgba(0,0,0,.47)', 3, 24, W - 6, 3);
     for (const x of [W - 124, W - 108]) o += `<div style="position:absolute;left:${x}px;top:3px;width:6px;height:18px;background:${l.accent};transform:skewX(-24deg);opacity:.9"></div>`;
     o += rivet(9, 33) + rivet(W - 9, 33) + rivet(9, H - 9) + rivet(W - 9, H - 9) + rivet(90, H - 9) + rivet(210, H - 9) + rivet(330, H - 9);
+  } else if (l.n === 'vort') {
+    for (let i = 0; i < 8; i++) o += R(l.accent, 1, H - 34 + i * 4, W - 2, 4, (4 + i * 4) / 255);
+    o += `<div style="position:absolute;inset:0;border:1px solid ${l.dim}"></div>` + R(l.line, 0, 22, W, 2) + R(l.accent, 10, H - 4, W - 20, 2) + R(l.accent, W - 116, 7, 9, 9) + R(l.accent, W - 130, 10, 5, 5) + R(l.accent, W - 102, 10, 5, 5);
+  } else if (l.n === 'plain') {
+    o += R(l.dim, 0, 23, W, 1) + R(l.dim, 0, H - 3, W, 3) + R(l.dim, W - 2, 0, 2, H) + R(l.accent, 0, 24, 4, H - 27);
   } else if (l.n === 'custody') {
     for (let i = 0; i < 10; i++) o += R('#fff', 0, 24 + i * 5, W, 5, (22 - i * 2) / 255);
     o += `<div style="position:absolute;inset:0;border:1px solid ${l.line}"></div>` + R(l.accent, 0, 24, W, 2) + R(l.accent, 0, H - 4, W, 4);
@@ -65,13 +101,15 @@ function win(l, dir) {
     if (l.n === 'combine') b += `border-left:3px solid ${l.line};${i === 0 ? `outline:1px solid ${l.line};outline-offset:-1px;` : ''}`;
     if (l.n === 'rebel') b += `border-top:1px solid rgba(255,255,255,.1);border-bottom:2px solid rgba(0,0,0,.47);${i === 0 ? `outline:1px solid ${l.line};outline-offset:-1px;` : ''}`;
     if (l.n === 'custody') b += `border:1px solid ${l.dim};${i === 0 ? `border-bottom:2px solid ${l.accent};` : ''}`;
+    if (l.n === 'vort') b += `border-bottom:2px solid ${l.accent};${i === 0 ? `outline:1px solid ${l.line};outline-offset:-1px;` : ''}`;
+    if (l.n === 'plain') b += `border-top:1px solid rgba(255,255,255,.1);border-bottom:2px solid ${l.dim};${i === 0 ? `border-left:3px solid ${l.accent};` : ''}`;
     if (l.n === 'citizen') b += `border-top:1px solid rgba(255,255,255,.1);border-bottom:2px solid ${l.dim};${i === 0 ? `border-left:3px solid ${l.accent};` : ''}`;
     return b + `">${t}</div>`;
   };
-  return `<div style="margin:0 0 6px 0;font:700 15px 'Liberation Sans';color:#ddd">${l.who}</div><div style="position:relative;width:${W}px;height:${H}px;background:url(file://${dir}/${l.tex}.png);background-size:${W}px ${H}px;${l.n === 'custody' ? 'filter:saturate(.3) brightness(.62);' : ''}overflow:hidden"></div>
+  return `<div style="margin:0 0 6px 0;font:700 15px 'Liberation Sans';color:#ddd">${l.who}</div><div style="position:relative;width:${W}px;height:${H}px;background:${l.tex ? `url(file://${dir}/${l.tex}.png)` : '#18181a'};background-size:${W}px ${H}px;${l.n === 'custody' ? 'filter:saturate(.3) brightness(.62);' : ''}${l.dull ? 'filter:saturate(.7) brightness(.86);' : ''}${l.warm ? 'filter:sepia(.5) saturate(.5) brightness(.95);' : ''}overflow:hidden">${l.lam ? `<img src="file://${dir}/lambda.png" style="position:absolute;right:14px;bottom:14px;width:190px;height:190px;opacity:.59">` : ''}</div>
 <div style="position:relative;width:${W}px;height:${H}px;margin-top:-${H}px;overflow:hidden">${R(l.head, 0, 0, W, 24)}${o}
 <div style="position:absolute;left:8px;top:4px;font:700 13px 'Liberation Sans';color:${l.text}">${l.title}</div>
-<div style="position:absolute;right:${l.n === 'rebel' ? 136 : 112}px;top:6px;font:800 11px 'Liberation Sans';color:${l.n === 'custody' ? l.text : l.line}">${l.label}</div>
+<div style="position:absolute;right:${(l.n === 'rebel' || l.n === 'vort') ? 140 : 112}px;top:6px;font:800 11px 'Liberation Sans';color:${l.n === 'custody' ? l.text : l.line}">${l.label}</div>
 <div style="position:absolute;right:8px;top:3px;font:700 14px 'Liberation Sans';color:${l.text}">x</div>
 <div style="position:absolute;left:18px;top:44px;width:${W - 36}px;font:15px 'Liberation Sans';line-height:21px;color:${l.text}">${l.body}</div>
 ${l.btn.map(btn).join('')}</div>`;
@@ -82,7 +120,8 @@ ${l.btn.map(btn).join('')}</div>`;
   const browser = await chromium.launch();
   const pg = await browser.newPage({ viewport: { width: S, height: S }, deviceScaleFactor: 1 });
   for (const [name, f] of Object.entries(TEX)) { await pg.setContent(`<body style="margin:0">${f()}</body>`); await pg.screenshot({ path: path.join(out, name + '.png') }); }
-  await pg.setViewportSize({ width: 1080, height: 720 });
+  await pg.setContent(`<body style="margin:0;background:transparent">${LAMBDA()}</body>`); await pg.screenshot({ path: path.join(out, 'lambda.png'), omitBackground: true });
+  await pg.setViewportSize({ width: 1080, height: 1070 });
   const html = `<body style="margin:0;background:#1a1a1a;padding:20px;display:grid;grid-template-columns:500px 500px;gap:28px 40px">${LOOKS.map(l => `<div>${win(l, out)}</div>`).join('')}</body>`;
   fs.writeFileSync(path.join(out, 'ui.html'), html);
   await pg.goto('file://' + path.join(out, 'ui.html')); await pg.waitForLoadState('networkidle');

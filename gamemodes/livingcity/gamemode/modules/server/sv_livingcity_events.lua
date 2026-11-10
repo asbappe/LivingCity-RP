@@ -673,7 +673,7 @@ timer.Create("LivingCityEvents", 0.5, 0, function()
         if LC.Event and LC.EventEnds and now > LC.EventEnds then LC.EndEvent(false) end
 
         if cvAuto:GetBool() and not LC.Event then
-            if nextAuto == 0 then nextAuto = now + cvInterval:GetFloat() * 60 end
+            if nextAuto == 0 then nextAuto = now + cvInterval:GetFloat() * 60 * (LC.SmallEventMul and LC.SmallEventMul() or 1) end -- (small-server mode: sv_livingcity_smallserver.lua)
             if not pendingAuto and nextAuto - now <= SOON then
                 pendingAuto = PickAuto()
                 LC.PendingEvent = pendingAuto
@@ -682,7 +682,7 @@ timer.Create("LivingCityEvents", 0.5, 0, function()
             if now > nextAuto then
                 LC.StartEvent(pendingAuto or PickAuto())
                 pendingAuto, LC.PendingEvent = nil, nil
-                nextAuto = now + cvInterval:GetFloat() * 60
+                nextAuto = now + cvInterval:GetFloat() * 60 * (LC.SmallEventMul and LC.SmallEventMul() or 1)
             end
         end
 

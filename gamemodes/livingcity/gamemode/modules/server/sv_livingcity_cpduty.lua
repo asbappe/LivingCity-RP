@@ -59,7 +59,17 @@ end
 LC.CPShift = Shift
 
 local function Quota()
-    return { searches = math.max(0, cvSearch:GetInt()), papers = math.max(0, cvPapers:GetInt()), inspections = math.max(0, cvInspect:GetInt()) }
+    local insp = math.max(0, cvInspect:GetInt())
+    if insp > 0 and LC.SmallServer and LC.SmallServer() then
+        -- small-server mode: no inspection asked for when nobody housed is online to inspect (sv_livingcity_smallserver.lua)
+        local any = false
+        for _, p in ipairs(player.GetAll()) do
+            local f = p:GetNW2String("lcf_faction", "")
+            if (f == "" or f == "citizen" or f == "resistance") and LC.PlayerBlock and LC.PlayerBlock(p) then any = true break end
+        end
+        if not any then insp = 0 end
+    end
+    return { searches = math.max(0, cvSearch:GetInt()), papers = math.max(0, cvPapers:GetInt()), inspections = insp }
 end
 LC.CPQuota = Quota
 

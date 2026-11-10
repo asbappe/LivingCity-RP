@@ -1362,6 +1362,7 @@ Notes:
 - [ ] **Bounties:** as the Administrator (or a Division Leader), F2 > Me > Bounties on the wanted: put 50 or 100 on someone wanted. Units and the wanted person should be told; the unit who arrests them gets paid.
   Notes:
 - [ ] **Shifts back to back:** finish the checklist early, F2 > Me > My shift > Report in now: a review at once and a fresh shift. Try Go on a break, then Back on duty.
+  Notes:
 
 ## 10 November: the city's minds (watching only)
 - [ ] **Leave it running:** with `lc_minds` on (the default), play or leave the server idle for a few hours. Then copy `garrysmod/data/livingcity/minds/` off the server (zip it) and bring it back.
@@ -1372,5 +1373,44 @@ Notes:
   Notes:
 - [ ] **Lag check:** with it on and off (editor panel, "Watch the city's minds"), is there any difference? (It should cost about 0.01 ms a second.)
   Notes:
+
+## 10 November, last: the state of the city
+
+- [ ] **The bulletin:** wait for a city morning (or an hour): a City Bulletin should appear on the screens and in chat with what changed.
+  Notes:
+- [ ] **F2 > Me > The state of the city:** the five numbers in words and every block with who holds it.
+  Notes:
+- [ ] **Her levers:** as Administrator, place a "Point: speech stand", then F2 > Me > The city's levers: go to the stand, give a speech (citizens nearby gain standing), declare an amnesty, order a crackdown on a block (a raid should start there) and extra rations (a ration day).
+  Notes:
+- [ ] **It carries over:** restart the server: the numbers and districts should be as they were, with the days that passed drifted through.
+  Notes:
+## 10 November: window styles, second pass
+- [ ] **Terminal screens:** the Commissary, Civil Intake, Housing and Labor screens in the world are black glass with cyan lines and corner brackets, for a citizen too. Buttons light up with a cyan outline under the crosshair.
+  Notes:
+- [ ] **The quartermaster and the black market:** their window is rust and scrap for anyone. The Resistance lab too.
+  Notes:
+- [ ] **Menus:** the C menu and any right-click menu are dark plates in your side's colours, and every line is readable. A drop-down list inside a window too.
+  Notes:
+- [ ] **F1 / F2 and notices:** the quick menu and the notice card have your side's back. As the Administrator, F2 (her tablet entries) is black glass and cyan.
+  Notes:
+- [ ] **Buttons that had their own colours:** they keep them (green, red, chosen) and gain an edge in your side's style. Tell me any button that looks wrong or any invisible click area that now shows a line.
+  Notes:
+
+## 10 November: the HUD in your side's look
+- [ ] **HUD panels:** play a while as a citizen, as Civil Protection and as Resistance. The dark panels on screen (needs, tips, timers, job panels, cards) are grey slab, black glass with cyan, or rust with an orange line. Bars and coloured edges look as before. Tell me any panel that looks wrong, any text that became hard to read, or any fade to black that now shows a panel (a screenshot helps). `lc_ui_theme 0` puts it all back.
+  Notes:
+
+## 10 November: more looks
+- [ ] **The lambda:** as Resistance, your windows (and the quartermaster's, and the lab's) have a yellow sprayed lambda bottom right, and the text over it is still readable. The black market dealer's window is plain rust with no lambda.
+  Notes:
+- [ ] **Vortigaunts:** a free vortigaunt's windows are green with a glow; a shackled one's are the same green under a cyan line.
+  Notes:
+- [ ] **The Administration:** as the Administrator or her Director, windows are black glass with ivory lines and a red edge.
+  Notes:
+- [ ] **Staff:** the Staff window, admin testing tools and the character screens are plain charcoal marked out of character.
+  Notes:
+- [ ] **On the streets:** order a crackdown on a block: a metrocop should take up a post in the middle of it and stop people. Win a few rebel operations in one block until it is the Resistance's: units walking there should now and then be ambushed, and the black market there should be cheaper. Watch Commissary prices rise as supply falls.
+  Notes:
+- [ ] **Small-server mode:** with 4 or fewer on, chat should say "A quiet night in the city". Events and rebel operations should come noticeably more often. When a fifth player joins, it should say the city is back to its usual pace.
 - [ ] **Citizens drinking and smoking:** stand near citizens for a few minutes: now and then one lights up (puffs of smoke from their head) or swigs from a bottle in their hand, and stops when they walk off. Does the bottle sit right in the hand? Too often, or too rare? (Editor panel: "Citizens fond of a drink and a smoke" turns it off.)
   Notes:

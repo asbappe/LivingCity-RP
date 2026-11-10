@@ -67,6 +67,12 @@ function LC.CanPlanOp(ply)
         end
         return true
     end
+    if Rank(ply) >= 2 and LC.SmallServer and LC.SmallServer() then
+        -- small-server mode: a Member may, with no Fighter or higher online (sv_livingcity_smallserver.lua)
+        local higher = false
+        for _, p in ipairs(player.GetAll()) do if p ~= ply and Faction(p) == "resistance" and Rank(p) >= 3 then higher = true break end end
+        if not higher then return true end
+    end
     return false, "Fighters and up plan operations. Join one when it's posted."
 end
 

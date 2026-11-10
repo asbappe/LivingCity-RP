@@ -226,7 +226,15 @@ local function DrawCards(now)
     local a = Alpha(c, now)
     c.lines = c.lines or Wrap(c.text, "LCNoticeText", cw - 28)
     local h = 30 + #c.lines * 19
-    draw.RoundedBox(4, x, y, cw, h, A(BG, a))
+    -- (the card is your side's: its plate and its line, cl_livingcity_theme.lua; the edge still says what kind of notice)
+    local T = LC_CL.ThemeOn and LC_CL.ThemeOn() and LC_CL.Themes and LC_CL.Themes[LC_CL.ThemeName()] or nil
+    if T then
+        draw.RoundedBox(0, x, y, cw, h, A(T.bg, a))
+        draw.RoundedBox(0, x, y, cw, 1, A(T.line, a))
+        draw.RoundedBox(0, x, y + h - 2, cw, 2, A(T.dim, a))
+    else
+        draw.RoundedBox(4, x, y, cw, h, A(BG, a))
+    end
     draw.RoundedBox(0, x, y, 4, h, A(EDGE[c.kind] or EDGE.info, a))
     local title = string.upper(c.title ~= "" and c.title or "Notice") .. (c.n > 1 and ("  x" .. c.n) or "")
     draw.SimpleText(title, "LCNoticeTitle", x + 14, y + 6, A(EDGE[c.kind] or EDGE.info, a))

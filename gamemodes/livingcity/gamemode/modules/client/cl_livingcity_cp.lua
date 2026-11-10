@@ -152,6 +152,7 @@ local function BuildRecords()
     local x, y
     if IsValid(recFrame) then x, y = recFrame:GetPos() recFrame:Remove() end
     recFrame = vgui.Create("DFrame")
+    if LC_CL.SetTheme then LC_CL.SetTheme(recFrame, "combine") end
     recFrame:SetTitle("Civil Protection: records terminal")
     recFrame:SetSize(math.min(ScrW() - 40, 900), math.min(ScrH() - 40, 620))
     if x then recFrame:SetPos(x, y) else recFrame:Center() end

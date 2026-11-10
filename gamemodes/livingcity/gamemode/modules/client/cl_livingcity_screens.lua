@@ -156,23 +156,50 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityScreens", function(depth, 
     if sky or not S or not IsValid(S.ent) then return end
     local lay, h = Layout()
     local tl, ang = Frame(S.ent, h)
+    -- a Combine machine's screen, whoever reads it: the Combine look (cl_livingcity_theme.lua), or as it was with lc_ui_theme 0
+    local T = LC_CL.ThemeOn and LC_CL.ThemeOn() and LC_CL.Themes and LC_CL.Themes.combine or nil
+    local edge = T and T.line or EDGE
     cam.Start3D2D(tl, ang, SCALE)
-        draw.RoundedBox(6, 0, 0, W, h, BG)
-        surface.SetDrawColor(EDGE.r, EDGE.g, EDGE.b, 200)
-        surface.DrawOutlinedRect(0, 0, W, h, 2)
-        draw.SimpleText(S.title, "LCScreenTitle", 14, 8, EDGE)
+        if T then
+            local top = math.max(30, (lay[1] and lay[1].y or 40) - 6)
+            draw.RoundedBox(0, 0, 0, W, h, T.bg)
+            surface.SetDrawColor(255, 255, 255, 5)
+            for y = top + 2, h - 3, 4 do surface.DrawRect(2, y, W - 4, 1) end
+            draw.RoundedBox(0, 0, 0, W, top, T.head)
+            surface.SetDrawColor(T.dim.r, T.dim.g, T.dim.b, 255)
+            surface.DrawOutlinedRect(0, 0, W, h, 1)
+            surface.SetDrawColor(T.line.r, T.line.g, T.line.b, 255)
+            surface.DrawRect(0, top - 2, W, 2)
+            surface.DrawRect(0, 0, 22, 3) surface.DrawRect(0, 0, 3, 22) surface.DrawRect(W - 22, h - 3, 22, 3) surface.DrawRect(W - 3, h - 22, 3, 22)
+            for i = 0, 5 do
+                surface.SetDrawColor(i % 2 == 0 and T.line or T.dim)
+                surface.DrawRect(10 + i * 9, h - 9, 6, 4)
+            end
+        else
+            draw.RoundedBox(6, 0, 0, W, h, BG)
+            surface.SetDrawColor(EDGE.r, EDGE.g, EDGE.b, 200)
+            surface.DrawOutlinedRect(0, 0, W, h, 2)
+        end
+        draw.SimpleText(S.title, "LCScreenTitle", 14, 8, edge)
         draw.SimpleText(S.sub, "LCScreenText", W - 14, 14, DIM, TEXT_ALIGN_RIGHT)
         for _, l in ipairs(lay) do
             local r = l.r
             if r.kind == "button" then
                 local hot = S.hover == l.y
                 local off = r.enabled == false
-                draw.RoundedBox(4, 10, l.y, W - 20, ROW - 4, hot and (off and HOT_OFF or HOT_ON) or BTN)
-                draw.SimpleText((hot and "> " or "") .. (r.text or ""), "LCScreenText", 20, l.y + (ROW - 4) / 2, off and DIM or INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+                if T then
+                    draw.RoundedBox(0, 10, l.y, W - 20, ROW - 4, (hot and not off) and T.plateHot or T.plate)
+                    surface.SetDrawColor(off and T.dim or T.line)
+                    surface.DrawRect(10, l.y, 4, ROW - 4)
+                    if hot then surface.DrawOutlinedRect(10, l.y, W - 20, ROW - 4, 1) end
+                else
+                    draw.RoundedBox(4, 10, l.y, W - 20, ROW - 4, hot and (off and HOT_OFF or HOT_ON) or BTN)
+                end
+                draw.SimpleText((hot and "> " or "") .. (r.text or ""), "LCScreenText", T and 24 or 20, l.y + (ROW - 4) / 2, off and DIM or (T and T.text or INK), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
             else
                 local text = r.text or ""
                 if #text > 64 then text = string.sub(text, 1, 62) .. "..." end
-                draw.SimpleText(text, "LCScreenText", 14, l.y + ROW / 2, r.col or (r.kind == "head" and EDGE or INK), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+                draw.SimpleText(text, "LCScreenText", 14, l.y + ROW / 2, r.col or (r.kind == "head" and edge or INK), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
             end
         end
         if not S.hover then

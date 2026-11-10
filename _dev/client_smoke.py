@@ -3545,7 +3545,7 @@ if err:
 err = L.execute(r"""
 if not (LC_CL.PaintThemeBack and LC_CL.SetTheme and LC_CL.ThemedPaint and LC_CL.ThemeName) then return "theme: the module is missing" end
 local f = vgui.Create("DFrame")
-for _, name in ipairs({ "combine", "rebel", "citizen", "custody" }) do
+for _, name in ipairs({ "combine", "rebel", "citizen", "custody", "office", "scrap", "vort", "bound", "staff", "ooc" }) do
     LC_CL.SetTheme(f, name)
     local okT, errT = pcall(LC_CL.PaintThemeBack, f, 520, 360)
     if not okT then return "theme " .. name .. ": " .. tostring(errT) end
@@ -3564,6 +3564,28 @@ draw.RoundedBox = rb
 if not okW then return "theme wrap: " .. tostring(errW) end
 if LC_CL.ThemeBroken then return "theme: it switched itself off" end
 if LC_CL.ThemeOn() and (#boxes ~= 1 or boxes[1] ~= "100x30") then return "theme wrap: kept " .. table.concat(boxes, ",") end
+-- a button that paints itself keeps its paint; a box on the screen gets a back
+local drew = 0
+local bp = LC_CL.TrimmedPaint(function(self, w, h) drew = drew + 1 draw.RoundedBox(4, 0, 0, w, h, color_white) end)
+local okT2, errT2 = pcall(bp, f, 200, 28)
+if not okT2 or drew ~= 1 then return "theme trim: " .. tostring(errT2) end
+for _, name in ipairs({ "combine", "rebel", "citizen", "custody" }) do
+    if not LC_CL.PaintThemePanel(24, 300, 380, 294, 30, name) then return "theme panel: " .. name end
+end
+if LC_CL.ThemeBroken then return "theme: it switched itself off (trim or panel)" end
+-- the HUD: a dark panel's back becomes your side's plate while the HUD is painted, and only then
+local hb, hp = hook.t.HUDPaintBackground and hook.t.HUDPaintBackground.LivingCityThemeHUD, hook.t.PostDrawHUD and hook.t.PostDrawHUD.LivingCityThemeHUD
+if not (hb and hp and LC_CL.ThemeInHUD) then return "theme HUD: its hooks are missing" end
+hb()
+local okH, errH = pcall(function()
+    draw.RoundedBox(4, 40, 40, 320, 60, Color(10, 12, 16, 220)) -- a panel: restyled
+    draw.RoundedBox(0, 40, 40, 200, 8, Color(10, 12, 16, 220))  -- a bar's track: left alone
+    draw.RoundedBox(0, 40, 40, 320, 60, Color(200, 60, 40, 255)) -- a coloured box: left alone
+    draw.RoundedBox(0, 0, 0, 4000, 4000, Color(0, 0, 0, 255))    -- a fade over everything: left alone
+end)
+hp()
+if not okH then return "theme HUD: " .. tostring(errH) end
+if LC_CL.ThemeInHUD() then return "theme HUD: still on after the HUD was drawn" end
 f:Remove()
 return nil
 """)

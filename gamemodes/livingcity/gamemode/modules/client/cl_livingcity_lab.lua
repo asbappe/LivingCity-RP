@@ -36,6 +36,7 @@ function LC_CL.OpenLab(t)
     if IsValid(frame) then frame:Remove() end
     if not t then return end
     frame = vgui.Create("DFrame")
+    if LC_CL.SetTheme then LC_CL.SetTheme(frame, "rebel") end -- (the Resistance's lab, whoever stands at it)
     frame:SetTitle("")
     frame:SetSize(math.min(ScrW() - 40, 700), math.min(ScrH() - 40, 640))
     frame:Center()
