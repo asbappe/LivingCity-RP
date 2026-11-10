@@ -257,6 +257,7 @@ function LC.BuildReport()
     for _, r in ipairs(rows) do out[#out + 1] = r end
     if LC.NPCWorkSummary then out[#out + 1] = LC.NPCWorkSummary() end
     if LC.StalkerSummary then out[#out + 1] = LC.StalkerSummary() end
+    if LC.CrematorSummary then out[#out + 1] = LC.CrematorSummary() end
 
     Section(out, "Performance")
     local p = LC.Perf or {}

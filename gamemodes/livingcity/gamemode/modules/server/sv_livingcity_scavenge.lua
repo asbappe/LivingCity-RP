@@ -807,6 +807,7 @@ end)
 function LC.ItemUse(ply, id)
     local it = LCS.Items[id]
     if not it or not it.use then return false end
+    if LC.ItemUseHandlers and LC.ItemUseHandlers[it.use] then return LC.ItemUseHandlers[it.use](ply, id) end -- (new kinds of use register here: fine clothes, decor, a pet bird...)
     if it.use == "fish" then return Fish(ply) end
     if it.use == "vice" and LC.ViceUse then return LC.ViceUse(ply, id) end -- cigarettes, alcohol, stimulants (sv_livingcity_vices.lua)
     if it.use == "foilhat" and LC.FoilHatUse then return LC.FoilHatUse(ply, id) end -- sv_livingcity_bedtime.lua

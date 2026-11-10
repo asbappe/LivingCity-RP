@@ -25,6 +25,7 @@ This file is only an index. The specification of how everything behaves (the agr
 - [Factions: the 1 November playtest](docs/features/factions-1-november.md): The owner's 1 November list, item by item
 - [The Resistance Insider and the loyalty test](docs/features/resistance-insider.md): The spy inside Civil Protection, Inside Work, the loyalty test
 - [Things to do as a vortigaunt, and what loyalty earns](docs/features/loyalty-and-vortigaunts.md): Vortigaunt jobs, loyalty rewards for citizens
+- [The Cremator](docs/features/cremator.md): An NPC that walks the streets, burns the dead where they lie and attacks enemies; needs a Workshop model
 - [Weeds, the Groundskeeper and weedkiller](docs/features/infestation-cleanup.md): Infestation Cleanup, the hoover, weedkiller against growths and against the Combine
 - [Civil Protection's tools](docs/features/civil-protection-tools.md): The unit's quick menu, the Commissary, unit tools
 - [Jobs and quests (F4), and story chains](docs/features/jobs-and-quests.md): The job board, objectives, directives, story chains

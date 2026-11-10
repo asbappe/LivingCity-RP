@@ -49,3 +49,10 @@ Every player kill is judged; unjustified ones earn strikes (2: prison, 4: kick),
 - **The call box** has a "Call for help" button in your pockets (F3); its tip points there.
 - **Pockets:** a refusal now says which limit you hit, with the numbers (large items: 1, or 2 with a satchel; a uniform is a large item), not only "pockets full".
 - **The CP disguise** wears the HL:Alyx metrocop playermodel when one is installed or named in `lc_pm_metrocop`; with none, nothing changes.
+
+## Crime between citizens (the owner, 10 November)
+
+- **Pickpocketing.** From behind someone (not a unit), close: F1 > "Pick (name)'s pocket" (three seconds, keep still). They may feel it (about one time in three from behind, much more if they turn to face you). Unnoticed, you come away with some of their credits (up to 20) or one thing from their pockets (never their papers or ration card). Felt, they're told whose hand it was (or your description, if they don't know you) and nothing's taken. Either way, a unit who sees it makes it Theft, and a snitch may tell. Once every two minutes for a thief; the same person can't be picked again for five. `lc_pickpocket` 0 turns it off.
+- **Debts.** F1 on someone > "Lend (name) money...": 10, 25 or 50 credits (face to face). They take it or turn it down on F2 > Me (More) > My household and stall business > My debts. It's due back in `lc_debt_hours` (2) with a fifth more on top. The borrower repays on the same page; if the lender isn't about, it waits for them. Overdue, the lender can report it to Civil Protection from their own My debts: Debt default (a petty crime) and 10 standing off the borrower (now, or when they next join). A new person starts with no debts.
+- **Deals that go bad.** Buying from a black market dealer (not the quartermaster), `lc_bad_deal_chance` (6%) of the time it goes wrong: half the time the goods are fake (a brick wrapped in newspaper, the credits gone), half the time it was a sting (you get the goods, but you're booked for Buying contraband and outlined for the units for a minute).
+
