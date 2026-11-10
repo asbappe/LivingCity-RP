@@ -1306,4 +1306,6 @@ Notes:
 - [ ] **Burning:** as a Resistance Member, F2 looking at a citizen > Burn them as an informant. RAT should appear over them for Resistance players; the quartermaster should refuse them. Put their hands up, F2 > Scar them: their description should gain the scar.
   Notes:
 - [ ] **A wrong guess:** burn someone who never informed: every citizen should be told, and lose sympathy.
+## 10 November: poster pictures
+- [ ] **Poster pictures:** upload `materials/livingcity/posters/` (six `.jpg`), FastDL sync, change map. Each civil notice poster shows its picture (dispenser, Commissary, intake, water, law board, curfew elsewhere), sharp enough to read from a few steps away.
   Notes:
