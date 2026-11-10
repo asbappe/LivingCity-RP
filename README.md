@@ -25,6 +25,7 @@ This file is only an index. The specification of how everything behaves (the agr
 - [Factions: the 1 November playtest](docs/features/factions-1-november.md): The owner's 1 November list, item by item
 - [The Resistance Insider and the loyalty test](docs/features/resistance-insider.md): The spy inside Civil Protection, Inside Work, the loyalty test
 - [Things to do as a vortigaunt, and what loyalty earns](docs/features/loyalty-and-vortigaunts.md): Vortigaunt jobs, loyalty rewards for citizens
+- [The Cremator](docs/features/cremator.md): An NPC that walks the streets, burns the dead where they lie and attacks enemies; needs a Workshop model
 - [Weeds, the Groundskeeper and weedkiller](docs/features/infestation-cleanup.md): Infestation Cleanup, the hoover, weedkiller against growths and against the Combine
 - [Civil Protection's tools](docs/features/civil-protection-tools.md): The unit's quick menu, the Commissary, unit tools
 - [Jobs and quests (F4), and story chains](docs/features/jobs-and-quests.md): The job board, objectives, directives, story chains
@@ -34,7 +35,7 @@ This file is only an index. The specification of how everything behaves (the agr
 - [Survival, social credit and your characters](docs/features/survival-and-credit.md): Hunger, thirst, sleep, medicine, standing, credits, characters
 - [Talking, knowing people, going down, and tips](docs/features/talking-and-tips.md): Chat, recognition, acts, going down instead of dying, pop-up tips
 - [Window styles](docs/features/window-styles.md): Every window in your faction's look (Combine, Resistance, citizen, in custody)
-- [The city's minds](docs/features/city-minds.md): the named people's traits, needs, thoughts, stress and rumours, watched and written down (nothing acts on it yet)
+- [The city's minds](docs/features/city-minds.md): the named people's eleven traits, needs, thoughts, stress and rumours, watched and written down (nothing acts on it yet); citizens drinking and smoking in the street
 - [Homes, trade and the written word](docs/features/homes-and-trade.md): Apartments, business licenses, notes, letters, broadcasts, the law
 - [Vortigaunts, and day, night and weather](docs/features/vortigaunts-and-weather.md): Freed vortigaunts, the clock, light, rain
 - [Staff tools](docs/features/staff-tools.md): Admin safeguards for a public server, staff menus

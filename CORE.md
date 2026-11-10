@@ -98,6 +98,7 @@ Things players and the owner rely on that were settled in conversation:
 - **Small-server mode (asked for 10 November):** with 4 or fewer players online, events come half again as often, the Resistance's NPC operations twice as often, the collapse can come with 2 players, a unit's inspection quota is waived with nobody housed online, and Resistance Members may plan operations with no Fighter on (`docs/features/admin.md`).
 - **Citizen goals (asked for 10 November):** status symbols (fine clothes, home decor, a radio set, a pet bird), households (a block, crates, keys), a business (hand-made goods bought by passers-by, a hired worker paid from the till), and crime between citizens (pickpocketing, debts, deals gone bad) (`docs/features/homes-and-trade.md`, `docs/features/contraband.md`).
 - **NPCs carry boxes and crates in front in both hands,** luggage at the side, small things in the hand.
+- **The Cremator (asked for 10 November):** an NPC, `lc_cremators` (1) of them, walks the streets, burns bodies that have lain `lc_cremator_grace` (90) seconds and attacks whoever the units would shoot, the Resistance's people in the open, monsters and its attackers. It needs a Cremator model from the Workshop on the server (the owner chose items `2090972521`, and `3329322225` for the playermodel); with none there are no Cremators. The Mortician job is unchanged. Details: `docs/features/cremator.md`.
 
 ## How the code must be written (or things break)
 

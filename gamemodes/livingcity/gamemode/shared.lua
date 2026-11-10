@@ -214,6 +214,7 @@ LC_MODULES = {
         "sv_livingcity_stalkerwork",
         "sv_livingcity_combineground", -- (soldiers stay in Combine zones, citizens stay out)
         "sv_livingcity_zonestalkers", -- (each Combine zone's stalkers: its terminals, its cleaning and repairs)
+        "sv_livingcity_cremator", -- (the Cremator: walks the streets, burns the dead where they lie, and any enemy)
         "sv_livingcity_writing",
         "sv_livingcity_guidance", -- (the quest trail's way, and where you are for the panel of what you can do)
         "sv_livingcity_fieldops", -- (after the quests and the war: backup's guns, squads for violent jobs, flashbangs, rebel ground)
@@ -222,6 +223,7 @@ LC_MODULES = {
         "sv_livingcity_evidence", -- (what units confiscate is kept, and burned in public now and then)
         "sv_livingcity_psyche", -- (the city's minds: traits, needs, thoughts, stress, ties, rumours; pure arithmetic)
         "sv_livingcity_minds", -- (watching the city's minds and writing it down, data/livingcity/minds/; changes nothing)
+        "sv_livingcity_npcvices", -- (citizens fond of a drink and a smoke light up or take out a bottle, where players can see)
     },
     client = {
         "cl_livingcity",
@@ -269,6 +271,7 @@ LC_MODULES = {
         "cl_livingcity_labor", -- (Labor Assignment's screen)
         "cl_livingcity_kick",
         "cl_livingcity_arrest", -- (the struggle bar when someone resists arrest)
+        "cl_livingcity_cremator", -- (the Cremator's flame)
         "cl_livingcity_ways",
         "cl_livingcity_outfits",
         "cl_livingcity_lab",

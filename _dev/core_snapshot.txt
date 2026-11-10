@@ -160,6 +160,7 @@ console command lc_collapse_test
 console command lc_combine_models_list
 console command lc_conduct
 console command lc_creator
+console command lc_cremator_spawn
 console command lc_debugreport
 console command lc_desperation_squad
 console command lc_desperation_test
@@ -598,6 +599,9 @@ setting lc_cpsupply_recharge = 5
 setting lc_crate_kg = 35
 setting lc_crates_per_person = 2
 setting lc_cremation_pay = 6
+setting lc_cremator_grace = 90
+setting lc_cremator_model = 
+setting lc_cremators = 1
 setting lc_cripple_minutes = 15
 setting lc_crowbar_wanted = 120
 setting lc_curfew_citizens = 0
@@ -927,6 +931,7 @@ setting lc_npc_budget = 100
 setting lc_npc_doors = 1
 setting lc_npc_make_way = 1
 setting lc_npc_sleep = 1
+setting lc_npc_vices = 1
 setting lc_npc_work = 1
 setting lc_npc_work_grace = 60
 setting lc_npc_work_grace_players = 300
