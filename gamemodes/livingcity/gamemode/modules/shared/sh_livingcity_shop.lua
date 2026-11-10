@@ -193,6 +193,10 @@ LCS.Items = {
     pasteup         = { name = "Resistance paste-up", model = "models/props_c17/paper01.mdl", use = "pasteup", useLabel = "Paste it up",
                         contraband = true, conceal = 0.5, sell = 3,
                         desc = "A hand-painted Resistance poster and a dab of glue. Look at a bare wall, up close, and paste it up. Don't let a Civil Protection unit see you do it" },
+    -- (a Resistance pamphlet to read, hand over or leave lying about: sv_livingcity_rebelpamphlet.lua)
+    rebel_pamphlet  = { name = "Resistance pamphlet", model = "models/props_c17/paper01.mdl", kg = 0, use = "rebelpamphlet", useLabel = "Read",
+                        contraband = true, conceal = 0.8, sell = 1,
+                        desc = "A cheap sheet run off by hand, the ink still purple. Read it, hand it to someone who might listen, or leave it where it will be found. Don't let a Civil Protection unit see you do it" },
     ------------------------------------------------------------------------
     -- Making things (sv_livingcity_crafting.lua)
     --   arms     weapons and ammunition: the quartermaster pays half as much again
@@ -456,6 +460,7 @@ LCS.Black = {
     { id = "satchel", item = "satchel", price = 30, desc = "No questions about what goes in it." },
     { id = "spraypaint", item = "spraypaint", count = 3, name = "Spray cans (3)", price = 25, desc = "Let the city know we're still here." },
     { id = "pasteup", item = "pasteup", count = 3, name = "Paste-ups (3)", price = 20, desc = "Their walls, our words.", qm = true }, -- (the owner, 10 November: the dealer isn't Resistance)
+    { id = "rebel_pamphlet", item = "rebel_pamphlet", count = 5, name = "Pamphlets (5)", price = 15, desc = "Read this. Then pass it on.", qm = true },
     -- what the Resistance's lab makes (sv_livingcity_lab.lua); everyone else pays the dealer for it
     { id = "smokebomb", item = "smokebomb", price = 30, desc = "Chemicals in a can, and a fuse." },
     { id = "ammo_pistol", item = "ammo_pistol", price = 40, desc = "Eighteen rounds. Hand-loaded, mostly reliable." },

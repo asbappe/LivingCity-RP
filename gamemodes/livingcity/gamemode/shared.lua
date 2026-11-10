@@ -211,6 +211,7 @@ LC_MODULES = {
         "sv_livingcity_combineground", -- (soldiers stay in Combine zones, citizens stay out)
         "sv_livingcity_zonestalkers", -- (each Combine zone's stalkers: its terminals, its cleaning and repairs)
         "sv_livingcity_cremator", -- (the Cremator: walks the streets, burns the dead where they lie, and any enemy)
+        "sv_livingcity_rebelpamphlet", -- (the Resistance pamphlet: read it, hand it over, leave it lying about)
         "sv_livingcity_writing",
         "sv_livingcity_guidance", -- (the quest trail's way, and where you are for the panel of what you can do)
         "sv_livingcity_fieldops", -- (after the quests and the war: backup's guns, squads for violent jobs, flashbangs, rebel ground)

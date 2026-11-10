@@ -130,6 +130,91 @@ local function OpenPamphlet(text, opts)
     shut.DoClick = function() frame:Close() end
 end
 
+------------------------------------------------------------------------
+-- The Resistance pamphlet (sv_livingcity_rebelpamphlet.lua): one cheap sheet, folded once, run off on a
+-- hand duplicator. The cover half lists what's inside; the other half is the page, typed. The paper is
+-- materials/livingcity/pamphlet/rebel_paper.jpg (made by _dev/posters/rebelpamphlet.js); without it the
+-- sheet is drawn plainly. Options whose id starts with "_" are things to do with the sheet (pocket it,
+-- leave it, confiscate it), not pages.
+------------------------------------------------------------------------
+
+surface.CreateFont("LCRebelHead", { font = "Courier New", size = 30, weight = 900 })
+surface.CreateFont("LCRebelBody", { font = "Courier New", size = 19, weight = 700 })
+surface.CreateFont("LCRebelItem", { font = "Courier New", size = 19, weight = 900 })
+surface.CreateFont("LCRebelSmall", { font = "Courier New", size = 15, weight = 700 })
+
+local R_PAPER, R_INK, R_ORANGE = Color(216, 205, 171), Color(52, 36, 100), Color(206, 96, 22)
+
+local function OpenRebelPamphlet(text, opts)
+    local W, H = 860, 580
+    local PX, PW = 462, 368 -- the page: the half right of the fold
+    local head, body = string.match(text, "^(.-)\n\n(.*)$")
+    if not head then head, body = "", text end
+    local sign
+    local b2, s2 = string.match(body, "^(.*)\n\n([^\n]+)$")
+    if b2 and #s2 < 40 then body, sign = b2, s2 end
+    local paper = PMat("livingcity/pamphlet/rebel_paper.jpg")
+    local pages, acts = {}, {}
+    for _, o in ipairs(opts) do
+        if string.sub(o[1], 1, 1) == "_" then acts[#acts + 1] = o else pages[#pages + 1] = o end
+    end
+
+    frame = vgui.Create("DFrame")
+    frame:SetTitle("")
+    frame:SetSize(W, H)
+    frame:Center()
+    frame:MakePopup()
+    frame:ShowCloseButton(false)
+    frame.lcNoTheme = true -- (it's a sheet of paper, whoever holds it: cl_livingcity_theme.lua)
+    frame.OnClose = function() Do("") end
+    frame.Paint = function(_, w, h)
+        if paper and not paper:IsError() then
+            surface.SetDrawColor(255, 255, 255) surface.SetMaterial(paper) surface.DrawTexturedRect(0, 0, w, h)
+        else
+            surface.SetDrawColor(R_PAPER) surface.DrawRect(0, 0, w, h)
+            surface.SetDrawColor(0, 0, 0, 60) surface.DrawRect(w / 2, 0, 1, h)
+            draw.SimpleText("READ THIS.", "LCRebelHead", 30, 52, R_INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            draw.SimpleText("THEN PASS IT ON.", "LCRebelSmall", 31, 82, R_INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            surface.SetDrawColor(R_INK) surface.DrawRect(30, 102, 356, 3)
+        end
+        draw.SimpleText(head, "LCRebelHead", PX, 76, R_INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        surface.SetDrawColor(R_ORANGE) surface.DrawRect(PX, 96, math.min(PW, 30 + #head * 15), 3)
+        if sign then draw.SimpleText("- " .. sign, "LCRebelBody", PX + PW, h - 82, R_INK, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER) end
+    end
+
+    local words = vgui.Create("DLabel", frame)
+    words:SetPos(PX, 112)
+    words:SetSize(PW, 370)
+    words:SetFont("LCRebelBody")
+    words:SetTextColor(R_INK)
+    words:SetWrap(true)
+    words:SetContentAlignment(7)
+    words:SetText(body)
+
+    -- what's inside, typed down the cover; then what to do with the sheet
+    local y = 138
+    local function Line(label, id, mark, fn)
+        local b = vgui.Create("DButton", frame)
+        b:SetPos(30, y)
+        b:SetSize(356, 30)
+        b:SetText("")
+        local here = id ~= nil and id == lastPage
+        b.Paint = function(self, w, h)
+            local hot = here or self:IsHovered()
+            draw.SimpleText(mark, "LCRebelItem", 0, h / 2, hot and R_ORANGE or R_INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            draw.SimpleText(label, "LCRebelItem", 40, h / 2, hot and R_ORANGE or R_INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            if hot then surface.SetDrawColor(R_ORANGE) surface.DrawRect(40, h - 3, math.min(w - 40, #label * 12), 2) end
+        end
+        b.DoClick = fn
+        y = y + 32
+    end
+    for i, o in ipairs(pages) do Line(o[2], o[1], i .. ".", function() Do(o[1]) end) end
+    y = y + 10
+    for _, o in ipairs(acts) do Line(o[2], nil, ">", function() Do(o[1]) end) end
+    Line("Fold it away", nil, ">", function() frame:Close() end)
+end
+LC_CL.OpenRebelPamphlet = OpenRebelPamphlet
+
 net.Receive("lc_dialog", function()
     local ent = net.ReadEntity()
     local title, sub, text = net.ReadString(), net.ReadString(), net.ReadString()
@@ -139,6 +224,7 @@ net.Receive("lc_dialog", function()
     if IsValid(frame) then frame:Remove() end
     if title == "" and #opts == 0 then return end
     if style == "pamphlet" then OpenPamphlet(text, opts) return end
+    if style == "rebelpamphlet" then OpenRebelPamphlet(text, opts) return end
     local h = 150 + 30 * (#opts + 1) + math.min(220, math.ceil(#text / 52) * 17)
     frame = vgui.Create("DFrame")
     frame:SetTitle(title)

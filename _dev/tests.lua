@@ -22181,6 +22181,131 @@ for _, x in pairs(LC.Cremators) do if IsValid(x.vis) then x.vis:Remove() end if 
 end
 CrematorTests()
 
+function RebelPamphletTests()
+section("The Resistance pamphlet: read, handed over, left lying about")
+local it = LCS.Items.rebel_pamphlet
+ok(it ~= nil and it.contraband == true and it.use == "rebelpamphlet", "the pamphlet is an item, and contraband")
+ok(LCS.BlackById.rebel_pamphlet ~= nil and LCS.BlackById.rebel_pamphlet.qm == true and LCS.BlackById.rebel_pamphlet.count == 5, "the quartermaster sells them, five at a time (no dealer does)")
+local seenWas, crimeWas, snitchWas, rollWas = LC.SeenBySecurity, LC.ReportCrime, LC.IsSnitch, LC.RebelPamphletRoll
+local seen, crimes = false, {}
+LC.SeenBySecurity = function() return seen end
+LC.ReportCrime = function(p, why) crimes[#crimes + 1] = { p, why } end
+local P0 = Vector(-170000, 120000, 0)
+local reb = newPlayer("PamRebel", "resistance")
+local cit = newPlayer("PamCitizen", "citizen")
+local cit2 = newPlayer("PamCitizen2", "citizen")
+local cp = newPlayer("PamUnit", "cp")
+reb:SetPos(P0) cit:SetPos(P0 + Vector(60, 0, 0)) cit2:SetPos(P0 + Vector(0, 60, 0)) cp:SetPos(P0 + Vector(-60, 0, 0))
+
+-- reading one from the pockets
+ok(LC.ReadRebelPamphlet(cit) == false, "none in your pockets: nothing to read")
+LC.GiveItem(cit, "rebel_pamphlet", 1)
+local s0 = LC.Trait(cit, "sympathy")
+ok(LC.ReadRebelPamphlet(cit) == true and cit.lcDialog and cit.lcDialog.key == "rebelpamphlet", "Read: the sheet opens")
+ok(LC.Trait(cit, "sympathy") == s0 + 1, "the first one a citizen ever reads: 1 sympathy", LC.Trait(cit, "sympathy") - s0)
+LC.ReadRebelPamphlet(cit)
+ok(LC.Trait(cit, "sympathy") == s0 + 1, "(only the first)")
+ok(LC.DialogDo(cit, "help") == "help" and LC.DialogDo(cit, "nosuchpage") == nil, "its pages turn")
+
+-- leaving one about
+LC.GiveItem(reb, "rebel_pamphlet", 14)
+local okL, left = LC.LeaveRebelPamphlet(reb)
+ok(okL == true and IsValid(left) and left:GetClass() == "lc_rebelpamphlet" and LC.HasItem(reb, "rebel_pamphlet", 13) and not LC.HasItem(reb, "rebel_pamphlet", 14),
+    "Leave a pamphlet here: it lies there, and it's out of your pockets")
+ok(#crimes == 0, "nobody watching: no crime")
+seen = true
+local _, left2 = LC.LeaveRebelPamphlet(reb)
+ok(#crimes == 1 and crimes[1][1] == reb and crimes[1][2] == "Distributing seditious material", "a unit watching: a crime", #crimes)
+seen = false
+for _ = 1, 6 do LC.LeaveRebelPamphlet(reb) end
+local mine = 0
+for _, e in ipairs(LC.RebelPamphlets) do if IsValid(e) and e.lcOwnerSid == reb:SteamID() then mine = mine + 1 end end
+ok(mine == 6 and not IsValid(left), "no more than lc_rebel_pamphlets_max (6) of yours lying about: the oldest goes", mine)
+ok(LC.LeaveRebelPamphlet(cit2) == false, "none to leave: no")
+
+-- someone finds it
+local found = LC.RebelPamphlets[#LC.RebelPamphlets]
+cit2:SetPos(found:GetPos() + Vector(30, 0, 0))
+local s2 = LC.Trait(cit2, "sympathy")
+ok(LC.ReadRebelPamphlet(cit2, found) == true and LC.Trait(cit2, "sympathy") == s2 + 1, "a citizen presses E on it: reads it (their first: 1 sympathy)")
+ok(LC.DialogDo(cit2, "_seize") == nil and IsValid(found), "(a citizen can't confiscate it)")
+ok(LC.DialogDo(cit2, "_take") == "_take" and not IsValid(found) and LC.HasItem(cit2, "rebel_pamphlet"), "Pocket it: it's theirs now")
+local found2 = LC.RebelPamphlets[#LC.RebelPamphlets]
+for i = #LC.RebelPamphlets, 1, -1 do if IsValid(LC.RebelPamphlets[i]) then found2 = LC.RebelPamphlets[i] break end end
+cp:SetPos(found2:GetPos() + Vector(30, 0, 0))
+local s3 = LC.Trait(cp, "sympathy")
+ok(LC.ReadRebelPamphlet(cp, found2) == true and LC.Trait(cp, "sympathy") == s3, "a unit reads it too (it wins nobody there)")
+ok(LC.DialogDo(cp, "_take") == nil and LC.DialogDo(cp, "_seize") == "_seize" and not IsValid(found2), "Confiscate it: gone")
+cit2:SetPos(P0 + Vector(0, 60, 0))
+ok(LC.ReadRebelPamphlet(cit2, left2) == false, "(too far from one: no)")
+
+-- handing one to the city's people
+local function Citizen(off, extra)
+    local n = ents.Create("npc_citizen") n:SetPos(P0 + off) n:Spawn()
+    n:SetHealth(40)
+    local st = { role = "citizen", state = "idle" }
+    for k, v in pairs(extra or {}) do st[k] = v end
+    LC.NPCs[n] = st
+    return n, st
+end
+local have = function() local c = 0 while LC.HasItem(reb, "rebel_pamphlet", c + 1) do c = c + 1 end return c end
+reb:SetPos(P0)
+local n1, st1 = Citizen(Vector(80, 0, 0))
+local before = have()
+LC.RebelPamphletRoll = function() return 0.1 end
+ok(LC.GiveRebelPamphlet(reb, n1) == true and st1.rebel == true and n1:GetNW2Bool("lc_prebel", false) == true and have() == before - 1,
+    "handed to a citizen who listens: they take it, a sympathiser now")
+local okA, whyA = LC.GiveRebelPamphlet(reb, n1)
+ok(okA == false and whyA ~= nil and have() == before - 1, "(not the same one again straight away)")
+local n2, st2 = Citizen(Vector(0, 80, 0))
+LC.RebelPamphletRoll = function() return 0.9 end
+ok(LC.GiveRebelPamphlet(reb, n2) == true and not st2.rebel and have() == before - 1, "one who won't: they push it back, and you keep it")
+local n3, st3 = Citizen(Vector(-80, 0, 0))
+LC.IsSnitch = function(n) return n == n3 end
+ok(LC.GiveRebelPamphlet(reb, n3) == true and not st3.rebel and have() == before - 2 and #crimes == 1, "an informant takes it like anyone")
+LC.NPCs[n1], LC.NPCs[n2], LC.NPCs[n3] = nil, nil, nil
+_run(21)
+ok(#crimes == 2 and crimes[2][1] == reb, "and Civil Protection hears of it a little later", #crimes)
+
+-- the city walking past the ones lying about
+for _, e in ipairs(LC.RebelPamphlets) do if IsValid(e) then e:Remove() end end
+local _, lying = LC.LeaveRebelPamphlet(reb)
+local now = CurTime()
+n1:SetPos(lying:GetPos() + Vector(40, 0, 0))
+st1.rebel = nil
+LC.NPCs[n1] = st1
+LC.RebelPamphletRoll = function() return 0.1 end
+LC.RebelPamphletsTick(now)
+ok(IsValid(lying) and lying.lcReadCount == 1 and st1.rebel == true, "a citizen walking past reads it, and may come round")
+LC.RebelPamphletsTick(now)
+ok(lying.lcReadCount == 1, "(once each)")
+LC.NPCs[n1] = nil
+n2:SetPos(lying:GetPos() + Vector(40, 0, 0))
+LC.NPCs[n2] = { role = "cop", state = "idle" }
+LC.RebelPamphletsTick(now)
+ok(not IsValid(lying), "a unit walking past takes it away")
+LC.NPCs[n2] = nil
+local _, old = LC.LeaveRebelPamphlet(reb)
+LC.RebelPamphletsTick(now + 29 * 60)
+ok(IsValid(old), "one left lying stays lc_rebel_pamphlet_minutes (30)")
+LC.RebelPamphletsTick(now + 31 * 60)
+ok(not IsValid(old) and #LC.RebelPamphlets == 0, "then it's gone")
+
+-- handing one to a player
+reb:SetPos(P0) cit:SetPos(P0 + Vector(60, 0, 0))
+local trWas = reb.GetEyeTrace
+reb.GetEyeTrace = function() return { Entity = cit, HitPos = cit:GetPos(), Hit = true } end
+local citHad = 0
+while LC.HasItem(cit, "rebel_pamphlet", citHad + 1) do citHad = citHad + 1 end
+ok(LC.GiveRebelPamphlet(reb, cit) == true and LC.HasItem(cit, "rebel_pamphlet", citHad + 1), "handed to a player: it's in their pockets")
+reb.GetEyeTrace = trWas
+
+LC.SeenBySecurity, LC.ReportCrime, LC.IsSnitch, LC.RebelPamphletRoll = seenWas, crimeWas, snitchWas, rollWas
+n1:Remove() n2:Remove() n3:Remove()
+reb:Remove() cit:Remove() cit2:Remove() cp:Remove()
+end
+RebelPamphletTests()
+
 section("NPCs that fall out of the map")
 ;(function()
     local npc = LC.Spawners.citizen(Vector(-160000, -160000, 0))

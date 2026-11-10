@@ -1430,3 +1430,18 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **Players who join** download the Cremator addon by themselves and see it (not an ERROR sign).
   Notes:
+
+## 10 November: the Resistance pamphlet
+
+- [ ] **Buying and reading:** as a Resistance member, buy "Pamphlets (5)" from the quartermaster. Pockets > Resistance pamphlet > Read: a folded sheet in purple ink with an orange lambda opens, six pages on the left, the page typed on the right. Is the typed text easy to read on your screen?
+  Notes:
+- [ ] **Leaving one:** F1 > Leave a Resistance pamphlet here, in front of a bench or table and on the floor. A sheet of paper lies there. Another player presses E on it and reads it; a citizen can "Pocket it", a Civil Protection player can "Confiscate it".
+  Notes:
+- [ ] **First read:** a citizen who has never read one gets "Sympathy +1" once, and the member who left it is told.
+  Notes:
+- [ ] **Handing to a player:** F1 > their name > Hand them a Resistance pamphlet: it is in their pockets.
+  Notes:
+- [ ] **Handing to a citizen NPC:** F1 > This person > Hand them a Resistance pamphlet. Try several people: some take it and become sympathisers, some tuck it away, some push it back.
+  Notes:
+- [ ] **Risk:** do either in front of a Civil Protection unit: you are wanted for it. Leave one on a patrol route: the unit takes it and the Civil Protection radio says where.
+  Notes:

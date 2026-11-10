@@ -3617,6 +3617,32 @@ return nil
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
 
+# the Resistance pamphlet opens as its own sheet (cl_livingcity_dialog.lua, style "rebelpamphlet"), and paints
+err = L.execute(r"""
+if not net["recv_lc_dialog"] then return "rebel pamphlet: the dialog receiver is missing" end
+local rS, rE, rU = net.ReadString, net.ReadEntity, net.ReadUInt
+local q = { "Resistance pamphlet", "Cheap paper.", "READ THIS\n\nYou were not brought here for your protection.\n\nA friend",
+    "water", "The water", "pass", "Pass it on", "_leave", "Leave it here", "rebelpamphlet" }
+net.ReadString = function() return table.remove(q, 1) end
+net.ReadEntity = function() return NULL end
+net.ReadUInt = function() return 3 end
+local made = {}
+local vc = vgui.Create
+vgui.Create = function(...) local p = vc(...) made[#made + 1] = p return p end
+local okP, errP = pcall(function()
+    net["recv_lc_dialog"]()
+    for _, p in ipairs(made) do if p.Paint then p:Paint(860, 580) end end
+end)
+vgui.Create = vc
+net.ReadString, net.ReadEntity, net.ReadUInt = rS, rE, rU
+if not okP then return "rebel pamphlet: " .. tostring(errP) end
+-- the frame, the page, two pages listed, one thing to do with it, and folding it away
+if #made < 6 then return "rebel pamphlet: the sheet wasn't built (" .. #made .. " panels)" end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
 # the people's name tags (sh_livingcity_npcstr.lua): the server's answer fills the game's copy, readers
 # read it through LC.NPCStr, a removed one is forgotten, and the game asks after a far one it reads
 err = L.execute(r"""

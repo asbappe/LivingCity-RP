@@ -15,7 +15,7 @@ or `python3 _dev/run_section.py "section name"`; `anon@N` is a nameless test blo
 A `-` under Tests means no test calls enough of this module's own functions (client code is covered by
 `_dev/client_smoke.py`).
 
-202 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
+203 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
 
 | Module | What it is | Server | Client | Shared | Key functions | Tests |
 |---|---|---|---|---|---|---|
@@ -50,13 +50,13 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `cpduty` | A Civil Protection shift, with a quota and a review | `server/sv_livingcity_cpduty.lua` 16K | - | - | `LC.CPInspect`, `LC.CPReportIn`, `LC.CPBreak`, `LC.CPPapersDuty`, `LC.CPInspectOrder`, `LC.CPReview` | CPDutyTests (5) |
 | `cpsupply` | The Civil Protection Commissary (units' supplies) | `server/sv_livingcity_cpsupply.lua` 13K | - | - | `LC.NearCPSupply`, `LC.CPSupplyRechargeTick`, `LC.UseCPSupply`, `LC.CPDailyKitDue`, `LC.HasCPSupply`, `LC.IssueSupplies` | UnitLifeTests (3); SuppliesAndLabTests (2) |
 | `crabhunt` | Headcrab hunts for the Resistance's supply crate | `server/sv_livingcity_crabhunt.lua` 11K | - | - | `CH.Check`, `CH.Available`, `CH.Deposit` | CrabHuntTests (2) |
-| `crafting` | Making things, grenades, the arms trade, and getting people out | `server/sv_livingcity_crafting.lua` 25K | - | - | `LC.SmokeBlocks`, `LC.SellPrice`, `LC.Detonate`, `LC.IssuedLocked`, `LC.Craft`, `LC.SyncGrenades` | CraftingTests (6); SalvageTests (2); anon@20140 (2) |
+| `crafting` | Making things, grenades, the arms trade, and getting people out | `server/sv_livingcity_crafting.lua` 25K | - | - | `LC.SmokeBlocks`, `LC.SellPrice`, `LC.Detonate`, `LC.IssuedLocked`, `LC.Craft`, `LC.GiveTo` | CraftingTests (6); SalvageTests (2); anon@20140 (2) |
 | `cremator` | The Cremator | `server/sv_livingcity_cremator.lua` 28K | `client/cl_livingcity_cremator.lua` 3K | - | `LC.CrematorModel`, `LC.CrematorEnemy`, `LC.CrematorSequence`, `LC.CrematorSummary`, `LC.SpawnCremator`, `LC.CrematorBody` | CrematorTests (8) |
 | `custody` | What custody costs the worst anticitizens | `server/sv_livingcity_custody.lua` 23K | - | `shared/sh_livingcity_custody.lua` 2K | `LC.PlayerIsStalker`, `LC.StalkerCantSpeak`, `LC.MakeStalker`, `LC.Severity`, `LC.InterrogationTalk`, `LC.IsCrippled` | anon@19682 (5); PlaytestBatchTwoTests (4); ResistanceOpsTests (4) |
 | `data` | Saved layout | `server/sv_livingcity_data.lua` 26K | - | - | `LC.SendCompressed`, `LC.RemoveZone`, `LC.AddPoint`, `LC.AddZone`, `LC.RemovePoint`, `LC.CanEdit` | EditorAndScannerTests (9); section "Saving and loading a layout" (8); TerritoryPathTests (7) |
 | `debug` | Debugging | `server/sv_livingcity_debug.lua` 22K | - | - | `LC.BuildReport` | section "Debugging" (1); MindsTests (1); anon@18885 (1) |
 | `desperation` | The desperate Combine (sv_livingcity_desperation.lua) | `server/sv_livingcity_desperation.lua` 19K | - | - | `LC.DesperateSidearm`, `LC.DesperationTick`, `LC.DesperationTestSet`, `LC.DesperateClear`, `LC.DesperationFight`, `LC.DesperationTarget` | SideBalanceTests (9) |
-| `dialog` | A window for someone (or something) that answers questions | `server/sv_livingcity_dialog.lua` 2K | `client/cl_livingcity_dialog.lua` 9K | - | `LC.DialogDo`, `LC.OpenDialog`, `LC.CloseDialog` | TalkTests (1) |
+| `dialog` | A window for someone (or something) that answers questions | `server/sv_livingcity_dialog.lua` 2K | `client/cl_livingcity_dialog.lua` 13K | - | `LC.DialogDo`, `LC.OpenDialog`, `LC.CloseDialog` | RebelPamphletTests (1); TalkTests (1) |
 | `directives` | Sealed directives: how the secret endings start (the owner, 2 November; ENDING_TRIGGERS_DRAFT.md) | `server/sv_livingcity_directives.lua` 43K | `client/cl_livingcity_directives.lua` 15K | - | `ORDERS.weedkiller`, `ORDERS.lift`, `ORDERS.blackout`, `ORDERS.amnesty`, `LC.Vision`, `ORDERS.morticians` | anon@21598 (8) |
 | `doors` | Doors | `server/sv_livingcity_doors.lua` 24K | - | - | `LC.ApplyDoorState`, `LC.AutoDoorTag`, `LC.ApplyAllDoors`, `LC.PrisonDoorThink`, `LC.OpenEveryDoor`, `LC.KeepOpenThink` | PrisonDoorTests (2) |
 | `dreamenforce` | Enforcers in the dreams | - | `client/cl_livingcity_dreamenforce.lua` 2K | - | - | - |
@@ -159,6 +159,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `ratscar` | The rat carved into a burned informant's cheek | - | `client/cl_livingcity_ratscar.lua` 3K | - | `LC_CL.DrawRatScar` | - |
 | `rebelevents` | The Resistance's raids and operations, made real and findable | `server/sv_livingcity_rebelevents.lua` 19K | - | - | `LC.CityNPCCount`, `LC.MarketRaidExtra`, `LC.EventNPCAdd`, `LC.EventSlot`, `LC.EventOpen`, `LC.EventRoom` | RebelEventTests (6) |
 | `rebellife` | Rebel life | `server/sv_livingcity_rebellife.lua` 50K | - | - | `A.work`, `A.point`, `A.carry`, `A.sleep`, `A.sort`, `A.patrol` | RebelLifeTests (6) |
+| `rebelpamphlet` | The Resistance pamphlet | `server/sv_livingcity_rebelpamphlet.lua` 16K | - | - | `LC.ReadRebelPamphlet`, `LC.LeaveRebelPamphlet`, `LC.GiveRebelPamphlet`, `LC.RebelPamphletsTick` | RebelPamphletTests (4) |
 | `rebels` | The Resistance on the street | `server/sv_livingcity_rebels.lua` 101K | - | - | `LC.NearQuartermaster`, `LC.RebelTarget`, `LC.DismissFollower`, `LC.ReinforceRebels`, `LC.ArmUnit`, `LC.StartRebelRaid` | anon@19207 (8); RebelTests (7); LookoutPostTests (2) |
 | `reconcile` | Who you are now, and what goes with it (the owner, 7 November: "when I become a metrocop | `server/sv_livingcity_reconcile.lua` 5K | - | - | `LC.ReconcileAppearance`, `LC.FactionHoldsJobs` | UnitLifeTests (1) |
 | `rent` | Apartment doors (client) | - | `client/cl_livingcity_rent.lua` 4K | - | `LC_CL.RentLines` | - |
@@ -176,12 +177,12 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `screens` | Terminals with their menu on their own screen | - | `client/cl_livingcity_screens.lua` 10K | - | `LC_CL.ScreenFor`, `LC_CL.ScreenClose`, `LC_CL.ScreenOpen`, `LC_CL.ScreenClick`, `LC_CL.ScreenWrap`, `LC_CL.ScreenState` | - |
 | `security` | Combine-only areas | `server/sv_livingcity_security.lua` 5K | - | - | `LC.Unstick`, `LC.CombineZoneTick` | UpdateTests (1); WorkEscortTests (1) |
 | `sentence` | Sentences that fit the crimes, the work detail, probation | `server/sv_livingcity_sentence.lua` 31K | - | - | `LC.SentenceTick`, `LC.CrimeMinutes`, `LC.OnProbation`, `LC.AskWorkDetail`, `LC.ProbationCheckIn`, `LC.SentenceFor` | SentenceTests (5) |
-| `shop` | Items, Civil Standing tiers, the Union Commissary and the black market | - | - | `shared/sh_livingcity_shop.lua` 52K | `LCS.Weight`, `LCS.TierFor`, `LCS.IsBulky` | PapersHousingTests (1); ResponseTests (1) |
+| `shop` | Items, Civil Standing tiers, the Union Commissary and the black market | - | - | `shared/sh_livingcity_shop.lua` 53K | `LCS.Weight`, `LCS.TierFor`, `LCS.IsBulky` | PapersHousingTests (1); ResponseTests (1) |
 | `sidejobs` | Jobs that come with supply drops, and Union work orders that | `server/sv_livingcity_sidejobs.lua` 25K | - | - | - | - |
 | `sleep` | NPCs far from everyone sleep | `server/sv_livingcity_sleep.lua` 5K | - | - | `LC.WakeNPC`, `LC.NPCSleepTick`, `LC.SleepingCount` | - |
 | `slots` | Character slots | `server/sv_livingcity_slots.lua` 12K | `client/cl_livingcity_slots.lua` 7K | - | `LC.SwitchCharacter`, `LC.SendSlots`, `LC.CanSwitchCharacter`, `LC.DeleteCharacterSlot`, `LC.ActiveSlot` | SlotActTests (3) |
 | `smallserver` | Small-server mode (the owner, 10 November: "yes please"). | `server/sv_livingcity_smallserver.lua` 2K | - | - | `LC.SmallServer`, `LC.SmallEventMul`, `LC.SmallBlackPlayers`, `LC.SmallOpsMul` | SmallServerTests (4) |
-| `snitches` | Snitches among the citizens, and burning an informant | `server/sv_livingcity_snitches.lua` 17K | - | - | `LC.Burn`, `LC.IsBurned`, `LC.IllegalAct`, `LC.Scar`, `LC.IsSnitch`, `LC.ReallyInformant` | SnitchTests (5) |
+| `snitches` | Snitches among the citizens, and burning an informant | `server/sv_livingcity_snitches.lua` 17K | - | - | `LC.Burn`, `LC.IsSnitch`, `LC.IsBurned`, `LC.IllegalAct`, `LC.Scar`, `LC.ReallyInformant` | SnitchTests (5) |
 | `squadai` | Squads | `server/sv_livingcity_squadai.lua` 8K | - | - | `LC.SquadFollow`, `LC.LeaveSquad`, `LC.FaceOut`, `LC.SquadHurt`, `LC.OpenDirection` | - |
 | `squads` | Squad sizes and backup by radio (sv_livingcity_squads.lua) | `server/sv_livingcity_squads.lua` 11K | - | - | `LC.SquadLimit`, `LC.UnitRecruit`, `LC.SquadSide`, `LC.SquadRoom`, `LC.SquadFullText`, `LC.RebelBackupSpot` | SquadSizeTests (5) |
 | `staff` | Staff tools | `server/sv_livingcity_staff.lua` 17K | `client/cl_livingcity_staff.lua` 11K | - | `LC.StaffLogAdd`, `LC.CharBanned`, `LC.TicketAction`, `LC.WarningsOf`, `LC.SendStaff`, `LC.StaffLogFlush` | VortAtmosStaffTests (4) |

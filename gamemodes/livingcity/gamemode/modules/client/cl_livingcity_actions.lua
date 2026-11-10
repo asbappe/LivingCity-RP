@@ -143,6 +143,7 @@ function LC_CL.OpenActions()
     Add(menu, "Tips I've seen (read them again)", function() net.Start("lc_hints_list") net.SendToServer() end, "icon16/lightbulb.png")
     menu:AddSpacer()
 
+    if rebel then Add(menu, "Leave a Resistance pamphlet here (for someone to find)", function() Send("leavepamphlet") end, "icon16/page_white_put.png") end
     -- the person in front of you
     if person then
         local sub, opt = menu:AddSubMenu(LC_CL.ICName(person))
@@ -166,6 +167,7 @@ function LC_CL.OpenActions()
         if rebel and person:GetNW2String("lcf_faction", "") == "vort" then Add(sub, "Cut the vortigaunt's shackles", function() Send("unshackle") end) end
         Add(sub, "Give them a key to my apartment", function() Send("givekey") end, "icon16/key_add.png")
         Add(sub, "Take my apartment key back from them", function() Send("takekey") end, "icon16/key_delete.png")
+        if rebel then Add(sub, "Hand them a Resistance pamphlet", function() Send("givepamphlet", "", person) end, "icon16/page_white_text.png") end
     end
     -- someone who's down (sv_livingcity_rp.lua)
     if close and IsValid(e) and e:GetNW2Bool("lc_downed_body", false) then
@@ -180,6 +182,7 @@ function LC_CL.OpenActions()
         local sub, opt = menu:AddSubMenu("This person")
         opt:SetIcon("icon16/user.png")
         Add(sub, "Ask their name", function() Send("askname", "", e) end, "icon16/user_comment.png")
+        if rebel then Add(sub, "Hand them a Resistance pamphlet", function() Send("givepamphlet", "", e) end, "icon16/page_white_text.png") end
         if rebel then Add(sub, "Bring them into the Resistance (on rebel ground)", function() Send("recruitnpc", "", e) end, "icon16/user_add.png") end
         Add(sub, "Tell them to leave (on rebel ground)", function() Send("sendaway", "", e) end, "icon16/user_go.png")
     end
