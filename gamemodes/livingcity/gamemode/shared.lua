@@ -181,6 +181,7 @@ LC_MODULES = {
         "sv_livingcity_interrogation", -- (the interrogation question by question: truth, lies, silence, a bargain; a unit asking in person)
         "sv_livingcity_survivalmode", -- (Realistic or Relaxed survival, per character)
         "sv_livingcity_dreamskip", -- (sitting out a kind of dream, once earned)
+        "sv_livingcity_standingpanel", -- (where I stand: every number in one window, explained)
         "sv_livingcity_vort",
         "sv_livingcity_vortwork", -- (things to do as a vortigaunt, and the freed ones' camp life)
         "sv_livingcity_weeds", -- (weeds on open ground, the Groundskeeper, weedkiller as poison)
@@ -227,6 +228,7 @@ LC_MODULES = {
         "cl_livingcity_patsearch", -- (the pat-down window a unit's search opens, and the panel for the person searched)
         "cl_livingcity_intaketutor", -- (the arrival search: the choice, the lesson, the practice search)
         "cl_livingcity_interrogation", -- (the interrogation's questions on the prisoner's screen, and the unit's window asking them)
+        "cl_livingcity_standingpanel", -- (where I stand: every number explained)
         "cl_livingcity_atmos",
         "cl_livingcity_character",
         "cl_livingcity_checkpoints",

@@ -1339,7 +1339,7 @@ function LC.SetDreamOptOut(p, out)
     if not IsValid(p) then return end
     if p:GetPData("lc_dream_optout", "0") == "1" then p:SetPData("lc_dream_optout", "0") end
     p:SetNW2Bool("lc_dream_optout", false)
-    Notice(p, "info", "Shared dreams", "Everyone asleep dreams the city's dreams. You can sit out Happy (or Neutral) dreams after living through 2 of them, and Nightmares and propaganda with Exemplary standing: C > Settings > Shared dreams. Otherwise only a stimulant before bed (or, with luck, the lab's foil hat) keeps one out.", 10)
+    Notice(p, "info", "Shared dreams", "Everyone asleep dreams the city's dreams. You can sit out Happy (or Neutral) dreams after living through 2 of them, and Nightmares and propaganda with Exemplary standing: F2 > Me > My dreams (or C > Settings > Shared dreams). Otherwise only a stimulant before bed (or, with luck, the lab's foil hat) keeps one out.", 10)
 end
 
 local function DreamCommand(p, rest)

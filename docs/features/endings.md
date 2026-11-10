@@ -117,7 +117,7 @@ Nobody can opt out of the city's dreams until they've earned it, kind by kind:
 - **Happy dreams:** after living through 2 Happy dreams (`lc_dream_skip_after`), anyone may sit them out.
 - **Neutral dreams:** the same, after 2 Neutral dreams.
 - **Nightmares and propaganda dreams:** only a citizen with Exemplary standing (Civil Standing `lc_dream_skip_standing`, 400), the city's favoured. Never the Resistance. Fall below it and they come again.
-- **Choosing:** C > Settings > Shared dreams lists each kind they've earned ("Happy: dreaming them (sit them out)"), or `/dream skip happy` (`neutral`, `nightmare`, `propaganda`; the same again to dream them again). Sitting a dream out, they simply sleep through it.
-- **The note:** someone who has earned a kind but hasn't chosen to sit it out sees a small line under the day's mood as the screen goes black ("You've earned the right to sit out happy dreams: C > Settings > Shared dreams."), and the same in the "A dream is coming" notice.
+- **Choosing:** F2 > Me > My dreams (also C > Settings > Shared dreams) lists each kind they've earned ("Happy: dreaming them (sit them out)"), or `/dream skip happy` (`neutral`, `nightmare`, `propaganda`; the same again to dream them again). Sitting a dream out, they simply sleep through it.
+- **The note:** someone who has earned a kind but hasn't chosen to sit it out sees a small line under the day's mood as the screen goes black ("You've earned the right to sit out happy dreams: F2 > Me > My dreams."), and the same in the "A dream is coming" notice.
 - Dreams lived through are counted per kind for each character (not as an Enforcer, not a test from the editor); a new person starts again from none. `lc_dream_skip` 0: nobody sits anything out, as before.
 

@@ -12,7 +12,7 @@
         the speed; no parasites, no toilet or washing, nothing goes off.
 
     Chosen on the characters screen (C > Your characters, the character
-    you're playing) or F1 > Me; switching is allowed once every
+    you're playing) or F2 > Me; switching is allowed once every
     lc_survival_switch_hours (3). lc_survival_modes 0: everyone Realistic,
     with no bonus, exactly as before.
 

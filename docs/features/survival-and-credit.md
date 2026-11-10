@@ -45,6 +45,6 @@ Each character chooses how hard staying alive is:
 
 - **Realistic** (where everyone starts; everything as it has always been): hunger, thirst, parasites, the toilet and washing, food going off. For taking it on: **20% more shift pay** (the Union shift and the shift games' pay, `lc_realistic_bonus` 0.2) **and 20% more experience**, and the title **"Hardened"** under your name (before any title your lives have earned, "Hardened, Old hand").
 - **Relaxed:** hunger and thirst come on at a third of the speed (`lc_relaxed_needs` 0.33); no parasites (nothing catches), no toilet or washing, nothing in your pockets goes off. Switching to Relaxed clears any parasites, urge and dirt you had.
-- **Where to choose:** the characters screen (C > Your characters: the "Survival" button on the character you're playing) or F1 > Me ("Survival: Realistic (switch to Relaxed)"). Switching is allowed once every `lc_survival_switch_hours` (3). Each character keeps its own choice.
+- **Where to choose:** the characters screen (C > Your characters: the "Survival" button on the character you're playing) or F2 > Me ("Survival: Realistic (switch to Relaxed)"). Switching is allowed once every `lc_survival_switch_hours` (3). Each character keeps its own choice.
 - `lc_survival_modes` 0: everyone Realistic, with no bonus and no title, exactly as before.
 

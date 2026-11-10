@@ -1243,7 +1243,7 @@ Notes:
 
 - [ ] **Realistic by default:** your name should show "Hardened". Do a Union shift: the pay should be 20% more than before (18 instead of 15).
   Notes:
-- [ ] **Switch to Relaxed:** C > Your characters > the Survival button (or F1 > Me). Hunger and thirst should drop much slower; eating raw meat should never give parasites; meat should never go off; no toilet urge. "Hardened" should disappear.
+- [ ] **Switch to Relaxed:** C > Your characters > the Survival button (or F2 > Me). Hunger and thirst should drop much slower; eating raw meat should never give parasites; meat should never go off; no toilet urge. "Hardened" should disappear.
   Notes:
 - [ ] **The 3 hours:** try switching back straight away: it should say when you can.
 ## 10 November, learning the city by living in it
@@ -1268,10 +1268,14 @@ Notes:
 
 ## 10 November, last: sitting out dreams
 
-- [ ] **Happy and Neutral:** live through 2 Happy dreams. As the third comes, the black screen should show a small note under the mood line. C > Settings > Shared dreams should then offer "Happy: dreaming them (sit them out)". Choose it: the next Happy dream, you should sleep through it.
+- [ ] **Happy and Neutral:** live through 2 Happy dreams. As the third comes, the black screen should show a small note under the mood line. F2 > Me > My dreams should then offer "Happy: dreaming them (sit them out)". Choose it: the next Happy dream, you should sleep through it.
   Notes:
 - [ ] **Nightmares and propaganda:** as a citizen with 400 standing, the same note and setting for Nightmares and Propaganda. Drop below 400 and they should come again.
   Notes:
+
+## 10 November, last: where I stand
+
+- [ ] **One window for the numbers:** F2 > Me > My standing (or Where I stand) (or C > You > Where I stand). Every number should be there with a line explaining it; wanted, a record or no close calls in red.
 - [ ] **The old-timer's troubles:** visit him: his greeting ends with what's troubling him (food first). Offer him food, then water, then tablets or a bandage, a ration card, a radio, each after he mentions it. Each warms him; after all five, "Sit with him a while" gives you his lockpicks.
   Notes:
 - [ ] **The pamphlet's new words:** read every page; tell Claude any line that sounds wrong.
