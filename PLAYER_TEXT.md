@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version b0322ff. Admin-only console messages and log lines are left out.
+Made from version ab3dc84. Admin-only console messages and log lines are left out.
 
 10644 lines, from 294 files.
 
@@ -910,7 +910,7 @@ Made from version b0322ff. Admin-only console messages and log lines are left ou
 - "More propaganda dreams: Record Harvest (carry glowing crates to the depot; crouch to throw away a green, spoiled one), The Stakhanov Shift (crouch again and again at a work station to beat the norm by 1400%), Careless Talk (four rounds of 30 seconds: listen for clues and crouch beside the one you think is the spy; everyone's pick is revealed together), The Newsreel (as the camera rolls, say the wave, salute or cheer it asks of you; everyone's take is shown at the cut), Two Minutes of Hate (jeer in chat; silence is noticed), The Mass Games (gold card: crouch, red: stand, at FLIP!), On-the-Spot Guidance (jump or say clap when she points), The Scrap Drive (fill the bins; never sell to the shady trader), Flowers for the Liberators (jump as a soldier passes you; stay off the road), Duck and Cover (when the siren wails and the Resistance's rocket goes up, crouch beside a table, two to a table), Ravenholm (the dead rise from the graves and a red Father Grigori rants; hold on until help comes, and if any vortigaunt freed from its shackles is alive in the city, you may see the truth)."  (text, line 95)
 - "The Battle Line (a propaganda dream): you're handed a rifle behind her barricades; shoot the red rebels before they reach the line. Never fire on her soldiers or the APC: the manhacks come for you, and if they get you, you're a tiny unarmed rebel charging the line until the dream ends."  (text, line 96)
 - "Freed vortigaunts can break into propaganda dreams (the more freed and alive, the more often): purple vortigaunts in rings of light. Stand in their light to side with them (it costs Civil Standing, but the Resistance hears of it), or keep to her. If they win, her figure shatters and the dream ends."  (text, line 97)
-- "Strange dreams: The Cheese Dream (it starts in the dark, with two voices: gather the glowing cheese, jump onto the floating slabs, and keep out of the way of the rolling wheels; it gets colourful), Musical Chairs (walk round the chairs while the music plays; when it stops, crouch beside a free one), Wings (jump, then jump again in the air to flap, and fly through the golden rings) and It's Raining Melons (stand on a green glow to catch a melon; keep out from under a red one). Win one and you wake Unbroken; losing one costs nothing."  (text, line 98)
+- "Strange dreams: The Cheese Dream (it starts in the dark, with two voices: gather the glowing cheese, jump onto the floating slabs, and keep out of the way of the rolling wheels; it gets colourful), Musical Chairs (walk round the chairs while the music plays; when it stops, get to a free one and crouch (or press Use) to sit down in it), Wings (jump, then jump again in the air to flap, and fly through the golden rings) and It's Raining Melons (stand on a green glow to catch a melon; keep out from under a red one). Win one and you wake Unbroken; losing one costs nothing."  (text, line 98)
 - "More strange dreams: Hooves and All (Neutral: when Father Grigori's shot stops the black horse, run in and bite it with E; don't get trampled), The Main Event (box: punch with attack next to it, crouch when it winds up), The Exam (stuck at your desk: type A, B, C or D in chat; the right answer is whatever most of the class picks, and you only learn your score once Doctor Kleiner has eaten your paper), The Last Train (the door moves away while anyone looks at it: walk backwards), Where's Lamarr? (catch the hopping headcrabs; the golden one counts three), Running in Molasses (reach the glowing corners in turn, slowly, away from the zombie), Hot Potato (touch someone to pass the grenade before it goes off), Overwatch Says (do it only when he says "Overwatch says"), Dance Marathon (jump on the big beat) and Counting Headcrabs (count them, not the watermelons, and say how many in chat)."  (text, line 99)
 - "Nonsense dreams: Stop the Clocks (touch each melting clock to stop it; stop them all at once), The Tea Party (move to the seat that glows when the host shouts), The Headcrab Derby (stand on a lane's pad before the race to back its headcrab), Say Cheese (hide behind something giant before the scanner's flash), The Doors (stand at the door the music box plays behind), Splat! (paint the floor your colour), Conga! (keep in the glow at the tail of the line), Shh! (gather toys quietly: running and jumping wake the baby), Bubbles (pop them; big ones lift you) and The Watchers (they only move while nobody looks at them: gather the keys). In every strange dream, expect nonsense: things floating in the sky, odd textures, faces pulling expressions, sparkles and smoke, and sounds that won't stay at one pitch."  (text, line 100)
 - "The Midnight Rally (a Happy dream): a buggy race at night. Forward to go, back to brake, look where you want to go; you watch from behind your buggy. Stay between the cones (off the road you crawl), drive every part of the lap in order, and drive through the glowing crates for a pickup: a boost, a melon to drop behind you (whoever hits it spins out) or a horn blast that slows everyone near. Jump uses it. The first three over the line win. When few are asleep, the city's people drive the other buggies, and they can beat you."  (text, line 101)
@@ -2121,72 +2121,72 @@ Made from version b0322ff. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game's render screenspace effects moment
 
-- "$pp_colour_addr"  (text, line 826)
-- "$pp_colour_addg"  (text, line 826)
-- "$pp_colour_addb"  (text, line 826)
-- "$pp_colour_brightness"  (text, line 827)
-- "$pp_colour_contrast"  (text, line 827)
-- "$pp_colour_colour"  (text, line 827)
-- "$pp_colour_mulr"  (text, line 828)
-- "$pp_colour_mulg"  (text, line 828)
-- "$pp_colour_mulb"  (text, line 828)
+- "$pp_colour_addr"  (text, line 829)
+- "$pp_colour_addg"  (text, line 829)
+- "$pp_colour_addb"  (text, line 829)
+- "$pp_colour_brightness"  (text, line 830)
+- "$pp_colour_contrast"  (text, line 830)
+- "$pp_colour_colour"  (text, line 830)
+- "$pp_colour_mulr"  (text, line 831)
+- "$pp_colour_mulg"  (text, line 831)
+- "$pp_colour_mulb"  (text, line 831)
 
 > Note for you (not shown in game): on screen
 
-- "Under the water: hold Jump to swim up"  (text, line 907)
+- "Under the water: hold Jump to swim up"  (text, line 910)
 
 > Note for you (not shown in game): the game's render screenspace effects moment
 
-- "$pp_colour_addr"  (text, line 915)
-- "$pp_colour_addg"  (text, line 915)
-- "$pp_colour_addb"  (text, line 915)
-- "$pp_colour_brightness"  (text, line 915)
-- "$pp_colour_contrast"  (text, line 916)
-- "$pp_colour_colour"  (text, line 916)
-- "$pp_colour_mulr"  (text, line 916)
-- "$pp_colour_mulg"  (text, line 916)
-- "$pp_colour_mulb"  (text, line 916)
+- "$pp_colour_addr"  (text, line 918)
+- "$pp_colour_addg"  (text, line 918)
+- "$pp_colour_addb"  (text, line 918)
+- "$pp_colour_brightness"  (text, line 918)
+- "$pp_colour_contrast"  (text, line 919)
+- "$pp_colour_colour"  (text, line 919)
+- "$pp_colour_mulr"  (text, line 919)
+- "$pp_colour_mulg"  (text, line 919)
+- "$pp_colour_mulb"  (text, line 919)
 
 > Note for you (not shown in game): The warning, as a flashing ending starts: leave the flashing out, or not
 
-- "Photosensitivity warning"  (window title, line 1365)
+- "Photosensitivity warning"  (window title, line 1368)
 
 > Note for you (not shown in game): part of: flash warning
 
-- "What's about to happen has flashing lights, strobes and screen flashes. If that could be a problem for you, leave them out: the music, the dancing and everything else stay. (lc_ending_calm in the console changes it any time.)"  (label or button, line 1374)
-- "Reduce flashing"  (label or button, line 1379)
+- "What's about to happen has flashing lights, strobes and screen flashes. If that could be a problem for you, leave them out: the music, the dancing and everything else stay. (lc_ending_calm in the console changes it any time.)"  (label or button, line 1377)
+- "Reduce flashing"  (label or button, line 1382)
 
 > Note for you (not shown in game): (doing nothing is "I'm fine": it goes by itself after 15 seconds, time enough to read it)
 
-- "I'm fine, keep it (15)"  (label or button, line 1387)
-- "I'm fine, keep it ({left})"  (label or button, line 1392)
-- "Oy vey!"  (text, line 1756)
-- "Oy gevalt!"  (text, line 1756)
-- "Mazel tov!"  (text, line 1756)
-- "Kvetch, kvetch"  (text, line 1756)
-- "Zei gezunt!"  (text, line 1757)
-- "Kol hakavod!"  (text, line 1757)
-- "Oy li!"  (text, line 1757)
-- "Hava nagila!"  (text, line 1758)
-- "Am Yisrael chai!"  (text, line 1758)
-- "Toda raba!"  (text, line 1758)
-- "Ein ba'aya!"  (text, line 1758)
-- "Chag sameach!"  (text, line 1758)
-- "Shabbat shalom!"  (text, line 1758)
-- "Ma nishma?"  (text, line 1759)
-- "Yasher koach!"  (text, line 1759)
-- "Oy, mamaleh!"  (text, line 1759)
-- "Hakol beseder!"  (text, line 1759)
-- "Tov me'od!"  (text, line 1759)
-- "Baruch HaShem!"  (text, line 1759)
+- "I'm fine, keep it (15)"  (label or button, line 1390)
+- "I'm fine, keep it ({left})"  (label or button, line 1395)
+- "Oy vey!"  (text, line 1759)
+- "Oy gevalt!"  (text, line 1759)
+- "Mazel tov!"  (text, line 1759)
+- "Kvetch, kvetch"  (text, line 1759)
+- "Zei gezunt!"  (text, line 1760)
+- "Kol hakavod!"  (text, line 1760)
+- "Oy li!"  (text, line 1760)
+- "Hava nagila!"  (text, line 1761)
+- "Am Yisrael chai!"  (text, line 1761)
+- "Toda raba!"  (text, line 1761)
+- "Ein ba'aya!"  (text, line 1761)
+- "Chag sameach!"  (text, line 1761)
+- "Shabbat shalom!"  (text, line 1761)
+- "Ma nishma?"  (text, line 1762)
+- "Yasher koach!"  (text, line 1762)
+- "Oy, mamaleh!"  (text, line 1762)
+- "Hakol beseder!"  (text, line 1762)
+- "Tov me'od!"  (text, line 1762)
+- "Baruch HaShem!"  (text, line 1762)
 
 > Note for you (not shown in game): on screen
 
-- "Am Yisrael chai"  (text, line 2143)
+- "Am Yisrael chai"  (text, line 2146)
 
 > Note for you (not shown in game): the console command lc_shalom_pose_print
 
-- "chair %s = Angle(%g, %g, %g)"  (message, line 2162)
+- "chair %s = Angle(%g, %g, %g)"  (message, line 2165)
 
 ## the Endings menu (superadmins): tune the secret endings live (cl_livingcity_endingtune.lua)
 
@@ -7627,147 +7627,147 @@ Made from version b0322ff. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): dream restore
 
-- "You wake up"  (on-screen notice, line 885)
-- "The test is over: you're back where you were, with everything as it was."  (on-screen notice, line 885)
-- "You wake from the dream, in your bed, with everything as it was."  (on-screen notice, line 886)
-- "You wake in your bed, with everything just as it was. Press Jump to get up."  (on-screen notice, line 887)
+- "You wake up"  (on-screen notice, line 932)
+- "The test is over: you're back where you were, with everything as it was."  (on-screen notice, line 932)
+- "You wake from the dream, in your bed, with everything as it was."  (on-screen notice, line 933)
+- "You wake in your bed, with everything just as it was. Press Jump to get up."  (on-screen notice, line 934)
 
 > Note for you (not shown in game): Starting one Dream an ending now, with everyone asleep (also: an admin testing it, awake). vote: the G-Man's vote first (among the dreamers). True, or false and why not.
 
-- "Dreams are off (lc_dreams 0)."  (text, line 959)
-- "There's no dream point on this map: place one with the Living City Editor (Point: dream)."  (text, line 961)
-- "No such ending."  (text, line 963)
-- "An ending is already under way."  (text, line 964)
-- "A dream is already under way."  (text, line 965)
+- "Dreams are off (lc_dreams 0)."  (text, line 1006)
+- "There's no dream point on this map: place one with the Living City Editor (Point: dream)."  (text, line 1008)
+- "No such ending."  (text, line 1010)
+- "An ending is already under way."  (text, line 1011)
+- "A dream is already under way."  (text, line 1012)
 
 > Note for you (not shown in game): part of: dream start
 
-- "Not yet ({EndingCooldownLeft} minutes of the endings' cooldown left)."  (text, line 966)
-- "Nobody is asleep to dream it."  (text, line 970)
+- "Not yet ({EndingCooldownLeft} minutes of the endings' cooldown left)."  (text, line 1013)
+- "Nobody is asleep to dream it."  (text, line 1017)
 
 > Note for you (not shown in game): Enforcers watch over a dream; they don't dream it on their own (the owner, 8 November)
 
-- "Nobody is asleep to dream it (only Enforcers)."  (text, line 975)
+- "Nobody is asleep to dream it (only Enforcers)."  (text, line 1022)
 
 > Note for you (not shown in game): part of: dream start
 
-- "Nobody could be got ready to dream (their snapshots couldn't be saved)."  (text, line 985)
-- "Dream: %s, with %d asleep"  (message, line 997)
+- "Nobody could be got ready to dream (their snapshots couldn't be saved)."  (text, line 1032)
+- "Dream: %s, with %d asleep"  (message, line 1044)
 
 > Note for you (not shown in game): (this dream can't take a latecomer after all: they wake at once with everything, and sleep on)
 
-- "(in the dream) {Nick} drifts into the dream, late."  (chat message, line 1041)
+- "(in the dream) {Nick} drifts into the dream, late."  (chat message, line 1088)
 
 > Note for you (not shown in game): The Administrator's tablet (sv_livingcity_cityadmin.lua): tonight's dream, by mood.
 
-- "Dreams are switched off on this server."  (text, line 1071)
-- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 1072)
+- "Dreams are switched off on this server."  (text, line 1118)
+- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 1119)
 
 > Note for you (not shown in game): The Administrator picks tonight's dream (id), or none ("none"). True, or false and why not. The pick ignores the endings' cooldown, and there's still one dream a night; it can be changed until the dream begins. (The G-Man has no part in dreams: the owner, 7 November.)
 
-- "Only the City Administrator chooses the city's dreams."  (text, line 1112)
-- "Dreams are switched off on this server."  (text, line 1113)
-- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 1114)
+- "Only the City Administrator chooses the city's dreams."  (text, line 1159)
+- "Dreams are switched off on this server."  (text, line 1160)
+- "There's nowhere for the city to dream yet (no dream point on this map)."  (text, line 1161)
 
 > Note for you (not shown in game): part of: dream admin pick
 
-- "Tonight's dream"  (on-screen notice, line 1119)
-- "No dream tonight. The city sleeps without one."  (on-screen notice, line 1119)
-- "No such dream."  (text, line 1122)
-- "Not tonight. {whyR}"  (text, line 1125)
-- "Tonight's dream"  (on-screen notice, line 1134)
-- "Everyone asleep will dream it tonight, a minute after you say good night."  (message, line 1135)
-- "Tonight's dream has been dreamt already: it waits for tomorrow night."  (message, line 1135)
+- "Tonight's dream"  (on-screen notice, line 1166)
+- "No dream tonight. The city sleeps without one."  (on-screen notice, line 1166)
+- "No such dream."  (text, line 1169)
+- "Not tonight. {whyR}"  (text, line 1172)
+- "Tonight's dream"  (on-screen notice, line 1181)
+- "Everyone asleep will dream it tonight, a minute after you say good night."  (message, line 1182)
+- "Tonight's dream has been dreamt already: it waits for tomorrow night."  (message, line 1182)
 
 > Note for you (not shown in game): part of: dream tonight
 
-- "no dream point"  (text, line 1168)
-- "nothing to dream"  (text, line 1170)
+- "no dream point"  (text, line 1215)
+- "nothing to dream"  (text, line 1217)
 
 > Note for you (not shown in game): picked earlier, and the day has changed since (a curfew after a Happy pick): the city's own pick instead (her kind, or the city's own choice, stands: sv_livingcity_dreamplan.lua)
 
-- "Tonight's dream"  (on-screen notice, line 1177)
-- "%s can't be dreamt tonight after all. %s The city dreams %s instead."  (message, line 1177)
-- "nothing allowed to dream"  (text, line 1179)
+- "Tonight's dream"  (on-screen notice, line 1224)
+- "%s can't be dreamt tonight after all. %s The city dreams %s instead."  (message, line 1224)
+- "nothing allowed to dream"  (text, line 1226)
 
 > Note for you (not shown in game): (the morning after a dream: a line for the whole city, by its mood)
 
-- "[City] {line}"  (chat message, line 1205)
+- "[City] {line}"  (chat message, line 1252)
 
 > Note for you (not shown in game): the sleepers, warned (and the way out)
 
-- "A dream is coming"  (on-screen notice, line 1227)
-- "You'll be in it as an Enforcer: nothing in it can touch you, and you can wake whenever you like. Punish the dreamers who misbehave (they glow red) with your baton."  (on-screen notice, line 1227)
+- "A dream is coming"  (on-screen notice, line 1274)
+- "You'll be in it as an Enforcer: nothing in it can touch you, and you can wake whenever you like. Punish the dreamers who misbehave (they glow red) with your baton."  (on-screen notice, line 1274)
 
 > Note for you (not shown in game): pcall
 
-- "A dream is coming"  (on-screen notice, line 1231)
-- "It's shared with everyone asleep, and you'll wake in your bed with everything you had. {or}"  (on-screen notice, line 1231)
+- "A dream is coming"  (on-screen notice, line 1278)
+- "It's shared with everyone asleep, and you'll wake in your bed with everything you had. {or}"  (on-screen notice, line 1278)
 
 > Note for you (not shown in game): the safeguard (the owner, 8 November: "ALL dreams will end for all players after 5 minutes ... in case they get bugged/glitched"): ended, everything it made removed, everyone woken with everything put back
 
-- "Dream: %s still going after %d minutes: ended by the safeguard"  (message, line 1251)
-- "The dream fades"  (on-screen notice, line 1252)
-- "It loosens its grip, and you wake."  (on-screen notice, line 1252)
-- "time limit"  (text, line 1254)
+- "Dream: %s still going after %d minutes: ended by the safeguard"  (message, line 1298)
+- "The dream fades"  (on-screen notice, line 1299)
+- "It loosens its grip, and you wake."  (on-screen notice, line 1299)
+- "time limit"  (text, line 1301)
 
 > Note for you (not shown in game): In a dream, nothing counts
 
-- "will have to wait until you wake up. (C > Settings > Shared dreams: wake up.)"  (on-screen notice, line 1348)
+- "will have to wait until you wake up. (C > Settings > Shared dreams: wake up.)"  (on-screen notice, line 1395)
 
 > Note for you (not shown in game): part of: inv action
 
-- "Your pockets"  (text, line 1372)
+- "Your pockets"  (text, line 1419)
 
 > Note for you (not shown in game): part of: sleep in
 
-- "You're already dreaming."  (text, line 1373)
+- "You're already dreaming."  (text, line 1420)
 
 > Note for you (not shown in game): Players: opting out, and waking up (no opting out any more: the owner, 8 November. Asking just says so.)
 
-- "Shared dreams"  (on-screen notice, line 1416)
-- "Everyone asleep dreams the city's dreams. You can sit out Happy (or Neutral) dreams after living through 2 of them, and Nightmares and propaganda with Exemplary standing: F2 > Me (More) > My dreams (or C > Settings > Shared dreams). Otherwise only a stimulant before bed (or, with luck, the lab's foil hat) keeps one out."  (on-screen notice, line 1416)
+- "Shared dreams"  (on-screen notice, line 1463)
+- "Everyone asleep dreams the city's dreams. You can sit out Happy (or Neutral) dreams after living through 2 of them, and Nightmares and propaganda with Exemplary standing: F2 > Me (More) > My dreams (or C > Settings > Shared dreams). Otherwise only a stimulant before bed (or, with luck, the lab's foil hat) keeps one out."  (on-screen notice, line 1463)
 
 > Note for you (not shown in game): /dream skip happy|neutral|nightmare|propaganda: sit that kind out, or dream it again (sv_livingcity_dreamskip.lua)
 
-- "Nobody can sit out the city's dreams here."  (text, line 1429)
-- "[Dreams] {why}"  (chat message, line 1431)
+- "Nobody can sit out the city's dreams here."  (text, line 1476)
+- "[Dreams] {why}"  (chat message, line 1478)
 
 > Note for you (not shown in game): part of: dream command
 
-- "[Dreams] You're not dreaming."  (chat message, line 1433)
-- "[Dreams] Everyone asleep dreams the city's dreams: nobody can opt out. /dream wake, once you're out of one (or F1 > Wake up from the dream)."  (chat message, line 1435)
+- "[Dreams] You're not dreaming."  (chat message, line 1480)
+- "[Dreams] Everyone asleep dreams the city's dreams: nobody can opt out. /dream wake, once you're out of one (or F1 > Wake up from the dream)."  (chat message, line 1482)
 
 > Note for you (not shown in game): dream restore
 
-- "You wake up"  (on-screen notice, line 1455)
-- "You'd left in the middle of a dream. Everything you had is just as it was."  (on-screen notice, line 1455)
+- "You wake up"  (on-screen notice, line 1502)
+- "You'd left in the middle of a dream. Everything you had is just as it was."  (on-screen notice, line 1502)
 
 > Note for you (not shown in game): Put someone's things back from their snapshot (also an old one already put back once).
 
-- "No such player."  (text, line 1473)
-- "is woken, and everything put back."  (text, line 1474)
-- "has no dream snapshot."  (text, line 1477)
+- "No such player."  (text, line 1520)
+- "is woken, and everything put back."  (text, line 1521)
+- "has no dream snapshot."  (text, line 1524)
 
 > Note for you (not shown in game): part of: dream force restore
 
-- "'s things are being put back from their snapshot."  (text, line 1482)
+- "'s things are being put back from their snapshot."  (text, line 1529)
 
 > Note for you (not shown in game): part of: dream status
 
-- "(a dream you play)"  (name, line 1498)
+- "(a dream you play)"  (name, line 1545)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_dream_act)
 
-- "[Dreams] {why}"  (chat message, line 1531)
+- "[Dreams] {why}"  (chat message, line 1578)
 
 > Note for you (not shown in game): part of: reply
 
-- "[Living City] {m}"  (chat message, line 1555)
+- "[Living City] {m}"  (chat message, line 1602)
 
 > Note for you (not shown in game): the console command lc_dream_now
 
-- "The dream begins: {id}"  (text, line 1565)
+- "The dream begins: {id}"  (text, line 1612)
 
 ## sitting out a kind of dream, earned (the owner, 10 November) (sv_livingcity_dreamskip.lua)
 
@@ -8168,116 +8168,116 @@ Made from version b0322ff. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: burst
 
-- "Your behind takes you all the way up, and you go off like a firework. Watch the rest go."  (text, line 2836)
+- "Your behind takes you all the way up, and you go off like a firework. Watch the rest go."  (text, line 2852)
 
 > Note for you (not shown in game): (held there, not frozen: a frozen player can't even look about, and the rope's view is all about looking about; where they are is set every tick anyway)
 
-- "A rope drops round your neck from above, and up you go. (You can still look about.)"  (chat message, line 3171)
+- "A rope drops round your neck from above, and up you go. (You can still look about.)"  (chat message, line 3187)
 
 > Note for you (not shown in game): Gone limp: still hanging there, looking on.
 
-- "You stop kicking. You hang there, and watch the rest."  (chat message, line 3192)
+- "You stop kicking. You hang there, and watch the rest."  (chat message, line 3208)
 
 > Note for you (not shown in game): part of: bite
 
-- "Something huge comes up out of the dark water. That's the last you see."  (text, line 3368)
+- "Something huge comes up out of the dark water. That's the last you see."  (text, line 3384)
 
 > Note for you (not shown in game): part of: icthy step
 
-- "It comes over the edge of the stage at you, jaws first. That's the last you see."  (text, line 3383)
+- "It comes over the edge of the stage at you, jaws first. That's the last you see."  (text, line 3399)
 
 > Note for you (not shown in game): part of: water
 
-- "Father Grigori"  (text, line 3477)
+- "Father Grigori"  (text, line 3493)
 
 > Note for you (not shown in game): under the water: you hold your breath, then you drown
 
-- "The water closes over your head. Somewhere above, Father Grigori hits the high note."  (text, line 3618)
+- "The water closes over your head. Somewhere above, Father Grigori hits the high note."  (text, line 3634)
 
 > Note for you (not shown in game): the last note: whoever's still here goes, and Father Grigori last of all
 
-- "The tide takes you, gently, at the very end."  (text, line 3745)
-- "Father Grigori holds the last note, bows, and the flood takes its encore."  (text, line 3747)
+- "The tide takes you, gently, at the very end."  (text, line 3761)
+- "Father Grigori holds the last note, bows, and the flood takes its encore."  (text, line 3763)
 
 > Note for you (not shown in game): part of: water
 
-- "Father Grigori holds the last note, bows, and the flood takes its encore."  (chat message, line 3750)
+- "Father Grigori holds the last note, bows, and the flood takes its encore."  (chat message, line 3766)
 
 > Note for you (not shown in game): part of: go to
 
-- "[???] Time stops. A man in a blue suit is standing in front of you. He'd like a word, and your vote: 1 to let it happen, 2 to skip it."  (text, line 3842)
-- "No song"  (on-screen notice, line 3851)
-- "No song found for {id}: put {id}.mp3 in garrysmod/sound/livingcity/endings/ on the server (and sync FastDL). lc_endings shows what it finds."  (on-screen notice, line 3851)
-- "[???] So be it. {say}"  (text, line 3856)
-- "[???] The city resets. Everyone you were is still you."  (text, line 3865)
+- "[???] Time stops. A man in a blue suit is standing in front of you. He'd like a word, and your vote: 1 to let it happen, 2 to skip it."  (text, line 3859)
+- "No song"  (on-screen notice, line 3868)
+- "No song found for {id}: put {id}.mp3 in garrysmod/sound/livingcity/endings/ on the server (and sync FastDL). lc_endings shows what it finds."  (on-screen notice, line 3868)
+- "[???] So be it. {say}"  (text, line 3873)
+- "[???] The city resets. Everyone you were is still you."  (text, line 3882)
 
 > Note for you (not shown in game): part of: trigger ending
 
-- "No such ending."  (text, line 3872)
-- "One's already under way."  (text, line 3873)
-- "Secret endings are off."  (text, line 3874)
-- "Not yet ({EndingCooldownLeft} minutes)."  (text, line 3875)
+- "No such ending."  (text, line 3889)
+- "One's already under way."  (text, line 3890)
+- "Secret endings are off."  (text, line 3891)
+- "Not yet ({EndingCooldownLeft} minutes)."  (text, line 3892)
 
 > Note for you (not shown in game): pcall
 
-- "[???] %d to %d. Very well. He straightens his tie, and time starts again."  (message, line 3936)
+- "[???] %d to %d. Very well. He straightens his tie, and time starts again."  (message, line 3953)
 
 > Note for you (not shown in game): "Not this time." (the owner, 2 November; Episode One's G-Man, where the game has it)
 
-- "Not this time."  (text, line 3938)
-- "[???] Silence. He takes that as a yes."  (text, line 3941)
+- "Not this time."  (text, line 3955)
+- "[???] Silence. He takes that as a yes."  (text, line 3958)
 
 > Note for you (not shown in game): Triggers Father Grigori eats the motherlode.
 
-- "You'd break your teeth."  (text, line 3987)
-- "You've nothing like that to eat."  (text, line 3988)
-- "Not now."  (text, line 3989)
-- "It doesn't go down. Not yet."  (text, line 3990)
-- "Not now."  (text, line 3991)
+- "You'd break your teeth."  (text, line 4004)
+- "You've nothing like that to eat."  (text, line 4005)
+- "Not now."  (text, line 4006)
+- "It doesn't go down. Not yet."  (text, line 4007)
+- "Not now."  (text, line 4008)
 
 > Note for you (not shown in game): part of: eat chip
 
-- "** Father Grigori swallows a Combine data core whole. His eyes light up."  (chat message, line 3995)
+- "** Father Grigori swallows a Combine data core whole. His eyes light up."  (chat message, line 4012)
 
 > Note for you (not shown in game): For the admin
 
-- "[Living City] {m}"  (chat message, line 4009)
+- "[Living City] {m}"  (chat message, line 4026)
 
 > Note for you (not shown in game): the console command lc_endings
 
-- "{song} is a low-quality copy ({hz} Hz: it plays, but sounds muffled); a better copy would sound much better"  (text, line 4017)
-- "NO SONG FOUND (looking for {id}.mp3 in garrysmod/sound/{ROOT})"  (text, line 4019)
+- "{song} is a low-quality copy ({hz} Hz: it plays, but sounds muffled); a better copy would sound much better"  (text, line 4034)
+- "NO SONG FOUND (looking for {id}.mp3 in garrysmod/sound/{ROOT})"  (text, line 4036)
 
 > Note for you (not shown in game): everything that's actually there, so a file in the wrong place shows
 
-- "In sound/{ROOT}: {or}"  (text, line 4024)
-- "The folder {d}/ holds {inside} file(s) that never play: move them up one level, straight into sound/{ROOT}"  (text, line 4029)
+- "In sound/{ROOT}: {or}"  (text, line 4041)
+- "The folder {d}/ holds {inside} file(s) that never play: move them up one level, straight into sound/{ROOT}"  (text, line 4046)
 
 > Note for you (not shown in game): the console command lc_endings
 
-- "never plays: name it for its ending (harpies.mp3, bus.mp3 ...)"  (text, line 4035)
-- "isn't a sound the game plays (.mp3, .ogg or .wav)"  (text, line 4037)
-- "Next one possible in {left} minutes (lc_ending_reset_cooldown)."  (text, line 4041)
-- "One can happen now."  (text, line 4041)
+- "never plays: name it for its ending (harpies.mp3, bus.mp3 ...)"  (text, line 4052)
+- "isn't a sound the game plays (.mp3, .ogg or .wav)"  (text, line 4054)
+- "Next one possible in {left} minutes (lc_ending_reset_cooldown)."  (text, line 4058)
+- "One can happen now."  (text, line 4058)
 
 > Note for you (not shown in game): the console command lc_ending
 
-- "Ending triggered: {id}"  (text, line 4051)
+- "Ending triggered: {id}"  (text, line 4068)
 
 > Note for you (not shown in game): the console command lc_ending_cancel
 
-- "Ending cancelled. Time runs again."  (text, line 4056)
-- "No ending on."  (text, line 4056)
+- "Ending cancelled. Time runs again."  (text, line 4073)
+- "No ending on."  (text, line 4073)
 
 > Note for you (not shown in game): the console command lc_ending_reset_cooldown
 
-- "Secret ending cooldown cleared."  (text, line 4062)
-- "harpies=2,shalom=2"  (text, line 4107)
-- "harpies=4,shalom=2"  (text, line 4107)
-- "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4108)
-- "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4108)
-- "2.2=CAPTAIN: What happen ?\|3.5=MECHANIC: Somebody set up us the bomb.\|6.5=OPERATOR: We get signal.\|9.5=CAPTAIN: What !\|12.5=OPERATOR: Main screen turn on.\|14.7=CAPTAIN: It's you !!\|16.4=CATS: How are you gentlemen !!\|18.4=CATS: All your base are belong to us.\|20.4=CATS: You are on the way to destruction.\|21.6=CAPTAIN: What you say !!\|23.0=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4109)
-- "2.15=CAPTAIN: What happen ?\|3.55=MECHANIC: Somebody set up us the bomb.\|4.65=OPERATOR: We get signal.\|6.5=CAPTAIN: What !\|9.5=OPERATOR: Main screen turn on.\|11.7=CAPTAIN: It's you !!\|12.55=CATS: How are you gentlemen !!\|14.7=CATS: All your base are belong to us.\|18.45=CATS: You are on the way to destruction.\|20.6=CAPTAIN: What you say !!\|21.65=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4109)
+- "Secret ending cooldown cleared."  (text, line 4079)
+- "harpies=2,shalom=2"  (text, line 4124)
+- "harpies=4,shalom=2"  (text, line 4124)
+- "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4125)
+- "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4125)
+- "2.2=CAPTAIN: What happen ?\|3.5=MECHANIC: Somebody set up us the bomb.\|6.5=OPERATOR: We get signal.\|9.5=CAPTAIN: What !\|12.5=OPERATOR: Main screen turn on.\|14.7=CAPTAIN: It's you !!\|16.4=CATS: How are you gentlemen !!\|18.4=CATS: All your base are belong to us.\|20.4=CATS: You are on the way to destruction.\|21.6=CAPTAIN: What you say !!\|23.0=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4126)
+- "2.15=CAPTAIN: What happen ?\|3.55=MECHANIC: Somebody set up us the bomb.\|4.65=OPERATOR: We get signal.\|6.5=CAPTAIN: What !\|9.5=OPERATOR: Main screen turn on.\|11.7=CAPTAIN: It's you !!\|12.55=CATS: How are you gentlemen !!\|14.7=CATS: All your base are belong to us.\|18.45=CATS: You are on the way to destruction.\|20.6=CAPTAIN: What you say !!\|21.65=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4126)
 
 ## escorts through Combine doors (sv_livingcity_escort.lua)
 
@@ -17965,92 +17965,92 @@ Made from version b0322ff. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Musical Chairs
 
-- "Musical Chairs"  (name, line 417)
-- "Walk round the chairs while the music plays. When it stops, crouch beside a free chair. No chair, you're out."  (text, line 418)
-- "The music never stops"  (text, line 419)
-- "The chairs keep drifting round and round, and you drift awake."  (text, line 419)
-- "Musical Chairs"  (name, line 420)
-- "The last one sitting"  (text, line 421)
-- "You wake up sitting bolt upright in bed, and nobody can take it from you."  (text, line 421)
-- "No chair for you"  (text, line 422)
-- "You wake with a tune stuck in your head and the feeling that a chair laughed at you."  (text, line 422)
-- "Round and round"  (text, line 423)
-- "You wake dizzy, humming. Were there always that many chairs?"  (text, line 423)
+- "Musical Chairs"  (name, line 418)
+- "Walk round the chairs while the music plays. When it stops, get to a free chair and crouch (or press Use) to sit in it. No chair, you're out."  (text, line 420)
+- "The music never stops"  (text, line 421)
+- "The chairs keep drifting round and round, and you drift awake."  (text, line 421)
+- "Musical Chairs"  (name, line 422)
+- "The last one sitting"  (text, line 423)
+- "You wake up sitting bolt upright in bed, and nobody can take it from you."  (text, line 423)
+- "No chair for you"  (text, line 424)
+- "You wake with a tune stuck in your head and the feeling that a chair laughed at you."  (text, line 424)
+- "Round and round"  (text, line 425)
+- "You wake dizzy, humming. Were there always that many chairs?"  (text, line 425)
 
 > Note for you (not shown in game): part of: tick
 
-- "No chair for you"  (text, line 513)
-- "The music stopped and every chair was taken. The chairs laugh at you (chairs can do that, here)."  (text, line 513)
-- "The last one sitting"  (text, line 521)
-- "The music stops for good. Yours is the only chair left, and it's very comfortable."  (text, line 521)
+- "No chair for you"  (text, line 530)
+- "The music stopped and every chair was taken. The chairs laugh at you (chairs can do that, here)."  (text, line 530)
+- "The last one sitting"  (text, line 538)
+- "The music stops for good. Yours is the only chair left, and it's very comfortable."  (text, line 538)
 
 > Note for you (not shown in game): part of: state
 
-- "Get ready: the music's about to start."  (text, line 536)
-- "Keep walking round the chairs..."  (text, line 537)
-- "You've got a chair."  (text, line 539)
-- "SIT! Crouch beside a free chair!"  (text, line 539)
-- "Safe! One chair fewer..."  (text, line 540)
-- "Round %d     Chairs: %d"  (message, line 542)
+- "Get ready: the music's about to start."  (text, line 553)
+- "Keep walking round the chairs..."  (text, line 554)
+- "You've got a chair."  (text, line 556)
+- "SIT! Crouch (or press Use) at a free chair!"  (text, line 556)
+- "Safe! One chair fewer..."  (text, line 557)
+- "Round %d     Chairs: %d"  (message, line 559)
 
 > Note for you (not shown in game): Wings
 
-- "You can fly! Jump, then jump again in the air to flap. Fly through the golden rings."  (text, line 555)
-- "Gently down"  (text, line 556)
-- "You float down, softly, softly, into your own bed."  (text, line 556)
-- "You flew"  (text, line 558)
-- "You wake up light as air. For a moment you're sure you could step off the roof and keep going. Don't."  (text, line 558)
-- "Gently down"  (text, line 559)
-- "You wake from a flying dream, arms spread, smiling."  (text, line 559)
+- "You can fly! Jump, then jump again in the air to flap. Fly through the golden rings."  (text, line 572)
+- "Gently down"  (text, line 573)
+- "You float down, softly, softly, into your own bed."  (text, line 573)
+- "You flew"  (text, line 575)
+- "You wake up light as air. For a moment you're sure you could step off the roof and keep going. Don't."  (text, line 575)
+- "Gently down"  (text, line 576)
+- "You wake from a flying dream, arms spread, smiling."  (text, line 576)
 
 > Note for you (not shown in game): part of: tick
 
-- "You flew"  (text, line 629)
-- "Through every ring, round the pigeons, over the dream. You actually flew."  (text, line 629)
+- "You flew"  (text, line 646)
+- "Through every ring, round the pigeons, over the dream. You actually flew."  (text, line 646)
 
 > Note for you (not shown in game): part of: state
 
-- "Jump, then jump again in the air to flap!"  (text, line 642)
-- "Rings: %d of %d"  (message, line 643)
+- "Jump, then jump again in the air to flap!"  (text, line 659)
+- "Rings: %d of %d"  (message, line 660)
 
 > Note for you (not shown in game): It's Raining Melons
 
-- "It's Raining Melons"  (name, line 655)
-- "Watermelons are falling! Stand on a green glow to catch one. A red glow is a lead melon: keep out from under it."  (text, line 656)
-- "The rain stops"  (text, line 657)
-- "The last melon lands, the sun comes out, and you wake."  (text, line 657)
-- "It's Raining Melons"  (name, line 658)
-- "You wake up full, and sticky, and happy. There's no melon anywhere. There never is."  (text, line 659)
-- "You wake with a bump on your head that isn't there. Lead melons. Who grows those?"  (text, line 660)
-- "The rain stops"  (text, line 661)
-- "You wake to the sound of rain and, for a moment, hope."  (text, line 661)
+- "It's Raining Melons"  (name, line 672)
+- "Watermelons are falling! Stand on a green glow to catch one. A red glow is a lead melon: keep out from under it."  (text, line 673)
+- "The rain stops"  (text, line 674)
+- "The last melon lands, the sun comes out, and you wake."  (text, line 674)
+- "It's Raining Melons"  (name, line 675)
+- "You wake up full, and sticky, and happy. There's no melon anywhere. There never is."  (text, line 676)
+- "You wake with a bump on your head that isn't there. Lead melons. Who grows those?"  (text, line 677)
+- "The rain stops"  (text, line 678)
+- "You wake to the sound of rain and, for a moment, hope."  (text, line 678)
 
 > Note for you (not shown in game): part of: melon land
 
-- "A lead melon. It's exactly as heavy as it sounds."  (text, line 707)
-- "Your arms are full of melons and the sky is still raining them. A perfect dream."  (text, line 711)
+- "A lead melon. It's exactly as heavy as it sounds."  (text, line 724)
+- "Your arms are full of melons and the sky is still raining them. A perfect dream."  (text, line 728)
 
 > Note for you (not shown in game): part of: state
 
-- "Catch the melons! Stand on the green glows."  (text, line 743)
-- "Melons: %d of %d"  (message, line 744)
-- "The Heads in the Sky"  (text, line 749)
-- "Cheeeeese. Cheeeeeeeese."  (text, line 749)
-- "a choir of giant floating heads, humming, slow, warm, reverb-heavy and slightly off-key"  (text, line 749)
-- "The Heads in the Sky"  (text, line 750)
-- "The golden cheese! The golden cheese!"  (text, line 750)
-- "the same choir, suddenly excited, overlapping, high-pitched"  (text, line 750)
-- "The Music Man"  (text, line 751)
-- "Ladies and gentlemen, musical chairs! When the music stops... sit."  (text, line 751)
-- "a cheerful old game-show host, a little too close to the microphone"  (text, line 751)
-- "The Music Man"  (text, line 752)
-- "the game-show host, sudden and loud"  (text, line 752)
-- "A Gentle Voice"  (text, line 753)
-- "Go on. You always knew you could. Just... flap."  (text, line 753)
-- "a soft, kind, dreamy narrator, almost whispering"  (text, line 753)
-- "The Weatherman"  (text, line 754)
-- "Today's forecast: melons. Heavy melons, with a chance of lead."  (text, line 754)
-- "a chirpy TV weatherman, completely serious about it"  (text, line 754)
+- "Catch the melons! Stand on the green glows."  (text, line 760)
+- "Melons: %d of %d"  (message, line 761)
+- "The Heads in the Sky"  (text, line 766)
+- "Cheeeeese. Cheeeeeeeese."  (text, line 766)
+- "a choir of giant floating heads, humming, slow, warm, reverb-heavy and slightly off-key"  (text, line 766)
+- "The Heads in the Sky"  (text, line 767)
+- "The golden cheese! The golden cheese!"  (text, line 767)
+- "the same choir, suddenly excited, overlapping, high-pitched"  (text, line 767)
+- "The Music Man"  (text, line 768)
+- "Ladies and gentlemen, musical chairs! When the music stops... sit."  (text, line 768)
+- "a cheerful old game-show host, a little too close to the microphone"  (text, line 768)
+- "The Music Man"  (text, line 769)
+- "the game-show host, sudden and loud"  (text, line 769)
+- "A Gentle Voice"  (text, line 770)
+- "Go on. You always knew you could. Just... flap."  (text, line 770)
+- "a soft, kind, dreamy narrator, almost whispering"  (text, line 770)
+- "The Weatherman"  (text, line 771)
+- "Today's forecast: melons. Heavy melons, with a chance of lead."  (text, line 771)
+- "a chirpy TV weatherman, completely serious about it"  (text, line 771)
 
 ## ten more strange dreams (dreams you play) (sv_livingcity_strangedreams2.lua)
 

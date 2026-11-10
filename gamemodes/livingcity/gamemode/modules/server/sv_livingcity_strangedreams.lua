@@ -414,8 +414,10 @@ do
     LC.ChairsSit = 4 -- (seconds to find a chair once it stops)
     LC.ChairsSoloRounds = 3 -- (alone in it: rounds to sit through to win)
     LC.ChairsReach = 60
+    LC.ChairsSeatUp = 22 -- (how high above a chair's foot its seat is, for the real seat: tune it if people sit too high or low)
     local def = { id = "chairs", name = "Musical Chairs", mood = "neutral", secs = 240, lives = 1, ownMusic = true,
-        goal = "Walk round the chairs while the music plays. When it stops, crouch beside a free chair. No chair, you're out.",
+        leave = function(g, p) if LC.DreamUnseat then LC.DreamUnseat(p) end end,
+        goal = "Walk round the chairs while the music plays. When it stops, get to a free chair and crouch (or press Use) to sit in it. No chair, you're out.",
         timeUp = { "The music never stops", "The chairs keep drifting round and round, and you drift awake." },
         woke = Woke({ name = "Musical Chairs",
             won = { "The last one sitting", "You wake up sitting bolt upright in bed, and nobody can take it from you." },
@@ -428,6 +430,15 @@ do
 
     -- (who's really in it: players; stand-ins wander, they don't take chairs)
     local function Seats(g, n)
+        -- (anyone still sat in the last round's chairs stands up beside theirs)
+        for _, ch in ipairs(g.chairs) do
+            if IsValid(ch.by) and ch.by.lcDreamSeat and LC.DreamUnseat then
+                LC.DreamUnseat(ch.by)
+                local out = Vector(ch.pos.x - g.dream.pos.x, ch.pos.y - g.dream.pos.y, 0)
+                if out:Length() > 1 then out:Normalize() end
+                ch.by:SetPos(ch.pos + out * 60 + Vector(0, 0, 4))
+            end
+        end
         for _, ch in ipairs(g.chairs) do if IsValid(ch.ent) then ch.ent:Remove() end end
         g.chairs = {}
         local model = FirstModel(CHAIR)
@@ -445,7 +456,7 @@ do
         for i, ch in ipairs(g.chairs) do
             local a = g.turn + (i - 1) / math.max(1, n) * math.pi * 2
             local pos = Vector(g.dream.pos.x + math.cos(a) * g.radius, g.dream.pos.y + math.sin(a) * g.radius, g.top)
-            ch.pos = pos
+            ch.pos, ch.yaw = pos, math.deg(a)
             if IsValid(ch.ent) then
                 ch.ent:SetPos(pos + Vector(0, 0, g.phase == "music" and 8 + math.sin(t * 3 + i) * 8 or 0))
                 ch.ent:SetAngles(Angle(0, math.deg(a), g.phase == "music" and math.sin(t * 2 + i) * 10 or 0))
@@ -494,12 +505,18 @@ do
         elseif g.phase == "sit" then
             for _, p in ipairs(players) do
                 local s = g.pl[p]
-                if not s.chair and p.Crouching ~= nil and p:Crouching() == true then
+                local asks = (p.Crouching ~= nil and p:Crouching() == true) or (IN_USE ~= nil and p.KeyDown ~= nil and p:KeyDown(IN_USE) == true)
+                if not s.chair and asks then
                     local pp = p:GetPos()
                     for i, ch in ipairs(g.chairs) do
                         if not ch.by and Dist2(pp, ch.pos) < LC.ChairsReach then
                             ch.by, s.chair, g.dirty = p, i, true
                             Snd(p, "garrysmod/save_load1.wav", 60, 130)
+                            -- (really sat in it: Garry's Mod's own seat on the chair, LC.DreamSeat)
+                            if LC.DreamSeat then
+                                local seat = LC.DreamSeat(p, ch.pos + Vector(0, 0, LC.ChairsSeatUp), ch.yaw or 0)
+                                if IsValid(seat) then seat.lcDreamGame = true g.ents[#g.ents + 1] = seat end
+                            end
                             break
                         end
                     end
@@ -536,7 +553,7 @@ do
         if g.phase == "ready" then big = "Get ready: the music's about to start."
         elseif g.phase == "music" then big = "Keep walking round the chairs..."
         elseif g.phase == "sit" then
-            if s.chair then big = "You've got a chair." else big, tone = "SIT! Crouch beside a free chair!", "warn" end
+            if s.chair then big = "You've got a chair." else big, tone = "SIT! Crouch (or press Use) at a free chair!", "warn" end
         elseif g.phase == "result" and not s.done then big = "Safe! One chair fewer..." end
         return { glows = glows, big = big, tone = tone, phase2 = g.phase,
             meterName = string.format("Round %d     Chairs: %d", g.round, #g.chairs) }

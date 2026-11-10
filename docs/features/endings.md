@@ -187,3 +187,11 @@ No new settings or commands.
 - **On screen:** "Lap 2 of 4   3rd of 6   Carrying: BOOST (Jump to use)", and "off the road", "Spinning out!", "Slowed!".
 - **Music:** the owner's `rally` file in `sound/livingcity/dreams/` if there is one, else Half-Life 2's own. Late sleepers can join it like any dream.
 
+## Real seats for the chairs (10 November; the owner: "for the dreams that involve chairs (musical chairs and shalom), can we just use the gmod seat entity instead of awkward player placement?")
+
+`LC.DreamSeat(player, pos, yaw)`, `LC.DreamSeatMove`, `LC.DreamUnseat` in `sv_livingcity_dreams.lua`: Garry's Mod's own seat (the one the seat tool makes, `prop_vehicle_prisoner_pod` with the airboat seat), unseen and not solid, with the player sat in it by the game's own sitting animation. Nobody can climb out of one or into someone else's: the dream seats and unseats. Waking, or the ending finishing, always takes them out and removes the seat.
+
+- **Musical Chairs:** claiming a free chair (crouch at it, or now also press Use) really sits you in it, until the next round begins (you stand up beside it) or the dream ends. Before, you only crouched beside it. The rules are the same: one chair fewer than the players, four seconds to find one.
+- **Shalom:** a player lifted on the chair is sat in a real seat that is carried up, round the ring and down with the chair; they can look about freely from up there. Before, they stood in the air with their legs bent by hand. The chair drawn under them, the arms waving and the bounce are as they were. The city's own people (not players) are lifted the old way: the game can't seat them.
+- **To tune after a look in game:** `LC.ChairsSeatUp` (22: how high on the chair you sit in Musical Chairs), `LC.ShalomSeatUp` (28) and `LC.DreamSeatYaw` (-90: which way a sitter faces).
+

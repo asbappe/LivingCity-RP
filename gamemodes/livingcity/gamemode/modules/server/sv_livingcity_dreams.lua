@@ -837,9 +837,56 @@ local function Leave(p)
     net.Send(p)
 end
 
+------------------------------------------------------------------------
+-- A real seat (the owner, 10 November: "for the dreams that involve chairs (musical chairs and shalom), can we just
+-- use the gmod seat entity instead of awkward player placement?")
+------------------------------------------------------------------------
+
+-- Garry's Mod's own seat (the one the seat tool makes), unseen and not solid, with the player sat in it: they sit
+-- the way the game sits anyone, and are let out only by the dream. What's seen under them is the dream's own chair.
+LC.DreamSeatYaw = -90 -- (a seat's passenger faces a quarter turn from the seat itself)
+function LC.DreamSeatMove(seat, pos, yaw)
+    if not IsValid(seat) then return end
+    seat:SetPos(pos)
+    seat:SetAngles(Angle(0, (yaw or 0) + LC.DreamSeatYaw, 0))
+end
+function LC.DreamUnseat(p)
+    if not IsValid(p) then return end
+    local seat = p.lcDreamSeat
+    p.lcDreamSeat = nil
+    if p.SetNW2Bool then p:SetNW2Bool("lc_real_seat", false) end
+    if p.InVehicle and p:InVehicle() and p.ExitVehicle then p:ExitVehicle() end
+    if IsValid(seat) then seat:Remove() end
+end
+-- Sit p at pos, facing yaw. The seat, or nil.
+function LC.DreamSeat(p, pos, yaw)
+    if not IsValid(p) or not p:IsPlayer() then return nil end
+    LC.DreamUnseat(p)
+    local seat = ents.Create("prop_vehicle_prisoner_pod")
+    if not IsValid(seat) then return nil end
+    seat:SetModel("models/nova/airboat_seat.mdl")
+    seat:SetKeyValue("vehiclescript", "scripts/vehicles/prisoner_pod.txt")
+    seat:SetKeyValue("limitview", "0")
+    LC.DreamSeatMove(seat, pos, yaw)
+    seat:Spawn()
+    if seat.SetNoDraw then seat:SetNoDraw(true) end
+    if seat.SetNotSolid then seat:SetNotSolid(true) end
+    local ph = seat.GetPhysicsObject and seat:GetPhysicsObject()
+    if ph and IsValid(ph) and ph.EnableMotion then ph:EnableMotion(false) end
+    seat.lcDreamSeat = true
+    p.lcDreamSeat = seat
+    p:SetNW2Bool("lc_real_seat", true)
+    if p.EnterVehicle then p:EnterVehicle(seat) end
+    return seat
+end
+-- (nobody climbs out of one, or into someone else's: the dream seats and unseats)
+hook.Add("CanExitVehicle", "LivingCityDreamSeat", function(veh) if IsValid(veh) and veh.lcDreamSeat then return false end end)
+hook.Add("CanPlayerEnterVehicle", "LivingCityDreamSeat", function(p, veh) if IsValid(veh) and veh.lcDreamSeat and p.lcDreamSeat ~= veh then return false end end)
+
 -- Wake one dreamer: out of it, and everything put back.
 function LC.DreamWakeOne(p, why)
     if not IsValid(p) then return false end
+    LC.DreamUnseat(p) -- (sat in one of a dream's chairs: out of it first)
     local sid = Sid(p)
     local snap = LC.DreamSnaps[sid] or LC.DreamLoad(sid)
     local dream = LC.DreamActive

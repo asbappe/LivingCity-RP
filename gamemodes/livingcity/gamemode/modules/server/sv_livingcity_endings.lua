@@ -2421,11 +2421,17 @@ local function Member(ring, e, a)
 end
 
 -- Up on a chair, over everyone's heads (a beat-long bounce on every beat), then down.
+LC.ShalomSeatUp = 28 -- (the real seat's height above where their feet were: so their hips are where the chair is drawn)
 local function LiftUp(m, now)
     if not m or m.lift or not IsValid(m.e) then return end
     local beats = 16
     m.lift = { t0 = now, dur = beats * 60 / math.max(40, cvShalomBPM:GetFloat()) }
     m.e:SetNW2Bool("lc_chair", true)
+    -- (a player: really sat, in Garry's Mod's own seat, carried up with the chair. LC.DreamSeat, sv_livingcity_dreams.lua)
+    if m.e:IsPlayer() and LC.DreamSeat then
+        m.seat = LC.DreamSeat(m.e, m.e:GetPos() + Vector(0, 0, LC.ShalomSeatUp), m.yawSent or 0)
+        if IsValid(m.seat) then E.ents[#E.ents + 1] = m.seat end
+    end
     E.lifted = E.lifted or {}
     E.lifted[m.e] = true
     local y = Pick(YEAH)
@@ -2441,6 +2447,10 @@ end
 local function LiftDown(m)
     if not m or not m.lift then return end
     m.lift = nil
+    if m.seat then
+        if IsValid(m.e) and LC.DreamUnseat then LC.DreamUnseat(m.e) end
+        m.seat = nil
+    end
     if IsValid(m.e) then m.e:SetNW2Bool("lc_chair", false) end
 end
 -- Whose turn: players and the city's people in turn, nobody twice till everyone's been up.
@@ -2560,8 +2570,14 @@ function LC.ShalomStep(now)
                     pos.z = pos.z + s * (62 + 8 * math.abs(math.sin(beat * math.pi)))
                     -- (the chair itself is drawn on every screen under their hips: cl_livingcity_endings.lua)
                 end
-                e:SetPos(pos)
-                if e:IsPlayer() then
+                if m.seat and IsValid(m.seat) then
+                    LC.DreamSeatMove(m.seat, pos + Vector(0, 0, LC.ShalomSeatUp), yaw) -- (sat in it: the seat is moved, and they go with it)
+                else
+                    e:SetPos(pos)
+                end
+                if e:IsPlayer() and m.seat then
+                    m.yawSent = yaw -- (free to look about from up there)
+                elseif e:IsPlayer() then
                     if math.abs(AngleTo(math.rad(m.yawSent or 0), math.rad(yaw))) > 0.05 then
                         m.yawSent = yaw
                         if e.SetEyeAngles then e:SetEyeAngles(Angle(0, yaw, 0)) end
@@ -3788,6 +3804,7 @@ local function Clear()
         p:SetNW2Bool("lc_end_spectating", false)
         p:SetNW2Bool("lc_dancing", false)
         p:SetNW2Bool("lc_seated", false)
+        if p.lcDreamSeat and LC.DreamUnseat then LC.DreamUnseat(p) end -- (still up on Shalom's chair as it ended)
         p:SetNW2Entity("lc_riding", NULL)
         p.lcBloomUp = nil
         p:SetNW2Bool("lc_rocking", false)
