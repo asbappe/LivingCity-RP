@@ -65,6 +65,8 @@ function LC.SavePeople()
             id = p.id, role = p.role, name = p.name, gender = p.gender, model = p.model, job = p.job, home = p.home,
             rebel = p.rebel or nil, alive = p.alive, born = p.born, lastSeen = p.lastSeen, died = p.died, killer = p.killer,
             memory = p.memory, -- how each player's character has treated them (sv_livingcity_talk.lua)
+            oldtimer = p.oldtimer or nil, -- the old man who gives advice (sv_livingcity_oldtimer.lua)
+            helped = p.helped, -- what each player's character has helped him with (sv_livingcity_oldtimer.lua)
         }
     end
     LC.SafeWrite(File(), util.TableToJSON(out))

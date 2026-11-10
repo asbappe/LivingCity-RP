@@ -212,6 +212,7 @@ end
 
 function LC.UseToilet(ply)
     if not IsValid(ply) or not ply:Alive() then return false end
+    if LC.PrisonToiletUse and LC.PrisonToiletUse(ply) then return true end -- (a prisoner unclogging it on a work detail: sv_livingcity_sentence.lua)
     if ply:GetNW2String("lcf_faction", "") == "stalker" then
         Notice(ply, "info", "Not for you", "A stalker has no need of a toilet any more. They saw to that.", 5)
         return false

@@ -134,6 +134,7 @@ end
 
 -- Throw out what has gone off. Returns how many units went.
 function LC.SpoilCheck(ply, quiet)
+    if LC.Relaxed and LC.Relaxed(ply) then return 0 end -- (Relaxed survival: nothing goes off)
     local inv, gone = Inv(ply), 0
     for id, n in pairs(inv) do
         if LC.Spoils(id) then
@@ -368,10 +369,14 @@ function LC.Feed(ply, hunger, thirst)
     ply:SetNW2Float("lcn_thirst", math.Clamp(LC.Thirst(ply) + (thirst or 0), 0, 100))
 end
 
-local function HasParasites(ply) return ply:GetNW2Float("lcn_parasites", 0) > CurTime() end
+local function HasParasites(ply)
+    if LC.Relaxed and LC.Relaxed(ply) then return false end -- (Relaxed survival has none: sv_livingcity_survivalmode.lua)
+    return ply:GetNW2Float("lcn_parasites", 0) > CurTime()
+end
 LC.HasParasites = HasParasites
 
 local function Infect(ply)
+    if LC.Relaxed and LC.Relaxed(ply) then return end -- (Relaxed survival: no parasites)
     local was = HasParasites(ply)
     ply:SetNW2Float("lcn_parasites", CurTime() + 1e9) -- they don't wear off: only antiparasitic tablets (a medic, the black market) clear them
     if not was then ply:ChatPrint("Your stomach turns. Something in that wasn't clean.") end
@@ -414,6 +419,7 @@ timer.Create("LivingCityNeeds", 5, 0, function()
         if not Exempt(ply) and not ply.lcSleep and not ply.lcDreaming then
             local mult = (HasParasites(ply) and 2 or 1) * ((LC.IsRested and LC.IsRested(ply)) and 0.75 or 1) -- (a good night's sleep: sv_livingcity_rest.lua)
                 * ((LC.SecondWind and LC.SecondWind(ply)) and 0.75 or 1) -- (beat a nightmare: sv_livingcity_vices.lua)
+                * (LC.RelaxedNeedsMul and LC.RelaxedNeedsMul(ply) or 1) -- (Relaxed survival: sv_livingcity_survivalmode.lua)
             LC.Feed(ply, -hDrain * mult, -tDrain * mult)
             local h, t = LC.Hunger(ply), LC.Thirst(ply)
 
@@ -1007,7 +1013,7 @@ LC.Fixtures = LC.Fixtures or {}
 -- ration dispenser is wall-mounted at about chest height; everything else
 -- stands on the floor. (Models have their origin in different places, so the
 -- model's own bounds are used to put its bottom exactly here.)
-local FIXTURE_LIFT = { conveyor = 34, dispenser = 34, screen = 60, lawboard = 30, screen_big = 140, loudspeaker = 180, powerbank = 40 }
+local FIXTURE_LIFT = { conveyor = 34, dispenser = 34, screen = 60, lawboard = 30, civposter = 50, screen_big = 140, loudspeaker = 180, powerbank = 40 }
 
 function LC.SeatFixture(e, ground, kind)
     local mins = e:OBBMins()
@@ -1021,7 +1027,7 @@ local function FrontSlot(ent, up, out)
 end
 local FIXTURE_CLASS = {
     vending = "lc_vending", dispenser = "lc_dispenser", terminal = "lc_terminal", stove = "lc_stove", fire = "lc_fire",
-    dealer = "lc_dealer", locker = "lc_locker", screen = "lc_screen", lawboard = "lc_lawboard", console = "lc_console",
+    dealer = "lc_dealer", locker = "lc_locker", screen = "lc_screen", lawboard = "lc_lawboard", infodesk = "lc_infoclerk", civposter = "lc_civposter", console = "lc_console",
     workbench = "lc_workbench", recycler = "lc_recycler", dataterm = "lc_dataterminal", masterterm = "lc_masterterminal", incinerator = "lc_incinerator",
     hazbarrel = "lc_hazbarrel", -- (sv_livingcity_cleanup.lua)
     transformer = "lc_transformer", forcefield = "lc_forcefield",
@@ -1107,7 +1113,7 @@ function LC.UseVending(ply, ent)
     if econ and econ:GetBool() and price > 0 then
         if LC.Credits(ply) < price then
             ent:EmitSound("buttons/button10.wav", 65)
-            ply:ChatPrint("[Vending] Insert " .. price .. " credits.")
+            if not (LC.MachineSpeak and LC.MachineSpeak(ent, ply, "[Vending] Insert " .. price .. " credits.", false)) then ply:ChatPrint("[Vending] Insert " .. price .. " credits.") end
             return false
         end
         LC.AddCredits(ply, -price)
@@ -1154,7 +1160,7 @@ function LC.UseStaticVending(ply, fx)
     if econ and econ:GetBool() and price > 0 then
         if LC.Credits(ply) < price then
             ply:EmitSound("buttons/button10.wav", 65)
-            ply:ChatPrint("[Vending] Insert " .. price .. " credits.")
+            if not (LC.MachineSpeak and LC.MachineSpeak(nil, ply, "[Vending] Insert " .. price .. " credits.", false)) then ply:ChatPrint("[Vending] Insert " .. price .. " credits.") end
             return false
         end
         LC.AddCredits(ply, -price)
@@ -1372,8 +1378,11 @@ function LC.UseDispenser(ply, ent)
         return true
     end
     if refused then
-        beeper:EmitSound("buttons/combine_button_locked.wav", 65)
-        ply:ChatPrint(refused)
+        -- the dispenser says it (sv_livingcity_machines.lua), or the old way
+        if not (LC.MachineSpeak and LC.MachineSpeak(beeper, ply, refused)) then
+            beeper:EmitSound("buttons/combine_button_locked.wav", 65)
+            ply:ChatPrint(refused)
+        end
         return false
     end
     local base = cvRation:GetFloat()

@@ -520,15 +520,44 @@ local function Due(ply, key)
         return nil
     end
     if def.when and not def.when(ply) then return nil end
+    -- held back until they seem stuck (sv_livingcity_learning.lua): the city teaches it first
+    local first = ply.lcHintFirst and ply.lcHintFirst[seenKey]
+    local wait = first and not def.urgent and LC.HintDeferSecs and LC.HintDeferSecs(ply, key, def)
+    if wait and CurTime() - first < wait then return nil end
     return text, (Variant(def.title, role)) or "Tip", seenKey, def
 end
 LC.HintDue = function(ply, key) return Due(ply, key) ~= nil end
+
+-- They learned it some other way (the clerk, the old-timer, the pamphlet, doing it): no card for it.
+function LC.HintLearned(ply, key)
+    local def = LC.HINTS[key]
+    if not def or not IsValid(ply) or not ply:IsPlayer() then return false end
+    local _, variant = Variant(def.text, RoleOf(ply))
+    local seenKey = variant and variant ~= "default" and (key .. "." .. variant) or key
+    if ply.lcHintFirst then ply.lcHintFirst[seenKey] = nil end
+    if def.every then
+        ply.lcHintLast = ply.lcHintLast or {}
+        ply.lcHintLast[seenKey] = CurTime()
+        return true
+    end
+    if Seen(ply)[seenKey] then return false end
+    Seen(ply)[seenKey] = true
+    SaveSeen(ply)
+    return true
+end
 
 -- Show a tip, if this player hasn't had it. Returns true if it was sent.
 function LC.Hint(ply, key)
     local text, title, seenKey, def = Due(ply, key)
     if not text then return false end
     local now = CurTime()
+    -- the first time it would show: start the clock instead, if it waits for them to be stuck
+    ply.lcHintFirst = ply.lcHintFirst or {}
+    if not def.urgent and not ply.lcHintFirst[seenKey] and LC.HintDeferSecs and LC.HintDeferSecs(ply, key, def) then
+        ply.lcHintFirst[seenKey] = now
+        return false
+    end
+    ply.lcHintFirst[seenKey] = nil
     local busy = ply.lcHintBusy or 0
     -- too many already waiting: hold this one back (it'll come up next time)
     if not def.urgent and busy - now > BACKLOG then return false end

@@ -120,7 +120,7 @@ hook.Add("LivingCityQuestComplete", "LivingCityEconomy", function(p, q)
     if q.chain == "rehab" then
         LC.AddStanding(p, 40, "Community service")
     elseif q.chain == "shift" then
-        LC.AddCredits(p, math.floor(cvShiftPay:GetInt() * (LC.LoyalPayMul and LC.LoyalPayMul(p) or 1) + 0.5), "shift complete") -- (more for the loyal: sv_livingcity_loyalty.lua)
+        LC.AddCredits(p, math.floor(cvShiftPay:GetInt() * (LC.LoyalPayMul and LC.LoyalPayMul(p) or 1) * (LC.SurvivalPayMul and LC.SurvivalPayMul(p) or 1) + 0.5), "shift complete") -- (more for the loyal: sv_livingcity_loyalty.lua; and for Realistic survival: sv_livingcity_survivalmode.lua)
         LC.AddStanding(p, 5, "Union shift completed")
     elseif q.chain == "insidework" or SECRET_BOARDS[q.board] then
         if q.board ~= "Urges" then LC.AddCredits(p, cvJobPay:GetInt(), "paid quietly") end

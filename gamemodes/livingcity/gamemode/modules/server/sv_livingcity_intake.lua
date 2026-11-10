@@ -188,6 +188,7 @@ function LC.IntakeNew(ply)
     ply.lcIntakeSince = CurTime()
     ply.lcArrive = true -- (the next spawn is an arrival)
     if LC.LaborNew then LC.LaborNew(ply) end -- (a new person has never had a work assignment)
+    if LC.TutorReset then LC.TutorReset(ply) end -- (a new person hasn't been searched: sv_livingcity_intaketutor.lua)
     Flags(ply)
 end
 

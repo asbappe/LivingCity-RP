@@ -245,6 +245,8 @@ function LC.Announce(kind, path, detail)
     for _, ply in ipairs(player.GetAll()) do
         if says then ply:ChatPrint("[" .. title .. "] \"" .. says .. "\"") end
         local ok, means = pcall(function() return detail or (MEANS[kind] and MEANS[kind](ply)) end)
+        -- the plain-words explanation only the first few times each player hears it (sv_livingcity_learning.lua)
+        if ok and means and not detail and LC.PAExplainDue and not LC.PAExplainDue(ply, kind) then means = nil end
         if ok and means then ply:ChatPrint("  > " .. means) end
         -- and on the screen, where it won't scroll away (sv_livingcity_notices.lua)
         local text = (ok and means) or (says and ("\"" .. says .. "\"")) or nil

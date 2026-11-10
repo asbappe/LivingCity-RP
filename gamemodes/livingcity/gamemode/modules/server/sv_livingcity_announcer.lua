@@ -702,6 +702,33 @@ function LC.VoiceMissing()
         if path ~= "" and not file.Exists("sound/" .. path, "GAME") then g[#g + 1] = path .. " (" .. name .. ")" end
     end
     Row("G-Man", "gman/", g)
+    -- citizens showing the way (sv_livingcity_advice.lua), a man's take and a woman's of each line
+    local c = {}
+    if LC.AdviceRescan then LC.AdviceRescan() end
+    for id in pairs(LC.AdviceLines or {}) do
+        for _, gen in ipairs({ "male", "female" }) do
+            if not LC.AdviceClip(id, gen) then c[#c + 1] = id .. "_" .. gen end
+        end
+    end
+    Row("Citizens", "citizens/", c)
+    -- the Citizen Information clerk, the old-timer, the machines (sv_livingcity_infodesk.lua, _oldtimer, _machines)
+    local function Each(name, folder, rescan, clip, ids)
+        local m = {}
+        if rescan then rescan() end
+        for _, id in ipairs(ids) do if clip and not clip(id) then m[#m + 1] = id end end
+        Row(name, folder, m)
+    end
+    local function Ids(topics, lines)
+        local ids = {}
+        for _, t in ipairs(topics or {}) do ids[#ids + 1] = t[1] end
+        for id in pairs(lines or {}) do ids[#ids + 1] = id end
+        return ids
+    end
+    Each("Citizen Information clerk", "clerk/", LC.InfoDeskRescan, LC.InfoDeskClip, Ids(LC.InfoDeskTopics, LC.InfoDeskLines))
+    local oldIds = Ids(LC.OldTimerTopics, LC.OldTimerLines)
+    for _, t in ipairs(LC.OldTimerTroubles or {}) do oldIds[#oldIds + 1] = "hint_" .. t[1] oldIds[#oldIds + 1] = "thanks_" .. t[1] end
+    Each("The old-timer", "oldtimer/", LC.OldTimerRescan, LC.OldTimerClip, oldIds)
+    Each("Machines", "machines/", LC.MachineRescan, LC.MachineClip, Ids(nil, LC.MachineLines))
     return out
 end
 

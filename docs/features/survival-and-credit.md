@@ -38,3 +38,13 @@ You can have more than one person in the city (`lc_char_slots`, 3). `!characters
 - **Birds:** a crow leaves a raw crow, a gull a raw gull, a pigeon a raw pigeon (all cook to roast bird). Birds only appear under open sky. There are `lc_birds` (4) about; a bird or roaming headcrab that is killed is replaced only after a minute and a half, one of each kind per 90 seconds at most (the owner, 7 November: food scarcity).
 - **Fish:** raw fish is a grey bait pod (HL2 has no fish model), fried fish a takeout carton.
 - **A fishing line** lasts 4 to 8 casts, warns when it's fraying, then snaps. A cast takes 25 to 45 seconds and brings up a fish 30% of the time (it was 10 to 22 seconds and 58% until 7 November, the owner: food scarcity).
+
+## Realistic or Relaxed survival (the owner, 10 November)
+
+Each character chooses how hard staying alive is:
+
+- **Realistic** (where everyone starts; everything as it has always been): hunger, thirst, parasites, the toilet and washing, food going off. For taking it on: **20% more shift pay** (the Union shift and the shift games' pay, `lc_realistic_bonus` 0.2) **and 20% more experience**, and the title **"Hardened"** under your name (before any title your lives have earned, "Hardened, Old hand").
+- **Relaxed:** hunger and thirst come on at a third of the speed (`lc_relaxed_needs` 0.33); no parasites (nothing catches), no toilet or washing, nothing in your pockets goes off. Switching to Relaxed clears any parasites, urge and dirt you had.
+- **Where to choose:** the characters screen (C > Your characters: the "Survival" button on the character you're playing) or F2 > Me ("Survival: Realistic (switch to Relaxed)"). Switching is allowed once every `lc_survival_switch_hours` (3). Each character keeps its own choice.
+- `lc_survival_modes` 0: everyone Realistic, with no bonus and no title, exactly as before.
+

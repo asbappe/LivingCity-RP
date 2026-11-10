@@ -180,6 +180,7 @@ local function StepAway(npc, ply)
     if tr and not tr.StartSolid then npc:SetPos(tr.HitPos - Vector(0, 0, 4)) end
 end
 LC.TalkStepAway = StepAway
+LC.FoodToGive = FoodToGive
 
 function LC.OpenTalk(ply, npc, said)
     local st = Usable(ply, npc)
@@ -217,6 +218,11 @@ end
 local function Chat(ply, npc, st)
     local feel = LC.Feeling(npc, ply)
     if feel <= AFRAID then return Pick(AFRAID_LINES) end
+    -- what you need, if they notice: a trail, or a friend walks you there (sv_livingcity_advice.lua)
+    if LC.CitizenAdvice then
+        local said, close = LC.CitizenAdvice(ply, npc, st, feel)
+        if said then return said, close end
+    end
     npc:EmitSound(Vo(st.gender, string.format("question%02d", math.random(1, 20))), 65)
     -- a rumour if they've heard one (warm, they always share it)
     local line = (feel >= WARM or math.random() < 0.7) and LC.TakeRumor and LC.TakeRumor(ply)
@@ -305,7 +311,7 @@ net.Receive("lc_talk_do", function(_, ply)
     local st = IsValid(npc) and Usable(ply, npc)
     if not st then return end
     local said, close
-    if what == "chat" then said = Chat(ply, npc, st)
+    if what == "chat" then said, close = Chat(ply, npc, st)
     elseif what == "food" then said = ShareFood(ply, npc, st)
     elseif what == "pick" and not LC.PlayerIsCP(ply) then said, close = PickPocket(ply, npc, st)
     elseif what == "inform" and not LC.PlayerIsCP(ply) then said, close = Inform(ply, npc, st)
@@ -335,6 +341,7 @@ hook.Add("LivingCityPlayerUsedNPC", "LivingCityTalk", function(ply, npc, st)
     if not cvTalk:GetBool() or not st or st.role ~= "citizen" then return end
     if LC.PlayerIsCP(ply) then return end -- units stop citizens with E (sv_livingcity.lua)
     if LC.QuestWantsNPC and LC.QuestWantsNPC(ply, npc) then return end
+    if st.oldtimer and LC.OldTimerOn and LC.OldTimerOn() then return end -- (the old-timer has his own window: sv_livingcity_oldtimer.lua)
     timer.Simple(0, function() if IsValid(ply) and IsValid(npc) then LC.OpenTalk(ply, npc) end end)
 end)
 

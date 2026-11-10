@@ -200,6 +200,8 @@ local function Context(me, unit, rebel)
     local now = CurTime()
     if me:GetNW2Float("lc_downed_until", 0) > now then Add("Give up (let go)", function() Send("giveup") end) end
     if me:GetNW2Bool("lc_tied", false) then Add("Work at the cuffs", function() Send("struggle") end) end
+    if me:GetNW2Float("lc_jail_until", 0) > now and not me:GetNW2Bool("lc_work_detail", false) then Add("Ask for a work detail (time off your sentence)", function() Send("workdetail") end) end
+    if me:GetNW2Float("lc_probation_until", 0) > now and not me:GetNW2Bool("lc_probation_checked", false) then Add("Check in for probation (close to a unit)", function() Send("checkin") end) end
     if me:GetNW2Float("lc_gman_rival_until", 0) > now then Add("Call a vote to remove the City Administrator", function() Send("recall") end) end
     if not unit and me:GetNW2Float("lc_wanted_until", 0) > now then Add("Give myself up (near a Civil Protection unit)", function() Send("surrender") end) end
     if me:GetNW2Bool("lc_interrogated", false) then
@@ -218,6 +220,9 @@ local function Context(me, unit, rebel)
         local tied = e:GetNW2Bool("lc_tied", false)
         if unit then
             Add("Search " .. n, function() Send("search") end, true)
+            if e:GetNW2Float("lc_jail_until", 0) > now then
+                Add("Interrogate " .. n, function() if LC_CL.InterrogationDo then LC_CL.InterrogationDo("start") end end, true)
+            end
             if tied then
                 Add("Drag " .. n .. " along / let go", function() Send("drag") end)
                 Add("Uncuff " .. n, function() Send("untie") end)
@@ -368,6 +373,43 @@ local function Freq7Page()
 end
 
 -- A citizen's own: work, rations, home, standing (each marks the way, and says the rest).
+-- Your dreams (sv_livingcity_dreamskip.lua): the kinds you've earned the right to sit out, each on or off.
+local function MyDreamsPage()
+    local me = LocalPlayer()
+    local ds = util.JSONToTable(me:GetNW2String("lc_dream_sitout", "") or "") or {}
+    local items = {}
+    for _, k in ipairs({ { "happy", "Happy dreams" }, { "neutral", "Neutral dreams" }, { "nightmare", "Nightmares" }, { "propaganda", "Propaganda dreams" } }) do
+        local on = ds.on and ds.on[k[1]]
+        if (ds.earned and ds.earned[k[1]]) or on then
+            items[#items + 1] = Item(on and (k[2] .. ": sitting them out (dream them again)") or (k[2] .. ": dreaming them (sit them out)"),
+                function() if LC_CL.DreamAct then LC_CL.DreamAct(on and "unskip" or "skip", k[1]) end end)
+        end
+    end
+    local rows = {}
+    if #items == 0 then
+        rows[1] = "Nothing to sit out yet. Happy or Neutral dreams: live through 2 of that kind."
+        rows[2] = "Nightmares and propaganda: a citizen with Exemplary standing (400)."
+    end
+    return { title = "MY DREAMS", items = items, empty = rows }
+end
+
+-- What everyone has about themselves (the owner, 10 November: never only in the C menu): where they
+-- stand, survival, their dreams. On a citizen's Me page, and a page of its own for everyone else.
+local function MineItems(me)
+    local out = {
+        Item("Where I stand (every number explained)", function() if LC_CL.OpenStandingPanel then LC_CL.OpenStandingPanel() else QM("standing") end end),
+    }
+    if me:GetNW2String("lc_survival", "") ~= "" then
+        out[#out + 1] = Item(me:GetNW2String("lc_survival", "") == "relaxed" and "Survival: Relaxed (switch to Realistic: more pay)"
+            or "Survival: Realistic (switch to Relaxed)", function() Send("survival") end)
+    end
+    out[#out + 1] = Page("My dreams (which to sit out)", MyDreamsPage)
+    return out
+end
+local function MinePage()
+    return { title = "ME", items = MineItems(LocalPlayer()) }
+end
+
 local function MePage()
     local me = LocalPlayer()
     local m = Info("me")
@@ -388,12 +430,15 @@ local function MePage()
     local standing = "My standing: " .. tostring(m.standing or me:GetNW2Int("lce_standing", 0)) .. (wanted and ", WANTED" or "")
     local rows = {}
     if m.next then rows[6] = string.format("Next: %s at %d.", tostring(m.nextWhat or ""), m.next) end
-    return { title = "ME", items = {
+    local items = {
         Item(work, function() if m.work == "board" then Hub("jobs") else QM("work") end end),
         Item(rations, function() QM("rations") end),
         Item(home, function() QM("home") end),
-        Item(standing, function() QM("standing") end),
-    }, empty = rows }
+        Item(standing, function() if LC_CL.OpenStandingPanel then LC_CL.OpenStandingPanel() else QM("standing") end end), -- (every number explained: cl_livingcity_standingpanel.lua)
+    }
+    for i, it in ipairs(MineItems(me)) do if i > 1 then items[#items + 1] = it end end -- (survival, my dreams: where I stand is the line above)
+    if m.next then rows = { [#items + 1] = string.format("Next: %s at %d.", tostring(m.nextWhat or ""), m.next) } end -- (the line after the last one)
+    return { title = "ME", items = items, empty = rows }
 end
 
 -- The Administrator's two Elites. How close they follow, and what they do when there's trouble,
@@ -613,6 +658,13 @@ function LC_CL.QuickRoleRoot()
     for _, it in ipairs(Context(me, unit, rebel)) do if it.role then Add(it) end end
     for _, it in ipairs(late) do Add(it) end
     for _, it in ipairs(usual) do Add(it) end
+    if f ~= "citizen" and f ~= "" and f ~= "zombie" and f ~= "stalker" then -- (the infested and stalkers have none of it)
+        -- everyone else: where they stand, survival, their dreams (never only in the C menu), after
+        -- everything already on F2, so nothing there moves
+        local mine = Page("Me: where I stand, survival, dreams", MinePage)
+        mine.id = "me"
+        Add(mine)
+    end
     local empty = #items == 0
     items[9] = Full()
     if title == "" then title = "YOUR SIDE" end

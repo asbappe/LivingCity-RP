@@ -24,8 +24,9 @@ LC.NextNodeId = LC.NextNodeId or 1
 
 LC.POINT_KINDS = {
     idle = true, sit = true, sitchair = true, lean = true, queue = true,
-    patrol = true, checkpoint = true, spawn = true, cell = true, release = true,
+    patrol = true, checkpoint = true, spawn = true, cell = true, release = true, prisonwork = true,
     work = true, vending = true, dispenser = true, terminal = true, stove = true, fire = true, dealer = true, locker = true, screen = true, lawboard = true, console = true,
+    infodesk = true, civposter = true,
     workbench = true, recycler = true, bin = true, salvage = true, -- (sv_livingcity_salvage.lua)
     conveyor = true, -- the factory line (sv_livingcity_jobgames.lua)
     bed = true, toilet = true, bath = true, -- sleep and hygiene (sv_livingcity_rest.lua, sv_livingcity_hygiene.lua)

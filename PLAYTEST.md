@@ -1208,3 +1208,77 @@ Notes:
   Notes:
 - [ ] **Last stand sounds:** the flash comes with a white flash and teleport sound; each falling panel zaps and clanks; each transformer gives an electric blast as its guards appear; her bubble hums while it is up, each transformer hums while it powers her and goes quiet when destroyed.
   Notes:
+
+## 10 November, last: the arrival search
+
+- [ ] **Arrival search at the desks:** start a new character. A metrocop should stand beside Civil Intake and beside Housing Allocation. Walk past: he comes to you, you get "Show me how searches work" or "Just search me". Try the lesson: tips for each spot, the practice note in Boots, press R after a spot is checked. At the end: the lesson page and "Try the other side" (search a pretend citizen).
+  Notes:
+- [ ] **Contraband on day one:** give yourself moonshine (or anything illegal) before the search. It should be taken with a warning, and you should not be wanted.
+  Notes:
+- [ ] **Queueing next to him:** stand right beside the desk unit for a minute. He must never tell you to move back or arrest you.
+  Notes:
+- [ ] **Leaving unregistered:** walk out of the station (about 1500 units from the desk and arrival point) before registering. The nearest metrocop should stop you, cuff you and walk you back to the Civil Intake terminal, then take the cuffs off. Never the cells. If he gets stuck, you should end up at the desk, uncuffed.
+  Notes:
+- [ ] **Leaving unsearched:** register while the desk units are busy, then leave. A unit should come and search you outside, then let you go.
+  Notes:
+
+## 10 November, last: prison
+
+- [ ] **Sentences add up:** commit a petty crime and assault a unit, then get arrested. The chat should say "Your sentence: ... (3), Assaulting Civil Protection (10): 13 minutes". Give yourself up instead and it should be halved.
+  Notes:
+- [ ] **Work detail:** in a cell, F1 > Ask for a work detail. A guard should come to your cell, walk you out (to the "prison work spot" point if you placed one), and there should be 6 bits of trash. E on each: 20 seconds off. Then he walks you back. Try walking far away from him: it should count as an escape.
+  Notes:
+- [ ] **Probation:** get released after an arrest as a citizen. You should be told you are on probation. F1 > Check in for probation next to a unit. Walk into rebel territory: probation violation. Wait out 15 minutes without checking in (another time): Failure to report.
+  Notes:
+- [ ] **Interrogation:** as a Resistance member, get jailed with a bad record. Answer each of the three questions differently (truth, lie, silence, bargain). As a CP player, stand by a prisoner's cell, F2 > Interrogate, ask questions and use the baton.
+## 10 November, citizens show the way
+- [ ] **Advice from a stranger:** as a new or hungry citizen, E on a citizen and Chat. They say something vague ("Try the bins") and a marker and a trail on the ground go to the nearest one. Chat again: rumours or small talk (advice once a minute).
+  Notes:
+- [ ] **A friend walks you there:** share food twice with a citizen (warm), then Chat while you need something. "Come on, I'll show you": the window closes and they walk; fall behind and they wait ("Keep up!"); at the place they say one line. Run far away and they give up and the trail shows the way instead.
+  Notes:
+- [ ] **Settings:** `lc_citizen_lead 0` (everyone only points), `lc_citizen_advice 0` (Chat as before).
+  Notes:
+
+## 10 November, last: survival modes
+
+- [ ] **Realistic by default:** your name should show "Hardened". Do a Union shift: the pay should be 20% more than before (18 instead of 15).
+  Notes:
+- [ ] **Switch to Relaxed:** C > Your characters > the Survival button (or F2 > Me). Hunger and thirst should drop much slower; eating raw meat should never give parasites; meat should never go off; no toilet urge. "Hardened" should disappear.
+  Notes:
+- [ ] **The 3 hours:** try switching back straight away: it should say when you can.
+## 10 November, learning the city by living in it
+- [ ] **Tips wait:** walk up to a bin as a new character: no card. Walk away, come back after 4 minutes without searching one: now the card. Search a bin first and the card never comes. (`lc_hints_wait 0` is the old way.)
+  Notes:
+- [ ] **Body signs:** get hungry (below 25): the colour drains with waves of weakness. Thirsty: warm haze and breathing. Below 35 health: red edges and a heartbeat. Off in C > Settings.
+  Notes:
+- [ ] **The dispenser talks:** use it with no ration card: it says "No ration card detected..." low on screen, the full reason in chat, no card at the top.
+  Notes:
+- [ ] **Citizen Information:** place "Fixture: Citizen Information desk" behind a counter. E: the topics, the answers, Where is...? marks a route. Try it wanted (no answers), and with high and low standing (manner).
+  Notes:
+- [ ] **The old-timer:** find the citizen whose job says "Old-timer". E: his window. Bins and the dealer locked at first; visit and share food until he tells you, with the way marked.
+  Notes:
+- [ ] **Pamphlet:** register at Civil Intake: you get a Civil Orientation pamphlet. Read it from your pockets, pick pages.
+  Notes:
+- [ ] **Civil notice posters:** place a few: by the dispenser, the Commissary, a sink, Civil Intake, the law board, somewhere empty. Each says the right thing. E reads it.
+  Notes:
+- [ ] **PA explanations:** the "  > what it means" line in chat stops after the third of each kind.
+  Notes:
+- [ ] **Mentor XP:** a friend you /recognize to a brand-new player: be near them at their first ration or shift: you get 25 XP.
+  Notes:
+
+## 10 November, last: sitting out dreams
+
+- [ ] **Happy and Neutral:** live through 2 Happy dreams. As the third comes, the black screen should show a small note under the mood line. F2 > Me > My dreams should then offer "Happy: dreaming them (sit them out)". Choose it: the next Happy dream, you should sleep through it.
+  Notes:
+- [ ] **Nightmares and propaganda:** as a citizen with 400 standing, the same note and setting for Nightmares and Propaganda. Drop below 400 and they should come again.
+  Notes:
+
+## 10 November, last: where I stand
+
+- [ ] **One window for the numbers:** F2 > Me > My standing (or Where I stand) (or C > You > Where I stand). Every number should be there with a line explaining it; wanted, a record or no close calls in red.
+- [ ] **The old-timer's troubles:** visit him: his greeting ends with what's troubling him (food first). Offer him food, then water, then tablets or a bandage, a ration card, a radio, each after he mentions it. Each warms him; after all five, "Sit with him a while" gives you his lockpicks.
+  Notes:
+- [ ] **The pamphlet's new words:** read every page; tell Claude any line that sounds wrong.
+  Notes:
+- [ ] **Work detail by turns:** ask for a work detail three times in one sentence. First trash, then sweeping (a push broom and grime; hold E on each patch), then, if there are toilets in your Combine zone, unclogging: the guard walks you to each blocked toilet, E on it, water should splash out of the bowl for six seconds.
+  Notes:

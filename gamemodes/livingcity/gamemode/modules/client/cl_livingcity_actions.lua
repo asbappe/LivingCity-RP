@@ -265,6 +265,7 @@ function LC_CL.OpenActions()
     for n in pairs(LCA and LCA.Gestures or {}) do names[#names + 1] = n end
     table.sort(names)
     for _, n in ipairs(names) do Add(gest, Title(n), function() Send(n) end) end
+    Add(you, "Where I stand (every number explained)", function() if LC_CL.OpenStandingPanel then LC_CL.OpenStandingPanel() end end, "icon16/chart_bar.png")
     Add(you, "My papers", function() Send("papers") end, "icon16/vcard.png")
     Add(you, "Show my papers to whoever I'm looking at", function() Send("showpapers") end, "icon16/vcard_edit.png")
     Add(you, "My credits and standing", function() Send("credits") end, "icon16/coins.png")
@@ -440,6 +441,9 @@ function LC_CL.OpenActions()
     local notes = GetConVar("lc_notices")
     Add(set, (notes and notes:GetBool() and "Warnings and notices on screen: on (turn off)") or "Warnings and notices on screen: off (turn on)",
         function() RunConsoleCommand("lc_notices", (notes and notes:GetBool()) and "0" or "1") end)
+    local body = GetConVar("lc_body_signs")
+    Add(set, (body and body:GetBool() and "Hunger, thirst and pain shown on screen and in sound: on (turn off)") or "Hunger, thirst and pain shown on screen and in sound: off (turn on)",
+        function() RunConsoleCommand("lc_body_signs", (body and body:GetBool()) and "0" or "1") end)
     Add(set, "Tips: turn off", function() Send("hints", "off") end)
     Add(set, "Tips: turn on", function() Send("hints", "on") end)
     Add(set, "Tips: show me them all again, from the start", function() Send("hints", "reset") end)
@@ -448,7 +452,16 @@ function LC_CL.OpenActions()
         Add(set, me:GetNW2Bool("lc_enforcer", false) and "Shared dreams: wake up now (an Enforcer may, any time)"
             or "Shared dreams: wake up now (only once you're out of it)", function() if LC_CL.DreamAct then LC_CL.DreamAct("wake") end end, "icon16/weather_sun.png")
     end
-    -- (no opting out of the city's dreams: the owner, 8 November)
+    -- (no opting out of the city's dreams, the owner, 8 November; but a kind can be sat out once earned, 10 November:
+    -- sv_livingcity_dreamskip.lua)
+    local ds = util.JSONToTable(me:GetNW2String("lc_dream_sitout", "") or "") or {}
+    for _, k in ipairs({ { "happy", "Happy" }, { "neutral", "Neutral" }, { "nightmare", "Nightmares" }, { "propaganda", "Propaganda" } }) do
+        local on = ds.on and ds.on[k[1]]
+        if (ds.earned and ds.earned[k[1]]) or on then
+            Add(set, on and ("Shared dreams: " .. k[2] .. ": sitting them out (dream them again)") or ("Shared dreams: " .. k[2] .. ": dreaming them (sit them out)"),
+                function() if LC_CL.DreamAct then LC_CL.DreamAct(on and "unskip" or "skip", k[1]) end end, "icon16/weather_clouds.png")
+        end
+    end
 
     -- help, and staff
     local help, helpo = menu:AddSubMenu("Help")
@@ -564,4 +577,5 @@ net.Receive("lc_interrogate", function()
         if not LocalPlayer():GetNW2Bool("lc_interrogated", false) and (self.born or 0) + 2 < CurTime() then self:Remove() end
     end
     frame.born = CurTime()
+    LC_CL.InterrogateFrame = frame -- (the questions replace it: cl_livingcity_interrogation.lua)
 end)

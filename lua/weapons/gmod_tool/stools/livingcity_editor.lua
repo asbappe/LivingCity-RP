@@ -35,6 +35,7 @@ local MODES = {
     { id = "spawn",       label = "Point: spawn / exit doorway" },
     { id = "cell",        label = "Point: prison cell" },
     { id = "release",     label = "Point: prison release spot" },
+    { id = "prisonwork",  label = "Point: prison work spot (where a prisoner's work detail picks up trash)" },
     { id = "zspawn",      label = "Point: infestation spawn (zombies, infested players)" },
     { id = "rspawn",      label = "Point: resistance spawn (rebel players)" },
     { id = "rlookout",    label = "Point: rebel lookout post (an armed fighter stands guard here; place it from where the Combine would come, so he faces that way)" },
@@ -73,6 +74,8 @@ local MODES = {
     { id = "locker",      label = "Fixture: locker (people keep things in it)" },
     { id = "screen",      label = "Fixture: city screen (shows broadcasts)" },
     { id = "lawboard",    label = "Fixture: law board" },
+    { id = "infodesk",    label = "Fixture: Citizen Information desk (a clerk who answers questions; place behind a counter)" },
+    { id = "civposter",   label = "Fixture: Civil notice poster (its words fit what's nearest: rations, water, the Commissary...)" },
     { id = "console",     label = "Fixture: Combine console (fly a scanner: prisoners and Civil Protection units)" },
     { id = "workbench",   label = "Fixture: Resistance lab (a scientist makes guns, ammunition, jammers and radios for the Resistance; one in every rebel base)" },
     { id = "recycler",    label = "Fixture: Union reclamation point (hand in scrap for credits)" },
@@ -128,7 +131,7 @@ else
 end
 
 -- sit, bench and lean spots, and fixtures, face the person placing them
-local FACE_PLACER = { adminpower = true, bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, screen = true, lawboard = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, hazbarrel = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, yard = true }
+local FACE_PLACER = { adminpower = true, bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, screen = true, lawboard = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, hazbarrel = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, yard = true }
 
 local function ModeIndex(id)
     for i, m in ipairs(MODES) do if m.id == id then return i end end

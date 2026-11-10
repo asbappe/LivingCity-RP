@@ -84,6 +84,13 @@ local function W(...) out:write(table.concat({ ... }, "\t") .. "\n") end
 for _, t in ipairs(LC.AnnounceTriggers or {}) do W("trigger", t, tostring((LC.AnnounceBaseTier or {})[t] or 1), (LC.AnnounceTitles or {})[t] or "") end
 for _, n in ipairs(LC.AnnounceTierNames or {}) do W("tier", n) end
 for v, ts in pairs(LC.AnnounceExtra or {}) do for _, t in ipairs(ts) do W("extra", v, t) end end
+for id, words in pairs(LC.AdviceLines or {}) do W("advice", id, words) end
+for _, t in ipairs(LC.InfoDeskTopics or {}) do W("clerk", t[1], t[2], t[3]) end
+for id, words in pairs(LC.InfoDeskLines or {}) do W("clerk", id, "", words) end
+for _, t in ipairs(LC.OldTimerTopics or {}) do W("oldtimer", t[1], t[3], t[4]) end
+for id, words in pairs(LC.OldTimerLines or {}) do W("oldtimer", id, "", words) end
+for _, t in ipairs(LC.OldTimerTroubles or {}) do W("oldtimer", "hint_" .. t[1], "What's troubling him (said instead of his greeting)", t[3]) W("oldtimer", "thanks_" .. t[1], "You helped him with it", t[4]) end
+for id, l in pairs(LC.MachineLines or {}) do W("machine", id, l[1], l[2]) end
 for key, g in pairs(LC.CollapseGmanLines or {}) do
     local cv = GetConVar(g[1])
     W("gman", key, g[1], cv and cv:GetString() or "", g[2])
@@ -131,7 +138,7 @@ def main():
         "- **After adding files:** press FastDL sync on the host panel, then change the map (players download new sounds when they join).",
         "- **Without a recording** the moment is silent (or Half-Life 2's own voice, for Overwatch, with `lc_announce_stock` 1), and the words still show.",
         "",
-        "Contents: 1. The city's announcements (Overwatch and the Administrator) · 2. The radio · 3. The G-Man · 4. The dreams",
+        "Contents: 1. The city's announcements (Overwatch and the Administrator) · 2. The radio · 3. The G-Man · 4. The dreams · 5. Citizens showing the way · 6. The Citizen Information clerk · 7. The old-timer · 8. Machines",
         "",
         "## 1. The city's announcements",
         "",
@@ -200,6 +207,43 @@ def main():
                 doc.append("| [ ] " + l)
                 count += 1
             doc.append("")
+    advice = sorted((r[1], r[2]) for r in rows if r[0] == "advice")
+    order = {"advice": 0, "lead": 1}
+    advice.sort(key=lambda r: (order.get(r[0].split("_")[0], 2), r[0]))
+    doc += ["", "## 5. Citizens showing the way", "",
+            "When you chat with a citizen and they notice what you need, they say one of these, then point the way (a marker and a trail) "
+            "or, if they like you, walk you there. Folder: **`garrysmod/sound/livingcity/citizens/`**. Each line wants a man's take and a woman's "
+            "(the citizen's own voice): `advice_bins_male1.wav`, `advice_bins_female1.wav`; more takes `...2`, `...3`. "
+            "Without a recording they speak with Half-Life 2's own citizen voice, and the words still show.",
+            "",
+            "| Done | Man's file | Woman's file | When | Says |",
+            "|---|---|---|---|---|"]
+    for id, words in advice:
+        when = "Walking you there" if id.startswith("lead_") else ("No such place on this map" if id == "advice_nowhere" else "Advice")
+        doc.append("| [ ] | `%s_male1.wav` | `%s_female1.wav` | %s | %s |" % (id, id, when, words))
+        count += 2
+    def simple(kind, num, title, intro, whohead):
+        nonlocal count
+        rs = [r for r in rows if r[0] == kind]
+        topics = [r for r in rs if r[2] != ""] if kind != "machine" else []
+        others = sorted([r for r in rs if r[2] == ""], key=lambda r: r[1]) if kind != "machine" else sorted(rs, key=lambda r: r[1])
+        doc.extend(["", "## %d. %s" % (num, title), "", intro, "", "| Done | File | %s | Says |" % whohead, "|---|---|---|---|"])
+        for r in topics + others:
+            doc.append("| [ ] | `%s1.wav` | %s | %s |" % (r[1], r[2] if r[2] else "(said between answers)", r[3]))
+            count += 1
+    simple("clerk", 6, "The Citizen Information clerk",
+           "The clerk behind the Citizen Information desk: flat, tired, official. Folder: **`garrysmod/sound/livingcity/clerk/`**. "
+           "One voice for every clerk (or record a man's and a woman's take and keep whichever fits). Without a recording, a terminal's chime, and the words show.",
+           "The question asked")
+    simple("oldtimer", 7, "The old-timer",
+           "The old man who gives advice: warm, worn, a little wry. Folder: **`garrysmod/sound/livingcity/oldtimer/`**. "
+           "For \"Is anyone fighting back?\" he goes on to say where the Resistance gathers (that part changes with the map, so it only shows as words). "
+           "Without a recording, Half-Life 2's own citizen voice.",
+           "The question asked")
+    simple("machine", 8, "Machines",
+           "The ration dispenser and the vending machines, in a flat machine voice (a Combine terminal's). Folder: **`garrysmod/sound/livingcity/machines/`**. "
+           "Without a recording, the machine's beep.",
+           "Which machine")
     text = "\n".join(doc).rstrip("\n") + "\n"
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(text)

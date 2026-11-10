@@ -426,9 +426,12 @@ function LC.DreamMoodSend(q, at)
     local text = LC.DreamMoodText(q.why, kind)
     local list = LC.DreamSleepers and LC.DreamSleepers(LC.DreamMood(q.id), q.id) or {}
     if #list == 0 then return 0 end
-    net.Start("lc_dream_mood")
-    net.WriteTable({ text = text, til = at or (CurTime() + LC.DreamMoodLead), kind = kind })
-    net.Send(list)
+    for _, p in ipairs(list) do
+        net.Start("lc_dream_mood")
+        net.WriteTable({ text = text, til = at or (CurTime() + LC.DreamMoodLead), kind = kind,
+            hint = LC.DreamSkipHint and LC.DreamSkipHint(p, q.id) or nil }) -- (earned the right to sit this kind out: sv_livingcity_dreamskip.lua)
+        net.Send(p)
+    end
     return #list, text
 end
 
