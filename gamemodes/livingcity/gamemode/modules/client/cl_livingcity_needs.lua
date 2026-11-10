@@ -827,7 +827,8 @@ net.Receive("lcu_market", function()
     local keep = IsValid(marketFrame) and ScrollOf(marketFrame.lcScroll) or nil
     if IsValid(marketFrame) then marketFrame:Remove() end
     marketFrame = vgui.Create("DFrame")
-    if LC_CL.SetTheme then LC_CL.SetTheme(marketFrame, "rebel") end -- (the quartermaster, the black market: scrap and rust, whoever buys)
+    -- (the quartermaster's is the Resistance's rust, lambda and all; a dealer's is rust with nobody's mark)
+    if LC_CL.SetTheme then LC_CL.SetTheme(marketFrame, t.quartermaster and "rebel" or "scrap") end
     marketFrame:SetTitle("")
     marketFrame:SetSize(math.min(ScrW() - 60, 620), math.min(ScrH() - 60, 620))
     marketFrame:Center()

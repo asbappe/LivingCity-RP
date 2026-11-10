@@ -163,6 +163,7 @@ function LC_CL.PerfDebugMenu()
     if IsValid(frame) then frame:Remove() end
     lists = {}
     frame = vgui.Create("DFrame")
+    if LC_CL.SetTheme then LC_CL.SetTheme(frame, "staff") end -- (out of character: cl_livingcity_theme.lua)
     frame:SetTitle("Performance debugger (staff)")
     frame:SetSize(math.min(ScrW() - 40, 980), math.min(ScrH() - 40, 640))
     frame:Center()

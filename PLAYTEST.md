@@ -1397,3 +1397,13 @@ Notes:
 ## 10 November: the HUD in your side's look
 - [ ] **HUD panels:** play a while as a citizen, as Civil Protection and as Resistance. The dark panels on screen (needs, tips, timers, job panels, cards) are grey slab, black glass with cyan, or rust with an orange line. Bars and coloured edges look as before. Tell me any panel that looks wrong, any text that became hard to read, or any fade to black that now shows a panel (a screenshot helps). `lc_ui_theme 0` puts it all back.
   Notes:
+
+## 10 November: more looks
+- [ ] **The lambda:** as Resistance, your windows (and the quartermaster's, and the lab's) have a yellow sprayed lambda bottom right, and the text over it is still readable. The black market dealer's window is plain rust with no lambda.
+  Notes:
+- [ ] **Vortigaunts:** a free vortigaunt's windows are green with a glow; a shackled one's are the same green under a cyan line.
+  Notes:
+- [ ] **The Administration:** as the Administrator or her Director, windows are black glass with ivory lines and a red edge.
+  Notes:
+- [ ] **Staff:** the Staff window, admin testing tools and the character screens are plain charcoal marked out of character.
+  Notes:

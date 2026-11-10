@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 62c15a1. Admin-only console messages and log lines are left out.
+Made from version 1ecbe58. Admin-only console messages and log lines are left out.
 
 10238 lines, from 283 files.
 
@@ -1234,15 +1234,15 @@ Made from version 62c15a1. Admin-only console messages and log lines are left ou
 
 - "[Living City]"  (chat message, line 989)
 - "Debug report copied to your clipboard. Paste it to Claude. Also saved to {file}"  (chat message, line 989)
-- "Living City debug report"  (window title, line 992)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_report)
 
-- "Copy to clipboard again"  (label or button, line 1005)
+- "Living City debug report"  (window title, line 993)
+- "Copy to clipboard again"  (label or button, line 1006)
 
 > Note for you (not shown in game): Path mapping (sv_livingcity_pathmap.lua): say so on screen while it's on (made once here, not every frame)
 
-- "PATH MAPPING: walk to lay nodes"  (text, line 1041)
+- "PATH MAPPING: walk to lay nodes"  (text, line 1042)
 
 ## cl_livingcity_actions.lua (cl_livingcity_actions.lua)
 
@@ -1392,68 +1392,68 @@ Made from version 62c15a1. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: build
 
-- "Admin: testing tools"  (window title, line 79)
+- "Admin: testing tools"  (window title, line 80)
 
 > Note for you (not shown in game): who it's for
 
-- "Acting on:"  (text, line 87)
+- "Acting on:"  (text, line 88)
 
 > Note for you (not shown in game): faction
 
-- "Faction  (switches straight away, no requirements)"  (text, line 100)
+- "Faction  (switches straight away, no requirements)"  (text, line 101)
 
 > Note for you (not shown in game): XP and rank
 
-- "XP and rank  (%s: %d XP)"  (message, line 108)
-- "XP and rank"  (text, line 108)
-- "Set rank:"  (text, line 114)
+- "XP and rank  (%s: %d XP)"  (message, line 109)
+- "XP and rank"  (text, line 109)
+- "Set rank:"  (text, line 115)
 
 > Note for you (not shown in game): part of: build
 
-- "This faction has no ranks to climb."  (text, line 122)
-- "Reset all XP to 0"  (text, line 125)
+- "This faction has no ranks to climb."  (text, line 123)
+- "Reset all XP to 0"  (text, line 126)
 
 > Note for you (not shown in game): credits and standing
 
-- "economy off"  (message, line 128)
-- "Reset to 0"  (text, line 131)
-- "Civil Standing  (%s)"  (message, line 132)
-- "economy off"  (message, line 132)
+- "economy off"  (message, line 129)
+- "Reset to 0"  (text, line 132)
+- "Civil Standing  (%s)"  (message, line 133)
+- "economy off"  (message, line 133)
 
 > Note for you (not shown in game): odds and ends
 
-- "Clear wanted"  (text, line 143)
-- "Feed and heal"  (text, line 144)
-- "Clear conduct strikes"  (text, line 145)
-- "Give item:"  (text, line 147)
+- "Clear wanted"  (text, line 144)
+- "Feed and heal"  (text, line 145)
+- "Clear conduct strikes"  (text, line 146)
+- "Give item:"  (text, line 148)
 
 > Note for you (not shown in game): the whole city (sv_livingcity_power.lua)
 
-- "The city"  (text, line 157)
-- "Black out the city"  (text, line 160)
-- "Lights on"  (text, line 161)
-- "Follow the grid"  (text, line 162)
+- "The city"  (text, line 158)
+- "Black out the city"  (text, line 161)
+- "Lights on"  (text, line 162)
+- "Follow the grid"  (text, line 163)
 
 > Note for you (not shown in game): the confiscated contraband, burned in public (sv_livingcity_evidence.lua)
 
-- "Burn it now"  (text, line 167)
+- "Burn it now"  (text, line 168)
 
 > Note for you (not shown in game): save files that couldn't be read: kept as they are until a superadmin says otherwise (sv_livingcity_safefile.lua)
 
-- "Save files:"  (text, line 175)
-- "Let the city save over them"  (text, line 176)
-- "Couldn't be read, kept as they are and not saved over: {savefiles}"  (text, line 177)
+- "Save files:"  (text, line 176)
+- "Let the city save over them"  (text, line 177)
+- "Couldn't be read, kept as they are and not saved over: {savefiles}"  (text, line 178)
 
 > Note for you (not shown in game): territory: grow it now, for testing (superadmins; it grows along the path nodes)
 
-- "Grow rebel ground now"  (text, line 185)
-- "Grow the infestation now"  (text, line 186)
+- "Grow rebel ground now"  (text, line 186)
+- "Grow the infestation now"  (text, line 187)
 
 > Note for you (not shown in game): part of: build
 
-- "No rebel or infestation zones are placed."  (text, line 193)
-- "Start over"  (text, line 196)
-- "Reset XP, credits and standing to 0"  (text, line 198)
+- "No rebel or infestation zones are placed."  (text, line 194)
+- "Start over"  (text, line 197)
+- "Reset XP, credits and standing to 0"  (text, line 199)
 
 ## cl_livingcity_arrest.lua (cl_livingcity_arrest.lua)
 
@@ -1534,31 +1534,31 @@ Made from version 62c15a1. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: paint
 
-- "Number to be issued:"  (text, line 80)
+- "Number to be issued:"  (text, line 81)
 
 > Note for you (not shown in game): the game answering something done in a window (lcc_open)
 
-- "Your name"  (label or button, line 188)
-- "First name and surname"  (text, line 202)
+- "Your name"  (label or button, line 189)
+- "First name and surname"  (text, line 203)
 
 > Note for you (not shown in game): stuck for a name: an ordinary one, for the face picked
 
-- "Suggest a name"  (label or button, line 207)
+- "Suggest a name"  (label or button, line 208)
 
 > Note for you (not shown in game): the game answering something done in a window (lcc_open)
 
-- "How a stranger would know you"  (label or button, line 217)
-- "tall, grey coat, a scar over one eye"  (text, line 225)
-- "Your face (then its look, under the picture)"  (label or button, line 233)
-- "Not now"  (button, line 271)
-- "Keep what I was given (ignores edits)"  (button, line 277)
-- "Submit to the terminal"  (button, line 283)
-- "This is me"  (button, line 283)
+- "How a stranger would know you"  (label or button, line 218)
+- "tall, grey coat, a scar over one eye"  (text, line 226)
+- "Your face (then its look, under the picture)"  (label or button, line 234)
+- "Not now"  (button, line 272)
+- "Keep what I was given (ignores edits)"  (button, line 278)
+- "Submit to the terminal"  (button, line 284)
+- "This is me"  (button, line 284)
 
 > Note for you (not shown in game): The server says yes, or why not.
 
-- "[Living City]"  (chat message, line 308)
-- "You are {msg}."  (chat message, line 308)
+- "[Living City]"  (chat message, line 309)
+- "You are {msg}."  (chat message, line 309)
 
 ## cl_livingcity_cityadmin.lua (cl_livingcity_cityadmin.lua)
 
@@ -2211,14 +2211,14 @@ Made from version 62c15a1. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: open
 
-- "Endings: tune them live"  (window title, line 639)
-- "Play it now"  (button, line 653)
-- "Stop it"  (button, line 654)
-- "(playing now)"  (text, line 669)
+- "Endings: tune them live"  (window title, line 640)
+- "Play it now"  (button, line 654)
+- "Stop it"  (button, line 655)
+- "(playing now)"  (text, line 670)
 
 > Note for you (not shown in game): part of: endings menu
 
-- "Only a superadmin can tune the endings."  (chat message, line 682)
+- "Only a superadmin can tune the endings."  (chat message, line 683)
 
 ## morning exercise, on your screen (sv_livingcity_exercise.lua) (cl_livingcity_exercise.lua)
 
@@ -3149,18 +3149,18 @@ Made from version 62c15a1. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game answering something done in a window (lcu_market)
 
-- "He sells nothing to strangers. But he'll buy arms and what the fight needs, or take them as a gift."  (label or button, line 900)
-- "He sells nothing to strangers. Bring him guns, ammunition, gun parts, scrap, rags or chemicals and he'll buy them, or take them as a gift."  (label or button, line 900)
-- "Sell for {price}"  (text, line 920)
+- "He sells nothing to strangers. But he'll buy arms and what the fight needs, or take them as a gift."  (label or button, line 901)
+- "He sells nothing to strangers. Bring him guns, ammunition, gun parts, scrap, rags or chemicals and he'll buy them, or take them as a gift."  (label or button, line 901)
+- "Sell for {price}"  (text, line 921)
 
 > Note for you (not shown in game): (giving it for the cause: no credits, and, for someone not of the Resistance, their sympathy)
 
-- "give one to the cause"  (text, line 928)
-- "Sell all for {n}"  (text, line 935)
+- "give one to the cause"  (text, line 929)
+- "Sell all for {n}"  (text, line 936)
 
 > Note for you (not shown in game): on screen
 
-- "Out of breath"  (drawn on screen, line 982)
+- "Out of breath"  (drawn on screen, line 983)
 
 ## cl_livingcity_nextstep.lua (cl_livingcity_nextstep.lua)
 
@@ -3382,24 +3382,24 @@ Made from version 62c15a1. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: perf debug menu
 
-- "Performance debugger (staff)"  (window title, line 166)
-- "Save report"  (text, line 192)
-- "Copy report"  (text, line 193)
+- "Performance debugger (staff)"  (window title, line 167)
+- "Save report"  (text, line 193)
+- "Copy report"  (text, line 194)
 
 > Note for you (not shown in game): btn
 
-- "[Performance debugger]"  (chat message, line 195)
-- "Both reports copied to the clipboard."  (chat message, line 195)
+- "[Performance debugger]"  (chat message, line 196)
+- "Both reports copied to the clipboard."  (chat message, line 196)
 
 > Note for you (not shown in game): part of: perf debug menu
 
-- "Server / Your game"  (text, line 197)
-- "Hitch at {or} ms"  (text, line 205)
-- "Hitch at {ms} ms"  (text, line 206)
-- "Turns off after {or} min"  (text, line 215)
-- "Turns off after {m} min"  (text, line 216)
-- "Never turns itself off"  (text, line 217)
-- "Asking the server..."  (label or button, line 224)
+- "Server / Your game"  (text, line 198)
+- "Hitch at {or} ms"  (text, line 206)
+- "Hitch at {ms} ms"  (text, line 207)
+- "Turns off after {or} min"  (text, line 216)
+- "Turns off after {m} min"  (text, line 217)
+- "Never turns itself off"  (text, line 218)
+- "Asking the server..."  (label or button, line 225)
 
 ## cl_livingcity_quests.lua (cl_livingcity_quests.lua)
 
@@ -4053,10 +4053,10 @@ Made from version 62c15a1. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game answering something done in a window (lc_slots)
 
-- "Your characters"  (window title, line 122)
-- "Lives lived: %d.  Longest: %dh %02dm%s.%s"  (message, line 134)
-- "({longestName})"  (text, line 134)
-- "You can't switch right now: {why}"  (label or button, line 141)
+- "Your characters"  (window title, line 123)
+- "Lives lived: %d.  Longest: %dh %02dm%s.%s"  (message, line 135)
+- "({longestName})"  (text, line 135)
+- "You can't switch right now: {why}"  (label or button, line 142)
 
 ## cl_livingcity_staff.lua (cl_livingcity_staff.lua)
 
@@ -4113,12 +4113,12 @@ Made from version 62c15a1. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Open tickets, for staff, under the clock (made once here, not every frame)
 
-- "open ticket"  (text, line 260)
-- "open tickets"  (text, line 260)
+- "open ticket"  (text, line 261)
+- "open tickets"  (text, line 261)
 
 > Note for you (not shown in game): on screen
 
-- "Warning %d, from %s"  (message, line 284)
+- "Warning %d, from %s"  (message, line 285)
 
 ## cl_livingcity_standingpanel.lua (cl_livingcity_standingpanel.lua)
 
@@ -4169,11 +4169,11 @@ Made from version 62c15a1. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The Derma skin: the default one, with windows, buttons, combo boxes, scroll bars and menus repainted
 
-- "Living City"  (name, line 243)
+- "Living City"  (name, line 305)
 
 > Note for you (not shown in game): part of: define skin
 
-- "Living City: windows in your faction's style"  (text, line 276)
+- "Living City: windows in your faction's style"  (text, line 338)
 
 ## cl_livingcity_unittools.lua (cl_livingcity_unittools.lua)
 

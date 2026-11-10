@@ -3545,7 +3545,7 @@ if err:
 err = L.execute(r"""
 if not (LC_CL.PaintThemeBack and LC_CL.SetTheme and LC_CL.ThemedPaint and LC_CL.ThemeName) then return "theme: the module is missing" end
 local f = vgui.Create("DFrame")
-for _, name in ipairs({ "combine", "rebel", "citizen", "custody" }) do
+for _, name in ipairs({ "combine", "rebel", "citizen", "custody", "office", "scrap", "vort", "bound", "staff", "ooc" }) do
     LC_CL.SetTheme(f, name)
     local okT, errT = pcall(LC_CL.PaintThemeBack, f, 520, 360)
     if not okT then return "theme " .. name .. ": " .. tostring(errT) end

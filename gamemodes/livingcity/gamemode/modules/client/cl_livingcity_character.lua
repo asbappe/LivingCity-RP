@@ -67,6 +67,7 @@ net.Receive("lcc_open", function()
     local chosenModel = data.model ~= "" and data.model or (looks[1] and looks[1].path) or ""
     local chosenSkin, chosenBG = tonumber(data.skin) or 0, istable(data.bg) and data.bg or {}
     frame = vgui.Create("DFrame")
+    if LC_CL.SetTheme then LC_CL.SetTheme(frame, "ooc") end -- (out of character: cl_livingcity_theme.lua)
     frame:SetTitle("")
     frame:ShowCloseButton(false)
     frame:SetSize(W, H)

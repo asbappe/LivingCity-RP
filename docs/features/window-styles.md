@@ -6,10 +6,19 @@ The owner, 10 November: "artistic overhauls of all UI items that are consistent 
 
 | Look | Who and where | What it is |
 |---|---|---|
-| `combine` | Civil Protection, the Administration, stalkers; and every Combine machine whoever uses it: terminal screens in the world (the Commissary, Civil Intake, Housing, Labor), their fallback windows, the records terminal, her tablet's market page | black glass, thin cyan lines, cut corners, a faint scan, "OVERWATCH LINK // SECTOR ACTIVE" |
-| `rebel` | the Resistance; and their places whoever stands there: the quartermaster and black market window, the Resistance lab | rust and scrap plate, a heavy welded edge, rivets, a hazard stripe, "NO MASTERS NO BENEFACTORS" |
+| `combine` | Civil Protection, stalkers; and every Combine machine whoever uses it: terminal screens in the world (the Commissary, Civil Intake, Housing, Labor), their fallback windows, the records terminal, her tablet's market page | black glass, thin cyan lines, cut corners, a faint scan, "OVERWATCH LINK // SECTOR ACTIVE" |
+| `rebel` | the Resistance; and their places whoever stands there: the quartermaster's window, the Resistance lab | rust and scrap plate, a heavy welded edge, rivets, a hazard stripe, "NO MASTERS NO BENEFACTORS" |
 | `citizen` | citizens, shackled vortigaunts | a grey concrete slab, a faded blue edge, "UNION RESIDENT SERVICES", "FORM 27-B" |
 | `custody` | anyone, in the interrogation's question window and while being patted down | black under a hard light, a red title bar, "DETAINED. ANSWER. COMPLY." |
+| `office` | the Administration (her faction), by default | the Combine glass in the posters' ivory and red, "OFFICE OF THE CITY ADMINISTRATOR" |
+| `scrap` | the black market dealer's window, whoever buys (the dealer isn't Resistance) | rust with nobody's mark, duller, "NO QUESTIONS" |
+| `vort` | free vortigaunts (a Resistance member whose role is `vortigaunt`) | green dark, veins of light, a glow from the foot, three eyes, "THE VORTESSENCE" |
+| `bound` | shackled vortigaunts (the `vort` faction) | the same green, under the Combine's cyan line, "COLLARED. PROPERTY OF THE COMBINE." |
+| `staff`, `ooc` | staff tools (Staff, Admin testing tools, the performance debugger, the endings tuner, the debug report); choosing and making a character | plain charcoal, nobody's side, "STAFF // OUT OF CHARACTER" in amber, or "OUT OF CHARACTER" |
+
+**The Resistance's lambda.** Windows in the `rebel` look (a Resistance member's own windows, the quartermaster's, the lab's) have a yellow lambda sprayed by hand over the rust, bottom right (`materials/livingcity/ui/lambda.png`, `lambda = 150` in the look). The dealer's `scrap` look has none, so the two are told apart at a glance.
+
+Each look names a way of being drawn (`style`: combine, rebel, citizen, custody, vort, plain), so a new look is a row of colours and words.
 
 **What follows the look:**
 - every window (`DFrame`), its plain buttons, combo boxes and scroll bars;
