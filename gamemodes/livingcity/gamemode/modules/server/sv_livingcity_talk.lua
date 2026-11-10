@@ -273,11 +273,14 @@ local GIVE_LABEL = { food = "Food", vice = "A drink or a smoke", medicine = "Med
 LC.GiveLabels = GIVE_LABEL
 
 -- Everything in your pockets a citizen could be handed: { id, label } in order (food first).
+-- Civil Protection never sees arms in it (the owner, 10 November: "Just remove guns from the menu
+-- for Civil Protection players, so the option never shows").
 function LC.GiveableTo(ply)
     local out = {}
+    local unit = LC.PlayerIsCP(ply)
     for id, n in pairs(LC.Inventory and LC.Inventory(ply) or {}) do
         local kind = n > 0 and LC.GiveKind(id)
-        if kind and not (LC.IssuedLocked and LC.IssuedLocked(ply, id, nil)) then
+        if kind and not (unit and kind == "arms") and not (LC.IssuedLocked and LC.IssuedLocked(ply, id, nil)) then
             out[#out + 1] = { id = id, kind = kind, label = GIVE_LABEL[kind] .. ": " .. (LCS.Items[id].name or id) .. (n > 1 and (" (" .. n .. ")") or "") }
         end
     end
@@ -319,7 +322,7 @@ local function Give(ply, npc, st, id)
     elseif kind == "medicine" then
         return Taken(3, "They turn the " .. name .. " over in their hands. 'Medicine. You don't see that often. Thank you.'")
     elseif kind == "arms" then
-        if LC.PlayerIsCP(ply) then return "They back away from you. 'I don't want any trouble, officer.'" end
+        if LC.PlayerIsCP(ply) then return "They back away from you. 'I don't want any trouble, officer.'" end -- (not in a unit's menu; only if asked for directly)
         if not st.rebel then
             LC.Remember(npc, ply, -1)
             return "They go white. 'Are you out of your mind? Put that away before a unit sees!'"

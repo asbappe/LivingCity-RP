@@ -1445,3 +1445,5 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **Give something (talk window):** E on a citizen: "Give something..." opens a menu of what you carry (food first). Try food, a beer or cigarette (someone fond of it lights up there and then; someone sober refuses), medicine, the Civil Orientation pamphlet, and a gun (refused, frightened; a sympathizer hides it). With nothing to give, the button is greyed out.
   Notes:
+- [ ] **Give menu as Civil Protection:** with a gun in your pockets, E on a citizen > Give something: no guns listed.
+  Notes:

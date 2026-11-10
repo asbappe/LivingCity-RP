@@ -11021,6 +11021,12 @@ ok(LC.HasItem(giver, "gun_pistol") and LC.Feeling(s, giver) == before - 1 and st
 cs.rebel = true
 said = LC.GiveToCitizen(giver, c, "gun_pistol")
 ok(not LC.HasItem(giver, "gun_pistol") and string.find(said or "", "under their coat", 1, true), "a sympathizer hides it under their coat", said)
+-- Civil Protection never sees arms in the menu
+local giverCP = newPlayer("GiverUnit", "cp")
+LC.GiveItem(giverCP, "gun_pistol", 1) LC.GiveItem(giverCP, "ration", 1)
+local cpIds = {}
+for _, g in ipairs(LC.GiveableTo(giverCP)) do cpIds[g.id] = true end
+ok(cpIds.ration and not cpIds.gun_pistol, "a Civil Protection player's Give menu has no guns in it")
 -- a Resistance leaflet: a sympathizer takes it, someone loyal pushes it back
 said = LC.GiveToCitizen(giver, c, "test_leaflet")
 ok(not LC.HasItem(giver, "test_leaflet"), "a Resistance leaflet to a sympathizer: kept", said)
