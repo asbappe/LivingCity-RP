@@ -17,25 +17,30 @@
                   lc_black_cooldown_hours (3) of the last collapse. (F2 shows how close it is.)
       Black       Sociostability BLACK: civil collapse, open rebellion. Everything red does, and it
                   stays until this is over. Overwatch's recording socio_black, if there is one.
-      The offer   The G-Man comes to the Administrator: step down, or end it yourself, while there's
-                  still a choice. lc_black_answer_minutes (5) to answer; no answer is a refusal. With
-                  no player as the Administrator, she (the city's own) refuses.
+      The offer   The G-Man in person (lc_gman: in front of her, only she sees him, nothing touches him):
+                  she can't move while he talks, then his window: step down, or end it yourself.
+                  lc_black_answer_minutes (5) to answer; no answer is a refusal. Shutting his window or
+                  walking off from him: "Get back here...", and 10 seconds to press E on him, or it's a
+                  refusal. With no player as the Administrator, she (the city's own) refuses. His lines:
+                  settings lc_black_gman_* (and three shared ones), words from a .txt beside each clip.
                     Step down       she leaves the post (a citizen again); the city calms.
                     End it yourself she dies by her own hand and leaves the post; the city calms.
-                    Refuse          he hastens her end, a step every lc_black_phase_minutes (5):
+                    Refuse          he hastens her end, a step every lc_black_phase_minutes (5), back
+                                    to her each time with a line:
                                     1 his weapon crates all over the city
                                     2 people waking from sleep with weapons in their hands
                                     3 the grid failing, the whole city dark for a few minutes
                                     4 the last stand
-      Last stand  In her office (the editor's "Administrator's desk" point; else beside her office
-                  door, else the broadcast studio, else a Combine zone): the Administrator (a player,
-                  brought there, or the city's own, with a pulse rifle), lc_black_admin_health (600)
-                  health, lc_black_elites (4) Overwatch Elites guarding her, and her shield: it takes
-                  every hit until it breaks (lc_black_shield, 1500), throws back anyone who comes too
-                  close, and comes back if left alone. Cut the power to her office (sabotage the
-                  transformer feeding it; with none, the G-Man keeps the city dark) and the shield is
-                  weak: a third as strong, no throwing back, never comes back. lc_black_rebels (8)
-                  Resistance fighters storm the office with everyone else. lc_black_stand_minutes (15).
+      Last stand  Where her transformer is (lc_adminpower, the editor's "Her last stand: the
+                  Administrator's power"): at her desk if it's within reach of it, else beside it (none
+                  placed: the G-Man brings one beside her desk). The Administrator (a player, brought
+                  there, or the city's own, with a pulse rifle), lc_black_admin_health (600) health,
+                  lc_black_elites (4) Overwatch Elites, and her shield: it deflects every bullet while
+                  the transformer stands and she's within lc_black_power_range (1600) of it, and throws
+                  back anyone who comes too close. The transformer takes lc_black_power_health (2500),
+                  sparking, smoking and blasting as it goes; destroyed, her shield is down for good.
+                  lc_black_rebels (8) Resistance fighters storm it with everyone else.
+                  lc_black_stand_minutes (15).
       The end     She dies: the city is the people's tonight (everyone who isn't Combine and was there
                   gets lc_black_reward credits, 200), the post is empty, sociostability as the city
                   makes it, chaos gone. Time runs out: Overwatch crushes the uprising, chaos halved,
@@ -62,7 +67,7 @@
 
       lc_black 0/1 (1), lc_black_minutes (30), lc_black_min_players (4), lc_black_cooldown_hours (3),
       lc_black_answer_minutes (5), lc_black_phase_minutes (5), lc_black_stand_minutes (15),
-      lc_black_elites (4), lc_black_rebels (8), lc_black_admin_health (600), lc_black_shield (1500),
+      lc_black_elites (4), lc_black_rebels (8), lc_black_admin_health (600), lc_black_power_health (2500), lc_black_power_range (1600),
       lc_black_reward (200), lc_black_heroes 0/1 (1), lc_black_barney_minutes (5), lc_black_freeman_minutes (5),
       lc_black_hero_kills (2), lc_black_freeman_model, lc_black_barney_model, lc_black_reset_map 0/1 (0)
 ]]
@@ -82,7 +87,8 @@ local cvStand   = CreateConVar("lc_black_stand_minutes", "15", FLAGS, "Minutes t
 local cvElites  = CreateConVar("lc_black_elites", "4", FLAGS, "Overwatch Elites guarding the Administrator in her last stand")
 local cvRebels  = CreateConVar("lc_black_rebels", "8", FLAGS, "Resistance fighters who storm the Administrator's office in her last stand")
 local cvHealth  = CreateConVar("lc_black_admin_health", "600", FLAGS, "The Administrator's health in her last stand")
-local cvShield  = CreateConVar("lc_black_shield", "1500", FLAGS, "How much damage the Administrator's shield takes before it breaks")
+local cvPowerHP = CreateConVar("lc_black_power_health", "2500", FLAGS, "How much damage the transformer powering the Administrator's shield takes before it blows")
+local cvPowerR  = CreateConVar("lc_black_power_range", "1600", FLAGS, "How far (units; 16 to a foot) the Administrator's shield reaches from its transformer: her last stand is fought there")
 local cvReward  = CreateConVar("lc_black_reward", "200", FLAGS, "Credits for everyone not Combine who was there when the Administrator fell")
 
 local cvHeroes   = CreateConVar("lc_black_heroes", "1", FLAGS, "Heroes in the Administrator's last stand: Barney, then Gordon Freeman, played by players of the rebellion")
@@ -93,11 +99,11 @@ local cvFreemanMdl = CreateConVar("lc_black_freeman_model", "models/player/group
 local cvBarneyMdl = CreateConVar("lc_black_barney_model", "models/player/barney.mdl", FLAGS, "Barney's player model")
 local cvResetMap = CreateConVar("lc_black_reset_map", "0", FLAGS, "1: a minute after the Administrator falls, the server changes to the same map (a fresh city)")
 
+util.AddNetworkString("lc_collapse_gman")    -- the G-Man, in person, to the Administrator: what he does and says
 util.AddNetworkString("lc_collapse_offer")   -- the G-Man's offer, to the Administrator
 util.AddNetworkString("lc_collapse_answer")  -- her answer: "resign", "end" or "refuse"
 
 local TICK = 5
-local SHIELD_WEAK = 1 / 3   -- (its strength with the power cut)
 local PULSE_GAP, PULSE_R = 6, 220
 
 LC.Chaos = LC.Chaos or 0
@@ -112,6 +118,133 @@ local function Combine(p) return LC.SideOf and LC.SideOf(p) == "combine" end
 local function Each(fn) for _, p in ipairs(player.GetAll()) do fn(p) end end
 local function NoticeAll(kind, title, text, secs) Each(function(p) if LC.Notice then LC.Notice(p, kind, title, text, secs) end end) end
 local function Line(key) return LC.GmanLine and LC.GmanLine(key) or "" end
+
+-- The G-Man in person, in front of the Administrator: lc_gman, only she is sent him, nothing touches him.
+-- kind: "arrive" (he stays), "say" (he's there, saying more), "visit" (a short return), "leave" (he walks off),
+-- "walkaway" (she walked off or shut his window: "Get back here...", and 10 seconds to come back)
+local WALKAWAY_SECS, GMAN_REACH = 10, 300
+local function GmanSpot(ply)
+    local fwd = ply:GetForward()
+    fwd.z = 0
+    if fwd:LengthSqr() < 0.01 then fwd = Vector(1, 0, 0) end
+    fwd:Normalize()
+    local eye = ply:GetPos() + Vector(0, 0, 40)
+    local tr = util.TraceLine and util.TraceLine({ start = eye, endpos = eye + fwd * 85, filter = ply, mask = MASK_SOLID })
+    local at = (tr and tr.Hit) and (tr.HitPos - fwd * 20) or (eye + fwd * 85)
+    return (LC.GroundAt and LC.GroundAt(at)) or (at - Vector(0, 0, 40))
+end
+function LC.CollapseGmanEnt() return IsValid(C.gman) and C.gman or nil end
+-- he walks off and is gone (lc_gman:Leave; the same marks if the entity's own code isn't there)
+local function GmanLeave(g, secs)
+    if not IsValid(g) or g.lcLeaveAt then return end
+    if g.Leave then g:Leave(secs or 3) return end
+    g.lcLeaveAt = CurTime() + (secs or 3)
+    g:SetNW2Bool("lc_leaving", true)
+    timer.Simple(secs or 3, function() if IsValid(g) then g:Remove() end end)
+end
+local function GmanFor(ply)
+    if IsValid(C.gman) and not C.gman.lcLeaveAt and C.gman.lcFor == ply then return C.gman end
+    if IsValid(C.gman) then C.gman:Remove() end
+    local g = ents.Create("lc_gman")
+    if not IsValid(g) then return nil end
+    g:SetPos(GmanSpot(ply))
+    local d = ply:GetPos() - g:GetPos()
+    g:SetAngles(Angle(0, d:Angle().y, 0))
+    g.lcFor = ply
+    g:SetNW2Entity("lc_for", ply)
+    g:Spawn()
+    -- (nobody else's game is sent him)
+    if g.SetPreventTransmit then
+        for _, p in ipairs(player.GetAll()) do if p ~= ply then g:SetPreventTransmit(p, true) end end
+    end
+    C.gman = g
+    return g
+end
+hook.Add("PlayerInitialSpawn", "LivingCityCollapseGman", function(p)
+    if IsValid(C.gman) and C.gman.SetPreventTransmit and C.gman.lcFor ~= p then C.gman:SetPreventTransmit(p, true) end
+end)
+function LC.CollapseGman(ply, kind, text, sound)
+    if not IsValid(ply) then return end
+    if kind == "leave" then
+        if IsValid(C.gman) then GmanLeave(C.gman, 3) end
+    elseif kind == "visit" then
+        local g = GmanFor(ply)
+        if IsValid(g) then
+            local secs = math.max(8, #(text or "") / 10)
+            timer.Create("LivingCityCollapseGmanVisit", secs, 1, function() if IsValid(g) and C.stage ~= "offer" then GmanLeave(g, 3) end end)
+        end
+    elseif kind ~= "walkaway" then
+        GmanFor(ply)
+    end
+    net.Start("lc_collapse_gman")
+    net.WriteString(kind or "say")
+    net.WriteString(text or "")
+    net.WriteString(sound or "")
+    net.Send(ply)
+end
+local Gman = LC.CollapseGman
+
+-- His lines in the collapse (the owner, 10 November: "I can splice lines to remove references to 'mr freeman'
+-- and such"): each a setting pointing at a file under garrysmod/sound/: any of the G-Man's real clips, stock or
+-- spliced (nothing new needs recording). The words on screen: a .txt beside the clip with the same name, if
+-- there is one (the way the announcements' subtitles work), else the words here. Missing, the moment is
+-- silent and the words still show. Reused clips already on the owner's list: lc_gman_line_refused,
+-- lc_gman_line_crates, and lc_gman_line_walk_away (on the client). Two start on Half-Life 2's own lines.
+local GLINES = {
+    arrive    = { "lc_black_gman_arrive", "Is it really that time again?", "vo/citadel/gman_exit02.wav" },
+    ways      = { "lc_black_gman_ways", "I've received some interesting offers for your services. Ordinarily, I wouldn't contemplate them. These are extraordinary times.", "vo/citadel/gman_exit05.wav" },
+    choose    = { "lc_black_gman_choose", "Step aside. Or end it ... yourself. Choose." },
+    press     = { "lc_black_gman_press", "Time is a luxury you no longer have, Administrator." },
+    lastcall  = { "lc_black_gman_lastcall", "Choose. Or I will ... choose for you." },
+    wise      = { "lc_black_gman_wise", "A wise choice, Administrator." },
+    asyouwish = { "lc_black_gman_asyouwish", "... As you wish." },
+    refused   = { "lc_gman_line_refused", "Not for long..." },
+    walkaway  = { "lc_gman_line_walk_away", "Get back here..." },
+    phase1    = { "lc_gman_line_crates", "The right man in the wrong place can make all the difference in the world." },
+    phase2    = { "lc_black_gman_sleep", "Your citizens sleep poorly. They wake ... prepared." },
+    phase3    = { "lc_black_gman_dark", "Even the lights are leaving you." },
+    phase4    = { "lc_black_gman_office", "It ends where it began, Administrator. In your office." },
+}
+LC.CollapseGmanLines = GLINES
+LC.CollapseGmanCvars = {}
+for key, g in pairs(GLINES) do
+    if string.sub(g[1], 1, 9) == "lc_black_" then
+        CreateConVar(g[1], g[3] or ("livingcity/gman/" .. string.sub(g[1], 4) .. ".wav"), FLAGS, "The G-Man's line in the collapse: \"" .. g[2] .. "\" (a file under garrysmod/sound/; missing: the words only)")
+        LC.CollapseGmanCvars[#LC.CollapseGmanCvars + 1] = g[1]
+    end
+end
+table.sort(LC.CollapseGmanCvars)
+local function Clip(key)
+    local g = GLINES[key]
+    local cv = g and GetConVar(g[1])
+    local path = cv and string.Trim(cv:GetString()) or ""
+    if path ~= "" and (not LC.SoundExists or LC.SoundExists(path)) then return path end
+    return ""
+end
+-- the words on screen: the clip's own .txt if it has one, else ours
+function LC.CollapseGmanWords(key)
+    local clip = Clip(key)
+    if clip ~= "" and file and file.Read then
+        local t = file.Read("sound/" .. string.gsub(clip, "%.%w+$", ".txt"), "GAME")
+        if t and string.Trim(t) ~= "" then return string.Trim(t) end
+    end
+    return GLINES[key] and GLINES[key][2] or ""
+end
+-- him, saying one of his lines to her
+local function Says(ply, kind, key, fallback)
+    local clip = Clip(key)
+    if clip == "" and fallback then clip = fallback end
+    Gman(ply, kind, LC.CollapseGmanWords(key), clip)
+end
+LC.CollapseSays = Says
+-- (the ones the server has go to players when they join)
+hook.Add("InitPostEntity", "LivingCityCollapseGmanLines", function()
+    if not resource or not resource.AddFile then return end
+    for key in pairs(GLINES) do
+        local c = Clip(key)
+        if c ~= "" then resource.AddFile("sound/" .. c) end
+    end
+end)
 
 local function SittingAdministrator()
     for _, p in ipairs(player.GetAll()) do
@@ -175,9 +308,19 @@ function LC.CollapseBegin(why)
     local adm = SittingAdministrator()
     C.offeredTo = adm
     if IsValid(adm) then
-        if LC.Vision then LC.Vision(adm, "visit", Line("elected"), "Your city is coming apart, Administrator. There are ... ways out of this, while you still have a choice.") end
-        timer.Simple(9, function()
+        -- he steps out in front of her, and she can't walk away while he talks (the owner, 10 November: "the Gman
+        -- appears before the administrator himself and tries to force the issue", not only a window)
+        C.pressed = {}
+        Says(adm, "arrive", "arrive", Line("glimpse"))
+        if adm.Freeze then adm:Freeze(true) end
+        timer.Simple(5, function()
+            if C.stage == "offer" and IsValid(adm) then Says(adm, "say", "ways") end
+        end)
+        timer.Simple(10, function()
+            if IsValid(adm) and adm.Freeze then adm:Freeze(false) end
             if C.stage ~= "offer" or not IsValid(adm) then return end
+            Says(adm, "say", "choose")
+            C.offerOpen = true
             net.Start("lc_collapse_offer")
             net.WriteFloat(math.max(5, C.answerBy - Now()))
             net.Send(adm)
@@ -194,9 +337,49 @@ function LC.CollapseBegin(why)
 end
 
 -- her answer
+-- She walks off from him, or shuts his window: "Get back here...", and 10 seconds to come back and press E on
+-- him (the owner, 10 November: "refusal to interact and brushing him aside has the same effect as refusal").
+function LC.CollapseWalkAway(ply, how)
+    if C.stage ~= "offer" or ply ~= C.offeredTo or C.walkAwayUntil then return false end
+    C.walkAwayUntil = Now() + WALKAWAY_SECS
+    ply:SetNW2Float("lc_gman_back_by", C.walkAwayUntil)
+    Says(ply, "walkaway", "walkaway")
+    LC.Log("info", "The Administrator walked away from the G-Man (" .. tostring(how) .. ")")
+    return true
+end
+-- E on him: back to his offer
+function LC.CollapseGmanUsed(ply)
+    if C.stage ~= "offer" or ply ~= C.offeredTo or not IsValid(C.gman) then return false end
+    C.walkAwayUntil = nil
+    ply:SetNW2Float("lc_gman_back_by", 0)
+    Says(ply, "say", "choose")
+    C.offerOpen = true
+    net.Start("lc_collapse_offer")
+    net.WriteFloat(math.max(5, (C.answerBy or Now()) - Now()))
+    net.Send(ply)
+    return true
+end
+-- (E, looking at him, close: he's not solid, so it's where she looks, not what she touches)
+hook.Add("KeyPress", "LivingCityCollapseGman", function(ply, key)
+    if key ~= (IN_USE or 32) or C.stage ~= "offer" or ply ~= C.offeredTo or not IsValid(C.gman) then return end
+    local to = C.gman:GetPos() + Vector(0, 0, 50) - ply:EyePos()
+    local d = to:Length()
+    if d > 160 then return end
+    local aim = ply.GetAimVector and ply:GetAimVector() or ply:EyeAngles():Forward()
+    if d < 40 or aim:Dot(to / d) > 0.85 then LC.CollapseGmanUsed(ply) end
+end)
+
 function LC.CollapseAnswer(ply, how)
     if C.stage ~= "offer" or not IsAdministrator(ply) then return false end
-    if how == "resign" or how == "end" then Resolve(how, ply) return true end
+    if how == "walkaway" then return LC.CollapseWalkAway(ply, "closed") end
+    if how == "resign" or how == "end" then
+        C.walkAwayUntil, C.offerOpen = nil, nil
+        ply:SetNW2Float("lc_gman_back_by", 0)
+        if ply.Freeze then ply:Freeze(false) end
+        Says(ply, "leave", how == "resign" and "wise" or "asyouwish")
+        Resolve(how, ply)
+        return true
+    end
     Refuse()
     return true
 end
@@ -211,8 +394,11 @@ Refuse = function()
     C.nextPhase = Now() + 30
     Publish()
     local adm = C.offeredTo
+    C.walkAwayUntil, C.offerOpen = nil, nil
     if IsValid(adm) then
-        if LC.Vision then LC.Vision(adm, "visit", Line("first"), "Not for long.") end
+        adm:SetNW2Float("lc_gman_back_by", 0)
+        if adm.Freeze then adm:Freeze(false) end
+        Says(adm, "leave", "refused")
         if LC.Notice then LC.Notice(adm, "warn", "You refused him", "He means to hasten your end. Your guards, your office, your shield: you'll need all of them.", 10) end
     end
 end
@@ -244,6 +430,7 @@ local PHASES = {
     function() StandBegin() end,
 }
 LC.CollapsePhases = PHASES
+-- (what he says when he comes back to her at each step: GLINES phase1 to phase4, above)
 
 -- the next step now (the timer, or an admin testing it)
 function LC.CollapseNext()
@@ -254,7 +441,7 @@ function LC.CollapseNext()
     local fn = PHASES[C.phase]
     if fn then fn() end
     local adm = C.offeredTo
-    if IsValid(adm) and C.phase < #PHASES and LC.Vision then LC.Vision(adm, "voice", "", "Time is running out, Administrator.") end
+    if IsValid(adm) and GLINES["phase" .. C.phase] then Says(adm, "visit", "phase" .. C.phase) end
     return true
 end
 
@@ -333,22 +520,83 @@ local function SpawnHer(pos)
     return npc
 end
 
+-- The transformer powering her shield: the editor's "Her last stand: the Administrator's power" (lc_adminpower).
+function LC.CollapsePower()
+    for _, e in ipairs((LC.EntsOf and LC.EntsOf("lc_adminpower")) or ents.FindByClass("lc_adminpower")) do
+        if IsValid(e) and not e.lcCollapseTemp then return e end
+    end
+end
+
+-- A clear spot `dist` from `at` (nothing solid between), for her beside the transformer or it beside her.
+local function Beside(at, dist)
+    for k = 0, 7 do
+        local dir = Angle(0, k * 45, 0):Forward()
+        local spot = at + dir * dist
+        local tr = util.TraceLine and util.TraceLine({ start = at + Vector(0, 0, 40), endpos = spot + Vector(0, 0, 40), mask = MASK_SOLID_BRUSHONLY })
+        if not (tr and tr.Hit) then return Ground(spot) end
+    end
+    return Ground(at + Vector(dist, 0, 0))
+end
+
+-- Where she stands, and what powers her shield. The fight is where the transformer is (the owner, 10 November:
+-- "this also then determines the final fight area; it's based off where the transformer is"): her desk if it's
+-- within the shield's reach of it, else beside it. None placed: the G-Man brings one, beside her desk.
+function LC.CollapseStandSpot()
+    local power = LC.CollapsePower()
+    local desk = LC.CollapseOffice()
+    local reach = math.max(200, cvPowerR:GetFloat())
+    if IsValid(power) then
+        local pp = power:GetPos()
+        if desk and desk:DistToSqr(pp) <= (reach * 0.8) ^ 2 then return Ground(desk), power end
+        return Beside(pp, 180), power
+    end
+    if not desk then return nil end
+    desk = Ground(desk)
+    local t = ents.Create("lc_adminpower")
+    if IsValid(t) then
+        t.lcCollapseTemp = true
+        t:SetPos(Beside(desk, 220))
+        t:Spawn()
+        t:Activate()
+        C.tempPower = t
+    end
+    return desk, t
+end
+
+-- Is her shield up? While its transformer stands and she's within its reach.
+function LC.CollapseShieldUp()
+    local boss, power = C.boss, C.power
+    if C.stage ~= "stand" or not IsValid(boss) or not IsValid(power) or power:GetNW2Bool("lc_power_down", false) then return false end
+    return boss:GetPos():DistToSqr(power:GetPos()) <= math.max(200, cvPowerR:GetFloat()) ^ 2
+end
+
+local function ArmPower(power)
+    if not IsValid(power) then return end
+    power.lcPowerMax = math.max(1, cvPowerHP:GetFloat())
+    power.lcPowerHP = power.lcPowerMax
+    power.lcPowerBlew = nil
+    power:SetNW2Float("lc_power_frac", 1)
+    power:SetNW2Bool("lc_power_down", false)
+    power:SetNW2Int("lc_power_smoke", 0)
+end
+
 StandBegin = function()
     if C.stage == "stand" then return false end
     local now = Now()
-    local office = LC.CollapseOffice()
+    local office, power = LC.CollapseStandSpot()
     if not office then return false end
-    office = Ground(office)
     C.stage, C.office, C.standUntil, C.nextPulse, C.standAt = "stand", office, now + math.max(1, cvStand:GetFloat()) * 60, now + PULSE_GAP, now
     C.heroStage, C.freemanAt, C.npcBarney = nil, nil, nil
     C.there = {}
+    C.power = power
+    ArmPower(power)
     -- her: the player, brought to her office, or the city's own
     local adm = SittingAdministrator()
     local boss
     if IsValid(adm) then
         boss = adm
         adm:SetPos(office + Vector(0, 0, 4))
-        if LC.Notice then LC.Notice(adm, "warn", "Your last stand", "He's put you where you belong: your office. Hold out " .. math.floor(cvStand:GetFloat()) .. " minutes. Keep the power on: it's your shield.", 12) end
+        if LC.Notice then LC.Notice(adm, "warn", "Your last stand", "He's put you where you belong. Hold out " .. math.floor(cvStand:GetFloat()) .. " minutes. Your shield holds while its transformer stands, and only near it: stay close.", 12) end
     else
         boss = SpawnHer(office)
         if IsValid(boss) then C.npcs[#C.npcs + 1] = boss end
@@ -358,16 +606,16 @@ StandBegin = function()
     local hp = math.max(1, cvHealth:GetInt())
     if boss.SetMaxHealth then boss:SetMaxHealth(hp) end
     boss:SetHealth(hp)
-    C.shield, C.shieldMax, C.lastHit = cvShield:GetFloat(), cvShield:GetFloat(), 0
-    boss:SetNW2Float("lc_shield_frac", 1)
+    boss:SetNW2Float("lc_shield_frac", LC.CollapseShieldUp() and 1 or 0)
     SetGlobal2Entity("lc_collapse_boss", boss)
+    SetGlobal2Entity("lc_collapse_power", IsValid(power) and power or NULL)
     SetGlobal2Vector("lc_collapse_office", office)
     SetGlobal2Float("lc_collapse_until", C.standUntil)
-    -- her Elites, round the desk
+    -- her Elites, round her, and one by the transformer
     local n = math.max(0, cvElites:GetInt())
     for i = 1, n do
         local a = (i / math.max(1, n)) * math.pi * 2
-        local at = Ground(office + Vector(math.cos(a) * 110, math.sin(a) * 110, 0))
+        local at = (i == n and IsValid(power) and n > 1) and Beside(power:GetPos(), 90) or Ground(office + Vector(math.cos(a) * 110, math.sin(a) * 110, 0))
         local npc, st
         if LC.ManpowerFree and LC.SpawnSoldier then npc, st = LC.ManpowerFree(LC.SpawnSoldier, at, "elite")
         elseif LC.SpawnSoldier then npc, st = LC.SpawnSoldier(at, "elite") end
@@ -386,15 +634,15 @@ StandBegin = function()
         if IsValid(npc) then
             st = st or (LC.NPCs and LC.NPCs[npc])
             if st then st.unmanaged, st.questLock, st.collapseStorm = true, true, true end
-            if npc.AddEntityRelationship then npc:AddEntityRelationship(boss, D_HT or 1, 99) end
+            if npc.AddEntityRelationship then
+                npc:AddEntityRelationship(boss, D_HT or 1, 99)
+                if IsValid(power) then npc:AddEntityRelationship(power, D_HT or 1, 98) end
+            end
             C.npcs[#C.npcs + 1] = npc
         end
     end
-    -- with nothing feeding her office, he keeps the city dark (or she'd be untouchable)
-    if LC.FeederOf and not LC.FeederOf(office) and LC.ForceBlackout then
-        LC.ForceBlackout("on")
-        C.forcedDark = true
-    elseif C.forcedDark and LC.ForceBlackout then
+    -- (the grid's own blackout, his third step, is over: her shield runs off her transformer alone)
+    if C.forcedDark and LC.ForceBlackout then
         timer.Remove("LivingCityCollapseDark")
         LC.ForceBlackout("auto")
         C.forcedDark = nil
@@ -403,23 +651,77 @@ StandBegin = function()
     Each(function(p)
         if not LC.Notice then return end
         if Combine(p) and p ~= boss then
-            LC.Notice(p, "warn", "Defend the Administrator", "Her office is under attack. Hold it, and keep its power on.", 12)
+            LC.Notice(p, "warn", "Defend the Administrator", "Her last stand has begun. Guard her, and guard the transformer that powers her shield.", 12)
         elseif p ~= boss then
-            LC.Notice(p, "event", "The last stand", AdminName() .. " is in her office. End it. Cut the power to her office first: it weakens her shield.", 12)
+            LC.Notice(p, "event", "The last stand", "Her shield deflects every bullet. Destroy the transformer powering it (marked on screen), then end her.", 12)
         end
     end)
-    hook.Run("LivingCityLastStand", boss, office)
+    hook.Run("LivingCityLastStand", boss, office, power)
     return true
 end
 LC.CollapseStand = function() return StandBegin() end
 
--- The shield's strength now: full, or a third with her office's power cut.
-function LC.CollapseShieldWeak()
-    if not IsValid(C.boss) then return false end
-    return LC.PoweredAt ~= nil and not LC.PoweredAt(C.boss:GetPos())
+-- The transformer hit (lc_adminpower's OnTakeDamage). Shows it's working: sparks on every hit, smoke from
+-- three quarters, a small blast at half, a big one when it goes, and her shield with it.
+local HIT_SOUNDS = { "ambient/energy/spark1.wav", "ambient/energy/spark2.wav", "ambient/energy/spark3.wav", "ambient/energy/spark4.wav", "ambient/energy/spark5.wav", "ambient/energy/spark6.wav" }
+local function Blast(pos, big)
+    if util.Effect and EffectData then
+        local ed = EffectData()
+        ed:SetOrigin(pos)
+        ed:SetMagnitude(big and 3 or 1)
+        ed:SetScale(big and 2 or 1)
+        util.Effect(big and "HelicopterMegaBomb" or "Explosion", ed, true, true)
+    end
+    if util.ScreenShake then util.ScreenShake(pos, big and 12 or 5, 5, big and 2 or 1, big and 1200 or 600) end
 end
-local function ShieldCap() return C.shieldMax * (LC.CollapseShieldWeak() and SHIELD_WEAK or 1) end
+function LC.CollapsePowerHit(ent, dmg)
+    if C.stage ~= "stand" or ent ~= C.power or not IsValid(ent) or ent:GetNW2Bool("lc_power_down", false) then return false end
+    local att = dmg:GetAttacker()
+    if IsValid(att) and (Combine(att) or (att.IsNPC and att:IsNPC() and LC.NPCs and LC.NPCs[att] and LC.IsSecurity and LC.IsSecurity(LC.NPCs[att]))) then return false end
+    if IsValid(att) and att:IsPlayer() then C.there[att] = true end
+    local ha = IsValid(att) and att.lcHero and LC.CollapseHeroes and LC.CollapseHeroes[att.lcHero]
+    local n = dmg:GetDamage() * (ha and ha.dealt or 1)
+    if n <= 0 then return false end
+    local before = ent.lcPowerHP or ent.lcPowerMax or 1
+    ent.lcPowerHP = math.max(0, before - n)
+    local max = ent.lcPowerMax or 1
+    local frac = ent.lcPowerHP / max
+    ent:SetNW2Float("lc_power_frac", frac)
+    ent:SetNW2Int("lc_power_smoke", frac <= 0.25 and 3 or (frac <= 0.5 and 2 or (frac <= 0.75 and 1 or 0)))
+    local at = (dmg.GetDamagePosition and dmg:GetDamagePosition()) or ent:GetPos() + Vector(0, 0, 40)
+    if not at or at == vector_origin then at = ent:GetPos() + Vector(0, 0, 40) end
+    if util.Effect and EffectData then
+        local ed = EffectData()
+        ed:SetOrigin(at)
+        ed:SetMagnitude(2)
+        ed:SetScale(1)
+        ed:SetRadius(4)
+        util.Effect("Sparks", ed, true, true)
+    end
+    if ent.EmitSound and (ent.lcNextSpark or 0) < Now() then
+        ent.lcNextSpark = Now() + 0.25
+        ent:EmitSound(HIT_SOUNDS[math.random(#HIT_SOUNDS)], 75)
+    end
+    if before / max > 0.5 and frac <= 0.5 then
+        Blast(ent:GetPos() + Vector(0, 0, 50), false)
+        NoticeAll("info", "Her power is failing", "The transformer is half gone. Keep at it.", 4)
+    end
+    if ent.lcPowerHP <= 0 then
+        ent:SetNW2Bool("lc_power_down", true)
+        ent.lcPowerBlew = true
+        Blast(ent:GetPos() + Vector(0, 0, 50), true)
+        if ent.EmitSound then ent:EmitSound("ambient/explosions/explode_4.wav", 100) end
+        if IsValid(C.boss) then
+            C.boss:SetNW2Float("lc_shield_frac", 0)
+            if C.boss.EmitSound then C.boss:EmitSound("ambient/energy/powerdown2.wav", 90) end
+        end
+        NoticeAll("event", "Her shield is down", "The transformer is destroyed. " .. AdminName() .. " is unprotected. Now.", 8)
+        hook.Run("LivingCityAdminPowerDown", ent, att)
+    end
+    return true
+end
 
+-- Her shield: every hit deflected while it's up (sparks where it lands); Civil Protection never hurts her.
 hook.Add("EntityTakeDamage", "LivingCityCollapseShield", function(victim, dmg)
     if C.stage ~= "stand" or victim ~= C.boss then return end
     local att = dmg:GetAttacker()
@@ -428,21 +730,23 @@ hook.Add("EntityTakeDamage", "LivingCityCollapseShield", function(victim, dmg)
         return true
     end
     if IsValid(att) and att:IsPlayer() then C.there[att] = true end
-    local ha = IsValid(att) and att.lcHero and LC.CollapseHeroes and LC.CollapseHeroes[att.lcHero]
-    if ha then dmg:ScaleDamage(ha.dealt) end
-    C.shield = math.min(C.shield or 0, ShieldCap())
-    if C.shield > 0 then
-        C.shield = C.shield - dmg:GetDamage()
-        C.lastHit = Now()
-        if C.shield <= 0 then
-            C.shield = 0
-            NoticeAll("event", "Her shield is down", AdminName() .. "'s shield has broken. Now.", 5)
-            if victim.EmitSound then victim:EmitSound("ambient/energy/powerdown2.wav", 90) end
-        end
-        victim:SetNW2Float("lc_shield_frac", C.shieldMax > 0 and C.shield / C.shieldMax or 0)
+    if LC.CollapseShieldUp() then
         dmg:SetDamage(0)
+        if (C.nextRic or 0) < Now() then
+            C.nextRic = Now() + 0.15
+            local at = (dmg.GetDamagePosition and dmg:GetDamagePosition()) or victim:GetPos() + Vector(0, 0, 40)
+            if util.Effect and EffectData then
+                local ed = EffectData()
+                ed:SetOrigin(at)
+                ed:SetNormal(Vector(0, 0, 1))
+                util.Effect("cball_bounce", ed, true, true)
+            end
+            if victim.EmitSound then victim:EmitSound("weapons/fx/rics/ric" .. math.random(1, 5) .. ".wav", 75) end
+        end
         return true
     end
+    local ha = IsValid(att) and att.lcHero and LC.CollapseHeroes and LC.CollapseHeroes[att.lcHero]
+    if ha then dmg:ScaleDamage(ha.dealt) end
 end)
 
 -- her death: the people's night
@@ -468,14 +772,18 @@ function LC.CollapseStandTick(now)
         if cvHeroes:GetBool() and C.heroStage ~= "freeman" then LC.HeroBegin("freeman") else Resolve("crushed") return end
     end
     LC.HeroTick(now)
-    local weak, cap = LC.CollapseShieldWeak(), ShieldCap()
-    if C.shield > cap then C.shield = cap end
-    -- left alone for 8 seconds with the power on, it comes back (a twentieth a second)
-    if not weak and now - (C.lastHit or 0) > 8 and C.shield < cap then C.shield = math.min(cap, C.shield + C.shieldMax * 0.05) end
-    boss:SetNW2Float("lc_shield_frac", C.shieldMax > 0 and C.shield / C.shieldMax or 0)
-    boss:SetNW2Bool("lc_shield_weak", weak)
-    -- the pulse: anyone not Combine too close is thrown back (not with the power cut, nor once it's broken)
-    if not weak and C.shield > 0 and now >= C.nextPulse then
+    local up = LC.CollapseShieldUp()
+    boss:SetNW2Float("lc_shield_frac", up and 1 or 0)
+    -- a player Administrator who strays out of her transformer's reach is told (and unprotected)
+    if boss:IsPlayer() and IsValid(C.power) and not C.power:GetNW2Bool("lc_power_down", false) then
+        local out = not up
+        if out ~= (C.outOfReach or false) and LC.Notice then
+            LC.Notice(boss, out and "warn" or "info", out and "Out of your shield's reach" or "Shielded again", out and "Get back near your transformer: out here, bullets reach you." or "You're within your transformer's reach.", 5)
+        end
+        C.outOfReach = out
+    end
+    -- the pulse: anyone not Combine too close is thrown back, while her shield is up
+    if up and now >= C.nextPulse then
         C.nextPulse = now + PULSE_GAP
         local hit = false
         for _, e in ipairs(ents.FindInSphere(boss:GetPos(), PULSE_R)) do
@@ -738,6 +1046,12 @@ local function Calm()
     C.npcs = {}
     timer.Simple(60, function() for _, npc in ipairs(leftovers) do if IsValid(npc) and npc:Health() > 0 then npc:Remove() end end end)
     if IsValid(C.boss) then C.boss:SetNW2Float("lc_shield_frac", 0) end
+    if IsValid(C.tempPower) then C.tempPower:Remove() end
+    if IsValid(C.power) and not C.power.lcCollapseTemp then ArmPower(C.power) end
+    C.tempPower, C.power, C.outOfReach = nil, nil, nil
+    if IsValid(C.gman) and not C.gman.lcLeaveAt then GmanLeave(C.gman, 3) end
+    C.walkAwayUntil, C.offerOpen = nil, nil
+    SetGlobal2Entity("lc_collapse_power", NULL)
     for _, st in pairs(LC.NPCs or {}) do
         st.lcCollapseFriend = nil
         if st.lcCollapseRallied then st.lcCollapseRallied, st.collapseStorm, st.unmanaged = nil, nil, nil end
@@ -819,10 +1133,39 @@ function LC.CollapseTick(now)
         Publish()
         return
     end
+    if C.stage == "offer" and IsValid(C.offeredTo) then
+        local left, total = (C.answerBy or now) - now, math.max(30, cvAnswer:GetFloat() * 60)
+        C.pressed = C.pressed or {}
+        if left <= total / 2 and not C.pressed.half then
+            C.pressed.half = true
+            Says(C.offeredTo, "visit", "press")
+        elseif left <= 30 and not C.pressed.last then
+            C.pressed.last = true
+            Says(C.offeredTo, "visit", "lastcall")
+        end
+    end
     if C.stage == "offer" and now >= (C.answerBy or 0) then Refuse() end
+    LC.CollapseGmanTick(now)
     if C.stage == "refused" and now >= (C.nextPhase or 0) then LC.CollapseNext() end
     Publish()
 end
+-- she walks off from him (once his offer is open), and the 10 seconds to come back
+function LC.CollapseGmanTick(now)
+    now = now or Now()
+    if C.stage ~= "offer" then return end
+    local adm, g = C.offeredTo, C.gman
+    if not IsValid(adm) then return end
+    if C.walkAwayUntil then
+        if now >= C.walkAwayUntil then
+            LC.Log("info", "The Administrator didn't come back to the G-Man: a refusal")
+            Refuse()
+        end
+    elseif C.offerOpen and IsValid(g) and adm:GetPos():DistToSqr(g:GetPos()) > GMAN_REACH * GMAN_REACH then
+        LC.CollapseWalkAway(adm, "walked")
+    end
+end
+timer.Create("LivingCityCollapseGman", 0.5, 0, function() if C.stage == "offer" then pcall(LC.CollapseGmanTick, CurTime()) end end)
+
 timer.Create("LivingCityCollapse", TICK, 0, function() if LC.Running ~= false then pcall(LC.CollapseTick, CurTime()) end end)
 timer.Create("LivingCityCollapseStand", 1, 0, function() if C.stage == "stand" then pcall(LC.CollapseStandTick, CurTime()) end end)
 

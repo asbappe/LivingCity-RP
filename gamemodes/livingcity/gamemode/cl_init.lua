@@ -277,7 +277,7 @@ local GUIDE = {
         "RADIO JAMMED on your HUD means a jammer is nearby. Follow the beeping and press E on it to smash it.",
         "Civil Protection units: look at someone and choose F2 > Cuff them. Anyone with cuffs: C > their name > Cuff them. You can cuff someone whose hands are up, who is down, who has been stopped, or from behind. Drag walks them along; hitting them with the baton arrests them.",
         "Sociostability (green, yellow or red) is shown at the top of the screen. Only the Administrator sets it (F2 > Sociostability, or C > The city). Red means a judgment waiver: metrocops have their pistols drawn.",
-        "BLACK (purple, the city collapsing): long red fills the city's chaos (the readout shows how close: \"collapse 45%\"). Full, the G-Man offers the Administrator a way out: step down, or end it. Refused, he arms the city until her last stand in her office: Elites round her and a shield that throws people back; cut the power to her office and it's weak. If she holds out, a player of the rebellion comes back as Barney, then as Gordon Freeman, to finish it.",
+        "BLACK (purple, the city collapsing): long red fills the city's chaos (the readout shows how close: \"collapse 45%\"). Full, the G-Man offers the Administrator a way out: step down, or end it. Refused, he arms the city until her last stand: Elites round her and a shield that deflects every bullet, fed by a transformer marked on screen. Destroy the transformer and she can be killed. If she holds out, a player of the rebellion comes back as Barney, then as Gordon Freeman, to finish it.",
         "Set off an alarm (with a data chip, or during an escape) and a squad of two metrocops and a soldier comes through the door a few seconds later.",
         "The Nexus and every Combine-only area are guarded: mostly Overwatch soldiers, plus a metrocop or two.",
         "Combine units are tougher than in Half-Life 2 (metrocops 70 health, soldiers 90, Elites 150). When the Resistance far outnumbers the Combine's players, they get desperate, and more so the bigger the gap: metrocops carry SMGs, soldiers throw frags, gas and flashbangs, Elites fire more energy balls, and they hit a little harder. Everyone is told when it starts and stops.",
@@ -307,7 +307,7 @@ local GUIDE = {
     { "Talking, and knowing people", {
         "Chat is spoken out loud: only people nearby hear it. C > Talk lets you yell so people further away hear (/y), or whisper to whoever is right next to you (/w).",
         "C > Talk: describe what your character does (/me lights a cigarette), describe the scene (/it), or roll 1 to 100 for everyone nearby to see (/roll).",
-        "C > Talk > Out of character: talk to the whole server (//, with a cooldown) or only to people nearby (/looc).",
+        "Out of character: F1, \"Out of character...\": type it, then Nearby (/looc) or Everyone (//, with a cooldown). Also C > Talk > Out of character.",
         "U (the game's team chat key): talk to your own side only, wherever they are: Civil Protection, Overwatch and the Administrator; the Resistance; citizens; the infested. Marked (Team) in chat.",
         "Voice chat works the same way: people only hear you if they're close enough.",
         "Strangers don't know your name; they see your description instead. Set it in C > Me > Change how strangers see me (\"tall, with a scar over one eye\").",

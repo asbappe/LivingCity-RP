@@ -23294,8 +23294,13 @@ ok(not LC.SetSocio(nil, "black"), "nobody can set BLACK by hand: it's only reach
 local adm = newPlayer("CollapseAdmin", "admin")
 ok(LC.CollapseBegin("test") and LC.CollapseStage() == "offer" and GetGlobal2Bool("lc_collapse", false) and LC.Socio == "red", "the city collapses: BLACK, red underneath")
 ok(CS.offeredTo == adm, "the G-Man comes to the sitting Administrator")
+ok(adm.frozen == true, "he stands in front of them, and they can't walk away while he talks")
 net.sent = {}
 _run(10)
+local inPerson = false
+for _, m in ipairs(net.sent) do if m.name == "lc_collapse_gman" and m.to == adm then inPerson = true end end
+ok(inPerson and adm.frozen == false, "in person, saying his lines; then they can move")
+ok(LC.CollapseGmanWords("arrive") == "Is it really that time again?" and LC.CollapseGmanWords("refused") == "Not for long...", "his words are his clips' words (Half-Life 2's own where they fit)")
 local offered = false
 for _, m in ipairs(net.sent) do if m.name == "lc_collapse_offer" and m.to == adm then offered = true end end
 ok(offered, "and puts his offer to them on screen")
@@ -23309,8 +23314,19 @@ local reb = newPlayer("CollapseRebel", "resistance", nil, 900)
 local cop = newPlayer("CollapseCop", "cp")
 reb:SetPos(Vector(9000, 9000, 0)) cop:SetPos(Vector(-9000, 9000, 0))
 LC.CollapseBegin("test")
-LC.CollapseAnswer(adm2, "refuse")
-ok(LC.CollapseStage() == "refused", "refused: he means to hasten the end")
+local gm = LC.CollapseGmanEnt()
+ok(IsValid(gm) and gm:GetClass() == "lc_gman" and gm.lcFor == adm2 and gm:GetNW2Entity("lc_for") == adm2, "the G-Man is really there, in front of the Administrator, for them alone")
+if gm.OnTakeDamage then gm:OnTakeDamage(_dmg(reb, 5000)) end
+ok(IsValid(gm) and not gm.lcLeaveAt, "and nothing hurts him")
+_run(10.5)
+ok(LC.CollapseAnswer(adm2, "walkaway") and CS.walkAwayUntil and adm2:GetNW2Float("lc_gman_back_by", 0) > CurTime(), "shutting his window is walking away: \"Get back here...\", and 10 seconds to come back")
+ok(LC.CollapseGmanUsed(adm2) and CS.walkAwayUntil == nil and adm2:GetNW2Float("lc_gman_back_by", 0) == 0, "E on him: back to his offer")
+adm2:SetPos(gm:GetPos() + Vector(600, 0, 0))
+LC.CollapseGmanTick(CurTime())
+ok(CS.walkAwayUntil ~= nil, "walking off from him starts the 10 seconds too")
+LC.CollapseGmanTick(CS.walkAwayUntil + 0.1)
+ok(LC.CollapseStage() == "refused" and gm.lcLeaveAt ~= nil, "not back in time: a refusal, and he walks off")
+adm2:SetPos(Vector(0, 0, 0))
 LC.CollapseNext()
 ok(CS.phase == 1, "his first step: crates about the city")
 LC.CollapseNext()
@@ -23325,21 +23341,30 @@ local guards = 0
 for npc, st in pairs(LC.NPCs) do if IsValid(npc) and st.collapseGuard then guards = guards + 1 end end
 ok(guards == 4, "four Overwatch Elites guard her", guards)
 ok(GetGlobal2Entity("lc_collapse_boss") == adm2, "everyone's screen knows who she is")
--- the shield (her office powered: no transformer feeds it here, so the G-Man keeps the city dark)
-ok(CS.forcedDark == true, "nothing feeding her office: the city stays dark, or she'd be untouchable")
-local poweredWas = LC.PoweredAt
-LC.PoweredAt = function() return true end
-CS.shield = CS.shieldMax
+-- her shield, and the transformer powering it (the owner, 10 November)
+local pw = CS.power
+ok(IsValid(pw) and pw:GetClass() == "lc_adminpower" and pw.lcCollapseTemp, "no transformer placed: the G-Man brings one beside her")
+ok(GetGlobal2Entity("lc_collapse_power") == pw and LC.CollapseShieldUp(), "her shield is up while it stands (and everyone's screen knows where it is)")
 local ShieldHook = hook.t.EntityTakeDamage.LivingCityCollapseShield
-ShieldHook(adm2, _dmg(reb, 100))
-ok(adm2:Health() == 600 and math.abs(CS.shield - 1400) < 0.01, "her shield takes the hit (1500, 100 off)", CS.shield)
+local d0 = _dmg(reb, 100)
+ShieldHook(adm2, d0)
+ok(d0:GetDamage() == 0 and adm2:Health() == 600, "her shield deflects every bullet", d0:GetDamage())
 local fdmg = _dmg(cop, 50)
 ShieldHook(adm2, fdmg)
-ok(fdmg:GetDamage() == 0 and math.abs(CS.shield - 1400) < 0.01, "Civil Protection can't hurt her or her shield")
-LC.PoweredAt = function() return false end
-ShieldHook(adm2, _dmg(reb, 10))
-ok(CS.shield <= 500, "her office's power cut: the shield is a third as strong", CS.shield)
-LC.PoweredAt = poweredWas
+ok(fdmg:GetDamage() == 0, "and Civil Protection can't hurt her")
+local full = pw.lcPowerHP
+LC.CollapsePowerHit(pw, _dmg(cop, 500))
+ok(pw.lcPowerHP == full, "nor her transformer")
+LC.CollapsePowerHit(pw, _dmg(reb, 700))
+ok(pw:GetNW2Int("lc_power_smoke", 0) == 1 and math.abs(pw:GetNW2Float("lc_power_frac", 1) - 0.72) < 0.01, "shot: past three quarters, it smokes (2500, 700 off)", pw:GetNW2Float("lc_power_frac", 1))
+LC.CollapsePowerHit(pw, _dmg(reb, 600))
+ok(pw:GetNW2Int("lc_power_smoke", 0) == 2, "past half: smoke and sparks (and a small blast as it passed half)")
+ok(LC.CollapseShieldUp(), "still standing: her shield still holds")
+LC.CollapsePowerHit(pw, _dmg(reb, 5000))
+ok(pw:GetNW2Bool("lc_power_down", false) and not LC.CollapseShieldUp(), "destroyed: her shield is down")
+local d4 = _dmg(reb, 50)
+ShieldHook(adm2, d4)
+ok(d4:GetDamage() == 50, "now the bullets reach her", d4:GetDamage())
 -- the heroes
 local unit = LC.SpawnCop(Vector(9100, 9000, 4))
 hook.Run("OnNPCKilled", unit, reb) hook.Run("OnNPCKilled", unit, reb)
@@ -23371,8 +23396,13 @@ ok(reb.lcHero == nil and reb:GetNW2String("lc_char", "") ~= "Gordon Freeman" and
 adm2.alive = true
 -- the city's own Administrator: she refuses, and stands in person
 CS.cooldownUntil = 0
+local placed = ents.Create("lc_adminpower")
+placed:SetPos(Vector(-60000, -60000, 0)) placed:Spawn()
 local okS = LC.CollapseTest("stand")
 ok(okS and IsValid(CS.boss) and CS.boss.lcCollapseBoss, "no player as the Administrator: the city's own stands in her office")
+ok(CS.power == placed and CS.boss:GetPos():Distance(placed:GetPos()) < 400, "the fight is where her transformer is", tostring(CS.boss:GetPos()))
+CS.boss:SetPos(Vector(-60000, -40000, 0))
+ok(not LC.CollapseShieldUp(), "out of its reach (100 feet), her shield doesn't hold")
 -- time runs out with no heroes: Overwatch crushes it
 _setcvar("lc_black_heroes", 0)
 CS.standUntil = CurTime()
@@ -23380,6 +23410,8 @@ LC.CollapseStandTick(CurTime() + 1)
 ok(LC.CollapseStage() == nil and math.abs(LC.Chaos - 0.5) < 0.01, "time runs out: the uprising is crushed, chaos halved")
 _setcvar("lc_black_heroes", 1)
 LC.CollapseTest("off")
+ok(IsValid(placed) and not placed:GetNW2Bool("lc_power_down", false), "afterwards her transformer stands ready again")
+placed:Remove()
 LC.Chaos = 0
 for _, p in ipairs(benched) do p:SetNW2String("lcf_faction", "admin") end
 end

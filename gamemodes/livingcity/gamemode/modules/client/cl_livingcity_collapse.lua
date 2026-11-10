@@ -1,16 +1,66 @@
 --[[
     Living City: the collapse on screen (sv_livingcity_collapse.lua)
 
+      The G-Man, in person    his words and voice (he himself is lc_gman, in front of her, only she sees him);
+                              walk away from him or shut his window, and 10 seconds to go back and press E
       The G-Man's offer       a window for the Administrator: step down, end it yourself, or refuse him
-      Her shield              a bubble round the Administrator in her last stand (orange and flickering
-                              with her office's power cut)
-      The last stand          the time left, her health and shield, and where her office is
+      Her shield              a bubble round the Administrator in her last stand, and a faint stream of
+                              power from her transformer to it
+      The last stand          the time left, her health, her transformer's, where she and it are
       Heroes                  who the hero is, and "you are" for the one playing him
 ]]
 
 LC_CL = LC_CL or {}
 
 local HERO_NAMES = { barney = "BARNEY CALHOUN", freeman = "GORDON FREEMAN" }
+
+------------------------------------------------------------------------
+-- The G-Man, in person, in front of the Administrator (the owner, 10 November: "not only a window popping up,
+-- but the Gman appears before the administrator himself and tries to force the issue")
+------------------------------------------------------------------------
+
+-- (he's lc_gman, a real thing in the world only she is sent: this is his voice and words on her screen)
+local GM -- { kind, text, textUntil, leaveAt }
+LC_CL.CollapseGmanState = function() return GM end
+
+net.Receive("lc_collapse_gman", function()
+    local kind, text, snd = net.ReadString(), net.ReadString(), net.ReadString()
+    if snd ~= "" and file.Exists("sound/" .. snd, "GAME") then surface.PlaySound(snd) end
+    GM = GM or {}
+    GM.kind, GM.text, GM.textUntil = kind, text, CurTime() + math.max(5, #text / 12)
+    GM.leaveAt = (kind == "leave") and CurTime() + 3 or (kind == "visit" and CurTime() + math.max(8, #text / 10) + 3) or nil
+    if kind == "walkaway" and IsValid(LC_CL.CollapseOffer) then LC_CL.CollapseOffer:Remove() end
+end)
+hook.Add("Think", "LivingCityCollapseGman", function()
+    if GM and GM.leaveAt and CurTime() >= GM.leaveAt then GM = nil end
+end)
+
+-- his words, and the world dimming at the edges while he's there
+hook.Add("HUDPaint", "LivingCityCollapseGmanWords", function()
+    if not GM then return end
+    local w, h = ScrW(), ScrH()
+    local a = GM.leaveAt and math.Clamp((GM.leaveAt - CurTime()) / 3, 0, 1) or 1
+    for i = 0, 5 do
+        surface.SetDrawColor(0, 0, 0, (60 - i * 10) * a)
+        surface.DrawRect(0, 0, w, h * (0.12 - i * 0.02))
+        surface.DrawRect(0, h - h * (0.12 - i * 0.02), w, h * (0.12 - i * 0.02))
+    end
+    if GM.text ~= "" and CurTime() < (GM.textUntil or 0) then
+        draw.SimpleTextOutlined(GM.text, "DermaLarge", w / 2, h * 0.8, Color(225, 225, 210, 255 * a), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 200 * a))
+    end
+end)
+
+-- walked away from him: 10 seconds to go back and press E on him, or it's a refusal
+hook.Add("HUDPaint", "LivingCityCollapseGmanBack", function()
+    local me = LocalPlayer()
+    if not IsValid(me) then return end
+    local left = me:GetNW2Float("lc_gman_back_by", 0) - CurTime()
+    if left <= 0 then return end
+    local w, h = ScrW(), ScrH()
+    draw.SimpleTextOutlined(string.format("Go back to him and press E (%d)", math.ceil(left)), "DermaLarge", w / 2, h * 0.32,
+        Color(255, 200, 120), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_black)
+    draw.SimpleTextOutlined("Walking away is a refusal.", "DermaDefaultBold", w / 2, h * 0.32 + 30, Color(230, 230, 230), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+end)
 
 ------------------------------------------------------------------------
 -- The G-Man's offer
@@ -53,6 +103,13 @@ net.Receive("lc_collapse_offer", function()
     Btn("Step down", 16, "resign", "Leave the post: a citizen again. The city calms.")
     Btn("End it myself", 182, "end", "Die by your own hand and leave the post. The city calms.")
     Btn("Refuse him", 348, "refuse", "He hastens your end: crates of guns, people waking armed, the grid failing, then your last stand in your office.")
+    -- (closing it is walking away from him: 10 seconds to come back and press E on him, or it's a refusal)
+    local x = vgui.Create("DButton", f)
+    x:SetText("Walk away")
+    x:SetPos(520 - 92, 6)
+    x:SetSize(84, 22)
+    x:SetTooltip("Brush him aside. He gives you 10 seconds to come back and press E on him; after that it's a refusal.")
+    x.DoClick = function() Send("walkaway") end
 end)
 
 ------------------------------------------------------------------------
@@ -60,19 +117,31 @@ end)
 ------------------------------------------------------------------------
 
 local SHIELD = Color(140, 110, 255, 60)
-local SHIELD_WEAK = Color(255, 150, 60, 50)
+local BEAM = Material("sprites/physbeam")
+local SPARK = Material("sprites/light_glow02_add")
 hook.Add("PostDrawTranslucentRenderables", "LivingCityCollapseShield", function(depth, sky)
     if sky then return end
     local boss = GetGlobal2Entity("lc_collapse_boss")
     if not IsValid(boss) then return end
-    local frac = boss:GetNW2Float("lc_shield_frac", 0)
-    if frac <= 0 then return end
-    if boss == LocalPlayer() and not LocalPlayer():ShouldDrawLocalPlayer() then return end
-    local weak = boss:GetNW2Bool("lc_shield_weak", false)
-    local c = weak and SHIELD_WEAK or SHIELD
-    local a = (25 + 70 * frac) * (weak and (0.5 + 0.5 * math.abs(math.sin(CurTime() * 9))) or 1)
-    render.SetColorMaterial()
-    render.DrawSphere(boss:GetPos() + Vector(0, 0, 40), 52, 24, 24, Color(c.r, c.g, c.b, a))
+    if boss:GetNW2Float("lc_shield_frac", 0) <= 0 then return end
+    local centre = boss:GetPos() + Vector(0, 0, 40)
+    -- the bubble (not drawn round her own first-person view)
+    if not (boss == LocalPlayer() and not LocalPlayer():ShouldDrawLocalPlayer()) then
+        local a = 45 + 25 * math.abs(math.sin(CurTime() * 2))
+        render.SetColorMaterial()
+        render.DrawSphere(centre, 52, 24, 24, Color(SHIELD.r, SHIELD.g, SHIELD.b, a))
+    end
+    -- the power, a faint stream from her transformer to the bubble
+    local power = GetGlobal2Entity("lc_collapse_power")
+    if IsValid(power) and not power:GetNW2Bool("lc_power_down", false) then
+        local from = power:LocalToWorld(Vector(0, 0, power:OBBMaxs().z * 0.85))
+        local len = from:Distance(centre)
+        local scroll = CurTime() * 2
+        render.SetMaterial(BEAM)
+        render.DrawBeam(from, centre, 6, scroll, scroll + len / 96, Color(170, 130, 255, 70 + 30 * math.abs(math.sin(CurTime() * 6))))
+        render.SetMaterial(SPARK)
+        render.DrawSprite(from, 20, 20, Color(190, 150, 255, 120))
+    end
 end)
 
 ------------------------------------------------------------------------
@@ -104,13 +173,27 @@ hook.Add("HUDPaint", "LivingCityCollapseHUD", function()
     if IsValid(boss) then
         local hp = boss:Health() / math.max(1, boss:GetMaxHealth())
         Bar(w / 2 - 110, y + 18, 220, hp, 220, 70, 60, "Health")
-        local sh = boss:GetNW2Float("lc_shield_frac", 0)
-        local weak = boss:GetNW2Bool("lc_shield_weak", false)
-        Bar(w / 2 - 110, y + 33, 220, sh, weak and 255 or 140, weak and 150 or 110, weak and 60 or 255, sh > 0 and (weak and "Shield (power cut: weak)" or "Shield") or "Shield broken")
+        local power = GetGlobal2Entity("lc_collapse_power")
+        local up = boss:GetNW2Float("lc_shield_frac", 0) > 0
+        if IsValid(power) then
+            local down = power:GetNW2Bool("lc_power_down", false)
+            Bar(w / 2 - 110, y + 33, 220, down and 0 or power:GetNW2Float("lc_power_frac", 1), 160, 120, 255,
+                down and "Her transformer: destroyed. Her shield is down" or (up and "Her transformer (her shield deflects everything)" or "Her transformer (she's out of its reach)"))
+        end
     end
     local h = GetGlobal2String("lc_collapse_hero", "")
     if h ~= "" and HERO_NAMES[h] then
         draw.SimpleTextOutlined(HERO_NAMES[h] .. " IS IN THE CITY", "DermaDefaultBold", w / 2, y + 50, Color(255, 170, 60), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, color_black)
+    end
+    -- where her transformer is: what the rebellion has to destroy, and the Combine to guard
+    local power = GetGlobal2Entity("lc_collapse_power")
+    if IsValid(power) and not power:GetNW2Bool("lc_power_down", false) and boss ~= me then
+        local sp = (power:GetPos() + Vector(0, 0, power:OBBMaxs().z + 16)):ToScreen()
+        if sp.visible then
+            local f = me:GetNW2String("lcf_faction", "")
+            local mine = f == "cp" or f == "admin"
+            draw.SimpleTextOutlined(mine and "HER TRANSFORMER: GUARD IT" or "HER TRANSFORMER: DESTROY IT", "DermaDefaultBold", sp.x, sp.y, Color(255, 170, 60), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+        end
     end
     -- where her office is (not for her)
     if boss ~= me then

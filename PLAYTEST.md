@@ -1174,3 +1174,13 @@ Notes:
   Notes:
 - [ ] **Heroes:** "Make me Barney" then "Make me Freeman": you reappear in rebel territory, named in chat, with the weapons (Freeman has the RPG, crossbow, gravity gun), YOU ARE ... on screen; you take far less damage and deal more; Freeman comes back as Freeman when killed. The rebels in the city head for her office. Kill her: credits, back to yourself (name, model, weapons). Freeman's model is a rebel stand-in: send me a Workshop Gordon model to use instead.
   Notes:
+
+## 10 November: the G-Man in person, her transformer, out of character on F1
+- [ ] **The G-Man in person:** editor > The collapse > "collapse to BLACK now" while you are the Administrator. He appears in front of you (nobody else sees him: ask someone), you cannot move while he talks, then his window. His lines: Half-Life 2's "Is it really that time again?" and the offers line, then the words only for the rest until your spliced clips are in (GMAN_SOUNDS.md, rows 11 to 23). Shoot him, walk through him: nothing.
+  Notes:
+- [ ] **Walking away from him:** press "Walk away" on his window, or walk off: "Get back here...", a 10-second countdown. Go back, look at him, press E: his window again. Do it again and wait out the 10 seconds: a refusal ("Not for long..."), he walks off, and comes back at each of his steps.
+  Notes:
+- [ ] **Her transformer:** place "Her last stand: the Administrator's power" (layout list: The Administrator's last stand) and her desk within 100 feet. "Her last stand now": a purple bubble, a faint beam from the transformer to it, the transformer glowing. Shoot her: sparks and ricochets, no damage. Shoot the transformer: sparks each hit, smoke at three quarters, a small blast at half, heavy smoke, a big blast at the end; then she can be killed. Markers: "DESTROY IT" (or "GUARD IT" for the Combine).
+  Notes:
+- [ ] **Out of character on F1:** F1, item 6 "Out of character...": type, Nearby or Everyone; Enter sends nearby.
+  Notes:

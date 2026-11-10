@@ -576,10 +576,25 @@ do
         if not okP2 then problems[#problems + 1] = "the G-Man's offer paint: " .. tostring(errP2) end
         LC_CL.CollapseOffer:Remove()
     end
+    -- the G-Man in person: his words, and the 10 seconds to go back to him
+    net._q = { "arrive", "Is it really that time again?", "" }
+    net.ReadString = function() return table.remove(net._q, 1) end
+    local okG, errG = pcall(net["recv_lc_collapse_gman"])
+    if not okG then problems[#problems + 1] = "the G-Man's words error: " .. tostring(errG)
+    elseif not (LC_CL.CollapseGmanState and LC_CL.CollapseGmanState()) then problems[#problems + 1] = "the G-Man's words aren't kept to show" end
+    local okW, errW = pcall(hook.t.HUDPaint.LivingCityCollapseGmanWords)
+    if not okW then problems[#problems + 1] = "the G-Man's words on screen error: " .. tostring(errW) end
+    _me.nw.lc_gman_back_by = CurTime() + 8
+    local okB, errB = pcall(hook.t.HUDPaint.LivingCityCollapseGmanBack)
+    if not okB then problems[#problems + 1] = "the 10 seconds to go back to him error: " .. tostring(errB) end
+    _me.nw.lc_gman_back_by = nil
     net.ReadFloat, net.ReadString = rf, rs
+    local power = ents.Create("lc_adminpower")
+    power:SetPos(Vector(500, 0, 0))
+    _globals.lc_collapse_power = power
     local boss = ents.Create("npc_citizen")
     boss:SetPos(Vector(300, 0, 0))
-    boss.nw.lc_shield_frac = 0.6
+    boss.nw.lc_shield_frac = 1
     _globals.lc_collapse = true
     _globals.lc_collapse_stage = "stand"
     _globals.lc_collapse_boss = boss
@@ -594,8 +609,9 @@ do
     local okH, errH = pcall(hook.t.HUDPaint.LivingCityCollapseHUD)
     if not okH then problems[#problems + 1] = "the last stand on screen errors: " .. tostring(errH) end
     _me.nw.lc_hero = nil
-    for _, k in ipairs({ "lc_collapse", "lc_collapse_stage", "lc_collapse_boss", "lc_collapse_office", "lc_collapse_until", "lc_collapse_hero" }) do _globals[k] = nil end
+    for _, k in ipairs({ "lc_collapse", "lc_collapse_stage", "lc_collapse_boss", "lc_collapse_office", "lc_collapse_until", "lc_collapse_hero", "lc_collapse_power" }) do _globals[k] = nil end
     boss:Remove()
+    power:Remove()
 end
 -- flying a scanner: the view leaves the body, and units see who a report caught
 local scn = ents.Create("lc_rscanner")

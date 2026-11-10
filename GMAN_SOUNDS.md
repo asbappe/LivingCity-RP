@@ -24,3 +24,23 @@ Every clip the gamemode plays for the G-Man: when it plays, the file it looks fo
 **To download (6 files):** `gman_notthistime`, `gman_notforlong`, `gman_wellseeaboutthat`, `gman_comebacknow` (spliced), `gman_getbackhere`, `gman_inhale`, into `garrysmod/sound/vo/episode_1/npc/gman/`; and the Half-Life: Alyx `04_00302` to `04_00304` joined into `garrysmod/sound/livingcity/gman/gman_replacement.wav`.
 
 Dreams (the riddles, the rumours) have no voice: his words on screen, over the dark.
+
+## The collapse (sociostability BLACK): his lines to the Administrator
+
+Added 10 November. He stands in front of the Administrator (only she sees him) and says these. **Nothing needs recording:** point each setting at any real G-Man clip, stock or one you've spliced (cut out "Mr. Freeman" and so on). **The words on screen:** put a `.txt` file with the same name next to the clip (for example `black_gman_wise.txt` beside `black_gman_wise.wav`) holding exactly what the clip says, and that's what shows; with no `.txt`, the words below show. With no clip, the moment is silent and the words still show. `lc_voice_missing` lists which ones the server doesn't have yet.
+
+| # | When it plays | What it says now (on screen) | File (under `garrysmod/sound/`) by default | Setting |
+|---|---|---|---|---|
+| 11 | He appears in front of her (she can't move while he talks) | "Is it really that time again?" | `vo/citadel/gman_exit02.wav` (Half-Life 2, on your server) | `lc_black_gman_arrive` |
+| 12 | Five seconds later | "I've received some interesting offers for your services. Ordinarily, I wouldn't contemplate them. These are extraordinary times." | `vo/citadel/gman_exit05.wav` (Half-Life 2, on your server) | `lc_black_gman_ways` |
+| 13 | His window opens (step down, end it, refuse) | "Step aside. Or end it ... yourself. Choose." | `livingcity/gman/black_gman_choose.wav` | `lc_black_gman_choose` |
+| 14 | Half her time to answer is gone | "Time is a luxury you no longer have, Administrator." | `livingcity/gman/black_gman_press.wav` | `lc_black_gman_press` |
+| 15 | 30 seconds left to answer | "Choose. Or I will ... choose for you." (Half-Life 2's ending has a line about taking the liberty of choosing for you: a good one to splice) | `livingcity/gman/black_gman_lastcall.wav` | `lc_black_gman_lastcall` |
+| 16 | She shuts his window or walks away from him (10 seconds to come back and press E on him) | "Get back here..." | `vo/episode_1/npc/gman/gman_getbackhere.wav` (row 6: splice "get back here ... get back here now" without "Freeman", with a `.txt` of its words) | `lc_gman_line_walk_away` (shared with row 6) |
+| 17 | She steps down | "A wise choice, Administrator." | `livingcity/gman/black_gman_wise.wav` | `lc_black_gman_wise` |
+| 18 | She ends it herself | "... As you wish." | `livingcity/gman/black_gman_asyouwish.wav` | `lc_black_gman_asyouwish` |
+| 19 | She refuses (or doesn't come back in time) | "Not for long..." | row 3's file | `lc_gman_line_refused` (shared with row 3) |
+| 20 | His first step: weapon crates about the city | "The right man in the wrong place can make all the difference in the world." | row 9's file | `lc_gman_line_crates` (shared with row 9) |
+| 21 | His second step: people waking armed | "Your citizens sleep poorly. They wake ... prepared." | `livingcity/gman/black_gman_sleep.wav` | `lc_black_gman_sleep` |
+| 22 | His third step: the grid failing | "Even the lights are leaving you." | `livingcity/gman/black_gman_dark.wav` | `lc_black_gman_dark` |
+| 23 | His fourth step: her last stand | "It ends where it began, Administrator. In your office." | `livingcity/gman/black_gman_office.wav` | `lc_black_gman_office` |

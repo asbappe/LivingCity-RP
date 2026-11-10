@@ -42,7 +42,8 @@ local MODES = {
     { id = "sspawn",      label = "Point: scanner launch spot (where flown scanners go up)" },
     { id = "platform",    label = "Point: train platform (trains stop here: new arrivals, people leaving the city)" },
     { id = "arrival",     label = "Point: arrival (where new people step into the city, before Civil Intake; place it from the way they should face, Civil Intake say)" },
-    { id = "desk",        label = "Point: the Administrator's desk (her office: where she makes her last stand when the city collapses to BLACK)" },
+    { id = "desk",        label = "Her last stand: the Administrator's desk (where she stands when the city collapses to BLACK; within 100 feet of her power)" },
+    { id = "adminpower",  label = "Her last stand: the Administrator's power (a Combine transformer: her shield deflects every bullet while it stands, out to 100 feet; the fight is here)" },
     { id = "studio",      label = "Point: broadcast studio (the Administrator speaks here, filmed live, when no player is Director of Propaganda)" },
     { id = "jogroute",    label = "Point: jogging route stop (morning jog: place them in order round the route, the first is the start; route #)", group = true },
     { id = "yard",        label = "Point: exercise yard (morning drill: stand where the rows of citizens will be and aim at where the leader stands)" },
@@ -725,14 +726,15 @@ function TOOL.BuildCPanel(panel)
     Slider("Elites guarding her", "lc_black_elites", 0, 12, 0)
     Slider("Resistance fighters storming her office", "lc_black_rebels", 0, 24, 0)
     Slider("Her health", "lc_black_admin_health", 100, 3000, 0)
-    Slider("Her shield (damage it takes before breaking)", "lc_black_shield", 0, 5000, 0)
+    Slider("Her transformer's health (her shield holds till it's destroyed)", "lc_black_power_health", 200, 10000, 0)
+    Slider("How far her shield reaches from it (16 units a foot)", "lc_black_power_range", 400, 4000, 0)
     Slider("Credits for those there when she falls", "lc_black_reward", 0, 2000, 0)
     Check("Heroes: Barney, then Gordon Freeman, played by players of the rebellion", "lc_black_heroes")
     Slider("Minutes into her stand before Barney comes", "lc_black_barney_minutes", 0, 30, 0)
     Slider("Minutes after Barney before Freeman comes", "lc_black_freeman_minutes", 0, 30, 0)
     Slider("Unit kills that make a player the first pick for a hero", "lc_black_hero_kills", 0, 20, 0)
     Check("A minute after she falls, start the map over (a fresh city)", "lc_black_reset_map")
-    panel:Help("Her office is the \"Administrator's desk\" point (Civil Protection and the Combine, in the layout list). Without one: beside her office door, else the broadcast studio, else a Combine zone. Cut the power to it (sabotage the transformer feeding it) and her shield is weak.")
+    panel:Help("Place \"Her last stand: the Administrator's power\" (a Combine transformer) where the fight should be, and her desk within 100 feet of it. Her shield deflects every bullet while the transformer stands; destroy it and she can be killed. No transformer placed: the G-Man brings one beside her desk. No desk: beside it, or beside her office door, the broadcast studio, a Combine zone.")
     panel:Button("Test: collapse to BLACK now (the G-Man comes to the Administrator)", "lc_collapse_test", "black")
     panel:Button("Test: the G-Man's next step now (crates, waking armed, the grid failing, the stand)", "lc_collapse_test", "next")
     panel:Button("Test: her last stand now", "lc_collapse_test", "stand")

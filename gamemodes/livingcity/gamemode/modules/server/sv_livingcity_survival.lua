@@ -1025,6 +1025,7 @@ local FIXTURE_CLASS = {
     workbench = "lc_workbench", recycler = "lc_recycler", dataterm = "lc_dataterminal", masterterm = "lc_masterterminal", incinerator = "lc_incinerator",
     hazbarrel = "lc_hazbarrel", -- (sv_livingcity_cleanup.lua)
     transformer = "lc_transformer", forcefield = "lc_forcefield",
+    adminpower = "lc_adminpower", -- the Administrator's power: her shield in her last stand (sv_livingcity_collapse.lua)
     powerbank = "lc_powerbank", turret = "npc_turret_floor", -- checkpoints (sv_livingcity_checkpoints.lua)
     barricade_low = "lc_barricade", barricade = "lc_barricade", barricade_tall = "lc_barricade",
     citybin = "lc_citybin", streetlight = "lc_streetlight", loudspeaker = "lc_loudspeaker", screen_big = "lc_screen", tv = "lc_screen",

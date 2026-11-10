@@ -689,6 +689,12 @@ function LC.VoiceMissing()
     rival = rival and rival:GetString() or ""
     if rival ~= "" and not file.Exists("sound/" .. rival, "GAME") then g[#g + 1] = rival end
     if #(file.Find("sound/livingcity/gman/dream*", "GAME") or {}) == 0 then g[#g + 1] = "dream1 (optional)" end
+    -- his lines in the collapse (sv_livingcity_collapse.lua), each a setting
+    for _, name in ipairs(LC.CollapseGmanCvars or {}) do
+        local cv = GetConVar(name)
+        local path = cv and string.Trim(cv:GetString()) or ""
+        if path ~= "" and not file.Exists("sound/" .. path, "GAME") then g[#g + 1] = path .. " (" .. name .. ")" end
+    end
     Row("G-Man", "gman/", g)
     return out
 end
