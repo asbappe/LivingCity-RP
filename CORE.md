@@ -52,6 +52,7 @@ This is the master technical document. It lists what the owner's server, files, 
 | Whose turn it is in each kind of dream (round robin), and when the Administrator last chose | `data/livingcity/dream_plan.json` | `LC.DreamPlanFile`, sv_livingcity_dreamplan.lua |
 | Propaganda dreams' music, flat, named for its codeword (`admire`, `adore`, `roses`, `mirror`, `saviour_horde`, `saviour`, `quiz`, and for the ten more `harvest`, `shift`, `spy`, `newsreel`, `hate`, `massgames`, `guidance`, `scrap`, `flowers`, `duck`, `ravenholm`, or `propaganda` for any of those; and any dream you play by its codeword (`cheese`, `horse`, `boxing`, `maze`...: `LC.DreamSongFor`), else Half-Life 2's own for the strange dreams; every line in `VOICE_LINES.md`); her voice lines in `voice/`, named for the line, a `.txt` its subtitle; the older `dreams/administrator/` still counts as `admire` | `sound/livingcity/dreams/` | `LC.PropagandaSongs`, `LC.PropagandaVoice`, sv_livingcity_propagandadreams.lua (and sv_livingcity_propagandamore.lua) |
 | The Administrator's Commissary rules and the market's stock and demand | `data/livingcity/<map>_market.json` | sv_livingcity_market.lua |
+| The city's minds: logs to bring back, and the minds kept over a map change (`lc_minds`) | `data/livingcity/minds/<map>_<date>_<time>.txt`, `data/livingcity/minds/<map>_state.json` | sv_livingcity_minds.lua |
 | Pose Recorder recordings | the player's `data/pose_recorder/<name>.json` | pose_recorder/ |
 
 Every recording and song is sent to players with `resource.AddFile` when the map starts.

@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 6af293b. Admin-only console messages and log lines are left out.
+Made from version bbb14d0. Admin-only console messages and log lines are left out.
 
-10000 lines, from 276 files.
+10034 lines, from 278 files.
 
 ## Contents
 
@@ -155,7 +155,7 @@ Made from version 6af293b. Admin-only console messages and log lines are left ou
 - [making things, grenades, the arms trade, and getting people out](#making-things-grenades-the-arms-trade-and-getting-people-out-svlivingcitycraftinglua) (30)
 - [what custody costs the worst anticitizens](#what-custody-costs-the-worst-anticitizens-svlivingcitycustodylua) (30)
 - [saved layout](#saved-layout-svlivingcitydatalua) (14)
-- [debugging](#debugging-svlivingcitydebuglua) (61)
+- [debugging](#debugging-svlivingcitydebuglua) (62)
 - [the desperate Combine (sv_livingcity_desperation.lua)](#the-desperate-combine-svlivingcitydesperationlua-svlivingcitydesperationlua) (12)
 - [sv_livingcity_directives.lua](#svlivingcitydirectiveslua-svlivingcitydirectiveslua) (56)
 - [doors](#doors-svlivingcitydoorslua) (9)
@@ -205,6 +205,7 @@ Made from version 6af293b. Admin-only console messages and log lines are left ou
 - [manpower, what each side has left to send](#manpower-what-each-side-has-left-to-send-svlivingcitymanpowerlua) (25)
 - [marched to the cells](#marched-to-the-cells-svlivingcitymarchlua) (17)
 - [the city's market (the owner, 7 November: "a dynamic economic system of](#the-citys-market-the-owner-7-november-a-dynamic-economic-system-of-svlivingcitymarketlua) (42)
+- [watching the city's minds (writes it down, changes nothing)](#watching-the-citys-minds-writes-it-down-changes-nothing-svlivingcitymindslua) (13)
 - [more work you actually do (the engine is sv_livingcity_jobgames.lua)](#more-work-you-actually-do-the-engine-is-svlivingcityjobgameslua-svlivingcitymoregameslua) (218)
 - [hauling the dead](#hauling-the-dead-svlivingcitymortuarylua) (20)
 - [routes over the map's own nodegraph](#routes-over-the-maps-own-nodegraph-svlivingcitynavgraphlua) (1)
@@ -226,6 +227,7 @@ Made from version 6af293b. Admin-only console messages and log lines are left ou
 - [propaganda dreams (dreams you play)](#propaganda-dreams-dreams-you-play-svlivingcitypropagandadreamslua) (210)
 - [more propaganda dreams (dreams you play), drawn from real propaganda](#more-propaganda-dreams-dreams-you-play-drawn-from-real-propaganda-svlivingcitypropagandamorelua) (351)
 - [persistent props](#persistent-props-svlivingcitypropslua) (6)
+- [the city's minds (the arithmetic)](#the-citys-minds-the-arithmetic-svlivingcitypsychelua) (20)
 - [quests](#quests-svlivingcityquestslua) (368)
 - [more on F2 (the owner, later on 7 November)](#more-on-f2-the-owner-later-on-7-november-svlivingcityquickmorelua) (111)
 - [habitation block raids](#habitation-block-raids-svlivingcityraidslua) (15)
@@ -4050,14 +4052,14 @@ Made from version 6af293b. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game answering something done in a window (lc_talk)
 
-- "No work"  (text, line 50)
-- "They're {mood}."  (label or button, line 57)
-- "They wait for you to say something."  (label or button, line 65)
-- "Chat (what have they heard?)"  (button, line 79)
-- "Share some food"  (button, line 80)
-- "Ask them to keep watch for us (a lookout)"  (button, line 81)
-- "Pick their pocket (Guile)"  (button, line 82)
-- "Inform on them to Civil Protection"  (button, line 83)
+- "No work"  (text, line 53)
+- "They're {mood}."  (label or button, line 60)
+- "They wait for you to say something."  (label or button, line 78)
+- "Chat (what have they heard?)"  (button, line 92)
+- "Share some food"  (button, line 93)
+- "Ask them to keep watch for us (a lookout)"  (button, line 94)
+- "Pick their pocket (Guile)"  (button, line 95)
+- "Inform on them to Civil Protection"  (button, line 96)
 
 ## cl_livingcity_unittools.lua (cl_livingcity_unittools.lua)
 
@@ -6582,7 +6584,8 @@ Made from version 6af293b. Admin-only console messages and log lines are left ou
 - "running check: {pl}"  (text, line 328)
 - "(rebel territory)"  (message, line 330)
 - "%s \| %s \| job %s \| block %s \| cp %s \| wanted %s \| hunger %d thirst %d \| credits %s standing %s%s%s"  (message, line 331)
-- "Recent log (newest last)"  (text, line 341)
+- "The city's minds (watching only: sv_livingcity_minds.lua)"  (text, line 342)
+- "Recent log (newest last)"  (text, line 346)
 
 ## the desperate Combine (sv_livingcity_desperation.lua) (sv_livingcity_desperation.lua)
 
@@ -10762,6 +10765,45 @@ Made from version 6af293b. Admin-only console messages and log lines are left ou
 
 - "[Office] {or}"  (chat message, line 594)
 
+## watching the city's minds (writes it down, changes nothing) (sv_livingcity_minds.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_minds.lua`
+
+
+> Note for you (not shown in game): The log
+
+- "{kind}  {buf}"  (text, line 102)
+
+> Note for you (not shown in game): part of: minds flush
+
+- "(this log is full: the next map start begins a new one) /"  (text, line 130)
+
+> Note for you (not shown in game): part of: break
+
+- "(angriest at {worst}{wv}"  (text, line 345)
+- "(closest to {best}{bv}"  (text, line 349)
+
+> Note for you (not shown in game): part of: minds snapshot
+
+- "unrest=%.2f minds=%d on_streets=%d food=%.2f rest=%.2f company=%.2f stress=%.1f steps=%d avg_us=%.1f max_us=%.1f"  (message, line 437)
+- "%s%s brave %+.1f temper %+.1f loyal %+.1f social %+.1f hope %+.1f \| %s"  (message, line 448)
+
+> Note for you (not shown in game): For the debug report (sv_livingcity_debug.lua).
+
+- "off (lc_minds 0)"  (text, line 457)
+- "log: data/{or} \| lc_minds_show {GetString}"  (text, line 459)
+
+> Note for you (not shown in game): For the talk window (sv_livingcity_talk.lua): how they seem and why, or "" (lc_minds_show 0).
+
+- "close to breaking"  (text, line 471)
+
+> Note for you (not shown in game): part of: minds seem
+
+- "on edge"  (text, line 472)
+- "in good spirits"  (text, line 473)
+- "all right"  (text, line 475)
+- "They seem {word}{or}."  (text, line 481)
+
 ## more work you actually do (the engine is sv_livingcity_jobgames.lua) (sv_livingcity_moregames.lua)
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_moregames.lua`
@@ -12914,6 +12956,37 @@ Made from version 6af293b. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): the game's can tool moment
 
 - "Removed, and taken out of the layout."  (chat message, line 205)
+
+## the city's minds (the arithmetic) (sv_livingcity_psyche.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_psyche.lua`
+
+
+> Note for you (not shown in game): Thoughts: kind -> value, how long it lasts, and who it bends v is the mood it adds; tr scales it by a trait (value * (1 + k * trait))
+
+- "had a meal"  (text, line 72)
+- "was turned away from the ration line"  (text, line 73)
+- "slept at home"  (text, line 74)
+- "had a word with someone"  (text, line 75)
+- "was beaten"  (text, line 76)
+- "saw someone beaten"  (text, line 77)
+- "saw a friend beaten"  (text, line 78)
+- "lost a friend"  (text, line 79)
+- "saw someone die"  (text, line 80)
+- "was taken to the cells"  (text, line 81)
+- "had a friend taken away"  (text, line 82)
+- "was shown a kindness"  (text, line 83)
+- "heard the Administrator"  (text, line 84)
+- "heard bad news"  (text, line 85)
+- "feels guilty"  (text, line 86)
+- "let it out"  (text, line 87)
+- "was comforted by a friend"  (text, line 88)
+- "was attacked on duty"  (text, line 89)
+- "was hurt"  (text, line 90)
+
+> Note for you (not shown in game): part of: describe
+
+- "mood %+.0f, stress %.0f: %s"  (message, line 370)
 
 ## quests (sv_livingcity_quests.lua)
 
@@ -17970,28 +18043,28 @@ Made from version 6af293b. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): (no sympathy for it any more: the owner, 9 November, sympathy is the way into the Resistance, and a kindness to a stranger isn't that)
 
-- "They take the {name} with both hands. 'I won't forget this. I mean it.'"  (name, line 242)
-- "They take the {name} and hide it in their coat. 'Thank you.'"  (name, line 243)
+- "They take the {name} with both hands. 'I won't forget this. I mean it.'"  (name, line 243)
+- "They take the {name} and hide it in their coat. 'Thank you.'"  (name, line 244)
 
 > Note for you (not shown in game): part of: pick pocket
 
-- "Their pockets are already empty."  (text, line 256)
-- "Your fingers come out with {item}. They didn't feel a thing."  (text, line 264)
-- "%d credits, and they didn't feel a thing."  (message, line 269)
+- "Their pockets are already empty."  (text, line 257)
+- "Your fingers come out with {item}. They didn't feel a thing."  (text, line 265)
+- "%d credits, and they didn't feel a thing."  (message, line 270)
 
 > Note for you (not shown in game): caught
 
-- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 276)
+- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 277)
 
 > Note for you (not shown in game): part of: pick pocket
 
-- "They feel your hand and spin round. 'Thief! Get away from me!'"  (text, line 282)
+- "They feel your hand and spin round. 'Thief! Get away from me!'"  (text, line 283)
 
 > Note for you (not shown in game): part of: inform
 
-- "You reported someone a moment ago. Don't push your luck."  (text, line 286)
-- "You give their name to a Civil Protection unit. He writes it down. (+15 standing) They'll be picked up."  (text, line 300)
-- "You give their name to a Civil Protection unit. He checks it and looks at you instead. 'Waste of time.' (-5 standing)"  (text, line 304)
+- "You reported someone a moment ago. Don't push your luck."  (text, line 287)
+- "You give their name to a Civil Protection unit. He writes it down. (+15 standing) They'll be picked up."  (text, line 301)
+- "You give their name to a Civil Protection unit. He checks it and looks at you instead. 'Waste of time.' (-5 standing)"  (text, line 305)
 
 ## territory that spreads, and is pushed back (sv_livingcity_territory.lua)
 

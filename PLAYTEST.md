@@ -1339,3 +1339,13 @@ Notes:
   Notes:
 - [ ] **Paste-ups:** as a Resistance member holding a poster roll, reload: four Resistance posters are at the top of the list. Hang one. A citizen holding the roll does not see them.
   Notes:
+
+## 10 November: the city's minds (watching only)
+- [ ] **Leave it running:** with `lc_minds` on (the default), play or leave the server idle for a few hours. Then copy `garrysmod/data/livingcity/minds/` off the server (zip it) and bring it back.
+  Notes:
+- [ ] **Debug report:** it has a section "The city's minds" with the most strained people.
+  Notes:
+- [ ] **How they seem (optional):** editor panel > NPC budget > tick "Talking to a named person says how they seem", then press E on a citizen: one more grey line. Untick it after.
+  Notes:
+- [ ] **Lag check:** with it on and off (editor panel, "Watch the city's minds"), is there any difference? (It should cost about 0.01 ms a second.)
+  Notes:

@@ -202,6 +202,7 @@ function LC.OpenTalk(ply, npc, said)
     net.WriteBool(o.pick)
     net.WriteBool(o.inform)
     net.WriteBool(o.recruit == true)
+    net.WriteString(LC.MindsSeem and LC.MindsSeem(npc) or "") -- (how they seem: sv_livingcity_minds.lua, lc_minds_show)
     net.Send(ply)
     -- they stop for you
     StepAway(npc, ply)

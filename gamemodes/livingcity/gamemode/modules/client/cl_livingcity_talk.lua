@@ -28,13 +28,16 @@ net.Receive("lc_talk", function()
     end
     local name, job, doing, mood, kind, said = net.ReadString(), net.ReadString(), net.ReadString(), net.ReadString(), net.ReadString(), net.ReadString()
     local canChat, canFood, canPick, canInform, canRecruit = net.ReadBool(), net.ReadBool(), net.ReadBool(), net.ReadBool(), net.ReadBool()
+    -- how they seem and why (the city's minds, sv_livingcity_minds.lua; empty unless lc_minds_show is on)
+    local seem = net.ReadString() or ""
+    local tall = 330 + (seem ~= "" and 34 or 0)
 
     if IsValid(frame) then frame:Remove() end
     frame = vgui.Create("DFrame")
     frame:SetTitle(name)
-    frame:SetSize(420, 330)
+    frame:SetSize(420, tall)
     -- low on the screen, off to the right, and see-through: so you can still see who you're talking to
-    frame:SetPos(math.floor(ScrW() * 0.62), ScrH() - 330 - 60)
+    frame:SetPos(math.floor(ScrW() * 0.62), ScrH() - tall - 60)
     frame:MakePopup()
     frame.npc = npc
     frame.Paint = function(self, w, h)
@@ -55,6 +58,16 @@ net.Receive("lc_talk", function()
     feel:SetTall(18)
     feel:SetTextColor(MOOD[kind] or MOOD.neutral)
     feel:SetText("They're " .. mood .. ".")
+
+    if seem ~= "" then
+        local how = vgui.Create("DLabel", frame)
+        how:Dock(TOP)
+        how:DockMargin(8, 0, 8, 4)
+        how:SetTall(30)
+        how:SetWrap(true)
+        how:SetTextColor(DIM)
+        how:SetText(seem)
+    end
 
     local words = vgui.Create("DLabel", frame)
     words:Dock(TOP)
