@@ -1339,3 +1339,10 @@ Notes:
   Notes:
 - [ ] **Paste-ups:** as a Resistance member holding a poster roll, reload: four Resistance posters are at the top of the list. Hang one. A citizen holding the roll does not see them.
   Notes:
+
+## 10 November, last: planned operations and bounties
+
+- [ ] **Plan an operation:** as a Resistance Lieutenant (or a Fighter with no Lieutenant on), F2 > Resistance > Operations: pick a target, then 2, 5 or 10 minutes. Others in the Resistance should hear it and be able to join on the same page. When it starts, joiners get a waypoint; if it works, joiners there get 25 experience and 15 credits.
+  Notes:
+- [ ] **Bounties:** as the Administrator (or a Division Leader), F2 > Me > Bounties on the wanted: put 50 or 100 on someone wanted. Units and the wanted person should be told; the unit who arrests them gets paid.
+  Notes:

@@ -10851,6 +10851,72 @@ for _, x in ipairs({ p, unit, reb, innocent, rat, bystander }) do x:SetPos(S0 + 
 _setcvar("lc_snitches", 0)
 end
 SnitchTests()
+function OpPlanTests()
+section("The Resistance plans its own operations; the Combine puts prices on heads")
+local function Later(secs) _advance(secs) _runtimers() end
+_setcvar("lc_rebel_plans", 1)
+_setcvar("lc_bounties", 1)
+local O0 = Vector(-101000, 101000, 0)
+local lt = newPlayer("PlanLieutenant", "resistance", nil, 9000)
+local mem = newPlayer("PlanMember", "resistance", nil, 100)
+local unit = newPlayer("PlanUnit", "cp")
+Later(0.5)
+lt:SetNW2Int("lcf_rank", 4) mem:SetNW2Int("lcf_rank", 2)
+ok(LC.CanPlanOp(lt) and not LC.CanPlanOp(mem), "a Lieutenant plans operations; a Member joins them")
+local targetsWas, launchWas, radioWas, skWas = LC.OpTargets, LC.LaunchRebelOp, LC.RadioNotice, LC.Skirmish
+local heard, launched = {}, nil
+LC.RadioNotice = function(band, text) heard[#heard + 1] = band .. ": " .. text end
+LC.OpTargets = function() return { { label = "Hijack the city screen in the square", kind = "screen", pos = O0, data = {} } } end
+LC.LaunchRebelOp = function(kind, pos, data) launched = kind LC.Skirmish = { purpose = kind, rebels = {}, units = {}, done = true, startT = CurTime(), untilT = CurTime() + 1e6 } return true end
+LC.Skirmish = nil
+_setcvar("lc_rebel_plan_leak", 1)
+unit.chat = {}
+lt.lcOpTargets = nil
+ok(LC.PlanOp(lt, 1, 2) and LC.OpPlan and LC.OpPlan.kind == "screen", "F2 > Resistance > Operations: a target, and when")
+local onFreq = false
+for _, h in ipairs(heard) do if string.find(h, "resistance: ", 1, true) and string.find(h, "plans an operation", 1, true) then onFreq = true end end
+ok(onFreq, "the cell hears it on Freq 7")
+ok(has(unit.chat, "Intelligence"), "and someone always talks: it can leak to Civil Protection")
+_setcvar("lc_rebel_plan_leak", 0.15)
+ok(not LC.PlanOp(lt, 1, 5), "one plan at a time")
+ok(LC.JoinOp(mem) and LC.OpPlan.joined[mem], "anyone in the Resistance can join it")
+Later(125)
+ok(launched == "screen" and LC.OpPlan == nil, "when the time comes, the fighters go")
+ok(mem.lcWaypoint ~= nil, "and everyone who joined is pointed at the target")
+mem:SetPos(O0 + Vector(100, 0, 0))
+local x0, c0 = tonumber(mem:GetPData("lcf_xp_resistance", 0)) or 0, LC.Credits(mem)
+hook.Run("LivingCityRebelOpDone", "screen", LC.Skirmish)
+ok((tonumber(mem:GetPData("lcf_xp_resistance", 0)) or 0) - x0 == 25 and LC.Credits(mem) - c0 == 15, "it worked: those who joined and were there earn for it")
+-- too hot: it waits, then it's off
+LC.Skirmish = { purpose = "other", rebels = {}, units = {}, done = true, startT = CurTime(), untilT = CurTime() + 1e6 }
+LC.OpPlan = { by = lt, label = "Test op", kind = "screen", pos = O0, data = {}, fireAt = CurTime(), joined = { [lt] = true } }
+Later(4)
+ok(LC.OpPlan and LC.OpPlan.waiting, "with another fight on, it waits")
+Later(302)
+ok(LC.OpPlan == nil, "and is called off after five minutes")
+LC.OpTargets, LC.LaunchRebelOp, LC.RadioNotice, LC.Skirmish = targetsWas, launchWas, radioWas, skWas
+
+-- bounties
+local adm = newPlayer("BountyAdministrator", "admin")
+local cop = newPlayer("BountyMetrocop", "cp")
+local crook = newPlayer("BountyCrook", "citizen")
+Later(0.5)
+cop:SetNW2Int("lcf_rank", 1)
+ok(not LC.PostBounty(adm, crook, 50), "only on someone wanted")
+LC.ReportCrime(crook, "Theft", 600)
+crook.lcGraceUntil = 0
+ok(not LC.CanPostBounty(cop), "a Metrocop can't put a price on a head")
+crook.chat = {}
+unit.chat = {}
+ok(LC.PostBounty(adm, crook, 100) and LC.Bounties[crook].amount == 100, "the Administrator can: 100 credits")
+ok(has(unit.chat, "BOUNTY") and has(crook.chat, "price on your head"), "every unit hears, and so do they")
+local cu0 = LC.Credits(unit)
+LC.Incarcerate(crook, 60, "Arrested", unit)
+ok(LC.Credits(unit) - cu0 == 100 and LC.Bounties[crook] == nil, "the unit who brings them in collects it")
+LC.ReleasePrisoner(crook)
+for _, x in ipairs({ lt, mem, unit, adm, cop, crook }) do x:SetPos(O0 + Vector(30000, 0, 0)) end
+end
+OpPlanTests()
 
 function PapersHousingTests()
 section("Papers you carry, the housing register, transfers")
