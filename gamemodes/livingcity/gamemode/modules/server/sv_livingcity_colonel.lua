@@ -12,6 +12,13 @@
     the camp, back when they've left. Anyone else near someone talking to
     him sees them talking quietly to an empty corner.
 
+    How ghostly he looks is each player's own (the owner, 10 November: "at
+    first he appears completely normal and as you do things for him and get
+    to know him, he slowly looks more and more ghostly for the player"):
+    LC.ColonelGhost, 0 (a solid old man) to 1 (see-through, cold, flickering),
+    from the jobs this character has done for him (0.3 each) and the visits
+    after the first (0.01 each, ten at most). Sent as lc_colonel_ghost.
+
     E on him (cl_livingcity_colonel.lua asks; the window: sv_livingcity_dialog.lua):
 
       What's the word?      live intel, marked: a sweep coming into rebel
@@ -131,6 +138,16 @@ local function CombineNear(pos)
     return false
 end
 
+-- How ghostly he looks to this player (this character): 0 a solid old man, 1 what he is.
+function LC.ColonelGhost(ply)
+    local m = LC.ColonelMem(ply)
+    local jobs = 0
+    for _, on in pairs(m.done) do if on then jobs = jobs + 1 end end
+    local visits = math.Clamp((tonumber(m.talks) or 0) - 1, 0, 10)
+    return math.Clamp(jobs * 0.3 + visits * 0.01, 0, 1)
+end
+local function SendGhost(ply) ply:SetNW2Float("lc_colonel_ghost", LC.ColonelGhost(ply)) end
+
 function LC.ColonelTick()
     local pos, yaw = nil, 0
     if cvOn:GetBool() then pos, yaw = LC.ColonelSpot() end
@@ -141,6 +158,11 @@ function LC.ColonelTick()
         SetGlobal2Float("lc_colonel_yaw", yaw or 0)
     end
     LC.ColonelHere, LC.ColonelPos = here, pos
+    if pos then
+        for _, p in ipairs(player.GetAll()) do
+            if p:GetNW2String("lcf_faction", "") == "resistance" then SendGhost(p) end
+        end
+    end
     return here
 end
 timer.Create("LivingCityColonel", 2, 0, function() LC.ColonelTick() end)
@@ -279,6 +301,9 @@ end
 function LC.OpenColonel(ply)
     if not CanTalk(ply) or not LC.OpenDialog then return false end
     local g = Greeting(ply)
+    local m = Mem(ply)
+    if (tonumber(m.talks) or 0) < 11 then m.talks = (tonumber(m.talks) or 0) + 1 Save(ply) end
+    SendGhost(ply)
     Say(ply, g)
     local job = JobLine(ply)
     Menu(ply, LC.ColonelLines[g] .. (job and ("\n\n" .. job) or ""))
@@ -340,6 +365,7 @@ LC.DialogHandlers.colonel = function(ply, _, id)
         if not ok then Say(ply, "nothing") Menu(ply, LC.ColonelLines.nothing .. (j and ("\n\n" .. (JobLine(ply) or "")) or "")) return "nothing" end
         m.done[j] = true
         Save(ply)
+        SendGhost(ply)
         if j == "medicine" and LC.AddXP then LC.AddXP(ply, 40, "the Colonel's wounded") end
         if j == "tags" then
             if LC.AddXP then LC.AddXP(ply, 60, "the Colonel's brother") end

@@ -7696,7 +7696,7 @@ nosy.chat = {}
 nosy:SetPos(fighter:GetPos() + Vector(0, 100, 0))
 ok(LC.OpenColonel(fighter) and fighter.lcDialog.key == "colonel", "E on him: his window")
 ok(has(nosy.chat, "empty corner"), "anyone else sees them talking to an empty corner", table.concat(nosy.chat, " | "))
-ok(LC.ColonelJob(fighter) == "medicine", "his first job: medicine for the wounded")
+ok(LC.ColonelJob(fighter) == "medicine", "his first job: medicine for the wounded") ok(LC.ColonelGhost(fighter) == 0 and fighter:GetNW2Float("lc_colonel_ghost", -1) == 0, "at first he looks like anyone: not ghostly at all")
 -- intel
 local sym, syms = person(Vector(3200, 3000, 0))
 syms.rebel = true
@@ -7721,7 +7721,7 @@ local heard = {}
 for _ = 1, 10 do heard[LC.DialogDo(fighter, "whisper") or "?"] = true end
 local n = 0 for k in pairs(heard) do if string.sub(k, 1, 8) == "whisper_" then n = n + 1 end end
 ok(n == 10 and LC.DialogDo(fighter, "whisper") == "whisper_none", "ten whispers about the city's secrets, each once", tostring(n))
-ok(LC.ColonelJob(fighter) == "tags", "next: his brother's tags")
+ok(LC.ColonelJob(fighter) == "tags", "next: his brother's tags") ok(LC.ColonelGhost(fighter) >= 0.3 and LC.ColonelGhost(fighter) < 0.45 and fighter:GetNW2Float("lc_colonel_ghost", 0) == LC.ColonelGhost(fighter), "one favour done: a little ghostly, for this player")
 LC.GiveItem(fighter, "dog_tags", 1)
 ok(LC.DialogDo(fighter, "give") == "done_tags" and fighter:HasWeapon("weapon_357"), "the tags: his brother's revolver")
 local tcop, tcops = person(Vector(3000, 3400, 0))
@@ -7732,7 +7732,7 @@ ok(LC.DialogDo(fighter, "give") == "nothing", "not till he's dead")
 hook.Run("OnNPCKilled", target, fighter)
 ok(LC.DialogDo(fighter, "give") == "done_unit" and cxp[fighter] == 40 + 60 + 75, "it's done (and every job paid)")
 LC.OpenColonel(fighter)
-ok(LC.ColonelJob(fighter) == nil, "nothing left he needs")
+ok(LC.ColonelJob(fighter) == nil, "nothing left he needs") ok(LC.ColonelGhost(fighter) >= 0.9, "everything done: he looks like what he is") do local hereWas, was = LC.ColonelHere, fighter:GetNW2String("lc_char", "") fighter:SetNW2String("lc_char", "Someone Else") LC.ColonelTick() ok(LC.ColonelGhost(fighter) == 0 and fighter:GetNW2Float("lc_colonel_ghost", -1) == 0, "to another character he still looks solid") fighter:SetNW2String("lc_char", was) LC.ColonelTick() ok(fighter:GetNW2Float("lc_colonel_ghost", 0) >= 0.9, "and back as the one who knows him: a ghost again") LC.ColonelHere = hereWas SetGlobal2Bool("lc_colonel_here", hereWas) end
 -- debriefs
 hook.t.LivingCityQuestAccepted.LivingCityColonel(fighter, { title = "A dead drop" })
 hook.t.LivingCityQuestComplete.LivingCityColonel(fighter, { title = "A dead drop" })

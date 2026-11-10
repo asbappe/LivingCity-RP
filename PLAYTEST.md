@@ -1478,3 +1478,11 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **The old-timer's face:** find him: a citizen's clothes with the Lost Coast fisherman's head. Check the head sits right on the neck while he walks, talks and turns. If you see his ordinary face, your game lacks the model: in the spawn menu search "fisherman".
   Notes:
+
+## 10 November: the Colonel turns ghostly as you get to know him
+- [ ] **A new Resistance character:** the Colonel by the quartermaster looks like a solid old man, with a shadow, no flicker.
+  Notes:
+- [ ] **Give him the three medicines:** over a few seconds he turns a little see-through and loses his shadow. After the tags, more. After the unit, fully ghostly (faint, cold, fading and flickering).
+  Notes:
+- [ ] **Two Resistance players, one who has done his jobs and one who has not:** each sees him their own way at the same moment.
+  Notes:
