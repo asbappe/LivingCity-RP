@@ -1338,6 +1338,13 @@ Notes:
 - [ ] **A fresh sheet:** as Director, left click with the roll on a painted poster: it is clean again.
   Notes:
 - [ ] **Paste-ups:** as a Resistance member holding a poster roll, reload: four Resistance posters are at the top of the list. Hang one. A citizen holding the roll does not see them.
+- [ ] **The Colonel:** as the Resistance, go to the quartermaster: an old man (Odessa) beside him; "The Colonel, [E] talk". As a citizen or unit: nobody there. Bring a unit into the camp: he's gone; leave: back. Ask "What's the word?" during a sweep, a march, a supply drop. Bring 3 Union medicine, then find the dog tags in Combine ground, then kill the unit he names. Debrief after a Resistance job, clean and messy. Ask for whispers. A citizen next to you should see you "talking quietly to an empty corner".
+  Notes:
+
+## 10 November: paste-ups
+- [ ] **Buying and pasting:** buy "Paste-ups (3)" from the black market dealer. Look at a bare wall up close and use one from your pockets: after a moment a Resistance poster is on the wall. Use another on a different street: a different poster.
+  Notes:
+- [ ] **The limits:** try to paste a second one near the first: refused ("There's one of ours close by already"). With `lc_pasteup_max 2`, paste a third somewhere else: the first one comes down.
   Notes:
 
 ## 10 November, last: planned operations and bounties

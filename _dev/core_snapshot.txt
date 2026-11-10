@@ -334,6 +334,7 @@ item crowbar
 item cwu_overalls
 item data_chip
 item data_shard
+item dog_tags
 item door_code
 item firebomb
 item fishing_line
@@ -366,6 +367,7 @@ item paper
 item papers_blank
 item papers_dead
 item papers_forged
+item pasteup
 item permit
 item radio
 item radio_transmitter
@@ -556,6 +558,8 @@ setting lc_clipboard_angle = 0 0 180
 setting lc_close_call_recover = 10
 setting lc_close_call_regen = 3
 setting lc_close_calls = 3
+setting lc_colonel = 1
+setting lc_colonel_debrief_xp = 25
 setting lc_color_grade = 1
 setting lc_combat_window = 30
 setting lc_combine_models = 1
@@ -924,6 +928,7 @@ setting lc_pamphlet = 1
 setting lc_papers_fee = 10
 setting lc_parade_min = 35
 setting lc_parade_units = 6
+setting lc_pasteup_max = 8
 setting lc_pathmap_spacing = 130
 setting lc_people_heights = 1
 setting lc_perfdebug_minutes = 30

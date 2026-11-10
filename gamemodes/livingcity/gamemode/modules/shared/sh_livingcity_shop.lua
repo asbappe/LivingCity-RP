@@ -30,6 +30,8 @@ LCS.Items = {
     melon           = { name = "Watermelon", model = "models/props_junk/watermelon01.mdl", hunger = 40, thirst = 40 },
     coffee          = { name = "Real coffee", model = "models/props_junk/garbage_coffeemug001a.mdl", hunger = 5, thirst = 25, uplift = true },
     tablets         = { name = "Antiparasitic tablets", model = "models/props_lab/jar01b.mdl", cures = "parasites" },
+    dog_tags        = { name = "Dog tags", model = "models/props_lab/box01a.mdl", kg = 0.05, sell = 1,
+                        desc = "A soldier's tags on a chain, a name scratched in by hand. Someone at the Resistance camp is looking for these" },
     medicine        = { name = "Union medicine", model = "models/healthvial.mdl", cures = "illness", sell = 4,
                         desc = "Cures a cold or a fever at once (sv_livingcity_illness.lua). Does nothing for parasites" },
 
@@ -187,6 +189,10 @@ LCS.Items = {
     spraypaint      = { name = "Spray can", model = "models/props_junk/popcan01a.mdl", use = "spray", useLabel = "Spray",
                         contraband = true, conceal = 0.5, sell = 4,
                         desc = "Look at a wall and spray the lambda, or at one of the city's posters to paint over it. Don't let a Civil Protection unit see you do it" },
+    -- (a Resistance poster to paste on a wall: Paste in sv_livingcity_scavenge.lua, entities/lc_civposter.lua)
+    pasteup         = { name = "Resistance paste-up", model = "models/props_c17/paper01.mdl", use = "pasteup", useLabel = "Paste it up",
+                        contraband = true, conceal = 0.5, sell = 3,
+                        desc = "A hand-painted Resistance poster and a dab of glue. Look at a bare wall, up close, and paste it up. Don't let a Civil Protection unit see you do it" },
     ------------------------------------------------------------------------
     -- Making things (sv_livingcity_crafting.lua)
     --   arms     weapons and ammunition: the quartermaster pays half as much again
@@ -321,7 +327,7 @@ LCS.Weights = {
     radio = 1.0, radio_tuned = 1.0, radio_transmitter = 0.6, permit = 0.02, papers_blank = 0.02, papers_forged = 0.02, papers_dead = 0.02, ration_forged = 0.02,
     uniform_cp = 3.0, cwu_overalls = 1.2, rebel_gear = 3.0, civvies = 1.0,
     lockpick = 0.1, bypass = 0.6, cp_keycard = 0.02, canned_food = 0.5, vegetables = 0.6, raw_fish = 0.7, cooked_fish = 0.6,
-    seeds = 0.05, fishing_line = 0.2, spraypaint = 0.4, cloth = 0.2, chemicals = 0.8, gun_parts = 1.0, bandage = 0.1,
+    seeds = 0.05, fishing_line = 0.2, spraypaint = 0.4, pasteup = 0.1, cloth = 0.2, chemicals = 0.8, gun_parts = 1.0, bandage = 0.1,
     ammo_pistol = 0.4, ammo_smg = 0.8, ammo_buckshot = 0.7, gun_pistol = 1.1, gun_shotgun = 3.4, gun_smg = 2.8,
     smokebomb = 0.4, gas_bomb = 0.4, firebomb = 0.6, ration_short = 0.3, gren_smoke = 0.5, gren_flash = 0.5, gren_gas = 0.6, arms_crate = 9.0, smuggled_supplies = 2.5, data_shard = 0.3, master_chip = 0.6, zipties = 0.05,
     request_device = 0.3, scrap = 0.5, keepsake = 0.01, satchel = 0.8, storage_crate = 6.0,
@@ -448,6 +454,7 @@ LCS.Black = {
     { id = "zipties", item = "zipties", count = 2, name = "Cuffs (2)", price = 20, desc = "Two pairs. Tie anyone's hands, a Civil Protection unit's included: up close, looking at them, C > their name > Cuff them. They must have their hands up, be down, be stopped by a unit, or you come from behind. Cuffed, they can't use anything, and Drag walks them along." },
     { id = "satchel", item = "satchel", price = 30, desc = "No questions about what goes in it." },
     { id = "spraypaint", item = "spraypaint", count = 3, name = "Spray cans (3)", price = 25, desc = "Let the city know we're still here." },
+    { id = "pasteup", item = "pasteup", count = 3, name = "Paste-ups (3)", price = 20, desc = "Their walls, our words." },
     -- what the Resistance's lab makes (sv_livingcity_lab.lua); everyone else pays the dealer for it
     { id = "smokebomb", item = "smokebomb", price = 30, desc = "Chemicals in a can, and a fuse." },
     { id = "ammo_pistol", item = "ammo_pistol", price = 40, desc = "Eighteen rounds. Hand-loaded, mostly reliable." },
