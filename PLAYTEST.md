@@ -1298,3 +1298,12 @@ Notes:
   Notes:
 - [ ] **Poster art:** put a test image at `garrysmod/materials/livingcity/posters/curfew.png`, FastDL sync, change map: a curfew poster shows it.
   Notes:
+
+## 10 November, last: snitches and burning
+
+- [ ] **Snitches:** draw a gun (or drink moonshine) in front of a few citizens. Now and then one should hurry off to the nearest metrocop, and a moment later you are wanted: "Reported by a citizen".
+  Notes:
+- [ ] **Burning:** as a Resistance Member, F2 looking at a citizen > Burn them as an informant. RAT should appear over them for Resistance players; the quartermaster should refuse them. Put their hands up, F2 > Scar them: their description should gain the scar.
+  Notes:
+- [ ] **A wrong guess:** burn someone who never informed: every citizen should be told, and lose sympathy.
+  Notes:

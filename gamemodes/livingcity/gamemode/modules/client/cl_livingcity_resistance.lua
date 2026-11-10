@@ -29,6 +29,12 @@ hook.Add("HUDPaint", "LivingCityTraitors", function()
                 if s.visible then
                     draw.SimpleTextOutlined("TRAITOR", "DermaDefaultBold", s.x, s.y, RED, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM, 1, color_black)
                 end
+            elseif p ~= me and p:Alive() and p:GetNW2Float("lc_burned_until", 0) > now and p:GetPos():DistToSqr(me:GetPos()) < 1500 * 1500 then
+                -- burned as an informant (sv_livingcity_snitches.lua)
+                local s = (p:GetPos() + V_0_0_82):ToScreen()
+                if s.visible then
+                    draw.SimpleTextOutlined("RAT", "DermaDefaultBold", s.x, s.y, RED, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM, 1, color_black)
+                end
             end
         end
     end

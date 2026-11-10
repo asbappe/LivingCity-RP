@@ -184,6 +184,7 @@ LC_MODULES = {
         "sv_livingcity_dreamskip", -- (sitting out a kind of dream, once earned)
         "sv_livingcity_standingpanel", -- (where I stand: every number in one window, explained)
         "sv_livingcity_cpduty", -- (a unit's shift: the quota, papers duty, inspections, the review)
+        "sv_livingcity_snitches", -- (secret informants among the citizens, and the Resistance burning one)
         "sv_livingcity_vort",
         "sv_livingcity_vortwork", -- (things to do as a vortigaunt, and the freed ones' camp life)
         "sv_livingcity_weeds", -- (weeds on open ground, the Groundskeeper, weedkiller as poison)

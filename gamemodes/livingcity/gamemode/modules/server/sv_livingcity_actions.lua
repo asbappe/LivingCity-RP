@@ -66,6 +66,11 @@ net.Receive("lc_action", function(_, ply)
         if LC.CitizenNPCAction then LC.CitizenNPCAction(ply, cmd, target) end
         return
     end
+    if LC.TargetActions and LC.TargetActions[cmd] then -- (actions on whoever's in front of you: burning an informant, sv_livingcity_snitches.lua)
+        local ok, why = LC.TargetActions[cmd](ply, target)
+        if not ok and why then ply:ChatPrint(why) end
+        return
+    end
     if cmd == "inform" then
         local ok, why
         if LC.Inform then ok, why = LC.Inform(ply, target) end
