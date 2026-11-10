@@ -17,7 +17,7 @@ TWO = re.compile(r'^\s*(\w+)\s*=\s*\{\s*' + STR + r'\s*,\s*' + STR + r'\s*\},?\s
 ONE = re.compile(r'^\s*(\w+)\s*=\s*' + STR + r',?\s*$')
 
 NAMES = {
-    "cheese": "The Cheese Dream", "chairs": "Musical Chairs", "flying": "Wings", "melons": "It's Raining Melons",
+    "cheese": "The Cheese Dream", "chairs": "Musical Chairs", "flying": "Wings", "melons": "It's Raining Melons", "rally": "The Midnight Rally",
     "horse": "Hooves and All", "boxing": "The Main Event", "exam": "The Exam", "train": "The Last Train", "lamarr": "Where's Lamarr?",
     "molasses": "Running in Molasses", "potato": "Hot Potato", "simon": "Overwatch Says", "dance": "Dance Marathon", "sheep": "Counting Headcrabs",
     "clocks": "Stop the Clocks", "tea": "The Tea Party", "derby": "The Headcrab Derby", "photo": "Say Cheese", "doors": "The Doors", "paint": "Splat!",

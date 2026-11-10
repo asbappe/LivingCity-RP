@@ -344,6 +344,8 @@ local function Admirers(g, fromX, toX, y1, y2, top, faceX, faceY)
             local yaw = math.deg(math.atan2(faceY - y, faceX - x))
             local e = Actor(g, ADMIRERS[(n - 1) % #ADMIRERS + 1], Vector(x, y, top), yaw, 1, ACT_IDLE or 1)
             Pose(e, KNEEL, ACT_COVER_LOW)
+            g.admirers = g.admirers or {} -- (kept, for their acting: sv_livingcity_dreamstage.lua)
+            g.admirers[#g.admirers + 1] = e
         end
     end
 end

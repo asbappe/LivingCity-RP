@@ -16511,6 +16511,97 @@ LC.DreamGameStop(d4, "admin")
 _run(2.5)
 ok(not a.lcDreaming and LC.DreamActive == nil, "waking everyone ends it")
 
+-- The Midnight Rally (the owner, 10 November: a buggy race dream)
+do
+    for _, p in ipairs({ adm, a, b }) do if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end end
+    for _, p in ipairs({ a, b }) do p:SetNW2Float("lc_unbroken_until", 0) p:SetNW2Float("lc_secondwind_until", 0) end
+    ok(LC.DreamMood("rally") == "happy" and LC.DreamTitle("rally") == "The Midnight Rally" and LC.DreamSongFor("rally") ~= nil, "The Midnight Rally is a Happy dream, with music")
+    -- the driving (sh_livingcity_kart.lua): pure arithmetic
+    local vx, vy = 0, 0
+    for i = 1, 200 do vx, vy = LCK.Step(vx, vy, 0, 1, 0.015, LCK.Base, false) end
+    ok(math.abs(vx - LCK.Base) < 1 and math.abs(vy) < 1, "flat out in a straight line: up to the top speed, and no faster", vx)
+    local wx, wy = LCK.Step(vx, vy, math.pi / 2, 1, 0.015, LCK.Base, false)
+    ok(wy > 0 and wy < 60 and wx > 400, "looking hard left at speed: the buggy only comes round so fast", wx .. " " .. wy)
+    local bx, by = LCK.Step(vx, vy, 0, -1, 0.1, LCK.Base, false)
+    ok(bx < vx - 80 and bx >= 0, "back brakes", bx)
+    for i = 1, 100 do bx, by = LCK.Step(bx, by, 0, -1, 0.015, LCK.Base, false) end
+    ok(bx < 0 and math.abs(bx) <= LCK.Base * LCK.Reverse + 1, "and then reverses, slowly", bx)
+    local sx = LCK.Step(vx, vy, 0, 1, 0.1, LCK.Base, true)
+    local hx, hy = LCK.Step(0, 0, 0, 1, 0.1, 0, false)
+    ok(sx < vx - 60 and hx == 0 and hy == 0, "spinning out there's no throttle, and held on the grid nobody moves", sx)
+    local ox = vx
+    for i = 1, 100 do ox = LCK.Step(ox, 0, 0, 1, 0.015, LCK.Base * 0.45, false) end
+    ok(math.abs(ox - LCK.Base * 0.45) < 2, "off the road the top speed comes down to a crawl", ox)
+    -- the race
+    Asleep(a, CITY)
+    Asleep(b, CITY + Vector(0, 200, 0))
+    local okR, dr = LC.DreamStart("rally", nil, false, nil, true)
+    local gr = okR and dr.game
+    _run(0.3)
+    local TAU = math.pi * 2
+    ok(okR and gr.laps >= 3 and #gr.boxes == 6 and #gr.bots == math.max(0, LC.DreamMin() - 2) and IsValid(gr.pl[a].kart) and a:GetNW2Bool("lc_kart", false)
+        and a:GetNW2Float("lc_kart_max", -1) == 0, "the road, the crates, the rival drivers; everyone in a buggy, held on the grid", okR and (gr.laps .. " laps, " .. #gr.bots .. " rivals") or tostring(dr))
+    local st0 = gr.def.state(gr, a)
+    ok(st0.big ~= nil and string.find(st0.meterName, "Lap 1 of " .. gr.laps, 1, true), "the countdown, and the lap, on screen", tostring(st0.big) .. " / " .. tostring(st0.meterName))
+    _run(4.2)
+    local function Drive(p, sec) p:SetPos(LC.RallyRoadAt(gr, (sec + 0.5) / LC.RallySectors * TAU) + Vector(0, 0, 4)) _run(0.1) end
+    Drive(a, 11)
+    ok(a:GetNW2Float("lc_kart_max", 0) == LCK.Base and not gr.pl[a].off, "go: on the road, the full top speed", a:GetNW2Float("lc_kart_max", 0))
+    a:SetPos(gr.c + Vector(0, 0, 4))
+    _run(0.1)
+    ok(gr.pl[a].off and a:GetNW2Float("lc_kart_max", 0) == math.floor(LCK.Base * 0.45), "inside the cones: a crawl")
+    ok(gr.pl[a].prog == 0, "(and cutting across the middle counts for nothing)", gr.pl[a].prog)
+    for sec = 0, 11 do Drive(a, sec) end
+    Drive(a, 0)
+    ok(gr.pl[a].lap == 2 and gr.pl[a].prog == 13, "every stretch driven in order: a lap", gr.pl[a].lap .. " " .. gr.pl[a].prog)
+    Drive(a, 6)
+    ok(gr.pl[a].prog == 13, "jumping half the road ahead doesn't count", gr.pl[a].prog)
+    Drive(a, 1)
+    -- pickups
+    local function Press(p) p.keys = { [IN_JUMP] = true } _run(0.1) p.keys = {} _run(0.1) end
+    gr.pl[a].item = nil
+    local crate = gr.boxes[4]
+    for _, bx in ipairs(gr.boxes) do -- (one no rival driver is anywhere near)
+        local clear = true
+        for _, bot in ipairs(gr.bots) do if bot.pos and bot.pos:Distance(bx.pos) < 400 then clear = false end end
+        if clear then crate = bx end
+    end
+    crate.back = 0
+    a:SetPos(crate.pos + Vector(0, 0, 4))
+    _run(0.1)
+    ok(gr.pl[a].item ~= nil and crate.back > CurTime(), "driving through a crate: a pickup, and the crate is gone a while", tostring(gr.pl[a].item))
+    gr.pl[a].item = "boost"
+    Press(a)
+    ok(gr.pl[a].item == nil and gr.pl[a].boost > CurTime() and a:GetNW2Float("lc_kart_max", 0) == math.floor(LCK.Base * 1.5), "Jump uses it: a boost", a:GetNW2Float("lc_kart_max", 0))
+    gr.pl[a].item = "melon"
+    Press(a)
+    ok(#gr.traps == 1, "a melon, dropped behind", #gr.traps)
+    local trap = gr.traps[1]
+    _run(0.7)
+    if trap then b:SetPos(trap.pos) end
+    _run(0.1)
+    ok(trap and (gr.pl[b].spin or 0) > CurTime() and b:GetNW2Float("lc_kart_spin", 0) > CurTime() and not IsValid(trap.e), "the next buggy over it spins out, and the melon's gone")
+    b:SetPos(a:GetPos() + Vector(200, 0, 0))
+    gr.pl[a].item = "pulse"
+    Press(a)
+    ok((gr.pl[b].slow or 0) > CurTime() and (gr.pl[a].slow or 0) <= CurTime(), "the horn blast slows everyone near, not the one who sounded it")
+    if gr.bots[1] then
+        local a0 = gr.bots[1].a
+        _run(1)
+        ok(gr.bots[1].a > a0 and gr.bots[1].e:GetPos():Distance(LC.RallyRoadAt(gr, gr.bots[1].a, gr.bots[1].lane)) < 5, "the rival drivers are driving, on the road")
+    end
+    -- the finish
+    gr.pl[a].lap, gr.pl[a].sec = gr.laps, 11
+    Drive(a, 0)
+    ok(gr.pl[a].how == "won" and gr.pl[a].place == 1 and not a:GetNW2Bool("lc_kart", false) and not IsValid(gr.pl[a].kart), "over the line after the last lap, first: won, and out of the buggy", tostring(gr.pl[a].how))
+    local st1 = gr.def.state(gr, b)
+    ok(string.find(st1.meterName, "2nd of", 1, true) or string.find(st1.meterName, " of " .. (2 + #gr.bots), 1, true), "the others see where they are in the running", st1.meterName)
+    LC.DreamGameStop(dr, "admin")
+    _run(3)
+    ok(not b:GetNW2Bool("lc_kart", false) and not b.lcDreaming and not a.lcDreaming and LC.DreamActive == nil, "the race over: everyone out of their buggies and awake")
+    for _, p in ipairs({ a, b }) do p:SetNW2Float("lc_unbroken_until", 0) p:SetNW2Float("lc_secondwind_until", 0) p.keys = nil if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end end
+end
+
 -- falling asleep late (the owner, 10 November): whoever lies down after a dream has begun joins it, in every dream you play
 do
     for _, p in ipairs({ adm, a, b }) do if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end end
@@ -16670,6 +16761,37 @@ do
     ok(cheering == 3, "a player wins: every stand-in still in it cheers", cheering)
     g.pl[b].how = how0
     LC.DreamStandinsTick(CurTime())
+end
+-- staging (the owner, 10 November): the opening, the figures' acting, the dreamers' own bodies, the finish
+do
+    local opened, finished = false, nil
+    for _, m in ipairs(net.sent) do
+        if m.name == "lc_dream_stage" and type(m.data[1]) == "table" and m.data[1].k == "open" and m.data[1].name == g.def.name and m.data[1].mood == "nightmare" then opened = true end
+    end
+    ok(opened and g.stage, "the opening: every dreamer's screen is given the dream's name")
+    LC.DreamStageTick(CurTime())
+    local hunter = g.cops[1].e
+    local was = hunter:GetPos()
+    hunter:SetPos(a:GetPos() + Vector(150, 0, 0))
+    g.pl[a].lives = g.pl[a].lives - 1
+    LC.DreamStageTick(CurTime())
+    ok(a:GetNW2String("lc_dream_act", "") == "flinch" and a:GetNW2Bool("lc_dream_actor", false) and a:GetNW2Float("lc_dream_act_end", 0) > CurTime(),
+        "a dreamer who loses a life flinches (the others see it)")
+    ok(hunter:GetNW2String("lc_dream_act", "") == "gloat", "and the officer nearest them raises a fist over them", hunter:GetNW2String("lc_dream_act", ""))
+    hunter:SetPos(was)
+    g.pl[a].lives = g.pl[a].lives + 1
+    _advance(1.2)
+    LC.DreamStageTick(CurTime())
+    ok(not a:GetNW2Bool("lc_dream_actor", false) and a:GetNW2String("lc_dream_act", "") == "", "a second later their body is their own again")
+    local sent0, how0 = #net.sent, g.pl[b].how
+    g.pl[b].how = "won"
+    LC.DreamStageTick(CurTime())
+    for i = sent0 + 1, #net.sent do local m = net.sent[i] if m.name == "lc_dream_stage" and type(m.data[1]) == "table" and m.data[1].k == "finish" then finished = m.data[1] end end
+    ok(b:GetNW2String("lc_dream_act", "") == "cheer" and hunter:GetNW2String("lc_dream_act", "") == "slump", "a dreamer wins: they cheer, and the officers hang their heads")
+    ok(finished and finished.who == b:Nick() and finished.first == true, "the finish: every dreamer's screen is told who made it through, and that they were first")
+    g.pl[b].how = how0
+    LC.DreamStageTick(CurTime())
+    LC.DreamActSet(b, nil)
 end
 -- bad dreamers: marked, and the baton
 _run(4) -- (past the start's safety)
@@ -17154,6 +17276,13 @@ ok(okA and g and g.id == "adore" and IsValid(g.her) and not g.star and #g.ents >
 local hello = Sent(a, "start", function(t) return t.id == "adore" end)
 ok(hello and hello.theme == "admire" and table.HasValue(adm1, hello.song), "the dreamer's screen goes pink, and an admire song plays")
 ok(not LC.DreamCanWake(b) and not LC.DreamWakeAsked(b) and b.lcDreaming and b:GetNW2Bool("lc_dream_forced", false), "not skippable: nobody wakes themselves from a propaganda dream while they're still in it")
+do -- (staging: her figure and her admirers act, sv_livingcity_dreamstage.lua)
+    local gS = LC.DreamActive and LC.DreamActive.game
+    LC.DreamStageTick(CurTime())
+    local her, _, adm = LC.DreamStageFigures(gS)
+    ok(gS and gS.stage ~= nil and (her == nil or her:GetNW2String("lc_dream_act", "") == "regal") and (#adm == 0 or adm[1]:GetNW2String("lc_dream_act", "") == "kneel"),
+        "her figure stands regally and her admirers hold out their arms to her", (her and her:GetNW2String("lc_dream_act", "") or "no figure") .. " " .. #adm)
+end
 _run(3.5)
 ok(Said(g, "adore_hello"), "(she greets them)")
 local s = g.pl[a]

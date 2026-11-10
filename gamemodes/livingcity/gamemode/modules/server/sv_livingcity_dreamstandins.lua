@@ -218,7 +218,7 @@ local function Plan(b, t0, secs, lives)
 end
 
 function LC.DreamStandinsGame(g)
-    if not g or g.standins or g.id == "quiz" then return {} end -- (the quiz seats its own)
+    if not g or g.standins or g.id == "quiz" or (g.def and g.def.ownStandins) then return {} end -- (the quiz seats its own; the rally brings its own drivers)
     g.standins = {}
     local want = LC.DreamMin() - table.Count(g.pl)
     if want <= 0 then return g.standins end

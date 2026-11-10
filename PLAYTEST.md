@@ -1535,3 +1535,18 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **The Administrator, tablet and F2 > Tonight's dream:** the first line says when the next dream is; at night it counts down.
   Notes:
+
+## 10 November: staged dreams, and The Midnight Rally
+
+- [ ] **The opening and finish:** start any dream you play (the editor's Dreams: test one). Its name should show between black bars at the start; win it and "You made it through" should show.
+  Notes:
+- [ ] **Figures acting:** in the maze, lose a life near a giant officer (does he shake a fist?). In Kneel Before Her, does her figure point at you when you lose a life, and do the admirers reach out to her?
+  Notes:
+- [ ] **Other dreamers' bodies (needs two players):** when one loses a life, does the other see them flinch? Does a winner cheer? After waking, is the body normal again?
+  Notes:
+- [ ] **The Midnight Rally, driving:** test it from the editor. Does the buggy accelerate, brake and reverse? Does it feel right in corners (too slidey, too stiff)? Is it smooth or does it stutter? Is the view from behind the buggy good (too close, too far)?
+  Notes:
+- [ ] **The Midnight Rally, the race:** do laps count as you cross the line? Do the crates give a pickup, and does Jump use it (boost, melon, horn blast)? Do the rival buggies drive the road and finish? Is the race too long or too short?
+  Notes:
+- [ ] **The Midnight Rally, looks:** the buggy size, the cones, whether you can tell the road from the grass at a glance.
+  Notes:
