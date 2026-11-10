@@ -1292,6 +1292,7 @@ Notes:
 - [ ] **Inspection:** with a citizen player online who has a room, My shift > Get an inspection order, go to their block, Inspect the residence. Contraband in their stash should be confiscated and they should be told.
   Notes:
 - [ ] **Review:** at the end of 15 minutes, a performance review with a grade and experience.
+  Notes:
 - [ ] **Illness (Realistic):** stand in the rain a while (or `lc_illness_rate 20` to hurry it): a cold, coughing. Buy Union medicine at the Commissary and take it. Eat raw meat: a stomach bug, vomiting; drink clean water. Leave a cold alone: maybe a fever (health stops at 60). On Relaxed: nothing.
   Notes:
 - [ ] **The old-timer's new troubles:** his cough wants Union medicine (tablets refused), and his last trouble is a smoke (a cigarette), not a radio.
@@ -1306,8 +1307,10 @@ Notes:
 - [ ] **Burning:** as a Resistance Member, F2 looking at a citizen > Burn them as an informant. RAT should appear over them for Resistance players; the quartermaster should refuse them. Put their hands up, F2 > Scar them: their description should gain the scar.
   Notes:
 - [ ] **A wrong guess:** burn someone who never informed: every citizen should be told, and lose sympathy.
+  Notes:
 ## 10 November: poster pictures
 - [ ] **Poster pictures:** upload `materials/livingcity/posters/` (six `.jpg`), FastDL sync, change map. Each civil notice poster shows its picture (dispenser, Commissary, intake, water, law board, curfew elsewhere), sharp enough to read from a few steps away.
+  Notes:
 - [ ] **Fever:** `lc_illness_rate 20`, catch a cold in the rain and leave it (or wait for a fever). With a fever: you can't sprint, fists don't swing. At 12:00 on the clock (`lc_time 11` to hurry) you drop for a minute into the fever dream: melting colours, rolling view, drifting words, the eye, slow sounds. You come to with it broken. Get someone to hit you during it: you wake, still feverish.
   Notes:
 
@@ -1317,5 +1320,6 @@ Notes:
 - [ ] **Poster roll, in your hands:** you see your hands and a sheet of paper. If the sheet sits wrong, try `lc_posters_view "20 0 -9"` (forward right up) and tell me the numbers that look right.
   Notes:
 - [ ] **The eleven new pictures:** work, loyalty, informants, contraband, radio, illness, infestation, housing, vortigaunt, recruit, administrator (she should read as Mossman).
+  Notes:
 - [ ] **The carved rat:** scar a burned informant (hands up). A crude red rat should appear on their right cheek, and move with their head. If it floats off the face or sits in the wrong place, tell me what you see: lc_ratscar_pos moves it (forward, right, up, turn). They should never be able to join the Resistance after.
   Notes:
