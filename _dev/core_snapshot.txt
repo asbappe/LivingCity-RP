@@ -825,6 +825,7 @@ setting lc_informants = 1
 setting lc_inherit_max = 200
 setting lc_inherit_pct = 25
 setting lc_insider = 1
+setting lc_insider_clean_minutes = 30
 setting lc_insider_privacy = 700
 setting lc_intake = 1
 setting lc_intake_escort = 1

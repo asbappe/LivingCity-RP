@@ -36,7 +36,7 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   - planning board and bounties (`opplan`); state of the city (`ledger`, `ledger2`, speech stand point); small-server mode (`smallserver`)
   - citizen goals: status symbols and the pet pigeon (`status`, `cl_livingcity_petbird`), households (`households`), a stall business with hand-made goods and workers (`employment`), pickpocketing, loans and bad deals (`streetcrime`)
 - The owner: **never only in the C menu** (CLAUDE.md house rule 2). A citizen's F2 > Me keeps lines 1 to 4 and the milestone; new pages go under "More". F1 gets "More with them..." when entries overflow.
-- Open offers, not asked for yet: an Insider quietly reporting a Resistance residence clean; tuning `lc_ratscar_pos` and `lc_petbird_pos` after an in-game look.
+- Insider **Report it clean** (`LC.CPReportClean` in cpduty) built; F2 now overflows into a More page at slot 8 (a unit's Me/My shift did not fit before). Open offer: tuning `lc_ratscar_pos` and `lc_petbird_pos` after an in-game look.
 - Known: "a winner wakes Unbroken" (after ExerciseParadeTests) and a PropagandaDreamTests check (after DreamGameTests) fail only by test order, old (TODO.md); a few random tests come and go.
 - Unchecked in game: PLAYTEST.md "9 November, part 13" and every "10 November" section.
 - Tests need `pip install lupa` in a fresh container.

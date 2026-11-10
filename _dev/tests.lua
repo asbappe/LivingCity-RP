@@ -10991,6 +10991,33 @@ Later(9)
 ok((LC.Stash(cit).moonshine or 0) < 6 and s.inspections == 1, "the residence is searched: contraband in their stash is confiscated", LC.Stash(cit).moonshine)
 ok(LC.PlayerIsWanted(cit), "and the resident is charged, as a raid would")
 LC.ClearWanted(cit)
+-- an Insider writes it up clean
+local okNI, whyNI = LC.CPReportClean(unit)
+ok(not okNI, "only an Insider can report a residence clean", whyNI)
+local oldIns, oldW = LC.IsInsider, LC.InsiderWatched
+LC.IsInsider = function(p) return p == unit end
+LC.InsiderWatched = function() return true, "Someone can see you." end
+unit.lcInspectOrder = { target = cit, name = "DutyResident", block = LC.PlayerBlock(cit), blockName = "Block 37" }
+local okW, whyW = LC.CPReportClean(unit)
+ok(not okW and string.find(whyW or "", "properly", 1, true), "not with anyone watching but the resident", whyW)
+LC.InsiderWatched = function() return false end
+LC.Stash(cit).moonshine = 4
+local symB = LC.Trait and LC.Trait(unit, "sympathy") or 0
+local insB = s.inspections
+ok(LC.CPReportClean(unit), "an Insider reports the residence clean")
+Later(9)
+ok((LC.Stash(cit).moonshine or 0) == 4 and s.inspections == insB + 1, "the stash is left alone and the quota still counts", LC.Stash(cit).moonshine)
+ok(not LC.PlayerIsWanted(cit), "and the resident isn't charged")
+ok(not LC.Trait or LC.Trait(unit, "sympathy") > symB, "contraband written up clean: a little sympathy")
+ok(unit.lcCleanReport and unit.lcCleanReport.block == LC.PlayerBlock(cit), "the report is remembered")
+local stB = LC.Standing and LC.Standing(unit) or 0
+hook.Run("LivingCityBlockRaided", LC.PlayerBlock(cit) + 1, { x = 2 })
+ok(unit.lcCleanReport ~= nil, "a raid elsewhere doesn't matter")
+hook.Run("LivingCityBlockRaided", LC.PlayerBlock(cit), { x = 2 })
+ok(not LC.Standing or LC.Standing(unit) < stB, "a raid there that finds anything soon after: the report doesn't hold up", LC.Standing and LC.Standing(unit))
+ok(unit.lcCleanReport == nil, "and it's settled")
+LC.IsInsider, LC.InsiderWatched = oldIns, oldW
+LC.Stash(cit).moonshine = nil
 -- papers duty
 ok(LC.CPPapersDuty(unit) and LC.JobGames[unit] and LC.JobGames[unit].kind == "papers", "checkpoint papers duty: the travelers' papers checked against today's rules")
 LC.JobGames[unit].done = 5

@@ -1441,3 +1441,7 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **Crime between citizens:** get behind another player, F1 > Pick their pocket. Lend someone money with F1; repay it from F2 > Me > More > Household and business > My debts. Buy from the black market a few times: now and then it should go bad (a brick, or a sting).
   Notes:
+- [ ] **Insider, report it clean (10 November):** as an Insider on a shift, get an inspection order on a resident with contraband in their stash, go to their block with nobody else about, F2 > Me > My shift > Report it clean. The quota counts, the stash stays, the resident hears on Freq 7. Then raid that block (a sweep) within 30 minutes: -15 Civil Standing. With someone watching, it refuses.
+  Notes:
+- [ ] **F2 More for units (10 November):** as a Civil Protection unit, F2 slot 8 reads More: Records terminal, Me...; inside are Records terminal and Me (My shift).
+  Notes:

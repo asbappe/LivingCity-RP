@@ -3241,6 +3241,27 @@ local ok, e = pcall(function()
     -- an ordinary unit: no Inside
     LC_CL.Insider = false
     if Find(LC_CL.QuickRoleRoot(), "inside") then error("an ordinary unit has Inside >") end
+    -- My shift: an Insider with an inspection order can report it clean; an ordinary unit can't
+    local function ShiftLabels(insider)
+        _me.nw = { lcf_faction = "cp", lcf_rank = 2, lc_shift = "x" }
+        local shift = { left = 600, q = { searches = 3, papers = 1, inspections = 1 }, order = { name = "Ana", block = "Block 3" }, insider = insider or nil }
+        util.JSONToTable = function(t) if t == "x" then return shift end return jt(t) end
+        local function Walk(page, depth)
+            for i = 1, 9 do
+                local it = page.items[i]
+                if it and it.page and string.find(tostring(it.label), "My shift", 1, true) then return Labels(it.page()) end
+                if it and it.page and depth < 2 then local ok, sub = pcall(it.page) if ok and sub and sub.items then local r = Walk(sub, depth + 1) if r then return r end end end
+            end
+        end
+        local root = LC_CL.QuickRoleRoot()
+        local r = Walk(root, 0)
+        util.JSONToTable = jt
+        return r or ("not found on F2: " .. Labels(root))
+    end
+    local sl = ShiftLabels(true)
+    if not string.find(sl, "Report it clean", 1, true) then error("an Insider's My shift has no Report it clean: " .. sl) end
+    if string.find(ShiftLabels(false), "Report it clean", 1, true) then error("an ordinary unit's My shift offers Report it clean") end
+    _me.nw = { lcf_faction = "cp", lcf_rank = 2 }
 
     -- a Division Leader: Call a sweep >, greyed with why
     _me.nw = { lcf_faction = "cp", lcf_rank = 3 }
