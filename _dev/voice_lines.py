@@ -89,6 +89,7 @@ for _, t in ipairs(LC.InfoDeskTopics or {}) do W("clerk", t[1], t[2], t[3]) end
 for id, words in pairs(LC.InfoDeskLines or {}) do W("clerk", id, "", words) end
 for _, t in ipairs(LC.OldTimerTopics or {}) do W("oldtimer", t[1], t[3], t[4]) end
 for id, words in pairs(LC.OldTimerLines or {}) do W("oldtimer", id, "", words) end
+for _, t in ipairs(LC.OldTimerTroubles or {}) do W("oldtimer", "hint_" .. t[1], "What's troubling him (said instead of his greeting)", t[3]) W("oldtimer", "thanks_" .. t[1], "You helped him with it", t[4]) end
 for id, l in pairs(LC.MachineLines or {}) do W("machine", id, l[1], l[2]) end
 for key, g in pairs(LC.CollapseGmanLines or {}) do
     local cv = GetConVar(g[1])

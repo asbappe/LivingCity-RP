@@ -537,10 +537,22 @@ The old man who gives advice: warm, worn, a little wry. Folder: **`garrysmod/sou
 | [ ] | `dealer1.wav` | Things the Commissary doesn't sell? | There's a man who trades in what you can't buy. Don't tell him I sent you, and don't let a cop see you with him. That way. |
 | [ ] | `lockpick1.wav` | What's a lockpick good for? | Doors that aren't yours. Rooms people left in a hurry. Be quick, be quiet, and never in front of a unit. |
 | [ ] | `resistance1.wav` | Is anyone fighting back? | You didn't hear it from me. |
+| [ ] | `hint_hungry1.wav` | What's troubling him (said instead of his greeting) | My legs won't take me to the bins any more. Some days I don't eat at all. |
+| [ ] | `thanks_hungry1.wav` | You helped him with it | Food. Real food. You don't know what that means to an old man. |
+| [ ] | `hint_thirsty1.wav` | What's troubling him (said instead of his greeting) | The tap on my floor's been dry a week. Carrying water up those stairs, at my age... |
+| [ ] | `thanks_thirsty1.wav` | You helped him with it | Water. Bless you. I'll make it last. |
+| [ ] | `hint_cough1.wav` | What's troubling him (said instead of his greeting) | This cough. The Commissary wants more for its tablets than I see in a month. |
+| [ ] | `thanks_cough1.wav` | You helped him with it | For my chest? I'll sleep tonight, for the first time in a while. |
+| [ ] | `hint_card1.wav` | What's troubling him (said instead of his greeting) | Some young thug took my ration card in the line. I'm too old to work a shift for another. |
+| [ ] | `thanks_card1.wav` | You helped him with it | A card? You worked for that. I won't forget it. Not ever. |
+| [ ] | `hint_radio1.wav` | What's troubling him (said instead of his greeting) | I miss music. They took my old wireless, years ago. The quiet gets into you. |
+| [ ] | `thanks_radio1.wav` | You helped him with it | A radio... Turn the dial past the Union band some night. You'll hear things worth hearing. |
 | [ ] | `food1.wav` | (said between answers) | For me? You're a good one. I won't forget it. |
 | [ ] | `greet1.wav` | (said between answers) | Sit down, sit down. My knees aren't what they were. What do you want to know? |
 | [ ] | `greet_friend1.wav` | (said between answers) | Ah, you again. Good. Not many come back. |
-| [ ] | `nofood1.wav` | (said between answers) | You've nothing to give. Never mind. Neither have I. |
+| [ ] | `keepsake1.wav` | (said between answers) | You've done more for me than my own family. Here. My old picks. I won't be needing them, and you might. Doors don't stay locked for people who know how. |
+| [ ] | `keepsake_again1.wav` | (said between answers) | Sit a while. The city's quieter when there's someone to share it with. |
+| [ ] | `nothing1.wav` | (said between answers) | Kind of you. But nothing I need, not that. |
 | [ ] | `notyet1.wav` | (said between answers) | Hm. Ask me that when I know you better. |
 | [ ] | `nowhere1.wav` | (said between answers) | There used to be one. Not in this part of town, not any more. |
 | [ ] | `stranger1.wav` | (said between answers) | I don't know you. Ask me something simple. |

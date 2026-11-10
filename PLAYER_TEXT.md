@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 78f2c0e. Admin-only console messages and log lines are left out.
+Made from version 1aca5d4. Admin-only console messages and log lines are left out.
 
-9745 lines, from 268 files.
+9772 lines, from 268 files.
 
 ## Contents
 
@@ -205,9 +205,9 @@ Made from version 78f2c0e. Admin-only console messages and log lines are left ou
 - [what now?](#what-now-svlivingcitynextsteplua) (41)
 - [on the screen, not just in chat](#on-the-screen-not-just-in-chat-svlivingcitynoticeslua) (20)
 - [the city does its own work](#the-city-does-its-own-work-svlivingcitynpcworklua) (49)
-- [the old-timer](#the-old-timer-svlivingcityoldtimerlua) (35)
+- [the old-timer](#the-old-timer-svlivingcityoldtimerlua) (50)
 - [clothes that show the job](#clothes-that-show-the-job-svlivingcityoutfitslua) (8)
-- [the Civil Orientation pamphlet](#the-civil-orientation-pamphlet-svlivingcitypamphletlua) (4)
+- [the Civil Orientation pamphlet](#the-civil-orientation-pamphlet-svlivingcitypamphletlua) (16)
 - [path mapping, drawing the walkable network by walking it](#path-mapping-drawing-the-walkable-network-by-walking-it-svlivingcitypathmaplua) (6)
 - [a unit's search as a short pat-down (the owner, 7 November)](#a-units-search-as-a-short-pat-down-the-owner-7-november-svlivingcitypatsearchlua) (14)
 - [people](#people-svlivingcitypeoplelua) (5)
@@ -4544,25 +4544,25 @@ Made from version 78f2c0e. Admin-only console messages and log lines are left ou
 - "Dream lines"  (text, line 678)
 - "dream1 (optional)"  (text, line 697)
 - "Citizen Information clerk"  (text, line 727)
-- "The old-timer"  (text, line 728)
+- "The old-timer"  (text, line 730)
 
 > Note for you (not shown in game): the console command lc_voice_missing
 
-- "[Living City] {name} (sound/livingcity/{folder}), {missing}"  (text, line 738)
-- "[Living City] {total} voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_LINES.md, in the gamemode's folder."  (text, line 741)
+- "[Living City] {name} (sound/livingcity/{folder}), {missing}"  (text, line 740)
+- "[Living City] {total} voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_LINES.md, in the gamemode's folder."  (text, line 743)
 
 > Note for you (not shown in game): the console command lc_announce_rescan
 
-- "[Living City] {AnnounceRescan} custom announcements found."  (text, line 747)
+- "[Living City] {AnnounceRescan} custom announcements found."  (text, line 749)
 
 > Note for you (not shown in game): the console command lc_announce_say
 
-- "[Living City] lc_announce_say <overwatch\|administrator> <trigger> [warm\|firm\|stern\|furious]"  (text, line 753)
-- "[Living City] Nothing in sound/{ROOT}{voice}/{trig}/ to say (or it's off)."  (text, line 756)
+- "[Living City] lc_announce_say <overwatch\|administrator> <trigger> [warm\|firm\|stern\|furious]"  (text, line 755)
+- "[Living City] Nothing in sound/{ROOT}{voice}/{trig}/ to say (or it's off)."  (text, line 758)
 
 > Note for you (not shown in game): the console command lc_announce_tier
 
-- "[Living City] {trig}: she would be {t} about it now (sociostability {or}, {Heat} violent things in ten minutes){or}."  (text, line 764)
+- "[Living City] {trig}: she would be {t} about it now (sociostability {or}, {Heat} violent things in ten minutes){or}."  (text, line 766)
 
 ## arrests in the open (the owner's playtest, 7 November) (sv_livingcity_arrest.lua)
 
@@ -11230,25 +11230,46 @@ Made from version 78f2c0e. Admin-only console messages and log lines are left ou
 - "Doors that aren't yours. Rooms people left in a hurry. Be quick, be quiet, and never in front of a unit."  (text, line 78)
 - "Is anyone fighting back?"  (text, line 79)
 - "You didn't hear it from me."  (text, line 80)
-- "Sit down, sit down. My knees aren't what they were. What do you want to know?"  (text, line 84)
-- "Ah, you again. Good. Not many come back."  (text, line 85)
-- "I don't know you. Ask me something simple."  (text, line 86)
-- "Hm. Ask me that when I know you better."  (text, line 87)
-- "For me? You're a good one. I won't forget it."  (text, line 88)
-- "You've nothing to give. Never mind. Neither have I."  (text, line 89)
-- "There used to be one. Not in this part of town, not any more."  (text, line 90)
+
+> Note for you (not shown in game): His troubles: an unmarked quest line (the owner, 10 November: "little hints in his dialogue that you can help remedy and then he likes you more and gives you better advice"). One at a time, in order, he lets the current one slip when you visit; nothing marks it. Offer him something from your pockets and he takes what he needs: he warms to you (+2), thanks you, and the next trouble surfaces. Help with all of them and he has one last thing to tell you, and something to give. id = { what he'll take (item ids; "food" is anything fit to eat), the hint, his thanks }
+
+- "My legs won't take me to the bins any more. Some days I don't eat at all."  (text, line 90)
+- "Food. Real food. You don't know what that means to an old man."  (text, line 91)
+- "The tap on my floor's been dry a week. Carrying water up those stairs, at my age..."  (text, line 92)
+- "Water. Bless you. I'll make it last."  (text, line 93)
+- "This cough. The Commissary wants more for its tablets than I see in a month."  (text, line 94)
+- "For my chest? I'll sleep tonight, for the first time in a while."  (text, line 95)
+- "Some young thug took my ration card in the line. I'm too old to work a shift for another."  (text, line 96)
+- "A card? You worked for that. I won't forget it. Not ever."  (text, line 97)
+- "I miss music. They took my old wireless, years ago. The quiet gets into you."  (text, line 98)
+- "A radio... Turn the dial past the Union band some night. You'll hear things worth hearing."  (text, line 99)
+- "Sit down, sit down. My knees aren't what they were. What do you want to know?"  (text, line 103)
+- "Ah, you again. Good. Not many come back."  (text, line 104)
+- "I don't know you. Ask me something simple."  (text, line 105)
+- "Hm. Ask me that when I know you better."  (text, line 106)
+- "For me? You're a good one. I won't forget it."  (text, line 107)
+- "There used to be one. Not in this part of town, not any more."  (text, line 108)
+- "Kind of you. But nothing I need, not that."  (text, line 109)
+- "You've done more for me than my own family. Here. My old picks. I won't be needing them, and you might. Doors don't stay locked for people who know how."  (text, line 110)
+- "Sit a while. The city's quieter when there's someone to share it with."  (text, line 111)
 
 > Note for you (not shown in game): part of: menu
 
-- "(he doesn't know you well enough)"  (text, line 191)
-- "Share some food with him"  (text, line 193)
-- "An old man"  (text, line 195)
-- "An old man"  (title, line 195)
-- "An old man with tired eyes. He's {mood}."  (text, line 196)
+- "(he doesn't know you well enough)"  (text, line 241)
+- "Sit with him a while"  (text, line 243)
+- "Offer him something from your pockets"  (text, line 244)
+- "An old man"  (text, line 246)
+- "An old man"  (title, line 246)
+- "An old man with tired eyes. He's {mood}."  (text, line 247)
+
+> Note for you (not shown in game): part of: oldtimer
+
+- "'{keepsake}' (He presses a Lockpick set into your hand.)"  (text, line 327)
+- "'{keepsake_again}'"  (text, line 331)
 
 > Note for you (not shown in game): only to someone who might be one of them, and only what a sympathizer would say
 
-- "Nobody I know of. Not any more."  (text, line 255)
+- "Nobody I know of. Not any more."  (text, line 345)
 
 ## clothes that show the job (sv_livingcity_outfits.lua)
 
@@ -11282,16 +11303,31 @@ Made from version 78f2c0e. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_pamphlet.lua`
 
-- "WELCOME TO YOUR NEW CITY. /  / You have been relocated for your safety and the common good. This pamphlet contains everything a compliant resident needs to know. Read it. Keep it. Your cooperation is noted. /  / Issued by the Office of the City Administrator."  (text, line 21)
+
+> Note for you (not shown in game): Written by someone in the Administrator's office: kind on the surface, a threat underneath (the owner, 10 November: "natural english ... as someone working for the administrator wrote it ... a bit harsh with a veneer of being kind"). Its own words, not the clerk's. id = { page title, the page } (the ids are the clerk's topics, so a page teaches the same tips: LC.InfoDeskTopics).
+
+- "WELCOME HOME /  / You were brought here for your own protection, and the city is glad to have you. In return it asks very little: work, do as you're told, and keep your papers on you. This pamphlet explains how. Please read it carefully. "I didn't know" has never helped anyone. /  / The Office of the City Administrator"  (text, line 26)
+- "Nobody in this city goes hungry unless they choose to. Every Union shift you finish earns you a ration card, and each card buys one ration at the dispenser. It really is that simple. Your first meal after you arrive is on us. After that, you earn it like everyone else."  (text, line 30)
+- "Idleness is bad for you, and worse for the city. Labor Assignment will find you something suitable. Shifts pay credits and Civil Standing, and every one you finish puts a ration card in your hand. Your shifts are on your work board."  (text, line 32)
+- "Housing Allocation finds a room for every resident with a job. Every resident with a job, you'll notice. Your room is where you sleep, where you keep your things, and where you will be when curfew starts."  (text, line 34)
+- "Your papers"  (text, line 35)
+- "You're registered now, which means, as far as the city is concerned, you exist. Keep your identity papers on you at all times, and show them to any Civil Protection officer who asks. They are entitled to ask. Lost papers can be replaced at Civil Intake, for a fee. Try not to lose them."  (text, line 36)
+- "The law"  (text, line 37)
+- "The laws are posted on the law board for anyone to read, so nobody can say they weren't told. Do what Civil Protection tells you. Don't run when they're nearby: they'll assume the worst, and they're usually right. If you see something, report it. Your neighbours would do the same for you."  (text, line 38)
+- "Curfew is for your own safety. You'll hear a warning two minutes before it starts. When it does, go home to your block and stay there until morning. Anyone found outside will be detained, and nobody wants that, least of all you."  (text, line 40)
+- "Civil Standing"  (text, line 41)
+- "Civil Standing is how the city knows who it can count on. Work, cooperate and report what you see, and it goes up. Break the rules and it goes down. Let it drop below zero and you'll lose your rations until you've earned them back. Climb high enough, and Civil Protection may have a place for you."  (text, line 42)
+- "Civil Protection"  (text, line 43)
+- "The city looks after those who look after it. Residents with high enough Civil Standing can apply to join Civil Protection from their work board, under Factions. The uniform brings respect, and a sense of purpose. Do think about it."  (text, line 44)
 
 > Note for you (not shown in game): part of: pages
 
-- "Civil Orientation pamphlet"  (title, line 26)
-- "Grey paper, stamped with the Combine's mark."  (text, line 26)
+- "Civil Orientation pamphlet"  (title, line 50)
+- "Thin grey paper, stamped with the Combine's mark."  (text, line 50)
 
 > Note for you (not shown in game): the game's living city registered moment
 
-- "[Civil Intake] You are handed a Civil Orientation pamphlet. Read it (it's in your pockets)."  (chat message, line 50)
+- "[Civil Intake] You are handed a Civil Orientation pamphlet. Read it (it's in your pockets)."  (chat message, line 76)
 
 ## path mapping, drawing the walkable network by walking it (sv_livingcity_pathmap.lua)
 
@@ -11357,20 +11393,20 @@ Made from version 78f2c0e. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the face first, then a name that goes with it
 
-- "Citizen {id}"  (text, line 204)
+- "Citizen {id}"  (text, line 205)
 
 > Note for you (not shown in game): an NPC dying
 
-- "%s (%s) was killed%s"  (message, line 311)
-- "by {killer}"  (text, line 311)
+- "%s (%s) was killed%s"  (message, line 312)
+- "by {killer}"  (text, line 312)
 
 > Note for you (not shown in game): the console command lc_people
 
-- "[Living City] %d citizens and %d Civil Protection units alive (%d out now), %d sympathizers, %d with jobs, %d dead remembered"  (message, line 370)
+- "[Living City] %d citizens and %d Civil Protection units alive (%d out now), %d sympathizers, %d with jobs, %d dead remembered"  (message, line 371)
 
 > Note for you (not shown in game): the console command lc_resetpeople
 
-- "[Living City] The city's people have been replaced. People already on the streets keep their old faces until they leave."  (chat message, line 389)
+- "[Living City] The city's people have been replaced. People already on the streets keep their old faces until they leave."  (chat message, line 390)
 
 ## server timing (sv_livingcity_perf.lua)
 

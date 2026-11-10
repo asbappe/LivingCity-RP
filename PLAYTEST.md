@@ -1272,3 +1272,7 @@ Notes:
   Notes:
 - [ ] **Nightmares and propaganda:** as a citizen with 400 standing, the same note and setting for Nightmares and Propaganda. Drop below 400 and they should come again.
   Notes:
+- [ ] **The old-timer's troubles:** visit him: his greeting ends with what's troubling him (food first). Offer him food, then water, then tablets or a bandage, a ration card, a radio, each after he mentions it. Each warms him; after all five, "Sit with him a while" gives you his lockpicks.
+  Notes:
+- [ ] **The pamphlet's new words:** read every page; tell Claude any line that sounds wrong.
+  Notes:

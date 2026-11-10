@@ -7521,7 +7521,9 @@ ok(LC.Feeling(old, visitor) == 1, "a visit warms him to you a little")
 ok(LC.DialogDo(visitor, "headdown") == "headdown", "a stranger gets the simple advice")
 ok(LC.DialogDo(visitor, "bins") == "notyet", "the bins: not until he knows you")
 LC.GiveItem(visitor, "ration", 1)
-ok(LC.DialogDo(visitor, "food") == "food" and LC.Feeling(old, visitor) == 3, "share food and he warms to you")
+ok(visitor.lcDialog and LC.OldTimerTrouble(old, visitor)[1] == "hungry", "his first trouble: he's too old to scavenge for food")
+ok(LC.DialogDo(visitor, "food") == "helped_hungry" and LC.Feeling(old, visitor) == 3 and LC.OldTimerTrouble(old, visitor)[1] == "thirsty",
+    "offer him food: he warms to you, and the next trouble slips out (water)")
 local realBin, binPos = LC.WaypointPlaces.bin, LB + Vector(0, 700, 0)
 LC.WaypointPlaces.bin = function() return binPos, "Bin" end
 visitor.lcGuide = nil
@@ -7529,6 +7531,16 @@ ok(LC.DialogDo(visitor, "bins") == "bins" and visitor.lcWaypoint and visitor.lcW
     "friendly: the bins, the way marked, and learned")
 LC.WaypointPlaces.bin = realBin
 ok(LC.DialogDo(visitor, "dealer") == "notyet", "the dealer only once he's glad to see you")
+ok(LC.DialogDo(visitor, "food") == "nothing", "nothing he needs in your pockets: he says so, and nothing changes")
+LC.GiveItem(visitor, "water", 1)
+ok(LC.DialogDo(visitor, "food") == "helped_thirsty" and LC.Feeling(old, visitor) == 5, "bring him water: that trouble's over too")
+LC.GiveItem(visitor, "tablets", 1) LC.GiveItem(visitor, "ration_card", 1) LC.GiveItem(visitor, "radio", 1)
+LC.DialogDo(visitor, "food") LC.DialogDo(visitor, "food") LC.DialogDo(visitor, "food")
+ok(LC.OldTimerTrouble(old, visitor) == nil and LC.Feeling(old, visitor) >= 6 and LC.DialogDo(visitor, "dealer") == "dealer", "all his troubles seen to: he's glad to see you, and tells you everything")
+ok(LC.DialogDo(visitor, "keepsake") == "keepsake" and LC.HasItem(visitor, "lockpick"), "and he gives you his old lockpicks")
+ok(LC.DialogDo(visitor, "keepsake") == "keepsake_again", "(once)")
+LC.SavePeople()
+ok(string.find(_files["livingcity/" .. game.GetMap() .. "_people.json"] or "", "keepsake", 1, true) ~= nil, "what you've done for him is kept with the roster")
 _setcvar("lc_oldtimer", 0)
 net.sent = {}
 hook.Run("LivingCityPlayerUsedNPC", visitor, old, olds)
