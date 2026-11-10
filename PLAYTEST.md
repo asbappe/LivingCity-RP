@@ -1382,4 +1382,14 @@ Notes:
 - [ ] **Her levers:** as Administrator, place a "Point: speech stand", then F2 > Me > The city's levers: go to the stand, give a speech (citizens nearby gain standing), declare an amnesty, order a crackdown on a block (a raid should start there) and extra rations (a ration day).
   Notes:
 - [ ] **It carries over:** restart the server: the numbers and districts should be as they were, with the days that passed drifted through.
+## 10 November: window styles, second pass
+- [ ] **Terminal screens:** the Commissary, Civil Intake, Housing and Labor screens in the world are black glass with cyan lines and corner brackets, for a citizen too. Buttons light up with a cyan outline under the crosshair.
+  Notes:
+- [ ] **The quartermaster and the black market:** their window is rust and scrap for anyone. The Resistance lab too.
+  Notes:
+- [ ] **Menus:** the C menu and any right-click menu are dark plates in your side's colours, and every line is readable. A drop-down list inside a window too.
+  Notes:
+- [ ] **F1 / F2 and notices:** the quick menu and the notice card have your side's back. As the Administrator, F2 (her tablet entries) is black glass and cyan.
+  Notes:
+- [ ] **Buttons that had their own colours:** they keep them (green, red, chosen) and gain an edge in your side's style. Tell me any button that looks wrong or any invisible click area that now shows a line.
   Notes:

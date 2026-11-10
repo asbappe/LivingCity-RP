@@ -105,6 +105,7 @@ function LC_CL.OpenMarketAdmin(t)
     page = IsValid(frame) and frame.lcSheet and frame.lcSheet:GetActiveTab() and frame.lcSheet:GetActiveTab():GetText() or page
     if IsValid(frame) then frame:Remove() end
     frame = vgui.Create("DFrame")
+    if LC_CL.SetTheme then LC_CL.SetTheme(frame, "combine") end -- (her tablet)
     frame:SetTitle("The Commissary and the market")
     frame:SetSize(math.min(ScrW() - 40, 900), math.min(ScrH() - 40, 640))
     frame:Center()

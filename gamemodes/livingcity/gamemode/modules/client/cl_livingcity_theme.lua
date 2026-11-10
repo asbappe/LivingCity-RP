@@ -3,17 +3,28 @@
     (the owner, 10 November: "artistic overhauls of all UI items that are consistent enough across the
     gamemode while still having flavours based on the faction and context").
 
-    One place paints every window's back, title bar and ordinary buttons:
-      combine    Civil Protection, the Administration, stalkers: black glass, thin cyan lines, cut corners
-      rebel      the Resistance: rust and scrap plate, rivets, a hazard stripe, the lambda
+    One place paints every window's back, title bar, buttons and menus:
+      combine    Civil Protection, the Administration, stalkers, and every Combine machine (the
+                 Commissary, Civil Intake, Housing, Labor, the records terminal, her tablet): black glass,
+                 thin cyan lines, cut corners
+      rebel      the Resistance, and their places whoever stands there (the quartermaster, the black
+                 market, the lab): rust and scrap plate, rivets, a hazard stripe
       citizen    citizens and shackled vortigaunts: a grey concrete slab, heavy and plain
       custody    whoever you are, while they question you: black, a hard light, a red bar
 
-    How it reaches windows that paint themselves: every DFrame made while lc_ui_theme is 1 gets the
-    "LivingCity" Derma skin (its plain buttons, combo boxes and scroll bars follow), and a frame with its
-    own Paint has that Paint run on top of the themed back, with its own full-window box and title strip
-    left out (those are what the theme replaces). A window can ask for a look of its own with
-    LC_CL.SetTheme(panel, "custody"), or opt out with panel.lcNoTheme = true (the pamphlet does).
+    How it reaches everything:
+      - every DFrame made while lc_ui_theme is 1 gets the "LivingCity" Derma skin (plain buttons, combo
+        boxes, scroll bars and menus follow), and a frame with its own Paint has that Paint run on top
+        of the themed back, with its own full-window box and title strip left out (those are what the
+        theme replaces);
+      - a button that paints itself keeps its own colours (they often say something: chosen, can't
+        afford) and gets the look's trim over them, when it drew itself a full back;
+      - right-click menus (DMenu) get the skin too;
+      - a popup that isn't a DFrame asks for it: LC_CL.ThemeWindow(panel, "DPanel");
+      - what's drawn straight on the screen (the F1/F2 quick menu) asks for a back:
+        LC_CL.PaintThemePanel(x, y, w, h, headHeight, name).
+    A window can have a look of its own, whoever is looking: LC_CL.SetTheme(panel, "custody"); or opt out:
+    panel.lcNoTheme = true (the pamphlet does).
 
     The backs are pictures when they're there (materials/livingcity/ui/<name>.jpg, made by
     _dev/posters/ui.js, sent to players at map start); without them, flat colour.
@@ -91,10 +102,15 @@ if surface and surface.CreateFont then
     surface.CreateFont("LCThemeTiny", { font = "Arial", size = 11, weight = 800 })
 end
 
-local HEAD = 24
 local SHADE, LIGHT = Color(0, 0, 0, 120), Color(255, 255, 255, 26)
+local SCAN, SCRATCH_D, SCRATCH_L = Color(255, 255, 255, 5), Color(0, 0, 0, 60), Color(255, 255, 255, 14)
+local GLARE = {}
+for i = 0, 9 do GLARE[i] = Color(255, 255, 255, 22 - i * 2) end
 
-local function Rect(c, x, y, w, h) surface.SetDrawColor(c.r, c.g, c.b, c.a) surface.DrawRect(x, y, w, h) end
+-- (everything below draws at OX, OY: 0, 0 in a panel, the corner of the box on the screen)
+local OX, OY = 0, 0
+local function Rect(c, x, y, w, h) surface.SetDrawColor(c.r, c.g, c.b, c.a) surface.DrawRect(OX + x, OY + y, w, h) end
+local function Outline(c, x, y, w, h) surface.SetDrawColor(c.r, c.g, c.b, 255) surface.DrawOutlinedRect(OX + x, OY + y, w, h) end
 local function Rivet(t, x, y)
     Rect(SHADE, x - 3, y - 2, 7, 7)
     Rect(t.dim, x - 3, y - 3, 6, 6)
@@ -102,12 +118,13 @@ local function Rivet(t, x, y)
 end
 
 -- The back of a window: its picture (or flat colour), its title bar, its edges.
-local function PaintBack(t, name, w, h)
+local function PaintBack(t, name, w, h, HEAD)
+    HEAD = HEAD or 24
     local m = Mat(t.tex)
     if m and not m:IsError() then
         surface.SetDrawColor(t.tint.r, t.tint.g, t.tint.b, 255)
         surface.SetMaterial(m)
-        surface.DrawTexturedRect(0, 0, w, h)
+        surface.DrawTexturedRect(OX, OY, w, h)
         if draw and draw.NoTexture then draw.NoTexture() end
     else
         Rect(t.bg, 0, 0, w, h)
@@ -116,8 +133,8 @@ local function PaintBack(t, name, w, h)
     local wide = w >= 430
     if name == "combine" then
         -- thin light, cut corners, a faint scan
-        for y = HEAD + 2, h - 2, 4 do Rect(Color(255, 255, 255, 5), 1, y, w - 2, 1) end
-        surface.SetDrawColor(t.dim.r, t.dim.g, t.dim.b, 255) surface.DrawOutlinedRect(0, 0, w, h)
+        for y = HEAD + 2, h - 2, 4 do Rect(SCAN, 1, y, w - 2, 1) end
+        Outline(t.dim, 0, 0, w, h)
         Rect(t.line, 0, HEAD - 2, w, 2)
         Rect(t.line, 0, 0, 16, 2) Rect(t.line, 0, 0, 2, 16) Rect(t.line, w - 16, h - 2, 16, 2) Rect(t.line, w - 2, h - 16, 2, 16)
         Rect(t.line, 0, h - 2, 5, 2) Rect(t.line, w - 5, 0, 5, 2)
@@ -128,66 +145,94 @@ local function PaintBack(t, name, w, h)
         Rect(t.dim, 3, HEAD, w - 6, 1) Rect(LIGHT, 3, 3, w - 6, 1)
         Rect(t.line, 0, HEAD - 2, w, 2)
         Rect(SHADE, 3, HEAD, w - 6, 3)
-        for x = w - 124, w - 108, 16 do
-            if wide and draw and draw.NoTexture and surface.DrawPoly then
+        if wide and draw and draw.NoTexture and surface.DrawPoly then
+            for x = w - 124, w - 108, 16 do
                 draw.NoTexture()
                 surface.SetDrawColor(t.accent.r, t.accent.g, t.accent.b, 230)
-                surface.DrawPoly({ { x = x, y = HEAD - 3 }, { x = x + 8, y = 3 }, { x = x + 14, y = 3 }, { x = x + 6, y = HEAD - 3 } })
+                surface.DrawPoly({ { x = OX + x, y = OY + HEAD - 3 }, { x = OX + x + 8, y = OY + 3 }, { x = OX + x + 14, y = OY + 3 }, { x = OX + x + 6, y = OY + HEAD - 3 } })
             end
         end
         Rivet(t, 9, HEAD + 9) Rivet(t, w - 9, HEAD + 9) Rivet(t, 9, h - 9) Rivet(t, w - 9, h - 9)
         for x = 90, w - 90, 120 do Rivet(t, x, h - 9) end
-        Rect(Color(0, 0, 0, 60), 20, h - 22, math.floor(w * 0.3), 1) Rect(Color(255, 255, 255, 14), 40, HEAD + 16, math.floor(w * 0.22), 1)
+        Rect(SCRATCH_D, 20, h - 22, math.floor(w * 0.3), 1) Rect(SCRATCH_L, 40, HEAD + 16, math.floor(w * 0.22), 1)
     elseif name == "custody" then
         -- a hard light from above, a red bar, nothing else
-        for i = 0, 9 do Rect(Color(255, 255, 255, 22 - i * 2), 0, HEAD + i * 5, w, 5) end
-        surface.SetDrawColor(t.line.r, t.line.g, t.line.b, 255) surface.DrawOutlinedRect(0, 0, w, h)
+        for i = 0, 9 do Rect(GLARE[i], 0, HEAD + i * 5, w, 5) end
+        Outline(t.line, 0, 0, w, h)
         Rect(t.accent, 0, HEAD, w, 2) Rect(t.accent, 0, h - 4, w, 4)
     else
         -- a slab: lighter on top, a dark foot, a form number
         Rect(LIGHT, 0, 0, w, 1) Rect(t.dim, 0, HEAD - 1, w, 1)
         Rect(t.dim, 0, h - 3, w, 3) Rect(t.dim, w - 2, 0, 2, h) Rect(LIGHT, 0, 0, 1, h)
         Rect(t.accent, 0, HEAD, 4, h - HEAD - 3)
-        if wide then draw.SimpleText("FORM 27-B", "LCThemeTiny", w - 10, h - 12, t.line, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER) end
+        if wide then draw.SimpleText("FORM 27-B", "LCThemeTiny", OX + w - 10, OY + h - 12, t.line, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER) end
     end
     if wide and draw and draw.SimpleText then
-        draw.SimpleText(t.label, "LCThemeTiny", name == "rebel" and w - 136 or w - 112, HEAD / 2, name == "custody" and t.text or t.line, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+        draw.SimpleText(t.label, "LCThemeTiny", OX + (name == "rebel" and w - 136 or w - 112), OY + HEAD / 2, name == "custody" and t.text or t.line, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
     end
 end
 
 function LC_CL.PaintThemeBack(panel, w, h)
     local t, name = ThemeOf(panel)
+    OX, OY = 0, 0
     PaintBack(t, name, w, h)
 end
 
--- An ordinary button, a combo box: a plate in the window's look.
-local function PaintPlate(panel, w, h)
-    local t, name = ThemeOf(panel)
-    local hot = panel.Hovered or (panel.IsHovered and panel:IsHovered())
-    local down = panel.Depressed or (panel.IsDown and panel:IsDown())
-    local off = panel.GetDisabled and panel:GetDisabled()
-    local base = (hot and not off) and t.plateHot or t.plate
-    Rect(base, 0, 0, w, h)
+-- The same back for something drawn straight on the screen (the F1/F2 quick menu): at x, y, your look
+-- unless one is named. Returns the look's colours (its line, its text) for whatever is drawn on it.
+function LC_CL.PaintThemePanel(x, y, w, h, headH, name)
+    name = THEMES[name] and name or LC_CL.ThemeName()
+    local t = THEMES[name]
+    OX, OY = x, y
+    local ok, err = pcall(PaintBack, t, name, w, h, headH)
+    OX, OY = 0, 0
+    if not ok then
+        LC_CL.ThemeBroken = true
+        print("[Living City] window styles are off after an error: " .. tostring(err))
+    end
+    return t
+end
+
+-- The look's trim on a button: what makes it this side's, whatever colour the button itself is.
+local function PaintTrim(t, name, w, h, hot, off)
     if name == "combine" then
         Rect(off and t.dim or t.line, 0, 0, 3, h)
-        if hot and not off then surface.SetDrawColor(t.line.r, t.line.g, t.line.b, 255) surface.DrawOutlinedRect(0, 0, w, h) end
+        if hot and not off then Outline(t.line, 0, 0, w, h) end
     elseif name == "rebel" then
         Rect(LIGHT, 0, 0, w, 1) Rect(SHADE, 0, h - 2, w, 2)
         Rect(t.dim, 4, math.floor(h / 2) - 1, 3, 3) Rect(t.dim, w - 7, math.floor(h / 2) - 1, 3, 3)
-        if hot and not off then surface.SetDrawColor(t.line.r, t.line.g, t.line.b, 255) surface.DrawOutlinedRect(0, 0, w, h) end
+        if hot and not off then Outline(t.line, 0, 0, w, h) end
     elseif name == "custody" then
-        surface.SetDrawColor(t.dim.r, t.dim.g, t.dim.b, 255) surface.DrawOutlinedRect(0, 0, w, h)
+        Outline(t.dim, 0, 0, w, h)
         if hot and not off then Rect(t.accent, 0, h - 2, w, 2) end
     else
         Rect(t.dim, 0, h - 2, w, 2) Rect(LIGHT, 0, 0, w, 1)
         if hot and not off then Rect(t.accent, 0, 0, 3, h) end
     end
+end
+
+local function State(panel)
+    local hot = panel.Hovered == true or (panel.IsHovered and panel:IsHovered() == true)
+    local down = panel.Depressed == true or (panel.IsDown and panel:IsDown() == true)
+    local off = panel.GetDisabled and panel:GetDisabled() == true
+    return hot, down, off
+end
+
+-- An ordinary button, a combo box: a plate in the window's look.
+local function PaintPlate(panel, w, h)
+    local t, name = ThemeOf(panel)
+    local hot, down, off = State(panel)
+    OX, OY = 0, 0
+    Rect((hot and not off) and t.plateHot or t.plate, 0, 0, w, h)
+    PaintTrim(t, name, w, h, hot, off)
     if down and not off then Rect(Color(t.accent.r, t.accent.g, t.accent.b, 70), 0, 0, w, h) end
     if off then Rect(Color(0, 0, 0, 110), 0, 0, w, h) end
+    -- (its words stay readable on the dark plate, whatever the skin's own colours say)
+    if panel.SetTextStyleColor then panel:SetTextStyleColor(off and t.dim or t.text) end
 end
 
 ------------------------------------------------------------------------
--- The Derma skin: the default one, with windows, buttons, combo boxes and scroll bars repainted
+-- The Derma skin: the default one, with windows, buttons, combo boxes, scroll bars and menus repainted
 ------------------------------------------------------------------------
 
 local function DefineSkin()
@@ -207,10 +252,27 @@ local function DefineSkin()
         PaintPlate(panel, w, h)
     end
     function SKIN:PaintComboBox(panel, w, h) PaintPlate(panel, w, h) end
-    function SKIN:PaintVScrollBar(panel, w, h) local t = ThemeOf(panel) Rect(Color(0, 0, 0, 90), 0, 0, w, h) Rect(t.dim, 0, 0, 1, h) end
-    function SKIN:PaintScrollBarGrip(panel, w, h) local t = ThemeOf(panel) Rect(t.plateHot, 1, 0, w - 2, h) Rect(t.line, 1, 0, w - 2, 2) end
-    function SKIN:PaintButtonUp(panel, w, h) local t = ThemeOf(panel) Rect(t.plate, 0, 0, w, h) Rect(t.line, math.floor(w / 2) - 3, math.floor(h / 2), 6, 2) end
-    function SKIN:PaintButtonDown(panel, w, h) local t = ThemeOf(panel) Rect(t.plate, 0, 0, w, h) Rect(t.line, math.floor(w / 2) - 3, math.floor(h / 2) - 1, 6, 2) end
+    function SKIN:PaintVScrollBar(panel, w, h) local t = ThemeOf(panel) OX, OY = 0, 0 Rect(Color(0, 0, 0, 90), 0, 0, w, h) Rect(t.dim, 0, 0, 1, h) end
+    function SKIN:PaintScrollBarGrip(panel, w, h) local t = ThemeOf(panel) OX, OY = 0, 0 Rect(t.plateHot, 1, 0, w - 2, h) Rect(t.line, 1, 0, w - 2, 2) end
+    function SKIN:PaintButtonUp(panel, w, h) local t = ThemeOf(panel) OX, OY = 0, 0 Rect(t.plate, 0, 0, w, h) Rect(t.line, math.floor(w / 2) - 3, math.floor(h / 2), 6, 2) end
+    function SKIN:PaintButtonDown(panel, w, h) local t = ThemeOf(panel) OX, OY = 0, 0 Rect(t.plate, 0, 0, w, h) Rect(t.line, math.floor(w / 2) - 3, math.floor(h / 2) - 1, 6, 2) end
+    -- menus (right-click, a combo box's list): a plate, the row under the cursor lit
+    function SKIN:PaintMenu(panel, w, h)
+        local t, name = ThemeOf(panel)
+        OX, OY = 0, 0
+        Rect(t.bg, 0, 0, w, h)
+        Outline(name == "citizen" and t.line or t.dim, 0, 0, w, h)
+        Rect(t.line, 0, 0, w, name == "rebel" and 2 or 1)
+    end
+    function SKIN:PaintMenuOption(panel, w, h)
+        local t = ThemeOf(panel)
+        OX, OY = 0, 0
+        local hot = panel.Hovered == true or panel.Highlight == true
+        if panel.m_bBackground ~= false and hot then Rect(t.plateHot, 1, 0, w - 2, h) Rect(t.line, 1, 0, 3, h) end
+        if panel.GetChecked and panel:GetChecked() == true then Rect(t.line, 8, math.floor(h / 2) - 3, 6, 6) end
+        if panel.SetTextStyleColor then panel:SetTextStyleColor(t.text) end
+    end
+    function SKIN:PaintMenuSpacer(panel, w, h) local t = ThemeOf(panel) OX, OY = 0, 0 Rect(t.dim, 0, 0, w, h) end
     derma.DefineSkin("LivingCity", "Living City: windows in your faction's style", SKIN)
     return true
 end
@@ -247,11 +309,44 @@ local function Themed(old)
         return res
     end
 end
-
 LC_CL.ThemedPaint = Themed
 
--- A new window: the skin now, and (a moment later, once whoever made it has set it up) its Paint wrapped.
-function LC_CL.ThemeWindow(p)
+-- A button that paints itself: it keeps its own colours, and gets the trim over them when it drew itself
+-- a full back (one that draws nothing, a click area over a picture, is left alone).
+local seen = { w = 0, h = 0, hit = false, rb = nil, rbx = nil, dr = nil }
+local function SeenBack(x, y, bw, bh) if x == 0 and y == 0 and bw and bh and bw >= seen.w - 1 and bh >= seen.h - 1 then seen.hit = true end end
+local function SeeRB(r, x, y, bw, bh, ...) SeenBack(x, y, bw, bh) return seen.rb(r, x, y, bw, bh, ...) end
+local function SeeRBX(r, x, y, bw, bh, ...) SeenBack(x, y, bw, bh) return seen.rbx(r, x, y, bw, bh, ...) end
+local function SeeDR(x, y, bw, bh) SeenBack(x, y, bw, bh) return seen.dr(x, y, bw, bh) end
+local function Trimmed(old)
+    return function(self, w, h)
+        if not LC_CL.ThemeOn() or w < 40 or h < 16 then return old(self, w, h) end
+        seen.w, seen.h, seen.hit = w, h, false
+        seen.rb, seen.rbx, seen.dr = draw.RoundedBox, draw.RoundedBoxEx, surface.DrawRect
+        draw.RoundedBox, draw.RoundedBoxEx, surface.DrawRect = SeeRB, SeeRBX, SeeDR
+        local ok, res = pcall(old, self, w, h)
+        draw.RoundedBox, draw.RoundedBoxEx, surface.DrawRect = seen.rb, seen.rbx, seen.dr
+        if not ok then self.Paint = old return end
+        if seen.hit then
+            local t, name = ThemeOf(self)
+            local hot, _, off = State(self)
+            OX, OY = 0, 0
+            if not pcall(PaintTrim, t, name, w, h, hot, off) then LC_CL.ThemeBroken = true end
+        end
+        return res
+    end
+end
+LC_CL.TrimmedPaint = Trimmed
+
+local function OwnPaint(p, class)
+    local own = p.GetTable and rawget(p:GetTable(), "Paint") or nil
+    local cls = vgui.GetControlTable and vgui.GetControlTable(class) or nil
+    if own and not (cls and own == cls.Paint) then return own end
+end
+
+-- A new window (a DFrame by itself; any other popup when asked): the skin now, and (a moment later,
+-- once whoever made it has set it up) its Paint wrapped.
+function LC_CL.ThemeWindow(p, class)
     if not IsValid(p) or p.lcThemeSet == true then return end
     p.lcThemeSet = true
     if skinOK and p.SetSkin then p:SetSkin("LivingCity") end
@@ -260,21 +355,52 @@ function LC_CL.ThemeWindow(p)
             if IsValid(p) and p.lcNoTheme == true and p.SetSkin then p:SetSkin("Default") end
             return
         end
-        -- (only a Paint of its own: the plain DFrame one already goes through the skin)
-        local own = p.GetTable and rawget(p:GetTable(), "Paint") or nil
-        local cls = vgui.GetControlTable and vgui.GetControlTable("DFrame") or nil
-        if own and not (cls and own == cls.Paint) then p.Paint = Themed(own) end
+        -- (only a Paint of its own: the plain one already goes through the skin)
+        local own = OwnPaint(p, class or "DFrame")
+        if own then p.Paint = Themed(own) end
     end)
 end
+
+-- Is this panel inside a styled window?
+local function InThemed(p)
+    local n = 0
+    p = p.GetParent and p:GetParent() or nil
+    while p and n < 12 do
+        if p.lcThemeSet == true then return p.lcNoTheme ~= true end
+        p = p.GetParent and p:GetParent() or nil
+        n = n + 1
+    end
+    return false
+end
+
+-- Buttons made this frame wait here until whoever made them has set them up (one look next frame, not a timer each).
+local waiting = {}
+hook.Add("Think", "LivingCityThemeButtons", function()
+    if #waiting == 0 then return end
+    local list = waiting
+    waiting = {}
+    for _, p in ipairs(list) do
+        if IsValid(p) and p.lcTrimSet ~= true then
+            p.lcTrimSet = true
+            local ok, own = pcall(OwnPaint, p, "DButton")
+            if ok and own and InThemed(p) then p.Paint = Trimmed(own) end
+        end
+    end
+end)
 
 if vgui and vgui.Create and not LC_CL.ThemeCreateWas then
     local create = vgui.Create
     LC_CL.ThemeCreateWas = create
     vgui.Create = function(class, ...)
         local p = create(class, ...)
-        if class == "DFrame" and p and cvTheme:GetBool() and not LC_CL.ThemeBroken then
-            local ok = pcall(LC_CL.ThemeWindow, p)
-            if not ok then LC_CL.ThemeBroken = true end
+        if p and cvTheme:GetBool() and not LC_CL.ThemeBroken then
+            if class == "DFrame" then
+                if not pcall(LC_CL.ThemeWindow, p) then LC_CL.ThemeBroken = true end
+            elseif class == "DButton" then
+                waiting[#waiting + 1] = p
+            elseif class == "DMenu" and skinOK and p.SetSkin then
+                p:SetSkin("LivingCity")
+            end
         end
         return p
     end

@@ -3564,6 +3564,15 @@ draw.RoundedBox = rb
 if not okW then return "theme wrap: " .. tostring(errW) end
 if LC_CL.ThemeBroken then return "theme: it switched itself off" end
 if LC_CL.ThemeOn() and (#boxes ~= 1 or boxes[1] ~= "100x30") then return "theme wrap: kept " .. table.concat(boxes, ",") end
+-- a button that paints itself keeps its paint; a box on the screen gets a back
+local drew = 0
+local bp = LC_CL.TrimmedPaint(function(self, w, h) drew = drew + 1 draw.RoundedBox(4, 0, 0, w, h, color_white) end)
+local okT2, errT2 = pcall(bp, f, 200, 28)
+if not okT2 or drew ~= 1 then return "theme trim: " .. tostring(errT2) end
+for _, name in ipairs({ "combine", "rebel", "citizen", "custody" }) do
+    if not LC_CL.PaintThemePanel(24, 300, 380, 294, 30, name) then return "theme panel: " .. name end
+end
+if LC_CL.ThemeBroken then return "theme: it switched itself off (trim or panel)" end
 f:Remove()
 return nil
 """)

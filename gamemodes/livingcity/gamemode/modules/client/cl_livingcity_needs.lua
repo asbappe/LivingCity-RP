@@ -768,6 +768,7 @@ net.Receive("lce_shop", function()
         return
     end
     shopFrame = vgui.Create("DFrame")
+    if LC_CL.SetTheme then LC_CL.SetTheme(shopFrame, "combine") end -- (a Combine machine, whoever uses it: cl_livingcity_theme.lua)
     shopFrame:SetTitle("")
     shopFrame:SetSize(math.min(ScrW() - 60, 620), math.min(ScrH() - 60, 600))
     shopFrame:Center()
@@ -826,6 +827,7 @@ net.Receive("lcu_market", function()
     local keep = IsValid(marketFrame) and ScrollOf(marketFrame.lcScroll) or nil
     if IsValid(marketFrame) then marketFrame:Remove() end
     marketFrame = vgui.Create("DFrame")
+    if LC_CL.SetTheme then LC_CL.SetTheme(marketFrame, "rebel") end -- (the quartermaster, the black market: scrap and rust, whoever buys)
     marketFrame:SetTitle("")
     marketFrame:SetSize(math.min(ScrW() - 60, 620), math.min(ScrH() - 60, 620))
     marketFrame:Center()
