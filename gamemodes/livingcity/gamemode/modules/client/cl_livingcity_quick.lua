@@ -476,10 +476,13 @@ local function ShiftPage()
         items[#items + 1] = Item("Get an inspection order", function() Send("inspectorder") end)
     end
     items[#items + 1] = Page("My last reviews", ReviewsPage)
+    local done = (s.searches or 0) >= (q.searches or 0) and (s.papers or 0) >= (q.papers or 0) and (s.inspections or 0) >= (q.inspections or 0)
+    if done then table.insert(items, 1, Item("Report in now: review, and start the next shift", function() Send("reportin") end)) end
+    items[#items + 1] = Item("Go on a break (no shift until I'm back)", function() Send("shiftbreak") end)
     local rows = {}
-    rows[5] = string.format("Shift: %d min left.", math.ceil((s.left or 0) / 60))
-    rows[6] = string.format("Searches %d of %d, papers duty %d of %d,", s.searches or 0, q.searches or 0, s.papers or 0, q.papers or 0)
-    rows[7] = string.format("inspections %d of %d, arrests %d.", s.inspections or 0, q.inspections or 0, s.arrests or 0)
+    rows[6] = string.format("Shift: %d min left.", math.ceil((s.left or 0) / 60))
+    rows[7] = string.format("Searches %d of %d, papers duty %d of %d,", s.searches or 0, q.searches or 0, s.papers or 0, q.papers or 0)
+    rows[8] = string.format("inspections %d of %d, arrests %d.", s.inspections or 0, q.inspections or 0, s.arrests or 0)
     return { title = "MY SHIFT", items = items, empty = rows }
 end
 
@@ -490,6 +493,7 @@ local function MineItems(me)
         Item("Where I stand (every number explained)", function() if LC_CL.OpenStandingPanel then LC_CL.OpenStandingPanel() else QM("standing") end end),
     }
     if me:GetNW2String("lc_shift", "") ~= "" then table.insert(out, 1, Page("My shift: quota, papers duty, inspections", ShiftPage)) end
+    if me:GetNW2Bool("lc_offduty", false) then table.insert(out, 1, Item("Back on duty (start a shift)", function() Send("shiftbreak") end)) end
     if me:GetNW2String("lc_bounty_menu", "") ~= "" then table.insert(out, 2, Page("Bounties on the wanted", BountyPage)) end
     if me:GetNW2String("lc_survival", "") ~= "" then
         out[#out + 1] = Item(me:GetNW2String("lc_survival", "") == "relaxed" and "Survival: Relaxed (switch to Realistic: more pay)"

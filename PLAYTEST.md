@@ -1361,3 +1361,5 @@ Notes:
   Notes:
 - [ ] **Bounties:** as the Administrator (or a Division Leader), F2 > Me > Bounties on the wanted: put 50 or 100 on someone wanted. Units and the wanted person should be told; the unit who arrests them gets paid.
   Notes:
+- [ ] **Shifts back to back:** finish the checklist early, F2 > Me > My shift > Report in now: a review at once and a fresh shift. Try Go on a break, then Back on duty.
+  Notes:
