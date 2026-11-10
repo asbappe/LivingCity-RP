@@ -165,6 +165,12 @@ LC_MODULES = {
         "sv_livingcity_survival",
         "sv_livingcity_talk",
         "sv_livingcity_advice",
+        "sv_livingcity_dialog",
+        "sv_livingcity_infodesk",
+        "sv_livingcity_oldtimer",
+        "sv_livingcity_pamphlet",
+        "sv_livingcity_learning",
+        "sv_livingcity_machines",
         "sv_livingcity_territory",
         "sv_livingcity_territorypaths", -- (territory grows along the path nodes)
         "sv_livingcity_trains",
@@ -264,6 +270,8 @@ LC_MODULES = {
         "cl_livingcity_unittools",
         "cl_livingcity_staff",
         "cl_livingcity_talk",
+        "cl_livingcity_dialog",
+        "cl_livingcity_bodysigns",
         "cl_livingcity_war",
         "cl_livingcity_writing",
         "cl_livingcity_context", -- (what you can do here: the panel on the right)

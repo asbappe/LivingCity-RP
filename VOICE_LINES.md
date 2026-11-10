@@ -8,7 +8,7 @@
 - **After adding files:** press FastDL sync on the host panel, then change the map (players download new sounds when they join).
 - **Without a recording** the moment is silent (or Half-Life 2's own voice, for Overwatch, with `lc_announce_stock` 1), and the words still show.
 
-Contents: 1. The city's announcements (Overwatch and the Administrator) · 2. The radio · 3. The G-Man · 4. The dreams · 5. Citizens showing the way
+Contents: 1. The city's announcements (Overwatch and the Administrator) · 2. The radio · 3. The G-Man · 4. The dreams · 5. Citizens showing the way · 6. The Citizen Information clerk · 7. The old-timer · 8. Machines
 
 ## 1. The city's announcements
 
@@ -497,3 +497,67 @@ When you chat with a citizen and they notice what you need, they say one of thes
 | [ ] | `lead_start_male1.wav` | `lead_start_female1.wav` | Walking you there | Come on, I'll show you. Stay close. |
 | [ ] | `lead_start2_male1.wav` | `lead_start2_female1.wav` | Walking you there | Here, let me show you. Follow me. |
 | [ ] | `lead_wait_male1.wav` | `lead_wait_female1.wav` | Walking you there | Keep up! I'm not waiting all day. |
+
+## 6. The Citizen Information clerk
+
+The clerk behind the Citizen Information desk: flat, tired, official. Folder: **`garrysmod/sound/livingcity/clerk/`**. One voice for every clerk (or record a man's and a woman's take and keep whichever fits). Without a recording, a terminal's chime, and the words show.
+
+| Done | File | The question asked | Says |
+|---|---|---|---|
+| [ ] | `rations1.wav` | Rations and ration cards | Rations are issued at the ration dispenser. Each ration requires one ration card. Ration cards are issued on completion of a Union shift: one card per shift. No shift, no card. No card, no ration. Your first allocation after arrival is guaranteed. |
+| [ ] | `work1.wav` | Work | All residents are assigned labor. Report to Labor Assignment for your assignment. Shifts pay credits and Civil Standing, and each completed shift earns one ration card. Your shifts are listed on your work board. |
+| [ ] | `housing1.wav` | Housing | Housing Allocation assigns rooms to registered residents with a work assignment. Your room is in your housing block. Sleep there, keep your possessions there, and be there at curfew. |
+| [ ] | `papers1.wav` | Papers and registration | Every resident is registered at Civil Intake and carries identity papers at all times. Present them to any Civil Protection unit on request. Lost papers are replaced at Civil Intake, for a fee. |
+| [ ] | `law1.wav` | The law | The city's laws are posted on the law board. Ignorance of the law is not a defence. Comply with Civil Protection. Do not run in their presence. Report anticivil activity. |
+| [ ] | `curfew1.wav` | Curfew | Curfew is announced two minutes in advance. When it begins, return to your housing block and remain there until morning. Residents found outside during curfew will be detained. |
+| [ ] | `standing1.wav` | Civil Standing | Civil Standing measures your value to the city. Work, compliance and reporting raise it. Infractions lower it. Below zero, ration privileges are withdrawn. High standing qualifies a resident for Civil Protection. |
+| [ ] | `cp1.wav` | Joining Civil Protection | Residents of sufficient Civil Standing may apply to Civil Protection. Applications are made on your work board, under Factions. Civil Protection serves the city. Consider it. |
+| [ ] | `closed1.wav` | (said between answers) | This desk is closed. Come back later. |
+| [ ] | `greet1.wav` | (said between answers) | Citizen Information. State your question. |
+| [ ] | `greet_curt1.wav` | (said between answers) | Make it quick. There are others waiting. |
+| [ ] | `greet_warm1.wav` | (said between answers) | Good day, citizen. Thank you for your cooperation. How may I help you? |
+| [ ] | `noplace1.wav` | (said between answers) | That facility is not available in this sector. |
+| [ ] | `route1.wav` | (said between answers) | The route is marked. Follow it. Next. |
+| [ ] | `wanted1.wav` | (said between answers) | You have an outstanding warrant. Remain where you are. Civil Protection is aware of you. |
+| [ ] | `where1.wav` | (said between answers) | Which location? I will mark the route. |
+
+## 7. The old-timer
+
+The old man who gives advice: warm, worn, a little wry. Folder: **`garrysmod/sound/livingcity/oldtimer/`**. For "Is anyone fighting back?" he goes on to say where the Resistance gathers (that part changes with the map, so it only shows as words). Without a recording, Half-Life 2's own citizen voice.
+
+| Done | File | The question asked | Says |
+|---|---|---|---|
+| [ ] | `headdown1.wav` | Any advice for someone like me? | Keep your head down, your papers handy, and your mouth shut. The ones who last are the ones nobody remembers. |
+| [ ] | `curfew1.wav` | What about curfew? | When the voice says two minutes, it means one. Be indoors. I've seen what they do to the ones who are late, and so have the walls. |
+| [ ] | `scanners1.wav` | The flying things? | Scanners. They take your picture. Don't stand under them, don't do anything worth photographing, and if one flashes you, walk, don't run. |
+| [ ] | `running1.wav` | Why does everyone walk so slowly? | Run in front of a cop and you're a suspect. Walk. Even when your heart's going like a train, walk. |
+| [ ] | `bins1.wav` | Where do people find food, really? | The bins. Commissary scraps, things people drop. Nobody checks them as often as they should. Here, I'll show you the nearest. |
+| [ ] | `water1.wav` | And water? | Sinks, the machines, open water if you're desperate. Boil anything that isn't from a tap, or you'll be coughing for a week. |
+| [ ] | `fishing1.wav` | Anything else to eat out there? | Fish, if you can find a line. Cook what you catch on a stove or a fire barrel. Raw meat will turn your stomach. |
+| [ ] | `dealer1.wav` | Things the Commissary doesn't sell? | There's a man who trades in what you can't buy. Don't tell him I sent you, and don't let a cop see you with him. That way. |
+| [ ] | `lockpick1.wav` | What's a lockpick good for? | Doors that aren't yours. Rooms people left in a hurry. Be quick, be quiet, and never in front of a unit. |
+| [ ] | `resistance1.wav` | Is anyone fighting back? | You didn't hear it from me. |
+| [ ] | `food1.wav` | (said between answers) | For me? You're a good one. I won't forget it. |
+| [ ] | `greet1.wav` | (said between answers) | Sit down, sit down. My knees aren't what they were. What do you want to know? |
+| [ ] | `greet_friend1.wav` | (said between answers) | Ah, you again. Good. Not many come back. |
+| [ ] | `nofood1.wav` | (said between answers) | You've nothing to give. Never mind. Neither have I. |
+| [ ] | `notyet1.wav` | (said between answers) | Hm. Ask me that when I know you better. |
+| [ ] | `nowhere1.wav` | (said between answers) | There used to be one. Not in this part of town, not any more. |
+| [ ] | `stranger1.wav` | (said between answers) | I don't know you. Ask me something simple. |
+
+## 8. Machines
+
+The ration dispenser and the vending machines, in a flat machine voice (a Combine terminal's). Folder: **`garrysmod/sound/livingcity/machines/`**. Without a recording, the machine's beep.
+
+| Done | File | Which machine | Says |
+|---|---|---|---|
+| [ ] | `dispenser_blackout1.wav` | Ration dispenser | Power failure. Service unavailable. |
+| [ ] | `dispenser_empty1.wav` | Ration dispenser | Distribution suspended. |
+| [ ] | `dispenser_nocard1.wav` | Ration dispenser | No ration card detected. Report for labor assignment. |
+| [ ] | `dispenser_short1.wav` | Ration dispenser | Supply shortfall. Try again shortly. |
+| [ ] | `dispenser_suspended1.wav` | Ration dispenser | Ration privileges suspended. |
+| [ ] | `dispenser_unregistered1.wav` | Ration dispenser | Identity not found. Report to Civil Intake. |
+| [ ] | `dispenser_wait1.wav` | Ration dispenser | Allocation not yet available. Return later. |
+| [ ] | `dispenser_withheld1.wav` | Ration dispenser | Allocation withheld. Noncompliance is recorded. |
+| [ ] | `vending_blackout1.wav` | Vending machine | Power failure. Service unavailable. |
+| [ ] | `vending_credits1.wav` | Vending machine | Insufficient credits. |

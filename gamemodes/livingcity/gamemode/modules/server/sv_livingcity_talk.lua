@@ -180,6 +180,7 @@ local function StepAway(npc, ply)
     if tr and not tr.StartSolid then npc:SetPos(tr.HitPos - Vector(0, 0, 4)) end
 end
 LC.TalkStepAway = StepAway
+LC.FoodToGive = FoodToGive
 
 function LC.OpenTalk(ply, npc, said)
     local st = Usable(ply, npc)
@@ -340,6 +341,7 @@ hook.Add("LivingCityPlayerUsedNPC", "LivingCityTalk", function(ply, npc, st)
     if not cvTalk:GetBool() or not st or st.role ~= "citizen" then return end
     if LC.PlayerIsCP(ply) then return end -- units stop citizens with E (sv_livingcity.lua)
     if LC.QuestWantsNPC and LC.QuestWantsNPC(ply, npc) then return end
+    if st.oldtimer and LC.OldTimerOn and LC.OldTimerOn() then return end -- (the old-timer has his own window: sv_livingcity_oldtimer.lua)
     timer.Simple(0, function() if IsValid(ply) and IsValid(npc) then LC.OpenTalk(ply, npc) end end)
 end)
 

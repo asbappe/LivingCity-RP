@@ -711,6 +711,22 @@ function LC.VoiceMissing()
         end
     end
     Row("Citizens", "citizens/", c)
+    -- the Citizen Information clerk, the old-timer, the machines (sv_livingcity_infodesk.lua, _oldtimer, _machines)
+    local function Each(name, folder, rescan, clip, ids)
+        local m = {}
+        if rescan then rescan() end
+        for _, id in ipairs(ids) do if clip and not clip(id) then m[#m + 1] = id end end
+        Row(name, folder, m)
+    end
+    local function Ids(topics, lines)
+        local ids = {}
+        for _, t in ipairs(topics or {}) do ids[#ids + 1] = t[1] end
+        for id in pairs(lines or {}) do ids[#ids + 1] = id end
+        return ids
+    end
+    Each("Citizen Information clerk", "clerk/", LC.InfoDeskRescan, LC.InfoDeskClip, Ids(LC.InfoDeskTopics, LC.InfoDeskLines))
+    Each("The old-timer", "oldtimer/", LC.OldTimerRescan, LC.OldTimerClip, Ids(LC.OldTimerTopics, LC.OldTimerLines))
+    Each("Machines", "machines/", LC.MachineRescan, LC.MachineClip, Ids(nil, LC.MachineLines))
     return out
 end
 

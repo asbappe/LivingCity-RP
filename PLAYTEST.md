@@ -1246,6 +1246,24 @@ Notes:
 - [ ] **Switch to Relaxed:** C > Your characters > the Survival button (or F2 > Me). Hunger and thirst should drop much slower; eating raw meat should never give parasites; meat should never go off; no toilet urge. "Hardened" should disappear.
   Notes:
 - [ ] **The 3 hours:** try switching back straight away: it should say when you can.
+## 10 November, learning the city by living in it
+- [ ] **Tips wait:** walk up to a bin as a new character: no card. Walk away, come back after 4 minutes without searching one: now the card. Search a bin first and the card never comes. (`lc_hints_wait 0` is the old way.)
+  Notes:
+- [ ] **Body signs:** get hungry (below 25): the colour drains with waves of weakness. Thirsty: warm haze and breathing. Below 35 health: red edges and a heartbeat. Off in C > Settings.
+  Notes:
+- [ ] **The dispenser talks:** use it with no ration card: it says "No ration card detected..." low on screen, the full reason in chat, no card at the top.
+  Notes:
+- [ ] **Citizen Information:** place "Fixture: Citizen Information desk" behind a counter. E: the topics, the answers, Where is...? marks a route. Try it wanted (no answers), and with high and low standing (manner).
+  Notes:
+- [ ] **The old-timer:** find the citizen whose job says "Old-timer". E: his window. Bins and the dealer locked at first; visit and share food until he tells you, with the way marked.
+  Notes:
+- [ ] **Pamphlet:** register at Civil Intake: you get a Civil Orientation pamphlet. Read it from your pockets, pick pages.
+  Notes:
+- [ ] **Civil notice posters:** place a few: by the dispenser, the Commissary, a sink, Civil Intake, the law board, somewhere empty. Each says the right thing. E reads it.
+  Notes:
+- [ ] **PA explanations:** the "  > what it means" line in chat stops after the third of each kind.
+  Notes:
+- [ ] **Mentor XP:** a friend you /recognize to a brand-new player: be near them at their first ration or shift: you get 25 XP.
   Notes:
 
 ## 10 November, last: sitting out dreams

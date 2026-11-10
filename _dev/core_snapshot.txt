@@ -360,6 +360,7 @@ item master_chip
 item melon
 item milk
 item moonshine
+item pamphlet
 item paper
 item papers_blank
 item papers_dead
@@ -771,6 +772,7 @@ setting lc_heist_master_intel_seconds = 600
 setting lc_heist_master_seconds = 60
 setting lc_heist_seconds = 30
 setting lc_hints = 1
+setting lc_hints_wait = 240
 setting lc_hoover_capacity = 3
 setting lc_hunger_minutes = 60
 setting lc_hygiene = 1
@@ -783,6 +785,7 @@ setting lc_infest_nests = 1
 setting lc_infest_nests_per_patch = 4
 setting lc_infest_quiet_minutes = 10
 setting lc_infest_spread_minutes = 10
+setting lc_infodesk = 1
 setting lc_informants = 1
 setting lc_inherit_max = 200
 setting lc_inherit_pct = 25
@@ -842,6 +845,7 @@ setting lc_loyalty_wait = 15
 setting lc_machine_hack_cooldown = 10
 setting lc_machine_hack_max = 8
 setting lc_machine_hack_out = 5
+setting lc_machine_voice = 1
 setting lc_mail_minutes = 4
 setting lc_manpower = 1
 setting lc_manpower_cp_max = 20
@@ -869,6 +873,7 @@ setting lc_market_rebels_per = 1
 setting lc_market_restock_minutes = 20
 setting lc_market_scarce_stock = 5
 setting lc_max_bodies = 16
+setting lc_mentor_xp = 25
 setting lc_morning_exercise = 1
 setting lc_needs = 1
 setting lc_nest_regrow_minutes = 6
@@ -896,11 +901,14 @@ setting lc_npcmodel_guard_shotgun =
 setting lc_npcmodel_shotgunner = 
 setting lc_npcmodel_soldier = 
 setting lc_obituary = 1
+setting lc_oldtimer = 1
 setting lc_ooc = 1
 setting lc_ooc_cooldown = 10
 setting lc_outbreaks = 1
 setting lc_outfits = 1
 setting lc_overwatch_drops = 1
+setting lc_pa_explain = 3
+setting lc_pamphlet = 1
 setting lc_papers_fee = 10
 setting lc_parade_min = 35
 setting lc_parade_units = 6

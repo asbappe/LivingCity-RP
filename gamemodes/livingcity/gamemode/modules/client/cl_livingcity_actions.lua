@@ -441,6 +441,9 @@ function LC_CL.OpenActions()
     local notes = GetConVar("lc_notices")
     Add(set, (notes and notes:GetBool() and "Warnings and notices on screen: on (turn off)") or "Warnings and notices on screen: off (turn on)",
         function() RunConsoleCommand("lc_notices", (notes and notes:GetBool()) and "0" or "1") end)
+    local body = GetConVar("lc_body_signs")
+    Add(set, (body and body:GetBool() and "Hunger, thirst and pain shown on screen and in sound: on (turn off)") or "Hunger, thirst and pain shown on screen and in sound: off (turn on)",
+        function() RunConsoleCommand("lc_body_signs", (body and body:GetBool()) and "0" or "1") end)
     Add(set, "Tips: turn off", function() Send("hints", "off") end)
     Add(set, "Tips: turn on", function() Send("hints", "on") end)
     Add(set, "Tips: show me them all again, from the start", function() Send("hints", "reset") end)
