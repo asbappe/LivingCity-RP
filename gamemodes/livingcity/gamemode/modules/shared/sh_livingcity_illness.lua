@@ -2,7 +2,10 @@
     Living City (shared): what a fever does to how you move (sv_livingcity_illness.lua)
 
       A fever           no running (walking pace at most), and fists are no use:
-                        you're too weak to throw a punch.
+                        you're too weak to throw a punch. The gun in your hands
+                        sways and swims (the owner, 10 November), and bullets
+                        leave the barrel where it's swaying, not where you aim:
+                        LC.FeverSway is the one drift both follow.
       The fever dream   at midday the fever takes you: down on the ground, unable
                         to move, jump or swing until it lets you go
                         (lc_feverdream, what the screen shows: cl_livingcity_feverdream.lua).
@@ -36,3 +39,29 @@ hook.Add("StartCommand", "LivingCityFever", function(ply, cmd)
     local w = ply:GetActiveWeapon()
     if IsValid(w) and w:GetClass() == "weapon_fists" then cmd:RemoveKey(IN_ATTACK) cmd:RemoveKey(IN_ATTACK2) end
 end)
+
+-- The fever's drift: how far off (pitch, yaw, roll in degrees) the gun points right now. The same on the
+-- player's computer and the server (it's a function of the clock and who they are), so the bullets go
+-- where the swaying gun on screen points.
+function LC.FeverSway(ply, t)
+    if not LC.HasFever(ply) then return Angle(0, 0, 0) end
+    t = t or CurTime()
+    local k = (IsValid(ply) and ply:EntIndex() or 1) * 1.7
+    return Angle(5 * math.sin(t * 1.3 + k) + 2.5 * math.sin(t * 3.1 + k * 2),
+        8 * math.sin(t * 0.9 + k * 0.5) + 3 * math.sin(t * 2.3 + k),
+        10 * math.sin(t * 0.7 + k))
+end
+
+-- bullets come out where the gun is swaying, and wild besides
+hook.Add("EntityFireBullets", "LivingCityFeverAim", function(ent, data)
+    if not IsValid(ent) or not ent:IsPlayer() or not LC.HasFever(ent) or not data or not data.Dir then return end
+    local sw = LC.FeverSway(ent)
+    local a = data.Dir:Angle()
+    a.p, a.y = a.p + sw.p, a.y + sw.y
+    data.Dir = a:Forward()
+    local sp = data.Spread or Vector(0, 0, 0)
+    data.Spread = Vector(sp.x + 0.05, sp.y + 0.05, 0)
+    return true
+end)
+
+-- (the gun on screen, swaying: cl_livingcity_feverdream.lua, LC_CL.FeverViewModel)

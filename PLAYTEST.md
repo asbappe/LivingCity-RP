@@ -1323,3 +1323,5 @@ Notes:
   Notes:
 - [ ] **The carved rat:** scar a burned informant (hands up). A crude red rat should appear on their right cheek, and move with their head. If it floats off the face or sits in the wrong place, tell me what you see: lc_ratscar_pos moves it (forward, right, up, turn). They should never be able to join the Resistance after.
   Notes:
+- [ ] **Fever aim:** with a fever, hold a pistol or SMG: it sways and drifts on screen; fire at a wall: the holes land where the gun was pointing, scattered.
+  Notes:

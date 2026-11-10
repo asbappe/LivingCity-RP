@@ -111,6 +111,8 @@ if CLIENT then
         local a = Angle(ang.p, ang.y, ang.r)
         a:RotateAroundAxis(a:Right(), -28)
         a:RotateAroundAxis(a:Up(), 12)
-        return pos - ang:Up() * 4 + ang:Right() * 2, a
+        local p2, a2 = pos - ang:Up() * 4 + ang:Right() * 2, a
+        if LC_CL and LC_CL.FeverViewModel then return LC_CL.FeverViewModel(p2, a2) end -- (a fever sways it too: sh_livingcity_illness.lua)
+        return p2, a2
     end)
 end
