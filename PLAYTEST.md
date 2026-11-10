@@ -1514,4 +1514,24 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
 - [ ] **Director:** play 20 minutes, then read the debug report section "The director and free talk": are its last decisions sensible, and did you see one happen (someone walking up to you with a line)?
   Notes:
 - [ ] **Cost:** after an evening, compare "requests today" and the tokens in the debug report with the bill on the service.
+## 10 November: the dreams stand-ins act
+
+- [ ] **In the maze (few players asleep, so stand-ins appear):** do they keep near you, and bolt when a giant officer comes close? Lose a life near one: does it flinch, and does one say your name in chat?
+  Notes:
+- [ ] **How the poses look:** cowering (hands over head), cheering, waving, glancing over a shoulder. Say which look wrong (an arm bent the wrong way, a head turned oddly) and for which model (man or woman).
+  Notes:
+- [ ] **A propaganda dream:** do the stand-ins kneel facing her with arms held out or hands together?
+  Notes:
+- [ ] **An ending as a dream (for example the bus):** the stand-ins turn to you and wave or cheer instead of standing like statues.
+  Notes:
+
+## 10 November: falling asleep late, and when the next dream is
+
+- [ ] **Late into a dream:** have one player asleep when the dream starts and another lie down about 20 seconds later. The second should appear in the dream with every life, and the first should see "drifts into the dream, late" in chat. Both wake with everything.
+  Notes:
+- [ ] **Not twice:** lose all your lives, wake up, and stay in bed. You should not be pulled back into the same dream.
+  Notes:
+- [ ] **Late into an ending (for example the bus):** does the late sleeper see the ending properly (music, dancing) from where it has got to?
+  Notes:
+- [ ] **The Administrator, tablet and F2 > Tonight's dream:** the first line says when the next dream is; at night it counts down.
   Notes:

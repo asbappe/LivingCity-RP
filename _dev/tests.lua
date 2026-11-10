@@ -16100,6 +16100,21 @@ concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
 s3.lcSleep = s3.lcSleep or { t0 = CurTime(), done = CurTime(), last = CurTime(), slept = true }
 local okD = LC.DreamStart("shalom", nil, false)
 ok(okD and s1.lcDreaming, "a dream an admin starts (dream it now)")
+-- someone falls asleep after it has begun: they join it, their screen is sent the ending, and they wake with the rest
+do
+    local awAt = aw:GetPos()
+    aw.lcSleep = { t0 = CurTime(), done = CurTime(), last = CurTime(), slept = true }
+    local sent0 = #net.sent
+    _run(4.2)
+    local got = false
+    for i = sent0 + 1, #net.sent do local m = net.sent[i] if m.name == "lc_ending" and m.to == aw then got = true end end
+    ok(aw.lcDreaming == LC.DreamActive.id and got and aw:GetPos():Distance(awAt) > 1000, "asleep after an ending's dream began: they're in it, and their screen has the ending")
+    LC.DreamWakeOne(aw, "admin")
+    _run(1.5)
+    ok(not aw.lcDreaming and aw:GetPos():Distance(awAt) < 1 and LC.DreamActive ~= nil, "(woken, back where they lay; the dream goes on, and doesn't take them again)")
+    aw.lcSleep = nil
+    aw:SetNW2Bool("lc_sleeping", false)
+end
 local sid = s1:SteamID64()
 local db = s1.pdata
 s1.valid = false
@@ -16496,6 +16511,56 @@ LC.DreamGameStop(d4, "admin")
 _run(2.5)
 ok(not a.lcDreaming and LC.DreamActive == nil, "waking everyone ends it")
 
+-- falling asleep late (the owner, 10 November): whoever lies down after a dream has begun joins it, in every dream you play
+do
+    for _, p in ipairs({ adm, a, b }) do if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end end
+    for _, p in ipairs({ a, b }) do p:SetNW2Float("lc_unbroken_until", 0) p:SetNW2Float("lc_secondwind_until", 0) end -- (b won the last one: Unbroken would spare them)
+    local tried, joined, clean, failed = 0, 0, 0, {}
+    for _, id in ipairs(LC.DreamGameOrder) do
+        local e0 = #_errors
+        Asleep(a, CITY)
+        local okL, dl = LC.DreamStart(id, nil, false, nil, true)
+        if okL then
+            tried = tried + 1
+            _run(1.5)
+            Asleep(b, CITY + Vector(0, 200, 0))
+            _run(1)
+            local early = b.lcDreaming ~= nil -- (not in its first three seconds)
+            _run(2.2)
+            local gl = dl.game
+            local inIt = b.lcDreaming == dl.id and gl and (gl.pl[b] ~= nil or (gl.enf and gl.enf[b] ~= nil)) and b:GetPos():Distance(CITY) > 10000
+            if inIt and not early then joined = joined + 1 else failed[#failed + 1] = id .. string.format("[early=%s dreaming=%s pl=%s can=%s sleep=%s]", tostring(early), tostring(b.lcDreaming), tostring(gl and gl.pl[b] ~= nil), tostring(LC.DreamCanJoinLate(dl)), tostring(b.lcSleep ~= nil)) end
+            if id == "maze" then
+                ok(inIt and gl.pl[b].lives == gl.def.lives and gl.pl[b].late and b:GetNW2Bool("lc_dreaming", false), "asleep after the maze began: they're in it, with every life")
+                LC.DreamWakeOne(b, "admin")
+                _run(2.5)
+                ok(b.lcSleep and not b.lcDreaming, "woken from it and still asleep in bed, they aren't taken into the same dream twice")
+            end
+            _run(1)
+            LC.DreamGameStop(dl, "admin")
+            _run(3)
+            if not a.lcDreaming and not b.lcDreaming and LC.DreamActive == nil and #_errors == e0 then clean = clean + 1 else failed[#failed + 1] = id .. " (end)" end
+        end
+        for _, p in ipairs({ a, b }) do if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end end
+        for i = #_errors, e0 + 1, -1 do if i > errs0 then failed[#failed + 1] = tostring(_errors[i]) end end
+    end
+    ok(tried >= 20 and joined == tried and clean == tried, "every dream you play takes a late sleeper and ends cleanly, everything put back",
+        tried .. " tried, " .. joined .. " joined, " .. clean .. " clean: " .. table.concat(failed, "; "))
+    -- too near its end: they sleep on
+    Asleep(a, CITY)
+    local okL, dl = LC.DreamStart("maze", nil, false, nil, true)
+    _run(4)
+    dl.game.ends = CurTime() + 20
+    Asleep(b, CITY + Vector(0, 200, 0))
+    _run(1.5)
+    ok(okL and not b.lcDreaming and not LC.DreamCanJoinLate(dl), "with under 45 seconds of it left, a late sleeper sleeps on")
+    LC.DreamGameStop(dl, "admin")
+    _run(3)
+    -- the tablet's "when" line has what it needs
+    local off = LC.DreamOffice()
+    ok(off.delay and off.delay >= 5, "the Administrator's tablet is told how long after the good night the dream comes", tostring(off.delay))
+end
+
 LC.DreamForget()
 LC.RemovePoint(dp)
 for _, p in ipairs({ adm, a, b }) do
@@ -16563,6 +16628,49 @@ _run(0.3)
 ok(s1.lives == math.max(1, (g.def.lives or 1) - 1) or s1.lives == 1, "a stand-in loses a life (a red flash, back to the start)")
 _run(0.5)
 ok(s1.out and not IsValid(s1.ent), "and drops out of it (a puff, gone)")
+-- how they act (the owner, 10 November): they bolt from what hunts the dreamers, and see what happens to the players
+do
+    local s2, s3 = g.standins[2], g.standins[3]
+    for _, sb in ipairs(g.standins) do sb.hits, sb.outAt = {}, nil end -- (nothing else happens to them meanwhile)
+    LC.DreamStandinDo(s2, "kneel", CurTime())
+    ok(s2.act == "kneel" and s2.ent:GetNW2String("lc_dream_act", "") == "kneel" and s2.ent:GetNW2Bool("lc_dream_standin", false),
+        "what a stand-in is doing is told to the dreamers' screens (for the arms, head and back)")
+    local threat = g.cops[1].e
+    ok(#LC.DreamStandinThreats(g) >= 2, "the giant officers are what the stand-ins fear", #LC.DreamStandinThreats(g))
+    s2.pause, s2.busy, s2.flee, s2.target, s2.brave = nil, nil, nil, nil, 0.5
+    s2.pos = Vector(s2.home.x, s2.home.y, s2.home.z)
+    local was = threat:GetPos()
+    threat:SetPos(s2.pos + Vector(120, 0, 0))
+    local d0 = 120
+    LC.DreamStandinsTick(CurTime())
+    _advance(0.2)
+    LC.DreamStandinsTick(CurTime())
+    local d1 = math.sqrt((s2.pos.x - threat:GetPos().x) ^ 2 + (s2.pos.y - threat:GetPos().y) ^ 2)
+    ok(s2.act == "panic" and s2.flee and d1 > d0, "an officer close by: they bolt, away from him", tostring(s2.act) .. " " .. d1)
+    threat:SetPos(was)
+    -- a player near them loses a life: they flinch, facing it, and one says so by name
+    s3.pause, s3.busy, s3.flee, s3.target = nil, nil, nil, nil
+    s3.pos = a:GetPos() + Vector(100, 0, 0)
+    LC.DreamStandinsTick(CurTime())
+    g.standinSaidAt = nil
+    local chat0 = #(a.chat or {})
+    g.pl[a].lives = g.pl[a].lives - 1
+    LC.DreamStandinsTick(CurTime())
+    local named = false
+    for i = chat0 + 1, #(a.chat or {}) do if string.find(a.chat[i], a:Nick(), 1, true) and string.find(a.chat[i], "(in the dream)", 1, true) then named = true end end
+    ok(s3.act == "flinch" and s3.faceAt ~= nil and named, "a player near them loses a life: they flinch towards it, and one of them says so by name", tostring(s3.act))
+    g.pl[a].lives = g.pl[a].lives + 1
+    LC.DreamStandinsTick(CurTime())
+    -- a player wins: all of them cheer
+    local how0 = g.pl[b].how
+    g.pl[b].how = "won"
+    LC.DreamStandinsTick(CurTime())
+    local cheering = 0
+    for _, sb in ipairs(g.standins) do if not sb.out and sb.act == "cheer" then cheering = cheering + 1 end end
+    ok(cheering == 3, "a player wins: every stand-in still in it cheers", cheering)
+    g.pl[b].how = how0
+    LC.DreamStandinsTick(CurTime())
+end
 -- bad dreamers: marked, and the baton
 _run(4) -- (past the start's safety)
 ok(not LC.DreamBad(a), "(nobody glows to start with)")

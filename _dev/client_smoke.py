@@ -1963,6 +1963,29 @@ local ok, e = pcall(function()
     _me:SetNW2Float("lc_dream_ends", 0)
     _me:SetNW2Bool("lc_dreaming", false)
     assert(not OnF1() and LC_CL.DreamTimeLeft() == nil, "awake, the dream's lines linger")
+    -- the stand-ins' acting (cl_livingcity_dreamacting.lua): every act gives a pose, and a figure's bones ease towards it
+    for _, act in ipairs({ "cower", "flinch", "cheer", "wave", "look", "kneel", "plead", "sway", "panic", "idle", "run", "" }) do
+        for _, own in ipairs({ true, false }) do
+            for name, ang in pairs(LC_CL.DreamActPose(act, 0.4, own)) do assert(ang.p and ang.y and ang.r, act .. ": " .. name .. " isn't an angle") end
+        end
+    end
+    assert(next(LC_CL.DreamActPose("idle", 1, false)) == nil and LC_CL.DreamActPose("cower", 1, false).R_UpperArm, "the acts' poses are wrong")
+    local set = {}
+    local fig = { ManipulateBoneAngles = function(_, id, a) set[id] = a end, LookupBone = function(_, n) return n == "ValveBiped.Bip01_R_UpperArm" and 7 or nil end,
+        GetNW2String = function() return "cheer" end, GetNW2Float = function() return CurTime() - 1 end, GetNW2Bool = function() return false end }
+    LC_CL.DreamActApply(fig, CurTime(), 0.05)
+    local first = set[7] and set[7].y
+    for i = 1, 60 do LC_CL.DreamActApply(fig, CurTime(), 0.05) end
+    assert(first and first < 0 and set[7].y < first and set[7].y < -90, "a cheering figure's arm doesn't ease up: " .. tostring(first) .. " " .. tostring(set[7] and set[7].y))
+    hook.t.Think.LivingCityDreamActing()
+    -- when the next dream is (the Administrator's tablet and F2 page)
+    local W = LC_CL.DreamWhenLine
+    assert(W(nil) == nil and W({ ready = false }) == nil, "a when line with no dreams possible")
+    assert(string.find(W({ ready = true, busy = true }), "dreaming right now", 1, true), "when: dreaming now")
+    assert(string.find(W({ ready = true, dreamt = true }), "tomorrow night", 1, true), "when: dreamt")
+    assert(string.find(W({ ready = true, at = 75, will = true }), "1:15", 1, true), "when: the countdown")
+    assert(string.find(W({ ready = true, at = 75 }), "nothing is waiting", 1, true), "when: nothing waiting")
+    assert(string.find(W({ ready = true, delay = 60 }), "60 seconds after", 1, true), "when: by day")
     local st = { on = true, point = true, zone = false, queued = "hard", queuedName = "Hard", queuedMood = "happy", at = 40, every = false, delay = 60,
         active = { ending = "hard", name = "Hard", n = 2, mood = "happy", left = 200, who = { "Someone", "Unit (Enforcer)" } }, asleep = 3, saved = { { sid = "1", nick = "Someone", online = true, applied = true } },
         endings = { { id = "hard", name = "Hard" } } }

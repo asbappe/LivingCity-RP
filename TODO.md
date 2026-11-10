@@ -121,3 +121,4 @@
   8. Paste all of it into the chat.
 - [ ] **The minds, still open:** tune `Psy.cfg`, the bias numbers and `lc_minds_unrest` from a real log (`python3 _dev/psyche/analyze.py`); a sheltering citizen actually hiding a wanted player; ask the owner whether `lc_minds_show` should default to 1.
 - [ ] **The director, still open:** more choices for it (a rumour, a PA line, a quest offer), free talk from the talk window as a text box, and a look at real `DIRECTOR` and `TALK` lines with the owner to tune the two prompts in `sv_livingcity_brain.lua`.
+- [ ] **A random test:** RebelPamphletTests, "and Civil Protection hears of it a little later" (3 crimes instead of 2), fails about one full run in three, on `main` before the minds acted too (checked 10 November). Passes alone.

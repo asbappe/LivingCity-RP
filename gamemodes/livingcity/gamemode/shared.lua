@@ -261,6 +261,7 @@ LC_MODULES = {
         "cl_livingcity_dreamgames", -- (the dreams you play: tokens, lives, time, on screen)
         "cl_livingcity_vortwar", -- (the vortigaunts' purple light, the tug-of-war meter)
         "cl_livingcity_strangedreams", -- (the strange dreams: the cheese dream's voices and colours, wings' rings; after dreamgames)
+        "cl_livingcity_dreamacting", -- (the dreams' stand-ins: arms, heads and backs moved on top of their sequences)
         "cl_livingcity_dreamenforce", -- (Enforcers: the bad dreamers glow red; a dreamer marked is told)
         "cl_livingcity_vices", -- (smoke, drunk, wired, crashing and the shakes, on screen)
         "cl_livingcity_exercise",

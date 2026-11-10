@@ -92,7 +92,9 @@ net.Receive("lc_admin_office", function()
         if not d.ready then
             Note(d.why or "The city can't dream yet.")
         else
-            if d.busy then Note("The city is dreaming right now.") end
+            -- (when the next one is: the countdown is as it was when the tablet was opened)
+            local when = LC_CL.DreamWhenLine and LC_CL.DreamWhenLine(d)
+            if when then Note(when) elseif d.busy then Note("The city is dreaming right now.") end
             if d.vort then Note(d.vort) end -- (freed vortigaunts breaking into her propaganda dreams)
             local pl = d.plan or {}
             if pl.feel then Note(pl.feel) end

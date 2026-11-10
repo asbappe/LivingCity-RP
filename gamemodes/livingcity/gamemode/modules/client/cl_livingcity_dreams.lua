@@ -28,6 +28,16 @@ function LC_CL.DreamTimeLeft()
     return math.max(0, math.ceil(ends - CurTime()))
 end
 
+-- When the next dream is, in a line, for the Administrator's tablet and her F2 page (d: LC.DreamOffice's table).
+function LC_CL.DreamWhenLine(d)
+    if not d or not d.ready then return nil end
+    if d.busy then return "When: the city is dreaming right now." end
+    if d.dreamt then return "When: tonight's dream has been dreamt. The next is tomorrow night's." end
+    if d.at and d.will then return string.format("When: tonight's dream begins in about %d:%02d.", math.floor(d.at / 60), d.at % 60) end
+    if d.at then return "When: nothing is waiting to be dreamt tonight." end
+    return string.format("When: the next dream comes about %d seconds after tonight's good night.", math.floor(tonumber(d.delay) or 60))
+end
+
 -- While you dream: how to wake.
 -- (made once here, not every frame)
 local C_0_0_0_200 = Color(0, 0, 0, 200)
