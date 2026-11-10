@@ -7,7 +7,7 @@ The owner, 10 November: "artistic overhauls of all UI items that are consistent 
 | Look | Who | What it is |
 |---|---|---|
 | `combine` | Civil Protection, the Administration, stalkers | black glass, thin cyan lines, cut corners, a faint scan, "OVERWATCH LINK // SECTOR ACTIVE" |
-| `rebel` | the Resistance | rust and scrap plate, a heavy welded edge, rivets, a hazard stripe, "NO GODS NO MASTERS NO BENEFACTORS" |
+| `rebel` | the Resistance | rust and scrap plate, a heavy welded edge, rivets, a hazard stripe, "NO MASTERS NO BENEFACTORS" |
 | `citizen` | citizens, shackled vortigaunts | a grey concrete slab, a faded blue edge, "UNION RESIDENT SERVICES", "FORM 27-B" |
 | `custody` | anyone, in the interrogation's question window | black under a hard light, a red title bar, "DETAINED. ANSWER. COMPLY." |
 

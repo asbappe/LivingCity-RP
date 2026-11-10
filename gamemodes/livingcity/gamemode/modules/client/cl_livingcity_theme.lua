@@ -34,7 +34,7 @@ local THEMES = {
     rebel = {
         bg = Color(36, 25, 18, 248), head = Color(74, 46, 26, 255), plate = Color(62, 41, 26, 255), plateHot = Color(88, 56, 30, 255),
         line = Color(226, 138, 44, 255), dim = Color(118, 72, 36, 255), text = Color(242, 228, 206, 255), accent = Color(232, 145, 42, 255),
-        tint = Color(255, 255, 255, 255), tex = "livingcity/ui/rust.jpg", label = "NO GODS  NO MASTERS  NO BENEFACTORS",
+        tint = Color(255, 255, 255, 255), tex = "livingcity/ui/rust.jpg", label = "NO MASTERS  NO BENEFACTORS",
     },
     citizen = {
         bg = Color(50, 52, 54, 248), head = Color(84, 87, 89, 255), plate = Color(72, 75, 77, 255), plateHot = Color(92, 96, 99, 255),
