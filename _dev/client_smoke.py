@@ -1264,6 +1264,16 @@ net._q = { talkNpc, "Mira Kovacs", "Factory Worker", "working the line", "friend
 okTk, errTk = pcall(net["recv_lc_talk"])
 if not okTk then problems[#problems + 1] = "talk window (how they seem): " .. tostring(errTk) end
 if made < 9 then problems[#problems + 1] = "talk window with how they seem built only " .. made .. " controls" end
+-- with things to give (the Give menu: a count, then id and label for each)
+made = 0
+local oldUInt = net.ReadUInt
+net.ReadUInt = function() return table.remove(net._q, 1) end
+net._q = { talkNpc, "Mira Kovacs", "Factory Worker", "working the line", "friendly", "warm", "'Another day.'", true, true, true, true, true, "",
+    2, "ration", "Food: Ration packet (2)", "beer", "A drink or a smoke: Homebrew beer" }
+okTk, errTk = pcall(net["recv_lc_talk"])
+if not okTk then problems[#problems + 1] = "talk window (Give menu): " .. tostring(errTk) end
+if made < 8 then problems[#problems + 1] = "talk window with a Give menu built only " .. made .. " controls" end
+net.ReadUInt = oldUInt
 net._q = { nil }
 okTk, errTk = pcall(net["recv_lc_talk"]) -- (and closing it)
 if not okTk then problems[#problems + 1] = "talk window close: " .. tostring(errTk) end

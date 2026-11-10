@@ -10958,6 +10958,98 @@ ok(#LC.Minds.buf == n0 and LC.MindsSeem(v) == "", "lc_minds 0: nothing is watche
 for _, e in ipairs({ v, f, cop }) do if IsValid(e) then e:Remove() end end
 end
 MindsTests()
+function GiveTests()
+section("Giving a citizen something: food, a drink or a smoke, medicine, papers, arms")
+local function Later(secs) _advance(secs) _runtimers() end
+ok(LC.GiveKind("ration") == "food" and LC.GiveKind("beer") == "vice" and LC.GiveKind("cig_union") == "vice" and LC.GiveKind("medicine") == "medicine"
+    and LC.GiveKind("gun_pistol") == "arms" and LC.GiveKind("pamphlet") == "papers", "what kind of thing each is, to a citizen")
+LCS.Items.test_leaflet = { name = "Test leaflet", model = "models/props_c17/paper01.mdl", leaflet = "resistance", kg = 0 }
+ok(LC.GiveKind("test_leaflet") == "papers", "a Resistance leaflet (any item with leaflet = \"resistance\") is papers")
+local T0 = Vector(-40000, 28000, 0)
+local function person(off)
+    local n, st = LC.SpawnCitizen(T0 + off)
+    st.leaveAt = nil
+    n.sim = false
+    if not n.lcProfile then LC.AttachProfile(n, st, LC.NewPerson("citizen")) end
+    st.state, st.untilT, st.nextThink = "idle", CurTime() + 9999, CurTime() + 9999
+    return n, st
+end
+local giver = newPlayer("Giver", "citizen")
+giver:SetPos(T0)
+for _, id in ipairs({ "ration", "beer", "medicine", "gun_pistol", "pamphlet", "test_leaflet" }) do LC.GiveItem(giver, id, 1) end
+local list = LC.GiveableTo(giver)
+local ids = {}
+for i, g in ipairs(list) do ids[g.id] = i end
+ok(ids.ration and ids.beer and ids.medicine and ids.gun_pistol and ids.pamphlet and ids.test_leaflet and ids.ration < ids.beer and ids.beer < ids.gun_pistol,
+    "the Give menu lists what's in your pockets, food first, arms last", #list)
+-- food: as sharing always was
+local c, cs = person(Vector(60, 0, 0))
+cs.rebel = nil
+local said = LC.GiveToCitizen(giver, c, "ration")
+ok(LC.Feeling(c, giver) == 2 and not LC.HasItem(giver, "ration") and string.find(said or "", "ration", 1, true), "food: taken and remembered, as before", said)
+-- a drink: only someone with the weakness takes it, and drinks it there and then
+local drinker, sober
+for _ = 1, 400 do
+    local q = LC.NewPerson("citizen")
+    local v = LC.Psy.Traits(LC.MindOf(q)).vice
+    if v > 0.5 and not drinker then drinker = q elseif v <= 0 and not sober then sober = q end
+    if drinker and sober then break end
+end
+local d, ds = person(Vector(0, 60, 0))
+if d.lcProfile then d.lcProfile.npc = nil end
+LC.AttachProfile(d, ds, drinker)
+ds.state = "idle"
+local s, ss = person(Vector(0, -60, 0))
+if s.lcProfile then s.lcProfile.npc = nil end
+LC.AttachProfile(s, ss, sober)
+ss.state = "idle"
+said = LC.GiveToCitizen(giver, s, "beer")
+ok(LC.HasItem(giver, "beer") and string.find(said or "", "I don't", 1, true), "someone sober says no and you keep it", said)
+_setcvar("lc_npc_vices", 1)
+said = LC.GiveToCitizen(giver, d, "beer")
+ok(not LC.HasItem(giver, "beer") and LC.Feeling(d, giver) >= 2 and LC.NPCVices[d] ~= nil, "someone fond of a drink takes it, and drinks it there and then", said)
+LC.NPCViceStop(d)
+_setcvar("lc_npc_vices", 0)
+-- medicine
+said = LC.GiveToCitizen(giver, c, "medicine")
+ok(not LC.HasItem(giver, "medicine") and LC.Feeling(c, giver) == 5, "medicine: taken gratefully", said)
+-- arms: only a sympathizer takes a gun
+local before = LC.Feeling(s, giver)
+ss.rebel = nil
+said = LC.GiveToCitizen(giver, s, "gun_pistol")
+ok(LC.HasItem(giver, "gun_pistol") and LC.Feeling(s, giver) == before - 1 and string.find(said or "", "out of your mind", 1, true), "a gun to an ordinary citizen: refused, and it frightens them", said)
+cs.rebel = true
+said = LC.GiveToCitizen(giver, c, "gun_pistol")
+ok(not LC.HasItem(giver, "gun_pistol") and string.find(said or "", "under their coat", 1, true), "a sympathizer hides it under their coat", said)
+-- a Resistance leaflet: a sympathizer takes it, someone loyal pushes it back
+said = LC.GiveToCitizen(giver, c, "test_leaflet")
+ok(not LC.HasItem(giver, "test_leaflet"), "a Resistance leaflet to a sympathizer: kept", said)
+LC.GiveItem(giver, "test_leaflet", 1)
+local loyalP
+for _ = 1, 400 do local q = LC.NewPerson("citizen") if LC.Psy.Traits(LC.MindOf(q)).loyal > 0.5 then loyalP = q break end end
+local l, ls = person(Vector(-60, 0, 0))
+if l.lcProfile then l.lcProfile.npc = nil end
+LC.AttachProfile(l, ls, loyalP)
+ls.state, ls.rebel = "idle", nil
+said = LC.GiveToCitizen(giver, l, "test_leaflet")
+ok(LC.HasItem(giver, "test_leaflet") and LC.Feeling(l, giver) == -3, "to someone loyal: pushed back, and they hold it against you", said)
+said = LC.GiveToCitizen(giver, l, "pamphlet")
+ok(not LC.HasItem(giver, "pamphlet"), "the Civil Orientation pamphlet: anyone takes it", said)
+-- the window: the list goes with it, and a pick from it gives
+net.sent = {}
+LC.OpenTalk(giver, l)
+local m = _lastnet("lc_talk")
+local listed = false
+for _, v in ipairs(m and m.data or {}) do if v == "test_leaflet" then listed = true end end
+ok(listed, "the talk window carries the Give menu's list")
+LC.GiveItem(giver, "ration", 1)
+giver.lcTalkNext = 0
+_netcall("lc_talk_do", giver, l, "give:ration")
+ok(not LC.HasItem(giver, "ration"), "picking from the menu gives it (give:<item>)")
+LCS.Items.test_leaflet = nil
+for _, e in ipairs({ c, d, s, l }) do if IsValid(e) then e:Remove() end end
+end
+GiveTests()
 function CPDutyTests()
 section("A unit's shift: the quota, papers duty, inspections, the review")
 local function Later(secs) _advance(secs) _runtimers() end

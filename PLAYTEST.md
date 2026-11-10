@@ -1444,4 +1444,7 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
 - [ ] **Insider, report it clean (10 November):** as an Insider on a shift, get an inspection order on a resident with contraband in their stash, go to their block with nobody else about, F2 > Me > My shift > Report it clean. The quota counts, the stash stays, the resident hears on Freq 7. Then raid that block (a sweep) within 30 minutes: -15 Civil Standing. With someone watching, it refuses.
   Notes:
 - [ ] **F2 More for units (10 November):** as a Civil Protection unit, F2 slot 8 reads More: Records terminal, Me...; inside are Records terminal and Me (My shift).
+- [ ] **The Colonel looks like a ghost:** faintly see-through, a cold blue tint, slowly fading in and out with the odd flicker.
+  Notes:
+- [ ] **Give something (talk window):** E on a citizen: "Give something..." opens a menu of what you carry (food first). Try food, a beer or cigarette (someone fond of it lights up there and then; someone sober refuses), medicine, the Civil Orientation pamphlet, and a gun (refused, frightened; a sympathizer hides it). With nothing to give, the button is greyed out.
   Notes:

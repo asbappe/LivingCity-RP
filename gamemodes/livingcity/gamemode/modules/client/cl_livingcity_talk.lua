@@ -30,6 +30,12 @@ net.Receive("lc_talk", function()
     local canChat, canFood, canPick, canInform, canRecruit = net.ReadBool(), net.ReadBool(), net.ReadBool(), net.ReadBool(), net.ReadBool()
     -- how they seem and why (the city's minds, sv_livingcity_minds.lua; empty unless lc_minds_show is on)
     local seem = net.ReadString() or ""
+    -- what you could give them (sv_livingcity_talk.lua, LC.GiveableTo): id and label
+    local give = {}
+    for _ = 1, net.ReadUInt(8) or 0 do
+        local id, label = net.ReadString(), net.ReadString()
+        if id and id ~= "" then give[#give + 1] = { id = id, label = label or id } end
+    end
     local tall = 330 + (seem ~= "" and 34 or 0)
 
     if IsValid(frame) then frame:Remove() end
@@ -90,7 +96,13 @@ net.Receive("lc_talk", function()
         return b
     end
     Button("Chat (what have they heard?)", "chat", canChat)
-    Button("Share some food", "food", canFood)
+    -- Give something: a menu of what's in your pockets that could be handed over
+    local giveB = Button(#give > 0 and "Give something..." or "Give something (nothing to give)", nil, #give > 0)
+    giveB.DoClick = function()
+        local m = DermaMenu()
+        for _, g in ipairs(give) do m:AddOption(g.label, function() Do(npc, "give:" .. g.id) end) end
+        m:Open()
+    end
     if canRecruit then Button("Ask them to keep watch for us (a lookout)", "recruit") end
     Button("Pick their pocket (Guile)", "pick", canPick)
     if canInform then Button("Inform on them to Civil Protection", "inform") end

@@ -2,8 +2,8 @@
     Living City (client): the Colonel (sv_livingcity_colonel.lua)
 
     Drawn only here, only for the Resistance: Odessa Cubbage's face, standing
-    by the quartermaster. He's a model on your own screen and nowhere else:
-    no shadow, nothing to bump into, bullets go through him, and when the
+    by the quartermaster. He's a model on your own screen and nowhere else,
+    faintly see-through and cold-tinted, fading in and out a little: no shadow, nothing to bump into, bullets go through him, and when the
     Combine come into the camp he isn't there. E while looking at him talks
     to him. His voice (if recorded) is heard by you alone.
 ]]
@@ -31,9 +31,11 @@ hook.Add("Think", "LivingCityColonel", function()
     local pos = GetGlobal2Vector("lc_colonel_pos", Vector(0, 0, 0))
     if pos == Vector(0, 0, 0) then Remove() return end
     if not IsValid(colonel) then
-        colonel = ClientsideModel(MODEL, RENDERGROUP_OPAQUE)
+        colonel = ClientsideModel(MODEL, RENDERGROUP_TRANSLUCENT)
         if not IsValid(colonel) then return end
         colonel:DrawShadow(false)
+        -- see-through, like a ghost (the owner, 10 November: "slightly transparent ... so he looks sort of ghostly")
+        colonel:SetRenderMode(RENDERMODE_TRANSCOLOR)
         local seq = colonel:SelectWeightedSequence(ACT_IDLE)
         if not seq or seq < 0 then seq = colonel:LookupSequence("idle_subtle") end
         if seq and seq >= 0 then colonel:ResetSequence(seq) end
@@ -45,6 +47,10 @@ hook.Add("Think", "LivingCityColonel", function()
     local dur = colonel:SequenceDuration() or 3
     colonel.lcCycle = ((colonel.lcCycle or 0) + FrameTime() / math.max(dur, 0.5)) % 1
     colonel:SetCycle(colonel.lcCycle)
+    -- faint, and never quite steady: a slow breath of fading, now and then a flicker
+    local t = CurTime()
+    local a = 110 + 30 * math.sin(t * 0.8) + (math.random() < 0.02 and -60 or 0)
+    colonel:SetColor(Color(215, 225, 255, math.Clamp(math.floor(a), 30, 160)))
     -- he looks at you
     local me = LocalPlayer()
     local d = me:EyePos() - (pos + Vector(0, 0, 64))
