@@ -4070,6 +4070,7 @@ end)
 -- the old one: anything still exactly at an old default moves to the new one (once;
 -- a value someone chose themselves is left alone).
 local RETUNED = {
+    { "lc_cp_shift_minutes", { "30" }, "15" }, -- (10 November: a unit's shift is 15 minutes, not 30, the owner asked; sv_livingcity_cpduty.lua)
     { "lc_ending_cooldown", { "60", "45" }, "180" }, -- (1 November: three hours between endings, the owner asked)
     { "lc_afk_minutes", { "5" }, "20" }, -- (2 November: away at 20 minutes, the owner asked; sv_livingcity_cityadmin.lua)
     { "lc_ending_gman_lines", { "vo/citadel/gman_exit01.wav,vo/citadel/gman_exit02.wav" }, "vo/citadel/gman_exit02.wav" }, -- (2 November: exit01 calls everyone "Doctor Freeman")

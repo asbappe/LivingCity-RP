@@ -233,6 +233,7 @@ LC_MODULES = {
         "cl_livingcity_intaketutor", -- (the arrival search: the choice, the lesson, the practice search)
         "cl_livingcity_interrogation", -- (the interrogation's questions on the prisoner's screen, and the unit's window asking them)
         "cl_livingcity_standingpanel", -- (where I stand: every number explained)
+        "cl_livingcity_ratscar", -- (the crude rat carved into a burned informant's cheek)
         "cl_livingcity_atmos",
         "cl_livingcity_character",
         "cl_livingcity_checkpoints",

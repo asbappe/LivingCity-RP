@@ -1590,6 +1590,15 @@ local okSP, errSP = pcall(function()
 end)
 net.ReadString, util.JSONToTable, vgui = spSaved[1], spSaved[2], spSaved[3]
 if not okSP then problems[#problems + 1] = "where I stand: " .. tostring(errSP) end
+-- the carved rat (cl_livingcity_ratscar.lua): drawn on a scarred face without errors
+local okRS, errRS = pcall(function()
+    if not LC_CL.DrawRatScar then error("no rat to draw") end
+    _me:SetNW2Bool("lc_scar_mark", true)
+    LC_CL.DrawRatScar(_me)
+    _me:SetNW2Bool("lc_scar_mark", false)
+    if #(LC_CL.RatScarCuts or {}) < 10 then error("the rat has too few cuts to look like one") end
+end)
+if not okRS then problems[#problems + 1] = "the carved rat: " .. tostring(errRS) end
 -- what now? (cl_livingcity_nextstep.lua): the line on screen, and its F1 page
 local okWN, errWN = pcall(function()
     _me:SetNW2String("lc_next", "Find water")

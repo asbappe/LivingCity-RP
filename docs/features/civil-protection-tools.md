@@ -50,7 +50,7 @@
 
 ## A unit's shift: the quota, papers duty, inspections, the review (the owner, 10 November)
 
-Something for Civil Protection to do when no rebels are about. Every Civil Protection player on duty works shifts of `lc_cp_shift_minutes` (30), each with a quota. **F2 > Me > My shift** shows the time left and the quota so far, and holds the work:
+Something for Civil Protection to do when no rebels are about. Every Civil Protection player on duty works shifts of `lc_cp_shift_minutes` (15; it was 30 for a day, the owner: "let's do 15"), each with a quota. **F2 > Me > My shift** shows the time left and the quota so far, and holds the work:
 
 - **Searches** (`lc_cp_quota_searches`, 3): anyone searched counts, a player (the pat-down) or one of the city's people.
 - **Checkpoint papers duty** (`lc_cp_quota_papers`, 1): F2 > Me > My shift > Checkpoint papers duty. Travelers walk up one at a time; E on each shows their papers beside today's rules (expiry, the photo, a banned district, the stamps); approve, deny or call it in. It's the Intake Processor's papers check, done by a unit. Seeing most of them through (3 of 5) counts.

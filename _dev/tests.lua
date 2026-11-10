@@ -10809,7 +10809,12 @@ ok(not okS and string.find(whyS or "", "fight you off", 1, true), "scarring need
 rat:SetNW2Bool("lc_handsup", true)
 LC.Scar(reb, rat)
 Later(6)
-ok(rat:GetPData("lc_scar", "0") == "1" and string.find(rat:GetNW2String("lc_desc", ""), "rat's scar", 1, true), "a rat's scar, for good, in the description strangers see")
+ok(rat:GetPData("lc_scar", "0") == "1" and string.find(rat:GetNW2String("lc_desc", ""), "crude rat carved", 1, true), "a crude rat carved into their cheek, for good, in the description strangers see")
+ok(rat:GetNW2Bool("lc_scar_mark", false), "and drawn on their face for everyone to see")
+rat:SetNW2Float("lc_burned_until", 0)
+LC.AddTrait(rat, "sympathy", 20)
+ok(not LC.ResistanceProven(rat), "a marked rat can never join the Resistance, burned or not, whatever their sympathy")
+rat:SetNW2Float("lc_burned_until", CurTime() + 3600)
 -- roughed up in rebel territory
 local rebNPC, rst = LC.Spawners.rebel and LC.Spawners.rebel(rat:GetPos() + Vector(60, 0, 0))
 if not rebNPC then rebNPC, rst = LC.SpawnCitizen(rat:GetPos() + Vector(60, 0, 0)) rst.role = "rebel" end

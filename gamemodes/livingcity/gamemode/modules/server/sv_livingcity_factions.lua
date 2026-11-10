@@ -119,6 +119,7 @@ function LC.ResistanceTrust(ply) return LC.Counter and LC.Counter(ply, "res_jobs
 local cvJoin = CreateConVar("lc_resistance_join_sympathy", "5", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Sympathy a citizen needs before the Resistance lets them join (0: anyone)")
 function LC.ResistanceProven(ply)
     if not IsValid(ply) then return false end
+    if ply.GetPData and ply:GetPData("lc_scar", "0") == "1" then return false end -- (a marked rat, never: sv_livingcity_snitches.lua)
     if ply:GetNW2String("lcf_faction", "") == "resistance" or ply:GetPData("lcf_faction", "") == "resistance" or ply:GetPData("lcf_res_proven", "") == "1" then return true end
     if LC.IsBurned and LC.IsBurned(ply) then return false end -- (burned as an informant: sv_livingcity_snitches.lua)
     return (LC.Trait and LC.Trait(ply, "sympathy") or 0) >= math.max(0, cvJoin:GetInt())
@@ -487,6 +488,7 @@ function LC.CanJoinFaction(ply, fid, sid)
         if not okE then return false, whyE end
     end
     if fid == "resistance" and not ply:IsSuperAdmin() and not LC.ResistanceProven(ply) then
+        if ply.GetPData and ply:GetPData("lc_scar", "0") == "1" then return false, "The Resistance will never take someone with a rat carved into their face." end -- (sv_livingcity_snitches.lua)
         return false, "The Resistance doesn't trust you yet." -- (the owner: just that; they find out how in roleplay)
     end
     if f.requires then
