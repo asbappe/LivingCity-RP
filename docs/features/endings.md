@@ -109,3 +109,15 @@ Songs go straight in the server's **`garrysmod/sound/livingcity/endings/`** (the
 **Ideas for the future endings setup** (the owner, 7 November; not built, kept here so the next endings work starts from them). The G-Man, the sealed directives, his sleep visits and his talks with the Administrator are set aside (`lc_directives` 0) for that setup. When it comes: if the Administrator refuses a sealed directive, the G-Man could punish the city through its dreams: (1) **dreams that keep**: people wake with the weapons and stats they had in the dream, instead of everything being put back; (2) **dreams that leak into reality**: when everyone's dreams end, the dream spills over once, for example a swarm of the Harpies' mingebags pours through the city and attacks Civil Protection. Either could be an apocalyptic event of its own. The dream code already keeps every dreamer's snapshot and knows when a dream ends (`sv_livingcity_dreams.lua`, `LivingCityDreamStarted` and the wake-up), so both would hook in there.
 
 **The collapse (9 November):** the G-Man's new place is the collapse to sociostability BLACK and the Administrator's last stand, not the sealed directives (still off): `docs/features/collapse.md`.
+
+## Sitting out a kind of dream, once earned (the owner, 10 November)
+
+Nobody can opt out of the city's dreams until they've earned it, kind by kind:
+
+- **Happy dreams:** after living through 2 Happy dreams (`lc_dream_skip_after`), anyone may sit them out.
+- **Neutral dreams:** the same, after 2 Neutral dreams.
+- **Nightmares and propaganda dreams:** only a citizen with Exemplary standing (Civil Standing `lc_dream_skip_standing`, 400), the city's favoured. Never the Resistance. Fall below it and they come again.
+- **Choosing:** C > Settings > Shared dreams lists each kind they've earned ("Happy: dreaming them (sit them out)"), or `/dream skip happy` (`neutral`, `nightmare`, `propaganda`; the same again to dream them again). Sitting a dream out, they simply sleep through it.
+- **The note:** someone who has earned a kind but hasn't chosen to sit it out sees a small line under the day's mood as the screen goes black ("You've earned the right to sit out happy dreams: C > Settings > Shared dreams."), and the same in the "A dream is coming" notice.
+- Dreams lived through are counted per kind for each character (not as an Enforcer, not a test from the editor); a new person starts again from none. `lc_dream_skip` 0: nobody sits anything out, as before.
+

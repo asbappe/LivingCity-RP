@@ -607,6 +607,9 @@ setting lc_dream_min = 6
 setting lc_dream_moods = bus=happy,plane=happy,hard=happy,shalom=happy,bloom=neutral,fire=neutral,base=neutral,harpies=nightmare,marrow=nightmare,water=nightmare,standup=nightmare
 setting lc_dream_radius = 1500
 setting lc_dream_rules = 1
+setting lc_dream_skip = 1
+setting lc_dream_skip_after = 2
+setting lc_dream_skip_standing = 400
 setting lc_dreams = 1
 setting lc_dressing = 1
 setting lc_drill_cues = 14

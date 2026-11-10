@@ -38,7 +38,7 @@ end)
 local mood -- { text, t0, til }
 net.Receive("lc_dream_mood", function()
     local t = net.ReadTable() or {}
-    mood = { text = tostring(t.text or ""), t0 = CurTime(), til = tonumber(t.til) or (CurTime() + 7), kind = t.kind }
+    mood = { text = tostring(t.text or ""), t0 = CurTime(), til = tonumber(t.til) or (CurTime() + 7), kind = t.kind, hint = t.hint }
 end)
 LC_CL.DreamMoodShown = function() return mood end
 -- Words broken into lines that fit (font set first).
@@ -72,6 +72,9 @@ local function DrawMood()
     for _, l in ipairs(lines) do
         draw.SimpleText(l, "DermaLarge", ScrW() / 2, y, Color(c.r, c.g, c.b, math.floor(255 * a)), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
         y = y + lh + 6
+    end
+    if mood.hint then -- (a small note: they've earned the right to sit this kind out)
+        draw.SimpleText(tostring(mood.hint), "DermaDefault", ScrW() / 2, y + 18, Color(190, 190, 200, math.floor(200 * a)), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
     end
 end
 LC_CL.DreamMoodDraw = DrawMood
