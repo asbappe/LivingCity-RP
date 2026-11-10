@@ -7383,6 +7383,63 @@ talker.lcInformNPCAt = 0
 LC.TalkAction(talker, c5, "inform")
 ok(LC.Standing(talker) == sd0 + 10, "on an innocent: a waste of a unit's time")
 
+section("Citizens who show you the way")
+local realNext, wayPos = LC.NextStep, T0 + Vector(900, 0, 0)
+LC.NextStep = function() return { key = "eat_scrounge", way = "lc_test_way" } end
+LC.WaypointPlaces.lc_test_way = function() return wayPos, "Test bins" end
+for _, id in pairs(LC.AdviceForStep) do ok(LC.AdviceLines[id] ~= nil, "every step's advice has its line: " .. id) end
+local asker = newPlayer("Asker", "citizen")
+asker:SetPos(T0 + Vector(0, 200, 0))
+local a1, as1 = person(Vector(60, 200, 0))
+asker.lcGuide, asker.lcWaypoint = nil, nil
+local said, close = LC.TalkAction(asker, a1, "chat")
+ok(string.find(said or "", "bins", 1, true) and not close and LC.AdviceLeads[a1] == nil, "a stranger notices you're starving and points the way", said)
+ok(asker.lcWaypoint and asker.lcWaypoint.pos == wayPos and asker.lcGuide ~= nil, "the marker and the trail go to the place the map has", tostring(asker.lcWaypoint))
+said = LC.TalkAction(asker, a1, "chat")
+ok(not string.find(said or "", "bins", 1, true), "not again straight away: Chat is the rumours and small talk again", said)
+-- a friend walks you there
+local a2, as2 = person(Vector(-60, 200, 0))
+LC.Remember(a2, asker, 4)
+asker.lcAdviceNext, asker.lcGuide, asker.lcWaypoint = 0, nil, nil
+said, close = LC.TalkAction(asker, a2, "chat")
+ok(close and LC.AdviceLeads[a2] ~= nil and as2.state == "moving" and as2.dest == wayPos, "a citizen who likes you sets off to show you", tostring(said) .. " state " .. tostring(as2.state))
+ok(string.find(said or "", "show you", 1, true) or string.find(said or "", "Follow me", 1, true), "'Here, let me show you'", said)
+asker.chat = {}
+a2:SetPos(wayPos + Vector(40, 0, 0))
+asker:SetPos(wayPos + Vector(120, 0, 0))
+LC.AdviceLeadTick()
+ok(LC.AdviceLeads[a2] == nil and as2.lcLeading == nil and asker.lcGuide == nil, "there: they stop, and no trail is needed")
+-- you wander off: they point instead
+asker:SetPos(T0 + Vector(0, 200, 0))
+a2:SetPos(T0 + Vector(-60, 200, 0))
+asker.lcAdviceNext = 0
+LC.TalkAction(asker, a2, "chat")
+ok(LC.AdviceLeads[a2] ~= nil, "(off again)")
+asker:SetPos(T0 + Vector(0, 3000, 0))
+LC.AdviceLeadTick()
+ok(LC.AdviceLeads[a2] == nil and asker.lcWaypoint and asker.lcWaypoint.pos == wayPos, "wander off and they give up, and the trail shows the way instead")
+-- a friend, but nobody walks you (lc_citizen_lead 0)
+asker:SetPos(T0 + Vector(0, 200, 0))
+a2:SetPos(T0 + Vector(-60, 200, 0))
+_setcvar("lc_citizen_lead", 0)
+asker.lcAdviceNext = 0
+said, close = LC.TalkAction(asker, a2, "chat")
+ok(not close and LC.AdviceLeads[a2] == nil and string.find(said or "", "bins", 1, true), "lc_citizen_lead 0: even a friend only points", said)
+_setcvar("lc_citizen_lead", 1)
+-- nothing of the kind on this map
+LC.WaypointPlaces.lc_test_way = function() return nil, "none" end
+asker.lcAdviceNext = 0
+said = LC.TalkAction(asker, a1, "chat")
+ok(string.find(said or "", "Can't help you there", 1, true), "nothing like it on this map: they never point at nothing", said)
+_setcvar("lc_citizen_advice", 0)
+asker.lcAdviceNext = 0
+said = LC.TalkAction(asker, a1, "chat")
+ok(not string.find(said or "", "Can't help", 1, true) and not string.find(said or "", "bins", 1, true), "lc_citizen_advice 0: Chat as before", said)
+_setcvar("lc_citizen_advice", 1)
+LC.NextStep, LC.WaypointPlaces.lc_test_way = realNext, nil
+for _, e in ipairs({ a1, a2 }) do if IsValid(e) then e:Remove() end end
+asker:SetPos(Vector(-30000, 30000, 0))
+
 section("Resistance lookouts")
 local boss = newPlayer("LookoutBoss", "resistance", nil, 150)
 boss:SetPos(T0 + Vector(0, -400, 0))
@@ -9431,6 +9488,7 @@ end
 ok(vmRows.overwatch and not string.find(vmRows.overwatch, "|lockdown|", 1, true) and not string.find(vmRows.overwatch, "|blackout|", 1, true) and #vmWrong == 0, "lc_voice_missing lists only the triggers with no recording", table.concat(vmWrong, ", "))
 ok(vmRows.administrator and not string.find(vmRows.administrator, "|dawn|", 1, true), "and hers (a recording in any tone counts)", vmRows.administrator)
 ok(vmRows.radio and vmRows["G-Man"] and vmRows["Dream lines"], "and the radio's, the G-Man's and the dreams' lines")
+ok(vmRows.Citizens and string.find(vmRows.Citizens, "|advice_bins_male|", 1, true) and string.find(vmRows.Citizens, "|lead_start_female|", 1, true), "and the citizens' lines, a man's take and a woman's", vmRows.Citizens)
 local vmOut = {}
 print = function(m) vmOut[#vmOut + 1] = tostring(m) end
 local vmOk = pcall(concommand.list["lc_voice_missing"], nil)

@@ -1221,3 +1221,11 @@ Notes:
   Notes:
 - [ ] **Leaving unsearched:** register while the desk units are busy, then leave. A unit should come and search you outside, then let you go.
   Notes:
+
+## 10 November, citizens show the way
+- [ ] **Advice from a stranger:** as a new or hungry citizen, E on a citizen and Chat. They say something vague ("Try the bins") and a marker and a trail on the ground go to the nearest one. Chat again: rumours or small talk (advice once a minute).
+  Notes:
+- [ ] **A friend walks you there:** share food twice with a citizen (warm), then Chat while you need something. "Come on, I'll show you": the window closes and they walk; fall behind and they wait ("Keep up!"); at the place they say one line. Run far away and they give up and the trail shows the way instead.
+  Notes:
+- [ ] **Settings:** `lc_citizen_lead 0` (everyone only points), `lc_citizen_advice 0` (Chat as before).
+  Notes:
