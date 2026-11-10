@@ -1222,6 +1222,15 @@ Notes:
 - [ ] **Leaving unsearched:** register while the desk units are busy, then leave. A unit should come and search you outside, then let you go.
   Notes:
 
+## 10 November, last: prison
+
+- [ ] **Sentences add up:** commit a petty crime and assault a unit, then get arrested. The chat should say "Your sentence: ... (3), Assaulting Civil Protection (10): 13 minutes". Give yourself up instead and it should be halved.
+  Notes:
+- [ ] **Work detail:** in a cell, F1 > Ask for a work detail. A guard should come to your cell, walk you out (to the "prison work spot" point if you placed one), and there should be 6 bits of trash. E on each: 20 seconds off. Then he walks you back. Try walking far away from him: it should count as an escape.
+  Notes:
+- [ ] **Probation:** get released after an arrest as a citizen. You should be told you are on probation. F1 > Check in for probation next to a unit. Walk into rebel territory: probation violation. Wait out 15 minutes without checking in (another time): Failure to report.
+  Notes:
+- [ ] **Interrogation:** as a Resistance member, get jailed with a bad record. Answer each of the three questions differently (truth, lie, silence, bargain). As a CP player, stand by a prisoner's cell, F2 > Interrogate, ask questions and use the baton.
 ## 10 November, citizens show the way
 - [ ] **Advice from a stranger:** as a new or hungry citizen, E on a citizen and Chat. They say something vague ("Try the bins") and a marker and a trail on the ground go to the nearest one. Chat again: rumours or small talk (advice once a minute).
   Notes:
@@ -1230,6 +1239,13 @@ Notes:
 - [ ] **Settings:** `lc_citizen_lead 0` (everyone only points), `lc_citizen_advice 0` (Chat as before).
   Notes:
 
+## 10 November, last: survival modes
+
+- [ ] **Realistic by default:** your name should show "Hardened". Do a Union shift: the pay should be 20% more than before (18 instead of 15).
+  Notes:
+- [ ] **Switch to Relaxed:** C > Your characters > the Survival button (or F1 > Me). Hunger and thirst should drop much slower; eating raw meat should never give parasites; meat should never go off; no toilet urge. "Hardened" should disappear.
+  Notes:
+- [ ] **The 3 hours:** try switching back straight away: it should say when you can.
 ## 10 November, learning the city by living in it
 - [ ] **Tips wait:** walk up to a bin as a new character: no card. Walk away, come back after 4 minutes without searching one: now the card. Search a bin first and the card never comes. (`lc_hints_wait 0` is the old way.)
   Notes:

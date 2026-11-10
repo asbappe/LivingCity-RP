@@ -102,6 +102,10 @@ function LC.Incarcerate(ply, seconds, reason, arrester)
     local cell = FreeCell(ply)
     if not cell then return false, "no free cell (place more with the editor)" end
 
+    -- an arrest: the sentence adds up their record since the last one (sv_livingcity_sentence.lua)
+    local sentenced
+    if LC.SentenceFor then seconds, sentenced = LC.SentenceFor(ply, seconds, reason, arrester) end
+
     local weps = {}
     for _, w in ipairs(ply:GetWeapons()) do weps[#weps + 1] = w:GetClass() end
 
@@ -114,6 +118,7 @@ function LC.Incarcerate(ply, seconds, reason, arrester)
     LC.CalmCops(ply)
 
     Say(ply, string.format("You have been incarcerated for %s. Reason: %s", string.NiceTime(seconds), reason or "none given"))
+    if sentenced then Say(ply, "Your sentence: " .. sentenced .. ".") end
     NotifyCP(string.format("%s incarcerated (%s).", ply:Nick(), reason or "no reason"))
     LC.Log("info", string.format("Jailed %s for %ds: %s", ply:Nick(), seconds, tostring(reason)))
     hook.Run("LivingCityIncarcerated", ply, seconds, reason, arrester)
@@ -215,7 +220,7 @@ timer.Create("LivingCityPrison", 1, 0, function()
             LC.Prisoners[ply] = nil
         elseif now >= pr.untilT then
             LC.ReleasePrisoner(ply)
-        elseif ply:Alive() and not (pr.grace and now < pr.grace) then
+        elseif ply:Alive() and not pr.work and not (pr.grace and now < pr.grace) then -- (out on a work detail: the guard watches them)
             local pos = ply:GetPos()
             local inside = pos:DistToSqr(pr.cell.pos) < 250 * 250 -- anywhere near your own cell is fine
             if not inside then
@@ -636,7 +641,9 @@ concommand.Add("lc_jail", function(ply, _, args)
     if not target then return Say(ply, "Usage: lc_jail <name> [seconds] [reason]") end
     local secs = tonumber(args[2]) or cvTime:GetInt()
     local reason = table.concat(args, " ", 3)
+    target.lcExactSentence = true -- (staff: exactly as given, not their record: sv_livingcity_sentence.lua)
     local ok, err = LC.Incarcerate(target, secs, reason ~= "" and reason or "Administrative detention", ply)
+    target.lcExactSentence = nil
     Say(ply, ok and (target:Nick() .. " jailed.") or ("Couldn't: " .. tostring(err)))
 end)
 

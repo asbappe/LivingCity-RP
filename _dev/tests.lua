@@ -51,6 +51,7 @@ _setcvar("lc_stockpile", 0) -- (the city's ration stores: tested on their own, a
 _setcvar("lc_garrison", 0) -- (the nexus garrison: tested on its own)
 _setcvar("lc_search_fight_choice", 0) -- (fight or comply: tested on its own, in the 1 November section)
 _setcvar("lc_wear_uses", 0) -- (tools wearing out at random: tested on its own)
+_setcvar("lc_survival_modes", 0) -- (Realistic or Relaxed, and its 20% bonus: tested on its own, SurvivalModeTests)
 _setcvar("lc_quest_allies", 0) -- (friendly NPCs on violent jobs: tested on their own, in QuestSquadTests)
 _setcvar("lc_directives", 1) -- (the G-Man's directives are off by default now, set aside by the owner; still tested as they are)
 _setcvar("lc_market_demand", 0) -- (demand moving black market prices: tested on its own, in MarketTests)
@@ -10160,6 +10161,300 @@ if blockZone then LC.RemoveZone(blockZone) end
 GAMEMODE = savedGM
 end
 IntakeTutorTests()
+function SentenceTests()
+section("Sentences that add up the record, the work detail, probation")
+local function Later(secs) _advance(secs) _runtimers() end
+local FARS = Vector(-142000, 142000, 0)
+_setcvar("lc_sentences", 1)
+_setcvar("lc_prison_work", 1)
+_setcvar("lc_probation", 1)
+ok(LC.CrimeMinutes("Curfew violation") == 3 and LC.CrimeMinutes("Theft") == 3, "petty crimes: 3 minutes")
+ok(LC.CrimeMinutes("Assaulting a citizen") == 6 and LC.CrimeMinutes("Resisting arrest") == 6 and LC.CrimeMinutes("Escaping custody") == 6, "assaulting a citizen, resisting, escaping: 6")
+ok(LC.CrimeMinutes("Possession of a firearm") == 8 and LC.CrimeMinutes("Sabotage") == 8, "weapons and sabotage: 8")
+ok(LC.CrimeMinutes("Assaulting Civil Protection") == 10 and LC.CrimeMinutes("Attacking the Administrator") == 10, "assaulting Civil Protection or the Administrator: 10")
+ok(LC.CrimeMinutes("Murder") == 15, "murder: 15")
+ok(LC.CrimeMinutes("Murder of a Civil Protection officer") == 20 and LC.CrimeMinutes("Murder of an Overwatch soldier") == 20, "murdering a unit: 20")
+
+local unit, ust = LC.SpawnCop(Vector(700, 560, 0))
+ust.untilT = 1e9
+local p = newPlayer("SentenceCrook", "citizen")
+Later(0.3)
+LC.ReportCrime(p, "Theft", 120)
+LC.ReportCrime(p, "Theft", 120)
+LC.ReportCrime(p, "Assaulting Civil Protection", 120)
+ok(#LC.RapSheet(p) == 2, "each crime goes on the record once", #LC.RapSheet(p))
+p.chat = {}
+ok(LC.Incarcerate(p, 180, "Arrested", unit), "arrested")
+local pr = LC.Prisoners[p]
+local left = pr and pr.untilT - CurTime()
+ok(left and math.abs(left - 13 * 60) < 2, "the sentence adds up the record: 3 + 10 = 13 minutes", left)
+ok(has(p.chat, "Your sentence: Theft (3), Assaulting Civil Protection (10): 13 minutes"), "and says how", p.chat[#p.chat])
+ok(#LC.RapSheet(p) == 0, "then the record is clear")
+
+-- the work detail
+local guard, gst = LC.SpawnSoldier(pr.cell.pos + Vector(900, 0, 0))
+gst.prisonGuard = true
+gst.untilT = 1e9
+local okW = LC.AskWorkDetail(p)
+local D = LC.WorkDetails[p]
+ok(okW and D and IsValid(D.guard) and D.stage == "fetch", "F1 > Ask for a work detail: a prison guard comes for you", D and tostring(D.guard))
+guard, gst = D.guard, LC.NPCs[D.guard]
+guard:SetPos(pr.cell.pos + Vector(60, 0, 0))
+LC.SentenceTick()
+ok(D.stage == "out", "he takes you out of your cell", D.stage)
+guard:SetPos(D.area)
+gst.state = "idle"
+LC.SentenceTick()
+ok(D.stage == "work" and #D.trash == 6, "to the work spot, where there's trash to pick up", D.stage)
+p:SetPos(D.area)
+local before = pr.untilT
+hook.Run("PlayerUse", p, D.trash[1])
+ok(math.abs((before - pr.untilT) - 20) < 0.5 and has(p.chat, "seconds off your sentence"), "each piece takes 20 seconds off", before - pr.untilT)
+local other = newPlayer("SentenceOther", "citizen")
+Later(0.3)
+ok(hook.Run("PlayerUse", other, D.trash[2]) == false and IsValid(D.trash[2]), "nobody else can pick up your trash")
+for i = 2, 6 do hook.Run("PlayerUse", p, D.trash[i]) end
+LC.SentenceTick()
+ok(D.stage == "back", "all picked up: he walks you back", D.stage)
+guard:SetPos(pr.cell.pos + Vector(40, 0, 0))
+LC.SentenceTick()
+ok(LC.WorkDetails[p] == nil and not pr.work and p:GetPos():Distance(pr.cell.pos) < 120, "back in your cell", tostring(p:GetPos()))
+ok(math.abs((before - pr.untilT) - 120) < 1, "6 pieces, 2 minutes off", before - pr.untilT)
+-- straying from the guard on a detail is an escape
+gst.state, gst.workDetail, gst.questLock = "idle", nil, nil
+LC.AskWorkDetail(p)
+D = LC.WorkDetails[p]
+guard, gst = D.guard, LC.NPCs[D.guard]
+guard:SetPos(pr.cell.pos + Vector(60, 0, 0)) LC.SentenceTick()
+guard:SetPos(D.area) gst.state = "idle" LC.SentenceTick()
+p:SetPos(D.area + Vector(2000, 0, 0))
+LC.SentenceTick()
+ok(not LC.Prisoners[p] and LC.PlayerIsWanted(p) and LC.WorkDetails[p] == nil, "wander off from the guard and it's an escape")
+LC.ClearWanted(p)
+p.lcRap = {}
+p:RemovePData("lc_rap")
+
+-- probation
+LC.ReportCrime(p, "Curfew violation", 60)
+LC.ClearWanted(p)
+LC.Incarcerate(p, 180, "Arrested", unit)
+p.chat = {}
+LC.ReleasePrisoner(p)
+ok(LC.OnProbation(p) and p:GetNW2Float("lc_probation_until", 0) > CurTime() + 14 * 60, "released after an arrest: 15 minutes of probation")
+ok(has(p.chat, "probation"), "and told what it means")
+p.lcGraceUntil = 0 -- (the minute's head start after release is tested elsewhere)
+LC.ReportCrime(p, "Curfew violation", 60)
+LC.ClearWanted(p)
+local r = LC.RapSheet(p)
+ok(#r == 1 and r[1].min == 6 and r[1].doubled, "on probation, a new offence counts double", r[1] and r[1].min)
+p.lcRap = {}
+p:SetPos(FARS)
+local okC, whyC = LC.ProbationCheckIn(p)
+ok(not okC and string.find(whyC or "", "stand close", 1, true), "checking in needs a unit close by", whyC)
+p:SetPos(unit:GetPos() + Vector(60, 0, 0))
+ok(LC.ProbationCheckIn(p) and p:GetNW2Bool("lc_probation_checked", false), "F1 > Check in for probation, beside a unit")
+p.lcProbationWarned = 0
+LC.AddTrait(p, "sympathy", 1)
+ok(LC.PlayerIsWanted(p) and LC.RapSheet(p)[1] and string.find(LC.RapSheet(p)[1].reason, "helping the Resistance", 1, true), "helping the Resistance on probation is a violation")
+LC.ClearWanted(p)
+p.lcRap = {}
+p.lcProbationWarned = 0
+local inRebel = LC.InRebelZone
+LC.InRebelZone = function() return true end
+Later(2.5)
+LC.InRebelZone = inRebel
+ok(LC.PlayerIsWanted(p) and string.find(p:GetNW2String("lc_wanted_reason", ""), "rebel territory", 1, true), "so is going into rebel territory", p:GetNW2String("lc_wanted_reason", ""))
+LC.ClearWanted(p)
+p.lcRap = {}
+-- never checked in
+local q = newPlayer("SentenceNoShow", "citizen")
+Later(0.3)
+q:SetPos(FARS)
+LC.StartProbation(q, 5)
+Later(6)
+ok(not LC.OnProbation(q) and LC.PlayerIsWanted(q) and string.find(q:GetNW2String("lc_wanted_reason", ""), "Failure to report", 1, true), "never checked in: failure to report")
+LC.ClearWanted(q)
+-- the cap, and staff sentences exactly as given
+for _, c in ipairs({ "Murder of a Civil Protection officer", "Murder", "Sabotage" }) do LC.ReportCrime(q, c, 60) end
+LC.ClearWanted(q)
+LC.Incarcerate(q, 180, "Arrested", unit)
+ok(LC.Prisoners[q] and math.abs(LC.Prisoners[q].untilT - CurTime() - 30 * 60) < 2, "a sentence is 30 minutes at most")
+LC.ReleasePrisoner(q)
+LC.EndProbation(q, true)
+LC.ReportCrime(q, "Murder", 60)
+LC.ClearWanted(q)
+q.lcExactSentence = true
+LC.Incarcerate(q, 77, "Administrative detention", p)
+q.lcExactSentence = nil
+ok(LC.Prisoners[q] and math.abs(LC.Prisoners[q].untilT - CurTime() - 77) < 2 and #LC.RapSheet(q) == 1, "staff jailing someone: exactly as given, the record untouched")
+LC.ReleasePrisoner(q)
+LC.EndProbation(p, true) LC.EndProbation(q, true)
+for _, pl in ipairs({ p, q, other }) do pl.lcRap = {} pl:RemovePData("lc_rap") pl:RemovePData("lc_probation_due") pl:SetPos(FARS) end
+for _, n in ipairs({ unit, guard }) do if IsValid(n) then LC.NPCs[n] = nil n:Remove() end end
+end
+SentenceTests()
+function InterrogationTests()
+section("The interrogation, question by question: truth, lies, silence, a bargain, a unit asking in person")
+local function Later(secs) _advance(secs) _runtimers() end
+local function Payload(name)
+    local m = _lastnet(name)
+    return m and util.JSONToTable(m.data[1]) or nil
+end
+local FARI = Vector(-143000, 143000, 0)
+local rb = newPlayer("IntrRebel", "resistance", nil, 100)
+local mate = newPlayer("IntrMate", "resistance", nil, 100)
+local unit = newPlayer("IntrUnit", "cp")
+local cit = newPlayer("IntrCitizen", "citizen")
+Later(0.5)
+mate:SetPos(FARI) unit:SetPos(FARI + Vector(300, 0, 0)) cit:SetPos(FARI + Vector(600, 0, 0))
+local zr = LC.AddZone(FARI + Vector(0, 3000, 0), 300, "rebel", 0)
+LC.Incarcerate(rb, 900, "Test")
+local pr = LC.Prisoners[rb]
+LC.StartInterrogation(rb)
+local it = LC.Interrogations[rb]
+ok(it and it.resolve == 3, "a unit comes to question them, and their resolve is 3")
+local hp0 = rb:Health()
+net.sent = {}
+Later(5)
+local q = Payload("lc_intr_q")
+ok(q and q.q == 1 and string.find(q.text, "hideout", 1, true) and q.bargain, "the first question, with the choices on screen", q and q.text)
+ok(rb:Health() < hp0, "and a blow, to show he means it")
+-- silence
+rb.chat = {}
+local hp1 = rb:Health()
+_netcall("lc_intr_a", rb, "silent")
+ok(it.resolve == 2 and rb:Health() < hp1 and has(rb.chat, "You say nothing"), "saying nothing: the baton, and less resolve")
+-- a lie he sees through
+it.lies = 5 -- (he's sure to see through it now)
+Later(6)
+local left0 = pr.untilT - CurTime()
+rb.chat = {}
+_netcall("lc_intr_a", rb, "lie")
+ok(has(rb.chat, "Liar") and pr.untilT - CurTime() > left0 + 100, "a lie seen through: another blow, and two more minutes", pr.untilT - CurTime() - left0)
+-- the truth
+unit.chat = {}
+local s0 = LC.Standing(rb)
+Later(6)
+rb.chat = {}
+_netcall("lc_intr_a", rb, "truth")
+ok(LC.Standing(rb) == s0 + 50, "the first truth pays the 50 he offered", LC.Standing(rb) - s0)
+ok(has(unit.chat, "A prisoner talked under interrogation") , "and the units hear what they said", unit.chat[1])
+ok(rb:GetNW2Float("lc_traitor_until", 0) > CurTime(), "and the Resistance hears they talked")
+ok(LC.Interrogations[rb] == nil and has(rb.chat, "That will be all"), "all three asked: it's over")
+
+-- a lie he swallows, a bargain, and silence with no resolve left
+LC.StartInterrogation(rb)
+it = LC.Interrogations[rb]
+Later(5)
+local rnd = math.random
+math.random = function(a, b) if a == nil then return 0.99 elseif b == nil then return rnd(a) end return rnd(a, b) end
+unit.chat = {}
+_netcall("lc_intr_a", rb, "lie")
+math.random = rnd
+ok(it.liesBelieved == 1 and has(unit.chat, "A prisoner talked"), "a lie he believes goes to the units as if it were true")
+Later(6)
+local left1 = pr.untilT - CurTime()
+_netcall("lc_intr_a", rb, "bargain")
+ok(it.bargained and pr.untilT - CurTime() < left1 * 0.75, "a bargain: the truth, for a third off the sentence", pr.untilT - CurTime())
+it.resolve = 0
+Later(6)
+rb.chat = {}
+_netcall("lc_intr_a", rb, "silent")
+ok(has(rb.chat, "can't take any more") and has(rb.chat, "the truth"), "with no resolve left, silence breaks and the truth comes out")
+
+-- no answer is silence
+LC.StartInterrogation(rb)
+it = LC.Interrogations[rb]
+Later(5)
+Later(13)
+ok(it.silences == 1, "no answer in time is silence")
+LC.EndInterrogation(rb, nil)
+
+-- a unit asking in person
+unit:SetPos(rb:GetPos() + Vector(80, 0, 0))
+ok(LC.StartPlayerInterrogation(unit, rb), "a unit player can question a prisoner themselves (F2 > Interrogate)")
+it = LC.Interrogations[rb]
+ok(it.byPlayer == unit and _lastnet("lc_intr_cp") ~= nil, "and gets the questions, the baton and the answers in a window")
+net.sent = {}
+LC.PlayerInterrogationDo(unit, "ask", 2)
+ok(Payload("lc_intr_q") and Payload("lc_intr_q").q == 2, "they pick the question")
+unit.chat = {}
+_netcall("lc_intr_a", rb, "truth")
+local named = false
+for _, pl in ipairs(player.GetAll()) do
+    if pl ~= rb and pl:GetNW2String("lcf_faction", "") == "resistance" and has(unit.chat, LC.CharacterName(pl) or pl:Nick()) then named = true end
+end
+ok(named, "the truth about names is a real Resistance member's name, to the unit asking", unit.chat[1])
+local r0 = it.resolve
+LC.PlayerInterrogationDo(unit, "baton")
+ok(it.resolve == r0 - 1, "the baton wears their resolve down")
+LC.PlayerInterrogationDo(unit, "done")
+ok(LC.Interrogations[rb] == nil, "Done ends it")
+-- a citizen who knows nothing says so
+local words = LC.InterrogationIntel(cit, "hideout", true)
+ok(string.find(words, "don't know", 1, true), "a citizen telling the truth knows nothing", words)
+local lie = LC.InterrogationIntel(rb, "names", false)
+ok(lie and lie ~= "" and not string.find(lie, LC.CharacterName(mate) or "IntrMate", 1, true), "a lie names someone else")
+
+LC.ReleasePrisoner(rb)
+LC.RemoveZone(zr)
+for _, pl in ipairs({ rb, mate, unit, cit }) do pl:SetPos(FARI + Vector(0, -2000, 0)) end
+end
+InterrogationTests()
+function SurvivalModeTests()
+section("Realistic or Relaxed survival, per character")
+local function Later(secs) _advance(secs) _runtimers() end
+_setcvar("lc_survival_modes", 1)
+local a = newPlayer("SurvivalRealist", "citizen")
+local b = newPlayer("SurvivalRelaxed", "citizen")
+Later(4.5)
+ok(LC.SurvivalMode(a) == "realistic" and a:GetNW2String("lc_survival", "") == "realistic", "everyone starts on Realistic (as the city has always been)")
+ok(string.find(a:GetNW2String("lc_legacy_title", ""), "Hardened", 1, true), "with the title Hardened under their name")
+b.chat = {}
+hook.Run("PlayerSay", b, "!survival relaxed")
+ok(LC.Relaxed(b) and b:GetPData("lc_survival", "") == "relaxed" and not string.find(b:GetNW2String("lc_legacy_title", ""), "Hardened", 1, true), "switching to Relaxed (F1 > Me, or the characters screen)")
+local okS, whyS = LC.SetSurvivalMode(b, "realistic")
+ok(not okS and string.find(whyS or "", "switch again", 1, true), "and not again for 3 hours", whyS)
+-- hunger and thirst
+local was = LC.Running
+LC.Running = true
+LC.Feed(a, 100, 100) LC.Feed(b, 100, 100)
+for _ = 1, 12 do Later(5) end
+LC.Running = was
+local da, db = 100 - LC.Hunger(a), 100 - LC.Hunger(b)
+ok(da > 0 and db > 0 and math.abs(db / da - 0.33) < 0.05, "Relaxed: hunger comes on at a third of the speed", string.format("%.2f vs %.2f", da, db))
+-- parasites, the toilet, spoiling
+LC.Infect(b)
+ok(not LC.HasParasites(b), "Relaxed: no parasites")
+LC.Infect(a)
+ok(LC.HasParasites(a), "Realistic: parasites as always")
+a:SetNW2Float("lcn_parasites", 0)
+ok(LC.SpoilCheck(b, true) == 0, "Relaxed: nothing goes off")
+-- the pay and the experience
+ok(math.abs(LC.SurvivalPayMul(a) - 1.2) < 0.001 and LC.SurvivalPayMul(b) == 1, "Realistic: 20% more shift pay")
+local c0, c1 = LC.Credits(a), LC.Credits(b)
+hook.Run("LivingCityQuestComplete", a, { chain = "shift" })
+hook.Run("LivingCityQuestComplete", b, { chain = "shift" })
+local pa, pb = LC.Credits(a) - c0, LC.Credits(b) - c1
+ok(pb > 0 and pa == math.floor(pb * 1.2 + 0.5), "a shift pays a Realistic citizen 20% more", pa .. " vs " .. pb)
+local unit = newPlayer("SurvivalUnit", "cp")
+Later(0.3)
+local x0 = tonumber(unit:GetPData("lcf_xp_cp", 0)) or 0
+LC.AddXP(unit, 10, "test")
+ok((tonumber(unit:GetPData("lcf_xp_cp", 0)) or 0) - x0 == 12, "and 20% more experience", (tonumber(unit:GetPData("lcf_xp_cp", 0)) or 0) - x0)
+-- switching to Relaxed clears what it leaves out
+local d = newPlayer("SurvivalDirty", "citizen")
+Later(0.3)
+LC.Infect(d)
+d:SetNW2Float("lc_urge", 80)
+LC.SetSurvivalMode(d, "relaxed")
+ok(not LC.HasParasites(d) and d:GetNW2Float("lc_urge", 0) == 0, "switching to Relaxed clears parasites and the urge")
+-- off: everyone Realistic, no bonus
+_setcvar("lc_survival_modes", 0)
+ok(LC.SurvivalMode(b) == "realistic" and LC.SurvivalPayMul(a) == 1, "lc_survival_modes 0: everyone Realistic, with no bonus, as before")
+for _, p in ipairs({ a, b, d }) do p:RemovePData("lc_survival") p:RemovePData("lc_survival_at") p.lcSurvMode = nil end
+end
+SurvivalModeTests()
 
 function PapersHousingTests()
 section("Papers you carry, the housing register, transfers")

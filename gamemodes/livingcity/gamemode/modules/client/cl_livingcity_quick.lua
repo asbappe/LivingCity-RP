@@ -200,6 +200,8 @@ local function Context(me, unit, rebel)
     local now = CurTime()
     if me:GetNW2Float("lc_downed_until", 0) > now then Add("Give up (let go)", function() Send("giveup") end) end
     if me:GetNW2Bool("lc_tied", false) then Add("Work at the cuffs", function() Send("struggle") end) end
+    if me:GetNW2Float("lc_jail_until", 0) > now and not me:GetNW2Bool("lc_work_detail", false) then Add("Ask for a work detail (time off your sentence)", function() Send("workdetail") end) end
+    if me:GetNW2Float("lc_probation_until", 0) > now and not me:GetNW2Bool("lc_probation_checked", false) then Add("Check in for probation (close to a unit)", function() Send("checkin") end) end
     if me:GetNW2Float("lc_gman_rival_until", 0) > now then Add("Call a vote to remove the City Administrator", function() Send("recall") end) end
     if not unit and me:GetNW2Float("lc_wanted_until", 0) > now then Add("Give myself up (near a Civil Protection unit)", function() Send("surrender") end) end
     if me:GetNW2Bool("lc_interrogated", false) then
@@ -218,6 +220,9 @@ local function Context(me, unit, rebel)
         local tied = e:GetNW2Bool("lc_tied", false)
         if unit then
             Add("Search " .. n, function() Send("search") end, true)
+            if e:GetNW2Float("lc_jail_until", 0) > now then
+                Add("Interrogate " .. n, function() if LC_CL.InterrogationDo then LC_CL.InterrogationDo("start") end end, true)
+            end
             if tied then
                 Add("Drag " .. n .. " along / let go", function() Send("drag") end)
                 Add("Uncuff " .. n, function() Send("untie") end)
@@ -393,6 +398,8 @@ local function MePage()
         Item(rations, function() QM("rations") end),
         Item(home, function() QM("home") end),
         Item(standing, function() QM("standing") end),
+        me:GetNW2String("lc_survival", "") ~= "" and Item(me:GetNW2String("lc_survival", "") == "relaxed" and "Survival: Relaxed (switch to Realistic: more pay)"
+            or "Survival: Realistic (switch to Relaxed)", function() Send("survival") end) or nil,
     }, empty = rows }
 end
 

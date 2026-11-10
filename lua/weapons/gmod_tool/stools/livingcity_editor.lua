@@ -35,6 +35,7 @@ local MODES = {
     { id = "spawn",       label = "Point: spawn / exit doorway" },
     { id = "cell",        label = "Point: prison cell" },
     { id = "release",     label = "Point: prison release spot" },
+    { id = "prisonwork",  label = "Point: prison work spot (where a prisoner's work detail picks up trash)" },
     { id = "zspawn",      label = "Point: infestation spawn (zombies, infested players)" },
     { id = "rspawn",      label = "Point: resistance spawn (rebel players)" },
     { id = "rlookout",    label = "Point: rebel lookout post (an armed fighter stands guard here; place it from where the Combine would come, so he faces that way)" },

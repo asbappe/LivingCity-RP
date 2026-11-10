@@ -107,6 +107,7 @@ function LC.JobGameEnd(ply, how)
         local pay = math.max(0, math.floor(g.pay))
         -- community service is unpaid (sv_livingcity_work.lua): the work still counts
         if g.q and g.q.title and string.find(g.q.title, "Community service", 1, true) then pay = 0 end
+        if pay > 0 and LC.SurvivalPayMul then pay = math.floor(pay * LC.SurvivalPayMul(ply) + 0.5) end -- (Realistic survival: sv_livingcity_survivalmode.lua)
         if pay > 0 and LC.AddCredits then LC.AddCredits(ply, pay, g.title) end
         if IsValid(ply) and LC.Notice then
             local text = (#g.notes > 0 and (table.concat(g.notes, " ") .. " ") or "") .. (pay > 0 and string.format("You earned %d extra credits for this work, on top of your normal shift pay.", pay) or "No extra credits for this work.")

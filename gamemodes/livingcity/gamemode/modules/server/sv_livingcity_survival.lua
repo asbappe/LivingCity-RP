@@ -134,6 +134,7 @@ end
 
 -- Throw out what has gone off. Returns how many units went.
 function LC.SpoilCheck(ply, quiet)
+    if LC.Relaxed and LC.Relaxed(ply) then return 0 end -- (Relaxed survival: nothing goes off)
     local inv, gone = Inv(ply), 0
     for id, n in pairs(inv) do
         if LC.Spoils(id) then
@@ -368,10 +369,14 @@ function LC.Feed(ply, hunger, thirst)
     ply:SetNW2Float("lcn_thirst", math.Clamp(LC.Thirst(ply) + (thirst or 0), 0, 100))
 end
 
-local function HasParasites(ply) return ply:GetNW2Float("lcn_parasites", 0) > CurTime() end
+local function HasParasites(ply)
+    if LC.Relaxed and LC.Relaxed(ply) then return false end -- (Relaxed survival has none: sv_livingcity_survivalmode.lua)
+    return ply:GetNW2Float("lcn_parasites", 0) > CurTime()
+end
 LC.HasParasites = HasParasites
 
 local function Infect(ply)
+    if LC.Relaxed and LC.Relaxed(ply) then return end -- (Relaxed survival: no parasites)
     local was = HasParasites(ply)
     ply:SetNW2Float("lcn_parasites", CurTime() + 1e9) -- they don't wear off: only antiparasitic tablets (a medic, the black market) clear them
     if not was then ply:ChatPrint("Your stomach turns. Something in that wasn't clean.") end
@@ -414,6 +419,7 @@ timer.Create("LivingCityNeeds", 5, 0, function()
         if not Exempt(ply) and not ply.lcSleep and not ply.lcDreaming then
             local mult = (HasParasites(ply) and 2 or 1) * ((LC.IsRested and LC.IsRested(ply)) and 0.75 or 1) -- (a good night's sleep: sv_livingcity_rest.lua)
                 * ((LC.SecondWind and LC.SecondWind(ply)) and 0.75 or 1) -- (beat a nightmare: sv_livingcity_vices.lua)
+                * (LC.RelaxedNeedsMul and LC.RelaxedNeedsMul(ply) or 1) -- (Relaxed survival: sv_livingcity_survivalmode.lua)
             LC.Feed(ply, -hDrain * mult, -tDrain * mult)
             local h, t = LC.Hunger(ply), LC.Thirst(ply)
 
