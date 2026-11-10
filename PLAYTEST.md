@@ -1441,3 +1441,5 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **Crime between citizens:** get behind another player, F1 > Pick their pocket. Lend someone money with F1; repay it from F2 > Me > More > Household and business > My debts. Buy from the black market a few times: now and then it should go bad (a brick, or a sting).
   Notes:
+- [ ] **The Colonel looks like a ghost:** faintly see-through, a cold blue tint, slowly fading in and out with the odd flicker.
+  Notes:
