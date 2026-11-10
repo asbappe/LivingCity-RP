@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 9411afa. Admin-only console messages and log lines are left out.
+Made from version 5c0f8bd. Admin-only console messages and log lines are left out.
 
 9362 lines, from 252 files.
 
@@ -4261,76 +4261,76 @@ Made from version 9411afa. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_announcer.lua`
 
-- "Morning exercise"  (text, line 173)
-- "Morning exercise"  (text, line 173)
-- "Morning parade"  (text, line 173)
-- "Power failure"  (text, line 174)
-- "Power restored"  (text, line 174)
-- "Overwatch response"  (text, line 174)
+- "Morning exercise"  (text, line 174)
+- "Morning exercise"  (text, line 174)
+- "Morning parade"  (text, line 174)
+- "Power failure"  (text, line 175)
+- "Power restored"  (text, line 175)
 - "Overwatch response"  (text, line 175)
-- "Prison breakout"  (text, line 175)
-- "Overwatch deployment"  (text, line 175)
-- "Housing block inspection"  (text, line 176)
-- "Resistance activity"  (text, line 176)
-- "City announcement"  (text, line 177)
-- "City announcement"  (text, line 177)
-- "City announcement"  (text, line 177)
-- "City announcement"  (text, line 177)
+- "Overwatch response"  (text, line 176)
+- "Prison breakout"  (text, line 176)
+- "Overwatch deployment"  (text, line 176)
+- "Housing block inspection"  (text, line 177)
+- "Resistance activity"  (text, line 177)
 - "City announcement"  (text, line 178)
-- "Overwatch response"  (text, line 178)
-- "Civil collapse"  (text, line 178)
-- "The Nexus"  (text, line 179)
-- "The Administrator"  (text, line 179)
-- "Order restored"  (text, line 179)
-- "The suppression device"  (text, line 179)
+- "City announcement"  (text, line 178)
+- "City announcement"  (text, line 178)
+- "City announcement"  (text, line 178)
+- "City announcement"  (text, line 179)
+- "Overwatch response"  (text, line 179)
+- "Civil collapse"  (text, line 179)
+- "The Nexus"  (text, line 180)
+- "The Administrator"  (text, line 180)
+- "Order restored"  (text, line 180)
+- "The suppression device"  (text, line 180)
 
 > Note for you (not shown in game): part of: announce unused
 
-- ": doesn't start with a trigger (a typo?)"  (text, line 245)
-- ": {t} is no longer said (a surprise, or it answers violence)"  (text, line 247)
-- ": plays as Overwatch (a tone word only means something to the Administrator: is this her recording?)"  (text, line 249)
+- ": doesn't start with a trigger (a typo?)"  (text, line 247)
+- ": {t} is no longer said (a surprise, or it answers violence)"  (text, line 249)
+- ": plays as Overwatch (a tone word only means something to the Administrator: is this her recording?)"  (text, line 251)
 
 > Note for you (not shown in game): part of: say
 
-- "[{or}] "{text}""  (chat message, line 421)
-- "[{or}] "{text}""  (chat message, line 437)
+- "[{or}] "{text}""  (chat message, line 423)
+- "[{or}] "{text}""  (chat message, line 439)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "Sound files"  (on-screen notice, line 614)
-- "recording(s) can't be played (an MP3 renamed .wav, or a WAV that isn't 16-bit 44100 Hz). Type lc_announce_clips in the console to see which, and how to fix each."  (on-screen notice, line 614)
+- "Sound files"  (on-screen notice, line 616)
+- "recording(s) can't be played (an MP3 renamed .wav, or a WAV that isn't 16-bit 44100 Hz). Type lc_announce_clips in the console to see which, and how to fix each."  (on-screen notice, line 616)
 
 > Note for you (not shown in game): the console command lc_announce_clips
 
-- "[Living City] {v}: {or}"  (text, line 641)
-- "[Living City]   check {v}/{why}"  (text, line 642)
-- "[Living City]   CAN'T PLAY {why}"  (text, line 645)
-- "[Living City] {v}: {parts}"  (text, line 653)
-- "[Living City] Players' computers play these, so each needs the files: {or}sv_allowdownload {or}, sv_downloadurl "{or}" (a Workshop addon is the reliable way). Each player can type lc_sound_check to test their own."  (text, line 656)
-- "[Living City] {total} custom announcements found. Folders: sound/livingcity/overwatch/, administrator/, radio/ (or the same under sound/{ROOT}), flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files."  (text, line 660)
+- "[Living City] {v}: {or}"  (text, line 643)
+- "[Living City]   check {v}/{why}"  (text, line 644)
+- "[Living City]   CAN'T PLAY {why}"  (text, line 647)
+- "[Living City] {v}: {parts}"  (text, line 655)
+- "[Living City] Players' computers play these, so each needs the files: {or}sv_allowdownload {or}, sv_downloadurl "{or}" (a Workshop addon is the reliable way). Each player can type lc_sound_check to test their own."  (text, line 658)
+- "[Living City] {total} custom announcements found. Folders: sound/livingcity/overwatch/, administrator/, radio/ (or the same under sound/{ROOT}), flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files."  (text, line 662)
 
 > Note for you (not shown in game): part of: voice missing
 
-- "Dream lines"  (text, line 676)
-- "dream1 (optional)"  (text, line 695)
+- "Dream lines"  (text, line 678)
+- "dream1 (optional)"  (text, line 697)
 
 > Note for you (not shown in game): the console command lc_voice_missing
 
-- "[Living City] {name} (sound/livingcity/{folder}), {missing}"  (text, line 711)
-- "[Living City] {total} voice lines with no recording yet. Without one, a dream line still shows its words on screen, and the PA uses Half-Life 2's lines where it has them. Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle."  (text, line 714)
+- "[Living City] {name} (sound/livingcity/{folder}), {missing}"  (text, line 713)
+- "[Living City] {total} voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_LINES.md, in the gamemode's folder."  (text, line 716)
 
 > Note for you (not shown in game): the console command lc_announce_rescan
 
-- "[Living City] {AnnounceRescan} custom announcements found."  (text, line 720)
+- "[Living City] {AnnounceRescan} custom announcements found."  (text, line 722)
 
 > Note for you (not shown in game): the console command lc_announce_say
 
-- "[Living City] lc_announce_say <overwatch\|administrator> <trigger> [warm\|firm\|stern\|furious]"  (text, line 726)
-- "[Living City] Nothing in sound/{ROOT}{voice}/{trig}/ to say (or it's off)."  (text, line 729)
+- "[Living City] lc_announce_say <overwatch\|administrator> <trigger> [warm\|firm\|stern\|furious]"  (text, line 728)
+- "[Living City] Nothing in sound/{ROOT}{voice}/{trig}/ to say (or it's off)."  (text, line 731)
 
 > Note for you (not shown in game): the console command lc_announce_tier
 
-- "[Living City] {trig}: she would be {t} about it now (sociostability {or}, {Heat} violent things in ten minutes){or}."  (text, line 737)
+- "[Living City] {trig}: she would be {t} about it now (sociostability {or}, {Heat} violent things in ten minutes){or}."  (text, line 739)
 
 ## arrests in the open (the owner's playtest, 7 November) (sv_livingcity_arrest.lua)
 
@@ -5192,176 +5192,176 @@ Made from version 9411afa. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: name
 
-- "The Administrator"  (text, line 131)
+- "The Administrator"  (text, line 133)
 
 > Note for you (not shown in game): part of: admin name
 
-- "The Administrator"  (text, line 132)
+- "The Administrator"  (text, line 134)
 
 > Note for you (not shown in game): His lines in the collapse (the owner, 10 November: "I can splice lines to remove references to 'mr freeman' and such"): each a setting pointing at a file under garrysmod/sound/: any of the G-Man's real clips, stock or spliced (nothing new needs recording). The words on screen: a .txt beside the clip with the same name, if there is one (the way the announcements' subtitles work), else the words here. Missing, the moment is silent and the words still show. Reused clips already on the owner's list: lc_gman_line_refused, lc_gman_line_crates, and lc_gman_line_walk_away (on the client). Two start on Half-Life 2's own lines.
 
-- "Is it really that time again?"  (text, line 211)
-- "I've received some interesting offers for your services. Ordinarily, I wouldn't contemplate them. These are extraordinary times."  (text, line 212)
-- "Step aside. Or end it ... yourself. Choose."  (text, line 213)
-- "Time is a luxury you no longer have, Administrator."  (text, line 214)
-- "Choose. Or I will ... choose for you."  (text, line 215)
-- "A wise choice, Administrator."  (text, line 216)
-- "... As you wish."  (text, line 217)
-- "Not for long..."  (text, line 218)
-- "Get back here..."  (text, line 219)
-- "The right man in the wrong place can make all the difference in the world."  (text, line 220)
-- "Your citizens sleep poorly. They wake ... prepared."  (text, line 221)
-- "Even the lights are leaving you."  (text, line 222)
-- "It ends where it began, Administrator. In your office."  (text, line 223)
+- "Is it really that time again?"  (text, line 213)
+- "I've received some interesting offers for your services. Ordinarily, I wouldn't contemplate them. These are extraordinary times."  (text, line 214)
+- "Step aside. Or end it ... yourself. Choose."  (text, line 215)
+- "Time is a luxury you no longer have, Administrator."  (text, line 216)
+- "Choose. Or I will ... choose for you."  (text, line 217)
+- "A wise choice, Administrator."  (text, line 218)
+- "... As you wish."  (text, line 219)
+- "Not for long..."  (text, line 220)
+- "Get back here..."  (text, line 221)
+- "The right man in the wrong place can make all the difference in the world."  (text, line 222)
+- "Your citizens sleep poorly. They wake ... prepared."  (text, line 223)
+- "Even the lights are leaving you."  (text, line 224)
+- "It ends where it began, Administrator. In your office."  (text, line 225)
 
 > Note for you (not shown in game): Can the city collapse right now? (and why not)
 
-- "already collapsed"  (text, line 297)
-- "too few players"  (text, line 298)
-- "too soon after the last one"  (text, line 299)
-- "a dream ending is on"  (text, line 300)
+- "already collapsed"  (text, line 299)
+- "too few players"  (text, line 300)
+- "too soon after the last one"  (text, line 301)
+- "a dream ending is on"  (text, line 302)
 
 > Note for you (not shown in game): part of: collapse begin
 
-- "open rebellion"  (text, line 318)
-- "Civil collapse. Open rebellion in the streets. Overwatch has lost the city."  (text, line 321)
+- "open rebellion"  (text, line 320)
+- "Civil collapse. Open rebellion in the streets. Overwatch has lost the city."  (text, line 323)
 
 > Note for you (not shown in game): each
 
-- "[Overwatch] Sociostability: BLACK (civil collapse)."  (chat message, line 322)
+- "[Overwatch] Sociostability: BLACK (civil collapse)."  (chat message, line 324)
 
 > Note for you (not shown in game): the city's own Administrator: she refuses him
 
-- "She was given a choice. She chose ... poorly."  (text, line 354)
+- "She was given a choice. She chose ... poorly."  (text, line 356)
 
 > Note for you (not shown in game): part of: refuse
 
-- "You refused him"  (on-screen notice, line 424)
-- "He means to hasten your end. Your guards, your office, your shield: you'll need all of them."  (on-screen notice, line 424)
+- "You refused him"  (on-screen notice, line 426)
+- "He means to hasten your end. Your guards, your office, your shield: you'll need all of them."  (on-screen notice, line 426)
 
 > Note for you (not shown in game): His hand on the city
 
-- "[???] Crates have turned up around the city. Nobody saw who left them."  (chat message, line 438)
+- "[???] Crates have turned up around the city. Nobody saw who left them."  (chat message, line 440)
 
 > Note for you (not shown in game): each
 
-- "[Rumour] People are waking up with weapons in their hands. Nobody knows where they come from."  (chat message, line 443)
-- "[City] The grid is failing, block by block."  (chat message, line 447)
+- "[Rumour] People are waking up with weapons in their hands. Nobody knows where they come from."  (chat message, line 445)
+- "[City] The grid is failing, block by block."  (chat message, line 449)
 
 > Note for you (not shown in game): waking with a weapon (step 2): once each, after he's started it
 
-- "Something in your hands"  (on-screen notice, line 477)
-- "You wake holding something you didn't go to sleep with."  (on-screen notice, line 477)
+- "Something in your hands"  (on-screen notice, line 479)
+- "You wake holding something you didn't go to sleep with."  (on-screen notice, line 479)
 
 > Note for you (not shown in game): part of: spawn her
 
-- "City Administrator"  (text, line 539)
+- "City Administrator"  (text, line 541)
 
 > Note for you (not shown in game): her: the player, brought to her office, or the city's own
 
-- "Your last stand"  (on-screen notice, line 834)
-- "He's put you where you belong. Hold out {GetFloat} minutes. Your shield holds while its transformer stands, and only near it: stay close."  (on-screen notice, line 834)
+- "Your last stand"  (on-screen notice, line 902)
+- "He's put you where you belong. Hold out {GetFloat} minutes. Your shield holds while its transformer stands, and only near it: stay close."  (on-screen notice, line 902)
 
 > Note for you (not shown in game): each
 
-- "Defend the Administrator"  (on-screen notice, line 891)
-- "Her last stand has begun. Guard her, and guard the transformers that power her shield ({powers})."  (on-screen notice, line 891)
-- "The last stand"  (on-screen notice, line 893)
-- "Her shield deflects every bullet. Destroy every transformer powering it ({powers}, marked on screen, each behind glass and guarded), then end her."  (on-screen notice, line 893)
-- "An Overwatch squad is on its way to the Administrator."  (on-screen notice, line 951)
+- "Defend the Administrator"  (on-screen notice, line 966)
+- "Her last stand has begun. Guard her, and guard the transformers that power her shield ({powers})."  (on-screen notice, line 966)
+- "The last stand"  (on-screen notice, line 968)
+- "Her shield deflects every bullet. Destroy every transformer powering it ({powers}, marked on screen, each behind glass and guarded), then end her."  (on-screen notice, line 968)
+- "An Overwatch squad is on its way to the Administrator."  (on-screen notice, line 1027)
 
 > Note for you (not shown in game): part of: collapse power hit
 
-- "A transformer is failing"  (text, line 1040)
-- "It's half gone. Keep at it."  (text, line 1040)
-- "A transformer is down"  (text, line 1050)
-- "more stands"  (text, line 1050)
-- "more stand"  (text, line 1050)
-- "between her and you."  (text, line 1050)
-- "Her shield is down"  (text, line 1056)
-- "Her last transformer is destroyed. {AdminName} is unprotected. Now."  (text, line 1056)
+- "A transformer is failing"  (text, line 1123)
+- "It's half gone. Keep at it."  (text, line 1123)
+- "A transformer is down"  (text, line 1133)
+- "more stands"  (text, line 1133)
+- "more stand"  (text, line 1133)
+- "between her and you."  (text, line 1133)
+- "Her shield is down"  (text, line 1139)
+- "Her last transformer is destroyed. {AdminName} is unprotected. Now."  (text, line 1139)
 
 > Note for you (not shown in game): a player Administrator who strays out of her transformer's reach is told (and unprotected)
 
-- "Out of your shield's reach"  (on-screen notice, line 1124)
-- "Shielded again"  (on-screen notice, line 1124)
-- "Get back near your transformers: out here, bullets reach you."  (on-screen notice, line 1124)
-- "You're within your transformers' reach."  (on-screen notice, line 1124)
+- "Out of your shield's reach"  (on-screen notice, line 1222)
+- "Shielded again"  (on-screen notice, line 1222)
+- "Get back near your transformers: out here, bullets reach you."  (on-screen notice, line 1222)
+- "You're within your transformers' reach."  (on-screen notice, line 1222)
 
 > Note for you (not shown in game): Heroes: Barney, then Freeman
 
-- "Barney Calhoun"  (name, line 1182)
-- "Gordon Freeman"  (name, line 1185)
+- "Barney Calhoun"  (name, line 1280)
+- "Gordon Freeman"  (name, line 1283)
 
 > Note for you (not shown in game): (whoever was the last hero is themselves again first)
 
-- "You are {name}"  (on-screen notice, line 1282)
-- "Back in rebel territory, armed for it. Rally the Resistance and take the Administrator's office.{or}"  (on-screen notice, line 1282)
+- "You are {name}"  (on-screen notice, line 1380)
+- "Back in rebel territory, armed for it. Rally the Resistance and take the Administrator's office.{or}"  (on-screen notice, line 1380)
 
 > Note for you (not shown in game): each
 
-- "is in the city"  (on-screen notice, line 1315)
-- "Stop him before he reaches the Administrator."  (on-screen notice, line 1315)
-- "is here{who}"  (on-screen notice, line 1316)
-- "Rally to him. Every fighter in the city is moving on the Administrator's office."  (on-screen notice, line 1316)
+- "is in the city"  (on-screen notice, line 1413)
+- "Stop him before he reaches the Administrator."  (on-screen notice, line 1413)
+- "is here{who}"  (on-screen notice, line 1414)
+- "Rally to him. Every fighter in the city is moving on the Administrator's office."  (on-screen notice, line 1414)
 
 > Note for you (not shown in game): part of: calm
 
-- "open rebellion"  (text, line 1420)
+- "open rebellion"  (text, line 1518)
 
 > Note for you (not shown in game): how: "resign", "end" (by her own hand), "killed" (the people), "crushed" (time ran out), "fled", "off" (an admin)
 
-- "The Administrator steps down"  (text, line 1440)
-- "has resigned as City Administrator. The office is empty."  (text, line 1440)
+- "The Administrator steps down"  (text, line 1538)
+- "has resigned as City Administrator. The office is empty."  (text, line 1538)
 
 > Note for you (not shown in game): part of: resolve
 
-- "The Administrator is dead"  (text, line 1443)
-- "is dead, by her own hand. The office is empty."  (text, line 1443)
-- "the Administrator's fall"  (text, line 1452)
-- "She's dead"  (on-screen notice, line 1453)
-- "The city is yours tonight.{or}"  (on-screen notice, line 1453)
-- "The Administrator is dead"  (text, line 1456)
-- "has fallen in her office. The people have the Nexus tonight."  (text, line 1456)
-- "A fresh city"  (text, line 1461)
-- "The server starts the city over in a minute."  (text, line 1461)
-- "The uprising is crushed"  (text, line 1466)
-- "Overwatch has retaken the Nexus. {AdminName} keeps the office."  (text, line 1466)
-- "The Administrator has fled"  (text, line 1470)
-- "The office is empty. Overwatch pulls back to the Nexus."  (text, line 1470)
+- "The Administrator is dead"  (text, line 1541)
+- "is dead, by her own hand. The office is empty."  (text, line 1541)
+- "the Administrator's fall"  (text, line 1550)
+- "She's dead"  (on-screen notice, line 1551)
+- "The city is yours tonight.{or}"  (on-screen notice, line 1551)
+- "The Administrator is dead"  (text, line 1554)
+- "has fallen in her office. The people have the Nexus tonight."  (text, line 1554)
+- "A fresh city"  (text, line 1559)
+- "The server starts the city over in a minute."  (text, line 1559)
+- "The uprising is crushed"  (text, line 1564)
+- "Overwatch has retaken the Nexus. {AdminName} keeps the office."  (text, line 1564)
+- "The Administrator has fled"  (text, line 1568)
+- "The office is empty. Overwatch pulls back to the Nexus."  (text, line 1568)
 
 > Note for you (not shown in game): the curfew: on for as long as the city is BLACK (put back if anything else takes its place, a lockdown aside)
 
-- "Mandatory curfew"  (text, line 1509)
-- "Martial law: everyone indoors. Anyone in the street is fair game."  (text, line 1509)
+- "Mandatory curfew"  (text, line 1607)
+- "Martial law: everyone indoors. Anyone in the street is fair game."  (text, line 1607)
 
 > Note for you (not shown in game): part of: suppressor hit
 
-- "The suppression device is destroyed"  (text, line 1614)
-- "The shelling stops."  (text, line 1614)
+- "The suppression device is destroyed"  (text, line 1712)
+- "The shelling stops."  (text, line 1712)
 
 > Note for you (not shown in game): Admins: test every part (the editor's "The collapse" section) what: "black" (collapse now), "next" (his next step now), "stand" (the last stand now), "off" (end it), "chaos" (half full)
 
-- "Already collapsed."  (text, line 1744)
-- "an admin's test"  (text, line 1746)
-- "The city collapses to BLACK."  (text, line 1746)
-- "Not collapsed: push it to black first."  (text, line 1748)
-- "The G-Man's next step."  (text, line 1749)
+- "Already collapsed."  (text, line 1842)
+- "an admin's test"  (text, line 1844)
+- "The city collapses to BLACK."  (text, line 1844)
+- "Not collapsed: push it to black first."  (text, line 1846)
+- "The G-Man's next step."  (text, line 1847)
 
 > Note for you (not shown in game): part of: collapse test
 
-- "an admin's test"  (text, line 1751)
-- "Her last stand begins."  (text, line 1753)
-- "Chaos cleared."  (text, line 1755)
-- "Back to normal."  (text, line 1758)
-- "Start her last stand first."  (text, line 1760)
-- "is in the city."  (text, line 1763)
-- ": nobody to play him."  (text, line 1763)
-- "Chaos set to half."  (text, line 1767)
+- "an admin's test"  (text, line 1849)
+- "Her last stand begins."  (text, line 1851)
+- "Chaos cleared."  (text, line 1853)
+- "Back to normal."  (text, line 1856)
+- "Start her last stand first."  (text, line 1858)
+- "is in the city."  (text, line 1861)
+- ": nobody to play him."  (text, line 1861)
+- "Chaos set to half."  (text, line 1865)
 
 > Note for you (not shown in game): the console command lc_collapse_test
 
-- "[Collapse] {why}"  (chat message, line 1775)
+- "[Collapse] {why}"  (chat message, line 1873)
 
 ## the Combine's own ground (sv_livingcity_combineground.lua)
 
@@ -15993,7 +15993,7 @@ Made from version 9411afa. Admin-only console messages and log lines are left ou
 - "There were {n}."  (text, line 1321)
 - "Round %d of %d     Points: %d of %d"  (message, line 1323)
 
-> Note for you (not shown in game): Every line said in these dreams (to record: docs/features/dream-lines.md)
+> Note for you (not shown in game): Every line said in these dreams (to record: VOICE_LINES.md)
 
 - "A Hungry Man"  (text, line 1350)
 - "I'm so hungry... I could eat a horse."  (text, line 1350)
@@ -16388,7 +16388,7 @@ Made from version 9411afa. Admin-only console messages and log lines are left ou
 - "Something moved."  (text, line 964)
 - "Keys: %d of %d"  (message, line 965)
 
-> Note for you (not shown in game): Every line said in these dreams (to record: docs/features/dream-lines.md)
+> Note for you (not shown in game): Every line said in these dreams (to record: VOICE_LINES.md)
 
 - "The Clock Voice"  (text, line 974)
 - "Tick. Tock. Tick. Tock. It's later than you think. It's earlier than you think. It's cheese."  (text, line 974)

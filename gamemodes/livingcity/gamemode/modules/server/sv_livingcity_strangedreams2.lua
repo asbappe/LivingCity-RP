@@ -8,7 +8,7 @@
       players have to box in a boxing ring against something ridiculous". Every one can play the owner's
       music (a file named for its codeword in sound/livingcity/dreams/) and every line said in them can
       be a recording (sound/livingcity/dreams/voice/, named for the line; the list to record is
-      docs/features/dream-lines.md).
+      VOICE_LINES.md).
 
         Hooves and All (horse, Neutral: the owner, 9 November, "it should just be neutral"): in the dark, Half-Life 2's citizens echo that they're so
           hungry they could eat a horse. Then a cliff at night, a wrecked ship on the rocks, and the
@@ -1343,7 +1343,7 @@ hook.Add("PlayerSay", "LivingCityStrangeDreams", function(p, text)
 end)
 
 ------------------------------------------------------------------------
--- Every line said in these dreams (to record: docs/features/dream-lines.md)
+-- Every line said in these dreams (to record: VOICE_LINES.md)
 ------------------------------------------------------------------------
 
 LC.StrangeAddCues({

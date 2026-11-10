@@ -31,13 +31,13 @@
                        a raid or a supply convoy is a surprise, and a
                        lockdown answers violence, so they have none)
         the city       socio_green  socio_yellow  socio_red  socio_black (the collapse, and the shelling)
-        the collapse   black_stand (her last stand)  black_fallen (she's dead; Overwatch)  black_crushed
-                       (the uprising crushed)  suppressor_down (the suppression device destroyed)
                        dawn  day  dusk  night
                        outbreak  blackout  power_restored
                        skirmish_raid  skirmish_sweep  response (a response squad)
                        breakout  overwatch_drop  block_raided  territory_grew
                        train_arrival  welcome (just for someone joining: hers, then Overwatch's)
+        the collapse   black_stand (her last stand)  black_fallen (she's dead; Overwatch)  black_crushed
+                       (the uprising crushed)  suppressor_down (the suppression device destroyed)
         ambient        general city announcements; also what the Administrator's
                        periodic addresses are made of (lc_breen_broadcasts 1)
 
@@ -143,6 +143,7 @@ local BASE_TIER = {
     breakout = 4, socio_black = 4, black_stand = 4, black_fallen = 4, suppressor_down = 4, black_crushed = 3,
     jog = 1, drill = 1, parade = 1, -- (she loves a bit of exercise)
 }
+LC.AnnounceBaseTier = BASE_TIER -- (read only: the voice lines list, _dev/voice_lines.py)
 local VIOLENT = { raid = true, skirmish_raid = true, skirmish_sweep = true, breakout = true, outbreak = true, block_raided = true, territory_grew = true, overwatch_drop = true }
 local heat = {} -- times of recent violent things
 
@@ -178,6 +179,7 @@ local TITLES = {
     ambient = "City announcement", response = "Overwatch response", socio_black = "Civil collapse",
     black_stand = "The Nexus", black_fallen = "The Administrator", black_crushed = "Order restored", suppressor_down = "The suppression device",
 }
+LC.AnnounceTitles = TITLES -- (read only: the voice lines list, _dev/voice_lines.py)
 
 ------------------------------------------------------------------------
 -- What's in the folders
@@ -711,8 +713,8 @@ concommand.Add("lc_voice_missing", function(ply)
         Reply(ply, "[Living City] " .. r.name .. " (sound/livingcity/" .. r.folder .. "), " ..
             (#r.missing == 0 and "nothing missing" or (#r.missing .. " missing: " .. table.concat(r.missing, ", "))))
     end
-    Reply(ply, "[Living City] " .. total .. " voice lines with no recording yet. Without one, a dream line still shows its words on screen, " ..
-        "and the PA uses Half-Life 2's lines where it has them. Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle.")
+    Reply(ply, "[Living City] " .. total .. " voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). " ..
+        "Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_LINES.md, in the gamemode's folder.")
 end)
 
 concommand.Add("lc_announce_rescan", function(ply)

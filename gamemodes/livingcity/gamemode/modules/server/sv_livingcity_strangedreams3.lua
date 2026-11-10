@@ -30,7 +30,7 @@
 
       Winning a Happy or Neutral one wakes you Unbroken (LC.DreamOutcome), losing costs nothing; the
       Watchers wake you as any nightmare does. Music: the owner's, named for the codeword, else
-      Half-Life 2's own. Lines to record: docs/features/dream-lines.md.
+      Half-Life 2's own. Lines to record: VOICE_LINES.md.
 ]]
 
 if CLIENT then return end
@@ -967,7 +967,7 @@ do
 end
 
 ------------------------------------------------------------------------
--- Every line said in these dreams (to record: docs/features/dream-lines.md)
+-- Every line said in these dreams (to record: VOICE_LINES.md)
 ------------------------------------------------------------------------
 
 LC.StrangeAddCues({

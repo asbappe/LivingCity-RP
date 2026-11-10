@@ -1082,7 +1082,7 @@ Notes:
   Notes:
 - [ ] **Dance Marathon / Counting Headcrabs:** jump on every fourth beat (the ring on screen closes in); count headcrabs over the fence and say the number in chat.
   Notes:
-- [ ] **Music and lines:** put horse1.mp3 (or any dream's codeword, even maze1.mp3) in garrysmod/sound/livingcity/dreams/ and it plays in that dream. Recorded lines go in dreams/voice/, named as in docs/features/dream-lines.md. Dance: dance1.mp3 plus dance1.txt holding its BPM.
+- [ ] **Music and lines:** put horse1.mp3 (or any dream's codeword, even maze1.mp3) in garrysmod/sound/livingcity/dreams/ and it plays in that dream. Recorded lines go in dreams/voice/, named as in VOICE_LINES.md. Dance: dance1.mp3 plus dance1.txt holding its BPM.
   Notes:
 - [ ] **Editor:** Dreams: test one is now the last section of the Living City Editor panel.
   Notes:
@@ -1176,7 +1176,7 @@ Notes:
   Notes:
 
 ## 10 November: the G-Man in person, her transformer, out of character on F1
-- [ ] **The G-Man in person:** editor > The collapse > "collapse to BLACK now" while you are the Administrator. He appears in front of you (nobody else sees him: ask someone), you cannot move while he talks, then his window. His lines: Half-Life 2's "Is it really that time again?" and the offers line, then the words only for the rest until your spliced clips are in (GMAN_SOUNDS.md, rows 11 to 23). Shoot him, walk through him: nothing.
+- [ ] **The G-Man in person:** editor > The collapse > "collapse to BLACK now" while you are the Administrator. He appears in front of you (nobody else sees him: ask someone), you cannot move while he talks, then his window. His lines: Half-Life 2's "Is it really that time again?" and the offers line, then the words only for the rest until your spliced clips are in (VOICE_LINES.md, rows 11 to 23). Shoot him, walk through him: nothing.
   Notes:
 - [ ] **Walking away from him:** press "Walk away" on his window, or walk off: "Get back here...", a 10-second countdown. Go back, look at him, press E: his window again. Do it again and wait out the 10 seconds: a refusal ("Not for long..."), he walks off, and comes back at each of his steps.
   Notes:
@@ -1196,5 +1196,13 @@ Notes:
   Notes:
 - [ ] **BLACK: curfew and shelling:** "collapse to BLACK now": a mandatory curfew starts. As a rebel, stand outside under open sky near a Combine zone: a ring fades in on the ground under you, the incoming whistle, then the blast. One at a time. Under a roof: nothing. Place "Fixture: the suppression device" (the Nexus mortar): the shells come from it (a flash and launch sound there); shoot it to pieces and the shelling stops. Does the mortar model show (not an ERROR)?
   Notes:
-- [ ] **Collapse announcements:** record socio_black, black_stand, black_crushed, suppressor_down (both voices) and black_fallen (Overwatch); suggested words in docs/features/custom-announcements.md. lc_voice_missing lists what is still missing.
+- [ ] **Collapse announcements:** record socio_black, black_stand, black_crushed, suppressor_down (both voices) and black_fallen (Overwatch); everything to record, with suggested words, is in VOICE_LINES.md. lc_voice_missing lists what is still missing.
+  Notes:
+
+## 10 November, latest: scaling, the panels, the voice lines list
+- [ ] **Scaling:** with several Resistance players on, "Her last stand now": more manhacks and turrets (8 to 100 and 4 to 25 from 2 to 20 players). The turrets never shoot down the manhacks. Squads arrive faster with more attackers near her office, each led by an Elite. Watch the server: does it hold up with a lot of manhacks?
+  Notes:
+- [ ] **Shield panels:** when her bubble comes up, a purple flash and jolt, and the panels fall out of the ceiling. Pick one up with E: does it cover you crouched? Do bullets stop on it? Walk it into a turret: does it tip over? (If the door model is too heavy to carry or too small, tell me.)
+  Notes:
+- [ ] **VOICE_LINES.md** (in the gamemode folder): every line still to record, in one list. Run lc_voice_missing on the server and paste the output to Claude to tick off what you have.
   Notes:

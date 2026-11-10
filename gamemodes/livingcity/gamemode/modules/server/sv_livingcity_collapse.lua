@@ -88,14 +88,16 @@ local cvElites  = CreateConVar("lc_black_elites", "4", FLAGS, "Overwatch Elites 
 local cvRebels  = CreateConVar("lc_black_rebels", "8", FLAGS, "Resistance fighters who storm the Administrator's office in her last stand")
 local cvHealth  = CreateConVar("lc_black_admin_health", "600", FLAGS, "The Administrator's health in her last stand")
 local cvPowerHP = CreateConVar("lc_black_power_health", "1250", FLAGS, "How much damage each transformer powering the Administrator's shield takes before it blows")
-local cvManhacks = CreateConVar("lc_black_manhacks", "8", FLAGS, "Manhacks guarding transformer #1 in the Administrator's last stand")
-local cvTurrets  = CreateConVar("lc_black_turrets", "4", FLAGS, "Floor turrets guarding transformer #2 in the Administrator's last stand")
-local cvPanels   = CreateConVar("lc_black_panels", "4", FLAGS, "Metal panels left round her office in her last stand (carry one as a bullet shield, ram a turret over with it)")
+local cvManhacks = CreateConVar("lc_black_manhacks", "8", FLAGS, "Manhacks guarding transformer #1 in the Administrator's last stand, with 1 or 2 Resistance players on (more with more, up to lc_black_manhacks_max at 20)")
+local cvManhacksMax = CreateConVar("lc_black_manhacks_max", "100", FLAGS, "Manhacks guarding transformer #1 with 20 or more Resistance players on")
+local cvTurrets  = CreateConVar("lc_black_turrets", "4", FLAGS, "Floor turrets guarding transformer #2 in the Administrator's last stand, with 1 or 2 Resistance players on (more with more, up to lc_black_turrets_max at 20)")
+local cvTurretsMax = CreateConVar("lc_black_turrets_max", "25", FLAGS, "Floor turrets guarding transformer #2 with 20 or more Resistance players on")
+local cvPanels   = CreateConVar("lc_black_panels", "4", FLAGS, "Shield panels that fall from the ceiling round her office in her last stand (one more for every two Resistance players past 8, up to 12): carry one to shield yourself, ram a turret over with it")
 local cvMines    = CreateConVar("lc_black_mines", "4", FLAGS, "Hopper mines guarding transformer #3 in the Administrator's last stand")
 local cvRollers  = CreateConVar("lc_black_rollermines", "3", FLAGS, "Rollermines guarding transformer #3 in the Administrator's last stand")
-local cvSquadMin = CreateConVar("lc_black_squad_min", "45", FLAGS, "Fewest seconds between Overwatch squads coming in to her last stand")
-local cvSquadMax = CreateConVar("lc_black_squad_max", "75", FLAGS, "Most seconds between Overwatch squads coming in to her last stand")
-local cvSquadSize = CreateConVar("lc_black_squad_size", "4", FLAGS, "Soldiers in each squad coming in to her last stand")
+local cvSquadFew  = CreateConVar("lc_black_squad_gap_few", "100", FLAGS, "Seconds between Overwatch squads coming in to her last stand with 1 or 2 Resistance players attacking her")
+local cvSquadMany = CreateConVar("lc_black_squad_gap_many", "15", FLAGS, "Seconds between Overwatch squads with 20 or more Resistance players attacking her (in between, in between)")
+local cvSquadSize = CreateConVar("lc_black_squad_size", "4", FLAGS, "Soldiers in each squad coming in to her last stand, an Elite leading them")
 local cvGravguns = CreateConVar("lc_black_gravguns", "2", FLAGS, "Gravity guns left near transformer #3's mines in her last stand")
 local cvPowerR  = CreateConVar("lc_black_power_range", "1600", FLAGS, "How far (units; 16 to a foot) the Administrator's shield reaches from its transformer: her last stand is fought there")
 local cvReward  = CreateConVar("lc_black_reward", "200", FLAGS, "Credits for everyone not Combine who was there when the Administrator fell")
@@ -749,13 +751,44 @@ end
 -- 2 floor turrets (and metal panels round her office, to carry as a shield and ram them over with); 3 hopper
 -- mines and rollermines (and gravity guns left near). On its open sides, never behind its glass. A transformer
 -- with no number takes the first kind not yet taken.
+-- How many Resistance players there are: on the server (near: only those within about 200 feet of her office,
+-- attacking her), alive and not away.
+function LC.CollapseRebelCount(near)
+    local n = 0
+    for _, p in ipairs(player.GetAll()) do
+        if p:Alive() and LC.SideOf and LC.SideOf(p) == "resistance" and not (LC.IsAFK and LC.IsAFK(p))
+            and (not near or not C.office or p:GetPos():DistToSqr(C.office) <= 3200 * 3200) then n = n + 1 end
+    end
+    return n
+end
+-- base with 1 or 2 of them, max with 20 or more, in a straight line between (the owner, 10 November: "8 manhacks if
+-- 1-2 resistance players ... if there are 20 resistance players ... like 100"; turrets 4 to 25)
+function LC.CollapseScale(base, max, n)
+    if n <= 2 then return math.floor(base) end
+    return math.floor(math.min(max, base + (max - base) * (n - 2) / 18) + 0.5)
+end
+
 local GUARDS = { npc_manhack = true, npc_turret_floor = true, npc_rollermine = true, combine_mine = true }
 LC.CollapseGuardClasses = GUARDS
-local PANELS = { "models/props_debris/metal_panel01a.mdl", "models/props_c17/door01_left.mdl" }
+-- The shield panels: a metal door, tall and wide enough to hide a crouching body behind (about 56 by 108 units),
+-- made light enough to pick up with E, and unbreakable.
+local PANELS = { "models/props_c17/door01_left.mdl", "models/props_debris/metal_panel01a.mdl" }
 local function Ring(power, k, n, r)
     local yaw = power:GetAngles().y + 60 + (k - 0.5) / math.max(1, n) * 240
     return Ground(power:GetPos() + Angle(0, yaw, 0):Forward() * r), yaw
 end
+-- an energy jolt where something appears (the owner, 10 November: "a flash or energy jolt effect")
+local function Jolt(pos, big)
+    if util.Effect and EffectData then
+        local ed = EffectData()
+        ed:SetOrigin(pos)
+        ed:SetMagnitude(big and 2 or 1)
+        ed:SetScale(big and 2 or 1)
+        ed:SetRadius(big and 80 or 30)
+        util.Effect(big and "cball_explode" or "ElectricSpark", ed, true, true)
+    end
+end
+LC.CollapseJolt = Jolt
 local function Guard(cls, pos, ang, power)
     local e = ents.Create(cls)
     if not IsValid(e) then return nil end
@@ -765,17 +798,40 @@ local function Guard(cls, pos, ang, power)
     if e.Activate then e:Activate() end
     e.lcCollapseGuardOf = power
     if IsValid(C.boss) then Friendly(e, C.boss) end
+    -- (her guards are on one side: the turrets never shoot the manhacks)
+    if e.IsNPC and e:IsNPC() then
+        for _, o in ipairs(C.npcs) do
+            if IsValid(o) and o.lcCollapseGuardOf and o.IsNPC and o:IsNPC() then
+                e:AddEntityRelationship(o, D_LI or 3, 99)
+                o:AddEntityRelationship(e, D_LI or 3, 99)
+            end
+        end
+    end
     C.npcs[#C.npcs + 1] = e
     return e
 end
+-- something that falls out of the ceiling above a spot (out of the energy jolt: not just junk lying in her office)
+local function FromCeiling(pos)
+    local up = util.TraceLine and util.TraceLine({ start = pos + Vector(0, 0, 20), endpos = pos + Vector(0, 0, 320), mask = MASK_SOLID_BRUSHONLY })
+    local top = (up and up.Hit) and up.HitPos.z - 60 or pos.z + 200
+    return Vector(pos.x, pos.y, math.max(pos.z + 24, top))
+end
+LC.CollapseFromCeiling = FromCeiling
 local function Loose(model, pos, list)
     local e = ents.Create(model and "prop_physics" or "weapon_physcannon")
     if not IsValid(e) then return nil end
     if model then e:SetModel(model) end
-    e:SetPos(pos + Vector(0, 0, 12))
+    local at = FromCeiling(pos)
+    e:SetPos(at)
     e:SetAngles(Angle(0, math.random(0, 359), 0))
     e:Spawn()
+    local phys = e.GetPhysicsObject and e:GetPhysicsObject()
+    if model and IsValid(phys) then
+        phys:SetMass(30) -- (light enough to pick up with E)
+        phys:Wake()
+    end
     e.lcCollapseLoose = true
+    Jolt(at, false)
     list[#list + 1] = e
     return e
 end
@@ -788,19 +844,30 @@ end
 function LC.CollapseGuard(power, kind)
     C.loose = C.loose or {}
     power:SetNW2Int("lc_power_guard", kind)
+    local rebels = C.rebelsAtStart or LC.CollapseRebelCount()
+    Jolt(power:GetPos() + Vector(0, 0, 50), true)
     if kind == 1 then
-        local n = math.max(0, cvManhacks:GetInt())
-        for i = 1, n do Guard("npc_manhack", Ring(power, i, n, 140) + Vector(0, 0, 64), nil, power) end
-    elseif kind == 2 then
-        local n = math.max(0, cvTurrets:GetInt())
+        -- (in rings of 12, wider and higher as there are more)
+        local n = LC.CollapseScale(math.max(0, cvManhacks:GetInt()), math.max(0, cvManhacksMax:GetInt()), rebels)
         for i = 1, n do
-            local at, yaw = Ring(power, i, n, 110)
+            local ring = math.floor((i - 1) / 12)
+            local inRing = math.min(12, n - ring * 12)
+            Guard("npc_manhack", Ring(power, (i - 1) % 12 + 1, inRing, 140 + ring * 60) + Vector(0, 0, 64 + (ring % 3) * 30), nil, power)
+        end
+    elseif kind == 2 then
+        -- (in rings of 8, wider as there are more)
+        local n = LC.CollapseScale(math.max(0, cvTurrets:GetInt()), math.max(0, cvTurretsMax:GetInt()), rebels)
+        for i = 1, n do
+            local ring = math.floor((i - 1) / 8)
+            local inRing = math.min(8, n - ring * 8)
+            local at, yaw = Ring(power, (i - 1) % 8 + 1, inRing, 110 + ring * 60)
             Guard("npc_turret_floor", at, Angle(0, yaw, 0), power)
         end
         local model
         for _, m in ipairs(PANELS) do if not util.IsValidModel or util.IsValidModel(m) then model = m break end end
-        for i = 1, math.max(0, cvPanels:GetInt()) do
-            local a = (i / math.max(1, cvPanels:GetInt())) * math.pi * 2
+        local panels = math.min(12, math.max(0, cvPanels:GetInt()) + math.max(0, math.floor((rebels - 8) / 2)))
+        for i = 1, panels do
+            local a = (i / math.max(1, panels)) * math.pi * 2
             Loose(model or PANELS[1], Ground((C.office or power:GetPos()) + Vector(math.cos(a) * 280, math.sin(a) * 280, 0)), C.loose)
         end
     else
@@ -823,6 +890,7 @@ StandBegin = function()
     C.stage, C.office, C.standUntil, C.nextPulse, C.standAt = "stand", office, now + math.max(1, cvStand:GetFloat()) * 60, now + PULSE_GAP, now
     C.heroStage, C.freemanAt, C.npcBarney = nil, nil, nil
     C.there = {}
+    C.rebelsAtStart = LC.CollapseRebelCount()
     C.powers, C.power = powers, power
     for _, pw in ipairs(powers) do ArmPower(pw) end
     -- her: the player, brought to her office, or the city's own
@@ -843,6 +911,13 @@ StandBegin = function()
     boss:SetHealth(hp)
     boss:SetNW2Float("lc_shield_frac", LC.CollapseShieldUp() and 1 or 0)
     FloatBegin(boss, office)
+    -- her bubble comes up: a flash and an energy jolt (and what falls out of it)
+    Jolt(boss:GetPos() + Vector(0, 0, 40), true)
+    if sound and sound.Play then sound.Play("ambient/energy/whiteflash.wav", boss:GetPos(), 100, 100, 1) end
+    if util.ScreenShake then util.ScreenShake(boss:GetPos(), 8, 5, 1.5, 1500) end
+    for _, p in ipairs(player.GetAll()) do
+        if p.ScreenFade and p:GetPos():DistToSqr(boss:GetPos()) < 1500 * 1500 then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(190, 160, 255, 150), 0.7, 0) end
+    end
     NextSquad(now)
     SetGlobal2Entity("lc_collapse_boss", boss)
     SetGlobal2Entity("lc_collapse_power", IsValid(power) and power or NULL)
@@ -934,8 +1009,9 @@ function LC.CollapseSquad()
     for i = 1, math.max(0, cvSquadSize:GetInt()) do
         local at = Ground(from + Vector(math.cos(i * 1.7) * 50, math.sin(i * 1.7) * 50, 0))
         local npc, st
-        if LC.ManpowerFree and LC.SpawnSoldier then npc, st = LC.ManpowerFree(LC.SpawnSoldier, at)
-        elseif LC.SpawnSoldier then npc, st = LC.SpawnSoldier(at) end
+        local kind = i == 1 and "elite" or nil -- (an Elite leads each squad: the owner, 10 November)
+        if LC.ManpowerFree and LC.SpawnSoldier then npc, st = LC.ManpowerFree(LC.SpawnSoldier, at, kind)
+        elseif LC.SpawnSoldier then npc, st = LC.SpawnSoldier(at, kind) end
         if IsValid(npc) then
             local a = math.random() * math.pi * 2
             local post = Ground(C.office + Vector(math.cos(a) * math.random(180, 360), math.sin(a) * math.random(180, 360), 0))
@@ -953,9 +1029,16 @@ function LC.CollapseSquad()
     end
     return made
 end
+-- the next squad: every 100 seconds with 1 or 2 Resistance players attacking her, every 15 with 20 or more, in
+-- a straight line between (the owner, 10 November), give or take a tenth
+function LC.CollapseSquadGap(n)
+    local few, many = math.max(5, cvSquadFew:GetFloat()), math.max(5, cvSquadMany:GetFloat())
+    local f = math.Clamp((n - 2) / 18, 0, 1)
+    return few + (many - few) * f
+end
 NextSquad = function(now)
-    local lo = math.max(5, cvSquadMin:GetFloat())
-    C.nextSquad = now + lo + math.random() * math.max(0, cvSquadMax:GetFloat() - lo)
+    local gap = LC.CollapseSquadGap(LC.CollapseRebelCount(true))
+    C.nextSquad = now + gap * (0.9 + math.random() * 0.2)
 end
 
 -- She floats in her bubble (the owner, 10 November: "make her float up in the air, but not too high so she doesn't
@@ -1059,6 +1142,21 @@ function LC.CollapsePowerHit(ent, dmg)
     end
     return true
 end
+
+-- Her guards never harm one another (the turrets don't shoot down the manhacks), and the shield panels don't break.
+hook.Add("EntityTakeDamage", "LivingCityCollapseGuards", function(victim, dmg)
+    if not C.stage then return end
+    if victim.lcCollapseLoose then dmg:SetDamage(0) return true end
+    if not victim.lcCollapseGuardOf then return end
+    local att, inf = dmg:GetAttacker(), dmg.GetInflictor and dmg:GetInflictor()
+    for _, e in ipairs({ att, inf }) do
+        if IsValid(e) and e ~= victim and (e.lcCollapseGuardOf or GUARDS[e:GetClass()]
+            or (e.IsNPC and e:IsNPC() and LC.NPCs and LC.NPCs[e] and LC.IsSecurity and LC.IsSecurity(LC.NPCs[e]))) then
+            dmg:SetDamage(0)
+            return true
+        end
+    end
+end)
 
 -- Her shield: every hit deflected while it's up (sparks where it lands); Civil Protection never hurts her.
 hook.Add("EntityTakeDamage", "LivingCityCollapseShield", function(victim, dmg)
@@ -1395,7 +1493,7 @@ local function Calm()
     C.npcs = {}
     timer.Simple(60, function() for _, npc in ipairs(leftovers) do if IsValid(npc) and npc:Health() > 0 then npc:Remove() end end end)
     if IsValid(C.boss) then C.boss:SetNW2Float("lc_shield_frac", 0) FloatEnd(C.boss) end
-    C.floatZ, C.nextSquad = nil, nil
+    C.floatZ, C.nextSquad, C.rebelsAtStart = nil, nil, nil
     C.shell, C.nextShell, C.nextBlackLine = nil, nil, nil
     LC.SuppressorsArm(false)
     if C.curfewOurs and LC.Event == "curfew" and LC.EndEvent then LC.EndEvent(true) end

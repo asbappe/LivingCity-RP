@@ -23410,8 +23410,13 @@ end
 local squad = LC.CollapseSquad()
 local sq = 0
 for npc, st in pairs(LC.NPCs) do if IsValid(npc) and st.collapseSquad then sq = sq + 1 end end
-ok(squad == 4 and sq >= 4, "an Overwatch squad comes in from outside the fight (4 soldiers)", squad)
-ok(CS.nextSquad and CS.nextSquad - CurTime() >= 44 and CS.nextSquad - CurTime() <= 76, "and the next in 45 to 75 seconds", CS.nextSquad and (CS.nextSquad - CurTime()))
+local led = false
+for npc, st in pairs(LC.NPCs) do if IsValid(npc) and st.collapseSquad and st.elite then led = true end end
+ok(squad == 4 and sq >= 4 and led, "an Overwatch squad comes in from outside the fight (4 soldiers, an Elite leading)", squad)
+local gapNow = LC.CollapseSquadGap(LC.CollapseRebelCount(true))
+ok(CS.nextSquad and CS.nextSquad - CurTime() >= gapNow * 0.89 and CS.nextSquad - CurTime() <= gapNow * 1.11, "and the next in its time", CS.nextSquad and (CS.nextSquad - CurTime()))
+ok(LC.CollapseSquadGap(1) == 100 and LC.CollapseSquadGap(20) == 15 and math.abs(LC.CollapseSquadGap(11) - 57.5) < 0.01, "squads every 100 seconds with 1 or 2 attacking her, every 15 with 20, in between in between")
+ok(LC.CollapseScale(8, 100, 2) == 8 and LC.CollapseScale(8, 100, 20) == 100 and LC.CollapseScale(4, 25, 20) == 25 and LC.CollapseScale(8, 100, 40) == 100, "manhacks 8 to 100 and turrets 4 to 25 with the Resistance's numbers")
 ok(CS.power == placed and CS.boss:GetPos():Distance(placed:GetPos()) < 400, "the fight is where her transformer is", tostring(CS.boss:GetPos()))
 CS.boss:SetPos(Vector(-60000, -40000, 0))
 ok(not LC.CollapseShieldUp(), "out of its reach (100 feet), her shield doesn't hold")
@@ -23462,7 +23467,17 @@ do
         if IsValid(e) and e.lcCollapseGuardOf == t1 and e:GetClass() == "npc_manhack" then hacks = hacks + 1 end
         if IsValid(e) and e.lcCollapseGuardOf == t2 and e:GetClass() == "npc_turret_floor" then turrets = turrets + 1 end
     end
-    ok(hacks == 8 and turrets == 4 and #(CS.loose or {}) == 4, "#1 a manhack swarm, #2 floor turrets, and metal panels round her office to carry", hacks .. " " .. turrets .. " " .. #(CS.loose or {}))
+    local rb = CS.rebelsAtStart or 0
+    local wantPanels = math.min(12, 4 + math.max(0, math.floor((rb - 8) / 2)))
+    ok(hacks == LC.CollapseScale(8, 100, rb) and turrets == LC.CollapseScale(4, 25, rb) and #(CS.loose or {}) == wantPanels, "#1 a manhack swarm, #2 floor turrets, and shield panels round her office, by the Resistance's numbers", hacks .. " " .. turrets .. " " .. #(CS.loose or {}) .. " (" .. rb .. " Resistance)")
+    local panel = CS.loose and CS.loose[1]
+    ok(panel and panel:GetPos().z > CS.office.z + 20, "the panels fall out of the ceiling, not lying about her office", panel and tostring(panel:GetPos()))
+    local tur, hk
+    for _, e in ipairs(CS.npcs) do if IsValid(e) and e:GetClass() == "npc_turret_floor" then tur = e end end
+    for _, e in ipairs(CS.npcs) do if IsValid(e) and e:GetClass() == "npc_manhack" then hk = e end end
+    local friendly = _dmg(tur, 30)
+    hook.t.EntityTakeDamage.LivingCityCollapseGuards(hk, friendly)
+    ok(friendly:GetDamage() == 0, "the turrets don't shoot down the manhacks")
     local hack
     for _, e in ipairs(CS.npcs) do if IsValid(e) and e:GetClass() == "npc_manhack" then hack = e end end
     LC.CollapsePowerHit(t1, _dmg(hack, 500))
