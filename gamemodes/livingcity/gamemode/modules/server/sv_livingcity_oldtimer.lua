@@ -91,12 +91,12 @@ LC.OldTimerTroubles = {
       "Food. Real food. You don't know what that means to an old man." },
     { "thirsty", { "water" }, "The tap on my floor's been dry a week. Carrying water up those stairs, at my age...",
       "Water. Bless you. I'll make it last." },
-    { "cough", { "tablets", "bandage" }, "This cough. The Commissary wants more for its tablets than I see in a month.",
-      "For my chest? I'll sleep tonight, for the first time in a while." },
+    { "cough", { "medicine" }, "This cough. Twenty years I've had it. The Commissary wants more for its medicine than I see in a month.",
+      "Medicine? For me? I'll sleep tonight, for the first time in a long while." },
     { "card", { "ration_card" }, "Some young thug took my ration card in the line. I'm too old to work a shift for another.",
       "A card? You worked for that. I won't forget it. Not ever." },
-    { "radio", { "radio", "radio_tuned" }, "I miss music. They took my old wireless, years ago. The quiet gets into you.",
-      "A radio... Turn the dial past the Union band some night. You'll hear things worth hearing." },
+    { "smoke", { "cig_union", "cig_rolled" }, "What I wouldn't give for a smoke. Even the Union's, and those taste of floor sweepings.",
+      "Ah. Now that's a kindness. Sit with me while I have it." },
 }
 
 LC.OldTimerLines = {

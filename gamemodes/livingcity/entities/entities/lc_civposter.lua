@@ -12,6 +12,12 @@
 
     Press E to read it closely: that's learning it, and its tip cards don't
     come (LC.Learn, sv_livingcity_learning.lua).
+
+    Your own artwork: garrysmod/materials/livingcity/posters/<kind>.png (or
+    .jpg), kind = dispenser, commissary, intake, water, law, curfew; a 3:4
+    portrait picture (768 x 1024 is plenty). With one, the poster shows it;
+    without, the drawn notice below. They're sent to players when the map
+    starts. The brief for each picture: POSTER_BRIEF.md.
 ]]
 
 AddCSLuaFile()
@@ -75,12 +81,33 @@ end
 
 if CLIENT then
     local PAPER, INK, RED = Color(205, 200, 185, 245), Color(25, 25, 28), Color(150, 20, 20)
+    local art = {} -- [kind] = the owner's picture (a Material), or false
+    local function Art(kind)
+        if art[kind] == nil then
+            art[kind] = false
+            for _, ext in ipairs({ "png", "jpg" }) do
+                local path = "livingcity/posters/" .. kind .. "." .. ext
+                if file.Exists("materials/" .. path, "GAME") then art[kind] = Material(path, "smooth mips") break end
+            end
+        end
+        return art[kind]
+    end
     function ENT:Draw()
         if LocalPlayer():GetPos():DistToSqr(self:GetPos()) > 900 * 900 then return end
-        local n = NOTICES[self:GetNW2String("lc_notice", "curfew")] or NOTICES.curfew
+        local kind = self:GetNW2String("lc_notice", "curfew")
+        local n = NOTICES[kind] or NOTICES.curfew
         local ang = self:GetAngles()
         ang:RotateAroundAxis(ang:Up(), 90)
         ang:RotateAroundAxis(ang:Forward(), 90)
+        local pic = Art(kind)
+        if pic and not pic:IsError() then
+            cam.Start3D2D(self:GetPos() + self:GetForward() * 0.6, ang, 0.1)
+                surface.SetDrawColor(255, 255, 255, 255)
+                surface.SetMaterial(pic)
+                surface.DrawTexturedRect(-230, -310, 460, 620)
+            cam.End3D2D()
+            return
+        end
         cam.Start3D2D(self:GetPos() + self:GetForward() * 0.6, ang, 0.1)
             draw.RoundedBox(0, -230, -310, 460, 620, PAPER)
             draw.RoundedBox(0, -230, -310, 460, 70, RED)

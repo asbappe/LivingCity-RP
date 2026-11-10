@@ -10,6 +10,8 @@
       thirsty (below 25)  the world goes hazy and warm, and you breathe hard
       hurt (below 35)     the edges of the screen go red, and your heart
                           pounds
+      ill                 a fever swims like thirst, a stomach bug drains
+                          the colour like hunger (sv_livingcity_illness.lua)
     Each player can turn it off: the full menu's Settings (lc_body_signs 0).
 ]]
 
@@ -21,7 +23,11 @@ local function Level(me)
     local hunger = me:GetNW2Float("lcn_hunger", 100)
     local thirst = me:GetNW2Float("lcn_thirst", 100)
     local hp = me:Health()
-    return math.Clamp((25 - hunger) / 25, 0, 1), math.Clamp((25 - thirst) / 25, 0, 1), (hp > 0 and hp < 35) and math.Clamp((35 - hp) / 35, 0, 1) or 0
+    -- a fever swims like thirst; a stomach bug drains the colour like hunger (sv_livingcity_illness.lua)
+    local ill = me:GetNW2String("lc_ill", "")
+    local fever = string.find(ill, "fever", 1, true) and 0.6 or 0
+    local sick = string.find(ill, "stomach", 1, true) and 0.4 or 0
+    return math.max(math.Clamp((25 - hunger) / 25, 0, 1), sick), math.max(math.Clamp((25 - thirst) / 25, 0, 1), fever), (hp > 0 and hp < 35) and math.Clamp((35 - hp) / 35, 0, 1) or 0
 end
 LC_CL.BodyLevel = Level
 

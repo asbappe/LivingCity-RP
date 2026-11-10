@@ -30,6 +30,8 @@ LCS.Items = {
     melon           = { name = "Watermelon", model = "models/props_junk/watermelon01.mdl", hunger = 40, thirst = 40 },
     coffee          = { name = "Real coffee", model = "models/props_junk/garbage_coffeemug001a.mdl", hunger = 5, thirst = 25, uplift = true },
     tablets         = { name = "Antiparasitic tablets", model = "models/props_lab/jar01b.mdl", cures = "parasites" },
+    medicine        = { name = "Union medicine", model = "models/healthvial.mdl", cures = "illness", sell = 4,
+                        desc = "Cures a cold or a fever at once (sv_livingcity_illness.lua). Does nothing for parasites" },
 
     -- Cigarettes, alcohol and stimulants (sv_livingcity_vices.lua; the owner, 7 November). From your
     -- pockets: Smoke, Drink or Take. vice = what it does, strength = how much of it.
@@ -313,7 +315,7 @@ end
 
 LCS.Weights = {
     beer = 0.6, vodka = 0.9, moonshine = 0.9,
-    ration = 0.3, water = 0.4, bread = 0.5, milk = 0.6, melon = 3.0, coffee = 0.3, tablets = 0.05,
+    ration = 0.3, water = 0.4, bread = 0.5, milk = 0.6, melon = 3.0, coffee = 0.3, tablets = 0.05, medicine = 0.1,
     raw_bird = 0.6, raw_crow = 0.6, raw_gull = 0.7, cooked_bird = 0.5, raw_headcrab = 1.2, raw_fastcrab = 1.0, raw_poisoncrab = 1.4, cooked_headcrab = 1.0,
     can_empty = 0.05, can_dirty = 0.4, can_clean = 0.4, bottle_empty = 0.3, bottle_dirty = 0.8, bottle_clean = 0.8,
     radio = 1.0, radio_tuned = 1.0, radio_transmitter = 0.6, permit = 0.02, papers_blank = 0.02, papers_forged = 0.02, papers_dead = 0.02, ration_forged = 0.02,
@@ -378,6 +380,7 @@ LCS.Goods = {
     { id = "water", item = "water", price = 2, minStanding = -50, desc = "Clean, cold, refreshing. Do not ask what is in it." },
     { id = "bottle", item = "bottle_empty", price = 2, minStanding = -50, desc = "An empty glass bottle, for whatever water you can find." },
     { id = "tablets", item = "tablets", price = 15, minStanding = -50, desc = "For what the canal water gives you." },
+    { id = "medicine", item = "medicine", price = 12, minStanding = -50, desc = "For a cold or a fever. Take it as directed." },
     { id = "civvies", item = "civvies", price = 10, minStanding = -50, civOnly = true, desc = "Union-issue work clothes. Everyone looks the same in them." },
     { id = "weedkiller", item = "weedkiller", price = 15, minStanding = 0, desc = "For the weeds in the cracks. Keep it away from food." },
     { id = "permit", item = "permit", price = 35, minStanding = 150, desc = "One night out after curfew, stamped and legal." },
@@ -430,6 +433,7 @@ LCS.Black = {
     { id = "civvies", item = "civvies", price = 15, desc = "Clean, plain, forgettable." },
     { id = "uniform_cp", item = "uniform_cp", price = 160, desc = "Off a Civil Protection unit who won't be needing it." },
     { id = "tablets", item = "tablets", price = 20, desc = "No questions about why you need them." },
+    { id = "medicine", item = "medicine", price = 18, desc = "Fell off a Commissary truck." },
     { id = "cig_rolled", item = "cig_rolled", count = 5, name = "Hand-rolled cigarettes (5)", price = 10, desc = "Real tobacco. Don't ask from where." },
     { id = "beer", item = "beer", price = 8, desc = "Bathtub beer. It's wet, and it works." },
     { id = "moonshine", item = "moonshine", price = 10, desc = "Strong enough to strip paint. Mostly safe." },

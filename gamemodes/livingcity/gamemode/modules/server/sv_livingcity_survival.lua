@@ -502,6 +502,7 @@ function LC.Consume(ply, id)
     if (it.hunger or 0) > 0 and not it.poison and ply:Health() < ply:GetMaxHealth() then
         ply:SetHealth(math.min(ply:GetMaxHealth(), ply:Health() + math.max(1, math.floor(it.hunger / 4))))
     end
+    if it.cures == "illness" and LC.CureIllness then LC.CureIllness(ply) end -- (Union medicine: sv_livingcity_illness.lua)
     if it.cures == "parasites" then
         ply:SetNW2Float("lcn_parasites", 0)
         ply:ChatPrint("The cramps ease.")

@@ -168,3 +168,13 @@ end
 function LC.CivPosterRead(ply, kind)
     Learn(ply, unpack(LC.CivPosterTips[kind] or LC.CivPosterTips.curfew))
 end
+
+-- The owner's poster pictures, sent to players when the map starts (materials/livingcity/posters/)
+local function SendPosterArt()
+    if not (resource and resource.AddFile and file and file.Find) then return end
+    for _, n in ipairs(file.Find("materials/livingcity/posters/*", "GAME") or {}) do
+        local ext = string.lower(string.match(n, "%.(%w+)$") or "")
+        if ext == "png" or ext == "jpg" then resource.AddFile("materials/livingcity/posters/" .. n) end
+    end
+end
+hook.Add("Initialize", "LivingCityPosterArt", SendPosterArt)

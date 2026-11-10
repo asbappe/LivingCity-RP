@@ -171,6 +171,7 @@ LC_MODULES = {
         "sv_livingcity_pamphlet",
         "sv_livingcity_learning",
         "sv_livingcity_machines",
+        "sv_livingcity_illness",
         "sv_livingcity_territory",
         "sv_livingcity_territorypaths", -- (territory grows along the path nodes)
         "sv_livingcity_trains",
