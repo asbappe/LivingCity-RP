@@ -1395,3 +1395,20 @@ Notes:
   Notes:
 - [ ] **On the streets:** order a crackdown on a block: a metrocop should take up a post in the middle of it and stop people. Win a few rebel operations in one block until it is the Resistance's: units walking there should now and then be ambushed, and the black market there should be cheaper. Watch Commissary prices rise as supply falls.
   Notes:
+
+## 10 November: the Cremator
+
+Needs Workshop items 2090972521 (and 3329322225) in the server collection, then a map change.
+
+- [ ] **The model is found:** as an admin, type `lc_cremator_spawn` in the console while looking at the ground. It should say which model and which idle, walk and fire animations it found. Send that line back if anything looks wrong.
+  Notes:
+- [ ] **How it looks:** the Cremator stands, walks (feet moving, not sliding too badly) and faces the right way. No second figure or stalker visible inside it, no red beam from it.
+  Notes:
+- [ ] **Bodies:** leave a body lying for 90 seconds near it: it walks over, a green flame plays on the body for about five seconds, the body is gone and a scorch mark is left. A body you are hauling is left alone.
+  Notes:
+- [ ] **Enemies:** as a citizen with empty hands it ignores you. With a gun out (not as Civil Protection) it comes at you and burns you when close. Shoot it: it turns on you and nearby units come. Rebel NPCs out in the city get burnt.
+  Notes:
+- [ ] **Killing it:** it takes about 400 damage, falls (a ragdoll if the model has one), and another turns up some minutes later out of sight. Fire does not hurt it.
+  Notes:
+- [ ] **Players who join** download the Cremator addon by themselves and see it (not an ERROR sign).
+  Notes:

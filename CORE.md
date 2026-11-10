@@ -94,6 +94,7 @@ Things players and the owner rely on that were settled in conversation:
 - **Planned operations and bounties (asked for 10 November):** Resistance Lieutenants (or Fighters) plan operations on F2 > Resistance > Operations (target, time, joiners rewarded, 15% leak to CP); the Administrator or Division Leaders and up post 50 or 100 credit bounties on wanted people (F2 > Me) (`docs/features/city.md`).
 - **The state of the city (asked for 10 November):** five numbers kept day to day (supply, morale, Combine and Resistance strength, authority) that change the streets (units, fighters, informants), housing blocks as districts with an owner, the collapse's aftermath, a City Bulletin each morning on the screens, and the Administrator's levers (speech stand, amnesty, crackdown, extra rations) on F2 > Me (`docs/features/city.md`).
 - **NPCs carry boxes and crates in front in both hands,** luggage at the side, small things in the hand.
+- **The Cremator (asked for 10 November):** an NPC, `lc_cremators` (1) of them, walks the streets, burns bodies that have lain `lc_cremator_grace` (90) seconds and attacks whoever the units would shoot, the Resistance's people in the open, monsters and its attackers. It needs a Cremator model from the Workshop on the server (the owner chose items `2090972521`, and `3329322225` for the playermodel); with none there are no Cremators. The Mortician job is unchanged. Details: `docs/features/cremator.md`.
 
 ## How the code must be written (or things break)
 

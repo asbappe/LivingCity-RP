@@ -15,7 +15,7 @@ or `python3 _dev/run_section.py "section name"`; `anon@N` is a nameless test blo
 A `-` under Tests means no test calls enough of this module's own functions (client code is covered by
 `_dev/client_smoke.py`).
 
-199 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
+200 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
 
 | Module | What it is | Server | Client | Shared | Key functions | Tests |
 |---|---|---|---|---|---|---|
@@ -51,12 +51,13 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `cpsupply` | The Civil Protection Commissary (units' supplies) | `server/sv_livingcity_cpsupply.lua` 13K | - | - | `LC.NearCPSupply`, `LC.CPSupplyRechargeTick`, `LC.UseCPSupply`, `LC.CPDailyKitDue`, `LC.HasCPSupply`, `LC.IssueSupplies` | UnitLifeTests (3); SuppliesAndLabTests (2) |
 | `crabhunt` | Headcrab hunts for the Resistance's supply crate | `server/sv_livingcity_crabhunt.lua` 11K | - | - | `CH.Check`, `CH.Available`, `CH.Deposit` | CrabHuntTests (2) |
 | `crafting` | Making things, grenades, the arms trade, and getting people out | `server/sv_livingcity_crafting.lua` 25K | - | - | `LC.SmokeBlocks`, `LC.SellPrice`, `LC.Detonate`, `LC.IssuedLocked`, `LC.Craft`, `LC.SyncGrenades` | CraftingTests (6); SalvageTests (2); anon@20033 (2) |
+| `cremator` | The Cremator | `server/sv_livingcity_cremator.lua` 28K | `client/cl_livingcity_cremator.lua` 3K | - | `LC.CrematorModel`, `LC.CrematorEnemy`, `LC.CrematorSequence`, `LC.CrematorSummary`, `LC.SpawnCremator`, `LC.CrematorBody` | CrematorTests (8) |
 | `custody` | What custody costs the worst anticitizens | `server/sv_livingcity_custody.lua` 23K | - | `shared/sh_livingcity_custody.lua` 2K | `LC.PlayerIsStalker`, `LC.StalkerCantSpeak`, `LC.MakeStalker`, `LC.Severity`, `LC.InterrogationTalk`, `LC.IsCrippled` | anon@19575 (5); PlaytestBatchTwoTests (4); ResistanceOpsTests (4) |
 | `data` | Saved layout | `server/sv_livingcity_data.lua` 26K | - | - | `LC.SendCompressed`, `LC.RemoveZone`, `LC.AddPoint`, `LC.AddZone`, `LC.RemovePoint`, `LC.CanEdit` | EditorAndScannerTests (9); section "Saving and loading a layout" (8); TerritoryPathTests (7) |
 | `debug` | Debugging | `server/sv_livingcity_debug.lua` 22K | - | - | `LC.BuildReport` | section "Debugging" (1); MindsTests (1); anon@18778 (1) |
 | `desperation` | The desperate Combine (sv_livingcity_desperation.lua) | `server/sv_livingcity_desperation.lua` 19K | - | - | `LC.DesperateSidearm`, `LC.DesperationTick`, `LC.DesperationTestSet`, `LC.DesperateClear`, `LC.DesperationFight`, `LC.DesperationTarget` | SideBalanceTests (9) |
 | `dialog` | A window for someone (or something) that answers questions | `server/sv_livingcity_dialog.lua` 2K | `client/cl_livingcity_dialog.lua` 9K | - | `LC.DialogDo`, `LC.OpenDialog`, `LC.CloseDialog` | TalkTests (1) |
-| `directives` | Sealed directives: how the secret endings start (the owner, 2 November; ENDING_TRIGGERS_DRAFT.md) | `server/sv_livingcity_directives.lua` 43K | `client/cl_livingcity_directives.lua` 15K | - | `ORDERS.weedkiller`, `ORDERS.lift`, `ORDERS.blackout`, `ORDERS.amnesty`, `LC.Vision`, `ORDERS.worship` | anon@21491 (8) |
+| `directives` | Sealed directives: how the secret endings start (the owner, 2 November; ENDING_TRIGGERS_DRAFT.md) | `server/sv_livingcity_directives.lua` 43K | `client/cl_livingcity_directives.lua` 15K | - | `ORDERS.weedkiller`, `ORDERS.lift`, `ORDERS.blackout`, `ORDERS.amnesty`, `LC.Vision`, `ORDERS.morticians` | anon@21491 (8) |
 | `doors` | Doors | `server/sv_livingcity_doors.lua` 24K | - | - | `LC.ApplyDoorState`, `LC.AutoDoorTag`, `LC.ApplyAllDoors`, `LC.PrisonDoorThink`, `LC.OpenEveryDoor`, `LC.KeepOpenThink` | PrisonDoorTests (2) |
 | `dreamenforce` | Enforcers in the dreams | - | `client/cl_livingcity_dreamenforce.lua` 2K | - | - | - |
 | `dreamenforcers` | Enforcers in the dreams | `server/sv_livingcity_dreamenforcers.lua` 12K | - | - | `LC.DreamEnforcerRole`, `LC.DreamBad`, `LC.DreamMarkBad`, `LC.DreamEnforcerStrike`, `LC.DreamEnforcerJoin`, `LC.DreamEnforcerLeave` | DreamCrowdTests (4) |
@@ -203,7 +204,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `theme` | How every window looks, by who you are and where you stand | - | `client/cl_livingcity_theme.lua` 20K | - | `LC_CL.SetTheme`, `LC_CL.ThemeOn`, `LC_CL.ThemeWindow`, `LC_CL.ThemeName`, `LC_CL.PaintThemePanel`, `LC_CL.PaintThemeBack` | - |
 | `trail` | The quest trail on the ground | - | `client/cl_livingcity_trail.lua` 7K | - | `LC_CL.TrailActive`, `LC_CL.TrailPrune`, `LC_CL.SetTrail`, `LC_CL.TrailChevrons`, `LC_CL.Trail` | - |
 | `trains` | The trains | `server/sv_livingcity_trains.lua` 6K | - | - | `LC.TrainPlatforms`, `LC.TrainArrive`, `LC.TrainBoardingPos` | TrainTests (3); IntakeTests (1) |
-| `underground` | The underground | `server/sv_livingcity_underground.lua` 91K | - | - | `LC.RadioNotice`, `LC.DisguisedAsCP`, `LC.Search`, `LC.BlackPrice`, `LC.PassesAsCitizen`, `LC.Stash` | UndergroundTests (26); DisguiseTests (7); anon@19100 (5) |
+| `underground` | The underground | `server/sv_livingcity_underground.lua` 91K | - | - | `LC.RadioNotice`, `LC.Search`, `LC.DisguisedAsCP`, `LC.BlackPrice`, `LC.PassesAsCitizen`, `LC.Stash` | UndergroundTests (26); DisguiseTests (7); anon@19100 (5) |
 | `unittools` | Unit tools | - | `client/cl_livingcity_unittools.lua` 11K | - | `LC_CL.IsUnit`, `LC_CL.OpenUnitTools` | - |
 | `vest` | Powered vests ("suit power") | `server/sv_livingcity_vest.lua` 4K | - | - | `LC.HasVest`, `LC.VestCap`, `LC.ChargeVest`, `LC.PutOnVest`, `LC.IssueVest` | VestTests (3) |
 | `vices` | Cigarettes, alcohol and stimulants (and how a night's dream leaves you) | `server/sv_livingcity_vices.lua` 15K | `client/cl_livingcity_vices.lua` 4K | - | `LC.Unbroken`, `LC.DreamOutcome`, `LC.Drunk`, `LC.Wired`, `LC.DreamScarred`, `LC.Shaken` | ViceTests (8); DreamGameTests (5); DreamCrowdTests (2) |
