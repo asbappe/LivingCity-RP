@@ -47,7 +47,7 @@ LC.PamphletPages = {
 local function Pages(ply, text)
     local opts = {}
     for _, t in ipairs(LC.PamphletPages) do opts[#opts + 1] = { t[1], t[2] } end
-    LC.OpenDialog(ply, "pamphlet", nil, { title = "Civil Orientation pamphlet", sub = "Thin grey paper, stamped with the Combine's mark.", text = text, options = opts })
+    LC.OpenDialog(ply, "pamphlet", nil, { title = "Civil Orientation pamphlet", sub = "Thin grey paper, stamped with the Combine's mark.", text = text, options = opts, style = "pamphlet" })
 end
 
 function LC.ReadPamphlet(ply)

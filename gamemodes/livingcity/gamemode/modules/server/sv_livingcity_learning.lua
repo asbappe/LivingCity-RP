@@ -220,5 +220,10 @@ local function SendPosterArt()
         local ext = string.lower(string.match(n, "%.(%w+)$") or "")
         if ext == "png" or ext == "jpg" then resource.AddFile("materials/livingcity/posters/" .. n) end
     end
+    -- (and the orientation pamphlet's paper: cl_livingcity_dialog.lua)
+    for _, n in ipairs(file.Find("materials/livingcity/pamphlet/*", "GAME") or {}) do
+        local ext = string.lower(string.match(n, "%.(%w+)$") or "")
+        if ext == "png" or ext == "jpg" then resource.AddFile("materials/livingcity/pamphlet/" .. n) end
+    end
 end
 hook.Add("Initialize", "LivingCityPosterArt", SendPosterArt)

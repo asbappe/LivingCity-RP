@@ -1327,3 +1327,7 @@ Notes:
   Notes:
 - [ ] **Poster roll, the city's own posters:** right click on a poster the editor placed: it comes down. Hang a different one in its place. After a map change the editor's poster is back.
   Notes:
+
+## 10 November: the pamphlet's look
+- [ ] **Pamphlet:** read the Civil Orientation pamphlet from your pockets. It opens as a folded paper leaflet: sections 1 to 8 down the left, a picture and the page on the right. Click each section (the picture changes), then "Fold it away". Tell me if any text runs off the paper or the font looks wrong.
+  Notes:

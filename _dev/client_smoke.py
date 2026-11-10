@@ -3518,6 +3518,31 @@ return nil
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
 
+# the Civil Orientation pamphlet opens as a printed leaflet (cl_livingcity_dialog.lua), and paints
+err = L.execute(r"""
+if not net["recv_lc_dialog"] then return "pamphlet: the dialog receiver is missing" end
+local rS, rE, rU = net.ReadString, net.ReadEntity, net.ReadUInt
+local q = { "Civil Orientation pamphlet", "Thin grey paper.", "WELCOME HOME\n\nYou were brought here.\n\nThe Office of the City Administrator",
+    "rations", "Rations", "work", "Work", "pamphlet" }
+net.ReadString = function() return table.remove(q, 1) end
+net.ReadEntity = function() return NULL end
+net.ReadUInt = function() return 2 end
+local made = {}
+local vc = vgui.Create
+vgui.Create = function(...) local p = vc(...) made[#made + 1] = p return p end
+local okP, errP = pcall(function()
+    net["recv_lc_dialog"]()
+    for _, p in ipairs(made) do if p.Paint then p:Paint(860, 580) end end
+end)
+vgui.Create = vc
+net.ReadString, net.ReadEntity, net.ReadUInt = rS, rE, rU
+if not okP then return "pamphlet: " .. tostring(errP) end
+if #made < 5 then return "pamphlet: the leaflet wasn't built (" .. #made .. " panels)" end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
 # the people's name tags (sh_livingcity_npcstr.lua): the server's answer fills the game's copy, readers
 # read it through LC.NPCStr, a removed one is forgotten, and the game asks after a far one it reads
 err = L.execute(r"""

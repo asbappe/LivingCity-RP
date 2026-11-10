@@ -34,6 +34,7 @@ function LC.OpenDialog(ply, key, ent, d)
         net.WriteString(tostring(opts[i][1]))
         net.WriteString(tostring(opts[i][2]))
     end
+    net.WriteString(d.style or "") -- ("pamphlet": the client draws it as a printed leaflet, cl_livingcity_dialog.lua)
     net.Send(ply)
 end
 

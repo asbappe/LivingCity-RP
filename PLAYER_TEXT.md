@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version a2aed39. Admin-only console messages and log lines are left out.
+Made from version 56fa8fd. Admin-only console messages and log lines are left out.
 
-9981 lines, from 275 files.
+9983 lines, from 276 files.
 
 ## Contents
 
@@ -73,6 +73,7 @@ Made from version a2aed39. Admin-only console messages and log lines are left ou
 - [the collapse on screen (sv_livingcity_collapse.lua)](#the-collapse-on-screen-svlivingcitycollapselua-cllivingcitycollapselua) (16)
 - [cl_livingcity_context.lua](#cllivingcitycontextlua-cllivingcitycontextlua) (79)
 - [cl_livingcity_cp.lua](#cllivingcitycplua-cllivingcitycplua) (26)
+- [cl_livingcity_dialog.lua](#cllivingcitydialoglua-cllivingcitydialoglua) (2)
 - [cl_livingcity_directives.lua](#cllivingcitydirectiveslua-cllivingcitydirectiveslua) (19)
 - [cl_livingcity_dreamenforce.lua](#cllivingcitydreamenforcelua-cllivingcitydreamenforcelua) (1)
 - [the nightmare dreams you play, your side (sv_livingcity_dreamgames.lua)](#the-nightmare-dreams-you-play-your-side-svlivingcitydreamgameslua-cllivingcitydreamgameslua) (24)
@@ -1807,6 +1808,16 @@ Made from version a2aed39. Admin-only console messages and log lines are left ou
 
 - "!struggle to work at the cuffs when nobody's looking"  (text, line 408)
 - "HANDS UP  (!handsup to lower them)"  (text, line 410)
+
+## cl_livingcity_dialog.lua (cl_livingcity_dialog.lua)
+
+`gamemodes/livingcity/gamemode/modules/client/cl_livingcity_dialog.lua`
+
+
+> Note for you (not shown in game): part of: paint
+
+- "A guide for new residents"  (drawn on screen, line 81)
+- "Fold it away"  (drawn on screen, line 127)
 
 ## cl_livingcity_directives.lua (cl_livingcity_directives.lua)
 
