@@ -47,3 +47,15 @@
 **Changes from the 7 November playtest (part 2).**
 - **Backup comes armed to a gunfight:** call for backup with a gun in your hand, shot at in the last 30 seconds, or on a violent job, and the units come with pistols and SMGs (half and half), and keep them in hand while they're with you (calming down after a fight, or Half-Life 2's own weapon choice, used to put the stunstick back in their hand). Dispatch says so: "Weapons free: they're coming with pistols and SMGs." Units already with a player for a job aren't pulled away by someone else's call.
 - **My career** (F4 > Career, or C > "My career: rank, XP and the way to the Overwatch", which opens that tab): your rank and the XP to the next one, every rank and what it takes (which need the conditioning), and the way up in plain words: where the Overwatch Candidate story stands for you (waiting on a few more jobs, on your board now, a failed part coming back and when), the Man Inside if it's yours, and that nothing you fail locks you out. Every faction with ranks has the page; the way to the Overwatch is Civil Protection's.
+
+## A unit's shift: the quota, papers duty, inspections, the review (the owner, 10 November)
+
+Something for Civil Protection to do when no rebels are about. Every Civil Protection player on duty works shifts of `lc_cp_shift_minutes` (30), each with a quota. **F2 > Me > My shift** shows the time left and the quota so far, and holds the work:
+
+- **Searches** (`lc_cp_quota_searches`, 3): anyone searched counts, a player (the pat-down) or one of the city's people.
+- **Checkpoint papers duty** (`lc_cp_quota_papers`, 1): F2 > Me > My shift > Checkpoint papers duty. Travelers walk up one at a time; E on each shows their papers beside today's rules (expiry, the photo, a banned district, the stamps); approve, deny or call it in. It's the Intake Processor's papers check, done by a unit. Seeing most of them through (3 of 5) counts.
+- **A residence inspection** (`lc_cp_quota_inspections`, 1): F2 > Me > My shift > Get an inspection order names a resident (a housed citizen or rebel who's online) and their block. Go to the block and F2 > Me > My shift > Inspect the residence (8 seconds). Their stash is gone through: each contraband item is found 4 times in 5, confiscated, and the resident is charged exactly as a block raid charges (standing lost, wanted); they're told their residence was inspected, clean or not. The unit gets 5 experience for each thing found.
+- **Arrests** aren't in the quota, but count toward the review.
+- **The performance review** at the end of the shift: a grade from the quota met (A all of it, B two thirds, C a third, D less), arrests adding a little, and experience for it (A 30, B 20, C 10), which is what promotes a unit. The last five reviews are kept: F2 > Me > My shift > My last reviews.
+- `lc_cp_duty` 0 turns it off.
+

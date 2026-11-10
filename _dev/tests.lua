@@ -10632,6 +10632,66 @@ LC.ClearWanted(p)
 p.lcRap = {} p:RemovePData("lc_rap")
 end
 StandingPanelTests()
+function CPDutyTests()
+section("A unit's shift: the quota, papers duty, inspections, the review")
+local function Later(secs) _advance(secs) _runtimers() end
+_setcvar("lc_cp_duty", 1)
+local D0 = Vector(97000, -97000, 0)
+local bz = LC.AddZone(D0, 500, "block", 37)
+local unit = newPlayer("DutyUnit", "cp")
+local cit = newPlayer("DutyResident", "citizen")
+Later(5.5)
+local s = LC.CPShift(unit)
+ok(s and unit:GetNW2String("lc_shift", "") ~= "", "a unit on duty is on a shift, shown on F2 > Me > My shift")
+ok(LC.CPShift(cit) == nil, "a citizen has no shift")
+for _ = 1, 3 do hook.Run("LivingCitySearched", unit, cit, {}, {}) end
+ok(s.searches == 3 and has(unit.chat, "Quota: searches done"), "searches count toward the quota", s.searches)
+LC.SearchNPCClean(unit, { untilT = 0 })
+ok(s.searches == 4, "searching one of the city's people counts too")
+-- an inspection
+local b = LC.PlayerBlock(cit) or 37
+if not LC.PlayerBlock(cit) then cit:SetPData("lc_block_" .. game.GetMap(), 37) cit:SetNW2Int("lc_block", 37) end
+local okO = LC.CPInspectOrder(unit)
+ok(okO and unit.lcInspectOrder, "F2 > My shift > Get an inspection order names a resident and their block")
+unit.lcInspectOrder = { target = cit, name = "DutyResident", block = LC.PlayerBlock(cit), blockName = "Block 37" }
+LC.Stash(cit).moonshine = 6
+unit:SetPos(D0 + Vector(0, 0, 0) + Vector(9000, 0, 0))
+local okI, whyI = LC.CPInspect(unit)
+ok(not okI and string.find(whyI or "", "not in", 1, true), "inspecting needs you in their block", whyI)
+for _, z in ipairs(LC.ZonesOfKind("block")) do if z.group == LC.PlayerBlock(cit) then unit:SetPos(z.pos) break end end
+cit:SetPos(D0 + Vector(20000, 0, 0))
+LC.CPInspect(unit)
+Later(9)
+ok((LC.Stash(cit).moonshine or 0) < 6 and s.inspections == 1, "the residence is searched: contraband in their stash is confiscated", LC.Stash(cit).moonshine)
+ok(LC.PlayerIsWanted(cit), "and the resident is charged, as a raid would")
+LC.ClearWanted(cit)
+-- papers duty
+ok(LC.CPPapersDuty(unit) and LC.JobGames[unit] and LC.JobGames[unit].kind == "papers", "checkpoint papers duty: the travelers' papers checked against today's rules")
+LC.JobGames[unit].done = 5
+LC.JobGameEnd(unit, "done")
+LC.CPDutyTick()
+ok(s.papers == 1, "finished, it counts", s.papers)
+hook.Run("LivingCityIncarcerated", cit, 60, "Test", unit)
+ok(s.arrests == 1, "arrests are counted for the review")
+-- the review
+local x0 = tonumber(unit:GetPData("lcf_xp_cp", 0)) or 0
+s.startT = CurTime() - 31 * 60
+unit.chat = {}
+LC.CPDutyTick()
+local rv = util.JSONToTable(unit:GetPData("lc_cp_reviews", "") or "") or {}
+ok(rv[1] and rv[1].grade == "A" and has(unit.chat, "Performance review"), "the end of the shift: a performance review", rv[1] and rv[1].line)
+ok((tonumber(unit:GetPData("lcf_xp_cp", 0)) or 0) - x0 == 30, "grade A: 30 experience toward promotion")
+ok(LC.CPShift(unit) ~= s and LC.CPShift(unit).searches == 0, "and a new shift begins")
+LC.CPShift(unit).startT = CurTime() - 31 * 60
+LC.CPDutyTick()
+rv = util.JSONToTable(unit:GetPData("lc_cp_reviews", "") or "") or {}
+ok(rv[1].grade == "D" and #rv == 2, "nothing done: grade D, and the reviews are kept")
+if LC.Prisoners[cit] then LC.ReleasePrisoner(cit) end
+unit:RemovePData("lc_cp_reviews")
+LC.RemoveZone(bz)
+for _, p in ipairs({ unit, cit }) do p:SetPos(D0 + Vector(30000, 0, 0)) end
+end
+CPDutyTests()
 
 function PapersHousingTests()
 section("Papers you carry, the housing register, transfers")

@@ -1282,6 +1282,16 @@ Notes:
   Notes:
 - [ ] **Work detail by turns:** ask for a work detail three times in one sentence. First trash, then sweeping (a push broom and grime; hold E on each patch), then, if there are toilets in your Combine zone, unclogging: the guard walks you to each blocked toilet, E on it, water should splash out of the bowl for six seconds.
   Notes:
+
+## 10 November, last: a unit's shift
+
+- [ ] **The quota:** as Civil Protection, F2 > Me > My shift. It should show the time left and searches, papers duty, inspections. Search 3 people (players or NPCs) and watch it count.
+  Notes:
+- [ ] **Papers duty:** My shift > Checkpoint papers duty. Travelers walk up; E on each shows their papers.
+  Notes:
+- [ ] **Inspection:** with a citizen player online who has a room, My shift > Get an inspection order, go to their block, Inspect the residence. Contraband in their stash should be confiscated and they should be told.
+  Notes:
+- [ ] **Review:** at the end of 30 minutes, a performance review with a grade and experience.
 - [ ] **Illness (Realistic):** stand in the rain a while (or `lc_illness_rate 20` to hurry it): a cold, coughing. Buy Union medicine at the Commissary and take it. Eat raw meat: a stomach bug, vomiting; drink clean water. Leave a cold alone: maybe a fever (health stops at 60). On Relaxed: nothing.
   Notes:
 - [ ] **The old-timer's new troubles:** his cough wants Union medicine (tablets refused), and his last trouble is a smoke (a cigarette), not a radio.

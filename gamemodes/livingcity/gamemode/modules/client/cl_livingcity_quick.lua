@@ -393,12 +393,39 @@ local function MyDreamsPage()
     return { title = "MY DREAMS", items = items, empty = rows }
 end
 
+-- A Civil Protection shift (sv_livingcity_cpduty.lua): the quota so far, the work, the reviews.
+local function ReviewsPage()
+    local list = util.JSONToTable(LocalPlayer():GetNW2String("lc_cp_reviews", "") or "") or {}
+    local rows = {}
+    for i, r in ipairs(list) do rows[i] = tostring(r.line or "") end
+    if #rows == 0 then rows[1] = "No reviews yet: one comes at the end of each shift." end
+    return { title = "MY REVIEWS", items = {}, empty = rows }
+end
+local function ShiftPage()
+    local me = LocalPlayer()
+    local s = util.JSONToTable(me:GetNW2String("lc_shift", "") or "") or {}
+    local q = s.q or {}
+    local items = { Item("Checkpoint papers duty", function() Send("papersduty") end) }
+    if s.order then
+        items[#items + 1] = Item("Inspect the residence of " .. tostring(s.order.name) .. ", " .. tostring(s.order.block), function() Send("inspect") end)
+    else
+        items[#items + 1] = Item("Get an inspection order", function() Send("inspectorder") end)
+    end
+    items[#items + 1] = Page("My last reviews", ReviewsPage)
+    local rows = {}
+    rows[5] = string.format("Shift: %d min left.", math.ceil((s.left or 0) / 60))
+    rows[6] = string.format("Searches %d of %d, papers duty %d of %d,", s.searches or 0, q.searches or 0, s.papers or 0, q.papers or 0)
+    rows[7] = string.format("inspections %d of %d, arrests %d.", s.inspections or 0, q.inspections or 0, s.arrests or 0)
+    return { title = "MY SHIFT", items = items, empty = rows }
+end
+
 -- What everyone has about themselves (the owner, 10 November: never only in the C menu): where they
 -- stand, survival, their dreams. On a citizen's Me page, and a page of its own for everyone else.
 local function MineItems(me)
     local out = {
         Item("Where I stand (every number explained)", function() if LC_CL.OpenStandingPanel then LC_CL.OpenStandingPanel() else QM("standing") end end),
     }
+    if me:GetNW2String("lc_shift", "") ~= "" then table.insert(out, 1, Page("My shift: quota, papers duty, inspections", ShiftPage)) end
     if me:GetNW2String("lc_survival", "") ~= "" then
         out[#out + 1] = Item(me:GetNW2String("lc_survival", "") == "relaxed" and "Survival: Relaxed (switch to Realistic: more pay)"
             or "Survival: Realistic (switch to Relaxed)", function() Send("survival") end)
@@ -661,7 +688,7 @@ function LC_CL.QuickRoleRoot()
     if f ~= "citizen" and f ~= "" and f ~= "zombie" and f ~= "stalker" then -- (the infested and stalkers have none of it)
         -- everyone else: where they stand, survival, their dreams (never only in the C menu), after
         -- everything already on F2, so nothing there moves
-        local mine = Page("Me: where I stand, survival, dreams", MinePage)
+        local mine = Page(me:GetNW2String("lc_shift", "") ~= "" and "Me: my shift, where I stand, survival" or "Me: where I stand, survival, dreams", MinePage)
         mine.id = "me"
         Add(mine)
     end
