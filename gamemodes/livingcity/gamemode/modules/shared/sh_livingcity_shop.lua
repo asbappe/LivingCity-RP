@@ -425,6 +425,7 @@ end
 ------------------------------------------------------------------------
 -- The black market (a dealer placed with the editor, or rebel territory)
 --   weapon    given straight to you
+--   qm        only the Resistance's quartermaster has it, never a dealer
 -- Standing doesn't matter here. Credits do. Units who walk up to a dealer
 -- don't buy anything: they bust it.
 ------------------------------------------------------------------------
@@ -454,7 +455,7 @@ LCS.Black = {
     { id = "zipties", item = "zipties", count = 2, name = "Cuffs (2)", price = 20, desc = "Two pairs. Tie anyone's hands, a Civil Protection unit's included: up close, looking at them, C > their name > Cuff them. They must have their hands up, be down, be stopped by a unit, or you come from behind. Cuffed, they can't use anything, and Drag walks them along." },
     { id = "satchel", item = "satchel", price = 30, desc = "No questions about what goes in it." },
     { id = "spraypaint", item = "spraypaint", count = 3, name = "Spray cans (3)", price = 25, desc = "Let the city know we're still here." },
-    { id = "pasteup", item = "pasteup", count = 3, name = "Paste-ups (3)", price = 20, desc = "Their walls, our words." },
+    { id = "pasteup", item = "pasteup", count = 3, name = "Paste-ups (3)", price = 20, desc = "Their walls, our words.", qm = true }, -- (the owner, 10 November: the dealer isn't Resistance)
     -- what the Resistance's lab makes (sv_livingcity_lab.lua); everyone else pays the dealer for it
     { id = "smokebomb", item = "smokebomb", price = 30, desc = "Chemicals in a can, and a fuse." },
     { id = "ammo_pistol", item = "ammo_pistol", price = 40, desc = "Eighteen rounds. Hand-loaded, mostly reliable." },

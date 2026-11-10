@@ -7593,6 +7593,7 @@ if IsValid(paste) then paste:Remove() end
 hanger:SetNW2String("lcf_faction", "")
 -- a paste-up from the black market: anyone holding one can put it up
 ok(LCS.Items.pasteup and LCS.Items.pasteup.use == "pasteup", "the paste-up is an item")
+ok(LCS.BlackById.pasteup and LCS.BlackById.pasteup.qm == true, "and only the quartermaster sells it, not a dealer")
 local pasted = LC.HangPoster(hanger, "rebel_leash", LB + Vector(5000, 6800, 60), Vector(1, 0, 0), true)
 ok(IsValid(pasted) and pasted:GetNW2String("lc_notice", "") == "rebel_leash", "a paste-up from your pockets goes up, Resistance or not")
 -- only so many paste-ups in the city: one more and the oldest comes down; and not right beside another

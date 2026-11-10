@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 111933e. Admin-only console messages and log lines are left out.
+Made from version 8544704. Admin-only console messages and log lines are left out.
 
-10126 lines, from 280 files.
+10127 lines, from 280 files.
 
 ## Contents
 
@@ -270,7 +270,7 @@ Made from version 111933e. Admin-only console messages and log lines are left ou
 - [territory that spreads, and is pushed back](#territory-that-spreads-and-is-pushed-back-svlivingcityterritorylua) (38)
 - [territory grows along the path nodes](#territory-grows-along-the-path-nodes-svlivingcityterritorypathslua) (14)
 - [the trains](#the-trains-svlivingcitytrainslua) (9)
-- [the underground](#the-underground-svlivingcityundergroundlua) (197)
+- [the underground](#the-underground-svlivingcityundergroundlua) (198)
 - [powered vests ("suit power")](#powered-vests-suit-power-svlivingcityvestlua) (4)
 - [cigarettes, alcohol and stimulants (and how a night's dream leaves you)](#cigarettes-alcohol-and-stimulants-and-how-a-nights-dream-leaves-you-svlivingcityviceslua) (31)
 - [vortigaunts](#vortigaunts-svlivingcityvortlua) (12)
@@ -1052,7 +1052,7 @@ Made from version 111933e. Admin-only console messages and log lines are left ou
 - "The Director of Propaganda's microphone: left click to go on air over every loudspeaker and screen (one minute, once every fifteen minutes). A scanner flies down and films whoever holds it, live on every screen; its eye blinks red while it records. Shoot the scanner down to cut the picture. With no player in the job, the Administrator addresses the city herself now and then; kill her on air and her microphone is yours. Take the microphone off someone (hands up or cuffed, actions menu) and broadcasting with it is a pirate broadcast."  (text, line 269)
 - "The Director of Propaganda's poster roll: left click hangs the chosen poster on the wall in front of you, right click takes any poster down (the city's own return when the map next starts), reload chooses another (seventeen posters). Eleven of them only ever go up by hand: the city has them when its Director hangs them. They stay up until the map changes."  (text, line 270)
 - "A spray can used on one of the city's posters paints over it (the same risk as spraying a wall). Left click with a poster roll pastes a fresh sheet over the paint. In a Resistance member's hands a poster roll also has four of their own paste-ups on it."  (text, line 271)
-- "Resistance paste-ups (black market, three for 20): use one from your pockets while looking at a bare wall, up close, and it goes up. Only a few can be up in the city at once: one more and the oldest comes down, and never two close together."  (text, line 272)
+- "Resistance paste-ups (from the quartermaster, three for 20): use one from your pockets while looking at a bare wall, up close, and it goes up. Only a few can be up in the city at once: one more and the oldest comes down, and never two close together."  (text, line 272)
 - "Windows are drawn in your faction's style: black glass and cyan for Civil Protection and the Administration, rust and scrap plate for the Resistance, grey concrete for citizens. Being questioned looks the same whoever you are. To switch it off: lc_ui_theme 0 in the console."  (text, line 273)
 - "Streetlights and loudspeakers break when shot or worn out: broken lights go dark, and nobody near a broken loudspeaker hears the PA. Maintenance and Radio Repair crews fix them."  (text, line 274)
 - "One data terminal gives half a chip (a fragment): hack a second, different terminal and the two fragments make a full data chip. The master terminal is the big prize: one download gives a master data core."  (text, line 275)
@@ -18698,120 +18698,115 @@ Made from version 111933e. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: open market
 
 - "[Black market] {why}"  (chat message, line 1401)
-
-> Note for you (not shown in game): his usual stock, and whatever the Commissary is short of (sv_livingcity_market.lua)
-
-- "Not enough credits"  (text, line 1414)
-- "Too much to carry"  (text, line 1415)
-
-> Note for you (not shown in game): part of: open market
-
-- "Sold out: more in about %d minutes"  (message, line 1419)
+- "Not enough credits"  (text, line 1418)
+- "Too much to carry"  (text, line 1419)
+- "Sold out: more in about %d minutes"  (message, line 1423)
 
 > Note for you (not shown in game): (the quartermaster pays more for what's in demand: sv_livingcity_market.lua)
 
-- "In demand: he pays more"  (text, line 1432)
+- "In demand: he pays more"  (text, line 1436)
 
 > Note for you (not shown in game): The quartermaster's window for someone not of the Resistance: nothing to buy, the arms they carry to sell or give.
 
-- "[Quartermaster] "I don't deal with rats. Walk away while you can.""  (chat message, line 1451)
+- "[Quartermaster] "I don't deal with rats. Walk away while you can.""  (chat message, line 1455)
 
 > Note for you (not shown in game): Giving one of something to the quartermaster: sympathy for someone not of the Resistance (1 a gift).
 
-- "Give it to the quartermaster himself."  (text, line 1477)
-- "He only wants arms and what the fight needs: guns, ammunition, gun parts, scrap, rags, chemicals."  (text, line 1478)
+- "Give it to the quartermaster himself."  (text, line 1481)
+- "He only wants arms and what the fight needs: guns, ammunition, gun parts, scrap, rags, chemicals."  (text, line 1482)
 
 > Note for you (not shown in game): part of: quartermaster donate
 
-- "That was issued to you. He won't touch it."  (text, line 1483)
-- "[Quartermaster] 'Every bit helps.' (You give: {name}.)"  (text, line 1492)
-- "[Quartermaster] He weighs it in his hand and nods. 'We won't forget this.' (You give: {name}.)"  (text, line 1493)
+- "That was issued to you. He won't touch it."  (text, line 1487)
+- "[Quartermaster] 'Every bit helps.' (You give: {name}.)"  (text, line 1496)
+- "[Quartermaster] He weighs it in his hand and nods. 'We won't forget this.' (You give: {name}.)"  (text, line 1497)
 
 > Note for you (not shown in game): the game answering something done in a window (lcu_donate)
 
-- "[Quartermaster] {why}"  (chat message, line 1501)
+- "[Quartermaster] {why}"  (chat message, line 1505)
 
 > Note for you (not shown in game): At the quartermaster: a chip decoded, from his menu.
 
-- "[Quartermaster] {why}"  (chat message, line 1510)
-- "[Quartermaster] He plugs it into a battered laptop and reads. 'This is good. Get the word out.'"  (chat message, line 1511)
+- "[Quartermaster] {why}"  (chat message, line 1514)
+- "[Quartermaster] He plugs it into a battered laptop and reads. 'This is good. Get the word out.'"  (chat message, line 1515)
 
 > Note for you (not shown in game): part of: black buy
 
-- "He's out of those. More in about %d minutes."  (message, line 1564)
-- "Not enough credits."  (text, line 1566)
-- "[Black market] %s, for %d credits. You didn't get it here."  (message, line 1576)
+- "Only the quartermaster has those."  (text, line 1567)
+- "He's out of those. More in about %d minutes."  (message, line 1569)
+- "Not enough credits."  (text, line 1571)
+- "[Black market] %s, for %d credits. You didn't get it here."  (message, line 1581)
 
 > Note for you (not shown in game): Sell one of something (or all of it): pocket items, or a weapon as "w:<class>".
 
-- "From strangers the quartermaster only buys arms and what the fight needs: guns, ammunition, gun parts, scrap, rags, chemicals."  (text, line 1584)
+- "From strangers the quartermaster only buys arms and what the fight needs: guns, ammunition, gun parts, scrap, rags, chemicals."  (text, line 1589)
 
 > Note for you (not shown in game): part of: dealer sell
 
-- "That was issued to you. The dealer doesn't want it."  (text, line 1592)
-- "[Black market] Sold: %s, for %d credits."  (message, line 1595)
-- "The quartermaster doesn't buy those. Take it to the lab: the scientist decodes them."  (text, line 1603)
-- "[Black market] Sold: %s%s, for %d credits."  (message, line 1611)
+- "That was issued to you. The dealer doesn't want it."  (text, line 1597)
+- "[Black market] Sold: %s, for %d credits."  (message, line 1600)
+- "The quartermaster doesn't buy those. Take it to the lab: the scientist decodes them."  (text, line 1608)
+- "[Black market] Sold: %s%s, for %d credits."  (message, line 1616)
 
 > Note for you (not shown in game): (arms and materials sold to the quartermaster: 0.1 an item for arms and gun parts, 0.025 for scrap, rags and chemicals: the owner, 9 November)
 
-- "[Black market] {why}"  (chat message, line 1619)
+- "[Black market] {why}"  (chat message, line 1624)
 
 > Note for you (not shown in game): the game answering something done in a window (lcu_sell)
 
-- "[Black market] {why}"  (chat message, line 1626)
+- "[Black market] {why}"  (chat message, line 1631)
 
 > Note for you (not shown in game): part of: bust dealer
 
-- "[Civil Protection] The dealer bolts. You confiscate what's left of the stock."  (chat message, line 1636)
-- "a black market dealer's stock"  (text, line 1637)
-- "black market busted"  (text, line 1638)
-- "Busted a dealer"  (text, line 1639)
-- "The dealer {GetPos} got raided. Stay away for a while."  (text, line 1642)
+- "[Civil Protection] The dealer bolts. You confiscate what's left of the stock."  (chat message, line 1641)
+- "a black market dealer's stock"  (text, line 1642)
+- "black market busted"  (text, line 1643)
+- "Busted a dealer"  (text, line 1644)
+- "The dealer {GetPos} got raided. Stay away for a while."  (text, line 1647)
 
 > Note for you (not shown in game): Inventory actions and what the inventory window needs to know !pick (or bind a key to lc_pick): use the right tool you're carrying on the door you're looking at.
 
-- "Look at a locked door, up close."  (text, line 1668)
+- "Look at a locked door, up close."  (text, line 1673)
 
 > Note for you (not shown in game): part of: quick pick
 
-- "That's a Combine lock. You need a keycard, a door code or a bypass charge."  (text, line 1675)
-- "You don't have a lockpick. Make one from four pieces of scrap (F3), or find the dealer."  (text, line 1675)
+- "That's a Combine lock. You need a keycard, a door code or a bypass charge."  (text, line 1680)
+- "You don't have a lockpick. Make one from four pieces of scrap (F3), or find the dealer."  (text, line 1680)
 
 > Note for you (not shown in game): bend four bits of scrap into something that opens a lock
 
-- "You need four pieces of scrap."  (text, line 1708)
-- "You bend and file the scrap into a lockpick set."  (text, line 1713)
+- "You need four pieces of scrap."  (text, line 1713)
+- "You bend and file the scrap into a lockpick set."  (text, line 1718)
 
 > Note for you (not shown in game): part of: underground action
 
-- "Requests are off on this server."  (text, line 1717)
-- "[Request] {why}"  (text, line 1718)
-- "[Stash] {why}"  (chat message, line 1723)
-- "Keep it on you. It's shown when a Civil Protection unit stops you during curfew."  (text, line 1736)
-- "It only listens. With a radio transmitter too, you can talk on Freq 7: switch to the Radio transmitter (next to Hands), or !r <message>."  (text, line 1738)
-- "It only listens: nobody talks on the Union band, it's the city's. Press Listen to hear it."  (text, line 1739)
-- "Use any ration dispenser."  (text, line 1741)
+- "Requests are off on this server."  (text, line 1722)
+- "[Request] {why}"  (text, line 1723)
+- "[Stash] {why}"  (chat message, line 1728)
+- "Keep it on you. It's shown when a Civil Protection unit stops you during curfew."  (text, line 1741)
+- "It only listens. With a radio transmitter too, you can talk on Freq 7: switch to the Radio transmitter (next to Hands), or !r <message>."  (text, line 1743)
+- "It only listens: nobody talks on the Union band, it's the city's. Press Listen to hear it."  (text, line 1744)
+- "Use any ration dispenser."  (text, line 1746)
 
 > Note for you (not shown in game): Upkeep
 
-- "[Papers] Your borrowed name has worn thin. You're yourself again."  (chat message, line 1775)
+- "[Papers] Your borrowed name has worn thin. You're yourself again."  (chat message, line 1780)
 
 > Note for you (not shown in game): the console command lc_search
 
-- "%s searched: %d item(s) confiscated%s"  (message, line 1801)
+- "%s searched: %d item(s) confiscated%s"  (message, line 1806)
 
 > Note for you (not shown in game): The Resistance's own plain clothes
 
-- "You don't have anything else to wear. (Find some clothes.)"  (chat message, line 1827)
+- "You don't have anything else to wear. (Find some clothes.)"  (chat message, line 1832)
 
 > Note for you (not shown in game): typing in chat
 
-- "You're already in your own clothes."  (chat message, line 1833)
+- "You're already in your own clothes."  (chat message, line 1838)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "[Resistance] You're in plain clothes. F2 > Gear up when it's time to fight."  (chat message, line 1844)
+- "[Resistance] You're in plain clothes. F2 > Gear up when it's time to fight."  (chat message, line 1849)
 
 ## powered vests ("suit power") (sv_livingcity_vest.lua)
 
@@ -20577,77 +20572,77 @@ Made from version 111933e. Admin-only console messages and log lines are left ou
 - "Suit battery"  (name, line 416)
 - "Armor recharge."  (description, line 416)
 
-> Note for you (not shown in game): The black market (a dealer placed with the editor, or rebel territory) weapon    given straight to you Standing doesn't matter here. Credits do. Units who walk up to a dealer don't buy anything: they bust it.
+> Note for you (not shown in game): The black market (a dealer placed with the editor, or rebel territory) weapon    given straight to you qm        only the Resistance's quartermaster has it, never a dealer Standing doesn't matter here. Credits do. Units who walk up to a dealer don't buy anything: they bust it.
 
-- "Already tuned to Freq 7."  (description, line 433)
-- "Good work. Not perfect work."  (description, line 434)
-- "For people with a steady hand."  (description, line 435)
-- "One more meal than the Union thinks you deserve."  (description, line 436)
-- "Picks, tension wrench, patience not included."  (description, line 437)
-- "One use: opens a Combine door (or any locked door), holds it open ten seconds, open for thirty. Can trip an alarm. Don't ask where it came from."  (description, line 438)
-- "Clean, plain, forgettable."  (description, line 439)
-- "Off a Civil Protection unit who won't be needing it."  (description, line 440)
-- "No questions about why you need them."  (description, line 441)
-- "Fell off a Commissary truck."  (description, line 442)
-- "Hand-rolled cigarettes (5)"  (name, line 443)
-- "Real tobacco. Don't ask from where."  (description, line 443)
-- "Bathtub beer. It's wet, and it works."  (description, line 444)
-- "Strong enough to strip paint. Mostly safe."  (description, line 445)
-- "Pre-war vodka, for people the Union isn't proud of."  (description, line 446)
-- "Stolen from a Civil Protection depot, a few at a time. Keeps you up past lights out, and the night's dream goes by without you."  (description, line 447)
-- "Every revolution starts somewhere."  (description, line 448)
-- "Opens Combine locks, screens and terminals. Very illegal. Don't get searched."  (description, line 449)
-- "Springs, barrels, pins. Make something with them."  (description, line 450)
-- "Bought by the bottle. Nobody cleans that much."  (description, line 451)
-- "Tomatoes, beans, maybe. Plant them in rebel territory."  (description, line 452)
-- "Pre-war tins. Nobody asks where they come from."  (description, line 453)
-- "Two pairs. Tie anyone's hands, a Civil Protection unit's included: up close, looking at them, C > their name > Cuff them. They must have their hands up, be down, be stopped by a unit, or you come from behind. Cuffed, they can't use anything, and Drag walks them along."  (description, line 454)
-- "No questions about what goes in it."  (description, line 455)
-- "Spray cans (3)"  (name, line 456)
-- "Let the city know we're still here."  (description, line 456)
-- "Paste-ups (3)"  (name, line 457)
-- "Their walls, our words."  (description, line 457)
+- "Already tuned to Freq 7."  (description, line 434)
+- "Good work. Not perfect work."  (description, line 435)
+- "For people with a steady hand."  (description, line 436)
+- "One more meal than the Union thinks you deserve."  (description, line 437)
+- "Picks, tension wrench, patience not included."  (description, line 438)
+- "One use: opens a Combine door (or any locked door), holds it open ten seconds, open for thirty. Can trip an alarm. Don't ask where it came from."  (description, line 439)
+- "Clean, plain, forgettable."  (description, line 440)
+- "Off a Civil Protection unit who won't be needing it."  (description, line 441)
+- "No questions about why you need them."  (description, line 442)
+- "Fell off a Commissary truck."  (description, line 443)
+- "Hand-rolled cigarettes (5)"  (name, line 444)
+- "Real tobacco. Don't ask from where."  (description, line 444)
+- "Bathtub beer. It's wet, and it works."  (description, line 445)
+- "Strong enough to strip paint. Mostly safe."  (description, line 446)
+- "Pre-war vodka, for people the Union isn't proud of."  (description, line 447)
+- "Stolen from a Civil Protection depot, a few at a time. Keeps you up past lights out, and the night's dream goes by without you."  (description, line 448)
+- "Every revolution starts somewhere."  (description, line 449)
+- "Opens Combine locks, screens and terminals. Very illegal. Don't get searched."  (description, line 450)
+- "Springs, barrels, pins. Make something with them."  (description, line 451)
+- "Bought by the bottle. Nobody cleans that much."  (description, line 452)
+- "Tomatoes, beans, maybe. Plant them in rebel territory."  (description, line 453)
+- "Pre-war tins. Nobody asks where they come from."  (description, line 454)
+- "Two pairs. Tie anyone's hands, a Civil Protection unit's included: up close, looking at them, C > their name > Cuff them. They must have their hands up, be down, be stopped by a unit, or you come from behind. Cuffed, they can't use anything, and Drag walks them along."  (description, line 455)
+- "No questions about what goes in it."  (description, line 456)
+- "Spray cans (3)"  (name, line 457)
+- "Let the city know we're still here."  (description, line 457)
+- "Paste-ups (3)"  (name, line 458)
+- "Their walls, our words."  (description, line 458)
 
 > Note for you (not shown in game): what the Resistance's lab makes (sv_livingcity_lab.lua); everyone else pays the dealer for it
 
-- "Chemicals in a can, and a fuse."  (description, line 459)
-- "Eighteen rounds. Hand-loaded, mostly reliable."  (description, line 460)
-- "Twelve shells."  (description, line 461)
-- "Forty-five rounds."  (description, line 462)
-- "Six heavy rounds."  (description, line 463)
-- "Put together on somebody's kitchen table. It fires."  (description, line 464)
-- "It jams. Not often."  (description, line 465)
-- "Hard to hide. Hard to argue with."  (description, line 466)
-- "Loud, heavy, final."  (description, line 467)
-- "Plates and salvaged charge cells. Holds a charge; comes with thirty in it."  (description, line 468)
-- "Talk on your radio's band, not just listen. Contraband."  (description, line 469)
-- "Four minutes of static on every Civil Protection unit radio nearby."  (description, line 470)
+- "Chemicals in a can, and a fuse."  (description, line 460)
+- "Eighteen rounds. Hand-loaded, mostly reliable."  (description, line 461)
+- "Twelve shells."  (description, line 462)
+- "Forty-five rounds."  (description, line 463)
+- "Six heavy rounds."  (description, line 464)
+- "Put together on somebody's kitchen table. It fires."  (description, line 465)
+- "It jams. Not often."  (description, line 466)
+- "Hard to hide. Hard to argue with."  (description, line 467)
+- "Loud, heavy, final."  (description, line 468)
+- "Plates and salvaged charge cells. Holds a charge; comes with thirty in it."  (description, line 469)
+- "Talk on your radio's band, not just listen. Contraband."  (description, line 470)
+- "Four minutes of static on every Civil Protection unit radio nearby."  (description, line 471)
 
 > Note for you (not shown in game): Making things by hand (F3): just these, anywhere. Everything else (guns, ammunition, armour, jammers, bypass charges, smoke bombs, a radio tuned to Freq 7) is the Resistance lab's (LCS.Lab, below) or the black market's. private   out of any unit's sight (a tunnel or back room will do)
 
-- "Bent and filed scrap"  (description, line 510)
-- "Rags, torn into strips"  (description, line 511)
+- "Bent and filed scrap"  (description, line 511)
+- "Rags, torn into strips"  (description, line 512)
 
 > Note for you (not shown in game): The Resistance lab (sv_livingcity_lab.lua): what the scientist makes, for the Resistance only. Bring him the materials (needs) and he makes it for nothing; or pay him: 60% of the dealer's price (never less than the quartermaster pays for it). secs: how long he takes.
 
-- "Eighteen pistol rounds"  (description, line 524)
-- "Twelve shotgun shells"  (description, line 525)
-- "Forty-five SMG rounds"  (description, line 526)
-- "Six .357 rounds"  (description, line 527)
-- "A powered vest: holds a charge (charge cells top it up)"  (description, line 532)
-- "A charge cell: twenty-five charge into your vest"  (description, line 533)
-- "Five forged ration cards: the dealer buys them, the dispensers take them. The more turn up, the hotter the search for the forger"  (description, line 535)
-- "Thick white smoke"  (description, line 536)
-- "Opens any door once, Combine doors too, and holds it open ten seconds"  (description, line 537)
-- "Weedkiller, cooked down, in a bottle with a rag: fire, which armour doesn't keep out"  (description, line 538)
-- "Two canisters of weedkiller, cooked down into chemicals"  (description, line 539)
-- "A Freq 7 radio rebuilt to send as well as listen"  (description, line 540)
-- "A radio that only screams"  (description, line 541)
-- "Bar stock, heated and bent"  (description, line 542)
+- "Eighteen pistol rounds"  (description, line 525)
+- "Twelve shotgun shells"  (description, line 526)
+- "Forty-five SMG rounds"  (description, line 527)
+- "Six .357 rounds"  (description, line 528)
+- "A powered vest: holds a charge (charge cells top it up)"  (description, line 533)
+- "A charge cell: twenty-five charge into your vest"  (description, line 534)
+- "Five forged ration cards: the dealer buys them, the dispensers take them. The more turn up, the hotter the search for the forger"  (description, line 536)
+- "Thick white smoke"  (description, line 537)
+- "Opens any door once, Combine doors too, and holds it open ten seconds"  (description, line 538)
+- "Weedkiller, cooked down, in a bottle with a rag: fire, which armour doesn't keep out"  (description, line 539)
+- "Two canisters of weedkiller, cooked down into chemicals"  (description, line 540)
+- "A Freq 7 radio rebuilt to send as well as listen"  (description, line 541)
+- "A radio that only screams"  (description, line 542)
+- "Bar stock, heated and bent"  (description, line 543)
 
 > Note for you (not shown in game): (only once you've lived through lc_chip_dreams of the city's dreams: sv_livingcity_bedtime.lua)
 
-- "A foil hat: sleep in it and it keeps the dream out about one night in three. "The physics is... complicated." Contraband"  (description, line 545)
+- "A foil hat: sleep in it and it keeps the dream out about one night in three. "The physics is... complicated." Contraband"  (description, line 546)
 
 ## shared.lua (shared.lua)
 

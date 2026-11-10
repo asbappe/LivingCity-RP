@@ -1343,7 +1343,7 @@ Notes:
   Notes:
 
 ## 10 November: paste-ups
-- [ ] **Buying and pasting:** buy "Paste-ups (3)" from the black market dealer. Look at a bare wall up close and use one from your pockets: after a moment a Resistance poster is on the wall. Use another on a different street: a different poster.
+- [ ] **Buying and pasting:** buy "Paste-ups (3)" from the Resistance quartermaster (a black market dealer should not list them). Look at a bare wall up close and use one from your pockets: after a moment a Resistance poster is on the wall. Use another on a different street: a different poster.
   Notes:
 - [ ] **The limits:** try to paste a second one near the first: refused ("There's one of ours close by already"). With `lc_pasteup_max 2`, paste a third somewhere else: the first one comes down.
   Notes:
