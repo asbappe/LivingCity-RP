@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 01537f9. Admin-only console messages and log lines are left out.
+Made from version 71c8f0f. Admin-only console messages and log lines are left out.
 
-9922 lines, from 273 files.
+9923 lines, from 273 files.
 
 ## Contents
 
@@ -171,7 +171,7 @@ Made from version 01537f9. Admin-only console messages and log lines are left ou
 - [city events](#city-events-svlivingcityeventslua) (80)
 - [burning the confiscated contraband (the owner, 7 November)](#burning-the-confiscated-contraband-the-owner-7-november-svlivingcityevidencelua) (45)
 - [morning exercise (mandatory for citizens)](#morning-exercise-mandatory-for-citizens-svlivingcityexerciselua) (61)
-- [sv_livingcity_factions.lua](#svlivingcityfactionslua-svlivingcityfactionslua) (51)
+- [sv_livingcity_factions.lua](#svlivingcityfactionslua-svlivingcityfactionslua) (52)
 - [field operations (the owner's 7 November playtest)](#field-operations-the-owners-7-november-playtest-svlivingcityfieldopslua) (27)
 - [Freq 7, the Resistance's pirate broadcast](#freq-7-the-resistances-pirate-broadcast-svlivingcityfreq7lua) (6)
 - [the Resistance's money (besides raiding supply drops)](#the-resistances-money-besides-raiding-supply-drops-svlivingcityfundinglua) (16)
@@ -872,7 +872,7 @@ Made from version 01537f9. Admin-only console messages and log lines are left ou
 - "The Resistance (Member rank and up) can ask a sympathizer to keep watch: they warn everyone on Freq 7 when Civil Protection units approach."  (text, line 138)
 - "The city runs on a daily schedule: work in the morning, ration lines at midday, quiet evenings, and nearly empty streets at night (only the night shift works)."  (text, line 139)
 - "Trains arrive at the station now and then, bringing new arrivals with suitcases. Anyone leaving the city boards before it departs."  (text, line 140)
-- "Careful who sees you: some ordinary citizens are informants. A gun out in the open or contraband used in plain view, and one may walk off to tell the nearest unit. The Resistance can burn a citizen they suspect of informing (F2): RAT over their head for the cell, the quartermaster won't deal with them, and if they're held, a scar for good. Burn an innocent and the whole city thinks less of the Resistance."  (text, line 141)
+- "Careful who sees you: some ordinary citizens are informants. A gun out in the open or contraband used in plain view, and one may walk off to tell the nearest unit. The Resistance can burn a citizen they suspect of informing (F2): RAT over their head for the cell, the quartermaster won't deal with them, and if they're held, a crude rat carved into their cheek for good: no Resistance will ever take them in. Burn an innocent and the whole city thinks less of the Resistance."  (text, line 141)
 - "Civil Protection works shifts with a quota: searches, checkpoint papers duty and a residence inspection (F2 > Me > My shift). A performance review at the end of each shift gives experience toward promotion."  (text, line 142)
 - "Lost among the numbers? F2 > Me > My standing (or Where I stand) (or C > You > Where I stand) shows every one of them in one window, each explained: standing, credits, rank, loyalty, sympathy, corruption, your record, wanted, probation and more."  (text, line 143)
 - "Dreams can be sat out once you've earned it: Happy or Neutral ones after living through 2 of that kind, Nightmares and propaganda with Exemplary standing (400). A small note tells you as the dream comes; choose in F2 > Me > My dreams."  (text, line 144)
@@ -7550,12 +7550,12 @@ Made from version 01537f9. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): the console command lc_ending_reset_cooldown
 
 - "Secret ending cooldown cleared."  (text, line 4060)
-- "harpies=2,shalom=2"  (text, line 4104)
-- "harpies=4,shalom=2"  (text, line 4104)
-- "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4105)
-- "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4105)
-- "2.2=CAPTAIN: What happen ?\|3.5=MECHANIC: Somebody set up us the bomb.\|6.5=OPERATOR: We get signal.\|9.5=CAPTAIN: What !\|12.5=OPERATOR: Main screen turn on.\|14.7=CAPTAIN: It's you !!\|16.4=CATS: How are you gentlemen !!\|18.4=CATS: All your base are belong to us.\|20.4=CATS: You are on the way to destruction.\|21.6=CAPTAIN: What you say !!\|23.0=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4106)
-- "2.15=CAPTAIN: What happen ?\|3.55=MECHANIC: Somebody set up us the bomb.\|4.65=OPERATOR: We get signal.\|6.5=CAPTAIN: What !\|9.5=OPERATOR: Main screen turn on.\|11.7=CAPTAIN: It's you !!\|12.55=CATS: How are you gentlemen !!\|14.7=CATS: All your base are belong to us.\|18.45=CATS: You are on the way to destruction.\|20.6=CAPTAIN: What you say !!\|21.65=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4106)
+- "harpies=2,shalom=2"  (text, line 4105)
+- "harpies=4,shalom=2"  (text, line 4105)
+- "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4106)
+- "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4106)
+- "2.2=CAPTAIN: What happen ?\|3.5=MECHANIC: Somebody set up us the bomb.\|6.5=OPERATOR: We get signal.\|9.5=CAPTAIN: What !\|12.5=OPERATOR: Main screen turn on.\|14.7=CAPTAIN: It's you !!\|16.4=CATS: How are you gentlemen !!\|18.4=CATS: All your base are belong to us.\|20.4=CATS: You are on the way to destruction.\|21.6=CAPTAIN: What you say !!\|23.0=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4107)
+- "2.15=CAPTAIN: What happen ?\|3.55=MECHANIC: Somebody set up us the bomb.\|4.65=OPERATOR: We get signal.\|6.5=CAPTAIN: What !\|9.5=OPERATOR: Main screen turn on.\|11.7=CAPTAIN: It's you !!\|12.55=CATS: How are you gentlemen !!\|14.7=CATS: All your base are belong to us.\|18.45=CATS: You are on the way to destruction.\|20.6=CAPTAIN: What you say !!\|21.65=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4107)
 
 ## escorts through Combine doors (sv_livingcity_escort.lua)
 
@@ -8173,127 +8173,128 @@ Made from version 01537f9. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game's living city gave moment
 
-- "[Resistance] They take it with a nod. They'll remember that."  (chat message, line 143)
+- "[Resistance] They take it with a nod. They'll remember that."  (chat message, line 144)
 
 > Note for you (not shown in game): part of: sides even
 
-- "The Resistance is too big for the city's Combine right now (%d fighters, %d of Civil Protection and Overwatch). Wait for more units to come on, or for a place to free up."  (message, line 451)
-- "The Combine is too big for the Resistance right now (%d of Civil Protection and Overwatch, %d fighters). Wait for more rebels to come on, or for a place to free up."  (message, line 453)
+- "The Resistance is too big for the city's Combine right now (%d fighters, %d of Civil Protection and Overwatch). Wait for more units to come on, or for a place to free up."  (message, line 452)
+- "The Combine is too big for the Resistance right now (%d of Civil Protection and Overwatch, %d fighters). Wait for more rebels to come on, or for a place to free up."  (message, line 454)
 
 > Note for you (not shown in game): part of: can join faction
 
-- "No such faction."  (text, line 458)
+- "No such faction."  (text, line 459)
 
 > Note for you (not shown in game): (a stalker is bound even as a superadmin: only death, or lc_unstalker, ends it)
 
-- "Whitelist only."  (text, line 468)
+- "Whitelist only."  (text, line 469)
 
 > Note for you (not shown in game): part of: can join faction
 
-- "Civil Protection only takes citizens in good standing (%d or more). Yours is %d."  (message, line 474)
+- "Civil Protection only takes citizens in good standing (%d or more). Yours is %d."  (message, line 475)
 
 > Note for you (not shown in game): and who've come up the Civil Protection path: Intake Processor, or Infestation Cleanup (sv_livingcity_work.lua counts the shifts)
 
-- "Civil Protection recruits from the train station's Intake Processors and the infestation cleanup crews: finish %d Intake Processor shifts first, or half as many in Infestation Cleanup (F4 > Jobs). You've done %d."  (message, line 480)
+- "Civil Protection recruits from the train station's Intake Processors and the infestation cleanup crews: finish %d Intake Processor shifts first, or half as many in Infestation Cleanup (F4 > Jobs). You've done %d."  (message, line 481)
 
 > Note for you (not shown in game): the sides kept even (the owner, 9 November: "keep the sides even"): neither the Resistance nor the Combine (Civil Protection and Overwatch together) may grow past double the other side's players, plus 4. Only joining waits: nobody on a side is ever put off it.
 
-- "The Resistance doesn't trust you yet."  (text, line 490)
+- "The Resistance will never take someone with a rat carved into their face."  (text, line 491)
+- "The Resistance doesn't trust you yet."  (text, line 492)
 
 > Note for you (not shown in game): part of: can join faction
 
-- "Requires %s in %s."  (message, line 495)
-- "No such role."  (text, line 500)
-- "Someone already holds that role."  (text, line 502)
+- "Requires %s in %s."  (message, line 497)
+- "No such role."  (text, line 502)
+- "Someone already holds that role."  (text, line 504)
 
 > Note for you (not shown in game): (the owner, 7 November: a recruit became Overwatch Commander; the rank is needed, superadmin or not, and an Overwatch role needs the conditioning like any Overwatch rank)
 
-- "Requires {name} in {name}."  (text, line 506)
-- "Overwatch roles need the transhuman conditioning first (the Overwatch Candidate story)."  (text, line 509)
+- "Requires {name} in {name}."  (text, line 508)
+- "Overwatch roles need the transhuman conditioning first (the Overwatch Candidate story)."  (text, line 511)
 
 > Note for you (not shown in game): part of: set faction
 
-- "You are now {name}."  (chat message, line 533)
+- "You are now {name}."  (chat message, line 535)
 
 > Note for you (not shown in game): the game answering something done in a window (lcf_join)
 
-- "Not while you're in custody."  (chat message, line 560)
-- "Not while you're wanted or in a fight."  (chat message, line 561)
-- "You can change faction again in {CurTime} seconds."  (chat message, line 563)
+- "Not while you're in custody."  (chat message, line 562)
+- "Not while you're wanted or in a fight."  (chat message, line 563)
+- "You can change faction again in {CurTime} seconds."  (chat message, line 565)
 
 > Note for you (not shown in game): what Civil Protection asks of a citizen, as progress bars on the card (the owner asked)
 
-- "Civil Standing"  (label, line 583)
-- "Intake Processor shifts finished (F4 > Jobs; Infestation Cleanup counts double)"  (label, line 584)
+- "Civil Standing"  (label, line 585)
+- "Intake Processor shifts finished (F4 > Jobs; Infestation Cleanup counts double)"  (label, line 586)
 
 > Note for you (not shown in game): part of: send menu
 
-- "Jobs done for the Resistance, to be trusted as a Fighter (their board, F4)"  (label, line 590)
+- "Jobs done for the Resistance, to be trusted as a Fighter (their board, F4)"  (label, line 592)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "You're a citizen for now; join again from the faction menu (F4) when there's room. Your rank and experience are kept."  (chat message, line 667)
-- "Welcome back. You're still {name}."  (chat message, line 670)
-- "You can't be %s right now: %s You're %s for now; take it again from the faction menu (F4) when there's a place."  (message, line 675)
-- "back to your rank"  (message, line 677)
+- "You're a citizen for now; join again from the faction menu (F4) when there's room. Your rank and experience are kept."  (chat message, line 669)
+- "Welcome back. You're still {name}."  (chat message, line 672)
+- "You can't be %s right now: %s You're %s for now; take it again from the faction menu (F4) when there's a place."  (message, line 677)
+- "back to your rank"  (message, line 679)
 
 > Note for you (not shown in game): XP The transhuman conditioning: the Overwatch ranks open, and whatever XP you've earned counts at once. There's no undoing it.
 
-- "the conditioning"  (text, line 692)
+- "the conditioning"  (text, line 694)
 
 > Note for you (not shown in game): part of: add xp
 
-- "Promoted to {name}!{or}"  (chat message, line 712)
-- "[%s] %s has been promoted to %s."  (message, line 717)
-- "Demoted to {name}."  (chat message, line 721)
+- "Promoted to {name}!{or}"  (chat message, line 714)
+- "[%s] %s has been promoted to %s."  (message, line 719)
+- "Demoted to {name}."  (chat message, line 723)
 
 > Note for you (not shown in game): A rebel put down by a Civil Protection or Overwatch player (the owner, 7 November): standing, two credits, and an ammunition allocation (a box of rounds for the gun in hand), so sweeping in on them is worth the danger. (The XP for it: sv_livingcity_rebels.lua.)
 
-- "anticitizen neutralized"  (text, line 764)
-- "anticitizen neutralized"  (text, line 765)
+- "anticitizen neutralized"  (text, line 766)
+- "anticitizen neutralized"  (text, line 767)
 
 > Note for you (not shown in game): part of: rebel kill reward
 
-- "twelve rounds"  (text, line 776)
-- "Anticitizen neutralized"  (on-screen notice, line 779)
-- "+%d standing, +%d credits%s."  (message, line 779)
-- ", and an ammunition allocation: {got}"  (text, line 780)
+- "twelve rounds"  (text, line 778)
+- "Anticitizen neutralized"  (on-screen notice, line 781)
+- "+%d standing, +%d credits%s."  (message, line 781)
+- ", and an ammunition allocation: {got}"  (text, line 782)
 
 > Note for you (not shown in game): (the XP, as for an NPC rebel in sv_livingcity_rebels.lua: the owner, 8 November, "5 xp per kill")
 
-- "anticitizen neutralized"  (text, line 799)
+- "anticitizen neutralized"  (text, line 801)
 
 > Note for you (not shown in game): Admin commands
 
-- "Player not found."  (text, line 887)
+- "Player not found."  (text, line 889)
 
 > Note for you (not shown in game): admin cmd
 
-- "Factions: citizen, resistance, cp, ota, admin, zombie"  (text, line 894)
-- "No such special role."  (text, line 896)
-- "set to {name}."  (text, line 898)
-- "Usage: lcf_setxp <name> <xp>"  (text, line 904)
-- "now has {xp} XP in {name}."  (text, line 907)
+- "Factions: citizen, resistance, cp, ota, admin, zombie"  (text, line 896)
+- "No such special role."  (text, line 898)
+- "set to {name}."  (text, line 900)
+- "Usage: lcf_setxp <name> <xp>"  (text, line 906)
+- "now has {xp} XP in {name}."  (text, line 909)
 
 > Note for you (not shown in game): part of: step
 
-- "by staff"  (text, line 916)
-- "is now {name}."  (text, line 917)
+- "by staff"  (text, line 918)
+- "is now {name}."  (text, line 919)
 
 > Note for you (not shown in game): admin cmd
 
-- "Usage: lcf_whitelist <name> <faction>"  (text, line 924)
-- "whitelisted for"  (text, line 928)
-- "removed from"  (text, line 928)
+- "Usage: lcf_whitelist <name> <faction>"  (text, line 926)
+- "whitelisted for"  (text, line 930)
+- "removed from"  (text, line 930)
 
 > Note for you (not shown in game): A job done for the Resistance builds their trust; the last one needed makes a Fighter of a member with the XP.
 
-- "[Resistance] You've proved yourself. They trust you now."  (chat message, line 938)
-- "trusted by the Resistance"  (text, line 939)
+- "[Resistance] You've proved yourself. They trust you now."  (chat message, line 940)
+- "trusted by the Resistance"  (text, line 941)
 
 > Note for you (not shown in game): the game's living city quest complete moment
 
-- "[Resistance] They're starting to trust you: %d of %d jobs before they'd arm you as a Fighter."  (message, line 941)
+- "[Resistance] They're starting to trust you: %d of %d jobs before they'd arm you as a Fighter."  (message, line 943)
 
 ## field operations (the owner's 7 November playtest) (sv_livingcity_fieldops.lua)
 
@@ -15323,62 +15324,62 @@ Made from version 01537f9. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_snitches.lua`
 
-- "A rat's scar carved across one cheek."  (text, line 51)
+- "A crude rat carved into one cheek."  (text, line 52)
 
 > Note for you (not shown in game): They tell.
 
-- "Reported by a citizen: {what}"  (text, line 104)
+- "Reported by a citizen: {what}"  (text, line 108)
 
 > Note for you (not shown in game): part of: report
 
-- "[CP net] A citizen reports someone {what}{or}: {who}. Outlined for 60 seconds."  (chat message, line 109)
-- "[Living City] Somebody told Civil Protection about you."  (chat message, line 111)
+- "[CP net] A citizen reports someone {what}{or}: {who}. Outlined for 60 seconds."  (chat message, line 113)
+- "[Living City] Somebody told Civil Protection about you."  (chat message, line 115)
 
 > Note for you (not shown in game): What a snitch can see: a gun out in the open.
 
-- "carrying a gun"  (text, line 169)
+- "carrying a gun"  (text, line 173)
 
 > Note for you (not shown in game): part of: item use
 
-- "using {or}"  (text, line 185)
+- "using {or}"  (text, line 189)
 
 > Note for you (not shown in game): part of: burn
 
-- "Nobody burns anyone here."  (text, line 210)
-- "Only the Resistance burns informants."  (text, line 211)
-- "The cell doesn't take that from a Sympathizer. Rise to Member first."  (text, line 212)
-- "Look at the one you suspect, close up."  (text, line 213)
-- "Only a citizen can be burned as an informant."  (text, line 215)
-- "Get closer to them."  (text, line 216)
-- "They're burned already."  (text, line 217)
-- "You burned someone not long ago. (%s)"  (message, line 218)
-- "is burned: an informant. Don't deal with them."  (text, line 225)
-- "[Living City] The Resistance has burned you as an informant. Their people will know you."  (chat message, line 226)
-- "burned an informant"  (text, line 228)
-- "[Resistance] You were right about them."  (chat message, line 229)
-- "burned an innocent citizen"  (text, line 231)
-- "[Living City] Word spreads: the Resistance burned an innocent citizen as an informant."  (chat message, line 236)
-- "[Resistance] Word comes back: they were never an informant. The city won't forget it."  (chat message, line 239)
+- "Nobody burns anyone here."  (text, line 214)
+- "Only the Resistance burns informants."  (text, line 215)
+- "The cell doesn't take that from a Sympathizer. Rise to Member first."  (text, line 216)
+- "Look at the one you suspect, close up."  (text, line 217)
+- "Only a citizen can be burned as an informant."  (text, line 219)
+- "Get closer to them."  (text, line 220)
+- "They're burned already."  (text, line 221)
+- "You burned someone not long ago. (%s)"  (message, line 222)
+- "is burned: an informant. Don't deal with them."  (text, line 229)
+- "[Living City] The Resistance has burned you as an informant. Their people will know you."  (chat message, line 230)
+- "burned an informant"  (text, line 232)
+- "[Resistance] You were right about them."  (chat message, line 233)
+- "burned an innocent citizen"  (text, line 235)
+- "[Living City] Word spreads: the Resistance burned an innocent citizen as an informant."  (chat message, line 240)
+- "[Resistance] Word comes back: they were never an informant. The city won't forget it."  (chat message, line 243)
 
 > Note for you (not shown in game): part of: scar
 
-- "Only the Resistance marks their rats."  (text, line 246)
-- "Only someone burned as an informant."  (text, line 247)
-- "Get right up to them."  (text, line 248)
-- "They'd fight you off. Only when they're cuffed, down, or have their hands up."  (text, line 250)
-- "They carry the mark already."  (text, line 251)
-- "[Living City] Someone grabs your face. A blade."  (chat message, line 253)
-- "Marking them..."  (progress bar, line 254)
-- "You let them go."  (text, line 254)
+- "Only the Resistance marks their rats."  (text, line 250)
+- "Only someone burned as an informant."  (text, line 251)
+- "Get right up to them."  (text, line 252)
+- "They'd fight you off. Only when they're cuffed, down, or have their hands up."  (text, line 254)
+- "They carry the mark already."  (text, line 255)
+- "[Living City] Someone grabs your face. A blade."  (chat message, line 257)
+- "Marking them..."  (progress bar, line 258)
+- "You let them go."  (text, line 258)
 
 > Note for you (not shown in game): part of: done
 
-- "[Living City] They've carved a rat's scar across your cheek. Everyone who sees you will see it."  (chat message, line 269)
-- "[Resistance] Marked. Anyone who looks at them will know."  (chat message, line 270)
+- "[Living City] They've carved a crude rat into your cheek. Everyone who sees you will see it, and the Resistance will never take you in."  (chat message, line 274)
+- "[Resistance] Marked. Anyone who looks at them will know."  (chat message, line 275)
 
 > Note for you (not shown in game): part of: beat tick
 
-- "[Living City] A rebel slams you against the wall. "Rat. Get out of here.""  (chat message, line 286)
+- "[Living City] A rebel slams you against the wall. "Rat. Get out of here.""  (chat message, line 291)
 
 ## squad sizes and backup by radio (sv_livingcity_squads.lua) (sv_livingcity_squads.lua)
 

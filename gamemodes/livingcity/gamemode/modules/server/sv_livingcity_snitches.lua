@@ -25,8 +25,9 @@
         citizen in the city loses a point of sympathy for them, and the
         burner loses 20 experience. The mark stays: the cell believes it.
       - A burned person who is cuffed, down, or has their hands up can be
-        scarred (F2, five seconds): a rat's scar carved across one cheek,
-        for good, in the description strangers see.
+        scarred (F2, five seconds): a crude rat carved into one cheek, drawn
+        on their face (cl_livingcity_ratscar.lua) and added to the description
+        strangers see, for good; and the Resistance will never take them in.
 
       lc_snitches 0/1, lc_snitch_chance (0.12), lc_burn 0/1, lc_burn_hours (2)
 ]]
@@ -48,7 +49,10 @@ local GIVE_UP = 90       -- a report not made by then is made anyway (they found
 local ACT_GAP = 60       -- the same person, the same thing: not seen again for this long
 local BURN_GAP = 1200    -- a burner can burn again after this long
 local BEAT_GAP = 30
-local SCAR_TEXT = " A rat's scar carved across one cheek."
+local SCAR_TEXT = " A crude rat carved into one cheek."
+-- Where the rat sits on the cheek, from the head: forward, right, up (units) and how far it turns
+-- toward the side of the face (degrees). Tuned in game; the client reads it (cl_livingcity_ratscar.lua).
+CreateConVar("lc_ratscar_pos", "3.4 2.6 -1.6 55", FLAGS, "Where the carved rat sits on a scarred face, from the head bone: forward right up turn")
 
 local function Up(npc) return IsValid(npc) and npc:Health() > 0 and LC.NPCs and LC.NPCs[npc] ~= nil end
 local function Name(p) return (LC.CharacterName and LC.CharacterName(p)) or (IsValid(p) and p:Nick()) or "someone" end
@@ -266,7 +270,8 @@ function LC.Scar(burner, target)
                     target:SetNW2String("lc_desc", desc)
                 end
             end
-            target:ChatPrint("[Living City] They've carved a rat's scar across your cheek. Everyone who sees you will see it.")
+            target:SetNW2Bool("lc_scar_mark", true) -- (the rat itself, drawn on the cheek: cl_livingcity_ratscar.lua)
+            target:ChatPrint("[Living City] They've carved a crude rat into your cheek. Everyone who sees you will see it, and the Resistance will never take you in.")
             p:ChatPrint("[Resistance] Marked. Anyone who looks at them will know.")
             hook.Run("LivingCityScarred", p, target)
         end })
@@ -294,6 +299,7 @@ end
 hook.Add("PlayerInitialSpawn", "LivingCityBurned", function(ply)
     timer.Simple(5, function()
         if not IsValid(ply) or not ply.GetPData then return end
+        ply:SetNW2Bool("lc_scar_mark", ply:GetPData("lc_scar", "0") == "1")
         local at = tonumber(ply:GetPData("lc_burned_at", 0)) or 0
         local left = at + cvHours:GetFloat() * 3600 - os.time()
         if at > 0 and left > 0 then ply:SetNW2Float("lc_burned_until", CurTime() + left) end
@@ -304,6 +310,7 @@ hook.Add("LivingCityNewCharacter", "LivingCityBurned", function(ply)
     ply:SetNW2Float("lc_burned_until", 0)
     ply:RemovePData("lc_burned_at")
     ply:RemovePData("lc_scar")
+    ply:SetNW2Bool("lc_scar_mark", false)
 end)
 
 ------------------------------------------------------------------------

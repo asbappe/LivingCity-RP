@@ -965,6 +965,7 @@ setting lc_ration_dock_height = 150
 setting lc_ration_dock_radius = 1500
 setting lc_ration_full_standing = 150
 setting lc_ration_interval = 1500
+setting lc_ratscar_pos = 3.4 2.6 -1.6 55
 setting lc_rdm_strikes_jail = 2
 setting lc_rdm_strikes_kick = 4
 setting lc_realistic_bonus = 0.2
