@@ -132,17 +132,17 @@ function reader(tx, ty, s, tone, hat) {
   return G(`translate(${tx},${ty}) scale(${s})`, g);
 }
 
-// The City Administrator (after Judith Mossman as the owner's server shows her: blond hair
-// parted and pulled back, a light roll-neck sweater), front view, in a 170 x 214 box.
+// The City Administrator (after Judith Mossman as the owner's server shows her: short auburn hair
+// with a side part, tucked back, and a white roll-neck sweater), front view, in a 170 x 214 box.
 function adminBust(o = {}) {
-  const skin = '#dfc6a8', sh = '#b59a7e', hair = '#c4a65e', hairD = '#8c7238', knit = '#d3cab2', knitD = '#b3aa92', lip = o.lip || '#8a4a40';
+  const skin = '#dfc6a8', sh = '#b59a7e', hair = '#7b3f2b', hairD = '#552a1d', knit = '#e4dece', knitD = '#c3bca8', lip = o.lip || '#8a4a40';
   return [
-    P('M44,88 L48,44 L68,22 L102,22 L122,44 L126,88 L118,116 L52,116Z', hairD),
+    P('M48,84 L50,44 L68,22 L102,22 L120,44 L122,84 L115,102 L55,102Z', hairD),
     P('M4,214 L22,166 L66,148 L104,148 L148,166 L166,214Z', knit), P('M104,148 L148,166 L166,214 L120,214 L112,170Z', knitD),
     P('M66,120 L64,152 L85,164 L106,152 L104,120Z', C.paper), P('M66,136 L104,136 L104,140 L66,140Z', knitD), P('M92,122 L104,120 L106,152 L92,160Z', knitD),
     P('M56,72 L62,50 L85,42 L108,50 L114,72 L112,100 L100,122 L85,130 L70,122 L58,100Z', skin),
     P('M102,58 L108,50 L114,72 L112,100 L100,122 L85,130 L96,112 L104,92Z', sh),
-    P('M85,38 L60,44 L50,70 L53,96 L60,76 L70,60 L85,52Z', hair), P('M85,38 L110,44 L120,70 L117,96 L110,76 L100,60 L85,52Z', hair),
+    P('M98,36 L60,42 L50,70 L53,92 L60,76 L74,62 L98,52Z', hair), P('M98,36 L110,44 L120,70 L117,92 L111,76 L105,60 L98,52Z', hair),
     P('M63,73 L80,70 L80,73 L63,77Z', hairD), P('M90,70 L107,73 L107,77 L90,73Z', hairD),
     P('M66,81 L80,81 L78,86 L68,86Z', C.ink), P('M90,81 L104,81 L102,86 L92,86Z', C.ink),
     P('M70,82 L74,82 L74,84 L70,84Z', C.paper), P('M94,82 L98,82 L98,84 L94,84Z', C.paper),
