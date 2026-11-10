@@ -151,6 +151,36 @@ local function ManpowerRows(from)
     return rows
 end
 
+-- The planning board (sv_livingcity_opplan.lua): what's planned, join it; or plan one: a target, then when.
+local function OpsPage()
+    local m = util.JSONToTable(LocalPlayer():GetNW2String("lc_op_menu", "") or "") or {}
+    local items, rows = {}, {}
+    if m.plan then
+        local p = m.plan
+        items[#items + 1] = Item(m.joined and "Back out of the operation" or "Join the operation", function() Send("joinop") end)
+        if m.can then items[#items + 1] = Item("Call it off", function() Send("cancelop") end) end
+        rows[4] = tostring(p.label)
+        rows[5] = string.format("Planned by %s. %s. %d joined.", tostring(p.by), p.waiting and "Waiting for the streets to quiet" or ("In " .. math.ceil((p.left or 0) / 60) .. " min"), p.joined or 0)
+    elseif m.can then
+        for i, label in ipairs(m.targets or {}) do
+            if #items < 8 then
+                items[#items + 1] = Page(label, function()
+                    return { title = "WHEN?", items = {
+                        Item("In 2 minutes", function() Send("planop", i .. ":2") end),
+                        Item("In 5 minutes", function() Send("planop", i .. ":5") end),
+                        Item("In 10 minutes", function() Send("planop", i .. ":10") end),
+                    } }
+                end)
+            end
+        end
+        if #items == 0 then rows[1] = "Nothing to hit right now: no terminal, screen, prisoner or drop." end
+        if (m.wait or 0) > 0 then rows[#items + 2] = string.format("Too soon after the last one: %d min.", math.ceil(m.wait / 60)) end
+    else
+        rows[1] = "Nothing planned. " .. tostring(m.why or "")
+    end
+    return { title = "OPERATIONS", items = items, empty = rows }
+end
+
 local function ResistancePage()
     local me = LocalPlayer()
     local items = {
@@ -160,6 +190,7 @@ local function ResistancePage()
         Item("Write down what you see (needs paper)", function() Send("scout") end),
     }
     if me:HasWeapon("weapon_lc_multitool") then items[#items + 1] = Item("Hack the Combine door I'm looking at", function() Send("hack") end) end
+    items[#items + 1] = Page("Operations: plan or join", OpsPage)
     -- (the owner, 7 November: losses you can see; the fighters we have left, under the rest)
     return { title = "RESISTANCE", items = items, empty = ManpowerRows(7) }
 end
@@ -403,6 +434,29 @@ local function MyDreamsPage()
     return { title = "MY DREAMS", items = items, empty = rows }
 end
 
+-- Prices on heads (sv_livingcity_opplan.lua): the wanted, and 50 or 100 credits on one.
+local function BountyPage()
+    local list = util.JSONToTable(LocalPlayer():GetNW2String("lc_bounty_menu", "") or "") or {}
+    local items, rows = {}, {}
+    for _, w in ipairs(list) do
+        if #items < 8 then
+            if w.bounty then
+                rows[#items + 1] = nil
+                items[#items + 1] = Item(string.format("%s: %d credits on them already", tostring(w.name), w.bounty), function() end)
+            else
+                items[#items + 1] = Page(string.format("%s (%s)", tostring(w.name), tostring(w.why)), function()
+                    return { title = "HOW MUCH?", items = {
+                        Item("50 credits", function() Send("bounty", w.id .. ":50") end),
+                        Item("100 credits", function() Send("bounty", w.id .. ":100") end),
+                    } }
+                end)
+            end
+        end
+    end
+    if #items == 0 then rows[1] = "Nobody is wanted right now." end
+    return { title = "BOUNTIES", items = items, empty = rows }
+end
+
 -- A Civil Protection shift (sv_livingcity_cpduty.lua): the quota so far, the work, the reviews.
 local function ReviewsPage()
     local list = util.JSONToTable(LocalPlayer():GetNW2String("lc_cp_reviews", "") or "") or {}
@@ -436,6 +490,7 @@ local function MineItems(me)
         Item("Where I stand (every number explained)", function() if LC_CL.OpenStandingPanel then LC_CL.OpenStandingPanel() else QM("standing") end end),
     }
     if me:GetNW2String("lc_shift", "") ~= "" then table.insert(out, 1, Page("My shift: quota, papers duty, inspections", ShiftPage)) end
+    if me:GetNW2String("lc_bounty_menu", "") ~= "" then table.insert(out, 2, Page("Bounties on the wanted", BountyPage)) end
     if me:GetNW2String("lc_survival", "") ~= "" then
         out[#out + 1] = Item(me:GetNW2String("lc_survival", "") == "relaxed" and "Survival: Relaxed (switch to Realistic: more pay)"
             or "Survival: Realistic (switch to Relaxed)", function() Send("survival") end)

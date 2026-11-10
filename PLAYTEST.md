@@ -1338,6 +1338,7 @@ Notes:
 - [ ] **A fresh sheet:** as Director, left click with the roll on a painted poster: it is clean again.
   Notes:
 - [ ] **Paste-ups:** as a Resistance member holding a poster roll, reload: four Resistance posters are at the top of the list. Hang one. A citizen holding the roll does not see them.
+  Notes:
 - [ ] **The Colonel:** as the Resistance, go to the quartermaster: an old man (Odessa) beside him; "The Colonel, [E] talk". As a citizen or unit: nobody there. Bring a unit into the camp: he's gone; leave: back. Ask "What's the word?" during a sweep, a march, a supply drop. Bring 3 Union medicine, then find the dog tags in Combine ground, then kill the unit he names. Debrief after a Resistance job, clean and messy. Ask for whispers. A citizen next to you should see you "talking quietly to an empty corner".
   Notes:
 
@@ -1353,4 +1354,10 @@ Notes:
 - [ ] **Interrogation:** being questioned shows the black window with the red bar, whoever you are.
   Notes:
 - [ ] **Off switch:** `lc_ui_theme 0` in the console, then open a window: it looks as it did before.
+  Notes:
+## 10 November, last: planned operations and bounties
+
+- [ ] **Plan an operation:** as a Resistance Lieutenant (or a Fighter with no Lieutenant on), F2 > Resistance > Operations: pick a target, then 2, 5 or 10 minutes. Others in the Resistance should hear it and be able to join on the same page. When it starts, joiners get a waypoint; if it works, joiners there get 25 experience and 15 credits.
+  Notes:
+- [ ] **Bounties:** as the Administrator (or a Division Leader), F2 > Me > Bounties on the wanted: put 50 or 100 on someone wanted. Units and the wanted person should be told; the unit who arrests them gets paid.
   Notes:
