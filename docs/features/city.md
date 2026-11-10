@@ -83,5 +83,12 @@ Every day each number drifts 2 back toward 50. While the server is empty the cit
 - **Order a crackdown on a district**: a block raid there now and the district marked for two days. Authority +5, morale -6, the Resistance +4.
 - **Order extra rations**: a ration day now. Supply -15, morale +8; not with the stores under 20.
 
-`lc_ledger` 0 turns all of it off. Still to come (phase two): rebel stalls and danger for patrols in Resistance-held districts, more checkpoints in crackdown districts, supply in Commissary prices, and the optional two-week acts.
+**On the streets (phase two):**
+- **A district under a crackdown has a checkpoint:** a Civil Protection unit posted in the middle of it, stopping and searching whoever passes, until the crackdown ends.
+- **The Resistance's districts are dangerous for patrols:** a Combine unit walking through one may be ambushed (at most every two minutes per district, a one in four chance): two fighters from out of sight, who melt away a couple of minutes later. Units hear it on the CP net.
+- **The black market is cheapest on Resistance ground:** a quarter off for anyone buying inside a Resistance-held district (never under what the dealer pays back).
+- **Supply sets the Commissary's prices:** dearer as the stores run down (up to 40% more with nothing left), cheaper when they're full (up to 15% off).
+- **Acts:** every `lc_ledger_act_days` (14) real days the act ends. The side holding more districts (and the stronger) wins it: the bulletin says so and every player of that side online earns 50 experience. Then the city starts over: the five numbers back to 50 and every district contested. Characters, records and legacy are untouched. 0 turns acts off.
+
+`lc_ledger` 0 turns all of it off; `lc_ledger_effects` 0 keeps the numbers and the districts but leaves the streets (units, fighters, informants, checkpoints, ambushes, prices) alone.
 

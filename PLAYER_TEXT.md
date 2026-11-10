@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version ca254e1. Admin-only console messages and log lines are left out.
+Made from version f5130b2. Admin-only console messages and log lines are left out.
 
-10238 lines, from 283 files.
+10245 lines, from 284 files.
 
 ## Contents
 
@@ -201,6 +201,7 @@ Made from version ca254e1. Admin-only console messages and log lines are left ou
 - [Labor Assignment (Union work, given out in person)](#labor-assignment-union-work-given-out-in-person-svlivingcitylaborlua) (25)
 - [learning the city by living in it](#learning-the-city-by-living-in-it-svlivingcitylearninglua) (19)
 - [the state of the city, kept from day to day (the owner,](#the-state-of-the-city-kept-from-day-to-day-the-owner-svlivingcityledgerlua) (46)
+- [the state of the city, phase two (the owner, 10 November:](#the-state-of-the-city-phase-two-the-owner-10-november-svlivingcityledger2lua) (7)
 - [a life](#a-life-svlivingcitylifelua) (42)
 - [Resistance lookouts](#resistance-lookouts-svlivingcitylookoutslua) (15)
 - [what loyalty earns (the owner, 2026-11-01: "other rewards for high standing civilians? All of them")](#what-loyalty-earns-the-owner-2026-11-01-other-rewards-for-high-standing-civilians-all-of-them-svlivingcityloyaltylua) (5)
@@ -10678,6 +10679,24 @@ Made from version ca254e1. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): typing in chat
 
 - "[The office] {why}"  (chat message, line 493)
+
+## the state of the city, phase two (the owner, 10 November: (sv_livingcity_ledger2.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_ledger2.lua`
+
+
+> Note for you (not shown in game): part of: ledger ambush
+
+- "[CP net] Unit ambushed in {n}. Resistance-held ground: expect contact."  (chat message, line 151)
+
+> Note for you (not shown in game): part of: ledger end act
+
+- "The end of act %d. %s"  (message, line 190)
+- "The Resistance holds the city's streets."  (message, line 190)
+- "The Combine's order holds."  (text, line 191)
+- "Neither side has the city."  (text, line 191)
+- "your side won the act"  (text, line 195)
+- "[City Bulletin] {line}{act}"  (chat message, line 196)
 
 ## a life (sv_livingcity_life.lua)
 

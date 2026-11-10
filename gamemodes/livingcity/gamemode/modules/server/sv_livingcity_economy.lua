@@ -221,7 +221,7 @@ function LC.GoodsPrice(ply, g)
     if not g then return 0 end
     if g.cpOnly then return g.price end
     local set = LC.MarketCommissaryMul and LC.MarketCommissaryMul(g) or 1
-    return math.max(1, math.floor(g.price * set * (LC.LoyalPriceMul and LC.LoyalPriceMul(ply) or 1) + 0.5))
+    return math.max(1, math.floor(g.price * set * (LC.LoyalPriceMul and LC.LoyalPriceMul(ply) or 1) * (LC.LedgerPriceMul and LC.LedgerPriceMul() or 1) + 0.5)) -- (the city's supply: sv_livingcity_ledger2.lua)
 end
 
 function LC.Buy(ply, id)

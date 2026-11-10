@@ -1393,3 +1393,5 @@ Notes:
   Notes:
 - [ ] **Buttons that had their own colours:** they keep them (green, red, chosen) and gain an edge in your side's style. Tell me any button that looks wrong or any invisible click area that now shows a line.
   Notes:
+- [ ] **On the streets:** order a crackdown on a block: a metrocop should take up a post in the middle of it and stop people. Win a few rebel operations in one block until it is the Resistance's: units walking there should now and then be ambushed, and the black market there should be cheaper. Watch Commissary prices rise as supply falls.
+  Notes:
