@@ -909,6 +909,7 @@ setting lc_npc_budget = 100
 setting lc_npc_doors = 1
 setting lc_npc_make_way = 1
 setting lc_npc_sleep = 1
+setting lc_npc_vices = 1
 setting lc_npc_work = 1
 setting lc_npc_work_grace = 60
 setting lc_npc_work_grace_players = 300
