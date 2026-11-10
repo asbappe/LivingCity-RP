@@ -52,6 +52,7 @@ _setcvar("lc_garrison", 0) -- (the nexus garrison: tested on its own)
 _setcvar("lc_search_fight_choice", 0) -- (fight or comply: tested on its own, in the 1 November section)
 _setcvar("lc_wear_uses", 0) -- (tools wearing out at random: tested on its own)
 _setcvar("lc_survival_modes", 0) -- (Realistic or Relaxed, and its 20% bonus: tested on its own, SurvivalModeTests)
+_setcvar("lc_snitches", 0) -- (secret informants among the citizens, at random: tested on their own, SnitchTests)
 _setcvar("lc_quest_allies", 0) -- (friendly NPCs on violent jobs: tested on their own, in QuestSquadTests)
 _setcvar("lc_directives", 1) -- (the G-Man's directives are off by default now, set aside by the owner; still tested as they are)
 _setcvar("lc_market_demand", 0) -- (demand moving black market prices: tested on its own, in MarketTests)
@@ -10709,6 +10710,107 @@ LC.RemoveZone(bz)
 for _, p in ipairs({ unit, cit }) do p:SetPos(D0 + Vector(30000, 0, 0)) end
 end
 CPDutyTests()
+function SnitchTests()
+section("Secret informants among the citizens, and the Resistance burning one")
+local function Later(secs) _advance(secs) _runtimers() end
+_setcvar("lc_snitches", 1)
+_setcvar("lc_burn", 1)
+local S0 = Vector(-99000, 99000, 0)
+local cit, cst = LC.SpawnCitizen(S0)
+cst.untilT = 1e9
+local cop, kst = LC.SpawnCop(S0 + Vector(1200, 0, 0))
+kst.untilT = 1e9
+local p = newPlayer("SnitchedOn", "citizen")
+local unit = newPlayer("SnitchUnit", "cp")
+Later(0.5)
+p:SetPos(S0 + Vector(200, 0, 0))
+unit:SetPos(S0 + Vector(-3000, 0, 0))
+cst.snitch = false
+ok(not LC.IllegalAct(p, "carrying a gun"), "an ordinary citizen sees nothing worth telling")
+cst.snitch = true
+ok(LC.IsSnitch(cit) and cit:GetNW2String("lc_role", "") == "citizen", "a snitch is one of the city's citizens like any other (a flag nobody sees)")
+ok(LC.IllegalAct(p, "carrying a gun") and cst.snitchReport and cst.snitchReport.unit == cop, "seeing a player do something illegal, they head for the nearest unit")
+ok(not LC.IllegalAct(p, "carrying a gun"), "(the same thing isn't seen twice in a minute)")
+cit:SetPos(cop:GetPos() + Vector(60, 0, 0))
+unit.chat = {}
+Later(0.6)
+ok(LC.PlayerIsWanted(p) and string.find(p:GetNW2String("lc_wanted_reason", ""), "Reported by a citizen", 1, true), "and tell: the player is booked", p:GetNW2String("lc_wanted_reason", ""))
+ok(has(unit.chat, "A citizen reports") and p:GetNW2Float("lc_spotted_until", 0) > CurTime(), "the units hear it, and the player is outlined for them")
+LC.ClearWanted(p)
+-- no unit about: a call from a doorway
+LC.NPCs[cop] = nil cop:Remove()
+p.lcActSeen = {}
+cit:SetPos(S0)
+LC.IllegalAct(p, "using moonshine")
+Later(26)
+ok(LC.PlayerIsWanted(p), "with no unit about, they make the call after a while")
+LC.ClearWanted(p)
+-- killed first: nobody hears
+p.lcActSeen = {}
+LC.IllegalAct(p, "carrying a gun")
+cst.state = "hostile"
+Later(0.6)
+cst.state = "idle"
+Later(30)
+ok(not LC.PlayerIsWanted(p) and cst.snitchReport == nil, "caught up in a fight (or killed) before telling: nobody hears it")
+-- contraband used in plain view
+p.lcActSeen = {}
+cst.questLock = nil
+LC.GiveItem(p, "moonshine", 1)
+LC.ItemUse(p, "moonshine")
+ok(cst.snitchReport and string.find(cst.snitchReport.what, "moonshine", 1, true), "using contraband is seen too", cst.snitchReport and cst.snitchReport.what)
+cst.snitchReport, cst.questLock = nil, nil
+
+-- burning
+local reb = newPlayer("BurnerRebel", "resistance", nil, 3000)
+local innocent = newPlayer("BurnInnocent", "citizen")
+local rat = newPlayer("BurnRat", "citizen")
+local bystander = newPlayer("BurnBystander", "citizen")
+Later(0.5)
+for _, x in ipairs({ reb, innocent, rat, bystander }) do x:SetPos(S0 + Vector(0, 3000, 0)) end
+reb:SetNW2Int("lcf_rank", 1)
+local okB, whyB = LC.Burn(reb, innocent)
+ok(not okB and string.find(whyB or "", "Member", 1, true), "a Sympathizer can't burn anyone", whyB)
+reb:SetNW2Int("lcf_rank", 2)
+LC.AddTrait(bystander, "sympathy", 3 - LC.Trait(bystander, "sympathy"))
+local x0 = tonumber(reb:GetPData("lcf_xp_resistance", 0)) or 0
+local okW, right = LC.Burn(reb, innocent)
+ok(okW and not right and LC.IsBurned(innocent), "burning someone who never informed: they're burned all the same", tostring(right))
+ok(LC.Trait(bystander, "sympathy") == 2 and has(bystander.chat, "burned an innocent"), "and word spreads: every citizen thinks less of the Resistance")
+ok((tonumber(reb:GetPData("lcf_xp_resistance", 0)) or 0) < x0, "and the burner loses experience")
+local okC, whyC = LC.Burn(reb, rat)
+ok(not okC and string.find(whyC or "", "not long ago", 1, true), "one burning at a time", whyC)
+reb.lcBurnNext = 0
+rat.lcInformedAt = CurTime()
+local x1 = tonumber(reb:GetPData("lcf_xp_resistance", 0)) or 0
+local okR, right2 = LC.Burn(reb, rat)
+ok(okR and right2 and (tonumber(reb:GetPData("lcf_xp_resistance", 0)) or 0) > x1, "burning a real informant: the burner was right, and earns for it")
+LC.AddTrait(rat, "sympathy", 10)
+ok(not LC.ResistanceProven(rat), "a burned citizen can't join the Resistance, whatever their sympathy")
+rat.chat = {}
+ok(LC.OpenQuartermasterVisit(rat) == false and has(rat.chat, "rats"), "and the quartermaster won't deal with them")
+-- the scar
+local okS, whyS = LC.Scar(reb, rat)
+ok(not okS and string.find(whyS or "", "fight you off", 1, true), "scarring needs them held: cuffed, down, or hands up", whyS)
+rat:SetNW2Bool("lc_handsup", true)
+LC.Scar(reb, rat)
+Later(6)
+ok(rat:GetPData("lc_scar", "0") == "1" and string.find(rat:GetNW2String("lc_desc", ""), "rat's scar", 1, true), "a rat's scar, for good, in the description strangers see")
+-- roughed up in rebel territory
+local rebNPC, rst = LC.Spawners.rebel and LC.Spawners.rebel(rat:GetPos() + Vector(60, 0, 0))
+if not rebNPC then rebNPC, rst = LC.SpawnCitizen(rat:GetPos() + Vector(60, 0, 0)) rst.role = "rebel" end
+local inR = LC.InRebelZone
+LC.InRebelZone = function() return true end
+rat:SetHealth(100)
+rat.chat = {}
+Later(2.5)
+LC.InRebelZone = inR
+ok(rat:Health() < 100 and has(rat.chat, "Rat"), "in rebel territory, the rebels rough them up")
+for _, n in ipairs({ cit, rebNPC }) do if IsValid(n) then LC.NPCs[n] = nil n:Remove() end end
+for _, x in ipairs({ p, unit, reb, innocent, rat, bystander }) do x:SetPos(S0 + Vector(30000, 0, 0)) x:SetNW2Float("lc_burned_until", 0) end
+_setcvar("lc_snitches", 0)
+end
+SnitchTests()
 
 function PapersHousingTests()
 section("Papers you carry, the housing register, transfers")

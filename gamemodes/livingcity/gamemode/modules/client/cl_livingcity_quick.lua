@@ -240,6 +240,16 @@ local function Context(me, unit, rebel)
             end
             if me:GetNW2Bool("lc_foreman", false) then Add("Give " .. n .. " a work order", function() Send("assign", "", e) end, true) end
             if rebel and e:GetNW2String("lcf_faction", "") == "vort" then Add("Cut the vortigaunt's shackles", function() Send("unshackle") end, true) end
+            local ef = e:GetNW2String("lcf_faction", "")
+            if rebel and (ef == "" or ef == "citizen") then -- (burning an informant: sv_livingcity_snitches.lua)
+                if e:GetNW2Float("lc_burned_until", 0) > now then
+                    if tied or e:GetNW2Bool("lc_handsup", false) or e:GetNW2Float("lc_downed_until", 0) > now then
+                        Add("Scar " .. n .. " (mark the rat for good)", function() Send("scar", "", e) end, true)
+                    end
+                else
+                    Add("Burn " .. n .. " as an informant", function() Send("burn", "", e) end, true)
+                end
+            end
             if not rebel then Add("Inform on " .. n, function() Send("inform", "", e) end) end
         end
     elseif unit and e:GetNW2Bool("lc_cuffed", false) then

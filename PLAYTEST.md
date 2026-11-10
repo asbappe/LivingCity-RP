@@ -1299,6 +1299,13 @@ Notes:
 - [ ] **Poster art:** put a test image at `garrysmod/materials/livingcity/posters/curfew.png`, FastDL sync, change map: a curfew poster shows it.
   Notes:
 
+## 10 November, last: snitches and burning
+
+- [ ] **Snitches:** draw a gun (or drink moonshine) in front of a few citizens. Now and then one should hurry off to the nearest metrocop, and a moment later you are wanted: "Reported by a citizen".
+  Notes:
+- [ ] **Burning:** as a Resistance Member, F2 looking at a citizen > Burn them as an informant. RAT should appear over them for Resistance players; the quartermaster should refuse them. Put their hands up, F2 > Scar them: their description should gain the scar.
+  Notes:
+- [ ] **A wrong guess:** burn someone who never informed: every citizen should be told, and lose sympathy.
 ## 10 November: poster pictures
 - [ ] **Poster pictures:** upload `materials/livingcity/posters/` (six `.jpg`), FastDL sync, change map. Each civil notice poster shows its picture (dispenser, Commissary, intake, water, law board, curfew elsewhere), sharp enough to read from a few steps away.
 - [ ] **Fever:** `lc_illness_rate 20`, catch a cold in the rain and leave it (or wait for a fever). With a fever: you can't sprint, fists don't swing. At 12:00 on the clock (`lc_time 11` to hurry) you drop for a minute into the fever dream: melting colours, rolling view, drifting words, the eye, slow sounds. You come to with it broken. Get someone to hit you during it: you wake, still feverish.

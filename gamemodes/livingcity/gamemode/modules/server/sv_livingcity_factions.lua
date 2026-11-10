@@ -120,6 +120,7 @@ local cvJoin = CreateConVar("lc_resistance_join_sympathy", "5", bit.bor(FCVAR_AR
 function LC.ResistanceProven(ply)
     if not IsValid(ply) then return false end
     if ply:GetNW2String("lcf_faction", "") == "resistance" or ply:GetPData("lcf_faction", "") == "resistance" or ply:GetPData("lcf_res_proven", "") == "1" then return true end
+    if LC.IsBurned and LC.IsBurned(ply) then return false end -- (burned as an informant: sv_livingcity_snitches.lua)
     return (LC.Trait and LC.Trait(ply, "sympathy") or 0) >= math.max(0, cvJoin:GetInt())
 end
 function LC.ResistanceInvite(ply) if IsValid(ply) then ply:SetPData("lcf_res_proven", "1") end end

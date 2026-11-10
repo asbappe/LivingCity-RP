@@ -1447,6 +1447,10 @@ end
 
 -- The quartermaster's window for someone not of the Resistance: nothing to buy, the arms they carry to sell or give.
 function LC.OpenQuartermasterVisit(ply)
+    if LC.IsBurned and LC.IsBurned(ply) then -- (burned as an informant: sv_livingcity_snitches.lua)
+        ply:ChatPrint("[Quartermaster] \"I don't deal with rats. Walk away while you can.\"")
+        return false
+    end
     local sell = {}
     local inv = LC.Inventory(ply)
     local ids = table.GetKeys(inv)
