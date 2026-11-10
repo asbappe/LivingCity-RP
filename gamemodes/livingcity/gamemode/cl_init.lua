@@ -137,6 +137,7 @@ local GUIDE = {
         "The Resistance (Member rank and up) can ask a sympathizer to keep watch: they warn everyone on Freq 7 when Civil Protection units approach.",
         "The city runs on a daily schedule: work in the morning, ration lines at midday, quiet evenings, and nearly empty streets at night (only the night shift works).",
         "Trains arrive at the station now and then, bringing new arrivals with suitcases. Anyone leaving the city boards before it departs.",
+        "Civil Protection works shifts with a quota: searches, checkpoint papers duty and a residence inspection (F2 > Me > My shift). A performance review at the end of each shift gives experience toward promotion.",
         "Lost among the numbers? F2 > Me > My standing (or Where I stand) (or C > You > Where I stand) shows every one of them in one window, each explained: standing, credits, rank, loyalty, sympathy, corruption, your record, wanted, probation and more.",
         "Dreams can be sat out once you've earned it: Happy or Neutral ones after living through 2 of that kind, Nightmares and propaganda with Exemplary standing (400). A small note tells you as the dream comes; choose in F2 > Me > My dreams.",
         "Survival: Realistic (every need, 20% more shift pay and experience, the title Hardened) or Relaxed (slow hunger and thirst, no parasites, toilet, washing or spoiling). Choose on the characters screen or F2 > Me; you can switch every 3 hours.",
