@@ -1346,3 +1346,11 @@ Notes:
   Notes:
 - [ ] **The limits:** try to paste a second one near the first: refused ("There's one of ours close by already"). With `lc_pasteup_max 2`, paste a third somewhere else: the first one comes down.
   Notes:
+
+## 10 November: window styles
+- [ ] **Your faction's look:** open a few windows as a citizen (grey concrete), as Civil Protection (black and cyan), as Resistance (rust plate). Titles and text should stay readable everywhere. Tell me any window that looks broken, doubled or unreadable (a screenshot helps).
+  Notes:
+- [ ] **Interrogation:** being questioned shows the black window with the red bar, whoever you are.
+  Notes:
+- [ ] **Off switch:** `lc_ui_theme 0` in the console, then open a window: it looks as it did before.
+  Notes:

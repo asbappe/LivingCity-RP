@@ -3534,6 +3534,36 @@ return nil
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
 
+# windows in your faction's style (cl_livingcity_theme.lua): every look paints, and a window's own Paint
+# runs over the themed back with its own back and title strip left out
+err = L.execute(r"""
+if not (LC_CL.PaintThemeBack and LC_CL.SetTheme and LC_CL.ThemedPaint and LC_CL.ThemeName) then return "theme: the module is missing" end
+local f = vgui.Create("DFrame")
+for _, name in ipairs({ "combine", "rebel", "citizen", "custody" }) do
+    LC_CL.SetTheme(f, name)
+    local okT, errT = pcall(LC_CL.PaintThemeBack, f, 520, 360)
+    if not okT then return "theme " .. name .. ": " .. tostring(errT) end
+end
+if not LC_CL.Themes[LC_CL.ThemeName()] then return "theme: no look for you" end
+local boxes, rb = {}, draw.RoundedBox
+draw.RoundedBox = function(r, x, y, w, h) boxes[#boxes + 1] = w .. "x" .. h end
+local paint = LC_CL.ThemedPaint(function(self, w, h)
+    draw.RoundedBox(6, 0, 0, w, h, color_white)   -- its own back: left out
+    draw.RoundedBox(0, 0, 0, w, 24, color_white)  -- its own title strip: left out
+    draw.RoundedBox(4, 10, 40, 100, 30, color_white) -- a card: kept
+end)
+local okW, errW = pcall(paint, f, 520, 360)
+local same = draw.RoundedBox
+draw.RoundedBox = rb
+if not okW then return "theme wrap: " .. tostring(errW) end
+if LC_CL.ThemeBroken then return "theme: it switched itself off" end
+if LC_CL.ThemeOn() and (#boxes ~= 1 or boxes[1] ~= "100x30") then return "theme wrap: kept " .. table.concat(boxes, ",") end
+f:Remove()
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
 # the Civil Orientation pamphlet opens as a printed leaflet (cl_livingcity_dialog.lua), and paints
 err = L.execute(r"""
 if not net["recv_lc_dialog"] then return "pamphlet: the dialog receiver is missing" end

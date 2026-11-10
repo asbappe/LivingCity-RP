@@ -215,6 +215,7 @@ LC_MODULES = {
     },
     client = {
         "cl_livingcity",
+        "cl_livingcity_theme", -- (early: every window made after it is drawn in your faction's style)
         "cl_livingcity_view", -- (early: the camera the other modules add their touches to)
         "cl_livingcity_screens", -- (terminals' menus on their own screens)
         "cl_livingcity_notices",
