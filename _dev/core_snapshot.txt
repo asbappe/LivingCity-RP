@@ -335,8 +335,13 @@ item crowbar
 item cwu_overalls
 item data_chip
 item data_shard
+item decor_cactus
+item decor_chair
+item decor_frame
+item decor_lamp
 item dog_tags
 item door_code
+item fine_clothes
 item firebomb
 item fishing_line
 item foil_hat
@@ -369,10 +374,14 @@ item papers_blank
 item papers_dead
 item papers_forged
 item pasteup
+item patched_coat
 item permit
+item pet_bird
 item radio
+item radio_set
 item radio_transmitter
 item radio_tuned
+item rag_doll
 item ration
 item ration_card
 item ration_forged
@@ -413,6 +422,7 @@ item tainted_ration
 item tainted_ration_short
 item tainted_vegetables
 item tainted_water
+item tin_toy
 item transfer_order
 item uniform_clean
 item uniform_cp
@@ -453,6 +463,7 @@ setting lc_assign_work = 1
 setting lc_atmosphere = 1
 setting lc_auto_events = 1
 setting lc_autostart = 0
+setting lc_bad_deal_chance = 0.06
 setting lc_bank_loads = 2
 setting lc_bed_head_flip = 0
 setting lc_bed_npc_lift = 9
@@ -602,7 +613,9 @@ setting lc_daily_rhythm = 1
 setting lc_day_minutes = 60
 setting lc_daynight = -1
 setting lc_daynight_light = 1
+setting lc_debt_hours = 2
 setting lc_debug = 0
+setting lc_decor_max = 6
 setting lc_desperation = 1
 setting lc_directive_grace_minutes = 10
 setting lc_directive_last_call_minutes = 5
@@ -793,6 +806,8 @@ setting lc_heist_seconds = 30
 setting lc_hints = 1
 setting lc_hints_wait = 240
 setting lc_hoover_capacity = 3
+setting lc_household_max = 6
+setting lc_households = 1
 setting lc_hunger_minutes = 60
 setting lc_hygiene = 1
 setting lc_ic_chat = 1
@@ -811,6 +826,7 @@ setting lc_informants = 1
 setting lc_inherit_max = 200
 setting lc_inherit_pct = 25
 setting lc_insider = 1
+setting lc_insider_clean_minutes = 30
 setting lc_insider_privacy = 700
 setting lc_intake = 1
 setting lc_intake_escort = 1
@@ -945,6 +961,8 @@ setting lc_people_heights = 1
 setting lc_perfdebug_minutes = 30
 setting lc_perfdebug_spike_ms = 60
 setting lc_permadeath = 1
+setting lc_petbird_pos = -1 3 5
+setting lc_pickpocket = 1
 setting lc_pickpocket_dc = 12
 setting lc_player_doors = 1
 setting lc_pm_elite = 
@@ -1074,6 +1092,7 @@ setting lc_squads = 1
 setting lc_stagger_timers = 1
 setting lc_stalker_model = 
 setting lc_stalkers = 1
+setting lc_stall_customers_minutes = 3
 setting lc_stall_kg = 30
 setting lc_stalls_per_person = 1
 setting lc_stamina = 1
@@ -1158,6 +1177,8 @@ setting lc_vort_charge_minutes = 10
 setting lc_vort_commune_minutes = 15
 setting lc_vort_slaves = 2
 setting lc_vort_zap_secs = 45
+setting lc_wage = 10
+setting lc_wage_minutes = 10
 setting lc_walk_speed = 110
 setting lc_walkway_clear = 100
 setting lc_wanted_lost = 30

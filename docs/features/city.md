@@ -75,7 +75,7 @@ Every day each number drifts 2 back toward 50. While the server is empty the cit
 
 **The collapse leaves a mark.** The Administrator killed: the district nearest rebel ground is liberated, the Resistance +15, morale +10, authority -25. The uprising crushed: a crackdown week in every district, authority +15, the Resistance -15, morale -10. She steps down or ends it: authority starts again at 50.
 
-**The news comes the city's way** (the owner: no new windows): each city morning a **City Bulletin** on the city screens and in chat, what changed and why ("Civil Protection raided Block 4: 3 things confiscated. The Resistance struck in Block 2. Supply low. Morale steady."). Anyone can read the state of the city on **F2 > Me > The state of the city** (the numbers in words, every district and who holds it, this morning's bulletin).
+**The news comes the city's way** (the owner: no new windows): each city morning a **City Bulletin** on the city screens and in chat, what changed and why ("Civil Protection raided Block 4: 3 things confiscated. The Resistance struck in Block 2. Supply low. Morale steady."). Anyone can read the state of the city on **F2 > Me (More) > The state of the city** (the numbers in words, every district and who holds it, this morning's bulletin).
 
 **The Administrator's levers** (F2 > Me > The city's levers), each with its cost:
 - **Go to the speech stand** (editor: "Point: speech stand"; she's taken there, facing the way it faces), then **Give a speech**: her words on the screens and in chat; morale +6, authority +3, and every citizen within earshot +2 standing. Once a city day. With no stand placed she speaks from where she is.

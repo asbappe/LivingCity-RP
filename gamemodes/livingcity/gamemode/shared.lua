@@ -191,6 +191,10 @@ LC_MODULES = {
         "sv_livingcity_ledger", -- (the state of the city, day to day: five numbers, districts with an owner, the bulletin, her levers)
         "sv_livingcity_ledger2", -- (what the districts and numbers do on the streets: checkpoints, ambushes, prices; and the acts)
         "sv_livingcity_smallserver", -- (small-server mode: with few players, the city carries more of the story)
+        "sv_livingcity_status", -- (things other people can see: fine clothes, home decor, a radio set, a pet bird)
+        "sv_livingcity_households", -- (households: the same block, shared crates and lockers, keys, known to each other)
+        "sv_livingcity_employment", -- (a business of your own: hand-made goods, the city's people buying, hiring a worker)
+        "sv_livingcity_streetcrime", -- (crime between citizens: pickpocketing, debts, deals that go bad)
         "sv_livingcity_vort",
         "sv_livingcity_vortwork", -- (things to do as a vortigaunt, and the freed ones' camp life)
         "sv_livingcity_weeds", -- (weeds on open ground, the Groundskeeper, weedkiller as poison)
@@ -245,6 +249,7 @@ LC_MODULES = {
         "cl_livingcity_interrogation", -- (the interrogation's questions on the prisoner's screen, and the unit's window asking them)
         "cl_livingcity_standingpanel", -- (where I stand: every number explained)
         "cl_livingcity_ratscar", -- (the crude rat carved into a burned informant's cheek)
+        "cl_livingcity_petbird", -- (a pet bird on someone's shoulder)
         "cl_livingcity_atmos",
         "cl_livingcity_character",
         "cl_livingcity_checkpoints",

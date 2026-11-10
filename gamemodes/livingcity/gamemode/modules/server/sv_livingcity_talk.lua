@@ -6,7 +6,8 @@
     they're doing, how they feel about you, and what you can do:
 
       Chat              whatever they've heard (the city's rumours), or small talk
-      Share some food   one of your rations, bread, a can: they remember it
+      Give something    from your pockets: food, a drink or a smoke, medicine, a
+                        gun, a pamphlet; each taken (or refused) in its own way
       Pick their pocket a Guile check. Credits, now and then something better.
                         Fail and they shout, back away, and a unit who saw it
                         makes you wanted for theft
@@ -32,7 +33,7 @@ util.AddNetworkString("lc_talk")
 util.AddNetworkString("lc_talk_do")
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvTalk = CreateConVar("lc_talk", "1", FLAGS, "E on a citizen opens a talk window (chat, share food, pickpocket, inform)")
+local cvTalk = CreateConVar("lc_talk", "1", FLAGS, "E on a citizen opens a talk window (chat, give something, pickpocket, inform)")
 local cvPickDC = CreateConVar("lc_pickpocket_dc", "12", FLAGS, "Guile check to pick a citizen's pocket (d20 + Guile)")
 
 local function Pick(t) return t[math.random(#t)] end
@@ -160,6 +161,7 @@ local function Options(ply, npc, st)
     return {
         chat = true,
         food = FoodToGive(ply) ~= nil,
+        give = LC.GiveableTo and LC.GiveableTo(ply) or {},
         pick = not unit and not (npc.lcPickedAt and npc.lcPickedAt > CurTime() - 600), -- (never picked counts as ready, even in a server's first ten minutes)
         inform = not unit and not rebel,
         recruit = rebel and st.rebel == true and LC.CanRecruitLookout ~= nil and (LC.CanRecruitLookout(ply, npc)),
@@ -203,6 +205,9 @@ function LC.OpenTalk(ply, npc, said)
     net.WriteBool(o.inform)
     net.WriteBool(o.recruit == true)
     net.WriteString(LC.MindsSeem and LC.MindsSeem(npc) or "") -- (how they seem: sv_livingcity_minds.lua, lc_minds_show)
+    -- what you could give them (Give something): at most 30
+    net.WriteUInt(math.min(#o.give, 30), 8)
+    for i = 1, math.min(#o.give, 30) do net.WriteString(o.give[i].id) net.WriteString(o.give[i].label) end
     net.Send(ply)
     -- they stop for you
     StepAway(npc, ply)
@@ -232,8 +237,8 @@ local function Chat(ply, npc, st)
     return line and ("'" .. line .. "'") or Pick(SMALL_TALK)
 end
 
-local function ShareFood(ply, npc, st)
-    local id = FoodToGive(ply)
+local function ShareFood(ply, npc, st, chosen)
+    local id = chosen or FoodToGive(ply)
     if not id or not LC.TakeItem(ply, id) then return "You've nothing to give." end
     local v = LC.Remember(npc, ply, 2)
     -- (no sympathy for it any more: the owner, 9 November, sympathy is the way into the Resistance, and a kindness to a stranger isn't that)
@@ -242,6 +247,102 @@ local function ShareFood(ply, npc, st)
     local name = LCS and LCS.Items[id] and string.lower(LCS.Items[id].name) or "food"
     if v >= 6 then return "They take the " .. name .. " with both hands. 'I won't forget this. I mean it.'" end
     return "They take the " .. name .. " and hide it in their coat. 'Thank you.'"
+end
+
+------------------------------------------------------------------------
+-- Giving something (the owner, 10 November: "a 'Share' or 'Give' button that
+-- opens a menu of the many things that can be shared/given: rations, drinks,
+-- smokes, guns, pamphlets")
+------------------------------------------------------------------------
+
+-- What kind of thing an item is, to a citizen being handed it (nil: not something you'd hand over).
+-- A Resistance leaflet is any item with leaflet = "resistance" (made in another chat: TODO.md).
+function LC.GiveKind(id)
+    local it = LCS and LCS.Items and LCS.Items[id]
+    if not it or it.doc then return nil end
+    if it.leaflet or it.use == "pamphlet" then return "papers" end
+    if it.vice == "smoke" or it.vice == "drink" then return "vice" end
+    if it.use == "arm" or it.use == "throw" then return "arms" end
+    if it.cures then return "medicine" end
+    if ((it.hunger or 0) > 0 or (it.thirst or 0) > 0) and not it.parasite and not it.poison then return "food" end
+    return nil
+end
+
+local GIVE_ORDER = { food = 1, vice = 2, medicine = 3, papers = 4, arms = 5 }
+local GIVE_LABEL = { food = "Food", vice = "A drink or a smoke", medicine = "Medicine", papers = "Papers", arms = "Arms" }
+LC.GiveLabels = GIVE_LABEL
+
+-- Everything in your pockets a citizen could be handed: { id, label } in order (food first).
+function LC.GiveableTo(ply)
+    local out = {}
+    for id, n in pairs(LC.Inventory and LC.Inventory(ply) or {}) do
+        local kind = n > 0 and LC.GiveKind(id)
+        if kind and not (LC.IssuedLocked and LC.IssuedLocked(ply, id, nil)) then
+            out[#out + 1] = { id = id, kind = kind, label = GIVE_LABEL[kind] .. ": " .. (LCS.Items[id].name or id) .. (n > 1 and (" (" .. n .. ")") or "") }
+        end
+    end
+    table.sort(out, function(a, b)
+        if a.kind ~= b.kind then return GIVE_ORDER[a.kind] < GIVE_ORDER[b.kind] end
+        return a.label < b.label
+    end)
+    return out
+end
+
+-- How loyal a named person is (the city's minds' trait, worked out from who they are; 0 if unknown).
+local function LoyalOf(npc, st)
+    if st.rebel then return -1 end
+    local p = npc.lcProfile
+    if p and LC.Psy and LC.MindOf then return LC.Psy.Traits(LC.MindOf(p)).loyal end
+    return 0
+end
+
+local function Give(ply, npc, st, id)
+    local kind = LC.GiveKind(id)
+    if not kind or not (LC.HasItem and LC.HasItem(ply, id)) then return "You've nothing like that to give." end
+    if LC.IssuedLocked and LC.IssuedLocked(ply, id, nil) then return "That's Combine issue: it stays with you (or another unit)." end
+    if kind == "food" then return ShareFood(ply, npc, st, id) end
+    local it = LCS.Items[id]
+    local name = string.lower(it.name or id)
+    local function Taken(d, line)
+        if not LC.TakeItem(ply, id) then return "You've nothing like that to give." end
+        if d ~= 0 then LC.Remember(npc, ply, d) end
+        hook.Run("LivingCityGaveCitizen", ply, npc, id, kind)
+        return line
+    end
+    if kind == "vice" then
+        local vice = LC.NPCViceOf and LC.NPCViceOf(npc) or 0.5
+        if vice <= 0 then return "They shake their head. 'I don't, thanks. Keep it.'" end
+        local said = Taken(vice > 0.5 and 3 or 2, it.vice == "smoke" and "They take the " .. name .. " and light it there and then. 'God, I needed that.'"
+            or "They take a long pull of the " .. name .. ". 'You're a good sort, you know that?'")
+        if LC.NPCViceStart and GetConVar("lc_npc_vices") and GetConVar("lc_npc_vices"):GetBool() then LC.NPCViceStart(npc, it.vice) end
+        return said
+    elseif kind == "medicine" then
+        return Taken(3, "They turn the " .. name .. " over in their hands. 'Medicine. You don't see that often. Thank you.'")
+    elseif kind == "arms" then
+        if LC.PlayerIsCP(ply) then return "They back away from you. 'I don't want any trouble, officer.'" end
+        if not st.rebel then
+            LC.Remember(npc, ply, -1)
+            return "They go white. 'Are you out of your mind? Put that away before a unit sees!'"
+        end
+        return Taken(3, "They glance about, then slip the " .. name .. " under their coat. 'It'll go where it's needed.'")
+    elseif kind == "papers" then
+        local loyal = LoyalOf(npc, st)
+        if it.leaflet == "resistance" then
+            if loyal > 0.2 then
+                LC.Remember(npc, ply, -3)
+                return "They push it back at you. 'I never saw this. I never saw you.'"
+            end
+            return Taken(2, "They read the first lines and fold it small. 'Somebody has to say it.'")
+        end
+        if loyal < -0.2 then return Taken(0, "They take the " .. name .. " without looking at it. 'I know what it says.'") end
+        return Taken(1, "They take the " .. name .. ". 'Thank you, citizen.'")
+    end
+    return "They don't want that."
+end
+LC.GiveToCitizen = function(ply, npc, id) -- (for tests)
+    local st = Usable(ply, npc)
+    if not st then return nil end
+    return Give(ply, npc, st, id)
 end
 
 -- What's in a citizen's pockets (a little; rarely something good).
@@ -314,6 +415,7 @@ net.Receive("lc_talk_do", function(_, ply)
     local said, close
     if what == "chat" then said, close = Chat(ply, npc, st)
     elseif what == "food" then said = ShareFood(ply, npc, st)
+    elseif string.sub(what, 1, 5) == "give:" then said = Give(ply, npc, st, string.sub(what, 6))
     elseif what == "pick" and not LC.PlayerIsCP(ply) then said, close = PickPocket(ply, npc, st)
     elseif what == "inform" and not LC.PlayerIsCP(ply) then said, close = Inform(ply, npc, st)
     elseif what == "recruit" and LC.RecruitLookout then
@@ -333,6 +435,7 @@ LC.TalkAction = function(ply, npc, what) -- (for tests)
     if not st then return nil end
     if what == "chat" then return Chat(ply, npc, st) end
     if what == "food" then return ShareFood(ply, npc, st) end
+    if string.sub(what, 1, 5) == "give:" then return Give(ply, npc, st, string.sub(what, 6)) end
     if what == "pick" then return PickPocket(ply, npc, st) end
     if what == "inform" then return Inform(ply, npc, st) end
 end

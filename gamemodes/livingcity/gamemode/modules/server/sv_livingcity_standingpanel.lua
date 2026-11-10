@@ -106,13 +106,18 @@ function LC.StandingRows(ply)
         Row("You", "Lives lived", string.format("%d%s", lg.lives or 0, title ~= "" and (" (" .. title .. ")") or ""),
             "Every person you've been before this one. Titles come with many lives behind you; never power or money.")
     end
+    if LC.HouseholdOf then
+        local _, h = LC.HouseholdOf(ply)
+        Row("You", "Household", h and h.name or "None",
+            "Who you live with: the same block, each other's crates and lockers, the head's apartment keys. F2 > Me (More) > My household.")
+    end
     if LC.DreamSkipEarned then
         local kinds = {}
         for _, k in ipairs({ { "happy", "Happy" }, { "neutral", "Neutral" }, { "nightmare", "Nightmares" }, { "propaganda", "propaganda" } }) do
             if LC.DreamSkipEarned(ply, k[1]) == true then kinds[#kinds + 1] = k[2] end
         end
         Row("You", "Dreams you may sit out", #kinds > 0 and table.concat(kinds, ", ") or "None yet",
-            "Happy or Neutral dreams after living through 2 of that kind; nightmares and propaganda with Exemplary standing (citizens). Choose in F2 > Me > My dreams.")
+            "Happy or Neutral dreams after living through 2 of that kind; nightmares and propaganda with Exemplary standing (citizens). Choose in F2 > Me (More) > My dreams.")
     end
     return rows
 end

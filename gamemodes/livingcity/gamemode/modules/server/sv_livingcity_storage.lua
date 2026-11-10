@@ -154,6 +154,8 @@ local function Access(ply, c)
         return nil, string.format("Lockers are for citizens in good standing (Civil Standing %d). Yours is %d.", cvLockerStanding:GetInt(), LC.Standing(ply))
     end
     if not c.owner or c.owner == OwnerKey(ply) then return "open" end
+    if c.kind ~= "stall" and LC.HouseholdShares and LC.HouseholdShares(ply, c.owner) then return "open" end -- (the same household: sv_livingcity_households.lua)
+    if c.kind == "stall" and LC.EmployerOf and LC.EmployerOf(ply) == c.owner then return "open" end -- (you work this stall: sv_livingcity_employment.lua)
     if RealUnit(ply) then return "search" end
     if c.kind == "stall" then
         if c.closed then return nil, "The stall is closed." end
@@ -374,6 +376,9 @@ timer.Create("LivingCityBins", 60, 0, function()
 end)
 
 ------------------------------------------------------------------------
+-- Every container (sv_livingcity_employment.lua reads the stalls).
+function LC.Containers() return Load() end
+
 -- Market stalls: stock it with prices, people buy, takings wait in the till
 ------------------------------------------------------------------------
 
@@ -384,7 +389,7 @@ function LC.StallStock(ply, spec)
     if not id or not price then return false, "Name a price." end
     local cid, c = Focused(ply)
     if not cid or c.kind ~= "stall" then return false end
-    if c.owner ~= OwnerKey(ply) then return false, "It isn't your stall." end
+    if c.owner ~= OwnerKey(ply) and not (LC.EmployerOf and LC.EmployerOf(ply) == c.owner) then return false, "It isn't your stall." end -- (or you work it: sv_livingcity_employment.lua)
     price = math.Clamp(math.floor(price), 1, 5000)
     c.prices = c.prices or {}
     if LC.HasItem(ply, id) then

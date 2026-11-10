@@ -321,6 +321,24 @@ hook.Add("LivingCitySharedFood", "LivingCityMinds", function(ply, npc, id)
     Log("KIND", "%s given %s by %s", m.name, it and string.lower(it.name or id) or "food", Name(who))
 end)
 
+-- Something else handed to them from the talk window's Give menu (sv_livingcity_talk.lua).
+hook.Add("LivingCityGaveCitizen", "LivingCityMinds", function(ply, npc, id, kind)
+    if not On() or not (IsValid(npc) and npc.lcProfile) then return end
+    local m = MindOf(npc.lcProfile)
+    local who = WhoKey(ply)
+    local now = CurTime()
+    local it = LCS and LCS.Items and LCS.Items[id]
+    if kind == "vice" then
+        LC.MindsIndulged(m, "given")
+        if who then Psy.Bond(m, who, 2) end
+    elseif kind == "papers" and it and it.leaflet == "resistance" then
+        Psy.Think(m, "defiance_good", now, who)
+    end
+    if kind ~= "papers" then Psy.Think(m, "kindness", now, who) if who then Psy.Bond(m, who, 3) end end
+    Count("given_" .. tostring(kind))
+    Log("GIVEN", "%s given %s by %s", m.name, it and string.lower(it.name or id) or tostring(id), Name(who))
+end)
+
 -- A drink or a smoke (a player's gift, in the street, or at home): the craving goes.
 function LC.MindsIndulged(m, where)
     if not On() or not m then return end

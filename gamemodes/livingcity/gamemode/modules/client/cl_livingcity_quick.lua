@@ -282,6 +282,27 @@ local function Context(me, unit, rebel)
                 end
             end
             if not rebel then Add("Inform on " .. n, function() Send("inform", "", e) end) end
+            local myf = me:GetNW2String("lcf_faction", "")
+            if (myf == "" or myf == "citizen" or myf == "resistance") and (ef == "" or ef == "citizen" or ef == "resistance") and e:GetNW2String("lc_household", "") == "" then
+                Add("Invite " .. n .. " into my household", function() Send("houseinvite", "", e) end)
+            end
+            local bz = util.JSONToTable(me:GetNW2String("lc_business", "") or "") or {}
+            if bz.owner and (ef == "" or ef == "citizen" or ef == "resistance") then Add("Offer " .. n .. " a job at my stall", function() Send("joboffer", "", e) end) end
+            -- crime between citizens and debts (sv_livingcity_streetcrime.lua)
+            if ef ~= "cp" and ef ~= "admin" then
+                local to = me:GetPos() - e:GetPos() to.z = 0
+                local fw = e:GetForward() fw.z = 0
+                if to:LengthSqr() > 1 and fw:GetNormalized():Dot(to:GetNormalized()) < -0.3 and to:LengthSqr() < 80 * 80 then
+                    Add("Pick " .. n .. "'s pocket", function() Send("pickpocket", "", e) end)
+                end
+                out[#out + 1] = { label = "Lend " .. n .. " money...", ctx = true, page = function()
+                    return { title = "LEND HOW MUCH?", items = {
+                        Item("10 credits (12 back)", function() Send("lend10", "", e) end),
+                        Item("25 credits (30 back)", function() Send("lend25", "", e) end),
+                        Item("50 credits (60 back)", function() Send("lend50", "", e) end),
+                    } }
+                end }
+            end
         end
     elseif unit and e:GetNW2Bool("lc_cuffed", false) then
         -- a citizen or rebel cuffed with the baton (sv_livingcity_arrest.lua)
@@ -434,6 +455,82 @@ local function MyDreamsPage()
     return { title = "MY DREAMS", items = items, empty = rows }
 end
 
+-- My debts (sv_livingcity_streetcrime.lua): a loan on offer, what I owe (repay), what I'm owed (report it when it's overdue).
+local function DebtsPage()
+    local d = util.JSONToTable(LocalPlayer():GetNW2String("lc_debts", "") or "") or {}
+    local items, rows = {}, {}
+    if d.offer then
+        items[#items + 1] = Item(string.format("Take %s's loan of %d", tostring(d.offer.from), d.offer.n or 0), function() Send("loanaccept") end)
+        items[#items + 1] = Item("Turn the loan down", function() Send("loandecline") end)
+    end
+    for i, o in ipairs(d.owes or {}) do
+        if #items < 8 then items[#items + 1] = Item(string.format("Repay %s %d (%s)", tostring(o.to), o.n or 0, (o.left or 0) > 0 and ("due in " .. math.ceil(o.left / 60) .. " min") or "OVERDUE"), function() Send("repay", tostring(i)) end) end
+    end
+    for i, o in ipairs(d.owed or {}) do
+        if #items < 8 and (o.left or 0) <= 0 and not o.reported then items[#items + 1] = Item(string.format("Report %s's unpaid debt (%d) to Civil Protection", tostring(o.by), o.n or 0), function() Send("reportdebt", tostring(i)) end)
+        elseif #rows < 3 then rows[#items + #rows + 1] = string.format("%s owes you %d%s.", tostring(o.by), o.n or 0, o.reported and " (reported)" or ((o.left or 0) > 0 and (", due in " .. math.ceil(o.left / 60) .. " min") or "")) end
+    end
+    if #items == 0 and #rows == 0 then rows[1] = "No debts. F1 on someone: lend them money." end
+    return { title = "MY DEBTS", items = items, empty = rows }
+end
+
+-- My stall business (sv_livingcity_employment.lua): a job offer waiting, who I work for, who works for me.
+local function BusinessPage()
+    local bz = util.JSONToTable(LocalPlayer():GetNW2String("lc_business", "") or "") or {}
+    local items, rows = {}, {}
+    if bz.offer then
+        items[#items + 1] = Item("Work " .. tostring(bz.offer) .. "'s stall", function() Send("jobaccept") end)
+        items[#items + 1] = Item("Turn the job down", function() Send("jobdecline") end)
+    end
+    if bz.employer then items[#items + 1] = Item("Quit working " .. tostring(bz.employer) .. "'s stall", function() Send("jobquit") end) end
+    if bz.workers then
+        items[#items + 1] = Page("Let a worker go", function()
+            local its = {}
+            for _, w in ipairs(bz.workers) do if #its < 8 then its[#its + 1] = Item(tostring(w), function() Send("joblet", tostring(w)) end) end end
+            return { title = "LET GO", items = its }
+        end)
+        rows[#items + 1] = "Working your stalls: " .. table.concat(bz.workers, ", ") .. "."
+    end
+    if #items == 0 then
+        rows[1] = "Make goods to sell (F3 > crafting): a rag doll, a tin toy, a patched coat."
+        rows[2] = "Passers-by buy them from your stall at a fair price. With a stall, F1 on someone: offer them a job."
+    end
+    return { title = "MY STALL BUSINESS", items = items, empty = rows }
+end
+
+-- My household (sv_livingcity_households.lua): who's in it, an invitation waiting, leave, name it, send someone away.
+local function HouseholdPage()
+    local me = LocalPlayer()
+    local h = util.JSONToTable(me:GetNW2String("lc_household", "") or "") or {}
+    local inv = me:GetNW2String("lc_house_invite", "")
+    local items, rows = {}, {}
+    if inv ~= "" then
+        items[#items + 1] = Item("Join " .. inv .. "'s household", function() Send("houseaccept") end)
+        items[#items + 1] = Item("Decline", function() Send("housedecline") end)
+    end
+    if h.name then
+        items[#items + 1] = Item("Leave " .. tostring(h.name), function() Send("houseleave") end)
+        if h.head then
+            items[#items + 1] = Item("Name the household...", function() Say("The household's name", "What your household is called", "!housename ") end)
+            items[#items + 1] = Page("Send someone away", function()
+                local its = {}
+                for _, m in ipairs(h.members or {}) do
+                    if not m.head and #its < 8 then its[#its + 1] = Item(tostring(m.n), function() Send("housesendaway", tostring(m.n)) end) end
+                end
+                return { title = "SEND AWAY", items = its }
+            end)
+        end
+        rows[#items + 1] = tostring(h.name) .. ":"
+        for _, m in ipairs(h.members or {}) do
+            if #items + #rows < 9 then rows[#items + #rows + 1] = "  " .. tostring(m.n) .. (m.head and " (head)" or "") .. (m.here and "" or " (away)") end
+        end
+    elseif inv == "" then
+        rows[1] = "You're not in a household. Look at someone and F1 > Invite them into your household."
+        rows[2] = "A household shares a block, crates and lockers, and the head's apartment keys."
+    end
+    return { title = "MY HOUSEHOLD", items = items, empty = rows }
+end
+
 -- The state of the city (sv_livingcity_ledger.lua): the five numbers in words, the districts and who holds them.
 local function LedgerWord(v)
     v = tonumber(v) or 50
@@ -512,6 +609,7 @@ local function ShiftPage()
     local items = { Item("Checkpoint papers duty", function() Send("papersduty") end) }
     if s.order then
         items[#items + 1] = Item("Inspect the residence of " .. tostring(s.order.name) .. ", " .. tostring(s.order.block), function() Send("inspect") end)
+        if s.insider then items[#items + 1] = Item("Report it clean (the Resistance's friend inside)", function() Send("reportclean") end) end
     else
         items[#items + 1] = Item("Get an inspection order", function() Send("inspectorder") end)
     end
@@ -540,6 +638,18 @@ local function MineItems(me)
             or "Survival: Realistic (switch to Relaxed)", function() Send("survival") end)
     end
     out[#out + 1] = Page("My dreams (which to sit out)", MyDreamsPage)
+    local hf = me:GetNW2String("lcf_faction", "")
+    if hf == "" or hf == "citizen" or hf == "resistance" then
+        local bz = util.JSONToTable(me:GetNW2String("lc_business", "") or "") or {}
+        local waiting = me:GetNW2String("lc_house_invite", "") ~= "" or bz.offer
+        out[#out + 1] = Page(waiting and "My household and stall business (something waits)" or "My household and stall business", function()
+            return { title = "HOUSEHOLD AND BUSINESS", items = {
+                Page(me:GetNW2String("lc_house_invite", "") ~= "" and "My household (an invitation waits)" or "My household", HouseholdPage),
+                Page(bz.offer and "My stall business (a job offer waits)" or "My stall business", BusinessPage),
+                Page("My debts", DebtsPage),
+            } }
+        end)
+    end
     if GetGlobal2String("lc_ledger", "") ~= "" then out[#out + 1] = Page("The state of the city", CityPage) end
     if me:GetNW2String("lcf_faction", "") == "admin" then out[#out + 1] = Page("The city's levers (speeches, amnesty, crackdowns, rations)", LeversPage) end
     return out
@@ -574,8 +684,11 @@ local function MePage()
         Item(home, function() QM("home") end),
         Item(standing, function() if LC_CL.OpenStandingPanel then LC_CL.OpenStandingPanel() else QM("standing") end end), -- (every number explained: cl_livingcity_standingpanel.lua)
     }
-    for i, it in ipairs(MineItems(me)) do if i > 1 then items[#items + 1] = it end end -- (survival, my dreams: where I stand is the line above)
-    if m.next then rows = { [#items + 1] = string.format("Next: %s at %d.", tostring(m.nextWhat or ""), m.next) } end -- (the line after the last one)
+    -- the rest, one line (the next milestone keeps line 6, as it always has): survival, dreams, the city, household, business
+    local more = {}
+    for i, it in ipairs(MineItems(me)) do if i > 1 then more[#more + 1] = it end end -- (where I stand is the line above)
+    if #more > 0 then items[#items + 1] = Page("More: survival, dreams, the city, household, business", function() return { title = "MORE ABOUT ME", items = more } end) end
+    if m.next then rows = { [6] = string.format("Next: %s at %d.", tostring(m.nextWhat or ""), m.next) } end
     return { title = "ME", items = items, empty = rows }
 end
 
@@ -676,6 +789,11 @@ function LC_CL.QuickRoot()
     local ctx = {}
     for _, it in ipairs(Context(me, unit, rebel)) do if not it.role then ctx[#ctx + 1] = it end end
     local n = #items
+    if #ctx > 8 - n then
+        -- more in front of you than fits: the first, then all of them on a page of their own
+        local all = ctx
+        ctx = { ctx[1], { label = "More with them...", page = function() return { title = "WITH THEM", items = { unpack(all, 1, math.min(#all, 8)) } } end } }
+    end
     for i = 1, 8 - n do items[n + i] = ctx[i] or table.remove(usual, 1) end
     items[9] = Full()
     local accent = unit and ACCENT.cp or (rebel and ACCENT.resistance or ACCENT.default)
@@ -693,8 +811,8 @@ function LC_CL.QuickRoleRoot()
     local f, unit, rebel = Who(me)
     local fac = LCF and LCF.Get and LCF.Get(f)
     local title, accent = fac and fac.name or "", ACCENT.default
-    local items, usual, late = {}, {}, {}
-    local function Add(it) if it and #items < 8 then items[#items + 1] = it end end
+    local items, usual, late, over = {}, {}, {}, {}
+    local function Add(it) if not it then return end if #items < 8 then items[#items + 1] = it else over[#over + 1] = it end end
     if unit then
         title = me:GetNW2String("lcf_title", "") ~= "" and me:GetNW2String("lcf_title", "") or ((LCF and LCF.IsOverwatch and LCF.IsOverwatch(me)) and "OVERWATCH" or "CIVIL PROTECTION")
         accent = ACCENT.cp
@@ -802,6 +920,16 @@ function LC_CL.QuickRoleRoot()
         local mine = Page(me:GetNW2String("lc_shift", "") ~= "" and "Me: my shift, where I stand, survival" or "Me: where I stand, survival, dreams", MinePage)
         mine.id = "me"
         Add(mine)
+    end
+    if #over > 0 then
+        -- more than fits: slot 8 becomes More, with what was there and the rest (nothing dropped:
+        -- a unit's My shift is on its Me page, past Records terminal)
+        local moved = { items[8] }
+        for _, it in ipairs(over) do moved[#moved + 1] = it end
+        local names = {}
+        for i = 1, math.min(2, #moved) do names[#names + 1] = string.match(tostring(moved[i].label), "^[^:(]+") or moved[i].label end
+        items[8] = Page("More: " .. string.Trim(table.concat(names, ", ")) .. "...", function() return { title = "MORE", items = moved } end)
+        items[8].id = "more"
     end
     local empty = #items == 0
     items[9] = Full()

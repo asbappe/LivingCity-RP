@@ -6,7 +6,7 @@
       - Neutral dreams: the same, after 2 Neutral dreams.
       - Nightmares and propaganda dreams: only a citizen with Exemplary
         standing (lc_dream_skip_standing, 400), the city's favoured.
-    Chosen per kind in F2 > Me > My dreams (also C > Settings > Shared dreams, or /dream skip happy,
+    Chosen per kind in F2 > Me (More) > My dreams (also C > Settings > Shared dreams, or /dream skip happy,
     /dream skip neutral, /dream skip nightmare, /dream skip propaganda;
     the same again to dream them again). Whoever has earned it but hasn't
     chosen it sees a small note as the screen goes black for a dream.
@@ -71,7 +71,7 @@ function LC.DreamSkipHint(p, id, mood)
     if not cvOn:GetBool() or not IsValid(p) or not p.GetPData then return nil end
     local kind = Kind(id, mood)
     if Prefs(p)[kind] or not LC.DreamSkipEarned(p, kind) then return nil end
-    return string.format("You've earned the right to sit out %s dreams: F2 > Me > My dreams.", KINDS[kind] == "Nightmares" and "nightmare" or string.lower(KINDS[kind]))
+    return string.format("You've earned the right to sit out %s dreams: F2 > Me (More) > My dreams.", KINDS[kind] == "Nightmares" and "nightmare" or string.lower(KINDS[kind]))
 end
 
 local function Sync(p)

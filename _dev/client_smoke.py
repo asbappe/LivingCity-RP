@@ -1264,6 +1264,16 @@ net._q = { talkNpc, "Mira Kovacs", "Factory Worker", "working the line", "friend
 okTk, errTk = pcall(net["recv_lc_talk"])
 if not okTk then problems[#problems + 1] = "talk window (how they seem): " .. tostring(errTk) end
 if made < 9 then problems[#problems + 1] = "talk window with how they seem built only " .. made .. " controls" end
+-- with things to give (the Give menu: a count, then id and label for each)
+made = 0
+local oldUInt = net.ReadUInt
+net.ReadUInt = function() return table.remove(net._q, 1) end
+net._q = { talkNpc, "Mira Kovacs", "Factory Worker", "working the line", "friendly", "warm", "'Another day.'", true, true, true, true, true, "",
+    2, "ration", "Food: Ration packet (2)", "beer", "A drink or a smoke: Homebrew beer" }
+okTk, errTk = pcall(net["recv_lc_talk"])
+if not okTk then problems[#problems + 1] = "talk window (Give menu): " .. tostring(errTk) end
+if made < 8 then problems[#problems + 1] = "talk window with a Give menu built only " .. made .. " controls" end
+net.ReadUInt = oldUInt
 net._q = { nil }
 okTk, errTk = pcall(net["recv_lc_talk"]) -- (and closing it)
 if not okTk then problems[#problems + 1] = "talk window close: " .. tostring(errTk) end
@@ -1628,6 +1638,14 @@ local okRS, errRS = pcall(function()
     if #(LC_CL.RatScarCuts or {}) < 10 then error("the rat has too few cuts to look like one") end
 end)
 if not okRS then problems[#problems + 1] = "the carved rat: " .. tostring(errRS) end
+-- a pet bird on the shoulder (cl_livingcity_petbird.lua): drawn without errors
+local okPB, errPB = pcall(function()
+    if not LC_CL.DrawPetBird then error("no bird to draw") end
+    _me:SetNW2Bool("lc_pet_bird", true)
+    LC_CL.DrawPetBird(_me)
+    _me:SetNW2Bool("lc_pet_bird", false)
+end)
+if not okPB then problems[#problems + 1] = "the pet bird: " .. tostring(errPB) end
 -- what now? (cl_livingcity_nextstep.lua): the line on screen, and its F1 page
 local okWN, errWN = pcall(function()
     _me:SetNW2String("lc_next", "Find water")
@@ -3233,6 +3251,27 @@ local ok, e = pcall(function()
     -- an ordinary unit: no Inside
     LC_CL.Insider = false
     if Find(LC_CL.QuickRoleRoot(), "inside") then error("an ordinary unit has Inside >") end
+    -- My shift: an Insider with an inspection order can report it clean; an ordinary unit can't
+    local function ShiftLabels(insider)
+        _me.nw = { lcf_faction = "cp", lcf_rank = 2, lc_shift = "x" }
+        local shift = { left = 600, q = { searches = 3, papers = 1, inspections = 1 }, order = { name = "Ana", block = "Block 3" }, insider = insider or nil }
+        util.JSONToTable = function(t) if t == "x" then return shift end return jt(t) end
+        local function Walk(page, depth)
+            for i = 1, 9 do
+                local it = page.items[i]
+                if it and it.page and string.find(tostring(it.label), "My shift", 1, true) then return Labels(it.page()) end
+                if it and it.page and depth < 2 then local ok, sub = pcall(it.page) if ok and sub and sub.items then local r = Walk(sub, depth + 1) if r then return r end end end
+            end
+        end
+        local root = LC_CL.QuickRoleRoot()
+        local r = Walk(root, 0)
+        util.JSONToTable = jt
+        return r or ("not found on F2: " .. Labels(root))
+    end
+    local sl = ShiftLabels(true)
+    if not string.find(sl, "Report it clean", 1, true) then error("an Insider's My shift has no Report it clean: " .. sl) end
+    if string.find(ShiftLabels(false), "Report it clean", 1, true) then error("an ordinary unit's My shift offers Report it clean") end
+    _me.nw = { lcf_faction = "cp", lcf_rank = 2 }
 
     -- a Division Leader: Call a sweep >, greyed with why
     _me.nw = { lcf_faction = "cp", lcf_rank = 3 }
