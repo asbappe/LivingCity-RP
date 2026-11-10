@@ -80,3 +80,7 @@ Six propaganda posters for Living City, a Half-Life 2 roleplay server. They hang
 - No real-world flags, swastikas, hammers and sickles, or real political figures.
 - No gore, and nobody shown being hurt: the threat is always implied, never shown.
 - Not cartoony or glossy: these are worn, printed posters in a grim city.
+
+## Eleven more, hung by hand
+
+The Director of Propaganda hangs these with the poster roll (they never appear by themselves). Same style, same footer. File names: `work`, `loyalty`, `informants`, `contraband`, `radio`, `illness`, `infestation`, `housing`, `vortigaunt`, `recruit`, `administrator` (`.png` or `.jpg`). The Administrator is drawn after Judith Mossman: dark hair parted and pulled back, a pale coat over a dark high collar. Their words are in `gamemodes/livingcity/entities/entities/lc_civposter.lua`. All seventeen pictures are already drawn (`materials/livingcity/posters/`, made by `node _dev/posters/gen.js OUTDIR`).

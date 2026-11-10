@@ -70,6 +70,7 @@ function worker(tx, ty, s, o = {}) {
     g += P('M58,140 L98,140 L200,162 L200,192 L78,192Z', t.b2);
     g += P('M190,160 L204,161 L204,193 L190,192Z', t.bd);
     g += P('M204,163 L236,160 L248,170 L240,187 L204,191Z', t.skin);
+    if (o.hammer) g += P('M226,186 L240,188 L300,40 L286,36Z', C.steel) + P('M262,20 L330,44 L322,70 L254,46Z', C.red) + P('M216,160 L246,158 L250,186 L220,190Z', t.skin);
     if (o.card) g += P('M230,160 L306,153 L308,177 L232,184Z', C.red) + P('M222,159 L252,157 L254,166 L224,168Z', t.skin);
   } else {
     g += P('M40,142 L84,148 L90,300 L52,304Z', t.b2);
@@ -131,4 +132,42 @@ function reader(tx, ty, s, tone, hat) {
   return G(`translate(${tx},${ty}) scale(${s})`, g);
 }
 
-module.exports = { C, P, R, G, rays, emblem, head, childHead, worker, officer, citizen, reader, TONES };
+// The City Administrator (after Judith Mossman: dark hair parted and pulled back, tan skin,
+// a pale coat over a dark high collar), front view, in a 170 x 214 box.
+function adminBust(o = {}) {
+  const skin = '#c9a384', sh = '#9b7860', hair = '#1b1819', lip = o.lip || '#7d3f36';
+  return [
+    P('M44,88 L48,44 L68,22 L102,22 L122,44 L126,88 L118,116 L52,116Z', hair),
+    P('M4,214 L22,166 L66,148 L104,148 L148,166 L166,214Z', C.ink),
+    P('M58,152 L85,200 L80,214 L34,214 L44,164Z', C.paper), P('M112,152 L85,200 L90,214 L136,214 L126,164Z', C.paper),
+    P('M112,152 L85,200 L90,214 L104,214 L100,196 L118,160Z', C.steel2),
+    P('M68,118 L68,150 L85,172 L102,150 L102,118Z', C.slate2), P('M68,134 L102,134 L102,140 L68,140Z', C.ink),
+    P('M56,72 L62,50 L85,42 L108,50 L114,72 L112,100 L100,122 L85,130 L70,122 L58,100Z', skin),
+    P('M102,58 L108,50 L114,72 L112,100 L100,122 L85,130 L96,112 L104,92Z', sh),
+    P('M85,38 L60,44 L50,70 L53,96 L60,76 L70,60 L85,52Z', hair), P('M85,38 L110,44 L120,70 L117,96 L110,76 L100,60 L85,52Z', hair),
+    P('M63,73 L80,70 L80,73 L63,77Z', hair), P('M90,70 L107,73 L107,77 L90,73Z', hair),
+    P('M66,81 L80,81 L78,86 L68,86Z', C.ink), P('M90,81 L104,81 L102,86 L92,86Z', C.ink),
+    P('M70,82 L74,82 L74,84 L70,84Z', C.paper), P('M94,82 L98,82 L98,84 L94,84Z', C.paper),
+    P('M85,84 L90,103 L81,103Z', sh),
+    P('M76,111 L85,109 L94,111 L85,116Z', lip),
+    P('M70,122 L85,130 L100,122 L96,128 L85,134 L74,128Z', sh),
+    emblem(118, 178, 0.42, o.pin || C.cyan),
+  ].join('');
+}
+// A scanner: the city's flying eye. Centre at 0,0, about 144 wide.
+function scanner(x, y, s, eye) {
+  return G(`translate(${x},${y}) scale(${s})`, [
+    P('M-70,0 L-28,-24 L30,-20 L72,0 L30,18 L-28,24Z', C.steel), P('M-70,0 L-28,-24 L30,-20 L72,0Z', C.steel2),
+    P('M-28,-24 L-44,-44 L-18,-38 L4,-22Z', C.slate3), P('M30,18 L52,36 L20,34 L0,22Z', C.slate3),
+    `<circle cx="0" cy="0" r="30" fill="${eye}" opacity=".18"/><circle cx="0" cy="0" r="19" fill="${C.ink}"/><circle cx="0" cy="0" r="12" fill="${eye}"/><circle cx="0" cy="0" r="5" fill="#fff4ee"/>`,
+  ].join(''));
+}
+// An open hand, fingers up, 84 x 190.
+function palm(x, y, s, fill, rot = 0) {
+  return G(`translate(${x},${y}) rotate(${rot}) scale(${s})`, [
+    R(20, 26, 13, 70, fill), R(36, 10, 13, 86, fill), R(52, 14, 13, 82, fill), R(68, 30, 12, 66, fill),
+    P('M20,84 L80,84 L82,190 L24,190Z', fill), P('M20,96 L2,72 L10,60 L26,80Z', fill),
+  ].join(''));
+}
+
+module.exports = { adminBust, scanner, palm, C, P, R, G, rays, emblem, head, childHead, worker, officer, citizen, reader, TONES };

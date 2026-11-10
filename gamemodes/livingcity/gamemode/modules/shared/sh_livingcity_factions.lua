@@ -149,9 +149,10 @@ LCF.Factions = {
             {
                 id = "propaganda_director", name = "Director of Propaganda", max = 1, minRank = 1,
                 desc = "The city's voice. Carries the microphone: on air over every loudspeaker and screen, a minute at a time, " ..
-                       "when the transmitter is ready. Keep hold of it: the Resistance would love to use it.",
+                       "when the transmitter is ready. Keep hold of it: the Resistance would love to use it. " ..
+                       "Carries the poster roll too: the city's walls say what the Director hangs on them.",
                 models = { "models/player/breen.mdl" },
-                loadout = { "weapon_fists", "weapon_lc_microphone" },
+                loadout = { "weapon_fists", "weapon_lc_microphone", "weapon_lc_posters" },
             },
         },
     },

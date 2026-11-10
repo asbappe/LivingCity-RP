@@ -2,7 +2,8 @@
 // Run: node gen.js OUTDIR
 const fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
-const { C, P, R, G, rays, emblem, head, childHead, worker, officer, citizen, reader } = require('./lib.js');
+const { C, P, R, G, rays, emblem, head, childHead, worker, officer, citizen, reader, adminBust } = require('./lib.js');
+const more = require('./art2.js');
 
 const ART = {};
 
@@ -50,18 +51,7 @@ ART.commissary = () => {
   }
   // the Administrator's portrait
   s += R(44, 30, 186, 230, C.ink) + R(52, 38, 170, 214, C.paper) + R(60, 46, 154, 198, C.slate3);
-  s += G('translate(52,38)', [
-    P('M8,206 L28,160 L68,146 L102,146 L142,160 L162,206Z', C.ink),
-    P('M68,146 L85,170 L102,146 L98,140 L72,140Z', C.paper),
-    P('M72,150 L72,118 L98,118 L98,150 L85,162Z', C.steel2),
-    P('M58,72 L64,52 L85,44 L106,52 L112,72 L110,100 L98,122 L85,128 L72,122 L60,100Z', C.paper),
-    P('M85,44 L106,52 L112,72 L110,100 L98,122 L85,128Z', C.steel2, 'opacity=".6"'),
-    P('M50,80 L54,46 L72,30 L98,30 L116,46 L120,80 L112,72 L106,54 L85,48 L64,54 L58,72Z', C.ink),
-    P('M70,30 L76,14 L94,14 L100,30Z', C.ink),
-    R(67, 74, 13, 3, C.ink), R(90, 74, 13, 3, C.ink), R(69, 80, 10, 4, C.ink), R(92, 80, 10, 4, C.ink),
-    P('M84,84 L88,100 L82,100Z', C.steel), `<path d="M78,109 L85,111 L92,109" stroke="${C.ink}" stroke-width="2.2" fill="none"/>`,
-    `<circle cx="85" cy="176" r="5" fill="${C.cyan}"/>`,
-  ].join(''));
+  s += '<svg x="60" y="46" width="154" height="198" viewBox="8 16 154 198">' + adminBust({}) + '</svg>';
   s += R(44, 268, 186, 6, C.cyan);
   // the hatch
   s += R(488, 344, 232, 206, C.steel) + R(502, 358, 218, 192, C.ink);
@@ -254,9 +244,12 @@ const POSTERS = [
     small: ['At the two-minute warning,', 'return to your housing block.', 'Do not run in the presence of Civil Protection.'] },
 ];
 
+Object.assign(ART, more.ART);
+POSTERS.push(...more.POSTERS);
+
 function page(p) {
   const dark = p.accent === 'cyan';
-  const acc = dark ? C.cyan : C.red, body = dark ? C.paper : C.ink, ground = dark ? (p.id === 'curfew' ? C.night : C.slate) : C.paper;
+  const acc = dark ? C.cyan : C.red, body = dark ? C.paper : C.ink, ground = dark ? (p.id === 'curfew' || p.dark ? C.night : C.slate) : C.paper;
   const T0 = 634, X0 = 50, TW = 668;
   let t = '', y = T0 + 20;
   if (p.head.length === 1) y += 14;

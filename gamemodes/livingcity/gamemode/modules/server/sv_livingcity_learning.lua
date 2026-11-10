@@ -144,6 +144,9 @@ LC.CivPosterTips = {
     dispenser = { "dispenser", "ration", "event_rations" }, commissary = { "terminal" },
     intake = { "intake_arrival", "item_papers" }, water = { "water", "sink", "parasites" },
     law = { "lawboard" }, curfew = { "curfew_warning", "running" },
+    -- (the Director's hand-hung posters are propaganda: they teach no tip)
+    work = {}, loyalty = {}, informants = {}, contraband = {}, radio = {}, illness = {}, infestation = {}, housing = {},
+    vortigaunt = {}, recruit = {}, administrator = {},
 }
 
 function LC.CivPosterNotice(pos)
@@ -167,6 +170,42 @@ end
 
 function LC.CivPosterRead(ply, kind)
     Learn(ply, unpack(LC.CivPosterTips[kind] or LC.CivPosterTips.curfew))
+end
+
+-- Posters hung by hand (the Director of Propaganda's poster roll: weapon_lc_posters.lua). They stay up until
+-- the map changes or someone with a roll takes them down; the editor's own posters are never touched.
+LC.PosterHangMax = 24
+function LC.HungPosters()
+    local out = {}
+    for _, e in ipairs(ents.FindByClass("lc_civposter")) do if IsValid(e) and e.lcFixedKind then out[#out + 1] = e end end
+    return out
+end
+
+function LC.HangPoster(ply, kind, pos, normal)
+    local stored = scripted_ents and scripted_ents.GetStored and scripted_ents.GetStored("lc_civposter")
+    local notices = stored and stored.t and stored.t.Notices or LC.CivPosterTips
+    if not notices[kind] then return false, "There's no such poster on the roll." end
+    if not pos or not normal or math.abs(normal.z) > 0.3 then return false, "Posters go on a wall." end
+    for _, e in ipairs(ents.FindByClass("lc_civposter")) do
+        if IsValid(e) and e:GetPos():DistToSqr(pos) < 60 * 60 then return false, "There's a poster here already." end
+    end
+    if #LC.HungPosters() >= LC.PosterHangMax then return false, "The city has enough posters up (" .. LC.PosterHangMax .. "). Take one down first." end
+    local e = ents.Create("lc_civposter")
+    if not IsValid(e) then return false, "It won't stick." end
+    e:SetPos(pos + normal * 1)
+    e:SetAngles(normal:Angle())
+    e.lcFixedKind = kind
+    e.lcHungBy = ply
+    e:Spawn()
+    e:SetNW2String("lc_notice", kind)
+    return e
+end
+
+function LC.TakeDownPoster(ply, e)
+    if not IsValid(e) or e:GetClass() ~= "lc_civposter" then return false, "Look at a poster." end
+    if not e.lcFixedKind then return false, "That one is the city's own: it stays." end
+    e:Remove()
+    return true
 end
 
 -- The owner's poster pictures, sent to players when the map starts (materials/livingcity/posters/)

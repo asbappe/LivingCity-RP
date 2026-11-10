@@ -10,11 +10,16 @@
     machine, that untreated water carries parasites; by the law board, to
     know the law; anywhere else, curfew.
 
+    Eleven more are hung by hand only, by the Director of Propaganda (the
+    poster roll, weapon_lc_posters.lua; LC.HangPoster): work, loyalty,
+    informants, contraband, radio, illness, infestation, housing, vortigaunt,
+    recruit, administrator. Those keep the poster they were hung as.
+
     Press E to read it closely: that's learning it, and its tip cards don't
     come (LC.Learn, sv_livingcity_learning.lua).
 
     Your own artwork: garrysmod/materials/livingcity/posters/<kind>.png (or
-    .jpg), kind = dispenser, commissary, intake, water, law, curfew; a 3:4
+    .jpg), kind = any of the names below; a 3:4
     portrait picture (768 x 1024 is plenty). With one, the poster shows it;
     without, the drawn notice below. They're sent to players when the map
     starts. The brief for each picture: POSTER_BRIEF.md.
@@ -39,8 +44,23 @@ local NOTICES = {
     water = { "UNTREATED WATER CARRIES PARASITES", "Drink only from approved taps and machines. Antiparasitic tablets are available at the Commissary." },
     law = { "KNOW THE LAW", "Ignorance of the law is no defence. The city's laws are posted here. Comply." },
     curfew = { "CURFEW IS ABSOLUTE", "At the two-minute warning, return to your housing block. Do not run in the presence of Civil Protection." },
+    -- hung by hand only (the Director of Propaganda's posters: weapon_lc_posters.lua)
+    work = { "IDLE HANDS BURDEN THE CITY", "Every citizen has a shift. Report to Labor Assignment. The Union remembers who works." },
+    loyalty = { "LOYALTY IS NOTICED", "Good standing opens doors. Poor standing closes them. Your record is always current." },
+    informants = { "REPORT WHAT YOU HEAR", "A word to Civil Protection keeps your block safe. Silence protects no one." },
+    contraband = { "CONTRABAND FEEDS THE ENEMY", "Unlicensed goods are confiscated. So are those who carry them. Submit to search." },
+    radio = { "UNLICENSED FREQUENCIES ARE MONITORED", "The city speaks on approved channels only. We hear the others too." },
+    illness = { "A COUGH UNREPORTED IS A COUGH SHARED", "Report illness at once. Medicine is available at the Commissary. Rest, and return to work." },
+    infestation = { "DO NOT APPROACH. REPORT.", "Growths and spores spread by touch. Keep away. Sanitation crews will cleanse the area." },
+    housing = { "YOUR ROOM IS A PRIVILEGE", "Housing is assigned to registered workers. Keep it clean. Keep it quiet. Keep it." },
+    vortigaunt = { "THEY SERVE, AS YOU SERVE", "Shackled labor keeps your streets clean. Do not speak to it. Do not free it." },
+    recruit = { "JOIN CIVIL PROTECTION. EAT BETTER.", "Better rations. Better housing. A place in the new order. Apply at any post." },
+    administrator = { "SHE WATCHES OVER YOU", "Your Administrator works while you sleep. Work well, sleep well, and trust in her." },
 }
 ENT.Notices = NOTICES
+-- (the order the Director's poster roll lists them in)
+ENT.NoticeOrder = { "administrator", "loyalty", "informants", "work", "housing", "recruit", "contraband", "radio", "illness", "infestation", "vortigaunt",
+    "curfew", "law", "dispenser", "commissary", "intake", "water" }
 
 function ENT:Initialize()
     if CLIENT then return end
@@ -58,7 +78,8 @@ end
 if SERVER then
     -- (what's nearest, and what reading it teaches: sv_livingcity_learning.lua)
     function ENT:PickNotice()
-        local best = LC and LC.CivPosterNotice and LC.CivPosterNotice(self:GetPos()) or "curfew"
+        -- (one hung by hand keeps the poster it was hung as: LC.HangPoster)
+        local best = self.lcFixedKind or (LC and LC.CivPosterNotice and LC.CivPosterNotice(self:GetPos())) or "curfew"
         self:SetNW2String("lc_notice", best)
         self.lcPickedAt = CurTime()
         return best

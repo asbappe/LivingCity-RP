@@ -1310,3 +1310,11 @@ Notes:
 - [ ] **Poster pictures:** upload `materials/livingcity/posters/` (six `.jpg`), FastDL sync, change map. Each civil notice poster shows its picture (dispenser, Commissary, intake, water, law board, curfew elsewhere), sharp enough to read from a few steps away.
 - [ ] **Fever:** `lc_illness_rate 20`, catch a cold in the rain and leave it (or wait for a fever). With a fever: you can't sprint, fists don't swing. At 12:00 on the clock (`lc_time 11` to hurry) you drop for a minute into the fever dream: melting colours, rolling view, drifting words, the eye, slow sounds. You come to with it broken. Get someone to hit you during it: you wake, still feverish.
   Notes:
+
+## 10 November: the poster roll
+- [ ] **Poster roll:** as Director of Propaganda, take out the poster roll (slot 5). Reload: a list of seventeen posters opens; pick one. Left click at a wall: it hangs there with its picture. Right click on it: it comes down. A poster the editor placed does not come down.
+  Notes:
+- [ ] **Poster roll, in your hands:** you see your hands and a sheet of paper. If the sheet sits wrong, try `lc_posters_view "20 0 -9"` (forward right up) and tell me the numbers that look right.
+  Notes:
+- [ ] **The eleven new pictures:** work, loyalty, informants, contraband, radio, illness, infestation, housing, vortigaunt, recruit, administrator (she should read as Mossman).
+  Notes:
