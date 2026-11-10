@@ -1325,3 +1325,5 @@ Notes:
   Notes:
 - [ ] **Fever aim:** with a fever, hold a pistol or SMG: it sways and drifts on screen; fire at a wall: the holes land where the gun was pointing, scattered.
   Notes:
+- [ ] **Poster roll, the city's own posters:** right click on a poster the editor placed: it comes down. Hang a different one in its place. After a map change the editor's poster is back.
+  Notes:

@@ -173,7 +173,9 @@ function LC.CivPosterRead(ply, kind)
 end
 
 -- Posters hung by hand (the Director of Propaganda's poster roll: weapon_lc_posters.lua). They stay up until
--- the map changes or someone with a roll takes them down; the editor's own posters are never touched.
+-- the map changes or someone with a roll takes them down. The roll takes the editor's own posters down too
+-- (the owner, 10 November: "let the roll take them all down"): those are only hidden, so the saved layout
+-- is untouched and LC.SyncFixtures doesn't put them straight back; they return when the map next starts.
 LC.PosterHangMax = 24
 function LC.HungPosters()
     local out = {}
@@ -187,7 +189,7 @@ function LC.HangPoster(ply, kind, pos, normal)
     if not notices[kind] then return false, "There's no such poster on the roll." end
     if not pos or not normal or math.abs(normal.z) > 0.3 then return false, "Posters go on a wall." end
     for _, e in ipairs(ents.FindByClass("lc_civposter")) do
-        if IsValid(e) and e:GetPos():DistToSqr(pos) < 60 * 60 then return false, "There's a poster here already." end
+        if IsValid(e) and not e.lcTornDown and e:GetPos():DistToSqr(pos) < 60 * 60 then return false, "There's a poster here already." end
     end
     if #LC.HungPosters() >= LC.PosterHangMax then return false, "The city has enough posters up (" .. LC.PosterHangMax .. "). Take one down first." end
     local e = ents.Create("lc_civposter")
@@ -203,8 +205,11 @@ end
 
 function LC.TakeDownPoster(ply, e)
     if not IsValid(e) or e:GetClass() ~= "lc_civposter" then return false, "Look at a poster." end
-    if not e.lcFixedKind then return false, "That one is the city's own: it stays." end
-    e:Remove()
+    if e.lcTornDown then return false, "Look at a poster." end
+    if e.lcFixedKind then e:Remove() return true end
+    e.lcTornDown = true
+    if e.SetNoDraw then e:SetNoDraw(true) end
+    if e.SetNotSolid then e:SetNotSolid(true) end
     return true
 end
 

@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version bc3a99a. Admin-only console messages and log lines are left out.
+Made from version a2aed39. Admin-only console messages and log lines are left out.
 
 9981 lines, from 275 files.
 
@@ -1027,7 +1027,7 @@ Made from version bc3a99a. Admin-only console messages and log lines are left ou
 - "A special role (Hacker, Father Grigori...) comes back with you when you rejoin, if there's still a free place in it."  (text, line 265)
 - "The multitool (the Resistance's two Hackers carry one; the black market sells them; contraband): aim it and left click at a locked Combine door (hacks it open), a city screen (hijacks it), a data terminal (steals its data), a vending machine or ration dispenser (free water or rations), or a shackled vortigaunt (unlocks its shackles and frees it)."  (text, line 266)
 - "The Director of Propaganda's microphone: left click to go on air over every loudspeaker and screen (one minute, once every fifteen minutes). A scanner flies down and films whoever holds it, live on every screen; its eye blinks red while it records. Shoot the scanner down to cut the picture. With no player in the job, the Administrator addresses the city herself now and then; kill her on air and her microphone is yours. Take the microphone off someone (hands up or cuffed, actions menu) and broadcasting with it is a pirate broadcast."  (text, line 267)
-- "The Director of Propaganda's poster roll: left click hangs the chosen poster on the wall in front of you, right click takes a hand-hung one down, reload chooses another (seventeen posters). Eleven of them only ever go up by hand: the city has them when its Director hangs them. They stay up until the map changes."  (text, line 268)
+- "The Director of Propaganda's poster roll: left click hangs the chosen poster on the wall in front of you, right click takes any poster down (the city's own return when the map next starts), reload chooses another (seventeen posters). Eleven of them only ever go up by hand: the city has them when its Director hangs them. They stay up until the map changes."  (text, line 268)
 - "Streetlights and loudspeakers break when shot or worn out: broken lights go dark, and nobody near a broken loudspeaker hears the PA. Maintenance and Radio Repair crews fix them."  (text, line 269)
 - "One data terminal gives half a chip (a fragment): hack a second, different terminal and the two fragments make a full data chip. The master terminal is the big prize: one download gives a master data core."  (text, line 270)
 - "A data chip: sell it to the black market dealer, take it to the lab and have the scientist Decode it (first on his list; marks every Civil Protection unit for five minutes), or Use it at a terminal to wipe your record."  (text, line 271)
@@ -1700,7 +1700,7 @@ Made from version bc3a99a. Admin-only console messages and log lines are left ou
 - "{+attack}: go live on every loudspeaker and screen (a minute, once every fifteen)"  (text, line 150)
 - "Poster roll"  (text, line 151)
 - "{+attack}: hang the poster on the wall in front of you"  (text, line 152)
-- "{+attack2}: take a hand-hung poster down"  (text, line 153)
+- "{+attack2}: take a poster down"  (text, line 153)
 - "{+reload}: choose another poster"  (text, line 154)
 - "Administrator's tablet"  (text, line 155)
 - "{+attack} at someone: your bodyguard kills them"  (text, line 156)
@@ -10321,16 +10321,16 @@ Made from version bc3a99a. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: hang poster
 
-- "There's no such poster on the roll."  (text, line 187)
-- "Posters go on a wall."  (text, line 188)
-- "There's a poster here already."  (text, line 190)
-- "The city has enough posters up ({PosterHangMax}). Take one down first."  (text, line 192)
-- "It won't stick."  (text, line 194)
+- "There's no such poster on the roll."  (text, line 189)
+- "Posters go on a wall."  (text, line 190)
+- "There's a poster here already."  (text, line 192)
+- "The city has enough posters up ({PosterHangMax}). Take one down first."  (text, line 194)
+- "It won't stick."  (text, line 196)
 
 > Note for you (not shown in game): part of: take down poster
 
-- "Look at a poster."  (text, line 205)
-- "That one is the city's own: it stays."  (text, line 206)
+- "Look at a poster."  (text, line 207)
+- "Look at a poster."  (text, line 208)
 
 ## a life (sv_livingcity_life.lua)
 

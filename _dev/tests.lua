@@ -7579,7 +7579,11 @@ ok(not LC.HangPoster(hanger, "nonsense", wallAt + Vector(0, 300, 0), Vector(1, 0
 ok(#LC.HungPosters() == 1 and LC.TakeDownPoster(hanger, hung) and #LC.HungPosters() == 0, "a hand-hung poster comes down again")
 local cityPoster = ents.Create("lc_civposter")
 cityPoster:SetPos(LB + Vector(5000, 6000, 60)) cityPoster:Spawn()
-ok(not LC.TakeDownPoster(hanger, cityPoster), "the city's own posters (the editor's) stay up")
+ok(LC.TakeDownPoster(hanger, cityPoster) and IsValid(cityPoster) and cityPoster.lcTornDown, "the roll takes the city's own posters down too: hidden until the map next starts")
+ok(not LC.TakeDownPoster(hanger, cityPoster), "one that's down can't be taken down again")
+local over = LC.HangPoster(hanger, "loyalty", cityPoster:GetPos(), Vector(1, 0, 0))
+ok(IsValid(over), "and a new one can be hung where it was")
+if IsValid(over) then over:Remove() end
 cityPoster:Remove()
 section("Catching something: a cold, a stomach bug, a fever")
 local sick = lp("Sick")

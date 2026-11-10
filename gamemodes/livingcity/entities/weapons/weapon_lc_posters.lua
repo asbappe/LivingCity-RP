@@ -1,7 +1,7 @@
 --[[
     Poster roll (Living City): the Director of Propaganda's. Left click hangs
-    the chosen poster on the wall in front of you; right click takes one of
-    the hand-hung ones down; reload opens the roll to choose another. The
+    the chosen poster on the wall in front of you; right click takes any
+    poster down (the editor's own come back when the map next starts); reload opens the roll to choose another. The
     city's walls only get these posters when someone holding a roll puts them
     up (LC.HangPoster, sv_livingcity_learning.lua; the posters themselves:
     entities/lc_civposter.lua). Anyone holding it can use it.
@@ -13,7 +13,7 @@ SWEP.PrintName    = "Poster roll"
 SWEP.Author       = "Living City"
 SWEP.Category     = "Living City"
 SWEP.Purpose      = "The city's walls."
-SWEP.Instructions = "Left click: hang the poster on the wall in front of you. Right click: take a hand-hung poster down. Reload: choose another poster."
+SWEP.Instructions = "Left click: hang the poster on the wall in front of you. Right click: take a poster down. Reload: choose another poster."
 SWEP.Spawnable    = true
 SWEP.AdminOnly    = true
 

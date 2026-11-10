@@ -150,7 +150,7 @@ local DATA = {
             "{+attack}: go live on every loudspeaker and screen (a minute, once every fifteen)" },
         weapon_lc_posters = { "Poster roll",
             "{+attack}: hang the poster on the wall in front of you",
-            "{+attack2}: take a hand-hung poster down",
+            "{+attack2}: take a poster down",
             "{+reload}: choose another poster" },
         weapon_lc_admin = { "Administrator's tablet",
             "{+attack} at someone: your bodyguard kills them",
