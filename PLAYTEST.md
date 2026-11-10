@@ -1291,7 +1291,7 @@ Notes:
   Notes:
 - [ ] **Inspection:** with a citizen player online who has a room, My shift > Get an inspection order, go to their block, Inspect the residence. Contraband in their stash should be confiscated and they should be told.
   Notes:
-- [ ] **Review:** at the end of 30 minutes, a performance review with a grade and experience.
+- [ ] **Review:** at the end of 15 minutes, a performance review with a grade and experience.
 - [ ] **Illness (Realistic):** stand in the rain a while (or `lc_illness_rate 20` to hurry it): a cold, coughing. Buy Union medicine at the Commissary and take it. Eat raw meat: a stomach bug, vomiting; drink clean water. Leave a cold alone: maybe a fever (health stops at 60). On Relaxed: nothing.
   Notes:
 - [ ] **The old-timer's new troubles:** his cough wants Union medicine (tablets refused), and his last trouble is a smoke (a cigarette), not a radio.

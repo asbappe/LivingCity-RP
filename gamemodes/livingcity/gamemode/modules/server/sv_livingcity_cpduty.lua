@@ -4,7 +4,7 @@
     Combine to do when there are no rebels about).
 
     Every Civil Protection player on duty works shifts of lc_cp_shift_minutes
-    (30). Each shift has a quota, on F2 > My shift:
+    (15; the owner, 10 November: "30 ... is a bit extreme, let's do 15"). Each shift has a quota, on F2 > My shift:
       - searches        lc_cp_quota_searches (3): anyone, a player or one of
                         the city's people (the pat-down, the baton's reload)
       - papers duty     lc_cp_quota_papers (1): F2 > My shift > Checkpoint
@@ -23,7 +23,7 @@
     for extra, and experience for it (A 30, B 20, C 10), which is what
     promotes a unit. The last five reviews are kept (F2 > My shift).
 
-      lc_cp_duty 0/1, lc_cp_shift_minutes (30), lc_cp_quota_searches (3),
+      lc_cp_duty 0/1, lc_cp_shift_minutes (15), lc_cp_quota_searches (3),
       lc_cp_quota_papers (1), lc_cp_quota_inspections (1)
 ]]
 
@@ -33,7 +33,7 @@ LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn      = CreateConVar("lc_cp_duty", "1", FLAGS, "Civil Protection players work shifts with a quota (searches, papers duty, an inspection) and a performance review")
-local cvMins    = CreateConVar("lc_cp_shift_minutes", "30", FLAGS, "Minutes in a Civil Protection shift")
+local cvMins    = CreateConVar("lc_cp_shift_minutes", "15", FLAGS, "Minutes in a Civil Protection shift")
 local cvSearch  = CreateConVar("lc_cp_quota_searches", "3", FLAGS, "Searches in a Civil Protection shift's quota")
 local cvPapers  = CreateConVar("lc_cp_quota_papers", "1", FLAGS, "Checkpoint papers duties in a Civil Protection shift's quota")
 local cvInspect = CreateConVar("lc_cp_quota_inspections", "1", FLAGS, "Residence inspections in a Civil Protection shift's quota")
