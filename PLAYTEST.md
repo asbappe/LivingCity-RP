@@ -1414,3 +1414,5 @@ Notes:
 - [ ] **Small-server mode:** with 4 or fewer on, chat should say "A quiet night in the city". Events and rebel operations should come noticeably more often. When a fifth player joins, it should say the city is back to its usual pace.
 - [ ] **Citizens drinking and smoking:** stand near citizens for a few minutes: now and then one lights up (puffs of smoke from their head) or swigs from a bottle in their hand, and stops when they walk off. Does the bottle sit right in the hand? Too often, or too rare? (Editor panel: "Citizens fond of a drink and a smoke" turns it off.)
   Notes:
+- [ ] **Give something (talk window):** E on a citizen: "Give something..." opens a menu of what you carry (food first). Try food, a beer or cigarette (someone fond of it lights up there and then; someone sober refuses), medicine, the Civil Orientation pamphlet, and a gun (refused, frightened; a sympathizer hides it). With nothing to give, the button is greyed out.
+  Notes:
