@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version a3f1fc9. Admin-only console messages and log lines are left out.
+Made from version ba3ca08. Admin-only console messages and log lines are left out.
 
 10553 lines, from 292 files.
 
@@ -18998,46 +18998,46 @@ Made from version a3f1fc9. Admin-only console messages and log lines are left ou
 
 - "They take the {name} with both hands. 'I won't forget this. I mean it.'"  (name, line 248)
 - "They take the {name} and hide it in their coat. 'Thank you.'"  (name, line 249)
-- "A drink or a smoke"  (text, line 272)
+- "A drink or a smoke"  (text, line 273)
 
 > Note for you (not shown in game): part of: taken
 
-- "You've nothing like that to give."  (name, line 307)
+- "You've nothing like that to give."  (name, line 318)
 
 > Note for you (not shown in game): part of: give
 
-- "They shake their head. 'I don't, thanks. Keep it.'"  (text, line 314)
-- "They take the {name} and light it there and then. 'God, I needed that.'"  (text, line 315)
-- "They take a long pull of the {name}. 'You're a good sort, you know that?'"  (text, line 316)
-- "They turn the {name} over in their hands. 'Medicine. You don't see that often. Thank you.'"  (text, line 320)
-- "They back away from you. 'I don't want any trouble, officer.'"  (text, line 322)
-- "They go white. 'Are you out of your mind? Put that away before a unit sees!'"  (text, line 325)
-- "They glance about, then slip the {name} under their coat. 'It'll go where it's needed.'"  (text, line 327)
-- "They push it back at you. 'I never saw this. I never saw you.'"  (text, line 333)
-- "They read the first lines and fold it small. 'Somebody has to say it.'"  (text, line 335)
-- "They take the {name} without looking at it. 'I know what it says.'"  (text, line 337)
-- "They take the {name}. 'Thank you, citizen.'"  (text, line 338)
-- "They don't want that."  (text, line 340)
+- "They shake their head. 'I don't, thanks. Keep it.'"  (text, line 325)
+- "They take the {name} and light it there and then. 'God, I needed that.'"  (text, line 326)
+- "They take a long pull of the {name}. 'You're a good sort, you know that?'"  (text, line 327)
+- "They turn the {name} over in their hands. 'Medicine. You don't see that often. Thank you.'"  (text, line 331)
+- "They back away from you. 'I don't want any trouble, officer.'"  (text, line 333)
+- "They go white. 'Are you out of your mind? Put that away before a unit sees!'"  (text, line 336)
+- "They glance about, then slip the {name} under their coat. 'It'll go where it's needed.'"  (text, line 338)
+- "They push it back at you. 'I never saw this. I never saw you.'"  (text, line 344)
+- "They read the first lines and fold it small. 'Somebody has to say it.'"  (text, line 346)
+- "They take the {name} without looking at it. 'I know what it says.'"  (text, line 348)
+- "They take the {name}. 'Thank you, citizen.'"  (text, line 349)
+- "They don't want that."  (text, line 351)
 
 > Note for you (not shown in game): part of: pick pocket
 
-- "Their pockets are already empty."  (text, line 358)
-- "Your fingers come out with {item}. They didn't feel a thing."  (text, line 366)
-- "%d credits, and they didn't feel a thing."  (message, line 371)
+- "Their pockets are already empty."  (text, line 369)
+- "Your fingers come out with {item}. They didn't feel a thing."  (text, line 377)
+- "%d credits, and they didn't feel a thing."  (message, line 382)
 
 > Note for you (not shown in game): caught
 
-- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 378)
+- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 389)
 
 > Note for you (not shown in game): part of: pick pocket
 
-- "They feel your hand and spin round. 'Thief! Get away from me!'"  (text, line 384)
+- "They feel your hand and spin round. 'Thief! Get away from me!'"  (text, line 395)
 
 > Note for you (not shown in game): part of: inform
 
-- "You reported someone a moment ago. Don't push your luck."  (text, line 388)
-- "You give their name to a Civil Protection unit. He writes it down. (+15 standing) They'll be picked up."  (text, line 402)
-- "You give their name to a Civil Protection unit. He checks it and looks at you instead. 'Waste of time.' (-5 standing)"  (text, line 406)
+- "You reported someone a moment ago. Don't push your luck."  (text, line 399)
+- "You give their name to a Civil Protection unit. He writes it down. (+15 standing) They'll be picked up."  (text, line 413)
+- "You give their name to a Civil Protection unit. He checks it and looks at you instead. 'Waste of time.' (-5 standing)"  (text, line 417)
 
 ## territory that spreads, and is pushed back (sv_livingcity_territory.lua)
 

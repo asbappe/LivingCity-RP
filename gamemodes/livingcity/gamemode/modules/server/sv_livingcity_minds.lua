@@ -331,7 +331,7 @@ hook.Add("LivingCityGaveCitizen", "LivingCityMinds", function(ply, npc, id, kind
     if kind == "vice" then
         LC.MindsIndulged(m, "given")
         if who then Psy.Bond(m, who, 2) end
-    elseif kind == "papers" and it and it.leaflet == "resistance" then
+    elseif kind == "papers" and it and (it.leaflet == "resistance" or it.use == "rebelpamphlet") then
         Psy.Think(m, "defiance_good", now, who)
     end
     if kind ~= "papers" then Psy.Think(m, "kindness", now, who) if who then Psy.Bond(m, who, 3) end end

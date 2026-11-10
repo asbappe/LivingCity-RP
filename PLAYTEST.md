@@ -1474,6 +1474,7 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   6. Type `lc_debugreport` and copy the line starting "Cremators:" from the People section.
   7. If it said no model was found: in your own Garry's Mod, with the two addons subscribed, hold Q, open the Addons list on the left of the spawn menu, click the Cremator addon, right-click the Cremator model and choose "Copy to clipboard". That is the model's path (it starts with `models/`). Send it, or set it yourself in the server console: `lc_cremator_model models/the/path.mdl` and then run step 2 again.
   8. Paste all of it into the chat.
+- [ ] **Give menu as Civil Protection:** with a gun in your pockets, E on a citizen > Give something: no guns listed.
   Notes:
 - [ ] **The old-timer's face:** find him: a citizen's clothes with the Lost Coast fisherman's head. Check the head sits right on the neck while he walks, talks and turns. If you see his ordinary face, your game lacks the model: in the spawn menu search "fisherman".
   Notes:
