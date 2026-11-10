@@ -84,6 +84,7 @@ local function W(...) out:write(table.concat({ ... }, "\t") .. "\n") end
 for _, t in ipairs(LC.AnnounceTriggers or {}) do W("trigger", t, tostring((LC.AnnounceBaseTier or {})[t] or 1), (LC.AnnounceTitles or {})[t] or "") end
 for _, n in ipairs(LC.AnnounceTierNames or {}) do W("tier", n) end
 for v, ts in pairs(LC.AnnounceExtra or {}) do for _, t in ipairs(ts) do W("extra", v, t) end end
+for id, words in pairs(LC.AdviceLines or {}) do W("advice", id, words) end
 for key, g in pairs(LC.CollapseGmanLines or {}) do
     local cv = GetConVar(g[1])
     W("gman", key, g[1], cv and cv:GetString() or "", g[2])
@@ -131,7 +132,7 @@ def main():
         "- **After adding files:** press FastDL sync on the host panel, then change the map (players download new sounds when they join).",
         "- **Without a recording** the moment is silent (or Half-Life 2's own voice, for Overwatch, with `lc_announce_stock` 1), and the words still show.",
         "",
-        "Contents: 1. The city's announcements (Overwatch and the Administrator) · 2. The radio · 3. The G-Man · 4. The dreams",
+        "Contents: 1. The city's announcements (Overwatch and the Administrator) · 2. The radio · 3. The G-Man · 4. The dreams · 5. Citizens showing the way",
         "",
         "## 1. The city's announcements",
         "",
@@ -200,6 +201,21 @@ def main():
                 doc.append("| [ ] " + l)
                 count += 1
             doc.append("")
+    advice = sorted((r[1], r[2]) for r in rows if r[0] == "advice")
+    order = {"advice": 0, "lead": 1}
+    advice.sort(key=lambda r: (order.get(r[0].split("_")[0], 2), r[0]))
+    doc += ["", "## 5. Citizens showing the way", "",
+            "When you chat with a citizen and they notice what you need, they say one of these, then point the way (a marker and a trail) "
+            "or, if they like you, walk you there. Folder: **`garrysmod/sound/livingcity/citizens/`**. Each line wants a man's take and a woman's "
+            "(the citizen's own voice): `advice_bins_male1.wav`, `advice_bins_female1.wav`; more takes `...2`, `...3`. "
+            "Without a recording they speak with Half-Life 2's own citizen voice, and the words still show.",
+            "",
+            "| Done | Man's file | Woman's file | When | Says |",
+            "|---|---|---|---|---|"]
+    for id, words in advice:
+        when = "Walking you there" if id.startswith("lead_") else ("No such place on this map" if id == "advice_nowhere" else "Advice")
+        doc.append("| [ ] | `%s_male1.wav` | `%s_female1.wav` | %s | %s |" % (id, id, when, words))
+        count += 2
     text = "\n".join(doc).rstrip("\n") + "\n"
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(text)

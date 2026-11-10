@@ -28,6 +28,7 @@ This is the master technical document. It lists what the owner's server, files, 
 | Overwatch and Administrator recordings, and the radio's | `sound/livingcity/<voice>/` **and** `sound/livingcity/announce/<voice>/` (both are read: `overwatch`, `administrator`, `radio`) | `LC.AnnounceRoots`, sv_livingcity_announcer.lua |
 | Which trigger a recording is for | its file name starts with the trigger (the longest that fits): `curfew_soon1.wav` is `curfew_soon`; a `.txt` with the same name is its subtitle | `LC.AnnounceTriggerOf` |
 | The Administrator's tone | `firm`, `stern` or `furious` anywhere in the name; none is warm | `LC.AnnounceToneOf` |
+| Citizens' advice lines (showing you the way) | `sound/livingcity/citizens/`, flat, named for the line and the voice: `advice_bins_male1.wav`, `advice_bins_female1.wav` (list: `VOICE_LINES.md` section 5) | `LC.AdviceVoiceRoot`, `LC.AdviceClip`, sv_livingcity_advice.lua |
 | Ending songs | `sound/livingcity/endings/`, flat, named for the ending's codeword (`bus.mp3`, `bus2.mp3`, `shalom1.mp3`); `.mp3`, `.ogg` or `.wav`; the older folder per ending still works | `LC.EndingOfSong`, `LC.EndingSongs`, `LC.EndingRoot` |
 | The city's layout (the editor's work) | `data/livingcity/<map>.json`, with backups in `data/livingcity/backups/<map>/` | `LC.LayoutPath`, sv_livingcity_data.lua |
 | Who knew whom (for "word gets around"), and news of a death still to pass on | `data/livingcity/known.json`, `data/livingcity/word.json` | sv_livingcity_life.lua |

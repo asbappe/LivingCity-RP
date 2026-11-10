@@ -702,6 +702,15 @@ function LC.VoiceMissing()
         if path ~= "" and not file.Exists("sound/" .. path, "GAME") then g[#g + 1] = path .. " (" .. name .. ")" end
     end
     Row("G-Man", "gman/", g)
+    -- citizens showing the way (sv_livingcity_advice.lua), a man's take and a woman's of each line
+    local c = {}
+    if LC.AdviceRescan then LC.AdviceRescan() end
+    for id in pairs(LC.AdviceLines or {}) do
+        for _, gen in ipairs({ "male", "female" }) do
+            if not LC.AdviceClip(id, gen) then c[#c + 1] = id .. "_" .. gen end
+        end
+    end
+    Row("Citizens", "citizens/", c)
     return out
 end
 

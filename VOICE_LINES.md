@@ -8,7 +8,7 @@
 - **After adding files:** press FastDL sync on the host panel, then change the map (players download new sounds when they join).
 - **Without a recording** the moment is silent (or Half-Life 2's own voice, for Overwatch, with `lc_announce_stock` 1), and the words still show.
 
-Contents: 1. The city's announcements (Overwatch and the Administrator) · 2. The radio · 3. The G-Man · 4. The dreams
+Contents: 1. The city's announcements (Overwatch and the Administrator) · 2. The radio · 3. The G-Man · 4. The dreams · 5. Citizens showing the way
 
 ## 1. The city's announcements
 
@@ -468,3 +468,32 @@ Every line said in the dreams you play. Folder: **`garrysmod/sound/livingcity/dr
 | [ ] | `vortwar_answer41.mp3` | A Vortigaunt | The dream is hers. The waking is yours. |  |
 | [ ] | `vortwar_loyal1.mp3` | The Administrator | Begone, false spirits! These citizens are MINE. | her own voice |
 | [ ] | `vortwar_shatter1.mp3` | A Vortigaunt | Her light was never yours. Wake, and see. |  |
+
+
+## 5. Citizens showing the way
+
+When you chat with a citizen and they notice what you need, they say one of these, then point the way (a marker and a trail) or, if they like you, walk you there. Folder: **`garrysmod/sound/livingcity/citizens/`**. Each line wants a man's take and a woman's (the citizen's own voice): `advice_bins_male1.wav`, `advice_bins_female1.wav`; more takes `...2`, `...3`. Without a recording they speak with Half-Life 2's own citizen voice, and the words still show.
+
+| Done | Man's file | Woman's file | When | Says |
+|---|---|---|---|---|
+| [ ] | `advice_bins_male1.wav` | `advice_bins_female1.wav` | Advice | You look half-starved. Try the bins. Nobody checks them as often as they should. |
+| [ ] | `advice_buy_male1.wav` | `advice_buy_female1.wav` | Advice | You look hungry, and you've got credits. The Commissary has food. Go on. |
+| [ ] | `advice_drink_own_male1.wav` | `advice_drink_own_female1.wav` | Advice | You've something to drink in your coat. Drink it. You look awful. |
+| [ ] | `advice_eat_own_male1.wav` | `advice_eat_own_female1.wav` | Advice | You've got food on you, haven't you? Eat it, before someone takes it off you. |
+| [ ] | `advice_home_male1.wav` | `advice_home_female1.wav` | Advice | You look lost. Your block's that way. Get there before curfew. |
+| [ ] | `advice_housing_male1.wav` | `advice_housing_female1.wav` | Advice | Nowhere to sleep? They hand out rooms. Go and ask, it's not far. |
+| [ ] | `advice_intake_male1.wav` | `advice_intake_female1.wav` | Advice | You're new, aren't you? Get yourself on the register before anything else. Over that way. |
+| [ ] | `advice_job_male1.wav` | `advice_job_female1.wav` | Advice | No work? The Union doesn't like idle hands. Find a job before they find you. |
+| [ ] | `advice_labor_male1.wav` | `advice_labor_female1.wav` | Advice | Registered, but no work? Nobody gets a room without a work assignment. Go and get one. |
+| [ ] | `advice_nowhere_male1.wav` | `advice_nowhere_female1.wav` | No such place on this map | Can't help you there, friend. I wish I could. |
+| [ ] | `advice_ration_male1.wav` | `advice_ration_female1.wav` | Advice | Your ration's waiting. Don't leave it too long, they notice who doesn't come. |
+| [ ] | `advice_shift_male1.wav` | `advice_shift_female1.wav` | Advice | Short on credits? Get to work. A shift pays. |
+| [ ] | `advice_water_male1.wav` | `advice_water_female1.wav` | Advice | You look parched. There's water near here. Drink before you fall down. |
+| [ ] | `advice_work_male1.wav` | `advice_work_female1.wav` | Advice | Hungry, and no card? Work a shift. It's the only way they give you one. |
+| [ ] | `lead_arrive_male1.wav` | `lead_arrive_female1.wav` | Walking you there | Here. Don't tell anyone I helped you. |
+| [ ] | `lead_arrive2_male1.wav` | `lead_arrive2_female1.wav` | Walking you there | This is it. Good luck. |
+| [ ] | `lead_cantgo_male1.wav` | `lead_cantgo_female1.wav` | Walking you there | I can't go there. It's that way, look. |
+| [ ] | `lead_giveup_male1.wav` | `lead_giveup_female1.wav` | Walking you there | Fine. It's that way. Find it yourself. |
+| [ ] | `lead_start_male1.wav` | `lead_start_female1.wav` | Walking you there | Come on, I'll show you. Stay close. |
+| [ ] | `lead_start2_male1.wav` | `lead_start2_female1.wav` | Walking you there | Here, let me show you. Follow me. |
+| [ ] | `lead_wait_male1.wav` | `lead_wait_female1.wav` | Walking you there | Keep up! I'm not waiting all day. |
