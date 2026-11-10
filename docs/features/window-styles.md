@@ -18,6 +18,7 @@ The owner, 10 November: "artistic overhauls of all UI items that are consistent 
 - the F1 / F2 quick menu (which holds the Administrator's tablet entries): your side's back behind it;
 - terminal screens drawn in the world (`cl_livingcity_screens.lua`): always the Combine look;
 - the notice card (`LC.Notice`): your side's plate and line, its coloured edge still saying what kind of notice it is.
+- **the whole HUD:** every dark panel drawn on the screen (behind needs, tips, timers, cards, job panels and the rest) is your side's plate, at the same fade as before. Bars, coloured edges and fills, and full-screen fades are untouched.
 
 The Civil Orientation pamphlet keeps its own paper look.
 
@@ -34,4 +35,6 @@ The Civil Orientation pamphlet keeps its own paper look.
 - A popup that is not a `DFrame` asks for it: `LC_CL.ThemeWindow(panel, "DPanel")`. Something drawn straight on the screen asks for a back: `LC_CL.PaintThemePanel(x, y, w, h, headHeight, name)`.
 - A new `DButton` waits one frame (a `Think` hook), then, if it has a Paint of its own and sits inside a styled window, that Paint is wrapped to add the trim.
 
-**Not styled yet:** the rest of the HUD (needs bars, the many small on-screen panels spread over about forty files), and panels inside windows that paint themselves (cards, lists).
+- **The HUD.** About forty files draw the HUD, each with its own dark `draw.RoundedBox` behind its words. While the HUD is being painted (between the `HUDPaintBackground` and `PostDrawHUD` hooks) `draw.RoundedBox` and `draw.RoundedBoxEx` restyle a box that is dark (red and green 60 or less, blue 64 or less, alpha 40 or more), at least 100 by 20, and less than 35% of the screen: it is filled in the look's colour at the box's own alpha, with a small trim (cyan line and brackets; orange line and rivets; a slab foot and blue edge). Anything else passes through. HUD backs drawn with `surface.DrawRect` are not caught.
+
+**Not styled yet:** panels inside windows that paint themselves (cards, lists), and HUD backs drawn with `surface.DrawRect` rather than `draw.RoundedBox`.

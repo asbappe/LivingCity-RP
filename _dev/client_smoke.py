@@ -3573,6 +3573,19 @@ for _, name in ipairs({ "combine", "rebel", "citizen", "custody" }) do
     if not LC_CL.PaintThemePanel(24, 300, 380, 294, 30, name) then return "theme panel: " .. name end
 end
 if LC_CL.ThemeBroken then return "theme: it switched itself off (trim or panel)" end
+-- the HUD: a dark panel's back becomes your side's plate while the HUD is painted, and only then
+local hb, hp = hook.t.HUDPaintBackground and hook.t.HUDPaintBackground.LivingCityThemeHUD, hook.t.PostDrawHUD and hook.t.PostDrawHUD.LivingCityThemeHUD
+if not (hb and hp and LC_CL.ThemeInHUD) then return "theme HUD: its hooks are missing" end
+hb()
+local okH, errH = pcall(function()
+    draw.RoundedBox(4, 40, 40, 320, 60, Color(10, 12, 16, 220)) -- a panel: restyled
+    draw.RoundedBox(0, 40, 40, 200, 8, Color(10, 12, 16, 220))  -- a bar's track: left alone
+    draw.RoundedBox(0, 40, 40, 320, 60, Color(200, 60, 40, 255)) -- a coloured box: left alone
+    draw.RoundedBox(0, 0, 0, 4000, 4000, Color(0, 0, 0, 255))    -- a fade over everything: left alone
+end)
+hp()
+if not okH then return "theme HUD: " .. tostring(errH) end
+if LC_CL.ThemeInHUD() then return "theme HUD: still on after the HUD was drawn" end
 f:Remove()
 return nil
 """)

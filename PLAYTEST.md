@@ -1384,3 +1384,7 @@ Notes:
   Notes:
 - [ ] **Buttons that had their own colours:** they keep them (green, red, chosen) and gain an edge in your side's style. Tell me any button that looks wrong or any invisible click area that now shows a line.
   Notes:
+
+## 10 November: the HUD in your side's look
+- [ ] **HUD panels:** play a while as a citizen, as Civil Protection and as Resistance. The dark panels on screen (needs, tips, timers, job panels, cards) are grey slab, black glass with cyan, or rust with an orange line. Bars and coloured edges look as before. Tell me any panel that looks wrong, any text that became hard to read, or any fade to black that now shows a panel (a screenshot helps). `lc_ui_theme 0` puts it all back.
+  Notes:

@@ -405,3 +405,76 @@ if vgui and vgui.Create and not LC_CL.ThemeCreateWas then
         return p
     end
 end
+
+------------------------------------------------------------------------
+-- The HUD: every dark panel drawn on the screen is your side's plate (the owner, 10 November: "do all of
+-- these"). The HUD is drawn by about forty files, each with its own dark box behind its words; rather than
+-- touch them all, the box itself is restyled while the HUD is being painted (between HUDPaintBackground and
+-- PostDrawHUD): a draw.RoundedBox that is dark, not tiny and not the whole screen is filled in your look's
+-- colour at the same fade, with its trim. Bars, coloured edges, fills and full-screen fades are left as
+-- they are. Outside the HUD (windows, the world) nothing changes here.
+------------------------------------------------------------------------
+
+local inHUD = false
+hook.Add("HUDPaintBackground", "LivingCityThemeHUD", function() inHUD = cvTheme:GetBool() and not LC_CL.ThemeBroken end)
+hook.Add("PostDrawHUD", "LivingCityThemeHUD", function() inHUD = false end)
+hook.Add("PreRender", "LivingCityThemeHUD", function() inHUD = false end)
+function LC_CL.ThemeInHUD() return inHUD end
+
+-- Is this box a panel's back? (dark, see-through or solid, a fair size, not most of the screen)
+local function HudBack(w, h, col)
+    if type(col) ~= "table" or type(w) ~= "number" or type(h) ~= "number" then return false end
+    local r, g, b, a = col.r, col.g, col.b, col.a or 255
+    if type(r) ~= "number" or r > 60 or g > 60 or b > 64 or a < 40 then return false end
+    if w < 100 or h < 20 then return false end
+    local sw, sh = ScrW and ScrW() or 1920, ScrH and ScrH() or 1080
+    if type(sw) ~= "number" or type(sh) ~= "number" then return false end
+    return w * h < sw * sh * 0.35
+end
+
+local function HudPlate(x, y, w, h, a)
+    local name = LC_CL.ThemeName()
+    local t = THEMES[name]
+    local k = a / 255
+    surface.SetDrawColor(t.bg.r, t.bg.g, t.bg.b, a)
+    surface.DrawRect(x, y, w, h)
+    if name == "combine" then
+        surface.SetDrawColor(t.line.r, t.line.g, t.line.b, 220 * k)
+        surface.DrawRect(x, y, w, 1)
+        surface.DrawRect(x, y, 2, 9) surface.DrawRect(x, y, 9, 2)
+        surface.DrawRect(x + w - 9, y + h - 2, 9, 2) surface.DrawRect(x + w - 2, y + h - 9, 2, 9)
+        surface.SetDrawColor(t.dim.r, t.dim.g, t.dim.b, 200 * k)
+        surface.DrawRect(x, y + h - 1, w - 9, 1)
+    elseif name == "rebel" then
+        surface.SetDrawColor(t.line.r, t.line.g, t.line.b, 200 * k)
+        surface.DrawRect(x, y, w, 2)
+        surface.SetDrawColor(0, 0, 0, 120 * k)
+        surface.DrawRect(x, y + h - 2, w, 2)
+        if w >= 160 and h >= 28 then
+            surface.SetDrawColor(t.dim.r, t.dim.g, t.dim.b, 255 * k)
+            surface.DrawRect(x + w - 8, y + 6, 4, 4) surface.DrawRect(x + w - 8, y + h - 10, 4, 4)
+        end
+    else
+        surface.SetDrawColor(255, 255, 255, 26 * k)
+        surface.DrawRect(x, y, w, 1)
+        surface.SetDrawColor(t.dim.r, t.dim.g, t.dim.b, 255 * k)
+        surface.DrawRect(x, y + h - 2, w, 2)
+        surface.SetDrawColor(t.accent.r, t.accent.g, t.accent.b, 200 * k)
+        surface.DrawRect(x + w - 3, y, 3, h - 2)
+    end
+end
+
+if draw and draw.RoundedBox and not LC_CL.ThemeBoxWas then
+    local rb, rbx = draw.RoundedBox, draw.RoundedBoxEx
+    LC_CL.ThemeBoxWas = rb
+    draw.RoundedBox = function(r, x, y, w, h, col, ...)
+        if inHUD and HudBack(w, h, col) then return HudPlate(x, y, w, h, col.a or 255) end
+        return rb(r, x, y, w, h, col, ...)
+    end
+    if rbx then
+        draw.RoundedBoxEx = function(r, x, y, w, h, col, ...)
+            if inHUD and HudBack(w, h, col) then return HudPlate(x, y, w, h, col.a or 255) end
+            return rbx(r, x, y, w, h, col, ...)
+        end
+    end
+end
