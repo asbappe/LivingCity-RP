@@ -1288,3 +1288,7 @@ Notes:
   Notes:
 - [ ] **Poster art:** put a test image at `garrysmod/materials/livingcity/posters/curfew.png`, FastDL sync, change map: a curfew poster shows it.
   Notes:
+
+## 10 November: poster pictures
+- [ ] **Poster pictures:** upload `materials/livingcity/posters/` (six `.jpg`), FastDL sync, change map. Each civil notice poster shows its picture (dispenser, Commissary, intake, water, law board, curfew elsewhere), sharp enough to read from a few steps away.
+  Notes:
