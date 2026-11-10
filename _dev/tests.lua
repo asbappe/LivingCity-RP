@@ -10926,14 +10926,14 @@ local dn, dst = person(Vector(0, 200, 0))
 if dn.lcProfile then dn.lcProfile.npc = nil end
 LC.AttachProfile(dn, dst, dp)
 dst.state = "idle"
+dst.untilT, dst.nextThink, dst.test = CurTime() + 9999, CurTime() + 9999, nil -- (held still: the city's loop doesn't send them off mid-test)
 ok(LC.NPCViceOf(dn) > 0.5 and LC.NPCViceOf(cop) == 0, "who drinks and smokes comes from their traits; never a unit")
 _setcvar("lc_npc_vices", 1)
 ok(LC.NPCViceStart(dn, "drink", CurTime()) and IsValid(LC.NPCVices[dn].prop), "a bottle in their hand")
 ok(LC.MindOf(dp).psy and has(LC.MindOf(dp), "indulged"), "and their mind knows they had one")
-Later(2)
 LC.NPCViceTick(CurTime() + 2)
 ok(LC.NPCVices[dn] ~= nil, "they keep at it while they stand about")
-local prop = LC.NPCVices[dn].prop
+local prop = LC.NPCVices[dn] and LC.NPCVices[dn].prop
 dst.state = "moving"
 LC.NPCViceTick(CurTime())
 ok(LC.NPCVices[dn] == nil and not IsValid(prop), "off somewhere: the bottle goes")
