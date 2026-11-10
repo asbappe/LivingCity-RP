@@ -1362,6 +1362,7 @@ Notes:
 - [ ] **Bounties:** as the Administrator (or a Division Leader), F2 > Me > Bounties on the wanted: put 50 or 100 on someone wanted. Units and the wanted person should be told; the unit who arrests them gets paid.
   Notes:
 - [ ] **Shifts back to back:** finish the checklist early, F2 > Me > My shift > Report in now: a review at once and a fresh shift. Try Go on a break, then Back on duty.
+  Notes:
 
 ## 10 November: the city's minds (watching only)
 - [ ] **Leave it running:** with `lc_minds` on (the default), play or leave the server idle for a few hours. Then copy `garrysmod/data/livingcity/minds/` off the server (zip it) and bring it back.
@@ -1382,6 +1383,7 @@ Notes:
 - [ ] **Her levers:** as Administrator, place a "Point: speech stand", then F2 > Me > The city's levers: go to the stand, give a speech (citizens nearby gain standing), declare an amnesty, order a crackdown on a block (a raid should start there) and extra rations (a ration day).
   Notes:
 - [ ] **It carries over:** restart the server: the numbers and districts should be as they were, with the days that passed drifted through.
+  Notes:
 ## 10 November: window styles, second pass
 - [ ] **Terminal screens:** the Commissary, Civil Intake, Housing and Labor screens in the world are black glass with cyan lines and corner brackets, for a citizen too. Buttons light up with a cyan outline under the crosshair.
   Notes:
@@ -1406,4 +1408,6 @@ Notes:
 - [ ] **The Administration:** as the Administrator or her Director, windows are black glass with ivory lines and a red edge.
   Notes:
 - [ ] **Staff:** the Staff window, admin testing tools and the character screens are plain charcoal marked out of character.
+  Notes:
+- [ ] **On the streets:** order a crackdown on a block: a metrocop should take up a post in the middle of it and stop people. Win a few rebel operations in one block until it is the Resistance's: units walking there should now and then be ambushed, and the black market there should be cheaper. Watch Commissary prices rise as supply falls.
   Notes:
