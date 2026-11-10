@@ -247,7 +247,7 @@ def main():
            "Which machine")
     def colonel_when(i):
         for k, v in (("greet", "Greeting (by how well he knows you)"), ("job_", "What he needs (end of his greeting)"), ("thanks_", "You helped"),
-                     ("intel_", "What's the word?"), ("debrief_", "Debrief me"), ("whisper_", "Heard anything strange?")):
+                     ("intel_", "What's the word?"), ("debrief_", "Debrief me"), ("whisper_", "Heard anything strange?"), ("ask", "What's happening to you? (by how ghostly he looks)")):
             if i.startswith(k): return v
         return "Between answers"
     rs = sorted([r for r in rows if r[0] == "colonel"], key=lambda r: r[1])

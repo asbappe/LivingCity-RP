@@ -580,6 +580,10 @@ The old fighter at the Resistance camp (Odessa Cubbage's face): weary, dry, kind
 
 | Done | File | When | Says |
 |---|---|---|---|
+| [ ] | `ask11.wav` | What's happening to you? (by how ghostly he looks) | Happening? I'm old. Old men look how they look. Ask me something useful. |
+| [ ] | `ask21.wav` | What's happening to you? (by how ghostly he looks) | You're tired, and the light's bad in here. That's all it is. Don't stare, it's rude. |
+| [ ] | `ask31.wav` | What's happening to you? (by how ghostly he looks) | You've seen the others don't answer me. I saw it too, a long time ago. I stopped asking why. Leave it alone a while longer. |
+| [ ] | `ask41.wav` | What's happening to you? (by how ghostly he looks) | All right. You've earned it. I didn't get out of the first camp. They burned it with us inside, my brother and me both. Nobody here can see me but the ones who keep coming back. I don't know what that makes me. I know I'm still here, and I know you can hear me. That'll have to do for the pair of us. |
 | [ ] | `debrief_clean1.wav` | Debrief me | Clean. Nobody saw you, nobody followed you home. That's how it's done. |
 | [ ] | `debrief_failed1.wav` | Debrief me | We lost that one. Learn why before you try again. |
 | [ ] | `debrief_messy1.wav` | Debrief me | You got it done, and half the city knows your face. Next time, slower. |

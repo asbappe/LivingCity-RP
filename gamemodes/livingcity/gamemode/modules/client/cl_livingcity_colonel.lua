@@ -61,8 +61,8 @@ hook.Add("Think", "LivingCityColonel", function()
     colonel:SetCycle(colonel.lcCycle)
     -- solid at first; the more you've done for him, the fainter and less steady he is
     -- (the owner, 10 November: "he slowly looks more and more ghostly for the player").
-    -- A change eases in over a few seconds rather than snapping.
-    colonel.lcGhost = math.Approach(colonel.lcGhost or 0, LocalPlayer():GetNW2Float("lc_colonel_ghost", 0), FrameTime() * 0.05)
+    -- A change eases in slowly (a job's worth takes about twelve seconds) rather than snapping.
+    colonel.lcGhost = math.Approach(colonel.lcGhost or 0, LocalPlayer():GetNW2Float("lc_colonel_ghost", 0), FrameTime() * 0.02)
     local r, g, b, a, flick, shadow = LC_CL.ColonelLook(colonel.lcGhost, CurTime())
     if math.random() < flick then a = math.max(a - 60, 30) end
     colonel:DrawShadow(shadow)

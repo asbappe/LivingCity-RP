@@ -16,8 +16,22 @@
     first he appears completely normal and as you do things for him and get
     to know him, he slowly looks more and more ghostly for the player"):
     LC.ColonelGhost, 0 (a solid old man) to 1 (see-through, cold, flickering),
-    from the jobs this character has done for him (0.3 each) and the visits
-    after the first (0.01 each, ten at most). Sent as lc_colonel_ghost.
+    from the jobs this character has done for him (0.25 each) and the visits
+    after the first (0.025 each, ten at most, one counted every five minutes).
+    So all three jobs leave him three quarters gone, and only coming back to
+    him finishes it. Sent as lc_colonel_ghost.
+
+    What's happening to you?  the confrontation (the owner, 10 November: "the
+                            player can ask him once at the different stages
+                            and at first he's extremely vague and by the end
+                            at full ghastliness he answers truthfully").
+                            LC.ColonelStage, 0 to 4, is the quarter of the way
+                            he's gone. From stage 1 the question is there,
+                            once for each stage: he brushes it off (ask1),
+                            blames the light (ask2), half admits it (ask3),
+                            and at stage 4, fully a ghost, tells the truth
+                            (ask4). Only then does his greeting say it
+                            outright (greet_known).
 
     E on him (cl_livingcity_colonel.lua asks; the window: sv_livingcity_dialog.lua):
 
@@ -88,6 +102,10 @@ LC.ColonelLines = {
     debrief_failed = "We lost that one. Learn why before you try again.",
     debrief_none = "Nothing to report? Then go and do something worth reporting.",
     nothing = "That's not what I need.",
+    ask1 = "Happening? I'm old. Old men look how they look. Ask me something useful.",
+    ask2 = "You're tired, and the light's bad in here. That's all it is. Don't stare, it's rude.",
+    ask3 = "You've seen the others don't answer me. I saw it too, a long time ago. I stopped asking why. Leave it alone a while longer.",
+    ask4 = "All right. You've earned it. I didn't get out of the first camp. They burned it with us inside, my brother and me both. Nobody here can see me but the ones who keep coming back. I don't know what that makes me. I know I'm still here, and I know you can hear me. That'll have to do for the pair of us.",
     whisper_harpies = "When the streets run red fast enough, a dozen dead in a few minutes, something comes down out of the sky. Something with wings.",
     whisper_plane = "Do the morning drill, five of you or more, and do it perfectly. Not one mistake. Then look up.",
     whisper_hard = "Kill the city's lights and keep them dead for a quarter of an hour. Somebody starts a party in the dark, and nobody can stop it.",
@@ -144,8 +162,10 @@ function LC.ColonelGhost(ply)
     local jobs = 0
     for _, on in pairs(m.done) do if on then jobs = jobs + 1 end end
     local visits = math.Clamp((tonumber(m.talks) or 0) - 1, 0, 10)
-    return math.Clamp(jobs * 0.3 + visits * 0.01, 0, 1)
+    return math.Clamp(jobs * 0.25 + visits * 0.025, 0, 1)
 end
+-- The quarter of the way he's gone, 0 to 4: what he'll admit when asked.
+function LC.ColonelStage(ply) return math.floor(LC.ColonelGhost(ply) * 4 + 0.0001) end
 local function SendGhost(ply) ply:SetNW2Float("lc_colonel_ghost", LC.ColonelGhost(ply)) end
 
 function LC.ColonelTick()
@@ -286,23 +306,30 @@ local function Menu(ply, said)
     local opts = { { "intel", "What's the word?" }, { "give", "Give him something from your pockets" } }
     if ply.lcOpReport then opts[#opts + 1] = { "debrief", "Debrief me" } end
     if m.done.medicine then opts[#opts + 1] = { "whisper", "Heard anything strange?" } end
+    if LC.ColonelStage(ply) > (tonumber(m.asked) or 0) then opts[#opts + 1] = { "ask", "What's happening to you?" } end
     LC.OpenDialog(ply, "colonel", nil, { title = "The Colonel",
         sub = "A grey-haired fighter in an old coat, standing by the quartermaster. Nobody else looks at him.", text = said, options = opts })
 end
 
 local function Greeting(ply)
     local m = Mem(ply)
-    if m.done.unit then return "greet_known" end
+    if m.done.unit and (tonumber(m.asked) or 0) >= 4 then return "greet_known" end
     if m.done.tags then return "greet_trust" end
     if m.done.medicine then return "greet_back" end
     return "greet"
 end
 
+LC.ColonelGreeting = Greeting
+
 function LC.OpenColonel(ply)
     if not CanTalk(ply) or not LC.OpenDialog then return false end
     local g = Greeting(ply)
     local m = Mem(ply)
-    if (tonumber(m.talks) or 0) < 11 then m.talks = (tonumber(m.talks) or 0) + 1 Save(ply) end
+    if (tonumber(m.talks) or 0) < 11 and (ply.lcColonelVisitNext or 0) <= CurTime() then
+        ply.lcColonelVisitNext = CurTime() + 300
+        m.talks = (tonumber(m.talks) or 0) + 1
+        Save(ply)
+    end
     SendGhost(ply)
     Say(ply, g)
     local job = JobLine(ply)
@@ -390,6 +417,16 @@ LC.DialogHandlers.colonel = function(ply, _, id)
         Say(ply, line)
         Menu(ply, LC.ColonelLines[line] .. (r and r.title and ("\n\n(" .. r.title .. ")") or ""))
         return line
+    end
+    if id == "ask" then
+        local stage = LC.ColonelStage(ply)
+        if stage < 1 or stage <= (tonumber(m.asked) or 0) then return nil end
+        m.asked = stage
+        Save(ply)
+        Say(ply, "ask" .. stage)
+        Menu(ply, LC.ColonelLines["ask" .. stage])
+        hook.Run("LivingCityColonelAsked", ply, stage)
+        return "ask" .. stage
     end
     if id == "whisper" then
         if not m.done.medicine then return nil end
