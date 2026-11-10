@@ -1208,3 +1208,16 @@ Notes:
   Notes:
 - [ ] **Last stand sounds:** the flash comes with a white flash and teleport sound; each falling panel zaps and clanks; each transformer gives an electric blast as its guards appear; her bubble hums while it is up, each transformer hums while it powers her and goes quiet when destroyed.
   Notes:
+
+## 10 November, last: the arrival search
+
+- [ ] **Arrival search at the desks:** start a new character. A metrocop should stand beside Civil Intake and beside Housing Allocation. Walk past: he comes to you, you get "Show me how searches work" or "Just search me". Try the lesson: tips for each spot, the practice note in Boots, press R after a spot is checked. At the end: the lesson page and "Try the other side" (search a pretend citizen).
+  Notes:
+- [ ] **Contraband on day one:** give yourself moonshine (or anything illegal) before the search. It should be taken with a warning, and you should not be wanted.
+  Notes:
+- [ ] **Queueing next to him:** stand right beside the desk unit for a minute. He must never tell you to move back or arrest you.
+  Notes:
+- [ ] **Leaving unregistered:** walk out of the station (about 1500 units from the desk and arrival point) before registering. The nearest metrocop should stop you, cuff you and walk you back to the Civil Intake terminal, then take the cuffs off. Never the cells. If he gets stuck, you should end up at the desk, uncuffed.
+  Notes:
+- [ ] **Leaving unsearched:** register while the desk units are busy, then leave. A unit should come and search you outside, then let you go.
+  Notes:

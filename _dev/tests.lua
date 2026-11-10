@@ -9844,6 +9844,148 @@ for _, p in ipairs({ before, new, other, third, old, fourth, fifth, sixth, watch
 GAMEMODE = savedGM
 end
 IntakeTests()
+function IntakeTutorTests()
+section("The arrival search: a unit at the desks, the lesson, the walk back")
+local savedGM = GAMEMODE
+GAMEMODE = { IsLivingCity = true }
+local function Later(secs) _advance(secs) _runtimers() end
+local function Payload(name)
+    local m = _lastnet(name)
+    return m and util.JSONToTable(m.data[1]) or nil
+end
+local FARX = Vector(-141000, 141000, 0)
+local T0 = Vector(91000, -91000, 0)
+_setcvar("lc_intake", 1)
+_setcvar("lc_intake_tutor", 1)
+_setcvar("lc_intake_escort", 1)
+_setcvar("lc_intake_station", 1500)
+local blockZone = LC.AddZone(T0 + Vector(0, 3000, 0), 400, "block", 33)
+local regPt = LC.AddPoint(T0, 0, "intake", 0)
+local housePt = LC.AddPoint(T0 + Vector(0, 900, 0), 0, "housingterm", 0)
+local arrPt = LC.AddPoint(T0 + Vector(-1000, 0, 0), 90, "arrival", 0)
+LC.SyncFixtures()
+local cop, cst = LC.SpawnCop(T0 + Vector(400, 400, 0))
+
+local a = newPlayer("TutorArrival", "citizen")
+Later(0.3)
+ok(LC.IntakePending(a) and LC.TutorWants(a), "a new arrival is someone to be searched")
+ok(LC.InStation(a:GetPos()) and not LC.InStation(T0 + Vector(6000, 0, 0)), "the station is near the desks and where people arrive")
+a:SetPos(FARX)
+Later(1.2)
+local posted = 0
+for _, post in ipairs(LC.TutorPosts) do
+    if IsValid(post.npc) and LC.NPCs[post.npc] and LC.NPCs[post.npc].holdPos then posted = posted + 1 end
+end
+ok(#LC.TutorPosts == 2 and posted == 2, "a unit is posted beside Civil Intake and beside Housing Allocation", #LC.TutorPosts .. "/" .. posted)
+local post1 = LC.TutorPosts[1]
+local tutor = post1.npc
+tutor:SetPos(post1.pos)
+LC.NPCs[tutor].state = "idle"
+
+-- walk past: he searches you
+a:SetPos(post1.pos + Vector(50, 0, 0))
+net.sent = {}
+Later(1.2)
+local F = LC.TutorFlows[a]
+ok(F and F.cop == tutor, "walk past the unit at the desk and he comes to search you")
+LC.TutorTick()
+local offer = Payload("lc_tut_offer")
+ok(F and F.stage == "offer" and offer ~= nil, "first you choose: learn how searches work, or just be searched", F and F.stage)
+-- people at the desk aren't "crowding" him
+for _ = 1, 6 do LC.CopProvoked(tutor, LC.NPCs[tutor], a, CurTime()) Later(0.3) end
+ok(not LC.PlayerIsWanted(a), "standing next to the unit at the desk is never obstructing him")
+
+net.sent = {}
+_netcall("lc_tut_choice", a, true)
+local st = Payload("lc_tut_state")
+ok(st and st.learn and st.tip and string.find(st.tip, "four spots", 1, true), "the lesson explains each step", st and st.tip)
+ok(st and st.spots and #st.spots == 4 and string.find(st.spots[4].mine or "", "practice", 1, true), "with a practice note to hide, in the boots")
+Later(5)
+Later(4)
+a.chat = {}
+_netcall("lc_tut_slip", a)
+ok(F.slipUsed and (has(a.chat, "ease the") or has(a.chat, "felt it")), "once a spot is checked, R slips something into it", a.chat[1])
+net.sent = {}
+for _ = 1, 30 do Later(1) if not LC.TutorFlows[a] then break end end
+ok(a.lcTutSearched and not LC.TutorWants(a) and LC.TutorFlows[a] == nil, "then you're searched, and nobody searches you again")
+ok(_lastnet("lc_tut_done") ~= nil, "the lesson ends with how searches work, and a practice go at the other side")
+ok(not LC.PlayerIsWanted(a) and a:GetPData("lc_tut_lesson", "0") == "1", "nothing's a crime, and the lesson is remembered")
+
+-- contraband is taken, with a warning
+local b = newPlayer("TutorSmuggler", "citizen")
+Later(0.3)
+LC.GiveItem(b, "moonshine", 6)
+b:SetPos(post1.pos + Vector(-50, 0, 0))
+tutor:SetPos(post1.pos)
+LC.NPCs[tutor].state = "idle"
+Later(1.2)
+LC.TutorTick()
+ok(LC.TutorFlows[b] and LC.TutorFlows[b].stage == "offer", "the next arrival is searched too")
+b.chat = {}
+_netcall("lc_tut_choice", b, false)
+for _ = 1, 20 do Later(1) if not LC.TutorFlows[b] then break end end
+ok(((LC.Inventory(b) or {}).moonshine or 0) < 6 and has(b.chat, "Confiscated"), "contraband found is taken", (LC.Inventory(b) or {}).moonshine)
+ok(not LC.PlayerIsWanted(b) and has(b.chat, "warning"), "with a warning, not a crime: it's their first day")
+
+-- out of the station unregistered: searched if nobody has, cuffed, walked back to Civil Intake (never to the cells)
+local c = newPlayer("TutorRunaway", "citizen")
+Later(0.3)
+c.lcTutSearched = true
+local outside = T0 + Vector(6000, 0, 0)
+c:SetPos(outside)
+local far, fst = LC.SpawnCop(outside + Vector(300, 0, 0))
+Later(1.2)
+local G = LC.TutorFlows[c]
+ok(G and G.out and G.why == "escape", "out of the station without registering: the nearest unit stops you", G and G.why)
+if G then G.cop:SetPos(c:GetPos() + Vector(40, 0, 0)) end
+LC.TutorTick()
+ok(G and G.stage == "escort" and LC.IsTied(c), "papers (none), cuffs, and walked back", G and G.stage)
+ok(not LC.Marching[c] and not (LC.Prisoners and LC.Prisoners[c]) and not LC.PlayerIsWanted(c), "to the desk, not the cells, and no crime")
+-- stuck on the way: handed over at the desk, never sent to the cells
+if G then G.escortAt = CurTime() - 1000 end
+LC.TutorTick()
+local desk = LC.TutorDeskSpot(c:GetPos())
+ok(LC.TutorFlows[c] == nil and not LC.IsTied(c) and c:GetPos():Distance(desk) < 200, "a walk that gets stuck ends at the desk, cuffs off", tostring(c:GetPos()))
+ok(not (LC.Prisoners and LC.Prisoners[c]) and not LC.Marching[c], "and never in a cell")
+
+-- registered but never searched, out of the station: searched there, and let go
+local d = newPlayer("TutorUnsearched", "citizen")
+Later(0.3)
+LC.RegisterPerson(d, "test")
+d:SetPos(outside + Vector(0, 300, 0))
+far:SetPos(d:GetPos() + Vector(300, 0, 0))
+LC.NPCs[far].state = "idle"
+LC.NPCs[far].tutorBusy = nil
+Later(1.2)
+local H = LC.TutorFlows[d]
+ok(H and H.why == "unsearched", "out of the station unsearched: the nearest unit comes and does it there", H and H.why)
+if H then H.cop:SetPos(d:GetPos() + Vector(40, 0, 0)) end
+LC.TutorTick()
+_netcall("lc_tut_choice", d, false)
+for _ = 1, 20 do Later(1) if not LC.TutorFlows[d] then break end end
+ok(d.lcTutSearched and not LC.IsTied(d), "searched, and on their way (registered: no walk back)")
+
+-- off
+_setcvar("lc_intake_tutor", 0)
+local e = newPlayer("TutorOff", "citizen")
+Later(0.3)
+ok(not LC.TutorWants(e), "lc_intake_tutor 0: nobody is searched at the desks")
+_setcvar("lc_intake_tutor", 1)
+e.lcTutSearched = true
+local wasTutor = tutor
+Later(130)
+ok(IsValid(wasTutor) and LC.NPCs[wasTutor] and not LC.NPCs[wasTutor].tutorPost and not LC.NPCs[wasTutor].holdPos, "with nobody left to search, the units go back to their day")
+
+for _, p in ipairs({ a, b, c, d, e }) do p:SetPos(FARX) end
+for _, n in ipairs({ cop, far }) do if IsValid(n) then LC.NPCs[n] = nil n:Remove() end end
+for _, post in ipairs(LC.TutorPosts) do if IsValid(post.npc) then LC.NPCs[post.npc] = nil post.npc:Remove() end end
+LC.TutorPosts = {}
+LC.RemovePoint(regPt) LC.RemovePoint(housePt) LC.RemovePoint(arrPt)
+LC.SyncFixtures()
+if blockZone then LC.RemoveZone(blockZone) end
+GAMEMODE = savedGM
+end
+IntakeTutorTests()
 
 function PapersHousingTests()
 section("Papers you carry, the housing register, transfers")

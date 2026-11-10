@@ -26,3 +26,16 @@
 Everyone who was in the city before Civil Intake counts as registered and housed. **A map with no Civil Intake desk works as before** (people are registered and handed a room as they arrive), take the desks away and anyone still waiting is registered, and `lc_intake 0` turns it all off. Editor panel: **Civil Intake**. Staff: `lc_register <name>` (on the register now), `lc_unregister <name>` (back through all of it: no papers, no room, register again). Put a checkpoint point beside the desks and a unit will stand there, checking papers.
 
 **Labor Assignment** (editor: "Fixture: Labor Assignment"), when the map has one, comes between the two: a newly registered citizen is given Union work there, and Housing Allocation only houses citizens with work. It's described in full under Union jobs (union-jobs.md, "Labor Assignment").
+
+**The arrival search** (the owner, 10 November). Every new arrival is searched by Civil Protection before or after they go through the desks, and can learn how searches work while it happens.
+
+- **A unit stands beside the Civil Intake terminal and beside the Housing Allocation terminal** (one at each desk, up to 4 in all) whenever someone new is in the city who hasn't been searched yet. Walk past and he searches you. When nobody is left to search (2 minutes), they go back to their day.
+- **First you choose:** "Show me how searches work" or "Just search me" (no answer in 15 seconds: just searched). Once you've had the lesson, the next character is offered "Just search me" first.
+- **The search is the pat-down, done to you:** the unit checks Jacket, Waist, Legs and Boots one at a time, and once a spot has been checked you may press R once to slip one thing into it (6 times in 10 it works; otherwise he feels it and it's found). In the lesson every step is explained, it goes slower, and a practice note (not real) is hidden in your boots so you can try R. At the end, a page on how searches work in the city and **"Try the other side"**: you search a pretend citizen yourself, clicking spots as a unit does (nothing real, nothing counts).
+- **Real contraband found is taken, with a warning and no crime:** it's your first day.
+- **The unit at the desk never counts people queueing beside him as crowding him** (no "move back", no obstructing).
+- **Out of the station without being searched** (every unit was busy): the nearest unit comes and searches you there, the same way. Walking off mid-search is not a crime here: he follows and carries on.
+- **Out of the station without registering:** the nearest unit stops you, searches you if nobody has, looks at your papers (none), **cuffs you and walks you back to the Civil Intake terminal**, where the cuffs come off: "Register. Now." No crime, and **never to the cells**: if the walk gets stuck, or takes more than 150 seconds, or he has to fight, you're simply handed over at the desk with the cuffs off. You can't work at these cuffs while he's walking you.
+- **The station** is everywhere within `lc_intake_station` (1500) units of a Civil Intake terminal or an arrival point. A map with no Civil Intake desk has no station and none of this happens.
+- Settings: `lc_intake_tutor` (1) the searches at the desks, `lc_intake_escort` (1) the walk back, `lc_intake_station` (1500).
+

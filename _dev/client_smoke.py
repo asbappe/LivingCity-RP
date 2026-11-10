@@ -1446,6 +1446,57 @@ local okPS, errPS = pcall(function()
 end)
 net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteUInt = psSaved[1], psSaved[2], psSaved[3], psSaved[4], psSaved[5], psSaved[6]
 if not okPS then problems[#problems + 1] = "pat-down search: " .. tostring(errPS) end
+-- the arrival search (cl_livingcity_intaketutor.lua): the choice, the panel for the person searched (with the lesson),
+-- the lesson's last page and the practice search all build and paint, and close on the server's word
+local tsSaved = { net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteBool }
+local okTS, errTS = pcall(function()
+    local doc, sent, made = nil, {}, {}
+    local curName
+    net.ReadString = function() return "x" end
+    util.JSONToTable = function() return doc end
+    net.Start = function(n) curName = n end
+    net.WriteBool = function() end
+    net.SendToServer = function() sent[#sent + 1] = curName end
+    local function P()
+        local t = {}
+        made[#made + 1] = t
+        return setmetatable(t, { __index = function(_, k)
+            if string.sub(k, 1, 2) == "lc" or string.sub(k, 1, 1) == "_" or k == "silent" or k == "btn" or k == "tip" or k == "wasDown" or k == "openAt" then return nil end
+            if k == "IsValid" then return function() return not t._removed end end
+            if k == "Remove" then return function() t._removed = true if t.OnRemove then t.OnRemove(t) end end end
+            if k == "GetWide" or k == "GetTall" then return function() return 380 end end
+            if k == "GetText" then return function() return "" end end
+            if k == "IsHovered" or k == "GetDisabled" then return function() return false end end
+            return function() return P() end
+        end })
+    end
+    vgui = { Create = function() return P() end, GetKeyboardFocus = function() return nil end }
+    doc = { seen = false, secs = 15 }
+    net.recv_lc_tut_offer()
+    local offer = LC_CL.TutorPanels()
+    if not IsValid(offer) then error("the choice didn't open") end
+    local four = function(a, b, c, d) return { { name = "Jacket", state = a, mine = "" }, { name = "Waist", state = b, mine = "" }, { name = "Legs", state = c, mine = "" }, { name = "Boots", state = d, mine = "a folded practice note (not real)" } } end
+    doc = { learn = true, step = 2, checking = 2, secs = 3.5, slip = "ready", key = "R", tip = "Waist: belt and waistband.", spots = four(2, 1, 0, 0) }
+    net.recv_lc_tut_state()
+    local _, panel = LC_CL.TutorPanels()
+    if not IsValid(panel) then error("no panel for the person searched") end
+    doc = { found = "Moonshine x2" }
+    net.recv_lc_tut_done()
+    LC_CL.TutorOpenPractice()
+    for _, pnl in ipairs(made) do
+        for _, k in ipairs({ "Paint", "Think", "PerformLayout", "DoClick" }) do
+            local f = rawget(pnl, k)
+            if f then local okp, e = pcall(f, pnl, 380, 240) if not okp then error("a panel's " .. k .. " fails: " .. tostring(e)) end end
+        end
+    end
+    local P2 = LC_CL.TutorPractice
+    if not P2 or P2.contraband < 1 then error("the practice search has nothing to find") end
+    net.recv_lc_tut_close()
+    local o2, p2 = LC_CL.TutorPanels()
+    if IsValid(o2) or IsValid(p2) then error("the arrival search didn't close") end
+end)
+net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteBool = tsSaved[1], tsSaved[2], tsSaved[3], tsSaved[4], tsSaved[5], tsSaved[6]
+if not okTS then problems[#problems + 1] = "arrival search: " .. tostring(errTS) end
 -- what now? (cl_livingcity_nextstep.lua): the line on screen, and its F1 page
 local okWN, errWN = pcall(function()
     _me:SetNW2String("lc_next", "Find water")
