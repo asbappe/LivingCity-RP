@@ -2,10 +2,16 @@
     Living City (client): the Colonel (sv_livingcity_colonel.lua)
 
     Drawn only here, only for the Resistance: Odessa Cubbage's face, standing
-    by the quartermaster. He's a model on your own screen and nowhere else,
-    faintly see-through and cold-tinted, fading in and out a little: no shadow, nothing to bump into, bullets go through him, and when the
-    Combine come into the camp he isn't there. E while looking at him talks
-    to him. His voice (if recorded) is heard by you alone.
+    by the quartermaster. He's a model on your own screen and nowhere else:
+    nothing to bump into, bullets go through him, and when the Combine come
+    into the camp he isn't there. E while looking at him talks to him. His
+    voice (if recorded) is heard by you alone.
+
+    How he looks is yours alone too (lc_colonel_ghost, 0 to 1, from the
+    server: the jobs you've done for him and how often you've come by). At
+    0 he's a solid old man with a shadow. As it climbs he loses the shadow,
+    turns see-through and cold-tinted, and starts to fade in and out and
+    flicker. LC_CL.ColonelLook(g, t) gives the look for a ghostliness.
 ]]
 
 LC_CL = LC_CL or {}
@@ -13,6 +19,14 @@ LC_CL = LC_CL or {}
 local MODEL = "models/odessa.mdl"
 local REACH = 140
 local colonel
+
+-- The look for a ghostliness g (0 solid, 1 a ghost) at time t: red, green, blue, alpha
+-- (before any flicker), the chance of a flicker each frame, and whether he has a shadow.
+function LC_CL.ColonelLook(g, t)
+    g = math.Clamp(g or 0, 0, 1)
+    local a = Lerp(g, 255, 110) + 30 * g * math.sin((t or 0) * 0.8)
+    return Lerp(g, 255, 215), Lerp(g, 255, 225), 255, math.Clamp(math.floor(a), 30, 255), 0.02 * g, g < 0.05
+end
 
 local function Mine()
     local me = LocalPlayer()
@@ -33,9 +47,7 @@ hook.Add("Think", "LivingCityColonel", function()
     if not IsValid(colonel) then
         colonel = ClientsideModel(MODEL, RENDERGROUP_TRANSLUCENT)
         if not IsValid(colonel) then return end
-        colonel:DrawShadow(false)
-        -- see-through, like a ghost (the owner, 10 November: "slightly transparent ... so he looks sort of ghostly")
-        colonel:SetRenderMode(RENDERMODE_TRANSCOLOR)
+        colonel.lcGhost = LocalPlayer():GetNW2Float("lc_colonel_ghost", 0)
         local seq = colonel:SelectWeightedSequence(ACT_IDLE)
         if not seq or seq < 0 then seq = colonel:LookupSequence("idle_subtle") end
         if seq and seq >= 0 then colonel:ResetSequence(seq) end
@@ -47,10 +59,15 @@ hook.Add("Think", "LivingCityColonel", function()
     local dur = colonel:SequenceDuration() or 3
     colonel.lcCycle = ((colonel.lcCycle or 0) + FrameTime() / math.max(dur, 0.5)) % 1
     colonel:SetCycle(colonel.lcCycle)
-    -- faint, and never quite steady: a slow breath of fading, now and then a flicker
-    local t = CurTime()
-    local a = 110 + 30 * math.sin(t * 0.8) + (math.random() < 0.02 and -60 or 0)
-    colonel:SetColor(Color(215, 225, 255, math.Clamp(math.floor(a), 30, 160)))
+    -- solid at first; the more you've done for him, the fainter and less steady he is
+    -- (the owner, 10 November: "he slowly looks more and more ghostly for the player").
+    -- A change eases in over a few seconds rather than snapping.
+    colonel.lcGhost = math.Approach(colonel.lcGhost or 0, LocalPlayer():GetNW2Float("lc_colonel_ghost", 0), FrameTime() * 0.05)
+    local r, g, b, a, flick, shadow = LC_CL.ColonelLook(colonel.lcGhost, CurTime())
+    if math.random() < flick then a = math.max(a - 60, 30) end
+    colonel:DrawShadow(shadow)
+    colonel:SetRenderMode(a >= 255 and RENDERMODE_NORMAL or RENDERMODE_TRANSCOLOR)
+    colonel:SetColor(Color(r, g, b, a))
     -- he looks at you
     local me = LocalPlayer()
     local d = me:EyePos() - (pos + Vector(0, 0, 64))

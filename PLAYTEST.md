@@ -1489,3 +1489,11 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **Admins, C > Help > Dreams:** with a dream going on, it shows the mood, who is in it, and a countdown that moves without pressing Refresh.
   Notes:
+
+## 10 November: the Colonel turns ghostly as you get to know him
+- [ ] **A new Resistance character:** the Colonel by the quartermaster looks like a solid old man, with a shadow, no flicker.
+  Notes:
+- [ ] **Give him the three medicines:** over a few seconds he turns a little see-through and loses his shadow. After the tags, more. After the unit, fully ghostly (faint, cold, fading and flickering).
+  Notes:
+- [ ] **Two Resistance players, one who has done his jobs and one who has not:** each sees him their own way at the same moment.
+  Notes:

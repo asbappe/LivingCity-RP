@@ -1307,6 +1307,13 @@ ClientsideModel = function()
 end
 run("Think") run("HUDPaint")
 if colonelMade == 0 then problems[#problems + 1] = "the Colonel wasn't drawn for a Resistance player" end
+do
+    local r0, g0, _, a0, f0, s0 = LC_CL.ColonelLook(0, 5)
+    local r1, _, _, a1, f1, s1 = LC_CL.ColonelLook(1, 0)
+    local _, _, _, ah = LC_CL.ColonelLook(0.5, 0)
+    if not (r0 == 255 and g0 == 255 and a0 == 255 and f0 == 0 and s0 == true) then problems[#problems + 1] = "the Colonel isn't solid at first" end
+    if not (r1 == 215 and a1 == 110 and f1 > 0 and s1 == false and ah < 255 and ah > a1) then problems[#problems + 1] = "the Colonel doesn't turn ghostly" end
+end
 ClientsideModel = cmWasC
 _globals.lc_colonel_here = false run("Think")
 _me:SetNW2String("lcf_faction", "")
