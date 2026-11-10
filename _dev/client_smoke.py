@@ -3251,6 +3251,27 @@ local ok, e = pcall(function()
     -- an ordinary unit: no Inside
     LC_CL.Insider = false
     if Find(LC_CL.QuickRoleRoot(), "inside") then error("an ordinary unit has Inside >") end
+    -- My shift: an Insider with an inspection order can report it clean; an ordinary unit can't
+    local function ShiftLabels(insider)
+        _me.nw = { lcf_faction = "cp", lcf_rank = 2, lc_shift = "x" }
+        local shift = { left = 600, q = { searches = 3, papers = 1, inspections = 1 }, order = { name = "Ana", block = "Block 3" }, insider = insider or nil }
+        util.JSONToTable = function(t) if t == "x" then return shift end return jt(t) end
+        local function Walk(page, depth)
+            for i = 1, 9 do
+                local it = page.items[i]
+                if it and it.page and string.find(tostring(it.label), "My shift", 1, true) then return Labels(it.page()) end
+                if it and it.page and depth < 2 then local ok, sub = pcall(it.page) if ok and sub and sub.items then local r = Walk(sub, depth + 1) if r then return r end end end
+            end
+        end
+        local root = LC_CL.QuickRoleRoot()
+        local r = Walk(root, 0)
+        util.JSONToTable = jt
+        return r or ("not found on F2: " .. Labels(root))
+    end
+    local sl = ShiftLabels(true)
+    if not string.find(sl, "Report it clean", 1, true) then error("an Insider's My shift has no Report it clean: " .. sl) end
+    if string.find(ShiftLabels(false), "Report it clean", 1, true) then error("an ordinary unit's My shift offers Report it clean") end
+    _me.nw = { lcf_faction = "cp", lcf_rank = 2 }
 
     -- a Division Leader: Call a sweep >, greyed with why
     _me.nw = { lcf_faction = "cp", lcf_rank = 3 }
@@ -3630,6 +3651,32 @@ vgui.Create = vc
 net.ReadString, net.ReadEntity, net.ReadUInt = rS, rE, rU
 if not okP then return "pamphlet: " .. tostring(errP) end
 if #made < 5 then return "pamphlet: the leaflet wasn't built (" .. #made .. " panels)" end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
+# the Resistance pamphlet opens as its own sheet (cl_livingcity_dialog.lua, style "rebelpamphlet"), and paints
+err = L.execute(r"""
+if not net["recv_lc_dialog"] then return "rebel pamphlet: the dialog receiver is missing" end
+local rS, rE, rU = net.ReadString, net.ReadEntity, net.ReadUInt
+local q = { "Resistance pamphlet", "Cheap paper.", "READ THIS\n\nYou were not brought here for your protection.\n\nA friend",
+    "water", "The water", "pass", "Pass it on", "_leave", "Leave it here", "rebelpamphlet" }
+net.ReadString = function() return table.remove(q, 1) end
+net.ReadEntity = function() return NULL end
+net.ReadUInt = function() return 3 end
+local made = {}
+local vc = vgui.Create
+vgui.Create = function(...) local p = vc(...) made[#made + 1] = p return p end
+local okP, errP = pcall(function()
+    net["recv_lc_dialog"]()
+    for _, p in ipairs(made) do if p.Paint then p:Paint(860, 580) end end
+end)
+vgui.Create = vc
+net.ReadString, net.ReadEntity, net.ReadUInt = rS, rE, rU
+if not okP then return "rebel pamphlet: " .. tostring(errP) end
+-- the frame, the page, two pages listed, one thing to do with it, and folding it away
+if #made < 6 then return "rebel pamphlet: the sheet wasn't built (" .. #made .. " panels)" end
 return nil
 """)
 if err:

@@ -18,13 +18,24 @@
                         gone through: contraband in it is confiscated and they
                         are charged, as a block raid would (online or, if
                         they've left since, when they next join)
+                        An Insider (the Resistance's friend inside) can
+                        instead F2 > My shift > Report it clean: the same 8
+                        seconds, the quota met, nothing touched, as long as
+                        nobody but the resident sees them. If there was
+                        contraband, the resident hears on Freq 7 that the
+                        unit wrote clean anyway, and the Insider gains 1
+                        sympathy; but a block raid there within
+                        lc_insider_clean_minutes (30) that finds anything
+                        costs them 15 Civil Standing (a report that doesn't
+                        hold up).
     At the end of the shift comes a performance review: a grade from the
     quota met (A all of it, B most, C some, D none), with arrests counting
     for extra, and experience for it (A 30, B 20, C 10), which is what
     promotes a unit. The last five reviews are kept (F2 > My shift).
 
       lc_cp_duty 0/1, lc_cp_shift_minutes (15), lc_cp_quota_searches (3),
-      lc_cp_quota_papers (1), lc_cp_quota_inspections (1)
+      lc_cp_quota_papers (1), lc_cp_quota_inspections (1),
+      lc_insider_clean_minutes (30)
 ]]
 
 if CLIENT then return end
@@ -37,9 +48,11 @@ local cvMins    = CreateConVar("lc_cp_shift_minutes", "15", FLAGS, "Minutes in a
 local cvSearch  = CreateConVar("lc_cp_quota_searches", "3", FLAGS, "Searches in a Civil Protection shift's quota")
 local cvPapers  = CreateConVar("lc_cp_quota_papers", "1", FLAGS, "Checkpoint papers duties in a Civil Protection shift's quota")
 local cvInspect = CreateConVar("lc_cp_quota_inspections", "1", FLAGS, "Residence inspections in a Civil Protection shift's quota")
+local cvClean   = CreateConVar("lc_insider_clean_minutes", "30", FLAGS, "Minutes after an Insider reports a residence with contraband clean in which a block raid there that finds anything costs them Civil Standing")
 
 local REVIEW_XP = { A = 30, B = 20, C = 10, D = 0 }
 local INSPECT_SECS = 8
+local CLEAN_COST = 15 -- (Civil Standing, when a raid finds what a clean report missed)
 local FIND_CHANCE = 0.8 -- (each contraband item in a stash: found this often)
 
 local function OnDuty(ply)
@@ -82,6 +95,7 @@ local function Sync(ply)
         left = math.max(0, math.floor(s.startT + cvMins:GetFloat() * 60 - CurTime())),
         searches = s.searches, papers = s.papers, inspections = s.inspections, arrests = s.arrests,
         q = q, order = o and { name = o.name, block = o.blockName } or nil,
+        insider = (LC.IsInsider and LC.IsInsider(ply)) or nil,
     }) or "")
 end
 LC.CPShiftSync = Sync
@@ -210,6 +224,70 @@ function LC.CPInspect(ply)
         end })
 end
 
+-- An Insider writes the residence up clean (F2 > My shift > Report it clean): the same time
+-- spent, the quota met, the stash left alone. Only with nobody but the resident watching.
+function LC.CPReportClean(ply)
+    if not (LC.IsInsider and LC.IsInsider(ply)) then return false, "Nothing like that is open to you." end
+    local o = ply.lcInspectOrder
+    if not OnDuty(ply) or not o then return false, "No inspection order: F2 > My shift > Get an inspection order." end
+    if not IsValid(o.target) then
+        ply.lcInspectOrder = nil
+        Sync(ply)
+        return false, "The resident has left the city. Get another order."
+    end
+    if not (LC.InBlock and LC.InBlock(ply:GetPos(), o.block)) then return false, "You're not in " .. o.blockName .. " yet." end
+    if LC.InsiderWatched then
+        local watched, why = LC.InsiderWatched(ply, { [o.target] = true })
+        if watched then return false, why .. " Inspect it properly, or wait until nobody's watching." end
+    end
+    if not LC.StartTask then return false end
+    ply:EmitSound("physics/wood/wood_box_impact_soft" .. math.random(1, 3) .. ".wav", 60)
+    return LC.StartTask(ply, INSPECT_SECS, "Searching the residence...", { maxMove = 160, cancelText = "You stop the inspection.",
+        done = function(p)
+            local t = o.target
+            p.lcInspectOrder = nil
+            local had = false
+            if IsValid(t) and LC.Stash and LCS then
+                for id, n in pairs(LC.Stash(t)) do
+                    local it = LCS.Items[id]
+                    if it and it.contraband and (n or 0) > 0 then had = true break end
+                end
+            end
+            Count(p, "inspections")
+            p:ChatPrint(string.format("[CP net] Inspection of %s's residence: clean. (Your report.)", o.name))
+            if IsValid(t) then
+                t:ChatPrint("[Civil Protection] Your residence in " .. o.blockName .. " was inspected. Nothing was found.")
+                if had then t:ChatPrint("[Freq 7] Whoever went through your place saw what was there, and wrote it up clean.") end
+            end
+            if had then
+                p:ChatPrint("[Inside] There was contraband there. You wrote it up clean. If a raid finds it soon, your report won't hold up.")
+                if LC.AddTrait then pcall(LC.AddTrait, p, "sympathy", 1) end
+                p.lcCleanReport = { block = o.block, at = CurTime() }
+            end
+            hook.Run("LivingCityResidenceInspected", p, t, 0)
+            hook.Run("LivingCityInsiderAct", p, "clean")
+            Sync(p)
+        end })
+end
+
+-- A raid that finds what a clean report missed.
+hook.Add("LivingCityBlockRaided", "LivingCityCPDutyClean", function(block, found)
+    local n = 0
+    for _, c in pairs(istable(found) and found or {}) do n = n + (tonumber(c) or 0) end
+    if n <= 0 then return end
+    for _, p in ipairs(player.GetAll()) do
+        local r = p.lcCleanReport
+        if r and r.block == block then
+            p.lcCleanReport = nil
+            if CurTime() - r.at <= cvClean:GetFloat() * 60 then
+                if LC.AddStanding then LC.AddStanding(p, -CLEAN_COST, "An inspection report that didn't hold up") end
+                p:ChatPrint(string.format("[CP net] The raid on %s found what your inspection report missed. Sloppy work (-%d Civil Standing).",
+                    LC.BlockName and LC.BlockName(block) or ("Block " .. tostring(block)), CLEAN_COST))
+            end
+        end
+    end
+end)
+
 ------------------------------------------------------------------------
 -- The review, at the end of a shift
 ------------------------------------------------------------------------
@@ -319,7 +397,7 @@ end)
 -- The menu's actions (F2 > My shift).
 local function Wrap2()
     if LC.MenuActions then
-        LC.MenuActions.papersduty, LC.MenuActions.inspectorder, LC.MenuActions.inspect = true, true, true
+        LC.MenuActions.papersduty, LC.MenuActions.inspectorder, LC.MenuActions.inspect, LC.MenuActions.reportclean = true, true, true, true
         LC.MenuActions.reportin, LC.MenuActions.shiftbreak = true, true
     end
 end
@@ -327,7 +405,7 @@ Wrap2()
 hook.Add("Initialize", "LivingCityCPDutyActions", Wrap2)
 hook.Add("PlayerSay", "LivingCityCPDuty", function(ply, text)
     local cmd = string.lower(string.Trim(tostring(text or "")))
-    local fn = (cmd == "!papersduty" and LC.CPPapersDuty) or (cmd == "!inspectorder" and LC.CPInspectOrder) or (cmd == "!inspect" and LC.CPInspect)
+    local fn = (cmd == "!papersduty" and LC.CPPapersDuty) or (cmd == "!inspectorder" and LC.CPInspectOrder) or (cmd == "!inspect" and LC.CPInspect) or (cmd == "!reportclean" and LC.CPReportClean)
         or (cmd == "!reportin" and LC.CPReportIn) or (cmd == "!shiftbreak" and LC.CPBreak)
     if not fn then return end
     local ok, why = fn(ply)

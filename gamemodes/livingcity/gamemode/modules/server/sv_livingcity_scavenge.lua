@@ -816,6 +816,7 @@ function LC.ItemUse(ply, id)
     if it.use == "write" and LC.OpenWriter then return LC.OpenWriter(ply) end -- sv_livingcity_writing.lua
     if it.use == "papers" and LC.ShowPapers then return LC.ShowPapers(ply) end -- sv_livingcity_intake.lua
     if it.use == "pamphlet" and LC.ReadPamphlet then return LC.ReadPamphlet(ply) end -- sv_livingcity_pamphlet.lua
+    if it.use == "rebelpamphlet" and LC.ReadRebelPamphlet then return LC.ReadRebelPamphlet(ply) end -- sv_livingcity_rebelpamphlet.lua
     if it.use == "listen" and LC.RadioListen then return LC.RadioListen(ply, id) end -- sv_livingcity_moregames.lua
     if it.use == "read" and LC.ReadItem then return LC.ReadItem(ply, id) end -- sv_livingcity_moregames.lua (a Freq 7 sheet)
     if it.use == "plant" then

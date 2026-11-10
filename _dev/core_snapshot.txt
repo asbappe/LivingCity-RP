@@ -395,6 +395,7 @@ item raw_gull
 item raw_headcrab
 item raw_poisoncrab
 item rebel_gear
+item rebel_pamphlet
 item request_device
 item satchel
 item scrap
@@ -825,6 +826,7 @@ setting lc_informants = 1
 setting lc_inherit_max = 200
 setting lc_inherit_pct = 25
 setting lc_insider = 1
+setting lc_insider_clean_minutes = 30
 setting lc_insider_privacy = 700
 setting lc_intake = 1
 setting lc_intake_escort = 1
@@ -1014,6 +1016,8 @@ setting lc_rebel_life = 1
 setting lc_rebel_merge = 128
 setting lc_rebel_ops = 1
 setting lc_rebel_ops_minutes = 60
+setting lc_rebel_pamphlet_minutes = 30
+setting lc_rebel_pamphlets_max = 6
 setting lc_rebel_pct = 12
 setting lc_rebel_per_combine = 1.25
 setting lc_rebel_plan_leak = 0.15

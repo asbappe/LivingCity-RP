@@ -1441,9 +1441,25 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **Crime between citizens:** get behind another player, F1 > Pick their pocket. Lend someone money with F1; repay it from F2 > Me > More > Household and business > My debts. Buy from the black market a few times: now and then it should go bad (a brick, or a sting).
   Notes:
+- [ ] **Insider, report it clean (10 November):** as an Insider on a shift, get an inspection order on a resident with contraband in their stash, go to their block with nobody else about, F2 > Me > My shift > Report it clean. The quota counts, the stash stays, the resident hears on Freq 7. Then raid that block (a sweep) within 30 minutes: -15 Civil Standing. With someone watching, it refuses.
+  Notes:
+- [ ] **F2 More for units (10 November):** as a Civil Protection unit, F2 slot 8 reads More: Records terminal, Me...; inside are Records terminal and Me (My shift).
 - [ ] **The Colonel looks like a ghost:** faintly see-through, a cold blue tint, slowly fading in and out with the odd flicker.
   Notes:
 - [ ] **Give something (talk window):** E on a citizen: "Give something..." opens a menu of what you carry (food first). Try food, a beer or cigarette (someone fond of it lights up there and then; someone sober refuses), medicine, the Civil Orientation pamphlet, and a gun (refused, frightened; a sympathizer hides it). With nothing to give, the button is greyed out.
+## 10 November: the Resistance pamphlet
+
+- [ ] **Buying and reading:** as a Resistance member, buy "Pamphlets (5)" from the quartermaster. Pockets > Resistance pamphlet > Read: a folded sheet in purple ink with an orange lambda opens, six pages on the left, the page typed on the right. Is the typed text easy to read on your screen?
+  Notes:
+- [ ] **Leaving one:** F1 > Leave a Resistance pamphlet here, in front of a bench or table and on the floor. A sheet of paper lies there. Another player presses E on it and reads it; a citizen can "Pocket it", a Civil Protection player can "Confiscate it".
+  Notes:
+- [ ] **First read:** a citizen who has never read one gets "Sympathy +1" once, and the member who left it is told.
+  Notes:
+- [ ] **Handing to a player:** F1 > their name > Hand them a Resistance pamphlet: it is in their pockets.
+  Notes:
+- [ ] **Handing to a citizen NPC:** F1 > This person > Hand them a Resistance pamphlet. Try several people: some take it and become sympathisers, some tuck it away, some push it back.
+  Notes:
+- [ ] **Risk:** do either in front of a Civil Protection unit: you are wanted for it. Leave one on a patrol route: the unit takes it and the Civil Protection radio says where.
   Notes:
 - [ ] **Give menu as Civil Protection:** with a gun in your pockets, E on a citizen > Give something: no guns listed.
   Notes:

@@ -609,6 +609,7 @@ local function ShiftPage()
     local items = { Item("Checkpoint papers duty", function() Send("papersduty") end) }
     if s.order then
         items[#items + 1] = Item("Inspect the residence of " .. tostring(s.order.name) .. ", " .. tostring(s.order.block), function() Send("inspect") end)
+        if s.insider then items[#items + 1] = Item("Report it clean (the Resistance's friend inside)", function() Send("reportclean") end) end
     else
         items[#items + 1] = Item("Get an inspection order", function() Send("inspectorder") end)
     end
@@ -810,8 +811,8 @@ function LC_CL.QuickRoleRoot()
     local f, unit, rebel = Who(me)
     local fac = LCF and LCF.Get and LCF.Get(f)
     local title, accent = fac and fac.name or "", ACCENT.default
-    local items, usual, late = {}, {}, {}
-    local function Add(it) if it and #items < 8 then items[#items + 1] = it end end
+    local items, usual, late, over = {}, {}, {}, {}
+    local function Add(it) if not it then return end if #items < 8 then items[#items + 1] = it else over[#over + 1] = it end end
     if unit then
         title = me:GetNW2String("lcf_title", "") ~= "" and me:GetNW2String("lcf_title", "") or ((LCF and LCF.IsOverwatch and LCF.IsOverwatch(me)) and "OVERWATCH" or "CIVIL PROTECTION")
         accent = ACCENT.cp
@@ -919,6 +920,16 @@ function LC_CL.QuickRoleRoot()
         local mine = Page(me:GetNW2String("lc_shift", "") ~= "" and "Me: my shift, where I stand, survival" or "Me: where I stand, survival, dreams", MinePage)
         mine.id = "me"
         Add(mine)
+    end
+    if #over > 0 then
+        -- more than fits: slot 8 becomes More, with what was there and the rest (nothing dropped:
+        -- a unit's My shift is on its Me page, past Records terminal)
+        local moved = { items[8] }
+        for _, it in ipairs(over) do moved[#moved + 1] = it end
+        local names = {}
+        for i = 1, math.min(2, #moved) do names[#names + 1] = string.match(tostring(moved[i].label), "^[^:(]+") or moved[i].label end
+        items[8] = Page("More: " .. string.Trim(table.concat(names, ", ")) .. "...", function() return { title = "MORE", items = moved } end)
+        items[8].id = "more"
     end
     local empty = #items == 0
     items[9] = Full()
