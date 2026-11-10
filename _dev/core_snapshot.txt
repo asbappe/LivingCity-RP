@@ -945,6 +945,7 @@ setting lc_npcmodel_shotgunner =
 setting lc_npcmodel_soldier = 
 setting lc_obituary = 1
 setting lc_oldtimer = 1
+setting lc_oldtimer_face = models/lostcoast/fisherman/fisherman.mdl
 setting lc_ooc = 1
 setting lc_ooc_cooldown = 10
 setting lc_outbreaks = 1

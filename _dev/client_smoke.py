@@ -1310,6 +1310,34 @@ if colonelMade == 0 then problems[#problems + 1] = "the Colonel wasn't drawn for
 ClientsideModel = cmWasC
 _globals.lc_colonel_here = false run("Think")
 _me:SetNW2String("lcf_faction", "")
+-- the old-timer's face (cl_livingcity_oldtimerface.lua): with the model, laid over him; without it, nothing
+do
+    local oldNpc = setmetatable({ nw = { lc_oldtimer = true } }, { __index = function(t, k)
+        if k == "GetNW2Bool" then return function(self, n, d) local v = self.nw[n] if v == nil then return d end return v end end
+        if k == "IsValid" then return function() return true end end
+        if k == "GetPos" then return function() return Vector(0, 0, 0) end end
+        if k == "LookupBone" then return function() return 6 end end
+        return function() end
+    end })
+    local fbWas, ivWas, cmWas2 = ents.FindByClass, util.IsValidModel, ClientsideModel
+    local made = 0
+    ents.FindByClass = function(c) if c == "npc_citizen" then return { oldNpc } end return {} end
+    ClientsideModel = function()
+        made = made + 1
+        local m = { IsValid = function() return true end, GetBoneCount = function() return 3 end, GetBoneName = function(_, i) return ({ [0] = "ValveBiped.Bip01_Pelvis", "ValveBiped.Bip01_Neck1", "ValveBiped.Bip01_Head1" })[i] end }
+        return setmetatable(m, { __index = function() return function() end end })
+    end
+    _globals.lc_oldtimer_face = "models/lostcoast/fisherman/fisherman.mdl"
+    util.IsValidModel = function() return true end
+    _advance(2) run("Think")
+    if made ~= 1 then problems[#problems + 1] = "the old-timer's face wasn't laid over him" end
+    util.IsValidModel = function() return false end
+    made = 0
+    _advance(2) run("Think")
+    if made ~= 0 then problems[#problems + 1] = "the old-timer's face was made without the model" end
+    ents.FindByClass, util.IsValidModel, ClientsideModel = fbWas, ivWas, cmWas2
+    _globals.lc_oldtimer_face = ""
+end
 _me:SetNW2Float("lc_feverdream", 0) _me:SetNW2String("lc_ill", "") _me:SetNW2Float("lcn_hunger", 100) _me:SetHealth(100)
 run("Think")
 local okB, errB = pcall(LC_CL.BuildLayoutBrowser, panel, { { id = "dealer", label = "Fixture: black market dealer" },

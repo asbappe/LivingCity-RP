@@ -26,6 +26,13 @@
     named for the line (bins1.wav). Every line: VOICE_LINES.md section 7
     (LC.OldTimerLines below). Without one, Half-Life 2's own citizen voice.
 
+    His face (the owner, 10 November: "make his face the old man from Lost
+    Coast, but his body just a standard citizen in citizen clothes"): the
+    Lost Coast fisherman's head on his own citizen's body, drawn on each
+    player's screen (cl_livingcity_oldtimerface.lua). Lost Coast is free
+    with Half-Life 2, but a player without it installed simply sees the
+    citizen's own face. lc_oldtimer_face picks the model (empty: his own).
+
     Setting: lc_oldtimer (1; 0 and he's just another citizen).
 ]]
 
@@ -35,6 +42,9 @@ LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOld = CreateConVar("lc_oldtimer", "1", FLAGS, "One of the city's citizens is an old man who gives advice and opens up as he knows you")
+-- his face: Lost Coast's old fisherman on a citizen's body (cl_livingcity_oldtimerface.lua; the owner, 10 November)
+local cvFace = CreateConVar("lc_oldtimer_face", "models/lostcoast/fisherman/fisherman.mdl", FLAGS,
+    "The model whose head the old-timer wears on his citizen's body (empty: his own face). Players without it see his own face")
 
 function LC.OldTimerOn() return cvOld:GetBool() end
 
@@ -141,6 +151,7 @@ function LC.MakeOldTimer(npc)
 end
 
 function LC.OldTimerTick()
+    SetGlobal2String("lc_oldtimer_face", cvOld:GetBool() and cvFace:GetString() or "")
     if not cvOld:GetBool() then return end
     if LC.OldTimer() then return end
     -- the roster's old-timer, if he's out

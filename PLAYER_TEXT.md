@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 320eaa1. Admin-only console messages and log lines are left out.
+Made from version a3f1fc9. Admin-only console messages and log lines are left out.
 
 10553 lines, from 292 files.
 
@@ -12150,71 +12150,71 @@ Made from version 320eaa1. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The dealer, for the waypoint (the official lists leave him out, of course).
 
-- "The man he told you about"  (text, line 46)
-- "No dealer in the city right now."  (text, line 47)
+- "The man he told you about"  (text, line 56)
+- "No dealer in the city right now."  (text, line 57)
 
 > Note for you (not shown in game): id = { trust needed, button, words, place to mark (a LC.WaypointPlaces kind), tips it teaches }
 
-- "Any advice for someone like me?"  (text, line 61)
-- "Keep your head down, your papers handy, and your mouth shut. The ones who last are the ones nobody remembers."  (text, line 62)
-- "What about curfew?"  (text, line 63)
-- "When the voice says two minutes, it means one. Be indoors. I've seen what they do to the ones who are late, and so have the walls."  (text, line 64)
-- "The flying things?"  (text, line 65)
-- "Scanners. They take your picture. Don't stand under them, don't do anything worth photographing, and if one flashes you, walk, don't run."  (text, line 66)
-- "Why does everyone walk so slowly?"  (text, line 67)
-- "Run in front of a cop and you're a suspect. Walk. Even when your heart's going like a train, walk."  (text, line 68)
-- "Where do people find food, really?"  (text, line 69)
-- "The bins. Commissary scraps, things people drop. Nobody checks them as often as they should. Here, I'll show you the nearest."  (text, line 70)
-- "And water?"  (text, line 71)
-- "Sinks, the machines, open water if you're desperate. Boil anything that isn't from a tap, or you'll be coughing for a week."  (text, line 72)
-- "Anything else to eat out there?"  (text, line 73)
-- "Fish, if you can find a line. Cook what you catch on a stove or a fire barrel. Raw meat will turn your stomach."  (text, line 74)
-- "Things the Commissary doesn't sell?"  (text, line 75)
-- "There's a man who trades in what you can't buy. Don't tell him I sent you, and don't let a cop see you with him. That way."  (text, line 76)
-- "What's a lockpick good for?"  (text, line 77)
-- "Doors that aren't yours. Rooms people left in a hurry. Be quick, be quiet, and never in front of a unit."  (text, line 78)
-- "Is anyone fighting back?"  (text, line 79)
-- "You didn't hear it from me."  (text, line 80)
+- "Any advice for someone like me?"  (text, line 71)
+- "Keep your head down, your papers handy, and your mouth shut. The ones who last are the ones nobody remembers."  (text, line 72)
+- "What about curfew?"  (text, line 73)
+- "When the voice says two minutes, it means one. Be indoors. I've seen what they do to the ones who are late, and so have the walls."  (text, line 74)
+- "The flying things?"  (text, line 75)
+- "Scanners. They take your picture. Don't stand under them, don't do anything worth photographing, and if one flashes you, walk, don't run."  (text, line 76)
+- "Why does everyone walk so slowly?"  (text, line 77)
+- "Run in front of a cop and you're a suspect. Walk. Even when your heart's going like a train, walk."  (text, line 78)
+- "Where do people find food, really?"  (text, line 79)
+- "The bins. Commissary scraps, things people drop. Nobody checks them as often as they should. Here, I'll show you the nearest."  (text, line 80)
+- "And water?"  (text, line 81)
+- "Sinks, the machines, open water if you're desperate. Boil anything that isn't from a tap, or you'll be coughing for a week."  (text, line 82)
+- "Anything else to eat out there?"  (text, line 83)
+- "Fish, if you can find a line. Cook what you catch on a stove or a fire barrel. Raw meat will turn your stomach."  (text, line 84)
+- "Things the Commissary doesn't sell?"  (text, line 85)
+- "There's a man who trades in what you can't buy. Don't tell him I sent you, and don't let a cop see you with him. That way."  (text, line 86)
+- "What's a lockpick good for?"  (text, line 87)
+- "Doors that aren't yours. Rooms people left in a hurry. Be quick, be quiet, and never in front of a unit."  (text, line 88)
+- "Is anyone fighting back?"  (text, line 89)
+- "You didn't hear it from me."  (text, line 90)
 
 > Note for you (not shown in game): His troubles: an unmarked quest line (the owner, 10 November: "little hints in his dialogue that you can help remedy and then he likes you more and gives you better advice"). One at a time, in order, he lets the current one slip when you visit; nothing marks it. Offer him something from your pockets and he takes what he needs: he warms to you (+2), thanks you, and the next trouble surfaces. Help with all of them and he has one last thing to tell you, and something to give. id = { what he'll take (item ids; "food" is anything fit to eat), the hint, his thanks }
 
-- "My legs won't take me to the bins any more. Some days I don't eat at all."  (text, line 90)
-- "Food. Real food. You don't know what that means to an old man."  (text, line 91)
-- "The tap on my floor's been dry a week. Carrying water up those stairs, at my age..."  (text, line 92)
-- "Water. Bless you. I'll make it last."  (text, line 93)
-- "This cough. Twenty years I've had it. The Commissary wants more for its medicine than I see in a month."  (text, line 94)
-- "Medicine? For me? I'll sleep tonight, for the first time in a long while."  (text, line 95)
-- "Some young thug took my ration card in the line. I'm too old to work a shift for another."  (text, line 96)
-- "A card? You worked for that. I won't forget it. Not ever."  (text, line 97)
-- "What I wouldn't give for a smoke. Even the Union's, and those taste of floor sweepings."  (text, line 98)
-- "Ah. Now that's a kindness. Sit with me while I have it."  (text, line 99)
-- "Sit down, sit down. My knees aren't what they were. What do you want to know?"  (text, line 103)
-- "Ah, you again. Good. Not many come back."  (text, line 104)
-- "I don't know you. Ask me something simple."  (text, line 105)
-- "Hm. Ask me that when I know you better."  (text, line 106)
-- "For me? You're a good one. I won't forget it."  (text, line 107)
-- "There used to be one. Not in this part of town, not any more."  (text, line 108)
-- "Kind of you. But nothing I need, not that."  (text, line 109)
-- "You've done more for me than my own family. Here. My old picks. I won't be needing them, and you might. Doors don't stay locked for people who know how."  (text, line 110)
-- "Sit a while. The city's quieter when there's someone to share it with."  (text, line 111)
+- "My legs won't take me to the bins any more. Some days I don't eat at all."  (text, line 100)
+- "Food. Real food. You don't know what that means to an old man."  (text, line 101)
+- "The tap on my floor's been dry a week. Carrying water up those stairs, at my age..."  (text, line 102)
+- "Water. Bless you. I'll make it last."  (text, line 103)
+- "This cough. Twenty years I've had it. The Commissary wants more for its medicine than I see in a month."  (text, line 104)
+- "Medicine? For me? I'll sleep tonight, for the first time in a long while."  (text, line 105)
+- "Some young thug took my ration card in the line. I'm too old to work a shift for another."  (text, line 106)
+- "A card? You worked for that. I won't forget it. Not ever."  (text, line 107)
+- "What I wouldn't give for a smoke. Even the Union's, and those taste of floor sweepings."  (text, line 108)
+- "Ah. Now that's a kindness. Sit with me while I have it."  (text, line 109)
+- "Sit down, sit down. My knees aren't what they were. What do you want to know?"  (text, line 113)
+- "Ah, you again. Good. Not many come back."  (text, line 114)
+- "I don't know you. Ask me something simple."  (text, line 115)
+- "Hm. Ask me that when I know you better."  (text, line 116)
+- "For me? You're a good one. I won't forget it."  (text, line 117)
+- "There used to be one. Not in this part of town, not any more."  (text, line 118)
+- "Kind of you. But nothing I need, not that."  (text, line 119)
+- "You've done more for me than my own family. Here. My old picks. I won't be needing them, and you might. Doors don't stay locked for people who know how."  (text, line 120)
+- "Sit a while. The city's quieter when there's someone to share it with."  (text, line 121)
 
 > Note for you (not shown in game): part of: menu
 
-- "(he doesn't know you well enough)"  (text, line 241)
-- "Sit with him a while"  (text, line 243)
-- "Offer him something from your pockets"  (text, line 244)
-- "An old man"  (text, line 246)
-- "An old man"  (title, line 246)
-- "An old man with tired eyes. He's {mood}."  (text, line 247)
+- "(he doesn't know you well enough)"  (text, line 252)
+- "Sit with him a while"  (text, line 254)
+- "Offer him something from your pockets"  (text, line 255)
+- "An old man"  (text, line 257)
+- "An old man"  (title, line 257)
+- "An old man with tired eyes. He's {mood}."  (text, line 258)
 
 > Note for you (not shown in game): part of: oldtimer
 
-- "'{keepsake}' (He presses a Lockpick set into your hand.)"  (text, line 327)
-- "'{keepsake_again}'"  (text, line 331)
+- "'{keepsake}' (He presses a Lockpick set into your hand.)"  (text, line 338)
+- "'{keepsake_again}'"  (text, line 342)
 
 > Note for you (not shown in game): only to someone who might be one of them, and only what a sympathizer would say
 
-- "Nobody I know of. Not any more."  (text, line 345)
+- "Nobody I know of. Not any more."  (text, line 356)
 
 ## the Resistance plans its own operations, and the Combine (sv_livingcity_opplan.lua)
 

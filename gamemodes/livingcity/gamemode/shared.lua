@@ -296,6 +296,7 @@ LC_MODULES = {
         "cl_livingcity_bodysigns",
         "cl_livingcity_feverdream",
         "cl_livingcity_colonel",
+        "cl_livingcity_oldtimerface",
         "cl_livingcity_war",
         "cl_livingcity_writing",
         "cl_livingcity_context", -- (what you can do here: the panel on the right)

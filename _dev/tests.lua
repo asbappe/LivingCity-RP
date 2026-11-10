@@ -7518,6 +7518,8 @@ local old, olds = person(Vector(0, 960, 0))
 olds.gender = "male"
 ok(LC.MakeOldTimer(old) and olds.oldtimer and old.lcProfile.oldtimer, "one of the citizens is the old-timer, kept with the roster")
 ok(LC.OldTimer() == old, "(and found again)")
+LC.OldTimerTick()
+ok(GetGlobal2String("lc_oldtimer_face", "") == "models/lostcoast/fisherman/fisherman.mdl", "his face: Lost Coast's old fisherman (players' screens put it on him)")
 local visitor = lp("Visitor")
 net.sent = {}
 hook.Run("LivingCityPlayerUsedNPC", visitor, old, olds)
