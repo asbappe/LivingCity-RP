@@ -1331,3 +1331,5 @@ Notes:
 ## 10 November: the pamphlet's look
 - [ ] **Pamphlet:** read the Civil Orientation pamphlet from your pockets. It opens as a folded paper leaflet: sections 1 to 8 down the left, a picture and the page on the right. Click each section (the picture changes), then "Fold it away". Tell me if any text runs off the paper or the font looks wrong.
   Notes:
+- [ ] **The Colonel:** as the Resistance, go to the quartermaster: an old man (Odessa) beside him; "The Colonel, [E] talk". As a citizen or unit: nobody there. Bring a unit into the camp: he's gone; leave: back. Ask "What's the word?" during a sweep, a march, a supply drop. Bring 3 Union medicine, then find the dog tags in Combine ground, then kill the unit he names. Debrief after a Resistance job, clean and messy. Ask for whispers. A citizen next to you should see you "talking quietly to an empty corner".
+  Notes:
