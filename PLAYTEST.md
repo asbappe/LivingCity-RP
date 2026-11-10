@@ -1362,6 +1362,15 @@ Notes:
 - [ ] **Bounties:** as the Administrator (or a Division Leader), F2 > Me > Bounties on the wanted: put 50 or 100 on someone wanted. Units and the wanted person should be told; the unit who arrests them gets paid.
   Notes:
 - [ ] **Shifts back to back:** finish the checklist early, F2 > Me > My shift > Report in now: a review at once and a fresh shift. Try Go on a break, then Back on duty.
+
+## 10 November: the city's minds (watching only)
+- [ ] **Leave it running:** with `lc_minds` on (the default), play or leave the server idle for a few hours. Then copy `garrysmod/data/livingcity/minds/` off the server (zip it) and bring it back.
+  Notes:
+- [ ] **Debug report:** it has a section "The city's minds" with the most strained people.
+  Notes:
+- [ ] **How they seem (optional):** editor panel > NPC budget > tick "Talking to a named person says how they seem", then press E on a citizen: one more grey line. Untick it after.
+  Notes:
+- [ ] **Lag check:** with it on and off (editor panel, "Watch the city's minds"), is there any difference? (It should cost about 0.01 ms a second.)
   Notes:
 
 ## 10 November: window styles, second pass

@@ -1258,6 +1258,12 @@ net._q = { talkNpc, "Mira Kovacs", "Factory Worker", "working the line", "friend
 local okTk, errTk = pcall(net["recv_lc_talk"])
 if not okTk then problems[#problems + 1] = "talk window: " .. tostring(errTk) end
 if made < 8 then problems[#problems + 1] = "talk window built only " .. made .. " controls (valid npc: " .. tostring(IsValid(talkNpc)) .. ")" end
+-- with how they seem (the city's minds, lc_minds_show): one more line
+made = 0
+net._q = { talkNpc, "Mira Kovacs", "Factory Worker", "working the line", "friendly", "warm", "'Another day.'", true, true, true, true, true, "They seem on edge: was beaten, saw a friend beaten." }
+okTk, errTk = pcall(net["recv_lc_talk"])
+if not okTk then problems[#problems + 1] = "talk window (how they seem): " .. tostring(errTk) end
+if made < 9 then problems[#problems + 1] = "talk window with how they seem built only " .. made .. " controls" end
 net._q = { nil }
 okTk, errTk = pcall(net["recv_lc_talk"]) -- (and closing it)
 if not okTk then problems[#problems + 1] = "talk window close: " .. tostring(errTk) end
