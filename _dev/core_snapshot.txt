@@ -334,8 +334,13 @@ item crowbar
 item cwu_overalls
 item data_chip
 item data_shard
+item decor_cactus
+item decor_chair
+item decor_frame
+item decor_lamp
 item dog_tags
 item door_code
+item fine_clothes
 item firebomb
 item fishing_line
 item foil_hat
@@ -369,7 +374,9 @@ item papers_dead
 item papers_forged
 item pasteup
 item permit
+item pet_bird
 item radio
+item radio_set
 item radio_transmitter
 item radio_tuned
 item ration
@@ -598,6 +605,7 @@ setting lc_day_minutes = 60
 setting lc_daynight = -1
 setting lc_daynight_light = 1
 setting lc_debug = 0
+setting lc_decor_max = 6
 setting lc_desperation = 1
 setting lc_directive_grace_minutes = 10
 setting lc_directive_last_call_minutes = 5
@@ -939,6 +947,7 @@ setting lc_people_heights = 1
 setting lc_perfdebug_minutes = 30
 setting lc_perfdebug_spike_ms = 60
 setting lc_permadeath = 1
+setting lc_petbird_pos = -1 3 5
 setting lc_pickpocket_dc = 12
 setting lc_player_doors = 1
 setting lc_pm_elite = 

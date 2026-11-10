@@ -244,6 +244,17 @@ LCS.Items = {
     ------------------------------------------------------------------------
     satchel         = { name = "Satchel", model = "models/props_c17/BriefCase001a.mdl", bag = { kg = 8, bulky = 1 }, sell = 10,
                         desc = "A canvas bag over the shoulder. Room for more, and for something large" },
+    -- status (sv_livingcity_status.lua, the owner, 10 November): things other people can see
+    fine_clothes    = { name = "Fine clothes", model = "models/props_c17/SuitCase001a.mdl", use = "finery", useLabel = "Put on / take off", sell = 40,
+                        desc = "A good coat and a clean collar. People notice." },
+    decor_cactus    = { name = "Potted cactus", model = "models/props_lab/cactus.mdl", use = "decor", useLabel = "Place it at home", sell = 6, desc = "Something alive on the windowsill." },
+    decor_lamp      = { name = "Desk lamp", model = "models/props_c17/lamp001a.mdl", use = "decor", useLabel = "Place it at home", sell = 8, desc = "A warm light of your own." },
+    decor_chair     = { name = "Armchair", model = "models/props_c17/FurnitureChair001a.mdl", use = "decor", useLabel = "Place it at home", sell = 12, desc = "Somewhere to sit that isn't the floor." },
+    decor_frame     = { name = "Picture frame", model = "models/props_lab/frame002a.mdl", use = "decor", useLabel = "Place it at home", sell = 10, desc = "A photograph from before. Or a portrait of the Administrator, to be safe." },
+    radio_set       = { name = "Radio set", model = "models/props_lab/citizenradio.mdl", use = "decor", useLabel = "Place it at home", sell = 25,
+                        desc = "A wireless for the home. Press E on it to play music; again to stop." },
+    pet_bird        = { name = "Pet bird", model = "models/pigeon.mdl", use = "petbird", useLabel = "On my shoulder / off", sell = 30,
+                        desc = "A tame pigeon that rides on your shoulder. A luxury in this city." },
     storage_crate   = { name = "Storage crate", model = "models/props_junk/wood_crate001a.mdl", place = "crate", sell = 12,
                         desc = "Set it down somewhere (Set down, in your pockets) and it's yours: only you can open it. Civil Protection units can" },
     ------------------------------------------------------------------------
@@ -332,6 +343,7 @@ LCS.Weights = {
     smokebomb = 0.4, gas_bomb = 0.4, firebomb = 0.6, ration_short = 0.3, gren_smoke = 0.5, gren_flash = 0.5, gren_gas = 0.6, arms_crate = 9.0, smuggled_supplies = 2.5, data_shard = 0.3, master_chip = 0.6, zipties = 0.05,
     request_device = 0.3, scrap = 0.5, keepsake = 0.01, satchel = 0.8, storage_crate = 6.0,
     business_license = 0.02, vendor_stall = 7.0, paper = 0.02,
+    fine_clothes = 1.5, decor_cactus = 1.0, decor_lamp = 1.5, decor_chair = 6.0, decor_frame = 0.5, radio_set = 3.0, pet_bird = 0.3, -- (sv_livingcity_status.lua)
 }
 -- (a tainted twin weighs what the real thing does: sv_livingcity_weeds.lua)
 for id, it in pairs(LCS.Items) do
@@ -340,7 +352,7 @@ for id, it in pairs(LCS.Items) do
         if LCS.Weights[real] then LCS.Weights[id] = LCS.Weights[real] end
     end
 end
-LCS.Bulky = { melon = true, uniform_cp = true, rebel_gear = true, gun_shotgun = true, gun_smg = true, arms_crate = true, storage_crate = true, vendor_stall = true }
+LCS.Bulky = { melon = true, uniform_cp = true, rebel_gear = true, gun_shotgun = true, gun_smg = true, arms_crate = true, storage_crate = true, vendor_stall = true, decor_chair = true }
 
 function LCS.Weight(id)
     local it = LCS.Items[id]
@@ -404,6 +416,14 @@ LCS.Goods = {
     { id = "business_license", item = "business_license", price = 75, minStanding = 50, desc = "The Union's permission to trade from a stall." },
     { id = "vendor_stall", item = "vendor_stall", price = 60, minStanding = 50, desc = "Everything you need to sell. A license not included." },
     { id = "satchel", item = "satchel", price = 25, minStanding = -50, desc = "Carry more. Eight more kilos, and one more large thing." },
+    -- things other people can see (sv_livingcity_status.lua)
+    { id = "fine_clothes", item = "fine_clothes", price = 120, minStanding = 150, civOnly = true, desc = "A good coat and a clean collar. For citizens the Union trusts." },
+    { id = "decor_cactus", item = "decor_cactus", price = 20, minStanding = 25, civOnly = true, desc = "For the home. Place it from your pockets, in your block." },
+    { id = "decor_lamp", item = "decor_lamp", price = 25, minStanding = 25, civOnly = true, desc = "For the home. Place it from your pockets, in your block." },
+    { id = "decor_frame", item = "decor_frame", price = 30, minStanding = 50, civOnly = true, desc = "For the home. Place it from your pockets, in your block." },
+    { id = "decor_chair", item = "decor_chair", price = 35, minStanding = 50, civOnly = true, desc = "For the home. Place it from your pockets, in your block." },
+    { id = "radio_set", item = "radio_set", price = 60, minStanding = 75, civOnly = true, desc = "A wireless for the home: music, Union-approved." },
+    { id = "pet_bird", item = "pet_bird", price = 80, minStanding = 100, civOnly = true, desc = "A tame pigeon for your shoulder. Everyone will want one." },
     { id = "storage_crate", item = "storage_crate", price = 40, minStanding = 0, desc = "Somewhere of your own to keep things. Civil Protection units can open it." },
     { id = "fishing_line", item = "fishing_line", price = 15, minStanding = -50, civOnly = true, desc = "Line and a hook. The canal has fish, of a kind." },
     { id = "gren_smoke", item = "gren_smoke", price = 20, cpOnly = true, desc = "Cover for an advance, or a retreat." },

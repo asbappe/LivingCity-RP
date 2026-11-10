@@ -1413,3 +1413,8 @@ Notes:
   Notes:
 - [ ] **Small-server mode:** with 4 or fewer on, chat should say "A quiet night in the city". Events and rebel operations should come noticeably more often. When a fifth player joins, it should say the city is back to its usual pace.
   Notes:
+
+## 10 November, last: citizen goals
+
+- [ ] **Status symbols:** buy fine clothes (standing 150) and put them on from F3: you should look better dressed and show "Well dressed". Buy a lamp or cactus and use it in your own block: it should appear where you look and still be there after a restart. A radio set should play music with E. A pet bird should sit on your shoulder (tell me if it floats: lc_petbird_pos moves it).
+  Notes:

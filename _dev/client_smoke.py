@@ -1628,6 +1628,14 @@ local okRS, errRS = pcall(function()
     if #(LC_CL.RatScarCuts or {}) < 10 then error("the rat has too few cuts to look like one") end
 end)
 if not okRS then problems[#problems + 1] = "the carved rat: " .. tostring(errRS) end
+-- a pet bird on the shoulder (cl_livingcity_petbird.lua): drawn without errors
+local okPB, errPB = pcall(function()
+    if not LC_CL.DrawPetBird then error("no bird to draw") end
+    _me:SetNW2Bool("lc_pet_bird", true)
+    LC_CL.DrawPetBird(_me)
+    _me:SetNW2Bool("lc_pet_bird", false)
+end)
+if not okPB then problems[#problems + 1] = "the pet bird: " .. tostring(errPB) end
 -- what now? (cl_livingcity_nextstep.lua): the line on screen, and its F1 page
 local okWN, errWN = pcall(function()
     _me:SetNW2String("lc_next", "Find water")

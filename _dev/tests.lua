@@ -11265,6 +11265,68 @@ ok(not LC.CanPlanOp(m), "and the Member waits for a Fighter again")
 m:SetPos(Vector(-140000, -140000, 0))
 end
 SmallServerTests()
+function StatusTests()
+section("Things other people can see: fine clothes, home decor, a radio set, a pet bird")
+local function Later(secs) _advance(secs) _runtimers() end
+local G0 = Vector(107000, -107000, 0)
+local p = newPlayer("StatusCitizen", "citizen")
+local q = newPlayer("StatusNeighbour", "citizen")
+local unit = newPlayer("StatusUnit", "cp")
+Later(0.5)
+p:SetModel("models/player/group01/male_04.mdl")
+LC.GiveItem(p, "fine_clothes", 1)
+ok(LC.ItemUse(p, "fine_clothes") and string.find(p:GetModel(), "group02", 1, true) and p:GetNW2Bool("lc_well_dressed", false), "fine clothes: the better-dressed look", p:GetModel())
+ok(string.find(LC.LegacyTitle(p) or "", "Well dressed", 1, true), "and \"Well dressed\" with their title")
+LC.ItemUse(p, "fine_clothes")
+ok(p:GetModel() == "models/player/group01/male_04.mdl" and not p:GetNW2Bool("lc_well_dressed", true), "taken off, the old clothes back")
+LC.GiveItem(unit, "fine_clothes", 1)
+ok(not LC.ItemUse(unit, "fine_clothes"), "not over a uniform")
+-- the bird
+LC.GiveItem(p, "pet_bird", 1)
+LC.ItemUse(p, "pet_bird")
+ok(p:GetNW2Bool("lc_pet_bird", false), "a pet bird on the shoulder, for everyone to see")
+LC.TakeItem(p, "pet_bird", 1)
+hook.Run("LivingCityInventoryChanged", p)
+ok(not p:GetNW2Bool("lc_pet_bird", true), "sold or lost, it's gone from the shoulder")
+-- decor
+local inOwn = LC.PlayerInOwnBlock
+LC.PlayerInOwnBlock = function(ply) return ply == p end
+p:SetPos(G0)
+p.GetEyeTrace = function() return { Hit = true, HitPos = G0 + Vector(60, 0, 0), HitNormal = Vector(0, 0, 1) } end
+q.GetEyeTrace = p.GetEyeTrace
+LC.GiveItem(q, "decor_lamp", 1)
+ok(not LC.ItemUse(q, "decor_lamp"), "decor goes down only at home, in your own block")
+LC.Decor = {}
+LC.GiveItem(p, "decor_lamp", 1)
+ok(LC.ItemUse(p, "decor_lamp") and #LC.Decor == 1 and IsValid(LC.Decor[1].ent) and not LC.HasItem(p, "decor_lamp"), "a desk lamp set down at home")
+local lamp = LC.Decor[1].ent
+q.chat = {}
+LC.UseDecor(q, lamp)
+ok(IsValid(lamp) and has(q.chat, "Not yours"), "nobody else can take it")
+LC.GiveItem(p, "radio_set", 1)
+LC.ItemUse(p, "radio_set")
+local radio = LC.Decor[2].ent
+LC.UseDecor(q, radio)
+ok(radio.lcSong ~= nil, "a radio set: E plays music, for anyone")
+LC.UseDecor(q, radio)
+ok(radio.lcSong == nil, "and again stops it")
+LC.SaveDecor()
+LC.LoadDecor()
+ok(#LC.Decor == 2 and IsValid(LC.Decor[1].ent), "decor stays where it was, across a restart")
+lamp = LC.Decor[1].ent
+LC.UseDecor(p, lamp)
+ok(not IsValid(lamp) and #LC.Decor == 1 and LC.HasItem(p, "decor_lamp"), "E on your own piece takes it back")
+_setcvar("lc_decor_max", 1)
+ok(not LC.ItemUse(p, "decor_lamp"), "at most lc_decor_max pieces each")
+_setcvar("lc_decor_max", 6)
+for _, d in ipairs(LC.Decor) do if IsValid(d.ent) then d.ent:Remove() end end
+LC.Decor = {}
+LC.SaveDecor()
+LC.PlayerInOwnBlock = inOwn
+p.GetEyeTrace, q.GetEyeTrace = nil, nil
+for _, x in ipairs({ p, q, unit }) do x:SetPos(G0 + Vector(30000, 0, 0)) end
+end
+StatusTests()
 
 function PapersHousingTests()
 section("Papers you carry, the housing register, transfers")
