@@ -25,7 +25,9 @@ hook.Add("CalcViewModelView", "LivingCitySuitHands", function(wep, vm, oldPos, o
     local parts = {}
     for n in string.gmatch(cvHands:GetString(), "%-?[%d%.]+") do parts[#parts + 1] = tonumber(n) end
     local f, r, u = parts[1] or -6, parts[2] or 0, parts[3] or 0
-    return pos + ang:Forward() * f + ang:Right() * r + ang:Up() * u, ang
+    local p2 = pos + ang:Forward() * f + ang:Right() * r + ang:Up() * u
+    if LC_CL.FeverViewModel then return LC_CL.FeverViewModel(p2, ang) end -- (a fever sways it too: sh_livingcity_illness.lua)
+    return p2, ang
 end)
 
 -- A unit's own body as their first-person hands (lc_cp_hands "own", sv_livingcity_factions.lua): everything

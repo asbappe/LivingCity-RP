@@ -7617,6 +7617,11 @@ local mv = { GetMaxClientSpeed = function() return mvF.max end, SetMaxClientSpee
     SetForwardSpeed = function() end, SetSideSpeed = function() end, SetUpSpeed = function() end }
 hook.t.SetupMove.LivingCityFever(sick, mv)
 ok(mvF.max <= (sick:GetWalkSpeed() or 110), "no running with a fever", tostring(mvF.max))
+local shot = { Dir = Vector(1, 0, 0), Spread = Vector(0, 0, 0), Src = sick:GetPos() }
+local swayed = hook.t.EntityFireBullets.LivingCityFeverAim(sick, shot)
+ok(swayed == true and shot.Dir:Distance(Vector(1, 0, 0)) > 0.001 and shot.Spread.x >= 0.05, "a feverish shot goes where the gun's swaying, and wild", tostring(shot.Dir))
+local s0 = LC.FeverSway(sick, 10)
+ok(s0.p ~= LC.FeverSway(sick, 11).p, "(and the sway drifts over time)")
 ok(LC.FeverDream(sick) and LC.InFeverDream(sick), "midday: the fever takes them, down where they are")
 mvF.max = 400 hook.t.SetupMove.LivingCityFever(sick, mv)
 ok(mvF.max < 1, "and they can't move till it lets them go")

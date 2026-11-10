@@ -1227,15 +1227,6 @@ run("Think")
 run("PostDrawTranslucentRenderables", false, false)
 _advance(1)
 run("PostDrawTranslucentRenderables", false, false)
--- a fever, then the midday fever dream: the body signs and the dream draw without errors (cl_livingcity_bodysigns.lua, cl_livingcity_feverdream.lua)
-_me:SetNW2String("lc_ill", "fever,stomach") _me:SetNW2Float("lcn_hunger", 10) _me:SetHealth(20)
-run("Think") run("RenderScreenspaceEffects") run("HUDPaint")
-_me:SetNW2Float("lc_feverdream", CurTime() + 60)
-local polys0 = _calls["surface.DrawPoly"] or 0
-for _ = 1, 3 do run("Think") run("RenderScreenspaceEffects") run("CalcView", _me, Vector(0, 0, 64), Angle(0, 0, 0), 75) run("HUDPaint") end
-if (_calls["surface.DrawPoly"] or 0) <= polys0 then problems[#problems + 1] = "the fever dream drew nothing" end
-_me:SetNW2Float("lc_feverdream", 0) _me:SetNW2String("lc_ill", "") _me:SetNW2Float("lcn_hunger", 100) _me:SetHealth(100)
-run("Think")
 _globals.lc_weather = nil
 -- the clock line with the city's ration stores showing
 _globals.lc_stock_on, _globals.lc_stock, _globals.lc_stock_max = true, 40, 400
@@ -1273,6 +1264,22 @@ if not okTk then problems[#problems + 1] = "talk window close: " .. tostring(err
 -- the editor's layout browser: counts, find through walls
 LC_CL.points = { { pos = Vector(100, 0, 0), kind = "dealer" } }
 LC_CL.zones, LC_CL.doors, LC_CL.nodes = {}, {}, {}
+-- a fever, then the midday fever dream: the body signs and the dream draw without errors (cl_livingcity_bodysigns.lua, cl_livingcity_feverdream.lua)
+local function runArgs(name, ...)
+    for id, fn in pairs(hook.t[name] or {}) do
+        local ok, e = pcall(fn, ...)
+        if not ok then problems[#problems + 1] = name .. "/" .. id .. ": " .. tostring(e) end
+    end
+end
+_me:SetNW2String("lc_ill", "fever,stomach") _me:SetNW2Float("lcn_hunger", 10) _me:SetHealth(20)
+run("Think") run("RenderScreenspaceEffects") run("HUDPaint")
+runArgs("CalcViewModelView", nil, nil, Vector(0, 0, 0), Angle(0, 0, 0), Vector(0, 0, 64), Angle(0, 0, 0))
+_me:SetNW2Float("lc_feverdream", CurTime() + 60)
+local polys0 = _calls["surface.DrawPoly"] or 0
+for _ = 1, 3 do run("Think") run("RenderScreenspaceEffects") runArgs("CalcView", _me, Vector(0, 0, 64), Angle(0, 0, 0), 75) run("HUDPaint") end
+if (_calls["surface.DrawPoly"] or 0) <= polys0 then problems[#problems + 1] = "the fever dream drew nothing" end
+_me:SetNW2Float("lc_feverdream", 0) _me:SetNW2String("lc_ill", "") _me:SetNW2Float("lcn_hunger", 100) _me:SetHealth(100)
+run("Think")
 local okB, errB = pcall(LC_CL.BuildLayoutBrowser, panel, { { id = "dealer", label = "Fixture: black market dealer" },
     { id = "zone_rebel", label = "Zone: rebel territory" }, { id = "inspect", label = "Inspect anything" } })
 if not okB then problems[#problems + 1] = "layout browser: " .. tostring(errB) end

@@ -144,3 +144,25 @@ hook.Add("HUDPaint", "LivingCityFeverDream", function()
         end
     end
 end)
+
+------------------------------------------------------------------------
+-- A fever: the gun in your hands sways (bullets follow the same drift: sh_livingcity_illness.lua)
+------------------------------------------------------------------------
+
+-- the gun on screen, swaying (the other view model hooks call this too, so it adds to what they do)
+function LC_CL.FeverViewModel(pos, ang)
+    local me = LocalPlayer()
+    if not LC.HasFever(me) then return pos, ang end
+    local sw = LC.FeverSway(me)
+    local a = Angle(ang.p + sw.p, ang.y + sw.y, ang.r + sw.r)
+    local t = CurTime()
+    return pos + a:Right() * (1.5 * math.sin(t * 1.1)) + a:Up() * (1.2 * math.sin(t * 1.7) - 0.8), a
+end
+hook.Add("CalcViewModelView", "LivingCityFeverSway", function(wep, vm, oldPos, oldAng, pos, ang)
+    local me = LocalPlayer()
+    if not LC.HasFever(me) then return end
+    -- (lowered or in a work suit: those hooks place the gun and sway it themselves)
+    if LC_CL.InSuit and LC_CL.InSuit(me) then return end
+    if LCL and LCL.Lowered and LCL.Lowered(me) then return end
+    return LC_CL.FeverViewModel(pos, ang)
+end)
