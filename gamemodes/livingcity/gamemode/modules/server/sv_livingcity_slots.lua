@@ -41,6 +41,7 @@ local function CharKeys()
         "lc_docs", "lc_housed_how", "lc_transfer_at",
         "lc_rap", "lc_probation_due", -- (the record since the last sentence, and probation to come: sv_livingcity_sentence.lua)
         "lc_survival", "lc_survival_at", -- (Realistic or Relaxed survival, and when it was last switched: sv_livingcity_survivalmode.lua)
+        "lc_dreams_happy", "lc_dreams_neutral", "lc_dreams_nightmare", "lc_dreams_propaganda", "lc_dream_sitout", -- (dreams lived through by kind, and the kinds sat out: sv_livingcity_dreamskip.lua)
         "lc_labor_job", "lc_labor_secs", "lc_labor_shifts", "lc_labor_done", -- (the work assignment and its stint: sv_livingcity_labor.lua)
         "lcf_transhuman", "lc_stalker", "lc_close_used", "lc_close_at", "lc_skin", "lc_bgs", -- (the conditioning, a stalker, close calls: the person's, not the player's)
         "lc_chipless", "lc_dreams_endured", "lc_stim_locked", -- (the chip pulled, the dreams lived through, a stimulant taken: sv_livingcity_bedtime.lua)

@@ -1247,3 +1247,10 @@ Notes:
   Notes:
 - [ ] **The 3 hours:** try switching back straight away: it should say when you can.
   Notes:
+
+## 10 November, last: sitting out dreams
+
+- [ ] **Happy and Neutral:** live through 2 Happy dreams. As the third comes, the black screen should show a small note under the mood line. C > Settings > Shared dreams should then offer "Happy: dreaming them (sit them out)". Choose it: the next Happy dream, you should sleep through it.
+  Notes:
+- [ ] **Nightmares and propaganda:** as a citizen with 400 standing, the same note and setting for Nightmares and Propaganda. Drop below 400 and they should come again.
+  Notes:

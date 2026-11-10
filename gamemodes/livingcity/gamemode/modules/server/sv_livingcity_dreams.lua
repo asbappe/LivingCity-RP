@@ -224,6 +224,7 @@ function LC.DreamSleepers(mood, id)
             or (LC.DreamProof and LC.DreamProof(p))
         if p.lcSleep and p:Alive() and not p.lcDreaming and not spared and (forced or not LC.DreamOptedOut(p)) and not (LC.Wired and LC.Wired(p))
             and not (LC.DreamAdminSkips and LC.DreamAdminSkips(p)) -- (the Administrator, sitting out a dream she didn't choose: sv_livingcity_dreamplan.lua)
+            and not (LC.DreamSkips and LC.DreamSkips(p, id, mood)) -- (a kind they've earned the right to sit out: sv_livingcity_dreamskip.lua)
             and not (p.InVehicle and p:InVehicle()) then out[#out + 1] = p end
     end
     return out
@@ -1164,8 +1165,9 @@ timer.Create("LivingCityDreams", 1, 0, function()
                         Notice(p, "info", "A dream is coming", MOOD_LINES[mood] .. " You'll be in it as an Enforcer: nothing in it can touch you, and you can wake whenever you like. "
                             .. "Punish the dreamers who misbehave (they glow red) with your baton.", 12)
                     else
+                        local hint = LC.DreamSkipHint and LC.DreamSkipHint(p, q and q.id, mood)
                         Notice(p, mood == "nightmare" and "warn" or "info", "A dream is coming", MOOD_LINES[mood] .. " It's shared with everyone asleep, and you'll wake in your bed with everything you had. "
-                            .. (mood == "nightmare" and "There's no opting out of a nightmare: only a stimulant before bed (or, with luck, the lab's foil hat) would have kept you out of it."
+                            .. (hint and hint or mood == "nightmare" and "There's no opting out of a nightmare: only a stimulant before bed (or, with luck, the lab's foil hat) would have kept you out of it."
                                 or forced and "There's no opting out of this one: only a stimulant before bed (or, with luck, the lab's foil hat) would have kept you out of it."
                                 or "There's no opting out: only a stimulant before bed (or, with luck, the lab's foil hat) would have kept you out of it."), 12)
                     end
@@ -1337,13 +1339,22 @@ function LC.SetDreamOptOut(p, out)
     if not IsValid(p) then return end
     if p:GetPData("lc_dream_optout", "0") == "1" then p:SetPData("lc_dream_optout", "0") end
     p:SetNW2Bool("lc_dream_optout", false)
-    Notice(p, "info", "Shared dreams", "Nobody can opt out of the city's dreams. Everyone asleep dreams them; only a stimulant before bed (or, with luck, the lab's foil hat) keeps one out.", 8)
+    Notice(p, "info", "Shared dreams", "Everyone asleep dreams the city's dreams. You can sit out Happy (or Neutral) dreams after living through 2 of them, and Nightmares and propaganda with Exemplary standing: C > Settings > Shared dreams. Otherwise only a stimulant before bed (or, with luck, the lab's foil hat) keeps one out.", 10)
 end
 
 local function DreamCommand(p, rest)
     local a = string.lower(string.Trim(tostring(rest or "")))
     if a == "off" or a == "out" then LC.SetDreamOptOut(p, true)
     elseif a == "on" or a == "in" then LC.SetDreamOptOut(p, false)
+    elseif string.sub(a, 1, 4) == "skip" then
+        -- /dream skip happy|neutral|nightmare|propaganda: sit that kind out, or dream it again (sv_livingcity_dreamskip.lua)
+        local kind = string.Trim(string.sub(a, 5))
+        if kind == "nightmares" then kind = "nightmare" end
+        local pr = p.GetPData and (util.JSONToTable(p:GetPData("lc_dream_sitout", "") or "") or {}) or {}
+        if not istable(pr) then pr = {} end
+        local ok, why = false, "Nobody can sit out the city's dreams here."
+        if LC.SetDreamSkip then ok, why = LC.SetDreamSkip(p, kind, not pr[kind]) end
+        if not ok and why then p:ChatPrint("[Dreams] " .. why) end
     elseif a == "wake" then
         if p.lcDreaming then LC.DreamWakeAsked(p) else p:ChatPrint("[Dreams] You're not dreaming.") end
     else
@@ -1432,6 +1443,12 @@ net.Receive("lc_dream_act", function(_, p)
     if what == "optout" then LC.SetDreamOptOut(p, true) return end
     if what == "optin" then LC.SetDreamOptOut(p, false) return end
     if what == "wake" then LC.DreamWakeAsked(p) return end
+    if what == "skip" or what == "unskip" then -- (C > Settings > Shared dreams: sv_livingcity_dreamskip.lua)
+        local ok, why = false, nil
+        if LC.SetDreamSkip then ok, why = LC.SetDreamSkip(p, arg, what == "skip") end
+        if not ok and why then p:ChatPrint("[Dreams] " .. why) end
+        return
+    end
     if not p:IsAdmin() then return end
     local msg
     if what == "status" then SendStatus(p) return

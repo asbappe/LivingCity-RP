@@ -448,7 +448,16 @@ function LC_CL.OpenActions()
         Add(set, me:GetNW2Bool("lc_enforcer", false) and "Shared dreams: wake up now (an Enforcer may, any time)"
             or "Shared dreams: wake up now (only once you're out of it)", function() if LC_CL.DreamAct then LC_CL.DreamAct("wake") end end, "icon16/weather_sun.png")
     end
-    -- (no opting out of the city's dreams: the owner, 8 November)
+    -- (no opting out of the city's dreams, the owner, 8 November; but a kind can be sat out once earned, 10 November:
+    -- sv_livingcity_dreamskip.lua)
+    local ds = util.JSONToTable(me:GetNW2String("lc_dream_sitout", "") or "") or {}
+    for _, k in ipairs({ { "happy", "Happy" }, { "neutral", "Neutral" }, { "nightmare", "Nightmares" }, { "propaganda", "Propaganda" } }) do
+        local on = ds.on and ds.on[k[1]]
+        if (ds.earned and ds.earned[k[1]]) or on then
+            Add(set, on and ("Shared dreams: " .. k[2] .. ": sitting them out (dream them again)") or ("Shared dreams: " .. k[2] .. ": dreaming them (sit them out)"),
+                function() if LC_CL.DreamAct then LC_CL.DreamAct(on and "unskip" or "skip", k[1]) end end, "icon16/weather_clouds.png")
+        end
+    end
 
     -- help, and staff
     local help, helpo = menu:AddSubMenu("Help")

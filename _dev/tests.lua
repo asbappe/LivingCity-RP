@@ -10339,6 +10339,54 @@ ok(LC.SurvivalMode(b) == "realistic" and LC.SurvivalPayMul(a) == 1, "lc_survival
 for _, p in ipairs({ a, b, d }) do p:RemovePData("lc_survival") p:RemovePData("lc_survival_at") p.lcSurvMode = nil end
 end
 SurvivalModeTests()
+function DreamSkipTests()
+section("Sitting out a kind of dream, once earned")
+local function Later(secs) _advance(secs) _runtimers() end
+_setcvar("lc_dream_skip", 1)
+local p = newPlayer("DreamSkipper", "citizen")
+local r = newPlayer("DreamSkipRebel", "resistance", nil, 100)
+Later(0.3)
+ok(not LC.DreamSkipEarned(p, "happy") and not LC.DreamSkipEarned(p, "neutral"), "nobody starts able to sit dreams out")
+local okS, whyS = LC.SetDreamSkip(p, "happy", true)
+ok(not okS and string.find(whyS or "", "Live through 2 more", 1, true), "and asking says what it takes", whyS)
+-- lived through, counted by kind
+local was = LC.DreamActive
+LC.DreamActive = { id = "test_happy", mood = "happy" }
+hook.Run("LivingCityDreamWoke", p, true, "end")
+hook.Run("LivingCityDreamWoke", p, true, "end")
+LC.DreamActive = { id = "test_happy", mood = "happy", test = true }
+hook.Run("LivingCityDreamWoke", p, true, "test")
+LC.DreamActive = was
+ok(LC.DreamsLivedOfKind(p, "happy") == 2, "each dream lived through is counted by its kind (a test doesn't count)", LC.DreamsLivedOfKind(p, "happy"))
+ok(LC.DreamSkipEarned(p, "happy") and not LC.DreamSkipEarned(p, "neutral"), "two Happy dreams: Happy ones may be sat out, Neutral not yet")
+local hint = LC.DreamSkipHint(p, nil, "happy")
+ok(hint and string.find(hint, "sit out happy dreams", 1, true), "earned but not chosen: a small note as the dream comes", hint)
+_netcall("lc_dream_act", p, "skip", "happy")
+ok(LC.DreamSkips(p, nil, "happy") and LC.DreamSkipHint(p, nil, "happy") == nil, "C > Settings > Shared dreams: sit them out")
+p.lcSleep = true
+local function In(list, who) for _, x in ipairs(list) do if x == who then return true end end return false end
+ok(not In(LC.DreamSleepers("happy"), p) and In(LC.DreamSleepers("neutral"), p), "asleep, they sleep through Happy dreams and still dream Neutral ones")
+-- nightmares and propaganda: Exemplary citizens only
+ok(not LC.DreamSkipEarned(p, "nightmare"), "a nightmare can't be sat out without Exemplary standing")
+LC.AddStanding(p, 400 - LC.Standing(p), "test")
+ok(LC.DreamSkipEarned(p, "nightmare") and LC.DreamSkipEarned(p, "propaganda"), "Exemplary (400): nightmares and propaganda may be sat out")
+LC.AddStanding(r, 400 - LC.Standing(r), "test")
+ok(not LC.DreamSkipEarned(r, "nightmare"), "only citizens: never the Resistance")
+LC.SlashCommands.dream(p, "skip nightmare")
+ok(not In(LC.DreamSleepers("nightmare"), p), "/dream skip nightmare: they sleep through it")
+LC.SlashCommands.dream(p, "skip nightmare")
+ok(In(LC.DreamSleepers("nightmare"), p), "and the same again dreams them again")
+-- standing gone: a choice made doesn't hold without it
+LC.SlashCommands.dream(p, "skip nightmare")
+LC.AddStanding(p, 100 - LC.Standing(p), "test")
+ok(In(LC.DreamSleepers("nightmare"), p), "fall below Exemplary and nightmares come again")
+p.lcSleep = nil
+_setcvar("lc_dream_skip", 0)
+ok(not LC.DreamSkips(p, nil, "happy"), "lc_dream_skip 0: nobody sits anything out")
+_setcvar("lc_dream_skip", 1)
+for _, pl in ipairs({ p, r }) do pl:RemovePData("lc_dream_sitout") pl.lcDreamSkip = nil for _, k in ipairs({ "happy", "neutral", "nightmare", "propaganda" }) do pl:RemovePData("lc_dreams_" .. k) end end
+end
+DreamSkipTests()
 
 function PapersHousingTests()
 section("Papers you carry, the housing register, transfers")
