@@ -4,7 +4,9 @@
     poster down (the editor's own come back when the map next starts); reload opens the roll to choose another. The
     city's walls only get these posters when someone holding a roll puts them
     up (LC.HangPoster, sv_livingcity_learning.lua; the posters themselves:
-    entities/lc_civposter.lua). Anyone holding it can use it.
+    entities/lc_civposter.lua). Anyone holding it can use it. Left click on a
+    poster the Resistance has painted over pastes a fresh one over it. In a
+    Resistance member's hands the roll also has their own four paste-ups.
 ]]
 
 AddCSLuaFile()
@@ -35,7 +37,7 @@ local REACH = 110
 local function Notices()
     local stored = scripted_ents and scripted_ents.GetStored and scripted_ents.GetStored("lc_civposter")
     local t = stored and stored.t or {}
-    return t.Notices or {}, t.NoticeOrder or {}
+    return t.Notices or {}, t.NoticeOrder or {}, t.RebelOrder or {}
 end
 
 function SWEP:Initialize() self:SetHoldType(self.HoldType) end
@@ -100,9 +102,13 @@ if CLIENT then
         if (self.lcMenuAt or 0) > CurTime() then return end
         self.lcMenuAt = CurTime() + 1
         if not DermaMenu then return end
-        local notices, order = Notices()
+        local notices, order, rebel = Notices()
         local menu = DermaMenu()
-        for _, kind in ipairs(order) do
+        -- (in Resistance hands the roll has their own paste-ups on it too, first)
+        local list = {}
+        if LocalPlayer():GetNW2String("lcf_faction", "") == "resistance" then for _, k in ipairs(rebel) do list[#list + 1] = k end end
+        for _, k in ipairs(order) do list[#list + 1] = k end
+        for _, kind in ipairs(list) do
             local n = notices[kind]
             if n then
                 menu:AddOption(n[1], function()

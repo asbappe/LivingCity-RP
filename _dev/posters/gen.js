@@ -4,6 +4,7 @@ const fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
 const { C, P, R, G, rays, emblem, head, childHead, worker, officer, citizen, reader, adminBust } = require('./lib.js');
 const more = require('./art2.js');
+const res = require('./art3.js');
 
 const ART = {};
 
@@ -247,7 +248,7 @@ const POSTERS = [
 Object.assign(ART, more.ART);
 POSTERS.push(...more.POSTERS);
 
-function page(p) {
+function page(p, defaced) {
   const dark = p.accent === 'cyan';
   const acc = dark ? C.cyan : C.red, body = dark ? C.paper : C.ink, ground = dark ? (p.id === 'curfew' || p.dark ? C.night : C.slate) : C.paper;
   const T0 = 634, X0 = 50, TW = 668;
@@ -276,6 +277,7 @@ function page(p) {
   <filter id="specks" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="1" seed="${p.n * 5 + 1}"/><feColorMatrix values="0 0 0 0 0.87  0 0 0 0 0.84  0 0 0 0 0.76  0 0 0 14 -10.2"/></filter>
   <filter id="dirt" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.02 0.035" numOctaves="4" seed="${p.n * 13 + 5}"/><feColorMatrix values="0 0 0 0 0.2  0 0 0 0 0.16  0 0 0 0 0.1  0 0 0 2.8 -1.5"/></filter>
   <filter id="rough" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" seed="${p.n}"/><feDisplacementMap in="SourceGraphic" scale="16"/></filter>
+  ${res.FILTERS}
   <filter id="soft"><feGaussianBlur stdDeviation="1.2"/></filter>
   <radialGradient id="edge" cx="50%" cy="50%" r="72%"><stop offset="62%" stop-color="#2a2015" stop-opacity="0"/><stop offset="100%" stop-color="#2a2015" stop-opacity=".5"/></radialGradient>
   <linearGradient id="foldH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".46" stop-color="#fff" stop-opacity=".2"/><stop offset=".5" stop-color="#000" stop-opacity=".28"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>
@@ -291,6 +293,7 @@ ${t}
 ${emblem(40, 965, 0.62, acc)}
 <text x="76" y="985.5" font-family="Inter" font-weight="800" font-size="15.5" fill="${footInk}" letter-spacing="2.6">OFFICE OF THE CITY ADMINISTRATOR</text>
 <text x="728" y="985.5" text-anchor="end" font-family="Inter" font-weight="700" font-size="13" fill="${footInk}" letter-spacing="1.6" opacity=".8">CIVIL NOTICE ${p.n}</text>
+${defaced ? res.defaceLayer(p) : ''}
 <g clip-path="url(#sheet)" style="pointer-events:none">
   <rect width="768" height="1024" filter="url(#fade)" opacity=".15"/>
   <rect width="768" height="1024" filter="url(#specks)" opacity=".8"/>
@@ -308,17 +311,30 @@ ${emblem(40, 965, 0.62, acc)}
 </svg></body></html>`;
 }
 
+// a Resistance paste-up: its own paper, the same wear
+function rebelPage(id, n) {
+  const base = page({ id: 'curfew', n, accent: 'red', head: [], small: [] });
+  const a = base.indexOf('<rect width="768" height="1024" fill='), b = base.indexOf('<g clip-path="url(#sheet)"');
+  return base.slice(0, a) + res.rebelPage(id) + base.slice(b);
+}
+
 (async () => {
   const out = process.argv[2] || path.join(__dirname, 'out');
   fs.mkdirSync(out, { recursive: true });
   const only = process.argv[3];
   const browser = await chromium.launch();
   const pg = await browser.newPage({ viewport: { width: 768, height: 1024 }, deviceScaleFactor: 1 });
-  for (const p of POSTERS) {
-    if (only && only !== p.id) continue;
-    await pg.setContent(page(p));
+  const shot = async (html, name) => {
+    if (only && only !== name) return;
+    await pg.setContent(html);
     await pg.evaluate(() => document.fonts.ready);
-    await pg.screenshot({ path: path.join(out, p.id + '.png') });
+    await pg.screenshot({ path: path.join(out, name + '.png') });
+  };
+  for (const p of POSTERS) {
+    await shot(page(p), p.id);
+    await shot(page(p, true), p.id + '_x'); // (painted over by the Resistance)
   }
+  let n = 40;
+  for (const id of Object.keys(res.REBEL)) await shot(rebelPage(id, n++), id);
   await browser.close();
 })();

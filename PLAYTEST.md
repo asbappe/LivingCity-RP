@@ -1331,3 +1331,11 @@ Notes:
 ## 10 November: the pamphlet's look
 - [ ] **Pamphlet:** read the Civil Orientation pamphlet from your pockets. It opens as a folded paper leaflet: sections 1 to 8 down the left, a picture and the page on the right. Click each section (the picture changes), then "Fold it away". Tell me if any text runs off the paper or the font looks wrong.
   Notes:
+
+## 10 November: the Resistance and the posters
+- [ ] **Painting over a poster:** with a spray can in your pockets, look at a poster up close and use the can. After a moment the poster shows its painted-over picture, and E on it reads what was painted. Try a few different posters.
+  Notes:
+- [ ] **A fresh sheet:** as Director, left click with the roll on a painted poster: it is clean again.
+  Notes:
+- [ ] **Paste-ups:** as a Resistance member holding a poster roll, reload: four Resistance posters are at the top of the list. Hang one. A citizen holding the roll does not see them.
+  Notes:

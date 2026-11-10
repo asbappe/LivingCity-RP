@@ -15,6 +15,13 @@
     informants, contraband, radio, illness, infestation, housing, vortigaunt,
     recruit, administrator. Those keep the poster they were hung as.
 
+    The Resistance answers (the owner, 10 November): a spray can used on any
+    poster paints over it (lc_defaced: the picture <kind>_x, the words in
+    DEFACED below; LC.DefacePoster), until someone with a roll pastes a fresh
+    one over it or takes it down. And four paste-ups of their own, which only
+    a Resistance member holding a roll can hang: rebel_leash, rebel_water,
+    rebel_home, rebel_watch.
+
     Press E to read it closely: that's learning it, and its tip cards don't
     come (LC.Learn, sv_livingcity_learning.lua).
 
@@ -56,8 +63,22 @@ local NOTICES = {
     vortigaunt = { "THEY SERVE, AS YOU SERVE", "Shackled labor keeps your streets clean. Do not speak to it. Do not free it." },
     recruit = { "JOIN CIVIL PROTECTION. EAT BETTER.", "Better rations. Better housing. A place in the new order. Apply at any post." },
     administrator = { "SHE WATCHES OVER YOU", "Your Administrator works while you sleep. Work well, sleep well, and trust in her." },
+    -- the Resistance's own paste-ups (only a Resistance member with a roll hangs these)
+    rebel_leash = { "THE RATION IS THE LEASH", "They feed you so you will not bite." },
+    rebel_water = { "DON'T DRINK THE WATER", "They put something in it to make you forget." },
+    rebel_home = { "THIS IS NOT YOUR HOME", "Remember who you were." },
+    rebel_watch = { "SHE WATCHES. WE SEE.", "The Resistance is closer than you think." },
 }
 ENT.Notices = NOTICES
+ENT.RebelOrder = { "rebel_watch", "rebel_leash", "rebel_water", "rebel_home" }
+-- what the Resistance paints over each of the city's posters (the picture: <kind>_x)
+local DEFACED = {
+    dispenser = "CHAINS", commissary = "THE COMBINE", intake = "LIKE CATTLE", water = "DON'T DRINK IT. It makes you forget",
+    law = "BREAK IT", curfew = "THE NIGHT IS OURS", work = "BUSY HANDS BUILD CAGES", loyalty = "SO IS COURAGE",
+    informants = "SNITCHES BURN", contraband = "ARMS US", radio = "WE HEAR YOU TOO", illness = "THE CITY IS THE SICKNESS",
+    infestation = "THEY LET IT GROW", housing = "IS A CELL", vortigaunt = "FREE THEM", recruit = "TRAITORS", administrator = "LIAR",
+}
+ENT.Defaced = DEFACED
 -- (the order the Director's poster roll lists them in)
 ENT.NoticeOrder = { "administrator", "loyalty", "informants", "work", "housing", "recruit", "contraband", "radio", "illness", "infestation", "vortigaunt",
     "curfew", "law", "dispenser", "commissary", "intake", "water" }
@@ -95,13 +116,18 @@ if SERVER then
         if not IsValid(activator) or not activator:IsPlayer() then return end
         local kind = self:GetNW2String("lc_notice", "curfew")
         local n = NOTICES[kind] or NOTICES.curfew
+        if self:GetNW2Bool("lc_defaced", false) then
+            activator:ChatPrint("[City] " .. n[1] .. ". Someone has painted over it: " .. (DEFACED[kind] or "the lambda") .. ".")
+            return
+        end
+        if string.sub(kind, 1, 6) == "rebel_" then activator:ChatPrint("[Paste-up] " .. n[1] .. " " .. n[2]) return end
         activator:ChatPrint("[City] " .. n[1] .. ". " .. n[2])
         if LC and LC.CivPosterRead then LC.CivPosterRead(activator, kind) end
     end
 end
 
 if CLIENT then
-    local PAPER, INK, RED = Color(205, 200, 185, 245), Color(25, 25, 28), Color(150, 20, 20)
+    local PAPER, INK, RED, ORANGE = Color(205, 200, 185, 245), Color(25, 25, 28), Color(150, 20, 20), Color(232, 145, 42)
     local art = {} -- [kind] = the owner's picture (a Material), or false
     local function Art(kind)
         if art[kind] == nil then
@@ -120,12 +146,20 @@ if CLIENT then
         local ang = self:GetAngles()
         ang:RotateAroundAxis(ang:Up(), 90)
         ang:RotateAroundAxis(ang:Forward(), 90)
-        local pic = Art(kind)
+        -- painted over: its own picture when there is one, else the words daubed across the clean one
+        local defaced = self:GetNW2Bool("lc_defaced", false)
+        local pic = defaced and Art(kind .. "_x") or nil
+        local daub = nil
+        if not (pic and not pic:IsError()) then
+            pic = Art(kind)
+            daub = defaced and (DEFACED[kind] or "LIES") or nil
+        end
         if pic and not pic:IsError() then
             cam.Start3D2D(self:GetPos() + self:GetForward() * 0.6, ang, 0.1)
                 surface.SetDrawColor(255, 255, 255, 255)
                 surface.SetMaterial(pic)
                 surface.DrawTexturedRect(-230, -310, 460, 620)
+                if daub then draw.SimpleTextOutlined(daub, "DermaLarge", 0, -60, ORANGE, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, INK) end
             cam.End3D2D()
             return
         end
@@ -148,6 +182,7 @@ if CLIENT then
                 y = y + 26
             end
             draw.SimpleText("Your cooperation is noted.", "DermaDefault", 0, 280, INK, TEXT_ALIGN_CENTER)
+            if daub then draw.SimpleTextOutlined(daub, "DermaLarge", 0, -60, ORANGE, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, INK) end
         cam.End3D2D()
     end
 end

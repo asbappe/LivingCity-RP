@@ -84,3 +84,7 @@ Six propaganda posters for Living City, a Half-Life 2 roleplay server. They hang
 ## Eleven more, hung by hand
 
 The Director of Propaganda hangs these with the poster roll (they never appear by themselves). Same style, same footer. File names: `work`, `loyalty`, `informants`, `contraband`, `radio`, `illness`, `infestation`, `housing`, `vortigaunt`, `recruit`, `administrator` (`.png` or `.jpg`). The Administrator is drawn after Judith Mossman: short auburn hair with a side part, a white roll-neck sweater. Their words are in `gamemodes/livingcity/entities/entities/lc_civposter.lua`. All seventeen pictures are already drawn (`materials/livingcity/posters/`, made by `node _dev/posters/gen.js OUTDIR`).
+
+## The Resistance's answer
+
+Each of the seventeen has a painted-over version, `<kind>_x` (a spray can on the poster shows it): words struck out or daubed across in white and orange paint, with a lambda. And four paste-ups of their own, rough stencil and typewriter on scrap paper: `rebel_watch` (SHE WATCHES. WE SEE.), `rebel_leash` (THE RATION IS THE LEASH), `rebel_water` (DON'T DRINK THE WATER), `rebel_home` (THIS IS NOT YOUR HOME). All drawn by `_dev/posters/art3.js`.

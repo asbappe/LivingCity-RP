@@ -681,6 +681,27 @@ LC.TagNear = TagNear
 local function Spray(ply)
     local pos, normal = WallAhead(ply)
     if not pos then return false, "Look at a wall, up close." end
+    -- a poster on this wall: paint over it instead (entities/lc_civposter.lua, LC.DefacePoster)
+    local poster = LC.PosterAt and LC.PosterAt(pos, 55)
+    if poster then
+        if poster:GetNW2Bool("lc_defaced", false) then return false, "Someone has seen to this one already." end
+        if string.sub(poster:GetNW2String("lc_notice", ""), 1, 6) == "rebel_" then return false, "That one is ours." end
+        return LC.StartTask(ply, 2.5, "Painting over the poster... keep looking at it", {
+            maxMove = 30, cancelText = "You stop, half done, and the paint runs.",
+            done = function(p)
+                if not IsValid(poster) or not LC.HasItem(p, "spraypaint") then return end
+                if not LC.DefacePoster(p, poster) then return end
+                LC.TakeItem(p, "spraypaint")
+                p:EmitSound("ambient/water/water_spray3.wav", 60)
+                if LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then
+                    LC.ReportCrime(p, "Vandalism", 90)
+                    p:ChatPrint("[Civil Protection] A Civil Protection unit saw that.")
+                elseif IsResistance(p) and LC.AddXP then
+                    LC.AddXP(p, 3, "graffiti")
+                end
+            end,
+        })
+    end
     if TagNear(pos, 60) then return false, "There's already one here." end
     return LC.StartTask(ply, 2.5, "Spraying the lambda... keep looking at the wall", {
         maxMove = 30, cancelText = "You stop, half done, and the paint runs.",
