@@ -30,6 +30,8 @@ LCS.Items = {
     melon           = { name = "Watermelon", model = "models/props_junk/watermelon01.mdl", hunger = 40, thirst = 40 },
     coffee          = { name = "Real coffee", model = "models/props_junk/garbage_coffeemug001a.mdl", hunger = 5, thirst = 25, uplift = true },
     tablets         = { name = "Antiparasitic tablets", model = "models/props_lab/jar01b.mdl", cures = "parasites" },
+    dog_tags        = { name = "Dog tags", model = "models/props_lab/box01a.mdl", kg = 0.05, sell = 1,
+                        desc = "A soldier's tags on a chain, a name scratched in by hand. Someone at the Resistance camp is looking for these" },
     medicine        = { name = "Union medicine", model = "models/healthvial.mdl", cures = "illness", sell = 4,
                         desc = "Cures a cold or a fever at once (sv_livingcity_illness.lua). Does nothing for parasites" },
 

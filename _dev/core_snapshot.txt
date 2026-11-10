@@ -334,6 +334,7 @@ item crowbar
 item cwu_overalls
 item data_chip
 item data_shard
+item dog_tags
 item door_code
 item firebomb
 item fishing_line
@@ -556,6 +557,8 @@ setting lc_clipboard_angle = 0 0 180
 setting lc_close_call_recover = 10
 setting lc_close_call_regen = 3
 setting lc_close_calls = 3
+setting lc_colonel = 1
+setting lc_colonel_debrief_xp = 25
 setting lc_color_grade = 1
 setting lc_combat_window = 30
 setting lc_combine_models = 1

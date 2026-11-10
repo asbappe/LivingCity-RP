@@ -1278,6 +1278,22 @@ _me:SetNW2Float("lc_feverdream", CurTime() + 60)
 local polys0 = _calls["surface.DrawPoly"] or 0
 for _ = 1, 3 do run("Think") run("RenderScreenspaceEffects") runArgs("CalcView", _me, Vector(0, 0, 64), Angle(0, 0, 0), 75) run("HUDPaint") end
 if (_calls["surface.DrawPoly"] or 0) <= polys0 then problems[#problems + 1] = "the fever dream drew nothing" end
+-- the Colonel, drawn only for the Resistance (cl_livingcity_colonel.lua)
+_me:SetNW2String("lcf_faction", "resistance")
+_globals.lc_colonel_here, _globals.lc_colonel_pos, _globals.lc_colonel_yaw = true, Vector(60, 0, 0), 0
+local cmWasC = ClientsideModel
+local colonelMade = 0
+ClientsideModel = function()
+    colonelMade = colonelMade + 1
+    local m = { IsValid = function() return true end, GetPos = function() return Vector(60, 0, 0) end, GetAngles = function() return Angle(0, 0, 0) end,
+        SelectWeightedSequence = function() return 1 end, SequenceDuration = function() return 2 end }
+    return setmetatable(m, { __index = function() return function() end end })
+end
+run("Think") run("HUDPaint")
+if colonelMade == 0 then problems[#problems + 1] = "the Colonel wasn't drawn for a Resistance player" end
+ClientsideModel = cmWasC
+_globals.lc_colonel_here = false run("Think")
+_me:SetNW2String("lcf_faction", "")
 _me:SetNW2Float("lc_feverdream", 0) _me:SetNW2String("lc_ill", "") _me:SetNW2Float("lcn_hunger", 100) _me:SetHealth(100)
 run("Think")
 local okB, errB = pcall(LC_CL.BuildLayoutBrowser, panel, { { id = "dealer", label = "Fixture: black market dealer" },

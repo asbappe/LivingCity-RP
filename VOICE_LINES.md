@@ -8,7 +8,7 @@
 - **After adding files:** press FastDL sync on the host panel, then change the map (players download new sounds when they join).
 - **Without a recording** the moment is silent (or Half-Life 2's own voice, for Overwatch, with `lc_announce_stock` 1), and the words still show.
 
-Contents: 1. The city's announcements (Overwatch and the Administrator) · 2. The radio · 3. The G-Man · 4. The dreams · 5. Citizens showing the way · 6. The Citizen Information clerk · 7. The old-timer · 8. Machines
+Contents: 1. The city's announcements (Overwatch and the Administrator) · 2. The radio · 3. The G-Man · 4. The dreams · 5. Citizens showing the way · 6. The Citizen Information clerk · 7. The old-timer · 8. Machines · 9. The Colonel
 
 ## 1. The city's announcements
 
@@ -573,3 +573,42 @@ The ration dispenser and the vending machines, in a flat machine voice (a Combin
 | [ ] | `dispenser_withheld1.wav` | Ration dispenser | Allocation withheld. Noncompliance is recorded. |
 | [ ] | `vending_blackout1.wav` | Vending machine | Power failure. Service unavailable. |
 | [ ] | `vending_credits1.wav` | Vending machine | Insufficient credits. |
+
+## 9. The Colonel
+
+The old fighter at the Resistance camp (Odessa Cubbage's face): weary, dry, kind underneath, a ghost who doesn't quite know it at first. Folder: **`garrysmod/sound/livingcity/colonel/`**. Only the player he's talking to hears these. Without a recording he's silent and the words show. `job_unit` names a unit's designation where it says %s: record it without the number ("Designation... still walking around").
+
+| Done | File | When | Says |
+|---|---|---|---|
+| [ ] | `debrief_clean1.wav` | Debrief me | Clean. Nobody saw you, nobody followed you home. That's how it's done. |
+| [ ] | `debrief_failed1.wav` | Debrief me | We lost that one. Learn why before you try again. |
+| [ ] | `debrief_messy1.wav` | Debrief me | You got it done, and half the city knows your face. Next time, slower. |
+| [ ] | `debrief_none1.wav` | Debrief me | Nothing to report? Then go and do something worth reporting. |
+| [ ] | `greet1.wav` | Greeting (by how well he knows you) | Another one. Sit, if you like. Nobody else does. |
+| [ ] | `greet_back1.wav` | Greeting (by how well he knows you) | You came back. Most don't. |
+| [ ] | `greet_known1.wav` | Greeting (by how well he knows you) | You've worked it out by now, haven't you. Nobody else can see me. I didn't get out of the first camp. None of us did, not really. But you keep coming, so I keep telling you what I know. |
+| [ ] | `greet_trust1.wav` | Greeting (by how well he knows you) | The quartermaster won't look at me, you know. Hasn't for years. Sit. |
+| [ ] | `intel_march1.wav` | What's the word? | They're walking one of ours to the cells. Right now. You can still get to them. |
+| [ ] | `intel_quiet1.wav` | What's the word? | Quiet. Too quiet. Rest while you can. |
+| [ ] | `intel_supply1.wav` | What's the word? | Supply drop coming in. Guarded, but not well. Go. |
+| [ ] | `intel_sweep1.wav` | What's the word? | They're coming into our ground. Now. Clear what you can carry and go. |
+| [ ] | `intel_sympathizer1.wav` | What's the word? | That one. They're with us, they just don't know it yet. Ask them to keep watch. |
+| [ ] | `job_medicine1.wav` | What he needs (end of his greeting) | Our wounded are in a bad way. Three of the Union's medicines would see them through. |
+| [ ] | `job_tags1.wav` | What he needs (end of his greeting) | They took my brother's tags when they took him. They keep things like that on their own ground. I'd like them back. |
+| [ ] | `job_unit1.wav` | What he needs (end of his greeting) | One more thing. The unit who lit the first camp. Designation %s. Still walking around. |
+| [ ] | `job_unit_none1.wav` | What he needs (end of his greeting) | There's a unit I'd like to see in the ground. When he's back on the streets, I'll tell you his number. |
+| [ ] | `nothing1.wav` | Between answers | That's not what I need. |
+| [ ] | `thanks_medicine1.wav` | You helped | That'll keep them breathing. Good. You think of others. That's rarer than courage. |
+| [ ] | `thanks_tags1.wav` | You helped | His. His name, scratched in by hand. Here. He'd want you to have this. It never missed for him. |
+| [ ] | `thanks_unit1.wav` | You helped | Is it done? ...It is. I can feel it. Thank you. I don't think I'll need anything else. |
+| [ ] | `whisper_base1.wav` | Heard anything strange? | The master core, the big one from their nexus. Get it to our scientist and let him crack it open. All their screens change. |
+| [ ] | `whisper_bloom1.wav` | Heard anything strange? | Let the weeds take the streets, every crack full, and leave them be. The city starts to dance. |
+| [ ] | `whisper_fire1.wav` | Heard anything strange? | Set fifteen fires burning at once. Then watch what the city does. |
+| [ ] | `whisper_hard1.wav` | Heard anything strange? | Kill the city's lights and keep them dead for a quarter of an hour. Somebody starts a party in the dark, and nobody can stop it. |
+| [ ] | `whisper_harpies1.wav` | Heard anything strange? | When the streets run red fast enough, a dozen dead in a few minutes, something comes down out of the sky. Something with wings. |
+| [ ] | `whisper_marrow1.wav` | Heard anything strange? | When the dead pile up faster than they can be carried off, or the infested hold half the city, the bones get restless. |
+| [ ] | `whisper_none1.wav` | Heard anything strange? | Nothing you haven't heard from me already. |
+| [ ] | `whisper_plane1.wav` | Heard anything strange? | Do the morning drill, five of you or more, and do it perfectly. Not one mistake. Then look up. |
+| [ ] | `whisper_shalom1.wav` | Heard anything strange? | Six people dancing in a ring, in this city. Imagine it. They say the whole city joins in. |
+| [ ] | `whisper_standup1.wav` | Heard anything strange? | Keep the city red for three quarters of an hour straight. The crowd starts wanting a show. |
+| [ ] | `whisper_water1.wav` | Heard anything strange? | There's a priest who'd swallow anything holy. Feed him the master core and pray for rain. A lot of rain. |

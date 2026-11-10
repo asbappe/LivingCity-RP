@@ -173,6 +173,7 @@ LC_MODULES = {
         "sv_livingcity_learning",
         "sv_livingcity_machines",
         "sv_livingcity_illness",
+        "sv_livingcity_colonel",
         "sv_livingcity_territory",
         "sv_livingcity_territorypaths", -- (territory grows along the path nodes)
         "sv_livingcity_trains",
@@ -278,6 +279,7 @@ LC_MODULES = {
         "cl_livingcity_dialog",
         "cl_livingcity_bodysigns",
         "cl_livingcity_feverdream",
+        "cl_livingcity_colonel",
         "cl_livingcity_war",
         "cl_livingcity_writing",
         "cl_livingcity_context", -- (what you can do here: the panel on the right)
