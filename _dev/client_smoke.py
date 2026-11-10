@@ -1552,6 +1552,35 @@ local okIT, errIT = pcall(function()
 end)
 net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteString, net.WriteUInt = itSaved[1], itSaved[2], itSaved[3], itSaved[4], itSaved[5], itSaved[6], itSaved[7]
 if not okIT then problems[#problems + 1] = "interrogation windows: " .. tostring(errIT) end
+-- "Where I stand" (cl_livingcity_standingpanel.lua): the window builds from the rows and paints
+local spSaved = { net.ReadString, util.JSONToTable, vgui }
+local okSP, errSP = pcall(function()
+    local made = {}
+    net.ReadString = function() return "x" end
+    util.JSONToTable = function() return { { g = "Trouble", l = "Wanted", v = "Yes: Theft", e = "Units chase you.", w = true }, { g = "You", l = "Survival", v = "Realistic", e = "Every need." } } end
+    local function P()
+        local t = {}
+        made[#made + 1] = t
+        return setmetatable(t, { __index = function(_, k)
+            if string.sub(k, 1, 2) == "lc" or string.sub(k, 1, 1) == "_" then return nil end
+            if k == "IsValid" then return function() return not t._removed end end
+            if k == "Remove" then return function() t._removed = true end end
+            if k == "GetWide" or k == "GetTall" then return function() return 380 end end
+            return function() return P() end
+        end })
+    end
+    vgui = { Create = function() return P() end, GetKeyboardFocus = function() return nil end }
+    net.recv_lc_standing_panel()
+    if not IsValid(LC_CL.StandingPanel()) then error("the window didn't open") end
+    for _, pnl in ipairs(made) do
+        for _, k in ipairs({ "Paint", "PerformLayout" }) do
+            local f = rawget(pnl, k)
+            if f then local okp, e = pcall(f, pnl, 380, 240) if not okp then error("a panel's " .. k .. " fails: " .. tostring(e)) end end
+        end
+    end
+end)
+net.ReadString, util.JSONToTable, vgui = spSaved[1], spSaved[2], spSaved[3]
+if not okSP then problems[#problems + 1] = "where I stand: " .. tostring(errSP) end
 -- what now? (cl_livingcity_nextstep.lua): the line on screen, and its F1 page
 local okWN, errWN = pcall(function()
     _me:SetNW2String("lc_next", "Find water")

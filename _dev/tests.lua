@@ -10387,6 +10387,26 @@ _setcvar("lc_dream_skip", 1)
 for _, pl in ipairs({ p, r }) do pl:RemovePData("lc_dream_sitout") pl.lcDreamSkip = nil for _, k in ipairs({ "happy", "neutral", "nightmare", "propaganda" }) do pl:RemovePData("lc_dreams_" .. k) end end
 end
 DreamSkipTests()
+function StandingPanelTests()
+section("Where I stand: every number in one window, explained")
+local function Later(secs) _advance(secs) _runtimers() end
+local p = newPlayer("PanelCitizen", "citizen")
+Later(0.3)
+LC.ReportCrime(p, "Theft", 60)
+local rows = LC.StandingRows(p)
+local by = {}
+for _, r in ipairs(rows) do by[r.l] = r end
+ok(by["Civil Standing"] and by["Credits"] and by["Sympathy"] and by["Wanted"] and by["Record since your last sentence"], "standing, credits, the traits, wanted and the record are all there")
+ok(by["Wanted"].w and string.find(by["Wanted"].e, "press E on them", 1, true), "wanted, with how to give yourself up")
+ok(string.find(by["Record since your last sentence"].v, "Theft (3)", 1, true), "the record, and what a sentence would come to", by["Record since your last sentence"].v)
+for _, r in ipairs(rows) do if r.e == "" then ok(false, "every number is explained: " .. r.l) end end
+net.sent = {}
+_netcall("lc_standing_panel", p)
+ok(_lastnet("lc_standing_panel") ~= nil, "asked for (F1 > Me > My standing, C > You), it's sent")
+LC.ClearWanted(p)
+p.lcRap = {} p:RemovePData("lc_rap")
+end
+StandingPanelTests()
 
 function PapersHousingTests()
 section("Papers you carry, the housing register, transfers")

@@ -265,6 +265,7 @@ function LC_CL.OpenActions()
     for n in pairs(LCA and LCA.Gestures or {}) do names[#names + 1] = n end
     table.sort(names)
     for _, n in ipairs(names) do Add(gest, Title(n), function() Send(n) end) end
+    Add(you, "Where I stand (every number explained)", function() if LC_CL.OpenStandingPanel then LC_CL.OpenStandingPanel() end end, "icon16/chart_bar.png")
     Add(you, "My papers", function() Send("papers") end, "icon16/vcard.png")
     Add(you, "Show my papers to whoever I'm looking at", function() Send("showpapers") end, "icon16/vcard_edit.png")
     Add(you, "My credits and standing", function() Send("credits") end, "icon16/coins.png")
