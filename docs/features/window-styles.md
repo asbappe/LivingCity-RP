@@ -6,10 +6,19 @@ The owner, 10 November: "artistic overhauls of all UI items that are consistent 
 
 | Look | Who and where | What it is |
 |---|---|---|
-| `combine` | Civil Protection, the Administration, stalkers; and every Combine machine whoever uses it: terminal screens in the world (the Commissary, Civil Intake, Housing, Labor), their fallback windows, the records terminal, her tablet's market page | black glass, thin cyan lines, cut corners, a faint scan, "OVERWATCH LINK // SECTOR ACTIVE" |
-| `rebel` | the Resistance; and their places whoever stands there: the quartermaster and black market window, the Resistance lab | rust and scrap plate, a heavy welded edge, rivets, a hazard stripe, "NO MASTERS NO BENEFACTORS" |
+| `combine` | Civil Protection, stalkers; and every Combine machine whoever uses it: terminal screens in the world (the Commissary, Civil Intake, Housing, Labor), their fallback windows, the records terminal, her tablet's market page | black glass, thin cyan lines, cut corners, a faint scan, "OVERWATCH LINK // SECTOR ACTIVE" |
+| `rebel` | the Resistance; and their places whoever stands there: the quartermaster's window, the Resistance lab | rust and scrap plate, a heavy welded edge, rivets, a hazard stripe, "NO MASTERS NO BENEFACTORS" |
 | `citizen` | citizens, shackled vortigaunts | a grey concrete slab, a faded blue edge, "UNION RESIDENT SERVICES", "FORM 27-B" |
 | `custody` | anyone, in the interrogation's question window and while being patted down | black under a hard light, a red title bar, "DETAINED. ANSWER. COMPLY." |
+| `office` | the Administration (her faction), by default | the Combine glass in the posters' ivory and red, "OFFICE OF THE CITY ADMINISTRATOR" |
+| `scrap` | the black market dealer's window, whoever buys (the dealer isn't Resistance) | rust with nobody's mark, duller, "NO QUESTIONS" |
+| `vort` | free vortigaunts (a Resistance member whose role is `vortigaunt`) | green dark, veins of light, a glow from the foot, three eyes, "THE VORTESSENCE" |
+| `bound` | shackled vortigaunts (the `vort` faction) | the same green, under the Combine's cyan line, "COLLARED. PROPERTY OF THE COMBINE." |
+| `staff`, `ooc` | staff tools (Staff, Admin testing tools, the performance debugger, the endings tuner, the debug report); choosing and making a character | plain charcoal, nobody's side, "STAFF // OUT OF CHARACTER" in amber, or "OUT OF CHARACTER" |
+
+**The Resistance's lambda.** Windows in the `rebel` look (a Resistance member's own windows, the quartermaster's, the lab's) have a yellow lambda sprayed by hand over the rust, bottom right (`materials/livingcity/ui/lambda.png`, `lambda = 150` in the look). The dealer's `scrap` look has none, so the two are told apart at a glance.
+
+Each look names a way of being drawn (`style`: combine, rebel, citizen, custody, vort, plain), so a new look is a row of colours and words.
 
 **What follows the look:**
 - every window (`DFrame`), its plain buttons, combo boxes and scroll bars;
@@ -18,6 +27,7 @@ The owner, 10 November: "artistic overhauls of all UI items that are consistent 
 - the F1 / F2 quick menu (which holds the Administrator's tablet entries): your side's back behind it;
 - terminal screens drawn in the world (`cl_livingcity_screens.lua`): always the Combine look;
 - the notice card (`LC.Notice`): your side's plate and line, its coloured edge still saying what kind of notice it is.
+- **the whole HUD:** every dark panel drawn on the screen (behind needs, tips, timers, cards, job panels and the rest) is your side's plate, at the same fade as before. Bars, coloured edges and fills, and full-screen fades are untouched.
 
 The Civil Orientation pamphlet keeps its own paper look.
 
@@ -34,4 +44,6 @@ The Civil Orientation pamphlet keeps its own paper look.
 - A popup that is not a `DFrame` asks for it: `LC_CL.ThemeWindow(panel, "DPanel")`. Something drawn straight on the screen asks for a back: `LC_CL.PaintThemePanel(x, y, w, h, headHeight, name)`.
 - A new `DButton` waits one frame (a `Think` hook), then, if it has a Paint of its own and sits inside a styled window, that Paint is wrapped to add the trim.
 
-**Not styled yet:** the rest of the HUD (needs bars, the many small on-screen panels spread over about forty files), and panels inside windows that paint themselves (cards, lists).
+- **The HUD.** About forty files draw the HUD, each with its own dark `draw.RoundedBox` behind its words. While the HUD is being painted (between the `HUDPaintBackground` and `PostDrawHUD` hooks) `draw.RoundedBox` and `draw.RoundedBoxEx` restyle a box that is dark (red and green 60 or less, blue 64 or less, alpha 40 or more), at least 100 by 20, and less than 35% of the screen: it is filled in the look's colour at the box's own alpha, with a small trim (cyan line and brackets; orange line and rivets; a slab foot and blue edge). Anything else passes through. HUD backs drawn with `surface.DrawRect` are not caught.
+
+**Not styled yet:** panels inside windows that paint themselves (cards, lists), and HUD backs drawn with `surface.DrawRect` rather than `draw.RoundedBox`.

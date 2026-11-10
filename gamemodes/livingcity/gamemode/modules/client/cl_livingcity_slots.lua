@@ -119,6 +119,7 @@ net.Receive("lc_slots", function()
     if not t then return end
     if IsValid(frame) then frame:Remove() end
     frame = vgui.Create("DFrame")
+    if LC_CL.SetTheme then LC_CL.SetTheme(frame, "ooc") end -- (out of character: cl_livingcity_theme.lua)
     frame:SetTitle("Your characters")
     local n = #(t.slots or {})
     local lg = t.legacy
