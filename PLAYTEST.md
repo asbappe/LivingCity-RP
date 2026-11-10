@@ -1486,3 +1486,5 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **Two Resistance players, one who has done his jobs and one who has not:** each sees him their own way at the same moment.
   Notes:
+- [ ] **Ask the Colonel "What's happening to you?":** not offered while he looks solid. After the first job it is there once and he brushes it off; it comes back once after each further quarter (a job, or ten visits five minutes apart after all three jobs). Fully ghostly, he tells the truth, and from then on his greeting says it too.
+  Notes:

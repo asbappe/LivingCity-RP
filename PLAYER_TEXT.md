@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version ba3ca08. Admin-only console messages and log lines are left out.
+Made from version e8f5d3b. Admin-only console messages and log lines are left out.
 
-10553 lines, from 292 files.
+10558 lines, from 292 files.
 
 ## Contents
 
@@ -147,7 +147,7 @@ Made from version ba3ca08. Admin-only console messages and log lines are left ou
 - [the City Administrator's office, and idle players (the owner, 1 November)](#the-city-administrators-office-and-idle-players-the-owner-1-november-svlivingcitycityadminlua) (48)
 - [weedkiller against the infestation, and against the Combine (the owner, 2026-11-01)](#weedkiller-against-the-infestation-and-against-the-combine-the-owner-2026-11-01-svlivingcitycleanuplua) (28)
 - [the collapse (sociostability BLACK) and the Administrator's last stand](#the-collapse-sociostability-black-and-the-administrators-last-stand-svlivingcitycollapselua) (92)
-- [the Colonel](#the-colonel-svlivingcitycolonellua) (47)
+- [the Colonel](#the-colonel-svlivingcitycolonellua) (52)
 - [the Combine's own ground](#the-combines-own-ground-svlivingcitycombinegroundlua) (2)
 - [Half-Life: Alyx-style Combine models](#half-life-alyx-style-combine-models-svlivingcitycombinemodelslua) (5)
 - [conduct (anti-RDM and anti-combat-logging)](#conduct-anti-rdm-and-anti-combat-logging-svlivingcityconductlua) (26)
@@ -1716,7 +1716,7 @@ Made from version ba3ca08. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): on screen
 
-- "The Colonel"  (drawn on screen, line 80)
+- "The Colonel"  (drawn on screen, line 97)
 
 ## cl_livingcity_context.lua (cl_livingcity_context.lua)
 
@@ -5993,71 +5993,76 @@ Made from version ba3ca08. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_colonel.lua`
 
-- "Another one. Sit, if you like. Nobody else does."  (text, line 63)
-- "You came back. Most don't."  (text, line 64)
-- "The quartermaster won't look at me, you know. Hasn't for years. Sit."  (text, line 65)
-- "You've worked it out by now, haven't you. Nobody else can see me. I didn't get out of the first camp. None of us did, not really. But you keep coming, so I keep telling you what I know."  (text, line 66)
-- "Our wounded are in a bad way. Three of the Union's medicines would see them through."  (text, line 67)
-- "That'll keep them breathing. Good. You think of others. That's rarer than courage."  (text, line 68)
-- "They took my brother's tags when they took him. They keep things like that on their own ground. I'd like them back."  (text, line 69)
-- "His. His name, scratched in by hand. Here. He'd want you to have this. It never missed for him."  (text, line 70)
-- "One more thing. The unit who lit the first camp. Designation %s. Still walking around."  (text, line 71)
-- "There's a unit I'd like to see in the ground. When he's back on the streets, I'll tell you his number."  (text, line 72)
-- "Is it done? ...It is. I can feel it. Thank you. I don't think I'll need anything else."  (text, line 73)
-- "They're coming into our ground. Now. Clear what you can carry and go."  (text, line 74)
-- "They're walking one of ours to the cells. Right now. You can still get to them."  (text, line 75)
-- "Supply drop coming in. Guarded, but not well. Go."  (text, line 76)
-- "That one. They're with us, they just don't know it yet. Ask them to keep watch."  (text, line 77)
-- "Quiet. Too quiet. Rest while you can."  (text, line 78)
-- "Clean. Nobody saw you, nobody followed you home. That's how it's done."  (text, line 79)
-- "You got it done, and half the city knows your face. Next time, slower."  (text, line 80)
-- "We lost that one. Learn why before you try again."  (text, line 81)
-- "Nothing to report? Then go and do something worth reporting."  (text, line 82)
-- "That's not what I need."  (text, line 83)
-- "When the streets run red fast enough, a dozen dead in a few minutes, something comes down out of the sky. Something with wings."  (text, line 84)
-- "Do the morning drill, five of you or more, and do it perfectly. Not one mistake. Then look up."  (text, line 85)
-- "Kill the city's lights and keep them dead for a quarter of an hour. Somebody starts a party in the dark, and nobody can stop it."  (text, line 86)
-- "Six people dancing in a ring, in this city. Imagine it. They say the whole city joins in."  (text, line 87)
-- "Set fifteen fires burning at once. Then watch what the city does."  (text, line 88)
-- "The master core, the big one from their nexus. Get it to our scientist and let him crack it open. All their screens change."  (text, line 89)
-- "When the dead pile up faster than they can be carried off, or the infested hold half the city, the bones get restless."  (text, line 90)
-- "Let the weeds take the streets, every crack full, and leave them be. The city starts to dance."  (text, line 91)
-- "There's a priest who'd swallow anything holy. Feed him the master core and pray for rain. A lot of rain."  (text, line 92)
-- "Keep the city red for three quarters of an hour straight. The crowd starts wanting a show."  (text, line 93)
-- "Nothing you haven't heard from me already."  (text, line 94)
+- "Another one. Sit, if you like. Nobody else does."  (text, line 84)
+- "You came back. Most don't."  (text, line 85)
+- "The quartermaster won't look at me, you know. Hasn't for years. Sit."  (text, line 86)
+- "You've worked it out by now, haven't you. Nobody else can see me. I didn't get out of the first camp. None of us did, not really. But you keep coming, so I keep telling you what I know."  (text, line 87)
+- "Our wounded are in a bad way. Three of the Union's medicines would see them through."  (text, line 88)
+- "That'll keep them breathing. Good. You think of others. That's rarer than courage."  (text, line 89)
+- "They took my brother's tags when they took him. They keep things like that on their own ground. I'd like them back."  (text, line 90)
+- "His. His name, scratched in by hand. Here. He'd want you to have this. It never missed for him."  (text, line 91)
+- "One more thing. The unit who lit the first camp. Designation %s. Still walking around."  (text, line 92)
+- "There's a unit I'd like to see in the ground. When he's back on the streets, I'll tell you his number."  (text, line 93)
+- "Is it done? ...It is. I can feel it. Thank you. I don't think I'll need anything else."  (text, line 94)
+- "They're coming into our ground. Now. Clear what you can carry and go."  (text, line 95)
+- "They're walking one of ours to the cells. Right now. You can still get to them."  (text, line 96)
+- "Supply drop coming in. Guarded, but not well. Go."  (text, line 97)
+- "That one. They're with us, they just don't know it yet. Ask them to keep watch."  (text, line 98)
+- "Quiet. Too quiet. Rest while you can."  (text, line 99)
+- "Clean. Nobody saw you, nobody followed you home. That's how it's done."  (text, line 100)
+- "You got it done, and half the city knows your face. Next time, slower."  (text, line 101)
+- "We lost that one. Learn why before you try again."  (text, line 102)
+- "Nothing to report? Then go and do something worth reporting."  (text, line 103)
+- "That's not what I need."  (text, line 104)
+- "Happening? I'm old. Old men look how they look. Ask me something useful."  (text, line 105)
+- "You're tired, and the light's bad in here. That's all it is. Don't stare, it's rude."  (text, line 106)
+- "You've seen the others don't answer me. I saw it too, a long time ago. I stopped asking why. Leave it alone a while longer."  (text, line 107)
+- "All right. You've earned it. I didn't get out of the first camp. They burned it with us inside, my brother and me both. Nobody here can see me but the ones who keep coming back. I don't know what that makes me. I know I'm still here, and I know you can hear me. That'll have to do for the pair of us."  (text, line 108)
+- "When the streets run red fast enough, a dozen dead in a few minutes, something comes down out of the sky. Something with wings."  (text, line 109)
+- "Do the morning drill, five of you or more, and do it perfectly. Not one mistake. Then look up."  (text, line 110)
+- "Kill the city's lights and keep them dead for a quarter of an hour. Somebody starts a party in the dark, and nobody can stop it."  (text, line 111)
+- "Six people dancing in a ring, in this city. Imagine it. They say the whole city joins in."  (text, line 112)
+- "Set fifteen fires burning at once. Then watch what the city does."  (text, line 113)
+- "The master core, the big one from their nexus. Get it to our scientist and let him crack it open. All their screens change."  (text, line 114)
+- "When the dead pile up faster than they can be carried off, or the infested hold half the city, the bones get restless."  (text, line 115)
+- "Let the weeds take the streets, every crack full, and leave them be. The city starts to dance."  (text, line 116)
+- "There's a priest who'd swallow anything holy. Feed him the master core and pray for rain. A lot of rain."  (text, line 117)
+- "Keep the city red for three quarters of an hour straight. The crowd starts wanting a show."  (text, line 118)
+- "Nothing you haven't heard from me already."  (text, line 119)
 
 > Note for you (not shown in game): an NPC dying
 
-- "Somewhere at the camp, an old man lets out a breath he's been holding for years."  (chat message, line 224)
+- "Somewhere at the camp, an old man lets out a breath he's been holding for years."  (chat message, line 266)
 
 > Note for you (not shown in game): part of: menu
 
-- "What's the word?"  (text, line 264)
-- "Give him something from your pockets"  (text, line 264)
-- "Debrief me"  (text, line 265)
-- "Heard anything strange?"  (text, line 266)
-- "The Colonel"  (title, line 267)
-- "A grey-haired fighter in an old coat, standing by the quartermaster. Nobody else looks at him."  (text, line 268)
+- "What's the word?"  (text, line 306)
+- "Give him something from your pockets"  (text, line 306)
+- "Debrief me"  (text, line 307)
+- "Heard anything strange?"  (text, line 308)
+- "What's happening to you?"  (text, line 309)
+- "The Colonel"  (title, line 310)
+- "A grey-haired fighter in an old coat, standing by the quartermaster. Nobody else looks at him."  (text, line 311)
 
 > Note for you (not shown in game): anyone else near sees someone talking to nobody
 
-- "* {or} is talking quietly to an empty corner."  (chat message, line 288)
+- "* {or} is talking quietly to an empty corner."  (chat message, line 340)
 
 > Note for you (not shown in game): Live intel: the first of these that's true right now, marked.
 
-- "Where they're sweeping"  (text, line 306)
-- "The prisoner march"  (text, line 309)
+- "Where they're sweeping"  (text, line 358)
+- "The prisoner march"  (text, line 361)
 
 > Note for you (not shown in game): part of: colonel intel
 
-- "The supply drop"  (text, line 312)
+- "The supply drop"  (text, line 364)
 
 > Note for you (not shown in game): part of: colonel
 
-- "the Colonel's wounded"  (text, line 343)
-- "the Colonel's brother"  (text, line 345)
-- "the first camp, avenged"  (text, line 349)
-- "a clean job, debriefed"  (text, line 362)
+- "the Colonel's wounded"  (text, line 396)
+- "the Colonel's brother"  (text, line 398)
+- "the first camp, avenged"  (text, line 402)
+- "a clean job, debriefed"  (text, line 415)
 
 ## the Combine's own ground (sv_livingcity_combineground.lua)
 
