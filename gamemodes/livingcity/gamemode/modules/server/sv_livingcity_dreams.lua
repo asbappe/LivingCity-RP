@@ -16,6 +16,9 @@
       off in play (/eatchip, an admin's lc_ending) are the whole city's, as they always were:
       the G-Man is kept for a future endings setup (the owner, 7 November).
 
+      Someone who falls asleep after the dream has begun joins it (LC.DreamJoinLate), as long as
+      it has 45 seconds or more to go; nobody is taken into the same dream twice.
+
       With no dream point, nothing changes: the endings are as they always were.
 
       Waking up, everything is as it was: before anyone is moved, everything about them is
@@ -779,6 +782,8 @@ local function Enter(p, dream, spot)
     end
     LC.DreamSnaps[snap.sid] = snap
     dream.snaps[p] = snap
+    dream.had = dream.had or {}
+    dream.had[snap.sid] = true -- (once in it, never taken into the same dream again: LC.DreamJoinLate)
     -- out of the bed without getting up (it stays theirs: LC.BedFree below)
     p.lcSleep = nil
     p:SetNW2Bool("lc_sleeping", false)
@@ -874,7 +879,9 @@ function LC.DreamWakeOne(p, why)
         LC.DreamRestore(p, snap, function(ok)
             if not IsValid(p) then return end
             hook.Run("LivingCityDreamWoke", p, ok, why, mine)
-            if ok then
+            local quiet = p.lcDreamQuietWake
+            p.lcDreamQuietWake = nil
+            if ok and not quiet then
                 Notice(p, "info", (why == "optout" or why == "test") and "Awake" or "You wake up", why == "test" and "The test is over: you're back where you were, with everything as it was."
                     or why == "optout" and "You wake from the dream, in your bed, with everything as it was."
                     or "You wake in your bed, with everything just as it was. Press Jump to get up.", 9)
@@ -992,6 +999,52 @@ function LC.DreamStart(id, by, vote, also, force)
     return true, dream
 end
 
+-- Falling asleep a little late (the owner, 10 November: yes to "letting someone who falls asleep a little late join a
+-- dream already under way"): anyone who would have been taken at the start (LC.DreamSleepers: asleep in a bed, not
+-- spared, not sitting it out) and wasn't in it already joins it, as long as it has a while to go.
+local JOIN_AFTER, JOIN_LEFT = 3, 45 -- (seconds: not in its first moments, and not with less than this left)
+function LC.DreamCanJoinLate(dream, now)
+    now = now or CurTime()
+    if not dream or dream ~= LC.DreamActive or dream.test or dream.timedOut then return false end
+    if now - (dream.started or now) < JOIN_AFTER then return false end
+    local maxSecs = cvMax:GetFloat() * 60
+    if maxSecs > 0 and (dream.started or now) + maxSecs - now < JOIN_LEFT then return false end
+    local g = dream.game
+    if g then return not g.stopped and (g.ends or math.huge) - now >= JOIN_LEFT and LC.DreamGameJoin ~= nil end
+    local E = LC.EndingAny and LC.EndingAny()
+    return E ~= nil and E.dream == dream
+end
+function LC.DreamJoinLate(p, dream)
+    dream = dream or LC.DreamActive
+    if not IsValid(p) or p.lcDreaming or not LC.DreamCanJoinLate(dream) then return false end
+    if dream.had and dream.had[Sid(p)] then return false end
+    local g = dream.game
+    -- (an ending's Enforcers are set to watching as it starts: one arriving late sleeps on)
+    if not g and dream.forced and LC.DreamEnforcerRole and LC.DreamEnforcerRole(p, dream.ending) then return false end
+    local ok, err = pcall(Enter, p, dream, dream.pos + Vector(math.Rand(-50, 50), math.Rand(-50, 50), 4))
+    if not ok or not err then
+        if not ok and LC.Error then LC.Error("dream join", err) end
+        return false
+    end
+    dream.list[#dream.list + 1] = p
+    local okJ, errJ = true, nil
+    if g then okJ, errJ = pcall(LC.DreamGameJoin, g, p)
+    elseif LC.EndingSendTo then okJ, errJ = pcall(LC.EndingSendTo, p) end -- (their screen: the ending as it is now)
+    if not okJ or errJ == false then
+        -- (this dream can't take a latecomer after all: they wake at once with everything, and sleep on)
+        if not okJ and LC.Error then LC.Error("dream join", errJ) end
+        p.lcDreamQuietWake = true
+        LC.DreamWakeOne(p, "test") -- (as a test is: nothing comes of it)
+        return false
+    end
+    for _, q in ipairs(LC.DreamersOf(dream)) do
+        if q ~= p and q.ChatPrint then q:ChatPrint("(in the dream) " .. p:Nick() .. " drifts into the dream, late.") end
+    end
+    Log("info", "Dream: " .. p:Nick() .. " fell asleep late and joined " .. tostring(dream.ending))
+    hook.Run("LivingCityDreamJoinedLate", p, dream)
+    return true
+end
+
 -- Queue an ending for tonight's dream (the Administrator's pick uses this; kept for a future
 -- endings setup to call). source: who chose it. Endings set off in play don't come here: they're
 -- the whole city's (the owner, 7 November: dreams are a bonus, the G-Man is kept for the endings).
@@ -1045,6 +1098,9 @@ function LC.DreamOffice()
     out.dreamt = (S.dreamedNight == S.night) and LC.DayPhase and LC.DayPhase() == "night" or nil
     out.at = S.at and math.max(0, math.floor(S.at - CurTime())) or nil
     out.busy = LC.DreamActive ~= nil or nil
+    -- (for the "when" line: is there one to come tonight, and how long after the good night)
+    out.will = (S.queued ~= nil or cvNightly:GetBool() or (LC.DreamCityPicks ~= nil and LC.DreamCityPicks() == true)) or nil
+    out.delay = math.max(5, cvDelay:GetFloat())
     out.plan = LC.DreamPlanOffice and LC.DreamPlanOffice() or nil -- (her choice now: a kind, now and then: sv_livingcity_dreamplan.lua)
     return out
 end
@@ -1201,6 +1257,10 @@ timer.Create("LivingCityDreams", 1, 0, function()
             if LC.DreamActive == dream then LC.DreamWake(dream) end
             if LC.DreamActive == dream then LC.DreamActive = nil end -- (whatever happened, the next one isn't held up)
             return
+        end
+        -- (anyone who has fallen asleep since it began joins it: LC.DreamJoinLate)
+        if dream and LC.DreamCanJoinLate(dream, now) then
+            for _, p in ipairs(LC.DreamSleepers(dream.mood, dream.ending)) do LC.DreamJoinLate(p, dream) end
         end
         -- (each dreamer's screen: may they wake themselves yet, and when it ends at the latest)
         if dream then

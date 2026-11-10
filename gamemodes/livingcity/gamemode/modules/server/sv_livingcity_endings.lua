@@ -237,6 +237,8 @@ local function Send(to)
     end
     if to then net.Send(to) elseif E and E.dream then net.Send(LC.EndingPlayers()) else net.Broadcast() end
 end
+-- (a dreamer who joined a dream late: their screen, the ending as it is now. sv_livingcity_dreams.lua)
+function LC.EndingSendTo(p) if E and IsValid(p) then Send(p) end end
 
 ------------------------------------------------------------------------
 -- Stopping time

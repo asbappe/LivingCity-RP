@@ -949,6 +949,7 @@ function LC.DreamGameStart(dream)
     end
     g.started = #players
     local hello = def.hello and def.hello(g) or {}
+    g.hello = hello -- (kept for anyone who joins late: LC.DreamGameJoin)
     -- (music for any dream: the owner's file named for its codeword, sv_livingcity_strangedreams.lua; not before the voices in the dark)
     if hello.song == nil and not hello.intro and not def.ownMusic and LC.DreamSongFor then hello.song = LC.DreamSongFor(def.id) end
     local n = 0
@@ -981,6 +982,31 @@ function LC.DreamGameStart(dream)
     end
     timer.Create("LivingCityDreamGames", 0, 0, Tick)
     Log("info", string.format("Dream game: %s, %d dreamers, %d props", def.id, #players, #g.ents))
+    return true
+end
+
+-- One more dreamer, after it has begun (they fell asleep late: LC.DreamJoinLate). Placed and told as the others
+-- were at the start, with every life; an Enforcer joins as an Enforcer. False: this dream can't take them.
+function LC.DreamGameJoin(g, p)
+    if not g or g.stopped or not IsValid(p) or g.pl[p] or (g.enf and g.enf[p]) or g.star == p then return false end
+    local def = g.def
+    local hello = {}
+    for k, v in pairs(g.hello or {}) do if k ~= "intro" then hello[k] = v end end -- (the opening has been and gone)
+    if hello.song == nil and not def.ownMusic and LC.DreamSongFor then hello.song = LC.DreamSongFor(def.id) end
+    if LC.DreamEnforcerRole and LC.DreamEnforcerRole(p, def.id) then
+        if not LC.DreamEnforcerJoin then return false end
+        LC.DreamEnforcerJoin(g, p, hello)
+        return true
+    end
+    local at, yaw = def.spawn(g, p, table.Count(g.pl) + 1)
+    if not at then return false end
+    g.pl[p] = { lives = def.lives, start = at, yaw = yaw, late = true }
+    p.lcDreamGame = def.id
+    ToStart(g, p, 4)
+    local t = { k = "start", id = def.id, name = def.name, goal = def.goal, ends = g.ends, lives = def.lives, maxLives = def.lives }
+    for k, v in pairs(hello) do t[k] = v end
+    Send(g, t, p)
+    Notice(p, "warn", def.name .. " (already under way)", def.goal, 10)
     return true
 end
 

@@ -147,3 +147,16 @@ The city's people who fill a dream up to `lc_dream_min` (`sv_livingcity_dreamsta
 
 No new settings or commands. The poses use the bone directions the endings' dances found in play, but nobody has looked at these in game yet: say which look wrong and they get tuned.
 
+## Falling asleep late, and when the next dream is (10 November; the owner: "yes to both thanks")
+
+- **Late sleepers join the dream.** Before, only those asleep at the moment a dream began were in it. Now anyone who falls asleep in a bed after it has begun joins it (`LC.DreamJoinLate`, looked at every second), by the same rules as at the start: not spared (Unbroken, a Combine zone in a nightmare, a foil hat, no chip), not sitting that kind out, not the Administrator skipping a dream she didn't choose.
+  - Not in the dream's first 3 seconds, and not with less than 45 seconds of it left (of the dream game's own time, or of the `lc_dream_max_minutes` safeguard). Never into a test from the editor.
+  - **Nobody is taken into the same dream twice:** someone who woke from it (and lies asleep in their bed again, as waking leaves them) stays out.
+  - **In a dream you play** they are placed like everyone else, with every life, told the goal ("... (already under way)") and given the music; Civil Protection and the Administration join a Nightmare or propaganda dream as Enforcers, as at the start. The opening (the voices in the dark) isn't replayed.
+  - **In an ending** they appear among the dreamers and their screen is sent the ending as it stands. A unit who would have been an Enforcer in an ending's nightmare sleeps on instead.
+  - The others see "(in the dream) Ada drifts into the dream, late." Everything is snapshotted and put back for them exactly as for the rest. If a dream can't place a latecomer, they wake at once with everything and sleep on.
+  - Hook `LivingCityDreamJoinedLate(player, dream)`.
+- **When the next dream is.** The Administrator's tablet (Tonight's dream) and her F2 > Tonight's dream page have a "When:" line first: "the city is dreaming right now", "tonight's dream begins in about 1:15" (at night, with one to come; on F2 the countdown runs, on the tablet it is as it was when opened), "nothing is waiting to be dreamt tonight", "tonight's dream has been dreamt. The next is tomorrow night's", or by day "the next dream comes about 60 seconds after tonight's good night" (`lc_dream_delay`).
+
+No new settings or commands.
+

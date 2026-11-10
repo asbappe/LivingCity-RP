@@ -1978,6 +1978,14 @@ local ok, e = pcall(function()
     for i = 1, 60 do LC_CL.DreamActApply(fig, CurTime(), 0.05) end
     assert(first and first < 0 and set[7].y < first and set[7].y < -90, "a cheering figure's arm doesn't ease up: " .. tostring(first) .. " " .. tostring(set[7] and set[7].y))
     hook.t.Think.LivingCityDreamActing()
+    -- when the next dream is (the Administrator's tablet and F2 page)
+    local W = LC_CL.DreamWhenLine
+    assert(W(nil) == nil and W({ ready = false }) == nil, "a when line with no dreams possible")
+    assert(string.find(W({ ready = true, busy = true }), "dreaming right now", 1, true), "when: dreaming now")
+    assert(string.find(W({ ready = true, dreamt = true }), "tomorrow night", 1, true), "when: dreamt")
+    assert(string.find(W({ ready = true, at = 75, will = true }), "1:15", 1, true), "when: the countdown")
+    assert(string.find(W({ ready = true, at = 75 }), "nothing is waiting", 1, true), "when: nothing waiting")
+    assert(string.find(W({ ready = true, delay = 60 }), "60 seconds after", 1, true), "when: by day")
     local st = { on = true, point = true, zone = false, queued = "hard", queuedName = "Hard", queuedMood = "happy", at = 40, every = false, delay = 60,
         active = { ending = "hard", name = "Hard", n = 2, mood = "happy", left = 200, who = { "Someone", "Unit (Enforcer)" } }, asleep = 3, saved = { { sid = "1", nick = "Someone", online = true, applied = true } },
         endings = { { id = "hard", name = "Hard" } } }

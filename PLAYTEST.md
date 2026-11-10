@@ -1510,3 +1510,14 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **An ending as a dream (for example the bus):** the stand-ins turn to you and wave or cheer instead of standing like statues.
   Notes:
+
+## 10 November: falling asleep late, and when the next dream is
+
+- [ ] **Late into a dream:** have one player asleep when the dream starts and another lie down about 20 seconds later. The second should appear in the dream with every life, and the first should see "drifts into the dream, late" in chat. Both wake with everything.
+  Notes:
+- [ ] **Not twice:** lose all your lives, wake up, and stay in bed. You should not be pulled back into the same dream.
+  Notes:
+- [ ] **Late into an ending (for example the bus):** does the late sleeper see the ending properly (music, dancing) from where it has got to?
+  Notes:
+- [ ] **The Administrator, tablet and F2 > Tonight's dream:** the first line says when the next dream is; at night it counts down.
+  Notes:

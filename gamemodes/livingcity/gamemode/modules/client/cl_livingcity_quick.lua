@@ -746,7 +746,9 @@ local function DreamPage()
     if not d.ready then return { title = "TONIGHT'S DREAM", items = {}, empty = { d.why or "The city can't dream yet." } } end
     local pl = d.plan or {}
     local items, notes = {}, {}
-    if d.busy then notes[#notes + 1] = "The city is dreaming right now." end
+    -- (when the next one is: this page is asked for again every two seconds, so the countdown runs)
+    local when = LC_CL.DreamWhenLine and LC_CL.DreamWhenLine(d)
+    if when then notes[#notes + 1] = when elseif d.busy then notes[#notes + 1] = "The city is dreaming right now." end
     if pl.feel then notes[#notes + 1] = pl.feel end
     if pl.chosen then
         notes[#notes + 1] = "Chosen for tonight: " .. (pl.chosen == "nightmare" and "a Nightmare" or "a propaganda dream") .. ". You'll be in it."
