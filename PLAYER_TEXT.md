@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version d90f833. Admin-only console messages and log lines are left out.
+Made from version 320eaa1. Admin-only console messages and log lines are left out.
 
-10551 lines, from 292 files.
+10553 lines, from 292 files.
 
 ## Contents
 
@@ -157,7 +157,7 @@ Made from version d90f833. Admin-only console messages and log lines are left ou
 - [the Civil Protection Commissary (units' supplies)](#the-civil-protection-commissary-units-supplies-svlivingcitycpsupplylua) (26)
 - [headcrab hunts for the Resistance's supply crate](#headcrab-hunts-for-the-resistances-supply-crate-svlivingcitycrabhuntlua) (15)
 - [making things, grenades, the arms trade, and getting people out](#making-things-grenades-the-arms-trade-and-getting-people-out-svlivingcitycraftinglua) (30)
-- [the Cremator](#the-cremator-svlivingcitycrematorlua) (15)
+- [the Cremator](#the-cremator-svlivingcitycrematorlua) (17)
 - [what custody costs the worst anticitizens](#what-custody-costs-the-worst-anticitizens-svlivingcitycustodylua) (30)
 - [saved layout](#saved-layout-svlivingcitydatalua) (14)
 - [debugging](#debugging-svlivingcitydebuglua) (62)
@@ -1881,7 +1881,7 @@ Made from version d90f833. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: open rebel pamphlet
 
-- "Fold it away"  (text, line 214)
+- "Fold it away"  (text, line 223)
 
 ## cl_livingcity_directives.lua (cl_livingcity_directives.lua)
 
@@ -6771,6 +6771,11 @@ Made from version d90f833. Admin-only console messages and log lines are left ou
 - "Cremator model: {model}"  (chat message, line 698)
 - "A Cremator, model {model}; animations: {CrematorSequencesUsed}"  (text, line 700)
 - "The Cremator couldn't be made."  (chat message, line 700)
+
+> Note for you (not shown in game): for sending back when it looks wrong: every model found, and every animation this one has (console only)
+
+- "[cremator] models found: {CrematorModelsFound} /"  (message, line 702)
+- "[cremator] animations: {names} /"  (message, line 708)
 
 ## what custody costs the worst anticitizens (sv_livingcity_custody.lua)
 
@@ -14810,91 +14815,91 @@ Made from version d90f833. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_rebelpamphlet.lua`
 
-- "Distributing seditious material"  (text, line 47)
-- "READ THIS /  / You were not brought here for your protection. You were brought here to be counted, worked and kept quiet. Everything in their pamphlet is true, and none of it is the truth. This one is ours. Read it where they can't see you. /  / A friend"  (text, line 49)
+- "Distributing seditious material"  (text, line 48)
+- "READ THIS /  / You were not brought here for your protection. You were brought here to be counted, worked and kept quiet. Everything in their pamphlet is true, and none of it is the truth. This one is ours. Read it where they can't see you. /  / A friend"  (text, line 50)
 
 > Note for you (not shown in game): id, the page's title, the page.
 
-- "The water"  (text, line 53)
-- "They put something in the water. It doesn't hurt. It helps you forget: what year it is, who lived next door, what you were angry about. If there are mornings you can't account for, that is why. Drink what you have collected yourself, when you can."  (text, line 54)
-- "The ration"  (text, line 55)
-- "A ration is not a gift. It is a leash, and it is exactly as long as they want it to be. Count what a shift pays you and what a day costs you. It never quite covers it. That isn't a mistake."  (text, line 56)
-- "Who is listening"  (text, line 57)
-- "Some of your neighbours inform. They aren't monsters. They're hungry, and it pays. Say nothing in a queue that you wouldn't say to a mask. The flying cameras take pictures: keep your head down and your hands empty."  (text, line 58)
-- "If they stop you"  (text, line 59)
-- "Don't run. Running is the one thing they are always ready for. Show your papers and say little. Whatever you carry that you shouldn't, carry it deep, or don't carry it. They can't search what they have no reason to look for."  (text, line 60)
-- "If you want to help"  (text, line 61)
-- "You don't have to fight. Leave food in our supply crates. Sell what you find to our quartermaster. Do a job for us when one is offered. Keep quiet about what you see. We notice who helps. When we have seen enough, we will come and ask you."  (text, line 62)
-- "Pass it on"  (text, line 63)
-- "This sheet is worth a beating. Don't keep it and don't burn it. Leave it where the next person will find it: a bench, a stairwell, a ration queue. One sheet read by five people is five people who know they aren't alone."  (text, line 64)
+- "The water"  (text, line 54)
+- "They put something in the water. It doesn't hurt. It helps you forget: what year it is, who lived next door, what you were angry about. If there are mornings you can't account for, that is why. Drink what you have collected yourself, when you can."  (text, line 55)
+- "The ration"  (text, line 56)
+- "A ration is not a gift. It is a leash, and it is exactly as long as they want it to be. Count what a shift pays you and what a day costs you. It never quite covers it. That isn't a mistake."  (text, line 57)
+- "Who is listening"  (text, line 58)
+- "Some of your neighbours inform. They aren't monsters. They're hungry, and it pays. Say nothing in a queue that you wouldn't say to a mask. The flying cameras take pictures: keep your head down and your hands empty."  (text, line 59)
+- "If they stop you"  (text, line 60)
+- "Don't run. Running is the one thing they are always ready for. Show your papers and say little. Whatever you carry that you shouldn't, carry it deep, or don't carry it. They can't search what they have no reason to look for."  (text, line 61)
+- "If you want to help"  (text, line 62)
+- "You don't have to fight. Leave food in our supply crates. Sell what you find to our quartermaster. Do a job for us when one is offered. Keep quiet about what you see. We notice who helps. When we have seen enough, we will come and ask you."  (text, line 63)
+- "Pass it on"  (text, line 64)
+- "This sheet is worth a beating. Don't keep it and don't burn it. Leave it where the next person will find it: a bench, a stairwell, a ration queue. One sheet read by five people is five people who know they aren't alone."  (text, line 65)
 
 > Note for you (not shown in game): Caught at it, or (a member, unseen) a little XP.
 
-- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 81)
+- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 86)
 
 > Note for you (not shown in game): Reading it
 
-- "Confiscate it"  (text, line 98)
-- "Pocket it"  (text, line 98)
+- "Confiscate it"  (text, line 103)
+- "Pocket it"  (text, line 103)
 
 > Note for you (not shown in game): part of: pages
 
-- "Leave it here"  (text, line 100)
-- "Resistance pamphlet"  (title, line 102)
-- "Cheap paper. The purple ink comes off on your fingers."  (text, line 102)
+- "Leave it here"  (text, line 105)
+- "Resistance pamphlet"  (title, line 107)
+- "Cheap paper. The purple ink comes off on your fingers."  (text, line 107)
 
 > Note for you (not shown in game): The first one a citizen ever reads stays with them.
 
-- "Some of it stays with you. (Sympathy +1: the Resistance notices who listens.)"  (chat message, line 111)
+- "Some of it stays with you. (Sympathy +1: the Resistance notices who listens.)"  (chat message, line 116)
 
 > Note for you (not shown in game): part of: first read
 
-- "[Resistance] Someone new has read one of your pamphlets."  (chat message, line 116)
+- "[Resistance] Someone new has read one of your pamphlets."  (chat message, line 121)
 
 > Note for you (not shown in game): part of: rebelpamphlet
 
-- "You can't carry any more."  (chat message, line 151)
-- "You fold it into a pocket. It's contraband: don't be searched with it."  (chat message, line 154)
-- "[Civil Protection] Seditious material recovered."  (chat message, line 161)
+- "You can't carry any more."  (chat message, line 156)
+- "You fold it into a pocket. It's contraband: don't be searched with it."  (chat message, line 159)
+- "[Civil Protection] Seditious material recovered."  (chat message, line 166)
 
 > Note for you (not shown in game): part of: leave rebel pamphlet
 
-- "You have no Resistance pamphlet. (Their quartermaster sells them.)"  (text, line 186)
-- "There's nowhere flat to leave it here."  (text, line 196)
+- "You have no Resistance pamphlet. (Their quartermaster sells them.)"  (text, line 191)
+- "There's nowhere flat to leave it here."  (text, line 201)
 
 > Note for you (not shown in game): no more than a few of one player's lying about: the oldest goes
 
-- "You leave it where someone will find it."  (chat message, line 215)
+- "You leave it where someone will find it."  (chat message, line 220)
 
 > Note for you (not shown in game): Handing it over
 
-- "Look at the person you want to give it to, up close."  (text, line 232)
+- "Look at the person you want to give it to, up close."  (text, line 237)
 
 > Note for you (not shown in game): part of: give rebel pamphlet
 
-- "You have no Resistance pamphlet. (Their quartermaster sells them.)"  (text, line 233)
-- "They wouldn't take it."  (text, line 236)
-- "They've been offered one already. Give it time."  (text, line 238)
+- "You have no Resistance pamphlet. (Their quartermaster sells them.)"  (text, line 238)
+- "They wouldn't take it."  (text, line 241)
+- "They've been offered one already. Give it time."  (text, line 243)
 
 > Note for you (not shown in game): an informant: takes it like anyone, and Civil Protection hears of it a little later
 
-- "They take it without a word and walk on, a little quickly."  (chat message, line 244)
-- "[Civil Protection] Someone has informed on you."  (chat message, line 248)
+- "They take it without a word and walk on, a little quickly."  (chat message, line 249)
+- "[Civil Protection] Someone has informed on you."  (chat message, line 253)
 
 > Note for you (not shown in game): part of: give rebel pamphlet
 
-- "They know already. They take it anyway: it'll be on a bench by evening."  (chat message, line 255)
-- "They read the first lines, look round, and fold it into a sleeve. A sympathiser now."  (chat message, line 263)
-- "They tuck it away without looking at it. Later, perhaps."  (chat message, line 268)
-- "They push it back at you. "Are you trying to get us both killed?""  (chat message, line 271)
+- "They know already. They take it anyway: it'll be on a bench by evening."  (chat message, line 260)
+- "They read the first lines, look round, and fold it into a sleeve. A sympathiser now."  (chat message, line 268)
+- "They tuck it away without looking at it. Later, perhaps."  (chat message, line 273)
+- "They push it back at you. "Are you trying to get us both killed?""  (chat message, line 276)
 
 > Note for you (not shown in game): (handed to a player any way at all: Pockets > Give as well)
 
-- "It's a Resistance pamphlet. Read it from your pockets, somewhere quiet."  (chat message, line 281)
+- "It's a Resistance pamphlet. Read it from your pockets, somewhere quiet."  (chat message, line 286)
 
 > Note for you (not shown in game): a unit: it's gone, and the others hear where
 
-- "Dispatch: seditious material recovered {or}."  (text, line 313)
+- "Dispatch: seditious material recovered {or}."  (text, line 318)
 
 ## the Resistance on the street (sv_livingcity_rebels.lua)
 

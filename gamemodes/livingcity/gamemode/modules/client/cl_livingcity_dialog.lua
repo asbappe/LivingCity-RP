@@ -132,16 +132,19 @@ end
 
 ------------------------------------------------------------------------
 -- The Resistance pamphlet (sv_livingcity_rebelpamphlet.lua): one cheap sheet, folded once, run off on a
--- hand duplicator. The cover half lists what's inside; the other half is the page, typed. The paper is
+-- hand duplicator. The cover half lists what's inside; the other half is the page, written by hand. The paper is
 -- materials/livingcity/pamphlet/rebel_paper.jpg (made by _dev/posters/rebelpamphlet.js); without it the
 -- sheet is drawn plainly. Options whose id starts with "_" are things to do with the sheet (pocket it,
 -- leave it, confiscate it), not pages.
 ------------------------------------------------------------------------
 
-surface.CreateFont("LCRebelHead", { font = "Courier New", size = 30, weight = 900 })
-surface.CreateFont("LCRebelBody", { font = "Courier New", size = 19, weight = 700 })
-surface.CreateFont("LCRebelItem", { font = "Courier New", size = 19, weight = 900 })
-surface.CreateFont("LCRebelSmall", { font = "Courier New", size = 15, weight = 700 })
+-- The hand it's written in (the owner, 10 November: "more like humble/simple/sloppy handwriting"):
+-- resource/fonts/lcrebelhand.ttf, which is Kimberly Geswein's "Covered By Your Grace" (SIL Open Font
+-- License, beside it) under a one-word name, the same as its file, so every system finds it.
+surface.CreateFont("LCRebelHead", { font = "lcrebelhand", size = 44, weight = 500 })
+surface.CreateFont("LCRebelBody", { font = "lcrebelhand", size = 27, weight = 500 })
+surface.CreateFont("LCRebelItem", { font = "lcrebelhand", size = 28, weight = 500 })
+surface.CreateFont("LCRebelSmall", { font = "lcrebelhand", size = 22, weight = 500 })
 
 local R_PAPER, R_INK, R_ORANGE = Color(216, 205, 171), Color(52, 36, 100), Color(206, 96, 22)
 
@@ -178,13 +181,15 @@ local function OpenRebelPamphlet(text, opts)
             surface.SetDrawColor(R_INK) surface.DrawRect(30, 102, 356, 3)
         end
         draw.SimpleText(head, "LCRebelHead", PX, 76, R_INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-        surface.SetDrawColor(R_ORANGE) surface.DrawRect(PX, 96, math.min(PW, 30 + #head * 15), 3)
+        surface.SetFont("LCRebelHead")
+        local hw = surface.GetTextSize(head)
+        surface.SetDrawColor(R_ORANGE) surface.DrawRect(PX, 100, math.min(PW, (tonumber(hw) or 200) + 8), 3)
         if sign then draw.SimpleText("- " .. sign, "LCRebelBody", PX + PW, h - 82, R_INK, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER) end
     end
 
     local words = vgui.Create("DLabel", frame)
-    words:SetPos(PX, 112)
-    words:SetSize(PW, 370)
+    words:SetPos(PX, 114)
+    words:SetSize(PW, 380)
     words:SetFont("LCRebelBody")
     words:SetTextColor(R_INK)
     words:SetWrap(true)
@@ -203,13 +208,17 @@ local function OpenRebelPamphlet(text, opts)
             local hot = here or self:IsHovered()
             draw.SimpleText(mark, "LCRebelItem", 0, h / 2, hot and R_ORANGE or R_INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
             draw.SimpleText(label, "LCRebelItem", 40, h / 2, hot and R_ORANGE or R_INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-            if hot then surface.SetDrawColor(R_ORANGE) surface.DrawRect(40, h - 3, math.min(w - 40, #label * 12), 2) end
+            if hot then
+                surface.SetFont("LCRebelItem")
+                local lw = surface.GetTextSize(label)
+                surface.SetDrawColor(R_ORANGE) surface.DrawRect(40, h - 3, math.min(w - 40, tonumber(lw) or 120), 2)
+            end
         end
         b.DoClick = fn
-        y = y + 32
+        y = y + 31
     end
     for i, o in ipairs(pages) do Line(o[2], o[1], i .. ".", function() Do(o[1]) end) end
-    y = y + 10
+    y = y + 6
     for _, o in ipairs(acts) do Line(o[2], nil, ">", function() Do(o[1]) end) end
     Line("Fold it away", nil, ">", function() frame:Close() end)
 end

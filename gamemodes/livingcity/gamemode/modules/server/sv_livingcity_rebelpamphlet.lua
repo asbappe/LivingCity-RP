@@ -8,7 +8,8 @@
     quartermaster sells five for 15 credits. Pockets > Read opens it as the
     sheet itself (cl_livingcity_dialog.lua, style "rebelpamphlet"; the paper is
     materials/livingcity/pamphlet/rebel_paper.jpg, made by
-    _dev/posters/rebelpamphlet.js). Its words are LC.RebelPamphletPages below:
+    _dev/posters/rebelpamphlet.js; the handwriting is the font
+    resource/fonts/lcrebelhand.ttf). Its words are LC.RebelPamphletPages below:
     the Resistance's answer to the Civil Orientation pamphlet, and true to how
     the city works (how a citizen earns the Resistance's trust).
 
@@ -65,6 +66,10 @@ LC.RebelPamphletPages = {
 }
 
 LC.RebelPamphlets = LC.RebelPamphlets or {} -- the ones lying about, oldest first
+
+-- The hand the sheet is written in (cl_livingcity_dialog.lua): players download it like the paper.
+local HAND = "resource/fonts/lcrebelhand.ttf"
+if resource and resource.AddFile and file.Exists(HAND, "GAME") then resource.AddFile(HAND) end
 
 local function Combine(ply)
     if ply:GetNW2String("lcf_faction", "") == "cp" then return true end
