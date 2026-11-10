@@ -340,8 +340,13 @@ function LC.BuildReport()
     end
 
     if LC.MindsReport and LC.MindsOn and LC.MindsOn() then
-        Section(out, "The city's minds (watching only: sv_livingcity_minds.lua)")
+        Section(out, "The city's minds (sv_livingcity_minds.lua, sv_livingcity_mindsact.lua)")
         for _, l in ipairs(LC.MindsReport()) do out[#out + 1] = l end
+        if LC.MindsActReport then for _, l in ipairs(LC.MindsActReport()) do out[#out + 1] = l end end
+    end
+    if LC.BrainReport then
+        Section(out, "The director and free talk (sv_livingcity_brain.lua)")
+        for _, l in ipairs(LC.BrainReport()) do out[#out + 1] = l end
     end
 
     Section(out, "Recent log (newest last)")

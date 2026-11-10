@@ -1812,16 +1812,26 @@ local function ChooseCitizenTask(npc, st, now)
 
     -- rations being handed out: the queue comes before work (work used to win, and the line stood empty)
     local lineChance = (ev == "rations") and 0.85 or (LC.RhythmLineChance and LC.RhythmLineChance(0.18) or 0.18)
+    -- how they feel bends it all (sv_livingcity_mindsact.lua; nil for the unnamed, or with lc_minds_act 0)
+    local bias = LC.MindsBias and LC.MindsBias(npc, st, now)
+    local workMul = bias and bias.work or 1
+    if bias then
+        lineChance = math.min(0.95, lineChance * bias.line)
+        if bias.home > 1 and not st.questLock and math.random() < (bias.home - 1) * 0.2 then
+            return StartLeaving(npc, st, false, "worn down: gone home")
+        end
+    end
+    local function Spots(list) return (bias and bias.avoidCops and LC.MindsAwayFromUnits) and LC.MindsAwayFromUnits(list) or list end
     local served = st.servedUntil and now < st.servedUntil
     if ev == "rations" and next(LC.Lines) and not served and math.random() < lineChance and JoinLine(npc, st) then return end
 
     -- their Union job: fix what's broken, haul, carry, deliver, heal (sv_livingcity_npcwork.lua)
-    if LC.NPCWorkChoose and LC.NPCWorkChoose(npc, st, now) then return end
+    if (workMul >= 1 or math.random() < workMul) and LC.NPCWorkChoose and LC.NPCWorkChoose(npc, st, now) then return end
 
     if ev ~= "rations" and next(LC.Lines) and not served and math.random() < lineChance and JoinLine(npc, st) then return end
 
-    if math.random() < (LC.RhythmSitChance and LC.RhythmSitChance(0.3) or 0.3) then
-        local spots = FreePoints(SITTABLE, npc)
+    if math.random() < (LC.RhythmSitChance and LC.RhythmSitChance(0.3) or 0.3) * (bias and bias.sit or 1) then
+        local spots = Spots(FreePoints(SITTABLE, npc))
         if #spots > 0 then
             local p = Pick(spots)
             Claim(npc, st, p)
@@ -1830,7 +1840,7 @@ local function ChooseCitizenTask(npc, st, now)
     end
 
     -- people with a job spend a good part of the day at its workplace
-    if st.profile and st.profile.job and math.random() < 0.4 and LC.WorkplaceFor then
+    if st.profile and st.profile.job and math.random() < 0.4 * workMul and LC.WorkplaceFor then
         local p = LC.WorkplaceFor(st)
         if p and IsFree(p, npc) then
             Claim(npc, st, p)
@@ -1838,7 +1848,7 @@ local function ChooseCitizenTask(npc, st, now)
         end
     end
 
-    if math.random() < 0.25 then
+    if math.random() < 0.25 * workMul then
         -- the city has jobs, and people go to them
         local spots = FreePoints(WORK, npc)
         if #spots > 0 then
@@ -1849,7 +1859,7 @@ local function ChooseCitizenTask(npc, st, now)
     end
 
     if math.random() < 0.45 then
-        local spots = FreePoints(LOITER, npc, true)
+        local spots = Spots(FreePoints(LOITER, npc, true))
         if #spots > 0 then
             local p = Pick(spots)
             Claim(npc, st, p)

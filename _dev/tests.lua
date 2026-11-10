@@ -10814,6 +10814,7 @@ ok(broke ~= nil and s.stress < Psy.cfg.breakAt, "stress past the line: something
 -- in the city
 _setcvar("lc_minds", 1)
 _setcvar("lc_minds_show", 0)
+_setcvar("lc_minds_act", 0) -- (watching only first; acting is further down)
 LC.Minds.byId, LC.Minds.order, LC.Minds.idx, LC.Minds.buf, LC.Minds.counts, LC.Minds.loaded = {}, {}, 0, {}, {}, true
 local T0 = Vector(-39000, 27000, 0)
 local function person(off)
@@ -10956,6 +10957,147 @@ _setcvar("lc_npc_vices", 0)
 LC.NPCViceTick(CurTime())
 ok(next(LC.NPCVices) == nil, "lc_npc_vices 0: nobody drinks or smokes")
 if IsValid(dn) then dn:Remove() end
+-- acting (sv_livingcity_mindsact.lua)
+section("The city's minds: acting")
+ok(LC.MindsBias(v, vst, CurTime()) == nil and LC.MindsAct(mv, "despair", CurTime()) == nil and LC.MindsIsInformer(v, vst) == nil
+    and not LC.MindsUnrestHigh(), "lc_minds_act 0: watching only, nothing bends and nothing is done")
+_setcvar("lc_minds_act", 1)
+mv, mf = LC.MindOf(v.lcProfile), LC.MindOf(f.lcProfile)
+for _, e in ipairs({ v, f }) do local s = LC.NPCs[e] s.state, s.leaving, s.questLock, s.snitchReport, s.test = "idle", nil, nil, nil, nil end
+Psy.State(mv).food = 0.1
+local bias = LC.MindsBias(v, vst, CurTime())
+ok(bias and bias.line > 1, "hungry: the ration line draws them", bias and bias.line)
+Psy.State(mv).food = 0.8
+-- a tantrum: up to a unit, and stopped (or taken in)
+local unit, ust = LC.SpawnCop(T0 + Vector(600, 0, 0))
+ust = ust or LC.NPCs[unit]
+unit.sim = false
+local arrest = LC.ArrestNPC
+LC.ArrestNPC = function() return false end
+local did = LC.MindsAct(mv, "tantrum", CurTime())
+ok(vst.mindErrand ~= nil and vst.questLock == true and has(mv, "vented"), "a tantrum: they set off for the nearest unit", did)
+v:SetPos(unit:GetPos() + Vector(50, 0, 0))
+LC.MindsErrandTick(CurTime())
+ok(vst.mindErrand == nil and vst.questLock == nil and vst.state == "detained", "and scream in his face: stopped where they stand", vst.state)
+LC.ArrestNPC = arrest
+vst.state = "idle"
+v:SetPos(T0)
+-- an errand that never gets there is dropped
+LC.MindsAct(mv, "tantrum", CurTime())
+LC.MindsErrandTick(CurTime() + 200)
+ok(vst.mindErrand == nil and vst.questLock == nil and next(LC.MindsActs.errands) == nil, "an errand that takes too long is dropped, and they go about their day")
+vst.state = "idle"
+-- defiance: a poster painted over, and a new sympathizer
+v.lcProfile.rebel, vst.rebel, mv.rebel = nil, false, nil
+local poster = ents.Create("lc_civposter")
+poster:SetPos(T0 + Vector(0, 300, 0))
+did = LC.MindsAct(mv, "defy", CurTime())
+ok(v.lcProfile.rebel == true and vst.rebel == true and vst.mindErrand ~= nil, "defiance: they side with the Resistance, and go for a poster", did)
+v:SetPos(poster:GetPos() + Vector(40, 0, 0))
+LC.MindsErrandTick(CurTime())
+ok(poster:GetNW2Bool("lc_defaced", false) == true, "the poster is painted over")
+ok(LC.MindsIsInformer(v, vst) == false, "a sympathizer is never an informant")
+v:SetPos(T0)
+vst.state = "idle"
+-- informants from who people are: the same share as the roll
+local byId = LC.Minds.byId
+LC.Minds.byId = {}
+for i = 1, 50 do LC.Minds.byId[9000 + i] = { id = 9000 + i, role = "citizen", p = { id = 9000 + i, alive = true }, name = "T" .. i } end
+LC.MindsActs.informers = nil
+v.lcProfile.rebel, vst.rebel, mv.rebel = nil, false, nil
+LC.Minds.byId[mv.id] = mv
+LC.MindsIsInformer(v, vst)
+local infs = 0
+for _ in pairs(LC.MindsActs.informers or {}) do infs = infs + 1 end
+LC.Minds.byId = byId
+LC.MindsActs.informers = nil
+ok(infs == 6, "informants come from the minds: 12% of 51 named citizens is 6", infs)
+-- an informer names a player they hold a grudge against
+v.lcProfile.rebel, vst.rebel, mv.rebel = nil, false, nil
+local grudge = newPlayer("MindGrudge", "citizen")
+grudge:SetPos(T0 + Vector(200, 0, 0))
+local gkey = "pl:" .. ((LC.MemoryKey and LC.MemoryKey(grudge)) or grudge:SteamID())
+Psy.Bond(mv, gkey, -6)
+Psy.State(mv).th = {}
+did = LC.MindsAct(mv, "inform", CurTime())
+ok(vst.snitch == true and vst.mindErrand ~= nil, "informing: they are an informant now, and set off for a unit with a name", did)
+v:SetPos(unit:GetPos() + Vector(50, 0, 0))
+LC.MindsErrandTick(CurTime())
+ok(grudge:GetNW2Float("lc_spotted_until", 0) > CurTime() and has(mv, "snitched"), "the unit hears the name: the player is outlined for Civil Protection")
+v:SetPos(T0)
+vst.state = "idle"
+-- despair
+did = LC.MindsAct(mv, "despair", CurTime())
+ok((vst.mindLowUntil or 0) > CurTime() and LC.MindsBias(v, vst, CurTime()).work == 0, "despair: no work and little queueing for a while", did)
+vst.mindLowUntil, vst.leaving, vst.state = nil, nil, "idle"
+-- an accusation, out loud
+fst.state = "idle"
+f:SetPos(T0 + Vector(120, 0, 0))
+Psy.State(mv).ties = {}
+Psy.Bond(mv, mf.id, -5)
+did = LC.MindsAct(mv, "accuse", CurTime())
+ok(has(mf, "accused") and Psy.Tie(mf, mv.id) < 5, "an accusation: the accused hears it, and thinks less of them", did)
+-- sharing
+Psy.State(mv).ties = {}
+Psy.Bond(mv, mf.id, 5)
+Psy.State(mf).food, Psy.State(mv).food = 0.1, 0.9
+LC.MindsAct(mv, "share", CurTime())
+ok(Psy.State(mf).food > 0.3 and Psy.State(mv).food < 0.8 and has(mf, "kindness"), "sharing: a hungry friend is fed from their own ration")
+-- steadying
+Psy.State(mf).stress = 10
+LC.MindsAct(mv, "steady", CurTime())
+ok(Psy.State(mf).stress == 7 and has(mf, "steadied"), "steadying: the people near are calmer for it")
+-- a brutal unit
+local mu = LC.MindOf(unit.lcProfile or LC.AttachProfile(unit, ust, LC.NewPerson("cop")) or unit.lcProfile)
+Psy.State(mu)
+unit:SetPos(T0 + Vector(60, 60, 0))
+local hp = v:Health()
+Psy.State(mv).th = {}
+did = LC.MindsAct(mu, "brutal", CurTime())
+ok(string.find(did or "", "beat", 1, true) ~= nil and (has(mv, "beaten") or has(mf, "beaten")), "a brutal unit beats the nearest citizen, who feels it", did)
+ok(v:Health() > 0 and f:Health() > 0, "never to death")
+for _, e in ipairs({ v, f }) do LC.NPCs[e].state = "idle" end
+-- a unit drinking on duty
+did = LC.MindsAct(mu, "drink", CurTime())
+ok((ust.nextInspect or 0) >= CurTime() + 299, "a unit drinking on duty stops nobody for five minutes", did)
+-- a leak
+vst.snitch = true
+local radio = {}
+local rn = LC.RadioNotice
+LC.RadioNotice = function(band, text) radio[#radio + 1] = band .. ": " .. text end
+did = LC.MindsAct(mu, "leak", CurTime())
+LC.RadioNotice = rn
+ok(#radio == 1 and string.find(radio[1], "resistance: ", 1, true) == 1 and string.find(radio[1], v.lcProfile.name, 1, true) ~= nil, "a leak: Freq 7 hears who has been informing", radio[1])
+vst.snitch = nil
+-- unrest and sociostability
+_setcvar("lc_minds_unrest", 0.4)
+local real = Psy.Unrest
+Psy.Unrest = function() return 0.5 end
+LC.MindsActs.unrestUntil = 0
+ok(LC.MindsUnrestHigh() == true, "unrest past the line: the city's mood counts")
+local level, why = LC.SocioAuto()
+ok(level ~= "green", "and sociostability is not green for it", tostring(level) .. " " .. tostring(why))
+Psy.Unrest = function() return 0.35 end
+LC.MindsActs.unrestUntil = 0
+ok(LC.MindsUnrestHigh() == true, "it holds until the mood has eased a little below the line")
+Psy.Unrest = function() return 0.1 end
+LC.MindsActs.unrestUntil = 0
+ok(LC.MindsUnrestHigh() == false, "and then it is over")
+Psy.Unrest = real
+LC.MindsActs.unrestUntil = 0
+-- the log says what was done
+local didLine = false
+for _, l in ipairs(LC.Minds.buf) do if string.find(l, "DID", 1, true) then didLine = true end end
+Psy.State(mv).stress, Psy.State(mv).broke = Psy.cfg.breakAt + 5, -1e9
+LC.Minds.idx = 0 LC.Minds.order = { mv.id }
+vst.state = "idle"
+LC.MindsStep(CurTime())
+for _, l in ipairs(LC.Minds.buf) do if string.find(l, "DID", 1, true) then didLine = true end end
+ok(didLine, "a break in the city is written down as done (DID), after the WOULD line")
+ok(#LC.MindsActReport() >= 1, "the debug report says what the minds have done")
+for _, e in ipairs({ unit, poster, grudge }) do if IsValid(e) then e:Remove() end end
+LC.MindsActs.errands = {}
+_setcvar("lc_minds_act", 0)
 -- off
 _setcvar("lc_minds", 0)
 local n0 = #LC.Minds.buf
@@ -10965,6 +11107,147 @@ ok(#LC.Minds.buf == n0 and LC.MindsSeem(v) == "", "lc_minds 0: nothing is watche
 for _, e in ipairs({ v, f, cop }) do if IsValid(e) then e:Remove() end end
 end
 MindsTests()
+
+function BrainTests()
+section("The director and free talk: a hosted model, on a short list")
+local Psy = LC.Psy
+_setcvar("lc_minds", 1) _setcvar("lc_minds_act", 1) _setcvar("lc_minds_show", 0)
+_setcvar("lc_brain", 1) _setcvar("lc_brain_talk", 1) _setcvar("lc_director", 2) _setcvar("lc_brain_daily", 1500)
+LC.Minds.byId, LC.Minds.order, LC.Minds.idx, LC.Minds.buf, LC.Minds.counts, LC.Minds.loaded = {}, {}, 0, {}, {}, true
+local B = LC.Brain
+B.lastTalk, B.minute, B.backOff, B.today, B.day, B.decisions, B.moved, B.talks, B.inFlight, B.useLoaded = {}, {}, nil, 0, os.date("%Y-%m-%d"), {}, {}, {}, 0, true
+local reqs, answer = {}, nil
+local realHTTP = LC.BrainHTTP
+LC.BrainHTTP = function(req)
+    reqs[#reqs + 1] = req
+    if not answer then return end
+    local code, body = answer(req)
+    if code then req.success(code, body) else req.failed("timed out") end
+end
+local function reply(tbl, stop)
+    return 200, LC.BrainJSON({ content = { { type = "text", text = LC.BrainJSON(tbl) } }, stop_reason = stop or "end_turn",
+        usage = { input_tokens = 100, output_tokens = 20 } })
+end
+local T0 = Vector(-41000, 29000, 0)
+local n, st = LC.SpawnCitizen(T0)
+st.leaveAt = nil n.sim = false
+if not n.lcProfile then LC.AttachProfile(n, st, LC.NewPerson("citizen")) end
+st.state = "idle"
+local who = n.lcProfile.name
+local m = LC.MindOf(n.lcProfile)
+Psy.State(m)
+local ply = newPlayer("BrainTalker", "citizen")
+ply:SetPos(T0 + Vector(80, 0, 0))
+ply.chat = {}
+ply.GetEyeTrace = function() return { Entity = n } end
+local function heard(text) for _, l in ipairs(ply.chat) do if string.find(l, text, 1, true) then return true end end return false end
+
+-- no key: nothing at all
+LC.BrainSetKey("")
+ok(LC.BrainHeard(ply, "say", "Hello there") == false and LC.DirectorLook(CurTime()) == false and #reqs == 0, "no key: nothing is asked, nothing changes")
+LC.BrainSetKey("sk-test-123")
+ok(_files["livingcity/brain_key.txt"] == "sk-test-123" and LC.BrainHasKey(), "the key is kept on the server, in data/livingcity/brain_key.txt")
+ok(LC.BrainJSON({ max_tokens = 1000, a = { "x", "y" }, s = "q\"\n" }) == '{"a":["x","y"],"max_tokens":1000,"s":"q\\"\\n"}', "requests are written with whole numbers and safe strings")
+ok(LC.BrainClean("one\226\128\148two\nthree") == "one, two three", "what the model writes is made one clean line, with no long dashes")
+
+-- free talk
+answer = function() return reply({ say = "Keep your voice down. They listen.", feeling = "1", act = "none" }) end
+ok(LC.BrainHeard(ply, "say", "Hello there") == true and #reqs == 1, "say something while looking at a named person: the model is asked")
+local r = reqs[1]
+ok(r.url == "https://api.anthropic.com/v1/messages" and r.method == "POST" and r.headers["x-api-key"] == "sk-test-123"
+    and r.headers["anthropic-version"] == "2026-10-21", "asked the right way: the address, the key and the version")
+ok(string.find(r.body, '"model":"claude-haiku-5-5"', 1, true) and string.find(r.body, '"max_tokens":1000', 1, true)
+    and string.find(r.body, who, 1, true) and string.find(r.body, "Hello there", 1, true) and string.find(r.body, "json_schema", 1, true),
+    "the request names the small model, who they are and what was said")
+ok(not string.find(r.body, ply:SteamID(), 1, true), "never the player's Steam id")
+ok(heard(who .. " says: \"Keep your voice down. They listen.\""), "and they answer out loud, in their own name")
+ok(LC.Feeling(n, ply) == 1 and Psy.Tie(m, "pl:" .. LC.MemoryKey(ply)) == 1, "a kind word is remembered: they think a little better of you")
+ok(LC.BrainHeard(ply, "say", "And again") == false, "not twice in a few seconds")
+_advance(6)
+ok(LC.BrainHeard(ply, "me", "waves") == false and LC.BrainHeard(ply, "looc", "hi") == false, "an action or out-of-character chat is not for them")
+LC.BrainHeard(ply, "say", "Who runs this block?")
+ok(string.find(reqs[#reqs].body, "They said: Hello there", 1, true) ~= nil, "they remember what was just said between you")
+-- the service is down, or says no: nothing happens
+_advance(6)
+ply.chat = {}
+answer = function() return 500, '{"error":{"message":"overloaded"}}' end
+LC.BrainHeard(ply, "say", "Anyone home?")
+ok(#ply.chat == 0 and st.brainBusy == nil and (B.backOff or 0) > CurTime(), "the service is down: no answer, the city goes on, and it waits before asking again")
+B.backOff = nil
+_advance(6)
+answer = function() return reply({ say = "I should not say.", feeling = "0", act = "none" }, "refusal") end
+LC.BrainHeard(ply, "say", "Tell me something")
+ok(#ply.chat == 0, "an answer the service would not finish is not shown")
+_advance(6)
+-- an informant reports what they heard
+st.snitch = true
+local unit, ust = LC.SpawnCop(T0 + Vector(500, 0, 0))
+unit.sim = false
+answer = function() return reply({ say = "Is that so.", feeling = "-1", act = "report" }) end
+LC.BrainHeard(ply, "say", "The Resistance meets tonight")
+ok(st.mindErrand ~= nil, "an informant who hears sedition sets off for a unit")
+n:SetPos(unit:GetPos() + Vector(40, 0, 0))
+LC.MindsErrandTick(CurTime())
+ok(ply:GetNW2Float("lc_spotted_until", 0) > CurTime(), "and the player is named to Civil Protection")
+n:SetPos(T0) st.state = "idle" st.snitch = nil
+_advance(6)
+
+-- the director
+local digest = LC.DirectorDigest()
+ok(digest and string.find(digest, who, 1, true) and string.find(digest, LC.CharacterName and LC.CharacterName(ply) or ply:Nick(), 1, true),
+    "the director is shown who is where: the player and the named people near them")
+local n2, st2 = LC.SpawnCitizen(T0 + Vector(100, 100, 0))
+st2.leaveAt = nil n2.sim = false
+if not n2.lcProfile then LC.AttachProfile(n2, st2, LC.NewPerson("citizen")) end
+st2.state = "idle"
+local m2 = LC.MindOf(n2.lcProfile)
+Psy.State(m2).stress = 10
+answer = function() return reply({ action = "break", event = "", person = who, kind = "steady", player = "", line = "", reason = "A calm word before the sweep." }) end
+ok(LC.DirectorLook(CurTime()) == true and #B.decisions == 1 and string.find(B.decisions[1].text, "steady", 1, true) ~= nil, "it picks a named person to act, and it is written down", B.decisions[1] and B.decisions[1].text)
+ok(Psy.State(m2).stress == 7, "and they do: the people near are steadied")
+local ok2, why = LC.DirectorApply({ action = "break", person = who, kind = "tantrum" }, CurTime())
+ok(ok2 == false, "the same person is not moved again so soon", why)
+B.moved = {}
+ok2, why = LC.DirectorApply({ action = "break", person = who, kind = "brutal" }, CurTime())
+ok(ok2 == false, "a citizen cannot be told to do what only a unit does", why)
+ok2, why = LC.DirectorApply({ action = "break", person = "Nobody Atall", kind = "steady" }, CurTime())
+ok(ok2 == false, "a name it made up is refused", why)
+ok2, why = LC.DirectorApply({ action = "event", event = "lockdown" }, CurTime())
+ok(ok2 == false, "an event off its list is refused", why)
+-- an approach
+ply.chat = {}
+st.state = "idle"
+ok2, why = LC.DirectorApply({ action = "approach", person = who, player = LC.CharacterName and LC.CharacterName(ply) or ply:Nick(), line = "You. They were asking about you at the checkpoint." }, CurTime())
+ok(ok2 == true and st.mindErrand ~= nil, "an approach: the citizen sets off for the player", why)
+n:SetPos(ply:GetPos() + Vector(40, 0, 0))
+LC.MindsErrandTick(CurTime())
+ok(heard("They were asking about you at the checkpoint."), "and says the line when they get there")
+n:SetPos(T0) st.state = "idle"
+-- watching only
+_setcvar("lc_director", 1)
+B.moved = {}
+Psy.State(m2).stress = 10
+answer = function() return reply({ action = "break", event = "", person = who, kind = "steady", player = "", line = "", reason = "Again." }) end
+LC.DirectorLook(CurTime())
+ok(Psy.State(m2).stress == 10 and string.find(B.decisions[#B.decisions].text, "would have", 1, true) == 1, "lc_director 1: it only writes down what it would have done")
+_setcvar("lc_director", 2)
+-- the day's limit
+_setcvar("lc_brain_daily", 1)
+local before = #reqs
+ok(LC.DirectorLook(CurTime()) == false and #reqs == before, "past the day's limit nothing more is asked")
+_setcvar("lc_brain_daily", 1500)
+-- the report never shows the key
+local shows = false
+for _, l in ipairs(LC.BrainReport()) do if string.find(l, "sk-test-123", 1, true) then shows = true end end
+ok(not shows and #LC.BrainReport() >= 2, "the debug report says how much was asked, and never shows the key")
+LC.BrainSetKey("")
+ok(_files["livingcity/brain_key.txt"] == nil and not LC.BrainHasKey(), "saving an empty key clears it")
+LC.BrainHTTP = realHTTP
+LC.MindsActs.errands = {}
+for _, e in ipairs({ n, n2, unit, ply }) do if IsValid(e) then e:Remove() end end
+_setcvar("lc_minds_act", 0) _setcvar("lc_minds", 0)
+end
+BrainTests()
 function GiveTests()
 section("Giving a citizen something: food, a drink or a smoke, medicine, papers, arms")
 local function Later(secs) _advance(secs) _runtimers() end

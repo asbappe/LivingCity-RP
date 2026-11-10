@@ -48,7 +48,7 @@ LC = LC or {}
 local Psy = LC.Psy
 
 local FLAGS = FCVAR_ARCHIVE
-local cvOn = CreateConVar("lc_minds", "1", FLAGS, "The city's minds: watch how the named people feel and write it down (data/livingcity/minds/); nobody behaves differently")
+local cvOn = CreateConVar("lc_minds", "1", FLAGS, "The city's minds: how the named people feel, written down in data/livingcity/minds/ (what they do about it: lc_minds_act)")
 local cvShow = CreateConVar("lc_minds_show", "0", FLAGS, "Talking to a named person says how they seem and why (from the city's minds)")
 
 local DIR = "livingcity/minds"
@@ -94,6 +94,8 @@ local function WhoKey(ent)
     return nil
 end
 
+LC.MindsWhoKey = WhoKey
+
 local function Name(id)
     if id == nil then return "something" end
     if M.names[id] then return M.names[id] end
@@ -115,6 +117,21 @@ local function Log(kind, fmt, ...)
     if #M.buf > 2000 then table.remove(M.buf, 1) end
 end
 LC.MindsLog = Log
+-- A line from elsewhere (the director and free talk: sv_livingcity_brain.lua).
+function LC.MindsNote(kind, text) if M.loaded then Log(kind, "%s", tostring(text)) end end
+-- The last few things that happened, for the director: the log's lines without the clock.
+local RECENT = { HURT = true, KILLED = true, ARREST = true, DID = true, SNITCH = true, CITY = true, KIND = true }
+function LC.MindsRecent(n)
+    local out = {}
+    for i = #M.buf, 1, -1 do
+        local kind, rest = string.match(M.buf[i], "^.-  (%u+)  (.*)$")
+        if kind and RECENT[kind] then
+            table.insert(out, 1, string.lower(kind) .. ": " .. string.sub(rest, 1, 160))
+            if #out >= (n or 8) then break end
+        end
+    end
+    return out
+end
 
 local function Count(k) M.counts[k] = (M.counts[k] or 0) + 1 end
 
@@ -211,6 +228,7 @@ local function NearbyMinds(pos, except)
     end
     return out
 end
+LC.MindsNearby = NearbyMinds
 
 local function Witness(pos, except, item, thought, victim)
     local now = CurTime()
@@ -491,7 +509,14 @@ function ctx.Break(m, kind)
     Log("WOULD", "%s%s: %s%s%s  [%s]%s", m.name, m.role == "cop" and "" or (m.rebel and " (sympathizer)" or ""), kind, target,
         IsValid(m.p and m.p.npc) and " (on the streets)" or " (off the streets)", Psy.Describe(m, CurTime(), Name),
         #words > 0 and (" {" .. table.concat(words, ", ") .. "}") or "")
+    -- and it happens (sv_livingcity_mindsact.lua; nothing with lc_minds_act 0)
+    local did = LC.MindsAct and LC.MindsAct(m, kind, CurTime())
+    if did then
+        Count("did_" .. kind)
+        Log("DID", "%s: %s: %s", m.name, kind, did)
+    end
 end
+LC.MindsCtx = ctx
 
 function ctx.Heard(m, n)
     Count("news_passed")

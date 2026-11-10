@@ -1499,3 +1499,19 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **Ask the Colonel "What's happening to you?":** not offered while he looks solid. After the first job it is there once and he brushes it off; it comes back once after each further quarter (a job, or ten visits five minutes apart after all three jobs). Fully ghostly, he tells the truth, and from then on his greeting says it too.
   Notes:
+
+## 10 November: the minds act, the director and free talk
+- [ ] **Minds act:** leave the server running with a few named citizens out. Within the hour somebody should break in the street (a line starting `**` in chat when you are near). Check `data/livingcity/minds/` has `DID` lines after `WOULD` lines.
+  Notes:
+- [ ] **Bias:** a hungry or worn down named citizen should be seen queueing or sitting more than working. Does the street still look busy enough?
+  Notes:
+- [ ] **Unrest:** after a rough stretch (beatings, arrests) does sociostability go yellow for "the mood of the city", and come back?
+  Notes:
+- [ ] **Key:** editor panel > "The director and free talk": paste the key, Save, Test. Does the notice say the model answered?
+  Notes:
+- [ ] **Free talk:** look at a named citizen within a few steps and say something in chat. Do they turn and answer in a few seconds? Is the voice right for the city? Try a unit too.
+  Notes:
+- [ ] **Director:** play 20 minutes, then read the debug report section "The director and free talk": are its last decisions sensible, and did you see one happen (someone walking up to you with a line)?
+  Notes:
+- [ ] **Cost:** after an evening, compare "requests today" and the tokens in the debug report with the bill on the service.
+  Notes:

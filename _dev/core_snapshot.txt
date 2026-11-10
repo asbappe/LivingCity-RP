@@ -149,6 +149,8 @@ console command lc_backup
 console command lc_backup_call
 console command lc_backups
 console command lc_blackout
+console command lc_brain_key
+console command lc_brain_test
 console command lc_breencast
 console command lc_broadcast
 console command lc_buildmode
@@ -528,6 +530,10 @@ setting lc_bodies = 1
 setting lc_body_time = 300
 setting lc_bolo_minutes = 30
 setting lc_bounties = 1
+setting lc_brain = 1
+setting lc_brain_daily = 1500
+setting lc_brain_model = claude-haiku-5-5
+setting lc_brain_talk = 1
 setting lc_brandish = 1
 setting lc_brandish_grace = 10
 setting lc_brandish_wanted = 180
@@ -624,6 +630,8 @@ setting lc_directive_pay = 10
 setting lc_directive_sign_minutes = 20
 setting lc_directive_staff_minutes = 5
 setting lc_directives = 0
+setting lc_director = 2
+setting lc_director_minutes = 3
 setting lc_disguise_risk = 5
 setting lc_downed = 1
 setting lc_downed_secs = 90
@@ -915,7 +923,9 @@ setting lc_market_scarce_stock = 5
 setting lc_max_bodies = 16
 setting lc_mentor_xp = 25
 setting lc_minds = 1
+setting lc_minds_act = 1
 setting lc_minds_show = 0
+setting lc_minds_unrest = 0.4
 setting lc_morning_exercise = 1
 setting lc_needs = 1
 setting lc_nest_regrow_minutes = 6
