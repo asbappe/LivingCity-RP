@@ -434,6 +434,46 @@ local function MyDreamsPage()
     return { title = "MY DREAMS", items = items, empty = rows }
 end
 
+-- The state of the city (sv_livingcity_ledger.lua): the five numbers in words, the districts and who holds them.
+local function LedgerWord(v)
+    v = tonumber(v) or 50
+    if v >= 80 then return "very high" elseif v >= 60 then return "high" elseif v > 40 then return "steady" elseif v > 20 then return "low" end
+    return "very low"
+end
+local function CityPage()
+    local l = util.JSONToTable(GetGlobal2String("lc_ledger", "") or "") or {}
+    local rows = {
+        string.format("Day %d. Supply %s, morale %s.", l.day or 0, LedgerWord(l.supply), LedgerWord(l.morale)),
+        string.format("Civil Protection %s, the Resistance %s.", LedgerWord(l.combine), LedgerWord(l.resistance)),
+        string.format("The Administrator's authority: %s.", LedgerWord(l.authority)),
+    }
+    for _, d in ipairs(l.districts or {}) do
+        if #rows < 9 then
+            rows[#rows + 1] = string.format("%s: %s%s", tostring(d.name), d.owner == "contested" and "contested" or (d.owner == "resistance" and "the Resistance's" or "the Combine's"),
+                d.mark == "liberated" and " (liberated)" or (d.mark == "crackdown" and " (crackdown)" or ""))
+        end
+    end
+    local b = GetGlobal2String("lc_city_bulletin", "")
+    return { title = "THE STATE OF THE CITY", items = { Item(b ~= "" and "Read this morning's bulletin" or "No bulletin yet today", function()
+        if b ~= "" then chat.AddText(Color(200, 200, 160), "[City Bulletin] ", Color(230, 230, 230), b) end end) }, empty = rows }
+end
+local function LeversPage()
+    local l = util.JSONToTable(GetGlobal2String("lc_ledger", "") or "") or {}
+    local items = {}
+    if l.stand then items[#items + 1] = Item("Go to the speech stand", function() Send("speechstand") end) end
+    items[#items + 1] = Item(l.spoke and "Give a speech (done today)" or "Give a speech... (morale +6, authority +3)", function() Say("A speech", "Your words to the whole city, from the stand", "!speech ") end)
+    items[#items + 1] = Item(l.amnesty and "Declare an amnesty (done today)" or "Declare an amnesty (morale +6, authority -8, Resistance +3)", function() Send("amnesty") end)
+    items[#items + 1] = Page("Order a crackdown on a district (authority +5, morale -6, Resistance +4)", function()
+        local its = {}
+        for _, d in ipairs(l.districts or {}) do
+            if #its < 8 then its[#its + 1] = Item(tostring(d.name), function() Send("crackdown", tostring(d.n)) end) end
+        end
+        return { title = "WHICH DISTRICT?", items = its, empty = #its == 0 and { "No housing blocks in this city." } or nil }
+    end)
+    items[#items + 1] = Item("Order extra rations (supply -15, morale +8)", function() Send("extrarations") end)
+    return { title = "THE CITY'S LEVERS", items = items }
+end
+
 -- Prices on heads (sv_livingcity_opplan.lua): the wanted, and 50 or 100 credits on one.
 local function BountyPage()
     local list = util.JSONToTable(LocalPlayer():GetNW2String("lc_bounty_menu", "") or "") or {}
@@ -500,6 +540,8 @@ local function MineItems(me)
             or "Survival: Realistic (switch to Relaxed)", function() Send("survival") end)
     end
     out[#out + 1] = Page("My dreams (which to sit out)", MyDreamsPage)
+    if GetGlobal2String("lc_ledger", "") ~= "" then out[#out + 1] = Page("The state of the city", CityPage) end
+    if me:GetNW2String("lcf_faction", "") == "admin" then out[#out + 1] = Page("The city's levers (speeches, amnesty, crackdowns, rations)", LeversPage) end
     return out
 end
 local function MinePage()

@@ -427,7 +427,8 @@ local function HudBack(w, h, col)
     local r, g, b, a = col.r, col.g, col.b, col.a or 255
     if type(r) ~= "number" or r > 60 or g > 60 or b > 64 or a < 40 then return false end
     if w < 100 or h < 20 then return false end
-    local sw, sh = ScrW and ScrW() or 1920, ScrH and ScrH() or 1080
+    local sw = ScrW and ScrW() or 1920
+    local sh = ScrH and ScrH() or 1080
     if type(sw) ~= "number" or type(sh) ~= "number" then return false end
     return w * h < sw * sh * 0.35
 end

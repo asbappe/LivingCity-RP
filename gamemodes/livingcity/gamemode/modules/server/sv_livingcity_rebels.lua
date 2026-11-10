@@ -231,6 +231,8 @@ function LC.RebelTarget()
     local want = math.max(0, cvRebels:GetInt()) + (LC.GrownCount and LC.GrownCount("rebel") or 0)
         + (LC.MarketRebelBonus and LC.MarketRebelBonus() or 0) -- (each Commissary restriction, another joins them: sv_livingcity_market.lua)
         + (LC.ImbalanceRebels or 0) -- (the Combine's players far outnumbering the Resistance's: sv_livingcity_imbalance.lua)
+        + (LC.LedgerRebels or 0) -- (the Resistance's strength, day to day: sv_livingcity_ledger.lua)
+    want = math.max(0, want)
     -- (the owner, 9 November: "slightly more resistance NPCs than combine"): never fewer than lc_rebel_per_combine for each
     -- Combine NPC on the streets (still within the zones' room, the Resistance's reserve and the NPC cap)
     local per = math.max(0, cvPerUnit:GetFloat())

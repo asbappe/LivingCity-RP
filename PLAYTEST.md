@@ -1373,6 +1373,15 @@ Notes:
 - [ ] **Lag check:** with it on and off (editor panel, "Watch the city's minds"), is there any difference? (It should cost about 0.01 ms a second.)
   Notes:
 
+## 10 November, last: the state of the city
+
+- [ ] **The bulletin:** wait for a city morning (or an hour): a City Bulletin should appear on the screens and in chat with what changed.
+  Notes:
+- [ ] **F2 > Me > The state of the city:** the five numbers in words and every block with who holds it.
+  Notes:
+- [ ] **Her levers:** as Administrator, place a "Point: speech stand", then F2 > Me > The city's levers: go to the stand, give a speech (citizens nearby gain standing), declare an amnesty, order a crackdown on a block (a raid should start there) and extra rations (a ration day).
+  Notes:
+- [ ] **It carries over:** restart the server: the numbers and districts should be as they were, with the days that passed drifted through.
 ## 10 November: window styles, second pass
 - [ ] **Terminal screens:** the Commissary, Civil Intake, Housing and Labor screens in the world are black glass with cyan lines and corner brackets, for a citizen too. Buttons light up with a cyan outline under the crosshair.
   Notes:

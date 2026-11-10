@@ -188,6 +188,7 @@ LC_MODULES = {
         "sv_livingcity_cpduty", -- (a unit's shift: the quota, papers duty, inspections, the review)
         "sv_livingcity_snitches", -- (secret informants among the citizens, and the Resistance burning one)
         "sv_livingcity_opplan", -- (the Resistance plans its own operations; the Combine puts prices on heads)
+        "sv_livingcity_ledger", -- (the state of the city, day to day: five numbers, districts with an owner, the bulletin, her levers)
         "sv_livingcity_vort",
         "sv_livingcity_vortwork", -- (things to do as a vortigaunt, and the freed ones' camp life)
         "sv_livingcity_weeds", -- (weeds on open ground, the Groundskeeper, weedkiller as poison)

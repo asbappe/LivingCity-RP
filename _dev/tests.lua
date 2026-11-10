@@ -53,6 +53,7 @@ _setcvar("lc_search_fight_choice", 0) -- (fight or comply: tested on its own, in
 _setcvar("lc_wear_uses", 0) -- (tools wearing out at random: tested on its own)
 _setcvar("lc_survival_modes", 0) -- (Realistic or Relaxed, and its 20% bonus: tested on its own, SurvivalModeTests)
 _setcvar("lc_snitches", 0) -- (secret informants among the citizens, at random: tested on their own, SnitchTests)
+_setcvar("lc_ledger", 0) -- (the state of the city, day to day, and its effects on the streets: tested on its own, LedgerTests)
 _setcvar("lc_minds", 0) -- (watching the city's minds draws random numbers: tested on its own, MindsTests)
 _setcvar("lc_quest_allies", 0) -- (friendly NPCs on violent jobs: tested on their own, in QuestSquadTests)
 _setcvar("lc_directives", 1) -- (the G-Man's directives are off by default now, set aside by the owner; still tested as they are)
@@ -11110,6 +11111,84 @@ LC.ReleasePrisoner(crook)
 for _, x in ipairs({ lt, mem, unit, adm, cop, crook }) do x:SetPos(O0 + Vector(30000, 0, 0)) end
 end
 OpPlanTests()
+function LedgerTests()
+section("The state of the city: five numbers day to day, districts with an owner, the bulletin, her levers")
+local function Later(secs) _advance(secs) _runtimers() end
+_setcvar("lc_ledger", 1)
+_setcvar("lc_ledger_effects", 1)
+local E0 = Vector(103000, -103000, 0)
+local bz = LC.AddZone(E0, 500, "block", 41)
+local s = LC.LedgerReload()
+for _, k in ipairs({ "supply", "morale", "combine", "resistance", "authority" }) do s[k] = 50 end
+s.districts, s.crackdown, s.liberated, s.news, s.day, s.speechDay, s.amnestyDay = {}, {}, {}, {}, 0, -1, -1
+ok(LC.LedgerBlockAt(E0) == 41 and LC.DistrictOwner(41) == "contested", "each housing block is a district; it starts contested")
+hook.Run("LivingCityRebelOpDone", "heist", { target = E0 })
+ok(s.resistance == 54 and s.combine == 48 and s.authority == 48, "an operation that works: the Resistance up, Civil Protection and authority down")
+ok(LC.DistrictControl(41) == 15, "and the district it hit leans their way")
+for _ = 1, 2 do hook.Run("LivingCityRebelOpDone", "screen", { target = E0 }) end
+ok(LC.DistrictOwner(41) == "resistance", "enough of them and the district is the Resistance's")
+hook.Run("LivingCityBlockRaided", 41, { a = 2 })
+ok(LC.DistrictControl(41) == 35 and s.resistance < 62, "a raid that finds things pushes it back")
+-- a new day: the drift and the bulletin
+local sup = s.supply
+LC.LedgerNewDay(false)
+local b = GetGlobal2String("lc_city_bulletin", "")
+ok(s.day == 1 and string.find(b, "City Bulletin, day 1", 1, true) and string.find(b, "raided", 1, true), "each city morning, a City Bulletin on the screens: what changed and why", b)
+ok(s.supply == sup - 4 and #s.news == 0, "the city eats into its supply; the news is told once")
+-- effects on the streets
+s.combine, s.resistance, s.authority = 98, 2, 100
+LC.LedgerEffects()
+ok(LC.LedgerCops == 4 and LC.LedgerRebels == -4 and math.abs(LC.LedgerSnitchMul - 1.5) < 0.01, "a strong Combine puts more units on the streets, a weak Resistance fewer fighters, high authority more informants")
+s.combine, s.resistance, s.authority = 50, 50, 50
+-- the collapse leaves a mark
+local rz = LC.AddZone(E0 + Vector(200, 0, 0), 200, "rebel", 0)
+local raidWas, raided = LC.StartRaid, nil
+LC.StartRaid = function(n) raided = n return true end
+hook.Run("LivingCityCollapseOver", "killed")
+ok(LC.DistrictOwner(41) == "resistance" and select(2, LC.DistrictOwner(41)) == "liberated", "the Administrator killed: the district nearest rebel ground is liberated")
+for _ = 1, 3 do LC.LedgerNewDay(true) end
+LC.LedgerNewDay(false)
+ok(raided == 41 and select(2, LC.DistrictOwner(41)) ~= "liberated", "three days later, the Combine come back for it")
+hook.Run("LivingCityCollapseOver", "crushed")
+ok(select(2, LC.DistrictOwner(41)) == "crackdown", "the uprising crushed: a crackdown week in every district")
+s.crackdown = {}
+-- her levers
+local adm = newPlayer("LedgerAdministrator", "admin")
+Later(0.5)
+adm:SetPos(E0 + Vector(0, 0, 0))
+local m0, a0 = s.morale, s.authority
+ok(LC.GiveSpeech(adm, "Citizens, your city thanks you for your work.") and s.morale == m0 + 6 and s.authority == a0 + 3, "a speech: morale and authority up")
+ok(not LC.GiveSpeech(adm, "Again, citizens, again and again."), "one a day")
+local crook = newPlayer("LedgerCrook", "citizen")
+Later(0.3)
+LC.ReportCrime(crook, "Theft", 600)
+crook.lcGraceUntil = 0
+ok(LC.Amnesty(adm) and not LC.PlayerIsWanted(crook), "an amnesty: the wanted forgiven (authority spent)")
+raided = nil
+ok(LC.Crackdown(adm, 41) and raided == 41 and select(2, LC.DistrictOwner(41)) == "crackdown", "a crackdown on a district: a raid there now, and the district marked")
+local evWas, ev = LC.StartEvent, nil
+LC.StartEvent = function(n) ev = n return true end
+s.supply = 50
+ok(LC.ExtraRations(adm) and ev == "rations" and s.supply == 35, "extra rations: a ration day, out of the stores")
+s.supply = 10
+ok(not LC.ExtraRations(adm), "not with the stores nearly empty")
+LC.StartEvent = evWas
+local stand = LC.AddPoint(E0 + Vector(0, 2000, 0), 90, "speech", 0)
+ok(LC.GoToSpeechStand(adm) and adm:GetPos():Distance(stand.pos) < 120, "she's taken to the speech stand")
+LC.RemovePoint(stand)
+-- kept, and the days it missed
+LC.LedgerSave()
+local saved = s.morale
+s = LC.LedgerReload()
+ok(s.morale == saved, "the state of the city is kept on disk")
+s.lastSave = os.time() - 3 * 60 * 60
+ok(LC.LedgerCatchUp() == 3, "the days the server was empty pass too")
+LC.StartRaid = raidWas
+LC.RemoveZone(bz) LC.RemoveZone(rz)
+for _, x in ipairs({ adm, crook }) do x:SetPos(E0 + Vector(30000, 0, 0)) end
+_setcvar("lc_ledger", 0)
+end
+LedgerTests()
 
 function PapersHousingTests()
 section("Papers you carry, the housing register, transfers")
