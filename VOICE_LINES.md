@@ -541,12 +541,12 @@ The old man who gives advice: warm, worn, a little wry. Folder: **`garrysmod/sou
 | [ ] | `thanks_hungry1.wav` | You helped him with it | Food. Real food. You don't know what that means to an old man. |
 | [ ] | `hint_thirsty1.wav` | What's troubling him (said instead of his greeting) | The tap on my floor's been dry a week. Carrying water up those stairs, at my age... |
 | [ ] | `thanks_thirsty1.wav` | You helped him with it | Water. Bless you. I'll make it last. |
-| [ ] | `hint_cough1.wav` | What's troubling him (said instead of his greeting) | This cough. The Commissary wants more for its tablets than I see in a month. |
-| [ ] | `thanks_cough1.wav` | You helped him with it | For my chest? I'll sleep tonight, for the first time in a while. |
+| [ ] | `hint_cough1.wav` | What's troubling him (said instead of his greeting) | This cough. Twenty years I've had it. The Commissary wants more for its medicine than I see in a month. |
+| [ ] | `thanks_cough1.wav` | You helped him with it | Medicine? For me? I'll sleep tonight, for the first time in a long while. |
 | [ ] | `hint_card1.wav` | What's troubling him (said instead of his greeting) | Some young thug took my ration card in the line. I'm too old to work a shift for another. |
 | [ ] | `thanks_card1.wav` | You helped him with it | A card? You worked for that. I won't forget it. Not ever. |
-| [ ] | `hint_radio1.wav` | What's troubling him (said instead of his greeting) | I miss music. They took my old wireless, years ago. The quiet gets into you. |
-| [ ] | `thanks_radio1.wav` | You helped him with it | A radio... Turn the dial past the Union band some night. You'll hear things worth hearing. |
+| [ ] | `hint_smoke1.wav` | What's troubling him (said instead of his greeting) | What I wouldn't give for a smoke. Even the Union's, and those taste of floor sweepings. |
+| [ ] | `thanks_smoke1.wav` | You helped him with it | Ah. Now that's a kindness. Sit with me while I have it. |
 | [ ] | `food1.wav` | (said between answers) | For me? You're a good one. I won't forget it. |
 | [ ] | `greet1.wav` | (said between answers) | Sit down, sit down. My knees aren't what they were. What do you want to know? |
 | [ ] | `greet_friend1.wav` | (said between answers) | Ah, you again. Good. Not many come back. |

@@ -48,3 +48,10 @@ Each character chooses how hard staying alive is:
 - **Where to choose:** the characters screen (C > Your characters: the "Survival" button on the character you're playing) or F2 > Me ("Survival: Realistic (switch to Relaxed)"). Switching is allowed once every `lc_survival_switch_hours` (3). Each character keeps its own choice.
 - `lc_survival_modes` 0: everyone Realistic, with no bonus and no title, exactly as before.
 
+**Catching something (the owner, 10 November: "a framework for illness that can be contracted such as a bad cough and vomitting and other things; it shouldn't be horrifically annoying and can fit into the Realistic survival mechanics").** Realistic survival only: Relaxed characters never fall ill. Each illness passes by itself, and once over it you can't catch it again for half an hour. (`sv_livingcity_illness.lua`; add one with a row in `LC.Illnesses`.)
+- **A cold (a bad cough):** caught out in the rain (3% a minute, 5% in a storm) or from someone coughing right next to you. You cough every minute or so (everyone near hears it), and get a little thirstier. 20 minutes. Left alone, it may turn into a fever.
+- **A stomach bug:** raw meat (25%), dirty water and anything else that can give parasites (15%), now and then a bin (3%). Every two or three minutes you double over and vomit: a little hunger and thirst gone, a mess on the floor. 10 minutes; a drink of clean water halves what's left.
+- **A fever:** from an untreated cold. The world swims (like thirst), and it wears your health down to 60, no lower. 12 minutes.
+- **Union medicine** (new item: the Commissary, 12 credits; the black market, 18): cures a cold or a fever at once, from your pockets (Take). It does nothing for parasites or a stomach bug, and antiparasitic tablets do nothing for a cold.
+- You feel it before you're told (the coughing, the screen); the tip card waits like the others. Settings: `lc_illness` (1; 0 and nobody falls ill), `lc_illness_rate` (1; 0.5 is half as likely).
+

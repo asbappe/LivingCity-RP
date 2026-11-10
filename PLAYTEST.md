@@ -1282,3 +1282,9 @@ Notes:
   Notes:
 - [ ] **Work detail by turns:** ask for a work detail three times in one sentence. First trash, then sweeping (a push broom and grime; hold E on each patch), then, if there are toilets in your Combine zone, unclogging: the guard walks you to each blocked toilet, E on it, water should splash out of the bowl for six seconds.
   Notes:
+- [ ] **Illness (Realistic):** stand in the rain a while (or `lc_illness_rate 20` to hurry it): a cold, coughing. Buy Union medicine at the Commissary and take it. Eat raw meat: a stomach bug, vomiting; drink clean water. Leave a cold alone: maybe a fever (health stops at 60). On Relaxed: nothing.
+  Notes:
+- [ ] **The old-timer's new troubles:** his cough wants Union medicine (tablets refused), and his last trouble is a smoke (a cigarette), not a radio.
+  Notes:
+- [ ] **Poster art:** put a test image at `garrysmod/materials/livingcity/posters/curfew.png`, FastDL sync, change map: a curfew poster shows it.
+  Notes:

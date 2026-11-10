@@ -357,6 +357,7 @@ item jammer
 item keepsake
 item lockpick
 item master_chip
+item medicine
 item melon
 item milk
 item moonshine
@@ -778,6 +779,8 @@ setting lc_hunger_minutes = 60
 setting lc_hygiene = 1
 setting lc_ic_chat = 1
 setting lc_identity_minutes = 30
+setting lc_illness = 1
+setting lc_illness_rate = 1
 setting lc_infest_hazard_posts = 1
 setting lc_infest_max = 30
 setting lc_infest_nest_models = 
