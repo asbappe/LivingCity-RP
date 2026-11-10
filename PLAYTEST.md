@@ -1372,3 +1372,5 @@ Notes:
   Notes:
 - [ ] **Lag check:** with it on and off (editor panel, "Watch the city's minds"), is there any difference? (It should cost about 0.01 ms a second.)
   Notes:
+- [ ] **Citizens drinking and smoking:** stand near citizens for a few minutes: now and then one lights up (puffs of smoke from their head) or swigs from a bottle in their hand, and stops when they walk off. Does the bottle sit right in the hand? Too often, or too rare? (Editor panel: "Citizens fond of a drink and a smoke" turns it off.)
+  Notes:

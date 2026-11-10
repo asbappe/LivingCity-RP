@@ -75,7 +75,10 @@ local function Witnesses(where, except, n, item, thought)
 end
 
 local function Arrest(p, by, why)
+    if not p then return end
+    if p.sheltered then p.sheltered = nil Log("  ...but %s is hidden, and the units find nobody", p.name) Count("sheltered_saved") return end
     p.jailedUntil = now + DAY * 0.15
+    p.arrests = (p.arrests or 0) + 1
     Psy.Think(p, "arrested", now, by and by.id)
     if by then Psy.Bond(p, by.id, -4) end
     for _, q in ipairs(people) do
@@ -126,6 +129,8 @@ function ctx.Partner(p)
 end
 function ctx.Break(p, kind)
     Count(kind)
+    p.did = p.did or {}
+    p.did[kind] = (p.did[kind] or 0) + 1
     local t = Psy.Traits(p)
     local s = p.psy
     local why = Psy.Describe(p, now, Name)
@@ -169,6 +174,7 @@ function ctx.Break(p, kind)
         target = target or Any(Living("citizen", p.district, p))
         if target then
             Log("%s whispers %s's name to a unit, for a meal  [%s]", p.name, target.name, why)
+            p.informed = (p.informed or 0) + 1
             s.food = math.min(1, s.food + 0.5)
             Psy.Think(p, "fed", now)
             Arrest(target, Any(Living("cop")), target.rebel and "named as a Resistance sympathizer" or "named by an informant")
@@ -189,7 +195,45 @@ function ctx.Break(p, kind)
         else
             Log("%s wanders the streets alone, looking for anyone to talk to  [%s]", p.name, why)
         end
-    elseif kind == "inspired" then
+    elseif kind == "hoard" then
+        -- keeps food back: the hungriest near them go short, and someone notices
+        s.food = math.min(1, s.food + 0.4)
+        local near = Living("citizen", p.district, p)
+        for _ = 1, math.min(2, #near) do local q = table.remove(near, math.random(#near)) q.psy.food = math.max(0, q.psy.food - 0.15) Psy.Bond(q, p.id, -2) end
+        Log("%s hoards food and takes more than their share  [%s]", p.name, why)
+    elseif kind == "accuse" then
+        local target, tv
+        for id, v in pairs(s.ties) do local q = byId[id] if q and q.alive and q.role == "citizen" and (not tv or v < tv) then target, tv = q, v end end
+        target = target or Any(Living("citizen", p.district, p))
+        if target then
+            local right = target.informed and target.informed > 0
+            Log("%s calls %s an informer, in the street%s  [%s]", p.name, target.name, right and " (and they're right)" or "", why)
+            Psy.Think(target, "accused", now, p.id) Psy.Bond(target, p.id, -5)
+            Witnesses(p.district, target, 2, { k = right and "informer" or "accused", about = target.id, to = p.id, w = 1, hop = 0 })
+            Count(right and "accuse_right" or "accuse_wrong")
+        end
+    elseif kind == "sabotage" then
+        Log("%s quietly spoils their Union work  [%s]", p.name, why)
+        Psy.Think(p, "vented", now)
+        if math.random() < 0.2 then Arrest(p, Any(Living("cop", p.district)), "sabotage") end
+    elseif kind == "binge" then
+        Log("%s drinks and smokes everything they have  [%s]", p.name, why)
+        s.food = math.max(0, s.food - 0.2)
+        Psy.Think(p, "indulged", now)
+        if math.random() < 0.35 then Arrest(p, Any(Living("cop", p.district)), "drunk in public") end
+    elseif kind == "shelter" then
+        local best, bv
+        for id, v in pairs(s.ties) do local q = byId[id] if q and q.alive and q.role == "citizen" and q.rebel and (not bv or v > bv) then best, bv = q, v end end
+        if best and bv > 0 then
+            best.sheltered = true
+            Log("%s hides %s from the units for the night", p.name, best.name)
+            Psy.Bond(best, p.id, 4) Psy.Think(best, "kindness", now, p.id)
+        else Count("shelter_nobody") end
+    elseif kind == "steady" then
+        local near = Living("citizen", p.district, p)
+        for _, q in ipairs(near) do if q.psy.stress > Psy.cfg.frayed and math.random() < 0.5 then q.psy.stress = q.psy.stress * 0.8 Psy.Think(q, "steadied", now, p.id) end end
+        Log("%s keeps calm and steadies the frightened around them", p.name)
+    elseif kind == "share" then
         -- shares food with the hungriest friend
         local best, bf
         for id, v in pairs(s.ties) do
@@ -202,7 +246,7 @@ function ctx.Break(p, kind)
             Psy.Think(best, "kindness", now, p.id)
             Psy.Bond(best, p.id, 3)
             Psy.Hear(best, { k = "kindness", about = p.id, to = best.id, w = 1, hop = 0 }, now)
-        else Count("inspired_nothing") end
+        else Count("share_nobody") end
     elseif kind == "brutal" then
         local v = Any(Living("citizen", p.district))
         -- someone they've a grudge against, if one's about
@@ -231,6 +275,7 @@ local shortDay = {}
 local nextBroadcast, nextKind = DAY * 0.1, DAY * 0.05
 local lastPhase = -1
 local TICK = 0.5
+local curfewDone, lastSocio = {}, nil
 
 local unrestByDay = {}
 while now < DAYS * DAY do
@@ -294,6 +339,51 @@ while now < DAYS * DAY do
             Psy.Think(hungriest, "kindness", now) Count("player_kindness")
         end
     end
+    -- units stop and search people in the street
+    for _, cop in ipairs(Living("cop")) do
+        if math.random() < TICK / (DAY * 0.4) then
+            local v = Any(Living("citizen", cop.district))
+            if v then Psy.Think(v, "stopped", now, cop.id) Psy.Bond(v, cop.id, -1) Count("stops") end
+        end
+    end
+    -- curfew every night, a lockdown now and then
+    if f > 0.9 and not curfewDone[d] then
+        curfewDone[d] = true
+        local kind = math.random() < 0.15 and "lockdown" or "curfew"
+        for _, p in ipairs(Living("citizen")) do Psy.Think(p, kind, now) end
+        Count(kind)
+    end
+    -- the city's mood (sociostability) follows how the people feel
+    local u = Psy.Unrest(people)
+    local socio = u > 0.55 and "red" or "green"
+    if socio ~= lastSocio then
+        for _, p in ipairs(Living("citizen")) do Psy.Think(p, socio == "red" and "city_red" or "relief", now) end
+        if lastSocio then Log("the city turns %s", socio) Count("socio_" .. socio) end
+        lastSocio = socio
+    end
+    -- someone paints over a poster (a player, or a sympathizer)
+    if math.random() < TICK / (DAY * 0.5) then
+        local where = math.random(3)
+        for _, w in ipairs(Living("citizen", where)) do
+            if math.random() < 0.4 then Psy.Think(w, Psy.Traits(w).loyal < 0 and "defiance_good" or "defiance_bad", now) end
+        end
+        Count("posters_defaced")
+    end
+    -- a pickpocket caught at it
+    if math.random() < TICK / (DAY * 0.5) then
+        local v = Any(Living("citizen"))
+        if v then Psy.Think(v, "robbed", now) Count("pickpocket_caught") end
+    end
+    -- at home, those with the weakness drink and smoke when they can, and it costs them food
+    for _, p in ipairs(people) do
+        if p.alive and not p.jailedUntil and Psy.Traits(p).vice > 0 and p.psy.crave > 0.5 and math.random() < TICK / 400 then
+            p.psy.crave = 0
+            p.psy.food = math.max(0, p.psy.food - 0.08)
+            Psy.Think(p, "indulged", now)
+            Count("indulged")
+        end
+    end
+
     -- the Administrator on the screens
     if now > nextBroadcast then
         nextBroadcast = now + DAY / 3
@@ -310,6 +400,7 @@ while now < DAYS * DAY do
             if p.alive and not p.jailedUntil then
                 local c0 = clock()
                 Psy.Step(p, now, ctx)
+                p.stressSum, p.steps = (p.stressSum or 0) + p.psy.stress, (p.steps or 0) + 1
                 local c = clock() - c0
                 stepCost, stepCalls = stepCost + c, stepCalls + 1
                 if c > stepMax then stepMax = c end
@@ -322,6 +413,18 @@ while now < DAYS * DAY do
 end
 unrestByDay[#unrestByDay + 1] = Psy.Unrest(people)
 
+-- every citizen who lived through the run, with their traits and what they did (for analyze_traits.py)
+local recs = {}
+for _, p in ipairs(people) do
+    if p.role == "citizen" then
+        local r = { stress = p.psy.stress, informed = p.informed or 0, rebel = p.rebel and 1 or 0, arrests = p.arrests or 0 }
+        for _, k in ipairs(Psy.TRAITS) do r["t_" .. k] = p.tr and p.tr[k] or 0 end
+        for k, v in pairs(p.did or {}) do r["b_" .. k] = v end
+        r.stress_sum, r.steps = p.stressSum or 0, p.steps or 0
+        recs[#recs + 1] = r
+    end
+end
+City.recs = recs
 City.log, City.counts, City.unrest = log, counts, unrestByDay
 City.cost = { calls = stepCalls, avg_us = stepCost / math.max(1, stepCalls) * 1e6, max_us = stepMax * 1e6 }
 -- a few people as they stand at the end

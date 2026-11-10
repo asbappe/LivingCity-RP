@@ -19,7 +19,19 @@
       fed         a citizen served at the ration dispenser
       kindness    a player sharing food with them (talking to them)
       asleep      a citizen in bed at home (sv_livingcity_rest.lua)
-    Off the streets they're at home: they eat and sleep as the day allows.
+      stopped     a citizen stopped and searched by a unit (seen as "detained")
+      curfew      a curfew, lockdown or sweep starting (everyone)
+      socio       sociostability turning red or black, and calming again
+      posters     a poster of the Administrator defaced, by those who saw it
+      robbed      a pickpocket caught at it
+      burned      an informant beaten by the Resistance, and who saw it
+      snitched    a secret informant reporting a player
+      announced   the Administrator on the PA (at most every 10 minutes)
+      vices       a drink or a smoke: given by a player, in the street
+                  (sv_livingcity_npcvices.lua) or at home
+    Off the streets they're at home: they eat and sleep as the day allows,
+    and those fond of a drink and a smoke have one when they can (it costs
+    them a little food).
 
     Files (data/livingcity/minds/):
       <map>_<date>_<time>.txt  one log per map start: inputs, would-be
@@ -146,7 +158,7 @@ function LC.MindsSave()
             for k, v in pairs(s.ties) do ties[#ties + 1] = { tostring(k), v } end
             for _, t in ipairs(s.th) do th[#th + 1] = { t.k, t.v, math.max(0, t.untilT - now), t.who and tostring(t.who) or nil } end
             for _, n in ipairs(s.news) do news[#news + 1] = { n.k, tostring(n.about), tostring(n.to), n.w, n.hop } end
-            out.minds[#out.minds + 1] = { id = id, food = s.food, rest = s.rest, company = s.company, stress = s.stress,
+            out.minds[#out.minds + 1] = { id = id, food = s.food, rest = s.rest, company = s.company, stress = s.stress, crave = s.crave or 0,
                 ties = ties, th = th, news = news }
         end
     end
@@ -173,7 +185,7 @@ function LC.MindsLoad()
             local m = M.byId[id] or { id = id }
             M.byId[id] = m
             local s = { food = tonumber(d.food) or 0.8, rest = tonumber(d.rest) or 0.8, company = tonumber(d.company) or 0.7,
-                stress = tonumber(d.stress) or 0, th = {}, ties = {}, news = {}, last = 0, broke = -1e9 }
+                stress = tonumber(d.stress) or 0, crave = tonumber(d.crave) or 0, th = {}, ties = {}, news = {}, last = 0, broke = -1e9 }
             for _, t in ipairs(d.ties or {}) do s.ties[Key(t[1])] = tonumber(t[2]) end
             for _, t in ipairs(d.th or {}) do
                 if Psy.THOUGHTS[t[1]] then s.th[#s.th + 1] = { k = t[1], v = tonumber(t[2]) or 0, untilT = now + (tonumber(t[3]) or 0), who = t[4] and Key(t[4]) or nil } end
@@ -291,16 +303,117 @@ hook.Add("LivingCityServed", "LivingCityMinds", function(npc)
     Count("fed")
 end)
 
-hook.Add("LivingCitySharedFood", "LivingCityMinds", function(ply, npc)
+hook.Add("LivingCitySharedFood", "LivingCityMinds", function(ply, npc, id)
     if not On() or not (IsValid(npc) and npc.lcProfile) then return end
     local m = MindOf(npc.lcProfile)
     local s = Psy.State(m)
     local who = WhoKey(ply)
-    s.food = math.min(1, s.food + 0.4)
+    local it = LCS and LCS.Items and LCS.Items[id]
+    if it and it.vice then
+        LC.MindsIndulged(m, "given")
+        if Psy.Traits(m).vice > 0 then Psy.Bond(m, who, 2) end
+    else
+        s.food = math.min(1, s.food + 0.4)
+    end
     Psy.Think(m, "kindness", CurTime(), who)
     if who then Psy.Bond(m, who, 3) end
     Count("kindness")
-    Log("KIND", "%s given food by %s", m.name, Name(who))
+    Log("KIND", "%s given %s by %s", m.name, it and string.lower(it.name or id) or "food", Name(who))
+end)
+
+-- A drink or a smoke (a player's gift, in the street, or at home): the craving goes.
+function LC.MindsIndulged(m, where)
+    if not On() or not m then return end
+    local s = Psy.State(m)
+    s.crave = 0
+    Psy.Think(m, "indulged", CurTime())
+    Count("indulged_" .. (where or "street"))
+end
+
+local function Citizens()
+    local out = {}
+    for _, m in pairs(M.byId) do
+        if m.role == "citizen" and m.p and m.p.alive and not m.dead then out[#out + 1] = m end
+    end
+    return out
+end
+
+-- Curfew, lockdown, sweep: everyone feels it.
+local EVENT_THOUGHT = { curfew = "curfew", lockdown = "lockdown", sweep = "sweep" }
+hook.Add("LivingCityEventStarted", "LivingCityMinds", function(name)
+    local k = EVENT_THOUGHT[name]
+    if not On() or not k then return end
+    local now = CurTime()
+    for _, m in ipairs(Citizens()) do Psy.Think(m, k, now) end
+    Count(k)
+    Log("CITY", "%s begins", name)
+end)
+
+-- Sociostability (sv_livingcity_cp.lua, LC.Socio), looked at each step: red and black frighten, calm relieves.
+function LC.MindsSocio()
+    local now, socio = CurTime(), LC.Socio or "green"
+    if socio == M.lastSocio then return end
+    local was = M.lastSocio
+    M.lastSocio = socio
+    if not was then return end
+    local k = (socio == "red" and "city_red") or (socio == "black" and "city_black")
+        or ((was == "red" or was == "black") and "relief") or nil
+    if k then for _, m in ipairs(Citizens()) do Psy.Think(m, k, now) end end
+    Log("CITY", "sociostability %s (was %s)", socio, was)
+end
+
+-- A poster defaced (sv_livingcity_learning.lua): the disloyal cheer inside, the loyal are upset.
+hook.Add("LivingCityPosterDefaced", "LivingCityMinds", function(ply, e)
+    if not On() or not IsValid(e) then return end
+    local now = CurTime()
+    for _, w in ipairs(NearbyMinds(e:GetPos())) do
+        if w.role == "citizen" then Psy.Think(w, Psy.Traits(w).loyal < 0 and "defiance_good" or "defiance_bad", now, WhoKey(ply)) end
+    end
+    Count("posters")
+end)
+
+-- A pickpocket caught at it (sv_livingcity_talk.lua).
+hook.Add("LivingCityPickpocket", "LivingCityMinds", function(ply, npc, got)
+    if got or not On() or not (IsValid(npc) and npc.lcProfile) then return end
+    local m = MindOf(npc.lcProfile)
+    local who = WhoKey(ply)
+    Psy.Think(m, "robbed", CurTime(), who)
+    if who then Psy.Bond(m, who, -4) end
+    Count("robbed")
+    Log("ROBBED", "%s caught %s at their pocket", m.name, Name(who))
+end)
+
+-- An informant burned by the Resistance (sv_livingcity_snitches.lua): beaten as a rat, and those who saw it know who.
+hook.Add("LivingCityBurned", "LivingCityMinds", function(burner, target, right)
+    if not On() or not (IsValid(target) and target.lcProfile) then return end
+    local m = MindOf(target.lcProfile)
+    local who = WhoKey(burner)
+    local now = CurTime()
+    Psy.Think(m, "burned", now, who)
+    if who then Psy.Bond(m, who, -8) end
+    Witness(target:GetPos(), target, { k = "burning", about = who, to = m.id, w = 1, hop = 0 }, "saw_beating", m.id)
+    Count("burned")
+    Log("BURNED", "%s beaten as a rat by %s (%s)", m.name, Name(who), right and "really an informant" or "not one")
+end)
+
+-- A secret informant reporting a player (sv_livingcity_snitches.lua).
+hook.Add("LivingCitySnitched", "LivingCityMinds", function(npc, ply, what)
+    if not On() or not (IsValid(npc) and npc.lcProfile) then return end
+    local m = MindOf(npc.lcProfile)
+    local who = WhoKey(ply)
+    Psy.Think(m, "snitched", CurTime(), who)
+    Count("snitched")
+    Log("SNITCH", "%s reported %s (%s)", m.name, Name(who), tostring(what))
+end)
+
+-- The Administrator on the PA (the server's own recordings: sv_livingcity_announcer.lua), every 10 minutes at most.
+hook.Add("LivingCityCustomAnnouncement", "LivingCityMinds", function(voice)
+    if not On() or voice ~= "administrator" then return end
+    local now = CurTime()
+    if now - (M.lastPA or -1e9) < 600 then return end
+    M.lastPA = now
+    for _, m in ipairs(Citizens()) do Psy.Think(m, "propaganda", now) end
+    Count("propaganda")
 end)
 
 ------------------------------------------------------------------------
@@ -343,13 +456,23 @@ function ctx.Break(m, kind)
         local worst, wv
         for id, v in pairs(s.ties) do if not wv or v < wv then worst, wv = id, v end end
         if worst and wv < 0 then target = " (angriest at " .. Name(worst) .. string.format(" %+d)", wv) end
-    elseif kind == "seek" or kind == "inspired" then
+    elseif kind == "accuse" then
+        local worst, wv
+        for id, v in pairs(s.ties) do local q = M.byId[id] if q and q.role == "citizen" and (not wv or v < wv) then worst, wv = id, v end end
+        if worst then target = " (would call " .. Name(worst) .. string.format(" an informer, %+d)", wv) end
+    elseif kind == "shelter" then
+        local best, bv
+        for id, v in pairs(s.ties) do local q = M.byId[id] if q and q.rebel and v > 0 and (not bv or v > bv) then best, bv = id, v end end
+        if best then target = " (would hide " .. Name(best) .. ")" end
+    elseif kind == "seek" or kind == "share" then
         local best, bv
         for id, v in pairs(s.ties) do if not bv or v > bv then best, bv = id, v end end
         if best and bv > 0 then target = " (closest to " .. Name(best) .. string.format(" %+d)", bv) end
     end
-    Log("WOULD", "%s%s: %s%s%s  [%s]", m.name, m.role == "cop" and "" or (m.rebel and " (sympathizer)" or ""), kind, target,
-        IsValid(m.p and m.p.npc) and " (on the streets)" or " (off the streets)", Psy.Describe(m, CurTime(), Name))
+    local words = Psy.TraitWords(m, 3)
+    Log("WOULD", "%s%s: %s%s%s  [%s]%s", m.name, m.role == "cop" and "" or (m.rebel and " (sympathizer)" or ""), kind, target,
+        IsValid(m.p and m.p.npc) and " (on the streets)" or " (off the streets)", Psy.Describe(m, CurTime(), Name),
+        #words > 0 and (" {" .. table.concat(words, ", ") .. "}") or "")
 end
 
 function ctx.Heard(m, n)
@@ -383,7 +506,25 @@ local function Live(m, now)
             Psy.Think(m, "slept", now)
             Count("slept")
         end
+        -- stopped and searched by a unit (sv_livingcity.lua: TryStartInspection)
+        if st.state == "detained" then
+            if not m.wasStopped then
+                m.wasStopped = true
+                local by
+                for cop, cst in pairs(LC.NPCs) do if cst.subject == npc then by = WhoKey(cop) break end end
+                Psy.Think(m, "stopped", now, by)
+                if by then Psy.Bond(m, by, -1) end
+                Count("stopped")
+            end
+        else
+            m.wasStopped = nil
+        end
         return st
+    end
+    -- at home, those fond of a drink and a smoke have one when they can (it costs a little food)
+    if Psy.Traits(m).vice > 0 and (s.crave or 0) > 0.5 and math.random() < 0.15 then
+        s.food = math.max(0, s.food - 0.06)
+        LC.MindsIndulged(m, "home")
     end
     -- off the streets: at home, getting by on what they have, and sleeping at night
     if s.food < 0.45 then s.food = s.food + 0.02 end
@@ -400,6 +541,7 @@ function LC.MindsStep(now)
         local n = LC.MindsLoad()
         Log("START", "watching the city's minds on %s (%d minds put back from the last map)", game.GetMap(), n)
     end
+    LC.MindsSocio()
     if M.idx >= #M.order then Rebuild() end
     if #M.order == 0 then return end
     M.idx = M.idx + 1
