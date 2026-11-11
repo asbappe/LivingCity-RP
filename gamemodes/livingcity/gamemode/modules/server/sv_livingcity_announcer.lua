@@ -711,6 +711,12 @@ function LC.VoiceMissing()
         end
     end
     Row("Citizens", "citizens/", c)
+    -- what named people say (sv_livingcity_lines.lua): citizens a man's take and a woman's, units one voice
+    if LC.LinesMissing then
+        local cit, unit = LC.LinesMissing()
+        Row("Named citizens' lines", "citizens/", cit)
+        Row("Units' lines", "units/", unit)
+    end
     -- the Citizen Information clerk, the old-timer, the machines (sv_livingcity_infodesk.lua, _oldtimer, _machines)
     local function Each(name, folder, rescan, clip, ids)
         local m = {}

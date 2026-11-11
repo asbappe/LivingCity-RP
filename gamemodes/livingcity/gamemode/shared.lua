@@ -229,6 +229,8 @@ LC_MODULES = {
         "sv_livingcity_minds", -- (watching the city's minds and writing it down, data/livingcity/minds/)
         "sv_livingcity_mindsact", -- (the minds acting: choices bend, breaks happen in the street, informants and unrest come from them)
         "sv_livingcity_brain", -- (the director and free talk: a hosted model picks from what the game can do, and speaks for named people)
+        "sv_livingcity_lines", -- (what named people say, recorded: a small bank for free talk, the director and the minds' breaks)
+        "sv_livingcity_voice", -- (the city's own Administrator's decrees spoken in her voice; off until a voice key and id are set)
         "sv_livingcity_npcvices", -- (citizens fond of a drink and a smoke light up or take out a bottle, where players can see)
     },
     client = {
@@ -299,6 +301,7 @@ LC_MODULES = {
         "cl_livingcity_unittools",
         "cl_livingcity_staff",
         "cl_livingcity_talk",
+        "cl_livingcity_voice", -- (plays a spoken line the server sends: sv_livingcity_voice.lua)
         "cl_livingcity_dialog",
         "cl_livingcity_bodysigns",
         "cl_livingcity_feverdream",

@@ -92,6 +92,8 @@ for id, words in pairs(LC.OldTimerLines or {}) do W("oldtimer", id, "", words) e
 for _, t in ipairs(LC.OldTimerTroubles or {}) do W("oldtimer", "hint_" .. t[1], "What's troubling him (said instead of his greeting)", t[3]) W("oldtimer", "thanks_" .. t[1], "You helped him with it", t[4]) end
 for id, l in pairs(LC.MachineLines or {}) do W("machine", id, l[1], l[2]) end
 for id, words in pairs(LC.ColonelLines or {}) do W("colonel", id, "", words) end
+for id, l in pairs(LC.StreetLines or {}) do W("street", id, l[2], l[1]) end
+for id, l in pairs(LC.UnitLines or {}) do W("unitline", id, l[2], l[1]) end
 for key, g in pairs(LC.CollapseGmanLines or {}) do
     local cv = GetConVar(g[1])
     W("gman", key, g[1], cv and cv:GetString() or "", g[2])
@@ -139,7 +141,7 @@ def main():
         "- **After adding files:** press FastDL sync on the host panel, then change the map (players download new sounds when they join).",
         "- **Without a recording** the moment is silent (or Half-Life 2's own voice, for Overwatch, with `lc_announce_stock` 1), and the words still show.",
         "",
-        "Contents: 1. The city's announcements (Overwatch and the Administrator) · 2. The radio · 3. The G-Man · 4. The dreams · 5. Citizens showing the way · 6. The Citizen Information clerk · 7. The old-timer · 8. Machines · 9. The Colonel",
+        "Contents: 1. The city's announcements (Overwatch and the Administrator) · 2. The radio · 3. The G-Man · 4. The dreams · 5. Citizens showing the way · 6. The Citizen Information clerk · 7. The old-timer · 8. Machines · 9. The Colonel · 10. What named citizens say · 11. What units say",
         "",
         "## 1. The city's announcements",
         "",
@@ -258,6 +260,50 @@ def main():
                 "", "| Done | File | When | Says |", "|---|---|---|---|"])
     for r in rs:
         doc.append("| [ ] | `%s1.wav` | %s | %s |" % (r[1], colonel_when(r[1]), r[3]))
+        count += 1
+    street = sorted([r for r in rows if r[0] == "street"], key=lambda r: r[1])
+    groups = [("say_open_", "Openers (a word or two before another line)"), ("say_greet_", "Hello"), ("say_bye_", "Goodbye"),
+              ("say_yes", "Yes, no, perhaps"), ("say_no", "Yes, no, perhaps"), ("say_maybe", "Yes, no, perhaps"), ("say_later", "Yes, no, perhaps"),
+              ("say_dunno", "What they know"), ("say_heard", "What they know"), ("say_cant_say", "What they know"), ("say_ask_else", "What they know"), ("say_truth", "What they know"),
+              ("say_state_", "How they are"),
+              ("say_thanks", "Answering how they were spoken to"), ("say_sorry", "Answering how they were spoken to"), ("say_insulted", "Answering how they were spoken to"),
+              ("say_threatened", "Answering how they were spoken to"), ("say_laugh", "Answering how they were spoken to"), ("say_agree", "Answering how they were spoken to"),
+              ("say_disagree", "Answering how they were spoken to"),
+              ("say_loyal", "The Combine"), ("say_careful", "The Combine"), ("say_units_near", "The Combine"), ("say_hate_", "The Combine"), ("say_fear_", "The Combine"), ("say_obey", "The Combine"),
+              ("say_res_", "The Resistance"), ("say_warn_", "Warnings and tips"), ("say_tip_", "Warnings and tips"),
+              ("say_ask_", "Asking and giving"), ("say_offer", "Asking and giving"), ("say_decline_", "Asking and giving"),
+              ("say_break_", "As a mind gives way"), ("say_saw_", "What they saw"), ("say_grief", "What they saw")]
+    def group_of(i):
+        for k, v in groups:
+            if i.startswith(k): return v
+        return "Other"
+    order = []
+    for _, v in groups:
+        if v not in order: order.append(v)
+    doc.extend(["", "## 10. What named citizens say", "",
+                "A small bank of lines the city's named citizens say everywhere: answering you in free talk (the hosted model picks the one that fits), "
+                "walking up to you when the director sends them, and as their minds give way. Written by what the line does, not what it is about, "
+                "with no names, jobs, places or times in them, so any citizen can say any line. Folder: **`garrysmod/sound/livingcity/citizens/`** "
+                "(the same as section 5). Each line wants a man's take and a woman's: `say_dunno_male1.wav`, `say_dunno_female1.wav`; more takes `...2`, `...3`. "
+                "Keep them short and flat: tired people, speaking low. An opener is said just before another line, so record it to run on (\"Listen.\" ... \"You should go. Now.\"). "
+                "Without a recording they speak with Half-Life 2's own citizen voice, and the words still show. "
+                "How it works: `docs/features/recorded-lines.md`.",
+                "", "| Done | Man's file | Woman's file | When | Says |", "|---|---|---|---|---|"])
+    for g in order + ["Other"]:
+        rs = [r for r in street if group_of(r[1]) == g]
+        if not rs: continue
+        doc.append("| | | | **%s** | |" % g)
+        for r in rs:
+            doc.append("| [ ] | `%s_male1.wav` | `%s_female1.wav` | %s | %s |" % (r[1], r[1], r[2], r[3]))
+            count += 2
+    units = sorted([r for r in rows if r[0] == "unitline"], key=lambda r: r[1])
+    doc.extend(["", "## 11. What units say", "",
+                "The named Civil Protection units' answers in free talk, and what they say when their minds give way. One voice for every unit, "
+                "clipped and cold, through the mask (a radio or vocoder effect over it helps). Folder: **`garrysmod/sound/livingcity/units/`**. "
+                "Without a recording a unit is silent and the words show.",
+                "", "| Done | File | When | Says |", "|---|---|---|---|"])
+    for r in units:
+        doc.append("| [ ] | `%s1.wav` | %s | %s |" % (r[1], r[2], r[3]))
         count += 1
     text = "\n".join(doc).rstrip("\n") + "\n"
     with open(OUT, "w", encoding="utf-8") as f:

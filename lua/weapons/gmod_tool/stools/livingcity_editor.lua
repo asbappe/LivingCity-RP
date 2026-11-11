@@ -717,6 +717,27 @@ function TOOL.BuildCPanel(panel)
     Check("With no player as the City Administrator, the model sits in her office (events, rations, prices, a job bonus, commend, censure, pardon)", "lc_brain_admin")
     Slider("Minutes between her looks at the city", "lc_brain_admin_minutes", 2, 60, 0)
     Slider("Most requests to the hosted model in a day (0: no limit)", "lc_brain_daily", 0, 10000, 0)
+    Header("Her voice: the city's own Administrator's decrees, spoken (ElevenLabs; off until you turn it on)")
+    panel:Help("Paste the ElevenLabs key and the voice id (shown beside the voice in ElevenLabs' voice list) and press Save. A box left empty keeps what is saved. Both are kept on the server (data/livingcity/) and never shown again. Each spoken sentence costs a little.")
+    local voiceKey = panel:TextEntry("Voice key")
+    local voiceId = panel:TextEntry("Voice id")
+    local function SendVoice(clear)
+        net.Start("lc_voice_key")
+        net.WriteString(IsValid(voiceKey) and voiceKey:GetValue() or "")
+        net.WriteString(IsValid(voiceId) and voiceId:GetValue() or "")
+        net.WriteBool(clear)
+        net.SendToServer()
+        if IsValid(voiceKey) then voiceKey:SetValue("") end
+        if IsValid(voiceId) then voiceId:SetValue("") end
+    end
+    panel:Button("Save the voice key and id").DoClick = function() SendVoice(false) end
+    panel:Button("Test her voice (you alone hear it)").DoClick = function()
+        net.Start("lc_voice_test")
+        net.SendToServer()
+    end
+    panel:Button("Clear the voice key and id").DoClick = function() SendVoice(true) end
+    Check("Her decrees are spoken in her voice (needs the key and the voice id)", "lc_voice")
+    Slider("Most spoken lines in a day (0: no limit)", "lc_voice_daily", 0, 2000, 0)
     Slider("Civil Protection size (1 = HL2's own)", "lc_cp_scale", 0.8, 1.3, 2)
     Slider("Overwatch soldier size (1 = HL2's own)", "lc_soldier_scale", 0.8, 1.3, 2)
     Slider("Civil Protection health (HL2's own: 40)", "lc_cp_health", 10, 300, 0)

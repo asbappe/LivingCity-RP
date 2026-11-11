@@ -11345,6 +11345,183 @@ LC.CollapseNpcRoll, LC.CollapseNpcHow = roll, how
 for _, p in ipairs(human) do if IsValid(p) then p:SetNW2String("lcf_faction", "admin") end end
 end
 CollapseOwnTests()
+
+function VoiceTests()
+section("Her voice: the city's own Administrator's decrees, spoken (off until a key and a voice id are set)")
+local V = LC.Voice
+V.key, V.id, V.backOff, V.today, V.day, V.useLoaded, V.calls, V.chars = nil, nil, nil, 0, os.date("%Y-%m-%d"), true, 0, 0
+_files["livingcity/voice_key.txt"], _files["livingcity/voice_id.txt"] = nil, nil
+local reqs, answer = {}, nil
+local realHTTP = LC.VoiceHTTP
+LC.VoiceHTTP = function(req)
+    reqs[#reqs + 1] = req
+    if not answer then return end
+    local code, body = answer(req)
+    if code then req.success(code, body) else req.failed("timed out") end
+end
+local mp3 = string.rep("x", 9000)
+local function clips() local n, last = 0, nil for _, m in ipairs(net.sent) do if m.name == "lc_voice_clip" then n, last = n + 1, m end end return n, last end
+local quiet = LC.PAQuiet
+LC.PAQuiet = function() return 99 end
+ok(GetConVar("lc_voice"):GetInt() == 0, "off by default")
+_setcvar("lc_voice", 1)
+net.sent = {}
+ok(LC.VoiceSpeak("Order is kindness.", "The City Administrator") == false and #reqs == 0, "no key and no voice id: nothing is asked")
+local hasKey, hasId = LC.VoiceSet("el-key-1", "", false)
+ok(hasKey and not hasId and not LC.VoiceReady(), "a key alone is not enough")
+hasKey, hasId = LC.VoiceSet("", "Voice123abc", false)
+ok(hasKey and hasId and LC.VoiceReady() and _files["livingcity/voice_key.txt"] == "el-key-1" and _files["livingcity/voice_id.txt"] == "Voice123abc",
+    "the key and the voice id are kept on the server; a box left empty keeps what was saved")
+LC.VoiceSet("", "bad/id?x", false)
+ok(LC.Voice.id == "Voice123abc", "a voice id that is not letters and digits is not taken")
+answer = function() return 200, mp3 end
+ok(LC.VoiceSpeak("Order is kindness.", "The City Administrator") == true and #reqs == 1, "with both set and lc_voice on, her sentence is asked for")
+local r = reqs[1]
+ok(r.url == "https://api.elevenlabs.io/v1/text-to-speech/Voice123abc?output_format=mp3_22050_32" and r.method == "POST" and r.headers["xi-api-key"] == "el-key-1",
+    "asked the right way: the voice in the address, the key in its header", r.url)
+ok(string.find(r.body, '"text":"Order is kindness."', 1, true) ~= nil and string.find(r.body, '"model_id":"eleven_flash_v2_5"', 1, true) ~= nil, "the request carries her words and the model", r.body)
+local n, clip = clips()
+ok(n == 1 and clip.data[2] == "The City Administrator" and clip.data[3] == #mp3 and clip.data[4] == mp3, "and the sound is sent to the players to play")
+-- it waits for the PA
+net.sent = {}
+local q = -5
+LC.PAQuiet = function() return q end
+LC.VoiceSpeak("Wait your turn.", "The City Administrator")
+ok(clips() == 0, "while the PA is speaking it waits")
+q = 99
+_run(2)
+ok(clips() == 1, "and speaks once the PA is quiet")
+LC.PAQuiet = function() return 99 end
+-- problems: nothing is played
+net.sent = {}
+answer = function() return 401, '{"detail":"bad key"}' end
+LC.VoiceSpeak("Nobody hears this.", "The City Administrator")
+ok(clips() == 0 and (V.backOff or 0) > CurTime() and V.lastError ~= nil, "the service says no: nothing is played, and it waits before asking again")
+V.backOff = nil
+answer = function() return 200, string.rep("x", 70000) end
+LC.VoiceSpeak("Too long to send.", "The City Administrator")
+ok(clips() == 0, "a sound too big for one message is not sent")
+-- the day's limit
+answer = function() return 200, mp3 end
+_setcvar("lc_voice_daily", 1)
+local before = #reqs
+ok(LC.VoiceSpeak("Past the limit.", "The City Administrator") == false and #reqs == before, "past the day's limit nothing more is asked")
+_setcvar("lc_voice_daily", 200)
+-- off
+_setcvar("lc_voice", 0)
+ok(LC.VoiceSpeak("Off.", "The City Administrator") == false and #reqs == before, "lc_voice 0: nothing is asked")
+-- the test button works with it off, for the one who asked
+local adminp = newPlayer("VoiceTester", "citizen")
+net.sent = {}
+V.today = 0
+ok(LC.VoiceTest(adminp) == true, "the panel's test asks even while it is off")
+n, clip = clips()
+ok(n == 1 and clip.to == adminp, "and only the one who pressed it hears her")
+local shows = false
+for _, l in ipairs(LC.VoiceReport()) do if string.find(l, "el-key-1", 1, true) then shows = true end end
+ok(not shows, "the debug report never shows the key")
+LC.VoiceSet("", "", true)
+ok(not LC.VoiceReady() and _files["livingcity/voice_key.txt"] == nil and _files["livingcity/voice_id.txt"] == nil, "clearing removes both")
+LC.VoiceHTTP, LC.PAQuiet = realHTTP, quiet
+if IsValid(adminp) then adminp:Remove() end
+end
+VoiceTests()
+
+function LinesTests()
+section("What named people say, recorded: a small bank for free talk, the director and the minds' breaks")
+local nCit, nOpen, bad = 0, 0, nil
+for id, l in pairs(LC.StreetLines) do
+    nCit = nCit + 1
+    if string.sub(id, 1, 9) == "say_open_" then nOpen = nOpen + 1 end
+    if string.sub(id, 1, 4) ~= "say_" or type(l[1]) ~= "string" or #l[1] > 70 or l[2] == nil or string.find(l[1], "\226\128\148", 1, true) then bad = id end
+end
+ok(nCit >= 60 and nCit <= 90 and nOpen == 6 and not bad, "a citizen's bank: under 90 short lines, six of them openers, each with when it is said", tostring(nCit) .. " " .. tostring(bad))
+local nUnit = 0
+for id, l in pairs(LC.UnitLines) do nUnit = nUnit + 1 if string.sub(id, 1, 5) ~= "unit_" or #l[1] > 60 then bad = id end end
+ok(nUnit >= 12 and nUnit <= 24 and not bad, "a unit's bank: a couple of dozen at most", nUnit)
+ok(LC.LineValid("citizen", "say_dunno") and not LC.LineValid("citizen", "unit_move") and LC.LineValid("cop", "unit_move") and not LC.LineValid("cop", "say_dunno")
+    and not LC.LineValid("citizen", "say_open_listen") and LC.LineValid("citizen", "say_open_listen", true) and not LC.LineValid("citizen", ""),
+    "each kind of person has their own lines, and an opener only counts as an opener")
+ok(LC.LineWords("citizen", "say_warn_go", "say_open_listen") == "Listen. You should go. Now.", "an opener and a line run together", LC.LineWords("citizen", "say_warn_go", "say_open_listen"))
+ok(string.find(LC.LineList("citizen"), "say_dunno: I wouldn't know anything about that.", 1, true) ~= nil and not string.find(LC.LineList("citizen"), "say_open_", 1, true), "the model is shown the bank: an id, the words, and when")
+-- said out loud: the recording when there is one, Half-Life 2's citizen otherwise
+local T0 = Vector(-43000, 31000, 0)
+local n, st = LC.SpawnCitizen(T0)
+st.leaveAt = nil n.sim = false st.state = "idle"
+if not n.lcProfile then LC.AttachProfile(n, st, LC.NewPerson("citizen")) end
+local heardSounds = {}
+local realEmit = n.EmitSound
+n.EmitSound = function(self, path) heardSounds[#heardSounds + 1] = path end
+local realClip = LC.AdviceClip
+LC.AdviceClip = function() return nil end
+ok(LC.LineSay(n, st, "say_no") == "No. Sorry." and #heardSounds == 1 and string.find(heardSounds[1], "vo/npc/", 1, true) == 1, "no recording: Half-Life 2's own citizen voice, and the words come back", heardSounds[1])
+heardSounds = {}
+LC.AdviceClip = function(id, gender) return "livingcity/citizens/" .. id .. "_" .. (gender == "female" and "female" or "male") .. "1.wav" end
+LC.LineSay(n, st, "say_warn_go", "say_open_listen")
+ok(#heardSounds == 1 and string.find(heardSounds[1], "livingcity/citizens/say_open_listen_", 1, true) == 1, "a recording: the opener first", heardSounds[1])
+_run(2)
+ok(#heardSounds == 2 and string.find(heardSounds[2], "livingcity/citizens/say_warn_go_", 1, true) == 1, "then the line, in their own voice (a man's take or a woman's)", heardSounds[2])
+local cit, unit = LC.LinesMissing()
+LC.AdviceClip = function() return nil end
+cit, unit = LC.LinesMissing()
+ok(#cit == nCit * 2 and #unit == nUnit, "lc_voice_missing can list every one not recorded yet", #cit)
+-- free talk: the model picks a line
+_setcvar("lc_brain", 1) _setcvar("lc_brain_talk", 1) _setcvar("lc_brain_lines", 1)
+local B = LC.Brain
+B.lastTalk, B.minute, B.backOff, B.today, B.day, B.talks, B.inFlight, B.useLoaded, B.talkAsk, B.dirSystem = {}, {}, nil, 0, os.date("%Y-%m-%d"), {}, 0, true, nil, nil
+local reqs, answer = {}, nil
+local realHTTP = LC.BrainHTTP
+LC.BrainHTTP = function(req) reqs[#reqs + 1] = req local code, body = answer(req) req.success(code, body) end
+local function reply(tbl)
+    return 200, LC.BrainJSON({ content = { { type = "text", text = LC.BrainJSON(tbl) } }, stop_reason = "end_turn", usage = { input_tokens = 100, output_tokens = 20 } })
+end
+LC.BrainSetKey("sk-test-lines")
+local ply = newPlayer("LinesTalker", "citizen")
+ply:SetPos(T0 + Vector(80, 0, 0))
+ply.chat = {}
+ply.GetEyeTrace = function() return { Entity = n } end
+local function heard(text) for _, l in ipairs(ply.chat) do if string.find(l, text, 1, true) then return true end end return false end
+heardSounds = {}
+LC.AdviceClip = function(id, gender) return "livingcity/citizens/" .. id .. "_male1.wav" end
+answer = function() return reply({ line = "say_cant_say", opener = "say_open_quiet", say = "", feeling = "0", act = "none" }) end
+ok(LC.BrainHeard(ply, "say", "What do you know about the raid?") == true, "free talk with the bank on")
+ok(string.find(reqs[1].body, "say_cant_say: I can't talk about that. You know why.", 1, true) ~= nil and string.find(reqs[1].body, '"line"', 1, true) ~= nil, "the model is given the bank and asked for a line")
+ok(heard("says: \"Keep your voice down. I can't talk about that. You know why.\""), "it picked a recorded line: those are the words shown")
+ok(#heardSounds >= 1 and string.find(heardSounds[1], "say_open_quiet", 1, true) ~= nil, "and it is spoken in their recorded voice", heardSounds[1])
+_advance(6)
+ply.chat = {}
+answer = function() return reply({ line = "", opener = "", say = "The trains stopped running east a week ago.", feeling = "0", act = "none" }) end
+LC.BrainHeard(ply, "say", "Are the trains running?")
+ok(heard("The trains stopped running east a week ago."), "no line fits: its own words, as before")
+_advance(6)
+ply.chat = {}
+_setcvar("lc_brain_lines", 2)
+B.talkAsk = nil
+LC.BrainHeard(ply, "say", "Are the trains running?")
+ok(heard("I wouldn't know anything about that.") and not heard("The trains stopped"), "lc_brain_lines 2: recorded lines only, never words nobody recorded")
+_advance(6)
+ply.chat = {}
+_setcvar("lc_brain_lines", 0)
+answer = function() return reply({ say = "Ask at the station.", feeling = "0", act = "none" }) end
+LC.BrainHeard(ply, "say", "Are the trains running?")
+ok(heard("Ask at the station.") and not string.find(reqs[#reqs].body, "say_cant_say", 1, true), "lc_brain_lines 0: the bank is left out")
+_setcvar("lc_brain_lines", 1)
+-- the director's approach opens with one
+B.moved, B.dirSystem = {}, nil
+ply.chat = {}
+st.state = "idle"
+local okA, whyA = LC.DirectorApply({ action = "approach", person = n.lcProfile.name, player = LC.CharacterName and LC.CharacterName(ply) or ply:Nick(), line = "", recorded = "say_warn_asked", opener = "say_open_listen" }, CurTime())
+ok(okA == true and st.mindErrand ~= nil, "an approach with a recorded line", whyA)
+n:SetPos(ply:GetPos() + Vector(40, 0, 0))
+LC.MindsErrandTick(CurTime())
+ok(heard("Listen. Someone's been asking about you."), "they walk up and say it")
+LC.BrainSetKey("")
+LC.BrainHTTP, LC.AdviceClip = realHTTP, realClip
+n.EmitSound = realEmit
+LC.MindsActs.errands = {}
+for _, e in ipairs({ n, ply }) do if IsValid(e) then e:Remove() end end
+end
+LinesTests()
 function GiveTests()
 section("Giving a citizen something: food, a drink or a smoke, medicine, papers, arms")
 local function Later(secs) _advance(secs) _runtimers() end

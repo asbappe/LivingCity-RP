@@ -1563,6 +1563,7 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
 - [ ] **The G-Man and the city's own (11 November):** with nobody elected, let the city go BLACK a few times (or step it with the staff tools). About two times in three she should step down or end it after one or two refusals; the third, her last stand.
 - [ ] **The close, 11 November:** dream one of the endings to its end (the harpies, the plane, the fire). As you wake in bed, "The dream is over" and a line about that dream should show for five seconds. Lose a dream you play: a closing line too.
   Notes:
+- [ ] **Her voice (11 November, once there is an ElevenLabs key and voice id):** editor panel > "Her voice": paste both, Save, Test her voice. Do you hear her? Tick the box, wait for a decree from the city's own Administrator: is the sentence spoken after the PA, for everyone, in the same voice as her recordings?
 
 ## 11 November: the harpies carry you off
 
@@ -1575,4 +1576,6 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
 - [ ] **The harpies, all of it (11 November):** watch the Combine's units and the citizens: are they carried off too, with no bodies left? At the very end, is the last player snatched up and turned, not killed? Does it still feel like a slaughter is coming, or too slow?
   Notes:
 - [ ] **The harpies, the finale (11 November):** stay alive to the last five seconds: are you killed (a body), then three seconds from the end do you rise out of the ground as a mingebag where you fell, and do all of them run off into the night just before the song ends? Are there enough of them that the scene fills the whole song? Does the server cope with 90?
+  Notes:
+- [ ] **Recorded lines (11 November):** record a handful first (`say_dunno`, `say_greet_plain`, `say_no`, `say_warn_go`, `say_open_listen`, a man and a woman), FastDL sync, change map. Talk to named citizens: do they answer with those lines in that voice, and does an opener run on into the line? Do the words in chat match what is heard?
   Notes:
