@@ -30,6 +30,12 @@ util.AddNetworkString("lc_trail")
 local cvOn = CreateConVar("lc_trail", "1", FCVAR_ARCHIVE,
     "The quest trail on the ground, leading to the quest's objective: 1 players can have it (each can hide theirs in C > Settings), 0 off for everyone", 0, 1)
 
+local cvStraight = CreateConVar("lc_trail_straight", "1", FCVAR_ARCHIVE,
+    "The quest trail skips path points you could walk straight past (1), or follows every one (0)", 0, 1)
+local SHORTCUT_LOOK = 14  -- points ahead looked at for a straight walk
+local SHORTCUT_FAR = 2200 -- no further than this in one straight line
+local SHORTCUT_RISE = 70  -- nor up or down more than this (another floor)
+
 local REFRESH = 10    -- seconds before the way is worked out again, if you've moved
 local STRAY = 300     -- this far off the line, and it's worked out again at once
 local MOVED = 160     -- the objective (or you) moved this far
@@ -124,6 +130,38 @@ local function Tidy(pts, from)
     return out
 end
 
+-- Can you simply walk from a to b? Nothing solid between them at knee and chest height, about the
+-- same level, and floor under the middle of it.
+local function WalkLine(a, b)
+    if not util or not util.TraceHull or math.abs(a.z - b.z) > SHORTCUT_RISE then return false end
+    local up = Vector(0, 0, 24)
+    local tr = util.TraceHull({ start = a + up, endpos = b + up, mins = Vector(-12, -12, 0), maxs = Vector(12, 12, 40), mask = MASK_PLAYERSOLID_BRUSHONLY or MASK_SOLID_BRUSHONLY })
+    if not tr or tr.Hit or tr.StartSolid then return false end
+    for _, f in ipairs({ 0.25, 0.5, 0.75 }) do
+        local m = a + (b - a) * f
+        local down = util.TraceLine({ start = m + up, endpos = m - Vector(0, 0, 90), mask = MASK_SOLID_BRUSHONLY })
+        if not down or not down.Hit then return false end
+    end
+    return true
+end
+LC.TrailWalkLine = WalkLine
+
+-- The way doesn't have to touch every path node (the owner, 11 November: "can they go between path
+-- nodes on the ground if there is a straight line and no walls between me and my objective? ... they
+-- jump all around crazily sometimes"): the points you could walk straight past are left out, so it
+-- starts toward the furthest one in plain reach, or the objective itself.
+function LC.TrailShortcut(from, pts)
+    if not cvStraight:GetBool() or #pts == 0 then return pts end
+    local keep = 1
+    for i = math.min(#pts, SHORTCUT_LOOK), 1, -1 do
+        if from:DistToSqr(pts[i]) < SHORTCUT_FAR * SHORTCUT_FAR and WalkLine(from, pts[i]) then keep = i break end
+    end
+    if keep == 1 then return pts end
+    local out = {}
+    for i = keep, #pts do out[#out + 1] = pts[i] end
+    return out
+end
+
 -- The way from `from` to `to`, as a list of points ending at `to` (never empty).
 function LC.TrailRoute(from, to, role)
     local pts
@@ -139,7 +177,7 @@ function LC.TrailRoute(from, to, role)
         local ok, r = pcall(NavMeshPath, from, to)
         if ok and type(r) == "table" and #r > 0 then pts = r end
     end
-    return Tidy(pts or { to }, from)
+    return LC.TrailShortcut(from, Tidy(pts or { to }, from))
 end
 
 local function RoleOf(ply)

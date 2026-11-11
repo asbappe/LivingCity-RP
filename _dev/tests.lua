@@ -16042,6 +16042,7 @@ AdminVoiceTests()
 function GuidanceTests()
 section("Guidance: the quest trail's way, refreshed when you stray, and where you are")
 local G0 = Vector(170000, -170000, 0)
+_setcvar("lc_trail_straight", 0) -- (first, every path point; the straight walk is tried at the end)
 local function payload()
     local m = _lastnet("lc_trail")
     return m and util.JSONToTable(m.data[2]) or nil
@@ -16165,6 +16166,17 @@ walker:SetPos(G0 + Vector(9000, 0, 0))
 ok(LC.WhereKind(walker) == "", "nowhere in particular: nothing")
 LC.RemoveZone(rz)
 walker:SetPos(Vector(-150000, 150000, 0))
+do -- the straight walk (the owner, 11 November): points you could walk straight past are left out
+    _setcvar("lc_trail_straight", 1)
+    local from = G0 + Vector(20000, 0, 0)
+    local pts = { from + Vector(-200, 300, 0), from + Vector(300, 300, 0), from + Vector(900, 0, 0), from + Vector(900, 0, 400), from + Vector(1500, 0, 400) }
+    local out = LC.TrailShortcut(from, pts)
+    ok(#out == 3 and out[1] == pts[3] and out[#out] == pts[5], "the trail starts toward the furthest point in plain reach on your own level, not the nearest path node", #out)
+    ok(#LC.TrailShortcut(from, { from + Vector(0, 0, 500), from + Vector(600, 0, 500) }) == 2, "never straight to another floor")
+    _setcvar("lc_trail_straight", 0)
+    ok(#LC.TrailShortcut(from, pts) == 5, "lc_trail_straight 0: every point, as before")
+    _setcvar("lc_trail_straight", 1)
+end
 end
 GuidanceTests()
 

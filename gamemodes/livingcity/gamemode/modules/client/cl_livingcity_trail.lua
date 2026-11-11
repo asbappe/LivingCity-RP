@@ -63,6 +63,8 @@ function LC_CL.TrailPrune(t, pos)
             end
         end
     end
+    -- (how far along the way has been dropped: the chevrons keep their places on the ground, below)
+    for i = 1, cut do t.d0 = (t.d0 or 0) + (pts[i + 1] - pts[i]):Length() end
     for _ = 1, cut do table.remove(pts, 1) end
     if cut > 0 then t.samples = nil end
     return cut
@@ -125,7 +127,10 @@ function LC_CL.TrailChevrons(t, from, now)
     local headDir = Vector(head.x, head.y, 0)
     if headDir:LengthSqr() > 0.01 then headDir:Normalize() else headDir = smp[1].dir end
     local out, j = {}, 1
-    local u = (now * SPEED) % SPACING
+    -- Each chevron keeps its place on the ground and flows on at SPEED, however fast you go (the owner,
+    -- 11 November: "when I run they speed up and it looks really disorienting"; they were spaced out
+    -- from your own feet, so they ran along with you).
+    local u = (now * SPEED + headLen - (t.d0 or 0)) % SPACING
     while u <= AHEAD do
         local pos, dir
         if u < headLen then
