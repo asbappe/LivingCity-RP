@@ -6,14 +6,14 @@ Asked for by the owner, 11 November: "architect and design natural sounding line
 
 Voicing every answer as it is written would cost money on every line, for ever. Instead there is a **small bank of lines recorded once**, and the hosted model **picks from it**: it is shown the bank and asked which line this person would say right now. A recorded line costs nothing to play, sounds the same every time, and is in the person's own voice.
 
-**80 lines for a citizen (a man's take and a woman's of each: 160 recordings) and 17 for a unit, of which Half-Life 2 already has 8 (so 9 to record): 169 recordings, about 5,500 characters in all.** The wording is American (the owner, 11 November), to sit with the Half-Life 2 citizens still heard around them. With ElevenLabs that is a one-off of well under a dollar at the prices seen in November, or a few thousand of a plan's monthly characters.
+**79 lines for a citizen (a man's take and a woman's of each: 158 recordings) and 17 for a unit, of which Half-Life 2 already has 8 (so 9 to record): 167 recordings.** With the directions for ElevenLabs they come to about 9,000 characters; with the Administrator's 36 announcements and the G-Man's 8 made-up lines, 211 files and about 13,000 characters, which `_dev/tools/elevenlabs_batch.py` makes in one run (`VOICE_SCRIPTS.md`). The wording is American (the owner, 11 November), to sit with the Half-Life 2 citizens still heard around them. With ElevenLabs that is a one-off of well under a dollar at the prices seen in November, or a few thousand of a plan's monthly characters.
 
 ## How so few lines cover so much
 
 1. **Lines are written by what they do, not what they are about.** "I wouldn't know anything about that." answers any question about anything. "You should go. Now." fits a raid, a snitch, a unit coming, a fight starting. The bank is a set of moves: greet, part, agree, refuse, put off, not know, admit, thank, back down, take offence, warn, ask, give.
 2. **Nothing specific is in them:** no names, jobs, places, times of day, events or items. Any named citizen can say any line, at any hour, on any map.
 3. **The same few feelings throughout:** warm, plain, guarded, cold. Where the feeling changes the words there are two or three versions (four greetings, three goodbyes); where it does not there is one.
-4. **Six openers** ("Listen.", "Look.", "Please.", "Keep your voice down.", "Well.", "You.") can be said before any other line. They turn 74 lines into several hundred that sound different: "Look. No. Sorry." is not "Please. No. Sorry."
+4. **Six openers** ("Listen.", "Look.", "Please.", "Keep your voice down.", "Well.", "You.") can be said before any other line. They turn 73 lines into several hundred that sound different: "Look. No. Sorry." is not "Please. No. Sorry."
 5. **Who they are comes from which line is picked,** not from the words: the loyal say "The Administrator knows best. I believe that."; the frightened say "I don't know, and I don't want to know."; a sympathizer who trusts you says "There are people. That's all I'll say."
 
 ## The groups (a citizen)
@@ -56,7 +56,7 @@ The owner, 11 November: a named citizen must not answer in a recorded voice and 
 ## Recording them
 
 - **Folders:** a citizen's lines in `garrysmod/sound/livingcity/citizens/` (the folder the advice lines already use), a unit's in `garrysmod/sound/livingcity/units/` (new).
-- **Names:** `say_dunno_male1.wav` and `say_dunno_female1.wav`; a unit's `unit_move1.wav`. More takes `...2`, `...3`: one is picked at random, which is the cheapest way to make the lines heard most (greetings, "I wouldn't know", yes and no) sound less repeated. `.wav`, `.mp3` or `.ogg`; **`.mp3` is worth it here** (177 short files are a few megabytes for players to download as MP3, some 30 as WAV).
+- **Names:** `say_dunno_male1.wav` and `say_dunno_female1.wav`; a unit's `unit_move1.wav`. More takes `...2`, `...3`: one is picked at random, which is the cheapest way to make the lines heard most (greetings, "I wouldn't know", yes and no) sound less repeated. `.wav`, `.mp3` or `.ogg`; **`.mp3` is worth it here** (some 170 short files are a few megabytes for players to download as MP3, some 30 as WAV).
 - **Voices:** one man and one woman for every citizen, for now: ordinary, tired, speaking low, never acting. Pick two ElevenLabs voices that sound like they belong in the same city as Half-Life 2's citizens, since those are still heard where there is no recording. A unit: one clipped male voice, with a radio or vocoder effect over it if you can.
 - **Direction:** short and flat. The openers should run on into the next line (no falling full stop). The breaks are the only loud ones.
 - **After adding files:** FastDL sync, then a map change. `lc_voice_missing` in the server console lists what is not there yet ("Named citizens' lines", "Units' lines").

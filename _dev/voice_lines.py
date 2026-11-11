@@ -336,6 +336,23 @@ def scripts(doc, street, units, group_of, order):
            "- **The same voice for every line of a kind:** design the voice once (below), save it to your voices, and use that saved voice for the whole table.",
            "- **Staying legal:** the descriptions below describe a kind of voice in ordinary words. Do not name a game, a character or an actor in a voice prompt, "
            "and do not upload audio from the games to clone a voice: that needs the performer's consent, and ElevenLabs' terms forbid it.", "",
+           "## All of them at once (instead of pasting each line)", "",
+           "`_dev/tools/elevenlabs_batch.py` sends every line to ElevenLabs and saves each file under its right name, in the right folder, ready to upload. "
+           "On Linux Mint, in a terminal in the gamemode's folder:", "",
+           "```",
+           "export ELEVENLABS_API_KEY='your key here'",
+           "python3 _dev/tools/elevenlabs_batch.py --man VOICE_ID --woman VOICE_ID --dry-run",
+           "python3 _dev/tools/elevenlabs_batch.py --man VOICE_ID --woman VOICE_ID --limit 3",
+           "python3 _dev/tools/elevenlabs_batch.py --man VOICE_ID --woman VOICE_ID --unit VOICE_ID --administrator VOICE_ID --gman VOICE_ID",
+           "```", "",
+           "- **A voice id** is shown beside each voice in ElevenLabs' voice list (design and save the voices first, below). Only the voices you give are made: leave one out to skip its lines.",
+           "- **`--dry-run`** makes nothing: it says how many lines and characters it would send, so you know the cost first. **`--limit 3`** makes just the first three, to listen before doing the rest.",
+           "- **It never makes a file twice:** a file already in the output folder is skipped, so you can stop and run it again, delete the takes you dislike and rerun, or add `--takes 2` for a second take of each (`...2`).",
+           "- **Where they go:** `voice_out/sound/livingcity/...`, laid out like the server's `garrysmod/sound/`, so the whole `sound` folder can be uploaded as it is. "
+           "Unit lines go to `voice_out/units_clean/` instead: run `bash _dev/tools/unit_radio.sh voice_out/units_clean voice_out/sound/livingcity/units` for their radio sound.",
+           "- **`--extras`** also makes the G-Man lines that are not in the game yet. **`--model eleven_v4_turbo`** is cheaper than the default `eleven_v4`.",
+           "- The G-Man's files must be `.wav`: with `ffmpeg` installed (`sudo apt install ffmpeg`) the script converts them itself.",
+           "- **Not yet tried against the real service.** If the first run prints an error from ElevenLabs, paste it to Claude.", "",
            "## Voice descriptions (ElevenLabs: Voices > Voice Design; paste one, listen, adjust)", "",
            "Each is written to sit close to the people already heard in the city without copying anyone. Try the first; the others lean a different way.", "",
            "### The citizen, a man (every named male citizen)", "",
@@ -376,6 +393,7 @@ def scripts(doc, street, units, group_of, order):
            "`" + HER_TONE["stern"] + "` and save as `<trigger>_stern1`, or after `" + HER_TONE["furious"] + "` as `<trigger>_furious1`.", "",
            "| Done | File | When | Paste |", "|---|---|---|---|"]
     n = 0
+    batch = []  # (voice, path under sound/ without its ending, text)
     in1 = False
     for l in doc:
         if l.startswith("## 1."): in1 = True; continue
@@ -386,6 +404,7 @@ def scripts(doc, street, units, group_of, order):
         m = re.match(r"`([^`]+)`\s*\((\w+)\)", c[5])
         if not m or not c[6]: continue
         out.append("| [ ] | `%s` | %s | %s %s |" % (m.group(1), c[2], HER_TONE.get(m.group(2), HER_TONE["warm"]), c[6]))
+        batch.append(("administrator", "livingcity/administrator/" + re.sub(r"\.\w+$", "", m.group(1)), HER_TONE.get(m.group(2), HER_TONE["warm"]) + " " + c[6]))
         n += 1
     out += ["", "## What named citizens say", "",
             "Folder: `citizens/`. Paste each line twice: once with the man's voice (save as the man's file), once with the woman's.", "",
@@ -396,6 +415,8 @@ def scripts(doc, street, units, group_of, order):
         out.append("| | | | **%s** |" % g)
         for r in rs:
             out.append("| [ ] | `%s_male1` | `%s_female1` | %s |" % (r[1], r[1], r[4] if len(r) > 4 else r[3]))
+            batch.append(("man", "livingcity/citizens/%s_male1" % r[1], r[4] if len(r) > 4 else r[3]))
+            batch.append(("woman", "livingcity/citizens/%s_female1" % r[1], r[4] if len(r) > 4 else r[3]))
             n += 2
     out += ["", "## What units say", "",
             "Folder: `units/`. Record clean, then give them the radio sound (above). Half-Life 2's own units are heard beside these, "
@@ -404,6 +425,7 @@ def scripts(doc, street, units, group_of, order):
     for r in units:
         if len(r) > 5 and r[5]: continue
         out.append("| [ ] | `%s1` | %s |" % (r[1], r[4] if len(r) > 4 else r[3]))
+        batch.append(("unit", "livingcity/units/%s1" % r[1], r[4] if len(r) > 4 else r[3]))
         n += 1
     have = [r for r in units if len(r) > 5 and r[5]]
     if have:
@@ -425,6 +447,7 @@ def scripts(doc, street, units, group_of, order):
         if not f or not words: continue
         w = re.match(r'"([^"]+)"', words).group(1)
         out.append("| [ ] | %s | %s | %s %s |" % (f.split(" ")[0], c[1], GMAN_TAG, w))
+        batch.append(("gman", re.sub(r"\.\w+$", "", f.split(" ")[0].strip("`")), GMAN_TAG + " " + w))
         n += 1
     out += ["", "## The G-Man: lines it would be nice to have", "",
             "**Not in the game yet.** Nothing plays these today: they are offered as lines worth making while you are designing his voice. "
@@ -432,6 +455,11 @@ def scripts(doc, street, units, group_of, order):
             "| File | Where it could be heard | Paste |", "|---|---|---|"]
     for f, where, w in NICE_GMAN:
         out.append("| `%s` | %s | %s |" % (f, where, w))
+        batch.append(("gman_extra", "livingcity/gman/" + re.sub(r"\.\w+$", "", f), w))
+    with open(os.path.join(HERE, "tools", "voice_batch.tsv"), "w", encoding="utf-8") as fh:
+        fh.write("# Made by python3 _dev/voice_lines.py for _dev/tools/elevenlabs_batch.py: voice, file (under garrysmod/sound/, no ending), text\n")
+        for v, path, text in batch:
+            fh.write("%s\t%s\t%s\n" % (v, path, text))
     with open(os.path.join(os.path.dirname(OUT), "VOICE_SCRIPTS.md"), "w", encoding="utf-8") as fh:
         fh.write("\n".join(out).rstrip("\n") + "\n")
     print("wrote VOICE_SCRIPTS.md: %d lines to paste" % n)

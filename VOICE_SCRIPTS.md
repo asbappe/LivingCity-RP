@@ -11,6 +11,25 @@
 - **The same voice for every line of a kind:** design the voice once (below), save it to your voices, and use that saved voice for the whole table.
 - **Staying legal:** the descriptions below describe a kind of voice in ordinary words. Do not name a game, a character or an actor in a voice prompt, and do not upload audio from the games to clone a voice: that needs the performer's consent, and ElevenLabs' terms forbid it.
 
+## All of them at once (instead of pasting each line)
+
+`_dev/tools/elevenlabs_batch.py` sends every line to ElevenLabs and saves each file under its right name, in the right folder, ready to upload. On Linux Mint, in a terminal in the gamemode's folder:
+
+```
+export ELEVENLABS_API_KEY='your key here'
+python3 _dev/tools/elevenlabs_batch.py --man VOICE_ID --woman VOICE_ID --dry-run
+python3 _dev/tools/elevenlabs_batch.py --man VOICE_ID --woman VOICE_ID --limit 3
+python3 _dev/tools/elevenlabs_batch.py --man VOICE_ID --woman VOICE_ID --unit VOICE_ID --administrator VOICE_ID --gman VOICE_ID
+```
+
+- **A voice id** is shown beside each voice in ElevenLabs' voice list (design and save the voices first, below). Only the voices you give are made: leave one out to skip its lines.
+- **`--dry-run`** makes nothing: it says how many lines and characters it would send, so you know the cost first. **`--limit 3`** makes just the first three, to listen before doing the rest.
+- **It never makes a file twice:** a file already in the output folder is skipped, so you can stop and run it again, delete the takes you dislike and rerun, or add `--takes 2` for a second take of each (`...2`).
+- **Where they go:** `voice_out/sound/livingcity/...`, laid out like the server's `garrysmod/sound/`, so the whole `sound` folder can be uploaded as it is. Unit lines go to `voice_out/units_clean/` instead: run `bash _dev/tools/unit_radio.sh voice_out/units_clean voice_out/sound/livingcity/units` for their radio sound.
+- **`--extras`** also makes the G-Man lines that are not in the game yet. **`--model eleven_v4_turbo`** is cheaper than the default `eleven_v4`.
+- The G-Man's files must be `.wav`: with `ffmpeg` installed (`sudo apt install ffmpeg`) the script converts them itself.
+- **Not yet tried against the real service.** If the first run prints an error from ElevenLabs, paste it to Claude.
+
 ## Voice descriptions (ElevenLabs: Voices > Voice Design; paste one, listen, adjust)
 
 Each is written to sit close to the people already heard in the city without copying anyone. Try the first; the others lean a different way.
