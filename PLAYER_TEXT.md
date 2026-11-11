@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version b8fa8d9. Admin-only console messages and log lines are left out.
+Made from version e093a97. Admin-only console messages and log lines are left out.
 
-10822 lines, from 296 files.
+10824 lines, from 296 files.
 
 ## Contents
 
@@ -275,7 +275,7 @@ Made from version b8fa8d9. Admin-only console messages and log lines are left ou
 - [the city's stores](#the-citys-stores-svlivingcitystockpilelua) (8)
 - [places to keep things](#places-to-keep-things-svlivingcitystoragelua) (44)
 - [story chains](#story-chains-svlivingcitystorieslua) (355)
-- [strange dreams (Happy and Neutral dreams you play)](#strange-dreams-happy-and-neutral-dreams-you-play-svlivingcitystrangedreamslua) (80)
+- [strange dreams (Happy and Neutral dreams you play)](#strange-dreams-happy-and-neutral-dreams-you-play-svlivingcitystrangedreamslua) (82)
 - [ten more strange dreams (dreams you play)](#ten-more-strange-dreams-dreams-you-play-svlivingcitystrangedreams2lua) (331)
 - [ten more strange dreams, nonsense on purpose](#ten-more-strange-dreams-nonsense-on-purpose-svlivingcitystrangedreams3lua) (235)
 - [crime between citizens (the owner, 10 November: "citizen](#crime-between-citizens-the-owner-10-november-citizen-svlivingcitystreetcrimelua) (51)
@@ -914,7 +914,7 @@ Made from version b8fa8d9. Admin-only console messages and log lines are left ou
 - "More propaganda dreams: Record Harvest (carry glowing crates to the depot; crouch to throw away a green, spoiled one), The Stakhanov Shift (crouch again and again at a work station to beat the norm by 1400%), Careless Talk (four rounds of 30 seconds: listen for clues and crouch beside the one you think is the spy; everyone's pick is revealed together), The Newsreel (as the camera rolls, say the wave, salute or cheer it asks of you; everyone's take is shown at the cut), Two Minutes of Hate (jeer in chat; silence is noticed), The Mass Games (gold card: crouch, red: stand, at FLIP!), On-the-Spot Guidance (jump or say clap when she points), The Scrap Drive (fill the bins; never sell to the shady trader), Flowers for the Liberators (jump as a soldier passes you; stay off the road), Duck and Cover (when the siren wails and the Resistance's rocket goes up, crouch beside a table, two to a table), Ravenholm (the dead rise from the graves and a red Father Grigori rants; hold on until help comes, and if any vortigaunt freed from its shackles is alive in the city, you may see the truth)."  (text, line 97)
 - "The Battle Line (a propaganda dream): you're handed a rifle behind her barricades; shoot the red rebels before they reach the line. Never fire on her soldiers or the APC: the manhacks come for you, and if they get you, you're a tiny unarmed rebel charging the line until the dream ends."  (text, line 98)
 - "Freed vortigaunts can break into propaganda dreams (the more freed and alive, the more often): purple vortigaunts in rings of light. Stand in their light to side with them (it costs Civil Standing, but the Resistance hears of it), or keep to her. If they win, her figure shatters and the dream ends."  (text, line 99)
-- "Strange dreams: The Cheese Dream (it starts in the dark, with two voices: gather the glowing cheese, jump onto the floating slabs, and keep out of the way of the rolling wheels; it gets colourful), Musical Chairs (walk round the chairs while the music plays; when it stops, get to a free one and crouch (or press Use) to sit down in it), Wings (jump, then jump again in the air to flap, and fly through the golden rings) and It's Raining Melons (stand on a green glow to catch a melon; keep out from under a red one). Win one and you wake Unbroken; losing one costs nothing."  (text, line 100)
+- "Strange dreams: The Cheese Dream (it starts in the dark, with two voices: gather the glowing cheese, jump onto the floating slabs, and keep out of the way of the rolling wheels; it gets colourful), Musical Chairs (walk round the chairs while the music plays; when it stops, get to a free one and press Use to sit down in it; try to sit while the music is still playing and you lose one of your three lives), Wings (jump, then jump again in the air to flap, and fly through the golden rings) and It's Raining Melons (stand on a green glow to catch a melon; keep out from under a red one). Win one and you wake Unbroken; losing one costs nothing."  (text, line 100)
 - "More strange dreams: Hooves and All (Neutral: when Father Grigori's shot stops the black horse, run in and bite it with E; don't get trampled), The Main Event (box: punch with attack next to it, crouch when it winds up), The Exam (stuck at your desk: type A, B, C or D in chat; the right answer is whatever most of the class picks, and you only learn your score once Doctor Kleiner has eaten your paper), The Last Train (the door moves away while anyone looks at it: walk backwards), Where's Lamarr? (catch the hopping headcrabs; the golden one counts three), Running in Molasses (reach the glowing corners in turn, slowly, away from the zombie), Hot Potato (touch someone to pass the grenade before it goes off), Overwatch Says (do it only when he says "Overwatch says"), Dance Marathon (jump on the big beat) and Counting Headcrabs (count them, not the watermelons, and say how many in chat)."  (text, line 101)
 - "Nonsense dreams: Stop the Clocks (touch each melting clock to stop it; stop them all at once), The Tea Party (move to the seat that glows when the host shouts), The Headcrab Derby (stand on a lane's pad before the race to back its headcrab), Say Cheese (hide behind something giant before the scanner's flash), The Doors (stand at the door the music box plays behind), Splat! (paint the floor your colour), Conga! (keep in the glow at the tail of the line), Shh! (gather toys quietly: running and jumping wake the baby), Bubbles (pop them; big ones lift you) and The Watchers (they only move while nobody looks at them: gather the keys). In every strange dream, expect nonsense: things floating in the sky, odd textures, faces pulling expressions, sparkles and smoke, and sounds that won't stay at one pitch."  (text, line 102)
 - "The Midnight Rally (a Happy dream): a buggy race at night. Forward to go, back to brake, look where you want to go; you watch from behind your buggy. Stay between the cones (off the road you crawl), drive every part of the lap in order, and drive through the glowing crates for a pickup: a boost, a melon to drop behind you (whoever hits it spins out) or a horn blast that slows everyone near. Jump uses it. The first three over the line win. When few are asleep, the city's people drive the other buggies, and they can beat you."  (text, line 103)
@@ -18321,94 +18321,96 @@ Made from version b8fa8d9. Admin-only console messages and log lines are left ou
 - "Gather the glowing cheese!"  (text, line 402)
 - "Cheese: %d of %d"  (message, line 404)
 
-> Note for you (not shown in game): Musical Chairs
+> Note for you (not shown in game): (three lives since 11 November: the owner, "if they sit while the music is still playing they lose a life". Before, one.)
 
-- "Musical Chairs"  (name, line 418)
-- "Walk round the chairs while the music plays. When it stops, get to a free chair and crouch (or press Use) to sit in it. No chair, you're out."  (text, line 420)
-- "The music never stops"  (text, line 421)
-- "The chairs keep drifting round and round, and you drift awake."  (text, line 421)
-- "Musical Chairs"  (name, line 422)
-- "The last one sitting"  (text, line 423)
-- "You wake up sitting bolt upright in bed, and nobody can take it from you."  (text, line 423)
-- "No chair for you"  (text, line 424)
-- "You wake with a tune stuck in your head and the feeling that a chair laughed at you."  (text, line 424)
-- "Round and round"  (text, line 425)
-- "You wake dizzy, humming. Were there always that many chairs?"  (text, line 425)
+- "Musical Chairs"  (name, line 419)
+- "Walk round the chairs while the music plays. When it stops, get to a free chair and press Use to sit in it. No chair, you're out. Try to sit while the music is still playing and you lose a life."  (text, line 421)
+- "The music never stops"  (text, line 422)
+- "The chairs keep drifting round and round, and you drift awake."  (text, line 422)
+- "Musical Chairs"  (name, line 423)
+- "The last one sitting"  (text, line 424)
+- "You wake up sitting bolt upright in bed, and nobody can take it from you."  (text, line 424)
+- "No chair for you"  (text, line 425)
+- "You wake with a tune stuck in your head and the feeling that a chair laughed at you."  (text, line 425)
+- "Round and round"  (text, line 426)
+- "You wake dizzy, humming. Were there always that many chairs?"  (text, line 426)
 
 > Note for you (not shown in game): part of: tick
 
-- "No chair for you"  (text, line 530)
-- "The music stopped and every chair was taken. The chairs laugh at you (chairs can do that, here)."  (text, line 530)
-- "The last one sitting"  (text, line 538)
-- "The music stops for good. Yours is the only chair left, and it's very comfortable."  (text, line 538)
+- "Too soon!"  (text, line 513)
+- "You tried to sit while the music was still playing."  (text, line 513)
+- "No chair for you"  (text, line 553)
+- "The music stopped and every chair was taken. The chairs laugh at you (chairs can do that, here)."  (text, line 553)
+- "The last one sitting"  (text, line 561)
+- "The music stops for good. Yours is the only chair left, and it's very comfortable."  (text, line 561)
 
 > Note for you (not shown in game): part of: state
 
-- "Get ready: the music's about to start."  (text, line 553)
-- "Keep walking round the chairs..."  (text, line 554)
-- "You've got a chair."  (text, line 556)
-- "SIT! Crouch (or press Use) at a free chair!"  (text, line 556)
-- "Safe! One chair fewer..."  (text, line 557)
-- "Round %d     Chairs: %d"  (message, line 559)
+- "Get ready: the music's about to start."  (text, line 576)
+- "Keep walking round the chairs... (don't sit yet!)"  (text, line 577)
+- "You've got a chair."  (text, line 579)
+- "SIT! Press Use at a free chair!"  (text, line 579)
+- "Safe! One chair fewer..."  (text, line 580)
+- "Round %d     Chairs: %d"  (message, line 582)
 
 > Note for you (not shown in game): Wings
 
-- "You can fly! Jump, then jump again in the air to flap. Fly through the golden rings."  (text, line 572)
-- "Gently down"  (text, line 573)
-- "You float down, softly, softly, into your own bed."  (text, line 573)
-- "You flew"  (text, line 575)
-- "You wake up light as air. For a moment you're sure you could step off the roof and keep going. Don't."  (text, line 575)
-- "Gently down"  (text, line 576)
-- "You wake from a flying dream, arms spread, smiling."  (text, line 576)
+- "You can fly! Jump, then jump again in the air to flap. Fly through the golden rings."  (text, line 595)
+- "Gently down"  (text, line 596)
+- "You float down, softly, softly, into your own bed."  (text, line 596)
+- "You flew"  (text, line 598)
+- "You wake up light as air. For a moment you're sure you could step off the roof and keep going. Don't."  (text, line 598)
+- "Gently down"  (text, line 599)
+- "You wake from a flying dream, arms spread, smiling."  (text, line 599)
 
 > Note for you (not shown in game): part of: tick
 
-- "You flew"  (text, line 646)
-- "Through every ring, round the pigeons, over the dream. You actually flew."  (text, line 646)
+- "You flew"  (text, line 669)
+- "Through every ring, round the pigeons, over the dream. You actually flew."  (text, line 669)
 
 > Note for you (not shown in game): part of: state
 
-- "Jump, then jump again in the air to flap!"  (text, line 659)
-- "Rings: %d of %d"  (message, line 660)
+- "Jump, then jump again in the air to flap!"  (text, line 682)
+- "Rings: %d of %d"  (message, line 683)
 
 > Note for you (not shown in game): It's Raining Melons
 
-- "It's Raining Melons"  (name, line 672)
-- "Watermelons are falling! Stand on a green glow to catch one. A red glow is a lead melon: keep out from under it."  (text, line 673)
-- "The rain stops"  (text, line 674)
-- "The last melon lands, the sun comes out, and you wake."  (text, line 674)
-- "It's Raining Melons"  (name, line 675)
-- "You wake up full, and sticky, and happy. There's no melon anywhere. There never is."  (text, line 676)
-- "You wake with a bump on your head that isn't there. Lead melons. Who grows those?"  (text, line 677)
-- "The rain stops"  (text, line 678)
-- "You wake to the sound of rain and, for a moment, hope."  (text, line 678)
+- "It's Raining Melons"  (name, line 695)
+- "Watermelons are falling! Stand on a green glow to catch one. A red glow is a lead melon: keep out from under it."  (text, line 696)
+- "The rain stops"  (text, line 697)
+- "The last melon lands, the sun comes out, and you wake."  (text, line 697)
+- "It's Raining Melons"  (name, line 698)
+- "You wake up full, and sticky, and happy. There's no melon anywhere. There never is."  (text, line 699)
+- "You wake with a bump on your head that isn't there. Lead melons. Who grows those?"  (text, line 700)
+- "The rain stops"  (text, line 701)
+- "You wake to the sound of rain and, for a moment, hope."  (text, line 701)
 
 > Note for you (not shown in game): part of: melon land
 
-- "A lead melon. It's exactly as heavy as it sounds."  (text, line 724)
-- "Your arms are full of melons and the sky is still raining them. A perfect dream."  (text, line 728)
+- "A lead melon. It's exactly as heavy as it sounds."  (text, line 747)
+- "Your arms are full of melons and the sky is still raining them. A perfect dream."  (text, line 751)
 
 > Note for you (not shown in game): part of: state
 
-- "Catch the melons! Stand on the green glows."  (text, line 760)
-- "Melons: %d of %d"  (message, line 761)
-- "The Heads in the Sky"  (text, line 766)
-- "Cheeeeese. Cheeeeeeeese."  (text, line 766)
-- "a choir of giant floating heads, humming, slow, warm, reverb-heavy and slightly off-key"  (text, line 766)
-- "The Heads in the Sky"  (text, line 767)
-- "The golden cheese! The golden cheese!"  (text, line 767)
-- "the same choir, suddenly excited, overlapping, high-pitched"  (text, line 767)
-- "The Music Man"  (text, line 768)
-- "Ladies and gentlemen, musical chairs! When the music stops... sit."  (text, line 768)
-- "a cheerful old game-show host, a little too close to the microphone"  (text, line 768)
-- "The Music Man"  (text, line 769)
-- "the game-show host, sudden and loud"  (text, line 769)
-- "A Gentle Voice"  (text, line 770)
-- "Go on. You always knew you could. Just... flap."  (text, line 770)
-- "a soft, kind, dreamy narrator, almost whispering"  (text, line 770)
-- "The Weatherman"  (text, line 771)
-- "Today's forecast: melons. Heavy melons, with a chance of lead."  (text, line 771)
-- "a chirpy TV weatherman, completely serious about it"  (text, line 771)
+- "Catch the melons! Stand on the green glows."  (text, line 783)
+- "Melons: %d of %d"  (message, line 784)
+- "The Heads in the Sky"  (text, line 789)
+- "Cheeeeese. Cheeeeeeeese."  (text, line 789)
+- "a choir of giant floating heads, humming, slow, warm, reverb-heavy and slightly off-key"  (text, line 789)
+- "The Heads in the Sky"  (text, line 790)
+- "The golden cheese! The golden cheese!"  (text, line 790)
+- "the same choir, suddenly excited, overlapping, high-pitched"  (text, line 790)
+- "The Music Man"  (text, line 791)
+- "Ladies and gentlemen, musical chairs! When the music stops... sit."  (text, line 791)
+- "a cheerful old game-show host, a little too close to the microphone"  (text, line 791)
+- "The Music Man"  (text, line 792)
+- "the game-show host, sudden and loud"  (text, line 792)
+- "A Gentle Voice"  (text, line 793)
+- "Go on. You always knew you could. Just... flap."  (text, line 793)
+- "a soft, kind, dreamy narrator, almost whispering"  (text, line 793)
+- "The Weatherman"  (text, line 794)
+- "Today's forecast: melons. Heavy melons, with a chance of lead."  (text, line 794)
+- "a chirpy TV weatherman, completely serious about it"  (text, line 794)
 
 ## ten more strange dreams (dreams you play) (sv_livingcity_strangedreams2.lua)
 
