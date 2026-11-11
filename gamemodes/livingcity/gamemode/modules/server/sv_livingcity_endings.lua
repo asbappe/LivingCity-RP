@@ -643,18 +643,25 @@ LC.EndingSlaughter = Slaughter
 -- A player the mingebags bring down isn't killed where they stand any more: the one that got them lifts them over
 -- its head and runs straight out into the dark with them, their screen going black, and LC.MingeCarrySecs later they
 -- are one of them: a mingebag of their own comes back out of the dark for whoever is left, and they ride with it,
--- watching (clicks still look at someone else). Shoot the one carrying someone and it drops them, alive. The
--- Combine's units and the city's people die where they stand, as before; so does anyone left in the last two seconds.
+-- watching (clicks still look at someone else). Shoot the one carrying someone and it drops them, alive.
+-- The owner, later on 11 November: "Replace both the ending and the dream with this new idea". So nobody is killed
+-- where they stand any more, as the city's ending or as a dream: the Combine's units and the city's people are
+-- carried off and come back as mingebags too, and in the last two seconds whoever is left is taken the same way.
 LC.MingeCarrySecs = 6
 LC.MingeCarryUp = 78 -- (how high over it they're held)
 local function Drop(p, hp)
     if not IsValid(p) or not p.lcMingeCarried then return end
     p.lcMingeCarried = nil
     p.lcEndTaken = nil
+    if p.SetNotSolid then p:SetNotSolid(false) end
+    if not p:IsPlayer() then -- (one of the Combine's units or the city's people: on their feet again)
+        if p.SetMoveType then p:SetMoveType(MOVETYPE_STEP or 3) end
+        if hp then p:SetHealth(hp) end
+        return
+    end
     p:SetNW2Bool("lc_minge_carried", false)
     if p.Freeze then p:Freeze(false) end
     p.lcEndFrozen = nil
-    if p.SetNotSolid then p:SetNotSolid(false) end
     if hp then
         p:SetHealth(hp)
         if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(0, 0, 0, 255), 1.5, 0) end
@@ -662,18 +669,23 @@ local function Drop(p, hp)
     end
 end
 LC.MingeDrop = Drop
-function LC.MingeCarry(p, m)
-    if not E or not IsValid(p) or not p:IsPlayer() or p.lcEndTaken or p.lcMingeCarried then return false end
+function LC.MingeCarry(p, m, secs)
+    if not E or not IsValid(p) or p.lcEndTaken or p.lcMingeCarried then return false end
     local s = IsValid(m) and m.lcMinge
     if not s or s.carry then return false end
     local now = CurTime()
+    local isPlayer = p:IsPlayer()
     p.lcEndTaken = true -- (nobody else goes for them, and nothing more hurts them)
-    p.lcMingeCarried = { by = m, t0 = now, turnAt = now + LC.MingeCarrySecs }
+    p.lcMingeCarried = { by = m, t0 = now, turnAt = now + (secs or LC.MingeCarrySecs) }
     p:SetHealth(1)
-    p:SetNW2Bool("lc_minge_carried", true)
-    if p.Freeze then p:Freeze(true) end
-    p.lcEndFrozen = true
     if p.SetNotSolid then p:SetNotSolid(true) end
+    if isPlayer then
+        p:SetNW2Bool("lc_minge_carried", true)
+        if p.Freeze then p:Freeze(true) end
+        p.lcEndFrozen = true
+    elseif p.SetMoveType then
+        p:SetMoveType(MOVETYPE_NONE) -- (one of the Combine's units or the city's people: held)
+    end
     -- straight out from the middle of it, into the dark (a dream: as far as its edge)
     local pos = m:GetPos()
     local c = E.lz or Centre() -- (the middle of the ring)
@@ -688,6 +700,11 @@ function LC.MingeCarry(p, m)
     s.carry, s.carryGoal, s.leap, s.target, s.path = p, goal, nil, nil, nil
     s.goal, s.speed = goal, 430
     p:EmitSound("vo/npc/male01/help01.wav", 85)
+    if not isPlayer then
+        if table.HasValue(E.combine or {}, p) and LC.EndingChatter then LC.EndingChatter("down") end
+        hook.Run("LivingCityMingeCarried", p, m)
+        return true
+    end
     if p.ViewPunch then p:ViewPunch(Angle(-25, math.Rand(-15, 15), 0)) end
     if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.OUT or 2, Color(0, 0, 0, 255), LC.MingeCarrySecs, 1.5) end
     p:ChatPrint("It has you. It lifts you over its head like a toy, and runs for the dark.")
@@ -703,8 +720,16 @@ function LC.MingeTurn(p)
     local m = p.lcMingeCarried.by
     local at = IsValid(m) and m:GetPos() or p:GetPos()
     p.lcMingeCarried = nil
-    p:SetNW2Bool("lc_minge_carried", false)
     if IsValid(m) and m.lcMinge then m.lcMinge.carry, m.lcMinge.carryGoal, m.lcMinge.goal = nil, nil, nil end
+    if not p:IsPlayer() then
+        -- (one of the Combine's units or the city's people: gone, and one more of them comes back)
+        local c0 = E.lz or Centre()
+        local back = SpawnMinge(at + Vector(40, 0, 0), math.atan2(at.y - c0.y, at.x - c0.x))
+        p:Remove()
+        hook.Run("LivingCityMingeTurned", p, back)
+        return true
+    end
+    p:SetNW2Bool("lc_minge_carried", false)
     p.lcEndTaken = nil -- (so they're taken properly, as anyone out of it is: hidden, watching)
     Spectator(p, "In the dark it sets you down. Your arms won't come down. You slide. You're one of them now.", Color(60, 0, 90, 255))
     local c = E.lz or Centre()
@@ -741,10 +766,8 @@ local function Hit(p, m)
         p:SetHealth(p:Health() - math.max(1, math.floor(math.random(10, 18) * fury)))
         p:EmitSound("physics/body/body_medium_impact_hard" .. math.random(1, 6) .. ".wav", 75)
         if p:Health() <= 0 then
-            local unit = E and table.HasValue(E.combine or {}, p)
-            Body(p:GetModel(), p:GetPos(), p:GetAngles().y, 260)
-            p:Remove()
-            if unit and LC.EndingChatter then LC.EndingChatter("down") end
+            -- (carried off, like anyone; if this one has its hands full, they hang on for the next)
+            if not LC.MingeCarry(p, m) then p:SetHealth(1) end
         end
         return true
     end
@@ -757,8 +780,8 @@ local function Hit(p, m)
         util.Effect("BloodImpact", fx)
     end
     if p:Health() <= 0 then
-        -- (carried off into the dark and turned, by the one that got them; killed where they stand only if it can't)
-        if not LC.MingeCarry(p, m) then Slaughter(p, "They're on you, all of them, in that pose. The mingebags got you.") end
+        -- (carried off into the dark and turned, by the one that got them; if it has its hands full, they hang on for the next)
+        if not LC.MingeCarry(p, m) then p:SetHealth(1) end
     end
     return true
 end
@@ -1089,8 +1112,8 @@ TICK.harpies = function(now)
     -- who they go for: the Combine's units first (they're the ones shooting),
     -- then the city's people, and only then the players
     local targets = {}
-    for _, n in ipairs(E.combine or {}) do if IsValid(n) then targets[#targets + 1] = n end end
-    if #targets == 0 then for _, c in ipairs(E.folk or {}) do if IsValid(c) then targets[#targets + 1] = c end end end
+    for _, n in ipairs(E.combine or {}) do if IsValid(n) and not n.lcEndTaken then targets[#targets + 1] = n end end -- (not one being carried off)
+    if #targets == 0 then for _, c in ipairs(E.folk or {}) do if IsValid(c) and not c.lcEndTaken then targets[#targets + 1] = c end end end
     if #targets == 0 then for _, p in ipairs(living) do targets[#targets + 1] = p end end
     local tier = targets[1] and (targets[1]:IsPlayer() and 3 or (table.HasValue(E.combine or {}, targets[1]) and 1 or 2)) or 3
     local centre = E.lz
@@ -1129,7 +1152,7 @@ TICK.harpies = function(now)
     -- the Combine open fire, a moment before the leaping (and keep firing)
     if firing then
         for _, n in ipairs(E.combine or {}) do
-            if IsValid(n) and now >= (n.lcNextShot or 0) then Shoot(n, now, E.minges, LC.MingeHurt) end
+            if IsValid(n) and not n.lcEndTaken and now >= (n.lcNextShot or 0) then Shoot(n, now, E.minges, LC.MingeHurt) end
         end
     end
 
@@ -1215,13 +1238,33 @@ TICK.harpies = function(now)
     for _, p in ipairs(LC.EndingPlayers()) do
         if p.lcMingeCarried and not IsValid(p.lcMingeCarried.by) then Drop(p, 40) end
     end
+    for _, list in ipairs({ E.combine or {}, E.folk or {} }) do
+        for _, n in ipairs(list) do if IsValid(n) and n.lcMingeCarried and not IsValid(n.lcMingeCarried.by) then Drop(n, 40) end end
+    end
 
     -- the last two seconds: nobody's left
     if t >= fin - 2 then
-        for _, p in ipairs(LC.EndingPlayers()) do if p.lcMingeCarried then LC.MingeTurn(p) end end -- (anyone still being carried: turned now)
-        for _, p in ipairs(living) do Slaughter(p, "There's nowhere left. The mingebags got you.") end
-        for _, n in ipairs(E.combine or {}) do if IsValid(n) then Body(n:GetModel(), n:GetPos(), n:GetAngles().y, 260) n:Remove() end end
-        for _, c in ipairs(E.folk or {}) do if IsValid(c) then Body(c:GetModel(), c:GetPos(), c:GetAngles().y, 260) c:Remove() end end
+        -- (there's nowhere left: whoever still stands is snatched up at once, and everyone carried is one of them
+        -- before the song's last half second. Nobody is killed where they stand.)
+        local free = {}
+        for _, m in ipairs(E.minges) do if IsValid(m) and m.lcMinge and not m.lcMinge.carry then free[#free + 1] = m end end
+        local function Snatch(v)
+            if not IsValid(v) or v.lcEndTaken then return end
+            local m = table.remove(free)
+            if not (m and LC.MingeCarry(v, m, 1.2)) then
+                v.lcEndTaken, v.lcMingeCarried = true, { by = NULL, t0 = now, turnAt = now } -- (none free to carry them: taken where they are)
+                LC.MingeTurn(v)
+            end
+        end
+        for _, p in ipairs(living) do Snatch(p) end
+        for _, n in ipairs(E.combine or {}) do Snatch(n) end
+        for _, c in ipairs(E.folk or {}) do Snatch(c) end
+        if t >= fin - 0.5 then
+            for _, p in ipairs(LC.EndingPlayers()) do if p.lcMingeCarried then LC.MingeTurn(p) end end
+            for _, list in ipairs({ E.combine or {}, E.folk or {} }) do
+                for _, n in ipairs(list) do if IsValid(n) and n.lcMingeCarried then LC.MingeTurn(n) end end
+            end
+        end
     end
     -- the dead keep watching someone
     for _, p in ipairs(LC.EndingPlayers()) do

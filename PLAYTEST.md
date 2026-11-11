@@ -1572,3 +1572,5 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **Shot down:** have someone shoot the mingebag carrying a player. Is the player dropped, alive, and able to run?
   Notes:
+- [ ] **The harpies, all of it (11 November):** watch the Combine's units and the citizens: are they carried off too, with no bodies left? At the very end, is the last player snatched up and turned, not killed? Does it still feel like a slaughter is coming, or too slow?
+  Notes:

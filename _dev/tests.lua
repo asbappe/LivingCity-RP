@@ -14464,11 +14464,26 @@ do
     local told = false
     for _, l in ipairs(b.chat or {}) do if string.find(l, "One of them", 1, true) then told = true end end
     ok(told, "and the others are told who it was that came back")
+    -- (the owner, later that day: this is the whole of it now) the Combine's units and the city's people go the same way
+    local victim
+    for _, list in ipairs({ E.combine or {}, E.folk or {} }) do for _, n in ipairs(list) do if IsValid(n) and not n.lcEndTaken then victim = victim or n end end end
+    local mg3
+    for _, m in ipairs(E.minges) do if IsValid(m) and not m.lcMinge.carry then mg3 = m break end end
+    if victim and mg3 then
+        local bodies0, minges0 = #(E.bodies or {}), #E.minges
+        ok(LC.MingeCarry(victim, mg3) == true and victim.lcEndTaken and mg3.lcMinge.carry == victim, "one of the Combine's units (or the city's people) is carried off the same way")
+        victim.lcMingeCarried.turnAt = CurTime()
+        LC.MingeStep(mg3, 0.1)
+        ok(not IsValid(victim) and #E.minges == minges0 + 1 and #(E.bodies or {}) == bodies0, "and comes back as one more of them: no body left lying there")
+    end
 end
 for _, n in ipairs(FIRE) do _files["sound/npc/metropolice/vo/" .. n .. ".wav"] = nil end
 runTo(38.5)
 ok(a.lcEndTaken and b.lcEndTaken and a.alive and b.alive and a:GetNW2Bool("lc_end_spectating", false),
     "by the end everyone's gone, and the dead watch (nobody really dies: no close call, no new character)")
+runTo(39.7)
+ok(b:GetNW2Bool("lc_end_spectating", false) and not b.lcMingeCarried and IsValid(b.lcMingeSelf), "the last one standing was snatched up and turned too, not killed where they stood",
+    tostring(b:GetNW2Bool("lc_end_spectating", false)) .. " carried=" .. tostring(b.lcMingeCarried ~= nil) .. " self=" .. tostring(IsValid(b.lcMingeSelf)))
 ok(LC.EndingSession().phase == "apocalypse", "the song plays out with the dead watching")
 runTo(41)
 ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and when it's over the city resets")
