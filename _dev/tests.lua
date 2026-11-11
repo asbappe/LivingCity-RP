@@ -11231,6 +11231,57 @@ answer = function() return reply({ action = "break", event = "", person = who, k
 LC.DirectorLook(CurTime())
 ok(Psy.State(m2).stress == 10 and string.find(B.decisions[#B.decisions].text, "would have", 1, true) == 1, "lc_director 1: it only writes down what it would have done")
 _setcvar("lc_director", 2)
+-- her office, with nobody in it (LC.AdminDecree, LC.AdminLook)
+section("The city's own Administrator: the model in her office")
+_setcvar("lc_brain_admin", 1)
+LC.AdminNPC.lcAdminNext, LC.AdminNPC.lcAdminDaily = nil, nil
+B.decrees, B.adminBusy = {}, nil
+local human = LC.HumanAdministrator
+LC.HumanAdministrator = function() return nil end -- (whoever an earlier test left in the post)
+local wasEvent = LC.Event
+if LC.Event then LC.EndEvent(true) end
+local notes = {}
+local realNotice = LC.Notice
+LC.Notice = function(p, kind, title, text) notes[#notes + 1] = tostring(title) .. ": " .. tostring(text) end
+local function noted(text) for _, l in ipairs(notes) do if string.find(l, text, 1, true) then return true end end return false end
+local pname = LC.CharacterName and LC.CharacterName(ply) or ply:Nick()
+local state = LC.AdminOfficeState()
+ok(string.find(state, "event ready", 1, true) ~= nil and string.find(state, "left today 5", 1, true) ~= nil, "her office says what it can do now", state)
+answer = function() return reply({ decree = "rations", event = "", rations = "generous", prices = "", job = "", player = "", words = "A city that works is a city that eats.", reason = "Hunger is feeding the unrest." }) end
+ok(LC.AdminLook(CurTime()) == true and LC.AdminState.rations == "generous" and LC.AdminState.rationsUntil > CurTime(), "with nobody in the post she decrees: generous rations for the hour")
+ok(noted("Rations are increased for the hour") and noted("A city that works is a city that eats."), "announced as the City Administrator's, with her own words")
+ok(string.find(reqs[#reqs].body, "Your office:", 1, true) ~= nil and string.find(reqs[#reqs].body, pname, 1, true) ~= nil, "she is shown the city and what her office can do")
+ok(#B.decrees == 1 and string.find(B.decrees[1].text, "rations generous", 1, true) == 1, "and it is written down", B.decrees[1] and B.decrees[1].text)
+local okD, whyD = LC.AdminApply({ decree = "rations", rations = "austere", words = "" }, CurTime())
+ok(okD == false and LC.AdminState.rations == "generous", "the same waits as a player in the post: not again for 15 minutes", whyD)
+local stand = {}
+local realStanding = LC.AddStanding
+LC.AddStanding = function(p, n, why) stand[#stand + 1] = { p, n, why } end
+okD, whyD = LC.AdminApply({ decree = "censure", player = pname, words = "Let this be remembered." }, CurTime())
+ok(okD == true and #stand == 1 and stand[1][1] == ply and stand[1][2] == -15, "a censure: the player's civil standing falls by 15", whyD)
+okD, whyD = LC.AdminApply({ decree = "commend", player = "Nobody Atall", words = "" }, CurTime())
+ok(okD == false and #stand == 1, "a name she made up is refused", whyD)
+LC.AddStanding = realStanding
+okD, whyD = LC.AdminApply({ decree = "pardon", player = pname, words = "" }, CurTime())
+ok(okD == false, "no pardon for someone who is not wanted", whyD)
+okD, whyD = LC.AdminApply({ decree = "prices", prices = "lower", words = "" }, CurTime())
+ok(okD == true and LC.AdminState.priceMul == 0.85, "prices lowered: 85% for the hour", whyD)
+-- a player in the post: she is out of it
+LC.HumanAdministrator = function() return ply end
+local nreq = #reqs
+ok(LC.AdminLook(CurTime()) == false and #reqs == nreq and LC.AdminDecree("rations", "normal") == false, "a player holds the post: the model is out of the office")
+LC.HumanAdministrator = function() return nil end
+local wasSocio = LC.Socio
+LC.Socio = "black"
+ok(LC.AdminLook(CurTime()) == false and #reqs == nreq, "during the collapse she is left to its own script")
+LC.Socio = wasSocio
+_setcvar("lc_brain_admin", 0)
+ok(LC.AdminLook(CurTime()) == false and #reqs == nreq, "lc_brain_admin 0: the office stays empty")
+_setcvar("lc_brain_admin", 1)
+LC.Notice = realNotice
+LC.HumanAdministrator = human
+LC.AdminState.rations, LC.AdminState.rationsUntil, LC.AdminState.priceMul, LC.AdminState.priceUntil = nil, 0, 1, 0
+LC.AdminNPC.lcAdminNext, LC.AdminNPC.lcAdminDaily = nil, nil
 -- the day's limit
 _setcvar("lc_brain_daily", 1)
 local before = #reqs

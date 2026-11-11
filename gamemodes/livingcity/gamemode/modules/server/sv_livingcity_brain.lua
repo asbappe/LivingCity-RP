@@ -484,6 +484,106 @@ function LC.DirectorLook(now)
 end
 
 ------------------------------------------------------------------------
+-- The Administrator's office, with nobody in it (sv_livingcity_cityadmin.lua: LC.AdminDecree)
+------------------------------------------------------------------------
+local cvAdmin = CreateConVar("lc_brain_admin", "1", FLAGS, "With no player as the City Administrator, the hosted model sits in her office: events, rations, prices, a job bonus, commendations, censures and pardons")
+local cvAdminMins = CreateConVar("lc_brain_admin_minutes", "12", FLAGS, "Minutes between the city's own Administrator's looks at the city")
+
+local ADMIN_SYSTEM = [[You are the City Administrator of a city under Combine occupation, in the world of Half-Life 2: the human face of the occupation, appointed by the Combine, heard on every loudspeaker. You believe, or say you believe, that obedience is survival. You are calm, paternal and cold, never crude. You reward loyalty in public and punish disorder in public, and you watch the city's mood because your own position depends on it.
+
+Every so often you are shown the state of the city and may issue ONE decree from your office, or none.
+
+Your office:
+- "none": no decree. Choose this when the city is going as you want it, or when you decreed recently. A ruler who decrees constantly is not heard.
+- "event": set "event" to curfew, rations (a ration day), sweep (an inspection sweep) or parade (a Combine parade). Only when no event is running. A curfew or a sweep answers disorder; a ration day or a parade rewards calm or buys it.
+- "rations": set "rations" to generous, austere or normal, for an hour. Generous calms a hungry, restless city; austere punishes one that has defied you.
+- "prices": set "prices" to lower or raise (the Commissary, for an hour).
+- "bonus": set "job" to one of the Union job ids you are given; its shifts pay half again for an hour.
+- "commend" or "censure": set "player" to the exact name of a person in the city. A commendation raises their civil standing, a censure lowers it, and the whole city hears it. Commend those who served order; censure those who troubled it. You have only a few a day.
+- "pardon": set "player" to a wanted person whose record you clear. Rare, and never for killing.
+
+Rules:
+- You can only do what your office state says is ready.
+- Use only names and job ids exactly as given. Do not decree about a Civil Protection unit as if they were a citizen.
+- React to what the people in the city actually did, as the account shows it. Do not repeat your last decrees.
+- "words": one sentence the city hears from you with the decree, under 140 characters, in your own public voice. No quotation marks. Empty for "none".
+- "reason": one short private sentence for the record.
+- Leave unused fields as empty strings.]]
+
+local ADMIN_SCHEMA = {
+    type = "object",
+    additionalProperties = false,
+    required = { "decree", "event", "rations", "prices", "job", "player", "words", "reason" },
+    properties = {
+        decree = { type = "string", enum = { "none", "event", "rations", "prices", "bonus", "commend", "censure", "pardon" } },
+        event = { type = "string", enum = { "", "curfew", "rations", "sweep", "parade" } },
+        rations = { type = "string", enum = { "", "generous", "austere", "normal" } },
+        prices = { type = "string", enum = { "", "lower", "raise" } },
+        job = { type = "string" },
+        player = { type = "string" },
+        words = { type = "string" },
+        reason = { type = "string" },
+    },
+}
+
+B.decrees = B.decrees or {}
+
+-- Does what she chose, if her office may. Returns true and what was done, or false and why not.
+function LC.AdminApply(d, now)
+    if type(d) ~= "table" or not LC.AdminDecree then return false, "no decree" end
+    local what = tostring(d.decree or "none")
+    if what == "none" then return true, "no decree" end
+    local words = Clean(d.words, 140)
+    local arg, target
+    if what == "event" then arg = tostring(d.event or "")
+    elseif what == "rations" then arg = tostring(d.rations or "")
+    elseif what == "prices" then
+        arg = (d.prices == "lower" and 0.85) or (d.prices == "raise" and 1.15) or nil
+        if not arg then return false, "no price order" end
+    elseif what == "bonus" then arg = tostring(d.job or "")
+    elseif what == "commend" or what == "censure" or what == "pardon" then
+        target = FindPlayer(d.player)
+        if not IsValid(target) then return false, "no player of that name" end
+        arg = 15
+    else
+        return false, "not something her office does"
+    end
+    local ok, why = LC.AdminDecree(what, arg, target, words)
+    if not ok then return false, tostring(why or "the office refused") end
+    return true, what .. " " .. (IsValid(target) and CharName(target) or tostring(arg)) .. (words ~= "" and (": \"" .. words .. "\"") or "")
+end
+
+function LC.AdminLook(now)
+    now = now or CurTime()
+    if not cvAdmin:GetBool() or not On() or B.adminBusy or not LC.AdminDecree or not LC.AdminOfficeState then return false end
+    if LC.HumanAdministrator and LC.HumanAdministrator() then return false end
+    if LC.Socio == "black" then return false end -- (the collapse has its own script for her: sv_livingcity_collapse.lua)
+    local digest = LC.DirectorDigest()
+    if not digest then return false end
+    local state, jobs = LC.AdminOfficeState()
+    local out = { digest, "", "Your office: " .. state }
+    if #jobs > 0 then out[#out + 1] = "Union job ids: " .. table.concat(jobs, ", ", 1, math.min(#jobs, 30)) .. "." end
+    out[#out + 1] = "Your last decrees (oldest first):"
+    if #B.decrees == 0 then out[#out + 1] = "- (none yet)" end
+    for i = math.max(1, #B.decrees - 3), #B.decrees do
+        out[#out + 1] = string.format("- %d min ago: %s", math.floor((now - B.decrees[i].at) / 60), B.decrees[i].text)
+    end
+    B.adminBusy = true
+    local sent = LC.BrainAsk(ADMIN_SYSTEM, table.concat(out, "\n"), ADMIN_SCHEMA, 1500, function(d)
+        B.adminBusy = nil
+        if not d then return end
+        if LC.HumanAdministrator and LC.HumanAdministrator() then return end -- (someone was elected while she thought)
+        local ok, what = LC.AdminApply(d, CurTime())
+        local text = (ok and what or ("wanted " .. tostring(d.decree) .. ", but " .. tostring(what))) .. " (" .. Clean(d.reason, 160) .. ")"
+        B.decrees[#B.decrees + 1] = { at = CurTime(), text = text }
+        if #B.decrees > 12 then table.remove(B.decrees, 1) end
+        Note("ADMINISTRATOR", text)
+    end)
+    if not sent then B.adminBusy = nil end
+    return sent
+end
+
+------------------------------------------------------------------------
 -- Free talk
 ------------------------------------------------------------------------
 local TALK_SYSTEM = [[You speak for one person in a city under Combine occupation, in the world of Half-Life 2. Citizens live on rations and work for the Civil Workers' Union under the eyes of Civil Protection. Speaking against the Combine is dangerous. A Resistance exists, and nobody admits to knowing it.
@@ -673,6 +773,11 @@ function LC.BrainReport()
         local d = B.decisions[i]
         out[#out + 1] = string.format("  %d min ago: %s", math.floor((CurTime() - d.at) / 60), d.text)
     end
+    out[#out + 1] = "her office: lc_brain_admin " .. cvAdmin:GetString() .. ", every " .. cvAdminMins:GetString() .. " min" .. ((LC.HumanAdministrator and LC.HumanAdministrator()) and " (a player holds the post: she is out of it)" or "")
+    for i = math.max(1, #(B.decrees or {}) - 3), #(B.decrees or {}) do
+        local d = B.decrees[i]
+        out[#out + 1] = string.format("  %d min ago: %s", math.floor((CurTime() - d.at) / 60), d.text)
+    end
     return out
 end
 
@@ -681,8 +786,17 @@ timer.Create("LivingCityDirector", 15, 0, function()
     Key()
     local now = CurTime()
     local every = math.max(1, cvMins:GetFloat()) * 60
-    if now - (B.lastLook or 0) < every then return end
-    B.lastLook = now
-    local ok, err = pcall(LC.DirectorLook, now)
-    if not ok and LC.Error then LC.Error("brain (director)", err) end
+    if now - (B.lastLook or 0) >= every then
+        B.lastLook = now
+        local ok, err = pcall(LC.DirectorLook, now)
+        if not ok and LC.Error then LC.Error("brain (director)", err) end
+    end
+    -- her office, with nobody in it: the first look half a wait in, so it never lands on the director's
+    local adminEvery = math.max(2, cvAdminMins:GetFloat()) * 60
+    if not B.lastAdminLook then B.lastAdminLook = now - adminEvery / 2 end
+    if now - B.lastAdminLook >= adminEvery then
+        B.lastAdminLook = now
+        local ok, err = pcall(LC.AdminLook, now)
+        if not ok and LC.Error then LC.Error("brain (administrator)", err) end
+    end
 end)

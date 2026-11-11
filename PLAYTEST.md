@@ -1557,3 +1557,5 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **Shalom, lifted on the chair (as a player):** are you sat on the chair as it goes up and round, without your legs looking wrong? Is the chair under you? When you come down, are you back in the ring and dancing?
   Notes:
+- [ ] **Her office, empty (11 November):** with a key set and nobody elected, wait 15 minutes with a few players on. Does "The City Administrator" announce a decree with a sentence of her own, and does it fit what happened? Get elected: does she stop?
+  Notes:
