@@ -10992,7 +10992,9 @@ vst.state = "idle"
 v.lcProfile.rebel, vst.rebel, mv.rebel = nil, false, nil
 local poster = ents.Create("lc_civposter")
 poster:SetPos(T0 + Vector(0, 300, 0))
+for i = 1, 8 do LC.Minds.byId[8000 + i] = { id = 8000 + i, role = "citizen", p = { id = 8000 + i, alive = true }, name = "Crowd" .. i } end -- (a roster big enough that one more sympathizer is under the cap)
 did = LC.MindsAct(mv, "defy", CurTime())
+for i = 1, 8 do LC.Minds.byId[8000 + i] = nil end
 ok(v.lcProfile.rebel == true and vst.rebel == true and vst.mindErrand ~= nil, "defiance: they side with the Resistance, and go for a poster", did)
 v:SetPos(poster:GetPos() + Vector(40, 0, 0))
 LC.MindsErrandTick(CurTime())
