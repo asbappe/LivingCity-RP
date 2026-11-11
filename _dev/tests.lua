@@ -16255,6 +16255,19 @@ do
     LC.UseCPSupply(u, sup)
     ok(LC.HasItem(u, "ration") and not LC.HasItem(u, "ration_voucher") and has(u.chat, "for your voucher"), "the CP Commissary takes the voucher and hands over a ration packet")
     ok(#ents.FindByClass("item_healthvial") == vials and LC.HasItem(u, "health_vial", 1) and LC.HasItem(u, "bandage", 3), "and once a city day, a health vial (in the pockets, not on the floor: the owner, 11 November) and a bandage (on top of the bandages it tops up)")
+    do -- turning in what you carry (the owner, 11 November)
+        LC.GiveItem(u, "scrap", 2)
+        local before = LC.Credits(u)
+        local scrapPrice = LC.CPTurnInPrice(u, "scrap")
+        ok(scrapPrice and scrapPrice >= 1 and LC.CPTurnInPrice(u, "bandage") == nil and LC.CPTurnInPrice(u, "health_vial") == nil,
+            "the CP Commissary takes what a unit carries that isn't their own issue")
+        local listed = false
+        for _, s in ipairs(LC.CPTurnInList(u)) do if s.id == "scrap" and s.n == 2 then listed = true end end
+        ok(listed and LC.CPTurnIn(u, "scrap", true) and not LC.HasItem(u, "scrap") and LC.Credits(u) == before + scrapPrice * 2, "turned in, all of it: paid for each")
+        local far = newPlayer("TurnInFar", "cp") far:SetPos(S0 + Vector(0, 9000, 0)) LC.GiveItem(far, "scrap", 1)
+        ok(not LC.CPTurnIn(far, "scrap") and LC.HasItem(far, "scrap"), "only standing at one")
+        far:SetPos(Vector(-150000, 150000, 0))
+    end
     ok(not LC.CPDailyKitDue(u), "not again the same day")
     u.lcSupplyNext = 0
     LC.UseCPSupply(u, sup)

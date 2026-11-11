@@ -267,35 +267,38 @@ local function OpenInventory()
     if not LCS then return end
     invFrame = vgui.Create("DFrame")
     invFrame:SetTitle("")
-    invFrame:SetSize(math.min(ScrW() - 60, 520), math.min(ScrH() - 60, 520))
+    invFrame:SetSize(math.min(ScrW() - 60, 520), math.min(ScrH() - 60, 546))
     invFrame:Center()
     invFrame:MakePopup()
     local count = Total(lastInv.items)
     invFrame.Paint = function(self, w, h)
         draw.RoundedBox(4, 0, 0, w, h, PANEL)
-        draw.SimpleText("POCKETS", "DermaLarge", 16, 14, ACCENT)
+        -- (everything of its own sits under the window's title strip, 24 tall: in a unit's look the strip's
+        -- line and words ran through "POCKETS" and the counters, the owner, 11 November)
+        local top = 26
+        draw.SimpleText("POCKETS", "DermaLarge", 16, top + 4, ACCENT)
         if GetGlobal2Bool("lc_economy_on", true) and LCS and LCS.TierFor then
             -- money and standing live here (the quiet HUD keeps them off the screen)
             local me = LocalPlayer()
             local standing = me:GetNW2Int("lce_standing", 0)
             local tier = LCS.TierFor(standing)
             draw.SimpleText(string.format("%d credits     %s (%d)", me:GetNW2Int("lce_credits", 0), tier.name, standing),
-                "DermaDefault", w - 40, 8, tier.color or DIM, TEXT_ALIGN_RIGHT)
+                "DermaDefault", w - 16, top, tier.color or DIM, TEXT_ALIGN_RIGHT)
         end
         if lastInv.maxKg then
             -- weight and large things, against what you can carry
             local heavy = lastInv.kg > lastInv.maxKg + 0.001 or (lastInv.bulky or 0) > (lastInv.maxBulky or 1)
             draw.SimpleText(string.format("%.1f / %.0f kg     large %d / %d", lastInv.kg, lastInv.maxKg, lastInv.bulky or 0, lastInv.maxBulky or 1),
-                "DermaDefault", w - 40, 24, heavy and ILLEGAL or DIM, TEXT_ALIGN_RIGHT)
-            if heavy then draw.SimpleText("Too much to carry: you're slowed down", "DermaDefault", w - 40, 38, ILLEGAL, TEXT_ALIGN_RIGHT) end
+                "DermaDefault", w - 16, top + 14, heavy and ILLEGAL or DIM, TEXT_ALIGN_RIGHT)
+            if heavy then draw.SimpleText("Too much to carry: you're slowed down", "DermaDefault", w - 16, top + 28, ILLEGAL, TEXT_ALIGN_RIGHT) end
         else
-            draw.SimpleText(string.format("%d / %d", count, lastInv.size or 12), "DermaDefault", w - 40, 24, DIM, TEXT_ALIGN_RIGHT)
+            draw.SimpleText(string.format("%d / %d", count, lastInv.size or 12), "DermaDefault", w - 16, top + 14, DIM, TEXT_ALIGN_RIGHT)
         end
     end
 
     local scroll = vgui.Create("DScrollPanel", invFrame)
     scroll:Dock(FILL)
-    scroll:DockMargin(6, 26, 6, 6)
+    scroll:DockMargin(6, 44, 6, 6)
 
     if lastInv.disguise then
         local b = vgui.Create("DButton", scroll)
@@ -764,6 +767,16 @@ net.Receive("lce_shop", function()
                 text = g.name .. "   " .. g.price .. " credits" .. (g.ok and "" or ("   (" .. ShortNote(g) .. ")")) .. (g.market and ("   [" .. g.market .. "]") or ""),
                 fn = function() net.Start("lce_buy") net.WriteString(id) net.SendToServer() end }
         end
+        -- turning in what you carry (sv_livingcity_economy.lua, LC.CPTurnIn)
+        if t.turnin and #t.turnin > 0 then
+            rows[#rows + 1] = { kind = "line", text = "TURN IN  (what you carry that isn't your issue)" }
+            for _, s in ipairs(t.turnin) do
+                local id = s.id
+                rows[#rows + 1] = { kind = "button", enabled = true,
+                    text = string.format("Turn in all: %s x%d   %d credits", s.name, s.n, s.price * s.n),
+                    fn = function() net.Start("lce_turnin") net.WriteString(id) net.WriteBool(true) net.SendToServer() end }
+            end
+        end
         LC_CL.ScreenOpen(scr, "CIVIL PROTECTION COMMISSARY", "the unit counter", rows)
         return
     end
@@ -809,6 +822,20 @@ net.Receive("lce_shop", function()
         b.DoClick = function()
             net.Start("lce_buy")
             net.WriteString(g.id)
+            net.SendToServer()
+        end
+    end
+    -- (the same in the window, for players with the screens in the world off)
+    for _, s in ipairs(t.cp and t.turnin or {}) do
+        local b = vgui.Create("DButton", scroll)
+        b:Dock(TOP)
+        b:DockMargin(0, 0, 0, 4)
+        b:SetTall(26)
+        b:SetText(string.format("Turn in all: %s x%d   (%d credits)", s.name, s.n, s.price * s.n))
+        b.DoClick = function()
+            net.Start("lce_turnin")
+            net.WriteString(s.id)
+            net.WriteBool(true)
             net.SendToServer()
         end
     end
