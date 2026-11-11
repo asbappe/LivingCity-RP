@@ -371,6 +371,85 @@ function LC.AdminDo(ply, what, arg, target)
     return false
 end
 
+-- The office with nobody in it (the owner, 11 November: "the NPC administrator to be controlled by the
+-- llm and make decisions based on the context of the server"). The city's own Administrator decrees
+-- through the same acts, with the same waits and the same announcements; sv_livingcity_brain.lua asks
+-- a hosted model which one. No bodyguard orders, housing or permits. Never while a player holds the post.
+-- words: a sentence of hers, added to the announcement.
+LC.AdminNPC = LC.AdminNPC or {}
+function LC.AdminDecree(what, arg, target, words)
+    if LC.HumanAdministrator and LC.HumanAdministrator() then return false, "A player holds the post." end
+    local N = LC.AdminNPC
+    local said = (words and words ~= "") and (" \"" .. words .. "\"") or ""
+    if what == "event" then
+        if not EVENTS[arg] then return false, "Not an event the office can call." end
+        if LC.Event then return false, "An event is already running." end
+        local ok, why = Cool(N, "event", 600)
+        if not ok then return false, why end
+        if not (LC.StartEvent and LC.StartEvent(arg)) then N.lcAdminNext.event = 0 return false, "That can't happen right now (or the map has nowhere for it)." end
+        Announce("By order of the City Administrator: " .. EVENTS[arg] .. "." .. said)
+        return true
+    elseif what == "rations" then
+        if arg ~= "generous" and arg ~= "austere" and arg ~= "normal" then return false, "Not a ration order." end
+        local ok, why = Cool(N, "rations", 900)
+        if not ok then return false, why end
+        A.rations, A.rationsUntil = arg, (arg == "normal" and 0 or CurTime() + 3600)
+        Announce((arg == "generous" and "Rations are increased for the hour. The Union provides." or (arg == "austere" and "Rations are reduced for the hour. Sacrifice strengthens us." or "Rations are as usual.")) .. said)
+        return true
+    elseif what == "prices" then
+        local f = math.Clamp(tonumber(arg) or 1, 0.75, 1.25)
+        local ok, why = Cool(N, "prices", 900)
+        if not ok then return false, why end
+        A.priceMul, A.priceUntil = f, CurTime() + 3600
+        Announce(string.format("Commissary prices are %s for the hour (%d%%).", f < 1 and "lowered" or (f > 1 and "raised" or "as usual"), math.floor(f * 100 + 0.5)) .. said)
+        return true
+    elseif what == "bonus" then
+        local job = LCJ and LCJ.ById and LCJ.ById[arg]
+        if not job then return false, "No such Union job." end
+        local ok, why = Cool(N, "bonus", 900)
+        if not ok then return false, why end
+        A.bonusJob, A.bonusUntil = job.id, CurTime() + 3600
+        Announce("For the hour, " .. job.name .. " shifts pay half again. The city needs hands there." .. said)
+        return true
+    end
+    if not IsValid(target) or not target:IsPlayer() then return false, "Nobody of that name." end
+    if what == "commend" or what == "censure" then
+        local ok, why = Daily(N, "standing", 5)
+        if not ok then return false, why end
+        local n = math.Clamp(math.floor(tonumber(arg) or 15), 1, 25)
+        if LC.AddStanding then LC.AddStanding(target, what == "commend" and n or -n, what == "commend" and "Commended by the Administrator" or "Censured by the Administrator") end
+        Announce(Name(target) .. (what == "commend" and " is commended for their service to the city." or " is censured. Let them remember it.") .. said)
+        return true
+    elseif what == "pardon" then
+        if not (LC.PlayerIsWanted and LC.PlayerIsWanted(target)) then return false, "They aren't wanted." end
+        local rec = string.lower(tostring(target:GetNW2String("lc_wanted_why", "")))
+        if string.find(rec, "murder", 1, true) or string.find(rec, "killing", 1, true) or string.find(rec, "officer", 1, true) then
+            return false, "Not for that. Not even the Administrator."
+        end
+        local ok, why = Cool(N, "pardon", 3600)
+        if not ok then return false, why end
+        if LC.ClearWanted then LC.ClearWanted(target) end
+        Announce(Name(target) .. " is pardoned. The city is merciful." .. said)
+        return true
+    end
+    return false, "Not something the office does."
+end
+
+-- What the office is doing and what it could do now, in words (for the model).
+function LC.AdminOfficeState()
+    local now, N = CurTime(), LC.AdminNPC
+    local nxt = N.lcAdminNext or {}
+    local function ready(k) return (nxt[k] or 0) <= now and "ready" or string.format("in %d min", math.ceil(((nxt[k] or 0) - now) / 60)) end
+    local d = N.lcAdminDaily and N.lcAdminDaily.standing
+    local left = 5 - ((d and d.day == os.date("%Y%m%d")) and d.n or 0)
+    local jobs = {}
+    for id, job in pairs(LCJ and LCJ.ById or {}) do jobs[#jobs + 1] = tostring(id) end
+    table.sort(jobs)
+    return string.format("Rations: %s. Commissary prices: %d%%. Job bonus: %s. Can decree: event %s, rations %s, prices %s, bonus %s, pardon %s, commendations or censures left today %d.",
+        now < A.rationsUntil and tostring(A.rations) or "normal", now < A.priceUntil and math.floor(A.priceMul * 100 + 0.5) or 100,
+        (A.bonusJob and now < A.bonusUntil) and tostring(A.bonusJob) or "none", ready("event"), ready("rations"), ready("prices"), ready("bonus"), ready("pardon"), left), jobs
+end
+
 -- a week's free housing (the office): read by the rent
 local baseRent = LC.RentPrice
 if baseRent then

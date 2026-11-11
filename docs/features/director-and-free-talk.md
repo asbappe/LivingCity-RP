@@ -1,6 +1,6 @@
 # The director and free talk (a hosted model)
 
-Asked for by the owner, 10 November: "is it possible to run some sort of localized LLM on the server that can handle advanced npc logic to enhance player encounters and dynamically orchestrate NPCs and interactions?", then "I don't have a pc capable of that, so a small hosted fee is fine". Code: `sv_livingcity_brain.lua`. Tests: BrainTests (30).
+Asked for by the owner, 10 November: "is it possible to run some sort of localized LLM on the server that can handle advanced npc logic to enhance player encounters and dynamically orchestrate NPCs and interactions?", then "I don't have a pc capable of that, so a small hosted fee is fine". Code: `sv_livingcity_brain.lua`. Tests: BrainTests (43).
 
 **What it is.** A language model on someone else's computers, asked over the web by the game server. It takes a second or several to answer, so it never walks, fights or reacts: the city's own code does all of that, as before. The model is a slow brain on top, and it only ever picks from a short list of things the game can already do. **Nothing runs without a key, and if the service is slow, down or says no, nothing happens: the city goes on as it always has.**
 
@@ -25,6 +25,17 @@ Every `lc_director_minutes` (3), with at least one living player on, it is shown
 
 The same person is moved at most once in 10 minutes. A name it made up, a kind that does not fit the person, or an event off the list is refused and written down as "wanted ..., but ...". `lc_director` 2 does it, 1 only writes down what it would have done, 0 is off. Every decision goes in the minds' log as a `DIRECTOR` line (`data/livingcity/minds/`) and the last five are in the debug report.
 
+## The city's own Administrator
+
+Asked for by the owner, 11 November: "another great option is for the NPC administrator to be controlled by the llm and make decisions based on the context of the server". With **no player in the post**, every `lc_brain_admin_minutes` (12) the model is shown the same account of the city as the director, plus what her office is doing and what it can do right now, and issues one decree or none:
+
+- **an event:** a curfew, a ration day, an inspection sweep or a Combine parade (10 minutes apart, never over a running event)
+- **rations** generous, austere or normal for an hour; **Commissary prices** lowered to 85% or raised to 115% for an hour; **a Union job bonus** for an hour (15 minutes apart each)
+- **a commendation or a censure** of a player by name: 15 Civil Standing given or taken, 5 a day
+- **a pardon** for a wanted player, once an hour, never for a killing
+
+These are the office's own acts with the same waits a player Administrator has (`LC.AdminDecree` in `sv_livingcity_cityadmin.lua`), announced the same way as "The City Administrator", with one sentence of hers the model wrote. **She has no bodyguard orders, housing grants or curfew permits.** The moment a player is elected the model is out of the office, and during the collapse (BLACK) she is left to its own script. Which voice makes the PA's announcements is unchanged. Every decree goes in the minds' log as an `ADMINISTRATOR` line, and the last four are in the debug report. `lc_brain_admin` 0 leaves the office empty, as before.
+
 ## Free talk
 
 Say something in character (ordinary chat, `/y` or `/w`) while looking at a named citizen or unit within 220 units. They turn to you, and a moment later answer out loud in their own name ("Olga Volkov says: ..."), heard by everyone in chat range. The model is told who they are (name, job, traits), how they feel right now and why, their secrets (sympathizer, informant), what they think of you, and the last few lines between you (kept for ten minutes). The answer comes with:
@@ -38,7 +49,7 @@ One answered line per player every 4 seconds, one answer at a time per person. `
 
 ## Settings (editor panel, under the minds)
 
-`lc_brain` (1; nothing without a key), `lc_brain_talk` (1), `lc_director` (2: acts; 1: writes down only; 0: off), `lc_director_minutes` (3), `lc_brain_daily` (1500; 0: no limit), `lc_brain_model` (console only). Console extras for the server: `lc_brain_key <key>`, `lc_brain_test`.
+`lc_brain` (1; nothing without a key), `lc_brain_talk` (1), `lc_brain_admin` (1), `lc_brain_admin_minutes` (12), `lc_director` (2: acts; 1: writes down only; 0: off), `lc_director_minutes` (3), `lc_brain_daily` (1500; 0: no limit), `lc_brain_model` (console only). Console extras for the server: `lc_brain_key <key>`, `lc_brain_test`.
 
 ## Safeguards
 
