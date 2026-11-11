@@ -153,6 +153,12 @@ end
 ------------------------------------------------------------------------
 
 local function Vo(gender, name) return "vo/npc/" .. gender .. "01/" .. name .. ".wav" end
+-- A citizen says one of Half-Life 2's lines, unless they are a named citizen with a recorded voice of their own
+-- (sv_livingcity_lines.lua, LC.OwnVoice): then they say nothing here, and their recorded lines are their only voice.
+local function CitSay(ent, st, path, ...)
+    if LC.OwnVoice and LC.OwnVoice(ent, st) then return end
+    ent:EmitSound(path, ...)
+end
 
 local COP_APPROACH = { "npc/metropolice/vo/citizen.wav", "npc/metropolice/vo/apply.wav" }
 local COP_RELEASE  = { "npc/metropolice/vo/movealong.wav", "npc/metropolice/vo/movealong3.wav", "npc/metropolice/vo/keepmoving.wav" }
@@ -1780,11 +1786,11 @@ local function TryChat(npc, st, now)
             and other:GetPos():DistToSqr(npc:GetPos()) < 160 * 160 then
             if st.state ~= "inline" then Face(npc, other:GetPos()) end
             if ost.state ~= "inline" then Face(other, npc:GetPos()) end
-            npc:EmitSound(Vo(st.gender, string.format("question%02d", math.random(1, 20))), 70)
+            CitSay(npc, st, Vo(st.gender, string.format("question%02d", math.random(1, 20))), 70)
             ost.nextChat = now + 30
             timer.Simple(math.Rand(2.5, 4), function()
                 if IsValid(other) then
-                    other:EmitSound(Vo(ost.gender or "male", string.format("answer%02d", math.random(1, 20))), 70)
+                    CitSay(other, ost, Vo(ost.gender or "male", string.format("answer%02d", math.random(1, 20))), 70)
                 end
             end)
             return
@@ -1965,7 +1971,7 @@ local function TryArrestCitizen(cop, cst, cit, ist, now)
     if math.random(100) > cvArrestChance:GetInt() then return false end
     if not LC.ArrestNPC then return false end
     cop:EmitSound(Pick(COP_ARREST), 75)
-    cit:EmitSound(Vo(ist.gender, Pick(CIT_PROTEST)), 70)
+    CitSay(cit, ist, Vo(ist.gender, Pick(CIT_PROTEST)), 70)
     cst.subject = nil
     SetState(cop, cst, "idle")
     cst.untilT = now + math.Rand(2, 5)
@@ -2003,7 +2009,7 @@ local function ThinkInspection(cop, cst, now)
             end)
             if ist then
                 timer.Simple(2, function()
-                    if IsValid(cit) then cit:EmitSound(Vo(ist.gender, Pick(CIT_NERVOUS)), 70) end
+                    if IsValid(cit) then CitSay(cit, ist, Vo(ist.gender, Pick(CIT_NERVOUS)), 70) end
                 end)
             end
             SetState(cop, cst, "inspect_talk"); cst.untilT = now + math.Rand(5, 8)
@@ -2787,7 +2793,7 @@ function LC.CitizenPanic(npc, st, threat)
     local now = CurTime()
     if (st.nextPanic or 0) > now then return false end
     st.nextPanic = now + 3.5
-    npc:EmitSound(Vo(st.gender, Pick(CIT_PANIC)), 85, math.random(98, 108))
+    CitSay(npc, st, Vo(st.gender, Pick(CIT_PANIC)), 85, math.random(98, 108))
     local npos = npc:GetPos()
     if st.state ~= "detained" and st.state ~= "jailed" and st.state ~= "escorted" and st.state ~= "event" then
         CancelBusy(npc, st)
@@ -2919,14 +2925,14 @@ hook.Add("PlayerUse", "LivingCityUse", function(ply, ent)
         if st.state == "moving" then ent:SetSchedule(SCHED_IDLE_STAND) end
         if LC.PlayerIsCP(ply) then
             -- a Civil Protection player stops a citizen: they freeze and apologise
-            ent:EmitSound(Vo(st.gender, Pick(CIT_NERVOUS)), 70)
+            CitSay(ent, st, Vo(st.gender, Pick(CIT_NERVOUS)), 70)
             SetState(ent, st, "detained"); st.untilT = CurTime() + 10
             if (ply.lcStopHintAt or 0) < CurTime() then
                 ply.lcStopHintAt = CurTime() + 300
                 ply:ChatPrint("[Civil Protection] Stopped. With the Arrest Baton out: R to search them, right click to detain.")
             end
         else
-            ent:EmitSound(Vo(st.gender, Pick(CIT_GREET)), 70)
+            CitSay(ent, st, Vo(st.gender, Pick(CIT_GREET)), 70)
             SetState(ent, st, "idle"); st.untilT = CurTime() + 4
         end
         return false

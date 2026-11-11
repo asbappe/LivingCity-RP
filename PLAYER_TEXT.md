@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version a725f51. Admin-only console messages and log lines are left out.
+Made from version cd7c674. Admin-only console messages and log lines are left out.
 
-11062 lines, from 299 files.
+11164 lines, from 299 files.
 
 ## Contents
 
@@ -211,7 +211,7 @@ Made from version a725f51. Admin-only console messages and log lines are left ou
 - [the state of the city, kept from day to day (the owner,](#the-state-of-the-city-kept-from-day-to-day-the-owner-svlivingcityledgerlua) (46)
 - [the state of the city, phase two (the owner, 10 November:](#the-state-of-the-city-phase-two-the-owner-10-november-svlivingcityledger2lua) (7)
 - [a life](#a-life-svlivingcitylifelua) (42)
-- [what named people say, recorded (the owner, 11 November: "architect and design natural](#what-named-people-say-recorded-the-owner-11-november-architect-and-design-natural-svlivingcitylineslua) (177)
+- [what named people say, recorded (the owner, 11 November: "architect and design natural](#what-named-people-say-recorded-the-owner-11-november-architect-and-design-natural-svlivingcitylineslua) (279)
 - [Resistance lookouts](#resistance-lookouts-svlivingcitylookoutslua) (15)
 - [what loyalty earns (the owner, 2026-11-01: "other rewards for high standing civilians? All of them")](#what-loyalty-earns-the-owner-2026-11-01-other-rewards-for-high-standing-civilians-all-of-them-svlivingcityloyaltylua) (5)
 - [machines that answer in their own voice](#machines-that-answer-in-their-own-voice-svlivingcitymachineslua) (30)
@@ -4633,145 +4633,145 @@ Made from version a725f51. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: say
 
-- "[Living City] {msg}"  (chat message, line 190)
+- "[Living City] {msg}"  (chat message, line 196)
 
 > Note for you (not shown in game): only trust the zones if the main area is a real share of the map
 
-- "%d of %d ground nodes, in the main connected area%s"  (message, line 506)
+- "%d of %d ground nodes, in the main connected area%s"  (message, line 512)
 
 > Note for you (not shown in game): part of: read nodegraph
 
-- "(%d walkable links, routes planned over them)"  (message, line 507)
+- "(%d walkable links, routes planned over them)"  (message, line 513)
 
 > Note for you (not shown in game): part of: handle moving
 
-- "engine found no path"  (text, line 693)
-- "no progress"  (text, line 696)
-- "took too long"  (text, line 697)
+- "engine found no path"  (text, line 699)
+- "no progress"  (text, line 702)
+- "took too long"  (text, line 703)
 
 > Note for you (not shown in game): part of: served at
 
-- "had their ration and went home"  (text, line 978)
+- "had their ration and went home"  (text, line 984)
 
 > Note for you (not shown in game): Stuck NPCs are logged a few at a time, then summarized, so they don't push everything else out of the debug report.
 
-- "...and %d more stuck NPCs moved in the last minute (%s)"  (message, line 1131)
+- "...and %d more stuck NPCs moved in the last minute (%s)"  (message, line 1137)
 
 > Note for you (not shown in game): Someone who isn't getting anywhere. If nobody's watching and the place they were heading for is close (a prop in the way, a doorframe), they're quietly put there. A far one isn't: popping people across the map is worse than the trip being given up, so they give it up, and that place is remembered as hard to reach so it isn't picked again straight away.
 
-- "no progress"  (text, line 1146)
-- "no progress"  (text, line 1146)
+- "no progress"  (text, line 1152)
+- "no progress"  (text, line 1152)
 
 > Note for you (not shown in game): nobody's looking and it's just a step away: put them there. Not someone a quest has you chasing or following, though: they'd seem to go through walls.
 
-- "%s stuck near %s (%s), moved on to hop %d/%d (%s)"  (message, line 1156)
-- "no progress"  (message, line 1157)
+- "%s stuck near %s (%s), moved on to hop %d/%d (%s)"  (message, line 1162)
+- "no progress"  (message, line 1163)
 
 > Note for you (not shown in game): part of: recover
 
-- "%s removed after %d recoveries near %s"  (message, line 1169)
+- "%s removed after %d recoveries near %s"  (message, line 1175)
 
 > Note for you (not shown in game): bedtime: a free bed in a block, their own first, then the nearest with one; they sleep there till morning (sv_livingcity_rest.lua). No bed free: indoors and gone, as before.
 
-- "going home to bed"  (text, line 1202)
+- "going home to bed"  (text, line 1208)
 
 > Note for you (not shown in game): a train's in: leaving the city means boarding it, suitcase and all (sv_livingcity_trains.lua)
 
-- "leaving the city by train"  (text, line 1236)
+- "leaving the city by train"  (text, line 1242)
 
 > Note for you (not shown in game): part of: register
 
-- "their time out was up (lc_citizen_lifetime: a citizen stays about that long, then others come)"  (text, line 1320)
+- "their time out was up (lc_citizen_lifetime: a citizen stays about that long, then others come)"  (text, line 1326)
 
 > Note for you (not shown in game): part of: choose citizen task
 
-- "curfew or lockdown: gone home"  (text, line 1805)
+- "curfew or lockdown: gone home"  (text, line 1811)
 
 > Note for you (not shown in game): more people out than the hour calls for: home (sv_livingcity_rhythm.lua)
 
-- "the time of day: fewer people out at this hour"  (text, line 1810)
+- "the time of day: fewer people out at this hour"  (text, line 1816)
 
 > Note for you (not shown in game): how they feel bends it all (sv_livingcity_mindsact.lua; nil for the unnamed, or with lc_minds_act 0)
 
-- "worn down: gone home"  (text, line 1821)
+- "worn down: gone home"  (text, line 1827)
 
 > Note for you (not shown in game): part of: cop provoked
 
-- "[Civil Protection] The Civil Protection unit shoves you back. Move along."  (chat message, line 2208)
-- "[Civil Protection] A crack across the ribs with the stick. Last warning."  (chat message, line 2209)
-- "[Civil Protection] You were warned. Obstructing Civil Protection."  (chat message, line 2213)
-- "Obstructing Civil Protection"  (text, line 2214)
+- "[Civil Protection] The Civil Protection unit shoves you back. Move along."  (chat message, line 2214)
+- "[Civil Protection] A crack across the ribs with the stick. Last warning."  (chat message, line 2215)
+- "[Civil Protection] You were warned. Obstructing Civil Protection."  (chat message, line 2219)
+- "Obstructing Civil Protection"  (text, line 2220)
 
 > Note for you (not shown in game): A city scanner that has a fugitive in sight (wanted, or a hunted rebel who isn't passing as a citizen) tells the units where they are: a flash, a report to every unit on duty, and the nearby units come after them.
 
-- "a wanted citizen"  (text, line 2371)
+- "a wanted citizen"  (text, line 2377)
 
 > Note for you (not shown in game): part of: scanner tip off
 
-- "A scanner's flash. You've been photographed, and Civil Protection has the picture."  (chat message, line 2376)
-- "[CP net] Scanner report: %s%s."  (message, line 2380)
+- "A scanner's flash. You've been photographed, and Civil Protection has the picture."  (chat message, line 2382)
+- "[CP net] Scanner report: %s%s."  (message, line 2386)
 
 > Note for you (not shown in game): part of: start
 
-- "This map has no AI nodes or navmesh and nothing placed yet. Lay some path nodes or points with the Living City Editor, then start again."  (chat message, line 2611)
-- "Started. Map nav: %d spots (%s). Your layout: %d points, %d path nodes."  (message, line 2618)
+- "This map has no AI nodes or navmesh and nothing placed yet. Lay some path nodes or points with the Living City Editor, then start again."  (chat message, line 2617)
+- "Started. Map nav: %d spots (%s). Your layout: %d points, %d path nodes."  (message, line 2624)
 
 > Note for you (not shown in game): part of: stop
 
-- "Stopped and removed all Living City NPCs."  (chat message, line 2635)
+- "Stopped and removed all Living City NPCs."  (chat message, line 2641)
 
 > Note for you (not shown in game): part of: spawn test walker
 
-- "your path network (%d hops)"  (message, line 2664)
-- "the map's own navigation"  (text, line 2664)
-- "Test walker heading out using {how}."  (chat message, line 2665)
+- "your path network (%d hops)"  (message, line 2670)
+- "the map's own navigation"  (text, line 2670)
+- "Test walker heading out using {how}."  (chat message, line 2671)
 
 > Note for you (not shown in game): part of: test arrived
 
-- "Test walker arrived in %.1f seconds. This route works."  (message, line 2670)
+- "Test walker arrived in %.1f seconds. This route works."  (message, line 2676)
 
 > Note for you (not shown in game): part of: test stuck
 
-- "Test walker stuck at %s on hop %d/%d"  (message, line 2677)
-- "Test walker got stuck after %.1f seconds, on hop %d of %d (marked red)."  (message, line 2678)
-- "Add a path node here and link it toward the destination, or check for a door it can't open."  (text, line 2681)
+- "Test walker stuck at %s on hop %d/%d"  (message, line 2683)
+- "Test walker got stuck after %.1f seconds, on hop %d of %d (marked red)."  (message, line 2684)
+- "Add a path node here and link it toward the destination, or check for a door it can't open."  (text, line 2687)
 
 > Note for you (not shown in game): guarding a supply drop (sv_livingcity_convoy.lua): he answers, without leaving his post
 
-- "[Civil Protection] "Supply point secure. Hold the perimeter until the load moves on.""  (chat message, line 2905)
+- "[Civil Protection] "Supply point secure. Hold the perimeter until the load moves on.""  (chat message, line 2911)
 
 > Note for you (not shown in game): pressing E on something
 
-- "[Civil Protection] "{Pick}""  (chat message, line 2909)
+- "[Civil Protection] "{Pick}""  (chat message, line 2915)
 
 > Note for you (not shown in game): a Civil Protection player stops a citizen: they freeze and apologise
 
-- "[Civil Protection] Stopped. With the Arrest Baton out: R to search them, right click to detain."  (chat message, line 2926)
+- "[Civil Protection] Stopped. With the Arrest Baton out: R to search them, right click to detain."  (chat message, line 2932)
 
 > Note for you (not shown in game): a crime, and every cop comes for you (a scanner is city property, not a person) (one report per few seconds for a scanner: every bullet of a burst isn't a new offence)
 
-- "Damaging city property"  (text, line 2978)
-- "Assaulting Civil Protection"  (text, line 2981)
-- "Assaulting a citizen"  (text, line 2981)
+- "Damaging city property"  (text, line 2984)
+- "Assaulting Civil Protection"  (text, line 2987)
+- "Assaulting a citizen"  (text, line 2987)
 
 > Note for you (not shown in game): Console commands
 
-- "Civil Protection has stood down."  (chat message, line 3017)
+- "Civil Protection has stood down."  (chat message, line 3023)
 
 > Note for you (not shown in game): the console command lc_addpoint
 
-- "Kinds: idle, sit, sitchair, lean, queue, patrol, checkpoint, spawn, cell, release"  (chat message, line 3024)
-- "Added %s point (%d total on this map)."  (message, line 3027)
+- "Kinds: idle, sit, sitchair, lean, queue, patrol, checkpoint, spawn, cell, release"  (chat message, line 3030)
+- "Added %s point (%d total on this map)."  (message, line 3033)
 
 > Note for you (not shown in game): the console command lc_removepoint
 
-- "Removed nearest {kind} point."  (text, line 3033)
-- "No point within 150 Civil Protection units."  (chat message, line 3033)
+- "Removed nearest {kind} point."  (text, line 3039)
+- "No point within 150 Civil Protection units."  (chat message, line 3039)
 
 > Note for you (not shown in game): the console command lc_status
 
-- "citizens %d/%d, cops %d/%d, soldiers %d/%d, scanners %d/%d, zombies %d/%d, rebels %d/%d"  (message, line 3044)
-- "map nav %d (%s) \| points %d \| path nodes %d, links %d, unlinked %d \| zones %d \| lines %d \| patrol beats %d"  (message, line 3048)
+- "citizens %d/%d, cops %d/%d, soldiers %d/%d, scanners %d/%d, zombies %d/%d, rebels %d/%d"  (message, line 3050)
+- "map nav %d (%s) \| points %d \| path nodes %d, links %d, unlinked %d \| zones %d \| lines %d \| patrol beats %d"  (message, line 3054)
 
 ## the actions menu (server side) (sv_livingcity_actions.lua)
 
@@ -4960,9 +4960,9 @@ Made from version a725f51. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: citizen advice
 
-- "'{advice_nowhere}'"  (label, line 242)
-- "'{id} {s}'"  (text, line 249)
-- "'{id}' They nod the way."  (text, line 253)
+- "'{advice_nowhere}'"  (label, line 259)
+- "'{id} {s}'"  (text, line 266)
+- "'{id}' They nod the way."  (text, line 270)
 
 ## custom announcements, for Overwatch and for the Administrator (sv_livingcity_announcer.lua)
 
@@ -11535,221 +11535,296 @@ Made from version a725f51. Admin-only console messages and log lines are left ou
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_lines.lua`
 
 
-> Note for you (not shown in game): openers: said before another line
+> Note for you (not shown in game): id = { words, when it is said, the words as pasted into ElevenLabs (Eleven v4 or v3: a direction in square brackets changes how what follows is said) }. Citizens: every id starts say_. American wording (the owner, 11 November).
 
-- "Opener: before something that matters"  (text, line 33)
-- "Opener: before a refusal or a plain truth"  (text, line 34)
-- "Opener: before asking, or begging off"  (text, line 35)
-- "Keep your voice down."  (text, line 36)
-- "Opener: before anything dangerous to say"  (text, line 36)
-- "Opener: thinking it over"  (text, line 37)
-- "Opener: stopping someone"  (text, line 38)
-
-> Note for you (not shown in game): hello and goodbye
-
-- "Oh, it's you. Good to see a friendly face."  (text, line 40)
-- "Greeting someone they like"  (text, line 40)
-- "Hello. Still here, then. Same as me."  (text, line 41)
-- "Greeting anyone"  (text, line 41)
-- "Do I know you?"  (text, line 42)
-- "Greeting a stranger they are wary of"  (text, line 42)
-- "What do you want?"  (text, line 43)
-- "Greeting someone they dislike"  (text, line 43)
-- "No trouble here, officer."  (text, line 44)
-- "Spoken to by a unit"  (text, line 44)
-- "Look after yourself. I mean it."  (text, line 45)
-- "Parting from someone they like"  (text, line 45)
-- "I'd best get on."  (text, line 46)
-- "Ending a conversation"  (text, line 46)
-- "We're done here."  (text, line 47)
-- "Ending a conversation they want no more of"  (text, line 47)
-
-> Note for you (not shown in game): yes, no, perhaps
-
-- "Yes. All right."  (text, line 49)
+- "Opener: before something that matters"  (text, line 35)
+- "[low, urgent] Listen."  (text, line 35)
+- "Opener: before a refusal or a plain truth"  (text, line 36)
+- "[tired, flat] Look."  (text, line 36)
+- "Opener: before asking, or begging off"  (text, line 37)
+- "[pleading, quietly] Please."  (text, line 37)
+- "Keep your voice down."  (text, line 38)
+- "Opener: before anything dangerous to say"  (text, line 38)
+- "[whispers, tense] Keep your voice down."  (text, line 38)
+- "Opener: thinking it over"  (text, line 39)
+- "[thinking it over] Well..."  (text, line 39)
+- "Opener: stopping someone"  (text, line 40)
+- "[sharp, low] You."  (text, line 40)
+- "Oh, it's you. Good to see a friendly face."  (text, line 41)
+- "Greeting someone they like"  (text, line 41)
+- "[relieved, warm] Oh, it's you. Good to see a friendly face."  (text, line 41)
+- "Hey. Still here, huh. Me too."  (text, line 42)
+- "Greeting anyone"  (text, line 42)
+- "[tired, dry] Hey. Still here, huh. [exhales] Me too."  (text, line 42)
+- "Do I know you?"  (text, line 43)
+- "Greeting a stranger they are wary of"  (text, line 43)
+- "[wary, guarded] Do I know you?"  (text, line 43)
+- "What do you want?"  (text, line 44)
+- "Greeting someone they dislike"  (text, line 44)
+- "[cold, flat] What do you want?"  (text, line 44)
+- "No trouble here, officer."  (text, line 45)
+- "Spoken to by a unit"  (text, line 45)
+- "[nervous, too polite] No trouble here, officer."  (text, line 45)
+- "Take care of yourself. I mean it."  (text, line 46)
+- "Parting from someone they like"  (text, line 46)
+- "[warm, quietly] Take care of yourself. [sincere] I mean it."  (text, line 46)
+- "I should get going."  (text, line 47)
+- "Ending a conversation"  (text, line 47)
+- "[flat, tired] I should get going."  (text, line 47)
+- "We're done here."  (text, line 48)
+- "Ending a conversation they want no more of"  (text, line 48)
+- "[cold, final] We're done here."  (text, line 48)
+- "Yeah. All right."  (text, line 49)
 - "Agreeing to something"  (text, line 49)
+- "[plain, tired] Yeah. All right."  (text, line 49)
 - "For you? Of course."  (text, line 50)
 - "Agreeing, for someone they like"  (text, line 50)
+- "[warm, a small smile] For you? Of course."  (text, line 50)
 - "No. Sorry."  (text, line 51)
+- "[flat, apologetic] No. Sorry."  (text, line 51)
 - "No. And don't ask me again."  (text, line 52)
 - "Refusing for good"  (text, line 52)
+- "[firm, low] No. [pause] And don't ask me again."  (text, line 52)
 - "Maybe. I'd have to think about it."  (text, line 53)
 - "Not sure"  (text, line 53)
+- "[hesitant] Maybe. I'd have to think about it."  (text, line 53)
 - "Not now. Not here."  (text, line 54)
 - "Putting it off: the wrong time or place"  (text, line 54)
+- "[hushed, tense] Not now. Not here."  (text, line 54)
+- "I wouldn't know anything about that."  (text, line 55)
+- "Asked something they don't know, or won't say"  (text, line 55)
+- "[guarded, flat] I wouldn't know anything about that."  (text, line 55)
+- "I don't know, and I don't want to know."  (text, line 56)
+- "Asked something dangerous"  (text, line 56)
+- "[frightened, quick] I don't know, and I don't want to know."  (text, line 56)
+- "I've heard things. Everyone has."  (text, line 57)
+- "Asked about a rumour"  (text, line 57)
+- "[low, careful] I've heard things. [pause] Everyone has."  (text, line 57)
+- "I can't talk about that. You know why."  (text, line 58)
+- "Asked what can't be said aloud"  (text, line 58)
+- "[hushed, uneasy] I can't talk about that. You know why."  (text, line 58)
+- "You're asking the wrong person."  (text, line 59)
+- "Asked for something they can't give"  (text, line 59)
+- "[tired, dismissive] You're asking the wrong person."  (text, line 59)
+- "Honestly? It's as bad as it looks."  (text, line 60)
+- "Asked how things are, by someone they trust"  (text, line 60)
+- "[quiet, grim] Honestly? [sighs] It's as bad as it looks."  (text, line 60)
+- "Getting by. That's all anyone can say."  (text, line 61)
+- "Asked how they are: all right"  (text, line 61)
+- "[worn, matter of fact] Getting by. That's all anyone can say."  (text, line 61)
+- "I haven't had a real meal in days."  (text, line 62)
+- "Asked how they are: hungry"  (text, line 62)
+- "[weak, hollow] I haven't had a real meal in days."  (text, line 62)
+- "I'm tired. Just so tired."  (text, line 63)
+- "Asked how they are: worn out"  (text, line 63)
+- "[exhausted] I'm tired. [sighs] Just so tired."  (text, line 63)
+- "I'm scared. Aren't you?"  (text, line 64)
+- "Asked how they are: afraid"  (text, line 64)
+- "[frightened, hushed] I'm scared. Aren't you?"  (text, line 64)
+- "I've had about all I can take."  (text, line 65)
+- "Asked how they are: close to breaking"  (text, line 65)
+- "[tight, barely holding it in] I've had about all I can take."  (text, line 65)
+- "It's good to just talk to someone."  (text, line 66)
+- "Asked how they are: starved of company"  (text, line 66)
+- "[soft, grateful] It's good to just talk to someone."  (text, line 66)
+- "It can't last forever. Nothing does."  (text, line 67)
+- "Asked how they are: in good spirits"  (text, line 67)
+- "[quiet, hopeful] It can't last forever. Nothing does."  (text, line 67)
+- "What's the point? Really, what is the point?"  (text, line 68)
+- "Asked how they are: in despair"  (text, line 68)
+- "[hollow, defeated] What's the point? [pause] Really, what is the point?"  (text, line 68)
+- "Thank you. I won't forget it."  (text, line 69)
+- "Thanked for a kindness"  (text, line 69)
+- "[sincere, quietly] Thank you. I won't forget it."  (text, line 69)
+- "You didn't have to do that. Thank you."  (text, line 70)
+- "A real kindness: food, medicine, help"  (text, line 70)
+- "[moved, voice catching] You didn't have to do that. Thank you."  (text, line 70)
+- "I'm sorry. I didn't mean anything by it."  (text, line 71)
+- "Backing down"  (text, line 71)
+- "[nervous, backing down] I'm sorry. I didn't mean anything by it."  (text, line 71)
+- "Hey. There's no need for that."  (text, line 72)
+- "[stung, stiff] Hey. There's no need for that."  (text, line 72)
+- "I don't want any trouble."  (text, line 73)
+- "[frightened, hands up] I don't want any trouble."  (text, line 73)
+- "Ha. That's the first laugh I've had all week."  (text, line 74)
+- "Something funny was said"  (text, line 74)
+- "[short laugh] Ha. [warm, surprised] That's the first laugh I've had all week."  (text, line 74)
+- "You're not wrong."  (text, line 75)
+- "Agreeing with an opinion"  (text, line 75)
+- "[dry, low] You're not wrong."  (text, line 75)
+- "I don't see it that way."  (text, line 76)
+- "Disagreeing with an opinion"  (text, line 76)
+- "[even, firm] I don't see it that way."  (text, line 76)
+- "The Administrator knows best. I believe that."  (text, line 77)
+- "A loyal citizen, on the Combine"  (text, line 77)
+- "[earnest, a little rehearsed] The Administrator knows best. I believe that."  (text, line 77)
+- "You shouldn't say things like that. Someone will hear."  (text, line 78)
+- "Hearing sedition, and not liking it"  (text, line 78)
+- "[alarmed, hushed] You shouldn't say things like that. Someone will hear."  (text, line 78)
+- "Careful. The walls have ears."  (text, line 79)
+- "Warning someone who is talking too freely"  (text, line 79)
+- "[whispers] Careful. The walls have ears."  (text, line 79)
+- "Not with them standing right there."  (text, line 80)
+- "Won't talk with a unit close"  (text, line 80)
+- "[under their breath] Not with them standing right there."  (text, line 80)
+- "One day they'll answer for all of it."  (text, line 81)
+- "A disloyal citizen, to someone they trust"  (text, line 81)
+- "[low, bitter, controlled] One day they'll answer for all of it."  (text, line 81)
+- "Stay away from the units today. They're in a mood."  (text, line 82)
+- "A warning about Civil Protection"  (text, line 82)
+- "[low, warning] Stay away from the units today. They're in a mood."  (text, line 82)
+- "Keep your head down and do what they say. That's how you make it."  (text, line 83)
+- "Advice to a newcomer"  (text, line 83)
+- "[tired, kindly] Keep your head down and do what they say. That's how you make it."  (text, line 83)
+- "I don't know anything about any Resistance."  (text, line 84)
+- "Asked about the Resistance"  (text, line 84)
+- "[quick, stiff, too careful] I don't know anything about any Resistance."  (text, line 84)
+- "There are people. That's all I'll say."  (text, line 85)
+- "A sympathizer, hinting to someone they trust"  (text, line 85)
+- "[whispers, meaningful] There are people. [pause] That's all I'll say."  (text, line 85)
+- "If someone needed a door left open, mine might be."  (text, line 86)
+- "A sympathizer, offering help"  (text, line 86)
+- "[very quietly, steady] If someone needed a door left open, mine might be."  (text, line 86)
+- "I've got people to think about. Leave me out of it."  (text, line 87)
+- "Asked to help the Resistance, and afraid"  (text, line 87)
+- "[afraid, firm] I've got people to think about. Leave me out of it."  (text, line 87)
+- "Whoever they are, good luck to them."  (text, line 88)
+- "Quiet approval of the Resistance"  (text, line 88)
+- "[quiet, a hint of a smile] Whoever they are, good luck to them."  (text, line 88)
+- "Someone's been asking about you."  (text, line 89)
+- "A warning: they are being looked for"  (text, line 89)
+- "[low, urgent] Someone's been asking about you."  (text, line 89)
+- "You're being watched. Don't turn around."  (text, line 90)
+- "A warning: an informant or a unit has an eye on them"  (text, line 90)
+- "[whispers, barely moving lips] You're being watched. Don't turn around."  (text, line 90)
+- "You should go. Now."  (text, line 91)
+- "A warning: get away"  (text, line 91)
+- "[urgent, hushed] You should go. Now."  (text, line 91)
+- "Watch who you talk to. Not everyone here is a friend."  (text, line 92)
+- "A warning about informants"  (text, line 92)
+- "[low, careful] Watch who you talk to. Not everyone here is a friend."  (text, line 92)
+- "If you need something, ask. Quietly."  (text, line 93)
+- "Offering help"  (text, line 93)
+- "[low, kind] If you need something, ask. [whispers] Quietly."  (text, line 93)
+- "There's gonna be trouble tonight. I can feel it."  (text, line 94)
+- "The city's mood is turning"  (text, line 94)
+- "[uneasy, low] There's gonna be trouble tonight. I can feel it."  (text, line 94)
+- "You got anything to eat? Anything?"  (text, line 95)
+- "Hungry, asking a player"  (text, line 95)
+- "[weak, ashamed to ask] You got anything to eat? [pause] Anything?"  (text, line 95)
+- "You wouldn't have a smoke on you, would you?"  (text, line 96)
+- "Craving, asking a player"  (text, line 96)
+- "[edgy, hopeful] You wouldn't have a smoke on you, would you?"  (text, line 96)
+- "I need help. I've got nobody else to ask."  (text, line 97)
+- "In trouble, asking a player"  (text, line 97)
+- "[desperate, quietly] I need help. I've got nobody else to ask."  (text, line 97)
+- "Here. Take it. Don't say where you got it."  (text, line 98)
+- "Giving something"  (text, line 98)
+- "[hushed, quick] Here. Take it. Don't say where you got it."  (text, line 98)
+- "I can't take that. Keep it."  (text, line 99)
+- "Refusing a gift"  (text, line 99)
+- "[gentle, proud] I can't take that. Keep it."  (text, line 99)
+- "I've had enough! Do you hear me? Enough!"  (text, line 100)
+- "A tantrum, in a unit's face"  (text, line 100)
+- "[shouting, voice cracking] I've had enough! Do you hear me? Enough!"  (text, line 100)
+- "I can't. I just can't anymore."  (text, line 101)
+- "[broken, near tears] I can't. [shaky breath] I just can't anymore."  (text, line 101)
+- "They can't scare all of us forever."  (text, line 102)
+- "Defiance: painting over a poster"  (text, line 102)
+- "[quiet, defiant, steady] They can't scare all of us forever."  (text, line 102)
+- "That one! That one talks to Civil Protection!"  (text, line 103)
+- "Accusing someone of informing"  (text, line 103)
+- "[loud, accusing, pointing] That one! That one talks to Civil Protection!"  (text, line 103)
+- "That's a lie! I never told them anything!"  (text, line 104)
+- "Accused of informing"  (text, line 104)
+- "[panicked, loud] That's a lie! I never told them anything!"  (text, line 104)
+- "Leave me alone. Just let me have this."  (text, line 105)
+- "Drinking in the street"  (text, line 105)
+- "[slurred, tired, bitter] Leave me alone. Just let me have this."  (text, line 105)
+- "There you are. I've been looking for you."  (text, line 106)
+- "Finding a friend"  (text, line 106)
+- "[relieved, a little shaky] There you are. I've been looking for you."  (text, line 106)
+- "Go on, take half. You need it more than I do."  (text, line 107)
+- "Sharing food"  (text, line 107)
+- "[gentle, insisting] Go on, take half. You need it more than I do."  (text, line 107)
+- "Easy. Easy now. We're still here, right?"  (text, line 108)
+- "Steadying the people near"  (text, line 108)
+- "[calm, soothing, low] Easy. Easy now. We're still here, right?"  (text, line 108)
+- "Officer. I've got something you'll want to hear."  (text, line 109)
+- "Informing to a unit"  (text, line 109)
+- "[nervous, eager, hushed] Officer. I've got something you'll want to hear."  (text, line 109)
+- "Stop! Please, I didn't do anything!"  (text, line 110)
+- "Being beaten"  (text, line 110)
+- "[crying out in pain, terrified] Stop! Please, I didn't do anything!"  (text, line 110)
+- "Don't look. Just keep walking."  (text, line 111)
+- "Someone beaten in front of them"  (text, line 111)
+- "[under their breath, tense] Don't look. Just keep walking."  (text, line 111)
+- "Oh God. Oh God, no."  (text, line 112)
+- "Someone killed in front of them"  (text, line 112)
+- "[horrified, gasping] Oh God. Oh God, no."  (text, line 112)
+- "They took my friend. Just dragged them off."  (text, line 113)
+- "A friend arrested or dead"  (text, line 113)
+- "[numb, grieving] They took my friend. [pause] Just dragged them off."  (text, line 113)
 
-> Note for you (not shown in game): what they know
+> Note for you (not shown in game): A unit's lines: one voice. Every id starts unit_. A fourth entry names Half-Life 2's own Civil Protection clips that say the same words (sound/npc/metropolice/vo/<name>.wav): with no recording of yours, the first of them the server has is played, so those lines need no recording at all (the owner, 11 November: "already exist in HL2").
 
-- "I wouldn't know anything about that."  (text, line 56)
-- "Asked something they don't know, or won't say"  (text, line 56)
-- "I don't know, and I don't want to know."  (text, line 57)
-- "Asked something dangerous"  (text, line 57)
-- "I've heard things. Everyone has."  (text, line 58)
-- "Asked about a rumour"  (text, line 58)
-- "I can't talk about that. You know why."  (text, line 59)
-- "Asked what can't be said aloud"  (text, line 59)
-- "You're asking the wrong person."  (text, line 60)
-- "Asked for something they can't give"  (text, line 60)
-- "Honestly? It's as bad as it looks."  (text, line 61)
-- "Asked how things are, by someone they trust"  (text, line 61)
+- "Spoken to"  (text, line 121)
+- "[flat, clipped, cold] Citizen."  (text, line 121)
+- "Unit. Sector is quiet."  (text, line 122)
+- "Spoken to by another unit"  (text, line 122)
+- "[flat, clipped] Unit. Sector is quiet."  (text, line 122)
+- "Move along."  (text, line 123)
+- "Wants them gone"  (text, line 123)
+- "[curt, bored] Move along."  (text, line 123)
+- "Identification. Now."  (text, line 124)
+- "Suspicious of them"  (text, line 124)
+- "[cold, commanding] Identification. Now."  (text, line 124)
+- "[flat] Affirmative."  (text, line 125)
+- "[flat] Negative."  (text, line 126)
+- "That information is restricted."  (text, line 127)
+- "Asked anything he won't answer"  (text, line 127)
+- "[flat, dismissive] That information is restricted."  (text, line 127)
+- "Now get out of here."  (text, line 128)
+- "Ending it"  (text, line 128)
+- "[curt] Now get out of here."  (text, line 128)
+- "Get indoors."  (text, line 129)
+- "Curfew, a lockdown or a sweep"  (text, line 129)
+- "[sharp, commanding] Get indoors."  (text, line 129)
+- "Final warning."  (text, line 130)
+- "Pushed too far"  (text, line 130)
+- "[cold, slow, threatening] Final warning."  (text, line 130)
+- "Hold it right there."  (text, line 131)
+- "Threatened or crowded"  (text, line 131)
+- "[hard, loud] Hold it right there."  (text, line 131)
+- "Looking for trouble?"  (text, line 132)
+- "[low, dangerous] Looking for trouble?"  (text, line 132)
+- "Noted. It will go on your record."  (text, line 133)
+- "Heard something he will report"  (text, line 133)
+- "[flat, ominous] Noted. It will go on your record."  (text, line 133)
+- "Your cooperation is noted."  (text, line 134)
+- "Told something useful, or obeyed"  (text, line 134)
+- "[flat, faintly approving] Your cooperation is noted."  (text, line 134)
+- "Keep your head down today. That is advice."  (text, line 135)
+- "A unit with some kindness in him, to someone he doesn't mind"  (text, line 135)
+- "[low, off the record] Keep your head down today. [pause] That is advice."  (text, line 135)
+- "You want some too?"  (text, line 136)
+- "Brutality: to whoever is watching"  (text, line 136)
+- "[breathing hard, vicious] You want some too?"  (text, line 136)
+- "You saw nothing."  (text, line 137)
+- "Caught drinking on duty"  (text, line 137)
+- "[low, threatening, slightly slurred] You saw nothing."  (text, line 137)
 
-> Note for you (not shown in game): how they are
+> Note for you (not shown in game): part of: hl2 lines dump
 
-- "Getting by. That's all anyone can say."  (text, line 63)
-- "Asked how they are: all right"  (text, line 63)
-- "I haven't eaten properly in days."  (text, line 64)
-- "Asked how they are: hungry"  (text, line 64)
-- "I'm tired. Bone tired."  (text, line 65)
-- "Asked how they are: worn out"  (text, line 65)
-- "I'm frightened. Aren't you?"  (text, line 66)
-- "Asked how they are: afraid"  (text, line 66)
-- "I've had about as much as I can take."  (text, line 67)
-- "Asked how they are: close to breaking"  (text, line 67)
-- "It's good to just talk to someone."  (text, line 68)
-- "Asked how they are: starved of company"  (text, line 68)
-- "It can't last for ever. Nothing does."  (text, line 69)
-- "Asked how they are: in good spirits"  (text, line 69)
-- "What's the point? Really, what is the point?"  (text, line 70)
-- "Asked how they are: in despair"  (text, line 70)
+- "A citizen, a man"  (text, line 308)
+- "A citizen, a woman"  (text, line 309)
+- "Civil Protection"  (text, line 310)
 
-> Note for you (not shown in game): answering how they were spoken to
+> Note for you (not shown in game): the console command lc_hl2_lines
 
-- "Thank you. I won't forget it."  (text, line 72)
-- "Thanked for a kindness"  (text, line 72)
-- "You didn't have to do that. Thank you."  (text, line 73)
-- "A real kindness: food, medicine, help"  (text, line 73)
-- "I'm sorry. I didn't mean anything by it."  (text, line 74)
-- "Backing down"  (text, line 74)
-- "There's no call for that."  (text, line 75)
-- "I don't want any trouble."  (text, line 76)
-- "Ha. That's the first laugh I've had all week."  (text, line 77)
-- "Something funny was said"  (text, line 77)
-- "You're not wrong."  (text, line 78)
-- "Agreeing with an opinion"  (text, line 78)
-- "I don't see it that way."  (text, line 79)
-- "Disagreeing with an opinion"  (text, line 79)
-
-> Note for you (not shown in game): the Combine
-
-- "The Administrator knows best. I believe that."  (text, line 81)
-- "A loyal citizen, on the Combine"  (text, line 81)
-- "You shouldn't say things like that. Someone will hear."  (text, line 82)
-- "Hearing sedition, and not liking it"  (text, line 82)
-- "Careful. The walls have ears."  (text, line 83)
-- "Warning someone who is talking too freely"  (text, line 83)
-- "Not with them standing there."  (text, line 84)
-- "Won't talk with a unit close"  (text, line 84)
-- "One day they'll answer for all of it."  (text, line 85)
-- "A disloyal citizen, to someone they trust"  (text, line 85)
-- "Stay clear of the units today. They're in a mood."  (text, line 86)
-- "A warning about Civil Protection"  (text, line 86)
-- "Keep your head down and do as they say. That's how you last."  (text, line 87)
-- "Advice to a newcomer"  (text, line 87)
-
-> Note for you (not shown in game): the Resistance
-
-- "I don't know anything about any Resistance."  (text, line 89)
-- "Asked about the Resistance"  (text, line 89)
-- "There are people. That's all I'll say."  (text, line 90)
-- "A sympathizer, hinting to someone they trust"  (text, line 90)
-- "If someone needed a door left open, mine might be."  (text, line 91)
-- "A sympathizer, offering help"  (text, line 91)
-- "I've people to think of. Leave me out of it."  (text, line 92)
-- "Asked to help the Resistance, and afraid"  (text, line 92)
-- "Whoever they are, good luck to them."  (text, line 93)
-- "Quiet approval of the Resistance"  (text, line 93)
-
-> Note for you (not shown in game): warnings and tips
-
-- "Someone's been asking about you."  (text, line 95)
-- "A warning: they are being looked for"  (text, line 95)
-- "You're being watched. Don't look round."  (text, line 96)
-- "A warning: an informant or a unit has an eye on them"  (text, line 96)
-- "You should go. Now."  (text, line 97)
-- "A warning: get away"  (text, line 97)
-- "Mind who you talk to. Not everyone here is a friend."  (text, line 98)
-- "A warning about informants"  (text, line 98)
-- "If you need something, ask. Quietly."  (text, line 99)
-- "Offering help"  (text, line 99)
-- "There'll be trouble tonight. I can feel it."  (text, line 100)
-- "The city's mood is turning"  (text, line 100)
-
-> Note for you (not shown in game): asking and giving
-
-- "You wouldn't have anything to eat, would you?"  (text, line 102)
-- "Hungry, asking a player"  (text, line 102)
-- "You haven't got a smoke, have you?"  (text, line 103)
-- "Craving, asking a player"  (text, line 103)
-- "I need help. I've nobody else to ask."  (text, line 104)
-- "In trouble, asking a player"  (text, line 104)
-- "Here. Take it. Don't say where you got it."  (text, line 105)
-- "Giving something"  (text, line 105)
-- "I can't take that. Keep it."  (text, line 106)
-- "Refusing a gift"  (text, line 106)
-
-> Note for you (not shown in game): as a mind gives way (sv_livingcity_mindsact.lua)
-
-- "I've had enough! Do you hear me? Enough!"  (text, line 108)
-- "A tantrum, in a unit's face"  (text, line 108)
-- "I can't. I just can't any more."  (text, line 109)
-- "They can't frighten all of us for ever."  (text, line 110)
-- "Defiance: painting over a poster"  (text, line 110)
-- "That one. That one talks to Civil Protection!"  (text, line 111)
-- "Accusing someone of informing"  (text, line 111)
-- "It's a lie! I never told them anything!"  (text, line 112)
-- "Accused of informing"  (text, line 112)
-- "Leave me be. Let me have this."  (text, line 113)
-- "Drinking in the street"  (text, line 113)
-- "There you are. I've been looking for you."  (text, line 114)
-- "Finding a friend"  (text, line 114)
-- "Go on, take half. You need it more than I do."  (text, line 115)
-- "Sharing food"  (text, line 115)
-- "Easy. Easy now. We're still here, aren't we?"  (text, line 116)
-- "Steadying the people near"  (text, line 116)
-- "Officer. I've something you'll want to hear."  (text, line 117)
-- "Informing to a unit"  (text, line 117)
-- "Stop! Please, I've done nothing!"  (text, line 118)
-- "Being beaten"  (text, line 118)
-
-> Note for you (not shown in game): what they saw
-
-- "Don't look. Just keep walking."  (text, line 120)
-- "Someone beaten in front of them"  (text, line 120)
-- "Oh God. Oh God, no."  (text, line 121)
-- "Someone killed in front of them"  (text, line 121)
-- "They took my friend. Just took them."  (text, line 122)
-- "A friend arrested or dead"  (text, line 122)
-
-> Note for you (not shown in game): A unit's lines: one voice. Every id starts unit_.
-
-- "Spoken to"  (text, line 127)
-- "Unit. Sector is quiet."  (text, line 128)
-- "Spoken to by another unit"  (text, line 128)
-- "Move along."  (text, line 129)
-- "Wants them gone"  (text, line 129)
-- "Identification. Now."  (text, line 130)
-- "Suspicious of them"  (text, line 130)
-- "That information is restricted."  (text, line 133)
-- "Asked anything he won't answer"  (text, line 133)
-- "Not now. Return to your duties."  (text, line 134)
-- "Ending it"  (text, line 134)
-- "Get indoors."  (text, line 135)
-- "Curfew, a lockdown or a sweep"  (text, line 135)
-- "Final warning, citizen."  (text, line 136)
-- "Pushed too far"  (text, line 136)
-- "Step back, or be pacified."  (text, line 137)
-- "Threatened or crowded"  (text, line 137)
-- "Watch your mouth."  (text, line 138)
-- "Noted. It will go on your record."  (text, line 139)
-- "Heard something he will report"  (text, line 139)
-- "Your cooperation is noted."  (text, line 140)
-- "Told something useful, or obeyed"  (text, line 140)
-- "Keep your head down today. That is advice."  (text, line 141)
-- "A unit with some kindness in him, to someone he doesn't mind"  (text, line 141)
-- "You want some as well?"  (text, line 142)
-- "Brutality: to whoever is watching"  (text, line 142)
-- "You saw nothing."  (text, line 143)
-- "Caught drinking on duty"  (text, line 143)
+- "wrote data/livingcity/hl2_lines.txt: {n} clips. Bring it back to Claude."  (text, line 318)
+- "could not list them: {n}"  (text, line 318)
+- "[Living City] {msg}"  (chat message, line 319)
 
 ## Resistance lookouts (sv_livingcity_lookouts.lua)
 
@@ -19807,81 +19882,81 @@ Made from version a725f51. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Who you are to them: this character of yours, not just your account.
 
-- "\|{GetNW2String}"  (text, line 50)
+- "\|{GetNW2String}"  (text, line 56)
 
 > Note for you (not shown in game): part of: mood word
 
-- "glad to see you"  (text, line 81)
-- "terrified of you"  (text, line 83)
-- "wary of you"  (text, line 84)
+- "glad to see you"  (text, line 87)
+- "terrified of you"  (text, line 89)
+- "wary of you"  (text, line 90)
 
 > Note for you (not shown in game): A sympathizer who likes you: where the Resistance gathers.
 
-- "out past the checkpoints"  (text, line 129)
+- "out past the checkpoints"  (text, line 135)
 
 > Note for you (not shown in game): part of: safe house hint
 
-- "If you're looking for people who think like you, they're {where}. Ask for the quartermaster."  (text, line 130)
-- "'Another day. Keep your head down and it's another day.'"  (text, line 134)
-- "'The water tastes of something again.'"  (text, line 134)
-- "'They moved the line again this morning. Nobody knows why.'"  (text, line 135)
-- "'I don't sleep much. Nobody does.'"  (text, line 135)
-- "'Have you seen my neighbour? Since Tuesday, nobody has.'"  (text, line 136)
-- "'The trains are always full coming in. Never going out.'"  (text, line 136)
-- "'Don't stand under the scanners. They don't like it.'"  (text, line 137)
-- "'They say the rations will be bigger next month. They always say that.'"  (text, line 137)
-- "They won't look at you."  (text, line 139)
-- "They step back, hands up: 'I don't want any trouble.'"  (text, line 139)
-- "'Please. Just leave me alone.'"  (text, line 139)
+- "If you're looking for people who think like you, they're {where}. Ask for the quartermaster."  (text, line 136)
+- "'Another day. Keep your head down and it's another day.'"  (text, line 140)
+- "'The water tastes of something again.'"  (text, line 140)
+- "'They moved the line again this morning. Nobody knows why.'"  (text, line 141)
+- "'I don't sleep much. Nobody does.'"  (text, line 141)
+- "'Have you seen my neighbour? Since Tuesday, nobody has.'"  (text, line 142)
+- "'The trains are always full coming in. Never going out.'"  (text, line 142)
+- "'Don't stand under the scanners. They don't like it.'"  (text, line 143)
+- "'They say the rations will be bigger next month. They always say that.'"  (text, line 143)
+- "They won't look at you."  (text, line 145)
+- "They step back, hands up: 'I don't want any trouble.'"  (text, line 145)
+- "'Please. Just leave me alone.'"  (text, line 145)
 
 > Note for you (not shown in game): part of: doing
 
-- "waiting in the ration line"  (text, line 153)
+- "waiting in the ration line"  (text, line 159)
 
 > Note for you (not shown in game): (no sympathy for it any more: the owner, 9 November, sympathy is the way into the Resistance, and a kindness to a stranger isn't that)
 
-- "They take the {name} with both hands. 'I won't forget this. I mean it.'"  (name, line 248)
-- "They take the {name} and hide it in their coat. 'Thank you.'"  (name, line 249)
-- "A drink or a smoke"  (text, line 273)
+- "They take the {name} with both hands. 'I won't forget this. I mean it.'"  (name, line 254)
+- "They take the {name} and hide it in their coat. 'Thank you.'"  (name, line 255)
+- "A drink or a smoke"  (text, line 279)
 
 > Note for you (not shown in game): part of: taken
 
-- "You've nothing like that to give."  (name, line 318)
+- "You've nothing like that to give."  (name, line 324)
 
 > Note for you (not shown in game): part of: give
 
-- "They shake their head. 'I don't, thanks. Keep it.'"  (text, line 325)
-- "They take the {name} and light it there and then. 'God, I needed that.'"  (text, line 326)
-- "They take a long pull of the {name}. 'You're a good sort, you know that?'"  (text, line 327)
-- "They turn the {name} over in their hands. 'Medicine. You don't see that often. Thank you.'"  (text, line 331)
-- "They back away from you. 'I don't want any trouble, officer.'"  (text, line 333)
-- "They go white. 'Are you out of your mind? Put that away before a unit sees!'"  (text, line 336)
-- "They glance about, then slip the {name} under their coat. 'It'll go where it's needed.'"  (text, line 338)
-- "They push it back at you. 'I never saw this. I never saw you.'"  (text, line 344)
-- "They read the first lines and fold it small. 'Somebody has to say it.'"  (text, line 346)
-- "They take the {name} without looking at it. 'I know what it says.'"  (text, line 348)
-- "They take the {name}. 'Thank you, citizen.'"  (text, line 349)
-- "They don't want that."  (text, line 351)
+- "They shake their head. 'I don't, thanks. Keep it.'"  (text, line 331)
+- "They take the {name} and light it there and then. 'God, I needed that.'"  (text, line 332)
+- "They take a long pull of the {name}. 'You're a good sort, you know that?'"  (text, line 333)
+- "They turn the {name} over in their hands. 'Medicine. You don't see that often. Thank you.'"  (text, line 337)
+- "They back away from you. 'I don't want any trouble, officer.'"  (text, line 339)
+- "They go white. 'Are you out of your mind? Put that away before a unit sees!'"  (text, line 342)
+- "They glance about, then slip the {name} under their coat. 'It'll go where it's needed.'"  (text, line 344)
+- "They push it back at you. 'I never saw this. I never saw you.'"  (text, line 350)
+- "They read the first lines and fold it small. 'Somebody has to say it.'"  (text, line 352)
+- "They take the {name} without looking at it. 'I know what it says.'"  (text, line 354)
+- "They take the {name}. 'Thank you, citizen.'"  (text, line 355)
+- "They don't want that."  (text, line 357)
 
 > Note for you (not shown in game): part of: pick pocket
 
-- "Their pockets are already empty."  (text, line 369)
-- "Your fingers come out with {item}. They didn't feel a thing."  (text, line 377)
-- "%d credits, and they didn't feel a thing."  (message, line 382)
+- "Their pockets are already empty."  (text, line 375)
+- "Your fingers come out with {item}. They didn't feel a thing."  (text, line 383)
+- "%d credits, and they didn't feel a thing."  (message, line 388)
 
 > Note for you (not shown in game): caught
 
-- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 389)
+- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 395)
 
 > Note for you (not shown in game): part of: pick pocket
 
-- "They feel your hand and spin round. 'Thief! Get away from me!'"  (text, line 395)
+- "They feel your hand and spin round. 'Thief! Get away from me!'"  (text, line 401)
 
 > Note for you (not shown in game): part of: inform
 
-- "You reported someone a moment ago. Don't push your luck."  (text, line 399)
-- "You give their name to a Civil Protection unit. He writes it down. (+15 standing) They'll be picked up."  (text, line 413)
-- "You give their name to a Civil Protection unit. He checks it and looks at you instead. 'Waste of time.' (-5 standing)"  (text, line 417)
+- "You reported someone a moment ago. Don't push your luck."  (text, line 405)
+- "You give their name to a Civil Protection unit. He writes it down. (+15 standing) They'll be picked up."  (text, line 419)
+- "You give their name to a Civil Protection unit. He checks it and looks at you instead. 'Waste of time.' (-5 standing)"  (text, line 423)
 
 ## territory that spreads, and is pushed back (sv_livingcity_territory.lua)
 

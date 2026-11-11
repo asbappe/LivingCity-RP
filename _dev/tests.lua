@@ -11379,7 +11379,7 @@ ok(LC.VoiceSpeak("Order is kindness.", "The City Administrator") == true and #re
 local r = reqs[1]
 ok(r.url == "https://api.elevenlabs.io/v1/text-to-speech/Voice123abc?output_format=mp3_22050_32" and r.method == "POST" and r.headers["xi-api-key"] == "el-key-1",
     "asked the right way: the voice in the address, the key in its header", r.url)
-ok(string.find(r.body, '"text":"Order is kindness."', 1, true) ~= nil and string.find(r.body, '"model_id":"eleven_flash_v2_5"', 1, true) ~= nil, "the request carries her words and the model", r.body)
+ok(string.find(r.body, '"text":"Order is kindness."', 1, true) ~= nil and string.find(r.body, '"model_id":"eleven_v4_turbo"', 1, true) ~= nil, "the request carries her words and the model", r.body)
 local n, clip = clips()
 ok(n == 1 and clip.data[2] == "The City Administrator" and clip.data[3] == #mp3 and clip.data[4] == mp3, "and the sound is sent to the players to play")
 -- it waits for the PA
@@ -11454,7 +11454,50 @@ local realEmit = n.EmitSound
 n.EmitSound = function(self, path) heardSounds[#heardSounds + 1] = path end
 local realClip = LC.AdviceClip
 LC.AdviceClip = function() return nil end
-ok(LC.LineSay(n, st, "say_no") == "No. Sorry." and #heardSounds == 1 and string.find(heardSounds[1], "vo/npc/", 1, true) == 1, "no recording: Half-Life 2's own citizen voice, and the words come back", heardSounds[1])
+ok(LC.LineSay(n, st, "say_no") == "No. Sorry." and #heardSounds == 0, "no recording: the words only, never Half-Life 2's voice in its place", heardSounds[1])
+-- one voice for each named person
+local realAny = LC.AdviceHasAny
+LC.AdviceHasAny = function() return false end
+ok(LC.OwnVoice(n, st) == false, "nothing recorded yet: a named citizen still has Half-Life 2's voice for everything else")
+LC.AdviceHasAny = function(prefix, gender) return prefix == "say_" and gender == st.gender end
+ok(LC.OwnVoice(n, st) == true, "once the bank is recorded for their sex, a named citizen has a voice of their own")
+local plain, pst = LC.SpawnCitizen(T0 + Vector(0, 300, 0))
+plain.lcProfile = nil
+pst.gender = st.gender
+ok(LC.OwnVoice(plain, pst) == false, "an unnamed citizen keeps Half-Life 2's voice")
+local sounds2 = {}
+plain.EmitSound = function(self, path) sounds2[#sounds2 + 1] = path end
+local thief2 = newPlayer("LinesGreeter", "citizen")
+thief2:SetPos(T0 + Vector(60, 0, 0))
+heardSounds = {}
+local advClip = LC.AdviceClip
+LC.AdviceClip = function() return nil end -- (this advice line is not recorded)
+LC.AdviceSay(n, st, "advice_bins", thief2)
+LC.AdviceSay(plain, pst, "advice_bins", thief2)
+LC.AdviceClip = advClip
+local hl2 = false
+for _, s in ipairs(heardSounds) do if string.find(s, "vo/npc/", 1, true) then hl2 = true end end
+ok(not hl2 and #sounds2 >= 1 and string.find(sounds2[1], "vo/npc/", 1, true) == 1, "a line with no recording: the named one is quiet (no borrowed voice), the unnamed one speaks as before", sounds2[1])
+for _, e in ipairs({ plain, thief2 }) do if IsValid(e) then e:Remove() end end
+LC.AdviceHasAny = realAny
+-- a unit: Half-Life 2's own clip where it has the line
+local u, ust = LC.SpawnCop(T0 + Vector(400, 0, 0))
+u.sim = false
+local usounds = {}
+u.EmitSound = function(self, path) usounds[#usounds + 1] = path end
+LC.UnitLinesForgetStock()
+ok(LC.LineSay(u, ust, "unit_move") == "Move along." and #usounds == 0, "a unit's line with no recording and no clip on the server: words only")
+_files["sound/npc/metropolice/vo/movealong.wav"] = "x"
+LC.UnitLinesForgetStock()
+LC.LineSay(u, ust, "unit_move")
+ok(usounds[1] == "npc/metropolice/vo/movealong.wav", "Half-Life 2 has that line: its own clip is played, nothing to record", usounds[1])
+local _, unitMissing = LC.LinesMissing()
+local listed = false
+for _, id in ipairs(unitMissing) do if id == "unit_move" then listed = true end end
+ok(not listed, "and it is not listed as missing")
+_files["sound/npc/metropolice/vo/movealong.wav"] = nil
+LC.UnitLinesForgetStock()
+if IsValid(u) then u:Remove() end
 heardSounds = {}
 LC.AdviceClip = function(id, gender) return "livingcity/citizens/" .. id .. "_" .. (gender == "female" and "female" or "male") .. "1.wav" end
 LC.LineSay(n, st, "say_warn_go", "say_open_listen")
@@ -11465,6 +11508,9 @@ local cit, unit = LC.LinesMissing()
 LC.AdviceClip = function() return nil end
 cit, unit = LC.LinesMissing()
 ok(#cit == nCit * 2 and #unit == nUnit, "lc_voice_missing can list every one not recorded yet", #cit)
+local tagged = true
+for id, l in pairs(LC.StreetLines) do if type(l[3]) ~= "string" or string.sub(l[3], 1, 1) ~= "[" or not string.find(l[3], string.sub(l[1], 1, 3), 1, true) then tagged = id end end
+ok(tagged == true, "every line has its text for ElevenLabs: a direction in square brackets, then the words", tostring(tagged))
 -- free talk: the model picks a line
 _setcvar("lc_brain", 1) _setcvar("lc_brain_talk", 1) _setcvar("lc_brain_lines", 1)
 local B = LC.Brain

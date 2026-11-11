@@ -20,134 +20,124 @@
     Recordings: a citizen's lines want a man's take and a woman's, in the folder the advice lines already
     use, garrysmod/sound/livingcity/citizens/: say_greet_warm_male1.wav, say_greet_warm_female1.wav (more
     takes ...2, ...3; one is picked at random). A unit's lines are one voice, in
-    garrysmod/sound/livingcity/units/: unit_move1.wav. Without a recording a citizen speaks with
-    Half-Life 2's own citizen voice, a unit is silent, and the words still show.
+    garrysmod/sound/livingcity/units/: unit_move1.wav (where Half-Life 2 has the line already, its own clip is
+    used and nothing needs recording). Without a recording the line is words only (never
+    Half-Life 2's voice in its place), and once any are recorded the named citizens of that sex speak ONLY
+    with their recorded voice (LC.OwnVoice, below).
     VOICE_LINES.md lists them all (python3 _dev/voice_lines.py); lc_voice_missing says which are not there yet.
 ]]
 
 LC = LC or {}
 
--- id = { words, when it is said }. Citizens: every id starts say_.
+-- id = { words, when it is said, the words as pasted into ElevenLabs (Eleven v4 or v3: a direction in square
+-- brackets changes how what follows is said) }. Citizens: every id starts say_. American wording (the owner, 11 November).
 LC.StreetLines = {
-    -- openers: said before another line
-    say_open_listen   = { "Listen.", "Opener: before something that matters" },
-    say_open_look     = { "Look.", "Opener: before a refusal or a plain truth" },
-    say_open_please   = { "Please.", "Opener: before asking, or begging off" },
-    say_open_quiet    = { "Keep your voice down.", "Opener: before anything dangerous to say" },
-    say_open_well     = { "Well.", "Opener: thinking it over" },
-    say_open_you      = { "You.", "Opener: stopping someone" },
-    -- hello and goodbye
-    say_greet_warm    = { "Oh, it's you. Good to see a friendly face.", "Greeting someone they like" },
-    say_greet_plain   = { "Hello. Still here, then. Same as me.", "Greeting anyone" },
-    say_greet_guarded = { "Do I know you?", "Greeting a stranger they are wary of" },
-    say_greet_cold    = { "What do you want?", "Greeting someone they dislike" },
-    say_greet_unit    = { "No trouble here, officer.", "Spoken to by a unit" },
-    say_bye_warm      = { "Look after yourself. I mean it.", "Parting from someone they like" },
-    say_bye_plain     = { "I'd best get on.", "Ending a conversation" },
-    say_bye_cold      = { "We're done here.", "Ending a conversation they want no more of" },
-    -- yes, no, perhaps
-    say_yes           = { "Yes. All right.", "Agreeing to something" },
-    say_yes_warm      = { "For you? Of course.", "Agreeing, for someone they like" },
-    say_no            = { "No. Sorry.", "Refusing" },
-    say_no_hard       = { "No. And don't ask me again.", "Refusing for good" },
-    say_maybe         = { "Maybe. I'd have to think about it.", "Not sure" },
-    say_later         = { "Not now. Not here.", "Putting it off: the wrong time or place" },
-    -- what they know
-    say_dunno         = { "I wouldn't know anything about that.", "Asked something they don't know, or won't say" },
-    say_dunno_scared  = { "I don't know, and I don't want to know.", "Asked something dangerous" },
-    say_heard         = { "I've heard things. Everyone has.", "Asked about a rumour" },
-    say_cant_say      = { "I can't talk about that. You know why.", "Asked what can't be said aloud" },
-    say_ask_else      = { "You're asking the wrong person.", "Asked for something they can't give" },
-    say_truth         = { "Honestly? It's as bad as it looks.", "Asked how things are, by someone they trust" },
-    -- how they are
-    say_state_fine    = { "Getting by. That's all anyone can say.", "Asked how they are: all right" },
-    say_state_hungry  = { "I haven't eaten properly in days.", "Asked how they are: hungry" },
-    say_state_tired   = { "I'm tired. Bone tired.", "Asked how they are: worn out" },
-    say_state_scared  = { "I'm frightened. Aren't you?", "Asked how they are: afraid" },
-    say_state_angry   = { "I've had about as much as I can take.", "Asked how they are: close to breaking" },
-    say_state_lonely  = { "It's good to just talk to someone.", "Asked how they are: starved of company" },
-    say_state_hopeful = { "It can't last for ever. Nothing does.", "Asked how they are: in good spirits" },
-    say_state_low     = { "What's the point? Really, what is the point?", "Asked how they are: in despair" },
-    -- answering how they were spoken to
-    say_thanks        = { "Thank you. I won't forget it.", "Thanked for a kindness" },
-    say_thanks_big    = { "You didn't have to do that. Thank you.", "A real kindness: food, medicine, help" },
-    say_sorry         = { "I'm sorry. I didn't mean anything by it.", "Backing down" },
-    say_insulted      = { "There's no call for that.", "Insulted" },
-    say_threatened    = { "I don't want any trouble.", "Threatened" },
-    say_laugh         = { "Ha. That's the first laugh I've had all week.", "Something funny was said" },
-    say_agree         = { "You're not wrong.", "Agreeing with an opinion" },
-    say_disagree      = { "I don't see it that way.", "Disagreeing with an opinion" },
-    -- the Combine
-    say_loyal         = { "The Administrator knows best. I believe that.", "A loyal citizen, on the Combine" },
-    say_loyal_warn    = { "You shouldn't say things like that. Someone will hear.", "Hearing sedition, and not liking it" },
-    say_careful       = { "Careful. The walls have ears.", "Warning someone who is talking too freely" },
-    say_units_near    = { "Not with them standing there.", "Won't talk with a unit close" },
-    say_hate_quiet    = { "One day they'll answer for all of it.", "A disloyal citizen, to someone they trust" },
-    say_fear_units    = { "Stay clear of the units today. They're in a mood.", "A warning about Civil Protection" },
-    say_obey          = { "Keep your head down and do as they say. That's how you last.", "Advice to a newcomer" },
-    -- the Resistance
-    say_res_deny      = { "I don't know anything about any Resistance.", "Asked about the Resistance" },
-    say_res_hint      = { "There are people. That's all I'll say.", "A sympathizer, hinting to someone they trust" },
-    say_res_side      = { "If someone needed a door left open, mine might be.", "A sympathizer, offering help" },
-    say_res_refuse    = { "I've people to think of. Leave me out of it.", "Asked to help the Resistance, and afraid" },
-    say_res_respect   = { "Whoever they are, good luck to them.", "Quiet approval of the Resistance" },
-    -- warnings and tips
-    say_warn_asked    = { "Someone's been asking about you.", "A warning: they are being looked for" },
-    say_warn_watched  = { "You're being watched. Don't look round.", "A warning: an informant or a unit has an eye on them" },
-    say_warn_go       = { "You should go. Now.", "A warning: get away" },
-    say_warn_informer = { "Mind who you talk to. Not everyone here is a friend.", "A warning about informants" },
-    say_tip_help      = { "If you need something, ask. Quietly.", "Offering help" },
-    say_tip_trouble   = { "There'll be trouble tonight. I can feel it.", "The city's mood is turning" },
-    -- asking and giving
-    say_ask_food      = { "You wouldn't have anything to eat, would you?", "Hungry, asking a player" },
-    say_ask_smoke     = { "You haven't got a smoke, have you?", "Craving, asking a player" },
-    say_ask_help      = { "I need help. I've nobody else to ask.", "In trouble, asking a player" },
-    say_offer         = { "Here. Take it. Don't say where you got it.", "Giving something" },
-    say_decline_gift  = { "I can't take that. Keep it.", "Refusing a gift" },
-    -- as a mind gives way (sv_livingcity_mindsact.lua)
-    say_break_tantrum = { "I've had enough! Do you hear me? Enough!", "A tantrum, in a unit's face" },
-    say_break_despair = { "I can't. I just can't any more.", "Despair" },
-    say_break_defy    = { "They can't frighten all of us for ever.", "Defiance: painting over a poster" },
-    say_break_accuse  = { "That one. That one talks to Civil Protection!", "Accusing someone of informing" },
-    say_break_accused = { "It's a lie! I never told them anything!", "Accused of informing" },
-    say_break_binge   = { "Leave me be. Let me have this.", "Drinking in the street" },
-    say_break_seek    = { "There you are. I've been looking for you.", "Finding a friend" },
-    say_break_share   = { "Go on, take half. You need it more than I do.", "Sharing food" },
-    say_break_steady  = { "Easy. Easy now. We're still here, aren't we?", "Steadying the people near" },
-    say_break_inform  = { "Officer. I've something you'll want to hear.", "Informing to a unit" },
-    say_break_beaten  = { "Stop! Please, I've done nothing!", "Being beaten" },
-    -- what they saw
-    say_saw_beating   = { "Don't look. Just keep walking.", "Someone beaten in front of them" },
-    say_saw_death     = { "Oh God. Oh God, no.", "Someone killed in front of them" },
-    say_grief         = { "They took my friend. Just took them.", "A friend arrested or dead" },
+    say_open_listen = { "Listen.", "Opener: before something that matters", "[low, urgent] Listen." },
+    say_open_look = { "Look.", "Opener: before a refusal or a plain truth", "[tired, flat] Look." },
+    say_open_please = { "Please.", "Opener: before asking, or begging off", "[pleading, quietly] Please." },
+    say_open_quiet = { "Keep your voice down.", "Opener: before anything dangerous to say", "[whispers, tense] Keep your voice down." },
+    say_open_well = { "Well.", "Opener: thinking it over", "[thinking it over] Well..." },
+    say_open_you = { "You.", "Opener: stopping someone", "[sharp, low] You." },
+    say_greet_warm = { "Oh, it's you. Good to see a friendly face.", "Greeting someone they like", "[relieved, warm] Oh, it's you. Good to see a friendly face." },
+    say_greet_plain = { "Hey. Still here, huh. Me too.", "Greeting anyone", "[tired, dry] Hey. Still here, huh. [exhales] Me too." },
+    say_greet_guarded = { "Do I know you?", "Greeting a stranger they are wary of", "[wary, guarded] Do I know you?" },
+    say_greet_cold = { "What do you want?", "Greeting someone they dislike", "[cold, flat] What do you want?" },
+    say_greet_unit = { "No trouble here, officer.", "Spoken to by a unit", "[nervous, too polite] No trouble here, officer." },
+    say_bye_warm = { "Take care of yourself. I mean it.", "Parting from someone they like", "[warm, quietly] Take care of yourself. [sincere] I mean it." },
+    say_bye_plain = { "I should get going.", "Ending a conversation", "[flat, tired] I should get going." },
+    say_bye_cold = { "We're done here.", "Ending a conversation they want no more of", "[cold, final] We're done here." },
+    say_yes = { "Yeah. All right.", "Agreeing to something", "[plain, tired] Yeah. All right." },
+    say_yes_warm = { "For you? Of course.", "Agreeing, for someone they like", "[warm, a small smile] For you? Of course." },
+    say_no = { "No. Sorry.", "Refusing", "[flat, apologetic] No. Sorry." },
+    say_no_hard = { "No. And don't ask me again.", "Refusing for good", "[firm, low] No. [pause] And don't ask me again." },
+    say_maybe = { "Maybe. I'd have to think about it.", "Not sure", "[hesitant] Maybe. I'd have to think about it." },
+    say_later = { "Not now. Not here.", "Putting it off: the wrong time or place", "[hushed, tense] Not now. Not here." },
+    say_dunno = { "I wouldn't know anything about that.", "Asked something they don't know, or won't say", "[guarded, flat] I wouldn't know anything about that." },
+    say_dunno_scared = { "I don't know, and I don't want to know.", "Asked something dangerous", "[frightened, quick] I don't know, and I don't want to know." },
+    say_heard = { "I've heard things. Everyone has.", "Asked about a rumour", "[low, careful] I've heard things. [pause] Everyone has." },
+    say_cant_say = { "I can't talk about that. You know why.", "Asked what can't be said aloud", "[hushed, uneasy] I can't talk about that. You know why." },
+    say_ask_else = { "You're asking the wrong person.", "Asked for something they can't give", "[tired, dismissive] You're asking the wrong person." },
+    say_truth = { "Honestly? It's as bad as it looks.", "Asked how things are, by someone they trust", "[quiet, grim] Honestly? [sighs] It's as bad as it looks." },
+    say_state_fine = { "Getting by. That's all anyone can say.", "Asked how they are: all right", "[worn, matter of fact] Getting by. That's all anyone can say." },
+    say_state_hungry = { "I haven't had a real meal in days.", "Asked how they are: hungry", "[weak, hollow] I haven't had a real meal in days." },
+    say_state_tired = { "I'm tired. Just so tired.", "Asked how they are: worn out", "[exhausted] I'm tired. [sighs] Just so tired." },
+    say_state_scared = { "I'm scared. Aren't you?", "Asked how they are: afraid", "[frightened, hushed] I'm scared. Aren't you?" },
+    say_state_angry = { "I've had about all I can take.", "Asked how they are: close to breaking", "[tight, barely holding it in] I've had about all I can take." },
+    say_state_lonely = { "It's good to just talk to someone.", "Asked how they are: starved of company", "[soft, grateful] It's good to just talk to someone." },
+    say_state_hopeful = { "It can't last forever. Nothing does.", "Asked how they are: in good spirits", "[quiet, hopeful] It can't last forever. Nothing does." },
+    say_state_low = { "What's the point? Really, what is the point?", "Asked how they are: in despair", "[hollow, defeated] What's the point? [pause] Really, what is the point?" },
+    say_thanks = { "Thank you. I won't forget it.", "Thanked for a kindness", "[sincere, quietly] Thank you. I won't forget it." },
+    say_thanks_big = { "You didn't have to do that. Thank you.", "A real kindness: food, medicine, help", "[moved, voice catching] You didn't have to do that. Thank you." },
+    say_sorry = { "I'm sorry. I didn't mean anything by it.", "Backing down", "[nervous, backing down] I'm sorry. I didn't mean anything by it." },
+    say_insulted = { "Hey. There's no need for that.", "Insulted", "[stung, stiff] Hey. There's no need for that." },
+    say_threatened = { "I don't want any trouble.", "Threatened", "[frightened, hands up] I don't want any trouble." },
+    say_laugh = { "Ha. That's the first laugh I've had all week.", "Something funny was said", "[short laugh] Ha. [warm, surprised] That's the first laugh I've had all week." },
+    say_agree = { "You're not wrong.", "Agreeing with an opinion", "[dry, low] You're not wrong." },
+    say_disagree = { "I don't see it that way.", "Disagreeing with an opinion", "[even, firm] I don't see it that way." },
+    say_loyal = { "The Administrator knows best. I believe that.", "A loyal citizen, on the Combine", "[earnest, a little rehearsed] The Administrator knows best. I believe that." },
+    say_loyal_warn = { "You shouldn't say things like that. Someone will hear.", "Hearing sedition, and not liking it", "[alarmed, hushed] You shouldn't say things like that. Someone will hear." },
+    say_careful = { "Careful. The walls have ears.", "Warning someone who is talking too freely", "[whispers] Careful. The walls have ears." },
+    say_units_near = { "Not with them standing right there.", "Won't talk with a unit close", "[under their breath] Not with them standing right there." },
+    say_hate_quiet = { "One day they'll answer for all of it.", "A disloyal citizen, to someone they trust", "[low, bitter, controlled] One day they'll answer for all of it." },
+    say_fear_units = { "Stay away from the units today. They're in a mood.", "A warning about Civil Protection", "[low, warning] Stay away from the units today. They're in a mood." },
+    say_obey = { "Keep your head down and do what they say. That's how you make it.", "Advice to a newcomer", "[tired, kindly] Keep your head down and do what they say. That's how you make it." },
+    say_res_deny = { "I don't know anything about any Resistance.", "Asked about the Resistance", "[quick, stiff, too careful] I don't know anything about any Resistance." },
+    say_res_hint = { "There are people. That's all I'll say.", "A sympathizer, hinting to someone they trust", "[whispers, meaningful] There are people. [pause] That's all I'll say." },
+    say_res_side = { "If someone needed a door left open, mine might be.", "A sympathizer, offering help", "[very quietly, steady] If someone needed a door left open, mine might be." },
+    say_res_refuse = { "I've got people to think about. Leave me out of it.", "Asked to help the Resistance, and afraid", "[afraid, firm] I've got people to think about. Leave me out of it." },
+    say_res_respect = { "Whoever they are, good luck to them.", "Quiet approval of the Resistance", "[quiet, a hint of a smile] Whoever they are, good luck to them." },
+    say_warn_asked = { "Someone's been asking about you.", "A warning: they are being looked for", "[low, urgent] Someone's been asking about you." },
+    say_warn_watched = { "You're being watched. Don't turn around.", "A warning: an informant or a unit has an eye on them", "[whispers, barely moving lips] You're being watched. Don't turn around." },
+    say_warn_go = { "You should go. Now.", "A warning: get away", "[urgent, hushed] You should go. Now." },
+    say_warn_informer = { "Watch who you talk to. Not everyone here is a friend.", "A warning about informants", "[low, careful] Watch who you talk to. Not everyone here is a friend." },
+    say_tip_help = { "If you need something, ask. Quietly.", "Offering help", "[low, kind] If you need something, ask. [whispers] Quietly." },
+    say_tip_trouble = { "There's gonna be trouble tonight. I can feel it.", "The city's mood is turning", "[uneasy, low] There's gonna be trouble tonight. I can feel it." },
+    say_ask_food = { "You got anything to eat? Anything?", "Hungry, asking a player", "[weak, ashamed to ask] You got anything to eat? [pause] Anything?" },
+    say_ask_smoke = { "You wouldn't have a smoke on you, would you?", "Craving, asking a player", "[edgy, hopeful] You wouldn't have a smoke on you, would you?" },
+    say_ask_help = { "I need help. I've got nobody else to ask.", "In trouble, asking a player", "[desperate, quietly] I need help. I've got nobody else to ask." },
+    say_offer = { "Here. Take it. Don't say where you got it.", "Giving something", "[hushed, quick] Here. Take it. Don't say where you got it." },
+    say_decline_gift = { "I can't take that. Keep it.", "Refusing a gift", "[gentle, proud] I can't take that. Keep it." },
+    say_break_tantrum = { "I've had enough! Do you hear me? Enough!", "A tantrum, in a unit's face", "[shouting, voice cracking] I've had enough! Do you hear me? Enough!" },
+    say_break_despair = { "I can't. I just can't anymore.", "Despair", "[broken, near tears] I can't. [shaky breath] I just can't anymore." },
+    say_break_defy = { "They can't scare all of us forever.", "Defiance: painting over a poster", "[quiet, defiant, steady] They can't scare all of us forever." },
+    say_break_accuse = { "That one! That one talks to Civil Protection!", "Accusing someone of informing", "[loud, accusing, pointing] That one! That one talks to Civil Protection!" },
+    say_break_accused = { "That's a lie! I never told them anything!", "Accused of informing", "[panicked, loud] That's a lie! I never told them anything!" },
+    say_break_binge = { "Leave me alone. Just let me have this.", "Drinking in the street", "[slurred, tired, bitter] Leave me alone. Just let me have this." },
+    say_break_seek = { "There you are. I've been looking for you.", "Finding a friend", "[relieved, a little shaky] There you are. I've been looking for you." },
+    say_break_share = { "Go on, take half. You need it more than I do.", "Sharing food", "[gentle, insisting] Go on, take half. You need it more than I do." },
+    say_break_steady = { "Easy. Easy now. We're still here, right?", "Steadying the people near", "[calm, soothing, low] Easy. Easy now. We're still here, right?" },
+    say_break_inform = { "Officer. I've got something you'll want to hear.", "Informing to a unit", "[nervous, eager, hushed] Officer. I've got something you'll want to hear." },
+    say_break_beaten = { "Stop! Please, I didn't do anything!", "Being beaten", "[crying out in pain, terrified] Stop! Please, I didn't do anything!" },
+    say_saw_beating = { "Don't look. Just keep walking.", "Someone beaten in front of them", "[under their breath, tense] Don't look. Just keep walking." },
+    say_saw_death = { "Oh God. Oh God, no.", "Someone killed in front of them", "[horrified, gasping] Oh God. Oh God, no." },
+    say_grief = { "They took my friend. Just dragged them off.", "A friend arrested or dead", "[numb, grieving] They took my friend. [pause] Just dragged them off." },
 }
 
--- A unit's lines: one voice. Every id starts unit_.
+-- A unit's lines: one voice. Every id starts unit_. A fourth entry names Half-Life 2's own Civil Protection
+-- clips that say the same words (sound/npc/metropolice/vo/<name>.wav): with no recording of yours, the first
+-- of them the server has is played, so those lines need no recording at all (the owner, 11 November: "already
+-- exist in HL2").
 LC.UnitLines = {
-    unit_greet    = { "Citizen.", "Spoken to" },
-    unit_greet_cp = { "Unit. Sector is quiet.", "Spoken to by another unit" },
-    unit_move     = { "Move along.", "Wants them gone" },
-    unit_papers   = { "Identification. Now.", "Suspicious of them" },
-    unit_yes      = { "Affirmative.", "Agreeing" },
-    unit_no       = { "Negative.", "Refusing" },
-    unit_dunno    = { "That information is restricted.", "Asked anything he won't answer" },
-    unit_busy     = { "Not now. Return to your duties.", "Ending it" },
-    unit_curfew   = { "Get indoors.", "Curfew, a lockdown or a sweep" },
-    unit_warn     = { "Final warning, citizen.", "Pushed too far" },
-    unit_threat   = { "Step back, or be pacified.", "Threatened or crowded" },
-    unit_insulted = { "Watch your mouth.", "Insulted" },
-    unit_noted    = { "Noted. It will go on your record.", "Heard something he will report" },
-    unit_thanks   = { "Your cooperation is noted.", "Told something useful, or obeyed" },
-    unit_soft     = { "Keep your head down today. That is advice.", "A unit with some kindness in him, to someone he doesn't mind" },
-    unit_brutal   = { "You want some as well?", "Brutality: to whoever is watching" },
-    unit_drink    = { "You saw nothing.", "Caught drinking on duty" },
+    unit_greet = { "Citizen.", "Spoken to", "[flat, clipped, cold] Citizen.", { "citizen" } },
+    unit_greet_cp = { "Unit. Sector is quiet.", "Spoken to by another unit", "[flat, clipped] Unit. Sector is quiet." },
+    unit_move = { "Move along.", "Wants them gone", "[curt, bored] Move along.", { "movealong", "movealong3", "keepmoving" } },
+    unit_papers = { "Identification. Now.", "Suspicious of them", "[cold, commanding] Identification. Now." },
+    unit_yes = { "Affirmative.", "Agreeing", "[flat] Affirmative.", { "affirmative", "affirmative2" } },
+    unit_no = { "Negative.", "Refusing", "[flat] Negative.", { "negative" } },
+    unit_dunno = { "That information is restricted.", "Asked anything he won't answer", "[flat, dismissive] That information is restricted." },
+    unit_busy = { "Now get out of here.", "Ending it", "[curt] Now get out of here.", { "nowgetoutofhere", "getoutofhere" } },
+    unit_curfew = { "Get indoors.", "Curfew, a lockdown or a sweep", "[sharp, commanding] Get indoors." },
+    unit_warn = { "Final warning.", "Pushed too far", "[cold, slow, threatening] Final warning.", { "finalwarning" } },
+    unit_threat = { "Hold it right there.", "Threatened or crowded", "[hard, loud] Hold it right there.", { "holditrightthere", "holdit" } },
+    unit_insulted = { "Looking for trouble?", "Insulted", "[low, dangerous] Looking for trouble?", { "lookingfortrouble" } },
+    unit_noted = { "Noted. It will go on your record.", "Heard something he will report", "[flat, ominous] Noted. It will go on your record." },
+    unit_thanks = { "Your cooperation is noted.", "Told something useful, or obeyed", "[flat, faintly approving] Your cooperation is noted." },
+    unit_soft = { "Keep your head down today. That is advice.", "A unit with some kindness in him, to someone he doesn't mind", "[low, off the record] Keep your head down today. [pause] That is advice." },
+    unit_brutal = { "You want some too?", "Brutality: to whoever is watching", "[breathing hard, vicious] You want some too?" },
+    unit_drink = { "You saw nothing.", "Caught drinking on duty", "[low, threatening, slightly slurred] You saw nothing." },
 }
 
 LC.UnitVoiceRoot = "livingcity/units/"
-
--- Half-Life 2's own citizen voice, where there is no recording (else an "answer" line)
-local HL2 = { say_break_tantrum = "no02", say_break_accused = "no01", say_break_beaten = "no01", say_no = "no01", say_no_hard = "no02",
-    say_sorry = "sorry01", say_yes = "ok01", say_yes_warm = "ok02", say_saw_death = "gordead_ques01", say_greet_plain = "hi01", say_greet_warm = "hi02" }
 
 local AUDIO = { wav = true, mp3 = true, ogg = true }
 local unitClips
@@ -166,10 +156,26 @@ end
 LC.UnitLinesRescan = ScanUnits
 hook.Add("Initialize", "LivingCityUnitLines", ScanUnits)
 
-function LC.UnitLineClip(id)
+-- Half-Life 2's own clip for a unit's line, if the server has one of those named for it.
+local STOCK_ROOT = "npc/metropolice/vo/"
+local stockHas = {}
+function LC.UnitLineStock(id)
+    local l = LC.UnitLines[id]
+    for _, name in ipairs(l and l[4] or {}) do
+        if stockHas[name] == nil then stockHas[name] = file.Exists("sound/" .. STOCK_ROOT .. name .. ".wav", "GAME") == true end
+        if stockHas[name] then return STOCK_ROOT .. name .. ".wav" end
+    end
+    return nil
+end
+function LC.UnitLinesForgetStock() stockHas = {} end
+
+-- Your recording of it; else Half-Life 2's own, where it has one.
+function LC.UnitLineClip(id, ownOnly)
     if not unitClips then ScanUnits() end
     local t = unitClips[id]
-    return t and t[math.random(#t)] or nil
+    if t then return t[math.random(#t)] end
+    if ownOnly then return nil end
+    return LC.UnitLineStock(id)
 end
 
 local function Bank(role) return role == "cop" and LC.UnitLines or LC.StreetLines end
@@ -224,11 +230,18 @@ local function Emit(npc, st, id)
         npc:EmitSound(clip, 72)
         return (LC.AnnounceKnownSecs and LC.AnnounceKnownSecs(clip)) or 0
     end
-    if st.role ~= "cop" then
-        local vo = HL2[id] or string.format("answer%02d", math.random(1, 20))
-        npc:EmitSound("vo/npc/" .. (st.gender == "female" and "female01" or "male01") .. "/" .. vo .. ".wav", 68)
-    end
-    return 0
+    return 0 -- (not recorded yet: the words only, never Half-Life 2's voice in its place)
+end
+
+-- One voice for each named person (the owner, 11 November). Once any of the bank is recorded for men (or for
+-- women), the city's NAMED citizens of that sex stop speaking with Half-Life 2's citizen voice wherever the
+-- gamemode chooses the sound (street chatter, the talk window, protests, under words the model wrote): the
+-- words still show, and their recorded lines are their only voice. Unnamed citizens keep Half-Life 2's.
+function LC.OwnVoice(npc, st)
+    if not IsValid(npc) or not st or st.role ~= "citizen" then return false end
+    local p = npc.lcProfile
+    if not p or not p.name then return false end
+    return LC.AdviceHasAny ~= nil and LC.AdviceHasAny("say_", st.gender) == true
 end
 
 -- They say it out loud (the sound only: whoever calls shows the words). lead: an opener first.
@@ -257,7 +270,51 @@ function LC.LinesMissing()
         end
     end
     ScanUnits()
-    for id in pairs(LC.UnitLines) do if not LC.UnitLineClip(id) then unit[#unit + 1] = id end end
+    for id in pairs(LC.UnitLines) do if not LC.UnitLineClip(id) then unit[#unit + 1] = id end end -- (Half-Life 2's own clip counts)
     table.sort(cit) table.sort(unit)
     return cit, unit
 end
+
+-- What Half-Life 2 already has (the owner, 11 November: "please double check if there are others"): lc_hl2_lines,
+-- in the server console, writes data/livingcity/hl2_lines.txt: every clip of Half-Life 2's citizens (a man's and
+-- a woman's) and of Civil Protection that the server can see, with its words where the game's caption file gives
+-- them. Bring the file back and the bank can be matched to real clips for certain, instead of from memory.
+function LC.HL2LinesDump()
+    local out, n = {}, 0
+    local words = {}
+    for _, cc in ipairs({ "resource/closecaption_english.txt", "resource/subtitles_english.txt" }) do
+        local raw = file.Read(cc, "GAME")
+        if raw then
+            raw = string.gsub(raw, "%z", "") -- (the file is two bytes a letter: drop the empty ones)
+            for token, text in string.gmatch(raw, '"([%w_%.]+)"%s+"([^"\r\n]*)"') do
+                local key = string.lower(token)
+                if words[key] == nil then words[key] = (string.gsub(text, "<[^>]*>", "")) end
+            end
+        end
+    end
+    local function Folder(title, path, tokens)
+        out[#out + 1] = "## " .. title .. " (sound/" .. path .. ")"
+        local files = file.Find("sound/" .. path .. "*.wav", "GAME") or {}
+        table.sort(files)
+        for _, f in ipairs(files) do
+            local base = string.lower(string.gsub(f, "%.wav$", ""))
+            local text
+            for _, pre in ipairs(tokens) do text = text or words[pre .. base] end
+            out[#out + 1] = f .. "\t" .. (text or "")
+            n = n + 1
+        end
+        out[#out + 1] = ""
+    end
+    Folder("A citizen, a man", "vo/npc/male01/", { "npc_citizen.", "citizen." })
+    Folder("A citizen, a woman", "vo/npc/female01/", { "npc_citizen.", "citizen." })
+    Folder("Civil Protection", "npc/metropolice/vo/", { "npc_metropolice.", "metropolice." })
+    if file.CreateDir then file.CreateDir("livingcity") end
+    file.Write("livingcity/hl2_lines.txt", table.concat(out, "\n"))
+    return n
+end
+concommand.Add("lc_hl2_lines", function(ply)
+    if IsValid(ply) and not (LC.CanEdit and LC.CanEdit(ply)) then return end
+    local ok, n = pcall(LC.HL2LinesDump)
+    local msg = ok and ("wrote data/livingcity/hl2_lines.txt: " .. tostring(n) .. " clips. Bring it back to Claude.") or ("could not list them: " .. tostring(n))
+    if IsValid(ply) then ply:ChatPrint("[Living City] " .. msg) else print("[Living City] " .. msg) end
+end)

@@ -233,7 +233,7 @@ local FEAR_BUSY = { detained = true, jailed = true, escorted = true, event = tru
 local COWER = { "ACT_COWER", "Fear_Reaction", "photo_react_startle" }
 local CRIES = { "help01", "runforyourlife01", "runforyourlife02", "runforyourlife03", "gethellout", "watchout", "uhoh", "no01", "no02" }
 local function Cry(npc, st)
-    npc:EmitSound("vo/npc/" .. (st.gender == "female" and "female01" or "male01") .. "/" .. CRIES[math.random(#CRIES)] .. ".wav", 80, math.random(96, 108))
+    if not (LC.OwnVoice and LC.OwnVoice(npc, st)) then npc:EmitSound("vo/npc/" .. (st.gender == "female" and "female01" or "male01") .. "/" .. CRIES[math.random(#CRIES)] .. ".wav", 80, math.random(96, 108)) end
 end
 
 -- Off, away from where the shots came from (not just anywhere).

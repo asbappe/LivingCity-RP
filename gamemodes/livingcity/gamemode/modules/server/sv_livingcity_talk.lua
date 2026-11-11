@@ -38,6 +38,12 @@ local cvPickDC = CreateConVar("lc_pickpocket_dc", "12", FLAGS, "Guile check to p
 
 local function Pick(t) return t[math.random(#t)] end
 local function Vo(gender, name) return "vo/npc/" .. (gender or "male") .. "01/" .. name .. ".wav" end
+-- A citizen says one of Half-Life 2's lines, unless they are a named citizen with a recorded voice of their own
+-- (sv_livingcity_lines.lua, LC.OwnVoice): then they say nothing here, and their recorded lines are their only voice.
+local function CitSay(ent, st, path, ...)
+    if LC.OwnVoice and LC.OwnVoice(ent, st) then return end
+    ent:EmitSound(path, ...)
+end
 
 ------------------------------------------------------------------------
 -- Memory: how each of your characters has treated them
@@ -229,7 +235,7 @@ local function Chat(ply, npc, st)
         local said, close = LC.CitizenAdvice(ply, npc, st, feel)
         if said then return said, close end
     end
-    npc:EmitSound(Vo(st.gender, string.format("question%02d", math.random(1, 20))), 65)
+    CitSay(npc, st, Vo(st.gender, string.format("question%02d", math.random(1, 20))), 65)
     -- a rumour if they've heard one (warm, they always share it)
     local line = (feel >= WARM or math.random() < 0.7) and LC.TakeRumor and LC.TakeRumor(ply)
     -- a sympathizer who likes you: where the Resistance can be found
@@ -242,7 +248,7 @@ local function ShareFood(ply, npc, st, chosen)
     if not id or not LC.TakeItem(ply, id) then return "You've nothing to give." end
     local v = LC.Remember(npc, ply, 2)
     -- (no sympathy for it any more: the owner, 9 November, sympathy is the way into the Resistance, and a kindness to a stranger isn't that)
-    npc:EmitSound(Vo(st.gender, Pick({ "hi01", "hi02" })), 65)
+    CitSay(npc, st, Vo(st.gender, Pick({ "hi01", "hi02" })), 65)
     hook.Run("LivingCitySharedFood", ply, npc, id)
     local name = LCS and LCS.Items[id] and string.lower(LCS.Items[id].name) or "food"
     if v >= 6 then return "They take the " .. name .. " with both hands. 'I won't forget this. I mean it.'" end
@@ -383,7 +389,7 @@ local function PickPocket(ply, npc, st)
     end
     -- caught
     LC.Remember(npc, ply, -3)
-    npc:EmitSound(Vo(st.gender, "gethellout"), 75)
+    CitSay(npc, st, Vo(st.gender, "gethellout"), 75)
     if LC.SeenBySecurity and LC.SeenBySecurity(ply, 900) then
         LC.ReportCrime(ply, "Theft", 120)
         ply:ChatPrint("[Civil Protection] A Civil Protection unit saw that.")
@@ -477,11 +483,11 @@ timer.Create("LivingCityMemory", 2, 0, function()
                         -- back off from the one who hurt them
                         npc.lcFleeAt = now + 6
                         local away = npc:GetPos() + (npc:GetPos() - ply:GetPos()):GetNormalized() * 300
-                        if LC.GoTo(npc, st, away, true, nil) then npc:EmitSound(Vo(st.gender, Pick({ "sorry01", "sorry02" })), 65) end
+                        if LC.GoTo(npc, st, away, true, nil) then CitSay(npc, st, Vo(st.gender, Pick({ "sorry01", "sorry02" })), 65) end
                     elseif feel >= WARM and (npc.lcGreetAt or 0) < now then
                         npc.lcGreetAt = now + 90
                         LC.Face(npc, ply:GetPos())
-                        npc:EmitSound(Vo(st.gender, Pick({ "hi01", "hi02" })), 65)
+                        CitSay(npc, st, Vo(st.gender, Pick({ "hi01", "hi02" })), 65)
                     end
                 end
             end

@@ -38,7 +38,7 @@ This file is only an index. The specification of how everything behaves (the agr
 - [Window styles](docs/features/window-styles.md): Every window in your faction's look (Combine, Resistance, citizen, in custody)
 - [The city's minds](docs/features/city-minds.md): the named people's eleven traits, needs, thoughts, stress and rumours; their choices bend with mood, breaks happen in the street, informants and unrest come from them; citizens drinking and smoking in the street
 - [The director and free talk](docs/features/director-and-free-talk.md): a hosted model picks one thing to happen every few minutes from a short list, and named people answer what you say to them; setting up the key, cost, safeguards
-- [What named people say, recorded](docs/features/recorded-lines.md): a bank of 80 citizen lines and 17 unit lines to record once; the model picks from it in free talk, the director and the minds' breaks use it; how to record them
+- [What named people say, recorded](docs/features/recorded-lines.md): a bank of 80 citizen lines and 17 unit lines to record once; the model picks from it in free talk, the director and the minds' breaks use it; how to record them; one voice for each named person; `VOICE_SCRIPTS.md` is the text to paste into ElevenLabs
 - [Homes, trade and the written word](docs/features/homes-and-trade.md): Apartments, business licenses, notes, letters, broadcasts, the law
 - [Vortigaunts, and day, night and weather](docs/features/vortigaunts-and-weather.md): Freed vortigaunts, the clock, light, rain
 - [Staff tools](docs/features/staff-tools.md): Admin safeguards for a public server, staff menus

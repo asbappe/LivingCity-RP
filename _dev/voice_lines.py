@@ -92,8 +92,8 @@ for id, words in pairs(LC.OldTimerLines or {}) do W("oldtimer", id, "", words) e
 for _, t in ipairs(LC.OldTimerTroubles or {}) do W("oldtimer", "hint_" .. t[1], "What's troubling him (said instead of his greeting)", t[3]) W("oldtimer", "thanks_" .. t[1], "You helped him with it", t[4]) end
 for id, l in pairs(LC.MachineLines or {}) do W("machine", id, l[1], l[2]) end
 for id, words in pairs(LC.ColonelLines or {}) do W("colonel", id, "", words) end
-for id, l in pairs(LC.StreetLines or {}) do W("street", id, l[2], l[1]) end
-for id, l in pairs(LC.UnitLines or {}) do W("unitline", id, l[2], l[1]) end
+for id, l in pairs(LC.StreetLines or {}) do W("street", id, l[2], l[1], l[3] or l[1]) end
+for id, l in pairs(LC.UnitLines or {}) do W("unitline", id, l[2], l[1], l[3] or l[1], table.concat(l[4] or {}, ", ")) end
 for key, g in pairs(LC.CollapseGmanLines or {}) do
     local cv = GetConVar(g[1])
     W("gman", key, g[1], cv and cv:GetString() or "", g[2])
@@ -300,15 +300,157 @@ def main():
     doc.extend(["", "## 11. What units say", "",
                 "The named Civil Protection units' answers in free talk, and what they say when their minds give way. One voice for every unit, "
                 "clipped and cold, through the mask (a radio or vocoder effect over it helps). Folder: **`garrysmod/sound/livingcity/units/`**. "
-                "Without a recording a unit is silent and the words show.",
+                "**Where Half-Life 2 already has the line** (marked in the table) its own clip is played and nothing needs recording. "
+                "Without a recording or a clip a unit is silent and the words show.",
                 "", "| Done | File | When | Says |", "|---|---|---|---|"])
     for r in units:
-        doc.append("| [ ] | `%s1.wav` | %s | %s |" % (r[1], r[2], r[3]))
-        count += 1
+        stock = r[5] if len(r) > 5 else ""
+        if stock:
+            doc.append("| n/a | `%s1.wav` (optional) | %s | %s (Half-Life 2 has it: `npc/metropolice/vo/%s.wav`, used by itself) |" % (r[1], r[2], r[3], stock.split(", ")[0]))
+        else:
+            doc.append("| [ ] | `%s1.wav` | %s | %s |" % (r[1], r[2], r[3]))
+            count += 1
     text = "\n".join(doc).rstrip("\n") + "\n"
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(text)
     print("wrote VOICE_LINES.md: %d lines" % count)
+    scripts(doc, street, units, group_of, order)
+
+
+HER_TONE = {"warm": "[warm, motherly, smiling]", "firm": "[firm, composed, still kind]", "stern": "[stern, cold, slowly]",
+            "furious": "[furious, barely controlled, clipped]"}
+GMAN_TAG = "[slow, breathy, unsettling calm, odd pauses and emphasis]"
+
+def scripts(doc, street, units, group_of, order):
+    """VOICE_SCRIPTS.md: the same lines as text to paste into ElevenLabs, with voice descriptions."""
+    out = ["# Voice scripts: what to paste into ElevenLabs", "",
+           "**Made from the code by `python3 _dev/voice_lines.py`: never edit it by hand.** The lines of `VOICE_LINES.md` that are generated speech "
+           "(named citizens, units, the Administrator, and the G-Man's made-up lines), written the way ElevenLabs wants them, with a voice description for each voice.", "",
+           "## How to use it", "",
+           "- **Model:** Eleven v4 (or v3). A direction in **square brackets** changes how what follows is said: `[whispers] Careful.` It is not read out. "
+           "Put it just before the words it changes. Your own wording works (`[tired, flat]`), as do reactions (`[sighs]`, `[exhales]`, `[short laugh]`) and `[pause]`. "
+           "If a tag is read aloud, the model is not v4 or v3, or the brackets are not square.",
+           "- **Copy the \"Paste\" cell as it is.** Generate two or three takes and keep the best; a second good take can be saved as `...2` (one is picked at random in game).",
+           "- **Save each file under the name in the table**, `.mp3` or `.wav`, into the folder named above the table (on the server, under `garrysmod/sound/livingcity/`).",
+           "- **Tags are a starting point.** If a line comes out overacted, delete the tag or soften it (`[quietly]`): these are tired people, not actors. The breaks are the only loud ones.",
+           "- **The same voice for every line of a kind:** design the voice once (below), save it to your voices, and use that saved voice for the whole table.",
+           "- **Staying legal:** the descriptions below describe a kind of voice in ordinary words. Do not name a game, a character or an actor in a voice prompt, "
+           "and do not upload audio from the games to clone a voice: that needs the performer's consent, and ElevenLabs' terms forbid it.", "",
+           "## Voice descriptions (ElevenLabs: Voices > Voice Design; paste one, listen, adjust)", "",
+           "Each is written to sit close to the people already heard in the city without copying anyone. Try the first; the others lean a different way.", "",
+           "### The citizen, a man (every named male citizen)", "",
+           "1. `An American man in his late thirties, an ordinary working man. Mid-range voice with a slightly dry, nasal edge, plain General American accent. Tired and understated, speaks low and close as if he might be overheard. No announcer polish, no warmth put on; a real person, a little worn down. Clean studio recording, no reverb.`",
+           "2. `Middle-aged American man, forty or so, soft-spoken everyman. Slightly rough, unremarkable baritone, flat Midwestern delivery, weary and cautious, a little short of breath. Natural, conversational, close to the microphone, dry room.`",
+           "3. `American man, early thirties, lean and anxious. Lighter, slightly reedy voice, quick and quiet, guarded, the sound of someone who has not slept well in years. Ordinary, unpolished, dry recording.`", "",
+           "### The citizen, a woman (every named female citizen)", "",
+           "1. `An American woman in her mid thirties, an ordinary working woman. Low-to-mid voice with a little huskiness, plain General American accent. Tired, matter of fact, guarded, speaks low and close. No brightness, no announcer polish; a real person who has learned to keep quiet. Clean studio recording, no reverb.`",
+           "2. `American woman around forty, calm and worn. Warm but flat alto, slightly breathy, unhurried, dry humour under the tiredness. Natural, conversational, close to the microphone, dry room.`",
+           "3. `American woman, late twenties, wary. Clear mid voice with a slight rasp, quick, quiet and tense, careful with every word. Ordinary, unpolished, dry recording.`", "",
+           "### The unit (one voice for every Civil Protection unit)", "",
+           "**The radio sound is not the voice: it is an effect put on afterwards.** No voice model will make it reliably. Record the lines CLEAN with a plain, deep, flat voice, then run them through the effect (next heading). A clean voice to start from:", "",
+           "1. `An American man in his forties, deep and flat. Low baritone, clipped and cold, every word the same weight, no emotion, like a man reading orders he has read a thousand times. Speaks close to the microphone, firmly, a little too loud. Dry studio recording, no reverb.`",
+           "2. `Deep-voiced American man, thirties, hard and bored. Gravelly bass-baritone, short flat sentences bitten off at the end, faintly contemptuous. Close, dry recording.`",
+           "3. `American man, fifties, heavy chest voice. Slow, toneless, official, slightly muffled as if speaking behind a mask, no rise or fall. Close, dry recording.`", "",
+           "If you would rather ElevenLabs tried the effect itself, add this to the end of any of them (results vary a lot from take to take): "
+           "`Heard through a small helmet radio: narrow, tinny, compressed and slightly distorted, with a faint electronic buzz.`", "",
+           "### Giving the unit's lines their radio sound", "",
+           "On Linux Mint, once, in a terminal: `sudo apt install ffmpeg`. Then put the clean unit recordings in one folder and run the script that comes with the gamemode:", "",
+           "```",
+           "bash _dev/tools/unit_radio.sh ~/unit_clean ~/unit_radio",
+           "```", "",
+           "It writes a `.wav` of each into the second folder: a little deeper, the lows and highs cut like a small speaker, squashed flat and loud, a little digital grit and a fast buzz for the gargle, "
+           "and a click of static before and after. Listen to one. To change it, put settings in front: `DEPTH=0.90 BUZZ=0.5 CRUSH=0.4 bash _dev/tools/unit_radio.sh ...` "
+           "(DEPTH 0.90 deeper to 1.00 as recorded; BUZZ 0 none to 0.6 heavy; CRUSH 0 clean to 0.6 gritty). Upload the results to `garrysmod/sound/livingcity/units/`.", "",
+           "By hand in Audacity instead, in this order: Effect > Pitch and Tempo > Change Pitch (about -6%); Effect > EQ and Filters > High-Pass Filter (300 Hz) and Low-Pass Filter (3000 Hz); "
+           "Effect > Volume and Compression > Compressor (ratio 8:1, threshold -24 dB); Effect > Distortion and Modulation > Distortion (Hard Clipping, a little); "
+           "Effect > Distortion and Modulation > Tremolo (about 85 Hz, depth 35%).", "",
+           "### The G-Man (only for his lines that are not real clips)", "",
+           "Most of his lines in game are his real clips and need nothing. These are for the few made-up ones, so they sit beside the real ones without imitating the performer. "
+           "Expect to generate several takes: what sells him is where the stress falls, and the tags only nudge that.", "",
+           "1. `A middle-aged American man with a soft, breathy, slightly hoarse voice and a strange, halting way of speaking: pauses in the wrong places, stress on the wrong syllables, sibilants drawn out a little, pitch rising and falling where it should not. Polite, bureaucratic, quietly menacing, as if human speech were learned from a manual. Very slow and deliberate. Close, dry recording.`",
+           "2. `Older man, sixties, thin dry voice barely above a whisper, formal and courteous, oddly musical, each phrase beginning slowly and ending in a small upward lilt. Unsettlingly calm, patient, amused. Close, dry recording.`",
+           "3. `Man in his fifties, smooth low voice with a faint rasp, a government official's careful diction, long unnatural gaps between words, cold and detached, never raising his voice. Close, dry recording.`", "",
+           "## The Administrator's announcements", "",
+           "Folder: `administrator/`. **Use the voice her existing recordings were made with.** Each line is given in her usual tone; the tone is the word in the file name "
+           "(none: warm). A harsher take of any line is worth having, since she steps up a tone when the city is on red or after violence: paste the same words after "
+           "`" + HER_TONE["stern"] + "` and save as `<trigger>_stern1`, or after `" + HER_TONE["furious"] + "` as `<trigger>_furious1`.", "",
+           "| Done | File | When | Paste |", "|---|---|---|---|"]
+    n = 0
+    in1 = False
+    for l in doc:
+        if l.startswith("## 1."): in1 = True; continue
+        if l.startswith("## ") and in1: break
+        if not in1 or not l.startswith("| [ ] |"): continue
+        c = [x.strip() for x in l.strip().strip("|").split("|")]
+        if len(c) < 7: continue
+        m = re.match(r"`([^`]+)`\s*\((\w+)\)", c[5])
+        if not m or not c[6]: continue
+        out.append("| [ ] | `%s` | %s | %s %s |" % (m.group(1), c[2], HER_TONE.get(m.group(2), HER_TONE["warm"]), c[6]))
+        n += 1
+    out += ["", "## What named citizens say", "",
+            "Folder: `citizens/`. Paste each line twice: once with the man's voice (save as the man's file), once with the woman's.", "",
+            "| Done | Man's file | Woman's file | Paste |", "|---|---|---|---|"]
+    for g in order + ["Other"]:
+        rs = [r for r in street if group_of(r[1]) == g]
+        if not rs: continue
+        out.append("| | | | **%s** |" % g)
+        for r in rs:
+            out.append("| [ ] | `%s_male1` | `%s_female1` | %s |" % (r[1], r[1], r[4] if len(r) > 4 else r[3]))
+            n += 2
+    out += ["", "## What units say", "",
+            "Folder: `units/`. Record clean, then give them the radio sound (above). Half-Life 2's own units are heard beside these, "
+            "so the closer the effect gets to theirs the better: compare one of yours with `npc/metropolice/vo/movealong.wav`.", "",
+            "| Done | File | Paste |", "|---|---|---|"]
+    for r in units:
+        if len(r) > 5 and r[5]: continue
+        out.append("| [ ] | `%s1` | %s |" % (r[1], r[4] if len(r) > 4 else r[3]))
+        n += 1
+    have = [r for r in units if len(r) > 5 and r[5]]
+    if have:
+        out += ["", "**Nothing to record for these:** Half-Life 2's own Civil Protection voice says them, and the game uses its clip "
+                "(`npc/metropolice/vo/`): " + "; ".join('"%s" (`%s`)' % (r[3], r[5].split(", ")[0]) for r in have) + ". "
+                "The clip names are from memory: `lc_voice_missing` on your server lists any unit line that has neither a recording nor a clip, and those can then be recorded."]
+    out += ["", "## The G-Man: the lines that are not real clips", "",
+            "Folder: as in the File column, under `garrysmod/sound/`. These are the collapse lines the gamemode already looks for; until a file is there the moment is silent and the words show. "
+            "Save as `.wav` (signed 16-bit, 44100 Hz, mono).", "",
+            "| Done | File | When | Paste |", "|---|---|---|---|"]
+    in3 = False
+    for l in doc:
+        if l.startswith("## 3."): in3 = True; continue
+        if l.startswith("## ") and in3: break
+        if not in3 or not re.match(r"^\| \d+ \|", l): continue
+        c = [x.strip() for x in l.strip().strip("|").split("|")]
+        f = next((x for x in c if x.startswith("`livingcity/gman/black_")), None)
+        words = next((x for x in c if x.startswith('"')), None)
+        if not f or not words: continue
+        w = re.match(r'"([^"]+)"', words).group(1)
+        out.append("| [ ] | %s | %s | %s %s |" % (f.split(" ")[0], c[1], GMAN_TAG, w))
+        n += 1
+    out += ["", "## The G-Man: lines it would be nice to have", "",
+            "**Not in the game yet.** Nothing plays these today: they are offered as lines worth making while you are designing his voice. "
+            "Tell Claude which you record and where you want them heard, and they can be wired in. Suggested folder: `livingcity/gman/`.", "",
+            "| File | Where it could be heard | Paste |", "|---|---|---|"]
+    for f, where, w in NICE_GMAN:
+        out.append("| `%s` | %s | %s |" % (f, where, w))
+    with open(os.path.join(os.path.dirname(OUT), "VOICE_SCRIPTS.md"), "w", encoding="utf-8") as fh:
+        fh.write("\n".join(out).rstrip("\n") + "\n")
+    print("wrote VOICE_SCRIPTS.md: %d lines to paste" % n)
+
+
+NICE_GMAN = [
+    ("gman_asked_again.wav", "The collapse: he asks the city's own Administrator again", "[slow, breathy, patient, faintly amused] I will ask ... once more."),
+    ("gman_poorly.wav", "The collapse: she refuses him again", "[slow, soft, mock regret] She was given a choice. [pause] She chose ... poorly."),
+    ("gman_vote_yes.wav", "His vote passes, as time starts again", "[slow, pleased, breathy] Then it is ... decided."),
+    ("gman_new_admin.wav", "A new City Administrator takes the post", "[slow, courteous, cold] Congratulations ... Administrator. We will be ... watching."),
+    ("gman_glimpse.wav", "A glimpse of him about the city", "[barely a whisper, amused] Not yet."),
+    ("gman_crate_taken.wav", "A player takes a weapon from one of his crates", "[slow, breathy, approving] A wise ... investment."),
+    ("gman_dream_open.wav", "The start of one of his riddles in a dream", "[very slow, soft, dreamlike] Rise ... and listen."),
+    ("gman_dream_close.wav", "The end of one of his riddles", "[slow, fading] Remember this ... when you wake."),
+    ("gman_last_stand_won.wav", "The uprising is crushed", "[slow, dry, faintly disappointed] How ... disappointing. Another time, then."),
+    ("gman_last_stand_lost.wav", "The Administrator falls in her office", "[slow, satisfied, breathy] The city ... thanks you. In its way."),
+    ("gman_time_resumes.wav", "Time starts again after his vote", "[slow, businesslike] Time, I think ... to resume."),
+    ("gman_patience.wav", "A directive has waited too long", "[slow, cold, quiet] My employers ... are not patient."),
+]
 
 
 if __name__ == "__main__":

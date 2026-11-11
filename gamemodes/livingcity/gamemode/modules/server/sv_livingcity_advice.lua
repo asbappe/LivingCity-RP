@@ -104,6 +104,23 @@ end
 LC.AdviceRescan = Scan
 hook.Add("Initialize", "LivingCityAdviceVoices", Scan)
 
+-- Is any line whose name starts with prefix recorded for this sex? (sv_livingcity_lines.lua: LC.OwnVoice)
+local anyCache = {}
+function LC.AdviceHasAny(prefix, gender)
+    if not clips then Scan() end
+    local g = gender == "female" and "female" or "male"
+    local key = prefix .. g
+    if anyCache.clips ~= clips then anyCache = { clips = clips } end
+    if anyCache[key] == nil then
+        local found = false
+        for base in pairs(clips) do
+            if string.sub(base, 1, #prefix) == prefix and string.sub(base, -#g - 1) == "_" .. g then found = true break end
+        end
+        anyCache[key] = found
+    end
+    return anyCache[key]
+end
+
 function LC.AdviceClip(id, gender)
     if not clips then Scan() end
     local t = clips[id .. "_" .. (gender == "female" and "female" or "male")]
@@ -118,7 +135,7 @@ local function Say(npc, st, id, ply)
     local clip = LC.AdviceClip(id, g)
     if clip then
         npc:EmitSound(clip, 70)
-    else
+    elseif not (LC.OwnVoice and LC.OwnVoice(npc, st)) then -- (a named citizen with a recorded voice never borrows Half-Life 2's)
         local vo = HL2[id] or string.format("question%02d", math.random(1, 20))
         npc:EmitSound("vo/npc/" .. (g == "female" and "female01" or "male01") .. "/" .. vo .. ".wav", 65)
     end

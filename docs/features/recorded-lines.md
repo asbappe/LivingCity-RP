@@ -1,12 +1,12 @@
 # What named people say, recorded
 
-Asked for by the owner, 11 November: "architect and design natural sounding lines so that we can pre record NPC lines and cover as much situational dialogs as possible with the least amount of lines". Code: `sv_livingcity_lines.lua` (the bank and playing it), used by `sv_livingcity_brain.lua` (free talk, the director) and `sv_livingcity_mindsact.lua` (breaks). Tests: LinesTests (18). The list to record: `VOICE_LINES.md`, sections 10 and 11.
+Asked for by the owner, 11 November: "architect and design natural sounding lines so that we can pre record NPC lines and cover as much situational dialogs as possible with the least amount of lines". Code: `sv_livingcity_lines.lua` (the bank and playing it), used by `sv_livingcity_brain.lua` (free talk, the director) and `sv_livingcity_mindsact.lua` (breaks). Tests: LinesTests (26). The list to record: `VOICE_LINES.md`, sections 10 and 11. **The text to paste into ElevenLabs, with voice descriptions: `VOICE_SCRIPTS.md`.**
 
 ## The idea
 
 Voicing every answer as it is written would cost money on every line, for ever. Instead there is a **small bank of lines recorded once**, and the hosted model **picks from it**: it is shown the bank and asked which line this person would say right now. A recorded line costs nothing to play, sounds the same every time, and is in the person's own voice.
 
-**80 lines for a citizen (a man's take and a woman's of each: 160 recordings) and 17 for a unit (one voice): 177 recordings, about 5,500 characters in all.** With ElevenLabs that is a one-off of well under a dollar at the prices seen in November, or a few thousand of a plan's monthly characters.
+**80 lines for a citizen (a man's take and a woman's of each: 160 recordings) and 17 for a unit, of which Half-Life 2 already has 8 (so 9 to record): 169 recordings, about 5,500 characters in all.** The wording is American (the owner, 11 November), to sit with the Half-Life 2 citizens still heard around them. With ElevenLabs that is a one-off of well under a dollar at the prices seen in November, or a few thousand of a plan's monthly characters.
 
 ## How so few lines cover so much
 
@@ -35,9 +35,20 @@ Voicing every answer as it is written would cost money on every line, for ever. 
 
 A unit's 17 are the same moves in his register: "Citizen.", "Move along.", "Identification. Now.", "Affirmative.", "Negative.", "That information is restricted.", and so on, with one kind line for a unit who has some kindness in him and two for when his mind gives way.
 
+**Where Half-Life 2 already says it** (the owner, 11 November: "already exist in HL2"), a unit's line names Half-Life 2's own Civil Protection clip (`sound/npc/metropolice/vo/`: `citizen`, `movealong`, `affirmative`, `negative`, `finalwarning`, `nowgetoutofhere`, `lookingfortrouble`, `holditrightthere`), its words are the clip's words, and with no recording of yours that clip is played. **The clip names are from memory, not checked against the game's files:** the game looks for each and only uses one that is there, and `lc_voice_missing` lists any unit line left with neither. To settle it, `lc_hl2_lines` in the server console writes `data/livingcity/hl2_lines.txt`: every citizen and Civil Protection clip the server has, with its words where the game's caption file gives them. With that file the bank can be matched to real clips for certain (and more of it, perhaps, taken from Half-Life 2 instead of recorded).
+
+## One voice for each named person
+
+The owner, 11 November: a named citizen must not answer in a recorded voice and then say a Half-Life 2 line in another.
+
+- **Once any line of the bank is recorded for men (or for women), the city's named citizens of that sex stop using Half-Life 2's citizen voice** wherever the gamemode chooses the sound: street chatter between citizens, the talk window, protests and nervous lines when stopped, panic, greetings, cries, an advice line that is not recorded, and under words the model wrote. There they are silent, and any words still show. Their recorded lines are their only voice (`LC.OwnVoice`).
+- **An unrecorded line of the bank is words only,** never Half-Life 2's voice in its place.
+- **Unnamed citizens keep Half-Life 2's voice** for everything, as before, and never use the bank.
+- Not covered: sounds the game engine makes by itself (pain grunts, its own reactions to being pushed or shot at).
+
 ## Where they are heard
 
-- **Free talk.** With `lc_brain_lines` 1 (the default) the model is shown the bank for the person spoken to and told to pick the line that says what they would say, even roughly, with an opener if it adds something. Only when nothing comes close does it write words of its own (which are text only, with Half-Life 2's citizen voice under them). `lc_brain_lines` 2: recorded lines only, never words of its own (everything said is voiced; "I wouldn't know anything about that." when nothing fits). `lc_brain_lines` 0: the bank is left out, as before.
+- **Free talk.** With `lc_brain_lines` 1 (the default) the model is shown the bank for the person spoken to and told to pick the line that says what they would say, even roughly, with an opener if it adds something. Only when nothing comes close does it write words of its own (text only; an unnamed-voice "answer" sound under them until the bank is recorded, nothing after). `lc_brain_lines` 2: recorded lines only, never words of its own (everything said is voiced; "I wouldn't know anything about that." when nothing fits). `lc_brain_lines` 0: the bank is left out, as before.
 - **The director's approach.** The citizen who walks up to a player opens with a recorded line (warnings, tips, asks, greetings, how they are, the Resistance) when one fits.
 - **The minds' breaks.** The person says their line as it happens: the tantrum's shout, the accusation and the accused's answer, the plea under the stick, the unit's "You saw nothing." The `**` scene line in chat is unchanged.
 - The bank adds about 1,000 tokens to each free talk request (the instructions are the same every time, so the service can reuse them cheaply). At the small model's price that is about a hundredth of a cent a line.
@@ -49,7 +60,9 @@ A unit's 17 are the same moves in his register: "Citizen.", "Move along.", "Iden
 - **Voices:** one man and one woman for every citizen, for now: ordinary, tired, speaking low, never acting. Pick two ElevenLabs voices that sound like they belong in the same city as Half-Life 2's citizens, since those are still heard where there is no recording. A unit: one clipped male voice, with a radio or vocoder effect over it if you can.
 - **Direction:** short and flat. The openers should run on into the next line (no falling full stop). The breaks are the only loud ones.
 - **After adding files:** FastDL sync, then a map change. `lc_voice_missing` in the server console lists what is not there yet ("Named citizens' lines", "Units' lines").
-- **Without a recording** a citizen speaks with Half-Life 2's own citizen voice, a unit is silent, and the words still show: nothing waits on the recordings.
+- **Without a recording** the words show and nothing is said (a unit uses Half-Life 2's own clip where it has one): nothing waits on the recordings.
+- **The radio sound of a unit** is an effect put on a clean recording afterwards: `bash _dev/tools/unit_radio.sh FOLDER_IN FOLDER_OUT` (needs `ffmpeg`), explained in `VOICE_SCRIPTS.md`.
+- **`VOICE_SCRIPTS.md`** has every line as text to paste, with a direction in square brackets for Eleven v4 or v3 (kept in the bank as each line's third entry), voice descriptions for the citizen man and woman, the unit and the G-Man, the Administrator's announcements in her usual tone, and the G-Man's made-up lines.
 
 ## Changing the bank
 

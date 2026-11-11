@@ -24,7 +24,7 @@ LC = LC or {}
 local FLAGS = FCVAR_ARCHIVE
 local cvOn    = CreateConVar("lc_voice", "0", FLAGS, "The city's own Administrator's decrees are spoken in her voice (needs a voice key and a voice id set in the editor panel)")
 local cvDaily = CreateConVar("lc_voice_daily", "200", FLAGS, "Most spoken lines in a day (0: no limit)")
-local cvModel = CreateConVar("lc_voice_model", "eleven_flash_v2_5", FLAGS, "The ElevenLabs model that speaks")
+local cvModel = CreateConVar("lc_voice_model", "eleven_v4_turbo", FLAGS, "The ElevenLabs model that speaks")
 
 local URL = "https://api.elevenlabs.io/v1/text-to-speech/"
 local FORMAT = "mp3_22050_32"    -- (small: about 4 KB a second, so a sentence fits in one net message)

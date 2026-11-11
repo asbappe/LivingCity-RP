@@ -1579,3 +1579,7 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **Recorded lines (11 November):** record a handful first (`say_dunno`, `say_greet_plain`, `say_no`, `say_warn_go`, `say_open_listen`, a man and a woman), FastDL sync, change map. Talk to named citizens: do they answer with those lines in that voice, and does an opener run on into the line? Do the words in chat match what is heard?
   Notes:
+- [ ] **One voice (11 November):** after recording a few `say_` lines for men, do named men stop saying Half-Life 2 lines in the street and the talk window, while unnamed men still do? Is the street too quiet?
+  Notes:
+- [ ] **Units' own clips:** run `lc_voice_missing`: which unit lines are listed? Run `lc_hl2_lines` and bring back `data/livingcity/hl2_lines.txt`.
+  Notes:

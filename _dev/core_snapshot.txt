@@ -183,6 +183,7 @@ console command lc_giveitem
 console command lc_goto_layout
 console command lc_hack
 console command lc_handsup
+console command lc_hl2_lines
 console command lc_holster
 console command lc_jail
 console command lc_kick
@@ -1187,7 +1188,7 @@ setting lc_view_bob = 1
 setting lc_view_bob_amount = 100
 setting lc_voice = 0
 setting lc_voice_daily = 200
-setting lc_voice_model = eleven_flash_v2_5
+setting lc_voice_model = eleven_v4_turbo
 setting lc_voice_range = 900
 setting lc_vort_call_minutes = 10
 setting lc_vort_charge_minutes = 10
