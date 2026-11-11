@@ -18,7 +18,11 @@ if CLIENT then return end
 LC = LC or {}
 
 local FIGHT_SECS = 30   -- (a fight counts this long after the last shot or hurt)
-local ACTION_HOLD = 20  -- (the music's state is kept this long after the action ends)
+-- (the owner, 11 November: "I killed all of them in about 5 seconds and the music just kept playing as if it has
+-- a minimum amount of time": a fight held the action music for 30 seconds and this 20 more. Now about 20 in all.)
+local ACTION_HOLD = 8   -- (the music's state is kept this long after the action ends)
+local ACTION_FIGHT = 12 -- (for the music, a fight is over this long after the last shot or hurt)
+local JOB_NEAR = 1500   -- (a violent job is action once you are this near where it happens)
 local SKIRMISH_NEAR = 3000
 
 function LC.InFight(ply, secs)
@@ -43,9 +47,14 @@ local ACTION_EVENTS = { sweep = true, raid = true, lockdown = true }
 -- Why a unit is in action now, or nil.
 function LC.InAction(ply)
     if not IsValid(ply) or not ply:Alive() or ply:GetNW2String("lcf_faction", "") ~= "cp" then return nil end
-    if LC.InFight(ply) then return "fight" end
+    if LC.InFight(ply, ACTION_FIGHT) then return "fight" end
     local q = LC.QuestOf and LC.QuestOf[ply]
-    if q and q.violent then return "job" end
+    if q and q.violent then
+        -- (the owner, 11 November: the music started 100 metres away, the moment the job was taken:
+        -- "only kick in when I reach the destination and the fighting starts")
+        local okAt, at = pcall(function() return q.stages and LC.QuestObjectivePos and LC.QuestObjectivePos(ply) or nil end)
+        if not okAt or not at or ply:GetPos():DistToSqr(at) < JOB_NEAR * JOB_NEAR then return "job" end
+    end
     if LC.Event and ACTION_EVENTS[LC.Event] then return LC.Event end
     local sk = LC.Skirmish
     if sk then

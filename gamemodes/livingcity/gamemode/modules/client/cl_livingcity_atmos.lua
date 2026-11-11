@@ -239,8 +239,13 @@ end)
 ------------------------------------------------------------------------
 
 local TRACKS = {
-    calm = { "music/hl2_song19.mp3", "music/hl2_song10.mp3", "music/hl2_song2.mp3", "music/hl2_song26.mp3", "music/hl2_song27_trainstation2.mp3" },
-    tense = { "music/hl2_song13.mp3", "music/hl2_song26_trainstation1.mp3", "music/hl2_song30.mp3", "music/hl2_song33.mp3" },
+    -- (more of them, the owner, 11 November: the same piece "3 times in 8 minutes, please lower the
+    -- occurrence and add some variety"; whichever this install has)
+    calm = { "music/hl2_song19.mp3", "music/hl2_song10.mp3", "music/hl2_song2.mp3", "music/hl2_song26.mp3", "music/hl2_song27_trainstation2.mp3",
+        "music/hl2_song0.mp3", "music/hl2_song1.mp3", "music/hl2_song8.mp3", "music/hl2_song11.mp3", "music/hl2_song17.mp3",
+        "music/hl2_song23_suitsong3.mp3", "music/hl2_song32.mp3", "music/hl1_song11.mp3", "music/hl1_song20.mp3" },
+    tense = { "music/hl2_song13.mp3", "music/hl2_song26_trainstation1.mp3", "music/hl2_song30.mp3", "music/hl2_song33.mp3",
+        "music/hl2_song7.mp3", "music/hl2_song28.mp3", "music/hl1_song5.mp3", "music/hl1_song14.mp3", "music/hl1_song21.mp3" },
     urgent = { "music/hl2_song3.mp3", "music/hl2_song4.mp3", "music/hl2_song29.mp3", "music/hl2_song16.mp3" },
     -- the moment someone becomes a stalker (the owner, 7 November: "the most depressing HL2 music there is")
     stalker = { "music/hl2_song26.mp3" },
@@ -258,6 +263,7 @@ function LC_CL.InAction(ply)
     return IsValid(ply) and ply:GetNW2String("lcf_faction", "") == "cp" and ply:GetNW2Float("lc_action_until", 0) > CurTime()
 end
 local playing, playingMood, nextTrack = nil, nil, 100
+local QUIET_MIN, QUIET_MAX = 480, 900 -- (8 to 15 minutes of quiet between pieces; it was 5 to 12)
 
 local function Mood()
     local socio = GetGlobal2String("lc_socio", "green")
@@ -293,13 +299,24 @@ local function Stop(fade)
     playing, playingMood = nil, nil
 end
 
+local recent = {} -- (the last pieces played, newest first)
 local fadingUntil = 0 -- (a sound channel can't carry fields of its own: the fade-in is tracked here)
 
 local function PlayMood(mood)
     local options = {}
     for _, p in ipairs(TRACKS[mood] or {}) do if Exists(p) then options[#options + 1] = p end end
     if #options == 0 or not sound.PlayFile then return end
+    -- (never one of the last few again while there's another to play)
+    local fresh = {}
+    for _, p in ipairs(options) do
+        local heard = false
+        for _, r in ipairs(recent) do if r == p then heard = true end end
+        if not heard then fresh[#fresh + 1] = p end
+    end
+    if #fresh > 0 then options = fresh end
     local path = options[math.random(#options)]
+    table.insert(recent, 1, path)
+    while #recent > 6 do table.remove(recent) end
     sound.PlayFile("sound/" .. path, "noplay", function(ch)
         if not Live(ch) then return end
         Stop(false)
@@ -357,10 +374,16 @@ timer.Create("LivingCityMusic", 1, 0, function()
         if CurTime() > fadingUntil then playing:SetVolume(MusicVolume()) end
         -- the mood changed a lot: let this one go
         -- (the urgent music comes in about five seconds after things turn: an alarm, a chase)
-        if playingMood ~= mood and (Hot(mood) or Hot(playingMood)) and not (Hot(mood) and Hot(playingMood)) then Stop(true) nextTrack = CurTime() + 5 end
+        -- (and when the action is over the city is quiet for a few minutes: the calm music used to follow the
+        -- battle music within seconds, the owner, 11 November)
+        if playingMood ~= mood and (Hot(mood) or Hot(playingMood)) and not (Hot(mood) and Hot(playingMood)) then
+            local cooling = Hot(playingMood)
+            Stop(true)
+            nextTrack = CurTime() + (cooling and math.random(QUIET_MIN, QUIET_MAX) or 5)
+        end
         if Live(playing) and playing:GetState() == GMOD_CHANNEL_STOPPED then
             playing, playingMood = nil, nil
-            nextTrack = CurTime() + math.random(306, 714) -- quiet for a while between pieces (5 to 12 minutes)
+            nextTrack = CurTime() + math.random(QUIET_MIN, QUIET_MAX) -- quiet for a while between pieces
         end
         return
     end
