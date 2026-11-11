@@ -156,7 +156,7 @@ local function Vo(gender, name) return "vo/npc/" .. gender .. "01/" .. name .. "
 -- A citizen says one of Half-Life 2's lines, unless they are a named citizen with a recorded voice of their own
 -- (sv_livingcity_lines.lua, LC.OwnVoice): then they say nothing here, and their recorded lines are their only voice.
 local function CitSay(ent, st, path, ...)
-    if LC.OwnVoice and LC.OwnVoice(ent, st) then return end
+    if LC.OwnVoice and LC.OwnVoice(ent, st, path) then return end
     ent:EmitSound(path, ...)
 end
 

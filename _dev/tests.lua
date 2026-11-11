@@ -11561,6 +11561,31 @@ ok(okA == true and st.mindErrand ~= nil, "an approach with a recorded line", why
 n:SetPos(ply:GetPos() + Vector(40, 0, 0))
 LC.MindsErrandTick(CurTime())
 ok(heard("Listen. Someone's been asking about you."), "they walk up and say it")
+-- Half-Life 2's own lines, replaced one by one
+section("Half-Life 2's own voice clips, replaced by recordings of them")
+_setcvar("lc_voice_replace", 1)
+LC.VoiceReplaceRescan()
+ok(LC.VoiceReplacement("vo/npc/male01/hi01.wav") == nil, "no recording of a clip: it plays as it always did")
+_files["sound/livingcity/hl2/vo/npc/male01/hi01.mp3"] = "x"
+_files["sound/livingcity/hl2/npc/metropolice/vo/movealong.wav"] = "x"
+_files["sound/livingcity/hl2/vo/gman_misc/gman_03.wav"] = "x"
+ok(LC.VoiceReplaceRescan() == 2, "recordings in sound/livingcity/hl2/, under the clip's own path, are found (only in the folders it covers)", LC.VoiceReplacedCount)
+ok(LC.VoiceReplacement("vo/npc/male01/hi01.wav") == "livingcity/hl2/vo/npc/male01/hi01.mp3" and LC.VoiceReplacement(")vo/npc/male01/HI01.wav") ~= nil
+    and LC.VoiceReplacement("npc/metropolice/vo/movealong.wav") == "livingcity/hl2/npc/metropolice/vo/movealong.wav", "a clip with a recording is swapped for it, whatever marks the game put on its name")
+ok(LC.VoiceReplacement("vo/gman_misc/gman_03.wav") == nil and LC.VoiceReplacement("vo/npc/male01/hi02.wav") == nil, "never the G-Man's, and never a clip without one")
+local data = { SoundName = "vo/npc/male01/hi01.wav" }
+local res = hook.Run("EntityEmitSound", data)
+ok(res == true and data.SoundName == "livingcity/hl2/vo/npc/male01/hi01.mp3", "every sound an entity makes passes the swap: the game's own lines too", data.SoundName)
+local data2 = { SoundName = "vo/npc/male01/hi02.wav" }
+ok(hook.Run("EntityEmitSound", data2) == nil and data2.SoundName == "vo/npc/male01/hi02.wav", "anything else is left alone")
+LC.AdviceHasAny = function() return true end
+ok(LC.OwnVoice(n, st) == true and LC.OwnVoice(n, st, "vo/npc/male01/hi01.wav") == false, "a named citizen is not silenced on a clip that has been re-recorded: it is their voice now")
+LC.AdviceHasAny = realAny
+_setcvar("lc_voice_replace", 0)
+ok(LC.VoiceReplacement("vo/npc/male01/hi01.wav") == nil, "lc_voice_replace 0: Half-Life 2's clips as they are")
+_setcvar("lc_voice_replace", 1)
+_files["sound/livingcity/hl2/vo/npc/male01/hi01.mp3"], _files["sound/livingcity/hl2/npc/metropolice/vo/movealong.wav"], _files["sound/livingcity/hl2/vo/gman_misc/gman_03.wav"] = nil, nil, nil
+LC.VoiceReplaceRescan()
 LC.BrainSetKey("")
 LC.BrainHTTP, LC.AdviceClip = realHTTP, realClip
 n.EmitSound = realEmit

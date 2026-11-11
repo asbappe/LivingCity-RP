@@ -237,8 +237,9 @@ end
 -- women), the city's NAMED citizens of that sex stop speaking with Half-Life 2's citizen voice wherever the
 -- gamemode chooses the sound (street chatter, the talk window, protests, under words the model wrote): the
 -- words still show, and their recorded lines are their only voice. Unnamed citizens keep Half-Life 2's.
-function LC.OwnVoice(npc, st)
+function LC.OwnVoice(npc, st, path)
     if not IsValid(npc) or not st or st.role ~= "citizen" then return false end
+    if path and LC.VoiceReplacement and LC.VoiceReplacement(path) then return false end -- (that very clip has been re-recorded: it is their voice)
     local p = npc.lcProfile
     if not p or not p.name then return false end
     return LC.AdviceHasAny ~= nil and LC.AdviceHasAny("say_", st.gender) == true
@@ -308,6 +309,9 @@ function LC.HL2LinesDump()
     Folder("A citizen, a man", "vo/npc/male01/", { "npc_citizen.", "citizen." })
     Folder("A citizen, a woman", "vo/npc/female01/", { "npc_citizen.", "citizen." })
     Folder("Civil Protection", "npc/metropolice/vo/", { "npc_metropolice.", "metropolice." })
+    Folder("Overwatch soldiers", "npc/combine_soldier/vo/", { "npc_combine.", "combine_soldier.", "npc_combine_soldier." })
+    Folder("Overwatch, the city's voice", "npc/overwatch/cityvoice/", { "npc_overwatch.", "overwatch." })
+    Folder("Overwatch, on the radio", "npc/overwatch/radiovoice/", { "npc_overwatch.", "overwatch." })
     if file.CreateDir then file.CreateDir("livingcity") end
     file.Write("livingcity/hl2_lines.txt", table.concat(out, "\n"))
     return n
@@ -316,5 +320,69 @@ concommand.Add("lc_hl2_lines", function(ply)
     if IsValid(ply) and not (LC.CanEdit and LC.CanEdit(ply)) then return end
     local ok, n = pcall(LC.HL2LinesDump)
     local msg = ok and ("wrote data/livingcity/hl2_lines.txt: " .. tostring(n) .. " clips. Bring it back to Claude.") or ("could not list them: " .. tostring(n))
+    if IsValid(ply) then ply:ChatPrint("[Living City] " .. msg) else print("[Living City] " .. msg) end
+end)
+
+------------------------------------------------------------------------
+-- Half-Life 2's own lines, replaced one by one (the owner, 11 November: "We are going to slowly replace all
+-- the HL2 native voice lines with my custom generated ones, EXCEPT for Gman")
+------------------------------------------------------------------------
+-- A recording at garrysmod/sound/livingcity/hl2/<the clip's own path> takes the place of that Half-Life 2
+-- clip wherever it is played, by the gamemode or by the game itself: sound/livingcity/hl2/vo/npc/male01/hi01.mp3
+-- is heard instead of sound/vo/npc/male01/hi01.wav. No list to keep: a file being there is the whole of it,
+-- so they can be added a few at a time. A clip with no replacement plays as it always did.
+-- Only in these folders, and never the G-Man's.
+local cvReplace = CreateConVar("lc_voice_replace", "1", FCVAR_ARCHIVE, "Half-Life 2's own voice clips are replaced by your recordings of them in sound/livingcity/hl2/ (a clip with none plays as before)")
+LC.VoiceReplaceRoot = "livingcity/hl2/"
+LC.VoiceReplaceFolders = { "vo/npc/male01/", "vo/npc/female01/", "npc/metropolice/vo/", "npc/combine_soldier/vo/", "npc/overwatch/cityvoice/", "npc/overwatch/radiovoice/" }
+
+local replaced -- [clip path without its ending] = the recording's path
+local function ScanReplaced()
+    replaced = {}
+    local n = 0
+    for _, folder in ipairs(LC.VoiceReplaceFolders) do
+        for _, f in ipairs(file.Find("sound/" .. LC.VoiceReplaceRoot .. folder .. "*", "GAME") or {}) do
+            local base, ext = string.match(string.lower(f), "^(.-)%.(%w+)$")
+            if base and AUDIO[ext] then
+                local path = LC.VoiceReplaceRoot .. folder .. f
+                replaced[folder .. base] = path
+                n = n + 1
+                if resource and resource.AddFile then resource.AddFile("sound/" .. path) end
+                if util and util.PrecacheSound then util.PrecacheSound(path) end
+            end
+        end
+    end
+    LC.VoiceReplacedCount = n
+    return n
+end
+LC.VoiceReplaceRescan = ScanReplaced
+hook.Add("Initialize", "LivingCityVoiceReplace", ScanReplaced)
+
+-- Your recording of a Half-Life 2 clip, or nil. path: as the game names it ("vo/npc/male01/hi01.wav").
+function LC.VoiceReplacement(path)
+    if not cvReplace:GetBool() or type(path) ~= "string" then return nil end
+    if not replaced then ScanReplaced() end
+    local p = string.lower(path)
+    p = string.gsub(p, "^[^%w]+", "")   -- (the game puts marks in front of some names)
+    p = string.gsub(p, "^sound/", "")
+    p = string.gsub(p, "%.%w+$", "")
+    if string.find(p, "gman", 1, true) then return nil end
+    return replaced[p]
+end
+
+-- Every sound an entity makes passes here: a Half-Life 2 clip that has been re-recorded is swapped for the recording.
+hook.Add("EntityEmitSound", "LivingCityVoiceReplace", function(data)
+    local name = data and data.SoundName
+    if not name then return end
+    local mine = LC.VoiceReplacement(name)
+    if not mine then return end
+    data.SoundName = mine
+    return true
+end)
+
+concommand.Add("lc_voice_replaced", function(ply)
+    if IsValid(ply) and not (LC.CanEdit and LC.CanEdit(ply)) then return end
+    local n = ScanReplaced()
+    local msg = "Half-Life 2 clips replaced by your recordings (sound/" .. LC.VoiceReplaceRoot .. "): " .. n
     if IsValid(ply) then ply:ChatPrint("[Living City] " .. msg) else print("[Living City] " .. msg) end
 end)

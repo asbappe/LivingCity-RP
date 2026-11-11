@@ -350,8 +350,11 @@ def scripts(doc, street, units, group_of, order):
            "- **It never makes a file twice:** a file already in the output folder is skipped, so you can stop and run it again, delete the takes you dislike and rerun, or add `--takes 2` for a second take of each (`...2`).",
            "- **Where they go:** `voice_out/sound/livingcity/...`, laid out like the server's `garrysmod/sound/`, so the whole `sound` folder can be uploaded as it is. "
            "Unit lines go to `voice_out/units_clean/` instead: run `bash _dev/tools/unit_radio.sh voice_out/units_clean voice_out/sound/livingcity/units` for their radio sound.",
+           "- **Only what your server lacks:** run `lc_voice_missing` on the server, download `data/livingcity/voice_missing.txt`, and add `--missing voice_missing.txt`: lines the server already has a recording of are left out.",
            "- **`--extras`** also makes the G-Man lines that are not in the game yet. **`--model eleven_v4_turbo`** is cheaper than the default `eleven_v4`.",
            "- The G-Man's files must be `.wav`: with `ffmpeg` installed (`sudo apt install ffmpeg`) the script converts them itself.",
+           "- **Half-Life 2's own lines, in your voices** (they then play in place of Half-Life 2's clips; never the G-Man): run `lc_hl2_lines` in the server console, download `data/livingcity/hl2_lines.txt`, "
+           "then `python3 _dev/tools/elevenlabs_batch.py --hl2 hl2_lines.txt --man ID --woman ID --unit ID --soldier ID --overwatch ID --dry-run`. More: `docs/features/recorded-lines.md`.",
            "- **Not yet tried against the real service.** If the first run prints an error from ElevenLabs, paste it to Claude.", "",
            "## Voice descriptions (ElevenLabs: Voices > Voice Design; paste one, listen, adjust)", "",
            "Each is written to sit close to the people already heard in the city without copying anyone. Try the first; the others lean a different way.", "",

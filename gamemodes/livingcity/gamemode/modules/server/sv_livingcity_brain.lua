@@ -428,8 +428,9 @@ local function Speak(npc, st, line, voiced)
     for _, ply in ipairs(player.GetAll()) do
         if ply:GetPos():DistToSqr(npc:GetPos()) < range * range then ply:ChatPrint(name .. " says: \"" .. line .. "\"") end
     end
-    if st.role == "citizen" and not voiced and not (LC.OwnVoice and LC.OwnVoice(npc, st)) then
-        npc:EmitSound("vo/npc/" .. (st.gender or "male") .. "01/" .. string.format("answer%02d", math.random(1, 20)) .. ".wav", 65)
+    if st.role == "citizen" and not voiced then
+        local path = "vo/npc/" .. (st.gender or "male") .. "01/" .. string.format("answer%02d", math.random(1, 20)) .. ".wav"
+        if not (LC.OwnVoice and LC.OwnVoice(npc, st, path)) then npc:EmitSound(path, 65) end
     end
 end
 LC.BrainSpeak = Speak

@@ -135,9 +135,11 @@ local function Say(npc, st, id, ply)
     local clip = LC.AdviceClip(id, g)
     if clip then
         npc:EmitSound(clip, 70)
-    elseif not (LC.OwnVoice and LC.OwnVoice(npc, st)) then -- (a named citizen with a recorded voice never borrows Half-Life 2's)
+    else
         local vo = HL2[id] or string.format("question%02d", math.random(1, 20))
-        npc:EmitSound("vo/npc/" .. (g == "female" and "female01" or "male01") .. "/" .. vo .. ".wav", 65)
+        local path = "vo/npc/" .. (g == "female" and "female01" or "male01") .. "/" .. vo .. ".wav"
+        -- (a named citizen with a recorded voice never borrows Half-Life 2's, unless that clip is re-recorded)
+        if not (LC.OwnVoice and LC.OwnVoice(npc, st, path)) then npc:EmitSound(path, 65) end
     end
     if IsValid(ply) and LC.Notice then
         LC.Notice(ply, "speech", LC.NPCStr and LC.NPCStr(npc, "lc_pname", "A citizen") or "A citizen", LC.AdviceLines[id] or "")

@@ -1583,3 +1583,22 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **Units' own clips:** run `lc_voice_missing`: which unit lines are listed? Run `lc_hl2_lines` and bring back `data/livingcity/hl2_lines.txt`.
   Notes:
+- [ ] **Replacing Half-Life 2 lines (11 November):** make one (`sound/livingcity/hl2/vo/npc/male01/hi01.mp3`), FastDL sync, change map, `lc_voice_replaced` should say 1. Do citizens say yours instead of the stock "Hi", both when the gamemode plays it and when the game does by itself? Then try one metropolice clip.
+  Notes:
+
+## Sound clip audit (run these on the server, any time)
+
+Type them in the server console on the host panel, or in your own game console (the ` key) as a superadmin. Nothing is changed by any of them.
+
+- [ ] **`lc_voice_missing`**: every voice line with no recording on the server yet, by folder (announcements for Overwatch and the Administrator, the radio, dreams, the G-Man, citizens, units, the clerk, the old-timer, machines). It also writes the whole list to `data/livingcity/voice_missing.txt`: download that and give it to `elevenlabs_batch.py --missing` so only what you lack is made.
+  Notes:
+- [ ] **`lc_announce_clips`**: the announcement recordings it DID find, for each voice and trigger (how many takes of each). Use it to check the Administrator clips already on the server are being seen: a clip that is there but not counted is misnamed or in the wrong folder.
+  Notes:
+- [ ] **`lc_announce_rescan`**: looks again after you add files without a restart, and says how many it found.
+  Notes:
+- [ ] **`lc_voice_replaced`**: how many Half-Life 2 clips have a recording of yours in `sound/livingcity/hl2/`.
+  Notes:
+- [ ] **`lc_hl2_lines`**: writes `data/livingcity/hl2_lines.txt`, every Half-Life 2 citizen, unit, soldier and Overwatch clip the server has, with its words. Needed once, before making your own versions of them.
+  Notes:
+- [ ] **`lc_sound_check`**: the folders it reads sounds from and what is in them (the older, general check).
+  Notes:

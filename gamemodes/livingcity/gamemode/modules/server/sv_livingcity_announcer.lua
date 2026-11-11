@@ -741,6 +741,15 @@ end
 concommand.Add("lc_voice_missing", function(ply)
     if IsValid(ply) and not ply:IsSuperAdmin() then return end
     local total = 0
+    -- also as a file, one missing recording to a line (folder/name), for _dev/tools/elevenlabs_batch.py --missing:
+    -- it then makes only what the server lacks (the owner, 11 November: "I already have loads of these")
+    local lines = {}
+    for _, r in ipairs(LC.VoiceMissing()) do
+        for _, m in ipairs(r.missing) do lines[#lines + 1] = r.folder .. m end
+    end
+    if file.CreateDir then file.CreateDir("livingcity") end
+    file.Write("livingcity/voice_missing.txt", table.concat(lines, "\n") .. "\n")
+    Reply(ply, "[Living City] The whole list is also in data/livingcity/voice_missing.txt (" .. #lines .. " lines).")
     for _, r in ipairs(LC.VoiceMissing()) do
         total = total + #r.missing
         Reply(ply, "[Living City] " .. r.name .. " (sound/livingcity/" .. r.folder .. "), " ..

@@ -238,6 +238,7 @@ console command lc_unregister
 console command lc_unstalker
 console command lc_vo
 console command lc_voice_missing
+console command lc_voice_replaced
 console command lc_vortwar_next
 console command lc_weather
 console command lce_shop
@@ -1190,6 +1191,7 @@ setting lc_voice = 0
 setting lc_voice_daily = 200
 setting lc_voice_model = eleven_v4_turbo
 setting lc_voice_range = 900
+setting lc_voice_replace = 1
 setting lc_vort_call_minutes = 10
 setting lc_vort_charge_minutes = 10
 setting lc_vort_commune_minutes = 15

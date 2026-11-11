@@ -13,11 +13,12 @@ the server's garrysmod/sound/. Nothing but Python 3 is needed (ffmpeg only for t
 The key is read from the ELEVENLABS_API_KEY setting of the terminal, never from a file, and is not printed.
 A file that is already there is skipped, so it can be stopped and run again.
 """
-import argparse, json, os, shutil, subprocess, sys, time, urllib.error, urllib.request
+import argparse, json, os, re, shutil, subprocess, sys, time, urllib.error, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 URL = "https://api.elevenlabs.io/v1/text-to-speech/%s?output_format=%s"
-VOICES = ["man", "woman", "unit", "administrator", "gman"]
+VOICES = ["man", "woman", "unit", "administrator", "gman", "soldier", "overwatch"]
+RADIO = ("unit", "soldier")  # recorded clean, then given their radio sound by unit_radio.sh
 
 
 def rows():
@@ -33,6 +34,49 @@ def rows():
     return out
 
 
+HL2_VOICE = {"vo/npc/male01/": "man", "vo/npc/female01/": "woman", "npc/metropolice/vo/": "unit",
+             "npc/combine_soldier/vo/": "soldier", "npc/overwatch/cityvoice/": "overwatch", "npc/overwatch/radiovoice/": "overwatch"}
+
+
+def hl2_rows(path):
+    """data/livingcity/hl2_lines.txt (the server's lc_hl2_lines): every Half-Life 2 clip and its words.
+    Each becomes a file at livingcity/hl2/<the clip's own path>, which the game plays in the clip's place."""
+    out, nowords, folder = [], [], None
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            line = line.rstrip("\r\n")
+            if line.startswith("## "):
+                folder = line[line.rfind("(sound/") + 7:].rstrip(")") if "(sound/" in line else None
+                continue
+            if not line or folder not in HL2_VOICE:
+                continue
+            name, _, words = line.partition("\t")
+            base = name.rsplit(".", 1)[0]
+            words = words.strip()
+            if not words:
+                nowords.append(folder + name)
+                continue
+            out.append([HL2_VOICE[folder], "livingcity/hl2/" + folder + base, words])
+    return out, nowords
+
+
+def stem(name):
+    """A file's line: its name without the take number or the Administrator's tone word."""
+    return re.sub(r"(_(firm|stern|furious))?\d*$", "", name.lower())
+
+
+def missing_set(path):
+    """data/livingcity/voice_missing.txt (the server's lc_voice_missing): folder/name, one to a line."""
+    out = set()
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            line = line.strip().lower()
+            if "/" in line:
+                folder, _, name = line.rpartition("/")
+                out.add("livingcity/" + folder + "/" + stem(name))
+    return out
+
+
 def speak(key, voice_id, model, fmt, text):
     body = json.dumps({"text": text, "model_id": model}).encode("utf-8")
     req = urllib.request.Request(URL % (voice_id, fmt), data=body, method="POST",
@@ -45,6 +89,8 @@ def main():
     ap = argparse.ArgumentParser(description="Make Living City's generated voice lines with ElevenLabs.")
     for v in VOICES:
         ap.add_argument("--" + v, metavar="VOICE_ID", help="the ElevenLabs voice id for the %s (left out: those lines are skipped)" % v)
+    ap.add_argument("--hl2", metavar="FILE", help="make Half-Life 2's own lines instead: the hl2_lines.txt that lc_hl2_lines wrote on the server")
+    ap.add_argument("--missing", metavar="FILE", help="make only what the server lacks: the voice_missing.txt that lc_voice_missing wrote on the server")
     ap.add_argument("--out", default="voice_out", help="where to put the files (default: voice_out)")
     ap.add_argument("--model", default="eleven_v4", help="the ElevenLabs model (default: eleven_v4)")
     ap.add_argument("--format", default="mp3_44100_128", help="the sound format asked for (default: mp3_44100_128)")
@@ -58,7 +104,19 @@ def main():
     ids = {v: getattr(a, v) for v in VOICES}
     ids["gman_extra"] = a.gman if a.extras else None
     todo, chars, skipped_voice = [], 0, {}
-    for voice, path, text in rows():
+    source = rows()
+    if a.hl2:
+        source, nowords = hl2_rows(a.hl2)
+        if nowords:
+            print("%d clips have no words in the list (grunts, noises, or lines the caption file does not give): left out. First few: %s"
+                  % (len(nowords), ", ".join(nowords[:5])))
+    if a.missing and not a.hl2:
+        want = missing_set(a.missing)
+        before = len(source)
+        source = [row for row in source if row[0] in ("gman", "gman_extra")
+                  or (os.path.dirname(row[1]) + "/" + stem(os.path.basename(row[1]))) in want]
+        print("the server already has %d of these lines: left out" % (before - len(source)))
+    for voice, path, text in source:
         if not ids.get(voice):
             skipped_voice[voice] = skipped_voice.get(voice, 0) + 1
             continue
@@ -66,8 +124,9 @@ def main():
             p = path
             if take > 1:
                 p = path[:-1] + str(take) if path[-1] == "1" else path + str(take)
-            if voice == "unit":  # clean recordings: unit_radio.sh makes the ones the game uses
-                dest = os.path.join(a.out, "units_clean", os.path.basename(p) + ".mp3")
+            if voice in RADIO:  # clean recordings: unit_radio.sh makes the ones the game uses
+                sub = "units_clean" if not a.hl2 else os.path.join("radio_clean", os.path.dirname(p))
+                dest = os.path.join(a.out, sub, os.path.basename(p) + ".mp3")
             else:
                 dest = os.path.join(a.out, "sound", p + ".mp3")
             wav = voice in ("gman", "gman_extra")
@@ -130,7 +189,11 @@ def main():
         print("%4d  %s" % (made, wav if (wav and os.path.exists(wav)) else dest))
         time.sleep(max(0.0, a.pause))
     print("made %d files in %s" % (made, a.out))
-    if any(v == "unit" for v, _, _, _ in todo):
+    if a.hl2:
+        for d in sorted({os.path.dirname(dest) for v, dest, _, _ in todo if v in RADIO}):
+            rel = os.path.relpath(d, os.path.join(a.out, "radio_clean"))
+            print("radio voices are clean in %s: now run\n  bash _dev/tools/unit_radio.sh %s %s" % (d, d, os.path.join(a.out, "sound", rel)))
+    elif any(v == "unit" for v, _, _, _ in todo):
         print("unit lines are in %s/units_clean: now run\n  bash _dev/tools/unit_radio.sh %s/units_clean %s/sound/livingcity/units" % (a.out, a.out, a.out))
     return 0
 

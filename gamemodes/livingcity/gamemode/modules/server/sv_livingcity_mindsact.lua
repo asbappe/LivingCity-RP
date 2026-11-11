@@ -429,7 +429,7 @@ function ACT.seek(m, now)
         local ost = LC.NPCs[other]
         if LC.Face then LC.Face(n, other:GetPos()) LC.Face(other, n:GetPos()) end
         Line(n, s, "say_break_seek")
-        if ost then timer.Simple(2.5, function() if IsValid(other) and not (LC.OwnVoice and LC.OwnVoice(other, ost)) then other:EmitSound(Vo(ost, string.format("answer%02d", math.random(1, 20))), 70) end end) end
+        if ost then timer.Simple(2.5, function() local path = Vo(ost, string.format("answer%02d", math.random(1, 20))) if IsValid(other) and not (LC.OwnVoice and LC.OwnVoice(other, ost, path)) then other:EmitSound(path, 70) end end) end
         Psy.Chat(m, q, CurTime(), LC.MindsCtx or {})
         Psy.Think(m, "comforted", CurTime(), q.id)
         m.psy.stress = m.psy.stress * 0.8
