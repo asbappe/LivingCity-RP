@@ -644,6 +644,21 @@ end)
 
 -- Tied hands can't hold or use anything.
 hook.Add("PlayerCanPickupWeapon", "LivingCityTied", function(ply) if LC.IsTied(ply) then return false end end)
+
+-- A unit has an Arrest Baton: a stunstick lying about (a dead metrocop's) isn't theirs to pick up as a
+-- second one (the owner, 11 November: "I shouldn't even be able to pick it up, only citizens and rebels
+-- should be able to pick it up as a stunstick"). One handed to them by the game itself (a dream's
+-- Enforcer) is new that moment, and is let through.
+function LC.UnitLeavesStunstick(ply, wep)
+    if not (IsValid(ply) and IsValid(wep) and wep:GetClass() == "weapon_stunstick") then return false end
+    if not (LC.PlayerIsCP and LC.PlayerIsCP(ply)) then return false end
+    if ply.lcDreaming or (ply.GetNW2Bool and ply:GetNW2Bool("lc_dreaming", false)) then return false end
+    local born = wep.GetCreationTime and wep:GetCreationTime() or 0
+    return CurTime() - born > 0.5
+end
+hook.Add("PlayerCanPickupWeapon", "LivingCityUnitStunstick", function(ply, wep)
+    if LC.UnitLeavesStunstick(ply, wep) then return false end
+end)
 hook.Add("PlayerUse", "LivingCityTied", function(ply) if LC.IsTied(ply) then return false end end)
 hook.Add("PlayerSpawn", "LivingCityTied", function(ply)
     if LC.Tied[ply] then LC.Tied[ply] = nil end

@@ -82,17 +82,46 @@ end
 -- Judgment waiver (sociostability red): every metrocop on the street has his
 -- pistol out, not his stick, until it's lifted.
 function LC.WaiverIn() return LC.Socio == "red" end
+
+-- A firefight is no place for a stick (the owner, 11 November: in a raid on the Combine's ground "metrocops
+-- were walking around ... holding arrest batons and doing nothing while soldiers and rebels were shooting").
+-- A metrocop whose enemy is one of the Resistance's fighters or the infested, or who stands within
+-- FIGHT_NEAR of a raid or a sweep under way, has his pistol out until it's over.
+local FIGHT_NEAR = 2200
+function LC.CopInFirefight(npc)
+    local e = npc.GetEnemy and npc:GetEnemy()
+    if IsValid(e) and e.IsNPC and e:IsNPC() then
+        local es = LC.NPCs and LC.NPCs[e]
+        if es and (es.role == "rebel" or es.role == "zombie") then return true end
+    end
+    local sk = LC.Skirmish
+    if sk then
+        for _, at in ipairs({ sk.target, sk.zone and (sk.zone.pos or sk.zone.center) }) do
+            if at and at.DistToSqr and npc:GetPos():DistToSqr(at) < FIGHT_NEAR * FIGHT_NEAR then return true end
+        end
+    end
+    return false
+end
+
 function LC.WaiverArmTick()
     local waiver = LC.WaiverIn()
     for npc, st in pairs(LC.NPCs or {}) do
         if st.role == "cop" and IsValid(npc) then
+            local fight = LC.CopInFirefight(npc)
+            if fight and not st.fightDrawn then
+                st.fightDrawn = true
+                LC.DrawPistol(npc, st)
+            elseif not fight and st.fightDrawn then
+                st.fightDrawn = nil
+                if not waiver and not st.armed and st.state ~= "hostile" then LC.HolsterPistol(npc, st) end
+            end
             if waiver and not st.waiverDrawn then
                 st.waiverDrawn = true
                 LC.DrawPistol(npc, st)
             elseif not waiver and st.waiverDrawn then
                 st.waiverDrawn = nil
                 -- (one still after somebody, or sent by an alarm, keeps it out)
-                if not st.armed and st.state ~= "hostile" then LC.HolsterPistol(npc, st) end
+                if not st.armed and not st.fightDrawn and st.state ~= "hostile" then LC.HolsterPistol(npc, st) end
             end
         end
     end

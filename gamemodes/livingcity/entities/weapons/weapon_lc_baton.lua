@@ -123,3 +123,35 @@ function SWEP:Reload()
         if not ok and why then Tell(owner, why) end
     end
 end
+
+-- The charge at the head of it, in your own view (the owner, 11 November: a stunstick picked up off a dead
+-- metrocop "has the electric effect ... and I love it. Why can't the arrest baton have that?"). Half-Life 2's
+-- stunstick draws its glow on the view model's spark attachments; so does this, flickering.
+if CLIENT then
+    local GLOW = Material("sprites/light_glow02_add")
+    local FLARE = Material("effects/blueflare1")
+    local SMALL = { "spark1a", "spark1b", "spark2a", "spark2b" }
+    local function At(vm, name)
+        local id = vm.LookupAttachment and vm:LookupAttachment(name) or 0
+        if not id or id <= 0 then return nil end
+        local a = vm:GetAttachment(id)
+        return a and a.Pos or nil
+    end
+    function SWEP:PostDrawViewModel(vm)
+        if not IsValid(vm) or not render or not render.DrawSprite then return end
+        local rear = At(vm, "sparkrear")
+        if rear then
+            local s = math.Rand(7, 10)
+            render.SetMaterial(GLOW)
+            render.DrawSprite(rear, s, s, Color(255, 255, 255, 255))
+        end
+        render.SetMaterial(FLARE)
+        for _, name in ipairs(SMALL) do
+            local pos = At(vm, name)
+            if pos and math.random() < 0.6 then
+                local s = math.Rand(1.5, 3.5)
+                render.DrawSprite(pos, s, s, Color(255, 255, 255, 255))
+            end
+        end
+    end
+end
