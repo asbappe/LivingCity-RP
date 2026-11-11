@@ -820,6 +820,7 @@ end
 local function Leave(p)
     if p.lcEndFrozen or (p.IsFrozen and p:IsFrozen()) then p:Freeze(false) end
     p.lcEndFrozen = nil
+    if p.lcMingeGod then p.lcMingeGod = nil if p.GodDisable then p:GodDisable() end end -- (carried off by a mingebag: sv_livingcity_endings.lua)
     if p.SetMoveType then p:SetMoveType(MOVETYPE_WALK) end
     if p.SetNoDraw then p:SetNoDraw(false) end
     if p.SetNotSolid then p:SetNotSolid(false) end

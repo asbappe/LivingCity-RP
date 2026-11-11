@@ -14451,11 +14451,10 @@ do
     local wasV = E.vulnerable
     E.vulnerable = true
     mg.lcMinge.hp = 1
-    ok(LC.MingeHurt(mg, nil) == true and not a.lcMingeCarried and not a.lcEndTaken and not a.frozen and a:Health() == 40, "shot down, it drops them, alive and free to run")
+    ok(LC.MingeHurt(mg, nil) == false and IsValid(mg) and a.lcMingeCarried ~= nil and mg.lcMinge.invincible and a.lcMingeGod,
+        "nothing interrupts it: the one with a player over its head can't be shot down, and nothing touches the player (the owner, 11 November)")
     E.vulnerable = wasV
-    local mg2
-    for _, m in ipairs(E.minges) do if IsValid(m) and not m.lcMinge.carry then mg2 = m break end end
-    LC.MingeCarry(a, mg2)
+    local mg2 = mg
     a.lcMingeCarried.turnAt = CurTime()
     _run(0.3)
     local own = a.lcMingeSelf
@@ -14468,13 +14467,20 @@ do
     local victim
     for _, list in ipairs({ E.combine or {}, E.folk or {} }) do for _, n in ipairs(list) do if IsValid(n) and not n.lcEndTaken then victim = victim or n end end end
     local mg3
-    for _, m in ipairs(E.minges) do if IsValid(m) and not m.lcMinge.carry then mg3 = m break end end
+    for _, m in ipairs(E.minges) do if IsValid(m) and not m.lcMinge.carry and not m.lcMinge.invincible and not m.lcMinge.was then mg3 = m break end end
     if victim and mg3 then
         local bodies0, minges0 = #(E.bodies or {}), #E.minges
         ok(LC.MingeCarry(victim, mg3) == true and victim.lcEndTaken and mg3.lcMinge.carry == victim, "one of the Combine's units (or the city's people) is carried off the same way")
         victim.lcMingeCarried.turnAt = CurTime()
         LC.MingeStep(mg3, 0.1)
         ok(not IsValid(victim) and #E.minges == minges0 + 1 and #(E.bodies or {}) == bodies0, "and comes back as one more of them: no body left lying there")
+        local wasV2 = E.vulnerable
+        E.vulnerable = true
+        mg2.lcMinge.hp = 1
+        ok(LC.MingeHurt(mg2, nil) == false and IsValid(mg2), "(the one that took the player stays unstoppable after it has set them down)")
+        mg3.lcMinge.hp = 1
+        ok(not mg3.lcMinge.invincible and LC.MingeHurt(mg3, nil) == true, "(one that only ever took a unit can still be shot down)")
+        E.vulnerable = wasV2
     end
 end
 for _, n in ipairs(FIRE) do _files["sound/npc/metropolice/vo/" .. n .. ".wav"] = nil end
@@ -14484,7 +14490,8 @@ for _, m in ipairs(E.minges) do if IsValid(m) then if m.lcMinge.carry or m.lcMin
 runTo(39.5)
 freeM = 0
 for _, m in ipairs(E.minges) do if IsValid(m) and not (m.lcMinge.carry or m.lcMinge.was) then freeM = freeM + 1 end end
-ok(freeM > maxM and freeM <= math.floor(maxM * LC.MingeMore), "once they leap there are half as many again (carrying people off keeps them busy, and the song is no longer)", freeM .. " of " .. maxM)
+-- (and each unit or citizen turned is one more on top)
+ok(freeM > maxM and freeM >= math.floor(maxM * LC.MingeMore) - 2, "once they leap there are half as many again (carrying people off keeps them busy, and the song is no longer)", freeM .. " of " .. maxM)
 ok(not b.lcEndTaken, "(someone still standing, five seconds and a bit from the end)")
 runTo(40.3)
 ok(b.lcEndTaken and b:GetNW2Bool("lc_end_spectating", false) and IsValid(b.lcMingeBody) and not IsValid(b.lcMingeSelf), "the last five seconds: whoever still stands is killed where they stand, a body on the ground")
