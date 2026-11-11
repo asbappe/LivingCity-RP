@@ -826,7 +826,7 @@ local function Leave(p)
     if p.SetGravity then p:SetGravity(1) end
     if p.lcEndSpectating and p.UnSpectate then p:UnSpectate() if p.Spawn then p:Spawn() end end
     for _, k in ipairs({ "lcEndTaken", "lcEndRide", "lcEndHang", "lcEndUnder", "lcEndSpectating", "lcEndWatching", "lcEndRoam", "lcHang", "lcHangHP",
-        "lcShalom", "lcFire", "lcHora", "lcBloomUp", "lcEndModel", "lcMingeCarried", "lcMingeSelf" }) do p[k] = nil end
+        "lcShalom", "lcFire", "lcHora", "lcBloomUp", "lcEndModel", "lcMingeCarried", "lcMingeSelf", "lcMingeBody" }) do p[k] = nil end
     for _, k in ipairs({ "lc_end_taken", "lc_end_spectating", "lc_dancing", "lc_seated", "lc_rocking", "lc_chair", "lc_flying", "lc_limp", "lc_minge_carried" }) do p:SetNW2Bool(k, false) end
     p:SetNW2Float("lc_fire", 0)
     p:SetNW2Float("lc_hanged", 0)

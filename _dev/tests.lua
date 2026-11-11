@@ -14349,7 +14349,7 @@ concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
 local realGetAll = player.GetAll
 player.GetAll = function() return { a, b } end -- (just these two in the world for the endings below: the suite's other players would crowd the landing zone)
 _setcvar("lc_ending_minge_swell", 20)
-_setcvar("lc_ending_minge_end", 40)
+_setcvar("lc_ending_minge_end", 45) -- (45, not 40: the last five seconds are the killing and the rising now)
 _setcvar("lc_ending_minge_max", 12)
 ok(LC.TriggerEnding("harpies", a), "again (cooldown cleared)")
 _run(5)
@@ -14478,14 +14478,27 @@ do
     end
 end
 for _, n in ipairs(FIRE) do _files["sound/npc/metropolice/vo/" .. n .. ".wav"] = nil end
-runTo(38.5)
+local maxM = GetConVar("lc_ending_minge_max"):GetInt()
+local busyM, freeM = 0, 0
+for _, m in ipairs(E.minges) do if IsValid(m) then if m.lcMinge.carry or m.lcMinge.was then busyM = busyM + 1 else freeM = freeM + 1 end end end
+runTo(39.5)
+freeM = 0
+for _, m in ipairs(E.minges) do if IsValid(m) and not (m.lcMinge.carry or m.lcMinge.was) then freeM = freeM + 1 end end
+ok(freeM > maxM and freeM <= math.floor(maxM * LC.MingeMore), "once they leap there are half as many again (carrying people off keeps them busy, and the song is no longer)", freeM .. " of " .. maxM)
+ok(not b.lcEndTaken, "(someone still standing, five seconds and a bit from the end)")
+runTo(40.3)
+ok(b.lcEndTaken and b:GetNW2Bool("lc_end_spectating", false) and IsValid(b.lcMingeBody) and not IsValid(b.lcMingeSelf), "the last five seconds: whoever still stands is killed where they stand, a body on the ground")
+runTo(43.5)
 ok(a.lcEndTaken and b.lcEndTaken and a.alive and b.alive and a:GetNW2Bool("lc_end_spectating", false),
     "by the end everyone's gone, and the dead watch (nobody really dies: no close call, no new character)")
-runTo(39.7)
-ok(b:GetNW2Bool("lc_end_spectating", false) and not b.lcMingeCarried and IsValid(b.lcMingeSelf), "the last one standing was snatched up and turned too, not killed where they stood",
-    tostring(b:GetNW2Bool("lc_end_spectating", false)) .. " carried=" .. tostring(b.lcMingeCarried ~= nil) .. " self=" .. tostring(IsValid(b.lcMingeSelf)))
+ok(IsValid(b.lcMingeSelf) and b.lcMingeSelf.lcMinge.was == b and b.lcMingeBody == nil and b.lcEndWatching == b.lcMingeSelf,
+    "three from the end the dead get up as mingebags where they fell, and watch from their own")
+local function OutM(m) local c = m:GetPos() - E.lz return math.sqrt(c.x * c.x + c.y * c.y) end
+local own, dOwn = b.lcMingeSelf, OutM(b.lcMingeSelf)
+runTo(44.6)
+ok(IsValid(own) and own.lcMinge.fleeGoal ~= nil and OutM(own) > dOwn + 200, "and in the last second and a half every one of them scurries off into the night", OutM(own) - dOwn)
 ok(LC.EndingSession().phase == "apocalypse", "the song plays out with the dead watching")
-runTo(41)
+runTo(46)
 ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and when it's over the city resets")
 _run(6)
 ok(reloaded == 1 and LC.EndingSession() == nil and not a.lcEndTaken, "and the map reloads")

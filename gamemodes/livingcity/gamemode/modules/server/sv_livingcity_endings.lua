@@ -632,7 +632,7 @@ LC.EndingSpectator = Spectator
 
 local function Slaughter(p, how)
     if not IsValid(p) or p.lcEndTaken then return end
-    Body(p:GetModel(), p:GetPos(), p:EyeAngles().y, 260)
+    p.lcMingeBody = Body(p:GetModel(), p:GetPos(), p:EyeAngles().y, 260) -- (kept: in the harpies the dead rise from where they fell)
     p:EmitSound("vo/npc/male01/pain0" .. math.random(7, 9) .. ".wav", 80)
     Spectator(p, how or "The mingebags got you.")
 end
@@ -646,7 +646,15 @@ LC.EndingSlaughter = Slaughter
 -- watching (clicks still look at someone else). Shoot the one carrying someone and it drops them, alive.
 -- The owner, later on 11 November: "Replace both the ending and the dream with this new idea". So nobody is killed
 -- where they stand any more, as the city's ending or as a dream: the Combine's units and the city's people are
--- carried off and come back as mingebags too, and in the last two seconds whoever is left is taken the same way.
+-- carried off and come back as mingebags too.
+-- The owner, later still: "adjust the dream so there are more of them so it still lasts the same time as the song. If
+-- any players are left in the last 5 seconds, the mingebags kill them, then all the dead players transform into
+-- mingebags and rise, and scurry into the night". So: half as many again once they leap (LC.MingeMore), and the ones
+-- with their hands full or that were players don't count against that; 5 seconds from the end whoever still stands
+-- is killed where they stand (LC.MingeKillAt), 3 from the end the dead players get up as mingebags out of the ground
+-- where they fell (LC.MingeRiseAt), and 1.5 from the end every one of them runs off into the night (LC.MingeScatterAt).
+LC.MingeMore = 1.5
+LC.MingeKillAt, LC.MingeRiseAt, LC.MingeScatterAt = 5, 3, 1.5
 LC.MingeCarrySecs = 6
 LC.MingeCarryUp = 78 -- (how high over it they're held)
 local function Drop(p, hp)
@@ -747,6 +755,30 @@ function LC.MingeTurn(p)
     return true
 end
 
+-- A dead player gets up as one of them, out of the ground where they fell.
+function LC.MingeRise(p)
+    if not E or not IsValid(p) or IsValid(p.lcMingeSelf) then return false end
+    local body = p.lcMingeBody
+    local at = IsValid(body) and body:GetPos() or p:GetPos()
+    local g = Ground(at)
+    if g then at = Vector(at.x, at.y, g.z) end
+    p.lcMingeBody = nil
+    local c = E.lz or Centre()
+    local own = SpawnMinge(at - UP * 50, math.atan2(at.y - c.y, at.x - c.x))
+    if not IsValid(own) then return false end
+    if IsValid(body) then body:Remove() end
+    own.lcMinge.was = p
+    own.lcMinge.rise = { t0 = CurTime(), dur = 1.4, from = at.z - 50, to = at.z }
+    if own.SetNW2String then own:SetNW2String("lc_minge_was", p:Nick()) end
+    own:EmitSound("npc/zombie/zombie_alert" .. math.random(1, 3) .. ".wav", 80, 140)
+    p.lcMingeSelf, p.lcEndWatching, p.lcEndRoam = own, own, nil
+    if p.SpectateEntity then p:SpectateEntity(own) end
+    if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(60, 0, 90, 255), 1.5, 0) end
+    p:ChatPrint("You get up. Your arms won't come down. You slide. You're one of them now.")
+    hook.Run("LivingCityMingeTurned", p, own)
+    return true
+end
+
 -- How hard they hit: light for the first 30 seconds of the leaping (a chance
 -- to run), then climbing steeply to full at 45 seconds, and worse after.
 function LC.MingeFury(now)
@@ -792,6 +824,14 @@ function LC.MingeStep(m, dt)
     if not s or not E or E.id ~= "harpies" then return end
     local now = CurTime()
     local pos = m:GetPos()
+    -- getting up out of the ground (a dead player, turned)
+    if s.rise then
+        local R = s.rise
+        local f = math.Clamp((now - R.t0) / R.dur, 0, 1)
+        m:SetPos(Vector(pos.x, pos.y, R.from + (R.to - R.from) * f))
+        if f >= 1 then s.rise = nil end
+        return
+    end
     -- someone held over its head: they go where it goes, until they turn
     if s.carry then
         local p = s.carry
@@ -1160,8 +1200,13 @@ TICK.harpies = function(now)
     local alive = {}
     for _, m in ipairs(E.minges) do if IsValid(m) then alive[#alive + 1] = m end end
     E.minges = alive
-    local want = mode == "lurk" and math.floor(4 + (cvMingeMax:GetInt() - 4) * k ^ 1.3) or cvMingeMax:GetInt()
-    if #E.minges < want and now >= (E.nextSpawn or 0) then
+    -- (once they leap there are half as many again, and one with its hands full, or that was a player, isn't counted:
+    -- carrying people off takes each of them out of it for a while, and the song is no longer)
+    local want = mode == "lurk" and math.floor(4 + (cvMingeMax:GetInt() - 4) * k ^ 1.3) or math.floor(cvMingeMax:GetInt() * (mode == "leap" and LC.MingeMore or 1))
+    local busy = 0
+    for _, m in ipairs(E.minges) do if m.lcMinge and (m.lcMinge.carry or m.lcMinge.was) then busy = busy + 1 end end
+    local scatter = t >= fin - LC.MingeScatterAt
+    if #E.minges - busy < want and now >= (E.nextSpawn or 0) and t < fin - LC.MingeRiseAt then
         E.nextSpawn = now + (mode == "lurk" and 0.4 or 0.1)
         local g, a = RingSpot(centre, mode == "lurk" and far or 900, mode == "lurk" and k < 0.6)
         -- (only somewhere it can get to everyone from on foot: never shut away behind a wall)
@@ -1232,6 +1277,17 @@ TICK.harpies = function(now)
             s.leap, s.target, s.noclip = nil, nil, true
             s.goal, s.speed = s.carryGoal or s.goal, 430
             if s.goal then m:SetAngles(Angle(0, (s.goal - pos):Angle().y, 0)) end
+        elseif scatter and not s.rise then
+            -- (the end: every one of them, the ones that were players too, scurries off into the night)
+            if not s.fleeGoal then
+                local off = Vector(pos.x - centre.x, pos.y - centre.y, 0)
+                if off:Length() < 1 then off = Vector(math.Rand(-1, 1), math.Rand(-1, 1), 0) end
+                off:Normalize()
+                s.fleeGoal = pos + off * 4000
+            end
+            s.leap, s.target, s.noclip, s.path = nil, nil, true, nil
+            s.goal, s.speed = s.fleeGoal, 760
+            m:SetAngles(Angle(0, (s.fleeGoal - pos):Angle().y, 0))
         end
     end
     -- (carried by one that's gone: let go)
@@ -1243,27 +1299,24 @@ TICK.harpies = function(now)
     end
 
     -- the last two seconds: nobody's left
-    if t >= fin - 2 then
-        -- (there's nowhere left: whoever still stands is snatched up at once, and everyone carried is one of them
-        -- before the song's last half second. Nobody is killed where they stand.)
-        local free = {}
-        for _, m in ipairs(E.minges) do if IsValid(m) and m.lcMinge and not m.lcMinge.carry then free[#free + 1] = m end end
-        local function Snatch(v)
-            if not IsValid(v) or v.lcEndTaken then return end
-            local m = table.remove(free)
-            if not (m and LC.MingeCarry(v, m, 1.2)) then
-                v.lcEndTaken, v.lcMingeCarried = true, { by = NULL, t0 = now, turnAt = now } -- (none free to carry them: taken where they are)
-                LC.MingeTurn(v)
+    -- the last five seconds: whoever still stands is killed where they stand
+    if t >= fin - LC.MingeKillAt and not E.minged then
+        E.minged = true
+        for _, p in ipairs(living) do Slaughter(p, "There's nowhere left. The mingebags got you.") end
+        for _, list in ipairs({ E.combine or {}, E.folk or {} }) do
+            for _, n in ipairs(list) do
+                if IsValid(n) then
+                    if n.lcMingeCarried then LC.MingeTurn(n) else Body(n:GetModel(), n:GetPos(), n:GetAngles().y, 260) n:Remove() end
+                end
             end
         end
-        for _, p in ipairs(living) do Snatch(p) end
-        for _, n in ipairs(E.combine or {}) do Snatch(n) end
-        for _, c in ipairs(E.folk or {}) do Snatch(c) end
-        if t >= fin - 0.5 then
-            for _, p in ipairs(LC.EndingPlayers()) do if p.lcMingeCarried then LC.MingeTurn(p) end end
-            for _, list in ipairs({ E.combine or {}, E.folk or {} }) do
-                for _, n in ipairs(list) do if IsValid(n) and n.lcMingeCarried then LC.MingeTurn(n) end end
-            end
+    end
+    -- three from the end: the dead players get up as mingebags, where they fell (and anyone still being carried turns)
+    if t >= fin - LC.MingeRiseAt and not E.risen then
+        E.risen = true
+        for _, p in ipairs(LC.EndingPlayers()) do
+            if p.lcMingeCarried then LC.MingeTurn(p)
+            elseif p.lcEndTaken and not IsValid(p.lcMingeSelf) then LC.MingeRise(p) end
         end
     end
     -- the dead keep watching someone
@@ -3958,7 +4011,7 @@ local function Clear()
         p:SetNW2Bool("lc_dancing", false)
         p:SetNW2Bool("lc_seated", false)
         if p.lcDreamSeat and LC.DreamUnseat then LC.DreamUnseat(p) end -- (still up on Shalom's chair as it ended)
-        p.lcMingeCarried, p.lcMingeSelf = nil, nil -- (the harpies: carried, or one of them)
+        p.lcMingeCarried, p.lcMingeSelf, p.lcMingeBody = nil, nil, nil -- (the harpies: carried, or one of them)
         p:SetNW2Bool("lc_minge_carried", false)
         p:SetNW2Entity("lc_riding", NULL)
         p.lcBloomUp = nil

@@ -1574,3 +1574,5 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **The harpies, all of it (11 November):** watch the Combine's units and the citizens: are they carried off too, with no bodies left? At the very end, is the last player snatched up and turned, not killed? Does it still feel like a slaughter is coming, or too slow?
   Notes:
+- [ ] **The harpies, the finale (11 November):** stay alive to the last five seconds: are you killed (a body), then three seconds from the end do you rise out of the ground as a mingebag where you fell, and do all of them run off into the night just before the song ends? Are there enough of them that the scene fills the whole song? Does the server cope with 90?
+  Notes:
