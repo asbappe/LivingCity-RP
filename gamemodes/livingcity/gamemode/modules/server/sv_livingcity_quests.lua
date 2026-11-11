@@ -3147,6 +3147,61 @@ end
 -- Post a directive right now, on every board it belongs on that has someone to
 -- take it, whatever else is there; tell them. focus: what it's about (a zone).
 -- Returns the postings made.
+-- Jobs to protect something that is on its way (a dropship's landing, a supply drop). The owner,
+-- 11 November: "those jobs/quests are time sensitive and only show on the board for 60 seconds: if at
+-- least one human player picks it up, then there is a further 60 second delay from their taking the
+-- job until the drop ship appears or the supply drop comes in. if no human players take the quest to
+-- secure the area, then the event doesn't wait and triggers 1 second after timing out on the job board".
+--   LC.ProtectWait(ids, postings, go): ids are the protecting jobs' template ids, postings what
+--   LC.PostDirective made for them, go(taken) is what arrives.
+LC.ProtectBoardSecs, LC.ProtectTakenSecs = 60, 60
+LC.ProtectWaits = LC.ProtectWaits or {}
+function LC.ProtectWait(ids, postings, go, what)
+    if LC.ProtectWaitOff then go(false) return nil end -- (the tests of what arrives don't sit through the wait)
+    local now = CurTime()
+    local w = { ids = {}, postings = postings or {}, postedAt = now, go = go, what = what or "It" }
+    for _, id in ipairs(ids) do w.ids[id] = true end
+    for _, p in ipairs(w.postings) do p.expiresPost = math.min(p.expiresPost or math.huge, now + LC.ProtectBoardSecs) end
+    LC.ProtectWaits[#LC.ProtectWaits + 1] = w
+    return w
+end
+function LC.ProtectWaitTick(now)
+    now = now or CurTime()
+    for i = #LC.ProtectWaits, 1, -1 do
+        local w = LC.ProtectWaits[i]
+        if not w.takenAt then
+            for ply, q in pairs(LC.QuestOf or {}) do
+                if IsValid(ply) and q and not q.done and q.tmpl and w.ids[q.tmpl.id] then
+                    w.takenAt = now
+                    for _, p in ipairs(Members(q)) do
+                        p:ChatPrint(string.format("[Living City] You have %d seconds to get there before it arrives.", LC.ProtectTakenSecs))
+                    end
+                    break
+                end
+            end
+        end
+        local due = w.takenAt and (w.takenAt + LC.ProtectTakenSecs) or (w.postedAt + LC.ProtectBoardSecs + 1)
+        -- everyone on the job sees the countdown in their job tracker, top right (the owner, 11 November:
+        -- "so that players know how long until the dropship arrives"; cl_livingcity_quests.lua)
+        if w.takenAt then
+            for ply, q in pairs(LC.QuestOf or {}) do
+                if IsValid(ply) and q and not q.done and q.tmpl and w.ids[q.tmpl.id] and ply:GetNW2Float("lc_protect_at", 0) ~= due then
+                    ply:SetNW2Float("lc_protect_at", due)
+                    ply:SetNW2String("lc_protect_what", w.what)
+                end
+            end
+        end
+        if now >= due then
+            table.remove(LC.ProtectWaits, i)
+            -- (nobody took it: off the board)
+            if not w.takenAt then for _, p in ipairs(w.postings) do if not p.q then p.dead = true end end end
+            local ok, err = pcall(w.go, w.takenAt ~= nil)
+            if not ok and LC.Error then LC.Error("protect wait", err) end
+        end
+    end
+end
+timer.Create("LivingCityProtectWait", 1, 0, function() LC.ProtectWaitTick(CurTime()) end)
+
 function LC.PostDirective(tid, focus)
     if not cvOn:GetBool() then return {} end
     local t

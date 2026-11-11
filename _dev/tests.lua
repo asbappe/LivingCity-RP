@@ -47,6 +47,7 @@ do
 end
 local function section(name) results.retire() table.insert(results.lines, "== " .. name) end
 _setcvar("lc_daily_rhythm", 0) -- (the city keeps to the clock; tested on its own, at the end)
+LC.ProtectWaitOff = true -- (a dropship or a supply drop comes at once, not after the wait for its guards: tested on its own)
 _setcvar("lc_stockpile", 0) -- (the city's ration stores: tested on their own, at the end)
 _setcvar("lc_garrison", 0) -- (the nexus garrison: tested on its own)
 _setcvar("lc_search_fight_choice", 0) -- (fight or comply: tested on its own, in the 1 November section)
@@ -5271,14 +5272,40 @@ ok(_lastnet("lc_cpmark") ~= nil, "a smuggler shows on units' screens")
 LC.Smugglers[fq] = nil
 -- overwatch drop
 _setcvar("lc_overwatch_drops", 1)
-local keepLead = LC.DropLead
-ok(keepLead == 75, "(a dropship is 75 seconds out when it's called in: the owner, 11 November, time to get there)")
-LC.DropLead = 6 -- (for the rest of this, the old six seconds)
+local keepBoard = LC.ProtectBoardSecs
+ok(keepBoard == 60 and LC.ProtectTakenSecs == 60, "(a job to protect something on its way is on the board a minute, and the thing waits a minute for whoever takes it: the owner, 11 November)")
+LC.ProtectBoardSecs = 4 -- (for the rest of this, nobody takes it and it leaves the board after four seconds)
+LC.ProtectWaitOff = nil
 local okD, d = LC.StartOverwatchDrop(C0 + Vector(4000, 4000, 0))
-LC.DropLead = keepLead
-ok(okD and LC.OverwatchDrop == d and d.landT > d.startT, "Overwatch can drop soldiers at a landing zone")
+ok(okD and LC.OverwatchDrop == d and d.landT == nil, "Overwatch can drop soldiers at a landing zone: called in, not yet on its way down")
 _run(8)
-ok(d.ship ~= nil and IsValid(d.ship) and d.ship:GetClass() == "lc_dropship", "they come by dropship")
+LC.ProtectBoardSecs = keepBoard
+do -- taken: it comes a minute after that, however long the board had left
+    local went
+    local posting = { expiresPost = CurTime() + 600 }
+    local w = LC.ProtectWait({ "cp_securelz" }, { posting }, function(taken) went = taken end)
+    ok(posting.expiresPost <= CurTime() + 60.01, "the job to protect it is on the board for a minute")
+    local t0 = CurTime()
+    local taker = newPlayer("LZTaker", "cp")
+    LC.QuestOf[taker] = { tmpl = { id = "cp_securelz" }, owner = taker, members = { taker }, stages = {}, stage = 1 }
+    LC.ProtectWaitTick(t0 + 20)
+    ok(w.takenAt == t0 + 20 and went == nil, "a unit takes it 20 seconds in: it waits for them")
+    LC.ProtectWaitTick(t0 + 70)
+    ok(went == nil, "still waiting 50 seconds after they took it")
+    LC.ProtectWaitTick(t0 + 80.5)
+    ok(went == true and posting.dead ~= true, "a minute after they took it, it arrives")
+    LC.QuestOf[taker] = nil
+    local went2
+    local posting2 = { expiresPost = CurTime() + 600 }
+    LC.ProtectWait({ "cp_securelz" }, { posting2 }, function(taken) went2 = taken end)
+    LC.ProtectWaitTick(t0 + 59)
+    ok(went2 == nil, "nobody takes it: nothing for the minute it's on the board")
+    LC.ProtectWaitTick(t0 + 61.5)
+    ok(went2 == false and posting2.dead == true, "a second after it leaves the board, it arrives anyway, and the job is gone")
+    taker:SetPos(Vector(-150000, 150000, 0))
+end
+LC.ProtectWaitOff = true
+ok(d.landT ~= nil and d.ship ~= nil and IsValid(d.ship) and d.ship:GetClass() == "lc_dropship", "they come by dropship, a second after the job left the board untaken")
 local shipStart = d.ship:GetPos()
 _run(27)
 ok(#d.soldiers >= 1, "and they arrive", tostring(#d.soldiers))

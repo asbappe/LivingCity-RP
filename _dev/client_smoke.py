@@ -540,6 +540,17 @@ if not kh then problems[#problems + 1] = "no kick reminder" else
     if not okK then problems[#problems + 1] = "the kick reminder errors: " .. tostring(errK) end
 end
 _me.nw.lc_kick_hint = nil
+-- the job tracker's countdown to what a protect job is waiting for (11 November)
+if LC_CL.ProtectArrives then
+    _me.nw.lc_protect_at, _me.nw.lc_protect_what = CurTime() + 42, "The dropship"
+    local line = LC_CL.ProtectArrives()
+    if line ~= "The dropship arrives in 0:42" and line ~= "The dropship arrives in 0:41" then problems[#problems + 1] = "the arrival countdown reads wrong: " .. tostring(line) end
+    _me.nw.lc_protect_at = CurTime() - 1
+    if LC_CL.ProtectArrives() ~= nil then problems[#problems + 1] = "the arrival countdown stays after it has arrived" end
+    _me.nw.lc_protect_at, _me.nw.lc_protect_what = nil, nil
+else
+    problems[#problems + 1] = "the arrival countdown is missing"
+end
 -- F3 and F4: with one window open, its own key shuts it and the other's key switches (11 November)
 if LC_CL.FMenu and LC_CL.FMenuPress then
     LC_CL.FMenu("gm_showspare2", nil) -- (an F4 window an earlier check left open)

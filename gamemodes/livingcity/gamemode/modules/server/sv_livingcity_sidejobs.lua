@@ -79,10 +79,15 @@ T{
 }
 
 -- The supply event posts these once the crate is actually down.
-hook.Add("LivingCitySupplyDrop", "LivingCitySideJobs", function()
+hook.Add("LivingCitySupplyDrop", "LivingCitySideJobs", function(s)
     if LC.PostDirective then
-        LC.PostDirective("cp_guardsupply")
+        local posted = LC.PostDirective("cp_guardsupply") or {}
         LC.PostDirective("res_raidsupply")
+        -- the drop waits for whoever takes the guard job (LC.ProtectWait, sv_livingcity_quests.lua)
+        if s and s.arrive and #posted > 0 and LC.ProtectWait then
+            s.held = true
+            LC.ProtectWait({ "cp_guardsupply" }, posted, s.arrive, "The supply drop")
+        end
     end
 end)
 
