@@ -404,3 +404,6 @@ Every commit says what it did; TIMELINE.md has the summary. The big pieces:
 
 - First chats: the first list (handoff in `docs/dev/handoff-2026-11-07.md`).
 - This chat (part 2): the owner's answers on three core items, the rest of the first list (Labor Assignment, rebel food scaling, shared dreams, the pockets, the kick, sweeps) and the whole second list (faction cleanup, arrests, Combine ground, field ops, guidance, pacing), built with nine workers in worktrees and merged. Details: `docs/dev/handoff-2026-11-07-part2.md`.
+
+- 2026-11-10: **Give menu** in the talk window (`LC.GiveKind`, `LC.GiveableTo`, `Give` in sv_livingcity_talk.lua; action `give:<id>`; hook `LivingCityGaveCitizen`; client DermaMenu; GiveTests (14)). Food still via ShareFood/`LivingCitySharedFood`. Resistance pamphlet (`rebel_pamphlet`, another chat) goes through `LC.GiveRebelPamphlet`; units never see arms in the menu.
+- 2026-11-11: the owner's 11 November playtest notes worked through (the Cremator, clearing away, stalkers' noise, G kick, the radio, the conditioning, night shift hours, vouchers, shift notices, the trail, chat lines, looping sounds, Bubbles, the health vial, music, the vortigaunt's charge); what is left is in `TODO.md`.

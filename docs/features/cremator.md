@@ -35,6 +35,14 @@ The flame is green, as the Immolator's was, drawn on the client from the model's
 - `lc_cremators` (1), `lc_cremator_grace` (90), `lc_cremator_speed` (2: twice the walker's pace; 1 was the first pace), `lc_cremator_model` (empty: found by itself).
 - `lc_cremator_spawn` (admins, console): one where you are looking, and a line saying which model and animations were found. An extra for checking; the Cremators need no command. In the console it also lists every Cremator model found and every animation the model has (lines starting `[cremator]`), for sending back when it looks wrong.
 
+## Changes from the 11 November playtest
+
+- **No fire left on small prey.** A Cremator no longer sets headcrabs, birds or manhacks alight (the fire's sizzle stayed on what they left, for minutes); the stream and the burn damage kill them. Anything it kills is put out as it dies, and a body is put out before it goes.
+- **Cooked, not raw.** A headcrab or bird a Cremator burns to death leaves its cooked meat (`cooked_headcrab`, `cooked_bird`), which spoils as cooked meat does.
+- **Carcasses are burnt too.** What a dead headcrab or bird leaves (an item, not a body) is burnt where it lies, after the same wait as a body (`lc_cremator_grace`).
+- **Barricades.** Every 20 seconds it checks whether it got anywhere (80 units). Twice running without, it gives up on what it was after and, out of sight (or after two minutes, seen or not), starts again at a street spot nobody can see.
+- **The flame** is greener, with a glow along the stream and a stronger green light.
+
 ## Code
 
 `sv_livingcity_cremator.lua` (`LC.CrematorModel`, `LC.CrematorPace`, `LC.CrematorModelsFound`, `LC.CrematorSequence`, `LC.SpawnCremator`, `LC.CrematorEnemy`, `LC.CrematorBody`, `LC.CrematorsStaff`/`Think`/`Tick`, `LC.CrematorDie`, `LC.CrematorSummary`; hooks `LivingCityCremated` with the walker as who, `LivingCityCrematorKilled`), `cl_livingcity_cremator.lua` (the flame). Tests: CrematorTests.

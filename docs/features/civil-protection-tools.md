@@ -62,3 +62,16 @@ Something for Civil Protection to do when no rebels are about. Every Civil Prote
 - **A break, if they want one:** My shift > "Go on a break": no shift and no review until F2 > Me > "Back on duty", which starts a fresh shift (the one they were on is dropped).
 - `lc_cp_duty` 0 turns it off.
 
+
+## Changes from the 11 November playtest
+
+- **The kick key (G) works.** It sent the console command `lc_kick`, which on a player's game is the server's on/off setting of the same name and only printed its value; the key now sends the kick the way F2 > Kick does.
+- **The radio comes back out.** R on your empty hands draws what you last held; the same R, still down, no longer puts the radio straight back.
+- **A shift tells you about itself:** a notice when it starts (with the quota), when half of it is gone and with two minutes left. Its clock waits while the editor tool is out.
+- **The night shift** is only on the board from 18:00 to 21:00 (it was there from dusk to dawn and could still be taken the next day), and is checked again when taken.
+- **Ration vouchers** come about every 14 minutes instead of 10 (30% fewer); the coupons in credits still come every 10.
+- **The daily health vial** goes into your pockets as an item (`health_vial`, 10 health when used); on the floor only when the pockets are full.
+- **Vest charging** at a CP Commissary and at a power bank no longer uses Half-Life 2's charger hum, which loops for ever.
+- **Cuffing:** the Arrest Baton's on-screen tip now says F2 with the person in front of you (Cuff, Drag), not the Unit tools window.
+- **Action music:** about 20 seconds after the last shot it ends (it was 50), a violent job only counts within 1500 units of where it happens, and afterwards the city is quiet for 8 to 15 minutes. More calm and tense pieces, none of the last six repeated.
+- **Ground retaken or lost:** each player gets one chat line (their radio's, or the city's), not one from every band.

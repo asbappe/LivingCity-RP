@@ -359,6 +359,7 @@ item gun_parts
 item gun_pistol
 item gun_shotgun
 item gun_smg
+item health_vial
 item id_papers
 item intel_checkpoint
 item intel_nexus
@@ -1172,6 +1173,7 @@ setting lc_thirst_minutes = 40
 setting lc_tie_seconds = 3
 setting lc_tired_days = 1
 setting lc_trail = 1
+setting lc_trail_straight = 1
 setting lc_train_minutes = 24
 setting lc_trains = 1
 setting lc_trespass_grace = 10

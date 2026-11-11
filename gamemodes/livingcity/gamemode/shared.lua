@@ -282,6 +282,7 @@ LC_MODULES = {
         "cl_livingcity_kick",
         "cl_livingcity_arrest", -- (the struggle bar when someone resists arrest)
         "cl_livingcity_cremator", -- (the Cremator's flame)
+        "cl_livingcity_vortcharge", -- (a vortigaunt charging a vest: the green beam from its hand)
         "cl_livingcity_ways",
         "cl_livingcity_outfits",
         "cl_livingcity_lab",

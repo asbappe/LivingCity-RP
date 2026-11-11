@@ -13748,6 +13748,7 @@ LC.SettleVort(v)
 for _ = 1, 4 do _advance(5) _runtimers() end
 LC.VortCharge(reb, v)
 ok(reb:Armor() > 0 and reb:Health() == 50, "a freed vortigaunt charges our vests when asked (and doesn't heal)", reb:Armor() .. " / " .. reb:Health())
+ok(v:GetNW2Entity("lc_vort_charge_to") == reb and v:GetNW2Float("lc_vort_charge_until", 0) > CurTime(), "and it shows: for a few seconds its energy runs to whoever it charged (the owner, 11 November)")
 LC.RebelVorts[v] = nil v:Remove()
 -- Father Grigori
 local z = LC.AddZone(V0 + Vector(6000, 0, 0), 600, "rebel", 0)

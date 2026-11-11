@@ -204,3 +204,5 @@ The staging above (the opening card, the figures' acting, the finish) is for the
 - Only when the dream itself ends: not for someone who woke early, an Enforcer, or a test from the editor.
 - Not done for the endings: the figures' acting and the dreamers' flinch and cheer. Those endings move everyone themselves (the dances, the rope, the flood), and the two would fight.
 
+
+**Changes from the 11 November playtest.** **Bubbles:** 30 bubbles at a time (it was 18), about 37% of them lift bubbles (it was 15%: about four times as many); a lift bubble throws you up harder (640) and leaves you floating at very low gravity for 12 seconds. **Strange dreams' music:** each lurch lasts 3 to 6 seconds (twice as long), 13 to 23 seconds apart.

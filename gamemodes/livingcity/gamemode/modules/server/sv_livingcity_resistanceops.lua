@@ -1044,6 +1044,57 @@ end
 -- A freed vortigaunt charges your vest when you ask it (E), not by itself (not while you sleep
 -- beside it): once every lc_vort_charge_minutes.
 local cvVortCharge = CreateConVar("lc_vort_charge_minutes", "10", FLAGS, "Minutes before a freed vortigaunt will charge the same person's vest again (E on it)")
+-- The charge as you see it (the owner, 11 November: "can we have them do the animation like from HL2
+-- when they charge Freeman's HEV suit? they hold up their hand and green energy pulses to the player").
+-- The vortigaunt turns to you and plays its charging animation (whichever this model has: likely names
+-- first, then anything of its own that sounds like it), and for LC.VortChargeSecs a green beam runs from
+-- its hand to your chest (cl_livingcity_vortcharge.lua).
+LC.VortChargeSecs = 3
+LC.VORT_CHARGE_CANDIDATES = { "chargeup", "charge_up", "armor_charge", "heal_cycle", "heal_start", "heal", "ChargeLoop", "ArmStart", "zapattack1", "dispel" }
+local vortSeq = {} -- [model] = name or false
+function LC.VortChargeSequence(v)
+    if not IsValid(v) or not v.LookupSequence then return nil end
+    local mdl = v:GetModel() or ""
+    if vortSeq[mdl] ~= nil then return vortSeq[mdl] or nil end
+    local name
+    for _, cand in ipairs(LC.VORT_CHARGE_CANDIDATES) do
+        local i = v:LookupSequence(cand)
+        if i and i >= 0 then name = cand break end
+    end
+    if not name and v.GetSequenceList then
+        for _, word in ipairs({ "charge", "heal", "zap" }) do
+            for _, seq in pairs(v:GetSequenceList() or {}) do
+                if string.find(string.lower(tostring(seq)), word, 1, true) then name = tostring(seq) break end
+            end
+            if name then break end
+        end
+    end
+    vortSeq[mdl] = name or false
+    if LC.Log then LC.Log("info", "vortigaunt charging animation: " .. (name and ("'" .. name .. "'") or "none found") .. " on " .. mdl) end
+    return name
+end
+
+function LC.VortChargeShow(ply, v)
+    if not IsValid(ply) or not IsValid(v) then return false end
+    local secs = LC.VortChargeSecs
+    if LC.Face then LC.Face(v, ply:GetPos()) end
+    v:SetNW2Entity("lc_vort_charge_to", ply)
+    v:SetNW2Float("lc_vort_charge_until", CurTime() + secs)
+    local name = LC.VortChargeSequence(v)
+    if name and LC.MakeSequence then
+        local flags = (SF_SCRIPT_NO_COMPLAINTS or 128) + (SF_SCRIPT_ALLOW_DEATH or 64)
+        local ok, ss = pcall(LC.MakeSequence, v, v:GetPos(), v:GetAngles().y, name, name, flags, 0, 0)
+        if ok and IsValid(ss) then
+            timer.Simple(secs + 0.3, function()
+                if not IsValid(ss) then return end
+                ss:Fire("CancelSequence")
+                if SafeRemoveEntityDelayed then SafeRemoveEntityDelayed(ss, 0.5) else ss:Remove() end
+            end)
+        end
+    end
+    return true
+end
+
 function LC.VortCharge(ply, v)
     if not IsValid(v) or not LC.RebelVorts[v] or not IsValid(ply) or not ply:Alive() then return false end
     if not IsResistance(ply) then return false, "The vortigaunt looks at you, and through you." end
@@ -1056,6 +1107,7 @@ function LC.VortCharge(ply, v)
     ply.lcVortChargeNext = now + cvVortCharge:GetFloat() * 60
     LC.ChargeVest(ply, 25)
     v:EmitSound("npc/vort/health_charge.wav", 65)
+    LC.VortChargeShow(ply, v)
     return true, "The vortigaunt's hands glow green, and your vest hums with charge."
 end
 hook.Add("PlayerUse", "LivingCityVortCharge", function(ply, ent)
