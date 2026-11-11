@@ -550,6 +550,8 @@ function LC.AdminApply(d, now)
     end
     local ok, why = LC.AdminDecree(what, arg, target, words)
     if not ok then return false, tostring(why or "the office refused") end
+    -- her sentence, out loud (sv_livingcity_voice.lua; nothing unless lc_voice is on and a voice is set)
+    if words ~= "" and LC.VoiceSpeak then LC.VoiceSpeak(words, "The City Administrator") end
     return true, what .. " " .. (IsValid(target) and CharName(target) or tostring(arg)) .. (words ~= "" and (": \"" .. words .. "\"") or "")
 end
 

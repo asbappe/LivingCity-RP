@@ -1563,3 +1563,5 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
 - [ ] **The G-Man and the city's own (11 November):** with nobody elected, let the city go BLACK a few times (or step it with the staff tools). About two times in three she should step down or end it after one or two refusals; the third, her last stand.
 - [ ] **The close, 11 November:** dream one of the endings to its end (the harpies, the plane, the fire). As you wake in bed, "The dream is over" and a line about that dream should show for five seconds. Lose a dream you play: a closing line too.
   Notes:
+- [ ] **Her voice (11 November, once there is an ElevenLabs key and voice id):** editor panel > "Her voice": paste both, Save, Test her voice. Do you hear her? Tick the box, wait for a decree from the city's own Administrator: is the sentence spoken after the PA, for everyone, in the same voice as her recordings?
+  Notes:

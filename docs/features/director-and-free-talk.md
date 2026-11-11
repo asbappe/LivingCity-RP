@@ -36,6 +36,18 @@ Asked for by the owner, 11 November: "another great option is for the NPC admini
 
 These are the office's own acts with the same waits a player Administrator has (`LC.AdminDecree` in `sv_livingcity_cityadmin.lua`), announced the same way as "The City Administrator", with one sentence of hers the model wrote. **She has no bodyguard orders, housing grants or curfew permits.** The moment a player is elected the model is out of the office, and during the collapse (BLACK) she is left to its own script. Which voice makes the PA's announcements is unchanged. Every decree goes in the minds' log as an `ADMINISTRATOR` line, and the last four are in the debug report. `lc_brain_admin` 0 leaves the office empty, as before.
 
+## Her voice: decrees spoken (off until turned on)
+
+Asked for by the owner, 11 November ("Please build it but I don't have the key or voice id so just leave it disabled for now, ready to turn on in the future"). Code: `sv_livingcity_voice.lua`, `cl_livingcity_voice.lua`. Tests: VoiceTests (19).
+
+When the city's own Administrator issues a decree with a sentence of her own, that sentence is spoken in her voice. The server asks ElevenLabs' text to speech (the service her recordings were made with) for it, gets a small MP3 back (about 4 KB a second), waits until the PA is quiet, and sends it to every player, whose game writes it to `data/livingcity_voice/` and plays it everywhere at once like the PA. The on-screen notice is unchanged. **Named people's answers in free talk are not spoken:** it would cost many times what the text does.
+
+**To turn it on:** in the editor panel under "Her voice", paste the ElevenLabs key into **Voice key** and the voice's id (shown beside the voice in ElevenLabs' voice list) into **Voice id**, press **Save the voice key and id**, then **Test her voice** (only you hear it, and it works while the feature is still off). Then tick "Her decrees are spoken in her voice". A box left empty keeps what was saved; **Clear** removes both. They are kept in `data/livingcity/voice_key.txt` and `voice_id.txt`, never sent to players, never printed.
+
+**Settings:** `lc_voice` (0: off), `lc_voice_daily` (200 spoken lines a day at most), `lc_voice_model` (`eleven_flash_v2_5`; console only). A sentence is 200 characters at most. If the service is down, says no, or sends something too big for one message (60 KB), nothing is played and the decree goes out as text, as before.
+
+**Not checked against the real service** (this chat could not reach its documentation): the address (`api.elevenlabs.io/v1/text-to-speech/<voice id>`), the `xi-api-key` header, the `mp3_22050_32` format and the model's name are as remembered and from a search summary. The Test button shows the service's own error if any of them is wrong; the model's name can be changed with `lc_voice_model`. Also to check in game the first time: that a player's game can play a sound written this way.
+
 ## Free talk
 
 Say something in character (ordinary chat, `/y` or `/w`) while looking at a named citizen or unit within 220 units. They turn to you, and a moment later answer out loud in their own name ("Olga Volkov says: ..."), heard by everyone in chat range. The model is told who they are (name, job, traits), how they feel right now and why, their secrets (sympathizer, informant), what they think of you, and the last few lines between you (kept for ten minutes). The answer comes with:

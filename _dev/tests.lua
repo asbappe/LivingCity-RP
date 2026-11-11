@@ -11345,6 +11345,87 @@ LC.CollapseNpcRoll, LC.CollapseNpcHow = roll, how
 for _, p in ipairs(human) do if IsValid(p) then p:SetNW2String("lcf_faction", "admin") end end
 end
 CollapseOwnTests()
+
+function VoiceTests()
+section("Her voice: the city's own Administrator's decrees, spoken (off until a key and a voice id are set)")
+local V = LC.Voice
+V.key, V.id, V.backOff, V.today, V.day, V.useLoaded, V.calls, V.chars = nil, nil, nil, 0, os.date("%Y-%m-%d"), true, 0, 0
+_files["livingcity/voice_key.txt"], _files["livingcity/voice_id.txt"] = nil, nil
+local reqs, answer = {}, nil
+local realHTTP = LC.VoiceHTTP
+LC.VoiceHTTP = function(req)
+    reqs[#reqs + 1] = req
+    if not answer then return end
+    local code, body = answer(req)
+    if code then req.success(code, body) else req.failed("timed out") end
+end
+local mp3 = string.rep("x", 9000)
+local function clips() local n, last = 0, nil for _, m in ipairs(net.sent) do if m.name == "lc_voice_clip" then n, last = n + 1, m end end return n, last end
+local quiet = LC.PAQuiet
+LC.PAQuiet = function() return 99 end
+ok(GetConVar("lc_voice"):GetInt() == 0, "off by default")
+_setcvar("lc_voice", 1)
+net.sent = {}
+ok(LC.VoiceSpeak("Order is kindness.", "The City Administrator") == false and #reqs == 0, "no key and no voice id: nothing is asked")
+local hasKey, hasId = LC.VoiceSet("el-key-1", "", false)
+ok(hasKey and not hasId and not LC.VoiceReady(), "a key alone is not enough")
+hasKey, hasId = LC.VoiceSet("", "Voice123abc", false)
+ok(hasKey and hasId and LC.VoiceReady() and _files["livingcity/voice_key.txt"] == "el-key-1" and _files["livingcity/voice_id.txt"] == "Voice123abc",
+    "the key and the voice id are kept on the server; a box left empty keeps what was saved")
+LC.VoiceSet("", "bad/id?x", false)
+ok(LC.Voice.id == "Voice123abc", "a voice id that is not letters and digits is not taken")
+answer = function() return 200, mp3 end
+ok(LC.VoiceSpeak("Order is kindness.", "The City Administrator") == true and #reqs == 1, "with both set and lc_voice on, her sentence is asked for")
+local r = reqs[1]
+ok(r.url == "https://api.elevenlabs.io/v1/text-to-speech/Voice123abc?output_format=mp3_22050_32" and r.method == "POST" and r.headers["xi-api-key"] == "el-key-1",
+    "asked the right way: the voice in the address, the key in its header", r.url)
+ok(string.find(r.body, '"text":"Order is kindness."', 1, true) ~= nil and string.find(r.body, '"model_id":"eleven_flash_v2_5"', 1, true) ~= nil, "the request carries her words and the model", r.body)
+local n, clip = clips()
+ok(n == 1 and clip.data[2] == "The City Administrator" and clip.data[3] == #mp3 and clip.data[4] == mp3, "and the sound is sent to the players to play")
+-- it waits for the PA
+net.sent = {}
+local q = -5
+LC.PAQuiet = function() return q end
+LC.VoiceSpeak("Wait your turn.", "The City Administrator")
+ok(clips() == 0, "while the PA is speaking it waits")
+q = 99
+_run(2)
+ok(clips() == 1, "and speaks once the PA is quiet")
+LC.PAQuiet = function() return 99 end
+-- problems: nothing is played
+net.sent = {}
+answer = function() return 401, '{"detail":"bad key"}' end
+LC.VoiceSpeak("Nobody hears this.", "The City Administrator")
+ok(clips() == 0 and (V.backOff or 0) > CurTime() and V.lastError ~= nil, "the service says no: nothing is played, and it waits before asking again")
+V.backOff = nil
+answer = function() return 200, string.rep("x", 70000) end
+LC.VoiceSpeak("Too long to send.", "The City Administrator")
+ok(clips() == 0, "a sound too big for one message is not sent")
+-- the day's limit
+answer = function() return 200, mp3 end
+_setcvar("lc_voice_daily", 1)
+local before = #reqs
+ok(LC.VoiceSpeak("Past the limit.", "The City Administrator") == false and #reqs == before, "past the day's limit nothing more is asked")
+_setcvar("lc_voice_daily", 200)
+-- off
+_setcvar("lc_voice", 0)
+ok(LC.VoiceSpeak("Off.", "The City Administrator") == false and #reqs == before, "lc_voice 0: nothing is asked")
+-- the test button works with it off, for the one who asked
+local adminp = newPlayer("VoiceTester", "citizen")
+net.sent = {}
+V.today = 0
+ok(LC.VoiceTest(adminp) == true, "the panel's test asks even while it is off")
+n, clip = clips()
+ok(n == 1 and clip.to == adminp, "and only the one who pressed it hears her")
+local shows = false
+for _, l in ipairs(LC.VoiceReport()) do if string.find(l, "el-key-1", 1, true) then shows = true end end
+ok(not shows, "the debug report never shows the key")
+LC.VoiceSet("", "", true)
+ok(not LC.VoiceReady() and _files["livingcity/voice_key.txt"] == nil and _files["livingcity/voice_id.txt"] == nil, "clearing removes both")
+LC.VoiceHTTP, LC.PAQuiet = realHTTP, quiet
+if IsValid(adminp) then adminp:Remove() end
+end
+VoiceTests()
 function GiveTests()
 section("Giving a citizen something: food, a drink or a smoke, medicine, papers, arms")
 local function Later(secs) _advance(secs) _runtimers() end

@@ -347,6 +347,7 @@ function LC.BuildReport()
     if LC.BrainReport then
         Section(out, "The director and free talk (sv_livingcity_brain.lua)")
         for _, l in ipairs(LC.BrainReport()) do out[#out + 1] = l end
+        if LC.VoiceReport then for _, l in ipairs(LC.VoiceReport()) do out[#out + 1] = "her voice: " .. l end end
     end
 
     Section(out, "Recent log (newest last)")
