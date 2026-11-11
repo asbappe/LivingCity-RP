@@ -5271,8 +5271,12 @@ ok(_lastnet("lc_cpmark") ~= nil, "a smuggler shows on units' screens")
 LC.Smugglers[fq] = nil
 -- overwatch drop
 _setcvar("lc_overwatch_drops", 1)
+local keepLead = LC.DropLead
+ok(keepLead == 75, "(a dropship is 75 seconds out when it's called in: the owner, 11 November, time to get there)")
+LC.DropLead = 6 -- (for the rest of this, the old six seconds)
 local okD, d = LC.StartOverwatchDrop(C0 + Vector(4000, 4000, 0))
-ok(okD and LC.OverwatchDrop == d, "Overwatch can drop soldiers at a landing zone")
+LC.DropLead = keepLead
+ok(okD and LC.OverwatchDrop == d and d.landT > d.startT, "Overwatch can drop soldiers at a landing zone")
 _run(8)
 ok(d.ship ~= nil and IsValid(d.ship) and d.ship:GetClass() == "lc_dropship", "they come by dropship")
 local shipStart = d.ship:GetPos()

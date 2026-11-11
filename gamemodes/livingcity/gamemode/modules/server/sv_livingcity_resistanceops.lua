@@ -365,6 +365,12 @@ end)
 LC.OverwatchDrop = LC.OverwatchDrop or nil
 local nextDrop, redSince = 0, nil
 
+-- Time to get there (the owner, 11 November: the landing party "was wiped out about 15 seconds after I saw
+-- the notice and took the quest ... at least delay the dropship a minute or two and give me time to get
+-- there"). The dropship comes LC.DropLead seconds after it's called in, not six; the Resistance's answer
+-- is counted from the landing, as before.
+LC.DropLead = 75
+
 function LC.StartOverwatchDrop(pos)
     if LC.OverwatchDrop then return false, "a drop is already down" end
     if not pos then
@@ -372,10 +378,11 @@ function LC.StartOverwatchDrop(pos)
         pos = #lz > 0 and Pick(lz).pos or (LC.SupplyDropSpot and LC.SupplyDropSpot())
     end
     if not pos then return false, "nowhere to land" end
-    local d = { pos = pos, soldiers = {}, startT = CurTime(), untilT = CurTime() + 300 }
+    local lead = math.max(6, LC.DropLead or 6)
+    local d = { pos = pos, soldiers = {}, startT = CurTime(), landT = CurTime() + lead, untilT = CurTime() + 300 + lead }
     LC.OverwatchDrop = d
     local where = Where(pos)
-    TellUnits("[CP net] Overwatch reinforcements inbound " .. where .. ". Secure the landing zone.")
+    TellUnits(string.format("[CP net] Overwatch reinforcements inbound %s, on the ground in about %d seconds. Secure the landing zone.", where, lead))
     MarkUnits("LANDING ZONE", pos, 120)
     Radio("resistance", "Dropship inbound " .. where .. ". Overwatch soldiers. Hit them on the ground, or keep clear.")
     if LC.AnnounceLine then LC.AnnounceLine("f_protectionresponse_1_spkr.wav", "Overwatch soldiers are landing " .. where .. ".") end
@@ -420,7 +427,7 @@ function LC.StartOverwatchDrop(pos)
     end
     local n = cvDropN:GetInt()
     d.expected = n
-    timer.Simple(6, function()
+    timer.Simple(lead, function()
         if LC.OverwatchDrop ~= d then return end
         local ship = LC.FlyDropship and LC.FlyDropship({ pos = pos, hold = 8 + n * 1.5, troops = true, -- (the soldiers come out of its container, which never leaves its claws)
             onLanded = function(_, ground, container, door)
@@ -488,8 +495,13 @@ local function DropTick(now)
     if d then
         local alive = 0
         for _, s in ipairs(d.soldiers) do if IsValid(s) and s:Health() > 0 then alive = alive + 1 end end
-        if now > d.untilT or (now - d.startT > 45 and alive == 0) then -- (the dropship takes a while to come in)
-            if alive == 0 and now - d.startT > 45 then
+        -- Lost only once somebody had landed and they are all dead, or nobody came out at all a long while
+        -- after the landing was due. (It was "nobody alive 45 seconds after the call", which a slow dropship
+        -- made true before anyone had set foot on the ground: the party was "lost" with nobody there.)
+        local land = d.landT or d.startT
+        local lost = alive == 0 and ((#d.soldiers > 0 and now - land > 20) or now - land > 120)
+        if now > d.untilT or lost then
+            if lost then
                 Radio("resistance", "The landing party is down. Good work.")
                 TellUnits("[CP net] The Overwatch landing party is lost.")
             end
@@ -603,7 +615,7 @@ local function React(now)
     if not cvOps:GetBool() or not LC.Running or LC.Skirmish then return false end
     local chance = math.Clamp(cvReact:GetFloat(), 0, 1)
     local d = LC.OverwatchDrop
-    if d and not d.ambushed and now - d.startT > 25 then
+    if d and not d.ambushed and now - (d.landT or d.startT) > 19 then
         d.ambushed = true
         if math.random() < chance then return LaunchOp("ambush", d.pos, {}) end
     end

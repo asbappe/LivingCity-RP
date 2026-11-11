@@ -599,6 +599,34 @@ hook.Add("EntityTakeDamage", "LivingCityBackupSquad", function(victim, dmg)
     if victim:IsPlayer() and IsUnitPlayer(victim) and a ~= victim and (a:IsPlayer() or a:IsNPC()) then SquadOnto(victim, a, now) end
 end)
 
+-- Backup comes from close by (the owner, 11 November: it "arrived 3 minutes later (WAY too late, make them
+-- spawn NEARBY)"). A unit answering from further off than BACKUP_WALK that nobody is looking at starts
+-- its walk from a spot out of sight between BACKUP_MIN and BACKUP_MAX of the caller, on about their level.
+local BACKUP_WALK, BACKUP_MIN, BACKUP_MAX = 1400, 450, 1300
+function LC.BackupSpot(ply)
+    if not LC.RandomWanderPos then return nil end
+    local at = ply:GetPos()
+    for _ = 1, 40 do
+        local p = LC.RandomWanderPos("cop", at) or LC.RandomWanderPos("cop")
+        if p then
+            local d = p:DistToSqr(at)
+            if d > BACKUP_MIN * BACKUP_MIN and d < BACKUP_MAX * BACKUP_MAX and math.abs(p.z - at.z) < 220
+                and not (LC.IsSeen and LC.IsSeen(p + Vector(0, 0, 50))) and (not LC.ClearSpot or LC.ClearSpot(p))
+                and not (LC.InRebelZone and LC.InRebelZone(p))
+                and (not LC.NavReachable or LC.NavReachable(p, at)) then return p end
+        end
+    end
+    return nil
+end
+function LC.BackupBringNear(npc, ply)
+    if npc:GetPos():DistToSqr(ply:GetPos()) < BACKUP_WALK * BACKUP_WALK then return false end
+    if LC.IsSeen and LC.IsSeen(npc:GetPos() + Vector(0, 0, 50)) then return false end -- (watched: it walks)
+    local p = LC.BackupSpot(ply)
+    if not p then return false end
+    npc:SetPos(p + Vector(0, 0, 4))
+    return true
+end
+
 function LC.CallBackup(ply)
     if not IsUnitPlayer(ply) then return false, "Only Civil Protection units can call for backup." end
     if LC.Jammed and LC.Jammed(ply:GetPos()) then return false, "Static. Your radio can't get through: there's a jammer nearby." end
@@ -633,6 +661,7 @@ function LC.CallBackup(ply)
         -- between them so Half-Life 2's own squad tactics work
         u.st.backupFor, u.st.backupUntil, u.st.backupJoined = ply, now + BACKUP_SECS, nil
         if u.npc.SetSquad then u.npc:SetSquad("lcbk" .. ply:EntIndex()) end
+        LC.BackupBringNear(u.npc, ply)
         if LC.GoTo(u.npc, u.st, ply:GetPos(), true, nil) then sent = sent + 1 end
     end
     LC.Mark1020(ply, true)
