@@ -1309,6 +1309,32 @@ local STASHES = { "models/props_c17/FurnitureDrawer001a.mdl", "models/props_junk
     "models/props_junk/wood_crate001a.mdl", "models/props_c17/FurnitureDresser001a.mdl" }
 local DOOR_CLASSES = { prop_door_rotating = true, func_door_rotating = true, func_door = true }
 
+-- A place on the room's floor for a piece of furniture: out from the middle until a wall is in the way,
+-- then down to the floor (the owner, 11 November: a crate came up "halfway into the ground" and a suitcase
+-- "95% in the wall with just a corner sticking out").
+local function RoomSpot(center, i, n, rmin, rmax)
+    local up = Vector(0, 0, 40)
+    for try = 1, 8 do
+        local a = (i / n) * math.pi * 2 + math.Rand(-0.4, 0.4) + (try - 1) * 0.8
+        local r = math.Rand(rmin, rmax) * (try > 4 and 0.5 or 1)
+        local want = center + Vector(math.cos(a) * r, math.sin(a) * r, 0)
+        local at = want
+        local tr = util.TraceHull and util.TraceHull({ start = center + up, endpos = want + up, mins = Vector(-20, -20, -8), maxs = Vector(20, 20, 8), mask = MASK_SOLID_BRUSHONLY })
+        if tr and tr.Hit and tr.HitPos then at = tr.HitPos - up end
+        local down = util.TraceLine({ start = at + up, endpos = at - Vector(0, 0, 160), mask = MASK_SOLID_BRUSHONLY })
+        if down and down.Hit and not down.StartSolid and (not tr or not tr.StartSolid) then return down.HitPos end
+    end
+    return Ground(center)
+end
+local function SitOnFloor(e, floor)
+    local mins = e.OBBMins and e:OBBMins()
+    e:SetPos(floor + Vector(0, 0, 1 - (mins and mins.z or 0)))
+end
+local function IsLocked(d)
+    local v = d.GetInternalVariable and d:GetInternalVariable("m_bLocked")
+    return v == true
+end
+
 local function Room(g)
     g.phase = "room"
     g.roomT = CurTime()
@@ -1328,8 +1354,10 @@ local function Room(g)
     local hot = math.random(1, n)
     for i = 1, n do
         local m = K.Valid(models[i]) and models[i] or "models/props_junk/cardboard_box001a.mdl"
-        local e = K.Spawn(m, Around(center, i + 0.5, n, 80, 200) + Vector(0, 0, 4), Angle(0, math.random(0, 359), 0), true)
+        local floor = RoomSpot(center, i + 0.5, n, 80, 200)
+        local e = K.Spawn(m, floor + Vector(0, 0, 4), Angle(0, math.random(0, 359), 0), true)
         if IsValid(e) then
+            SitOnFloor(e, floor)
             local has = i == hot or math.random() < 0.35
             e.lcStash = { has = has, what = has and Pick(CONTRABAND)[1] or nil }
             Mark(e, g.ply, "target")
@@ -1356,12 +1384,18 @@ LC.JobGameDefine("breach", {
         if IsValid(best) and not g.opts.noDoor then
             g.door, g.phase = best, "door"
             Mark(best, g.ply, "target")
-            Say(g, "CP", "The door is locked. Press E on it to set a breaching charge, then stand back: it blows a moment later.")
+            -- shut and locked until it is breached or kicked in (the owner, 11 November: it "opened when I
+            -- pressed E on it and I couldn't set a breach charge at all, so I failed the quest")
+            g.wasLocked = IsLocked(best)
+            best:Fire("Close")
+            best:Fire("Lock", "", 0.2)
+            Say(g, "CP", "The door is locked. Press E on it to set a breaching charge, then stand back: it blows a moment later. Or kick it in ("
+                .. "G, or F2 > Kick).")
         else
             Room(g)
         end
         g.hud = function(gg)
-            if gg.phase == "door" then return { gg.blowAt and "Charge set: stand back" or "Press E on the door to set the charge" } end
+            if gg.phase == "door" then return { gg.blowAt and "Charge set: stand back" or "Press E on the door to set the charge, or kick it in" } end
             local left = 0
             for _, r in ipairs(gg.res or {}) do if not r.done then left = left + 1 end end
             local unsearched = 0
@@ -1373,7 +1407,13 @@ LC.JobGameDefine("breach", {
     end,
     use = function(g, ent)
         if g.phase == "door" then
-            if ent ~= g.door or g.blowAt then return nil end
+            if g.blowAt then return nil end
+            -- (another door of the same block will do: the one marked is only the nearest to the middle)
+            if ent ~= g.door then
+                if not (IsValid(ent) and DOOR_CLASSES[ent:GetClass()] and ent:GetPos():DistToSqr(g.center) < 900 * 900) then return nil end
+                g.door = ent
+                Mark(ent, g.ply, "target")
+            end
             g.blowAt = CurTime() + 2.5
             ent:EmitSound("buttons/blip1.wav", 70)
             return true
@@ -1404,17 +1444,25 @@ LC.JobGameDefine("breach", {
     end,
     tick = function(g, now)
         if g.phase == "door" then
-            if g.blowAt and now >= g.blowAt then
+            -- (open some other way, by a key or an admin: the search goes on all the same)
+            local opened = not g.blowAt and IsValid(g.door) and LC.DoorIsOpen and LC.DoorIsOpen(g.door) and now - g.startT > 2
+            if (g.blowAt and now >= g.blowAt) or opened or not IsValid(g.door) then
                 local d = g.door
                 if IsValid(d) then
-                    d:Fire("Unlock")
-                    d:Fire("Open")
-                    d:EmitSound("physics/wood/wood_crate_break3.wav", 90)
-                    if EffectData then local fx = EffectData() fx:SetOrigin(d:WorldSpaceCenter()) util.Effect("Sparks", fx, true, true) end
-                    -- the room's on the far side of the door from where we stood
-                    local away = (d:WorldSpaceCenter() - g.ply:GetPos()) away.z = 0
-                    g.inside = d:WorldSpaceCenter() + away:GetNormalized() * 160
+                    if not g.kicked and not opened then
+                        d:Fire("Unlock")
+                        d:Fire("Open")
+                        d:EmitSound("physics/wood/wood_crate_break3.wav", 90)
+                        if EffectData then local fx = EffectData() fx:SetOrigin(d:WorldSpaceCenter()) util.Effect("Sparks", fx, true, true) end
+                    end
+                    -- the room's on the far side of the door from where we stood, no further in than its walls
+                    local from = d:WorldSpaceCenter()
+                    local away = (from - g.ply:GetPos()) away.z = 0
+                    away = away:GetNormalized()
+                    local tr = util.TraceLine({ start = from + away * 20, endpos = from + away * 160, mask = MASK_SOLID_BRUSHONLY })
+                    g.inside = (tr and tr.Hit and tr.HitPos) and (tr.HitPos - away * 40) or (from + away * 160)
                 end
+                g.doorDone = true
                 Room(g)
             end
             return
@@ -1450,4 +1498,16 @@ LC.JobGameDefine("breach", {
             return LC.JobGameEnd(g.ply, "done")
         end
     end,
+    -- (given up at the door: it isn't left locked if it wasn't before)
+    finish = function(g)
+        if IsValid(g.door) and not g.doorDone and g.wasLocked == false then g.door:Fire("Unlock") end
+    end,
 })
+
+-- Kicking the door in does as well as the charge.
+hook.Add("LivingCityDoorKicked", "LivingCityBreachGame", function(ply, door)
+    local g = IsValid(ply) and LC.JobGames and LC.JobGames[ply]
+    if not g or g.kind ~= "breach" or g.phase ~= "door" or not IsValid(door) then return end
+    if door ~= g.door and door:GetPos():DistToSqr(g.center) > 900 * 900 then return end
+    g.door, g.kicked, g.blowAt = door, true, CurTime()
+end)

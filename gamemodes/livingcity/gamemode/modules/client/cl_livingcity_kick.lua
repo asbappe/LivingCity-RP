@@ -97,7 +97,9 @@ function LC_CL.KickHideUpper(ent)
     end
     local hidden = 0
     for b = 0, n - 1 do
-        local keep = b == pelvis
+        -- (the hips go too: kept, they showed as a dark lump of torso under the camera, the owner's
+        -- screenshot of 11 November. Only the kicking leg is left.)
+        local keep = false
         local p = b
         while not keep and p and p >= 0 do -- (the kicking thigh, or something hanging off it)
             if p == thigh then keep = true end

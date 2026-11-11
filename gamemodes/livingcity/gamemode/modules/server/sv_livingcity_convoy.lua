@@ -219,18 +219,26 @@ function LC.StartSupplyDrop(pos)
     local s = { guards = {}, props = {}, pos = pos, loads = loads, startT = CurTime(), raided = {} }
     LC.Supply = s
     -- by air if there's open sky over the dock: the container comes down under a dropship
-    local ship = LC.FlyDropship and LC.FlyDropship({ pos = pos, cargo = true, hold = 6,
-        onLanded = function(sh, ground, container)
-            if LC.Supply ~= s then return end
-            s.container = container
-            Unload(s, ground, sh:GetForward())
-        end })
-    s.byAir = ship ~= nil
-    if not ship then ByRoad(s) end
+    -- (it comes when the job to guard it has been taken for a minute, or a second after that job leaves
+    -- the board untaken: the owner, 11 November, LC.ProtectWait in sv_livingcity_quests.lua)
+    s.byAir = LC.FlyDropship ~= nil and (not LC.UnderOpenSky or LC.UnderOpenSky(pos))
+    s.waiting = true
+    s.arrive = function()
+        if LC.Supply ~= s or not s.waiting then return end
+        s.waiting, s.startT = nil, CurTime()
+        local ship = LC.FlyDropship and LC.FlyDropship({ pos = pos, cargo = true, hold = 6,
+            onLanded = function(sh, ground, container)
+                if LC.Supply ~= s then return end
+                s.container = container
+                Unload(s, ground, sh:GetForward())
+            end })
+        s.byAir = ship ~= nil
+        if not ship then ByRoad(s) end
+    end
     local where = LC.DescribePlace and LC.DescribePlace(pos) or ""
     for _, p in ipairs(player.GetAll()) do
         if Unit(p) then
-            p:ChatPrint("[CP net] A supply " .. (s.byAir and "dropship is coming down " or "convoy is unloading ") .. where .. ". Guard the drop until it moves on. Directive on your board (F4).")
+            p:ChatPrint("[CP net] A supply " .. (s.byAir and "dropship is coming down " or "convoy is unloading ") .. where .. ". Guard the drop until it moves on. The job is on your board (F4) for one minute, and the drop holds off a minute for whoever takes it.")
         end
     end
     if LC.RadioNotice then
@@ -243,6 +251,8 @@ function LC.StartSupplyDrop(pos)
     end
     LC.Log("info", "Supply drop " .. where .. (s.byAir and " (by dropship)" or " (by road)"))
     hook.Run("LivingCitySupplyDrop", s)
+    -- (nobody put the guard job up, or quests are off: it comes now, as it always did)
+    if s.waiting and not s.held then s.arrive() end
     return true, s
 end
 

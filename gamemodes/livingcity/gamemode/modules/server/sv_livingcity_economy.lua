@@ -18,6 +18,7 @@ if CLIENT then return end
 
 util.AddNetworkString("lce_shop")
 util.AddNetworkString("lce_buy")
+util.AddNetworkString("lce_turnin")
 
 LC = LC or {}
 
@@ -274,8 +275,50 @@ function LC.OpenShop(ply, viaTerminal)
         end
     end
     local cp = LC.PlayerIsCP(ply) and LC.NearCPSupply ~= nil and LC.NearCPSupply(ply)
-    LC.SendCompressed("lce_shop", { credits = LC.Credits(ply), standing = LC.Standing(ply), goods = goods, cp = cp or nil }, { ply })
+    LC.SendCompressed("lce_shop", { credits = LC.Credits(ply), standing = LC.Standing(ply), goods = goods, cp = cp or nil,
+        turnin = cp and LC.CPTurnInList(ply) or nil }, { ply })
 end
+
+-- Turning things in at a Civil Protection Commissary (the owner, 11 November: "as a CP/overwatch, what am
+-- I supposed to do with all this junk? If I drop it, it clutters the city, and I can't sell it anywhere;
+-- please make it so I can sell these things at the commissary"). A unit standing at one is paid for
+-- whatever they carry that isn't their own issue: what a dealer would pay for it, or a credit.
+local KEEP = { ration_voucher = true, health_vial = true, bandage = true }
+function LC.CPTurnInPrice(ply, id)
+    local it = LCS.Items[id]
+    if not it or KEEP[id] then return nil end
+    if LC.IssuedLocked and LC.IssuedLocked(ply, id) then return nil end
+    return math.max(1, math.floor(it.sell or 1))
+end
+function LC.CPTurnInList(ply)
+    local out = {}
+    local inv = LC.Inventory and LC.Inventory(ply) or {}
+    local ids = table.GetKeys(inv)
+    table.sort(ids)
+    for _, id in ipairs(ids) do
+        local price = LC.CPTurnInPrice(ply, id)
+        if price and (inv[id] or 0) > 0 then out[#out + 1] = { id = id, name = LCS.Items[id].name, n = inv[id], price = price } end
+    end
+    return out
+end
+function LC.CPTurnIn(ply, id, all)
+    if not (IsValid(ply) and LC.PlayerIsCP(ply) and LC.NearCPSupply and LC.NearCPSupply(ply)) then
+        return false, "Stand at a Civil Protection Commissary."
+    end
+    local price = LC.CPTurnInPrice(ply, id)
+    if not price or not LC.HasItem(ply, id) then return false, "The Commissary doesn't take that." end
+    local n = all and (LC.Inventory(ply)[id] or 1) or 1
+    if not LC.TakeItem(ply, id, n) then return false end
+    LC.AddCredits(ply, price * n)
+    ply:ChatPrint(string.format("[CP Commissary] Turned in: %s%s, for %d credits.", LCS.Items[id].name, n > 1 and (" x" .. n) or "", price * n))
+    return true
+end
+net.Receive("lce_turnin", function(_, ply)
+    local id, all = net.ReadString(), net.ReadBool()
+    local ok, why = LC.CPTurnIn(ply, id, all)
+    if not ok and why then ply:ChatPrint("[CP Commissary] " .. why) end
+    LC.OpenShop(ply, true)
+end)
 
 net.Receive("lce_buy", function(_, ply)
     if not NearTerminal(ply) then return end

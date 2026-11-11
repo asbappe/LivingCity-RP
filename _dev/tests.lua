@@ -47,6 +47,7 @@ do
 end
 local function section(name) results.retire() table.insert(results.lines, "== " .. name) end
 _setcvar("lc_daily_rhythm", 0) -- (the city keeps to the clock; tested on its own, at the end)
+LC.ProtectWaitOff = true -- (a dropship or a supply drop comes at once, not after the wait for its guards: tested on its own)
 _setcvar("lc_stockpile", 0) -- (the city's ration stores: tested on their own, at the end)
 _setcvar("lc_garrison", 0) -- (the nexus garrison: tested on its own)
 _setcvar("lc_search_fight_choice", 0) -- (fight or comply: tested on its own, in the 1 November section)
@@ -5271,10 +5272,40 @@ ok(_lastnet("lc_cpmark") ~= nil, "a smuggler shows on units' screens")
 LC.Smugglers[fq] = nil
 -- overwatch drop
 _setcvar("lc_overwatch_drops", 1)
+local keepBoard = LC.ProtectBoardSecs
+ok(keepBoard == 60 and LC.ProtectTakenSecs == 60, "(a job to protect something on its way is on the board a minute, and the thing waits a minute for whoever takes it: the owner, 11 November)")
+LC.ProtectBoardSecs = 4 -- (for the rest of this, nobody takes it and it leaves the board after four seconds)
+LC.ProtectWaitOff = nil
 local okD, d = LC.StartOverwatchDrop(C0 + Vector(4000, 4000, 0))
-ok(okD and LC.OverwatchDrop == d, "Overwatch can drop soldiers at a landing zone")
+ok(okD and LC.OverwatchDrop == d and d.landT == nil, "Overwatch can drop soldiers at a landing zone: called in, not yet on its way down")
 _run(8)
-ok(d.ship ~= nil and IsValid(d.ship) and d.ship:GetClass() == "lc_dropship", "they come by dropship")
+LC.ProtectBoardSecs = keepBoard
+do -- taken: it comes a minute after that, however long the board had left
+    local went
+    local posting = { expiresPost = CurTime() + 600 }
+    local w = LC.ProtectWait({ "cp_securelz" }, { posting }, function(taken) went = taken end)
+    ok(posting.expiresPost <= CurTime() + 60.01, "the job to protect it is on the board for a minute")
+    local t0 = CurTime()
+    local taker = newPlayer("LZTaker", "cp")
+    LC.QuestOf[taker] = { tmpl = { id = "cp_securelz" }, owner = taker, members = { taker }, stages = {}, stage = 1 }
+    LC.ProtectWaitTick(t0 + 20)
+    ok(w.takenAt == t0 + 20 and went == nil, "a unit takes it 20 seconds in: it waits for them")
+    LC.ProtectWaitTick(t0 + 70)
+    ok(went == nil, "still waiting 50 seconds after they took it")
+    LC.ProtectWaitTick(t0 + 80.5)
+    ok(went == true and posting.dead ~= true, "a minute after they took it, it arrives")
+    LC.QuestOf[taker] = nil
+    local went2
+    local posting2 = { expiresPost = CurTime() + 600 }
+    LC.ProtectWait({ "cp_securelz" }, { posting2 }, function(taken) went2 = taken end)
+    LC.ProtectWaitTick(t0 + 59)
+    ok(went2 == nil, "nobody takes it: nothing for the minute it's on the board")
+    LC.ProtectWaitTick(t0 + 61.5)
+    ok(went2 == false and posting2.dead == true, "a second after it leaves the board, it arrives anyway, and the job is gone")
+    taker:SetPos(Vector(-150000, 150000, 0))
+end
+LC.ProtectWaitOff = true
+ok(d.landT ~= nil and d.ship ~= nil and IsValid(d.ship) and d.ship:GetClass() == "lc_dropship", "they come by dropship, a second after the job left the board untaken")
 local shipStart = d.ship:GetPos()
 _run(27)
 ok(#d.soldiers >= 1, "and they arrive", tostring(#d.soldiers))
@@ -13790,6 +13821,158 @@ LC.VortCharge(reb, v)
 ok(reb:Armor() > 0 and reb:Health() == 50, "a freed vortigaunt charges our vests when asked (and doesn't heal)", reb:Armor() .. " / " .. reb:Health())
 ok(v:GetNW2Entity("lc_vort_charge_to") == reb and v:GetNW2Float("lc_vort_charge_until", 0) > CurTime(), "and it shows: for a few seconds its energy runs to whoever it charged (the owner, 11 November)")
 LC.RebelVorts[v] = nil v:Remove()
+do -- company on a patrol (the owner, 11 November): a loiterer who may bolt, a tail who runs when seen
+    local C0 = Vector(-173000, 173000, 0)
+    local unit = newPlayer("CompanyUnit", "cp")
+    unit:SetPos(C0)
+    ok(LC.OnPatrolJob(unit) == nil and LC.PatrolCompanyJobs.cp_nightshift and LC.PatrolCompanyJobs.cp_patrol, "(the night shift and patrol jobs are the ones with company)")
+    LC.QuestOf[unit] = { tmpl = { id = "cp_patrol" }, owner = unit, members = { unit }, stages = {}, stage = 1 }
+    ok(LC.OnPatrolJob(unit) ~= nil, "a unit on a patrol job")
+    local wasSpot, wasSeen, wasLOS, wasRand = LC.RandomWanderPos, LC.IsSeen, LC.LineOfSight, math.random
+    LC.RandomWanderPos = function() return C0 + Vector(700, 0, 0) end
+    LC.IsSeen = function() return false end
+    LC.LineOfSight = function() return true end
+    local now = CurTime()
+    local xp0 = tonumber(unit:GetPData("lcf_xp_cp", 0)) or 0
+    local enc = LC.PatrolCompanyStart(unit, "loiter", now)
+    ok(enc and IsValid(enc.npc) and enc.phase == "wait" and enc.st.suspect == true and LC.PatrolCompany[unit] == enc, "a loiterer waits out of sight near the patrol; the unit is told")
+    ok(LC.PatrolCompanyStart(unit, "tail", now) == nil, "never two at a time")
+    LC.PatrolCompanyStep(enc, now + 1)
+    ok(enc.phase == "wait", "far off: nothing yet")
+    unit:SetPos(enc.npc:GetPos() - Vector(300, 0, 0))
+    math.random = function(a, b) if a then return wasRand(a, b) end return 0.1 end -- (this one bolts)
+    LC.PatrolCompanyStep(enc, now + 2)
+    math.random = wasRand
+    ok(enc.phase == "run", "seen from close by, this one bolts")
+    unit:SetPos(enc.npc:GetPos() - Vector(60, 0, 0))
+    LC.PatrolCompanyStep(enc, now + 3)
+    ok(enc.phase == "stopped" and (tonumber(unit:GetPData("lcf_xp_cp", 0)) or 0) == xp0 + 3, "run down: they give up, 3 experience")
+    enc.st.papersAt = now + 300 -- (their papers looked at)
+    LC.PatrolCompanyStep(enc, now + 4)
+    ok(LC.PatrolCompany[unit] == nil and (tonumber(unit:GetPData("lcf_xp_cp", 0)) or 0) == xp0 + 5 and enc.st.unmanaged == nil, "seen to (their papers): 2 more, and they go on their way")
+    -- a tail
+    unit:SetPos(C0)
+    local tail = LC.PatrolCompanyStart(unit, "tail", now + 200)
+    ok(tail and tail.phase == "follow", "a tail walks after the unit")
+    unit.GetAimVector = function() return Vector(-1, 0, 0) end -- (looking the other way)
+    unit:SetPos(tail.npc:GetPos() - Vector(400, 0, 0))
+    LC.PatrolCompanyStep(tail, now + 230)
+    ok(tail.phase == "follow" and tail.told == true, "after a while: the feeling of being followed")
+    unit.GetAimVector = function() return Vector(1, 0, 0) end -- (turned round, looking at them)
+    LC.PatrolCompanyStep(tail, now + 231)
+    LC.PatrolCompanyStep(tail, now + 232)
+    ok(tail.phase == "run", "looked at for a moment: they run")
+    unit:SetPos(tail.npc:GetPos() - Vector(3000, 0, 0))
+    LC.PatrolCompanyStep(tail, now + 233)
+    ok(LC.PatrolCompany[unit] == nil, "far enough away: lost")
+    unit.GetAimVector = nil
+    LC.RandomWanderPos, LC.IsSeen, LC.LineOfSight = wasSpot, wasSeen, wasLOS
+    LC.QuestOf[unit] = nil
+    if IsValid(enc.npc) then enc.npc:Remove() end
+    if IsValid(tail.npc) then tail.npc:Remove() end
+    unit:SetPos(Vector(-150000, 150000, 0))
+end
+do -- tonight's dream waits for the first sleeper when every bed was empty as it came (the owner, 11 November)
+    local DS = LC.DreamState
+    local keep = { at = DS.at, queued = DS.queued, missed = DS.missedNight, active = LC.DreamActive }
+    local wasReady, wasPhase, wasSleepers = LC.DreamReady, LC.DayPhase, LC.DreamSleepers
+    local late = newPlayer("LateSleeper", "citizen")
+    local asleep = {}
+    LC.DreamReady = function() return true end
+    LC.DayPhase = function() return "night" end
+    LC.DreamSleepers = function() return asleep end
+    LC.DreamActive = nil
+    DS.at, DS.queued, DS.missedNight = nil, { id = "cheese", vote = false, t = os.time(), source = "auto" }, DS.night
+    local now = CurTime()
+    ok(LC.DreamMissedCheck(now) == false and DS.at == nil and DS.missedNight == DS.night, "nobody in bed yet: the missed dream goes on waiting")
+    asleep = { late }
+    ok(LC.DreamMissedCheck(now) == true and DS.at == now + 20 and DS.missedNight == nil, "the first to fall asleep that night: it comes twenty seconds later")
+    DS.at, DS.missedNight = nil, DS.night
+    LC.DayPhase = function() return "day" end
+    ok(LC.DreamMissedCheck(now) == false and DS.missedNight == nil, "by morning it's forgotten")
+    LC.DreamReady, LC.DayPhase, LC.DreamSleepers = wasReady, wasPhase, wasSleepers
+    DS.at, DS.queued, DS.missedNight, LC.DreamActive = keep.at, keep.queued, keep.missed, keep.active
+    late:SetPos(Vector(-150000, 150000, 0))
+end
+do -- fighters that fight (the owner, 11 November)
+    local F0 = Vector(-175000, 175000, 0)
+    local cop, cst = LC.Spawners.cop(F0)
+    cst = cst or LC.NPCs[cop]
+    local foe = ents.Create("npc_citizen") foe:SetPos(F0 + Vector(600, 0, 0)) foe:Spawn()
+    local enemy, sees, gun = nil, true, "weapon_pistol"
+    cop.GetEnemy = function() return enemy end
+    cop.Visible = function() return sees end
+    cop.GetActiveWeapon = function() local w = ents.Create(gun) return w end
+    local sched
+    local realSched = cop.SetSchedule
+    cop.SetSchedule = function(self, s) sched = s end
+    local now = CurTime()
+    ok(LC.CombatHolds(cop, cst, now) == false and LC.CombatStep(cop, cst, now) == nil, "nobody to fight: a unit goes where it's sent")
+    enemy = foe
+    ok(LC.CombatHolds(cop, cst, now) == true and LC.CombatStep(cop, cst, now) == "fighting" and cst.cmbTuned == true,
+        "an enemy in plain sight, gun in hand: it stops being marched and fights (and is a better shot from now on)")
+    gun = "weapon_stunstick"
+    ok(LC.CombatHolds(cop, cst, now) == false, "with a stick in hand it has to close in: still walked there")
+    gun = "weapon_pistol"
+    sees = false
+    cst.state = "wander"
+    ok(LC.CombatHolds(cop, cst, now) == false and LC.CombatStep(cop, cst, now + 10) == "closing" and sched ~= nil,
+        "knows of them but can't see them: it goes for a line of fire instead of staring at the wall")
+    ok(LC.CombatStep(cop, cst, now + 11) == "waiting", "(not ordered again every second)")
+    sees = true
+    cst.cmbHeldTotal = 100
+    ok(LC.CombatHolds(cop, cst, now) == false, "a journey is held up a minute at most")
+    cst.cmbHeldTotal = nil
+    local wasRand = math.random
+    math.random = function(a, b) if a then return wasRand(a, b) end return 0 end
+    sched = nil
+    SCHED_TAKE_COVER_FROM_ENEMY = SCHED_TAKE_COVER_FROM_ENEMY or 27 -- (the game's own number, where the stand-in has none)
+    ok(LC.CombatHurt(cop, cst, foe, 5, now + 20) == true and sched == SCHED_TAKE_COVER_FROM_ENEMY and LC.CombatHurt(cop, cst, foe, 5, now + 21) == false,
+        "hurt by an enemy: into cover, and not again straight away")
+    math.random = wasRand
+    _setcvar("lc_combat_ai", 0)
+    ok(LC.CombatHolds(cop, cst, now) == false, "lc_combat_ai 0: as before")
+    _setcvar("lc_combat_ai", 1)
+    cop.SetSchedule = realSched
+    foe:Remove() cop:Remove()
+end
+do -- papers on the street, and what's carried in a search (the owner, 11 November)
+    local P0 = Vector(-171000, 171000, 0)
+    local unit = newPlayer("PapersUnit", "cp")
+    unit:SetPos(P0)
+    local cit, cst = LC.SpawnCitizen(P0 + Vector(60, 0, 4))
+    cst = cst or LC.NPCs[cit]
+    local far = newPlayer("PapersCitizen", "citizen") far:SetPos(P0)
+    ok(not LC.StreetPapers(far, cit), "only a unit asks for papers")
+    local wasW, wasF = LC.StreetPapersWrong, LC.StreetPapersForged
+    LC.StreetPapersWrong, LC.StreetPapersForged = 1, 0
+    local credits, standing = LC.Credits(unit), LC.Standing(unit)
+    ok(LC.StreetPapers(unit, cit) and unit.lcStreetPapers and unit.lcStreetPapers.wrong ~= nil and _lastnet("lc_papers_check") ~= nil,
+        "a unit asks a citizen for their papers: the papers window, against today's rules")
+    ok(LC.StreetPapersDecide(unit, "deny") == true and LC.Credits(unit) == credits + 1 and LC.Standing(unit) == standing + 5,
+        "out of order and cited: 1 credit and +5 Civil Standing")
+    ok(not LC.StreetPapers(unit, cit), "not the same citizen again straight away")
+    cst.papersAt = 0
+    LC.StreetPapersWrong = 0
+    standing = LC.Standing(unit)
+    LC.StreetPapers(unit, cit)
+    ok(LC.StreetPapersDecide(unit, "deny") == false and LC.Standing(unit) == standing - 2, "papers in order, cited anyway: thrown out, -2 Civil Standing")
+    cst.papersAt = 0
+    LC.StreetPapers(unit, cit)
+    ok(LC.StreetPapersDecide(unit, "approve") == true and unit.lcStreetPapers == nil, "in order and waved on: right")
+    LC.StreetPapersWrong, LC.StreetPapersForged = wasW, wasF
+    -- what they carry is a spot of its own
+    ok(LC.PatSearchCarried(cit, cst) == nil, "(empty hands: the four spots)")
+    local case = ents.Create("prop_dynamic") case:SetModel("models/props_c17/suitcase001a.mdl") case:Spawn()
+    cst.carry = case
+    ok(LC.PatSearchCarried(cit, cst) == "Suitcase", "someone carrying a suitcase: the suitcase is searched too")
+    local S = LC.PatSearchOffer(unit, cit)
+    ok(S and #S.spots == 5 and S.spots[5].name == "Suitcase" and S.papers == true, "a fifth spot in the search window, and their papers can be asked for from it")
+    if S then LC.PatSearchEnd(S, "done") end
+    cst.carry = nil case:Remove()
+    cit:Remove()
+    unit:SetPos(Vector(-150000, 150000, 0)) far:SetPos(Vector(-150000, 150000, 0))
+end
 -- Father Grigori
 local z = LC.AddZone(V0 + Vector(6000, 0, 0), 600, "rebel", 0)
 local priests = {}
@@ -16295,6 +16478,19 @@ do
     LC.UseCPSupply(u, sup)
     ok(LC.HasItem(u, "ration") and not LC.HasItem(u, "ration_voucher") and has(u.chat, "for your voucher"), "the CP Commissary takes the voucher and hands over a ration packet")
     ok(#ents.FindByClass("item_healthvial") == vials and LC.HasItem(u, "health_vial", 1) and LC.HasItem(u, "bandage", 3), "and once a city day, a health vial (in the pockets, not on the floor: the owner, 11 November) and a bandage (on top of the bandages it tops up)")
+    do -- turning in what you carry (the owner, 11 November)
+        LC.GiveItem(u, "scrap", 2)
+        local before = LC.Credits(u)
+        local scrapPrice = LC.CPTurnInPrice(u, "scrap")
+        ok(scrapPrice and scrapPrice >= 1 and LC.CPTurnInPrice(u, "bandage") == nil and LC.CPTurnInPrice(u, "health_vial") == nil,
+            "the CP Commissary takes what a unit carries that isn't their own issue")
+        local listed = false
+        for _, s in ipairs(LC.CPTurnInList(u)) do if s.id == "scrap" and s.n == 2 then listed = true end end
+        ok(listed and LC.CPTurnIn(u, "scrap", true) and not LC.HasItem(u, "scrap") and LC.Credits(u) == before + scrapPrice * 2, "turned in, all of it: paid for each")
+        local far = newPlayer("TurnInFar", "cp") far:SetPos(S0 + Vector(0, 9000, 0)) LC.GiveItem(far, "scrap", 1)
+        ok(not LC.CPTurnIn(far, "scrap") and LC.HasItem(far, "scrap"), "only standing at one")
+        far:SetPos(Vector(-150000, 150000, 0))
+    end
     ok(not LC.CPDailyKitDue(u), "not again the same day")
     u.lcSupplyNext = 0
     LC.UseCPSupply(u, sup)
@@ -16380,7 +16576,9 @@ do
     ok(math.abs((t0 + 500 - e.lcAwakeSince) - awake) < 0.01, "and the hours with it out don't count as time awake")
     e.GetActiveWeapon = nil
     LC.RestTick(t0 + 505)
-    ok(e:GetNW2Bool("lc_tired", false), "put it away and you're as tired as you were")
+    ok(not e:GetNW2Bool("lc_tired", false), "put it away: not exhausted that instant (the owner, 11 November), six minutes to find a bed")
+    LC.RestTick(t0 + 505 + 365)
+    ok(e:GetNW2Bool("lc_tired", false), "after those six minutes you're as tired as you were")
     e.lcAwakeSince = CurTime() e:SetNW2Bool("lc_tired", false) LC.RestTick(CurTime())
     e:SetPos(Vector(-120000, -120000, 0))
 end

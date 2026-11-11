@@ -631,7 +631,7 @@ local function MakePapers(g, npc)
     }
     if r.district then while p.district == r.banned do p.district = Pick(DISTRICTS) end end
     local wrong
-    if math.random() < 0.5 then
+    if math.random() < (g.wrongChance or 0.5) then
         local can = { "expiry", "photo" }
         if r.district then can[#can + 1] = "district" end
         if r.permit then can[#can + 1] = "permit" end
@@ -646,7 +646,7 @@ local function MakePapers(g, npc)
     -- a stamp nobody asked for is just ink: vary it so its absence isn't a tell
     if not r.permit and math.random() < 0.5 then p.permit = false end
     if not r.union and math.random() < 0.5 then p.union = false end
-    local forged = math.random() < 0.15
+    local forged = math.random() < (g.forgedChance or 0.15)
     if forged then p.seal = Pick({ "0CS", "OC5", "QCS" }) end
     return p, wrong, forged
 end
@@ -826,9 +826,99 @@ function LC.PapersDecide(ply, choice)
     return right
 end
 
+------------------------------------------------------------------------
+-- Papers on the street: a unit checks the papers of a citizen they have stopped or searched (the owner,
+-- 11 November: "there is no paperwork check ... can there also be a button to 'check papers' and then it
+-- switches to the checking papers minigame? It's not mandatory but offers further searching and
+-- opportunity to meet quotas and get rewards for catching those out of compliance ... Even if just 1
+-- credit and +5 civil standing"). The same papers window as at the station, against today's rules (the
+-- same for every unit, one city day long). Most people's are in order.
+--   approve: let them go.   deny: cite them.   unit: take them in (forged papers).
+------------------------------------------------------------------------
+
+LC.StreetPapersWrong, LC.StreetPapersForged = 0.2, 0.06
+LC.StreetPapersAgain = 300 -- (seconds before the same citizen's papers can be asked for again)
+LC.StreetPapersCredits, LC.StreetPapersStanding = 1, 5
+local streetRules, streetDay
+
+function LC.StreetPapersRules()
+    local day = (LC.CityDay and LC.CityDay()) or math.floor(CurTime() / 3600)
+    if not streetRules or streetDay ~= day then
+        streetRules, streetDay = Rules(), day
+        streetRules.today = 200 + (day % 150)
+    end
+    return streetRules
+end
+
+function LC.StreetPapers(cop, npc)
+    if not (IsValid(cop) and cop:IsPlayer() and LC.PlayerIsCP and LC.PlayerIsCP(cop)) then return false, "Only Civil Protection units check papers." end
+    local st = IsValid(npc) and LC.NPCs and LC.NPCs[npc]
+    if not st or st.role ~= "citizen" then return false, "Look at a citizen, up close." end
+    if cop:GetPos():DistToSqr(npc:GetPos()) > 160 * 160 then return false, "Get up close to them." end
+    if st.state == "jailed" or st.questLock then return false, "Not this one, not now." end
+    local now = CurTime()
+    if (st.papersAt or 0) > now then return false, "You've seen their papers. Pick someone else." end
+    st.papersAt = now + LC.StreetPapersAgain
+    local rules = LC.StreetPapersRules()
+    local g = { rules = rules, today = rules.today, wrongChance = st.suspect and math.max(0.6, LC.StreetPapersWrong) or LC.StreetPapersWrong,
+        forgedChance = st.suspect and math.max(0.2, LC.StreetPapersForged) or LC.StreetPapersForged }
+    local papers, wrong, forged = MakePapers(g, npc)
+    cop.lcStreetPapers = { npc = npc, st = st, papers = papers, wrong = wrong, forged = forged, at = now }
+    if LC.SetState then LC.SetState(npc, st, "event") end
+    st.eventUntil = now + 40
+    if npc.SetSchedule then npc:SetSchedule(SCHED_IDLE_STAND) end
+    if LC.Face then LC.Face(npc, cop:GetPos()) end
+    net.Start("lc_papers_check")
+    net.WriteString(util.TableToJSON({ papers = papers, rules = RuleLines(rules), today = rules.today, n = 1, of = 1, street = true }))
+    net.Send(cop)
+    return true
+end
+
+-- The call on the street. Returns true when it was right (nil: nothing to decide).
+function LC.StreetPapersDecide(cop, choice)
+    local c = IsValid(cop) and cop.lcStreetPapers
+    if not c then return nil end
+    cop.lcStreetPapers = nil
+    if not IsValid(c.npc) or CurTime() - c.at > 120 then return nil end
+    local bad = c.forged or c.wrong ~= nil
+    local caught = bad and choice ~= "approve"
+    local right = caught or (not bad and choice == "approve")
+    c.st.eventUntil = 0
+    if caught then
+        local credits = LC.StreetPapersCredits + ((c.forged and choice == "unit") and 2 or 0)
+        if LC.AddCredits then LC.AddCredits(cop, credits, "papers out of order") end
+        if LC.AddStanding then LC.AddStanding(cop, LC.StreetPapersStanding, "papers out of order") end
+        local why = c.forged and ("a forged seal, " .. tostring(c.papers.seal)) or ({ expiry = "expired", photo = "somebody else's photo",
+            district = "a banned district", permit = "no transit permit stamp", union = "no Union stamp" })[c.wrong] or "out of order"
+        cop:ChatPrint(string.format("[CP net] Papers out of order (%s): cited. %d credit%s, +%d Civil Standing.", why, credits, credits == 1 and "" or "s", LC.StreetPapersStanding))
+        c.npc:EmitSound("vo/npc/male01/no02.wav", 65)
+        hook.Run("LivingCityStreetPapers", cop, c.npc, true, c.forged and "forged" or c.wrong)
+    elseif bad then
+        cop:ChatPrint("[CP net] You wave them on.") -- (nobody tells a unit what they missed)
+        hook.Run("LivingCityStreetPapers", cop, c.npc, false, c.forged and "forged" or c.wrong)
+    elseif choice == "approve" then
+        cop:ChatPrint("[CP net] Papers in order. You wave them on.")
+        hook.Run("LivingCityStreetPapers", cop, c.npc, true, nil)
+    else
+        if LC.AddStanding then LC.AddStanding(cop, -2, "a citation that didn't stand") end
+        cop:ChatPrint("[CP net] Their papers were in order: the citation is thrown out (-2 Civil Standing).")
+        hook.Run("LivingCityStreetPapers", cop, c.npc, false, nil)
+    end
+    return right
+end
+
+-- (F2 with a citizen in front of you: "Check their papers")
+LC.TargetActions = LC.TargetActions or {}
+LC.TargetActions.streetpapers = function(ply, target)
+    local ok, why = LC.StreetPapers(ply, target)
+    return ok, (not ok and why) and ("[CP net] " .. why) or nil
+end
+
 net.Receive("lc_papers_decide", function(_, ply)
     local choice = net.ReadString()
     if choice ~= "approve" and choice ~= "deny" and choice ~= "unit" then return end
+    local g = LC.JobGames[ply]
+    if ply.lcStreetPapers and not (g and g.kind == "papers" and g.current) then return LC.StreetPapersDecide(ply, choice) end
     LC.PapersDecide(ply, choice)
 end)
 

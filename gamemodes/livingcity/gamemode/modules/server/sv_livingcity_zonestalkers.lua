@@ -241,6 +241,10 @@ function LC.CombineChores(now)
     return out
 end
 
+-- An item is picked up from arm's length, and from further when the stalker can get no nearer (the
+-- owner, 11 November: with a pile of dropped things "they inch closer and closer then turn around":
+-- the one it was after lay in the middle of the pile, and the pile was in the way).
+local ITEM_REACH, ITEM_REACH_STUCK = 100, 190
 local DOING = { item = "clearing up", stain = "scrubbing up a mess", body = "taking a body away", tag = "scrubbing off graffiti" }
 local SECS = { item = 2.5, body = 3, stain = 6, tag = 6, fix = 10 }
 
@@ -248,6 +252,7 @@ local function Free(c)
     if not c then return end
     if c.kind == "body" and IsValid(c.ent) and c.ent.lcBody then c.ent.lcBody.claimed = nil end
     if IsValid(c.ent) then
+        if c.kind == "body" and c.ent.SetNW2Entity then c.ent:SetNW2Entity("lc_roped_to", NULL) end
         c.ent.lcStalkerTaken = nil
         if c.ent.GetParent and IsValid(c.ent:GetParent()) then Call(c.ent, "SetParent", NULL) end
     end
@@ -394,6 +399,8 @@ local function DoIt(r, now)
         Call(e, "SetParent", r.npc)
         Call(e, "SetLocalPos", Vector(20, 0, 40))
     end
+    -- a body is towed on a rope from the stalker's hand (drawn in each player's game: cl_livingcity_dragrope.lua)
+    if c.kind == "body" and IsValid(e) and e.SetNW2Entity then e:SetNW2Entity("lc_roped_to", r.npc) end
     -- carried (or dragged) off out of sight
     r.away = HiddenSpot(r.zone, r.npc:GetPos())
     r.phase, r.startAway = "away", now
@@ -460,7 +467,8 @@ function LC.ZoneStalkersThink(now)
                 if not tp or (c.kind == "body" and LC.HauledBy and LC.HauledBy(c.ent))
                     or (c.kind == "fix" and not c.ent:GetNW2Bool("lc_broken", false)) then
                     Free(c) r.chore = nil r.phase = "back" -- (someone else saw to it)
-                elseif pos:DistToSqr(tp) < (c.kind == "fix" and 90 or 70) ^ 2 then
+                elseif pos:DistToSqr(tp) < (c.kind == "fix" and 90 or (c.kind == "item" and ITEM_REACH or 70)) ^ 2
+                    or (c.kind == "item" and now - r.lastMoved > 6 and pos:DistToSqr(tp) < ITEM_REACH_STUCK ^ 2) then
                     r.phase, r.untilT = "take", now + (SECS[c.kind] or 3)
                     npc:SetSchedule(SCHED_IDLE_STAND)
                     if LC.Face then LC.Face(npc, tp) end

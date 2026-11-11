@@ -535,6 +535,9 @@ end)
 function LC.OnNPCReachedCell(npc, st, now)
     LC.SetState(npc, st, "jailed")
     st.untilT = st.jailUntil or (now + 90)
+    -- (said under their name: unarmed rebels standing in the cells during a raid were taken for raiders who
+    -- had spawned there, the owner, 11 November. They are prisoners.)
+    if LC.SetNPCStr then LC.SetNPCStr(npc, "lc_doing", "a prisoner, held in the cells") end
 end
 
 -- Cells sit behind doors that lock themselves, which NPCs can't walk through,

@@ -217,6 +217,8 @@ LC_MODULES = {
         "sv_livingcity_stalkerwork",
         "sv_livingcity_combineground", -- (soldiers stay in Combine zones, citizens stay out)
         "sv_livingcity_zonestalkers", -- (each Combine zone's stalkers: its terminals, its cleaning and repairs)
+        "sv_livingcity_combat", -- (fighters stop to fight, look for a line of fire, take cover)
+        "sv_livingcity_patrolcompany", -- (a loiterer or a tail for a unit on the night shift or a patrol)
         "sv_livingcity_cremator", -- (the Cremator: walks the streets, burns the dead where they lie, and any enemy)
         "sv_livingcity_rebelpamphlet", -- (the Resistance pamphlet: read it, hand it over, leave it lying about)
         "sv_livingcity_writing",
@@ -283,6 +285,8 @@ LC_MODULES = {
         "cl_livingcity_arrest", -- (the struggle bar when someone resists arrest)
         "cl_livingcity_cremator", -- (the Cremator's flame)
         "cl_livingcity_vortcharge", -- (a vortigaunt charging a vest: the green beam from its hand)
+        "cl_livingcity_dragrope", -- (the rope a stalker tows a body on)
+        "cl_livingcity_fmenus", -- (F3 and F4: each one's key shuts the other's window and opens its own)
         "cl_livingcity_ways",
         "cl_livingcity_outfits",
         "cl_livingcity_lab",

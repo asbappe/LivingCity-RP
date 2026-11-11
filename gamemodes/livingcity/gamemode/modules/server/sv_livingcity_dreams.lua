@@ -1230,6 +1230,8 @@ function LC.DreamTonight()
     if ok then
         S.queued, S.lastMood = nil, LC.DreamMood(id)
     else
+        -- nobody was in bed yet: it waits for the first to fall asleep tonight (below)
+        if why == "Nobody is asleep to dream it." then S.missedNight = S.night end
         Log("info", "Tonight's dream didn't happen: " .. tostring(why))
         if S.queued and (S.queued.source == "nightly" or S.queued.source == "auto") then S.queued = nil end
     end
@@ -1260,9 +1262,32 @@ hook.Add("LivingCityCustomAnnouncement", "LivingCityDreams", function(voice, tri
     S.at, S.warned = CurTime() + math.max(0, secs) + math.max(5, cvDelay:GetFloat()), nil
 end)
 
+-- Tonight's dream found nobody asleep (the owner, 11 November: in bed at 21:15, alone on the server, two
+-- nights running, and no dream: it had come and gone a minute after 21:00 with every bed empty). It
+-- waits: the first to fall asleep later that night has it, twenty seconds after they do.
+function LC.DreamMissedCheck(now)
+    if S.at or S.missedNight ~= S.night or LC.DreamActive or not LC.DreamReady() then return false end
+    if LC.DayPhase and LC.DayPhase() ~= "night" then S.missedNight = nil return false end
+    local q = Nightly()
+    if not q then return false end
+    local who = LC.DreamSleepers(LC.DreamMood(q.id), q.id)
+    local dreamers = 0
+    for _, p in ipairs(who) do
+        if not (LC.DreamForced(q.id) and LC.DreamEnforcerRole and LC.DreamEnforcerRole(p, q.id)) then dreamers = dreamers + 1 end
+    end
+    if dreamers == 0 then return false end
+    S.missedNight = nil
+    S.at, S.warned = now + 20, nil
+    return true
+end
+
 timer.Create("LivingCityDreams", 1, 0, function()
     local ok, err = pcall(function()
         local now = CurTime()
+        if S.missedNight and now >= (S.missedCheck or 0) then
+            S.missedCheck = now + 5
+            LC.DreamMissedCheck(now)
+        end
         if S.at and LC.DreamReady() and (S.queued or cvNightly:GetBool()) then
             -- the sleepers, warned (and the way out)
             if not S.warned and now >= S.at - math.min(30, cvDelay:GetFloat()) then

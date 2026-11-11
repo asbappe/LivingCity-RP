@@ -40,6 +40,7 @@ util.AddNetworkString("lc_pat_open")  -- (server to client: the window, or what'
 util.AddNetworkString("lc_pat_check") -- (unit: check spot N; 0 means the window is open)
 util.AddNetworkString("lc_pat_slip")  -- (the person searched: try to slip something)
 util.AddNetworkString("lc_pat_close") -- (either way: it's over)
+util.AddNetworkString("lc_pat_papers") -- (unit: done searching, their papers now)
 
 LC.PatSearches = LC.PatSearches or {} -- [target] = the search
 LC.PatSearchByCop = LC.PatSearchByCop or {} -- [unit] = target
@@ -66,7 +67,7 @@ end
 -- What each side may see: the unit only what's been checked; the person searched, their own pockets.
 local function Push(S)
     local now = CurTime()
-    local u = { role = "unit", who = Nick(S.target), live = S.live, checking = S.checking, secs = CHECK_SECS, spots = {} }
+    local u = { role = "unit", who = Nick(S.target), live = S.live, checking = S.checking, secs = CHECK_SECS, spots = {}, papers = S.papers }
     for i, sp in ipairs(S.spots) do
         u.spots[i] = { name = sp.name, state = sp.done and 2 or (S.checking == i and 1 or 0), text = sp.done and sp.result or nil }
     end
@@ -93,6 +94,17 @@ local function Close(ply)
     net.Send(ply)
 end
 
+-- What someone has in their hands, as the search window calls it (nil: nothing).
+function LC.PatSearchCarried(target, st)
+    local e = st and st.carry
+    if not Ok(e) then return nil end
+    local m = string.lower(e:GetModel() or "")
+    if string.find(m, "suitcase", 1, true) then return "Suitcase" end
+    if string.find(m, "clipboard", 1, true) then return nil end -- (nothing to hide in a clipboard)
+    if string.find(m, "box", 1, true) or string.find(m, "crate", 1, true) or string.find(m, "cardboard", 1, true) then return "Parcel" end
+    return "What they carry"
+end
+
 -- A unit starts a search: offer the window. Returns the search (nil: the old search, as it always was).
 function LC.PatSearchOffer(cop, target)
     if not (LC.JobGamesOn and LC.JobGamesOn()) then return nil end
@@ -103,6 +115,11 @@ function LC.PatSearchOffer(cop, target)
         lastCheck = -1e9, found = {}, guns = {}, flashId = 0 }
     if S.npc then S.st = LC.NPCs and LC.NPCs[target] end
     for i, name in ipairs(SPOTS) do S.spots[i] = { name = name, items = {} } end
+    -- What they carry is searched too (the owner, 11 November: "I searched someone holding a suitcase and
+    -- another holding a box/parcel and I would like those to be searchable"): a fifth spot, named for it.
+    local carried = LC.PatSearchCarried(target, S.st)
+    if carried then S.spots[#S.spots + 1] = { name = carried, items = {}, carried = true } end
+    S.papers = S.npc and S.st ~= nil and S.st.role == "citizen" or nil
     PAT[target], BYCOP[cop] = S, target
     Push(S)
     return S
@@ -116,7 +133,10 @@ function LC.PatSearchGoLive(S)
     S.live, S.liveAt, S.origin = true, CurTime(), target:GetPos()
     if S.npc then
         local what = S.st and LC.SearchNPCRoll(S.st)
-        if what then table.insert(S.spots[math.random(#S.spots)].items, { npc = what }) end
+        -- (what they carry is where half of it is: a case or a parcel is the obvious place)
+        local where = math.random(#S.spots)
+        if S.spots[#S.spots].carried and math.random() < 0.5 then where = #S.spots end
+        if what then table.insert(S.spots[where].items, { npc = what }) end
     else
         target.lcSearchedAt = CurTime()
         target:SetNW2Float("lcu_stop_until", 0) -- (the panel says it instead)
@@ -299,6 +319,21 @@ net.Receive("lc_pat_close", function(_, ply)
     if not S then return end
     if S.live then LC.PatSearchEnd(S, "done") else LC.PatSearchDrop(S) end
 end)
+
+-- "Check papers" in the unit's window: the search is done as it stands, and their papers come up
+-- (LC.StreetPapers, sv_livingcity_jobgames.lua).
+function LC.PatSearchPapers(cop)
+    local S = BYCOP[cop] and PAT[BYCOP[cop]]
+    local npc = S and S.npc and S.target
+    if S then LC.PatSearchEnd(S, "done") end
+    if not Ok(npc) or not LC.StreetPapers then return false end
+    local st = LC.NPCs and LC.NPCs[npc]
+    if st then st.questLock = nil end
+    local ok, why = LC.StreetPapers(cop, npc)
+    if not ok and why then cop:ChatPrint("[CP net] " .. why) end
+    return ok
+end
+net.Receive("lc_pat_papers", function(_, ply) LC.PatSearchPapers(ply) end)
 
 hook.Add("PlayerDisconnected", "LivingCityPatSearch", function(ply)
     local S = PAT[ply] or (BYCOP[ply] and PAT[BYCOP[ply]])

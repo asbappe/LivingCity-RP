@@ -74,6 +74,17 @@ local function BuildUnit()
     end)(foot, "Done", Color(70, 90, 130), function() if IsValid(f) then f:Remove() end end)
     done:Dock(BOTTOM)
     done:SetTall(32)
+    -- their papers next (a citizen NPC's): the search ends as it stands (sv_livingcity_patsearch.lua)
+    local papers = (LC_CL.JobLook and LC_CL.JobLook.Button or function(p, text, _, click)
+        local b = vgui.Create("DButton", p) b:SetText(text) b.DoClick = click return b
+    end)(foot, "Done searching: check their papers", Color(60, 110, 100), function()
+        net.Start("lc_pat_papers") net.SendToServer()
+        if IsValid(f) then f.silent = true f:Remove() end
+    end)
+    papers:Dock(BOTTOM)
+    papers:DockMargin(0, 0, 0, 4)
+    papers:SetTall(26)
+    papers.Think = function(s) local st = unitState or {} s:SetVisible(st.papers == true and st.live == true) end
 
     local body = vgui.Create("DPanel", f)
     body:Dock(FILL)
@@ -87,12 +98,13 @@ local function BuildUnit()
         draw.RoundedBox(4, math.floor(w * 0.71), math.floor(h * 0.21), math.floor(w * 0.11), math.floor(h * 0.30), CARD)
     end
     body.spots = {}
-    for i = 1, 4 do
+    for i = 1, 5 do -- (the fifth: what they carry, when they carry something)
         local b = vgui.Create("DButton", body)
         b:SetText("")
         b.Paint = function(s, w, h)
             local st = unitState or {}
             local sp = (st.spots or {})[i]
+            if not sp then return end
             local col = Color(70, 90, 130)
             if sp and sp.state == 2 then col = (sp.text == "Nothing.") and Color(55, 60, 66) or BAD end
             draw.RoundedBox(4, 0, 0, w, h, s:IsHovered() and sp and sp.state == 0 and Color(90, 110, 150) or col)
@@ -111,7 +123,7 @@ local function BuildUnit()
     end
     body.PerformLayout = function(s, w, h)
         for i, b in ipairs(s.spots) do
-            local p = PLACE[i]
+            local p = PLACE[i] or { 0.02, 0.56, 0.24, 0.16 } -- (the case or parcel: beside the legs, at the hand)
             b:SetPos(math.floor(w * p[1]), math.floor(h * p[2]))
             b:SetSize(math.floor(w * p[3]), math.max(18, math.floor(h * p[4])))
         end

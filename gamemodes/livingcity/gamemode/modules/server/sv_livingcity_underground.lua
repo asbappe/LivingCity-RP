@@ -759,7 +759,8 @@ end
 -- What a citizen has on them (nil: nothing), and what happens when a unit finds it, or finds nothing.
 -- (Shared with the pat-down game, sv_livingcity_patsearch.lua.)
 function LC.SearchNPCRoll(st)
-    if math.random() < (st.rebel and 0.5 or 0.1) then return Pick(NPC_CONTRABAND) end
+    -- (someone met on a patrol, loitering or following a unit, is far likelier to: sv_livingcity_patrolcompany.lua)
+    if math.random() < (st.suspect and 0.85 or (st.rebel and 0.5 or 0.1)) then return Pick(NPC_CONTRABAND) end
 end
 function LC.SearchNPCFound(cop, npc, st, what)
     st.contraband = what

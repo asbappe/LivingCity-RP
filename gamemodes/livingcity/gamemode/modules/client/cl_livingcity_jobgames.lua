@@ -128,7 +128,8 @@ net.Receive("lc_papers_check", function()
     local p = t.papers or {}
     if IsValid(frame) then frame:Remove() end
     frame = vgui.Create("DFrame")
-    frame:SetTitle(string.format("Papers check: traveler %d of %d", t.n or 1, t.of or 5))
+    -- (on the street, a unit's own check of someone they stopped: sv_livingcity_jobgames.lua, LC.StreetPapers)
+    frame:SetTitle(t.street and "Papers check" or string.format("Papers check: traveler %d of %d", t.n or 1, t.of or 5))
     frame:SetSize(math.min(ScrW() - 40, 720), math.min(ScrH() - 40, 420))
     frame:Center()
     frame:MakePopup()
@@ -159,7 +160,11 @@ net.Receive("lc_papers_check", function()
     bar:Dock(BOTTOM)
     bar:SetTall(40)
     bar.Paint = nil
-    for i, b in ipairs({ { "Approve", "approve", Color(70, 140, 80) }, { "Deny", "deny", Color(150, 70, 60) }, { "Call a Civil Protection unit", "unit", Color(70, 90, 150) } }) do
+    local calls = { { "Approve", "approve", Color(70, 140, 80) }, { "Deny", "deny", Color(150, 70, 60) }, { "Call a Civil Protection unit", "unit", Color(70, 90, 150) } }
+    if t.street then
+        calls = { { "In order: wave them on", "approve", Color(70, 140, 80) }, { "Out of order: cite them", "deny", Color(150, 70, 60) }, { "Forged: take them in", "unit", Color(70, 90, 150) } }
+    end
+    for i, b in ipairs(calls) do
         local btn = vgui.Create("DButton", bar)
         btn:Dock(LEFT)
         btn:SetWide(150)

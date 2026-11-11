@@ -69,3 +69,5 @@ Units are units: Civil Protection players still stop citizens with E.
 
 
 **Stalkers are quieter (11 November).** A stalker's own voice is let through once in 60 seconds for each one (`LC.StalkerSoundGap`); its footsteps are unchanged. The unseen walker inside a Cremator makes no stalker sounds at all.
+
+**More from 11 November.** A clipboard is carried like luggage, hanging from the hand flat against the leg (`lc_clipboard_angle` no longer turns it). A stalker picks an item up from 100 units, and from up to 190 when it can get no nearer for six seconds (a pile in the way). A body a stalker drags is on a rope from its hand (`cl_livingcity_dragrope.lua`).

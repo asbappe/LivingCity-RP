@@ -14,6 +14,18 @@ local INK = Color(232, 226, 210)
 local DIM = Color(170, 165, 150)
 local ACCENT = Color(230, 180, 90)
 local RED = Color(220, 90, 80)
+
+-- "The dropship arrives in 0:42", while what the job protects is still on its way; nil otherwise.
+LC_CL = LC_CL or {}
+function LC_CL.ProtectArrives(now)
+    local me = LocalPlayer()
+    if not IsValid(me) then return nil end
+    now = now or CurTime()
+    local left = me:GetNW2Float("lc_protect_at", 0) - now
+    if left <= 0 or left > 600 then return nil end
+    local what = me:GetNW2String("lc_protect_what", "")
+    return string.format("%s arrives in %d:%02d", what ~= "" and what or "It", math.floor(left / 60), math.floor(left % 60))
+end
 local PANEL = Color(16, 15, 13, 240)
 local STORY = Color(175, 140, 235)
 
@@ -429,7 +441,10 @@ hook.Add("HUDPaint", "LivingCityQuestsTracker", function()
 
     local lines = Wrap(state.objective or "", "DermaDefault", bw - 24)
     local narr = state.narration and Wrap(state.narration, "DermaDefault", bw - 24) or {}
+    -- what this job protects is on its way: how long until it arrives (sv_livingcity_quests.lua, LC.ProtectWait)
+    local arrives = LC_CL.ProtectArrives()
     local h = 54 + #lines * 16 + (state.progress and 16 or 0) + (#narr > 0 and (#narr * 15 + 8) or 0) + (state.choice and 18 or 0) + (compassTarget and 34 or 0) + (state.suspicion and 22 or 0)
+        + (arrives and 24 or 0)
     LC_CL.QuestTrackerBottom, LC_CL.QuestTrackerAt = y + h, CurTime() -- (the panel of what you can do goes under it: cl_livingcity_context.lua)
     draw.RoundedBox(4, x, y, bw, h, C_16_15_13_210)
     draw.RoundedBox(0, x, y, 3, h, ACCENT)
@@ -476,6 +491,11 @@ hook.Add("HUDPaint", "LivingCityQuestsTracker", function()
         DrawArrow(x + 28, ly + 11, rel, ACCENT)
         draw.SimpleText(string.format("%d m, %s", meters, heading), "DermaDefaultBold", x + 50, ly + 1, INK)
         draw.SimpleText(level, "DermaDefaultBold", x + 50, ly + 14, dz > 48 and C_120_200_255 or (dz < -48 and C_255_170_110 or DIM))
+        ly = ly + 26
+    end
+    if arrives then
+        ly = ly + 6
+        draw.SimpleText(arrives, "DermaDefaultBold", x + 12, ly, RED)
     end
 
     -- being seen while tailing someone: right where you're looking, so you notice in time to duck back

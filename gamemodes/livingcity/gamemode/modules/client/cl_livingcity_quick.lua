@@ -309,6 +309,9 @@ local function Context(me, unit, rebel)
                 end }
             end
         end
+    elseif unit and cls == "npc_citizen" and not e:GetNW2Bool("lc_cuffed", false) and not e:GetNW2Bool("lc_downed_body", false) and not e:GetNW2Bool("lc_body", false) then
+        -- a citizen in front of a unit: their papers, without the search first (sv_livingcity_jobgames.lua, LC.StreetPapers)
+        Add("Check their papers", function() Send("streetpapers", "", e) end, true)
     elseif unit and e:GetNW2Bool("lc_cuffed", false) then
         -- a citizen or rebel cuffed with the baton (sv_livingcity_arrest.lua)
         Add("Walk them to the cells / let go", function() Send("drag") end, true)

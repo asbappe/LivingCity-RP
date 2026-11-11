@@ -540,7 +540,34 @@ if not kh then problems[#problems + 1] = "no kick reminder" else
     if not okK then problems[#problems + 1] = "the kick reminder errors: " .. tostring(errK) end
 end
 _me.nw.lc_kick_hint = nil
--- the kick shows only the legs: every bone but the hips and the kicking leg is shrunk (a fake skeleton,
+-- the job tracker's countdown to what a protect job is waiting for (11 November)
+if LC_CL.ProtectArrives then
+    _me.nw.lc_protect_at, _me.nw.lc_protect_what = CurTime() + 42, "The dropship"
+    local line = LC_CL.ProtectArrives()
+    if line ~= "The dropship arrives in 0:42" and line ~= "The dropship arrives in 0:41" then problems[#problems + 1] = "the arrival countdown reads wrong: " .. tostring(line) end
+    _me.nw.lc_protect_at = CurTime() - 1
+    if LC_CL.ProtectArrives() ~= nil then problems[#problems + 1] = "the arrival countdown stays after it has arrived" end
+    _me.nw.lc_protect_at, _me.nw.lc_protect_what = nil, nil
+else
+    problems[#problems + 1] = "the arrival countdown is missing"
+end
+-- F3 and F4: with one window open, its own key shuts it and the other's key switches (11 November)
+if LC_CL.FMenu and LC_CL.FMenuPress then
+    LC_CL.FMenu("gm_showspare2", nil) -- (an F4 window an earlier check left open)
+    local f3 = vgui.Create("DFrame")
+    LC_CL.FMenu("gm_showspare1", f3)
+    local a1 = LC_CL.FMenuPress("gm_showspare1")
+    local a2, other = LC_CL.FMenuPress("gm_showspare2")
+    if a1 ~= "close" or a2 ~= "switch" or other ~= "gm_showspare1" then
+        problems[#problems + 1] = "F3/F4: with the pockets open, F3 should close and F4 switch: " .. tostring(a1) .. ", " .. tostring(a2)
+    end
+    f3:Remove()
+    LC_CL.FMenu("gm_showspare1", nil)
+    if LC_CL.FMenuPress("gm_showspare2") ~= nil then problems[#problems + 1] = "F3/F4: with nothing open the keys are the game's own" end
+else
+    problems[#problems + 1] = "F3/F4 switching is missing"
+end
+-- the kick shows only the legs: every bone but the kicking leg is shrunk, the hips too (11 November) (a fake skeleton,
 -- with an extra mask bone off the head like the HL:Alyx metrocop's)
 if LC_CL.KickHideUpper then
     local names = { [0] = "ValveBiped.Bip01_Pelvis", "ValveBiped.Bip01_Spine", "ValveBiped.Bip01_Head1", "mask",
@@ -552,7 +579,7 @@ if LC_CL.KickHideUpper then
         ManipulateBoneScale = function(_, b) shrunk[b] = true end }
     local okL, nL = pcall(LC_CL.KickHideUpper, fake)
     if not okL then problems[#problems + 1] = "the kick's legs-only errors: " .. tostring(nL)
-    elseif not (shrunk[1] and shrunk[2] and shrunk[3] and shrunk[6] and not shrunk[0] and not shrunk[4] and not shrunk[5]) then
+    elseif not (shrunk[1] and shrunk[2] and shrunk[3] and shrunk[6] and shrunk[0] and not shrunk[4] and not shrunk[5]) then
         problems[#problems + 1] = "the kick shows more than the legs (the mask or the head) or hides the kicking leg"
     end
 else problems[#problems + 1] = "no LC_CL.KickHideUpper" end

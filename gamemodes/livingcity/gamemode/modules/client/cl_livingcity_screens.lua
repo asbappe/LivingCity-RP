@@ -60,7 +60,17 @@ local function Frame(ent, h)
     local center = ent:GetPos() + ent:GetForward() * (math.max(8, maxs.x) + 10) + ent:GetUp() * 54
     -- (the owner, 1 November: it stood at crotch height. Its middle a hair below your eyes, as they were
     -- when it opened, wherever the terminal's own origin is)
-    if S and S.ent == ent and S.eyeZ then center.z = S.eyeZ - 8 end
+    -- (the owner, 11 November: the CP Commissary's still opened too low until something was bought. The
+    -- height was read once from the eyes as it opened, which can be mid-step or mid-crouch; now it's your
+    -- feet plus your standing eye height, read again whenever you stand on the ground.)
+    if S and S.ent == ent then
+        local me = LocalPlayer()
+        if IsValid(me) and me.GetViewOffset and (not me.IsOnGround or me:IsOnGround()) then
+            local off = me:GetViewOffset()
+            S.eyeZ = me:GetPos().z + ((off and off.z and off.z > 30) and off.z or 64)
+        end
+        if S.eyeZ then center.z = S.eyeZ - 8 end
+    end
     local tl = center - ang:Forward() * (W / 2 * SCALE) - ang:Right() * (h / 2 * SCALE)
     return tl, ang
 end
